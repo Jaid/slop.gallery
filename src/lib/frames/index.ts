@@ -21,6 +21,7 @@ import HorrorBleedingFrame from './HorrorBleedingFrame.ts'
 import HorrorButcherFrame from './HorrorButcherFrame.ts'
 import HorrorFleshFrame from './HorrorFleshFrame.ts'
 import HorrorInfestedFrame from './HorrorInfestedFrame.ts'
+import HorrorMawFrame from './HorrorMawFrame.ts'
 import LobbyLouisFrame from './LobbyLouisFrame.ts'
 import LobbyTravertineFrame from './LobbyTravertineFrame.ts'
 import LodgeCharredFrame from './LodgeCharredFrame.ts'
@@ -85,6 +86,7 @@ export const frames = {
   'horror-bleeding': new HorrorBleedingFrame,
   'horror-butcher': new HorrorButcherFrame,
   'horror-infested': new HorrorInfestedFrame,
+  'horror-maw': new HorrorMawFrame,
   'spook-maelstrom': new SpookMaelstromFrame,
   'spook-rift': new SpookRiftFrame,
   'spook-abyss': new SpookAbyssFrame,
