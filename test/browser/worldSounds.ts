@@ -103,6 +103,7 @@ export default async function verify() {
     hung: await recipe('a work hung on arrival', arrivalVoices(true)),
     slapped: await recipe('a work slapped onto its wall on arrival', [...arrivalVoices(true, 0, hangingAnimation.impact), ...hangingVoices({
       impact: hangingAnimation.impact,
+      mass: 1,
       sound: 'gilt',
       variation: 0,
     })]),

@@ -10,6 +10,7 @@ import {playSound, useGallery} from '#src/lib/gallery.ts'
 import HangingRun from '#src/lib/gallery/hanging/HangingRun.ts'
 import {requestJolt, takeHanging} from '#src/lib/gallery/hanging/hangings.ts'
 import JoltAnimation from '#src/lib/gallery/hanging/JoltAnimation.ts'
+import {heft} from '#src/lib/gallery/hanging/motion.ts'
 import {hangingNeighbors} from '#src/lib/gallery/hanging/neighbors.ts'
 import world from '#src/worlds/current.ts'
 
@@ -44,6 +45,7 @@ export default function useHanging(portrait: Portrait, frame: PortraitFrame, hel
       if (!jolt) {
         playSound(hangingVoices({
           impact: request.animation.impact,
+          mass: heft(current.stage),
           sound: frame.impactSound,
           variation: request.seed / 2 ** 31 - 1,
         }), `hanging:${request.seed}`, portrait.position)

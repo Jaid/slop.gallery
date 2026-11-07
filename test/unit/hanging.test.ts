@@ -90,6 +90,12 @@ const hung = (id: string, along: number, extra: Partial<{
   rotation: extra.rotation ?? 0,
   width: extra.width ?? 1,
 })
+const slapVoices = (mass: number) => hangingVoices({
+  impact: animation.impact,
+  mass,
+  sound: 'gilt',
+  variation: 0,
+})
 const request = () => ({
   animation,
   from: [3, 1.5, -0.5] as [number, number, number],
@@ -257,6 +263,7 @@ describe('the hanging sound', () => {
     const sounds = Object.keys(frameImpactSounds) as Array<keyof typeof frameImpactSounds>
     const recipes = sounds.map(sound => hangingVoices({
       impact: animation.impact,
+      mass: 1,
       sound,
       variation: 0,
     }))
@@ -276,6 +283,7 @@ describe('the hanging sound', () => {
     }
     const options = {
       impact: animation.impact,
+      mass: 1,
       sound: 'gilt',
     } as const
     expect(hangingVoices({
@@ -285,6 +293,19 @@ describe('the hanging sound', () => {
       ...options,
       variation: 0.5,
     }))
+  })
+  test('booms the wall deeper and longer under a heavier work', () => {
+    const light = slapVoices(0.4)
+    const heavy = slapVoices(2.5)
+    const changed = light.flatMap((voice, index) => (JSON.stringify(voice) === JSON.stringify(heavy[index]) ? [] : [[voice, heavy[index]] as const]))
+    const booms = changed.filter(([voice]) => voice.kind === 'oscillator')
+    expect(booms).toHaveLength(1)
+    for (const [lighter, heavier] of changed) {
+      expect(heavier.duration).toBeGreaterThan(lighter.duration)
+      expect(heavier.volume).toBeGreaterThan(lighter.volume)
+    }
+    const [[lighter, heavier]] = booms
+    expect(lighter.kind === 'oscillator' && heavier.kind === 'oscillator' && heavier.frequency < lighter.frequency).toBe(true)
   })
 })
 describe('jolts of neighbors', () => {
