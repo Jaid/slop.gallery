@@ -1,12 +1,12 @@
 import type {Wall} from '../placement/wallGeometry.ts'
 import type {FloorRectangle} from './floors.ts'
-import type {Vec3} from './types.ts'
 import type {KnotLightSlot} from 'knot-materials/KnotLights.ts'
 
 import {knotLightColor, knotLightHousingSize, knotLightHousingY} from 'knot-materials/KnotLightPanels.ts'
 
 import {wallFace, wallOpeningTrim} from './architectureDimensions.ts'
 import roomOrigins from './layout.ts'
+import {plankTable} from './plankTable.ts'
 import {salonSouthZ} from './salon.ts'
 
 /** The Banquet’s floor plan, from the Salon’s south wall to the Vesper’s south wall’s line, and the height of its ceiling. */
@@ -62,61 +62,21 @@ export const banquetLedSlots: ReadonlyArray<KnotLightSlot> = banquetLedGrid.z.fl
   slot,
 })))
 
-/** how long the Banquet’s table is: as long as the row of panes over it, from the north end of the first housing to the south end of the last */
-const tableLength = banquetLedGrid.z.at(-1)! - banquetLedGrid.z[0] + knotLightHousingSize[2]
-/** how wide the table is */
-const tableWidth = 1.2
-/** how far the table’s top overhangs its aprons and legs all round */
-const tableOverhang = 0.05
-/** the side of the table’s square legs */
-const tableLeg = 0.09
-/** how far the table’s legs stand back from the faces of its aprons, so their faces never fight */
-const tableLegInset = 0.003
 /**
- * The long farmhouse table down the middle of the Banquet, under its row of panes: a top of planks running its length on square legs tied together by aprons, in the room’s middle. Its `height` is the top’s upper face over the floor, all in meters.
+ * The long farmhouse table down the middle of the Banquet, in the room’s middle under its row of panes and as long as it, from the north end of the first housing to the south end of the last, on five pairs of legs.
  */
-export const banquetTable = {
-  length: tableLength,
-  width: tableWidth,
+export const banquetTable = plankTable({
+  length: banquetLedGrid.z.at(-1)! - banquetLedGrid.z[0] + knotLightHousingSize[2],
+  width: 1.2,
   height: 0.77,
-  /** how thick its planks are */
   top: 0.045,
-  /** how many planks lie side by side across it, and the gap between two of them */
   boards: 6,
   gap: 0.004,
-  overhang: tableOverhang,
-  /** how deep its aprons reach below the top, and how thick they are */
+  overhang: 0.05,
   apron: [0.13, 0.032],
-  leg: tableLeg,
-  /** how far either leg of a pair stands from its middle across it */
-  legX: tableWidth / 2 - tableOverhang - tableLeg / 2 - tableLegInset,
-  /** where along it from its middle its pairs of legs stand, one at either end and evenly between them so the long top never sags */
-  legs: Array.from({length: 5}, (_, index) => (index - 2) / 2 * (tableLength / 2 - tableOverhang - tableLeg / 2 - tableLegInset)),
-} as const
-/** a box a collider takes up: where its middle lies and how large it is */
-type ColliderBox = {
-  center: Vec3
-  name: string
-  size: Vec3
-}
-/** The table’s colliders, in its frame on the floor under its middle: its top with the aprons under it, solid down to their bottom, and each of its legs. */
-export function banquetTableColliders(): Array<ColliderBox> {
-  const {apron: [apronDepth], height, leg, legs, legX, length, top, width} = banquetTable
-  const slab = top + apronDepth
-  const legHeight = height - slab
-  return [
-    {
-      name: 'banquet-table-top',
-      center: [0, height - slab / 2, 0],
-      size: [width, slab, length],
-    },
-    ...legs.flatMap(z => [-1, 1].map((side): ColliderBox => ({
-      name: 'banquet-table-leg',
-      center: [side * legX, legHeight / 2, z],
-      size: [leg, legHeight, leg],
-    }))),
-  ]
-}
+  leg: 0.09,
+  pairs: 5,
+})
 
 /** Edge length of the Banquet’s checkered marble tiles, laid from the room’s north-west corner: 12 × 24 whole tiles fill the floor. */
 export const banquetFloorTile = 1

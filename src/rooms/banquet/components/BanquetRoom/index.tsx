@@ -6,13 +6,13 @@ import {useState} from 'react'
 import {Color} from 'three/webgpu'
 
 import BanquetFloor from '#component/BanquetFloor'
-import BanquetTable from '#component/BanquetTable'
 import CeilingLeds from '#component/CeilingLeds'
 import LightSwitch from '#component/LightSwitch'
+import PlankTable from '#component/PlankTable'
 import SelectorSwitch from '#component/SelectorSwitch'
 import Box from '#src/components/Scene/primitives.tsx'
 import {wallFace} from '#src/lib/gallery/architectureDimensions.ts'
-import {banquetLedSlots, banquetLightTemperatures} from '#src/lib/gallery/banquet.ts'
+import {banquetLedSlots, banquetLightTemperatures, banquetTable} from '#src/lib/gallery/banquet.ts'
 import lamps from '#src/rooms/banquet/lamps.ts'
 import walls, {lightSwitchSpots} from '#src/rooms/banquet/walls.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
@@ -33,6 +33,11 @@ const balanced = (value: string, reference: string) => {
   return result.multiplyScalar(luminance(new Color(reference)) / luminance(result))
 }
 const {white} = banquetLightTemperatures
+/** the long farmhouse table’s lacquered chestnut-brown pine */
+const tableWood = {
+  heartwood: ['#3c1b0c', '#70391a'],
+  latewood: '#2b140a',
+} as const
 const temperatures = mapValues(banquetLightTemperatures, ({light, surface}): CeilingLedColor => ({
   light: balanced(light, white.light),
   surface: balanced(surface, white.surface),
@@ -48,7 +53,7 @@ export default function BanquetRoom({glass, stone, wood}: Omit<Parameters<typeof
       </RigidBody>
       <Box color='#e1dccc' position={[0, room.height - 0.02, 0]} size={[width, 0.18, depth]} />
       <BanquetFloor glass={glass} room={room} stone={stone} wood={wood} />
-      <BanquetTable />
+      <PlankTable colors={tableWood} name='banquet-table' roughness={0.4} seed={2117} table={banquetTable} />
     </group>
     <BanquetLights />
   </>

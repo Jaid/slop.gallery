@@ -1,10 +1,10 @@
+import type {PlankTable} from './plankTable.ts'
 import type {GrainMapping} from './woodGrain.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
 import {mulberry32} from 'math/random'
 
 import {mergeParts} from '../geometry.ts'
-import {banquetTable} from './banquet.ts'
 import {place, roundedBox} from './lodgeInterior/place.ts'
 import {withWoodGrain} from './woodGrain.ts'
 
@@ -18,24 +18,23 @@ const alongZ: GrainMapping = (x, y, z) => [z, x + y * 0.3]
 const alongY: GrainMapping = (x, y, z) => [y, x + z]
 
 /**
- * The Banquet’s long farmhouse table, see {@link banquetTable}: a top of planks with eased edges running its length, each course butt-jointed at its own places, over aprons round its sides and ends and a cross rail at every pair of legs between the ends, on square legs standing a hair back from the aprons’ faces.
- * Every piece has its own grain, see `GrainedWoodMaterial`. The origin is on the floor under its middle.
+ * A table of planks, see {@link PlankTable}: a top of planks with eased edges running its length, each course butt-jointed at its own places, over aprons round its sides and ends and a cross rail at every pair of legs between the ends, on square legs standing a hair back from the aprons’ faces.
+ * Every piece has its own grain, see `GrainedWoodMaterial`, drawn by the `seed`. The origin is on the floor under its middle.
  */
-export default class BanquetTableGeometry {
+export default class PlankTableGeometry {
   readonly timber: BufferGeometry
 
-  constructor() {
-    const {apron: [apronDepth, apronThickness], boards, gap, height, leg, legs, legX, length, overhang, top, width} = banquetTable
-    const state = mulberry32.create(2117)
+  constructor({apron: [apronDepth, apronThickness], boards, gap, height, leg, legs, legX, length, overhang, top, width}: PlankTable, seed: number) {
+    const state = mulberry32.create(seed)
     const random = () => mulberry32.sample(state)
-    let seed = 0
+    let pieceSeed = 0
     /** a rounded box of the size with its grain, its middle at the point */
     const piece = (size: [number, number, number], mapping: GrainMapping, [x, y, z]: readonly [number, number, number], radius = 0.004) => {
       const offset = random() * 40
       const geometry = withWoodGrain(roundedBox(size, radius, 2), (px, py, pz) => {
         const [along, across] = mapping(px, py, pz)
         return [along + offset, across]
-      }, seed++ * 0.618034 % 1)
+      }, pieceSeed++ * 0.618034 % 1)
       return place(geometry, x, y, z)
     }
     const parts: Array<BufferGeometry> = []

@@ -6,10 +6,11 @@ import {describe, expect, test} from 'bun:test'
 import RAPIER from '@dimforge/rapier3d-compat'
 import {Box3, Euler, Quaternion, Vector3} from 'three/webgpu'
 
-import {banquet, banquetTable, banquetTableColliders} from '../../src/lib/gallery/banquet.ts'
+import {banquet, banquetTable} from '../../src/lib/gallery/banquet.ts'
 import {curios, hatchet, helmet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
+import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
@@ -126,7 +127,7 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
     })
     world.timestep = 1 / 60
     world.createCollider(RAPIER.ColliderDesc.cuboid(banquet.size[0] / 2, 0.12, banquet.size[1] / 2).setTranslation(banquet.center[0], -0.12, banquet.center[1]))
-    for (const {center: [x, y, z], size: [width, height, depth]} of banquetTableColliders()) {
+    for (const {center: [x, y, z], size: [width, height, depth]} of plankTableColliders(banquetTable, 'banquet-table')) {
       world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(banquet.center[0] + x, y, banquet.center[1] + z))
     }
     return world
