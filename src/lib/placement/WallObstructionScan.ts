@@ -12,6 +12,8 @@ import {hangingMargins, hangingOffset, nearCutout, wallPosition} from './wallGeo
 export const frameClearance = hangingOffset + frameBack
 /** how far out of its wall’s center line a hung frame reaches at most, with room to spare: anything standing further out leaves it room in front */
 export const frameDepth = hangingOffset + 0.2
+/** how far out of and into the wall from a hung frame’s back the scan looks for the faces of a solid it might stand inside, which a solid deeper than this escapes */
+const enclosureReach = 2
 
 type Candidate = {
   box: Box3
@@ -24,7 +26,7 @@ const ownParts = (wall: Wall) => new Set(['wall', 'trim', 'cornice', 'glass'].ma
 /**
  * Finds what stands in the way of works hanging on the sticky walls without the walls knowing: anything in the scene, beyond each wall’s own architecture, hung works and loose props, standing out of a wall further than a hung frame’s back, but not as far as its front, wherever the wall lets works reach, outside its openings and reservations and their margins.
  *
- * It casts a ray toward the wall every `step` meters across and up, against the meshes as they are when a pass begins, so whatever the scene adds or moves shows up with the next pass.
+ * It casts a ray toward the wall every `step` meters across and up, against the meshes as they are when a pass begins, so whatever the scene adds or moves shows up with the next pass. Where the ray meets nothing, one cast back out tells whether it ran inside a solid all along, like a chimney breast.
  */
 export default class WallObstructionScan {
   /** the patches of every scanned wall where something stands in the way, by wall id, merged up each column of rays */
@@ -87,7 +89,16 @@ export default class WallObstructionScan {
     const origin = this.ray.origin.set(...wallPosition(wall, u, raked, frameDepth))
     const length = this.ray.direction.set(...wallPosition(wall, u, raked, frameClearance)).sub(origin).length()
     this.ray.direction.divideScalar(length)
-    return candidates.some(({box, mesh}) => this.ray.intersectsBox(box) && this.hits(mesh, length))
+    if (candidates.some(({box, mesh}) => this.ray.intersectsBox(box) && this.firstHit(mesh, length))) {
+      return true
+    }
+    // Inside a solid reaching past both ends of the ray, like a chimney breast set into the wall, the ray meets none of its faces. Cast out of the wall and on into it instead, it first leaves the solid both ways, where a stray open surface, seen from behind, fools one cast at most.
+    const inside = this.ray.at(length, new Vector3)
+    const directions = [this.ray.direction.clone().negate(), this.ray.direction.clone()]
+    return candidates.some(({box, mesh}) => directions.every(direction => {
+      this.ray.set(inside, direction)
+      return this.ray.intersectsBox(box) && this.firstHit(mesh, enclosureReach)?.leaving
+    }))
   }
 
   private bvh(geometry: BufferGeometry) {
@@ -150,23 +161,35 @@ export default class WallObstructionScan {
     return meshes
   }
 
-  /** whether the scan’s ray meets the mesh within `length` meters */
-  private hits(mesh: Mesh, length: number) {
+  /**
+   * Where the scan’s ray first meets the mesh within `far` meters, or `null`: how far along, and whether it leaves the mesh there, through a face turned the way the ray runs, so it started inside.
+   * Only meshes that cast through their geometry’s own triangles tell whether the ray leaves them.
+   */
+  private firstHit(mesh: Mesh, far: number) {
     // A mesh with a raycast of its own, like the markers that never take one, or whose triangles move apart from its geometry, casts itself.
     const {isBatchedMesh, isInstancedMesh, isSkinnedMesh} = mesh as Partial<Record<'isBatchedMesh' | 'isInstancedMesh' | 'isSkinnedMesh', boolean>>
     const plain = !Object.hasOwn(mesh, 'raycast') && !isBatchedMesh && !isInstancedMesh && !isSkinnedMesh
     if (!plain) {
       this.raycaster.set(this.ray.origin, this.ray.direction)
-      this.raycaster.far = length
-      return this.raycaster.intersectObject(mesh, false).length > 0
+      this.raycaster.far = far
+      const hit = this.raycaster.intersectObject(mesh, false).at(0)
+      return hit ? {
+        distance: hit.distance,
+        leaving: false,
+      } : null
     }
     const bvh = this.bvh(mesh.geometry)
     if (!bvh) {
-      return false
+      return null
     }
     this.localRay.copy(this.ray).applyMatrix4(this.inverse.copy(mesh.matrixWorld).invert())
     const hit = bvh.raycastFirst(this.localRay, DoubleSide)
-    return Boolean(hit) && this.point.copy(hit!.point).applyMatrix4(mesh.matrixWorld).distanceTo(this.ray.origin) <= length
+    const distance = hit ? this.point.copy(hit.point).applyMatrix4(mesh.matrixWorld).distanceTo(this.ray.origin) : Infinity
+    // The triangle’s own normal, in the mesh’s frame, against the ray in the same frame keeps its sign under any transform.
+    return hit && distance <= far ? {
+      distance,
+      leaving: hit.face!.normal.dot(this.localRay.direction) > 0,
+    } : null
   }
 
   private store(wall: Wall, patches: ReadonlyArray<WallPatch>) {

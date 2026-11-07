@@ -2,7 +2,8 @@ import type {Wall} from '../../src/lib/placement/wallGeometry.ts'
 
 import {describe, expect, test} from 'bun:test'
 
-import {BoxGeometry, Group, Mesh, Scene, Triangle, Vector3} from 'three/webgpu'
+import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js'
+import {BoxGeometry, Group, Mesh, PlaneGeometry, Scene, Triangle, Vector3} from 'three/webgpu'
 
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {readShowSticky} from '../../src/lib/placement/showSticky.ts'
@@ -183,6 +184,22 @@ describe('?show_sticky', () => {
     expect(area([target], () => geometry)).toBeCloseTo(4, 5)
     const points = geometry.getAttribute('wallPoint')
     expect([points.getX(0), points.getY(0)]).toEqual([-1, 0.5])
+    // Out of the wall into its room, unit length, round curved walls too.
+    const curved = wall({curveRadius: 3})
+    const bent = patchGeometry([[curved, [{
+      from: 1,
+      to: 1.2,
+      bottom: 1,
+      top: 1.2,
+    }]]])
+    const normals = bent.getAttribute('wallNormal')
+    const position = bent.getAttribute('position')
+    for (let index = 0; index < normals.count; index++) {
+      const point = new Vector3(position.getX(index), position.getY(index), position.getZ(index))
+      const normal = new Vector3(normals.getX(index), normals.getY(index), normals.getZ(index))
+      expect(normal.length()).toBeCloseTo(1, 5)
+      expect(wallOffset(curved, point.clone().add(normal.multiplyScalar(0.5)).toArray()) - wallOffset(curved, point.toArray())).toBeCloseTo(0.5, 4)
+    }
   })
   test('finds whatever stands out of a sticky wall in the way of hung frames, but not its own architecture, flat relief, hung works or what stands clear', () => {
     const target = wall()
@@ -213,6 +230,29 @@ describe('?show_sticky', () => {
     // One 5 cm row of rays meets the 7 cm rail in every column.
     expect(found).toHaveLength(Math.floor((target.width - hangingMargins.side * 2) / 0.05))
     expect(patchArea(found)).toBeCloseTo((target.width - hangingMargins.side * 2) * 0.05, 2)
+  })
+  test('finds a solid set into the wall that stands out past where hung frames reach, like a chimney breast, but not one standing clear in front of the wall', () => {
+    const target = wall()
+    const scene = new Scene
+    const breast = new Mesh(new BoxGeometry(1, 1, 0.9))
+    breast.position.set(...wallPosition(target, -0.5, target.center[1] + 1.5, wallFace - 0.05 + 0.45))
+    breast.rotation.y = target.rotation
+    const bench = new Mesh(new BoxGeometry(1, 0.5, 0.5))
+    bench.position.set(...wallPosition(target, 1, target.center[1] + 1.5, frameDepth + 0.3))
+    bench.rotation.y = target.rotation
+    // An open surface standing out in the room, facing away from the wall, which the ray out of the wall meets from behind, merged with a knob on the wall, so it is cast against.
+    const panel = new PlaneGeometry(1, 1)
+    const knob = new BoxGeometry(0.1, 0.1, 0.1)
+    const screen = new Mesh(mergeGeometries([panel.translate(1.2, 1.7, 1), knob.translate(-1.5, 0.75, wallFace + 0.05)]))
+    screen.position.set(...wallPosition(target, 0, target.center[1], 0))
+    screen.rotation.y = target.rotation
+    scene.add(breast, bench, screen)
+    const found = scan([target], scene).patches.get(target.id)!
+    // The breast’s square meter and the knob’s 2 × 2 rays.
+    expect(patchArea(found)).toBeCloseTo(1.01, 2)
+    for (const patch of found) {
+      expect(patch.to).toBeLessThanOrEqual(0 + 1e-9)
+    }
   })
   test('leaves out the margins of openings and reservations', () => {
     const target = wall({reservations: [{

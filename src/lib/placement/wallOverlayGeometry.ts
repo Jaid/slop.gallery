@@ -117,9 +117,10 @@ function solidSpans(wall: Wall, cutouts: ReadonlyArray<WallOpening>, u: number) 
   spans.push([floor, wall.height])
   return spans
 }
-/** An overlay on walls, in world space and just in front of their plaster, raked along with sloping walls and bent round curved ones; every vertex carries `wallPoint`, where along its wall and how high over its foot it lies. */
+/** An overlay on walls, in world space and just in front of their plaster, raked along with sloping walls and bent round curved ones; every vertex carries `wallPoint`, where along its wall and how high over its foot it lies, and `wallNormal`, the unit direction out of the wall into its room. */
 class WallSheet {
   private readonly indices: Array<number> = []
+  private readonly normals: Array<number> = []
   private readonly points: Array<number> = []
   private readonly positions: Array<number> = []
 
@@ -129,6 +130,7 @@ class WallSheet {
     const geometry = new BufferGeometry
     geometry.setAttribute('position', new Float32BufferAttribute(this.positions, 3))
     geometry.setAttribute('wallPoint', new Float32BufferAttribute(this.points, 2))
+    geometry.setAttribute('wallNormal', new Float32BufferAttribute(this.normals, 3))
     geometry.setIndex(this.indices)
     geometry.computeBoundingBox()
     geometry.computeBoundingSphere()
@@ -150,8 +152,12 @@ class WallSheet {
   }
 
   private vertex(wall: Wall, u: number, y: number) {
-    this.positions.push(...wallPosition(wall, u, wall.center[1] + y + u * (wall.slope ?? 0), wallFace + lift))
+    const height = wall.center[1] + y + u * (wall.slope ?? 0)
+    const position = wallPosition(wall, u, height, wallFace + lift)
+    const outside = wallPosition(wall, u, height, wallFace + lift + 1)
+    this.positions.push(...position)
     this.points.push(u, y)
+    this.normals.push(...outside.map((value, axis) => value - position[axis]))
     return this.positions.length / 3 - 1
   }
 }

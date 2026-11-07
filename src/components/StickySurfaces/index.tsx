@@ -3,7 +3,7 @@ import type {BufferGeometry} from 'three/webgpu'
 import {useFrame, useThree} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
 import {useEffect, useMemo, useRef, useState} from 'react'
-import {attribute, cameraPosition, float, fract, length, modelWorldMatrixInverse, positionLocal, step, vec4} from 'three/tsl'
+import {attribute, cameraPosition, dot, float, fract, length, modelWorldMatrixInverse, positionLocal, step, vec4} from 'three/tsl'
 import {MeshBasicNodeMaterial} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
@@ -13,8 +13,10 @@ import world from '#src/worlds/current.ts'
 
 const stickyColor = '#38e08c'
 const reservedColor = '#ff2a2a'
-/** how many meters at most the red overlays are drawn toward the camera, so whatever stands out of their wall can’t hide them, while walls further in front still do */
-const nudge = 1.2
+/** how many meters out of their wall the red overlays are drawn, toward the camera, so whatever stands out of their wall less far, like a chimney breast, can’t hide them, while furniture and walls further in front still do */
+const nudge = 1.4
+/** how many meters at most an overlay travels toward the camera, so one seen at a glancing angle doesn’t reach through the walls of other rooms in front of it */
+const furthest = 2
 /** how close to the camera a nudged overlay comes at most, beyond its near plane */
 const nearest = 0.15
 /** how far apart the stripes over suspected obstructions are, along their wall and up it, in meters */
@@ -40,7 +42,7 @@ export default function StickySurfaces() {
   </>
 }
 
-/** An unlit overlay drawn up to {@link nudge} meters toward the camera along each ray, so it shows exactly where it is, only in front of what stands out of its wall; striped diagonally across its wall, or solid. */
+/** An unlit overlay drawn toward the camera along each ray, until it stands {@link nudge} meters out of its wall or has travelled {@link furthest}, so it shows exactly where it is, only in front of what stands out of the wall; striped diagonally across its wall, or solid. */
 function nudgedMaterial(opacity: number, striped: boolean) {
   const material = new MeshBasicNodeMaterial({
     color: reservedColor,
@@ -51,7 +53,10 @@ function nudgedMaterial(opacity: number, striped: boolean) {
   const eye = modelWorldMatrixInverse.mul(vec4(cameraPosition, 1)).xyz
   const toEye = eye.sub(positionLocal)
   const distance = length(toEye)
-  material.positionNode = positionLocal.add(toEye.div(distance).mul(distance.sub(nearest).clamp(0, nudge)))
+  const toward = toEye.div(distance)
+  // Seen at a slant, it has to travel further along the ray to stand as far out of the wall.
+  const along = float(nudge).div(dot(toward, attribute('wallNormal', 'vec3')).max(nudge / furthest))
+  material.positionNode = positionLocal.add(toward.mul(along.min(distance.sub(nearest)).max(0)))
   const point = attribute('wallPoint', 'vec2')
   material.opacityNode = striped ? step(0.5, fract(point.x.add(point.y).div(stripePeriod))).mul(opacity) : float(opacity)
   return material
