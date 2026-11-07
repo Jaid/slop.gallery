@@ -1,6 +1,6 @@
 import type {FrameSurface} from '#src/lib/materials/frames/frameAttributes.ts'
 
-import {atan, color, float, hash, max, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, time, vec2, vec3} from 'three/tsl'
+import {atan, color, float, max, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, time, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {heightNormal, visibleDetail} from '#src/lib/materials/filters.ts'
@@ -44,16 +44,18 @@ function bleeding(surface: FrameSurface) {
   const opening = surface.opening
   const top = opening.y.add(profile.reach)
   const lane = p.x.div(runs.lane).floor()
-  const active = hash(lane.mul(1.31)).lessThan(0.6)
-  const length = hash(lane.mul(2.17)).pow(1.6).mul(runs.longest - 0.04).add(0.04)
-  const period = hash(lane.mul(3.73)).mul(runs.period[1] - runs.period[0]).add(runs.period[0])
-  const progress = time.div(period).add(hash(lane.mul(5.11))).fract()
+  /** a random number from 0 to 1 for this lane, another for every `k`; cell noise, as `hash` truncates its seed to an unsigned integer, which would give every lane left of the middle the same */
+  const random = (k: number) => mx_cell_noise_float(vec3(lane, k, 0))
+  const active = random(0).lessThan(0.6)
+  const length = random(1).pow(1.6).mul(runs.longest - 0.04).add(0.04)
+  const period = random(2).mul(runs.period[1] - runs.period[0]).add(runs.period[0])
+  const progress = time.div(period).add(random(3)).fract()
   const head = top.sub(length.mul(progress.smoothstep(0, 0.75)))
   // Over the work, a run can only reach the sight edge, where its drop hangs.
   const over = p.x.abs().lessThan(opening.x)
   const stop = over.select(opening.y.sub(0.003), float(-1e3))
   const end = head.max(stop)
-  const middle = lane.add(0.5).add(hash(lane.mul(7.9)).sub(0.5).mul(0.3)).mul(runs.lane)
+  const middle = lane.add(0.5).add(random(4).sub(0.5).mul(0.3)).mul(runs.lane)
   const fromTop = top.sub(p.y)
   // The run narrows as it goes, wavers and swells into a drop at its head.
   const width = float(runs.lane * 0.2).mul(fromTop.mul(-4).exp().mul(0.7).add(0.5)).mul(mx_noise_float(vec3(p.y.mul(50), lane, 0.5)).mul(0.3).add(1))
