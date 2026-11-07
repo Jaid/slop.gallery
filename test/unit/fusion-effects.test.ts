@@ -4,7 +4,7 @@ import type EscapingGhosts from '../../src/lib/gallery/fusion/effects/ghosts/Esc
 import {describe, expect, test} from 'bun:test'
 
 import {batOffset, flyingBats} from '../../src/lib/gallery/fusion/effects/bats/flights.ts'
-import {bloodDrops, gravity as bloodGravity, bloodLanding, drying, splatLift} from '../../src/lib/gallery/fusion/effects/blood/flights.ts'
+import {airDrag, bloodBeats, bloodDrops, bloodFading, gravity as bloodGravity, bloodLanding, bloodPool, splatLift} from '../../src/lib/gallery/fusion/effects/blood/flights.ts'
 import {escapingGhosts} from '../../src/lib/gallery/fusion/effects/ghosts/flights.ts'
 import {batsEffect, bloodEffect, fusionEffects, ghostsEffect} from '../../src/lib/gallery/fusion/effects/index.ts'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
@@ -154,7 +154,7 @@ describe('fusion effects', () => {
       expect(effect.afterglow).toBeGreaterThan(fusionTiming.afterglow)
     }
     expect(batsEffect.afterglow).toBe(Math.max(...flyingBats.map(({delay, life}) => delay + life)))
-    expect(bloodEffect.afterglow).toBeCloseTo(drying.start + drying.stagger + drying.duration, 9)
+    expect(bloodEffect.afterglow).toBeCloseTo(Math.max(bloodFading.start + bloodFading.stagger + bloodFading.duration, bloodPool.draining.start + bloodPool.draining.seconds), 9)
   })
   test('the bats burst out of the portal’s middle and fly out into the room', () => {
     for (const bat of flyingBats) {
@@ -165,14 +165,27 @@ describe('fusion effects', () => {
       expect(out).toBeGreaterThan(0.3)
     }
   })
-  test('the drops land on the floor when their landing says so, and before they dry away', () => {
-    const floor = frame.floor - frame.center[1]
-    for (const drop of bloodDrops) {
-      const {landing, speed} = bloodLanding(drop, floor)
-      const up = drop.velocity[1]
-      expect(drop.start[1] + up * landing - bloodGravity * landing * landing / 2).toBeCloseTo(floor + splatLift, 6)
-      expect(speed).toBeGreaterThan(0)
-      expect(drop.delay + landing).toBeLessThan(drying.start)
+  test('the air slows a drop down the more the finer it is, and it lands where its fall meets the floor, before the stains fade', () => {
+    expect(airDrag(0.0005)).toBeGreaterThan(airDrag(0.02))
+    const thrown = bloodDrops.filter(({kind}) => kind !== 'pool')
+    for (const floor of [-1.55, frame.floor - frame.center[1], -2.05]) {
+      for (const drop of thrown) {
+        const {landing, speed} = bloodLanding(drop, floor)
+        const drag = airDrag(drop.size)
+        const terminal = bloodGravity / drag
+        const decay = Math.exp(-drag * landing)
+        const height = drop.start[1] + (drop.velocity[1] + terminal) * (1 - decay) / drag - terminal * landing
+        expect(height).toBeCloseTo(floor + splatLift, 3)
+        expect(speed).toBeGreaterThan(0)
+        expect(speed).toBeLessThanOrEqual(Math.hypot(...drop.velocity) + terminal + 1e-9)
+        expect(drop.delay + landing).toBeLessThan(bloodFading.start)
+      }
     }
+  })
+  test('the pool fills with the blood of every beat before it is sucked back, which is done by the time the portal closes', () => {
+    const {draining, filling} = bloodPool
+    expect(bloodDrops[0].kind).toBe('pool')
+    expect(Math.max(...bloodBeats.map(({at}) => at)) + filling[1]).toBeLessThan(draining.start)
+    expect(draining.start + draining.seconds).toBeLessThanOrEqual(bloodEffect.afterglow)
   })
 })

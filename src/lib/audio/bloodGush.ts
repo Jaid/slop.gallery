@@ -1,9 +1,8 @@
-import type {BloodDrop} from '../gallery/fusion/effects/blood/flights.ts'
+import type {BloodSplat, Heartbeat} from '../gallery/fusion/effects/blood/flights.ts'
 import type {PortalFrame} from '../gallery/fusion/portalFrame.ts'
 import type {AudioOutput} from './proceduralAudio.ts'
 
 import {offsetPosition} from '../gallery/fusion/effects/base/portalOffset.ts'
-import {bloodLanding, spurts} from '../gallery/fusion/effects/blood/flights.ts'
 import EffectSound from './EffectSound.ts'
 
 /** the shrieking strings: a cluster of high violins a semitone apart, in hertz */
@@ -12,10 +11,13 @@ const shriek = [1244.51, 1318.51, 1396.91, 1479.98]
 const splatSpots = [-1, 0, 1]
 
 /**
- * The sound of blood spurting out of the portal of `frame`, from now on: a heartbeat’s thud and a wet gush on each spurt, a stab of shrieking violins on each and once more after them, sinking into a cello’s groan, and a wet splat for every drop where it lands on the floor, the bigger the louder, all in a dark, close room.
+ * The sound of blood spurting out of the portal of `frame`, from now on: a heartbeat’s thud and a wet gush on each of the `beats`, as strong as it, a stab of shrieking violins on the first two and once more after them, sinking into a cello’s groan, and a wet splat for every drop of `splats` where it lands on the floor, the bigger the louder, all in a dark, close room.
  * It cleans up after itself once it has rung out.
  */
-export default function playBloodGush(output: AudioOutput, frame: PortalFrame, drops: ReadonlyArray<BloodDrop>) {
+export default function playBloodGush(output: AudioOutput, frame: PortalFrame, {beats, splats}: {
+  beats: ReadonlyArray<Heartbeat>
+  splats: ReadonlyArray<BloodSplat>
+}) {
   const sound = new EffectSound(output, frame.center, {
     brightness: 0.35,
     decay: 0.6,
@@ -23,8 +25,7 @@ export default function playBloodGush(output: AudioOutput, frame: PortalFrame, d
     wet: 0.38,
   })
   const {now} = sound
-  for (const [index, at] of spurts.entries()) {
-    const strength = index ? 0.75 : 1
+  for (const {at, strength} of beats) {
     sound.tone(now + at, 0.32, {
       frequency: 78,
       end: 36,
@@ -52,7 +53,8 @@ export default function playBloodGush(output: AudioOutput, frame: PortalFrame, d
       attack: 0.015,
     })
   }
-  for (const [index, at] of [...spurts, spurts[1] * 2].entries()) {
+  const stabs = [beats[0].at, beats[1].at, beats[1].at * 2 - beats[0].at]
+  for (const [index, at] of stabs.entries()) {
     const last = index === 2
     for (const frequency of shriek) {
       sound.tone(now + at, last ? 1.1 : 0.34, {
@@ -71,7 +73,7 @@ export default function playBloodGush(output: AudioOutput, frame: PortalFrame, d
       })
     }
   }
-  sound.tone(now + spurts[1] * 2 + 0.1, 1.6, {
+  sound.tone(now + stabs[2] + 0.1, 1.6, {
     frequency: 116.54,
     end: 61.74,
     type: 'sawtooth',
@@ -86,19 +88,16 @@ export default function playBloodGush(output: AudioOutput, frame: PortalFrame, d
   })
   const floor = frame.floor - frame.center[1]
   const panners = splatSpots.map(along => sound.pannerAt(offsetPosition(frame, [along, floor, 1.4])))
-  for (const drop of drops) {
-    if (drop.size < 0.014) {
+  for (const {along, at, size, speed} of splats) {
+    if (size < 0.014) {
       continue
     }
-    const {landing, speed} = bloodLanding(drop, floor)
-    const travel = drop.start[0] + drop.velocity[0] * landing
-    const panner = panners[travel < -0.5 ? 0 : (travel > 0.5 ? 2 : 1)]
-    const start = now + drop.delay + landing
-    const loudness = Math.min(1, drop.size / 0.04) * Math.min(1, 0.4 + speed / 8)
-    sound.hiss(start, 0.06 + drop.size, {
+    const panner = panners[along < -0.5 ? 0 : (along > 0.5 ? 2 : 1)]
+    const loudness = Math.min(1, size / 0.04) * Math.min(1, 0.4 + speed / 8)
+    sound.hiss(now + at, 0.06 + size, {
       filter: {
         type: 'bandpass',
-        frequency: 1900 - drop.size * 18_000,
+        frequency: 1900 - size * 18_000,
         q: 1.6,
       },
       volume: 0.045 * loudness,
