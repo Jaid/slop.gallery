@@ -4,12 +4,12 @@ import type {Node} from 'three/webgpu'
 import {attribute, cameraPosition, cross, exp, float, max, mix, modelPosition, mx_noise_float, positionGeometry, select, sin, smoothstep, uv, varying, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
+import {paintColor} from '#src/lib/materials/oilPaints.ts'
 import {coverage} from '#src/lib/materials/orb/fill.ts'
 
 import {portalPoint} from '../base/billboards.ts'
 import EffectSprites, {instanceAttribute} from '../base/EffectSprites.ts'
 import {strokeDrift, strokeDrying} from './flights.ts'
-import {paintColor} from './paints.ts'
 
 type Float = Node<'float'>
 

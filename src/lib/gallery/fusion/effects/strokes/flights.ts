@@ -1,7 +1,7 @@
 import type {OilPaint} from '#src/lib/materials/oilPaints.ts'
 import type {PortalOffset} from '../base/portalOffset.ts'
 
-import {paintIndex} from './paints.ts'
+import {paintIndex} from '#src/lib/materials/oilPaints.ts'
 
 /** a stroke of oil paint that an unseen brush lays into the air around a fusion’s portal as the result flips out, curving around the portal’s middle */
 export type BrushStroke = {
