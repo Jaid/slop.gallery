@@ -3,6 +3,7 @@ import {describe, expect, test} from 'bun:test'
 import {readAudio, readAudioOverride, readAudioVolume} from '../../src/lib/audio/audioParameter.ts'
 import {readIntroNarration} from '../../src/lib/audio/intro.ts'
 import {readDevelopmentMode} from '../../src/lib/developmentMode.ts'
+import {readFade} from '../../src/lib/fade.ts'
 import {readFlying} from '../../src/lib/gallery/flyMode.ts'
 import {readAlbedo} from '../../src/lib/rendering/albedo.ts'
 import {getAntiAliasing, readAntiAliasing} from '../../src/lib/rendering/antiAliasing.ts'
@@ -128,6 +129,14 @@ describe('URL options', () => {
     }
     for (const search of ['', '?room_announcements', '?room_announcements=true', '?room_announcements=maybe']) {
       expect(readRoomAnnouncements(search)).toBe(true)
+    }
+  })
+  test('only ?fade=false or 0 cuts instead of fading', () => {
+    for (const search of ['?fade=false', '?fade=0']) {
+      expect(readFade(search)).toBe(false)
+    }
+    for (const search of ['', '?fade', '?fade=true', '?fade=1', '?fade=maybe']) {
+      expect(readFade(search)).toBe(true)
     }
   })
   test('?audio is muted unless it is true or a percentage', () => {

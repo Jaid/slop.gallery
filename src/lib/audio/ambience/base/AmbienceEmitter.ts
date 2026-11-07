@@ -38,15 +38,15 @@ export default abstract class AmbienceEmitter extends AmbienceLoop {
     this.rooms = rooms
   }
 
-  /** Hears the emitter from `listener` in `room`: disabled outside its rooms, and the farther away, the more muffled. */
-  hear(listener: Vec3, room: string) {
-    this.setListenerRoom(room)
+  /** Hears the emitter from `listener` in `room`: disabled outside its rooms, and the farther away, the more muffled. Without `fading`, both follow at once instead of gliding, like after the listener jumped somewhere else. */
+  hear(listener: Vec3, room: string, fading = true) {
+    this.setListenerRoom(room, fading)
     const cutoff = absorptionCutoff(hearingShare(this.position, listener, this.hearing))
     if (Math.max(cutoff / this.cutoff, this.cutoff / cutoff) < retuneStep) {
       return
     }
     this.cutoff = cutoff
-    this.absorption?.frequency.setTargetAtTime(cutoff, this.absorption.context.currentTime, 0.05)
+    this.absorption?.frequency.setTargetAtTime(cutoff, this.absorption.context.currentTime, fading ? 0.05 : 0)
   }
 
   /** Whether `room` is one the emitter stands in. */
@@ -74,14 +74,14 @@ export default abstract class AmbienceEmitter extends AmbienceLoop {
     return level.connect(panner).connect(this.absorption)
   }
 
-  /** Disables the emitter while the listener is outside its rooms. */
-  setListenerRoom(room: string) {
+  /** Disables the emitter while the listener is outside its rooms, fading it out and in again, or without `fading` at once. */
+  setListenerRoom(room: string, fading = true) {
     const inside = this.isInside(room)
     if (inside === this.inside) {
       return
     }
     this.inside = inside
-    this.setLevel(inside ? 1 : 0)
+    this.setLevel(inside ? 1 : 0, fading ? undefined : 0)
   }
 
   override stop(fade?: number) {

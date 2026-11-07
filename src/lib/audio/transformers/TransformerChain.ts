@@ -25,8 +25,8 @@ type Link = {
 
 /** how many transformers can take the world’s sound at once, stacked one after the other, those still ringing out included */
 const length = 6
-/** the time constant in seconds by which a link follows a new share, short enough to keep up with a mood’s eased fade frame by frame */
-const smoothing = 0.03
+/** the time constant in seconds by which a link follows a new share by default, short enough to keep up with a mood’s eased fade frame by frame */
+const linkSmoothing = 0.03
 /** how long a transformer stays built after it stopped taking any sound, in seconds: long enough for any echo to die and for a mood coming back, like a room stepped back into through its doorway, to find it still there */
 const linger = 8
 
@@ -61,8 +61,9 @@ export default class TransformerChain {
   /**
    * Lets the transformer keyed by `key` take `amount` (0–1) of the world’s sound from now on, building `transformer` on a free link first if it has none.
    * At 0, what it took rings out and it is released 8 s later unless it takes some again before. With every link taken, a new transformer replaces the one that has rung out the longest, or else stays out.
+   * The link follows the new share with `smoothing` as its time constant in seconds; 0 switches it at once.
    */
-  transform(key: object, transformer: SoundTransformer, amount: number) {
+  transform(key: object, transformer: SoundTransformer, amount: number, smoothing = linkSmoothing) {
     let link = this.links.find(candidate => candidate.hold?.key === key)
     if (!link) {
       if (amount <= 0) {

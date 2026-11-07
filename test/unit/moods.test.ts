@@ -22,18 +22,25 @@ import sandbox from '../../src/worlds/sandbox/index.ts'
 /** a loop that only records what it was told */
 class RecordingLoop {
   levels: Array<number> = []
+  /** the time constants of every start, level and stop after the first level, which precedes any start */
+  smoothings: Array<number | undefined> = []
   started = 0
   stopped = 0
-  setLevel(level: number) {
+  setLevel(level: number, smoothing?: number) {
+    if (this.levels.length > 0) {
+      this.smoothings.push(smoothing)
+    }
     this.levels.push(level)
   }
 
-  start() {
+  start(_output: unknown, smoothing?: number) {
     this.started++
+    this.smoothings.push(smoothing)
   }
 
-  stop() {
+  stop(fade?: number) {
     this.stopped++
+    this.smoothings.push(fade)
   }
 }
 const noRelease = () => {}
@@ -239,6 +246,39 @@ describe('mood mixer', () => {
     expect(mixer.moods).toEqual([])
     expect(mood.loops[0].stopped).toBe(1)
     expect(room.loops[0].stopped).toBe(1)
+  })
+  test('without fading, moods cut in and out from one frame to the next, the cast ones swapping at once, their loops and transformers along', () => {
+    const mixer = new MoodMixer({fade: false})
+    const audio = engine()
+    const room = new TestMood('room', roomMoodFade)
+    const entered = new TestMood('entered', roomMoodFade)
+    const first = new TestMood('first')
+    const second = new TestMood('second')
+    mixer.update(cast(first, room), step, audio)
+    expect(mixer.moods).toEqual([room, first])
+    expect(mixer.amountOf(room)).toBe(1)
+    expect(mixer.amountOf(first)).toBe(1)
+    expect(mixer.tintOf(new PointLight).toArray()).toEqual([0.25, 0, 0])
+    expect(first.loops[0].levels.at(-1)).toBe(1)
+    expect(share(audio, first)).toBe(1)
+    mixer.update(cast(second, entered), step, audio)
+    expect(mixer.moods).toEqual([entered, second])
+    expect(mixer.amountOf(second)).toBe(1)
+    expect(first.loops[0].stopped).toBe(1)
+    expect(room.loops[0].stopped).toBe(1)
+    expect(share(audio, first)).toBe(0)
+    expect(share(audio, room)).toBe(0)
+    expect(share(audio, entered)).toBe(1)
+    // A frame without any time passing cuts just the same.
+    mixer.update(noMood, 0, audio)
+    expect(mixer.moods).toEqual([])
+    expect(mixer.tintOf(new PointLight).equals(noTint)).toBe(true)
+    for (const loop of [room, entered, first, second].flatMap(mood => mood.loops)) {
+      expect(loop.smoothings.length).toBeGreaterThan(0)
+      expect(loop.smoothings).toEqual(loop.smoothings.map(() => 0))
+    }
+    const smoothings = audio.transformers.transform.mock.calls.map(call => (call as Array<unknown>)[3])
+    expect(smoothings).toEqual(smoothings.map(() => 0))
   })
   test('the loop and the transformer start once there is an output, follow the strength and stop with their mood', () => {
     const mixer = new MoodMixer

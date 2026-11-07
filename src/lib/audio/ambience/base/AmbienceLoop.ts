@@ -143,15 +143,15 @@ export default abstract class AmbienceLoop {
     this.graph?.level.gain.setTargetAtTime(this.gain * level, this.graph.context.currentTime, smoothing)
   }
 
-  /** Starts sounding on `output`; does nothing while already playing. */
-  start(output: AudioOutput) {
+  /** Starts sounding on `output`, rising with `smoothing` as its time constant in seconds, or at once at 0; does nothing while already playing. */
+  start(output: AudioOutput, smoothing = 0.2) {
     if (this.graph) {
       return
     }
     const {context, master} = output
     const level = new GainNode(context, {gain: this.gain * this.level})
     const bus = new GainNode(context, {gain: 0})
-    bus.gain.setTargetAtTime(1, context.currentTime, 0.2)
+    bus.gain.setTargetAtTime(1, context.currentTime, smoothing)
     bus.connect(level)
     const outlet = this.route(level, context)
     outlet.connect(master)

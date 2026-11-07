@@ -15,6 +15,10 @@ import {paintMoodGrades} from '../rendering/moodGrade.ts'
 export type MoodOutput = AudioOutput & {
   readonly transformers: TransformerChain
 }
+export type MoodMixerOptions = {
+  /** whether moods come and go at their pace; without, each shows in full or not at all from one frame to the next, its loop and its transformer cut in and out along, as `?fade=false` asks for */
+  fade?: boolean
+}
 /** the moods the world asks for */
 export type MoodTarget = {
   /** the mood cast over the world, like that of a held prop or a fusion in progress, which shows over the room’s */
@@ -61,6 +65,7 @@ const ease = (progress: number) => progress * progress * (3 - 2 * progress)
  * Blends the moods the world asks for over it, stacked: those of the listener’s room beneath the one cast over the world. Each fades in while it is asked for and out otherwise, at its own pace, while the others hold on.
  * The moods cast over the world take turns: only once the one showing is gone does the next one fade in, so two of them never mix. The moods of two rooms cross over as the listener walks from one into the other.
  * It paints the render pipeline’s gradient maps, keeps the tints of the lamps and of the fill, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
+ * Without `fade`, every mood shows in full while it is asked for and not at all otherwise, the next mood cast replacing the last one within the same frame.
  */
 export default class MoodMixer {
   /** what the fill and daylight are multiplied by now */
@@ -69,7 +74,12 @@ export default class MoodMixer {
   readonly lampTint = new Color(1, 1, 1)
   /** the mood cast over the world that shows, also while it fades out, which the next one cast waits for */
   private cast: Mood | null = null
+  private readonly fading: boolean
   private readonly showing = new Map<Mood, Showing>
+
+  constructor({fade = true}: MoodMixerOptions = {}) {
+    this.fading = fade
+  }
 
   /** the moods showing, also while they fade in or out, from the bottom of the stack to its top */
   get moods(): ReadonlyArray<Mood> {
@@ -88,7 +98,7 @@ export default class MoodMixer {
       return
     }
     for (const showing of this.showing.values()) {
-      this.release(showing, 0.3)
+      this.release(showing, this.smoothing(0.3))
     }
     this.paint()
   }
@@ -103,7 +113,7 @@ export default class MoodMixer {
     const wanted = this.wanted(target)
     for (const showing of this.showing.values()) {
       if (!wanted.has(showing.mood)) {
-        this.release(showing, 0.3)
+        this.release(showing, this.smoothing(0.3))
       }
     }
     for (const mood of wanted) {
@@ -122,8 +132,8 @@ export default class MoodMixer {
 
   /** Moves every mood `delta` seconds toward `target`, each at its own pace, sounding them on `output` once there is one. */
   update(target: MoodTarget, delta: number, output?: MoodOutput) {
-    // The next mood cast takes over once the last one is gone, or right away if the room holds on to that one anyway.
-    if (target.cast !== this.cast && (!this.cast || !this.showing.has(this.cast) || target.room.includes(this.cast))) {
+    // The next mood cast takes over once the last one is gone, or right away if the room holds on to that one anyway or nothing fades.
+    if (target.cast !== this.cast && (!this.fading || !this.cast || !this.showing.has(this.cast) || target.room.includes(this.cast))) {
       this.cast = target.cast
     }
     const wanted = this.wanted(target)
@@ -132,10 +142,14 @@ export default class MoodMixer {
     }
     for (const showing of this.showing.values()) {
       const rising = wanted.has(showing.mood)
-      const fade = showing.mood.fade ?? moodFade
-      showing.progress = clamp(showing.progress + delta / (rising ? fade.in : -fade.out), 0, 1)
+      if (this.fading) {
+        const fade = showing.mood.fade ?? moodFade
+        showing.progress = clamp(showing.progress + delta / (rising ? fade.in : -fade.out), 0, 1)
+      } else {
+        showing.progress = rising ? 1 : 0
+      }
       if (!rising && showing.progress === 0) {
-        this.release(showing)
+        this.release(showing, this.smoothing())
         continue
       }
       if (output) {
@@ -164,7 +178,7 @@ export default class MoodMixer {
     const {mood} = showing
     showing.ambience?.stop(fade)
     if (mood.transformer) {
-      showing.transformers?.transform(mood, mood.transformer, 0)
+      showing.transformers?.transform(mood, mood.transformer, 0, this.smoothing())
     }
     this.showing.delete(mood)
     if (mood === this.cast) {
@@ -186,6 +200,11 @@ export default class MoodMixer {
     return showing
   }
 
+  /** The time constant in seconds an audio change follows with: `seconds`, or the callee’s own default where left out, while moods fade, and 0, at once, otherwise. */
+  private smoothing(seconds?: number) {
+    return this.fading ? seconds : 0
+  }
+
   /** Sounds a mood showing on `output` as strongly as it shows: its loop, started the first time, and its transformer. */
   private sound(showing: Showing, output: MoodOutput) {
     const {mood} = showing
@@ -194,15 +213,15 @@ export default class MoodMixer {
     if (Ambience && !showing.ambience) {
       showing.ambience = new Ambience
       showing.ambience.setLevel(0)
-      showing.ambience.start(output)
+      showing.ambience.start(output, this.smoothing())
     }
     if (showing.ambience && amount !== showing.level) {
       showing.level = amount
-      showing.ambience.setLevel(amount, 0.05)
+      showing.ambience.setLevel(amount, this.smoothing(0.05))
     }
     if (mood.transformer) {
       showing.transformers = output.transformers
-      output.transformers.transform(mood, mood.transformer, amount)
+      output.transformers.transform(mood, mood.transformer, amount, this.smoothing())
     }
   }
 

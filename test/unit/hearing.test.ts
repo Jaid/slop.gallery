@@ -1,4 +1,4 @@
-import {expect, test} from 'bun:test'
+import {expect, spyOn, test} from 'bun:test'
 
 import Fountain from '../../src/lib/audio/ambience/Fountain.ts'
 import {absorptionCutoff, hearingShare, openCutoff} from '../../src/lib/audio/hearing.ts'
@@ -36,4 +36,13 @@ test('an emitter heard from farther away is muffled and quieter, and silent outs
   fountain.hear([far, 0, 0], 'lobby')
   fountain.hear([0, 0, 0], 'vesper')
   expect(fountain.playing).toBe(false)
+})
+test('an emitter fades out and in again as the listener leaves and enters its rooms, or cuts without fading', () => {
+  const fountain = new Fountain([0, 0, 0], ['lobby'])
+  const setLevel = spyOn(fountain, 'setLevel')
+  fountain.hear([0, 0, 0], 'vesper')
+  fountain.hear([0, 0, 0], 'lobby', false)
+  fountain.hear([0, 0, 0], 'lobby', false)
+  fountain.hear([0, 0, 0], 'vesper', false)
+  expect(setLevel.mock.calls).toEqual([[0, undefined], [1, 0], [0, 0]])
 })

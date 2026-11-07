@@ -89,6 +89,10 @@ test('a transformer is built once, takes its share of the sound and leaves the r
   const orb = transformer()
   chain.transform({}, orb.transform, 0.5)
   expect(orb.transform).toHaveBeenCalledWith(context, links[1].send, links[1].outlet)
+  // Without smoothing, as under ?fade=false, the share switches at once.
+  chain.transform(key, lobby.transform, 0, 0)
+  expect(links[0].send.gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 2, 0)
+  expect(links[0].dry.gain.setTargetAtTime).toHaveBeenLastCalledWith(1, 2, 0)
 })
 test('a transformer that stops taking any sound rings out and is released later, unless it takes some again before', () => {
   const {chain, links, scheduled} = setup()
