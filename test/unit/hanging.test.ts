@@ -110,6 +110,16 @@ const work = {
   reach: 0.08,
   width: 0.9,
 }
+/** where a work hanging at 1.6 m on a wall facing +z flies in from, in its own frame, thrown from `from` */
+const flownFrom = (from: [number, number, number]) => {
+  const run = new HangingRun({
+    ...request(),
+    from,
+    position: [0, 1.6, 0],
+    rotation: 0,
+  }, work)
+  return run.stage.from
+}
 const fakeDust = () => {
   const emitted: Array<Parameters<WallDust['emit']>[0]> = []
   return {
@@ -209,6 +219,16 @@ describe('hanging runs', () => {
     const run = new HangingRun(request(), work)
     expect(run.stage.side).toBe(1)
     expect(run.stage.from.z).toBeGreaterThan(0)
+  })
+  test('fly in along the line of sight from the player’s hands, from no farther than a throw away and never out of the wall', () => {
+    const far = flownFrom([-6, 1.4, 1.2])
+    expect(far.angleTo(new Vector3(-6, -0.2, 1.2))).toBeLessThan(1e-6)
+    expect(far.length()).toBeCloseTo(1.8, 6)
+    const near = flownFrom([0.4, 1.3, 1.1])
+    expect(near.distanceTo(new Vector3(0.4, -0.3, 1.1))).toBeLessThan(1e-6)
+    const grazing = flownFrom([-6, 1.6, 0.05])
+    expect(grazing.z).toBeCloseTo(0.3, 6)
+    expect(grazing.x).toBeCloseTo(-1.8, 3)
   })
   test('pose the frame, send the dust flying at its impact and settle at their end', () => {
     const run = new HangingRun(request(), work)

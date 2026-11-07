@@ -3,7 +3,6 @@ import type {HangingRequest} from './hangings.ts'
 import type WallDust from './WallDust.ts'
 import type {Object3D} from 'three/webgpu'
 
-import {clamp} from 'math'
 import {mulberry32} from 'math/random'
 import {Matrix4, Quaternion, Vector3} from 'three/webgpu'
 
@@ -14,6 +13,10 @@ import {wobble} from './motion.ts'
 /** the dust of the loaded world, which every hanging blows its particles into, if it is mounted */
 export const wallDust: {current: WallDust | null} = {current: null}
 
+/** how far from where it hangs a work flies in from at most, in meters */
+const throwReach = 1.8
+/** how far in front of its wall a work flies in from at least, in meters */
+const wallClearance = 0.3
 const up = new Vector3(0, 1, 0)
 const point = new Vector3
 const direction = new Vector3
@@ -50,8 +53,10 @@ export default class HangingRun {
     this.frame.compose(point.fromArray(request.position), this.frameRotation, direction.set(1, 1, 1))
     const from = new Vector3
     from.fromArray(request.from).applyMatrix4(this.frame.clone().invert())
-    // From too far or oddly placed, like through a doorway at its side, it still comes from in front of its spot.
-    from.set(clamp(from.x, -1.4, 1.4), clamp(from.y, -1.2, 1.2), clamp(from.z, 0.3, 1.8))
+    // It flies in along the line of sight from the player’s hands, from no farther than a throw away, and seen from along its wall, from far enough in front of it to turn toward the player.
+    from.z = Math.max(from.z, 0.01)
+    from.setLength(Math.min(from.length(), throwReach))
+    from.z = Math.max(from.z, wallClearance)
     const random = mulberry32.create(request.seed)
     this.stage = {
       back: frameBack,
