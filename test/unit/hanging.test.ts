@@ -10,8 +10,10 @@ import {frameImpactSounds} from '../../src/lib/audio/frameImpacts.ts'
 import hangingVoices from '../../src/lib/audio/hangingVoices.ts'
 import {frameBack} from '../../src/lib/frames/base/PortraitFrame.ts'
 import HangingRun from '../../src/lib/gallery/hanging/HangingRun.ts'
-import {requestHanging, takeHanging} from '../../src/lib/gallery/hanging/hangings.ts'
+import {requestHanging, requestJolt, takeHanging} from '../../src/lib/gallery/hanging/hangings.ts'
 import {hangingAnimation as animation} from '../../src/lib/gallery/hanging/index.ts'
+import JoltAnimation from '../../src/lib/gallery/hanging/JoltAnimation.ts'
+import {hangingNeighbors, neighborReach} from '../../src/lib/gallery/hanging/neighbors.ts'
 
 const front = 0.06
 const sizes = [[0.5, 0.5], [0.9, 1.4], [1.7, 0.95]] as const
@@ -33,9 +35,9 @@ const restingPose = (): HangingPose => ({
   quaternion: new Quaternion,
   scale: new Vector3(1, 1, 1),
 })
-const poseAt = (time: number, on: HangingStage) => {
+const poseAt = (time: number, on: HangingStage, of: JoltAnimation | typeof animation = animation) => {
   const pose = restingPose()
-  animation.pose(time, on, pose)
+  of.pose(time, on, pose)
   return pose
 }
 /** the corners of the frame’s box, posed */
@@ -51,7 +53,43 @@ const corners = (pose: HangingPose, {halfWidth, halfHeight, back}: HangingStage)
   }
   return points
 }
+const bottom = new Vector3
+/** how far the posed frame’s bottom edge moves from where it hangs at most, over `from` to `to` seconds in, and the first moment it swings back through hanging straight after it first swung out */
+const swing = (on: HangingStage, of: JoltAnimation | typeof animation, from: number, to: number) => {
+  let farthest = 0
+  let turn = Infinity
+  let sign = 0
+  for (let time = from; time <= to; time += 1 / 1000) {
+    const roll = bottom.set(0, -on.halfHeight, 0).applyQuaternion(poseAt(time, on, of).quaternion).x
+    farthest = Math.max(farthest, Math.abs(roll))
+    if (sign === 0 && Math.abs(roll) > 1e-4) {
+      sign = Math.sign(roll)
+    } else if (sign !== 0 && turn === Infinity && Math.sign(roll) === -sign) {
+      turn = time
+    }
+  }
+  return {
+    farthest,
+    turn,
+  }
+}
 const rest = new Quaternion
+/** a work hanging `along` meters to the right of the middle of a wall facing +z */
+const hung = (id: string, along: number, extra: Partial<{
+  height: number
+  hung: boolean
+  out: number
+  rotation: number
+  up: number
+  width: number
+}> = {}) => ({
+  height: extra.height ?? 1,
+  hung: extra.hung ?? true,
+  id,
+  position: [along, 1.6 + (extra.up ?? 0), extra.out ?? 0] as [number, number, number],
+  rotation: extra.rotation ?? 0,
+  width: extra.width ?? 1,
+})
 const request = () => ({
   animation,
   from: [3, 1.5, -0.5] as [number, number, number],
@@ -138,6 +176,27 @@ describe('the hanging animation', () => {
     }
   })
 })
+describe('the slap', () => {
+  test('draws the work back toward the player before it flies', () => {
+    const on = stage(0.9, 1.2, [0.4, -0.2, 1.2])
+    const drawn = Math.max(...Array.from({length: 20}, (_, index) => poseAt(index * animation.impact / 20, on).position.length()))
+    expect(drawn).toBeGreaterThan(on.from.length() * 1.05)
+  })
+  test('holds the work squashed flat against the wall for a moment before it springs back', () => {
+    const on = stage(0.9, 1.2, [0, 0, 1])
+    const squashed = poseAt(animation.impact + 0.001, on).scale.z
+    expect(squashed).toBeLessThan(0.7)
+    expect(poseAt(animation.impact + 0.04, on).scale.z).toBeCloseTo(squashed, 6)
+    expect(poseAt(animation.impact + 0.04, on).quaternion.angleTo(rest)).toBeLessThan(1e-6)
+    expect(poseAt(animation.impact + 0.08, on).scale.z).toBeGreaterThan(squashed + 0.05)
+  })
+  test('rocks big works less and slower than small ones', () => {
+    const small = swing(stage(0.4, 0.5, [0.6, 0, 1]), animation, animation.impact, animation.duration)
+    const big = swing(stage(1.8, 1.6, [0.6, 0, 1]), animation, animation.impact, animation.duration)
+    expect(big.turn).toBeGreaterThan(small.turn)
+    expect(big.farthest / 1.8).toBeLessThan(small.farthest / 0.5)
+  })
+})
 describe('hanging runs', () => {
   test('come from the player’s side in the work’s own frame', () => {
     // The work faces +x, so its right is −z, where the player stands.
@@ -153,7 +212,7 @@ describe('hanging runs', () => {
     expect(run.update(0.05, art, placard, dust)).toBe(true)
     expect(art.position.length()).toBeGreaterThan(0.1)
     expect(emitted).toHaveLength(0)
-    expect(run.update(0.08, art, placard, dust)).toBe(true)
+    expect(run.update(animation.impact - 0.05 + 0.02, art, placard, dust)).toBe(true)
     expect(emitted).toHaveLength(1)
     const [particles] = emitted
     const particle = [...particles][0]
@@ -177,7 +236,7 @@ describe('hanging runs', () => {
     const run = new HangingRun(request(), work)
     const art = new Group
     const placard = new Group
-    run.update(0.15, art, placard, null)
+    run.update(animation.impact + 0.03, art, placard, null)
     expect(art.scale.z).not.toBe(1)
     run.settle(art, placard)
     expect(art.position.toArray()).toEqual([0, 0, 0])
@@ -226,5 +285,70 @@ describe('the hanging sound', () => {
       ...options,
       variation: 0.5,
     }))
+  })
+})
+describe('jolts of neighbors', () => {
+  test('rest until the blow arrives and end at rest', () => {
+    const jolt = new JoltAnimation(0.2, 0.8)
+    const on = stage(0.9, 1.2, [1.4, 0, 0.3])
+    expect(poseAt(0.19, on, jolt).position.length()).toBe(0)
+    expect(poseAt(0.27, on, jolt).quaternion.angleTo(rest)).toBeGreaterThan(1e-3)
+    const end = poseAt(jolt.duration, on, jolt)
+    expect(end.quaternion.angleTo(rest)).toBeLessThan(2e-3)
+    expect(end.position.length()).toBeLessThan(2e-3)
+  })
+  test('shake a work right beside half as much as the slap, harder by their strength and less for big works', () => {
+    const on = stage(0.9, 1.2, [1.4, 0, 0.3])
+    const slapped = swing(on, animation, animation.impact, animation.duration).farthest
+    const jolted = swing(on, new JoltAnimation(0, 1), 0, 1).farthest
+    expect(jolted / slapped).toBeGreaterThan(0.4)
+    expect(jolted / slapped).toBeLessThan(0.6)
+    expect(swing(on, new JoltAnimation(0, 0.3), 0, 1).farthest).toBeLessThan(jolted * 0.4)
+    const big = stage(1.8, 1.6, [1.4, 0, 0.3])
+    expect(swing(big, new JoltAnimation(0, 1), 0, 1).farthest / 1.8).toBeLessThan(jolted / 1.2)
+  })
+  test('never replace an arrival still waiting for its work', () => {
+    requestHanging('waiting', [1, 2, 3], 0.5, [1, 2, 5])
+    requestJolt('waiting', [1, 2, 3], 0.5, [2, 2, 3], new JoltAnimation(0.1, 1))
+    expect(takeHanging('waiting', [1, 2, 3], 0.5)?.animation).toBe(animation)
+    requestJolt('waiting', [1, 2, 3], 0.5, [2, 2, 3], new JoltAnimation(0.1, 1))
+    expect(takeHanging('waiting', [1, 2, 3], 0.5)?.animation).toBeInstanceOf(JoltAnimation)
+  })
+})
+describe('neighbors', () => {
+  const slapped = hung('a', 0)
+  test('are found on the same wall only, the closest first', () => {
+    const found = hangingNeighbors(slapped, [
+      slapped,
+      hung('b', 1.3, {out: 0.01}),
+      hung('c', -4),
+      hung('d', 1, {out: 0.5}),
+      hung('e', 0.5, {rotation: Math.PI / 2}),
+      hung('f', 0.5, {hung: false}),
+      hung('g', 1 + neighborReach + 0.1),
+      hung('h', 0, {up: 1.5}),
+    ])
+    expect(found.map(neighbor => neighbor.work.id)).toEqual(['b', 'h', 'c'])
+  })
+  test('feel the blow fully right beside, falling off linearly between their edges to a faint jolt at reach', () => {
+    // a work of 1.2 m square, slapped onto the wall
+    const square = hung('a', 0, {
+      width: 1.2,
+      height: 1.2,
+    })
+    const found = hangingNeighbors(square, [hung('beside', 1.1), hung('middle', 1.1 + neighborReach / 2), hung('far', 1.1 + neighborReach)])
+    const [beside, middle, far] = found.map(({strength}) => strength)
+    expect(found[0].gap).toBe(0)
+    expect(beside).toBeCloseTo(1, 6)
+    expect(far).toBeGreaterThan(0.05)
+    expect(far).toBeLessThan(0.2)
+    expect(middle).toBeCloseTo((beside + far) / 2, 6)
+  })
+  test('feel the blow of a heavy work harder than of a light one', () => {
+    const [light, heavy] = [0.6, 1.6].map(size => hangingNeighbors(hung('a', 0, {
+      width: size,
+      height: size,
+    }), [hung('b', 3)])[0].strength)
+    expect(heavy).toBeGreaterThan(light * 1.3)
   })
 })

@@ -1,5 +1,6 @@
 import type {HangingPose, HangingStage} from './base/HangingAnimation.ts'
 
+import {clamp} from 'math'
 import {Euler, Quaternion, Vector3} from 'three/webgpu'
 
 /** no rotation at all, the work as it hangs; never written to */
@@ -16,6 +17,12 @@ export const wobble = (time: number, omega: number, decay: number) => Math.exp(-
 
 /** A swing at `omega` radians per second that dies away at `decay` per second, starting at its peak. */
 export const ringing = (time: number, omega: number, decay: number) => Math.exp(-decay * time) * Math.cos(omega * time)
+
+/** How heavy a frame of `halfWidth` × `halfHeight` is against one of 1.2 m square, by its area, from 0.35 to 3. */
+export const heft = ({halfHeight, halfWidth}: {
+  halfHeight: number
+  halfWidth: number
+}) => clamp(4 * halfWidth * halfHeight / 1.44, 0.35, 3)
 
 /** A uniformly random value between `from` and `to`. */
 export const between = (random: () => number, from: number, to: number) => from + random() * (to - from)

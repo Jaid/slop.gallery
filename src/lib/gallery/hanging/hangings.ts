@@ -26,15 +26,22 @@ export function holdPoint(pose: Pick<typeof cameraPose, 'direction' | 'position'
   return [x + dx * 0.9, y + dy * 0.9 - 0.22, z + dz * 0.9]
 }
 
-/** Lets the work `id`, just hung at `position` with the yaw `rotation`, arrive there flying in from `from`, by default the player’s hands. */
-export function requestHanging(id: string, position: Vec3, rotation: number, from = holdPoint()) {
+/** Lets the work `id`, just hung at `position` with the yaw `rotation`, arrive there flying in from `from`, by default the player’s hands, by `animation`, by default the slap. */
+export function requestHanging(id: string, position: Vec3, rotation: number, from = holdPoint(), animation: HangingAnimation = hangingAnimation) {
   requests.set(id, {
-    animation: hangingAnimation,
+    animation,
     from,
     position,
     rotation,
     seed: Math.floor(Math.random() * 2 ** 32),
   })
+}
+
+/** Lets the work `id`, hanging at `position` with the yaw `rotation`, be jolted by `animation` from a blow at `from`, unless an arrival of its own waits for it already, which the jolt mustn’t replace. */
+export function requestJolt(id: string, position: Vec3, rotation: number, from: Vec3, animation: HangingAnimation) {
+  if (!requests.has(id)) {
+    requestHanging(id, position, rotation, from, animation)
+  }
 }
 
 /** Takes the arrival waiting for the work `id`, once the work, hung at `position` with the yaw `rotation`, hangs where the arrival asked for. Until then, as when the store’s update hasn’t reached the work yet, it keeps waiting. */
