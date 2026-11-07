@@ -51,7 +51,7 @@ function carving(q: Vec2): Float {
   return min(min(eye, nose), max(grin, min(upper, lower).negate()))
 }
 
-/** The Halloween Orb’s frame: a jack-o’-lantern, its rind swelling in lobes round the work, a grinning face carved on every corner and lit by a guttering candle inside. */
+/** One of the Halloween Orb’s frames: a jack-o’-lantern, its rind swelling in lobes round the work, a grinning face carved on every corner and lit by a guttering candle inside. */
 export default class HalloweenLanternFrame extends PortraitFrame {
   override readonly description = 'Carved out of the biggest pumpkin of the patch: lobes of waxy orange rind swelling round the work between deep creases, and a grinning jack-o’-lantern face cut on every corner, glowing with a guttering candle inside.'
   override readonly front = profile.front

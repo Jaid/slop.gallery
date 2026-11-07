@@ -35,7 +35,7 @@ export default class HalloweenOrb extends PromptOrb {
   readonly change = 'add casual Halloween decoration that makes it'
   readonly color = '#ff7b1c'
   override readonly effect = batsEffect
-  readonly frame = 'halloween-lantern'
+  readonly frame = ['halloween-lantern', 'halloween-ossuary'] as const
   readonly id = 'halloween'
   readonly mood = halloweenMood
   readonly photo = photo
