@@ -7,6 +7,14 @@ export const placementReach = 10
 /** distance between a wall plane and the center of an artwork hanging on it */
 export const hangingOffset = 0.22
 
+/** how close, in meters, the space a work takes up on its wall, placard and breathing space included, may come to the wall’s ends, its foot, its top and its openings and reservations */
+export const hangingMargins = {
+  side: 0.24,
+  bottom: 0.48,
+  top: 0.55,
+  cutout: 0.14,
+} as const
+
 /** Reasons why an artwork cannot hang at a spot. */
 export const placementIssues = {
   unsticky: 'unsticky',
@@ -157,10 +165,15 @@ export function wallOffset(targetWall: Pick<Wall, 'center' | 'curveRadius' | 'ro
   return radius - Math.sign(radius) * Math.hypot(along, depth - radius)
 }
 
+/** Whether the stretch of a wall within `halfWidth` of `u` along it, from the world heights `bottom` to `top`, comes closer than {@link hangingMargins} to one of its openings or reservations, taken as the rectangle round it. */
+export function nearCutout(targetWall: Wall, cutout: WallOpening, u: number, halfWidth: number, bottom: number, top: number) {
+  return Math.abs(u - cutout.u) < halfWidth + cutout.width / 2 + hangingMargins.cutout && bottom < targetWall.center[1] + cutout.height + hangingMargins.cutout && top > targetWall.center[1] + (cutout.bottom ?? 0) - hangingMargins.cutout
+}
+
 /** Why an artwork of this size, centered at `position`, would cover an opening or a reservation of its wall, or an empty string if it covers neither. */
 export function obstructionIssue(targetWall: Wall, position: Vec3, width: number, height: number, labelAbove = false) {
   const {u, halfWidth, bottom, top} = footprint(targetWall, position, width, height, labelAbove)
-  const overlaps = (hole: WallOpening) => Math.abs(u - hole.u) < halfWidth + hole.width / 2 + 0.14 && bottom < targetWall.center[1] + hole.height + 0.14 && top > targetWall.center[1] + (hole.bottom ?? 0) - 0.14
+  const overlaps = (cutout: WallOpening) => nearCutout(targetWall, cutout, u, halfWidth, bottom, top)
   if (targetWall.holes?.some(overlaps)) {
     return placementIssues.doorway
   }
@@ -177,7 +190,7 @@ export function placementIssue(targetWall: Wall, position: Vec3, width: number, 
     return placementIssues.unsticky
   }
   const {u, halfWidth, bottom, top} = footprint(targetWall, position, width, height, labelAbove)
-  if (Math.abs(u) + halfWidth > targetWall.width / 2 - 0.24 || bottom < targetWall.center[1] + 0.48 || top > targetWall.center[1] + targetWall.height - 0.55) {
+  if (Math.abs(u) + halfWidth > targetWall.width / 2 - hangingMargins.side || bottom < targetWall.center[1] + hangingMargins.bottom || top > targetWall.center[1] + targetWall.height - hangingMargins.top) {
     return placementIssues.frame
   }
   const obstruction = obstructionIssue(targetWall, position, width, height, labelAbove)

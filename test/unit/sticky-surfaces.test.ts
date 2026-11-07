@@ -2,12 +2,13 @@ import type {Wall} from '../../src/lib/placement/wallGeometry.ts'
 
 import {describe, expect, test} from 'bun:test'
 
-import {Triangle, Vector3} from 'three/webgpu'
+import {BoxGeometry, Group, Mesh, Scene, Triangle, Vector3} from 'three/webgpu'
 
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {readShowSticky} from '../../src/lib/placement/showSticky.ts'
-import stickySurfaceGeometry from '../../src/lib/placement/stickySurfaceGeometry.ts'
-import {wallOffset} from '../../src/lib/placement/wallGeometry.ts'
+import {hangingMargins, wallOffset, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import WallObstructionScan, {frameClearance, frameDepth} from '../../src/lib/placement/WallObstructionScan.ts'
+import {patchGeometry, reservationGeometry, stickySurfaceGeometry} from '../../src/lib/placement/wallOverlayGeometry.ts'
 
 const wall = (overrides: Partial<Wall> = {}): Wall => ({
   id: 'test-north',
@@ -19,8 +20,8 @@ const wall = (overrides: Partial<Wall> = {}): Wall => ({
   ...overrides,
 })
 /** every triangle of the geometry, with its area and its normal, as precise as its 32-bit positions */
-const triangles = (walls: ReadonlyArray<Wall>) => {
-  const geometry = stickySurfaceGeometry(walls)
+const triangles = (walls: ReadonlyArray<Wall>, build = stickySurfaceGeometry) => {
+  const geometry = build(walls)
   const position = geometry.getAttribute('position')
   const index = geometry.index!
   return Array.from({length: index.count / 3}, (_, face) => {
@@ -36,7 +37,28 @@ const triangles = (walls: ReadonlyArray<Wall>) => {
     }
   })
 }
-const area = (walls: ReadonlyArray<Wall>) => triangles(walls).reduce((sum, {area: part}) => sum + part, 0)
+const area = (walls: ReadonlyArray<Wall>, build = stickySurfaceGeometry) => triangles(walls, build).reduce((sum, {area: part}) => sum + part, 0)
+/** A box `depth` meters deep standing out of the wall from its plaster, `width` × `height` around `u` and `y` over its foot. */
+const relief = (target: Wall, u: number, y: number, width: number, height: number, depth: number) => {
+  const box = new Mesh(new BoxGeometry(width, height, depth))
+  box.position.set(...wallPosition(target, u, target.center[1] + y, wallFace + depth / 2))
+  box.rotation.y = target.rotation
+  return box
+}
+/** the patches one full scan of the walls in the scene finds, by wall id */
+const scan = (walls: ReadonlyArray<Wall>, scene: Scene) => {
+  const wallScan = new WallObstructionScan(walls, scene)
+  for (const _ of wallScan.pass()) {
+    // Scans to the end.
+  }
+  return wallScan
+}
+const patchArea = (patches: ReadonlyArray<{
+  bottom: number
+  from: number
+  to: number
+  top: number
+}> = []) => patches.reduce((sum, {from, to, bottom, top}) => sum + (to - from) * (top - bottom), 0)
 describe('?show_sticky', () => {
   test('is enabled by a bare or true flag only', () => {
     expect(readShowSticky('?show_sticky')).toBe(true)
@@ -123,5 +145,93 @@ describe('?show_sticky', () => {
         expect(wallOffset(target, corner.toArray())).toBeCloseTo(offset, 5)
       }
     }
+  })
+  test('covers exactly the declared reservations, on any wall, cut off at the wall’s top', () => {
+    expect(triangles([wall()], reservationGeometry)).toHaveLength(0)
+    expect(area([wall({reservations: [{
+      u: 1,
+      width: 0.2,
+      bottom: 1,
+      height: 1.3,
+      profile: 'rectangle',
+    }]})], reservationGeometry)).toBeCloseTo(0.06, 5)
+    expect(area([wall({
+      sticky: false,
+      reservations: [{
+        u: 0,
+        width: 1.2,
+        height: 2.4,
+        profile: 'arch',
+      }, {
+        u: -1.5,
+        width: 0.4,
+        bottom: 2,
+        height: 4,
+        profile: 'rectangle',
+      }],
+    })], reservationGeometry)).toBeCloseTo(1.2 * 1.8 + Math.PI * 0.36 / 2 + 0.4, 2)
+  })
+  test('splits what is drawn toward the camera into cells of at most 20 cm', () => {
+    const target = wall({rotation: 0})
+    const geometry = patchGeometry([[target, [{
+      from: -1,
+      to: 1,
+      bottom: 0.5,
+      top: 2.5,
+    }]]])
+    expect(geometry.index!.count / 6).toBe(10)
+    expect(area([target], () => geometry)).toBeCloseTo(4, 5)
+    const points = geometry.getAttribute('wallPoint')
+    expect([points.getX(0), points.getY(0)]).toEqual([-1, 0.5])
+  })
+  test('finds whatever stands out of a sticky wall in the way of hung frames, but not its own architecture, flat relief, hung works or what stands clear', () => {
+    const target = wall()
+    const scene = new Scene
+    // A rail standing out 4.5 cm along the wall, like the Salon’s, and a dado panel of 1.2 cm under it, which a frame’s back clears.
+    scene.add(relief(target, 0, 0.85, 4, 0.07, 0.045), relief(target, 0, 0.65, 4, 0.3, 0.012))
+    // A lamp standing well clear of the wall, in front of where frames hang.
+    const lamp = new Mesh(new BoxGeometry(0.3, 0.3, 0.3))
+    lamp.position.set(...wallPosition(target, 1, target.center[1] + 2, frameDepth + 0.3))
+    // The wall’s own trim and a hung work, which belong there.
+    const trim = relief(target, 0, 1.5, 4, 0.1, 0.1)
+    trim.name = `trim-${target.id}`
+    const work = new Group
+    work.userData.pickup = true
+    work.add(relief(target, -1, 1.8, 0.6, 0.6, 0.15))
+    scene.add(lamp, trim, work)
+    const {patches} = scan([target, wall({
+      id: 'test-glass',
+      sticky: false,
+    })], scene)
+    expect(patches.keys().toArray()).toEqual([target.id])
+    const found = patches.get(target.id)!
+    for (const patch of found) {
+      expect(patch.bottom).toBeGreaterThanOrEqual(0.8)
+      expect(patch.top).toBeLessThanOrEqual(0.9 + 1e-9)
+      expect(Math.abs(patch.from)).toBeLessThanOrEqual(target.width / 2 - hangingMargins.side + 1e-9)
+    }
+    // One 5 cm row of rays meets the 7 cm rail in every column.
+    expect(found).toHaveLength(Math.floor((target.width - hangingMargins.side * 2) / 0.05))
+    expect(patchArea(found)).toBeCloseTo((target.width - hangingMargins.side * 2) * 0.05, 2)
+  })
+  test('leaves out the margins of openings and reservations', () => {
+    const target = wall({reservations: [{
+      u: 0,
+      width: 1,
+      bottom: 0.5,
+      height: 1.5,
+      profile: 'rectangle',
+    }]})
+    const scene = new Scene
+    scene.add(relief(target, 0, 1, 4, 1, 0.3))
+    const found = scan([target], scene).patches.get(target.id)!
+    expect(found.length).toBeGreaterThan(0)
+    for (const patch of found) {
+      expect(Math.abs((patch.from + patch.to) / 2)).toBeGreaterThan(0.5 + hangingMargins.cutout)
+    }
+  })
+  test('looks between a hung frame’s back and front', () => {
+    expect(frameClearance).toBeCloseTo(wallFace + 0.02, 9)
+    expect(frameDepth).toBeGreaterThan(frameClearance)
   })
 })
