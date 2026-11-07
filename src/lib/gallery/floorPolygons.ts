@@ -106,9 +106,26 @@ export function cutFloorOpening(polygon: FloorPolygon, opening?: FloorRectangle)
   return [clipPolygon(polygon, [0, 1], north), clipPolygon(polygon, [0, -1], -south), clipPolygon(between, [1, 0], west), clipPolygon(between, [-1, 0], -east)].filter(piece => piece.length)
 }
 
-/** The corners of a level slab over the polygon between two heights, all a convex hull around it needs. */
-export function slabCorners(polygon: FloorPolygon, bottom: number, top: number) {
-  return new Float32Array(polygon.flatMap(([x, z]) => [x, bottom, z, x, top, z]))
+/** The convex polygon in convex pieces of at most four corners, fanned out from the corner whose diagonals, the seams between the pieces, are shortest. */
+export function quadrilaterals(polygon: FloorPolygon): Array<FloorPolygon> {
+  const fan = (start: number) => {
+    const corners = [...polygon.slice(start), ...polygon.slice(0, start)]
+    const pieces: Array<FloorPolygon> = []
+    for (let i = 1; i < corners.length - 1; i += 2) {
+      pieces.push([corners[0], ...corners.slice(i, i + 3)])
+    }
+    return pieces
+  }
+  const seams = (pieces: Array<FloorPolygon>) => pieces.slice(1).reduce((sum, [[ax, az], [bx, bz]]) => sum + Math.hypot(bx - ax, bz - az), 0)
+  return polygon.map((_, start) => fan(start)).reduce((best, pieces) => (seams(pieces) < seams(best) - tolerance ? pieces : best))
+}
+
+/**
+ * The corners of convex hulls that together make a level slab over the polygon between two heights, one for each of its {@link quadrilaterals}.
+ * Rapier builds the contacts of boxes and hulls against a hull’s face out of at most four of its corners, so a box sank 8.5 cm into one hull round the Lodge’s six-cornered floor.
+ */
+export function slabHulls(polygon: FloorPolygon, bottom: number, top: number) {
+  return quadrilaterals(polygon).map(piece => new Float32Array(piece.flatMap(([x, z]) => [x, bottom, z, x, top, z])))
 }
 
 /**

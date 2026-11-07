@@ -11,7 +11,7 @@ import {corniceBands} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionApproach, bastionDoorway, bastionMouth, bastionTransition} from '../../src/lib/gallery/bastion.ts'
 import {insideBastion} from '../../src/lib/gallery/bastionNetwork.ts'
 import {corridorEndZ, corridorLanding, corridorPassage, corridorRails, corridorRunner, corridorStairs, insideCorridor, lodgeThreshold, lodgeThresholdSaddle} from '../../src/lib/gallery/corridor.ts'
-import {insidePolygon, polygonCentroid, rectanglePolygon, slabCorners} from '../../src/lib/gallery/floorPolygons.ts'
+import {insidePolygon, polygonCentroid, rectanglePolygon, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import lodge, {insideLodgeWindow, lodgeBay, lodgeBayFloor, lodgeOutline, lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import lodgeInterior, {lodgeFurnitureColliders} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import LodgeWindowGeometry from '../../src/lib/gallery/LodgeWindowGeometry.ts'
@@ -80,8 +80,9 @@ function createWorld(fps: number) {
   const box = (position: Vec3, size: Vec3) => world.createCollider(RAPIER.ColliderDesc.cuboid(size[0] / 2, size[1] / 2, size[2] / 2).setTranslation(...position))
   for (const passage of routePassages) {
     for (const floor of passage.floors) {
-      world.createCollider(RAPIER.ColliderDesc.convexHull(slabCorners(floor, passage.floorY - 0.24, passage.floorY))!)
-      world.createCollider(RAPIER.ColliderDesc.convexHull(slabCorners(floor, passage.floorY + passage.height, passage.floorY + passage.height + 0.24))!)
+      for (const corners of [...slabHulls(floor, passage.floorY - 0.24, passage.floorY), ...slabHulls(floor, passage.floorY + passage.height, passage.floorY + passage.height + 0.24)]) {
+        world.createCollider(RAPIER.ColliderDesc.convexHull(corners)!)
+      }
     }
   }
   for (const block of corridorStairs.blocks) {
@@ -93,9 +94,9 @@ function createWorld(fps: number) {
     box(beam.position, beam.size).setRotation(beamRotation.setFromEuler(new Euler(...beam.rotation)))
   }
   // The Lodge’s floor and ceiling slabs over its plan with the bay, and both saddles, as hulls like the room mounts them.
-  const slab = (bottom: number, top: number) => world.createCollider(RAPIER.ColliderDesc.convexHull(new Float32Array(lodgeOutline.flatMap(([x, z]) => [x, bottom, z, x, top, z])))!)
-  slab(lodge.floorY - 0.3, lodge.floorY)
-  slab(lodge.floorY + lodge.height, lodge.floorY + lodge.height + 0.24)
+  for (const corners of [...slabHulls(lodgeOutline, lodge.floorY - 0.3, lodge.floorY), ...slabHulls(lodgeOutline, lodge.floorY + lodge.height, lodge.floorY + lodge.height + 0.24)]) {
+    world.createCollider(RAPIER.ColliderDesc.convexHull(corners)!)
+  }
   for (const saddle of saddles) {
     world.createCollider(RAPIER.ColliderDesc.convexHull(saddle.getAttribute('position').array as Float32Array)!)
   }
@@ -347,6 +348,44 @@ describe('Lodge and Corridor route', () => {
       }
     })
   }
+  // Portraits and the hatchet sank 8.5 cm into a single hull round the whole six-cornered plan, which only held orbs up.
+  test('boxes dropped anywhere in the Lodge, bay included, come to rest on its planks', () => {
+    const world = new RAPIER.World({
+      x: 0,
+      y: -9.81,
+      z: 0,
+    })
+    // Fiber’s integration parameters
+    world.integrationParameters.normalizedAllowedLinearError = 0.001
+    world.integrationParameters.normalizedPredictionDistance = 0.002
+    for (const corners of slabHulls(lodgeOutline, lodge.floorY - 0.3, lodge.floorY)) {
+      world.createCollider(RAPIER.ColliderDesc.convexHull(corners)!)
+    }
+    const halfHeight = 0.05
+    const boxes: Array<RAPIER.RigidBody> = []
+    try {
+      for (let x = lodge.center[0] - 4.5; x <= lodge.center[0] + 4.5; x += 0.75) {
+        for (let z = lodge.center[1] - 7.5; z <= lodge.center[1] + 3; z += 0.75) {
+          // Clear of the bay’s walls and the hearth
+          if (!insidePolygon(lodgeOutline, x - 0.3, z - 0.3) || !insidePolygon(lodgeOutline, x + 0.3, z - 0.3)) {
+            continue
+          }
+          const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(x, lodge.floorY + 0.4, z))
+          world.createCollider(RAPIER.ColliderDesc.cuboid(0.2, halfHeight, 0.15), body)
+          boxes.push(body)
+        }
+      }
+      for (let i = 0; i < 120; i++) {
+        world.step()
+      }
+      expect(boxes.length).toBeGreaterThan(100)
+      for (const body of boxes) {
+        expect(body.translation().y).toBeCloseTo(lodge.floorY + halfHeight, 2)
+      }
+    } finally {
+      world.free()
+    }
+  })
   test('the Lodge furniture leaves the walkway between both doorways clear', () => {
     // The loop walks along z = tunnelZ from the tunnel doorway to the middle of the room and north from there to the corridor doorway in the bay; a 0.3 m capsule needs room on both sides.
     const walkway = lodge.tunnelZ - lodge.center[1]

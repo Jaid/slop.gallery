@@ -9,6 +9,7 @@ import LodgeFireGuard from '#component/LodgeFireGuard'
 import LodgeFurnishings from '#component/LodgeFurnishings'
 import LodgeHatchetHook from '#component/LodgeHatchetHook'
 import Box from '#src/components/Scene/primitives.tsx'
+import {slabHulls} from '#src/lib/gallery/floorPolygons.ts'
 import lodge, {lodgeOutline} from '#src/lib/gallery/lodge.ts'
 import lodgeInterior from '#src/lib/gallery/lodgeInterior/layout.ts'
 
@@ -29,10 +30,8 @@ const ceilingSlab = {
   depth: 0.24,
   bevelEnabled: false,
 }
-/** The corners of a slab over the plan between two heights, all its collider needs, since the plan is convex. */
-const slabCorners = (bottom: number, top: number) => new Float32Array(plan.flatMap(([x, z]) => [x, bottom, z, x, top, z]))
-const floorCorners = slabCorners(-floorSlab.depth, 0)
-const ceilingCorners = slabCorners(lodge.height, lodge.height + ceilingSlab.depth)
+const floorHulls = slabHulls(plan, -floorSlab.depth, 0)
+const ceilingHulls = slabHulls(plan, lodge.height, lodge.height + ceilingSlab.depth)
 
 /**
  * The Lodge: log walls with chinking and a half-octagon bay to the north, a wide-plank oak floor, a smoke-darkened board ceiling on hewn beams, hips fanning into the bay from the chandelier’s boss and a fieldstone fireplace, furnished around the hearth.
@@ -47,8 +46,7 @@ export default function LodgeRoom({materials}: {materials: LodgeMaterials}) {
   const chimneyHeight = lodge.height - lintelTop
   return <group name='lodge-room' position={[lodge.center[0], lodge.floorY, lodge.center[1]]}>
     <RigidBody colliders={false} type='fixed'>
-      <ConvexHullCollider args={[floorCorners]} />
-      <ConvexHullCollider args={[ceilingCorners]} />
+      {[...floorHulls, ...ceilingHulls].map((corners, i) => <ConvexHullCollider key={i} args={[corners]} />)}
       <mesh castShadow material={materials.floor} name='lodge-floor' position={[0, -floorSlab.depth, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}><extrudeGeometry args={[planShape, floorSlab]} /></mesh>
       <mesh castShadow material={materials.ceiling} name='lodge-ceiling' position={[0, lodge.height, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}><extrudeGeometry args={[planShape, ceilingSlab]} /></mesh>
     </RigidBody>

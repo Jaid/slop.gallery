@@ -13,7 +13,7 @@ import {bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNe
 import {insideCisternPlan} from '../../src/lib/gallery/cistern/cistern.ts'
 import {climbApproach, climbArch, climbCrossfall, climbCulvert, climbDoorway, climbDrain, climbHairpin, climbLanterns, climbMouth, climbRun} from '../../src/lib/gallery/climb.ts'
 import {easedRampGradient} from '../../src/lib/gallery/easedRamp.ts'
-import {insidePolygon, slabCorners} from '../../src/lib/gallery/floorPolygons.ts'
+import {insidePolygon, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import forge, {forgeVestibule} from '../../src/lib/gallery/forge.ts'
 import {forgeRoundVestibule, vestibuleArches} from '../../src/lib/gallery/forgeVestibule.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
@@ -445,7 +445,9 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
           world.createCollider(RAPIER.ColliderDesc.trimesh(vertices, indices, RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES).setContactSkin(weldedSurfaceSkin))
         }
         for (const floor of climbMouth.floors.flatMap(piece => climbMouthHollow.cut(piece))) {
-          world.createCollider(RAPIER.ColliderDesc.convexHull(slabCorners(floor, climbMouth.floorY - 0.24, climbMouth.floorY))!)
+          for (const corners of slabHulls(floor, climbMouth.floorY - 0.24, climbMouth.floorY)) {
+            world.createCollider(RAPIER.ColliderDesc.convexHull(corners)!)
+          }
         }
         world.createCollider(RAPIER.ColliderDesc.cuboid(forge.size[0] / 2, 0.12, forge.size[1] / 2).setTranslation(forge.center[0], -0.12, forge.center[1]))
         addOculusRailings(world)

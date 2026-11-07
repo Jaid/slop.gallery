@@ -7,7 +7,7 @@ import {Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/web
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {bastionMouth} from '../../src/lib/gallery/bastion.ts'
 import {climbMouth} from '../../src/lib/gallery/climb.ts'
-import {slabCorners} from '../../src/lib/gallery/floorPolygons.ts'
+import {slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import lowerGallery, {oculusRamps} from '../../src/lib/gallery/lowerGallery.ts'
 import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import tower, {towerRamp as ramp, towerArch, towerBridge, towerBridgeGradient, towerBridgeLift, towerBridges, towerDeck, towerFloorHeight, towerPlatformOutline, towerRampGradient, towerRampHalfWidth, towerRampHeight} from '../../src/lib/gallery/oculusTower.ts'
@@ -394,7 +394,9 @@ describe('cylindrical Oculus platform', () => {
           }
           for (const mouth of [bastionMouth, climbMouth]) {
             for (const floor of mouth.floors) {
-              world.createCollider(RAPIER.ColliderDesc.convexHull(slabCorners(floor, mouth.floorY - 0.24, mouth.floorY))!)
+              for (const corners of slabHulls(floor, mouth.floorY - 0.24, mouth.floorY)) {
+                world.createCollider(RAPIER.ColliderDesc.convexHull(corners)!)
+              }
             }
           }
           world.timestep = 1 / fps

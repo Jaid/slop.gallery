@@ -11,7 +11,7 @@ import {corniceBands} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionApproach, bastionCurve, bastionDoorway, bastionMouth, bastionOrigin, bastionPassages, bastionTransition} from '../../src/lib/gallery/bastion.ts'
 import {bastionLink} from '../../src/lib/gallery/bastionNetwork.ts'
 import {easedRampGradient} from '../../src/lib/gallery/easedRamp.ts'
-import {slabCorners} from '../../src/lib/gallery/floorPolygons.ts'
+import {slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {oculusPlatform} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse, {apseArcs, insideApse} from '../../src/lib/gallery/oculusApse.ts'
@@ -399,7 +399,9 @@ describe('the Bastion’s route round the Oculus', () => {
         }
         for (const passage of [bastionMouth, bastionApproach]) {
           for (const floor of passage.floors) {
-            world.createCollider(RAPIER.ColliderDesc.convexHull(slabCorners(floor, passage.floorY - 0.24, passage.floorY))!)
+            for (const corners of slabHulls(floor, passage.floorY - 0.24, passage.floorY)) {
+              world.createCollider(RAPIER.ColliderDesc.convexHull(corners)!)
+            }
           }
         }
         addOculusRailings(world)

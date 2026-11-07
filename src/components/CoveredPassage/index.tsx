@@ -16,7 +16,7 @@ import PendantLamps from '#component/PendantLamps'
 import TimberFrame from '#component/TimberFrame'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {climbPassageLanterns} from '#src/lib/gallery/climb.ts'
-import {slabCorners} from '#src/lib/gallery/floorPolygons.ts'
+import {slabHulls} from '#src/lib/gallery/floorPolygons.ts'
 import TimberGeometry from '#src/lib/gallery/passages/TimberGeometry.ts'
 import VaultGeometry from '#src/lib/gallery/passages/VaultGeometry.ts'
 import {corridorLightSpacing, passagePendantMounts} from '#src/lib/gallery/pendants/mounts.ts'
@@ -62,8 +62,8 @@ export default function CoveredPassage({passage, sole = false, material, paving:
   const crown = passage.floorY + passage.height
   return <group name={passage.name}>
     <RigidBody colliders={false} type='fixed'>
-      {floors.map((floor, i) => <ConvexHullCollider key={i} args={[slabCorners(floor, passage.floorY - slabDepth, passage.floorY)]} />)}
-      {passage.floors.map((floor, i) => <ConvexHullCollider key={i} args={[slabCorners(floor, crown, crown + slabDepth)]} />)}
+      {floors.flatMap(floor => slabHulls(floor, passage.floorY - slabDepth, passage.floorY)).map((corners, i) => <ConvexHullCollider key={i} args={[corners]} />)}
+      {passage.floors.flatMap(floor => slabHulls(floor, crown, crown + slabDepth)).map((corners, i) => <ConvexHullCollider key={i} args={[corners]} />)}
       {ceilings.map((ceiling, i) => <FloorSlab key={i} bottom={crown} depth={slabDepth} material={material} polygon={ceiling} />)}
       {paving.map((floor, i) => <FloorSlab key={i} bottom={passage.floorY - slabDepth} depth={slabDepth} material={material} polygon={floor} />)}
       <Branch if={hollow}><SunkenPaving hollow={hollow!} material={material} /></Branch>

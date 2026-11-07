@@ -5,6 +5,7 @@ import {describe, expect, test} from 'bun:test'
 import RAPIER from '@dimforge/rapier3d-compat'
 import {BoxGeometry, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
 
+import {polygonArea, quadrilaterals, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import {floorGlassThickness, roomFloorPlan, subtractFloorOpening} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import walls, {insideGallery, rooms, roomVisit} from './fixtures/gallery.ts'
@@ -151,6 +152,61 @@ describe('rectangular floor openings', () => {
         mesh.geometry.dispose()
       }
       material.dispose()
+      world.free()
+    }
+  })
+})
+/** a regular polygon with 3 m to its corners */
+const regular = (corners: number) => Array.from({length: corners}, (_, i) => [3 * Math.cos(i / corners * 2 * Math.PI), 3 * Math.sin(i / corners * 2 * Math.PI)] as const)
+describe('convex floor slabs', () => {
+  test('split into convex pieces of at most four corners that cover the polygon', () => {
+    for (let corners = 3; corners <= 9; corners++) {
+      const polygon = regular(corners)
+      const pieces = quadrilaterals(polygon)
+      expect(pieces).toHaveLength(Math.ceil((corners - 2) / 2))
+      for (const piece of pieces) {
+        expect(piece.length).toBeGreaterThanOrEqual(3)
+        expect(piece.length).toBeLessThanOrEqual(4)
+        expect(piece.every(corner => polygon.includes(corner))).toBe(true)
+      }
+      expect(pieces.reduce((sum, piece) => sum + polygonArea(piece), 0)).toBeCloseTo(polygonArea(polygon))
+    }
+  })
+  test('cut along their shortest diagonals', () => {
+    // A square with a trapezoid on its north side splits along the square’s north edge, not across the square.
+    const pieces = quadrilaterals([[-5, 5], [-5, -5], [-2, -8], [2, -8], [5, -5], [5, 5]])
+    const [trapezoid, square] = pieces.map(piece => polygonArea(piece)).toSorted((a, b) => a - b)
+    expect(trapezoid).toBeCloseTo(21)
+    expect(square).toBeCloseTo(100)
+  })
+  // Rapier builds a box’s contacts with a hull’s face out of at most four of its corners, so boxes sank into slabs with more.
+  test('hold boxes up on every part of their surface', () => {
+    const world = new RAPIER.World({
+      x: 0,
+      y: -9.81,
+      z: 0,
+    })
+    world.integrationParameters.normalizedAllowedLinearError = 0.001
+    world.integrationParameters.normalizedPredictionDistance = 0.002
+    for (const corners of slabHulls(regular(8), -0.3, 0)) {
+      world.createCollider(RAPIER.ColliderDesc.convexHull(corners)!)
+    }
+    const boxes: Array<RAPIER.RigidBody> = []
+    for (let x = -2; x <= 2; x += 0.5) {
+      for (let z = -2; z <= 2; z += 0.5) {
+        const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(x, 0.3, z))
+        world.createCollider(RAPIER.ColliderDesc.cuboid(0.1, 0.05, 0.1), body)
+        boxes.push(body)
+      }
+    }
+    try {
+      for (let i = 0; i < 120; i++) {
+        world.step()
+      }
+      for (const body of boxes) {
+        expect(body.translation().y).toBeCloseTo(0.05, 2)
+      }
+    } finally {
       world.free()
     }
   })

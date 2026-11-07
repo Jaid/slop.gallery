@@ -10,7 +10,7 @@ import {bastionLinkGate, bastionNetwork, climbMouthHollow} from '../../../src/li
 import CisternGeometry, {cisternWindowGeometry} from '../../../src/lib/gallery/cistern/CisternGeometry.ts'
 import InflowGeometry from '../../../src/lib/gallery/cistern/InflowGeometry.ts'
 import {climbMouth} from '../../../src/lib/gallery/climb.ts'
-import {slabCorners} from '../../../src/lib/gallery/floorPolygons.ts'
+import {slabHulls} from '../../../src/lib/gallery/floorPolygons.ts'
 import forge from '../../../src/lib/gallery/forge.ts'
 import {forgeRoundVestibule, vestibuleArches} from '../../../src/lib/gallery/forgeVestibule.ts'
 import gateGeometry from '../../../src/lib/gallery/gateGeometry.ts'
@@ -49,9 +49,9 @@ export function bastionColliders() {
       const hollow = passage === climbMouth ? climbMouthHollow : undefined
       const crown = passage.floorY + passage.height
       for (const floor of passage.floors) {
-        colliders.hulls.push(slabCorners(floor, crown, crown + 0.24))
+        colliders.hulls.push(...slabHulls(floor, crown, crown + 0.24))
         for (const piece of hollow ? hollow.cut(floor) : [floor]) {
-          colliders.hulls.push(slabCorners(piece, passage.floorY - 0.24, passage.floorY))
+          colliders.hulls.push(...slabHulls(piece, passage.floorY - 0.24, passage.floorY))
         }
       }
       if (hollow) {
@@ -98,7 +98,7 @@ export function forgeAndBastionColliders() {
   }
   const [halfWidth, halfDepth] = [forge.size[0] / 2, forge.size[1] / 2]
   const [x, z] = forge.center
-  colliders.hulls.push(slabCorners([[x - halfWidth, z - halfDepth], [x + halfWidth, z - halfDepth], [x + halfWidth, z + halfDepth], [x - halfWidth, z + halfDepth]], -0.24, 0))
+  colliders.hulls.push(...slabHulls([[x - halfWidth, z - halfDepth], [x + halfWidth, z - halfDepth], [x + halfWidth, z + halfDepth], [x - halfWidth, z + halfDepth]], -0.24, 0))
   const cistern = new CisternGeometry
   colliders.surface(cistern.floor, true)
   colliders.shapes.push({
