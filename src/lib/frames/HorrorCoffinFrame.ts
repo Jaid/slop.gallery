@@ -139,8 +139,8 @@ function clawing(surface: FrameSurface, plane: Vec2, index: Float, footprint: Fl
   }
 }
 
-/** One of the Halloween Orb’s frames: the inside of a coffin’s lid, its satin lining quilted round the work and its bare boards clawed all over by someone buried alive, the scratches still tearing open in fits. */
-export default class HalloweenCoffinFrame extends PortraitFrame {
+/** One of the Horror Orb’s frames: the inside of a coffin’s lid, its satin lining quilted round the work and its bare boards clawed all over by someone buried alive, the scratches still tearing open in fits. */
+export default class HorrorCoffinFrame extends PortraitFrame {
   override readonly description = 'The inside of a coffin’s lid: quilted ivory satin buttoned round the work, yellowed and stained, then bare pine boards held by tarnished brass brackets and screws, the satin torn to shreds and the boards scored all over by fingernails, three or four scratches side by side, a broken nail left in the end of some, and every few seconds a fit of clawing tears new scratches open, pale and bloody, as if someone were still in there.'
   override readonly front = boards.z + bracket.depth + boss.height
   override readonly imageDepth = imageDepth
