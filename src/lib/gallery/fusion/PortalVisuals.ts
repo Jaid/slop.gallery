@@ -4,6 +4,7 @@ import type {PortalPalette} from './PortalCore.ts'
 import {Color, Group} from 'three/webgpu'
 
 import GatheringMotes from './GatheringMotes.ts'
+import PrismRipple from './impact/PrismRipple.ts'
 import OrbitTrail from './OrbitTrail.ts'
 import PortalCore from './PortalCore.ts'
 import PortalSparks from './PortalSparks.ts'
@@ -47,6 +48,8 @@ export function paletteOf(color?: string): PortalPalette {
 export default class PortalVisuals {
   readonly core = new PortalCore
   readonly motes = new GatheringMotes
+  /** the ripple the strike that opened it sends out from where it struck the work */
+  readonly ripple = new PrismRipple
   readonly root = new Group
   readonly sparks = new PortalSparks
   readonly tethers = [new Tether(5.1), new Tether(17.3)]
@@ -57,7 +60,7 @@ export default class PortalVisuals {
   constructor() {
     this.root.name = 'fusion'
     this.middle.add(this.warp, this.core, this.sparks, this.motes)
-    this.root.add(this.middle, ...this.trails, ...this.tethers)
+    this.root.add(this.middle, ...this.trails, ...this.tethers, this.ripple)
   }
 
   dispose() {
@@ -65,6 +68,7 @@ export default class PortalVisuals {
     this.sparks.dispose()
     this.warp.dispose()
     this.motes.dispose()
+    this.ripple.dispose()
     for (const part of [...this.tethers, ...this.trails]) {
       part.dispose()
     }
@@ -73,6 +77,11 @@ export default class PortalVisuals {
   /** Colors every part. */
   paint({core, rim, swirl}: PortalPalette) {
     this.core.uniforms.core.value.copy(core)
+    this.ripple.paint({
+      core,
+      rim,
+      swirl,
+    })
     for (const {uniforms} of [this.core, this.sparks, this.motes, ...this.tethers, ...this.trails]) {
       uniforms.rim.value.copy(rim)
       uniforms.swirl.value.copy(swirl)

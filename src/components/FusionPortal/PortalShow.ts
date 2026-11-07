@@ -3,20 +3,24 @@ import type {EffectShow} from '#src/lib/gallery/fusion/effects/index.ts'
 import type {PortalEnvelope} from '#src/lib/gallery/fusion/envelope.ts'
 import type Fusion from '#src/lib/gallery/fusion/Fusion.ts'
 import type {PortalPalette} from '#src/lib/gallery/fusion/PortalCore.ts'
+import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {Camera, Texture} from 'three/webgpu'
 
 import {clamp} from 'math'
 import {Color, Group, Mesh, PointLight, Vector3} from 'three/webgpu'
 
+import playArcCrack from '#src/lib/audio/arcCrack.ts'
 import FusionSound from '#src/lib/audio/FusionSound.ts'
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {portraitFrame} from '#src/lib/frames/index.ts'
 import {useGallery} from '#src/lib/gallery.ts'
 import {climaxMoment, confluence, impact, reboundTrail, reboundWarp} from '#src/lib/gallery/fusion/climax.ts'
 import {portalEnvelope} from '#src/lib/gallery/fusion/envelope.ts'
+import {impactStrength, orbRippleRadius} from '#src/lib/gallery/fusion/impact/strike.ts'
 import {decorateIntro, introTether, introTrail} from '#src/lib/gallery/fusion/intro.ts'
 import {introOrbitRate, orbitAngle} from '#src/lib/gallery/fusion/orbit.ts'
 import PortalVisuals, {emberPalette, paletteOf} from '#src/lib/gallery/fusion/PortalVisuals.ts'
+import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import {resetImpact, screenImpact} from '#src/lib/rendering/screenImpact.ts'
 import {holdArtworkTexture} from '#src/lib/useArtworkTexture.ts'
 
@@ -71,6 +75,12 @@ export default class PortalShow {
   private readonly satellites: Satellites
   private sound?: FusionSound
   private stage: Stage = 'brewing'
+  /** the strike that opened it: where, how hard and whether its crack still has to sound */
+  private readonly struck?: {
+    point: Vec3
+    silent: boolean
+    strength: number
+  }
   private turn = -1
   private readonly visuals = new PortalVisuals
 
@@ -92,6 +102,19 @@ export default class PortalShow {
     this.root.name = `fusion-${fusion.id}`
     this.effects = fusion.spec.effects.map(effect => effect.show(fusion))
     this.root.add(this.visuals.root, this.light, ...this.effects.map(effect => effect.root))
+    const {impact: opening, partner, work} = fusion.spec
+    if (opening) {
+      const strength = impactStrength(opening.speed)
+      const group = portraitObjects.get(work.id)?.group
+      if (group) {
+        this.visuals.ripple.place(group, portraitFrame(work.frame).front, opening.center, strength, partner.kind === 'item' && partner.orb ? orbRippleRadius : undefined)
+      }
+      this.struck = {
+        point: opening.center,
+        strength,
+        silent: true,
+      }
+    }
   }
 
   dispose() {
@@ -192,6 +215,7 @@ export default class PortalShow {
     this.rebound(moment)
     this.impact(moment, elapsed, camera)
     this.light.intensity = envelope.light + (lightBoost.factor - 1) * Math.min(envelope.light, lightBoost.upTo)
+    this.strike(elapsed)
     this.light.color.copy(this.paint.swirl).lerp(this.paint.rim, envelope.flash / 2)
     if (!this.sound && this.stage === 'brewing') {
       this.sound = this.listen()
@@ -383,5 +407,22 @@ export default class PortalShow {
       core.uniforms.aspect.value = texture.image.width / Math.max(1, texture.image.height)
     }
     core.uniforms.clarity.value = image.clarity
+  }
+
+  /** The strike that opened the fusion, `elapsed` seconds after it: its ripple, and its crack once, as soon as it can sound. */
+  private strike(elapsed: number) {
+    const {struck, visuals} = this
+    visuals.ripple.update(struck ? elapsed : 10)
+    if (!struck?.silent) {
+      return
+    }
+    const engine = SoundEngine.existing()
+    if (engine && useGallery.getState().sound) {
+      struck.silent = false
+      // Too late, it would sound apart from the strike.
+      if (elapsed < 0.15) {
+        playArcCrack(engine.world, struck.point, struck.strength)
+      }
+    }
   }
 }
