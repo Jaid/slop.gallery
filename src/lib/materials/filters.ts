@@ -6,6 +6,8 @@ type Float = Node<'float'>
 
 /** Pixel-filtered coverage of the region where the signed distance `d` (meters) is negative. */
 export const inside = (d: Float) => clamp(float(0.5).sub(d.div(d.fwidth().max(0.00001))), 0, 1)
+/** Coverage of the region where `d` (meters) is negative, filtered over `width` meters, the footprint of a pixel, for distances that jump between neighboring pixels, like those to features picked per cell, whose own derivatives would smear a line along every cell edge. */
+export const insideBy = (d: Float, width: Float) => clamp(float(0.5).sub(d.div(width.max(0.00001))), 0, 1)
 /** Filtered coverage of a band of half-width `halfWidth` around the zero set of `d`; bands thinner than a pixel fade to their average instead of crawling. */
 export const line = (d: Float, halfWidth: number) => inside(d.abs().sub(halfWidth)).mul(float(halfWidth * 2).div(d.fwidth().max(0.00001)).min(1))
 /** 1 while features of `size` meters span several pixels of the footprint, fading to 0 before they could alias. */

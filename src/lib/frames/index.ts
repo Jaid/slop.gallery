@@ -34,6 +34,8 @@ import MoonfallOrbitFrame from './MoonfallOrbitFrame.ts'
 import MoonfallRegolithFrame from './MoonfallRegolithFrame.ts'
 import OculusAcrylicFrame from './OculusAcrylicFrame.ts'
 import OculusFloatFrame from './OculusFloatFrame.ts'
+import PaintCanvasFrame from './PaintCanvasFrame.ts'
+import PaintMarbledFrame from './PaintMarbledFrame.ts'
 import SalonBarbizonFrame from './SalonBarbizonFrame.ts'
 import SalonImpressionistFrame from './SalonImpressionistFrame.ts'
 import SalonWhistlerFrame from './SalonWhistlerFrame.ts'
@@ -95,6 +97,8 @@ export const frames = {
   'spook-rift': new SpookRiftFrame,
   'spook-abyss': new SpookAbyssFrame,
   'spook-seance': new SpookSeanceFrame,
+  'paint-marbled': new PaintMarbledFrame,
+  'paint-canvas': new PaintCanvasFrame,
 } as const satisfies Record<PortraitFrameId, PortraitFrame>
 
 const forcedFrameId = readFrame()
