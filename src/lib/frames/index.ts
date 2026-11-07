@@ -18,6 +18,7 @@ import ForgeMeanderFrame from './ForgeMeanderFrame.ts'
 import {readFrame} from './frameParameter.ts'
 import HalloweenLanternFrame from './HalloweenLanternFrame.ts'
 import HorrorBleedingFrame from './HorrorBleedingFrame.ts'
+import HorrorButcherFrame from './HorrorButcherFrame.ts'
 import HorrorFleshFrame from './HorrorFleshFrame.ts'
 import LobbyLouisFrame from './LobbyLouisFrame.ts'
 import LobbyTravertineFrame from './LobbyTravertineFrame.ts'
@@ -81,6 +82,7 @@ export const frames = {
   'halloween-lantern': new HalloweenLanternFrame,
   'horror-flesh': new HorrorFleshFrame,
   'horror-bleeding': new HorrorBleedingFrame,
+  'horror-butcher': new HorrorButcherFrame,
   'spook-maelstrom': new SpookMaelstromFrame,
   'spook-rift': new SpookRiftFrame,
   'spook-abyss': new SpookAbyssFrame,

@@ -36,7 +36,7 @@ export default class HorrorOrb extends PromptOrb {
   readonly change = 'provide traits that make it'
   readonly color = '#a8060f'
   override readonly effect = bloodEffect
-  readonly frame = ['horror-flesh', 'horror-bleeding'] as const
+  readonly frame = ['horror-flesh', 'horror-bleeding', 'horror-butcher'] as const
   readonly id = 'horror'
   readonly mood = horrorMood
   readonly photo = photo
