@@ -7,7 +7,8 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import {Box3, Euler, Quaternion, Vector3} from 'three/webgpu'
 
 import {banquet, banquetTable} from '../../src/lib/gallery/banquet.ts'
-import {curios, hatchet, helmet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
+import {curios, hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
+import forge, {forgeTable, forgeTableCenter} from '../../src/lib/gallery/forge.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
@@ -32,15 +33,15 @@ const signedVolume = (geometry: BufferGeometry) => {
 const sizeOf = (geometry: BufferGeometry) => (new Box3).setFromBufferAttribute(geometry.getAttribute('position') as never).getSize(new Vector3)
 describe('the curios', () => {
   test('each is a prop of its own, lying in its room when a game begins', () => {
-    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet'])
+    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set'])
     for (const curio of curios) {
       expect(slopGallery.roomAt(curio.position)?.id).toBe(curio.room)
     }
-    expect([pumpkin.room, hatchet.room, helmet.room]).toEqual(['banquet', 'lodge', 'bastion'])
-    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic'])
+    expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge'])
+    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic'])
   })
   for (const curio of curios) {
-    test(`the ${curio.id}’s meshes face out, carry what their materials read and fit its reach`, () => {
+    test(`the ${curio.id.replaceAll('-', ' ')}’s meshes face out, carry what their materials read and fit its reach`, () => {
       const model = curio.createModel()
       try {
         for (const {geometry, material} of model.parts) {
@@ -69,7 +70,7 @@ describe('the curios', () => {
       }
     })
   }
-  test('all three curios keep within 16 384 triangles each, their fine relief left to their materials', () => {
+  test('every curio keeps within 16 384 triangles, its fine relief left to its materials', () => {
     for (const curio of curios) {
       const model = curio.createModel()
       expect(model.parts.reduce((sum, {geometry}) => sum + geometry.index!.count / 3, 0)).toBeLessThanOrEqual(16_384)
@@ -92,6 +93,51 @@ describe('the curios', () => {
     expect(axe.parts[1].geometry.hasAttribute('woodGrain')).toBe(true)
     expect(sizeOf(axe.parts[0].geometry).y).toBeGreaterThan(0.24)
     axe.dispose()
+  })
+  test('the painting set is a case two hands wide standing open, its lid leaning back past upright, with its paint on the palette in the lid and everything else in the box', () => {
+    const model = paintingSet.createModel()
+    try {
+      expect(model.parts.map(({name}) => name)).toEqual(['painting-set-wood', 'painting-set-palette', 'painting-set-finish', 'painting-set-metal', 'painting-set-paint'])
+      const [wood, board, finish, metal, paint] = model.parts.map(({geometry}) => (new Box3).setFromBufferAttribute(geometry.getAttribute('position') as never))
+      expect(wood.min.y).toBeCloseTo(0, 6)
+      expect(wood.max.x - wood.min.x).toBeCloseTo(0.4, 3)
+      // The lid stands higher than the box is deep and leans back behind it.
+      expect(wood.max.y).toBeGreaterThan(0.3)
+      expect(wood.min.z).toBeLessThan(-0.2)
+      // The tubes, bottles, brushes and knife lie inside the box’s walls, on its bottom, but for the tipped bottle leaning out over the left wall’s top.
+      expect(finish.min.y).toBeGreaterThan(0.0079)
+      expect(finish.min.x).toBeLessThan(-0.19)
+      expect(finish.min.x).toBeGreaterThan(-0.2)
+      expect(finish.max.x).toBeLessThan(0.19)
+      expect(Math.max(Math.abs(finish.min.z), finish.max.z)).toBeLessThan(0.13)
+      expect(finish.max.y).toBeGreaterThan(0.075)
+      expect(finish.max.y).toBeLessThan(0.13)
+      expect(metal.min.y).toBeGreaterThan(0)
+      // The palette fits inside the open lid’s rim, and its paint sits on it, above the box’s rim and in front of the lid’s back.
+      expect(board.max.x - board.min.x).toBeLessThan(0.38)
+      expect(board.min.y).toBeGreaterThan(0.075)
+      expect(board.max.y).toBeLessThan(wood.max.y)
+      expect(paint.min.y).toBeGreaterThan(0.075)
+      expect(paint.max.y).toBeLessThan(wood.max.y)
+      // The finish and the paint take their colors from their vertices, and the finish shows the bottles’ liquid up to its level.
+      const [, , finishPart, , paintPart] = model.parts
+      for (const {geometry} of [finishPart, paintPart]) {
+        expect(geometry.getAttribute('color').count).toBe(geometry.getAttribute('position').count)
+      }
+      const levels = finishPart.geometry.getAttribute('fillLevel')
+      expect(levels.count).toBe(finishPart.geometry.getAttribute('position').count)
+      const filled = [...new Set(levels.array)].filter(level => level < 1).toSorted((a, b) => a - b)
+      // One level for either bottle: the lying one’s within its depth, the tipped one’s higher
+      expect(filled).toHaveLength(2)
+      expect(filled[0]).toBeGreaterThan(0.008)
+      expect(filled[0]).toBeLessThan(0.035)
+      expect(filled[1]).toBeGreaterThan(0.05)
+      expect(filled[1]).toBeLessThan(finish.max.y)
+      expect(model.parts[0].geometry.hasAttribute('woodGrain')).toBe(true)
+      expect(model.parts[1].geometry.hasAttribute('woodGrain')).toBe(true)
+    } finally {
+      model.dispose()
+    }
   })
 })
 /** Drops the curio where it lies when a game begins into the world, its body as `Curio` builds it, lets it settle for four seconds, and returns where it went, which way its own up then points and whether it has fallen asleep. */
@@ -162,6 +208,31 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
       expect(hatchet.position[1] - headBounds.max.y).toBeGreaterThan(lodge.floorY + 0.7)
     } finally {
       model.dispose()
+    }
+  })
+  test('the painting set stands open on the Forge’s painter’s table', () => {
+    const world = new RAPIER.World({
+      x: 0,
+      y: -9.81,
+      z: 0,
+    })
+    world.timestep = 1 / 60
+    try {
+      const [tableX, tableZ] = forgeTableCenter
+      world.createCollider(RAPIER.ColliderDesc.cuboid(forge.size[0] / 2, 0.12, forge.size[1] / 2).setTranslation(forge.center[0], -0.12, forge.center[1]))
+      for (const {center: [x, y, z], size: [width, height, depth]} of plankTableColliders(forgeTable, 'forge-table')) {
+        world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(tableX + x, y, tableZ + z))
+      }
+      const {asleep, facing, moved, up, y} = settle(paintingSet, world)
+      expect(asleep).toBe(true)
+      expect(moved).toBeLessThan(0.03)
+      expect(y).toBeGreaterThan(forgeTable.height - 0.01)
+      expect(y).toBeLessThan(forgeTable.height + 0.01)
+      expect(up.y).toBeGreaterThan(0.99)
+      // Its front looks out into the room, away from the wall behind the table.
+      expect(facing.x).toBeGreaterThan(0.9)
+    } finally {
+      world.free()
     }
   })
   test('the helmet stands on its gorget in the Bastion’s blind branch beside the Lodge', () => {

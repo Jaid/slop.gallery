@@ -16,7 +16,7 @@ export default function Props() {
     <GrabbableProp id='prop-ring' orbit={{radius: 0.24}} position={[eastPlinth.position[0], plinthTop(eastPlinth) + 0.06, eastPlinth.position[2]]} rotation={[Math.PI / 2, 0, 0]} title='One ring, to keep things simple' type='dynamic'>
       <mesh castShadow material={gold} receiveShadow><torusGeometry args={[0.18, 0.06, 12, 32]} /></mesh>
     </GrabbableProp>
-    {/* The pumpkin on the Banquet’s table, the hatchet in the Lodge and the helmet in the Bastion, which steer the flavor the Forge’s alchemy machine gives a Transparent Orb */}
+    {/* The pumpkin on the Banquet’s table, the hatchet in the Lodge and the helmet in the Bastion, which steer the flavor the Forge’s alchemy machine gives a Transparent Orb, and the painting set on the Forge’s painter’s table */}
     {curios.map(curio => <Curio key={curio.id} curio={curio} />)}
   </>
 }

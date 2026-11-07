@@ -1,3 +1,5 @@
+import {wallFace} from './architectureDimensions.ts'
+import {plankTable} from './plankTable.ts'
 import salon, {salonCeiling} from './salon.ts'
 
 /**
@@ -33,6 +35,23 @@ const forge = {
   size: readonly [number, number]
 }
 const northZ = forge.center[1] - forge.size[1] / 2
+const westX = forge.center[0] - forge.size[0] / 2
+
+/** The painter’s table against the middle of the west wall, which the painting set lies on: a plain one of three planks on four legs, running along the wall. */
+export const forgeTable = plankTable({
+  length: 1.8,
+  width: 0.8,
+  height: 0.78,
+  top: 0.04,
+  boards: 3,
+  gap: 0.004,
+  overhang: 0.04,
+  apron: [0.1, 0.024],
+  leg: 0.065,
+  pairs: 2,
+})
+/** where the middle of the table stands in plan, in the world’s frame: its back a hand’s width from the west wall’s face */
+export const forgeTableCenter = [westX + wallFace + 0.05 + forgeTable.width / 2, forge.center[1]] as const
 
 /** The round rooflight in the middle of the ceiling, relative to the room’s center. */
 export const forgeRooflight = {
