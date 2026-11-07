@@ -13,23 +13,22 @@ const box = (size: readonly [number, number, number], position: readonly [number
   return geometry
 }
 
-/** A deep stone-lined side window from the Lodge to the Bastion’s blind branch. */
+/** A deep timber-lined side window from the Lodge to the Bastion’s blind branch. */
 export default class LodgeEastWindowGeometry {
   readonly frame: BufferGeometry
   readonly glass: BoxGeometry
   readonly lining: BufferGeometry
 
   constructor() {
-    const {x, z, width, bottom, top, glassThickness} = lodgeEastWindow
+    const {x, z, width, bottom, top, glassThickness, border, sill} = lodgeEastWindow
     const height = top - bottom
     const middleY = (bottom + top) / 2
     const tunnelX = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
     const depth = tunnelX - x
     const middleX = (x + tunnelX) / 2
-    const border = 0.09
-    // The stone reveal wraps the opening into the Lodge's wall, with a projecting sill.
+    // The reveal runs from the Lodge wall’s center line on to the passage’s face, its sill, head and jambs reaching past the opening: the Lodge’s wall hides them, and the passage’s stone is cut round them, so they frame the window flush there instead of sharing the planes of the stone’s own cut faces.
     this.lining = mergeParts([
-      box([depth, 0.16, width + border * 2], [middleX, bottom - 0.08, z]),
+      box([depth, sill, width + border * 2], [middleX, bottom - sill / 2, z]),
       box([depth, border, width + border * 2], [middleX, top + border / 2, z]),
       ...[-1, 1].map(side => box([depth, height, border], [middleX, middleY, z + side * (width + border) / 2])),
     ])

@@ -78,6 +78,10 @@ export const lodgeEastWindow = {
   bottom: lodgeWindow.bottom,
   top: lodgeWindow.top,
   glassThickness: lodgeWindow.glassThickness,
+  /** how far its reveal’s head and jambs reach past the opening */
+  border: 0.09,
+  /** how far its reveal’s sill reaches under the opening */
+  sill: 0.16,
 } as const
 
 export const lodgeWindowCutout: PassageCutout = {

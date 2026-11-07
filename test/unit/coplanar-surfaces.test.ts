@@ -8,12 +8,15 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/web
 import {createArchitectureGeometry, wallFace, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
 import {defaultBaseboardHeight} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionMouth} from '../../src/lib/gallery/bastion.ts'
+import {lodgeSpur, lodgeSpurWidth, lodgeSpurX} from '../../src/lib/gallery/bastionNetwork.ts'
 import miterCorners from '../../src/lib/gallery/cornerMiters.ts'
 import corridor, {corridorLanding, corridorPassage} from '../../src/lib/gallery/corridor.ts'
 import {insidePolygon, polygonArea} from '../../src/lib/gallery/floorPolygons.ts'
-import lodge from '../../src/lib/gallery/lodge.ts'
+import lodge, {lodgeEastWindow} from '../../src/lib/gallery/lodge.ts'
+import LodgeEastWindowGeometry from '../../src/lib/gallery/LodgeEastWindowGeometry.ts'
 import UpholsteredSeatGeometry from '../../src/lib/gallery/lodgeInterior/UpholsteredSeatGeometry.ts'
 import Passage from '../../src/lib/gallery/passages/Passage.ts'
+import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
 import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
 import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -287,6 +290,28 @@ describe('passage elbows', () => {
       }
     }
   })
+})
+test('the reveal of the Lodge’s east window shares no plane with the Bastion’s stone it runs through', () => {
+  const side = lodgeSpur.walls.find(wall => wall.holes?.some(hole => hole.name === 'lodge_window'))!
+  const vault = new RouteVaultGeometry(lodgeSpur)
+  const window = new LodgeEastWindowGeometry
+  disposables.push(vault, window)
+  const meshes = [...wallMeshes(side), new Mesh(vault.shell, material), new Mesh(window.lining, material)]
+  const {z, width, bottom, top, border} = lodgeEastWindow
+  const face = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
+  const middleY = (bottom + top) / 2
+  const origin = new Vector3(lodgeSpurX, middleY, z)
+  // Straight at the reveal’s jamb on the passage’s face, then from the passage’s middle at its jambs, sill and head within the stone’s depth, the head also where the vault’s shell takes over from the wall.
+  const probes: Array<readonly [from: Vector3, target: readonly [number, number, number]]> = [
+    [new Vector3(lodgeSpurX, middleY, z - width / 2 - border / 2), [face - 0.01, middleY, z - width / 2 - border / 2]],
+    ...[-1, 1].map(edge => [origin, [face - 0.05, middleY, z + edge * width / 2]] as const),
+    [origin, [face - 0.05, bottom, z]],
+    ...[0.05, 0.2].map(depth => [origin, [face - depth, top, z]] as const),
+  ]
+  for (const [from, target] of probes) {
+    const direction = new Vector3(...target)
+    expect(nearestHits(meshes, from, direction.sub(from))).toHaveLength(1)
+  }
 })
 describe('Lodge furniture', () => {
   for (const seats of [1, 3]) {

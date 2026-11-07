@@ -118,13 +118,14 @@ const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, 
 }, {length: lodgeSpurStartZ - spurEndZ - 2}])
 export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, lodgeSpurWidth, {
   fixPavingEdges: false,
+  // Cut round the window’s timber reveal, which runs on through the stone and frames it flush with the passage’s face.
   openings: [{
     name: 'lodge_window',
     along: lodgeSpurStartZ - lodgeEastWindow.z,
     side: -1,
-    width: lodgeEastWindow.width,
-    bottom: lodgeEastWindow.bottom - lodge.floorY,
-    height: lodgeEastWindow.top - lodge.floorY,
+    width: lodgeEastWindow.width + lodgeEastWindow.border * 2,
+    bottom: lodgeEastWindow.bottom - lodgeEastWindow.sill - lodge.floorY,
+    height: lodgeEastWindow.top + lodgeEastWindow.border - lodge.floorY,
     profile: 'rectangle',
     casing: false,
   }],
