@@ -65,6 +65,7 @@ export default class Moonfall extends Room {
         }),
       ],
       frame: ['moonfall-meteorite', 'moonfall-orbit', 'moonfall-regolith'],
+      portraitArea: 60_000,
       cameras,
       spawns,
       ambience: ambienceEmitters,

@@ -18,10 +18,10 @@ import slopGallery from '../../src/worlds/gallery/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
 
 const entries = Object.entries(frames)
-/** every size a work can come in: each slot ratio at each slot area, and imported images at both of the crop’s limits and square */
+/** every size a work can come in: each slot ratio at each slot area, and imported images at both of the crop’s limits and square at each slot area, which rooms take their portrait areas from */
 const sizes = [
   ...Object.keys(portraitRatios).flatMap(ratio => slotAreas.map(area => slotFrame(ratio as PortraitRatio, area))),
-  ...[[2, 1], [1, 2], [1, 1]].map(([width, height]) => imageSize(width, height)),
+  ...slotAreas.flatMap(area => [[2, 1], [1, 2], [1, 1]].map(([width, height]) => imageSize(width, height, area))),
 ]
 describe('frames', () => {
   test('every id has a frame and the default comes first', () => {

@@ -6,8 +6,10 @@ import {imageSize} from '../../src/lib/gallery/ImageImporter.ts'
 import {maximumPortraits} from '../../src/lib/gallery/imagePolicy.ts'
 import portraitLabel, {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
+import {defaultPortraitArea, slotAreas} from '../../src/lib/placement/portraitSlots.ts'
 import {placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
+import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls, {galleryPlacement, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
@@ -183,11 +185,11 @@ describe('wall geometry', () => {
   })
 })
 describe('image dimensions', () => {
-  test('keeps landscape, portrait and square aspect ratios at a frame area of 30 000 cm²', () => {
+  test('keeps landscape, portrait and square aspect ratios at a frame area of 15 000 cm²', () => {
     for (const [width, height] of [[400, 200], [200, 400], [400, 400]]) {
       const size = imageSize(width, height)
       expect(size.width / size.height).toBeCloseTo(width / height, 9)
-      expect(size.width * size.height).toBeCloseTo(3, 9)
+      expect(size.width * size.height).toBeCloseTo(1.5, 9)
     }
   })
   test('frames an image at a given area', () => {
@@ -200,6 +202,30 @@ describe('image dimensions', () => {
       expect(() => imageSize(dimensions[0], dimensions[1])).toThrow()
     })
   }
+})
+describe('import areas', () => {
+  test('rooms set their own portrait areas, the rest 15 000 cm²', () => {
+    expect(Object.fromEntries(slopGallery.rooms.map(room => [room.id, room.portraitArea]))).toMatchObject({
+      lobby: 30_000,
+      lodge: 7500,
+      moonfall: 60_000,
+      oculus: 60_000,
+      salon: defaultPortraitArea,
+      sienna: defaultPortraitArea,
+    })
+  })
+  test('every portrait area is a slot area', () => {
+    for (const room of slopGallery.rooms) {
+      expect(slotAreas).toContain(room.portraitArea as typeof slotAreas[number])
+    }
+  })
+  test('a hung work takes the area of the room owning its wall, a dropped one that of the player’s room', () => {
+    const lodgeWall = walls.find(wall => wall.room === 'lodge')!
+    expect(slopGallery.portraitArea(lodgeWall.id, 'lobby')).toBe(7500)
+    expect(slopGallery.portraitArea(undefined, 'lobby')).toBe(30_000)
+    expect(slopGallery.portraitArea('nowhere', 'oculus')).toBe(60_000)
+    expect(slopGallery.portraitArea(undefined, 'nowhere')).toBe(defaultPortraitArea)
+  })
 })
 describe('collection changes', () => {
   test('a dropped work falls off its wall and the held work stays in hand', () => {

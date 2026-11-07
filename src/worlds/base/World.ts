@@ -14,6 +14,7 @@ import type {Node} from 'three/webgpu'
 import Geofences from 'geofency'
 
 import miterCorners from '#src/lib/gallery/cornerMiters.ts'
+import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
 
 import PlacedRoom from './PlacedRoom.ts'
 
@@ -122,6 +123,12 @@ export default abstract class World<Kind extends Room = Room> {
   /** How opaque the drawing of a room is on the map while the player is in the room with the id `current`: faint for every room and a little stronger for the player’s own. */
   mapOpacity(room: PlacedRoom<Kind>, current: string) {
     return room.id === current ? 0.25 : 0.1
+  }
+
+  /** The frame area in cm² of a work imported onto the wall with the id `wallId`, that of the room owning the wall, or, dropped instead, that of the player’s room `room`; {@link defaultPortraitArea} for a room the world doesn’t know. */
+  portraitArea(wallId: string | undefined, room: string) {
+    const owner = wallId === undefined ? room : this.placement.wall(wallId)?.room ?? room
+    return this.roomById(owner)?.portraitArea ?? defaultPortraitArea
   }
 
   /** Every portrait slot of the world in world meters, room by room. */

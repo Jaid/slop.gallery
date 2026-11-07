@@ -8,6 +8,8 @@ import type {Vec3} from 'math'
 
 import {Box3} from 'three/webgpu'
 
+import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
+
 import RoomMap from '../lib/RoomMap.ts'
 
 /** what the ground under the player’s feet is made of, which their footsteps sound like */
@@ -74,6 +76,8 @@ export type RoomOptions = {
   map?: string
   /** the moods that hold while the listener is in the room, beneath any mood cast over the world, like a `RoomMood` of its acoustics, a `reverberation` of what it is built of; left out, the world sounds dry there */
   moods?: ReadonlyArray<Mood>
+  /** the frame area in cm² of works imported onto the room’s walls or dropped into it by a player inside, at which they keep their own aspect; {@link defaultPortraitArea} if left out */
+  portraitArea?: number
   /**
    * the id of the skybox behind the world while the player is in the room, like `sky`, which the world resolves to one of its own, maybe by its weather
    *
@@ -153,6 +157,8 @@ export default abstract class Room {
   readonly map: RoomMap | undefined
   /** the moods that hold while the listener is in the room */
   readonly moods: ReadonlyArray<Mood>
+  /** the frame area in cm² of works imported onto the room’s walls or dropped into it by a player inside */
+  readonly portraitArea: number
   /** the width along x and the depth along z of a room around a rectangular floor plan, centered on its origin */
   readonly size?: FloorSize
   /** the id of the skybox behind the world while the player is inside, `null` for none or undefined to keep the one that showed before */
@@ -168,10 +174,11 @@ export default abstract class Room {
   readonly volumetricSun: number
   readonly walls: ReadonlyMap<string, RoomWall>
 
-  constructor({title, moods = [], lamps = {}, ambience = {}, cameras = {}, frame, map, upperMap, slots = {}, spawns = {}, walls = {}, skybox, sunlit = true, volumetricSun = 1}: RoomOptions) {
+  constructor({title, moods = [], lamps = {}, ambience = {}, cameras = {}, frame, map, upperMap, portraitArea = defaultPortraitArea, slots = {}, spawns = {}, walls = {}, skybox, sunlit = true, volumetricSun = 1}: RoomOptions) {
     this.title = title
     this.moods = moods
     this.frame = frame
+    this.portraitArea = portraitArea
     this.map = map === undefined ? undefined : new RoomMap(map)
     this.upperMap = upperMap && {
       ...upperMap,

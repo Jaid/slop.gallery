@@ -66,6 +66,11 @@ export default class PlacedRoom<Kind extends Room = Room> {
     return this.room.moods
   }
 
+  /** the frame area in cm² of works imported onto the room’s walls or dropped into it by a player inside */
+  get portraitArea() {
+    return this.room.portraitArea
+  }
+
   /** the extent of the floor plan of a room around a rectangular one, centered on {@link center} */
   get size(): Kind['size'] {
     return this.room.size

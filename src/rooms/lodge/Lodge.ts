@@ -63,6 +63,7 @@ export default class Lodge extends Room {
         }),
       ],
       frame: ['lodge-twig', 'lodge-tramp', 'lodge-charred'],
+      portraitArea: 7500,
       cameras,
       spawns,
       ambience: ambienceEmitters,

@@ -1,9 +1,10 @@
-import type {Portrait, Vec3} from './types.ts'
+import type {Placement, Portrait, Vec3} from './types.ts'
 
 import world from '#src/worlds/current.ts'
 
 import arrivalVoices, {arrivalGap} from '../audio/arrivalVoices.ts'
 import {shiftVoices} from '../audio/proceduralAudio.ts'
+import {defaultPortraitArea} from '../placement/portraitSlots.ts'
 import {arrivalFrame, cameraPose, loadBlob, newPortrait, notify, playSound} from './actions.ts'
 import {holdPoint, requestHanging} from './hanging/hangings.ts'
 import {hangingAnimation} from './hanging/index.ts'
@@ -18,7 +19,7 @@ export type SizedImage = {
 }
 
 /** The frame of an image in meters: its own aspect at an area of `area` cm². */
-export function imageSize(width: number, height: number, area = 30_000) {
+export function imageSize(width: number, height: number, area = defaultPortraitArea) {
   if (!(width > 0 && height > 0) || !Number.isFinite(width + height) || width * height > 64_000_000) {
     throw new Error('Choose an image with at most 64 million pixels.')
   }
@@ -31,6 +32,11 @@ export function imageSize(width: number, height: number, area = 30_000) {
     width: Math.sqrt(squareMeters * ratio),
     height: Math.sqrt(squareMeters / ratio),
   }
+}
+
+/** The side in meters of the square an image dragged in previews as, before its shape is known: one at the portrait area it would take on the wall with the id `wallId` or dropped while the player is in the room with the id `room`. */
+export function importPreviewSide(wallId: string | undefined, room: string) {
+  return Math.sqrt(world.portraitArea(wallId, room) / 10_000)
 }
 
 /** The centered part of an image, as x, y, width and height, that is at most `limit` times as wide as tall or as tall as wide. */
@@ -167,6 +173,7 @@ export default class ImageImporter {
       position: [...cameraPose.position] as Vec3,
       direction: [...cameraPose.direction] as Vec3,
     }
+    const {room} = useGallery.getState()
     this.queue = this.queue.catch(() => {}).then(async () => {
       if (this.disposed) {
         return
@@ -179,13 +186,17 @@ export default class ImageImporter {
             throw new Error('The collection is full. Remove a work to make room.')
           }
           const bitmap = await createImageBitmap(file)
+          let cropWidth: number
+          let cropHeight: number
           let size: ReturnType<typeof imageSize>
           let source: Blob
           try {
             // Works wider than 2:1 or taller than 1:2 keep only their middle.
             const crop = centeredCrop(bitmap.width, bitmap.height)
-            const [, , cropWidth, cropHeight] = crop
-            size = imageSize(cropWidth, cropHeight)
+            cropWidth = crop[2]
+            cropHeight = crop[3]
+            // Dropped into the room, a work takes the portrait area of the player’s room.
+            size = imageSize(cropWidth, cropHeight, world.portraitArea(undefined, room))
             const scale = Math.min(1, 3072 / Math.max(cropWidth, cropHeight))
             const canvas = new OffscreenCanvas(Math.max(1, Math.round(cropWidth * scale)), Math.max(1, Math.round(cropHeight * scale)))
             const context = canvas.getContext('2d')
@@ -207,9 +218,22 @@ export default class ImageImporter {
             break
           }
           const title = file.name.replace(/\.[^.]+$/, '').replaceAll(/[-_]/g, ' ').trim().slice(0, 150) || 'An untitled arrival'
-          const p = newPortrait(source, title, size.width, size.height, pose)
           const s = useGallery.getState()
-          const place = target && world.placement.findPlacement(target.origin, target.direction, p.width, p.height, s.portraits, p.id)
+          let place: Placement | null = null
+          if (target) {
+            const aim = ({width, height}: typeof size) => world.placement.findPlacement(target.origin, target.direction, width, height, s.portraits)
+            place = aim(size)
+            // Hung, it takes the portrait area of the room owning its wall, which the ray hits whatever the size, and falls into the room if it does not fit there at that size.
+            const hungArea = place && world.portraitArea(place.wallId, room)
+            if (hungArea && hungArea !== world.portraitArea(undefined, room)) {
+              const hung = imageSize(cropWidth, cropHeight, hungArea)
+              place = aim(hung)
+              if (place?.valid) {
+                size = hung
+              }
+            }
+          }
+          const p = newPortrait(source, title, size.width, size.height, pose)
           if (place?.valid) {
             Object.assign(p, {
               position: place.position,

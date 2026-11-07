@@ -1,3 +1,4 @@
+import type {Placement} from '#src/lib/gallery.ts'
 import type {InteractionFrameRefs} from './types.ts'
 import type {RootState} from '@react-three/fiber'
 
@@ -6,6 +7,7 @@ import {useEffect, useRef} from 'react'
 
 import {readIntroNarration} from '#src/lib/audio/intro.ts'
 import {bodyPose, cameraPose, dragPose, narrate, useGallery} from '#src/lib/gallery.ts'
+import {importPreviewSide} from '#src/lib/gallery/ImageImporter.ts'
 import {interactiveObjects} from '#src/lib/gallery/interactiveObjects.ts'
 import {orbitables} from '#src/lib/gallery/orbitables.ts'
 import {isPortraitLabelHit} from '#src/lib/gallery/portraitLabel.ts'
@@ -107,7 +109,21 @@ export default function useInteractionFrame(camera: RootState['camera'], rendere
       placement.current = null
       return
     }
-    const candidate = world.placement.findPlacement(ray.current.ray.origin.toArray(), ray.current.ray.direction.toArray(), portrait?.width ?? 2.4, portrait?.height ?? 2.4, s.portraits, portrait?.id, portrait?.labelAbove === true)
+    const origin = ray.current.ray.origin.toArray()
+    const rayDirection = ray.current.ray.direction.toArray()
+    let candidate: Placement | null
+    if (portrait) {
+      candidate = world.placement.findPlacement(origin, rayDirection, portrait.width, portrait.height, s.portraits, portrait.id, portrait.labelAbove === true)
+    } else {
+      // An image dragged in previews as a square at the portrait area of the room owning the wall it is aimed at, which the ray hits whatever the size.
+      const aim = (side: number) => world.placement.findPlacement(origin, rayDirection, side, side, s.portraits)
+      const droppedSide = importPreviewSide(undefined, s.room)
+      candidate = aim(droppedSide)
+      const hungSide = candidate && importPreviewSide(candidate.wallId, s.room)
+      if (hungSide && hungSide !== droppedSide) {
+        candidate = aim(hungSide)
+      }
+    }
     placement.current = candidate
     if (candidate?.valid !== s.placement?.valid || candidate?.inReach !== s.placement?.inReach || candidate?.reason !== s.placement?.reason || candidate?.wallId !== s.placement?.wallId || candidate?.labelAbove !== s.placement?.labelAbove || !candidate && s.placement) {
       useGallery.setState({placement: candidate})

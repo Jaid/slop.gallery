@@ -11,6 +11,7 @@ import OrbitViewing from '#component/OrbitViewing'
 import PlacementPreview from '#component/PlacementPreview'
 import {portraitFrame} from '#src/lib/frames/index.ts'
 import {arrivalFrame, cameraPose, upcomingWorkId, useGallery} from '#src/lib/gallery.ts'
+import {importPreviewSide} from '#src/lib/gallery/ImageImporter.ts'
 
 import useInteractionDiagnostics from './interaction/useInteractionDiagnostics.ts'
 import useInteractionEvents from './interaction/useInteractionEvents.ts'
@@ -31,6 +32,8 @@ export default function Interaction() {
   const dragging = useGallery(s => s.dragging)
   // A dropped image wears its roll of the frames of the room it lands in, which changes along with the wall it would hang on.
   const arriving = useGallery(s => (s.dragging && s.placement ? arrivalFrame(s.placement.position, cameraPose.position, upcomingWorkId()) : undefined))
+  // Its shape unknown yet, it shows as a square at the portrait area of the room owning that wall.
+  const arrivingSide = useGallery(s => importPreviewSide(s.placement?.wallId, s.room))
   useInteractionEvents({
     camera,
     controls,
@@ -52,7 +55,7 @@ export default function Interaction() {
   return <>
     <OrbitViewing />
     <group visible={false} ref={ghost}>
-      <Branch some={[artwork, dragging]} not={held?.startsWith('prop-')}><PlacementPreview key={artwork?.id ?? 'import'} creator={artwork?.creator} frame={portraitFrame(artwork ? artwork.frame : arriving)} height={artwork?.height ?? 2.4} pending={artwork?.pending} source={artwork?.source} title={artwork?.title} width={artwork?.width ?? 2.4} /></Branch>
+      <Branch some={[artwork, dragging]} not={held?.startsWith('prop-')}><PlacementPreview key={artwork?.id ?? 'import'} creator={artwork?.creator} frame={portraitFrame(artwork ? artwork.frame : arriving)} height={artwork?.height ?? arrivingSide} pending={artwork?.pending} source={artwork?.source} title={artwork?.title} width={artwork?.width ?? arrivingSide} /></Branch>
     </group>
   </>
 }

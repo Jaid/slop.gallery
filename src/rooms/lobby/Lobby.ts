@@ -56,6 +56,7 @@ export default class Lobby extends Room {
         }),
       ],
       frame: ['lobby-travertine', 'lobby-louis'],
+      portraitArea: 30_000,
       cameras,
       spawns,
       ambience: ambienceEmitters,
