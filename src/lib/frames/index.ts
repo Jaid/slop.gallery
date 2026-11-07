@@ -16,6 +16,7 @@ import ExhibitionEvidenceFrame from './ExhibitionEvidenceFrame.ts'
 import ExhibitionVitrineFrame from './ExhibitionVitrineFrame.ts'
 import ForgeMeanderFrame from './ForgeMeanderFrame.ts'
 import {readFrame} from './frameParameter.ts'
+import HalloweenCoffinFrame from './HalloweenCoffinFrame.ts'
 import HalloweenLanternFrame from './HalloweenLanternFrame.ts'
 import HalloweenOssuaryFrame from './HalloweenOssuaryFrame.ts'
 import HorrorBleedingFrame from './HorrorBleedingFrame.ts'
@@ -84,6 +85,7 @@ export const frames = {
   'cell-coffer': new CellCofferFrame,
   'halloween-lantern': new HalloweenLanternFrame,
   'halloween-ossuary': new HalloweenOssuaryFrame,
+  'halloween-coffin': new HalloweenCoffinFrame,
   'horror-flesh': new HorrorFleshFrame,
   'horror-bleeding': new HorrorBleedingFrame,
   'horror-butcher': new HorrorButcherFrame,
