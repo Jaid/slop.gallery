@@ -1,4 +1,3 @@
-import type {FrameChoice} from '#src/lib/frames/frameChoice.ts'
 import type {ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type {Mood} from '#src/lib/moods/index.ts'
 
@@ -6,7 +5,7 @@ import {environmentPick, environmentSample} from '../../../environmentSeed.ts'
 import {transparentOrb} from '../transparent/TransparentOrb.ts'
 import Orb from './Orb.ts'
 
-/** An orb filled with a scene of its own, which contributes its prompt as an instruction and its frame to the fusion of a portrait it is thrown into, while the fusion’s portal shows its photograph, which lies in the orb’s folder. A success empties it of its scene, and its clear glass flips back out of the portal as a Transparent Orb. */
+/** An orb filled with a scene of its own, which contributes its prompt as an instruction and its frame, if it has one, to the fusion of a portrait it is thrown into, while the fusion’s portal shows its photograph, which lies in the orb’s folder. A success empties it of its scene, and its clear glass flips back out of the portal as a Transparent Orb. */
 export default abstract class PromptOrb extends Orb {
   /** how many of its adjectives a prompt may name, one of which the environment seed picks */
   readonly adjectiveCounts: ReadonlyArray<number> = [3, 4, 5]
@@ -19,7 +18,8 @@ export default abstract class PromptOrb extends Orb {
   abstract readonly change: string
   /** the orb’s glow, which tints the portal of the fusion and, made locally without AI, the image in place of its prompt */
   abstract readonly color: string
-  abstract override readonly frame: FrameChoice
+  /** the word that joins the last of the adjectives a prompt names to the others: `or` leaves the image model free to pick among them, `and` asks for all of them */
+  readonly conjunction: string = 'or'
   abstract override readonly mood: Mood
   /** the URL of an image of it, which the portal of its fusion shows; made in advance, as its glass takes seconds to compile for the studio a thrown prop is photographed in */
   abstract readonly photo: string
@@ -28,7 +28,7 @@ export default abstract class PromptOrb extends Orb {
   /** the clear glass the orb leaves once a success emptied it */
   override readonly remains = transparentOrb
 
-  /** The orb contributes its prompt as an instruction, its frame and its effect, if it has one, and shows in the portal by its glow and its photograph. */
+  /** The orb contributes its prompt as an instruction, its frame and its effect, if it has them, and shows in the portal by its glow and its photograph. */
   override ingredient(seed: number): ItemIngredient {
     const orb = super.ingredient(seed)
     return {
@@ -45,11 +45,11 @@ export default abstract class PromptOrb extends Orb {
     }
   }
 
-  /** the orb’s whole instruction to the image model in the environment of `seed`, sent verbatim along with the image: its premise and change, then 3 to 5 of its adjectives in their listed order, never two synonyms */
+  /** the orb’s whole instruction to the image model in the environment of `seed`, sent verbatim along with the image: its premise and change, then 3 to 5 of its adjectives in their listed order, never two synonyms, the last one joined by its {@link conjunction} */
   prompt(seed: number) {
     const count = environmentPick(seed, `${this.id}-orb:count`, this.adjectiveCounts)
     const entries = environmentSample(seed, `${this.id}-orb:adjectives`, this.adjectives, count)
     const adjectives = entries.map(entry => (typeof entry === 'string' ? entry : environmentPick(seed, `${this.id}-orb:synonym:${entry[0]}`, entry)))
-    return `${this.premise}\n\nPlease edit this image and ${this.change} ${adjectives.slice(0, -1).join(', ')} or ${adjectives.at(-1)}.`
+    return `${this.premise}\n\nPlease edit this image and ${this.change} ${adjectives.slice(0, -1).join(', ')} ${this.conjunction} ${adjectives.at(-1)}.`
   }
 }

@@ -11,7 +11,7 @@ import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
 import FusionRecipe, {itemIngredient, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
 import {portalFrame} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
-import {halloweenOrb, horrorOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
+import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
 
 const hung = portraitIngredient({
   title: 'The hung portrait',
@@ -101,15 +101,17 @@ describe('fusion effects', () => {
     show.dispose()
     fusion.abort()
   })
-  test('every themed orb contributes an effect of its own, which an id names that starts with the orb’s', () => {
+  test('every themed orb but the Paint Orb contributes an effect of its own, which an id names that starts with the orb’s', () => {
     expect(halloweenOrb.effect).toBe(batsEffect)
     expect(horrorOrb.effect).toBe(bloodEffect)
     expect(spookOrb.effect).toBe(ghostsEffect)
+    expect(paintOrb.effect).toBeUndefined()
     for (const orb of promptOrbs) {
-      expect(orb.ingredient(3).contributions).toContainEqual({
+      const effects = orb.ingredient(3).contributions.filter(contribution => contribution.kind === 'effect')
+      expect(effects).toEqual(orb.effect ? [{
         kind: 'effect',
         effect: orb.effect,
-      })
+      }] : [])
     }
     const ids = fusionEffects.map(effect => effect.id)
     const unique = new Set(ids)

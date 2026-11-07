@@ -619,6 +619,7 @@ export const paintingSetSpot: Vec3 = [forgeTableCenter[0], forgeTable.height + 0
 
 /**
  * A painter’s box of oils, standing open: a walnut case with its lid raised past upright, a pale artist’s palette held in the lid, daubed with dollops of fresh paint and smeared with mixes, and in the box, between low dividers, five tubes of paint in the front compartment, two bottles of oil fallen over in the back one, and two flat brushes and a palette knife in the long one on the right.
+ * Lying in the Forge, it steers the flavor the alchemy machine gives a Transparent Orb to a Paint Orb.
  * In its own frame its box stands on its bottom at the origin, its front, with the handle, looking along z.
  */
 export default class PaintingSet extends Curio {
