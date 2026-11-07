@@ -229,6 +229,9 @@ const sections: Array<Section> = [
     title: 'Bloom',
     toggle: 'bloom',
     controls: [
+      select('bloomResolutionScale', 'Resolution', scales([0.125, 0.25, 0.375, 0.5, 0.75, 1])),
+      select('bloomMipCount', 'Blur mips', [[1, '1'], [2, '2'], [3, '3'], [4, '4'], [5, '5']]),
+      select('bloomGaussianKernelSize', 'Gaussian kernel size', [[2, '2'], [4, '4'], [6, '6'], [8, '8'], [10, '10'], [12, '12']]),
       percent('bloomStrength', 'Strength', 0, 2, 0.1),
       range('bloomRadius', 'Radius', 0, 1, 0.05),
       range('bloomThreshold', 'Threshold', 0, 4, 0.1),

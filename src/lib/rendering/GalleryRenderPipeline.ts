@@ -3,7 +3,6 @@ import type {Camera, Node, NodeMaterial, Object3D, Renderer, RenderTarget, Scene
 
 import {WireframeFloodPass} from 'capture-session'
 import {vxgi} from 'three/addons/lighting/vxgi/VXGINode.js'
-import {bloom} from 'three/addons/tsl/display/BloomNode.js'
 import {denoise} from 'three/addons/tsl/display/DenoiseNode.js'
 import {depthAwareBlend} from 'three/addons/tsl/display/depthAwareBlend.js'
 import {gaussianBlur} from 'three/addons/tsl/display/GaussianBlurNode.js'
@@ -19,6 +18,7 @@ import {BlendMode, DirectionalLight, HalfFloatType, NoBlending, NormalBlending, 
 import {mountedRooms, pendingRooms} from '../gallery/roomLoading.ts'
 import {floorReflectionBlur, floorReflectionGrazing, floorReflectionLevel, floorReflectionRoughness, floorReflectionStrength, renderFloorReflection} from '../materials/FloorMaterial.ts'
 import ConditionalTexture from './ConditionalTexture.ts'
+import ConfigurableBloomNode from './ConfigurableBloomNode.ts'
 import {GalleryRenderer} from './GalleryRenderer.ts'
 import KnotBokeh from './KnotBokeh.ts'
 import {gradeMood} from './moodGrade.ts'
@@ -326,7 +326,8 @@ export default class GalleryRenderPipeline extends RenderPipeline {
         mask = min(mask, near)
       }
       // Bloom MUST read the resolved image. Its hard luminance threshold and half-resolution downsample turn TRAA's subpixel jitter on small HDR features into frame-to-frame halo changes, and TRAA's variance clipping cannot calm such smooth, low-frequency flicker.
-      const glow = own(bloom(current))
+      const glow = own(new ConfigurableBloomNode(current, settings.bloomMipCount, settings.bloomGaussianKernelSize))
+      glow.setResolutionScale(settings.bloomResolutionScale)
       set(glow.strength, 'bloomStrength')
       set(glow.radius, 'bloomRadius')
       set(glow.threshold, 'bloomThreshold')

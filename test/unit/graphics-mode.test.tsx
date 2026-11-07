@@ -5,7 +5,7 @@ import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import GraphicsMode from '../../src/components/App/GraphicsMode.tsx'
 import {fitCanvasTextureResolution, getGraphicsProfile, getSunShadowSettings, readCinematicGraphics, readGraphicsMode, readGraphicsModeName, readGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
-import {getRenderPipelineSettings} from '../../src/lib/rendering/renderPipelineSettings.ts'
+import {getRenderPipelineSettings, getRenderPipelineStructure} from '../../src/lib/rendering/renderPipelineSettings.ts'
 
 function ReadProfile() {
   const isHeavy: boolean = useGraphicsMode()
@@ -149,15 +149,26 @@ test('Fast disables bloom, while Heavy and Cinematic use the current tuned bloom
   const cinematic = getRenderPipelineSettings(getGraphicsProfile(true, true), 'traa')
   const tunedBloom = {
     bloom: true,
+    bloomGaussianKernelSize: 6,
+    bloomMipCount: 5,
+    bloomResolutionScale: 0.5,
     bloomLuminanceCap: 4,
     bloomRadius: 0.3,
-    bloomSmoothWidth: 0.5,
-    bloomStrength: 1,
+    bloomSmoothWidth: 0.2,
+    bloomStrength: 0.5,
     bloomThreshold: 2,
   }
   expect(fast.bloom).toBe(false)
   expect(heavy).toMatchObject(tunedBloom)
   expect(cinematic).toMatchObject(tunedBloom)
+})
+test('bloom blur quality controls rebuild the render pipeline', () => {
+  const settings = getRenderPipelineSettings(getGraphicsProfile(true), 'traa')
+  expect(getRenderPipelineStructure(settings)).toMatchObject({
+    bloomGaussianKernelSize: 6,
+    bloomMipCount: 5,
+    bloomResolutionScale: 0.5,
+  })
 })
 test('no graphics mode traces voxel indirect light, which the tuning panel switches on with one bounce, or two in Cinematic', () => {
   const fast = getRenderPipelineSettings(getGraphicsProfile(false), false)

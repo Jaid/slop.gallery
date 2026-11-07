@@ -18,9 +18,15 @@ export type RenderPipelineSettings = {
   ambientOcclusionThickness: number
   antiAliasing: AntiAliasing
   bloom: boolean
+  /** Gaussian kernel radius at the first level; successive levels add four, as in Three.js */
+  bloomGaussianKernelSize: number
   /** brightest luminance one pixel may feed into bloom. Intended glow sources (chandelier flames, emissive veins) peak around 4; sharp specular fireflies reach hundreds. */
   bloomLuminanceCap: number
+  /** number of progressively downsampled Gaussian blur levels, from 1 to 5 */
+  bloomMipCount: number
   bloomRadius: number
+  /** bloom pixels per output pixel along each axis */
+  bloomResolutionScale: number
   bloomSmoothWidth: number
   bloomStrength: number
   bloomThreshold: number
@@ -97,7 +103,7 @@ export type RenderPipelineSettings = {
 export type RenderPipelineSetting = keyof RenderPipelineSettings
 
 /** the settings that change which passes the pipeline has or how they are set up, so changing one builds it anew; every other setting is a uniform that can change live. A new sun filter builds a new sun, which the passes that march its shadow map have to pick up. */
-export const renderPipelineStructure = ['ambientOcclusion', 'ambientOcclusionResolutionScale', 'ambientOcclusionTemporalFiltering', 'antiAliasing', 'bloom', 'contactShadowDenoise', 'contactShadowResolutionScale', 'contactShadows', 'dither', 'mirrorReflections', 'reflectionResolutionScale', 'screenSpaceIndirectLight', 'screenSpaceIndirectLightResolutionScale', 'screenSpaceIndirectLightTemporalFiltering', 'screenSpaceReflectionResolutionScale', 'screenSpaceReflections', 'sunShadowSamples', 'volumetricLight', 'volumetricLightBlur', 'volumetricLightResolutionScale', 'voxelIndirectLight', 'voxelIndirectLightResolution'] as const satisfies Array<RenderPipelineSetting>
+export const renderPipelineStructure = ['ambientOcclusion', 'ambientOcclusionResolutionScale', 'ambientOcclusionTemporalFiltering', 'antiAliasing', 'bloom', 'bloomGaussianKernelSize', 'bloomMipCount', 'bloomResolutionScale', 'contactShadowDenoise', 'contactShadowResolutionScale', 'contactShadows', 'dither', 'mirrorReflections', 'reflectionResolutionScale', 'screenSpaceIndirectLight', 'screenSpaceIndirectLightResolutionScale', 'screenSpaceIndirectLightTemporalFiltering', 'screenSpaceReflectionResolutionScale', 'screenSpaceReflections', 'sunShadowSamples', 'volumetricLight', 'volumetricLightBlur', 'volumetricLightResolutionScale', 'voxelIndirectLight', 'voxelIndirectLightResolution'] as const satisfies Array<RenderPipelineSetting>
 
 export type RenderPipelineStructure = Pick<RenderPipelineSettings, typeof renderPipelineStructure[number]>
 
@@ -117,6 +123,9 @@ export function getRenderPipelineSettings(profile: GraphicsProfile, antiAliasing
     ambientOcclusionThickness: profile.ambientOcclusionThickness ?? world.ambientOcclusionThickness,
     antiAliasing,
     bloom: profile.postprocessing,
+    bloomGaussianKernelSize: 6,
+    bloomMipCount: 5,
+    bloomResolutionScale: 0.5,
     bloomLuminanceCap: 4,
     bloomRadius: 0.3,
     bloomSmoothWidth: 0.2,

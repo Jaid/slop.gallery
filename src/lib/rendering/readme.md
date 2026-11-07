@@ -29,13 +29,15 @@ Heavy graphics resolve with TRAA and fast graphics without antialiasing, unless 
 
 ## Bloom
 
-Bloom reads the antialiased image, never the jittered scene pass. Its luminance threshold has a 0.01 knee and its first downsample is half resolution, so subpixel HDR features (flames, sparkles, thin emissive veins) that TRAA's jitter moves across pixel centers switch whole halos on and off. Those halos are smooth, so TRAA's variance clipping clamps their history to the current frame and cannot average the flicker away. Feeding bloom the resolved image keeps a still scene's halo still, and thin features bloom by their real pixel coverage instead of jitter-inflated peaks.
+Bloom reads the antialiased image, never the jittered scene pass. Its luminance threshold has a configurable knee (default 0.2) and its first downsample defaults to half resolution, so subpixel HDR features (flames, sparkles, thin emissive veins) that TRAA's jitter moves across pixel centers switch whole halos on and off. Those halos are smooth, so TRAA's variance clipping clamps their history to the current frame and cannot average the flicker away. Feeding bloom the resolved image keeps a still scene's halo still, and thin features bloom by their real pixel coverage instead of jitter-inflated peaks.
 
 The inspection mask (glow is suppressed over the defocused background) is still computed before TRAA: alpha carries it through the resolve, so its edge is temporally antialiased. TRAA's resolve material is opaque by default, which would force alpha to 1, so the pipeline sets it to `NoBlending`. TRAA clips only RGB history, so the resolved mask is additionally clamped by the current mask dilated by about 2 px; stale history can then never put glow back onto distant background after focus changes.
 
 The canvas is opaque (`alpha: false`), so this alpha channel is free.
 
-Each pixel feeds bloom at most luminance 8. Sharp specular highlights (clearcoat at roughness 0.015, high-exponent glints) reach hundreds on a single pixel, and as a knot rotates they land on and leave pixel centers frame by frame. Uncapped, each one flashed a halo far larger than any intended glow source, which read as heavy flicker even without antialiasing jitter. Intended sources such as the chandelier flames peak around 4 and are unaffected.
+Each pixel feeds bloom at most luminance 4 by default (temporarily raised during fusion impacts). Sharp specular highlights (clearcoat at roughness 0.015, high-exponent glints) reach hundreds on a single pixel, and as a knot rotates they land on and leave pixel centers frame by frame. Uncapped, each one flashed a halo far larger than any intended glow source, which read as heavy flicker even without antialiasing jitter. Intended sources such as the chandelier flames peak around 4 and are unaffected.
+
+The tuning panel exposes the bloom resolution scale, mip count and base Gaussian kernel radius. Three.js defaults to five blur levels with kernel radii [6, 10, 14, 18, 22]. `ConfigurableBloomNode` keeps the stock render targets and blur passes but specializes their count, composite and kernel radii (base + 4 per level). Those three controls rebuild the pipeline; the other bloom controls update uniforms live.
 
 ## Focus boundary invariant
 
