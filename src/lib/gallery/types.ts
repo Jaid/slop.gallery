@@ -48,6 +48,8 @@ export type ThrownItem = {
   id: string
   /** The item as an ingredient, with what it contributes to the fusion, by default a studio photograph of it as it is now. Called once, after the portrait is reserved for the fusion. */
   ingredient: () => ItemIngredient
+  /** the kind of orb it is, if it is one */
+  orb?: Orb
   /** the orb a success that uses it up leaves of it, which flips out of the portal after the result, like the clear glass of a themed orb */
   remains?: Orb
   title: string

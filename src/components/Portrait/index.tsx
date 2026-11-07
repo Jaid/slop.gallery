@@ -15,6 +15,7 @@ import {impactSounds} from '#src/lib/audio/impactSounds.ts'
 import {frameBack} from '#src/lib/frames/base/PortraitFrame.ts'
 import {portraitFrame} from '#src/lib/frames/index.ts'
 import {requestFusion, useGallery} from '#src/lib/gallery.ts'
+import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import world from '#src/worlds/current.ts'
 
@@ -107,8 +108,8 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
       }
       const other: unknown = event.other.rigidBodyObject?.userData.portraitId
       const target = useGallery.getState().portraits.find(a => a.id === other)
-      if (target?.hung) {
-        requestFusion(target.id, p.id)
+      if (target?.hung && body.current) {
+        requestFusion(target.id, p.id, impactOf(body.current))
       }
     }}
     onSleep={() => {

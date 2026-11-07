@@ -1,5 +1,6 @@
 import type {AiSettings} from './ai/settings.ts'
 import type {Portrait, ThrownItem} from './gallery.ts'
+import type {FusionImpact} from './gallery/fusion/Fusion.ts'
 
 import {useEffect, useState} from 'react'
 
@@ -30,15 +31,16 @@ export default function useGalleryAI() {
       director.narrator.enqueue((event as CustomEvent<string>).detail)
     }
     const fuse = (event: Event) => {
-      const [a, b] = (event as CustomEvent<[string, string]>).detail
-      void director.fuse(a, b).catch(() => notify('The fusion could not be started.'))
+      const [a, b, impact] = (event as CustomEvent<[string, string, FusionImpact | undefined]>).detail
+      void director.fuse(a, b, impact).catch(() => notify('The fusion could not be started.'))
     }
     const fuseItem = (event: Event) => {
-      const {portrait, item} = (event as CustomEvent<{
+      const {portrait, item, impact} = (event as CustomEvent<{
+        impact?: FusionImpact
         item: ThrownItem
         portrait: string
       }>).detail
-      void director.fuseItem(portrait, item).catch(() => notify('The fusion could not be started.'))
+      void director.fuseItem(portrait, item, impact).catch(() => notify('The fusion could not be started.'))
     }
     const unsubscribe = useGallery.subscribe(s => {
       SoundEngine.existing()?.mute(!s.sound)

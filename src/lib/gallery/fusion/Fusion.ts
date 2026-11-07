@@ -1,5 +1,5 @@
 import type {PortraitFrameId} from '../../frames/frameParameter.ts'
-import type {Portrait} from '../types.ts'
+import type {Portrait, Vec3} from '../types.ts'
 import type {FusionEffect} from './effects/index.ts'
 import type {IngredientLatch} from './FusionRecipe.ts'
 import type {PortalFrame} from './portalFrame.ts'
@@ -14,8 +14,17 @@ export type FusionPartner = {
   id: string
   /** a loose portrait, which the result replaces along with the hung one; or an item, which the portal spits back out unless it is consumed */
   kind: 'item' | 'portrait'
+  /** for an item, whether it is a glass orb, which is much smaller than a portrait */
+  orb?: boolean
   /** for an item a success uses up, the prop id of what it leaves of the item (see `FusionRemains`), which the portal holds hidden in its middle and spits out after the result */
   remains?: string
+}
+/** where and how hard what was thrown struck the hung portrait, which opened the fusion */
+export type FusionImpact = {
+  /** where the middle of what was thrown was as they met, in the world */
+  center: Vec3
+  /** how fast the thrown one was moving, in m/s */
+  speed: number
 }
 export type FusionSpec = {
   /** the swirl’s color, like an orb’s glow; the portal’s own otherwise */
@@ -24,6 +33,8 @@ export type FusionSpec = {
   effects: ReadonlyArray<FusionEffect>
   /** the images the portal shows of the ingredients in turn, the hung portrait’s first; more can surface later, like a prop’s photograph; an ingredient with nothing to show, like the Transparent Orb, shows nothing */
   images: Array<Blob | string>
+  /** the strike that opened it, unless it was opened otherwise, like by a test */
+  impact?: FusionImpact
   /** how the intro’s ember latches each ingredient on, the hung portrait first, one for each of the fusion’s 2–4 ingredients, which it yanks in on a beat of its own */
   latches: ReadonlyArray<IngredientLatch>
   partner: FusionPartner

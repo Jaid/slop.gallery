@@ -1,4 +1,5 @@
 import type {Voice} from '../audio/proceduralAudio.ts'
+import type {FusionImpact} from './fusion/Fusion.ts'
 import type {Portrait, ThrownItem, Vec3} from './types.ts'
 
 import composeId from 'compose-id'
@@ -102,16 +103,18 @@ export function flingPlayer(velocity: Vec3) {
   galleryEvents.dispatchEvent(new CustomEvent('fling', {detail: velocity}))
 }
 
-export function requestFusion(first: string, second: string) {
-  galleryEvents.dispatchEvent(new CustomEvent('fusion', {detail: [first, second]}))
+/** Asks for the hung portrait `first` to fuse with the loose portrait `second`, which struck it as `impact` says. */
+export function requestFusion(first: string, second: string, impact?: FusionImpact) {
+  galleryEvents.dispatchEvent(new CustomEvent('fusion', {detail: [first, second, impact]}))
 }
 
-/** Asks for the hung portrait `portrait` to fuse with the thrown `item`. */
-export function requestItemFusion(portrait: string, item: ThrownItem) {
+/** Asks for the hung portrait `portrait` to fuse with the thrown `item`, which struck it as `impact` says. */
+export function requestItemFusion(portrait: string, item: ThrownItem, impact?: FusionImpact) {
   galleryEvents.dispatchEvent(new CustomEvent('item-fusion', {
     detail: {
       portrait,
       item,
+      impact,
     },
   }))
 }

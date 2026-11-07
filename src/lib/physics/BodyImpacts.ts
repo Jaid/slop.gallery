@@ -33,6 +33,8 @@ type Entry<Tag> = {
   motion: Motion
   /** whether it moved into the current step, awake and dynamic, so that it may strike something */
   moving: boolean
+  /** how fast it moved right before each of the last {@link BodyImpacts.touchSteps} steps, in m/s, the latest last */
+  speeds: Array<number>
   tag: Tag
 }
 /** the strongest contact of one body found so far within a step */
@@ -101,6 +103,10 @@ export default class BodyImpacts<Tag> {
       if (entry.moving) {
         take(body, entry.motion)
       }
+      entry.speeds.push(entry.moving ? entry.motion.linear.length() : 0)
+      if (entry.speeds.length > this.touchSteps) {
+        entry.speeds.shift()
+      }
     }
   }
 
@@ -140,6 +146,12 @@ export default class BodyImpacts<Tag> {
     }
   }
 
+  /** The fastest the registered `body` moved right before any of the last {@link touchSteps} steps, in m/s, which a collision reported after the solver bounced it still finds, or undefined for a body that isn’t registered. */
+  recentSpeed(body: RigidBody) {
+    const entry = this.entries.get(body.handle)
+    return entry && Math.max(0, ...entry.speeds)
+  }
+
   /** Hears what `body` strikes as `tag` until the returned function is called. */
   register(body: RigidBody, tag: Tag) {
     const {handle} = body
@@ -149,6 +161,7 @@ export default class BodyImpacts<Tag> {
       lastStrike: Number.NEGATIVE_INFINITY,
       moving: false,
       motion: motion(),
+      speeds: [],
     }
     this.entries.set(handle, entry)
     return () => {

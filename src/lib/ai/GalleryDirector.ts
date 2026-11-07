@@ -1,5 +1,5 @@
 import type Fusion from '../gallery/fusion/Fusion.ts'
-import type {FusionSpec} from '../gallery/fusion/Fusion.ts'
+import type {FusionImpact, FusionSpec} from '../gallery/fusion/Fusion.ts'
 import type {SizedImage} from '../gallery/ImageImporter.ts'
 import type {Portrait, ThrownItem} from '../gallery/types.ts'
 import type {OpenRouterAccess} from './openRouterAccess.ts'
@@ -123,8 +123,8 @@ export default class GalleryDirector {
     }
   }
 
-  /** Fuses the hung portrait `first` with the loose portrait `second`, whose image it contributes. */
-  async fuse(first: string, second: string) {
+  /** Fuses the hung portrait `first` with the loose portrait `second`, whose image it contributes, which struck it as `impact` says. */
+  async fuse(first: string, second: string, impact?: FusionImpact) {
     if (this.controller.signal.aborted) {
       return
     }
@@ -161,6 +161,7 @@ export default class GalleryDirector {
       images: recipe.looks,
       latches: recipe.latches,
       effects: recipe.effects,
+      impact,
     }, recipe)
     try {
       await this.brew(a, fusion, recipe, current, {
@@ -182,10 +183,10 @@ export default class GalleryDirector {
   }
 
   /**
-   * Fuses the hung portrait `portrait` with the thrown `item` and whatever it contributes: a studio photograph of it by default, an orb’s prompt or nothing at all, which leaves the portrait as it was. The item stays in the room, unless a success uses it up, like an orb.
+   * Fuses the hung portrait `portrait` with the thrown `item`, which struck it as `impact` says, and whatever it contributes: a studio photograph of it by default, an orb’s prompt or nothing at all, which leaves the portrait as it was. The item stays in the room, unless a success uses it up, like an orb.
    * What the item leaves of itself once used up, like a themed orb’s clear glass, enters the world as the portal opens, hidden in the portal until it flips out after the result, so it is built and compiled by then; it leaves the world again unless the success used the item up.
    */
-  async fuseItem(portrait: string, item: ThrownItem) {
+  async fuseItem(portrait: string, item: ThrownItem, impact?: FusionImpact) {
     if (this.controller.signal.aborted) {
       return
     }
@@ -215,11 +216,13 @@ export default class GalleryDirector {
         kind: 'item',
         id: item.id,
         consumed: item.consumable ?? false,
+        ...item.orb ? {orb: true} : {},
         ...remains ? {remains: remains.id} : {},
       },
       images: recipe.looks,
       latches: recipe.latches,
       effects: recipe.effects,
+      impact,
       color: recipe.glow,
     }, recipe)
     if (remains) {

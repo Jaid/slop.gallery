@@ -18,6 +18,7 @@ import {Box3, Vector3} from 'three/webgpu'
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
 import {cameraPose, notify, requestItemFusion, useGallery} from '#src/lib/gallery.ts'
 import {handBack, settle} from '#src/lib/gallery/fusion/handBack.ts'
+import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import {registerOrbitable} from '#src/lib/gallery/orbitables.ts'
 import GrabbableBody from '#src/lib/physics/GrabbableBody.ts'
 import {bodyThrow, clearBodyThrow} from '#src/lib/physics/ThrowState.ts'
@@ -365,6 +366,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       title,
       consumable,
       remains,
+      ...orb ? {orb} : {},
       ingredient: () => ingredient ?? {
         contributions: [
           {
@@ -373,7 +375,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
           },
         ],
       },
-    })
+    }, impactOf(current))
   }
   // A withheld prop’s colliders are built from its children while they are hidden.
   return <RigidBody ccd colliders={collider ? false : 'cuboid'} friction={0.8} includeInvisible={withheld} mass={1.8} restitution={0.32} ref={body} onCollisionEnter={struck} {...props}>
