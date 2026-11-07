@@ -465,12 +465,30 @@ describe('fusion', () => {
     expect(fusion.closed).toBe(true)
     expect(fusion.elapsed()).toBeGreaterThanOrEqual(fusion.outcome!.at + timing.fizzle)
   })
-  test('once its outcome is in, it can no longer be broken off', async () => {
+  test('a result that came in early can still be broken off until its climax begins, which drops it for the fizzle', async () => {
     const fusion = new Fusion(spec(), {
       frame,
       timing,
     })
     const job = fusion.succeed(new Blob(['result']))
+    expect(fusion.outcome).toEqual({
+      kind: 'success',
+      at: timing.minimum,
+    })
+    expect(fusion.cancel()).toBe(true)
+    expect(fusion.signal.aborted).toBe(true)
+    expect(fusion.outcome?.kind).toBe('failure')
+    await job
+    expect(fusion.closed).toBe(true)
+    expect(fusion.emergedAt).toBeUndefined()
+  })
+  test('once its climax has begun, it can no longer be broken off', async () => {
+    const fusion = new Fusion(spec(), {
+      frame,
+      timing,
+    })
+    const job = fusion.succeed(new Blob(['result']))
+    await new Promise(resolve => setTimeout(resolve, (timing.minimum + 0.01) * 1000))
     expect(fusion.cancel()).toBe(false)
     expect(fusion.signal.aborted).toBe(false)
     await job

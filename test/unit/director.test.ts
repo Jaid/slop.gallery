@@ -538,6 +538,37 @@ test('broken off while its result is being made ready, the fusion keeps the orig
     director.dispose()
   }
 })
+test('a result made at once, like a local one without AI, can still be broken off until its climax begins, which keeps the original and hands the orb back', async () => {
+  // Its climax is far off, however long the result takes to come in.
+  const director = new TestDirector({
+    ...defaults,
+    ai: false,
+  }, '', {
+    ...brief,
+    minimum: 30,
+  })
+  try {
+    const job = director.fuseItem('a', testOrb)
+    director.result.resolve(new Blob(['result'], {type: 'image/webp'}))
+    const [fusion] = director.opened
+    while (!fusion.outcome) {
+      await sleep(0.01)
+    }
+    // The result is in, but its climax is still due.
+    expect(fusion.outcome.kind).toBe('success')
+    expect(fusion.elapsed()).toBeLessThan(fusion.outcome.at)
+    expect(fusion.cancel()).toBe(true)
+    expect(useGallery.getState().notice).toBe('You canceled the fusion. The original is still here.')
+    await job
+    expect(fusion.emergedAt).toBeUndefined()
+    expect(useGallery.getState().portraits.find(p => p.id === 'a')?.source).toBe(a)
+    expect(useGallery.getState().portraits.some(p => p.fusing || p.reserved)).toBe(false)
+    expect(useGallery.getState().consumed).not.toContain(testOrb.id)
+    expect(useGallery.getState().notice).toBe('You canceled the fusion. The original is still here.')
+  } finally {
+    director.dispose()
+  }
+})
 test('the result wears the frame a thrown ingredient contributed wherever it arrives, and without one that of the room it arrives in, rolled as the portal opens', async () => {
   const items: Array<[ThrownItem, PortraitFrameId | undefined]> = [[framing(testOrb, 'lodge-tramp'), 'lodge-tramp'], [framing(apple, 'cell-coffer'), 'cell-coffer'], [testOrb, undefined], [apple, undefined]]
   for (const [item, frame] of items) {

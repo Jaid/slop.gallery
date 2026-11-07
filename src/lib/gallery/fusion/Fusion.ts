@@ -120,10 +120,11 @@ export default class Fusion {
 
   /**
    * Breaks the fusion off while it still brews, as the player does by jumping into its portal: the portal recoils at once, {@link signal} tells the image model to give up, and the fusion fails like one that went wrong as the next turn of the images begins, no sooner than the end of its intro.
-   * Returns whether it broke off, which it no longer does once its outcome is in.
+   * A result that came in early, like one made locally without AI, which is ready at once, only shows once its climax begins, so until then it still brews as far as the player can tell, and breaking it off drops the result.
+   * Returns whether it broke off, which it no longer does once the climax or the fizzle has begun.
    */
   cancel() {
-    if (this.settled()) {
+    if (!this.brewing()) {
       return false
     }
     const elapsed = this.elapsed()
@@ -200,6 +201,12 @@ export default class Fusion {
       at,
     }
     await this.reach(at + this.timing.climax)
+  }
+
+  /** whether the fusion still brews as the player sees it: open and without an outcome, or with a success whose climax is yet to begin */
+  private brewing() {
+    const {closed, outcome} = this
+    return !closed && (outcome === undefined || outcome.kind === 'success' && this.elapsed() < outcome.at)
   }
 
   private close() {

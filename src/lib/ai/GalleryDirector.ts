@@ -314,6 +314,8 @@ export default class GalleryDirector {
     }
     // Broken off, the fusion tells so at once and stops waiting, even for a model that doesn’t listen to the signal.
     const broken = Promise.withResolvers<never>()
+    // Broken off after the result came in, like a local one, nothing races it any more.
+    broken.promise.catch(() => {})
     const breakOff = () => {
       if (current()) {
         notify(canceled)
