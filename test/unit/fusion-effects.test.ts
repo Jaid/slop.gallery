@@ -6,10 +6,11 @@ import {describe, expect, test} from 'bun:test'
 import {batOffset, flyingBats} from '../../src/lib/gallery/fusion/effects/bats/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, gravity as bloodGravity, bloodLanding, bloodPool, splatLift} from '../../src/lib/gallery/fusion/effects/blood/flights.ts'
 import {escapingGhosts} from '../../src/lib/gallery/fusion/effects/ghosts/flights.ts'
-import {batsEffect, bloodEffect, fusionEffects, ghostsEffect} from '../../src/lib/gallery/fusion/effects/index.ts'
+import {batsEffect, bloodEffect, fusionEffects, ghostsEffect, strokesEffect} from '../../src/lib/gallery/fusion/effects/index.ts'
+import {brushStrokes, strokeDrying, strokePoint} from '../../src/lib/gallery/fusion/effects/strokes/flights.ts'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
 import FusionRecipe, {itemIngredient, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
-import {portalFrame} from '../../src/lib/gallery/fusion/portalFrame.ts'
+import {portalFrame, portalRadius} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
 
@@ -101,17 +102,17 @@ describe('fusion effects', () => {
     show.dispose()
     fusion.abort()
   })
-  test('every themed orb but the Paint Orb contributes an effect of its own, which an id names that starts with the orb’s', () => {
+  test('every themed orb contributes an effect of its own, which an id names that starts with the orb’s', () => {
     expect(halloweenOrb.effect).toBe(batsEffect)
     expect(horrorOrb.effect).toBe(bloodEffect)
     expect(spookOrb.effect).toBe(ghostsEffect)
-    expect(paintOrb.effect).toBeUndefined()
+    expect(paintOrb.effect).toBe(strokesEffect)
     for (const orb of promptOrbs) {
       const effects = orb.ingredient(3).contributions.filter(contribution => contribution.kind === 'effect')
-      expect(effects).toEqual(orb.effect ? [{
+      expect(effects).toEqual([{
         kind: 'effect',
         effect: orb.effect,
-      }] : [])
+      }])
     }
     const ids = fusionEffects.map(effect => effect.id)
     const unique = new Set(ids)
@@ -156,6 +157,7 @@ describe('fusion effects', () => {
       expect(effect.afterglow).toBeGreaterThan(fusionTiming.afterglow)
     }
     expect(batsEffect.afterglow).toBe(Math.max(...flyingBats.map(({delay, life}) => delay + life)))
+    expect(strokesEffect.afterglow).toBe(strokeDrying.start + strokeDrying.stagger + strokeDrying.seconds)
     expect(bloodEffect.afterglow).toBeCloseTo(Math.max(bloodFading.start + bloodFading.stagger + bloodFading.duration, bloodPool.draining.start + bloodPool.draining.seconds), 9)
   })
   test('the bats burst out of the portal’s middle and fly out into the room', () => {
@@ -189,5 +191,22 @@ describe('fusion effects', () => {
     expect(bloodDrops[0].kind).toBe('pool')
     expect(Math.max(...bloodBeats.map(({at}) => at)) + filling[1]).toBeLessThan(draining.start)
     expect(draining.start + draining.seconds).toBeLessThanOrEqual(bloodEffect.afterglow)
+  })
+  test('the brush strokes curve around the portal clear of its ball, are laid one after another, each before it dries away, and turn on and drift out into the room once laid', () => {
+    for (const stroke of brushStrokes) {
+      for (const share of [0, 0.5, 1]) {
+        const [along, up] = strokePoint(stroke, share, 0)
+        expect(Math.hypot(along, up) - stroke.width / 2).toBeGreaterThan(portalRadius)
+      }
+      expect(stroke.delay + stroke.duration).toBeLessThan(strokeDrying.start)
+      expect(stroke.paint.every(paint => Number.isInteger(paint) && paint >= 0 && paint < 5)).toBe(true)
+    }
+    const delays = brushStrokes.map(({delay}) => delay)
+    expect(delays).toEqual(delays.toSorted((a, b) => a - b))
+    const [stroke] = brushStrokes
+    const [along, up, out] = strokePoint(stroke, 0, 0)
+    const [laterAlong, laterUp, laterOut] = strokePoint(stroke, 0, 1)
+    expect(Math.atan2(laterUp, laterAlong)).not.toBeCloseTo(Math.atan2(up, along), 2)
+    expect(laterOut).toBeGreaterThan(out)
   })
 })

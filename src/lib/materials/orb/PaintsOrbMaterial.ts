@@ -3,6 +3,7 @@ import type {Node} from 'three/webgpu'
 
 import {Break, float, If, Loop, mix, mx_cell_noise_float, normalize, select, smoothstep, time, vec2, vec3} from 'three/tsl'
 
+import {oilPaints} from '../oilPaints.ts'
 import OrbGlassMaterial from './base/OrbGlassMaterial.ts'
 import {rgb, spinAroundY} from './fill.ts'
 import {orbNoise} from './noise.ts'
@@ -14,7 +15,7 @@ const stride = [0.003, 0.05] as const
 /** how fast the {@link ribbonsAt} reach of ribbons at their full thickness falls at most, per radius of the orb, which a step’s length is reckoned by, so it doesn’t step through the ribbon ahead */
 const steepest = 50
 /** the paints, of which every ribbon is one or two: cadmium yellow, vermilion, ultramarine and viridian, and titanium white twice as often */
-const paints = ['#f2b705', '#d8341e', '#f4efe2', '#1f3aa8', '#0f7a5c', '#f4efe2'].map(rgb)
+const paints = [oilPaints.cadmiumYellow, oilPaints.vermilion, oilPaints.titaniumWhite, oilPaints.ultramarine, oilPaints.viridian, oilPaints.titaniumWhite].map(rgb)
 /** how many ribbons lie side by side per unit, across the spiral the stirring winds them into and up along it */
 const spacing = [3.2, 3] as const
 /** how far a ribbon reaches out of its middle across and along its flat side, in shares of its spacing */
