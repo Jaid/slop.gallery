@@ -14,7 +14,9 @@ import CorridorMissionFrame from './CorridorMissionFrame.ts'
 import ExhibitionContainmentFrame from './ExhibitionContainmentFrame.ts'
 import ExhibitionEvidenceFrame from './ExhibitionEvidenceFrame.ts'
 import ExhibitionVitrineFrame from './ExhibitionVitrineFrame.ts'
+import ForgeBrushesFrame from './ForgeBrushesFrame.ts'
 import ForgeMeanderFrame from './ForgeMeanderFrame.ts'
+import ForgePaletteFrame from './ForgePaletteFrame.ts'
 import {readFrame} from './frameParameter.ts'
 import HalloweenLanternFrame from './HalloweenLanternFrame.ts'
 import HalloweenOssuaryFrame from './HalloweenOssuaryFrame.ts'
@@ -69,6 +71,8 @@ export const frames = {
   'salon-whistler': new SalonWhistlerFrame,
   'salon-impressionist': new SalonImpressionistFrame,
   'forge-meander': new ForgeMeanderFrame,
+  'forge-palette': new ForgePaletteFrame,
+  'forge-brushes': new ForgeBrushesFrame,
   'moonfall-meteorite': new MoonfallMeteoriteFrame,
   'moonfall-orbit': new MoonfallOrbitFrame,
   'moonfall-regolith': new MoonfallRegolithFrame,

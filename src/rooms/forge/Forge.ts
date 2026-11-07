@@ -50,7 +50,7 @@ export default class Forge extends Room {
           }),
         }),
       ],
-      frame: 'forge-meander',
+      frame: ['forge-meander', 'forge-palette', 'forge-brushes'],
       cameras,
       spawns,
       skybox: 'sky',
