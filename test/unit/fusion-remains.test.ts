@@ -100,7 +100,7 @@ describe('fusion remains', () => {
       at: fusionTiming.minimum,
     }
     fusion.emergedAt = emergedAt
-    satellites.update(emergedAt + 0.1)
+    satellites.update(emergedAt + 0.05)
     expect(unleashed).toEqual([])
     expect(group.scale.x).toBeCloseTo(1e-4, 9)
     satellites.update(emergedAt + 0.4)

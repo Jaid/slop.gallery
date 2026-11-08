@@ -40,8 +40,8 @@ type Satellite = Held & {
 const regrowth = 0.4
 /** the largest side an orbiting prop shrinks to, in meters */
 const propSize = 0.6
-/** seconds after the result that the portal spits a prop back out, once the result has risen clear of where the prop appears */
-const spitDelay = 0.35
+/** seconds after the result that the portal spits a prop back out, a beat later, below the result while it flips up and away */
+const spitDelay = 0.1
 /** the angular velocity a prop spat out of the portal tumbles off with, in radians per second around the world axes */
 const spitSpin: Vec3 = [4, 3, 2]
 const holderInverse = new Matrix4
