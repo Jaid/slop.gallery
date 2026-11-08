@@ -5,7 +5,7 @@ import type {RootState} from '@react-three/fiber'
 import {useEffect} from 'react'
 import {Euler, PerspectiveCamera, Vector3} from 'three/webgpu'
 
-import {galleryEvents, setCameraFocused, useGallery} from '#src/lib/gallery.ts'
+import {cameraPose, galleryEvents, setCameraFocused, useGallery} from '#src/lib/gallery.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
@@ -63,9 +63,10 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
         },
       }))
       api.fuse = (first: string, second: string) => galleryEvents.dispatchEvent(new CustomEvent('fusion', {detail: [first, second]}))
-      // Detaches the camera from the player until the next teleport, so a still photo can be framed exactly.
+      // Detaches the camera from the player until the next teleport, so a still photo can be framed exactly, and makes the room it is in the player’s.
       api.pose = ({position, rotation, fov} = {}) => {
         setCameraFocused(true)
+        cameraPose.posed = true
         if (position) {
           camera.position.set(...position)
         }

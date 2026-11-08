@@ -60,7 +60,8 @@ export default function useInteractionFrame(camera: RootState['camera'], rendere
     camera.getWorldDirection(direction.current)
     cameraPose.position = camera.position.toArray()
     cameraPose.direction = direction.current.toArray()
-    rooms.current?.update(bodyPose.center)
+    // A posed camera, as in a capture, takes the player’s room along.
+    rooms.current?.update(cameraPose.posed ? cameraPose.position : bodyPose.center)
     geofences.current?.update(bodyPose.center, bodyPose.velocity)
     cursor.current.set(0, 0)
     if (dragPose.active) {

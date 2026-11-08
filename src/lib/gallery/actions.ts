@@ -24,6 +24,8 @@ import {useGallery} from './store.ts'
 const {spawn: playerSpawn} = world
 export const cameraPose = {
   focused: false,
+  /** whether a capture posed the camera apart from the player (`slopGallery.pose`) until the next teleport, which makes the room the camera is in the player’s, so the world looks and sounds as it does there */
+  posed: false,
   position: [playerSpawn.position[0], playerSpawn.position[1] + 1.6, playerSpawn.position[2]] as Vec3,
   direction: [-Math.sin(playerSpawn.yaw) * Math.cos(playerSpawn.pitch), Math.sin(playerSpawn.pitch), -Math.cos(playerSpawn.yaw) * Math.cos(playerSpawn.pitch)] as Vec3,
 }

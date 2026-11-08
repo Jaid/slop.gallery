@@ -92,6 +92,7 @@ export default function Player() {
         rotation: [number, number, number, number]
       }>).detail
       setCameraFocused(false)
+      cameraPose.posed = false
       if (heldCamera.current) {
         setFov(camera, heldCamera.current.releaseFov)
       }
