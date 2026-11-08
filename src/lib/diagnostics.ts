@@ -46,10 +46,21 @@ export type GalleryDiagnostics = {
   seed: number
   webGPU: boolean
 }
+/** where the Sandbox’s turntable floats its work and how large the work is in its frame */
+export type TurntablePose = {
+  /** the middle of the frame, round which it turns, in world meters */
+  center: Vec3
+  /** the direction the frame’s front faces while it isn’t turned, away from the wall into the room */
+  facing: Vec3
+  /** the frame’s outer width and height, its reach on every side included, and its depth, in meters */
+  size: Vec3
+}
 type GalleryDebugApi = Partial<CaptureFrameApi> & {
   /** the X dump snapshot of the current view, without logging, copying or sound; null before the player is ready */
   dump?: () => PlayerDumpSnapshot | null
   fuse?: (first: string, second: string) => void
+  /** Sandbox only, with `?turntable`: holds the turntable’s work turned `angle` radians round from facing the room, rising and sinking with the angle as it does while turning, or lets it turn on its own again without one, and tells where it floats */
+  holdTurntable?: (angle?: number) => TurntablePose
   player?: {
     enabled: boolean
     grounded: boolean

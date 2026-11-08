@@ -36,6 +36,7 @@ import {getShadowProps} from '#src/lib/rendering/shadowFilterNodes.ts'
 import {cellLed} from '#src/rooms/cell/Cell.ts'
 import CellCeiling from '#src/rooms/cell/components/CellCeiling/index.tsx'
 import CellDoor from '#src/rooms/cell/components/CellDoor/index.tsx'
+import CellTurntable from '#src/rooms/cell/components/CellTurntable/index.tsx'
 import sandbox from '#src/worlds/sandbox/index.ts'
 import {moonDirection, moonlight} from '#src/worlds/sandbox/night.ts'
 
@@ -106,7 +107,7 @@ const moon = sunGeometry(moonDirection, sunlitPoints(sandbox.rooms), {nearest: t
 /** texels along each axis of the moon’s shadow map in heavy graphics, about a centimeter each across the Cell */
 const moonShadowMapSize = 2048
 
-/** The Sandbox’s one room: a hall with the Vesper’s varnished wood underfoot, papered like the Sienna under a gabled, coffered ceiling with roof lights and the Sienna’s chandelier, lit besides by the moon through the roof lights and a faint studio fill from no visible source, and beyond its north wall the passage on to the round room with the items on their pedestals, or the door that closes it while there are none. */
+/** The Sandbox’s one room: a hall with the Vesper’s varnished wood underfoot, papered like the Sienna under a gabled, coffered ceiling with roof lights and the Sienna’s chandelier, lit besides by the moon through the roof lights and a faint studio fill from no visible source, the work `?turntable` asks for turning in front of its east wall, and beyond its north wall the passage on to the round room with the items on their pedestals, or the door that closes it while there are none. */
 export default function CellRoom() {
   const surfaces = useArenaSurfaces()
   // The Sienna’s damask, its baseboards, casings and cornice in one varnished timber, which the ceiling’s beams share.
@@ -126,6 +127,7 @@ export default function CellRoom() {
       <Chandelier lamp={cell.room.globalId('chandelier')} rod={chandelierRod} />
     </group>
     <Branch if={door} else={<Vestibule joinery={joinery} surfaces={surfaces} />}><CellDoor hole={door!} surfaces={surfaces} wall={northWall} /></Branch>
+    <Branch if={sandbox.turntable}><CellTurntable turntable={sandbox.turntable!} /></Branch>
   </group>
 }
 

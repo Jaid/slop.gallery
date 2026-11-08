@@ -1,4 +1,5 @@
 import {readItems} from '#src/worlds/sandbox/items.ts'
+import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
 
 import {readAiSettings} from './ai/settings.ts'
 import {readShowAmbienceEmitters} from './audio/ambience/ambienceEmitters.ts'
@@ -88,6 +89,9 @@ const readers: Record<string, Reader> = {
   weather: readWeather,
   wireframe_highlight: readWireframeHighlight,
   telemetry: readTelemetry,
+  turntable: input => readTurntable(input)?.artwork,
+  turntable_area: input => readTurntable(input)?.area,
+  turntable_ratio: input => readTurntable(input)?.aspect,
   logs_ingestion_endpoint: searchParameter('logs_ingestion_endpoint'),
   metrics_ingestion_endpoint: searchParameter('metrics_ingestion_endpoint'),
   traces_ingestion_endpoint: searchParameter('traces_ingestion_endpoint'),

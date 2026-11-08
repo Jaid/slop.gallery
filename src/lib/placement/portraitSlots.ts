@@ -19,7 +19,11 @@ const toMillimeters = (meters: number) => Math.round(meters * 1000) / 1000
 
 /** Frame width and height in meters of a ratio at an area in cm², rounded to the millimeter. */
 export function slotFrame(ratio: PortraitRatio, area: number) {
-  const aspect = portraitRatios[ratio]
+  return frameSize(portraitRatios[ratio], area)
+}
+
+/** Frame width and height in meters of a work `aspect` times as wide as it is high at an area in cm², rounded to the millimeter. */
+export function frameSize(aspect: number, area: number) {
   const squareMeters = area / 10_000
   return {
     width: toMillimeters(Math.sqrt(squareMeters * aspect)),

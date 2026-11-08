@@ -41,10 +41,10 @@ export const worlds = {
 /** the world a URL opens without any other world’s room in `?room` and without any other world’s own parameters */
 export const defaultWorld = 'gallery' satisfies WorldId
 
-/** the URL parameters only one world reads, by that world, which open it: Knottingham’s, like `?shots`, and the Sandbox’s `?item` */
+/** the URL parameters only one world reads, by that world, which open it: Knottingham’s, like `?shots`, and the Sandbox’s `?item` and `?turntable` */
 export const worldParameters = {
   knottingham: ['candidate', 'knot_id', 'model', 'shots', 'candidate_limit', 'candidate_order', 'rarity', 'rarity_filter'],
-  sandbox: ['item'],
+  sandbox: ['item', 'turntable'],
 } as const satisfies Partial<Record<WorldId, ReadonlyArray<string>>>
 
 /** the ids of the rooms of every world but the gallery, by that world, which open it when `?room` names one: Knottingham’s Arena and the Sandbox’s Cell */

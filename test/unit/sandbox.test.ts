@@ -17,15 +17,19 @@ import {orbs, promptOrbs} from '../../src/lib/gallery/orbs/index.ts'
 import roundRevealGeometry from '../../src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape} from '../../src/lib/gallery/roundVestibule.ts'
 import {chandelierCanopyTop, chandelierLampY, chandelierPhysics} from '../../src/lib/physics/chandelier.ts'
+import {defaultPortraitArea, portraitRatios} from '../../src/lib/placement/portraitSlots.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import cellBaseboard, {cellBaseboardHeight} from '../../src/rooms/cell/baseboard.ts'
 import Cell, {cellLed} from '../../src/rooms/cell/Cell.ts'
 import CellLayout from '../../src/rooms/cell/CellLayout.ts'
 import cellMap from '../../src/rooms/cell/map.ts'
 import RoomMap from '../../src/rooms/lib/RoomMap.ts'
+import artworks from '../../src/worlds/gallery/artworks.ts'
+import {readWorld} from '../../src/worlds/index.ts'
 import {readItems} from '../../src/worlds/sandbox/items.ts'
 import {moonDirection} from '../../src/worlds/sandbox/night.ts'
 import Sandbox from '../../src/worlds/sandbox/Sandbox.ts'
+import {readTurntable} from '../../src/worlds/sandbox/turntable.ts'
 
 await RAPIER.init()
 const ids = orbs.map(orb => orb.propId)
@@ -62,6 +66,85 @@ describe('?item', () => {
     const triple = new Sandbox(readItems('?item=prop-orb-spook,prop-orb-spook,prop-orb-spook'))
     expect(triple.room('cell').room.layout.plan).toBe('rotunda')
     expect(triple.room('cell').room.layout.pedestals).toHaveLength(3)
+  })
+})
+describe('?turntable', () => {
+  test('asks for an artwork of the catalog, an image URL or the catalog’s first, with its ratio and frame area if given', () => {
+    expect(readTurntable('http://localhost/')).toBeUndefined()
+    expect(readTurntable('?turntable=false')).toBeUndefined()
+    expect(readTurntable('?turntable')).toEqual({
+      artwork: '',
+      aspect: undefined,
+      area: undefined,
+    })
+    expect(readTurntable('?turntable=true')).toEqual({
+      artwork: '',
+      aspect: undefined,
+      area: undefined,
+    })
+    expect(readTurntable('?turntable=%20dog%20&turntable_ratio=3:2&turntable_area=30000')).toEqual({
+      artwork: 'dog',
+      aspect: 1.5,
+      area: 30_000,
+    })
+    expect(readTurntable('?turntable=dog&turntable_ratio=0.75')?.aspect).toBe(0.75)
+    for (const ratio of ['3:0', '-1', 'wide', '1:2:3']) {
+      expect(readTurntable(`?turntable=dog&turntable_ratio=${ratio}`)?.aspect).toBeUndefined()
+    }
+    expect(readTurntable('?turntable=dog&turntable_area=-5')?.area).toBeUndefined()
+  })
+  test('opens the Sandbox and shows among the query overrides as given', () => {
+    expect(readWorld('http://localhost/?turntable=dog')).toBe('sandbox')
+    expect(readQueryOverrides('http://localhost/?turntable=dog&turntable_ratio=16:9&turntable_area=7500')).toEqual({
+      turntable: 'dog',
+      turntable_ratio: 16 / 9,
+      turntable_area: 7500,
+    })
+  })
+  test('floats the work in place of the east wall’s middle one, in its catalog ratio unless one is asked for, and refuses what is neither an artwork nor a URL', () => {
+    const plain = new Sandbox([])
+    expect(plain.turntable).toBeUndefined()
+    const slot = plain.turntableSlot()
+    expect(plain.portraitSlots().map(entry => entry.id)).toContain(slot.id)
+    const sandbox = new Sandbox([], {
+      artwork: '',
+      aspect: undefined,
+      area: undefined,
+    })
+    expect(sandbox.turntable).toEqual({
+      id: artworks[0].id,
+      source: artworks[0].source,
+      aspect: portraitRatios[artworks[0].ratio],
+      area: defaultPortraitArea,
+    })
+    expect(sandbox.portraitSlots().map(entry => entry.id)).not.toContain(slot.id)
+    expect(sandbox.portraitSlots()).toHaveLength(plain.portraitSlots().length - 1)
+    const dog = new Sandbox([], {
+      artwork: 'dog',
+      aspect: 1.5,
+      area: 7500,
+    })
+    expect(dog.turntable).toMatchObject({
+      id: 'dog',
+      aspect: 1.5,
+      area: 7500,
+    })
+    const image = new Sandbox([], {
+      artwork: 'https://example.com/work.png',
+      aspect: undefined,
+      area: undefined,
+    })
+    expect(image.turntable).toEqual({
+      id: 'https://example.com/work.png',
+      source: 'https://example.com/work.png',
+      aspect: undefined,
+      area: defaultPortraitArea,
+    })
+    expect(() => new Sandbox([], {
+      artwork: 'gooze',
+      aspect: undefined,
+      area: undefined,
+    })).toThrow('Unknown Sandbox turntable artwork: gooze.')
   })
 })
 test('every orb with a prompt brings a JPEG XL photograph of itself for the portal of its fusions, in its own folder', async () => {

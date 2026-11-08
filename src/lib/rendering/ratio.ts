@@ -1,22 +1,24 @@
 import optis from 'optis'
 import readPermalink, {parseNumber} from 'read-permalink'
 
+/** A width-to-height ratio given as `16:9`, `16/9` or `1.78`; undefined for anything else. */
+export function parseRatio(value: unknown) {
+  const sides = typeof value === 'string' ? value.split(/[/:]/) : [value]
+  if (sides.length > 2) {
+    return
+  }
+  try {
+    const [width, height = 1] = sides.map(parseNumber)
+    const ratio = width / height
+    if (width > 0 && height > 0 && ratio > 0 && Number.isFinite(ratio)) {
+      return ratio
+    }
+  } catch {
+  }
+}
 const ratioSchema = optis({
   normalizations: {
-    ratio(value: unknown) {
-      const sides = typeof value === 'string' ? value.split(/[/:]/) : [value]
-      if (sides.length > 2) {
-        return
-      }
-      try {
-        const [width, height = 1] = sides.map(parseNumber)
-        const ratio = width / height
-        if (width > 0 && height > 0 && ratio > 0 && Number.isFinite(ratio)) {
-          return ratio
-        }
-      } catch {
-      }
-    },
+    ratio: parseRatio,
   },
 })
 
