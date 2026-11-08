@@ -133,7 +133,7 @@ test('the table lists every group in a fixed order with narrow-spaced thousands 
     effective: 6000 * (index + 1),
   }])) as CodeSizes
   const markdown = codeSizeTable(sizes)
-  expect(markdown).toStartWith('## Code size\n')
+  expect(markdown).toStartWith('## code size\n')
   expect(markdown).toContain([
     '| group | files | raw bytes | effective bytes |',
     '| --- | --: | --: | --: |',
