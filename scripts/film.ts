@@ -13,6 +13,8 @@ import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
 import {degrees, galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
 
+/** how many characters of a tool’s result the log shows */
+const logLength = 400
 const help = `Usage: bun scripts/film.ts [options]
 
 Renders a camera flight through a world and writes it as an animated JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
@@ -52,7 +54,7 @@ A recipe is a JSON array of keyframes, ordered by time:
             ${Object.keys(tweens).join(', ')}
   wireframe input for the app’s set_wireframe WebMCP tool, in effect from this keyframe on. See below
   tools     the app’s WebMCP tools to run once right before the first frame at or after this keyframe, by name with their input, in order, like
-            {"throw_prop": {"prop": "prop-orb-spook", "portrait": "goose"}}; their results go to stderr
+            {"throw_prop": {"prop": "prop-orb-spook", "portrait": "goose"}}; their results go to stderr, the first ${logLength} characters of each
 
 Each property animates on its own track, so a keyframe only affects the properties it sets. Before its first keyframe and after its last, a property holds still; properties no keyframe sets stay at the player spawn’s camera.
 The video lasts until the last keyframe, which is not rendered itself: 1 second at 60 fps is 60 frames, and a recipe that ends where it starts loops seamlessly.
@@ -205,6 +207,13 @@ const main = async (options: FilmOptions) => {
   const audioBytes = Math.ceil((leadIn + frameCount / fps + 1) * sampleRate) * 2 * 4
   let received = 0
   let audio: AudioTrack | undefined
+  /** what the recipe’s tool calls returned, in the order they ran */
+  const results: Array<{
+    name: string
+    /** the tool’s result as the page returned it, JSON for the app’s own tools */
+    result: string
+    time: number
+  }> = []
   // Frames travel as raw RGBA request bodies, and the sound as raw samples; base64 through the DevTools protocol would cost more than rendering.
   const frameServer = Bun.serve({
     hostname: '127.0.0.1',
@@ -282,7 +291,13 @@ const main = async (options: FilmOptions) => {
       if (frameCalls) {
         for (const {input, name, time} of frameCalls) {
           const result = await executeWebmcpTool(page, name, input)
-          console.error(`${name} at ${time} s: ${result}`)
+          // Dumps run long; scripts get every result in full from main.
+          console.error(`${name} at ${time} s: ${result.length > logLength ? `${result.slice(0, logLength)}… (${result.length} characters)` : result}`)
+          results.push({
+            name,
+            result,
+            time,
+          })
         }
         await page.evaluate((delta: number) => globalThis.virtualClock!.step(delta), 1 / fps)
       }
@@ -347,6 +362,8 @@ const main = async (options: FilmOptions) => {
     frameCount,
     height,
     output,
+    /** what the recipe’s tool calls returned, in the order they ran */
+    tools: results,
     width,
   }
 }
