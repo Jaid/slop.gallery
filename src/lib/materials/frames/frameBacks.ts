@@ -5,6 +5,7 @@ import {attribute, color, float, max, mix, mx_cell_noise_float, positionLocal, s
 import {frameShapeAttribute} from '#src/lib/frames/frameGeometry.ts'
 
 import {inside, line, visibleDetail} from '../filters.ts'
+import {curveDistance} from '../sdf.ts'
 
 export type BackSurface = ReturnType<typeof backSurface>
 type Vec2 = Node<'vec2'>
@@ -80,3 +81,34 @@ export function galleryLabel({footprint, point}: BackSurface, center: Vec2, size
     height: card.mul(0.0002),
   }
 }
+
+/**
+ * A line of handwriting `length` meters long round `center`, letters `height` tall, like an inventory number in chalk or a joiner’s note in pencil: a looping stroke broken into words, its own for every `seed`. Returns how much it covers the point, fading to a faint average before its strokes could shimmer.
+ */
+export function scribble({footprint, point}: BackSurface, center: Vec2, length: number, height: number, seed: number) {
+  const local = point.sub(center)
+  const t = local.x.div(height)
+  // Loops of two waves at once, as hands write.
+  const f = t.mul(5.1).add(seed).sin().mul(0.3).add(t.mul(12.3).add(seed * 2.7).sin().mul(0.2))
+  const slope = t.mul(5.1).add(seed).cos().mul(0.3 * 5.1).add(t.mul(12.3).add(seed * 2.7).cos().mul(0.2 * 12.3))
+  const stroke = line(curveDistance(local.y.div(height), f, slope).mul(height), height * 0.05)
+  const word = mx_cell_noise_float(vec3(t.div(2.2).floor(), seed, 1.7)).greaterThan(0.22)
+  const within = select(local.x.abs().lessThan(length / 2).and(word), float(1), float(0))
+  return mix(float(0.08), stroke, visibleDetail(footprint, height * 0.25)).mul(within).mul(select(local.y.abs().lessThan(height), float(1), float(0)))
+}
+
+/** A slotted screw head of `radius` at `center`, its slot turned its own way: how much the head and how much the slot cover the point, and how high it stands. */
+export function screwHead({point}: BackSurface, center: Vec2, radius: number) {
+  const local = point.sub(center)
+  const turn = mx_cell_noise_float(vec3(center.mul(97), 3.1)).mul(Math.PI)
+  const along = local.x.mul(turn.cos()).add(local.y.mul(turn.sin()))
+  const across = local.y.mul(turn.cos()).sub(local.x.mul(turn.sin()))
+  const head = inside(local.length().sub(radius))
+  const slot = inside(max(across.abs().sub(radius * 0.16), along.abs().sub(radius * 0.85))).mul(head)
+  return {
+    cover: head,
+    slot,
+    height: head.mul(float(1).sub(local.length().div(radius).pow(2)).max(0).mul(radius * 0.25)).sub(slot.mul(radius * 0.2)),
+  }
+}
+

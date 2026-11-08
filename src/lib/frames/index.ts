@@ -8,6 +8,8 @@ import BanquetPerspectiveFrame from './BanquetPerspectiveFrame.ts'
 import BastionOakFrame from './BastionOakFrame.ts'
 import BastionStrapworkFrame from './BastionStrapworkFrame.ts'
 import CellCofferFrame from './CellCofferFrame.ts'
+import CellCrateFrame from './CellCrateFrame.ts'
+import CellGildingFrame from './CellGildingFrame.ts'
 import ClassicFrame from './ClassicFrame.ts'
 import CorridorKumikoFrame from './CorridorKumikoFrame.ts'
 import CorridorMissionFrame from './CorridorMissionFrame.ts'
@@ -89,6 +91,8 @@ export const frames = {
   'exhibition-evidence': new ExhibitionEvidenceFrame,
   'exhibition-containment': new ExhibitionContainmentFrame,
   'cell-coffer': new CellCofferFrame,
+  'cell-gilding': new CellGildingFrame,
+  'cell-crate': new CellCrateFrame,
   'halloween-lantern': new HalloweenLanternFrame,
   'halloween-ossuary': new HalloweenOssuaryFrame,
   'horror-flesh': new HorrorFleshFrame,

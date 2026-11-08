@@ -108,7 +108,7 @@ export default class Cell extends Room {
           }),
         }),
       ],
-      frame: 'cell-coffer',
+      frame: ['cell-coffer', 'cell-gilding', 'cell-crate'],
       map: cellMap(layout),
       slots,
       lamps,
