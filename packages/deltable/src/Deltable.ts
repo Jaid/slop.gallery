@@ -6,7 +6,7 @@ export type DeltableRows = Partial<Record<string, Partial<Record<string, number>
 export type DeltableOptions = {
   /** the title of a changed column’s subcolumn with its deltas. Default: delta */
   deltaHeaderTitle?: string
-  /** the titles of the columns by their keys; a column without one is titled by its key */
+  /** the titles of the columns by their keys, in the order of the columns; columns without one follow them, titled by their keys */
   headers?: Partial<Record<string, string>>
   /** the title of the cell above the row IDs. Default: empty */
   idHeaderTitle?: string
@@ -59,12 +59,12 @@ export default class Deltable {
     }
   }
   /**
-   * The rows of `values` in their order, then those only `base` has with counts of 0; the columns in the order they first appear in them.
+   * The rows of `values` in their order, then those only `base` has with counts of 0; the columns of `headers` in its order, even those without any count, then the others in the order they first appear in the rows.
    * Rows keep the order of their IDs in the objects, which JavaScript puts first for IDs that are array indices, like “7”.
    */
   render({values, base}: DeltableInput) {
     const ids = [...new Set([...presentKeys(values), ...presentKeys(base)])]
-    const keys = [...new Set(ids.flatMap(id => [...presentKeys(values[id]), ...presentKeys(base?.[id])]))]
+    const keys = [...new Set([...presentKeys(this.options.headers), ...ids.flatMap(id => [...presentKeys(values[id]), ...presentKeys(base?.[id])])])]
     const counts = (rows: DeltableRows | undefined, id: string) => keys.map(key => rows?.[id]?.[key] ?? 0)
     const rows: Array<Row> = ids.map(id => ({
       id,

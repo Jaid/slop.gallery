@@ -60,6 +60,27 @@ describe('markdown', () => {
     expect(html).toContain('<tr><th align="right">now</th><th align="right">change</th></tr>')
     expect(html).toContain('<tr><td><b>sum</b></td><td align="right">2</td><td align="right">+1</td></tr>')
   })
+  test('columns follow the order of headers, even without counts, and the others come after them in the order they first appear', () => {
+    const ordered = new Deltable({
+      headers: {
+        files: 'files',
+        bytes: 'bytes',
+        lines: 'lines',
+      },
+    })
+    expect(ordered.render({
+      values: {
+        a: {
+          words: 3,
+          bytes: 20,
+        },
+        b: {
+          files: 1,
+          chars: 9,
+        },
+      },
+    })).toBe(['|  | files | bytes | lines | words | chars |', '| --- | --: | --: | --: | --: | --: |', '| a |  | 20 |  | 3 |  |', '| b | 1 |  |  |  | 9 |'].join('\n'))
+  })
   test('pipes in titles and IDs are escaped', () => {
     const piped = new Deltable({headers: {count: 'this | that'}})
     expect(piped.render({values: {'a|b': {count: 1}}})).toBe([String.raw`|  | this \| that |`, '| --- | --: |', String.raw`| a\|b | 1 |`].join('\n'))
