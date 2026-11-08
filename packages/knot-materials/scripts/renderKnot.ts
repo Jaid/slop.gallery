@@ -149,8 +149,37 @@ export default async function renderKnot(id: string, {categories = renderCategor
   }
 }
 
-/** Command line of renderKnot. `scenes` adds named scenes to --scene besides the default `transparent`; their renders go to out/render/<id>-<scene>. */
-export const renderKnotCli = async (args = Bun.argv.slice(2), scenes: Record<string, NamedKnotScene> = {}) => {
+const sceneNamesOf = (scenes: Record<string, NamedKnotScene>) => ['transparent', ...Object.keys(scenes)]
+const assertSceneName = (scenes: Record<string, NamedKnotScene>, sceneName: string) => {
+  const sceneNames = sceneNamesOf(scenes)
+  if (!sceneNames.includes(sceneName)) {
+    throw new Error(`--scene must be one of: ${sceneNames.join(', ')}.`)
+  }
+}
+
+/** folder in out/render that receives the renders of the knot in the scene of that name: <id> for `transparent`, otherwise <id>-<scene> */
+export const sceneFolder = (id: string, sceneName = 'transparent') => (sceneName === 'transparent' ? id : `${id}-${sceneName}`)
+
+/** Renders the knot in the scene of that name: `transparent`, the default, or one of `scenes`, into out/render/<id> or out/render/<id>-<scene>. */
+export const renderKnotInScene = (id: string, scenes: Record<string, NamedKnotScene>, {scene: sceneName = 'transparent', ...options}: Omit<RenderKnotOptions, 'folder' | 'scene'> & {scene?: string} = {}) => {
+  assertSceneName(scenes, sceneName)
+  return renderKnot(id, {
+    ...options,
+    folder: sceneFolder(id, sceneName),
+    scene: sceneName === 'transparent' ? undefined : scenes[sceneName].scene,
+  })
+}
+
+/** --help of renderKnot’s command line, which lists `scenes` besides the default `transparent` */
+export const renderKnotHelp = (scenes: Record<string, NamedKnotScene> = {}) => {
+  const sceneNames = sceneNamesOf(scenes)
+  const sceneHelp = sceneNames.length > 1 ? `\n\nScenes, selected with --scene; default: transparent:\n  transparent  the knot alone on a transparent background, written to out/render/<knot-id>${Object.entries(scenes).map(([name, {description}]) => `\n  ${name.padEnd(11)}  ${description}, written to out/render/<knot-id>-${name}`).join('')}` : ''
+  return `Usage: bun scripts/renderKnot.ts <knot-id> [--category snapshot,animation,video]${sceneNames.length > 1 ? ` [--scene ${sceneNames.join('|')}]` : ''}
+Categories can be snapshot, animation, video, or any comma-separated combination; default: snapshot,animation,video. Snapshots and the animated angle loop use JPEG XL. Video is ${inspectionVideoSize}x${inspectionVideoSize} AV1/WebM.${sceneHelp}`
+}
+
+/** Parses and validates renderKnot’s command line against `scenes` besides the default `transparent`. Resolves nothing for --help. */
+export const parseRenderKnotArgs = <Scenes extends Record<string, NamedKnotScene>>(args: Array<string>, scenes = {} as Scenes) => {
   const {values, positionals} = parseArgs({
     args,
     allowPositionals: true,
@@ -163,11 +192,7 @@ export const renderKnotCli = async (args = Bun.argv.slice(2), scenes: Record<str
       },
     },
   })
-  const sceneNames = ['transparent', ...Object.keys(scenes)]
   if (values.help) {
-    const sceneHelp = sceneNames.length > 1 ? `\n\nScenes, selected with --scene; default: transparent:\n  transparent  the knot alone on a transparent background, written to out/render/<knot-id>${Object.entries(scenes).map(([name, {description}]) => `\n  ${name.padEnd(11)}  ${description}, written to out/render/<knot-id>-${name}`).join('')}` : ''
-    console.log(`Usage: bun scripts/renderKnot.ts <knot-id> [--category snapshot,animation,video]${sceneNames.length > 1 ? ` [--scene ${sceneNames.join('|')}]` : ''}
-Categories can be snapshot, animation, video, or any comma-separated combination; default: snapshot,animation,video. Snapshots and the animated angle loop use JPEG XL. Video is ${inspectionVideoSize}x${inspectionVideoSize} AV1/WebM.${sceneHelp}`)
     return
   }
   if (positionals.length !== 1) {
@@ -176,18 +201,27 @@ Categories can be snapshot, animation, video, or any comma-separated combination
   const id = positionals[0]
   getKnot(id)
   const categories = parseRenderCategories(values.category)
-  const sceneName = values.scene ?? 'transparent'
-  if (!sceneNames.includes(sceneName)) {
-    throw new Error(`--scene must be one of: ${sceneNames.join(', ')}.`)
-  }
-  const isTransparent = sceneName === 'transparent'
-  const folder = isTransparent ? id : `${id}-${sceneName}`
-  console.log(`Output: out/render/${folder}`)
-  await renderKnot(id, {
+  const scene = values.scene ?? 'transparent'
+  assertSceneName(scenes, scene)
+  return {
     categories,
-    folder,
+    id,
+    scene: scene as Extract<keyof Scenes, string> | 'transparent',
+  }
+}
+
+/** Command line of renderKnot. `scenes` adds named scenes to --scene besides the default `transparent`; their renders go to out/render/<id>-<scene>. */
+export const renderKnotCli = async (args = Bun.argv.slice(2), scenes: Record<string, NamedKnotScene> = {}) => {
+  const parsed = parseRenderKnotArgs(args, scenes)
+  if (!parsed) {
+    console.log(renderKnotHelp(scenes))
+    return
+  }
+  const {id, ...options} = parsed
+  console.log(`Output: out/render/${sceneFolder(id, options.scene)}`)
+  await renderKnotInScene(id, scenes, {
+    ...options,
     onFile: filename => console.log(filename),
-    scene: isTransparent ? undefined : scenes[sceneName].scene,
   })
 }
 

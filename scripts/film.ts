@@ -70,202 +70,225 @@ With --scale above 1, every frame renders at that many times the size and is dow
 
 Set BROWSER to a Chromium executable with WebGPU support. ffmpeg (and cjxl for .jxl) must be on PATH.`
 const filmRoot = join(repositoryRoot, 'out', 'film')
-const {values} = parseArgs({
-  args: Bun.argv.slice(2),
-  options: {
-    ...galleryOptions,
-    crf: {type: 'string'},
-    fps: {
-      type: 'string',
-      default: '60',
-    },
-    help: {
-      type: 'boolean',
-      short: 'h',
-    },
-    'jxl-distance': {
-      type: 'string',
-      default: '1',
-    },
-    'output-file': {type: 'string'},
-    recipe: {type: 'string'},
-    settle: {
-      type: 'string',
-      default: '2',
-    },
-    'starting-frame': {
-      type: 'string',
-      default: '1',
-    },
+const filmOptions = {
+  ...galleryOptions,
+  crf: {type: 'string'},
+  fps: {
+    type: 'string',
+    default: '60',
   },
-})
-if (values.help) {
-  console.log(help)
-  process.exit(0)
-}
-const recipeFile = values.recipe ?? join(import.meta.dir, 'recipes', 'spawn.json')
-const recipeText = recipeFile === '-' ? await Bun.stdin.text() : await fs.readFile(recipeFile, 'utf8')
-const recipe = parseRecipe(JSON.parse(recipeText))
-const duration = recipeDuration(recipe)
-if (duration === 0) {
-  throw new Error('The recipe needs a keyframe with a time after 0.')
-}
-const crf = values.crf === undefined ? av1Crf : parseNumbers(values.crf, 'crf', [1])[0]
-const jxlDistance = parseNumbers(values['jxl-distance'], 'jxl-distance', [1])[0]
-const fps = parseNumbers(values.fps, 'fps', [1])[0]
-if (fps <= 0) {
-  throw new Error('--fps must be positive.')
-}
-const setup = await resolveGallerySetup(values)
-warnAboutDevServer(setup)
-const settle = resolveSettle(values.settle)
-const output = values['output-file'] === undefined ? join(filmRoot, `${setup.world}-${timestamp()}.jxl`) : resolve(values['output-file'])
-const format = frameFormat(output)
-const {width, height} = setup.viewport
-if ((format === 'webm' || format === 'mkv') && (width % 2 || height % 2)) {
-  throw new Error('--width and --height need to be even for 4:2:0 video.')
-}
-const frameCount = Math.max(1, Math.round(duration * fps))
-const startingFrame = parseNumbers(values['starting-frame'], 'starting-frame', [1])[0]
-if (!Number.isSafeInteger(startingFrame) || startingFrame < 1 || startingFrame > frameCount) {
-  throw new Error(`--starting-frame must be a whole number between 1 and ${frameCount}.`)
-}
-const frameSeconds = (index: number) => (index + startingFrame - 1) % frameCount / fps
-const toPose = (shot: Shot): Partial<CameraPose> => ({
-  position: shot.position,
-  rotation: [radians(shot.pitch), radians(shot.yaw), radians(shot.roll)],
-  fov: shot.fov,
-})
-await using gallery = await openHeadlessGallery(setup, {
-  cacheDir: 'node_modules/.vite-film',
-  initScript: installVirtualClock,
-})
-const {page} = gallery
-const spawn = await page.evaluate(() => globalThis.slopGallery!.pose!())
-const fallback: Shot = {
-  position: spawn.position,
-  yaw: degrees(spawn.rotation[1]),
-  pitch: degrees(spawn.rotation[0]),
-  roll: degrees(spawn.rotation[2]),
-  fov: spawn.fov ?? 60,
-}
-// recipes with wireframe keyframes send their flood to set_wireframe before every frame; unchanged fields keep it growing
-const flood = (index: number) => sampleWireframe(recipe, frameSeconds(index))
-const firstFlood = flood(0)
-if (firstFlood) {
-  await setWireframe(page, firstFlood)
-}
-const first = toPose(sampleRecipe(recipe, frameSeconds(0), fallback))
-await page.evaluate((pose: Partial<CameraPose>) => globalThis.slopGallery!.pose!(pose), first)
-await waitForFrames(page, settle)
-await waitForLoadingItems(page)
-// All of it loaded at the warmup scale; the film renders at the full size, after frames that build TRAA’s history there.
-const warmup = await endWarmup(page)
-if (warmup.warmed) {
+  'jxl-distance': {
+    type: 'string',
+    default: '1',
+  },
+  'output-file': {type: 'string'},
+  recipe: {type: 'string'},
+  settle: {
+    type: 'string',
+    default: '2',
+  },
+  'starting-frame': {
+    type: 'string',
+    default: '1',
+  },
+} as const
+
+/** the command line options without --help, as parsed strings */
+export type FilmOptions = ReturnType<typeof parseArgs<{options: typeof filmOptions}>>['values']
+
+const main = async (options: FilmOptions) => {
+  const recipeFile = options.recipe ?? join(import.meta.dir, 'recipes', 'spawn.json')
+  const recipeText = recipeFile === '-' ? await Bun.stdin.text() : await fs.readFile(recipeFile, 'utf8')
+  const recipe = parseRecipe(JSON.parse(recipeText))
+  const duration = recipeDuration(recipe)
+  if (duration === 0) {
+    throw new Error('The recipe needs a keyframe with a time after 0.')
+  }
+  const crf = options.crf === undefined ? av1Crf : parseNumbers(options.crf, 'crf', [1])[0]
+  const jxlDistance = parseNumbers(options['jxl-distance'], 'jxl-distance', [1])[0]
+  const fps = parseNumbers(options.fps, 'fps', [1])[0]
+  if (fps <= 0) {
+    throw new Error('--fps must be positive.')
+  }
+  const setup = await resolveGallerySetup(options)
+  warnAboutDevServer(setup)
+  const settle = resolveSettle(options.settle)
+  const output = options['output-file'] === undefined ? join(filmRoot, `${setup.world}-${timestamp()}.jxl`) : resolve(options['output-file'])
+  const format = frameFormat(output)
+  const {width, height} = setup.viewport
+  if ((format === 'webm' || format === 'mkv') && (width % 2 || height % 2)) {
+    throw new Error('--width and --height need to be even for 4:2:0 video.')
+  }
+  const frameCount = Math.max(1, Math.round(duration * fps))
+  const startingFrame = parseNumbers(options['starting-frame'], 'starting-frame', [1])[0]
+  if (!Number.isSafeInteger(startingFrame) || startingFrame < 1 || startingFrame > frameCount) {
+    throw new Error(`--starting-frame must be a whole number between 1 and ${frameCount}.`)
+  }
+  const frameSeconds = (index: number) => (index + startingFrame - 1) % frameCount / fps
+  const toPose = (shot: Shot): Partial<CameraPose> => ({
+    position: shot.position,
+    rotation: [radians(shot.pitch), radians(shot.yaw), radians(shot.roll)],
+    fov: shot.fov,
+  })
+  await using gallery = await openHeadlessGallery(setup, {
+    cacheDir: 'node_modules/.vite-film',
+    initScript: installVirtualClock,
+  })
+  const {page} = gallery
+  const spawn = await page.evaluate(() => globalThis.slopGallery!.pose!())
+  const fallback: Shot = {
+    position: spawn.position,
+    yaw: degrees(spawn.rotation[1]),
+    pitch: degrees(spawn.rotation[0]),
+    roll: degrees(spawn.rotation[2]),
+    fov: spawn.fov ?? 60,
+  }
+  // recipes with wireframe keyframes send their flood to set_wireframe before every frame; unchanged fields keep it growing
+  const flood = (index: number) => sampleWireframe(recipe, frameSeconds(index))
+  const firstFlood = flood(0)
+  if (firstFlood) {
+    await setWireframe(page, firstFlood)
+  }
+  const first = toPose(sampleRecipe(recipe, frameSeconds(0), fallback))
+  await page.evaluate((pose: Partial<CameraPose>) => globalThis.slopGallery!.pose!(pose), first)
   await waitForFrames(page, settle)
   await waitForLoadingItems(page)
-}
-await waitForFrames(page, settle)
-// With --scale the canvas renders more pixels than the film has; the sink downsamples them.
-const source = await page.evaluate(async () => {
-  const frame = await globalThis.slopGallery!.capturePixels!()
-  return {
-    width: frame.width,
-    height: frame.height,
+  // All of it loaded at the warmup scale; the film renders at the full size, after frames that build TRAA’s history there.
+  const warmup = await endWarmup(page)
+  if (warmup.warmed) {
+    await waitForFrames(page, settle)
+    await waitForLoadingItems(page)
   }
-})
-await fs.mkdir(dirname(output), {recursive: true})
-const sink = createFrameSink(format, {
-  crf,
-  fps,
-  frameCount,
-  height,
-  jxlDistance,
-  output,
-  source,
-  width,
-})
-const frameBytes = source.width * source.height * 4
-let received = 0
-// Frames travel as raw RGBA request bodies; base64 through the DevTools protocol would cost more than rendering.
-const frameServer = Bun.serve({
-  hostname: '127.0.0.1',
-  port: 0,
-  maxRequestBodySize: frameBytes,
-  async fetch(request) {
-    const headers = {'Access-Control-Allow-Origin': '*'}
-    const pixels = await request.bytes()
-    if (pixels.byteLength !== frameBytes) {
-      return new Response(`Expected ${frameBytes} bytes, got ${pixels.byteLength}.`, {
-        status: 400,
-        headers,
-      })
+  await waitForFrames(page, settle)
+  // With --scale the canvas renders more pixels than the film has; the sink downsamples them.
+  const source = await page.evaluate(async () => {
+    const frame = await globalThis.slopGallery!.capturePixels!()
+    return {
+      width: frame.width,
+      height: frame.height,
     }
-    if (received === 0 && !pixels.some((value, index) => index % 4 !== 3 && value > 8)) {
-      return new Response('The first frame is completely black.', {
-        status: 422,
-        headers,
-      })
-    }
-    await sink.write(pixels)
-    received++
-    return new Response(null, {
-      status: 204,
-      headers,
-    })
-  },
-})
-try {
-  const frameUrl = `http://127.0.0.1:${frameServer.port}/`
-  await page.evaluate(() => {
-    // Knots turned on the wall clock while the world loaded; every film starts them at the same angle.
-    globalThis.slopGallery!.resetKnotRotation?.()
-    globalThis.virtualClock!.start()
-    // Fiber measures its first frozen delta from the last wall-clock frame; this aligns it without recording.
-    globalThis.virtualClock!.step(0)
   })
-  const startedAt = performance.now()
-  for (let index = 0; index < frameCount; index++) {
-    const pose = toPose(sampleRecipe(recipe, frameSeconds(index), fallback))
-    const frameFlood = flood(index)
-    if (frameFlood) {
-      await setWireframe(page, frameFlood)
-    }
-    await page.evaluate((frame: {
-      delta: number
-      pose: Partial<CameraPose>
-    }) => {
-      globalThis.slopGallery!.pose!(frame.pose)
-      globalThis.virtualClock!.step(frame.delta)
-    }, {
-      delta: 1 / fps,
-      pose,
-    })
-    // The clock stands still while whatever just came into view loads; frames at the same moment let what needs them, like objects streaming in, get there.
-    await waitForLoadingItems(page, {between: () => page.evaluate(() => globalThis.virtualClock!.step(0))})
-    await page.evaluate(async (url: string) => {
-      const {pixels} = await globalThis.slopGallery!.capturePixels!()
-      const response = await fetch(url, {
-        method: 'POST',
-        body: pixels,
-      })
-      if (!response.ok) {
-        throw new Error(await response.text())
+  await fs.mkdir(dirname(output), {recursive: true})
+  const sink = createFrameSink(format, {
+    crf,
+    fps,
+    frameCount,
+    height,
+    jxlDistance,
+    output,
+    source,
+    width,
+  })
+  const frameBytes = source.width * source.height * 4
+  let received = 0
+  // Frames travel as raw RGBA request bodies; base64 through the DevTools protocol would cost more than rendering.
+  const frameServer = Bun.serve({
+    hostname: '127.0.0.1',
+    port: 0,
+    maxRequestBodySize: frameBytes,
+    async fetch(request) {
+      const headers = {'Access-Control-Allow-Origin': '*'}
+      const pixels = await request.bytes()
+      if (pixels.byteLength !== frameBytes) {
+        return new Response(`Expected ${frameBytes} bytes, got ${pixels.byteLength}.`, {
+          status: 400,
+          headers,
+        })
       }
-    }, frameUrl)
-    const rendered = index + 1
-    if (rendered % Math.round(fps) !== 0 && rendered !== frameCount) {
-      continue
+      if (received === 0 && !pixels.some((value, index) => index % 4 !== 3 && value > 8)) {
+        return new Response('The first frame is completely black.', {
+          status: 422,
+          headers,
+        })
+      }
+      await sink.write(pixels)
+      received++
+      return new Response(null, {
+        status: 204,
+        headers,
+      })
+    },
+  })
+  try {
+    const frameUrl = `http://127.0.0.1:${frameServer.port}/`
+    await page.evaluate(() => {
+      // Knots turned on the wall clock while the world loaded; every film starts them at the same angle.
+      globalThis.slopGallery!.resetKnotRotation?.()
+      globalThis.virtualClock!.start()
+      // Fiber measures its first frozen delta from the last wall-clock frame; this aligns it without recording.
+      globalThis.virtualClock!.step(0)
+    })
+    const startedAt = performance.now()
+    for (let index = 0; index < frameCount; index++) {
+      const pose = toPose(sampleRecipe(recipe, frameSeconds(index), fallback))
+      const frameFlood = flood(index)
+      if (frameFlood) {
+        await setWireframe(page, frameFlood)
+      }
+      await page.evaluate((frame: {
+        delta: number
+        pose: Partial<CameraPose>
+      }) => {
+        globalThis.slopGallery!.pose!(frame.pose)
+        globalThis.virtualClock!.step(frame.delta)
+      }, {
+        delta: 1 / fps,
+        pose,
+      })
+      // The clock stands still while whatever just came into view loads; frames at the same moment let what needs them, like objects streaming in, get there.
+      await waitForLoadingItems(page, {between: () => page.evaluate(() => globalThis.virtualClock!.step(0))})
+      await page.evaluate(async (url: string) => {
+        const {pixels} = await globalThis.slopGallery!.capturePixels!()
+        const response = await fetch(url, {
+          method: 'POST',
+          body: pixels,
+        })
+        if (!response.ok) {
+          throw new Error(await response.text())
+        }
+      }, frameUrl)
+      const rendered = index + 1
+      if (rendered % Math.round(fps) !== 0 && rendered !== frameCount) {
+        continue
+      }
+      const rate = rendered / ((performance.now() - startedAt) / 1000)
+      console.log(`Rendered ${(rendered / fps).toFixed(1)}/${duration.toFixed(1)} s (frame ${rendered}/${frameCount}, ${rate.toFixed(1)} frames per second)`)
     }
-    const rate = rendered / ((performance.now() - startedAt) / 1000)
-    console.log(`Rendered ${(rendered / fps).toFixed(1)}/${duration.toFixed(1)} s (frame ${rendered}/${frameCount}, ${rate.toFixed(1)} frames per second)`)
+  } catch (error) {
+    sink.abort()
+    throw error
+  } finally {
+    await frameServer.stop(true)
   }
-} catch (error) {
-  sink.abort()
-  throw error
-} finally {
-  await frameServer.stop(true)
+  await sink.finish()
+  return {
+    format,
+    fps,
+    frameCount,
+    height,
+    output,
+    width,
+  }
 }
-await sink.finish()
-const written = relative(repositoryRoot, output).replaceAll('\\', '/')
-console.log(`Wrote ${format === 'png' ? `${frameCount} numbered PNGs for ${written}` : written} (${width}×${height}, ${frameCount} frames at ${fps} fps, ${(frameCount / fps).toFixed(2)} s)`)
+
+export default main
+
+if (import.meta.main) {
+  const {values} = parseArgs({
+    args: Bun.argv.slice(2),
+    options: {
+      ...filmOptions,
+      help: {
+        type: 'boolean',
+        short: 'h',
+      },
+    },
+  })
+  if (values.help) {
+    console.log(help)
+  } else {
+    const {format, fps, frameCount, height, output, width} = await main(values)
+    const written = relative(repositoryRoot, output).replaceAll('\\', '/')
+    console.log(`Wrote ${format === 'png' ? `${frameCount} numbered PNGs for ${written}` : written} (${width}×${height}, ${frameCount} frames at ${fps} fps, ${(frameCount / fps).toFixed(2)} s)`)
+  }
+}

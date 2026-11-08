@@ -21,31 +21,47 @@ ${galleryHelp()}
   -h, --help              show this help
 
 Set BROWSER to a Chromium executable with WebGPU support.`
-const {values} = parseArgs({
-  args: Bun.argv.slice(2),
-  options: {
-    ...galleryOptions,
-    format: {
-      type: 'string',
-      default: 'json',
-    },
-    help: {
-      type: 'boolean',
-      short: 'h',
-    },
+const analyzeWorldOptions = {
+  ...galleryOptions,
+  format: {
+    type: 'string',
+    default: 'json',
   },
-})
-if (values.help) {
-  console.log(help)
-  process.exit(0)
+} as const
+
+/** the command line options without --help, as parsed strings */
+export type AnalyzeWorldOptions = ReturnType<typeof parseArgs<{options: typeof analyzeWorldOptions}>>['values']
+
+/** Resolves with the analysis as JSON or as markdown tables, depending on `format`. */
+const main = async (options: AnalyzeWorldOptions) => {
+  const format = options.format as typeof formats[number]
+  if (!formats.includes(format)) {
+    throw new Error(`--format must be one of ${formats.join(', ')}, got “${options.format}”.`)
+  }
+  const setup = await resolveGallerySetup(options)
+  await using gallery = await openHeadlessGallery(setup, {cacheDir: 'node_modules/.vite-analyze-world'})
+  // Rooms other than the start room still download and mount after the scene is ready.
+  await waitForLoadingItems(gallery.page)
+  const analysis = await callWebmcpTool(gallery.page, 'analyze_world') as WorldAnalysis
+  return format === 'markdown' ? worldTables(analysis, worlds[setup.world].title, options.graphics, setup.seed) : JSON.stringify(analysis, null, 2)
 }
-const format = values.format as typeof formats[number]
-if (!formats.includes(format)) {
-  throw new Error(`--format must be one of ${formats.join(', ')}, got “${values.format}”.`)
+
+export default main
+
+if (import.meta.main) {
+  const {values} = parseArgs({
+    args: Bun.argv.slice(2),
+    options: {
+      ...analyzeWorldOptions,
+      help: {
+        type: 'boolean',
+        short: 'h',
+      },
+    },
+  })
+  if (values.help) {
+    console.log(help)
+  } else {
+    console.log(await main(values))
+  }
 }
-const setup = await resolveGallerySetup(values)
-await using gallery = await openHeadlessGallery(setup, {cacheDir: 'node_modules/.vite-analyze-world'})
-// Rooms other than the start room still download and mount after the scene is ready.
-await waitForLoadingItems(gallery.page)
-const analysis = await callWebmcpTool(gallery.page, 'analyze_world') as WorldAnalysis
-console.log(format === 'markdown' ? worldTables(analysis, worlds[setup.world].title, values.graphics, setup.seed) : JSON.stringify(analysis, null, 2))

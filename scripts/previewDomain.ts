@@ -144,6 +144,16 @@ export const detachPreviewDomain = async (alias: string) => {
   }
 }
 
+/** Resolves with the custom domain’s URL after `attach`. */
+const main = async (command: 'attach' | 'detach', alias: string) => {
+  if (command === 'attach') {
+    return attachPreviewDomain(alias)
+  }
+  await detachPreviewDomain(alias)
+}
+
+export default main
+
 if (import.meta.main) {
   const {positionals, values} = parseArgs({
     args: Bun.argv.slice(2),
@@ -157,9 +167,7 @@ if (import.meta.main) {
   if (values.help || !alias || positionals.length > 2 || command !== 'attach' && command !== 'detach') {
     console.log(help)
     process.exitCode = values.help ? 0 : 1
-  } else if (command === 'attach') {
-    await attachPreviewDomain(alias)
   } else {
-    await detachPreviewDomain(alias)
+    await main(command, alias)
   }
 }

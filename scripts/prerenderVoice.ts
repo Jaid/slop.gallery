@@ -109,7 +109,7 @@ export function parsePrerenderVoiceArgs(args: Array<string>) {
   }
 }
 
-export default async function prerenderVoice({
+const main = async ({
   apiKey = Bun.env.OPENROUTER_API_KEY,
   bitrate,
   fetch,
@@ -120,7 +120,7 @@ export default async function prerenderVoice({
   sampleRate,
   trim = true,
   trimThreshold,
-}: PrerenderVoiceOptions) {
+}: PrerenderVoiceOptions) => {
   if (typeof input !== 'string' || !input.trim()) {
     throw new TypeError('Input must be a nonempty string.')
   }
@@ -168,10 +168,12 @@ export default async function prerenderVoice({
   }
 }
 
+export default main
+
 if (import.meta.main) {
   const options = parsePrerenderVoiceArgs(Bun.argv.slice(2))
   if (options) {
-    console.log(JSON.stringify(await prerenderVoice(options), null, 2))
+    console.log(JSON.stringify(await main(options), null, 2))
   } else {
     console.log(help)
   }
