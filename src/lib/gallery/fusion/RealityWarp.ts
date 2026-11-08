@@ -1,13 +1,13 @@
 import type {Node} from 'three/webgpu'
 
-import {cameraProjectionMatrix, cameraViewMatrix, cameraWorldMatrix, exp, float, max, modelWorldMatrix, positionGeometry, rotate, smoothstep, texture, uniform, uv, vec2, vec3, vec4, viewportSharedTexture} from 'three/tsl'
+import {abs, cameraProjectionMatrix, cameraViewMatrix, cameraWorldMatrix, exp, float, fract, max, modelWorldMatrix, positionGeometry, rotate, smoothstep, texture, uniform, uv, vec2, vec3, vec4, viewportSharedTexture} from 'three/tsl'
 import {Mesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
 
 import TransparentSpriteOutputsNode from '../../rendering/TransparentSpriteOutputsNode.ts'
 
 /**
  * A wide stretch of the view around a fusion’s portal, bent as if the portal swallowed space itself: pulled toward the middle and twisted like water down a drain, darkened toward the middle and split into its colors, or, with a negative pull, pushed back out while a ripple runs outward over it.
- * A camera-facing quad that redraws the scene behind it through `viewportSharedTexture`. It draws without depth, so whatever stands in front of the portal bends along, and before the portal’s own quads, which blend over it. At its rim the view is undisturbed, so its edge never shows.
+ * A camera-facing quad that redraws the scene behind it through `viewportSharedTexture`. It draws without depth, so whatever stands in front of the portal bends along, and before the portal’s own quads, which blend over it. At its rim the view is undisturbed, so its edge never shows. Where it reaches past the edge of the screen, which it does once the camera is close, it reads the view mirrored at that edge, so it never runs out of view to show.
  */
 export default class RealityWarp extends Mesh<PlaneGeometry, MeshBasicNodeMaterial> {
   readonly uniforms = {
@@ -63,18 +63,17 @@ export default class RealityWarp extends Mesh<PlaneGeometry, MeshBasicNodeMateri
       const clip = cameraProjectionMatrix.mul(cameraViewMatrix).mul(vec4(world, 1))
       return clip.xy.div(clip.w).mul(vec2(0.5, -0.5)).add(0.5)
     }
+    // Where the pull reaches past the edge of the view, it reads the view mirrored at that edge, as often as it takes.
+    const mirrored = (point: Node<'vec2'>) => vec2(1).sub(abs(fract(point.mul(0.5)).mul(2).sub(1)))
     const split = falloff.mul(chroma)
-    const seen = onScreen(source).toVar('warpSeen')
-    // Where the pull reaches past the edge of the view, nothing is left to show but the dark.
-    const within = smoothstep(-0.03, 0, seen.x).mul(smoothstep(1.03, 1, seen.x)).mul(smoothstep(-0.03, 0, seen.y)).mul(smoothstep(1.03, 1, seen.y))
-    const view = viewportSharedTexture(seen.clamp(0, 1))
+    const view = viewportSharedTexture(mirrored(onScreen(source)))
     // Only this node copies the view each render; the other channels read its copy instead of copying it again.
     const copy = view.value
-    const red = texture(copy, onScreen(source.mul(split.add(1))).clamp(0, 1)).r
-    const blue = texture(copy, onScreen(source.mul(float(1).sub(split))).clamp(0, 1)).b
+    const red = texture(copy, mirrored(onScreen(source.mul(split.add(1))))).r
+    const blue = texture(copy, mirrored(onScreen(source.mul(float(1).sub(split))))).b
     // Light falls into the middle: a dark well around it and a dimmer stretch all over.
     const well = exp(rho.mul(rho).mul(-60)).mul(darkness)
-    const dim = float(1).sub(well).mul(float(1).sub(darkness.mul(0.35).mul(falloff))).mul(within)
+    const dim = float(1).sub(well).mul(float(1).sub(darkness.mul(0.35).mul(falloff)))
     material.colorNode = vec3(red, (view as unknown as Node<'vec4'>).g, blue).mul(dim)
     material.opacityNode = smoothstep(1, 0.9, rho)
   }
