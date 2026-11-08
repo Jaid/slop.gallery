@@ -3,23 +3,16 @@ import {describe, expect, test} from 'bun:test'
 import Deltable, {formatCount, formatDelta} from '../src/main.ts'
 
 const deltable = new Deltable({
-  idHeaderTitle: 'Room',
-  valueHeaderTitle: 'Count',
-  deltaHeaderTitle: 'Delta',
-  headers: {
-    triangles: 'Triangles',
-    meshes: 'Meshes',
-  },
+  idHeaderTitle: 'room',
   total: true,
-  totalTitle: 'Total',
 })
 describe('markdown', () => {
   test('without a base or without any change, the table stays markdown, closed by its totals', () => {
     const markdown = [
-      '| Room | Triangles | Meshes |',
+      '| room | triangles | meshes |',
       '| --- | --: | --: |',
       '| Hall | 12\u{202F}000 | 2 |',
-      '| **Total** | 12\u{202F}000 | 2 |',
+      '| **total** | 12\u{202F}000 | 2 |',
     ].join('\n')
     const values = {
       Hall: {
@@ -41,6 +34,31 @@ describe('markdown', () => {
         b: {files: 2},
       },
     })).toBe(['|  | files |', '| --- | --: |', '| a | 1 |', '| b | 2 |'].join('\n'))
+  })
+  test('counts of 0 leave their cells empty unless zeroValue says otherwise', () => {
+    const values = {
+      a: {
+        files: 0,
+        bytes: 5,
+      },
+    }
+    expect(deltable.render({values})).toBe(['| room | files | bytes |', '| --- | --: | --: |', '| a |  | 5 |', '| **total** |  | 5 |'].join('\n'))
+    const dashed = new Deltable({zeroValue: '–'})
+    expect(dashed.render({values})).toBe(['|  | files | bytes |', '| --- | --: | --: |', '| a | – | 5 |'].join('\n'))
+  })
+  test('the titles of the subcolumns and the totals can be set', () => {
+    const titled = new Deltable({
+      valueHeaderTitle: 'now',
+      deltaHeaderTitle: 'change',
+      total: true,
+      totalTitle: 'sum',
+    })
+    const html = titled.render({
+      values: {a: {files: 2}},
+      base: {a: {files: 1}},
+    })
+    expect(html).toContain('<tr><th align="right">now</th><th align="right">change</th></tr>')
+    expect(html).toContain('<tr><td><b>sum</b></td><td align="right">2</td><td align="right">+1</td></tr>')
   })
   test('pipes in titles and IDs are escaped', () => {
     const piped = new Deltable({headers: {count: 'this | that'}})
@@ -73,13 +91,13 @@ describe('html', () => {
     })).toBe([
       '<table>',
       '<thead>',
-      '<tr><th rowspan="2" align="left">Room</th><th colspan="2">Triangles</th><th rowspan="2" align="right">Meshes</th></tr>',
-      '<tr><th align="right">Count</th><th align="right">Delta</th></tr>',
+      '<tr><th rowspan="2" align="left">room</th><th colspan="2">triangles</th><th rowspan="2" align="right">meshes</th></tr>',
+      '<tr><th align="right">count</th><th align="right">delta</th></tr>',
       '</thead>',
       '<tbody>',
       '<tr><td>Hall</td><td align="right">12\u{202F}000</td><td align="right">+10\u{202F}000</td><td align="right">2</td></tr>',
-      '<tr><td>Nook &amp; Cranny</td><td align="right">0</td><td align="right">−30\u{202F}000</td><td align="right">0</td></tr>',
-      '<tr><td><b>Total</b></td><td align="right">12\u{202F}000</td><td align="right">−20\u{202F}000</td><td align="right">2</td></tr>',
+      '<tr><td>Nook &amp; Cranny</td><td align="right"></td><td align="right">−30\u{202F}000</td><td align="right"></td></tr>',
+      '<tr><td><b>total</b></td><td align="right">12\u{202F}000</td><td align="right">−20\u{202F}000</td><td align="right">2</td></tr>',
       '</tbody>',
       '</table>',
     ].join('\n'))
@@ -107,8 +125,8 @@ describe('html', () => {
         },
       },
     })
-    expect(html).toContain('<tr><th rowspan="2" align="left">Room</th><th colspan="2">Triangles</th><th colspan="2">Meshes</th></tr>')
-    expect(html).toContain('<tr><th align="right">Count</th><th align="right">Delta</th><th align="right">Count</th><th align="right">Delta</th></tr>')
+    expect(html).toContain('<tr><th rowspan="2" align="left">room</th><th colspan="2">triangles</th><th colspan="2">meshes</th></tr>')
+    expect(html).toContain('<tr><th align="right">count</th><th align="right">delta</th><th align="right">count</th><th align="right">delta</th></tr>')
     expect(html).toContain('<tr><td>Hall</td><td align="right">10</td><td align="right">−2</td><td align="right">3</td><td align="right">+1</td></tr>')
     expect(html).toContain('<tr><td>Salon</td><td align="right">5</td><td align="right"></td><td align="right">1</td><td align="right"></td></tr>')
   })
@@ -123,9 +141,9 @@ describe('html', () => {
         Hall: {triangles: 10},
       },
     })
-    expect(html).toContain('<th colspan="2">Triangles</th><th colspan="2">Meshes</th>')
-    expect(html).toContain('<tr><td>Hall</td><td align="right">10</td><td align="right"></td><td align="right">0</td><td align="right"></td></tr>\n<tr><td>Parlor</td><td align="right">0</td><td align="right">−4</td><td align="right">0</td><td align="right">−1</td></tr>')
-    expect(html).toContain('<tr><td><b>Total</b></td><td align="right">10</td><td align="right">−4</td><td align="right">0</td><td align="right">−1</td></tr>')
+    expect(html).toContain('<th colspan="2">triangles</th><th colspan="2">meshes</th>')
+    expect(html).toContain('<tr><td>Hall</td><td align="right">10</td><td align="right"></td><td align="right"></td><td align="right"></td></tr>\n<tr><td>Parlor</td><td align="right"></td><td align="right">−4</td><td align="right"></td><td align="right">−1</td></tr>')
+    expect(html).toContain('<tr><td><b>total</b></td><td align="right">10</td><td align="right">−4</td><td align="right"></td><td align="right">−1</td></tr>')
   })
 })
 describe('format', () => {

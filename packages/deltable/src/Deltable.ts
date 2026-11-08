@@ -16,6 +16,8 @@ export type DeltableOptions = {
   totalTitle?: string
   /** the title of a changed column’s subcolumn with its counts. Default: count */
   valueHeaderTitle?: string
+  /** what a count of 0 shows as. Default: empty */
+  zeroValue?: string
 }
 
 export type DeltableInput = {
@@ -40,7 +42,7 @@ const presentKeys = (record: Partial<Record<string, unknown>> = {}) => Object.ke
 
 /**
  * Renders tables of counts, which compared with a base tell how the counts changed.
- * Every column with a count that changed splits into a count and a delta subcolumn under its title, where unchanged counts leave the delta empty. Markdown has no cells spanning columns, so such a table comes as HTML, which GitHub renders in markdown anyway; a table without any change stays markdown.
+ * Every column with a count that changed splits into a count and a delta subcolumn under its title, where unchanged counts leave the delta empty, as counts of 0 leave theirs by default. Markdown has no cells spanning columns, so such a table comes as HTML, which GitHub renders in markdown anyway; a table without any change stays markdown.
  */
 export default class Deltable {
   readonly options: Required<DeltableOptions>
@@ -52,6 +54,7 @@ export default class Deltable {
       headers: {},
       total: false,
       totalTitle: 'total',
+      zeroValue: '',
       ...options,
     }
   }
@@ -84,12 +87,18 @@ export default class Deltable {
     }
     return this.#renderHtml(titles, rows, changed)
   }
+  #formatValue(value: number, escape: (text: string) => string) {
+    return value === 0 ? escape(this.options.zeroValue) : formatCount(value)
+  }
   #renderHtml(titles: ReadonlyArray<string>, rows: ReadonlyArray<Row>, changed: ReadonlyArray<boolean>) {
     const headers = titles.map((title, index) => (changed[index] ? `<th colspan="2">${escapeHtml(title)}</th>` : `<th rowspan="2" align="right">${escapeHtml(title)}</th>`))
     const subheaders = `<th align="right">${escapeHtml(this.options.valueHeaderTitle)}</th><th align="right">${escapeHtml(this.options.deltaHeaderTitle)}</th>`
     const bodyRow = (row: Row) => {
       const id = row.total ? `<b>${escapeHtml(row.id)}</b>` : escapeHtml(row.id)
-      const cells = row.values.map((value, index) => (changed[index] ? cell(formatCount(value)) + cell(formatDelta(value - row.base[index])) : cell(formatCount(value))))
+      const cells = row.values.map((value, index) => {
+        const count = cell(this.#formatValue(value, escapeHtml))
+        return changed[index] ? count + cell(formatDelta(value - row.base[index])) : count
+      })
       return `<tr><td>${id}</td>${cells.join('')}</tr>`
     }
     return [
@@ -109,7 +118,7 @@ export default class Deltable {
     return [
       line([this.options.idHeaderTitle, ...titles].map(escapeMarkdown)),
       `| --- |${' --: |'.repeat(titles.length)}`,
-      ...rows.map(row => line([row.total ? `**${escapeMarkdown(row.id)}**` : escapeMarkdown(row.id), ...row.values.map(formatCount)])),
+      ...rows.map(row => line([row.total ? `**${escapeMarkdown(row.id)}**` : escapeMarkdown(row.id), ...row.values.map(value => this.#formatValue(value, escapeMarkdown))])),
     ].join('\n')
   }
 }
