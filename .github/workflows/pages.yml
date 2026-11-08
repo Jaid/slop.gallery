@@ -1,5 +1,5 @@
 name: pages
-# The build workflow calls it to deploy the production build it uploaded as the artifact dist; closing a pull request runs it on its own to detach the preview’s domain.
+# The build workflow calls it to deploy the production build it uploaded as the artifact build; closing a pull request runs it on its own to detach the preview’s domain.
 on:
   workflow_call:
   pull_request:
@@ -43,8 +43,7 @@ jobs:
     - name: downloadBuild
       uses: actions/download-artifact@v8.0.2
       with:
-        name: dist
-        path: dist
+        name: build
     # The Cloudflare project’s production branch is named production, so a deployment to main is a preview too.
     - name: deploy
       id: deploy

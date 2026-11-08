@@ -1,5 +1,5 @@
 name: triangles
-# Called by the build workflow with the production build it uploaded as the artifact dist. The dev server’s first visit reoptimizes dependencies while rooms load, which silently leaves rooms out, so the analyses always take a production build.
+# Called by the build workflow with the production build it uploaded as the artifact build. The dev server’s first visit reoptimizes dependencies while rooms load, which silently leaves rooms out, so the analyses always take a production build.
 on:
   workflow_call:
 jobs:
@@ -23,8 +23,7 @@ jobs:
     - name: downloadBuild
       uses: actions/download-artifact@v8.0.2
       with:
-        name: dist
-        path: dist
+        name: build
     # Chrome’s software rendering needs the surface extensions of a system Vulkan driver.
     - name: installVulkanDriver
       run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends mesa-vulkan-drivers

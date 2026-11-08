@@ -22,14 +22,22 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha || github.sha }}
     - name: buildSite
       uses: ./.github/actions/buildSite
-    # Only for the jobs below, which download it within minutes.
+    # dist with the list of its outputs, which only the build’s checks read, for the jobs below, which download it within minutes.
     - name: uploadBuild
       uses: actions/upload-artifact@v7.0.2
       with:
-        name: dist
-        path: dist
+        name: build
+        path: |
+          dist
+          out/build/production.json
+        if-no-files-found: error
         include-hidden-files: true
         retention-days: 1
+  checkBuild:
+    needs: build
+    uses: ./.github/workflows/checkBuild.yml
+    permissions:
+      contents: read
   pages:
     needs: build
     uses: ./.github/workflows/pages.yml
