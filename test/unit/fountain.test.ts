@@ -357,6 +357,8 @@ describe('Lobby fountain', () => {
     const spray = new FountainSpray
     expect(spray.count).toBe(fountain.sprayCount)
     expect(spray.frustumCulled).toBe(false)
+    // The drops draw after the falling water whichever way the camera tips.
+    expect(spray.renderOrder).toBeGreaterThan(0)
     expect(spray.material.positionNode).not.toBeNull()
     expect(spray.material.opacityNode).not.toBeNull()
     expect(spray.material.mrtNode).toBeInstanceOf(TransparentSpriteOutputsNode)
