@@ -10,12 +10,12 @@ import measureBuildSize from './lib/measureBuildSize.ts'
 const formats = ['json', 'markdown'] as const
 const help = `Usage: bun scripts/buildSize.ts [options]
 
-Prints the size of the production build by the kinds of its files, their extensions or the names of those without one, with their files and bytes, the kinds with the most bytes first.
+Prints the size of the production build by the kinds of its files, their extensions or the names of those without one, with their files and bytes, the kinds with the most bytes first, or as a table, by categories of them like scripts and images.
 Bytes are those of the files as the build writes them, before the compression the server applies.
 
 Options:
   --folder <folder>       the build. Default: this repository’s dist, which bun run build writes
-  --format <format>       json prints the sizes by kind, markdown a table of them closed by their totals. Default: json
+  --format <format>       json prints the sizes by kind, markdown a table of them by category closed by their totals. Default: json
   --base <file>           the json output of a base revision, which the markdown table tells the changes since
   -h, --help              show this help`
 const buildSizeOptions = {

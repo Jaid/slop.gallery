@@ -4,7 +4,7 @@ import * as path from 'forward-slash-path'
 import fs from 'fs-extra'
 
 import buildSize from '../../scripts/buildSize.ts'
-import buildSizeTable from '../../scripts/lib/buildSizeTable.ts'
+import buildSizeTable, {categoryOf} from '../../scripts/lib/buildSizeTable.ts'
 import measureBuildSize, {fileKind} from '../../scripts/lib/measureBuildSize.ts'
 
 const folders: Array<string> = []
@@ -57,44 +57,70 @@ test('the sizes count every file, nested and hidden ones too, by kind with the m
   })
   expect(Object.keys(sizes)).toEqual(['js', 'jxl', 'html', '_headers', '.hidden'])
 })
-test('the table lists the kinds with narrow-spaced thousands and closes with their totals', () => {
+test('every kind of file has a category, other for those none names', () => {
+  expect(['html', 'js', 'wasm', 'jxl', 'svg', 'opus', 'webm', 'css', 'txt', 'md', 'json', 'msgpack', 'cbor', '_headers', 'bin', 'woff2'].map(categoryOf)).toEqual(['HTML', 'scripts', 'scripts', 'images', 'images', 'audio', 'video', 'styles', 'text', 'text', 'data', 'data', 'data', 'Cloudflare', 'other', 'other'])
+})
+test('the table sums the kinds up by category in the order of the categories, closed by their totals', () => {
   const markdown = buildSizeTable({
     js: {
       files: 40,
       bytes: 3_000_000,
     },
+    bin: {
+      files: 2,
+      bytes: 500,
+    },
     css: {
       files: 1,
       bytes: 9000,
     },
+    wasm: {
+      files: 1,
+      bytes: 1000,
+    },
+    html: {
+      files: 1,
+      bytes: 300,
+    },
   })
-  expect(markdown).toStartWith('## Build size\n')
-  expect(markdown).toContain([
+  expect(markdown).toBe([
+    '## build size',
+    '',
     '| kind | files | bytes |',
     '| --- | --: | --: |',
-    '| js | 40 | 3\u{202F}000\u{202F}000 |',
-    '| css | 1 | 9000 |',
-    '| **total** | 41 | 3\u{202F}009\u{202F}000 |',
+    '| HTML | 1 | 300 |',
+    '| scripts | 41 | 3\u{202F}001\u{202F}000 |',
+    '| styles | 1 | 9000 |',
+    '| other | 2 | 500 |',
+    '| **total** | 45 | 3\u{202F}010\u{202F}800 |',
+    '',
   ].join('\n'))
 })
-test('the script tells the changes since the json output of a base revision, with kinds gone since after the others', async () => {
+test('the script tells the changes since the json output of a base revision, with categories gone since in their place', async () => {
   const folder = await temporaryBuild({
+    'index.html': 'x',
     'a.js': 'x'.repeat(100),
-    'b.wasm': 'x'.repeat(10),
+    'b.opus': 'x'.repeat(10),
   })
   const base = path.join(path.dirname(folder), `${path.basename(folder)}.json`)
   folders.push(base)
   await fs.outputFile(base, await buildSize({folder}))
-  await fs.remove(path.join(folder, 'b.wasm'))
-  await fs.outputFile(path.join(folder, 'c.js'), 'x'.repeat(5))
+  await fs.remove(path.join(folder, 'b.opus'))
+  await fs.outputFile(path.join(folder, 'c.wasm'), 'x'.repeat(5))
+  await fs.outputFile(path.join(folder, 'd.css'), 'x'.repeat(5))
   const markdown = await buildSize({
     folder,
     format: 'markdown',
     base,
   })
   expect(markdown).toContain('<tr><th rowspan="2" align="left">kind</th><th colspan="2">files</th><th colspan="2">bytes</th></tr>')
-  expect(markdown).toContain('<tr><td>js</td><td align="right">2</td><td align="right">+1</td><td align="right">105</td><td align="right">+5</td></tr>\n<tr><td>wasm</td><td align="right"></td><td align="right">−1</td><td align="right"></td><td align="right">−10</td></tr>')
-  expect(markdown).toContain('<tr><td><b>total</b></td><td align="right">2</td><td align="right"></td><td align="right">105</td><td align="right">−5</td></tr>')
+  expect(markdown).toContain([
+    '<tr><td>HTML</td><td align="right">1</td><td align="right"></td><td align="right">1</td><td align="right"></td></tr>',
+    '<tr><td>scripts</td><td align="right">2</td><td align="right">+1</td><td align="right">105</td><td align="right">+5</td></tr>',
+    '<tr><td>audio</td><td align="right"></td><td align="right">−1</td><td align="right"></td><td align="right">−10</td></tr>',
+    '<tr><td>styles</td><td align="right">1</td><td align="right">+1</td><td align="right">5</td><td align="right">+5</td></tr>',
+    '<tr><td><b>total</b></td><td align="right">4</td><td align="right">+1</td><td align="right">111</td><td align="right"></td></tr>',
+  ].join('\n'))
   await expect(buildSize({base})).rejects.toThrow('--base only applies to --format markdown')
 })
 test('the script refuses unknown formats and missing builds', async () => {
