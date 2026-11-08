@@ -12,6 +12,7 @@ import CellCofferFrame from './CellCofferFrame.ts'
 import CellCrateFrame from './CellCrateFrame.ts'
 import CellGildingFrame from './CellGildingFrame.ts'
 import ClassicFrame from './ClassicFrame.ts'
+import CorridorCasingFrame from './CorridorCasingFrame.ts'
 import CorridorKumikoFrame from './CorridorKumikoFrame.ts'
 import CorridorMissionFrame from './CorridorMissionFrame.ts'
 import ExhibitionContainmentFrame from './ExhibitionContainmentFrame.ts'
@@ -89,6 +90,7 @@ export const frames = {
   'lodge-charred': new LodgeCharredFrame,
   'corridor-kumiko': new CorridorKumikoFrame,
   'corridor-mission': new CorridorMissionFrame,
+  'corridor-casing': new CorridorCasingFrame,
   'oculus-float': new OculusFloatFrame,
   'oculus-acrylic': new OculusAcrylicFrame,
   'exhibition-vitrine': new ExhibitionVitrineFrame,

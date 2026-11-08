@@ -63,7 +63,7 @@ export default class Corridor extends Room {
           }),
         }),
       ],
-      frame: ['corridor-kumiko', 'corridor-mission'],
+      frame: ['corridor-kumiko', 'corridor-mission', 'corridor-casing'],
       lamps,
       skybox: null,
       sunlit: false,
