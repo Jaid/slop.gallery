@@ -37,7 +37,7 @@ export const knottinghamScene = (graphics: 'cinematic' | 'heavy'): KnotScene => 
   })
   await using gallery = await openHeadlessGallery(setup, {
     cacheDir: 'node_modules/.vite-render-knot',
-    initScript: installVirtualClock,
+    initScripts: [installVirtualClock],
   })
   const {page} = gallery
   // The knot only enters once its shader has arrived, which can be after the loading screen.

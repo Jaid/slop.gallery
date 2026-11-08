@@ -1,20 +1,24 @@
 import type {CameraPose} from '#src/lib/diagnostics.ts'
-import type {Shot} from 'capture-session/script'
+import type {InitScript} from './lib/headlessGallery.ts'
+import type {AudioTrack, Shot, ToolCall} from 'capture-session/script'
 
 import {dirname, join, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
-import {createFrameSink, endWarmup, frameFormat, installVirtualClock, parseRecipe, recipeDuration, sampleRecipe, sampleWireframe, setWireframe, tweens, waitForLoadingItems} from 'capture-session/script'
+import {audioSidecar, carriesAudio, createFrameSink, endWarmup, executeWebmcpTool, frameFormat, installVirtualAudio, installVirtualClock, parseRecipe, recipeDuration, recipeToolCalls, sampleRecipe, sampleWireframe, setWireframe, tweens, waitForLoadingItems} from 'capture-session/script'
 import fs from 'fs-extra'
 import {av1Crf} from 'knot-materials/scripts/lib/encodeAnimation.ts'
+
+import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
 import {degrees, galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
 
 const help = `Usage: bun scripts/film.ts [options]
 
-Renders a camera flight through a world and writes it as an animated JPEG XL, a video or a PNG sequence.
+Renders a camera flight through a world and writes it as an animated JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
 Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser.
 The engine clock is virtual: every frame advances the scene by exactly 1/fps seconds, however long it takes to render. Artworks that come into view are decoded before their frame is captured, so nothing pops in.
+With --audio on (true, or a volume from 1 to 100, like ?audio), the page’s sound renders offline in step with the clock, at 48 kHz, so every sound starts on the frame that starts it, and the film carries it as Opus: WebM and Matroska inside, the other formats in an Opus file of the same name beside them. Sound the page plays through media elements or speech synthesis is not recorded.
 
 Options:
   --recipe <file>         JSON camera recipe, or - to read it from stdin. Default: scripts/recipes/spawn.json, a two-second metronome sway at the gallery spawn
@@ -47,6 +51,8 @@ A recipe is a JSON array of keyframes, ordered by time:
   tween     how this keyframe’s properties travel toward it from their previous keyframe. Default: linear
             ${Object.keys(tweens).join(', ')}
   wireframe input for the app’s set_wireframe WebMCP tool, in effect from this keyframe on. See below
+  tools     the app’s WebMCP tools to run once right before the first frame at or after this keyframe, by name with their input, in order, like
+            {"throw_prop": {"prop": "prop-orb-spook", "portrait": "goose"}}; their results go to stderr
 
 Each property animates on its own track, so a keyframe only affects the properties it sets. Before its first keyframe and after its last, a property holds still; properties no keyframe sets stay at the player spawn’s camera.
 The video lasts until the last keyframe, which is not rendered itself: 1 second at 60 fps is 60 frames, and a recipe that ends where it starts loops seamlessly.
@@ -70,6 +76,8 @@ With --scale above 1, every frame renders at that many times the size and is dow
 
 Set BROWSER to a Chromium executable with WebGPU support. ffmpeg (and cjxl for .jxl) must be on PATH.`
 const filmRoot = join(repositoryRoot, 'out', 'film')
+/** samples per second the film’s sound renders at, like the live game’s and Opus’ own */
+const sampleRate = 48_000
 const filmOptions = {
   ...galleryOptions,
   crf: {type: 'string'},
@@ -125,14 +133,26 @@ const main = async (options: FilmOptions) => {
     throw new Error(`--starting-frame must be a whole number between 1 and ${frameCount}.`)
   }
   const frameSeconds = (index: number) => (index + startingFrame - 1) % frameCount / fps
+  // Each call runs before the output frame showing the first recipe frame at or after its time, wrapping around with --starting-frame.
+  const calls = Map.groupBy(recipeToolCalls(recipe), (call: ToolCall) => (Math.ceil(call.time * fps - 1e-6) - startingFrame + 1 + frameCount) % frameCount)
+  const audible = readAudioOverride(`http://localhost/?${setup.search}`) === true
+  // The first frame shows the clock 1/fps after it started, which is where the film’s sound begins.
+  const leadIn = 1 / fps
   const toPose = (shot: Shot): Partial<CameraPose> => ({
     position: shot.position,
     rotation: [radians(shot.pitch), radians(shot.yaw), radians(shot.roll)],
     fov: shot.fov,
   })
+  const initScripts: Array<InitScript> = [installVirtualClock]
+  if (audible) {
+    initScripts.push([installVirtualAudio, {
+      duration: leadIn + frameCount / fps,
+      sampleRate,
+    }])
+  }
   await using gallery = await openHeadlessGallery(setup, {
     cacheDir: 'node_modules/.vite-film',
-    initScript: installVirtualClock,
+    initScripts,
   })
   const {page} = gallery
   const spawn = await page.evaluate(() => globalThis.slopGallery!.pose!())
@@ -170,6 +190,7 @@ const main = async (options: FilmOptions) => {
   })
   await fs.mkdir(dirname(output), {recursive: true})
   const sink = createFrameSink(format, {
+    audio: audible,
     crf,
     fps,
     frameCount,
@@ -180,14 +201,30 @@ const main = async (options: FilmOptions) => {
     width,
   })
   const frameBytes = source.width * source.height * 4
+  // stereo at 32 bits, with a second to spare
+  const audioBytes = Math.ceil((leadIn + frameCount / fps + 1) * sampleRate) * 2 * 4
   let received = 0
-  // Frames travel as raw RGBA request bodies; base64 through the DevTools protocol would cost more than rendering.
+  let audio: AudioTrack | undefined
+  // Frames travel as raw RGBA request bodies, and the sound as raw samples; base64 through the DevTools protocol would cost more than rendering.
   const frameServer = Bun.serve({
     hostname: '127.0.0.1',
     port: 0,
-    maxRequestBodySize: frameBytes,
+    maxRequestBodySize: Math.max(frameBytes, audible ? audioBytes : 0),
     async fetch(request) {
       const headers = {'Access-Control-Allow-Origin': '*'}
+      const {pathname, searchParams} = new URL(request.url)
+      if (pathname === '/audio') {
+        const bytes = await request.arrayBuffer()
+        audio = {
+          channels: Number(searchParams.get('channels')),
+          sampleRate: Number(searchParams.get('rate')),
+          samples: new Float32Array(bytes),
+        }
+        return new Response(null, {
+          status: 204,
+          headers,
+        })
+      }
       const pixels = await request.bytes()
       if (pixels.byteLength !== frameBytes) {
         return new Response(`Expected ${frameBytes} bytes, got ${pixels.byteLength}.`, {
@@ -225,16 +262,30 @@ const main = async (options: FilmOptions) => {
       if (frameFlood) {
         await setWireframe(page, frameFlood)
       }
-      await page.evaluate((frame: {
+      const frameCalls = calls.get(index)
+      // The sound renders up to the frame’s moment first, so whatever the frame starts sounds from there.
+      await page.evaluate(async (frame: {
         delta: number
         pose: Partial<CameraPose>
+        step: boolean
       }) => {
         globalThis.slopGallery!.pose!(frame.pose)
-        globalThis.virtualClock!.step(frame.delta)
+        await globalThis.virtualAudio?.advance(frame.delta)
+        if (frame.step) {
+          globalThis.virtualClock!.step(frame.delta)
+        }
       }, {
         delta: 1 / fps,
         pose,
+        step: !frameCalls,
       })
+      if (frameCalls) {
+        for (const {input, name, time} of frameCalls) {
+          const result = await executeWebmcpTool(page, name, input)
+          console.error(`${name} at ${time} s: ${result}`)
+        }
+        await page.evaluate((delta: number) => globalThis.virtualClock!.step(delta), 1 / fps)
+      }
       // The clock stands still while whatever just came into view loads; frames at the same moment let what needs them, like objects streaming in, get there.
       await waitForLoadingItems(page, {between: () => page.evaluate(() => globalThis.virtualClock!.step(0))})
       await page.evaluate(async (url: string) => {
@@ -254,14 +305,43 @@ const main = async (options: FilmOptions) => {
       const rate = rendered / ((performance.now() - startedAt) / 1000)
       console.log(`Rendered ${(rendered / fps).toFixed(1)}/${duration.toFixed(1)} s (frame ${rendered}/${frameCount}, ${rate.toFixed(1)} frames per second)`)
     }
+    if (audible) {
+      // The sound before the first frame’s moment is left out.
+      const recorded = await page.evaluate(async (input: {
+        leadIn: number
+        url: string
+      }) => {
+        const recording = await globalThis.virtualAudio!.finish()
+        if (!recording) {
+          return false
+        }
+        const {channels, samples} = recording
+        const response = await fetch(`${input.url}audio?channels=${channels}&rate=${recording.sampleRate}`, {
+          method: 'POST',
+          body: samples.subarray(Math.round(input.leadIn * recording.sampleRate) * channels),
+        })
+        if (!response.ok) {
+          throw new Error(await response.text())
+        }
+        return true
+      }, {
+        leadIn,
+        url: frameUrl,
+      })
+      if (!recorded) {
+        console.warn('Warning: the page never made an audio context, so the film has no sound.')
+      }
+    }
   } catch (error) {
     sink.abort()
     throw error
   } finally {
     await frameServer.stop(true)
   }
-  await sink.finish()
+  await sink.finish(audio)
   return {
+    /** where the sound went, if any */
+    audio: audio && (carriesAudio(format) ? output : audioSidecar(output)),
     format,
     fps,
     frameCount,
@@ -287,8 +367,13 @@ if (import.meta.main) {
   if (values.help) {
     console.log(help)
   } else {
-    const {format, fps, frameCount, height, output, width} = await main(values)
-    const written = relative(repositoryRoot, output).replaceAll('\\', '/')
-    console.log(`Wrote ${format === 'png' ? `${frameCount} numbered PNGs for ${written}` : written} (${width}×${height}, ${frameCount} frames at ${fps} fps, ${(frameCount / fps).toFixed(2)} s)`)
+    const {audio, format, fps, frameCount, height, output, width} = await main(values)
+    const shorten = (file: string) => relative(repositoryRoot, file).replaceAll('\\', '/')
+    const written = shorten(output)
+    let sound = ''
+    if (audio !== undefined) {
+      sound = audio === output ? ' with sound' : `, sound in ${shorten(audio)}`
+    }
+    console.log(`Wrote ${format === 'png' ? `${frameCount} numbered PNGs for ${written}` : written} (${width}×${height}, ${frameCount} frames at ${fps} fps, ${(frameCount / fps).toFixed(2)} s${sound})`)
   }
 }

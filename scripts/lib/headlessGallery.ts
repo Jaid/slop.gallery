@@ -267,6 +267,8 @@ export const waitForGallery = async (page: Page) => {
     throw new Error('The browser fell back to WebGL. Captures need native WebGPU.')
   }
 }
+/** a function Puppeteer serializes into the page, which runs it before any of the page’s own scripts, alone or with the arguments that follow it, which travel as JSON */
+export type InitScript = (() => void) | readonly [script: (...args: Array<never>) => void, ...args: Array<unknown>]
 /**
  * Starts the gallery server and a private headless browser, then waits until the scene is ready.
  * Never touches the visible browser. Dispose the result to stop everything again.
@@ -274,8 +276,8 @@ export const waitForGallery = async (page: Page) => {
 export const openHeadlessGallery = async (setup: GallerySetup, options: {
   /** Vite cache directory, see serveGallery */
   cacheDir: string
-  /** runs in the page before any of its own scripts */
-  initScript?: () => void
+  /** run in the page in order before any of its own scripts, like the virtual clock of capture-session/script */
+  initScripts?: ReadonlyArray<InitScript>
 }) => {
   const server = await serveGallery(setup, options)
   let browser: Browser | undefined
@@ -303,8 +305,9 @@ export const openHeadlessGallery = async (setup: GallerySetup, options: {
     })
     const page = await browser.newPage()
     watchPage(page)
-    if (options.initScript) {
-      await page.evaluateOnNewDocument(options.initScript)
+    for (const initScript of options.initScripts ?? []) {
+      const [script, ...args] = typeof initScript === 'function' ? [initScript] : initScript
+      await page.evaluateOnNewDocument(script as (...args: Array<unknown>) => void, ...args)
     }
     // Progress goes to stderr, so a script’s stdout stays its result.
     console.error(`Loading ${server.url}`)
