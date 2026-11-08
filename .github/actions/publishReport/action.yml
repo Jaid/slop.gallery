@@ -34,7 +34,8 @@ runs:
       }
       {
         echo "$marker"
-        cat "$file"
+        # Without the report’s trailing blank lines, so a single one parts it from the commits.
+        printf '%s\n' "$(cat "$file")"
         echo
         echo "<sub>${base:+$(commit "$base")..}$(commit "$measured")</sub>"
       } > "$body"
