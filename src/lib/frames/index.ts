@@ -50,6 +50,7 @@ import SpookAbyssFrame from './SpookAbyssFrame.ts'
 import SpookMaelstromFrame from './SpookMaelstromFrame.ts'
 import SpookRiftFrame from './SpookRiftFrame.ts'
 import SpookSeanceFrame from './SpookSeanceFrame.ts'
+import VesperAuricularFrame from './VesperAuricularFrame.ts'
 import VesperRippleFrame from './VesperRippleFrame.ts'
 import VesperSgraffitoFrame from './VesperSgraffitoFrame.ts'
 
@@ -62,6 +63,7 @@ export const frames = {
   'lobby-louis': new LobbyLouisFrame,
   'vesper-ripple': new VesperRippleFrame,
   'vesper-sgraffito': new VesperSgraffitoFrame,
+  'vesper-auricular': new VesperAuricularFrame,
   'banquet-perspective': new BanquetPerspectiveFrame,
   'banquet-deco': new BanquetDecoFrame,
   'banquet-checker': new BanquetCheckerFrame,

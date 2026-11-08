@@ -51,7 +51,7 @@ export default class Vesper extends Room {
           }),
         }),
       ],
-      frame: ['vesper-ripple', 'vesper-sgraffito'],
+      frame: ['vesper-ripple', 'vesper-sgraffito', 'vesper-auricular'],
       cameras,
       spawns,
       skybox: 'sky',

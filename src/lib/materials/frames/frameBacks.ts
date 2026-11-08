@@ -1,6 +1,6 @@
 import type {Node} from 'three/webgpu'
 
-import {attribute, color, float, max, mix, mx_cell_noise_float, positionLocal, select, vec2, vec3} from 'three/tsl'
+import {atan, attribute, color, float, max, mix, mx_cell_noise_float, mx_noise_float, positionLocal, select, vec2, vec3} from 'three/tsl'
 
 import {frameShapeAttribute} from '#src/lib/frames/frameGeometry.ts'
 
@@ -112,3 +112,21 @@ export function screwHead({point}: BackSurface, center: Vec2, radius: number) {
   }
 }
 
+/** A seal of sealing wax of `radius` pressed at `center`: a puddle with a ragged rim, a raised ring and a crest in its middle. Returns how much it covers the point, its color and its height. */
+export function waxSeal({footprint, point}: BackSurface, center: Vec2, radius: number, wax = '#8a1410') {
+  const local = point.sub(center)
+  const angle = atan(local.y, local.x)
+  const rim = mx_noise_float(vec3(angle.cos().mul(3), angle.sin().mul(3), 4.3)).mul(radius * 0.12)
+  const puddle = inside(local.length().sub(rim).sub(radius))
+  const ring = line(local.length().sub(radius * 0.72), radius * 0.05)
+  // The crest: a shield with a bar across it, pressed in.
+  const crest = inside(max(local.x.abs().sub(radius * 0.32), local.y.add(local.x.abs().mul(0.4)).abs().sub(radius * 0.4)))
+  const bar = inside(local.y.sub(radius * 0.06).abs().sub(radius * 0.06)).mul(crest)
+  const relief = mix(float(0.5), ring.add(bar).sub(crest.mul(0.6)).add(0.5), visibleDetail(footprint, radius * 0.2))
+  const swell = float(1).sub(local.length().div(radius).pow(2)).max(0)
+  return {
+    cover: puddle,
+    color: color(wax).mul(relief.mul(0.5).add(0.6)),
+    height: puddle.mul(swell.mul(0.0015).add(relief.mul(0.0004))),
+  }
+}
