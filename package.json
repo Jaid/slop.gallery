@@ -49,6 +49,7 @@
     "capture-session": "workspace:*",
     "clsx": "2.1.1",
     "compose-id": "0.2.0",
+    "deltable": "workspace:*",
     "disposable-lifetime": "workspace:*",
     "ego-player": "workspace:*",
     "es-toolkit": "1.53.1",
@@ -87,8 +88,7 @@
     "@react-three/drei": "11.0.0-alpha.7",
     "@react-three/fiber": "10.0.0-alpha.6",
     "@react-three/rapier": "2.2.0",
-    "@react-three/tsl": "10.0.0-alpha.6",
-    "deltable": "workspace:*"
+    "@react-three/tsl": "10.0.0-alpha.6"
   },
   "devDependencies": {
     "autoprefixer": "10.6.2",
