@@ -21,6 +21,7 @@ import {decorateIntro, introTether, introTrail} from '#src/lib/gallery/fusion/in
 import {introOrbitRate, orbitAngle} from '#src/lib/gallery/fusion/orbit.ts'
 import PortalVisuals, {emberPalette, paletteOf} from '#src/lib/gallery/fusion/PortalVisuals.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import setGroupOrder from '#src/lib/rendering/groupOrder.ts'
 import {resetImpact, screenImpact} from '#src/lib/rendering/screenImpact.ts'
 import {holdArtworkTexture} from '#src/lib/useArtworkTexture.ts'
 
@@ -46,6 +47,11 @@ const middle = new Vector3
 const seen = new Vector3
 /** how far around the portal the climax’s warp drags the room in, in meters, less than the intro’s, so its pull stays clear of the screen’s edges */
 const reboundReach = 3.2
+/**
+ * where a fusion draws among the scene’s groups: after the whole world, so the view its warp, its lens and its ripple copy and bend already holds the world’s transparent parts, like the text of the labels, glass, flames and a thrown orb,
+ * instead of those drawing over the bent view untouched
+ */
+const fusionGroupOrder = 1
 
 /**
  * One fusion as the scene shows it: its portal, its light, its sound, the choreography of what orbits it and the effects its ingredients contributed, all following the fusion’s clock frame by frame.
@@ -102,6 +108,7 @@ export default class PortalShow {
     this.root.name = `fusion-${fusion.id}`
     this.effects = fusion.spec.effects.map(effect => effect.show(fusion))
     this.root.add(this.visuals.root, this.light, ...this.effects.map(effect => effect.root))
+    setGroupOrder(this.root, fusionGroupOrder)
     const {impact: opening, partner, work} = fusion.spec
     if (opening) {
       const strength = impactStrength(opening.speed)
