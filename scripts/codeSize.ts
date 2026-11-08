@@ -9,7 +9,7 @@ const formats = ['json', 'markdown'] as const
 const help = `Usage: bun scripts/codeSize.ts [options]
 
 Prints the code size of the workspace in six groups, main (the root package) and packages (every workspace package below it, at any depth), each split into source (src and lib), scripts (scripts) and tests (test), with their files, raw bytes and effective bytes. Only JavaScript and TypeScript files count.
-Effective bytes are those of the code without comments and the whitespace it doesn’t need, with its types kept, neither compressed nor mangled.
+Effective bytes are those of the code as the JavaScript it runs as, without TypeScript’s notation, comments and the whitespace it doesn’t need, neither compressed nor mangled.
 
 Options:
   --folder <folder>       the workspace root. Default: this repository

@@ -25,22 +25,42 @@ const manifest = (name: string, workspaces?: Array<string>) => JSON.stringify({
   name,
   ...workspaces ? {workspaces} : {},
 })
-test('effective code leaves out comments and whitespace but keeps types and statement ends', () => {
+test('effective code leaves out TypeScript’s notation, comments and whitespace but keeps statement ends', () => {
   const source = [
     '// a comment',
     'import type {A} from \'./a.ts\'',
+    'import {b, type B} from \'./b.ts\'',
     '',
     '/** the documented type */',
     'export type Foo = {',
     '  a: A',
-    '  b: Array<number> /* inline */',
+    '  b: Array<B> /* inline */',
+    '}',
+    'interface Bar {',
+    '  x: number',
+    '}',
+    'export abstract class Shape<T extends object = object> {',
+    '  abstract readonly id: string',
+    '  declare tag: T',
+    '  getName(): string {',
+    '    return this.id as string',
+    '  }',
     '}',
     'const value = 1 as const',
-    'foo()',
+    'const pick = <T,>(item: T): T => item!',
+    'b()',
     ';[value].forEach(item => item satisfies number)',
     '',
   ].join('\n')
-  expect(effectiveCode('example.ts', source)).toBe('import type{A}from"./a.ts";export type Foo={a:A;b:Array<number>;};const value=1 as const;foo();[value].forEach(item=>item satisfies number);')
+  expect(effectiveCode('example.ts', source)).toBe('import{b}from"./b.ts";export class Shape{getName(){return this.id}}const value=1;const pick=item=>item;b();[value].forEach(item=>item);')
+})
+test('effective code writes out what TypeScript turns into code', () => {
+  expect(effectiveCode('point.ts', 'export class Point {\n  constructor(public x: number) {}\n}\n')).toBe('export class Point{x;constructor(x){this.x=x}}')
+})
+test('modules of nothing but types and declaration files have no effective code', () => {
+  expect(effectiveCode('types.ts', 'export type A = string\nexport interface B {\n  a: A\n}\n')).toBe('')
+  expect(effectiveCode('types.mts', 'export {}\n')).toBe('')
+  expect(effectiveCode('globals.d.ts', 'declare module \'x\' {\n  export const a: number\n}\n')).toBe('')
 })
 test('effective code folds JSX text as JSX reads it and drops JSX comments', () => {
   const source = [

@@ -25,7 +25,7 @@ export default function codeSizeTable(sizes: CodeSizes) {
     ...groups.map(group => row(group, sizes[group])),
     row('**Total**', total),
     '',
-    `Main is the root package, packages every workspace package below it. Source counts their src and lib folders, scripts their scripts folders and tests their test folders, each only with its ${extensions.join(', ')} files. Effective bytes leave out comments and the whitespace the code doesn’t need, but keep its types, compressing and mangling nothing.`,
+    `Main is the root package, packages every workspace package below it. Source counts their src and lib folders, scripts their scripts folders and tests their test folders, each only with its ${extensions.join(', ')} files. Effective bytes count the code as the JavaScript it runs as, leaving out TypeScript’s notation, comments and the whitespace the code doesn’t need, but compressing and mangling nothing.`,
     '',
   ].join('\n')
 }

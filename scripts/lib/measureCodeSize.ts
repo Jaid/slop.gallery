@@ -1,5 +1,5 @@
 import * as path from 'forward-slash-path'
-import {minifySync, parseSync, Visitor} from 'rolldown/utils'
+import {minifySync, parseSync, transformSync, Visitor} from 'rolldown/utils'
 import traverseWorkspace from 'traverse-workspace'
 
 export const scopes = ['main', 'packages'] as const
@@ -15,7 +15,7 @@ export type Scope = typeof scopes[number]
 export type Kind = keyof typeof kinds
 export type Group = `${Scope}/${Kind}`
 export type CodeSize = {
-  /** bytes of the code without comments and the whitespace it doesn’t need */
+  /** bytes of the code without TypeScript’s notation, comments and the whitespace it doesn’t need */
   effective: number
   files: number
   /** bytes of the files as they are */
@@ -47,17 +47,27 @@ const cleanJsxText = (text: string) => {
 }
 
 /**
- * The code of a JavaScript or TypeScript file without comments and without the whitespace it doesn’t need, its types kept and nothing compressed or mangled, so it tells how much code there is rather than how small a build of it gets.
- * Terser can’t read TypeScript, so this goes through Rolldown’s Oxc minifier, which keeps JSX text as written, newlines and indentation included, and the comments’ containers as `{}`; both are cleaned up afterwards.
+ * The code of a JavaScript or TypeScript file as the JavaScript it runs as, without TypeScript’s notation, comments and the whitespace it doesn’t need, nothing compressed or mangled, so it tells how much code there is rather than how small a build of it gets.
+ * Types and type-only imports go first, through Rolldown’s Oxc transformer, which leaves JSX alone and writes out what TypeScript turns into code, like parameter properties. Its Oxc minifier then drops comments and whitespace, but keeps JSX text as written, newlines and indentation included, the comments’ containers in JSX as `{}` and the `export {}` the transformer leaves in modules of nothing but types; all three are cleaned up afterwards.
  */
 export const effectiveCode = (file: string, source: string) => {
-  const minified = minifySync(file, source, {
+  const transformed = transformSync(file, source, {
+    tsconfig: false,
+    jsx: 'preserve',
+    typescript: {onlyRemoveTypeImports: true},
+  })
+  if (transformed.errors.length) {
+    throw new Error(`Failed to parse ${file}: ${transformed.errors[0].message}`)
+  }
+  // Not .cjs for .cts, as TypeScript lets those export like modules.
+  const javascriptFile = file.replace(/\.[cm]?ts(x?)$/, '.js$1')
+  const minified = minifySync(javascriptFile, transformed.code, {
     compress: false,
     mangle: false,
     codegen: {removeWhitespace: true},
   })
   if (minified.errors.length) {
-    throw new Error(`Failed to parse ${file}: ${minified.errors[0].message}`)
+    throw new Error(`Failed to minify ${file}: ${minified.errors[0].message}`)
   }
   const {code} = minified
   const edits: Array<{
@@ -86,8 +96,17 @@ export const effectiveCode = (file: string, source: string) => {
         })
       }
     },
+    ExportNamedDeclaration: node => {
+      if (!node.declaration && !node.source && !node.specifiers.length) {
+        edits.push({
+          start: node.start,
+          end: node.end,
+          text: '',
+        })
+      }
+    },
   })
-  visitor.visit(parseSync(file, code).program)
+  visitor.visit(parseSync(javascriptFile, code).program)
   let result = ''
   let offset = 0
   for (const edit of edits) {
