@@ -45,7 +45,7 @@ const markdown = deltable.render({
 
 Every column with a count that differs from the base splits into a count and a delta subcolumn under its title, like `−1` or `+2613`. An unchanged count leaves its delta cell empty, just as a count of 0 leaves its own cell empty unless `zeroValue` says otherwise. Markdown has no cells spanning columns, so a table with any change is rendered as HTML, which GitHub displays in comments, readmes and Actions job summaries. Without a base or without any change, the table stays plain markdown.
 
-Rows keep the order of `values`, followed by rows only `base` has, which count 0 now. Columns follow the order of `headers`, even those without any count, and the columns it leaves out come after them, in the order their keys first appear in the rows. A missing row or count counts as 0. JavaScript puts object keys that are array indices, like `'7'`, before all others, so such row IDs come first.
+Rows keep the order of `values`, followed by rows only `base` has, which count 0 now. Columns follow the order of `headers`, and the columns it leaves out come after them, in the order their keys first appear in the rows. Columns whose every count is 0, in `values` and `base` alike, are left out unless `showUselessColumns` is set, which also shows the columns of `headers` without any count. A missing row or count counts as 0. JavaScript puts object keys that are array indices, like `'7'`, before all others, so such row IDs come first.
 
 ## Options
 
@@ -55,6 +55,7 @@ Rows keep the order of `values`, followed by rows only `base` has, which count 0
 | `valueHeaderTitle` | `'count'` | the title of a changed column’s subcolumn with its counts |
 | `deltaHeaderTitle` | `'delta'` | the title of a changed column’s subcolumn with its deltas |
 | `headers` | `{}` | the titles of the columns by their keys, in the order of the columns; columns without one follow them, titled by their keys |
+| `showUselessColumns` | `false` | whether columns whose every count is 0, in `values` and `base` alike, show too |
 | `total` | `false` | whether a row with the sums of every column closes the table |
 | `totalTitle` | `'total'` | the ID of the row with the sums, rendered bold |
 | `zeroValue` | `''` | what a count of 0 shows as |

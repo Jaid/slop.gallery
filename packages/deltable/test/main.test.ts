@@ -41,10 +41,14 @@ describe('markdown', () => {
         files: 0,
         bytes: 5,
       },
+      b: {
+        files: 1,
+        bytes: 0,
+      },
     }
-    expect(deltable.render({values})).toBe(['| room | files | bytes |', '| --- | --: | --: |', '| a |  | 5 |', '| **total** |  | 5 |'].join('\n'))
+    expect(deltable.render({values})).toBe(['| room | files | bytes |', '| --- | --: | --: |', '| a |  | 5 |', '| b | 1 |  |', '| **total** | 1 | 5 |'].join('\n'))
     const dashed = new Deltable({zeroValue: '–'})
-    expect(dashed.render({values})).toBe(['|  | files | bytes |', '| --- | --: | --: |', '| a | – | 5 |'].join('\n'))
+    expect(dashed.render({values})).toBe(['|  | files | bytes |', '| --- | --: | --: |', '| a | – | 5 |', '| b | 1 | – |'].join('\n'))
   })
   test('the titles of the subcolumns and the totals can be set', () => {
     const titled = new Deltable({
@@ -60,8 +64,9 @@ describe('markdown', () => {
     expect(html).toContain('<tr><th align="right">now</th><th align="right">change</th></tr>')
     expect(html).toContain('<tr><td><b>sum</b></td><td align="right">2</td><td align="right">+1</td></tr>')
   })
-  test('columns follow the order of headers, even without counts, and the others come after them in the order they first appear', () => {
+  test('columns follow the order of headers, and the others come after them in the order they first appear', () => {
     const ordered = new Deltable({
+      showUselessColumns: true,
       headers: {
         files: 'files',
         bytes: 'bytes',
@@ -80,6 +85,33 @@ describe('markdown', () => {
         },
       },
     })).toBe(['|  | files | bytes | lines | words | chars |', '| --- | --: | --: | --: | --: | --: |', '| a |  | 20 |  | 3 |  |', '| b | 1 |  |  |  | 9 |'].join('\n'))
+  })
+  test('columns with counts of 0 only are left out, but those with a delta from the base stay', () => {
+    const input = {
+      values: {
+        a: {
+          files: 0,
+          bytes: 5,
+          lines: 0,
+        },
+      },
+      base: {
+        a: {
+          files: 0,
+          bytes: 5,
+          lines: 2,
+        },
+        b: {files: 0},
+      },
+    }
+    const html = deltable.render(input)
+    expect(html).toContain('<tr><th rowspan="2" align="left">room</th><th rowspan="2" align="right">bytes</th><th colspan="2">lines</th></tr>')
+    expect(html).not.toContain('files')
+    const shown = new Deltable({
+      showUselessColumns: true,
+      headers: {words: 'words'},
+    })
+    expect(shown.render(input)).toContain('<tr><th rowspan="2" align="left"></th><th rowspan="2" align="right">words</th><th rowspan="2" align="right">files</th><th rowspan="2" align="right">bytes</th><th colspan="2">lines</th></tr>')
   })
   test('pipes in titles and IDs are escaped', () => {
     const piped = new Deltable({headers: {count: 'this | that'}})

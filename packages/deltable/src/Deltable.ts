@@ -10,6 +10,8 @@ export type DeltableOptions = {
   headers?: Partial<Record<string, string>>
   /** the title of the cell above the row IDs. Default: empty */
   idHeaderTitle?: string
+  /** whether columns whose every count is 0, in `values` and `base` alike, show too. Default: false */
+  showUselessColumns?: boolean
   /** whether a row with the sums of every column closes the table. Default: false */
   total?: boolean
   /** the ID of the row with the sums. Default: total */
@@ -37,6 +39,8 @@ const sum = (values: ReadonlyArray<number>) => values.reduce((total, value) => t
 const escapeHtml = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 const escapeMarkdown = (text: string) => text.replaceAll('|', String.raw`\|`)
 const cell = (text: string) => `<td align="right">${text}</td>`
+/** a row’s count of a column, 0 where it has none */
+const countOf = (rows: DeltableRows | undefined, id: string, key: string) => rows?.[id]?.[key] ?? 0
 /** the keys of the defined entries, in their order */
 const presentKeys = (record: Partial<Record<string, unknown>> = {}) => Object.keys(record).filter(key => record[key] !== undefined)
 
@@ -52,6 +56,7 @@ export default class Deltable {
       valueHeaderTitle: 'count',
       deltaHeaderTitle: 'delta',
       headers: {},
+      showUselessColumns: false,
       total: false,
       totalTitle: 'total',
       zeroValue: '',
@@ -59,13 +64,14 @@ export default class Deltable {
     }
   }
   /**
-   * The rows of `values` in their order, then those only `base` has with counts of 0; the columns of `headers` in its order, even those without any count, then the others in the order they first appear in the rows.
+   * The rows of `values` in their order, then those only `base` has with counts of 0; the columns of `headers` in its order, then the others in the order they first appear in the rows, leaving out those with counts of 0 only unless `showUselessColumns` is set.
    * Rows keep the order of their IDs in the objects, which JavaScript puts first for IDs that are array indices, like “7”.
    */
   render({values, base}: DeltableInput) {
     const ids = [...new Set([...presentKeys(values), ...presentKeys(base)])]
-    const keys = [...new Set([...presentKeys(this.options.headers), ...ids.flatMap(id => [...presentKeys(values[id]), ...presentKeys(base?.[id])])])]
-    const counts = (rows: DeltableRows | undefined, id: string) => keys.map(key => rows?.[id]?.[key] ?? 0)
+    const allKeys = [...new Set([...presentKeys(this.options.headers), ...ids.flatMap(id => [...presentKeys(values[id]), ...presentKeys(base?.[id])])])]
+    const keys = this.options.showUselessColumns ? allKeys : allKeys.filter(key => ids.some(id => countOf(values, id, key) !== 0 || countOf(base, id, key) !== 0))
+    const counts = (rows: DeltableRows | undefined, id: string) => keys.map(key => countOf(rows, id, key))
     const rows: Array<Row> = ids.map(id => ({
       id,
       total: false,
