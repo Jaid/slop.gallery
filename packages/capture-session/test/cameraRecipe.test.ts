@@ -2,7 +2,7 @@ import type {Shot} from '../src/script/cameraRecipe.ts'
 
 import {describe, expect, test} from 'bun:test'
 
-import {parseRecipe, sampleRecipe, sampleWireframe, tweens} from '../src/script/cameraRecipe.ts'
+import {parseRecipe, recipeToolCalls, sampleRecipe, sampleWireframe, tweens} from '../src/script/cameraRecipe.ts'
 
 const fallback: Shot = {
   position: [0, 1.7, 0],
@@ -95,6 +95,57 @@ describe('camera recipes', () => {
       time: 0,
       wireframe: 'in',
     }])).toThrow('Keyframe 0 needs wireframe as an object')
+    for (const tools of ['throw_prop', ['throw_prop'], {throw_prop: 'prop-orb-spook'}]) {
+      expect(() => parseRecipe([{
+        time: 0,
+        tools,
+      }])).toThrow('Keyframe 0 needs tools as an object')
+    }
+  })
+})
+describe('tool keyframes', () => {
+  test('every keyframe’s tools run once at its time, in the order they are given and the keyframes come', () => {
+    const recipe = parseRecipe([
+      {
+        time: 0,
+        yaw: 0,
+      },
+      {
+        time: 1.5,
+        tools: {
+          throw_prop: {
+            prop: 'prop-orb-spook',
+            portrait: 'goose',
+          },
+          set_wireframe: {enabled: false},
+        },
+      },
+      {
+        time: 2,
+        tools: {end_warmup: {}},
+      },
+    ])
+    expect(recipeToolCalls(recipe)).toEqual([
+      {
+        time: 1.5,
+        name: 'throw_prop',
+        input: {
+          prop: 'prop-orb-spook',
+          portrait: 'goose',
+        },
+      },
+      {
+        time: 1.5,
+        name: 'set_wireframe',
+        input: {enabled: false},
+      },
+      {
+        time: 2,
+        name: 'end_warmup',
+        input: {},
+      },
+    ])
+    expect(recipeToolCalls(parseRecipe([{time: 0}, {time: 1}]))).toEqual([])
   })
 })
 describe('wireframe keyframes', () => {

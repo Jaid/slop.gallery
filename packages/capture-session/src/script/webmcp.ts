@@ -1,7 +1,7 @@
 import type {Page} from 'puppeteer-core'
 
 /** Runs one of the app’s WebMCP tools in a page once the app has registered it, and resolves with its result as the browser serialized it: tools returning a string give it as is, others as JSON. The browser needs `--enable-features=WebMCP`. */
-const executeWebmcpTool = async (page: Page, name: string, input: Record<string, unknown> = {}) => {
+export const executeWebmcpTool = async (page: Page, name: string, input: Record<string, unknown> = {}) => {
   await page.waitForFunction(async (tool: string) => {
     const tools = await document.modelContext?.getTools()
     return Boolean(tools?.some(candidate => candidate.name === tool))

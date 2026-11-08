@@ -38,6 +38,8 @@ export type Keyframe = {
   roll?: number
   /** seconds since the start of the video */
   time: number
+  /** the app’s WebMCP tools to run once at this keyframe’s moment, right before its frame, by name with their input, in order */
+  tools?: Record<string, Record<string, unknown>>
   /** how the properties this keyframe sets travel toward it from their previous keyframe. Default: linear */
   tween?: Tween
   /** set_wireframe input from this keyframe on; radius and position travel with the tween, the other fields switch at the keyframe */
@@ -55,7 +57,7 @@ export const parseRecipe = (input: unknown): Recipe => {
   if (!Array.isArray(input) || input.length === 0) {
     throw new Error('A recipe is a non-empty JSON array of keyframes.')
   }
-  const known = new Set(['time', 'tween', 'wireframe', ...properties])
+  const known = new Set(['time', 'tools', 'tween', 'wireframe', ...properties])
   return input.map((keyframe: unknown, index) => {
     const at = `Keyframe ${index}`
     if (!isRecord(keyframe)) {
@@ -93,6 +95,10 @@ export const parseRecipe = (input: unknown): Recipe => {
     // the set_wireframe tool validates the fields themselves
     if (keyframe.wireframe !== undefined && !isRecord(keyframe.wireframe)) {
       throw new Error(`${at} needs wireframe as an object of set_wireframe input.`)
+    }
+    // the tools validate their input themselves
+    if (keyframe.tools !== undefined && !(isRecord(keyframe.tools) && Object.values(keyframe.tools).every(isRecord))) {
+      throw new Error(`${at} needs tools as an object of WebMCP tool names, each with an object of its input.`)
     }
     if (fov !== undefined && ((fov as number) <= 0 || (fov as number) >= 180)) {
       throw new Error(`${at} needs fov between 0 and 180 degrees.`)
@@ -137,6 +143,20 @@ export const sampleRecipe = (recipe: Recipe, time: number, fallback: Shot): Shot
     fov: sample('fov'),
   }
 }
+
+/** a WebMCP tool a keyframe runs */
+export type ToolCall = {
+  input: Record<string, unknown>
+  name: string
+  /** seconds since the start of the video */
+  time: number
+}
+/** Every tool call of the recipe’s keyframes, in the order they run. */
+export const recipeToolCalls = (recipe: Recipe): Array<ToolCall> => recipe.flatMap(({time, tools = {}}) => Object.entries(tools).map(([name, input]) => ({
+  input,
+  name,
+  time,
+})))
 
 /** The set_wireframe input in effect at a point in time, or undefined before the first keyframe that sets one. Radius and position travel like camera properties, each on its own track, but never into a keyframe that starts a flood with a direction; every other field holds its latest value. */
 export const sampleWireframe = (recipe: Recipe, time: number): Record<string, unknown> | undefined => {

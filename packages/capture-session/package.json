@@ -2,7 +2,7 @@
   "name": "capture-session",
   "version": "0.1.0",
   "type": "module",
-  "description": "Renderers and helpers for headless captures of the gallery, like the wireframe flood, camera recipes and the capture warmup",
+  "description": "Renderers and helpers for headless captures of the gallery, like the wireframe flood, camera recipes, the capture warmup and the virtual clock and sound of films",
   "funding": "https://github.com/sponsors/Jaid",
   "license": "MIT",
   "repository": {
