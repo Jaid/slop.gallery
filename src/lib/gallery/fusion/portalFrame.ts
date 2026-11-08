@@ -51,6 +51,24 @@ const rebound = {
   lift: 3,
   most: 8,
 }
+/** how far out from the work the room’s sides are measured, clear of the work’s own wall */
+const sideProbe = 0.3
+
+/** The portal that opens in front of the work in `world`, sized to the room around it, see {@link portalFrame}. */
+export function portalIn(work: Pick<Portrait, 'position' | 'rotation'>, world: {
+  floorHeight: (position: Vec3) => number
+  wallDistance: (origin: Vec3, direction: Vec3) => number
+}) {
+  const {position, rotation} = work
+  const normal: Vec3 = [Math.sin(rotation), 0, Math.cos(rotation)]
+  const tangent: Vec3 = [normal[2], 0, -normal[0]]
+  const probe: Vec3 = [position[0] + normal[0] * sideProbe, position[1], position[2] + normal[2] * sideProbe]
+  return portalFrame(work, {
+    floor: world.floorHeight(position),
+    room: world.wallDistance(position, normal),
+    sides: [world.wallDistance(probe, [-tangent[0], 0, -tangent[2]]), world.wallDistance(probe, tangent)],
+  })
+}
 
 /** The portal opens in front of the work at about eye height, as far out as the room lets its orbit pass clear of the wall. */
 export function portalFrame(work: Pick<Portrait, 'position' | 'rotation'>, {floor, room, sides}: PortalSurroundings): PortalFrame {
