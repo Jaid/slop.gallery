@@ -5,7 +5,6 @@ import {RigidBody} from '@react-three/rapier'
 import SlopedBox from '#component/SlopedBox'
 import TunnelDisplays from '#component/TunnelDisplays'
 import lowerGallery, {tunnelCenter, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
-import ExhibitionPedestals from '#src/rooms/exhibition/components/ExhibitionPedestals/index.tsx'
 
 const {tunnel} = lowerGallery
 const [, centerY, centerZ] = tunnelCenter
@@ -14,7 +13,6 @@ const [, centerY, centerZ] = tunnelCenter
 export default function ExhibitionRoom({material}: {material: Material}) {
   return <group name='exhibition-room'>
     <TunnelDisplays material={material} />
-    <ExhibitionPedestals material={material} />
     <RigidBody colliders={false} type='fixed'>
       <SlopedBox material={material} name='exhibition-floor' position={[tunnel.x, centerY - 0.12, centerZ]} size={[tunnel.width, 0.24, tunnel.southZ - tunnel.northZ]} slope={tunnelSlope} />
       <SlopedBox material={material} name='exhibition-ceiling' position={[tunnel.x, centerY + tunnel.height + 0.09, centerZ]} size={[tunnel.width, 0.18, tunnel.southZ - tunnel.northZ]} slope={tunnelSlope} />
