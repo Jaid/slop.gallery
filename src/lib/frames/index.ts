@@ -2,6 +2,7 @@ import type PortraitFrame from './base/PortraitFrame.ts'
 import type {PortraitFrameId} from './frameParameter.ts'
 
 import AntechamberAdamFrame from './AntechamberAdamFrame.ts'
+import AntechamberSevresFrame from './AntechamberSevresFrame.ts'
 import BanquetCheckerFrame from './BanquetCheckerFrame.ts'
 import BanquetDecoFrame from './BanquetDecoFrame.ts'
 import BanquetPerspectiveFrame from './BanquetPerspectiveFrame.ts'
@@ -68,6 +69,7 @@ export const frames = {
   'banquet-deco': new BanquetDecoFrame,
   'banquet-checker': new BanquetCheckerFrame,
   'antechamber-adam': new AntechamberAdamFrame,
+  'antechamber-sevres': new AntechamberSevresFrame,
   'sienna-velvet': new SiennaVelvetFrame,
   'sienna-burl': new SiennaBurlFrame,
   'sienna-leather': new SiennaLeatherFrame,

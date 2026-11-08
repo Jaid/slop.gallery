@@ -55,7 +55,7 @@ export default class Antechamber extends Room {
           }),
         }),
       ],
-      frame: 'antechamber-adam',
+      frame: ['antechamber-adam', 'antechamber-sevres'],
       cameras,
       skybox: 'sky',
       slots,
