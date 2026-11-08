@@ -15,21 +15,43 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+    # Two commits, so a pull request’s merge commit has its base at hand.
     - name: checkout
       uses: actions/checkout@v7.0.1
+      with:
+        fetch-depth: 2
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
       with:
         bun-version: 1.4.4
     - name: install
       run: bun install --frozen-lockfile
+    - name: resolveBase
+      id: resolveBase
+      uses: ./.github/actions/resolveBase
     # The raw and effective bytes of the root package’s and the workspace packages’ source, scripts and tests, to the log and the report.
+    # The base revision is measured by this revision’s script too, so the deltas only tell changes of the code, never of how it is measured.
     - name: measureCodeSize
+      id: measureCodeSize
       shell: bash
-      run: bun scripts/codeSize.ts --format markdown | tee "$RUNNER_TEMP/codeSize.md"
+      env:
+        base: ${{ steps.resolveBase.outputs.sha }}
+      run: |
+        compare=()
+        if [ -n "$base" ]; then
+          if git fetch --quiet --no-tags --depth 1 origin "$base" && git worktree add --quiet --detach "$RUNNER_TEMP/base" "$base"; then
+            bun scripts/codeSize.ts --folder "$RUNNER_TEMP/base" > "$RUNNER_TEMP/codeSizeBase.json"
+            compare=(--base "$RUNNER_TEMP/codeSizeBase.json")
+            echo "base=$base" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Could not check out the base revision ${base::8}, so the code size report has no deltas."
+          fi
+        fi
+        bun scripts/codeSize.ts --format markdown "${compare[@]}" | tee "$RUNNER_TEMP/codeSize.md"
     # To the job summary, or for a pull request to its comment.
     - name: publishReport
       uses: ./.github/actions/publishReport
       with:
         file: ${{ runner.temp }}/codeSize.md
         id: codeSize
+        base: ${{ steps.measureCodeSize.outputs.base }}

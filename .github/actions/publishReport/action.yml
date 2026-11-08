@@ -7,6 +7,9 @@ inputs:
   id:
     description: the name the comment is found again by, unique among the reports of all workflows
     required: true
+  base:
+    description: the commit the report’s deltas compare with, if it has any
+    default: ''
 runs:
   using: composite
   steps:
@@ -16,12 +19,23 @@ runs:
       GH_TOKEN: ${{ github.token }}
       file: ${{ inputs.file }}
       id: ${{ inputs.id }}
+      base: ${{ inputs.base }}
       pullRequest: ${{ github.event.pull_request.number }}
-      headSha: ${{ github.event.pull_request.head.sha }}
+      # A pull request’s run measures the merge commit, which nobody knows by its hash, so the footer names the head instead.
+      measured: ${{ github.event.pull_request.head.sha || github.sha }}
       fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
     run: |
+      # The hidden marker finds this report’s comment again among all others on the pull request.
+      marker="<!-- report:$id -->"
+      body="$RUNNER_TEMP/report-$id.md"
+      {
+        echo "$marker"
+        cat "$file"
+        echo
+        echo "<sub>Measured on ${measured::8}${base:+, compared with ${base::8}}.</sub>"
+      } > "$body"
       publishSummary() {
-        cat "$file" >> "$GITHUB_STEP_SUMMARY"
+        cat "$body" >> "$GITHUB_STEP_SUMMARY"
       }
       if [ -z "$pullRequest" ]; then
         publishSummary
@@ -33,15 +47,6 @@ runs:
         publishSummary
         exit 0
       fi
-      # The hidden marker finds this report’s comment again among all others on the pull request.
-      marker="<!-- report:$id -->"
-      body="$RUNNER_TEMP/report-$id.md"
-      {
-        echo "$marker"
-        cat "$file"
-        echo
-        echo "<sub>Measured on ${headSha::8}.</sub>"
-      } > "$body"
       comments="repos/$GITHUB_REPOSITORY/issues/$pullRequest/comments"
       upsertComment() {
         local ids comment
