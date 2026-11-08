@@ -17,6 +17,8 @@ Starts a private Vite dev server (or serves --target); never touches the visible
 
 Options:
   --format <format>       json prints the whole analysis, markdown tables of the rooms’ static meshes and items with their triangles and of their lamps and shadows. Default: json
+  --base <file>           the json output of a base revision with the same options, which the markdown tables tell the changes since
+  --json <file>           also write the whole analysis as json to this file, like for a later --base
 ${galleryHelp()}
   -h, --help              show this help
 
@@ -27,6 +29,8 @@ const analyzeWorldOptions = {
     type: 'string',
     default: 'json',
   },
+  base: {type: 'string'},
+  json: {type: 'string'},
 } as const
 
 /** the command line options without --help, as parsed strings */
@@ -38,12 +42,21 @@ const main = async (options: AnalyzeWorldOptions) => {
   if (!formats.includes(format)) {
     throw new Error(`--format must be one of ${formats.join(', ')}, got “${options.format}”.`)
   }
+  if (options.base !== undefined && format !== 'markdown') {
+    throw new Error('--base only applies to --format markdown.')
+  }
+  // Read before the long analysis, so a missing file fails at once.
+  const base = options.base === undefined ? undefined : await Bun.file(options.base).json() as WorldAnalysis
   const setup = await resolveGallerySetup(options)
   await using gallery = await openHeadlessGallery(setup, {cacheDir: 'node_modules/.vite-analyze-world'})
   // Rooms other than the start room still download and mount after the scene is ready.
   await waitForLoadingItems(gallery.page)
   const analysis = await callWebmcpTool(gallery.page, 'analyze_world') as WorldAnalysis
-  return format === 'markdown' ? worldTables(analysis, worlds[setup.world].title, options.graphics, setup.seed) : JSON.stringify(analysis, null, 2)
+  const json = JSON.stringify(analysis, null, 2)
+  if (options.json !== undefined) {
+    await Bun.write(options.json, json)
+  }
+  return format === 'markdown' ? worldTables(analysis, worlds[setup.world].title, options.graphics, setup.seed, base) : json
 }
 
 export default main

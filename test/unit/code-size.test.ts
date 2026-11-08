@@ -146,6 +146,23 @@ test('the table lists every group in a fixed order with narrow-spaced thousands 
     '| **Total** | 21 | 210\u{202F}000 | 126\u{202F}000 |',
   ].join('\n'))
 })
+test('the script tells the changes since the json output of a base revision', async () => {
+  const root = await temporaryRoot()
+  await fs.outputFile(path.join(root, 'package.json'), manifest('root'))
+  await fs.outputFile(path.join(root, 'src/main.ts'), 'export const a = 1\n')
+  const base = path.join(root, 'base.json')
+  await fs.outputFile(base, await codeSize({folder: root}))
+  await fs.outputFile(path.join(root, 'src/second.ts'), 'export const b = 2\n')
+  const markdown = await codeSize({
+    folder: root,
+    format: 'markdown',
+    base,
+  })
+  expect(markdown).toContain('<tr><th rowspan="2" align="left">Group</th><th colspan="2">Files</th><th colspan="2">Raw bytes</th><th colspan="2">Effective bytes</th></tr>')
+  expect(markdown).toContain('<tr><td>main/source</td><td align="right">2</td><td align="right">+1</td><td align="right">38</td><td align="right">+19</td><td align="right">34</td><td align="right">+17</td></tr>')
+  expect(markdown).toContain('<tr><td>main/tests</td><td align="right">0</td><td align="right">±0</td>')
+  await expect(codeSize({base})).rejects.toThrow('--base only applies to --format markdown')
+})
 test('the script refuses unknown formats', async () => {
   await expect(codeSize({format: 'yaml'})).rejects.toThrow('--format must be one of json, markdown')
 })

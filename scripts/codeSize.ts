@@ -1,3 +1,5 @@
+import type {CodeSizes} from './lib/measureCodeSize.ts'
+
 import {parseArgs} from 'node:util'
 
 import * as path from 'forward-slash-path'
@@ -14,22 +16,28 @@ Effective bytes are those of the code as the JavaScript it runs as, without Type
 Options:
   --folder <folder>       the workspace root. Default: this repository
   --format <format>       json prints the sizes by group, markdown a table of them closed by their totals. Default: json
+  --base <file>           the json output of a base revision, which the markdown table tells the changes since
   -h, --help              show this help`
 const codeSizeOptions = {
   folder: {type: 'string'},
   format: {type: 'string'},
+  base: {type: 'string'},
 } as const
 
 /** the command line options without --help, as parsed strings */
 export type CodeSizeOptions = ReturnType<typeof parseArgs<{options: typeof codeSizeOptions}>>['values']
 
 /** Resolves with the sizes as JSON or as a markdown table, depending on `format`. */
-const main = async ({folder = path.resolve(import.meta.dir, '..'), format = 'json'}: CodeSizeOptions = {}) => {
+const main = async ({folder = path.resolve(import.meta.dir, '..'), format = 'json', base}: CodeSizeOptions = {}) => {
   if (!formats.includes(format as typeof formats[number])) {
     throw new Error(`--format must be one of ${formats.join(', ')}, got “${format}”.`)
   }
+  if (base !== undefined && format !== 'markdown') {
+    throw new Error('--base only applies to --format markdown.')
+  }
+  const baseSizes = base === undefined ? undefined : await Bun.file(base).json() as Partial<CodeSizes>
   const sizes = await measureCodeSize(folder)
-  return format === 'markdown' ? codeSizeTable(sizes) : JSON.stringify(sizes, null, 2)
+  return format === 'markdown' ? codeSizeTable(sizes, baseSizes) : JSON.stringify(sizes, null, 2)
 }
 
 export default main

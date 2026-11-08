@@ -287,3 +287,48 @@ test('the tables split static meshes from items, leave rooms without items out o
   expect(section('Lights')).toContain('| Room | Lamps | Shadows |')
   expect(section('Lights')).toContain('| Salon | 3 | 2 |\n| Hall | 1 | 0 |\n| Global | 2 | 1 |\n| **Total** | 6 | 3 |')
 })
+test('against a base revision, the tables tell the changes, matching rooms by title and counting those only one revision has as empty in the other', () => {
+  const fence = {
+    min: [0, 0, 0] as [number, number, number],
+    max: [1, 1, 1] as [number, number, number],
+  }
+  const analysis = (rooms: Record<string, ReturnType<typeof region> & {title: string}>, elsewhere = region([], [], [])) => ({
+    rooms: Object.fromEntries(Object.entries(rooms).map(([id, room]) => [id, {
+      ...room,
+      fence,
+      foreignLights: [],
+    }])),
+    elsewhere,
+    globalLights: region([], [], ['own']).lights,
+  })
+  const markdown = worldTables(analysis({
+    hall: {
+      title: 'Hall',
+      ...region([12_000, 300], [], [undefined]),
+    },
+    salon: {
+      title: 'Salon',
+      ...region([20_000], [100], ['own']),
+    },
+  }), 'Test', 'heavy', 1, analysis({
+    hall: {
+      title: 'Hall',
+      ...region([12_000, 300], [50], [undefined]),
+    },
+    // Renamed to the Salon since, so it counts as gone.
+    parlor: {
+      title: 'Parlor',
+      ...region([500], [], [undefined]),
+    },
+  }))
+  const section = (name: string) => markdown.split(`### ${name}`)[1].split('###')[0]
+  expect(section('Static meshes')).toContain('<th colspan="2">Triangles</th><th colspan="2">Meshes</th>')
+  expect(section('Static meshes')).toContain('<tr><td>Salon</td><td align="right">20\u{202F}000</td><td align="right">+20\u{202F}000</td><td align="right">1</td><td align="right">+1</td></tr>')
+  expect(section('Static meshes')).toContain('<tr><td>Hall</td><td align="right">12\u{202F}300</td><td align="right">±0</td><td align="right">2</td><td align="right">±0</td></tr>')
+  expect(section('Static meshes')).toContain('<tr><td>Parlor</td><td align="right">0</td><td align="right">−500</td><td align="right">0</td><td align="right">−1</td></tr>')
+  // The Hall lost its only item, but stays in the table to tell so.
+  expect(section('Items')).toContain('<tr><td>Hall</td><td align="right">0</td><td align="right">−50</td><td align="right">0</td><td align="right">−1</td></tr>')
+  expect(section('Items')).toContain('<tr><td><b>Total</b></td><td align="right">100</td><td align="right">+50</td><td align="right">1</td><td align="right">±0</td></tr>')
+  expect(section('Lights')).toContain('<th colspan="2">Lamps</th><th colspan="2">Shadows</th>')
+  expect(section('Lights')).toContain('<tr><td>Global</td><td align="right">1</td><td align="right">±0</td><td align="right">1</td><td align="right">±0</td></tr>')
+})
