@@ -124,7 +124,7 @@ Without a synthesizer, text uses native browser speech. Native speech has a glob
 - Concurrent native utterances are rejected explicitly rather than secretly queued or allowed to cancel each other. Synthesized audio is required for truly simultaneous TTS.
 - The package cancels only its owned active native utterance, not a detected unrelated speaker. Other code should not directly operate the native speech queue while this narrator owns it.
 
-See the [Web Speech specification](https://webaudio.github.io/web-speech-api/) for the native queue and boundary event contracts. Recorded and provider-generated audio resume on the same HTMLAudioElement at its preserved playback position.
+See the [Web Speech specification](https://webaudio.github.io/web-speech-api/) for the native queue and boundary event contracts. Recorded and provider-generated audio resume on the same HTMLAudioElement at its preserved playback position. Where `audio.context()` returns an audio context, recordings play decoded through it instead (`audioBuffer` of `use-audio-queue/browser`), and `audio.connect(output, instanceId)` receives the node they leave rather than a media element; contexts that can’t take media elements, like an offline one rendering a film, need it.
 
 ## Timing and subtitles
 

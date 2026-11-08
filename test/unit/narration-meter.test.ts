@@ -113,3 +113,37 @@ test('meter keeps concurrent narration spectra independent by instance ID', () =
   first()
   second()
 })
+test('meter routes decoded narration straight through its analyser and measures it whenever the context runs', () => {
+  const routes: Array<unknown> = []
+  const context = {
+    state: 'running',
+    sampleRate: 48_000,
+    destination: {},
+    createMediaElementSource: () => {
+      throw new Error('A decoded narration needs no media element source.')
+    },
+    createAnalyser: () => ({
+      context,
+      fftSize: 0,
+      connect: (node: unknown) => routes.push(node),
+      disconnect() {},
+      getByteFrequencyData: (target: Uint8Array) => target.fill(96),
+    }),
+  }
+  let disconnected = 0
+  const output = {
+    connect: (node: unknown) => routes.push(node),
+    disconnect: () => {
+      disconnected++
+    },
+  } as unknown as AudioNode
+  const meter = new NarrationMeter
+  const release = meter.connect('decoded', output, context as unknown as BaseAudioContext)
+  expect(routes).toHaveLength(2)
+  expect(routes[1]).toBe(context.destination)
+  expect(meter.read('decoded')[2]).toBeCloseTo(96 / 255)
+  context.state = 'suspended'
+  expect([...meter.read('decoded')]).toEqual([0, 0, 0, 0, 0])
+  release()
+  expect(disconnected).toBe(1)
+})

@@ -72,7 +72,10 @@ export type NarrationPushOptions = Omit<AudioPushOptions<NarrationMetadata>, 'me
   title?: string
 }
 export type NarratorAudioOptions = Omit<AudioFileOptions, 'connect'> & {
-  connect?: (audio: HTMLAudioElement, instanceId: string) => () => void
+  /** Owns only this connection: the recording’s media element, or the node its decoded audio leaves where `context` gives a context. */
+  connect?: (audio: AudioNode | HTMLAudioElement, instanceId: string) => () => void
+  /** The audio context to play recordings through as decoded buffers (see `audioBuffer`) instead of media elements, asked for every recording; recordings play through media elements whenever it gives none. For contexts that can’t take media elements, like an offline one rendering a film. */
+  context?: () => BaseAudioContext | undefined
 }
 export type NarratorOptions = AudioQueueOptions & {
   audio?: NarratorAudioOptions

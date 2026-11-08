@@ -81,6 +81,8 @@ The hook only subscribes. The application creates and disposes a shared queue, n
 
 `audioFile()` accepts a URL string, URL object or Blob. Its options include `volume`, asynchronous `prepare(signal)` and `connect(audio) => disconnect` for an application-owned Web Audio graph. The adapter preserves the same HTMLAudioElement/currentTime across injections, removes handlers and media sources on teardown, and revokes only object URLs it created for Blobs. It does not revoke caller URLs, close shared AudioContexts or change the caller's mixer.
 
+`audioBuffer(reference, {context})` plays the same references through an application-owned `BaseAudioContext` instead: it fetches and decodes the whole recording, plays it from an `AudioBufferSourceNode` through a gain at `volume` and reports its position on the context’s clock. Pausing stops the source and remembers where it stood; playing again starts a new one there. `connect(output) => disconnect` receives that gain node, which otherwise plays into the context’s destination. It suits contexts that can’t take media elements, like an `OfflineAudioContext` rendering a film, and sound that has to keep time with the rest of the context.
+
 For text-to-speech, completion memory, provider caching and indicator metadata, use the parent `use-narrator` package.
 
 ## Tests
@@ -89,4 +91,4 @@ For text-to-speech, completion memory, provider caching and indicator metadata, 
 bun run test
 ```
 
-Tests use a deterministic clock and fake transports for every priority, timer interruption, cancellation race and backend failure. Browser-adapter tests cover media events, cancellation while preparing, exact element/position reuse, URL ownership and cleanup.
+Tests use a deterministic clock and fake transports for every priority, timer interruption, cancellation race and backend failure. Browser-adapter tests cover media events, cancellation while preparing, exact element/position reuse, URL ownership and cleanup, and decoded playback through a fake context, its pauses, resumption and failures.

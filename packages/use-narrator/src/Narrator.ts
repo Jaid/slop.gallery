@@ -1,8 +1,9 @@
 import type {NarrationInput, NarrationMetadata, NarrationPushOptions, NarrationReference, NarratorOptions, RecordingReference, SpeechReference, SpeechSynthesizer, SynthesizedSpeech} from './types.ts'
-import type {AudioHandle, AudioPlayback, AudioProgress, AudioQueueSnapshot} from 'use-audio-queue/core'
+import type {AudioReference} from 'use-audio-queue/browser'
+import type {AudioHandle, AudioPlayback, AudioProgress, AudioQueueSnapshot, AudioTask} from 'use-audio-queue/core'
 
 import composeId from 'compose-id'
-import {audioFile} from 'use-audio-queue/browser'
+import {audioBuffer, audioFile} from 'use-audio-queue/browser'
 import {AudioQueue} from 'use-audio-queue/core'
 
 import {browserSpeech} from './browser.ts'
@@ -173,12 +174,7 @@ export default class Narrator implements Disposable {
       try {
         const {audio, timing} = 'audio' in reference ? reference : synthesized(await synthesize!(reference, signal))
         signal.throwIfAborted()
-        const narrationAudio = this.options.audio
-        const fileOptions = narrationAudio && {
-          ...narrationAudio,
-          connect: narrationAudio.connect ? (element: HTMLAudioElement) => narrationAudio.connect!(element, metadata.instanceId) : undefined,
-        }
-        playback = await (this.options.createAudio ? this.options.createAudio(audio, signal) : audioFile<NarrationMetadata>(audio, fileOptions)(context))
+        playback = await (this.options.createAudio ? this.options.createAudio(audio, signal) : this.recording(audio, metadata.instanceId)(context))
         if (signal.aborted) {
           void playback.finished.catch(() => {})
           playback.dispose()
@@ -221,5 +217,21 @@ export default class Narrator implements Disposable {
   }
   [Symbol.dispose]() {
     this.dispose()
+  }
+  /** The task that plays a recording: decoded through the context the audio options give, or else through a media element. */
+  private recording(audio: AudioReference, instanceId: string): AudioTask<NarrationMetadata> {
+    const {connect, context: through, ...options} = this.options.audio ?? {}
+    const context = through?.()
+    if (context) {
+      return audioBuffer(audio, {
+        ...options,
+        context,
+        connect: connect && (output => connect(output, instanceId)),
+      })
+    }
+    return audioFile(audio, {
+      ...options,
+      connect: connect && (element => connect(element, instanceId)),
+    })
   }
 }

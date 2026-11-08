@@ -1,7 +1,8 @@
 type Connection = {
   analyser: AnalyserNode
-  audio: HTMLAudioElement
   disconnect: () => void
+  /** whether the narration can be heard right now */
+  sounding: () => boolean
 }
 
 export const narrationBands = [[20, 120], [120, 500], [500, 2000], [2000, 6000], [6000, 12_000]] as const
@@ -28,8 +29,10 @@ export default class NarrationMeter {
   private frequencies = new Uint8Array(1024)
   private readonly levels = new Float32Array(narrationBands.length)
 
-  connect(instanceId: string, audio: HTMLAudioElement, context: AudioContext, destination: AudioNode = context.destination) {
-    const source = context.createMediaElementSource(audio)
+  /** Routes a narration through its own analyser to `destination`: a media element, or the node its decoded audio leaves, which sounds whenever it plays. Returns the cleanup. */
+  connect(instanceId: string, audio: AudioNode | HTMLAudioElement, context: BaseAudioContext, destination: AudioNode = context.destination) {
+    const decoded = 'connect' in audio
+    const source = decoded ? audio : (context as AudioContext).createMediaElementSource(audio)
     const analyser = context.createAnalyser()
     analyser.fftSize = 2048
     analyser.smoothingTimeConstant = 0.72
@@ -38,8 +41,8 @@ export default class NarrationMeter {
     source.connect(analyser)
     analyser.connect(destination)
     const connection = {
-      audio,
       analyser,
+      sounding: decoded ? () => true : () => !(audio.paused || audio.ended || audio.muted || audio.volume === 0),
       disconnect: () => {
         source.disconnect()
         analyser.disconnect()
@@ -71,8 +74,8 @@ export default class NarrationMeter {
     return this.levels
   }
 
-  private measure({audio, analyser}: Connection, merge = false) {
-    if (audio.paused || audio.ended || audio.muted || audio.volume === 0 || analyser.context.state !== 'running') {
+  private measure({analyser, sounding}: Connection, merge = false) {
+    if (!sounding() || analyser.context.state !== 'running') {
       return
     }
     analyser.getByteFrequencyData(this.frequencies)

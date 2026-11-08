@@ -14,6 +14,11 @@ export const narrator = new Narrator({
   audio: {
     volume: 0.85,
     prepare: () => SoundEngine.get().resume(),
+    // An offline context, like a film’s, can’t take media elements, so recordings play through it decoded.
+    context: () => {
+      const {context} = SoundEngine.get()
+      return 'createMediaElementSource' in context ? undefined : context
+    },
     connect: (audio, instanceId) => {
       const {context, output} = SoundEngine.get()
       return narrationMeter.connect(instanceId, audio, context, output)
