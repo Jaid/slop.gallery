@@ -15,11 +15,11 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-    # Two commits, so a pull request’s merge commit has its base at hand.
+    # A pull request’s head, not its merge commit, so the report tells what it changed since it branched off.
     - name: checkout
       uses: actions/checkout@v7.0.1
       with:
-        fetch-depth: 2
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
       with:
