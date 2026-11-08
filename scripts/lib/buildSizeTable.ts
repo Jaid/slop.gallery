@@ -10,6 +10,7 @@ export const categories = {
   audio: ['opus', 'ogg', 'oga', 'mp3', 'm4a', 'aac', 'flac', 'wav', 'weba'],
   video: ['webm', 'mp4', 'm4v', 'mkv', 'mov', 'ogv'],
   styles: ['css'],
+  fonts: ['woff2', 'woff', 'ttf', 'otf'],
   text: ['txt', 'md'],
   data: ['json', 'yaml', 'yml', 'toml', 'msgpack', 'cbor'],
   Cloudflare: ['_headers', '_redirects'],

@@ -58,7 +58,7 @@ test('the sizes count every file, nested and hidden ones too, by kind with the m
   expect(Object.keys(sizes)).toEqual(['js', 'jxl', 'html', '_headers', '.hidden'])
 })
 test('every kind of file has a category, other for those none names', () => {
-  expect(['html', 'js', 'wasm', 'jxl', 'svg', 'opus', 'webm', 'css', 'txt', 'md', 'json', 'msgpack', 'cbor', '_headers', 'bin', 'woff2'].map(categoryOf)).toEqual(['HTML', 'scripts', 'scripts', 'images', 'images', 'audio', 'video', 'styles', 'text', 'text', 'data', 'data', 'data', 'Cloudflare', 'other', 'other'])
+  expect(['html', 'js', 'wasm', 'jxl', 'svg', 'opus', 'webm', 'css', 'woff2', 'ttf', 'txt', 'md', 'json', 'msgpack', 'cbor', '_headers', 'bin', 'glb'].map(categoryOf)).toEqual(['HTML', 'scripts', 'scripts', 'images', 'images', 'audio', 'video', 'styles', 'fonts', 'fonts', 'text', 'text', 'data', 'data', 'data', 'Cloudflare', 'other', 'other'])
 })
 test('the table sums the kinds up by category in the order of the categories, closed by their totals', () => {
   const markdown = buildSizeTable({
