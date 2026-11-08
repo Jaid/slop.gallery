@@ -4,9 +4,16 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+# A newer push to a pull request replaces the run of an older one, so two runs never race to create its comment.
+concurrency:
+  group: codeSize-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   codeSize:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
     - name: checkout
       uses: actions/checkout@v7.0.1
@@ -16,7 +23,13 @@ jobs:
         bun-version: 1.4.4
     - name: install
       run: bun install --frozen-lockfile
-    # The raw and effective bytes of the root package’s and the workspace packages’ source, scripts and tests, to the log and the job summary.
+    # The raw and effective bytes of the root package’s and the workspace packages’ source, scripts and tests, to the log and the report.
     - name: measureCodeSize
       shell: bash
-      run: bun scripts/codeSize.ts --format markdown | tee --append "$GITHUB_STEP_SUMMARY"
+      run: bun scripts/codeSize.ts --format markdown | tee "$RUNNER_TEMP/codeSize.md"
+    # To the job summary, or for a pull request to its comment.
+    - name: publishReport
+      uses: ./.github/actions/publishReport
+      with:
+        file: ${{ runner.temp }}/codeSize.md
+        id: codeSize

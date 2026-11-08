@@ -1,0 +1,60 @@
+name: publishReport
+description: Publishes a markdown report to the job summary, or for a pull request as a comment on it, which later runs update instead of adding another
+inputs:
+  file:
+    description: the markdown file holding the report
+    required: true
+  id:
+    description: the name the comment is found again by, unique among the reports of all workflows
+    required: true
+runs:
+  using: composite
+  steps:
+  - name: publishReport
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      file: ${{ inputs.file }}
+      id: ${{ inputs.id }}
+      pullRequest: ${{ github.event.pull_request.number }}
+      headSha: ${{ github.event.pull_request.head.sha }}
+      fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+    run: |
+      publishSummary() {
+        cat "$file" >> "$GITHUB_STEP_SUMMARY"
+      }
+      if [ -z "$pullRequest" ]; then
+        publishSummary
+        exit 0
+      fi
+      # Pull requests from forks get a read-only token, which can’t comment.
+      if [ "$fork" = true ]; then
+        echo "::notice::Pull requests from forks can’t be commented on, so the $id report went to the job summary."
+        publishSummary
+        exit 0
+      fi
+      # The hidden marker finds this report’s comment again among all others on the pull request.
+      marker="<!-- report:$id -->"
+      body="$RUNNER_TEMP/report-$id.md"
+      {
+        echo "$marker"
+        cat "$file"
+        echo
+        echo "<sub>Measured on ${headSha::8}.</sub>"
+      } > "$body"
+      comments="repos/$GITHUB_REPOSITORY/issues/$pullRequest/comments"
+      upsertComment() {
+        local ids comment
+        ids=$(gh api --paginate "$comments" --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id") || return 1
+        read -r comment <<< "$ids" || true
+        if [ -n "$comment" ]; then
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment" --field body=@"$body" > /dev/null
+        else
+          gh api --method POST "$comments" --field body=@"$body" > /dev/null
+        fi
+      }
+      # Tokens without write access, like those of Dependabot’s pull requests, can’t comment either.
+      if ! upsertComment; then
+        echo "::warning::Could not comment on pull request #$pullRequest, so the $id report went to the job summary."
+        publishSummary
+      fi

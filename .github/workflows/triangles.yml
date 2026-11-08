@@ -4,9 +4,16 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+# A newer push to a pull request replaces the run of an older one, so two runs never race to create its comment.
+concurrency:
+  group: triangles-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   triangles:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
     - name: checkout
       uses: actions/checkout@v7.0.1
@@ -24,7 +31,7 @@ jobs:
     # Chrome’s software rendering needs the surface extensions of a system Vulkan driver.
     - name: installVulkanDriver
       run: sudo apt-get install --yes --no-install-recommends mesa-vulkan-drivers
-    # Every room’s triangles, meshes and lights in heavy graphics, to the log and the job summary, loaded in the runner’s Chrome on its software Vulkan.
+    # Every room’s triangles, meshes and lights in heavy graphics, to the log and the report, loaded in the runner’s Chrome on its software Vulkan.
     # The seed decides which default works hang in which slots at which size and which plants stand in the pots, so it is fixed to keep runs comparable.
     # Knottingham is left out, as some of its Knot shaders crash Chrome’s software GPU process.
     - name: analyzeWorlds
@@ -35,7 +42,13 @@ jobs:
         # Chrome’s sandbox needs unprivileged user namespaces, which Ubuntu restricts since 24.04.
         sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
         analyze() {
-          bun scripts/analyzeWorld.ts --target dist --swiftshader --height 180 --seed 1 --format markdown "$@" | tee --append "$GITHUB_STEP_SUMMARY"
+          bun scripts/analyzeWorld.ts --target dist --swiftshader --height 180 --seed 1 --format markdown "$@" | tee --append "$RUNNER_TEMP/triangles.md"
         }
         analyze
         analyze --room cell
+    # To the job summary, or for a pull request to its comment.
+    - name: publishReport
+      uses: ./.github/actions/publishReport
+      with:
+        file: ${{ runner.temp }}/triangles.md
+        id: triangles
