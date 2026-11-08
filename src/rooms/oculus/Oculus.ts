@@ -55,7 +55,7 @@ export default class Oculus extends Room {
           }),
         }),
       ],
-      frame: ['oculus-float', 'oculus-acrylic'],
+      frame: ['oculus-float', 'oculus-acrylic', 'oculus-dichroic'],
       portraitArea: 60_000,
       cameras,
       spawns,

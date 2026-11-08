@@ -39,6 +39,7 @@ import MoonfallMeteoriteFrame from './MoonfallMeteoriteFrame.ts'
 import MoonfallOrbitFrame from './MoonfallOrbitFrame.ts'
 import MoonfallRegolithFrame from './MoonfallRegolithFrame.ts'
 import OculusAcrylicFrame from './OculusAcrylicFrame.ts'
+import OculusDichroicFrame from './OculusDichroicFrame.ts'
 import OculusFloatFrame from './OculusFloatFrame.ts'
 import PaintCanvasFrame from './PaintCanvasFrame.ts'
 import PaintMarbledFrame from './PaintMarbledFrame.ts'
@@ -93,6 +94,7 @@ export const frames = {
   'corridor-casing': new CorridorCasingFrame,
   'oculus-float': new OculusFloatFrame,
   'oculus-acrylic': new OculusAcrylicFrame,
+  'oculus-dichroic': new OculusDichroicFrame,
   'exhibition-vitrine': new ExhibitionVitrineFrame,
   'exhibition-evidence': new ExhibitionEvidenceFrame,
   'exhibition-containment': new ExhibitionContainmentFrame,
