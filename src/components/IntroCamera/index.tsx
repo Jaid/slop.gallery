@@ -6,11 +6,12 @@ import {useEffect, useRef} from 'react'
 import {PointerLockControls} from 'three/addons/controls/PointerLockControls.js'
 import {Euler, PerspectiveCamera, Vector3} from 'three/webgpu'
 
+import hearAtOnce from '#src/lib/audio/hearAtOnce.ts'
 import inspectionPointerSensitivity from '#src/lib/camera/inspectionPointerSensitivity.ts'
 import OrbitInspection, {orbitKeySpeed, orbitPointerSpeed} from '#src/lib/camera/OrbitInspection.ts'
 import {frozenSeconds} from '#src/lib/frozenTime.ts'
 import {galleryEvents, isTextInput, setCameraFocused} from '#src/lib/gallery.ts'
-import {endIntro, hearIntro, introDirection} from '#src/lib/gallery/intro.ts'
+import {endIntro, introDirection} from '#src/lib/gallery/intro.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
 import {setInspectionFocus} from '#src/lib/rendering/playerView.ts'
@@ -46,7 +47,7 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
     distance: 1,
     proximity: 0,
   })
-  useEffect(hearIntro, [])
+  useEffect(hearAtOnce, [])
   // Only Heavy graphics blur the background, as only they can focus; Fast graphics leave it sharp.
   useEffect(() => () => setInspectionFocus(0, 1, 0), [])
   useEffect(() => {

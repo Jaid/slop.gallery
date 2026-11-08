@@ -1,9 +1,11 @@
 import type {Vec3} from '#src/lib/gallery.ts'
 
 import {useFrame} from '@react-three/fiber'
+import {useEffect} from 'react'
 import {Vector3} from 'three/webgpu'
 
 import {useAmbienceEmitters} from '#src/lib/audio/ambience/ambienceEmitters.ts'
+import hearAtOnce, {audioAutoplays} from '#src/lib/audio/hearAtOnce.ts'
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {isFading} from '#src/lib/fade.ts'
 import {useGallery} from '#src/lib/gallery.ts'
@@ -13,10 +15,11 @@ const up = new Vector3
 const position = new Vector3
 
 /**
- * Hears the world’s positional sounds from the camera: moves the Web Audio listener along with it every frame and starts the ambience emitters once the sound engine exists, which only happens with the player’s first click. Under `?fade=false`, the emitters cut in and out instead of fading.
+ * Hears the world’s positional sounds from the camera: moves the Web Audio listener along with it every frame and starts the ambience emitters once the sound engine exists, which happens with the player’s first click, or right away during the intro and where audio autoplays, like in a film recording the game’s sound. Under `?fade=false`, the emitters cut in and out instead of fading.
  * Fusions’ portals sound positionally too, so the listener follows even in worlds without ambience.
  */
 export default function AmbienceListener() {
+  useEffect(() => (audioAutoplays() ? hearAtOnce() : undefined), [])
   useFrame(({camera}) => {
     const engine = SoundEngine.existing()
     if (!engine) {
