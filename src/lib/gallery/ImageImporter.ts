@@ -4,12 +4,20 @@ import world from '#src/worlds/current.ts'
 
 import arrivalVoices, {arrivalGap} from '../audio/arrivalVoices.ts'
 import {shiftVoices} from '../audio/proceduralAudio.ts'
+import {frameBack} from '../frames/base/PortraitFrame.ts'
 import {defaultPortraitArea} from '../placement/portraitSlots.ts'
-import {arrivalFrame, cameraPose, loadBlob, newPortrait, notify, playSound} from './actions.ts'
+import {arrivalFrame, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'
 import {holdPoint, requestHanging} from './hanging/hangings.ts'
 import {hangingAnimation} from './hanging/index.ts'
 import {maximumPortraits, validateImage} from './imagePolicy.ts'
 import {useGallery} from './store.ts'
+
+/** how far out from where it would have hung an imported work that does not fit there flips off its wall, in meters: its back clear of the fronts of the works hung beside it, which it would fuse with on touching them */
+const flipClearance = 0.03 - frameBack
+/** how much further out each further work of the same import flips off, a little more than the deepest frame, so none starts inside another */
+const flipSpacing = 0.12
+/** how fast a work flipping off its wall turns its top toward the room at most, in radians per second; a tall one turns slower, so its bottom edge swinging back still leaves the wall at a fifth of the speed it flies out at */
+const flipSpin = 4
 
 /** an image with its size in pixels */
 export type SizedImage = {
@@ -179,6 +187,7 @@ export default class ImageImporter {
         return
       }
       let count = 0
+      let flips = 0
       for (const file of files.slice(0, 12)) {
         try {
           validateImage(file)
@@ -188,7 +197,7 @@ export default class ImageImporter {
           const bitmap = await createImageBitmap(file)
           let cropWidth: number
           let cropHeight: number
-          let size: ReturnType<typeof imageSize>
+          let dropped: ReturnType<typeof imageSize>
           let source: Blob
           try {
             // Works wider than 2:1 or taller than 1:2 keep only their middle.
@@ -196,7 +205,7 @@ export default class ImageImporter {
             cropWidth = crop[2]
             cropHeight = crop[3]
             // Dropped into the room, a work takes the portrait area of the player’s room.
-            size = imageSize(cropWidth, cropHeight, world.portraitArea(undefined, room))
+            dropped = imageSize(cropWidth, cropHeight, world.portraitArea(undefined, room))
             const scale = Math.min(1, 3072 / Math.max(cropWidth, cropHeight))
             const canvas = new OffscreenCanvas(Math.max(1, Math.round(cropWidth * scale)), Math.max(1, Math.round(cropHeight * scale)))
             const context = canvas.getContext('2d')
@@ -219,19 +228,20 @@ export default class ImageImporter {
           }
           const title = file.name.replace(/\.[^.]+$/, '').replaceAll(/[-_]/g, ' ').trim().slice(0, 150) || 'An untitled arrival'
           const s = useGallery.getState()
+          let size = dropped
           let place: Placement | null = null
           if (target) {
             const aim = ({width, height}: typeof size) => world.placement.findPlacement(target.origin, target.direction, width, height, s.portraits)
             place = aim(size)
-            // Hung, it takes the portrait area of the room owning its wall, which the ray hits whatever the size, and falls into the room if it does not fit there at that size.
+            // Aimed at a wall, it takes the portrait area of the room owning the wall, which the ray hits whatever the size.
             const hungArea = place && world.portraitArea(place.wallId, room)
             if (hungArea && hungArea !== world.portraitArea(undefined, room)) {
-              const hung = imageSize(cropWidth, cropHeight, hungArea)
-              place = aim(hung)
-              if (place?.valid) {
-                size = hung
-              }
+              size = imageSize(cropWidth, cropHeight, hungArea)
+              place = aim(size)
             }
+          }
+          if (!place?.inReach) {
+            size = dropped
           }
           const p = newPortrait(source, title, size.width, size.height, pose)
           if (place?.valid) {
@@ -242,6 +252,18 @@ export default class ImageImporter {
               labelAbove: place.labelAbove === true ? true : undefined,
               hung: true,
             })
+          } else if (place?.inReach) {
+            // In its own shape it does not fit where it was aimed, which the square previewing it could not tell: it flips off the wall back into the room as the player’s body bounces off a work it knocked down, its top tipping toward the room, each one after the first further out, clear of the one before.
+            const normal = [Math.sin(place.rotation), Math.cos(place.rotation)] as const
+            const out = flipClearance + flips * flipSpacing
+            const turn = Math.min(flipSpin, wallRebound.out * 0.8 / (size.height / 2))
+            Object.assign(p, {
+              position: [place.position[0] + normal[0] * out, place.position[1], place.position[2] + normal[1] * out],
+              rotation: place.rotation,
+              velocity: [normal[0] * wallRebound.out, wallRebound.lift, normal[1] * wallRebound.out],
+              spin: [normal[1] * turn, 0.6, -normal[0] * turn],
+            })
+            flips++
           } else {
             const distance = Math.min(1.6, Math.max(0.25, world.wallDistance(pose.position, pose.direction) - 0.35))
             p.position = [pose.position[0] + pose.direction[0] * distance, Math.max(world.placement.floorHeight([pose.position[0] + pose.direction[0] * distance, pose.position[1], pose.position[2] + pose.direction[2] * distance]) + 0.8, pose.position[1] + pose.direction[1] * distance + count * 0.15), pose.position[2] + pose.direction[2] * distance]

@@ -119,6 +119,12 @@ export function requestItemFusion(portrait: string, item: ThrownItem, impact?: F
   }))
 }
 
+/** how something bouncing off a wall’s works is thrown back, in m/s: straight out from the wall by `out` and up by `lift`, like the player’s body knocking a work off its wall or an imported work that turns out not to fit where it was aimed */
+export const wallRebound = {
+  lift: 2,
+  out: 3,
+}
+
 /** Knocks a hung work off its wall, keeping whatever the player holds. */
 export function dropPortrait(id: string) {
   const state = useGallery.getState()

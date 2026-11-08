@@ -10,7 +10,7 @@ import {Euler, PerspectiveCamera, Quaternion, Vector3} from 'three/webgpu'
 
 import {attachPlayerAudio, onPlayerLand, onPlayerStep, onPlayerZoomChange, onPlayerZoomTransition} from '#src/lib/audio/playerAudio.ts'
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
-import {bodyPose, cameraPose, dropPortrait, flingPlayer, galleryEvents, narrate, setCameraFocused, useGallery} from '#src/lib/gallery.ts'
+import {bodyPose, cameraPose, dropPortrait, flingPlayer, galleryEvents, narrate, setCameraFocused, useGallery, wallRebound} from '#src/lib/gallery.ts'
 import {cameraBookmarkFeet, findCameraBookmark} from '#src/lib/gallery/bookmarks.ts'
 import {flyMode} from '#src/lib/gallery/flyMode.ts'
 import {activateInteractiveObject} from '#src/lib/gallery/interactiveObjects.ts'
@@ -43,11 +43,6 @@ const onInteract = () => {
  * Speed in m/s toward a hung work at which jumping into it or landing on it knocks it off the wall. Above a walking (3) or dodging (4.5) jump, below a sprinting jump (9) and the landing after a fall of a meter (6.3).
  */
 export const portraitDropSpeed = 6
-/** how a work knocked off its wall throws the body back, in m/s: straight out from the wall by `out` and up by `lift`, so it stops pushing the falling work into the wall */
-const portraitRebound = {
-  lift: 2,
-  out: 3,
-}
 const onImpact = (impact: EgoImpact) => {
   if (!impact.airborne || impact.speed < portraitDropSpeed) {
     return
@@ -57,8 +52,9 @@ const onImpact = (impact: EgoImpact) => {
     return
   }
   const portrait = useGallery.getState().portraits.find(candidate => candidate.id === id)
+  // The body bounces back off the wall, so it stops pushing the falling work into it.
   if (portrait && dropPortrait(id)) {
-    flingPlayer([Math.sin(portrait.rotation) * portraitRebound.out, portraitRebound.lift, Math.cos(portrait.rotation) * portraitRebound.out])
+    flingPlayer([Math.sin(portrait.rotation) * wallRebound.out, wallRebound.lift, Math.cos(portrait.rotation) * wallRebound.out])
   }
 }
 export default function Player() {
