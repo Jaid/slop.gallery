@@ -1,0 +1,63 @@
+name: test_packages
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  # Every workspace package with a test script, at any depth, for a job of its own.
+  listPackages:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    outputs:
+      packages: ${{ steps.listPackages.outputs.packages }}
+    steps:
+    - name: checkout
+      uses: actions/checkout@v7.0.1
+    - name: setupBun
+      uses: oven-sh/setup-bun@v2.2.0
+      with:
+        bun-version: 1.4.4
+    - name: listPackages
+      id: listPackages
+      shell: bash
+      run: |
+        bun --eval "$(cat << 'EOF'
+        const {workspaces} = await Bun.file('package.json').json()
+        const packages = []
+        for (const pattern of workspaces) {
+          for await (const manifest of new Bun.Glob(`${pattern}/package.json`).scan()) {
+            const {name, scripts} = await Bun.file(manifest).json()
+            if (scripts?.test) {
+              packages.push({name, folder: manifest.replace(/\/package\.json$/, '')})
+            }
+          }
+        }
+        console.log(`packages=${JSON.stringify(packages.toSorted((a, b) => a.name.localeCompare(b.name)))}`)
+        EOF
+        )" >> "$GITHUB_OUTPUT"
+  testPackage:
+    needs: listPackages
+    name: ${{ matrix.package.name }}
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.listPackages.outputs.packages) }}
+    steps:
+    - name: checkout
+      uses: actions/checkout@v7.0.1
+    - name: setupBun
+      uses: oven-sh/setup-bun@v2.2.0
+      with:
+        bun-version: 1.4.4
+    # Some packages encode media in their tests, like capture-session with ffmpeg and vite-plugin-jxl with cjxl and ImageMagick.
+    - name: setupMediaTools
+      uses: ./.github/actions/setupMediaTools
+    - name: install
+      run: bun install --frozen-lockfile
+    - name: test
+      working-directory: ${{ matrix.package.folder }}
+      run: bun run test

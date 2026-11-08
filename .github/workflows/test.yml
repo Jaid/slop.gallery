@@ -6,11 +6,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
     steps:
     - name: checkout
       uses: actions/checkout@v7.0.1
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
+      with:
+        bun-version: 1.4.4
     - name: installFfmpeg
       run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ffmpeg
     - name: install

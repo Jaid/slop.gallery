@@ -1,11 +1,13 @@
-name: check
+name: tsc
 on:
   push:
     branches: [main]
   pull_request:
 jobs:
-  check:
+  tsc:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
     steps:
     - name: checkout
       uses: actions/checkout@v7.0.1
@@ -13,9 +15,7 @@ jobs:
       uses: oven-sh/setup-bun@v2.2.0
       with:
         bun-version: 1.4.4
-    - name: setupMediaTools
-      uses: ./.github/actions/setupMediaTools
     - name: install
       run: bun install --frozen-lockfile
-    - name: check
-      run: bun run check
+    - name: typecheck
+      run: bun run typecheck
