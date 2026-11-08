@@ -8,7 +8,7 @@ inputs:
     description: the name the comment is found again by, unique among the reports of all workflows
     required: true
   base:
-    description: the commit the report’s deltas compare with, if it has any
+    description: the full hash of the commit the report’s deltas compare with, if it has any
     default: ''
 runs:
   using: composite
@@ -28,11 +28,15 @@ runs:
       # The hidden marker finds this report’s comment again among all others on the pull request.
       marker="<!-- report:$id -->"
       body="$RUNNER_TEMP/report-$id.md"
+      # The commits as links, the base first if the report compares with one, like base..measured.
+      commit() {
+        echo "<a href=\"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$1\">\`${1::6}\`</a>"
+      }
       {
         echo "$marker"
         cat "$file"
         echo
-        echo "<sub>Measured on ${measured::8}${base:+, compared with ${base::8}}.</sub>"
+        echo "<sub>${base:+$(commit "$base")..}$(commit "$measured")</sub>"
       } > "$body"
       publishSummary() {
         cat "$body" >> "$GITHUB_STEP_SUMMARY"
