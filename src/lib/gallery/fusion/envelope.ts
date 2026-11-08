@@ -51,6 +51,8 @@ export type PortalCast = {
 const fizzlePop = 0.55
 /** how bright the portal’s light glows while it brews, in candela */
 const brewingLight = 28
+/** the share of the afterglow, or of the fizzle, over the end of which the portal’s light goes out completely */
+const dimming = 0.6
 /** a flicker in 0–1 that jumps 25 times a second */
 const flicker = (seconds: number) => {
   const step = Math.floor(seconds * 25)
@@ -60,8 +62,12 @@ const flicker = (seconds: number) => {
 
 /** The portal `elapsed` seconds into a fusion of the cast, which its intro, the outcome, the moment its result emerged and the moment the player broke it off shape. */
 export function portalEnvelope(elapsed: number, outcome: FusionOutcome | undefined, emergedAt: number | undefined, timing: FusionTiming, cast: PortalCast, canceledAt?: number): PortalEnvelope {
-  const envelope = shaped(elapsed, outcome, emergedAt, timing, cast)
-  return canceledAt === undefined || elapsed < canceledAt ? envelope : recoiled(envelope, elapsed, elapsed - canceledAt)
+  const shapedEnvelope = shaped(elapsed, outcome, emergedAt, timing, cast)
+  const envelope = canceledAt === undefined || elapsed < canceledAt ? shapedEnvelope : recoiled(shapedEnvelope, elapsed, elapsed - canceledAt)
+  return {
+    ...envelope,
+    light: envelope.light * (1 - darkening(elapsed, outcome, emergedAt, timing)),
+  }
 }
 
 /** The portal brewing once its intro is over, showing the images in turn from the end of its lull until the outcome is in. The intro settles into it as it ends, and the ring of fire the intro’s slingshot left behind lands in it with a blaze, a big shockwave and a burst of sparks. */
@@ -133,6 +139,25 @@ function recoiled(envelope: PortalEnvelope, elapsed: number, since: number): Por
     size: envelope.size * (1 + 0.25 * jolt * Math.sin(since * 75)),
     spin: envelope.spin * (1 - 1.8 * jolt),
   }
+}
+/**
+ * How far the portal’s light has gone out `elapsed` seconds into a fusion, from 0 to 1 by the moment its portal closes, after the afterglow once the result flipped out or after the fizzle once it failed, over the last {@link dimming} of either.
+ * The light’s own fades die away exponentially and never reach 0, so without this it would go out at once with the portal, a pop on every wall it lights.
+ */
+function darkening(elapsed: number, outcome: FusionOutcome | undefined, emergedAt: number | undefined, timing: FusionTiming) {
+  let end: number
+  let span: number
+  if (outcome?.kind === 'success' && emergedAt !== undefined) {
+    end = emergedAt + timing.afterglow
+    span = timing.afterglow
+  } else if (outcome?.kind === 'failure') {
+    end = outcome.at + timing.fizzle
+    span = timing.fizzle
+  } else {
+    return 0
+  }
+  const length = span * dimming
+  return length > 0 ? fade(clamp((elapsed - end + length) / length, 0, 1)) : Number(elapsed >= end)
 }
 /** The portal as long as nobody broke it off. */
 function shaped(elapsed: number, outcome: FusionOutcome | undefined, emergedAt: number | undefined, timing: FusionTiming, cast: PortalCast): PortalEnvelope {

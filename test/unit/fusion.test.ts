@@ -131,6 +131,43 @@ describe('timeline', () => {
     expect(fizzled.size).toBe(0)
     expect(fizzled.embers).toBe(1)
   })
+  test('the portal’s light goes out smoothly by the time the portal closes, after its afterglow or its fizzle', () => {
+    const {afterglow, climax, fizzle} = fusionTiming
+    const success = {
+      kind: 'success' as const,
+      at: 5,
+    }
+    const emergedAt = 5 + climax
+    const failure = {
+      kind: 'failure' as const,
+      at: 4,
+    }
+    const runs = [
+      [emergedAt, emergedAt + afterglow, (elapsed: number) => portalEnvelope(elapsed, success, emergedAt, fusionTiming, pair).light],
+      [failure.at, failure.at + fizzle, (elapsed: number) => portalEnvelope(elapsed, failure, undefined, fusionTiming, pair).light],
+      // broken off, which recoils with a blaze of its own
+      [failure.at, failure.at + fizzle, (elapsed: number) => portalEnvelope(elapsed, failure, undefined, fusionTiming, pair, failure.at - 0.4).light],
+    ] as const
+    for (const [from, end, light] of runs) {
+      expect(light(from + 0.05)).toBeGreaterThan(10)
+      // The last frame before the portal closes is as good as dark already.
+      expect(light(end - 1 / 60)).toBeLessThan(0.05)
+      expect(light(end)).toBe(0)
+      expect(light(end + 1)).toBe(0)
+    }
+    // The afterglow, which doesn’t flicker like the fizzle, dims frame by frame at 60 frames per second without a step.
+    const [[from, end, light]] = runs
+    let previous = light(from)
+    for (let elapsed = from + 1 / 60; elapsed <= end; elapsed += 1 / 60) {
+      const current = light(elapsed)
+      expect(current).toBeLessThanOrEqual(previous)
+      expect(previous - current).toBeLessThan(Math.max(1, previous * 0.15))
+      previous = current
+    }
+    // Until the outcome is in, it shines as it always did.
+    const brewed = brewing(10, fusionTiming, 2)
+    expect(portalEnvelope(10, undefined, undefined, fusionTiming, pair).light).toBe(brewed.light)
+  })
 })
 describe('rhythm', () => {
   test('every peak of the ceremony falls on the pulse: the burst, the ignition, the landing, every turn and the result flipping out', () => {
