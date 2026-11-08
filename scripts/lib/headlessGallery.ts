@@ -18,8 +18,15 @@ export const warmupRows = 360
 // These have dedicated options with validation and defaults. A world’s own parameters open it, like --shots opens Knottingham and --item the Sandbox.
 const queryOptionNames = [...new Set([...queryParameters.filter(key => !dedicatedQueryOptionNames.has(key)), ...Object.values(worldParameters).flat()])].toSorted()
 const queryOptions: Record<string, {type: 'string'}> = Object.fromEntries(queryOptionNames.map(key => [key, {type: 'string'}]))
-/** Scripts pick their own default height; the width follows 16:9. */
-export const galleryHelp = (defaultHeight = 720) => `  --target <dir>          use this static build (e.g. dist) instead of the dev server, which suits captures better: the dev server can reload the page while it captures
+/** Scripts pick their own default height and the ratio of width to height a missing side follows, 16:9 by default, and may leave out query options they set themselves. */
+export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}: {
+  ratio?: number
+  /** query options the script sets itself, which the help leaves out */
+  without?: ReadonlyArray<string>
+} = {}) => {
+  const sides = ratio === 1 ? ['--height', '--width'] : (ratio === 16 / 9 ? ['--height × 16/9', '--width × 9/16'] : [`--height × ${ratio}`, `--width ÷ ${ratio}`])
+  const listed = queryOptionNames.filter(key => !without.includes(key))
+  return `  --target <dir>          use this static build (e.g. dist) instead of the dev server, which suits captures better: the dev server can reload the page while it captures
   --graphics <mode>       mirrors ?graphics (fast, heavy, cinematic, which is heavy with larger maps and more samples for non-realtime renders, or auto, which picks fast or heavy for the GPU). Default: heavy
   --seed <number>         mirrors ?seed, the environment seed (0–${maximumSeed}) that decides random details like the potted plants. Default: 1
   --stream_budget <ms|false>
@@ -27,10 +34,11 @@ export const galleryHelp = (defaultHeight = 720) => `  --target <dir>          u
   --warmup_scale <scale|false>
                           mirrors ?warmup_scale, the renderer scale the page loads, compiles and streams everything in at until the script ends its warmup right before capturing, so those frames stay cheap and the full-size render targets don’t exist yet. Default: ${warmupRows} rows, ${warmupRows} divided by the height, unless the regular scale is smaller; false renders at the full size from the start
   --swiftshader           renders on Chrome’s software Vulkan instead of a GPU, for machines without one like CI runners, which also need a system Vulkan driver like Mesa’s (mesa-vulkan-drivers on Ubuntu); slow, but enough to load and analyze the scene
-  --width <pixels>        render width. Default: --height × 16/9, or ${Math.round(defaultHeight * 16 / 9)}
-  --height <pixels>       render height. Default: --width × 9/16, or ${defaultHeight}
+  --width <pixels>        render width. Default: ${sides[0]}, or ${Math.round(defaultHeight * ratio)}
+  --height <pixels>       render height. Default: ${sides[1]}, or ${defaultHeight}
   --<parameter> <value>   mirrors ?<parameter>=<value> for every other URL query parameter the app reads, e.g. --show_wireframe true or --anti_aliasing false:
-                          ${queryOptionNames.join(', ')}`
+                          ${listed.join(', ')}`
+}
 export const galleryOptions = {
   ...queryOptions,
   graphics: {
@@ -144,8 +152,8 @@ export const warnAboutDevServer = (setup: GallerySetup) => {
     console.warn('Warning: capturing from the Vite dev server, which can reload the page mid-capture and lose the pose; captures should target a static build: bun run build, then --target dist.')
   }
 }
-/** Validates the shared gallery options before anything is started. */
-export const resolveGallerySetup = async (values: GalleryValues, defaultHeight = 720) => {
+/** Validates the shared gallery options before anything is started; a missing side of the viewport follows `ratio`, width divided by height. */
+export const resolveGallerySetup = async (values: GalleryValues, defaultHeight = 720, ratio = 16 / 9) => {
   const target = values.target === undefined ? undefined : resolve(values.target)
   if (target !== undefined && !await fs.stat(join(target, 'index.html')).then(entry => entry.isFile(), () => false)) {
     throw new Error(`--target ${values.target} has no index.html. Build it first, e.g. bun run build.`)
@@ -172,7 +180,7 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
       search.set(key, value)
     }
   }
-  const viewport = resolveSize(values, defaultHeight)
+  const viewport = resolveSize(values, defaultHeight, ratio)
   const warmupScale = resolveWarmupScale(values.warmup_scale, viewport.height, Number(search.get('scale') ?? 1))
   if (warmupScale !== undefined) {
     search.set('warmup_scale', String(warmupScale))
