@@ -5,7 +5,8 @@ import {RuleTester} from '@typescript-eslint/rule-tester'
 RuleTester.afterAll = afterAll
 RuleTester.describe = describe
 RuleTester.it = test
-RuleTester.itOnly = test.only
+// Bun throws as soon as test.only is read in CI, so only a test that asks for it reads it.
+RuleTester.itOnly = (text, callback) => test.only(text, callback)
 
 export const ruleTester = new RuleTester({
   languageOptions: {
