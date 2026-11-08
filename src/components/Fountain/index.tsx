@@ -40,8 +40,12 @@ export default function Fountain() {
       {/* The shared gold lives for the page, like on the chandeliers; it is borrowed, not disposed here. */}
       <mesh castShadow geometry={geometry.gilt} material={gold} name='fountain-gilt-fittings' receiveShadow />
     </RigidBody>
+    {/*
+      The pools (transparent to three.js as soon as they transmit), the falling water and the spray all sort among the transparent parts, by the middles of their bounds, which stand one above the other: they would swap places whenever the camera tips across level.
+      So they draw in a fixed order: the pools first, writing their depth, so the veils blend over them and vanish into them and the pools’ refraction only shows the marble under them, then the veils and the arcs, then the drops, most of which fly in front of the water, around it or off its frayed foot.
+    */}
     <mesh geometry={geometry.pools} material={pool} name='fountain-pools' receiveShadow />
-    <mesh geometry={geometry.water} material={falling} name='fountain-falling-water' />
-    <primitive object={spray} />
+    <mesh geometry={geometry.water} material={falling} name='fountain-falling-water' renderOrder={1} />
+    <primitive object={spray} renderOrder={2} />
   </Orbitable>
 }

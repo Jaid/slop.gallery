@@ -206,9 +206,6 @@ export default class FountainSpray extends InstancedMesh<PlaneGeometry, MeshBasi
     this.name = 'fountain-spray'
     // Vertex animation exceeds the source quad’s bounds.
     this.frustumCulled = false
-    // The falling water draws without depth too, so three.js would order the two by the middles of their bounds, the drops’ at the fountain’s foot and the water’s higher up, which swap places whenever the camera tips across level and the veils swallow every drop in front of them or let them all through.
-    // The drops always draw over the water: most of them fly in front of it, around it or off its frayed foot.
-    this.renderOrder = 1
   }
 
   override dispose() {
