@@ -54,6 +54,41 @@ export function centeredCrop(width: number, height: number, limit = 2) {
   return [(width - cropWidth) / 2, (height - cropHeight) / 2, cropWidth, cropHeight] as const
 }
 
+/** An image file, already validated, as an imported work keeps it: works wider than 2:1 or taller than 1:2 only their middle, at most 3072 px on its longer edge, on an opaque ground, with the size in pixels of the part it keeps. */
+export async function importedImage(file: Blob): Promise<SizedImage> {
+  const bitmap = await createImageBitmap(file)
+  try {
+    const crop = centeredCrop(bitmap.width, bitmap.height)
+    const [, , width, height] = crop
+    // Rejects images too large or too panoramic for a frame before encoding them.
+    imageSize(width, height)
+    const scale = Math.min(1, 3072 / Math.max(width, height))
+    const canvas = new OffscreenCanvas(Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale)))
+    const context = canvas.getContext('2d')
+    if (!context) {
+      throw new Error('The image could not be decoded.')
+    }
+    context.fillStyle = '#f2eee3'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    context.drawImage(bitmap, ...crop, 0, 0, canvas.width, canvas.height)
+    return {
+      image: await canvas.convertToBlob({
+        type: 'image/webp',
+        quality: 0.94,
+      }),
+      width,
+      height,
+    }
+  } finally {
+    bitmap.close()
+  }
+}
+
+/** The title of a work imported from the file named `name`: its name without the extension, dashes and underscores as spaces. */
+export function importedTitle(name: string) {
+  return name.replace(/\.[^.]+$/, '').replaceAll(/[-_]/g, ' ').trim().slice(0, 150) || 'An untitled arrival'
+}
+
 /** A provider’s output as a work keeps it: in whatever shape it came, at most 3072 px on its longer edge, on an opaque ground. */
 export async function encodeGeneratedImage(source: Blob) {
   const bitmap = await createImageBitmap(source)
@@ -194,39 +229,14 @@ export default class ImageImporter {
           if (useGallery.getState().portraits.length >= maximumPortraits) {
             throw new Error('The collection is full. Remove a work to make room.')
           }
-          const bitmap = await createImageBitmap(file)
-          let cropWidth: number
-          let cropHeight: number
-          let dropped: ReturnType<typeof imageSize>
-          let source: Blob
-          try {
-            // Works wider than 2:1 or taller than 1:2 keep only their middle.
-            const crop = centeredCrop(bitmap.width, bitmap.height)
-            cropWidth = crop[2]
-            cropHeight = crop[3]
-            // Dropped into the room, a work takes the portrait area of the player’s room.
-            dropped = imageSize(cropWidth, cropHeight, world.portraitArea(undefined, room))
-            const scale = Math.min(1, 3072 / Math.max(cropWidth, cropHeight))
-            const canvas = new OffscreenCanvas(Math.max(1, Math.round(cropWidth * scale)), Math.max(1, Math.round(cropHeight * scale)))
-            const context = canvas.getContext('2d')
-            if (!context) {
-              throw new Error('The image could not be decoded.')
-            }
-            context.fillStyle = '#f2eee3'
-            context.fillRect(0, 0, canvas.width, canvas.height)
-            context.drawImage(bitmap, ...crop, 0, 0, canvas.width, canvas.height)
-            source = await canvas.convertToBlob({
-              type: 'image/webp',
-              quality: 0.94,
-            })
-          } finally {
-            bitmap.close()
-          }
+          const {image: source, width: cropWidth, height: cropHeight} = await importedImage(file)
           // dispose() can run during decoding, which the narrowing from the check above cannot see.
           if (this.disposed as boolean) {
             break
           }
-          const title = file.name.replace(/\.[^.]+$/, '').replaceAll(/[-_]/g, ' ').trim().slice(0, 150) || 'An untitled arrival'
+          // Dropped into the room, a work takes the portrait area of the player’s room.
+          const dropped = imageSize(cropWidth, cropHeight, world.portraitArea(undefined, room))
+          const title = importedTitle(file.name)
           const s = useGallery.getState()
           let size = dropped
           let place: Placement | null = null
