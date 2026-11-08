@@ -1,0 +1,22 @@
+name: codeSize
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  codeSize:
+    runs-on: ubuntu-26.04
+    steps:
+    - name: checkout
+      uses: actions/checkout@v7.0.1
+    - name: setupBun
+      uses: oven-sh/setup-bun@v2.2.0
+      with:
+        bun-version: 1.4.4
+    - name: install
+      run: bun install --frozen-lockfile
+    # The raw and effective bytes of the root package’s and the workspace packages’ source, scripts and tests, to the log and the job summary.
+    - name: measureCodeSize
+      shell: bash
+      run: bun scripts/codeSize.ts --format markdown | tee --append "$GITHUB_STEP_SUMMARY"
