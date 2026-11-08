@@ -46,6 +46,13 @@ export default class Corridor extends Room {
         new RoomMood({
           id: 'corridor',
           title: 'Timber tunnel',
+          // The dark between the lanterns deepens, while their glow holds.
+          grade: {
+            shadow: '#040201',
+            midtone: '#5c4430',
+            highlight: '#ffeedd',
+            strength: 0.3,
+          },
           // A timber tunnel with a flutter of its own.
           transformer: reverberation({
             decay: 1.1,
