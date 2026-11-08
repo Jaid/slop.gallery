@@ -1,6 +1,6 @@
 import type {Browser, Page} from 'puppeteer-core'
 
-import {join, resolve, sep} from 'node:path'
+import {basename, join, resolve, sep} from 'node:path'
 
 import fs from 'fs-extra'
 import puppeteer from 'puppeteer-core'
@@ -131,6 +131,26 @@ const serveStatic = (root: string) => Bun.serve({
     return isFile ? new Response(Bun.file(file)) : new Response('Not found', {status: 404})
   },
 })
+/** Serves the image file under its own name to the page, which only loads images over HTTP. Dispose it to stop serving. */
+export const serveFile = (file: string) => {
+  const name = `/${encodeURIComponent(basename(file))}`
+  const headers = {'Access-Control-Allow-Origin': '*'}
+  const server = Bun.serve({
+    hostname: '127.0.0.1',
+    port: 0,
+    fetch(request) {
+      const {pathname} = new URL(request.url)
+      return pathname === name ? new Response(Bun.file(file), {headers}) : new Response('Not found', {
+        status: 404,
+        headers,
+      })
+    },
+  })
+  return {
+    url: `http://127.0.0.1:${server.port}${name}`,
+    [Symbol.asyncDispose]: () => server.stop(true),
+  }
+}
 /** The --warmup_scale to open the page with, or undefined for none: `false`, or a default that would not render fewer rows than the regular `scale`. */
 const resolveWarmupScale = (value: string | undefined, height: number, scale: number) => {
   if (value === 'false') {

@@ -2,7 +2,7 @@ import type {CameraPose, TurntablePose} from '#src/lib/diagnostics.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {GalleryValues} from './lib/headlessGallery.ts'
 
-import {basename, dirname, join, relative, resolve} from 'node:path'
+import {dirname, join, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
 import {createFrameSink, endWarmup, frameFormat, installVirtualClock, waitForLoadingItems} from 'capture-session/script'
@@ -14,7 +14,7 @@ import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
 import artworks from '#src/worlds/gallery/artworks.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
 
-import {galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
+import {galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, repositoryRoot, resolveGallerySetup, resolveSettle, serveFile, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
 
 /** query options this script sets itself from its own, and `?ratio`, the canvas’ width per height, which the video’s size sets instead, while --ratio is the work’s */
 const ownQueryOptions = ['frame', 'ratio', 'turntable', 'turntable_area', 'turntable_ratio']
@@ -134,26 +134,6 @@ export const turntableCamera = ({center, facing, size: [width, height, depth]}: 
   return looking(eye, center, fov)
 }
 
-/** Serves the image file under its own name to the page, which only loads images over HTTP. Dispose it to stop serving. */
-const serveFile = (file: string) => {
-  const name = `/${encodeURIComponent(basename(file))}`
-  const headers = {'Access-Control-Allow-Origin': '*'}
-  const server = Bun.serve({
-    hostname: '127.0.0.1',
-    port: 0,
-    fetch(request) {
-      const {pathname} = new URL(request.url)
-      return pathname === name ? new Response(Bun.file(file), {headers}) : new Response('Not found', {
-        status: 404,
-        headers,
-      })
-    },
-  })
-  return {
-    url: `http://127.0.0.1:${server.port}${name}`,
-    [Symbol.asyncDispose]: () => server.stop(true),
-  }
-}
 /** The image file the artwork names, unless it names an artwork of the catalog by its id or an image by its URL; an error for anything else. */
 const artworkFile = async (artwork: string) => {
   if (artworks.some(entry => entry.id === artwork)) {
