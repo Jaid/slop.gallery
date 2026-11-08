@@ -1,5 +1,4 @@
 import type {Metal} from '#src/lib/materials/frames/FrameMetalMaterial.ts'
-import type {Node} from 'three/webgpu'
 
 import {color, float, max, mix, mx_cell_noise_float, mx_noise_float, select, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
@@ -17,8 +16,6 @@ import {withOpening} from './frameBack.ts'
 import {along, assembleFrame, place, sweepProfile} from './frameGeometry.ts'
 import FrameProfile from './FrameProfile.ts'
 import {dome} from './ornaments.ts'
-
-type Float = Node<'float'>
 
 const imageDepth = -0.034
 const linen = 0

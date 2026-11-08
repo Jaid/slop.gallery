@@ -5,7 +5,7 @@ import type {Node} from 'three/webgpu'
 import {color, float, max, mix, mx_cell_noise_float, mx_noise_float, select, time, vec2, vec3} from 'three/tsl'
 import {LatheGeometry, MeshPhysicalNodeMaterial, Vector2} from 'three/webgpu'
 
-import {heightNormal, inside, insideBy, visibleDetail} from '#src/lib/materials/filters.ts'
+import {heightNormal, insideBy, visibleDetail} from '#src/lib/materials/filters.ts'
 import {frameSurface} from '#src/lib/materials/frames/frameAttributes.ts'
 import {backSurface, hangingWire} from '#src/lib/materials/frames/frameBacks.ts'
 import frameStudio from '#src/lib/materials/frames/frameStudio.ts'
