@@ -113,6 +113,45 @@ describe('markdown', () => {
     })
     expect(shown.render(input)).toContain('<tr><th rowspan="2" align="left"></th><th rowspan="2" align="right">words</th><th rowspan="2" align="right">files</th><th rowspan="2" align="right">bytes</th><th colspan="2">lines</th></tr>')
   })
+  test('without showUnchangedRows, a base leaves out the rows without any change, which the totals still count', () => {
+    const hiding = new Deltable({
+      idHeaderTitle: 'room',
+      showUnchangedRows: false,
+      total: true,
+    })
+    const values = {
+      Hall: {
+        triangles: 10,
+        meshes: 2,
+      },
+      Salon: {
+        triangles: 5,
+        meshes: 1,
+      },
+    }
+    const html = hiding.render({
+      values,
+      base: {
+        Hall: {
+          triangles: 10,
+          meshes: 2,
+        },
+        Salon: {
+          triangles: 4,
+          meshes: 1,
+        },
+        Parlor: {triangles: 3},
+      },
+    })
+    expect(html).not.toContain('Hall')
+    expect(html).toContain('<tbody>\n<tr><td>Salon</td><td align="right">5</td><td align="right">+1</td><td align="right">1</td></tr>\n<tr><td>Parlor</td><td align="right"></td><td align="right">−3</td><td align="right"></td></tr>\n<tr><td><b>total</b></td><td align="right">15</td><td align="right">−2</td><td align="right">3</td></tr>\n</tbody>')
+    // Without a base, there is no change to tell, so every row shows.
+    expect(hiding.render({values})).toBe(['| room | triangles | meshes |', '| --- | --: | --: |', '| Hall | 10 | 2 |', '| Salon | 5 | 1 |', '| **total** | 15 | 3 |'].join('\n'))
+    expect(hiding.render({
+      values,
+      base: structuredClone(values),
+    })).toBe(['| room | triangles | meshes |', '| --- | --: | --: |', '| **total** | 15 | 3 |'].join('\n'))
+  })
   test('pipes in titles and IDs are escaped', () => {
     const piped = new Deltable({headers: {count: 'this | that'}})
     expect(piped.render({values: {'a|b': {count: 1}}})).toBe([String.raw`|  | this \| that |`, '| --- | --: |', String.raw`| a\|b | 1 |`].join('\n'))

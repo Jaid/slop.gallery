@@ -10,6 +10,8 @@ export type DeltableOptions = {
   headers?: Partial<Record<string, string>>
   /** the title of the cell above the row IDs. Default: empty */
   idHeaderTitle?: string
+  /** whether rows without a single change since `base` show too; without a base, every row shows. Default: true */
+  showUnchangedRows?: boolean
   /** whether columns whose every count is 0, in `values` and `base` alike, show too. Default: false */
   showUselessColumns?: boolean
   /** whether a row with the sums of every column closes the table. Default: false */
@@ -56,6 +58,7 @@ export default class Deltable {
       valueHeaderTitle: 'count',
       deltaHeaderTitle: 'delta',
       headers: {},
+      showUnchangedRows: true,
       showUselessColumns: false,
       total: false,
       totalTitle: 'total',
@@ -65,7 +68,7 @@ export default class Deltable {
   }
   /**
    * The rows of `values` in their order, then those only `base` has with counts of 0; the columns of `headers` in its order, then the others in the order they first appear in the rows, leaving out those with counts of 0 only unless `showUselessColumns` is set.
-   * Rows keep the order of their IDs in the objects, which JavaScript puts first for IDs that are array indices, like “7”.
+   * Rows keep the order of their IDs in the objects, which JavaScript puts first for IDs that are array indices, like “7”. Unless `showUnchangedRows` is set, a base leaves out the rows without any change since; the totals still count them.
    */
   render({values, base}: DeltableInput) {
     const ids = [...new Set([...presentKeys(values), ...presentKeys(base)])]
@@ -88,10 +91,11 @@ export default class Deltable {
     }
     const titles = keys.map(key => this.options.headers[key] ?? key)
     const changed = keys.map((_, index) => base !== undefined && rows.some(row => row.values[index] !== row.base[index]))
+    const shown = this.options.showUnchangedRows || base === undefined ? rows : rows.filter(row => row.total || row.values.some((value, index) => value !== row.base[index]))
     if (!changed.includes(true)) {
-      return this.#renderMarkdown(titles, rows)
+      return this.#renderMarkdown(titles, shown)
     }
-    return this.#renderHtml(titles, rows, changed)
+    return this.#renderHtml(titles, shown, changed)
   }
   #formatValue(value: number, escape: (text: string) => string) {
     return value === 0 ? escape(this.options.zeroValue) : formatCount(value)

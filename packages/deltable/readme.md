@@ -55,6 +55,7 @@ Rows keep the order of `values`, followed by rows only `base` has, which count 0
 | `valueHeaderTitle` | `'count'` | the title of a changed column’s subcolumn with its counts |
 | `deltaHeaderTitle` | `'delta'` | the title of a changed column’s subcolumn with its deltas |
 | `headers` | `{}` | the titles of the columns by their keys, in the order of the columns; columns without one follow them, titled by their keys |
+| `showUnchangedRows` | `true` | whether rows without a single change since `base` show too; the totals count them either way, and without a base, every row shows |
 | `showUselessColumns` | `false` | whether columns whose every count is 0, in `values` and `base` alike, show too |
 | `total` | `false` | whether a row with the sums of every column closes the table |
 | `totalTitle` | `'total'` | the ID of the row with the sums, rendered bold |
