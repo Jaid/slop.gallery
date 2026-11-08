@@ -30,12 +30,15 @@ const source = () => Object.assign(new EventTarget, node(), {
   start: mock((_time: number) => {}),
   stop: mock((_time: number) => {}),
 })
+const constantSource = () => Object.assign(source(), {offset: param()})
 
 export default function audioFixture() {
   const gains: Array<ReturnType<typeof gain>> = []
   const sources: Array<ReturnType<typeof source>> = []
   const filters: Array<ReturnType<typeof filter>> = []
   const buffers: Array<Float32Array> = []
+  /** the silent sources that time callbacks on the context’s clock (see `atContextTime`), which tests end by dispatching `ended` */
+  const timers: Array<ReturnType<typeof constantSource>> = []
   const context = {
     currentTime: 0,
     sampleRate: 48_000,
@@ -60,6 +63,11 @@ export default function audioFixture() {
     createBufferSource() {
       return this.createOscillator()
     },
+    createConstantSource() {
+      const result = constantSource()
+      timers.push(result)
+      return result
+    },
     createBuffer(_channels: number, length: number, _rate: number) {
       const data = new Float32Array(length)
       buffers.push(data)
@@ -72,5 +80,6 @@ export default function audioFixture() {
     sources,
     filters,
     buffers,
+    timers,
   }
 }

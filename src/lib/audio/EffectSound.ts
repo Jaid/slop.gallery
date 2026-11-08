@@ -2,6 +2,7 @@ import type {Vec3} from '../gallery/types.ts'
 import type {AudioOutput} from './proceduralAudio.ts'
 
 import {whiteNoise} from './ambience/base/noise.ts'
+import atContextTime from './atContextTime.ts'
 
 const silence = 0.0001
 
@@ -110,11 +111,11 @@ export default class EffectSound {
 
   /** Disconnects every node once everything has rung out, `tail` seconds after the last part ended. */
   finish(tail = 3) {
-    setTimeout(() => {
+    atContextTime(this.context, this.end + tail, () => {
       for (const node of this.nodes) {
         node.disconnect()
       }
-    }, (this.end - this.context.currentTime + tail) * 1000)
+    })
   }
 
   /** Moves where it is heard from to `to`, gliding there linearly by `at`, in the context’s seconds. */

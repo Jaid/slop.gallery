@@ -1,3 +1,5 @@
+import atContextTime from '../atContextTime.ts'
+
 /**
  * How a mood transforms every sound of the world, like the walls of a room ringing on: wires `input` to `output` through nodes of its own, the dry sound included, returning how to disconnect them again.
  * It is built anew whenever its mood begins to show, so it may keep state, but `input` belongs to the caller.
@@ -6,12 +8,12 @@ export type SoundTransformer = (context: BaseAudioContext, input: AudioNode, out
 
 /** a transformer built on a link for the one who keys it */
 type Hold = {
+  /** cancels the timer that releases it once it has stopped taking any sound and its last echo has died */
+  cancel?: () => void
   key: object
   /** when it last stopped taking any sound, in the context’s time */
   left: number
   release: () => void
-  /** the timer that releases it once it has stopped taking any sound and its last echo has died */
-  timer?: ReturnType<typeof setTimeout>
 }
 /** one link of the chain: what reaches it passes on dry by the share its transformer leaves and through its transformer by the share it takes */
 type Link = {
@@ -87,12 +89,12 @@ export default class TransformerChain {
     link.amount = amount
     link.send.gain.setTargetAtTime(amount, now, smoothing)
     link.dry.gain.setTargetAtTime(1 - amount, now, smoothing)
-    clearTimeout(hold.timer)
-    hold.timer = undefined
+    hold.cancel?.()
+    hold.cancel = undefined
     if (amount === 0) {
       hold.left = now
       const ringing = link
-      hold.timer = setTimeout(() => this.release(ringing), linger * 1000)
+      hold.cancel = atContextTime(this.context, now + linger, () => this.release(ringing))
     }
   }
 
@@ -101,7 +103,7 @@ export default class TransformerChain {
     if (!hold) {
       return
     }
-    clearTimeout(hold.timer)
+    hold.cancel?.()
     hold.release()
     link.send.disconnect()
     link.hold = undefined

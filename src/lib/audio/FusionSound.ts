@@ -6,6 +6,7 @@ import type {AudioOutput} from './proceduralAudio.ts'
 import {choreographed, drags, emberRhythm, gathering, grab, ignition, implosion, introSeconds, release, whirl, whirled, whirling, yank} from '../gallery/fusion/intro.ts'
 import {introTurns} from '../gallery/fusion/timing.ts'
 import {whiteNoise} from './ambience/base/noise.ts'
+import atContextTime from './atContextTime.ts'
 
 type Tone = {
   attack?: number
@@ -258,7 +259,7 @@ export default class FusionSound {
       source.stop(now + fade)
     }
     // The reverb rings on for a while after the last source.
-    setTimeout(() => this.panner.disconnect(), (fade + 2.4) * 1000)
+    atContextTime(this.context, now + fade + 2.4, () => this.panner.disconnect())
   }
 
   /** An image surfaces in the portal after the lull: a bell with a slow vibrato over a soft rush, each one a step further along the motif. The intro’s turns stay silent here, as their ingredients are latched on with beats of the intro’s own sound. */

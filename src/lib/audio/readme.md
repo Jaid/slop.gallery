@@ -86,6 +86,8 @@ The sounds of the other effects (`src/lib/gallery/fusion/effects`) are built on 
 
 `playVoices()` returns a cancellable playback with a gain parameter. It owns only its sources, filters, envelopes and local bus; it never disconnects the caller's master or closes the caller's context. Both natural completion and cancellation disconnect nodes. Voice envelopes start with intrinsic gain zero, including before delayed onsets, so sample-boundary rounding cannot leak a full-volume noise sample.
 
+Whatever has to happen once sound has rung out, like disconnecting an effect’s nodes, releasing a transformer 8 s after it stopped taking any sound or an ambience loop’s outlet after its fade, waits for the context’s own clock through `atContextTime`, a silent constant source that ends on time, never for the wall clock: a context rendering slower than real time, like a film’s, would otherwise cut tails off, and a suspended one would let them go before they were heard. Only the ambience loops still schedule their one-shots from an 80 ms interval, which looks 0.25 s ahead of the context’s time, so a context slower than real time only gets looked after more often.
+
 ## Validation
 
 Run `bun test ./test/unit/sound-engine.test.ts ./test/unit/sound-effects.test.ts ./test/unit/player-audio.test.ts ./test/unit/transformers.test.ts ./test/unit/moods.test.ts ./test/unit/hearing.test.ts ./test/unit/impact-sounds.test.ts` and `bun run --cwd packages/ego-player test`.

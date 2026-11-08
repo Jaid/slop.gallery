@@ -1,7 +1,7 @@
 import type {Reverberation} from '../../src/lib/audio/transformers/reverberation.ts'
 import type {SoundTransformer} from '../../src/lib/audio/transformers/TransformerChain.ts'
 
-import {afterEach, expect, mock, spyOn, test} from 'bun:test'
+import {expect, mock, test} from 'bun:test'
 
 import {reverberationImpulse} from '../../src/lib/audio/transformers/reverberation.ts'
 import TransformerChain from '../../src/lib/audio/transformers/TransformerChain.ts'
@@ -10,19 +10,18 @@ import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
 import audioFixture from './audioFixture.ts'
 
-let timers: ReturnType<typeof spyOn<typeof globalThis, 'setTimeout'>> | undefined
-afterEach(() => {
-  timers?.mockRestore()
-  timers = undefined
-})
-/** A chain on the fixture’s context, with the timers that release transformers rung out caught instead of run, and its links’ gains. */
+/** A chain on the fixture’s context, with the timers on its clock that release transformers rung out, which end when told to, and its links’ gains. */
 function setup() {
   const fixture = audioFixture()
-  const scheduled: Array<() => void> = []
-  timers = spyOn(globalThis, 'setTimeout').mockImplementation(((job: () => void) => {
-    scheduled.push(job)
-    return scheduled.length
-  }) as typeof setTimeout)
+  const scheduled = {
+    get length() {
+      return fixture.timers.length
+    },
+    /** ends the timer started `index`th, as the context’s clock reaching it would */
+    end: (index: number) => fixture.timers[index].dispatchEvent(new Event('ended')),
+    /** the context time the timer started `index`th is due at, as last scheduled */
+    at: (index: number) => fixture.timers[index].stop.mock.calls[0][0],
+  }
   const [input, output] = [fixture.context.createGain(), fixture.context.createGain()]
   const context = fixture.context as unknown as BaseAudioContext
   const chain = new TransformerChain(context, input as unknown as AudioNode, output as unknown as AudioNode)
@@ -109,8 +108,12 @@ test('a transformer that stops taking any sound rings out and is released later,
   expect(lobby.transform).toHaveBeenCalledTimes(1)
   chain.transform(vesperKey, vesper.transform, 0)
   expect(scheduled).toHaveLength(2)
-  // The Lobby’s timer was cleared by stepping back in; the Vesper’s releases it.
-  scheduled[1]()
+  // Both ring out for 8 s of the context’s own time.
+  expect(scheduled.at(1)).toBe(8)
+  // The Lobby’s timer was canceled by stepping back in, so its end releases nothing; the Vesper’s releases it.
+  scheduled.end(0)
+  expect(lobby.release).not.toHaveBeenCalled()
+  scheduled.end(1)
   expect(vesper.release).toHaveBeenCalledTimes(1)
   expect(links[1].send.disconnect).toHaveBeenCalledTimes(1)
   expect(lobby.release).not.toHaveBeenCalled()

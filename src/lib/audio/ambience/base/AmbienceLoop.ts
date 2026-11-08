@@ -1,6 +1,7 @@
 import type {AudioOutput} from '../../proceduralAudio.ts'
 import type {Range} from './noise.ts'
 
+import atContextTime from '../../atContextTime.ts'
 import {loopLength, swayCurve, whiteNoise} from './noise.ts'
 
 /** a looping noise bed through one filter, its level swaying by smooth random modulation */
@@ -188,7 +189,7 @@ export default abstract class AmbienceLoop {
     for (const source of graph.sources) {
       source.stop(now + fade)
     }
-    setTimeout(() => graph.outlet.disconnect(), (fade + lookahead) * 1000 + 100)
+    atContextTime(graph.context, now + fade + lookahead + 0.1, () => graph.outlet.disconnect())
   }
 
   /** A voice that rises slowly and dies away while gliding from `frequency` to its `endFrequency`, like a moan or a hoot. */

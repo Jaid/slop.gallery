@@ -3,6 +3,7 @@ import type {Vec3} from '../gallery/types.ts'
 import type {AudioOutput} from './proceduralAudio.ts'
 
 import {whiteNoise} from './ambience/base/noise.ts'
+import atContextTime from './atContextTime.ts'
 
 const silence = 0.0001
 /** how high the sound rises with the ghosts over their flight, in meters */
@@ -164,11 +165,11 @@ export default function playGhostChorus({context, master}: AudioOutput, [x, y, z
   play(puff, puffFilter, now, 0.9, 0.08, 0.05)
   nodes.push(draft, draftFilter, puff, puffFilter)
   // Once everything has rung out in the hall, the nodes go.
-  setTimeout(() => {
+  atContextTime(context, end + 4, () => {
     for (const node of nodes) {
       node.disconnect()
     }
-  }, (end - context.currentTime + 4) * 1000)
+  })
 }
 
 /** A cold, dark hall for the wails to ring in: three and a half seconds of decaying stereo noise, darkening fast. */
