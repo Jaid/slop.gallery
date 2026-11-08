@@ -2,6 +2,9 @@ import type {FrameDownload, FrameFormat} from '#src/lib/downloadFrame.ts'
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
 import type {WorldAnalysis} from './analyzeWorld.ts'
+import type {PortraitDump} from './dumpPortraits.ts'
+import type {WorkHanging, WorkHangingInput} from './hangWork.ts'
+import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
 import type {PropThrow, PropThrowInput} from './throwProp.ts'
 import type {WireframeFlood} from 'capture-session'
 import type {WarmupEnd} from 'capture-session/script'
@@ -28,13 +31,16 @@ export type WebmcpBridge = {
   getAim: () => AimSnapshot
   getKnots: () => ReadonlyArray<KnotDump>
   getLoadingItems: () => ReadonlyArray<string>
+  getPortraits: () => ReadonlyArray<PortraitDump>
   getPortraitSlots: () => ReadonlyArray<PortraitSlot>
   getTelemetry: () => {
     collection: ReturnType<VictoriaClient['collectionStatus']>
     delivery: ReturnType<VictoriaClient['status']>
     sessionId: string
   } | null
+  hangWork: (input: WorkHangingInput) => Promise<WorkHanging>
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
+  spawnOrb: (input: OrbSpawnInput) => Promise<OrbSpawn>
   throwProp: (input: PropThrowInput) => PropThrow
 }
 
@@ -42,6 +48,9 @@ const frameFormats: Array<FrameFormat> = ['webp', 'png']
 const fileNamePattern = /^[\w\-.]{1,100}$/u
 const colorPattern = /^#(?:[\da-f]{3}){1,2}$/iu
 const throwKeys = ['prop', 'portrait', 'target', 'velocity', 'from', 'speed']
+const spawnKeys = new Set(['orb', 'position', 'id'])
+const hangKeys = new Set(['image', 'slot', 'title'])
+const propIdPattern = /^prop-[\w-]{1,100}$/u
 const isPoint = (value: unknown): value is [number, number, number] => Array.isArray(value) && value.length === 3 && value.every(number => typeof number === 'number' && Number.isFinite(number))
 const point = (description: string) => ({
   type: 'array',
@@ -77,6 +86,12 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       title: 'Dump portrait slots',
       description: 'Return every portrait slot of the world with its ID, wall ID, ratio, priority for default works, frame width and height in meters, world-space frame center, rotation, whether its placard hangs above the frame and the frame of its room, which its default work wears (left out for the default frame). With ?edit_portrait_slots, this includes the edits made on this page. Worlds without slots return an empty array.',
       read: () => getBridge().getPortraitSlots(),
+    },
+    {
+      name: 'dump_portraits',
+      title: 'Dump portraits',
+      description: 'Return every work of the collection where it is now, hung, lying, flying or held by a fusion: its ID, title, whether it hangs and on which wall, its frame width and height in meters, whether a fusion holds it (fusing) or waits for one (pending), the world-space middle of its frame and its rotation as a quaternion [x, y, z, w], before which its front faces +z and its top +y. Poll it to follow a work through the air, like the result a fusion flips out of its portal, which joins the collection as it does.',
+      read: () => getBridge().getPortraits(),
     },
     {
       name: 'analyze_world',
@@ -235,6 +250,102 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           velocity: velocity as [number, number, number] | undefined,
           from: from as [number, number, number] | undefined,
           speed,
+        })
+      },
+    },
+    {
+      name: 'spawn_orb',
+      title: 'Spawn orb',
+      description: 'Bring an orb of any kind into the world at a point, where it lies, rolls and falls like any other, so throw_prop can throw it even where the game has none of its kind yet, like the Horror Orb that only the Forge’s alchemy machine makes. Resolves once its prop is in the world, which renders it from the next frame on. Fails for an unknown kind, whose error lists the kinds, and for an id a prop already has. Returns its prop id, its kind and where it entered. Does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          orb: {
+            type: 'string',
+            description: 'the kind of orb, like horror, spook, halloween, paint or transparent',
+          },
+          position: point('world-space point in meters where its middle enters the world, [x, y, z]'),
+          id: {
+            type: 'string',
+            description: 'its prop id, unique in the world. Default: the kind’s prop id, numbered like prop-orb-horror-spawned-1',
+            pattern: propIdPattern.source,
+          },
+        },
+        required: ['orb', 'position'],
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !spawnKeys.has(key))) {
+          throw new TypeError('This tool takes an object with orb, position and an optional id.')
+        }
+        const {orb, position, id} = input as Record<string, unknown>
+        if (typeof orb !== 'string' || !orb) {
+          throw new TypeError('orb must be the id of a kind of orb.')
+        }
+        if (!isPoint(position)) {
+          throw new TypeError('position must be three finite numbers.')
+        }
+        if (id !== undefined && (typeof id !== 'string' || !propIdPattern.test(id))) {
+          throw new TypeError(`id must match ${propIdPattern}.`)
+        }
+        return getBridge().spawnOrb({
+          orb,
+          position,
+          id,
+        })
+      },
+    },
+    {
+      name: 'hang_work',
+      title: 'Hang work',
+      description: 'Hang an image in a portrait slot as an imported work, in place of the work hanging there, if any: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect at the slot’s frame area, wearing its own roll of the slot’s frames or of its room’s, right away without the hanging animation or the sound of an arrival. Resolves once it hangs, while its image may still decode. Fails for an unknown slot, an image that does not load or is no PNG, JPEG, WebP, AVIF or GIF up to 25 mb, and a full collection. Returns its new id, its title, the slot, the id of the work it replaced, where its frame’s middle is, its rotation and its frame width and height in meters. Slot ids are what dump_portrait_slots lists. Does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          image: {
+            type: 'string',
+            description: 'URL of the image, which the page fetches',
+          },
+          slot: {
+            type: 'string',
+            description: 'id of the portrait slot it hangs in',
+          },
+          title: {
+            type: 'string',
+            description: 'its title. Default: the image’s file name without its extension, dashes and underscores as spaces, as an import names it',
+            minLength: 1,
+            maxLength: 150,
+          },
+        },
+        required: ['image', 'slot'],
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !hangKeys.has(key))) {
+          throw new TypeError('This tool takes an object with image, slot and an optional title.')
+        }
+        const {image, slot, title} = input as Record<string, unknown>
+        if (typeof image !== 'string' || !URL.canParse(image, typeof location === 'undefined' ? undefined : location.href)) {
+          throw new TypeError('image must be the URL of an image.')
+        }
+        if (typeof slot !== 'string' || !slot) {
+          throw new TypeError('slot must be the id of a portrait slot.')
+        }
+        if (title !== undefined && (typeof title !== 'string' || !title.trim() || title.length > 150)) {
+          throw new TypeError('title must be a text of 1 to 150 characters.')
+        }
+        return getBridge().hangWork({
+          image,
+          slot,
+          title,
         })
       },
     },

@@ -1,3 +1,5 @@
+import type {WorkHangingInput} from '../../src/lib/webmcp/hangWork.ts'
+import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
 import type {PropThrowInput} from '../../src/lib/webmcp/throwProp.ts'
 import type {WebmcpBridge} from '../../src/lib/webmcp/tools.ts'
 
@@ -90,13 +92,37 @@ const bridge: WebmcpBridge = {
     from,
     velocity,
   }),
+  getPortraits: () => [{
+    id: 'gnomes',
+    title: 'The Night Watering',
+    hung: true,
+    wallId: 'banquet-south',
+    width: 2.121,
+    height: 1.414,
+    position: [14, 3.13, 7.78],
+    quaternion: [0, 1, 0, 0],
+  }],
+  hangWork: ({slot, title = 'xf14RxM8'}: WorkHangingInput) => Promise.resolve({
+    id: 'work-1',
+    title,
+    slot,
+    position: [10.2, 3.13, 7.78],
+    rotation: Math.PI,
+    width: 1.732,
+    height: 1.732,
+  }),
+  spawnOrb: ({orb, position, id = `prop-orb-${orb}-spawned-1`}: OrbSpawnInput) => Promise.resolve({
+    prop: id,
+    orb,
+    position,
+  }),
 }
 test('WebMCP read tools are read-only, validate input and read the current bridge', () => {
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'set_wireframe'])
-  for (const tool of tools.slice(0, 6)) {
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'hang_work', 'set_wireframe'])
+  for (const tool of tools.slice(0, 7)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
   }
@@ -116,8 +142,9 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   expect(tools[1].execute({}, {signal: controller.signal})).toBeNull()
   expect(tools[2].execute({}, {signal: controller.signal})).toEqual(current.getKnots())
   expect(tools[3].execute({}, {signal: controller.signal})).toEqual(current.getPortraitSlots())
-  expect(tools[4].execute({}, {signal: controller.signal})).toEqual(current.analyzeWorld())
-  expect(tools[5].execute({}, {signal: controller.signal})).toBe('pipeline:lobby-floor/MeshStandardNodeMaterial\nwarmup')
+  expect(tools[4].execute({}, {signal: controller.signal})).toEqual(current.getPortraits())
+  expect(tools[5].execute({}, {signal: controller.signal})).toEqual(current.analyzeWorld())
+  expect(tools[6].execute({}, {signal: controller.signal})).toBe('pipeline:lobby-floor/MeshStandardNodeMaterial\nwarmup')
   controller.abort()
   expect(() => tools[0].execute({}, {signal: controller.signal})).toThrow()
 })
@@ -295,6 +322,103 @@ test('throw_prop takes a prop and exactly one of a portrait, a target or a veloc
     portrait: 'goose',
   })).toThrow()
 })
+test('spawn_orb takes a kind, a point and an optional prop id, and spawns through the bridge', async () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'spawn_orb')!
+  const controller = new AbortController
+  const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  expect(await execute({
+    orb: 'horror',
+    position: [1, 0.2, 3],
+  })).toEqual({
+    prop: 'prop-orb-horror-spawned-1',
+    orb: 'horror',
+    position: [1, 0.2, 3],
+  })
+  expect(await execute({
+    orb: 'horror',
+    position: [1, 0.2, 3],
+    id: 'prop-orb-horror-film',
+  })).toHaveProperty('prop', 'prop-orb-horror-film')
+  for (const input of [null, [], {}, {orb: 'horror'}, {position: [0, 0, 0]}, {
+    orb: '',
+    position: [0, 0, 0],
+  }, {
+    orb: 'horror',
+    position: [0, 0],
+  }, {
+    orb: 'horror',
+    position: [0, 0, Number.NaN],
+  }, {
+    orb: 'horror',
+    position: [0, 0, 0],
+    id: 'orb-horror',
+  }, {
+    orb: 'horror',
+    position: [0, 0, 0],
+    id: 'prop-a b',
+  }, {
+    orb: 'horror',
+    position: [0, 0, 0],
+    velocity: [0, 0, 0],
+  }]) {
+    await expect(execute(input)).rejects.toThrow(TypeError)
+  }
+  controller.abort()
+  await expect(execute({
+    orb: 'horror',
+    position: [0, 0, 0],
+  })).rejects.toThrow()
+})
+test('hang_work takes an image URL, a slot and an optional title, and hangs through the bridge', async () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'hang_work')!
+  const controller = new AbortController
+  const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  expect(await execute({
+    image: 'http://127.0.0.1:8080/xf14RxM8.png',
+    slot: 'banquet-south_2',
+  })).toEqual({
+    id: 'work-1',
+    title: 'xf14RxM8',
+    slot: 'banquet-south_2',
+    position: [10.2, 3.13, 7.78],
+    rotation: Math.PI,
+    width: 1.732,
+    height: 1.732,
+  })
+  expect(await execute({
+    image: 'http://127.0.0.1:8080/xf14RxM8.png',
+    slot: 'banquet-south_2',
+    title: 'Invader',
+  })).toHaveProperty('title', 'Invader')
+  for (const input of [null, [], {}, {slot: 'banquet-south_2'}, {image: 'http://127.0.0.1/a.png'}, {
+    image: 'not a url',
+    slot: 'banquet-south_2',
+  }, {
+    image: 'http://127.0.0.1/a.png',
+    slot: '',
+  }, {
+    image: 'http://127.0.0.1/a.png',
+    slot: 'banquet-south_2',
+    title: ' ',
+  }, {
+    image: 'http://127.0.0.1/a.png',
+    slot: 'banquet-south_2',
+    title: 'x'.repeat(151),
+  }, {
+    image: 'http://127.0.0.1/a.png',
+    slot: 'banquet-south_2',
+    frame: 'gilt',
+  }]) {
+    await expect(execute(input)).rejects.toThrow(TypeError)
+  }
+  controller.abort()
+  await expect(execute({
+    image: 'http://127.0.0.1/a.png',
+    slot: 'banquet-south_2',
+  })).rejects.toThrow()
+})
 test('worlds without Knots expose an empty dump', () => {
   expect(slopGallery.dumpKnots()).toEqual([])
 })
@@ -316,7 +440,7 @@ test('registrations clean up on unmount, failure and cancellation during registr
     const registered = registerWebmcp(() => bridge, controller.signal, context)
     if (mode === 'success') {
       const cleanup = await registered
-      expect(signals).toHaveLength(10)
+      expect(signals).toHaveLength(13)
       expect(signals[0].aborted).toBe(false)
       cleanup()
       cleanup()

@@ -13,7 +13,10 @@ import {captureWarmup, getRenderScale} from '#src/lib/rendering/captureWarmup.ts
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
 import analyzeWorld from '#src/lib/webmcp/analyzeWorld.ts'
+import dumpPortraits from '#src/lib/webmcp/dumpPortraits.ts'
+import hangWork from '#src/lib/webmcp/hangWork.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
+import spawnOrb from '#src/lib/webmcp/spawnOrb.ts'
 import throwProp from '#src/lib/webmcp/throwProp.ts'
 import world from '#src/worlds/current.ts'
 
@@ -63,8 +66,11 @@ export default function WebmcpBridge() {
       getAim: () => inspector.getAim(),
       getKnots: () => world.dumpKnots(),
       getLoadingItems: loadingItems,
+      getPortraits: dumpPortraits,
       getPortraitSlots: () => usePortraitSlots.getState().slots,
+      hangWork,
       setWireframe: applyWireframeFlood,
+      spawnOrb,
       throwProp: (input: Parameters<typeof throwProp>[1]) => throwProp(camera, input),
       getTelemetry: () => {
         if (!telemetry) {
