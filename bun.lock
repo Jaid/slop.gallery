@@ -17,6 +17,7 @@
         "capture-session": "workspace:*",
         "clsx": "2.1.1",
         "compose-id": "0.2.0",
+        "deltable": "workspace:*",
         "disposable-lifetime": "workspace:*",
         "ego-player": "workspace:*",
         "es-toolkit": "1.53.1",
@@ -120,6 +121,10 @@
       "optionalPeers": [
         "puppeteer-core",
       ],
+    },
+    "packages/deltable": {
+      "name": "deltable",
+      "version": "0.1.0",
     },
     "packages/disposable-lifetime": {
       "name": "disposable-lifetime",
@@ -1126,6 +1131,8 @@
     "decode-zstd": ["decode-zstd@0.1.0", "", {}, "sha512-PeIFr8wfu3Dc9drFCEbVIFpVLwh0FSdI0PB8rNQYMuMYSLDTnrHfDKkqIkAoF92Pij0pnGt2WOVXpBMJ9kyZrw=="],
 
     "deep-is": ["deep-is@0.1.4", "", {}, "sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ=="],
+
+    "deltable": ["deltable@workspace:packages/deltable"],
 
     "dequal": ["dequal@2.0.3", "", {}, "sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA=="],
 

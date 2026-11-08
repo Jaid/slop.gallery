@@ -1,0 +1,27 @@
+{
+  "name": "deltable",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Markdown tables of counts that, compared with a base, split every changed column into its counts and deltas",
+  "funding": "https://github.com/sponsors/Jaid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaid/slop.gallery.git",
+    "directory": "packages/deltable"
+  },
+  "main": "src/main.ts",
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "scripts": {
+    "test": "bun test ./test"
+  },
+  "files": [
+    "src",
+    "readme.md",
+    "license.txt"
+  ],
+  "sideEffects": false,
+  "types": "./src/main.ts"
+}

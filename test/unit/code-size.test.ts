@@ -160,7 +160,7 @@ test('the script tells the changes since the json output of a base revision', as
   })
   expect(markdown).toContain('<tr><th rowspan="2" align="left">Group</th><th colspan="2">Files</th><th colspan="2">Raw bytes</th><th colspan="2">Effective bytes</th></tr>')
   expect(markdown).toContain('<tr><td>main/source</td><td align="right">2</td><td align="right">+1</td><td align="right">38</td><td align="right">+19</td><td align="right">34</td><td align="right">+17</td></tr>')
-  expect(markdown).toContain('<tr><td>main/tests</td><td align="right">0</td><td align="right">±0</td>')
+  expect(markdown).toContain('<tr><td>main/tests</td><td align="right">0</td><td align="right"></td>')
   await expect(codeSize({base})).rejects.toThrow('--base only applies to --format markdown')
 })
 test('the script refuses unknown formats', async () => {

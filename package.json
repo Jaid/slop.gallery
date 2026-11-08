@@ -87,7 +87,8 @@
     "@react-three/drei": "11.0.0-alpha.7",
     "@react-three/fiber": "10.0.0-alpha.6",
     "@react-three/rapier": "2.2.0",
-    "@react-three/tsl": "10.0.0-alpha.6"
+    "@react-three/tsl": "10.0.0-alpha.6",
+    "deltable": "workspace:*"
   },
   "devDependencies": {
     "autoprefixer": "10.6.2",
