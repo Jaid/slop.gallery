@@ -8,8 +8,10 @@ import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {moonfallCrater} from '#src/lib/gallery/moonfall/config.ts'
 import CraterGeometry from '#src/lib/gallery/moonfall/CraterGeometry.ts'
+import {fencePosts, fenceShape} from '#src/lib/gallery/moonfall/fence.ts'
 import StanchionRingGeometry from '#src/lib/gallery/railings/StanchionRingGeometry.ts'
 import {useGallery} from '#src/lib/gallery/store.ts'
+import {environmentSeed} from '#src/lib/gameSeed.ts'
 import CraterMaterial from '#src/lib/materials/CraterMaterial.ts'
 import {setFloorReflectionHeight} from '#src/lib/materials/FloorMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
@@ -23,8 +25,11 @@ const slateHeight = slopGallery.room('moonfall').floorY
 
 export default function MoonfallCrater() {
   const geometry = useDisposable(useMemo(() => new CraterGeometry, []))
-  const fence = useDisposable(useMemo(() => new StanchionRingGeometry(moonfallCrater.fenceRadius, moonfallCrater.fencePosts), []))
-  const collision = [geometry.floor, geometry.terrain, geometry.rocks, fence.postCollision, fence.rope].map(colliderGeometry)
+  const fence = useDisposable(useMemo(() => {
+    const posts = fencePosts(environmentSeed)
+    return new StanchionRingGeometry(moonfallCrater.fenceRadius, posts, fenceShape(posts))
+  }, []))
+  const collision = [geometry.floor, geometry.terrain, geometry.rocks, ...fence.collision].map(colliderGeometry)
   const rock = useDisposable(useMemo(() => new CraterMaterial({rock: true}), []))
   const terrain = useDisposable(useMemo(() => new CraterMaterial, []))
   const velvet = useDisposable(useMemo(() => new VelvetRopeMaterial, []))

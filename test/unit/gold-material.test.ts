@@ -4,6 +4,8 @@ import StudioEnvironment from 'knot-materials/StudioEnvironment.ts'
 import {MeshPhysicalNodeMaterial, Vector3} from 'three/webgpu'
 
 import {moonfallCrater} from '../../src/lib/gallery/moonfall/config.ts'
+import {fenceShape} from '../../src/lib/gallery/moonfall/fence.ts'
+import {stanchionHeight} from '../../src/lib/gallery/railings/stanchion.ts'
 import StanchionRingGeometry from '../../src/lib/gallery/railings/StanchionRingGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import gold from '../../src/lib/materials/gold.ts'
@@ -71,7 +73,8 @@ describe('the stanchion barrier', () => {
     }
   })
   test('finely turned posts for polished metal, with coarse stand-ins of the same size for collision', () => {
-    const fence = new StanchionRingGeometry(moonfallCrater.fenceRadius, moonfallCrater.fencePosts)
+    // the most posts the seed can draw
+    const fence = new StanchionRingGeometry(moonfallCrater.fenceRadius, moonfallCrater.fencePosts[1], fenceShape(moonfallCrater.fencePosts[1]))
     try {
       const posts = triangleCount(fence.posts)
       const collision = triangleCount(fence.postCollision)
@@ -105,8 +108,7 @@ describe('the stanchion barrier', () => {
       // Every post stands on the floor with its finial at rope height.
       const size = render.getSize(new Vector3)
       expect(render.min.y).toBeCloseTo(0, 6)
-      expect(size.y).toBeGreaterThan(1.1)
-      expect(size.y).toBeLessThan(1.13)
+      expect(size.y).toBeCloseTo(stanchionHeight, 4)
       fence.rope.computeBoundingBox()
       expect(fence.rope.boundingBox!.max.y).toBeLessThan(render.max.y)
     } finally {
