@@ -8,17 +8,21 @@ import EgoTelemetry from '../EgoTelemetry.ts'
 export default function useEgoTelemetry(options: EgoTelemetryOptions) {
   const read = useRef(options.read)
   read.current = options.read
+  const readAimHit = useRef(options.readAimHit)
+  readAimHit.current = options.readAimHit
   const collector = useRef<EgoTelemetry | null>(null)
-  const {telemetry, intervalMs, metersPerUnit, maxVelocityGapMs, attributes, now} = options
+  const {telemetry, intervalMs, aimHitIntervalMs, metersPerUnit, maxVelocityGapMs, attributes, now} = options
   useEffect(() => {
     const instance = new EgoTelemetry({
       telemetry,
       intervalMs,
+      aimHitIntervalMs,
       metersPerUnit,
       maxVelocityGapMs,
       attributes,
       now,
       read: () => read.current(),
+      readAimHit: () => readAimHit.current?.() ?? null,
     })
     collector.current = instance
     const reset = () => instance.reset()
@@ -27,7 +31,7 @@ export default function useEgoTelemetry(options: EgoTelemetryOptions) {
       document.removeEventListener('visibilitychange', reset)
       collector.current = null
     }
-  }, [telemetry, intervalMs, metersPerUnit, maxVelocityGapMs, attributes, now])
+  }, [telemetry, intervalMs, aimHitIntervalMs, metersPerUnit, maxVelocityGapMs, attributes, now])
   useFrame(() => {
     if (document.visibilityState !== 'hidden') {
       collector.current?.update()

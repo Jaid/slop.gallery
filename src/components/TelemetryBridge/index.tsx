@@ -3,10 +3,11 @@ import type {Attributes} from 'victoria-browser-client'
 import {useThree} from '@react-three/fiber'
 import Branch from 'branch-component'
 import {AimInspector} from 'ego-player'
-import {useEffect} from 'react'
+import {useEffect, useState} from 'react'
 import useEgoTelemetry from 'telemethree-ego/react'
 import usePauseMenuTelemetry from 'telemethree-pause-menu/react'
 import useThreeTelemetry from 'telemethree/react'
+import {Vector3} from 'three/webgpu'
 import useGraphicsMode, {useCinematicGraphics} from 'use-graphics-mode'
 
 import {useGallery} from '#src/lib/gallery.ts'
@@ -28,6 +29,8 @@ function Collectors() {
   const scene = useThree(state => state.scene)
   const camera = useThree(state => state.camera)
   const inspector = new AimInspector(scene, camera)
+  const [aimOrigin] = useState(() => new Vector3)
+  const [aimDirection] = useState(() => new Vector3)
   const isHeavy = useGraphicsMode()
   const isCinematic = useCinematicGraphics()
   const profile = getGraphicsProfile(isHeavy, isCinematic)
@@ -93,11 +96,16 @@ function Collectors() {
   })
   useEgoTelemetry({
     telemetry: telemetry!,
+    intervalMs: 0,
+    readAimHit: () => inspector.getAim().hit,
     read: () => {
       const player = playerTelemetry.read?.()
       return player ? {
         ...player,
-        aim: inspector.getAim(),
+        aim: {
+          origin: camera.getWorldPosition(aimOrigin),
+          direction: camera.getWorldDirection(aimDirection),
+        },
       } : null
     },
   })

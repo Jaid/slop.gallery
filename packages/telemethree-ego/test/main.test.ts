@@ -10,6 +10,7 @@ import EgoTelemetry from '../src/main.ts'
 type Metric = {
   attributes: Attributes
   name: string
+  time?: number
   value: number
 }
 class TestClient extends VictoriaClient {
@@ -23,16 +24,19 @@ class TestClient extends VictoriaClient {
   }
   readonly metrics: Array<Metric> = []
   constructor() {
+    let time = 0
     super({
       serviceName: 'telemethree-ego-test',
       endpoint: 'http://localhost:4318',
       interval: false,
+      now: () => time++,
     })
   }
   override metric(name: string, value: number, options: MetricOptions = {}) {
     this.metrics.push({
       name,
       value,
+      time: options.time,
       attributes: {...options.attributes},
     })
     return true
@@ -67,15 +71,17 @@ test('world-space position, physical velocity and normalized aim are numeric met
         y: 0,
         z: -3,
       },
-      hit: {
-        point: {
-          x: 100,
-          y: 200,
-          z: 100,
-        },
-        distance: 200,
-      },
     },
+  })
+  const captureTimes = new Set(metrics.map(metric => metric.time))
+  expect(captureTimes.size).toBe(1)
+  ego.recordAimHit({
+    point: {
+      x: 100,
+      y: 200,
+      z: 100,
+    },
+    distance: 200,
   })
   expect(values()).toMatchObject({
     'ego.position.x': 1,
@@ -121,6 +127,8 @@ test('sampling gates expensive sources and clears absent aim without stale hit v
   const {telemetry, values} = TestClient.fixture()
   let now = 0
   let reads = 0
+  let hitReads = 0
+  let hit = true
   const sample: EgoSample = {
     position: {
       x: 0,
@@ -138,14 +146,6 @@ test('sampling gates expensive sources and clears absent aim without stale hit v
         y: 0,
         z: -1,
       },
-      hit: {
-        point: {
-          x: 0,
-          y: 0,
-          z: -4,
-        },
-        distance: 4,
-      },
     },
   }
   const ego = new EgoTelemetry({
@@ -155,6 +155,17 @@ test('sampling gates expensive sources and clears absent aim without stale hit v
       reads++
       return sample
     },
+    readAimHit: () => {
+      hitReads++
+      return hit ? {
+        point: {
+          x: 0,
+          y: 0,
+          z: -4,
+        },
+        distance: 4,
+      } : null
+    },
   })
   ego.update()
   ego.update()
@@ -163,6 +174,7 @@ test('sampling gates expensive sources and clears absent aim without stale hit v
   expect(reads).toBe(1)
   expect(values()['ego.aim.distance']).toBe(4)
   sample.aim = undefined
+  hit = false
   now = 1000
   ego.update()
   expect(values()).toMatchObject({
@@ -172,9 +184,58 @@ test('sampling gates expensive sources and clears absent aim without stale hit v
     'ego.aim.point.z': 0,
   })
   expect(reads).toBe(2)
+  expect(hitReads).toBe(2)
   expect(() => new EgoTelemetry({
     telemetry,
-    intervalMs: 0,
+    intervalMs: -1,
     read: () => null,
   })).toThrow()
+})
+test('every-frame sampling preserves motion and viewing angles while raycasts stay at one Hz', () => {
+  const {telemetry, metrics, values} = TestClient.fixture()
+  let now = 0
+  let hitReads = 0
+  const ego = new EgoTelemetry({
+    telemetry,
+    intervalMs: 0,
+    now: () => now,
+    read: () => ({
+      position: {
+        x: now / 1000,
+        y: 0,
+        z: 0,
+      },
+      aim: {
+        origin: {
+          x: now / 1000,
+          y: 1.6,
+          z: 0,
+        },
+        direction: {
+          x: -Math.cos(0.3),
+          y: Math.sin(0.3),
+          z: 0,
+        },
+      },
+    }),
+    readAimHit: () => {
+      hitReads++
+      return null
+    },
+  })
+  for (let frame = 0; frame <= 240; frame++) {
+    now = frame * 1000 / 240
+    ego.update()
+  }
+  expect(metrics.filter(metric => metric.name === 'ego.position.x')).toHaveLength(241)
+  expect(metrics.filter(metric => metric.name === 'ego.aim.yaw')).toHaveLength(241)
+  expect(hitReads).toBe(2)
+  expect(values()['ego.velocity.x']).toBeCloseTo(1)
+  expect(values()['ego.aim.yaw']).toBeCloseTo(Math.PI / 2)
+  expect(values()['ego.aim.pitch']).toBeCloseTo(0.3)
+  ego.reset()
+  now += 1
+  ego.update()
+  expect(values()['ego.velocity.valid']).toBe(0)
+  expect(hitReads).toBe(3)
 })

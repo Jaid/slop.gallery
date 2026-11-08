@@ -2,6 +2,7 @@ import type {GalleryState} from '../../src/lib/telemetry/types.ts'
 
 import {expect, test} from 'bun:test'
 
+import EgoTelemetry from 'telemethree-ego'
 import {createStore} from 'zustand/vanilla'
 
 import SlopGalleryTelemetry from '../../src/lib/telemetry/SlopGalleryTelemetry.ts'
@@ -82,6 +83,76 @@ const initial: GalleryState = {
   narration: null,
   revision: 0,
 }
+test('per-frame player metrics survive a high-refresh delivery interval with aligned timestamps', async () => {
+  const {requests, fetch} = capture()
+  let time = 1000
+  const telemetry = new SlopGalleryTelemetry({
+    endpoints: {metrics: endpoints.metrics},
+    interval: false,
+    fetch,
+    now: () => time,
+  })
+  const ego = new EgoTelemetry({
+    telemetry,
+    intervalMs: 0,
+    now: () => time,
+    read: () => ({
+      position: {
+        x: time,
+        y: 2,
+        z: 3,
+      },
+      velocity: {
+        x: 4,
+        y: 5,
+        z: 6,
+      },
+      aim: {
+        origin: {
+          x: time,
+          y: 3.6,
+          z: 3,
+        },
+        direction: {
+          x: -1,
+          y: 0,
+          z: 0,
+        },
+      },
+    }),
+  })
+  const timestamps = Array.from({length: 480}, (_, frame) => {
+    time = 1000 + frame * 1000 / 480
+    ego.update()
+    return Math.trunc(time)
+  })
+  expect(telemetry.status().signals.metrics.dropped).toBe(0)
+  expect(requests).toHaveLength(0)
+  await telemetry.flush({throwOnPending: true})
+  const samples = new Map<string, Array<[number, number]>>
+  for (const request of requests) {
+    for (const line of request.body.trim().split('\n')) {
+      const record = JSON.parse(line) as {
+        metric: {__name__: string}
+        timestamps: Array<number>
+        values: Array<number>
+      }
+      const name = record.metric.__name__
+      const series = samples.get(name) ?? []
+      series.push(...record.timestamps.map((timestamp, index) => [timestamp, record.values[index]] as [number, number]))
+      samples.set(name, series)
+    }
+  }
+  expect(samples.size).toBe(17)
+  for (const series of samples.values()) {
+    expect(series.map(([timestamp]) => timestamp)).toEqual(timestamps)
+  }
+  expect(samples.get('ego.position.x')?.at(-1)?.[1]).toBe(time)
+  expect(samples.get('ego.velocity.z')?.at(-1)?.[1]).toBe(6)
+  expect(samples.get('ego.aim.yaw')?.at(-1)?.[1]).toBe(Math.PI / 2)
+  expect(requests.length).toBeLessThan(20)
+  await telemetry.shutdown()
+})
 test('gallery adapters record bounded state and lifecycle data without private gallery contents', async () => {
   const {requests, fetch} = capture()
   const telemetry = new SlopGalleryTelemetry({

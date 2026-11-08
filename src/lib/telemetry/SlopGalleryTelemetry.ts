@@ -1,7 +1,7 @@
 import type {GalleryState, GalleryStore, SlopGalleryTelemetryOptions} from './types.ts'
 import type {Attributes, LogLevel, Span, SpanOptions} from 'victoria-browser-client'
 
-import VictoriaClient from 'victoria-browser-client'
+import VictoriaClient, {MemoryOutbox} from 'victoria-browser-client'
 
 import world from '#src/worlds/current.ts'
 
@@ -29,6 +29,11 @@ export default class SlopGalleryTelemetry extends VictoriaClient {
     } = options
     super({
       interval: 1000,
+      // Native metrics compact repeated series into arrays; admit enough observations per batch to benefit.
+      maxBatchBytes: 256_000,
+      maxBatchItems: 4096,
+      // Per-frame ego samples exceed the default 2048 items between deliveries at high refresh rates.
+      outbox: new MemoryOutbox({maxItems: 32_768}),
       ...clientOptions,
       serviceName: 'slop.gallery',
       endpoints: {

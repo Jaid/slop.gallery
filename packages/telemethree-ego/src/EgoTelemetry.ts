@@ -1,4 +1,4 @@
-import type {EgoSample, EgoTelemetryOptions, Point3} from './types.ts'
+import type {AimHit, EgoSample, EgoTelemetryOptions, Point3} from './types.ts'
 
 const zero = {
   x: 0,
@@ -9,8 +9,10 @@ const finite = (point: Point3) => Number.isFinite(point.x) && Number.isFinite(po
 
 /** Samples a player/controller adapter, never keyboard events, DOM state or a physics engine. */
 export default class EgoTelemetry {
+  private readonly aimHitIntervalMs: number
   private readonly intervalMs: number
   private readonly maxGap: number
+  private nextAimHit = 0
   private nextSample = 0
   private readonly now: () => number
   private previous: {
@@ -21,11 +23,12 @@ export default class EgoTelemetry {
 
   constructor(private readonly options: EgoTelemetryOptions) {
     this.intervalMs = options.intervalMs ?? 1000
+    this.aimHitIntervalMs = options.aimHitIntervalMs ?? 1000
     this.scale = options.metersPerUnit ?? 1
-    this.maxGap = options.maxVelocityGapMs ?? this.intervalMs * 3
+    this.maxGap = options.maxVelocityGapMs ?? Math.max(this.intervalMs * 3, 1000)
     this.now = options.now ?? (() => performance.now())
-    if (![this.intervalMs, this.scale, this.maxGap].every(value => Number.isFinite(value) && value > 0)) {
-      throw new RangeError('Ego telemetry intervals and metersPerUnit must be positive.')
+    if (!Number.isFinite(this.intervalMs) || this.intervalMs < 0 || ![this.aimHitIntervalMs, this.scale, this.maxGap].every(value => Number.isFinite(value) && value > 0)) {
+      throw new RangeError('Ego telemetry intervalMs must be nonnegative; aimHitIntervalMs, maxVelocityGapMs and metersPerUnit must be positive.')
     }
   }
 
@@ -48,8 +51,11 @@ export default class EgoTelemetry {
       position: {...position},
       time,
     }
+    // Give every component the same capture timestamp, even if encoding crosses a millisecond.
+    const capturedAt = this.options.telemetry.now()
     const metric = (name: string, value: number, unit = '1') => this.options.telemetry.metric(`ego.${name}`, value, {
       unit,
+      time: capturedAt,
       attributes: this.options.attributes,
     })
     const vector = (name: string, value: Point3, unit: string, scale: number) => {
@@ -73,18 +79,30 @@ export default class EgoTelemetry {
     vector('aim.direction', direction, '1', 1)
     metric('aim.yaw', valid ? Math.atan2(-direction.x, -direction.z) : 0, 'rad')
     metric('aim.pitch', valid ? Math.asin(Math.max(-1, Math.min(1, direction.y))) : 0, 'rad')
-    const hit = valid && aim?.hit && finite(aim.hit.point) && Number.isFinite(aim.hit.distance) && aim.hit.distance >= 0 ? aim.hit : null
-    metric('aim.hit', Number(Boolean(hit)))
-    metric('aim.distance', (hit?.distance ?? 0) * this.scale, 'm')
-    vector('aim.point', hit?.point ?? zero, 'm', this.scale)
+  }
+
+  recordAimHit(sample: AimHit | null) {
+    const hit = sample && finite(sample.point) && Number.isFinite(sample.distance) && sample.distance >= 0 ? sample : null
+    const capturedAt = this.options.telemetry.now()
+    const metric = (name: string, value: number, unit = '1') => this.options.telemetry.metric(`ego.aim.${name}`, value, {
+      unit,
+      time: capturedAt,
+      attributes: this.options.attributes,
+    })
+    metric('hit', Number(Boolean(hit)))
+    metric('distance', (hit?.distance ?? 0) * this.scale, 'm')
+    for (const axis of ['x', 'y', 'z'] as const) {
+      metric(`point.${axis}`, (hit?.point[axis] ?? 0) * this.scale, 'm')
+    }
   }
 
   reset() {
     this.previous = null
     this.nextSample = 0
+    this.nextAimHit = 0
   }
 
-  /** Cheap per-frame gate; the source and any raycast run only at the configured cadence. */
+  /** Sample motion each due frame; raycast independently at its slower cadence. */
   update() {
     const time = this.now()
     if (time < this.nextSample) {
@@ -97,5 +115,9 @@ export default class EgoTelemetry {
       return
     }
     this.record(sample, time)
+    if (time >= this.nextAimHit && this.options.readAimHit) {
+      this.nextAimHit = time + this.aimHitIntervalMs
+      this.recordAimHit(this.options.readAimHit())
+    }
   }
 }
