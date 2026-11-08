@@ -1,5 +1,5 @@
 import type {Vec3} from '../gallery/types.ts'
-import type {RigidBody, World} from '@dimforge/rapier3d-compat'
+import type {RigidBody, Vector, World} from '@dimforge/rapier3d-compat'
 
 import {RigidBodyType} from '@dimforge/rapier3d-compat'
 
@@ -27,8 +27,19 @@ type BodyPose = {
 }
 
 /** how fast a thrown prop leaves the hand, in meters per second, with a little extra upward */
-const throwSpeed = 10
+export const throwSpeed = 10
 const throwLift = 2
+/** how a thrown prop tumbles, in radians per second */
+const throwSpin = {
+  x: 3,
+  y: 2,
+  z: 1,
+}
+const still = {
+  x: 0,
+  y: 0,
+  z: 0,
+}
 
 /**
  * The physics side of carrying a prop: while carried, its body is out of the simulation altogether, so nothing collides with it, not even the player, and whoever carries it shows it by its own object. Only letting go asks the world where the prop fits.
@@ -56,6 +67,24 @@ export default class GrabbableBody {
     this.body.setEnabled(true)
     this.body.wakeUp()
     this.options.onAttachmentChange?.(this.body.isFixed())
+  }
+
+  /**
+   * Throws the prop from `position` with `velocity`, in meters per second, tumbling like the player’s throws, wherever it lies, loose from then on, as if the player had let go of it there. Does nothing while it is carried.
+   * Returns whether it did.
+   */
+  fling(position: Vec3, velocity: Vec3) {
+    if (this.carrying) {
+      return false
+    }
+    this.rememberHome()
+    this.loose(position, {
+      x: velocity[0],
+      y: velocity[1],
+      z: velocity[2],
+    }, throwSpin)
+    beginBodyThrow(this.body)
+    return true
   }
 
   grab() {
@@ -102,36 +131,11 @@ export default class GrabbableBody {
     const line = direction ?? target.map((value, axis) => value - origin[axis])
     const length = Math.hypot(...line) || 1
     const [x, y, z] = line.map(value => value / length)
-    this.body.setTranslation({
-      x: position[0],
-      y: position[1],
-      z: position[2],
-    }, false)
-    this.body.setBodyType(RigidBodyType.Dynamic, false)
-    // Rapier hands the colliders their own state again at its next step.
-    this.body.setEnabled(true)
-    for (const collider of this.colliders()) {
-      collider.setEnabled(true)
-    }
-    this.body.wakeUp()
-    this.body.setLinvel(throwing ? {
+    this.loose(position, throwing ? {
       x: x * throwSpeed,
       y: y * throwSpeed + throwLift,
       z: z * throwSpeed,
-    } : {
-      x: 0,
-      y: 0,
-      z: 0,
-    }, true)
-    this.body.setAngvel(throwing ? {
-      x: 3,
-      y: 2,
-      z: 1,
-    } : {
-      x: 0,
-      y: 0,
-      z: 0,
-    }, true)
+    } : still, throwing ? throwSpin : still)
     if (throwing) {
       beginBodyThrow(this.body)
     }
@@ -159,6 +163,24 @@ export default class GrabbableBody {
     return Array.from({length: this.body.numColliders()}, (_, i) => this.body.collider(i))
   }
 
+  /** Puts the body at `position`, dynamic and colliding, moving and turning as given. */
+  private loose(position: Vec3, velocity: Vector, spin: Vector) {
+    this.body.setTranslation({
+      x: position[0],
+      y: position[1],
+      z: position[2],
+    }, false)
+    this.body.setBodyType(RigidBodyType.Dynamic, false)
+    // Rapier hands the colliders their own state again at its next step.
+    this.body.setEnabled(true)
+    for (const collider of this.colliders()) {
+      collider.setEnabled(true)
+    }
+    this.body.wakeUp()
+    this.body.setLinvel(velocity, true)
+    this.body.setAngvel(spin, true)
+  }
+
   private restore(pose: BodyPose) {
     clearBodyThrow(this.body)
     this.body.setBodyType(pose.type, true)
@@ -177,15 +199,7 @@ export default class GrabbableBody {
   }
 
   private stop() {
-    this.body.setLinvel({
-      x: 0,
-      y: 0,
-      z: 0,
-    }, true)
-    this.body.setAngvel({
-      x: 0,
-      y: 0,
-      z: 0,
-    }, true)
+    this.body.setLinvel(still, true)
+    this.body.setAngvel(still, true)
   }
 }

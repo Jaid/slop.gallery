@@ -30,6 +30,8 @@ export type PropHandle = {
   cancel: () => void
   /** whether a grab would currently succeed, without attempting it */
   canGrab: () => boolean
+  /** Throws the prop from `position` with `velocity`, in m/s, as if the player had let go of it there, like the `throw_prop` tool does; false while it is carried or a fusion holds it. */
+  fling: (position: Vec3, velocity: Vec3) => boolean
   grab: () => boolean
   group: Group
   /** the mood that comes over the world while the player holds the prop */
@@ -260,6 +262,14 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         }
       },
       canGrab: () => !seized.current && !carried.active && (callbacks.current.canGrab?.() ?? true),
+      fling: (position, velocity) => {
+        if (seized.current || !carried.fling(position, velocity)) {
+          return false
+        }
+        settle(rigidBody, prop)
+        record('thrown')
+        return true
+      },
       grab: () => {
         if (seized.current || !carried.grab()) {
           const message = callbacks.current.blockedMessage?.()

@@ -1,3 +1,4 @@
+import type {PropThrowInput} from '../../src/lib/webmcp/throwProp.ts'
 import type {WebmcpBridge} from '../../src/lib/webmcp/tools.ts'
 
 import {expect, test} from 'bun:test'
@@ -84,12 +85,17 @@ const bridge: WebmcpBridge = {
     lineStyle,
     lineWidth,
   }),
+  throwProp: ({prop, from = [0, 1.5, 0], velocity = [0, 0, -10]}: PropThrowInput) => ({
+    prop,
+    from,
+    velocity,
+  }),
 }
 test('WebMCP read tools are read-only, validate input and read the current bridge', () => {
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'set_wireframe'])
   for (const tool of tools.slice(0, 6)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -236,6 +242,59 @@ test('set_wireframe validates its optional fields and sets them through the brid
   controller.abort()
   expect(() => execute({})).toThrow()
 })
+test('throw_prop takes a prop and exactly one of a portrait, a target or a velocity, and throws through the bridge', () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'throw_prop')!
+  const controller = new AbortController
+  const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  expect(execute({
+    prop: 'prop-orb-spook',
+    velocity: [1, 2, 3],
+    from: [4, 5, 6],
+  })).toEqual({
+    prop: 'prop-orb-spook',
+    from: [4, 5, 6],
+    velocity: [1, 2, 3],
+  })
+  expect(execute({
+    prop: 'prop-orb-spook',
+    portrait: 'goose',
+    speed: 8,
+  })).toHaveProperty('prop', 'prop-orb-spook')
+  for (const input of [null, [], {}, {prop: ''}, {prop: 'prop-orb-spook'}, {
+    prop: 'prop-orb-spook',
+    portrait: 'goose',
+    target: [0, 0, 0],
+  }, {
+    prop: 'prop-orb-spook',
+    target: [0, 0],
+  }, {
+    prop: 'prop-orb-spook',
+    velocity: [0, 0, Number.NaN],
+  }, {
+    prop: 'prop-orb-spook',
+    portrait: '',
+  }, {
+    prop: 'prop-orb-spook',
+    portrait: 'goose',
+    speed: 0,
+  }, {
+    prop: 'prop-orb-spook',
+    portrait: 'goose',
+    from: '0,0,0',
+  }, {
+    prop: 'prop-orb-spook',
+    portrait: 'goose',
+    spin: [0, 0, 0],
+  }]) {
+    expect(() => execute(input)).toThrow(TypeError)
+  }
+  controller.abort()
+  expect(() => execute({
+    prop: 'prop-orb-spook',
+    portrait: 'goose',
+  })).toThrow()
+})
 test('worlds without Knots expose an empty dump', () => {
   expect(slopGallery.dumpKnots()).toEqual([])
 })
@@ -257,7 +316,7 @@ test('registrations clean up on unmount, failure and cancellation during registr
     const registered = registerWebmcp(() => bridge, controller.signal, context)
     if (mode === 'success') {
       const cleanup = await registered
-      expect(signals).toHaveLength(9)
+      expect(signals).toHaveLength(10)
       expect(signals[0].aborted).toBe(false)
       cleanup()
       cleanup()

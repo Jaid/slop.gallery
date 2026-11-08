@@ -14,6 +14,7 @@ import {telemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
 import analyzeWorld from '#src/lib/webmcp/analyzeWorld.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
+import throwProp from '#src/lib/webmcp/throwProp.ts'
 import world from '#src/worlds/current.ts'
 
 export default function WebmcpBridge() {
@@ -64,6 +65,7 @@ export default function WebmcpBridge() {
       getLoadingItems: loadingItems,
       getPortraitSlots: () => usePortraitSlots.getState().slots,
       setWireframe: applyWireframeFlood,
+      throwProp: (input: Parameters<typeof throwProp>[1]) => throwProp(camera, input),
       getTelemetry: () => {
         if (!telemetry) {
           return null

@@ -2,6 +2,7 @@ import type {FrameDownload, FrameFormat} from '#src/lib/downloadFrame.ts'
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
 import type {WorldAnalysis} from './analyzeWorld.ts'
+import type {PropThrow, PropThrowInput} from './throwProp.ts'
 import type {WireframeFlood} from 'capture-session'
 import type {WarmupEnd} from 'capture-session/script'
 import type {AimSnapshot} from 'ego-player'
@@ -34,11 +35,21 @@ export type WebmcpBridge = {
     sessionId: string
   } | null
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
+  throwProp: (input: PropThrowInput) => PropThrow
 }
 
 const frameFormats: Array<FrameFormat> = ['webp', 'png']
 const fileNamePattern = /^[\w\-.]{1,100}$/u
 const colorPattern = /^#(?:[\da-f]{3}){1,2}$/iu
+const throwKeys = ['prop', 'portrait', 'target', 'velocity', 'from', 'speed']
+const isPoint = (value: unknown): value is [number, number, number] => Array.isArray(value) && value.length === 3 && value.every(number => typeof number === 'number' && Number.isFinite(number))
+const point = (description: string) => ({
+  type: 'array',
+  description,
+  items: {type: 'number'},
+  minItems: 3,
+  maxItems: 3,
+})
 const wireframeKeys = ['enabled', 'direction', 'mode', 'anchor', 'shape', 'position', 'radius', 'highlight', 'color', 'highlight_color', 'seam_width', 'glow_duration', 'seam_color', 'seam_intensity', 'angle_indicator_strength', 'speed', 'burst', 'burst_duration', 'antialiasing', 'line_style', 'line_width']
 
 export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<WebMCP.ModelContextTool> {
@@ -162,6 +173,69 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           throw new TypeError('This tool takes an empty input object.')
         }
         return getBridge().endWarmup()
+      },
+    },
+    {
+      name: 'throw_prop',
+      title: 'Throw prop',
+      description: 'Throw a prop, like an orb, the way the player throws one: loose and tumbling, from where a carried orb floats in front of the camera unless from says otherwise, so a hung portrait it strikes opens a fusion like a player’s throw does. Give exactly one of portrait (it flies at the portrait’s middle), target (it flies through the point) or velocity; with a portrait or a target it leaves at speed on the flatter of the two arcs that reach it. Fails for an unknown prop, one that is carried or held by a fusion and a target out of reach at that speed. Returns where it left from, its velocity in m/s and, with a portrait or a target, the seconds until it gets there. Prop ids are the items analyze_world lists, like prop-orb-spook. Does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          prop: {
+            type: 'string',
+            description: 'id of the prop to throw',
+          },
+          portrait: {
+            type: 'string',
+            description: 'id of the portrait to throw it at',
+          },
+          target: point('world-space point in meters it flies through, [x, y, z]'),
+          velocity: point('world-space velocity in m/s it leaves with, [x, y, z], instead of flying at a portrait or a target'),
+          from: point('world-space point in meters it leaves from, [x, y, z]. Default: where a carried orb floats, 0.55 m from the camera, 15° below the middle of the view'),
+          speed: {
+            type: 'number',
+            description: 'm/s it leaves with toward a portrait or a target. Default: 10, the player’s throw',
+            exclusiveMinimum: 0,
+          },
+        },
+        required: ['prop'],
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !throwKeys.includes(key))) {
+          throw new TypeError(`This tool takes an object with prop and optional ${throwKeys.slice(1).join(', ')}.`)
+        }
+        const {prop, portrait, target, velocity, from, speed} = input as Record<string, unknown>
+        if (typeof prop !== 'string' || !prop) {
+          throw new TypeError('prop must be the id of a prop.')
+        }
+        if (portrait !== undefined && (typeof portrait !== 'string' || !portrait)) {
+          throw new TypeError('portrait must be the id of a portrait.')
+        }
+        for (const [key, value] of [['target', target], ['velocity', velocity], ['from', from]] as const) {
+          if (value !== undefined && !isPoint(value)) {
+            throw new TypeError(`${key} must be three finite numbers.`)
+          }
+        }
+        if ([portrait, target, velocity].filter(value => value !== undefined).length !== 1) {
+          throw new TypeError('Give exactly one of portrait, target or velocity.')
+        }
+        if (speed !== undefined && !(typeof speed === 'number' && Number.isFinite(speed) && speed > 0)) {
+          throw new TypeError('speed must be a finite number above 0.')
+        }
+        return getBridge().throwProp({
+          prop,
+          portrait,
+          target: target as [number, number, number] | undefined,
+          velocity: velocity as [number, number, number] | undefined,
+          from: from as [number, number, number] | undefined,
+          speed,
+        })
       },
     },
     {
