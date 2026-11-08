@@ -5,16 +5,12 @@ import Deltable from 'deltable'
 import {extensions, groups} from './measureCodeSize.ts'
 
 const deltable = new Deltable({
-  idHeaderTitle: 'Group',
-  valueHeaderTitle: 'Count',
-  deltaHeaderTitle: 'Delta',
+  idHeaderTitle: 'group',
   headers: {
-    files: 'Files',
-    raw: 'Raw bytes',
-    effective: 'Effective bytes',
+    raw: 'raw bytes',
+    effective: 'effective bytes',
   },
   total: true,
-  totalTitle: 'Total',
 })
 /** every group’s counts in the table’s order, whatever order the sizes come in */
 const rows = (sizes: Partial<CodeSizes>) => Object.fromEntries(groups.map(group => [group, sizes[group] && {

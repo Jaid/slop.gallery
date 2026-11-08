@@ -15,34 +15,19 @@ const emptyRegion: WorldRegion = {
   items: [],
   lights: [],
 }
-const deltable = (headers: Record<string, string>) => new Deltable({
-  idHeaderTitle: 'Room',
-  valueHeaderTitle: 'Count',
-  deltaHeaderTitle: 'Delta',
-  headers,
+// The keys of the counts title their columns.
+const deltable = new Deltable({
+  idHeaderTitle: 'room',
   total: true,
-  totalTitle: 'Total',
-})
-const staticTable = deltable({
-  triangles: 'Triangles',
-  meshes: 'Meshes',
-})
-const itemTable = deltable({
-  triangles: 'Triangles',
-  items: 'Items',
-})
-const lightTable = deltable({
-  lamps: 'Lamps',
-  shadows: 'Shadows',
 })
 /** a table of the rows, most of the first count first, then of the second, with Elsewhere and Global after them, closed by their totals */
-const table = (renderer: Deltable, rows: ReadonlyArray<Row>, trailing: ReadonlyArray<Row> = []) => {
+const table = (rows: ReadonlyArray<Row>, trailing: ReadonlyArray<Row> = []) => {
   const sorted = [...rows.toSorted((a, b) => {
     const [aFirst, aSecond] = Object.values(a.values)
     const [bFirst, bSecond] = Object.values(b.values)
     return bFirst - aFirst || bSecond - aSecond
   }), ...trailing]
-  return renderer.render({
+  return deltable.render({
     values: Object.fromEntries(sorted.map(row => [row.title, row.values])),
     ...sorted.some(row => row.base) ? {base: Object.fromEntries(sorted.map(row => [row.title, row.base]))} : {},
   })
@@ -93,17 +78,17 @@ export default function worldTables(analysis: WorldAnalysis, title: string, grap
     '',
     '### Static meshes',
     '',
-    table(staticTable, rows(regions, () => true, staticValues), rows(elsewhere, region => region.meshes.length > 0, staticValues)),
+    table(rows(regions, () => true, staticValues), rows(elsewhere, region => region.meshes.length > 0, staticValues)),
     '',
     '### Items',
     '',
     'Props, portraits and everything else the player can pick up, counted in the room they lie in now, as they can be carried into any other.',
     '',
-    items.length ? table(itemTable, items) : 'None.',
+    items.length ? table(items) : 'None.',
     '',
     '### Lights',
     '',
-    table(lightTable, rows(regions, () => true, lightValues), [...rows(elsewhere, region => region.lights.length > 0, lightValues), ...global]),
+    table(rows(regions, () => true, lightValues), [...rows(elsewhere, region => region.lights.length > 0, lightValues), ...global]),
     '',
     'Shadows counts the lamps with a shadow map of their own and those borrowing one of the shadow pool’s while in view. Global holds the sun, the sky and ambient light, Elsewhere the passages, stairways and the outdoors.',
     '',

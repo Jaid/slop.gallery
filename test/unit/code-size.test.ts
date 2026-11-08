@@ -135,7 +135,7 @@ test('the table lists every group in a fixed order with narrow-spaced thousands 
   const markdown = codeSizeTable(sizes)
   expect(markdown).toStartWith('## Code size\n')
   expect(markdown).toContain([
-    '| Group | Files | Raw bytes | Effective bytes |',
+    '| group | files | raw bytes | effective bytes |',
     '| --- | --: | --: | --: |',
     '| main/source | 1 | 10\u{202F}000 | 6000 |',
     '| main/scripts | 2 | 20\u{202F}000 | 12\u{202F}000 |',
@@ -143,7 +143,7 @@ test('the table lists every group in a fixed order with narrow-spaced thousands 
     '| packages/source | 4 | 40\u{202F}000 | 24\u{202F}000 |',
     '| packages/scripts | 5 | 50\u{202F}000 | 30\u{202F}000 |',
     '| packages/tests | 6 | 60\u{202F}000 | 36\u{202F}000 |',
-    '| **Total** | 21 | 210\u{202F}000 | 126\u{202F}000 |',
+    '| **total** | 21 | 210\u{202F}000 | 126\u{202F}000 |',
   ].join('\n'))
 })
 test('the script tells the changes since the json output of a base revision', async () => {
@@ -158,9 +158,9 @@ test('the script tells the changes since the json output of a base revision', as
     format: 'markdown',
     base,
   })
-  expect(markdown).toContain('<tr><th rowspan="2" align="left">Group</th><th colspan="2">Files</th><th colspan="2">Raw bytes</th><th colspan="2">Effective bytes</th></tr>')
+  expect(markdown).toContain('<tr><th rowspan="2" align="left">group</th><th colspan="2">files</th><th colspan="2">raw bytes</th><th colspan="2">effective bytes</th></tr>')
   expect(markdown).toContain('<tr><td>main/source</td><td align="right">2</td><td align="right">+1</td><td align="right">38</td><td align="right">+19</td><td align="right">34</td><td align="right">+17</td></tr>')
-  expect(markdown).toContain('<tr><td>main/tests</td><td align="right">0</td><td align="right"></td>')
+  expect(markdown).toContain('<tr><td>main/tests</td><td align="right"></td><td align="right"></td>')
   await expect(codeSize({base})).rejects.toThrow('--base only applies to --format markdown')
 })
 test('the script refuses unknown formats', async () => {
