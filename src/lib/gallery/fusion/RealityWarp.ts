@@ -7,7 +7,7 @@ import TransparentSpriteOutputsNode from '../../rendering/TransparentSpriteOutpu
 
 /**
  * A wide stretch of the view around a fusion’s portal, bent as if the portal swallowed space itself: pulled toward the middle and twisted like water down a drain, darkened toward the middle and split into its colors, or, with a negative pull, pushed back out while a ripple runs outward over it.
- * A camera-facing quad that redraws the scene behind it through `viewportSharedTexture`. It draws without depth, so whatever stands in front of the portal bends along, and before the portal’s own quads, which blend over it, but after all of the world, the transparent parts included, as the fusion’s group order puts it (see `PortalShow`); whatever drew after it would show untouched over the bent view. At its rim the view is undisturbed, so its edge never shows.
+ * A camera-facing quad that redraws the scene behind it through `viewportSharedTexture`. It draws without depth, so whatever stands in front of the portal bends along, and before the portal’s own quads, which blend over it. At its rim the view is undisturbed, so its edge never shows.
  */
 export default class RealityWarp extends Mesh<PlaneGeometry, MeshBasicNodeMaterial> {
   readonly uniforms = {
