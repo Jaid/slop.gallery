@@ -1,0 +1,64 @@
+name: buildSize
+# Called by the build workflow with the production build it uploaded as the artifact dist.
+on:
+  workflow_call:
+jobs:
+  buildSize:
+    runs-on: ubuntu-26.04
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+    - name: checkout
+      uses: actions/checkout@v7.0.1
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
+    - name: setupBun
+      uses: oven-sh/setup-bun@v2.2.0
+      with:
+        bun-version: 1.4.4
+    - name: install
+      run: bun install --frozen-lockfile
+    - name: downloadBuild
+      uses: actions/download-artifact@v8.0.2
+      with:
+        name: dist
+        path: dist
+    - name: resolveBase
+      id: resolveBase
+      uses: ./.github/actions/resolveBase
+    # Measuring the base revision here would mean building it too, so the deltas compare with the sizes its own run uploaded.
+    - name: fetchBaseBuildSize
+      id: fetchBaseBuildSize
+      if: steps.resolveBase.outputs.sha != ''
+      uses: ./.github/actions/fetchBaseArtifact
+      with:
+        sha: ${{ steps.resolveBase.outputs.sha }}
+        name: buildSize
+        path: ${{ runner.temp }}/baseBuildSize
+    # The files and bytes of every kind of file in the build, to the log and the report.
+    - name: measureBuildSize
+      shell: bash
+      run: |
+        compare=()
+        if [ -f "$RUNNER_TEMP/baseBuildSize/buildSize.json" ]; then
+          compare=(--base "$RUNNER_TEMP/baseBuildSize/buildSize.json")
+        fi
+        mkdir --parents "$RUNNER_TEMP/buildSize"
+        bun scripts/buildSize.ts > "$RUNNER_TEMP/buildSize/buildSize.json"
+        bun scripts/buildSize.ts --format markdown "${compare[@]}" | tee "$RUNNER_TEMP/buildSize.md"
+    # For the runs of later revisions to compare with. Pull request runs measure pull requests, which nothing compares with.
+    - name: uploadBuildSize
+      if: github.event_name != 'pull_request'
+      uses: actions/upload-artifact@v7.0.2
+      with:
+        name: buildSize
+        path: ${{ runner.temp }}/buildSize
+    # To the job summary, or for a pull request to its comment.
+    - name: publishReport
+      uses: ./.github/actions/publishReport
+      with:
+        file: ${{ runner.temp }}/buildSize.md
+        id: buildSize
+        base: ${{ steps.fetchBaseBuildSize.outputs.base }}

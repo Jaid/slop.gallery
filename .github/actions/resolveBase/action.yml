@@ -1,5 +1,5 @@
 name: resolveBase
-description: Finds the revision a run’s reports compare with, the state before a push or the base branch a pull request merges into, for checkouts of at least two commits
+description: Finds the revision a run’s reports compare with, the state before a push, or for a pull request the base branch its merge commit merges into, or where its head branched off for a checkout of the head
 outputs:
   sha:
     description: the base revision’s commit, empty for runs without one, like manual ones or the first push of a branch
@@ -11,12 +11,22 @@ runs:
     id: resolveBase
     shell: bash
     env:
+      GH_TOKEN: ${{ github.token }}
       before: ${{ github.event.before }}
+      head: ${{ github.event.pull_request.head.sha }}
+      baseTip: ${{ github.event.pull_request.base.sha }}
     run: |
       sha=
       case "$GITHUB_EVENT_NAME" in
-        # The merge commit’s first parent is exactly the base its changes apply to, unlike the event’s base.sha, which can lag behind the branch.
-        pull_request) sha=$(git rev-parse HEAD^1) ;;
+        pull_request)
+          if [ "$(git rev-parse HEAD)" = "$head" ]; then
+            # The head compares with where it branched off, just like the pull request’s own diff.
+            sha=$(gh api "repos/$GITHUB_REPOSITORY/compare/$baseTip...$head" --jq .merge_base_commit.sha)
+          else
+            # The merge commit’s first parent is exactly the base its changes apply to, unlike the event’s base.sha, which can lag behind the branch. This needs a checkout of two commits.
+            sha=$(git rev-parse HEAD^1)
+          fi
+          ;;
         # A push of several commits compares with the state before all of them, which had a run of its own; a new branch has none.
         push) [[ $before =~ ^0+$ ]] || sha=$before ;;
       esac

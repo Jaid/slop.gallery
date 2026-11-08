@@ -1,13 +1,7 @@
 name: triangles
+# Called by the build workflow with the production build it uploaded as the artifact dist. The dev server’s first visit reoptimizes dependencies while rooms load, which silently leaves rooms out, so the analyses always take a production build.
 on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
-# A newer push to a pull request replaces the run of an older one, so two runs never race to create its comment.
-concurrency:
-  group: triangles-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  workflow_call:
 jobs:
   triangles:
     runs-on: ubuntu-26.04
@@ -16,25 +10,24 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-    # Two commits, so a pull request’s merge commit has its base at hand.
     - name: checkout
       uses: actions/checkout@v7.0.1
       with:
-        fetch-depth: 2
+        ref: ${{ github.event.pull_request.head.sha || github.sha }}
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
       with:
         bun-version: 1.4.4
-    - name: setupMediaTools
-      uses: ./.github/actions/setupMediaTools
     - name: install
       run: bun install --frozen-lockfile
-    # The production build, as the dev server’s first visit reoptimizes dependencies while rooms load, which silently leaves rooms out
-    - name: build
-      run: bun run build
+    - name: downloadBuild
+      uses: actions/download-artifact@v8.0.2
+      with:
+        name: dist
+        path: dist
     # Chrome’s software rendering needs the surface extensions of a system Vulkan driver.
     - name: installVulkanDriver
-      run: sudo apt-get install --yes --no-install-recommends mesa-vulkan-drivers
+      run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends mesa-vulkan-drivers
     - name: resolveBase
       id: resolveBase
       uses: ./.github/actions/resolveBase
@@ -42,35 +35,11 @@ jobs:
     - name: fetchBaseAnalyses
       id: fetchBaseAnalyses
       if: steps.resolveBase.outputs.sha != ''
-      shell: bash
-      env:
-        GH_TOKEN: ${{ github.token }}
-        base: ${{ steps.resolveBase.outputs.sha }}
-      run: |
-        fetchBaseAnalyses() {
-          local runs="repos/$GITHUB_REPOSITORY/actions/workflows/triangles.yml/runs?head_sha=$base&per_page=100"
-          local deadline=$((SECONDS + 1200))
-          local run id status conclusion artifact
-          # Pushes in quick succession run side by side, so the base revision’s run may still be going. Pull request runs measure merge commits, so they never stand for a base.
-          while :; do
-            run=$(gh api "$runs" --jq '[.workflow_runs[] | select(.event != "pull_request")] | first // empty | "\(.id) \(.status) \(.conclusion)"') || return 1
-            read -r id status conclusion <<< "$run" || true
-            if [ -z "$id" ] || [ "$status" = completed ] || [ "$SECONDS" -ge "$deadline" ]; then
-              break
-            fi
-            sleep 30
-          done
-          [ "$conclusion" = success ] || return 1
-          artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts" --jq '.artifacts[] | select(.name == "analyses" and (.expired | not)) | .id') || return 1
-          [ -n "$artifact" ] || return 1
-          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact/zip" > "$RUNNER_TEMP/baseAnalyses.zip" || return 1
-          unzip -q -o -d "$RUNNER_TEMP/baseAnalyses" "$RUNNER_TEMP/baseAnalyses.zip"
-        }
-        if fetchBaseAnalyses; then
-          echo "base=$base" >> "$GITHUB_OUTPUT"
-        else
-          echo "::notice::The base revision ${base::8} has no finished triangles run with analyses, so the triangles report has no deltas."
-        fi
+      uses: ./.github/actions/fetchBaseArtifact
+      with:
+        sha: ${{ steps.resolveBase.outputs.sha }}
+        name: analyses
+        path: ${{ runner.temp }}/baseAnalyses
     # Every room’s triangles, meshes and lights in heavy graphics, to the log and the report, loaded in the runner’s Chrome on its software Vulkan.
     # The seed decides which default works hang in which slots at which size and which plants stand in the pots, so it is fixed to keep runs comparable.
     # Knottingham is left out, as some of its Knot shaders crash Chrome’s software GPU process.
@@ -93,7 +62,7 @@ jobs:
         mkdir --parents "$RUNNER_TEMP/analyses"
         analyze gallery
         analyze cell --room cell
-    # For the runs of later revisions to compare with. Pull request runs measure merge commits, which nothing compares with.
+    # For the runs of later revisions to compare with. Pull request runs measure pull requests, which nothing compares with.
     - name: uploadAnalyses
       if: github.event_name != 'pull_request'
       uses: actions/upload-artifact@v7.0.2

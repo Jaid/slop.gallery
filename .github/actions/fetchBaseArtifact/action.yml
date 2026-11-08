@@ -1,0 +1,56 @@
+name: fetchBaseArtifact
+description: Downloads an artifact that the run of this workflow for the base revision uploaded, waiting for it while that run is still going, so reports can compare with measurements too costly to repeat for the base
+inputs:
+  sha:
+    description: the base revision’s commit
+    required: true
+  name:
+    description: the name of the artifact
+    required: true
+  path:
+    description: the folder to unpack the artifact to
+    required: true
+outputs:
+  base:
+    description: the base revision’s commit if its artifact was found, empty otherwise
+    value: ${{ steps.fetchBaseArtifact.outputs.base }}
+runs:
+  using: composite
+  steps:
+  - name: fetchBaseArtifact
+    id: fetchBaseArtifact
+    shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      sha: ${{ inputs.sha }}
+      name: ${{ inputs.name }}
+      folder: ${{ inputs.path }}
+    run: |
+      fetchBaseArtifact() {
+        local workflow runs run id status artifact
+        local deadline=$((SECONDS + 1200))
+        # The workflow of this run, which is the caller’s for a reusable workflow, as only it has runs of its own.
+        workflow=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .workflow_id) || return 1
+        runs="repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs?head_sha=$sha&per_page=100"
+        # Pushes in quick succession run side by side, so the base revision’s run may still be going. Pull request runs measure pull requests, so they never stand for a base.
+        while :; do
+          run=$(gh api "$runs" --jq '[.workflow_runs[] | select(.event != "pull_request")] | first // empty | "\(.id) \(.status)"') || return 1
+          read -r id status <<< "$run" || true
+          [ -n "$id" ] || return 1
+          artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id/artifacts?name=$name" --jq '[.artifacts[] | select(.expired | not)] | first // empty | .id') || return 1
+          if [ -n "$artifact" ]; then
+            break
+          fi
+          if [ "$status" = completed ] || [ "$SECONDS" -ge "$deadline" ]; then
+            return 1
+          fi
+          sleep 30
+        done
+        gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact/zip" > "$RUNNER_TEMP/$name.zip" || return 1
+        unzip -q -o -d "$folder" "$RUNNER_TEMP/$name.zip"
+      }
+      if fetchBaseArtifact; then
+        echo "base=$sha" >> "$GITHUB_OUTPUT"
+      else
+        echo "::notice::The base revision ${sha::8} has no run with the $name artifact, so its report has no deltas."
+      fi

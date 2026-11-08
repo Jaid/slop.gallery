@@ -21,7 +21,7 @@ runs:
       id: ${{ inputs.id }}
       base: ${{ inputs.base }}
       pullRequest: ${{ github.event.pull_request.number }}
-      # A pull request’s run measures the merge commit, which nobody knows by its hash, so the footer names the head instead.
+      # A pull request’s run measures its head, or its merge commit, which nobody knows by its hash, so the footer names the head for both.
       measured: ${{ github.event.pull_request.head.sha || github.sha }}
       fork: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
     run: |
