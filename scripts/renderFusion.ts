@@ -25,7 +25,7 @@ import film from './film.ts'
 import {add, ease, handheld, holdPoint, keyedShot, length, mix, mix3, normalize, parseCameraPath, radians, scale, shotAngles, sub, throughKeys} from './lib/fusionCamera.ts'
 import {galleryHelp, galleryOptions, parseNumbers, repositoryRoot, resolveSettle, serveFile, timestamp} from './lib/headlessGallery.ts'
 
-/** what the closing shot shows: the result lying on the floor, or the ingredient’s effect round the portal */
+/** what the closing shot shows: nothing in particular, the result lying on the floor, or the ingredient’s effect round the portal */
 export type Emphasis = typeof emphases[number]
 /** a sample of the result’s flight, from the probe */
 export type ResultSample = {
@@ -48,7 +48,7 @@ type PortalFrame = ReturnType<typeof portalIn>
 /** a key of the camera’s path round the portal: degrees round from straight out of the wall toward its tangent, meters out from the portal’s middle and above its floor, the field of view in degrees and the roll in degrees */
 type OrbitKey = [time: number, angle: number, radius: number, height: number, fov: number, roll: number]
 
-const emphases = ['party', 'result'] as const
+const emphases = ['neutral', 'party', 'result'] as const
 /** every world’s module, loaded only for the world whose room --room names */
 const worldModules: Record<WorldId, () => Promise<{default: World}>> = {
   gallery: () => import('#src/worlds/gallery/index.ts'),
@@ -60,7 +60,7 @@ const videoSize = 2160
 const probeSize = 360
 const help = `Usage: bun scripts/renderFusion.ts [options]
 
-Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of a world, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and, depending on --emphasis, follows the result down or pulls back for the ingredient’s effect. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
+Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of a world, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and steps aside for the result, then, depending on --emphasis, holds there, follows the result down or pulls back for the ingredient’s effect. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
 Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser. The engine clock is virtual, see scripts/film.ts, which renders the film.
 With --emphasis result, a probe renders the fusion small first to learn where the result lands, which the camera of the film then plans for.
 
@@ -71,10 +71,10 @@ Options:
                           the work it is thrown into: a default work by its id, which hangs where the seed hangs it, or an image file or URL, which hangs in a portrait slot of --room as an imported work. Default: the first work hung in --room
   --room <id>             the room of the work, which the page opens in, and with it its world, like the Sandbox for its Cell, which loads much faster than the gallery; for a default work, where it hangs. Default: banquet
   --slot <id>             the portrait slot an image hangs in, in place of what hangs there. Default: a free slot of --room with the most room in front and to its sides
-  --emphasis <kind>       what the closing shot shows: party pulls back a little for the ingredient’s effect, like the Halloween Orb’s bats or the Horror Orb’s blood, round the portal and on the floor; result follows the result down and cranes up close over it lying on the floor. Default: party
+  --emphasis <kind>       what the closing shot shows: neutral holds where the camera stepped aside for the result, looking at the portal, for as long as party; party pulls back a little for the ingredient’s effect, like the Halloween Orb’s bats or the Horror Orb’s blood, round the portal and on the floor; result follows the result down and cranes up close over it lying on the floor. Default: neutral
   --camera <file>         a camera path as JSON, like the camera editor exports it, in place of the camera’s own: keys of time, position, target, field of view and roll that the camera passes through smoothly, the end of the film and whether the camera is held by hand, shaken by the fusion’s blows and swaying a little. It replaces the closing shot of --emphasis too; the throw still leaves from in front of the camera.
   --plan-file <file>      writes what the film would show as JSON instead of filming it: the work, its portal, the fusion’s moments, the throw, with --emphasis result the result’s landing, which the probe still renders for, the camera in every frame and keys through its path round the portal for --camera
-  --hold <seconds>        how long the film goes on after the result lies still (result) or after the ingredient’s effect is over (party). Default: 3.5 for result, 1 for party
+  --hold <seconds>        how long the film goes on after the result lies still (result) or after the ingredient’s effect is over (neutral, party). Default: 3.5 for result, 1 otherwise
   --fps <number>          frames per second. Default: 60
   --settle <frames>       wall-clock frames to render before recording. Default: 2
   --output-file <file>    the extension picks the format: .webm or .mkv for AV1 video, .jxl for an animated JPEG XL, .png for one PNG per frame. Default: out/fusion/<portrait>-<ingredient>-<timestamp>.webm
@@ -95,7 +95,7 @@ const renderFusionOptions = {
   crf: {type: 'string'},
   emphasis: {
     type: 'string',
-    default: 'party',
+    default: 'neutral',
   },
   fps: {
     type: 'string',
@@ -274,10 +274,12 @@ const followResult = (track: ReadonlyArray<ResultSample>, time: number) => {
 
 /** what the camera’s path round the portal goes by */
 export type PathContext = {
+  /** the result’s landing and where to look down on it from, for --emphasis result */
   closing?: {
     landing: Landing
     view: ReturnType<typeof resultView>
   }
+  emphasis: Emphasis
   /** where the orb leaves from and how fast, which the camera’s look follows a little while it flies */
   flight?: {
     from: Vec3
@@ -292,9 +294,9 @@ export type PathContext = {
 
 /**
  * Where the camera is and what it looks at `time` seconds into the film, before it is held by hand: the path round the portal, which the closing shot takes over from the result flipping out.
- * With the result’s landing, which the probe learns, and where to look down on it from, it closes on the result as --emphasis result does; without, on the party round the portal.
+ * With the result’s landing, which the probe learns, and where to look down on it from, it closes on the result as --emphasis result does; without, on the party round the portal, unless the emphasis is neutral, which stays on the path.
  */
-export function pathAt(time: number, {closing: closeUp, flight, portal, timeline, work, world}: PathContext): Shot {
+export function pathAt(time: number, {closing: closeUp, emphasis, flight, portal, timeline, work, world}: PathContext): Shot {
   const {emergence, strike, throwAt} = timeline
   const [angle, keyed, height, fov, roll] = throughKeys(orbitKeys(timeline), time)
   // From the burst until the climax, the camera stands back far enough to keep the satellites in view.
@@ -318,7 +320,7 @@ export function pathAt(time: number, {closing: closeUp, flight, portal, timeline
     roll,
   }
   let shot = orbit
-  if (time > emergence) {
+  if (time > emergence && emphasis !== 'neutral') {
     const closing = closeUp ? resultShot(closeUp.landing, closeUp.view, timeline, time) : partyShot(world, portal, timeline, time)
     // Over the result, the camera only sets off once it has risen to the top of its flip, so it never flies into it.
     const blend = closeUp ? ease((time - emergence - 0.5) / clamp(closeUp.landing.settled - emergence + 0.5, 2.6, 4)) : ease((time - emergence - 0.15) / 2.2)
@@ -612,6 +614,7 @@ const main = async (options: RenderFusionOptions) => {
   let flight: PathContext['flight']
   const context = (closing?: PathContext['closing']): PathContext => ({
     closing,
+    emphasis,
     flight,
     portal,
     timeline,

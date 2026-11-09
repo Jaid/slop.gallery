@@ -240,3 +240,37 @@ test('a fusion in the Sandbox’s Cell opens the Sandbox and keeps the camera wi
     await fs.remove(folder)
   }
 })
+test('a neutral fusion holds where the camera stepped aside for the result, as long as a party', async () => {
+  const folder = await fs.mkdtemp(join(tmpdir(), 'render-fusion-'))
+  try {
+    const plans: Record<string, FusionPlan> = {}
+    for (const emphasis of ['neutral', 'party']) {
+      const options: RenderFusionOptions = {
+        emphasis,
+        fps: '60',
+        graphics: 'cinematic',
+        ingredient: 'horror',
+        'jxl-distance': '1',
+        seed: '1',
+        settle: '2',
+        room: 'cell',
+        'plan-file': join(folder, `${emphasis}.json`),
+      }
+      await renderFusion(options)
+      plans[emphasis] = await Bun.file(join(folder, `${emphasis}.json`)).json() as FusionPlan
+    }
+    const {neutral, party} = plans
+    expect(neutral.timeline).toEqual(party.timeline)
+    const {emergence} = neutral.timeline
+    const held = neutral.keys.filter(key => key.time >= emergence + 1.6)
+    expect(held.length).toBeGreaterThan(1)
+    for (const key of held) {
+      expect(key.position).toEqual(held[0].position)
+      expect(key.target).toEqual(held[0].target)
+    }
+    // Party pulls back from there instead.
+    expect(party.keys.at(-1)!.position).not.toEqual(neutral.keys.at(-1)!.position)
+  } finally {
+    await fs.remove(folder)
+  }
+})
