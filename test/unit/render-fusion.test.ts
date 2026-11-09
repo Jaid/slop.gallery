@@ -10,6 +10,7 @@ import fs from 'fs-extra'
 
 import {keyedShot, throughKeys} from '../../scripts/lib/fusionCamera.ts'
 import renderFusion, {findLanding, orbitDistance, resultView, throwMotion} from '../../scripts/renderFusion.ts'
+import gallery from '../../src/worlds/gallery/index.ts'
 
 const work = (patch: Partial<PortraitDump>): PortraitDump => ({
   id: 'work',
@@ -132,7 +133,7 @@ test('the camera looks down on a result lying face up from its bottom edge, so i
     quaternion: faceUp,
     width: 1.5,
     height: 1,
-  }, 5.8)
+  }, 5.8, gallery)
   expect(view.faceDown).toBe(false)
   // Its top points toward −z, so the camera stands toward +z.
   expect(view.direction[2]).toBeCloseTo(1, 9)
@@ -143,7 +144,7 @@ test('the camera looks down on a result lying face up from its bottom edge, so i
     quaternion: faceUp,
     width: 1.5,
     height: 1,
-  }, 2)
+  }, 2, gallery)
   expect(low.eye).toBeLessThanOrEqual(1.6 + 1e-9)
   expect(low.back).toBeGreaterThan(view.back)
 })
@@ -202,6 +203,39 @@ test('a camera path given by hand replaces the film’s camera, the throw leavin
     expect(plan.timeline.strike).toBeGreaterThan(plan.timeline.throwAt)
     expect(plan.timeline.emergence - plan.timeline.strike).toBeCloseTo(13.5, 9)
     expect(Math.hypot(...plan.flight.from.map((value, axis) => value - keyedShot(path.keys, 1).position[axis]))).toBeLessThan(0.6)
+  } finally {
+    await fs.remove(folder)
+  }
+})
+test('a fusion in the Sandbox’s Cell opens the Sandbox and keeps the camera within the Cell’s walls', async () => {
+  const folder = await fs.mkdtemp(join(tmpdir(), 'render-fusion-'))
+  try {
+    const image = join(folder, 'pixel.png')
+    await Bun.write(image, Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=='))
+    const options: RenderFusionOptions = {
+      emphasis: 'party',
+      fps: '60',
+      graphics: 'cinematic',
+      ingredient: 'horror',
+      'jxl-distance': '1',
+      seed: '1',
+      settle: '2',
+      room: 'cell',
+      portrait: image,
+      slot: 'cell-south_2',
+      'plan-file': join(folder, 'plan.json'),
+    }
+    await renderFusion(options)
+    const plan = await Bun.file(join(folder, 'plan.json')).json() as FusionPlan
+    expect(plan.world).toBe('sandbox')
+    expect(plan.room).toBe('cell')
+    expect(plan.slot.id).toBe('cell-south_2')
+    // The Cell is 18 × 10 m round its middle.
+    for (const {position: [x, , z]} of plan.frames) {
+      expect(Math.abs(x)).toBeLessThan(9)
+      expect(Math.abs(z)).toBeLessThan(5)
+    }
+    expect(plan.timeline.strike).toBeGreaterThan(plan.timeline.throwAt)
   } finally {
     await fs.remove(folder)
   }

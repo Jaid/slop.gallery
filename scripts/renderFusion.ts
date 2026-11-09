@@ -1,5 +1,7 @@
 import type {PortraitSlot, Quat, Vec3} from '#src/lib/gallery/types.ts'
 import type {PortraitDump} from '#src/lib/webmcp/dumpPortraits.ts'
+import type World from '#src/worlds/base/World.ts'
+import type {WorldId} from '#src/worlds/index.ts'
 import type {CameraKey, CameraPath, Shot, Timeline} from './lib/fusionCamera.ts'
 
 import {tmpdir} from 'node:os'
@@ -17,7 +19,7 @@ import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
 import {orbRadius, orbs} from '#src/lib/gallery/orbs/index.ts'
 import {aimThrow, flightPoint} from '#src/lib/physics/aimThrow.ts'
 import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
-import world from '#src/worlds/gallery/index.ts'
+import {readWorld} from '#src/worlds/index.ts'
 
 import film from './film.ts'
 import {add, ease, handheld, holdPoint, keyedShot, length, mix, mix3, normalize, parseCameraPath, radians, scale, shotAngles, sub, throughKeys} from './lib/fusionCamera.ts'
@@ -47,12 +49,18 @@ type PortalFrame = ReturnType<typeof portalIn>
 type OrbitKey = [time: number, angle: number, radius: number, height: number, fov: number, roll: number]
 
 const emphases = ['party', 'result'] as const
+/** every world’s module, loaded only for the world whose room --room names */
+const worldModules: Record<WorldId, () => Promise<{default: World}>> = {
+  gallery: () => import('#src/worlds/gallery/index.ts'),
+  knottingham: () => import('#src/worlds/knottingham/index.ts'),
+  sandbox: () => import('#src/worlds/sandbox/index.ts'),
+}
 const videoSize = 2160
 /** rows the probe renders, which only has to get the physics right */
 const probeSize = 360
 const help = `Usage: bun scripts/renderFusion.ts [options]
 
-Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of the gallery, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and, depending on --emphasis, follows the result down or pulls back for the ingredient’s effect. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
+Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of a world, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and, depending on --emphasis, follows the result down or pulls back for the ingredient’s effect. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
 Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser. The engine clock is virtual, see scripts/film.ts, which renders the film.
 With --emphasis result, a probe renders the fusion small first to learn where the result lands, which the camera of the film then plans for.
 
@@ -61,7 +69,7 @@ Options:
                           ${orbs.map(orb => orb.id).join(', ')}
   --portrait <id|file|url>
                           the work it is thrown into: a default work by its id, which hangs where the seed hangs it, or an image file or URL, which hangs in a portrait slot of --room as an imported work. Default: the first work hung in --room
-  --room <id>             the room of the work, which the page opens in; for a default work, where it hangs. Default: banquet
+  --room <id>             the room of the work, which the page opens in, and with it its world, like the Sandbox for its Cell, which loads much faster than the gallery; for a default work, where it hangs. Default: banquet
   --slot <id>             the portrait slot an image hangs in, in place of what hangs there. Default: a free slot of --room with the most room in front and to its sides
   --emphasis <kind>       what the closing shot shows: party pulls back a little for the ingredient’s effect, like the Halloween Orb’s bats or the Horror Orb’s blood, round the portal and on the floor; result follows the result down and cranes up close over it lying on the floor. Default: party
   --camera <file>         a camera path as JSON, like the camera editor exports it, in place of the camera’s own: keys of time, position, target, field of view and roll that the camera passes through smoothly, the end of the film and whether the camera is held by hand, shaken by the fusion’s blows and swaying a little. It replaces the closing shot of --emphasis too; the throw still leaves from in front of the camera.
@@ -177,18 +185,18 @@ export function orbitKeys({emergence, strike, throwAt}: Timeline): Array<OrbitKe
   ]
 }
 
-/** The point `radius` meters out from the portal’s middle, `angle` degrees round from straight out toward its tangent, `height` above its floor, but no closer to a wall than half a meter. */
-const aroundPortal = (portal: PortalFrame, angle: number, radius: number, height: number): Vec3 => {
+/** The point `radius` meters out from the portal’s middle, `angle` degrees round from straight out toward its tangent, `height` above its floor, but no closer to a wall of the world than half a meter. */
+const aroundPortal = (world: World, portal: PortalFrame, angle: number, radius: number, height: number): Vec3 => {
   const direction = turned(portal.normal, portal.tangent, angle)
   const at: Vec3 = [portal.center[0], portal.floor + height, portal.center[2]]
   const room = world.wallDistance(at, direction) - 0.5
   return add(at, scale(direction, Math.max(0.5, Math.min(radius, room))))
 }
 /** The closing shot of --emphasis party: pulled back a little and up, looking at the portal and the floor in front of it, where effects like bats whirl and blood spills, drifting round a little. */
-const partyShot = (portal: PortalFrame, {emergence, end}: Timeline, time: number): Shot => {
+const partyShot = (world: World, portal: PortalFrame, {emergence, end}: Timeline, time: number): Shot => {
   const drift = ease((time - emergence) / (end - emergence))
   return {
-    position: aroundPortal(portal, mix(-14, 4, drift), mix(4.6, 4.9, drift), mix(2.3, 2.45, drift)),
+    position: aroundPortal(world, portal, mix(-14, 4, drift), mix(4.6, 4.9, drift), mix(2.3, 2.45, drift)),
     target: [portal.center[0] + portal.normal[0] * 0.45, portal.floor + 1.2, portal.center[2] + portal.normal[2] * 0.45],
     fov: 56,
     roll: 0,
@@ -202,9 +210,9 @@ const frameReach = 0.15
 const resultFov = 46
 /**
  * Where the camera of --emphasis result looks down on the result lying still: from the side of its bottom edge, so its image stands upright in the view, as close as it can with all of it in view, looking down steeply, or from in front a little above, should it stand or lean.
- * Of the directions round it, the one nearest that side with room for the camera before the next wall.
+ * Of the directions round it, the one nearest that side with room for the camera before the next wall of the world.
  */
-export function resultView({height, position, quaternion, width}: Pick<Landing, 'height' | 'position' | 'quaternion' | 'width'>, ceiling: number) {
+export function resultView({height, position, quaternion, width}: Pick<Landing, 'height' | 'position' | 'quaternion' | 'width'>, ceiling: number, world: World) {
   const front = rotate([0, 0, 1], quaternion)
   const top = rotate([0, 1, 0], quaternion)
   const lying = Math.abs(front[1]) > 0.5
@@ -272,20 +280,22 @@ export type PathContext = {
   portal: PortalFrame
   timeline: Timeline
   work: Vec3
+  /** whose walls keep the camera in */
+  world: World
 }
 
 /**
  * Where the camera is and what it looks at `time` seconds into the film, before it is held by hand: the path round the portal, which the closing shot takes over from the result flipping out.
  * With the result’s landing, which the probe learns, and where to look down on it from, it closes on the result as --emphasis result does; without, on the party round the portal.
  */
-export function pathAt(time: number, {closing: closeUp, flight, portal, timeline, work}: PathContext): Shot {
+export function pathAt(time: number, {closing: closeUp, flight, portal, timeline, work, world}: PathContext): Shot {
   const {emergence, strike, throwAt} = timeline
   const [angle, keyed, height, fov, roll] = throughKeys(orbitKeys(timeline), time)
   // From the burst until the climax, the camera stands back far enough to keep the satellites in view.
   const framing = ease((time - strike - 1.5) / 0.7) * (1 - ease((time - emergence + 1.5) / 1.2))
   const radius = mix(keyed, Math.max(keyed, orbitDistance(portal, fov)), framing)
   const thrown = throwMotion(time, timeline)
-  const eye = aroundPortal(portal, angle, radius + thrown.radius, height + thrown.height)
+  const eye = aroundPortal(world, portal, angle, radius + thrown.radius, height + thrown.height)
   // The camera looks at the work until the orb strikes it, then at the portal it opens.
   let aimedAt = mix3(work, portal.center, ease((time - strike + 0.1) / 1))
   if (flight && time > throwAt && time < strike) {
@@ -303,7 +313,7 @@ export function pathAt(time: number, {closing: closeUp, flight, portal, timeline
   }
   let shot = orbit
   if (time > emergence) {
-    const closing = closeUp ? resultShot(closeUp.landing, closeUp.view, timeline, time) : partyShot(portal, timeline, time)
+    const closing = closeUp ? resultShot(closeUp.landing, closeUp.view, timeline, time) : partyShot(world, portal, timeline, time)
     // Over the result, the camera only sets off once it has risen to the top of its flip, so it never flies into it.
     const blend = closeUp ? ease((time - emergence - 0.5) / clamp(closeUp.landing.settled - emergence + 0.5, 2.6, 4)) : ease((time - emergence - 0.15) / 2.2)
     let target = mix3(orbit.target, closing.target, blend)
@@ -359,12 +369,12 @@ const writeRecipe = async (file: string, {fps, shot, timeline, tools}: {
   await fs.writeFile(file, JSON.stringify(keyframes))
 }
 /** The room the slot’s wall belongs to, by the point just in front of it. */
-const slotRoom = ({position, rotation}: PortraitSlot) => {
+const slotRoom = (world: World, {position, rotation}: PortraitSlot) => {
   const room = world.roomAt([position[0] + Math.sin(rotation) * 0.3, position[1], position[2] + Math.cos(rotation) * 0.3])
   return room?.id
 }
 /** how much room there is in front of the slot for the camera, up to 6 m, and along its wall to the nearer side, up to 3 m, as its portal measures it */
-const slotSpace = (slot: PortraitSlot) => {
+const slotSpace = (world: World, slot: PortraitSlot) => {
   const normal: Vec3 = [Math.sin(slot.rotation), 0, Math.cos(slot.rotation)]
   const tangent: Vec3 = [normal[2], 0, -normal[0]]
   const probe = add(slot.position, scale(normal, 0.3))
@@ -374,8 +384,8 @@ const slotSpace = (slot: PortraitSlot) => {
   }
 }
 const isSlotOf = (slot: PortraitSlot, position: Vec3) => Math.hypot(...position.map((value, axis) => value - slot.position[axis])) < 1e-6
-/** The work the fusion takes, by --portrait, --room and --slot: a default work where the seed hangs it, or an image hung in a slot of the room. */
-const resolveWork = async ({portrait, room, slot: slotId}: {
+/** The work the fusion takes in the world, by --portrait, --room and --slot: a default work where the seed hangs it, or an image hung in a slot of the room. */
+const resolveWork = async (world: World, {portrait, room, slot: slotId}: {
   portrait?: string
   room?: string
   slot?: string
@@ -392,12 +402,12 @@ const resolveWork = async ({portrait, room, slot: slotId}: {
       throw new Error('--slot is for an image; a default work hangs where the seed hangs it.')
     }
     const inRoom = room ?? 'banquet'
-    const work = portrait === undefined ? works.find(candidate => slotRoom(slots.find(slot => isSlotOf(slot, candidate.position))!) === inRoom) : works.find(candidate => candidate.id === portrait)
+    const work = portrait === undefined ? works.find(candidate => slotRoom(world, slots.find(slot => isSlotOf(slot, candidate.position))!) === inRoom) : works.find(candidate => candidate.id === portrait)
     if (!work) {
       throw new Error(portrait === undefined ? `With seed ${seed}, no default work hangs in “${inRoom}”; name one with --portrait or try another --seed.` : `With seed ${seed}, “${portrait}” doesn’t hang anywhere, as the seed drew other works of its ratio; try another --seed.`)
     }
     const slot = slots.find(candidate => isSlotOf(candidate, work.position))!
-    const workRoom = slotRoom(slot)!
+    const workRoom = slotRoom(world, slot)!
     if (room !== undefined && workRoom !== room) {
       throw new Error(`With seed ${seed}, “${work.id}” hangs in “${workRoom}”, not in “${room}”.`)
     }
@@ -418,10 +428,10 @@ const resolveWork = async ({portrait, room, slot: slotId}: {
     const taken = (candidate: PortraitSlot) => works.some(work => isSlotOf(candidate, work.position))
     // A free one first, then the one with the most room round it
     const space = (candidate: PortraitSlot) => {
-      const {depth, sides} = slotSpace(candidate)
+      const {depth, sides} = slotSpace(world, candidate)
       return depth + sides
     }
-    slot = slots.filter(candidate => slotRoom(candidate) === inRoom).toSorted((a, b) => Number(taken(a)) - Number(taken(b)) || space(b) - space(a) || a.id.localeCompare(b.id)).at(0)
+    slot = slots.filter(candidate => slotRoom(world, candidate) === inRoom).toSorted((a, b) => Number(taken(a)) - Number(taken(b)) || space(b) - space(a) || a.id.localeCompare(b.id)).at(0)
     if (!slot) {
       throw new Error(`The room “${inRoom}” has no portrait slots.`)
     }
@@ -430,14 +440,14 @@ const resolveWork = async ({portrait, room, slot: slotId}: {
     if (!slot) {
       throw new Error(`There is no portrait slot “${slotId}”.`)
     }
-    if (room !== undefined && slotRoom(slot) !== room) {
-      throw new Error(`The slot “${slotId}” is in “${slotRoom(slot)}”, not in “${room}”.`)
+    if (room !== undefined && slotRoom(world, slot) !== room) {
+      throw new Error(`The slot “${slotId}” is in “${slotRoom(world, slot)}”, not in “${room}”.`)
     }
   }
   const label = isFile ? parse(file).name : parse(URL.parse(portrait)!.pathname).name
   return {
     label: label || 'image',
-    room: slotRoom(slot)!,
+    room: slotRoom(world, slot)!,
     slot,
     image: isFile ? {file} : {url: portrait} as {
       file?: string
@@ -496,6 +506,7 @@ export type FusionPlan = {
   spawn?: Vec3
   throwSpeed: number
   timeline: Timeline
+  world: WorldId
 }
 
 /**
@@ -570,7 +581,10 @@ const main = async (options: RenderFusionOptions) => {
     throw new Error(`--seed expects a whole number, got “${options.seed}”.`)
   }
   const ingredient = resolveIngredient(options.ingredient)
-  const work = await resolveWork({
+  // The room opens its world, like the Sandbox for its Cell, the gallery for any other.
+  const worldId = readWorld(`?${new URLSearchParams({room: text('room') ?? ''})}`)
+  const {default: world} = await worldModules[worldId]()
+  const work = await resolveWork(world, {
     portrait: text('portrait'),
     room: text('room'),
     slot: text('slot'),
@@ -596,6 +610,7 @@ const main = async (options: RenderFusionOptions) => {
     portal,
     timeline,
     work: slot.position,
+    world,
   })
   const shot = (closing?: PathContext['closing']) => (time: number): Shot => {
     if (!camera) {
@@ -712,7 +727,7 @@ const main = async (options: RenderFusionOptions) => {
       const [x, y, z] = landing.position
       console.error(`The result flips out at ${landing.track[0].time.toFixed(2)} s and lies still from ${landing.settled.toFixed(2)} s at ${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}`)
       const room = world.roomById(work.room)!
-      const view = resultView(landing, room.floorY + (room.height ?? 3))
+      const view = resultView(landing, room.floorY + (room.height ?? 3), world)
       if (view.faceDown) {
         console.warn('Warning: the result lands face down, so the closing shot shows its back.')
       }
@@ -728,6 +743,7 @@ const main = async (options: RenderFusionOptions) => {
       const framed = shot(closing)
       const plan: FusionPlan = {
         fps,
+        world: worldId,
         room: work.room,
         slot,
         ingredient: {
