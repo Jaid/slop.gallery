@@ -35,8 +35,14 @@ const rings = [0, 1, 2].map(i => ({
 }))
 /** how large the meteorite at the sculpture’s middle is round */
 const coreRadius = 0.7
-/** The Moonfall’s orbital sculpture: an iron meteorite under three engraved bronze bands, each precessing and nodding on its own while its bead runs round it, trailing light through the band’s inlay. */
+/** how fast the meteorite spins round its own vertical and, slower, tumbles over round the horizontal, in radians per second */
+const coreSpin = {
+  x: 0.07,
+  y: 0.2,
+}
+/** The Moonfall’s orbital sculpture: a slowly tumbling iron meteorite under three engraved bronze bands, each precessing and nodding on its own while its bead runs round it, trailing light through the band’s inlay. */
 export default function MoonfallOrbit() {
+  const meteorite = useRef<Mesh>(null)
   const turns = useRef<Array<Group | null>>([])
   const beads = useRef<Array<Mesh | null>>([])
   const clock = useMemo(() => new AnimationClock(0.05), [])
@@ -69,6 +75,8 @@ export default function MoonfallOrbit() {
   const iron = useDisposable(useMemo(() => new MeteoriteMaterial(coreRadius), []))
   useFrame((_, delta) => {
     const t = clock.advance(delta)
+    // Euler order XYZ: it spins round its own axis while that axis tips over.
+    meteorite.current?.rotation.set(t * coreSpin.x, t * coreSpin.y, 0)
     for (const [i, ring] of rings.entries()) {
       const turn = turns.current[i]
       if (turn) {
@@ -80,7 +88,7 @@ export default function MoonfallOrbit() {
     }
   })
   return <Orbitable id='moonfall-orbital-sculpture' name='moonfall-orbital-sculpture' orbit={sculptureOrbit} position={[0, 2.5, 0]} title='Orbital sculpture'>
-    <mesh castShadow geometry={core} material={iron} name='moonfall-meteorite' />
+    <mesh castShadow geometry={core} material={iron} name='moonfall-meteorite' ref={meteorite} />
     {rings.map((ring, i) => <group
       key={i} ref={group => {
         turns.current[i] = group
