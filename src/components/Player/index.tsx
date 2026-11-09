@@ -22,7 +22,8 @@ import world from '#src/worlds/current.ts'
 
 const enabled = () => !cameraPose.focused
 const cameraEnabled = () => !cameraPose.focused
-const flying = () => flyMode.active
+// A camera a capture poses apart from the player leaves nobody where the body stands, so the body leaves the physics as it does while flying, and nothing, like the result a fusion flips out, bounces off it.
+const flying = () => flyMode.active || cameraPose.posed
 const setFov = (camera: Camera, fov: number) => {
   if (camera instanceof PerspectiveCamera && camera.fov !== fov) {
     camera.fov = fov
