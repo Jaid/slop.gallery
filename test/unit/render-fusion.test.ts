@@ -2,7 +2,7 @@ import type {PortraitDump} from '../../src/lib/webmcp/dumpPortraits.ts'
 
 import {expect, test} from 'bun:test'
 
-import {findLanding, resultView, throughKeys} from '../../scripts/renderFusion.ts'
+import {findLanding, resultView, throughKeys, throwMotion} from '../../scripts/renderFusion.ts'
 
 const work = (patch: Partial<PortraitDump>): PortraitDump => ({
   id: 'work',
@@ -34,6 +34,29 @@ test('the camera’s path passes through every key without stopping between them
     expect(Math.abs(c - a)).toBeLessThan(0.02)
     expect(Math.abs(d - b)).toBeLessThan(0.02)
   }
+})
+test('the camera dollies after the thrown orb, is knocked back past where it threw from on the strike and drawn in again for the burst', () => {
+  const timeline = {
+    throwAt: 1,
+    strike: 1.5,
+  }
+  expect(throwMotion(1, timeline)).toEqual({
+    radius: 0,
+    height: 0,
+    fov: 0,
+  })
+  const flying = throwMotion(1.25, timeline)
+  expect(flying.radius).toBeLessThan(-0.2)
+  expect(flying.height).toBeGreaterThan(0.1)
+  expect(throwMotion(1.5, timeline).radius).toBeCloseTo(-0.6, 9)
+  const knocked = throwMotion(1.85, timeline)
+  expect(knocked.radius).toBeGreaterThan(1.4)
+  expect(knocked.fov).toBeGreaterThan(4)
+  // It moves continuously, within a 60 fps frame by at most a hand’s width.
+  for (let time = 0; time < 4; time += 1 / 60) {
+    expect(Math.abs(throwMotion(time + 1 / 60, timeline).radius - throwMotion(time, timeline).radius)).toBeLessThan(0.2)
+  }
+  expect(throwMotion(3, timeline).radius).toBeCloseTo(0, 9)
 })
 test('the result is the work that no longer hangs and no fusion holds, or a new one, followed until it lies still', () => {
   const dumps = [

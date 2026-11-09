@@ -15,7 +15,7 @@ import {portalIn} from '#src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
 import {orbRadius, orbs} from '#src/lib/gallery/orbs/index.ts'
 import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
-import {aimThrow} from '#src/lib/webmcp/throwProp.ts'
+import {aimThrow, gravity} from '#src/lib/webmcp/throwProp.ts'
 import world from '#src/worlds/gallery/index.ts'
 
 import film from './film.ts'
@@ -70,7 +70,7 @@ const videoSize = 2160
 const probeSize = 360
 const help = `Usage: bun scripts/renderFusion.ts [options]
 
-Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of the gallery, whose portal opens, swallows both and flips out the result, while the camera rushes in on the singularity, is knocked back by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and, depending on --emphasis, follows the result down or pulls back for the ingredient’s effect. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
+Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of the gallery, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and, depending on --emphasis, follows the result down or pulls back for the ingredient’s effect. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
 Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser. The engine clock is virtual, see scripts/film.ts, which renders the film.
 With --emphasis result, a probe renders the fusion small first to learn where the result lands, which the camera of the film then plans for.
 
@@ -187,8 +187,8 @@ export function throughKeys(keys: ReadonlyArray<ReadonlyArray<number>>, time: nu
 const jolt = (since: number, decay: number) => (since < 0 ? 0 : (1 - Math.exp(-since / 0.05)) * Math.exp(-since / decay))
 /** the blows the fusion deals the camera: when, how far it is pushed back in meters, how hard it shakes in degrees and how fast both die away in seconds */
 const blows = ({emergence, strike}: Timeline) => [
-  // the orb strikes the work
-  [strike, 0.03, 0.3, 0.35],
+  // the orb strikes the work, which knocks the camera back for good, see throwMotion
+  [strike, 0, 0.55, 0.35],
   // the singularity collapses and bursts
   [strike + 1.5, 0.34, 0.95, 0.7],
   // the ring of fire lands
@@ -196,6 +196,24 @@ const blows = ({emergence, strike}: Timeline) => [
   // the result flips out with a blaze
   [emergence, 0.2, 0.7, 0.6],
 ] as const
+/** how far a recoil has kicked in `since` seconds after its blow, from 0 to 1 within a third of a second, starting from rest so it never jumps between frames */
+const kick = (since: number) => (since < 0 ? 0 : 1 - Math.exp(-((since / 0.16) ** 2)))
+/** how far the camera dollies after the orb by the time it strikes, in meters */
+const followReach = 0.6
+/** how far the strike knocks the camera back beyond its path, in meters, until the singularity’s pull draws it in again */
+const recoilReach = 1.5
+
+/** How the throw moves the camera on top of its path `time` seconds into the film, as offsets of its radius and height in meters and its field of view in degrees: it dollies after the orb as it flies, rising a little with its arc, and the strike knocks it back, further than it stood when it threw, until the singularity’s pull draws it in again for the burst. */
+export function throwMotion(time: number, {strike, throwAt}: Pick<Timeline, 'strike' | 'throwAt'>) {
+  const flight = clamp((time - throwAt) / (strike - throwAt), 0, 1)
+  const struck = kick(time - strike)
+  const recoil = struck * (1 - ease((time - strike - 0.35) / 1.1))
+  return {
+    radius: -followReach * ease(flight) * (1 - struck) + recoilReach * recoil,
+    height: 0.12 * Math.sin(Math.PI * flight) + 0.2 * recoil,
+    fov: 5 * recoil,
+  }
+}
 
 /** The camera’s path round the portal through the fusion until the closing shot takes over: it creeps toward the work, rushes in low and tilted on the singularity, is knocked back by its burst, cranes up and round while the ember beats, sweeps back across while the images take their turns and pushes in through the climax. */
 export function orbitKeys({emergence, strike, throwAt}: Timeline): Array<OrbitKey> {
@@ -299,22 +317,37 @@ const followResult = (track: ReadonlyArray<ResultSample>, time: number) => {
  * Where the camera is and what it looks at `time` seconds into the film: the path round the portal, which the closing shot takes over from the result flipping out, with the blows of the fusion and a slight sway as if held by hand.
  * With the result’s landing, which the probe learns, and where to look down on it from, it closes on the result as --emphasis result does; without, on the party round the portal.
  */
-export function shotAt(time: number, {closing: closeUp, portal, timeline, work}: {
+export function shotAt(time: number, {closing: closeUp, flight, portal, timeline, work}: {
   closing?: {
     landing: Landing
     view: ReturnType<typeof resultView>
+  }
+  /** where the orb leaves from and how fast, which the camera’s look follows a little while it flies */
+  flight?: {
+    from: Vec3
+    velocity: Vec3
   }
   portal: PortalFrame
   timeline: Timeline
   work: Vec3
 }): Shot {
-  const {emergence, strike} = timeline
+  const {emergence, strike, throwAt} = timeline
   const [angle, radius, height, fov, roll] = throughKeys(orbitKeys(timeline), time)
+  const thrown = throwMotion(time, timeline)
+  const eye = aroundPortal(portal, angle, radius + thrown.radius, height + thrown.height)
   // The camera looks at the work until the orb strikes it, then at the portal it opens.
+  let aimedAt = mix3(work, portal.center, ease((time - strike + 0.1) / 1))
+  if (flight && time > throwAt && time < strike) {
+    // While the orb flies, the aimedAt leans toward it, most halfway.
+    const since = time - throwAt
+    const orb: Vec3 = [flight.from[0] + flight.velocity[0] * since, flight.from[1] + flight.velocity[1] * since - gravity / 2 * since ** 2, flight.from[2] + flight.velocity[2] * since]
+    const along = add(eye, scale(normalize(sub(orb, eye)), length(sub(aimedAt, eye))))
+    aimedAt = mix3(aimedAt, along, 0.4 * Math.sin(Math.PI * since / (strike - throwAt)))
+  }
   const orbit: Shot = {
-    position: aroundPortal(portal, angle, radius, height),
-    target: mix3(work, portal.center, ease((time - strike + 0.1) / 1)),
-    fov,
+    position: eye,
+    target: aimedAt,
+    fov: fov + thrown.fov,
     roll,
   }
   let shot = orbit
@@ -326,8 +359,8 @@ export function shotAt(time: number, {closing: closeUp, portal, timeline, work}:
     if (closeUp) {
       // It follows the result up out of the portal and down onto the floor.
       const {landing} = closeUp
-      const flight = followResult(landing.track, time) ?? portal.center
-      target = mix3(mix3(orbit.target, flight, ease((time - emergence) / 0.3)), landing.position, ease((time - landing.settled) / 1.2))
+      const flown = followResult(landing.track, time) ?? portal.center
+      target = mix3(mix3(orbit.target, flown, ease((time - emergence) / 0.3)), landing.position, ease((time - landing.settled) / 1.2))
     }
     shot = {
       position: mix3(orbit.position, closing.position, blend),
@@ -599,13 +632,15 @@ const main = async (options: RenderFusionOptions) => {
     emergence: 0,
     end: 0,
   }
+  let flight: Parameters<typeof shotAt>[1]['flight']
   const shot = (closing?: Parameters<typeof shotAt>[1]['closing']) => (time: number) => shotAt(time, {
     closing,
+    flight,
     portal,
     timeline,
     work: slot.position,
   })
-  // The throw leaves from in front of the camera as it is when it throws, whose path bends toward where the orb strikes, which depends on where it leaves from: a few rounds settle both.
+  // The throw leaves from in front of the camera as it is when it throws, whose path bends toward where the orb strikes, which depends on where it leaves from: a few rounds settle both. The throw’s own motion of the camera only starts after it.
   let from: Vec3 = [0, 0, 0]
   for (let round = 0; round < 8; round++) {
     timeline.emergence = timeline.strike + fusionTiming.minimum + fusionTiming.climax
@@ -614,6 +649,10 @@ const main = async (options: RenderFusionOptions) => {
     const aim = aimThrow(from, slot.position, throwSpeed)
     if (!aim) {
       throw new Error(`A throw from ${from.map(value => value.toFixed(2)).join(', ')} at ${throwSpeed} m/s falls short of the work.`)
+    }
+    flight = {
+      from,
+      velocity: aim.velocity,
     }
     const strike = throwAt + aim.seconds
     const settled = Math.abs(strike - timeline.strike) < 1e-9
