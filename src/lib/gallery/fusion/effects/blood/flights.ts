@@ -1,14 +1,15 @@
 import type {PortalOffset} from '../base/portalOffset.ts'
 
-/** what a piece of the blood is: a drop, a speck of the mist that sprays out with the drops, which the air holds up and takes no splat from, or the pool gathering on the floor under the portal */
+/** what a piece of the blood is: a drop, a speck of the mist that sprays out with the drops, which the air holds up and takes no splat from, the pool gathering on the floor under the portal or the stream pouring down into it */
 export const bloodKinds = {
   drop: 0,
   mist: 1,
   pool: 2,
+  pour: 3,
 } as const
-/** a drop of blood that the portal spurts out as the result flips out or that drips from its bottom afterwards, a speck of its mist, or its pool */
+/** a drop of blood that the portal spurts out as the result flips out or that drips from its bottom afterwards, a speck of its mist, its pool or the stream pouring into the pool */
 export type BloodDrop = {
-  /** seconds after the result flipped out that it leaves the portal, or that the pool starts gathering */
+  /** seconds after the result flipped out that it leaves the portal, or that the pool starts gathering or the stream pouring */
   delay: number
   /** seconds it swells hanging from the portal before it drops, for a drip */
   hang: number
@@ -28,6 +29,17 @@ export type Heartbeat = {
   at: number
   /** how hard it beats, 1 for the hardest */
   strength: number
+}
+/** where and when the stream pouring out of the portal strikes the pool, in seconds after the result flipped out, as its sound needs it */
+export type BloodPouring = {
+  /** when its first blood strikes */
+  from: number
+  /** where it strikes, from the portal’s middle */
+  spot: PortalOffset
+  /** when the surge of each beat strikes, and how hard the beat was */
+  surges: ReadonlyArray<Heartbeat>
+  /** when its last blood strikes */
+  to: number
 }
 /** a drop striking the floor, as its sound needs it */
 export type BloodSplat = {
@@ -78,19 +90,39 @@ export const bloodFading = {
   duration: 0.6,
 } as const
 /**
- * The pool gathering on the floor under the portal, in seconds after the result flipped out and meters: it swells as the blood of each beat comes down, by the volume the beat brought, and creeps on a little as it settles, until it is sucked back toward its middle ever faster and gone.
+ * The stream pouring straight down out of the portal’s bottom, in seconds after the result flipped out and meters: it starts as the first beat spurts and runs dry after the second, before the result comes back down through it, surging on its beats and trickling between them, and thins and beads up as it speeds up in its fall, until it strikes the floor and feeds the pool there.
+ */
+export const bloodPour = {
+  /** where it leaves the portal, along the wall, up and out into the room from the portal’s middle: off the front of its bottom, so its pool spreads out before the result, which comes down right under the portal and lies on the pool’s back */
+  start: [0, -0.32, 0.25],
+  /** how fast it leaves the portal, downward, in m/s */
+  speed: 0.6,
+  /** how thick it is where it leaves the portal at a beat’s hardest surge, in meters */
+  width: 0.09,
+  /** seconds after the result flipped out that it starts and stops leaving the portal; each beat’s surge starts as late after the beat as the stream after the first. The result, thrown up out of the portal, comes back down through the stream about 1.05 s after it flipped out, whatever its size, so its last blood has fallen out of the result’s way by then. */
+  flowing: [0.04, 0.85],
+  /** seconds it takes to run dry before it stops */
+  drying: 0.15,
+  /** how much trickles out between the beats, against a hardest beat’s surge */
+  trickle: 0.45,
+  /** how fast a beat’s surge swells and ebbs, as rates per second */
+  surge: {
+    swell: 40,
+    ebb: 5,
+  },
+} as const
+/**
+ * The pool gathering on the floor where the pour strikes it, in seconds after the result flipped out and meters: it swells by the blood the pour brought down so far, and creeps on a little as it settles, until it is sucked back toward its middle ever faster and gone.
  */
 export const bloodPool = {
-  /** where its middle lies, along the wall and out into the room from the portal’s middle */
-  center: [0, 0.4],
-  /** its radius once the blood of every beat has come down */
+  /** where its middle lies, along the wall and out into the room from the portal’s middle: right under where the pour leaves the portal */
+  center: [bloodPour.start[0], bloodPour.start[2]],
+  /** its radius once all of the pour has come down */
   radius: 0.8,
-  /** seconds after a beat that its blood starts and ends coming down into the pool */
-  filling: [0.3, 1.1],
   /** how much further it creeps as it settles, a share of its radius, and from when to when */
   creep: {
     share: 0.1,
-    start: 1.5,
+    start: 2.2,
     end: 5,
   },
   draining: {
@@ -138,18 +170,70 @@ export function bloodLanding({size, start, velocity}: Pick<BloodDrop, 'size' | '
   }
 }
 
+/** How long the pour takes to fall `distance` meters from where it leaves the portal, in seconds; too thick for the air to slow it down. `BloodSpray` lets it fall the same way on the GPU. */
+export function pourFall(distance: number) {
+  const {speed} = bloodPour
+  return (Math.sqrt(speed * speed + 2 * gravity * Math.max(distance, 0)) - speed) / gravity
+}
+
+/** How much a beat’s surge has brought out `seconds` after it started, against its strength: `BloodSpray` swells it by `swell` and ebbs it by `ebb` per second. */
+export function surgeVolume(seconds: number) {
+  const {ebb, swell} = bloodPour.surge
+  const since = Math.max(seconds, 0)
+  return (1 - Math.exp(-ebb * since)) / ebb - (1 - Math.exp(-(swell + ebb) * since)) / (swell + ebb)
+}
+
+/** How much of the pour had left the portal `seconds` after the result flipped out: the trickle and every beat’s surge so far, as `BloodSpray` lets it flow, in seconds at a flow of 1. */
+function poured(seconds: number) {
+  const {flowing: [from, to], trickle} = bloodPour
+  const left = Math.min(Math.max(seconds, from), to)
+  return trickle * (left - from) + bloodBeats.reduce((sum, {at, strength}) => sum + strength * surgeVolume(left - at - from), 0)
+}
+
+/** how much the whole pour brings, as {@link poured} measures it */
+export const pourTotal = poured(bloodPour.flowing[1])
+
+/** How much of the pour had left the portal `seconds` after the result flipped out, 0–1. `BloodSpray` fills the pool by it once that blood came down. */
+export function pourVolume(seconds: number) {
+  return poured(seconds) / pourTotal
+}
+
+/** Where and when the pour strikes a floor `floor` meters below the portal’s middle (negative), as `pourFall` has it fall. */
+export function bloodPouring(floor: number): BloodPouring {
+  const {flowing: [from, to], start} = bloodPour
+  const fall = pourFall(start[1] - floor - splatLift)
+  return {
+    from: from + fall,
+    to: to + fall,
+    spot: [start[0], floor, start[2]],
+    surges: bloodBeats.filter(({at}) => at + from < to).map(({at, strength}) => ({
+      at: at + from + fall,
+      strength,
+    })),
+  }
+}
+
 /**
- * A wound’s arterial spurts out of the portal on three beats of a racing heart: each a narrow, pulsing jet that swells and ebbs within a fifth of a second and breaks up into drops, mostly fine and a few thick, among a spray of drops and a mist of specks, while drips fall from the portal after them, into the pool gathering under it, which comes first, so everything else lies on top of it.
+ * A wound’s arterial spurts out of the portal on three beats of a racing heart: each a narrow, pulsing jet that swells and ebbs within a fifth of a second and breaks up into drops, mostly fine and a few thick, among a spray of drops and a mist of specks, while the stream pours straight down out of the portal’s bottom and drips fall after it, into the pool gathering under it, which comes first, so everything else lies on top of it, and the stream right after it.
  */
 export const bloodDrops: ReadonlyArray<BloodDrop> = [
   {
     kind: 'pool',
-    delay: bloodBeats[0].at + bloodPool.filling[0],
+    delay: bloodPour.flowing[0],
     hang: 0,
     start: [bloodPool.center[0], 0, bloodPool.center[1]],
     velocity: [0, 0, 0],
     size: 0,
     phase: 0.41,
+  },
+  {
+    kind: 'pour',
+    delay: bloodPour.flowing[0],
+    hang: 0,
+    start: bloodPour.start,
+    velocity: [0, -bloodPour.speed, 0],
+    size: bloodPour.width,
+    phase: 0.67,
   },
   ...bloodBeats.flatMap(({at, strength}, beat): Array<BloodDrop> => {
     const seed = beat * 0.237
@@ -194,7 +278,7 @@ export const bloodDrops: ReadonlyArray<BloodDrop> = [
     kind: 'drop',
     delay,
     hang: 0.45,
-    start: [along, -0.36, 0.06],
+    start: [bloodPour.start[0] + along, bloodPour.start[1], bloodPour.start[2] - 0.04],
     velocity: [0, -0.05, 0.03],
     size,
     phase: 0.3 + index * 0.27,

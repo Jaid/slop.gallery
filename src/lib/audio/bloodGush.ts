@@ -1,4 +1,4 @@
-import type {BloodSplat, Heartbeat} from '../gallery/fusion/effects/blood/flights.ts'
+import type {BloodPouring, BloodSplat, Heartbeat} from '../gallery/fusion/effects/blood/flights.ts'
 import type {PortalFrame} from '../gallery/fusion/portalFrame.ts'
 import type {AudioOutput} from './proceduralAudio.ts'
 
@@ -11,11 +11,12 @@ const shriek = [1244.51, 1318.51, 1396.91, 1479.98]
 const splatSpots = [-1, 0, 1]
 
 /**
- * The sound of blood spurting out of the portal of `frame`, from now on: a heartbeat’s thud and a wet gush on each of the `beats`, as strong as it, a stab of shrieking violins on the first two and once more after them, sinking into a cello’s groan, and a wet splat for every drop of `splats` where it lands on the floor, the bigger the louder, all in a dark, close room.
+ * The sound of blood spurting out of the portal of `frame`, from now on: a heartbeat’s thud and a wet gush on each of the `beats`, as strong as it, a stab of shrieking violins on the first two and once more after them, sinking into a cello’s groan, a pattering splash where the `pouring` stream strikes its pool, swelling as each beat’s surge strikes it, and a wet splat for every drop of `splats` where it lands on the floor, the bigger the louder, all in a dark, close room.
  * It cleans up after itself once it has rung out.
  */
-export default function playBloodGush(output: AudioOutput, frame: PortalFrame, {beats, splats}: {
+export default function playBloodGush(output: AudioOutput, frame: PortalFrame, {beats, pouring, splats}: {
   beats: ReadonlyArray<Heartbeat>
+  pouring: BloodPouring
   splats: ReadonlyArray<BloodSplat>
 }) {
   const sound = new EffectSound(output, frame.center, {
@@ -86,6 +87,30 @@ export default function playBloodGush(output: AudioOutput, frame: PortalFrame, {
     volume: 0.035,
     attack: 0.15,
   })
+  const pool = sound.pannerAt(offsetPosition(frame, pouring.spot))
+  sound.hiss(now + pouring.from, pouring.to - pouring.from + 0.25, {
+    filter: {
+      type: 'bandpass',
+      frequency: 1100,
+      end: 650,
+      q: 0.9,
+    },
+    volume: 0.022,
+    attack: 0.03,
+    hold: pouring.to - pouring.from - 0.15,
+  }, pool)
+  for (const {at, strength} of pouring.surges) {
+    sound.hiss(now + at, 0.32, {
+      filter: {
+        type: 'lowpass',
+        frequency: 1200,
+        end: 320,
+        q: 1.4,
+      },
+      volume: 0.05 * strength,
+      attack: 0.02,
+    }, pool)
+  }
   const floor = frame.floor - frame.center[1]
   const panners = splatSpots.map(along => sound.pannerAt(offsetPosition(frame, [along, floor, 1.4])))
   for (const {along, at, size, speed} of splats) {

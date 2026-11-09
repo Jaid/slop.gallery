@@ -5,9 +5,9 @@ import playBloodGush from '#src/lib/audio/bloodGush.ts'
 
 import EmergenceEffect from '../base/EmergenceEffect.ts'
 import BloodSpray from './BloodSpray.ts'
-import {bloodBeats, bloodDrops, bloodFading, bloodPool, bloodSplats} from './flights.ts'
+import {bloodBeats, bloodDrops, bloodFading, bloodPool, bloodPouring, bloodSplats} from './flights.ts'
 
-/** The portal bleeds like a cut artery as the result of a successful fusion flips out: jets on three beats of a racing heart break up into drops large and fine and a mist, which the air slows down, and leave stains by the angle they struck at, which dry dark and dull before they fade, around a pool gathering under the portal that is sucked back into it at last. */
+/** The portal bleeds like a cut artery as the result of a successful fusion flips out: jets on three beats of a racing heart break up into drops large and fine and a mist, which the air slows down, and leave stains by the angle they struck at, which dry dark and dull before they fade, around a pool that a stream pouring straight down out of the portal fills under it and that is sucked back into it at last. */
 export default class BloodEffect extends EmergenceEffect {
   override readonly afterglow = Math.max(bloodFading.start + bloodFading.stagger + bloodFading.duration, bloodPool.draining.start + bloodPool.draining.seconds)
   readonly id = 'horror-blood'
@@ -17,9 +17,11 @@ export default class BloodEffect extends EmergenceEffect {
   }
 
   sound(audio: AudioOutput, frame: PortalFrame) {
+    const floor = frame.floor - frame.center[1]
     playBloodGush(audio, frame, {
       beats: bloodBeats,
-      splats: bloodSplats(bloodDrops, frame.floor - frame.center[1]),
+      pouring: bloodPouring(floor),
+      splats: bloodSplats(bloodDrops, floor),
     })
   }
 }

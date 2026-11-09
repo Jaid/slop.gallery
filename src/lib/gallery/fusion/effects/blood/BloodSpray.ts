@@ -1,7 +1,7 @@
 import type {BloodDrop} from './flights.ts'
 import type {Node} from 'three/webgpu'
 
-import {atan, attribute, cameraPosition, exp, float, max, mix, modelPosition, mx_noise_float, positionGeometry, positionWorld, select, sin, smoothstep, uv, vec2, vec3} from 'three/tsl'
+import {atan, attribute, cameraPosition, cross, exp, float, max, mix, modelPosition, mx_noise_float, positionGeometry, positionWorld, select, sin, smoothstep, uv, vec2, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
 import {coverage, rgb} from '#src/lib/materials/orb/fill.ts'
@@ -9,7 +9,7 @@ import {coverage, rgb} from '#src/lib/materials/orb/fill.ts'
 import {portalPoint} from '../base/billboards.ts'
 import EffectSprites, {instanceAttribute} from '../base/EffectSprites.ts'
 import {dropMargin, floorPoint, streakQuad, teardrop, up} from './drops.ts'
-import {bloodBeats, bloodFading, bloodKinds, bloodPool, clotting, gravity, landingSteps, shutter, splatLift} from './flights.ts'
+import {bloodBeats, bloodFading, bloodKinds, bloodPool, bloodPour, clotting, gravity, landingSteps, pourTotal, shutter, splatLift} from './flights.ts'
 
 /** how far a stain’s quad reaches from where the drop struck, in the stain’s half widths: behind it and to its sides, beyond its elongation, and ahead of it, with room for its tail and its satellites */
 const stainQuad = {
@@ -38,7 +38,7 @@ const colors = {
 const lamp = [0, 1.1, 0.6] as const
 
 /**
- * Arterial blood out of a fusion’s portal, as it behaves: the jets leave as stretched threads that snap into drops, which wobble and slow down in the air the finer they are, smeared by the camera’s shutter and lit like little glossy beads; the mist hangs a moment and settles away. Every drop leaves a stain by the angle it struck at, round from above, stretched with a tail and satellites from the side, ringed with spines the faster it came, glossy and red while fresh, then drying dark and dull from its edges with a darker ring, until the stains fade. Under the portal a pool gathers, swelling with the blood of every beat, glossy and wet, until it is sucked back into its middle. Animated entirely on the GPU by the clock.
+ * Arterial blood out of a fusion’s portal, as it behaves: the jets leave as stretched threads that snap into drops, which wobble and slow down in the air the finer they are, smeared by the camera’s shutter and lit like little glossy beads; the mist hangs a moment and settles away. Every drop leaves a stain by the angle it struck at, round from above, stretched with a tail and satellites from the side, ringed with spines the faster it came, glossy and red while fresh, then drying dark and dull from its edges with a darker ring, until the stains fade. Out of the portal’s bottom a stream pours straight down, surging on the first two beats and running dry before the result comes back down through it, thinning and beading up as it falls, into a pool on the floor under it, which swells by the blood the stream brought down, glossy and wet and rippling where the stream strikes it, until it is sucked back into its middle. Animated entirely on the GPU by the clock.
  */
 export default class BloodSpray extends EffectSprites {
   constructor(drops: ReadonlyArray<BloodDrop>) {
@@ -55,7 +55,8 @@ export default class BloodSpray extends EffectSprites {
     const [delay, hang, size, phase] = [times.x, times.y, times.z, times.w]
     const start = placement.xyz
     const isMist = placement.w.greaterThan(0.5).and(placement.w.lessThan(1.5))
-    const isPool = placement.w.greaterThan(1.5)
+    const isPool = placement.w.greaterThan(1.5).and(placement.w.lessThan(2.5))
+    const isPour = placement.w.greaterThan(2.5)
     const age = clock.sub(delay)
     const since = age.max(0)
     const shown = clock.greaterThan(delay.sub(hang))
@@ -169,13 +170,58 @@ export default class BloodSpray extends EffectSprites {
     const fresnel = float(1).sub(max(surface.dot(toCamera), 0)).pow(5).mul(0.96).add(0.04)
     const wet = float(1).sub(dried)
     const stainColor = mix(freshColor, driedColor, dried).add(colors.sheen.mul(fresnel).mul(wet).mul(0.6)).add(colors.highlight.mul(glint).mul(wet))
-    // The pool, in meters from its middle along the wall and out into the room, on a quad flat on the floor a little under the stains. It spreads by the area of the blood that came down so far and creeps on a little as it settles.
-    const {center, creep, draining, filling, radius: poolRadius} = bloodPool
+    // The pour, in meters down from where it leaves the portal, as `pourFall` has it fall: its blood leaves the portal as thick as it flows out then, surging on its beats, and thins and beads up the faster it falls.
+    const {drying, flowing: [pourFrom, pourTo], speed: pourSpeed, start: pourStart, surge, trickle, width: pourWidth} = bloodPour
+    const fallen = (seconds: Node<'float'>) => {
+      const falling = seconds.max(0)
+      return falling.mul(pourSpeed).add(falling.pow2().mul(gravity / 2))
+    }
+    const fallTime = (distance: Node<'float'>) => distance.max(0).mul(2 * gravity).add(pourSpeed ** 2).sqrt().sub(pourSpeed).div(gravity)
+    const pourFlow = (left: Node<'float'>) => {
+      const surges = bloodBeats.reduce<Node<'float'>>((sum, {at: beat, strength}) => {
+        const surging = left.sub(beat + pourFrom).max(0)
+        return sum.add(float(1).sub(exp(surging.mul(-surge.swell))).mul(exp(surging.mul(-surge.ebb))).mul(strength))
+      }, float(trickle))
+      return surges.mul(smoothstep(pourFrom, pourFrom + 0.04, left)).mul(smoothstep(pourTo, pourTo - drying, left))
+    }
+    const pourDepth = float(pourStart[1]).sub(target)
+    const pourLanding = fallTime(pourDepth)
+    // A ribbon from its tail to its head, turned toward the camera around the vertical: the tail stays at the portal until the pour stops, then falls after the rest.
+    const pourHead = fallen(clock.sub(pourFrom)).min(pourDepth)
+    const pourTail = fallen(clock.sub(pourTo)).min(pourDepth)
+    const pourSide = cross(cameraPosition.sub(modelPosition.add(portalPoint(tangent, normal, pourStart[0], pourStart[1], pourStart[2]))), up).normalize()
+    const pourFront = up.cross(pourSide)
+    const pourReach = pourWidth / 2 * Math.sqrt(1.1) * 1.45 * dropMargin + 0.005
+    const pourQuad = portalPoint(tangent, normal, pourStart[0], float(pourStart[1]).sub(mix(pourHead, pourTail, positionGeometry.y.add(0.5))), pourStart[2]).add(pourSide.mul(positionGeometry.x.mul(pourReach * 2)))
+    // Every height shows the blood that left the portal as long ago as it takes to fall there: thinner the faster it falls by now, beading up the further it fell and wandering a little, splaying out where it strikes the floor.
+    const pourDown = mix(pourHead, pourTail, uv().y)
+    const pourLeft = clock.sub(fallTime(pourDown))
+    const thinning = float(pourSpeed).div(pourDown.mul(2 * gravity).add(pourSpeed ** 2).sqrt()).pow(0.3)
+    const beading = sin(pourLeft.mul(Math.PI * 2 * 40).add(sin(pourLeft.mul(Math.PI * 2 * 7)).mul(2)).add(phase.mul(6))).mul(smoothstep(0.1, 1.2, pourDown).mul(0.45)).add(1)
+    const splaying = smoothstep(0.04, 0, pourDepth.sub(pourDown)).mul(1.2).add(1)
+    const pourHalfWidth = pourFlow(pourLeft).sqrt().mul(pourWidth / 2).mul(thinning).mul(beading).mul(splaying)
+    const wander = sin(pourLeft.mul(Math.PI * 2 * 3.1).add(phase.mul(11))).mul(0.6).add(sin(pourLeft.mul(Math.PI * 2 * 5.3).add(phase.mul(5))).mul(0.4)).mul(smoothstep(0, 1, pourDown).mul(0.004))
+    const pourAcross = uv().x.sub(0.5).mul(pourReach * 2).sub(wander)
+    const pourInside = pourHalfWidth.sub(pourAcross.abs()).sub(0.0003)
+    // Shaded as a glossy cylinder of blood: deep in its middle, thin and red at its sides, with a streak of the lamp running down it.
+    const pourRim = pourAcross.div(pourHalfWidth.max(0.00001)).clamp(-1, 1)
+    const pourFacing = float(1).sub(pourRim.pow2()).max(0).sqrt()
+    const pourSurface = pourSide.mul(pourRim).add(pourFront.mul(pourFacing))
+    const pourShading = pourSurface.dot(toLamp).mul(0.5).add(0.5)
+    const pourGlint = max(pourSurface.dot(toLamp.add(toCamera).normalize()), 0).pow(60)
+    const pourColor = mix(colors.thin, mix(colors.core, colors.body, pourShading), smoothstep(0, 0.5, pourFacing)).add(colors.sheen.mul(float(1).sub(pourFacing).pow(3)).mul(0.6)).add(colors.highlight.mul(pourGlint).mul(0.8))
+    // The pool, in meters from its middle along the wall and out into the room, on a quad flat on the floor a little under the stains. It spreads by the area of the blood the pour brought down so far and creeps on a little as it settles.
+    const {center, creep, draining, radius: poolRadius} = bloodPool
     const poolReach = poolRadius * (1 + creep.share) * 1.3
     const poolMiddle = floorPoint(tangent, normal, floor, center[0], center[1], splatLift / 2)
     const poolQuad = poolMiddle.add(tangent.mul(positionGeometry.x.mul(poolReach * 2))).add(normal.mul(positionGeometry.y.mul(poolReach * 2)))
-    const total = bloodBeats.reduce((sum, {strength}) => sum + strength, 0)
-    const volume = bloodBeats.reduce<Node<'float'>>((sum, {at: beat, strength}) => sum.add(smoothstep(beat + filling[0], beat + filling[1], clock).mul(strength / total)), float(0))
+    // As `pourVolume` has it, by the blood that left the portal as long ago as it takes to come down.
+    const landed = clock.sub(pourLanding).clamp(pourFrom, pourTo)
+    const volume = bloodBeats.reduce<Node<'float'>>((sum, {at: beat, strength}) => {
+      const surging = landed.sub(beat + pourFrom).max(0)
+      const surged = float(1).sub(exp(surging.mul(-surge.ebb))).div(surge.ebb).sub(float(1).sub(exp(surging.mul(-(surge.swell + surge.ebb)))).div(surge.swell + surge.ebb))
+      return sum.add(surged.mul(strength))
+    }, landed.sub(pourFrom).mul(trickle)).div(pourTotal)
     const drain = clock.sub(draining.start).div(draining.seconds).clamp(0, 1)
     const sucked = drain.mul(drain)
     const poolSize = volume.sqrt().mul(poolRadius).mul(smoothstep(creep.start, creep.end, clock).mul(creep.share).add(1)).mul(float(1).sub(sucked))
@@ -184,16 +230,18 @@ export default class BloodSpray extends EffectSprites {
     const poolAngle = atan(local.y, local.x).add(sucked.mul(2.5))
     const poolEdge = mx_noise_float(vec3(poolAngle.cos().mul(2.4), poolAngle.sin().mul(2.4), clock.mul(drain.mul(1.6).add(0.12)).add(phase.mul(9))))
     const poolInside = poolSize.mul(poolEdge.mul(drain.mul(0.25).add(0.12)).add(1)).sub(local.length())
-    // Thin and red at its rim, deep within; it stays wet, bulging up at its rim, mirroring the room and glinting like the stains.
+    // Thin and red at its rim, deep within; it stays wet, bulging up at its rim, mirroring the room and glinting like the stains, and rippling round its middle as long as the pour strikes it, as hard as it strikes.
     const poolOutward = tangent.mul(local.x).add(normal.mul(local.y)).add(normal.mul(0.0001)).normalize()
-    const poolSurface = up.add(poolOutward.mul(smoothstep(0.03, 0, poolInside).mul(0.5))).normalize()
+    const fromMiddle = local.length()
+    const ripples = sin(fromMiddle.mul(120).sub(clock.mul(28))).mul(exp(fromMiddle.mul(-7))).mul(smoothstep(0.005, 0.02, fromMiddle)).mul(pourFlow(clock.sub(pourLanding)).mul(0.3))
+    const poolSurface = up.add(poolOutward.mul(smoothstep(0.03, 0, poolInside).mul(0.5).add(ripples))).normalize()
     const poolGlint = max(poolSurface.dot(toLamp.add(toCamera).normalize()), 0).pow(320).mul(0.3).mul(smoothstep(0.02, 0.1, poolInside))
     const poolFresnel = float(1).sub(max(poolSurface.dot(toCamera), 0)).pow(5).mul(0.96).add(0.04)
     const poolColor = mix(colors.thin, mix(colors.body, colors.core, smoothstep(0.04, 0.2, poolInside)), smoothstep(0, 0.02, poolInside)).add(colors.sheen.mul(poolFresnel).mul(0.6)).add(colors.highlight.mul(poolGlint))
     const fadeAt = phase.mul(bloodFading.stagger).add(bloodFading.start)
     const presence = select(shown, smoothstep(fadeAt.add(bloodFading.duration), fadeAt, clock), float(0))
-    material.positionNode = select(shown.and(settled.not()), select(isPool, poolQuad, select(flying, streak, stain)), vec3(0, 0, 0))
-    material.colorNode = select(isPool, poolColor, select(isMist, colors.mist, select(flying, beadColor, stainColor)))
-    material.opacityNode = select(isPool, coverage(poolInside).mul(select(shown, float(1), float(0))), select(isMist, mistInside.mul(mistFade).mul(0.28), select(flying, coverage(beadInside).mul(smeared), coverage(stainInside))).mul(presence))
+    material.positionNode = select(shown.and(settled.not()), select(isPool, poolQuad, select(isPour, pourQuad, select(flying, streak, stain))), vec3(0, 0, 0))
+    material.colorNode = select(isPool, poolColor, select(isPour, pourColor, select(isMist, colors.mist, select(flying, beadColor, stainColor))))
+    material.opacityNode = select(isPool, coverage(poolInside).mul(select(shown.and(volume.greaterThan(0)), float(1), float(0))), select(isPour, coverage(pourInside), select(isMist, mistInside.mul(mistFade).mul(0.28), select(flying, coverage(beadInside).mul(smeared), coverage(stainInside)))).mul(presence))
   }
 }

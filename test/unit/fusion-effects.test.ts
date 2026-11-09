@@ -4,7 +4,7 @@ import type EscapingGhosts from '../../src/lib/gallery/fusion/effects/ghosts/Esc
 import {describe, expect, test} from 'bun:test'
 
 import {batOffset, flyingBats} from '../../src/lib/gallery/fusion/effects/bats/flights.ts'
-import {airDrag, bloodBeats, bloodDrops, bloodFading, gravity as bloodGravity, bloodLanding, bloodPool, splatLift} from '../../src/lib/gallery/fusion/effects/blood/flights.ts'
+import {airDrag, bloodBeats, bloodDrops, bloodFading, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/lib/gallery/fusion/effects/blood/flights.ts'
 import {escapingGhosts} from '../../src/lib/gallery/fusion/effects/ghosts/flights.ts'
 import {batsEffect, bloodEffect, fusionEffects, ghostsEffect, strokesEffect} from '../../src/lib/gallery/fusion/effects/index.ts'
 import {brushStrokes, strokeDrying, strokePoint} from '../../src/lib/gallery/fusion/effects/strokes/flights.ts'
@@ -171,7 +171,7 @@ describe('fusion effects', () => {
   })
   test('the air slows a drop down the more the finer it is, and it lands where its fall meets the floor, before the stains fade', () => {
     expect(airDrag(0.0005)).toBeGreaterThan(airDrag(0.02))
-    const thrown = bloodDrops.filter(({kind}) => kind !== 'pool')
+    const thrown = bloodDrops.filter(({kind}) => kind === 'drop' || kind === 'mist')
     for (const floor of [-1.55, frame.floor - frame.center[1], -2.05]) {
       for (const drop of thrown) {
         const {landing, speed} = bloodLanding(drop, floor)
@@ -186,10 +186,26 @@ describe('fusion effects', () => {
       }
     }
   })
-  test('the pool fills with the blood of every beat before it is sucked back, which is done by the time the portal closes', () => {
-    const {draining, filling} = bloodPool
+  test('the pool fills with all the blood the pour brings down before it is sucked back, which is done by the time the portal closes', () => {
+    const {draining} = bloodPool
     expect(bloodDrops[0].kind).toBe('pool')
-    expect(Math.max(...bloodBeats.map(({at}) => at)) + filling[1]).toBeLessThan(draining.start)
+    expect(bloodDrops[1].kind).toBe('pour')
+    expect(pourVolume(bloodPour.flowing[0])).toBe(0)
+    expect(pourVolume(bloodPour.flowing[1])).toBe(1)
+    for (const [earlier, later] of [[0.1, 0.3], [0.3, 0.6], [0.6, 0.85]]) {
+      expect(pourVolume(later)).toBeGreaterThan(pourVolume(earlier))
+    }
+    expect(pourVolume(1.5)).toBe(1)
+    for (const floor of [-1.55, frame.floor - frame.center[1], -2.05]) {
+      const {from, spot, surges, to} = bloodPouring(floor)
+      expect(from).toBeCloseTo(bloodPour.flowing[0] + pourFall(bloodPour.start[1] - floor - splatLift), 9)
+      expect(to).toBeLessThan(draining.start)
+      expect(surges.length).toBe(bloodBeats.filter(({at}) => at + bloodPour.flowing[0] < bloodPour.flowing[1]).length)
+      expect(surges.length).toBeGreaterThan(1)
+      expect(surges.every(({at}) => at >= from && at < to)).toBe(true)
+      expect([spot[0], spot[2]]).toEqual([...bloodPool.center])
+    }
+    expect(pourFall(1.4)).toBeLessThan(Math.sqrt(2 * 1.4 / bloodGravity))
     expect(draining.start + draining.seconds).toBeLessThanOrEqual(bloodEffect.afterglow)
   })
   test('the brush strokes curve around the portal clear of its ball, are laid one after another, each before it dries away, and turn on and drift out into the room once laid', () => {
