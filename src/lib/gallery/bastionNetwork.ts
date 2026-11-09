@@ -2,7 +2,7 @@ import type {Wall, WallOpening} from '../placement/wallGeometry.ts'
 import type {Vec3} from './types.ts'
 
 import {vaultShellThickness, wallFace} from './architectureDimensions.ts'
-import {bastionLinkStart, bastionLinkStripZ, bastionLinkWidth, bastionPassages} from './bastion.ts'
+import {bastionLinkStart, bastionLinkStripZ, bastionLinkWidth, bastionPassages, lodgeSpurEndZ, lodgeSpurHeight, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from './bastion.ts'
 import {cisternFloor, insideCistern} from './cistern/cistern.ts'
 import {climbCrossfall, climbHairpin, climbMouth, climbPassages} from './climb.ts'
 import gateMouseHole from './gateMouseHole.ts'
@@ -89,9 +89,6 @@ const route = new PassageRoute([startX, startZ], heading, y, height, [
  * How steeply the tunnel’s paving falls from both walls toward its middle: 1 in 20, gentler than the climb’s, so the sill it leaves along the doorway at the landing only slows orbs coming out of it into the crater instead of stopping them short of it.
  */
 export const bastionLinkCrossfall = 1 / 20
-/** A narrow branch from the wall facing the Lodge, at the place seen from the connecting tunnel. */
-export const lodgeSpurWidth = 2.6
-export const lodgeSpurX = -16.93
 const lodgeSpurAlong = route.project(lodgeSpurX, bastionLinkStripZ)!.along
 const lodgeSpurFloorY = route.at(lodgeSpurAlong).y
 const lodgeSpurStartZ = bastionLinkStripZ - bastionLinkWidth / 2
@@ -109,13 +106,12 @@ export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLi
     casing: false,
   }],
 })
-/** Straight north past the Lodge’s side window, stopping only where the existing passage toward the Lodge blocks further progress. The back of its closing wall clears that passage’s vault by 1 cm. */
-const spurEndZ = lodge.tunnelZ + lodge.passageWidth / 2 + vaultShellThickness + wallFace + 0.01
+/** Straight north past the Lodge’s side window, on to the existing passage toward the Lodge, where its closing wall stands back to back with that passage’s left wall. */
 const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, lodgeSpurFloorY, height, [{
   y: lodge.floorY,
-  height: 3.55,
+  height: lodgeSpurHeight,
   steps: [{length: 2}],
-}, {length: lodgeSpurStartZ - spurEndZ - 2}])
+}, {length: lodgeSpurStartZ - lodgeSpurEndZ - 2}])
 export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, lodgeSpurWidth, {
   fixPavingEdges: false,
   // Cut round the window’s timber reveal, which runs on through the stone and frames it flush with the passage’s face.
@@ -130,17 +126,41 @@ export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, l
     casing: false,
   }],
 })
+/** the barred window through its closing wall, see `lodgeSpurWindow`, which goes on through the wall behind it */
+const spurWindow = {
+  name: 'window',
+  u: 0,
+  width: lodgeSpurWindow.width,
+  bottom: lodgeSpurWindow.bottom,
+  height: lodgeSpurWindow.height,
+  rise: lodgeSpurWindow.rise,
+  profile: 'arch',
+  casing: false,
+} as const satisfies WallOpening
 export const lodgeSpurEnd: Wall = {
   id: 'bastion-lodge-spur_end',
   room: 'bastion',
-  center: [lodgeSpurX, lodge.floorY, spurEndZ],
+  center: [lodgeSpurX, lodge.floorY, lodgeSpurEndZ],
   rotation: 0,
   width: lodgeSpurWidth,
   height: spurRoute.end.height + vaultShellThickness,
+  holes: [spurWindow],
   sticky: false,
   trimStyle: 'plain',
   cornice: false,
 }
+/** The iron bars in the window through its closing wall, barred like the apse’s windows. In the frame of the closing wall, facing south down the spur. */
+export const lodgeSpurGrille = {
+  wall: lodgeSpurEnd,
+  hole: spurWindow,
+  bands: lodgeSpurWindow.bands,
+} as const satisfies {
+  bands: ReadonlyArray<number>
+  hole: WallOpening
+  wall: Wall
+}
+/** where the empty suit of armor stands near the spur’s end, its middle straight across from where the Lodge’s window ends, at the end of its reveal, looking back down the spur toward the link, the barred window behind it, see `suitOfArmor` */
+export const lodgeSpurArmor = [lodgeSpurX, lodge.floorY, lodgeEastWindow.z - lodgeEastWindow.width / 2 - lodgeEastWindow.border] as const satisfies Vec3
 export const lodgeSpurLanterns = [lodgeSpur.ribGap(2)]
 export const bastionLinkLanterns = [bastionLink.ribGap(4), bastionLink.ribGap(route.length - 5)]
 const mouthWall = climbMouth.walls[2]

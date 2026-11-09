@@ -11,4 +11,14 @@ export default {
     fov: 75,
     ratio: 16 / 9,
   },
+  // In the mouth of the blind branch beside the Lodge, looking down it at the empty suit of armor at its end with the helmet on its shoulders.
+  armor: {
+    position: [-16.4, 2.55, 11.9],
+    aim: {
+      yaw: 0.115,
+      pitch: -0.05,
+    },
+    fov: 60,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>

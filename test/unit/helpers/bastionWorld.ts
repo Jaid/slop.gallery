@@ -6,7 +6,7 @@ import {ExtrudeGeometry, Matrix4, Quaternion, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry} from '../../../src/lib/gallery/architecture.ts'
 import {bastionCrater} from '../../../src/lib/gallery/bastion.ts'
-import {bastionLinkGate, bastionNetwork, climbMouthHollow} from '../../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLinkGate, bastionNetwork, climbMouthHollow, lodgeSpurArmor, lodgeSpurGrille} from '../../../src/lib/gallery/bastionNetwork.ts'
 import CisternGeometry, {cisternWindowGeometry} from '../../../src/lib/gallery/cistern/CisternGeometry.ts'
 import InflowGeometry from '../../../src/lib/gallery/cistern/InflowGeometry.ts'
 import {climbMouth} from '../../../src/lib/gallery/climb.ts'
@@ -19,6 +19,7 @@ import RouteVaultGeometry from '../../../src/lib/gallery/passages/RouteVaultGeom
 import VaultGeometry from '../../../src/lib/gallery/passages/VaultGeometry.ts'
 import roundRevealGeometry from '../../../src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '../../../src/lib/gallery/roundVestibule.ts'
+import {suitOfArmorCollision} from '../../../src/lib/gallery/suitOfArmor.ts'
 import {weldedSurfaceSkin} from '../../../src/lib/physics/weldedSurface.ts'
 import walls from '../fixtures/gallery.ts'
 import {bastionCraterGeometry} from './bastionCrater.ts'
@@ -32,7 +33,7 @@ type Shape = {
   translation?: Vec3
   triangles: [Float32Array, Uint32Array]
 }
-/** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater, as the game builds their colliders. */
+/** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater and the suit of armor in its blind branch with the barred window behind it, as the game builds their colliders. */
 export function bastionColliders() {
   const colliders = new Colliders
   colliders.walls(['bastion'])
@@ -67,12 +68,17 @@ export function bastionColliders() {
     colliders.surface(vault.ribs)
     vault.dispose()
   }
-  const gate = gateGeometry(bastionLinkGate)
-  colliders.surface(gate)
-  gate.dispose()
+  for (const grille of [bastionLinkGate, lodgeSpurGrille]) {
+    const bars = gateGeometry(grille)
+    colliders.surface(bars)
+    bars.dispose()
+  }
   for (const part of [bastionCraterGeometry.flags, bastionCraterGeometry.rubble, bastionCraterGeometry.shards]) {
     colliders.surface(part, true, bastionCrater.center)
   }
+  const armor = suitOfArmorCollision()
+  colliders.surface(armor, false, [...lodgeSpurArmor])
+  armor.dispose()
   return colliders
 }
 

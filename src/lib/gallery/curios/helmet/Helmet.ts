@@ -7,7 +7,8 @@ import ForgedSteelMaterial from '#src/lib/materials/ForgedSteelMaterial.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
 
 import {mergeParts} from '../../../geometry.ts'
-import {lodgeSpur} from '../../bastionNetwork.ts'
+import {lodgeSpurArmor} from '../../bastionNetwork.ts'
+import {suitOfArmor} from '../../suitOfArmor.ts'
 import Curio, {CurioModel} from '../base/Curio.ts'
 import latticeGeometry from '../lattice.ts'
 
@@ -50,6 +51,11 @@ const edgeStep = 0.06
 const smoothstep = (from: number, to: number, value: number) => {
   const t = Math.min(1, Math.max(0, (value - from) / (to - from)))
   return t * t * (3 - 2 * t)
+}
+/** How far the border of the gorget, which the helmet stands on, reaches from its axis at `theta` degrees round from straight ahead. */
+export function gorgetBorderReach(theta: number) {
+  const [x, , z] = gorget(theta, 1)
+  return Math.hypot(x, z)
 }
 /** Where the shell’s surface lies at `theta` degrees round from straight ahead and `phi` degrees down from straight up, and how far there it lies in a hole. */
 function shell(theta: number, phi: number) {
@@ -120,13 +126,13 @@ function rivetHeads(points: ReadonlyArray<{
 }
 /**
  * A knight’s close helmet of hand-forged steel, and nobody in it: an egg of a skull with a low comb over its crown, a visor of two plates standing proud of it, the upper one with its eye slits, the lower one creased down its prow and slotted to breathe through, a pointed chin, all on a bell of a gorget with a rolled border riveted all round, pointed at the front.
- * It stands in the Bastion’s blind branch beside the Lodge, looking back toward the entrance, waiting for a body of armor to wear it, and steers the flavor the Forge’s alchemy machine gives a Transparent Orb to a Spook Orb.
+ * It rests on the shoulders of the empty suit of armor at the end of the Bastion’s blind branch beside the Lodge, looking back with it toward the entrance, and steers the flavor the Forge’s alchemy machine gives a Transparent Orb to a Spook Orb.
  * In its own frame it stands on the border of its gorget at the origin, looking along z.
  */
 export default class Helmet extends Curio {
   readonly id = 'helmet'
   readonly mass = 3.2
-  readonly position: Vec3 = [-16.921, lodgeSpur.floorAt(-16.921, -34.045)! + 0.003, -34.045]
+  readonly position: Vec3 = [lodgeSpurArmor[0], lodgeSpurArmor[1] + suitOfArmor.collar + 0.001, lodgeSpurArmor[2]]
   readonly reach = 0.36
   readonly room = 'bastion'
   readonly title = 'A knight’s helmet, with nobody in it'

@@ -7,8 +7,8 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/web
 
 import {createArchitectureGeometry, wallFace, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
 import {defaultBaseboardHeight} from '../../src/lib/gallery/architectureDimensions.ts'
-import {bastionMouth} from '../../src/lib/gallery/bastion.ts'
-import {lodgeSpur, lodgeSpurWidth, lodgeSpurX} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionMouth, lodgeSpurWidth, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
+import {lodgeSpur} from '../../src/lib/gallery/bastionNetwork.ts'
 import miterCorners from '../../src/lib/gallery/cornerMiters.ts'
 import corridor, {corridorLanding, corridorPassage} from '../../src/lib/gallery/corridor.ts'
 import {insidePolygon, polygonArea} from '../../src/lib/gallery/floorPolygons.ts'

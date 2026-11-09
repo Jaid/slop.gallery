@@ -113,6 +113,22 @@ export const bastionLinkWidth = linkSouthZ - linkNorthZ
 export const bastionLinkStripZ = (linkNorthZ + linkSouthZ) / 2
 /** where the left wall of the run toward the Lodge stands, which the tunnel opens out of */
 const runLeftZ = lodge.tunnelZ + width / 2
+/** A narrow branch from the connecting tunnel’s wall facing the Lodge, at the place seen from the tunnel, see `lodgeSpur`: where its center line runs, how far apart its walls stand, how high its vault rises over the Lodge’s floor, which it climbs to, and where it ends, back to back with the left wall of the run toward the Lodge. */
+export const lodgeSpurX = -16.93
+export const lodgeSpurWidth = 3
+export const lodgeSpurHeight = 3.55
+export const lodgeSpurEndZ = runLeftZ
+/**
+ * The barred window through the wall the branch ends against, behind the empty suit of armor standing at its end, looking out over the run’s ramp: on the branch’s center line, its sill and the crown of its segmental arch over the Lodge’s floor, which the branch’s end lies level with, and the flat iron band across its bars over the same floor.
+ * Bare like the ends of the vaults, it breaks into the run’s vault, which springs lower than its head there.
+ */
+export const lodgeSpurWindow = {
+  width: 2,
+  bottom: 0.95,
+  height: 2.55,
+  rise: 0.3,
+  bands: [2.05],
+} as const
 /** where that wall’s line meets the passage’s usual distance from the apse’s west shoulder: the tunnel’s east wall runs on south from there, along the Oculus */
 const linkEastX = west.center[0] - Math.sqrt((west.radius + bastionClearance) ** 2 - (runLeftZ - west.center[1]) ** 2)
 /** where the tunnel’s center line leaves the curve */
@@ -332,12 +348,29 @@ export const bastionCrater = {
   depth: 0.35,
   outline: brokenRing([craterCenter[0], craterCenter[2]], craterRadius, 23, 4243),
 }
+/** where the run passes the end of the blind branch beside the Lodge, climbing toward the Lodge’s floor, which the branch’s end lies level with */
+const spurStation = route.at(route.project(lodgeSpurX, runLeftZ)!.along)
 export const bastionCurve = new RoutedPassage('curve', 'bastion', route, width, {
+  // Behind its wall, the branch’s end takes the place of the back of its vault. Cut from 5 mm inside the wall, so the cut shares no plane with the wall’s back or the collar the window leaves round its hole through the vault, which would cost the cut a third of a second.
+  abutments: [{
+    position: [lodgeSpurX, lodge.floorY + (lodgeSpurHeight + vaultShellThickness) / 2, lodgeSpurEndZ + (vaultShellThickness + 0.01 - 0.005) / 2],
+    size: [lodgeSpurWidth, lodgeSpurHeight + vaultShellThickness, vaultShellThickness + 0.01 + 0.005],
+  }],
   openings: [...curveOpenings, {
     ...vaultOpening(bastionLinkWidth, mouthHeight),
     name: 'link',
     along: route.project(linkX, runLeftZ)!.along,
     side: -1,
+    casing: false,
+  }, {
+    name: 'lodge_spur_window',
+    along: spurStation.along,
+    side: -1,
+    width: lodgeSpurWindow.width,
+    bottom: lodge.floorY + lodgeSpurWindow.bottom - spurStation.y,
+    height: lodge.floorY + lodgeSpurWindow.height - spurStation.y,
+    rise: lodgeSpurWindow.rise,
+    profile: 'arch',
     casing: false,
   }],
   outlines: [outline, landingOutline],

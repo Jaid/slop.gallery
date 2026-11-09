@@ -4,7 +4,7 @@ import {BoxGeometry} from 'three/webgpu'
 
 import {mergeParts} from '../geometry.ts'
 import {wallFace} from './architectureDimensions.ts'
-import {lodgeSpurWidth, lodgeSpurX} from './bastionNetwork.ts'
+import {lodgeSpurWidth, lodgeSpurX} from './bastion.ts'
 import {lodgeEastWindow} from './lodge.ts'
 
 const box = (size: readonly [number, number, number], position: readonly [number, number, number]) => {

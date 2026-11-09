@@ -235,7 +235,7 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
       world.free()
     }
   })
-  test('the helmet stands on its gorget in the Bastion’s blind branch beside the Lodge', () => {
+  test('the helmet stands on its gorget on the shoulders of the suit of armor at the end of the Bastion’s blind branch beside the Lodge', () => {
     const world = physicsWorld(bastionColliders())
     try {
       const {asleep, moved, up, y} = settle(helmet, world)

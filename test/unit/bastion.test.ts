@@ -9,7 +9,7 @@ import {Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/web
 import {colliderGeometry, createArchitectureGeometry, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
 import {corniceBands} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionApproach, bastionCurve, bastionDoorway, bastionMouth, bastionOrigin, bastionPassages, bastionTransition} from '../../src/lib/gallery/bastion.ts'
-import {bastionLink} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, lodgeSpur} from '../../src/lib/gallery/bastionNetwork.ts'
 import {easedRampGradient} from '../../src/lib/gallery/easedRamp.ts'
 import {slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
@@ -157,7 +157,8 @@ describe('the Bastion’s route round the Oculus', () => {
         const out = bastionCurve.reach(station, side) + 0.2
         const beside: Vec3 = [x - Math.sin(heading) * side * out, y + 1.6, z + Math.cos(heading) * side * out]
         expect(bastionCurve.floorAt(beside[0], beside[2])).toBeUndefined()
-        if (!bastionLink.contains(beside)) {
+        // but for the connecting tunnel opening off it and the blind branch beside the Lodge ending against it, back to back
+        if (!bastionLink.contains(beside) && !lodgeSpur.contains(beside)) {
           expect(insideGallery(beside)).toBe(false)
         }
       }
