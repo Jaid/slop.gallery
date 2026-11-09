@@ -2,7 +2,7 @@ import type {PortraitDump} from '../../src/lib/webmcp/dumpPortraits.ts'
 
 import {expect, test} from 'bun:test'
 
-import {findLanding, resultView, throughKeys, throwMotion} from '../../scripts/renderFusion.ts'
+import {findLanding, orbitDistance, resultView, throughKeys, throwMotion} from '../../scripts/renderFusion.ts'
 
 const work = (patch: Partial<PortraitDump>): PortraitDump => ({
   id: 'work',
@@ -52,11 +52,25 @@ test('the camera dollies after the thrown orb, is knocked back past where it thr
   const knocked = throwMotion(1.85, timeline)
   expect(knocked.radius).toBeGreaterThan(1.4)
   expect(knocked.fov).toBeGreaterThan(4)
-  // It moves continuously, within a 60 fps frame by at most a hand’s width.
+  // It moves continuously, within a 60 fps frame by at most a quarter of a meter, even as it is knocked back.
   for (let time = 0; time < 4; time += 1 / 60) {
-    expect(Math.abs(throwMotion(time + 1 / 60, timeline).radius - throwMotion(time, timeline).radius)).toBeLessThan(0.2)
+    expect(Math.abs(throwMotion(time + 1 / 60, timeline).radius - throwMotion(time, timeline).radius)).toBeLessThan(0.25)
   }
   expect(throwMotion(3, timeline).radius).toBeCloseTo(0, 9)
+})
+test('while the portal brews, the camera stands back far enough to see the satellites whole at the end of their orbit', () => {
+  const portal = {
+    orbit: {
+      along: 1.35,
+      across: 0.8,
+      tilt: 0.72,
+    },
+  }
+  for (const fov of [40, 48, 60]) {
+    const halfWidth = orbitDistance(portal, fov) * Math.tan(fov * Math.PI / 360)
+    expect(halfWidth).toBeGreaterThan(1.35 + 0.4)
+  }
+  expect(orbitDistance(portal, 40)).toBeGreaterThan(orbitDistance(portal, 60))
 })
 test('the result is the work that no longer hangs and no fusion holds, or a new one, followed until it lies still', () => {
   const dumps = [

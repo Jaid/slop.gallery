@@ -11,7 +11,7 @@ import {clamp, fade} from 'math'
 
 import {parseSeed} from '#src/lib/environmentSeed.ts'
 import {hangDefaultWorks} from '#src/lib/gallery/defaultPortraits.ts'
-import {portalIn} from '#src/lib/gallery/fusion/portalFrame.ts'
+import {portalIn, satelliteSize} from '#src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
 import {orbRadius, orbs} from '#src/lib/gallery/orbs/index.ts'
 import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
@@ -201,7 +201,7 @@ const kick = (since: number) => (since < 0 ? 0 : 1 - Math.exp(-((since / 0.16) *
 /** how far the camera dollies after the orb by the time it strikes, in meters */
 const followReach = 0.6
 /** how far the strike knocks the camera back beyond its path, in meters, until the singularity’s pull draws it in again */
-const recoilReach = 1.5
+const recoilReach = 1.8
 
 /** How the throw moves the camera on top of its path `time` seconds into the film, as offsets of its radius and height in meters and its field of view in degrees: it dollies after the orb as it flies, rising a little with its arc, and the strike knocks it back, further than it stood when it threw, until the singularity’s pull draws it in again for the burst. */
 export function throwMotion(time: number, {strike, throwAt}: Pick<Timeline, 'strike' | 'throwAt'>) {
@@ -213,6 +213,14 @@ export function throwMotion(time: number, {strike, throwAt}: Pick<Timeline, 'str
     height: 0.12 * Math.sin(Math.PI * flight) + 0.2 * recoil,
     fov: 5 * recoil,
   }
+}
+
+/** how much of the view’s width the satellites’ orbit takes at most, each of them whole */
+const orbitFill = 0.9
+
+/** How far from the portal’s middle the camera has to stand at the field of view `fov` to see the satellites whole wherever their orbit takes them, which reaches out along the wall furthest. */
+export function orbitDistance(portal: Pick<PortalFrame, 'orbit'>, fov: number) {
+  return (portal.orbit.along + satelliteSize / 2) / Math.tan(radians(fov / 2)) / orbitFill
 }
 
 /** The camera’s path round the portal through the fusion until the closing shot takes over: it creeps toward the work, rushes in low and tilted on the singularity, is knocked back by its burst, cranes up and round while the ember beats, sweeps back across while the images take their turns and pushes in through the climax. */
@@ -332,7 +340,10 @@ export function shotAt(time: number, {closing: closeUp, flight, portal, timeline
   work: Vec3
 }): Shot {
   const {emergence, strike, throwAt} = timeline
-  const [angle, radius, height, fov, roll] = throughKeys(orbitKeys(timeline), time)
+  const [angle, keyed, height, fov, roll] = throughKeys(orbitKeys(timeline), time)
+  // From the burst until the climax, the camera stands back far enough to keep the satellites in view.
+  const framing = ease((time - strike - 1.5) / 0.7) * (1 - ease((time - emergence + 1.5) / 1.2))
+  const radius = mix(keyed, Math.max(keyed, orbitDistance(portal, fov)), framing)
   const thrown = throwMotion(time, timeline)
   const eye = aroundPortal(portal, angle, radius + thrown.radius, height + thrown.height)
   // The camera looks at the work until the orb strikes it, then at the portal it opens.
