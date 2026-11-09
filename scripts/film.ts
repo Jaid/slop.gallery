@@ -7,7 +7,7 @@ import {parseArgs} from 'node:util'
 
 import {audioSidecar, carriesAudio, createFrameSink, endWarmup, executeWebmcpTool, frameFormat, installVirtualAudio, installVirtualClock, parseRecipe, recipeDuration, recipeToolCalls, sampleRecipe, sampleWireframe, setWireframe, tweens, waitForLoadingItems} from 'capture-session/script'
 import fs from 'fs-extra'
-import {av1Crf} from 'knot-materials/scripts/lib/encodeAnimation.ts'
+import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
 import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
@@ -33,6 +33,9 @@ ${galleryHelp()}
   --starting-frame <n>    recipe frame that becomes the first frame of the output, wrapping around at the end; moves the loop seam without changing the motion. Default: 1
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
   --crf <number>          AV1 quality for .webm and .mkv, lower is better. Default: ${av1Crf}
+  --keyframe-interval <n> at most how many frames .webm and .mkv run from one keyframe to the next; small ones, like 6, let players seek and scrub without decoding long stretches, for a larger file. Default: the encoder’s own, about 5 s
+  --fast-decode <0–2>     how much of the AV1 compression of .webm and .mkv to trade for a faster decoder: SVT-AV1’s fast-decode level, and from 1 on four tiles, which the decoder’s threads take on side by side. Default: 0
+  --preset <number>       SVT-AV1 preset for .webm and .mkv, lower compresses better and encodes slower. Default: ${av1Preset}
   --settle <frames>       wall-clock frames to render at the first keyframe before recording. Default: 2
   -h, --help              show this help
 
@@ -83,6 +86,7 @@ const sampleRate = 48_000
 const filmOptions = {
   ...galleryOptions,
   crf: {type: 'string'},
+  'fast-decode': {type: 'string'},
   fps: {
     type: 'string',
     default: '60',
@@ -91,7 +95,9 @@ const filmOptions = {
     type: 'string',
     default: '1',
   },
+  'keyframe-interval': {type: 'string'},
   'output-file': {type: 'string'},
+  preset: {type: 'string'},
   recipe: {type: 'string'},
   settle: {
     type: 'string',
@@ -116,6 +122,18 @@ const main = async (options: FilmOptions) => {
   }
   const crf = options.crf === undefined ? av1Crf : parseNumbers(options.crf, 'crf', [1])[0]
   const jxlDistance = parseNumbers(options['jxl-distance'], 'jxl-distance', [1])[0]
+  const keyframeInterval = options['keyframe-interval'] === undefined ? undefined : parseNumbers(options['keyframe-interval'], 'keyframe-interval', [1])[0]
+  if (keyframeInterval !== undefined && !(Number.isSafeInteger(keyframeInterval) && keyframeInterval >= 1)) {
+    throw new Error('--keyframe-interval must be a whole number of frames, at least 1.')
+  }
+  const fastDecode = parseNumbers(options['fast-decode'] ?? '0', 'fast-decode', [1])[0]
+  if (![0, 1, 2].includes(fastDecode)) {
+    throw new Error('--fast-decode must be 0, 1 or 2.')
+  }
+  const preset = options.preset === undefined ? av1Preset : parseNumbers(options.preset, 'preset', [1])[0]
+  if (!(Number.isSafeInteger(preset) && preset >= -1 && preset <= 13)) {
+    throw new Error('--preset must be a whole number from -1 to 13.')
+  }
   const fps = parseNumbers(options.fps, 'fps', [1])[0]
   if (fps <= 0) {
     throw new Error('--fps must be positive.')
@@ -194,11 +212,14 @@ const main = async (options: FilmOptions) => {
   const sink = createFrameSink(format, {
     audio: audible,
     crf,
+    fastDecode,
     fps,
     frameCount,
     height,
     jxlDistance,
+    keyframeInterval,
     output,
+    preset,
     source,
     width,
   })

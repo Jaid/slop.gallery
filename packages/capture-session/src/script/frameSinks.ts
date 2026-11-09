@@ -1,4 +1,5 @@
 import type {Subprocess} from 'bun'
+
 import {extname} from 'node:path'
 
 import getFree from 'get-free'
@@ -17,11 +18,17 @@ export type FrameSinkOptions = {
   /** whether `finish` will be handed an {@link AudioTrack}: WebM and Matroska carry it as Opus, the other formats get an Opus file of their own beside them (see {@link audioSidecar}) */
   audio?: boolean
   crf: number
+  /** how much of AV1’s compression to trade for a faster decoder, from 0, none, to 2: SVT-AV1’s fast-decode level, and from 1 on four tiles, which a decoder’s threads take on side by side; none by default */
+  fastDecode?: number
   fps: number
   frameCount: number
   height: number
   jxlDistance: number
+  /** at most how many frames AV1 runs from one keyframe to the next, so a player seeking anywhere decodes no more than that; the encoder’s own, about 5 s, by default */
+  keyframeInterval?: number
   output: string
+  /** the SVT-AV1 preset, lower compresses better and encodes slower; {@link av1Preset} by default */
+  preset?: number
   /** the size of the incoming frames when it differs from the output’s, like a canvas rendered at a higher scale; they get downsampled */
   source?: {
     height: number
@@ -117,10 +124,13 @@ const withSidecar = (sink: ReturnType<typeof pipeSink>, {output}: FrameSinkOptio
  * With sound, which only comes at the end, the frames go into a file beside the output first, which the sound is muxed with.
  */
 const av1Sink = (options: FrameSinkOptions): FrameSink => {
-  const {output} = options
+  const {fastDecode = 0, keyframeInterval, output, preset = av1Preset} = options
+  const gop = keyframeInterval === undefined ? [] : ['-g', String(keyframeInterval)]
+  // Two tile columns and two tile rows, log2 each
+  const svtParams = fastDecode ? `${av1SvtParams}:fast-decode=${fastDecode}:tile-columns=1:tile-rows=1` : av1SvtParams
   const extension = extname(output)
   const video = options.audio ? `${output.slice(0, -extension.length)}.video${extension}` : output
-  const sink = pipeSink([[Bun.spawn([...ffmpeg, ...rawInput(options), '-framerate', String(options.fps), '-i', '-', '-an', ...filters(options, webmColorFilter), '-c:v', 'libsvtav1', '-preset', String(av1Preset), '-crf', String(options.crf), '-svtav1-params', av1SvtParams, '-pix_fmt', 'yuv420p', '-color_range', 'pc', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'iec61966-2-1', video], {
+  const sink = pipeSink([[Bun.spawn([...ffmpeg, ...rawInput(options), '-framerate', String(options.fps), '-i', '-', '-an', ...filters(options, webmColorFilter), '-c:v', 'libsvtav1', '-preset', String(preset), '-crf', String(options.crf), ...gop, '-svtav1-params', svtParams, '-pix_fmt', 'yuv420p', '-color_range', 'pc', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'iec61966-2-1', video], {
     stdin: 'pipe',
     stderr: 'inherit',
     env: quietEnvironment,

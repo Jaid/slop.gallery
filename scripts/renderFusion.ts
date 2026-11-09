@@ -9,7 +9,7 @@ import {join, parse, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
 import fs from 'fs-extra'
-import {av1Crf} from 'knot-materials/scripts/lib/encodeAnimation.ts'
+import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 import {clamp} from 'math'
 
 import {parseSeed} from '#src/lib/environmentSeed.ts'
@@ -79,6 +79,9 @@ Options:
   --settle <frames>       wall-clock frames to render before recording. Default: 2
   --output-file <file>    the extension picks the format: .webm or .mkv for AV1 video, .jxl for an animated JPEG XL, .png for one PNG per frame. Default: out/fusion/<portrait>-<ingredient>-<timestamp>.webm
   --crf <number>          AV1 quality for .webm and .mkv, lower is better. Default: ${av1Crf}
+  --keyframe-interval <n> at most how many frames .webm and .mkv run from one keyframe to the next, like 6 for a film to scrub through, see scripts/film.ts. Default: the encoder’s own, about 5 s
+  --fast-decode <0–2>     how much of the AV1 compression to trade for a faster decoder, see scripts/film.ts. Default: 0
+  --preset <number>       SVT-AV1 preset, lower compresses better and encodes slower. Default: ${av1Preset}
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
 ${galleryHelp(videoSize, {ratio: 1})}
   -h, --help              show this help
@@ -102,6 +105,7 @@ const renderFusionOptions = {
     type: 'string',
     default: 'cinematic',
   },
+  'fast-decode': {type: 'string'},
   hold: {type: 'string'},
   ingredient: {
     type: 'string',
@@ -111,9 +115,11 @@ const renderFusionOptions = {
     type: 'string',
     default: '1',
   },
+  'keyframe-interval': {type: 'string'},
   'output-file': {type: 'string'},
   'plan-file': {type: 'string'},
   portrait: {type: 'string'},
+  preset: {type: 'string'},
   settle: {
     type: 'string',
     default: '2',
@@ -784,7 +790,7 @@ const main = async (options: RenderFusionOptions) => {
       width: text('width') ?? side,
       height: text('height') ?? side,
       recipe,
-      ...text('crf') === undefined ? {} : {crf: text('crf')},
+      ...Object.fromEntries(['crf', 'fast-decode', 'keyframe-interval', 'preset'].flatMap(key => (text(key) === undefined ? [] : [[key, text(key)]]))),
       'output-file': output,
     })
     // How far from where the probe saw it the result came to rest in the film, which the camera planned for
