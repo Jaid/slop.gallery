@@ -2,7 +2,7 @@ import type {RouteStation} from './PassageRoute.ts'
 import type RoutedPassage from './RoutedPassage.ts'
 
 import {ADDITION, Brush, Evaluator, SUBTRACTION} from 'three-bvh-csg'
-import {BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, MeshBasicNodeMaterial, Shape, ShapeUtils, Vector2} from 'three/webgpu'
+import {BoxGeometry, BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, MeshBasicNodeMaterial, Shape, ShapeUtils, Vector2} from 'three/webgpu'
 
 import {mergeParts} from '../../geometry.ts'
 import {openingShape} from '../architecture.ts'
@@ -140,10 +140,13 @@ function vaultOpenings(passage: RoutedPassage) {
     hole,
   }))))
 }
-/** Join overlapping solid vault envelopes before hollowing them out. Unioning thin shells against the same air surface leaves coplanar cuts that tear holes through the barrel. */
+/**
+ * Join overlapping solid vault envelopes before hollowing them out. Unioning thin shells against the same air surface leaves coplanar cuts that tear holes through the barrel.
+ * Last, the back of the vault is cut away inside the passage’s abutments.
+ */
 function openVault(geometry: BufferGeometry, passage: RoutedPassage, air: BufferGeometry) {
   const openings = vaultOpenings(passage)
-  if (!openings.length) {
+  if (!openings.length && !passage.abutments.length) {
     air.dispose()
     return geometry
   }
@@ -168,16 +171,23 @@ function openVault(geometry: BufferGeometry, passage: RoutedPassage, air: Buffer
     brushes.push(result)
     return result
   }
+  /** Joins small solids into one first, so the large vault takes a single operation for all of them: cutting it one after the other took the curve’s vault half a second longer. */
+  const join = (parts: ReadonlyArray<BufferGeometry>) => parts.map(brush).reduce((joined, part) => evaluator.evaluate(joined, part, ADDITION, brush(new BufferGeometry)))
   let retained: BufferGeometry | undefined
   try {
     let result = brush(geometry)
-    for (const opening of openings) {
-      result = evaluator.evaluate(result, brush(extrude(opening, vaultShellThickness, 0)), ADDITION, brush(new BufferGeometry))
+    if (openings.length) {
+      result = evaluator.evaluate(result, join(openings.map(opening => extrude(opening, vaultShellThickness, 0))), ADDITION, brush(new BufferGeometry))
     }
     result = evaluator.evaluate(result, brush(air), SUBTRACTION, brush(new BufferGeometry))
-    for (const opening of openings) {
-      result = evaluator.evaluate(result, brush(extrude(opening, 0, -vaultShellThickness - 0.01)), SUBTRACTION, brush(new BufferGeometry))
-    }
+    const cutters = [
+      ...openings.map(opening => extrude(opening, 0, -vaultShellThickness - 0.01)),
+      ...passage.abutments.map(({position, size}) => {
+        const abutment = new BoxGeometry(...size)
+        return abutment.translate(...position)
+      }),
+    ]
+    result = evaluator.evaluate(result, join(cutters), SUBTRACTION, brush(new BufferGeometry))
     retained = result.geometry
     retained.computeBoundingBox()
     retained.computeBoundingSphere()
@@ -243,7 +253,7 @@ export default class RouteVaultGeometry {
         below === undefined ? [[right + padding, spring], [-left - padding, spring]] : [[right + padding, spring], [right + padding, foot], [-left - padding, foot], [-left - padding, spring]],
       ]
     }, true))
-    const hasOpenings = vaultOpenings(passage).length > 0
+    const hasOpenings = vaultOpenings(passage).length > 0 || passage.abutments.length > 0
     this.shell = hasOpenings ? openVault(solid(vaultShellThickness), passage, solid(0, 0.5)) : mergeParts(sweep(runs(0, route.length), ring(0, vaultShellThickness), true))
     this.ribs = mergeParts(passage.ribs.flatMap(along => sweep(runs(along - routeRibDepth / 2, along + routeRibDepth / 2), ring(-routeRibThickness, 0), true)))
     /** how many strips the paving is cut into from either wall to the centerline, at most `pavingStrip` wide, so it bends with its crossfall and stays close to flat through the twist of a ramp round a turn */

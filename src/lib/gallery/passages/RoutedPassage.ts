@@ -1,6 +1,7 @@
 import type {GalleryRoomId as RoomId} from '#src/worlds/gallery/index.ts'
 import type {Wall, WallOpening} from '../../placement/wallGeometry.ts'
 import type {Vec3} from '../types.ts'
+import type {PassageCutout} from './Passage.ts'
 import type {RoutePiece, RouteStation} from './PassageRoute.ts'
 
 import {wallCoordinates} from '../../placement/wallGeometry.ts'
@@ -37,6 +38,8 @@ export type RouteCrossfall = {
   slope: number
 }
 export type RoutedPassageOptions = {
+  /** boxes round the ends of other passages that end against its walls, back to back with them: the back of its vault, which stands out behind its walls where it springs from them, is cut away inside them, so it doesn’t break through their end walls */
+  abutments?: ReadonlyArray<PassageCutout>
   /** whether its walls carry a cornice along their tops, true by default */
   cornice?: boolean
   /** its paving falling toward its centerline, level across if left out */
@@ -103,6 +106,8 @@ const smoothstep = (s: number) => {
  * Its runs take straight walls and its turns curved ones, unless a {@link RouteOutline} stands in for those on a side along a stretch. Along a ramp, they stand level, from their lowest floor up to their highest ceiling, with their baseboards following the floor through the ramp’s knots.
  */
 export default class RoutedPassage {
+  /** the boxes round the ends of other passages that end against its walls, which the back of its vault is cut away inside */
+  readonly abutments: ReadonlyArray<PassageCutout>
   /** where straight across from the route the walls of the outlines turn their inner corners, in meters along it */
   readonly creases: ReadonlyArray<number>
   /** how its paving falls toward its centerline, if it does */
@@ -121,7 +126,11 @@ export default class RoutedPassage {
   /** a wall on each side of each of the route’s pieces in turn, the left one first, where the walls of an outline take the place of those of its side along its stretch, in its first piece’s place */
   readonly walls: ReadonlyArray<Wall>
 
-  constructor(readonly id: string, readonly room: RoomId, readonly route: PassageRoute, readonly width = 2.6, {cornice = true, crossfall, drains = [], openings = [], outlines = [], pits = [], fixPavingEdges = true}: RoutedPassageOptions = {}) {
+  constructor(readonly id: string, readonly room: RoomId, readonly route: PassageRoute, readonly width = 2.6, {abutments = [], cornice = true, crossfall, drains = [], openings = [], outlines = [], pits = [], fixPavingEdges = true}: RoutedPassageOptions = {}) {
+    if (abutments.some(box => ![...box.position, ...box.size].every(Number.isFinite) || box.size.some(size => size <= 0))) {
+      throw new RangeError('A routed passage’s abutments need finite centers and positive dimensions.')
+    }
+    this.abutments = abutments
     this.fixPavingEdges = fixPavingEdges
     if (!(width > 0) || route.pieces.some(piece => Math.min(piece.startHeight, piece.endHeight) <= width / 2 || piece.kind === 'arc' && piece.radius <= width / 2)) {
       throw new RangeError('A routed passage needs a positive width, room for its vault all along and turns wider than half of it.')
