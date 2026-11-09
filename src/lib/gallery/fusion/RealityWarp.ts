@@ -1,13 +1,15 @@
 import type {Node} from 'three/webgpu'
 
-import {abs, cameraProjectionMatrix, cameraViewMatrix, cameraWorldMatrix, exp, float, fract, max, modelWorldMatrix, positionGeometry, rotate, smoothstep, texture, uniform, uv, vec2, vec3, vec4, viewportSharedTexture} from 'three/tsl'
+import {cameraProjectionMatrix, cameraViewMatrix, cameraWorldMatrix, exp, float, modelWorldMatrix, positionGeometry, smoothstep, texture, uniform, uv, vec2, vec3, vec4, viewportSharedTexture} from 'three/tsl'
 import {Mesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
 
+import {mirrored, screenWarp, warpSource} from '../../rendering/screenWarp.ts'
 import TransparentSpriteOutputsNode from '../../rendering/TransparentSpriteOutputsNode.ts'
 
 /**
  * A wide stretch of the view around a fusion’s portal, bent as if the portal swallowed space itself: pulled toward the middle and twisted like water down a drain, darkened toward the middle and split into its colors, or, with a negative pull, pushed back out while a ripple runs outward over it.
  * A camera-facing quad that redraws the scene behind it through `viewportSharedTexture`. It draws without depth, so whatever stands in front of the portal bends along, and before the portal’s own quads, which blend over it. At its rim the view is undisturbed, so its edge never shows. Where it reaches past the edge of the screen, which it does once the camera is close, it reads the view mirrored at that edge, so it never runs out of view to show.
+ * While it draws, it tells the pipeline how it bends the view (see `screenWarp`), so the shading of the screen-space passes bends along.
  */
 export default class RealityWarp extends Mesh<PlaneGeometry, MeshBasicNodeMaterial> {
   readonly uniforms = {
@@ -44,7 +46,7 @@ export default class RealityWarp extends Mesh<PlaneGeometry, MeshBasicNodeMateri
     this.renderOrder = -1
     // The vertex shader places the quad, so its bounds say nothing.
     this.frustumCulled = false
-    const {chroma, darkness, front, pull, reach, ripple, twist} = this.uniforms
+    const {chroma, darkness, reach} = this.uniforms
     const right = cameraWorldMatrix.mul(vec4(1, 0, 0, 0)).xyz
     const upward = cameraWorldMatrix.mul(vec4(0, 1, 0, 0)).xyz
     material.positionNode = right.mul(positionGeometry.x).add(upward.mul(positionGeometry.y)).mul(reach)
@@ -52,19 +54,13 @@ export default class RealityWarp extends Mesh<PlaneGeometry, MeshBasicNodeMateri
     const p = uv().sub(0.5).mul(2).toVar('warpPoint')
     const rho = p.length().toVar('warpDistance')
     const falloff = float(1).sub(rho).max(0).toVar('warpFalloff')
-    const swirled = rotate(p, twist.mul(falloff).mul(falloff)) as unknown as Node<'vec2'>
-    const crest = rho.sub(front).div(0.1)
-    const wave = exp(crest.mul(crest).negate()).mul(ripple).mul(falloff.mul(4).min(1))
-    // Each point shows what lies farther out while the pull is positive, which draws the view in.
-    const source = swirled.mul(pull.mul(falloff).mul(falloff).add(1)).add(p.div(max(rho, 1e-4)).mul(wave)).toVar('warpSource')
+    const source = warpSource(p, this.uniforms).toVar('warpSource')
     const middle = modelWorldMatrix.mul(vec4(0, 0, 0, 1)).xyz
     const onScreen = (point: Node<'vec2'>) => {
       const world = middle.add(right.mul(point.x).add(upward.mul(point.y)).mul(reach))
       const clip = cameraProjectionMatrix.mul(cameraViewMatrix).mul(vec4(world, 1))
       return clip.xy.div(clip.w).mul(vec2(0.5, -0.5)).add(0.5)
     }
-    // Where the pull reaches past the edge of the view, it reads the view mirrored at that edge, as often as it takes.
-    const mirrored = (point: Node<'vec2'>) => vec2(1).sub(abs(fract(point.mul(0.5)).mul(2).sub(1)))
     const split = falloff.mul(chroma)
     const view = viewportSharedTexture(mirrored(onScreen(source)))
     // Only this node copies the view each render; the other channels read its copy instead of copying it again.
@@ -76,6 +72,15 @@ export default class RealityWarp extends Mesh<PlaneGeometry, MeshBasicNodeMateri
     const dim = float(1).sub(well).mul(float(1).sub(darkness.mul(0.35).mul(falloff)))
     material.colorNode = vec3(red, (view as unknown as Node<'vec4'>).g, blue).mul(dim)
     material.opacityNode = smoothstep(1, 0.9, rho)
+    this.onBeforeRender = () => {
+      const {front, pull, ripple, twist} = this.uniforms
+      screenWarp.front.value = front.value
+      screenWarp.pull.value = pull.value
+      screenWarp.ripple.value = ripple.value
+      screenWarp.twist.value = twist.value
+      screenWarp.reach = reach.value
+      this.getWorldPosition(screenWarp.middle)
+    }
   }
 
   dispose() {

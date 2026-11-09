@@ -12,7 +12,7 @@ import {ssgi} from 'three/addons/tsl/display/SSGINode.js'
 import {ssr} from 'three/addons/tsl/display/SSRNode.js'
 import {sss} from 'three/addons/tsl/display/SSSNode.js'
 import {traa} from 'three/addons/tsl/display/TRAANode.js'
-import {convertToTexture, diffuseColor, exp, float, int, interleavedGradientNoise, length, luminance, max, metalness, min, mix, mrt, normalView, output, pass, renderOutput, roughness, rtt, screenCoordinate, screenSize, screenUV, smoothstep, uniform, uv, vec2, vec3, vec4, velocity} from 'three/tsl'
+import {convertToTexture, diffuseColor, exp, float, int, interleavedGradientNoise, length, luminance, max, metalness, min, mix, mrt, normalView, output, pass, renderOutput, roughness, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, uniform, uv, vec2, vec3, vec4, velocity} from 'three/tsl'
 import {BlendMode, DirectionalLight, HalfFloatType, NoBlending, NormalBlending, PerspectiveCamera, RenderPipeline, Vector2} from 'three/webgpu'
 
 import {mountedRooms, pendingRooms} from '../gallery/roomLoading.ts'
@@ -23,6 +23,7 @@ import {GalleryRenderer} from './GalleryRenderer.ts'
 import KnotBokeh from './KnotBokeh.ts'
 import {gradeMood} from './moodGrade.ts'
 import {impactActive, screenImpact} from './screenImpact.ts'
+import {resetWarp, screenWarp, warpedScreenUV} from './screenWarp.ts'
 import tiltShift from './tiltShift.ts'
 import ZoomBlur from './ZoomBlur.ts'
 
@@ -84,6 +85,8 @@ export default class GalleryRenderPipeline extends RenderPipeline {
     // The wireframe flood draws into targets of its own right after the scene pass, with the same camera, but only while it is enabled
     const flood = own(new WireframeFloodPass(renderer, scene as Scene, camera))
     scenePass.updateBefore = frame => {
+      // A fusion’s warp tells where it bends the view again while the scene pass draws it.
+      resetWarp()
       const reflect = () => {
         // Its pipelines are mostly the scene pass’s, so the loading screen’s warmup skips it; streaming builds what it draws over the frames after loading.
         if (!mirrorReflections || renderer instanceof GalleryRenderer && renderer.isWarming) {
@@ -128,6 +131,11 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       const normal = scenePass.getTextureNode('normal')
       // The denoise node’s declaration lacks the node extensions every other node has.
       const smooth = (input: Node<'vec4'>) => own(denoise(input, depth, normal, camera)) as unknown as Node<'vec4'>
+      // The screen-space passes see the scene unbent, so where a fusion’s warp bends the view, each pixel takes what they found where its view comes from (see `screenWarp`).
+      const warped = warpedScreenUV(camera)
+      const follow = <Found extends TextureNode<'float' | 'vec3' | 'vec4'>>(found: Found) => found.sample(warped.uv) as Found
+      // A pass worked out inline, like a denoise, is drawn into a texture to read it there, only while a warp draws.
+      const followInline = (node: Node<'vec4'>) => select(warped.bending.greaterThan(0), own(new ConditionalTexture(node, () => screenWarp.reach > 0)).sample(warped.uv), node)
       if (settings.ambientOcclusion) {
         const ambientOcclusion = own(ao(depth, normal, camera))
         // It sizes its targets each frame from the drawing buffer, so the cap follows resizes.
@@ -141,7 +149,7 @@ export default class GalleryRenderPipeline extends RenderPipeline {
         set(ambientOcclusion.thickness, 'ambientOcclusionThickness')
         set(ambientOcclusion.scale, 'ambientOcclusionScale')
         set(ambientOcclusion.samples, 'ambientOcclusionSamples')
-        current = current.mul(vec4(vec3(ambientOcclusion.getTextureNode().r), 1))
+        current = current.mul(vec4(vec3(follow(ambientOcclusion.getTextureNode()).r), 1))
       }
       if (indirectLight && camera instanceof PerspectiveCamera) {
         const bounces: Array<Node<'vec3'>> = []
@@ -164,9 +172,9 @@ export default class GalleryRenderPipeline extends RenderPipeline {
           // Its own ambient occlusion is 1 everywhere at intensity 0.
           set(indirect.aoIntensity, 'screenSpaceIndirectLightAmbientOcclusion')
           indirect.useTemporalFiltering = settings.screenSpaceIndirectLightTemporalFiltering
-          current = vec4(current.rgb.mul(indirect.getAONode()), current.a)
+          current = vec4(current.rgb.mul(follow(indirect.getAONode())), current.a)
           // Without TRAA, nothing averages the per-pixel samples, so their fireflies are clamped and a spatial pass smooths them instead.
-          bounces.push(antiAliasing === 'traa' ? indirect.getGINode().rgb : smooth(vec4(indirect.getGINode().rgb.min(0.3), 1)).rgb)
+          bounces.push(antiAliasing === 'traa' ? follow(indirect.getGINode()).rgb : followInline(smooth(vec4(indirect.getGINode().rgb.min(0.3), 1))).rgb)
         }
         if (settings.voxelIndirectLight) {
           // Voxel cone tracing adds the bounces from what is off screen or hidden, which the screen-space pass cannot see. Faint, since it brightens far more than SSGI.
@@ -205,10 +213,10 @@ export default class GalleryRenderPipeline extends RenderPipeline {
           set(voxel.coneCount, 'voxelIndirectLightConeCount')
           set(voxel.coneAngle, 'voxelIndirectLightConeAngle')
           voxel.useTemporalFiltering = antiAliasing === 'traa'
-          bounces.push(voxel.getGINode().rgb)
+          bounces.push(follow(voxel.getGINode()).rgb)
         }
         if (bounces.length > 0) {
-          current = vec4(current.rgb.add(scenePass.getTextureNode('diffuseColor').rgb.mul(bounces.reduce((sum, bounce) => sum.add(bounce)))), current.a)
+          current = vec4(current.rgb.add(follow(scenePass.getTextureNode('diffuseColor')).rgb.mul(bounces.reduce((sum, bounce) => sum.add(bounce)))), current.a)
         }
       }
       let sun: DirectionalLight | undefined
@@ -230,7 +238,7 @@ export default class GalleryRenderPipeline extends RenderPipeline {
         set(reflection.thickness, 'screenSpaceReflectionThickness')
         set(reflection.intensity, 'screenSpaceReflectionIntensity')
         // The pass writes the weighted reflection in RGB and the hit distance in alpha, so it adds on rather than blends.
-        current = current.add(vec4(reflection.getTextureNode().rgb, 0))
+        current = current.add(vec4(follow(reflection.getTextureNode()).rgb, 0))
       }
       if (settings.contactShadows && sun) {
         // Marches a short way toward the sun from every pixel, which darkens the small contacts the shadow map is too coarse for.
@@ -241,11 +249,11 @@ export default class GalleryRenderPipeline extends RenderPipeline {
         set(contact.shadowIntensity, 'contactShadowIntensity')
         set(contact.quality, 'contactShadowQuality')
         contact.useTemporalFiltering = antiAliasing === 'traa'
-        let shadow: Node<'vec4'> = contact.getTextureNode()
+        let shadow: Node<'vec4'> = follow(contact.getTextureNode())
         if (settings.contactShadowDenoise) {
-          const denoised = own(denoise(shadow, depth, normal, camera))
+          const denoised = own(denoise(contact.getTextureNode(), depth, normal, camera))
           set(denoised.radius, 'contactShadowDenoiseRadius')
-          shadow = denoised as unknown as Node<'vec4'>
+          shadow = followInline(denoised as unknown as Node<'vec4'>)
         }
         current = vec4(current.rgb.mul(shadow.r), current.a)
       }
