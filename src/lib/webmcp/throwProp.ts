@@ -6,10 +6,9 @@ import {Vector3} from 'three/webgpu'
 
 import {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import {useGallery} from '#src/lib/gallery/store.ts'
+import {aimThrow} from '#src/lib/physics/aimThrow.ts'
 import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
 
-/** the physics’ gravity, Rapier’s default, in m/s² downward */
-export const gravity = 9.81
 /** how far below the middle of the view and how far from the eye a carried orb floats, where a throw leaves from by default: 15° and 0.55 m */
 const holdTilt = 15 * Math.PI / 180
 const holdDistance = 0.55
@@ -32,41 +31,6 @@ export type PropThrow = {
   /** seconds until it reaches its target, if it has one */
   seconds?: number
   velocity: Vec3
-}
-
-/**
- * The velocity that sends a body leaving `from` at `speed` m/s through `target` on the flatter of its two arcs, and the seconds it takes to get there, or undefined where it falls short at that speed.
- * The arc is a parabola; Rapier’s steps drop the body a few millimeters lower per meter flown.
- */
-export function aimThrow(from: Vec3, target: Vec3, speed: number): {
-  seconds: number
-  velocity: Vec3
-} | undefined {
-  const [x, y, z] = target.map((value, axis) => value - from[axis])
-  const reach = Math.hypot(x, z)
-  const square = speed ** 2
-  if (reach < 1e-6) {
-    // Straight up or down: up only as far as the speed carries it.
-    const discriminant = square - 2 * gravity * y
-    if (discriminant < 0) {
-      return
-    }
-    const upward = y >= 0
-    return {
-      seconds: upward ? (speed - Math.sqrt(discriminant)) / gravity : (Math.sqrt(discriminant) - speed) / gravity,
-      velocity: [0, upward ? speed : -speed, 0],
-    }
-  }
-  const discriminant = square ** 2 - gravity * (gravity * reach ** 2 + 2 * y * square)
-  if (discriminant < 0) {
-    return
-  }
-  const elevation = Math.atan2(square - Math.sqrt(discriminant), gravity * reach)
-  const horizontal = speed * Math.cos(elevation)
-  return {
-    seconds: reach / horizontal,
-    velocity: [x / reach * horizontal, speed * Math.sin(elevation), z / reach * horizontal],
-  }
 }
 
 /** Throws a prop like the player does, from in front of `camera` unless `from` says otherwise, at a portrait, through a point or with a velocity of its own; see the `throw_prop` tool. */

@@ -2,7 +2,7 @@ import type {Vec3} from '../../src/lib/gallery/types.ts'
 
 import {expect, test} from 'bun:test'
 
-import {aimThrow} from '../../src/lib/webmcp/throwProp.ts'
+import {aimThrow} from '../../src/lib/physics/aimThrow.ts'
 
 /** where a body leaving `from` with `velocity` is `seconds` later under Rapier’s default gravity, as a parabola */
 const flown = (from: Vec3, velocity: Vec3, seconds: number) => from.map((value, axis) => value + velocity[axis] * seconds - (axis === 1 ? 9.81 / 2 * seconds ** 2 : 0))

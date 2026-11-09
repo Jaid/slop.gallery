@@ -1,5 +1,6 @@
 import type {PortraitSlot, Quat, Vec3} from '#src/lib/gallery/types.ts'
 import type {PortraitDump} from '#src/lib/webmcp/dumpPortraits.ts'
+import type {CameraKey, CameraPath, Shot, Timeline} from './lib/fusionCamera.ts'
 
 import {tmpdir} from 'node:os'
 import {join, parse, relative, resolve} from 'node:path'
@@ -7,31 +8,23 @@ import {parseArgs} from 'node:util'
 
 import fs from 'fs-extra'
 import {av1Crf} from 'knot-materials/scripts/lib/encodeAnimation.ts'
-import {clamp, fade} from 'math'
+import {clamp} from 'math'
 
 import {parseSeed} from '#src/lib/environmentSeed.ts'
 import {hangDefaultWorks} from '#src/lib/gallery/defaultPortraits.ts'
 import {portalIn, satelliteSize} from '#src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
 import {orbRadius, orbs} from '#src/lib/gallery/orbs/index.ts'
+import {aimThrow, flightPoint} from '#src/lib/physics/aimThrow.ts'
 import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
-import {aimThrow, gravity} from '#src/lib/webmcp/throwProp.ts'
 import world from '#src/worlds/gallery/index.ts'
 
 import film from './film.ts'
+import {add, ease, handheld, holdPoint, keyedShot, length, mix, mix3, normalize, parseCameraPath, radians, scale, shotAngles, sub, throughKeys} from './lib/fusionCamera.ts'
 import {galleryHelp, galleryOptions, parseNumbers, repositoryRoot, resolveSettle, serveFile, timestamp} from './lib/headlessGallery.ts'
 
 /** what the closing shot shows: the result lying on the floor, or the ingredient’s effect round the portal */
 export type Emphasis = typeof emphases[number]
-/** where the camera is and what it looks at, at a moment of the film */
-export type Shot = {
-  /** vertical field of view in degrees */
-  fov: number
-  position: Vec3
-  /** degrees, positive tilts the camera counterclockwise */
-  roll: number
-  target: Vec3
-}
 /** a sample of the result’s flight, from the probe */
 export type ResultSample = {
   position: Vec3
@@ -48,17 +41,6 @@ export type Landing = {
   /** its flight, from the moment it flipped out */
   track: ReadonlyArray<ResultSample>
   width: number
-}
-/** the fusion’s moments, in seconds into the film */
-export type Timeline = {
-  /** when the result flips out of the portal */
-  emergence: number
-  /** the end of the film */
-  end: number
-  /** when the orb strikes the work and the fusion begins */
-  strike: number
-  /** when the orb is thrown */
-  throwAt: number
 }
 type PortalFrame = ReturnType<typeof portalIn>
 /** a key of the camera’s path round the portal: degrees round from straight out of the wall toward its tangent, meters out from the portal’s middle and above its floor, the field of view in degrees and the roll in degrees */
@@ -82,6 +64,8 @@ Options:
   --room <id>             the room of the work, which the page opens in; for a default work, where it hangs. Default: banquet
   --slot <id>             the portrait slot an image hangs in, in place of what hangs there. Default: a free slot of --room with the most room in front and to its sides
   --emphasis <kind>       what the closing shot shows: party pulls back a little for the ingredient’s effect, like the Halloween Orb’s bats or the Horror Orb’s blood, round the portal and on the floor; result follows the result down and cranes up close over it lying on the floor. Default: party
+  --camera <file>         a camera path as JSON, like the camera editor exports it, in place of the camera’s own: keys of time, position, target, field of view and roll that the camera passes through smoothly, the end of the film and whether the camera is held by hand, shaken by the fusion’s blows and swaying a little. It replaces the closing shot of --emphasis too; the throw still leaves from in front of the camera.
+  --plan-file <file>      writes what the film would show as JSON instead of filming it: the work, its portal, the fusion’s moments, the throw, with --emphasis result the result’s landing, which the probe still renders for, the camera in every frame and keys through its path round the portal for --camera
   --hold <seconds>        how long the film goes on after the result lies still (result) or after the ingredient’s effect is over (party). Default: 3.5 for result, 1 for party
   --fps <number>          frames per second. Default: 60
   --settle <frames>       wall-clock frames to render before recording. Default: 2
@@ -96,6 +80,7 @@ Set BROWSER to a Chromium executable with WebGPU support. ffmpeg (and cjxl for .
 const fusionRoot = join(repositoryRoot, 'out', 'fusion')
 const renderFusionOptions = {
   ...galleryOptions,
+  camera: {type: 'string'},
   crf: {type: 'string'},
   emphasis: {
     type: 'string',
@@ -119,6 +104,7 @@ const renderFusionOptions = {
     default: '1',
   },
   'output-file': {type: 'string'},
+  'plan-file': {type: 'string'},
   portrait: {type: 'string'},
   settle: {
     type: 'string',
@@ -138,16 +124,6 @@ export type RenderFusionOptions = Partial<Record<string, boolean | string>> & {
   settle: string
 }
 
-const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
-const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-const scale = (a: Vec3, factor: number): Vec3 => [a[0] * factor, a[1] * factor, a[2] * factor]
-const length = (a: Vec3) => Math.hypot(...a)
-const normalize = (a: Vec3) => scale(a, 1 / (length(a) || 1))
-const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-const mix = (a: number, b: number, t: number) => a + (b - a) * t
-const mix3 = (a: Vec3, b: Vec3, t: number): Vec3 => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)]
-const ease = (t: number) => fade(clamp(t, 0, 1))
-const radians = (degrees: number) => degrees * Math.PI / 180
 /** The vector turned by the quaternion [x, y, z, w]. */
 const rotate = ([x, y, z]: Vec3, [qx, qy, qz, qw]: Quat): Vec3 => {
   const tx = 2 * (qy * z - qz * y)
@@ -157,45 +133,6 @@ const rotate = ([x, y, z]: Vec3, [qx, qy, qz, qw]: Quat): Vec3 => {
 }
 /** The horizontal direction `degrees` round from `from` toward `toward`, both horizontal and at right angles. */
 const turned = (from: Vec3, toward: Vec3, degrees: number): Vec3 => add(scale(from, Math.cos(radians(degrees))), scale(toward, Math.sin(radians(degrees))))
-
-/** Cubic Hermite through the keys’ values over their times, its slopes from the neighbors (Catmull–Rom), so the camera never stops at a key; it holds still before the first and after the last. */
-export function throughKeys(keys: ReadonlyArray<ReadonlyArray<number>>, time: number) {
-  if (time <= keys[0][0]) {
-    return keys[0].slice(1)
-  }
-  const last = keys.length - 1
-  if (time >= keys[last][0]) {
-    return keys[last].slice(1)
-  }
-  const index = keys.findLastIndex(key => key[0] <= time)
-  const slope = (at: number, value: number) => {
-    if (at === 0 || at === last) {
-      return 0
-    }
-    return (keys[at + 1][value] - keys[at - 1][value]) / (keys[at + 1][0] - keys[at - 1][0])
-  }
-  const [from, to] = [keys[index], keys[index + 1]]
-  const span = to[0] - from[0]
-  const u = (time - from[0]) / span
-  return from.slice(1).map((value, field) => {
-    const column = field + 1
-    return (2 * u ** 3 - 3 * u ** 2 + 1) * value + (u ** 3 - 2 * u ** 2 + u) * span * slope(index, column) + (-2 * u ** 3 + 3 * u ** 2) * to[column] + (u ** 3 - u ** 2) * span * slope(index + 1, column)
-  })
-}
-
-/** how a blow hits the camera `since` seconds after it: a jolt that peaks within a few frames and dies away over `decay` seconds */
-const jolt = (since: number, decay: number) => (since < 0 ? 0 : (1 - Math.exp(-since / 0.05)) * Math.exp(-since / decay))
-/** the blows the fusion deals the camera: when, how far it is pushed back in meters, how hard it shakes in degrees and how fast both die away in seconds */
-const blows = ({emergence, strike}: Timeline) => [
-  // the orb strikes the work, which knocks the camera back for good, see throwMotion
-  [strike, 0, 0.55, 0.35],
-  // the singularity collapses and bursts
-  [strike + 1.5, 0.34, 0.95, 0.7],
-  // the ring of fire lands
-  [strike + 4.5, 0.08, 0.45, 0.5],
-  // the result flips out with a blaze
-  [emergence, 0.2, 0.7, 0.6],
-] as const
 /** how far a recoil has kicked in `since` seconds after its blow, from 0 to 1 within a third of a second, starting from rest so it never jumps between frames */
 const kick = (since: number) => (since < 0 ? 0 : 1 - Math.exp(-((since / 0.16) ** 2)))
 /** how far the camera dollies after the orb by the time it strikes, in meters */
@@ -321,11 +258,8 @@ const followResult = (track: ReadonlyArray<ResultSample>, time: number) => {
   return scale(Array.from({length: taps}, (_, index) => at(Math.max(track[0].time, time - 0.2 * index / (taps - 1)))).reduce(add), 1 / taps)
 }
 
-/**
- * Where the camera is and what it looks at `time` seconds into the film: the path round the portal, which the closing shot takes over from the result flipping out, with the blows of the fusion and a slight sway as if held by hand.
- * With the result’s landing, which the probe learns, and where to look down on it from, it closes on the result as --emphasis result does; without, on the party round the portal.
- */
-export function shotAt(time: number, {closing: closeUp, flight, portal, timeline, work}: {
+/** what the camera’s path round the portal goes by */
+export type PathContext = {
   closing?: {
     landing: Landing
     view: ReturnType<typeof resultView>
@@ -338,7 +272,13 @@ export function shotAt(time: number, {closing: closeUp, flight, portal, timeline
   portal: PortalFrame
   timeline: Timeline
   work: Vec3
-}): Shot {
+}
+
+/**
+ * Where the camera is and what it looks at `time` seconds into the film, before it is held by hand: the path round the portal, which the closing shot takes over from the result flipping out.
+ * With the result’s landing, which the probe learns, and where to look down on it from, it closes on the result as --emphasis result does; without, on the party round the portal.
+ */
+export function pathAt(time: number, {closing: closeUp, flight, portal, timeline, work}: PathContext): Shot {
   const {emergence, strike, throwAt} = timeline
   const [angle, keyed, height, fov, roll] = throughKeys(orbitKeys(timeline), time)
   // From the burst until the climax, the camera stands back far enough to keep the satellites in view.
@@ -349,9 +289,9 @@ export function shotAt(time: number, {closing: closeUp, flight, portal, timeline
   // The camera looks at the work until the orb strikes it, then at the portal it opens.
   let aimedAt = mix3(work, portal.center, ease((time - strike + 0.1) / 1))
   if (flight && time > throwAt && time < strike) {
-    // While the orb flies, the aimedAt leans toward it, most halfway.
+    // While the orb flies, the camera’s look leans toward it, most halfway.
     const since = time - throwAt
-    const orb: Vec3 = [flight.from[0] + flight.velocity[0] * since, flight.from[1] + flight.velocity[1] * since - gravity / 2 * since ** 2, flight.from[2] + flight.velocity[2] * since]
+    const orb = flightPoint(flight.from, flight.velocity, since)
     const along = add(eye, scale(normalize(sub(orb, eye)), length(sub(aimedAt, eye))))
     aimedAt = mix3(aimedAt, along, 0.4 * Math.sin(Math.PI * since / (strike - throwAt)))
   }
@@ -380,43 +320,12 @@ export function shotAt(time: number, {closing: closeUp, flight, portal, timeline
       roll: mix(orbit.roll, closing.roll, blend),
     }
   }
-  const look = normalize(sub(shot.target, shot.position))
-  const right = normalize(cross(look, [0, 1, 0]))
-  const up = cross(right, look)
-  const distance = length(sub(shot.target, shot.position))
-  let {position, target} = shot
-  for (const [at, push, shake, decay] of blows(timeline)) {
-    const since = time - at
-    const hit = jolt(since, decay)
-    if (hit === 0) {
-      continue
-    }
-    position = add(position, scale(look, -push * hit))
-    const tremble = radians(shake) * Math.exp(-since / (decay * 0.6))
-    const sideways = Math.tan(tremble * (0.6 * Math.sin(2 * Math.PI * 17 * since + at) + 0.4 * Math.sin(2 * Math.PI * 29 * since + 2 * at))) * distance
-    const upward = Math.tan(tremble * (0.6 * Math.sin(2 * Math.PI * 13 * since + 3 * at) + 0.4 * Math.sin(2 * Math.PI * 23 * since + at))) * distance
-    target = add(target, add(scale(right, sideways), scale(up, upward)))
-  }
-  // A slight sway, as if held by hand
-  const sway = (frequency: number, phase: number) => 0.6 * Math.sin(2 * Math.PI * frequency * time + phase) + 0.4 * Math.sin(2 * Math.PI * frequency * 2.3 * time + phase * 1.7)
-  position = add(position, scale([sway(0.21, 0.3), sway(0.17, 1.9), sway(0.26, 4.1)], 0.012))
-  target = add(target, scale([sway(0.19, 2.2), sway(0.23, 0.7), sway(0.15, 5.3)], 0.008))
-  return {
-    ...shot,
-    position,
-    target,
-  }
+  return shot
 }
 
-/** Where a throw from the camera of `shot` leaves: where a carried orb floats, 0.55 m out and 15° below the middle of the view, see throw_prop. */
-const holdPoint = ({position, roll, target}: Shot): Vec3 => {
-  const look = normalize(sub(target, position))
-  const right = normalize(cross(look, [0, 1, 0]))
-  const up = cross(right, look)
-  const tilted = add(scale(up, Math.cos(radians(roll))), scale(right, Math.sin(radians(roll))))
-  const tilt = radians(15)
-  return add(add(position, scale(look, Math.cos(tilt) * 0.55)), scale(tilted, -Math.sin(tilt) * 0.55))
-}
+/** Where the camera is and what it looks at `time` seconds into the film: its path round the portal, see {@link pathAt}, with the blows of the fusion and a slight sway as if held by hand. */
+export const shotAt = (time: number, context: PathContext) => handheld(pathAt(time, context), time, context.timeline)
+
 /** Every frame’s keyframe of a film.ts recipe, with the tools to run at the frames due for them, by the time of their frame. */
 const writeRecipe = async (file: string, {fps, shot, timeline, tools}: {
   fps: number
@@ -429,9 +338,10 @@ const writeRecipe = async (file: string, {fps, shot, timeline, tools}: {
   let previousYaw: number | undefined
   for (let frame = 0; frame <= frames; frame++) {
     const time = frame / fps
-    const {fov, position, roll, target} = shot(time)
-    const [x, y, z] = sub(target, position)
-    let yaw = Math.atan2(-x, -z) * 180 / Math.PI
+    const framed = shot(time)
+    const {fov, position} = framed
+    const angles = shotAngles(framed)
+    let {yaw} = angles
     if (previousYaw !== undefined) {
       yaw += Math.round((previousYaw - yaw) / 360) * 360
     }
@@ -440,8 +350,8 @@ const writeRecipe = async (file: string, {fps, shot, timeline, tools}: {
       time: Number(time.toFixed(6)),
       position: position.map(value => Number(value.toFixed(5))),
       yaw: Number(yaw.toFixed(4)),
-      pitch: Number((Math.atan2(y, Math.hypot(x, z)) * 180 / Math.PI).toFixed(4)),
-      roll: Number(roll.toFixed(4)),
+      pitch: Number(angles.pitch.toFixed(4)),
+      roll: Number(angles.roll.toFixed(4)),
       fov: Number(fov.toFixed(4)),
       ...tools.has(frame) ? {tools: tools.get(frame)} : {},
     })
@@ -561,6 +471,33 @@ const positiveNumber = (value: string, name: string) => {
   return number
 }
 
+/** what a film would show, as --plan-file writes it */
+export type FusionPlan = {
+  /** the throw: where it leaves from, how fast and how long it flies until it strikes */
+  flight: {
+    from: Vec3
+    seconds: number
+    velocity: Vec3
+  }
+  fps: number
+  /** every frame’s shot */
+  frames: Array<Shot>
+  ingredient: {
+    orb?: string
+    prop: string
+  }
+  /** keys through the camera’s path round the portal before it is held by hand, or those of --camera */
+  keys: Array<CameraKey>
+  landing?: Landing
+  portal: PortalFrame
+  room: string
+  slot: PortraitSlot
+  /** where the orb enters the world until it is thrown */
+  spawn?: Vec3
+  throwSpeed: number
+  timeline: Timeline
+}
+
 /**
  * The result’s flight and where it came to rest, from the probe’s dumps: the work that no longer hangs and no fusion holds any more, or a new one, from the moment it flipped out; it lies still once it moves less than 5 mm in half a second.
  * `work` is the id of the work the orb was thrown into, whose place the result takes in the collection.
@@ -600,7 +537,14 @@ export function findLanding(dumps: ReadonlyArray<{
     height: size!.height,
   }
 }
-
+/** the moments a plan has keys of the camera’s path at: where orbitKeys has them, round the throw and the strike, where the burst knocks the camera back and through the closing shot */
+const planKeyTimes = ({emergence, end, strike, throwAt}: Timeline) => [0, throwAt, (throwAt + strike) / 2, strike, strike + 0.3, strike + 0.75, strike + 1.45, strike + 2.1, strike + 2.6, strike + 4.6, strike + 6.5, strike + 8.5, emergence - 1.5, emergence, emergence + 0.8, emergence + 1.6, emergence + 2.6, (emergence + 2.6 + end) / 2, end].filter((time, index, times) => time <= end && time > (times[index - 1] ?? -1))
+const roundShot = ({fov, position, roll, target}: Shot): Shot => ({
+  position: position.map(value => Number(value.toFixed(5))) as Vec3,
+  target: target.map(value => Number(value.toFixed(5))) as Vec3,
+  fov: Number(fov.toFixed(4)),
+  roll: Number(roll.toFixed(4)),
+})
 const dumpsIn = (calls: Awaited<ReturnType<typeof film>>['tools']) => calls.filter(call => call.name === 'dump_portraits').map(call => ({
   time: call.time,
   portraits: JSON.parse(call.result) as Array<PortraitDump>,
@@ -643,19 +587,28 @@ const main = async (options: RenderFusionOptions) => {
     emergence: 0,
     end: 0,
   }
-  let flight: Parameters<typeof shotAt>[1]['flight']
-  const shot = (closing?: Parameters<typeof shotAt>[1]['closing']) => (time: number) => shotAt(time, {
+  const cameraFile = text('camera')
+  const camera: CameraPath | undefined = cameraFile === undefined ? undefined : parseCameraPath(await fs.readJson(resolve(cameraFile)))
+  let flight: PathContext['flight']
+  const context = (closing?: PathContext['closing']): PathContext => ({
     closing,
     flight,
     portal,
     timeline,
     work: slot.position,
   })
+  const shot = (closing?: PathContext['closing']) => (time: number): Shot => {
+    if (!camera) {
+      return shotAt(time, context(closing))
+    }
+    const keyed = keyedShot(camera.keys, time)
+    return camera.handheld ? handheld(keyed, time, timeline) : keyed
+  }
   // The throw leaves from in front of the camera as it is when it throws, whose path bends toward where the orb strikes, which depends on where it leaves from: a few rounds settle both. The throw’s own motion of the camera only starts after it.
   let from: Vec3 = [0, 0, 0]
   for (let round = 0; round < 8; round++) {
     timeline.emergence = timeline.strike + fusionTiming.minimum + fusionTiming.climax
-    timeline.end = timeline.emergence + party + hold
+    timeline.end = camera?.end ?? timeline.emergence + party + hold
     from = holdPoint(shot()(throwAt))
     const aim = aimThrow(from, slot.position, throwSpeed)
     if (!aim) {
@@ -673,7 +626,7 @@ const main = async (options: RenderFusionOptions) => {
     }
   }
   timeline.emergence = timeline.strike + fusionTiming.minimum + fusionTiming.climax
-  timeline.end = timeline.emergence + party + hold
+  timeline.end = camera?.end ?? timeline.emergence + party + hold
   const start = shot()(0)
   const tools = new Map<number, Record<string, Record<string, unknown>>>
   await using served = work.image?.file === undefined ? undefined : serveFile(work.image.file)
@@ -702,6 +655,7 @@ const main = async (options: RenderFusionOptions) => {
       from,
     },
   })
+  const planFile = text('plan-file')
   const outputFile = text('output-file')
   const output = outputFile === undefined ? join(fusionRoot, `${work.label}-${ingredient.label}-${timestamp()}.webm`) : resolve(outputFile)
   const side = text('width') ?? text('height') ?? String(videoSize)
@@ -723,8 +677,8 @@ const main = async (options: RenderFusionOptions) => {
   }
   const workspace = await fs.mkdtemp(join(tmpdir(), 'render-fusion-'))
   try {
-    let closing: Parameters<typeof shotAt>[1]['closing']
-    if (emphasis === 'result') {
+    let closing: PathContext['closing']
+    if (emphasis === 'result' && (!camera || planFile !== undefined)) {
       // The probe films the same fusion small, without sound, dumping the works every other frame from just before the result flips out until long after it landed.
       const probeEnd = timeline.emergence + 4
       const probeTools = new Map(tools)
@@ -766,9 +720,40 @@ const main = async (options: RenderFusionOptions) => {
         landing,
         view,
       }
-      timeline.end = Math.max(landing.settled, timeline.emergence + 2.4) + hold
+      timeline.end = camera?.end ?? Math.max(landing.settled, timeline.emergence + 2.4) + hold
       // The film dumps the works once more at its end, to tell how closely it followed the probe.
       tools.set(Math.round(timeline.end * fps) - 1, {dump_portraits: {}})
+    }
+    if (planFile !== undefined) {
+      const framed = shot(closing)
+      const plan: FusionPlan = {
+        fps,
+        room: work.room,
+        slot,
+        ingredient: {
+          prop: ingredient.prop,
+          ...ingredient.orb ? {orb: ingredient.orb.id} : {},
+        },
+        portal,
+        timeline,
+        throwSpeed,
+        flight: {
+          ...flight!,
+          seconds: timeline.strike - throwAt,
+        },
+        spawn: (tools.get(0)?.spawn_orb as {position: Vec3} | undefined)?.position,
+        ...closing ? {landing: closing.landing} : {},
+        keys: camera?.keys ?? planKeyTimes(timeline).map(time => ({
+          time,
+          ...roundShot(pathAt(time, context(closing))),
+        })),
+        frames: Array.from({length: Math.round(timeline.end * fps) + 1}, (_, frame) => roundShot(framed(frame / fps))),
+      }
+      await fs.outputJson(resolve(planFile), plan)
+      return {
+        plan: resolve(planFile),
+        timeline,
+      }
     }
     const recipe = join(workspace, 'film.json')
     await writeRecipe(recipe, {
@@ -814,11 +799,17 @@ if (import.meta.main) {
   if (values.help) {
     console.log(help)
   } else {
-    const {audio, drift, format, fps, frameCount, height, output, width} = await main(values)
+    const result = await main(values)
     const shorten = (file: string) => {
       const inRepository = relative(repositoryRoot, file)
       return (inRepository.startsWith('..') ? file : inRepository).replaceAll('\\', '/')
     }
+    if (result.plan !== undefined) {
+      const {plan, timeline} = result
+      console.log(`Wrote the plan of ${timeline.end.toFixed(2)} s to ${shorten(plan)}: the orb strikes at ${timeline.strike.toFixed(2)} s and the result flips out at ${timeline.emergence.toFixed(2)} s`)
+      process.exit()
+    }
+    const {audio, drift, format, fps, frameCount, height, output, width} = result
     const written = shorten(output)
     let sound = ''
     if (audio !== undefined) {

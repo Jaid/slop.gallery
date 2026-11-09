@@ -1,8 +1,15 @@
+import type {CameraPath} from '../../scripts/lib/fusionCamera.ts'
+import type {FusionPlan, RenderFusionOptions} from '../../scripts/renderFusion.ts'
 import type {PortraitDump} from '../../src/lib/webmcp/dumpPortraits.ts'
 
 import {expect, test} from 'bun:test'
+import {tmpdir} from 'node:os'
+import {join} from 'node:path'
 
-import {findLanding, orbitDistance, resultView, throughKeys, throwMotion} from '../../scripts/renderFusion.ts'
+import fs from 'fs-extra'
+
+import {keyedShot, throughKeys} from '../../scripts/lib/fusionCamera.ts'
+import renderFusion, {findLanding, orbitDistance, resultView, throwMotion} from '../../scripts/renderFusion.ts'
 
 const work = (patch: Partial<PortraitDump>): PortraitDump => ({
   id: 'work',
@@ -139,4 +146,63 @@ test('the camera looks down on a result lying face up from its bottom edge, so i
   }, 2)
   expect(low.eye).toBeLessThanOrEqual(1.6 + 1e-9)
   expect(low.back).toBeGreaterThan(view.back)
+})
+test('a camera path given by hand replaces the film’s camera, the throw leaving from in front of it, as the plan of the film tells without filming it', async () => {
+  const folder = await fs.mkdtemp(join(tmpdir(), 'render-fusion-'))
+  try {
+    const path: CameraPath = {
+      end: 18,
+      handheld: false,
+      keys: [
+        {
+          time: 0,
+          position: [15, 1.6, -11],
+          target: [19.78, 2.6, -8.68],
+          fov: 52,
+          roll: 0,
+        },
+        {
+          time: 6,
+          position: [14, 2.2, -6],
+          target: [18.3, 2, -8.68],
+          fov: 48,
+          roll: 2,
+        },
+      ],
+    }
+    const camera = join(folder, 'camera.json')
+    await Bun.write(camera, JSON.stringify(path))
+    // an image hung in the slot the films use, a pixel of it
+    const image = join(folder, 'pixel.png')
+    await Bun.write(image, Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=='))
+    const options: RenderFusionOptions = {
+      emphasis: 'party',
+      fps: '60',
+      graphics: 'cinematic',
+      ingredient: 'horror',
+      'jxl-distance': '1',
+      seed: '1',
+      settle: '2',
+      room: 'banquet',
+      portrait: image,
+      slot: 'banquet-east_1',
+      camera,
+      'plan-file': join(folder, 'plan.json'),
+    }
+    const result = await renderFusion(options)
+    expect(result.plan).toBe(join(folder, 'plan.json'))
+    const plan = await Bun.file(join(folder, 'plan.json')).json() as FusionPlan
+    expect(plan.timeline.end).toBe(18)
+    expect(plan.frames).toHaveLength(18 * 60 + 1)
+    expect(plan.keys).toEqual(path.keys)
+    const third = keyedShot(path.keys, 3)
+    expect(plan.frames[180].position[0]).toBeCloseTo(third.position[0], 4)
+    expect(plan.frames[180].fov).toBeCloseTo(third.fov, 3)
+    // The orb strikes the work once it flew from in front of the camera.
+    expect(plan.timeline.strike).toBeGreaterThan(plan.timeline.throwAt)
+    expect(plan.timeline.emergence - plan.timeline.strike).toBeCloseTo(13.5, 9)
+    expect(Math.hypot(...plan.flight.from.map((value, axis) => value - keyedShot(path.keys, 1).position[axis]))).toBeLessThan(0.6)
+  } finally {
+    await fs.remove(folder)
+  }
 })
