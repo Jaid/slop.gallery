@@ -1,4 +1,4 @@
-import type {WallOpening} from '../../src/lib/placement/wallGeometry.ts'
+import type {Wall, WallOpening} from '../../src/lib/placement/wallGeometry.ts'
 
 import {describe, expect, test} from 'bun:test'
 
@@ -27,56 +27,44 @@ function casingArea({width, height, bottom = 0, profile}: WallOpening) {
   const spring = height - width / 2
   return (width + 2 * trim) * (spring - bottom + trim) + halfDisc(width / 2 + trim) - width * (spring - bottom) - halfDisc(width / 2)
 }
-describe('floor-following wall baseboards', () => {
-  test('the Lobby baseboard has a 21 cm lower band and a 4 cm cap', () => {
-    const wall = walls.find(value => value.id === 'lobby-south')!
-    const geometry = createArchitectureGeometry(wall)
-    const material = new MeshBasicMaterial
-    try {
-      const trim = new Mesh(geometry.trim[0], material)
-      for (const [y, front] of [[0.2, 0.2], [0.22, 0.25], [0.26, null]] as const) {
-        const ray = new Raycaster(new Vector3(4, y, 1), new Vector3(0, 0, -1))
-        const hit = ray.intersectObject(trim)[0]
-        if (front === null) {
-          expect(hit).toBeUndefined()
-        } else {
-          expect(hit.point.z).toBeCloseTo(front, 5)
-        }
+/** Probes a plain wall’s baseboard from the room at `u`: the lower band up to its cap, the cap standing proud of it up to the top, and nothing above. */
+function expectBaseboard(wall: Wall, u: number, height: number, cap: number) {
+  const geometry = createArchitectureGeometry(wall)
+  const material = new MeshBasicMaterial
+  try {
+    const trim = new Mesh(geometry.trim[0], material)
+    for (const [y, front] of [[height - cap - 0.01, 0.2], [height - cap + 0.01, 0.25], [height - 0.01, 0.25], [height + 0.01, null]] as const) {
+      const ray = new Raycaster(new Vector3(u, y, 1), new Vector3(0, 0, -1))
+      const hit = ray.intersectObject(trim)[0]
+      if (front === null) {
+        expect(hit).toBeUndefined()
+      } else {
+        expect(hit.point.z).toBeCloseTo(front, 5)
       }
-    } finally {
-      geometry.dispose()
-      material.dispose()
     }
+  } finally {
+    geometry.dispose()
+    material.dispose()
+  }
+}
+describe('floor-following wall baseboards', () => {
+  test('the Lobby’s baseboard is the default one, a lower band under a cap standing proud of it', () => {
+    const wall = walls.find(value => value.id === 'lobby-south')!
+    expect(wall.baseboardHeight ?? defaultBaseboardHeight).toBe(defaultBaseboardHeight)
+    expect(wall.baseboardCapHeight ?? baseboardCapHeight).toBe(baseboardCapHeight)
+    expectBaseboard(wall, 4, defaultBaseboardHeight, baseboardCapHeight)
   })
-  test('the Bastion uses a 30 cm lower band and a 10 cm cap on every wall, without changing the Lobby', () => {
+  test('the Bastion’s walls all take its own taller baseboard and cap', () => {
     const bastionWalls = walls.filter(wall => wall.room === 'bastion')
     expect(bastionWalls.length).toBeGreaterThan(0)
     for (const wall of bastionWalls) {
       expect(wall.baseboardHeight).toBe(bastionBaseboard.baseboardHeight)
       expect(wall.baseboardCapHeight).toBe(bastionBaseboard.baseboardCapHeight)
     }
+    expect(bastionBaseboard.baseboardHeight).toBeGreaterThan(defaultBaseboardHeight)
+    expect(bastionBaseboard.baseboardCapHeight).toBeGreaterThan(baseboardCapHeight)
     const wall = bastionWalls.find(candidate => !candidate.baseboardProfile && !candidate.holes?.length)!
-    const geometry = createArchitectureGeometry(wall)
-    const material = new MeshBasicMaterial
-    try {
-      const trim = new Mesh(geometry.trim[0], material)
-      const x = 0
-      for (const [y, front] of [[0.29, 0.2], [0.31, 0.25], [0.39, 0.25], [0.41, null]] as const) {
-        const ray = new Raycaster(new Vector3(x, y, 1), new Vector3(0, 0, -1))
-        const hit = ray.intersectObject(trim)[0]
-        if (front === null) {
-          expect(hit).toBeUndefined()
-        } else {
-          expect(hit.point.z).toBeCloseTo(front, 5)
-        }
-      }
-    } finally {
-      geometry.dispose()
-      material.dispose()
-    }
-    const lobby = walls.find(candidate => candidate.id === 'lobby-south')!
-    expect(lobby.baseboardHeight ?? defaultBaseboardHeight).toBe(0.25)
-    expect(lobby.baseboardCapHeight ?? baseboardCapHeight).toBe(0.04)
+    expectBaseboard(wall, 0, bastionBaseboard.baseboardHeight, bastionBaseboard.baseboardCapHeight)
   })
   for (const side of ['west', 'east'] as const) {
     test(`${side}: constant-height trim follows the floor, ramp and raised base without buried horizontal stubs`, () => {

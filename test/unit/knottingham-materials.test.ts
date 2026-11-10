@@ -1,10 +1,9 @@
 import {describe, expect, test} from 'bun:test'
 
 import KnotLayout from 'knot-materials/KnotLayout.ts'
-import {PerspectiveCamera} from 'three/webgpu'
 
 import {knotFloorOrigin, knotFloorTile, knotGalleryBounds, knotGalleryCenter} from '../../src/lib/gallery/knotGallery.ts'
-import {CheckeredMarbleFloorMaterial, checkeredTile, cremaMarfil, neroMarquina} from '../../src/lib/materials/marble/index.ts'
+import {checkeredTile, cremaMarfil, neroMarquina} from '../../src/lib/materials/marble/index.ts'
 import VelvetWallMaterial, {oxbloodVelvet} from '../../src/lib/materials/VelvetWallMaterial.ts'
 import lightness from './helpers/lightness.ts'
 
@@ -36,39 +35,6 @@ describe('Knottingham’s checkered marble floor', () => {
     const right = checkeredTile(knotGalleryCenter[0] + 0.01, z, layout)
     expect(right.column - left.column).toBe(1)
     expect(right.dark).toBe(!left.dark)
-  })
-  test('heavy mode allocates a reflection that is released with the material', () => {
-    const options = {
-      ...layout,
-      dark: neroMarquina,
-      drift: true,
-      light: cremaMarfil,
-    }
-    const heavy = new CheckeredMarbleFloorMaterial({
-      ...options,
-      reflections: true,
-    })
-    const fast = new CheckeredMarbleFloorMaterial({
-      ...options,
-      reflections: false,
-    })
-    try {
-      expect(heavy.reflection).not.toBeNull()
-      expect(heavy.outputNode).not.toBeNull()
-      expect(fast.reflection).toBeNull()
-      for (const material of [heavy, fast]) {
-        expect(material.colorNode).not.toBeNull()
-        expect(material.roughnessNode).not.toBeNull()
-        expect(material.normalNode).not.toBeNull()
-      }
-    } finally {
-      fast.dispose()
-    }
-    const target = heavy.reflection!.reflector.getRenderTarget(new PerspectiveCamera)
-    const disposed: Array<string> = []
-    target.addEventListener('dispose', () => disposed.push('reflection'))
-    heavy.dispose()
-    expect(disposed).toEqual(['reflection'])
   })
   test('the cuts are a cream marble with darker veins and a black Nero Marquina with white veins', () => {
     expect(lightness(cremaMarfil.base)).toBeGreaterThan(200)

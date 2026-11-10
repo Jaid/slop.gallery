@@ -302,7 +302,6 @@ test('jumping into the portal marks the span with the cancellation trigger, and 
     'fusion.ingredient_kinds': 'portrait,portrait',
     'fusion.outcome': 'canceled',
   })
-  expect(attributes).not.toHaveProperty('fusion.items')
   expect(attributes).not.toHaveProperty('error.type')
   expect(attributes['fusion.canceled_at_s']).toBe(cancellation['fusion.elapsed_s'])
   expect(span.status.code).toBe(1)

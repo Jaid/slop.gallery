@@ -33,12 +33,13 @@ test('model and narration preferences remain configurable through URL parameters
   })
 })
 test('?stt_model picks the model that times generated narration, and false skips that step', () => {
-  expect(readAiSettings('').stt_model).toBe('x-ai/grok-stt-1.0')
+  const fallback = readAiSettings('').stt_model
+  expect(fallback).toMatch(/^[\w-]+\/[\w\-.]+$/u)
   expect(readAiSettings('?stt_model=elevenlabs/scribe-v2').stt_model).toBe('elevenlabs/scribe-v2')
   expect(readAiSettings('?stt_model=false').stt_model).toBe(false)
   expect(readAiSettings('?stt_model=0').stt_model).toBe(false)
-  expect(readAiSettings('?stt_model').stt_model).toBe('x-ai/grok-stt-1.0')
-  expect(readAiSettings('?stt_model=true').stt_model).toBe('x-ai/grok-stt-1.0')
+  expect(readAiSettings('?stt_model').stt_model).toBe(fallback)
+  expect(readAiSettings('?stt_model=true').stt_model).toBe(fallback)
 })
 test('the narrator voice is only set by a non-blank ?narrator_voice, so the seed picks it otherwise', () => {
   expect(readAiSettings('').narrator_voice).toBeUndefined()

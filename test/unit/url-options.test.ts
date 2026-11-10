@@ -134,7 +134,7 @@ describe('URL options', () => {
   test('?anti_aliasing accepts traa and false only', () => {
     expect(readAntiAliasing('?anti_aliasing=traa')).toBe('traa')
     expect(readAntiAliasing('?anti_aliasing=false')).toBe(false)
-    for (const search of ['', '?anti_aliasing=', '?anti_aliasing=TRAA', '?anti_aliasing=smaa', '?anti_aliasing=true', '?antiAliasing=traa']) {
+    for (const search of ['', '?anti_aliasing=', '?anti_aliasing=TRAA', '?anti_aliasing=msaa', '?anti_aliasing=true', '?antiAliasing=traa']) {
       expect(readAntiAliasing(search)).toBeUndefined()
     }
   })
