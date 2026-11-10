@@ -1,5 +1,5 @@
 name: publishReport
-description: Publishes a markdown report to the job summary, or for a pull request as a comment on it, which later runs update instead of adding another
+description: Publishes a markdown report to the job summary, or for a pull request as a comment on it, which later runs update instead of adding another, and always as the artifact report-<id>.md, which unlike the job summary can be read through the API
 inputs:
   file:
     description: the markdown file holding the report
@@ -68,3 +68,10 @@ runs:
         echo "::warning::Could not comment on pull request #$pullRequest, so the $id report went to the job summary."
         publishSummary
       fi
+  # Job summaries can’t be read through the API, so the report also goes to an artifact for whatever compares runs, like Mage’s judge with pull requests from forks.
+  - name: uploadReport
+    if: ${{ !cancelled() }}
+    uses: actions/upload-artifact@v7.0.2
+    with:
+      path: ${{ runner.temp }}/report-${{ inputs.id }}.md
+      archive: false
