@@ -49,7 +49,8 @@ const fileNamePattern = /^[\w\-.]{1,100}$/u
 const colorPattern = /^#(?:[\da-f]{3}){1,2}$/iu
 const throwKeys = ['prop', 'portrait', 'target', 'velocity', 'from', 'speed']
 const spawnKeys = new Set(['orb', 'position', 'id'])
-const hangKeys = new Set(['image', 'slot', 'title'])
+const hangKeys = new Set(['image', 'slot', 'title', 'id'])
+const workIdPattern = /^[\w-]{1,100}$/u
 const propIdPattern = /^prop-[\w-]{1,100}$/u
 const isPoint = (value: unknown): value is [number, number, number] => Array.isArray(value) && value.length === 3 && value.every(number => typeof number === 'number' && Number.isFinite(number))
 const point = (description: string) => ({
@@ -90,7 +91,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'dump_portraits',
       title: 'Dump portraits',
-      description: 'Return every work of the collection where it is now, hung, lying, flying or held by a fusion: its ID, title, whether it hangs and on which wall, its frame width and height in meters, whether a fusion holds it (fusing) or waits for one (pending), the world-space middle of its frame and its rotation as a quaternion [x, y, z, w], before which its front faces +z and its top +y. Poll it to follow a work through the air, like the result a fusion flips out of its portal, which joins the collection as it does.',
+      description: 'Return every work of the collection where it is now, hung, lying, flying or held by a fusion: its ID, title, whether it hangs and on which wall, its frame width and height in meters, the frame it wears unless the default one, whether a fusion holds it (fusing) or waits for one (pending), the world-space middle of its frame and its rotation as a quaternion [x, y, z, w], before which its front faces +z and its top +y. Poll it to follow a work through the air, like the result a fusion flips out of its portal, which joins the collection as it does.',
       read: () => getBridge().getPortraits(),
     },
     {
@@ -302,7 +303,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'hang_work',
       title: 'Hang work',
-      description: 'Hang an image in a portrait slot as an imported work, in place of the work hanging there, if any: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect at the slot’s frame area, wearing its own roll of the slot’s frames or of its room’s, right away without the hanging animation or the sound of an arrival. Resolves once it hangs, while its image may still decode. Fails for an unknown slot, an image that does not load or is no PNG, JPEG, WebP, AVIF or GIF up to 25 mb, and a full collection. Returns its new id, its title, the slot, the id of the work it replaced, where its frame’s middle is, its rotation and its frame width and height in meters. Slot ids are what dump_portrait_slots lists. Does not move the player, change focus or simulate input.',
+      description: 'Hang an image in a portrait slot as an imported work, in place of the work hanging there, if any: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect at the slot’s frame area, wearing the roll of its id of the slot’s frames or of its room’s, right away without the hanging animation or the sound of an arrival. Resolves once it hangs, while its image may still decode. Fails for an unknown slot, an id a work already has, an image that does not load or is no PNG, JPEG, WebP, AVIF or GIF up to 25 mb, and a full collection. Returns its new id, its title, the slot, the id of the work it replaced, where its frame’s middle is, its rotation and its frame width and height in meters. Slot ids are what dump_portrait_slots lists. Does not move the player, change focus or simulate input.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -320,6 +321,11 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             minLength: 1,
             maxLength: 150,
           },
+          id: {
+            type: 'string',
+            description: 'its id, unique in the collection, which tells the same roll of frames every time, for it and for the result of a fusion that takes it. Default: a new one',
+            pattern: workIdPattern.source,
+          },
         },
         required: ['image', 'slot'],
         additionalProperties: false,
@@ -330,9 +336,9 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       execute: (input: unknown, {signal}) => {
         signal.throwIfAborted()
         if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !hangKeys.has(key))) {
-          throw new TypeError('This tool takes an object with image, slot and an optional title.')
+          throw new TypeError('This tool takes an object with image, slot and an optional title and id.')
         }
-        const {image, slot, title} = input as Record<string, unknown>
+        const {image, slot, title, id} = input as Record<string, unknown>
         if (typeof image !== 'string' || !URL.canParse(image, typeof location === 'undefined' ? undefined : location.href)) {
           throw new TypeError('image must be the URL of an image.')
         }
@@ -342,10 +348,14 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (title !== undefined && (typeof title !== 'string' || !title.trim() || title.length > 150)) {
           throw new TypeError('title must be a text of 1 to 150 characters.')
         }
+        if (id !== undefined && (typeof id !== 'string' || !workIdPattern.test(id))) {
+          throw new TypeError(`id must match ${workIdPattern}.`)
+        }
         return getBridge().hangWork({
           image,
           slot,
           title,
+          id,
         })
       },
     },

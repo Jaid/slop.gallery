@@ -10,6 +10,8 @@ import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {slotArea} from '#src/lib/placement/portraitSlots.ts'
 
 export type WorkHangingInput = {
+  /** its id, unique in the collection; by default a new one */
+  id?: string
   /** the URL of the image */
   image: string
   /** the id of the portrait slot it hangs in */
@@ -36,10 +38,13 @@ const hangsIn = (portrait: Portrait, slot: {
 }) => portrait.hung && portrait.wallId === slot.wallId && Math.hypot(...portrait.position.map((value, axis) => value - slot.position[axis])) < 1e-3
 
 /** Hangs the image at the URL `image` in the portrait slot with the id `slot` as an imported work, in place of the work hanging there, if any; see the `hang_work` tool. */
-export default async function hangWork({image, slot, title}: WorkHangingInput): Promise<WorkHanging> {
+export default async function hangWork({id, image, slot, title}: WorkHangingInput): Promise<WorkHanging> {
   const target = usePortraitSlots.getState().slots.find(candidate => candidate.id === slot)
   if (!target) {
     throw new Error(`There is no portrait slot “${slot}”; dump_portrait_slots lists them.`)
+  }
+  if (id !== undefined && useGallery.getState().portraits.some(candidate => candidate.id === id)) {
+    throw new Error(`A work already has the id “${id}”.`)
   }
   const response = await fetch(image)
   if (!response.ok) {
@@ -56,6 +61,9 @@ export default async function hangWork({image, slot, title}: WorkHangingInput): 
     position: target.position,
     direction: [-normal[0], 0, -normal[2]],
   })
+  if (id !== undefined) {
+    portrait.id = id
+  }
   const frame = target.frame ? pickFrame(environmentSeed, target.frame, portrait.id) : arrivalFrame(target.position, target.position, portrait.id)
   Object.assign(portrait, {
     position: [...target.position],

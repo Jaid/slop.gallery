@@ -102,8 +102,8 @@ const bridge: WebmcpBridge = {
     position: [14, 3.13, 7.78],
     quaternion: [0, 1, 0, 0],
   }],
-  hangWork: ({slot, title = 'xf14RxM8'}: WorkHangingInput) => Promise.resolve({
-    id: 'work-1',
+  hangWork: ({id = 'work-1', slot, title = 'xf14RxM8'}: WorkHangingInput) => Promise.resolve({
+    id,
     title,
     slot,
     position: [10.2, 3.13, 7.78],
@@ -370,7 +370,7 @@ test('spawn_orb takes a kind, a point and an optional prop id, and spawns throug
     position: [0, 0, 0],
   })).rejects.toThrow()
 })
-test('hang_work takes an image URL, a slot and an optional title, and hangs through the bridge', async () => {
+test('hang_work takes an image URL, a slot and an optional title and id, and hangs through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'hang_work')!
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
@@ -392,7 +392,16 @@ test('hang_work takes an image URL, a slot and an optional title, and hangs thro
     slot: 'banquet-south_2',
     title: 'Invader',
   })).toHaveProperty('title', 'Invader')
+  expect(await execute({
+    image: 'http://127.0.0.1:8080/xf14RxM8.png',
+    slot: 'banquet-south_2',
+    id: 'film-invader',
+  })).toHaveProperty('id', 'film-invader')
   for (const input of [null, [], {}, {slot: 'banquet-south_2'}, {image: 'http://127.0.0.1/a.png'}, {
+    image: 'http://127.0.0.1/a.png',
+    slot: 'banquet-south_2',
+    id: 'no spaces',
+  }, {
     image: 'not a url',
     slot: 'banquet-south_2',
   }, {
