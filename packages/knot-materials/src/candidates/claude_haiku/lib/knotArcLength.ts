@@ -4,6 +4,7 @@ import {texture, vec2} from 'three/tsl'
 import {ClampToEdgeWrapping, DataTexture, FloatType, LinearFilter, RGBAFormat} from 'three/webgpu'
 
 import {knotGeometryArgs} from '../../../geometry.ts'
+
 const [radius,,,, p, q] = knotGeometryArgs
 /** Texels in the arc-length table. Linear filtering interpolates between them. */
 const samples = 2048

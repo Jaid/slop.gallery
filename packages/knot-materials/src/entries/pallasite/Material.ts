@@ -9,6 +9,7 @@ import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const ridgeLine = (field: Node<'float'>, width: number) => field.abs().div(field.fwidth().mul(1.3).add(width)).oneMinus().clamp()
 /**
  * A polished pallasite: a nickel-iron matrix etched into Widmanstätten lamellae,

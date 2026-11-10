@@ -6,6 +6,7 @@ import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {starfield} from '../../lib/starfield.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const steps = 32
 /** Four miniature Kerr singularities nestled inside the knot’s lobes and crossings. */
 const singularities = [{

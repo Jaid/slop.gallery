@@ -12,6 +12,7 @@ import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import {wrapCell} from '../../lib/wrapCell.ts'
 import knotData from './data.ts'
+
 const plateGrid: [number, number] = [12, 2]
 /** Periodic 2D Voronoi with smooth-minimum (smin) filleted edge distance so 3-way fissure junctions never produce sharp diagonal miter seams! */
 function smoothEdgeVoronoi(p: Node<'vec2'>, period: [number, number], seed = 0, jitter = 0.7) {

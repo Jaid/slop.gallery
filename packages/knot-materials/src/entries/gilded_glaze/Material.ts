@@ -7,6 +7,7 @@ import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {proceduralNormal} from '../../lib/proceduralNormal.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const crackScale = 6.5
 /** Distance from the nearest Voronoi site to the second nearest, sampled in 3D so the crazing never meets a UV seam. Zero along every cell wall. */
 const seamField = (q: Node<'vec3'>) => {

@@ -13,6 +13,7 @@ import {knotCurve} from '../../lib/knotCurve.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const shardScale = 2.1
 /** The mended fracture network: signed distance to the gold lacquer (object units, negative inside). */
 function fracture(position: Node<'vec3'>) {

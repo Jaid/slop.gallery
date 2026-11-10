@@ -9,6 +9,7 @@ import {spectralColor} from '../../lib/spectralColor.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import {wrapCell} from '../../lib/wrapCell.ts'
 import knotData from './data.ts'
+
 const plateletScale = vec2(150, 26)
 /** One platelet of precious opal: a secret mirror tilted inside the milk, flashing only when the visitor, the lamp and its tilt agree. Its random identity survives the UV seam because the cell index is wrapped before hashing. */
 function platelet(tube: Node<'vec2'>, seed: number) {

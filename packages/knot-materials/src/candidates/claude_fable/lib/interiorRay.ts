@@ -6,6 +6,7 @@ import {cellNoiseVec3} from './cellNoiseVec3.ts'
 import {toFloat} from './toFloat.ts'
 import {knotLength, tubeCircumference} from './tubeCoordinates.ts'
 import {viewerFrame} from './viewerFrame.ts'
+
 export type InteriorRay = ReturnType<typeof interiorRay>
 /**
  * The viewer's line of sight refracted into the surface, in object space.

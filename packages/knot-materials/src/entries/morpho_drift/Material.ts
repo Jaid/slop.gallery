@@ -10,6 +10,7 @@ import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import {wrapCell} from '../../lib/wrapCell.ts'
 import knotData from './data.ts'
+
 const grid: [number, number] = [132, 16]
 /** Surface-gradient bump on an explicit base normal, for detail too fine to displace. */
 function perturbNormal(base: Node<'vec3'>, height: Node<'float'>, strength: Node<'float'> | number) {

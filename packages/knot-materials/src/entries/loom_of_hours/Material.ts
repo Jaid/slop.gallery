@@ -7,6 +7,7 @@ import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {proceduralNormal} from '../../lib/proceduralNormal.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const warpThreads = 48
 // A multiple of the weave period keeps the twill unbroken where the UV seam closes.
 const weftThreads = 210

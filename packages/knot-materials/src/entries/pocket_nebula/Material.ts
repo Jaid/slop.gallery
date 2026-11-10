@@ -10,6 +10,7 @@ import {viewerFrame} from '../../candidates/claude_fable/lib/viewerFrame.ts'
 import {volumeStars} from '../../candidates/claude_fable/lib/volumeStars.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import knotData from './data.ts'
+
 const glassIndex = 1.52
 /** A night sky sealed in black glass. Star layers and nebula clouds are sampled along the refracted line of sight at increasing depths, so the interior has genuine parallax: near stars slide quickly across the surface as the viewer moves, distant ones barely at all, and the whole volume seems to be looked into rather than painted on. Toward the tube's axis the stars thicken into a galactic core that a viewer only reaches at normal incidence. */
 export default class extends KnotMaterial {

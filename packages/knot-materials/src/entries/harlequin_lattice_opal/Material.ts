@@ -13,6 +13,7 @@ import {viewerFrame} from '../../candidates/claude_fable/lib/viewerFrame.ts'
 import {voronoi} from '../../candidates/claude_fable/lib/voronoi.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import knotData from './data.ts'
+
 const opalIndex = 1.45
 /** View-space studio lamps shared with the glint helper: each patch diffracts each lamp separately. */
 const lamps = [vec3(0.35, 0.78, 0.52), vec3(-0.62, 0.28, 0.73), vec3(0.1, -0.35, 0.93)]

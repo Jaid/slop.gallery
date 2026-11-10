@@ -12,6 +12,7 @@ import {proceduralNormal} from '../../lib/proceduralNormal.ts'
 import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const glazeIndex = 1.53
 /** Celadon absorbs red and blue in the iron-bearing glaze; units are per object-space unit of light path. */
 const glazeAbsorption = vec3(26, 9, 19)

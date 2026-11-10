@@ -13,6 +13,7 @@ import {proceduralNormal} from '../../lib/proceduralNormal.ts'
 import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const floorBounce = vec3(0.11, -0.74, -0.66).normalize()
 /** Every bright source the stone can see: the four studio lights and the bright flooring bounce. */
 const fireLamps = [keyLightView, warmSoftboxView, coolStripView, fillPanelView, floorBounce]

@@ -9,6 +9,7 @@ import {rgb} from '../../candidates/claude_fable/lib/rgb.ts'
 import {viewerFrame} from '../../candidates/claude_fable/lib/viewerFrame.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import knotData from './data.ts'
+
 const iceIndex = 1.31
 /** Ice absorbs red first; over the chord of the tube this leaves the deep blue of a crevasse. */
 const absorption = vec3(14, 4.6, 1.7)

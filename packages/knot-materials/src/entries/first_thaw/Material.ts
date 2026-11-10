@@ -11,6 +11,7 @@ import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const rotate = (v: Node<'vec2'>, angle: number) => vec2(v.x.mul(Math.cos(angle)).add(v.y.mul(Math.sin(angle))), v.y.mul(Math.cos(angle)).sub(v.x.mul(Math.sin(angle))))
 /**
  * Rime growing from a black glacial stone. Three hexagonal families of crystal

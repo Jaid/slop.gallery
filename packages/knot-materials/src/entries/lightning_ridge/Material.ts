@@ -13,6 +13,7 @@ import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {proceduralNormal} from '../../lib/proceduralNormal.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const silicaIndex = 1.45
 /** The gallery’s lights, in object space: overhead, the key light, a low fill. */
 const lamps: Array<[[number, number, number], number]> = [[[0, 1, 0.15], 1], [[-0.17, 0.49, -0.86], 0.9], [[0.62, 0.25, 0.74], 0.6]]

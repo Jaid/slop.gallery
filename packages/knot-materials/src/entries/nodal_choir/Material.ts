@@ -7,6 +7,7 @@ import {proceduralNormal} from '../../lib/proceduralNormal.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import {wrapCell} from '../../lib/wrapCell.ts'
 import knotData from './data.ts'
+
 const tau = Math.PI * 2
 /** Sand grains lie on a grid whose integer counts keep the grains periodic around both seams. */
 const grains = vec2(240, 36)

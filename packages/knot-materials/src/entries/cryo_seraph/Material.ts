@@ -16,6 +16,7 @@ import {opticalLine} from '../../lib/opticalLine.ts'
 import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const frostCells = [44, 6] as const
 /** 6-fold stellar dendrite snowflake / hoarfrost fern crystal on a periodic hexagonal tube lattice. */
 function dendriteCrystal(tube: Node<'vec2'>) {

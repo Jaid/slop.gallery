@@ -10,6 +10,7 @@ import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const signedWrap = (value: ReturnType<typeof uv>['x'], center: number, scale: number) => value.sub(center).add(0.5).fract().sub(0.5).mul(scale)
 /**
  * A block of clear epoxy frozen under load and viewed between crossed polarizers. A constellation of

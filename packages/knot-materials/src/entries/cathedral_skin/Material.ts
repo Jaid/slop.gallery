@@ -11,6 +11,7 @@ import {proceduralNormal} from '../../lib/proceduralNormal.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import {wrapCell} from '../../lib/wrapCell.ts'
 import knotData from './data.ts'
+
 const tileScale = vec2(54, 9)
 /** Stained glass grown as a skin. Every wrapped tile keeps its own jewel hue, its own polish and its own candle-flicker, leaded by gold cames that flare when the light crosses them. Hue drifts dichroically toward the silhouette, tiles bevel under a wet glaze up close, and from across the room the leading dissolves into one glowing mosaic. */
 export default class extends KnotMaterial {

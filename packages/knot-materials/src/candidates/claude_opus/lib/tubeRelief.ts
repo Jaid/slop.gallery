@@ -3,6 +3,7 @@ import type {Node} from 'three/webgpu'
 import {negateOnBackSide, transformNormalToView, uv, vec2} from 'three/tsl'
 
 import {knotFrame} from './knotFrameOpus55.ts'
+
 export type TubeHeight = (tube: Node<'vec2'>) => Node<'float'>
 /**
  * Exact per-fragment normal of the knot tube displaced along its normal by `height` (object units).

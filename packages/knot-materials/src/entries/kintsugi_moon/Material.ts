@@ -14,6 +14,7 @@ import {viewerFrame} from '../../candidates/claude_fable/lib/viewerFrame.ts'
 import {voronoi2d} from '../../candidates/claude_fable/lib/voronoi.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import knotData from './data.ts'
+
 const glazeIndex = 1.5
 /** Porcelain repaired with gold. The body is shattered into shards whose seams are filled with lacquer and gold dust – raised, brushed metal that catches the room's lights while the glaze around it stays cool and glassy. Under that glaze a cobalt underglaze painting drifts with parallax: the pigment sits below the surface, so it slides against the crackle as the viewer moves. A network of hairline craquelure covers the glaze itself, and on the shadow side a faint moonlight seems to come from inside the seams. */
 export default class extends KnotMaterial {

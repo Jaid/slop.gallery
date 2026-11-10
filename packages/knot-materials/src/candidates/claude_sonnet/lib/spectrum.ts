@@ -4,6 +4,7 @@ import type {Node} from 'three/webgpu'
 import {float, vec3} from 'three/tsl'
 
 import {TAU} from '../../../lib/TAU.ts'
+
 const lobe = (wavelength: number, center: number, left: number, right: number) => Math.exp(-0.5 * ((wavelength - center) / (wavelength < center ? left : right)) ** 2)
 /** Linear sRGB radiance of a monochromatic wavelength in nanometers (multi-lobe CIE 1931 fit), clipped to the gamut. */
 export function wavelengthRgb(wavelength: number): Triple {

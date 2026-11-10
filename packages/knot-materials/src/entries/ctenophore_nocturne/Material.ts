@@ -13,6 +13,7 @@ import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const rows = 8
 /** rows wind three times around the tube over the knot; any integer keeps the UV seam closed */
 const rowTwist = 24

@@ -9,6 +9,7 @@ import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const combRows = 8
 /** Comb plates per row along the whole knot; an integer keeps the rows seamless. */
 const platesPerRow = 640

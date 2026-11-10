@@ -1,6 +1,7 @@
 import type {Triple} from '../../../lib/Triple.ts'
 
 import {cameraViewMatrix, vec3} from 'three/tsl'
+
 const toView = (direction: Triple) => vec3(...direction).normalize().transformDirection(cameraViewMatrix)
 /**
  * Directions of the gallery's real light sources, rotated into view space so analytic highlights

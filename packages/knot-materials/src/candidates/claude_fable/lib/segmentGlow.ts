@@ -1,4 +1,5 @@
 import type {Node} from 'three/webgpu'
+
 type Offset = Node<'vec2'> | Node<'vec3'>
 /**
  * Closed-form integral of a Lorentzian glow 1 / (|e|² + σ²) along a straight segment of offsets `from` → `to` (offsets

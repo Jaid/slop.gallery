@@ -8,6 +8,7 @@ import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
+
 const spotCenters = [[2.7, 0.36], [3.05, 0.69], [5.75, 0.22]] as const
 /**
  * The photosphere as a living convection experiment: polygonal granules with dark
