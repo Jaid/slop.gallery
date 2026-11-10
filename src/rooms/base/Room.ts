@@ -1,8 +1,8 @@
-import type AmbienceEmitter from '#src/lib/audio/ambience/base/AmbienceEmitter.ts'
 import type {FrameChoice} from '#src/lib/frames/frameChoice.ts'
 import type {CameraBookmark, PortraitRatio, SpawnBookmark} from '#src/lib/gallery/types.ts'
 import type Mood from '#src/lib/moods/base/Mood.ts'
 import type {Wall, WallOpening} from '#src/lib/placement/wallGeometry.ts'
+import type AmbienceEmitter from 'ambience-emitter'
 import type {Geofence} from 'geofency'
 import type {Vec3} from 'math'
 

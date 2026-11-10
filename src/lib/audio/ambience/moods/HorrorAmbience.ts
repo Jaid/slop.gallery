@@ -1,7 +1,6 @@
-import type {NoiseBed, ToneBed} from '../base/AmbienceLoop.ts'
-import type {Range} from '../base/noise.ts'
+import type {NoiseBed, Range, ToneBed} from 'ambience-emitter'
 
-import AmbienceLoop from '../base/AmbienceLoop.ts'
+import {AmbienceLoop} from 'ambience-emitter'
 
 /** a deep rumble and a slow, labored breath that wanders a little */
 const beds: ReadonlyArray<NoiseBed> = [

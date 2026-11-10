@@ -1,7 +1,8 @@
-import type {Voice} from '../../src/lib/audio/proceduralAudio.ts'
+import type {Voice} from 'procedural-audio'
+
+import playVoices from 'procedural-audio'
 
 import {footstepVoices, impactFootstepStrength, playerSoundEffects} from '../../src/lib/audio/playerSoundEffects.ts'
-import {playVoices} from '../../src/lib/audio/proceduralAudio.ts'
 
 const rate = 48_000
 const effectsGain = 0.6 * 10 ** (12 / 20)
@@ -36,7 +37,7 @@ const stats = (samples: Float32Array) => {
 const render = async (voices: ReadonlyArray<Voice>, seed: string) => {
   const duration = Math.max(...voices.map(voice => voice.duration + (voice.delay ?? 0)))
   const sound = output(duration + 0.12)
-  playVoices(sound, voices, seed)
+  playVoices(sound, voices, {seed})
   const buffer = await sound.context.startRendering()
   const samples = buffer.getChannelData(0)
   const result = stats(samples)
@@ -78,7 +79,10 @@ export default async function verify() {
     })
   }
   const sustained = output(1)
-  const bed = playVoices(sustained, playerSoundEffects.zoom.voices, 'held', {sustain: true})
+  const bed = playVoices(sustained, playerSoundEffects.zoom.voices, {
+    seed: 'held',
+    sustain: true,
+  })
   const paused = sustained.context.suspend(0.5)
   const rendered = sustained.context.startRendering()
   await paused
@@ -90,12 +94,12 @@ export default async function verify() {
   assert(stats(heldSamples.slice(rate * 0.3, rate * 0.45)).rms > 0.001, 'Held zoom failed to sustain')
   assert(stats(heldSamples.slice(rate * 0.7)).peak === 0, 'Released zoom kept playing')
   const interrupted = output(1)
-  const forward = playVoices(interrupted, playerSoundEffects.viewEnter.voices, 'enter')
+  const forward = playVoices(interrupted, playerSoundEffects.viewEnter.voices, {seed: 'enter'})
   const reversal = interrupted.context.suspend(0.035)
   const mixed = interrupted.context.startRendering()
   await reversal
   forward.stop()
-  playVoices(interrupted, playerSoundEffects.viewLeave.voices, 'leave')
+  playVoices(interrupted, playerSoundEffects.viewLeave.voices, {seed: 'leave'})
   await interrupted.context.resume()
   const reverseBuffer = await mixed
   const reverseSamples = reverseBuffer.getChannelData(0)

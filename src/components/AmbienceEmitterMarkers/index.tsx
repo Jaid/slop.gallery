@@ -1,4 +1,4 @@
-import type AmbienceEmitter from '#src/lib/audio/ambience/base/AmbienceEmitter.ts'
+import type AmbienceEmitter from 'ambience-emitter'
 import type {Group, Mesh, MeshBasicNodeMaterial} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'

@@ -1,5 +1,5 @@
-import type {AudioOutput} from '#src/lib/audio/proceduralAudio.ts'
 import type {PortalFrame} from '#src/lib/gallery/fusion/portalFrame.ts'
+import type {AudioOutput} from 'procedural-audio'
 
 import playGhostChorus from '#src/lib/audio/ghostChorus.ts'
 

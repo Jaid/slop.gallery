@@ -30,8 +30,12 @@ export default function AmbienceListener() {
     camera.getWorldDirection(forward)
     up.setFromMatrixColumn(camera.matrixWorld, 1)
     const listening: Vec3 = [position.x, position.y, position.z]
+    const hearing = {
+      room,
+      fading: isFading,
+    }
     for (const emitter of useAmbienceEmitters.getState().emitters) {
-      emitter.hear(listening, room, isFading)
+      emitter.hear(listening, hearing)
       emitter.start(engine.world, isFading ? undefined : 0)
     }
     const {listener} = engine.context

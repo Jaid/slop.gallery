@@ -1,9 +1,9 @@
 import type {Vec3} from '../../gallery/types.ts'
-import type {NoiseBed} from './base/AmbienceEmitter.ts'
-import type {Range} from './base/noise.ts'
+import type {NoiseBed, Range} from 'ambience-emitter'
+
+import AmbienceEmitter from 'ambience-emitter'
 
 import {fireWorldOrigin} from '../../gallery/fireplace/config.ts'
-import AmbienceEmitter from './base/AmbienceEmitter.ts'
 
 /** a log fire’s body: a low, slowly breathing roar, the wavering draw of the chimney and a faint hiss of gas escaping the wood */
 const beds: ReadonlyArray<NoiseBed> = [

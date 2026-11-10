@@ -1,8 +1,7 @@
 import type {Vec3} from '../gallery/types.ts'
-import type {AudioOutput} from './proceduralAudio.ts'
+import type {AudioOutput} from 'procedural-audio'
 
-import {whiteNoise} from './ambience/base/noise.ts'
-import atContextTime from './atContextTime.ts'
+import {atContextTime, whiteNoise} from 'procedural-audio'
 
 const silence = 0.0001
 

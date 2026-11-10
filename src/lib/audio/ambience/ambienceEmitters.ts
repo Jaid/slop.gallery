@@ -1,4 +1,4 @@
-import type AmbienceEmitter from './base/AmbienceEmitter.ts'
+import type AmbienceEmitter from 'ambience-emitter'
 
 import optis from 'optis'
 import {useEffect, useState} from 'react'

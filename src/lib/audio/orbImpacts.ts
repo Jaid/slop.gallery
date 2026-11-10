@@ -1,9 +1,8 @@
 import type {FootstepSurface} from './playerSoundEffects.ts'
-import type {Voice} from './proceduralAudio.ts'
+import type {Voice} from 'procedural-audio'
 
 import {clamp} from 'math'
-
-import {noise, osc} from './proceduralAudio.ts'
+import {noise, osc} from 'procedural-audio'
 
 /** what a glass orb strikes: a kind of ground, by what it sounds like underfoot, or another orb */
 export type OrbImpactSurface = FootstepSurface | 'orb'

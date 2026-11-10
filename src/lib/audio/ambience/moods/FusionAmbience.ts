@@ -1,7 +1,6 @@
-import type {ToneBed} from '../base/AmbienceLoop.ts'
-import type {Range} from '../base/noise.ts'
+import type {Range, ToneBed} from 'ambience-emitter'
 
-import AmbienceLoop from '../base/AmbienceLoop.ts'
+import {AmbienceLoop} from 'ambience-emitter'
 
 /** a transformer’s hum somewhere in the walls: the mains and its first overtone, beating so slowly that it only breathes */
 const tones: ReadonlyArray<ToneBed> = [

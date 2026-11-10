@@ -1,7 +1,6 @@
-import type {NoiseBed} from '../base/AmbienceLoop.ts'
-import type {Range} from '../base/noise.ts'
+import type {NoiseBed, Range} from 'ambience-emitter'
 
-import AmbienceLoop from '../base/AmbienceLoop.ts'
+import {AmbienceLoop} from 'ambience-emitter'
 
 /** an autumn night’s breeze, wandering a little, and dry leaves rustling in it now and then. A single band-pass falls off only 6 dB per octave and lets the white noise through as hiss, so each one is cascaded. */
 const beds: ReadonlyArray<NoiseBed> = [

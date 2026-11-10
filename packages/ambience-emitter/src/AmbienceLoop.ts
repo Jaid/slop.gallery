@@ -1,8 +1,9 @@
-import type {AudioOutput} from '../../proceduralAudio.ts'
-import type {Range} from './noise.ts'
+import type {AudioOutput} from 'procedural-audio'
 
-import atContextTime from '../../atContextTime.ts'
-import {loopLength, swayCurve, whiteNoise} from './noise.ts'
+import {atContextTime, loopLength, swayCurve, whiteNoise} from 'procedural-audio'
+
+/** the least and the most of something that varies at random */
+export type Range = readonly [number, number]
 
 /** a looping noise bed through one filter, its level swaying by smooth random modulation */
 export type NoiseBed = {
@@ -67,7 +68,7 @@ const silence = 0.00001
 
 /**
  * An endlessly looping ambient sound, synthesized live with Web Audio: subclasses declare looping {@link NoiseBed}s and held {@link ToneBed}s and scatter one-shots like {@link chirp}, {@link burst} and {@link swell} over each scheduling window.
- * Constructing one makes no sound; {@link start} builds its graph on an output, where it sounds centered unless a subclass routes it elsewhere, like an `AmbienceEmitter` through a panner.
+ * Constructing one makes no sound; {@link start} builds its graph on an output, where it sounds centered unless a subclass routes it elsewhere, like an `AmbienceEmitter` through a panner. Nothing of it is prerecorded or seeded: every start sounds a little different.
  */
 export default abstract class AmbienceLoop {
   readonly gain: number

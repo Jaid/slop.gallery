@@ -1,8 +1,7 @@
-import type {Voice} from './proceduralAudio.ts'
+import type {Voice} from 'procedural-audio'
 
 import {clamp} from 'math'
-
-import {noise, osc} from './proceduralAudio.ts'
+import {noise, osc} from 'procedural-audio'
 
 /** which part of a loose work strikes first */
 export type FrameContact = 'corner' | 'edge' | 'flat'

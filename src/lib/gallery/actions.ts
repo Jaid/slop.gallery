@@ -1,6 +1,6 @@
-import type {Voice} from '../audio/proceduralAudio.ts'
 import type {FusionImpact} from './fusion/Fusion.ts'
 import type {Portrait, ThrownItem, Vec3} from './types.ts'
+import type {Voice} from 'procedural-audio'
 
 import composeId from 'compose-id'
 import {defaultEgoOptions} from 'ego-player/motor'

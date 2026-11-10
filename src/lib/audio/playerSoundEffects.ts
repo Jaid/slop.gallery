@@ -1,8 +1,8 @@
-import type {SoundEffect, Voice} from './proceduralAudio.ts'
+import type {SoundEffect} from './types.ts'
+import type {Voice} from 'procedural-audio'
 
 import {clamp} from 'math'
-
-import {noise, osc} from './proceduralAudio.ts'
+import {noise, osc} from 'procedural-audio'
 
 export type FootstepSurface = 'fabric' | 'generic' | 'glass' | 'hollow' | 'stone'
 

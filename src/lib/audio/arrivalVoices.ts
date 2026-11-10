@@ -1,6 +1,6 @@
-import type {Voice} from './proceduralAudio.ts'
+import type {Voice} from 'procedural-audio'
 
-import {noise, osc, scaleVoices} from './proceduralAudio.ts'
+import {noise, osc, scaleVoices} from 'procedural-audio'
 
 /** how long the shimmer of a work dropped into the room swells, in seconds, before the work is there */
 const landing = 0.38

@@ -1,10 +1,12 @@
-import type {AudioOutput, SoundEffect} from './proceduralAudio.ts'
+import type {SoundEffect} from './types.ts'
+import type {AudioOutput} from 'procedural-audio'
+
+import playVoices, {noise, osc} from 'procedural-audio'
 
 import {playerSoundEffects} from './playerSoundEffects.ts'
-import {noise, osc, playVoices} from './proceduralAudio.ts'
 import {switchSoundEffects} from './switchSoundEffects.ts'
 
-export type {SoundEffect} from './proceduralAudio.ts'
+export type {SoundEffect} from './types.ts'
 
 export const soundEffects: Array<SoundEffect> = [
   {
@@ -188,6 +190,6 @@ export function playSoundEffect(sound: AudioOutput, id: string) {
   if (!effect) {
     return false
   }
-  playVoices(sound, effect.voices, id)
+  playVoices(sound, effect.voices, {seed: id})
   return true
 }

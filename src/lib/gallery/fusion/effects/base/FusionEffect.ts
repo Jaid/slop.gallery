@@ -1,6 +1,6 @@
-import type {AudioOutput} from '#src/lib/audio/proceduralAudio.ts'
 import type Fusion from '#src/lib/gallery/fusion/Fusion.ts'
 import type {PortalOffset} from './portalOffset.ts'
+import type {AudioOutput} from 'procedural-audio'
 import type {Object3D} from 'three/webgpu'
 
 /** a fusion’s effect as one portal shows it */

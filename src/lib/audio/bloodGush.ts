@@ -1,6 +1,6 @@
 import type {BloodPouring, BloodSplat, Heartbeat} from '../gallery/fusion/effects/blood/flights.ts'
 import type {PortalFrame} from '../gallery/fusion/portalFrame.ts'
-import type {AudioOutput} from './proceduralAudio.ts'
+import type {AudioOutput} from 'procedural-audio'
 
 import {offsetPosition} from '../gallery/fusion/effects/base/portalOffset.ts'
 import EffectSound from './EffectSound.ts'

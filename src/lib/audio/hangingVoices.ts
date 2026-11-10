@@ -1,8 +1,9 @@
 import type {FrameImpactSoundId} from './frameImpacts.ts'
-import type {Voice} from './proceduralAudio.ts'
+import type {Voice} from 'procedural-audio'
+
+import {noise, osc, shiftVoices} from 'procedural-audio'
 
 import {frameImpactVoices} from './frameImpacts.ts'
-import {noise, osc, shiftVoices} from './proceduralAudio.ts'
 
 /** how fast a work strikes its wall as its hanging slaps it there, in m/s, for the loudness of its strike */
 const slapSpeed = 6

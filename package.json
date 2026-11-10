@@ -44,6 +44,7 @@
   },
   "dependencies": {
     "ai": "7.0.166",
+    "ambience-emitter": "workspace:*",
     "branch-component": "0.4.0",
     "canvas-textures": "workspace:*",
     "capture-session": "workspace:*",
@@ -60,6 +61,7 @@
     "math": "0.1.0",
     "mount-root": "0.5.0",
     "optis": "0.3.0",
+    "procedural-audio": "workspace:*",
     "rapier-body-contact": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1",

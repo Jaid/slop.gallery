@@ -1,13 +1,12 @@
 import type {Vec3} from '../gallery/types.ts'
-import type {Hearing} from './hearing.ts'
 import type {FootstepSurface} from './playerSoundEffects.ts'
-import type {AudioOutput, ProceduralPlayback, Voice} from './proceduralAudio.ts'
+import type {AudioOutput, Hearing, Playback, Voice} from 'procedural-audio'
 
 import {clamp} from 'math'
+import playVoices, {osc} from 'procedural-audio'
 
 import {audioVolume} from './audioParameter.ts'
 import {footstepVoices, impactFootstepStrength, playerSoundEffects} from './playerSoundEffects.ts'
-import {osc, playVoices, playVoicesAt} from './proceduralAudio.ts'
 import {playSoundEffect} from './soundEffects.ts'
 import TransformerChain from './transformers/TransformerChain.ts'
 
@@ -40,10 +39,10 @@ export default class SoundEngine {
   private extendedZoom = false
   private lastLanding = Number.NEGATIVE_INFINITY
   private muted = false
-  private viewMotion?: ProceduralPlayback
+  private viewMotion?: Playback
   private zoomAmount = 0
-  private zoomBed?: ProceduralPlayback
-  private zoomMotion?: ProceduralPlayback
+  private zoomBed?: Playback
+  private zoomMotion?: Playback
 
   private constructor() {
     this.master.gain.value = effectsGain
@@ -68,7 +67,7 @@ export default class SoundEngine {
       crouching,
       strength: impactFootstepStrength(impactSpeed),
       variation: Math.sin(index * 2.39996),
-    }), `land:${index}`)
+    }), {seed: `land:${index}`})
   }
 
   mute(muted: boolean) {
@@ -94,11 +93,11 @@ export default class SoundEngine {
     if (this.muted || !voices.length) {
       return
     }
-    if (position) {
-      playVoicesAt(this.world, voices, seed, position, hearing)
-    } else {
-      playVoices(this.world, voices, seed)
-    }
+    playVoices(this.world, voices, {
+      seed,
+      position,
+      hearing,
+    })
   }
 
   async resume() {
@@ -117,7 +116,8 @@ export default class SoundEngine {
       this.zoomMotion = undefined
       return
     }
-    this.zoomBed ??= playVoices(this, playerSoundEffects.zoom.voices, playerSoundEffects.zoom.id, {
+    this.zoomBed ??= playVoices(this, playerSoundEffects.zoom.voices, {
+      seed: playerSoundEffects.zoom.id,
       sustain: true,
       gain: 0,
     })
@@ -133,7 +133,7 @@ export default class SoundEngine {
     playVoices(this.world, footstepVoices(surface, speed, {
       crouching,
       variation: Math.sin(index * 2.39996),
-    }), `step:${index}`)
+    }), {seed: `step:${index}`})
   }
 
   stopPlayerSounds() {
@@ -145,7 +145,7 @@ export default class SoundEngine {
   /** A plain falling sine in the world, the sound of most interactions. */
   tone(frequency: number, duration = 0.3, volume = 0.055) {
     if (!this.muted) {
-      playVoices(this.world, [osc(frequency, duration, volume, {endFrequency: frequency * 0.55})], 'tone')
+      playVoices(this.world, [osc(frequency, duration, volume, {endFrequency: frequency * 0.55})], {seed: 'tone'})
     }
   }
 
@@ -156,7 +156,7 @@ export default class SoundEngine {
       return
     }
     const effect = entering ? playerSoundEffects.viewEnter : playerSoundEffects.viewLeave
-    this.viewMotion = playVoices(this, effect.voices, effect.id)
+    this.viewMotion = playVoices(this, effect.voices, {seed: effect.id})
   }
 
   zoomTransition(extended: boolean, retract: boolean, duration: number) {
@@ -171,7 +171,10 @@ export default class SoundEngine {
     if (extended) {
       effect = retract ? playerSoundEffects.extendedZoomRetract : playerSoundEffects.extendedZoomForward
     }
-    this.zoomMotion = playVoices(this, effect.voices, effect.id, {duration})
+    this.zoomMotion = playVoices(this, effect.voices, {
+      seed: effect.id,
+      duration,
+    })
   }
 
   private updateZoomGain() {

@@ -1,6 +1,6 @@
-import type AmbienceLoop from '../../src/lib/audio/ambience/base/AmbienceLoop.ts'
 import type {MoodFade} from '../../src/lib/moods/base/Mood.ts'
 import type {MoodOutput, MoodTarget} from '../../src/lib/moods/MoodMixer.ts'
+import type {AmbienceLoop} from 'ambience-emitter'
 
 import {afterEach, describe, expect, mock, test} from 'bun:test'
 

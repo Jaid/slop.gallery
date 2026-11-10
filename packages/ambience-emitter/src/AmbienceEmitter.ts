@@ -1,16 +1,22 @@
-import type {Vec3} from '../../../gallery/types.ts'
-import type {Hearing} from '../../hearing.ts'
 import type {AmbienceLoopOptions} from './AmbienceLoop.ts'
+import type {Hearing, Position} from 'procedural-audio'
 
-import {absorptionCutoff, hearingShare, openCutoff} from '../../hearing.ts'
+import {absorptionCutoff, hearingPath, hearingShare, openCutoff} from 'procedural-audio'
+
 import AmbienceLoop from './AmbienceLoop.ts'
 
-export type {NoiseBed, ToneBed} from './AmbienceLoop.ts'
+export type HearOptions = {
+  /** whether what changes glides there, by default `true`; otherwise it follows at once, like after the listener jumped somewhere else */
+  fading?: boolean
+  /** the ID of the room the listener is in, which disables the emitter outside its rooms; left out, the emitter stays as it is */
+  room?: string
+}
 export type AmbienceEmitterOptions = AmbienceLoopOptions & {
   /** full level within `near` meters, fading linearly to silence at `far` */
   hearing: Hearing
-  position: Vec3
-  /** the rooms the emitter sounds in; it is disabled while the listener is anywhere else */
+  /** where it sounds from, in the listener’s space */
+  position: Position
+  /** the IDs of the rooms the emitter sounds in, by default everywhere; it is disabled while the listener is anywhere else */
   rooms?: ReadonlyArray<string>
 }
 
@@ -23,7 +29,7 @@ const retuneStep = 1.01
  */
 export default abstract class AmbienceEmitter extends AmbienceLoop {
   readonly hearing: Hearing
-  readonly position: Vec3
+  readonly position: Position
   readonly rooms?: ReadonlyArray<string>
   /** the lowpass the air takes the highs through, while the emitter sounds */
   private absorption?: BiquadFilterNode
@@ -38,9 +44,11 @@ export default abstract class AmbienceEmitter extends AmbienceLoop {
     this.rooms = rooms
   }
 
-  /** Hears the emitter from `listener` in `room`: disabled outside its rooms, and the farther away, the more muffled. Without `fading`, both follow at once instead of gliding, like after the listener jumped somewhere else. */
-  hear(listener: Vec3, room: string, fading = true) {
-    this.setListenerRoom(room, fading)
+  /** Hears the emitter from `listener`: the farther away, the more muffled, and disabled while the listener’s `room` is none of its rooms. Call it whenever the listener moved, like every frame. */
+  hear(listener: Position, {fading = true, room}: HearOptions = {}) {
+    if (room !== undefined) {
+      this.setListenerRoom(room, fading)
+    }
     const cutoff = absorptionCutoff(hearingShare(this.position, listener, this.hearing))
     if (Math.max(cutoff / this.cutoff, this.cutoff / cutoff) < retuneStep) {
       return
@@ -55,23 +63,10 @@ export default abstract class AmbienceEmitter extends AmbienceLoop {
   }
 
   protected override route(level: GainNode, context: BaseAudioContext) {
-    const [x, y, z] = this.position
-    const panner = new PannerNode(context, {
-      panningModel: 'HRTF',
-      distanceModel: 'linear',
-      refDistance: this.hearing.near,
-      maxDistance: this.hearing.far,
-      rolloffFactor: 1,
-      positionX: x,
-      positionY: y,
-      positionZ: z,
-    })
-    this.absorption = new BiquadFilterNode(context, {
-      type: 'lowpass',
-      frequency: this.cutoff,
-      Q: 0.5,
-    })
-    return level.connect(panner).connect(this.absorption)
+    const {absorption, panner} = hearingPath(context, this.position, this.hearing, this.cutoff)
+    this.absorption = absorption
+    level.connect(panner)
+    return absorption
   }
 
   /** Disables the emitter while the listener is outside its rooms, fading it out and in again, or without `fading` at once. */
@@ -89,9 +84,9 @@ export default abstract class AmbienceEmitter extends AmbienceLoop {
     this.absorption = undefined
   }
 
-  /** How loud the emitter reaches a listener at `listener` in `room`, 0–1, before {@link gain}; 0 while disabled there. */
-  strengthAt(listener: Vec3, room: string) {
-    if (!this.isInside(room)) {
+  /** How loud the emitter reaches a listener at `listener`, in `room` if given, 0–1, before {@link gain}; 0 while disabled there. */
+  strengthAt(listener: Position, room?: string) {
+    if (room !== undefined && !this.isInside(room)) {
       return 0
     }
     return 1 - hearingShare(this.position, listener, this.hearing)

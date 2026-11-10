@@ -1,6 +1,7 @@
-import type {SoundEffect, Voice} from './proceduralAudio.ts'
+import type {SoundEffect} from './types.ts'
+import type {Voice} from 'procedural-audio'
 
-import {noise, osc} from './proceduralAudio.ts'
+import {noise, osc} from 'procedural-audio'
 
 /**
  * An old push-button light switch: the pressed button goes in with a snap of its spring and a knock of the Bakelite body, the other one pops out a moment later, lighter. Switching on, the lights hum up briefly; switching off, the hum drops away. Off sounds a little lower than on.

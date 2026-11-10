@@ -1,7 +1,6 @@
-import type {NoiseBed} from '../base/AmbienceLoop.ts'
-import type {Range} from '../base/noise.ts'
+import type {NoiseBed, Range} from 'ambience-emitter'
 
-import AmbienceLoop from '../base/AmbienceLoop.ts'
+import {AmbienceLoop} from 'ambience-emitter'
 
 /** cold air pressing through iron bars: slow, deep gusts, a moan wandering in pitch that only stands out at their height and a hiss over the stone’s edges */
 const beds: ReadonlyArray<NoiseBed> = [

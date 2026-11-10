@@ -1,4 +1,4 @@
-import type {Voice} from '../../src/lib/audio/proceduralAudio.ts'
+import type {Voice} from 'procedural-audio'
 
 import {expect, test} from 'bun:test'
 

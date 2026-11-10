@@ -1,10 +1,9 @@
-export type Range = readonly [number, number]
-
 /** seconds that looping noise and sway curves last; white noise has no audible seam */
 export const loopLength = 6
 
 const noiseBuffers = new WeakMap<BaseAudioContext, AudioBuffer>
-/** A few seconds of white noise, shared by every emitter of a context. */
+
+/** A few seconds of white noise, shared by everything that sounds in a context. Looped or started somewhere at random, it never repeats audibly. */
 export function whiteNoise(context: BaseAudioContext) {
   let buffer = noiseBuffers.get(context)
   if (!buffer) {
@@ -18,7 +17,7 @@ export function whiteNoise(context: BaseAudioContext) {
   return buffer
 }
 
-/** Smooth random values in 0–1 that loop seamlessly, `rate` new targets per second. */
+/** Smooth random values in 0–1 that loop seamlessly, `rate` new targets per second, to modulate a level or a filter with. */
 export function swayCurve(context: BaseAudioContext, rate: number) {
   const points = Math.max(2, Math.round(rate * loopLength))
   const targets = Array.from({length: points}, Math.random)

@@ -1,12 +1,12 @@
 import type {IngredientLatch} from '../gallery/fusion/FusionRecipe.ts'
 import type {FusionTiming} from '../gallery/fusion/timing.ts'
 import type {Vec3} from '../gallery/types.ts'
-import type {AudioOutput} from './proceduralAudio.ts'
+import type {AudioOutput} from 'procedural-audio'
+
+import {atContextTime, whiteNoise} from 'procedural-audio'
 
 import {choreographed, drags, emberRhythm, gathering, grab, ignition, implosion, introSeconds, release, whirl, whirled, whirling, yank} from '../gallery/fusion/intro.ts'
 import {introTurns} from '../gallery/fusion/timing.ts'
-import {whiteNoise} from './ambience/base/noise.ts'
-import atContextTime from './atContextTime.ts'
 
 type Tone = {
   attack?: number

@@ -1,5 +1,5 @@
 import type {Vec3} from '../gallery/types.ts'
-import type {AudioOutput} from './proceduralAudio.ts'
+import type {AudioOutput} from 'procedural-audio'
 
 import EffectSound from './EffectSound.ts'
 

@@ -12,6 +12,7 @@
         "@react-three/rapier": "2.2.0",
         "@react-three/tsl": "10.0.0-alpha.6",
         "ai": "7.0.166",
+        "ambience-emitter": "workspace:*",
         "branch-component": "0.4.0",
         "canvas-textures": "workspace:*",
         "capture-session": "workspace:*",
@@ -28,6 +29,7 @@
         "math": "0.1.0",
         "mount-root": "0.5.0",
         "optis": "0.3.0",
+        "procedural-audio": "workspace:*",
         "rapier-body-contact": "workspace:*",
         "react": "19.3.1",
         "react-dom": "19.3.1",
@@ -97,6 +99,13 @@
         "vite-plugin-media-mixins": "0.10.0",
         "vite-plugin-title": "0.6.0",
         "webmcp-types": "0.1.10",
+      },
+    },
+    "packages/ambience-emitter": {
+      "name": "ambience-emitter",
+      "version": "0.1.0",
+      "dependencies": {
+        "procedural-audio": "workspace:*",
       },
     },
     "packages/canvas-textures": {
@@ -209,6 +218,10 @@
       "peerDependencies": {
         "three": "^0.187.0",
       },
+    },
+    "packages/procedural-audio": {
+      "name": "procedural-audio",
+      "version": "0.1.0",
     },
     "packages/rapier-body-contact": {
       "name": "rapier-body-contact",
@@ -1092,6 +1105,8 @@
 
     "ajv": ["ajv@6.15.0", "", { "dependencies": { "fast-deep-equal": "^3.1.1", "fast-json-stable-stringify": "^2.0.0", "json-schema-traverse": "^0.4.1", "uri-js": "^4.2.2" } }, "sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw=="],
 
+    "ambience-emitter": ["ambience-emitter@workspace:packages/ambience-emitter"],
+
     "ansi-regex": ["ansi-regex@6.6.0", "", {}, "sha512-XZ5apbzreCbXSKwPjJstu8R0zOi247w3XYwWxtwBXgpZrCyc1Ka7p9/xY0A9/diMewmHbEKz+FIraWaEWjlN5g=="],
 
     "ansi-styles": ["ansi-styles@6.2.3", "", {}, "sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg=="],
@@ -1743,6 +1758,8 @@
     "prelude-ls": ["prelude-ls@1.2.1", "", {}, "sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g=="],
 
     "proc-log": ["proc-log@6.1.0", "", {}, "sha512-iG+GYldRf2BQ0UDUAd6JQ/RwzaQy6mXmsk/IzlYyal4A4SNFw54MeH4/tLkF4I5WoWG9SQwuqWzS99jaFQHBuQ=="],
+
+    "procedural-audio": ["procedural-audio@workspace:packages/procedural-audio"],
 
     "promise-worker-transferable": ["promise-worker-transferable@1.0.4", "", { "dependencies": { "is-promise": "^2.1.0", "lie": "^3.0.2" } }, "sha512-bN+0ehEnrXfxV2ZQvU2PetO0n4gqBD4ulq3MI1WOPLgr7/Mg9yRQkX5+0v1vagr74ZTsl7XtzlaYDo2EuCeYJw=="],
 

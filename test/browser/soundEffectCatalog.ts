@@ -1,4 +1,5 @@
-import {playVoices} from '../../src/lib/audio/proceduralAudio.ts'
+import playVoices from 'procedural-audio'
+
 import {soundEffects} from '../../src/lib/audio/soundEffects.ts'
 
 const rate = 48_000
@@ -21,7 +22,7 @@ export default async function verify() {
     playVoices({
       context,
       master,
-    }, effect.voices, effect.id)
+    }, effect.voices, {seed: effect.id})
     const buffer = await context.startRendering()
     const samples = buffer.getChannelData(0)
     let peak = 0

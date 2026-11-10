@@ -1,11 +1,12 @@
-import type {Voice} from '../../src/lib/audio/proceduralAudio.ts'
+import type {Voice} from 'procedural-audio'
+
+import playVoices, {shiftVoices} from 'procedural-audio'
 
 import arrivalVoices, {arrivalGap} from '../../src/lib/audio/arrivalVoices.ts'
 import {frameImpactSounds, frameImpactVoices} from '../../src/lib/audio/frameImpacts.ts'
 import hangingVoices from '../../src/lib/audio/hangingVoices.ts'
 import {orbImpactVoices} from '../../src/lib/audio/orbImpacts.ts'
 import {footstepVoices, impactFootstepStrength} from '../../src/lib/audio/playerSoundEffects.ts'
-import {playVoices, playVoicesAt, shiftVoices} from '../../src/lib/audio/proceduralAudio.ts'
 import TransformerChain from '../../src/lib/audio/transformers/TransformerChain.ts'
 import {hangingAnimation} from '../../src/lib/gallery/hanging/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -67,7 +68,7 @@ async function render(name: string, seconds: number, play: (output: {
     loudest: Number(loudest.toFixed(5)),
   }
 }
-const recipe = (name: string, voices: ReadonlyArray<Voice>) => render(name, length(voices) + 0.15, output => playVoices(output, voices, name))
+const recipe = (name: string, voices: ReadonlyArray<Voice>) => render(name, length(voices) + 0.15, output => playVoices(output, voices, {seed: name}))
 
 /** Renders every strike, arrival and room of the world, through the transformers of its moods, into silent offline buffers: no audible output, DOM, input, focus or viewport changes. */
 export default async function verify() {
@@ -90,13 +91,21 @@ export default async function verify() {
     }
   }
   // Heard from where it happened: farther away, quieter.
-  const near = await render('a strike 1 m away', 0.6, output => playVoicesAt(output, orbImpactVoices('generic', 6), 'near', [0, 0, -1], {
-    near: 2,
-    far: 26,
+  const near = await render('a strike 1 m away', 0.6, output => playVoices(output, orbImpactVoices('generic', 6), {
+    seed: 'near',
+    position: [0, 0, -1],
+    hearing: {
+      near: 2,
+      far: 26,
+    },
   }))
-  const far = await render('a strike 18 m away', 0.6, output => playVoicesAt(output, orbImpactVoices('generic', 6), 'far', [0, 0, -18], {
-    near: 2,
-    far: 26,
+  const far = await render('a strike 18 m away', 0.6, output => playVoices(output, orbImpactVoices('generic', 6), {
+    seed: 'far',
+    position: [0, 0, -18],
+    hearing: {
+      near: 2,
+      far: 26,
+    },
   }))
   assert(far.loudest < near.loudest * 0.6, 'A strike far away must sound quieter')
   const arrivals = {
@@ -131,7 +140,7 @@ export default async function verify() {
         playVoices({
           context: output.context,
           master: world,
-        }, landing, 'landing')
+        }, landing, {seed: 'landing'})
         return output.context.resume()
       })
     }

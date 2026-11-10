@@ -1,8 +1,8 @@
-import type AmbienceLoop from '../audio/ambience/base/AmbienceLoop.ts'
-import type {AudioOutput} from '../audio/proceduralAudio.ts'
 import type TransformerChain from '../audio/transformers/TransformerChain.ts'
 import type Mood from './base/Mood.ts'
 import type {MoodFade, MoodLight} from './base/Mood.ts'
+import type {AmbienceLoop} from 'ambience-emitter'
+import type {AudioOutput} from 'procedural-audio'
 import type {Light} from 'three/webgpu'
 
 import {clamp} from 'math'

@@ -1,4 +1,4 @@
-import atContextTime from '../atContextTime.ts'
+import {atContextTime} from 'procedural-audio'
 
 /**
  * How a mood transforms every sound of the world, like the walls of a room ringing on: wires `input` to `output` through nodes of its own, the dry sound included, returning how to disconnect them again.

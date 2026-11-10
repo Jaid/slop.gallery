@@ -1,10 +1,11 @@
 import type {FlyingBat} from '../gallery/fusion/effects/bats/flights.ts'
 import type {PortalFrame} from '../gallery/fusion/portalFrame.ts'
-import type {AudioOutput} from './proceduralAudio.ts'
+import type {AudioOutput} from 'procedural-audio'
+
+import {whiteNoise} from 'procedural-audio'
 
 import {offsetPosition} from '../gallery/fusion/effects/base/portalOffset.ts'
 import {batOffset} from '../gallery/fusion/effects/bats/flights.ts'
-import {whiteNoise} from './ambience/base/noise.ts'
 import EffectSound from './EffectSound.ts'
 
 /** the leathery flutter of the swarm’s wings: how many times a second each layer flaps and where its noise rings, in hertz */

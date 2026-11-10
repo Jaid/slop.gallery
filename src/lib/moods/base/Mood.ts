@@ -1,5 +1,5 @@
-import type AmbienceLoop from '#src/lib/audio/ambience/base/AmbienceLoop.ts'
 import type {SoundTransformer} from '#src/lib/audio/transformers/TransformerChain.ts'
+import type {AmbienceLoop} from 'ambience-emitter'
 
 /** what a kind of light is multiplied by while a mood holds: a color, whose channels pass that share of the light, and a gain on top */
 export type MoodLight = {

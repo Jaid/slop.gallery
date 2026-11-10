@@ -4,12 +4,12 @@ import type {Orb} from '#src/lib/gallery/orbs/index.ts'
 import type CannonFx from './CannonFx.ts'
 import type {Object3D} from 'three/webgpu'
 
+import {shiftVoices} from 'procedural-audio'
 import {uniform} from 'three/tsl'
 import {Vector3} from 'three/webgpu'
 
 import {propObjects, showPropAt} from '#src/components/Scene/GrabbableProp.tsx'
 import {alchemyBrewVoices, alchemySwallowVoices, cannonVoices} from '#src/lib/audio/alchemySounds.ts'
-import {shiftVoices} from '#src/lib/audio/proceduralAudio.ts'
 import {bodyPose, playSound, useGallery} from '#src/lib/gallery.ts'
 import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, inSinkThroat, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {orbAround, transmutedOrb} from '#src/lib/gallery/alchemy/flavor.ts'

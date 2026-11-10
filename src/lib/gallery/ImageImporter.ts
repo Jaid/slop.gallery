@@ -1,9 +1,10 @@
 import type {Placement, Portrait, Vec3} from './types.ts'
 
+import {shiftVoices} from 'procedural-audio'
+
 import world from '#src/worlds/current.ts'
 
 import arrivalVoices, {arrivalGap} from '../audio/arrivalVoices.ts'
-import {shiftVoices} from '../audio/proceduralAudio.ts'
 import {frameBack} from '../frames/base/PortraitFrame.ts'
 import {defaultPortraitArea} from '../placement/portraitSlots.ts'
 import {arrivalFrame, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'

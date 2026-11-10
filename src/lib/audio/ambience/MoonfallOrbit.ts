@@ -1,8 +1,9 @@
 import type {Vec3} from '../../gallery/types.ts'
-import type {NoiseBed, ToneBed} from './base/AmbienceEmitter.ts'
+import type {NoiseBed, ToneBed} from 'ambience-emitter'
+
+import AmbienceEmitter from 'ambience-emitter'
 
 import roomOrigins from '../../gallery/layout.ts'
-import AmbienceEmitter from './base/AmbienceEmitter.ts'
 
 /** a low hum whose harmonics slowly beat against each other */
 const tones: ReadonlyArray<ToneBed> = [

@@ -1,9 +1,9 @@
 import type {Vec3} from '../../gallery/types.ts'
-import type {NoiseBed} from './base/AmbienceEmitter.ts'
-import type {Range} from './base/noise.ts'
+import type {NoiseBed, Range} from 'ambience-emitter'
+
+import AmbienceEmitter from 'ambience-emitter'
 
 import fountain from '../../gallery/fountain/config.ts'
-import AmbienceEmitter from './base/AmbienceEmitter.ts'
 
 /** water falling into water: a wandering mid-range plash, a low churn in the basin and a fine hiss of spray */
 const beds: ReadonlyArray<NoiseBed> = [

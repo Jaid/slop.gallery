@@ -1,6 +1,6 @@
-import type {Voice} from './proceduralAudio.ts'
+import type {Voice} from 'procedural-audio'
 
-import {noise, osc, shiftVoices} from './proceduralAudio.ts'
+import {noise, osc, shiftVoices} from 'procedural-audio'
 
 /**
  * An orb dropping down the throat of the alchemy machine’s sink into its iron body: the glass ticking against the brass, a hollow clonk as it lands inside and a low gulp sinking away under it.

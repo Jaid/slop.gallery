@@ -1,9 +1,8 @@
 import type {EscapingGhost} from '../gallery/fusion/effects/ghosts/flights.ts'
 import type {Vec3} from '../gallery/types.ts'
-import type {AudioOutput} from './proceduralAudio.ts'
+import type {AudioOutput} from 'procedural-audio'
 
-import {whiteNoise} from './ambience/base/noise.ts'
-import atContextTime from './atContextTime.ts'
+import {atContextTime, whiteNoise} from 'procedural-audio'
 
 const silence = 0.0001
 /** how high the sound rises with the ghosts over their flight, in meters */

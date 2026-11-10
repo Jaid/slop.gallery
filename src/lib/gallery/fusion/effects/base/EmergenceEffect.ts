@@ -1,8 +1,8 @@
-import type {AudioOutput} from '#src/lib/audio/proceduralAudio.ts'
 import type Fusion from '#src/lib/gallery/fusion/Fusion.ts'
 import type {PortalFrame} from '#src/lib/gallery/fusion/portalFrame.ts'
 import type EffectSprites from './EffectSprites.ts'
 import type {EffectShow} from './FusionEffect.ts'
+import type {AudioOutput} from 'procedural-audio'
 
 import {Group} from 'three/webgpu'
 
