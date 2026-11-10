@@ -19,6 +19,12 @@ export const fizzleRelease = 0.3
 export const tumbleSpeed = 1.9
 /** how far the tethers pull the satellites in while the intro whirls them, as a share of the orbit */
 const tightened = 0.1
+/** how far out along the wall the ring of fire’s landing knocks the satellites at most, as a share of their distance from the portal’s middle */
+const knockReach = 0.5
+/** seconds after the landing that the knock has flung them out furthest */
+const knockPeak = 0.15
+/** seconds after the landing from which they are back in their orbit, the lull’s */
+const knockBack = 1.5
 
 /** something orbiting a fusion’s portal: the work or what was thrown into it */
 export type SatelliteOrbit = {
@@ -60,12 +66,23 @@ const unwhirled = new Vector3
 const whirledTo = new Vector3
 const facingBefore = new Quaternion
 const facingAfter = new Quaternion
+const away = new Vector3
+const middle = new Vector3
 /** how far out beyond its place on the orbit the burst knocks a satellite, as a share of the orbit */
 const drift = 1.3
 const from: SatellitePose = {
   position: new Vector3,
   quaternion: new Quaternion,
   scale: 1,
+}
+
+/** How far out along the wall the ring of fire’s landing as the intro ends has knocked the satellites `elapsed` seconds into the fusion, as a share of their distance from the portal’s middle: flung out at once by its shockwave, they drift back in and are exactly in their orbit again {@link knockBack} seconds after it. */
+export function landingKnock(elapsed: number, {intro}: Pick<FusionTiming, 'intro'>) {
+  const after = elapsed - intro
+  if (after <= 0 || after >= knockBack) {
+    return 0
+  }
+  return knockReach * after / knockPeak * Math.exp(1 - after / knockPeak) * (1 - (after / knockBack) ** 4)
 }
 
 /** The orbit angle `elapsed` seconds into a fusion, speeding up through a climax that starts `at` seconds in. */
@@ -113,7 +130,7 @@ export function orbitFacing(frame: PortalFrame, point: Vector3, wobble: number, 
 }
 
 /**
- * The satellite’s pose in the world `elapsed` seconds into the fusion: the intro takes it from where it was seized into orbit, it circles the portal and, on success, spirals into it during the climax, shrinking away.
+ * The satellite’s pose in the world `elapsed` seconds into the fusion: the intro takes it from where it was seized into orbit, the ring of fire landing as it ends knocks it out for a moment, it circles the portal and, on success, spirals into it during the climax, shrinking away.
  * On failure, the orbit stutters through the first part of the fizzle; then the work flies home to its wall, while anything else is spat out, which the caller does.
  */
 export function satellitePose(frame: PortalFrame, timing: FusionTiming, satellite: SatelliteOrbit, elapsed: number, outcome: FusionOutcome | undefined, out: SatellitePose): SatellitePose {
@@ -124,6 +141,7 @@ export function satellitePose(frame: PortalFrame, timing: FusionTiming, satellit
       duration: timing.climax,
     })
     orbiting(frame, satellite, elapsed, angle, (1 - progress) ** 2, out)
+    knockOut(frame, out.position, landingKnock(elapsed, timing))
     out.scale = satellite.scale * (1 - fade(clamp((progress - shrinkFrom) / (0.95 - shrinkFrom), 0, 1)))
     return out
   }
@@ -143,7 +161,9 @@ export function satellitePose(frame: PortalFrame, timing: FusionTiming, satellit
   if (elapsed < timing.intro) {
     return entering(frame, timing, satellite, elapsed, out)
   }
-  return orbiting(frame, satellite, elapsed, orbitAngle(satellite.phase, elapsed), 1, out)
+  orbiting(frame, satellite, elapsed, orbitAngle(satellite.phase, elapsed), 1, out)
+  knockOut(frame, out.position, landingKnock(elapsed, timing))
+  return out
 }
 
 /** The satellite’s pose while it orbits freely at the angle, `reach` of the way out: a work faces the room, a prop tumbles. */
@@ -163,11 +183,22 @@ export function introOrbitRate(elapsed: number, timing: FusionTiming) {
   return orbitSpeed * clamp((introClock(elapsed, timing) - ignition) / departure, 0, 1) + whirlRate(elapsed, timing)
 }
 
+/** Pushes the point away from the portal’s middle along the wall, by `share` of how far from it it lies there, never toward the wall or away from it, the way the shockwave runs out over the portal’s disc. */
+function knockOut(frame: PortalFrame, point: Vector3, share: number) {
+  if (share > 0) {
+    normal.fromArray(frame.normal)
+    away.subVectors(point, middle.fromArray(frame.center))
+    point.addScaledVector(away.addScaledVector(normal, -away.dot(normal)), share)
+  }
+  return point
+}
 /** The orbit running down and shuddering through the start of a fizzle, `progress` of the way through it. */
 function stuttering(frame: PortalFrame, timing: FusionTiming, satellite: SatelliteOrbit, elapsed: number, failedAt: number, progress: number, out: SatellitePose) {
   const stutter = Math.min(progress, fizzleRelease) * timing.fizzle
   const angle = orbitAngle(satellite.phase, failedAt) + orbitSpeed * (stutter - stutter ** 2 / (2 * fizzleRelease * timing.fizzle) * 0.8)
-  return orbiting(frame, satellite, elapsed, angle, 1 + Math.sin(elapsed * 47) * 0.035, out)
+  orbiting(frame, satellite, elapsed, angle, 1 + Math.sin(elapsed * 47) * 0.035, out)
+  knockOut(frame, out.position, landingKnock(elapsed, timing))
+  return out
 }
 /** an elastic return from `displaced` to 0 over `seconds`, pushed on by `kick` at the start; exactly 0 from `seconds` on */
 function spring(after: number, displaced: number, kick: number, seconds: number) {

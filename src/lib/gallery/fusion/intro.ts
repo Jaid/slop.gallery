@@ -10,7 +10,7 @@ import {clamp, fade} from 'math'
  *
  * A singularity tears open in front of the work and sucks at everything around it: a wide stretch of the room bends toward it, twisting like water down a drain and darkening, while the work is torn from its wall and what was thrown into it is dragged along. Full, it collapses and bursts, the room snaps back like jelly and the burst knocks everything loose into the air.
  * The light it flung out streams back in and kindles an ember, which beats like a heart: each beat yanks an ingredient into place beside the ember, the work first, each surfacing in the ember as it arrives, and a last beat ignites the ember into the portal and sets them circling it.
- * At that, the portal lashes a tether out to each and whirls them around itself like a hammer thrower, ever faster and a little pulled in, until the comet trails of fire they leave behind close into a ring around it while the room swirls along. At full speed it lets go: they coast on out into their orbit, two laps further along, while the ring of fire falls into the portal and lands just as the intro ends with a blaze, a shockwave and a burst of sparks, the room rippling out from it.
+ * At that, the portal lashes a tether out to each and whirls them around itself like a hammer thrower, ever faster and a little pulled in, until the comet trails of fire they leave behind close into a ring around it while the room swirls along. At full speed it lets go: they coast on out into their orbit, two laps further along, while the ring of fire falls into the portal and lands just as the intro ends with a blaze, a shockwave and a burst of sparks, the room rippling out from it, which knocks them out along the wall, from where they drift back into their orbit.
  *
  * It keeps the {@link pulse} of the whole fusion, three of them long: the burst falls on the first, the ignition on the second and the landing on the third, after which the images take their turns on it. The ember’s beats divide the pulse between the burst and the ignition evenly, one for each ingredient: a triplet for two, sixteenths for three, a quintuplet for four.
  *
@@ -73,8 +73,8 @@ export function grab(index: number) {
 
 /** how many extra laps the whirl adds to the orbit */
 export const laps = 2
-/** how the whirl speeds up until the release: as the time since it began to this power */
-const rise = 1
+/** how the whirl speeds up until the release: as the time since it began to this power, which keeps it slow at first and gathers speed ever faster toward the release */
+const rise = 2
 /** how fast the whirl peaks, in radians per second of the choreography, so that it adds exactly its {@link laps} by the time the satellites have slowed back to the orbit’s speed as the intro ends */
 const whirlPeak = laps * 2 * Math.PI / ((release - whirl) / (rise + 1) + (choreographed - release) / 2)
 /** the longest the trails grow, in radians of the orbit: two of them nearly close the ring */

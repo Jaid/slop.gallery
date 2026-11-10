@@ -8,7 +8,7 @@ import FusionEffect from '../../src/lib/gallery/fusion/effects/base/FusionEffect
 import {brewing, portalEnvelope} from '../../src/lib/gallery/fusion/envelope.ts'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
 import {choreographed, emberRhythm, grab, ignition, implosion, introSeconds, introTether, introTrail, laps, pulse, release, whirl, whirled, whirling} from '../../src/lib/gallery/fusion/intro.ts'
-import {introOrbitRate, orbitPoint, orbitSpeed, satellitePose} from '../../src/lib/gallery/fusion/orbit.ts'
+import {introOrbitRate, orbitAngle, orbitPoint, orbitSpeed, satellitePose} from '../../src/lib/gallery/fusion/orbit.ts'
 import {portalFrame, portalRebound, satelliteSize, touchesPortal} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {firstTurn, fusionPulse, fusionTiming, imageAt, introTurns, minimumTurns, nextTurn} from '../../src/lib/gallery/fusion/timing.ts'
 
@@ -312,9 +312,9 @@ describe('intro', () => {
         if (elapsed >= setOff) {
           expect(wallSide(position)).toBeGreaterThan(0.1)
         }
-        // A yank may be quick, but nothing jumps faster than 24 m/s between frames.
+        // A yank may be quick and the whirl lets go at full speed, but nothing jumps faster than 34 m/s between frames.
         if (last) {
-          expect(position.distanceTo(last)).toBeLessThan(0.2)
+          expect(position.distanceTo(last)).toBeLessThan(0.28)
         }
         last = position.clone()
       }
@@ -348,6 +348,10 @@ describe('intro', () => {
       expect(whirled(t)).toBeGreaterThanOrEqual(angle)
       angle = whirled(t)
     }
+    // It whirls them slowly at first and gathers speed ever faster toward the release.
+    const halfway = (whirl + release) / 2
+    expect(whirling(halfway)).toBeLessThan(0.3)
+    expect(whirled(halfway)).toBeLessThan(whirled(release) / 6)
     for (const index of [0, 1]) {
       expect(introTether(index, introSeconds(grab(index), fusionTiming) - 1e-3, fusionTiming)).toBeUndefined()
       expect(introTether(index, introSeconds(grab(index) + 0.1, fusionTiming), fusionTiming)?.reach).toBeCloseTo(1, 6)
@@ -356,6 +360,24 @@ describe('intro', () => {
     }
     expect(introOrbitRate(introSeconds(release, fusionTiming), fusionTiming)).toBeGreaterThan(orbitSpeed * 4)
     expect(Math.abs(introOrbitRate(just, fusionTiming) - orbitSpeed)).toBeLessThan(0.3)
+  })
+  test('the ring of fire’s landing knocks everything out along the wall, from where it drifts back into its orbit', () => {
+    const center = new Vector3(...frame.center)
+    const normal = new Vector3(...frame.normal)
+    const along = (point: Vector3) => {
+      const offset = point.clone().sub(center)
+      return offset.addScaledVector(normal, -offset.dot(normal)).length()
+    }
+    for (const satellite of satellites) {
+      const knocked = satellitePose(frame, fusionTiming, satellite, end + 0.15, undefined, pose()).position
+      const orbiting = orbitPoint(frame, orbitAngle(satellite.phase, end + 0.15), 1, new Vector3)
+      expect(along(knocked)).toBeGreaterThan(along(orbiting) * 1.4)
+      // never toward the wall or away from it
+      expect(wallSide(knocked)).toBeCloseTo(wallSide(orbiting), 9)
+      for (const elapsed of [end + 1.5, end + 3]) {
+        expect(satellitePose(frame, fusionTiming, satellite, elapsed, undefined, pose()).position.distanceTo(orbitPoint(frame, orbitAngle(satellite.phase, elapsed), 1, new Vector3))).toBeLessThan(1e-9)
+      }
+    }
   })
   test('the ring of fire left behind falls into the portal and lands as the intro ends, with a blaze', () => {
     for (const index of [0, 1]) {
