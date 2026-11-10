@@ -138,6 +138,52 @@ index f8fc49fe7df98cbac4609603a1f2a2c6aea79675..ba03569dfdca88ed40eea0b9cc937dcf
  
  		}
  
+diff --git a/examples/jsm/tsl/display/TRAANode.js b/examples/jsm/tsl/display/TRAANode.js
+index fb4cf8161f85d42f6a83899c208fb255e43003b3..565a7c17f5397457223e9b028dcb6550fa739d1a 100644
+--- a/examples/jsm/tsl/display/TRAANode.js
++++ b/examples/jsm/tsl/display/TRAANode.js
+@@ -1,5 +1,5 @@
+ import { HalfFloatType, Vector2, RenderTarget, RendererUtils, QuadMesh, NodeMaterial, Node, NodeUpdateType, Matrix4, DepthTexture } from 'three/webgpu';
+-import { float, Fn, max, texture, uniform, uv, vec2, convertToTexture, passTexture, velocity, ivec2, mix, context, OnBeforeRenderPipeline, OnAfterRenderPipeline } from 'three/tsl';
++import { float, Fn, max, texture, uniform, uv, vec2, convertToTexture, passTexture, velocity, mix, context, OnBeforeRenderPipeline, OnAfterRenderPipeline } from 'three/tsl';
+ import { clipAABB, computeHaltonOffsets, flickerReduction, sampleCurrentDepth, samplePreviousDepth } from '../utils/TAAUtils.js';
+ 
+ const _quadMesh = /*@__PURE__*/ new QuadMesh();
+@@ -473,10 +473,13 @@ class TRAANode extends Node {
+ 			const moment1 = currentColor.toVar();
+ 			const moment2 = currentColor.pow2().toVar();
+ 
++			// Neighbors past the buffer's edges would load nothing: they take the edge's texel instead.
++			const lastTexel = vec2( this.beautyNode.size() ).sub( 0.5 ).toConst();
++
+ 			for ( const [ x, y ] of offsets ) {
+ 
+ 				// Use max() to prevent NaN values from propagating.
+-				const neighbor = this.beautyNode.offset( ivec2( x, y ) ).load( positionTexel ).max( 0 );
++				const neighbor = this.beautyNode.load( positionTexel.add( vec2( x, y ) ).clamp( vec2( 0.5 ), lastTexel ) ).max( 0 );
+ 				moment1.addAssign( neighbor );
+ 				moment2.addAssign( neighbor.pow2() );
+ 
+diff --git a/examples/jsm/tsl/utils/TAAUtils.js b/examples/jsm/tsl/utils/TAAUtils.js
+index 0e57209abb879dc49898ea860709a40eb0493532..4ce1a1fc70f8bc154bccfa3fae1626048631a644 100644
+--- a/examples/jsm/tsl/utils/TAAUtils.js
++++ b/examples/jsm/tsl/utils/TAAUtils.js
+@@ -80,11 +80,14 @@ export const sampleCurrentDepth = Fn( ( [ depthNode, positionTexel, cameraNearFa
+ 	const closestPositionTexel = vec2( 0 ).toVar();
+ 	const farthestDepth = float( - 1 ).toVar();
+ 
++	// Neighbors past the buffer's edges would load nothing: they take the edge's texel instead.
++	const lastTexel = vec2( depthNode.size() ).sub( 0.5 ).toConst();
++
+ 	for ( let x = - 1; x <= 1; ++ x ) {
+ 
+ 		for ( let y = - 1; y <= 1; ++ y ) {
+ 
+-			const neighbor = positionTexel.add( vec2( x, y ) ).toVar();
++			const neighbor = positionTexel.add( vec2( x, y ) ).clamp( vec2( 0.5 ), lastTexel ).toVar();
+ 			let depth = depthNode.load( neighbor ).r;
+ 			if ( builder.renderer.reversedDepthBuffer ) depth = depth.oneMinus();
+ 			if ( builder.renderer.logarithmicDepthBuffer ) depth = logarithmicToPerspectiveDepth( depth, cameraNearFar );
 diff --git a/src/nodes/lighting/PointShadowNode.js b/src/nodes/lighting/PointShadowNode.js
 index 7adc79bcf48ae56912c7597c5182d4a3a2a42421..7bd05db28bcb350ab24c3fbad8c2d670eb236738 100644
 --- a/src/nodes/lighting/PointShadowNode.js
