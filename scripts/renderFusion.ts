@@ -1,8 +1,10 @@
+import type {FusionEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import type {PortraitSlot, Quat, Vec3} from '#src/lib/gallery/types.ts'
 import type {PortraitDump} from '#src/lib/webmcp/dumpPortraits.ts'
 import type World from '#src/worlds/base/World.ts'
 import type {WorldId} from '#src/worlds/index.ts'
 import type {CameraKey, CameraPath, Shot, Timeline} from './lib/fusionCamera.ts'
+import type {Closing, Emphasis, Landing, PartyClosing, PartyFraming, PartyView, ResultClosing, ResultSample} from './lib/fusionEmphasis.ts'
 
 import {tmpdir} from 'node:os'
 import {join, parse, relative, resolve} from 'node:path'
@@ -12,8 +14,11 @@ import fs from 'fs-extra'
 import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 import {clamp} from 'math'
 
+import {inspectionFov} from '#src/lib/camera/OrbitInspection.ts'
 import {parseSeed} from '#src/lib/environmentSeed.ts'
+import {portraitFrame} from '#src/lib/frames/index.ts'
 import {hangDefaultWorks} from '#src/lib/gallery/defaultPortraits.ts'
+import {offsetPosition} from '#src/lib/gallery/fusion/effects/base/portalOffset.ts'
 import {portalIn, satelliteSize} from '#src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
 import {orbRadius, orbs} from '#src/lib/gallery/orbs/index.ts'
@@ -22,33 +27,14 @@ import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
 import {readWorld} from '#src/worlds/index.ts'
 
 import film from './film.ts'
-import {add, ease, handheld, holdPoint, keyedShot, length, mix, mix3, normalize, parseCameraPath, radians, scale, shotAngles, sub, throughKeys} from './lib/fusionCamera.ts'
+import {add, dot, ease, handheld, holdPoint, keyedShot, length, mix, mix3, normalize, parseCameraPath, radians, scale, shotAngles, sub, throughKeys} from './lib/fusionCamera.ts'
+import {emphases, emphasized, outermost, partyFraming, partyPush, partySwing, partyView, seenWithin, shotReach} from './lib/fusionEmphasis.ts'
 import {galleryHelp, galleryOptions, parseNumbers, repositoryRoot, resolveSettle, serveFile, timestamp} from './lib/headlessGallery.ts'
 
-/** what the closing shot shows: nothing in particular, the result lying on the floor, or the ingredient’s effect round the portal */
-export type Emphasis = typeof emphases[number]
-/** a sample of the result’s flight, from the probe */
-export type ResultSample = {
-  position: Vec3
-  quaternion: Quat
-  time: number
-}
-/** how the result came to rest, from the probe */
-export type Landing = {
-  height: number
-  position: Vec3
-  quaternion: Quat
-  /** seconds into the film it lies still from */
-  settled: number
-  /** its flight, from the moment it flipped out */
-  track: ReadonlyArray<ResultSample>
-  width: number
-}
 type PortalFrame = ReturnType<typeof portalIn>
 /** a key of the camera’s path round the portal: degrees round from straight out of the wall toward its tangent, meters out from the portal’s middle and above its floor, the field of view in degrees and the roll in degrees */
 type OrbitKey = [time: number, angle: number, radius: number, height: number, fov: number, roll: number]
 
-const emphases = ['neutral', 'party', 'result'] as const
 /** every world’s module, loaded only for the world whose room --room names */
 const worldModules: Record<WorldId, () => Promise<{default: World}>> = {
   gallery: () => import('#src/worlds/gallery/index.ts'),
@@ -56,11 +42,15 @@ const worldModules: Record<WorldId, () => Promise<{default: World}>> = {
   sandbox: () => import('#src/worlds/sandbox/index.ts'),
 }
 const videoSize = 2160
+/** how long a film lasts unless its camera path, --emphasis party or --end says otherwise, in seconds */
+const filmLength = 20
+/** how long a film of --emphasis party goes on once the ingredient’s effect is over and the portal has closed, in seconds */
+const partyOutro = 1
 /** rows the probe renders, which only has to get the physics right */
 const probeSize = 360
 const help = `Usage: bun scripts/renderFusion.ts [options]
 
-Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of a world, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and steps aside for the result, then, depending on --emphasis, holds there, follows the result down or pulls back for the ingredient’s effect. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
+Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of a world, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and steps aside for the result, where it holds, unless --emphasis ends the film otherwise. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
 Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser. The engine clock is virtual, see scripts/film.ts, which renders the film.
 With --emphasis result, a probe renders the fusion small first to learn where the result lands, which the camera of the film then plans for.
 
@@ -71,10 +61,10 @@ Options:
                           the work it is thrown into: a default work by its id, which hangs where the seed hangs it, or an image file or URL, which hangs in a portrait slot of --room as an imported work. Default: the first work hung in --room
   --room <id>             the room of the work, which the page opens in, and with it its world, like the Sandbox for its Cell, which loads much faster than the gallery; for a default work, where it hangs. Default: banquet
   --slot <id>             the portrait slot an image hangs in, in place of what hangs there. Default: a free slot of --room with the most room in front and to its sides
-  --emphasis <kind>       what the closing shot shows: neutral holds where the camera stepped aside for the result, looking at the portal, for as long as party; party pulls back a little for the ingredient’s effect, like the Halloween Orb’s bats or the Horror Orb’s blood, round the portal and on the floor; result follows the result down and cranes up close over it lying on the floor. Default: neutral
-  --camera <file>         a camera path as JSON, like the camera editor exports it, in place of the camera’s own: keys of time, position, target, field of view and roll that the camera passes through smoothly, the end of the film and whether the camera is held by hand, shaken by the fusion’s blows and swaying a little. It replaces the closing shot of --emphasis too; the throw still leaves from in front of the camera.
-  --plan-file <file>      writes what the film would show as JSON instead of filming it: the work, its portal, the fusion’s moments, the throw, with --emphasis result the result’s landing, which the probe still renders for, the camera in every frame and keys through its path round the portal for --camera
-  --hold <seconds>        how long the film goes on after the result lies still (result) or after the ingredient’s effect is over (neutral, party). Default: 3.5 for result, 1 otherwise
+  --emphasis <kind>       how the film ends, taking over from the camera’s path, its own or that of --camera, as the result flips out: neutral leaves the path as it is; party keeps everything the ingredient’s effect reaches, like the Halloween Orb’s bats or the Horror Orb’s blood, in view from just far enough, drifting round it a little, and ends the film a second after the effect is over; result follows the result down and cranes up over it lying on the floor until the last frame looks straight at its image, upright, which fills the view to the sight edge of its frame, as when viewing a hung portrait with V. Default: neutral
+  --camera <file>         a camera path as JSON, like the camera editor exports it, in place of the camera’s own: keys of time, position, target, field of view and roll that the camera passes through smoothly, the end of the film and whether the camera is held by hand, shaken by the fusion’s blows and swaying a little. --emphasis ends it as it ends the camera’s own; the throw still leaves from in front of the camera.
+  --plan-file <file>      writes what the film would show as JSON instead of filming it: the work, its portal, the fusion’s moments, the throw, how --emphasis ends it, with result the result’s landing, which the probe still renders for, the camera in every frame and keys through its path before it is held by hand and --emphasis ends it, or those of --camera
+  --end <seconds>         how long the film lasts. Default: with --emphasis party, until ${partyOutro} s after the ingredient’s effect is over and the portal has closed; otherwise the end of the path of --camera, otherwise ${filmLength}
   --fps <number>          frames per second. Default: 60
   --settle <frames>       wall-clock frames to render before recording. Default: 2
   --output-file <file>    the extension picks the format: .webm or .mkv for AV1 video, .jxl for an animated JPEG XL, .png for one PNG per frame. Default: out/fusion/<portrait>-<ingredient>-<timestamp>.webm
@@ -93,6 +83,7 @@ const renderFusionOptions = {
   ...galleryOptions,
   camera: {type: 'string'},
   crf: {type: 'string'},
+  end: {type: 'string'},
   emphasis: {
     type: 'string',
     default: 'neutral',
@@ -106,7 +97,6 @@ const renderFusionOptions = {
     default: 'cinematic',
   },
   'fast-decode': {type: 'string'},
-  hold: {type: 'string'},
   ingredient: {
     type: 'string',
     default: 'spook',
@@ -198,21 +188,11 @@ const aroundPortal = (world: World, portal: PortalFrame, angle: number, radius: 
   const room = world.wallDistance(at, direction) - 0.5
   return add(at, scale(direction, Math.max(0.5, Math.min(radius, room))))
 }
-/** The closing shot of --emphasis party: pulled back a little and up, looking at the portal and the floor in front of it, where effects like bats whirl and blood spills, drifting round a little. */
-const partyShot = (world: World, portal: PortalFrame, {emergence, end}: Timeline, time: number): Shot => {
-  const drift = ease((time - emergence) / (end - emergence))
-  return {
-    position: aroundPortal(world, portal, mix(-14, 4, drift), mix(4.6, 4.9, drift), mix(2.3, 2.45, drift)),
-    target: [portal.center[0] + portal.normal[0] * 0.45, portal.floor + 1.2, portal.center[2] + portal.normal[2] * 0.45],
-    fov: 56,
-    roll: 0,
-  }
-}
-/** how much of the view the result lying on the floor takes, across its longer side as seen from its middle; its near edge, closer to the camera, takes more */
+/** how much of the view the result lying on the floor takes, across its longer side as seen from its middle, while the camera looks down on it as it falls; its near edge, closer to the camera, takes more */
 const resultFill = 0.66
 /** how far a frame reaches out round its work on every side, in meters, about */
 const frameReach = 0.15
-/** the field of view the closing shot of --emphasis result looks down at the result with */
+/** the field of view the camera of --emphasis result looks down at the result with as it falls */
 const resultFov = 46
 /**
  * Where the camera of --emphasis result looks down on the result lying still: from the side of its bottom edge, so its image stands upright in the view, as close as it can with all of it in view, looking down steeply, or from in front a little above, should it stand or lean.
@@ -243,43 +223,70 @@ export function resultView({height, position, quaternion, width}: Pick<Landing, 
   }
 }
 
-/** The closing shot of --emphasis result: up and close over the result lying on the floor, drifting round it a little and pushing in. */
-const resultShot = (landing: Landing, view: ReturnType<typeof resultView>, {emergence, end}: Timeline, time: number): Shot => {
-  const drift = ease((time - emergence) / (end - emergence))
-  const direction = turned(view.direction, view.across, mix(-7, 7, drift))
-  const reach = mix(1.06, 0.97, drift)
-  const {position} = landing
+/** how much room the camera keeps from the ceiling, the floor and the walls, in meters */
+const roomMargin = 0.3
+
+/**
+ * How --emphasis result ends the film: following the result down and craning up over it, see {@link resultShot}, from where {@link resultView} looks down on it, until it looks straight at the middle of its image, which fills the view at the field of view of viewing a hung portrait with V, the larger of its sides for the film’s `aspect`, as far as its frame’s sight edge leaves it in sight, so none of the frame shows along those sides; should the ceiling stand in the way, from closer by and wider.
+ */
+export function resultClosing(landing: Landing, {aspect, ceiling, world}: {
+  aspect: number
+  ceiling: number
+  world: World
+}): ResultClosing {
+  const view = resultView(landing, ceiling, world)
+  const front = rotate([0, 0, 1], landing.quaternion)
+  const frame = portraitFrame(landing.frame)
+  // Its image lies recessed in its frame, by the frame.
+  const center = add(landing.position, scale(front, frame.imageDepth))
+  // Lying face down, it can only show its back, from above.
+  const normal = view.faceDown ? scale(front, -1) : front
+  const top = rotate([0, 1, 0], landing.quaternion)
+  const vantage: Vec3 = [landing.position[0] + view.direction[0] * view.back, view.eye, landing.position[2] + view.direction[2] * view.back]
+  const toward = normalize(sub(vantage, center))
+  const across = sub(toward, scale(normal, dot(toward, normal)))
+  // how far out from the image’s middle the ceiling and the walls let the camera stand
+  const flat = Math.hypot(normal[0], normal[2])
+  const below = normal[1] > 1e-3 ? (ceiling - roomMargin - center[1]) / normal[1] : Number.POSITIVE_INFINITY
+  const before = flat > 0.2 ? (world.wallDistance(center, [normal[0] / flat, 0, normal[2] / flat]) - roomMargin) / flat : Number.POSITIVE_INFINITY
+  const viewing = frame.viewingDistance(landing.width, landing.height, aspect, inspectionFov)
+  const distance = Math.min(viewing, below, before)
   return {
-    position: [position[0] + direction[0] * view.back * reach, position[1] + (view.eye - position[1]) * reach, position[2] + direction[2] * view.back * reach],
-    target: position,
+    kind: 'result',
+    landing,
+    center,
+    normal,
+    top: normalize(sub(top, scale(normal, dot(top, normal)))),
+    approach: normalize(length(across) > 1e-6 ? across : top),
+    elevation: Math.asin(clamp(dot(toward, normal), -1, 1)) * 180 / Math.PI,
+    distance: length(sub(vantage, center)),
     fov: resultFov,
-    roll: 0,
+    aligned: {
+      distance,
+      fov: distance < viewing ? 2 * Math.atan(frame.viewedFill(landing.width, landing.height, aspect, distance) / distance) * 180 / Math.PI : inspectionFov,
+    },
   }
 }
-/** Where the result is `time` seconds into the film, smoothed a little so the camera follows its flight calmly, or undefined before it flipped out. */
-const followResult = (track: ReadonlyArray<ResultSample>, time: number) => {
-  if (!track.length || time < track[0].time) {
-    return
-  }
-  const at = (moment: number): Vec3 => {
-    const index = track.findLastIndex(sample => sample.time <= moment)
-    const from = track[Math.max(0, index)]
-    const to = track[Math.min(track.length - 1, index + 1)]
-    return to.time > from.time ? mix3(from.position, to.position, clamp((moment - from.time) / (to.time - from.time), 0, 1)) : from.position
-  }
-  // a little behind its flight, averaged over a fifth of a second
-  const taps = 9
-  return scale(Array.from({length: taps}, (_, index) => at(Math.max(track[0].time, time - 0.2 * index / (taps - 1)))).reduce(add), 1 / taps)
+
+/** the fields of view --emphasis party looks at the party with, each wider one only tried should the room be too small for the one before */
+const partyFovs = [55, 65, 75, 90]
+/** how far round the closing shot of --emphasis party drifts over the closing, in degrees */
+const partyDrift = 12
+/** how --emphasis party may look at the party: how far down, in degrees, up where negative, how far round from straight out of the wall toward its tangent, in degrees, and the height over the floor it best looks from, about a standing person’s eyes, in meters */
+const partyLook = {
+  elevations: Array.from({length: 16}, (_, index) => index * 5 - 15),
+  angles: Array.from({length: 13}, (_, index) => index * 5 - 30),
+  eyes: 1.7,
 }
+/** how often --emphasis party works out what it has to keep in view anew, in seconds */
+const partyStep = 0.25
+/** how far into the effect’s show --emphasis party has settled, as a share of it, which it pushes in on, so it focuses on the party instead of chasing the last of it */
+const partySettles = 0.6
+/** how far out toward the edges of the view what is still to come may show while --emphasis party pushes in, as a share of the way from the middle */
+const partyMargin = 0.97
 
 /** what the camera’s path round the portal goes by */
 export type PathContext = {
-  /** the result’s landing and where to look down on it from, for --emphasis result */
-  closing?: {
-    landing: Landing
-    view: ReturnType<typeof resultView>
-  }
-  emphasis: Emphasis
   /** where the orb leaves from and how fast, which the camera’s look follows a little while it flies */
   flight?: {
     from: Vec3
@@ -293,10 +300,162 @@ export type PathContext = {
 }
 
 /**
- * Where the camera is and what it looks at `time` seconds into the film, before it is held by hand: the path round the portal, which the closing shot takes over from the result flipping out.
- * With the result’s landing, which the probe learns, and where to look down on it from, it closes on the result as --emphasis result does; without, on the party round the portal, unless the emphasis is neutral, which stays on the path.
+ * What --emphasis party has to keep in view from moment to moment, cut down to the outermost of it: everything the ingredient’s `effect` still reaches and the portal’s rim while it glows, or without an effect, where the fusion took place, the satellites’ orbit; and what of it is left once the effect has settled.
  */
-export function pathAt(time: number, {closing: closeUp, emphasis, flight, portal, timeline, work, world}: PathContext): Shot {
+export function partyViews(portal: PortalFrame, effect: FusionEffect | undefined, {emergence, end}: Pick<Timeline, 'emergence' | 'end'>) {
+  const ring = (along: number, up: number, out: number) => Array.from({length: 16}, (_, index): [number, number, number] => {
+    const angle = index / 16 * Math.PI * 2
+    return [Math.cos(angle) * along, Math.sin(angle) * up, Math.sin(angle) * out]
+  })
+  const {orbit, radius} = portal
+  const floor = portal.floor - portal.center[1]
+  const reach = (since: number) => outermost((effect ? [...since < fusionTiming.afterglow ? ring(radius, radius, 0) : [], ...effect.extent(floor, since)] : ring(orbit.along, -orbit.tilt, orbit.across)).map(offset => offsetPosition(portal, offset)))
+  const views: Array<PartyView> = []
+  for (let time = emergence; time < end + partyStep; time += partyStep) {
+    views.push({
+      time,
+      points: reach(time - emergence),
+    })
+  }
+  const settled = reach(Math.min((effect?.afterglow ?? 0) * partySettles, end - emergence))
+  return {
+    views,
+    settled: settled.length ? settled : views[0].points,
+  }
+}
+/**
+ * How --emphasis party ends the film: a wide shot of everything the party reaches and a close one of it once it has settled, both from straight out of the wall, unless from further round they come much closer, at the narrowest field of view the room has space for, each looking down from about a standing person’s eyes, unless from higher or lower it comes much closer; and the one calm push in from the wide to the close shot, as long as it can be without losing sight of anything still to come.
+ * The camera keeps clear of the walls, the floor and the ceiling of the world all through its drift.
+ */
+export function partyClosing({settled, views}: ReturnType<typeof partyViews>, timeline: Pick<Timeline, 'emergence' | 'end'>, {aspect, ceiling, portal, world}: {
+  aspect: number
+  ceiling: number
+  portal: PortalFrame
+  world: World
+}): PartyClosing {
+  const {emergence, end} = timeline
+  const lasts = end - emergence
+  const fits = (shot: Shot) => {
+    const {position, target} = shot
+    const away: Vec3 = [position[0] - target[0], 0, position[2] - target[2]]
+    const along = length(away)
+    return position[1] > portal.floor + roomMargin && position[1] < ceiling - roomMargin && (along < 1e-6 || world.wallDistance(target, scale(away, 1 / along)) > along + roomMargin)
+  }
+  const swings = [emergence, (emergence + end) / 2, end].map(time => partySwing({drift: partyDrift}, time, timeline))
+  /** the elevation that frames the points best from the look, by how close and how high it has the camera stand, as long as it stays in the room all through its drift */
+  const framed = (look: Pick<PartyClosing, 'aspect' | 'fov' | 'from'>, points: Array<Vec3>) => {
+    let chosen: {
+      framing: PartyFraming
+      score: number
+    } | undefined
+    for (const elevation of partyLook.elevations) {
+      const framing = {
+        elevation,
+        points,
+      }
+      const shots = swings.map(swing => partyFraming(look, framing, swing))
+      if (!shots.every(fits)) {
+        continue
+      }
+      const score = shotReach(shots[1]) * (1 + 0.3 * (shots[1].position[1] - portal.floor - partyLook.eyes) ** 2)
+      if (!chosen || score < chosen.score) {
+        chosen = {
+          framing,
+          score,
+        }
+      }
+    }
+    return chosen
+  }
+  let best: {
+    closing: PartyClosing
+    score: number
+  } | undefined
+  for (const fov of partyFovs) {
+    for (const angle of partyLook.angles) {
+      const look = {
+        aspect,
+        fov,
+        from: turned(portal.normal, portal.tangent, angle),
+      }
+      const wide = framed(look, views[0].points)
+      const close = framed(look, settled)
+      if (!wide || !close) {
+        continue
+      }
+      // The close shot is what the film ends on, so it counts twice.
+      const score = (wide.score + 2 * close.score) / 3 * (1 + 0.5 * (angle / 45) ** 2)
+      if (!best || score < best.score) {
+        best = {
+          score,
+          closing: {
+            kind: 'party',
+            ...look,
+            lasts,
+            drift: partyDrift,
+            wide: wide.framing,
+            close: close.framing,
+            views,
+          },
+        }
+      }
+    }
+    if (best) {
+      break
+    }
+  }
+  if (!best) {
+    console.warn('Warning: the room is too small to keep all of the party in view; the camera stands outside it.')
+    const wide = {
+      elevation: 0,
+      points: views[0].points,
+    }
+    return {
+      kind: 'party',
+      aspect,
+      fov: partyFovs.at(-1)!,
+      from: portal.normal,
+      lasts,
+      drift: partyDrift,
+      wide,
+      close: wide,
+      views,
+    }
+  }
+  const {closing} = best
+  // The push in: of every start and end on a grid, the longest that keeps everything still to come in view and the camera in the room, the earliest of those.
+  const frames = Array.from({length: Math.floor((end - emergence) * 30) + 1}, (_, index) => emergence + index / 30)
+  const swing = frames.map(time => partySwing(closing, time, timeline))
+  const wideShots = swing.map(degrees => partyFraming(closing, closing.wide, degrees))
+  const closeShots = swing.map(degrees => partyFraming(closing, closing.close, degrees))
+  const coming = frames.map(time => partyView(closing, time).points)
+  const holds = (move: NonNullable<PartyClosing['move']>) => frames.every((time, index) => {
+    const push = partyPush({move}, time)
+    const shot: Shot = {
+      position: mix3(wideShots[index].position, closeShots[index].position, push),
+      target: mix3(wideShots[index].target, closeShots[index].target, push),
+      fov: closing.fov,
+      roll: 0,
+    }
+    return fits(shot) && coming[index].every(point => seenWithin(shot, point, aspect, partyMargin))
+  })
+  const marks = Array.from({length: Math.floor((end - emergence) / partyStep) + 1}, (_, index) => Math.min(end, emergence + index * partyStep))
+  const moves = marks.flatMap(start => [...marks.filter(stop => stop > start), end].map(stop => ({
+    from: start,
+    to: stop,
+  }))).filter(({from, to}) => to > from).toSorted((a, b) => b.to - b.from - (a.to - a.from) || a.from - b.from)
+  const move = moves.find(holds)
+  return move ? {
+    ...closing,
+    move,
+  } : closing
+}
+
+/** How long the party of a fusion lasts once its result flipped out, in seconds: until the ingredient’s `effect` is over, at least until the portal has closed. */
+export const partyLength = (effect?: FusionEffect) => Math.max(fusionTiming.afterglow, effect?.afterglow ?? 0)
+
+/** Where the camera is and what it looks at `time` seconds into the film, before it is held by hand and the emphasis ends the film: its path round the portal, which holds where it stepped aside for the result, looking at the portal. */
+export function pathAt(time: number, {flight, portal, timeline, work, world}: PathContext): Shot {
   const {emergence, strike, throwAt} = timeline
   const [angle, keyed, height, fov, roll] = throughKeys(orbitKeys(timeline), time)
   // From the burst until the climax, the camera stands back far enough to keep the satellites in view.
@@ -313,32 +472,12 @@ export function pathAt(time: number, {closing: closeUp, emphasis, flight, portal
     const along = add(eye, scale(normalize(sub(orb, eye)), length(sub(aimedAt, eye))))
     aimedAt = mix3(aimedAt, along, 0.4 * Math.sin(Math.PI * since / (strike - throwAt)))
   }
-  const orbit: Shot = {
+  return {
     position: eye,
     target: aimedAt,
     fov: fov + thrown.fov,
     roll,
   }
-  let shot = orbit
-  if (time > emergence && emphasis !== 'neutral') {
-    const closing = closeUp ? resultShot(closeUp.landing, closeUp.view, timeline, time) : partyShot(world, portal, timeline, time)
-    // Over the result, the camera only sets off once it has risen to the top of its flip, so it never flies into it.
-    const blend = closeUp ? ease((time - emergence - 0.5) / clamp(closeUp.landing.settled - emergence + 0.5, 2.6, 4)) : ease((time - emergence - 0.15) / 2.2)
-    let target = mix3(orbit.target, closing.target, blend)
-    if (closeUp) {
-      // It follows the result up out of the portal and down onto the floor.
-      const {landing} = closeUp
-      const flown = followResult(landing.track, time) ?? portal.center
-      target = mix3(mix3(orbit.target, flown, ease((time - emergence) / 0.3)), landing.position, ease((time - landing.settled) / 1.2))
-    }
-    shot = {
-      position: mix3(orbit.position, closing.position, blend),
-      target,
-      fov: mix(orbit.fov, closing.fov, blend),
-      roll: mix(orbit.roll, closing.roll, blend),
-    }
-  }
-  return shot
 }
 
 /** Where the camera is and what it looks at `time` seconds into the film: its path round the portal, see {@link pathAt}, with the blows of the fusion and a slight sway as if held by hand. */
@@ -491,6 +630,8 @@ const positiveNumber = (value: string, name: string) => {
 
 /** what a film would show, as --plan-file writes it */
 export type FusionPlan = {
+  /** how --emphasis ends the film, unless neutral */
+  closing?: Closing
   /** the throw: where it leaves from, how fast and how long it flies until it strikes */
   flight: {
     from: Vec3
@@ -504,9 +645,8 @@ export type FusionPlan = {
     orb?: string
     prop: string
   }
-  /** keys through the camera’s path round the portal before it is held by hand, or those of --camera */
+  /** keys through the camera’s path round the portal before it is held by hand and the emphasis ends the film, or those of --camera */
   keys: Array<CameraKey>
-  landing?: Landing
   portal: PortalFrame
   room: string
   slot: PortraitSlot
@@ -514,6 +654,8 @@ export type FusionPlan = {
   spawn?: Vec3
   throwSpeed: number
   timeline: Timeline
+  /** the id the image of --portrait hangs under */
+  work?: string
   world: WorldId
 }
 
@@ -528,7 +670,7 @@ export function findLanding(dumps: ReadonlyArray<{
   const before = new Set(dumps[0]?.portraits.map(portrait => portrait.id))
   let id: string | undefined
   const track: Array<ResultSample> = []
-  let size: Pick<PortraitDump, 'height' | 'width'> | undefined
+  let size: Pick<PortraitDump, 'frame' | 'height' | 'width'> | undefined
   for (const {portraits, time} of dumps.slice(1)) {
     const result = id === undefined ? portraits.find(portrait => !portrait.hung && !portrait.fusing && !portrait.pending && (portrait.id === work || !before.has(portrait.id))) : portraits.find(portrait => portrait.id === id)
     if (!result) {
@@ -554,9 +696,10 @@ export function findLanding(dumps: ReadonlyArray<{
     track,
     width: size!.width,
     height: size!.height,
+    ...size!.frame === undefined ? {} : {frame: size!.frame},
   }
 }
-/** the moments a plan has keys of the camera’s path at: where orbitKeys has them, round the throw and the strike, where the burst knocks the camera back and through the closing shot */
+/** the moments a plan has keys of the camera’s path at: where orbitKeys has them, round the throw and the strike, where the burst knocks the camera back and where it holds after stepping aside for the result */
 const planKeyTimes = ({emergence, end, strike, throwAt}: Timeline) => [0, throwAt, (throwAt + strike) / 2, strike, strike + 0.3, strike + 0.75, strike + 1.45, strike + 2.1, strike + 2.6, strike + 4.6, strike + 6.5, strike + 8.5, emergence - 1.5, emergence, emergence + 0.8, emergence + 1.6, emergence + 2.6, (emergence + 2.6 + end) / 2, end].filter((time, index, times) => time <= end && time > (times[index - 1] ?? -1))
 const roundShot = ({fov, position, roll, target}: Shot): Shot => ({
   position: position.map(value => Number(value.toFixed(5))) as Vec3,
@@ -578,17 +721,15 @@ const main = async (options: RenderFusionOptions) => {
     throw new Error(`--emphasis must be ${emphases.join(' or ')}, got “${options.emphasis}”.`)
   }
   const fps = positiveNumber(options.fps, 'fps')
-  const holding = text('hold')
-  const hold = holding === undefined ? (emphasis === 'result' ? 3.5 : 1) : parseNumbers(holding, 'hold', [1])[0]
-  if (!(hold >= 0)) {
-    throw new Error('--hold must be at least 0.')
-  }
+  const ending = text('end')
   resolveSettle(options.settle)
   const seed = parseSeed(options.seed)
   if (seed === undefined) {
     throw new Error(`--seed expects a whole number, got “${options.seed}”.`)
   }
   const ingredient = resolveIngredient(options.ingredient)
+  /** what the fusion’s portal shows as the result flips out, which --emphasis party keeps in view */
+  const effect = ingredient.orb?.effect
   // The room opens its world, like the Sandbox for its Cell, the gallery for any other.
   const worldId = readWorld(`?${new URLSearchParams({room: text('room') ?? ''})}`)
   const {default: world} = await worldModules[worldId]()
@@ -601,38 +742,31 @@ const main = async (options: RenderFusionOptions) => {
   const portal = portalIn(slot, world)
   // The throw falls on a frame, so the probe and the film run it on the same one.
   const throwAt = Math.round(fps) / fps
-  /** the party’s length after the result flipped out: the ingredient’s effect, at least 2.5 s and at most 9 s */
-  const party = Math.min(9, Math.max(2.5, ingredient.orb?.effect?.afterglow ?? 0))
+  const cameraFile = text('camera')
+  const camera: CameraPath | undefined = cameraFile === undefined ? undefined : parseCameraPath(await fs.readJson(resolve(cameraFile)))
   const timeline: Timeline = {
     throwAt,
     strike: throwAt + 0.4,
     emergence: 0,
-    end: 0,
+    end: ending === undefined ? camera?.end ?? filmLength : positiveNumber(ending, 'end'),
   }
-  const cameraFile = text('camera')
-  const camera: CameraPath | undefined = cameraFile === undefined ? undefined : parseCameraPath(await fs.readJson(resolve(cameraFile)))
   let flight: PathContext['flight']
-  const context = (closing?: PathContext['closing']): PathContext => ({
-    closing,
-    emphasis,
+  const context = (): PathContext => ({
     flight,
     portal,
     timeline,
     work: slot.position,
     world,
   })
-  const shot = (closing?: PathContext['closing']) => (time: number): Shot => {
-    if (!camera) {
-      return shotAt(time, context(closing))
-    }
-    const keyed = keyedShot(camera.keys, time)
-    return camera.handheld ? handheld(keyed, time, timeline) : keyed
-  }
+  const held = camera?.handheld ?? true
+  const hold = (framed: Shot, time: number) => (held ? handheld(framed, time, timeline) : framed)
+  /** the camera’s path, its own or that of --camera, before it is held by hand and the emphasis ends the film */
+  const base = (time: number) => (camera ? keyedShot(camera.keys, time) : pathAt(time, context()))
+  const shot = (closing?: Closing) => (time: number): Shot => emphasized(hold(base(time), time), closing, time, timeline, closed => hold(closed, time))
   // The throw leaves from in front of the camera as it is when it throws, whose path bends toward where the orb strikes, which depends on where it leaves from: a few rounds settle both. The throw’s own motion of the camera only starts after it.
   let from: Vec3 = [0, 0, 0]
   for (let round = 0; round < 8; round++) {
     timeline.emergence = timeline.strike + fusionTiming.minimum + fusionTiming.climax
-    timeline.end = camera?.end ?? timeline.emergence + party + hold
     from = holdPoint(shot()(throwAt))
     const aim = aimThrow(from, slot.position, throwSpeed)
     if (!aim) {
@@ -650,9 +784,17 @@ const main = async (options: RenderFusionOptions) => {
     }
   }
   timeline.emergence = timeline.strike + fusionTiming.minimum + fusionTiming.climax
-  timeline.end = camera?.end ?? timeline.emergence + party + hold
+  if (emphasis === 'party' && ending === undefined) {
+    // on the first frame a second after the party is over
+    timeline.end = Math.ceil((timeline.emergence + partyLength(effect) + partyOutro) * fps - 1e-6) / fps
+  }
+  if (emphasis !== 'neutral' && timeline.end < timeline.emergence + 2) {
+    throw new Error(`--emphasis ${emphasis} ends the film from when the result flips out at ${timeline.emergence.toFixed(2)} s, but it ends at ${timeline.end.toFixed(2)} s; make it end at least 2 s later.`)
+  }
   const start = shot()(0)
   const tools = new Map<number, Record<string, Record<string, unknown>>>
+  /** the id an image hangs under */
+  const workId = `film-${work.label.replaceAll(/[^\w-]/g, '-').slice(0, 80)}`
   await using served = work.image?.file === undefined ? undefined : serveFile(work.image.file)
   const imageUrl = served?.url ?? work.image?.url
   tools.set(0, {
@@ -668,6 +810,8 @@ const main = async (options: RenderFusionOptions) => {
       hang_work: {
         image: imageUrl,
         slot: slot.id,
+        // The same in the probe and in the film, as the result of an ingredient that brings no frame rolls its own by the id of the work.
+        id: workId,
       },
     },
     dump_portraits: {},
@@ -683,6 +827,14 @@ const main = async (options: RenderFusionOptions) => {
   const outputFile = text('output-file')
   const output = outputFile === undefined ? join(fusionRoot, `${work.label}-${ingredient.label}-${timestamp()}.webm`) : resolve(outputFile)
   const side = text('width') ?? text('height') ?? String(videoSize)
+  const [width, height] = [text('width') ?? side, text('height') ?? side]
+  const room = world.roomById(work.room)!
+  const framing = {
+    aspect: Number(width) / Number(height),
+    ceiling: room.floorY + (room.height ?? 3),
+    portal,
+    world,
+  }
   const shared = {
     ...Object.fromEntries(Object.entries(options).filter(([key]) => key in galleryOptions)),
     graphics: options.graphics,
@@ -701,8 +853,8 @@ const main = async (options: RenderFusionOptions) => {
   }
   const workspace = await fs.mkdtemp(join(tmpdir(), 'render-fusion-'))
   try {
-    let closing: PathContext['closing']
-    if (emphasis === 'result' && (!camera || planFile !== undefined)) {
+    let closing: Closing | undefined = emphasis === 'party' ? partyClosing(partyViews(portal, effect, timeline), timeline, framing) : undefined
+    if (emphasis === 'result') {
       // The probe films the same fusion small, without sound, dumping the works every other frame from just before the result flips out until long after it landed.
       const probeEnd = timeline.emergence + 4
       const probeTools = new Map(tools)
@@ -735,16 +887,14 @@ const main = async (options: RenderFusionOptions) => {
       }
       const [x, y, z] = landing.position
       console.error(`The result flips out at ${landing.track[0].time.toFixed(2)} s and lies still from ${landing.settled.toFixed(2)} s at ${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}`)
-      const room = world.roomById(work.room)!
-      const view = resultView(landing, room.floorY + (room.height ?? 3), world)
-      if (view.faceDown) {
+      const result = resultClosing(landing, framing)
+      if (dot(result.normal, rotate([0, 0, 1], landing.quaternion)) < 0) {
         console.warn('Warning: the result lands face down, so the closing shot shows its back.')
       }
-      closing = {
-        landing,
-        view,
+      if (landing.settled > timeline.end - 1) {
+        console.warn(`Warning: the result only lies still ${(timeline.end - landing.settled).toFixed(2)} s before the film ends, too late to crane up over it calmly.`)
       }
-      timeline.end = camera?.end ?? Math.max(landing.settled, timeline.emergence + 2.4) + hold
+      closing = result
       // The film dumps the works once more at its end, to tell how closely it followed the probe.
       tools.set(Math.round(timeline.end * fps) - 1, {dump_portraits: {}})
     }
@@ -761,16 +911,17 @@ const main = async (options: RenderFusionOptions) => {
         },
         portal,
         timeline,
+        ...imageUrl === undefined ? {} : {work: workId},
         throwSpeed,
         flight: {
           ...flight!,
           seconds: timeline.strike - throwAt,
         },
         spawn: (tools.get(0)?.spawn_orb as {position: Vec3} | undefined)?.position,
-        ...closing ? {landing: closing.landing} : {},
+        ...closing ? {closing} : {},
         keys: camera?.keys ?? planKeyTimes(timeline).map(time => ({
           time,
-          ...roundShot(pathAt(time, context(closing))),
+          ...roundShot(pathAt(time, context())),
         })),
         frames: Array.from({length: Math.round(timeline.end * fps) + 1}, (_, frame) => roundShot(framed(frame / fps))),
       }
@@ -790,17 +941,17 @@ const main = async (options: RenderFusionOptions) => {
     console.error(`Filming ${timeline.end.toFixed(1)} s: the orb strikes at ${timeline.strike.toFixed(2)} s and the result flips out at ${timeline.emergence.toFixed(2)} s`)
     const filmed = await film({
       ...shared,
-      width: text('width') ?? side,
-      height: text('height') ?? side,
+      width,
+      height,
       recipe,
       ...Object.fromEntries(['crf', 'fast-decode', 'keyframe-interval', 'preset'].flatMap(key => (text(key) === undefined ? [] : [[key, text(key)]]))),
       'output-file': output,
     })
     // How far from where the probe saw it the result came to rest in the film, which the camera planned for
-    const rested = closing && findLanding(dumpsIn(filmed.tools), workIdIn(filmed.tools))
+    const rested = closing?.kind === 'result' ? findLanding(dumpsIn(filmed.tools), workIdIn(filmed.tools)) : undefined
     return {
       ...filmed,
-      drift: rested && length(sub(rested.position, closing!.landing.position)),
+      drift: rested && closing?.kind === 'result' ? length(sub(rested.position, closing.landing.position)) : undefined,
       timeline,
     }
   } finally {

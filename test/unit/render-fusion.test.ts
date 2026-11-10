@@ -1,4 +1,5 @@
 import type {CameraPath} from '../../scripts/lib/fusionCamera.ts'
+import type {PartyClosing} from '../../scripts/lib/fusionEmphasis.ts'
 import type {FusionPlan, RenderFusionOptions} from '../../scripts/renderFusion.ts'
 import type {PortraitDump} from '../../src/lib/webmcp/dumpPortraits.ts'
 
@@ -9,7 +10,9 @@ import {join} from 'node:path'
 import fs from 'fs-extra'
 
 import {keyedShot, throughKeys} from '../../scripts/lib/fusionCamera.ts'
-import renderFusion, {findLanding, orbitDistance, resultView, throwMotion} from '../../scripts/renderFusion.ts'
+import {partyShot} from '../../scripts/lib/fusionEmphasis.ts'
+import renderFusion, {findLanding, orbitDistance, partyLength, resultView, throwMotion} from '../../scripts/renderFusion.ts'
+import {bloodEffect} from '../../src/lib/gallery/fusion/effects/index.ts'
 import gallery from '../../src/worlds/gallery/index.ts'
 
 const work = (patch: Partial<PortraitDump>): PortraitDump => ({
@@ -126,6 +129,11 @@ test('the result is the work that no longer hangs and no fusion holds, or a new 
   expect(kept.track[0].time).toBe(15)
   expect(findLanding(dumps.slice(0, 2), 'work')).toBeUndefined()
 })
+test('a party lasts until the ingredient’s effect is over, at least until the portal has closed', () => {
+  expect(partyLength()).toBe(1.6)
+  expect(partyLength(bloodEffect)).toBe(bloodEffect.afterglow)
+  expect(bloodEffect.afterglow).toBeGreaterThan(1.6)
+})
 test('the camera looks down on a result lying face up from its bottom edge, so its image stands upright', () => {
   // In the middle of the Banquet, far from its walls
   const view = resultView({
@@ -177,7 +185,7 @@ test('a camera path given by hand replaces the film’s camera, the throw leavin
     const image = join(folder, 'pixel.png')
     await Bun.write(image, Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=='))
     const options: RenderFusionOptions = {
-      emphasis: 'party',
+      emphasis: 'neutral',
       fps: '60',
       graphics: 'cinematic',
       ingredient: 'horror',
@@ -240,7 +248,7 @@ test('a fusion in the Sandbox’s Cell opens the Sandbox and keeps the camera wi
     await fs.remove(folder)
   }
 })
-test('a neutral fusion holds where the camera stepped aside for the result, as long as a party', async () => {
+test('every emphasis ends the same camera path, which holds where it stepped aside for the result, 20 s long: party keeps the effect in view from there, until a second after it is over', async () => {
   const folder = await fs.mkdtemp(join(tmpdir(), 'render-fusion-'))
   try {
     const plans: Record<string, FusionPlan> = {}
@@ -260,7 +268,21 @@ test('a neutral fusion holds where the camera stepped aside for the result, as l
       plans[emphasis] = await Bun.file(join(folder, `${emphasis}.json`)).json() as FusionPlan
     }
     const {neutral, party} = plans
-    expect(neutral.timeline).toEqual(party.timeline)
+    expect(neutral.timeline.end).toBe(20)
+    // The Horror Orb’s blood has drained away 6.4 s after the result flipped out.
+    expect(party.timeline).toEqual({
+      ...neutral.timeline,
+      end: Math.ceil((neutral.timeline.emergence + bloodEffect.afterglow + 1) * 60 - 1e-6) / 60,
+    })
+    expect(party.timeline.end - party.timeline.emergence - bloodEffect.afterglow).toBeGreaterThanOrEqual(1 - 1e-6)
+    expect(party.timeline.end - party.timeline.emergence - bloodEffect.afterglow).toBeLessThan(1 + 1 / 60)
+    expect(party.frames).toHaveLength(Math.round(party.timeline.end * 60) + 1)
+    expect((party.closing as PartyClosing).lasts).toBeCloseTo(party.timeline.end - party.timeline.emergence, 9)
+    // The path’s keys are the same up to its last two, which follow the film to its end, where it still holds.
+    expect(party.keys.slice(0, -2)).toEqual(neutral.keys.slice(0, -2))
+    expect(party.keys.at(-1)!.time).toBe(party.timeline.end)
+    expect(party.keys.at(-1)!.position).toEqual(neutral.keys.at(-1)!.position)
+    expect(neutral.closing).toBeUndefined()
     const {emergence} = neutral.timeline
     const held = neutral.keys.filter(key => key.time >= emergence + 1.6)
     expect(held.length).toBeGreaterThan(1)
@@ -268,8 +290,12 @@ test('a neutral fusion holds where the camera stepped aside for the result, as l
       expect(key.position).toEqual(held[0].position)
       expect(key.target).toEqual(held[0].target)
     }
-    // Party pulls back from there instead.
-    expect(party.keys.at(-1)!.position).not.toEqual(neutral.keys.at(-1)!.position)
+    // The films are the same until the result flips out; from there, party takes over.
+    const flipped = Math.floor(emergence * 60)
+    expect(party.frames.slice(0, flipped + 1)).toEqual(neutral.frames.slice(0, flipped + 1))
+    expect(party.frames.at(-1)!.position).not.toEqual(neutral.frames.at(-1)!.position)
+    expect(party.closing?.kind).toBe('party')
+    expect(party.closing && partyShot(party.closing as PartyClosing, party.timeline.end, party.timeline).fov).toBe(party.frames.at(-1)!.fov)
   } finally {
     await fs.remove(folder)
   }

@@ -44,6 +44,7 @@ export const scale = (a: Vec3, factor: number): Vec3 => [a[0] * factor, a[1] * f
 export const length = (a: Vec3) => Math.hypot(...a)
 export const normalize = (a: Vec3) => scale(a, 1 / (length(a) || 1))
 export const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+export const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 export const mix = (a: number, b: number, t: number) => a + (b - a) * t
 export const mix3 = (a: Vec3, b: Vec3, t: number): Vec3 => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)]
 export const ease = (t: number) => fade(clamp(t, 0, 1))
