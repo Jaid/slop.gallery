@@ -7,7 +7,7 @@ import {portraitFrame} from '../frames/index.ts'
 import {portraitLabelLayout} from './portraitLabel.ts'
 
 /**
- * Orbiting a hung portrait starts straight in front of it, filling the view at the inspection field of view. Inspecting the
+ * Orbiting a hung portrait starts straight in front of it, its image filling the view at the inspection field of view as far as its frame leaves it in sight, so none of the frame shows along the view’s tighter sides. Inspecting the
  * name plate frames the portrait and its plate together, with room around both. The orbit stays in front
  * of the wall.
  */
@@ -19,8 +19,9 @@ export default function portraitOrbit(portrait: Portrait, label: boolean, aspect
   const bottom = label ? Math.min(-portrait.height / 2, layout.bottom) : -portrait.height / 2
   const top = label ? Math.max(portrait.height / 2, layout.top) : portrait.height / 2
   const normal: Vec3 = [Math.sin(portrait.rotation), 0, Math.cos(portrait.rotation)]
-  const distance = Math.max(top - bottom + (label ? 0.4 : 0), portrait.width / aspect) / (2 * Math.tan(inspectionFov * Math.PI / 360)) * (label ? 1.14 : 1)
-  const {imageDepth} = portraitFrame(portrait.frame)
+  const frame = portraitFrame(portrait.frame)
+  const distance = label ? Math.max(top - bottom + 0.4, portrait.width / aspect) / (2 * Math.tan(inspectionFov * Math.PI / 360)) * 1.14 : frame.viewingDistance(portrait.width, portrait.height, aspect, inspectionFov)
+  const {imageDepth} = frame
   return {
     // Measured from the image, not the frame’s middle behind it, which would crop the image’s edges.
     center: [portrait.position[0] + normal[0] * imageDepth, portrait.position[1] + (top + bottom) / 2, portrait.position[2] + normal[2] * imageDepth],

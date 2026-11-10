@@ -1,7 +1,8 @@
-import type {PortraitRatio, Vec3} from '../../src/lib/gallery/types.ts'
+import type {Portrait, PortraitRatio, Vec3} from '../../src/lib/gallery/types.ts'
 
 import {describe, expect, test} from 'bun:test'
 
+import {inspectionFov} from '../../src/lib/camera/OrbitInspection.ts'
 import {frameBack, frameTriangleBudget, maximumFrameReach} from '../../src/lib/frames/base/PortraitFrame.ts'
 import {choiceFrames, pickFrame} from '../../src/lib/frames/frameChoice.ts'
 import {frameIds, readFrame} from '../../src/lib/frames/frameParameter.ts'
@@ -11,6 +12,7 @@ import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {hangDefaultWorks} from '../../src/lib/gallery/defaultPortraits.ts'
 import {imageSize} from '../../src/lib/gallery/ImageImporter.ts'
 import {orbs} from '../../src/lib/gallery/orbs/index.ts'
+import portraitOrbit from '../../src/lib/gallery/portraitOrbit.ts'
 import {portraitRatios, slotAreas, slotFrame} from '../../src/lib/placement/portraitSlots.ts'
 import {hangingOffset} from '../../src/lib/placement/wallGeometry.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
@@ -59,6 +61,49 @@ describe('frames', () => {
       }
     })
   }
+  test('every frame leaves the image in sight up to its moulding’s sight edge, a little less of it from closer by', () => {
+    for (const [, frame] of entries) {
+      for (const {width, height} of sizes) {
+        const [far, near] = [frame.opening(width, height, 50), frame.opening(width, height, 0.5)]
+        for (const [seen, nearer, whole] of [[far.width, near.width, width], [far.height, near.height, height]]) {
+          expect(seen).toBeLessThanOrEqual(whole)
+          expect(seen).toBeGreaterThan(whole - 0.02)
+          expect(nearer).toBeLessThanOrEqual(seen + 1e-6)
+          expect(nearer).toBeGreaterThan(whole - 0.02)
+        }
+      }
+    }
+    // The default frame’s lip lies 5 mm over every edge of the image.
+    const {width, height} = classicFrame.opening(1.2, 0.8, 2)
+    expect(width).toBeCloseTo(1.19, 6)
+    expect(height).toBeCloseTo(0.79, 6)
+  })
+  test('from its viewing distance, what a frame leaves in sight of the image just fills the view along its tighter sides', () => {
+    for (const [, frame] of entries) {
+      for (const [width, height, aspect] of [[1.2, 0.8, 1], [0.8, 1.2, 16 / 9], [2, 2, 1]]) {
+        const distance = frame.viewingDistance(width, height, aspect, 50)
+        const opening = frame.opening(width, height, distance)
+        const reach = Math.tan(25 * Math.PI / 180) * distance
+        // its edges just outside the view, the frame’s sight edge beyond them
+        expect(Math.max(opening.height / 2 / reach, opening.width / 2 / (reach * aspect))).toBeCloseTo(1 / 0.997, 6)
+        expect(distance).toBeLessThanOrEqual(Math.max(height, width / aspect) / 2 / Math.tan(25 * Math.PI / 180))
+      }
+    }
+  })
+  test('V views a hung portrait from where its image fills the view up to its frame’s sight edge', () => {
+    const portrait = {
+      width: 1.2,
+      height: 0.8,
+      position: [0, 2, 0],
+      rotation: 0,
+      frame: 'cell-crate',
+    } as unknown as Portrait
+    const {center, orbit} = portraitOrbit(portrait, false, 1)
+    expect(orbit.distance).toBeCloseTo(frames['cell-crate'].viewingDistance(1.2, 0.8, 1, inspectionFov), 9)
+    expect(center[2]).toBeCloseTo(frames['cell-crate'].imageDepth, 9)
+    // with its name plate, from further back
+    expect(portraitOrbit(portrait, true, 1).orbit.distance).toBeGreaterThan(orbit.distance!)
+  })
   test('?frame forces one of them or nothing', () => {
     const id = frameIds.at(-1)!
     expect(readFrame(`https://example.com/?frame=${id}`)).toBe(id)
