@@ -1,8 +1,9 @@
 import {expect, test} from 'bun:test'
 
-import {knotsById} from 'knot-materials'
-import KnotResources from 'knot-materials/KnotResources.ts'
 import {BackSide, DoubleSide, FrontSide, Mesh, MeshBasicNodeMaterial, Raycaster, Vector3} from 'three/webgpu'
+
+import KnotResources from '../src/KnotResources.ts'
+import {knotsById} from '../src/main.ts'
 
 test('shared Knot BVH preserves native hits, face indices, UVs, sides and transformed distances', () => {
   const entries = [knotsById.get('lenticular_mirage')!, knotsById.get('coralline_crown')!]

@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import KnotLayout from 'knot-materials/KnotLayout.ts'
+import KnotLayout from '../src/KnotLayout.ts'
 
 test('room width follows the longest displayed row and depth follows candidate count', () => {
   const one = new KnotLayout([1, 1])

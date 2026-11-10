@@ -2,10 +2,11 @@ import type {Mesh} from 'three/webgpu'
 
 import {describe, expect, test} from 'bun:test'
 
-import createKnotMesh from 'knot-materials/createKnotMesh.ts'
-import Prince from 'knot-materials/entries/knotty_prince/Material.ts'
-import {createKnotGeometry} from 'knot-materials/geometry.ts'
 import {MeshPhysicalNodeMaterial, Texture} from 'three/webgpu'
+
+import createKnotMesh from '../src/createKnotMesh.ts'
+import Prince from '../src/entries/knotty_prince/Material.ts'
+import {createKnotGeometry} from '../src/geometry.ts'
 
 describe('Knotty Prince solid felt underneath fuzz', () => {
   test('preserves sculpt and appearance graphs while giving the felt core a closed, independently displaced surface', () => {

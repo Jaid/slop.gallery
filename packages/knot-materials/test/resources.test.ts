@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 
-import {knotsById} from 'knot-materials'
-import KnotResources from 'knot-materials/KnotResources.ts'
+import KnotResources from '../src/KnotResources.ts'
+import {knotsById} from '../src/main.ts'
 
 test('shares culling geometry by displacement bound and reuses one tight collider surface', () => {
   const base = knotsById.get('lenticular_mirage')!

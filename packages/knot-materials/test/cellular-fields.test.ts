@@ -1,8 +1,9 @@
 import {describe, expect, test} from 'bun:test'
 
-import {cellularBoundary} from 'knot-materials/lib/cellularBoundary.ts'
-import {cellularPoints} from 'knot-materials/lib/cellularPoints.ts'
 import {vec3} from 'three/tsl'
+
+import {cellularBoundary} from '../src/lib/cellularBoundary.ts'
+import {cellularPoints} from '../src/lib/cellularPoints.ts'
 
 describe('Knot cellular fields', () => {
   test('constructs real distance fields and rejects support that could reach another feature', () => {

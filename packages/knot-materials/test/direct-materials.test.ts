@@ -1,11 +1,12 @@
-import type {KnotMaterialConstructor} from 'knot-materials'
+import type {KnotMaterialConstructor} from '../src/main.ts'
 
 import {expect, spyOn, test} from 'bun:test'
 
-import {knotsById} from 'knot-materials'
-import DirectKnotMaterials from 'knot-materials/knotMaterials/DirectKnotMaterials.ts'
-import KnotMaterial from 'knot-materials/lib/KnotMaterial.ts'
 import {MeshPhysicalNodeMaterial, Texture} from 'three/webgpu'
+
+import DirectKnotMaterials from '../src/knotMaterials/DirectKnotMaterials.ts'
+import KnotMaterial from '../src/lib/KnotMaterial.ts'
+import {knotsById} from '../src/main.ts'
 
 const entry = knotsById.get('lenticular_mirage')!
 const entries = [entry, {

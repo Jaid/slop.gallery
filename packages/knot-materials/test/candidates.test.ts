@@ -1,11 +1,11 @@
-import type {KnotCandidateData, KnotData} from 'knot-materials/types.ts'
+import type {KnotCandidateData, KnotData} from '../src/types.ts'
 
 import {describe, expect, test} from 'bun:test'
 
-import {knotCandidates, knots, special} from 'knot-materials'
-import {knotAnnouncementPaths, knotModelSlug} from 'knot-materials/announcements.ts'
-import {enumerateKnotBays, formatKnotLabels, selectKnotBays} from 'knot-materials/exhibition.ts'
-import KnotCandidate, {indexKnots} from 'knot-materials/KnotCandidate.ts'
+import {knotAnnouncementPaths, knotModelSlug} from '../src/announcements.ts'
+import {enumerateKnotBays, formatKnotLabels, selectKnotBays} from '../src/exhibition.ts'
+import KnotCandidate, {indexKnots} from '../src/KnotCandidate.ts'
+import {knotCandidates, knots, special} from '../src/main.ts'
 
 const candidateData: KnotCandidateData = {
   id: 'claude_fable',

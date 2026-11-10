@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 import {fileURLToPath} from 'node:url'
 
-import {knotCandidates} from 'knot-materials'
+import {knotCandidates} from '../src/main.ts'
 
 test('every candidate’s icon is the SVG symbol in its own folder', async () => {
   for (const candidate of knotCandidates) {
