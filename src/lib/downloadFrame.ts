@@ -2,6 +2,8 @@ import '#src/lib/diagnostics.ts'
 
 import {currentWorldId} from '#src/worlds/index.ts'
 
+import downloadBlob, {fileTimestamp} from './downloadBlob.ts'
+
 export type FrameFormat = 'png' | 'webp'
 
 export type FrameDownload = {
@@ -15,10 +17,7 @@ export type FrameDownload = {
   width: number
 }
 
-const defaultName = () => {
-  const now = new Date
-  return `${currentWorldId}-${now.toISOString().replaceAll(/[.:]/gu, '-').replace(/-\d{3}Z$/u, '')}`
-}
+const defaultName = () => `${currentWorldId}-${fileTimestamp()}`
 type EncodedFrame = Pick<FrameDownload, 'height' | 'nonBlackFraction' | 'width'> & {blob: Blob}
 
 const encodePng = async (): Promise<EncodedFrame> => {
@@ -67,17 +66,10 @@ export default async function downloadFrame({name = defaultName(), format = 'web
   name?: string
 } = {}): Promise<FrameDownload> {
   const {blob, width, height, nonBlackFraction} = format === 'png' ? await encodePng() : await encodeWebp()
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${name}.${format}`
-  link.click()
-  // Revoking right after the click can cancel the download before Chromium has read the blob.
-  setTimeout(() => {
-    URL.revokeObjectURL(url)
-  }, 60_000)
+  const fileName = `${name}.${format}`
+  downloadBlob(blob, fileName)
   return {
-    fileName: link.download,
+    fileName,
     format,
     width,
     height,

@@ -5,6 +5,8 @@ import {readIntroNarration} from '../../src/lib/audio/intro.ts'
 import {readDevelopmentMode} from '../../src/lib/developmentMode.ts'
 import {readFade} from '../../src/lib/fade.ts'
 import {readFlying} from '../../src/lib/gallery/flyMode.ts'
+import {includesResult, readDownload, readWebhook, readWebhookEndpoint} from '../../src/lib/gallery/fusion/resultSharing.ts'
+import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {readAlbedo} from '../../src/lib/rendering/albedo.ts'
 import {getAntiAliasing, readAntiAliasing} from '../../src/lib/rendering/antiAliasing.ts'
 import {readFov} from '../../src/lib/rendering/fov.ts'
@@ -40,6 +42,33 @@ describe('URL options', () => {
     for (const search of ['', '?development', '?dump_screenshot=false', '?dump_screenshot=1', '?dump_screenshot=TRUE', '?dump_screenshots=true']) {
       expect(readDumpScreenshot(search)).toBe(false)
     }
+  })
+  test('?download and ?webhook share new fusion results with a bare or true flag and every result with all', () => {
+    for (const [key, read] of [['download', readDownload], ['webhook', readWebhook]] as const) {
+      expect(read(`?${key}`)).toBe(true)
+      expect(read(`?${key}=true`)).toBe(true)
+      expect(read(`?${key}=all`)).toBe('all')
+      for (const search of ['', `?${key}=false`, `?${key}=1`, `?${key}=ALL`, `?${key}s=all`]) {
+        expect(read(search)).toBe(false)
+      }
+    }
+    expect(readWebhook('?download')).toBe(false)
+    const making = ['ai', 'collage', 'tint', 'unchanged'] as const
+    expect(making.filter(kind => includesResult(kind, false))).toEqual([])
+    expect(making.filter(kind => includesResult(kind, true))).toEqual(['ai', 'collage'])
+    expect(making.filter(kind => includesResult(kind, 'all'))).toEqual([...making])
+  })
+  test('?webhook_endpoint takes an HTTP(S) URL or a bare host meaning HTTPS, and only its origin shows among the query overrides', () => {
+    expect(readWebhookEndpoint('?webhook_endpoint=http://10.0.0.22:8080/hooks/fusion')).toBe('http://10.0.0.22:8080/hooks/fusion')
+    expect(readWebhookEndpoint('?webhook_endpoint=hooks.nas.lan/fusion')).toBe('https://hooks.nas.lan/fusion')
+    expect(readWebhookEndpoint(`?webhook_endpoint=${encodeURIComponent('https://hooks.test/fusion?token=secret')}`)).toBe('https://hooks.test/fusion?token=secret')
+    for (const search of ['', '?webhook_endpoint', '?webhook_endpoint=', '?webhook_endpoint=ftp://hooks.test/fusion', '?webhook_endpoint=javascript:alert(1)']) {
+      expect(readWebhookEndpoint(search)).toBeUndefined()
+    }
+    expect(readQueryOverrides(`http://localhost/?webhook=all&webhook_endpoint=${encodeURIComponent('https://hooks.test/api/webhooks/1/secret')}`)).toEqual({
+      webhook: 'all',
+      webhook_endpoint: 'https://hooks.test',
+    })
   })
   test('?flying only takes effect with ?development', () => {
     for (const search of ['?development&flying', '?development=true&flying=true', '?flying&development']) {

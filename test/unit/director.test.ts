@@ -2,10 +2,11 @@ import type {AiSettings} from '../../src/lib/ai/settings.ts'
 import type {PortraitFrameId} from '../../src/lib/frames/frameParameter.ts'
 import type {FusionOptions, FusionSpec} from '../../src/lib/gallery/fusion/Fusion.ts'
 import type FusionRecipe from '../../src/lib/gallery/fusion/FusionRecipe.ts'
+import type {FusionMaking, FusionResults} from '../../src/lib/gallery/fusion/resultSharing.ts'
 import type {FusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import type {Portrait, ThrownItem} from '../../src/lib/gallery/types.ts'
 
-import {beforeEach, expect, test} from 'bun:test'
+import {afterEach, beforeEach, expect, spyOn, test} from 'bun:test'
 
 import GalleryDirector from '../../src/lib/ai/GalleryDirector.ts'
 import {readAiSettings} from '../../src/lib/ai/settings.ts'
@@ -103,6 +104,8 @@ const instant: FusionTiming = {
 class TestDirector extends GalleryDirector {
   /** the shape the image model was asked for */
   aspect: number | undefined
+  /** which results it saves, none unless a test asks for them */
+  override downloads: FusionResults = false
   flavorResult = Promise.withResolvers<Partial<Portrait>>()
   /** keeps a result ready to show, like the gallery’s texture cache */
   hold: FusionOptions['hold']
@@ -113,8 +116,13 @@ class TestDirector extends GalleryDirector {
   result = Promise.withResolvers<Blob>()
   /** the pixel size of the result */
   resultSize = [1024, 1024]
+  /** the results it saved as downloads, by file name */
+  saved: Array<[Blob, string]> = []
   /** what the image model was told to give up by */
   signal: AbortSignal | undefined
+  /** which results it posts, none unless a test asks for them */
+  override webhook: FusionResults = false
+  override webhookEndpoint: string | undefined = 'https://hooks.test/fusion'
   constructor(settings: AiSettings, key: false | string, private timing = instant) {
     super(settings, {key})
   }
@@ -141,6 +149,13 @@ class TestDirector extends GalleryDirector {
     })
     this.opened.push(fusion)
     return fusion
+  }
+  // The test images are no images, so they pass for WebPs as they are.
+  protected override async resultWebp(image: Blob | string) {
+    return image as Blob
+  }
+  protected override saveResult(webp: Blob, fileName: string) {
+    this.saved.push([webp, fileName])
   }
   private async sized() {
     const image = await this.result.promise
@@ -801,4 +816,171 @@ test('disposing the director closes its fusions at once', async () => {
   director.result.resolve(new Blob(['late'], {type: 'image/webp'}))
   await job
   expect(useGallery.getState().portraits.map(p => p.source)).toEqual([a, b])
+})
+/** the requests posted to webhooks, which all answer 204 */
+let posted: Array<{
+  form: FormData
+  url: string
+}> = []
+let fetchSpy: ReturnType<typeof spyOn<typeof globalThis, 'fetch'>> | undefined
+const mockWebhooks = (status = 204) => {
+  fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (input: RequestInfo | URL, init?: RequestInit) => {
+    posted.push({
+      url: input instanceof Request ? input.url : String(input),
+      form: init!.body as FormData,
+    })
+    return new Response(null, {status})
+  }) as typeof fetch)
+}
+afterEach(() => {
+  fetchSpy?.mockRestore()
+  fetchSpy = undefined
+  posted = []
+})
+/** Resolves once every promise queued so far, like a post after the result flipped out, has settled. */
+const settle = () => new Promise(resolve => setTimeout(resolve, 10))
+const makings: Record<FusionMaking, {
+  ai?: boolean
+  ingredients: Array<string>
+  start: (director: TestDirector) => Promise<void>
+}> = {
+  ai: {
+    ai: true,
+    ingredients: ['a', 'b'],
+    start: director => director.fuse('a', 'b'),
+  },
+  collage: {
+    ingredients: ['a', 'b'],
+    start: director => director.fuse('a', 'b'),
+  },
+  tint: {
+    ingredients: ['a', 'Test Orb'],
+    start: director => director.fuseItem('a', testOrb),
+  },
+  unchanged: {
+    ingredients: ['a', 'Clear Orb'],
+    start: director => director.fuseItem('a', clearOrb),
+  },
+}
+for (const [making, {ai = false, ingredients, start}] of Object.entries(makings) as Array<[FusionMaking, typeof makings[FusionMaking]]>) {
+  for (const results of [false, true, 'all'] as const) {
+    const shares = results === 'all' || results && (making === 'ai' || making === 'collage')
+    test(`?download${results === true ? '' : `=${results}`} and ?webhook${results === true ? '' : `=${results}`} ${shares ? 'share' : 'leave out'} a result made by ${making}`, async () => {
+      mockWebhooks()
+      useGallery.setState(state => ({portraits: state.portraits.map(p => ({
+        ...p,
+        title: p.id,
+      }))}))
+      const director = new TestDirector(ai ? defaults : {
+        ...defaults,
+        ai: false,
+      }, ai ? 'test' : '')
+      director.downloads = results
+      director.webhook = results
+      try {
+        const job = start(director)
+        director.result.resolve(new Blob([making], {type: 'image/webp'}))
+        await job
+        await settle()
+        const {source} = useGallery.getState().portraits.find(p => p.id === 'a')!
+        if (!shares) {
+          expect(director.saved).toEqual([])
+          expect(posted).toEqual([])
+          return
+        }
+        expect(director.saved).toHaveLength(1)
+        const [[webp, fileName]] = director.saved
+        expect(webp).toBe(source as Blob)
+        expect(fileName).toMatch(new RegExp(String.raw`^gallery-fusion-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-${making}\.webp$`, 'u'))
+        expect(posted).toHaveLength(1)
+        const [{url, form}] = posted
+        expect(url).toBe('https://hooks.test/fusion')
+        const posting = form.get('file') as File
+        expect(posting.name).toBe(fileName)
+        expect(await posting.text()).toBe(await webp.text())
+        expect(form.get('making')).toBe(making)
+        expect(form.get('world')).toBe('gallery')
+        expect(Date.parse(form.get('fused_at') as string)).toBeLessThanOrEqual(Date.now())
+        expect(form.getAll('ingredient')).toEqual(ingredients)
+      } finally {
+        director.dispose()
+      }
+    })
+  }
+}
+test('?download and ?webhook pick results each on their own, and ?webhook posts nothing without an endpoint', async () => {
+  mockWebhooks()
+  for (const [downloads, webhook, endpoint, saves, posts] of [[true, false, 'https://hooks.test/fusion', 1, 0], [false, true, 'https://hooks.test/fusion', 0, 1], [false, 'all', undefined, 0, 0], ['all', true, undefined, 1, 0]] as const) {
+    useGallery.setState(original, true)
+    useGallery.setState({
+      sound: false,
+      portraits: original.portraits.slice(0, 2).map((p, i) => ({
+        ...p,
+        id: i ? 'b' : 'a',
+        source: i ? b : a,
+        hung: !i,
+        wallId: i ? undefined : p.wallId,
+      })),
+    })
+    posted = []
+    const warn = spyOn(console, 'warn').mockImplementation(() => {})
+    const director = new TestDirector({
+      ...defaults,
+      ai: false,
+    }, '')
+    director.downloads = downloads
+    director.webhook = webhook
+    director.webhookEndpoint = endpoint
+    try {
+      const job = director.fuse('a', 'b')
+      director.result.resolve(new Blob(['result'], {type: 'image/webp'}))
+      await job
+      await settle()
+      expect(director.saved).toHaveLength(saves)
+      expect(posted).toHaveLength(posts)
+      expect(warn.mock.calls.some(([message]) => String(message).includes('?webhook_endpoint'))).toBe(Boolean(webhook) && !endpoint)
+    } finally {
+      warn.mockRestore()
+      director.dispose()
+    }
+  }
+})
+test('a webhook that turns the result down only warns, and the download still happens', async () => {
+  mockWebhooks(500)
+  const warn = spyOn(console, 'warn').mockImplementation(() => {})
+  const director = new TestDirector({
+    ...defaults,
+    ai: false,
+  }, '')
+  director.downloads = true
+  director.webhook = true
+  try {
+    const job = director.fuse('a', 'b')
+    director.result.resolve(new Blob(['result'], {type: 'image/webp'}))
+    await job
+    await settle()
+    expect(director.saved).toHaveLength(1)
+    expect(posted).toHaveLength(1)
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(String(warn.mock.calls[0][1])).toContain('500')
+  } finally {
+    warn.mockRestore()
+    director.dispose()
+  }
+})
+test('a failed fusion shares nothing, even with ?download=all and ?webhook=all', async () => {
+  mockWebhooks()
+  const director = new TestDirector(defaults, 'test')
+  director.downloads = 'all'
+  director.webhook = 'all'
+  try {
+    const job = director.fuse('a', 'b')
+    director.result.reject(new Error('Provider unavailable'))
+    await job
+    await settle()
+    expect(director.saved).toEqual([])
+    expect(posted).toEqual([])
+  } finally {
+    director.dispose()
+  }
 })

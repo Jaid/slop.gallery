@@ -13,6 +13,7 @@ import {readFrame} from './frames/frameParameter.ts'
 import {readFrozenTime} from './frozenTime.ts'
 import {readPortraitSet} from './gallery/defaultPortraits.ts'
 import {readFlying} from './gallery/flyMode.ts'
+import {readDownload, readWebhook, readWebhookEndpoint} from './gallery/fusion/resultSharing.ts'
 import {readWeather} from './gallery/lighting.ts'
 import {readPortraitSlotEditing, readShowPortraitSlots} from './gallery/portraitSlotStore.ts'
 import {readRoom, readSpawn} from './gallery/spawn.ts'
@@ -56,6 +57,7 @@ const readers: Record<string, Reader> = {
   audio: readAudio,
   crosshair: readCrosshair,
   development: readDevelopmentMode,
+  download: readDownload,
   dump_screenshot: readDumpScreenshot,
   edit_lamps: readEditLamps,
   edit_portrait_slots: readPortraitSlotEditing,
@@ -92,6 +94,12 @@ const readers: Record<string, Reader> = {
   turntable: input => readTurntable(input)?.artwork,
   turntable_area: input => readTurntable(input)?.area,
   turntable_ratio: input => readTurntable(input)?.aspect,
+  webhook: readWebhook,
+  // Only the origin, as webhook URLs often carry their token in the path or the query, like Discord’s.
+  webhook_endpoint: input => {
+    const endpoint = readWebhookEndpoint(input)
+    return endpoint && URL.parse(endpoint)?.origin
+  },
   logs_ingestion_endpoint: searchParameter('logs_ingestion_endpoint'),
   metrics_ingestion_endpoint: searchParameter('metrics_ingestion_endpoint'),
   traces_ingestion_endpoint: searchParameter('traces_ingestion_endpoint'),

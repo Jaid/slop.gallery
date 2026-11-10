@@ -1,20 +1,26 @@
 import type Fusion from '../gallery/fusion/Fusion.ts'
 import type {FusionImpact, FusionSpec} from '../gallery/fusion/Fusion.ts'
+import type {FusionMaking, FusionResultInfo, FusionResults} from '../gallery/fusion/resultSharing.ts'
 import type {SizedImage} from '../gallery/ImageImporter.ts'
 import type {Portrait, ThrownItem} from '../gallery/types.ts'
 import type {OpenRouterAccess} from './openRouterAccess.ts'
 import type {AiSettings} from './settings.ts'
 import type {Span} from 'victoria-browser-client'
 
+import {currentWorldId} from '#src/worlds/index.ts'
+
 import PortraitNarration from '../audio/PortraitNarration.ts'
+import downloadBlob, {fileTimestamp} from '../downloadBlob.ts'
 import {arrivalFrame, loadBlob, notify} from '../gallery/actions.ts'
 import FusionRecipe, {itemIngredient, portraitIngredient} from '../gallery/fusion/FusionRecipe.ts'
 import {openFusion} from '../gallery/fusion/fusions.ts'
+import {downloadedResults, includesResult, postedResults, webhookEndpoint, webhookForm} from '../gallery/fusion/resultSharing.ts'
 import {encodeGeneratedImage, imageSize} from '../gallery/ImageImporter.ts'
 import {validateImage} from '../gallery/imagePolicy.ts'
 import {useGallery} from '../gallery/store.ts'
 import FusionTrace from '../telemetry/FusionTrace.ts'
 import {telemetry} from '../telemetry/index.ts'
+import {modelImageType, toWebp} from './modelImage.ts'
 import {hasAccess} from './openRouterAccess.ts'
 import {tieredModel} from './settings.ts'
 
@@ -22,7 +28,13 @@ import {tieredModel} from './settings.ts'
 let remainsCount = 0
 
 export default class GalleryDirector {
+  /** which results of its fusions the director saves as downloads, see `?download` */
+  protected downloads: FusionResults = downloadedResults
   readonly narrator: PortraitNarration
+  /** which results of its fusions the director posts to {@link webhookEndpoint}, see `?webhook` */
+  protected webhook: FusionResults = postedResults
+  /** where the director posts the results of its fusions, see `?webhook_endpoint` */
+  protected webhookEndpoint = webhookEndpoint
   private controller = new AbortController
   private flavors = new Map<string, symbol>
   /** the job tokens of the portraits this director’s fusions hold, by portrait id */
@@ -290,11 +302,36 @@ export default class GalleryDirector {
     return openFusion(spec)
   }
 
+  /** Posts the WebP `webp` of a fusion’s result, named `fileName`, to `endpoint` as the multipart form of `webhookForm`. Rejects unless the endpoint answers with a 2xx status within a minute, which also takes CORS headers that let the page read the answer. */
+  protected async postResult(webp: Blob, fileName: string, info: FusionResultInfo, endpoint: string) {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      body: webhookForm(webp, fileName, currentWorldId, info),
+      // Not the director’s signal: a result that flipped out is the player’s, even once the director is replaced, like by a settings change.
+      signal: AbortSignal.timeout(60_000),
+    })
+    if (!response.ok) {
+      throw new Error(`The webhook answered with ${[response.status, response.statusText].filter(Boolean).join(' ')}.`)
+    }
+  }
+
+  /** The result `image` of a fusion as a WebP: as it is where it is one already, like every new image, otherwise re-encoded, like a default work’s JXL that came back unchanged. */
+  protected async resultWebp(image: Blob | string) {
+    const blob = await loadBlob(image)
+    return modelImageType(await blob.slice(0, 12).bytes()) === 'image/webp' ? blob : toWebp(blob)
+  }
+
+  /** Saves the WebP `webp` of a fusion’s result as the download `fileName`. */
+  protected saveResult(webp: Blob, fileName: string) {
+    downloadBlob(webp, fileName)
+  }
+
   /**
    * Makes the result of `recipe` while `fusion` shows it and, if `current` still holds afterward, replaces the hung portrait `a` with it, dropping the portrait `remove` and using up the prop `consume`.
    * Where the recipe leaves `a` unchanged, as nothing but its own image was contributed, no image model is asked: `a` itself comes back out of the portal as it went in.
    * The result flips out of the portal as a loose portrait once the fusion’s climax is over; a failure shows once the fusion fizzled out, like one the player broke off by jumping into its portal, which gives up on the image at once.
    * A new image’s frame takes its shape, whatever the model made of the shape it was asked for, at the area of `a`’s frame. The result wears the frame the fusion rolled as its portal opened.
+   * As it flips out, the result is also saved as a download and posted to the webhook where `?download` and `?webhook` ask for results made the way it was.
    */
   private async brew(a: Portrait, fusion: Fusion, recipe: FusionRecipe, current: () => boolean, {canceled, consume, description, failure, remove}: {
     /** the notice right as the player breaks the fusion off */
@@ -327,6 +364,7 @@ export default class GalleryDirector {
     }
     fusion.signal.addEventListener('abort', breakOff, {once: true})
     const trace = this.traces.get(fusion)
+    const making: FusionMaking = recipe.unchanged ? 'unchanged' : (this.usingAi ? 'ai' : recipe.handmade)
     let fused: Pick<Portrait, 'height' | 'source' | 'width'> | undefined
     if (!recipe.unchanged) {
       try {
@@ -406,6 +444,11 @@ export default class GalleryDirector {
       consumed: consume && held !== consume ? [...consumed, consume] : consumed,
     }))
     fusion.emerge()
+    void this.shareResult(result.source, {
+      making,
+      date: fusedAt,
+      ingredients: recipe.ingredients.map(ingredient => ingredient.title),
+    }).catch((error: unknown) => console.warn('The fusion result could not be shared.', error))
     if (!fused) {
       notify(`“${a.title}” came back as it went in.`)
       return
@@ -431,6 +474,40 @@ export default class GalleryDirector {
         reserved: false,
         fusionJob: undefined,
       })
+    }
+  }
+
+  /** Shares the result `image` of a fusion as `?download` and `?webhook` ask for results made the way it was, as `<world>-fusion-<timestamp>-<making>.webp`: saved as a download and posted to the webhook. A failure only warns on the console. */
+  private async shareResult(image: Blob | string, info: FusionResultInfo) {
+    const download = includesResult(info.making, this.downloads)
+    const post = includesResult(info.making, this.webhook)
+    if (post && !this.webhookEndpoint) {
+      console.warn('?webhook asks to post the fusion result, but ?webhook_endpoint gives no HTTP(S) URL to post it to.')
+    }
+    const {webhookEndpoint: endpoint} = this
+    if (!download && !(post && endpoint)) {
+      return
+    }
+    const fileName = `${currentWorldId}-fusion-${fileTimestamp(info.date)}-${info.making}.webp`
+    let webp: Blob
+    try {
+      webp = await this.resultWebp(image)
+    } catch (error) {
+      console.warn('The fusion result could not be encoded as WebP.', error)
+      return
+    }
+    if (download) {
+      this.saveResult(webp, fileName)
+      console.info(`Fusion result saved as ${fileName}.`)
+    }
+    if (post && endpoint) {
+      const {origin} = new URL(endpoint)
+      try {
+        await this.postResult(webp, fileName, info, endpoint)
+        console.info(`Fusion result ${fileName} posted to ${origin}.`)
+      } catch (error) {
+        console.warn(`The fusion result ${fileName} could not be posted to ${origin}.`, error)
+      }
     }
   }
 
