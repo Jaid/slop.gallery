@@ -2,7 +2,7 @@ import type {Vec3} from '../types.ts'
 
 import {wallFace} from '../architectureDimensions.ts'
 import {cisternWindow} from '../cistern/window.ts'
-import forge from '../forge.ts'
+import forge, {forgeTableWallGap} from '../forge.ts'
 
 const southZ = forge.center[1] + forge.size[1] / 2
 /** where the face of the Forge’s south wall stands, which the alchemy machine stands against */
@@ -14,29 +14,28 @@ export const physicsSteps = {
   substeps: 4,
 } as const
 const gravity = -9.81
+const benchDepth = 1.35
 
 /**
- * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: a long top of planks with eased edges over aprons on square legs, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
+ * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: a steel top with eased edges over aprons on square legs, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
  * All values are in meters; its middle and its top’s height are in the world’s frame, everything else measured on the bench.
  */
 export const workbench = {
-  /** the middle of its top in plan, on the room’s axis, its back a hand’s width from the wall’s face */
-  center: [forge.center[0], southWallFace - 0.05 - 0.55] as const,
+  /** the middle of its top in plan, on the room’s axis, its back clear of the baseboard */
+  center: [forge.center[0], southWallFace - forgeTableWallGap - benchDepth / 2] as const,
   /** how long it is along the wall, east to west */
-  length: 2.8,
+  length: 3.4,
   /** how deep it is, from the wall into the room */
-  depth: 1.1,
+  depth: benchDepth,
   height: 1.3,
   /** how thick its top is */
-  top: 0.045,
+  top: 0.05,
   /** how far its top reaches out over the aprons */
-  overhang: 0.04,
+  overhang: 0.045,
   /** how deep its aprons hang under the top and how thick they are */
-  apron: [0.11, 0.024],
+  apron: [0.11, 0.035],
   /** how thick its square legs are */
-  leg: 0.07,
-  /** how many planks its top is laid of, along its length */
-  boards: 4,
+  leg: 0.075,
 } as const
 const [benchX, benchZ] = workbench.center
 /** how far the sink’s bowl turns round from upright at its rim down to the throat, in radians: it meets the throat at a fall of 25° */
@@ -89,7 +88,8 @@ const pipeRun = 2.1
 /** how far the riser stands east of the bench’s east end, clear of it */
 const riserX = benchX + workbench.length / 2 + 0.07 + 0.18
 /** where the pipe’s run along the wall turns into the cannon, over the bench’s middle */
-const turn: Vec3 = [benchX, pipeRun, benchZ]
+// Keep the cannon’s established aim and launch point as the larger bench moves away from the wall.
+const turn: Vec3 = [benchX, pipeRun, southWallFace - 0.05 - 0.55]
 /** how far up the barrel from where the pipe turns into it the cannon’s breech starts */
 const feed = 0.32
 /** how long the barrel is, from its breech to its muzzle */

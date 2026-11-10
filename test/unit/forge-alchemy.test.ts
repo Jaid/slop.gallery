@@ -74,7 +74,7 @@ const wallAhead = ([x, z]: readonly [number, number], [dx, dz]: readonly [number
 describe('the Forge’s alchemy machine', () => {
   test('stands against the middle of the south wall: its bench on the room’s axis, its sink in the bench’s east end and its body under the sink, between the legs', () => {
     expect(benchX).toBe(forge.center[0])
-    expect(southWallFace - (benchZ + workbench.depth / 2)).toBeCloseTo(0.05, 9)
+    expect(southWallFace - (benchZ + workbench.depth / 2)).toBeCloseTo(0.18, 9)
     expect(roomAt([benchX, 1, benchZ])).toBe('forge')
     // Left of the bench’s middle, seen from the room, with room for the flange and the aprons round it
     expect(sinkX).toBeGreaterThan(benchX)
@@ -96,7 +96,7 @@ describe('the Forge’s alchemy machine', () => {
     bench.top.computeBoundingBox()
     expect(bench.top.boundingBox!.max.y).toBeCloseTo(workbench.height, 6)
     expect(bench.top.boundingBox!.min.y).toBeCloseTo(workbench.height - workbench.top, 6)
-    expect(bench.top.hasAttribute('woodGrain')).toBe(true)
+    expect(bench.top.hasAttribute('woodGrain')).toBe(false)
     const material = new MeshBasicMaterial
     try {
       const top = new Mesh(bench.top, material)

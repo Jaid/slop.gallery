@@ -1,5 +1,7 @@
 /** Height of the default two-band baseboard above the floor. */
 export const defaultBaseboardHeight = 0.25
+/** How far the projecting cap of the default baseboard stands from the wall’s center line. */
+export const defaultBaseboardFront = 0.25
 /** Height of the projecting upper cap on the default baseboard. */
 export const baseboardCapHeight = 0.04
 

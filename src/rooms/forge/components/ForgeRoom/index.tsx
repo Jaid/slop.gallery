@@ -7,10 +7,10 @@ import {useMemo} from 'react'
 import {CircleGeometry, ExtrudeGeometry, MeshStandardNodeMaterial, Path, Shape} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
-import PlankTable from '#component/PlankTable'
 import RoomFloor from '#component/RoomFloor'
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
+import WorkbenchGeometry from '#src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {floorThickness} from '#src/lib/gallery/floors.ts'
 import {forgeRooflight, forgeTable, forgeTableCenter, forgeVestibule} from '#src/lib/gallery/forge.ts'
@@ -18,8 +18,11 @@ import {forgeRoundVestibule, vestibuleArches} from '#src/lib/gallery/forgeVestib
 import roundRevealGeometry from '#src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/roundVestibule.ts'
 import {salonCeiling} from '#src/lib/gallery/salon.ts'
+import BrushedMetalMaterial from '#src/lib/materials/BrushedMetalMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
+import {studioEnvironment} from '#src/lib/materials/metal.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
+import WroughtIronMaterial from '#src/lib/materials/WroughtIronMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import AlchemyMachine from '#src/rooms/forge/components/AlchemyMachine/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
@@ -29,11 +32,6 @@ const vestibuleWall = slopGallery.walls.find(wall => wall.id === 'forge-vestibul
 const circleSegments = 96
 /** how far in from the vestibule’s wall its brass ring lies, on the line of the room’s inlays */
 const vestibuleInlay = 1.25
-/** the painter’s table’s oiled wood, the alchemy machine’s workbench’s */
-const tableWood = {
-  heartwood: ['#5e3a1c', '#8c5f33'],
-  latewood: '#3b2412',
-} as const
 /** The Forge: a workshop with plain walls and floors for now, under a plaster ceiling pierced by a round rooflight, with the alchemy machine against its south wall, whose cannon shoots orbs across it into its round vestibule north of it, alike on a smaller scale, and on through the window in its north wall into the Bastion’s cistern, and a painter’s table against its west wall. */
 export default function ForgeRoom({glass, masonry, stone, wood}: {
   glass: Material
@@ -68,12 +66,27 @@ export default function ForgeRoom({glass, masonry, stone, wood}: {
     </group>
     <Vestibule floorReflections={floorReflections} masonry={masonry} plaster={plaster} />
     <AlchemyMachine />
-    <group position={[forgeTableCenter[0], 0, forgeTableCenter[1]]}>
-      <PlankTable colors={tableWood} name='forge-table' roughness={0.5} seed={5303} table={forgeTable} />
-    </group>
+    <PainterTable />
   </group>
 }
 
+/** A steel worktable matching the alchemy bench, with a solid top for the painting set. */
+function PainterTable() {
+  const geometry = useDisposable(useMemo(() => new WorkbenchGeometry({
+    ...forgeTable,
+    depth: forgeTable.width,
+  }, null), []))
+  const steel = useDisposable(useMemo(() => new BrushedMetalMaterial({environment: studioEnvironment}), []))
+  const iron = useDisposable(useMemo(() => new WroughtIronMaterial, []))
+  return <group name='forge-table' position={[forgeTableCenter[0], 0, forgeTableCenter[1]]} rotation={[0, Math.PI / 2, 0]}>
+    <RigidBody colliders={false} type='fixed'>
+      <CuboidCollider args={[forgeTable.length / 2, forgeTable.top / 2, forgeTable.width / 2]} position={[0, forgeTable.height - forgeTable.top / 2, 0]} />
+      {geometry.colliders.map(({center, size}) => <CuboidCollider key={center.join()} args={[size[0] / 2, size[1] / 2, size[2] / 2]} position={center} />)}
+    </RigidBody>
+    <mesh castShadow geometry={geometry.top} material={steel} name='forge-table-top' receiveShadow />
+    <mesh castShadow geometry={geometry.frame} material={iron} name='forge-table-frame' receiveShadow />
+  </group>
+}
 /** A flat ring lying in the x/z plane with its underside at y = 0, from `inner` to `outer` radius, `depth` thick. */
 function ring(inner: number, outer: number, depth: number) {
   const shape = new Shape

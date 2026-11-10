@@ -232,9 +232,7 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
     try {
       const [tableX, tableZ] = forgeTableCenter
       world.createCollider(RAPIER.ColliderDesc.cuboid(forge.size[0] / 2, 0.12, forge.size[1] / 2).setTranslation(forge.center[0], -0.12, forge.center[1]))
-      for (const {center: [x, y, z], size: [width, height, depth]} of plankTableColliders(forgeTable, 'forge-table')) {
-        world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(tableX + x, y, tableZ + z))
-      }
+      world.createCollider(RAPIER.ColliderDesc.cuboid(forgeTable.width / 2, forgeTable.top / 2, forgeTable.length / 2).setTranslation(tableX, forgeTable.height - forgeTable.top / 2, tableZ))
       const {asleep, facing, moved, up, y} = settle(paintingSet, world)
       expect(asleep).toBe(true)
       expect(moved).toBeLessThan(0.03)

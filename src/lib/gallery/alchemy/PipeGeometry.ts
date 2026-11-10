@@ -99,7 +99,7 @@ export default class PipeGeometry {
       },
       {
         point: riserTop.clone().lerp(runEnd, 0.5),
-        along: new Vector3(1, 0, 0),
+        along: runEnd.clone().sub(riserTop).normalize(),
       },
     ]
     for (const {along, point} of spots) {
