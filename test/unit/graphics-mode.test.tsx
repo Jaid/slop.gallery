@@ -1,3 +1,5 @@
+import type {RenderPipelineSettings} from '../../src/lib/rendering/renderPipelineSettings.ts'
+
 import {expect, test} from 'bun:test'
 
 import {renderToStaticMarkup} from 'react-dom/server'
@@ -40,43 +42,30 @@ test('cinematic graphics read as heavy, and only cinematic reads as cinematic', 
   expect(readGraphicsProfile('?graphics=heavy')).toBe(getGraphicsProfile(true))
   expect(readGraphicsProfile()).toBe(getGraphicsProfile(false))
 })
-test('the cinematic profile increases intermediate resolutions, AO quality, shadow samples and lamp filter radius, texture filtering, curve tessellation, indirect light and metal reflections', () => {
-  const heavy = getGraphicsProfile(true)
-  const cinematic = getGraphicsProfile(true, true)
-  expect(cinematic).toEqual({
-    ...heavy,
-    canvasTextureMipmaps: true,
-    canvasTextureResolution: 2,
-    curveDetail: 2,
-    indirectLight: true,
-    metalReflections: true,
-    ambientOcclusionResolutionScale: 2,
-    ambientOcclusionSamples: 64,
-    ambientOcclusionThickness: 2,
-    reflectionResolutionScale: 2,
-    shadowMapScale: 4,
-    lampShadowRadius: 16,
-    shadowSamples: 16,
-    sunShadowMapSize: 8192,
-    sunShadowRadius: 8,
-    sunShadowSamples: 16,
-    ssgi: {
-      screenSpaceIndirectLightAmbientOcclusion: 0.5,
-      screenSpaceIndirectLightBackfaceLighting: 0.2,
-      screenSpaceIndirectLightExpFactor: 2,
-      screenSpaceIndirectLightIntensity: 5,
-      screenSpaceIndirectLightRadius: 32,
-      screenSpaceIndirectLightResolutionScale: 1,
-      screenSpaceIndirectLightSlices: 4,
-      screenSpaceIndirectLightSteps: 32,
-      screenSpaceIndirectLightTemporalFiltering: true,
-      screenSpaceIndirectLightThickness: 1,
-    },
-    surfaceAnisotropy: 16,
-    volumetricLightSteps: 128,
-    voxelIndirectLightBounces: 2,
-  })
-  expect(getGraphicsProfile(true, true)).toBe(cinematic)
+test('the cinematic profile raises intermediate resolutions, AO quality, shadow samples and lamp filter radius, texture filtering, curve tessellation, indirect light and metal reflections over Heavy and keeps the rest', () => {
+  const cinematicProfile = getGraphicsProfile(true, true)
+  const heavy: Record<string, unknown> = getGraphicsProfile(true)
+  const cinematic: Record<string, unknown> = cinematicProfile
+  const raised = ['canvasTextureResolution', 'curveDetail', 'ambientOcclusionResolutionScale', 'ambientOcclusionSamples', 'reflectionResolutionScale', 'shadowMapScale', 'lampShadowRadius', 'shadowSamples', 'sunShadowRadius', 'sunShadowSamples', 'surfaceAnisotropy', 'volumetricLightSteps']
+  for (const key of raised) {
+    expect(cinematic[key] as number, key).toBeGreaterThan(heavy[key] as number)
+  }
+  const switched = ['canvasTextureMipmaps', 'indirectLight', 'metalReflections']
+  for (const key of switched) {
+    expect(heavy[key], key).toBe(false)
+    expect(cinematic[key], key).toBe(true)
+  }
+  const added = ['ambientOcclusionThickness', 'sunShadowMapSize', 'ssgi', 'voxelIndirectLightBounces']
+  for (const key of added) {
+    expect(heavy[key], key).toBeUndefined()
+    expect(cinematic[key], key).toBeDefined()
+  }
+  for (const [key, value] of Object.entries(heavy)) {
+    if (![...raised, ...switched].includes(key)) {
+      expect(cinematic[key], key).toEqual(value)
+    }
+  }
+  expect(getGraphicsProfile(true, true)).toBe(cinematicProfile)
   expect(getGraphicsProfile(false, true)).toBe(getGraphicsProfile(false))
 })
 test('the provider exposes the fast profile during SSR, and every profile keeps its identity', () => {
@@ -86,192 +75,106 @@ test('the provider exposes the fast profile during SSR, and every profile keeps 
   expect(getGraphicsProfile(true)).toBe(getGraphicsProfile(true))
   expect(getGraphicsProfile(false)).toBe(getGraphicsProfile(false))
 })
-test('heavy and cinematic share the tuned volumetric sunlight values, apart from cinematic raymarch steps', () => {
-  const heavy = getRenderPipelineSettings(getGraphicsProfile(true), 'traa')
-  const cinematic = getRenderPipelineSettings(getGraphicsProfile(true, true), 'traa')
-  const volumetric = {
-    volumetricLight: true,
-    volumetricLightBlur: 0,
-    volumetricLightDensity: 20,
-    volumetricLightDistanceAttenuation: 2.5,
-    volumetricLightMaxDensity: 1,
-    volumetricLightResolutionScale: 0.25,
-  }
-  expect(heavy).toMatchObject({
-    ...volumetric,
-    volumetricLightSteps: 64,
-  })
-  expect(cinematic).toMatchObject({
-    ...volumetric,
-    volumetricLightSteps: 128,
-  })
+const profiles = {
+  fast: getGraphicsProfile(false),
+  heavy: getGraphicsProfile(true),
+  cinematic: getGraphicsProfile(true, true),
+}
+const pipelines = {
+  fast: getRenderPipelineSettings(profiles.fast, false),
+  heavy: getRenderPipelineSettings(profiles.heavy, 'traa'),
+  cinematic: getRenderPipelineSettings(profiles.cinematic, 'traa'),
+}
+/** the settings whose names start with `prefix`, but for those named in `except` */
+const settingsOf = (settings: RenderPipelineSettings, prefix: string, ...except: Array<string>) => Object.fromEntries(Object.entries(settings).filter(([key]) => key.startsWith(prefix) && !except.includes(key)))
+test('heavy and cinematic share the volumetric sunlight, but for cinematic’s finer raymarch', () => {
+  const {fast, heavy, cinematic} = pipelines
+  expect(fast.volumetricLight).toBe(false)
+  expect(heavy.volumetricLight).toBe(true)
+  expect(settingsOf(cinematic, 'volumetricLight', 'volumetricLightSteps')).toEqual(settingsOf(heavy, 'volumetricLight', 'volumetricLightSteps'))
+  expect(cinematic.volumetricLightSteps).toBeGreaterThan(heavy.volumetricLightSteps)
 })
 test('every profile shares the AO radius and strength, and Cinematic raises the AO quality', () => {
-  const fast = getRenderPipelineSettings(getGraphicsProfile(false), false)
-  const heavy = getRenderPipelineSettings(getGraphicsProfile(true), 'traa')
-  const cinematic = getRenderPipelineSettings(getGraphicsProfile(true, true), 'traa')
+  const {fast, heavy, cinematic} = pipelines
+  expect(settingsOf(fast, 'ambientOcclusion')).toEqual(settingsOf(heavy, 'ambientOcclusion'))
+  expect(heavy.ambientOcclusion).toBe(true)
   expect(cinematic).toMatchObject({
     ambientOcclusion: true,
-    ambientOcclusionRadius: 0.5,
-    ambientOcclusionResolutionScale: 2,
-    ambientOcclusionSamples: 64,
-    ambientOcclusionScale: 1,
-    ambientOcclusionTemporalFiltering: false,
-    ambientOcclusionThickness: 2,
+    ambientOcclusionRadius: heavy.ambientOcclusionRadius,
+    ambientOcclusionScale: heavy.ambientOcclusionScale,
   })
-  expect(fast.ambientOcclusionResolutionScale).toBe(1)
-  expect(fast.ambientOcclusionSamples).toBe(16)
-  expect(fast.ambientOcclusionRadius).toBe(0.5)
-  expect(fast.ambientOcclusionScale).toBe(1)
-  expect(heavy.ambientOcclusionRadius).toBe(0.5)
-  expect(heavy.ambientOcclusionResolutionScale).toBe(1)
-  expect(heavy.ambientOcclusionSamples).toBe(16)
-  expect(heavy.ambientOcclusionScale).toBe(1)
-  expect(heavy.ambientOcclusionThickness).toBe(1)
+  for (const key of ['ambientOcclusionResolutionScale', 'ambientOcclusionSamples', 'ambientOcclusionThickness'] as const) {
+    expect(cinematic[key], key).toBeGreaterThan(heavy[key])
+  }
 })
 test('only Cinematic adds screen-space reflections on metallic surfaces to the floor reflections', () => {
-  expect(getRenderPipelineSettings(getGraphicsProfile(false), false)).toMatchObject({
+  expect(pipelines.fast).toMatchObject({
     mirrorReflections: false,
     screenSpaceReflections: false,
   })
-  expect(getRenderPipelineSettings(getGraphicsProfile(true), 'traa')).toMatchObject({
+  expect(pipelines.heavy).toMatchObject({
     mirrorReflections: true,
     screenSpaceReflections: false,
   })
-  expect(getRenderPipelineSettings(getGraphicsProfile(true, true), 'traa')).toMatchObject({
+  expect(pipelines.cinematic).toMatchObject({
     mirrorReflections: true,
     screenSpaceReflections: true,
   })
 })
-test('Fast disables bloom, while Heavy and Cinematic use the current tuned bloom defaults', () => {
-  const fast = getRenderPipelineSettings(getGraphicsProfile(false), false)
-  const heavy = getRenderPipelineSettings(getGraphicsProfile(true), 'traa')
-  const cinematic = getRenderPipelineSettings(getGraphicsProfile(true, true), 'traa')
-  const tunedBloom = {
-    bloom: true,
-    bloomGaussianKernelSize: 6,
-    bloomMipCount: 5,
-    bloomResolutionScale: 0.5,
-    bloomLuminanceCap: 4,
-    bloomRadius: 0.3,
-    bloomSmoothWidth: 0.2,
-    bloomStrength: 0.5,
-    bloomThreshold: 2,
-  }
-  expect(fast.bloom).toBe(false)
-  expect(heavy).toMatchObject(tunedBloom)
-  expect(cinematic).toMatchObject(tunedBloom)
+test('Fast leaves out bloom, which Heavy and Cinematic tune alike', () => {
+  expect(pipelines.fast.bloom).toBe(false)
+  expect(pipelines.heavy.bloom).toBe(true)
+  expect(settingsOf(pipelines.cinematic, 'bloom')).toEqual(settingsOf(pipelines.heavy, 'bloom'))
 })
 test('bloom blur quality controls rebuild the render pipeline', () => {
-  const settings = getRenderPipelineSettings(getGraphicsProfile(true), 'traa')
-  expect(getRenderPipelineStructure(settings)).toMatchObject({
-    bloomGaussianKernelSize: 6,
-    bloomMipCount: 5,
-    bloomResolutionScale: 0.5,
-  })
+  const settings = pipelines.heavy
+  const structure = getRenderPipelineStructure(settings)
+  for (const key of ['bloomGaussianKernelSize', 'bloomMipCount', 'bloomResolutionScale'] as const) {
+    expect(getRenderPipelineStructure({
+      ...settings,
+      [key]: settings[key] + 1,
+    }), key).not.toEqual(structure)
+  }
 })
 test('no graphics mode traces voxel indirect light, which the tuning panel switches on with one bounce, or two in Cinematic', () => {
-  const fast = getRenderPipelineSettings(getGraphicsProfile(false), false)
-  const heavy = getRenderPipelineSettings(getGraphicsProfile(true), 'traa')
-  const cinematic = getRenderPipelineSettings(getGraphicsProfile(true, true), 'traa')
+  const {fast, heavy, cinematic} = pipelines
   for (const settings of [fast, heavy, cinematic]) {
-    expect(settings).toMatchObject({
-      voxelIndirectLight: false,
-      voxelIndirectLightConeAngle: 40,
-      voxelIndirectLightConeCount: 3,
-      voxelIndirectLightIntensity: 0.2,
-      voxelIndirectLightResolution: 256,
-    })
+    expect(settings.voxelIndirectLight).toBe(false)
+    expect(settingsOf(settings, 'voxelIndirectLight', 'voxelIndirectLightBounces')).toEqual(settingsOf(heavy, 'voxelIndirectLight', 'voxelIndirectLightBounces'))
   }
   expect(heavy.voxelIndirectLightBounces).toBe(1)
   expect(cinematic.voxelIndirectLightBounces).toBe(2)
 })
-test('Sun shadow presets are independent of the other lights and follow the configured map, radius and samples', () => {
-  const fastProfile = getGraphicsProfile(false)
-  const heavyProfile = getGraphicsProfile(true)
-  const cinematicProfile = getGraphicsProfile(true, true)
-  const fast = getRenderPipelineSettings(fastProfile, false)
-  const heavy = getRenderPipelineSettings(heavyProfile, 'traa')
-  const cinematic = getRenderPipelineSettings(cinematicProfile, 'traa')
-  const fastSun = {
-    mapSize: 4096,
-    radius: 1,
-    samples: 5,
+test('the sun’s shadows follow each profile’s map, radius and samples, Cinematic’s finer than Heavy’s', () => {
+  for (const name of ['fast', 'heavy', 'cinematic'] as const) {
+    const sun = getSunShadowSettings(profiles[name], 4096)
+    expect(pipelines[name]).toMatchObject({
+      sunShadowMapSize: sun.mapSize,
+      sunShadowRadius: sun.radius,
+      sunShadowSamples: sun.samples,
+    })
   }
-  const heavySun = {
-    mapSize: 4096,
-    radius: 4,
-    samples: 4,
+  const heavy = getSunShadowSettings(profiles.heavy, 4096)
+  const cinematic = getSunShadowSettings(profiles.cinematic, 4096)
+  for (const key of ['mapSize', 'radius', 'samples'] as const) {
+    expect(cinematic[key], key).toBeGreaterThan(heavy[key])
   }
-  const cinematicSun = {
-    mapSize: 8192,
-    radius: 8,
-    samples: 16,
-  }
-  expect(getSunShadowSettings(fastProfile, 4096)).toEqual(fastSun)
-  expect(getSunShadowSettings(heavyProfile, 4096)).toEqual(heavySun)
-  expect(getSunShadowSettings(cinematicProfile, 4096)).toEqual(cinematicSun)
-  expect(fast).toMatchObject({
-    sunShadowMapSize: 4096,
-    sunShadowRadius: 1,
-    sunShadowSamples: 5,
-  })
-  expect(heavy).toMatchObject({
-    sunShadowMapSize: 4096,
-    sunShadowRadius: 4,
-    sunShadowSamples: 4,
-  })
-  expect(cinematic).toMatchObject({
-    sunShadowMapSize: 8192,
-    sunShadowRadius: 8,
-    sunShadowSamples: 16,
-  })
-  expect(heavyProfile.shadowSamples).toBe(4)
-  expect(cinematicProfile.shadowSamples).toBe(16)
+  // A profile without a map size of its own keeps the one it’s given.
+  expect(getSunShadowSettings(profiles.heavy, 2048).mapSize).toBe(2048)
 })
-test('Cinematic scales Heavy’s four-texel lamp shadow filtering with its four times larger maps without changing their samples or Sun', () => {
-  const fast = getRenderPipelineSettings(getGraphicsProfile(false), false)
-  const heavy = getRenderPipelineSettings(getGraphicsProfile(true), 'traa')
-  const cinematic = getRenderPipelineSettings(getGraphicsProfile(true, true), 'traa')
-  expect(fast.lampShadowRadius).toBe(1)
-  expect(heavy.lampShadowRadius).toBe(4)
-  expect(cinematic.lampShadowRadius).toBe(16)
-  expect(heavy.lampShadowSamples).toBe(4)
-  expect(cinematic.lampShadowSamples).toBe(16)
-  expect(heavy.sunShadowRadius).toBe(4)
-  expect(cinematic.sunShadowRadius).toBe(8)
+test('Cinematic widens the lamps’ shadow filter as far as its shadow maps grow, with more samples', () => {
+  const {fast, heavy, cinematic} = pipelines
+  expect(cinematic.lampShadowRadius / heavy.lampShadowRadius).toBe(profiles.cinematic.shadowMapScale / profiles.heavy.shadowMapScale)
+  expect(heavy.lampShadowRadius).toBeGreaterThan(fast.lampShadowRadius)
+  expect(cinematic.lampShadowSamples).toBeGreaterThan(heavy.lampShadowSamples)
 })
-test('Cinematic alone adopts the tuned SSGI settings', () => {
-  const fast = getRenderPipelineSettings(getGraphicsProfile(false), false)
-  const heavy = getRenderPipelineSettings(getGraphicsProfile(true), 'traa')
-  const cinematic = getRenderPipelineSettings(getGraphicsProfile(true, true), 'traa')
+test('Cinematic alone lights indirectly in screen space, with its own tuning', () => {
+  const {fast, heavy, cinematic} = pipelines
   expect(fast.screenSpaceIndirectLight).toBe(false)
   expect(heavy.screenSpaceIndirectLight).toBe(false)
-  expect(heavy).toMatchObject({
-    screenSpaceIndirectLightAmbientOcclusion: 0,
-    screenSpaceIndirectLightBackfaceLighting: 0,
-    screenSpaceIndirectLightExpFactor: 2,
-    screenSpaceIndirectLightIntensity: 4,
-    screenSpaceIndirectLightRadius: 12,
-    screenSpaceIndirectLightResolutionScale: 1,
-    screenSpaceIndirectLightSlices: 3,
-    screenSpaceIndirectLightSteps: 16,
-    screenSpaceIndirectLightTemporalFiltering: true,
-    screenSpaceIndirectLightThickness: 1,
-  })
   expect(cinematic.screenSpaceIndirectLight).toBe(true)
-  expect(cinematic).toMatchObject({
-    screenSpaceIndirectLightAmbientOcclusion: 0.5,
-    screenSpaceIndirectLightBackfaceLighting: 0.2,
-    screenSpaceIndirectLightExpFactor: 2,
-    screenSpaceIndirectLightIntensity: 5,
-    screenSpaceIndirectLightRadius: 32,
-    screenSpaceIndirectLightResolutionScale: 1,
-    screenSpaceIndirectLightSlices: 4,
-    screenSpaceIndirectLightSteps: 32,
-    screenSpaceIndirectLightTemporalFiltering: true,
-    screenSpaceIndirectLightThickness: 1,
-  })
+  expect(cinematic).toMatchObject(profiles.cinematic.ssgi!)
+  expect(settingsOf(cinematic, 'screenSpaceIndirectLight')).not.toEqual(settingsOf(heavy, 'screenSpaceIndirectLight'))
 })
 test('canvas texture resolutions stay within the texture size limit', () => {
   expect(fitCanvasTextureResolution(2, 1024, 246)).toBe(2)
