@@ -1,5 +1,5 @@
-import type {FrameChoice} from '../frames/frameChoice.ts'
-import type {PortraitFrameId} from '../frames/frameParameter.ts'
+import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
+import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {PlacementIssue} from '../placement/wallGeometry.ts'
 import type {ItemIngredient} from './fusion/FusionRecipe.ts'
 import type {Orb} from './orbs/index.ts'

@@ -3,7 +3,7 @@ import type PromptOrb from '../../src/lib/gallery/orbs/base/PromptOrb.ts'
 
 import {describe, expect, test} from 'bun:test'
 
-import {pickFrame} from '../../src/lib/frames/frameChoice.ts'
+import {pickFrame} from '../../src/frames/lib/frameChoice.ts'
 import FusionRecipe, {fusionInstruction, itemIngredient, maximumIngredients, minimumIngredients, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
 import {promptOrbs, transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
 
@@ -135,7 +135,7 @@ describe('fusion recipe', () => {
       {
         ...item('Test Orb', {
           kind: 'frame',
-          frame: 'lodge-tramp',
+          frame: 'tramp',
         }, {
           kind: 'instruction',
           instruction: 'Make it red.',
@@ -144,12 +144,12 @@ describe('fusion recipe', () => {
       },
       item('frame', {
         kind: 'frame',
-        frame: 'cell-coffer',
+        frame: 'coffer',
       }),
     ]
     const recipe = new FusionRecipe(ingredients)
     expect(recipe.glow).toBe('#00ff00')
-    expect(recipe.frame).toBe('lodge-tramp')
+    expect(recipe.frame).toBe('tramp')
     expect(recipe.tints.map(tint => tint.title)).toEqual(['Test Orb'])
     expect(recipe.localDescription).toBe('Tinted by hand in the Test Orb’s glow.')
   })

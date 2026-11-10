@@ -6,7 +6,7 @@ import type {Object3D} from 'three/webgpu'
 import {mulberry32} from 'math/random'
 import {Matrix4, Quaternion, Vector3} from 'three/webgpu'
 
-import {frameBack} from '#src/lib/frames/base/PortraitFrame.ts'
+import {frameBack} from '#src/frames/base/PortraitFrame.ts'
 
 import {wobble} from './motion.ts'
 

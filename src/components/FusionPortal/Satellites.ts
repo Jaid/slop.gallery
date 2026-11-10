@@ -7,7 +7,7 @@ import type {Object3D} from 'three/webgpu'
 import {clamp} from 'math'
 import {Box3, Matrix4, Quaternion, Vector3} from 'three/webgpu'
 
-import {portraitFrame} from '#src/lib/frames/index.ts'
+import {portraitFrame} from '#src/frames/index.ts'
 import {useGallery} from '#src/lib/gallery.ts'
 import {handBack} from '#src/lib/gallery/fusion/handBack.ts'
 import {emberRhythm} from '#src/lib/gallery/fusion/intro.ts'

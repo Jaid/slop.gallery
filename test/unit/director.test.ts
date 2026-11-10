@@ -1,5 +1,5 @@
+import type {PortraitFrameId} from '../../src/frames/lib/frameParameter.ts'
 import type {AiSettings} from '../../src/lib/ai/settings.ts'
-import type {PortraitFrameId} from '../../src/lib/frames/frameParameter.ts'
 import type {FusionOptions, FusionSpec} from '../../src/lib/gallery/fusion/Fusion.ts'
 import type FusionRecipe from '../../src/lib/gallery/fusion/FusionRecipe.ts'
 import type {FusionMaking, FusionResults} from '../../src/lib/gallery/fusion/resultSharing.ts'
@@ -585,7 +585,7 @@ test('a result made at once, like a local one without AI, can still be broken of
   }
 })
 test('the result wears the frame a thrown ingredient contributed wherever it arrives, and without one that of the room it arrives in, rolled as the portal opens', async () => {
-  const items: Array<[ThrownItem, PortraitFrameId | undefined]> = [[framing(testOrb, 'lodge-tramp'), 'lodge-tramp'], [framing(apple, 'cell-coffer'), 'cell-coffer'], [testOrb, undefined], [apple, undefined]]
+  const items: Array<[ThrownItem, PortraitFrameId | undefined]> = [[framing(testOrb, 'tramp'), 'tramp'], [framing(apple, 'coffer'), 'coffer'], [testOrb, undefined], [apple, undefined]]
   for (const [item, frame] of items) {
     useGallery.setState(original, true)
     useGallery.setState({
@@ -763,7 +763,7 @@ for (const ai of [false, true]) {
     const before = useGallery.getState().portraits[0]
     useGallery.getState().update('a', {
       // the Halloween Orb’s, which no room wears
-      frame: 'halloween-lantern',
+      frame: 'lantern',
       narration: {audio: '/narration.opus'},
     })
     useGallery.setState({consumed: []})
@@ -798,7 +798,7 @@ for (const ai of [false, true]) {
         position: fusion.frame.center,
       })
       expect(portrait.frame).toBe(arrivalFrame(portrait.position, before.position, 'a', environmentSeed))
-      expect(portrait.frame).not.toBe('halloween-lantern')
+      expect(portrait.frame).not.toBe('lantern')
       expect(useGallery.getState().consumed).toEqual(['prop-orb-clear'])
       expect(useGallery.getState().notice).toContain('came back as it went in')
     } finally {

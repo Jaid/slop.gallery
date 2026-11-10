@@ -30,7 +30,7 @@ export default class SpookOrb extends PromptOrb {
   readonly change = 'add something supernatural that makes it'
   readonly color = '#3fd98a'
   override readonly effect = ghostsEffect
-  readonly frame = ['spook-maelstrom', 'spook-rift', 'spook-abyss', 'spook-seance'] as const
+  readonly frame = ['maelstrom', 'rift', 'abyss', 'seance'] as const
   readonly id = 'spook'
   readonly mood = 'spook'
   readonly photo = photo

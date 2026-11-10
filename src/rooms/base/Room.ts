@@ -1,4 +1,4 @@
-import type {FrameChoice} from '#src/lib/frames/frameChoice.ts'
+import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {CameraBookmark, PortraitRatio, SpawnBookmark} from '#src/lib/gallery/types.ts'
 import type {Wall, WallOpening} from '#src/lib/placement/wallGeometry.ts'
 import type {MoodId} from '#src/moods/index.ts'

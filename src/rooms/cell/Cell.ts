@@ -93,7 +93,7 @@ export default class Cell extends Room {
     super({
       title: 'Cell',
       mood: 'cell',
-      frame: ['cell-coffer', 'cell-gilding', 'cell-crate'],
+      frame: ['coffer', 'gilding', 'crate'],
       map: cellMap(layout),
       slots,
       lamps,

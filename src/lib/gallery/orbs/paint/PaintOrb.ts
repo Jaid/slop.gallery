@@ -42,7 +42,7 @@ export default class PaintOrb extends PromptOrb {
   readonly color = '#3d5afe'
   override readonly conjunction = 'and'
   override readonly effect = strokesEffect
-  readonly frame = ['paint-marbled', 'paint-canvas'] as const
+  readonly frame = ['marbled', 'canvas'] as const
   readonly id = 'paint'
   readonly mood = 'paint'
   readonly photo = photo

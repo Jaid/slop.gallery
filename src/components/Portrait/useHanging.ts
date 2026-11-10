@@ -1,4 +1,4 @@
-import type PortraitFrame from '#src/lib/frames/base/PortraitFrame.ts'
+import type PortraitFrame from '#src/frames/base/PortraitFrame.ts'
 import type {Portrait} from '#src/lib/gallery.ts'
 import type {Group} from 'three/webgpu'
 

@@ -29,7 +29,7 @@ export default class Salon extends Room {
     super({
       title: 'The Salon',
       mood: 'salon',
-      frame: ['salon-barbizon', 'salon-whistler', 'salon-impressionist'],
+      frame: ['barbizon', 'whistler', 'impressionist'],
       cameras,
       spawns,
       skybox: 'sky',

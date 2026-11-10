@@ -5,7 +5,8 @@ import type {BufferGeometry, InstancedMesh, Mesh, Object3D} from 'three/webgpu'
 import {MeshBVH} from 'three-mesh-bvh'
 import {Box3, DoubleSide, Matrix4, Ray, Raycaster, Vector3} from 'three/webgpu'
 
-import {frameBack} from '../frames/base/PortraitFrame.ts'
+import {frameBack} from '#src/frames/base/PortraitFrame.ts'
+
 import {hangingMargins, hangingOffset, nearCutout, wallPosition} from './wallGeometry.ts'
 
 /** how far out of its wall’s center line a hung frame’s back lies: anything standing out less leaves it room behind */

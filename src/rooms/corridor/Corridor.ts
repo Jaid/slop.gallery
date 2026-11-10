@@ -41,7 +41,7 @@ export default class Corridor extends Room {
     super({
       title: 'Corridor',
       mood: 'corridor',
-      frame: ['corridor-kumiko', 'corridor-mission', 'corridor-casing'],
+      frame: ['kumiko', 'mission', 'casing'],
       lamps,
       skybox: null,
       sunlit: false,

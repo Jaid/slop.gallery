@@ -1,9 +1,9 @@
 import type {OrbitSettings} from '#src/lib/camera/OrbitInspection.ts'
 import type {Portrait, Vec3} from './types.ts'
 
+import {portraitFrame} from '#src/frames/index.ts'
 import {inspectionFov} from '#src/lib/camera/OrbitInspection.ts'
 
-import {portraitFrame} from '../frames/index.ts'
 import {portraitLabelLayout} from './portraitLabel.ts'
 
 /**

@@ -40,7 +40,7 @@ export default class Antechamber extends Room {
     super({
       title: 'The Antechamber',
       mood: 'antechamber',
-      frame: ['antechamber-adam', 'antechamber-sevres'],
+      frame: ['adam', 'sevres'],
       cameras,
       skybox: 'sky',
       slots,

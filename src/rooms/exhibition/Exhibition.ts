@@ -37,7 +37,7 @@ export default class Exhibition extends Room {
     super({
       title: 'The Exhibition',
       mood: 'exhibition',
-      frame: ['exhibition-vitrine', 'exhibition-evidence', 'exhibition-containment'],
+      frame: ['vitrine', 'evidence', 'containment'],
       cameras,
       spawns,
       lamps,

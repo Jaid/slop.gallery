@@ -5,7 +5,7 @@ import type {Vec3} from 'math'
 
 import {Vector3} from 'three/webgpu'
 
-import {pickFrame} from '#src/lib/frames/frameChoice.ts'
+import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 import {slotFrame} from '#src/lib/placement/portraitSlots.ts'
 import {placeWalls} from '#src/rooms/lib/walls.ts'
 

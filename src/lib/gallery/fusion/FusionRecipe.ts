@@ -1,4 +1,4 @@
-import type {PortraitFrameId} from '../../frames/frameParameter.ts'
+import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {SizedImage} from '../ImageImporter.ts'
 import type {Portrait} from '../types.ts'
 import type {FusionEffect} from './effects/index.ts'

@@ -1,4 +1,4 @@
-import type {PortraitFrameId} from '#src/lib/frames/frameParameter.ts'
+import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {Quat, Vec3} from '#src/lib/gallery/types.ts'
 import type {Shot, Timeline} from './fusionCamera.ts'
 

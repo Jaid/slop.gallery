@@ -2,11 +2,11 @@ import type {Portrait, PortraitRatio, Vec3} from '../../src/lib/gallery/types.ts
 
 import {describe, expect, test} from 'bun:test'
 
+import {frameBack, frameTriangleBudget, maximumFrameReach} from '../../src/frames/base/PortraitFrame.ts'
+import {classicFrame, frames, portraitFrame} from '../../src/frames/index.ts'
+import {choiceFrames, pickFrame} from '../../src/frames/lib/frameChoice.ts'
+import {frameIds, readFrame} from '../../src/frames/lib/frameParameter.ts'
 import {inspectionFov} from '../../src/lib/camera/OrbitInspection.ts'
-import {frameBack, frameTriangleBudget, maximumFrameReach} from '../../src/lib/frames/base/PortraitFrame.ts'
-import {choiceFrames, pickFrame} from '../../src/lib/frames/frameChoice.ts'
-import {frameIds, readFrame} from '../../src/lib/frames/frameParameter.ts'
-import {classicFrame, frames, portraitFrame} from '../../src/lib/frames/index.ts'
 import {arrivalFrame} from '../../src/lib/gallery/actions.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {hangDefaultWorks} from '../../src/lib/gallery/defaultPortraits.ts'
@@ -30,6 +30,10 @@ describe('frames', () => {
     expect(Object.keys(frames)).toEqual([...frameIds])
     expect(frameIds[0]).toBe('classic')
     expect(frames.classic).toBe(classicFrame)
+    // Each is the frame of its id’s folder, named after it.
+    for (const [id, frame] of entries) {
+      expect(frame.constructor.name.toLowerCase()).toBe(`${id}frame`)
+    }
   })
   for (const [id, frame] of entries) {
     test(`${id} stays within its budget and envelope at every size`, () => {
@@ -96,11 +100,11 @@ describe('frames', () => {
       height: 0.8,
       position: [0, 2, 0],
       rotation: 0,
-      frame: 'cell-crate',
+      frame: 'crate',
     } as unknown as Portrait
     const {center, orbit} = portraitOrbit(portrait, false, 1)
-    expect(orbit.distance).toBeCloseTo(frames['cell-crate'].viewingDistance(1.2, 0.8, 1, inspectionFov), 9)
-    expect(center[2]).toBeCloseTo(frames['cell-crate'].imageDepth, 9)
+    expect(orbit.distance).toBeCloseTo(frames.crate.viewingDistance(1.2, 0.8, 1, inspectionFov), 9)
+    expect(center[2]).toBeCloseTo(frames.crate.imageDepth, 9)
     // with its name plate, from further back
     expect(portraitOrbit(portrait, true, 1).orbit.distance).toBeGreaterThan(orbit.distance!)
   })
@@ -122,8 +126,8 @@ const roomChoices = rooms.values().flatMap(room => (room.frame ? [room.frame] : 
 const orbChoices = orbs.flatMap(orb => (orb.frame ? [orb.frame] : []))
 describe('frame choices', () => {
   test('a single frame is always picked, and of several, every seed picks one, which one depending on the seed', () => {
-    expect(pickFrame(5, 'lodge-tramp')).toBe('lodge-tramp')
-    expect(choiceFrames('lodge-tramp')).toEqual(['lodge-tramp'])
+    expect(pickFrame(5, 'tramp')).toBe('tramp')
+    expect(choiceFrames('tramp')).toEqual(['tramp'])
     for (const choice of [...roomChoices, ...orbChoices]) {
       const picks = new Set(seeds.map(seed => pickFrame(seed, choice)))
       expect([...picks].every(id => choiceFrames(choice).includes(id))).toBe(true)
@@ -137,9 +141,9 @@ describe('frame choices', () => {
       expect(positions.size).toBeGreaterThan(1)
     }
   })
-  test('every frame but the default is brought by exactly one room or ingredient', () => {
-    const brought = [...roomChoices, ...orbChoices].flatMap(choice => choiceFrames(choice))
-    expect(brought.toSorted()).toEqual(frameIds.filter(id => id !== 'classic').toSorted())
+  test('every frame but the default is brought by a room or an ingredient, several of which may bring the same one', () => {
+    const brought = new Set([...roomChoices, ...orbChoices].flatMap(choice => choiceFrames(choice)))
+    expect([...brought].toSorted()).toEqual(frameIds.filter(id => id !== 'classic').toSorted())
   })
 })
 describe('room frames', () => {

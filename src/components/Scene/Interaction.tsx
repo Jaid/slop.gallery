@@ -9,7 +9,7 @@ import {Raycaster, Vector2, Vector3} from 'three/webgpu'
 
 import OrbitViewing from '#component/OrbitViewing'
 import PlacementPreview from '#component/PlacementPreview'
-import {portraitFrame} from '#src/lib/frames/index.ts'
+import {portraitFrame} from '#src/frames/index.ts'
 import {arrivalFrame, cameraPose, upcomingWorkId, useGallery} from '#src/lib/gallery.ts'
 import {importPreviewSide} from '#src/lib/gallery/ImageImporter.ts'
 

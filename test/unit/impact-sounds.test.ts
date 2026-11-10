@@ -6,9 +6,9 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import BodyContacts from 'rapier-body-contact'
 import {Quaternion, Vector3} from 'three/webgpu'
 
+import {frames} from '../../src/frames/index.ts'
 import {frameContact, frameImpactSounds, frameImpactVoices} from '../../src/lib/audio/frameImpacts.ts'
 import {orbImpactVoices} from '../../src/lib/audio/orbImpacts.ts'
-import {frames} from '../../src/lib/frames/index.ts'
 
 await RAPIER.init()
 /** A world stepping like `<Physics>` of @react-three/rapier, with a floor 10 m square whose top lies at 0. */
@@ -98,8 +98,8 @@ test('a work strikes with its face, a side or a corner, by the contact’s norma
 })
 test('every frame sounds like one of the shared frame sounds, gilded wood unless it says otherwise', () => {
   expect(frames.classic.impactSound).toBe('gilt')
-  expect(frames['bastion-oak'].impactSound).toBe('hardwood')
-  expect(frames['bastion-strapwork'].impactSound).toBe('heavy')
+  expect(frames.oak.impactSound).toBe('hardwood')
+  expect(frames.strapwork.impactSound).toBe('heavy')
   for (const frame of Object.values(frames)) {
     expect(Object.keys(frameImpactSounds)).toContain(frame.impactSound)
   }

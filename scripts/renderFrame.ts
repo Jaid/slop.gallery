@@ -9,7 +9,7 @@ import {createFrameSink, endWarmup, frameFormat, installVirtualClock, waitForLoa
 import fs from 'fs-extra'
 import {av1Crf} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
-import {frameIds} from '#src/lib/frames/frameParameter.ts'
+import {frameIds} from '#src/frames/lib/frameParameter.ts'
 import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
 import artworks from '#src/worlds/gallery/artworks.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'

@@ -3,10 +3,10 @@ import type {Artwork, Portrait, PortraitSlot} from './types.ts'
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
+import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 import world from '#src/worlds/current.ts'
 
 import {environmentRandom} from '../environmentSeed.ts'
-import {pickFrame} from '../frames/frameChoice.ts'
 
 const portraitSets = ['classic'] as const
 

@@ -1,6 +1,6 @@
 import type {Portrait, Vec3} from '#src/lib/gallery/types.ts'
 
-import {pickFrame} from '#src/lib/frames/frameChoice.ts'
+import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 import {arrivalFrame, newPortrait} from '#src/lib/gallery/actions.ts'
 import {imageSize, importedImage, importedTitle} from '#src/lib/gallery/ImageImporter.ts'
 import {maximumPortraits, validateImage} from '#src/lib/gallery/imagePolicy.ts'

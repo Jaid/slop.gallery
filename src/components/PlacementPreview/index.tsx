@@ -1,4 +1,4 @@
-import type PortraitFrame from '#src/lib/frames/base/PortraitFrame.ts'
+import type PortraitFrame from '#src/frames/base/PortraitFrame.ts'
 
 import {useFrame} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'

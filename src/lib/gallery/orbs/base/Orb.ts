@@ -1,11 +1,11 @@
-import type {FrameChoice} from '#src/lib/frames/frameChoice.ts'
+import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {FusionEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import type {IngredientContribution, ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type OrbGlassMaterial from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 import type {MoodId} from '#src/moods/index.ts'
 
-import {pickFrame} from '#src/lib/frames/frameChoice.ts'
+import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 
 /**
  * A kind of orb: a glass ball, which is an ingredient of the fusion of a portrait it is thrown into, contributing whatever it contributes instead of a studio photograph of itself, and which a success uses up.
