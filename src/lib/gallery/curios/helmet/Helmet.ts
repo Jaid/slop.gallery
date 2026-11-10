@@ -119,7 +119,7 @@ function rivetHeads(points: ReadonlyArray<{
     const head = new SphereGeometry(radius, 6, 2, 0, Math.PI * 2, 0, Math.PI / 2)
     head.deleteAttribute('uv')
     head.scale(1, 0.5, 1).applyQuaternion(turn.setFromUnitVectors(up, normal)).translate(...position)
-    const mask = new Float32Array(head.getAttribute('position').count * 2).map((_, index) => (index % 2 ? 0.5 : 0))
+    const mask = Float32Array.from({length: head.getAttribute('position').count * 2}, (_, index) => (index % 2 ? 0.5 : 0))
     head.setAttribute('steelMask', new Float32BufferAttribute(mask, 2))
     return head
   })

@@ -74,12 +74,12 @@ export default class Pumpkin extends Curio {
     const foot = top[1] - lowest - 0.008
     const stemRows = 10
     const stemAround = stemRidges * 6
-    const stem = latticeGeometry(Array.from({length: stemRows}, (_, index) => {
-      const t = 1 - index / (stemRows - 1)
+    const stem = latticeGeometry(Array.from({length: stemRows}, (_ignoredRow, row) => {
+      const t = 1 - row / (stemRows - 1)
       const thickness = stemRadius[0] + (stemRadius[1] - stemRadius[0]) * t + 0.012 * Math.exp(-t / 0.1)
       const twist = 0.5 * t
       const [bendX, bendZ] = [0.022 * t ** 2, 0.006 * t ** 2]
-      return Array.from({length: stemAround}, (_, column): LatticePoint => {
+      return Array.from({length: stemAround}, (_ignoredColumn, column): LatticePoint => {
         const u = Math.PI * 2 * column / stemAround
         const ridged = thickness * (1 + 0.14 * Math.abs(Math.cos((u + twist) * stemRidges / 2)) ** 2 - 0.07)
         return {position: [bendX + ridged * Math.sin(u), foot + stemHeight * t, bendZ + ridged * Math.cos(u)]}

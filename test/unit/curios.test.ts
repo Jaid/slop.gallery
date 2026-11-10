@@ -30,7 +30,13 @@ const signedVolume = (geometry: BufferGeometry) => {
   }
   return volume
 }
-const sizeOf = (geometry: BufferGeometry) => (new Box3).setFromBufferAttribute(geometry.getAttribute('position') as never).getSize(new Vector3)
+/** the box round the geometry’s positions */
+const boundsOf = (geometry: BufferGeometry) => {
+  const bounds = new Box3
+  bounds.setFromBufferAttribute(geometry.getAttribute('position') as never)
+  return bounds
+}
+const sizeOf = (geometry: BufferGeometry) => boundsOf(geometry).getSize(new Vector3)
 describe('the curios', () => {
   test('each is a prop of its own, lying in its room when a game begins', () => {
     expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set'])
@@ -54,7 +60,7 @@ describe('the curios', () => {
         }
         const bounds = new Box3
         for (const {geometry} of model.parts) {
-          bounds.union((new Box3).setFromBufferAttribute(geometry.getAttribute('position') as never))
+          bounds.union(boundsOf(geometry))
         }
         // The camera orbits it from outside.
         expect(bounds.getSize(new Vector3).length() / 2).toBeLessThan(curio.reach)
@@ -62,7 +68,8 @@ describe('the curios', () => {
         const {hull} = model
         expect(hull.length / 3).toBeGreaterThan(30)
         expect(hull.length / 3).toBeLessThanOrEqual(128)
-        const hullBounds = (new Box3).setFromArray(hull)
+        const hullBounds = new Box3
+        hullBounds.setFromArray(hull)
         expect(hullBounds.min.distanceTo(bounds.min)).toBeLessThan(0.01)
         expect(hullBounds.max.distanceTo(bounds.max)).toBeLessThan(0.01)
       } finally {
@@ -98,7 +105,7 @@ describe('the curios', () => {
     const model = paintingSet.createModel()
     try {
       expect(model.parts.map(({name}) => name)).toEqual(['painting-set-wood', 'painting-set-palette', 'painting-set-finish', 'painting-set-metal', 'painting-set-paint'])
-      const [wood, board, finish, metal, paint] = model.parts.map(({geometry}) => (new Box3).setFromBufferAttribute(geometry.getAttribute('position') as never))
+      const [wood, board, finish, metal, paint] = model.parts.map(({geometry}) => boundsOf(geometry))
       expect(wood.min.y).toBeCloseTo(0, 6)
       expect(wood.max.x - wood.min.x).toBeCloseTo(0.4, 3)
       // The lid stands higher than the box is deep and leans back behind it.
@@ -144,7 +151,8 @@ describe('the curios', () => {
 function settle(curio: Curio, world: RAPIER.World) {
   const model = curio.createModel()
   try {
-    const rotation = (new Quaternion).setFromEuler(new Euler(...curio.rotation))
+    const rotation = new Quaternion
+    rotation.setFromEuler(new Euler(...curio.rotation))
     const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...curio.position).setRotation(rotation).setCcdEnabled(true))
     world.createCollider(RAPIER.ColliderDesc.convexHull(model.hull)!.setMass(curio.mass).setFriction(0.8).setRestitution(0.32), body)
     for (let step = 0; step < 60 * 4; step++) {
@@ -152,32 +160,36 @@ function settle(curio: Curio, world: RAPIER.World) {
     }
     const {x, y, z} = body.translation()
     const {x: qx, y: qy, z: qz, w} = body.rotation()
+    const turn = new Quaternion(qx, qy, qz, w)
+    const up = new Vector3(0, 1, 0)
+    const facing = new Vector3(0, 0, 1)
     return {
       asleep: body.isSleeping(),
       moved: Math.hypot(x - curio.position[0], z - curio.position[2]),
       y,
       /** its own up, and the axis its hatchet’s head faces along, in the world */
-      up: new Vector3(0, 1, 0).applyQuaternion(new Quaternion(qx, qy, qz, w)),
-      facing: new Vector3(0, 0, 1).applyQuaternion(new Quaternion(qx, qy, qz, w)),
+      up: up.applyQuaternion(turn),
+      facing: facing.applyQuaternion(turn),
     }
   } finally {
     model.dispose()
   }
 }
-describe('where a game begins, each curio comes to rest where it lies', () => {
-  const banquetWorld = () => {
-    const world = new RAPIER.World({
-      x: 0,
-      y: -9.81,
-      z: 0,
-    })
-    world.timestep = 1 / 60
-    world.createCollider(RAPIER.ColliderDesc.cuboid(banquet.size[0] / 2, 0.12, banquet.size[1] / 2).setTranslation(banquet.center[0], -0.12, banquet.center[1]))
-    for (const {center: [x, y, z], size: [width, height, depth]} of plankTableColliders(banquetTable, 'banquet-table')) {
-      world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(banquet.center[0] + x, y, banquet.center[1] + z))
-    }
-    return world
+/** the Banquet’s floor and table */
+function banquetWorld() {
+  const world = new RAPIER.World({
+    x: 0,
+    y: -9.81,
+    z: 0,
+  })
+  world.timestep = 1 / 60
+  world.createCollider(RAPIER.ColliderDesc.cuboid(banquet.size[0] / 2, 0.12, banquet.size[1] / 2).setTranslation(banquet.center[0], -0.12, banquet.center[1]))
+  for (const {center: [x, y, z], size: [width, height, depth]} of plankTableColliders(banquetTable, 'banquet-table')) {
+    world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(banquet.center[0] + x, y, banquet.center[1] + z))
   }
+  return world
+}
+describe('where a game begins, each curio comes to rest where it lies', () => {
   test('the pumpkin sits upright on the table', () => {
     const world = banquetWorld()
     try {

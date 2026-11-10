@@ -6,7 +6,12 @@ import {heightNormal, visibleDetail} from './filters.ts'
 /** Oiled honey teak with solid lengthwise grain along local x, dark latewood and shallow pores. */
 export default class TeakMaterial extends MeshPhysicalNodeMaterial {
   constructor() {
-    super({roughness: 0.4, clearcoat: 0.24, clearcoatRoughness: 0.35, envMapIntensity: 0.4})
+    super({
+      roughness: 0.4,
+      clearcoat: 0.24,
+      clearcoatRoughness: 0.35,
+      envMapIntensity: 0.4,
+    })
     this.name = 'Oiled honey teak'
     const p = positionGeometry
     const footprint = p.x.fwidth().max(p.y.fwidth()).max(p.z.fwidth())

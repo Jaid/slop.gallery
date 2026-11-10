@@ -40,7 +40,8 @@ test('every pedestal’s orb is rolled by the seed among the random orbs, the sa
   for (let seed = 0; seed < 200; seed++) {
     const exhibits = vesperOrbs(seed)
     expect(exhibits).toHaveLength(vesperOrbPedestals.length)
-    expect(new Set(exhibits.map(({id}) => id)).size).toBe(exhibits.length)
+    const ids = new Set(exhibits.map(({id}) => id))
+    expect(ids.size).toBe(exhibits.length)
     layouts.add(exhibits.map(({orb}) => orb.id).join())
     for (const [index, {id, orb}] of exhibits.entries()) {
       expect(randomOrbs).toContain(orb)

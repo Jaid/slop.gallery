@@ -33,7 +33,8 @@ describe('the Banquet’s table', () => {
   test('stands on its legs, the top over them and the aprons, its colliders around its timber', () => {
     const geometry = new PlankTableGeometry(banquetTable, 2117)
     try {
-      const bounds = (new Box3).setFromBufferAttribute(geometry.timber.getAttribute('position') as never)
+      const bounds = new Box3
+      bounds.setFromBufferAttribute(geometry.timber.getAttribute('position') as never)
       expect(bounds.min.y).toBeCloseTo(0, 6)
       expect(bounds.max.y).toBeCloseTo(banquetTable.height, 6)
       expect(bounds.max.x).toBeCloseTo(banquetTable.width / 2 - banquetTable.gap / 2, 6)

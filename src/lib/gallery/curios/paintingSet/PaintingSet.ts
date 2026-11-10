@@ -136,7 +136,8 @@ const fillLevels = {
 /** Marks a part of the finish as nothing a liquid fills, so its own color shows all over. */
 function dry<T extends BufferGeometry>(geometry: T) {
   if (!geometry.hasAttribute(fillLevels.name)) {
-    geometry.setAttribute(fillLevels.name, new Float32BufferAttribute(new Float32Array(geometry.getAttribute('position').count).fill(fillLevels.none), 1))
+    const levels = new Float32Array(geometry.getAttribute('position').count)
+    geometry.setAttribute(fillLevels.name, new Float32BufferAttribute(levels.fill(fillLevels.none), 1))
   }
   return geometry
 }
@@ -396,8 +397,8 @@ function bottles() {
   flat.makeBasis(new Vector3(0, 0, 1), new Vector3(1, 0, 0), new Vector3(0, 1, 0))
   const lying = translation(-0.098, floor + flask.halfDepth, -0.1).multiply(turn('y', 0.12)).multiply(flat)
   // The tipped one is filled to the top of its label, where it crosses its middle; the lying one a little over halfway up its depth, which reaches into its neck.
-  const tippedLevel = new Vector3(0, 0.058, 0).applyMatrix4(leaning).y
-  return [...bottle(colors.oil, leaning, tippedLevel), ...bottle(colors.solvent, lying, floor + flask.halfDepth * 2 * 0.62)]
+  const labelTop = new Vector3(0, 0.058, 0)
+  return [...bottle(colors.oil, leaning, labelTop.applyMatrix4(leaning).y), ...bottle(colors.solvent, lying, floor + flask.halfDepth * 2 * 0.62)]
 }
 /** One of the two flat brushes, lying in the right compartment, built along x: a lacquered handle swelling toward its ferrule and the bristles beyond, `size` times as long, wide and thick as the small one’s, their tips dipped in a paint unless it is clean. */
 function brush(paint: Rgb | undefined, [x, z]: readonly [number, number], angle: number, size = 1) {
@@ -603,7 +604,6 @@ function palettePaint() {
   ] as const).map(([pair, [x, y], size, angle, thickness], index) => smear(pair, [x, -y], size, angle, thickness, index + 1))
   return [...dollops, ...smears].map(part => part.applyMatrix4(onPalette))
 }
-
 /**
  * The lacquer, printed tin and glass of the tubes, bottles and handles, in the colors their geometry carries: below a bottle’s {@link fillLevels} the color of its liquid, glossy, and bare glass above, glossier still, parted by a sharp, level line however finely the bottle is built.
  */

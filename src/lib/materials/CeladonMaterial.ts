@@ -6,7 +6,12 @@ import {heightNormal, line, visibleDetail} from './filters.ts'
 /** Pooled celadon glaze with fine dark crazing beneath a soft clearcoat, mapped through the pot’s own frame. */
 export default class CeladonMaterial extends MeshPhysicalNodeMaterial {
   constructor() {
-    super({roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.13, envMapIntensity: 0.7})
+    super({
+      roughness: 0.22,
+      clearcoat: 1,
+      clearcoatRoughness: 0.13,
+      envMapIntensity: 0.7,
+    })
     this.name = 'Crackle celadon'
     const p = positionGeometry
     const footprint = p.x.fwidth().max(p.y.fwidth()).max(p.z.fwidth())

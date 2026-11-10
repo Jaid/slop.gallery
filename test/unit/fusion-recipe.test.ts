@@ -1,4 +1,5 @@
 import type {FusionIngredient, IngredientContribution} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
+import type PromptOrb from '../../src/lib/gallery/orbs/base/PromptOrb.ts'
 
 import {describe, expect, test} from 'bun:test'
 
@@ -152,7 +153,8 @@ describe('fusion recipe', () => {
     expect(recipe.tints.map(tint => tint.title)).toEqual(['Test Orb'])
     expect(recipe.localDescription).toBe('Tinted by hand in the Test Orb’s glow.')
   })
-  for (const orb of promptOrbs) {
+  // Any prompt orb, even one without a frame or an effect, which none of today’s lacks.
+  for (const orb of promptOrbs as ReadonlyArray<PromptOrb>) {
     test(`the ${orb.title} contributes its prompt, its frame of the game and its effect, if it has them, shows by its glow and photograph and is latched on with a ping of glass`, () => {
       expect(orb.ingredient(7)).toEqual({
         contributions: [
