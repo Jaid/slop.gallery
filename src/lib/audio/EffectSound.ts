@@ -19,6 +19,8 @@ export type SoundShape = {
   volume: number
 }
 export type SoundTone = SoundShape & {
+  /** how far it is tuned off its frequency, in cents */
+  detune?: number
   /** the frequency it glides to by its end, exponentially */
   end?: number
   filter?: SoundFilter
@@ -72,10 +74,11 @@ function echo(context: BaseAudioContext, {brightness, decay, length}: SoundRoom)
  * It owns every node it makes and disconnects them once {@link finish} found them rung out, so the portal closing doesn’t cut its tail off.
  */
 export default class EffectSound {
+  /** what its parts sound into by default, heard from where it is and ringing in its room; a part heard from somewhere else can feed it some of itself, so it rings in the room too */
+  readonly bus: GainNode
   readonly context: BaseAudioContext
   /** when it started, in the context’s seconds */
   readonly now: number
-  private readonly bus: GainNode
   /** when the last of its parts ends, in the context’s seconds */
   private end: number
   private readonly master: AudioNode
@@ -161,10 +164,11 @@ export default class EffectSound {
   }
 
   /** A tone from `start` for `duration` seconds, into `into`, the bus by default. */
-  tone(start: number, duration: number, {end, filter, frequency, type = 'sine', vibrato, ...shape}: SoundTone, into?: AudioNode) {
+  tone(start: number, duration: number, {detune = 0, end, filter, frequency, type = 'sine', vibrato, ...shape}: SoundTone, into?: AudioNode) {
     const oscillator = this.keep(new OscillatorNode(this.context, {
       type,
       frequency,
+      detune,
     }))
     oscillator.frequency.setValueAtTime(frequency, start)
     if (end) {

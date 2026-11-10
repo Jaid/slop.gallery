@@ -14,14 +14,16 @@ import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb}
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/party_effects/blood/flights.ts'
+import {shutting, staring, staringEyes} from '../../src/party_effects/eyes/flights.ts'
 import {escapingGhosts, ghostOffset} from '../../src/party_effects/ghosts/flights.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 import {endParty, startParty, useParties} from '../../src/party_effects/lib/parties.ts'
 import {offsetPosition, partySite} from '../../src/party_effects/lib/partySite.ts'
 import {brushStrokes, strokeDrying, strokePoint} from '../../src/party_effects/strokes/flights.ts'
+import {lashing, lashingTendrils, snapping, tendrilReach} from '../../src/party_effects/tendrils/flights.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
-const {bats: batsEffect, blood: bloodEffect, ghosts: ghostsEffect, strokes: strokesEffect} = partyEffects
+const {bats: batsEffect, blood: bloodEffect, eyes: eyesEffect, ghosts: ghostsEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
 const effects = Object.values<PartyEffect>(partyEffects)
 const hung = portraitIngredient({
   title: 'The hung portrait',
@@ -122,8 +124,12 @@ describe('party effects', () => {
       expect(effect.id).toBe(id)
       expect(effect.title).toBeTruthy()
     }
-    // None is left without an orb to bring it.
-    expect(promptOrbs.map<string>(orb => orb.effect).toSorted()).toEqual(Object.keys(partyEffects).toSorted())
+    // No two orbs share one; the staring eyes and the flesh tendrils only play where they are spawned.
+    const brought = promptOrbs.map<string | undefined>(orb => orb.effect)
+    expect([...new Set(brought)]).toEqual(brought)
+    expect(brought.every(id => id !== undefined && Object.hasOwn(partyEffects, id))).toBe(true)
+    expect(brought).not.toContain('eyes')
+    expect(brought).not.toContain('tendrils')
   })
   test('every effect’s sprites stand at their site’s center, know its floor and the way it faces and show nothing until they burst out, wherever the site is', () => {
     const sites: Array<PartySite> = [frame, partySite({
@@ -318,7 +324,7 @@ describe('party effects', () => {
     expect(() => spawnThroughTool({
       effect: 'confetti',
       position: [0, 0, 0],
-    })).toThrow(/bats, blood, ghosts, strokes/)
+    })).toThrow(/bats, blood, eyes, ghosts, strokes, tendrils/)
     expect(() => spawnThroughTool({
       effect: 'toString',
       position: [0, 0, 0],
@@ -332,6 +338,29 @@ describe('party effects', () => {
     expect(batsEffect.duration).toBe(Math.max(...flyingBats.map(({delay, life}) => delay + life)))
     expect(strokesEffect.duration).toBe(strokeDrying.start + strokeDrying.stagger + strokeDrying.seconds)
     expect(bloodEffect.duration).toBeCloseTo(Math.max(bloodFading.start + bloodFading.stagger + bloodFading.duration, bloodPool.draining.start + bloodPool.draining.seconds), 9)
+    expect(eyesEffect.duration).toBeCloseTo(Math.max(...staringEyes.map(({close}) => close)) + shutting.lids + shutting.fading, 9)
+    expect(tendrilsEffect.duration).toBe(Math.max(...lashingTendrils.map(({retract}) => retract)) + snapping)
+  })
+  test('the eyes open round their origin clear of its ball before they stare and shut a while after it', () => {
+    for (const {close, open, size, spot: [along, up]} of staringEyes) {
+      expect(open).toBeLessThan(staring)
+      expect(close).toBeGreaterThan(staring + 0.5)
+      expect(Math.hypot(along, up) - size * 0.7).toBeGreaterThan(portalRadius)
+    }
+  })
+  test('the tendrils reach as long as they are out the way their site faces, wherever it faces, and are out before they snap back', () => {
+    const turned = partySite({
+      position: [4, 2.5, -7],
+      rotation: Math.PI / 2,
+    }, 0)
+    for (const tendril of lashingTendrils) {
+      const reach = tendrilReach(tendril)
+      expect(Math.hypot(...reach)).toBeCloseTo(tendril.length, 9)
+      expect(reach[2]).toBeGreaterThan(0)
+      expect(offsetPosition(frame, reach)[2]).toBeGreaterThan(frame.center[2])
+      expect(offsetPosition(turned, reach)[0]).toBeGreaterThan(turned.center[0])
+      expect(tendril.delay + lashing).toBeLessThan(tendril.retract)
+    }
   })
   test('the bats burst out of the portal’s middle and fly out into the room', () => {
     for (const bat of flyingBats) {
@@ -419,6 +448,8 @@ describe('party effects', () => {
     at(batsEffect, flyingBats.flatMap(bat => [0.1, 0.4, 0.8].map(share => batOffset(bat, bat.life * share))))
     at(ghostsEffect, escapingGhosts.flatMap(ghost => [0.1, 0.4, 0.8].map(share => ghostOffset(ghost, ghost.life * share))))
     at(strokesEffect, brushStrokes.flatMap(stroke => [0.2, 0.7].flatMap(share => [0, 1, 2].map(seconds => strokePoint(stroke, share, seconds)))))
+    at(eyesEffect, staringEyes.map(({spot}) => spot))
+    at(tendrilsEffect, lashingTendrils.map(tendrilReach))
     // every stain where its drop strikes the floor, and the pool at its widest
     const splats = bloodDrops.filter(drop => drop.kind === 'drop').map(drop => bloodFlight(drop, bloodLanding(drop, floor).landing).offset)
     expect(Math.max(...splats.map(([, up]) => Math.abs(up - floor - splatLift)))).toBeLessThan(1e-3)

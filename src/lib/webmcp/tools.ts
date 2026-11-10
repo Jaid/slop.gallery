@@ -306,13 +306,13 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'spawn_party_effect',
       title: 'Spawn party effect',
-      description: 'Play a party effect anywhere in the world: one of the special effects that burst out of a fusion’s portal as the result of an orb’s fusion flips out and out of the alchemy machine’s cannon, like bats, blood, ghosts or strokes, here on its own, bursting out of a point, facing a level direction, over the floor under it, with its sound while the sound is on. It renders from the next frame on and leaves the world a moment after it is over. Fails for an unknown effect, whose error lists the effects. Returns the effect, where it bursts out, its rotation, the height of the floor under it and the seconds it goes on. Does not move the player, change focus or simulate input.',
+      description: 'Play a party effect anywhere in the world: one of the special effects that burst out of a fusion’s portal as the result of an orb’s fusion flips out and out of the alchemy machine’s cannon, like bats, blood or ghosts, or that only play where they are spawned, like staring eyes or flesh tendrils, here on its own, bursting out of a point, facing a level direction, over the floor under it, with its sound while the sound is on. It renders from the next frame on and leaves the world a moment after it is over. Fails for an unknown effect, whose error lists the effects. Returns the effect, where it bursts out, its rotation, the height of the floor under it and the seconds it goes on. Does not move the player, change focus or simulate input.',
       inputSchema: {
         type: 'object',
         properties: {
           effect: {
             type: 'string',
-            description: 'the id of the party effect, like bats, blood, ghosts or strokes',
+            description: 'the id of the party effect: bats, blood, eyes, ghosts, strokes or tendrils',
           },
           position: point('world-space point in meters it bursts out of, [x, y, z], like the middle of a portal, about 1.8 m over the floor'),
           rotation: {
