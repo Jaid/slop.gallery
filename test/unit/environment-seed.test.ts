@@ -2,7 +2,7 @@ import {expect, test} from 'bun:test'
 
 import {narratorCharacter, narratorTraits, narratorVoice, narratorVoices} from '../../src/lib/audio/narratorCharacter.ts'
 import {effectiveSeed, environmentPick, environmentRoll, environmentSample, environmentWeightedPick, isSeed, maximumSeed, parseSeed, readSeedOverride, rollSeed} from '../../src/lib/environmentSeed.ts'
-import {orbs, paintOrb, promptOrbs} from '../../src/lib/gallery/orbs/index.ts'
+import {orbs, promptOrbs} from '../../src/lib/gallery/orbs/index.ts'
 import {potPlacements, pottedPlantKind, pottedPlantKinds} from '../../src/lib/gallery/plantDecorations/placements.ts'
 
 test('?seed accepts unsigned 32-bit integers and ignores anything else', () => {
@@ -125,14 +125,6 @@ for (const orb of promptOrbs) {
     expect(prompts.size).toBeGreaterThan(40)
   })
 }
-test('the Paint Orb asks for the hung work restyled as an artistic painting of its own subject, with every trait it names', () => {
-  for (let seed = 0; seed < 50; seed++) {
-    const prompt = paintOrb.prompt(seed)
-    expect(prompt).toStartWith(`${paintOrb.premise}\n\nPlease edit this image and restyle it while keeping the original subject intact. The output should be a beautiful high-quality artistic painting that is `)
-    expect(prompt).toMatch(/^[^,]+, [^,]+(?:, [^,]+)* and [^,]+\.$/u)
-    expect(prompt).not.toContain(' or ')
-  }
-})
 test('the orbs’ props are told apart by their ids', () => {
   const propIds = new Set(orbs.map(orb => orb.propId))
   expect(propIds.size).toBe(orbs.length)

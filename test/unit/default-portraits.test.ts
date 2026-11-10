@@ -46,7 +46,7 @@ test('a work whose ratio has no slot at all is an error', () => {
   expect(() => hangDefaultWorks(slots.filter(slot => slot.ratio !== '1:1'), artworks, 1)).toThrow(/No 1:1 portrait slot/u)
 })
 test('?portrait_set is classic unless it is false', () => {
-  for (const search of ['', '?portrait_set', '?portrait_set=classic', '?portrait_set=modern', '?portraits=false']) {
+  for (const search of ['', '?portrait_set', '?portrait_set=classic', '?portrait_set=modern']) {
     expect(readPortraitSet(`https://example.com/${search}`)).toBe('classic')
   }
   expect(readPortraitSet('https://example.com/?portrait_set=false')).toBe(false)

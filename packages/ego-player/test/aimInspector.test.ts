@@ -1,7 +1,8 @@
 import {afterEach, beforeEach, describe, expect, test} from 'bun:test'
 
-import {AimInspector} from 'ego-player'
 import {BoxGeometry, DoubleSide, Group, InstancedMesh, Matrix3, Matrix4, Mesh, MeshBasicMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, Scene, Vector3} from 'three/webgpu'
+
+import {AimInspector} from '../src/main.ts'
 
 let scene: Scene
 let camera: PerspectiveCamera

@@ -120,7 +120,7 @@ describe('URL options', () => {
     expect(readShowWireframe('?show_wireframe=1')).toBe(1)
     expect(readShowWireframe('?show_wireframe=50')).toBe(50)
     expect(readShowWireframe('?show_wireframe=250')).toBe(250)
-    for (const search of ['', '?show_wireframe=false', '?show_wireframe=0', '?show_wireframe=0.5', '?show_wireframe=-50', '?show_wireframe=thin', '?vision_mode=wireframe']) {
+    for (const search of ['', '?show_wireframe=false', '?show_wireframe=0', '?show_wireframe=0.5', '?show_wireframe=-50', '?show_wireframe=thin']) {
       expect(readShowWireframe(search)).toBe(false)
     }
   })

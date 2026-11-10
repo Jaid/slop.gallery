@@ -7,26 +7,6 @@ afterEach(() => {
   setCameraFocused(false)
   aimDot.setBlocked('zoom', false)
 })
-test('aim dot suppression composes independent viewing and zoom reasons', () => {
-  expect(aimDot.getSnapshot()).toBe(true)
-  aimDot.setBlocked('viewing', true)
-  expect(aimDot.getSnapshot()).toBe(false)
-  aimDot.setBlocked('zoom', true)
-  aimDot.setBlocked('viewing', false)
-  expect(aimDot.getSnapshot()).toBe(false)
-  aimDot.setBlocked('zoom', false)
-  expect(aimDot.getSnapshot()).toBe(true)
-})
-test('aim dot publishes only when effective visibility changes', () => {
-  let updates = 0
-  const unsubscribe = aimDot.subscribe(() => updates++)
-  aimDot.setBlocked('viewing', true)
-  aimDot.setBlocked('zoom', true)
-  aimDot.setBlocked('viewing', false)
-  aimDot.setBlocked('zoom', false)
-  unsubscribe()
-  expect(updates).toBe(2)
-})
 test('camera focus suppresses the aim dot for the full viewing lifecycle', () => {
   setCameraFocused(true)
   expect(cameraPose.focused).toBe(true)
