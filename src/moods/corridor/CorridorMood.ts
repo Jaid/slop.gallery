@@ -2,8 +2,9 @@ import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 
 import RoomMood from '../base/RoomMood.ts'
 
-/** The Corridor’s own: a timber tunnel with a flutter of its own, where the dark between the lanterns deepens while their glow holds. */
+/** The Corridor’s own: a timber tunnel with a flutter of its own, where the dark between the lanterns deepens while their glow holds and the view widens, so the long way back looks longer still. */
 export default class CorridorMood extends RoomMood {
+  override readonly fov = 10
   // The dark between the lanterns deepens, while their glow holds.
   override readonly grade = {
     shadow: '#040201',

@@ -7,11 +7,13 @@ import {useLayoutEffect, useRef, useState} from 'react'
 import {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {isFading} from '#src/lib/fade.ts'
-import {useGallery} from '#src/lib/gallery.ts'
+import {cameraPose, useGallery} from '#src/lib/gallery.ts'
 import {useFusions} from '#src/lib/gallery/fusion/fusions.ts'
 import {lightTint, noTint} from '#src/lib/rendering/lightLevels.ts'
+import {getPlayerZoom} from '#src/lib/rendering/playerView.ts'
 import {moods} from '#src/moods/index.ts'
 import {forcedMood} from '#src/moods/lib/forcedMood.ts'
+import {moodLens} from '#src/moods/lib/MoodLens.ts'
 import MoodMixer from '#src/moods/lib/MoodMixer.ts'
 import {moodSuppression} from '#src/moods/lib/moodSuppression.ts'
 import world from '#src/worlds/current.ts'
@@ -30,6 +32,7 @@ const noMoods: ReadonlyArray<Mood> = []
  * Under `?fade=false`, they cut in and out instead of fading, for captures right after the camera jumped from room to room.
  * None show while suppressed with N under `?development`, which cuts the moods showing off at once and, when lifted, brings the moods due back in full at once.
  * Their loops and transformers sound once the sound engine exists, which only happens with the player’s first click.
+ * What they widen the player’s view by only applies while it is drawn, each frame and every capture, see `MoodLens`.
  */
 export default function Moods() {
   const [mixer] = useState(() => new MoodMixer({fade: isFading}))
@@ -39,6 +42,7 @@ export default function Moods() {
     return () => {
       lightTint.current = () => noTint
       mixer.dispose()
+      moodLens.reset()
     }
   }, [mixer])
   useFrame((_, delta) => {
@@ -61,5 +65,19 @@ export default function Moods() {
     }
     mixer.update(target, delta, SoundEngine.existing())
   })
+  // After every regular frame callback, so whatever sets the camera’s field of view this frame has set it, and given back once the frame is drawn.
+  useFrame(({camera}, delta) => {
+    moodLens.update(mixer.fov, {
+      delta,
+      exact: cameraPose.posed,
+      fading: isFading,
+      own: !cameraPose.focused,
+      zoom: getPlayerZoom(),
+    })
+    moodLens.widen(camera)
+  }, {before: 'render'})
+  useFrame(() => {
+    moodLens.restore()
+  }, {phase: 'finish'})
   return null
 }

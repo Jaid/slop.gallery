@@ -25,8 +25,8 @@ export type MoodFade = {
 export type MoodAmbience = new () => AmbienceLoop
 
 /**
- * A spell over the whole world while something casts it, like a held prop that carries it, a fusion in progress or the room the listener is in, made of whatever it contributes, all fading in and out together: color filters (a gradient map over the finished frame and tints of the lights), an ambience (a loop sounding centered) and a sound transformer (which every sound of the world passes through).
- * Moods stack: several may show at once, like a room’s and that of the orb held in it, the filters of each over those of the moods beneath, the transformers one after the other.
+ * A spell over the whole world while something casts it, like a held prop that carries it, a fusion in progress or the room the listener is in, made of whatever it contributes, all fading in and out together: color filters (a gradient map over the finished frame and tints of the lights), an ambience (a loop sounding centered), a sound transformer (which every sound of the world passes through) and a wider or narrower view.
+ * Moods stack: several may show at once, like a room’s and that of the orb held in it, the filters of each over those of the moods beneath, the transformers one after the other, their changes of the view added up.
  * Colors are sRGB hex.
  */
 export default abstract class Mood {
@@ -36,6 +36,8 @@ export default abstract class Mood {
   readonly fade?: MoodFade
   /** ambient, hemisphere and directional lights: the fill and the sun */
   readonly fill?: MoodLight
+  /** how many degrees wider the player’s own view gets while the mood holds, of its vertical field of view, or narrower where negative; see `MoodLens` */
+  readonly fov?: number
   readonly grade?: MoodGrade
   abstract readonly id: string
   /** point and spot lights: the rooms’ lamps */

@@ -5,7 +5,7 @@ import type {AmbienceLoop} from 'ambience-emitter'
 
 import {afterEach, describe, expect, mock, test} from 'bun:test'
 
-import {AmbientLight, Color, HemisphereLight, PointLight, Scene} from 'three/webgpu'
+import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {orbs} from '../../src/lib/gallery/orbs/index.ts'
@@ -14,6 +14,7 @@ import Mood from '../../src/moods/base/Mood.ts'
 import RoomMood, {roomMoodFade} from '../../src/moods/base/RoomMood.ts'
 import {moods} from '../../src/moods/index.ts'
 import {readMood} from '../../src/moods/lib/forcedMood.ts'
+import MoodLens from '../../src/moods/lib/MoodLens.ts'
 import MoodMixer, {moodFade, noMood} from '../../src/moods/lib/MoodMixer.ts'
 import {moodSuppression, toggleMoodSuppression} from '../../src/moods/lib/moodSuppression.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -53,6 +54,7 @@ class TestMood extends Mood {
     color: '#808080',
     gain: 1,
   }
+  override readonly fov?: number
   override readonly grade = {
     shadow: '#000000',
     midtone: '#ff0000',
@@ -67,10 +69,11 @@ class TestMood extends Mood {
   readonly title: string
   override readonly transformer = mock(transformNothing)
 
-  constructor(readonly id: string, fade?: MoodFade) {
+  constructor(readonly id: string, fade?: MoodFade, fov?: number) {
     super()
     this.title = id
     this.fade = fade
+    this.fov = fov
     const {loops} = this
     this.ambience = class extends RecordingLoop {
       constructor() {
@@ -305,6 +308,141 @@ describe('mood mixer', () => {
     expect(mood.loops[1].stopped).toBe(1)
     expect(mixer.moods).toEqual([])
   })
+  test('moods widen or narrow the view by their degrees as far as they show, added up, and give it back as they go', () => {
+    const mixer = new MoodMixer
+    const room = new TestMood('room', roomMoodFade, 10)
+    const orb = new TestMood('orb', undefined, -4)
+    const plain = new TestMood('plain')
+    expect(mixer.fov).toBe(0)
+    run(mixer, inRoom(room), roomMoodFade.in / 2)
+    expect(mixer.fov).toBeGreaterThan(3)
+    expect(mixer.fov).toBeLessThan(7)
+    run(mixer, inRoom(room), roomMoodFade.in)
+    expect(mixer.fov).toBe(10)
+    run(mixer, cast(orb, room), moodFade.in)
+    expect(mixer.fov).toBe(6)
+    run(mixer, cast(plain, room), moodFade.out + moodFade.in + step * 2)
+    expect(mixer.moods).toEqual([room, plain])
+    expect(mixer.fov).toBe(10)
+    mixer.cut()
+    expect(mixer.fov).toBe(0)
+    mixer.snap(cast(orb, room))
+    expect(mixer.fov).toBe(6)
+  })
+})
+/** The camera’s field of view while the lens widens it by `degrees` as `view` lets it. */
+const widened = (lens: MoodLens, camera: PerspectiveCamera, degrees: number, view: Parameters<MoodLens['update']>[1]) => {
+  lens.update(degrees, view)
+  lens.widen(camera)
+  const {fov} = camera
+  lens.restore()
+  return fov
+}
+describe('mood lens', () => {
+  const own = {
+    delta: step,
+    own: true,
+  }
+  const taken = {
+    delta: step,
+    own: false,
+  }
+  test('widens the camera only until it is restored, which gives back the very field of view and projection it found', () => {
+    const lens = new MoodLens
+    const camera = new PerspectiveCamera(61.7, 16 / 9)
+    const projection = camera.projectionMatrix.clone()
+    lens.update(10, own)
+    expect(lens.widening).toBe(10)
+    // Working it out leaves the camera alone.
+    expect(camera.fov).toBe(61.7)
+    lens.widen(camera)
+    expect(camera.fov).toBeCloseTo(71.7, 9)
+    expect(camera.projectionMatrix.equals(projection)).toBe(false)
+    lens.restore()
+    expect(camera.fov).toBe(61.7)
+    expect(camera.projectionMatrix.equals(projection)).toBe(true)
+    // Widened again before it was restored, it widens the same view, not the widened one.
+    lens.widen(camera)
+    lens.update(-5, own)
+    lens.widen(camera)
+    expect(camera.fov).toBeCloseTo(56.7, 9)
+    lens.restore()
+    lens.restore()
+    expect(camera.fov).toBe(61.7)
+    // With nothing to widen by, the camera is left alone.
+    camera.fov = 40
+    expect(widened(lens, camera, 0, own)).toBe(40)
+    expect(camera.fov).toBe(40)
+    // A view never turns inside out.
+    expect(widened(lens, camera, 500, own)).toBeLessThan(180)
+    expect(widened(lens, camera, -500, own)).toBeGreaterThan(0)
+    expect(camera.fov).toBe(40)
+  })
+  test('a render of its own, like a capture’s, looks through the lens as the frames do, and the camera is itself again after it, also when the render throws', () => {
+    const lens = new MoodLens
+    const camera = new PerspectiveCamera(60, 1)
+    lens.update(10, own)
+    let seen = 0
+    lens.during(camera, () => {
+      seen = camera.fov
+    })
+    expect(seen).toBe(70)
+    expect(camera.fov).toBe(60)
+    expect(() => lens.during(camera, () => {
+      throw new Error('lost device')
+    })).toThrow('lost device')
+    expect(camera.fov).toBe(60)
+    lens.reset()
+    lens.during(camera, () => {
+      seen = camera.fov
+    })
+    expect(seen).toBe(60)
+  })
+  test('zooming in gives the widening up along the way', () => {
+    const lens = new MoodLens
+    const camera = new PerspectiveCamera(60, 1)
+    const zoomed = (zoom: number) => widened(lens, camera, 10, {
+      ...own,
+      zoom,
+    })
+    expect(zoomed(0)).toBe(70)
+    expect(zoomed(0.5)).toBe(65)
+    expect(zoomed(1)).toBe(60)
+  })
+  test('a camera taken from the player eases out of the widening and back into it, while one posed exactly drops it at once', () => {
+    const lens = new MoodLens
+    const camera = new PerspectiveCamera(60, 1)
+    const seen = (view: Parameters<MoodLens['update']>[1]) => widened(lens, camera, 10, view)
+    expect(seen(own)).toBe(70)
+    const leaving = seen(taken)
+    expect(leaving).toBeLessThan(70)
+    expect(leaving).toBeGreaterThan(65)
+    expect(seen(taken)).toBeLessThan(leaving)
+    for (let frame = 0; frame < 120; frame++) {
+      seen(taken)
+    }
+    expect(seen(taken)).toBe(60)
+    const returning = seen(own)
+    expect(returning).toBeGreaterThan(60)
+    expect(returning).toBeLessThan(65)
+    for (let frame = 0; frame < 120; frame++) {
+      seen(own)
+    }
+    expect(seen(own)).toBe(70)
+    // A capture’s pose shows exactly what it set, from its first frame, and so does every cut under ?fade=false.
+    expect(seen({
+      ...own,
+      exact: true,
+    })).toBe(60)
+    expect(seen({
+      ...own,
+      fading: false,
+    })).toBe(70)
+    expect(seen({
+      ...taken,
+      fading: false,
+    })).toBe(60)
+  })
 })
 describe('light tint', () => {
   afterEach(() => {
@@ -381,6 +519,9 @@ describe('moods', () => {
     const castOver = ['fusion', ...orbs.flatMap(orb => orb.mood ?? [])]
     expect(Object.keys(moods).toSorted()).toEqual([...named, ...castOver].toSorted())
     expect(roomMoods.filter(mood => mood.ambience).map(mood => mood.id)).toEqual(['bastion'])
+    // The Corridor’s widens the view.
+    expect(moods.corridor.fov).toBeGreaterThan(0)
+    expect(slopGallery.room('corridor').mood).toBe('corridor')
   })
   test('N suppresses every mood and lets them back', () => {
     expect(moodSuppression.active).toBe(false)

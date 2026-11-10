@@ -64,12 +64,14 @@ const ease = (progress: number) => progress * progress * (3 - 2 * progress)
 /**
  * Blends the moods the world asks for over it, stacked: those of the listener’s room beneath the one cast over the world. Each fades in while it is asked for and out otherwise, at its own pace, while the others hold on.
  * The moods cast over the world take turns: only once the one showing is gone does the next one fade in, so two of them never mix. The moods of two rooms cross over as the listener walks from one into the other.
- * It paints the render pipeline’s gradient maps, keeps the tints of the lamps and of the fill, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
+ * It paints the render pipeline’s gradient maps, keeps the tints of the lamps and of the fill and how much wider the view gets, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
  * Without `fade`, every mood shows in full while it is asked for and not at all otherwise, the next mood cast replacing the last one within the same frame.
  */
 export default class MoodMixer {
   /** what the fill and daylight are multiplied by now */
   readonly fillTint = new Color(1, 1, 1)
+  /** how many degrees wider the moods showing make the player’s view now, narrower where negative */
+  fov = 0
   /** what the lamps are multiplied by now */
   readonly lampTint = new Color(1, 1, 1)
   /** the mood cast over the world that shows, also while it fades out, which the next one cast waits for */
@@ -167,9 +169,11 @@ export default class MoodMixer {
     })))
     this.lampTint.setRGB(1, 1, 1)
     this.fillTint.setRGB(1, 1, 1)
+    this.fov = 0
     for (const {mood, progress} of stack) {
       tint(this.lampTint, mood.lamps, ease(progress))
       tint(this.fillTint, mood.fill, ease(progress))
+      this.fov += (mood.fov ?? 0) * ease(progress)
     }
   }
 
