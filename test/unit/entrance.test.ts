@@ -18,7 +18,6 @@ const withEntrance = (check: (geometry: EntranceGeometry) => void) => {
 }
 test('the entrance stays within a lean triangle budget', () => {
   withEntrance(geometry => {
-    // The previous door with strap hinges, ring pulls and 96-segment arches used about 6000 triangles.
     expect(triangleCount(geometry.leaves) + triangleCount(geometry.frame) + triangleCount(geometry.metal)).toBeLessThan(2500)
   })
 })

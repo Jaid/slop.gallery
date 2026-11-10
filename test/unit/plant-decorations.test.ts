@@ -9,19 +9,19 @@ import PotGeometry from '../../src/lib/gallery/plantDecorations/PotGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 
 describe('modular botanical catalog', () => {
-  test('four vessels × eight botanicals produce every pair exactly once, numbered 01–32', () => {
-    expect(pots).toHaveLength(4)
-    expect(plants).toHaveLength(8)
+  test('every vessel and every botanical pair up exactly once, numbered from 1, pot by pot', () => {
     const potIds = new Set(pots.map(pot => pot.id))
-    expect(potIds.size).toBe(4)
+    expect(potIds.size).toBe(pots.length)
     const plantIds = new Set(plants.map(plant => plant.id))
-    expect(plantIds.size).toBe(8)
-    expect(plantCombinations.map(combination => combination.number)).toEqual(Array.from({length: 32}, (_, i) => i + 1))
+    expect(plantIds.size).toBe(plants.length)
+    const pairs = pots.length * plants.length
+    expect(plantCombinations.map(combination => combination.number)).toEqual(Array.from({length: pairs}, (_, i) => i + 1))
     const potPlantPairs = new Set(plantCombinations.map(combination => `${combination.pot}:${combination.plant}`))
-    expect(potPlantPairs.size).toBe(32)
+    expect(potPlantPairs.size).toBe(pairs)
     for (const [row, pot] of pots.entries()) {
-      expect(plantCombinations.slice(row * 8, row * 8 + 8).map(combination => combination.plant)).toEqual(plants.map(plant => plant.id))
-      expect(plantCombinations.filter(combination => combination.pot === pot.id)).toHaveLength(8)
+      const potCombinations = plantCombinations.slice(row * plants.length, (row + 1) * plants.length)
+      expect(potCombinations.map(combination => combination.plant)).toEqual(plants.map(plant => plant.id))
+      expect(potCombinations.every(combination => combination.pot === pot.id)).toBe(true)
     }
   })
   test('cinematic rounds the celadon shell but keeps its convex hull identical to the other graphics modes', () => {

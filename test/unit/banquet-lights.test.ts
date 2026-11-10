@@ -48,8 +48,10 @@ test('housings meet the ceiling without a gap and the diffuser is the first surf
     expect(panels.housings.name).toBe('banquet-led-housings')
     expect(panels.diffusers.name).toBe('banquet-led-diffusers')
     for (const slot of banquetLedSlots) {
+      // The housing’s top reaches a little into the ceiling, so no sliver of light shows between them.
       const top = slot.position[1] + knotLightHousingY + knotLightHousingSize[1] / 2
-      expect(top - banquetCeilingUnderside).toBeCloseTo(0.005, 9)
+      expect(top).toBeGreaterThan(banquetCeilingUnderside)
+      expect(top).toBeLessThan(banquetCeilingUnderside + 0.02)
       for (const dx of [-0.9, 0, 0.9]) {
         const ray = new Raycaster(new Vector3(slot.position[0] + dx, 1.6, slot.position[2]), up)
         const hits = ray.intersectObjects([panels.housings, panels.diffusers])

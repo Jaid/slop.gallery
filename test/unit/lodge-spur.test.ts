@@ -54,12 +54,11 @@ test('the link’s junction roof is continuous across the doorway and faces into
   const ray = new Raycaster(new Vector3, new Vector3(0, 1, 0), 0, 4)
   ray.firstHitOnly = true
   try {
-    // The reported view used to hit a sliced rib hanging across this intersection.
+    // A view across the intersection that a sliced rib could hang into.
     const direction = new Vector3(1.302, 0.59, -0.602)
     const reported = new Raycaster(new Vector3(-18.748, -3.21, -27.967), direction.normalize(), 0, 2)
     expect(reported.intersectObject(new Mesh(vault.ribs, material))).toHaveLength(0)
-    // Dense columns cover both shoulders, the intersection and the roof beyond it.
-    // The former shell unions left triangular holes between the handful of entrance probes.
+    // Dense columns cover both shoulders, the intersection and the roof beyond it, so no hole between the shell’s parts slips through.
     for (let x = lodgeSpurX - 1.8; x <= lodgeSpurX + 1.8; x += 0.035) {
       for (let z = -29.8; z <= -26.2; z += 0.035) {
         const floor = bastionLink.floorAt(x, z)!

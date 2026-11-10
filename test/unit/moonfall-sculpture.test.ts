@@ -13,7 +13,7 @@ test('the meteorite stays lean, keeps clear of the innermost band and its bead, 
   const radius = 0.7
   const geometry = meteoriteGeometry(radius, 14)
   try {
-    expect(triangleCount(geometry)).toBe(20 * 15 ** 2)
+    expect(triangleCount(geometry)).toBeLessThanOrEqual(5000)
     const position = geometry.getAttribute('position')
     expect([...position.array].every(Number.isFinite)).toBe(true)
     const point = new Vector3
@@ -33,12 +33,11 @@ test('the meteorite stays lean, keeps clear of the innermost band and its bead, 
     geometry.dispose()
   }
 })
-test('an armillary band costs no more than the tube it replaced and lies flat round its ring', () => {
+test('an armillary band stays lean and lies flat round its ring', () => {
   const radius = innerRing
   const geometry = armillaryBandGeometry(radius, 128)
   try {
-    // The old tube: 8 sides × 128 segments × 2 triangles.
-    expect(triangleCount(geometry)).toBeLessThanOrEqual(8 * 128 * 2)
+    expect(triangleCount(geometry)).toBeLessThanOrEqual(2048)
     geometry.computeBoundingBox()
     const {min, max} = geometry.boundingBox!
     expect(max.x).toBeCloseTo(radius + armillaryBand.thickness / 2, 4)

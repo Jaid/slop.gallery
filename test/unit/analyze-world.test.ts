@@ -42,7 +42,7 @@ test('every gallery room is fenced around its origin', () => {
   expect(boxes.lodge[2].max[2]).toBe(boxes.lodge[0].min[2])
   expect(boxes.lodge[2].min[2]).toBeCloseTo(boxes.lodge[0].min[2] - lodgeBay.depth)
   expect([boxes.lodge[2].min[0], boxes.lodge[2].max[0], boxes.lodge[2].min[1], boxes.lodge[2].max[1]]).toEqual([boxes.lodge[0].min[0], boxes.lodge[0].max[0], boxes.lodge[0].min[1], boxes.lodge[0].max[1]])
-  // The Bastion now wraps around the Lodge and crosses above its roof.
+  // The Bastion wraps around the Lodge and crosses above its roof.
   expect(Math.min(...boxes.bastion.map(box => box.min[0]))).toBeLessThan(boxes.lodge[0].min[0])
   expect(Math.max(...boxes.bastion.map(box => box.max[0]))).toBeGreaterThan(boxes.lodge[0].max[0])
   expect(boxes.bastion.some(box => box.min[0] === boxes.lodge[0].max[0])).toBe(true)
@@ -50,7 +50,7 @@ test('every gallery room is fenced around its origin', () => {
   const moonfall = slopGallery.room('moonfall')
   expect(boxes.moonfall[0].min[1]).toBeCloseTo(moonfall.floorY + craterTerrain.lowest(), 3)
   expect(boxes.moonfall[0].min[1]).toBeLessThan(moonfall.floorY - 3)
-  expect(boxes.moonfall[0].max[1]).toBeCloseTo(moonfall.floorY + 5.8, 3)
+  expect(boxes.moonfall[0].max[1]).toBeCloseTo(moonfall.floorY + moonfall.height, 3)
   for (const room of slopGallery.rooms) {
     const [x, y, z] = room.origin
     expect(boxes[room.id].some(({min, max}) => x >= min[0] && x <= max[0] && y >= min[1] && y <= max[1] && z >= min[2] && z <= max[2])).toBe(true)

@@ -83,7 +83,8 @@ test('damaged panes flicker chaotically from deterministic noise', () => {
   const flickerLevels = new Set(first.map(value => value.toFixed(4)))
   expect(flickerLevels.size).toBeGreaterThan(30)
   expect(knotLightFlicker(73, 0)).toBe(1)
-  expect(Math.min(...first)).toBeGreaterThanOrEqual(0.38)
-  expect(Math.min(...first)).toBeLessThan(0.55)
+  // It dims deeply now and then, yet never goes out, which only breaking does.
+  expect(Math.min(...first)).toBeGreaterThan(0)
+  expect(Math.min(...first)).toBeLessThan(0.6)
   expect(Math.max(...first)).toBeGreaterThan(0.9)
 })

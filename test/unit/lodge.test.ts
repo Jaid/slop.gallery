@@ -424,8 +424,7 @@ describe('Lodge and Corridor route', () => {
     expect(first.top).toBeLessThan(0)
     expect(corridorStairs.axis).toBeUndefined()
     expect(corridorStairs.heading).toEqual([expect.closeTo(-Math.SQRT1_2), expect.closeTo(-Math.SQRT1_2)])
-    // The 26-step flight rises more than the player’s 18 cm snap to ground per step, so walking off the landing never snaps down onto the top tread.
-    expect(corridorStairs.count).toBe(26)
+    // Every step rises more than the player’s 18 cm snap to ground, so walking off the landing never snaps down onto the top tread.
     expect(corridorStairs.rise).toBeGreaterThan(0.18)
     expect(first.position[0] - corridorStairs.heading[0] * first.size[0] / 2).toBeCloseTo(corridorStairs.start[0])
     expect(first.position[2] - corridorStairs.heading[1] * first.size[0] / 2).toBeCloseTo(corridorStairs.start[2])

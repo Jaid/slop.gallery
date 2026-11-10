@@ -277,7 +277,7 @@ describe('passage elbows', () => {
       const direction = i ? horizontal(end[0] - start[0], end[1] - start[1]) : horizontal(start[0] - end[0], start[1] - end[1])
       const across = new Vector3(-direction.z, 0, direction.x)
       for (const side of [-1, 1]) {
-        // Beside the vault’s arch, just under the elbow’s ceiling, where the turn used to look into the void behind the vault.
+        // Beside the vault’s arch, just under the elbow’s ceiling, where the turn could look into the void behind the vault.
         for (const height of [bastionMouth.height - 0.05, bastionMouth.height - 0.6]) {
           const origin = elbow.clone().addScaledVector(across, side * (radius - wallFace - 0.15))
           origin.y = bastionMouth.floorY + height

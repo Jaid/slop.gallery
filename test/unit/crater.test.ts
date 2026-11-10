@@ -201,11 +201,12 @@ describe('Moonfall impact hall', () => {
       world.free()
     }
   })
-  test('the seed draws 16 to 32 posts, every count from the fewest to the most', () => {
+  test('the seed draws every count of posts from the fewest to the most', () => {
+    const [fewest, most] = moonfallCrater.fencePosts
     const counts = new Set(Array.from({length: 2000}, (_, seed) => fencePosts(seed)))
-    expect(Math.min(...counts)).toBe(16)
-    expect(Math.max(...counts)).toBe(32)
-    expect(counts.size).toBe(17)
+    expect(Math.min(...counts)).toBe(fewest)
+    expect(Math.max(...counts)).toBe(most)
+    expect(counts.size).toBe(most - fewest + 1)
     expect(fencePosts(1234)).toBe(fencePosts(1234))
   })
   test('the middle of a rope, never a post, faces the stairs from the Antechamber', () => {

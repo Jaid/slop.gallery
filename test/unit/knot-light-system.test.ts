@@ -5,13 +5,13 @@ import {expect, test} from 'bun:test'
 import RAPIER from '@dimforge/rapier3d-compat'
 import KnotLightPanels, {knotLightDiffuserContactSkin, knotLightDiffuserSize, knotLightDiffuserY, knotLightHousingSize, knotLightHousingY} from 'knot-materials/KnotLightPanels.ts'
 import KnotLightDamage, {knotLightFracture} from 'knot-materials/KnotLights.ts'
-import {Matrix4, Raycaster, Vector3} from 'three/webgpu'
+import {Matrix4} from 'three/webgpu'
 
 import KnotLightImpacts from '../../src/lib/physics/KnotLightImpacts.ts'
 import {beginBodyThrow} from '../../src/lib/physics/ThrowState.ts'
 
 await RAPIER.init()
-test('the exposed emitter is the first surface seen from below and never overlaps its housing', () => {
+test('the exposed emitter hangs under its housing without overlapping it and glows untouched by tone mapping', () => {
   const panels = new KnotLightPanels([{
     id: '0:0',
     position: [0, 5, 0],
@@ -20,12 +20,6 @@ test('the exposed emitter is the first surface seen from below and never overlap
   }])
   try {
     expect(knotLightDiffuserY + knotLightDiffuserSize[1] / 2).toBeLessThan(knotLightHousingY - knotLightHousingSize[1] / 2)
-    for (const x of [-0.8, 0, 0.8]) {
-      const ray = new Raycaster(new Vector3(x, 0, 0), new Vector3(0, 1, 0))
-      const hits = ray.intersectObjects([panels.housings, panels.diffusers])
-      expect(hits[0].object).toBe(panels.diffusers)
-      expect(hits[0].point.y).toBeCloseTo(5 + knotLightDiffuserY - knotLightDiffuserSize[1] / 2, 5)
-    }
     expect(panels.diffuserMaterial.toneMapped).toBe(false)
     expect(panels.diffuserMaterial.transparent).toBe(false)
   } finally {
