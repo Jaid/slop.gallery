@@ -1,9 +1,9 @@
 import type {NodeMaterial} from 'three/webgpu'
 
-import Fountain from '#component/Fountain'
 import FountainBenches from '#component/FountainBenches'
 import LobbyFloor from '#component/LobbyFloor'
 import LobbyVault from '#component/LobbyVault'
+import LobbyFountain from '#src/rooms/lobby/components/LobbyFountain/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const room = slopGallery.room('lobby')
@@ -18,7 +18,7 @@ export default function LobbyRoom({cladding, glass, stone, wood}: Omit<Parameter
       <LobbyFloor glass={glass} room={room} stone={stone} wood={wood} />
       <LobbyVault cladding={cladding} />
     </group>
-    <Fountain />
+    <LobbyFountain />
     <FountainBenches />
   </>
 }

@@ -3,8 +3,8 @@ import {expect, test} from 'bun:test'
 import {defaultEgoOptions} from 'ego-player'
 
 import IntroOrbit from '../../src/lib/camera/IntroOrbit.ts'
-import fountain from '../../src/lib/gallery/fountain/config.ts'
 import {introDirection, readIntro} from '../../src/lib/gallery/intro.ts'
+import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -31,9 +31,9 @@ test('the intro turns once a minute, looking at the fountain, either way the see
   }
   for (const {position, yaw, pitch} of samples) {
     // Along the view, the camera reaches the fountain’s axis.
-    const distance = Math.hypot(position[0] - fountain.position[0], position[2] - fountain.position[2])
-    expect(position[0] - Math.sin(yaw) * distance).toBeCloseTo(fountain.position[0], 9)
-    expect(position[2] - Math.cos(yaw) * distance).toBeCloseTo(fountain.position[2], 9)
+    const distance = Math.hypot(position[0] - lobbyFountainSpot[0], position[2] - lobbyFountainSpot[2])
+    expect(position[0] - Math.sin(yaw) * distance).toBeCloseTo(lobbyFountainSpot[0], 9)
+    expect(position[2] - Math.cos(yaw) * distance).toBeCloseTo(lobbyFountainSpot[2], 9)
     expect(pitch).toBeLessThan(0)
   }
   expect(orbit.pose(15, -1).position).not.toEqual(orbit.pose(15, 1).position)
@@ -50,7 +50,7 @@ test('the player taking over the intro’s camera stands inside the Lobby, clear
     expect(fall).toBeGreaterThanOrEqual(2)
     expect(fall).toBeLessThanOrEqual(2.5)
     // Beyond the benches, 4 m out and 0.8 m deep, with the capsule’s radius to spare; within the Lobby’s walls just as well.
-    expect(Math.hypot(feet[0] - fountain.position[0], feet[2] - fountain.position[2])).toBeGreaterThan(4.4 + defaultEgoOptions.radius)
+    expect(Math.hypot(feet[0] - lobbyFountainSpot[0], feet[2] - lobbyFountainSpot[2])).toBeGreaterThan(4.4 + defaultEgoOptions.radius)
     expect(Math.abs(feet[0])).toBeLessThan(8 - defaultEgoOptions.radius)
   }
 })

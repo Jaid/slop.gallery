@@ -6,9 +6,9 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import {Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
-import {fountainBench, fountainBenches, fountainBenchFrame} from '../../src/lib/gallery/fountain/benches.ts'
-import fountain from '../../src/lib/gallery/fountain/config.ts'
-import SlattedBenchGeometry from '../../src/lib/gallery/fountain/SlattedBenchGeometry.ts'
+import {fountainBench, fountainBenches, fountainBenchFrame} from '../../src/lib/gallery/fountainBenches.ts'
+import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
+import SlattedBenchGeometry from '../../src/lib/gallery/SlattedBenchGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 
 function attributeVector(attribute: BufferAttribute | InterleavedBufferAttribute, index: number) {
@@ -159,7 +159,7 @@ describe('round-tube fountain bench frames', () => {
       }
       const diagonal = fountainBench.radius / Math.SQRT2
       for (const [dx, dz] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) {
-        expect(down(fountain.position[0] + dx * diagonal, fountain.position[2] + dz * diagonal)).toBeNull()
+        expect(down(lobbyFountainSpot[0] + dx * diagonal, lobbyFountainSpot[2] + dz * diagonal)).toBeNull()
       }
     } finally {
       world.free()

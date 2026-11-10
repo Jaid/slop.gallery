@@ -4,16 +4,16 @@ import {Box3, Euler, Matrix4, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 
 
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {corridorLanding, corridorPassage} from '../../src/lib/gallery/corridor.ts'
-import {fountainBench, fountainBenches} from '../../src/lib/gallery/fountain/benches.ts'
-import fountain from '../../src/lib/gallery/fountain/config.ts'
-import SlattedBenchGeometry from '../../src/lib/gallery/fountain/SlattedBenchGeometry.ts'
+import {fountainBench, fountainBenches} from '../../src/lib/gallery/fountainBenches.ts'
+import {lobbyFountainReach, lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import lodge, {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
+import SlattedBenchGeometry from '../../src/lib/gallery/SlattedBenchGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls from './fixtures/gallery.ts'
 
 test('four matching slatted benches surround the fountain under the middle chandelier and leave the spawn clear', () => {
-  expect(fountain.position).toEqual([0, 0, -12])
+  expect(lobbyFountainSpot).toEqual([0, 0, -12])
   expect(fountainBenches.map(pose => pose.rotation[1])).toEqual([0, Math.PI / 2, Math.PI, Math.PI * 3 / 2])
   const geometry = new SlattedBenchGeometry
   try {
@@ -28,14 +28,14 @@ test('four matching slatted benches surround the fountain under the middle chand
       }
     }
     for (const {position, rotation} of fountainBenches) {
-      expect(Math.hypot(position[0] - fountain.position[0], position[2] - fountain.position[2])).toBeCloseTo(fountainBench.radius)
+      expect(Math.hypot(position[0] - lobbyFountainSpot[0], position[2] - lobbyFountainSpot[2])).toBeCloseTo(fountainBench.radius)
       const transform = new Matrix4
       transform.makeRotationFromEuler(new Euler(...rotation)).setPosition(...position)
       const bounds = new Box3
       bounds.copy(seat).applyMatrix4(transform)
       expect(bounds.distanceToPoint(new Vector3(...slopGallery.spawn.position))).toBeGreaterThan(0.5)
-      const center = new Vector3(fountain.position[0], 0.48, fountain.position[2])
-      expect(bounds.distanceToPoint(center) - fountain.radius).toBeGreaterThan(1.4)
+      const center = new Vector3(lobbyFountainSpot[0], 0.48, lobbyFountainSpot[2])
+      expect(bounds.distanceToPoint(center) - lobbyFountainReach).toBeGreaterThan(1.4)
     }
     // Six continuous lengthwise battens, with genuine openings between them.
     expect(fountainBench.slats).toBe(6)

@@ -6,8 +6,8 @@ import type {RoomPlacement} from '../base/World.ts'
 import {lazy} from 'react'
 
 import IntroOrbit from '#src/lib/camera/IntroOrbit.ts'
-import fountain from '#src/lib/gallery/fountain/config.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
+import {lobbyFountainReach, lobbyFountainSpot} from '#src/lib/gallery/lobbyFountain.ts'
 import showcasedKnots from '#src/lib/gallery/showcasedKnots.ts'
 import {GalleryPlacementSpace} from '#src/lib/placement/GalleryPlacementSpace.ts'
 import Antechamber from '#src/rooms/antechamber/Antechamber.ts'
@@ -64,12 +64,12 @@ export default class SlopGallery extends World<GalleryRoom> {
   override readonly id = 'gallery'
   /** Round the Lobby’s fountain, past its benches and looking down on its basin, starting from the south-east between two benches, the fountain in focus. Eyes 4 m up drop the entering player 2.4 m onto the floor. */
   override readonly introOrbit = new IntroOrbit({
-    target: [fountain.position[0], fountain.position[1] + 0.9, fountain.position[2]],
+    target: [lobbyFountainSpot[0], lobbyFountainSpot[1] + 0.9, lobbyFountainSpot[2]],
     radius: 6.2,
     elevation: 3.1,
     period: 60,
     start: Math.PI / 4,
-    subject: fountain.radius,
+    subject: lobbyFountainReach,
   })
   override readonly Minimap = minimap
   override readonly narratesIntroduction = true

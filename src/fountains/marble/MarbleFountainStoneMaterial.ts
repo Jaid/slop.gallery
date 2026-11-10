@@ -1,12 +1,13 @@
-import type {BowlLip, WaterSheet} from '../gallery/fountain/config.ts'
-import type {MarbleStyle} from './marble/index.ts'
+import type {MarbleStyle} from '#src/lib/materials/marble/index.ts'
+import type {BowlLip, WaterSheet} from './config.ts'
 import type {Node} from 'three/webgpu'
 
 import {abs, color, float, length, max, min, mix, mx_noise_float, normalGeometry, positionGeometry, smoothstep, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
-import fountain from '../gallery/fountain/config.ts'
-import {heightNormal, inside, visibleDetail} from './filters.ts'
+import {heightNormal, inside, visibleDetail} from '#src/lib/materials/filters.ts'
+
+import fountain from './config.ts'
 
 type Float = Node<'float'>
 
@@ -82,7 +83,7 @@ export function solidMarble({bedding, footprint, position, scale = 1, seed, styl
  *
  * The stone is Arabescato carved from the solid, its veins stacked on a diagonal so they stream across the basin and wrap the bowls and balusters. Below each pool, inside the bowls and down their overflowing lips, the marble darkens, polishes to a mirror and glistens with a film of running water. The dry stone keeps a honed polish broken by a fine grain.
  */
-export default class FountainMarbleMaterial extends MeshPhysicalNodeMaterial {
+export default class MarbleFountainStoneMaterial extends MeshPhysicalNodeMaterial {
   constructor({reflections = true}: {reflections?: boolean} = {}) {
     super({
       roughness: 0.3,

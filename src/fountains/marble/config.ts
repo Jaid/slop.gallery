@@ -1,7 +1,5 @@
-import type {LobedProfilePoint} from '../LobedProfileGeometry.ts'
-import type {ProfilePoint} from '../RevolvedProfileGeometry.ts'
-
-import lobby from '../lobby.ts'
+import type {LobedProfilePoint} from '#src/lib/gallery/LobedProfileGeometry.ts'
+import type {ProfilePoint} from '#src/lib/gallery/RevolvedProfileGeometry.ts'
 
 const gravity = 9.81
 const degrees = Math.PI / 180
@@ -356,8 +354,6 @@ const lilyJets = (() => {
  * nozzles rising from the basin throw arcs over the lower bowl into it.
  */
 const fountain = {
-  /** in the middle of the Lobby, right under its middle chandelier */
-  position: [0, 0, (lobby.northZ + lobby.southZ) / 2] as [number, number, number],
   /** apothem of the octagonal plinth, its flat sides face the benches */
   basinApothem,
   /** circumradius of the plinth, the farthest the fountain reaches from its axis */
@@ -393,5 +389,8 @@ const fountain = {
   sprayCount: 640,
   gravity,
 }
+
+/** how high the main jet’s water rises over the floor the fountain stands on, where its last drops turn back */
+export const mainJetApex = jet.y + jet.speed ** 2 / (2 * gravity)
 
 export default fountain

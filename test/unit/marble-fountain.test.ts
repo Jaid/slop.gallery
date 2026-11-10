@@ -5,18 +5,19 @@ import {describe, expect, test} from 'bun:test'
 import RAPIER from '@dimforge/rapier3d-compat'
 import {Box3, DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
 
+import fountain, {jetApex, jetFlightTime, jetLanding, jetPoint, jetSpeedFor, mainJetApex, sheetFlightTime, sheetLanding, sheetPoint} from '../../src/fountains/marble/config.ts'
+import MarbleFountainGeometry from '../../src/fountains/marble/MarbleFountainGeometry.ts'
+import MarbleFountainSpray, {dropLanding, fountainDroplets} from '../../src/fountains/marble/MarbleFountainSpray.ts'
+import MarbleFountainStoneMaterial from '../../src/fountains/marble/MarbleFountainStoneMaterial.ts'
+import MarbleFountainWaterMaterial from '../../src/fountains/marble/MarbleFountainWaterMaterial.ts'
 import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
 import EntranceGeometry from '../../src/lib/gallery/EntranceGeometry.ts'
-import {fountainBench, fountainBenches} from '../../src/lib/gallery/fountain/benches.ts'
-import fountain, {jetApex, jetFlightTime, jetLanding, jetPoint, jetSpeedFor, sheetFlightTime, sheetLanding, sheetPoint} from '../../src/lib/gallery/fountain/config.ts'
-import FountainGeometry from '../../src/lib/gallery/fountain/FountainGeometry.ts'
-import FountainSpray, {dropLanding, fountainDroplets} from '../../src/lib/gallery/fountain/FountainSpray.ts'
+import {fountainBench, fountainBenches} from '../../src/lib/gallery/fountainBenches.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
+import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import LobedProfileGeometry from '../../src/lib/gallery/LobedProfileGeometry.ts'
 import RevolvedProfileGeometry from '../../src/lib/gallery/RevolvedProfileGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
-import FountainMarbleMaterial from '../../src/lib/materials/FountainMarbleMaterial.ts'
-import FountainWaterMaterial from '../../src/lib/materials/FountainWaterMaterial.ts'
 import TransparentSpriteOutputsNode from '../../src/lib/rendering/TransparentSpriteOutputsNode.ts'
 
 await RAPIER.init()
@@ -163,11 +164,10 @@ describe('lobed profiles', () => {
     expect(() => new LobedProfileGeometry([[0, 0, 0, 0], [1, 0, 0, 0]], {lobes: 1})).toThrow(RangeError)
   })
 })
-describe('Lobby fountain', () => {
+describe('marble fountain', () => {
   test('the octagonal fountain is lean, finite, below the chandelier and clear of the glass floor and benches', () => {
-    const geometry = new FountainGeometry
+    const geometry = new MarbleFountainGeometry
     try {
-      expect(fountain.position[0]).toBe(0)
       const parts = [geometry.stone, geometry.gilt, geometry.pools, geometry.water]
       const bounds = new Box3
       for (const part of parts) {
@@ -187,11 +187,12 @@ describe('Lobby fountain', () => {
       expect(geometry.gilt.boundingBox!.max.y).toBeLessThan(3.1)
       expect(geometry.stone.boundingBox!.max.y).toBeLessThan(2.8)
       expect(bounds.max.y).toBeGreaterThan(4)
-      expect(fountain.jet.y + fountain.jet.speed ** 2 / (2 * fountain.gravity)).toBeLessThan(5.5)
+      expect(mainJetApex).toBeCloseTo(fountain.jet.y + fountain.jet.speed ** 2 / (2 * fountain.gravity), 9)
+      expect(mainJetApex).toBeLessThan(5.5)
       // Flat sides face the benches along x and z.
       expect(bounds.max.x).toBeCloseTo(fountain.basinApothem, 5)
       expect(bounds.min.z).toBeCloseTo(-fountain.basinApothem, 5)
-      expect(fountain.position[2] - fountain.radius).toBeGreaterThan(lobby.opening.center[1] + lobby.opening.size[1] / 2 + 1)
+      expect(lobbyFountainSpot[2] - fountain.radius).toBeGreaterThan(lobby.opening.center[1] + lobby.opening.size[1] / 2 + 1)
       expect(fountainBench.radius - fountainBench.depth / 2 - fountain.basinApothem).toBeGreaterThan(1.4)
       expect(fountainBenches).toHaveLength(4)
     } finally {
@@ -199,7 +200,7 @@ describe('Lobby fountain', () => {
     }
   })
   test('stone and gilt are closed toward the outside, so shadows and single-sided shading stay correct', () => {
-    const geometry = new FountainGeometry
+    const geometry = new MarbleFountainGeometry
     try {
       expect(frontFacesMatchNormals(geometry.stone)).toBe(true)
       expect(frontFacesMatchNormals(geometry.gilt)).toBe(true)
@@ -209,7 +210,7 @@ describe('Lobby fountain', () => {
   })
   test('each bowl brims between the crests and troughs of its scalloped lip and each veil lands inside the pool below', () => {
     const {veils, pools, lips, lobes, basinInnerApothem} = fountain
-    const geometry = new FountainGeometry
+    const geometry = new MarbleFountainGeometry
     const material = new MeshBasicMaterial
     try {
       const stone = new Mesh(geometry.stone, material)
@@ -287,7 +288,7 @@ describe('Lobby fountain', () => {
     expect(() => jetSpeedFor(Math.PI / 4, -2, 1)).toThrow(RangeError)
   })
   test('the basin is hollow and uses the same carved mesh for physics and visible surfaces', () => {
-    const geometry = new FountainGeometry
+    const geometry = new MarbleFountainGeometry
     const material = new MeshBasicMaterial
     const world = new RAPIER.World({
       x: 0,
@@ -325,7 +326,7 @@ describe('Lobby fountain', () => {
   test('water, marble and spray are real animated node graphs, with transmission omitted in fast mode', () => {
     for (const falling of [false, true]) {
       for (const heavy of [false, true]) {
-        const material = new FountainWaterMaterial(falling, heavy)
+        const material = new MarbleFountainWaterMaterial(falling, heavy)
         expect(material.isMeshPhysicalNodeMaterial).toBe(true)
         expect(material.positionNode !== null).toBe(falling)
         expect(material.normalNode).not.toBeNull()
@@ -337,13 +338,13 @@ describe('Lobby fountain', () => {
         material.dispose()
       }
     }
-    const marble = new FountainMarbleMaterial
+    const marble = new MarbleFountainStoneMaterial
     expect(marble.colorNode).not.toBeNull()
     expect(marble.roughnessNode).not.toBeNull()
     expect(marble.clearcoatNode).not.toBeNull()
     expect(marble.normalNode).not.toBeNull()
     marble.dispose()
-    const geometry = new FountainGeometry
+    const geometry = new MarbleFountainGeometry
     try {
       for (const name of ['waterFall', 'waterAir', 'waterLobe']) {
         const attribute = geometry.water.getAttribute(name)
@@ -354,7 +355,7 @@ describe('Lobby fountain', () => {
     } finally {
       geometry.dispose()
     }
-    const spray = new FountainSpray
+    const spray = new MarbleFountainSpray
     expect(spray.count).toBe(fountain.sprayCount)
     expect(spray.frustumCulled).toBe(false)
     expect(spray.material.positionNode).not.toBeNull()

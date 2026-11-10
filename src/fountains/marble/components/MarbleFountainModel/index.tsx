@@ -1,3 +1,5 @@
+import type {FountainModelProps} from '#src/fountains/index.ts'
+
 import {RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
@@ -5,34 +7,30 @@ import useGraphicsMode from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import Orbitable from '#component/Orbitable'
-import {useAmbienceEmitter} from '#src/lib/audio/ambience/ambienceEmitters.ts'
-import FountainAmbience from '#src/lib/audio/ambience/Fountain.ts'
+import MarbleFountainGeometry from '#src/fountains/marble/MarbleFountainGeometry.ts'
+import MarbleFountainSpray from '#src/fountains/marble/MarbleFountainSpray.ts'
+import MarbleFountainStoneMaterial from '#src/fountains/marble/MarbleFountainStoneMaterial.ts'
+import MarbleFountainWaterMaterial from '#src/fountains/marble/MarbleFountainWaterMaterial.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
-import fountain from '#src/lib/gallery/fountain/config.ts'
-import FountainGeometry from '#src/lib/gallery/fountain/FountainGeometry.ts'
-import FountainSpray from '#src/lib/gallery/fountain/FountainSpray.ts'
-import FountainMarbleMaterial from '#src/lib/materials/FountainMarbleMaterial.ts'
-import FountainWaterMaterial from '#src/lib/materials/FountainWaterMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
-import slopGallery from '#src/worlds/gallery/index.ts'
 
-export default function Fountain() {
+/** The marble fountain’s model: its carved stone with its collider, its gilt fittings, its pools, its falling water and its spray. */
+export default function MarbleFountainModel({id, position}: FountainModelProps) {
   const isHeavy = useGraphicsMode()
-  useAmbienceEmitter(FountainAmbience, slopGallery.ambienceRooms('lobby', 'lobby-fountain'))
-  const geometry = useDisposable(useMemo(() => new FountainGeometry, []))
+  const geometry = useDisposable(useMemo(() => new MarbleFountainGeometry, []))
   const collision = useMemo(() => colliderGeometry(geometry.stone), [geometry])
-  const marble = useDisposable(useMemo(() => new FountainMarbleMaterial({reflections: isHeavy}), [isHeavy]))
-  const spray = useDisposable(useMemo(() => new FountainSpray, []))
-  const pool = useDisposable(useMemo(() => new FountainWaterMaterial(false, isHeavy), [isHeavy]))
-  const falling = useDisposable(useMemo(() => new FountainWaterMaterial(true, isHeavy), [isHeavy]))
+  const marble = useDisposable(useMemo(() => new MarbleFountainStoneMaterial({reflections: isHeavy}), [isHeavy]))
+  const spray = useDisposable(useMemo(() => new MarbleFountainSpray, []))
+  const pool = useDisposable(useMemo(() => new MarbleFountainWaterMaterial(false, isHeavy), [isHeavy]))
+  const falling = useDisposable(useMemo(() => new MarbleFountainWaterMaterial(true, isHeavy), [isHeavy]))
   // Framed around the finial and the plinth’s reach, circling at a bench’s distance at most.
   return <Orbitable
-    id='lobby-fountain' center={[0, 1.6, 0]} name='lobby-fountain' orbit={{
+    id={id} center={[0, 1.6, 0]} name={id} orbit={{
       radius: 2.8,
       minDistance: 3.4,
       maxDistance: 8,
-      floorY: fountain.position[1],
-    }} position={fountain.position} title='Fountain'
+      floorY: position[1],
+    }} position={position} title='Fountain'
   >
     <RigidBody colliders={false} type='fixed'>
       <MeshSurfaceCollider args={collision} />

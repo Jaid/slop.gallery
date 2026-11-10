@@ -9,6 +9,7 @@ import useGraphicsMode from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import PendantLamps from '#component/PendantLamps'
+import MarbleFountainWaterMaterial from '#src/fountains/marble/MarbleFountainWaterMaterial.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {vaultShellThickness, wallFace} from '#src/lib/gallery/architectureDimensions.ts'
 import {cistern, cisternDomeRibs, cisternInflow, cisternLantern} from '#src/lib/gallery/cistern/cistern.ts'
@@ -19,7 +20,6 @@ import InflowGeometry from '#src/lib/gallery/cistern/InflowGeometry.ts'
 import {routeRibDepth, routeRibThickness} from '#src/lib/gallery/passages/RoutedPassage.ts'
 import {passageLantern, passageLanternGlow} from '#src/lib/gallery/pendants/passageLantern.ts'
 import CisternWaterMaterial from '#src/lib/materials/CisternWaterMaterial.ts'
-import FountainWaterMaterial from '#src/lib/materials/FountainWaterMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 
 const mounts = [cisternLantern]
@@ -60,7 +60,7 @@ export default function BastionCistern({stone}: {stone: Material}) {
   })), []))
   const water = useDisposable(useMemo(() => lightIndoors(new CisternWaterMaterial(cisternInflow.along)), []))
   const sump = useDisposable(useMemo(() => lightIndoors(new CisternWaterMaterial), []))
-  const falling = useDisposable(useMemo(() => lightIndoors(new FountainWaterMaterial(true, isHeavy)), [isHeavy]))
+  const falling = useDisposable(useMemo(() => lightIndoors(new MarbleFountainWaterMaterial(true, isHeavy)), [isHeavy]))
   const dead = {
     restitution: 0,
     restitutionCombineRule: CoefficientCombineRule.Min,

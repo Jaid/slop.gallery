@@ -3,8 +3,9 @@ import type {Node} from 'three/webgpu'
 import {abs, atan, attribute, color, exp, float, length, max, mix, mod, mx_noise_float, normalLocal, positionGeometry, sqrt, time, uv, vec3} from 'three/tsl'
 import {DoubleSide, FrontSide, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
-import fountain, {jetLanding, sheetLanding} from '../gallery/fountain/config.ts'
-import {heightNormal} from './filters.ts'
+import {heightNormal} from '#src/lib/materials/filters.ts'
+
+import fountain, {jetLanding, sheetLanding} from './config.ts'
 
 type Float = Node<'float'>
 
@@ -42,7 +43,7 @@ function ripples(distance: Float, amplitude: number, wavelength: number, speed: 
  * and which tears into strands and turns white with air as it falls (`waterFall`, 0 at the lip and 1 at the pool); scalloped lips
  * pour thicker ropes from their troughs (`waterLobe`).
  */
-export default class FountainWaterMaterial extends MeshPhysicalNodeMaterial {
+export default class MarbleFountainWaterMaterial extends MeshPhysicalNodeMaterial {
   constructor(falling = false, heavy = true) {
     super({
       color: '#ffffff',

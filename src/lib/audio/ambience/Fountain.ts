@@ -3,7 +3,7 @@ import type {NoiseBed, Range} from 'ambience-emitter'
 
 import AmbienceEmitter from 'ambience-emitter'
 
-import fountain from '../../gallery/fountain/config.ts'
+import {lobbyFountainSpot} from '../../gallery/lobbyFountain.ts'
 
 /** water falling into water: a wandering mid-range plash, a low churn in the basin and a fine hiss of spray */
 const beds: ReadonlyArray<NoiseBed> = [
@@ -58,10 +58,10 @@ const splashes = {
   volume: [0.01, 0.03] as Range,
 }
 
-/** The Lobby fountain: water falling from its veils into its pools, a plash over a low churn and a hiss of spray, full of small bubbles, the odd big one under the jet and drops striking the surface, sounding from the tip of its finial. */
+/** The Lobby’s fountain, whichever stands there: water falling from its veils into its pools, a plash over a low churn and a hiss of spray, full of small bubbles, the odd big one under the jet and drops striking the surface, sounding from the mouth of its tallest jet. */
 export default class Fountain extends AmbienceEmitter {
-  /** sounds from `position`, by default the finial’s tip, the main jet’s mouth, in `rooms`, by default only the Lobby */
-  constructor(position: Vec3 = [fountain.position[0], fountain.position[1] + fountain.jet.y, fountain.position[2]], rooms: ReadonlyArray<string> = ['lobby']) {
+  /** sounds from `position`, by default about where a jet leaves a fountain standing in the Lobby, 3 m over its foot, in `rooms`, by default only the Lobby */
+  constructor(position: Vec3 = [lobbyFountainSpot[0], lobbyFountainSpot[1] + 3, lobbyFountainSpot[2]], rooms: ReadonlyArray<string> = ['lobby']) {
     super({
       id: 'lobby-fountain',
       title: 'Fountain',

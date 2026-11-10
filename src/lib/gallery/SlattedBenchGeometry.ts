@@ -3,8 +3,8 @@ import type {BufferGeometry} from 'three/webgpu'
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {CircleGeometry, CylinderGeometry, TorusGeometry} from 'three/webgpu'
 
-import {mergeParts} from '../../geometry.ts'
-import {fountainBench, fountainBenchFrame} from './benches.ts'
+import {mergeParts} from '../geometry.ts'
+import {fountainBench, fountainBenchFrame} from './fountainBenches.ts'
 
 /** Lengthwise teak battens on two smoothly bent steel U-frames, shared by both benches. */
 export default class SlattedBenchGeometry {

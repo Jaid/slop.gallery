@@ -4,8 +4,8 @@ import {useMemo} from 'react'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
-import {fountainBench, fountainBenches} from '#src/lib/gallery/fountain/benches.ts'
-import SlattedBenchGeometry from '#src/lib/gallery/fountain/SlattedBenchGeometry.ts'
+import {fountainBench, fountainBenches} from '#src/lib/gallery/fountainBenches.ts'
+import SlattedBenchGeometry from '#src/lib/gallery/SlattedBenchGeometry.ts'
 import metal from '#src/lib/materials/metal.ts'
 import TeakMaterial from '#src/lib/materials/TeakMaterial.ts'
 

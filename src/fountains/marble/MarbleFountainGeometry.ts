@@ -2,9 +2,10 @@ import type {BowlLip, WaterJet, WaterSheet} from './config.ts'
 
 import {BoxGeometry, BufferGeometry, CylinderGeometry, Float32BufferAttribute, Matrix4, Quaternion, TorusGeometry, Uint32BufferAttribute, Vector3} from 'three/webgpu'
 
-import {mergeParts} from '../../geometry.ts'
-import LobedProfileGeometry from '../LobedProfileGeometry.ts'
-import RevolvedProfileGeometry from '../RevolvedProfileGeometry.ts'
+import LobedProfileGeometry from '#src/lib/gallery/LobedProfileGeometry.ts'
+import RevolvedProfileGeometry from '#src/lib/gallery/RevolvedProfileGeometry.ts'
+import {mergeParts} from '#src/lib/geometry.ts'
+
 import fountain, {jetFlightTime, jetPoint, jetVelocity, sheetFlightTime, sheetPoint} from './config.ts'
 
 const {basinInnerApothem, pools, lips, lobes, profiles, bowls, veils, jet, basinNozzles, lilyJets, panels, gravity} = fountain
@@ -186,7 +187,7 @@ function basinRelief() {
 }
 
 /** An octagonal carved basin holding a pedestal with two gadrooned bowls, gilt finial and nozzles, overflowing veils, jets and pools, merged by material. */
-export default class FountainGeometry {
+export default class MarbleFountainGeometry {
   static readonly profiles = profiles
   readonly gilt: BufferGeometry
   readonly pools: BufferGeometry

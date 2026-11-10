@@ -1,6 +1,6 @@
-import type {Vec3} from '../types.ts'
+import type {Vec3} from './types.ts'
 
-import fountain from './config.ts'
+import {lobbyFountainSpot} from './lobbyFountain.ts'
 
 export const fountainBench = {
   width: 2.8,
@@ -24,7 +24,7 @@ export const fountainBenchFrame = {
 export const fountainBenches = Array.from({length: 4}, (_, i) => {
   const angle = i * Math.PI / 2
   return {
-    position: [fountain.position[0] + Math.sin(angle) * fountainBench.radius, fountain.position[1], fountain.position[2] + Math.cos(angle) * fountainBench.radius] as Vec3,
+    position: [lobbyFountainSpot[0] + Math.sin(angle) * fountainBench.radius, lobbyFountainSpot[1], lobbyFountainSpot[2] + Math.cos(angle) * fountainBench.radius] as Vec3,
     rotation: [0, angle, 0] as Vec3,
   }
 })

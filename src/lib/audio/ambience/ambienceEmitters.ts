@@ -1,4 +1,5 @@
 import type AmbienceEmitter from 'ambience-emitter'
+import type {Vec3} from 'math'
 
 import optis from 'optis'
 import {useEffect, useState} from 'react'
@@ -37,9 +38,9 @@ export function addAmbienceEmitter(emitter: AmbienceEmitter) {
   }
 }
 
-/** Sounds an emitter of this class at its default position while the calling component is mounted, returning it; `rooms` replaces the rooms it sounds in by default. */
-export function useAmbienceEmitter<Emitter extends AmbienceEmitter>(EmitterClass: new (position?: undefined, rooms?: ReadonlyArray<string>) => Emitter, rooms?: ReadonlyArray<string>) {
-  const [emitter] = useState(() => new EmitterClass(undefined, rooms))
+/** Sounds an emitter of this class while the calling component is mounted, returning it, at its default position unless `position` names another in the world; `rooms` replaces the rooms it sounds in by default. */
+export function useAmbienceEmitter<Emitter extends AmbienceEmitter>(EmitterClass: new (position?: Vec3, rooms?: ReadonlyArray<string>) => Emitter, rooms?: ReadonlyArray<string>, position?: Vec3) {
+  const [emitter] = useState(() => new EmitterClass(position, rooms))
   useEffect(() => addAmbienceEmitter(emitter), [emitter])
   return emitter
 }

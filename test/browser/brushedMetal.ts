@@ -2,9 +2,9 @@ import {Box3, DataUtils, HalfFloatType, InstancedMesh, Mesh, OrthographicCamera,
 
 import StudioEnvironment from '../../packages/knot-materials/src/StudioEnvironment.ts'
 import createSupportGeometry from '../../src/components/KnotLabels/supportGeometry.ts'
-import SlattedBenchGeometry from '../../src/lib/gallery/fountain/SlattedBenchGeometry.ts'
 import OculusRailing from '../../src/lib/gallery/railings/OculusRailing.ts'
 import PolylineTubeGeometry from '../../src/lib/gallery/railings/PolylineTubeGeometry.ts'
+import SlattedBenchGeometry from '../../src/lib/gallery/SlattedBenchGeometry.ts'
 import BrushedMetalMaterial from '../../src/lib/materials/BrushedMetalMaterial.ts'
 
 /** Standalone, detached HDR readback: real meshes, no scene lights or environment to hide missing pseudo-reflections. */

@@ -1,7 +1,8 @@
 import {attribute, cameraWorldMatrix, color, float, min, mix, time, uv, vec3, vec4} from 'three/tsl'
 import {InstancedBufferAttribute, InstancedMesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
 
-import TransparentSpriteOutputsNode from '../../rendering/TransparentSpriteOutputsNode.ts'
+import TransparentSpriteOutputsNode from '#src/lib/rendering/TransparentSpriteOutputsNode.ts'
+
 import fountain, {jetFlightTime, jetLanding, jetPoint, jetVelocity, sheetLanding} from './config.ts'
 
 export type Droplet = {
@@ -150,7 +151,7 @@ export function fountainDroplets(count = fountain.sprayCount) {
  * Each drop loops over its own flight with its own phase. It is lit by a simple sky gradient – bright on top – rather than the
  * scene’s lights, so the spray reads against the bright marble without costing a lit material per drop.
  */
-export default class FountainSpray extends InstancedMesh<PlaneGeometry, MeshBasicNodeMaterial> {
+export default class MarbleFountainSpray extends InstancedMesh<PlaneGeometry, MeshBasicNodeMaterial> {
   constructor(count = fountain.sprayCount) {
     const geometry = new PlaneGeometry(1, 1)
     const droplets = fountainDroplets(count)
