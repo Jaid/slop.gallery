@@ -6,7 +6,7 @@ import PartyShow from '../lib/PartyShow.ts'
 
 /**
  * A special effect that bursts out of a point in the world: sprites the GPU animates by the seconds since then, and a sound that plays once at that moment, like the ghosts that escape a fusion’s portal as the result flips out, or the alchemy machine’s cannon as it shoots an orb of a new flavor.
- * It belongs to nothing: an orb names one by its id to contribute it to its fusion, and anything else can stage one anywhere.
+ * It belongs to nothing: an orb names one by its id to contribute it to its fusion, and anything else can spawn one anywhere, see `spawnPartyEffect`.
  * The effect is only the recipe: whoever shows it makes a {@link PartyShow} of it with {@link stage}, ahead of time where it can, so its pipelines compile before it is due.
  */
 export default abstract class PartyEffect {

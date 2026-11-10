@@ -24,6 +24,11 @@ export type PartyPlacement = {
   /** the way it faces, as a turn around y in radians: toward +z at 0 and toward +x at a quarter turn, like a work on a wall */
   rotation?: number
 }
+/** how to play a party effect that is spawned on its own */
+export type PartyOptions = {
+  /** seconds until it bursts out, which it waits staged, drawing nothing yet, so its pipelines compile meanwhile; right away by default */
+  delay?: number
+}
 /** where something is relative to a site’s center: to the right of someone facing it, up and out the way it faces, in meters */
 export type PartyOffset = readonly [along: number, up: number, out: number]
 

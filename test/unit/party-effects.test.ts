@@ -4,18 +4,22 @@ import type {AudioOutput} from 'procedural-audio'
 
 import {describe, expect, test} from 'bun:test'
 
+import {galleryEvents, spawnPartyEffect} from '../../src/lib/gallery.ts'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
 import FusionRecipe, {itemIngredient, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
 import {portalFrame, portalRadius} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
+import spawnThroughTool from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/party_effects/blood/flights.ts'
 import {escapingGhosts, ghostOffset} from '../../src/party_effects/ghosts/flights.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
+import {endParty, startParty, useParties} from '../../src/party_effects/lib/parties.ts'
 import {offsetPosition, partySite} from '../../src/party_effects/lib/partySite.ts'
 import {brushStrokes, strokeDrying, strokePoint} from '../../src/party_effects/strokes/flights.ts'
+import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const {bats: batsEffect, blood: bloodEffect, ghosts: ghostsEffect, strokes: strokesEffect} = partyEffects
 const effects = Object.values<PartyEffect>(partyEffects)
@@ -235,6 +239,91 @@ describe('party effects', () => {
     for (const show of [punctual, silent, late]) {
       show.dispose()
     }
+  })
+  test('a party effect plays anywhere on its own, over the floor the world has there, until it is ended', () => {
+    const position: [number, number, number] = [0, 1.8, 2]
+    const party = startParty('blood', {
+      position,
+      rotation: Math.PI,
+    }, {delay: 0.5})
+    expect(useParties.getState().parties).toEqual([party])
+    expect(party.show.effect).toBe(bloodEffect)
+    expect(party.show.site.center).toEqual(position)
+    expect(party.show.site.floor).toBe(slopGallery.floorHeight(position))
+    expect(party.show.site.normal[2]).toBeCloseTo(-1, 12)
+    expect(party.startsAt).toBeGreaterThan(performance.now() + 400)
+    const second = startParty('bats', {
+      position,
+      floor: -3,
+    })
+    expect(second.id).not.toBe(party.id)
+    expect(second.show.site.floor).toBe(-3)
+    expect(second.startsAt).toBeLessThanOrEqual(performance.now())
+    endParty(party)
+    expect(useParties.getState().parties).toEqual([second])
+    endParty(second)
+    endParty(second)
+    expect(useParties.getState().parties).toEqual([])
+    for (const {show} of [party, second]) {
+      show.dispose()
+    }
+  })
+  test('the gallery’s spawnPartyEffect asks for a party effect with where and how to play it', () => {
+    const requests: Array<unknown> = []
+    const listen = (event: Event) => {
+      requests.push((event as CustomEvent<unknown>).detail)
+    }
+    galleryEvents.addEventListener('party-effect', listen)
+    try {
+      spawnPartyEffect('ghosts', {
+        position: [1, 2, 3],
+        rotation: 0.4,
+      }, {delay: 2})
+      spawnPartyEffect('bats', {position: [0, 0, 0]})
+    } finally {
+      galleryEvents.removeEventListener('party-effect', listen)
+    }
+    expect(requests).toEqual([{
+      effect: 'ghosts',
+      placement: {
+        position: [1, 2, 3],
+        rotation: 0.4,
+      },
+      options: {delay: 2},
+    }, {
+      effect: 'bats',
+      placement: {position: [0, 0, 0]},
+      options: undefined,
+    }])
+    // Nothing plays them without a scene.
+    expect(useParties.getState().parties).toEqual([])
+  })
+  test('the spawn_party_effect tool’s spawner takes any party effect’s id and tells what it spawned, and names the effects for an id none has', () => {
+    const spawn = spawnThroughTool({
+      effect: 'strokes',
+      position: [0, 1.8, 2],
+      rotation: 0.5,
+    })
+    expect(spawn).toEqual({
+      effect: 'strokes',
+      position: [0, 1.8, 2],
+      rotation: 0.5,
+      floor: slopGallery.floorHeight([0, 1.8, 2]),
+      duration: strokesEffect.duration,
+    })
+    const [party] = useParties.getState().parties
+    expect(party.show.effect).toBe(strokesEffect)
+    endParty(party)
+    party.show.dispose()
+    expect(() => spawnThroughTool({
+      effect: 'confetti',
+      position: [0, 0, 0],
+    })).toThrow(/bats, blood, ghosts, strokes/)
+    expect(() => spawnThroughTool({
+      effect: 'toString',
+      position: [0, 0, 0],
+    })).toThrow(/no party effect/)
+    expect(useParties.getState().parties).toEqual([])
   })
   test('every effect keeps the portal open until the last of it is gone, and all of them longer than its own afterglow', () => {
     for (const effect of effects) {

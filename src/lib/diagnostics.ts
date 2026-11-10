@@ -1,3 +1,4 @@
+import type {PartyEffectId, PartyOptions, PartyPlacement} from '#src/party_effects/index.ts'
 import type {Placement, Portrait, Vec3} from './gallery/types.ts'
 import type {PlayerDumpSnapshot} from './telemetry/recordPlayerDump.ts'
 import type {EulerTuple} from 'three/webgpu'
@@ -80,6 +81,8 @@ type GalleryDebugApi = Partial<CaptureFrameApi> & {
   /** Knottingham only: turns every showcased Knot back to the start of its revolution, so films begin at the same angles */
   resetKnotRotation?: () => void
   snapshot?: () => GalleryDiagnostics
+  /** plays the party effect with the id, like `blood`, anywhere in the world: bursting out of the placement’s position, facing the way its rotation turns it around y, right away or after the options’ delay */
+  spawnPartyEffect?: (id: PartyEffectId, placement: PartyPlacement, options?: PartyOptions) => void
   teleport?: (position: Vec3, rotation: Array<number>) => void
 }
 

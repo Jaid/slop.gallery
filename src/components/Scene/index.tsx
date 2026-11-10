@@ -12,6 +12,7 @@ import Lamps from '#component/Lamps'
 import LightLevels from '#component/LightLevels'
 import LightMarkers from '#component/LightMarkers'
 import Moods from '#component/Moods'
+import PartyEffects from '#component/PartyEffects'
 import Player from '#component/Player'
 import Portraits from '#component/Portraits'
 import PortraitSlotEditor from '#component/PortraitSlotEditor'
@@ -52,6 +53,7 @@ export default function Scene() {
     <Fusions />
     <FusionRemains />
     <SpawnedOrbs />
+    <PartyEffects />
     {/* Hidden with O, the markers keep working: editors still aim, drag and switch what they mark. */}
     <group name='scene-ui' visible={!uiHidden}>
       <Branch if={isShowingSticky} then={StickySurfaces} />

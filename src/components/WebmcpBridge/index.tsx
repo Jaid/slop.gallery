@@ -17,6 +17,7 @@ import dumpPortraits from '#src/lib/webmcp/dumpPortraits.ts'
 import hangWork from '#src/lib/webmcp/hangWork.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
 import spawnOrb from '#src/lib/webmcp/spawnOrb.ts'
+import spawnPartyEffect from '#src/lib/webmcp/spawnPartyEffect.ts'
 import throwProp from '#src/lib/webmcp/throwProp.ts'
 import world from '#src/worlds/current.ts'
 
@@ -71,6 +72,7 @@ export default function WebmcpBridge() {
       hangWork,
       setWireframe: applyWireframeFlood,
       spawnOrb,
+      spawnPartyEffect,
       throwProp: (input: Parameters<typeof throwProp>[1]) => throwProp(camera, input),
       getTelemetry: () => {
         if (!telemetry) {

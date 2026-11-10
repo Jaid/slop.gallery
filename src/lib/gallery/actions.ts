@@ -1,3 +1,4 @@
+import type {PartyEffectId, PartyOptions, PartyPlacement} from '#src/party_effects/index.ts'
 import type {FusionImpact} from './fusion/Fusion.ts'
 import type {Portrait, ThrownItem, Vec3} from './types.ts'
 import type {Voice} from 'procedural-audio'
@@ -49,6 +50,13 @@ export const dragPose = {
 }
 export const galleryEvents = new EventTarget
 let noticeTimer: ReturnType<typeof setTimeout>
+
+/** a party effect asked for by {@link spawnPartyEffect} */
+export type PartyEffectRequest = {
+  effect: PartyEffectId
+  options?: PartyOptions
+  placement: PartyPlacement
+}
 
 export function notify(notice: string) {
   useGallery.setState({notice})
@@ -103,6 +111,20 @@ export function stopNarration() {
 /** Flings the player’s body off with the velocity, in m/s, replacing its momentum. */
 export function flingPlayer(velocity: Vec3) {
   galleryEvents.dispatchEvent(new CustomEvent('fling', {detail: velocity}))
+}
+
+/**
+ * Plays a party effect (`src/party_effects`), like `blood`, anywhere in the world on its own: bursting out of the placement’s position, facing the way its rotation turns it around y, toward +z at 0 like a work on a wall, over the floor the world has there unless the placement names its own, right away or after the options’ delay.
+ * `PartyEffects`, in every world’s scene, plays it until it is over.
+ */
+export function spawnPartyEffect(effect: PartyEffectId, placement: PartyPlacement, options?: PartyOptions) {
+  galleryEvents.dispatchEvent(new CustomEvent<PartyEffectRequest>('party-effect', {
+    detail: {
+      effect,
+      placement,
+      options,
+    },
+  }))
 }
 
 /** Asks for the hung portrait `first` to fuse with the loose portrait `second`, which struck it as `impact` says. */

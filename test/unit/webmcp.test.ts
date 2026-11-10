@@ -1,5 +1,6 @@
 import type {WorkHangingInput} from '../../src/lib/webmcp/hangWork.ts'
 import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
+import type {PartyEffectSpawnInput} from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import type {PropThrowInput} from '../../src/lib/webmcp/throwProp.ts'
 import type {WebmcpBridge} from '../../src/lib/webmcp/tools.ts'
 
@@ -116,12 +117,19 @@ const bridge: WebmcpBridge = {
     orb,
     position,
   }),
+  spawnPartyEffect: ({effect, position, rotation = 0, floor = 0}: PartyEffectSpawnInput) => ({
+    effect,
+    position,
+    rotation,
+    floor,
+    duration: 2.5,
+  }),
 }
 test('WebMCP read tools are read-only, validate input and read the current bridge', () => {
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'hang_work', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'hang_work', 'set_wireframe'])
   for (const tool of tools.slice(0, 7)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -370,6 +378,68 @@ test('spawn_orb takes a kind, a point and an optional prop id, and spawns throug
     position: [0, 0, 0],
   })).rejects.toThrow()
 })
+test('spawn_party_effect takes an effect, a point and an optional rotation, floor and delay, and spawns through the bridge', async () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'spawn_party_effect')!
+  const controller = new AbortController
+  const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  expect(await execute({
+    effect: 'blood',
+    position: [1, 1.8, 3],
+  })).toEqual({
+    effect: 'blood',
+    position: [1, 1.8, 3],
+    rotation: 0,
+    floor: 0,
+    duration: 2.5,
+  })
+  expect(await execute({
+    effect: 'bats',
+    position: [1, 1.8, 3],
+    rotation: Math.PI / 2,
+    floor: -4,
+    delay: 0.5,
+  })).toEqual({
+    effect: 'bats',
+    position: [1, 1.8, 3],
+    rotation: Math.PI / 2,
+    floor: -4,
+    duration: 2.5,
+  })
+  for (const input of [null, [], {}, {effect: 'blood'}, {position: [0, 0, 0]}, {
+    effect: '',
+    position: [0, 0, 0],
+  }, {
+    effect: 'blood',
+    position: [0, 0],
+  }, {
+    effect: 'blood',
+    position: [0, 0, Number.NaN],
+  }, {
+    effect: 'blood',
+    position: [0, 0, 0],
+    rotation: 'north',
+  }, {
+    effect: 'blood',
+    position: [0, 0, 0],
+    floor: Number.POSITIVE_INFINITY,
+  }, {
+    effect: 'blood',
+    position: [0, 0, 0],
+    delay: -1,
+  }, {
+    effect: 'blood',
+    position: [0, 0, 0],
+    orientation: [0, 0, 0, 1],
+  }]) {
+    await expect(execute(input)).rejects.toThrow(TypeError)
+  }
+  controller.abort()
+  await expect(execute({
+    effect: 'blood',
+    position: [0, 0, 0],
+  })).rejects.toThrow()
+})
 test('hang_work takes an image URL, a slot and an optional title and id, and hangs through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'hang_work')!
   const controller = new AbortController
@@ -449,7 +519,7 @@ test('registrations clean up on unmount, failure and cancellation during registr
     const registered = registerWebmcp(() => bridge, controller.signal, context)
     if (mode === 'success') {
       const cleanup = await registered
-      expect(signals).toHaveLength(13)
+      expect(signals).toHaveLength(createWebmcpTools(() => bridge).length)
       expect(signals[0].aborted).toBe(false)
       cleanup()
       cleanup()

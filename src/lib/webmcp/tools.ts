@@ -5,6 +5,7 @@ import type {WorldAnalysis} from './analyzeWorld.ts'
 import type {PortraitDump} from './dumpPortraits.ts'
 import type {WorkHanging, WorkHangingInput} from './hangWork.ts'
 import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
+import type {PartyEffectSpawn, PartyEffectSpawnInput} from './spawnPartyEffect.ts'
 import type {PropThrow, PropThrowInput} from './throwProp.ts'
 import type {WireframeFlood} from 'capture-session'
 import type {WarmupEnd} from 'capture-session/script'
@@ -41,6 +42,7 @@ export type WebmcpBridge = {
   hangWork: (input: WorkHangingInput) => Promise<WorkHanging>
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
   spawnOrb: (input: OrbSpawnInput) => Promise<OrbSpawn>
+  spawnPartyEffect: (input: PartyEffectSpawnInput) => PartyEffectSpawn
   throwProp: (input: PropThrowInput) => PropThrow
 }
 
@@ -49,6 +51,7 @@ const fileNamePattern = /^[\w\-.]{1,100}$/u
 const colorPattern = /^#(?:[\da-f]{3}){1,2}$/iu
 const throwKeys = ['prop', 'portrait', 'target', 'velocity', 'from', 'speed']
 const spawnKeys = new Set(['orb', 'position', 'id'])
+const partyKeys = new Set(['effect', 'position', 'rotation', 'floor', 'delay'])
 const hangKeys = new Set(['image', 'slot', 'title', 'id'])
 const workIdPattern = /^[\w-]{1,100}$/u
 const propIdPattern = /^prop-[\w-]{1,100}$/u
@@ -297,6 +300,67 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           orb,
           position,
           id,
+        })
+      },
+    },
+    {
+      name: 'spawn_party_effect',
+      title: 'Spawn party effect',
+      description: 'Play a party effect anywhere in the world: one of the special effects that burst out of a fusion’s portal as the result of an orb’s fusion flips out and out of the alchemy machine’s cannon, like bats, blood, ghosts or strokes, here on its own, bursting out of a point, facing a level direction, over the floor under it, with its sound while the sound is on. It renders from the next frame on and leaves the world a moment after it is over. Fails for an unknown effect, whose error lists the effects. Returns the effect, where it bursts out, its rotation, the height of the floor under it and the seconds it goes on. Does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          effect: {
+            type: 'string',
+            description: 'the id of the party effect, like bats, blood, ghosts or strokes',
+          },
+          position: point('world-space point in meters it bursts out of, [x, y, z], like the middle of a portal, about 1.8 m over the floor'),
+          rotation: {
+            type: 'number',
+            description: 'the way it faces, as a turn around the y axis in radians: toward +z at 0, toward +x at a quarter turn, like a portrait’s rotation. Default: 0',
+          },
+          floor: {
+            type: 'number',
+            description: 'world-space height in meters of the floor under it, which what it spills lands on. Default: the floor the world has under the position',
+          },
+          delay: {
+            type: 'number',
+            description: 'seconds until it bursts out, which it waits hidden while its pipelines compile. Default: 0',
+            minimum: 0,
+          },
+        },
+        required: ['effect', 'position'],
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !partyKeys.has(key))) {
+          throw new TypeError('This tool takes an object with effect, position and optional rotation, floor and delay.')
+        }
+        const {effect, position, rotation, floor, delay} = input as Record<string, unknown>
+        if (typeof effect !== 'string' || !effect) {
+          throw new TypeError('effect must be the id of a party effect.')
+        }
+        if (!isPoint(position)) {
+          throw new TypeError('position must be three finite numbers.')
+        }
+        for (const [key, value] of [['rotation', rotation], ['floor', floor]] as const) {
+          if (value !== undefined && !(typeof value === 'number' && Number.isFinite(value))) {
+            throw new TypeError(`${key} must be a finite number.`)
+          }
+        }
+        if (delay !== undefined && !(typeof delay === 'number' && Number.isFinite(delay) && delay >= 0)) {
+          throw new TypeError('delay must be a finite number of at least 0.')
+        }
+        return getBridge().spawnPartyEffect({
+          effect,
+          position,
+          rotation: rotation as number | undefined,
+          floor: floor as number | undefined,
+          delay,
         })
       },
     },

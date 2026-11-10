@@ -16,4 +16,4 @@ export type PartyEffectId = keyof typeof partyEffects
 
 export type {default as PartyEffect} from './base/PartyEffect.ts'
 export type {default as PartyShow} from './lib/PartyShow.ts'
-export type {PartyOffset, PartyPlacement, PartySite} from './lib/partySite.ts'
+export type {PartyOffset, PartyOptions, PartyPlacement, PartySite} from './lib/partySite.ts'
