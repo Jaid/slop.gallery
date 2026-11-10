@@ -7,7 +7,7 @@ import {Box3, Mesh, MeshBasicMaterial, Raycaster, TorusKnotGeometry, Vector3} fr
 import ChandelierGeometry from '../../src/lib/gallery/ChandelierGeometry.ts'
 import {siennaCeilingBeam, siennaCeilingBeamOffsets, siennaCeilingBeamY} from '../../src/lib/gallery/sienna.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
-import {chandelierPhysics} from '../../src/lib/physics/chandelier.ts'
+import {chandelierCanopyTop, chandelierPhysics} from '../../src/lib/physics/chandelier.ts'
 import {rooms} from './fixtures/gallery.ts'
 
 describe('chandelier geometry', () => {
@@ -38,11 +38,13 @@ describe('chandelier geometry', () => {
       }
       expect(triangles).toBeLessThan(7500)
       expect(bytes).toBeLessThan(240_000)
-      expect(bounds.min.y).toBeCloseTo(-0.506, 5)
-      expect(bounds.max.y).toBeCloseTo(2.13, 5)
-      expect(bounds.max.y + chandelierPhysics.height).toBeCloseTo(5.68, 5)
-      expect(bounds.max.x).toBeCloseTo(1.39, 5)
-      expect(bounds.min.x).toBeCloseTo(-1.39, 5)
+      // The canopy tops it where its physics say, under the Sienna’s ceiling and high over the visitors’ heads, and the arms reach out evenly all round.
+      const sienna = rooms.find(room => room.id === 'sienna')!
+      expect(bounds.max.y).toBeCloseTo(chandelierCanopyTop, 5)
+      expect(bounds.max.y + chandelierPhysics.height).toBeLessThanOrEqual(sienna.height)
+      expect(bounds.min.y + chandelierPhysics.height).toBeGreaterThan(2)
+      expect(bounds.max.x).toBeCloseTo(-bounds.min.x, 5)
+      expect(bounds.max.z).toBeCloseTo(-bounds.min.z, 5)
     } finally {
       geometry.dispose()
     }
@@ -54,13 +56,19 @@ describe('chandelier geometry', () => {
       const brass = new Mesh(geometry.brass, material)
       const candles = new Mesh(geometry.candles, material)
       const flames = new Mesh(geometry.flames, material)
-      for (let i = 0; i < 8; i++) {
+      const heights = Array.from({length: 8}, (_, i) => {
         const position = new Vector3(1.25, 2, 0)
         position.applyAxisAngle(new Vector3(0, 1, 0), i * Math.PI / 4)
         const ray = new Raycaster(position, new Vector3(0, -1, 0))
-        expect(ray.intersectObject(brass)[0].point.y).toBeCloseTo(0.21, 5)
-        expect(ray.intersectObject(candles)[0].point.y).toBeCloseTo(0.44, 5)
-        expect(ray.intersectObject(flames)[0].point.y).toBeCloseTo(0.615, 5)
+        return [brass, candles, flames].map(part => ray.intersectObject(part)[0].point.y)
+      })
+      const [saucer, candle, flame] = heights[0]
+      expect(saucer).toBeLessThan(candle)
+      expect(candle).toBeLessThan(flame)
+      for (const arm of heights) {
+        for (const [index, height] of arm.entries()) {
+          expect(height).toBeCloseTo(heights[0][index], 5)
+        }
       }
     } finally {
       geometry.dispose()

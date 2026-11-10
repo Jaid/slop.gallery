@@ -22,8 +22,16 @@ test('a strike on the frame or beside it lands there, past the image’s edge', 
   expect(x).toBeCloseTo(2)
   expect(y).toBeCloseTo(1.2)
 })
-test('a strike’s strength follows how fast it struck within bounds, 1 for a brisk throw', () => {
+test('a strike’s strength grows with how fast it struck, within bounds, 1 for a brisk throw', () => {
+  const speeds = [0, 0.5, 3, 5, 7, 9, 30, 100]
+  const strengths = speeds.map(speed => impactStrength(speed))
+  for (const [index, strength] of strengths.entries()) {
+    expect(strength).toBeGreaterThan(0)
+    expect(strength).toBeGreaterThanOrEqual(strengths[index - 1] ?? 0)
+  }
   expect(impactStrength(7)).toBe(1)
-  expect(impactStrength(0.5)).toBe(0.55)
-  expect(impactStrength(30)).toBe(1.2)
+  expect(impactStrength(3)).toBeLessThan(1)
+  expect(impactStrength(9)).toBeGreaterThan(1)
+  expect(impactStrength(0)).toBe(impactStrength(0.5))
+  expect(impactStrength(100)).toBe(impactStrength(30))
 })

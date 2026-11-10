@@ -1,23 +1,12 @@
 import {expect, test} from 'bun:test'
 
+import {getAntiAliasing} from '../../src/lib/rendering/antiAliasing.ts'
 import {getDefaultCustomGraphics, getTunedGraphics, toggleGraphicsTuning, useCustomGraphics, useGraphicsTuning} from '../../src/lib/rendering/customGraphics.ts'
 import {getGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
+import {getRenderPipelineSettings} from '../../src/lib/rendering/renderPipelineSettings.ts'
 
 test('the tuning panel starts from the pipeline of the page’s heavy graphics', () => {
-  const profile = getGraphicsProfile(true)
-  expect(getDefaultCustomGraphics()).toMatchObject({
-    ambientOcclusionResolutionScale: profile.ambientOcclusionResolutionScale,
-    ambientOcclusionSamples: profile.ambientOcclusionSamples,
-    antiAliasing: 'traa',
-    contactShadows: false,
-    dither: false,
-    mirrorReflections: true,
-    reflectionResolutionScale: profile.reflectionResolutionScale,
-    screenSpaceIndirectLight: profile.indirectLight,
-    screenSpaceReflections: false,
-    volumetricLight: profile.volumetricLight,
-    voxelIndirectLight: false,
-  })
+  expect(getDefaultCustomGraphics()).toMatchObject(getRenderPipelineSettings(getGraphicsProfile(true), getAntiAliasing(true)))
 })
 test('the pipeline keeps the panel’s values after hiding it', () => {
   const defaults = getDefaultCustomGraphics()

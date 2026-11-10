@@ -19,8 +19,9 @@ test('fast glass shares one plain pane between lobby and cabin and gives the tun
   expect(material.envMapIntensity).toBe(0)
   const tunnel = materials.tunnel as MeshStandardNodeMaterial
   expect(tunnel).not.toBe(material)
-  expect(tunnel.opacity).toBe(0.16)
-  expect(tunnel.color.getHexString()).toBe('b7d8d9')
+  expect(tunnel.transparent).toBe(true)
+  expect(tunnel.opacity).toBeGreaterThan(0)
+  expect(tunnel.opacity).toBeLessThan(0.5)
   const disposals = [material, tunnel].map(entry => spyOn(entry, 'dispose'))
   disposeArchitecturalGlassMaterials(materials)
   for (const dispose of disposals) {

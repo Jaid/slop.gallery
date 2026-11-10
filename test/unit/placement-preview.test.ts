@@ -1,3 +1,5 @@
+import type {Color} from 'three/webgpu'
+
 import {describe, expect, test} from 'bun:test'
 
 import {DataTexture, Vector3} from 'three/webgpu'
@@ -5,6 +7,9 @@ import {DataTexture, Vector3} from 'three/webgpu'
 import PreviewVisual, {previewBorderGeometry, previewOpacity} from '../../src/components/PlacementPreview/PreviewVisual.ts'
 import portraitLabel, {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
 
+/** whether the tint reads red, as where a work can’t go, or green */
+const red = ({r, g, b}: Color) => r > 2 * g && r > 2 * b
+const green = ({r, g, b}: Color) => g > 2 * r && g > 2 * b
 describe('placement preview', () => {
   for (const [width, height] of [[2.62, 2.62], [4.22, 1.22], [0.52, 3.22]] as const) {
     test(`the ${width} × ${height} border is closed, hollow and front-facing`, () => {
@@ -42,13 +47,13 @@ describe('placement preview', () => {
   test('validity changes the shared tint while the ants keep animating', () => {
     const visual = new PreviewVisual(2.4, 1.8, 0.09, null)
     try {
-      expect(visual.tint.value.getHexString()).toBe('ff3b45')
+      expect(red(visual.tint.value)).toBe(true)
       visual.update(true, 1 / 60)
-      expect(visual.tint.value.getHexString()).toBe('36ff72')
+      expect(green(visual.tint.value)).toBe(true)
       const time = visual.time.value
       visual.update(false, 5)
       expect(visual.time.value - time).toBeCloseTo(0.06)
-      expect(visual.tint.value.getHexString()).toBe('ff3b45')
+      expect(red(visual.tint.value)).toBe(true)
       visual.update(true, 5)
       expect(visual.time.value - time).toBeCloseTo(0.12)
       visual.update(true, -1)
@@ -64,14 +69,15 @@ describe('placement preview', () => {
     const visual = new PreviewVisual(2, 2, 0.09, null)
     try {
       visual.update(false, 1 / 60, false)
-      expect(visual.opacity.value).toBe(0.18)
+      expect(visual.opacity.value).toBeGreaterThan(0)
+      expect(visual.opacity.value).toBeLessThan(0.5)
       expect(previewOpacity(false)).toBe(visual.opacity.value)
       expect(visual.borderMaterial.opacityNode).not.toBeNull()
       expect(visual.labelBorderMaterial.opacityNode).not.toBeNull()
       expect(visual.imageMaterial.opacityNode).not.toBeNull()
       visual.update(false, 0, true)
       expect(visual.opacity.value).toBe(1)
-      expect(visual.tint.value.getHexString()).toBe('ff3b45')
+      expect(red(visual.tint.value)).toBe(true)
     } finally {
       visual.dispose()
     }

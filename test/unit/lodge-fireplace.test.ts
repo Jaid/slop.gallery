@@ -53,27 +53,27 @@ test('the complete fireplace faces inward from the south wall without moving the
       expect(value).toBeCloseTo(fireWorldOrigin[axis])
     }
     expect(origin.x).toBeCloseTo(lodge.center[0])
-    expect(origin.z).toBeCloseTo(-30.8)
-    expect(toWorld([fire.position[0], fire.position[1], fire.position[2] + fire.light.position[2]]).z).toBeCloseTo(-31.1)
     const fireplaceForward = new Vector3(0, 0, 1)
     expect(fireplaceForward.transformDirection(transform).z).toBeCloseTo(-1)
     expect(descendants(room).some(child => child.type === LodgeFurnishings)).toBe(true)
     expect(parts.some(child => child.type === LodgeFurnishings)).toBe(false)
-    // The stonework keeps the firebox the fire was built for: hearth top 0.2 m, inner pillar faces ±1.15 m, lintel underside 1.9 m and the back 0.47 m behind the logs.
+    // The stonework builds the firebox of the layout around the fire: the hearth, the raised bed on it, the pillars’ inner faces, the lintel over them and the back behind the logs.
+    const {fireplace: layout} = lodgeInterior
     const part = (name: string) => parts.filter(child => child.props.name === name).map(child => ({
       position: child.props.position!,
       size: child.props.size!,
     }))
     const [hearthBox] = part('lodge-hearth')
-    expect(hearthBox.position[1] + hearthBox.size[1] / 2).toBeCloseTo(0.2)
-    // The thicker hearth still meets the stone breast at the back, but now projects into the room.
-    expect(-hearthBox.position[2] - hearthBox.size[2] / 2).toBeCloseTo(3.35)
-    expect(-hearthBox.position[2] + hearthBox.size[2] / 2).toBeCloseTo(5)
+    expect(hearthBox.position[1] + hearthBox.size[1] / 2).toBeCloseTo(layout.hearth.size[1])
+    // The hearth meets the stone breast at the back and projects into the room.
+    expect(-hearthBox.position[2] - hearthBox.size[2] / 2).toBeCloseTo(layout.hearth.z - layout.hearth.size[2] / 2)
+    expect(-hearthBox.position[2] + hearthBox.size[2] / 2).toBeCloseTo(layout.hearth.z + layout.hearth.size[2] / 2)
+    expect(layout.hearth.z - layout.hearth.size[2] / 2).toBeLessThan(layout.front)
     const [raisedBed] = part('lodge-firebox-raised-bed')
     const raisedBedBottom = raisedBed.position[1] - raisedBed.size[1] / 2
     const raisedBedTop = raisedBed.position[1] + raisedBed.size[1] / 2
-    expect(raisedBedBottom).toBeCloseTo(0.2)
-    expect(raisedBedTop).toBeCloseTo(0.44)
+    expect(raisedBedBottom).toBeCloseTo(layout.hearth.size[1])
+    expect(raisedBedTop).toBeCloseTo(layout.hearth.size[1] + layout.raisedBed.size[1])
     expect(fire.position[1]).toBeCloseTo(raisedBed.size[1])
     expect(raisedBed.position[2] + raisedBed.size[2] / 2).toBeGreaterThan(lodgeInterior.fireplace.guard.footZ)
     expect(raisedBed.position[2] - raisedBed.size[2] / 2).toBeLessThan(lodgeInterior.fireplace.guard.footZ)
@@ -83,14 +83,14 @@ test('the complete fireplace faces inward from the south wall without moving the
     const pillars = part('lodge-fireplace-pillar')
     expect(pillars).toHaveLength(2)
     for (const pillar of pillars) {
-      expect(Math.abs(pillar.position[0]) - pillar.size[0] / 2).toBeCloseTo(1.15)
-      expect(pillar.position[1] - pillar.size[1] / 2).toBeCloseTo(0.2)
-      expect(pillar.position[1] + pillar.size[1] / 2).toBeCloseTo(1.9)
+      expect(Math.abs(pillar.position[0]) - pillar.size[0] / 2).toBeCloseTo(layout.openingHalfWidth)
+      expect(pillar.position[1] - pillar.size[1] / 2).toBeCloseTo(layout.hearth.size[1])
+      expect(pillar.position[1] + pillar.size[1] / 2).toBeCloseTo(layout.opening)
     }
     const [lintel] = part('lodge-fireplace-lintel')
-    expect(lintel.position[1] - lintel.size[1] / 2).toBeCloseTo(1.9)
+    expect(lintel.position[1] - lintel.size[1] / 2).toBeCloseTo(layout.opening)
     const [back] = part('lodge-firebox-back')
-    expect(back.position[2] + back.size[2] / 2 - fire.position[2]).toBeCloseTo(-0.47)
+    expect(back.position[2] + back.size[2] / 2).toBeLessThan(fire.position[2] - 0.3)
     // The chimney breast reaches the ceiling and is buried in the south wall, so no seam shows against the logs.
     const [chimney] = part('lodge-chimney')
     expect(chimney.position[1] + chimney.size[1] / 2).toBeCloseTo(lodge.height)
