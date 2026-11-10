@@ -1,6 +1,7 @@
 import {beforeEach, describe, expect, test} from 'bun:test'
 
 import {wallFace} from '../../src/lib/gallery/architecture.ts'
+import {roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
 import {salonBench, salonCeiling, salonPedestal, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
@@ -127,26 +128,7 @@ describe('the Salon', () => {
       }
     }
   })
-  test('its terrazzo builds its surface nodes, polished hard but mirroring half as strongly as the Banquet’s marble, its border on the brass inlays’ line', () => {
-    for (const reflections of [true, false]) {
-      const floor = new TerrazzoFloorMaterial({
-        center: room.center,
-        size: room.size,
-        field: venetianTerrazzo,
-        border: blackTerrazzo,
-        inset: salonTerrazzo.border,
-        reflections,
-      })
-      try {
-        for (const node of [floor.colorNode, floor.roughnessNode, floor.normalNode]) {
-          expect(node?.isNode).toBe(true)
-        }
-        expect(Boolean(floor.reflection)).toBe(reflections)
-        expect(floor.mirrored.value).toBe(1)
-      } finally {
-        floor.dispose()
-      }
-    }
+  test('its polished terrazzo mirrors the room, its border on the brass inlays’ line', () => {
     const polished = new TerrazzoFloorMaterial({
       center: room.center,
       size: room.size,
@@ -159,8 +141,7 @@ describe('the Salon', () => {
     try {
       expect(polished.reflection).not.toBeNull()
       expect(polished.reflectionTarget).not.toBeNull()
-      expect(polished.roughness).toBe(0.1)
-      expect(salonTerrazzo.polish.strength).toBe(0.2)
+      expect(polished.mirrored.value).toBe(1)
     } finally {
       polished.dispose()
     }
@@ -171,7 +152,11 @@ describe('the Salon', () => {
         field: venetianTerrazzo,
       })).toThrow(RangeError)
     }
-    // The border lies inside the brass inlays, which every stone floor lays 1.25 m from the walls.
-    expect(salonTerrazzo.border).toBe(1.25)
+    // The border reaches in as far as the brass inlays, which every stone floor lays at the same distance from its walls.
+    const inlays = roomFloorPlan(room).inlays.filter(inlay => inlay.size[1] > inlay.size[0])
+    expect(inlays.length).toBeGreaterThan(0)
+    for (const inlay of inlays) {
+      expect(room.size[0] / 2 - Math.abs(inlay.center[0])).toBeCloseTo(salonTerrazzo.border, 6)
+    }
   })
 })

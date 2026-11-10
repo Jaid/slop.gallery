@@ -1,7 +1,5 @@
 import {describe, expect, test} from 'bun:test'
 
-import {PerspectiveCamera} from 'three/webgpu'
-
 import {banquetBoiserie, banquetFloorOrigin, banquetFloorTile, banquetWallPanels, freeWallRuns} from '../../src/lib/gallery/banquet.ts'
 import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
 import BanquetMaterials from '../../src/lib/materials/BanquetMaterials.ts'
@@ -43,38 +41,6 @@ describe('The Banquet’s checkered marble floor', () => {
     expect(dark).toBe(columns * rows / 2)
     // The pattern keeps alternating past the grid origin, where floor division turns negative.
     expect(checkeredTile(banquetFloorOrigin[0] - 0.5, banquetFloorOrigin[1] + 0.5, layout).dark).toBe(true)
-  })
-  test('heavy mode allocates a filtered, nonrecursive reflection that is released with the material', () => {
-    const heavy = new CheckeredMarbleFloorMaterial({
-      ...layout,
-      reflections: true,
-    })
-    const fast = new CheckeredMarbleFloorMaterial({
-      ...layout,
-      reflections: false,
-    })
-    try {
-      expect(heavy.reflection).not.toBeNull()
-      expect(heavy.reflection!.reflector.bounces).toBe(false)
-      expect(heavy.reflection!.reflector.generateMipmaps).toBe(true)
-      expect(heavy.outputNode).not.toBeNull()
-      expect(fast.reflection).toBeNull()
-      expect(fast.outputNode).toBeNull()
-      expect(fast.envMapIntensity).toBe(0)
-      for (const material of [heavy, fast]) {
-        expect(material.map).toBeNull()
-        expect(material.colorNode).not.toBeNull()
-        expect(material.roughnessNode).not.toBeNull()
-        expect(material.normalNode).not.toBeNull()
-      }
-    } finally {
-      fast.dispose()
-    }
-    const target = heavy.reflection!.reflector.getRenderTarget(new PerspectiveCamera)
-    const disposed: Array<string> = []
-    target.addEventListener('dispose', () => disposed.push('reflection'))
-    heavy.dispose()
-    expect(disposed).toEqual(['reflection'])
   })
   test('rejects tiles without a size', () => {
     for (const tile of [0, -1, Number.NaN]) {

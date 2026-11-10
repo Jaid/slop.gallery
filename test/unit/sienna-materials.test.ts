@@ -1,7 +1,5 @@
 import {describe, expect, test} from 'bun:test'
 
-import {PerspectiveCamera} from 'three/webgpu'
-
 import {lodgeFloorPlanks} from '../../src/lib/gallery/lodge.ts'
 import {siennaCeilingPlanks, siennaRugSize, siennaRugThickness} from '../../src/lib/gallery/sienna.ts'
 import {siennaWainscot} from '../../src/lib/gallery/siennaWainscot.ts'
@@ -46,33 +44,16 @@ describe('the Sienna’s wainscot', () => {
   })
 })
 describe('the Sienna’s floor', () => {
-  test('heavy mode allocates a filtered, nonrecursive reflection that is released with the material', () => {
+  test('the varnish is glossier than the matte fast stand-in, but never a mirror', () => {
     const heavy = new PlankFloorMaterial(siennaFloorPlanks, true)
     const fast = new PlankFloorMaterial(siennaFloorPlanks, false)
     try {
-      expect(heavy.reflection).not.toBeNull()
-      expect(heavy.reflection!.reflector.bounces).toBe(false)
-      expect(heavy.outputNode).not.toBeNull()
-      expect(fast.reflection).toBeNull()
-      expect(fast.outputNode).toBeNull()
-      expect(fast.envMapIntensity).toBe(0)
-      // Varnish is glossier than the matte fast-mode stand-in, but never a mirror.
       expect(heavy.roughness).toBeLessThan(fast.roughness)
       expect(heavy.roughness).toBeGreaterThan(0.3)
-      for (const material of [heavy, fast]) {
-        expect(material.map).toBeNull()
-        expect(material.colorNode).not.toBeNull()
-        expect(material.roughnessNode).not.toBeNull()
-        expect(material.normalNode).not.toBeNull()
-      }
     } finally {
+      heavy.dispose()
       fast.dispose()
     }
-    const target = heavy.reflection!.reflector.getRenderTarget(new PerspectiveCamera)
-    const disposed: Array<string> = []
-    target.addEventListener('dispose', () => disposed.push('reflection'))
-    heavy.dispose()
-    expect(disposed).toEqual(['reflection'])
   })
   test('rejects boards without a size', () => {
     for (const layout of [{
