@@ -1,5 +1,6 @@
 import type {CameraBookmark, PortraitSlot, SpawnBookmark} from '#src/lib/gallery/types.ts'
 import type {Wall} from '#src/lib/placement/wallGeometry.ts'
+import type {RoomAmbience} from '#src/rooms/base/Room.ts'
 import type {Lamp, Room, RoomSpawn} from '#src/rooms/index.ts'
 import type {Vec3} from 'math'
 
@@ -11,6 +12,13 @@ import {placeWalls} from '#src/rooms/lib/walls.ts'
 
 /** a lamp with its global id, positioned in world meters */
 export type PlacedLamp = Lamp & {
+  id: string
+  /** the id of the room it belongs to */
+  room: string
+}
+
+/** an ambient sound of a room with its global id, sounding from a point in world meters */
+export type PlacedAmbience = RoomAmbience & {
   id: string
   /** the id of the room it belongs to */
   room: string
@@ -103,6 +111,16 @@ export default class PlacedRoom<Kind extends Room = Room> {
 
   get volumetricSun() {
     return this.room.volumetricSun
+  }
+
+  /** The room’s ambient sounds with global ids, each sounding from its point in world meters. */
+  ambiences(): Array<PlacedAmbience> {
+    return this.room.ambience.entries().map(([id, ambience]) => ({
+      ...ambience,
+      id: this.room.globalId(id),
+      room: this.room.id,
+      position: this.toWorld(ambience.position),
+    })).toArray()
   }
 
   /** The camera bookmarks with global ids in world meters. */

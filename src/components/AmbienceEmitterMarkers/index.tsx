@@ -5,7 +5,7 @@ import {useFrame} from '@react-three/fiber'
 import {useRef} from 'react'
 import {Color, Vector3} from 'three/webgpu'
 
-import {useAmbienceEmitters} from '#src/lib/audio/ambience/ambienceEmitters.ts'
+import {useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {useGallery} from '#src/lib/gallery.ts'
 
 /** marker radius in meters, like the light markers */

@@ -4,7 +4,7 @@ import {useFrame} from '@react-three/fiber'
 import {useEffect} from 'react'
 import {Vector3} from 'three/webgpu'
 
-import {useAmbienceEmitters} from '#src/lib/audio/ambience/ambienceEmitters.ts'
+import {useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import hearAtOnce, {audioAutoplays} from '#src/lib/audio/hearAtOnce.ts'
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {isFading} from '#src/lib/fade.ts'

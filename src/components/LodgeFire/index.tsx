@@ -7,8 +7,7 @@ import useDisposable from 'disposable-lifetime/react'
 import {useMemo, useRef} from 'react'
 import useGraphicsMode from 'use-graphics-mode'
 
-import {useAmbienceEmitter} from '#src/lib/audio/ambience/ambienceEmitters.ts'
-import LodgeFireAmbience from '#src/lib/audio/ambience/LodgeFire.ts'
+import {useAmbienceEmitter} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {AnimationClock} from '#src/lib/frozenTime.ts'
 import Coals from '#src/lib/gallery/fireplace/Coals.ts'
 import fire from '#src/lib/gallery/fireplace/config.ts'
@@ -30,7 +29,7 @@ const logRotation = [0, 0, Math.PI / 2] as const
 /** The lodge’s log fire inside the `lodge-fireplace` group, whose flames light the Lodge’s fire lamp. Heavy graphics burn charred firewood on a pulsing ember bed with coals and sparks; fast graphics burn a plain log pair on a static glow. */
 export default function LodgeFire() {
   const isHeavy = useGraphicsMode()
-  useAmbienceEmitter(LodgeFireAmbience, slopGallery.ambienceRooms('lodge', 'lodge-fire'))
+  useAmbienceEmitter(slopGallery.ambience('lodge', 'fire'))
   return <group name='lodge-fire' position={fire.position}>
     <Branch if={isHeavy} then={BurningPile} else={GlowingEmbers} />
     <Flames soft={isHeavy} />

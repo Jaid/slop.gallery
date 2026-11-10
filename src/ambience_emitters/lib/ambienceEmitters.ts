@@ -1,10 +1,13 @@
+import type {AmbienceEmitterId} from '../index.ts'
+import type {EmitterPlacement} from './EmitterPlacement.ts'
 import type AmbienceEmitter from 'ambience-emitter'
-import type {Vec3} from 'math'
 
 import optis from 'optis'
 import {useEffect, useState} from 'react'
 import readPermalink from 'read-permalink'
 import {create} from 'zustand'
+
+import {ambienceEmitters} from '../index.ts'
 
 const enabledValues = new Set<unknown>([true, '', 'true'])
 const flagsSchema = optis({
@@ -38,9 +41,12 @@ export function addAmbienceEmitter(emitter: AmbienceEmitter) {
   }
 }
 
-/** Sounds an emitter of this class while the calling component is mounted, returning it, at its default position unless `position` names another in the world; `rooms` replaces the rooms it sounds in by default. */
-export function useAmbienceEmitter<Emitter extends AmbienceEmitter>(EmitterClass: new (position?: Vec3, rooms?: ReadonlyArray<string>) => Emitter, rooms?: ReadonlyArray<string>, position?: Vec3) {
-  const [emitter] = useState(() => new EmitterClass(position, rooms))
+/** Sounds an ambience emitter of the kind `emitter` where the placement says while the calling component is mounted, returning it; the placement is read once. */
+export function useAmbienceEmitter({emitter: kind, ...placement}: EmitterPlacement & {emitter: AmbienceEmitterId}): AmbienceEmitter {
+  const [emitter] = useState(() => {
+    const Emitter = ambienceEmitters[kind]
+    return new Emitter(placement)
+  })
   useEffect(() => addAmbienceEmitter(emitter), [emitter])
   return emitter
 }

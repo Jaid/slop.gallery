@@ -1,9 +1,7 @@
-import type {Vec3} from '../../gallery/types.ts'
+import type {EmitterPlacement} from '../lib/EmitterPlacement.ts'
 import type {NoiseBed, Range} from 'ambience-emitter'
 
 import AmbienceEmitter from 'ambience-emitter'
-
-import {fireWorldOrigin} from '../../gallery/fireplace/config.ts'
 
 /** a log fire’s body: a low, slowly breathing roar, the wavering draw of the chimney and a faint hiss of gas escaping the wood */
 const beds: ReadonlyArray<NoiseBed> = [
@@ -59,13 +57,12 @@ const settles = {
   duration: [0.45, 0.8] as Range,
 }
 
-/** The Lodge’s log fire: a breathing roar under clustered crackles, occasional sap pops with a hiss of steam and a log settling now and then, sounding from just above the logs. */
-export default class LodgeFire extends AmbienceEmitter {
-  /** sounds from `position`, by default 60 cm above the fire’s origin, in `rooms`, by default only the Lodge */
-  constructor(position: Vec3 = [fireWorldOrigin[0], fireWorldOrigin[1] + 0.6, fireWorldOrigin[2]], rooms: ReadonlyArray<string> = ['lodge']) {
+/** A log fire, like the Lodge’s: a breathing roar under clustered crackles, occasional sap pops with a hiss of steam and a log settling now and then. It is best placed just above the logs. */
+export default class FireEmitter extends AmbienceEmitter {
+  constructor({id, position, rooms}: EmitterPlacement) {
     super({
-      id: 'lodge-fire',
-      title: 'Lodge fire',
+      id,
+      title: 'Log fire',
       position,
       hearing: {
         near: 1,

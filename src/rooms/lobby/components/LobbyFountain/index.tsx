@@ -1,8 +1,7 @@
 import type {Vec3} from '#src/lib/gallery.ts'
 
+import {useAmbienceEmitter} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {fountains} from '#src/fountains/index.ts'
-import {useAmbienceEmitter} from '#src/lib/audio/ambience/ambienceEmitters.ts'
-import FountainAmbience from '#src/lib/audio/ambience/Fountain.ts'
 import {lobbyFountainId, lobbyFountainSpot} from '#src/lib/gallery/lobbyFountain.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
@@ -18,6 +17,9 @@ const mouth = lobbyFountainSpot.map((value, axis) => value + lobbyFountain.mouth
 
 /** The Lobby’s fountain, the one the seed rolled, standing in the middle of the Lobby and sounding from its tallest jet’s mouth. */
 export default function LobbyFountain() {
-  useAmbienceEmitter(FountainAmbience, slopGallery.ambienceRooms('lobby', 'lobby-fountain'), mouth)
+  useAmbienceEmitter({
+    ...slopGallery.ambience('lobby', 'fountain'),
+    position: mouth,
+  })
   return <Model id='lobby-fountain' position={lobbyFountainSpot} />
 }

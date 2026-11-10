@@ -1,10 +1,9 @@
 import type {RoomAmbience} from '../base/Room.ts'
 
-import LodgeFireAmbience from '#src/lib/audio/ambience/LodgeFire.ts'
-
 export default {
+  // Just above the logs: 60 cm over the fire’s origin on its hearth.
   fire: {
-    emitter: LodgeFireAmbience,
-    position: [0, 0.6, 4.2],
+    emitter: 'fire',
+    position: [0, 0.84, 4.2],
   },
 } satisfies Record<string, RoomAmbience>

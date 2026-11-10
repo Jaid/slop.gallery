@@ -1,8 +1,8 @@
+import type {AmbienceEmitterId} from '#src/ambience_emitters/index.ts'
 import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {CameraBookmark, PortraitRatio, SpawnBookmark} from '#src/lib/gallery/types.ts'
 import type {Wall, WallOpening} from '#src/lib/placement/wallGeometry.ts'
 import type {MoodId} from '#src/moods/index.ts'
-import type AmbienceEmitter from 'ambience-emitter'
 import type {Geofence} from 'geofency'
 import type {Vec3} from 'math'
 
@@ -14,11 +14,10 @@ import RoomMap from '../lib/RoomMap.ts'
 
 /** what the ground under the player’s feet is made of, which their footsteps sound like */
 export type GroundSurface = 'fabric' | 'generic' | 'glass' | 'hollow' | 'stone'
-/** an ambience emitter class whose instances can sound from any world position and in any rooms */
-export type AmbienceEmitterClass = new (position?: Vec3, rooms?: ReadonlyArray<string>) => AmbienceEmitter
 /** a looping ambient sound of a room */
 export type RoomAmbience = {
-  emitter: AmbienceEmitterClass
+  /** the id of the kind of ambience emitter that sounds it, like `fire` */
+  emitter: AmbienceEmitterId
   /** where the sound comes from, relative to the room’s origin */
   position: Vec3
 }

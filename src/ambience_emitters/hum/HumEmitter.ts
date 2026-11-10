@@ -1,9 +1,7 @@
-import type {Vec3} from '../../gallery/types.ts'
+import type {EmitterPlacement} from '../lib/EmitterPlacement.ts'
 import type {NoiseBed, ToneBed} from 'ambience-emitter'
 
 import AmbienceEmitter from 'ambience-emitter'
-
-import roomOrigins from '../../gallery/layout.ts'
 
 /** a low hum whose harmonics slowly beat against each other */
 const tones: ReadonlyArray<ToneBed> = [
@@ -35,19 +33,17 @@ const beds: ReadonlyArray<NoiseBed> = [
     sway: [0.3, 0.5],
   },
 ]
-const [originX, originY, originZ] = roomOrigins.moonfall
 
-/** Moonfall’s orbital sculpture: a celestial hum floating over the crater, sounding from its core. */
-export default class MoonfallOrbit extends AmbienceEmitter {
-  /** sounds from `position`, by default the sculpture’s core, in `rooms`, by default only Moonfall */
-  constructor(position: Vec3 = [originX, originY + 2.5, originZ], rooms: ReadonlyArray<string> = ['moonfall']) {
+/** A celestial hum, like that of Moonfall’s orbital sculpture floating over the crater, which sounds from its core: held tones that slowly beat against each other over a faint rumble. */
+export default class HumEmitter extends AmbienceEmitter {
+  constructor({id, position, rooms}: EmitterPlacement) {
     super({
-      id: 'moonfall-orbital_sculpture',
-      title: 'Orbital sculpture',
+      id,
+      title: 'Celestial hum',
       position,
       hearing: {
         near: 1.5,
-        // still faintly audible from the top of the stairway, about 27 m away
+        // Moonfall’s is still faintly audible from the top of its stairway, about 27 m away.
         far: 32,
       },
       gain: 0.3,

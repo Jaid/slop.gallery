@@ -6,8 +6,7 @@ import {useMemo, useRef} from 'react'
 import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import Orbitable from '#component/Orbitable'
-import {useAmbienceEmitter} from '#src/lib/audio/ambience/ambienceEmitters.ts'
-import MoonfallOrbitAmbience from '#src/lib/audio/ambience/MoonfallOrbit.ts'
+import {useAmbienceEmitter} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {AnimationClock} from '#src/lib/frozenTime.ts'
 import armillaryBandGeometry from '#src/lib/gallery/moonfall/ArmillaryBandGeometry.ts'
 import meteoriteGeometry from '#src/lib/gallery/moonfall/MeteoriteGeometry.ts'
@@ -47,7 +46,7 @@ export default function MoonfallOrbit() {
   const beads = useRef<Array<Mesh | null>>([])
   const clock = useMemo(() => new AnimationClock(0.05), [])
   const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
-  useAmbienceEmitter(MoonfallOrbitAmbience, slopGallery.ambienceRooms('moonfall', 'moonfall-orbital_sculpture'))
+  useAmbienceEmitter(slopGallery.ambience('moonfall', 'orbital_sculpture'))
   const materials = useDisposable(useMemo(() => {
     const list = rings.map(ring => new ArmillaryRingMaterial(ring.radius, ring.hue, () => clock.time * ring.revolution / (Math.PI * 2) % 1))
     return {

@@ -79,9 +79,29 @@ export default abstract class World<Kind extends Room = Room> {
     return this.room(this.defaultRoom).spawn
   }
 
+  /** The ambient sound with the id `ambience` within the room `room`, as an ambience emitter of its kind takes it: under its global id, from its point in world meters, in the rooms it is heard in. */
+  ambience(room: Kind['id'], ambience: string) {
+    const id = this.room(room).room.globalId(ambience)
+    const placed = this.room(room).ambiences().find(candidate => candidate.id === id)
+    if (!placed) {
+      throw new Error(`${this.title} has no ambient sound “${id}”.`)
+    }
+    return {
+      emitter: placed.emitter,
+      id,
+      position: placed.position,
+      rooms: this.ambienceRooms(room, id),
+    }
+  }
+
   /** The rooms the player must be in to hear the room’s ambient sound with the global id: only its own room by default. */
   ambienceRooms(room: string, _ambience: string): ReadonlyArray<string> {
     return [room]
+  }
+
+  /** Every ambient sound of the world with its global id, from its point in world meters, room by room. */
+  ambiences() {
+    return this.rooms.flatMap(room => room.ambiences())
   }
 
   /** Every camera bookmark of the world in world meters, room by room. */

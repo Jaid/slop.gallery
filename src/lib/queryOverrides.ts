@@ -1,3 +1,4 @@
+import {readShowAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {readFountain} from '#src/fountains/lib/forcedFountain.ts'
 import {readFrame} from '#src/frames/lib/frameParameter.ts'
 import {readMood} from '#src/moods/lib/forcedMood.ts'
@@ -5,7 +6,6 @@ import {readItems} from '#src/worlds/sandbox/items.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
 
 import {readAiSettings} from './ai/settings.ts'
-import {readShowAmbienceEmitters} from './audio/ambience/ambienceEmitters.ts'
 import {readAudio} from './audio/audioParameter.ts'
 import {readIntroNarration} from './audio/intro.ts'
 import {readCrosshair} from './crosshair.ts'
