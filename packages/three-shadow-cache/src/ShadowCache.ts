@@ -1,12 +1,21 @@
-import type {BufferGeometry, Camera, Frustum, Light, LightShadow, Matrix4, Object3D, PerspectiveCamera} from 'three/webgpu'
+import type {BufferGeometry, Light, LightShadow, Matrix4, Object3D, PerspectiveCamera} from 'three/webgpu'
 
 import {Sphere, Vector3} from 'three/webgpu'
 
+export type ShadowCacheOptions = {
+  /** how far a caster or a light may move, in world units and in rotation matrix elements, before it counts as changed, by default 0.001; what stays below it, like a settling physics body wobbling by fractions of a millimeter, adds up until it counts */
+  tolerance?: number
+}
+export type ShadowCacheUpdate = {
+  /** whether the light’s shadows matter right now, by default always; a light they don’t matter for keeps its pending update until they do */
+  active?: (light: Light) => boolean
+  /** the subtrees left out of this frame, like culled rooms, by default none; they count as absent for all but directional lights */
+  hidden?: ReadonlySet<Object3D>
+}
 type ShadowLight = Light & {
   distance?: number
   isDirectionalLight?: boolean
   isPointLight?: boolean
-  isSpotLight?: boolean
   shadow: LightShadow<PerspectiveCamera>
 }
 type Caster = Object3D & {
@@ -24,14 +33,14 @@ type CasterState = {
   sphere: Sphere
 }
 type Change = {
-  /** whether the caster was out of sight before and after, where lamps don’t draw it */
+  /** whether the caster was hidden before and after, where lamps don’t draw it */
   hidden: boolean
   /** whether only its hiding changed, which directional lights don’t see */
   hiding: boolean
   sphere: Sphere
 }
 type LightState = {
-  /** whether a caster changed out of sight since the map last rendered, which shows once its room does */
+  /** whether a caster changed while hidden since the map last rendered, which shows once something shows again */
   deferred: boolean
   dirty: boolean
   frame: number
@@ -39,10 +48,8 @@ type LightState = {
 }
 
 const lightPosition = new Vector3
-const lightReach = new Sphere
-// Physics keeps settling bodies like the Sienna chandelier wobbling by fractions of a millimeter. A change only counts once it adds up to more than this, in meters and in rotation matrix elements.
-const tolerance = 0.001
-const moved = (from: Matrix4, to: Matrix4) => from.elements.some((value, i) => Math.abs(value - to.elements[i]) > tolerance)
+const nothingHidden: ReadonlySet<Object3D> = new Set
+const alwaysActive = () => true
 const worldSphere = (caster: Caster, target: Sphere) => {
   // Instanced meshes bound all of their instances themselves.
   if (caster.computeBoundingSphere && caster.instanceMatrix) {
@@ -54,56 +61,22 @@ const worldSphere = (caster: Caster, target: Sphere) => {
   return target.copy(caster.boundingSphere ?? caster.geometry.boundingSphere!).applyMatrix4(caster.matrixWorld)
 }
 
-/** Whether the light can shine on anything inside the frustum, where its shadows would show; a point or spot light within its range or else its shadow camera’s, any other light everywhere. */
-export function reachesFrustum(light: Light, frustum: Frustum) {
-  const {distance, isPointLight, isSpotLight, matrixWorld, shadow} = light as ShadowLight
-  if (!isPointLight && !isSpotLight) {
-    return true
-  }
-  lightReach.center.setFromMatrixPosition(matrixWorld)
-  lightReach.radius = distance || shadow.camera.far
-  return frustum.intersectsSphere(lightReach)
-}
-
-/**
- * Lets shadow maps that left out objects still streaming in render again despite the cache, one map per frame, each in turn, since rendering them all every frame costs more than building their objects.
- * Visit every shadow-casting light of a frame, then call `endFrame`.
- */
-export class ShadowRefresher {
-  private readonly refreshed = new Set<Camera>
-  private refreshing = false
-
-  /** Ends the frame: once every incomplete map had its turn, the next round starts. */
-  endFrame() {
-    if (!this.refreshing) {
-      this.refreshed.clear()
-    }
-    this.refreshing = false
-  }
-
-  /** Lets the light’s map render this frame if `incomplete` says it missed objects and no other map took this frame’s turn. */
-  visit(light: Light & {shadow: LightShadow}, incomplete: (camera: Camera) => boolean) {
-    const {camera} = light.shadow
-    if (this.refreshing || this.refreshed.has(camera) || !incomplete(camera)) {
-      return
-    }
-    light.shadow.needsUpdate = true
-    this.refreshed.add(camera)
-    this.refreshing = true
-  }
-}
-
 /**
  * Keeps shadow maps until something changes in their light’s reach: a shadow caster that moves, appears or disappears, or the light itself moving.
- * Almost everything in the gallery stands still, so most lights render their shadow map once instead of every frame.
- * Directional lights shine from outside the culled rooms and draw hidden casters too, so hiding or showing a caster leaves their shadow maps alone. A caster changing out of sight only changes shadows nobody sees, so it waits until its room, or any other, shows again, or something in sight changes.
- * Lamps leave hidden casters out of their maps, so they only notice them coming into or going out of sight.
+ * Where almost everything stands still, most lights then render their shadow map once instead of every frame.
+ * Directional lights are taken to shine from outside of whatever is hidden and to draw hidden casters too, so hiding or showing a caster leaves their shadow maps alone. A caster changing while hidden only changes shadows nobody sees, so it waits until anything hidden shows again or something in sight changes.
+ * All other lights leave hidden casters out of their maps, so they only notice them getting hidden or shown.
  */
 export default class ShadowCache {
   private readonly casters = new Map<Caster, CasterState>
   private readonly changes: Array<Change> = []
   private frame = 0
   private readonly lights = new Map<ShadowLight, LightState>
+  private readonly tolerance: number
+
+  constructor({tolerance = 0.001}: ShadowCacheOptions = {}) {
+    this.tolerance = tolerance
+  }
 
   /** Restores three’s default of updating every shadow map every frame. */
   dispose() {
@@ -116,10 +89,9 @@ export default class ShadowCache {
 
   /**
    * Compares the scene with the last call and requests an update of every shadow map whose light can reach a change.
-   * Call it once per frame, after the world matrices are up to date. Subtrees in `hidden` count as absent for all but directional lights, like in the renderer.
-   * A light that isn’t `active` keeps its pending update until it is.
+   * Call it once per frame, after the world matrices are up to date and before the renderer draws.
    */
-  update(scene: Object3D, hidden: ReadonlySet<Object3D>, active: (light: Light) => boolean) {
+  update(scene: Object3D, {active = alwaysActive, hidden = nothingHidden}: ShadowCacheUpdate = {}) {
     const frame = ++this.frame
     this.changes.length = 0
     const visit = (object: Object3D, isHidden: boolean) => {
@@ -164,7 +136,7 @@ export default class ShadowCache {
         if (!light.isDirectionalLight) {
           state.dirty = !change.hidden
         } else if (change.hiding) {
-          // A room showing again brings into view what changed in it out of sight.
+          // Something showing again brings into view what changed while it was hidden.
           state.dirty = state.deferred
         } else if (change.hidden) {
           state.deferred = true
@@ -179,6 +151,10 @@ export default class ShadowCache {
       light.shadow.needsUpdate = true
       state.dirty = false
     }
+  }
+
+  private moved(from: Matrix4, to: Matrix4) {
+    return from.elements.some((value, i) => Math.abs(value - to.elements[i]) > this.tolerance)
   }
 
   private reaches(light: ShadowLight, sphere: Sphere) {
@@ -211,7 +187,7 @@ export default class ShadowCache {
       return
     }
     state.frame = frame
-    if (state.geometry === caster.geometry && state.instances === instances && !moved(state.matrix, caster.matrixWorld)) {
+    if (state.geometry === caster.geometry && state.instances === instances && !this.moved(state.matrix, caster.matrixWorld)) {
       if (state.hidden !== hidden) {
         state.hidden = hidden
         this.changes.push({
@@ -242,7 +218,7 @@ export default class ShadowCache {
   private trackLight(light: ShadowLight, frame: number) {
     const state = this.lights.get(light)
     if (!state) {
-      // Its map has nothing to keep yet, so it renders right away, even in a room out of view.
+      // Its map has nothing to keep yet, so it renders right away, even while its shadows don’t matter.
       light.shadow.autoUpdate = false
       light.shadow.needsUpdate = true
       this.lights.set(light, {
@@ -254,7 +230,7 @@ export default class ShadowCache {
       return
     }
     state.frame = frame
-    if (moved(state.matrix, light.matrixWorld)) {
+    if (this.moved(state.matrix, light.matrixWorld)) {
       state.matrix.copy(light.matrixWorld)
       state.dirty = true
     }

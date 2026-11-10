@@ -4,6 +4,7 @@ import type {BufferGeometry, Camera, DirectionalLight, Light, LightShadow, Objec
 
 import {useThree} from '@react-three/fiber'
 import {useLayoutEffect} from 'react'
+import ShadowCache, {reachesFrustum, ShadowRefresher} from 'three-shadow-cache'
 import {Box3, Frustum, Matrix4, Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
@@ -11,7 +12,6 @@ import {ownerRoom, roomBoxes, roomContaining, roomsAt, screenRect, updatePickupR
 import {getFloorReflectionHeight} from '#src/lib/materials/FloorMaterial.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
 import {lightActive} from '#src/lib/rendering/lightLevels.ts'
-import ShadowCache, {reachesFrustum, ShadowRefresher} from '#src/lib/rendering/ShadowCache.ts'
 import relations from '#src/worlds/gallery/relations.ts'
 
 type Drawable = Object3D & {
@@ -156,13 +156,16 @@ export default function RoomCulling() {
       visit(scene, undefined)
       refresher.endFrame()
       frustum.setFromProjectionMatrix(viewProjection, camera.coordinateSystem, camera.reversedDepth)
-      shadows.update(scene, hidden, (light: Light) => {
-        if (!lightActive.current(light)) {
-          return false
-        }
-        const lightRoom = regions && roomContaining(position.setFromMatrixPosition(light.matrixWorld).toArray())
-        // A lamp in a room out of sight that shines into view, like the Exhibition’s green one up through the Lobby’s floor, needs its shadows as much as one in sight: a stale map lets its light through whatever stood in its way.
-        return !lightRoom || regions.has(lightRoom) || reachesFrustum(light, frustum)
+      shadows.update(scene, {
+        hidden,
+        active(light) {
+          if (!lightActive.current(light)) {
+            return false
+          }
+          const lightRoom = regions && roomContaining(position.setFromMatrixPosition(light.matrixWorld).toArray())
+          // A lamp in a room out of sight that shines into view, like the Exhibition’s green one up through the Lobby’s floor, needs its shadows as much as one in sight: a stale map lets its light through whatever stood in its way.
+          return !lightRoom || regions.has(lightRoom) || reachesFrustum(light, frustum)
+        },
       })
     }
     galleryRenderer.setCuller(cull)

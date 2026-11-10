@@ -2,11 +2,11 @@ import type {Light, LightShadow} from 'three/webgpu'
 
 import {useThree} from '@react-three/fiber'
 import {useLayoutEffect} from 'react'
+import ShadowCache, {ShadowRefresher} from 'three-shadow-cache'
 
 import {useGallery} from '#src/lib/gallery.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
 import {isShadowSlot} from '#src/lib/rendering/lightLevels.ts'
-import ShadowCache, {ShadowRefresher} from '#src/lib/rendering/ShadowCache.ts'
 import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
 
 type ShadowCastingLight = Light & {shadow: LightShadow}
@@ -37,7 +37,10 @@ export default function ShadowCaching() {
         }
       })
       refresher.endFrame()
-      shadows.update(scene, renderer.hidden, light => !isShadowSlot(light) || shadowPool.isInUse(light))
+      shadows.update(scene, {
+        hidden: renderer.hidden,
+        active: light => !isShadowSlot(light) || shadowPool.isInUse(light),
+      })
     })
     return () => {
       renderer.setCuller(null)

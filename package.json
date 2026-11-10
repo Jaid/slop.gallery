@@ -72,6 +72,7 @@
     "three-bvh-csg": "0.0.18",
     "three-fiber-game": "workspace:*",
     "three-mesh-bvh": "0.9.18",
+    "three-shadow-cache": "workspace:*",
     "use-audio-queue": "workspace:*",
     "use-graphics-mode": "workspace:*",
     "use-narrator": "workspace:*",

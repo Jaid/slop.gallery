@@ -4,7 +4,7 @@ import {expect, test} from 'bun:test'
 
 import {BoxGeometry, DirectionalLight, Frustum, Matrix4, Mesh, PerspectiveCamera, PointLight, Scene, SpotLight} from 'three/webgpu'
 
-import ShadowCache, {reachesFrustum, ShadowRefresher} from '../../src/lib/rendering/ShadowCache.ts'
+import ShadowCache, {reachesFrustum, ShadowRefresher} from '../src/main.ts'
 
 const setup = () => {
   const scene = new Scene
@@ -23,7 +23,10 @@ const setup = () => {
   const step = () => {
     lamp.shadow.needsUpdate = false
     scene.updateMatrixWorld()
-    cache.update(scene, hidden, () => active)
+    cache.update(scene, {
+      active: () => active,
+      hidden,
+    })
     return lamp.shadow.needsUpdate
   }
   return {
@@ -62,6 +65,26 @@ test('wobbling below a millimeter keeps the shadow map until it adds up', () => 
   near.position.x = 0.0008
   expect(step()).toBe(false)
   near.position.x = 0.0012
+  expect(step()).toBe(true)
+})
+test('the tolerance decides how far a caster may move unnoticed', () => {
+  const scene = new Scene
+  const lamp = new PointLight('#fff', 1, 5)
+  lamp.castShadow = true
+  const caster = new Mesh(new BoxGeometry)
+  caster.castShadow = true
+  scene.add(lamp, caster)
+  const cache = new ShadowCache({tolerance: 0.1})
+  const step = () => {
+    lamp.shadow.needsUpdate = false
+    scene.updateMatrixWorld()
+    cache.update(scene)
+    return lamp.shadow.needsUpdate
+  }
+  expect(step()).toBe(true)
+  caster.position.x = 0.05
+  expect(step()).toBe(false)
+  caster.position.x = 0.15
   expect(step()).toBe(true)
 })
 test('casters that appear, disappear or hide count as changes', () => {
@@ -149,7 +172,7 @@ test('directional lights test changes against their shadow camera', () => {
   const step = () => {
     sun.shadow.needsUpdate = false
     scene.updateMatrixWorld()
-    cache.update(scene, new Set, () => true)
+    cache.update(scene)
     return sun.shadow.needsUpdate
   }
   expect(step()).toBe(true)
@@ -171,7 +194,7 @@ test('directional lights ignore casters hiding, since they draw hidden ones too'
   const step = () => {
     sun.shadow.needsUpdate = false
     scene.updateMatrixWorld()
-    cache.update(scene, hidden, () => true)
+    cache.update(scene, {hidden})
     return sun.shadow.needsUpdate
   }
   step()
@@ -193,7 +216,7 @@ test('directional lights put off casters changing out of sight until a room show
   const step = () => {
     sun.shadow.needsUpdate = false
     scene.updateMatrixWorld()
-    cache.update(scene, hidden, () => true)
+    cache.update(scene, {hidden})
     return sun.shadow.needsUpdate
   }
   step()

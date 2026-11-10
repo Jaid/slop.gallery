@@ -40,6 +40,7 @@
         "three-bvh-csg": "0.0.18",
         "three-fiber-game": "workspace:*",
         "three-mesh-bvh": "0.9.18",
+        "three-shadow-cache": "workspace:*",
         "use-audio-queue": "workspace:*",
         "use-graphics-mode": "workspace:*",
         "use-narrator": "workspace:*",
@@ -340,6 +341,13 @@
         "@react-three/rapier": "^2.2.0",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
+        "three": "^0.187.0",
+      },
+    },
+    "packages/three-shadow-cache": {
+      "name": "three-shadow-cache",
+      "version": "0.1.0",
+      "peerDependencies": {
         "three": "^0.187.0",
       },
     },
@@ -1895,6 +1903,8 @@
     "three-fiber-game": ["three-fiber-game@workspace:packages/three-fiber-game"],
 
     "three-mesh-bvh": ["three-mesh-bvh@0.9.18", "", { "peerDependencies": { "three": ">= 0.159.0" } }, "sha512-S76hOBnsSG4jsuEyCu98K63klONG4NwJANabPY1LUD5l7oUgu2xtKC0IwnX/XyPzo4YZ1D7ZU+gHVA479UdQmA=="],
+
+    "three-shadow-cache": ["three-shadow-cache@workspace:packages/three-shadow-cache"],
 
     "three-stdlib": ["three-stdlib@2.36.1", "", { "dependencies": { "@types/draco3d": "^1.4.0", "@types/offscreencanvas": "^2019.6.4", "@types/webxr": "^0.5.2", "draco3d": "^1.4.1", "fflate": "^0.6.9", "potpack": "^1.0.1" }, "peerDependencies": { "three": ">=0.128.0" } }, "sha512-XyGQrFmNQ5O/IoKm556ftwKsBg11TIb301MB5dWNicziQBEs2g3gtOYIf7pFiLa0zI2gUwhtCjv9fmjnxKZ1Cg=="],
 
