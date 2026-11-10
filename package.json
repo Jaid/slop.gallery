@@ -32,7 +32,7 @@
     "test:live:oculus": "bun run build && LIVE_TEST=true bun test ./test/oculus.live.test.ts",
     "test:live:spawn": "bun run build && LIVE_TEST=true bun test ./test/spawn.live.test.ts",
     "test:rolldown-plugins": "bun test --max-concurrency 1 ./packages/rolldown-plugin-thematic-chunks ./packages/rolldown-plugin-hoist-popular-constants ./packages/rolldown-plugin-bake-branch-component",
-    "typecheck": "tsc --noEmit --noUnusedLocals --noUnusedParameters --pretty false",
+    "typecheck": "bun node_modules/typescript-native/bin/tsc --noEmit --noUnusedLocals --noUnusedParameters --pretty false",
     "vite": "bun --bun node_modules/vite/dist/node/cli.js --configLoader native"
   },
   "overrides": {
@@ -116,6 +116,7 @@
     "traverse-workspace": "0.2.0",
     "tsconfig-jaid-react": "16.0.0",
     "typescript": "npm:typescript-classic@6.0.4",
+    "typescript-native": "npm:typescript@7.0.2",
     "vite": "8.3.7",
     "vite-plugin-bake-three": "workspace:*",
     "vite-plugin-browserslist-target": "workspace:*",
