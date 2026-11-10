@@ -1,8 +1,5 @@
+import hide, {findLoadingScreen} from 'vite-plugin-loading-screen/client'
 import {create} from 'zustand'
-
-const glideMs = 300
-const fadeMs = 600
-const findLoadingScreen = () => document.querySelector<HTMLElement>('#loading-screen')
 
 /** Whether the title that index.html paints over the world’s wallpaper still covers the page, which it does until the scene is ready. */
 export const useLoadingScreen = create<{shown: boolean}>(() => ({shown: findLoadingScreen() !== null}))
@@ -12,38 +9,8 @@ export function hideLoadingScreen() {
   if (!useLoadingScreen.getState().shown) {
     return
   }
+  // The menu mounts with this state change, so the screen’s title can glide to where the menu shows its own.
   useLoadingScreen.setState({shown: false})
-  const element = findLoadingScreen()
-  if (!element) {
-    return
-  }
-  // Lets clicks through to the menu while it fades.
-  element.setAttribute('aria-busy', 'false')
-  // The menu mounts with the state change above and has its layout by the next frame.
-  requestAnimationFrame(() => {
-    const content = element.firstElementChild
-    const from = element.querySelector('h1')?.getBoundingClientRect()
-    const to = document.querySelector('#menu-title')?.getBoundingClientRect()
-    let delay = 0
-    // The title first glides to where the menu shows its own, so the menu fades in around it instead of showing it twice.
-    if (content && from && to) {
-      delay = glideMs
-      content.animate({transform: ['none', `translate(${to.left - from.left}px, ${to.top - from.top}px)`]}, {
-        duration: glideMs,
-        easing: 'ease-out',
-        fill: 'forwards',
-      })
-      element.querySelector('span')?.animate({opacity: 0}, {
-        duration: glideMs,
-        fill: 'forwards',
-      })
-    }
-    const fade = element.animate({opacity: [1, 0]}, {
-      duration: fadeMs,
-      delay,
-      easing: 'ease-in-out',
-      fill: 'forwards',
-    })
-    fade.addEventListener('finish', () => element.remove())
-  })
+  // eslint-disable-next-line typescript/no-floating-promises -- It never rejects, and nothing waits for the screen to be gone.
+  void hide({titleTarget: '#menu-title'})
 }

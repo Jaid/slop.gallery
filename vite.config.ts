@@ -15,11 +15,11 @@ import browserslistTargetPlugin from 'vite-plugin-browserslist-target'
 import importVoiceSamplePlugin from 'vite-plugin-import-voice-sample'
 import jxlPlugin from 'vite-plugin-jxl'
 import jxlHeadersPlugin from 'vite-plugin-jxl-headers'
+import loadingScreenPlugin from 'vite-plugin-loading-screen'
 import mediaMixinsPlugin from 'vite-plugin-media-mixins'
 import titlePlugin from 'vite-plugin-title'
 
 import immutableHeadersPlugin from '#src/lib/vite/immutableHeadersPlugin.ts'
-import loadingScreenPlugin from '#src/lib/vite/loadingScreenPlugin.ts'
 import outputListPlugin from '#src/lib/vite/outputListPlugin.ts'
 import rapierWasmPlugin from '#src/lib/vite/rapierWasmPlugin.ts'
 import worldChunksPlugin from '#src/lib/vite/worldChunksPlugin.ts'
@@ -41,11 +41,13 @@ const getCommonConfig = (context: ConfigEnv) => {
         optional: true,
       }),
       titlePlugin(worlds[defaultWorld].title),
+      // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
       loadingScreenPlugin({
-        worlds,
-        defaultWorld,
+        screens: worlds,
+        defaultScreen: defaultWorld,
         select: selectWorld,
         selectorArguments: [worldParameters, worldRooms],
+        fontFamily: 'main, system-ui, sans-serif',
       }),
       reactPlugin({compiler: true}),
       mediaMixinsPlugin(),

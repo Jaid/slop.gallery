@@ -1,0 +1,34 @@
+{
+  "name": "vite-plugin-loading-screen",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Vite plugin that paints a title over a wallpaper right in the page’s HTML until the app is ready, picked by the URL where one page opens several ways",
+  "funding": "https://github.com/sponsors/Jaid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaid/slop.gallery.git",
+    "directory": "packages/vite-plugin-loading-screen"
+  },
+  "main": "src/main.ts",
+  "exports": {
+    ".": "./src/main.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "test": "bun test ./test"
+  },
+  "peerDependencies": {
+    "vite": "^8.3.7"
+  },
+  "devDependencies": {
+    "fs-extra": "11.4.1",
+    "@types/fs-extra": "11.0.4"
+  },
+  "files": [
+    "src",
+    "readme.md",
+    "license.txt"
+  ],
+  "types": "./src/main.ts"
+}
