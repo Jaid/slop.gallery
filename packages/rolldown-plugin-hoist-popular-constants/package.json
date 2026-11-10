@@ -21,13 +21,13 @@
     "babel-plugin-hoist-popular-constants": "workspace:*"
   },
   "peerDependencies": {
-    "rolldown": "^1.2.16",
+    "rolldown": "^1.2.18",
     "@babel/core": "^8.1.0"
   },
   "devDependencies": {
     "fs-extra": "11.4.1",
     "terser": "5.51.2",
-    "vite": "8.3.5",
+    "vite": "8.3.7",
     "@types/fs-extra": "11.0.4"
   },
   "workspaces": [

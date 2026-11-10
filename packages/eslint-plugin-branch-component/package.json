@@ -17,7 +17,7 @@
     "test": "bun test --max-concurrency 1 ./test"
   },
   "dependencies": {
-    "@typescript-eslint/utils": "8.72.1"
+    "@typescript-eslint/utils": "8.72.2"
   },
   "peerDependencies": {
     "eslint": "^10.14.0"
@@ -27,8 +27,8 @@
     "eslint": "10.14.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "@typescript-eslint/parser": "8.72.1",
-    "@typescript-eslint/rule-tester": "8.72.1"
+    "@typescript-eslint/parser": "8.72.2",
+    "@typescript-eslint/rule-tester": "8.72.2"
   },
   "files": [
     "src",

@@ -22,11 +22,11 @@
     "browserslist-to-esbuild": "2.1.1"
   },
   "peerDependencies": {
-    "vite": "^8.3.5"
+    "vite": "^8.3.7"
   },
   "devDependencies": {
     "fs-extra": "11.4.1",
-    "vite": "8.3.5",
+    "vite": "8.3.7",
     "@types/fs-extra": "11.0.4"
   }
 }

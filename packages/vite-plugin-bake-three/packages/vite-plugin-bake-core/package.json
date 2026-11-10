@@ -23,7 +23,7 @@
     "fs-extra": "11.4.1",
     "magic-string": "1.4.5",
     "math": "0.1.0",
-    "minimatch": "11.0.4",
+    "minimatch": "11.0.5",
     "type-fest": "5.10.0",
     "@babel/core": "8.1.0",
     "@babel/generator": "8.1.0",
@@ -35,7 +35,7 @@
   "peerDependencies": {
     "three": "^0.187.0",
     "three-bvh-csg": "latest",
-    "vite": "^8.3.5"
+    "vite": "^8.3.7"
   },
   "peerDependenciesMeta": {
     "three": {
