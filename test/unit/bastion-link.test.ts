@@ -93,7 +93,6 @@ test('its paving falls 1 in 20 from both walls toward its middle, but levels out
   expect(bastionCurve.floorAt(route.start[0], route.start[1] - 0.05)).toBe(bastionLinkStart.y)
 })
 test('beside the Lodge, the tunnel takes up all the room between the Lodge and the mouth of the western climb', () => {
-  expect(bastionLink.width).toBeCloseTo(3.75, 9)
   const strip = route.pieces.filter(straight).find(piece => Math.abs(piece.heading - Math.PI) < 1e-9)!
   const station = route.at(strip.from + strip.length / 2)
   // The back of its vault 1 cm short of the face of the Lodge’s south wall

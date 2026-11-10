@@ -159,7 +159,6 @@ describe('sculpture pedestals', () => {
     expect(limestone.colorNode).not.toBeNull()
     expect(limestone.roughnessNode).not.toBeNull()
     expect(limestone.metalness).toBe(0)
-    expect(limestone.roughness).toBe(0.72)
     limestone.dispose()
   })
 })

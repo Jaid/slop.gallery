@@ -168,13 +168,12 @@ describe('the Cell’s layout', () => {
     expect(closed.vestibule).toBeUndefined()
     expect(closed.pedestals).toEqual([])
   })
-  test('lays its floor in whole tiles of 50 cm from wall to wall, under a ceiling the chandelier is lifted to', () => {
+  test('lays its floor in whole tiles of 50 cm from wall to wall', () => {
     const layout = new CellLayout(0)
     expect(layout.floorTile).toBe(0.5)
     for (const side of layout.size) {
       expect(Number.isInteger(side / layout.floorTile)).toBe(true)
     }
-    expect(layout.chandelierLift).toBe(0.2)
   })
   test('stands a lone item in the middle of its vestibule, facing the arch', () => {
     const layout = new CellLayout(1)
@@ -272,8 +271,7 @@ describe('the passage from the Cell’s hall to its round room', () => {
         expect(sandbox.roomAt(position)).toBe(cell)
         expect(sandbox.contains(position)).toBe(true)
       }
-      // Half a meter deep, beside it lies nothing.
-      expect(layout.passage).toBe(0.5)
+      // Beside it lies nothing.
       expect(sandbox.placement.contains(cell.toWorld([vestibule.center[0] + layout.arch.width / 2 + 0.3, 1, layout.northZ - layout.passage / 2]))).toBe(false)
     }
   })

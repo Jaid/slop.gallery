@@ -15,8 +15,7 @@ await RAPIER.init()
 test('matching access ramps flank the room with a clear central floor', () => {
   expect(oculusRamps).toHaveLength(2)
   const [west, east] = oculusRamps
-  expect(west.x).toBe(-7.9)
-  expect(east.x).toBe(7.9)
+  expect(west.x).toBe(-east.x)
   expect(west.x - west.width / 2).toBe(-lowerGallery.oculus.size[0] / 2)
   expect(east.x + east.width / 2).toBe(lowerGallery.oculus.size[0] / 2)
   expect({

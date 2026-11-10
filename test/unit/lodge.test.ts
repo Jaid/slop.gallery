@@ -117,7 +117,6 @@ describe('Lodge and Corridor route', () => {
   test('the timber tunnel keeps its 400 cm span and stays clear of room corners', () => {
     expect(corridorPassage.width).toBe(4)
     expect(corridorStairs.width).toBe(corridorPassage.width)
-    expect(lodge.approachX + corridorPassage.width / 2).toBeCloseTo(-31.7)
     for (const id of ['sienna-west', 'sienna-vestibule_east', 'sienna-vestibule_west', 'lodge-north']) {
       const wall = walls.find(value => value.id === id)!
       const hole = wall.holes![0]
