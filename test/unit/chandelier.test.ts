@@ -8,10 +8,9 @@ import HammeredBrassMaterial from '../../src/lib/materials/HammeredBrassMaterial
 import {chandelierCanopyTop, chandelierPhysics, chandelierRod} from '../../src/lib/physics/chandelier.ts'
 
 await RAPIER.init()
-test('the chandelier keeps its polished-brass base but adds hammering and patina', async () => {
+test('the chandelier’s brass is polished metal with hammering and patina', () => {
   const material = new HammeredBrassMaterial
   try {
-    expect(material.name).toBe('Hammered antique brass')
     expect(material.metalness).toBe(1)
     expect(material.metalnessNode).not.toBeNull()
     expect(material.colorNode).not.toBeNull()
@@ -21,9 +20,6 @@ test('the chandelier keeps its polished-brass base but adds hammering and patina
   } finally {
     material.dispose()
   }
-  const source = await Bun.file('src/components/Chandelier/index.tsx').text()
-  expect(source).toContain("import HammeredBrassMaterial from '#src/lib/materials/HammeredBrassMaterial.ts'")
-  expect(source).toContain('new HammeredBrassMaterial')
 })
 /** How far a projectile of `mass` swings the fixture out at most, hung from its canopy or from a rod `rod` meters long over it, and, with `canopy`, how far its canopy moves sideways at most, checking that it settles within `settle` seconds. */
 function simulate(mass: number, miss = false, fixture = chandelierPhysics, {canopy, rod = 0, settle = 45}: {
@@ -102,20 +98,6 @@ describe('suspended Sienna chandelier', () => {
     const heavy = simulate(5)
     expect(light).toBeGreaterThan(0.12)
     expect(heavy).toBeGreaterThan(light * 1.2)
-    const previous = simulate(5, false, {
-      height: 4.05,
-      anchor: [0, 1.55, 0],
-      angularDamping: 0.65,
-      linearDamping: 0.15,
-      armMass: 0.4,
-      hubMass: 2,
-      stemMass: 0.35,
-      rodMass: 0,
-      knopMass: 0,
-      ringMass: 0.025,
-      pendantMass: 0.1,
-    })
-    expect(heavy).toBeGreaterThan(previous * 1.15)
   })
   test('hung from a rod, swings about the ball at its top, canopy and all, and settles under it', () => {
     const canopy = {

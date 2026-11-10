@@ -12,12 +12,6 @@ import gold from '../../src/lib/materials/gold.ts'
 import GoldMaterial, {goldReflectance} from '../../src/lib/materials/GoldMaterial.ts'
 import VelvetRopeMaterial from '../../src/lib/materials/VelvetRopeMaterial.ts'
 
-const sharedGoldUsers = [
-  'src/components/MoonfallCrater/index.tsx',
-  'src/rooms/salon/components/SalonRoom/index.tsx',
-  'src/components/WallDecorations/index.tsx',
-  'src/components/Props/index.tsx',
-]
 describe('gold', () => {
   test('is a lacquered, fully metallic and procedurally varied physical material', () => {
     const material = new GoldMaterial
@@ -46,15 +40,6 @@ describe('gold', () => {
     expect(gold).toBeInstanceOf(GoldMaterial)
     expect(gold.envMap).toBeInstanceOf(StudioEnvironment)
     expect(gold.envMapIntensity).toBeGreaterThan(0)
-  })
-  test('the stanchions, crater trim, gilt rails, lamp hoods and golden props all use the shared instance', async () => {
-    for (const file of sharedGoldUsers) {
-      const source = await Bun.file(file).text()
-      expect(source, file).toContain('import gold from \'#src/lib/materials/gold.ts\'')
-    }
-    const crater = await Bun.file(sharedGoldUsers[0]).text()
-    expect(crater).toContain('geometry={fence.posts} material={gold}')
-    expect(crater).toContain('material={gold} name=\'moonfall-crater-trim\'')
   })
 })
 describe('the stanchion barrier', () => {

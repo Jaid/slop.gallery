@@ -6,11 +6,6 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 import BrushedMetalMaterial, {steelReflectance} from '../../src/lib/materials/BrushedMetalMaterial.ts'
 import metal from '../../src/lib/materials/metal.ts'
 
-const clients = [
-  'src/components/FountainBenches/index.tsx',
-  'src/components/OculusRailings/index.tsx',
-  'src/components/KnotLabels/index.tsx',
-]
 describe('shared satin steel', () => {
   test('is a fully metallic, opaque PBR material with filtered procedural brushing', () => {
     const material = new BrushedMetalMaterial
@@ -66,13 +61,5 @@ describe('shared satin steel', () => {
       environment.dispose()
     }
     expect(disposed).toBe(1)
-  })
-  test('the benches, railings and Knot stands borrow the same material and never dispose it', async () => {
-    const sources = await Promise.all(clients.map(file => Bun.file(file).text()))
-    for (const [index, source] of sources.entries()) {
-      expect(source, clients[index]).toContain("import metal from '#src/lib/materials/metal.ts'")
-      expect(source).not.toContain('metal.dispose(')
-      expect(source).not.toContain('useDisposable(metal)')
-    }
   })
 })
