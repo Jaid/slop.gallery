@@ -1,4 +1,4 @@
-import {environmentPick, environmentRoll, environmentSample} from '../environmentSeed.ts'
+import {environmentRandom} from '../environmentSeed.ts'
 
 /**
  * ordered from quiet and controlled to playful and energetic, so neighboring traits in an instruction belong together
@@ -30,15 +30,16 @@ const narratorSuffixes = ['', 'pleasant to listen to', 'easy to listen to', 'hoo
 
 /** the narrator’s delivery instructions for the speech model in the environment of `seed`: 2 to 5 of its traits in their listed order, one noun and an optional suffix */
 export function narratorCharacter(seed: number) {
-  const count = 2 + Math.floor(environmentRoll(seed, 'narrator-character:count') * 4)
-  const entries = environmentSample(seed, 'narrator-character:traits', narratorTraits, count)
-  const traits = entries.map(entry => (typeof entry === 'string' ? entry : environmentPick(seed, `narrator-character:synonym:${entry[0]}`, entry)))
-  const noun = environmentPick(seed, 'narrator-character:noun', narratorNouns)
-  const suffix = environmentPick(seed, 'narrator-character:suffix', narratorSuffixes)
+  const random = environmentRandom(seed).makeChild('narrator-character')
+  const count = random.makeChild('count').rollInteger(2, 5)
+  const entries = random.makeChild('traits').rollItems(narratorTraits, count, {keepOrder: true})
+  const traits = entries.map(entry => (typeof entry === 'string' ? entry : random.makeChild(['synonym', entry[0]]).rollItem(entry)))
+  const noun = random.makeChild('noun').rollItem(narratorNouns)
+  const suffix = random.makeChild('suffix').rollItem(narratorSuffixes)
   return [...traits, noun, suffix].filter(Boolean).join(' ')
 }
 
 /** the narrator’s voice in the environment of `seed` */
 export function narratorVoice(seed: number) {
-  return environmentPick(seed, 'narrator-voice', narratorVoices)
+  return environmentRandom(seed).makeChild('narrator-voice').rollItem(narratorVoices)
 }

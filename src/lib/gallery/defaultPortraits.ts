@@ -5,7 +5,7 @@ import readPermalink from 'read-permalink'
 
 import world from '#src/worlds/current.ts'
 
-import {environmentRoll} from '../environmentSeed.ts'
+import {environmentRandom} from '../environmentSeed.ts'
 import {pickFrame} from '../frames/frameChoice.ts'
 
 const portraitSets = ['classic'] as const
@@ -40,7 +40,11 @@ export const portraitSet = readPortraitSet()
  * Where a ratio has fewer slots than works, the seed also draws which of its works hang; the rest stay in the catalog. Works whose ratio has no slot at all are an error.
  */
 export function hangDefaultWorks(slots: ReadonlyArray<PortraitSlot>, artworks: ReadonlyArray<Artwork>, seed: number): Array<Portrait> {
-  const free = slots.toSorted((a, b) => b.priority - a.priority || environmentRoll(seed, `portrait-slot:${a.id}`) - environmentRoll(seed, `portrait-slot:${b.id}`))
+  const random = environmentRandom(seed)
+  // Every slot and every work rolls its own place in line, so adding one leaves the order of the others alone.
+  const slotOrder = new Map(slots.map(slot => [slot, random.makeChild(['portrait-slot', slot.id]).roll()]))
+  const workOrder = new Map(artworks.map(artwork => [artwork, random.makeChild(['default-work', artwork.id]).roll()]))
+  const free = slots.toSorted((a, b) => b.priority - a.priority || slotOrder.get(a)! - slotOrder.get(b)!)
   const capacity = Map.groupBy(free, slot => slot.ratio)
   // Per ratio, the works the seed draws first, as many as it has slots.
   const drawn = new Set(Map.groupBy(artworks, artwork => artwork.ratio).entries().flatMap(([ratio, works]) => {
@@ -48,7 +52,7 @@ export function hangDefaultWorks(slots: ReadonlyArray<PortraitSlot>, artworks: R
     if (count === 0) {
       throw new Error(`No ${ratio} portrait slot is left for ${works[0].id}.`)
     }
-    return works.length <= count ? works : works.toSorted((a, b) => environmentRoll(seed, `default-work:${a.id}`) - environmentRoll(seed, `default-work:${b.id}`)).slice(0, count)
+    return works.length <= count ? works : works.toSorted((a, b) => workOrder.get(a)! - workOrder.get(b)!).slice(0, count)
   }))
   return artworks.filter(artwork => drawn.has(artwork)).map(({ratio, ...artwork}) => {
     const index = free.findIndex(slot => slot.ratio === ratio)

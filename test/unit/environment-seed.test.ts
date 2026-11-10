@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 
 import {narratorCharacter, narratorTraits, narratorVoice, narratorVoices} from '../../src/lib/audio/narratorCharacter.ts'
-import {effectiveSeed, environmentPick, environmentRoll, environmentSample, environmentWeightedPick, isSeed, maximumSeed, parseSeed, readSeedOverride, rollSeed} from '../../src/lib/environmentSeed.ts'
+import {effectiveSeed, environmentRandom, isSeed, maximumSeed, parseSeed, readSeedOverride, rollSeed} from '../../src/lib/environmentSeed.ts'
 import {orbs, promptOrbs} from '../../src/lib/gallery/orbs/index.ts'
 import {potPlacements, pottedPlantKind, pottedPlantKinds} from '../../src/lib/gallery/plantDecorations/placements.ts'
 
@@ -27,71 +27,15 @@ test('an override wins over the stored seed, and rolls are random', () => {
   const distinct = new Set(rolled)
   expect(distinct.size).toBeGreaterThan(1)
 })
-test('rolls depend only on seed and ID, never on call order', () => {
+test('the environment’s rolls depend only on the seed and the ID, never on call order', () => {
   const ids = potPlacements.map(placement => placement.id)
-  const forward = ids.map(id => environmentRoll(1, id))
-  const backward = ids.toReversed().map(id => environmentRoll(1, id)).toReversed()
+  const rollOf = (seed: number, id: string) => environmentRandom(seed).makeChild(id).roll()
+  const forward = ids.map(id => rollOf(1, id))
+  const backward = ids.toReversed().map(id => rollOf(1, id)).toReversed()
   expect(backward).toEqual(forward)
-  for (const roll of forward) {
-    expect(roll).toBeGreaterThanOrEqual(0)
-    expect(roll).toBeLessThan(1)
-  }
-  expect(environmentRoll(2, ids[0])).not.toBe(environmentRoll(1, ids[0]))
-  expect(() => environmentPick(1, 'empty', [])).toThrow()
-})
-test('rolls spread evenly over seeds and over IDs', () => {
-  const buckets = (rolls: Array<number>) => {
-    const counts = Array.from({length: 10}, () => 0)
-    for (const roll of rolls) {
-      counts[Math.floor(roll * 10)]++
-    }
-    return counts
-  }
-  const bySeed = buckets(Array.from({length: 20_000}, (_, seed) => environmentRoll(seed, potPlacements[0].id)))
-  const byId = buckets(Array.from({length: 20_000}, (_, index) => environmentRoll(1, `spot-${index}`)))
-  for (const count of [...bySeed, ...byId]) {
-    expect(count).toBeGreaterThan(1800)
-    expect(count).toBeLessThan(2200)
-  }
-})
-test('samples pick distinct items in list order, the same for the same seed and ID', () => {
-  const items = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-  const sample = environmentSample(1, 'letters', items, 5)
-  expect(sample).toHaveLength(5)
-  const distinct = new Set(sample)
-  expect(distinct.size).toBe(5)
-  expect(sample).toEqual(items.filter(item => sample.includes(item)))
-  expect(environmentSample(1, 'letters', items, 5)).toEqual(sample)
-  const samples = new Set(Array.from({length: 200}, (_, seed) => environmentSample(seed, 'letters', items, 5).join('')))
-  expect(samples.size).toBeGreaterThan(30)
-  const picks = new Map(items.map(item => [item, 0]))
-  for (let seed = 0; seed < 8000; seed++) {
-    for (const item of environmentSample(seed, 'letters', items, 5)) {
-      picks.set(item, picks.get(item)! + 1)
-    }
-  }
-  // Each item lands in 5 of 8 samples.
-  for (const count of picks.values()) {
-    expect(count).toBeGreaterThan(4700)
-    expect(count).toBeLessThan(5300)
-  }
-  expect(environmentSample(1, 'letters', items, 0)).toEqual([])
-  expect(environmentSample(1, 'letters', items, 8)).toEqual(items)
-  expect(() => environmentSample(1, 'letters', items, 9)).toThrow()
-})
-test('weighted picks follow their weights and depend only on seed and ID', () => {
-  const counts = new Map<string, number>
-  const seeds = 4000
-  for (let seed = 0; seed < seeds; seed++) {
-    const pick = environmentWeightedPick(seed, 'weighted', [['a', 3], ['b', 1], ['never', 0]])
-    counts.set(pick, (counts.get(pick) ?? 0) + 1)
-  }
-  expect(counts.get('never')).toBeUndefined()
-  expect(counts.get('a')! / seeds).toBeCloseTo(0.75, 1)
-  expect(environmentWeightedPick(9, 'weighted', [['a', 1], ['b', 1]])).toBe(environmentWeightedPick(9, 'weighted', [['a', 1], ['b', 1]]))
-  expect(() => environmentWeightedPick(1, 'empty', [])).toThrow()
-  expect(() => environmentWeightedPick(1, 'weightless', [['a', 0]])).toThrow()
-  expect(() => environmentWeightedPick(1, 'negative', [['a', 2], ['b', -1]])).toThrow()
+  expect(rollOf(2, ids[0])).not.toBe(rollOf(1, ids[0]))
+  expect(rollOf(1, ids[0])).not.toBe(rollOf(1, ids[1]))
+  expect(environmentRandom(1).seed).toBe(1)
 })
 for (const orb of promptOrbs) {
   test(`the ${orb.title}’s prompt names 3 to 5 of its adjectives in their order, never two synonyms, the same for the same seed`, () => {
@@ -167,5 +111,5 @@ test('every pot placement can grow every plant, and seed 1 stays put', () => {
     expect(grown).toEqual(new Set(pottedPlantKinds))
   }
   // Captures from snap.ts and film.ts default to seed 1; a change here changes every one of them.
-  expect(potPlacements.map(placement => pottedPlantKind(1, placement.id))).toEqual(['jade', 'palm'])
+  expect(potPlacements.map(placement => pottedPlantKind(1, placement.id))).toEqual(['palm', 'calathea'])
 })

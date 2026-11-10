@@ -3,7 +3,7 @@ import type {DestructiblePlantKind} from '../destructiblePlants/catalog.ts'
 import type {Vec3} from '../types.ts'
 import type {PlantKind, PotKind} from './catalog.ts'
 
-import {environmentPick} from '../../environmentSeed.ts'
+import {environmentRandom} from '../../environmentSeed.ts'
 import destructiblePlants from '../destructiblePlants/catalog.ts'
 import {plants} from './catalog.ts'
 
@@ -21,7 +21,7 @@ export const pottedPlantKinds: Array<PottedPlantKind> = [...plants, ...destructi
 
 /** The plant growing in the pot placement `id` in the environment of `seed`. */
 export function pottedPlantKind(seed: number, id: string) {
-  return environmentPick(seed, `potted-plant:${id}`, pottedPlantKinds)
+  return environmentRandom(seed).makeChild(['potted-plant', id]).rollItem(pottedPlantKinds)
 }
 
 export const potPlacements: Array<PotPlacement> = [

@@ -1,7 +1,7 @@
 import type {ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type {Mood} from '#src/lib/moods/index.ts'
 
-import {environmentPick, environmentSample} from '../../../environmentSeed.ts'
+import {environmentRandom} from '../../../environmentSeed.ts'
 import {transparentOrb} from '../transparent/TransparentOrb.ts'
 import Orb from './Orb.ts'
 
@@ -47,9 +47,10 @@ export default abstract class PromptOrb extends Orb {
 
   /** the orb’s whole instruction to the image model in the environment of `seed`, sent verbatim along with the image: its premise and change, then 3 to 5 of its adjectives in their listed order, never two synonyms, the last one joined by its {@link conjunction} */
   prompt(seed: number) {
-    const count = environmentPick(seed, `${this.id}-orb:count`, this.adjectiveCounts)
-    const entries = environmentSample(seed, `${this.id}-orb:adjectives`, this.adjectives, count)
-    const adjectives = entries.map(entry => (typeof entry === 'string' ? entry : environmentPick(seed, `${this.id}-orb:synonym:${entry[0]}`, entry)))
+    const random = environmentRandom(seed).makeChild(['orb', this.id])
+    const count = random.makeChild('count').rollItem(this.adjectiveCounts)
+    const entries = random.makeChild('adjectives').rollItems(this.adjectives, count, {keepOrder: true})
+    const adjectives = entries.map(entry => (typeof entry === 'string' ? entry : random.makeChild(['synonym', entry[0]]).rollItem(entry)))
     return `${this.premise}\n\nPlease edit this image and ${this.change} ${adjectives.slice(0, -1).join(', ')} ${this.conjunction} ${adjectives.at(-1)}.`
   }
 }

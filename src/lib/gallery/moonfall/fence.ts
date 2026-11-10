@@ -2,7 +2,7 @@ import type {StanchionRingOptions} from '../railings/StanchionRingGeometry.ts'
 
 import {defaultEgoOptions} from 'ego-player/motor'
 
-import {environmentRoll} from '../../environmentSeed.ts'
+import {environmentRandom} from '../../environmentSeed.ts'
 import lowerGallery from '../lowerGallery.ts'
 import {ropeTop, stanchionHeight} from '../railings/stanchion.ts'
 import staircase from '../staircase.ts'
@@ -19,7 +19,7 @@ export const fenceGuard = defaultEgoOptions.stepHeight + 0.1
 /** the number of stanchions around the crater in the environment of `seed` */
 export function fencePosts(seed: number) {
   const [fewest, most] = moonfallCrater.fencePosts
-  return fewest + Math.floor(environmentRoll(seed, 'moonfall-fence-posts') * (most - fewest + 1))
+  return environmentRandom(seed).makeChild(['moonfall', 'fence-posts']).rollInteger(fewest, most)
 }
 
 /** how deep the ropes between `posts` stanchions sag: their middles hang as low as {@link moonfallCrater.fenceLowest} says for the fewest and the most stanchions, and in between by the span from post to post. Like ropes of one length, they hang deeper the closer their posts stand. */

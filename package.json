@@ -53,6 +53,7 @@
     "disposable-lifetime": "workspace:*",
     "ego-player": "workspace:*",
     "es-toolkit": "1.53.2",
+    "fated-random": "workspace:*",
     "flatten-string": "0.2.0",
     "geofency": "workspace:*",
     "knot-materials": "workspace:*",

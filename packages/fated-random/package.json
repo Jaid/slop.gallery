@@ -1,0 +1,27 @@
+{
+  "name": "fated-random",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Random rolls decided in advance by a seed, a chain of IDs and an index, never by when or in which order they are rolled",
+  "funding": "https://github.com/sponsors/Jaid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaid/slop.gallery.git",
+    "directory": "packages/fated-random"
+  },
+  "main": "src/main.ts",
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "scripts": {
+    "test": "bun test ./test"
+  },
+  "files": [
+    "src",
+    "readme.md",
+    "license.txt"
+  ],
+  "sideEffects": false,
+  "types": "./src/main.ts"
+}

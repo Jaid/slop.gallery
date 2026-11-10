@@ -5,7 +5,7 @@ import type {Vec3} from 'math'
 import {common, ethereal, knots, prime, rare} from 'knot-materials'
 import {knotSign} from 'knot-materials/signs.ts'
 
-import {environmentPick, environmentWeightedPick} from '#src/lib/environmentSeed.ts'
+import {environmentRandom} from '#src/lib/environmentSeed.ts'
 import {pedestalHeight} from '#src/lib/gallery/PedestalGeometry.ts'
 import {salonBench, salonPedestal} from '#src/lib/gallery/salon.ts'
 import {knotStandingHeight, standingKnotSink} from '#src/lib/physics/standingKnot.ts'
@@ -36,9 +36,10 @@ const knotsByRarity = Map.groupBy(salonKnots, knot => knot.rarity)
 
 /** The Knot hovering over the Salon’s pedestal in the environment of `seed`: rarity is rolled first, then a Knot of that rarity, so the seed alone decides it. */
 export default function salonKnot(seed: number): ShowcasedKnot {
-  const rarity = environmentWeightedPick(seed, 'salon-knot-rarity', salonKnotRarityChances)
+  const random = environmentRandom(seed).makeChild('salon-knot')
+  const [rarity] = random.makeChild('rarity').rollItem(salonKnotRarityChances, {weights: ([, chance]) => chance})
   return {
-    entry: environmentPick(seed, 'salon-knot', knotsByRarity.get(rarity)!),
+    entry: random.makeChild('entry').rollItem(knotsByRarity.get(rarity)!),
     height: salonKnotHeight,
     position: [salonPedestal[0], salonPedestal[1] + pedestalHeight, salonPedestal[2]],
   }

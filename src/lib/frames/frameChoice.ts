@@ -1,6 +1,6 @@
 import type {PortraitFrameId} from './frameParameter.ts'
 
-import {environmentPick} from '#src/lib/environmentSeed.ts'
+import {environmentRandom} from '#src/lib/environmentSeed.ts'
 
 /** the frames a room or a fusion ingredient brings: one, or several, of which {@link pickFrame} draws one */
 export type FrameChoice = PortraitFrameId | ReadonlyArray<PortraitFrameId>
@@ -17,5 +17,5 @@ export function pickFrame(seed: number, choice: FrameChoice, work?: string): Por
   if (typeof choice === 'string') {
     return choice
   }
-  return environmentPick(seed, work === undefined ? `frame:${choice.join(',')}` : `frame:${work}:${choice.join(',')}`, choice)
+  return environmentRandom(seed).makeChild(work === undefined ? ['frame', ...choice] : ['work-frame', work, ...choice]).rollItem(choice)
 }
