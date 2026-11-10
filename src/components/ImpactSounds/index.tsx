@@ -1,10 +1,9 @@
-import {useAfterPhysicsStep, useBeforePhysicsStep} from '@react-three/rapier'
+import useBodyContacts from 'rapier-body-contact/react'
 
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
 
 /** Sounds what orbs and loose works strike, sampling their motion around every physics step. */
 export default function ImpactSounds() {
-  useBeforePhysicsStep(world => impactSounds.capture(world))
-  useAfterPhysicsStep(world => impactSounds.collect(world))
+  useBodyContacts(impactSounds)
   return null
 }

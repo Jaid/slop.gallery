@@ -60,6 +60,7 @@
     "math": "0.1.0",
     "mount-root": "0.5.0",
     "optis": "0.3.0",
+    "rapier-body-contact": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-dropzone": "20.2.0",

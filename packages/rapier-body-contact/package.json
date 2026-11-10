@@ -1,0 +1,37 @@
+{
+  "name": "rapier-body-contact",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Tells what Rapier bodies strike, where and how fast, sampled around every physics step instead of from collision events",
+  "funding": "https://github.com/sponsors/Jaid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaid/slop.gallery.git",
+    "directory": "packages/rapier-body-contact"
+  },
+  "main": "src/main.ts",
+  "exports": {
+    ".": "./src/main.ts",
+    "./react": "./src/react/main.ts"
+  },
+  "scripts": {
+    "test": "bun test ./test"
+  },
+  "peerDependencies": {
+    "@dimforge/rapier3d-compat": "^0.21.0",
+    "@react-three/rapier": "^2.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@react-three/rapier": {
+      "optional": true
+    }
+  },
+  "files": [
+    "src",
+    "readme.md",
+    "license.txt"
+  ],
+  "sideEffects": false,
+  "types": "./src/main.ts"
+}

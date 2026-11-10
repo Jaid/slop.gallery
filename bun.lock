@@ -28,6 +28,7 @@
         "math": "0.1.0",
         "mount-root": "0.5.0",
         "optis": "0.3.0",
+        "rapier-body-contact": "workspace:*",
         "react": "19.3.1",
         "react-dom": "19.3.1",
         "react-dropzone": "20.2.0",
@@ -208,6 +209,17 @@
       "peerDependencies": {
         "three": "^0.187.0",
       },
+    },
+    "packages/rapier-body-contact": {
+      "name": "rapier-body-contact",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "@dimforge/rapier3d-compat": "^0.21.0",
+        "@react-three/rapier": "^2.2.0",
+      },
+      "optionalPeers": [
+        "@react-three/rapier",
+      ],
     },
     "packages/rolldown-plugin-bake-branch-component": {
       "name": "rolldown-plugin-bake-branch-component",
@@ -1743,6 +1755,8 @@
     "queue-microtask": ["queue-microtask@1.2.3", "", {}, "sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A=="],
 
     "quote-js-string": ["quote-js-string@0.1.0", "", {}, "sha512-Y3NoRtprEEZQD8RfxMCfS0ZTqc4e+i18OrXEXAvpM6TfC/3y+0L5rNbZiSnbBBEkDfFzbpd8o+cE8q3/anjMGA=="],
+
+    "rapier-body-contact": ["rapier-body-contact@workspace:packages/rapier-body-contact"],
 
     "react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
 

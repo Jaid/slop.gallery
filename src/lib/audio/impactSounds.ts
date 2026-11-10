@@ -1,12 +1,12 @@
 import type {Vec3} from '../gallery/types.ts'
-import type {BodyImpact} from '../physics/BodyImpacts.ts'
 import type {FrameImpactSoundId} from './frameImpacts.ts'
 import type {OrbImpactSurface} from './orbImpacts.ts'
+import type {BodyContact} from 'rapier-body-contact'
 
-import {Quaternion} from 'three/webgpu'
+import BodyContacts from 'rapier-body-contact'
+import {Quaternion, Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery/store.ts'
-import BodyImpacts from '#src/lib/physics/BodyImpacts.ts'
 import world from '#src/worlds/current.ts'
 
 import {frameContact, frameImpactVoices} from './frameImpacts.ts'
@@ -25,6 +25,7 @@ export type Striker = {
 export const orbStriker: Striker = {kind: 'orb'}
 
 const turn = new Quaternion
+const local = new Vector3
 let strikes = 0
 /** What an orb striking the striker `other`, or the world where it is not registered, at `position` strikes: another orb, a frame’s wood or the ground of the room there. */
 function orbSurface(other: Striker | undefined, position: Vec3): OrbImpactSurface {
@@ -34,7 +35,7 @@ function orbSurface(other: Striker | undefined, position: Vec3): OrbImpactSurfac
   return world.roomAt(position)?.groundSurface(position) ?? 'generic'
 }
 /** Sounds a strike where it happened: an orb’s glass against whatever it hit, else a frame by the part of it that hit first. */
-function sound({normal, other, point, rotation, speed, tag}: BodyImpact<Striker>) {
+function sound({normal, other, point, rotation, speed, tag}: BodyContact<Striker>) {
   const engine = SoundEngine.existing()
   if (!engine || !useGallery.getState().sound) {
     return
@@ -46,9 +47,9 @@ function sound({normal, other, point, rotation, speed, tag}: BodyImpact<Striker>
     engine.playInWorld(orbImpactVoices(tag.kind === 'orb' ? orbSurface(other, position) : 'hollow', speed, variation), `orb:${index}`, position)
     return
   }
-  const local = normal.clone().applyQuaternion(turn.copy(rotation).invert())
+  local.copy(normal).applyQuaternion(turn.copy(rotation).invert())
   engine.playInWorld(frameImpactVoices(frameContact([local.x, local.y, local.z]), speed, tag.sound, variation), `frame:${index}`, position)
 }
 
 /** every body whose strikes sound, which `ImpactSounds` samples around each physics step */
-export const impactSounds = new BodyImpacts<Striker>(sound)
+export const impactSounds = new BodyContacts<Striker>({onContact: sound})

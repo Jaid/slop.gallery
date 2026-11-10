@@ -1,17 +1,17 @@
-import type {BodyImpact} from '../../src/lib/physics/BodyImpacts.ts'
+import type {BodyContact} from 'rapier-body-contact'
 
 import {expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
+import BodyContacts from 'rapier-body-contact'
 import {Quaternion, Vector3} from 'three/webgpu'
 
 import {frameContact, frameImpactSounds, frameImpactVoices} from '../../src/lib/audio/frameImpacts.ts'
 import {orbImpactVoices} from '../../src/lib/audio/orbImpacts.ts'
 import {frames} from '../../src/lib/frames/index.ts'
-import BodyImpacts from '../../src/lib/physics/BodyImpacts.ts'
 
 await RAPIER.init()
-/** A world stepping like `<Physics>` of @react-three/rapier, with a floor 10 m square whose top lies at 0 and a wall along its east edge in one collider, like a room’s trimesh. */
+/** A world stepping like `<Physics>` of @react-three/rapier, with a floor 10 m square whose top lies at 0. */
 function physics() {
   const world = new RAPIER.World({
     x: 0,
@@ -23,15 +23,12 @@ function physics() {
     normalizedAllowedLinearError: 0.001,
     normalizedPredictionDistance: 0.002,
   })
-  const room = world.createRigidBody(RAPIER.RigidBodyDesc.fixed())
-  world.createCollider(RAPIER.ColliderDesc.cuboid(5, 0.1, 5).setTranslation(0, -0.1, 0), room)
-  // The wall, a collider of its own on the same body.
-  world.createCollider(RAPIER.ColliderDesc.cuboid(0.1, 2, 5).setTranslation(5.1, 2, 0), room)
-  const impacts: Array<BodyImpact<string>> = []
-  const sampler = new BodyImpacts<string>(impact => impacts.push(impact))
+  world.createCollider(RAPIER.ColliderDesc.cuboid(5, 0.1, 5).setTranslation(0, -0.1, 0), world.createRigidBody(RAPIER.RigidBodyDesc.fixed()))
+  const impacts: Array<BodyContact<string>> = []
+  const sampler = new BodyContacts<string>({onContact: impact => impacts.push(impact)})
   const step = (count: number) => {
     for (let i = 0; i < count; i++) {
-      sampler.capture(world)
+      sampler.capture()
       world.step()
       sampler.collect(world)
     }
@@ -43,91 +40,6 @@ function physics() {
     step,
   }
 }
-const radius = 0.14
-/** an orb: a 0.14 m glass ball of 1.8 kg */
-function orb(world: RAPIER.World, [x, y, z]: readonly [number, number, number]) {
-  const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(x, y, z).setCcdEnabled(true))
-  world.createCollider(RAPIER.ColliderDesc.ball(radius).setMass(1.8).setFriction(0.8).setRestitution(0.32), body)
-  return body
-}
-/** Sets an orb rolling along x at `speed` m/s, spinning as fast as it rolls. */
-function roll(body: RAPIER.RigidBody, speed: number) {
-  body.setLinvel({
-    x: speed,
-    y: 0,
-    z: 0,
-  }, true)
-  body.setAngvel({
-    x: 0,
-    y: 0,
-    z: -speed / radius,
-  }, true)
-}
-test('an orb dropped onto the floor strikes it at the speed it fell with, then bounces ever softer until it rests silently', () => {
-  const {world, impacts, sampler, step} = physics()
-  const body = orb(world, [0, 1.3, 0])
-  sampler.register(body, 'orb')
-  step(240)
-  expect(impacts.length).toBeGreaterThanOrEqual(2)
-  const [first, second] = impacts
-  // 1.16 m of fall
-  expect(first.speed).toBeCloseTo(Math.sqrt(2 * 9.81 * 1.16), 0)
-  expect(first.normal.y).toBeCloseTo(-1)
-  expect(first.point.y).toBeCloseTo(0, 1)
-  expect(first.other).toBeUndefined()
-  expect(second.speed).toBeLessThan(first.speed * 0.3)
-  const count = impacts.length
-  step(120)
-  expect(impacts).toHaveLength(count)
-})
-test('an orb rolling along the floor strikes the wall it meets, not the floor under it on the way', () => {
-  const {world, impacts, sampler, step} = physics()
-  const body = orb(world, [0, 0.14, 0])
-  sampler.register(body, 'orb')
-  step(30)
-  impacts.length = 0
-  roll(body, 4)
-  step(150)
-  expect(impacts.length).toBeGreaterThanOrEqual(1)
-  const [wall] = impacts
-  expect(wall.speed).toBeCloseTo(4, 0)
-  expect(wall.point.x).toBeCloseTo(5, 1)
-  expect(wall.point.y).toBeCloseTo(radius, 1)
-  expect(wall.normal.x).toBeCloseTo(1)
-})
-test('two orbs striking each other sound once, and only registered bodies sound at all', () => {
-  const {world, impacts, sampler, step} = physics()
-  const left = orb(world, [-1, 0.14, 0])
-  const right = orb(world, [1, 0.14, 0])
-  const stranger = orb(world, [0, 0.14, 2])
-  sampler.register(left, 'left')
-  const unregister = sampler.register(right, 'right')
-  step(30)
-  impacts.length = 0
-  roll(left, 3)
-  roll(right, -3)
-  stranger.setTranslation({
-    x: 0,
-    y: 1,
-    z: 2,
-  }, true)
-  step(30)
-  expect(impacts).toHaveLength(1)
-  const [clink] = impacts
-  expect(new Set([clink.tag, clink.other])).toEqual(new Set(['left', 'right']))
-  expect(clink.point.y).toBeCloseTo(radius, 2)
-  // Both closed in at 3 m/s.
-  expect(clink.speed).toBeCloseTo(6, 0)
-  unregister()
-  impacts.length = 0
-  right.setTranslation({
-    x: 0,
-    y: 1,
-    z: -2,
-  }, true)
-  step(90)
-  expect(impacts.every(impact => impact.tag === 'left')).toBe(true)
-})
 test('a work dropped askew strikes with a corner first and lands flat at last, while the points it keeps touching stay quiet', () => {
   const {world, impacts, sampler, step} = physics()
   // Lying on its back, but tipped over two of its sides, so one corner hangs lowest
@@ -146,7 +58,9 @@ test('a work dropped askew strikes with a corner first and lands flat at last, w
       continue
     }
     const {normal, rotation} = impacts.at(-1)!
-    const local = normal.clone().applyQuaternion(rotation.clone().invert())
+    const turn = new Quaternion
+    const local = new Vector3
+    local.copy(normal).applyQuaternion(turn.copy(rotation).invert())
     contacts.push(frameContact([local.x, local.y, local.z]))
   }
   expect(contacts[0]).toBe('corner')
