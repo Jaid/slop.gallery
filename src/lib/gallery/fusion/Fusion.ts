@@ -1,6 +1,6 @@
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
+import type {PartyEffect} from '#src/party_effects/index.ts'
 import type {Portrait, Vec3} from '../types.ts'
-import type {FusionEffect} from './effects/index.ts'
 import type {IngredientLatch} from './FusionRecipe.ts'
 import type {PortalFrame} from './portalFrame.ts'
 import type {FusionTiming} from './timing.ts'
@@ -29,8 +29,8 @@ export type FusionImpact = {
 export type FusionSpec = {
   /** the swirl’s color, like an orb’s glow; the portal’s own otherwise */
   color?: string
-  /** what the portal shows besides its own choreography, as the ingredients contributed it */
-  effects: ReadonlyArray<FusionEffect>
+  /** the party effects the portal shows besides its own choreography as the result flips out, as the ingredients contributed them */
+  effects: ReadonlyArray<PartyEffect>
   /** the images the portal shows of the ingredients in turn, the hung portrait’s first; more can surface later, like a prop’s photograph; an ingredient with nothing to show, like the Transparent Orb, shows nothing */
   images: Array<Blob | string>
   /** the strike that opened it, unless it was opened otherwise, like by a test */
@@ -107,7 +107,7 @@ export default class Fusion {
 
   /** seconds the portal stays open after the result flipped out: its own afterglow, or longer while an effect goes on */
   get afterglow() {
-    return Math.max(this.timing.afterglow, ...this.spec.effects.map(effect => effect.afterglow))
+    return Math.max(this.timing.afterglow, ...this.spec.effects.map(effect => effect.duration))
   }
 
   /** Ends the fusion right away, wherever it is: everything snaps back, and the portal closes. Does nothing once it is over. */

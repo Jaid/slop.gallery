@@ -30,6 +30,7 @@ import {halloweenOrb, horrorOrb, orbRadius, paintOrb, spookOrb, transparentOrb} 
 import {salonCeiling} from '../../src/lib/gallery/salon.ts'
 import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
 import {insideOpening, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import {partyEffects} from '../../src/party_effects/index.ts'
 import {bastionBaseboard} from '../../src/rooms/bastion/walls.ts'
 import CannonFx, {charging} from '../../src/rooms/forge/components/AlchemyMachine/CannonFx.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -366,7 +367,7 @@ describe('the alchemy machine’s cannon going off', () => {
       expect(fromBreech()).toBe(0)
       expect(fx.swell.size.value).toBe(0)
       // Once the bats have flown off, they are gone.
-      fx.update(1 + charging + halloweenOrb.effect.afterglow + 1.5, barrel)
+      fx.update(1 + charging + partyEffects[halloweenOrb.effect].duration + 1.5, barrel)
       expect(fx.root.children).toEqual([fx.blast])
     } finally {
       fx.dispose()

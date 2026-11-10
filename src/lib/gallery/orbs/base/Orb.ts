@@ -1,9 +1,9 @@
 import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
-import type {FusionEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import type {IngredientContribution, ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type OrbGlassMaterial from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 import type {MoodId} from '#src/moods/index.ts'
+import type {PartyEffectId} from '#src/party_effects/index.ts'
 
 import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 
@@ -12,8 +12,8 @@ import {pickFrame} from '#src/frames/lib/frameChoice.ts'
  * Its prop is `prop-orb-<id>`, and it lives in a folder of its own.
  */
 export default abstract class Orb {
-  /** the effect the orb contributes to the portal of its fusion, if any */
-  readonly effect?: FusionEffect
+  /** the id of the party effect the orb contributes to the portal of its fusion, if any */
+  readonly effect?: PartyEffectId
   /** the frame the orb contributes to a fusion, or several, of which every game picks one; without one, the room the result arrives in frames it */
   readonly frame?: FrameChoice
   abstract readonly id: string

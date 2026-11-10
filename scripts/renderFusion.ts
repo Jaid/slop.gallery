@@ -1,6 +1,6 @@
-import type {FusionEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import type {PortraitSlot, Quat, Vec3} from '#src/lib/gallery/types.ts'
 import type {PortraitDump} from '#src/lib/webmcp/dumpPortraits.ts'
+import type {PartyEffect} from '#src/party_effects/index.ts'
 import type World from '#src/worlds/base/World.ts'
 import type {WorldId} from '#src/worlds/index.ts'
 import type {CameraKey, CameraPath, Shot, Timeline} from './lib/fusionCamera.ts'
@@ -18,12 +18,13 @@ import {portraitFrame} from '#src/frames/index.ts'
 import {inspectionFov} from '#src/lib/camera/OrbitInspection.ts'
 import {parseSeed} from '#src/lib/environmentSeed.ts'
 import {hangDefaultWorks} from '#src/lib/gallery/defaultPortraits.ts'
-import {offsetPosition} from '#src/lib/gallery/fusion/effects/base/portalOffset.ts'
 import {portalIn, satelliteSize} from '#src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
 import {orbRadius, orbs} from '#src/lib/gallery/orbs/index.ts'
 import {aimThrow, flightPoint} from '#src/lib/physics/aimThrow.ts'
 import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
+import {partyEffects} from '#src/party_effects/index.ts'
+import {offsetPosition} from '#src/party_effects/lib/partySite.ts'
 import {readWorld} from '#src/worlds/index.ts'
 
 import film from './film.ts'
@@ -302,7 +303,7 @@ export type PathContext = {
 /**
  * What --emphasis party has to keep in view from moment to moment, cut down to the outermost of it: everything the ingredient’s `effect` still reaches and the portal’s rim while it glows, or without an effect, where the fusion took place, the satellites’ orbit; and what of it is left once the effect has settled.
  */
-export function partyViews(portal: PortalFrame, effect: FusionEffect | undefined, {emergence, end}: Pick<Timeline, 'emergence' | 'end'>) {
+export function partyViews(portal: PortalFrame, effect: PartyEffect | undefined, {emergence, end}: Pick<Timeline, 'emergence' | 'end'>) {
   const ring = (along: number, up: number, out: number) => Array.from({length: 16}, (_, index): [number, number, number] => {
     const angle = index / 16 * Math.PI * 2
     return [Math.cos(angle) * along, Math.sin(angle) * up, Math.sin(angle) * out]
@@ -317,7 +318,7 @@ export function partyViews(portal: PortalFrame, effect: FusionEffect | undefined
       points: reach(time - emergence),
     })
   }
-  const settled = reach(Math.min((effect?.afterglow ?? 0) * partySettles, end - emergence))
+  const settled = reach(Math.min((effect?.duration ?? 0) * partySettles, end - emergence))
   return {
     views,
     settled: settled.length ? settled : views[0].points,
@@ -452,7 +453,7 @@ export function partyClosing({settled, views}: ReturnType<typeof partyViews>, ti
 }
 
 /** How long the party of a fusion lasts once its result flipped out, in seconds: until the ingredient’s `effect` is over, at least until the portal has closed. */
-export const partyLength = (effect?: FusionEffect) => Math.max(fusionTiming.afterglow, effect?.afterglow ?? 0)
+export const partyLength = (effect?: PartyEffect) => Math.max(fusionTiming.afterglow, effect?.duration ?? 0)
 
 /** Where the camera is and what it looks at `time` seconds into the film, before it is held by hand and the emphasis ends the film: its path round the portal, which holds where it stepped aside for the result, looking at the portal. */
 export function pathAt(time: number, {flight, portal, timeline, work, world}: PathContext): Shot {
@@ -729,7 +730,7 @@ const main = async (options: RenderFusionOptions) => {
   }
   const ingredient = resolveIngredient(options.ingredient)
   /** what the fusion’s portal shows as the result flips out, which --emphasis party keeps in view */
-  const effect = ingredient.orb?.effect
+  const effect = ingredient.orb?.effect && partyEffects[ingredient.orb.effect]
   // The room opens its world, like the Sandbox for its Cell, the gallery for any other.
   const worldId = readWorld(`?${new URLSearchParams({room: text('room') ?? ''})}`)
   const {default: world} = await worldModules[worldId]()

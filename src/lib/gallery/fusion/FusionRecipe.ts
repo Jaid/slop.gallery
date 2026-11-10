@@ -1,7 +1,7 @@
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
+import type {PartyEffectId} from '#src/party_effects/index.ts'
 import type {SizedImage} from '../ImageImporter.ts'
 import type {Portrait} from '../types.ts'
-import type {FusionEffect} from './effects/index.ts'
 
 import modelImage from '../../ai/modelImage.ts'
 import {loadBlob} from '../actions.ts'
@@ -17,13 +17,13 @@ export type IngredientContribution = {
   instruction: string
   kind: 'instruction'
 } | {
-  /** something the portal shows besides its own choreography, like ghosts escaping it as the result flips out; it gives an image model nothing to do */
-  effect: FusionEffect
-  kind: 'effect'
-} | {
   /** the frame design the result wears wherever it arrives, instead of the frame of the room it arrives in */
   frame: PortraitFrameId
   kind: 'frame'
+} | {
+  /** the id of a party effect, which the portal shows besides its own choreography, like ghosts escaping it as the result flips out; it gives an image model nothing to do */
+  effect: PartyEffectId
+  kind: 'effect'
 }
 /** how the intro’s ember latches an ingredient on, see `FusionSound`: like a magnetic clamp charging up, or, for a glass ball like an orb, the same ending in a ping of glass */
 export type IngredientLatch = 'charge' | 'glass'
@@ -96,7 +96,7 @@ export default class FusionRecipe {
     this.ingredients = ingredients
   }
 
-  /** the effects the portal shows, each once, in the order of their ingredients */
+  /** the ids of the party effects the portal shows, each once, in the order of their ingredients */
   get effects() {
     return [...new Set(this.contributionsOf('effect').map(contribution => contribution.effect))]
   }

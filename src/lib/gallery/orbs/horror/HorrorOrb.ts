@@ -1,6 +1,5 @@
 import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 
-import {bloodEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import EyeOrbMaterial from '#src/lib/materials/orb/EyeOrbMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
@@ -34,7 +33,7 @@ export default class HorrorOrb extends PromptOrb {
   ]
   readonly change = 'provide traits that make it'
   readonly color = '#a8060f'
-  override readonly effect = bloodEffect
+  override readonly effect = 'blood'
   readonly frame = ['flesh', 'bleeding', 'butcher', 'infested', 'maw', 'coffin'] as const
   readonly id = 'horror'
   readonly mood = 'horror'

@@ -1,6 +1,5 @@
 import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 
-import {strokesEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import PaintsOrbMaterial from '#src/lib/materials/orb/PaintsOrbMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
@@ -41,7 +40,7 @@ export default class PaintOrb extends PromptOrb {
   readonly change = 'restyle it while keeping the original subject intact. The output should be a beautiful high-quality artistic painting that is'
   readonly color = '#3d5afe'
   override readonly conjunction = 'and'
-  override readonly effect = strokesEffect
+  override readonly effect = 'strokes'
   readonly frame = ['marbled', 'canvas'] as const
   readonly id = 'paint'
   readonly mood = 'paint'

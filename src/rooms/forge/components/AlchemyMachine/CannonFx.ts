@@ -1,7 +1,5 @@
 import type {Vec3} from '#src/lib/gallery.ts'
-import type EffectSprites from '#src/lib/gallery/fusion/effects/base/EffectSprites.ts'
-import type {FusionEffect} from '#src/lib/gallery/fusion/effects/index.ts'
-import type {PortalFrame} from '#src/lib/gallery/fusion/portalFrame.ts'
+import type {PartyEffectId, PartyShow, PartySite} from '#src/party_effects/index.ts'
 import type {Object3D} from 'three/webgpu'
 
 import {uniform} from 'three/tsl'
@@ -11,8 +9,7 @@ import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {useGallery} from '#src/lib/gallery.ts'
 import {alchemyCannon} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import CannonBlast from '#src/lib/gallery/alchemy/CannonBlast.ts'
-import EmergenceEffect from '#src/lib/gallery/fusion/effects/base/EmergenceEffect.ts'
-import {portalRadius} from '#src/lib/gallery/fusion/portalFrame.ts'
+import {partyEffects} from '#src/party_effects/index.ts'
 
 /** how long the cannon gathers itself before it goes off, in seconds, while a swell runs up its barrel */
 export const charging = 0.24
@@ -28,10 +25,8 @@ const squash = {
   damping: 7,
 } as const
 const {axis, breech, muzzle} = alchemyCannon
-/**
- * The cannon’s muzzle as a portal’s frame, facing the way it shoots across the floor, which the orbs’ effects burst out of as if out of a fusion’s portal.
- */
-const muzzleFrame: PortalFrame = (() => {
+/** the cannon’s muzzle as the site of the orbs’ party effects, which burst out of it facing the way it shoots across the floor */
+const muzzleSite: PartySite = (() => {
   const level = Math.hypot(axis[0], axis[2])
   const normal: Vec3 = [axis[0] / level, 0, axis[2] / level]
   return {
@@ -39,25 +34,18 @@ const muzzleFrame: PortalFrame = (() => {
     floor: 0,
     normal,
     tangent: [normal[2], 0, -normal[0]],
-    radius: portalRadius,
-    orbit: {
-      along: 1,
-      across: 0.5,
-      tilt: 0.72,
-    },
   }
 })()
 
-/** an orb’s effect waiting in the cannon for its orb to be shot, and then bursting out of the muzzle */
+/** an orb’s party effect waiting in the cannon for its orb to be shot, and then bursting out of the muzzle */
 type Burst = {
-  effect: EmergenceEffect
   /** when the orb was shot, by the machine’s clock */
   firedAt?: number
-  sprites: EffectSprites
+  show: PartyShow
 }
 
 /**
- * How the alchemy machine’s cannon goes off, like in a cartoon: it gathers itself, squashing, while a swell runs up its barrel, then stretches as it fires, kicks back and wobbles home, with a bang of smoke and sparks out of its muzzle. When the machine gave the orb a new flavor, the new orb’s effect bursts out of the muzzle with it, the Halloween Orb’s bats, the Horror Orb’s blood, the Spook Orb’s ghosts or the Paint Orb’s brush strokes.
+ * How the alchemy machine’s cannon goes off, like in a cartoon: it gathers itself, squashing, while a swell runs up its barrel, then stretches as it fires, kicks back and wobbles home, with a bang of smoke and sparks out of its muzzle. When the machine gave the orb a new flavor, the new orb’s party effect bursts out of the muzzle with it, the Halloween Orb’s bats, the Horror Orb’s blood, the Spook Orb’s ghosts or the Paint Orb’s brush strokes.
  * Every effect waits hidden from when the machine takes in the orb, so it compiles while the machine works on it.
  */
 export default class CannonFx {
@@ -86,8 +74,8 @@ export default class CannonFx {
 
   dispose() {
     this.blast.dispose()
-    for (const {sprites} of this.bursts.values()) {
-      sprites.dispose()
+    for (const {show} of this.bursts.values()) {
+      show.dispose()
     }
   }
 
@@ -95,32 +83,19 @@ export default class CannonFx {
   fire(clock: number, id: string) {
     this.firedAt = clock
     const burst = this.bursts.get(id)
-    if (!burst) {
-      return
-    }
-    burst.firedAt = clock
-    const engine = SoundEngine.existing()
-    if (engine && useGallery.getState().sound) {
-      burst.effect.sound(engine, muzzleFrame)
+    if (burst) {
+      burst.firedAt = clock
     }
   }
 
-  /** Readies the effect of the orb `id`, which the cannon will shoot, if it bursts out of portals. */
-  prepare(id: string, effect: FusionEffect | undefined) {
-    if (!(effect instanceof EmergenceEffect) || this.bursts.has(id)) {
+  /** Stages the party effect of the orb `id`, which the cannon will shoot, at the muzzle, if the orb brings one. */
+  prepare(id: string, effect: PartyEffectId | undefined) {
+    if (!effect || this.bursts.has(id)) {
       return
     }
-    const sprites = effect.createSprites()
-    const {center, floor, normal, tangent} = muzzleFrame
-    sprites.position.fromArray(center)
-    sprites.uniforms.normal.value.fromArray(normal)
-    sprites.uniforms.tangent.value.fromArray(tangent)
-    sprites.uniforms.floor.value = floor - center[1]
-    this.root.add(sprites)
-    this.bursts.set(id, {
-      effect,
-      sprites,
-    })
+    const show = partyEffects[effect].stage(muzzleSite)
+    this.root.add(show.root)
+    this.bursts.set(id, {show})
   }
 
   /** Brings everything to `clock`, the machine’s clock: the barrel’s pose and shape, the blast and the effects bursting out. */
@@ -146,14 +121,17 @@ export default class CannonFx {
       const back = since >= 0 && since < recoil[1] * 3 ? recoil[0] * kick : 0
       barrel.position.set(...breech.map((value, index) => value - axis[index] * back) as Vec3)
     }
-    for (const [id, burst] of this.bursts) {
-      const out = burst.firedAt === undefined ? -1 : clock - burst.firedAt
-      burst.sprites.uniforms.clock.value = out
-      if (!(out > burst.effect.afterglow + 1)) {
+    const engine = SoundEngine.existing()
+    const audio = engine && useGallery.getState().sound ? engine : undefined
+    for (const [id, {firedAt, show}] of this.bursts) {
+      const out = firedAt === undefined ? -1 : clock - firedAt
+      show.update(out, audio)
+      // A moment longer than it lasts, so nothing of it is cut off.
+      if (!show.over(out - 1)) {
         continue
       }
-      burst.sprites.removeFromParent()
-      burst.sprites.dispose()
+      show.root.removeFromParent()
+      show.dispose()
       this.bursts.delete(id)
     }
   }

@@ -1,9 +1,9 @@
 import type {ClimaxMoment} from '#src/lib/gallery/fusion/climax.ts'
-import type {EffectShow} from '#src/lib/gallery/fusion/effects/index.ts'
 import type {PortalEnvelope} from '#src/lib/gallery/fusion/envelope.ts'
 import type Fusion from '#src/lib/gallery/fusion/Fusion.ts'
 import type {PortalPalette} from '#src/lib/gallery/fusion/PortalCore.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
+import type {PartyShow} from '#src/party_effects/index.ts'
 import type {Camera, Texture} from 'three/webgpu'
 
 import {clamp} from 'math'
@@ -53,7 +53,8 @@ const reboundReach = 3.2
  */
 export default class PortalShow {
   readonly root = new Group
-  private readonly effects: ReadonlyArray<EffectShow>
+  /** the party effects its ingredients contributed, staged as the portal opens, so their pipelines compile during the intro, and bursting out as the result flips out */
+  private readonly effects: ReadonlyArray<PartyShow>
   private readonly embers: PortalPalette
   private readonly fusion: Fusion
   private readonly images = new Map<Blob | string, HeldImage>
@@ -100,7 +101,7 @@ export default class PortalShow {
     // The work and what was thrown into it sweep huge shadows over the walls and floor as they orbit, whirl and spiral in, as long as it is among the shadow pool’s nearest lights.
     this.light.userData.shadow = true
     this.root.name = `fusion-${fusion.id}`
-    this.effects = fusion.spec.effects.map(effect => effect.show(fusion))
+    this.effects = fusion.spec.effects.map(effect => effect.stage(fusion.frame))
     this.root.add(this.visuals.root, this.light, ...this.effects.map(effect => effect.root))
     const {impact: opening, partner, work} = fusion.spec
     if (opening) {
@@ -228,8 +229,9 @@ export default class PortalShow {
       spin: envelope.spin,
     })
     const audio = this.audio()
+    const {emergedAt} = this.fusion
     for (const effect of this.effects) {
-      effect.update(elapsed, audio)
+      effect.update(emergedAt === undefined ? -1 : elapsed - emergedAt, audio)
     }
   }
 

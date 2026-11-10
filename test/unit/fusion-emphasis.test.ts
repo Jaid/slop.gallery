@@ -10,10 +10,10 @@ import {radians, shotAngles} from '../../scripts/lib/fusionCamera.ts'
 import {emphasized, fitShot, outermost, partyShot, resultShot} from '../../scripts/lib/fusionEmphasis.ts'
 import {partyClosing, partyViews, resultClosing} from '../../scripts/renderFusion.ts'
 import {classicFrame} from '../../src/frames/index.ts'
-import {offsetPosition} from '../../src/lib/gallery/fusion/effects/base/portalOffset.ts'
-import {bloodEffect} from '../../src/lib/gallery/fusion/effects/index.ts'
 import {portalIn} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
+import {partyEffects} from '../../src/party_effects/index.ts'
+import {offsetPosition} from '../../src/party_effects/lib/partySite.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
 
 /** the game’s camera as slopGallery.pose turns it for the shot, square */
@@ -79,13 +79,13 @@ describe('fitting a shot to points', () => {
   })
 })
 describe('--emphasis party', () => {
-  const closing = partyClosing(partyViews(portal, bloodEffect, timeline), timeline, framing)
+  const closing = partyClosing(partyViews(portal, partyEffects.blood, timeline), timeline, framing)
   const floor = portal.floor - portal.center[1]
   test('keeps everything the Horror Orb’s blood still reaches in view all through its drift, from inside the Cell, pushing in once, calmly, as it settles', () => {
     for (let time = timeline.emergence; time <= timeline.end; time += 1 / 30) {
       const shot = partyShot(closing, time, timeline)
       const since = time - timeline.emergence
-      const coming = [...since < fusionTiming.afterglow ? Array.from({length: 8}, (_, index): [number, number, number] => [Math.cos(index * Math.PI / 4) * portal.radius, Math.sin(index * Math.PI / 4) * portal.radius, 0]) : [], ...bloodEffect.extent(floor, since)].map(offset => offsetPosition(portal, offset))
+      const coming = [...since < fusionTiming.afterglow ? Array.from({length: 8}, (_, index): [number, number, number] => [Math.cos(index * Math.PI / 4) * portal.radius, Math.sin(index * Math.PI / 4) * portal.radius, 0]) : [], ...partyEffects.blood.extent(floor, since)].map(offset => offsetPosition(portal, offset))
       expect(coming.length).toBeGreaterThan(0)
       for (const point of coming) {
         const [x, y] = project(shot, point)

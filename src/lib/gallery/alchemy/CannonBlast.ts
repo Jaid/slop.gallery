@@ -5,9 +5,9 @@ import {atan, attribute, exp, float, mix, positionGeometry, select, sin, smooths
 import {PlaneGeometry} from 'three/webgpu'
 
 import {coverage, rgb} from '#src/lib/materials/orb/fill.ts'
+import {screenAxes} from '#src/party_effects/lib/billboards.ts'
+import EffectSprites, {instanceAttribute} from '#src/party_effects/lib/EffectSprites.ts'
 
-import {screenAxes} from '../fusion/effects/base/billboards.ts'
-import EffectSprites, {instanceAttribute} from '../fusion/effects/base/EffectSprites.ts'
 import {alchemyCannon} from './alchemyMachine.ts'
 
 /** what a sprite of the blast is: the flash of the bang, a puff of smoke or a spark */

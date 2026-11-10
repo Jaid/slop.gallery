@@ -2,15 +2,15 @@ import type {SatelliteOrbit, SatellitePose} from '../../src/lib/gallery/fusion/o
 
 import {describe, expect, test} from 'bun:test'
 
-import {Group, Quaternion, Vector3} from 'three/webgpu'
+import {Quaternion, Vector3} from 'three/webgpu'
 
-import FusionEffect from '../../src/lib/gallery/fusion/effects/base/FusionEffect.ts'
 import {brewing, portalEnvelope} from '../../src/lib/gallery/fusion/envelope.ts'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
 import {choreographed, emberRhythm, grab, ignition, implosion, introSeconds, introTether, introTrail, laps, pulse, release, whirl, whirled, whirling} from '../../src/lib/gallery/fusion/intro.ts'
 import {introOrbitRate, orbitAngle, orbitPoint, orbitSpeed, satellitePose} from '../../src/lib/gallery/fusion/orbit.ts'
 import {portalFrame, portalRebound, satelliteSize, touchesPortal} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {firstTurn, fusionPulse, fusionTiming, imageAt, introTurns, minimumTurns, nextTurn} from '../../src/lib/gallery/fusion/timing.ts'
+import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 
 const work = {
   id: 'work',
@@ -398,22 +398,21 @@ describe('intro', () => {
     expect(portalEnvelope(end + 2, undefined, undefined, fusionTiming, pair).flash).toBeLessThan(0.01)
   })
 })
-/** an effect that goes on for 0.2 s after the result flipped out, showing nothing */
-class LingeringEffect extends FusionEffect {
-  override readonly afterglow = 0.2
+/** a party effect that goes on for 0.2 s after it burst out, which no test shows */
+class LingeringEffect extends PartyEffect {
+  readonly duration = 0.2
   readonly id = 'lingering'
+  readonly title = 'Lingering'
+
+  createSprites(): never {
+    throw new Error('It has nothing to show.')
+  }
 
   extent() {
     return []
   }
 
-  show() {
-    return {
-      root: new Group,
-      update: () => {},
-      dispose: () => {},
-    }
-  }
+  sound() {}
 }
 const spec = () => ({
   work,

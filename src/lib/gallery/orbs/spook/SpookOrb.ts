@@ -1,6 +1,5 @@
 import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 
-import {ghostsEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import GhostsOrbMaterial from '#src/lib/materials/orb/GhostsOrbMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
@@ -29,7 +28,7 @@ export default class SpookOrb extends PromptOrb {
   ]
   readonly change = 'add something supernatural that makes it'
   readonly color = '#3fd98a'
-  override readonly effect = ghostsEffect
+  override readonly effect = 'ghosts'
   readonly frame = ['maelstrom', 'rift', 'abyss', 'seance'] as const
   readonly id = 'spook'
   readonly mood = 'spook'

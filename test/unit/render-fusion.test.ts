@@ -12,7 +12,7 @@ import fs from 'fs-extra'
 import {keyedShot, throughKeys} from '../../scripts/lib/fusionCamera.ts'
 import {partyShot} from '../../scripts/lib/fusionEmphasis.ts'
 import renderFusion, {findLanding, orbitDistance, partyLength, resultView, throwMotion} from '../../scripts/renderFusion.ts'
-import {bloodEffect} from '../../src/lib/gallery/fusion/effects/index.ts'
+import {partyEffects} from '../../src/party_effects/index.ts'
 import gallery from '../../src/worlds/gallery/index.ts'
 
 const work = (patch: Partial<PortraitDump>): PortraitDump => ({
@@ -129,10 +129,11 @@ test('the result is the work that no longer hangs and no fusion holds, or a new 
   expect(kept.track[0].time).toBe(15)
   expect(findLanding(dumps.slice(0, 2), 'work')).toBeUndefined()
 })
+const bloodEffect = partyEffects.blood
 test('a party lasts until the ingredient’s effect is over, at least until the portal has closed', () => {
   expect(partyLength()).toBe(1.6)
-  expect(partyLength(bloodEffect)).toBe(bloodEffect.afterglow)
-  expect(bloodEffect.afterglow).toBeGreaterThan(1.6)
+  expect(partyLength(bloodEffect)).toBe(bloodEffect.duration)
+  expect(bloodEffect.duration).toBeGreaterThan(1.6)
 })
 test('the camera looks down on a result lying face up from its bottom edge, so its image stands upright', () => {
   // In the middle of the Banquet, far from its walls
@@ -272,10 +273,10 @@ test('every emphasis ends the same camera path, which holds where it stepped asi
     // The Horror Orb’s blood has drained away 6.4 s after the result flipped out.
     expect(party.timeline).toEqual({
       ...neutral.timeline,
-      end: Math.ceil((neutral.timeline.emergence + bloodEffect.afterglow + 1) * 60 - 1e-6) / 60,
+      end: Math.ceil((neutral.timeline.emergence + bloodEffect.duration + 1) * 60 - 1e-6) / 60,
     })
-    expect(party.timeline.end - party.timeline.emergence - bloodEffect.afterglow).toBeGreaterThanOrEqual(1 - 1e-6)
-    expect(party.timeline.end - party.timeline.emergence - bloodEffect.afterglow).toBeLessThan(1 + 1 / 60)
+    expect(party.timeline.end - party.timeline.emergence - bloodEffect.duration).toBeGreaterThanOrEqual(1 - 1e-6)
+    expect(party.timeline.end - party.timeline.emergence - bloodEffect.duration).toBeLessThan(1 + 1 / 60)
     expect(party.frames).toHaveLength(Math.round(party.timeline.end * 60) + 1)
     expect((party.closing as PartyClosing).lasts).toBeCloseTo(party.timeline.end - party.timeline.emergence, 9)
     // The path’s keys are the same up to its last two, which follow the film to its end, where it still holds.

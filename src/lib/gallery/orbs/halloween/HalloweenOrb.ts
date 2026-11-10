@@ -1,6 +1,5 @@
 import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 
-import {batsEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import BatsOrbMaterial from '#src/lib/materials/orb/BatsOrbMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
@@ -33,7 +32,7 @@ export default class HalloweenOrb extends PromptOrb {
   ]
   readonly change = 'add casual Halloween decoration that makes it'
   readonly color = '#ff7b1c'
-  override readonly effect = batsEffect
+  override readonly effect = 'bats'
   readonly frame = ['lantern', 'ossuary'] as const
   readonly id = 'halloween'
   readonly mood = 'halloween'

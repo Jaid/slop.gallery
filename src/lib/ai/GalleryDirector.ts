@@ -7,6 +7,7 @@ import type {OpenRouterAccess} from './openRouterAccess.ts'
 import type {AiSettings} from './settings.ts'
 import type {Span} from 'victoria-browser-client'
 
+import {partyEffects} from '#src/party_effects/index.ts'
 import {currentWorldId} from '#src/worlds/index.ts'
 
 import PortraitNarration from '../audio/PortraitNarration.ts'
@@ -172,7 +173,7 @@ export default class GalleryDirector {
       },
       images: recipe.looks,
       latches: recipe.latches,
-      effects: recipe.effects,
+      effects: recipe.effects.map(id => partyEffects[id]),
       impact,
     }, recipe)
     try {
@@ -233,7 +234,7 @@ export default class GalleryDirector {
       },
       images: recipe.looks,
       latches: recipe.latches,
-      effects: recipe.effects,
+      effects: recipe.effects.map(id => partyEffects[id]),
       impact,
       color: recipe.glow,
     }, recipe)

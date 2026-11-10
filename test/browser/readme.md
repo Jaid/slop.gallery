@@ -80,10 +80,10 @@ bun test/browser/run.ts fusionSound.ts
 
 This standalone fixture renders a succeeding and a failing fusion offline with the portal’s own envelope, heard from 4 m in front of it, and checks for nonfinite samples, silence, headroom and a silent tail. It does not play audio or touch the page.
 
-For the sounds of the effects ingredients contribute to a fusion’s portal, like the Halloween Orb’s bats:
+For the sounds of the party effects, which ingredients contribute to a fusion’s portal, like the Halloween Orb’s bats:
 
 ```sh
-bun test/browser/run.ts fusionEffectSounds.ts
+bun test/browser/run.ts partyEffectSounds.ts
 ```
 
 This standalone fixture renders every effect’s sound offline together with the portal’s boom as the result flips out, heard from 4 m in front of the portal, and checks for nonfinite samples, an effect falling silent once the boom has rung out, headroom and a silent tail. It does not play audio or touch the page.
