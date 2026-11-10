@@ -30,7 +30,12 @@ export type CaptureFrameApi = {
 
 export type FrameEncoder = (frame: RgbaFrame) => Blob | Promise<Blob>
 
+/** Runs a capture’s own render, which it must call exactly once and synchronously, e.g. between preparing the camera for it and restoring it. */
+export type CaptureRenderWrap = (render: () => void, camera: Camera) => void
+
 export type WebgpuCaptureOptions = {
+  /** Wraps every capture’s render, for whatever the application’s own frames set up around theirs. */
+  around?: CaptureRenderWrap
   camera: Camera
   /** Defaults to PNG encoding with an OffscreenCanvas. */
   encode?: FrameEncoder

@@ -1,5 +1,6 @@
-export type {CaptureFrame, CaptureFrameApi, CaptureFrameResult, CapturePixels, RgbaFrame} from '../types.ts'
+export type {CaptureFrame, CaptureFrameApi, CaptureFrameResult, CapturePixels, CaptureRenderWrap, RgbaFrame} from '../types.ts'
 export {default as useCaptureFrame} from './useCaptureFrame.ts'
 export {default as useWebgpuCapture} from './useWebgpuCapture.ts'
+export type {UseWebgpuCaptureOptions} from './useWebgpuCapture.ts'
 export {default} from './WebgpuCaptureBridge.tsx'
 export type {WebgpuCaptureBridgeProps} from './WebgpuCaptureBridge.tsx'

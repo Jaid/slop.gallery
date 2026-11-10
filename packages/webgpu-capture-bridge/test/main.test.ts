@@ -1,3 +1,5 @@
+import type {CaptureRenderWrap} from '../src/main.ts'
+
 import {describe, expect, test} from 'bun:test'
 
 import {PerspectiveCamera, RenderPipeline, RGBAFormat, Scene, UnsignedByteType} from 'three/webgpu'
@@ -54,6 +56,45 @@ describe('WebgpuCapture', () => {
     await capture.captureFrame()
     expect(rendered).toBe(1)
     expect(postprocessed).toBe(1)
+    direct.dispose()
+    capture.dispose()
+  })
+  test('a wrap runs around the capture’s render, of the scene or of the pipeline, with the capture’s camera', async () => {
+    const renderer = new TestRenderer
+    const scene = new Scene
+    const camera = new PerspectiveCamera
+    const steps: Array<string> = []
+    renderer.onRender = () => {
+      steps.push('scene')
+    }
+    const around: CaptureRenderWrap = (render, captured) => {
+      expect(captured).toBe(camera)
+      steps.push('before')
+      render()
+      steps.push('after')
+    }
+    const direct = new WebgpuCapture({
+      around,
+      renderer: renderer.asRenderer(),
+      scene,
+      camera,
+      encode,
+    })
+    await direct.capturePixels()
+    const pipeline = new RenderPipeline(renderer.asRenderer())
+    pipeline.render = () => {
+      steps.push('pipeline')
+    }
+    const capture = new WebgpuCapture({
+      around,
+      renderer: renderer.asRenderer(),
+      scene,
+      camera,
+      pipeline,
+      encode,
+    })
+    await capture.captureFrame()
+    expect(steps).toEqual(['before', 'scene', 'after', 'before', 'pipeline', 'after'])
     direct.dispose()
     capture.dispose()
   })

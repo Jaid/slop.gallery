@@ -80,7 +80,7 @@ export default class WebgpuCapture implements CaptureFrameApi, Disposable {
   }
 
   private async readFrame(): Promise<RgbaFrame> {
-    const {renderer, scene, camera, pipeline} = this.options
+    const {around, renderer, scene, camera, pipeline} = this.options
     const {width, height} = renderer.getDrawingBufferSize(this.size)
     validateSize(width, height)
     this.target ??= new RenderTarget(width, height, {
@@ -103,10 +103,17 @@ export default class WebgpuCapture implements CaptureFrameApi, Disposable {
       renderer.setOutputRenderTarget(target)
       renderer.setRenderTarget(null)
       renderer.autoClear = true
-      if (pipeline) {
-        pipeline.render()
+      const render = () => {
+        if (pipeline) {
+          pipeline.render()
+        } else {
+          renderer.render(scene, camera)
+        }
+      }
+      if (around) {
+        around(render, camera)
       } else {
-        renderer.render(scene, camera)
+        render()
       }
       pendingReadback = renderer.readRenderTargetPixelsAsync(target, 0, 0, width, height)
     } finally {

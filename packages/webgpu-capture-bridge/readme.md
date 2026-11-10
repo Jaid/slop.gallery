@@ -27,6 +27,8 @@ try {
 
 For postprocessing, pass `pipeline`, a Three `RenderPipeline` owned by the same renderer. Native WebGPU is required; renderers using Three’s WebGL fallback are rejected. Initialize the renderer before capturing. The service does not own or dispose your renderer, scene or pipeline.
 
+Pass `around` to wrap every capture’s render, a function `(render, camera) => void` that calls `render` exactly once and synchronously: whatever your own frames set up around their render and take back afterwards, like a camera adjustment that only applies while drawing, a capture then renders with as well.
+
 `captureFrame` is bound to its instance and can be passed directly as a callback. Each instance lazily allocates one RGBA8 render target and resizes it to the renderer’s current physical drawing-buffer dimensions, including pixel ratio. Empty or invalid dimensions reject instead of producing a misleading image.
 
 Captures use an output render target, preserving Three.js screen tone mapping and output color conversion for direct scene rendering. The previous render target, cube face, mipmap level, output target and `autoClear` are restored synchronously before awaiting GPU readback.
@@ -51,7 +53,7 @@ function CaptureButtonBinding() {
 }
 ```
 
-Mount the component inside the WebGPU `Canvas`. The hook owns setup and disposal, including React Strict Mode effect replay. Calls before effect setup or after unmount reject.
+Mount the component inside the WebGPU `Canvas`. The hook owns setup and disposal, including React Strict Mode effect replay. Calls before effect setup or after unmount reject. `useWebgpuCapture({around})` passes a render wrap on; keep the function stable, as a new one reconnects the capture service.
 
 For access outside the canvas, use the ref component, whose ref receives both `captureFrame` and `capturePixels`:
 
