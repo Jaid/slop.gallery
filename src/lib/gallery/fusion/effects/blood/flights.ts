@@ -1,5 +1,7 @@
 import type {PortalOffset} from '../base/portalOffset.ts'
 
+import {moments} from '../base/portalOffset.ts'
+
 /** what a piece of the blood is: a drop, a speck of the mist that sprays out with the drops, which the air holds up and takes no splat from, the pool gathering on the floor under the portal or the stream pouring down into it */
 export const bloodKinds = {
   drop: 0,
@@ -170,6 +172,18 @@ export function bloodLanding({size, start, velocity}: Pick<BloodDrop, 'size' | '
   }
 }
 
+/** Where a drop is `seconds` after it left the portal, from the portal’s middle, slowed by the air, as `BloodSpray` flies it on the GPU, and how fast it moves, in m/s along the wall, up and out into the room. */
+export function bloodFlight({size, start, velocity}: Pick<BloodDrop, 'size' | 'start' | 'velocity'>, seconds: number) {
+  const drag = airDrag(size)
+  const decay = Math.exp(-drag * seconds)
+  const travel = (1 - decay) / drag
+  const {height, speed} = rise(start[1], velocity[1], drag, seconds)
+  return {
+    offset: [start[0] + velocity[0] * travel, height, start[2] + velocity[2] * travel] as PortalOffset,
+    velocity: [velocity[0] * decay, speed, velocity[2] * decay] as PortalOffset,
+  }
+}
+
 /** How long the pour takes to fall `distance` meters from where it leaves the portal, in seconds; too thick for the air to slow it down. `BloodSpray` lets it fall the same way on the GPU. */
 export function pourFall(distance: number) {
   const {speed} = bloodPour
@@ -297,4 +311,38 @@ export function bloodSplats(drops: ReadonlyArray<BloodDrop>, floor: number): Arr
       speed,
     }
   })
+}
+
+/**
+ * Where the blood reaches from `since` seconds after the result flipped out until it is gone, above a floor `floor` meters below the portal’s middle (negative), as points from the portal’s middle: every drop’s flight down to where it strikes and its stain round that, stretched the flatter it struck, until the stain has faded, the mist until it settled away, the pour while it flows and the pool at its widest until it is drained.
+ */
+export function bloodExtent(drops: ReadonlyArray<BloodDrop>, floor: number, since = 0): Array<PortalOffset> {
+  const ground = floor + splatLift
+  const [along, out] = bloodPool.center
+  const widest = bloodPool.radius * (1 + bloodPool.creep.share)
+  const pool = since < bloodPool.draining.start + bloodPool.draining.seconds ? Array.from({length: 24}, (_, index): PortalOffset => [along + Math.cos(index / 24 * Math.PI * 2) * widest, ground, out + Math.sin(index / 24 * Math.PI * 2) * widest]) : []
+  const {flowing: [, stops], drying, start} = bloodPour
+  const pour: Array<PortalOffset> = since < stops + drying + pourFall(start[1] - ground) ? [start, [start[0], ground, start[2]]] : []
+  const flights = drops.filter(drop => drop.kind === 'drop' || drop.kind === 'mist').flatMap(drop => {
+    const {landing} = bloodLanding(drop, floor)
+    const flown = Math.max(0, since - drop.delay)
+    if (drop.kind === 'mist') {
+      // It has settled away by then.
+      return moments(flown, landing * 0.6, 6).map(seconds => bloodFlight(drop, seconds).offset)
+    }
+    // Its stain fades by its own share of the stagger, as `BloodSpray` fades it.
+    const faded = bloodFading.start + bloodFading.stagger * drop.phase + bloodFading.duration
+    if (since > faded) {
+      return []
+    }
+    const path = moments(Math.min(flown, landing), landing, 8).map(seconds => bloodFlight(drop, seconds).offset)
+    // Its stain, as wide as `BloodSpray` spreads it by how fast it struck and stretched by how flat
+    const {velocity} = bloodFlight(drop, landing)
+    const speed = Math.hypot(...velocity)
+    const elongation = 1 / Math.max(Math.abs(velocity[1]) / Math.max(speed, 0.0001), 0.28)
+    const reach = drop.size * (speed * 0.45 + 2.2) / 2 * (elongation + 1)
+    const [x, , z] = path.at(-1)!
+    return [...path, [x - reach, ground, z], [x + reach, ground, z], [x, ground, z - reach], [x, ground, z + reach]] satisfies Array<PortalOffset>
+  })
+  return [...pool, ...pour, ...flights]
 }

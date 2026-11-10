@@ -4,8 +4,8 @@ import type EscapingGhosts from '../../src/lib/gallery/fusion/effects/ghosts/Esc
 import {describe, expect, test} from 'bun:test'
 
 import {batOffset, flyingBats} from '../../src/lib/gallery/fusion/effects/bats/flights.ts'
-import {airDrag, bloodBeats, bloodDrops, bloodFading, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/lib/gallery/fusion/effects/blood/flights.ts'
-import {escapingGhosts} from '../../src/lib/gallery/fusion/effects/ghosts/flights.ts'
+import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/lib/gallery/fusion/effects/blood/flights.ts'
+import {escapingGhosts, ghostOffset} from '../../src/lib/gallery/fusion/effects/ghosts/flights.ts'
 import {batsEffect, bloodEffect, fusionEffects, ghostsEffect, strokesEffect} from '../../src/lib/gallery/fusion/effects/index.ts'
 import {brushStrokes, strokeDrying, strokePoint} from '../../src/lib/gallery/fusion/effects/strokes/flights.ts'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
@@ -30,6 +30,9 @@ const frame = portalFrame(work, {
   room: 4,
   sides: [3, 3],
 })
+/** the box round the points, as the lowest and highest value of each axis */
+const boxOf = (points: ReadonlyArray<readonly [number, number, number]>) => [0, 1, 2].map(axis => [Math.min(...points.map(point => point[axis])), Math.max(...points.map(point => point[axis]))])
+const holds = (box: Array<Array<number>>, point: readonly [number, number, number]) => point.every((value, axis) => value >= box[axis][0] - 1e-9 && value <= box[axis][1] + 1e-9)
 describe('fusion effects', () => {
   test('the Spook Orb contributes its ghosts, which the recipe hands the portal once', () => {
     expect(spookOrb.ingredient(3).contributions).toContainEqual({
@@ -224,5 +227,31 @@ describe('fusion effects', () => {
     const [laterAlong, laterUp, laterOut] = strokePoint(stroke, 0, 1)
     expect(Math.atan2(laterUp, laterAlong)).not.toBeCloseTo(Math.atan2(up, along), 2)
     expect(laterOut).toBeGreaterThan(out)
+  })
+  test('every effect tells where it reaches over its whole show, holding everything it flies, lays or spills, never below the floor', () => {
+    const floor = frame.floor - frame.center[1]
+    for (const effect of fusionEffects) {
+      const extent = effect.extent(floor)
+      expect(extent.length).toBeGreaterThan(20)
+      expect(extent.flat().every(Number.isFinite)).toBe(true)
+      expect(Math.min(...extent.map(([, up]) => up))).toBeGreaterThanOrEqual(floor)
+      // Ever less of it is still to come, within where it reaches over its whole show, and nothing once it is over.
+      const whole = boxOf(extent)
+      const halfway = effect.extent(floor, effect.afterglow / 2)
+      expect(halfway.length).toBeGreaterThan(0)
+      expect(halfway.every(point => holds(whole, point))).toBe(true)
+      expect(effect.extent(floor, effect.afterglow + 0.01)).toEqual([])
+    }
+    const at = (effect: typeof fusionEffects[number], points: Array<readonly [number, number, number]>) => {
+      const box = boxOf(effect.extent(floor))
+      expect(points.every(point => holds(box, point))).toBe(true)
+    }
+    at(batsEffect, flyingBats.flatMap(bat => [0.1, 0.4, 0.8].map(share => batOffset(bat, bat.life * share))))
+    at(ghostsEffect, escapingGhosts.flatMap(ghost => [0.1, 0.4, 0.8].map(share => ghostOffset(ghost, ghost.life * share))))
+    at(strokesEffect, brushStrokes.flatMap(stroke => [0.2, 0.7].flatMap(share => [0, 1, 2].map(seconds => strokePoint(stroke, share, seconds)))))
+    // every stain where its drop strikes the floor, and the pool at its widest
+    const splats = bloodDrops.filter(drop => drop.kind === 'drop').map(drop => bloodFlight(drop, bloodLanding(drop, floor).landing).offset)
+    expect(Math.max(...splats.map(([, up]) => Math.abs(up - floor - splatLift)))).toBeLessThan(1e-3)
+    at(bloodEffect, [...splats, [bloodPool.center[0] + bloodPool.radius, floor + splatLift, bloodPool.center[1]], [bloodPool.center[0], floor + splatLift, bloodPool.center[1] - bloodPool.radius]])
   })
 })

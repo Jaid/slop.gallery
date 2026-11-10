@@ -1,5 +1,6 @@
 import type {AudioOutput} from '#src/lib/audio/proceduralAudio.ts'
 import type Fusion from '#src/lib/gallery/fusion/Fusion.ts'
+import type {PortalOffset} from './portalOffset.ts'
 import type {Object3D} from 'three/webgpu'
 
 /** a fusion’s effect as one portal shows it */
@@ -19,6 +20,9 @@ export default abstract class FusionEffect {
   /** seconds it goes on after the result flipped out, which keeps the portal open at least that long */
   readonly afterglow: number = 0
   abstract readonly id: string
+
+  /** Where it reaches from `since` seconds after the result flipped out to the end of its show, round a portal whose floor lies `floor` meters below its middle (negative), as points from the portal’s middle, none once it is over: a camera that sees them all sees all of it that is still to come, like the closing shot of a film that keeps it in view. */
+  abstract extent(floor: number, since?: number): Array<PortalOffset>
 
   /** The effect as the portal of `fusion` shows it. */
   abstract show(fusion: Fusion): EffectShow

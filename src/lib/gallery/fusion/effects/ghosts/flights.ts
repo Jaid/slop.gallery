@@ -1,3 +1,5 @@
+import type {PortalOffset} from '../base/portalOffset.ts'
+
 /** a ghost that escapes a fusion’s portal as the result flips out */
 export type EscapingGhost = {
   /** where it shoots out toward, as an angle around the portal’s middle in the wall’s plane: 0 to the right along the wall, a quarter turn up */
@@ -54,3 +56,15 @@ export const escapingGhosts: ReadonlyArray<EscapingGhost> = [{
   phase: 4.1,
   pitch: 392,
 }]
+
+/**
+ * Where the middle of the ghost’s head is `seconds` after it escaped: it shoots out toward its angle, to the side and up and a little into the room, slows down at once and rises ever faster.
+ * `EscapingGhosts` flies them the same way on the GPU.
+ */
+export function ghostOffset({angle, life, reach, rise}: EscapingGhost, seconds: number): PortalOffset {
+  const since = Math.max(0, seconds)
+  const progress = Math.min(1, since / life)
+  // toward its angle and 0.3 of that into the room, as one unit
+  const distance = reach * (1 - Math.exp(-4 * since)) / Math.hypot(1, 0.3)
+  return [Math.cos(angle) * distance, Math.sin(angle) * distance + rise * progress ** 1.5, 0.3 * distance]
+}

@@ -403,6 +403,10 @@ class LingeringEffect extends FusionEffect {
   override readonly afterglow = 0.2
   readonly id = 'lingering'
 
+  extent() {
+    return []
+  }
+
   show() {
     return {
       root: new Group,
