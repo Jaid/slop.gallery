@@ -5,7 +5,7 @@ import {attribute, cameraPosition, cross, exp, float, max, mix, modelPosition, m
 import {PlaneGeometry} from 'three/webgpu'
 
 import {paintColor} from '#src/lib/materials/oilPaints.ts'
-import {coverage} from '#src/lib/materials/orb/fill.ts'
+import {coverage} from '#src/orbs/lib/fill.ts'
 
 import {partyPoint} from '../lib/billboards.ts'
 import EffectSprites, {instanceAttribute} from '../lib/EffectSprites.ts'

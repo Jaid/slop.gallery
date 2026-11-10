@@ -14,9 +14,9 @@ import {arrivalFrame} from '../../src/lib/gallery/actions.ts'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
 import {portalFrame} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {nextTurn} from '../../src/lib/gallery/fusion/timing.ts'
-import {transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import {environmentSeed} from '../../src/lib/gameSeed.ts'
+import {transparentOrb} from '../../src/orbs/index.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
 const defaults: AiSettings = readAiSettings()

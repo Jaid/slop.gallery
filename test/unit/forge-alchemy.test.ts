@@ -1,5 +1,5 @@
-import type {Orb} from '../../src/lib/gallery/orbs/index.ts'
 import type {Vec3} from '../../src/lib/gallery/types.ts'
+import type {Orb} from '../../src/orbs/index.ts'
 
 import {afterAll, describe, expect, test} from 'bun:test'
 
@@ -26,10 +26,10 @@ import {climbApproach, climbCulvert, climbRun} from '../../src/lib/gallery/climb
 import {hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import forge, {forgeRooflight, forgeVestibule} from '../../src/lib/gallery/forge.ts'
 import {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
-import {halloweenOrb, horrorOrb, orbRadius, paintOrb, spookOrb, transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
 import {salonCeiling} from '../../src/lib/gallery/salon.ts'
 import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
 import {insideOpening, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import {halloweenOrb, horrorOrb, orbRadius, paintOrb, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 import {bastionBaseboard} from '../../src/rooms/bastion/walls.ts'
 import CannonFx, {charging} from '../../src/rooms/forge/components/AlchemyMachine/CannonFx.ts'

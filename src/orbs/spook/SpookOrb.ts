@@ -1,8 +1,7 @@
-import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
-
-import GhostsOrbMaterial from '#src/lib/materials/orb/GhostsOrbMaterial.ts'
+import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
+import GhostsOrbMaterial from './GhostsOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
 /** Blinking ghosts drifting through green mist. It lets something supernatural slip into a work, and its ghosts escape the portal as the result flips out. */

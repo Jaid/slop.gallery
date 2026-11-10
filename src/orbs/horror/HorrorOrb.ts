@@ -1,8 +1,7 @@
-import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
-
-import EyeOrbMaterial from '#src/lib/materials/orb/EyeOrbMaterial.ts'
+import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
+import EyeOrbMaterial from './EyeOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
 /** A bloodshot eye bleeding into its liquid. It corrupts a work into something disturbing, and the portal spurts blood as the result flips out. */

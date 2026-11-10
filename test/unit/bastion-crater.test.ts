@@ -6,8 +6,8 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} fro
 
 import {bastionCrater, bastionCurve, bastionLinkStart} from '../../src/lib/gallery/bastion.ts'
 import {rubbleShelf} from '../../src/lib/gallery/BastionCraterGeometry.ts'
-import {orbRadius} from '../../src/lib/gallery/orbs/index.ts'
 import RouteVaultGeometry, {pavingThickness} from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
+import {orbRadius} from '../../src/orbs/index.ts'
 import {bastionCraterGeometry} from './helpers/bastionCrater.ts'
 import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 

@@ -1,7 +1,8 @@
 import type {ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type {MoodId} from '#src/moods/index.ts'
 
-import {environmentRandom} from '../../../environmentSeed.ts'
+import {environmentRandom} from '#src/lib/environmentSeed.ts'
+
 import {transparentOrb} from '../transparent/TransparentOrb.ts'
 import Orb from './Orb.ts'
 

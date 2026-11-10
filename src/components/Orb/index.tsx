@@ -1,13 +1,13 @@
 import type {Vec3} from '#src/lib/gallery.ts'
-import type {Orb as OrbKind} from '#src/lib/gallery/orbs/index.ts'
+import type {Orb as OrbKind} from '#src/orbs/index.ts'
 
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 
 import GrabbableProp from '#src/components/Scene/GrabbableProp.tsx'
 import {orbStriker} from '#src/lib/audio/impactSounds.ts'
-import {orbRadius} from '#src/lib/gallery/orbs/index.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
+import {orbRadius} from '#src/orbs/index.ts'
 
 /** A glass ball, filled with its orb’s scene if it has one, which rolls when knocked and clinks against what it strikes, casts its orb’s mood over the world while held and is an ingredient of the fusion of a portrait it is thrown into, contributing whatever its orb contributes, and used up by its success, which leaves the orb’s remains, if any. */
 export default function Orb({id, orb, position, withheld}: {

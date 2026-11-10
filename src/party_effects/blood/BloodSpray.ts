@@ -4,7 +4,7 @@ import type {Node} from 'three/webgpu'
 import {atan, attribute, cameraPosition, cross, exp, float, max, mix, modelPosition, mx_noise_float, positionGeometry, positionWorld, select, sin, smoothstep, uv, vec2, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
-import {coverage, rgb} from '#src/lib/materials/orb/fill.ts'
+import {coverage, rgb} from '#src/orbs/lib/fill.ts'
 
 import {partyPoint} from '../lib/billboards.ts'
 import EffectSprites, {instanceAttribute} from '../lib/EffectSprites.ts'

@@ -23,7 +23,7 @@ let spawned = 0
 
 /** Brings an orb of the kind `orb` into the world at `position`, lying there like any other, and resolves once its prop is in the world; see the `spawn_orb` tool. */
 export default async function spawnOrb({id, orb, position}: OrbSpawnInput): Promise<OrbSpawn> {
-  const {orbs} = await import('#src/lib/gallery/orbs/index.ts')
+  const {orbs} = await import('#src/orbs/index.ts')
   const kind = orbs.find(candidate => candidate.id === orb)
   if (!kind) {
     throw new Error(`There is no orb “${orb}”. Orbs: ${orbs.map(candidate => candidate.id).join(', ')}.`)

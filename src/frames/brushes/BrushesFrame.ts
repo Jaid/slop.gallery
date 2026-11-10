@@ -5,7 +5,7 @@ import {LatheGeometry, MeshPhysicalNodeMaterial, Vector2} from 'three/webgpu'
 
 import {heightNormal, inside, insideBy, line, visibleDetail} from '#src/lib/materials/filters.ts'
 import {paintColor, paintOrder} from '#src/lib/materials/oilPaints.ts'
-import {rgb} from '#src/lib/materials/orb/fill.ts'
+import {rgb} from '#src/orbs/lib/fill.ts'
 
 import PortraitFrame, {frameBack, frameTriangleBudget} from '../base/PortraitFrame.ts'
 import {withOpening} from '../lib/frameBack.ts'

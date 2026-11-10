@@ -1,8 +1,7 @@
-import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
-
-import ClearOrbMaterial from '#src/lib/materials/orb/ClearOrbMaterial.ts'
+import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
 import Orb from '../base/Orb.ts'
+import ClearOrbMaterial from './ClearOrbMaterial.ts'
 
 /**
  * A ball of clear crystal with nothing inside, an ingredient without any contribution: no instruction, no image and no frame. Thrown into a portrait, it leaves the hung portrait’s own image as the fusion’s only contribution, so no image model is asked and the portrait comes back out of the portal as it went in, framed by the room it arrives in.

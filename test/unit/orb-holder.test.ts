@@ -4,7 +4,7 @@ import RAPIER from '@dimforge/rapier3d-compat'
 
 import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
 import OrbHolderGeometry, {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
-import {orbRadius} from '../../src/lib/gallery/orbs/index.ts'
+import {orbRadius} from '../../src/orbs/index.ts'
 
 await RAPIER.init()
 /** Where an orb let down onto the holder from just over its seat, pushed by `velocity`, comes to rest after `seconds`, and how low it went on the way. */

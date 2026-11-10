@@ -1,6 +1,6 @@
 import type {PropHandle} from '#src/components/Scene/GrabbableProp.tsx'
 import type {Vec3} from '#src/lib/gallery.ts'
-import type {Orb} from '#src/lib/gallery/orbs/index.ts'
+import type {Orb} from '#src/orbs/index.ts'
 import type CannonFx from './CannonFx.ts'
 import type {Object3D} from 'three/webgpu'
 
@@ -14,8 +14,8 @@ import {bodyPose, playSound, useGallery} from '#src/lib/gallery.ts'
 import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, inSinkThroat, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {orbAround, transmutedOrb} from '#src/lib/gallery/alchemy/flavor.ts'
 import {orbSeat} from '#src/lib/gallery/OrbHolderGeometry.ts'
-import {orbRadius, transparentOrb} from '#src/lib/gallery/orbs/index.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
+import {orbRadius, transparentOrb} from '#src/orbs/index.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 import {charging} from './CannonFx.ts'

@@ -1,5 +1,6 @@
+import {randomOrbs} from '#src/orbs/index.ts'
+
 import {environmentRandom} from '../environmentSeed.ts'
-import {randomOrbs} from './orbs/index.ts'
 import {vesperOrbPedestals} from './vesper.ts'
 
 /**

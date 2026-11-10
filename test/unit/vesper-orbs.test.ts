@@ -2,9 +2,9 @@ import {expect, test} from 'bun:test'
 
 import {columnPedestalRadius} from '../../src/lib/gallery/ColumnPedestalGeometry.ts'
 import {floorTile} from '../../src/lib/gallery/floors.ts'
-import {horrorOrb, randomOrbs} from '../../src/lib/gallery/orbs/index.ts'
 import {vesper, vesperOrbPedestals} from '../../src/lib/gallery/vesper.ts'
 import {vesperOrbs} from '../../src/lib/gallery/vesperOrbs.ts'
+import {horrorOrb, randomOrbs} from '../../src/orbs/index.ts'
 import {floorHeight, roomAt} from './fixtures/gallery.ts'
 
 test('the Vesper stands four orbs on column pedestals in two northern rows of two, centered on floor tiles and clear of the walls and each other', () => {

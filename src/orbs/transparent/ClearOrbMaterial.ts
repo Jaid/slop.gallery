@@ -1,8 +1,8 @@
-import type {OrbGlassOptions} from './base/OrbGlassMaterial.ts'
+import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
 import {float, vec3} from 'three/tsl'
 
-import OrbGlassMaterial from './base/OrbGlassMaterial.ts'
+import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
 
 /** A ball of clear crystal with nothing inside, through which the room shows upside down and squeezed into the ball, sharp, untinted and bent as strongly as by solid glass. */
 export default class ClearOrbMaterial extends OrbGlassMaterial {

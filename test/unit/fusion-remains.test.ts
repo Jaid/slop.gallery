@@ -10,8 +10,8 @@ import {propObjects} from '../../src/components/Scene/GrabbableProp.tsx'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
 import {portalFrame} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
-import {orbs, promptOrbs, transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
+import {orbs, promptOrbs, transparentOrb} from '../../src/orbs/index.ts'
 
 const id = 'prop-orb-spook-remains-1'
 const work = {

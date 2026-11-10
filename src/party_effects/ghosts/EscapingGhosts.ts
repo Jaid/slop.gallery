@@ -5,7 +5,7 @@ import {attribute, cameraWorldMatrix, cos, cross, exp, float, fwidth, max, mix, 
 import {PlaneGeometry} from 'three/webgpu'
 
 import {ghostBlink, ghostColors, ghostShape} from '#src/lib/materials/ghost.ts'
-import {rgb} from '#src/lib/materials/orb/fill.ts'
+import {rgb} from '#src/orbs/lib/fill.ts'
 
 import EffectSprites, {instanceAttribute} from '../lib/EffectSprites.ts'
 

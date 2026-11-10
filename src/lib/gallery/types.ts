@@ -1,8 +1,8 @@
 import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
+import type {Orb} from '#src/orbs/index.ts'
 import type {PlacementIssue} from '../placement/wallGeometry.ts'
 import type {ItemIngredient} from './fusion/FusionRecipe.ts'
-import type {Orb} from './orbs/index.ts'
 import type {Quat as MathQuat, Vec3 as MathVec3} from 'math'
 import type {NarrationTiming} from 'use-narrator/core'
 

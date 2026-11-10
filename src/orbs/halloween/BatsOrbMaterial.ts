@@ -1,11 +1,11 @@
-import type {FillLayer, OrbGlassOptions, OrbRay} from './base/OrbGlassMaterial.ts'
+import type {FillLayer, OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
 import {color, cross, float, mix, mx_fractal_noise_float, select, smoothstep, time, vec3} from 'three/tsl'
 
-import OrbGlassMaterial from './base/OrbGlassMaterial.ts'
-import {coverage, ellipsoidHit, planeDepth, rgb, spinAroundY} from './fill.ts'
-import {orbFractalNoise, orbNoise} from './noise.ts'
+import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
+import {coverage, ellipsoidHit, planeDepth, rgb, spinAroundY} from '../lib/fill.ts'
+import {orbFractalNoise, orbNoise} from '../lib/noise.ts'
 
 const steps = 40
 /** the radius of the moon in the middle, in radii of the orb */

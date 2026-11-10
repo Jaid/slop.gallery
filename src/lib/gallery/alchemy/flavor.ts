@@ -1,8 +1,9 @@
-import type {Orb} from '../orbs/index.ts'
+import type {Orb} from '#src/orbs/index.ts'
 import type {Vec3} from '../types.ts'
 
+import {halloweenOrb, horrorOrb, paintOrb, spookOrb, transparentOrb} from '#src/orbs/index.ts'
+
 import {hatchet, helmet, paintingSet, pumpkin} from '../curios/index.ts'
-import {halloweenOrb, horrorOrb, paintOrb, spookOrb, transparentOrb} from '../orbs/index.ts'
 
 /** the rooms an orb the alchemy machine shoots out passes through on its way down to the Bastion’s crater */
 export const alchemyRooms: ReadonlySet<string> = new Set(['bastion', 'forge'])

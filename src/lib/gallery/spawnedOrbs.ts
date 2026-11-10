@@ -1,4 +1,4 @@
-import type {Orb} from './orbs/index.ts'
+import type {Orb} from '#src/orbs/index.ts'
 import type {Vec3} from './types.ts'
 
 import {create} from 'zustand'

@@ -1,13 +1,13 @@
-import type {Orb} from '#src/lib/gallery/orbs/index.ts'
 import type {PortraitSlot, Vec3} from '#src/lib/gallery/types.ts'
+import type {Orb} from '#src/orbs/index.ts'
 import type {SkyboxId} from '#src/rooms/index.ts'
 import type {TurntableRequest} from './turntable.ts'
 
 import {lazy} from 'react'
 
-import {orbs} from '#src/lib/gallery/orbs/index.ts'
 import {FloorPlanPlacementSpace} from '#src/lib/placement/FloorPlanPlacementSpace.ts'
 import {defaultPortraitArea, portraitRatios} from '#src/lib/placement/portraitSlots.ts'
+import {orbs} from '#src/orbs/index.ts'
 import Cell from '#src/rooms/cell/Cell.ts'
 import CellLayout from '#src/rooms/cell/CellLayout.ts'
 import artworks from '#src/worlds/gallery/artworks.ts'

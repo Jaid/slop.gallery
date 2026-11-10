@@ -2,7 +2,7 @@ import type {Node} from 'three/webgpu'
 
 import {select} from 'three/tsl'
 
-import {rgb} from './orb/fill.ts'
+import {rgb} from '#src/orbs/lib/fill.ts'
 
 /** the oil paints the Paint Orb holds, each from a tube of its own, which its ribbons curl in, its effects are laid in and the painters’ frames are daubed with */
 export const oilPaints = {

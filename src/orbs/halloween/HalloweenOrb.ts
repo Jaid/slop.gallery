@@ -1,8 +1,7 @@
-import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
-
-import BatsOrbMaterial from '#src/lib/materials/orb/BatsOrbMaterial.ts'
+import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
+import BatsOrbMaterial from './BatsOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
 /** Bats circling a harvest moon in orange haze. It dresses a work up for Halloween, festive rather than frightening, and its bats burst out of the portal as the result flips out. */

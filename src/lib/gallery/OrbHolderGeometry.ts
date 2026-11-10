@@ -4,8 +4,9 @@ import {ParametricGeometry} from 'three/addons/geometries/ParametricGeometry.js'
 import {toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js'
 import {ExtrudeGeometry, LatheGeometry, Shape, SphereGeometry, TorusGeometry, Vector2} from 'three/webgpu'
 
+import {orbRadius} from '#src/orbs/index.ts'
+
 import {mergeParts} from '../geometry.ts'
-import {orbRadius} from './orbs/index.ts'
 
 /** a point in a plane: of a turned outline, its radius and height, or of a flat one, across and up */
 type Point = readonly [x: number, y: number]

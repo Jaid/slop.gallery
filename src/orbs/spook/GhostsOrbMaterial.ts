@@ -1,13 +1,14 @@
-import type {GhostExpression} from '../ghost.ts'
-import type {FillLayer, OrbGlassOptions, OrbRay} from './base/OrbGlassMaterial.ts'
+import type {GhostExpression} from '#src/lib/materials/ghost.ts'
+import type {FillLayer, OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
 import {color, cross, float, mix, mx_noise_float, smoothstep, time, vec2, vec3} from 'three/tsl'
 
-import {ghostBlink, ghostColors, ghostShape} from '../ghost.ts'
-import OrbGlassMaterial from './base/OrbGlassMaterial.ts'
-import {coverage, rgb, spinAroundY, turn} from './fill.ts'
-import {orbNoise} from './noise.ts'
+import {ghostBlink, ghostColors, ghostShape} from '#src/lib/materials/ghost.ts'
+
+import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
+import {coverage, rgb, spinAroundY, turn} from '../lib/fill.ts'
+import {orbNoise} from '../lib/noise.ts'
 
 const steps = 40
 /** Each ghost drifts around the middle at its own height, bobbing and swaying, its height in radii of the orb. */

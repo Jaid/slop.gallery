@@ -3,10 +3,11 @@ import type {Vec3} from '../types.ts'
 
 import {defaultEgoOptions} from 'ego-player/motor'
 
+import {orbRadius} from '#src/orbs/index.ts'
+
 import {cannonLaunch, flight} from '../alchemy/alchemyMachine.ts'
 import {wallFace} from '../architectureDimensions.ts'
 import {climbCrossfall, climbCulvert, climbRun} from '../climb.ts'
-import {orbRadius} from '../orbs/index.ts'
 import {cisternWindow, cisternWindowHole} from './window.ts'
 
 type Point = readonly [x: number, z: number]

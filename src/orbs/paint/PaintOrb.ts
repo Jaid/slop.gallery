@@ -1,8 +1,7 @@
-import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
-
-import PaintsOrbMaterial from '#src/lib/materials/orb/PaintsOrbMaterial.ts'
+import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
+import PaintsOrbMaterial from './PaintsOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
 /** Ribbons of oil paint curling through linseed oil. It has a work painted anew as an artistic painting of its own subject, every prompt asking for all of the traits it names, and unseen brushes paint a flourish of oil strokes into the air around the portal as the result flips out. */

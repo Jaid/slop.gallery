@@ -1,11 +1,11 @@
 import type {FusionIngredient, IngredientContribution} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
-import type PromptOrb from '../../src/lib/gallery/orbs/base/PromptOrb.ts'
+import type PromptOrb from '../../src/orbs/base/PromptOrb.ts'
 
 import {describe, expect, test} from 'bun:test'
 
 import {pickFrame} from '../../src/frames/lib/frameChoice.ts'
 import FusionRecipe, {fusionInstruction, itemIngredient, maximumIngredients, minimumIngredients, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
-import {promptOrbs, transparentOrb} from '../../src/lib/gallery/orbs/index.ts'
+import {promptOrbs, transparentOrb} from '../../src/orbs/index.ts'
 
 const png = Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMAAABIeJ9nAAAAA1BMVEX/AAAZ4gk3AAAADElEQVQI12NgYGAAAAAEAAEnNCcKAAAAAElFTkSuQmCC')
 const image = new Blob([png], {type: 'image/png'})

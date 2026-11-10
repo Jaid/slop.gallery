@@ -1,12 +1,13 @@
-import type {OrbFill, OrbGlassOptions, OrbRay} from './base/OrbGlassMaterial.ts'
+import type {OrbFill, OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
 import {Break, float, If, Loop, mix, mx_cell_noise_float, normalize, select, smoothstep, time, vec2, vec3} from 'three/tsl'
 
-import {oilPaints} from '../oilPaints.ts'
-import OrbGlassMaterial from './base/OrbGlassMaterial.ts'
-import {rgb, spinAroundY} from './fill.ts'
-import {orbNoise} from './noise.ts'
+import {oilPaints} from '#src/lib/materials/oilPaints.ts'
+
+import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
+import {rgb, spinAroundY} from '../lib/fill.ts'
+import {orbNoise} from '../lib/noise.ts'
 
 /** the most steps the march takes through the fill */
 const steps = 128

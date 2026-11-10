@@ -4,7 +4,7 @@ import {mulberry32} from 'math/random'
 import {atan, attribute, exp, float, mix, positionGeometry, select, sin, smoothstep, step, uv, vec2, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
-import {coverage, rgb} from '#src/lib/materials/orb/fill.ts'
+import {coverage, rgb} from '#src/orbs/lib/fill.ts'
 import {screenAxes} from '#src/party_effects/lib/billboards.ts'
 import EffectSprites, {instanceAttribute} from '#src/party_effects/lib/EffectSprites.ts'
 

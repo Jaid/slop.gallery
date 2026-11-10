@@ -1,9 +1,9 @@
 import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {IngredientContribution, ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
-import type OrbGlassMaterial from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
-import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 import type {MoodId} from '#src/moods/index.ts'
 import type {PartyEffectId} from '#src/party_effects/index.ts'
+import type OrbGlassMaterial from './OrbGlassMaterial.ts'
+import type {OrbGlassOptions} from './OrbGlassMaterial.ts'
 
 import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 

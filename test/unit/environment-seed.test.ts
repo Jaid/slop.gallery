@@ -2,8 +2,8 @@ import {expect, test} from 'bun:test'
 
 import {narratorCharacter, narratorTraits, narratorVoice, narratorVoices} from '../../src/lib/audio/narratorCharacter.ts'
 import {effectiveSeed, environmentRandom, isSeed, maximumSeed, parseSeed, readSeedOverride, rollSeed} from '../../src/lib/environmentSeed.ts'
-import {orbs, promptOrbs} from '../../src/lib/gallery/orbs/index.ts'
 import {potPlacements, pottedPlantKind, pottedPlantKinds} from '../../src/lib/gallery/plantDecorations/placements.ts'
+import {orbs, promptOrbs} from '../../src/orbs/index.ts'
 
 test('?seed accepts unsigned 32-bit integers and ignores anything else', () => {
   expect(readSeedOverride('?seed=1')).toBe(1)

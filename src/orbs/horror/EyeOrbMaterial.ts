@@ -1,11 +1,11 @@
-import type {OrbGlassOptions, OrbRay} from './base/OrbGlassMaterial.ts'
+import type {OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
 import {atan, color, cross, float, mix, mx_noise_float, mx_noise_vec3, normalize, smoothstep, time, vec2, vec3} from 'three/tsl'
 
-import OrbGlassMaterial from './base/OrbGlassMaterial.ts'
-import {coverage, spinAroundY} from './fill.ts'
-import {orbFractalNoise, orbNoise} from './noise.ts'
+import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
+import {coverage, spinAroundY} from '../lib/fill.ts'
+import {orbFractalNoise, orbNoise} from '../lib/noise.ts'
 
 const steps = 40
 /** the eyeball’s radius, in radii of the orb */
