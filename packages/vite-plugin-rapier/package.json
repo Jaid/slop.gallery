@@ -1,0 +1,35 @@
+{
+  "name": "vite-plugin-rapier",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Vite plugin that ships the WebAssembly of Rapier’s compat builds as a preloaded file of its own instead of base64 inside the JavaScript",
+  "funding": "https://github.com/sponsors/Jaid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaid/slop.gallery.git",
+    "directory": "packages/vite-plugin-rapier"
+  },
+  "main": "src/main.ts",
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "scripts": {
+    "test": "bun test ./test"
+  },
+  "peerDependencies": {
+    "vite": "^8.3.7"
+  },
+  "devDependencies": {
+    "fs-extra": "11.4.1",
+    "@dimforge/rapier3d-compat": "0.21.0",
+    "@types/fs-extra": "11.0.4"
+  },
+  "files": [
+    "src",
+    "readme.md",
+    "license.txt"
+  ],
+  "sideEffects": false,
+  "types": "./src/main.ts"
+}

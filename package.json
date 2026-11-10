@@ -86,6 +86,7 @@
     "vite-plugin-jxl": "workspace:*",
     "vite-plugin-jxl-headers": "workspace:*",
     "vite-plugin-loading-screen": "workspace:*",
+    "vite-plugin-rapier": "workspace:*",
     "voice-sample-store": "workspace:*",
     "webgpu-capture-bridge": "workspace:*",
     "zustand": "5.1.0",

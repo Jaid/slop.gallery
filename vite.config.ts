@@ -17,11 +17,11 @@ import jxlPlugin from 'vite-plugin-jxl'
 import jxlHeadersPlugin from 'vite-plugin-jxl-headers'
 import loadingScreenPlugin from 'vite-plugin-loading-screen'
 import mediaMixinsPlugin from 'vite-plugin-media-mixins'
+import rapierPlugin from 'vite-plugin-rapier'
 import titlePlugin from 'vite-plugin-title'
 
 import immutableHeadersPlugin from '#src/lib/vite/immutableHeadersPlugin.ts'
 import outputListPlugin from '#src/lib/vite/outputListPlugin.ts'
-import rapierWasmPlugin from '#src/lib/vite/rapierWasmPlugin.ts'
 import worldChunksPlugin from '#src/lib/vite/worldChunksPlugin.ts'
 import {defaultWorld, selectWorld, worldIds, worldParameters, worldRooms, worlds} from '#src/worlds/index.ts'
 
@@ -93,7 +93,7 @@ const getProductionConfig = () => {
       jxlHeadersPlugin(),
       immutableHeadersPlugin(),
       outputListPlugin(),
-      rapierWasmPlugin(),
+      rapierPlugin(),
       // Only recipes that take longer to generate than their snapshots take to download; the rest load sooner without them.
       bakeThreePlugin({
         geometry: {

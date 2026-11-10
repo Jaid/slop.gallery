@@ -54,6 +54,7 @@
         "vite-plugin-jxl": "workspace:*",
         "vite-plugin-jxl-headers": "workspace:*",
         "vite-plugin-loading-screen": "workspace:*",
+        "vite-plugin-rapier": "workspace:*",
         "voice-sample-store": "workspace:*",
         "webgpu-capture-bridge": "workspace:*",
         "zustand": "5.1.0",
@@ -610,6 +611,18 @@
       "name": "vite-plugin-loading-screen",
       "version": "0.1.0",
       "devDependencies": {
+        "@types/fs-extra": "11.0.4",
+        "fs-extra": "11.4.1",
+      },
+      "peerDependencies": {
+        "vite": "^8.3.7",
+      },
+    },
+    "packages/vite-plugin-rapier": {
+      "name": "vite-plugin-rapier",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@dimforge/rapier3d-compat": "0.21.0",
         "@types/fs-extra": "11.0.4",
         "fs-extra": "11.4.1",
       },
@@ -2056,6 +2069,8 @@
     "vite-plugin-media-mixins": ["vite-plugin-media-mixins@0.10.0", "", { "peerDependencies": { "vite": "^8.0.16" } }, "sha512-CFctDKYijEKj/lOHFoj+x/V1kllgZHz0FTazUTpAo7ATFwQ2HXSmI7dRrzFQdmDE8RJeWp3CmOy31zHWK+6+xQ=="],
 
     "vite-plugin-r3f-static-rendering": ["vite-plugin-r3f-static-rendering@workspace:packages/vite-plugin-bake-three/packages/vite-plugin-r3f-static-rendering"],
+
+    "vite-plugin-rapier": ["vite-plugin-rapier@workspace:packages/vite-plugin-rapier"],
 
     "vite-plugin-title": ["vite-plugin-title@0.6.0", "", { "dependencies": { "fs-extra": "^11.3.5" }, "peerDependencies": { "vite": "^8" } }, "sha512-GNS8GAizPccHDFXhao6RTuT0+kg8AjL4yPQfJvL9qi0vsUJNEcgyIT3w7uJmK33ymALQlxXvWb7hiCpDIlx4cQ=="],
 
