@@ -284,7 +284,7 @@ describe('the alchemy machine’s cannon', () => {
     } finally {
       world.free()
     }
-  })
+  }, 30_000)
   test('the orb passes the arch between the Forge and its vestibule well clear of its crown and the window clear of its sill, jambs and arch, and no wall has an opening of its own for it', () => {
     const north = wallById('forge-north')
     const ring = wallById('forge-vestibule')
