@@ -52,7 +52,7 @@ jobs:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: 94b07787e8a720b65196137d6224ec90
         packageManager: bun
-        wranglerVersion: 4.157.0
+        wranglerVersion: 4.160.0
         command: pages deploy dist --project-name=slop-gallery --branch=${{ env.branch }} --commit-dirty=false
     # Only these, as Pages custom domains have no wildcards, so every other branch would leave a domain behind with no event to remove it.
     - name: attachDomain
@@ -72,7 +72,7 @@ jobs:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: 94b07787e8a720b65196137d6224ec90
         packageManager: bun
-        wranglerVersion: 4.157.0
+        wranglerVersion: 4.160.0
         command: pages deploy dist --project-name=slop-gallery --branch=main-${{ steps.shortenCommit.outputs.hash }} --commit-dirty=false
   detachDomain:
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.head.repo.full_name == github.repository
