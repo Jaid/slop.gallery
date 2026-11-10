@@ -3,10 +3,8 @@ import type {Vec3} from 'math'
 
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import sienna, {siennaRugSize, siennaVestibule} from '#src/lib/gallery/sienna.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -38,19 +36,7 @@ export default class Sienna extends Room {
   constructor() {
     super({
       title: 'The Sienna',
-      moods: [
-        new RoomMood({
-          id: 'sienna',
-          title: 'Hush',
-          // The rug and the wainscot swallow most of it.
-          transformer: reverberation({
-            decay: 0.5,
-            predelay: 0.006,
-            brightness: [3500, 900],
-            wet: 0.1,
-          }),
-        }),
-      ],
+      mood: 'sienna',
       frame: ['sienna-velvet', 'sienna-burl', 'sienna-leather'],
       cameras,
       spawns,

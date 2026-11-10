@@ -1,3 +1,4 @@
+import {readMood} from '#src/moods/lib/forcedMood.ts'
 import {readItems} from '#src/worlds/sandbox/items.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
 
@@ -17,7 +18,6 @@ import {readDownload, readWebhook, readWebhookEndpoint} from './gallery/fusion/r
 import {readWeather} from './gallery/lighting.ts'
 import {readPortraitSlotEditing, readShowPortraitSlots} from './gallery/portraitSlotStore.ts'
 import {readRoom, readSpawn} from './gallery/spawn.ts'
-import {readMood} from './moods/forcedMood.ts'
 import {readKnotRotation} from './physics/rotatingKnots.ts'
 import {readShowSticky} from './placement/showSticky.ts'
 import {readAlbedo} from './rendering/albedo.ts'

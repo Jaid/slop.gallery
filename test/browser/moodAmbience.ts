@@ -1,7 +1,6 @@
-import {moods} from '../../src/lib/moods/index.ts'
-import slopGallery from '../../src/worlds/gallery/index.ts'
-import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import type {Mood} from '../../src/moods/index.ts'
+
+import {moods} from '../../src/moods/index.ts'
 
 const rate = 48_000
 const effectsGain = 0.6 * 10 ** (12 / 20)
@@ -24,8 +23,7 @@ export default async function verify({listen = false, seconds = 20}: {
   seconds?: number
 } = {}) {
   const results = []
-  const roomMoods = [slopGallery, knottingham, sandbox].flatMap(world => world.rooms.flatMap(placed => placed.moods))
-  for (const mood of [...moods, ...roomMoods]) {
+  for (const mood of Object.values<Mood>(moods)) {
     const {ambience: Ambience} = mood
     if (!Ambience) {
       continue

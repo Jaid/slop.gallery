@@ -2,7 +2,6 @@ import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial
 
 import {bloodEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import EyeOrbMaterial from '#src/lib/materials/orb/EyeOrbMaterial.ts'
-import {horrorMood} from '#src/lib/moods/index.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
@@ -38,7 +37,7 @@ export default class HorrorOrb extends PromptOrb {
   override readonly effect = bloodEffect
   readonly frame = ['horror-flesh', 'horror-bleeding', 'horror-butcher', 'horror-infested', 'horror-maw', 'horror-coffin'] as const
   readonly id = 'horror'
-  readonly mood = horrorMood
+  readonly mood = 'horror'
   readonly photo = photo
   readonly premise = 'This picture is in a horror game – suddenly turned into a corrupted version.'
   readonly title = 'Horror Orb'

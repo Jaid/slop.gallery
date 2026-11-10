@@ -3,11 +3,9 @@ import type {Vec3} from 'math'
 
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import lobby from '#src/lib/gallery/lobby.ts'
 import lobbyVault from '#src/lib/gallery/lobbyVault.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -41,20 +39,7 @@ export default class Lobby extends Room {
   constructor() {
     super({
       title: 'Lobby',
-      moods: [
-        new RoomMood({
-          id: 'lobby',
-          title: 'Glass vault',
-          // Marble under a glass vault: long and bright.
-          transformer: reverberation({
-            decay: 2.1,
-            predelay: 0.022,
-            brightness: [9000, 2600],
-            early: [[0.011, 0.5], [0.023, 0.35], [0.041, 0.25]],
-            wet: 0.2,
-          }),
-        }),
-      ],
+      mood: 'lobby',
       frame: ['lobby-travertine', 'lobby-louis'],
       portraitArea: 30_000,
       cameras,

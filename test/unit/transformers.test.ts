@@ -1,10 +1,12 @@
 import type {Reverberation} from '../../src/lib/audio/transformers/reverberation.ts'
 import type {SoundTransformer} from '../../src/lib/audio/transformers/TransformerChain.ts'
+import type {Mood} from '../../src/moods/index.ts'
 
 import {expect, mock, test} from 'bun:test'
 
 import {reverberationImpulse} from '../../src/lib/audio/transformers/reverberation.ts'
 import TransformerChain from '../../src/lib/audio/transformers/TransformerChain.ts'
+import {moods} from '../../src/moods/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -189,13 +191,11 @@ test('a reverberation’s impulse rings for its decay after its predelay at unit
   expect(again).not.toBe(impulse)
   expect(again.getChannelData(0)).toEqual(left)
 })
-test('every room of every world has a mood of its own with acoustics, and no two rooms share a mood’s id', () => {
+test('every room of every world names a mood with acoustics', () => {
   for (const world of [slopGallery, knottingham, sandbox]) {
-    const ids = world.rooms.flatMap(placed => placed.moods.map(mood => mood.id))
-    const distinct = new Set(ids)
-    expect(distinct.size).toBe(ids.length)
     for (const placed of world.rooms) {
-      expect(`${placed.id}: ${placed.moods.filter(mood => typeof mood.transformer === 'function').length}`).toBe(`${placed.id}: 1`)
+      const mood: Mood | undefined = placed.mood && moods[placed.mood]
+      expect(`${placed.id}: ${typeof mood?.transformer}`).toBe(`${placed.id}: function`)
     }
   }
 })

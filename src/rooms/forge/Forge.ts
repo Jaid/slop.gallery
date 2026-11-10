@@ -1,9 +1,7 @@
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import forge, {forgeVestibule} from '#src/lib/gallery/forge.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -36,20 +34,7 @@ export default class Forge extends Room {
   constructor() {
     super({
       title: 'The Forge',
-      moods: [
-        new RoomMood({
-          id: 'forge',
-          title: 'Rooflit stone',
-          // Plain stone and plaster round a rooflight, its round vestibule ringing faintly.
-          transformer: reverberation({
-            decay: 1.8,
-            predelay: 0.018,
-            brightness: [7500, 2000],
-            early: [[0.03, 0.3], [0.06, 0.18]],
-            wet: 0.18,
-          }),
-        }),
-      ],
+      mood: 'forge',
       frame: ['forge-meander', 'forge-palette', 'forge-brushes'],
       cameras,
       spawns,

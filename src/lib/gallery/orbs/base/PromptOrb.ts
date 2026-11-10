@@ -1,5 +1,5 @@
 import type {ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
-import type {Mood} from '#src/lib/moods/index.ts'
+import type {MoodId} from '#src/moods/index.ts'
 
 import {environmentRandom} from '../../../environmentSeed.ts'
 import {transparentOrb} from '../transparent/TransparentOrb.ts'
@@ -20,7 +20,7 @@ export default abstract class PromptOrb extends Orb {
   abstract readonly color: string
   /** the word that joins the last of the adjectives a prompt names to the others: `or` leaves the image model free to pick among them, `and` asks for all of them */
   readonly conjunction: string = 'or'
-  abstract override readonly mood: Mood
+  abstract override readonly mood: MoodId
   /** the URL of an image of it, which the portal of its fusion shows; made in advance, as its glass takes seconds to compile for the studio a thrown prop is photographed in */
   abstract readonly photo: string
   /** the opening sentence of the prompt, which sets the scene for the image model */

@@ -3,13 +3,10 @@ import type {Vec3} from 'math'
 
 import {Geofence} from 'geofency'
 
-import BastionAmbience from '#src/lib/audio/ambience/moods/BastionAmbience.ts'
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import {bastionOrigin, bastionTransition} from '#src/lib/gallery/bastion.ts'
 import {bastionNetwork} from '#src/lib/gallery/bastionNetwork.ts'
 import {cisternChunks} from '#src/lib/gallery/cistern/cistern.ts'
 import {climbApex, climbHairpin} from '#src/lib/gallery/climb.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import chunkBoxes from '../lib/chunkBoxes.ts'
@@ -43,21 +40,7 @@ export default class Bastion extends Room {
   constructor() {
     super({
       title: 'The Bastion',
-      moods: [
-        new RoomMood({
-          id: 'bastion',
-          title: 'Cold stone',
-          ambience: BastionAmbience,
-          // Stone passages: dark and long, with slaps between their close walls.
-          transformer: reverberation({
-            decay: 2.7,
-            predelay: 0.009,
-            brightness: [6000, 1200],
-            flutter: [0.024, 7, 0.45],
-            wet: 0.26,
-          }),
-        }),
-      ],
+      mood: 'bastion',
       frame: ['bastion-strapwork', 'bastion-oak'],
       cameras,
       spawns,

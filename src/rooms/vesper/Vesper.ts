@@ -2,11 +2,9 @@ import type {GroundSurface} from '../base/Room.ts'
 
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import {vesper} from '#src/lib/gallery/vesper.ts'
 import {vesperLanternRidgeY} from '#src/lib/gallery/vesperCeiling.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -37,20 +35,7 @@ export default class Vesper extends Room {
   constructor() {
     super({
       title: 'The Vesper',
-      moods: [
-        new RoomMood({
-          id: 'vesper',
-          title: 'Coved parquet',
-          // Parquet and plaster under a coved ceiling: warm and medium.
-          transformer: reverberation({
-            decay: 1.5,
-            predelay: 0.016,
-            brightness: [7000, 1900],
-            early: [[0.012, 0.38], [0.026, 0.24]],
-            wet: 0.17,
-          }),
-        }),
-      ],
+      mood: 'vesper',
       frame: ['vesper-ripple', 'vesper-sgraffito', 'vesper-auricular'],
       cameras,
       spawns,

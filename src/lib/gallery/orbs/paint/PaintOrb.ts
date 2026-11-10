@@ -2,7 +2,6 @@ import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial
 
 import {strokesEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import PaintsOrbMaterial from '#src/lib/materials/orb/PaintsOrbMaterial.ts'
-import {paintMood} from '#src/lib/moods/index.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
@@ -45,7 +44,7 @@ export default class PaintOrb extends PromptOrb {
   override readonly effect = strokesEffect
   readonly frame = ['paint-marbled', 'paint-canvas'] as const
   readonly id = 'paint'
-  readonly mood = paintMood
+  readonly mood = 'paint'
   readonly photo = photo
   readonly premise = 'This picture is in a game – and a painter has just taken it to the easel to paint it anew.'
   readonly title = 'Paint Orb'

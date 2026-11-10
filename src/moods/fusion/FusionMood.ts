@@ -1,7 +1,7 @@
-import FusionAmbience from '#src/lib/audio/ambience/moods/FusionAmbience.ts'
 import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
 
-import Mood from './base/Mood.ts'
+import Mood from '../base/Mood.ts'
+import FusionAmbience from './FusionAmbience.ts'
 
 /** The world while a fusion brews, as before a thunderstorm: the daylight and the fill sink to half and everything takes on a cold blue, while the lamps burn on as they were, so the light gathers where the portal’s own effects play. The portal brings its own strong look, so this only reminds a player far away of it. */
 export default class FusionMood extends Mood {

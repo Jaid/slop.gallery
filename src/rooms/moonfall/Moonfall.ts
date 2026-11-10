@@ -3,12 +3,10 @@ import type {Vec3} from 'math'
 
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
 import {moonfallCrater} from '#src/lib/gallery/moonfall/config.ts'
 import {craterTerrain} from '#src/lib/gallery/moonfall/CraterTerrain.ts'
 import {stairwayFootprint} from '#src/lib/gallery/staircase.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -50,20 +48,7 @@ export default class Moonfall extends Room {
   constructor() {
     super({
       title: 'Moonfall',
-      moods: [
-        new RoomMood({
-          id: 'moonfall',
-          title: 'Crater dome',
-          // A crater under a dome: the longest, darkest tail.
-          transformer: reverberation({
-            decay: 3.6,
-            predelay: 0.034,
-            brightness: [4200, 700],
-            early: [[0.03, 0.3], [0.061, 0.22]],
-            wet: 0.26,
-          }),
-        }),
-      ],
+      mood: 'moonfall',
       frame: ['moonfall-meteorite', 'moonfall-orbit', 'moonfall-regolith'],
       portraitArea: 60_000,
       cameras,

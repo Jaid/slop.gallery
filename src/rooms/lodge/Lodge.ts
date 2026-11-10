@@ -2,10 +2,8 @@ import type {GroundSurface} from '../base/Room.ts'
 
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import corridor, {lodgeThreshold} from '#src/lib/gallery/corridor.ts'
 import lodge, {lodgeBay, lodgeWindow} from '#src/lib/gallery/lodge.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -48,20 +46,7 @@ export default class Lodge extends Room {
   constructor() {
     super({
       title: 'Lodge',
-      moods: [
-        new RoomMood({
-          id: 'lodge',
-          title: 'Fireside',
-          // Timber and fieldstone round a fire: short and warm.
-          transformer: reverberation({
-            decay: 0.85,
-            predelay: 0.007,
-            brightness: [5000, 1500],
-            early: [[0.006, 0.4], [0.014, 0.3]],
-            wet: 0.15,
-          }),
-        }),
-      ],
+      mood: 'lodge',
       frame: ['lodge-twig', 'lodge-tramp', 'lodge-charred'],
       portraitArea: 7500,
       cameras,

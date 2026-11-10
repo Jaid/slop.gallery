@@ -1,4 +1,4 @@
-import type {MoodGrade} from '../moods/base/Mood.ts'
+import type {MoodGrade} from '#src/moods/base/Mood.ts'
 import type {Node} from 'three/webgpu'
 
 import {luminance, mix, uniform, vec4} from 'three/tsl'

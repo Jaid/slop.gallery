@@ -1,9 +1,7 @@
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import {banquet} from '#src/lib/gallery/banquet.ts'
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -33,20 +31,7 @@ export default class Banquet extends Room {
   constructor() {
     super({
       title: 'The Banquet',
-      moods: [
-        new RoomMood({
-          id: 'banquet',
-          title: 'Marble checker',
-          // Polished marble checker under a hard ceiling: bright and lively.
-          transformer: reverberation({
-            decay: 1.7,
-            predelay: 0.017,
-            brightness: [8500, 2400],
-            early: [[0.013, 0.42], [0.029, 0.28]],
-            wet: 0.18,
-          }),
-        }),
-      ],
+      mood: 'banquet',
       frame: ['banquet-perspective', 'banquet-deco', 'banquet-checker'],
       cameras,
       spawns,

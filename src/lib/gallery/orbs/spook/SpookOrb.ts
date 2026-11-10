@@ -2,7 +2,6 @@ import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial
 
 import {ghostsEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import GhostsOrbMaterial from '#src/lib/materials/orb/GhostsOrbMaterial.ts'
-import {spookMood} from '#src/lib/moods/index.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
@@ -33,7 +32,7 @@ export default class SpookOrb extends PromptOrb {
   override readonly effect = ghostsEffect
   readonly frame = ['spook-maelstrom', 'spook-rift', 'spook-abyss', 'spook-seance'] as const
   readonly id = 'spook'
-  readonly mood = spookMood
+  readonly mood = 'spook'
   readonly photo = photo
   readonly premise = 'This picture is in a ghost story – something otherworldly has slipped into it.'
   readonly title = 'Spook Orb'

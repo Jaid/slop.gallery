@@ -61,9 +61,9 @@ export default class PlacedRoom<Kind extends Room = Room> {
     return this.room.map
   }
 
-  /** the moods that hold while the listener is in the room */
-  get moods() {
-    return this.room.moods
+  /** the id of the mood that holds while the listener is in the room, or undefined for none */
+  get mood() {
+    return this.room.mood
   }
 
   /** the frame area in cm² of works imported onto the room’s walls or dropped into it by a player inside */

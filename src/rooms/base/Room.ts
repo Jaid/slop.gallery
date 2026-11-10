@@ -1,7 +1,7 @@
 import type {FrameChoice} from '#src/lib/frames/frameChoice.ts'
 import type {CameraBookmark, PortraitRatio, SpawnBookmark} from '#src/lib/gallery/types.ts'
-import type Mood from '#src/lib/moods/base/Mood.ts'
 import type {Wall, WallOpening} from '#src/lib/placement/wallGeometry.ts'
+import type {MoodId} from '#src/moods/index.ts'
 import type AmbienceEmitter from 'ambience-emitter'
 import type {Geofence} from 'geofency'
 import type {Vec3} from 'math'
@@ -74,8 +74,8 @@ export type RoomOptions = {
   lamps?: Record<string, Lamp>
   /** the room’s floor plan on the map as SVG markup, usually the room’s own map.svg: a drawing in meters relative to the room’s origin that its viewBox frames */
   map?: string
-  /** the moods that hold while the listener is in the room, beneath any mood cast over the world, like a `RoomMood` of its acoustics, a `reverberation` of what it is built of; left out, the world sounds dry there */
-  moods?: ReadonlyArray<Mood>
+  /** the id of the mood that holds while the listener is in the room, beneath any mood cast over the world, usually the room’s own with its acoustics, though rooms may share one; left out, the world sounds dry there */
+  mood?: MoodId
   /** the frame area in cm² of works imported onto the room’s walls or dropped into it by a player inside, at which they keep their own aspect; {@link defaultPortraitArea} if left out */
   portraitArea?: number
   /**
@@ -155,8 +155,8 @@ export default abstract class Room {
   readonly lamps: ReadonlyMap<string, Lamp>
   /** the room’s floor plan on the map, if it has one */
   readonly map: RoomMap | undefined
-  /** the moods that hold while the listener is in the room */
-  readonly moods: ReadonlyArray<Mood>
+  /** the id of the mood that holds while the listener is in the room, or undefined for none */
+  readonly mood: MoodId | undefined
   /** the frame area in cm² of works imported onto the room’s walls or dropped into it by a player inside */
   readonly portraitArea: number
   /** the width along x and the depth along z of a room around a rectangular floor plan, centered on its origin */
@@ -174,9 +174,9 @@ export default abstract class Room {
   readonly volumetricSun: number
   readonly walls: ReadonlyMap<string, RoomWall>
 
-  constructor({title, moods = [], lamps = {}, ambience = {}, cameras = {}, frame, map, upperMap, portraitArea = defaultPortraitArea, slots = {}, spawns = {}, walls = {}, skybox, sunlit = true, volumetricSun = 1}: RoomOptions) {
+  constructor({title, mood, lamps = {}, ambience = {}, cameras = {}, frame, map, upperMap, portraitArea = defaultPortraitArea, slots = {}, spawns = {}, walls = {}, skybox, sunlit = true, volumetricSun = 1}: RoomOptions) {
     this.title = title
-    this.moods = moods
+    this.mood = mood
     this.frame = frame
     this.portraitArea = portraitArea
     this.map = map === undefined ? undefined : new RoomMap(map)

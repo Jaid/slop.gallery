@@ -1,6 +1,5 @@
-import HalloweenAmbience from '#src/lib/audio/ambience/moods/HalloweenAmbience.ts'
-
-import Mood from './base/Mood.ts'
+import Mood from '../base/Mood.ts'
+import HalloweenAmbience from './HalloweenAmbience.ts'
 
 /** The Halloween Orb’s night out: purple dusk in the shadows, jack-o’-lantern orange in the lights. */
 export default class HalloweenMood extends Mood {

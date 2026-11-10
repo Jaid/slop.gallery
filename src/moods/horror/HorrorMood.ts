@@ -1,6 +1,5 @@
-import HorrorAmbience from '#src/lib/audio/ambience/moods/HorrorAmbience.ts'
-
-import Mood from './base/Mood.ts'
+import Mood from '../base/Mood.ts'
+import HorrorAmbience from './HorrorAmbience.ts'
 
 /** The Horror Orb’s dread: the light thickens to blood and the shadows to clotted black. */
 export default class HorrorMood extends Mood {

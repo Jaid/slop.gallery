@@ -1,3 +1,4 @@
+import type {Mood} from '../../src/moods/index.ts'
 import type {Voice} from 'procedural-audio'
 
 import playVoices, {shiftVoices} from 'procedural-audio'
@@ -9,6 +10,7 @@ import {orbImpactVoices} from '../../src/lib/audio/orbImpacts.ts'
 import {footstepVoices, impactFootstepStrength} from '../../src/lib/audio/playerSoundEffects.ts'
 import TransformerChain from '../../src/lib/audio/transformers/TransformerChain.ts'
 import {hangingAnimation} from '../../src/lib/gallery/hanging/index.ts'
+import {moods} from '../../src/moods/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const rate = 48_000
@@ -70,7 +72,7 @@ async function render(name: string, seconds: number, play: (output: {
 }
 const recipe = (name: string, voices: ReadonlyArray<Voice>) => render(name, length(voices) + 0.15, output => playVoices(output, voices, {seed: name}))
 
-/** Renders every strike, arrival and room of the world, through the transformers of its moods, into silent offline buffers: no audible output, DOM, input, focus or viewport changes. */
+/** Renders every strike, arrival and room of the world, through the transformers of its rooms’ moods, into silent offline buffers: no audible output, DOM, input, focus or viewport changes. */
 export default async function verify() {
   const strikes: Record<string, Measure> = {}
   for (const surface of ['generic', 'stone', 'hollow', 'fabric', 'glass', 'orb'] as const) {
@@ -128,14 +130,11 @@ export default async function verify() {
     }) => {
       const world = output.context.createGain()
       const transformers = new TransformerChain(output.context, world, output.master)
-      if (acoustic) {
-        for (const mood of placed.moods) {
-          if (mood.transformer) {
-            transformers.transform(mood, mood.transformer, 1)
-          }
-        }
+      const mood: Mood | undefined = placed.mood && moods[placed.mood]
+      if (acoustic && mood?.transformer) {
+        transformers.transform(mood, mood.transformer, 1)
       }
-      // Once the room’s moods have taken over
+      // Once the room’s mood has taken over
       return output.context.suspend(0.5).then(() => {
         playVoices({
           context: output.context,

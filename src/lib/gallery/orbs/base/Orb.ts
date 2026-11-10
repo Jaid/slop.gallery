@@ -3,7 +3,7 @@ import type {FusionEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import type {IngredientContribution, ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type OrbGlassMaterial from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
 import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial.ts'
-import type {Mood} from '#src/lib/moods/index.ts'
+import type {MoodId} from '#src/moods/index.ts'
 
 import {pickFrame} from '#src/lib/frames/frameChoice.ts'
 
@@ -17,8 +17,8 @@ export default abstract class Orb {
   /** the frame the orb contributes to a fusion, or several, of which every game picks one; without one, the room the result arrives in frames it */
   readonly frame?: FrameChoice
   abstract readonly id: string
-  /** what comes over the world while the player holds the orb, if anything */
-  readonly mood?: Mood
+  /** the id of the mood that comes over the world while the player holds the orb, if any */
+  readonly mood?: MoodId
   /** the orb a success that used this one up leaves of it, which flips out of the portal after the result, if any */
   readonly remains?: Orb
   abstract readonly title: string

@@ -1,5 +1,6 @@
-import type {MoodFade} from '../../src/lib/moods/base/Mood.ts'
-import type {MoodOutput, MoodTarget} from '../../src/lib/moods/MoodMixer.ts'
+import type {MoodFade} from '../../src/moods/base/Mood.ts'
+import type {MoodOutput, MoodTarget} from '../../src/moods/lib/MoodMixer.ts'
+import type PlacedRoom from '../../src/worlds/base/PlacedRoom.ts'
 import type {AmbienceLoop} from 'ambience-emitter'
 
 import {afterEach, describe, expect, mock, test} from 'bun:test'
@@ -8,13 +9,13 @@ import {AmbientLight, Color, HemisphereLight, PointLight, Scene} from 'three/web
 
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {orbs} from '../../src/lib/gallery/orbs/index.ts'
-import Mood from '../../src/lib/moods/base/Mood.ts'
-import {readMood} from '../../src/lib/moods/forcedMood.ts'
-import {fusionMood, moods} from '../../src/lib/moods/index.ts'
-import MoodMixer, {moodFade, noMood} from '../../src/lib/moods/MoodMixer.ts'
-import {moodSuppression, toggleMoodSuppression} from '../../src/lib/moods/moodSuppression.ts'
-import RoomMood, {roomMoodFade} from '../../src/lib/moods/RoomMood.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
+import Mood from '../../src/moods/base/Mood.ts'
+import RoomMood, {roomMoodFade} from '../../src/moods/base/RoomMood.ts'
+import {moods} from '../../src/moods/index.ts'
+import {readMood} from '../../src/moods/lib/forcedMood.ts'
+import MoodMixer, {moodFade, noMood} from '../../src/moods/lib/MoodMixer.ts'
+import {moodSuppression, toggleMoodSuppression} from '../../src/moods/lib/moodSuppression.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -337,44 +338,48 @@ describe('light tint', () => {
   })
 })
 describe('moods', () => {
-  test('every orb that casts a mood casts one of its own, sharing its id, and only the Transparent Orb casts none', () => {
-    const moody = orbs.filter(orb => orb.mood)
-    expect(orbs.filter(orb => !orb.mood).map(orb => orb.id)).toEqual(['transparent'])
-    expect(moody.map(orb => orb.mood!.id).toSorted()).toEqual(moody.map(orb => orb.id).toSorted())
-    const distinct = new Set(moody.map(orb => orb.mood))
-    expect(distinct.size).toBe(moody.length)
-    for (const mood of moods) {
-      expect(mood.grade.strength).toBeGreaterThan(0)
-      expect(mood.grade.strength).toBeLessThanOrEqual(1)
-      for (const color of [mood.grade.shadow, mood.grade.midtone, mood.grade.highlight, mood.lamps.color, mood.fill.color]) {
-        expect(color).toMatch(/^#[\da-f]{6}$/)
-      }
-      const Ambience = mood.ambience
-      const ambience = new Ambience
-      expect(ambience.playing).toBe(false)
-      expect(ambience.id).toBe(`mood-${mood.id}`)
-    }
-  })
-  test('the fusion’s mood belongs to no orb and comes over the world while the intro plays', () => {
-    expect(moods).toContain(fusionMood)
-    const orbMoods: ReadonlyArray<Mood> = orbs.flatMap(orb => (orb.mood ? [orb.mood] : []))
-    expect(orbMoods).not.toContain(fusionMood)
-    expect(fusionMood.fade.in).toBe(fusionTiming.intro)
-  })
-  test('the rooms’ moods come and go at a room’s pace, apart from the moods cast over the world, and their loops share their ids', () => {
-    const roomMoods = [slopGallery, knottingham, sandbox].flatMap(world => world.rooms.flatMap(placed => placed.moods))
-    expect(roomMoods.length).toBeGreaterThan(0)
-    for (const mood of roomMoods) {
-      expect(mood).toBeInstanceOf(RoomMood)
-      expect(moods).not.toContain(mood)
-      expect(mood.fade).toEqual(roomMoodFade)
+  test('every mood goes by its id, which the loop of one that sounds shares', () => {
+    for (const [id, mood] of Object.entries<Mood>(moods)) {
+      expect(mood.id).toBe(id)
       const {ambience: Ambience} = mood
       if (!Ambience) {
         continue
       }
       const ambience = new Ambience
-      expect(ambience.id).toBe(`mood-${mood.id}`)
+      expect(ambience.playing).toBe(false)
+      expect(ambience.id).toBe(`mood-${id}`)
     }
+  })
+  test('every orb that casts a mood casts one of its own, sharing its id, and only the Transparent Orb casts none', () => {
+    const moody = orbs.filter(orb => orb.mood)
+    expect(orbs.filter(orb => !orb.mood).map(orb => orb.id)).toEqual(['transparent'])
+    expect(moody.map<string | undefined>(orb => orb.mood)).toEqual(moody.map(orb => orb.id))
+    for (const orb of moody) {
+      const mood: Mood = moods[orb.mood!]
+      expect(mood.ambience).toBeDefined()
+      expect(mood.grade!.strength).toBeGreaterThan(0)
+      expect(mood.grade!.strength).toBeLessThanOrEqual(1)
+      for (const color of [mood.grade!.shadow, mood.grade!.midtone, mood.grade!.highlight, mood.lamps!.color, mood.fill!.color]) {
+        expect(color).toMatch(/^#[\da-f]{6}$/)
+      }
+    }
+  })
+  test('the fusion’s mood belongs to no orb and comes over the world while the intro plays', () => {
+    expect(orbs.map(orb => orb.mood)).not.toContain('fusion')
+    expect(moods.fusion.fade.in).toBe(fusionTiming.intro)
+  })
+  test('every room names a mood of the rooms, which comes and goes at a room’s pace, apart from the moods cast over the world', () => {
+    const rooms = [slopGallery, knottingham, sandbox].flatMap<PlacedRoom>(world => world.rooms)
+    expect(rooms.filter(placed => !placed.mood)).toEqual([])
+    const named = [...new Set(rooms.map<string>(placed => placed.mood!))]
+    const roomMoods = Object.values<Mood>(moods).filter(mood => mood instanceof RoomMood)
+    // Every mood of the rooms is some room’s.
+    expect(roomMoods.map(mood => mood.id).toSorted()).toEqual(named.toSorted())
+    for (const mood of roomMoods) {
+      expect(mood.fade).toEqual(roomMoodFade)
+    }
+    const castOver = ['fusion', ...orbs.flatMap(orb => orb.mood ?? [])]
+    expect(Object.keys(moods).toSorted()).toEqual([...named, ...castOver].toSorted())
     expect(roomMoods.filter(mood => mood.ambience).map(mood => mood.id)).toEqual(['bastion'])
   })
   test('N suppresses every mood and lets them back', () => {
@@ -384,10 +389,12 @@ describe('moods', () => {
     expect(toggleMoodSuppression()).toBe(false)
     expect(moodSuppression.active).toBe(false)
   })
-  test('?mood names a mood by its id and ignores anything else', () => {
+  test('?mood names a mood by its id, a room’s too, and ignores anything else', () => {
     expect(readMood('http://localhost/?mood=horror')).toBe('horror')
     expect(readMood('http://localhost/?mood=fusion')).toBe('fusion')
+    expect(readMood('http://localhost/?mood=bastion')).toBe('bastion')
     expect(readMood('http://localhost/?mood=sunshine')).toBe('')
+    expect(readMood('http://localhost/?mood=toString')).toBe('')
     expect(readMood('http://localhost/')).toBe('')
   })
 })

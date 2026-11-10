@@ -1,6 +1,5 @@
-import SpookAmbience from '#src/lib/audio/ambience/moods/SpookAmbience.ts'
-
-import Mood from './base/Mood.ts'
+import Mood from '../base/Mood.ts'
+import SpookAmbience from './SpookAmbience.ts'
 
 /** The Spook Orb’s haunting: everything drowns in a sickly ghost-light green. */
 export default class SpookMood extends Mood {

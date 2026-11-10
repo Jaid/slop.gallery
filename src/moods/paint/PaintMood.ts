@@ -1,6 +1,5 @@
-import PaintAmbience from '#src/lib/audio/ambience/moods/PaintAmbience.ts'
-
-import Mood from './base/Mood.ts'
+import Mood from '../base/Mood.ts'
+import PaintAmbience from './PaintAmbience.ts'
 
 /** The Paint Orb’s atelier: the world turns into a painter’s study of it, warm in the lights and cool in the shadows, like an old master would lay it out. */
 export default class PaintMood extends Mood {

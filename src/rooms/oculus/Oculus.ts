@@ -1,10 +1,8 @@
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import lowerGallery, {oculusPlatform} from '#src/lib/gallery/lowerGallery.ts'
 import oculusApse from '#src/lib/gallery/oculusApse.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -41,20 +39,7 @@ export default class Oculus extends Room {
   constructor() {
     super({
       title: 'Oculus',
-      moods: [
-        new RoomMood({
-          id: 'oculus',
-          title: 'Round tower',
-          // A round tower, whose curved wall throws a ring back.
-          transformer: reverberation({
-            decay: 2.8,
-            predelay: 0.028,
-            brightness: [7000, 1800],
-            early: [[0.09, 0.45], [0.18, 0.22], [0.27, 0.1]],
-            wet: 0.22,
-          }),
-        }),
-      ],
+      mood: 'oculus',
       frame: ['oculus-float', 'oculus-acrylic', 'oculus-dichroic'],
       portraitArea: 60_000,
       cameras,

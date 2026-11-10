@@ -3,8 +3,8 @@ import type {OrbitSettings} from '#src/lib/camera/OrbitInspection.ts'
 import type {Vec3} from '#src/lib/gallery.ts'
 import type {ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type {Orb} from '#src/lib/gallery/orbs/index.ts'
-import type {Mood} from '#src/lib/moods/index.ts'
 import type {GrabbableBodyOptions} from '#src/lib/physics/GrabbableBody.ts'
+import type {MoodId} from '#src/moods/index.ts'
 import type {CollisionEnterPayload, RapierRigidBody, RigidBodyProps} from '@react-three/rapier'
 import type {ReactNode} from 'react'
 import type {Group, Object3D} from 'three/webgpu'
@@ -34,8 +34,8 @@ export type PropHandle = {
   fling: (position: Vec3, velocity: Vec3) => boolean
   grab: () => boolean
   group: Group
-  /** the mood that comes over the world while the player holds the prop */
-  mood?: Mood
+  /** the id of the mood that comes over the world while the player holds the prop */
+  mood?: MoodId
   /** the kind of orb the prop is, if it is one */
   orb?: Orb
   release: (throwing: boolean) => void
@@ -122,8 +122,8 @@ type GrabbablePropProps = Omit<RigidBodyProps, 'children' | 'position' | 'ref'> 
   id: string
   /** the prop as an ingredient of the fusion of a portrait it is thrown into, with what it contributes, like an orb’s prompt, or nothing at all; by default, it contributes a studio photograph of itself */
   ingredient?: ItemIngredient
-  /** what comes over the world while the player holds the prop */
-  mood?: Mood
+  /** the id of the mood that comes over the world while the player holds the prop */
+  mood?: MoodId
   /** the kind of orb the prop is, if it is one */
   orb?: Orb
   /** lets holding V orbit around the prop */

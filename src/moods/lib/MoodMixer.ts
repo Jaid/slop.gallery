@@ -1,6 +1,6 @@
-import type TransformerChain from '../audio/transformers/TransformerChain.ts'
-import type Mood from './base/Mood.ts'
-import type {MoodFade, MoodLight} from './base/Mood.ts'
+import type TransformerChain from '#src/lib/audio/transformers/TransformerChain.ts'
+import type Mood from '../base/Mood.ts'
+import type {MoodFade, MoodLight} from '../base/Mood.ts'
 import type {AmbienceLoop} from 'ambience-emitter'
 import type {AudioOutput} from 'procedural-audio'
 import type {Light} from 'three/webgpu'
@@ -8,8 +8,8 @@ import type {Light} from 'three/webgpu'
 import {clamp} from 'math'
 import {Color} from 'three/webgpu'
 
-import {noTint} from '../rendering/lightLevels.ts'
-import {paintMoodGrades} from '../rendering/moodGrade.ts'
+import {noTint} from '#src/lib/rendering/lightLevels.ts'
+import {paintMoodGrades} from '#src/lib/rendering/moodGrade.ts'
 
 /** where moods sound: their loops on the effects master, centered, and their transformers between the world and it, as `SoundEngine` offers both */
 export type MoodOutput = AudioOutput & {

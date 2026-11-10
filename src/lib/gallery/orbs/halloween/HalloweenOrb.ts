@@ -2,7 +2,6 @@ import type {OrbGlassOptions} from '#src/lib/materials/orb/base/OrbGlassMaterial
 
 import {batsEffect} from '#src/lib/gallery/fusion/effects/index.ts'
 import BatsOrbMaterial from '#src/lib/materials/orb/BatsOrbMaterial.ts'
-import {halloweenMood} from '#src/lib/moods/index.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
@@ -37,7 +36,7 @@ export default class HalloweenOrb extends PromptOrb {
   override readonly effect = batsEffect
   readonly frame = ['halloween-lantern', 'halloween-ossuary'] as const
   readonly id = 'halloween'
-  readonly mood = halloweenMood
+  readonly mood = 'halloween'
   readonly photo = photo
   readonly premise = 'This picture is in a game – and tonight is Halloween, so it gets dressed up for the holiday.'
   readonly title = 'Halloween Orb'

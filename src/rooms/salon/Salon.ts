@@ -1,9 +1,7 @@
 import {Geofence} from 'geofency'
 
-import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import salon from '#src/lib/gallery/salon.ts'
-import RoomMood from '#src/lib/moods/RoomMood.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -30,20 +28,7 @@ export default class Salon extends Room {
   constructor() {
     super({
       title: 'The Salon',
-      moods: [
-        new RoomMood({
-          id: 'salon',
-          title: 'Hung walls',
-          // Terrazzo under walls hung frame to frame, whose canvases soak up the highs.
-          transformer: reverberation({
-            decay: 1.2,
-            predelay: 0.014,
-            brightness: [6500, 1800],
-            early: [[0.012, 0.32], [0.027, 0.2]],
-            wet: 0.15,
-          }),
-        }),
-      ],
+      mood: 'salon',
       frame: ['salon-barbizon', 'salon-whistler', 'salon-impressionist'],
       cameras,
       spawns,
