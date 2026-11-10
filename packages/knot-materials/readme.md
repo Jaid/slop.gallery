@@ -165,7 +165,7 @@ A recording may be `undefined`: Slop Gallery only builds them with `VOICE_SAMPLE
 ```sh
 bun --cwd packages/knot-materials test
 bun run typecheck
-bun test --max-concurrency 1 test/unit/knot-candidates.test.ts test/unit/knot-exhibition.test.ts test/unit/knot-cellular-fields.test.ts test/unit/direct-knot-materials.test.ts
+bun test --max-concurrency 1 test/unit/knot-exhibition.test.ts
 ```
 
-Package tests cover metadata and folder parity, unique IDs and flavor text, exhaustive rarities, helper ownership, independent material construction, metadata-only bundling, complete prompt source inclusion, deterministic sampling, CLI output from another working directory, and the absence of persisted billboard rasters.
+Package tests cover metadata and folder parity, unique IDs and flavor text, exhaustive rarities, candidates and their bays, layout, shared resources and raycasts, cellular fields, candidate symbols, the announcement inventory, direct materials, helper ownership, independent material construction, metadata-only bundling, complete prompt source inclusion, deterministic sampling, CLI output from another working directory, and the absence of persisted billboard rasters. Slop Gallery’s `knot-exhibition.test.ts` covers the exhibition in its world.
