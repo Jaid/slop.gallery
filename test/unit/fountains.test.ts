@@ -1,11 +1,12 @@
-import type {Fountain} from '../../src/fountains/index.ts'
+import type {Fountain, FountainId} from '../../src/fountains/index.ts'
 
 import {describe, expect, test} from 'bun:test'
 
 import {fountains} from '../../src/fountains/index.ts'
+import {readFountain} from '../../src/fountains/lib/forcedFountain.ts'
 import {fountainBench} from '../../src/lib/gallery/fountainBenches.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
-import {lobbyFountain, lobbyFountainReach, lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
+import {lobbyFountainId, lobbyFountainReach, lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const entries = Object.entries<Fountain>(fountains)
@@ -46,7 +47,26 @@ describe('the Lobby’s fountain', () => {
       expect(fountainBench.radius - fountainBench.depth / 2 - fountain.radius).toBeGreaterThan(1.3)
     }
   })
-  test('one of the fountains stands in the Lobby', () => {
-    expect(entries.map(([, fountain]) => fountain)).toContain(lobbyFountain)
+  test('every seed rolls the fountain that stands in the Lobby, the same one every time, and between them the seeds roll every fountain', () => {
+    const seeds = Array.from({length: 64}, (_, index) => index * 7919 + 1)
+    const rolled = seeds.map<string>(seed => lobbyFountainId(seed, ''))
+    expect(rolled).toEqual(seeds.map(seed => lobbyFountainId(seed, '')))
+    const distinct = new Set(rolled)
+    expect([...distinct].toSorted()).toEqual(Object.keys(fountains).toSorted())
+    // Fairly, give or take.
+    for (const [id] of entries) {
+      expect(rolled.filter(roll => roll === id).length).toBeGreaterThan(seeds.length / entries.length / 2)
+    }
+  })
+  test('?fountain stands one of them in the Lobby whatever the seed rolls, and ignores anything else', () => {
+    for (const id of Object.keys(fountains) as Array<FountainId>) {
+      expect(readFountain(`http://localhost/?fountain=${id}`)).toBe(id)
+      for (const seed of [1, 2, 3, 4]) {
+        expect(lobbyFountainId(seed, id)).toBe(id)
+      }
+    }
+    expect(readFountain('http://localhost/?fountain=trevi')).toBe('')
+    expect(readFountain('http://localhost/?fountain=toString')).toBe('')
+    expect(readFountain('http://localhost/')).toBe('')
   })
 })

@@ -1,7 +1,9 @@
+import LimestoneFountain from './limestone/LimestoneFountain.ts'
 import MarbleFountain from './marble/MarbleFountain.ts'
 
 /** every fountain there is by its id */
 export const fountains = {
+  limestone: new LimestoneFountain,
   marble: new MarbleFountain,
 } as const
 

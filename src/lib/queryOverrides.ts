@@ -1,3 +1,4 @@
+import {readFountain} from '#src/fountains/lib/forcedFountain.ts'
 import {readFrame} from '#src/frames/lib/frameParameter.ts'
 import {readMood} from '#src/moods/lib/forcedMood.ts'
 import {readItems} from '#src/worlds/sandbox/items.ts'
@@ -63,6 +64,7 @@ const readers: Record<string, Reader> = {
   edit_portrait_slots: readPortraitSlotEditing,
   fade: readFade,
   flying: readFlying,
+  fountain: readFountain,
   fov: readFov,
   frame: readFrame,
   frozen_time: readFrozenTime,
