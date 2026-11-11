@@ -1,6 +1,6 @@
 name: previewFork
-# Deploys the build of a pull request from MageCast’s fork to pr-<number>.slop-gallery.pages.dev, which the pages workflow can’t, as the runs of pull requests from forks get no secrets. This one runs in the repository’s own context instead, so it never runs anything of the fork, which also chose what the artifact build holds, and only uploads its dist.
-# Without a custom domain, as nothing would detach it for pull requests from forks, whose closing events get no secrets either, and Pages takes any number of preview aliases but only 100 custom domains.
+# Deploys the build of a pull request from MageCast’s fork to pr-<number>.slop.gallery and pr-<number>.slop-gallery.pages.dev, which the pages workflow can’t, as the runs of pull requests from forks get no secrets. This one runs in the repository’s own context instead, so it never runs anything of the fork, which also chose what the artifact build holds, and only uploads its dist.
+# Nothing detaches the domain when the pull request closes. Pages takes only 100 custom domains per project, so the pruneDomains workflow clears up those past a count instead.
 on:
   workflow_run:
     workflows: [build]
@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-26.04
     permissions:
       actions: read
+      contents: read
       pull-requests: write
     env:
       fork: MageCast/slop-gallery
@@ -92,6 +93,22 @@ jobs:
         wranglerVersion: 4.160.0
         workingDirectory: ${{ runner.temp }}/preview
         command: pages deploy dist --project-name=slop-gallery --branch=pr-${{ steps.resolve.outputs.number }} --commit-hash=${{ steps.resolve.outputs.sha }} --commit-dirty=false
+    # The default branch’s script, which runs with the token, not the fork’s.
+    - name: checkout
+      if: steps.resolve.outputs.number != ''
+      uses: actions/checkout@v7.0.1
+      with:
+        sparse-checkout: scripts/previewDomain.ts
+        sparse-checkout-cone-mode: false
+    # The deployment stands without its domain, which fails once the project has as many as Pages takes, so the comment then links the pages.dev alias instead.
+    - name: attachDomain
+      id: attachDomain
+      if: steps.resolve.outputs.number != ''
+      continue-on-error: true
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        alias: pr-${{ steps.resolve.outputs.number }}
+      run: bun scripts/previewDomain.ts attach "$alias"
     # The pull request’s comment, which later deployments update, stands in for the deployment the pages workflow would attach to it.
     - name: comment
       if: steps.resolve.outputs.number != ''
@@ -101,15 +118,19 @@ jobs:
         sha: ${{ steps.resolve.outputs.sha }}
         alias: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
         deployment: ${{ steps.deploy.outputs.deployment-url }}
+        attached: ${{ steps.attachDomain.outcome == 'success' }}
       run: |
         marker='<!-- preview -->'
-        alias=${alias:-https://pr-$number.slop-gallery.pages.dev}
+        url=${alias:-https://pr-$number.slop-gallery.pages.dev}
+        if [ "$attached" = true ]; then
+          url=https://pr-$number.slop.gallery
+        fi
         body="$RUNNER_TEMP/previewComment.md"
         {
           echo "$marker"
           echo '## preview'
           echo
-          echo "$alias shows <a href=\"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$sha\">\`${sha::6}\`</a>${deployment:+, which stays at $deployment}."
+          echo "$url shows <a href=\"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$sha\">\`${sha::6}\`</a>${deployment:+, which stays at $deployment}."
         } > "$body"
         comments="repos/$GITHUB_REPOSITORY/issues/$number/comments"
         ids=$(gh api --paginate "$comments" --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id")
@@ -119,4 +140,4 @@ jobs:
         else
           gh api --method POST "$comments" --field body=@"$body" > /dev/null
         fi
-        echo "$alias" >> "$GITHUB_STEP_SUMMARY"
+        echo "$url" >> "$GITHUB_STEP_SUMMARY"
