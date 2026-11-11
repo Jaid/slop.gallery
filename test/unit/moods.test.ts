@@ -7,6 +7,7 @@ import {afterEach, describe, expect, mock, test} from 'bun:test'
 
 import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
+import {hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
 import Mood from '../../src/moods/base/Mood.ts'
@@ -16,7 +17,8 @@ import {readMood} from '../../src/moods/lib/forcedMood.ts'
 import MoodLens from '../../src/moods/lib/MoodLens.ts'
 import MoodMixer, {moodFade, noMood} from '../../src/moods/lib/MoodMixer.ts'
 import {moodSuppression, toggleMoodSuppression} from '../../src/moods/lib/moodSuppression.ts'
-import {orbs} from '../../src/orbs/index.ts'
+import {propMood} from '../../src/moods/lib/propMood.ts'
+import {halloweenOrb, horrorOrb, orbs, paintOrb, spookOrb} from '../../src/orbs/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -529,6 +531,35 @@ describe('moods', () => {
     expect(moodSuppression.active).toBe(true)
     expect(toggleMoodSuppression()).toBe(false)
     expect(moodSuppression.active).toBe(false)
+  })
+  test('a magic item casts the mood of the orb it belongs to while the player is in the Forge, and nowhere else, the same one holding that orb casts', () => {
+    const items = [
+      [pumpkin, halloweenOrb],
+      [hatchet, horrorOrb],
+      [helmet, spookOrb],
+      [paintingSet, paintOrb],
+    ] as const
+    for (const [curio, orb] of items) {
+      expect(orb.mood).toBeDefined()
+      // Picking it up in the Forge, or walking in while holding it.
+      expect(propMood(curio.propId, 'forge')).toBe(orb.mood)
+      // A copy numbered after the first of its kind belongs to the same orb.
+      expect(propMood(`${curio.propId}-2`, 'forge')).toBe(orb.mood)
+      // Carrying it through any other room, the Bastion included, casts nothing.
+      for (const room of ['bastion', 'banquet', 'lodge', 'lobby', 'corridor']) {
+        expect(propMood(curio.propId, room)).toBeUndefined()
+      }
+      // Holding the orb itself casts its mood in every room, the Forge included.
+      expect(propMood(orb.propId, 'forge', orb.mood)).toBe(orb.mood)
+      expect(propMood(orb.propId, 'lobby', orb.mood)).toBe(orb.mood)
+    }
+    // An orb’s own mood wins over a magic item’s id, and other props steer nothing.
+    expect(propMood(pumpkin.propId, 'forge', 'horror')).toBe('horror')
+    expect(propMood('prop-cube', 'forge')).toBeUndefined()
+    expect(propMood('prop-pumpkinseed', 'forge')).toBeUndefined()
+    expect(propMood('prop-knife', 'forge')).toBeUndefined()
+    expect(propMood('', 'forge')).toBeUndefined()
+    expect(propMood(halloweenOrb.propId, 'forge')).toBeUndefined()
   })
   test('?mood names a mood by its id, a room’s too, and ignores anything else', () => {
     expect(readMood('http://localhost/?mood=horror')).toBe('horror')

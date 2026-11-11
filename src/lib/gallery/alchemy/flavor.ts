@@ -53,8 +53,11 @@ export function transmutedOrb(orb: Orb, props: Iterable<PropPosition>, roomAt: (
   return orb === transparentOrb ? flavoredOrb(props, roomAt, random) : orb
 }
 
-/** the orb the prop steers the flavor to, if any: by its id, or the id of the first of its kind it is numbered after, like `prop-pumpkin-2` */
-function steeredOrb(id: string) {
-  const kind = /^(?<kind>.+?)(?:-\d+)?$/.exec(id)!.groups!.kind
-  return flavorSteering.get(kind)
+/**
+ * The orb the prop belongs to, if it is one of the magic items, by its id or the id of the first of its kind it is numbered after, like `prop-pumpkin-2`: the pumpkin’s Halloween Orb, the hatchet’s Horror Orb, the helmet’s Spook Orb and the Painting Set’s Paint Orb.
+ * In the Forge, one of them steers the flavor a Transparent Orb comes out as, and carrying it there casts that orb’s mood.
+ */
+export function steeredOrb(id: string) {
+  const kind = /^(?<kind>.+?)(?:-\d+)?$/.exec(id)?.groups?.kind
+  return kind ? flavorSteering.get(kind) : undefined
 }
