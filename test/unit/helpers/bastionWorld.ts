@@ -10,6 +10,7 @@ import {bastionLinkGate, bastionNetwork, climbMouthHollow, lodgeSpurArmor, lodge
 import CisternGeometry, {cisternWindowGeometry} from '../../../src/lib/gallery/cistern/CisternGeometry.ts'
 import InflowGeometry from '../../../src/lib/gallery/cistern/InflowGeometry.ts'
 import {climbMouth} from '../../../src/lib/gallery/climb.ts'
+import {helmet} from '../../../src/lib/gallery/curios/index.ts'
 import {slabHulls} from '../../../src/lib/gallery/floorPolygons.ts'
 import forge from '../../../src/lib/gallery/forge.ts'
 import {forgeRoundVestibule, vestibuleArches} from '../../../src/lib/gallery/forgeVestibule.ts'
@@ -19,7 +20,7 @@ import RouteVaultGeometry from '../../../src/lib/gallery/passages/RouteVaultGeom
 import VaultGeometry from '../../../src/lib/gallery/passages/VaultGeometry.ts'
 import roundRevealGeometry from '../../../src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '../../../src/lib/gallery/roundVestibule.ts'
-import {suitOfArmorCollision} from '../../../src/lib/gallery/suitOfArmor.ts'
+import {suitOfArmor, suitOfArmorColliders} from '../../../src/lib/gallery/suitOfArmor.ts'
 import {weldedSurfaceSkin} from '../../../src/lib/physics/weldedSurface.ts'
 import walls from '../fixtures/gallery.ts'
 import {bastionCraterGeometry} from './bastionCrater.ts'
@@ -33,7 +34,7 @@ type Shape = {
   translation?: Vec3
   triangles: [Float32Array, Uint32Array]
 }
-/** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater and the suit of armor in its blind branch with the barred window behind it, as the game builds their colliders. */
+/** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater in its blind branch with the barred window behind where the suit of armor stands, as the game builds their fixed colliders. The armor itself is a dynamic body, see `addSuitOfArmor`. */
 export function bastionColliders() {
   const colliders = new Colliders
   colliders.walls(['bastion'])
@@ -76,9 +77,6 @@ export function bastionColliders() {
   for (const part of [bastionCraterGeometry.flags, bastionCraterGeometry.rubble, bastionCraterGeometry.shards]) {
     colliders.surface(part, true, bastionCrater.center)
   }
-  const armor = suitOfArmorCollision()
-  colliders.surface(armor, false, [...lodgeSpurArmor])
-  armor.dispose()
   return colliders
 }
 
@@ -136,7 +134,45 @@ export function physicsWorld(colliders: Colliders) {
     normalizedPredictionDistance: 0.002,
   })
   colliders.into(world)
+  addSuitOfArmor(world)
   return world
+}
+
+/**
+ * The suit of armor’s body in the world, as `BastionArmor` builds it: a dynamic compound body on flat sabatons
+ * at `lodgeSpurArmor`, heavy in its legs, with the flat collar seat on top for the helmet.
+ */
+export function addSuitOfArmor(world: RAPIER.World, position: Vec3 = [...lodgeSpurArmor]) {
+  const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...position).setCcdEnabled(true).setLinearDamping(suitOfArmor.linearDamping).setAngularDamping(suitOfArmor.angularDamping))
+  for (const collider of suitOfArmorColliders) {
+    const shape = collider.kind === 'cylinder' ? RAPIER.ColliderDesc.cylinder((collider.size as readonly [number, number])[1] / 2, (collider.size as readonly [number, number])[0]) : (collider.kind === 'ball' ? RAPIER.ColliderDesc.ball(collider.size as number) : RAPIER.ColliderDesc.cuboid(...(collider.size as readonly [number, number, number]).map(value => value / 2) as [number, number, number]))
+    shape.setTranslation(...collider.position).setMass(collider.mass).setFriction(suitOfArmor.friction).setRestitution(suitOfArmor.restitution)
+    world.createCollider(shape, body)
+  }
+  return body
+}
+
+/** The knight’s helmet in the world, as its curio builds it: a convex hull of its meshes resting where a game begins. */
+export function addHelmet(world: RAPIER.World) {
+  const model = helmet.createModel()
+  try {
+    const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...helmet.position).setCcdEnabled(true))
+    world.createCollider(RAPIER.ColliderDesc.convexHull(model.hull)!.setMass(helmet.mass).setFriction(0.8).setRestitution(0.32), body)
+    return body
+  } finally {
+    model.dispose()
+  }
+}
+
+/** The suit of armor’s body already in a world from `physicsWorld`, by its mass. */
+export function suitOfArmorBody(world: RAPIER.World) {
+  let armor: RAPIER.RigidBody | undefined
+  world.forEachRigidBody(body => {
+    if (body.mass() === suitOfArmor.mass) {
+      armor = body
+    }
+  })
+  return armor!
 }
 
 /** An orb’s body in the world at the position, as `GrabbableProp` builds it: a ball of 1.8 kg, friction 0.8 and restitution 0.32. */
