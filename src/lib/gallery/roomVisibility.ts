@@ -49,7 +49,19 @@ const holeBox = (wallId: string, name: string) => {
   const bottom = wall.center[1] + (hole.bottom ?? 0)
   const top = wall.center[1] + openingTop(hole, hole.u)
   const box = new Box3
-  for (const u of [hole.u - hole.width / 2, hole.u + hole.width / 2]) {
+  const from = hole.u - hole.width / 2
+  const to = hole.u + hole.width / 2
+  const coordinates = [from, to]
+  const radius = wall.curveRadius
+  if (radius) {
+    // A curved opening can bulge past both jambs. Include every world-axis extremum of its inner and outer arcs, not just their endpoints; otherwise the camera can pass the portal while still inside its owner room’s air.
+    const quarterTurn = Math.PI / 2
+    const angles = [from / radius - wall.rotation, to / radius - wall.rotation]
+    for (let quadrant = Math.ceil(Math.min(...angles) / quarterTurn); quadrant <= Math.floor(Math.max(...angles) / quarterTurn); quadrant++) {
+      coordinates.push(radius * (wall.rotation + quadrant * quarterTurn))
+    }
+  }
+  for (const u of coordinates) {
     for (const offset of [-portalDepth, portalDepth]) {
       box.expandByPoint(new Vector3(...wallPosition(wall, u, bottom, offset)))
     }
