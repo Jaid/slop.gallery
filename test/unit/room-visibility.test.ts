@@ -195,3 +195,51 @@ test('of a box reaching behind the camera, only the part in front of it shows', 
   expect([left, bottom, top]).toEqual([-1, -1, 1])
   expect(right).toBeLessThan(-0.9)
 })
+test('the Forge–Bastion threshold stays visible at the reported camera pose', () => {
+  const camera = new PerspectiveCamera(62, 16 / 9, 0.1, 1000)
+  camera.position.set(-16.963, 1.62, -35.459)
+  camera.rotation.set(-0.0472, 1.6118, 0, 'YXZ')
+  camera.updateMatrixWorld()
+  const matrix = new Matrix4
+  matrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
+  const from = roomsAt(camera.position.toArray())
+  expect(from).toEqual(['forge'])
+  expect(visibleRegions(from, matrix).get('bastion')).toContainEqual([-1, -1, 1, 1])
+})
+test('portal boxes contain the entire opening, including the bulge of curved walls', () => {
+  for (const [index, {holes}] of openings.entries()) {
+    const {box} = portals[index]
+    for (const [wallId, name] of holes) {
+      const wall = slopGallery.walls.find(value => value.id === wallId)!
+      const hole = wall.holes!.find(value => value.name === name)!
+      for (let step = 0; step <= 100; step++) {
+        const u = hole.u + hole.width * (step / 100 - 0.5)
+        // Both faces of the portal’s 0.8 m padding, and the wall itself, at the sill and crown heights.
+        for (const offset of [-0.8, 0, 0.8]) {
+          for (const height of [hole.bottom ?? 0, openingTop(hole, hole.u)]) {
+            const position = new Vector3(...wallPosition(wall, u, wall.center[1] + height, offset))
+            expect(box.distanceToPoint(position), `${wallId}/${name} at ${u}, offset ${offset}`).toBeLessThan(1e-9)
+          }
+        }
+      }
+    }
+  }
+})
+test('crossing the Forge–Bastion threshold keeps both rooms visible in either direction', () => {
+  // Sweep across the formerly missing strip, across the doorway and at crouching, standing and flying eye heights.
+  for (let step = 0; step <= 24; step++) {
+    for (const z of [-36.5, -35, -33.5]) {
+      for (const y of [0.6, 1.62, 2.2]) {
+        const position: Vec3 = [-17.2 + step * 0.025, y, z]
+        const from = roomsAt(position)
+        expect(from.length).toBeGreaterThan(0)
+        for (const direction of [-1, 1]) {
+          const regions = visibleRegions(from, viewProjection(position, [position[0] + direction, y, z]))
+          for (const room of ['forge', 'bastion'] as const) {
+            expect(regions.get(room), `${position.join(', ')} facing ${direction}: ${room}`).toContainEqual([-1, -1, 1, 1])
+          }
+        }
+      }
+    }
+  }
+})
