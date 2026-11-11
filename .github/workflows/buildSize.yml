@@ -10,10 +10,9 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+    # The workflow’s own revision, a pull request’s merge commit, not its head, so the scripts are the ones this workflow calls, even for a pull request that branched off before them. What it measures is the head’s build all the same.
     - name: checkout
       uses: actions/checkout@v7.0.1
-      with:
-        ref: ${{ github.event.pull_request.head.sha || github.sha }}
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
       with:
