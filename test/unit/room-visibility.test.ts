@@ -165,6 +165,10 @@ test('a camera in a room’s threshold beyond one of its openings sees through i
   const dumped: Vec3 = [-24.638, -3.38, -43.796]
   expect(roomsAt(dumped)).toEqual(['lodge'])
   expect(visibleRegions(['lodge'], viewProjection(dumped, [-25.116, -3.7, -48.335])).has('corridor')).toBe(true)
+  // In the bow of the Forge’s vestibule’s west arch, west of the chord between its jambs but still on the Forge’s side of the Bastion’s air, the Bastion once showed nothing but the sky too.
+  const inBow: Vec3 = [-16.963, 1.62, -35.459]
+  expect(roomsAt(inBow)).toEqual(['forge'])
+  expect(visibleRegions(['forge'], viewProjection(inBow, [-24.195, 1.278, -35.163])).has('bastion')).toBe(true)
   for (const {rooms: pair, holes} of openings) {
     for (const [wallId, name] of holes) {
       const wall = slopGallery.walls.find(value => value.id === wallId)!

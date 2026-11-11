@@ -23,6 +23,8 @@ type Portal = {
 const sightDepth = 3
 // Doorframes, trims and the reveal of thick walls stay inside the portal.
 const portalDepth = 0.8
+/** how many steps along an opening its portal box follows, so the bow of a curved wall between its jambs lies inside the box too */
+const portalSteps = 16
 /** how far a box may reach in front of a wall and still count as lying behind it */
 const behindTolerance = 0.01
 /**
@@ -49,7 +51,9 @@ const holeBox = (wallId: string, name: string) => {
   const bottom = wall.center[1] + (hole.bottom ?? 0)
   const top = wall.center[1] + openingTop(hole, hole.u)
   const box = new Box3
-  for (const u of [hole.u - hole.width / 2, hole.u + hole.width / 2]) {
+  // Only the jambs would cut a curved wall’s bow off: the Forge’s vestibule bows almost a meter past the chord between its west arch’s jambs, and a camera in that bow stood west of the whole portal, so the Bastion behind it dropped out and only the sky showed.
+  for (let step = 0; step <= portalSteps; step++) {
+    const u = hole.u - hole.width / 2 + hole.width * step / portalSteps
     for (const offset of [-portalDepth, portalDepth]) {
       box.expandByPoint(new Vector3(...wallPosition(wall, u, bottom, offset)))
     }
