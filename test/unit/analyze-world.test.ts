@@ -260,7 +260,7 @@ test('the tables split static meshes from items, leave rooms without items out o
     min: [0, 0, 0] as [number, number, number],
     max: [1, 1, 1] as [number, number, number],
   }
-  const markdown = worldTables({
+  const markdown = worldTables([{
     rooms: {
       hall: {
         title: 'Hall',
@@ -277,8 +277,8 @@ test('the tables split static meshes from items, leave rooms without items out o
     },
     elsewhere: region([], [8], []),
     globalLights: region([], [], ['own', undefined]).lights,
-  }, 'Test', 'heavy', 1)
-  expect(markdown).toStartWith('## Test (heavy graphics, seed 1)\n')
+  }])
+  expect(markdown).toStartWith('### static meshes\n')
   const section = (name: string) => markdown.split(`### ${name}`)[1].split('###')[0]
   expect(section('static meshes')).toContain('| Salon | 20\u{202F}000 | 1 |\n| Hall | 12\u{202F}300 | 2 |\n| **total** | 32\u{202F}300 | 3 |')
   expect(section('static meshes')).not.toContain('Elsewhere')
@@ -301,7 +301,7 @@ test('against a base revision, the tables tell the changes, matching rooms by ti
     elsewhere,
     globalLights: region([], [], ['own']).lights,
   })
-  const markdown = worldTables(analysis({
+  const markdown = worldTables([analysis({
     hall: {
       title: 'Hall',
       ...region([12_000, 300], [], [undefined]),
@@ -310,7 +310,7 @@ test('against a base revision, the tables tell the changes, matching rooms by ti
       title: 'Salon',
       ...region([20_000], [100], ['own']),
     },
-  }), 'Test', 'heavy', 1, analysis({
+  })], [analysis({
     hall: {
       title: 'Hall',
       ...region([12_000, 300], [50], [undefined]),
@@ -320,7 +320,7 @@ test('against a base revision, the tables tell the changes, matching rooms by ti
       title: 'Parlor',
       ...region([500], [], [undefined]),
     },
-  }))
+  })])
   const section = (name: string) => markdown.split(`### ${name}`)[1].split('###')[0]
   expect(section('static meshes')).toContain('<th colspan="2">triangles</th><th colspan="2">meshes</th>')
   expect(section('static meshes')).toContain('<tr><td>Salon</td><td align="right">20\u{202F}000</td><td align="right">+20\u{202F}000</td><td align="right">1</td><td align="right">+1</td></tr>')
@@ -331,4 +331,33 @@ test('against a base revision, the tables tell the changes, matching rooms by ti
   expect(section('items')).toContain('<tr><td><b>total</b></td><td align="right">100</td><td align="right">+50</td><td align="right">1</td><td align="right"></td></tr>')
   expect(section('lights')).toContain('<th colspan="2">lamps</th><th colspan="2">shadows</th>')
   expect(section('lights')).toContain('<tr><td>Global</td><td align="right">1</td><td align="right"></td><td align="right">1</td><td align="right"></td></tr>')
+})
+test('the tables of several worlds list their rooms side by side and sum up their elsewheres and global lights', () => {
+  const fence = {
+    min: [0, 0, 0] as [number, number, number],
+    max: [1, 1, 1] as [number, number, number],
+  }
+  const world = (id: string, title: string, room: ReturnType<typeof region>, elsewhere: ReturnType<typeof region>) => ({
+    rooms: {
+      [id]: {
+        title,
+        fence,
+        ...room,
+        foreignLights: [],
+      },
+    },
+    elsewhere,
+    globalLights: region([], [], ['own']).lights,
+  })
+  const gallery = world('hall', 'Hall', region([12_000], [100], [undefined]), region([500], [], []))
+  const sandbox = world('cell', 'Cell', region([30_000], [], ['pooled']), region([200], [8], []))
+  const markdown = worldTables([gallery, sandbox])
+  expect(markdown.match(/^#+ .+$/gmu)).toEqual(['### static meshes', '### items', '### lights'])
+  const section = (name: string) => markdown.split(`### ${name}`)[1].split('###')[0]
+  expect(section('static meshes')).toContain('| Cell | 30\u{202F}000 | 1 |\n| Hall | 12\u{202F}000 | 1 |\n| Elsewhere | 700 | 2 |\n| **total** | 42\u{202F}700 | 4 |')
+  expect(section('items')).toContain('| Hall | 100 | 1 |\n| Elsewhere | 8 | 1 |\n| **total** | 108 | 2 |')
+  expect(section('lights')).toContain('| Cell | 1 | 1 |\n| Hall | 1 |  |\n| Global | 2 | 2 |\n| **total** | 4 | 3 |')
+  // Room ids only need to be unique within their world, but their titles have to tell the rows apart.
+  expect(() => worldTables([gallery, world('hall', 'Cell', region([], [], []), region([], [], []))])).not.toThrow()
+  expect(() => worldTables([gallery, gallery])).toThrow('More than one room is titled “Hall”')
 })

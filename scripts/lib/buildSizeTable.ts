@@ -50,8 +50,6 @@ export default function buildSizeTable(sizes: BuildSizes, base?: BuildSizes) {
   const baseValues = base && byCategory(base)
   const shown = (Object.keys(categories) as Array<Category>).filter(category => values[category] ?? baseValues?.[category])
   return [
-    '## build size',
-    '',
     deltable.render({
       // Categories gone since count 0 in their place, instead of following the others.
       values: Object.fromEntries(shown.map(category => [category, values[category] ?? {

@@ -84,8 +84,6 @@ test('the table sums the kinds up by category in the order of the categories, cl
     },
   })
   expect(markdown).toBe([
-    '## build size',
-    '',
     '| kind | files | bytes |',
     '| --- | --: | --: |',
     '| HTML | 1 | 300 |',

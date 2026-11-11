@@ -54,4 +54,5 @@ jobs:
       with:
         file: ${{ runner.temp }}/codeSize.md
         id: codeSize
+        title: code size
         base: ${{ steps.measureCodeSize.outputs.base }}

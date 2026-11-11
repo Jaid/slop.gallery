@@ -4,8 +4,6 @@ import {parseArgs} from 'node:util'
 
 import {callWebmcpTool, waitForLoadingItems} from 'capture-session/script'
 
-import {worlds} from '#src/worlds/index.ts'
-
 import {galleryHelp, galleryOptions, openHeadlessGallery, resolveGallerySetup} from './lib/headlessGallery.ts'
 import worldTables from './lib/worldTables.ts'
 
@@ -16,7 +14,7 @@ Opens the world in a private headless browser, calls the app’s analyze_world W
 Starts a private Vite dev server (or serves --target); never touches the visible browser. Progress goes to stderr, so stdout can be redirected to a file.
 
 Options:
-  --format <format>       json prints the whole analysis, markdown tables of the rooms’ static meshes and items with their triangles and of their lamps and shadows. Default: json
+  --format <format>       json prints the whole analysis, markdown tables of the rooms’ static meshes and items with their triangles and of their lamps and shadows, like worldReport.ts does for several worlds. Default: json
   --base <file>           the json output of a base revision with the same options, which the markdown tables tell the changes since
   --json <file>           also write the whole analysis as json to this file, like for a later --base
 ${galleryHelp()}
@@ -56,7 +54,7 @@ const main = async (options: AnalyzeWorldOptions) => {
   if (options.json !== undefined) {
     await Bun.write(options.json, json)
   }
-  return format === 'markdown' ? worldTables(analysis, worlds[setup.world].title, options.graphics, setup.seed, base) : json
+  return format === 'markdown' ? worldTables([analysis], base && [base]) : json
 }
 
 export default main

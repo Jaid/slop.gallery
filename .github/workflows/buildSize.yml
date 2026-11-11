@@ -60,4 +60,5 @@ jobs:
       with:
         file: ${{ runner.temp }}/buildSize.md
         id: buildSize
+        title: build size
         base: ${{ steps.fetchBaseBuildSize.outputs.base }}

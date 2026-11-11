@@ -19,8 +19,6 @@ const rows = (sizes: Partial<CodeSizes>) => Object.fromEntries(groups.map(group 
 /** a table of every group’s files, raw bytes and effective bytes, closed by their totals, and given the sizes of a base revision, how they changed since */
 export default function codeSizeTable(sizes: CodeSizes, base?: Partial<CodeSizes>) {
   return [
-    '## code size',
-    '',
     deltable.render({
       values: rows(sizes),
       ...base ? {base: rows(base)} : {},

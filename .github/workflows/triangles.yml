@@ -5,6 +5,10 @@ on:
 jobs:
   triangles:
     runs-on: ubuntu-26.04
+    # The analyses’ graphics and seed, which the report’s title names.
+    env:
+      graphics: heavy
+      seed: 1
     permissions:
       actions: read
       contents: read
@@ -39,7 +43,7 @@ jobs:
         sha: ${{ steps.resolveBase.outputs.sha }}
         name: analyses
         path: ${{ runner.temp }}/baseAnalyses
-    # Every room’s triangles, meshes and lights in heavy graphics, to the log and the report, loaded in the runner’s Chrome on its software Vulkan.
+    # Every room’s triangles, meshes and lights, loaded in the runner’s Chrome on its software Vulkan, the gallery’s and the sandbox’s Cell in the same tables, to the log and the report.
     # The seed decides which default works hang in which slots at which size and which plants stand in the pots, so it is fixed to keep runs comparable.
     # Knottingham is left out, as some of its Knot shaders crash Chrome’s software GPU process.
     - name: analyzeWorlds
@@ -49,18 +53,24 @@ jobs:
       run: |
         # Chrome’s sandbox needs unprivileged user namespaces, which Ubuntu restricts since 24.04.
         sudo sysctl --write kernel.apparmor_restrict_unprivileged_userns=0
+        analyses=()
+        bases=()
         analyze() {
           local name=$1
           shift
-          local compare=()
-          if [ -f "$RUNNER_TEMP/baseAnalyses/$name.json" ]; then
-            compare=(--base "$RUNNER_TEMP/baseAnalyses/$name.json")
-          fi
-          bun scripts/analyzeWorld.ts --target dist --swiftshader --height 180 --seed 1 --format markdown --json "$RUNNER_TEMP/analyses/$name.json" "${compare[@]}" "$@" | tee --append "$RUNNER_TEMP/triangles.md"
+          bun scripts/analyzeWorld.ts --target dist --swiftshader --height 180 --graphics "$graphics" --seed "$seed" "$@" > "$RUNNER_TEMP/analyses/$name.json"
+          analyses+=("$RUNNER_TEMP/analyses/$name.json")
+          bases+=(--base "$RUNNER_TEMP/baseAnalyses/$name.json")
         }
         mkdir --parents "$RUNNER_TEMP/analyses"
         analyze gallery
         analyze cell --room cell
+        # The deltas need the base of every world, as the rooms of a world without one would count as new.
+        compare=()
+        if [ -f "$RUNNER_TEMP/baseAnalyses/gallery.json" ] && [ -f "$RUNNER_TEMP/baseAnalyses/cell.json" ]; then
+          compare=("${bases[@]}")
+        fi
+        bun scripts/worldReport.ts "${compare[@]}" "${analyses[@]}" | tee "$RUNNER_TEMP/triangles.md"
     # For the runs of later revisions to compare with. Pull request runs measure pull requests, which nothing compares with.
     - name: uploadAnalyses
       if: github.event_name != 'pull_request'
@@ -74,4 +84,5 @@ jobs:
       with:
         file: ${{ runner.temp }}/triangles.md
         id: triangles
+        title: triangles (${{ env.graphics }} graphics, seed ${{ env.seed }})
         base: ${{ steps.fetchBaseAnalyses.outputs.base }}
