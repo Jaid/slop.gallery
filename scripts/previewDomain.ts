@@ -6,6 +6,10 @@ type CloudflareResponse<Result> = {
     message: string
   }>
   result: Result
+  result_info?: {
+    page?: number
+    total_pages?: number
+  }
   success: boolean
 }
 type DnsRecord = {
@@ -17,6 +21,7 @@ type DnsRecord = {
   type: string
 }
 type PagesDomain = {
+  created_on: string
   name: string
   status: 'active' | 'blocked' | 'deactivated' | 'error' | 'initializing' | 'pending'
   validation_data?: {error_message?: string}
@@ -36,7 +41,7 @@ const help = [
   'attach waits until Cloudflare has validated the domain and issued its certificate.',
   `Needs CLOUDFLARE_API_TOKEN, a Cloudflare API token with Cloudflare Pages: Edit and DNS: Edit on ${zoneName}.`,
 ].join('\n')
-const request = async <Result>(path: string, init: RequestInit = {}) => {
+const requestResponse = async <Result>(path: string, init: RequestInit = {}) => {
   const token = Bun.env.CLOUDFLARE_API_TOKEN
   if (!token) {
     throw new Error('CLOUDFLARE_API_TOKEN is missing.')
@@ -57,7 +62,11 @@ const request = async <Result>(path: string, init: RequestInit = {}) => {
     const errors = body.errors.map(error => `${error.code} ${error.message}`).join(', ')
     throw new Error(`Cloudflare answered ${init.method ?? 'GET'} ${path} with HTTP ${response.status}: ${errors}`)
   }
-  return body.result
+  return body
+}
+const request = async <Result>(path: string, init: RequestInit = {}) => {
+  const body = await requestResponse<Result>(path, init)
+  return body?.result
 }
 const resolveAlias = (alias: string) => {
   // Cloudflare cuts preview aliases to 28 characters of lowercase letters, digits and hyphens.
@@ -126,6 +135,23 @@ export const attachPreviewDomain = async (alias: string, {timeout = 600_000} = {
   const url = `https://${hostname}`
   console.log(`${url} serves ${target}.`)
   return url
+}
+
+/** Resolves with the preview aliases served at a subdomain of the zone, like `pr-145` for pr-145.slop.gallery, with when Cloudflare added their domain. */
+export const listPreviewDomains = async () => {
+  const domains: Array<PagesDomain> = []
+  for (let page = 1; ; page++) {
+    const body = await requestResponse<Array<PagesDomain>>(`${domainPath()}?page=${page}`)
+    domains.push(...body?.result ?? [])
+    if (page >= (body?.result_info?.total_pages ?? 1)) {
+      break
+    }
+  }
+  const suffix = `.${zoneName}`
+  return domains.filter(domain => domain.name.endsWith(suffix)).map(domain => ({
+    alias: domain.name.slice(0, -suffix.length),
+    createdOn: new Date(domain.created_on),
+  }))
 }
 
 export const detachPreviewDomain = async (alias: string) => {
