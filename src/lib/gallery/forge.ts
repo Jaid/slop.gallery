@@ -1,5 +1,4 @@
-import {wallFace} from './architectureDimensions.ts'
-import {plankTable} from './plankTable.ts'
+import {ironTable, ironTableStandOff} from './ironTable.ts'
 import salon, {salonCeiling} from './salon.ts'
 
 /**
@@ -37,21 +36,23 @@ const forge = {
 const northZ = forge.center[1] - forge.size[1] / 2
 const westX = forge.center[0] - forge.size[0] / 2
 
-/** The painter’s table against the middle of the west wall, which the painting set lies on: a plain one of three planks on four legs, running along the wall. */
-export const forgeTable = plankTable({
-  length: 1.8,
-  width: 0.8,
-  height: 0.78,
-  top: 0.04,
-  boards: 3,
-  gap: 0.004,
-  overhang: 0.04,
-  apron: [0.1, 0.024],
-  leg: 0.065,
+/** The painter’s table against the middle of the west wall, which the painting set lies on: an iron one under a slab of soapstone, like the alchemy machine’s workbench, running along the wall. */
+export const forgeTable = ironTable({
+  length: 2.4,
+  depth: 1,
+  height: 0.9,
+  top: 0.05,
+  overhang: 0.05,
+  back: 0.12,
+  apron: [0.1, 0.012],
+  leg: 0.06,
+  stretcher: [0.12, 0.035],
   pairs: 2,
 })
-/** where the middle of the table stands in plan, in the world’s frame: its back a hand’s width from the west wall’s face */
-export const forgeTableCenter = [westX + wallFace + 0.05 + forgeTable.width / 2, forge.center[1]] as const
+/** where the middle of the table stands in plan, in the world’s frame: as close to the west wall as its legs stand clear of the baseboard, its slab reaching back out over it */
+export const forgeTableCenter = [westX + ironTableStandOff(forgeTable), forge.center[1]] as const
+/** how the painter’s table turns about y from its own frame, its back toward +z, to face the room from the west wall */
+export const forgeTableTurn = -Math.PI / 2
 
 /** The round rooflight in the middle of the ceiling, relative to the room’s center. */
 export const forgeRooflight = {

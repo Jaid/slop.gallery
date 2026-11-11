@@ -3,6 +3,7 @@ import type {Vec3} from '../types.ts'
 import {wallFace} from '../architectureDimensions.ts'
 import {cisternWindow} from '../cistern/window.ts'
 import forge from '../forge.ts'
+import {ironTable, ironTableStandOff} from '../ironTable.ts'
 
 const southZ = forge.center[1] + forge.size[1] / 2
 /** where the face of the Forge’s south wall stands, which the alchemy machine stands against */
@@ -14,30 +15,31 @@ export const physicsSteps = {
   substeps: 4,
 } as const
 const gravity = -9.81
-
+/** the workbench in its own frame, which lines up with the world’s: running east to west along the wall, its back toward it */
+const bench = ironTable({
+  length: 3.2,
+  depth: 1.15,
+  height: 1.3,
+  // As thick as leaves an orb resting on the body’s lid down in the throat, which the sink’s bowl starts under
+  top: 0.045,
+  // Deep enough to keep the front feet off the floor’s brass inlay
+  overhang: 0.12,
+  back: 0.12,
+  apron: [0.12, 0.014],
+  leg: 0.07,
+  // Low enough for the machine’s pipe to pass over the stretcher across the east end on its way to the riser
+  stretcher: [0.12, 0.04],
+  pairs: 2,
+})
 /**
- * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: a long top of planks with eased edges over aprons on square legs, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
+ * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: an iron table under a thick slab of soapstone, see {@link ironTable}, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
  * All values are in meters; its middle and its top’s height are in the world’s frame, everything else measured on the bench.
  */
 export const workbench = {
-  /** the middle of its top in plan, on the room’s axis, its back a hand’s width from the wall’s face */
-  center: [forge.center[0], southWallFace - 0.05 - 0.55] as const,
-  /** how long it is along the wall, east to west */
-  length: 2.8,
-  /** how deep it is, from the wall into the room */
-  depth: 1.1,
-  height: 1.3,
-  /** how thick its top is */
-  top: 0.045,
-  /** how far its top reaches out over the aprons */
-  overhang: 0.04,
-  /** how deep its aprons hang under the top and how thick they are */
-  apron: [0.11, 0.024],
-  /** how thick its square legs are */
-  leg: 0.07,
-  /** how many planks its top is laid of, along its length */
-  boards: 4,
-} as const
+  ...bench,
+  /** the middle of its slab in plan, on the room’s axis, as close to the wall as its legs stand clear of the baseboard, its slab reaching back out over it */
+  center: [forge.center[0], southZ - ironTableStandOff(bench)] as const,
+}
 const [benchX, benchZ] = workbench.center
 /** how far the sink’s bowl turns round from upright at its rim down to the throat, in radians: it meets the throat at a fall of 25° */
 const bowlSweep = Math.PI * 65 / 180
