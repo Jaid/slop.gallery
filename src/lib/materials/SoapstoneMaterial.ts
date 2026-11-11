@@ -19,7 +19,9 @@ export default class SoapstoneMaterial extends MeshStandardNodeMaterial {
       envMapIntensity: 0.55,
     })
     this.name = 'Soapstone'
-    const position = positionGeometry.add(vec3(seed * 17.31, seed * 3.7, seed * -11.9)).toVar('soapstonePosition')
+    // Wrapped to a few hundred meters: shader floats tens of kilometers out only step in millimeters, which broke the veins into blocks.
+    const [x, y, z] = [seed * 17.31, seed * 3.7, seed * -11.9].map(value => value % 211)
+    const position = positionGeometry.add(vec3(x, y, z)).toVar('soapstonePosition')
     const footprint = max(positionGeometry.x.fwidth(), max(positionGeometry.y.fwidth(), positionGeometry.z.fwidth()))
     const detail = visibleDetail(footprint, 0.004)
     // Broad clouds of lighter and darker stone, stretched a little along the bedding
