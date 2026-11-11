@@ -8,7 +8,8 @@ import {Box3, Euler, Quaternion, Vector3} from 'three/webgpu'
 
 import {banquet, banquetTable} from '../../src/lib/gallery/banquet.ts'
 import {curios, hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
-import forge, {forgeTable, forgeTableCenter} from '../../src/lib/gallery/forge.ts'
+import forge, {forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
+import {ironTableColliders} from '../../src/lib/gallery/ironTable.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
@@ -232,8 +233,12 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
     try {
       const [tableX, tableZ] = forgeTableCenter
       world.createCollider(RAPIER.ColliderDesc.cuboid(forge.size[0] / 2, 0.12, forge.size[1] / 2).setTranslation(forge.center[0], -0.12, forge.center[1]))
-      for (const {center: [x, y, z], size: [width, height, depth]} of plankTableColliders(forgeTable, 'forge-table')) {
-        world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(tableX + x, y, tableZ + z))
+      // The table stands turned, as the room places it, on a body of its own.
+      const turn = new Quaternion
+      turn.setFromAxisAngle(new Vector3(0, 1, 0), forgeTableTurn)
+      const table = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(tableX, 0, tableZ).setRotation(turn))
+      for (const {center: [x, y, z], size: [width, height, depth]} of ironTableColliders(forgeTable, 'forge-table')) {
+        world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(x, y, z), table)
       }
       const {asleep, facing, moved, up, y} = settle(paintingSet, world)
       expect(asleep).toBe(true)

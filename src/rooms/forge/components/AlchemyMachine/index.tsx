@@ -19,10 +19,11 @@ import PipeGeometry, {pipeCenterline} from '#src/lib/gallery/alchemy/PipeGeometr
 import SinkGeometry from '#src/lib/gallery/alchemy/SinkGeometry.ts'
 import WorkbenchGeometry from '#src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
+import {ironTableColliders, ironTableFinish} from '#src/lib/gallery/ironTable.ts'
 import BronzeMaterial from '#src/lib/materials/BronzeMaterial.ts'
-import GrainedWoodMaterial from '#src/lib/materials/GrainedWoodMaterial.ts'
 import HammeredBrassMaterial from '#src/lib/materials/HammeredBrassMaterial.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
+import SoapstoneMaterial from '#src/lib/materials/SoapstoneMaterial.ts'
 import WroughtIronMaterial from '#src/lib/materials/WroughtIronMaterial.ts'
 
 import AlchemyWorks from './AlchemyWorks.ts'
@@ -30,6 +31,8 @@ import CannonFx from './CannonFx.ts'
 
 const [benchX, benchZ] = workbench.center
 const [sinkX, sinkY, sinkZ] = alchemySink.center
+/** the bench’s frame of iron, its slab having a collider of its own round the sink’s hole */
+const benchColliders = ironTableColliders(workbench, 'alchemy-workbench', {top: false})
 const up = new Vector3(0, 1, 0)
 /** The turn from up the y axis onto the direction, as Euler angles. */
 const turnOnto = (direction: Vector3) => {
@@ -65,7 +68,7 @@ const pipeCapsules = (() => {
 const breechBlock = alchemyCannon.breech.map((value, axis) => value + alchemyCannon.axis[axis] * trunnionReach / 2) as Vec3
 
 /**
- * The alchemy machine against the Forge’s south wall: a workbench with the machine’s brass sink let into its east end, and an orb holder on its west end, the machine’s iron body under the sink, and its pipe out of the body, up the wall and into a cannon over the bench, which shoots across the Forge through the arch into the vestibule and through the window there into the Bastion’s cistern.
+ * The alchemy machine against the Forge’s south wall: an iron workbench under a slab of soapstone with the machine’s brass sink let into its east end, and an orb holder on its west end, the machine’s iron body under the sink, and its pipe out of the body, up the wall and into a cannon over the bench, which shoots across the Forge through the arch into the vestibule and through the window there into the Bastion’s cistern.
  * An orb thrown or dropped into the sink rolls down its throat into the body, which works on it for a while, its window glowing, and shoots it out of the cannon, see {@link AlchemyWorks}.
  */
 export default function AlchemyMachine() {
@@ -96,12 +99,10 @@ export default function AlchemyMachine() {
     }
   }, []))
   const materials = useDisposable(useMemo(() => {
-    const wood = new GrainedWoodMaterial({
-      heartwood: ['#5e3a1c', '#8c5f33'],
-      latewood: '#3b2412',
-    }, {roughness: 0.5})
+    const stone = new SoapstoneMaterial({seed: 4391})
     const brass = new HammeredBrassMaterial
     const iron = new WroughtIronMaterial
+    const benchIron = new WroughtIronMaterial(ironTableFinish)
     const bronze = new BronzeMaterial({environment: studioEnvironment})
     // The swell running up the barrel as it gathers itself: wider round its axis where it is, but not out along the trunnions
     const {at, size} = fx.swell
@@ -116,13 +117,14 @@ export default function AlchemyMachine() {
     })
     window.emissiveNode = color('#ff7a26').mul(works.glow)
     return {
-      wood,
+      stone,
       brass,
       iron,
+      benchIron,
       bronze,
       window,
       dispose() {
-        for (const material of [wood, brass, iron, bronze, window]) {
+        for (const material of [stone, brass, iron, benchIron, bronze, window]) {
           material.dispose()
         }
       },
@@ -135,14 +137,14 @@ export default function AlchemyMachine() {
   return <group name='alchemy-machine'>
     <RigidBody colliders={false} name='alchemy-machine' type='fixed'>
       <MeshSurfaceCollider args={parts.topCollision} position={[benchX, 0, benchZ]} />
-      {parts.bench.colliders.map(({center, size}) => <CuboidCollider key={center.join()} args={[size[0] / 2, size[1] / 2, size[2] / 2]} position={[benchX + center[0], center[1], benchZ + center[2]]} />)}
+      {benchColliders.map(({center, name, size}, index) => <CuboidCollider key={index} args={[size[0] / 2, size[1] / 2, size[2] / 2]} name={name} position={[benchX + center[0], center[1], benchZ + center[2]]} />)}
       <MeshSurfaceCollider args={parts.sinkCollision} position={alchemySink.center} />
       <CuboidCollider args={[machineBody.size[0] / 2, machineBody.size[1] / 2, machineBody.size[2] / 2]} position={[sinkX, machineBody.size[1] / 2, sinkZ]} />
       {pipeCapsules.map(({half, position, rotation}) => <CapsuleCollider key={position.join()} args={[half, alchemyPipe.radius]} position={position} rotation={rotation} />)}
       <CylinderCollider args={[trunnionReach / 2, 0.27]} position={breechBlock} rotation={barrelTurn} />
       <group position={[benchX, 0, benchZ]}>
-        <mesh castShadow geometry={parts.bench.top} material={materials.wood} name='alchemy-workbench-top' receiveShadow />
-        <mesh castShadow geometry={parts.bench.frame} material={materials.wood} name='alchemy-workbench-frame' receiveShadow />
+        <mesh castShadow geometry={parts.bench.top} material={materials.stone} name='alchemy-workbench-top' receiveShadow />
+        <mesh castShadow geometry={parts.bench.frame} material={materials.benchIron} name='alchemy-workbench-frame' receiveShadow />
       </group>
       <mesh castShadow geometry={parts.sink.metal} material={materials.brass} name='alchemy-sink' position={[sinkX, sinkY, sinkZ]} receiveShadow />
       <group position={[sinkX, 0, sinkZ]}>
