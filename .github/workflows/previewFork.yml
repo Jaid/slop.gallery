@@ -1,0 +1,122 @@
+name: previewFork
+# Deploys the build of a pull request from MageCast’s fork to pr-<number>.slop-gallery.pages.dev, which the pages workflow can’t, as the runs of pull requests from forks get no secrets. This one runs in the repository’s own context instead, so it never runs anything of the fork, which also chose what the artifact build holds, and only uploads its dist.
+# Without a custom domain, as nothing would detach it for pull requests from forks, whose closing events get no secrets either, and Pages takes any number of preview aliases but only 100 custom domains.
+on:
+  workflow_run:
+    workflows: [build]
+    types: [completed]
+  # For build runs that finished before this workflow saw them, while their artifact build is kept.
+  workflow_dispatch:
+    inputs:
+      run:
+        description: the ID of the build workflow’s run for a pull request from MageCast’s fork
+        required: true
+# A newer build of the same branch replaces the deployment of an older one still going.
+concurrency:
+  group: previewFork-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch || inputs.run }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    # A build run whose build job succeeded concludes as failed all the same if one of its reports fails, so the artifact decides instead.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion != 'cancelled' && github.event.workflow_run.head_repository.full_name == 'MageCast/slop-gallery'
+    runs-on: ubuntu-26.04
+    permissions:
+      actions: read
+      pull-requests: write
+    env:
+      fork: MageCast/slop-gallery
+      run: ${{ github.event.workflow_run.id || inputs.run }}
+    steps:
+    # The pull request whose head is still the build’s commit, as an older build has nothing to show anymore. GitHub leaves the pull requests of a run from a fork out of its event.
+    - name: resolve
+      id: resolve
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if ! [[ "$run" =~ ^[0-9]+$ ]]; then
+          echo "::error::$run is no run ID."
+          exit 1
+        fi
+        read -r path event headRepository status sha branch < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run" --jq '[.path, .event, .head_repository.full_name, .status, .head_sha, .head_branch] | @tsv')
+        if [ "$path" != .github/workflows/build.yml ] || [ "$event" != pull_request ] || [ "$headRepository" != "$fork" ] || [ "$status" != completed ]; then
+          echo "::error::Run $run is no completed build of a pull request from $fork."
+          exit 1
+        fi
+        artifact=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts?name=build" --jq '[.artifacts[] | select(.expired | not)] | first // empty | .id')
+        if [ -z "$artifact" ]; then
+          echo "::notice::Run $run has no artifact build, as its build failed or the artifact expired."
+          exit 0
+        fi
+        number=$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" --field state=open --field head="${fork%%/*}:$branch" --jq "[.[] | select(.head.sha == \"$sha\")] | first // empty | .number")
+        if [ -z "$number" ]; then
+          echo "::notice::No open pull request has ${sha::8} as its head anymore."
+          exit 0
+        fi
+        {
+          echo "artifact=$artifact"
+          echo "number=$number"
+          echo "sha=$sha"
+        } >> "$GITHUB_OUTPUT"
+    # Only dist, unpacked into a folder of its own, so Wrangler finds no package.json, configuration or Pages Functions of the fork next to it. Links could point anywhere on the runner, and a _worker.js would run on Cloudflare, so either rejects the build.
+    - name: unpackBuild
+      if: steps.resolve.outputs.number != ''
+      env:
+        GH_TOKEN: ${{ github.token }}
+        artifact: ${{ steps.resolve.outputs.artifact }}
+      run: |
+        gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact/zip" > "$RUNNER_TEMP/build.zip"
+        # Without --quiet, which would stop reading early and fail the pipeline through zipinfo’s broken pipe.
+        if zipinfo "$RUNNER_TEMP/build.zip" | grep '^l' > /dev/null; then
+          echo "::error::The artifact build holds symbolic links."
+          exit 1
+        fi
+        unzip -q "$RUNNER_TEMP/build.zip" 'dist/*' -d "$RUNNER_TEMP/preview"
+        if [ -e "$RUNNER_TEMP/preview/dist/_worker.js" ]; then
+          echo "::error::The artifact build holds a _worker.js."
+          exit 1
+        fi
+    - name: setupBun
+      if: steps.resolve.outputs.number != ''
+      uses: oven-sh/setup-bun@v2.2.0
+      with:
+        bun-version: 1.4.4
+    # Labeled with the fork’s commit, as the folder is no Git repository Wrangler could read it from.
+    - name: deploy
+      id: deploy
+      if: steps.resolve.outputs.number != ''
+      uses: cloudflare/wrangler-action@v4.1.3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: 94b07787e8a720b65196137d6224ec90
+        packageManager: bun
+        wranglerVersion: 4.160.0
+        workingDirectory: ${{ runner.temp }}/preview
+        command: pages deploy dist --project-name=slop-gallery --branch=pr-${{ steps.resolve.outputs.number }} --commit-hash=${{ steps.resolve.outputs.sha }} --commit-dirty=false
+    # The pull request’s comment, which later deployments update, stands in for the deployment the pages workflow would attach to it.
+    - name: comment
+      if: steps.resolve.outputs.number != ''
+      env:
+        GH_TOKEN: ${{ github.token }}
+        number: ${{ steps.resolve.outputs.number }}
+        sha: ${{ steps.resolve.outputs.sha }}
+        alias: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+        deployment: ${{ steps.deploy.outputs.deployment-url }}
+      run: |
+        marker='<!-- preview -->'
+        alias=${alias:-https://pr-$number.slop-gallery.pages.dev}
+        body="$RUNNER_TEMP/previewComment.md"
+        {
+          echo "$marker"
+          echo '## preview'
+          echo
+          echo "$alias shows <a href=\"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/commit/$sha\">\`${sha::6}\`</a>${deployment:+, which stays at $deployment}."
+        } > "$body"
+        comments="repos/$GITHUB_REPOSITORY/issues/$number/comments"
+        ids=$(gh api --paginate "$comments" --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\"))) | .id")
+        read -r comment <<< "$ids" || true
+        if [ -n "$comment" ]; then
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment" --field body=@"$body" > /dev/null
+        else
+          gh api --method POST "$comments" --field body=@"$body" > /dev/null
+        fi
+        echo "$alias" >> "$GITHUB_STEP_SUMMARY"

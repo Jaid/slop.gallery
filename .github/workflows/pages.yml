@@ -6,7 +6,7 @@ on:
     types: [closed]
 jobs:
   deploy:
-    # Pull requests from forks get no secrets.
+    # Pull requests from forks get no secrets, so the previewFork workflow deploys those of MageCast’s fork.
     if: github.event_name != 'pull_request' || github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-26.04
     permissions:
