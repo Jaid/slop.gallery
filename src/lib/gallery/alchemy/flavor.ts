@@ -1,3 +1,4 @@
+import type {MoodCaster} from '#src/moods/lib/propMood.ts'
 import type {Orb} from '#src/orbs/index.ts'
 import type {Vec3} from '../types.ts'
 
@@ -7,7 +8,9 @@ import {hatchet, helmet, paintingSet, pumpkin} from '../curios/index.ts'
 
 /** the rooms an orb the alchemy machine shoots out passes through on its way down to the Bastion’s crater */
 export const alchemyRooms: ReadonlySet<string> = new Set(['bastion', 'forge'])
-/** the props that, lying in the Forge or carried into it, steer the flavor the alchemy machine gives a Transparent Orb to an orb of their own, by their ids: the pumpkin to the Halloween Orb, the hatchet to the Horror Orb, the helmet to the Spook Orb and the Painting Set to the Paint Orb */
+/** the room the alchemy machine stands in, which the props of {@link flavorSteering} steer it from, and the only room they cast the moods of their orbs in while the player holds them or views them with V */
+export const steeringRoom = 'forge'
+/** the props that, lying in the Forge or carried into it, steer the flavor the alchemy machine gives a Transparent Orb to an orb of their own, by their ids: the pumpkin to the Halloween Orb, the hatchet to the Horror Orb, the helmet to the Spook Orb and the Painting Set to the Paint Orb; held or viewed with V in the Forge, each casts the mood of its orb, as the orb itself would */
 export const flavorSteering: ReadonlyMap<string, Orb> = new Map<string, Orb>([
   [pumpkin.propId, halloweenOrb],
   [hatchet.propId, horrorOrb],
@@ -35,7 +38,7 @@ export function flavorCandidates(props: Iterable<PropPosition>, roomAt: (positio
   const steered = new Set<Orb>
   for (const [id, position] of props) {
     const orb = steeredOrb(id)
-    if (orb && roomAt(position) === 'forge') {
+    if (orb && roomAt(position) === steeringRoom) {
       steered.add(orb)
     }
   }
@@ -51,6 +54,15 @@ export function flavoredOrb(props: Iterable<PropPosition>, roomAt: (position: Ve
 /** What the alchemy machine makes of an orb: a Transparent Orb takes a flavor if anything in the Forge steers it to one, see {@link flavoredOrb}, while a flavored one always comes out as itself. */
 export function transmutedOrb(orb: Orb, props: Iterable<PropPosition>, roomAt: (position: Vec3) => string | undefined, random: number) {
   return orb === transparentOrb ? flavoredOrb(props, roomAt, random) : orb
+}
+
+/** The mood a prop of {@link flavorSteering} casts while held or viewed with V: that of the orb it steers to, but only in the {@link steeringRoom}, the Forge, as if it were that orb there; none for any other prop. */
+export function steeringMood(id: string): MoodCaster {
+  const mood = steeredOrb(id)?.mood
+  return mood ? {
+    mood,
+    moodRoom: steeringRoom,
+  } : {}
 }
 
 /** the orb the prop steers the flavor to, if any: by its id, or the id of the first of its kind it is numbered after, like `prop-pumpkin-2` */

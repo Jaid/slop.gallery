@@ -7,6 +7,7 @@ import {afterEach, describe, expect, mock, test} from 'bun:test'
 
 import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
+import {flavorSteering, steeringMood, steeringRoom} from '../../src/lib/gallery/alchemy/flavor.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
 import Mood from '../../src/moods/base/Mood.ts'
@@ -16,7 +17,8 @@ import {readMood} from '../../src/moods/lib/forcedMood.ts'
 import MoodLens from '../../src/moods/lib/MoodLens.ts'
 import MoodMixer, {moodFade, noMood} from '../../src/moods/lib/MoodMixer.ts'
 import {moodSuppression, toggleMoodSuppression} from '../../src/moods/lib/moodSuppression.ts'
-import {orbs} from '../../src/orbs/index.ts'
+import {propMood} from '../../src/moods/lib/propMood.ts'
+import {halloweenOrb, horrorOrb, orbs, paintOrb, spookOrb} from '../../src/orbs/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -500,6 +502,49 @@ describe('moods', () => {
       for (const color of [mood.grade!.shadow, mood.grade!.midtone, mood.grade!.highlight, mood.lamps!.color, mood.fill!.color]) {
         expect(color).toMatch(/^#[\da-f]{6}$/)
       }
+    }
+  })
+  test('a prop casts its mood in every room, or only in the one it names', () => {
+    expect(propMood({mood: 'horror'}, 'lobby')).toBe(moods.horror)
+    expect(propMood({mood: 'horror'}, 'forge')).toBe(moods.horror)
+    expect(propMood({
+      mood: 'spook',
+      moodRoom: 'forge',
+    }, 'forge')).toBe(moods.spook)
+    expect(propMood({
+      mood: 'spook',
+      moodRoom: 'forge',
+    }, 'bastion')).toBeUndefined()
+    expect(propMood({}, 'forge')).toBeUndefined()
+    expect(propMood(undefined, 'forge')).toBeUndefined()
+  })
+  test('the pumpkin, the hatchet, the helmet and the Painting Set cast the moods of the orbs they steer the Forge’s alchemy machine to, in the Forge only', () => {
+    expect(steeringRoom).toBe('forge')
+    expect(slopGallery.room(steeringRoom).id).toBe('forge')
+    const expected = {
+      'prop-pumpkin': halloweenOrb,
+      'prop-hatchet': horrorOrb,
+      'prop-helmet': spookOrb,
+      'prop-painting-set': paintOrb,
+    }
+    expect(Object.fromEntries(flavorSteering)).toEqual(expected)
+    for (const [id, orb] of Object.entries(expected)) {
+      const caster = steeringMood(id)
+      expect(caster).toEqual({
+        mood: orb.mood,
+        moodRoom: 'forge',
+      })
+      // In the Forge, as the orb itself does everywhere
+      expect(propMood(caster, 'forge')).toBe(propMood({mood: orb.mood}, 'lobby'))
+      expect(propMood(caster, 'forge')).toBe(moods[orb.mood])
+      for (const room of ['bastion', 'lobby', 'lodge', 'banquet']) {
+        expect(propMood(caster, room)).toBeUndefined()
+      }
+    }
+    // a second one of a kind too
+    expect(steeringMood('prop-pumpkin-2')).toEqual(steeringMood('prop-pumpkin'))
+    for (const id of ['prop-cube', 'prop-ring', 'prop-orb-horror', 'prop-orb-transparent']) {
+      expect(steeringMood(id)).toEqual({})
     }
   })
   test('the fusion’s mood belongs to no orb and comes over the world while the intro plays', () => {
