@@ -9,6 +9,7 @@ import {openingTop, wallCoordinates, wallOffset, wallPosition} from '#src/lib/pl
 import slopGallery from '#src/worlds/gallery/index.ts'
 import relations, {openings} from '#src/worlds/gallery/relations.ts'
 
+import {curveSegments} from './CurvedBoxGeometry.ts'
 import lobby from './lobby.ts'
 import {vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY} from './vesperCeiling.ts'
 
@@ -49,7 +50,12 @@ const holeBox = (wallId: string, name: string) => {
   const bottom = wall.center[1] + (hole.bottom ?? 0)
   const top = wall.center[1] + openingTop(hole, hole.u)
   const box = new Box3
-  for (const u of [hole.u - hole.width / 2, hole.u + hole.width / 2]) {
+  const uMin = hole.u - hole.width / 2
+  const uMax = hole.u + hole.width / 2
+  // Curved walls bow out between their jambs, so a box from their endpoints alone cuts through the portal.
+  const steps = wall.curveRadius ? Math.max(16, Math.ceil(curveSegments(hole.width, wall.curveRadius) / 2) * 2) : 1
+  for (let step = 0; step <= steps; step++) {
+    const u = uMin + (uMax - uMin) * (step / steps)
     for (const offset of [-portalDepth, portalDepth]) {
       box.expandByPoint(new Vector3(...wallPosition(wall, u, bottom, offset)))
     }

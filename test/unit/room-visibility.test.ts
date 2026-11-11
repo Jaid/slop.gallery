@@ -184,6 +184,30 @@ test('a camera in a room’s threshold beyond one of its openings sees through i
     }
   }
 })
+test('a camera in front of an opening on a curved wall sees the room beyond', () => {
+  // Between the Forge and the Bastion, the vestibule’s curved wall bows out past the chord of its arch; standing just before it, looking through the arch, the Bastion once showed nothing but the sky.
+  const dumped: Vec3 = [-16.963, 1.62, -35.459]
+  expect(roomsAt(dumped)).toEqual(['forge'])
+  expect(visibleRegions(['forge'], viewProjection(dumped, [-24.195, 1.278, -35.163])).has('bastion')).toBe(true)
+  for (const {rooms: pair, holes} of openings) {
+    for (const [wallId, name] of holes) {
+      const wall = slopGallery.walls.find(value => value.id === wallId)!
+      const hole = wall.holes!.find(value => value.name === name)!
+      const other = pair.find(room => room !== wall.room)!
+      const bottom = hole.bottom ?? 0
+      const y = wall.center[1] + bottom + Math.min(1.6, (openingTop(hole, hole.u) - bottom) / 2)
+      for (let step = 1; step <= 10; step++) {
+        const depth = step / 20
+        const position = wallPosition(wall, hole.u, y, depth)
+        if (roomsAt(position).join() !== wall.room) {
+          continue
+        }
+        const sees = visibleRegions([wall.room as GalleryRoomId], viewProjection(position, wallPosition(wall, hole.u, y, -5))).has(other)
+        expect(`${wallId} ${name} ${depth} m in front: ${sees ? 'sees' : 'misses'} ${other}`).toBe(`${wallId} ${name} ${depth} m in front: sees ${other}`)
+      }
+    }
+  }
+})
 test('of a box reaching behind the camera, only the part in front of it shows', () => {
   const matrix = viewProjection([0, 1.6, 0], [10, 1.6, 0])
   // Overhead, from behind the camera to in front of it, like a skylight, but far above the view.
