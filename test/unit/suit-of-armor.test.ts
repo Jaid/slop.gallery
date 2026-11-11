@@ -12,9 +12,8 @@ import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bas
 import {gorgetBorderReach, helmetHeight} from '../../src/lib/gallery/curios/helmet/Helmet.ts'
 import {helmet} from '../../src/lib/gallery/curios/index.ts'
 import {lodgeEastWindow} from '../../src/lib/gallery/lodge.ts'
-import {suitOfArmor, suitOfArmorBoxes} from '../../src/lib/gallery/suitOfArmor.ts'
-import suitOfArmorGeometry, {suitOfArmorCradle} from '../../src/lib/gallery/suitOfArmorGeometry.ts'
-import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
+import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '../../src/lib/gallery/suitOfArmor.ts'
+import suitOfArmorGeometry from '../../src/lib/gallery/suitOfArmorGeometry.ts'
 import {addArmor, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
 await RAPIER.init()
@@ -128,7 +127,7 @@ describe('the suit of armor', () => {
     }
     expect(checked).toBeGreaterThan(200)
   })
-  test('its body’s boxes wrap its steel, none over the collar, where the helmet sits in the cradle across its shoulders', () => {
+  test('its body’s boxes wrap its steel, none over the collar, where the surface across its shoulders lies level for the helmet', () => {
     const reach = new Box3
     for (const {from, to} of suitOfArmorBoxes) {
       reach.expandByPoint(new Vector3(...from)).expandByPoint(new Vector3(...to))
@@ -136,7 +135,12 @@ describe('the suit of armor', () => {
     expect(reach.max.y).toBeLessThan(collar)
     expect(reach.min.y).toBeCloseTo(0, 6)
     expect(suitOfArmorBoxes.reduce((sum, {mass}) => sum + mass, 0)).toBe(suitOfArmor.mass)
-    expect(reach.max.y).toBeGreaterThan(collar - 0.015)
+    const [vertices] = suitOfArmorShoulders()
+    for (let index = 1; index < vertices.length; index += 3) {
+      expect(vertices[index]).toBeCloseTo(collar, 6)
+    }
+    // the helmet’s gorget, a third of a meter across, rests on it
+    expect(Math.max(...vertices.filter((_, index) => index % 3 === 0))).toBeGreaterThan(gorgetBorderReach(90))
     const bounds = boundsOf(steel)
     expect(reach.min.x - bounds.min.x).toBeLessThan(0.01)
     expect(bounds.max.x - reach.max.x).toBeLessThan(0.01)
@@ -150,33 +154,6 @@ describe('the suit of armor', () => {
       }
     }
     expect(bounds.max.z - reach.max.z).toBeLessThan(0.05)
-  })
-  test('its cradle sinks under the helmet’s gorget and rises outward from its border, where the border sits on its skin, level at the collar all round', () => {
-    const [vertices, indices] = suitOfArmorCradle()
-    const rise = Math.tan(suitOfArmor.cradle * Math.PI / 180)
-    let [inside, outside] = [0, 0]
-    for (let index = 0; index < vertices.length; index += 3) {
-      const [x, y, z] = vertices.subarray(index, index + 3)
-      const border = gorgetBorderReach(Math.atan2(x, z) * 180 / Math.PI)
-      const reach = Math.hypot(x, z)
-      expect(y + weldedSurfaceSkin).toBeCloseTo(collar + (reach - border) * rise, 6)
-      if (reach < border - 0.02) {
-        inside++
-      }
-      if (reach > border + 0.02) {
-        outside++
-      }
-    }
-    expect(inside).toBeGreaterThan(40)
-    expect(outside).toBeGreaterThan(40)
-    // facing up
-    const [a, b, c] = [new Vector3, new Vector3, new Vector3]
-    for (let index = 0; index < indices.length; index += 3) {
-      a.fromArray(vertices, indices[index] * 3)
-      b.fromArray(vertices, indices[index + 1] * 3)
-      c.fromArray(vertices, indices[index + 2] * 3)
-      expect(b.sub(a).cross(c.sub(a)).y).toBeGreaterThan(0)
-    }
   })
   test('it stands on the level floor near the end of the Bastion’s blind branch beside the Lodge, abreast of where the Lodge’s window ends, clear of its walls, looking back down it', () => {
     const [x, y, z] = lodgeSpurArmor
@@ -199,12 +176,38 @@ describe('the suit of armor', () => {
     expect(helmet.rotation).toEqual([0, 0, 0])
   })
 })
-/** The suit of armor and the helmet on its shoulders in the Bastion, as the game builds them, and nothing else keeping the helmet on. */
+/** The suit of armor and the helmet on its shoulders in the Bastion, as the game builds them, nothing but its grip on the steel keeping the helmet on. */
 function scene() {
   const world = physicsWorld(colliders)
   const body = addArmor(world)
   const head = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...helmet.position).setCcdEnabled(true))
   world.createCollider(RAPIER.ColliderDesc.convexHull(helmetModel.hull)!.setMass(helmet.mass).setFriction(0.8).setRestitution(0.32), head)
+  /** which way `of` turns its own up */
+  const upOf = (of: RAPIER.RigidBody) => {
+    const {w, x, y, z} = of.rotation()
+    const up = new Vector3(0, 1, 0)
+    return up.applyQuaternion(new Quaternion(x, y, z, w))
+  }
+  /** Pushes its chest, wherever it lies, with `force` newtons along the level `angle` round y for a quarter second, then steps the world for `seconds`. */
+  const knock = (angle: number, force: number, seconds: number) => {
+    for (let step = 0; step < 15; step++) {
+      const up = upOf(body)
+      const at = body.translation()
+      body.applyImpulseAtPoint({
+        x: Math.sin(angle) * force / 60,
+        y: 0,
+        z: Math.cos(angle) * force / 60,
+      }, {
+        x: at.x + up.x * 1.35,
+        y: at.y + up.y * 1.35,
+        z: at.z + up.z * 1.35,
+      }, true)
+      world.step()
+    }
+    for (let step = 0; step < seconds * 60; step++) {
+      world.step()
+    }
+  }
   /** Steps the world for `seconds`, pushing the suit’s chest with `force`, in newtons, for a quarter second from the half second on. */
   const run = (seconds: number, force?: readonly [x: number, z: number]) => {
     for (let step = 0; step < seconds * 60; step++) {
@@ -222,12 +225,6 @@ function scene() {
       }
       world.step()
     }
-  }
-  /** which way `of` turns its own up */
-  const upOf = (of: RAPIER.RigidBody) => {
-    const {w, x, y, z} = of.rotation()
-    const up = new Vector3(0, 1, 0)
-    return up.applyQuaternion(new Quaternion(x, y, z, w))
   }
   /** how far it leans from upright, in degrees */
   const lean = () => Math.acos(Math.min(1, Math.max(-1, upOf(body).y))) * 180 / Math.PI
@@ -249,14 +246,15 @@ function scene() {
     body,
     head,
     headInFrame,
+    knock,
     lean,
     run,
     seated,
     world,
   }
 }
-describe('pushed, the suit of armor tips over, and the helmet goes wherever the fall takes it', () => {
-  test('left alone, it stands still with the helmet in its cradle and falls asleep', () => {
+describe('pushed, the suit of armor tips over, and the helmet holds on by nothing but its grip', () => {
+  test('left alone, it stands still with the helmet on its shoulders and falls asleep', () => {
     const {body, head, headInFrame, lean, run, world} = scene()
     try {
       run(3)
@@ -272,7 +270,7 @@ describe('pushed, the suit of armor tips over, and the helmet goes wherever the 
     }
   })
   for (const force of [40, 60]) {
-    test(`rocked by a nudge of ${force} N, it rights itself, and the helmet settles back into the middle of its cradle`, () => {
+    test(`rocked by a nudge of ${force} N, it rights itself, the helmet staying put`, () => {
       const {headInFrame, lean, run, seated, world} = scene()
       try {
         run(6, [0, force])
@@ -285,27 +283,49 @@ describe('pushed, the suit of armor tips over, and the helmet goes wherever the 
       }
     })
   }
-  test('pushed hard in any direction, it falls, against a wall or onto the floor, and nearly always loses its head', () => {
-    let headless = 0
-    for (let index = 0; index < 12; index++) {
+  test('pushed over in any direction, it falls, against a wall or onto the floor, and the helmet comes off or rides the fall out', () => {
+    const outcomes = Array.from({length: 12}, (_, index) => {
       const angle = index * Math.PI / 6
       const {body, head, lean, run, seated, world} = scene()
       try {
-        run(15, [Math.sin(angle) * 400, Math.cos(angle) * 400])
+        run(15, [Math.sin(angle) * 200, Math.cos(angle) * 200])
         expect(lean()).toBeGreaterThan(20)
         expect(body.isSleeping()).toBe(true)
         expect(head.isSleeping()).toBe(true)
-        if (!seated()) {
-          headless++
-        }
+        return seated()
       } finally {
         world.free()
       }
-    }
-    expect(headless).toBeGreaterThanOrEqual(10)
+    })
+    expect(outcomes).toContain(true)
+    expect(outcomes).toContain(false)
   }, 30_000)
-  test('a player walking into it from down the branch knocks it over, and the helmet falls to the floor', () => {
-    const {body, head, lean, run, seated, world} = scene()
+  test('knock after knock, it loses its head sooner or later, sometimes at the first, sometimes only after several', () => {
+    let seed = 7
+    const random = () => {
+      seed = seed * 16_807 % 2_147_483_647
+      return seed / 2_147_483_647
+    }
+    const knocks = Array.from({length: 16}, () => {
+      const {knock, run, seated, world} = scene()
+      try {
+        run(1)
+        let count = 0
+        while (seated() && count < 12) {
+          count++
+          knock(random() * Math.PI * 2, 150 + random() * 350, 4)
+        }
+        expect(seated()).toBe(false)
+        return count
+      } finally {
+        world.free()
+      }
+    })
+    expect(knocks).toContain(1)
+    expect(Math.max(...knocks)).toBeGreaterThan(2)
+  }, 60_000)
+  test('a player walking into it from down the branch knocks it over', () => {
+    const {body, head, lean, run, world} = scene()
     const player = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(lodgeSpurArmor[0], lodgeSpurArmor[1] + 0.04, lodgeSpurArmor[2] + 1.6))
     const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.55, 0.3).setTranslation(0, 0.85, 0), player)
     const motor = new EgoMotor(RAPIER, world, player, collider)
@@ -319,8 +339,6 @@ describe('pushed, the suit of armor tips over, and the helmet goes wherever the 
       world.removeRigidBody(player)
       run(12)
       expect(lean()).toBeGreaterThan(20)
-      expect(seated()).toBe(false)
-      expect(head.translation().y - lodgeSpurArmor[1]).toBeLessThan(0.3)
       expect(body.isSleeping()).toBe(true)
       expect(head.isSleeping()).toBe(true)
     } finally {

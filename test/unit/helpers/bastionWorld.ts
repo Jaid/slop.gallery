@@ -20,8 +20,7 @@ import RouteVaultGeometry from '../../../src/lib/gallery/passages/RouteVaultGeom
 import VaultGeometry from '../../../src/lib/gallery/passages/VaultGeometry.ts'
 import roundRevealGeometry from '../../../src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '../../../src/lib/gallery/roundVestibule.ts'
-import {suitOfArmor, suitOfArmorBoxes} from '../../../src/lib/gallery/suitOfArmor.ts'
-import {suitOfArmorCradle} from '../../../src/lib/gallery/suitOfArmorGeometry.ts'
+import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '../../../src/lib/gallery/suitOfArmor.ts'
 import {weldedSurfaceSkin} from '../../../src/lib/physics/weldedSurface.ts'
 import walls from '../fixtures/gallery.ts'
 import {bastionCraterGeometry} from './bastionCrater.ts'
@@ -150,7 +149,7 @@ export function addOrb(world: RAPIER.World, position: Vec3) {
   return body
 }
 
-/** The suit of armor’s body where it stands when a game begins, as `BastionArmor` builds it: its boxes, each with its share of its mass, and the cradle across its shoulders, welded like `MeshSurfaceCollider` welds it. */
+/** The suit of armor’s body where it stands when a game begins, as `BastionArmor` builds it: its boxes, each with its share of its mass, and the surface across its shoulders. */
 export function addArmor(world: RAPIER.World) {
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...lodgeSpurArmor).setCcdEnabled(true))
   for (const {friction, from, mass, to} of suitOfArmorBoxes) {
@@ -164,8 +163,7 @@ export function addArmor(world: RAPIER.World) {
     }
     world.createCollider(shape, body)
   }
-  const cradle = RAPIER.ColliderDesc.trimesh(...suitOfArmorCradle(), RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES).setContactSkin(weldedSurfaceSkin)
-  world.createCollider(cradle.setMass(0).setFriction(suitOfArmor.seat).setFrictionCombineRule(RAPIER.CoefficientCombineRule.Min).setRestitution(suitOfArmor.restitution), body)
+  world.createCollider(RAPIER.ColliderDesc.trimesh(...suitOfArmorShoulders()).setMass(0).setFriction(suitOfArmor.friction).setRestitution(suitOfArmor.restitution), body)
   return body
 }
 

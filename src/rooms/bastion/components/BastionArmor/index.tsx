@@ -1,23 +1,22 @@
-import {CoefficientCombineRule, CuboidCollider, RigidBody} from '@react-three/rapier'
+import {CoefficientCombineRule, CuboidCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {DoubleSide} from 'three/webgpu'
 
-import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import {lodgeSpurArmor} from '#src/lib/gallery/bastionNetwork.ts'
-import {suitOfArmor, suitOfArmorBoxes} from '#src/lib/gallery/suitOfArmor.ts'
-import suitOfArmorGeometry, {suitOfArmorCradle} from '#src/lib/gallery/suitOfArmorGeometry.ts'
+import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '#src/lib/gallery/suitOfArmor.ts'
+import suitOfArmorGeometry from '#src/lib/gallery/suitOfArmorGeometry.ts'
 import ForgedSteelMaterial from '#src/lib/materials/ForgedSteelMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
 
 /**
  * The empty suit of armor standing at the end of the Bastion’s blind branch beside the Lodge, looking back down it toward the link, the knight’s helmet resting on its shoulders, in the helmet’s steel.
- * It is a body of its own, top-heavy on its narrow feet: pushed, it tips over against the wall or onto the floor, and the helmet, loose in the cradle across its shoulders, goes wherever the fall takes it.
+ * It is a body of its own, top-heavy on its narrow feet: pushed, it tips over against the wall or onto the floor, and the helmet, loose on its shoulders, goes wherever the fall takes it, or holds on.
  */
 export default function BastionArmor() {
   const geometry = useDisposable(useMemo(suitOfArmorGeometry, []))
-  const cradle = useMemo(suitOfArmorCradle, [])
+  const shoulders = useMemo(suitOfArmorShoulders, [])
   const steel = useDisposable(useMemo(() => {
     const material = lightIndoors(new ForgedSteelMaterial({
       environment: studioEnvironment,
@@ -37,8 +36,8 @@ export default function BastionArmor() {
       position={[(from[0] + to[0]) / 2, (from[1] + to[1]) / 2, (from[2] + to[2]) / 2]}
       restitution={suitOfArmor.restitution}
     />)}
-    {/* What the helmet sits in, weightless */}
-    <MeshSurfaceCollider args={cradle} friction={suitOfArmor.seat} frictionCombineRule={CoefficientCombineRule.Min} mass={0} restitution={suitOfArmor.restitution} />
+    {/* What the helmet rests on, weightless */}
+    <TrimeshCollider args={shoulders} friction={suitOfArmor.friction} mass={0} restitution={suitOfArmor.restitution} />
     <mesh castShadow geometry={geometry} material={steel} name='bastion-armor-steel' receiveShadow />
   </RigidBody>
 }
