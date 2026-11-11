@@ -25,12 +25,17 @@ const cameraOf = (shot: Shot) => {
   camera.updateMatrixWorld()
   return camera
 }
-/** where the point shows in the shot, from −1 to 1 across and up the view */
-const project = (shot: Shot, point: Vec3) => {
-  const at = new Vector3(...point)
-  at.project(cameraOf(shot))
-  return [at.x, at.y] as const
+/** where points show in the shot, from −1 to 1 across and up the view, its camera turned only once for all of them */
+const projector = (shot: Shot) => {
+  const camera = cameraOf(shot)
+  const at = new Vector3
+  return (point: Vec3) => {
+    at.set(...point).project(camera)
+    return [at.x, at.y] as const
+  }
 }
+/** where the point shows in the shot, from −1 to 1 across and up the view */
+const project = (shot: Shot, point: Vec3) => projector(shot)(point)
 const timeline = {
   throwAt: 1,
   strike: 1.45,
@@ -61,7 +66,7 @@ describe('fitting a shot to points', () => {
     for (const look of [[0, -0.2, 1], [0.5, -0.5, 0.7], [-1, 0.1, 0.3]] as Array<Vec3>) {
       for (const fov of [40, 55, 80]) {
         const shot = fitShot(cloud, look, fov, 1, 0.9)
-        const spots = cloud.map(point => project(shot, point))
+        const spots = cloud.map(projector(shot))
         const edge = Math.max(...spots.flatMap(([x, y]) => [Math.abs(x), Math.abs(y)]))
         // touching the share of the view on its tighter axis, and nothing beyond it
         expect(edge).toBeCloseTo(0.9, 6)
@@ -87,10 +92,12 @@ describe('--emphasis party', () => {
       const since = time - timeline.emergence
       const coming = [...since < fusionTiming.afterglow ? Array.from({length: 8}, (_, index): [number, number, number] => [Math.cos(index * Math.PI / 4) * portal.radius, Math.sin(index * Math.PI / 4) * portal.radius, 0]) : [], ...partyEffects.blood.extent(floor, since)].map(offset => offsetPosition(portal, offset))
       expect(coming.length).toBeGreaterThan(0)
-      for (const point of coming) {
-        const [x, y] = project(shot, point)
-        expect(Math.max(Math.abs(x), Math.abs(y))).toBeLessThan(1)
-      }
+      const view = projector(shot)
+      const edge = Math.max(...coming.map(point => {
+        const [x, y] = view(point)
+        return Math.max(Math.abs(x), Math.abs(y))
+      }))
+      expect(edge).toBeLessThan(1)
       // The Cell is 18 × 10 m round its middle and 4 m high.
       expect(Math.abs(shot.position[0])).toBeLessThan(9)
       expect(Math.abs(shot.position[2])).toBeLessThan(5)
