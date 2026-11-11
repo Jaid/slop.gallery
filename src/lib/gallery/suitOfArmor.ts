@@ -8,7 +8,7 @@ import {mergeParts} from '../geometry.ts'
  */
 export const suitOfArmor = {
   /** how high over the floor the helmet’s gorget rests on its shoulders */
-  collar: 1.47,
+  collar: 1.6,
 } as const
 
 /** a box of its collision, by two opposite corners */
@@ -16,15 +16,15 @@ type Box = readonly [from: readonly [number, number, number], to: readonly [numb
 
 /** the boxes its collision is made of: its body from the waist up to the collar, its legs and its feet, and its arms, below the collar, clear of the helmet’s hull */
 const boxes: ReadonlyArray<Box> = [
-  [[-0.19, 0.88, -0.16], [0.19, suitOfArmor.collar, 0.19]],
+  [[-0.2, 0.96, -0.17], [0.2, suitOfArmor.collar, 0.2]],
   ...[-1, 1].flatMap((side): Array<Box> => {
     const span = (inner: number, outer: number) => [inner * side, outer * side].toSorted((a, b) => a - b)
-    const [legFrom, legTo] = span(0.02, 0.17)
-    const [armFrom, armTo] = span(0.2, 0.33)
+    const [legFrom, legTo] = span(0.02, 0.18)
+    const [armFrom, armTo] = span(0.22, 0.36)
     return [
-      [[legFrom, 0, -0.09], [legTo, 0.88, 0.11]],
-      [[legFrom, 0, 0.11], [legTo, 0.12, 0.24]],
-      [[armFrom, 0.7, -0.1], [armTo, suitOfArmor.collar - 0.08, 0.11]],
+      [[legFrom, 0, -0.1], [legTo, 0.96, 0.12]],
+      [[legFrom, 0, 0.12], [legTo, 0.13, 0.26]],
+      [[armFrom, 0.76, -0.11], [armTo, suitOfArmor.collar - 0.08, 0.12]],
     ]
   }),
 ]

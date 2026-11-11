@@ -31,10 +31,15 @@ export default function BastionArmor() {
     material.side = DoubleSide
     return material
   }, []))
-  return <group name='bastion-armor' position={lodgeSpurArmor}>
-    <RigidBody colliders={false} type='fixed'>
-      <TrimeshCollider args={collision} />
-    </RigidBody>
+  return <RigidBody
+    angularDamping={0.25}
+    colliders={false}
+    linearDamping={0.2}
+    name='bastion-armor'
+    position={lodgeSpurArmor}
+    type='dynamic'
+  >
+    <TrimeshCollider args={collision} friction={0.9} mass={42} restitution={0.1} />
     <mesh castShadow geometry={geometry} material={steel} name='bastion-armor-steel' receiveShadow />
-  </group>
+  </RigidBody>
 }

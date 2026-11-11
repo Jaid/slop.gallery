@@ -60,14 +60,18 @@ describe('the suit of armor', () => {
     expect(bounds.min.y).toBeGreaterThanOrEqual(-1e-6)
     // Its pauldrons rise beside the gorget, a little over the collar.
     expect(bounds.max.y).toBeLessThan(collar + 0.04)
+    expect(bounds.max.y).toBeCloseTo(1.6, 1)
     const size = bounds.getSize(new Vector3)
     expect(size.x).toBeGreaterThan(0.55)
     expect(size.x).toBeLessThan(0.75)
     // Its sabatons point ahead, its toes further out than anything behind it.
     expect(bounds.max.z).toBeGreaterThan(-bounds.min.z)
     const helmetTop = Math.max(...worn.map(({geometry}) => boundsOf(geometry).max.y))
-    expect(helmetTop).toBeGreaterThan(1.75)
-    expect(helmetTop).toBeLessThan(1.9)
+    expect(helmetTop).toBeCloseTo(2, 2)
+    const helmetHeight = worn.reduce((max, {geometry}) => Math.max(max, boundsOf(geometry).getSize(new Vector3).y), 0)
+    expect(helmetHeight).toBeCloseTo(0.4, 2)
+    const helmetTris = helmetModel.parts.reduce((sum, {geometry}) => sum + geometry.index!.count / 3, 0)
+    expect(helmetTris).toBeLessThan(8192)
     const mask = steel.getAttribute('steelMask')
     const position = steel.getAttribute('position')
     for (let index = 0; index < mask.count; index++) {
@@ -148,5 +152,58 @@ describe('the suit of armor', () => {
     expect(lodgeSpurWindow.height - lodgeSpurWindow.rise).toBeGreaterThan(helmetTop + 0.2)
     expect(helmet.position).toEqual([x, y + collar + 0.001, z])
     expect(helmet.rotation).toEqual([0, 0, 0])
+  })
+  test('pushing the body over makes it hit the ground and lose its head', async () => {
+    const RAPIER = await import('@dimforge/rapier3d-compat')
+    await RAPIER.init()
+    const world = new RAPIER.World({
+      x: 0,
+      y: -9.81,
+      z: 0,
+    })
+    world.createCollider(RAPIER.ColliderDesc.cuboid(5, 0.1, 5).setTranslation(0, -0.1, 0))
+    const armorGeom = suitOfArmorCollision()
+    const {colliderGeometry} = await import('../../src/lib/gallery/architecture.ts')
+    const [vertices, indices] = colliderGeometry(armorGeom)
+    const armorBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 0, 0).setLinearDamping(0.2).setAngularDamping(0.25))
+    world.createCollider(RAPIER.ColliderDesc.trimesh(vertices, indices).setMass(42).setFriction(0.9).setRestitution(0.1), armorBody)
+    armorGeom.dispose()
+    const curioHelmetModel = helmet.createModel()
+    const helmetBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, collar + 0.001, 0).setCcdEnabled(true))
+    world.createCollider(RAPIER.ColliderDesc.convexHull(curioHelmetModel.hull)!.setMass(helmet.mass).setFriction(0.8).setRestitution(0.32), helmetBody)
+    curioHelmetModel.dispose()
+    for (let i = 0; i < 60; i++) {
+      world.step()
+    }
+    expect(Math.abs(armorBody.translation().y)).toBeLessThan(0.01)
+    expect(Math.abs(helmetBody.translation().y - collar)).toBeLessThan(0.01)
+    // Player pushes into the armor
+    armorBody.applyImpulseAtPoint({
+      x: 0,
+      y: 0,
+      z: -80,
+    }, {
+      x: 0,
+      y: 1.1,
+      z: 0.1,
+    }, true)
+    for (let i = 0; i < 240; i++) {
+      world.step()
+    }
+    const armorPos = armorBody.translation()
+    const armorRot = armorBody.rotation()
+    const helmetPos = helmetBody.translation()
+    // The body tipped over and hit the ground
+    expect(Math.abs(armorRot.x) > 0.5 || Math.abs(armorRot.z) > 0.5).toBe(true)
+    expect(armorPos.y).toBeLessThan(0.35)
+    // The helmet lost its head and hit the ground
+    expect(helmetPos.y).toBeLessThan(0.25)
+    const separation = Math.hypot(
+      armorPos.x - helmetPos.x,
+      armorPos.y + collar - helmetPos.y,
+      armorPos.z - helmetPos.z,
+    )
+    expect(separation).toBeGreaterThan(1)
+    world.free()
   })
 })
