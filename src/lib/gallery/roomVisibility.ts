@@ -23,6 +23,8 @@ type Portal = {
 const sightDepth = 3
 // Doorframes, trims and the reveal of thick walls stay inside the portal.
 const portalDepth = 0.8
+/** the largest angle round a round wall’s bend between two of the points its hole’s portal is sampled at, see `holeSamples` */
+const curveSampleAngle = Math.PI / 36
 /** how far a box may reach in front of a wall and still count as lying behind it */
 const behindTolerance = 0.01
 /**
@@ -40,6 +42,17 @@ const behindHole = (wall: Wall, hole: WallOpening, {min, max}: Box3) => {
 }
 /** The floor mirrors what lies above it below its surface, and the reflection must show what lies behind an opening too. */
 const withReflection = (box: Box3, bottom: number, top: number) => box.expandByPoint(new Vector3(box.min.x, bottom - (top - bottom), box.min.z)).expandByPoint(new Vector3(box.max.x, top, box.max.z))
+/**
+ * Where along the wall the portal of its hole takes in the wall’s depth: at its jambs, and through a round wall, also across its middle and every few degrees in between.
+ * A round wall bulges out from the line between its jambs, the most at the hole’s middle, where a ring wall’s arch meets whatever lies beyond it; a box round the jambs alone would leave out that bulge, and a camera standing in it would see nothing beyond the opening.
+ */
+const holeSamples = (wall: Wall, {u, width}: WallOpening) => {
+  if (!wall.curveRadius) {
+    return [u - width / 2, u + width / 2]
+  }
+  const steps = 2 * Math.max(1, Math.ceil(Math.abs(width / wall.curveRadius) / 2 / curveSampleAngle))
+  return Array.from({length: steps + 1}, (_, index) => u - width / 2 + width * index / steps)
+}
 const holeBox = (wallId: string, name: string) => {
   const wall = slopGallery.walls.find(value => value.id === wallId)
   const hole = wall?.holes?.find(value => value.name === name)
@@ -49,7 +62,7 @@ const holeBox = (wallId: string, name: string) => {
   const bottom = wall.center[1] + (hole.bottom ?? 0)
   const top = wall.center[1] + openingTop(hole, hole.u)
   const box = new Box3
-  for (const u of [hole.u - hole.width / 2, hole.u + hole.width / 2]) {
+  for (const u of holeSamples(wall, hole)) {
     for (const offset of [-portalDepth, portalDepth]) {
       box.expandByPoint(new Vector3(...wallPosition(wall, u, bottom, offset)))
     }

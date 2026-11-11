@@ -184,6 +184,39 @@ test('a camera in a room’s threshold beyond one of its openings sees through i
     }
   }
 })
+test('a camera under an arch through a round wall sees what lies beyond it', () => {
+  // Between the Forge’s vestibule wall’s center line and the plane touching it, where the Bastion’s approach begins, the Bastion once showed nothing but the sky.
+  const dumped: Vec3 = [-16.963, 1.62, -35.459]
+  expect(roomsAt(dumped)).toEqual(['forge'])
+  expect(visibleRegions(['forge'], viewProjection(dumped, [-24.195, 1.278, -35.163])).has('bastion')).toBe(true)
+  for (const {rooms: pair, holes} of openings) {
+    for (const [wallId, name] of holes) {
+      const wall = slopGallery.walls.find(value => value.id === wallId)!
+      if (!wall.curveRadius) {
+        continue
+      }
+      const hole = wall.holes!.find(value => value.name === name)!
+      const other = pair.find(room => room !== wall.room)!
+      const bottom = hole.bottom ?? 0
+      const y = wall.center[1] + bottom + Math.min(1.6, (openingTop(hole, hole.u) - bottom) / 2)
+      // Across the hole, from just inside its jambs, and from the wall’s face out to where the plane touching its middle lies behind its center line there.
+      for (let across = -0.45; across <= 0.45; across += 0.05) {
+        const u = hole.u + across * hole.width
+        const bulge = wall.curveRadius * (1 / Math.cos((u - hole.u) / wall.curveRadius) - 1)
+        for (let share = 0; share <= 1; share += 0.125) {
+          const depth = -0.1 + share * (Math.abs(bulge) + 0.1)
+          const position = wallPosition(wall, u, y, -depth)
+          const from = roomsAt(position)
+          if (!from.length || from.includes(other)) {
+            continue
+          }
+          const sees = visibleRegions(from, viewProjection(position, wallPosition(wall, hole.u, y, -Math.abs(bulge) - 5))).has(other)
+          expect(`${wallId} ${name} at ${across.toFixed(2)}, ${depth.toFixed(3)} m behind: ${sees ? 'sees' : 'misses'} ${other}`).toBe(`${wallId} ${name} at ${across.toFixed(2)}, ${depth.toFixed(3)} m behind: sees ${other}`)
+        }
+      }
+    }
+  }
+})
 test('of a box reaching behind the camera, only the part in front of it shows', () => {
   const matrix = viewProjection([0, 1.6, 0], [10, 1.6, 0])
   // Overhead, from behind the camera to in front of it, like a skylight, but far above the view.
