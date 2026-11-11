@@ -16,27 +16,27 @@ export const physicsSteps = {
 const gravity = -9.81
 
 /**
- * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: a long top of planks with eased edges over aprons on square legs, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
+ * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: a heavy satin steel plate top with eased edges over blackened wrought-iron aprons on square legs, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
  * All values are in meters; its middle and its top’s height are in the world’s frame, everything else measured on the bench.
  */
 export const workbench = {
   /** the middle of its top in plan, on the room’s axis, its back a hand’s width from the wall’s face */
-  center: [forge.center[0], southWallFace - 0.05 - 0.55] as const,
+  center: [forge.center[0], southWallFace - 0.05 - 0.6] as const,
   /** how long it is along the wall, east to west */
-  length: 2.8,
+  length: 3.4,
   /** how deep it is, from the wall into the room */
-  depth: 1.1,
+  depth: 1.2,
   height: 1.3,
-  /** how thick its top is */
-  top: 0.045,
-  /** how far its top reaches out over the aprons */
-  overhang: 0.04,
+  /** how thick its steel plate top is */
+  top: 0.05,
+  /** how far its top reaches out over the aprons at the front */
+  overhang: 0.06,
+  /** how far its top reaches out over the rear legs at the back, clearing the baseboard */
+  rearOverhang: 0.13,
   /** how deep its aprons hang under the top and how thick they are */
-  apron: [0.11, 0.024],
-  /** how thick its square legs are */
-  leg: 0.07,
-  /** how many planks its top is laid of, along its length */
-  boards: 4,
+  apron: [0.09, 0.028] as const,
+  /** how thick its square iron legs are */
+  leg: 0.08,
 } as const
 const [benchX, benchZ] = workbench.center
 /** how far the sink’s bowl turns round from upright at its rim down to the throat, in radians: it meets the throat at a fall of 25° */

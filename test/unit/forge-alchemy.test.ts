@@ -91,12 +91,16 @@ describe('the Forge’s alchemy machine', () => {
     // The holder stands right of the bench’s middle, on its top, an orb’s width clear of the cannon’s bracket over it.
     expect(holderSpot[0]).toBeLessThan(benchX - 0.4)
     expect(holderSpot[1]).toBe(workbench.height)
+    // Redesigned to be larger and clear the room baseboard
+    expect(workbench.length).toBeGreaterThan(2.8)
+    expect(workbench.depth).toBeGreaterThan(1.1)
+    expect(southWallFace - (benchZ + workbench.depth / 2 - workbench.rearOverhang)).toBeGreaterThan(0.145)
   })
   test('the bench’s top lies flush round the hole the sink fills, which an orb dropped there falls through and anything set down beside it stands on', () => {
     bench.top.computeBoundingBox()
     expect(bench.top.boundingBox!.max.y).toBeCloseTo(workbench.height, 6)
     expect(bench.top.boundingBox!.min.y).toBeCloseTo(workbench.height - workbench.top, 6)
-    expect(bench.top.hasAttribute('woodGrain')).toBe(true)
+    expect(bench.top.hasAttribute('woodGrain')).toBe(false)
     const material = new MeshBasicMaterial
     try {
       const top = new Mesh(bench.top, material)
