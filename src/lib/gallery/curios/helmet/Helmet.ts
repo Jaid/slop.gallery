@@ -14,38 +14,38 @@ import latticeGeometry from '../lattice.ts'
 
 const degree = Math.PI / 180
 /** the point inside the head the shell is laid out round, by polar angles from straight up and angles round from straight ahead */
-const middle = [0, 0.205, 0] as const
+const middle = [0, 0.222, 0] as const
 /** how far the bare skull reaches from its middle sideways, up, forward and back */
 const skull = {
-  side: 0.112,
-  up: 0.155,
-  front: 0.128,
-  back: 0.136,
+  side: 0.122,
+  up: 0.168,
+  front: 0.14,
+  back: 0.148,
 }
 /** the polar angle of the neck, where the shell ends inside the gorget */
-const neck = 148
+const neck = 150
 /** where the upper visor plate begins, standing proud of the skull, and how far */
-const visorTop = 66
-const visorRaise = 0.0035
+const visorTop = 64
+const visorRaise = 0.004
 /** the band of the lower visor, the ventail, which stands prouder still, and how far */
-const ventail = [84.5, 118] as const
-const ventailRaise = 0.007
+const ventail = [84, 120] as const
+const ventailRaise = 0.008
 /** how far round from straight ahead both visor plates reach to either side, to where they pivot */
-const visorSpan = 78
+const visorSpan = 80
 /** the eye slits: the band they cut through the upper visor, and how far round from straight ahead each reaches, the bar between them in the middle */
-const eyeBand = [76, 81.5] as const
-const eyeSpan = [4, 52] as const
+const eyeBand = [75, 81] as const
+const eyeSpan = [5, 54] as const
 /** the slots in the ventail to breathe through: the band they cut, where round each is and how wide it is */
-const slotBand = [92, 110] as const
-const slots = [-31.5, -22.5, -13.5, -4.5, 4.5, 13.5, 22.5, 31.5] as const
-const slotWidth = 3.6
+const slotBand = [92, 112] as const
+const slots = [-36, -27, -18, -9, 0, 9, 18, 27, 36] as const
+const slotWidth = 3.4
 /** how deep a slit or slot cuts in, standing for a hole through the steel */
-const holeDepth = 0.009
+const holeDepth = 0.01
 /** how far the creased prow of the visor stands forward at most */
-const prowReach = 0.022
+const prowReach = 0.028
 /** the gorget: how high its top lies inside the helmet’s chin and how far it reaches there, and how far its border reaches at the sides, before its points at the front and back */
-const gorgetTop = [0.112, 0.084] as const
-const gorgetBorder = 0.158
+const gorgetTop = [0.055, 0.082] as const
+const gorgetBorder = 0.132
 /** how tiny a step is taken either side of an edge, in degrees, so the edge stands crisp */
 const edgeStep = 0.06
 const smoothstep = (from: number, to: number, value: number) => {
@@ -64,8 +64,8 @@ function shell(theta: number, phi: number) {
   const [dx, dy, dz] = direction
   const depth = dz > 0 ? skull.front : skull.back
   const bare = 1 / Math.hypot(dx / skull.side, dy / skull.up, dz / depth)
-  // A low comb along the crown, from the brow over to the nape
-  const comb = 0.006 * Math.exp(-((bare * Math.abs(dx) / 0.011) ** 2)) * smoothstep(0.1, 0.55, dy)
+  // A low comb along the crown, from the brow over to the nape, polished bright
+  const comb = 0.01 * Math.exp(-((bare * Math.abs(dx) / 0.012) ** 2)) * smoothstep(0.08, 0.5, dy)
   const ahead = Math.cos(t) > 0 && Math.abs(theta) < visorSpan
   let raise = 0
   if (ahead && phi >= visorTop && phi < ventail[0]) {
@@ -74,24 +74,26 @@ function shell(theta: number, phi: number) {
     raise = ventailRaise
   }
   // The visor’s prow, creased straight down its middle, from the eyes down over the slots to the chin
-  const prow = Math.cos(t) > 0 ? prowReach * smoothstep(70, 95, phi) * (1 - smoothstep(122, 146, phi)) * Math.max(0, 1 - Math.abs(Math.sin(t)) / Math.sin(62 * degree)) ** 1.6 : 0
+  const prow = Math.cos(t) > 0 ? prowReach * smoothstep(68, 96, phi) * (1 - smoothstep(124, 148, phi)) * Math.max(0, 1 - Math.abs(Math.sin(t)) / Math.sin(64 * degree)) ** 1.6 : 0
   const eye = ahead && phi > eyeBand[0] && phi < eyeBand[1] && Math.abs(theta) > eyeSpan[0] && Math.abs(theta) < eyeSpan[1]
   const slot = phi > slotBand[0] && phi < slotBand[1] && slots.some(at => Math.abs(theta - at) < slotWidth / 2)
   const hole = eye || slot ? 1 : 0
   const reach = bare + comb + raise + prow - hole * holeDepth
+  const polish = comb > 0.006 ? 0.32 : raise > 0 ? 0.18 : 0.12
   return {
     position: [middle[0] + dx * reach, middle[1] + dy * reach, middle[2] + dz * reach] as Vec3,
     hole,
+    polish,
   }
 }
 /** Where the gorget’s surface lies at `theta` degrees round from straight ahead, the share `t` of the way down from its top to its border. */
 function gorget(theta: number, t: number): Vec3 {
   const angle = theta * degree
   // Pointed at the front, and a little at the back
-  const point = Math.max(0, 1 - Math.abs(Math.sin(angle)) / Math.sin(48 * degree)) ** 2 * (Math.cos(angle) > 0 ? 0.03 : 0.012)
+  const point = Math.max(0, 1 - Math.abs(Math.sin(angle)) / Math.sin(46 * degree)) ** 2 * (Math.cos(angle) > 0 ? 0.038 : 0.014)
   const [top, reach] = gorgetTop
   // flaring out like a bell, with a rolled border along its edge
-  const r = reach + (gorgetBorder + point - reach) * t ** 1.7 + 0.0035 * Math.exp(-(((t - 0.93) / 0.025) ** 2))
+  const r = reach + (gorgetBorder + point - reach) * t ** 1.35 + 0.004 * Math.exp(-(((t - 0.9) / 0.03) ** 2))
   return [r * Math.sin(angle), top * (1 - t), r * Math.cos(angle)]
 }
 /** Samples from `from` to `to` every `step`, ending on `to`, and either side of every edge, without any sample crowding an edge. */
@@ -118,32 +120,31 @@ function rivetHeads(points: ReadonlyArray<{
   return points.map(({normal, position}) => {
     const head = new SphereGeometry(radius, 6, 2, 0, Math.PI * 2, 0, Math.PI / 2)
     head.deleteAttribute('uv')
-    head.scale(1, 0.5, 1).applyQuaternion(turn.setFromUnitVectors(up, normal)).translate(...position)
-    const mask = Float32Array.from({length: head.getAttribute('position').count * 2}, (_, index) => (index % 2 ? 0.5 : 0))
+    head.scale(1, 0.45, 1).applyQuaternion(turn.setFromUnitVectors(up, normal)).translate(...position)
+    const mask = Float32Array.from({length: head.getAttribute('position').count * 2}, (_, index) => (index % 2 ? 0.55 : 0))
     head.setAttribute('steelMask', new Float32BufferAttribute(mask, 2))
     return head
   })
 }
 /**
  * A knight’s close helmet of hand-forged steel, and nobody in it: an egg of a skull with a low comb over its crown, a visor of two plates standing proud of it, the upper one with its eye slits, the lower one creased down its prow and slotted to breathe through, a pointed chin, all on a bell of a gorget with a rolled border riveted all round, pointed at the front.
- * It rests on the shoulders of the empty suit of armor at the end of the Bastion’s blind branch beside the Lodge, looking back with it toward the entrance, and steers the flavor the Forge’s alchemy machine gives a Transparent Orb to a Spook Orb.
+ * It is 40 cm tall and rests on the shoulders of the empty suit of armor at the end of the Bastion’s blind branch beside the Lodge, looking back with it toward the entrance, and steers the flavor the Forge’s alchemy machine gives a Transparent Orb to a Spook Orb. It only rests there: knocking the suit over spills it.
  * In its own frame it stands on the border of its gorget at the origin, looking along z.
  */
 export default class Helmet extends Curio {
   readonly id = 'helmet'
-  readonly mass = 3.2
+  readonly mass = 4.2
   readonly position: Vec3 = [lodgeSpurArmor[0], lodgeSpurArmor[1] + suitOfArmor.collar + 0.001, lodgeSpurArmor[2]]
-  readonly reach = 0.36
+  readonly reach = 0.42
   readonly room = 'bastion'
   readonly title = 'A knight’s helmet, with nobody in it'
 
   createModel() {
     const visorEdges = [visorSpan, eyeSpan[0], eyeSpan[1], ...slots.flatMap(at => [at - slotWidth / 2, at + slotWidth / 2])]
-    const thetas = samples(-180, 175, 5, [...new Set([...visorEdges, ...visorEdges.map(edge => -edge)])])
-    const phis = samples(2, neck, 3.5, [visorTop, ...eyeBand, ...ventail, ...slotBand])
-    const polish = 0.12
+    const thetas = samples(-180, 172, 9, [...new Set([...visorEdges, ...visorEdges.map(edge => -edge)])])
+    const phis = samples(2, neck, 6.2, [visorTop, ...eyeBand, ...ventail, ...slotBand])
     const shellGeometry = latticeGeometry(phis.map(phi => thetas.map((theta): LatticePoint => {
-      const {position, hole} = shell(theta, phi)
+      const {position, hole, polish} = shell(theta, phi)
       return {
         position,
         values: [hole, polish],
@@ -151,18 +152,18 @@ export default class Helmet extends Curio {
     })), {
       start: {
         position: shell(0, 0).position,
-        values: [0, polish],
+        values: [0, 0.3],
       },
       extra: {
         name: 'steelMask',
         size: 2,
       },
     })
-    const gorgetRows = 12
-    const gorgetThetas = Array.from({length: 72}, (_, index) => -180 + index * 5)
+    const gorgetRows = 8
+    const gorgetThetas = Array.from({length: 32}, (_, index) => -180 + index * (360 / 32))
     const gorgetGeometry = latticeGeometry(Array.from({length: gorgetRows}, (_, row) => gorgetThetas.map((theta): LatticePoint => ({
       position: gorget(theta, row / (gorgetRows - 1)),
-      values: [0, 0.08],
+      values: [0, row > gorgetRows - 3 ? 0.22 : 0.1],
     }))), {
       extra: {
         name: 'steelMask',
@@ -171,21 +172,21 @@ export default class Helmet extends Curio {
     })
     const shellAt = (theta: number, phi: number) => shell(theta, phi).position
     // The visor’s pivots on either side and a rivet above and below each, and a row round the gorget inside its border
-    const skullRivets = [-1, 1].flatMap(side => [70, 87, 104].map(phi => ({
+    const skullRivets = [-1, 1].flatMap(side => [68, 86, 106].map(phi => ({
       position: shellAt(side * (visorSpan + 3), phi),
       normal: outward(shellAt, side * (visorSpan + 3), phi, 0.5),
     })))
-    const gorgetRivets = Array.from({length: 30}, (_, index) => {
-      const theta = -180 + index * 12 + 6
+    const gorgetRivets = Array.from({length: 16}, (_, index) => {
+      const theta = -180 + index * (360 / 16) + 11
       return {
-        position: gorget(theta, 0.85),
-        normal: outward((round, down) => gorget(round, down), theta, 0.85, 0.01),
+        position: gorget(theta, 0.84),
+        normal: outward((round, down) => gorget(round, down), theta, 0.84, 0.01),
       }
     })
-    const steel = mergeParts([shellGeometry, gorgetGeometry, ...rivetHeads(skullRivets, 0.0065), ...rivetHeads(gorgetRivets, 0.0042)])
+    const steel = mergeParts([shellGeometry, gorgetGeometry, ...rivetHeads(skullRivets, 0.007), ...rivetHeads(gorgetRivets, 0.0046)])
     const material = new ForgedSteelMaterial({
       environment: studioEnvironment,
-      patina: 0.15,
+      patina: 0.18,
     })
     // Seen from below, the gorget and the shell show their insides.
     material.side = DoubleSide

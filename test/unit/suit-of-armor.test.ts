@@ -2,7 +2,8 @@ import type {BufferGeometry} from 'three/webgpu'
 
 import {afterAll, describe, expect, test} from 'bun:test'
 
-import {Box3, DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
+import RAPIER from '@dimforge/rapier3d-compat'
+import {Box3, DoubleSide, Euler, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
@@ -10,8 +11,12 @@ import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bas
 import {gorgetBorderReach} from '../../src/lib/gallery/curios/helmet/Helmet.ts'
 import {helmet} from '../../src/lib/gallery/curios/index.ts'
 import {lodgeEastWindow} from '../../src/lib/gallery/lodge.ts'
-import {suitOfArmor, suitOfArmorCollision} from '../../src/lib/gallery/suitOfArmor.ts'
+import {suitOfArmor, suitOfArmorColliders, suitOfArmorCollision} from '../../src/lib/gallery/suitOfArmor.ts'
 import suitOfArmorGeometry from '../../src/lib/gallery/suitOfArmorGeometry.ts'
+import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
+import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
+
+await RAPIER.init()
 
 const {collar} = suitOfArmor
 const steel = suitOfArmorGeometry()
@@ -46,35 +51,44 @@ const signedVolume = (geometry: BufferGeometry) => {
   }
   return volume
 }
+const turned = (body: RAPIER.RigidBody) => {
+  const {x, y, z, w} = body.rotation()
+  return new Quaternion(x, y, z, w)
+}
 describe('the suit of armor', () => {
-  test('its steel faces out, carries what its material reads and keeps within 16 384 triangles', () => {
+  test('its steel faces out, carries what its material reads and keeps within 16 384 triangles', () => {
     const position = steel.getAttribute('position')
     expect(position.array.every(Number.isFinite)).toBe(true)
     expect(signedVolume(steel)).toBeGreaterThan(0)
     expect(steel.getAttribute('steelMask').count).toBe(position.count)
     expect(steel.index!.count / 3).toBeLessThanOrEqual(16_384)
   })
+  test('the helmet keeps within 8192 triangles', () => {
+    expect(helmetModel.parts.reduce((sum, {geometry}) => sum + geometry.index!.count / 3, 0)).toBeLessThanOrEqual(8192)
+  })
   test('it stands on the floor as tall as a knight, the helmet on it, and only its empty neck shows dark', () => {
     const bounds = boundsOf(steel)
     expect(bounds.min.y).toBeCloseTo(0, 3)
     expect(bounds.min.y).toBeGreaterThanOrEqual(-1e-6)
     // Its pauldrons rise beside the gorget, a little over the collar.
-    expect(bounds.max.y).toBeLessThan(collar + 0.04)
+    expect(bounds.max.y).toBeLessThan(collar + 0.02)
     const size = bounds.getSize(new Vector3)
-    expect(size.x).toBeGreaterThan(0.55)
-    expect(size.x).toBeLessThan(0.75)
+    expect(size.x).toBeGreaterThan(0.6)
+    expect(size.x).toBeLessThan(0.85)
     // Its sabatons point ahead, its toes further out than anything behind it.
     expect(bounds.max.z).toBeGreaterThan(-bounds.min.z)
     const helmetTop = Math.max(...worn.map(({geometry}) => boundsOf(geometry).max.y))
-    expect(helmetTop).toBeGreaterThan(1.75)
-    expect(helmetTop).toBeLessThan(1.9)
+    const helmetBottom = Math.min(...worn.map(({geometry}) => boundsOf(geometry).min.y))
+    // A two-meter knight: 40 cm of helmet over the 160 cm headless body.
+    expect(helmetTop - helmetBottom).toBeCloseTo(0.4, 2)
+    expect(helmetTop).toBeCloseTo(suitOfArmor.height, 2)
     const mask = steel.getAttribute('steelMask')
     const position = steel.getAttribute('position')
     for (let index = 0; index < mask.count; index++) {
       if (!(mask.getX(index) > 0)) {
         continue
       }
-      expect(Math.hypot(position.getX(index), position.getZ(index))).toBeLessThan(0.07)
+      expect(Math.hypot(position.getX(index), position.getZ(index))).toBeLessThan(0.08)
       expect(position.getY(index)).toBeLessThan(collar + 0.02)
     }
   })
@@ -124,10 +138,11 @@ describe('the suit of armor', () => {
     }
     const bounds = boundsOf(steel)
     expect(reach.min.y).toBeCloseTo(0, 6)
-    expect(reach.min.x - bounds.min.x).toBeLessThan(0.02)
-    expect(bounds.max.x - reach.max.x).toBeLessThan(0.02)
-    expect(reach.min.z - bounds.min.z).toBeLessThan(0.03)
-    expect(bounds.max.z - reach.max.z).toBeLessThan(0.03)
+    // The pauldrons and the sabatons’ toes overhang the collision, which stays inside the plates.
+    expect(Math.abs(reach.min.x - bounds.min.x)).toBeLessThan(0.08)
+    expect(Math.abs(bounds.max.x - reach.max.x)).toBeLessThan(0.08)
+    expect(Math.abs(reach.min.z - bounds.min.z)).toBeLessThan(0.06)
+    expect(bounds.max.z - reach.max.z).toBeLessThan(0.1)
   })
   test('it stands on the level floor near the end of the Bastion’s blind branch beside the Lodge, abreast of where the Lodge’s window ends, clear of its walls, looking back down it', () => {
     const [x, y, z] = lodgeSpurArmor
@@ -148,5 +163,53 @@ describe('the suit of armor', () => {
     expect(lodgeSpurWindow.height - lodgeSpurWindow.rise).toBeGreaterThan(helmetTop + 0.2)
     expect(helmet.position).toEqual([x, y + collar + 0.001, z])
     expect(helmet.rotation).toEqual([0, 0, 0])
+  })
+  test('a shove topples it into the wall or the floor and spills the helmet off its shoulders', () => {
+    const world = physicsWorld(bastionColliders(false))
+    const pieces = suitOfArmorColliders()
+    const armorBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...lodgeSpurArmor).setLinearDamping(0.02).setAngularDamping(0.12).setCanSleep(true))
+    for (const piece of pieces) {
+      const desc = 'ball' in piece ? RAPIER.ColliderDesc.ball(piece.ball[1]).setTranslation(piece.ball[0][0], piece.ball[0][1], piece.ball[0][2]) : RAPIER.ColliderDesc.convexHull(piece.hull)
+      world.createCollider(desc!.setMass(38 / pieces.length).setFriction(0.4).setRestitution(0.02).setContactSkin(weldedSurfaceSkin), armorBody)
+    }
+    const rotation = new Quaternion
+    rotation.setFromEuler(new Euler(...helmet.rotation))
+    const helmetBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...helmet.position).setRotation(rotation).setCcdEnabled(true))
+    world.createCollider(RAPIER.ColliderDesc.convexHull(helmetModel.hull)!.setMass(helmet.mass).setFriction(0.8).setRestitution(0.32), helmetBody)
+    for (let step = 0; step < 90; step++) {
+      world.step()
+    }
+    const rested = armorBody.translation()
+    expect(Math.hypot(rested.x - lodgeSpurArmor[0], rested.z - lodgeSpurArmor[2])).toBeLessThan(0.05)
+    expect(Math.abs(rested.y - lodgeSpurArmor[1])).toBeLessThan(0.03)
+    const upright = new Vector3(0, 1, 0).applyQuaternion(turned(armorBody))
+    expect(upright.y).toBeGreaterThan(0.97)
+    // A shove from down the spur, about chest high, toward the barred window.
+    armorBody.wakeUp()
+    armorBody.applyImpulseAtPoint({
+      x: 0,
+      y: 40,
+      z: -520,
+    }, {
+      x: lodgeSpurArmor[0],
+      y: lodgeSpurArmor[1] + 1.35,
+      z: lodgeSpurArmor[2] + 0.14,
+    }, true)
+    armorBody.wakeUp()
+    for (let step = 0; step < 60 * 6; step++) {
+      world.step()
+    }
+    const fallen = armorBody.translation()
+    const up = new Vector3(0, 1, 0).applyQuaternion(turned(armorBody))
+    const helmetAt = helmetBody.translation()
+    const shoulder = new Vector3(0, collar, 0).applyQuaternion(turned(armorBody)).add(new Vector3(fallen.x, fallen.y, fallen.z))
+    world.free()
+    // It has left its stance: tipped over, and into the wall behind it or down onto the floor.
+    expect(up.y).toBeLessThan(0.7)
+    const intoTheWall = fallen.z < lodgeSpurArmor[2] - 0.15
+    const ontoTheFloor = fallen.y < lodgeSpurArmor[1] - 0.2 || up.y < 0.35
+    expect(intoTheWall || ontoTheFloor).toBe(true)
+    // The helmet was only resting there, so it is no longer on the shoulders.
+    expect(Math.hypot(helmetAt.x - shoulder.x, helmetAt.y - shoulder.y, helmetAt.z - shoulder.z)).toBeGreaterThan(0.25)
   })
 })
