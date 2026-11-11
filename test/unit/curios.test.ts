@@ -13,7 +13,7 @@ import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
+import {addArmor, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
 await RAPIER.init()
 /** the volume a surface encloses, positive while it faces out */
@@ -249,6 +249,7 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
   })
   test('the helmet stands on its gorget on the shoulders of the suit of armor at the end of the Bastion’s blind branch beside the Lodge', () => {
     const world = physicsWorld(bastionColliders())
+    addArmor(world)
     try {
       const {asleep, moved, up, y} = settle(helmet, world)
       expect(asleep).toBe(true)

@@ -19,7 +19,7 @@ import RouteVaultGeometry from '../../../src/lib/gallery/passages/RouteVaultGeom
 import VaultGeometry from '../../../src/lib/gallery/passages/VaultGeometry.ts'
 import roundRevealGeometry from '../../../src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '../../../src/lib/gallery/roundVestibule.ts'
-import {suitOfArmorCollision} from '../../../src/lib/gallery/suitOfArmor.ts'
+import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '../../../src/lib/gallery/suitOfArmor.ts'
 import {weldedSurfaceSkin} from '../../../src/lib/physics/weldedSurface.ts'
 import walls from '../fixtures/gallery.ts'
 import {bastionCraterGeometry} from './bastionCrater.ts'
@@ -33,7 +33,7 @@ type Shape = {
   translation?: Vec3
   triangles: [Float32Array, Uint32Array]
 }
-/** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater and the suit of armor in its blind branch with the barred window behind it, as the game builds their colliders. */
+/** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater and the barred window at the end of its blind branch, as the game builds their colliders; the suit of armor in front of the window is a body of its own, see `addArmor`. */
 export function bastionColliders() {
   const colliders = new Colliders
   colliders.walls(['bastion'])
@@ -76,9 +76,6 @@ export function bastionColliders() {
   for (const part of [bastionCraterGeometry.flags, bastionCraterGeometry.rubble, bastionCraterGeometry.shards]) {
     colliders.surface(part, true, bastionCrater.center)
   }
-  const armor = suitOfArmorCollision()
-  colliders.surface(armor, false, [...lodgeSpurArmor])
-  armor.dispose()
   return colliders
 }
 
@@ -143,6 +140,25 @@ export function physicsWorld(colliders: Colliders) {
 export function addOrb(world: RAPIER.World, position: Vec3) {
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...position).setCcdEnabled(true))
   world.createCollider(RAPIER.ColliderDesc.ball(0.14).setMass(1.8).setFriction(0.8).setRestitution(0.32), body)
+  return body
+}
+
+/** The suit of armor’s body where it stands when a game begins, as `BastionArmor` builds it: its boxes, each with its share of its mass, and the surface across its shoulders. */
+export function addArmor(world: RAPIER.World) {
+  const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...lodgeSpurArmor).setCcdEnabled(true))
+  for (const {friction, from, mass, to} of suitOfArmorBoxes) {
+    const shape = RAPIER.ColliderDesc.cuboid((to[0] - from[0]) / 2, (to[1] - from[1]) / 2, (to[2] - from[2]) / 2)
+      .setTranslation((from[0] + to[0]) / 2, (from[1] + to[1]) / 2, (from[2] + to[2]) / 2)
+      .setMass(mass)
+      .setFriction(friction ?? suitOfArmor.friction)
+      .setRestitution(suitOfArmor.restitution)
+      .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS)
+    if (friction !== undefined) {
+      shape.setFrictionCombineRule(RAPIER.CoefficientCombineRule.Max)
+    }
+    world.createCollider(shape, body)
+  }
+  world.createCollider(RAPIER.ColliderDesc.trimesh(...suitOfArmorShoulders()).setMass(0).setFriction(suitOfArmor.friction).setRestitution(suitOfArmor.restitution).setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS), body)
   return body
 }
 
