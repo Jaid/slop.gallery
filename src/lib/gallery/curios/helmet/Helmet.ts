@@ -14,13 +14,13 @@ import latticeGeometry from '../lattice.ts'
 
 const degree = Math.PI / 180
 /** the point inside the head the shell is laid out round, by polar angles from straight up and angles round from straight ahead */
-const middle = [0, 0.205, 0] as const
+const middle = [0, 0.185, 0] as const
 /** how far the bare skull reaches from its middle sideways, up, forward and back */
 const skull = {
-  side: 0.112,
-  up: 0.155,
-  front: 0.128,
-  back: 0.136,
+  side: 0.122,
+  up: 0.18,
+  front: 0.138,
+  back: 0.145,
 }
 /** the polar angle of the neck, where the shell ends inside the gorget */
 const neck = 148
@@ -44,7 +44,7 @@ const holeDepth = 0.009
 /** how far the creased prow of the visor stands forward at most */
 const prowReach = 0.022
 /** the gorget: how high its top lies inside the helmet’s chin and how far it reaches there, and how far its border reaches at the sides, before its points at the front and back */
-const gorgetTop = [0.112, 0.084] as const
+const gorgetTop = [0.075, 0.1] as const
 const gorgetBorder = 0.158
 /** how tiny a step is taken either side of an edge, in degrees, so the edge stands crisp */
 const edgeStep = 0.06
@@ -139,8 +139,8 @@ export default class Helmet extends Curio {
 
   createModel() {
     const visorEdges = [visorSpan, eyeSpan[0], eyeSpan[1], ...slots.flatMap(at => [at - slotWidth / 2, at + slotWidth / 2])]
-    const thetas = samples(-180, 175, 5, [...new Set([...visorEdges, ...visorEdges.map(edge => -edge)])])
-    const phis = samples(2, neck, 3.5, [visorTop, ...eyeBand, ...ventail, ...slotBand])
+    const thetas = samples(-180, 174, 8, [...new Set([...visorEdges, ...visorEdges.map(edge => -edge)])])
+    const phis = samples(2, neck, 6, [visorTop, ...eyeBand, ...ventail, ...slotBand])
     const polish = 0.12
     const shellGeometry = latticeGeometry(phis.map(phi => thetas.map((theta): LatticePoint => {
       const {position, hole} = shell(theta, phi)
@@ -158,8 +158,8 @@ export default class Helmet extends Curio {
         size: 2,
       },
     })
-    const gorgetRows = 12
-    const gorgetThetas = Array.from({length: 72}, (_, index) => -180 + index * 5)
+    const gorgetRows = 8
+    const gorgetThetas = Array.from({length: 48}, (_, index) => -180 + index * 7.5)
     const gorgetGeometry = latticeGeometry(Array.from({length: gorgetRows}, (_, row) => gorgetThetas.map((theta): LatticePoint => ({
       position: gorget(theta, row / (gorgetRows - 1)),
       values: [0, 0.08],
@@ -183,6 +183,8 @@ export default class Helmet extends Curio {
       }
     })
     const steel = mergeParts([shellGeometry, gorgetGeometry, ...rivetHeads(skullRivets, 0.0065), ...rivetHeads(gorgetRivets, 0.0042)])
+    // The gorget stays at the origin; the crown reaches exactly 40 cm.
+    steel.scale(1, 0.4 / 0.371, 1)
     const material = new ForgedSteelMaterial({
       environment: studioEnvironment,
       patina: 0.15,

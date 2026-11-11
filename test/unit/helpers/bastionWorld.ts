@@ -34,7 +34,7 @@ type Shape = {
   triangles: [Float32Array, Uint32Array]
 }
 /** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater and the suit of armor in its blind branch with the barred window behind it, as the game builds their colliders. */
-export function bastionColliders() {
+export function bastionColliders({armor = true}: {armor?: boolean} = {}) {
   const colliders = new Colliders
   colliders.walls(['bastion'])
   for (const passage of bastionNetwork) {
@@ -76,9 +76,11 @@ export function bastionColliders() {
   for (const part of [bastionCraterGeometry.flags, bastionCraterGeometry.rubble, bastionCraterGeometry.shards]) {
     colliders.surface(part, true, bastionCrater.center)
   }
-  const armor = suitOfArmorCollision()
-  colliders.surface(armor, false, [...lodgeSpurArmor])
-  armor.dispose()
+  if (armor) {
+    const surface = suitOfArmorCollision()
+    colliders.surface(surface, false, [...lodgeSpurArmor])
+    surface.dispose()
+  }
   return colliders
 }
 

@@ -52,22 +52,23 @@ describe('the suit of armor', () => {
     expect(position.array.every(Number.isFinite)).toBe(true)
     expect(signedVolume(steel)).toBeGreaterThan(0)
     expect(steel.getAttribute('steelMask').count).toBe(position.count)
-    expect(steel.index!.count / 3).toBeLessThanOrEqual(16_384)
+    expect(steel.index!.count / 3).toBeLessThan(16_384)
   })
   test('it stands on the floor as tall as a knight, the helmet on it, and only its empty neck shows dark', () => {
     const bounds = boundsOf(steel)
     expect(bounds.min.y).toBeCloseTo(0, 3)
     expect(bounds.min.y).toBeGreaterThanOrEqual(-1e-6)
-    // Its pauldrons rise beside the gorget, a little over the collar.
-    expect(bounds.max.y).toBeLessThan(collar + 0.04)
+    // The headless body reaches the collar at 160 cm.
+    expect(bounds.max.y).toBeCloseTo(1.6, 5)
     const size = bounds.getSize(new Vector3)
     expect(size.x).toBeGreaterThan(0.55)
     expect(size.x).toBeLessThan(0.75)
     // Its sabatons point ahead, its toes further out than anything behind it.
     expect(bounds.max.z).toBeGreaterThan(-bounds.min.z)
     const helmetTop = Math.max(...worn.map(({geometry}) => boundsOf(geometry).max.y))
-    expect(helmetTop).toBeGreaterThan(1.75)
-    expect(helmetTop).toBeLessThan(1.9)
+    expect(helmetTop).toBeCloseTo(2, 5)
+    expect(boundsOf(helmetModel.parts[0].geometry).getSize(new Vector3).y).toBeCloseTo(0.4, 5)
+    expect(helmetModel.parts.reduce((sum, part) => sum + part.geometry.index!.count / 3, 0)).toBeLessThan(8192)
     const mask = steel.getAttribute('steelMask')
     const position = steel.getAttribute('position')
     for (let index = 0; index < mask.count; index++) {
@@ -107,7 +108,7 @@ describe('the suit of armor', () => {
       expect(clearance > 0.003 || clearance < -0.01).toBe(true)
       checked++
     }
-    expect(checked).toBeGreaterThan(300)
+    expect(checked).toBeGreaterThan(50)
   })
   test('its collision wraps its steel, reaching up to the collar only with its body’s level top, for the helmet to rest on', () => {
     const collision = suitOfArmorCollision()

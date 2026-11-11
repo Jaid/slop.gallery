@@ -1,7 +1,7 @@
 import type {LatticePoint} from './curios/lattice.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
-import {Vector3} from 'three/webgpu'
+import {Float32BufferAttribute, SphereGeometry, Vector3} from 'three/webgpu'
 
 import {mergeParts} from '../geometry.ts'
 import {gorgetBorderReach} from './curios/helmet/Helmet.ts'
@@ -9,6 +9,8 @@ import latticeGeometry from './curios/lattice.ts'
 import {suitOfArmor} from './suitOfArmor.ts'
 
 const degree = Math.PI / 180
+/** The plate patterns are drafted in the original frame, then fitted to the 160 cm body. */
+const draftCollar = 1.47
 /** how freshly polished its steel is all over, see `ForgedSteelMaterial` */
 const polish = 0.1
 const steelMask = {
@@ -132,7 +134,7 @@ function dome(center: Joint, up: Joint, front: Joint, {back, front: frontReach, 
  * The breastplate and the backplate in one: from deep in the dark of its empty neck up over the rolled lip of its collar, out under the helmet’s gorget, sloping off it just under its border all round, so the gorget rests on it, then over the shoulders and down the swelling breast with its crease to the waist, where it flares into a lip.
  */
 function cuirass() {
-  const {collar} = suitOfArmor
+  const collar = draftCollar
   const thetas = columnsOf(64)
   const ring = (y: number, reach: (theta: number) => readonly [side: number, front: number], hole = 0) => thetas.map(theta => {
     const [across, forward] = reach(theta)
@@ -141,18 +143,18 @@ function cuirass() {
   const round = (radius: number) => (theta: number) => [radius * Math.sin(theta * degree), radius * Math.cos(theta * degree)] as const
   const rows = [
     ring(collar - 0.07, round(0.064), 1),
-    ring(collar + 0.012, round(0.068), 0.6),
-    ring(collar + 0.03, round(0.073)),
-    ring(collar + 0.026, round(0.079)),
-    ring(collar + 0.014, round(0.084)),
+    ring(collar - 0.012, round(0.068), 0.6),
+    ring(collar, round(0.073)),
+    ring(collar - 0.004, round(0.079)),
+    ring(collar - 0.016, round(0.084)),
     // The yoke, a low dome under the gorget, down to a hair under its border
-    ...[0.66, 0.8, 0.91, 1].map(share => ring(collar - 0.0015 + 0.0215 * (1 - share ** 2), theta => round(share * gorgetBorderReach(theta))(theta))),
+    ...[0.66, 0.8, 0.91, 1].map(share => ring(collar - 0.0015 - 0.01 * (1 - share ** 2), theta => round(share * gorgetBorderReach(theta))(theta))),
   ]
   const sections = [
-    [-0.02, 0.172, 0.198, 0.174, 2.4, 0.003],
-    [-0.06, 0.188, 0.205, 0.168, 2.4, 0.007],
-    [-0.13, 0.192, 0.206, 0.158, 2.3, 0.011],
-    [-0.21, 0.178, 0.192, 0.146, 2.2, 0.011],
+    [-0.02, 0.185, 0.202, 0.174, 2.4, 0.005],
+    [-0.06, 0.205, 0.212, 0.17, 2.4, 0.012],
+    [-0.13, 0.21, 0.218, 0.16, 2.3, 0.018],
+    [-0.21, 0.19, 0.197, 0.146, 2.2, 0.016],
     [-0.29, 0.158, 0.165, 0.13, 2.1, 0.008],
     [-0.355, 0.142, 0.14, 0.116, 2.1, 0.005],
     [-0.38, 0.147, 0.145, 0.121, 2.1, 0.003],
@@ -170,13 +172,15 @@ function cuirass() {
   })
 }
 /** where the cuirass ends at the waist, under which the fauld’s lames hang, and how far it reaches there to the side, the front and the back */
-const waist = [suitOfArmor.collar - 0.39, 0.143, 0.141, 0.117] as const
+const waist = [draftCollar - 0.39, 0.143, 0.141, 0.117] as const
 /**
  * The steel of the suit of armor, see `suitOfArmor`, every plate carrying its `steelMask` for `ForgedSteelMaterial`: only the inside of its empty neck lies in a hole, showing dark.
  * Its plates are open where they lap over each other, so show it from both sides.
  */
 export default function suitOfArmorGeometry() {
-  return mergeParts([cuirass(), ...fauld(), ...[1, -1].flatMap(outside => [...leg(outside), ...arm(outside)])])
+  const geometry = mergeParts([cuirass(), ...fauld(), ...[1, -1].flatMap(outside => [...leg(outside), ...arm(outside)]), ...rivets()])
+  geometry.scale(1, suitOfArmor.collar / draftCollar, 1)
+  return geometry
 }
 /** The fauld: four hoops of lames lapping down over the hips from under the cuirass’ waist, each flaring out a little further, most to the sides and least over the rump, and two tassets hanging from the lowest over the front of the thighs, each of two lames. */
 function fauld() {
@@ -199,7 +203,7 @@ function fauld() {
   const hem = top + 0.01 - 3 * 0.048 - 0.062
   for (const x of [-0.095, 0.095]) {
     for (const [index, [from, to]] of [[hem + 0.016, hem - 0.066], [hem - 0.056, hem - 0.14]].entries()) {
-      const forward = (y: number) => 0.172 - (hem + 0.016 - y) * 0.3 - index * 0.004
+      const forward = (y: number) => 0.155 - (hem + 0.016 - y) * 0.3 - index * 0.004
       // The lower lame rounds off at its foot.
       const widths = index ? [0.084, 0.085, 0.086, 0.084, 0.072] : [0.08, 0.081, 0.083, 0.084, 0.084]
       const sections = [0, 0.15, 0.6, 0.88, 1].map((at, row): Section => {
@@ -359,7 +363,7 @@ function arm(outside: number) {
   const pauldronLames = [0, 72, 86, 100, 114]
   const fingerLames = [0.5, 0.64, 0.78, 0.92, 1.06]
   return [
-    dome(mirror([0.215, 1.375, -0.005]), mirror([0.5, 1, 0]), [0, 0, 1], {
+    dome(mirror([0.215, 1.37, -0.005]), mirror([0.5, 1, 0]), [0, 0, 1], {
       side: 0.105,
       front: 0.12,
       back: 0.13,
@@ -485,4 +489,30 @@ function arm(outside: number) {
       },
     ], {columns: 10}),
   ]
+}
+/** Small domed fasteners along the fauld and the breastplate, catching the light at the plate edges. */
+function rivets() {
+  const points: Array<readonly [number, number, number]> = []
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 4; i++) {
+      const y = waist[0] - 0.025 - i * 0.048
+      const radius = 0.147 + i * 0.007
+      for (const angle of [25, 55]) {
+        const theta = side * angle * degree
+        points.push([Math.sin(theta) * (0.15 + i * 0.011), y, Math.cos(theta) * radius])
+      }
+    }
+    // A row of fasteners follows the upper edge of the breastplate.
+    for (const x of [0.06, 0.095, 0.13]) {
+      points.push([side * x, 1.36, 0.207 * Math.sqrt(1 - (x / 0.215) ** 2)])
+    }
+  }
+  return points.map(([x, y, z]) => {
+    const rivet = new SphereGeometry(0.004, 8, 4)
+    rivet.scale(1, 1, 0.5).translate(x, y, z)
+    rivet.deleteAttribute('uv')
+    const mask = Float32Array.from({length: rivet.getAttribute('position').count * 2}, (_, index) => (index % 2 ? polish : 0))
+    rivet.setAttribute('steelMask', new Float32BufferAttribute(mask, 2))
+    return rivet
+  })
 }

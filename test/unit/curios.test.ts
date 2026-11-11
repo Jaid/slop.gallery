@@ -4,14 +4,18 @@ import type {BufferGeometry} from 'three/webgpu'
 import {describe, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
+import {EgoMotor} from 'ego-player'
 import {Box3, Euler, Quaternion, Vector3} from 'three/webgpu'
 
+import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
 import {banquet, banquetTable} from '../../src/lib/gallery/banquet.ts'
+import {lodgeSpurArmor} from '../../src/lib/gallery/bastionNetwork.ts'
 import {curios, hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import forge, {forgeTable, forgeTableCenter} from '../../src/lib/gallery/forge.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
+import {suitOfArmorCollision} from '../../src/lib/gallery/suitOfArmor.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
@@ -248,14 +252,70 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
     }
   })
   test('the helmet stands on its gorget on the shoulders of the suit of armor at the end of the Bastion’s blind branch beside the Lodge', () => {
-    const world = physicsWorld(bastionColliders())
+    const world = physicsWorld(bastionColliders({armor: false}))
+    const surface = suitOfArmorCollision()
+    const model = helmet.createModel()
     try {
-      const {asleep, moved, up, y} = settle(helmet, world)
-      expect(asleep).toBe(true)
-      expect(moved).toBeLessThan(0.03)
-      expect(Math.abs(y - helmet.position[1])).toBeLessThan(0.01)
-      expect(up.y).toBeGreaterThan(0.99)
+      const armor = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...lodgeSpurArmor).setCcdEnabled(true))
+      world.createCollider(RAPIER.ColliderDesc.trimesh(...colliderGeometry(surface)).setDensity(450).setFriction(0.8).setRestitution(0.05), armor)
+      const head = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...helmet.position).setCcdEnabled(true))
+      world.createCollider(RAPIER.ColliderDesc.convexHull(model.hull)!.setMass(helmet.mass).setFriction(0.8).setRestitution(0.32), head)
+      for (let step = 0; step < 60 * 12; step++) {
+        world.step()
+      }
+      expect(armor.isSleeping()).toBe(true)
+      expect(head.isSleeping()).toBe(true)
+      expect(Math.hypot(head.translation().x - helmet.position[0], head.translation().z - helmet.position[2])).toBeLessThan(0.03)
+      expect(Math.abs(head.translation().y - helmet.position[1])).toBeLessThan(0.01)
+      const [x, y, z] = lodgeSpurArmor
+      // A shove above the center of mass tips the body; the loose helmet falls independently.
+      armor.applyImpulseAtPoint({
+        x: 0,
+        y: 0,
+        z: 80,
+      }, {
+        x,
+        y: y + 1.4,
+        z,
+      }, true)
+      for (let step = 0; step < 60 * 5; step++) {
+        world.step()
+      }
+      const turn = armor.rotation()
+      const up = new Vector3(0, 1, 0)
+      up.applyQuaternion(new Quaternion(turn.x, turn.y, turn.z, turn.w))
+      expect(up.y).toBeLessThan(0.8)
+      expect(head.translation().y).toBeLessThan(helmet.position[1] - 0.3)
+      expect(head.translation().y).toBeGreaterThan(y - 0.02)
     } finally {
+      surface.dispose()
+      model.dispose()
+      world.free()
+    }
+  })
+  test('the player pushes the armor against the blind branch’s wall', () => {
+    const world = physicsWorld(bastionColliders({armor: false}))
+    const surface = suitOfArmorCollision()
+    const [x, y, z] = lodgeSpurArmor
+    const armor = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(x, y, z).setCcdEnabled(true))
+    world.createCollider(RAPIER.ColliderDesc.trimesh(...colliderGeometry(surface)).setDensity(450).setFriction(0.8).setRestitution(0.05), armor)
+    const player = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(x, y + 0.04, z + 1.5))
+    const capsule = world.createCollider(RAPIER.ColliderDesc.capsule(0.55, 0.3).setTranslation(0, 0.85, 0), player)
+    const motor = new EgoMotor(RAPIER, world, player, capsule, {})
+    try {
+      const rotation = new Quaternion
+      for (let step = 0; step < 60 * 3; step++) {
+        motor.step(world.timestep, {
+          forward: true,
+          sprint: true,
+        }, rotation, true, false)
+        world.step()
+      }
+      expect(armor.translation().z).toBeLessThan(z - 0.2)
+      expect(armor.translation().z).toBeGreaterThan(z - 0.8)
+    } finally {
+      motor.dispose()
+      surface.dispose()
       world.free()
     }
   })

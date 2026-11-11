@@ -31,10 +31,9 @@ export default function BastionArmor() {
     material.side = DoubleSide
     return material
   }, []))
-  return <group name='bastion-armor' position={lodgeSpurArmor}>
-    <RigidBody colliders={false} type='fixed'>
-      <TrimeshCollider args={collision} />
-    </RigidBody>
-    <mesh castShadow geometry={geometry} material={steel} name='bastion-armor-steel' receiveShadow />
-  </group>
+  return <RigidBody ccd colliders={false} friction={0.8} position={lodgeSpurArmor} restitution={0.05}>
+    {/* A surface rather than convex boxes keeps the helmet’s flat gorget stable while still letting both bodies move independently. */}
+    <TrimeshCollider args={collision} density={450} />
+    <group name='bastion-armor'><mesh castShadow geometry={geometry} material={steel} name='bastion-armor-steel' receiveShadow /></group>
+  </RigidBody>
 }
