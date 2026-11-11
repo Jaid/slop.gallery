@@ -14,12 +14,14 @@ import {slabHulls} from '../../../src/lib/gallery/floorPolygons.ts'
 import forge from '../../../src/lib/gallery/forge.ts'
 import {forgeRoundVestibule, vestibuleArches} from '../../../src/lib/gallery/forgeVestibule.ts'
 import gateGeometry from '../../../src/lib/gallery/gateGeometry.ts'
+import LodgeEastWindowGeometry from '../../../src/lib/gallery/LodgeEastWindowGeometry.ts'
 import Passage from '../../../src/lib/gallery/passages/Passage.ts'
 import RouteVaultGeometry from '../../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import VaultGeometry from '../../../src/lib/gallery/passages/VaultGeometry.ts'
 import roundRevealGeometry from '../../../src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '../../../src/lib/gallery/roundVestibule.ts'
-import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '../../../src/lib/gallery/suitOfArmor.ts'
+import {suitOfArmor, suitOfArmorBoxes} from '../../../src/lib/gallery/suitOfArmor.ts'
+import {suitOfArmorCradle} from '../../../src/lib/gallery/suitOfArmorGeometry.ts'
 import {weldedSurfaceSkin} from '../../../src/lib/physics/weldedSurface.ts'
 import walls from '../fixtures/gallery.ts'
 import {bastionCraterGeometry} from './bastionCrater.ts'
@@ -33,7 +35,7 @@ type Shape = {
   translation?: Vec3
   triangles: [Float32Array, Uint32Array]
 }
-/** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater and the barred window at the end of its blind branch, as the game builds their colliders; the suit of armor in front of the window is a body of its own, see `addArmor`. */
+/** The Bastion’s walls, passages, the hollow in its western mouth, its gate and crater, the barred window at the end of its blind branch and the Lodge’s window onto the branch, as the game builds their colliders; the suit of armor in front of the barred window is a body of its own, see `addArmor`. */
 export function bastionColliders() {
   const colliders = new Colliders
   colliders.walls(['bastion'])
@@ -73,6 +75,11 @@ export function bastionColliders() {
     colliders.surface(bars)
     bars.dispose()
   }
+  const lodgeWindow = new LodgeEastWindowGeometry
+  for (const part of [lodgeWindow.lining, lodgeWindow.glass, lodgeWindow.frame]) {
+    colliders.surface(part, true)
+  }
+  lodgeWindow.dispose()
   for (const part of [bastionCraterGeometry.flags, bastionCraterGeometry.rubble, bastionCraterGeometry.shards]) {
     colliders.surface(part, true, bastionCrater.center)
   }
@@ -143,7 +150,7 @@ export function addOrb(world: RAPIER.World, position: Vec3) {
   return body
 }
 
-/** The suit of armor’s body where it stands when a game begins, as `BastionArmor` builds it: its boxes, each with its share of its mass, and the surface across its shoulders. */
+/** The suit of armor’s body where it stands when a game begins, as `BastionArmor` builds it: its boxes, each with its share of its mass, and the cradle across its shoulders, welded like `MeshSurfaceCollider` welds it. */
 export function addArmor(world: RAPIER.World) {
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...lodgeSpurArmor).setCcdEnabled(true))
   for (const {friction, from, mass, to} of suitOfArmorBoxes) {
@@ -152,13 +159,13 @@ export function addArmor(world: RAPIER.World) {
       .setMass(mass)
       .setFriction(friction ?? suitOfArmor.friction)
       .setRestitution(suitOfArmor.restitution)
-      .setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS)
     if (friction !== undefined) {
       shape.setFrictionCombineRule(RAPIER.CoefficientCombineRule.Max)
     }
     world.createCollider(shape, body)
   }
-  world.createCollider(RAPIER.ColliderDesc.trimesh(...suitOfArmorShoulders()).setMass(0).setFriction(suitOfArmor.friction).setRestitution(suitOfArmor.restitution).setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS), body)
+  const cradle = RAPIER.ColliderDesc.trimesh(...suitOfArmorCradle(), RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES).setContactSkin(weldedSurfaceSkin)
+  world.createCollider(cradle.setMass(0).setFriction(suitOfArmor.seat).setFrictionCombineRule(RAPIER.CoefficientCombineRule.Min).setRestitution(suitOfArmor.restitution), body)
   return body
 }
 

@@ -6,12 +6,15 @@ import type {BufferGeometry} from 'three/webgpu'
 import {Vector3} from 'three/webgpu'
 
 import {mergeParts} from '../geometry.ts'
+import {weldedSurfaceSkin} from '../physics/weldedSurface.ts'
 import {columnsOf, creaseAt, degree, dome, lames, plate, rivetHeads, rollRows, sectionAt, sheetGeometry, squared, steel, steelMask, withEdges} from './armor/plating.ts'
 import {gorgetBorderReach} from './curios/helmet/Helmet.ts'
 import latticeGeometry from './curios/lattice.ts'
 import {suitOfArmor} from './suitOfArmor.ts'
 
 const {collar} = suitOfArmor
+/** how far in and out from the border of the helmet’s gorget the cradle across the shoulders reaches, by shares of how far the border reaches */
+const cradleShares = [0.75, 1, 1.3] as const
 /** the plain, dull steel of the skirt under the fauld, which only shows between the tassets */
 const skirtSteel: Finish = {polish: 0}
 
@@ -126,6 +129,27 @@ export default function suitOfArmorGeometry() {
     normal,
     position,
   }], radius))])
+}
+
+/**
+ * The cradle across the shoulders of the suit of armor that the helmet sits in, as the vertices and the indices of a welded triangle mesh in its frame, facing up, see `MeshSurfaceCollider`: a shallow funnel round the border of the helmet’s gorget, which sits in it level at the collar all round, rising outward from there at `suitOfArmor.cradle` degrees and sinking inward under the gorget.
+ * Rocked, the suit lets the helmet settle back into the middle; leaning over far enough, it lets it slide out over the rim. It is a surface rather than the top of a box: against a convex shape, Rapier builds the contact of a hull’s face from only a few of its corners, and of the dozens round the border of the gorget, the helmet jitters on a box and walks off it, while it sits still in a surface.
+ * It lies as much lower as the skin of a welded surface, so the helmet sits on its skin at the collar.
+ */
+export function suitOfArmorCradle(): [vertices: Float32Array, indices: Uint32Array] {
+  const thetas = columnsOf(48)
+  const rise = Math.tan(suitOfArmor.cradle * degree)
+  const vertices = cradleShares.flatMap(share => thetas.flatMap(theta => {
+    const reach = gorgetBorderReach(theta)
+    const [x, z] = round(share * reach)(theta)
+    return [x, collar - weldedSurfaceSkin + (share - 1) * reach * rise, z]
+  }))
+  const {length} = thetas
+  const indices = cradleShares.slice(1).flatMap((_, ring) => thetas.flatMap((__, index) => {
+    const [inner, next] = [ring * length + index, ring * length + (index + 1) % length]
+    return [inner, inner + length, next, next, inner + length, next + length]
+  }))
+  return [Float32Array.from(vertices), Uint32Array.from(indices)]
 }
 
 /**
