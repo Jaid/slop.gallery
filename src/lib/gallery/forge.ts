@@ -1,6 +1,6 @@
 import {wallFace} from './architectureDimensions.ts'
-import {plankTable} from './plankTable.ts'
 import salon, {salonCeiling} from './salon.ts'
+import {steelTable} from './steelTable.ts'
 
 /**
  * A round rooflight: a disc of clear cast glass open to the sky, held in a square grid of bars and framed by a deep ring of plaster hanging below the slab, like the eye of a Roman dome let into a flat ceiling.
@@ -37,17 +37,19 @@ const forge = {
 const northZ = forge.center[1] - forge.size[1] / 2
 const westX = forge.center[0] - forge.size[0] / 2
 
-/** The painter’s table against the middle of the west wall, which the painting set lies on: a plain one of three planks on four legs, running along the wall. */
-export const forgeTable = plankTable({
-  length: 1.8,
-  width: 0.8,
-  height: 0.78,
-  top: 0.04,
-  boards: 3,
-  gap: 0.004,
-  overhang: 0.04,
-  apron: [0.1, 0.024],
-  leg: 0.065,
+/**
+ * The painter’s work table against the middle of the west wall, which the painting set lies on: a heavy steel table running along the wall, larger than a painter’s easel table has any need to be, so paints, canvas and tools can spread out on it at once.
+ * Its legs stand in from its top by `legInset`, so with its back a hand’s width from the wall’s face, every part of it that reaches the floor stands clear of the baseboard’s cap, which reaches further into the room than that hand’s width.
+ */
+export const forgeTable = steelTable({
+  length: 2.6,
+  width: 1.1,
+  height: 0.9,
+  top: 0.05,
+  overhang: 0.03,
+  apron: [0.12, 0.03],
+  leg: 0.08,
+  legInset: 0.22,
   pairs: 2,
 })
 /** where the middle of the table stands in plan, in the world’s frame: its back a hand’s width from the west wall’s face */

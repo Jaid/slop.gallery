@@ -7,8 +7,8 @@ import {useMemo} from 'react'
 import {CircleGeometry, ExtrudeGeometry, MeshStandardNodeMaterial, Path, Shape} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
-import PlankTable from '#component/PlankTable'
 import RoomFloor from '#component/RoomFloor'
+import SteelTable from '#component/SteelTable'
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
@@ -29,12 +29,7 @@ const vestibuleWall = slopGallery.walls.find(wall => wall.id === 'forge-vestibul
 const circleSegments = 96
 /** how far in from the vestibule’s wall its brass ring lies, on the line of the room’s inlays */
 const vestibuleInlay = 1.25
-/** the painter’s table’s oiled wood, the alchemy machine’s workbench’s */
-const tableWood = {
-  heartwood: ['#5e3a1c', '#8c5f33'],
-  latewood: '#3b2412',
-} as const
-/** The Forge: a workshop with plain walls and floors for now, under a plaster ceiling pierced by a round rooflight, with the alchemy machine against its south wall, whose cannon shoots orbs across it into its round vestibule north of it, alike on a smaller scale, and on through the window in its north wall into the Bastion’s cistern, and a painter’s table against its west wall. */
+/** The Forge: a workshop with plain walls and floors for now, under a plaster ceiling pierced by a round rooflight, with the alchemy machine against its south wall, whose cannon shoots orbs across it into its round vestibule north of it, alike on a smaller scale, and on through the window in its north wall into the Bastion’s cistern, and a painter’s steel work table against its west wall. */
 export default function ForgeRoom({glass, masonry, stone, wood}: {
   glass: Material
   /** the Bastion’s stone, which lines the vestibule’s arch onto its approach */
@@ -69,7 +64,7 @@ export default function ForgeRoom({glass, masonry, stone, wood}: {
     <Vestibule floorReflections={floorReflections} masonry={masonry} plaster={plaster} />
     <AlchemyMachine />
     <group position={[forgeTableCenter[0], 0, forgeTableCenter[1]]}>
-      <PlankTable colors={tableWood} name='forge-table' roughness={0.5} seed={5303} table={forgeTable} />
+      <SteelTable name='forge-table' table={forgeTable} />
     </group>
   </group>
 }

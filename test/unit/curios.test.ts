@@ -12,6 +12,7 @@ import forge, {forgeTable, forgeTableCenter} from '../../src/lib/gallery/forge.t
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
+import {steelTableColliders} from '../../src/lib/gallery/steelTable.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
@@ -232,7 +233,7 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
     try {
       const [tableX, tableZ] = forgeTableCenter
       world.createCollider(RAPIER.ColliderDesc.cuboid(forge.size[0] / 2, 0.12, forge.size[1] / 2).setTranslation(forge.center[0], -0.12, forge.center[1]))
-      for (const {center: [x, y, z], size: [width, height, depth]} of plankTableColliders(forgeTable, 'forge-table')) {
+      for (const {center: [x, y, z], size: [width, height, depth]} of steelTableColliders(forgeTable, 'forge-table')) {
         world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(tableX + x, y, tableZ + z))
       }
       const {asleep, facing, moved, up, y} = settle(paintingSet, world)
