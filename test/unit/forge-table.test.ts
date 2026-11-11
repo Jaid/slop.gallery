@@ -1,7 +1,8 @@
 import {describe, expect, test} from 'bun:test'
 
 import {cannonFlight, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
-import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
+import PainterTableGeometry from '../../src/lib/gallery/alchemy/PainterTableGeometry.ts'
+import {defaultBaseboardHeight, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import forge, {forgeTable, forgeTableCenter} from '../../src/lib/gallery/forge.ts'
 import {wallCoordinates, wallOffset} from '../../src/lib/placement/wallGeometry.ts'
 import forgeSpawns from '../../src/rooms/forge/spawns.ts'
@@ -10,11 +11,21 @@ import slopGallery from '../../src/worlds/gallery/index.ts'
 const [tableX, tableZ] = forgeTableCenter
 const west = slopGallery.walls.find(wall => wall.id === 'forge-west')!
 describe('the Forge’s painter’s table', () => {
-  test('stands in the Forge against the middle of its west wall, running along it, its back a hand’s width from the wall’s face', () => {
+  test('stands in the Forge against the middle of its west wall, running along it, its back a hand’s width from the wall’s face and its legs clear of the baseboard', () => {
     expect(slopGallery.roomAt([tableX, 0.5, tableZ])?.id).toBe('forge')
     expect(wallCoordinates(west, [tableX, 0, tableZ])).toBeCloseTo(0, 9)
-    expect(wallOffset(west, [tableX, 0, tableZ]) - forgeTable.width / 2).toBeCloseTo(wallFace + 0.05, 9)
-    expect(forgeTable.legs).toHaveLength(2)
+    expect(wallOffset(west, [tableX, 0, tableZ]) - forgeTable.width / 2).toBeCloseTo(wallFace + 0.08, 9)
+    const wallLeg = forgeTable.width / 2 - forgeTable.inset + forgeTable.leg / 2
+    expect(wallOffset(west, [tableX, 0, tableZ]) - wallLeg).toBeGreaterThan(defaultBaseboardHeight)
+    const geometry = new PainterTableGeometry
+    try {
+      geometry.top.computeBoundingBox()
+      expect(geometry.top.boundingBox!.max.y).toBeCloseTo(forgeTable.height, 6)
+      expect(geometry.frame.boundingBox!.min.y).toBeCloseTo(0, 3)
+      expect(geometry.colliders.filter(box => box.name === 'forge-table-leg')).toHaveLength(4)
+    } finally {
+      geometry.dispose()
+    }
   })
   test('keeps works from hanging on the stretch of the wall behind it', () => {
     const reservation = west.reservations?.find(({u, width}) => Math.abs(u) < 1e-9 && Math.abs(width - forgeTable.length) < 1e-9)

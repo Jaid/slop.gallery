@@ -72,9 +72,12 @@ const wallAhead = ([x, z]: readonly [number, number], [dx, dz]: readonly [number
   return -along + Math.sqrt(along ** 2 - (ox ** 2 + oz ** 2 - (cistern.radius - wallFace) ** 2))
 }
 describe('the Forge’s alchemy machine', () => {
-  test('stands against the middle of the south wall: its bench on the room’s axis, its sink in the bench’s east end and its body under the sink, between the legs', () => {
+  test('stands against the middle of the south wall: its bench on the room’s axis, its sink in the bench’s east end and its body under the sink, between the legs, its legs clear of the baseboard', () => {
     expect(benchX).toBe(forge.center[0])
-    expect(southWallFace - (benchZ + workbench.depth / 2)).toBeCloseTo(0.05, 9)
+    expect(southWallFace - (benchZ + workbench.depth / 2)).toBeCloseTo(0.06, 9)
+    const backLeg = benchZ + workbench.depth / 2 - workbench.inset + workbench.leg / 2
+    const capFront = southWallFace + wallFace - 0.25
+    expect(backLeg - capFront).toBeLessThan(-0.03)
     expect(roomAt([benchX, 1, benchZ])).toBe('forge')
     // Left of the bench’s middle, seen from the room, with room for the flange and the aprons round it
     expect(sinkX).toBeGreaterThan(benchX)
@@ -85,9 +88,9 @@ describe('the Forge’s alchemy machine', () => {
     expect(alchemySink.throat - orbRadius - weldedSurfaceSkin).toBeGreaterThan(0.015)
     expect(alchemySink.throatY).toBeGreaterThan(machineBody.size[1] + orbRadius)
     expect(machineBody.center).toEqual([sinkX, benchZ])
-    const legInside = workbench.length / 2 - workbench.overhang - workbench.leg
+    const legInside = workbench.length / 2 - workbench.inset - workbench.leg
     expect(sinkX + machineBody.size[0] / 2 - benchX).toBeLessThan(legInside)
-    expect(machineBody.size[2] / 2).toBeLessThan(workbench.depth / 2 - workbench.overhang - workbench.leg)
+    expect(machineBody.size[2] / 2).toBeLessThan(workbench.depth / 2 - workbench.inset)
     // The holder stands right of the bench’s middle, on its top, an orb’s width clear of the cannon’s bracket over it.
     expect(holderSpot[0]).toBeLessThan(benchX - 0.4)
     expect(holderSpot[1]).toBe(workbench.height)
@@ -96,7 +99,8 @@ describe('the Forge’s alchemy machine', () => {
     bench.top.computeBoundingBox()
     expect(bench.top.boundingBox!.max.y).toBeCloseTo(workbench.height, 6)
     expect(bench.top.boundingBox!.min.y).toBeCloseTo(workbench.height - workbench.top, 6)
-    expect(bench.top.hasAttribute('woodGrain')).toBe(true)
+    expect(bench.top.hasAttribute('woodGrain')).toBe(false)
+    expect(bench.frame.hasAttribute('woodGrain')).toBe(false)
     const material = new MeshBasicMaterial
     try {
       const top = new Mesh(bench.top, material)

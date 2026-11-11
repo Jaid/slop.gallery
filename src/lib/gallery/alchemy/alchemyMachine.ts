@@ -16,27 +16,27 @@ export const physicsSteps = {
 const gravity = -9.81
 
 /**
- * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: a long top of planks with eased edges over aprons on square legs, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
+ * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: a long slab of hammered brass with eased edges on a frame of blackened iron, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
  * All values are in meters; its middle and its top’s height are in the world’s frame, everything else measured on the bench.
  */
 export const workbench = {
-  /** the middle of its top in plan, on the room’s axis, its back a hand’s width from the wall’s face */
-  center: [forge.center[0], southWallFace - 0.05 - 0.55] as const,
+  /** the middle of its top in plan, on the room’s axis, its back a hand’s width from the wall’s face and its legs clear of the baseboard’s cap */
+  center: [forge.center[0], southWallFace - 0.06 - 0.6] as const,
   /** how long it is along the wall, east to west */
-  length: 2.8,
+  length: 3.6,
   /** how deep it is, from the wall into the room */
-  depth: 1.1,
+  depth: 1.2,
   height: 1.3,
   /** how thick its top is */
-  top: 0.045,
-  /** how far its top reaches out over the aprons */
-  overhang: 0.04,
-  /** how deep its aprons hang under the top and how thick they are */
-  apron: [0.11, 0.024],
+  top: 0.028,
+  /** how far its top reaches out over the frame */
+  overhang: 0.045,
+  /** how deep the frame hangs under the top and how thick its bars are */
+  apron: [0.07, 0.03],
   /** how thick its square legs are */
-  leg: 0.07,
-  /** how many planks its top is laid of, along its length */
-  boards: 4,
+  leg: 0.06,
+  /** how far its legs stand in from the top’s edge, past the baseboard’s cap */
+  inset: 0.16,
 } as const
 const [benchX, benchZ] = workbench.center
 /** how far the sink’s bowl turns round from upright at its rim down to the throat, in radians: it meets the throat at a fall of 25° */
@@ -54,7 +54,7 @@ export const alchemySink = (() => {
   const rim = workbench.height - workbench.top
   return {
     /** the middle of its rim, flush with the bench’s top, far enough from the east end for the cube under it to clear the legs */
-    center: [benchX + workbench.length / 2 - 0.2 - radius, workbench.height, benchZ] as Vec3,
+    center: [benchX + workbench.length / 2 - 0.3 - radius, workbench.height, benchZ] as Vec3,
     radius,
     /** the radius of the throat inside, wide enough for an orb to drop through with a little room to spare */
     throat,

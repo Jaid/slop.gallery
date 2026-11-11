@@ -1,20 +1,15 @@
-import type {GrainMapping} from '../woodGrain.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
-import {mulberry32} from 'math/random'
 import {ExtrudeGeometry, Path, Shape} from 'three/webgpu'
 
 import {mergeParts} from '../../geometry.ts'
 import {place, roundedBox} from '../lodgeInterior/place.ts'
-import {withWoodGrain} from '../woodGrain.ts'
 import {alchemySink, workbench} from './alchemyMachine.ts'
 
-/** the grain of a piece built along x, along z or standing up along y, seen from its own middle */
-const alongX: GrainMapping = (x, y, z) => [x, z + y * 0.3]
-const alongZ: GrainMapping = (x, y, z) => [z, x + y * 0.3]
-const alongY: GrainMapping = (x, y, z) => [y, x + z]
 /** how far the top’s edges are eased */
-const ease = 0.004
+const ease = 0.003
+/** how far the foot plates reach out past the legs, and how thick they are */
+const foot = [0.025, 0.012] as const
 
 /** a box a collider takes up, in the bench’s frame: where its middle lies and how large it is */
 export type WorkbenchCollider = {
@@ -23,8 +18,8 @@ export type WorkbenchCollider = {
 }
 
 /**
- * The workbench of the alchemy machine, see {@link workbench}: a top of one thick slab with eased edges and the round hole of the sink cut through its east end, over aprons round its sides and ends, on four square legs standing flush with the aprons’ faces.
- * Every piece has its own grain, see `GrainedWoodMaterial`. Its frame lines up with the world’s, its origin on the floor under the top’s middle; the `top` is a piece of its own, which its collider follows round the hole.
+ * The workbench of the alchemy machine, see {@link workbench}: a thick slab of brass with eased edges and the round hole of the sink cut through its east end, over a frame of blackened iron – bars under its sides and ends, a stretcher each way and four square legs on foot plates, set in from its edge so they stand clear of the wall’s baseboard.
+ * Its frame lines up with the world’s, its origin on the floor under the top’s middle; the `top` is a piece of its own, which its collider follows round the hole.
  */
 export default class WorkbenchGeometry {
   readonly colliders: ReadonlyArray<WorkbenchCollider>
@@ -32,18 +27,7 @@ export default class WorkbenchGeometry {
   readonly top: BufferGeometry
 
   constructor() {
-    const {apron: [apronDepth, apronThickness], depth, height, leg, length, overhang} = workbench
-    const state = mulberry32.create(4391)
-    let seed = 0
-    /** a rounded box of the size with its grain, its middle at the point */
-    const piece = (size: [number, number, number], mapping: GrainMapping, [x, y, z]: readonly [number, number, number]) => {
-      const offset = mulberry32.sample(state) * 40
-      const geometry = withWoodGrain(roundedBox(size, 0.004, 2), (px, py, pz) => {
-        const [along, across] = mapping(px, py, pz)
-        return [along + offset, across]
-      }, seed++ * 0.618034 % 1)
-      return place(geometry, x, y, z)
-    }
+    const {apron: [apronDepth, apronThickness], depth, height, inset, leg, length, overhang, top} = workbench
     const [sinkX, , sinkZ] = alchemySink.center
     const [benchX, benchZ] = workbench.center
     // In the shape’s plane, x runs east and y north, so it turns flat onto the bench by its rotation about x.
@@ -57,7 +41,7 @@ export default class WorkbenchGeometry {
     hole.absarc(sinkX - benchX, -(sinkZ - benchZ), alchemySink.radius + alchemySink.thickness, 0, Math.PI * 2, true)
     outline.holes.push(hole)
     const slab = new ExtrudeGeometry(outline, {
-      depth: workbench.top - ease * 2,
+      depth: top - ease * 2,
       bevelEnabled: true,
       bevelSegments: 2,
       bevelSize: ease,
@@ -65,28 +49,43 @@ export default class WorkbenchGeometry {
       bevelOffset: -ease,
       curveSegments: 72,
     })
-    slab.rotateX(-Math.PI / 2).translate(0, height - workbench.top + ease, 0)
-    this.top = withWoodGrain(slab, (x, y, z) => [x + 13, z + y * 0.3], 0.31)
-    const underTop = height - workbench.top
+    slab.rotateX(-Math.PI / 2).translate(0, height - top + ease, 0)
+    this.top = slab
+    const underTop = height - top
     const apronY = underTop - apronDepth / 2
+    const frameLength = length - overhang * 2
+    const frameDepth = depth - overhang * 2
     const parts: Array<BufferGeometry> = []
-    // The aprons along both sides and across both ends, their faces where the top’s overhang ends
+    // The bars under both long sides and across both ends, their faces where the top’s overhang ends
     for (const side of [-1, 1]) {
       parts.push(
-        piece([length - overhang * 2, apronDepth, apronThickness], alongX, [0, apronY, side * (depth / 2 - overhang - apronThickness / 2)]),
-        piece([apronThickness, apronDepth, depth - overhang * 2 - apronThickness * 2], alongZ, [side * (length / 2 - overhang - apronThickness / 2), apronY, 0]),
+        place(roundedBox([frameLength, apronDepth, apronThickness], 0.004, 1), 0, apronY, side * (depth / 2 - overhang - apronThickness / 2)),
+        place(roundedBox([apronThickness, apronDepth, frameDepth - apronThickness * 2], 0.004, 1), side * (length / 2 - overhang - apronThickness / 2), apronY, 0),
       )
     }
-    const legs = [-1, 1].flatMap(x => [-1, 1].map(z => [x * (length / 2 - overhang - leg / 2), z * (depth / 2 - overhang - leg / 2)] as const))
+    const legX = length / 2 - inset
+    const legZ = depth / 2 - inset
+    const legs = [-1, 1].flatMap(x => [-1, 1].map(z => [x * legX, z * legZ] as const))
+    const stretcherY = 0.16
+    // A stretcher each way between the legs, low down, tying them
+    parts.push(
+      place(roundedBox([legX * 2 - leg, 0.028, 0.028], 0.004, 1), 0, stretcherY, -legZ),
+      place(roundedBox([legX * 2 - leg, 0.028, 0.028], 0.004, 1), 0, stretcherY, legZ),
+      place(roundedBox([0.028, 0.028, legZ * 2 - leg], 0.004, 1), -legX, stretcherY, 0),
+      place(roundedBox([0.028, 0.028, legZ * 2 - leg], 0.004, 1), legX, stretcherY, 0),
+    )
+    const [footOut, footTall] = foot
     for (const [x, z] of legs) {
-      parts.push(piece([leg, underTop, leg], alongY, [x, underTop / 2, z]))
+      parts.push(
+        place(roundedBox([leg, underTop, leg], 0.004, 1), x, underTop / 2, z),
+        place(roundedBox([leg + footOut * 2, footTall, leg + footOut * 2], 0.003, 1), x, footTall / 2, z),
+      )
     }
     this.frame = mergeParts(parts)
-    this.colliders
-      = legs.map(([x, z]) => ({
-        center: [x, underTop / 2, z] as const,
-        size: [leg, underTop, leg] as const,
-      }))
+    this.colliders = legs.map(([x, z]) => ({
+      center: [x, underTop / 2, z] as const,
+      size: [leg, underTop, leg] as const,
+    }))
   }
 
   dispose() {
