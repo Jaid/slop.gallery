@@ -1,38 +1,27 @@
 import type {RoomWall} from '../base/Room.ts'
 
+import {tunnelWalls} from '#src/lib/gallery/exhibitionTunnel.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
-import lowerGallery, {tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
 import tunnelDisplays, {tunnelDisplayWindow} from '#src/lib/gallery/tunnelDisplays.ts'
 
 import {localWalls} from '../lib/walls.ts'
 
-const {tunnel} = lowerGallery
-const [originX] = roomOrigins.exhibition
-/** One of the tunnel’s side walls, rising with its floor, with the glazed window onto the display behind it. */
-const tunnelWall = (side: -1 | 1): RoomWall => ({
-  center: [tunnel.x + side * tunnel.width / 2 - originX, 0, 0],
-  rotation: side < 0 ? Math.PI / 2 : -Math.PI / 2,
-  width: tunnel.southZ - tunnel.northZ,
-  height: tunnel.height,
-  slope: side * tunnelSlope,
-  sticky: false,
-  trimStyle: 'plain',
-  holes: {
-    display: {
-      u: 0,
-      bottom: tunnelDisplayWindow.bottom,
-      height: tunnelDisplayWindow.top,
-      width: tunnelDisplayWindow.width,
-      glassThickness: tunnelDisplayWindow.glassThickness,
-      profile: 'rectangle',
-    },
-  },
-})
+const {glassThickness} = tunnelDisplayWindow
+/** The tunnel’s walls on both sides, from the Oculus to Moonfall, with the glazed window onto the display behind the stretch rising along the diagonal on either side. */
+const tunnel = tunnelWalls(Object.fromEntries(tunnelDisplays.map(display => [display.side, {
+  range: display.window,
+  bottom: tunnelDisplayWindow.bottom,
+  height: tunnelDisplayWindow.top,
+  glassThickness,
+  profile: 'rectangle' as const,
+}])))
 
 export default {
-  west: tunnelWall(-1),
-  east: tunnelWall(1),
-  // The staff stairways’ walls, from the doors at the balcony’s ends down to the displays.
+  ...localWalls('exhibition', roomOrigins.exhibition, tunnel, {
+    west: ['display'],
+    east: ['display'],
+  }),
+  // The staff stairways’ walls, from the doors in the Oculus’ south wall down to the displays.
   ...localWalls('exhibition', roomOrigins.exhibition, tunnelDisplays.flatMap(({stairway}) => stairway.walls), {
     stairs_west_display_entry: ['door'],
     stairs_east_display_entry: ['door'],

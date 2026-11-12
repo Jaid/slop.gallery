@@ -19,14 +19,12 @@ const local = ([x, y, z]: Vec3): Vec3 => [x - originX, y - originY, z - originZ]
 /** The doorways’ sills sit 2 cm under the bridges’ decks, which cover them and the bottoms of their casings. */
 const sillDrop = 0.02
 /**
- * A side wall along the ramps, whose baseboard follows them up to the turning landing, with the door at the balcony’s level onto the staff stairway down to the tunnel’s display on that side.
+ * A side wall along the ramps, whose baseboard follows them up to the turning landing.
  * The east one opens into the Bastion where the east bridge meets it, the west one into its western climb where the west bridge does.
  */
 const sideWall = (side: 'east' | 'west'): RoomWall => {
   const ramp = oculusRamps.find(value => value.side === side)!
   const wall = planWall(oculus.size, side, height, {trimStyle: 'plain'})
-  const {stairway: {door}} = tunnelDisplays.find(display => display.side === side)!
-  const doorAt = local(door)
   const passage = side === 'east' ? bastionDoorway : climbDoorway
   const doorway = local([passage.x, passage.y, passage.z])
   return {
@@ -40,13 +38,6 @@ const sideWall = (side: 'east' | 'west'): RoomWall => {
       [oculus.center[1] + depth / 2, 0],
     ].map(([z, y]): [number, number] => [(z - oculus.center[1]) * (side === 'east' ? 1 : -1), y]).toSorted((a, b) => a[0] - b[0] || (side === 'east' ? b[1] - a[1] : a[1] - b[1])),
     holes: {
-      staff_door: {
-        u: wallCoordinates(wall, doorAt),
-        width: displayStairway.doorWidth,
-        bottom: doorAt[1],
-        height: doorAt[1] + displayStairway.doorHeight,
-        profile: 'rectangle',
-      },
       bastion: {
         u: wallCoordinates(wall, doorway),
         width: passage.width,
@@ -56,6 +47,33 @@ const sideWall = (side: 'east' | 'west'): RoomWall => {
       },
     },
   }
+}
+const southWall = planWall(oculus.size, 'south', height, {trimStyle: 'plain'})
+/** A door at the balcony’s level onto the staff stairway down to the tunnel’s display on the side. */
+const staffDoor = (side: 'east' | 'west') => {
+  const {stairway: {door}} = tunnelDisplays.find(display => display.side === side)!
+  const doorAt = local(door)
+  return {
+    u: wallCoordinates(southWall, doorAt),
+    width: displayStairway.doorWidth,
+    bottom: doorAt[1],
+    height: doorAt[1] + displayStairway.doorHeight,
+    profile: 'rectangle',
+  } as const
+}
+/** The south wall, with the tunnel down to the Exhibition leaving its middle, flanked by the doors at the balcony’s level onto the staff stairways down to the displays. */
+const south: RoomWall = {
+  ...southWall,
+  holes: {
+    exhibition: {
+      u: wallCoordinates(southWall, local([tunnel.north[0], 0, tunnel.north[1]])),
+      width: tunnel.width,
+      height: tunnel.height,
+      profile: 'rectangle',
+    },
+    west_staff_door: staffDoor('west'),
+    east_staff_door: staffDoor('east'),
+  },
 }
 const platformHeight = oculusPlatform.position[1] + oculusPlatform.size[1] / 2 - oculus.floorY
 /** The apse’s round walls stand on the platform, each along one of its arcs, and reach up to the same cornice as the side walls. The barred gate and windows onto the Bastion pierce them. */
@@ -94,15 +112,5 @@ export default {
   northeast,
   east: sideWall('east'),
   west: sideWall('west'),
-  south: planWall(oculus.size, 'south', height, {
-    trimStyle: 'plain',
-    holes: {
-      exhibition: {
-        u: 0,
-        width: tunnel.width,
-        height: 3.6,
-        profile: 'rectangle',
-      },
-    },
-  }),
+  south,
 } satisfies Record<string, RoomWall>

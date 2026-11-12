@@ -1,10 +1,9 @@
 import type {PedestalLobe} from '#src/lib/gallery/DisplayPedestalGeometry.ts'
-import type {Vec3} from 'math'
 
 import {knotSign} from 'knot-materials/signs.ts'
 
-import {tunnelFloorHeight, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
-import tunnelDisplays, {tunnelDisplayWindow} from '#src/lib/gallery/tunnelDisplays.ts'
+import {tunnelSlopeHeight as tunnelFloorHeight, tunnelFrame, tunnelSlope} from '#src/lib/gallery/exhibitionTunnel.ts'
+import tunnelDisplays, {placeInWorld, tunnelDisplayWindow} from '#src/lib/gallery/tunnelDisplays.ts'
 
 /** how high the exhibits are shown over their displays’ floors: halfway up the windows, at eye level */
 export const exhibitHeight = (tunnelDisplayWindow.bottom + tunnelDisplayWindow.top) / 2
@@ -62,10 +61,14 @@ export const exhibitionPedestalLobes = [
 
 const exhibitionNumberLabel = (number: number) => `#${String(number).padStart(2, '0')}`
 
-/** where the Exhibition shows an exhibit in the museum’s meters, three in each display from its north end south, each turned a sixth of a revolution on from the one before, with its pedestal and nameplate */
+/**
+ * where the Exhibition shows an exhibit in the museum’s meters, three in each display from its north end south, each turned a sixth of a revolution on from the one before, with its pedestal and nameplate
+ *
+ * The displays run along the tunnel’s diagonal, so everything is laid out in its frame (see `tunnelFrame`), where the back walls run along z, and placed from there, turned with the frame.
+ */
 export const exhibitionSlots = tunnelDisplays.flatMap(display => {
   /** from the back wall out toward the window */
-  const direction = Math.sign(display.frontX - display.backX) as -1 | 1
+  const direction = -display.direction as -1 | 1
   return display.exhibits.map((exhibit, index) => {
     const z = exhibit.position[2]
     const signZ = z - exhibitionSidecar.shift - exhibitionSidecar.signShift
@@ -74,13 +77,15 @@ export const exhibitionSlots = tunnelDisplays.flatMap(display => {
       id: exhibit.id,
       direction,
       /** where the pedestal meets the back wall, on the floor */
-      pedestal: [display.backX, tunnelFloorHeight(z), z] as Vec3,
-      position: [display.backX + direction * exhibitOffset, tunnelFloorHeight(z) + exhibitHeight, z] as Vec3,
+      pedestal: placeInWorld([display.backX, tunnelFloorHeight(z), z]),
+      /** the turn around y of the pedestal, whose back runs along its own z, with the diagonal */
+      yaw: tunnelFrame.yaw,
+      position: placeInWorld([display.backX + direction * exhibitOffset, tunnelFloorHeight(z) + exhibitHeight, z]),
       /** the nameplate’s plaque over the sidecar, facing the window and turned by its place along it */
       sign: {
-        position: [display.backX + direction * exhibitionSidecar.signOffset, tunnelFloorHeight(z - exhibitionSidecar.shift) + exhibitionSidecar.height + knotSign.elevation, signZ] as Vec3,
-        // Facing +z at no rotation, it turns from the window by its turn back toward +z, where Moonfall lies, or on toward −z, where the Oculus lies.
-        rotation: direction * (Math.PI / 2 - signTurn),
+        position: placeInWorld([display.backX + direction * exhibitionSidecar.signOffset, tunnelFloorHeight(z - exhibitionSidecar.shift) + exhibitionSidecar.height + knotSign.elevation, signZ]),
+        // Facing the diagonal’s +z at no turn of its own, it turns from the window by its turn back toward +z, up the diagonal toward Moonfall, or on toward −z, down it toward the Oculus.
+        rotation: tunnelFrame.yaw + direction * (Math.PI / 2 - signTurn),
       },
     }
   })

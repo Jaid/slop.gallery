@@ -64,11 +64,11 @@ export const openings: ReadonlyArray<Opening> = [
   {
     // The doors from the balcony onto the staff stairways down to the displays.
     rooms: ['oculus', 'exhibition'],
-    holes: [['oculus-east', 'staff_door']],
+    holes: [['oculus-south', 'east_staff_door']],
   },
   {
     rooms: ['oculus', 'exhibition'],
-    holes: [['oculus-west', 'staff_door']],
+    holes: [['oculus-south', 'west_staff_door']],
   },
   {
     rooms: ['oculus', 'bastion'],

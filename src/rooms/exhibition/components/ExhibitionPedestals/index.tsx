@@ -8,12 +8,12 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import DisplayPedestalGeometry from '#src/lib/gallery/DisplayPedestalGeometry.ts'
-import {tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
+import {tunnelSlope} from '#src/lib/gallery/exhibitionTunnel.ts'
 import {exhibitionPedestal, exhibitionPedestalLobes, exhibitionSlots} from '#src/rooms/exhibition/exhibits.ts'
 
 type PedestalMaterials = Record<'cap' | 'reveal' | 'stone', Material>
 
-/** The Exhibition’s six half-round pedestals against their displays’ back walls, each with the lower sidecar for a nameplate merged into its north flank, waiting for their exhibits. */
+/** The Exhibition’s six half-round pedestals against their displays’ back walls along the tunnel’s diagonal, each with the lower sidecar for a nameplate merged into its north flank, waiting for their exhibits. */
 export default function ExhibitionPedestals({material}: {material: Material}) {
   const reveal = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: '#1f2628',
@@ -34,7 +34,7 @@ export default function ExhibitionPedestals({material}: {material: Material}) {
     1: usePedestalGeometry(1),
   }
   return <group name='exhibition-pedestals'>
-    {exhibitionSlots.map(slot => <Pedestal key={slot.id} geometry={pedestals[slot.direction]} materials={materials} name={`${slot.id}-pedestal`} position={slot.pedestal} />)}
+    {exhibitionSlots.map(slot => <Pedestal key={slot.id} geometry={pedestals[slot.direction]} materials={materials} name={`${slot.id}-pedestal`} position={slot.pedestal} yaw={slot.yaw} />)}
   </group>
 }
 
@@ -46,13 +46,15 @@ function usePedestalGeometry(direction: -1 | 1) {
     slope: tunnelSlope,
   }), [direction]))
 }
-function Pedestal({geometry, materials, name, position}: {
+function Pedestal({geometry, materials, name, position, yaw}: {
   geometry: DisplayPedestalGeometry
   materials: PedestalMaterials
   name: string
   position: Vec3
+  /** the turn around y of its back, which runs along its own z, with the tunnel’s diagonal */
+  yaw: number
 }) {
-  return <RigidBody colliders={false} name={name} position={position} type='fixed'>
+  return <RigidBody colliders={false} name={name} position={position} rotation={[0, yaw, 0]} type='fixed'>
     {geometry.collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
     <mesh castShadow geometry={geometry.stone} material={materials.stone} receiveShadow />
     <mesh castShadow geometry={geometry.reveal} material={materials.reveal} receiveShadow />

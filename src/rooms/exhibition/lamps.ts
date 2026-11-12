@@ -1,6 +1,7 @@
 import type {Lamp, PointLamp} from '../base/Room.ts'
 
-import lowerGallery, {tunnelCenter, tunnelFloorHeight, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
+import {frameToWorld, tunnelCenter, tunnelFloorHeight, tunnelSlope} from '#src/lib/gallery/exhibitionTunnel.ts'
+import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
 import tunnelDisplays from '#src/lib/gallery/tunnelDisplays.ts'
 
 const {tunnel} = lowerGallery
@@ -8,23 +9,31 @@ const [originX, originY, originZ] = tunnelCenter
 /** how far each light hangs under its housing, along the housing’s tilt with the tunnel’s ceiling */
 const drop = 0.35
 const tilt = -Math.atan(tunnelSlope)
-/** under the housing on the tunnel’s ceiling abreast of a row of exhibits, at `z` in world meters */
-const tunnelLamp = (z: number, lamp: Omit<PointLamp, 'position'>): PointLamp => ({
-  ...lamp,
-  position: [tunnel.x - originX, tunnelFloorHeight(z) + tunnel.height - drop * Math.cos(tilt) - originY, z - drop * Math.sin(tilt) - originZ],
-})
-const [northZ, middleZ, southZ] = tunnelDisplays[0].exhibits.map(exhibit => exhibit.position[2])
+/** where the tunnel’s lamps hang down its diagonal: abreast of the middle of both displays’ rows of exhibits, each between the west and the east one, which the displays’ different sites stagger */
+export const tunnelLampZs = tunnelDisplays[0].exhibits.map((exhibit, index) => (exhibit.position[2] + tunnelDisplays[1].exhibits[index].position[2]) / 2)
+/** under the housing on the tunnel’s ceiling over the diagonal’s center line, `z` meters down it */
+const tunnelLamp = (z: number, lamp: Omit<PointLamp, 'position'>): PointLamp => {
+  const [x, worldZ] = frameToWorld([0, z - drop * Math.sin(tilt)])
+  return {
+    ...lamp,
+    position: [x - originX, tunnelFloorHeight(z) + tunnel.height - drop * Math.cos(tilt) - originY, worldZ - originZ],
+  }
+}
+const [northZ, middleZ, southZ] = tunnelLampZs
 /** the color of the staff stairways’ lamps */
 export const stairwayTint = '#a3d2cc'
 /** where each stairway’s lamps hang under its ceilings, from the door down to the landing */
-const stairwayLamps = ['door', 'ramp', 'landing'] as const
-const stairways = Object.fromEntries(tunnelDisplays.flatMap(({side, stairway}) => stairway.lamps.map(([x, y, z], index) => [`${side}_stairway_${stairwayLamps[index]}`, {
-  position: [x - originX, y - drop - originY, z - originZ],
-  strength: 16,
-  tint: stairwayTint,
-  range: 12,
-  decay: 1,
-} satisfies Lamp])))
+const stairwayLamps = ['door', 'middle', 'landing'] as const
+const stairways = Object.fromEntries(tunnelDisplays.flatMap(({side, stairway}) => stairway.lamps.map(([x, y, z], index) => {
+  const [worldX, worldZ] = frameToWorld([x, z])
+  return [`${side}_stairway_${stairwayLamps[index]}`, {
+    position: [worldX - originX, y - drop - originY, worldZ - originZ],
+    strength: 16,
+    tint: stairwayTint,
+    range: 12,
+    decay: 1,
+  } satisfies Lamp]
+})))
 
 export default {
   // Green, blue and red, from the tunnel’s low north end up to its high south end, abreast of each row of exhibits, lighting both displays at once.

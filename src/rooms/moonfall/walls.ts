@@ -10,10 +10,11 @@ const {moonfall, tunnel} = lowerGallery
 const height = 5.5
 
 export default {
+  // The Exhibition’s tunnel up from the Oculus arrives in the middle of the north wall.
   north: planWall(moonfall.size, 'north', height, {
     holes: {
       exhibition: {
-        u: tunnel.x - moonfall.center[0],
+        u: tunnel.south[0] - moonfall.center[0],
         width: tunnel.width,
         height: 3.6,
         profile: 'rectangle',
