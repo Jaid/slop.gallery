@@ -15,7 +15,8 @@ import {climbMouth} from '../../src/lib/gallery/climb.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse from '../../src/lib/gallery/oculusApse.ts'
-import {openingArc} from '../../src/lib/placement/wallGeometry.ts'
+import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
+import {openingArc, openingTop} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls, {floorHeight, insideGallery, roomAt} from './fixtures/gallery.ts'
 import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
@@ -71,7 +72,9 @@ test('both wings and the link belong to one Bastion', () => {
   expect(route.end.y).toBe(climbMouthHollow.outletY)
   // under the elbow’s fall toward its middle and the hollow sunk into it
   expect(climbMouth.floorY - route.end.y).toBeLessThan(0.35)
-  expect(route.end.height).toBe(climbMouth.height)
+  // It stands taller there than at the landing by the step down to its floor, so its crown meets the mouth’s ceiling.
+  expect(route.end.y + route.end.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
+  expect(route.height).toBe(bastionLinkStart.height)
 })
 test('its paving falls 1 in 20 from both walls toward its middle, but levels out toward the gate, which stands on a level floor', () => {
   expect(bastionLink.crossfall?.slope).toBe(bastionLinkCrossfall)
@@ -201,6 +204,28 @@ test('it opens into the mouth’s elbow through a bare arch the size of its vaul
   expect(west.baseboardMiters).toEqual([0, 0])
   expect(wall.miters).toEqual([1, 0])
   expect(wall.baseboardMiters).toEqual([0, 0])
+})
+test('its vault rises to the gate’s arch, so no sky shows over the gate', () => {
+  const wall = wallById('bastion-climb_mouth_wall_2')
+  const hole = wall.holes!.find(({name}) => name === 'link')!
+  const crown = climbMouth.floorY + climbMouth.height
+  expect(wall.center[1] + hole.height).toBeCloseTo(crown, 9)
+  expect(route.end.y + route.end.height).toBeCloseTo(crown, 9)
+  const vault = new RouteVaultGeometry(bastionLink)
+  const material = new MeshBasicMaterial({side: DoubleSide})
+  try {
+    const shell = new Mesh(vault.shell, material)
+    // Just inside the tunnel, its vault follows the gate’s arch all across instead of falling short under it.
+    for (const offset of [-1.7, -1, -0.5, 0, 0.5, 1, 1.7]) {
+      const ray = new Raycaster(new Vector3(route.end.point[0] + offset, route.end.y + 0.3, gateZ - 0.05), new Vector3(0, 1, 0), 0, route.end.height)
+      const hit = ray.intersectObject(shell)[0]
+      expect(hit).toBeDefined()
+      expect(Math.abs(hit.point.y - (wall.center[1] + openingTop(hole, hole.u + offset)))).toBeLessThan(0.02)
+    }
+  } finally {
+    vault.dispose()
+    material.dispose()
+  }
 })
 for (const returning of [false, true]) {
   for (const sprint of [false, true]) {

@@ -20,8 +20,8 @@ const cornerRadius = 4
 const lastRadius = mouthNorthZ - bastionLinkStripZ
 /** where the tunnel ends in the mouth’s north wall: its west wall in line with the mouth’s west wall, so it runs on into the elbow */
 const endX = climbMouth.path[1][0] - climbMouth.width / 2 + bastionLinkWidth / 2
-/** the opening it ends in through the mouth’s north wall, the size of its vault */
-const linkVault = vaultOpening(bastionLinkWidth, height)
+/** the opening it ends in through the mouth’s north wall, as high over the mouth’s floor as the mouth’s own ceiling */
+const linkVault = vaultOpening(bastionLinkWidth, climbMouth.height)
 const [elbowX, footZ] = climbHairpin.route.start
 /** where the mouth’s elbow ends in the west and in the east, along its west wall’s center line and straight across from the corner of its walls inside the turn, where it opens onto the straight run on toward the doorway */
 const [elbowWestX, elbowEastX] = [elbowX - climbMouth.width / 2, elbowX + climbMouth.width / 2]
@@ -65,12 +65,15 @@ export const climbMouthHollow = new FloorHollow(climbMouth.floorY, {
   },
   sag: elbowSag,
 })
+/** How tall the tunnel stands over its floor at the gate: its floor there lies a step under the mouth’s, so it stands that much taller than at the landing, and its crown meets the mouth’s ceiling instead of leaving a gap over the gate that shows the sky. Its height grows along the whole climb, like its floor. */
+const gateHeight = climbMouth.floorY + climbMouth.height - climbMouthHollow.outletY
 /**
  * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow, easing up from the platform’s level all the way to a step under the hollow in front of it.
  */
 const route = new PassageRoute([startX, startZ], heading, y, height, [
   {
     y: climbMouthHollow.outletY,
+    height: gateHeight,
     steps: [
       {length: bastionLinkStripZ - cornerRadius - startZ},
       {
@@ -91,6 +94,8 @@ const route = new PassageRoute([startX, startZ], heading, y, height, [
 export const bastionLinkCrossfall = 1 / 20
 const lodgeSpurAlong = route.project(lodgeSpurX, bastionLinkStripZ)!.along
 const lodgeSpurFloorY = route.at(lodgeSpurAlong).y
+/** how tall the tunnel stands where the spur leaves it, which the spur’s own vault starts at too, so their crowns meet over the spur’s doorway */
+const lodgeSpurLinkHeight = route.at(lodgeSpurAlong).height
 const lodgeSpurStartZ = bastionLinkStripZ - bastionLinkWidth / 2
 /** Its paving falls toward its middle, but for its last stretch to the gate, where it eases out to stand on a level floor; at the landing, it meets the landing’s floor on a sill along the doorway, a hand’s breadth over its middle. */
 export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLinkWidth, {
@@ -99,7 +104,7 @@ export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLi
     easeOut: 1.5,
   },
   openings: [{
-    ...vaultOpening(lodgeSpurWidth, height),
+    ...vaultOpening(lodgeSpurWidth, lodgeSpurLinkHeight),
     name: 'lodge_spur',
     along: lodgeSpurAlong,
     side: 1,
@@ -107,7 +112,7 @@ export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLi
   }],
 })
 /** Straight north past the Lodge’s side window, on to the existing passage toward the Lodge, where its closing wall stands back to back with that passage’s left wall. */
-const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, lodgeSpurFloorY, height, [{
+const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, lodgeSpurFloorY, lodgeSpurLinkHeight, [{
   y: lodge.floorY,
   height: lodgeSpurHeight,
   steps: [{length: 2}],
