@@ -106,8 +106,8 @@ describe('floor-following wall baseboards', () => {
           expect(topRay.intersectObjects(meshes)[0].point.y).toBeCloseTo(floor + defaultBaseboardHeight, 5)
         }
         const volume = geometry.trim.reduce((sum, part) => sum + computeMeshVolume(part), 0)
-        // Besides the baseboard, the trim only cases the door at the balcony’s level, down to the sill buried in the balcony, and the arched doorway at the bridge’s end, into the Bastion’s mouth on the east and into its western climb on the west.
-        expect(wall.holes!.map(hole => hole.name)).toEqual(['staff_door', 'bastion'])
+        // Besides the baseboard, the trim only cases the arched doorway at the bridge’s end, into the Bastion’s mouth on the east and into its western climb on the west; the staff doors open in the south wall.
+        expect(wall.holes!.map(hole => hole.name)).toEqual(['bastion'])
         const casing = wall.holes!.reduce((sum, hole) => sum + casingArea(hole), 0) * (0.25 - wallFace)
         expect(volume).toBeCloseTo(wall.width * (lowerBandHeight * (0.2 - wallFace) + baseboardCapHeight * (0.25 - wallFace)) + casing, 4)
       } finally {

@@ -54,7 +54,7 @@ describe('Moonfall impact hall', () => {
     expect(room.size).toEqual([28, 28])
     const north = walls.find(wall => wall.id === 'moonfall-north')!
     const east = walls.find(wall => wall.id === 'moonfall-east')!
-    expect(wallPosition(north, north.holes![0].u, room.floorY, 0)).toEqual([lowerGallery.tunnel.x, room.floorY, lowerGallery.tunnel.southZ])
+    expect(wallPosition(north, north.holes![0].u, room.floorY, 0)).toEqual([lowerGallery.tunnel.south[0], room.floorY, lowerGallery.tunnel.south[1]])
     const portal = wallPosition(east, east.holes![0].u, room.floorY, 0)
     expect(portal[0]).toBe(staircase.endX)
     expect(portal[2]).toBeCloseTo(staircase.returnZ)

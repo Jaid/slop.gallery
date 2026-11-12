@@ -53,12 +53,13 @@ test('the Lodge’s window niche belongs to the Lodge, out to the glass in the C
   }
   expect(slopGallery.roomAt([lodgeWindow.tunnelX - 0.3, sill, lodgeWindow.z])?.id).toBe('corridor')
 })
-test('the balcony’s middle stays the Oculus’, the staff stairways behind the doors at its ends are the Exhibition’s', () => {
-  const {door} = tunnelDisplays[0].stairway
-  const over = door[1] + 1.6
-  expect(slopGallery.roomAt([0, over, door[2]])?.id).toBe('oculus')
-  for (const side of [-1, 1]) {
-    expect(slopGallery.roomAt([side * (Math.abs(door[0]) - 0.5), over, door[2]])?.id).toBe('oculus')
-    expect(slopGallery.roomAt([side * (Math.abs(door[0]) + 0.5), over, door[2]])?.id).toBe('exhibition')
+test('the balcony stays the Oculus’ up to its south wall, the staff stairways behind the doors in it are the Exhibition’s', () => {
+  for (const {stairway: {door}} of tunnelDisplays) {
+    const over = door[1] + 1.6
+    for (const x of [door[0] - 0.6, door[0], door[0] + 0.6]) {
+      expect(slopGallery.roomAt([x, over, door[2] - 0.2])?.id).toBe('oculus')
+      expect(slopGallery.roomAt([x, over, door[2] + 0.4])?.id).toBe('exhibition')
+    }
   }
+  expect(slopGallery.roomAt([0, tunnelDisplays[0].stairway.door[1] + 1.6, tunnelDisplays[0].stairway.door[2] - 1])?.id).toBe('oculus')
 })

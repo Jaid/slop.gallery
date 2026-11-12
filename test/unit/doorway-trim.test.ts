@@ -10,7 +10,7 @@ import walls from './fixtures/gallery.ts'
 await RAPIER.init()
 const lowerBandHeight = defaultBaseboardHeight - baseboardCapHeight
 describe('plain doorway trim', () => {
-  test('both Oculus jambs meet the baseboard cap without protruding plinths or doubled surfaces', () => {
+  test('both jambs of the Oculus’ tunnel meet the baseboard cap without protruding plinths or doubled surfaces', () => {
     const wall = walls.find(value => value.id === 'oculus-south')!
     expect(wall.trimStyle).toBe('plain')
     const geometry = createArchitectureGeometry(wall)
@@ -27,7 +27,11 @@ describe('plain doorway trim', () => {
       }
       world.step()
       expect(geometry.trim[0].boundingBox!.max.z).toBeCloseTo(0.25, 6)
-      for (const hole of wall.holes!) {
+      // The staff doors open at the balcony’s level, high over the baseboard.
+      const [tunnel, ...doors] = wall.holes!
+      expect(tunnel.name).toBe('exhibition')
+      expect(doors.every(door => door.bottom! > 6)).toBe(true)
+      for (const hole of [tunnel]) {
         for (const side of [-1, 1]) {
           for (const offset of [0.04, wallOpeningTrim - 0.001, wallOpeningTrim + 0.001, 0.21, 0.3]) {
             for (const y of [0.02, 0.2, 0.209, 0.211, 0.239, 0.241, 0.249, 0.251, 1.2, 3]) {

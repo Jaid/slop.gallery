@@ -344,7 +344,7 @@ describe('cylindrical Oculus platform', () => {
     }
   }
   test('the tower leaves tunnel clearance and headroom below the glass', () => {
-    expect(tower.z + tower.radius).toBeLessThan(lowerGallery.tunnel.northZ - 3.5)
+    expect(tower.z + tower.radius).toBeLessThan(lowerGallery.tunnel.north[1] - 3.5)
     expect(tower.floorY + tower.height + 1.8).toBeLessThan(-0.12)
     expect(floorHeight([tower.x, tower.floorY + tower.height + 1.6, tower.z])).toBe(-4.5)
     expect(floorHeight([tower.x, 1.6, tower.z])).toBe(0)
