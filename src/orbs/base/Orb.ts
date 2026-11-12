@@ -1,19 +1,20 @@
 import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {IngredientContribution, ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type {MoodId} from '#src/moods/index.ts'
-import type {PartyEffectId} from '#src/party_effects/index.ts'
+import type {PartyEffectChoice, PartyEffectId} from '#src/party_effects/index.ts'
 import type OrbGlassMaterial from './OrbGlassMaterial.ts'
 import type {OrbGlassOptions} from './OrbGlassMaterial.ts'
 
 import {pickFrame} from '#src/frames/lib/frameChoice.ts'
+import {pickEffect} from '#src/party_effects/lib/effectChoice.ts'
 
 /**
  * A kind of orb: a glass ball, which is an ingredient of the fusion of a portrait it is thrown into, contributing whatever it contributes instead of a studio photograph of itself, and which a success uses up.
  * Its prop is `prop-orb-<id>`, and it lives in a folder of its own.
  */
 export default abstract class Orb {
-  /** the id of the party effect the orb contributes to the portal of its fusion, if any */
-  readonly effect?: PartyEffectId
+  /** the party effect the orb contributes to the portal of its fusion and lets burst out of the alchemy machine’s cannon, or several, of which every game picks one, if any */
+  readonly effect?: PartyEffectChoice
   /** the frame the orb contributes to a fusion, or several, of which every game picks one; without one, the room the result arrives in frames it */
   readonly frame?: FrameChoice
   abstract readonly id: string
@@ -39,15 +40,21 @@ export default abstract class Orb {
         frame: pickFrame(seed, this.frame),
       })
     }
-    if (this.effect) {
+    const effect = this.partyEffect(seed)
+    if (effect) {
       contributions.push({
         kind: 'effect',
-        effect: this.effect,
+        effect,
       })
     }
     return {
       contributions,
       latch: 'glass',
     }
+  }
+
+  /** The party effect the orb brings in the game of `seed`, if any. */
+  partyEffect(seed: number): PartyEffectId | undefined {
+    return this.effect && pickEffect(seed, this.effect)
   }
 }

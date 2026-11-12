@@ -340,8 +340,8 @@ describe('the alchemy machine’s cannon going off', () => {
       expect(fx.swell.size.value).toBe(0)
       // A new Halloween Orb’s bats wait hidden in the cannon; a Transparent Orb brings no effect.
       const halloween = `${halloweenOrb.propId}-alchemy-1`
-      fx.prepare(halloween, halloweenOrb.effect)
-      fx.prepare(transparentOrb.propId, transparentOrb.effect)
+      fx.prepare(halloween, halloweenOrb.partyEffect(1))
+      fx.prepare(transparentOrb.propId, transparentOrb.partyEffect(1))
       expect(fx.root.children).toHaveLength(2)
       const [bats] = fx.root.children.filter(child => child !== fx.blast) as Array<CannonFx['blast']>
       expect(bats.uniforms.clock.value).toBeLessThan(0)

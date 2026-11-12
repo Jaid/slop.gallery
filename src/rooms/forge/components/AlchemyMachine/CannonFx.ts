@@ -45,7 +45,7 @@ type Burst = {
 }
 
 /**
- * How the alchemy machine’s cannon goes off, like in a cartoon: it gathers itself, squashing, while a swell runs up its barrel, then stretches as it fires, kicks back and wobbles home, with a bang of smoke and sparks out of its muzzle. When the machine gave the orb a new flavor, the new orb’s party effect bursts out of the muzzle with it, the Halloween Orb’s bats, the Horror Orb’s blood, the Spook Orb’s ghosts or the Paint Orb’s brush strokes.
+ * How the alchemy machine’s cannon goes off, like in a cartoon: it gathers itself, squashing, while a swell runs up its barrel, then stretches as it fires, kicks back and wobbles home, with a bang of smoke and sparks out of its muzzle. When the machine gave the orb a new flavor, the new orb’s party effect bursts out of the muzzle with it, the Halloween Orb’s bats, the Horror Orb’s blood, staring eyes or flesh tendrils, whichever the game rolled, the Spook Orb’s ghosts or the Paint Orb’s brush strokes.
  * Every effect waits hidden from when the machine takes in the orb, so it compiles while the machine works on it.
  */
 export default class CannonFx {

@@ -730,7 +730,8 @@ const main = async (options: RenderFusionOptions) => {
   }
   const ingredient = resolveIngredient(options.ingredient)
   /** what the fusion’s portal shows as the result flips out, which --emphasis party keeps in view */
-  const effect = ingredient.orb?.effect && partyEffects[ingredient.orb.effect]
+  const rolled = ingredient.orb?.partyEffect(seed)
+  const effect = rolled && partyEffects[rolled]
   // The room opens its world, like the Sandbox for its Cell, the gallery for any other.
   const worldId = readWorld(`?${new URLSearchParams({room: text('room') ?? ''})}`)
   const {default: world} = await worldModules[worldId]()

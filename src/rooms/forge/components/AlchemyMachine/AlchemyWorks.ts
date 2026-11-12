@@ -14,6 +14,7 @@ import {bodyPose, playSound, useGallery} from '#src/lib/gallery.ts'
 import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, inSinkThroat, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {orbAround, transmutedOrb} from '#src/lib/gallery/alchemy/flavor.ts'
 import {orbSeat} from '#src/lib/gallery/OrbHolderGeometry.ts'
+import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import {orbRadius, transparentOrb} from '#src/orbs/index.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
@@ -189,7 +190,7 @@ export default class AlchemyWorks {
       'orb.changed': output !== orb,
     }, output === orb ? `Alchemy kept ${orb.title} unchanged` : `Alchemy turned ${orb.title} into ${output.title}`)
     if (product !== id) {
-      this.fx.prepare(product, output.effect)
+      this.fx.prepare(product, output.partyEffect(environmentSeed))
       this.add({
         id: product,
         orb: output,

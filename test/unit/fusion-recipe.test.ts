@@ -6,6 +6,7 @@ import {describe, expect, test} from 'bun:test'
 import {pickFrame} from '../../src/frames/lib/frameChoice.ts'
 import FusionRecipe, {fusionInstruction, itemIngredient, maximumIngredients, minimumIngredients, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
 import {promptOrbs, transparentOrb} from '../../src/orbs/index.ts'
+import {pickEffect} from '../../src/party_effects/lib/effectChoice.ts'
 
 const png = Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMAAABIeJ9nAAAAA1BMVEX/AAAZ4gk3AAAADElEQVQI12NgYGAAAAAEAAEnNCcKAAAAAElFTkSuQmCC')
 const image = new Blob([png], {type: 'image/png'})
@@ -171,7 +172,7 @@ describe('fusion recipe', () => {
           ...orb.effect ? [
             {
               kind: 'effect' as const,
-              effect: orb.effect,
+              effect: pickEffect(7, orb.effect),
             },
           ] : [],
         ],

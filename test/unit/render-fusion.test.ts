@@ -12,7 +12,9 @@ import fs from 'fs-extra'
 import {keyedShot, throughKeys} from '../../scripts/lib/fusionCamera.ts'
 import {partyShot} from '../../scripts/lib/fusionEmphasis.ts'
 import renderFusion, {findLanding, orbitDistance, partyLength, resultView, throwMotion} from '../../scripts/renderFusion.ts'
+import {horrorOrb} from '../../src/orbs/index.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
+import {pickEffect} from '../../src/party_effects/lib/effectChoice.ts'
 import gallery from '../../src/worlds/gallery/index.ts'
 
 const work = (patch: Partial<PortraitDump>): PortraitDump => ({
@@ -270,13 +272,14 @@ test('every emphasis ends the same camera path, which holds where it stepped asi
     }
     const {neutral, party} = plans
     expect(neutral.timeline.end).toBe(20)
-    // The Horror Orb’s blood has drained away 6.4 s after the result flipped out.
+    // The Horror Orb brings the effect seed 1 rolled for it.
+    const {duration} = partyEffects[pickEffect(1, horrorOrb.effect)]
     expect(party.timeline).toEqual({
       ...neutral.timeline,
-      end: Math.ceil((neutral.timeline.emergence + bloodEffect.duration + 1) * 60 - 1e-6) / 60,
+      end: Math.ceil((neutral.timeline.emergence + duration + 1) * 60 - 1e-6) / 60,
     })
-    expect(party.timeline.end - party.timeline.emergence - bloodEffect.duration).toBeGreaterThanOrEqual(1 - 1e-6)
-    expect(party.timeline.end - party.timeline.emergence - bloodEffect.duration).toBeLessThan(1 + 1 / 60)
+    expect(party.timeline.end - party.timeline.emergence - duration).toBeGreaterThanOrEqual(1 - 1e-6)
+    expect(party.timeline.end - party.timeline.emergence - duration).toBeLessThan(1 + 1 / 60)
     expect(party.frames).toHaveLength(Math.round(party.timeline.end * 60) + 1)
     expect((party.closing as PartyClosing).lasts).toBeCloseTo(party.timeline.end - party.timeline.emergence, 9)
     // The path’s keys are the same up to its last two, which follow the film to its end, where it still holds.

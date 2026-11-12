@@ -4,7 +4,7 @@ import PromptOrb from '../base/PromptOrb.ts'
 import EyeOrbMaterial from './EyeOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
-/** A bloodshot eye bleeding into its liquid. It corrupts a work into something disturbing, and the portal spurts blood as the result flips out. */
+/** A bloodshot eye bleeding into its liquid. It corrupts a work into something disturbing, and as the result flips out, the portal spurts blood, eyes like its own open round it to stare or fleshy tendrils lash out of it, whichever the game rolled. */
 export default class HorrorOrb extends PromptOrb {
   readonly adjectives = [
     // unease
@@ -32,7 +32,7 @@ export default class HorrorOrb extends PromptOrb {
   ]
   readonly change = 'provide traits that make it'
   readonly color = '#a8060f'
-  override readonly effect = 'blood'
+  override readonly effect = ['blood', 'eyes', 'tendrils'] as const
   readonly frame = ['flesh', 'bleeding', 'butcher', 'infested', 'maw', 'coffin'] as const
   readonly id = 'horror'
   readonly mood = 'horror'

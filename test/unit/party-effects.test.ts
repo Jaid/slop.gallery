@@ -17,6 +17,7 @@ import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bl
 import {shutting, staring, staringEyes} from '../../src/party_effects/eyes/flights.ts'
 import {escapingGhosts, ghostOffset} from '../../src/party_effects/ghosts/flights.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
+import {choiceEffects, pickEffect} from '../../src/party_effects/lib/effectChoice.ts'
 import {endParty, startParty, useParties} from '../../src/party_effects/lib/parties.ts'
 import {offsetPosition, partySite} from '../../src/party_effects/lib/partySite.ts'
 import {brushStrokes, strokeDrying, strokePoint} from '../../src/party_effects/strokes/flights.ts'
@@ -107,29 +108,38 @@ describe('party effects', () => {
     expect(show.over(ghostsEffect.duration + 0.01)).toBe(true)
     show.dispose()
   })
-  test('every themed orb names a party effect of its own, which it contributes to its fusion, and every party effect goes by its id', () => {
+  test('every themed orb names party effects of its own, of which it contributes the one its game rolled to its fusion, and every party effect goes by its id', () => {
     expect(halloweenOrb.effect).toBe('bats')
-    expect(horrorOrb.effect).toBe('blood')
+    expect(horrorOrb.effect).toEqual(['blood', 'eyes', 'tendrils'])
     expect(spookOrb.effect).toBe('ghosts')
     expect(paintOrb.effect).toBe('strokes')
     expect(transparentOrb.effect).toBeUndefined()
-    for (const orb of promptOrbs) {
-      const contributed = orb.ingredient(3).contributions.filter(contribution => contribution.kind === 'effect')
-      expect(contributed).toEqual([{
-        kind: 'effect',
-        effect: orb.effect,
-      }])
+    expect(transparentOrb.partyEffect(3)).toBeUndefined()
+    for (const seed of [0, 3, 4, 977, 0xFF_FF_FF_FF]) {
+      for (const orb of promptOrbs) {
+        const effect = pickEffect(seed, orb.effect)
+        expect(choiceEffects(orb.effect)).toContain(effect)
+        expect(orb.partyEffect(seed)).toBe(effect)
+        const contributed = orb.ingredient(seed).contributions.filter(contribution => contribution.kind === 'effect')
+        expect(contributed).toEqual([{
+          kind: 'effect',
+          effect,
+        }])
+      }
     }
     for (const [id, effect] of Object.entries<PartyEffect>(partyEffects)) {
       expect(effect.id).toBe(id)
       expect(effect.title).toBeTruthy()
     }
-    // No two orbs share one; the staring eyes and the flesh tendrils only play where they are spawned.
-    const brought = promptOrbs.map<string | undefined>(orb => orb.effect)
+    // No two orbs share one, and none is left without an orb to bring it.
+    const brought: Array<string> = promptOrbs.flatMap(orb => choiceEffects(orb.effect))
     expect([...new Set(brought)]).toEqual(brought)
-    expect(brought.every(id => id !== undefined && Object.hasOwn(partyEffects, id))).toBe(true)
-    expect(brought).not.toContain('eyes')
-    expect(brought).not.toContain('tendrils')
+    expect(brought.toSorted()).toEqual(Object.keys(partyEffects).toSorted())
+  })
+  test('the Horror Orb’s game rolls its blood, its staring eyes or its flesh tendrils by its seed, each in some games', () => {
+    const rolled = Array.from({length: 64}, (_, seed) => pickEffect(seed, horrorOrb.effect))
+    expect(new Set(rolled)).toEqual(new Set(['blood', 'eyes', 'tendrils']))
+    expect(pickEffect(4, 'ghosts')).toBe('ghosts')
   })
   test('every effect’s sprites stand at their site’s center, know its floor and the way it faces and show nothing until they burst out, wherever the site is', () => {
     const sites: Array<PartySite> = [frame, partySite({
