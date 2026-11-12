@@ -5,6 +5,11 @@ import {BufferGeometry, Float32BufferAttribute, Vector3} from 'three/webgpu'
 export type ProfilePoint = readonly [number, number]
 
 export type RevolvedProfileOptions = {
+  /**
+   * Which way a segment faces, as [outward, up], when the default — the left of the direction of travel — is wrong for it.
+   * A wall that rises straight up has no outward component, so the default cannot tell its outside from its inside.
+   */
+  front?: (segment: number) => readonly [number, number]
   /** Polygon sides; a turn sharper than `smoothAngle` between neighboring sides becomes a hard, carved arris. */
   sides: number
   /** Creases below this angle, along the profile or around a corner, are shaded smooth (radians). */
@@ -23,7 +28,7 @@ const defaultSmoothAngle = 40 * Math.PI / 180
 export default class RevolvedProfileGeometry extends BufferGeometry {
   override readonly type = 'RevolvedProfileGeometry'
 
-  constructor(profile: ReadonlyArray<ProfilePoint>, {sides, smoothAngle = defaultSmoothAngle, uv}: RevolvedProfileOptions) {
+  constructor(profile: ReadonlyArray<ProfilePoint>, {sides, smoothAngle = defaultSmoothAngle, uv, front}: RevolvedProfileOptions) {
     super()
     if (!Number.isInteger(sides) || sides < 3) {
       throw new RangeError('A revolved profile needs at least three sides.')
@@ -89,6 +94,7 @@ export default class RevolvedProfileGeometry extends BufferGeometry {
         } else if (profile[j + 1][0] === 0) {
           triangles = [[0, 1, 2]]
         }
+        const outsideOf = front?.(j) ?? own
         for (const triangle of triangles) {
           const [p, q, r] = triangle.map(index => {
             const [point, angle] = quad[index]
@@ -99,7 +105,7 @@ export default class RevolvedProfileGeometry extends BufferGeometry {
           b.subVectors(r, p)
           c.crossVectors(a, b)
           // Wind every face so that its front matches the profile’s outside.
-          const outside = c.x * Math.cos(facing) * own[0] + c.y * own[1] - c.z * Math.sin(facing) * own[0]
+          const outside = c.x * Math.cos(facing) * outsideOf[0] + c.y * outsideOf[1] - c.z * Math.sin(facing) * outsideOf[0]
           for (const index of outside >= 0 ? triangle : triangle.toReversed()) {
             const [point, angle, around, normal] = quad[index]
             push(point, angle, around, normal, facing)

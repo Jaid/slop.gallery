@@ -4,6 +4,7 @@ import RAPIER from '@dimforge/rapier3d-compat'
 
 import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
 import OrbHolderGeometry, {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
+import {triangleCount} from '../../src/lib/geometry.ts'
 import {orbRadius} from '../../src/orbs/index.ts'
 
 await RAPIER.init()
@@ -48,6 +49,7 @@ describe('the orb holder', () => {
       expect(max.x).toBeCloseTo(-min.x, 6)
       expect(max.y).toBeLessThan(orbSeat)
       expect(orbSeat - orbRadius).toBeGreaterThan(0.07)
+      expect(triangleCount(geometry.metal)).toBeLessThan(4096)
     } finally {
       geometry.dispose()
     }

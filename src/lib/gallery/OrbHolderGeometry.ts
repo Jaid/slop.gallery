@@ -1,33 +1,32 @@
 import type {BufferGeometry} from 'three/webgpu'
 
-import {ParametricGeometry} from 'three/addons/geometries/ParametricGeometry.js'
-import {toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js'
-import {ExtrudeGeometry, LatheGeometry, Shape, SphereGeometry, TorusGeometry, Vector2} from 'three/webgpu'
+import {BufferGeometry as BareGeometry, Float32BufferAttribute, LatheGeometry, SphereGeometry, TorusGeometry, Uint32BufferAttribute, Vector2, Vector3} from 'three/webgpu'
 
 import {orbRadius} from '#src/orbs/index.ts'
 
 import {mergeParts} from '../geometry.ts'
+import LobedProfileGeometry from './LobedProfileGeometry.ts'
+import RevolvedProfileGeometry from './RevolvedProfileGeometry.ts'
 
-/** a point in a plane: of a turned outline, its radius and height, or of a flat one, across and up */
-type Point = readonly [x: number, y: number]
+/** a point of a turned outline: its radius and its height */
+type Point = readonly [number, number]
 
 /** the beaded band the cup stands on, raised over the cap on the feet: its underside, the beads along its bottom and top edges and the plain frieze between them */
 const band = {
   bottom: 0.034,
   beadRadius: 0.005,
   beadCenter: 0.114,
-  frieze: 0.112,
+  frieze: 0.107,
   top: 0.064,
 }
 /** the gadrooned cup on the band, from its foot up to under the lip, bulging out between */
 const cup = {
-  foot: [0.094, 0.068],
-  top: [0.112, 0.119],
-  bulge: 0.016,
-  lobes: 16,
-  /** how deep the creases between the lobes cut in, as a share of the cup’s radius where they are deepest */
-  crease: 0.075,
-} as const
+  foot: [0.094, 0.068] satisfies Point,
+  top: [0.108, 0.119] satisfies Point,
+  lobes: 12,
+  /** how far a lobe swells past the cup’s mean radius where the gadrooning is strongest */
+  swell: 0.009,
+}
 /** the rolled lip round the cup’s mouth, which the orb rests on */
 const lip = {
   radius: 0.108,
@@ -37,165 +36,223 @@ const lip = {
 /** the scrolled feet under the band, evenly round it, one of them pointing to the front, along +z */
 const feet = {
   count: 3,
-  /** how thick a foot’s bracket is across, apart from its rounded edges */
-  depth: 0.014,
-  bevel: 0.003,
+  /** how thick a foot’s bracket is across */
+  depth: 0.016,
+  /** how thick a foot’s bracket is through, edge to edge */
+  thickness: 0.013,
 }
-const segments = 96
+/** sides of everything turned, enough for the beads to read round and shared with the lip so their rings line up */
+const sides = 40
 
 /** how high the middle of an orb resting on the lip stands over the holder’s foot, where its ball touches the lip’s roll all round */
 export const orbSeat = lip.y + Math.sqrt((orbRadius + lip.tube) ** 2 - lip.radius ** 2)
 
-const semicircle = ([radius, y]: Point, size: number, from: number, to: number, steps = 8): Array<Vector2> => Array.from({length: steps + 1}, (_, index) => {
+/** points round a quarter or half circle round `[radius, y]`, from angle `from` to `to` */
+const arc = ([radius, y]: Point, size: number, from: number, to: number, steps: number): Array<Point> => Array.from({length: steps + 1}, (_, index) => {
   const angle = from + (to - from) * index / steps
-  return new Vector2(radius + Math.cos(angle) * size, y + Math.sin(angle) * size)
+  return [radius + Math.cos(angle) * size, y + Math.sin(angle) * size] as const
 })
-/** the cup’s outline before it is gadrooned, `t` from its foot up to under the lip: swelling out below its middle and drawing in again toward the lip */
-const cupRadius = (t: number) => cup.foot[0] + (cup.top[0] - cup.foot[0]) * t + cup.bulge * Math.sin(Math.PI * t ** 0.75)
-const cupY = (t: number) => cup.foot[1] + (cup.top[1] - cup.foot[1]) * t
-/** where the orb’s ball meets nothing but the lip: the hollow inside the cup, from under the lip down to the middle */
-const bowl: Array<Point> = [
-  [lip.radius - lip.tube, lip.y],
-  [0.098, 0.112],
-  [0.085, 0.095],
-  [0.06, 0.08],
-  [0.03, 0.074],
-  [0, 0.073],
-]
 /** The band’s turned outline, from the middle of its underside out and up round its beads to the cup’s foot. */
-function bandProfile() {
+function bandProfile(): Array<Point> {
   return [
-    new Vector2(0, band.bottom),
-    new Vector2(band.beadCenter, band.bottom),
-    ...semicircle([band.beadCenter, band.bottom + band.beadRadius], band.beadRadius, -Math.PI / 2, Math.PI / 2).slice(1),
-    new Vector2(band.frieze, band.bottom + band.beadRadius * 2),
-    new Vector2(band.frieze, band.top - band.beadRadius * 2),
-    ...semicircle([band.beadCenter, band.top - band.beadRadius], band.beadRadius, -Math.PI / 2, Math.PI / 2),
-    new Vector2(0.1, band.top),
-    new Vector2(cup.foot[0], cup.foot[1]),
+    [0, band.bottom],
+    [band.beadCenter - band.beadRadius, band.bottom],
+    ...arc([band.beadCenter, band.bottom + band.beadRadius], band.beadRadius, -Math.PI / 2, Math.PI / 2, 4).slice(1),
+    [band.frieze, band.bottom + band.beadRadius * 2],
+    [band.frieze, band.top - band.beadRadius * 2],
+    ...arc([band.beadCenter, band.top - band.beadRadius], band.beadRadius, -Math.PI / 2, Math.PI / 2, 4),
+    [0.1, band.top],
+    cup.foot,
   ]
 }
-/** The cup’s outer wall, gadrooned into lobes that swell out between sharp creases, smooth again at its foot and under the lip. */
+/** where the orb’s ball meets nothing but the lip: the hollow inside the cup, from its middle up to under the lip */
+const bowl: Array<Point> = [
+  [0, 0.078],
+  [0.045, 0.082],
+  [0.078, 0.096],
+  [0.096, 0.112],
+  [lip.radius - lip.tube, lip.y],
+]
+/** a bar’s section at one point of its curve: how far it reaches across z and through, edge to edge */
+type BarSection = readonly [depth: number, thickness: number]
+/** The cup’s outer wall, facing out: the lobed sweep runs up the profile, which leaves it facing in. */
 function cupWall() {
-  const wall = new ParametricGeometry((u, v, target) => {
-    const angle = u * Math.PI * 2
-    // 1 in the middle of a lobe, falling sharply into the crease between two.
-    const lobe = Math.abs(Math.cos(angle * cup.lobes / 2)) ** 0.5
-    const radius = cupRadius(v) * (1 - cup.crease * Math.sin(Math.PI * v) ** 0.6 * (1 - lobe))
-    // Turning the same way as a lathe, so the wall faces out.
-    target.set(Math.sin(angle) * radius, cupY(v), Math.cos(angle) * radius)
-  }, cup.lobes * 12, 16)
-  // Smoothed in centimeters, as the normal utility welds positions closer than 0.01 units; the creases stay sharp.
-  const smooth = toCreasedNormals(wall.scale(100, 100, 100), Math.PI / 5).scale(0.01, 0.01, 0.01)
-  wall.dispose()
-  return smooth
-}
-/** An acanthus leaf’s outline, `width` across its foot and `height` up to its tip, its edges lobed three times on either side. */
-function leafShape(width: number, height: number) {
-  const half = width / 2
-  // Up the right edge from the foot to the tip as curves bulging out between their ends, three lobes, each narrower and higher than the one below.
-  const right: Array<{
-    control: readonly [number, number]
-    end: readonly [number, number]
-  }> = []
-  let start: Point = [half * 0.55, 0]
-  for (const [reach, rise] of [[1, 0.3], [0.78, 0.58], [0.48, 0.82]] as const) {
-    const end = [half * reach * 0.55, height * rise] as const
-    right.push({
-      control: [half * reach * 1.15, (start[1] + end[1]) / 2],
-      end,
-    })
-    start = end
-  }
-  right.push({
-    control: [half * 0.2, height * 0.95],
-    end: [0, height],
+  const wall = new LobedProfileGeometry(cupProfile(), {
+    lobes: cup.lobes,
+    segmentsPerLobe: 3,
+    phase: Math.PI / cup.lobes,
   })
-  const shape = new Shape
-  shape.moveTo(-half * 0.55, 0)
-  shape.lineTo(half * 0.55, 0)
-  for (const {control, end} of right) {
-    shape.quadraticCurveTo(...control, ...end)
+  const index = wall.index!
+  for (let corner = 0; corner < index.count; corner += 3) {
+    const swap = index.getX(corner + 1)
+    index.setX(corner + 1, index.getX(corner + 2))
+    index.setX(corner + 2, swap)
   }
-  // Down the left edge, the right one mirrored: each curve back to where its mirror image started.
-  for (const [index, {control}] of right.entries().toArray().toReversed()) {
-    const [x, y] = index ? right[index - 1].end : [half * 0.55, 0]
-    shape.quadraticCurveTo(-control[0], control[1], -x, y)
+  wall.computeVertexNormals()
+  return wall
+}
+function cupProfile() {
+  const rows = [
+    [0.094, 0.068, 0],
+    [0.1, 0.076, 0.3],
+    [0.107, 0.085, 0.72],
+    [0.112, 0.095, 1],
+    [0.113, 0.104, 0.85],
+    [0.111, 0.112, 0.4],
+    [0.108, 0.119, 0],
+  ] as const
+  return rows.map(([radius, y, lobe]) => [radius, y, cup.swell * lobe, 0] as const)
+}
+/** a rounded rectangle’s corners, from the outside round to the inside: the flat faces take most of it, the rounded edges the rest */
+function barSection(depth: number, thickness: number) {
+  const halfDepth = depth / 2
+  const halfThick = thickness / 2
+  return [
+    [halfThick, halfDepth],
+    [halfThick, -halfDepth],
+    [-halfThick * 0.55, -halfDepth],
+    [-halfThick, -halfDepth * 0.55],
+    [-halfThick, halfDepth * 0.55],
+    [-halfThick * 0.55, halfDepth],
+  ] as const
+}
+/**
+ * A rounded bar bent along a curve in the xy plane, standing out along x.
+ *
+ * `spine` runs from its root to its end, each point with its own section, so the bar can taper. The section is a rounded rectangle and the bar faces out along the curve.
+ */
+function sweptBar(spine: ReadonlyArray<readonly [number, number, BarSection]>, around: number): BufferGeometry {
+  const positions: Array<number> = []
+  const normals: Array<number> = []
+  const uvs: Array<number> = []
+  const frames = spine.map(([x, y], index) => {
+    const before = spine[Math.max(0, index - 1)]
+    const after = spine[Math.min(spine.length - 1, index + 1)]
+    const along = new Vector3(after[0] - before[0], after[1] - before[1], 0)
+    along.normalize()
+    // Out of the curve, in the xy plane, pointing to its right.
+    const out = new Vector3(along.y, -along.x, 0)
+    const side = new Vector3(0, 0, 1)
+    return {
+      out,
+      side,
+      along,
+      at: new Vector3(x, y, 0),
+    }
+  })
+  for (const [index, {out, side, at}] of frames.entries()) {
+    const [, , [depth, thickness]] = spine[index]
+    const section = barSection(depth, thickness)
+    for (const [corner, [across, aside]] of section.entries()) {
+      const normal = out.clone().multiplyScalar(across).addScaledVector(side, aside).normalize()
+      const point = at.clone().addScaledVector(out, across).addScaledVector(side, aside)
+      positions.push(point.x, point.y, point.z)
+      normals.push(normal.x, normal.y, normal.z)
+      uvs.push(corner / section.length, index / (spine.length - 1))
+    }
   }
-  return shape
+  const indices: Array<number> = []
+  const corners = barSection(1, 1).length
+  for (let index = 0; index < spine.length - 1; index++) {
+    for (let corner = 0; corner < corners; corner++) {
+      const next = (corner + 1) % corners
+      const a = index * corners + corner
+      const b = index * corners + next
+      const c = (index + 1) * corners + next
+      const d = (index + 1) * corners + corner
+      indices.push(a, d, c, a, c, b)
+    }
+  }
+  // Both ends close, so the bracket reads solid where it meets the band and at the toe.
+  const cap = (frame: number, inward: boolean) => {
+    const center = positions.length / 3
+    const {along, at} = frames[frame]
+    const normal = along.clone().multiplyScalar(inward ? -1 : 1)
+    positions.push(at.x, at.y, at.z)
+    normals.push(normal.x, normal.y, normal.z)
+    uvs.push(0.5, frame === 0 ? 0 : 1)
+    for (let corner = 0; corner < corners; corner++) {
+      const next = (corner + 1) % corners
+      const [a, b] = inward ? [frame * corners + next, frame * corners + corner] : [frame * corners + corner, frame * corners + next]
+      indices.push(center, a, b)
+    }
+  }
+  cap(0, true)
+  cap(spine.length - 1, false)
+  const geometry = new BareGeometry
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3))
+  geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
+  geometry.setIndex(new Uint32BufferAttribute(indices, 1))
+  geometry.rotateY(around)
+  return geometry
 }
-/** One scrolled foot, standing out along x: a bracket bending out from under the band to a round toe, and an acanthus leaf rising over the band. */
-function foot(): Array<BufferGeometry> {
-  const outline = new Shape
-  outline.moveTo(0.09, 0.042)
-  outline.lineTo(0.117, 0.042)
-  outline.bezierCurveTo(0.13, 0.04, 0.138, 0.03, 0.138, 0.02)
-  outline.bezierCurveTo(0.138, 0.012, 0.142, 0.006, 0.15, 0.003)
-  outline.lineTo(0.15, 0)
-  outline.lineTo(0.12, 0)
-  outline.bezierCurveTo(0.112, 0.004, 0.104, 0.016, 0.098, 0.026)
-  outline.bezierCurveTo(0.094, 0.032, 0.09, 0.036, 0.09, 0.042)
-  const bracket = new ExtrudeGeometry(outline, {
-    depth: feet.depth,
-    bevelEnabled: true,
-    bevelSegments: 3,
-    bevelSize: feet.bevel,
-    bevelThickness: feet.bevel,
-    bevelOffset: -feet.bevel,
-    curveSegments: 10,
-  })
-  const toe = new SphereGeometry(0.011, 16, 10)
-  const parts: Array<BufferGeometry> = [
-    bracket.translate(0, 0, -feet.depth / 2),
-    toe.scale(1.2, 0.8, 1.1).translate(0.143, 0.0088, 0),
-  ]
-  // Its back on the frieze, its face standing just out of the beads.
-  const leaf = new ExtrudeGeometry(leafShape(0.028, 0.03), {
-    depth: 0.006,
-    bevelEnabled: true,
-    bevelSegments: 2,
-    bevelSize: 0.0012,
-    bevelThickness: 0.0015,
-    curveSegments: 6,
-  })
-  parts.push(leaf.rotateY(Math.PI / 2).translate(band.frieze + 0.0015, band.bottom - 0.002, 0))
-  return parts
+/**
+ * A foot’s bracket, from under the band out and down onto a round toe.
+ *
+ * A quarter of an ellipse, never doubling back, so the bar cannot twist inside out. Thick where it leaves the band and thinning down to the toe, which swells round so it reads as a ball.
+ */
+function bracketSpine(): Array<readonly [number, number, BarSection]> {
+  const points: Array<readonly [number, number, BarSection]> = []
+  const steps = 8
+  for (let index = 0; index <= steps; index++) {
+    const t = index / steps
+    const reach = 0.104 + 0.03 * Math.sin(t * Math.PI / 2)
+    const y = 0.00935 + 0.037 * Math.cos(t * Math.PI / 2)
+    // Thinning down the leg, then swelling again over the last of it into the toe.
+    const taper = 1 - Math.sin(t * Math.PI) * 0.34
+    points.push([reach, y, [feet.depth * taper, feet.thickness * taper]])
+  }
+  return points
 }
-
 /**
  * A stand for an orb on a pedestal’s cap, cast in dark metal like a fortune teller’s crystal ball stand, the y axis up through its middle from the cap.
  *
- * A gadrooned cup with a rolled lip, which the orb rests in, stands on a band beaded along both edges, raised on three scrolled feet with acanthus leaves, one of them to the front.
+ * A gadrooned cup with a rolled lip, which the orb rests in, stands on a band beaded along both edges, raised on three scrolled feet, one of them to the front.
  */
 export default class OrbHolderGeometry {
   /** the stand turned smooth, without its lobes, feet and ornament, where the orb and everything thrown at it touch it */
-  readonly collision: LatheGeometry
+  readonly collision: BufferGeometry
   readonly metal: BufferGeometry
 
   constructor() {
-    const lipRoll = new TorusGeometry(lip.radius, lip.tube, 12, segments)
-    const inside = new LatheGeometry(bowl.map(([radius, y]) => new Vector2(radius, y)), segments)
+    const lipRoll = new TorusGeometry(lip.radius, lip.tube, 6, sides)
     const parts: Array<BufferGeometry> = [
-      new LatheGeometry(bandProfile(), segments),
+      // The frieze rises straight up, which leaves the sweep unable to tell its outside from its inside.
+      new RevolvedProfileGeometry(bandProfile(), {
+        sides,
+        smoothAngle: Math.PI,
+        front: () => [1, 0],
+      }),
+      // The profile sweeps upward, so the lobed wall faces in; the cup is seen from outside.
       cupWall(),
-      lipRoll.rotateX(Math.PI / 2).translate(0, lip.y, 0),
-      // From the lip down to the middle, so the bowl faces up and in.
-      inside,
+      lipRoll.rotateX(Math.PI / 2),
+      lipRoll.translate(0, lip.y, 0),
+      new RevolvedProfileGeometry(bowl, {
+        sides: 32,
+        smoothAngle: Math.PI,
+      }),
     ]
     for (let index = 0; index < feet.count; index++) {
       // A foot stands out along x until it is turned toward the front, then on round by a third each.
-      parts.push(...foot().map(part => part.rotateY(-Math.PI / 2 + index * Math.PI * 2 / feet.count)))
+      const around = -Math.PI / 2 + index * Math.PI * 2 / feet.count
+      const toe = new SphereGeometry(0.011, 8, 6)
+      toe.scale(1.2, 0.85, 1.1)
+      toe.translate(0.136, 0.00935, 0)
+      toe.rotateY(around)
+      parts.push(sweptBar(bracketSpine(), around), toe)
     }
     this.metal = mergeParts(parts)
     const outline = [
-      new Vector2(0, 0),
-      new Vector2(0.125, 0),
-      new Vector2(0.12, band.top),
-      ...Array.from({length: 9}, (_, index) => new Vector2(cupRadius(index / 8), cupY(index / 8))),
-      ...semicircle([lip.radius, lip.y], lip.tube, -Math.PI / 4, Math.PI, 12),
-      ...bowl.slice(1).map(([radius, y]) => new Vector2(radius, y)),
-    ]
-    this.collision = new LatheGeometry(outline, 48)
+      [0, 0],
+      [0.125, 0],
+      [0.12, band.top],
+      ...cupProfile().map(([radius, y]) => [radius, y] as const),
+      ...arc([lip.radius, lip.y], lip.tube, -Math.PI / 4, Math.PI, 6),
+      ...bowl.slice(0, -1).toReversed(),
+    ] satisfies Array<Point>
+    // A plain lathe: the collider only needs the outline, and a revolved profile cannot be cloned, which welding asks of it.
+    this.collision = new LatheGeometry(outline.map(([radius, y]) => new Vector2(radius, y)), 32)
   }
 
   dispose() {
