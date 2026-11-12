@@ -42,6 +42,9 @@ test('the link wall at the marked point has a walkable bare arch leading into th
   expect(start.point[0]).toBeCloseTo(lodgeSpurX, 9)
   expect(start.point[1]).toBeCloseTo(linkWall.center[2], 9)
   expect(start.y).toBeCloseTo(bastionLink.floorAt(lodgeSpurX, start.point[1])!, 7)
+  // Its vault starts as tall as the link’s there, so their crowns meet over the doorway too.
+  const linkStation = bastionLink.stationAt(...start.point)!
+  expect(start.y + start.height).toBeCloseTo(linkStation.y + linkStation.height, 9)
   expect(wallHit(linkWall, [lodgeSpurX, start.y + 1.2, -28], [0, 0, -1])).toBeUndefined()
   expect(wallHit(linkWall, [lodgeSpurX - 3, start.y + 1.2, -28], [0, 0, -1])).toBeDefined()
 })
@@ -66,7 +69,7 @@ test('the link’s junction roof is continuous across the doorway and faces into
         const hit = ray.intersectObject(mesh)[0]
         expect(hit).toBeDefined()
         expect(hit.face!.normal.y).toBeLessThan(-0.01)
-        expect(hit.point.y).toBeLessThan(-2.2)
+        expect(hit.point.y).toBeLessThan(-2.1)
       }
     }
   } finally {
@@ -219,7 +222,7 @@ test('the entrance clears the parent vault and ribs at walking height, and the s
       }
       // Cutting the doorway must leave a connected roof, rather than an opening to the sky.
       for (const z of [-28.4, -29, -29.7]) {
-        const up = new Raycaster(new Vector3(lodgeSpurX + dx, start.y + 1.7, z), new Vector3(0, 1, 0), 0, 1.1)
+        const up = new Raycaster(new Vector3(lodgeSpurX + dx, start.y + 1.7, z), new Vector3(0, 1, 0), 0, 1.25)
         expect(up.intersectObject(new Mesh(link.shell, material)).length).toBeGreaterThan(0)
       }
     }
