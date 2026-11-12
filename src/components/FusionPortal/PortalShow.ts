@@ -37,10 +37,10 @@ type HeldImage = {
 
 /** how far the portal’s light reaches, in meters */
 const lightRange = 11
-/** how much brighter the portal’s light shines than its envelope says, and up to how strong an envelope; it outshines the lamps around, so the shadows it casts read, but its flashes don’t blind */
+/** how much brighter the portal’s light shines than its envelope says, and up to how strong an envelope; it outshines the lamps around, so the shadows it casts read, but its flashes peak at 300 cd and don’t blind */
 const lightBoost = {
   factor: 3,
-  upTo: 35,
+  upTo: 60,
 }
 const middle = new Vector3
 const seen = new Vector3

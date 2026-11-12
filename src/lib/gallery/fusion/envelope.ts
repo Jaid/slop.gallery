@@ -51,6 +51,10 @@ export type PortalCast = {
 const fizzlePop = 0.55
 /** how bright the portal’s light glows while it brews, in candela */
 const brewingLight = 28
+/** how bright the portal’s light flares on the beat of each turn of the images, in candela, which the portal triples to 150 */
+const beatLight = 50
+/** the share of its brewing light the portal’s light sags by toward the next beat, so that one flares out of the dark */
+const beatSag = 0.3
 /** the share of the afterglow, or of the fizzle, over the end of which the portal’s light goes out completely */
 const dimming = 0.6
 /** a flicker in 0–1 that jumps 25 times a second */
@@ -86,7 +90,7 @@ export function brewing(elapsed: number, timing: FusionTiming, images: number): 
     flash: 0,
     image: shown,
     lens: 1,
-    light: brewingLight * energy,
+    light: turnBeat(brewingLight * energy, elapsed, timing),
     // A small shockwave greets every image as it starts to surface.
     pulse: Math.min(surfaced, 10),
     pulseStrength: 0.35,
@@ -108,7 +112,7 @@ export function brewing(elapsed: number, timing: FusionTiming, images: number): 
     burstStrength: landing ? 1.2 : 0,
     energy: energy + onset * Math.exp(-landed * 4) + 1 - onset,
     flash: 1.3 * Math.exp(-landed * 7),
-    light: calm.light + 140 * Math.exp(-landed * 4.5),
+    light: calm.light + 115 * Math.exp(-landed * 4.5),
     pulse: landing ? landed : calm.pulse,
     pulseStrength: landing ? 2 : calm.pulseStrength,
     size: calm.size * (1 + 0.38 * swell),
@@ -159,6 +163,24 @@ function darkening(elapsed: number, outcome: FusionOutcome | undefined, emergedA
   const length = span * dimming
   return length > 0 ? fade(clamp((elapsed - end + length) / length, 0, 1)) : Number(elapsed >= end)
 }
+/**
+ * The portal’s `light` keeping the beat of the turns of its images `elapsed` seconds into a fusion, of the turns that began before `until`: it flares up to {@link beatLight} as each begins, with its bell and its shockwave, and sags toward the next one, recovered from the sag by the share `recovered`.
+ * The climax and the fizzle pass the outcome’s moment, so the last beat dies away under them instead of a new one flaring as they begin.
+ */
+function turnBeat(light: number, elapsed: number, timing: FusionTiming, until = Infinity, recovered = 0) {
+  const first = firstTurn(timing)
+  const latest = Math.min(elapsed, until)
+  if (latest <= first || timing.image <= 0) {
+    return light
+  }
+  const turn = Math.ceil((latest - first) / timing.image) - 1
+  const since = elapsed - first - turn * timing.image
+  const settle = Math.min(0.3, timing.image / 2)
+  const sag = 1 - beatSag * fade(clamp((since - settle) / (timing.image - settle), 0, 1)) * (1 - recovered)
+  const sagged = light * sag
+  const peak = Math.max(sagged, beatLight)
+  return sagged + (peak - sagged) * Math.exp(-since * 5)
+}
 /** The portal as long as nobody broke it off. */
 function shaped(elapsed: number, outcome: FusionOutcome | undefined, emergedAt: number | undefined, timing: FusionTiming, cast: PortalCast): PortalEnvelope {
   const {images} = cast
@@ -184,7 +206,7 @@ function shaped(elapsed: number, outcome: FusionOutcome | undefined, emergedAt: 
       burst: popped < 0 ? 10 : popped,
       burstStrength: 0.5,
       flash: 0,
-      light: brewingLight * energy,
+      light: turnBeat(brewingLight * energy, elapsed, timing, outcome.at),
     }
   }
   if (outcome?.kind !== 'success' || elapsed <= outcome.at) {
@@ -210,7 +232,8 @@ function shaped(elapsed: number, outcome: FusionOutcome | undefined, emergedAt: 
       // It draws in as the satellites fall into it, then swells just before it lets go.
       size: 1 - 0.18 * Math.sin(Math.PI * Math.min(progress / 0.8, 1)) + 0.2 * fade(clamp((progress - 0.8) / 0.2, 0, 1)),
       flash: 0.5 * fade(clamp((progress - 0.85) / 0.15, 0, 1)),
-      light: brewingLight * energy + 50 * progress ** 3,
+      // Its light recovers from the last beat’s sag, sinks as it draws the satellites in and surges toward the blaze it lets go with.
+      light: turnBeat(brewingLight * energy, elapsed, timing, outcome.at, progress) * (1 - 0.45 * Math.sin(Math.PI * Math.min(progress / 0.75, 1))) + 60 * progress ** 4,
     }
   }
   // The result is out: a blaze, a shockwave and a burst of sparks, then the portal collapses.
@@ -231,7 +254,7 @@ function shaped(elapsed: number, outcome: FusionOutcome | undefined, emergedAt: 
     pulseStrength: 1.4,
     burst: after,
     burstStrength: 1,
-    light: brewingLight * energy + 110 * Math.exp(-after * 3.5),
+    light: brewingLight * energy + 130 * Math.exp(-after * 3.5),
   }
 }
 /** the ember’s size once the motes are in and once every ingredient’s beat has grown it a step, and the portal’s once the ignition did */
@@ -253,7 +276,8 @@ function opening(elapsed: number, timing: FusionTiming, {images, ingredients}: P
       flash: 0.5 * Math.exp(-t * 12),
       image: undefined,
       lens: 0,
-      light: 4 + 8 * feeding,
+      // It swallows its own light as it collapses, so the burst flares out of the dark.
+      light: (4 + 8 * feeding) * collapse,
       pulse: 10,
       pulseStrength: 0,
       size: (0.14 + 0.2 * feeding ** 2) * fade(clamp(t / 0.15, 0, 1)) * collapse,
@@ -296,7 +320,7 @@ function opening(elapsed: number, timing: FusionTiming, {images, ingredients}: P
     image,
     // The ember bends the view once the room has stopped wobbling.
     lens: (0.4 * kindled + 0.6 * fade(clamp((t - ignition + 0.3) / 0.6, 0, 1))) * fade(clamp((t - implosion - 0.75) / 0.4, 0, 1)),
-    light: brewingLight * energy * Math.min(1, size + 0.2) + 40 * Math.exp(-burst * 5),
+    light: brewingLight * energy * Math.min(1, size + 0.2) + 90 * Math.exp(-burst * 5) + (ignited === undefined ? 0 : 35 * Math.exp(-ignited * 5)),
     pulse: since,
     pulseStrength,
     size: size + kick + 0.12 * (image?.clarity ?? 0),

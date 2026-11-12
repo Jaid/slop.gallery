@@ -111,6 +111,24 @@ describe('timeline', () => {
     expect(portalEnvelope(intro + 0.1, undefined, undefined, hasty, pair).pulseStrength).toBe(2)
     expect(portalEnvelope(intro + image + 0.1, undefined, undefined, hasty, pair).pulseStrength).toBeLessThan(1)
   })
+  test('the portal’s light flares on the beat of every turn and sags toward the next, and a climax beginning on a beat lets the last one die away', () => {
+    const {image} = fusionTiming
+    const first = firstTurn()
+    const light = (elapsed: number) => portalEnvelope(elapsed, undefined, undefined, fusionTiming, pair).light
+    const peak = light(first + 1e-6)
+    for (let turn = 0; turn < minimumTurns; turn++) {
+      const beat = first + turn * image
+      // The landing’s blaze still dies away under the first.
+      expect(light(beat + 1e-6)).toBeCloseTo(peak, 0)
+      expect(light(beat + 0.01)).toBeGreaterThan(light(beat - 0.01) * 1.5)
+      expect(light(beat + image - 0.05)).toBeLessThan(light(beat + 0.2))
+    }
+    const success = {
+      kind: 'success' as const,
+      at: first + minimumTurns * image,
+    }
+    expect(portalEnvelope(success.at + 0.01, success, undefined, fusionTiming, pair).light).toBeLessThan(light(success.at - 0.01) * 1.5)
+  })
   test('the portal brews after its intro, closes after the result is out and dies down when it fizzles', () => {
     // It swells while an image shows.
     expect(portalEnvelope(firstTurn() + fusionTiming.image / 2, undefined, undefined, fusionTiming, pair).size).toBeGreaterThan(1.1)
