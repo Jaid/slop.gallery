@@ -6,9 +6,10 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import CoveredPassage from '#component/CoveredPassage'
 import CoveredRoute from '#component/CoveredRoute'
+import FloorSlab from '#component/FloorSlab'
 import TimberTransition from '#component/TimberTransition'
 import {bastionApproach, bastionCurve, bastionLanterns, bastionMouth, bastionTransition} from '#src/lib/gallery/bastion.ts'
-import {bastionLink, bastionLinkGate, bastionLinkLanterns, climbMouthHollow, lodgeSpur, lodgeSpurGrille, lodgeSpurLanterns} from '#src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, bastionLinkGate, bastionLinkLanterns, climbMouthHollow, gateLintel, lodgeSpur, lodgeSpurGrille, lodgeSpurLanterns} from '#src/lib/gallery/bastionNetwork.ts'
 import {climbApproach, climbApproachLantern, climbHairpin, climbLanterns, climbMouth, climbRun, climbRunLantern} from '#src/lib/gallery/climb.ts'
 import {lodgeFloorPlanks} from '#src/lib/gallery/lodge.ts'
 import lodgeTimber from '#src/lib/gallery/lodgeTimber.ts'
@@ -42,6 +43,8 @@ export default function BastionRoom({material, wood}: {
     <BastionArmor />
     <BastionGrille grille={lodgeSpurGrille} name='bastion-lodge-spur-window' />
     <BastionGrille grille={bastionLinkGate} name='bastion-link-gate' />
+    {/* The mouth’s ceiling stops at the gate wall’s center line, so this carries it on over the wall. */}
+    <FloorSlab bottom={climbMouth.floorY + climbMouth.height} depth={0.24} material={material} name='bastion-link-gate-lintel' polygon={gateLintel} />
     <CoveredPassage material={material} passage={bastionMouth} />
     <CoveredRoute lanterns={lanterns} material={material} passage={bastionCurve} />
     <BastionCrater stone={material} />

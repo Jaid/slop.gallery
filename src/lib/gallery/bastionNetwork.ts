@@ -20,11 +20,16 @@ const cornerRadius = 4
 const lastRadius = mouthNorthZ - bastionLinkStripZ
 /** where the tunnel ends in the mouth’s north wall: its west wall in line with the mouth’s west wall, so it runs on into the elbow */
 const endX = climbMouth.path[1][0] - climbMouth.width / 2 + bastionLinkWidth / 2
-/** the opening it ends in through the mouth’s north wall, the size of its vault */
-const linkVault = vaultOpening(bastionLinkWidth, height)
 const [elbowX, footZ] = climbHairpin.route.start
 /** where the mouth’s elbow ends in the west and in the east, along its west wall’s center line and straight across from the corner of its walls inside the turn, where it opens onto the straight run on toward the doorway */
 const [elbowWestX, elbowEastX] = [elbowX - climbMouth.width / 2, elbowX + climbMouth.width / 2]
+/**
+ * The opening the tunnel ends in through the mouth’s north wall, the size of its vault.
+ * Its crown is filled in once the hollow in front of the gate is known: the hollow decides how far under the mouth’s floor the tunnel ends, and the arch follows that crown. Until then it stands in for the mouth’s own ceiling, which is what the hollow’s width is measured against.
+ */
+const linkVault = {
+  ...vaultOpening(bastionLinkWidth, height),
+}
 /**
  * How far under the mouth’s floor its elbow’s paving lies at a point in plan: falling toward the line from the middle of the hairpin’s foot to the middle of the tunnel’s mouth, as the hairpin’s does, and as deep there, so it runs on from the hairpin’s paving into the tunnel’s.
  * It falls from the face of the west wall, which runs on into the tunnel’s, and from a wall’s depth short of where the elbow opens east at the hairpin’s foot, from the tunnel’s east jamb at the gate, so the north wall beside it stands on the level floor; level beyond the elbow.
@@ -35,7 +40,8 @@ function elbowSag(x: number, z: number) {
   }
   const toGate = (footZ - z) / (footZ - mouthNorthZ)
   const west = elbowWestX + wallFace
-  const east = elbowEastX - wallFace + (endX + linkVault.width / 2 - elbowEastX + wallFace) * toGate
+  // The vault’s jambs stand a wall’s face in from its walls, which the opening through this wall follows.
+  const east = elbowEastX - wallFace + (endX + bastionLinkWidth / 2 - wallFace - elbowEastX + wallFace) * toGate
   if (x <= west || x >= east) {
     return 0
   }
@@ -65,6 +71,12 @@ export const climbMouthHollow = new FloorHollow(climbMouth.floorY, {
   },
   sag: elbowSag,
 })
+/**
+ * How far under the mouth’s floor the tunnel’s floor lies at the gate: the hollow sinks toward the hatch and steps down onto it, and the tunnel climbs all the way up to it, so its crown there stands lower than the mouth’s own ceiling by the same.
+ * The arch through the wall follows that crown. Cut to the ceiling instead, it would open over the tunnel’s barrel onto the sky.
+ */
+const gateStep = climbMouth.floorY - climbMouthHollow.outletY
+Object.assign(linkVault, vaultOpening(bastionLinkWidth, height - gateStep))
 /**
  * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow, easing up from the platform’s level all the way to a step under the hollow in front of it.
  */
@@ -172,8 +184,22 @@ const linkHole = {
   casing: false,
 } as const satisfies WallOpening
 mouthWall.holes = [linkHole]
+// The arch reaches the tunnel’s crown, up into where the cornice would run, so the wall goes without one and on up to the ceiling. The arch then ends in stone instead of cutting the cornice in two.
+mouthWall.height += 0.3
+mouthWall.cornice = false
+// The mouth’s west wall meets this one in the corner, so it rises with it and their baseboards still miter.
+const westWall = climbMouth.walls[3]
+westWall.height = mouthWall.height
+/**
+ * Where the mouth’s ceiling runs on over the gate wall, which it otherwise stops short of, at the wall’s center line: across the arch and out past it on both sides, back over the wall’s whole thickness.
+ * The wall reaches the ceiling, so without it the wall’s top would open onto the sky on the tunnel’s side.
+ */
+export const gateLintel = [[endX - linkHole.width / 2 - wallFace * 2, mouthNorthZ + 0.01], [endX + linkHole.width / 2 + wallFace * 2, mouthNorthZ + 0.01], [endX + linkHole.width / 2 + wallFace * 2, mouthNorthZ - wallFace], [endX - linkHole.width / 2 - wallFace * 2, mouthNorthZ - wallFace]] as const
 /** how far under the mouth’s floor the gate’s foot stands, on the tunnel’s floor, a step under the hollow */
 const gateFoot = climbMouthHollow.outletY - climbMouth.floorY
+if (Math.abs(gateFoot + gateStep) > 1e-6) {
+  throw new Error(`The gate’s arch follows the tunnel’s crown, a step of ${-gateFoot} m under the mouth’s ceiling, not ${gateStep} m.`)
+}
 /**
  * The iron gate barring the tunnel where it opens into the mouth’s elbow, barred like the apse’s gate, low over the floor and on up its bars, but for a hatch in the middle of its foot, round-headed like a mouse hole: wide enough for an orb rolling at it to slip through and on down the tunnel, far too low for anyone to follow.
  * Orbs rolling down the hairpin come out of its turn along the west leg’s west wall, and the paving falling toward its middle carries them across to the hatch; those that miss it roll back down into the hollow in front of it.

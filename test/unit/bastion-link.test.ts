@@ -8,7 +8,7 @@ import EgoMotor from 'ego-player/motor'
 import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
-import {corniceBands, vaultShellThickness, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
+import {vaultShellThickness, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionCrater, bastionCurve, bastionLinkStart} from '../../src/lib/gallery/bastion.ts'
 import {bastionLink, bastionLinkCrossfall, bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import {climbMouth} from '../../src/lib/gallery/climb.ts'
@@ -179,20 +179,21 @@ test('it opens out of the curve’s level landing through a bare arch the size o
     }
   }
 })
-test('it opens into the mouth’s elbow through a bare arch the size of its vault, which cuts through the cornice', () => {
+test('it opens into the mouth’s elbow through a bare arch the size of its vault, which stops at the tunnel’s crown', () => {
   const wall = wallById('bastion-climb_mouth_wall_2')
   const hole = wall.holes!.find(({name}) => name === 'link')!
-  expectVaultSection(hole, climbMouth.height)
+  // The tunnel climbs all the way to the gate and ends a step under the hollow, so its crown stands lower than the mouth’s ceiling. The arch follows it; cut to the ceiling, it would open over the tunnel’s barrel onto the sky.
+  const crown = route.end.y + route.end.height - climbMouth.floorY
+  expect(crown).toBeLessThan(climbMouth.height)
+  expectVaultSection(hole, crown)
   // Its west jamb stands in line with the face of the mouth’s west wall.
   expect(wall.center[0] + hole.u - hole.width / 2).toBeCloseTo(mouthWestX + wallFace, 9)
   const {geometry} = architecture.find(entry => entry.wall === wall)!
-  // No cornice runs across it, but it still runs beside it, mitered round the corner into the mouth’s west wall.
-  const corner = mouthWestX + 0.3 - wall.center[0]
-  for (const {drop} of corniceBands) {
-    const y = wall.height - drop
-    expect(casted(geometry.cornice, hole.u, y)).toHaveLength(0)
-    expect(casted(geometry.cornice, corner, y).length).toBeGreaterThan(0)
-  }
+  // The arch reaches up into where the cornice would run, so the wall goes without one and on up to the ceiling, and the arch ends in stone.
+  expect(wall.cornice).toBe(false)
+  expect(geometry.cornice).toHaveLength(0)
+  expect(wall.center[1] + wall.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
+  expect(wall.center[1] + hole.height).toBeLessThan(wall.center[1] + wall.height)
   // No casing frames it: right beside its east jamb, the wall’s face is all there is.
   expect(casted(geometry.trim, hole.u + hole.width / 2 + 0.05, 1)).toHaveLength(0)
   // Its west jamb opens the corner down to the floor, so both baseboards there run on square, the mouth’s west wall’s straight into the tunnel’s, and only the cornices are mitered.
