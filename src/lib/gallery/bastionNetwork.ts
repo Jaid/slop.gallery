@@ -65,12 +65,15 @@ export const climbMouthHollow = new FloorHollow(climbMouth.floorY, {
   },
   sag: elbowSag,
 })
+/** how far under the mouth’s floor the gate’s foot stands, on the tunnel’s floor, a step under the hollow */
+const gateFoot = climbMouthHollow.outletY - climbMouth.floorY
 /**
- * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow, easing up from the platform’s level all the way to a step under the hollow in front of it.
+ * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow, easing up from the platform’s level all the way to a step under the hollow in front of it, its vault rising to meet the mouth’s ceiling at the gate.
  */
 const route = new PassageRoute([startX, startZ], heading, y, height, [
   {
     y: climbMouthHollow.outletY,
+    height: climbMouth.height - gateFoot,
     steps: [
       {length: bastionLinkStripZ - cornerRadius - startZ},
       {
@@ -172,8 +175,6 @@ const linkHole = {
   casing: false,
 } as const satisfies WallOpening
 mouthWall.holes = [linkHole]
-/** how far under the mouth’s floor the gate’s foot stands, on the tunnel’s floor, a step under the hollow */
-const gateFoot = climbMouthHollow.outletY - climbMouth.floorY
 /**
  * The iron gate barring the tunnel where it opens into the mouth’s elbow, barred like the apse’s gate, low over the floor and on up its bars, but for a hatch in the middle of its foot, round-headed like a mouse hole: wide enough for an orb rolling at it to slip through and on down the tunnel, far too low for anyone to follow.
  * Orbs rolling down the hairpin come out of its turn along the west leg’s west wall, and the paving falling toward its middle carries them across to the hatch; those that miss it roll back down into the hollow in front of it.

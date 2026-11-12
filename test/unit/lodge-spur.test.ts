@@ -66,7 +66,7 @@ test('the link’s junction roof is continuous across the doorway and faces into
         const hit = ray.intersectObject(mesh)[0]
         expect(hit).toBeDefined()
         expect(hit.face!.normal.y).toBeLessThan(-0.01)
-        expect(hit.point.y).toBeLessThan(-2.2)
+        expect(hit.point.y).toBeLessThan(-2.1)
       }
     }
   } finally {
@@ -219,7 +219,7 @@ test('the entrance clears the parent vault and ribs at walking height, and the s
       }
       // Cutting the doorway must leave a connected roof, rather than an opening to the sky.
       for (const z of [-28.4, -29, -29.7]) {
-        const up = new Raycaster(new Vector3(lodgeSpurX + dx, start.y + 1.7, z), new Vector3(0, 1, 0), 0, 1.1)
+        const up = new Raycaster(new Vector3(lodgeSpurX + dx, start.y + 1.7, z), new Vector3(0, 1, 0), 0, 1.4)
         expect(up.intersectObject(new Mesh(link.shell, material)).length).toBeGreaterThan(0)
       }
     }

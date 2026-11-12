@@ -71,7 +71,8 @@ test('both wings and the link belong to one Bastion', () => {
   expect(route.end.y).toBe(climbMouthHollow.outletY)
   // under the elbow’s fall toward its middle and the hollow sunk into it
   expect(climbMouth.floorY - route.end.y).toBeLessThan(0.35)
-  expect(route.end.height).toBe(climbMouth.height)
+  expect(route.end.y + route.end.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
+  expect(route.end.height).toBeCloseTo(climbMouth.height - (climbMouthHollow.outletY - climbMouth.floorY), 9)
 })
 test('its paving falls 1 in 20 from both walls toward its middle, but levels out toward the gate, which stands on a level floor', () => {
   expect(bastionLink.crossfall?.slope).toBe(bastionLinkCrossfall)
@@ -201,6 +202,18 @@ test('it opens into the mouth’s elbow through a bare arch the size of its vaul
   expect(west.baseboardMiters).toEqual([0, 0])
   expect(wall.miters).toEqual([1, 0])
   expect(wall.baseboardMiters).toEqual([0, 0])
+})
+test('the ceiling heights of both sides of the golfing gate match without leaving a gap', () => {
+  const mouthCeiling = climbMouth.floorY + climbMouth.height
+  const linkCeiling = route.end.y + route.end.height
+  expect(linkCeiling).toBeCloseTo(mouthCeiling, 9)
+  const wall = wallById('bastion-climb_mouth_wall_2')
+  const hole = wall.holes!.find(({name}) => name === 'link')!
+  const wallCrown = wall.center[1] + hole.height
+  expect(wallCrown).toBeCloseTo(mouthCeiling, 9)
+  // The gate bars stand from the tunnel floor under the hollow up to the shared ceiling.
+  expect(wall.center[1] + bastionLinkGate.hole.bottom).toBeCloseTo(route.end.y, 9)
+  expect(wall.center[1] + bastionLinkGate.hole.height).toBeCloseTo(mouthCeiling, 9)
 })
 for (const returning of [false, true]) {
   for (const sprint of [false, true]) {
