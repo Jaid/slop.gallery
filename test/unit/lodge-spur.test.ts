@@ -9,7 +9,7 @@ import {bastionCurve, lodgeSpurEndZ, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX
 import {bastionLink, insideBastion, lodgeSpur, lodgeSpurEnd, lodgeSpurGrille, lodgeSpurLanterns} from '../../src/lib/gallery/bastionNetwork.ts'
 import gateGeometry from '../../src/lib/gallery/gateGeometry.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
-import LodgeEastWindowGeometry from '../../src/lib/gallery/LodgeEastWindowGeometry.ts'
+import LodgeEastWindowGeometry, {lodgeEastWindowMaterials} from '../../src/lib/gallery/LodgeEastWindowGeometry.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import {routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
 import {openings} from '../../src/worlds/gallery/relations.ts'
@@ -208,6 +208,48 @@ test('the east Lodge wall opens to one matching glazed window, not another doorw
     rooms: ['bastion', 'lodge'],
     holes: [['lodge-east', 'east_window']],
   })
+})
+test('the east window’s Bastion side is faced in stone, with no timber showing on its wall', () => {
+  const {z, width, bottom, top, border, sill} = lodgeEastWindow
+  const face = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
+  const {groups, index} = window.lining
+  // Every index belongs to exactly one material group, timber or stone.
+  let covered = 0
+  for (const group of groups.toSorted((a, b) => a.start - b.start)) {
+    expect(group.start).toBe(covered)
+    covered += group.count
+  }
+  expect(covered).toBe(index!.count)
+  const positions = window.lining.getAttribute('position')
+  const normals = window.lining.getAttribute('normal')
+  const stoneBounds = {
+    y: [Infinity, -Infinity],
+    z: [Infinity, -Infinity],
+  }
+  let stoneFaces = 0
+  for (const group of groups) {
+    for (let i = group.start; i < group.start + group.count; i++) {
+      const vertex = index!.getX(i)
+      if (group.materialIndex === lodgeEastWindowMaterials.stone) {
+        // Only the reveal’s ends on the passage’s face take the stone: every such vertex faces the Bastion and lies in its wall’s plane.
+        expect([normals.getX(vertex), normals.getY(vertex), normals.getZ(vertex)]).toEqual([1, 0, 0])
+        expect(positions.getX(vertex)).toBeCloseTo(face, 5)
+        stoneBounds.y = [Math.min(stoneBounds.y[0], positions.getY(vertex)), Math.max(stoneBounds.y[1], positions.getY(vertex))]
+        stoneBounds.z = [Math.min(stoneBounds.z[0], positions.getZ(vertex)), Math.max(stoneBounds.z[1], positions.getZ(vertex))]
+      } else {
+        expect(group.materialIndex).toBe(lodgeEastWindowMaterials.timber)
+      }
+    }
+    if (group.materialIndex === lodgeEastWindowMaterials.stone) {
+      stoneFaces++
+    }
+  }
+  // One stone end for each of the reveal’s four parts, together taking its whole outline around the opening.
+  expect(stoneFaces).toBe(4)
+  expect(stoneBounds.y[0]).toBeCloseTo(bottom - sill, 5)
+  expect(stoneBounds.y[1]).toBeCloseTo(top + border, 5)
+  expect(stoneBounds.z[0]).toBeCloseTo(z - width / 2 - border, 5)
+  expect(stoneBounds.z[1]).toBeCloseTo(z + width / 2 + border, 5)
 })
 test('the entrance clears the parent vault and ribs at walking height, and the side window clears the spur', () => {
   const material = new MeshBasicMaterial({side: DoubleSide})

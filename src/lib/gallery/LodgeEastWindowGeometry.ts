@@ -13,7 +13,13 @@ const box = (size: readonly [number, number, number], position: readonly [number
   return geometry
 }
 
-/** A deep timber-lined side window from the Lodge to the Bastion’s blind branch. */
+/** the lining’s material groups: 0 the timber of the tunnel, 1 the stone of its Bastion-facing ends, which the mesh drawing it supplies in that order */
+export const lodgeEastWindowMaterials = {
+  timber: 0,
+  stone: 1,
+} as const
+
+/** A deep timber-lined side window from the Lodge to the Bastion’s blind branch, its ends on the Bastion’s side faced in that side’s stone. */
 export default class LodgeEastWindowGeometry {
   readonly frame: BufferGeometry
   readonly glass: BoxGeometry
@@ -32,6 +38,22 @@ export default class LodgeEastWindowGeometry {
       box([depth, border, width + border * 2], [middleX, top + border / 2, z]),
       ...[-1, 1].map(side => box([depth, height, border], [middleX, middleY, z + side * (width + border) / 2])),
     ])
+    // Each part’s end on the Bastion’s stone wall is its +x face, so triangles facing that way alone take the stone’s material group, in runs along the index: no wood shows around the frame there, while the tunnel behind the glass stays timber, as the Lodge’s side of the window. Flush with the wall, the stone ends share its plane and its world-mapped pattern runs on across them.
+    const index = this.lining.index!
+    const normals = this.lining.getAttribute('normal')
+    let groupStart = 0
+    let groupMaterial: number | undefined
+    for (let triangle = 0; triangle <= index.count / 3; triangle++) {
+      const material = triangle === index.count / 3 ? undefined : (normals.getX(index.getX(triangle * 3)) === 1 ? lodgeEastWindowMaterials.stone : lodgeEastWindowMaterials.timber)
+      if (material === groupMaterial) {
+        continue
+      }
+      if (groupMaterial !== undefined) {
+        this.lining.addGroup(groupStart, triangle * 3 - groupStart, groupMaterial)
+      }
+      groupStart = triangle * 3
+      groupMaterial = material
+    }
     this.glass = box([glassThickness, height, width], [tunnelX - glassThickness / 2, middleY, z])
     const stop = 0.035
     const stopX = tunnelX + 0.0125
