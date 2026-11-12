@@ -67,10 +67,12 @@ export const climbMouthHollow = new FloorHollow(climbMouth.floorY, {
 })
 /**
  * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow, easing up from the platform’s level all the way to a step under the hollow in front of it.
+ * Its vault grows taller by as much as that step on the way, so where the tunnel ends, its crown stands as high as the mouth’s ceiling, and the arch it opens through in the mouth’s wall meets its vault all round instead of leaving a gap over it open to the sky.
  */
 const route = new PassageRoute([startX, startZ], heading, y, height, [
   {
     y: climbMouthHollow.outletY,
+    height: climbMouth.floorY + climbMouth.height - climbMouthHollow.outletY,
     steps: [
       {length: bastionLinkStripZ - cornerRadius - startZ},
       {
