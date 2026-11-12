@@ -11,8 +11,14 @@ import LodgeEastWindowGeometry from '#src/lib/gallery/LodgeEastWindowGeometry.ts
 import LodgeWindowGeometry from '#src/lib/gallery/LodgeWindowGeometry.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 
-export default function LodgeWindow({glass, material}: {
+/**
+ * The Lodge’s two through-wall windows: the west one into the corridor’s timber passage, lined in `material`, and the east one into the Bastion’s spur, which bores through the castle’s masonry and is lined in that masonry, so the Bastion sees it as a plain embrasure in its stone instead of a timber box.
+ */
+export default function LodgeWindow({glass, masonry, material}: {
   glass: Material
+  /** the Bastion’s ashlar, which lines the east window’s reveal */
+  masonry: Material
+  /** the timber that lines the west window’s reveal */
   material: Material
 }) {
   const geometry = useDisposable(useMemo(() => new LodgeWindowGeometry, []))
@@ -34,7 +40,7 @@ export default function LodgeWindow({glass, material}: {
     </RigidBody>
     <RigidBody colliders={false} name='lodge-east-window' type='fixed'>
       {eastCollision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
-      <mesh castShadow geometry={eastGeometry.lining} material={material} name='lodge-east-window-reveal' receiveShadow />
+      <mesh castShadow geometry={eastGeometry.lining} material={masonry} name='lodge-east-window-reveal' receiveShadow />
       <mesh geometry={eastGeometry.glass} material={glass} name='lodge-east-window-glass' />
       <mesh castShadow geometry={eastGeometry.frame} material={brass} name='lodge-east-window-glazing-stop' receiveShadow />
     </RigidBody>

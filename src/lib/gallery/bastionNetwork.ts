@@ -119,7 +119,7 @@ const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, 
 }, {length: lodgeSpurStartZ - lodgeSpurEndZ - 2}])
 export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, lodgeSpurWidth, {
   fixPavingEdges: false,
-  // Cut round the window’s timber reveal, which runs on through the stone and frames it flush with the passage’s face.
+  // Cut round the window’s reveal, which runs on through the stone, dressed in the same ashlar, and closes the cut flush with the passage’s face.
   openings: [{
     name: 'lodge_window',
     along: lodgeSpurStartZ - lodgeEastWindow.z,

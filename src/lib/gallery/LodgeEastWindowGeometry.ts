@@ -13,7 +13,7 @@ const box = (size: readonly [number, number, number], position: readonly [number
   return geometry
 }
 
-/** A deep timber-lined side window from the Lodge to the Bastion’s blind branch. */
+/** A deep side window from the Lodge to the Bastion’s blind branch, its reveal bored through the castle’s masonry between the Lodge’s wall and the passage. */
 export default class LodgeEastWindowGeometry {
   readonly frame: BufferGeometry
   readonly glass: BoxGeometry
@@ -26,7 +26,7 @@ export default class LodgeEastWindowGeometry {
     const tunnelX = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
     const depth = tunnelX - x
     const middleX = (x + tunnelX) / 2
-    // The reveal runs from the Lodge wall’s center line on to the passage’s face, its sill, head and jambs reaching past the opening: the Lodge’s wall hides them, and the passage’s stone is cut round them, so they frame the window flush there instead of sharing the planes of the stone’s own cut faces.
+    // The reveal runs from the Lodge wall’s center line on to the passage’s face, its sill, head and jambs reaching past the opening: the Lodge’s wall hides them, and the passage’s stone is cut round them, so their stone continues the passage’s face flush up to the glazing stop instead of sharing the planes of the stone’s own cut faces.
     this.lining = mergeParts([
       box([depth, sill, width + border * 2], [middleX, bottom - sill / 2, z]),
       box([depth, border, width + border * 2], [middleX, top + border / 2, z]),
