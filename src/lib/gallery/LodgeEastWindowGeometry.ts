@@ -13,10 +13,11 @@ const box = (size: readonly [number, number, number], position: readonly [number
   return geometry
 }
 
-/** A deep timber-lined side window from the Lodge to the Bastion’s blind branch. */
+/** A deep timber-lined side window from the Lodge to the Bastion’s blind branch, with a stone passage face. */
 export default class LodgeEastWindowGeometry {
   readonly frame: BufferGeometry
   readonly glass: BoxGeometry
+  /** material 0: timber inside the recess; material 1: the flush stone face toward the Bastion */
   readonly lining: BufferGeometry
 
   constructor() {
@@ -32,6 +33,20 @@ export default class LodgeEastWindowGeometry {
       box([depth, border, width + border * 2], [middleX, top + border / 2, z]),
       ...[-1, 1].map(side => box([depth, height, border], [middleX, middleY, z + side * (width + border) / 2])),
     ])
+    // Keep the closed reveal and its collision unchanged, but dress its passage-facing ends in the same world-mapped ashlar as the surrounding wall, not the Lodge’s timber.
+    const timber: Array<number> = []
+    const stone: Array<number> = []
+    const indices = this.lining.index!
+    const normals = this.lining.getAttribute('normal')
+    for (let i = 0; i < indices.count; i += 3) {
+      const a = indices.getX(i)
+      const face = normals.getX(a) > 0.5 ? stone : timber
+      face.push(a, indices.getX(i + 1), indices.getX(i + 2))
+    }
+    this.lining.setIndex([...timber, ...stone])
+    this.lining.clearGroups()
+    this.lining.addGroup(0, timber.length, 0)
+    this.lining.addGroup(timber.length, stone.length, 1)
     this.glass = box([glassThickness, height, width], [tunnelX - glassThickness / 2, middleY, z])
     const stop = 0.035
     const stopX = tunnelX + 0.0125
