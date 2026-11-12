@@ -71,7 +71,28 @@ test('both wings and the link belong to one Bastion', () => {
   expect(route.end.y).toBe(climbMouthHollow.outletY)
   // under the elbow’s fall toward its middle and the hollow sunk into it
   expect(climbMouth.floorY - route.end.y).toBeLessThan(0.35)
-  expect(route.end.height).toBe(climbMouth.height)
+  // Its vault grows taller by that step on the way, so its crown ends level with the mouth’s ceiling.
+  expect(route.end.y + route.end.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
+})
+test('where it ends in the mouth’s north wall, the arch cut through the wall meets its vault all round, leaving no gap over it open to the sky', () => {
+  // Seen through the gate from in front of it, issue #166: the arch’s crown rose over the tunnel’s, a step lower, leaving the strip between them open.
+  const {hole, wall} = bastionLinkGate
+  const {radius, center} = openingArc(hole)
+  const station = route.end
+  const vaultRadius = bastionLink.width / 2
+  const spring = station.y + station.height - vaultRadius
+  // Both arches share their circle: the wall’s around the tunnel’s centerline at its end, over the mouth’s floor.
+  expect(wall.center[0] + hole.u).toBeCloseTo(station.point[0], 9)
+  expect(radius).toBeCloseTo(vaultRadius, 9)
+  expect(wall.center[1] + center).toBeCloseTo(spring, 9)
+  // Everywhere over the opening, the arch’s soffit stands no higher than the vault’s, which runs on into the elbow’s ceiling.
+  for (let share = -1; share <= 1; share += 1 / 32) {
+    const offset = share * hole.width / 2
+    const archTop = wall.center[1] + center + Math.sqrt(radius ** 2 - offset ** 2)
+    expect(archTop).toBeLessThanOrEqual(spring + Math.sqrt(vaultRadius ** 2 - offset ** 2) + 1e-9)
+  }
+  // The vault’s crown stands under the mouth’s ceiling slab, not over it.
+  expect(station.y + station.height).toBeLessThanOrEqual(climbMouth.floorY + climbMouth.height + 1e-9)
 })
 test('its paving falls 1 in 20 from both walls toward its middle, but levels out toward the gate, which stands on a level floor', () => {
   expect(bastionLink.crossfall?.slope).toBe(bastionLinkCrossfall)

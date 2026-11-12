@@ -5,7 +5,7 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/web
 
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
-import {bastionCurve, lodgeSpurEndZ, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
+import {bastionCurve, bastionLinkStripZ, lodgeSpurEndZ, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
 import {bastionLink, insideBastion, lodgeSpur, lodgeSpurEnd, lodgeSpurGrille, lodgeSpurLanterns} from '../../src/lib/gallery/bastionNetwork.ts'
 import gateGeometry from '../../src/lib/gallery/gateGeometry.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
@@ -19,6 +19,10 @@ const linkWall = walls.find(wall => wall.id === 'bastion-link_wall_5')!
 const lodgeWall = walls.find(wall => wall.id === 'lodge-east')!
 const window = new LodgeEastWindowGeometry
 afterAll(() => window.dispose())
+/** where the link passes the spur’s doorway, on its center line, with its floor and how tall its vault rises there */
+const linkAtSpur = bastionLink.route.at(bastionLink.route.project(lodgeSpurX, bastionLinkStripZ)!.along)
+/** how high the link’s vault rises at the spur, its crown */
+const linkCrownAtSpur = linkAtSpur.y + linkAtSpur.height
 /** Raycast a particular architectural wall, with the same placement as WallSurface. */
 const wallHit = (wall: typeof linkWall, from: [number, number, number], direction: [number, number, number]) => {
   const architecture = createArchitectureGeometry(wall)
@@ -66,7 +70,8 @@ test('the link’s junction roof is continuous across the doorway and faces into
         const hit = ray.intersectObject(mesh)[0]
         expect(hit).toBeDefined()
         expect(hit.face!.normal.y).toBeLessThan(-0.01)
-        expect(hit.point.y).toBeLessThan(-2.2)
+        // never far over the link’s own crown, which cutting the doorway would leave open to the sky
+        expect(hit.point.y).toBeLessThan(linkCrownAtSpur + 0.32)
       }
     }
   } finally {
@@ -219,7 +224,7 @@ test('the entrance clears the parent vault and ribs at walking height, and the s
       }
       // Cutting the doorway must leave a connected roof, rather than an opening to the sky.
       for (const z of [-28.4, -29, -29.7]) {
-        const up = new Raycaster(new Vector3(lodgeSpurX + dx, start.y + 1.7, z), new Vector3(0, 1, 0), 0, 1.1)
+        const up = new Raycaster(new Vector3(lodgeSpurX + dx, start.y + 1.7, z), new Vector3(0, 1, 0), 0, linkCrownAtSpur - start.y - 1.7 + 0.16)
         expect(up.intersectObject(new Mesh(link.shell, material)).length).toBeGreaterThan(0)
       }
     }
