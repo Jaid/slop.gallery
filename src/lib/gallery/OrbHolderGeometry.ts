@@ -1,8 +1,4 @@
-import type {BufferGeometry} from 'three/webgpu'
-
-import {ParametricGeometry} from 'three/addons/geometries/ParametricGeometry.js'
-import {toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js'
-import {ExtrudeGeometry, LatheGeometry, Shape, SphereGeometry, TorusGeometry, Vector2} from 'three/webgpu'
+import {BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, LatheGeometry, Shape, SphereGeometry, TorusGeometry, Vector2, Vector3} from 'three/webgpu'
 
 import {orbRadius} from '#src/orbs/index.ts'
 
@@ -41,12 +37,17 @@ const feet = {
   depth: 0.014,
   bevel: 0.003,
 }
-const segments = 96
+/** radial segments of the plain turned band, whose smooth normals hide its facets at this size */
+const turnedSegments = 32
+/** radial segments of the bowl inside the cup, mostly hidden by the orb it holds */
+const bowlSegments = 28
+/** radial segments of the rolled lip round the cup’s mouth */
+const lipSegments = 32
 
 /** how high the middle of an orb resting on the lip stands over the holder’s foot, where its ball touches the lip’s roll all round */
 export const orbSeat = lip.y + Math.sqrt((orbRadius + lip.tube) ** 2 - lip.radius ** 2)
 
-const semicircle = ([radius, y]: Point, size: number, from: number, to: number, steps = 8): Array<Vector2> => Array.from({length: steps + 1}, (_, index) => {
+const semicircle = ([radius, y]: Point, size: number, from: number, to: number, steps = 4): Array<Vector2> => Array.from({length: steps + 1}, (_, index) => {
   const angle = from + (to - from) * index / steps
   return new Vector2(radius + Math.cos(angle) * size, y + Math.sin(angle) * size)
 })
@@ -77,18 +78,76 @@ function bandProfile() {
 }
 /** The cup’s outer wall, gadrooned into lobes that swell out between sharp creases, smooth again at its foot and under the lip. */
 function cupWall() {
-  const wall = new ParametricGeometry((u, v, target) => {
-    const angle = u * Math.PI * 2
+  // Four columns per lobe: one on its crest, one in the crease beside it and one on either flank.
+  const columns = cup.lobes * 4
+  const rows = 8
+  const angleStep = Math.PI * 2 / columns
+  const cupPoint = (angle: number, t: number) => {
     // 1 in the middle of a lobe, falling sharply into the crease between two.
     const lobe = Math.abs(Math.cos(angle * cup.lobes / 2)) ** 0.5
-    const radius = cupRadius(v) * (1 - cup.crease * Math.sin(Math.PI * v) ** 0.6 * (1 - lobe))
+    const radius = cupRadius(t) * (1 - cup.crease * Math.sin(Math.PI * t) ** 0.6 * (1 - lobe))
     // Turning the same way as a lathe, so the wall faces out.
-    target.set(Math.sin(angle) * radius, cupY(v), Math.cos(angle) * radius)
-  }, cup.lobes * 12, 16)
-  // Smoothed in centimeters, as the normal utility welds positions closer than 0.01 units; the creases stay sharp.
-  const smooth = toCreasedNormals(wall.scale(100, 100, 100), Math.PI / 5).scale(0.01, 0.01, 0.01)
-  wall.dispose()
-  return smooth
+    return new Vector3(Math.sin(angle) * radius, cupY(t), Math.cos(angle) * radius)
+  }
+  // A point’s outward normal from the wall’s own tangents. In a crease, each side keeps its own, so the crease stays sharp while the lobes shade as smoothly as if they were far finer.
+  const cupNormal = (angle: number, t: number, side: -1 | 0 | 1) => {
+    const angleSample = angleStep
+    let round: Vector3
+    if (side < 0) {
+      round = cupPoint(angle, t).sub(cupPoint(angle - angleSample, t))
+    } else if (side > 0) {
+      round = cupPoint(angle + angleSample, t).sub(cupPoint(angle, t))
+    } else {
+      round = cupPoint(angle + angleSample, t).sub(cupPoint(angle - angleSample, t))
+    }
+    const tSample = 0.01
+    const [tBefore, tAfter] = [Math.max(0, t - tSample), Math.min(1, t + tSample)]
+    const along = cupPoint(angle, tAfter).sub(cupPoint(angle, tBefore))
+    const normal = new Vector3
+    normal.crossVectors(round, along).normalize()
+    return normal
+  }
+  const positions: Array<number> = []
+  const normals: Array<number> = []
+  const uvs: Array<number> = []
+  const indices: Array<number> = []
+  // The wall’s vertices by row and column: the left-hand one of each column, and, in a crease, the right-hand one too, which shares its place but not its normal.
+  const left: Array<Array<number>> = []
+  const right = new Map<string, number>
+  const vertex = (angle: number, t: number, side: -1 | 0 | 1) => {
+    const point = cupPoint(angle, t)
+    const normal = cupNormal(angle, t, side)
+    positions.push(point.x, point.y, point.z)
+    normals.push(normal.x, normal.y, normal.z)
+    uvs.push(angle / (Math.PI * 2), t)
+    return positions.length / 3 - 1
+  }
+  for (let row = 0; row <= rows; row++) {
+    // The rows gather toward the foot, where the cup’s swell starts fastest, so few of them trace it as closely as many even ones.
+    const t = (row / rows) ** 1.75
+    left.push([])
+    for (let column = 0; column <= columns; column++) {
+      const angle = column * angleStep
+      const crease = column % 4 === 2
+      left[row].push(vertex(angle, t, crease ? 1 : 0))
+      if (crease && column < columns) {
+        right.set(`${row}:${column}`, vertex(angle, t, -1))
+      }
+    }
+  }
+  const rightVertex = (row: number, column: number) => right.get(`${row}:${column}`) ?? left[row][column]
+  for (let row = 0; row < rows; row++) {
+    for (let column = 0; column < columns; column++) {
+      const [a, b, c, d] = [left[row][column], rightVertex(row, column + 1), left[row + 1][column], rightVertex(row + 1, column + 1)]
+      indices.push(a, b, c, c, b, d)
+    }
+  }
+  const wall = new BufferGeometry
+  wall.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  wall.setAttribute('normal', new Float32BufferAttribute(normals, 3))
+  wall.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
+  wall.setIndex(indices)
+  return wall
 }
 /** An acanthus leaf’s outline, `width` across its foot and `height` up to its tip, its edges lobed three times on either side. */
 function leafShape(width: number, height: number) {
@@ -138,13 +197,13 @@ function foot(): Array<BufferGeometry> {
   const bracket = new ExtrudeGeometry(outline, {
     depth: feet.depth,
     bevelEnabled: true,
-    bevelSegments: 3,
+    bevelSegments: 1,
     bevelSize: feet.bevel,
     bevelThickness: feet.bevel,
     bevelOffset: -feet.bevel,
-    curveSegments: 10,
+    curveSegments: 4,
   })
-  const toe = new SphereGeometry(0.011, 16, 10)
+  const toe = new SphereGeometry(0.011, 8, 5)
   const parts: Array<BufferGeometry> = [
     bracket.translate(0, 0, -feet.depth / 2),
     toe.scale(1.2, 0.8, 1.1).translate(0.143, 0.0088, 0),
@@ -153,10 +212,10 @@ function foot(): Array<BufferGeometry> {
   const leaf = new ExtrudeGeometry(leafShape(0.028, 0.03), {
     depth: 0.006,
     bevelEnabled: true,
-    bevelSegments: 2,
+    bevelSegments: 1,
     bevelSize: 0.0012,
     bevelThickness: 0.0015,
-    curveSegments: 6,
+    curveSegments: 3,
   })
   parts.push(leaf.rotateY(Math.PI / 2).translate(band.frieze + 0.0015, band.bottom - 0.002, 0))
   return parts
@@ -173,10 +232,10 @@ export default class OrbHolderGeometry {
   readonly metal: BufferGeometry
 
   constructor() {
-    const lipRoll = new TorusGeometry(lip.radius, lip.tube, 12, segments)
-    const inside = new LatheGeometry(bowl.map(([radius, y]) => new Vector2(radius, y)), segments)
+    const lipRoll = new TorusGeometry(lip.radius, lip.tube, 8, lipSegments)
+    const inside = new LatheGeometry(bowl.map(([radius, y]) => new Vector2(radius, y)), bowlSegments)
     const parts: Array<BufferGeometry> = [
-      new LatheGeometry(bandProfile(), segments),
+      new LatheGeometry(bandProfile(), turnedSegments),
       cupWall(),
       lipRoll.rotateX(Math.PI / 2).translate(0, lip.y, 0),
       // From the lip down to the middle, so the bowl faces up and in.

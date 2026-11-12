@@ -4,6 +4,7 @@ import RAPIER from '@dimforge/rapier3d-compat'
 
 import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
 import OrbHolderGeometry, {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
+import {triangleCount} from '../../src/lib/geometry.ts'
 import {orbRadius} from '../../src/orbs/index.ts'
 
 await RAPIER.init()
@@ -48,6 +49,24 @@ describe('the orb holder', () => {
       expect(max.x).toBeCloseTo(-min.x, 6)
       expect(max.y).toBeLessThan(orbSeat)
       expect(orbSeat - orbRadius).toBeGreaterThan(0.07)
+    } finally {
+      geometry.dispose()
+    }
+  })
+  test('stays below 4096 triangles while keeping its gadrooned cup', () => {
+    const geometry = new OrbHolderGeometry
+    try {
+      expect(triangleCount(geometry.metal)).toBeLessThan(4096)
+      // Near the cup’s middle, its surface still swings in and out by most of a centimeter between a lobe’s crest and the crease beside it.
+      const position = geometry.metal.getAttribute('position')
+      const radii: Array<number> = []
+      for (let index = 0; index < position.count; index++) {
+        if (Math.abs(position.getY(index) - 0.0905) < 0.001) {
+          radii.push(Math.hypot(position.getX(index), position.getZ(index)))
+        }
+      }
+      expect(radii.length).toBeGreaterThan(32)
+      expect(Math.max(...radii) - Math.min(...radii)).toBeGreaterThan(0.005)
     } finally {
       geometry.dispose()
     }
