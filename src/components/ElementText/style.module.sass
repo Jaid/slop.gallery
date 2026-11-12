@@ -1,0 +1,11 @@
+@use '../../style/face'
+
+// The face of one line of text; its size, colors and font come from index.tsx
+.face
+  display: grid
+  place-items: center
+  overflow: hidden
+
+.line
+  @include face.line
+  translate: 0 calc(-1 * #{face.$middleRaise})

@@ -4,9 +4,12 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import {candidateSignSuspensionCenter, candidateSignSuspensionHeight, knotCandidateSign} from 'knot-materials/knotCandidateSign.ts'
 import KnotCandidateSignGeometry from 'knot-materials/KnotCandidateSignGeometry.ts'
 import {knotPreviewHeight, knotPreviewMountY, knotPreviewPanelOffsetY} from 'knot-materials/KnotPreviewLayout.ts'
+import {createElement} from 'react'
+import {renderToStaticMarkup} from 'react-dom/server'
 import {Quaternion, Vector3} from 'three/webgpu'
 
-import drawFace, {candidateSignFontSize, candidateSignTextureSize} from '../../src/components/KnotCandidateSign/drawFace.ts'
+import KnotCandidateSignFace, {candidateSignBackground, candidateSignTextureSize} from '#component/KnotCandidateSignFace'
+
 import {knotGalleryBounds} from '../../src/lib/gallery/knotGallery.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 
@@ -100,35 +103,29 @@ test('large physical signs have two ceiling mounts, bounded chain geometry and r
     geometry.dispose()
   }
 })
-test('printed faces use a compact raster with fitted model name and proportional icon, without exhibit numbers', () => {
+test('printed faces use a compact raster with a fitted model name and its mark, without exhibit numbers', () => {
   expect(candidateSignTextureSize).toEqual([1024, 246])
   expect(candidateSignTextureSize[0] * candidateSignTextureSize[1] * 4 * 12).toBeLessThan(12 * 1024 ** 2)
-  for (const withIcon of [true, false]) {
-    const text: Array<Array<unknown>> = []
-    const images: Array<Array<unknown>> = []
-    const fonts: Array<string> = []
-    const context = {
-      set font(value: string) {
-        fonts.push(value)
-      },
-      fillRect() {},
-      strokeRect() {},
-      fillText: (...args: Array<unknown>) => text.push(args),
-      drawImage: (...args: Array<unknown>) => images.push(args),
-      measureText: () => ({width: 3000}),
-    } as unknown as CanvasRenderingContext2D
-    const icon = {
-      naturalWidth: 256,
-      naturalHeight: 128,
-    } as HTMLImageElement
-    drawFace(context, 'A very long model name', withIcon ? icon : undefined)
-    expect(text).toHaveLength(1)
-    expect(text[0][0]).toBe('A very long model name')
-    expect(text[0][2]).toBe(candidateSignTextureSize[1] / 2)
-    expect(Number.parseInt(fonts[1].split(' ')[1], 10)).toBeLessThan(candidateSignFontSize)
-    expect(images).toHaveLength(withIcon ? 1 : 0)
-    if (withIcon) {
-      expect(images[0]).toEqual([icon, 45, (candidateSignTextureSize[1] - 75) / 2, 150, 75])
+  for (const icon of ['/mark.svg', undefined]) {
+    const markup = renderToStaticMarkup(createElement(KnotCandidateSignFace, {
+      title: 'A very long model name',
+      icon,
+    }))
+    expect(markup).toContain(`width:${candidateSignTextureSize[0]}px;height:${candidateSignTextureSize[1]}px`)
+    expect(markup).toContain(`background:${candidateSignBackground}`)
+    expect(markup.split('>A very long model name<')).toHaveLength(2)
+    expect(markup.split('data-fit')).toHaveLength(2)
+    expect(markup.includes('<img')).toBe(icon !== undefined)
+    expect(markup).not.toContain('>#')
+    if (icon) {
+      expect(markup).toContain('src="/mark.svg"')
     }
   }
+  // The name moves aside for the mark.
+  const withMark = renderToStaticMarkup(createElement(KnotCandidateSignFace, {
+    title: 'Name',
+    icon: '/mark.svg',
+  }))
+  const alone = renderToStaticMarkup(createElement(KnotCandidateSignFace, {title: 'Name'}))
+  expect(/class="([^"]*)" data-fit/u.exec(withMark)![1]).not.toBe(/class="([^"]*)" data-fit/u.exec(alone)![1])
 })

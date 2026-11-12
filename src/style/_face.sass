@@ -1,0 +1,9 @@
+// Faces of signs: HTML that rasterize-element turns into textures
+
+// How far above its box’s middle a line trimmed to its capitals sits where canvas text with the “middle” baseline sat, whatever the font
+$middleRaise: 0.07em
+
+// A single line whose box is its capitals, so that centering it centers the lettering rather than the font’s line box
+@mixin line
+  white-space: nowrap
+  text-box: trim-both cap alphabetic

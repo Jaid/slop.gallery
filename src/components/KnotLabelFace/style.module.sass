@@ -1,0 +1,70 @@
+@use '../../style/face'
+
+// One nameplate’s complete face; its size comes from KnotLabels/layout.ts
+.plate
+  position: relative
+  overflow: hidden
+  font-family: main, sans-serif
+
+.accent
+  position: absolute
+  top: 41px
+  left: 38px
+  width: 644px
+  height: 8px
+
+.line
+  @include face.line
+  position: absolute
+  left: 50%
+  translate: -50% calc(-50% - #{face.$middleRaise})
+
+.number
+  top: 132px
+  max-width: 644px
+  color: #fff3d9
+  font-weight: 600
+  font-size: 74px
+
+.title
+  top: 225px
+  max-width: 644px
+  font-weight: 600
+  font-size: 44.5px
+
+.rarity
+  top: 290px
+  max-width: 300px
+  color: #e5cf87
+  font-family: sans-serif
+  font-size: 32px
+
+// The icon and the model’s name are centered together.
+.model
+  position: absolute
+  top: 364px
+  left: 50%
+  display: flex
+  align-items: center
+  gap: 15px
+  max-width: 596px
+  translate: -50% -50%
+  color: #c5d0d9
+  font-size: 40px
+
+.icon
+  flex: none
+  width: 50px
+  height: 50px
+  object-fit: contain
+
+.modelTitle
+  @include face.line
+  min-width: 0
+  translate: 0 calc(-1 * #{face.$middleRaise})
+
+.detail
+  top: 414px
+  max-width: 606px
+  color: #91a0ad
+  font-size: 30px

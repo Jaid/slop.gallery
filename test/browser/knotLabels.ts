@@ -1,10 +1,8 @@
-import type {KnotExhibit} from 'knot-materials/exhibition.ts'
-
 import renderCanvasTexture from 'canvas-textures/three'
 import {attribute, texture, uv, vec2} from 'three/tsl'
 import {InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicNodeMaterial, OrthographicCamera, PlaneGeometry, RenderTarget, Scene, SRGBColorSpace, WebGPURenderer} from 'three/webgpu'
 
-import drawLabel, {labelAtlasColumns, labelBackground, labelFonts, labelHeight, labelWidth} from '../../src/components/KnotLabels/drawLabel.ts'
+import {labelAtlasColumns, labelBackground, labelHeight, labelTile, labelWidth} from '../../src/components/KnotLabels/layout.ts'
 
 /** Detached rendering only: full-size atlas, row boundaries, final tile and late shader invalidation. */
 export default async function verifyKnotLabels() {
@@ -12,26 +10,18 @@ export default async function verifyKnotLabels() {
   const rows = Math.ceil(count / labelAtlasColumns)
   const indices = [0, labelAtlasColumns - 1, labelAtlasColumns, count - 1]
   const accents = ['#ff0000', '#00ff00', '#0000ff', '#ffff00']
-  await Promise.all(Object.values(labelFonts).map(font => document.fonts.load(font)))
   const atlas = renderCanvasTexture({
     width: labelAtlasColumns * labelWidth,
     height: rows * labelHeight,
     mipmaps: false,
     draw(context) {
+      // Faces are HTML now; the upload and the tile mapping only need each tile’s accent stripe on the face color.
       for (let index = 0; index < count; index++) {
-        const exhibit = {
-          label: `#${index + 1}`,
-          title: 'Abyssal Lantern',
-          rarity: 2,
-          modelTitle: 'GPT-6 Astra',
-          harness: 'Codex',
-          author: {model: {title: 'GPT-6 Astra'}},
-          placeholder: {
-            color: accents[indices.indexOf(index)] ?? '#46d6ff',
-            shading: 'smooth',
-          },
-        } as KnotExhibit
-        drawLabel(context, exhibit, index % labelAtlasColumns * labelWidth, Math.floor(index / labelAtlasColumns) * labelHeight)
+        const {x, y} = labelTile(index)
+        context.fillStyle = labelBackground
+        context.fillRect(x, y, labelWidth, labelHeight)
+        context.fillStyle = accents[indices.indexOf(index)] ?? '#46d6ff'
+        context.fillRect(x + 38, y + 41, 644, 8)
       }
     },
   })

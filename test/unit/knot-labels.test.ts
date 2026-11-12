@@ -3,8 +3,13 @@ import {describe, expect, test} from 'bun:test'
 import {knotsById} from 'knot-materials'
 import {knotBays, knotExhibition} from 'knot-materials/exhibition.ts'
 import {knotSign} from 'knot-materials/signs.ts'
+import {createElement} from 'react'
+import {renderToStaticMarkup} from 'react-dom/server'
 
-import drawLabel, {drawRarity, knotDetailLine, labelAtlasColumns, labelBackground, labelFonts, labelHeight, labelWidth, modelLineLayout, updateRarityAtlas} from '../../src/components/KnotLabels/drawLabel.ts'
+import KnotLabelFace, {KnotLabelFaces} from '#component/KnotLabelFace'
+
+import {knotDetailLine, labelAtlasColumns, labelBackground, labelHeight, labelTile, labelWidth} from '../../src/components/KnotLabels/layout.ts'
+import redrawPlates from '../../src/components/KnotLabels/redrawPlates.ts'
 import signAccentColor from '../../src/components/signAccentColor.ts'
 
 const iconHash = async (id: string) => Bun.hash(await Bun.file(new URL(knotsById.get(id)!.candidate.icon)).arrayBuffer())
@@ -35,201 +40,148 @@ describe('Knot nameplates', () => {
     expect(await iconHash('opal_fire')).toBe(await iconHash('lightless_border'))
     expect(await iconHash('cyber_kintsugi')).toBe(await iconHash('schwarzschild_vault'))
   })
-  test('centers the candidate icon and model text together and fits long names', () => {
-    for (const measured of [90, 240, 400, 1000]) {
-      for (const hasIcon of [true, false]) {
-        const line = modelLineLayout(measured, hasIcon)
-        expect(line.left).toBeGreaterThanOrEqual(62)
-        expect(line.left * 2 + line.iconSize + line.gap + line.textWidth).toBe(labelWidth)
-        expect(line.textWidth).toBeLessThanOrEqual(measured)
-        expect(line.iconSize).toBe(hasIcon ? 50 : 0)
-        expect(line.gap).toBe(hasIcon ? 15 : 0)
-      }
+  test('a face holds its number, title, stars, model with its mark and how it was made, with every line of text fitted', () => {
+    const exhibit = knotExhibition[0]
+    const markup = renderToStaticMarkup(createElement(KnotLabelFace, {exhibit}))
+    expect(markup).toContain(`width:${labelWidth}px;height:${labelHeight}px`)
+    expect(markup).toContain(`background:${labelBackground}`)
+    expect(markup).toContain(`style="background:${signAccentColor(exhibit.placeholder.color)}"`)
+    expect(markup).toContain(`style="color:${signAccentColor(exhibit.placeholder.color)}" data-fit="">${exhibit.title}<`)
+    for (const text of [exhibit.label, exhibit.title, exhibit.modelTitle, knotDetailLine(exhibit.harness, exhibit.author.model.effortLevel), Array.from({length: exhibit.rarity}, () => '★').join(' ')]) {
+      expect(markup.split(`>${text}<`)).toHaveLength(2)
     }
+    expect(markup.split('<img')).toHaveLength(2)
+    expect(markup).toContain(`src="${exhibit.candidate.icon}"`)
+    expect(markup.split('data-fit')).toHaveLength(5)
+    // The model’s mark comes before its name, in one line.
+    expect(markup.indexOf('<img')).toBeLessThan(markup.indexOf(`>${exhibit.modelTitle}<`))
   })
-  test('draws the complete face once at any atlas offset, with centered icons and bounded text', () => {
-    for (const [x, y] of [[0, 0], [labelWidth, labelHeight], [6 * labelWidth, 16 * labelHeight]]) {
-      const texts: Array<Array<unknown>> = []
-      const rects: Array<{
-        args: Array<number>
-        color: string
-      }> = []
-      const images: Array<Array<unknown>> = []
-      const fonts: Array<string> = []
-      const context = {
-        fillStyle: '',
-        set font(value: string) {
-          fonts.push(value)
-        },
-        fillRect(...args: Array<number>) {
-          rects.push({
-            args,
-            color: this.fillStyle,
-          })
-        },
-        fillText: (...args: Array<unknown>) => texts.push(args),
-        drawImage: (...args: Array<unknown>) => images.push(args),
-        measureText: () => ({width: 240}),
-      }
-      const exhibit = {
+  test('a face without a mark or a way it was made leaves both out instead of leaving them empty', () => {
+    const markup = renderToStaticMarkup(createElement(KnotLabelFace, {
+      exhibit: {
         ...knotExhibition[0],
+        candidate: undefined,
         harness: undefined,
         author: {model: {title: knotExhibition[0].modelTitle}},
-      }
-      const icon = {
-        naturalWidth: 256,
-        naturalHeight: 128,
-      } as HTMLImageElement
-      drawLabel(context as unknown as CanvasRenderingContext2D, exhibit, x, y, icon)
-      expect(fonts).toEqual([labelFonts.number, labelFonts.title, labelFonts.rarity, labelFonts.model])
-      expect(rects).toEqual([
-        {
-          args: [x, y, labelWidth, labelHeight],
-          color: labelBackground,
-        },
-        {
-          args: [x + 38, y + 41, 644, 8],
-          color: signAccentColor(exhibit.placeholder.color),
-        },
-        {
-          args: [x + 200, y + 264, 320, 52],
-          color: labelBackground,
-        },
-      ])
-      const {left} = modelLineLayout(240, true)
-      expect(images).toEqual([[icon, x + left, y + 351.5, 50, 25]])
-      expect(texts).toEqual([
-        [exhibit.label, x + labelWidth / 2, y + 132, 644],
-        [exhibit.title, x + labelWidth / 2, y + 225, 644],
-        [Array.from({length: exhibit.rarity}, () => '★').join(' '), x + labelWidth / 2, y + 290, 300],
-        [exhibit.modelTitle, x + left + 65, y + 364, 240],
-      ])
-    }
+      },
+    }))
+    expect(markup).not.toContain('<img')
+    expect(markup.split('data-fit')).toHaveLength(4)
   })
   test('formats harness and thinking effort with flattenString.list semantics', () => {
     const cases = [
-      {
-        harness: undefined,
-        effortLevel: undefined,
-        expected: '',
-      },
-      {
-        harness: '',
-        effortLevel: '',
-        expected: '',
-      },
-      {
-        harness: 'none',
-        effortLevel: undefined,
-        expected: 'non-agentic',
-      },
-      {
-        harness: 'none',
-        effortLevel: 'high',
-        expected: 'non-agentic, high effort',
-      },
-      {
-        harness: 'Codex',
-        effortLevel: undefined,
-        expected: 'Codex',
-      },
-      {
-        harness: undefined,
-        effortLevel: 'high',
-        expected: 'high effort',
-      },
-      {
-        harness: 'Codex',
-        effortLevel: 'high',
-        expected: 'Codex, high effort',
-      },
+      [undefined, undefined, ''],
+      ['', '', ''],
+      ['none', undefined, 'non-agentic'],
+      ['none', 'high', 'non-agentic, high effort'],
+      ['Codex', undefined, 'Codex'],
+      [undefined, 'high', 'high effort'],
+      ['Codex', 'high', 'Codex, high effort'],
     ] as const
-    for (const {harness, effortLevel, expected} of cases) {
+    for (const [harness, effortLevel, expected] of cases) {
       expect(knotDetailLine(harness, effortLevel)).toBe(expected)
-      const lines: Array<{
-        align: string
-        args: Array<unknown>
-        font: string
-      }> = []
-      const context = {
-        font: '',
-        textAlign: '',
-        fillRect() {},
-        measureText: () => ({width: 240}),
-        fillText(...args: Array<unknown>) {
-          lines.push({
-            args,
-            font: this.font,
-            align: this.textAlign,
-          })
-        },
-      }
-      const exhibit = {
-        ...knotExhibition[0],
-        harness,
-        author: {
-          model: {
-            title: knotExhibition[0].modelTitle,
-            effortLevel,
+      const markup = renderToStaticMarkup(createElement(KnotLabelFace, {
+        exhibit: {
+          ...knotExhibition[0],
+          harness,
+          author: {
+            model: {
+              title: knotExhibition[0].modelTitle,
+              effortLevel,
+            },
           },
         },
-      }
-      drawLabel(context as unknown as CanvasRenderingContext2D, exhibit, 0, 0)
-      expect(lines).toHaveLength(expected ? 5 : 4)
-      expect(lines[0].args[1]).toBeGreaterThanOrEqual(0)
+      }))
+      // An empty one leaves its line out.
+      expect(markup.split('data-fit')).toHaveLength(expected ? 5 : 4)
       if (expected) {
-        expect(lines[4]).toEqual({
-          args: [expected, labelWidth / 2, 414, 606],
-          font: labelFonts.detail,
-          align: 'center',
-        })
+        expect(markup).toContain(`>${expected}<`)
       }
     }
   })
+  test('the atlas lays every face out row by row, where the instanced batch looks for it', () => {
+    const exhibits = knotExhibition.slice(0, labelAtlasColumns + 2)
+    const markup = renderToStaticMarkup(createElement(KnotLabelFaces, {exhibits}))
+    expect(markup).toContain(`grid-template-columns:repeat(${labelAtlasColumns}, ${labelWidth}px)`)
+    expect(markup).toContain(`width:${labelAtlasColumns * labelWidth}px`)
+    const positions = exhibits.map(exhibit => markup.indexOf(`>${exhibit.title}<`))
+    expect(positions.every(position => position > 0)).toBe(true)
+    expect(positions).toEqual(positions.toSorted((a, b) => a - b))
+    expect(labelTile(0)).toEqual({
+      x: 0,
+      y: 0,
+    })
+    expect(labelTile(labelAtlasColumns - 1)).toEqual({
+      x: (labelAtlasColumns - 1) * labelWidth,
+      y: 0,
+    })
+    expect(labelTile(labelAtlasColumns + 1)).toEqual({
+      x: labelWidth,
+      y: labelHeight,
+    })
+  })
 })
-test('star strip paints one through four stars and clears the previous count at any atlas offset', () => {
+test('one through five stars are shown, and none for an unknown rarity while the rest of the face stays', () => {
   for (const rarity of [1, 2, 3, 4, 5] as const) {
-    const calls: Array<Array<unknown>> = []
-    const context = {
-      fillRect: (...args: Array<unknown>) => calls.push(args),
-      fillText: (...args: Array<unknown>) => calls.push(args),
-    }
-    drawRarity(context as unknown as CanvasRenderingContext2D, rarity, 720, 960)
-    expect(calls[0]).toEqual([920, 1224, 320, 52])
-    expect(calls[1]).toEqual([Array.from({length: rarity}, () => '★').join(' '), 1080, 1250, 300])
-  }
-})
-test('unknown signs leave the star strip blank while preserving the rest of the label', () => {
-  const texts: Array<string> = []
-  const context = {
-    fillRect() {},
-    fillText: (text: string) => texts.push(text),
-    measureText: () => ({width: 240}),
+    const markup = renderToStaticMarkup(createElement(KnotLabelFace, {
+      exhibit: {
+        ...knotExhibition[0],
+        rarity,
+      },
+    }))
+    expect(markup).toContain(`>${Array.from({length: rarity}, () => '★').join(' ')}<`)
   }
   const exhibit = {
     ...knotExhibition[0],
     rarity: 0 as const,
   }
-  drawLabel(context as unknown as CanvasRenderingContext2D, exhibit, 0, 0)
-  expect(texts).toContain(exhibit.title)
-  expect(texts).toContain(exhibit.modelTitle)
-  expect(texts.some(text => text.includes('★'))).toBe(false)
-  expect(texts).not.toContain('')
+  const markup = renderToStaticMarkup(createElement(KnotLabelFace, {exhibit}))
+  expect(markup).toContain(`>${exhibit.title}<`)
+  expect(markup).toContain(`>${exhibit.modelTitle}<`)
+  expect(markup).not.toContain('★')
 })
-test('returning to unknown clears old stars and marks the existing atlas for upload', () => {
-  const calls: Array<Array<unknown>> = []
-  const context = {
-    fillRect: (...args: Array<unknown>) => calls.push(['clear', ...args]),
-    fillText: (...args: Array<unknown>) => calls.push(['text', ...args]),
-  }
-  const exhibit = knotExhibition[0]
+test('a live rarity edit redraws only the changed face over its tile and marks the existing atlas for upload', async () => {
+  const exhibits = knotExhibition.slice(0, labelAtlasColumns + 3)
+  const changed = exhibits[labelAtlasColumns + 1]
+  const draws: Array<Array<unknown>> = []
   const atlas = {
-    image: {getContext: () => context},
+    image: {getContext: () => ({drawImage: (...args: Array<unknown>) => draws.push(args)})},
     needsUpdate: false,
   }
-  drawRarity(context as unknown as CanvasRenderingContext2D, 4, 0, 0)
-  calls.length = 0
-  updateRarityAtlas(atlas as unknown as Parameters<typeof updateRarityAtlas>[0], [exhibit], new Map([[exhibit.id, 0]]))
-  expect(calls).toEqual([['clear', 200, 264, 320, 52]])
+  const shows = new Map(exhibits.map(exhibit => [exhibit.id, exhibit.rarity]))
+  const rasterized: Array<{
+    id: string
+    rarity: number
+  }> = []
+  const plates: Array<{width: number}> = []
+  const rasterize = async (exhibit: {
+    id: string
+    rarity: number
+  }) => {
+    rasterized.push({
+      id: exhibit.id,
+      rarity: exhibit.rarity,
+    })
+    const plate = {width: labelWidth}
+    plates.push(plate)
+    return plate as HTMLCanvasElement
+  }
+  type Arguments = Parameters<typeof redrawPlates>
+  await redrawPlates(atlas as unknown as Arguments[0], exhibits, new Map, shows, rasterize)
+  expect(draws).toEqual([])
+  expect(atlas.needsUpdate).toBe(false)
+  await redrawPlates(atlas as unknown as Arguments[0], exhibits, new Map([[changed.id, 0]]), shows, rasterize)
+  expect(rasterized).toEqual([
+    {
+      id: changed.id,
+      rarity: 0,
+    },
+  ])
+  expect(draws).toEqual([[plates[0], labelWidth, labelHeight, labelWidth, labelHeight]])
+  // The face’s own canvas is released once it lies in the atlas.
+  expect(plates[0].width).toBe(0)
+  expect(shows.get(changed.id)).toBe(0)
   expect(atlas.needsUpdate).toBe(true)
+  await redrawPlates(atlas as unknown as Arguments[0], exhibits, new Map([[changed.id, 0]]), shows, rasterize)
+  expect(rasterized).toHaveLength(1)
 })

@@ -1,33 +1,33 @@
 import type {SnapshotSubject} from '#src/components/Scene/GrabbableProp.tsx'
-import type {KnotLabel} from './drawLabel.ts'
+import type {KnotLabel} from './layout.ts'
 import type {Rarity} from 'knot-materials'
 import type {Vec3} from 'math'
 import type {Material, Node, Texture} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
 import {CuboidCollider, CylinderCollider} from '@react-three/rapier'
-import {loadCanvasFonts} from 'canvas-textures'
 import useDisposable from 'disposable-lifetime/react'
-import loadCandidateIcons from 'knot-materials/loadCandidateIcons.ts'
 import {knotSign, knotSignId, knotSignParts, knotSignRoundParts} from 'knot-materials/signs.ts'
-import {useEffect, useMemo} from 'react'
+import {useEffect, useMemo, useRef} from 'react'
 import {attribute, texture, uv, vec2} from 'three/tsl'
 import {Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import InteractiveObject from '#component/InteractiveObject'
+import KnotLabelFace, {KnotLabelFaces} from '#component/KnotLabelFace'
 import GrabbableProp, {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import metal from '#src/lib/materials/metal.ts'
 import InstancedPropVisuals from '#src/lib/physics/InstancedPropVisuals.ts'
 import {fitCanvasTextureResolution, getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
-import useLoadingCanvasTexture from '#src/lib/useLoadingCanvasTexture.ts'
+import useLoadingElementTexture, {rasterizeFace} from '#src/lib/useLoadingElementTexture.ts'
 
-import drawLabel, {labelAtlasColumns, labelBackground, labelFonts, labelHeight, labelWidth, updateRarityAtlas} from './drawLabel.ts'
+import {labelAtlasColumns, labelBackground, labelHeight, labelWidth} from './layout.ts'
+import redrawPlates from './redrawPlates.ts'
 import createSupportGeometry from './supportGeometry.ts'
 
 /** a nameplate on its stand: `position` is its plaque’s center, `knotSign.elevation` over the floor its stand rests on, and `rotation` turns it around the vertical */
 export type KnotSignPlacement = {
-  entry: KnotLabel & {candidate: {icon: string}}
+  entry: KnotLabel
   position: Vec3
   rotation: number
 }
@@ -124,52 +124,46 @@ export default function KnotLabels({signs, ratings, action = 'Listen', onActivat
       },
     }
   }, [atlasRows, signs]))
-  const atlas = useLoadingCanvasTexture('knot-sign-texture', useMemo(() => ({
+  const atlasResolution = fitCanvasTextureResolution(resolution, labelAtlasColumns * labelWidth, atlasRows * labelHeight)
+  const atlas = useLoadingElementTexture('knot-sign-texture', useMemo(() => ({
     width: labelAtlasColumns * labelWidth,
     height: atlasRows * labelHeight,
-    resolution: fitCanvasTextureResolution(resolution, labelAtlasColumns * labelWidth, atlasRows * labelHeight),
+    resolution: atlasResolution,
     name: 'Knot nameplate atlas',
     mipmaps,
-    prepare: async () => {
-      const [icons] = await Promise.all([
-        loadCandidateIcons(signs.map(sign => sign.entry.candidate.icon)),
-        loadCanvasFonts([
-          {
-            font: labelFonts.number,
-            text: signs.map(sign => sign.entry.label).join(' '),
-          },
-          {
-            font: labelFonts.title,
-            text: signs.map(sign => sign.entry.title).join(' '),
-          },
-          {
-            font: labelFonts.model,
-            text: signs.map(sign => sign.entry.modelTitle).join(' '),
-          },
-          {font: labelFonts.detail},
-          {
-            font: labelFonts.rarity,
-            text: '★',
-          },
-        ]),
-      ])
-      return icons
-    },
-    draw(context: CanvasRenderingContext2D, icons: ReadonlyMap<string, HTMLImageElement>) {
-      for (const [index, {entry}] of signs.entries()) {
-        drawLabel(context, entry, index % labelAtlasColumns * labelWidth, Math.floor(index / labelAtlasColumns) * labelHeight, icons.get(entry.candidate.icon))
-      }
-    },
-  }), [atlasRows, mipmaps, resolution, signs]))
+    render: () => <KnotLabelFaces exhibits={signs.map(sign => sign.entry)} />,
+  }), [atlasResolution, atlasRows, mipmaps, signs]))
   useEffect(() => {
     resources.setAtlas(atlas)
   }, [resources, atlas])
+  /** the rarities the atlas shows, which only differ from the entries’ own after live edits */
+  const shown = useRef<{
+    atlas: typeof atlas
+    ratings: Map<string, Rarity>
+  }>(null)
   useEffect(() => {
     if (!atlas || !ratings) {
       return
     }
-    updateRarityAtlas(atlas, signs.map(sign => sign.entry), ratings)
-  }, [atlas, ratings, signs])
+    if (shown.current?.atlas !== atlas) {
+      shown.current = {
+        atlas,
+        ratings: new Map(signs.map(({entry}) => [entry.id, entry.rarity])),
+      }
+    }
+    const controller = new AbortController
+    const rasterize = (exhibit: KnotLabel) => rasterizeFace(<KnotLabelFace exhibit={exhibit} />, {
+      width: labelWidth,
+      height: labelHeight,
+      resolution: atlasResolution,
+    }, controller.signal)
+    void redrawPlates(atlas, signs.map(sign => sign.entry), ratings, shown.current.ratings, rasterize).catch((error: unknown) => {
+      if (!controller.signal.aborted) {
+        console.error('Knot nameplate could not be redrawn.', error)
+      }
+    })
+    return () => controller.abort()
+  }, [atlas, atlasResolution, ratings, signs])
   useFrame(() => resources.visuals.update(id => propObjects.get(id)?.group))
   return <>
     <primitive object={resources.faces} />

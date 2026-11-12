@@ -2,23 +2,20 @@ import type {RapierRigidBody} from '@react-three/rapier'
 import type {KnotBay} from 'knot-materials/exhibition.ts'
 
 import {CuboidCollider, CylinderCollider, RigidBody, useRevoluteJoint} from '@react-three/rapier'
-import {loadCanvasFonts} from 'canvas-textures'
 import useDisposable from 'disposable-lifetime/react'
 import {knotLayout} from 'knot-materials/exhibition.ts'
 import {candidateSignSuspensionCenter, candidateSignSuspensionHeight, knotCandidateSign} from 'knot-materials/knotCandidateSign.ts'
 import KnotCandidateSignGeometry from 'knot-materials/KnotCandidateSignGeometry.ts'
-import loadCandidateIcons from 'knot-materials/loadCandidateIcons.ts'
 import {useMemo, useRef} from 'react'
 import {MeshBasicNodeMaterial, MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import InteractiveObject from '#component/InteractiveObject'
+import KnotCandidateSignFace, {candidateSignBackground, candidateSignTextureSize} from '#component/KnotCandidateSignFace'
 import {narrate} from '#src/lib/gallery/actions.ts'
 import {knotGalleryBounds} from '#src/lib/gallery/knotGallery.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
-import useLoadingCanvasTexture from '#src/lib/useLoadingCanvasTexture.ts'
-
-import drawFace, {candidateSignBackground, candidateSignFontSize, candidateSignTextureSize} from './drawFace.ts'
+import useLoadingElementTexture from '#src/lib/useLoadingElementTexture.ts'
 
 export default function KnotCandidateSign({bay}: {bay: KnotBay}) {
   const anchor = useRef<RapierRigidBody>(null!)
@@ -33,26 +30,14 @@ export default function KnotCandidateSign({bay}: {bay: KnotBay}) {
   }) : new MeshBasicNodeMaterial({color: '#ac9270'})), [isHeavy]))
   const geometry = useDisposable(useMemo(() => new KnotCandidateSignGeometry, []))
   const {candidate} = bay
-  const texture = useLoadingCanvasTexture(`model-sign-texture:${candidate.id}`, {
+  const texture = useLoadingElementTexture(`model-sign-texture:${candidate.id}`, useMemo(() => ({
     width: candidateSignTextureSize[0],
     height: candidateSignTextureSize[1],
     resolution,
     name: `Candidate sign: ${candidate.title}`,
     mipmaps,
-    prepare: async () => {
-      const [icons] = await Promise.all([
-        loadCandidateIcons([candidate.icon]),
-        loadCanvasFonts([
-          {
-            font: `600 ${candidateSignFontSize}px main`,
-            text: candidate.title,
-          },
-        ]),
-      ])
-      return icons.get(candidate.icon)
-    },
-    draw: (context: CanvasRenderingContext2D, icon: HTMLImageElement | undefined) => drawFace(context, candidate.title, icon),
-  })
+    render: () => <KnotCandidateSignFace icon={candidate.icon} title={candidate.title} />,
+  }), [candidate, mipmaps, resolution]))
   const face = useDisposable(useMemo(() => new MeshBasicNodeMaterial({
     map: texture,
     color: texture ? '#ffffff' : candidateSignBackground,

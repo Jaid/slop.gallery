@@ -1,10 +1,10 @@
-import type {CanvasTextSurface} from '#component/CanvasText'
+import type {ElementTextSurface} from '#component/ElementText'
 
-import CanvasText from '#component/CanvasText'
+import ElementText from '#component/ElementText'
 import portraitLabel, {portraitLabelLayout} from '#src/lib/gallery/portraitLabel.ts'
 
 /** the painted card, which the text is painted on too, opaque, so a fusion’s warp, which bends the opaque scene, takes it along with the card */
-const card: CanvasTextSurface = {
+const card: ElementTextSurface = {
   color: '#eee8d7',
   roughness: 0.6,
 }
@@ -37,8 +37,8 @@ export default function PortraitLabel({width, height, title, creator = '', pendi
       <boxGeometry args={[layout.width, portraitLabel.height, portraitLabel.depth]} />
       <LabelBoardMaterial preview={preview} />
     </mesh>
-    <CanvasText color={preview ? '#ffffff' : '#3d4035'} fontFamily='Georgia' fontSize={0.63} height={0.135} materialProps={textMaterial} name='portrait-label-title' position={[0, 0.047, face]} surface={preview ? undefined : card} text={title || 'Finding the right words…'} width={layout.titleWidth} />
-    <CanvasText color={preview ? '#ffffff' : '#696653'} fontSize={0.64} height={0.085} materialProps={textMaterial} name='portrait-label-creator' position={[0, -0.065, face]} surface={preview ? undefined : card} text={creator + (pending ? ' · writing…' : '')} width={layout.creatorWidth} />
+    <ElementText color={preview ? '#ffffff' : '#3d4035'} fontFamily='Georgia' fontSize={0.63} height={0.135} materialProps={textMaterial} name='portrait-label-title' position={[0, 0.047, face]} surface={preview ? undefined : card} text={title || 'Finding the right words…'} width={layout.titleWidth} />
+    <ElementText color={preview ? '#ffffff' : '#696653'} fontSize={0.64} height={0.085} materialProps={textMaterial} name='portrait-label-creator' position={[0, -0.065, face]} surface={preview ? undefined : card} text={creator + (pending ? ' · writing…' : '')} width={layout.creatorWidth} />
   </group>
 }
 

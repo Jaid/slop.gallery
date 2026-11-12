@@ -3,8 +3,11 @@ import {expect, test} from 'bun:test'
 import {knotBays, knotNumberLabel} from 'knot-materials/exhibition.ts'
 import {knotPreviewBottomClearance, knotPreviewHeight, knotPreviewMountY, knotPreviewPanelOffsetY, knotPreviewTextureHeight, knotPreviewTextureLayout, knotPreviewTextureWidth, knotPreviewWidth} from 'knot-materials/KnotPreviewLayout.ts'
 import {billboardParts} from 'knot-materials/signs.ts'
+import {createElement} from 'react'
+import {renderToStaticMarkup} from 'react-dom/server'
 
-import drawPreview, {knotPreviewBackground} from '../../src/components/KnotPreviewSigns/drawPreview.ts'
+import KnotPreviewFace, {knotPreviewBackground} from '#component/KnotPreviewFace'
+
 import signAccentColor from '../../src/components/signAccentColor.ts'
 
 test('runtime billboards keep one 3:2 mesh and pack stickers to fit the fixed raster', () => {
@@ -51,21 +54,14 @@ test('shorter rows are kept in the middle and centered within the billboard', ()
     }],
   }
   const layout = knotPreviewTextureLayout(bay.finishes.length)
-  const texts: Array<Array<unknown>> = []
-  const context = {
-    canvas: {
-      width: layout.width,
-      height: layout.height,
-    },
-    fillRect() {},
-    drawImage() {},
-    measureText: () => ({width: 180}),
-    fillText: (...args: Array<unknown>) => texts.push(args),
-  } as unknown as CanvasRenderingContext2D
-  drawPreview(context, bay, new Map)
   expect(layout.rowCounts).toEqual([2, 3])
-  expect(texts).toHaveLength(5)
-  expect((texts[0][1] as number) + (texts[1][1] as number)).toBe(layout.width)
+  const markup = renderToStaticMarkup(createElement(KnotPreviewFace, {
+    bay,
+    images: new Map,
+  }))
+  const rows = markup.split(`height:${layout.rowHeight}px`).slice(1)
+  expect(rows.map(row => row.split('data-fit').length - 1)).toEqual([2, 3])
+  expect(markup.split(`width:${layout.tileWidth}px`)).toHaveLength(6)
 })
 test('runtime billboard textures keep the default preview population below 192 MiB', () => {
   const bytes = knotBays.reduce((total, bay) => {
@@ -75,60 +71,28 @@ test('runtime billboard textures keep the default preview population below 192 M
   expect(bytes).toBeLessThan(192 * 1024 ** 2)
   expect(knotBays.every(bay => bay.finishes.length > 0)).toBe(true)
 })
-test('candidate atlas draws dynamic numbers, titles, accents and image fallbacks in one surface', () => {
+test('a billboard shows dynamic numbers, titles, accents, pictures in their own proportions and plain squares for missing ones in one face', () => {
   const bay = knotBays[0]
   const layout = knotPreviewTextureLayout(bay.finishes.length)
-  const fills: Array<{
-    args: Array<number>
-    style: string
-  }> = []
-  const texts: Array<{
-    args: Array<unknown>
-    style: string
-  }> = []
-  const images: Array<Array<unknown>> = []
-  let fillStyle = ''
-  const context = {
-    canvas: {
-      width: layout.width,
-      height: layout.height,
-    },
-    font: '',
-    textAlign: '',
-    textBaseline: '',
-    get fillStyle() {
-      return fillStyle
-    },
-    set fillStyle(value: string) {
-      fillStyle = value
-    },
-    fillRect: (...args: Array<number>) => fills.push({
-      args,
-      style: fillStyle,
-    }),
-    drawImage: (...args: Array<unknown>) => images.push(args),
-    measureText: () => ({width: 180}),
-    fillText: (...args: Array<unknown>) => texts.push({
-      args,
-      style: fillStyle,
-    }),
-  } as unknown as CanvasRenderingContext2D
-  const bitmap = {
+  const picture = {
     width: 200,
     height: 100,
-  } as ImageBitmap
-  const bitmaps = new Map([[bay.finishes[0].id, bitmap]])
-  drawPreview(context, bay, bitmaps)
-  expect(fills[0]).toEqual({
-    args: [0, 0, layout.width, layout.height],
-    style: knotPreviewBackground,
-  })
-  expect(images).toHaveLength(1)
-  expect(images[0][0]).toBe(bitmap)
-  expect(fills.filter(fill => fill.style === '#5d2929')).toHaveLength(bay.finishes.length - 1)
-  expect(texts).toHaveLength(bay.finishes.length)
-  for (const [index, finish] of bay.finishes.entries()) {
-    expect(texts[index].args[0]).toBe(`${knotNumberLabel(finish.number)} · ${finish.title}`)
-    expect(texts[index].style).toBe(signAccentColor(finish.placeholder.color))
+  } as HTMLCanvasElement
+  const markup = renderToStaticMarkup(createElement(KnotPreviewFace, {
+    bay,
+    images: new Map([[bay.finishes[0].id, picture]]),
+  }))
+  expect(markup).toContain(`width:${layout.width}px;height:${layout.height}px;background:${knotPreviewBackground}`)
+  for (const finish of bay.finishes) {
+    expect(markup).toContain(`style="color:${signAccentColor(finish.placeholder.color)}" data-fit="">${knotNumberLabel(finish.number)} · ${finish.title}<`)
+  }
+  const pictures = markup.matchAll(/class="([^"]*)" style="width:([\d.]+)px;height:([\d.]+)px"/gu).filter(match => match[2] !== String(layout.tileWidth)).toArray()
+  expect(pictures).toHaveLength(bay.finishes.length)
+  // The first finish has a picture twice as wide as high, the others fall back to squares of another class.
+  expect(Number(pictures[0][2])).toBeCloseTo(Number(pictures[0][3]) * 2)
+  for (const fallback of pictures.slice(1)) {
+    expect(fallback[2]).toBe(fallback[3])
+    expect(fallback[1]).not.toBe(pictures[0][1])
+    expect(Number(fallback[2])).toBeCloseTo(Number(pictures[0][2]))
   }
 })
