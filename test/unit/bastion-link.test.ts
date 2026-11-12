@@ -5,6 +5,7 @@ import {afterAll, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
 import EgoMotor from 'ego-player/motor'
+import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
 import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
@@ -15,6 +16,7 @@ import {climbMouth} from '../../src/lib/gallery/climb.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse from '../../src/lib/gallery/oculusApse.ts'
+import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import {openingArc} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls, {floorHeight, insideGallery, roomAt} from './fixtures/gallery.ts'
@@ -71,7 +73,52 @@ test('both wings and the link belong to one Bastion', () => {
   expect(route.end.y).toBe(climbMouthHollow.outletY)
   // under the elbow’s fall toward its middle and the hollow sunk into it
   expect(climbMouth.floorY - route.end.y).toBeLessThan(0.35)
-  expect(route.end.height).toBe(climbMouth.height)
+  expect(route.end.y + route.end.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
+})
+test('the golfing gate’s arch and tunnel roof meet in world height across the whole opening', () => {
+  const {wall, hole} = bastionLinkGate
+  const {radius, center} = openingArc(hole)
+  for (let u = -hole.width / 2; u <= hole.width / 2; u += 0.025) {
+    const arch = wall.center[1] + center + Math.sqrt(radius ** 2 - u ** 2)
+    const roof = route.end.y + route.end.height - bastionLink.width / 2 + Math.sqrt((bastionLink.width / 2) ** 2 - u ** 2)
+    expect(roof).toBeCloseTo(arch, 9)
+  }
+})
+test('upward views through the golfing gate hit stone instead of escaping above the tunnel', () => {
+  const vault = new RouteVaultGeometry(bastionLink)
+  // Front faces only, like the rendered stone: a back-facing patch must not hide a hole in this check.
+  const material = new MeshBasicMaterial
+  const {wall, hole} = bastionLinkGate
+  const surface = architecture.find(entry => entry.wall.id === wall.id)!.geometry.surface
+  const face = new Mesh(surface, material)
+  face.position.set(...wall.center)
+  face.rotation.y = wall.rotation
+  face.updateMatrixWorld(true)
+  const meshes = [face, new Mesh(vault.shell, material)]
+  for (const mesh of meshes) {
+    mesh.geometry.boundsTree = new MeshBVH(mesh.geometry)
+    mesh.raycast = acceleratedRaycast
+  }
+  const {radius, center} = openingArc(hole)
+  const ray = new Raycaster
+  ray.firstHitOnly = true
+  try {
+    // Include the reported eye position and views from either shoulder and the middle of the elbow.
+    const eyes: Array<Vec3> = [[-29.67, -2.328, -23.138], ...[-1, 0, 1].flatMap(offset => [0.9, 1.6].map((up): Vec3 => [route.end.point[0] + offset, climbMouth.floorY + up, gateZ + 2]))]
+    for (const eye of eyes) {
+      ray.ray.origin.set(...eye)
+      for (let u = -hole.width / 2 + 0.05; u < hole.width / 2; u += 0.05) {
+        // Aim just under the arch all the way across it, above the old tunnel’s outer roof.
+        const target = new Vector3(wall.center[0] + hole.u + u, wall.center[1] + center + Math.sqrt(radius ** 2 - u ** 2) - 0.03, gateZ)
+        ray.far = ray.ray.origin.distanceTo(target) + 1
+        ray.ray.direction.copy(target).sub(ray.ray.origin).normalize()
+        expect(ray.intersectObjects(meshes).length).toBeGreaterThan(0)
+      }
+    }
+  } finally {
+    vault.dispose()
+    material.dispose()
+  }
 })
 test('its paving falls 1 in 20 from both walls toward its middle, but levels out toward the gate, which stands on a level floor', () => {
   expect(bastionLink.crossfall?.slope).toBe(bastionLinkCrossfall)

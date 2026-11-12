@@ -21,7 +21,7 @@ const lastRadius = mouthNorthZ - bastionLinkStripZ
 /** where the tunnel ends in the mouth’s north wall: its west wall in line with the mouth’s west wall, so it runs on into the elbow */
 const endX = climbMouth.path[1][0] - climbMouth.width / 2 + bastionLinkWidth / 2
 /** the opening it ends in through the mouth’s north wall, the size of its vault */
-const linkVault = vaultOpening(bastionLinkWidth, height)
+const linkVault = vaultOpening(bastionLinkWidth, climbMouth.height)
 const [elbowX, footZ] = climbHairpin.route.start
 /** where the mouth’s elbow ends in the west and in the east, along its west wall’s center line and straight across from the corner of its walls inside the turn, where it opens onto the straight run on toward the doorway */
 const [elbowWestX, elbowEastX] = [elbowX - climbMouth.width / 2, elbowX + climbMouth.width / 2]
@@ -66,11 +66,13 @@ export const climbMouthHollow = new FloorHollow(climbMouth.floorY, {
   sag: elbowSag,
 })
 /**
- * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow, easing up from the platform’s level all the way to a step under the hollow in front of it.
+ * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow. Its floor eases up from the platform’s level to a step under the hollow; its height eases up too, so its roof meets the arch above the gate despite the lower floor.
  */
 const route = new PassageRoute([startX, startZ], heading, y, height, [
   {
     y: climbMouthHollow.outletY,
+    // The sunken floor must not lower the roof below the gate’s arch, whose height is measured from the mouth’s floor.
+    height: climbMouth.floorY + linkVault.height - climbMouthHollow.outletY,
     steps: [
       {length: bastionLinkStripZ - cornerRadius - startZ},
       {
