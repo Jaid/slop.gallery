@@ -19,6 +19,7 @@ type FaceProps = {
   /** the surface’s color behind the text; without one, the face stays see-through */
   background?: string
   color: string
+  /** a CSS font-family value, so a generic family like sans-serif stays unquoted and a list of fallbacks works */
   fontFamily: string
   /** the text’s size before it is fitted, in the face’s pixels */
   fontSize: number
@@ -58,8 +59,7 @@ export function Face({background, color, fontFamily, fontSize, fontWeight, heigh
       className={css.line} style={{
         maxWidth: `${maxWidth * 100}%`,
         color,
-        // A quoted name: the default, sans-serif, is no generic family then but one nobody has, which falls back to the browser’s standard font, as these lines always did.
-        fontFamily: `"${fontFamily}"`,
+        fontFamily,
         fontSize,
         fontWeight,
       }} {...fitted}
