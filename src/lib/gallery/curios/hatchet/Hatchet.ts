@@ -110,6 +110,7 @@ function haftGeometry() {
 export default class Hatchet extends Curio {
   readonly id = 'hatchet'
   readonly mass = 1.25
+  readonly mood = 'horror'
   // Suspended in front of the right-hand pillar, with the head pointing down.
   readonly position: Vec3 = [
     lodge.center[0] + lodgeHatchetHook.position[0] + lodgeHatchetHook.hatchetOffset[0],

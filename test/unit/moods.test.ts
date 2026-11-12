@@ -1,4 +1,5 @@
 import type {MoodFade} from '../../src/moods/base/Mood.ts'
+import type {MoodId} from '../../src/moods/index.ts'
 import type {MoodOutput, MoodTarget} from '../../src/moods/lib/MoodMixer.ts'
 import type PlacedRoom from '../../src/worlds/base/PlacedRoom.ts'
 import type {AmbienceLoop} from 'ambience-emitter'
@@ -7,6 +8,8 @@ import {afterEach, describe, expect, mock, test} from 'bun:test'
 
 import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
+import {flavorSteering} from '../../src/lib/gallery/alchemy/flavor.ts'
+import {curios} from '../../src/lib/gallery/curios/index.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
 import Mood from '../../src/moods/base/Mood.ts'
@@ -16,6 +19,7 @@ import {readMood} from '../../src/moods/lib/forcedMood.ts'
 import MoodLens from '../../src/moods/lib/MoodLens.ts'
 import MoodMixer, {moodFade, noMood} from '../../src/moods/lib/MoodMixer.ts'
 import {moodSuppression, toggleMoodSuppression} from '../../src/moods/lib/moodSuppression.ts'
+import {castMoodId} from '../../src/moods/lib/propMood.ts'
 import {orbs} from '../../src/orbs/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
@@ -501,6 +505,38 @@ describe('moods', () => {
         expect(color).toMatch(/^#[\da-f]{6}$/)
       }
     }
+  })
+  test('every magic item casts the mood of the orb it belongs to, only in the Forge, fading in there and out again on leaving', () => {
+    expect(flavorSteering.keys().toArray().toSorted()).toEqual(curios.map(curio => curio.propId).toSorted())
+    for (const curio of curios) {
+      const orb = flavorSteering.get(curio.propId)!
+      const mood: MoodId = orb.mood!
+      expect(curio.mood).toBe(mood)
+      expect(curio.moodRoom).toBe('forge')
+      // Picked up in the Forge, or carried into it while held.
+      expect(castMoodId(curio, 'forge')).toBe(mood)
+      for (const room of ['banquet', 'bastion', 'lobby', 'lodge', 'vesper']) {
+        expect(castMoodId(curio, room)).toBeUndefined()
+      }
+    }
+    // An orb casts its mood in every room, and a prop without one casts none anywhere.
+    expect(castMoodId({mood: 'horror'}, 'lobby')).toBe('horror')
+    expect(castMoodId({}, 'forge')).toBeUndefined()
+    expect(castMoodId(undefined, 'forge')).toBeUndefined()
+    // Held in the Forge, the pumpkin’s Halloween mood fades in like its orb’s, and fades out again once carried out.
+    const mixer = new MoodMixer
+    const moodIn = (room: string) => {
+      const id = castMoodId(curios[0], room)
+      return id ? moods[id] : null
+    }
+    const heldInForge = cast(moodIn('forge'))
+    run(mixer, heldInForge, moodFade.in / 2)
+    expect(mixer.amountOf(moods.halloween)).toBeCloseTo(0.5, 1)
+    run(mixer, heldInForge, moodFade.in)
+    expect(mixer.amountOf(moods.halloween)).toBe(1)
+    run(mixer, cast(moodIn('lobby')), moodFade.out + step)
+    expect(mixer.amountOf(moods.halloween)).toBe(0)
+    expect(mixer.moods).toEqual([])
   })
   test('the fusion’s mood belongs to no orb and comes over the world while the intro plays', () => {
     expect(orbs.map(orb => orb.mood)).not.toContain('fusion')

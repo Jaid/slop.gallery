@@ -625,6 +625,7 @@ export const paintingSetSpot: Vec3 = [forgeTableCenter[0], forgeTable.height + 0
 export default class PaintingSet extends Curio {
   readonly id = 'painting-set'
   readonly mass = 2.4
+  readonly mood = 'paint'
   readonly position = paintingSetSpot
   readonly reach = 0.38
   readonly room = 'forge'

@@ -131,6 +131,7 @@ function opening(thetas: ReadonlyArray<number>, phis: ReadonlyArray<number>) {
 export default class Helmet extends Curio {
   readonly id = 'helmet'
   readonly mass = 3.2
+  readonly mood = 'spook'
   readonly position: Vec3 = [lodgeSpurArmor[0], lodgeSpurArmor[1] + suitOfArmor.collar + 0.001, lodgeSpurArmor[2]]
   readonly reach = 0.4
   readonly room = 'bastion'

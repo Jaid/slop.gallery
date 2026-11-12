@@ -1,3 +1,4 @@
+import type {MoodId} from '../../../../moods/index.ts'
 import type {GalleryRoomId} from '../../../../worlds/gallery/index.ts'
 import type {Vec3} from '../../types.ts'
 import type {BufferGeometry, Material} from 'three/webgpu'
@@ -53,13 +54,17 @@ export class CurioModel {
 }
 
 /**
- * A thing lying about the gallery that the player can pick up, carry, drop and throw, like a prop of a kind of its own: built of procedural meshes, with a convex hull around all of them as its collider.
- * Its prop is `prop-<id>`, and it lives in a folder of its own.
+ * A magic item lying about the gallery that the player can pick up, carry, drop and throw, like a prop of a kind of its own: built of procedural meshes, with a convex hull around all of them as its collider.
+ * Held in the Forge, it casts the mood of the orb it belongs to there. Its prop is `prop-<id>`, and it lives in a folder of its own.
  */
 export default abstract class Curio {
   abstract readonly id: string
   /** how heavy it is, in kilograms */
   abstract readonly mass: number
+  /** the id of the mood that comes over the world while the player holds the curio in the Forge, that of the orb it steers a Transparent Orb to there */
+  abstract readonly mood: MoodId
+  /** the room its mood only comes over the world in, where it belongs to its orb */
+  readonly moodRoom: GalleryRoomId = 'forge'
   /** where its origin lies when a game begins, in world space */
   abstract readonly position: Vec3
   /** how far from its origin the camera orbits it while V is held */

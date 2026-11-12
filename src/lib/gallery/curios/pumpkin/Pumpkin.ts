@@ -52,6 +52,7 @@ function rind(u: number, v: number) {
 export default class Pumpkin extends Curio {
   readonly id = 'pumpkin'
   readonly mass = 4.5
+  readonly mood = 'halloween'
   readonly position = pumpkinSpot
   readonly reach = 0.32
   readonly room = 'banquet'
