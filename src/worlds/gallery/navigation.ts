@@ -6,7 +6,7 @@ import {bastionFloors, insideBastion} from '#src/lib/gallery/bastionNetwork.ts'
 import {corridorLanding, corridorPassage, corridorStairFloor, insideCorridor} from '#src/lib/gallery/corridor.ts'
 import {forgeVestibuleFloor} from '#src/lib/gallery/forgeVestibule.ts'
 import {insideLodgeWindow, lodgeBayFloor, lodgeWindowFloor} from '#src/lib/gallery/lodge.ts'
-import lowerGallery, {rampFloorHeight, tunnelFloorHeight} from '#src/lib/gallery/lowerGallery.ts'
+import {rampFloorHeight, tunnelContains, tunnelFloorHeight} from '#src/lib/gallery/lowerGallery.ts'
 import {craterTerrain} from '#src/lib/gallery/moonfall/CraterTerrain.ts'
 import {insideApse, platformFloorHeight} from '#src/lib/gallery/oculusApse.ts'
 import {balconyFloorHeight} from '#src/lib/gallery/oculusBalcony.ts'
@@ -17,8 +17,7 @@ import {displayFloorHeight, insideTunnelDisplay} from '#src/lib/gallery/tunnelDi
 
 type Hall = PlacedRoom<GalleryRoom> & {size: NonNullable<GalleryRoom['size']>}
 
-const {tunnel} = lowerGallery
-const tunnelContains = ([x, y, z]: Vec3) => Math.abs(x - tunnel.x) <= tunnel.width / 2 && z >= tunnel.northZ && z <= tunnel.southZ && y >= tunnelFloorHeight(z) - 1 && y <= tunnelFloorHeight(z) + tunnel.height
+// Tunnel containment and floor height are provided by lowerGallery.
 const inPlan = ({center, size}: Hall, x: number, z: number) => Math.abs(x - center[0]) <= size[0] / 2 && Math.abs(z - center[1]) <= size[1] / 2
 /** The ground under the point in the room: its floor, or Moonfall’s crater where it dips below. */
 const groundOf = (room: Hall, x: number, z: number) => room.floorY + (room.id === 'moonfall' ? craterTerrain.height(x - room.center[0], z - room.center[1]) : 0)
@@ -51,7 +50,7 @@ export default class GalleryNavigation {
       siennaVestibuleFloor(x, z),
       forgeVestibuleFloor(x, z),
       platformFloorHeight(x, z),
-      tunnelContains([x, tunnelFloorHeight(z), z]) ? tunnelFloorHeight(z) : undefined,
+      tunnelFloorHeight(x, z),
       lodgeWindowFloor(x, z),
       lodgeBayFloor(x, z),
       corridorStairFloor(x, z),

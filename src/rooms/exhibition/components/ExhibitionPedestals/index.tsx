@@ -8,7 +8,7 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import DisplayPedestalGeometry from '#src/lib/gallery/DisplayPedestalGeometry.ts'
-import {tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
+import {tunnelDiagonalYaw, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
 import {exhibitionPedestal, exhibitionPedestalLobes, exhibitionSlots} from '#src/rooms/exhibition/exhibits.ts'
 
 type PedestalMaterials = Record<'cap' | 'reveal' | 'stone', Material>
@@ -52,7 +52,7 @@ function Pedestal({geometry, materials, name, position}: {
   name: string
   position: Vec3
 }) {
-  return <RigidBody colliders={false} name={name} position={position} type='fixed'>
+  return <RigidBody colliders={false} name={name} position={position} rotation={[0, tunnelDiagonalYaw, 0]} type='fixed'>
     {geometry.collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
     <mesh castShadow geometry={geometry.stone} material={materials.stone} receiveShadow />
     <mesh castShadow geometry={geometry.reveal} material={materials.reveal} receiveShadow />

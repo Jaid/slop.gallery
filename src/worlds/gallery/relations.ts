@@ -144,6 +144,7 @@ const relations = {
         'led_south',
       ],
       exhibition: [
+        'tunnel_north',
         'tunnel_green',
         'west_stairway_door',
         'east_stairway_door',
@@ -241,6 +242,7 @@ const relations = {
         'tunnel_green',
         'tunnel_blue',
         'tunnel_red',
+        'tunnel_south',
       ],
     },
   },
@@ -265,6 +267,7 @@ const relations = {
         'ember',
       ],
       exhibition: [
+        'tunnel_north',
         'tunnel_green',
         'tunnel_blue',
         'tunnel_red',

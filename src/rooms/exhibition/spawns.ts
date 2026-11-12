@@ -1,10 +1,10 @@
 import type {RoomSpawn} from '../base/Room.ts'
 
 export default {
-  // Near the tunnel’s high south end, looking down its slope toward the Oculus.
+  // At the tunnel’s high south threshold from Moonfall, looking north-east down the beveled gallery toward the Oculus.
   '': {
-    position: [0, 1.31, 8.25],
-    yaw: 0,
+    position: [-4, 1.54, 9.05],
+    yaw: -0.22,
     pitch: -0.08,
   },
 } satisfies Record<string, RoomSpawn>
