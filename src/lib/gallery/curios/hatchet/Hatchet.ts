@@ -6,6 +6,7 @@ import {BufferGeometry, Float32BufferAttribute} from 'three/webgpu'
 import ForgedSteelMaterial from '#src/lib/materials/ForgedSteelMaterial.ts'
 import GrainedWoodMaterial from '#src/lib/materials/GrainedWoodMaterial.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
+import {horrorOrb} from '#src/orbs/index.ts'
 
 import lodge from '../../lodge.ts'
 import {lodgeHatchetHook} from '../../lodgeInterior/layout.ts'
@@ -110,6 +111,7 @@ function haftGeometry() {
 export default class Hatchet extends Curio {
   readonly id = 'hatchet'
   readonly mass = 1.25
+  readonly orb = horrorOrb
   // Suspended in front of the right-hand pillar, with the head pointing down.
   readonly position: Vec3 = [
     lodge.center[0] + lodgeHatchetHook.position[0] + lodgeHatchetHook.hatchetOffset[0],

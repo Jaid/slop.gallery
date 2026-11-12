@@ -1,19 +1,14 @@
 import type {Orb} from '#src/orbs/index.ts'
 import type {Vec3} from '../types.ts'
 
-import {halloweenOrb, horrorOrb, paintOrb, spookOrb, transparentOrb} from '#src/orbs/index.ts'
+import {transparentOrb} from '#src/orbs/index.ts'
 
-import {hatchet, helmet, paintingSet, pumpkin} from '../curios/index.ts'
+import {curios} from '../curios/index.ts'
 
 /** the rooms an orb the alchemy machine shoots out passes through on its way down to the Bastion’s crater */
 export const alchemyRooms: ReadonlySet<string> = new Set(['bastion', 'forge'])
 /** the props that, lying in the Forge or carried into it, steer the flavor the alchemy machine gives a Transparent Orb to an orb of their own, by their ids: the pumpkin to the Halloween Orb, the hatchet to the Horror Orb, the helmet to the Spook Orb and the Painting Set to the Paint Orb */
-export const flavorSteering: ReadonlyMap<string, Orb> = new Map<string, Orb>([
-  [pumpkin.propId, halloweenOrb],
-  [hatchet.propId, horrorOrb],
-  [helmet.propId, spookOrb],
-  [paintingSet.propId, paintOrb],
-])
+export const flavorSteering: ReadonlyMap<string, Orb> = new Map<string, Orb>(curios.map(curio => [curio.propId, curio.orb]))
 
 /** what the alchemy machine may make of a Transparent Orb while nothing in the Forge steers it: nothing but itself */
 const unsteered: ReadonlyArray<Orb> = [transparentOrb]
@@ -54,7 +49,7 @@ export function transmutedOrb(orb: Orb, props: Iterable<PropPosition>, roomAt: (
 }
 
 /** the orb the prop steers the flavor to, if any: by its id, or the id of the first of its kind it is numbered after, like `prop-pumpkin-2` */
-function steeredOrb(id: string) {
-  const kind = /^(?<kind>.+?)(?:-\d+)?$/.exec(id)!.groups!.kind
-  return flavorSteering.get(kind)
+export function steeredOrb(id: string) {
+  const kind = /^(?<kind>.+?)(?:-\d+)?$/.exec(id)?.groups?.kind
+  return kind ? flavorSteering.get(kind) : undefined
 }

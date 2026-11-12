@@ -5,6 +5,7 @@ import {DoubleSide, Vector3} from 'three/webgpu'
 
 import ForgedSteelMaterial from '#src/lib/materials/ForgedSteelMaterial.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
+import {spookOrb} from '#src/orbs/index.ts'
 
 import {mergeParts} from '../../../geometry.ts'
 import {rivetHeads, sheetGeometry, smoothstep, steelMask} from '../../armor/plating.ts'
@@ -131,6 +132,7 @@ function opening(thetas: ReadonlyArray<number>, phis: ReadonlyArray<number>) {
 export default class Helmet extends Curio {
   readonly id = 'helmet'
   readonly mass = 3.2
+  readonly orb = spookOrb
   readonly position: Vec3 = [lodgeSpurArmor[0], lodgeSpurArmor[1] + suitOfArmor.collar + 0.001, lodgeSpurArmor[2]]
   readonly reach = 0.4
   readonly room = 'bastion'

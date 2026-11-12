@@ -3,6 +3,7 @@ import type {LatticePoint} from '../lattice.ts'
 
 import PumpkinRindMaterial from '#src/lib/materials/PumpkinRindMaterial.ts'
 import PumpkinStemMaterial from '#src/lib/materials/PumpkinStemMaterial.ts'
+import {halloweenOrb} from '#src/orbs/index.ts'
 
 import {banquet, banquetTable} from '../../banquet.ts'
 import Curio, {CurioModel} from '../base/Curio.ts'
@@ -52,6 +53,7 @@ function rind(u: number, v: number) {
 export default class Pumpkin extends Curio {
   readonly id = 'pumpkin'
   readonly mass = 4.5
+  readonly orb = halloweenOrb
   readonly position = pumpkinSpot
   readonly reach = 0.32
   readonly room = 'banquet'

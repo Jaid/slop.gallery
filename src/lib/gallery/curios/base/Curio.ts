@@ -1,3 +1,5 @@
+import type {MoodId} from '../../../../moods/index.ts'
+import type {Orb} from '../../../../orbs/index.ts'
 import type {GalleryRoomId} from '../../../../worlds/gallery/index.ts'
 import type {Vec3} from '../../types.ts'
 import type {BufferGeometry, Material} from 'three/webgpu'
@@ -60,6 +62,8 @@ export default abstract class Curio {
   abstract readonly id: string
   /** how heavy it is, in kilograms */
   abstract readonly mass: number
+  /** the orb this curio belongs to and steers the Forge’s alchemy machine to */
+  abstract readonly orb: Orb
   /** where its origin lies when a game begins, in world space */
   abstract readonly position: Vec3
   /** how far from its origin the camera orbits it while V is held */
@@ -71,6 +75,11 @@ export default abstract class Curio {
   abstract readonly title: string
   /** Whether it is attached to the scenery at the start, before its first pickup. */
   readonly type: 'dynamic' | 'fixed' = 'dynamic'
+
+  /** the mood of the orb this curio belongs to, cast while holding the curio in the Forge */
+  get mood(): MoodId {
+    return this.orb.mood!
+  }
 
   get propId() {
     return `prop-${this.id}`

@@ -32,6 +32,8 @@ export type PropHandle = {
   canGrab: () => boolean
   /** Throws the prop from `position` with `velocity`, in m/s, as if the player had let go of it there, like the `throw_prop` tool does; false while it is carried or a fusion holds it. */
   fling: (position: Vec3, velocity: Vec3) => boolean
+  /** the id of the mood that comes over the world while the player holds the prop in the Forge */
+  forgeMood?: MoodId
   grab: () => boolean
   group: Group
   /** the id of the mood that comes over the world while the player holds the prop */
@@ -119,6 +121,8 @@ type GrabbablePropProps = Omit<RigidBodyProps, 'children' | 'position' | 'ref'> 
   collider?: ReactNode
   /** whether a fusion it is thrown into uses it up on success, like an orb, instead of spitting it back out */
   consumable?: boolean
+  /** the id of the mood that comes over the world while the player holds the prop in the Forge */
+  forgeMood?: MoodId
   id: string
   /** the prop as an ingredient of the fusion of a portrait it is thrown into, with what it contributes, like an orb’s prompt, or nothing at all; by default, it contributes a studio photograph of itself */
   ingredient?: ItemIngredient
@@ -150,7 +154,7 @@ export default function GrabbableProp(props: GrabbablePropProps) {
 }
 
 /** The prop while it is still in the world. */
-function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, children, collider, canGrab, blockedMessage, onAttachmentChange, recoverAsDynamic, remains, snapshotSubject, striker, withheld = false, ...props}: GrabbablePropProps) {
+function PresentProp({id, title, consumable, ingredient, mood, forgeMood, orb, orbit, children, collider, canGrab, blockedMessage, onAttachmentChange, recoverAsDynamic, remains, snapshotSubject, striker, withheld = false, ...props}: GrabbablePropProps) {
   const body = useRef<RapierRigidBody>(null)
   const group = useRef<Group>(null)
   /** whether a fusion holds the prop, from the start if it is withheld */
@@ -228,6 +232,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       body: rigidBody,
       group: prop,
       mood,
+      forgeMood,
       ...orb ? {orb} : {},
       title,
       seize: () => {
@@ -326,7 +331,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         controller.current = null
       }
     }
-  }, [id, mood, orb, title, world])
+  }, [id, mood, forgeMood, orb, title, world])
   useEffect(() => {
     if (!held) {
       propObjects.get(id)?.cancel()

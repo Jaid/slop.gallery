@@ -7,6 +7,9 @@ import {afterEach, describe, expect, mock, test} from 'bun:test'
 
 import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
+import {moodOf} from '../../src/components/Moods/index.tsx'
+import {propObjects} from '../../src/components/Scene/GrabbableProp.tsx'
+import {curios, hatchet, helmet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
 import Mood from '../../src/moods/base/Mood.ts'
@@ -16,7 +19,7 @@ import {readMood} from '../../src/moods/lib/forcedMood.ts'
 import MoodLens from '../../src/moods/lib/MoodLens.ts'
 import MoodMixer, {moodFade, noMood} from '../../src/moods/lib/MoodMixer.ts'
 import {moodSuppression, toggleMoodSuppression} from '../../src/moods/lib/moodSuppression.ts'
-import {orbs} from '../../src/orbs/index.ts'
+import {halloweenOrb, horrorOrb, orbs, paintOrb, spookOrb} from '../../src/orbs/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -91,8 +94,8 @@ const engine = () => ({
 }) as unknown as MoodOutput & {transformers: {transform: ReturnType<typeof mock<(key: object, transformer: unknown, amount: number) => void>>}}
 const output = engine()
 const step = 1 / 60
-const cast = (mood: Mood | null, ...room: Array<Mood>): MoodTarget => ({
-  cast: mood,
+const cast = (mood: Mood | null | undefined, ...room: Array<Mood>): MoodTarget => ({
+  cast: mood ?? null,
   room,
 })
 const inRoom = (...room: Array<Mood>) => cast(null, ...room)
@@ -537,5 +540,109 @@ describe('moods', () => {
     expect(readMood('http://localhost/?mood=sunshine')).toBe('')
     expect(readMood('http://localhost/?mood=toString')).toBe('')
     expect(readMood('http://localhost/')).toBe('')
+  })
+})
+describe('mood on magic items', () => {
+  afterEach(() => {
+    propObjects.clear()
+  })
+  test('a magic item casts the mood of the orb it belongs to in the Forge only, while orbs cast theirs in any room and non-magic props cast none', () => {
+    // Magic items via Curio registration on propObjects
+    for (const curio of curios) {
+      propObjects.set(curio.propId, {
+        forgeMood: curio.mood,
+      } as never)
+      expect(moodOf(curio.propId, 'forge')).toBe(moods[curio.mood])
+      expect(moodOf(curio.propId, 'lodge')).toBeUndefined()
+      expect(moodOf(curio.propId, 'bastion')).toBeUndefined()
+      expect(moodOf(curio.propId, 'banquet')).toBeUndefined()
+      expect(moodOf(curio.propId)).toBeUndefined()
+    }
+    // Numbered clones resolved through steeredOrb even without a handle on propObjects
+    expect(moodOf('prop-pumpkin-2', 'forge')).toBe(moods.halloween)
+    expect(moodOf('prop-pumpkin-2', 'lodge')).toBeUndefined()
+    expect(moodOf('prop-hatchet-2', 'forge')).toBe(moods.horror)
+    expect(moodOf('prop-hatchet-2', 'lodge')).toBeUndefined()
+    // Orbs cast their mood in any room
+    for (const orb of [halloweenOrb, horrorOrb, spookOrb, paintOrb]) {
+      propObjects.set(orb.propId, {
+        mood: orb.mood,
+      } as never)
+      expect(moodOf(orb.propId, 'forge')).toBe(moods[orb.mood])
+      expect(moodOf(orb.propId, 'lodge')).toBe(moods[orb.mood])
+      expect(moodOf(orb.propId, 'bastion')).toBe(moods[orb.mood])
+      expect(moodOf(orb.propId)).toBe(moods[orb.mood])
+    }
+    // Other props and null cast no mood
+    propObjects.set('prop-cube', {} as never)
+    expect(moodOf('prop-cube', 'forge')).toBeUndefined()
+    expect(moodOf('prop-cube', 'lodge')).toBeUndefined()
+    expect(moodOf(null, 'forge')).toBeUndefined()
+    expect(moodOf(null)).toBeUndefined()
+  })
+  test('picking up a magic item in the Forge fades in its mood, and dropping it fades it out', () => {
+    const mixer = new MoodMixer
+    propObjects.set(hatchet.propId, {
+      forgeMood: hatchet.mood,
+    } as never)
+    // Standing in the Forge without holding anything
+    run(mixer, cast(moodOf(null, 'forge'), moods.forge), roomMoodFade.in)
+    expect(mixer.amountOf(moods.forge)).toBe(1)
+    expect(mixer.amountOf(moods.horror)).toBe(0)
+    // Picking up the hatchet in the Forge fades in the Horror mood over moodFade.in
+    const heldTarget = cast(moodOf(hatchet.propId, 'forge'), moods.forge)
+    run(mixer, heldTarget, moodFade.in / 2)
+    expect(mixer.amountOf(moods.horror)).toBeCloseTo(0.5, 1)
+    run(mixer, heldTarget, moodFade.in / 2)
+    expect(mixer.amountOf(moods.horror)).toBe(1)
+    expect(mixer.amountOf(moods.forge)).toBe(1)
+    // Dropping the hatchet in the Forge fades the Horror mood out
+    const droppedTarget = cast(moodOf(null, 'forge'), moods.forge)
+    run(mixer, droppedTarget, moodFade.out / 2)
+    expect(mixer.amountOf(moods.horror)).toBeCloseTo(0.5, 1)
+    run(mixer, droppedTarget, moodFade.out / 2 + step)
+    expect(mixer.amountOf(moods.horror)).toBe(0)
+    expect(mixer.amountOf(moods.forge)).toBe(1)
+  })
+  test('entering the Forge while holding a magic item fades in its mood, and leaving the Forge fades it out', () => {
+    const mixer = new MoodMixer
+    propObjects.set(pumpkin.propId, {
+      forgeMood: pumpkin.mood,
+    } as never)
+    // Holding the pumpkin in the Banquet room: no cast mood, only Banquet mood
+    const inBanquet = cast(moodOf(pumpkin.propId, 'banquet'), moods.banquet)
+    run(mixer, inBanquet, roomMoodFade.in)
+    expect(mixer.amountOf(moods.halloween)).toBe(0)
+    expect(mixer.amountOf(moods.banquet)).toBe(1)
+    // Walking into the Forge holding the pumpkin: Halloween mood fades in while room crosses over to Forge
+    const enteringForge = cast(moodOf(pumpkin.propId, 'forge'), moods.forge)
+    run(mixer, enteringForge, moodFade.in)
+    expect(mixer.amountOf(moods.halloween)).toBe(1)
+    expect(mixer.amountOf(moods.forge)).toBe(1)
+    expect(mixer.amountOf(moods.banquet)).toBe(0)
+    // Leaving the Forge into the Bastion holding the pumpkin: Halloween mood fades out while Bastion mood comes in
+    const enteringBastion = cast(moodOf(pumpkin.propId, 'bastion'), moods.bastion)
+    run(mixer, enteringBastion, roomMoodFade.in + step)
+    expect(mixer.amountOf(moods.halloween)).toBe(0)
+    expect(mixer.amountOf(moods.bastion)).toBe(1)
+    expect(mixer.amountOf(moods.forge)).toBe(0)
+  })
+  test('under ?fade=false, picking up or carrying a magic item into the Forge cuts its mood in at once and leaving cuts it out', () => {
+    const mixer = new MoodMixer({fade: false})
+    propObjects.set(helmet.propId, {
+      forgeMood: helmet.mood,
+    } as never)
+    // In Bastion holding helmet: no spook mood
+    mixer.update(cast(moodOf(helmet.propId, 'bastion'), moods.bastion), step)
+    expect(mixer.amountOf(moods.spook)).toBe(0)
+    expect(mixer.amountOf(moods.bastion)).toBe(1)
+    // Enter Forge holding helmet: spook mood cuts in on the very next frame
+    mixer.update(cast(moodOf(helmet.propId, 'forge'), moods.forge), step)
+    expect(mixer.amountOf(moods.spook)).toBe(1)
+    expect(mixer.amountOf(moods.forge)).toBe(1)
+    // Leave Forge into Bastion: spook mood cuts out on the very next frame
+    mixer.update(cast(moodOf(helmet.propId, 'bastion'), moods.bastion), step)
+    expect(mixer.amountOf(moods.spook)).toBe(0)
+    expect(mixer.amountOf(moods.bastion)).toBe(1)
   })
 })

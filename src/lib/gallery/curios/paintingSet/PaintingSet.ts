@@ -11,6 +11,7 @@ import {inside} from '#src/lib/materials/filters.ts'
 import GrainedWoodMaterial from '#src/lib/materials/GrainedWoodMaterial.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
 import OilPaintMaterial from '#src/lib/materials/OilPaintMaterial.ts'
+import {paintOrb} from '#src/orbs/index.ts'
 
 import {mergeParts} from '../../../geometry.ts'
 import {forgeTable, forgeTableCenter} from '../../forge.ts'
@@ -625,6 +626,7 @@ export const paintingSetSpot: Vec3 = [forgeTableCenter[0], forgeTable.height + 0
 export default class PaintingSet extends Curio {
   readonly id = 'painting-set'
   readonly mass = 2.4
+  readonly orb = paintOrb
   readonly position = paintingSetSpot
   readonly reach = 0.38
   readonly room = 'forge'

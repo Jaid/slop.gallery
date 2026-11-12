@@ -13,6 +13,7 @@ import {ironTableColliders} from '../../src/lib/gallery/ironTable.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
+import {halloweenOrb, horrorOrb, paintOrb, spookOrb} from '../../src/orbs/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {addArmor, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
@@ -46,6 +47,11 @@ describe('the curios', () => {
     }
     expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge'])
     expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic'])
+  })
+  test('every curio belongs to an orb and knows its mood', () => {
+    expect(curios.map(curio => curio.orb)).toEqual([pumpkin.orb, hatchet.orb, helmet.orb, paintingSet.orb])
+    expect([pumpkin.orb, hatchet.orb, helmet.orb, paintingSet.orb]).toEqual([halloweenOrb, horrorOrb, spookOrb, paintOrb])
+    expect(curios.map(curio => curio.mood)).toEqual(['halloween', 'horror', 'spook', 'paint'])
   })
   for (const curio of curios) {
     test(`the ${curio.id.replaceAll('-', ' ')}’s meshes face out, carry what their materials read and fit its reach`, () => {
