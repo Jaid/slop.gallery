@@ -63,6 +63,7 @@
     "optis": "0.3.0",
     "procedural-audio": "workspace:*",
     "rapier-body-contact": "workspace:*",
+    "rasterize-element": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-dropzone": "20.2.0",

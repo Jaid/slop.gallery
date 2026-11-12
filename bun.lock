@@ -31,6 +31,7 @@
         "optis": "0.3.0",
         "procedural-audio": "workspace:*",
         "rapier-body-contact": "workspace:*",
+        "rasterize-element": "workspace:*",
         "react": "19.3.1",
         "react-dom": "19.3.1",
         "react-dropzone": "20.2.0",
@@ -234,6 +235,18 @@
       },
       "optionalPeers": [
         "@react-three/rapier",
+      ],
+    },
+    "packages/rasterize-element": {
+      "name": "rasterize-element",
+      "version": "0.1.0",
+      "peerDependencies": {
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1",
+      },
+      "optionalPeers": [
+        "react",
+        "react-dom",
       ],
     },
     "packages/rolldown-plugin-bake-branch-component": {
@@ -1799,6 +1812,8 @@
     "quote-js-string": ["quote-js-string@0.1.0", "", {}, "sha512-Y3NoRtprEEZQD8RfxMCfS0ZTqc4e+i18OrXEXAvpM6TfC/3y+0L5rNbZiSnbBBEkDfFzbpd8o+cE8q3/anjMGA=="],
 
     "rapier-body-contact": ["rapier-body-contact@workspace:packages/rapier-body-contact"],
+
+    "rasterize-element": ["rasterize-element@workspace:packages/rasterize-element"],
 
     "react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
 
