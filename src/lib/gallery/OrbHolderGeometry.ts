@@ -1,8 +1,5 @@
-import type {BufferGeometry} from 'three/webgpu'
-
-import {ParametricGeometry} from 'three/addons/geometries/ParametricGeometry.js'
 import {toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js'
-import {ExtrudeGeometry, LatheGeometry, Shape, SphereGeometry, TorusGeometry, Vector2} from 'three/webgpu'
+import {BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, LatheGeometry, Shape, SphereGeometry, TorusGeometry, Vector2} from 'three/webgpu'
 
 import {orbRadius} from '#src/orbs/index.ts'
 
@@ -41,12 +38,13 @@ const feet = {
   depth: 0.014,
   bevel: 0.003,
 }
-const segments = 96
+// Circular edges deviate by at most 0.26 mm; finer sampling is reserved for the cup’s creases.
+const segments = 48
 
 /** how high the middle of an orb resting on the lip stands over the holder’s foot, where its ball touches the lip’s roll all round */
 export const orbSeat = lip.y + Math.sqrt((orbRadius + lip.tube) ** 2 - lip.radius ** 2)
 
-const semicircle = ([radius, y]: Point, size: number, from: number, to: number, steps = 8): Array<Vector2> => Array.from({length: steps + 1}, (_, index) => {
+const semicircle = ([radius, y]: Point, size: number, from: number, to: number, steps = 3): Array<Vector2> => Array.from({length: steps + 1}, (_, index) => {
   const angle = from + (to - from) * index / steps
   return new Vector2(radius + Math.cos(angle) * size, y + Math.sin(angle) * size)
 })
@@ -77,52 +75,108 @@ function bandProfile() {
 }
 /** The cup’s outer wall, gadrooned into lobes that swell out between sharp creases, smooth again at its foot and under the lip. */
 function cupWall() {
-  const wall = new ParametricGeometry((u, v, target) => {
-    const angle = u * Math.PI * 2
-    // 1 in the middle of a lobe, falling sharply into the crease between two.
-    const lobe = Math.abs(Math.cos(angle * cup.lobes / 2)) ** 0.5
-    const radius = cupRadius(v) * (1 - cup.crease * Math.sin(Math.PI * v) ** 0.6 * (1 - lobe))
-    // Turning the same way as a lathe, so the wall faces out.
-    target.set(Math.sin(angle) * radius, cupY(v), Math.cos(angle) * radius)
-  }, cup.lobes * 12, 16)
-  // Smoothed in centimeters, as the normal utility welds positions closer than 0.01 units; the creases stay sharp.
-  const smooth = toCreasedNormals(wall.scale(100, 100, 100), Math.PI / 5).scale(0.01, 0.01, 0.01)
-  wall.dispose()
+  // Each lobe owns its crease vertices, so normals stay smooth up the cup but never bridge a valley.
+  // Six spans across a lobe retain its rounded highlight; the five vertical spans follow the silhouette’s curvature.
+  const across = 6
+  const levels = [0, 0.12, 0.32, 0.6, 0.84, 1]
+  const parts: Array<BufferGeometry> = []
+  for (let lobe = 0; lobe < cup.lobes; lobe++) {
+    const positions: Array<number> = []
+    const uvs: Array<number> = []
+    const indices: Array<number> = []
+    for (const [row, v] of levels.entries()) {
+      for (let column = 0; column <= across; column++) {
+        const u = (lobe + column / across + 0.5) / cup.lobes
+        const angle = u * Math.PI * 2
+        const roundness = Math.max(0, Math.sin(column / across * Math.PI)) ** 0.5
+        const radius = cupRadius(v) * (1 - cup.crease * Math.sin(Math.PI * v) ** 0.6 * (1 - roundness))
+        // Tuck the foot 0.5 mm into the band, closing the seam between its 48 sides and the cup’s 96.
+        positions.push(Math.sin(angle) * radius, cupY(v) - (row === 0 ? 0.0005 : 0), Math.cos(angle) * radius)
+        uvs.push(u, v)
+        if (!row || !column) {
+          continue
+        }
+        const d = row * (across + 1) + column
+        const c = d - 1
+        const b = d - across - 1
+        const a = b - 1
+        indices.push(a, b, c, b, d, c)
+      }
+    }
+    const part = new BufferGeometry
+    part.setAttribute('position', new Float32BufferAttribute(positions, 3))
+    part.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
+    part.setIndex(indices)
+    part.computeVertexNormals()
+    parts.push(part)
+  }
+  return mergeParts(parts)
+}
+/** A small cast leaf with three pairs of lobes and a raised midrib, closed behind rather than a densely beveled extrusion. */
+function leaf() {
+  const levels = [[0, 0.0077], [0.0045, 0.012], [0.009, 0.0065], [0.013, 0.009], [0.0174, 0.0045], [0.021, 0.006], [0.0246, 0.0025]] as const
+  const positions: Array<number> = []
+  const uvs: Array<number> = []
+  const indices: Array<number> = []
+  for (const [row, [y, half]] of levels.entries()) {
+    // Across the relief’s face, then back down its shallow reverse; all coordinates are local meters.
+    for (const [x, z] of [[-half, 0], [0, 0.007], [half, 0], [0, -0.002]]) {
+      positions.push(x, y, z)
+      uvs.push(x / 0.028 + 0.5, y / 0.03)
+    }
+    if (row) {
+      for (let side = 0; side < 4; side++) {
+        const a = (row - 1) * 4 + side
+        const b = (row - 1) * 4 + (side + 1) % 4
+        const c = row * 4 + side
+        const d = row * 4 + (side + 1) % 4
+        indices.push(a, b, c, b, d, c)
+      }
+    }
+  }
+  indices.push(0, 3, 1, 1, 3, 2)
+  const tip = positions.length / 3
+  positions.push(0, 0.03, 0)
+  uvs.push(0.5, 1)
+  for (let side = 0; side < 4; side++) {
+    const last = (levels.length - 1) * 4
+    indices.push(last + side, last + (side + 1) % 4, tip)
+  }
+  const geometry = new BufferGeometry
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
+  geometry.setIndex(indices)
+  geometry.computeVertexNormals()
+  return geometry
+}
+/** Smooth curved extrusions in centimeters, keeping the broad side faces flat. */
+function smoothFoot(geometry: BufferGeometry) {
+  // Stay below the 45° chamfer angle with margin, so rounding never blends into the broad side faces.
+  const smooth = toCreasedNormals(geometry.scale(100, 100, 100), Math.PI * 2 / 9).scale(0.01, 0.01, 0.01)
+  // Nonindexed extrusions are smoothed in place; only dispose a separate temporary.
+  if (smooth !== geometry) {
+    geometry.dispose()
+  }
   return smooth
 }
-/** An acanthus leaf’s outline, `width` across its foot and `height` up to its tip, its edges lobed three times on either side. */
-function leafShape(width: number, height: number) {
-  const half = width / 2
-  // Up the right edge from the foot to the tip as curves bulging out between their ends, three lobes, each narrower and higher than the one below.
-  const right: Array<{
-    control: readonly [number, number]
-    end: readonly [number, number]
-  }> = []
-  let start: Point = [half * 0.55, 0]
-  for (const [reach, rise] of [[1, 0.3], [0.78, 0.58], [0.48, 0.82]] as const) {
-    const end = [half * reach * 0.55, height * rise] as const
-    right.push({
-      control: [half * reach * 1.15, (start[1] + end[1]) / 2],
-      end,
-    })
-    start = end
+/** LatheGeometry emits a collapsed triangle per segment at each pole; omit those instead of spending the budget on invisible faces. */
+function turned(profile: Array<Vector2>, resolution = segments) {
+  const geometry = new LatheGeometry(profile, resolution)
+  const indices = geometry.index!
+  const valid: Array<number> = []
+  for (let segment = 0; segment < resolution; segment++) {
+    for (let row = 0; row < profile.length - 1; row++) {
+      const offset = (segment * (profile.length - 1) + row) * 6
+      if (profile[row].x !== 0) {
+        valid.push(indices.getX(offset), indices.getX(offset + 1), indices.getX(offset + 2))
+      }
+      if (profile[row + 1].x !== 0) {
+        valid.push(indices.getX(offset + 3), indices.getX(offset + 4), indices.getX(offset + 5))
+      }
+    }
   }
-  right.push({
-    control: [half * 0.2, height * 0.95],
-    end: [0, height],
-  })
-  const shape = new Shape
-  shape.moveTo(-half * 0.55, 0)
-  shape.lineTo(half * 0.55, 0)
-  for (const {control, end} of right) {
-    shape.quadraticCurveTo(...control, ...end)
-  }
-  // Down the left edge, the right one mirrored: each curve back to where its mirror image started.
-  for (const [index, {control}] of right.entries().toArray().toReversed()) {
-    const [x, y] = index ? right[index - 1].end : [half * 0.55, 0]
-    shape.quadraticCurveTo(-control[0], control[1], -x, y)
-  }
-  return shape
+  geometry.setIndex(valid)
+  return geometry
 }
 /** One scrolled foot, standing out along x: a bracket bending out from under the band to a round toe, and an acanthus leaf rising over the band. */
 function foot(): Array<BufferGeometry> {
@@ -138,27 +192,19 @@ function foot(): Array<BufferGeometry> {
   const bracket = new ExtrudeGeometry(outline, {
     depth: feet.depth,
     bevelEnabled: true,
-    bevelSegments: 3,
+    bevelSegments: 1,
     bevelSize: feet.bevel,
     bevelThickness: feet.bevel,
     bevelOffset: -feet.bevel,
-    curveSegments: 10,
+    curveSegments: 3,
   })
-  const toe = new SphereGeometry(0.011, 16, 10)
+  const toe = new SphereGeometry(0.011, 8, 5)
   const parts: Array<BufferGeometry> = [
-    bracket.translate(0, 0, -feet.depth / 2),
+    smoothFoot(bracket).translate(0, 0, -feet.depth / 2),
     toe.scale(1.2, 0.8, 1.1).translate(0.143, 0.0088, 0),
   ]
   // Its back on the frieze, its face standing just out of the beads.
-  const leaf = new ExtrudeGeometry(leafShape(0.028, 0.03), {
-    depth: 0.006,
-    bevelEnabled: true,
-    bevelSegments: 2,
-    bevelSize: 0.0012,
-    bevelThickness: 0.0015,
-    curveSegments: 6,
-  })
-  parts.push(leaf.rotateY(Math.PI / 2).translate(band.frieze + 0.0015, band.bottom - 0.002, 0))
+  parts.push(leaf().rotateY(Math.PI / 2).translate(band.frieze + 0.0015, band.bottom - 0.002, 0))
   return parts
 }
 
@@ -166,6 +212,7 @@ function foot(): Array<BufferGeometry> {
  * A stand for an orb on a pedestal’s cap, cast in dark metal like a fortune teller’s crystal ball stand, the y axis up through its middle from the cap.
  *
  * A gadrooned cup with a rolled lip, which the orb rests in, stands on a band beaded along both edges, raised on three scrolled feet with acanthus leaves, one of them to the front.
+ * The complete visible holder uses 3960 triangles; its independent collision surface preserves the orb’s seat and stability.
  */
 export default class OrbHolderGeometry {
   /** the stand turned smooth, without its lobes, feet and ornament, where the orb and everything thrown at it touch it */
@@ -173,10 +220,10 @@ export default class OrbHolderGeometry {
   readonly metal: BufferGeometry
 
   constructor() {
-    const lipRoll = new TorusGeometry(lip.radius, lip.tube, 12, segments)
-    const inside = new LatheGeometry(bowl.map(([radius, y]) => new Vector2(radius, y)), segments)
+    const lipRoll = new TorusGeometry(lip.radius, lip.tube, 8, segments)
+    const inside = turned(bowl.map(([radius, y]) => new Vector2(radius, y)))
     const parts: Array<BufferGeometry> = [
-      new LatheGeometry(bandProfile(), segments),
+      turned(bandProfile()),
       cupWall(),
       lipRoll.rotateX(Math.PI / 2).translate(0, lip.y, 0),
       // From the lip down to the middle, so the bowl faces up and in.
