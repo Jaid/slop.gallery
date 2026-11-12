@@ -117,16 +117,24 @@ const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, 
   height: lodgeSpurHeight,
   steps: [{length: 2}],
 }, {length: lodgeSpurStartZ - lodgeSpurEndZ - 2}])
+const spurWallFaceX = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
+const spurBackX = lodgeSpurX - lodgeSpurWidth / 2 - vaultShellThickness - 0.01
+const spurAbutmentX = (spurWallFaceX + spurBackX) / 2
+const spurAbutmentSizeX = Math.abs(spurWallFaceX - spurBackX)
 export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, lodgeSpurWidth, {
   fixPavingEdges: false,
-  // Cut round the window’s timber reveal, which runs on through the stone and frames it flush with the passage’s face.
+  // Behind the passage’s stone wall, cut away the back of the vault where the window pierces it, so its head doesn’t share a plane with the stone wall’s cut head.
+  abutments: [{
+    position: [spurAbutmentX, (lodgeEastWindow.bottom + lodgeEastWindow.top) / 2, lodgeEastWindow.z],
+    size: [spurAbutmentSizeX, lodgeEastWindow.top - lodgeEastWindow.bottom + 0.1, lodgeEastWindow.width + 0.2],
+  }],
   openings: [{
     name: 'lodge_window',
     along: lodgeSpurStartZ - lodgeEastWindow.z,
     side: -1,
-    width: lodgeEastWindow.width + lodgeEastWindow.border * 2,
-    bottom: lodgeEastWindow.bottom - lodgeEastWindow.sill - lodge.floorY,
-    height: lodgeEastWindow.top + lodgeEastWindow.border - lodge.floorY,
+    width: lodgeEastWindow.width,
+    bottom: lodgeEastWindow.bottom - lodge.floorY,
+    height: lodgeEastWindow.top - lodge.floorY,
     profile: 'rectangle',
     casing: false,
   }],

@@ -24,9 +24,10 @@ export default class LodgeEastWindowGeometry {
     const height = top - bottom
     const middleY = (bottom + top) / 2
     const tunnelX = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
-    const depth = tunnelX - x
-    const middleX = (x + tunnelX) / 2
-    // The reveal runs from the Lodge wall’s center line on to the passage’s face, its sill, head and jambs reaching past the opening: the Lodge’s wall hides them, and the passage’s stone is cut round them, so they frame the window flush there instead of sharing the planes of the stone’s own cut faces.
+    const stoneBackX = tunnelX - wallFace
+    const depth = stoneBackX - x
+    const middleX = (x + stoneBackX) / 2
+    // The timber lining runs from the Lodge wall’s center line on to the back of the Bastion passage’s stone wall, so no wood shows on the passage’s face.
     this.lining = mergeParts([
       box([depth, sill, width + border * 2], [middleX, bottom - sill / 2, z]),
       box([depth, border, width + border * 2], [middleX, top + border / 2, z]),

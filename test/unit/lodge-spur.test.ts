@@ -238,3 +238,36 @@ test('the entrance clears the parent vault and ribs at walking height, and the s
     spur.dispose()
   }
 })
+test('the Lodge east window shows no wood material around its frame on the Bastion side', () => {
+  const side = lodgeSpur.walls.find(wall => wall.holes?.some(hole => hole.name === 'lodge_window'))!
+  const hole = side.holes!.find(value => value.name === 'lodge_window')!
+  expect(hole.width).toBe(lodgeEastWindow.width)
+  expect(hole.bottom).toBeCloseTo(lodgeEastWindow.bottom - lodge.floorY, 9)
+  expect(hole.height).toBeCloseTo(lodgeEastWindow.top - lodge.floorY, 9)
+  window.lining.computeBoundingBox()
+  const liningBounds = window.lining.boundingBox!
+  const tunnelX = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
+  expect(liningBounds.max.x).toBeCloseTo(tunnelX - wallFace, 6)
+  // At the reported pose, aiming at the wall surface adjacent to the window hits the stone wall, not the wood reveal.
+  const wallArchitecture = createArchitectureGeometry(side)
+  const material = new MeshBasicMaterial({side: DoubleSide})
+  const wallMesh = new Mesh(wallArchitecture.surface, material)
+  wallMesh.position.set(...side.center)
+  wallMesh.rotation.y = side.rotation
+  wallMesh.updateMatrixWorld(true)
+  const liningMesh = new Mesh(window.lining, material)
+  try {
+    const origin = new Vector3(-16.547, -3.431, -31.107)
+    const target = new Vector3(-18.325, -3.195, -32.284)
+    const direction = target.clone().sub(origin).normalize()
+    const ray = new Raycaster(origin, direction, 0, 5)
+    const wallHits = ray.intersectObject(wallMesh)
+    const liningHits = ray.intersectObject(liningMesh)
+    expect(wallHits.length).toBeGreaterThan(0)
+    expect(wallHits[0].point.x).toBeCloseTo(tunnelX, 4)
+    expect(liningHits.length === 0 || liningHits[0].distance > wallHits[0].distance).toBe(true)
+  } finally {
+    wallArchitecture.dispose()
+    material.dispose()
+  }
+})
