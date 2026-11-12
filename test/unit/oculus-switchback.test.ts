@@ -5,7 +5,7 @@ import EgoMotor from 'ego-player/motor'
 import {BoxGeometry, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
-import lowerGallery, {oculusCornerRamps, oculusLowerRamps, oculusPlatform, oculusQuarterLandings, oculusRampLandings, oculusRamps, rampFloorHeight, tunnelFloorHeight, tunnelSlope} from '../../src/lib/gallery/lowerGallery.ts'
+import lowerGallery, {oculusCornerRamps, oculusLowerRamps, oculusPlatform, oculusQuarterLandings, oculusRampLandings, oculusRamps, rampFloorHeight, tunnelFloorHeight, tunnelSkew, tunnelSlope, tunnelX} from '../../src/lib/gallery/lowerGallery.ts'
 import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import OculusSwitchbackRailing from '../../src/lib/gallery/railings/OculusSwitchbackRailing.ts'
 import SlopedBoxGeometry from '../../src/lib/gallery/SlopedBoxGeometry.ts'
@@ -31,21 +31,21 @@ test('the Oculus lies 3 m below Moonfall, which its tunnel ramps up to, and unde
   expect(floorHeight(visit.position)).toBe(oculus.floorY)
   for (const z of [-9.99, -6, 0, 4.49]) {
     const y = tunnelFloorHeight(z)
-    expect(floorHeight([0, y + 0.02, z])).toBeCloseTo(y)
-    expect(insideGallery([0, y + 1.6, z])).toBe(true)
-    expect(insideGallery([0, y - 1.01, z])).toBe(false)
-    expect(insideGallery([0, y + tunnel.height + 0.01, z])).toBe(false)
-    expect(roomAt([0, y + 1.6, z])).toBe('exhibition')
+    expect(floorHeight([tunnelX(z), y + 0.02, z])).toBeCloseTo(y)
+    expect(insideGallery([tunnelX(z), y + 1.6, z])).toBe(true)
+    expect(insideGallery([tunnelX(z), y - 1.01, z])).toBe(false)
+    expect(insideGallery([tunnelX(z), y + tunnel.height + 0.01, z])).toBe(false)
+    expect(roomAt([tunnelX(z), y + 1.6, z])).toBe('exhibition')
   }
 })
 test('sloped floor, ceiling, display shells and upright pedestal bases have matching visible and physical surfaces', () => {
   const material = new MeshBasicMaterial
   const middleZ = (tunnel.northZ + tunnel.southZ) / 2
   const middleY = tunnelFloorHeight(middleZ)
-  const floor = new SlopedBoxGeometry(tunnel.width, 0.24, tunnel.southZ - tunnel.northZ, tunnelSlope)
-  floor.translate(tunnel.x, middleY - 0.12, middleZ)
-  const ceiling = new SlopedBoxGeometry(tunnel.width, 0.18, tunnel.southZ - tunnel.northZ, tunnelSlope)
-  ceiling.translate(tunnel.x, middleY + tunnel.height + 0.09, middleZ)
+  const floor = new SlopedBoxGeometry(tunnel.width, 0.24, tunnel.southZ - tunnel.northZ, tunnelSlope, tunnelSlope, tunnelSkew)
+  floor.translate(tunnelX(middleZ), middleY - 0.12, middleZ)
+  const ceiling = new SlopedBoxGeometry(tunnel.width, 0.18, tunnel.southZ - tunnel.northZ, tunnelSlope, tunnelSlope, tunnelSkew)
+  ceiling.translate(tunnelX(middleZ), middleY + tunnel.height + 0.09, middleZ)
   const slabs = [floor, ceiling]
   const world = new RAPIER.World({
     x: 0,
@@ -63,7 +63,7 @@ test('sloped floor, ceiling, display shells and upright pedestal bases have matc
         const z = tunnel.northZ + 0.001 + (tunnel.southZ - tunnel.northZ - 0.002) * i / 20
         const floorY = tunnelFloorHeight(z)
         for (const direction of [-1, 1]) {
-          const ray = new Raycaster(new Vector3(x, floorY + 1.6, z), new Vector3(0, direction, 0))
+          const ray = new Raycaster(new Vector3(tunnelX(z) + x, floorY + 1.6, z), new Vector3(0, direction, 0))
           const height = floorY + (direction > 0 ? tunnel.height : 0)
           expect(ray.intersectObjects(meshes)[0].point.y).toBeCloseTo(height, 5)
           const physical = world.castRay(new RAPIER.Ray(ray.ray.origin, ray.ray.direction), 5, true)!

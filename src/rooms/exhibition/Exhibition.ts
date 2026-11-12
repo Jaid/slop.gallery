@@ -20,7 +20,7 @@ const [originX, originY, originZ] = tunnelCenter
 export default class Exhibition extends Room {
   override readonly air = [
     // From the tunnel’s low north end to the top of its high south end.
-    floorBox([tunnel.width, tunnel.southZ - tunnel.northZ], tunnel.northY - originY, tunnel.southY + tunnel.height - tunnel.northY, [tunnel.x - originX, 0]),
+    floorBox([tunnel.width + Math.abs(tunnel.southX - tunnel.northX), tunnel.southZ - tunnel.northZ], tunnel.northY - originY, tunnel.southY + tunnel.height - tunnel.northY, [0, 0]),
     // The displays, with their stairways from the balcony.
     ...tunnelDisplays.flatMap(({stairway}) => stairway.air.map(air => floorBox(air.size, air.bottom - originY, air.top - air.bottom, [air.center[0] - originX, air.center[1] - originZ]))),
   ]

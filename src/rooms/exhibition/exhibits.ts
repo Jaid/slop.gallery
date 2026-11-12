@@ -74,11 +74,11 @@ export const exhibitionSlots = tunnelDisplays.flatMap(display => {
       id: exhibit.id,
       direction,
       /** where the pedestal meets the back wall, on the floor */
-      pedestal: [display.backX, tunnelFloorHeight(z), z] as Vec3,
-      position: [display.backX + direction * exhibitOffset, tunnelFloorHeight(z) + exhibitHeight, z] as Vec3,
+      pedestal: [display.backAt(z), tunnelFloorHeight(z), z] as Vec3,
+      position: [display.backAt(z) + direction * exhibitOffset, tunnelFloorHeight(z) + exhibitHeight, z] as Vec3,
       /** the nameplate’s plaque over the sidecar, facing the window and turned by its place along it */
       sign: {
-        position: [display.backX + direction * exhibitionSidecar.signOffset, tunnelFloorHeight(z - exhibitionSidecar.shift) + exhibitionSidecar.height + knotSign.elevation, signZ] as Vec3,
+        position: [display.backAt(signZ) + direction * exhibitionSidecar.signOffset, tunnelFloorHeight(z - exhibitionSidecar.shift) + exhibitionSidecar.height + knotSign.elevation, signZ] as Vec3,
         // Facing +z at no rotation, it turns from the window by its turn back toward +z, where Moonfall lies, or on toward −z, where the Oculus lies.
         rotation: direction * (Math.PI / 2 - signTurn),
       },

@@ -1,6 +1,6 @@
 import type {Lamp, PointLamp} from '../base/Room.ts'
 
-import lowerGallery, {tunnelCenter, tunnelFloorHeight, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
+import lowerGallery, {tunnelCenter, tunnelFloorHeight, tunnelSlope, tunnelX} from '#src/lib/gallery/lowerGallery.ts'
 import tunnelDisplays from '#src/lib/gallery/tunnelDisplays.ts'
 
 const {tunnel} = lowerGallery
@@ -11,7 +11,7 @@ const tilt = -Math.atan(tunnelSlope)
 /** under the housing on the tunnel’s ceiling abreast of a row of exhibits, at `z` in world meters */
 const tunnelLamp = (z: number, lamp: Omit<PointLamp, 'position'>): PointLamp => ({
   ...lamp,
-  position: [tunnel.x - originX, tunnelFloorHeight(z) + tunnel.height - drop * Math.cos(tilt) - originY, z - drop * Math.sin(tilt) - originZ],
+  position: [tunnelX(z) - originX, tunnelFloorHeight(z) + tunnel.height - drop * Math.cos(tilt) - originY, z - drop * Math.sin(tilt) - originZ],
 })
 const [northZ, middleZ, southZ] = tunnelDisplays[0].exhibits.map(exhibit => exhibit.position[2])
 /** the color of the staff stairways’ lamps */

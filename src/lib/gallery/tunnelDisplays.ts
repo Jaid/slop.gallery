@@ -5,7 +5,7 @@ import type {Vec3} from './types.ts'
 
 import {wallCoordinates} from '../placement/wallGeometry.ts'
 import {wallFace} from './architectureDimensions.ts'
-import lowerGallery, {tunnelFloorHeight} from './lowerGallery.ts'
+import lowerGallery, {tunnelFloorHeight, tunnelSkew, tunnelX} from './lowerGallery.ts'
 import oculusBalcony from './oculusBalcony.ts'
 import passageOrientation from './passages/orientation.ts'
 import StairFlight, {stairThickness} from './stairs/StairFlight.ts'
@@ -26,7 +26,8 @@ const southZ = windowZ + tunnelDisplayWindow.width / 2
 const centerZ = (northZ + southZ) / 2
 const width = southZ - northZ
 const floorY = tunnelFloorHeight(centerZ)
-const depth = 3.2
+// Leaves over 70 cm normal to the diagonal wall between the pedestals and the glazing.
+const depth = 3.35
 const thickness = 0.18
 const ceilingThickness = 0.18
 /** A staff stairway runs down behind each display, from a door in the Oculus’ side wall at the balcony’s end out, then south and back in to a landing before a cutout in the display’s south end wall. It turns on flat floors, and the upper one runs on south as a gentle ramp down to the middle flight. */
@@ -35,14 +36,16 @@ export const displayStairway = {
   width: tunnel.southZ - (southZ + thickness - wallFace),
   /** over the grade, where its ceiling hangs, still below the floors of the Banquet and the Salon above */
   headroom: 2.8,
-  /** how deep each step is; every flight takes whole steps */
+  /** the minimum tread depth; the long east return spreads its steps over the available run */
   going: 0.4,
   /** how high each step rises; the drop takes as many steps as fit, the ramp before the middle flight falls by what they leave of it, and the middle flight takes the steps the upper and the lower flight leave */
   rise: 0.15,
-  /** the least level floor behind the door, in front of its casing, before the first step down; it grows by what the lower flight’s whole steps leave of the way out */
+  /** the least level floor behind the door, in front of its casing, before the first step down; the west threshold grows to clear its diagonal bay */
   threshold: 0.4,
   /** how many steps the upper flight takes down from the door before the middle one turns south */
   upperSteps: 3,
+  /** the lower return takes at least four treads; at most twelve leave enough drop for the middle flight */
+  lowerSteps: [4, 12] as const,
   /** narrow enough for the door’s casing to fit on the balcony, between the south wall and the balcony’s edge */
   doorWidth: 1.8,
   /** low enough for the door’s casing to stay below the cornice of the Oculus’ side wall */
@@ -93,18 +96,20 @@ const slab = (name: string, x: Range, z: Range, top: number, height: number, slo
 }
 const tunnelDisplays = (['west', 'east'] as const).map(side => {
   const direction = side === 'west' ? -1 : 1
-  const frontX = tunnel.x + direction * tunnel.width / 2
+  // Bay coordinates are measured on a line parallel to the diagonal gallery, at its center z.
+  const frontX = tunnelX(centerZ) + direction * tunnel.width / 2
   const backX = frontX + direction * depth
   const centerX = (frontX + backX) / 2
   const {headroom, going, rise, width: stairWidth} = displayStairway
   const id = `${side}-display`
   const innerX = oculus.center[0] + direction * oculus.size[0] / 2
-  const outsideX = backX + direction * thickness
-  // The lower flight takes as many whole steps as it needs to reach in from past the upper flight’s steps and the least floor behind the door, and that floor takes up what they leave of the way out.
+  const backAt = (z: number) => backX + tunnelSkew * (z - centerZ)
+  const frontAt = (z: number) => frontX + tunnelSkew * (z - centerZ)
+  const outsideX = backAt(southZ) + direction * thickness
+  // Each route clears both the balcony door and the bay’s farthest back corner. The west return is short; the east one spans the shift between the two rooms and uses broader treads rather than consuming the entire drop there.
   const upperCount = displayStairway.upperSteps
-  const lowerCount = Math.ceil((Math.abs(innerX - outsideX) + wallFace + displayStairway.threshold + upperCount * going) / going - 1e-9)
-  /** where the upper flight meets the middle one, along whose inner wall */
-  const turnX = outsideX + direction * lowerCount * going
+  const turnX = direction * Math.max(direction * innerX + wallFace + displayStairway.threshold + upperCount * going, direction * outsideX + displayStairway.lowerSteps[0] * going)
+  const lowerCount = Math.min(displayStairway.lowerSteps[1], Math.floor(Math.abs(turnX - outsideX) / going + 1e-9))
   const outerX = turnX + direction * stairWidth
   const middleX = (turnX + outerX) / 2
   const upperZ: Range = [doorZ - stairWidth / 2, doorZ + stairWidth / 2]
@@ -150,14 +155,14 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
   const door: Vec3 = [innerX, balconyY, doorZ]
   const cutout = {
     /** its jamb by the tunnel, in line with the landing’s wall */
-    from: backX - direction * displayStairway.cutoutWidth,
+    from: backAt(southZ) - direction * displayStairway.cutoutWidth,
     /** its jamb at the display’s back wall */
-    to: backX,
+    to: backAt(southZ),
     /** where the display’s ceiling, which reaches over the south end wall, meets the landing’s at the wall’s outer face */
     top: tunnelFloorHeight(southZ + thickness) + tunnel.height,
   }
-  /** where the landing’s wall by the tunnel stands, its face in line with the cutout’s jamb */
-  const landingX = cutout.from - direction * wallFace
+  /** where the landing’s wall by the tunnel stands, its face in line with the cutout’s jamb at the end wall’s outer face */
+  const landingX = cutout.from + tunnelSkew * thickness - direction * wallFace
   /** outside the cutout, level with the display’s floor at its south end, from its wall by the tunnel to the lower flight, and as high as the display, so the cutout runs up to the display’s ceiling */
   const landing: DisplayLevel = {
     ...area([landingX, outsideX], [southZ, tunnel.southZ]),
@@ -268,7 +273,7 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
   ]
   const southEndZ = southZ + thickness / 2
   const southEnd = (fromX: number, toX: number): DisplayBox => ({
-    position: [(fromX + toX) / 2, tunnelFloorHeight(southEndZ) + tunnel.height / 2, southEndZ],
+    position: [(fromX + toX) / 2 + tunnelSkew * thickness / 2, tunnelFloorHeight(southEndZ) + tunnel.height / 2, southEndZ],
     size: [Math.abs(toX - fromX), tunnel.height, thickness],
   })
   const shell: Array<DisplayBox> = [
@@ -278,19 +283,19 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     },
     // The ceiling reaches over the south end wall, sloping with the display, so the cutout runs up to it and it meets the landing’s level ceiling at the wall’s outer face.
     {
-      position: [centerX, tunnelFloorHeight(centerZ + thickness / 2) + tunnel.height + thickness / 2, centerZ + thickness / 2],
+      position: [centerX + tunnelSkew * thickness / 2, tunnelFloorHeight(centerZ + thickness / 2) + tunnel.height + thickness / 2, centerZ + thickness / 2],
       size: [depth, thickness, width + thickness],
     },
     // The back wall reaches past the south end wall, as the cutout’s jamb, to close the corner beside the landing.
     {
-      position: [backX + direction * thickness / 2, tunnelFloorHeight(centerZ + thickness / 2) + tunnel.height / 2, centerZ + thickness / 2],
+      position: [backX + tunnelSkew * thickness / 2 + direction * thickness / 2, tunnelFloorHeight(centerZ + thickness / 2) + tunnel.height / 2, centerZ + thickness / 2],
       size: [thickness, tunnel.height, width + thickness],
     },
     {
-      position: [centerX, tunnelFloorHeight(northZ - thickness / 2) + tunnel.height / 2, northZ - thickness / 2],
+      position: [centerX + tunnelSkew * (northZ - thickness / 2 - centerZ), tunnelFloorHeight(northZ - thickness / 2) + tunnel.height / 2, northZ - thickness / 2],
       size: [depth, tunnel.height, thickness],
     },
-    southEnd(frontX, cutout.from),
+    southEnd(frontAt(southZ), cutout.from),
   ]
   const ceilingY = (level: DisplayLevel) => level.floor + level.headroom + ceilingThickness / 2
   /** under the level’s ceiling at `z` */
@@ -307,13 +312,15 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     side,
     frontX,
     backX,
+    backAt,
+    frontAt,
     center: [centerX, centerZ] as const,
     size: [depth, width] as const,
     shell,
     /** where the exhibits stand on the display’s floor, from its north end south */
     exhibits: [-1, 0, 1].map((slot, i) => ({
       id: `tunnel-${side}-exhibit-${i}`,
-      position: [centerX, tunnelFloorHeight(windowZ + slot * tunnelDisplayWindow.width / 3), windowZ + slot * tunnelDisplayWindow.width / 3] as Vec3,
+      position: [tunnelX(windowZ + slot * tunnelDisplayWindow.width / 3) + direction * (tunnel.width / 2 + depth / 2), tunnelFloorHeight(windowZ + slot * tunnelDisplayWindow.width / 3), windowZ + slot * tunnelDisplayWindow.width / 3] as Vec3,
     })),
     stairway: {
       id,
@@ -351,7 +358,7 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
         air([landingX, outerX], [southZ, tunnel.southZ], landingY, Math.max(lowerCornerY + headroom, landingY + landing.headroom)),
         {
           center: [centerX, centerZ],
-          size: [depth, width],
+          size: [depth + Math.abs(tunnelSkew) * width, width],
           bottom: tunnelFloorHeight(northZ),
           top: tunnelFloorHeight(southZ) + tunnel.height,
         },
@@ -388,7 +395,7 @@ function displayGround(x: number, z: number) {
         headroom: level.headroom,
       }
     }
-    if (inside(x, z, display)) {
+    if (inside(x - tunnelSkew * (z - display.center[1]), z, display)) {
       return {
         floor: tunnelFloorHeight(z),
         headroom: tunnel.height,

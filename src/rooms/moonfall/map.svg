@@ -18,7 +18,7 @@
       <rect x="12" y="-8" width="10.05" height="3" fill="url(#moonfall-stairs-upper)"/>
     </mask>
   </defs>
-  <path d="M -13.7 -13.7 H 5.8 V -14 H 10.2 V -13.7 H 13.7 V -2.6 H 14 V 2.6 H 13.7 V 13.7 H -13.7 Z"/>
+  <path d="M -13.7 -13.7 H -2.2 V -14 H 2.2 V -13.7 H 13.7 V -2.6 H 14 V 2.6 H 13.7 V 13.7 H -13.7 Z"/>
   <path mask="url(#moonfall-stairs)" d="M 14 -2.3 H 22 A 1.6 1.6 0 0 0 23.6 -3.9 A 1.6 1.6 0 0 0 22 -5.5 H 14.3 V -7.5 H 22 A 4.9 4.9 0 0 1 26.9 -2.6 A 4.9 4.9 0 0 1 22 2.3 H 14 Z"/>
   <g fill="#d4d4d4">
     <circle r="10" fill="url(#moonfall-crater)"/>

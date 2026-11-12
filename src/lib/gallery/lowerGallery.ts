@@ -4,6 +4,7 @@ import {floorThickness, subtractFloorOpening} from './floors.ts'
 import lobby from './lobby.ts'
 
 const moonfallFloorY = -8
+const moonfallCenter = [-8, 18.5] as const
 export const oculusDrop = 3
 const oculusNorthZ = lobby.opening.center[1] - 11
 // Extend toward Moonfall; the connecting tunnel takes up whatever is left.
@@ -15,8 +16,8 @@ export const oculusTowerRadius = 2.2
 const lowerGallery = {
   floorY: moonfallFloorY,
   moonfall: {
-    // Keep the north tunnel fixed; expand west and south. The stairs arrive in the middle of the east wall.
-    center: [-8, 18.5],
+    // The Exhibition meets the north wall’s midpoint; the stairs arrive in the middle of the east wall.
+    center: moonfallCenter,
     size: [28, 28],
   },
   oculus: {
@@ -29,17 +30,24 @@ const lowerGallery = {
     },
   },
   tunnel: {
-    x: 0,
+    northX: lobby.opening.center[0],
+    southX: moonfallCenter[0],
     northZ: oculusSouthZ,
     southZ: 4.5,
     northY: moonfallFloorY - oculusDrop,
     southY: moonfallFloorY,
-    // as wide as the Oculus tower
+    // The portals are as wide as the Oculus tower; width is measured along x, not normal to the diagonal walls.
     width: oculusTowerRadius * 2,
     height: 3.6,
   },
 } as const
 
+/** lateral travel per meter south; the ends remain flush with the rooms’ north/south walls */
+export const tunnelSkew = (lowerGallery.tunnel.southX - lowerGallery.tunnel.northX) / (lowerGallery.tunnel.southZ - lowerGallery.tunnel.northZ)
+/** The diagonal passage’s center line, including its short continuation through the doorway reveals. */
+export function tunnelX(z: number) {
+  return lowerGallery.tunnel.northX + (z - lowerGallery.tunnel.northZ) * tunnelSkew
+}
 export const tunnelSlope = (lowerGallery.tunnel.southY - lowerGallery.tunnel.northY) / (lowerGallery.tunnel.southZ - lowerGallery.tunnel.northZ)
 /** The connection keeps plumb end faces and constant vertical headroom. */
 export function tunnelFloorHeight(z: number) {
@@ -47,7 +55,7 @@ export function tunnelFloorHeight(z: number) {
 }
 const tunnelMiddleZ = (lowerGallery.tunnel.northZ + lowerGallery.tunnel.southZ) / 2
 /** the middle of the tunnel’s sloping floor, halfway between its ends */
-export const tunnelCenter: Vec3 = [lowerGallery.tunnel.x, tunnelFloorHeight(tunnelMiddleZ), tunnelMiddleZ]
+export const tunnelCenter: Vec3 = [tunnelX(tunnelMiddleZ), tunnelFloorHeight(tunnelMiddleZ), tunnelMiddleZ]
 
 export const oculusCeiling = subtractFloorOpening({
   center: [0, 0],

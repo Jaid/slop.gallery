@@ -7,6 +7,7 @@ import {expect, test} from 'bun:test'
 import {Box3, Frustum, Group, Matrix4, Mesh, PerspectiveCamera, Vector3} from 'three/webgpu'
 
 import lobbyLayout from '../../src/lib/gallery/lobby.ts'
+import lowerGallery, {tunnelFloorHeight, tunnelX} from '../../src/lib/gallery/lowerGallery.ts'
 import {ownerRoom, portals, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
 import {openingTop, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -237,6 +238,26 @@ test('crossing the Forge–Bastion threshold keeps both rooms visible in either 
           const regions = visibleRegions(from, viewProjection(position, [position[0] + direction, y, z]))
           for (const room of ['forge', 'bastion'] as const) {
             expect(regions.get(room), `${position.join(', ')} facing ${direction}: ${room}`).toContainEqual([-1, -1, 1, 1])
+          }
+        }
+      }
+    }
+  }
+})
+test('crossing either end of the diagonal Exhibition keeps the adjoining rooms visible', () => {
+  const {tunnel} = lowerGallery
+  for (const [end, room] of [[tunnel.northZ, 'oculus'], [tunnel.southZ, 'moonfall']] as const) {
+    for (const offset of [-1.35, 0, 1.35]) {
+      for (const height of [0.9, 1.6, 2.5]) {
+        for (let step = -10; step <= 10; step++) {
+          const z = end + step * 0.04
+          const position: Vec3 = [tunnelX(z) + offset, tunnelFloorHeight(end) + height, z]
+          const from = roomsAt(position)
+          expect(from.length).toBeGreaterThan(0)
+          for (const direction of [-1, 1]) {
+            const regions = visibleRegions(from, viewProjection(position, [tunnelX(z + direction) + offset, position[1], z + direction]))
+            expect(regions.has('exhibition')).toBe(true)
+            expect(regions.has(room)).toBe(true)
           }
         }
       }

@@ -13,7 +13,7 @@ export default {
   north: planWall(moonfall.size, 'north', height, {
     holes: {
       exhibition: {
-        u: tunnel.x - moonfall.center[0],
+        u: tunnel.southX - moonfall.center[0],
         width: tunnel.width,
         height: 3.6,
         profile: 'rectangle',

@@ -1,6 +1,6 @@
 import type {BufferGeometry} from 'three/webgpu'
 
-import {ExtrudeGeometry, Shape, Vector2} from 'three/webgpu'
+import {ExtrudeGeometry, Matrix4, Shape, Vector2} from 'three/webgpu'
 
 import {circleSegments, mergeParts} from '../geometry.ts'
 import {colliderGeometry} from './architecture.ts'
@@ -23,6 +23,8 @@ export type DisplayPedestalOptions = {
   lobes: ReadonlyArray<PedestalLobe>
   /** how high the course at the foot is */
   plinth: number
+  /** lateral travel along the wall per meter along z; the level caps follow the diagonal bay */
+  skew?: number
   /** how far the floor rises per meter along +z; the course follows it, everything over it stays level */
   slope?: number
 }
@@ -130,8 +132,8 @@ export default class DisplayPedestalGeometry {
   readonly reveal: BufferGeometry
   readonly stone: BufferGeometry
 
-  constructor({lobes, plinth, direction = 1, slope = 0}: DisplayPedestalOptions) {
-    if (!lobes.length || !(plinth > 0) || !Number.isFinite(slope)) {
+  constructor({lobes, plinth, direction = 1, slope = 0, skew = 0}: DisplayPedestalOptions) {
+    if (!lobes.length || !(plinth > 0) || ![slope, skew].every(Number.isFinite)) {
       throw new RangeError('A display pedestal needs lobes, a course and a finite slope.')
     }
     for (const [index, lobe] of lobes.entries()) {
@@ -165,6 +167,13 @@ export default class DisplayPedestalGeometry {
     this.stone = mergeParts(stone)
     this.reveal = mergeParts(reveals)
     this.cap = mergeParts(caps)
+    if (skew) {
+      const transform = new Matrix4
+      transform.set(1, 0, skew, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)
+      for (const part of [this.stone, this.reveal, this.cap]) {
+        part.applyMatrix4(transform)
+      }
+    }
     this.collision = [this.stone, this.reveal, this.cap].map(colliderGeometry)
   }
 

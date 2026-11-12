@@ -7,7 +7,7 @@ import {DoubleSide, Euler, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'th
 
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import DisplayPedestalGeometry, {pedestalOverhang} from '../../src/lib/gallery/DisplayPedestalGeometry.ts'
-import {tunnelFloorHeight, tunnelSlope} from '../../src/lib/gallery/lowerGallery.ts'
+import {tunnelFloorHeight, tunnelSkew, tunnelSlope} from '../../src/lib/gallery/lowerGallery.ts'
 import tunnelDisplays, {displayNorthExtension, tunnelDisplayWindow} from '../../src/lib/gallery/tunnelDisplays.ts'
 import {exhibitHeight, exhibitionPedestal, exhibitionPedestalLobes, exhibitionSidecar, exhibitionSlots, exhibitOffset} from '../../src/rooms/exhibition/exhibits.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -21,8 +21,8 @@ test('every display shows three exhibits at eye level over their pedestals, insi
     const display = displayOf(slot)
     const [x, y, z] = slot.position
     const floor = tunnelFloorHeight(z)
-    expect(slot.pedestal).toEqual([display.backX, floor, z])
-    expect(x).toBeCloseTo(display.backX + slot.direction * exhibitOffset, 9)
+    expect(slot.pedestal).toEqual([display.backAt(z), floor, z])
+    expect(x).toBeCloseTo(display.backAt(z) + slot.direction * exhibitOffset, 9)
     expect(y - floor).toBeCloseTo(exhibitHeight, 9)
     expect(y - floor).toBeGreaterThan(exhibitionPedestal.height)
     expect(slopGallery.roomAt([x, y, z])?.id).toBe('exhibition')
@@ -60,7 +60,7 @@ test('the pedestals back onto the back walls with their sidecars, leaving ways i
     // The nameplate stands on its sidecar’s cap, faces the window and stays clear of its exhibit.
     const [signX, signY, signZ] = slot.sign.position
     expect(signZ).toBeCloseTo(z + sidecar.z - exhibitionSidecar.signShift, 9)
-    expect(Math.abs(signX - display.backX)).toBeCloseTo(exhibitionSidecar.signOffset, 9)
+    expect(Math.abs(signX - display.backAt(signZ))).toBeCloseTo(exhibitionSidecar.signOffset, 9)
     // The sidecar’s cap is level at its height over the floor under its middle.
     expect(signY - knotSign.elevation).toBeCloseTo(tunnelFloorHeight(z + sidecar.z) + sidecar.height, 9)
     // It faces out toward the window, the lowest down the tunnel toward the Oculus, to the north, the middle one straight and the highest up the tunnel toward Moonfall, to the south.
@@ -74,7 +74,7 @@ test('the pedestals back onto the back walls with their sidecars, leaving ways i
     const [plaque] = knotSignParts
     for (const corner of [-1, 1].flatMap(x => [-1, 1].flatMap(y => [-1, 1].map(zSide => new Vector3(x * plaque.size[0] / 2, y * plaque.size[1] / 2, zSide * plaque.size[2] / 2))))) {
       corner.applyEuler(new Euler(...plaque.rotation!)).add(new Vector3(...plaque.position)).applyAxisAngle(new Vector3(0, 1, 0), slot.sign.rotation).add(new Vector3(...slot.sign.position))
-      expect(Math.abs(corner.x - display.backX)).toBeGreaterThan(0.08)
+      expect(Math.abs(corner.x - display.backAt(corner.z))).toBeGreaterThan(0.08)
       expect(corner.z < z - southReach - 0.1 || corner.y > capTop + 0.03).toBe(true)
       expect(Math.hypot(corner.x - slot.position[0], corner.z - z)).toBeGreaterThan(1.2)
     }
@@ -178,5 +178,45 @@ test('a pedestal’s course follows the sloping floor around both lobes, while t
       plinth: 0.1,
       slope: tunnelSlope,
     })).toThrow(RangeError)
+  }
+})
+test('the diagonal pedestals have level caps, flush backs and a walkable aisle along the glazing', () => {
+  const material = new MeshBasicMaterial({side: DoubleSide})
+  try {
+    for (const slot of exhibitionSlots) {
+      const display = displayOf(slot)
+      const geometry = new DisplayPedestalGeometry({
+        direction: slot.direction,
+        lobes: exhibitionPedestalLobes,
+        plinth: exhibitionPedestal.plinth,
+        slope: tunnelSlope,
+        skew: tunnelSkew,
+      })
+      try {
+        const mesh = new Mesh(geometry.cap, material)
+        mesh.position.set(...slot.pedestal)
+        mesh.updateMatrixWorld()
+        for (const lobe of exhibitionPedestalLobes) {
+          const z = slot.pedestal[2] + lobe.z
+          const x = display.backAt(z) + slot.direction * (lobe.length + lobe.radius / 2)
+          const ray = new Raycaster(new Vector3(x, slot.pedestal[1] + 2, z), new Vector3(0, -1, 0))
+          expect(ray.intersectObject(mesh)[0].point.y).toBeCloseTo(tunnelFloorHeight(z) + lobe.height, 5)
+        }
+        for (const part of [geometry.stone, geometry.reveal, geometry.cap]) {
+          const positions = part.getAttribute('position')
+          for (let vertex = 0; vertex < positions.count; vertex++) {
+            const x = slot.pedestal[0] + positions.getX(vertex)
+            const z = slot.pedestal[2] + positions.getZ(vertex)
+            expect((x - display.backAt(z)) * slot.direction).toBeGreaterThanOrEqual(-1e-6)
+            const aisle = (x - display.frontAt(z)) * -slot.direction / Math.hypot(1, tunnelSkew) - wallFace
+            expect(aisle).toBeGreaterThan(0.7)
+          }
+        }
+      } finally {
+        geometry.dispose()
+      }
+    }
+  } finally {
+    material.dispose()
   }
 })

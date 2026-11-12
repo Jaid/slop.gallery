@@ -8,7 +8,7 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import DisplayPedestalGeometry from '#src/lib/gallery/DisplayPedestalGeometry.ts'
-import {tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
+import {tunnelSkew, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
 import {exhibitionPedestal, exhibitionPedestalLobes, exhibitionSlots} from '#src/rooms/exhibition/exhibits.ts'
 
 type PedestalMaterials = Record<'cap' | 'reveal' | 'stone', Material>
@@ -44,6 +44,7 @@ function usePedestalGeometry(direction: -1 | 1) {
     lobes: exhibitionPedestalLobes,
     plinth: exhibitionPedestal.plinth,
     slope: tunnelSlope,
+    skew: tunnelSkew,
   }), [direction]))
 }
 function Pedestal({geometry, materials, name, position}: {

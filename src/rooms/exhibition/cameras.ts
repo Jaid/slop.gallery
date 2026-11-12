@@ -1,12 +1,14 @@
 import type {RoomCamera} from '../base/Room.ts'
 
+import {tunnelSkew, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
+
 export default {
   // At the tunnel’s high south end, looking down its slope between the displays.
   overview: {
-    position: [0.08, 2.16, 8.78],
+    position: [8.78 * tunnelSkew, 3, 8.78],
     aim: {
-      yaw: 0.02,
-      pitch: 0.01,
+      yaw: Math.atan(tunnelSkew),
+      pitch: -Math.atan(tunnelSlope / Math.hypot(1, tunnelSkew)),
     },
     fov: 80,
     ratio: 16 / 9,

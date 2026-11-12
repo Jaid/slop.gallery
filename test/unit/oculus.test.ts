@@ -10,7 +10,7 @@ import {BoxGeometry, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} fr
 import {colliderGeometry, createArchitectureGeometry, wallFace} from '../../src/lib/gallery/architecture.ts'
 import {floorThickness, roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
-import lowerGallery, {oculusCeiling, oculusPlatform, tunnelFloorHeight, tunnelSlope} from '../../src/lib/gallery/lowerGallery.ts'
+import lowerGallery, {oculusCeiling, oculusPlatform, tunnelFloorHeight, tunnelSkew, tunnelSlope, tunnelX} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse, {apseBoundaryZ} from '../../src/lib/gallery/oculusApse.ts'
 import SlopedBoxGeometry from '../../src/lib/gallery/SlopedBoxGeometry.ts'
 import StairFlight from '../../src/lib/gallery/stairs/StairFlight.ts'
@@ -29,7 +29,7 @@ describe('oculus and connecting tunnel', () => {
     expect(insideGallery([8.9, -6.4, -24])).toBe(true)
     expect(insideGallery([9.01, -6.4, -24])).toBe(false)
     expect(lobby.opening.center).toEqual([0, -24])
-    expect(tunnel.x).toBe(0)
+    expect(tunnel.northX).toBe(0)
     expect(oculusCeiling.reduce((sum, slab) => sum + slab.size[0] * slab.size[1], 0)).toBe(18 * 20 - 8 * 8)
   })
   test('lower walls meet the ceiling underside without coplanar faces in the upper floor', () => {
@@ -126,15 +126,15 @@ describe('oculus and connecting tunnel', () => {
     expect(roomAt([0, -6.4, -24])).toBe('oculus')
     expect(roomAt([0, 1.6, -24])).toBe('lobby')
     for (const z of [-13.9, -8, 0, 4.4]) {
-      expect(insideGallery([0, tunnelFloorHeight(z) + 1.6, z])).toBe(true)
-      expect(floorHeight([0, tunnelFloorHeight(z) + 1.6, z])).toBeCloseTo(tunnelFloorHeight(z))
-      expect(roomAt([0, tunnelFloorHeight(z) + 1.6, z])).toBe('exhibition')
+      expect(insideGallery([tunnelX(z), tunnelFloorHeight(z) + 1.6, z])).toBe(true)
+      expect(floorHeight([tunnelX(z), tunnelFloorHeight(z) + 1.6, z])).toBeCloseTo(tunnelFloorHeight(z))
+      expect(roomAt([tunnelX(z), tunnelFloorHeight(z) + 1.6, z])).toBe('exhibition')
     }
     // beside the tunnel, between the Oculus and the displays’ north ends and past their south ends, where the landings of their stairways lie further out, behind the cutouts by the displays’ back walls
     for (const z of [-14, 4]) {
-      expect(insideGallery([tunnel.width / 2 + 0.01, tunnelFloorHeight(z) + 1.6, z])).toBe(false)
+      expect(insideGallery([tunnelX(z) + tunnel.width / 2 + 0.01, tunnelFloorHeight(z) + 1.6, z])).toBe(false)
     }
-    expect(roomAt([tunnel.width / 2 + 2, tunnelFloorHeight(4) + 1.6, 4])).toBe('exhibition')
+    expect(roomAt([tunnelX(4) + tunnel.width / 2 + 2, tunnelFloorHeight(4) + 1.6, 4])).toBe('exhibition')
   })
   test('the ceiling opening stays aligned with the transparent floor and contains no fixtures or lights', () => {
     const material = new MeshBasicMaterial
@@ -209,18 +209,22 @@ describe('oculus and connecting tunnel', () => {
               world.createCollider(RAPIER.ColliderDesc.cuboid(room.size[0] / 2, 0.12, room.size[1] / 2).setTranslation(room.center[0], (room === oculus ? floorY : lowerGallery.floorY) - 0.12, room.center[1]))
             }
             const tunnelGeometry = [0, 1].map(ceiling => {
-              const slab = new SlopedBoxGeometry(tunnel.width, ceiling ? 0.18 : 0.24, tunnel.southZ - tunnel.northZ, tunnelSlope)
-              slab.translate(tunnel.x, tunnelFloorHeight((tunnel.southZ + tunnel.northZ) / 2) + (ceiling ? tunnel.height + 0.09 : -0.12), (tunnel.southZ + tunnel.northZ) / 2)
+              const slab = new SlopedBoxGeometry(tunnel.width, ceiling ? 0.18 : 0.24, tunnel.southZ - tunnel.northZ, tunnelSlope, tunnelSlope, tunnelSkew)
+              slab.translate(tunnelX((tunnel.southZ + tunnel.northZ) / 2), tunnelFloorHeight((tunnel.southZ + tunnel.northZ) / 2) + (ceiling ? tunnel.height + 0.09 : -0.12), (tunnel.southZ + tunnel.northZ) / 2)
               world.createCollider(RAPIER.ColliderDesc.trimesh(...colliderGeometry(slab)))
               return slab
             })
-            const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(offset, (returning ? tunnel.northY : tunnel.southY) + 0.04, returning ? tunnel.northZ - 1.5 : 6))
+            const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(tunnelX(returning ? tunnel.northZ - 1.5 : 6) + offset, (returning ? tunnel.northY : tunnel.southY) + 0.04, returning ? tunnel.northZ - 1.5 : 6))
             const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
             const motor = new EgoMotor(RAPIER, world, body, collider)
             const facing = new Quaternion
-            facing.setFromAxisAngle(new Vector3(0, 1, 0), returning ? Math.PI : 0)
+            facing.setFromAxisAngle(new Vector3(0, 1, 0), (returning ? Math.PI : 0) + Math.atan(tunnelSkew))
             try {
               for (let i = 0; i < fps * 10; i++) {
+                // Follow a lane down the diagonal; projecting motion onto the slope otherwise slowly changes the heading.
+                const {x, z} = body.translation()
+                const aheadZ = z + (returning ? 1 : -1)
+                facing.setFromAxisAngle(new Vector3(0, 1, 0), Math.atan2(x - tunnelX(aheadZ) - offset, z - aheadZ))
                 motor.step(world.timestep, {
                   forward: true,
                   sprint,
@@ -231,6 +235,10 @@ describe('oculus and connecting tunnel', () => {
                 }
               }
               expect(returning ? body.translation().z > 6 : body.translation().z < tunnel.northZ - 1.5).toBe(true)
+              for (let i = 0; i < fps / 2; i++) {
+                motor.step(world.timestep, {}, facing)
+                world.step()
+              }
               expect(body.translation().y).toBeCloseTo((returning ? tunnel.southY : tunnel.northY) + 0.02, 2)
             } finally {
               for (const slab of tunnelGeometry) {
