@@ -11,8 +11,9 @@ import LodgeEastWindowGeometry from '#src/lib/gallery/LodgeEastWindowGeometry.ts
 import LodgeWindowGeometry from '#src/lib/gallery/LodgeWindowGeometry.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 
-export default function LodgeWindow({glass, material}: {
+export default function LodgeWindow({glass, masonry, material}: {
   glass: Material
+  masonry: Material
   material: Material
 }) {
   const geometry = useDisposable(useMemo(() => new LodgeWindowGeometry, []))
@@ -34,7 +35,7 @@ export default function LodgeWindow({glass, material}: {
     </RigidBody>
     <RigidBody colliders={false} name='lodge-east-window' type='fixed'>
       {eastCollision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
-      <mesh castShadow geometry={eastGeometry.lining} material={material} name='lodge-east-window-reveal' receiveShadow />
+      <mesh castShadow geometry={eastGeometry.lining} material={[material, masonry]} name='lodge-east-window-reveal' receiveShadow />
       <mesh geometry={eastGeometry.glass} material={glass} name='lodge-east-window-glass' />
       <mesh castShadow geometry={eastGeometry.frame} material={brass} name='lodge-east-window-glazing-stop' receiveShadow />
     </RigidBody>

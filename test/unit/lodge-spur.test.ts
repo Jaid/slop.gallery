@@ -238,3 +238,43 @@ test('the entrance clears the parent vault and ribs at walking height, and the s
     spur.dispose()
   }
 })
+test('the east window surround is stone on the Bastion face and timber inside the Lodge recess', () => {
+  const wood = new MeshBasicMaterial
+  const stone = new MeshBasicMaterial
+  const mesh = new Mesh(window.lining, [wood, stone])
+  const {x, z, width, bottom, top, border, sill} = lodgeEastWindow
+  const tunnelX = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
+  const middleY = (bottom + top) / 2
+  // All four strips outside the brass stop, seen head-on and obliquely from the passage.
+  const strips = [
+    [bottom - sill / 2, z],
+    [top + border / 2, z],
+    ...[-1, 1].map(side => [middleY, z + side * (width + border) / 2]),
+  ]
+  try {
+    for (const [y, across] of strips) {
+      const target = new Vector3(tunnelX, y, across)
+      for (const offset of [-0.6, 0, 0.6]) {
+        const origin = new Vector3(tunnelX + 1, y + offset, across + offset)
+        const ray = new Raycaster(origin, target.clone().sub(origin).normalize())
+        const hit = ray.intersectObject(mesh)[0]
+        expect(hit).toBeDefined()
+        expect(hit.face!.materialIndex).toBe(1)
+        expect(hit.point.x).toBeCloseTo(tunnelX, 5)
+      }
+      const fromLodge = new Raycaster(new Vector3(x - 0.5, y, across), new Vector3(1, 0, 0))
+      expect(fromLodge.intersectObject(mesh)[0]?.face?.materialIndex).toBe(0)
+    }
+    // Through the pane, the deep sill, head and jambs retain their wood finish.
+    for (const direction of [new Vector3(0, 1, 0), new Vector3(0, -1, 0), new Vector3(0, 0, 1), new Vector3(0, 0, -1)]) {
+      const ray = new Raycaster(new Vector3((x + tunnelX) / 2, middleY, z), direction)
+      expect(ray.intersectObject(mesh)[0]?.face?.materialIndex).toBe(0)
+    }
+    // No missing or duplicate triangles in the two material groups.
+    expect(window.lining.groups.map(group => [group.start, group.count, group.materialIndex])).toEqual([[0, 120, 0], [120, 24, 1]])
+    expect(window.lining.index!.count).toBe(144)
+  } finally {
+    wood.dispose()
+    stone.dispose()
+  }
+})
