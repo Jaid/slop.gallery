@@ -1,9 +1,11 @@
 import {describe, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
+import {Vector3} from 'three/webgpu'
 
 import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
 import OrbHolderGeometry, {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
+import {triangleCount} from '../../src/lib/geometry.ts'
 import {orbRadius} from '../../src/orbs/index.ts'
 
 await RAPIER.init()
@@ -48,6 +50,37 @@ describe('the orb holder', () => {
       expect(max.x).toBeCloseTo(-min.x, 6)
       expect(max.y).toBeLessThan(orbSeat)
       expect(orbSeat - orbRadius).toBeGreaterThan(0.07)
+    } finally {
+      geometry.dispose()
+    }
+  })
+  test('stays under 4096 triangles, every one of them facing the way its corners’ normals do', () => {
+    const geometry = new OrbHolderGeometry
+    try {
+      const {metal} = geometry
+      expect(triangleCount(metal)).toBeLessThan(4096)
+      const position = metal.getAttribute('position')
+      const normal = metal.getAttribute('normal')
+      const index = metal.index!
+      const [a, b, c, face, corner] = Array.from({length: 5}, () => new Vector3)
+      let backwards = 0
+      for (let offset = 0; offset < index.count; offset += 3) {
+        const corners = [index.getX(offset), index.getX(offset + 1), index.getX(offset + 2)]
+        a.fromBufferAttribute(position, corners[0])
+        b.fromBufferAttribute(position, corners[1])
+        c.fromBufferAttribute(position, corners[2])
+        face.crossVectors(b.sub(a), c.sub(a))
+        // No sliver of nothing, where a ring shrinks to the middle.
+        expect(face.length()).toBeGreaterThan(1e-10)
+        for (const vertex of corners) {
+          corner.fromBufferAttribute(normal, vertex)
+          expect(Number.isFinite(corner.x) && Number.isFinite(corner.y) && Number.isFinite(corner.z)).toBe(true)
+          if (corner.dot(face) <= 0) {
+            backwards++
+          }
+        }
+      }
+      expect(backwards).toBe(0)
     } finally {
       geometry.dispose()
     }
