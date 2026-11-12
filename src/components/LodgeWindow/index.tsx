@@ -11,9 +11,11 @@ import LodgeEastWindowGeometry from '#src/lib/gallery/LodgeEastWindowGeometry.ts
 import LodgeWindowGeometry from '#src/lib/gallery/LodgeWindowGeometry.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 
-export default function LodgeWindow({glass, material}: {
+export default function LodgeWindow({glass, material, stone}: {
   glass: Material
   material: Material
+  /** the Bastion’s castle stone, which frames the east window on the passage’s side */
+  stone: Material
 }) {
   const geometry = useDisposable(useMemo(() => new LodgeWindowGeometry, []))
   const eastGeometry = useDisposable(useMemo(() => new LodgeEastWindowGeometry, []))
@@ -24,7 +26,7 @@ export default function LodgeWindow({glass, material}: {
     roughness: 0.4,
   })), []))
   const collision = [geometry.lining, geometry.glass, geometry.frame].map(colliderGeometry)
-  const eastCollision = [eastGeometry.lining, eastGeometry.glass, eastGeometry.frame].map(colliderGeometry)
+  const eastCollision = [eastGeometry.lining, eastGeometry.glass, eastGeometry.frame, eastGeometry.surround].map(colliderGeometry)
   return <group name='lodge-tunnel-window'>
     <RigidBody colliders={false} type='fixed'>
       {collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
@@ -35,6 +37,7 @@ export default function LodgeWindow({glass, material}: {
     <RigidBody colliders={false} name='lodge-east-window' type='fixed'>
       {eastCollision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
       <mesh castShadow geometry={eastGeometry.lining} material={material} name='lodge-east-window-reveal' receiveShadow />
+      <mesh castShadow geometry={eastGeometry.surround} material={stone} name='lodge-east-window-surround' receiveShadow />
       <mesh geometry={eastGeometry.glass} material={glass} name='lodge-east-window-glass' />
       <mesh castShadow geometry={eastGeometry.frame} material={brass} name='lodge-east-window-glazing-stop' receiveShadow />
     </RigidBody>

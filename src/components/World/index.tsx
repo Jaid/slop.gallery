@@ -67,9 +67,9 @@ const loaders: Record<LaterRoom, () => Promise<RoomPart>> = {
   },
   lodge: async () => {
     const [{default: Room}, {default: LodgeWindow}, {default: LodgeThreshold}] = await Promise.all([import('#src/rooms/lodge/components/LodgeRoom/index.tsx'), import('#component/LodgeWindow'), import('#src/rooms/lodge/components/LodgeThreshold/index.tsx')])
-    return ({glass, lodge, windowReveal, wood}) => <>
+    return ({castleStone, glass, lodge, windowReveal, wood}) => <>
       <Room materials={lodge} />
-      <LodgeWindow glass={glass.cabin} material={windowReveal} />
+      <LodgeWindow glass={glass.cabin} material={windowReveal} stone={castleStone} />
       <LodgeThreshold wood={wood} />
     </>
   },

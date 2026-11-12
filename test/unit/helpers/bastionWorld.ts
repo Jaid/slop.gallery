@@ -75,7 +75,7 @@ export function bastionColliders() {
     bars.dispose()
   }
   const lodgeWindow = new LodgeEastWindowGeometry
-  for (const part of [lodgeWindow.lining, lodgeWindow.glass, lodgeWindow.frame]) {
+  for (const part of [lodgeWindow.lining, lodgeWindow.glass, lodgeWindow.frame, lodgeWindow.surround]) {
     colliders.surface(part, true)
   }
   lodgeWindow.dispose()

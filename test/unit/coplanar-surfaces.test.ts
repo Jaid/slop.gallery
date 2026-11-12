@@ -296,12 +296,12 @@ test('the reveal of the Lodge’s east window shares no plane with the Bastion�
   const vault = new RouteVaultGeometry(lodgeSpur)
   const window = new LodgeEastWindowGeometry
   disposables.push(vault, window)
-  const meshes = [...wallMeshes(side), new Mesh(vault.shell, material), new Mesh(window.lining, material)]
+  const meshes = [...wallMeshes(side), new Mesh(vault.shell, material), new Mesh(window.lining, material), new Mesh(window.surround, material)]
   const {z, width, bottom, top, border} = lodgeEastWindow
   const face = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
   const middleY = (bottom + top) / 2
   const origin = new Vector3(lodgeSpurX, middleY, z)
-  // Straight at the reveal’s jamb on the passage’s face, then from the passage’s middle at its jambs, sill and head within the stone’s depth, the head also where the vault’s shell takes over from the wall.
+  // Straight at the stone surround’s jamb, which covers the timber on the passage’s face, then from the passage’s middle at its jambs, sill and head within the stone’s depth, the head also where the vault’s shell takes over from the wall.
   const probes: Array<readonly [from: Vector3, target: readonly [number, number, number]]> = [
     [new Vector3(lodgeSpurX, middleY, z - width / 2 - border / 2), [face - 0.01, middleY, z - width / 2 - border / 2]],
     ...[-1, 1].map(edge => [origin, [face - 0.05, middleY, z + edge * width / 2]] as const),

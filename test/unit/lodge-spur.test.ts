@@ -181,6 +181,36 @@ test('a barred window goes on through the closing wall and the wall behind it, t
     }
   }
 })
+test('the Lodge’s east window shows stone, not its timber, around the frame on the Bastion side', () => {
+  const {z, width, bottom, top, border, sill} = lodgeEastWindow
+  const face = lodgeSpurX - lodgeSpurWidth / 2 + wallFace
+  window.surround.computeBoundingBox()
+  const surround = window.surround.boundingBox!
+  // It fills the wall’s thickness and stops a millimeter short of both the passage’s face and the wall’s back, so it covers the timber there without sharing either plane.
+  expect(face - surround.max.x).toBeCloseTo(0.001, 4)
+  expect(surround.min.x - (face - wallFace)).toBeCloseTo(0.001, 4)
+  expect(surround.min.y).toBeCloseTo(bottom - sill, 4)
+  expect(surround.max.y).toBeCloseTo(top + border, 4)
+  expect(surround.min.z).toBeCloseTo(z - width / 2 - border, 4)
+  expect(surround.max.z).toBeCloseTo(z + width / 2 + border, 4)
+  const material = new MeshBasicMaterial
+  const facing = new Mesh(window.surround, material)
+  const timber = new Mesh(window.lining, material)
+  try {
+    const probes = [[bottom - sill / 2, z], [(bottom + top) / 2, z - width / 2 - border / 2], [top + border / 2, z + width / 2 + border / 2]]
+    for (const [y, probeZ] of probes) {
+      const ray = new Raycaster(new Vector3(face + 0.3, y, probeZ), new Vector3(-1, 0, 0), 0, 1)
+      expect(ray.intersectObjects([facing, timber])[0]?.object).toBe(facing)
+    }
+    // The opening itself stays clear, and from inside it the reveal toward the Lodge is still timber.
+    const opening = new Raycaster(new Vector3(face + 0.3, (bottom + top) / 2, z), new Vector3(-1, 0, 0), 0, 1)
+    expect(opening.intersectObject(facing)).toHaveLength(0)
+    const inward = new Raycaster(new Vector3((lodgeEastWindow.x + face) / 2, (bottom + top) / 2, z - width / 2 + 0.05), new Vector3(0, 0, -1), 0, 1)
+    expect(inward.intersectObjects([facing, timber])[0]?.object).toBe(timber)
+  } finally {
+    material.dispose()
+  }
+})
 test('the east Lodge wall opens to one matching glazed window, not another doorway', () => {
   const hole = lodgeWall.holes!.find(value => value.name === 'east_window')!
   expect(hole).toBeDefined()
