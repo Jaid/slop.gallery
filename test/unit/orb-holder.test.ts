@@ -4,6 +4,7 @@ import RAPIER from '@dimforge/rapier3d-compat'
 
 import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
 import OrbHolderGeometry, {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
+import {triangleCount} from '../../src/lib/geometry.ts'
 import {orbRadius} from '../../src/orbs/index.ts'
 
 await RAPIER.init()
@@ -35,6 +36,15 @@ function settle(geometry: OrbHolderGeometry, velocity: readonly [number, number,
   }
 }
 describe('the orb holder', () => {
+  test('keeps within 4096 triangles for its metal and a lean collision geometry', () => {
+    const geometry = new OrbHolderGeometry
+    try {
+      expect(triangleCount(geometry.metal)).toBeLessThan(4096)
+      expect(triangleCount(geometry.collision)).toBeLessThan(2048)
+    } finally {
+      geometry.dispose()
+    }
+  })
   test('stands on the cap within the pedestal’s footprint, lower than the orb it holds', () => {
     const geometry = new OrbHolderGeometry
     try {

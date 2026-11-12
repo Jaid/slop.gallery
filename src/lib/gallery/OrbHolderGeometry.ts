@@ -2,7 +2,7 @@ import type {BufferGeometry} from 'three/webgpu'
 
 import {ParametricGeometry} from 'three/addons/geometries/ParametricGeometry.js'
 import {toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js'
-import {ExtrudeGeometry, LatheGeometry, Shape, SphereGeometry, TorusGeometry, Vector2} from 'three/webgpu'
+import {ExtrudeGeometry, LatheGeometry, Shape, SphereGeometry, Vector2} from 'three/webgpu'
 
 import {orbRadius} from '#src/orbs/index.ts'
 
@@ -41,7 +41,7 @@ const feet = {
   depth: 0.014,
   bevel: 0.003,
 }
-const segments = 96
+const segments = 48
 
 /** how high the middle of an orb resting on the lip stands over the holder’s foot, where its ball touches the lip’s roll all round */
 export const orbSeat = lip.y + Math.sqrt((orbRadius + lip.tube) ** 2 - lip.radius ** 2)
@@ -67,10 +67,10 @@ function bandProfile() {
   return [
     new Vector2(0, band.bottom),
     new Vector2(band.beadCenter, band.bottom),
-    ...semicircle([band.beadCenter, band.bottom + band.beadRadius], band.beadRadius, -Math.PI / 2, Math.PI / 2).slice(1),
+    ...semicircle([band.beadCenter, band.bottom + band.beadRadius], band.beadRadius, -Math.PI / 2, Math.PI / 2, 2).slice(1),
     new Vector2(band.frieze, band.bottom + band.beadRadius * 2),
     new Vector2(band.frieze, band.top - band.beadRadius * 2),
-    ...semicircle([band.beadCenter, band.top - band.beadRadius], band.beadRadius, -Math.PI / 2, Math.PI / 2),
+    ...semicircle([band.beadCenter, band.top - band.beadRadius], band.beadRadius, -Math.PI / 2, Math.PI / 2, 2),
     new Vector2(0.1, band.top),
     new Vector2(cup.foot[0], cup.foot[1]),
   ]
@@ -84,11 +84,20 @@ function cupWall() {
     const radius = cupRadius(v) * (1 - cup.crease * Math.sin(Math.PI * v) ** 0.6 * (1 - lobe))
     // Turning the same way as a lathe, so the wall faces out.
     target.set(Math.sin(angle) * radius, cupY(v), Math.cos(angle) * radius)
-  }, cup.lobes * 12, 16)
+  }, 64, 6)
   // Smoothed in centimeters, as the normal utility welds positions closer than 0.01 units; the creases stay sharp.
   const smooth = toCreasedNormals(wall.scale(100, 100, 100), Math.PI / 5).scale(0.01, 0.01, 0.01)
   wall.dispose()
   return smooth
+}
+/** The rolled lip round the mouth and the hollow bowl inside the cup, turned in one seamless lathe profile without hidden faces. */
+function lipAndBowl() {
+  const lipArc = semicircle([lip.radius, lip.y], lip.tube, -Math.PI / 4, Math.PI, 5)
+  const points = [
+    ...lipArc,
+    ...bowl.slice(1).map(([r, y]) => new Vector2(r, y)),
+  ]
+  return new LatheGeometry(points, segments)
 }
 /** An acanthus leaf’s outline, `width` across its foot and `height` up to its tip, its edges lobed three times on either side. */
 function leafShape(width: number, height: number) {
@@ -138,13 +147,13 @@ function foot(): Array<BufferGeometry> {
   const bracket = new ExtrudeGeometry(outline, {
     depth: feet.depth,
     bevelEnabled: true,
-    bevelSegments: 3,
+    bevelSegments: 1,
     bevelSize: feet.bevel,
     bevelThickness: feet.bevel,
     bevelOffset: -feet.bevel,
-    curveSegments: 10,
+    curveSegments: 4,
   })
-  const toe = new SphereGeometry(0.011, 16, 10)
+  const toe = new SphereGeometry(0.011, 8, 6)
   const parts: Array<BufferGeometry> = [
     bracket.translate(0, 0, -feet.depth / 2),
     toe.scale(1.2, 0.8, 1.1).translate(0.143, 0.0088, 0),
@@ -153,10 +162,10 @@ function foot(): Array<BufferGeometry> {
   const leaf = new ExtrudeGeometry(leafShape(0.028, 0.03), {
     depth: 0.006,
     bevelEnabled: true,
-    bevelSegments: 2,
+    bevelSegments: 1,
     bevelSize: 0.0012,
     bevelThickness: 0.0015,
-    curveSegments: 6,
+    curveSegments: 2,
   })
   parts.push(leaf.rotateY(Math.PI / 2).translate(band.frieze + 0.0015, band.bottom - 0.002, 0))
   return parts
@@ -173,14 +182,10 @@ export default class OrbHolderGeometry {
   readonly metal: BufferGeometry
 
   constructor() {
-    const lipRoll = new TorusGeometry(lip.radius, lip.tube, 12, segments)
-    const inside = new LatheGeometry(bowl.map(([radius, y]) => new Vector2(radius, y)), segments)
     const parts: Array<BufferGeometry> = [
       new LatheGeometry(bandProfile(), segments),
       cupWall(),
-      lipRoll.rotateX(Math.PI / 2).translate(0, lip.y, 0),
-      // From the lip down to the middle, so the bowl faces up and in.
-      inside,
+      lipAndBowl(),
     ]
     for (let index = 0; index < feet.count; index++) {
       // A foot stands out along x until it is turned toward the front, then on round by a third each.
@@ -191,11 +196,11 @@ export default class OrbHolderGeometry {
       new Vector2(0, 0),
       new Vector2(0.125, 0),
       new Vector2(0.12, band.top),
-      ...Array.from({length: 9}, (_, index) => new Vector2(cupRadius(index / 8), cupY(index / 8))),
-      ...semicircle([lip.radius, lip.y], lip.tube, -Math.PI / 4, Math.PI, 12),
+      ...Array.from({length: 5}, (_, index) => new Vector2(cupRadius(index / 4), cupY(index / 4))),
+      ...semicircle([lip.radius, lip.y], lip.tube, -Math.PI / 4, Math.PI, 6),
       ...bowl.slice(1).map(([radius, y]) => new Vector2(radius, y)),
     ]
-    this.collision = new LatheGeometry(outline, 48)
+    this.collision = new LatheGeometry(outline, 32)
   }
 
   dispose() {
