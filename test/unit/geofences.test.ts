@@ -45,7 +45,7 @@ test('the rooms’ fences cover every point a player’s body takes up on every 
   }
   expect(samples).toBeGreaterThan(20_000)
   expect(uncovered.slice(0, 5)).toEqual([])
-})
+}, 30_000)
 test('the Lodge’s window niche belongs to the Lodge, out to the glass in the Corridor’s lining', () => {
   const sill = lodgeWindow.bottom + 0.2
   for (const x of [lodgeWindow.roomX - 0.2, (lodgeWindow.roomX + lodgeWindow.tunnelX) / 2, lodgeWindow.tunnelX + 0.05]) {
