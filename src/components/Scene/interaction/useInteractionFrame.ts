@@ -16,6 +16,7 @@ import followRooms from '#src/lib/gallery/roomSession.ts'
 import interactionHint from '#src/lib/interactionHint.ts'
 import GeofenceTelemetry from '#src/lib/telemetry/GeofenceTelemetry.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
+import worldTime from '#src/lib/worldTime.ts'
 import world from '#src/worlds/current.ts'
 
 import {propObjects} from '../GrabbableProp.tsx'
@@ -140,7 +141,7 @@ export default function useInteractionFrame(camera: RootState['camera'], rendere
 /** Feeds the debounced HUD hint from the target resolved this frame. */
 function updateHint() {
   const s = useGallery.getState()
-  const now = performance.now() / 1000
+  const now = worldTime.now() / 1000
   if (!s.locked || s.dragging || cameraPose.focused || s.held) {
     interactionHint.update(null, now, true)
     return

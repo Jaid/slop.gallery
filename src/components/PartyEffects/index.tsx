@@ -7,6 +7,7 @@ import {useEffect} from 'react'
 
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {galleryEvents, spawnPartyEffect, useGallery} from '#src/lib/gallery.ts'
+import worldTime from '#src/lib/worldTime.ts'
 import {endParty, startParty, useParties} from '#src/party_effects/lib/parties.ts'
 
 /** how long after a party is over it stays in the world, in seconds, so nothing of it is cut off */
@@ -39,7 +40,7 @@ export default function PartyEffects() {
 function SpawnedParty({party}: {party: Party}) {
   const show = useDisposable(party.show)
   useFrame(() => {
-    const since = (performance.now() - party.startsAt) / 1000
+    const since = (worldTime.now() - party.startsAt) / 1000
     const engine = SoundEngine.existing()
     show.update(since, engine && useGallery.getState().sound ? engine : undefined)
     if (show.over(since - lingering)) {

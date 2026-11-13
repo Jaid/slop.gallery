@@ -2,6 +2,7 @@ import {narrationState, Narrator} from 'use-narrator/core'
 
 import {galleryEvents, notify} from '../gallery/actions.ts'
 import {useGallery} from '../gallery/store.ts'
+import worldTime from '../worldTime.ts'
 import {narrationMeter} from './NarrationMeter.ts'
 import SoundEngine from './SoundEngine.ts'
 
@@ -31,6 +32,11 @@ export const narrator = new Narrator({
 /** Gallery-specific mute, navigation and telemetry projection. Playback state lives in the package. */
 export function attachNarration(target: Narrator = narrator, events: Pick<EventTarget, 'addEventListener' | 'removeEventListener'> = globalThis) {
   target.enabled = useGallery.getState().sound
+  const pause = () => {
+    target.queue.paused = worldTime.paused
+  }
+  const unsubscribePause = worldTime.subscribe(pause)
+  pause()
   const publish = () => {
     const next = narrationState(target.getSnapshot())
     const previous = useGallery.getState().narration
@@ -51,10 +57,12 @@ export function attachNarration(target: Narrator = narrator, events: Pick<EventT
   publish()
   return () => {
     unsubscribeGallery()
+    unsubscribePause()
     galleryEvents.removeEventListener('stop-narration', stop)
     galleryEvents.removeEventListener('teleport', stop)
     events.removeEventListener('pagehide', stop)
     target.enabled = false
+    target.queue.paused = false
     unsubscribeNarrator()
   }
 }

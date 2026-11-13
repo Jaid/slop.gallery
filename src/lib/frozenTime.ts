@@ -6,6 +6,7 @@ import world from '#src/worlds/current.ts'
 
 import {readDevelopmentMode} from './developmentMode.ts'
 import {readSpawn} from './gallery/spawn.ts'
+import worldTime from './worldTime.ts'
 
 const frozenTimeSchema = optis({
   normalizations: {
@@ -29,14 +30,18 @@ export function readFrozenTime(input: URL | string = typeof location === 'undefi
 /** the seconds of `?frozen_time`, or undefined while the engine time runs */
 export const frozenSeconds = readFrozenTime()
 
-// Every renderer’s node time, which shaders read as TSL `time`, stands still at the frozen seconds from its first frame on. Nothing else reads it, so the real clock still drives physics and input.
-if (frozenSeconds !== undefined) {
-  // eslint-disable-next-line typescript/unbound-method -- called with the frame as this
-  const {update} = NodeFrame.prototype
-  NodeFrame.prototype.update = function (this: NodeFrame) {
-    update.call(this)
-    this.time = frozenSeconds
-  }
+// NodeFrame normally measures wall time independently of Fiber, so merely stopping the Canvas would make shaders jump ahead on resume. Every renderer follows the world clock; ?frozen_time still overrides animation time for captures.
+const lastUpdates = new WeakMap<NodeFrame, number>
+// eslint-disable-next-line typescript/unbound-method -- called with the frame as this
+const {update} = NodeFrame.prototype
+NodeFrame.prototype.update = function (this: NodeFrame) {
+  const now = worldTime.now()
+  const delta = (now - (lastUpdates.get(this) ?? now)) / 1000
+  const elapsed = this.time + delta
+  update.call(this)
+  lastUpdates.set(this, now)
+  this.deltaTime = delta
+  this.time = frozenSeconds ?? elapsed
 }
 
 /** The time of a CPU-side animation in seconds: the frame deltas summed up, each capped at `maxDelta`, or the frozen seconds under `?frozen_time`, like the shaders’ time. */

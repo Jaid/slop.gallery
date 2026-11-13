@@ -105,3 +105,12 @@ BROWSER=/path/to/chromium bun run test:live:spawn
 ```
 
 This builds the gallery and starts it once in every room with `?room`, each in a private headless browser without input. Every room but the Lobby streams in after the page, bringing its floors, so the physics waits for them; once none is loading anymore, the player has to stand grounded at the room’s spawn. It caught the physics hold reaching the scene too late, which let the player fall through the floors of a start room that had not mounted yet. `LIVE_TARGET` reuses a build like for the Oculus test.
+## Escape world pause
+
+With a local Vite page ready (for example `http://localhost:5173/?room=cell&graphics=light&intro=false`), click **Enter** first, then run:
+
+```sh
+BROWSER_TEST_ORIGIN=http://localhost:5173 bun test/browser/run.ts worldPause.ts
+```
+
+The fixture briefly flings the player, plays a silent WAV through the real narrator and uses real pointer-lock release/reacquisition. Escape-mode release must hold render counters, shader time, physics position, the AudioContext clock and the media transport exactly, even after invalidation, a resize event, a blur event and an attempted audio resume. It then checks smooth resumption and unchanged rendering/audio under focus-loss release. Run on a disposable page: the player moves and existing narration is replaced. Explicit `release('pause')` stands in for Escape’s browser UI unlock gesture, which CDP keyboard dispatch does not perform. Blur is simulated, not an actual operating-system Windows-key action. Unit tests exercise Escape inference, tab visibility and reason precedence separately.

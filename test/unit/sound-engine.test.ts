@@ -1,5 +1,7 @@
 import {afterEach, expect, mock, test} from 'bun:test'
 
+import {osc} from 'procedural-audio'
+
 import SoundEngine from '../../src/lib/audio/SoundEngine.ts'
 import audioFixture from './audioFixture.ts'
 
@@ -196,4 +198,47 @@ test('world sounds reach the master through the moods’ transformers, the inter
   expect(transformer.mock.calls[0]).toEqual([context as unknown as BaseAudioContext, send as unknown as AudioNode, outlet as unknown as AudioNode])
   expect(send.gain.setTargetAtTime).toHaveBeenLastCalledWith(1, 1, 0.03)
   expect(dry.gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 1, 0.03)
+})
+test('Escape suspends the audio clock, blocks menu sounds and keeps mute separate from pause', async () => {
+  const {sound, context, sources} = setup()
+  const suspend = Object.assign(context, {
+    suspend: mock(async () => {
+      context.state = 'suspended'
+    }),
+  }).suspend
+  sound.tone(320)
+  const playing = sources.length
+  sound.setPaused(true)
+  sound.setPaused(true)
+  expect(suspend).toHaveBeenCalledTimes(1)
+  await sound.resume()
+  expect(context.resume).not.toHaveBeenCalled()
+  sound.tone(320)
+  sound.playEffect('SFX-42')
+  sound.playInWorld([osc(320, 1, 1)], 'paused')
+  expect(sources).toHaveLength(playing)
+  sound.mute(true)
+  sound.setPaused(false)
+  await sound.resume()
+  expect(context.resume).toHaveBeenCalled()
+  sound.tone(320)
+  expect(sources).toHaveLength(playing)
+  sound.mute(false)
+  sound.tone(320)
+  expect(sources.length).toBeGreaterThan(playing)
+})
+test('a rapid resume cannot overtake an in-flight audio suspension or reopen a newer pause', async () => {
+  const {sound, context} = setup()
+  const suspension = Promise.withResolvers<void>()
+  Object.assign(context, {suspend: () => suspension.promise})
+  sound.setPaused(true)
+  sound.setPaused(false)
+  sound.setPaused(true)
+  context.state = 'suspended'
+  suspension.resolve()
+  await sound.resume()
+  expect(context.resume).not.toHaveBeenCalled()
+  sound.setPaused(false)
+  await sound.resume()
+  expect(context.resume).toHaveBeenCalled()
 })

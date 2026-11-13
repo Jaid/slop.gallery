@@ -6,6 +6,7 @@ import {FakeClock, FakePlayback, flush} from '../../packages/use-narrator/packag
 import {attachNarration} from '../../src/lib/audio/narration.ts'
 import {galleryEvents} from '../../src/lib/gallery/actions.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
+import worldTime from '../../src/lib/worldTime.ts'
 
 let narrator: Narrator
 let clock: FakeClock
@@ -106,4 +107,33 @@ test('effect replay clears abandoned work without permanently disposing the app 
   await clock.advance(0.1)
   expect(narrator.getSnapshot().current?.id).toBe(next.id)
   expect(players.at(-1)?.playing).toBe(true)
+})
+test('Escape pauses narration without clearing its queue or the sound preference', async () => {
+  // eslint-disable-next-line typescript/no-misused-spread -- Save own timing state for test isolation, not a working clock clone.
+  const initial = {...worldTime}
+  try {
+    const handle = narrator.push({audio: '/voice.opus'})
+    await clock.advance(0.1)
+    players[0].position = 3
+    worldTime.paused = true
+    expect(players[0].playing).toBe(false)
+    expect(narrator.queue.has(handle.id)).toBe(true)
+    expect(narrator.enabled).toBe(true)
+    expect(useGallery.getState().sound).toBe(true)
+    await clock.advance(60)
+    worldTime.paused = false
+    await flush()
+    expect(players[0].playing).toBe(true)
+    expect(players[0].position).toBe(3)
+    expect(players[0].disposals).toBe(0)
+    worldTime.paused = true
+    useGallery.setState({sound: false})
+    const result = await handle.finished
+    expect(result.status).toBe('cancelled')
+    worldTime.paused = false
+    expect(narrator.enabled).toBe(false)
+  } finally {
+    worldTime.paused = false
+    Object.assign(worldTime, initial)
+  }
 })

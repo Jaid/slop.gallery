@@ -5,6 +5,8 @@ import type {IngredientLatch} from './FusionRecipe.ts'
 import type {PortalFrame} from './portalFrame.ts'
 import type {FusionTiming} from './timing.ts'
 
+import worldTime from '#src/lib/worldTime.ts'
+
 import {fusionTiming, nextTurn} from './timing.ts'
 
 /** the ingredient thrown into the hung portrait */
@@ -67,7 +69,7 @@ let opened = 0
 /**
  * A fusion as the gallery shows it: a portal opens in front of the hung portrait with its intro, which brings the portrait and what was thrown into it into orbit around it, while the portal shows their images in turn.
  * The director tells it how the fusion went and waits for its timeline: a result never shows before {@link FusionTiming.minimum} and flips out after the climax, while a failure only waits for the intro and hands everything back after the fizzle.
- * Its own clock is `performance.now()`, which the renderer and the virtual clock of the film script follow too.
+ * Its clock is the pause-aware world timeline, backed by `performance.now()` (also the virtual clock of film captures).
  */
 export default class Fusion {
   /** seconds into the fusion that the player broke it off, by jumping into its portal */
@@ -87,7 +89,7 @@ export default class Fusion {
   /** aborted once the player breaks the fusion off, which makes the image model give up */
   readonly signal: AbortSignal
   readonly spec: FusionSpec
-  readonly startedAt = performance.now()
+  readonly startedAt = worldTime.now()
   readonly timing: FusionTiming
   private readonly canceller = new AbortController
   private readonly hold?: FusionOptions['hold']
@@ -146,7 +148,7 @@ export default class Fusion {
   }
 
   /** seconds since the fusion started */
-  elapsed(now = performance.now()) {
+  elapsed(now = worldTime.now()) {
     return (now - this.startedAt) / 1000
   }
 
@@ -248,10 +250,10 @@ export default class Fusion {
 
   /** Resolves once the fusion is `seconds` old or over. */
   private async reach(seconds: number) {
-    while (!this.closed && this.elapsed() < seconds) {
+    while (!this.closed && (worldTime.paused || this.elapsed() < seconds)) {
       let timer: ReturnType<typeof setTimeout> | undefined
       await Promise.race([this.over.promise, new Promise(resolve => {
-        timer = setTimeout(resolve, Math.min(poll, Math.max(1, (seconds - this.elapsed()) * 1000)))
+        timer = setTimeout(resolve, worldTime.paused ? poll : Math.min(poll, Math.max(1, (seconds - this.elapsed()) * 1000)))
       })])
       clearTimeout(timer)
     }

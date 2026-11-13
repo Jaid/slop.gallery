@@ -37,6 +37,7 @@ const wideColorAttachmentBytes = 64
 const cinematicSampledTextures = 32
 /** Renderer internals that three doesn’t type. */
 type Internals = {
+  _animation: {stop: () => void} | null
   _currentRenderBundle: unknown
   _nodes: {
     getForRender: (renderObject: RenderObject) => unknown
@@ -358,6 +359,11 @@ export class GalleryRenderer extends WebgpuRenderer {
   /** Whether the shadow map of this camera left out objects that streaming hasn’t built yet, or whose pipelines were still compiling and are ready by now, so it must render again. */
   shadowIncomplete(camera: Camera) {
     return this.incompleteCameras.has(camera) || this.shadowsAwaitingPipelines.has(camera) && !this.awaitsPipelines(camera)
+  }
+
+  /** Three keeps its own bookkeeping RAF alive even without renders. Stop it along with Fiber during a world pause; render() restarts it automatically on resume. */
+  stopAnimation() {
+    this.internals._animation?.stop()
   }
 
   /**

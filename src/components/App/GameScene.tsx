@@ -16,6 +16,8 @@ import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import {getRenderPipelineSettings} from '#src/lib/rendering/renderPipelineSettings.ts'
 import {isShowingWireframe} from '#src/lib/rendering/showWireframe.ts'
 
+import WorldPause from './WorldPause.tsx'
+
 /** Gallery integrations stay outside the physics subtree and share the WebGPU Canvas. */
 export default function GameScene({children}: GameWrapperProps) {
   const isHeavy = useGraphicsMode()
@@ -24,6 +26,7 @@ export default function GameScene({children}: GameWrapperProps) {
   const antiAliasing = getAntiAliasing(isHeavy, requestedAntiAliasing)
   const settings = useMemo(() => getRenderPipelineSettings(profile, antiAliasing), [profile, antiAliasing])
   return <>
+    <WorldPause />
     <WebgpuCaptureBridge />
     <TelemetryBridge />
     {children}
