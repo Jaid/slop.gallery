@@ -92,3 +92,7 @@ bun run test
 ```
 
 Tests use a deterministic clock and fake transports for every priority, timer interruption, cancellation race and backend failure. Browser-adapter tests cover media events, cancellation while preparing, exact element/position reuse, URL ownership and cleanup, and decoded playback through a fake context, its pauses, resumption and failures.
+
+## Global pause
+
+Set `queue.paused = true` to hold every lane, including concurrent audio, without canceling requests or losing playback positions. Existing interrupted jobs stay interrupted. Preparation may finish and new requests may be queued while paused, but neither can start playback. Set it back to `false` to resume, preserving remaining padding and gaps; entry snapshots report `suspended` during the pause. Cancellation, clearing and disposal still work while paused.
