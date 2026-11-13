@@ -99,9 +99,9 @@ export function disposeArchitecturalGlassMaterials(materials: ArchitecturalGlass
 /**
  * The Lobby’s cast pavers, set upright between the Lobby and the Salon and the Forge.
  *
- * Its own instance because it leaves the depth buffer alone: the pane refracts only opaque surfaces, so seen from the Salon or the Forge it
- * would replace the floor window behind it with the Oculus below. Drawn before every other transparent surface and without depth,
- * the floor window still draws over it.
+ * Its own instance because it leaves the depth buffer alone. Its panes are refracting panes: everything transparent behind one,
+ * like the floor window, the orbs and the glassy Knots seen from across the Lobby, draws before it and is bent by it, while everything
+ * on the camera’s side draws after it.
  */
 function createLobbyWindowGlass() {
   const material = new CastFloorGlassMaterial({

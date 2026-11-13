@@ -213,6 +213,8 @@ export class GalleryRenderer extends WebgpuRenderer {
     })
     this.lighting = new BatchedLighting
     this.drawingPipeline = this.drawing
+    // Transparent things behind a glass pane must draw before it, so it refracts them along with the room.
+    this.setTransparentSort(this.drawing.paneOrder.compare)
     this.createProjections()
     this.untrackLoading = trackLoadingItems(() => {
       // Incomplete shadow maps render again one per frame in turn, so what they left out stays listed until their next turn. Listing only what last frame’s passes left out would jump with whichever map rendered.

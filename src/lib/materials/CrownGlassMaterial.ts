@@ -2,9 +2,10 @@ import type {TransmittingEmission} from '../rendering/AlbedoRenderPipeline.ts'
 import type {ClearGlassOptions} from './ClearGlassMaterial.ts'
 import type {ColorRepresentation, Node} from 'three/webgpu'
 
-import {cameraFar, cameraNear, cameraProjectionMatrix, cross, dFdx, dFdy, float, fwidth, max, min, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, perspectiveDepthToViewZ, positionView, screenUV, smoothstep, uv, vec2, vec3, vec4, viewportDepthTexture, viewportSafeUV, viewportTexture} from 'three/tsl'
+import {cameraFar, cameraNear, cameraProjectionMatrix, cross, dFdx, dFdy, float, fwidth, max, min, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, perspectiveDepthToViewZ, positionView, screenUV, smoothstep, uv, vec2, vec3, vec4, viewportDepthTexture, viewportSafeUV} from 'three/tsl'
 import {Color} from 'three/webgpu'
 
+import {paneBackdrop} from '../rendering/refractingPanes.ts'
 import ClearGlassMaterial, {paneFresnelTransmittance} from './ClearGlassMaterial.ts'
 
 export type CrownGlassOptions = ClearGlassOptions & {
@@ -126,9 +127,9 @@ export default class CrownGlassMaterial extends ClearGlassMaterial implements Tr
     const clip = cameraProjectionMatrix.mul(vec4(backdrop.xy.add(drift), backdrop.z, 1))
     const refractedUV = clip.xy.div(clip.w).mul(vec2(0.5, -0.5)).add(0.5).clamp(0, 1)
     // Anything in front of the pane, like its own frame, must not be pulled into it.
-    // The pane copies the frame just before it draws, so transparent things behind it, like the fire, are included regardless of which
-    // other glass took the shared opaque copy first. The copy has no mipmaps, so the view stays pixel-sharp.
-    const transmitted = (viewportTexture(viewportSafeUV(refractedUV)) as Node<'vec4'>).rgb
+    // Each pane copies the frame just before it draws, so transparent things behind it, like the fire, are included regardless of which
+    // other glass took the shared opaque copy first, as long as its mesh is marked as a refracting pane to draw after them.
+    const transmitted = (paneBackdrop().sample(viewportSafeUV(refractedUV)) as Node<'vec4'>).rgb
     const transmittance = float(1 - options.absorption).mul(paneFresnelTransmittance(options.ior)).mul(float(1).sub(scatter))
     const body = new Color(bodyColor)
     this.emissiveNode = transmitted.mul(vec3(body.r, body.g, body.b)).mul(transmittance)

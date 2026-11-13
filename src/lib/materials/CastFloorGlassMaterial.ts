@@ -1,8 +1,10 @@
 import type {TransmittingEmission} from '../rendering/AlbedoRenderPipeline.ts'
 import type {Node} from 'three/webgpu'
 
-import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalLocal, perspectiveDepthToViewZ, positionLocal, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, transformNormalToView, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
+import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalLocal, perspectiveDepthToViewZ, positionLocal, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, transformNormalToView, vec2, vec3, vec4, viewportDepthTexture, viewportSafeUV} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
+
+import {paneBackdrop} from '../rendering/refractingPanes.ts'
 
 export type CastFloorGlassOptions = {
   /** slab thickness in meters */
@@ -46,6 +48,9 @@ const attenuationDepth = 0.3
  * Physical transmission only offsets its backdrop sample by the slab thickness, which leaves a 12 cm slab optically flat.
  * Real cast glass bends every ray by a small angle that keeps drifting all the way to whatever lies beyond it, so this material
  * refracts the backdrop itself: each relief facet deviates the ray like a thin prism, and the depth buffer tells how far it travels.
+ *
+ * The backdrop is a copy of the frame taken just before each pane draws, so its meshes should be marked with `refractingPaneRef([0, 1, 0])`:
+ * then transparent things behind it, like orbs and glassy Knots, draw first and are bent along with the room instead of drawn over it.
  */
 export default class CastFloorGlassMaterial extends MeshPhysicalNodeMaterial implements TransmittingEmission {
   readonly emissionIsTransmission = true
@@ -59,7 +64,7 @@ export default class CastFloorGlassMaterial extends MeshPhysicalNodeMaterial imp
       ior,
       specularIntensity: 1,
       envMapIntensity: 1.15,
-      // Transparent materials render after all opaque ones, so the backdrop copy contains the whole room below.
+      // Transparent materials render after all opaque ones, so the backdrop copy contains the whole room below, and so do the transparent ones behind the pane.
       transparent: true,
       opacity: 1,
     })
@@ -105,11 +110,12 @@ export default class CastFloorGlassMaterial extends MeshPhysicalNodeMaterial imp
     const gap = backdropViewZ.sub(positionView.z).negate().clamp(0, maximumRefractionGap)
     const backdrop = positionView.mul(backdropViewZ.div(positionView.z))
     const drift = castNormal.xy.sub(flatNormal.xy).mul(ior - 1).mul(gap)
+    const view = paneBackdrop()
     const sample = (spread: number) => {
       const clip = cameraProjectionMatrix.mul(vec4(backdrop.xy.add(drift.mul(1 + spread)), backdrop.z, 1))
       const uv = clip.xy.div(clip.w).mul(vec2(0.5, -0.5)).add(0.5).clamp(0, 1)
       // Anything in front of the glass, like a visitor’s own shoes, must not be refracted into it.
-      return viewportOpaqueMipTexture(viewportSafeUV(uv)) as Node<'vec4'>
+      return view.sample(viewportSafeUV(uv)) as Node<'vec4'>
     }
     const transmitted = vec3(sample(-dispersion).r, sample(0).g, sample(dispersion).b)
     // Fresnel at the cast surface decides how much of the backdrop gets through; the rest is the reflection the lighting already adds.

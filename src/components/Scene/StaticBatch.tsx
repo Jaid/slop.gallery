@@ -5,6 +5,8 @@ import {useLayoutEffect, useRef} from 'react'
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js'
 import {BufferAttribute, BufferGeometry, Matrix4, Mesh} from 'three/webgpu'
 
+import {isRefractingPane} from '#src/lib/rendering/refractingPanes.ts'
+
 type Family = {
   material: Material
   meshes: Array<Mesh>
@@ -44,8 +46,8 @@ const batchable = (mesh: Mesh, root: Group) => {
   if (!(mesh as Partial<Mesh>).isMesh || Array.isArray(mesh.material) || 'isInstancedMesh' in mesh || 'isBatchedMesh' in mesh || 'isSkinnedMesh' in mesh || mesh.morphTargetInfluences || !('position' in mesh.geometry.attributes)) {
     return false
   }
-  // A mirrored transform would turn the merged faces inside out, and an own render hook expects to draw alone.
-  if (mesh.matrixWorld.determinant() <= 0 || mesh.onBeforeRender !== Mesh.prototype.onBeforeRender) {
+  // A mirrored transform would turn the merged faces inside out, an own render hook expects to draw alone and a refracting pane is ordered by its own plane.
+  if (mesh.matrixWorld.determinant() <= 0 || mesh.onBeforeRender !== Mesh.prototype.onBeforeRender || isRefractingPane(mesh)) {
     return false
   }
   for (let node: Mesh['parent'] = mesh; node && node !== root; node = node.parent) {
