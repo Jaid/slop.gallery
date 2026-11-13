@@ -12,6 +12,7 @@ const basis = new Matrix4
 basis.makeBasis(new Vector3(0, 0, 1), new Vector3(1, 0, 0), new Vector3(0, 1, 0))
 const upright = new Quaternion
 upright.setFromRotationMatrix(basis)
+const glassPlane = {glassPlane: [0, 1, 0] as const}
 
 /** A glass wall between the Lobby extension and the room beside it, the Salon or the Forge, filling the openings both walls leave for it. */
 export default function LobbyWindow({glass, glazing, name}: {
@@ -30,6 +31,6 @@ export default function LobbyWindow({glass, glazing, name}: {
     <RigidBody colliders={false} type='fixed'>
       <CuboidCollider args={[thickness / 2, height / 2, width / 2]} position={[x, bottom + height / 2, z]} />
     </RigidBody>
-    <mesh geometry={geometry} material={glass} name={`${name}-glass`} position={[x, bottom, z - width / 2]} quaternion={upright} renderOrder={-1} />
+    <mesh geometry={geometry} material={glass} name={`${name}-glass`} position={[x, bottom, z - width / 2]} quaternion={upright} userData={glassPlane} />
   </group>
 }

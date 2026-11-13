@@ -11,6 +11,8 @@ import LodgeEastWindowGeometry from '#src/lib/gallery/LodgeEastWindowGeometry.ts
 import LodgeWindowGeometry from '#src/lib/gallery/LodgeWindowGeometry.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 
+const glassPlane = {glassPlane: [1, 0, 0] as const}
+
 export default function LodgeWindow({glass, masonry, material}: {
   glass: Material
   masonry: Material
@@ -30,13 +32,13 @@ export default function LodgeWindow({glass, masonry, material}: {
     <RigidBody colliders={false} type='fixed'>
       {collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
       <mesh castShadow geometry={geometry.lining} material={material} name='lodge-window-reveal' receiveShadow />
-      <mesh geometry={geometry.glass} material={glass} name='lodge-window-tunnel-glass' />
+      <mesh geometry={geometry.glass} material={glass} name='lodge-window-tunnel-glass' userData={glassPlane} />
       <mesh castShadow geometry={geometry.frame} material={brass} name='lodge-window-glazing-stop' receiveShadow />
     </RigidBody>
     <RigidBody colliders={false} name='lodge-east-window' type='fixed'>
       {eastCollision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
       <mesh castShadow geometry={eastGeometry.lining} material={[material, masonry]} name='lodge-east-window-reveal' receiveShadow />
-      <mesh geometry={eastGeometry.glass} material={glass} name='lodge-east-window-glass' />
+      <mesh geometry={eastGeometry.glass} material={glass} name='lodge-east-window-glass' userData={glassPlane} />
       <mesh castShadow geometry={eastGeometry.frame} material={brass} name='lodge-east-window-glazing-stop' receiveShadow />
     </RigidBody>
   </group>

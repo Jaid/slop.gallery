@@ -1,8 +1,10 @@
 import type {TransmittingEmission} from '#src/lib/rendering/AlbedoRenderPipeline.ts'
 import type {ColorRepresentation, Node} from 'three/webgpu'
 
-import {Break, cameraFar, cameraNear, cameraPosition, cameraProjectionMatrix, float, Fn, frameId, If, interleavedGradientNoise, Loop, modelViewMatrix, modelWorldMatrixInverse, normalView, perspectiveDepthToViewZ, positionGeometry, positionView, positionViewDirection, reflect, refract, screenCoordinate, screenUV, select, smoothstep, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
+import {Break, cameraFar, cameraNear, cameraPosition, cameraProjectionMatrix, float, Fn, frameId, If, interleavedGradientNoise, Loop, modelViewMatrix, modelWorldMatrixInverse, normalView, perspectiveDepthToViewZ, positionGeometry, positionView, positionViewDirection, reflect, refract, screenCoordinate, screenUV, select, smoothstep, vec2, vec3, vec4} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
+
+import {liveViewportDepthTexture, liveViewportMipTexture, liveViewportSafeUV} from '#src/lib/materials/liveViewport.ts'
 
 /** A ray through the orb’s fill, in its own frame and in radii of the orb, so the fill is the unit ball whichever size the orb is. */
 export type OrbRay = {
@@ -118,11 +120,9 @@ export default abstract class OrbGlassMaterial extends MeshPhysicalNodeMaterial 
       const outgoing = refract(direction, exit.negate(), fillIor)
       const exitView = modelViewMatrix.mul(vec4(exit.mul(radius), 1)).xyz
       const outgoingView = modelViewMatrix.mul(vec4(outgoing, 0)).xyz.normalize()
-      const backdropViewZ = perspectiveDepthToViewZ(viewportDepthTexture(screenUV), cameraNear, cameraFar)
+      const backdropViewZ = perspectiveDepthToViewZ(liveViewportDepthTexture(screenUV), cameraNear, cameraFar)
       const gap = positionView.z.sub(backdropViewZ).clamp(radius * 2, maximumGap)
-      // Light scattered by the fill blurs the view behind it.
-      const blur = transmittance.oneMinus().mul(3).add(0.6)
-      const backdrop = (viewportOpaqueMipTexture(viewportSafeUV(project(exitView.add(outgoingView.mul(gap)))), blur) as Node<'vec4'>).rgb
+      const backdrop = (liveViewportMipTexture(liveViewportSafeUV(project(exitView.add(outgoingView.mul(gap))))) as Node<'vec4'>).rgb
       // The fill scatters the brightest of it, like a lamp right behind the orb, into the glow around it, so the room seen through the orb never outshines what floats in it.
       const behind = backdrop.div(backdrop.r.max(backdrop.g).max(backdrop.b).mul(0.6).add(1))
       // The glass mirrors what stands around the orb, which the frame holds wherever the mirrored view lands on the screen. Toward the camera, it would mirror the unseen room behind it.
@@ -130,7 +130,7 @@ export default abstract class OrbGlassMaterial extends MeshPhysicalNodeMaterial 
       const mirroredClip = cameraProjectionMatrix.mul(vec4(positionView.add(mirrored.mul(gap)), 1))
       const mirroredUV = mirroredClip.xy.div(mirroredClip.w).mul(vec2(0.5, -0.5)).add(0.5)
       const onScreen = mirroredUV.sub(0.5).abs().max(0.5).sub(0.5).length().mul(-20).add(1).clamp().mul(select(mirroredClip.w.greaterThan(0), float(1), float(0)))
-      const around = (viewportOpaqueMipTexture(viewportSafeUV(mirroredUV.clamp(0, 1)), float(1.5)) as Node<'vec4'>).rgb
+      const around = (liveViewportMipTexture(liveViewportSafeUV(mirroredUV.clamp(0, 1))) as Node<'vec4'>).rgb
       const room = unseenRoom.add(around.sub(unseenRoom).mul(onScreen.mul(smoothstep(0, -0.35, mirrored.z))))
       const cosine = normalView.dot(positionViewDirection).abs().clamp()
       const fresnel = float(reflectance).add(float(1 - reflectance).mul(cosine.oneMinus().pow(5)))

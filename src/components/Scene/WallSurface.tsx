@@ -21,6 +21,7 @@ export type WallDecorationsProps = {
 
 /** draws nothing on a wall */
 const noDecorations = () => null
+const glassPlane = {glassPlane: [0, 0, 1] as const}
 
 /**
  * A wall with its trim, glazing and colliders, welded, so whatever rolls along its foot, like an orb along a baseboard, rolls on smoothly instead of catching on the edges between its facets. Its surface mesh carries the wall as `userData.wall`, so a material shared by many walls can lay its pattern out along each, round ones too.
@@ -73,7 +74,7 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
       {geometry.collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
       <mesh castShadow material={surfaceMaterials} name={`wall-${wall.id}`} receiveShadow userData={{wall}}><primitive attach='geometry' object={surface.geometry} /><Branch not={surfaceMaterials}><meshStandardNodeMaterial color={color} envMapIntensity={surfaceRoom === 'moonfall' ? 0.08 : 1} map={plaster} roughness={0.9} /></Branch></mesh>
       {geometry.trim.map((part, i) => <mesh key={i} castShadow material={material} name={`trim-${wall.id}`} receiveShadow><primitive attach='geometry' object={part} /><Branch not={material}><meshStandardNodeMaterial color={trim} roughness={0.6} /></Branch></mesh>)}
-      {geometry.glazing.map((part, i) => <mesh key={i} geometry={part} material={glass} name={`glass-${wall.id}`}>
+      {geometry.glazing.map((part, i) => <mesh key={i} geometry={part} material={glass} name={`glass-${wall.id}`} userData={wall.curveRadius ? undefined : glassPlane}>
         <Branch not={glass}><meshStandardNodeMaterial color='#b7d8d9' depthWrite={false} metalness={0.1} opacity={0.16} roughness={0.16} transparent /></Branch>
       </mesh>)}
     </RigidBody>

@@ -149,7 +149,7 @@ test('both glass walls are cast from the floor window’s glass, sharing one mat
       if (isHeavy) {
         expect(materials.lobbyWindow).toBeInstanceOf(CastFloorGlassMaterial)
         expect(materials.lobbyWindow).not.toBe(materials.lobby)
-        expect(materials.lobbyWindow.depthWrite).toBe(false)
+        expect(materials.lobbyWindow.depthWrite).toBe(true)
       }
     } finally {
       disposeArchitecturalGlassMaterials(materials)

@@ -2,10 +2,11 @@ import type {TransmittingEmission} from '../rendering/AlbedoRenderPipeline.ts'
 import type {ClearGlassOptions} from './ClearGlassMaterial.ts'
 import type {ColorRepresentation, Node} from 'three/webgpu'
 
-import {cameraFar, cameraNear, cameraProjectionMatrix, cross, dFdx, dFdy, float, fwidth, max, min, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, perspectiveDepthToViewZ, positionView, screenUV, smoothstep, uv, vec2, vec3, vec4, viewportDepthTexture, viewportSafeUV, viewportTexture} from 'three/tsl'
+import {cameraFar, cameraNear, cameraProjectionMatrix, cross, dFdx, dFdy, float, fwidth, max, min, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, perspectiveDepthToViewZ, positionView, screenUV, smoothstep, uv, vec2, vec3, vec4} from 'three/tsl'
 import {Color} from 'three/webgpu'
 
 import ClearGlassMaterial, {paneFresnelTransmittance} from './ClearGlassMaterial.ts'
+import {liveViewportDepthTexture, liveViewportSafeUV, liveViewportTexture} from './liveViewport.ts'
 
 export type CrownGlassOptions = ClearGlassOptions & {
   /** color the view picks up through the iron in the glass, on top of the neutral {@link ClearGlassOptions.absorption} */
@@ -119,16 +120,16 @@ export default class CrownGlassMaterial extends ClearGlassMaterial implements Tr
     this.roughnessNode = dullness
     this.clearcoatRoughnessNode = dullness.add(0.02)
     // Each ripple deviates the ray like a thin prism, and the ray keeps drifting across the whole gap to whatever lies behind the pane.
-    const backdropViewZ = perspectiveDepthToViewZ(viewportDepthTexture(screenUV), cameraNear, cameraFar)
+    const backdropViewZ = perspectiveDepthToViewZ(liveViewportDepthTexture(screenUV), cameraNear, cameraFar)
     const gap = backdropViewZ.sub(positionView.z).negate().clamp(0, maximumRefractionGap)
     const backdrop = positionView.mul(backdropViewZ.div(positionView.z))
     const drift = rippledNormal.xy.sub(normalViewGeometry.xy).mul((options.ior - 1) * wedge).mul(gap)
     const clip = cameraProjectionMatrix.mul(vec4(backdrop.xy.add(drift), backdrop.z, 1))
     const refractedUV = clip.xy.div(clip.w).mul(vec2(0.5, -0.5)).add(0.5).clamp(0, 1)
     // Anything in front of the pane, like its own frame, must not be pulled into it.
-    // The pane copies the frame just before it draws, so transparent things behind it, like the fire, are included regardless of which
-    // other glass took the shared opaque copy first. The copy has no mipmaps, so the view stays pixel-sharp.
-    const transmitted = (viewportTexture(viewportSafeUV(refractedUV)) as Node<'vec4'>).rgb
+    // The pane copies the frame just before it draws, so transparent things behind it, like orbs, knots and the fire, are included regardless of which
+    // other glass drew earlier. The copy has no mipmaps, so the view stays pixel-sharp.
+    const transmitted = (liveViewportTexture(liveViewportSafeUV(refractedUV)) as Node<'vec4'>).rgb
     const transmittance = float(1 - options.absorption).mul(paneFresnelTransmittance(options.ior)).mul(float(1).sub(scatter))
     const body = new Color(bodyColor)
     this.emissiveNode = transmitted.mul(vec3(body.r, body.g, body.b)).mul(transmittance)
