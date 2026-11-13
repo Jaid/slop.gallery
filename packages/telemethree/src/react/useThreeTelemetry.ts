@@ -8,11 +8,20 @@ import {useEffect, useRef} from 'react'
 import ThreeStatistics from '../ThreeStatistics.ts'
 import {useTelemetry} from './context.tsx'
 
-export type ThreeTelemetryOptions = ThreeStatisticsOptions & {telemetry?: TelemetryClient}
+/** Whether the application stopped its frames on purpose, like a paused game: `getSnapshot` tells so, and `subscribe` calls back whenever that changes, returning how to unsubscribe. The shape `useSyncExternalStore` takes. */
+export type FramePauses = {
+  getSnapshot: () => boolean
+  subscribe: (listener: () => void) => () => void
+}
+export type ThreeTelemetryOptions = ThreeStatisticsOptions & {
+  /** Frames drawn during such a pause aren’t sampled, and neither the pause nor the frames within it count as frame time, so a paused game leaves no stall behind, like a hidden page. Keep it stable. */
+  pauses?: FramePauses
+  telemetry?: TelemetryClient
+}
 
 /** Collect from the WebGPU Canvas after all render passes. */
 export default function useThreeTelemetry(options: ThreeTelemetryOptions = {}) {
-  const {telemetry, intervalMs, maxSamples, gpuIntervalMs, hitchThresholdMs, hitchCooldownMs} = options
+  const {telemetry, intervalMs, maxSamples, gpuIntervalMs, hitchThresholdMs, hitchCooldownMs, pauses} = options
   const latest = useRef(options)
   latest.current = options
   const client = useTelemetry(telemetry)
@@ -27,14 +36,18 @@ export default function useThreeTelemetry(options: ThreeTelemetryOptions = {}) {
       previousFrame.current = null
     }
     document.addEventListener('visibilitychange', reset)
+    // As a pause begins and as it ends, before the first frame after it.
+    const unsubscribe = pauses?.subscribe(reset)
     return () => {
       document.removeEventListener('visibilitychange', reset)
+      unsubscribe?.()
       stop.current?.()
       stop.current = null
       collector.current = null
       previousFrame.current = null
     }
-  }, [client, intervalMs, maxSamples, gpuIntervalMs, hitchThresholdMs, hitchCooldownMs])
+  }, [client, intervalMs, maxSamples, gpuIntervalMs, hitchThresholdMs, hitchCooldownMs, pauses])
+  const sampling = () => document.visibilityState !== 'hidden' && !pauses?.getSnapshot()
   useFrame(state => {
     if (!collector.current || renderer.current !== state.renderer || scene.current !== state.scene) {
       stop.current?.()
@@ -56,12 +69,12 @@ export default function useThreeTelemetry(options: ThreeTelemetryOptions = {}) {
       renderer.current = state.renderer
       scene.current = state.scene
     }
-    if (document.visibilityState !== 'hidden') {
+    if (sampling()) {
       collector.current.beginFrame()
     }
   }, {phase: 'start'})
   useFrame(() => {
-    if (document.visibilityState !== 'hidden') {
+    if (sampling()) {
         // Fiber clamps simulation delta. Use wall-clock frame intervals so stalls remain visible.
       const now = performance.now()
       const delta = previousFrame.current === null ? 0 : (now - previousFrame.current) / 1000

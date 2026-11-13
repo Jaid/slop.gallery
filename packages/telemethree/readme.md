@@ -29,4 +29,6 @@ function App() {
 
 `useThreeTelemetry()` samples renderer work after all render passes, reports bounded frame/work distributions, memory/output state and sparse hitch diagnostics. It accepts an explicit Victoria client or reads one from `TelemetryProvider`.
 
+Frame time is the wall-clock interval between frames, so stalls stay visible. A game that stops its frames on purpose passes `pauses`, an external store of whether it is paused (`{subscribe, getSnapshot}`, the shape `useSyncExternalStore` takes): neither the pause nor frames drawn within it are sampled, like while the page is hidden, so resuming reports no hitch as long as the pause.
+
 The hook does not own delivery timers or page lifecycle listeners. A browser Victoria client schedules delivery and handles `pagehide`/visibility lifecycle itself.
