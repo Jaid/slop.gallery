@@ -14,7 +14,7 @@ import {setApiKey, toggleSound} from '../../src/lib/gallery/actions.ts'
 import {useIntro} from '../../src/lib/gallery/intro.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import {startNewGame} from '../../src/lib/gameSeed.ts'
-import pauseMenu from '../../src/lib/pauseMenu.ts'
+import pauseMenu, {shouldFreezeWorld} from '../../src/lib/pauseMenu.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const state = useGallery.getState()
@@ -101,6 +101,9 @@ function primaryActionLabel(stage: MenuStage) {
   }
   return 'Resume'
 }
+test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('menu freezing only applies to the Escape pause stage', stage => {
+  expect(shouldFreezeWorld(stage)).toBe(stage === 'pause')
+})
 test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('renders the %s menu stage', (stage: MenuStage) => {
   const initial = {...useGallery.getInitialState()}
   const snapshot = spyOn(pauseMenu, 'getServerSnapshot').mockReturnValue({
