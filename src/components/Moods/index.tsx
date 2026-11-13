@@ -11,6 +11,7 @@ import {cameraPose, useGallery} from '#src/lib/gallery.ts'
 import {useFusions} from '#src/lib/gallery/fusion/fusions.ts'
 import {lightTint, noTint} from '#src/lib/rendering/lightLevels.ts'
 import {getPlayerZoom} from '#src/lib/rendering/playerView.ts'
+import worldClock from '#src/lib/worldClock.ts'
 import {moods} from '#src/moods/index.ts'
 import {forcedMood} from '#src/moods/lib/forcedMood.ts'
 import {moodLens} from '#src/moods/lib/MoodLens.ts'
@@ -69,6 +70,8 @@ export default function Moods() {
       exact: cameraPose.posed,
       fading: isFading,
       own: !cameraPose.focused,
+      // A frame of the frozen world passes no time, which would cut the lens’s easing short.
+      still: worldClock.frozen,
       zoom: getPlayerZoom(),
     })
     moodLens.widen(camera)

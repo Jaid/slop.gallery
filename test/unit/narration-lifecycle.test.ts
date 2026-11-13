@@ -6,6 +6,7 @@ import {FakeClock, FakePlayback, flush} from '../../packages/use-narrator/packag
 import {attachNarration} from '../../src/lib/audio/narration.ts'
 import {galleryEvents} from '../../src/lib/gallery/actions.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
+import worldClock from '../../src/lib/worldClock.ts'
 
 let narrator: Narrator
 let clock: FakeClock
@@ -81,6 +82,51 @@ test('mute clears every shared lane and prevents new playback until re-enabled',
   })
   useGallery.setState({sound: true})
   expect(narrator.enabled).toBe(true)
+})
+test('a frozen world holds the narrator mid-word, and it speaks on from there once the world goes on', async () => {
+  const handle = narrator.push({audio: '/voice.opus'})
+  await clock.advance(0.1)
+  players[0].position = 2.5
+  const release = worldClock.freeze()
+  try {
+    expect(narrator.paused).toBe(true)
+    expect(players[0].playing).toBe(false)
+    expect(useGallery.getState().narration).toMatchObject({status: 'playing'})
+    await clock.advance(30)
+    expect(players[0].playing).toBe(false)
+    // A narration asked for during the pause waits its turn in silence.
+    narrator.push({audio: '/later.opus'})
+    await clock.advance(1)
+    expect(players).toHaveLength(1)
+  } finally {
+    release()
+  }
+  await flush()
+  expect(narrator.paused).toBe(false)
+  expect(players[0].playing).toBe(true)
+  expect(players[0].position).toBe(2.5)
+  players[0].end()
+  await clock.advance(0.2)
+  expect(await handle.finished).toEqual({status: 'completed'})
+  await clock.advance(0.1)
+  expect(players[1].playing).toBe(true)
+})
+test('a narrator attached during a pause starts out held, and detaching lets go of it', async () => {
+  detach()
+  const release = worldClock.freeze()
+  try {
+    detach = attachNarration(narrator, events)
+    expect(narrator.paused).toBe(true)
+    narrator.push({audio: '/voice.opus'})
+    await clock.advance(1)
+    expect(players[0].plays).toBe(0)
+    detach()
+    expect(narrator.paused).toBe(false)
+  } finally {
+    release()
+  }
+  detach = attachNarration(narrator, events)
+  expect(narrator.paused).toBe(false)
 })
 for (const name of ['stop-narration', 'teleport', 'pagehide']) {
   test(`${name} clears suspended, current and pending narration through one handler`, async () => {

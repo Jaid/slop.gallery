@@ -4,6 +4,7 @@ import type {PartyOptions, PartyPlacement} from './partySite.ts'
 
 import {create} from 'zustand'
 
+import worldClock from '#src/lib/worldClock.ts'
 import world from '#src/worlds/current.ts'
 
 import {partyEffects} from '../index.ts'
@@ -14,7 +15,7 @@ export type Party = {
   /** unique among the parties of the page */
   id: number
   show: PartyShow
-  /** when it bursts out, by `performance.now()`, which the renderer and the virtual clock of the film script follow too */
+  /** when it bursts out, by the world’s clock (`worldClock`), which stands still while the world is frozen and follows the virtual clock of the film script like the renderer */
   startsAt: number
 }
 
@@ -31,7 +32,7 @@ export function startParty(id: PartyEffectId, placement: PartyPlacement, {delay 
   const party: Party = {
     id: ++spawned,
     show: partyEffects[id].stage(partySite(placement, world.floorHeight(placement.position))),
-    startsAt: performance.now() + delay * 1000,
+    startsAt: worldClock.now() + delay * 1000,
   }
   useParties.setState(({parties}) => ({parties: [...parties, party]}))
   return party

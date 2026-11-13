@@ -10,6 +10,7 @@ import FusionRecipe, {itemIngredient, portraitIngredient} from '../../src/lib/ga
 import {portalFrame, portalRadius} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import spawnThroughTool from '../../src/lib/webmcp/spawnPartyEffect.ts'
+import worldClock from '../../src/lib/worldClock.ts'
 import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
@@ -267,14 +268,15 @@ describe('party effects', () => {
     expect(party.show.site.center).toEqual(position)
     expect(party.show.site.floor).toBe(slopGallery.floorHeight(position))
     expect(party.show.site.normal[2]).toBeCloseTo(-1, 12)
-    expect(party.startsAt).toBeGreaterThan(performance.now() + 400)
+    // By the world’s clock, which the party plays by.
+    expect(party.startsAt).toBeGreaterThan(worldClock.now() + 400)
     const second = startParty('bats', {
       position,
       floor: -3,
     })
     expect(second.id).not.toBe(party.id)
     expect(second.show.site.floor).toBe(-3)
-    expect(second.startsAt).toBeLessThanOrEqual(performance.now())
+    expect(second.startsAt).toBeLessThanOrEqual(worldClock.now())
     endParty(party)
     expect(useParties.getState().parties).toEqual([second])
     endParty(second)

@@ -429,7 +429,33 @@ describe('mood lens', () => {
       seen(own)
     }
     expect(seen(own)).toBe(70)
-    // A capture’s pose shows exactly what it set, from its first frame, and so does every cut under ?fade=false.
+    // A frame of a frozen world passes no time: the easing stays where it stands instead of cutting, and goes on with the world.
+    const eased = seen(taken)
+    expect(eased).toBeLessThan(70)
+    expect(eased).toBeGreaterThan(60)
+    const still = {
+      ...taken,
+      delta: 0,
+      still: true,
+    }
+    expect(seen(still)).toBe(eased)
+    expect(seen(still)).toBe(eased)
+    expect(seen(taken)).toBeLessThan(eased)
+    // Without it, a frame without a delta, like the first one, starts where the camera stands.
+    expect(seen({
+      ...own,
+      delta: 0,
+    })).toBe(70)
+    // A capture’s pose shows exactly what it set, from its first frame, also in a frozen world, and so does every cut under ?fade=false.
+    expect(seen({
+      ...own,
+      exact: true,
+      still: true,
+    })).toBe(60)
+    expect(seen(own)).toBeGreaterThan(60)
+    for (let frame = 0; frame < 120; frame++) {
+      seen(own)
+    }
     expect(seen({
       ...own,
       exact: true,

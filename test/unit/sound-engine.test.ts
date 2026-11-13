@@ -1,6 +1,7 @@
 import {afterEach, expect, mock, test} from 'bun:test'
 
 import SoundEngine from '../../src/lib/audio/SoundEngine.ts'
+import worldClock from '../../src/lib/worldClock.ts'
 import audioFixture from './audioFixture.ts'
 
 /** the gains the engine makes for itself: its master, its output, the world and the three of each of its transformer chain’s six links; every playback’s come after them */
@@ -43,6 +44,63 @@ test('effects retain their 12 dB boost and mute only schedules changes', () => {
   context.currentTime = 2
   sound.mute(false)
   expect(master.gain.setTargetAtTime).toHaveBeenLastCalledWith(master.gain.value, 2, 0.08)
+})
+test('the engine falls silent with a frozen world and sounds on from where it stood once the world goes on', async () => {
+  const {sound, context} = setup()
+  // An engine that was never let to sound stays as the browser holds it.
+  context.state = 'suspended'
+  worldClock.freeze()()
+  expect(context.suspend).toHaveBeenCalledTimes(1)
+  expect(context.resume).not.toHaveBeenCalled()
+  await sound.resume()
+  expect(context.resume).toHaveBeenCalledTimes(1)
+  context.state = 'running'
+  const release = worldClock.freeze()
+  try {
+    expect(context.suspend).toHaveBeenCalledTimes(2)
+    context.state = 'suspended'
+    // Whatever asks it to sound during the pause, like the menu’s Resume button, has to wait for the world.
+    await sound.resume()
+    expect(context.resume).toHaveBeenCalledTimes(1)
+  } finally {
+    release()
+  }
+  expect(context.resume).toHaveBeenCalledTimes(2)
+})
+test('an engine the browser let sound right away sounds again after a pause, and one made during a pause waits for its end', async () => {
+  const autoplaying = setup()
+  const release = worldClock.freeze()
+  let late: ReturnType<typeof setup>
+  try {
+    expect(autoplaying.context.suspend).toHaveBeenCalledTimes(1)
+    late = setup()
+    expect(late.context.suspend).toHaveBeenCalledTimes(1)
+    late.context.state = 'suspended'
+    await late.sound.resume()
+    expect(late.context.resume).not.toHaveBeenCalled()
+  } finally {
+    release()
+  }
+  expect(autoplaying.context.resume).toHaveBeenCalledTimes(1)
+  expect(late.context.resume).toHaveBeenCalledTimes(1)
+})
+test('switching the sound during a pause takes effect at once as the world goes on, without a fade', () => {
+  const {sound, context, gains} = setup()
+  const [master] = gains
+  const full = master.gain.value
+  context.currentTime = 3
+  const release = worldClock.freeze()
+  try {
+    sound.mute(true)
+    expect(master.gain.setValueAtTime).toHaveBeenLastCalledWith(0, 3)
+    sound.mute(false)
+    expect(master.gain.setValueAtTime).toHaveBeenLastCalledWith(full, 3)
+    expect(master.gain.setTargetAtTime).not.toHaveBeenCalled()
+  } finally {
+    release()
+  }
+  sound.mute(true)
+  expect(master.gain.setTargetAtTime).toHaveBeenLastCalledWith(0, 3, 0.08)
 })
 test('catalog effects respect the SoundEngine mute state', () => {
   const {sound, sources} = setup()

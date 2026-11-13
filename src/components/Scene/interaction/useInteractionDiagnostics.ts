@@ -10,6 +10,7 @@ import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
+import worldClock from '#src/lib/worldClock.ts'
 
 import {propObjects} from '../GrabbableProp.tsx'
 
@@ -28,6 +29,7 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
       placement: placement.current,
       locked: useGallery.getState().locked,
       menuStage: pauseMenu.getSnapshot().stage,
+      frozen: worldClock.frozen,
       held: useGallery.getState().held,
       active: useGallery.getState().active,
       activeLabel: useGallery.getState().activeLabel,

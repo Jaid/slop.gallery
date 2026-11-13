@@ -7,6 +7,7 @@ import SoundEngine from '../../src/lib/audio/SoundEngine.ts'
 import {bastionApproach, bastionOrigin, bastionTransition} from '../../src/lib/gallery/bastion.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import {getPlayerZoom, setPlayerZoom} from '../../src/lib/rendering/playerView.ts'
+import worldClock from '../../src/lib/worldClock.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const original = useGallery.getState()
@@ -138,6 +139,23 @@ test('pause menu uses SFX-42 and subsequent resume uses SFX-43', () => {
   useGallery.setState({locked: false})
   useGallery.setState({locked: true})
   expect(sound.playEffect).toHaveBeenCalledTimes(2)
+})
+test('the pause menu of the Escape key opens in silence, since it froze the world’s sound, and resuming still plays SFX-43', () => {
+  dispose = attachPlayerAudio(new EventTarget)
+  useGallery.setState({locked: true})
+  const release = worldClock.freeze()
+  try {
+    useGallery.setState({locked: false})
+    expect(sound.playEffect).not.toHaveBeenCalled()
+    expect(sound.stopPlayerSounds).toHaveBeenCalled()
+  } finally {
+    release()
+  }
+  useGallery.setState({locked: true})
+  expect(sound.playEffect.mock.calls).toEqual([['SFX-43']])
+  // The menu of a lost focus leaves the world running and sounds as before.
+  useGallery.setState({locked: false})
+  expect(sound.playEffect).toHaveBeenLastCalledWith('SFX-42')
 })
 test('inspection cues fire once for entry/leave, not repeated state updates or focus targets', () => {
   dispose = attachPlayerAudio(new EventTarget)

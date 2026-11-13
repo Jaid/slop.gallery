@@ -16,6 +16,8 @@ export type GalleryDiagnostics = {
   active: string | null
   activeLabel: string | null
   camera: Vec3
+  /** whether the world stands still under the pause menu of the Escape key: no frames, physics, animations or sound until the player resumes */
+  frozen: boolean
   held: string | null
   /** the IDs of everything still loading that would leave something out of the next frame; a fresh pose can bring more */
   loadingItems: Array<string>

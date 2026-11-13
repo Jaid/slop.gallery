@@ -7,6 +7,7 @@ import world from '#src/worlds/current.ts'
 
 import arrivalVoices, {arrivalGap} from '../audio/arrivalVoices.ts'
 import {defaultPortraitArea} from '../placement/portraitSlots.ts'
+import worldClock from '../worldClock.ts'
 import {arrivalFrame, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'
 import {holdPoint, requestHanging} from './hanging/hangings.ts'
 import {hangingAnimation} from './hanging/index.ts'
@@ -199,7 +200,7 @@ export default class ImageImporter {
   /** how many works have arrived so far, which tunes each one’s sound */
   private arrivals = 0
   private disposed = false
-  /** when the last work’s arrival sounds, in seconds of `performance.now()` */
+  /** when the last work’s arrival sounds, in seconds of the world’s clock, which the sound engine’s runs in step with */
   private lastArrival = Number.NEGATIVE_INFINITY
   private queue = Promise.resolve()
 
@@ -298,7 +299,7 @@ export default class ImageImporter {
 
   /** Sounds a work arriving, each tuned a little apart: one hung right away as its hanging slaps it onto its wall, one dropped into the room at least {@link arrivalGap} after the one before. */
   private arrive(hung: boolean) {
-    const now = performance.now() / 1000
+    const now = worldClock.now() / 1000
     const delay = hung ? 0 : Math.max(0, this.lastArrival + arrivalGap - now)
     this.lastArrival = Math.max(this.lastArrival, now + delay)
     const index = this.arrivals++
