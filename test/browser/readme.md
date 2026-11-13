@@ -105,3 +105,10 @@ BROWSER=/path/to/chromium bun run test:live:spawn
 ```
 
 This builds the gallery and starts it once in every room with `?room`, each in a private headless browser without input. Every room but the Lobby streams in after the page, bringing its floors, so the physics waits for them; once none is loading anymore, the player has to stand grounded at the room’s spawn. It caught the physics hold reaching the scene too late, which let the player fall through the floors of a start room that had not mounted yet. `LIVE_TARGET` reuses a build like for the Oculus test.
+## Architectural glass refraction
+
+```sh
+BROWSER_TEST_ORIGIN=http://localhost:5173 bun test/browser/run.ts glassRefraction.ts --standalone
+```
+
+This detached native WebGPU fixture checks cast, crown and vault glass against identical opaque/transparent shader outputs on either side of the pane. It verifies two copies per glass draw, shared-material overlapping panes, independent render destinations, resizing and 4× multisampling, then renders Frozen Lightning and all five orb materials to ensure the glass affects their pixels without hiding the objects. `--standalone` is required: the fixture freezes its own time/frame uniforms and must not alter the live page’s Three.js instance. The original opaque-only glass sampling fails the behind-pane comparison.

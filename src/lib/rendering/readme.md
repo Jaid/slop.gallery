@@ -96,3 +96,17 @@ bun test/browser/run.ts bloomStability.ts --standalone
 `BROWSER_TEST_ORIGIN` can select a different already-open origin. The fixture bundles its own dependencies and only creates detached canvases and renderers; it does not navigate, change focus, resize the game, simulate input, or mutate the live scene. The independent bundle can emit Three's multiple-instance warning.
 
 Coverage includes foreground exclusion without TRAA, normalization, empty coverage, focus fades/re-entry, background highlight expansion, the complete heavy pipeline with mesh/camera motion, odd-sized target recreation, and real render-submission counts for walking, zoom, V-viewing, overlap, fades and re-entry with and without TRAA. Render iterations await animation frames so frame-scoped nodes update. WebGPU readbacks retain 256-byte row padding; pixel comparisons explicitly remove it.
+
+## Refraction through architectural glass
+
+Cast floor/window glass, crown glass and vault glass use `GlassBackdrop`: a fresh full-resolution color and depth copy immediately before each glass draw, including already-drawn transparent props. They sort back to front normally. Do not force the Lobby windows ahead of transparent objects or make them sample `viewportOpaqueMipTexture`: the orbs and transmissive Knots would then be absent from their backdrop and appear undistorted over the glass. The original opaque-only snapshots still belong to the orbs and physical transmission; glass never overwrites them.
+
+All panes share one scratch color/depth pair per destination, including separate pairs for the main scene and its reflection. Only the root viewport nodes copy, not each chromatic/UV sample. There are two framebuffer copies per visible glass draw, no additional scene renders and no mipmap generation. Target disposal/replacement releases its copies, and disposing the last material releases the remaining textures. Foreground rejection uses the same fresh depth as the refraction distance, including depth-writing transparent props. The Lobby windows still leave depth unwritten so the floor window can remain visible from inside the Salon and Forge.
+
+This remains screen-space refraction with object-level transparency sorting, not ray tracing or order-independent transparency: intersecting transparent meshes and offscreen backgrounds retain those limitations.
+
+The native regression `test/browser/glassRefraction.ts` compares opaque/transparent shader output behind and in front of each glass type, overlapping shared-material panes, copy counts, target switching/resizing and 4× MSAA. It also checks Frozen Lightning and all five orb shaders for raw pixels surviving the glass. Run it **standalone**, since it freezes its own Three.js time/frame uniforms:
+
+```sh
+BROWSER_TEST_ORIGIN=http://localhost:5173 bun test/browser/run.ts glassRefraction.ts --standalone
+```

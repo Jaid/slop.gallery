@@ -30,6 +30,6 @@ export default function LobbyWindow({glass, glazing, name}: {
     <RigidBody colliders={false} type='fixed'>
       <CuboidCollider args={[thickness / 2, height / 2, width / 2]} position={[x, bottom + height / 2, z]} />
     </RigidBody>
-    <mesh geometry={geometry} material={glass} name={`${name}-glass`} position={[x, bottom, z - width / 2]} quaternion={upright} renderOrder={-1} />
+    <mesh geometry={geometry} material={glass} name={`${name}-glass`} position={[x, bottom, z - width / 2]} quaternion={upright} />
   </group>
 }

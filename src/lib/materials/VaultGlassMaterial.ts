@@ -1,9 +1,10 @@
 import type {TransmittingEmission} from '../rendering/AlbedoRenderPipeline.ts'
 import type {Node} from 'three/webgpu'
 
-import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalView, perspectiveDepthToViewZ, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, uv, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
+import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalView, perspectiveDepthToViewZ, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, uv, vec2, vec3, vec4} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
+import GlassBackdrop from '../rendering/GlassBackdrop.ts'
 import {heightNormal, visibleDetail} from './filters.ts'
 
 export type VaultGlassOptions = {
@@ -98,14 +99,15 @@ export default class VaultGlassMaterial extends MeshPhysicalNodeMaterial impleme
     this.colorNode = mix(color('#1c1914'), color('#000000'), pane)
     this.roughnessNode = mix(float(0.55), float(0.055), pane)
     // Refract the opaque sky dome behind the glass with subtle prismatic dispersion and beveled edge bending.
-    const backdropViewZ = perspectiveDepthToViewZ(viewportDepthTexture(screenUV), cameraNear, cameraFar)
+    const scene = GlassBackdrop.forMaterial(this)
+    const backdropViewZ = perspectiveDepthToViewZ(scene.depth.sample(screenUV), cameraNear, cameraFar)
     const gap = backdropViewZ.sub(positionView.z).negate().clamp(0, maximumRefractionGap)
     const backdrop = positionView.mul(backdropViewZ.div(positionView.z))
     const drift = castNormal.xy.sub(flatNormal.xy).mul(ior - 1).mul(gap)
     const sample = (spread: number) => {
       const clip = cameraProjectionMatrix.mul(vec4(backdrop.xy.add(drift.mul(1 + spread)), backdrop.z, 1))
       const sampleUV = clip.xy.div(clip.w).mul(vec2(0.5, -0.5)).add(0.5).clamp(0, 1)
-      return viewportOpaqueMipTexture(viewportSafeUV(sampleUV)) as Node<'vec4'>
+      return scene.color.sample(scene.safeUV(sampleUV)) as Node<'vec4'>
     }
     const transmitted = vec3(sample(-dispersion).r, sample(0).g, sample(dispersion).b)
     const cosine = castNormal.dot(positionViewDirection).abs().clamp(0, 1)

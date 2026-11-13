@@ -1,8 +1,10 @@
 import type {TransmittingEmission} from '../rendering/AlbedoRenderPipeline.ts'
 import type {Node} from 'three/webgpu'
 
-import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalLocal, perspectiveDepthToViewZ, positionLocal, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, transformNormalToView, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
+import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalLocal, perspectiveDepthToViewZ, positionLocal, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, transformNormalToView, vec2, vec3, vec4} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
+
+import GlassBackdrop from '../rendering/GlassBackdrop.ts'
 
 export type CastFloorGlassOptions = {
   /** slab thickness in meters */
@@ -59,7 +61,7 @@ export default class CastFloorGlassMaterial extends MeshPhysicalNodeMaterial imp
       ior,
       specularIntensity: 1,
       envMapIntensity: 1.15,
-      // Transparent materials render after all opaque ones, so the backdrop copy contains the whole room below.
+      // Back-to-front transparency puts the room and its transmissive props into the backdrop before this pane draws.
       transparent: true,
       opacity: 1,
     })
@@ -101,7 +103,8 @@ export default class CastFloorGlassMaterial extends MeshPhysicalNodeMaterial imp
     this.colorNode = mix(color('#121718'), color('#000000'), pane)
     this.roughnessNode = mix(float(0.6), float(0.05), pane)
     // A thin prism deviates the ray by (n − 1) times its facet tilt, and the ray keeps drifting across the whole gap to whatever lies beyond the glass.
-    const backdropViewZ = perspectiveDepthToViewZ(viewportDepthTexture(screenUV), cameraNear, cameraFar)
+    const scene = GlassBackdrop.forMaterial(this)
+    const backdropViewZ = perspectiveDepthToViewZ(scene.depth.sample(screenUV), cameraNear, cameraFar)
     const gap = backdropViewZ.sub(positionView.z).negate().clamp(0, maximumRefractionGap)
     const backdrop = positionView.mul(backdropViewZ.div(positionView.z))
     const drift = castNormal.xy.sub(flatNormal.xy).mul(ior - 1).mul(gap)
@@ -109,7 +112,7 @@ export default class CastFloorGlassMaterial extends MeshPhysicalNodeMaterial imp
       const clip = cameraProjectionMatrix.mul(vec4(backdrop.xy.add(drift.mul(1 + spread)), backdrop.z, 1))
       const uv = clip.xy.div(clip.w).mul(vec2(0.5, -0.5)).add(0.5).clamp(0, 1)
       // Anything in front of the glass, like a visitor’s own shoes, must not be refracted into it.
-      return viewportOpaqueMipTexture(viewportSafeUV(uv)) as Node<'vec4'>
+      return scene.color.sample(scene.safeUV(uv)) as Node<'vec4'>
     }
     const transmitted = vec3(sample(-dispersion).r, sample(0).g, sample(dispersion).b)
     // Fresnel at the cast surface decides how much of the backdrop gets through; the rest is the reflection the lighting already adds.
