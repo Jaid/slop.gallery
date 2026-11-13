@@ -18,12 +18,27 @@ const enter = async (page: Page) => {
   await page.click('#enter-gallery')
   await page.waitForFunction(() => !!document.pointerLockElement)
 }
+/** What the Escape key does, which headless Chrome doesn’t act on: the browser releases the pointer lock while the page keeps the focus, which brings up the pause menu and freezes the world. */
+const pause = async (page: Page) => {
+  await page.evaluate(() => document.exitPointerLock())
+  await page.waitForFunction(() => globalThis.slopGallery!.snapshot!().menuStage === 'pause' && !globalThis.slopGallery!.snapshot!().locked)
+}
+/** What the Windows key or switching the tab does: the window loses the focus, which releases the pointer lock and brings up the menu over the running world. */
+const tabOut = async (page: Page) => {
+  await page.evaluate(() => {
+    dispatchEvent(new Event('blur'))
+    document.exitPointerLock()
+  })
+  await page.waitForFunction(() => globalThis.slopGallery!.snapshot!().menuStage === 'unfocus' && !globalThis.slopGallery!.snapshot!().locked)
+}
 const clickText = async (page: Page, text: string) => {
   const button = await page.waitForSelector(`xpath/.//button[starts-with(normalize-space(.), "${text}")]`)
   await button!.click()
 }
 test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, physics, imports, fusion and new games', async () => {
   const server = await preview({
+    // Bun loads the config like `bun run vite` does; Vite’s own bundling loader fails on the world catalog’s JXL import.
+    configLoader: 'native',
     preview: {
       host: '127.0.0.1',
       port: 5187,
@@ -137,7 +152,10 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, p
     await page.mouse.up({button: 'left'})
     const {portraits: portraitsAfterUnhang} = await snapshot(page)
     expect(portraitsAfterUnhang.find(p => p.id === 'goose')!.hung).toBe(false)
-    await page.evaluate(() => document.exitPointerLock())
+    // The menu of a lost focus leaves the world running, so the fusion below plays out behind it.
+    await tabOut(page)
+    const {frozen: frozenBehindFocusMenu} = await snapshot(page)
+    expect(frozenBehindFocusMenu).toBe(false)
     const image = await page.evaluate(async () => {
       const canvas = new OffscreenCanvas(600, 300)
       const context = canvas.getContext('2d')!
@@ -261,7 +279,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, p
         await page.keyboard.up('w')
         const {camera: cameraAfterPortal} = await snapshot(page)
         expect(cameraAfterPortal[1]).toBeCloseTo(1.62, 1)
-        await page.evaluate(() => document.exitPointerLock())
+        await pause(page)
       }
     }
     // Carried sculptures must never become moving platforms for the character controller.
@@ -299,20 +317,41 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, p
     const beforeThrow = propsBeforeThrow.find(prop => prop.id === 'prop-knot-astra1')!.position
     await page.keyboard.press('q')
     await page.mouse.up({button: 'left'})
+    // The pause menu of the Escape key freezes the world: the thrown sculpture hangs in the air until the player resumes.
+    await Bun.sleep(120)
+    await pause(page)
+    const flying = async () => {
+      const state = await snapshot(page)
+      return {
+        frozen: state.frozen,
+        ...state.props.find(prop => prop.id === 'prop-knot-astra1')!,
+      }
+    }
+    const hanging = await flying()
+    expect(hanging.frozen).toBe(true)
+    expect(hanging.sleeping).toBe(false)
+    await Bun.sleep(700)
+    const stillHanging = await flying()
+    expect(stillHanging.position).toEqual(hanging.position)
+    expect(stillHanging.visualPosition).toEqual(hanging.visualPosition)
+    await enter(page)
+    const {frozen: frozenAfterResuming} = await snapshot(page)
+    expect(frozenAfterResuming).toBe(false)
     await Bun.sleep(400)
     const {props: propsAfterThrow} = await snapshot(page)
     const thrown = propsAfterThrow.find(prop => prop.id === 'prop-knot-astra1')!
     expect(thrown.bodyType).toBe(0)
     expect(thrown.collidersEnabled.every(Boolean)).toBe(true)
     expect(Math.hypot(thrown.position.x - beforeThrow.x, thrown.position.y - beforeThrow.y, thrown.position.z - beforeThrow.z)).toBeGreaterThan(0.2)
-    await page.evaluate(() => document.exitPointerLock())
+    expect(Math.hypot(thrown.position.x - hanging.position.x, thrown.position.y - hanging.position.y, thrown.position.z - hanging.position.z)).toBeGreaterThan(0.1)
+    await pause(page)
     // The rear room is accessible from the lobby.
     await teleport(page, [0, 1.62, 6], [0, 1, 0, 0])
     await enter(page)
     await page.keyboard.down('w')
     await page.waitForFunction(() => globalThis.slopGallery!.snapshot!().room === 'antechamber')
     await page.keyboard.up('w')
-    await page.evaluate(() => document.exitPointerLock())
+    await pause(page)
     await page.screenshot({path: 'out/live-test/production-good-taste.png'})
     const graphicsLabel = await page.$eval('[aria-label="Heavy graphics"] small', element => element.textContent)
     await page.click('[aria-label="Heavy graphics"]')
