@@ -16,11 +16,12 @@ import {flyMode} from '#src/lib/gallery/flyMode.ts'
 import {activateInteractiveObject} from '#src/lib/gallery/interactiveObjects.ts'
 import {playerSession} from '#src/lib/gallery/PlayerSession.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import {isPauseFrozen} from '#src/lib/pauseMenu.ts'
 import {playerTelemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumpHandler, playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
 import world from '#src/worlds/current.ts'
 
-const enabled = () => !cameraPose.focused
+const enabled = () => !cameraPose.focused && !isPauseFrozen()
 const cameraEnabled = () => !cameraPose.focused
 // A camera a capture poses apart from the player leaves nobody where the body stands, so the body leaves the physics as it does while flying, and nothing, like the result a fusion flips out, bounces off it.
 const flying = () => flyMode.active || cameraPose.posed

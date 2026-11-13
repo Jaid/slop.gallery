@@ -4,6 +4,7 @@ import {useFrame} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 
+import {isWorldClockPaused} from '#src/lib/frozenTime.ts'
 import {bodyPose, flingPlayer} from '#src/lib/gallery.ts'
 import {portalRebound, touchesPortal} from '#src/lib/gallery/fusion/portalFrame.ts'
 
@@ -13,7 +14,7 @@ import PortalShow from './PortalShow.ts'
 export default function FusionPortal({fusion}: {fusion: Fusion}) {
   const show = useDisposable(useMemo(() => new PortalShow(fusion), [fusion]))
   useFrame(({camera}) => {
-    if (!bodyPose.grounded && touchesPortal(fusion.frame, bodyPose) && fusion.cancel()) {
+    if (!isWorldClockPaused() && !bodyPose.grounded && touchesPortal(fusion.frame, bodyPose) && fusion.cancel()) {
       flingPlayer(portalRebound(fusion.frame, bodyPose))
     }
     show.update(fusion.elapsed(), camera)

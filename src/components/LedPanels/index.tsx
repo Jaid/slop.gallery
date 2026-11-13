@@ -10,6 +10,7 @@ import KnotLightPanels, {knotLightDiffuserContactSkin, knotLightDiffuserSize, kn
 import KnotLightDamage, {knotLightFracture} from 'knot-materials/KnotLights.ts'
 import {useMemo, useRef, useState} from 'react'
 
+import {isWorldClockPaused} from '#src/lib/frozenTime.ts'
 import KnotLightImpacts from '#src/lib/physics/KnotLightImpacts.ts'
 
 type LedPanelsProps = {
@@ -47,6 +48,9 @@ export default function LedPanels({color, name, onBrightness, powered = true, sl
   const [broken, setBroken] = useState<ReadonlySet<number>>(() => new Set)
   useBeforePhysicsStep(world => impacts.capture(world))
   useFrame((_, delta) => {
+    if (isWorldClockPaused()) {
+      return
+    }
     time.current += delta
     power.current = powered ? Math.min(1, power.current + delta / powerRamp.on) : Math.max(0, power.current - delta / powerRamp.off)
     if (powered && color) {

@@ -60,6 +60,13 @@ export default class Narrator implements Disposable {
     this.queue.gap = value
   }
 
+  get paused() {
+    return this.queue.paused
+  }
+  set paused(value: boolean) {
+    this.queue.paused = value
+  }
+
   get prependedSilence() {
     return this.queue.prependedSilence
   }

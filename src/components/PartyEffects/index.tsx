@@ -6,6 +6,7 @@ import useDisposable from 'disposable-lifetime/react'
 import {useEffect} from 'react'
 
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
+import {isWorldClockPaused, worldNow} from '#src/lib/frozenTime.ts'
 import {galleryEvents, spawnPartyEffect, useGallery} from '#src/lib/gallery.ts'
 import {endParty, startParty, useParties} from '#src/party_effects/lib/parties.ts'
 
@@ -39,7 +40,10 @@ export default function PartyEffects() {
 function SpawnedParty({party}: {party: Party}) {
   const show = useDisposable(party.show)
   useFrame(() => {
-    const since = (performance.now() - party.startsAt) / 1000
+    if (isWorldClockPaused()) {
+      return
+    }
+    const since = (worldNow() - party.startsAt) / 1000
     const engine = SoundEngine.existing()
     show.update(since, engine && useGallery.getState().sound ? engine : undefined)
     if (show.over(since - lingering)) {

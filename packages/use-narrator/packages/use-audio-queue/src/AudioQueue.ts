@@ -58,6 +58,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
   private jobs = new Map<string, Job<T>>
   private lastEnd = -Infinity
   private listeners = new Set<() => void>
+  private pausedValue = false
 
   private pending: Array<Job<T>> = []
 
@@ -85,6 +86,38 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
   }
   set gap(value: number) {
     this.gapValue = seconds(value)
+  }
+
+  get paused() {
+    return this.pausedValue
+  }
+
+  set paused(value: boolean) {
+    if (this.pausedValue === value) {
+      return
+    }
+    this.mutate(() => {
+      this.pausedValue = value
+      const jobs = new Set<Job<T>>
+      if (this.current) {
+        jobs.add(this.current)
+      }
+      for (const job of this.jobs.values()) {
+        if (job.priority === 'async') {
+          jobs.add(job)
+        }
+      }
+      for (const job of jobs) {
+        if (job.suspended) {
+          continue
+        }
+        if (value) {
+          this.pauseJob(job)
+        } else {
+          this.resumeJob(job)
+        }
+      }
+    })
   }
 
   get prependedSilence() {
@@ -244,7 +277,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
   }
 
   private active(job: Job<T>) {
-    return this.alive(job) && !job.suspended
+    return this.alive(job) && !job.suspended && !this.pausedValue
   }
 
   private alive(job: Job<T>) {
@@ -254,7 +287,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
   private before(job: Job<T>, duration: number) {
     job.phase = 'before'
     job.remaining = duration
-    if (!job.suspended) {
+    if (this.active(job)) {
       this.wait(job)
     }
   }
@@ -269,7 +302,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
       job.version++
       job.phase = 'after'
       job.remaining = job.after
-      if (!job.suspended) {
+      if (this.active(job)) {
         this.wait(job)
       }
     })
@@ -325,7 +358,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
     try {
       while (this.dirty) {
         this.dirty = false
-        if (!this.current && !this.disposed) {
+        if (!this.current && !this.disposed && !this.pausedValue) {
           const next = this.interrupted.pop() ?? this.pending.shift()
           if (next) {
             this.current = next
@@ -346,8 +379,8 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
           metadata: Object.freeze({...job.metadata}),
           priority: job.priority,
           phase: job.phase,
-          phaseEndsAt: !job.suspended && job.timer && (job.phase === 'before' || job.phase === 'after') ? job.deadline : undefined,
-          suspended: job.suspended,
+          phaseEndsAt: !job.suspended && !this.pausedValue && job.timer && (job.phase === 'before' || job.phase === 'after') ? job.deadline : undefined,
+          suspended: job.suspended || this.pausedValue,
         })
         this.snapshot = Object.freeze({
           current: this.current ? entry(this.current) : null,
@@ -374,6 +407,25 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
       this.depth--
       if (!this.depth) {
         this.flush()
+      }
+    }
+  }
+
+  private pauseJob(job: Job<T>) {
+    if (job.timer) {
+      job.remaining = Math.max(0, job.deadline - this.clock.now())
+      job.timer()
+      job.timer = undefined
+    }
+    if (job.phase === 'playing' || job.phase === 'starting') {
+      job.version++
+      try {
+        job.playback?.pause()
+      } catch (error) {
+        this.finish(job, {
+          status: 'failed',
+          error,
+        })
       }
     }
   }
@@ -428,6 +480,18 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
         this.before(job, job.before)
       })
     }).catch(error => this.fail(job, error))
+  }
+
+  private resumeJob(job: Job<T>) {
+    if (!this.alive(job)) {
+      return
+    }
+    if (job.phase === 'before' || job.phase === 'after') {
+      this.wait(job)
+    } else if (job.phase === 'playing' || job.phase === 'starting') {
+      // Resume at the saved transport position, without prepending silence a second time.
+      this.before(job, 0)
+    }
   }
 
   private suspend(job: Job<T>) {

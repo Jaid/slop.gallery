@@ -417,3 +417,84 @@ test('reentrant subscribers can replace newly prepared jobs without resurrecting
   expect(players.get('replacement')!.plays).toBe(1)
   queue.dispose()
 })
+test('paused freezes playback, silence timers, queued work and async lanes until resumed', async () => {
+  const {queue, clock, players, push} = setup({
+    prependedSilence: 0.4,
+    appendedSilence: 0.5,
+  })
+  const first = push('first')
+  const queued = push('queued')
+  const parallel = push('parallel', {priority: 'async'})
+  await flush()
+  await clock.advance(0.15)
+  expect(queue.getSnapshot().current?.phase).toBe('before')
+  expect(queue.getSnapshot().concurrent[0]?.phase).toBe('before')
+  queue.paused = true
+  expect(queue.getSnapshot().current?.suspended).toBe(true)
+  expect(queue.getSnapshot().current?.phaseEndsAt).toBeUndefined()
+  expect(queue.getSnapshot().concurrent[0]?.suspended).toBe(true)
+  await clock.advance(5)
+  expect(players.get('first')!.plays).toBe(0)
+  expect(players.get('parallel')!.plays).toBe(0)
+  queue.paused = false
+  await clock.advance(0.24)
+  expect(players.get('first')!.plays).toBe(0)
+  await clock.advance(0.01)
+  expect(players.get('first')!.plays).toBe(1)
+  expect(players.get('parallel')!.plays).toBe(1)
+  players.get('first')!.position = 2.5
+  players.get('parallel')!.position = 1.1
+  queue.paused = true
+  expect(players.get('first')!.pauses).toBe(1)
+  expect(players.get('parallel')!.pauses).toBe(1)
+  const late = push('late')
+  await flush()
+  expect(players.get('late')!.plays).toBe(0)
+  queue.paused = false
+  await flush()
+  expect(players.get('first')!.plays).toBe(2)
+  expect(players.get('first')!.position).toBe(2.5)
+  expect(players.get('parallel')!.plays).toBe(2)
+  expect(players.get('parallel')!.position).toBe(1.1)
+  players.get('first')!.end()
+  await flush()
+  await clock.advance(0.2)
+  queue.paused = true
+  await clock.advance(5)
+  expect(queue.getSnapshot().current?.id).toBe(first.id)
+  queue.paused = false
+  await clock.advance(0.29)
+  expect(queue.getSnapshot().current?.id).toBe(first.id)
+  await clock.advance(0.01)
+  expect(await first.finished).toEqual({status: 'completed'})
+  expect(queue.getSnapshot().current?.id).toBe(queued.id)
+  players.get('parallel')!.end()
+  await clock.advance(0.5)
+  expect(await parallel.finished).toEqual({status: 'completed'})
+  expect(players.get('queued')!.plays).toBe(1)
+  players.get('queued')!.end()
+  await clock.advance(0.5)
+  expect(await queued.finished).toEqual({status: 'completed'})
+  await clock.advance(0.4)
+  players.get('late')!.end()
+  await clock.advance(0.5)
+  expect(await late.finished).toEqual({status: 'completed'})
+  queue.dispose()
+})
+test('preparation finishing while paused waits to play until resumed', async () => {
+  const queue = new AudioQueue
+  const ready = Promise.withResolvers<FakePlayback>()
+  const playback = new FakePlayback('prepared')
+  const handle = queue.push(() => ready.promise)
+  await flush()
+  queue.paused = true
+  ready.resolve(playback)
+  await flush()
+  expect(playback.plays).toBe(0)
+  queue.paused = false
+  await flush()
+  expect(playback.plays).toBe(1)
+  playback.end()
+  expect(await handle.finished).toEqual({status: 'completed'})
+  queue.dispose()
+})

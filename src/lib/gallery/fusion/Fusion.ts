@@ -5,6 +5,8 @@ import type {IngredientLatch} from './FusionRecipe.ts'
 import type {PortalFrame} from './portalFrame.ts'
 import type {FusionTiming} from './timing.ts'
 
+import {worldNow} from '#src/lib/frozenTime.ts'
+
 import {fusionTiming, nextTurn} from './timing.ts'
 
 /** the ingredient thrown into the hung portrait */
@@ -87,7 +89,7 @@ export default class Fusion {
   /** aborted once the player breaks the fusion off, which makes the image model give up */
   readonly signal: AbortSignal
   readonly spec: FusionSpec
-  readonly startedAt = performance.now()
+  readonly startedAt = worldNow()
   readonly timing: FusionTiming
   private readonly canceller = new AbortController
   private readonly hold?: FusionOptions['hold']
@@ -146,7 +148,7 @@ export default class Fusion {
   }
 
   /** seconds since the fusion started */
-  elapsed(now = performance.now()) {
+  elapsed(now = worldNow()) {
     return (now - this.startedAt) / 1000
   }
 

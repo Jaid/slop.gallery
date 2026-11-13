@@ -8,6 +8,7 @@ import {useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.t
 import hearAtOnce, {audioAutoplays} from '#src/lib/audio/hearAtOnce.ts'
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {isFading} from '#src/lib/fade.ts'
+import {isWorldClockPaused} from '#src/lib/frozenTime.ts'
 import {useGallery} from '#src/lib/gallery.ts'
 
 const forward = new Vector3
@@ -21,6 +22,9 @@ const position = new Vector3
 export default function AmbienceListener() {
   useEffect(() => (audioAutoplays() ? hearAtOnce() : undefined), [])
   useFrame(({camera}) => {
+    if (isWorldClockPaused()) {
+      return
+    }
     const engine = SoundEngine.existing()
     if (!engine) {
       return

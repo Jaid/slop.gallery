@@ -10,6 +10,7 @@ import {Vector3} from 'three/webgpu'
 
 import {propObjects, showPropAt} from '#src/components/Scene/GrabbableProp.tsx'
 import {alchemyBrewVoices, alchemySwallowVoices, cannonVoices} from '#src/lib/audio/alchemySounds.ts'
+import {isWorldClockPaused} from '#src/lib/frozenTime.ts'
 import {bodyPose, playSound, useGallery} from '#src/lib/gallery.ts'
 import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, inSinkThroat, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {orbAround, transmutedOrb} from '#src/lib/gallery/alchemy/flavor.ts'
@@ -114,6 +115,9 @@ export default class AlchemyWorks {
 
   /** Runs the machine on by `delta` seconds: takes in what dropped down the throat, sinks it out of sight, shoots out what is done, lets the window glow and the cannon’s `barrel` go off, see {@link CannonFx}. */
   update(delta: number, barrel: Object3D | null) {
+    if (isWorldClockPaused()) {
+      return
+    }
     const step = Math.min(delta, 0.1)
     this.clock += step
     this.takeIn()

@@ -1,13 +1,17 @@
 import {egoControls} from 'ego-player'
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import Game from 'three-fiber-game'
 import {useGraphicsModeValue} from 'use-graphics-mode'
+import usePauseMenu from 'use-pause-menu'
 
 import Scene from '#component/Scene'
+import {useGallery} from '#src/lib/gallery.ts'
 import {playerSession} from '#src/lib/gallery/PlayerSession.ts'
+import {attachPauseFreeze} from '#src/lib/pauseFreeze.ts'
+import pauseMenu, {isPauseFrozen} from '#src/lib/pauseMenu.ts'
 import {isShowingAlbedo} from '#src/lib/rendering/albedo.ts'
 import {useRenderScale} from '#src/lib/rendering/captureWarmup.ts'
-import {defaultFov} from '#src/lib/rendering/customGraphics.ts'
+import {defaultFov, useGraphicsTuning} from '#src/lib/rendering/customGraphics.ts'
 import {readFov} from '#src/lib/rendering/fov.ts'
 import {createGalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
@@ -18,6 +22,10 @@ import GamePhysics from './GamePhysics.tsx'
 import GameScene from './GameScene.tsx'
 
 export default function World() {
+  useEffect(attachPauseFreeze, [])
+  const pauseFrozen = isPauseFrozen(usePauseMenu(pauseMenu))
+  const dragging = useGallery(s => s.dragging)
+  const tuningOpen = useGraphicsTuning(s => s.open)
   const profile = useGraphicsModeValue(getGraphicsProfile)
   // The permalink’s scale, unless the tuning panel of `?development` changed it or a capture still warms up.
   const dpr = useZoomIndependentDpr(useRenderScale())
@@ -31,6 +39,6 @@ export default function World() {
       fov,
       position: [initial.position[0], initial.position[1] + 1.6, initial.position[2]],
       ...near === undefined ? {} : {near},
-    }} controls={egoControls} dpr={dpr} renderer={createGalleryRenderer} sceneWrapper={GameScene} shadows={shadows}
+    }} controls={egoControls} dpr={dpr} frameloop={pauseFrozen && !dragging && !tuningOpen ? 'never' : 'always'} renderer={createGalleryRenderer} sceneWrapper={GameScene} shadows={shadows}
   ><GamePhysics><Scene /></GamePhysics></Game>
 }

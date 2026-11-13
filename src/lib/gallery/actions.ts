@@ -16,7 +16,7 @@ import crosshair, {crosshairToggleKey} from '../crosshair.ts'
 import {isDevelopmentMode} from '../developmentMode.ts'
 import {environmentSeed} from '../gameSeed.ts'
 import {hiddenUiKey, toggleHiddenUi} from '../hiddenUi.ts'
-import pauseMenu from '../pauseMenu.ts'
+import pauseMenu, {isPauseFrozen} from '../pauseMenu.ts'
 import {graphicsTuningKey, toggleGraphicsTuning} from '../rendering/customGraphics.ts'
 import {bookmarkKey, teleportToNextBookmark} from './bookmarks.ts'
 import {flyModeKey, toggleFlyMode} from './flyMode.ts'
@@ -69,7 +69,9 @@ export function enterGallery() {
     return
   }
   galleryEvents.dispatchEvent(new Event('cancel-view'))
-  void SoundEngine.get().resume().catch(() => notify('Audio could not be enabled.'))
+  if (!isPauseFrozen()) {
+    void SoundEngine.get().resume().catch(() => notify('Audio could not be enabled.'))
+  }
   void pauseMenu.enter().catch(() => {})
 }
 

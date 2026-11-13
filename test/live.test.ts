@@ -55,6 +55,33 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, p
         external.push(request.url())
       }
     })
+    await page.evaluateOnNewDocument(() => {
+      let submits = 0
+      const NativeQueue = globalThis.GPUQueue as typeof GPUQueue | undefined
+      if (NativeQueue) {
+        // eslint-disable-next-line typescript/unbound-method -- called on the queue as this
+        const {submit} = NativeQueue.prototype
+        NativeQueue.prototype.submit = function (commandBuffers) {
+          submits++
+          return submit.call(this, commandBuffers)
+        }
+      }
+      const contexts: Array<AudioContext> = []
+      const NativeAudioContext = globalThis.AudioContext
+      globalThis.AudioContext = new Proxy(NativeAudioContext, {
+        construct(Target, args: Array<unknown>, newTarget) {
+          const instance = Reflect.construct(Target, args, newTarget) as AudioContext
+          contexts.push(instance)
+          return instance
+        },
+      })
+      Object.assign(globalThis, {
+        __liveProbe: {
+          submits: () => submits,
+          audioStates: () => contexts.map(context => context.state),
+        },
+      })
+    })
     // Wait for scene readiness below; network-idle navigation is not a rendering signal.
     await page.goto(`${baseUrl}?ai=false&test=true&seed=1`, {waitUntil: 'domcontentloaded'})
     await page.waitForFunction(() => globalThis.slopGallery?.snapshot?.().ready, {timeout: 60_000})
@@ -167,6 +194,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, p
     const imported = portraitsAfterImport.find(p => p.title === 'import fixture')!
     expect(imported.width / imported.height).toBe(2)
     expect(imported.hung).toBe(false)
+    await enter(page)
     const pending = await page.evaluate(id => {
       globalThis.slopGallery!.fuse!('orange', id)
       return globalThis.slopGallery!.snapshot!()
@@ -191,6 +219,35 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, p
     expect(newGame.menuStage).toBe('first')
     await enter(page)
     await page.keyboard.press('Escape')
+    await page.evaluate(() => document.exitPointerLock())
+    await page.waitForFunction(() => globalThis.slopGallery!.snapshot!().menuStage === 'pause')
+    await page.waitForFunction(() => {
+      const probe = (globalThis as {__liveProbe?: {audioStates: () => Array<string>}}).__liveProbe
+      return probe?.audioStates().every(state => state === 'suspended')
+    })
+    const pauseSubmitsBefore = await page.evaluate(() => (globalThis as unknown as {__liveProbe: {submits: () => number}}).__liveProbe.submits())
+    await Bun.sleep(250)
+    const pauseSubmitsAfter = await page.evaluate(() => (globalThis as unknown as {__liveProbe: {submits: () => number}}).__liveProbe.submits())
+    expect(pauseSubmitsAfter).toBe(pauseSubmitsBefore)
+    // Unfocus (Windows key / tabbing out) keeps rendering and audio running.
+    await enter(page)
+    await page.waitForFunction(() => {
+      const probe = (globalThis as {__liveProbe?: {audioStates: () => Array<string>}}).__liveProbe
+      return probe?.audioStates().includes('running')
+    })
+    await page.evaluate(() => {
+      globalThis.dispatchEvent(new Event('blur'))
+      document.exitPointerLock()
+    })
+    await page.waitForFunction(() => globalThis.slopGallery!.snapshot!().menuStage === 'unfocus')
+    const unfocusSubmitsBefore = await page.evaluate(() => (globalThis as unknown as {__liveProbe: {submits: () => number}}).__liveProbe.submits())
+    await Bun.sleep(250)
+    const unfocusSubmitsAfter = await page.evaluate(() => (globalThis as unknown as {__liveProbe: {submits: () => number}}).__liveProbe.submits())
+    expect(unfocusSubmitsAfter).toBeGreaterThan(unfocusSubmitsBefore)
+    expect(await page.evaluate(() => (globalThis as unknown as {__liveProbe: {audioStates: () => Array<string>}}).__liveProbe.audioStates())).toContain('running')
+    await enter(page)
+    await page.keyboard.press('Escape')
+    await page.evaluate(() => document.exitPointerLock())
     await teleport(page, [-6.3, 1.62, -4.5], lookingUp)
     await page.waitForFunction(() => Math.abs(globalThis.slopGallery!.snapshot!().camera[0] + 6.3) < 0.01)
     const drag = (type: string, offset = 0) => page.evaluate((eventType, encoded, horizontalOffset) => {
@@ -236,11 +293,13 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, p
     }, {}, baseline)
     const {portraits: portraitsAfterPaste} = await snapshot(page)
     expect(portraitsAfterPaste.some(p => p.title === 'pasted fixture')).toBe(true)
+    await enter(page)
     for (const [x, room] of [[-14, 'vesper'], [14, 'banquet']] as const) {
       await teleport(page, [x, 1.62, 3])
       await page.waitForFunction(expectedRoom => globalThis.slopGallery!.snapshot!().room === expectedRoom, {}, room)
       await page.screenshot({path: `out/live-test/production-${room}.png`})
     }
+    await page.evaluate(() => document.exitPointerLock())
     // Walk through both boolean-cut portals from both sides, including near a jamb.
     for (const side of [-1, 1]) {
       for (const returning of [false, true]) {

@@ -1,6 +1,7 @@
 import type {EgoState, EgoZoomTransition} from 'ego-player'
 
 import {useGallery} from '#src/lib/gallery/store.ts'
+import {isPauseFrozen} from '#src/lib/pauseMenu.ts'
 import {getPlayerZoom, setPlayerZoom} from '#src/lib/rendering/playerView.ts'
 import world from '#src/worlds/current.ts'
 
@@ -45,7 +46,7 @@ export function attachPlayerAudio(events: Pick<EventTarget, 'addEventListener' |
     const sound = SoundEngine.existing()
     if (state.locked !== previous.locked) {
       if (!state.locked && previous.locked) {
-        if (state.sound) {
+        if (state.sound && !isPauseFrozen()) {
           sound?.playEffect('SFX-42')
         }
         hasEnteredGame = true

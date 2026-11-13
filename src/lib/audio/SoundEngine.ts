@@ -39,6 +39,7 @@ export default class SoundEngine {
   private extendedZoom = false
   private lastLanding = Number.NEGATIVE_INFINITY
   private muted = false
+  private paused = false
   private viewMotion?: Playback
   private zoomAmount = 0
   private zoomBed?: Playback
@@ -58,7 +59,7 @@ export default class SoundEngine {
   }
 
   land(surface: FootstepSurface, speed: number, crouching: boolean, impactSpeed: number) {
-    if (this.muted) {
+    if (this.muted || this.paused) {
       return
     }
     this.lastLanding = this.context.currentTime
@@ -75,7 +76,12 @@ export default class SoundEngine {
       return
     }
     this.muted = muted
-    this.master.gain.setTargetAtTime(muted ? 0 : effectsGain, this.context.currentTime, 0.08)
+    const target = muted ? 0 : effectsGain
+    if (this.paused) {
+      this.master.gain.setValueAtTime(target, this.context.currentTime)
+    } else {
+      this.master.gain.setTargetAtTime(target, this.context.currentTime, 0.08)
+    }
     if (muted) {
       this.stopPlayerSounds()
     }
@@ -83,14 +89,14 @@ export default class SoundEngine {
 
   /** Plays the catalog’s sound effect with the id, on the master like the interface’s sounds unless `output` is another, like {@link world}. */
   playEffect(id: string, output: AudioOutput = this) {
-    if (!this.muted) {
+    if (!this.muted && !this.paused) {
       playSoundEffect(output, id)
     }
   }
 
   /** Plays a recipe in the world, heard from `position` if given, carrying as far as `hearing` says, or else right where the listener is. */
   playInWorld(voices: ReadonlyArray<Voice>, seed: string, position?: Vec3, hearing = worldHearing) {
-    if (this.muted || !voices.length) {
+    if (this.muted || this.paused || !voices.length) {
       return
     }
     playVoices(this.world, voices, {
@@ -101,14 +107,32 @@ export default class SoundEngine {
   }
 
   async resume() {
-    if (this.context.state === 'suspended') {
+    if (!this.paused && this.context.state === 'suspended') {
       await this.context.resume()
+    }
+  }
+
+  /** Suspends or resumes the audio context for Escape pause without discarding queued ambience or reverb tails. */
+  setPaused(paused: boolean) {
+    if (this.paused === paused) {
+      return
+    }
+    this.paused = paused
+    if (paused) {
+      this.stopPlayerSounds()
+      if (this.context.state === 'running') {
+        void this.context.suspend().catch(() => {})
+      }
+      return
+    }
+    if (this.context.state === 'suspended') {
+      void this.context.resume().catch(() => {})
     }
   }
 
   /** A single sustained bed follows the eased zoom amount, never one new sound per frame. */
   setZoom(amount: number) {
-    this.zoomAmount = this.muted ? 0 : clamp(amount, 0, 1)
+    this.zoomAmount = this.muted || this.paused ? 0 : clamp(amount, 0, 1)
     if (this.zoomAmount === 0) {
       this.zoomBed?.stop(0.06)
       this.zoomBed = undefined
@@ -125,7 +149,7 @@ export default class SoundEngine {
   }
 
   step(surface: FootstepSurface, speed: number, crouching: boolean) {
-    if (this.muted || speed < 0.1 || this.context.currentTime - this.lastLanding < 0.1) {
+    if (this.muted || this.paused || speed < 0.1 || this.context.currentTime - this.lastLanding < 0.1) {
       return
     }
     // The stride callback owns cadence; no fixed cooldown may discard faster steps.
@@ -144,7 +168,7 @@ export default class SoundEngine {
 
   /** A plain falling sine in the world, the sound of most interactions. */
   tone(frequency: number, duration = 0.3, volume = 0.055) {
-    if (!this.muted) {
+    if (!this.muted && !this.paused) {
       playVoices(this.world, [osc(frequency, duration, volume, {endFrequency: frequency * 0.55})], {seed: 'tone'})
     }
   }
@@ -152,7 +176,7 @@ export default class SoundEngine {
   viewTransition(entering: boolean) {
     this.viewMotion?.stop()
     this.viewMotion = undefined
-    if (this.muted) {
+    if (this.muted || this.paused) {
       return
     }
     const effect = entering ? playerSoundEffects.viewEnter : playerSoundEffects.viewLeave
@@ -164,7 +188,7 @@ export default class SoundEngine {
     this.zoomMotion = undefined
     this.extendedZoom = extended && !retract
     this.updateZoomGain()
-    if (this.muted || duration === 0) {
+    if (this.muted || this.paused || duration === 0) {
       return
     }
     let effect = retract ? playerSoundEffects.zoomRetract : playerSoundEffects.zoomForward

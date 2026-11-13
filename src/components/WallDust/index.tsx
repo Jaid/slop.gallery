@@ -2,6 +2,7 @@ import {useFrame} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
 import {useEffect, useMemo, useRef} from 'react'
 
+import {isWorldClockPaused} from '#src/lib/frozenTime.ts'
 import {useGallery} from '#src/lib/gallery.ts'
 import {wallDust} from '#src/lib/gallery/hanging/HangingRun.ts'
 import WallDustMesh from '#src/lib/gallery/hanging/WallDust.ts'
@@ -22,6 +23,9 @@ export default function WallDust() {
     }
   }, [dust])
   useFrame((_, delta) => {
+    if (isWorldClockPaused()) {
+      return
+    }
     mounted.current += delta
     dust.advance(delta, mounted.current < warmup || !useGallery.getState().ready)
   })

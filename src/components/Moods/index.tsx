@@ -7,6 +7,7 @@ import {useLayoutEffect, useRef, useState} from 'react'
 import {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {isFading} from '#src/lib/fade.ts'
+import {isWorldClockPaused} from '#src/lib/frozenTime.ts'
 import {cameraPose, useGallery} from '#src/lib/gallery.ts'
 import {useFusions} from '#src/lib/gallery/fusion/fusions.ts'
 import {lightTint, noTint} from '#src/lib/rendering/lightLevels.ts'
@@ -43,6 +44,9 @@ export default function Moods() {
     }
   }, [mixer])
   useFrame((_, delta) => {
+    if (isWorldClockPaused()) {
+      return
+    }
     if (moodSuppression.active) {
       suppressed.current = true
       mixer.cut()
@@ -65,7 +69,7 @@ export default function Moods() {
   // After every regular frame callback, so whatever sets the camera’s field of view this frame has set it, and given back once the frame is drawn.
   useFrame(({camera}, delta) => {
     moodLens.update(mixer.fov, {
-      delta,
+      delta: isWorldClockPaused() ? 0 : delta,
       exact: cameraPose.posed,
       fading: isFading,
       own: !cameraPose.focused,

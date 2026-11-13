@@ -6,6 +6,7 @@ import {useFrame} from '@react-three/fiber'
 import {useEffect, useRef} from 'react'
 
 import hangingVoices from '#src/lib/audio/hangingVoices.ts'
+import {isWorldClockPaused} from '#src/lib/frozenTime.ts'
 import {playSound, useGallery} from '#src/lib/gallery.ts'
 import HangingRun from '#src/lib/gallery/hanging/HangingRun.ts'
 import {requestJolt, takeHanging} from '#src/lib/gallery/hanging/hangings.ts'
@@ -28,6 +29,9 @@ export default function useHanging(portrait: Portrait, frame: PortraitFrame, hel
     run.current = null
   }, [art, placard])
   useFrame((_, delta) => {
+    if (isWorldClockPaused()) {
+      return
+    }
     const still = portrait.hung && !held && !portrait.reserved && !portrait.fusing
     const request = takeHanging(portrait.id, portrait.position, portrait.rotation)
     const jolt = request?.animation instanceof JoltAnimation

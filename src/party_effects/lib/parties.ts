@@ -4,6 +4,7 @@ import type {PartyOptions, PartyPlacement} from './partySite.ts'
 
 import {create} from 'zustand'
 
+import {worldNow} from '#src/lib/frozenTime.ts'
 import world from '#src/worlds/current.ts'
 
 import {partyEffects} from '../index.ts'
@@ -31,7 +32,7 @@ export function startParty(id: PartyEffectId, placement: PartyPlacement, {delay 
   const party: Party = {
     id: ++spawned,
     show: partyEffects[id].stage(partySite(placement, world.floorHeight(placement.position))),
-    startsAt: performance.now() + delay * 1000,
+    startsAt: worldNow() + delay * 1000,
   }
   useParties.setState(({parties}) => ({parties: [...parties, party]}))
   return party
