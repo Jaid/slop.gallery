@@ -54,6 +54,8 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
   private disposed = false
   private flushing = false
   private gapValue: number
+  /** when the pause in effect began, by the queue’s clock, or undefined while the queue runs */
+  private heldAt: number | undefined
   private interrupted: Array<Job<T>> = []
   private jobs = new Map<string, Job<T>>
   private lastEnd = -Infinity
@@ -67,6 +69,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
     interrupted: [],
     concurrent: [],
     idle: true,
+    paused: false,
   })
   constructor(options: AudioQueueOptions = {}) {
     this.clock = options.clock ?? clock
@@ -85,6 +88,11 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
   }
   set gap(value: number) {
     this.gapValue = seconds(value)
+  }
+
+  /** whether the queue stands still, see {@link pause} */
+  get paused() {
+    return this.heldAt !== undefined
   }
 
   get prependedSilence() {
@@ -128,6 +136,24 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
 
   has(id: string) {
     return this.jobs.has(id)
+  }
+
+  /**
+   * Holds the whole queue still until {@link resume}: every sound pauses where it is, silences stop running down, and nothing new starts to sound.
+   * Entries can still be pushed, prepared and cancelled meanwhile, and whatever interrupts another does so as usual, just without a sound.
+   */
+  pause() {
+    if (this.paused || this.disposed) {
+      return
+    }
+    this.mutate(() => {
+      this.heldAt = this.clock.now()
+      for (const job of this.jobs.values()) {
+        if (!job.suspended) {
+          this.halt(job)
+        }
+      }
+    })
   }
 
   /** Where an entry’s playback stands, if its playback reports it. Not part of the snapshot, so polling it never notifies subscribers. */
@@ -239,6 +265,29 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
     })
     return handle
   }
+
+  /** Lets a queue held by {@link pause} go on right where it stood: sounds play on from their position and silences run down the rest of their time, as if no time had passed. */
+  resume() {
+    if (this.heldAt === undefined) {
+      return
+    }
+    const {heldAt} = this
+    this.mutate(() => {
+      this.heldAt = undefined
+      // The pause doesn’t count toward the gap between sounds either.
+      this.lastEnd += this.clock.now() - heldAt
+      for (const job of this.jobs.values()) {
+        if (!this.active(job)) {
+          continue
+        }
+        if (job.phase === 'before' || job.phase === 'after') {
+          this.wait(job)
+        } else if (job.phase === 'playing' || job.phase === 'starting') {
+          this.play(job)
+        }
+      }
+    })
+  }
   [Symbol.dispose]() {
     this.dispose()
   }
@@ -264,7 +313,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
         return
       }
       if (job.priority !== 'async' && !job.suspended) {
-        this.lastEnd = this.clock.now()
+        this.lastEnd = this.soundingUntil()
       }
       job.version++
       job.phase = 'after'
@@ -293,7 +342,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
     this.jobs.delete(job.id)
     if (this.current === job) {
       if (job.phase === 'playing' || job.phase === 'starting') {
-        this.lastEnd = this.clock.now()
+        this.lastEnd = this.soundingUntil()
       }
       this.current = undefined
     }
@@ -355,6 +404,7 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
           interrupted: Object.freeze(this.interrupted.map(entry)),
           concurrent: Object.freeze(this.jobs.values().filter(job => job.priority === 'async').map(entry).toArray()),
           idle: this.jobs.size === 0,
+          paused: this.paused,
         })
         for (const listener of this.listeners) {
           listener()
@@ -362,6 +412,26 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
       }
     } finally {
       this.flushing = false
+    }
+  }
+
+  /** Stops a job where it is, keeping what is left of its silence and its playback’s position: its timer no longer runs down, and its sound pauses. */
+  private halt(job: Job<T>) {
+    job.version++
+    if (job.timer) {
+      job.remaining = Math.max(0, job.deadline - this.clock.now())
+      job.timer()
+      job.timer = undefined
+    }
+    if (job.phase === 'playing' || job.phase === 'starting') {
+      try {
+        job.playback?.pause()
+      } catch (error) {
+        this.finish(job, {
+          status: 'failed',
+          error,
+        })
+      }
     }
   }
 
@@ -430,31 +500,27 @@ export default class AudioQueue<T extends object = Record<string, never>> implem
     }).catch(error => this.fail(job, error))
   }
 
+  /** When a sound that stops now fell silent, by the queue’s clock: now, or when the pause in effect began, which silenced it already. */
+  private soundingUntil() {
+    return this.heldAt ?? this.clock.now()
+  }
+
   private suspend(job: Job<T>) {
     this.current = undefined
     this.interrupted.push(job)
     job.suspended = true
-    job.version++
-    if (job.timer) {
-      job.remaining = Math.max(0, job.deadline - this.clock.now())
-      job.timer()
-      job.timer = undefined
-    }
     if (job.phase === 'playing' || job.phase === 'starting') {
-      this.lastEnd = this.clock.now()
-      try {
-        job.playback?.pause()
-      } catch (error) {
-        this.finish(job, {
-          status: 'failed',
-          error,
-        })
-      }
+      this.lastEnd = this.soundingUntil()
+    }
+    // A paused queue halted it when the pause began.
+    if (!this.paused) {
+      this.halt(job)
     }
   }
 
   private wait(job: Job<T>) {
-    if (!this.active(job)) {
+    // A paused queue keeps what is left of the silence for when it resumes.
+    if (!this.active(job) || this.paused) {
       return
     }
     job.timer?.()

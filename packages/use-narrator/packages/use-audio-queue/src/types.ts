@@ -58,6 +58,8 @@ export type AudioQueueSnapshot<T> = Readonly<{
   current: AudioEntry<T> | null
   idle: boolean
   interrupted: ReadonlyArray<AudioEntry<T>>
+  /** whether the whole queue stands still, see `AudioQueue.pause()` */
+  paused: boolean
   pending: ReadonlyArray<AudioEntry<T>>
 }>
 export type AudioPushOptions<T> = {

@@ -289,6 +289,63 @@ test('disabling narration clears both lanes and skips new requests until re-enab
   expect(players.at(-1)!.name).toBe('speech:Enabled')
   narrator.dispose()
 })
+test('pausing holds recordings, speech and silences where they are until the narrator resumes', async () => {
+  const {narrator, players, clock} = setup({
+    prependedSilence: 0.2,
+    appendedSilence: 0.3,
+  })
+  const first = narrator.push({
+    audio: '/voice.opus',
+    title: 'Recording',
+  }, {id: 'a'})
+  narrator.push('Spoken words', {id: 'b'})
+  await clock.advance(0.2)
+  players[0].position = 4
+  expect(narrator.paused).toBe(false)
+  narrator.pause()
+  expect(narrator.paused).toBe(true)
+  expect(narrator.getSnapshot().paused).toBe(true)
+  expect(players[0].playing).toBe(false)
+  // What shows of the narration stays, without a deadline to run toward.
+  expect(narrationState(narrator.getSnapshot())).toMatchObject({
+    id: 'a',
+    title: 'Recording',
+    status: 'playing',
+    statusEndsAt: undefined,
+  })
+  await clock.advance(60)
+  expect(players).toHaveLength(1)
+  narrator.resume()
+  await flush()
+  expect(narrator.paused).toBe(false)
+  expect(players[0].playing).toBe(true)
+  expect(players[0].position).toBe(4)
+  players[0].end()
+  await clock.advance(0.1)
+  narrator.pause()
+  await clock.advance(60)
+  expect(narrationState(narrator.getSnapshot())).toMatchObject({
+    id: 'a',
+    status: 'after',
+    statusEndsAt: undefined,
+  })
+  narrator.resume()
+  await clock.advance(0.2)
+  expect(await first.finished).toEqual({status: 'completed'})
+  // Paused while the next one prepares, it only speaks once the narrator resumes, after its own silence.
+  narrator.pause()
+  await clock.advance(60)
+  expect(players.map(player => player.name)).toEqual(['audio:/voice.opus', 'speech:Spoken words'])
+  expect(players[1].plays).toBe(0)
+  narrator.stop()
+  await flush()
+  expect(players[1].disposals).toBe(1)
+  expect(narrator.getSnapshot()).toMatchObject({
+    idle: true,
+    paused: true,
+  })
+  narrator.dispose()
+})
 test('concurrent narration exposes separate visible states while the singular projection keeps foreground precedence', async () => {
   const {narrator} = setup()
   narrator.push('Parallel one', {
