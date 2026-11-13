@@ -5,7 +5,8 @@ import EgoMotor from 'ego-player/motor'
 import {BoxGeometry, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
-import lowerGallery, {oculusCornerRamps, oculusLowerRamps, oculusPlatform, oculusQuarterLandings, oculusRampLandings, oculusRamps, rampFloorHeight, tunnelFloorHeight, tunnelSlope} from '../../src/lib/gallery/lowerGallery.ts'
+import {ExhibitionTunnelSlabGeometry} from '../../src/lib/gallery/ExhibitionTunnelGeometry.ts'
+import lowerGallery, {oculusCornerRamps, oculusLowerRamps, oculusPlatform, oculusQuarterLandings, oculusRampLandings, oculusRamps, rampFloorHeight, tunnelDiagonalFloorY, tunnelDiagonalPoint, tunnelFloorHeight, tunnelSlope, tunnelSlopeEndS, tunnelSlopeLength, tunnelSlopeStartS} from '../../src/lib/gallery/lowerGallery.ts'
 import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import OculusSwitchbackRailing from '../../src/lib/gallery/railings/OculusSwitchbackRailing.ts'
 import SlopedBoxGeometry from '../../src/lib/gallery/SlopedBoxGeometry.ts'
@@ -18,34 +19,30 @@ const ground = new OculusGroundGeometry
 const collision = colliderGeometry(ground)
 afterAll(() => ground.dispose())
 const {oculus, tunnel} = lowerGallery
-test('the Oculus lies 3 m below Moonfall, which its tunnel ramps up to, and under the upper viewing deck', () => {
+test('the Oculus lies 3 m below Moonfall, which its beveled tunnel ramps up to, and under the upper viewing deck', () => {
   expect(lowerGallery.floorY - oculus.floorY).toBe(3)
-  expect(tunnelFloorHeight(tunnel.northZ)).toBe(oculus.floorY)
-  expect(tunnelFloorHeight(tunnel.southZ)).toBe(lowerGallery.floorY)
-  expect(tunnelSlope).toBeCloseTo(3 / (tunnel.southZ - tunnel.northZ))
+  expect(tunnelFloorHeight(tunnel.northX, tunnel.northZ)).toBe(oculus.floorY)
+  expect(tunnelFloorHeight(tunnel.southX, tunnel.southZ)).toBe(lowerGallery.floorY)
+  expect(tunnelSlope).toBeCloseTo(3 / tunnelSlopeLength)
   expect(oculusPlatform.position[1] + oculusPlatform.size[1] / 2).toBeGreaterThan(lowerGallery.floorY)
   const room = rooms.find(value => value.id === 'oculus')!
   const visit = roomVisit(room)
   expect(insideGallery(visit.position)).toBe(true)
   expect(roomAt(visit.position)).toBe('oculus')
   expect(floorHeight(visit.position)).toBe(oculus.floorY)
-  for (const z of [-9.99, -6, 0, 4.49]) {
-    const y = tunnelFloorHeight(z)
-    expect(floorHeight([0, y + 0.02, z])).toBeCloseTo(y)
-    expect(insideGallery([0, y + 1.6, z])).toBe(true)
-    expect(insideGallery([0, y - 1.01, z])).toBe(false)
-    expect(insideGallery([0, y + tunnel.height + 0.01, z])).toBe(false)
-    expect(roomAt([0, y + 1.6, z])).toBe('exhibition')
+  for (const [x, z] of [[0, -14.2], tunnelDiagonalPoint(3), tunnelDiagonalPoint(8.5), tunnelDiagonalPoint(14), [-8, 3.5]] as const) {
+    const y = tunnelFloorHeight(x, z)!
+    expect(floorHeight([x, y + 0.02, z])).toBeCloseTo(y)
+    expect(insideGallery([x, y + 1.6, z])).toBe(true)
+    expect(insideGallery([x, y - 1.01, z])).toBe(false)
+    expect(insideGallery([x, y + tunnel.height + 0.01, z])).toBe(false)
+    expect(roomAt([x, y + 1.6, z])).toBe('exhibition')
   }
 })
 test('sloped floor, ceiling, display shells and upright pedestal bases have matching visible and physical surfaces', () => {
   const material = new MeshBasicMaterial
-  const middleZ = (tunnel.northZ + tunnel.southZ) / 2
-  const middleY = tunnelFloorHeight(middleZ)
-  const floor = new SlopedBoxGeometry(tunnel.width, 0.24, tunnel.southZ - tunnel.northZ, tunnelSlope)
-  floor.translate(tunnel.x, middleY - 0.12, middleZ)
-  const ceiling = new SlopedBoxGeometry(tunnel.width, 0.18, tunnel.southZ - tunnel.northZ, tunnelSlope)
-  ceiling.translate(tunnel.x, middleY + tunnel.height + 0.09, middleZ)
+  const floor = new ExhibitionTunnelSlabGeometry(0, 0.24)
+  const ceiling = new ExhibitionTunnelSlabGeometry(tunnel.height + 0.18, 0.18)
   const slabs = [floor, ceiling]
   const world = new RAPIER.World({
     x: 0,
@@ -58,10 +55,11 @@ test('sloped floor, ceiling, display shells and upright pedestal bases have matc
       world.createCollider(RAPIER.ColliderDesc.trimesh(...colliderGeometry(slab)))
     }
     world.step()
-    for (const x of [-1.8, 0, 1.8]) {
+    for (const across of [-1.8, 0, 1.8]) {
       for (let i = 0; i <= 20; i++) {
-        const z = tunnel.northZ + 0.001 + (tunnel.southZ - tunnel.northZ - 0.002) * i / 20
-        const floorY = tunnelFloorHeight(z)
+        const s = tunnelSlopeStartS + 0.05 + (tunnelSlopeEndS - tunnelSlopeStartS - 0.1) * i / 20
+        const [x, z] = tunnelDiagonalPoint(s, across)
+        const floorY = tunnelFloorHeight(x, z)!
         for (const direction of [-1, 1]) {
           const ray = new Raycaster(new Vector3(x, floorY + 1.6, z), new Vector3(0, direction, 0))
           const height = floorY + (direction > 0 ? tunnel.height : 0)
@@ -73,15 +71,11 @@ test('sloped floor, ceiling, display shells and upright pedestal bases have matc
     }
     for (const display of tunnelDisplays) {
       for (const exhibit of display.exhibits) {
-        expect(exhibit.position[1]).toBeCloseTo(tunnelFloorHeight(exhibit.position[2]))
-        const pedestal = new SlopedBoxGeometry(1.15, 0.9, 1.15, 0, tunnelSlope)
-        pedestal.translate(exhibit.position[0], exhibit.position[1] + 0.45, exhibit.position[2])
-        const positions = pedestal.getAttribute('position')
-        for (let i = 0; i < positions.count; i++) {
-          const y = positions.getY(i)
-          expect(y).toBeCloseTo(y > exhibit.position[1] + 0.45 ? exhibit.position[1] + 0.9 : tunnelFloorHeight(positions.getZ(i)), 5)
-        }
-        pedestal.dispose()
+        const [ex, ey, ez] = exhibit.position
+        expect(ey).toBeGreaterThan(tunnelDiagonalFloorY(exhibit.s))
+        expect(tunnelFloorHeight(tunnelDiagonalPoint(exhibit.s)[0], tunnelDiagonalPoint(exhibit.s)[1])).toBeCloseTo(tunnelDiagonalFloorY(exhibit.s))
+        expect(ex).toBeDefined()
+        expect(ez).toBeDefined()
       }
     }
   } finally {

@@ -3,7 +3,7 @@ import type {Vec3} from 'math'
 
 import {knotSign} from 'knot-materials/signs.ts'
 
-import {tunnelFloorHeight, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
+import {tunnelDiagonalFloorY, tunnelDiagonalPoint, tunnelDiagonalYaw, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
 import tunnelDisplays, {tunnelDisplayWindow} from '#src/lib/gallery/tunnelDisplays.ts'
 
 /** how high the exhibits are shown over their displays’ floors: halfway up the windows, at eye level */
@@ -64,29 +64,32 @@ const exhibitionNumberLabel = (number: number) => `#${String(number).padStart(2,
 
 /** where the Exhibition shows an exhibit in the museum’s meters, three in each display from its north end south, each turned a sixth of a revolution on from the one before, with its pedestal and nameplate */
 export const exhibitionSlots = tunnelDisplays.flatMap(display => {
-  /** from the back wall out toward the window */
-  const direction = Math.sign(display.frontX - display.backX) as -1 | 1
+  /** from the back wall out toward the window (+1 for west display, −1 for east display) */
+  const direction = (-display.direction) as -1 | 1
   return display.exhibits.map((exhibit, index) => {
-    const z = exhibit.position[2]
-    const signZ = z - exhibitionSidecar.shift - exhibitionSidecar.signShift
+    const {s} = exhibit
+    const [backX, backZ] = tunnelDiagonalPoint(s, display.backAcross)
+    const [posX, posZ] = tunnelDiagonalPoint(s, display.backAcross + direction * exhibitOffset)
+    const signS = s - exhibitionSidecar.shift - exhibitionSidecar.signShift
+    const [signX, signZ] = tunnelDiagonalPoint(signS, display.backAcross + direction * exhibitionSidecar.signOffset)
     const signTurn = signTurns[index] * exhibitionSidecar.signTurn
     return {
       id: exhibit.id,
+      s,
       direction,
       /** where the pedestal meets the back wall, on the floor */
-      pedestal: [display.backX, tunnelFloorHeight(z), z] as Vec3,
-      position: [display.backX + direction * exhibitOffset, tunnelFloorHeight(z) + exhibitHeight, z] as Vec3,
+      pedestal: [backX, tunnelDiagonalFloorY(s), backZ] as Vec3,
+      position: [posX, tunnelDiagonalFloorY(s) + exhibitHeight, posZ] as Vec3,
       /** the nameplate’s plaque over the sidecar, facing the window and turned by its place along it */
       sign: {
-        position: [display.backX + direction * exhibitionSidecar.signOffset, tunnelFloorHeight(z - exhibitionSidecar.shift) + exhibitionSidecar.height + knotSign.elevation, signZ] as Vec3,
-        // Facing +z at no rotation, it turns from the window by its turn back toward +z, where Moonfall lies, or on toward −z, where the Oculus lies.
-        rotation: direction * (Math.PI / 2 - signTurn),
+        position: [signX, tunnelDiagonalFloorY(s - exhibitionSidecar.shift) + exhibitionSidecar.height + knotSign.elevation, signZ] as Vec3,
+        // Facing +z at no rotation in the display’s frame, turned from the window and rotated into the diagonal gallery.
+        rotation: direction * (Math.PI / 2 - signTurn) + tunnelDiagonalYaw,
       },
     }
   })
 }).map((slot, index) => ({
   ...slot,
   label: exhibitionNumberLabel(index + 1),
-  rotation: index * Math.PI / 3,
+  rotation: index * Math.PI / 3 + tunnelDiagonalYaw,
 }))
-

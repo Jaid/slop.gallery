@@ -1,5 +1,7 @@
+import type {FloorPolygon} from './floorPolygons.ts'
 import type {Vec3} from './types.ts'
 
+import {insidePolygon} from './floorPolygons.ts'
 import {floorThickness, subtractFloorOpening} from './floors.ts'
 import lobby from './lobby.ts'
 
@@ -29,9 +31,12 @@ const lowerGallery = {
     },
   },
   tunnel: {
-    x: 0,
+    northX: lobby.opening.center[0],
+    southX: -8,
     northZ: oculusSouthZ,
     southZ: 4.5,
+    northBendZ: -13.5,
+    southBendZ: 1.5,
     northY: moonfallFloorY - oculusDrop,
     southY: moonfallFloorY,
     // as wide as the Oculus tower
@@ -40,14 +45,134 @@ const lowerGallery = {
   },
 } as const
 
-export const tunnelSlope = (lowerGallery.tunnel.southY - lowerGallery.tunnel.northY) / (lowerGallery.tunnel.southZ - lowerGallery.tunnel.northZ)
-/** The connection keeps plumb end faces and constant vertical headroom. */
-export function tunnelFloorHeight(z: number) {
-  return lowerGallery.tunnel.northY + (z - lowerGallery.tunnel.northZ) * tunnelSlope
+export type TunnelSegment = {
+  end: Point
+  heading: Point
+  id: 'diagonal' | 'north' | 'south'
+  length: number
+  polygon: FloorPolygon
+  /** unit vector pointing toward the west side (to the right when walking south) */
+  right: Point
+  start: Point
 }
-const tunnelMiddleZ = (lowerGallery.tunnel.northZ + lowerGallery.tunnel.southZ) / 2
-/** the middle of the tunnel’s sloping floor, halfway between its ends */
-export const tunnelCenter: Vec3 = [lowerGallery.tunnel.x, tunnelFloorHeight(tunnelMiddleZ), tunnelMiddleZ]
+type Point = readonly [number, number]
+
+const {tunnel} = lowerGallery
+const northLen = tunnel.northBendZ - tunnel.northZ
+const diagDx = tunnel.southX - tunnel.northX
+const diagDz = tunnel.southBendZ - tunnel.northBendZ
+const diagLen = Math.hypot(diagDx, diagDz)
+const southLen = tunnel.southZ - tunnel.southBendZ
+const diagHeading: Point = [diagDx / diagLen, diagDz / diagLen]
+const diagEast: Point = [diagHeading[1], -diagHeading[0]]
+const halfWidth = tunnel.width / 2
+/** miter offset along each segment at both beveled turns: halfWidth · tan(θ / 2) */
+export const tunnelMiter = halfWidth * Math.abs(diagHeading[0]) / (1 + diagHeading[1])
+/** Both beveled turns (plus a 25 cm stub past each inner corner so level baseboards and cornices miter cleanly) lie flat at their room’s elevation; the diagonal stretch between them slopes evenly from −11 m to −8 m. */
+const tunnelLevelStub = 0.25
+export const tunnelSlopeStartS = tunnelMiter + tunnelLevelStub
+export const tunnelSlopeEndS = diagLen - tunnelMiter - tunnelLevelStub
+export const tunnelSlopeLength = tunnelSlopeEndS - tunnelSlopeStartS
+export const tunnelSlope = (tunnel.southY - tunnel.northY) / tunnelSlopeLength
+export const tunnelDiagonalYaw = Math.atan2(diagDx, diagDz)
+export const tunnelDiagonalHeading = diagHeading
+export const tunnelDiagonalEast = diagEast
+
+const p0: Point = [tunnel.northX, tunnel.northZ]
+const p1: Point = [tunnel.northX, tunnel.northBendZ]
+const p2: Point = [tunnel.southX, tunnel.southBendZ]
+const p3: Point = [tunnel.southX, tunnel.southZ]
+/** West (right) and east (left) boundary vertices of the passage centerline mitered at both turns, north to south. */
+export const tunnelBoundary: {
+  east: ReadonlyArray<Point>
+  west: ReadonlyArray<Point>
+} = {
+  west: [
+    [p0[0] - halfWidth, p0[1]],
+    [p1[0] - halfWidth, p1[1] - tunnelMiter],
+    [p2[0] - halfWidth, p2[1] - tunnelMiter],
+    [p3[0] - halfWidth, p3[1]],
+  ],
+  east: [
+    [p0[0] + halfWidth, p0[1]],
+    [p1[0] + halfWidth, p1[1] + tunnelMiter],
+    [p2[0] + halfWidth, p2[1] + tunnelMiter],
+    [p3[0] + halfWidth, p3[1]],
+  ],
+}
+
+export const tunnelSegments: ReadonlyArray<TunnelSegment> = [
+  {
+    id: 'north',
+    start: p0,
+    end: p1,
+    length: northLen,
+    heading: [0, 1],
+    right: [-1, 0],
+    polygon: [tunnelBoundary.west[0], tunnelBoundary.west[1], tunnelBoundary.east[1], tunnelBoundary.east[0]],
+  },
+  {
+    id: 'diagonal',
+    start: p1,
+    end: p2,
+    length: diagLen,
+    heading: diagHeading,
+    right: [-diagEast[0], -diagEast[1]],
+    polygon: [tunnelBoundary.west[1], tunnelBoundary.west[2], tunnelBoundary.east[2], tunnelBoundary.east[1]],
+  },
+  {
+    id: 'south',
+    start: p2,
+    end: p3,
+    length: southLen,
+    heading: [0, 1],
+    right: [-1, 0],
+    polygon: [tunnelBoundary.west[2], tunnelBoundary.west[3], tunnelBoundary.east[3], tunnelBoundary.east[2]],
+  },
+]
+
+/** Point in world xz along the diagonal segment (`s` meters south-west of its north bend, `across` meters east-southeast of its centerline). */
+export function tunnelDiagonalPoint(s: number, across = 0): Point {
+  return [p1[0] + s * diagHeading[0] + across * diagEast[0], p1[1] + s * diagHeading[1] + across * diagEast[1]]
+}
+
+/** Floor elevation `s` meters along the diagonal segment from its north bend: flat across both beveled elbows, sloping smoothly in between. */
+export function tunnelDiagonalFloorY(s: number) {
+  if (s <= tunnelSlopeStartS) {
+    return tunnel.northY
+  }
+  if (s >= tunnelSlopeEndS) {
+    return tunnel.southY
+  }
+  return tunnel.northY + (s - tunnelSlopeStartS) * tunnelSlope
+}
+
+/** Floor elevation under `(x, z)` inside the Exhibition passage, or undefined outside it. */
+export function tunnelFloorHeight(x: number, z: number) {
+  for (const segment of tunnelSegments) {
+    if (!insidePolygon(segment.polygon, x, z)) {
+      continue
+    }
+    if (segment.id === 'north') {
+      return tunnel.northY
+    }
+    if (segment.id === 'south') {
+      return tunnel.southY
+    }
+    const s = (x - p1[0]) * diagHeading[0] + (z - p1[1]) * diagHeading[1]
+    return tunnelDiagonalFloorY(s)
+  }
+}
+
+/** Whether `[x, y, z]` lies inside the Exhibition passage’s floor-to-ceiling volume. */
+export function tunnelContains([x, y, z]: Vec3) {
+  const floor = tunnelFloorHeight(x, z)
+  return floor !== undefined && y >= floor - 1 && y <= floor + tunnel.height
+}
+
+const tunnelMidpoint = tunnelDiagonalPoint(diagLen / 2)
+/** the middle of the tunnel’s sloping floor, halfway along its diagonal display gallery */
+export const tunnelCenter: Vec3 = [tunnelMidpoint[0], tunnelDiagonalFloorY(diagLen / 2), tunnelMidpoint[1]]
 
 export const oculusCeiling = subtractFloorOpening({
   center: [0, 0],
