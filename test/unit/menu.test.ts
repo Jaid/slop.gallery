@@ -125,9 +125,9 @@ test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('renders th
     expect(html.includes('Reroll seed')).toBe(stage === 'return' || stage === 'reset')
     expect(html.includes('Your position')).toBe(stage === 'pause')
     if (stage === 'pause') {
-      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(2)
-      expect(html.indexOf('aria-label="Upper gallery map"')).toBeLessThan(html.indexOf('id="menu-title"'))
-      expect(html.indexOf('aria-label="Lower gallery map"')).toBeGreaterThan(html.indexOf('id="openrouter-title"'))
+      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(1)
+      expect(html).toContain('data-testid="portrait-collection"')
+      expect(html).toMatch(/aria-label="(Upper|Lower) gallery map"/)
     }
     expect(html.includes('OpenRouter')).toBe(stage !== 'unfocus')
     expect(html.includes('Mute audio')).toBe(stage !== 'unfocus')
