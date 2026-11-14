@@ -9,18 +9,10 @@ import portraitObjects from './portraitObjects.ts'
 type MinimapRoom = (typeof slopGallery.rooms)[number]
 
 const {walls} = slopGallery
-/**
- * Whether a position in the room shows on the lower floor of the map: by the room’s floor, unless the floor under it lies in the part of the room that climbs to the floor above; a position outside of every room counts by its own height.
- */
-const isLower = (room: MinimapRoom | undefined, position: Vec3) => {
-  if (!room) {
-    return position[1] < 0
-  }
-  const {floorY, upperMap} = room
-  return floorY < 0 && !(upperMap && slopGallery.floorHeight(position) >= floorY + upperMap.from)
-}
+/** Whether a position in the room shows on the lower floor of the map, which the world decides, see its `mapIsLower`. */
+const isLower = (room: MinimapRoom | undefined, position: Vec3) => slopGallery.mapIsLower(room?.id ?? '', position)
 /** Whether a position in the room with the id, like the player’s, shows on the lower floor of the map. */
-export const isLowerPosition = (id: string, position: Vec3) => isLower(slopGallery.roomById(id), position)
+export const isLowerPosition = (id: string, position: Vec3) => slopGallery.mapIsLower(id, position)
 export const minimapHeading = ([x, , z]: Vec3) => Math.atan2(x, -z) * 180 / Math.PI
 
 /** how a work’s marker is filled: an imported work’s own tone, otherwise dark once the player interacted with it and light while it is still untouched */

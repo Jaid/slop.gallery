@@ -22,6 +22,11 @@
   width: min(1500px, 100%)
   grid-template-columns: repeat(3, minmax(0, 1fr))
 
+// A narrow window stacks the map, the buttons and the collection instead of squeezing all three.
+@media (max-width: 900px)
+  .container[data-stage='pause'] .layout
+    grid-template-columns: minmax(0, 1fr)
+
 .content
   width: min(440px, 100%)
   min-width: 0

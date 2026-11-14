@@ -107,6 +107,16 @@ export default class SlopGallery extends World<GalleryRoom> {
     return litRooms(lamp.room as GalleryRoomId, lamp.id)
   }
 
+  /** The gallery’s lower floor lies below y = 0, but a room that climbs from there, like the Bastion, counts as the upper floor once the floor under the position reaches its upper part. Outside of every room, the position’s own height decides. */
+  override mapIsLower(room: string, position: Vec3) {
+    const placed = this.roomById(room)
+    if (!placed) {
+      return position[1] < 0
+    }
+    const {floorY, upperMap} = placed
+    return floorY < 0 && !(upperMap && this.floorHeight(position) >= floorY + upperMap.from)
+  }
+
   override roomTagline(room: PlacedRoom<GalleryRoom>) {
     return room.floorY < 0 ? 'lower floor room' : 'upper floor room'
   }

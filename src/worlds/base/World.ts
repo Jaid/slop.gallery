@@ -42,7 +42,7 @@ export default abstract class World<Kind extends Room = Room> {
   abstract readonly id: WorldId
   /** where the camera circles behind the first menu until the player first enters, there and then taking over the camera’s pose, or undefined for none, the default */
   readonly introOrbit: IntroOrbit | undefined = undefined
-  /** the map of the world in the pause menu, once for its lower floors and once for its upper ones */
+  /** the map of the world in the pause menu, drawn for the one floor {@link mapIsLower} names */
   abstract readonly Minimap: ComponentType<{lower: boolean}>
   /** whether the welcome narration may play once the player first looks around */
   readonly narratesIntroduction: boolean = false
@@ -138,6 +138,11 @@ export default abstract class World<Kind extends Room = Room> {
   /** Every lamp of the world with its global id in world meters, room by room. */
   lamps() {
     return this.rooms.flatMap(room => room.lamps())
+  }
+
+  /** Whether the map of a player in the room with the id `room` at the position is its lower floor’s: a world of a single floor only has the one map its other floor would name, so never the lower one. */
+  mapIsLower(_room: string, _position: Vec3): boolean {
+    return false
   }
 
   /** How opaque the drawing of a room is on the map while the player is in the room with the id `current`: faint for every room and a little stronger for the player’s own. */

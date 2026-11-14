@@ -122,12 +122,15 @@ test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('renders th
     expect(html).toContain(`data-stage="${stage}"`)
     expect(html).toContain(primaryActionLabel(stage))
     expect(html.includes('data-testid="minimap"')).toBe(stage === 'pause')
+    expect(html.includes('data-testid="portrait-collection"')).toBe(stage === 'pause')
     expect(html.includes('Reroll seed')).toBe(stage === 'return' || stage === 'reset')
     expect(html.includes('Your position')).toBe(stage === 'pause')
     if (stage === 'pause') {
-      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(2)
+      // Only the current floor’s map, left of the buttons, and the collection on the right.
+      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(1)
       expect(html.indexOf('aria-label="Upper gallery map"')).toBeLessThan(html.indexOf('id="menu-title"'))
-      expect(html.indexOf('aria-label="Lower gallery map"')).toBeGreaterThan(html.indexOf('id="openrouter-title"'))
+      expect(html).not.toContain('aria-label="Lower gallery map"')
+      expect(html.indexOf('data-testid="portrait-collection"')).toBeGreaterThan(html.indexOf('id="openrouter-title"'))
     }
     expect(html.includes('OpenRouter')).toBe(stage !== 'unfocus')
     expect(html.includes('Mute audio')).toBe(stage !== 'unfocus')
@@ -187,6 +190,10 @@ test.each(['lobby', 'oculus'] as const)('pause heading identifies the %s room an
     }))
     expect(html).toContain(room === 'lobby' ? '>Lobby</h1>' : '>Oculus</h1>')
     expect(html).toContain(room === 'lobby' ? '>upper floor room</p>' : '>lower floor room</p>')
+    // The single map is that floor’s.
+    expect(html.match(/data-testid="minimap"/gu)).toHaveLength(1)
+    expect(html).toContain(room === 'lobby' ? 'aria-label="Upper gallery map"' : 'aria-label="Lower gallery map"')
+    expect(html).not.toContain(room === 'lobby' ? 'aria-label="Lower gallery map"' : 'aria-label="Upper gallery map"')
     expect(html).not.toContain('>Slop Gallery</h1>')
     expect(html).not.toContain('Good taste.')
   } finally {

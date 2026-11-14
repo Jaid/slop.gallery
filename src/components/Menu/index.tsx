@@ -12,8 +12,9 @@ import MenuNarration from '#component/MenuNarration'
 import MenuOptions from '#component/MenuOptions'
 import Minimap from '#component/Minimap'
 import OpenRouterConnection from '#component/OpenRouterConnection'
+import PortraitCollection from '#component/PortraitCollection'
 import icon from '#root/assets/icon.svg'
-import {enterGallery, useGallery} from '#src/lib/gallery.ts'
+import {cameraPose, enterGallery, useGallery} from '#src/lib/gallery.ts'
 import {useIntro} from '#src/lib/gallery/intro.ts'
 import {startNewGame} from '#src/lib/gameSeed.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
@@ -27,6 +28,8 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
   const isHeavy = useGraphicsMode()
   const room = world.roomById(s.room) ?? world.room(world.defaultRoom)
   const paused = stage === 'pause'
+  // The one map shows the floor the player is on, which the world names by the room and the camera’s height in it.
+  const lower = world.mapIsLower(s.room, cameraPose.position)
   const tagline = paused ? world.roomTagline(room) : world.tagline
   const heading = useRef<HTMLHeadingElement>(null)
   // Until the player first enters, the menu leaves the intro in full view: the title above it, the buttons below.
@@ -51,7 +54,7 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
   }
   return <section className={css.container} aria-labelledby='menu-title' data-stage={stage} data-testid='menu-overlay'>
     <div className={css.layout}>
-      <Branch if={paused}><Minimap lower={false} /></Branch>
+      <Branch if={paused}><Minimap lower={lower} /></Branch>
       <div className={css.content}>
         <h1 id='menu-title' tabIndex={-1} ref={heading}><Branch if={paused} then={room.title} else={world.title} /></h1>
         <Branch not={stage === 'unfocus'}><p className={css.tagline}>{tagline}</p></Branch>
@@ -63,7 +66,7 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
           <MenuNarration />
         </Branch>
       </div>
-      <Branch if={paused}><Minimap lower /></Branch>
+      <Branch if={paused} then={PortraitCollection} />
     </div>
   </section>
 }
