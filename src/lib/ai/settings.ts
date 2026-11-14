@@ -18,7 +18,7 @@ const defaults = {
   ai: true,
   /** the service tier to ask for; without one, model IDs go out unchanged */
   ai_tier: undefined as AiTier | undefined,
-  text_model: 'google/gemini-4-argon',
+  text_model: 'google/gemini-4-hydrogen',
   text_model_effort: 'low',
   image_model: 'google/gemini-nano-banana-2.1',
   audio_model: 'google/gemini-3.8-flash-tts',
