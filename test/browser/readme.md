@@ -105,3 +105,10 @@ BROWSER=/path/to/chromium bun run test:live:spawn
 ```
 
 This builds the gallery and starts it once in every room with `?room`, each in a private headless browser without input. Every room but the Lobby streams in after the page, bringing its floors, so the physics waits for them; once none is loading anymore, the player has to stand grounded at the room’s spawn. It caught the physics hold reaching the scene too late, which let the player fall through the floors of a start room that had not mounted yet. `LIVE_TARGET` reuses a build like for the Oculus test.
+For artwork PNG/WebP conversion at the full stored-source dimensions, including alpha, orientation and actual file signatures:
+
+```sh
+BROWSER_TEST_ORIGIN=http://localhost:5173 bun test/browser/run.ts exportArtwork.ts --standalone
+```
+
+This passive fixture tests both Blob and URL sources without requesting clipboard permission or touching the scene. The collection’s clipboard action separately requires a focused HTTPS or localhost page and the browser’s clipboard permission.

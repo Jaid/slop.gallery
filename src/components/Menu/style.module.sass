@@ -116,3 +116,14 @@
 .intro .options
   grid-template-columns: repeat(2, minmax(10rem, 1fr))
   margin: 0
+
+@media (max-width: 1050px)
+  .container[data-stage='pause'] .layout
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+  .container[data-stage='pause'] .content
+    grid-column: 1 / -1
+    grid-row: 1
+
+@media (max-width: 620px)
+  .container[data-stage='pause'] .layout
+    grid-template-columns: minmax(0, 1fr)

@@ -7,6 +7,7 @@ import {useEffect, useRef} from 'react'
 import useGraphicsMode from 'use-graphics-mode'
 import usePauseMenu from 'use-pause-menu'
 
+import ArtworkCollection from '#component/ArtworkCollection'
 import Icon from '#component/Icon'
 import MenuNarration from '#component/MenuNarration'
 import MenuOptions from '#component/MenuOptions'
@@ -51,7 +52,7 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
   }
   return <section className={css.container} aria-labelledby='menu-title' data-stage={stage} data-testid='menu-overlay'>
     <div className={css.layout}>
-      <Branch if={paused}><Minimap lower={false} /></Branch>
+      <Branch if={paused} then={Minimap} />
       <div className={css.content}>
         <h1 id='menu-title' tabIndex={-1} ref={heading}><Branch if={paused} then={room.title} else={world.title} /></h1>
         <Branch not={stage === 'unfocus'}><p className={css.tagline}>{tagline}</p></Branch>
@@ -63,7 +64,7 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
           <MenuNarration />
         </Branch>
       </div>
-      <Branch if={paused}><Minimap lower /></Branch>
+      <Branch if={paused} then={ArtworkCollection} />
     </div>
   </section>
 }

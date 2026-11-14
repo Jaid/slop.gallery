@@ -1,0 +1,56 @@
+@use '../../style/colors'
+
+.container
+  min-width: 0
+  padding: 1.15rem
+  border: 1px solid colors.$border
+  border-radius: 6px
+  background: #ffffff04
+
+.header
+  display: flex
+  align-items: baseline
+  justify-content: space-between
+  gap: 1rem
+  h2
+    margin: 0
+    font-size: 1.15rem
+  span
+    color: colors.$muted
+    font-size: 0.75rem
+
+.hint
+  margin: 0.6rem 0 1rem
+  color: colors.$muted
+  font-size: 0.75rem
+  line-height: 1.6
+
+.grid
+  display: grid
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr))
+  gap: 0.65rem
+  max-height: min(65dvh, 42rem)
+  margin: 0
+  padding: 4px
+  overflow: auto
+  overscroll-behavior: contain
+  scrollbar-width: thin
+  scrollbar-gutter: stable
+
+.empty
+  margin: 2rem 0
+  color: colors.$muted
+  font-size: 0.85rem
+  line-height: 1.7
+
+.status
+  margin: 0.65rem 0 0
+  min-height: 1em
+  color: colors.$muted
+  font-size: 0.75rem
+
+@media (max-width: 620px)
+  .grid
+    max-height: none
+    overflow: visible
+    scrollbar-gutter: auto
