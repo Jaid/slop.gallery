@@ -176,6 +176,8 @@ describe('portrait collection', () => {
     // Its title stays hidden until the player meets it, but the player brought it in.
     expect(itemOf(html, arrival.id)).toContain('aria-haspopup="menu"')
     expect(itemOf(html, arrival.id)).toContain('aria-label="Untouched work"')
+    // Without a tooltip, a click has nothing to pin.
+    expect(itemOf(html, arrival.id)).not.toContain('aria-pressed')
     expect(html).not.toContain(arrival.title)
   })
   test('only a work the player has interacted with has a tooltip, with its title, description, creator and year', () => {
@@ -189,6 +191,8 @@ describe('portrait collection', () => {
     const tooltipId = /\binterestfor="([^"]+)"/u.exec(itemOf(html, known.id)!)?.[1]
     expect(tooltipId).toBeString()
     expect(itemOf(html, known.id)).toContain('data-interacted="true"')
+    // A click pins the tooltip instead of opening the menu.
+    expect(itemOf(html, known.id)).toContain('aria-pressed="false"')
     const tooltips = html.match(/<div\b[^>]*popover="hint"[^>]*>.*?<\/div>/gu)!
     expect(tooltips).toHaveLength(1)
     expect(tooltips[0]).toContain(`id="${tooltipId}"`)
@@ -201,6 +205,17 @@ describe('portrait collection', () => {
     for (const value of [untouched.title, untouched.description, untouched.creator]) {
       expect(html).not.toContain(value)
     }
+  })
+  test('a pinned tooltip stays open as a popover of its own instead of a hint', () => {
+    const portrait = samplePortraits[0]
+    const pinned = renderToStaticMarkup(createElement(PortraitTooltip, {
+      id: 'tooltip',
+      portrait,
+      pinnedTo: {} as HTMLElement,
+    }))
+    expect(pinned).toMatch(/^<div\b[^>]*\bpopover="auto"/u)
+    expect(tooltip()).toMatch(/^<div\b[^>]*\bpopover="hint"/u)
+    expect(pinned).toContain(portrait.description)
   })
   test('a tooltip tells a missing year apart from year zero', () => {
     expect(tooltip()).toContain('Undated')
