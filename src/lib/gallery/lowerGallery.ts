@@ -39,8 +39,7 @@ const lowerGallery = {
     southBendZ: 1.5,
     northY: moonfallFloorY - oculusDrop,
     southY: moonfallFloorY,
-    // as wide as the Oculus tower
-    width: oculusTowerRadius * 2,
+    width: 5,
     height: 3.6,
   },
 } as const

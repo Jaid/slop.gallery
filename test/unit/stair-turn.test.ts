@@ -149,13 +149,13 @@ describe('round stair landing', () => {
     }
   })
   test('the lower flight, ceiling, rails and room doorway all use the wider span', () => {
-    expect(staircase.lowerWidth).toBeCloseTo(staircase.width * 2)
+    expect(staircase.lowerWidth).toBeGreaterThan(staircase.width)
     const doorway = walls.find(wall => wall.id === 'moonfall-east')!.holes!.find(hole => hole.width === staircase.lowerWidth)!
     expect(doorway.width).toBe(staircase.lowerWidth)
     const [upper, lower] = stairFlights
     expect(upper.width).toBe(staircase.width)
     expect(lower.width).toBe(staircase.lowerWidth)
-    expect(lower.start[2] - lower.width / 2).toBeCloseTo(15.9)
+    expect(lower.start[2]).toBe(staircase.returnZ)
     for (const block of lower.blocks) {
       expect(block.size[2]).toBe(staircase.lowerWidth)
       for (const side of [-1, 1]) {

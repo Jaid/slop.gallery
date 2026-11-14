@@ -31,13 +31,14 @@ const displayPlans = {
     upperSteps: 6,
     lowerSteps: 10,
   },
+  // Its south end lies due west of the lower flight’s end, which runs along Moonfall’s north wall: moving the display across the tunnel means moving it along the tunnel too, so that end only shifts along x.
   east: {
-    winNorthS: 1.5,
+    winNorthS: 1.34,
     northExtension: 0.7,
     upperCorner: [12.6, -16.5525] as Point,
     upperSteps: 3,
     lowerSteps: 16,
-    lowerEnd: [-1.96, 3.2] as Point,
+    lowerEnd: [-1.62, 3.2] as Point,
   },
 } as const
 

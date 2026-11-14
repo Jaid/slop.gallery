@@ -11,8 +11,8 @@ import {colliderGeometry, createArchitectureGeometry, wallFace, wallOpeningTrim}
 import {ExhibitionTunnelSlabGeometry, PolygonalSlabGeometry} from '../../src/lib/gallery/ExhibitionTunnelGeometry.ts'
 import lowerGallery, {tunnelDiagonalEast, tunnelDiagonalFloorY, tunnelDiagonalHeading, tunnelDiagonalPoint, tunnelDiagonalYaw, tunnelFloorHeight, tunnelSlope} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusBalcony from '../../src/lib/gallery/oculusBalcony.ts'
-import oculusTower from '../../src/lib/gallery/oculusTower.ts'
 import SlopedBoxGeometry from '../../src/lib/gallery/SlopedBoxGeometry.ts'
+import staircase from '../../src/lib/gallery/staircase.ts'
 import tunnelDisplays, {displayStairway, tunnelDisplayWindow} from '../../src/lib/gallery/tunnelDisplays.ts'
 import walls, {floorHeight, galleryPlacement, insideGallery, roomAt} from './fixtures/gallery.ts'
 
@@ -90,8 +90,8 @@ function wallMeshes(list: Array<Wall>, material: MeshBasicMaterial) {
   }
 }
 describe('beveled tunnel with display rooms and asymmetric staff stairways', () => {
-  test('both portals and floor bounds follow the beveled tunnel, and the displays are the Exhibition’s', () => {
-    expect(tunnel.width).toBe(oculusTower.radius * 2)
+  test('both portals and floor bounds follow the beveled tunnel, as wide as the stairway arriving in Moonfall, and the displays are the Exhibition’s', () => {
+    expect(tunnel.width).toBe(staircase.lowerWidth)
     expect(tunnel.northX).toBe(0)
     expect(tunnel.southX).toBe(lowerGallery.moonfall.center[0])
     for (const id of ['oculus-south', 'moonfall-north']) {

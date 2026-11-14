@@ -15,7 +15,7 @@ const staircase = {
   // The lower flight arrives in the middle of Moonfall’s east wall.
   returnZ: lowerGallery.moonfall.center[1],
   width: 2.6,
-  lowerWidth: 5.2,
+  lowerWidth: 5,
   topY: 0,
   bottomY: lowerGallery.floorY,
   landing: 0.8,
