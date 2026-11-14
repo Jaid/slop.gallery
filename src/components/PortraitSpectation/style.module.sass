@@ -1,0 +1,67 @@
+@use '../../style/colors'
+@use '../../style/ui'
+
+.container
+  position: relative
+  display: grid
+  // The model takes whatever the text below it leaves, which gets at most 45% of the height and scrolls beyond.
+  grid-template-rows: minmax(0, 1fr) fit-content(45%)
+  gap: 1.25rem
+  min-width: 0
+  // As tall as the collection beside it gets.
+  height: 80vh
+  min-height: 22rem
+
+.close
+  position: absolute
+  inset: 0 0 auto auto
+  display: grid
+  place-items: center
+  padding: 0.6rem
+  // The model can get under it, close up.
+  background: rgb(0 0 0 / 45%)
+  color: colors.$muted
+  &:hover
+    background: rgb(0 0 0 / 65%)
+    color: inherit
+
+.details
+  min-height: 0
+  overflow-y: auto
+  overscroll-behavior: contain
+  scrollbar-width: thin
+  scrollbar-color: #fff3 transparent
+  padding-inline: 1rem
+  text-align: center
+  // Its text can be selected and copied.
+  user-select: text
+  h1
+    margin: 0
+    font-size: clamp(1.5rem, 3vw, 2.1rem)
+
+.facts
+  display: flex
+  flex-wrap: wrap
+  justify-content: center
+  gap: 0.5rem 2.5rem
+  margin: 1rem 0 0
+  dt
+    @include ui.eyebrow
+    text-transform: uppercase
+  dd
+    margin: 0.2rem 0 0
+    font-size: 0.9rem
+    overflow-wrap: anywhere
+
+.description, .secret
+  max-width: 44rem
+  margin: 1.1rem auto 0
+  font-size: 0.9rem
+  line-height: 1.7
+  overflow-wrap: anywhere
+
+.description
+  white-space: pre-line
+
+.secret
+  color: colors.$muted

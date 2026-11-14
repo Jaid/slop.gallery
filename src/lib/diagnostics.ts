@@ -47,6 +47,8 @@ export type GalleryDiagnostics = {
   rotation: EulerTuple
   /** the environment seed in effect, after the `?seed` override */
   seed: number
+  /** the id of the work the pause menu shows up close in place of its map, or null while it shows the map; playing on puts the view away */
+  spectating: string | null
   webGPU: boolean
 }
 /** where the Sandbox’s turntable floats its work and how large the work is in its frame */

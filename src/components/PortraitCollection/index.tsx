@@ -10,6 +10,7 @@ import PortraitCollectionItem from '#component/PortraitCollectionItem'
 import artworkThumbnails from '#src/lib/artworkThumbnails.ts'
 import {notify, useGallery} from '#src/lib/gallery.ts'
 import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
+import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 
 import css from './style.module.sass'
 
@@ -51,10 +52,13 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
 
 /**
  * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie.
+ * A click on one shows it up close in place of the pause menu’s map and middle, see `PortraitSpectation`, and another click on it puts that view away again.
  * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
  */
 export default function PortraitCollection() {
   const portraits = useGallery(s => s.portraits)
+  const spectatedId = usePortraitSpectation(state => state.id)
+  const toggleSpectation = usePortraitSpectation(state => state.toggle)
   const [menu, setMenu] = useState<{
     id: string
     x: number
@@ -68,11 +72,11 @@ export default function PortraitCollection() {
       <ul className={css.grid}>
         {portraits.map(portrait => <li key={portrait.id} className={css.cell}>
           <PortraitCollectionItem
-            menuOpen={portrait === chosen} portrait={portrait} onMenu={(x, y) => setMenu({
+            menuOpen={portrait === chosen} portrait={portrait} spectated={portrait.id === spectatedId} onMenu={(x, y) => setMenu({
               id: portrait.id,
               x,
               y,
-            })}
+            })} onSpectate={() => toggleSpectation(portrait.id)}
           />
         </li>)}
       </ul>

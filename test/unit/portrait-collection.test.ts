@@ -11,6 +11,7 @@ import PortraitTooltip from '#component/PortraitTooltip'
 
 import {ArtworkThumbnails, makeThumbnail, thumbnailSize} from '../../src/lib/artworkThumbnails.ts'
 import {copyPortrait, portraitFileName, portraitImage} from '../../src/lib/gallery/portraitExport.ts'
+import {usePortraitSpectation} from '../../src/lib/gallery/portraitSpectation.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
@@ -27,11 +28,6 @@ const render = (portraits: Array<Portrait>) => {
 /** The opening tag of the button of the work with the id. */
 const itemOf = (html: string, id: string) => {
   const pattern = new RegExp(String.raw`<button\b[^>]*data-portrait="${id}"[^>]*>`, 'u')
-  return pattern.exec(html)?.[0]
-}
-/** The opening tag of the work with the id, a button or a mere image. */
-const workOf = (html: string, id: string) => {
-  const pattern = new RegExp(String.raw`<(?:button|div)\b[^>]*data-portrait="${id}"[^>]*>`, 'u')
   return pattern.exec(html)?.[0]
 }
 const tooltip = (year?: number) => renderToStaticMarkup(createElement(PortraitTooltip, {
@@ -116,9 +112,10 @@ const stubCanvas = () => {
 }
 afterEach(() => {
   Object.assign(useGallery.getInitialState(), initial)
+  Object.assign(usePortraitSpectation.getInitialState(), {id: null})
 })
 describe('portrait collection', () => {
-  test('shows every work in the world in the shape of its frame, as a button named after it once interacted with', () => {
+  test('shows every work in the world in the shape of its frame, as a button to show it up close, named after it once interacted with', () => {
     const portraits = initial.portraits.map((portrait, index) => ({
       ...portrait,
       interacted: index % 2 === 0,
@@ -128,10 +125,11 @@ describe('portrait collection', () => {
     expect(html).toContain('data-testid="portrait-collection"')
     expect(html.match(/<li\b/gu)).toHaveLength(portraits.length)
     for (const portrait of portraits) {
-      const work = workOf(html, portrait.id)
+      const work = itemOf(html, portrait.id)
       expect(work).toContain(`aspect-ratio:${portrait.width} / ${portrait.height}`)
-      expect(work).toStartWith(portrait.interacted ? '<button' : '<div')
       expect(work).toContain(`aria-label="${portrait.interacted ? portrait.title : 'Untouched work'}"`)
+      // None shows up close before the player clicks one.
+      expect(work).toContain('aria-pressed="false"')
     }
     // No menu is open before the player asks for one.
     expect(html).not.toContain('role="menu"')
@@ -158,27 +156,33 @@ describe('portrait collection', () => {
       },
     ])
     for (const id of [samplePortraits[0].id, 'loose', 'reserved', 'arrival']) {
-      expect(workOf(html, id)).toBeString()
+      expect(itemOf(html, id)).toBeString()
     }
   })
-  test('a default work the player hasn’t interacted with yet offers no menu at all, while one that arrived since does from the start', () => {
+  test('a default work the player hasn’t interacted with yet offers no menu, while one that arrived since does from the start', () => {
     const untouched = samplePortraits[0]
     const arrival = {
       ...samplePortraits[1],
       imported: true,
     }
     const html = render([untouched, arrival])
-    const work = workOf(html, untouched.id)!
-    expect(work).toStartWith('<div')
-    expect(work).toContain('role="img"')
+    // It can still be shown up close, so it is a button like the others.
+    const work = itemOf(html, untouched.id)!
     expect(work).not.toContain('aria-haspopup')
-    expect(itemOf(html, untouched.id)).toBeUndefined()
+    expect(work).not.toContain('aria-expanded')
     // Its title stays hidden until the player meets it, but the player brought it in.
     expect(itemOf(html, arrival.id)).toContain('aria-haspopup="menu"')
+    expect(itemOf(html, arrival.id)).toContain('aria-expanded="false"')
     expect(itemOf(html, arrival.id)).toContain('aria-label="Untouched work"')
-    // Without a tooltip, a click has nothing to pin.
-    expect(itemOf(html, arrival.id)).not.toContain('aria-pressed')
     expect(html).not.toContain(arrival.title)
+  })
+  test('marks the work the pause menu shows up close, and no other', () => {
+    Object.assign(usePortraitSpectation.getInitialState(), {id: samplePortraits[1].id})
+    const html = render(samplePortraits.slice(0, 3))
+    expect(itemOf(html, samplePortraits[1].id)).toContain('aria-pressed="true"')
+    for (const other of [samplePortraits[0], samplePortraits[2]]) {
+      expect(itemOf(html, other.id)).toContain('aria-pressed="false"')
+    }
   })
   test('only a work the player has interacted with has a tooltip, with its title, description, creator and year', () => {
     const known = {
@@ -191,31 +195,22 @@ describe('portrait collection', () => {
     const tooltipId = /\binterestfor="([^"]+)"/u.exec(itemOf(html, known.id)!)?.[1]
     expect(tooltipId).toBeString()
     expect(itemOf(html, known.id)).toContain('data-interacted="true"')
-    // A click pins the tooltip instead of opening the menu.
-    expect(itemOf(html, known.id)).toContain('aria-pressed="false"')
     const tooltips = html.match(/<div\b[^>]*popover="hint"[^>]*>.*?<\/div>/gu)!
     expect(tooltips).toHaveLength(1)
     expect(tooltips[0]).toContain(`id="${tooltipId}"`)
     for (const value of [known.title, known.description, known.creator, known.year]) {
       expect(tooltips[0]).toContain(String(value))
     }
-    expect(workOf(html, untouched.id)).not.toContain('interestfor')
-    expect(workOf(html, untouched.id)).toContain('data-interacted="false"')
+    expect(itemOf(html, untouched.id)).not.toContain('interestfor')
+    expect(itemOf(html, untouched.id)).toContain('data-interacted="false"')
     // The untouched work gives away nothing of its plate, not even to assistive technology.
     for (const value of [untouched.title, untouched.description, untouched.creator]) {
       expect(html).not.toContain(value)
     }
   })
-  test('a pinned tooltip stays open as a popover of its own instead of a hint', () => {
-    const portrait = samplePortraits[0]
-    const pinned = renderToStaticMarkup(createElement(PortraitTooltip, {
-      id: 'tooltip',
-      portrait,
-      pinnedTo: {} as HTMLElement,
-    }))
-    expect(pinned).toMatch(/^<div\b[^>]*\bpopover="auto"/u)
+  test('a tooltip is a hint that comes and goes with the interest in its work', () => {
     expect(tooltip()).toMatch(/^<div\b[^>]*\bpopover="hint"/u)
-    expect(pinned).toContain(portrait.description)
+    expect(tooltip()).toContain(samplePortraits[0].description)
   })
   test('a tooltip tells a missing year apart from year zero', () => {
     expect(tooltip()).toContain('Undated')

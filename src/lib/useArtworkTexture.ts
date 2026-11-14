@@ -14,6 +14,11 @@ const assets = new Map<Blob | string, Asset>
 let pending = 0
 let blobs = 0
 export const pendingImages = () => pending
+/** what an artwork shows as in place of its image: while it loads and after it failed to */
+export const artworkPlaceholders = {
+  loading: '#ded6c5',
+  failed: '#a17969',
+} as const
 
 export default function useArtworkTexture(source: Blob | string | null | undefined) {
   const [result, setResult] = useState<{

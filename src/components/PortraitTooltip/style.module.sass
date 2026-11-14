@@ -1,7 +1,7 @@
 @use '../../style/colors'
 
 .container
-  // The button that names it in interestfor or that it is pinned to is its implicit anchor.
+  // The button that names it in interestfor is its implicit anchor.
   position-area: top
   position-try-fallbacks: flip-block
   inset: auto
@@ -36,17 +36,6 @@
   line-height: 1.6
   white-space: pre-line
   overflow-wrap: anywhere
-
-// Pinned, it takes the pointer for its text to be selected and copied, all of it, scrolling where it is long.
-.pinned
-  overflow-y: auto
-  overscroll-behavior: contain
-  pointer-events: auto
-  user-select: text
-  cursor: text
-  .description
-    display: block
-    -webkit-line-clamp: none
 
 .byline
   margin: 0.65rem 0 0

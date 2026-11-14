@@ -4,9 +4,8 @@ import type {Portrait, Quat, Vec3} from './types.ts'
 import {portraitFrame} from '#src/frames/index.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
-import portraitObjects from './portraitObjects.ts'
+import portraitObjects, {portraitPosition} from './portraitObjects.ts'
 
-const {walls} = slopGallery
 /** Whether a position in the room with the id, like the player’s, shows on the lower floor of the map. */
 export const isLowerPosition = (id: string, position: Vec3) => slopGallery.isLowerFloor(slopGallery.roomById(id), position)
 export const minimapHeading = ([x, , z]: Vec3) => Math.atan2(x, -z) * 180 / Math.PI
@@ -21,10 +20,8 @@ export const portraitMarkerMinimumThickness = 0.8
  * Its thickness is at least {@link portraitMarkerMinimumThickness} and grows out of its back toward where it faces, so its fill stays visible inside its border; a loose work keeps its hanging size and turns with the plan view of its width instead of swelling to its face where it lies flat.
  */
 export function minimapPortrait(portrait: Portrait) {
-  const body = portraitObjects.get(portrait.id)?.body
-  const physical = body?.translation()
-  const position: Vec3 = physical ? [physical.x, physical.y, physical.z] : portrait.position
-  const turned = body?.rotation()
+  const position = portraitPosition(portrait)
+  const turned = portraitObjects.get(portrait.id)?.body.rotation()
   const [qx, qy, qz, qw]: Quat = turned ? [turned.x, turned.y, turned.z, turned.w] : portrait.orientation ?? [0, Math.sin(portrait.rotation / 2), 0, Math.cos(portrait.rotation / 2)]
   // The work’s width and the way it faces, laid flat on the map: the x and z of its own x and z axes.
   const across: readonly [number, number] = [1 - 2 * (qy * qy + qz * qz), 2 * (qx * qz - qy * qw)]
@@ -34,10 +31,9 @@ export function minimapPortrait(portrait: Portrait) {
   const thickness = Math.max(depth, portraitMarkerMinimumThickness)
   const out = frame.front - depth + thickness / 2
   const tone: MinimapPortraitTone = portrait.imported ? 'imported' : (portrait.interacted ? 'interacted' : 'untouched')
-  const wall = portrait.hung ? walls.find(candidate => candidate.id === portrait.wallId) : undefined
   return {
     position,
-    lower: slopGallery.isLowerFloor(wall ? slopGallery.roomById(wall.room) : slopGallery.roomAt(position), position),
+    lower: slopGallery.isLowerFloor(slopGallery.portraitRoom(portrait, position), position),
     angle: Math.hypot(...across) > 1e-9 ? Math.atan2(across[1], across[0]) * 180 / Math.PI : -portrait.rotation * 180 / Math.PI,
     center: [position[0] + facing[0] * out, position[2] + facing[1] * out] as const,
     width: portrait.width + frame.reach * 2,

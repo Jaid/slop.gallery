@@ -1,8 +1,8 @@
-import type {NodeFrame, Object3D} from 'three/webgpu'
+import type {Object3D} from 'three/webgpu'
 
-import {WebgpuRenderer} from 'three-fiber-game'
-import {ACESFilmicToneMapping, AmbientLight, Box3, DirectionalLight, Group, HemisphereLight, PerspectiveCamera, RenderTarget, Scene, SRGBColorSpace, UnsignedByteType, Vector3} from 'three/webgpu'
+import {Box3, PerspectiveCamera, RenderTarget, SRGBColorSpace, UnsignedByteType, Vector3} from 'three/webgpu'
 
+import Studio from './base/Studio.ts'
 import {averageLightness, backdropFor, frameObject, gray, snapshotFov, snapshotSize} from './studioSnapshot.ts'
 
 export type StudioSnapshot = {
@@ -12,65 +12,31 @@ export type StudioSnapshot = {
   lightness?: number
 }
 
-type OfflineRenderer = WebgpuRenderer & {
-  _animation: {stop: () => void}
-  _nodes: {nodeFrame: NodeFrame}
-}
-
-const animationKey = '_animation' as const
-const nodesKey = '_nodes' as const
 /** the direction from the object to the camera in its own frame: a three-quarter view from the front (+z), 32° to the right and 17° from above, so boxy objects show three faces */
 const viewDirection = new Vector3(Math.sin(0.56) * Math.cos(0.3), Math.sin(0.3), Math.cos(0.56) * Math.cos(0.3))
 /** the time in ms the lightness scan may take before the backdrop is chosen from what was sampled so far */
 const lightnessBudgetMs = 10
 
 /**
- * One detached WebGPU renderer that photographs objects of the scene in a neutral studio: the object alone against a gray that contrasts with its average lightness, lit like the Knot billboards, framed to fill the middle 960 px of a 1024² WebP.
+ * A studio that photographs objects of the scene: the object alone against a gray that contrasts with its average lightness, lit like the Knot billboards, framed to fill the middle 960 px of a 1024² WebP.
  *
- * The object is cloned and photographed upright in its own frame, like a product shot, not in whatever pose it tumbles through the room; its geometries and materials are shared, and three keeps per-renderer caches for them, so the gallery’s pipelines are not touched. Snapshots are serialized, as there is one scene and one target.
+ * The object is cloned and photographed upright in its own frame, like a product shot, not in whatever pose it tumbles through the room; its geometries and materials are shared, see {@link Studio}. Snapshots are taken one after another, as there is one scene and one target.
  */
-export default class StudioSnapshotRenderer {
+export default class StudioSnapshotRenderer extends Studio {
   private readonly camera = new PerspectiveCamera(snapshotFov, 1, 0.01, 100)
-  private disposal?: Promise<void>
-  private disposed = false
-  private readonly errors: Array<string> = []
-  private initialization?: Promise<void>
-  private readonly renderer = new WebgpuRenderer({
-    antialias: true,
-    alpha: true,
-  })
-  private readonly scene = new Scene
-  private readonly stage = new Group
-  private tail: Promise<void> = Promise.resolve()
   private readonly target = new RenderTarget(snapshotSize, snapshotSize, {
     type: UnsignedByteType,
     samples: 4,
   })
 
   constructor() {
+    super()
     this.target.texture.colorSpace = SRGBColorSpace
     this.renderer.setSize(snapshotSize, snapshotSize, false)
-    this.renderer.toneMapping = ACESFilmicToneMapping
-    this.renderer.setClearColor(0, 0)
-    const key = new DirectionalLight('#fff0d7', 2.3)
-    key.position.set(-3, 9, -16)
-    this.scene.add(new AmbientLight('#ffffff', 0.45), new HemisphereLight('#e1edff', '#80705d', 1.3), key, this.stage)
   }
 
-  private get device() {
-    return (this.renderer.backend as typeof this.renderer.backend & {device: GPUDevice}).device
-  }
-
-  dispose() {
-    if (!this.disposal) {
-      this.disposed = true
-      this.disposal = this.release()
-    }
-  }
-
-  async disposeAsync() {
-    this.dispose()
-    await this.disposal
+  protected override releaseResources() {
+    this.target.dispose()
   }
 
   /** Photographs `object` in its own frame, front (+z) toward the camera. Rejects when the renderer is disposed, the object has no visible extent or the GPU reported an error. */
@@ -78,15 +44,7 @@ export default class StudioSnapshotRenderer {
     if (this.disposed) {
       throw new Error('The studio snapshot renderer has been disposed.')
     }
-    const previous = this.tail
-    const gate = Promise.withResolvers<void>()
-    this.tail = gate.promise
-    await previous
-    try {
-      return await this.capture(object)
-    } finally {
-      gate.resolve()
-    }
+    return this.queue(() => this.capture(object))
   }
 
   private async capture(object: Object3D): Promise<StudioSnapshot> {
@@ -168,32 +126,6 @@ export default class StudioSnapshotRenderer {
       throw new Error('The browser could not encode the studio snapshot as WebP.')
     }
     return image
-  }
-
-  private async init() {
-    this.initialization ??= (async () => {
-      await this.renderer.init()
-      ;(this.renderer as OfflineRenderer)[animationKey].stop()
-      this.device.addEventListener('uncapturederror', event => this.errors.push(event.error.message))
-    })()
-    return this.initialization
-  }
-
-  private async release() {
-    try {
-      await this.tail
-      this.target.dispose()
-      await this.renderer.dispose()
-    } catch (error) {
-      console.error('Studio snapshot renderer disposal failed.', error)
-    }
-  }
-
-  private setTime(seconds: number) {
-    const {nodeFrame} = (this.renderer as OfflineRenderer)[nodesKey]
-    nodeFrame.frameId++
-    nodeFrame.time = seconds
-    nodeFrame.deltaTime = 1 / 60
   }
 }
 

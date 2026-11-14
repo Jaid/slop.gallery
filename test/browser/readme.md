@@ -72,6 +72,14 @@ bun test/browser/run.ts studioSnapshot.ts
 
 This detached fixture draws the gallery’s shared gold with a renderer of its own first, then photographs a gold apple twice and a white and a charcoal ball with `StudioSnapshotRenderer`. It decodes the WebPs and checks that no object pixel lies outside the middle 960 px, that the object reaches that window’s edge, that the backdrop gray contrasts with the measured lightness and that both snapshots of the apple frame alike. It reports the first (device creation) and warm snapshot times.
 
+For the studio view the pause menu shows a work of its collection in:
+
+```sh
+bun test/browser/run.ts studioView.ts --standalone
+```
+
+This standalone fixture shows works in a `StudioView` with their real frames and an image whose quarters tell its corners apart, and reads the canvas back. It checks that a work stands upright and unmirrored in the middle of a transparent backdrop and fills the share of the canvas its framing aims for, that all of it stays in view from behind and at an angle, that the camera moves closer and away, that another work takes its place while one replaced before it got there never shows, and that hiding empties the canvas. It reports how long the first work (device and pipelines) and the next one took to show.
+
 For the sound of a fusion’s portal:
 
 ```sh

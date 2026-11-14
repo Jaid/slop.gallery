@@ -1,5 +1,5 @@
 import type IntroOrbit from '#src/lib/camera/IntroOrbit.ts'
-import type {Artwork, PlayerPose, Vec3} from '#src/lib/gallery/types.ts'
+import type {Artwork, PlayerPose, Portrait, Vec3} from '#src/lib/gallery/types.ts'
 import type {PlacementSpace} from '#src/lib/placement/base/PlacementSpace.ts'
 import type {Wall} from '#src/lib/placement/wallGeometry.ts'
 import type {WorldRoom} from '#src/lib/webmcp/analyzeWorld.ts'
@@ -161,6 +161,12 @@ export default abstract class World<Kind extends Room = Room> {
   portraitArea(wallId: string | undefined, room: string) {
     const owner = wallId === undefined ? room : this.placement.wall(wallId)?.room ?? room
     return this.roomById(owner)?.portraitArea ?? defaultPortraitArea
+  }
+
+  /** The room a work is in while it is at the position: the one owning the wall it hangs on, or else the first whose fence holds the position; undefined for a loose work outside of every fence, like in a passage. */
+  portraitRoom({hung, wallId}: Pick<Portrait, 'hung' | 'wallId'>, position: Vec3) {
+    const wall = hung && wallId !== undefined ? this.placement.wall(wallId) : undefined
+    return (wall && this.roomById(wall.room)) ?? this.roomAt(position)
   }
 
   /** Every portrait slot of the world in world meters, room by room. */

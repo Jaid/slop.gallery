@@ -13,9 +13,11 @@ import MenuOptions from '#component/MenuOptions'
 import Minimap from '#component/Minimap'
 import OpenRouterConnection from '#component/OpenRouterConnection'
 import PortraitCollection from '#component/PortraitCollection'
+import PortraitSpectation from '#component/PortraitSpectation'
 import icon from '#root/assets/icon.svg'
 import {enterGallery, useGallery} from '#src/lib/gallery.ts'
 import {useIntro} from '#src/lib/gallery/intro.ts'
+import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import {startNewGame} from '#src/lib/gameSeed.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
 import world from '#src/worlds/current.ts'
@@ -29,6 +31,9 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
   const room = world.roomById(s.room) ?? world.room(world.defaultRoom)
   const paused = stage === 'pause'
   const tagline = paused ? world.roomTagline(room) : world.tagline
+  const spectatedId = usePortraitSpectation(state => state.id)
+  // A work that left the world meanwhile, like one a fusion used up, gives the map back.
+  const spectated = paused ? s.portraits.find(portrait => portrait.id === spectatedId) : undefined
   const heading = useRef<HTMLHeadingElement>(null)
   // Until the player first enters, the menu leaves the intro in full view: the title above it, the buttons below.
   const intro = useIntro(state => state.orbit !== null) && (stage === 'first' || stage === 'return')
@@ -52,19 +57,23 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
   }
   return <section className={css.container} aria-labelledby='menu-title' data-stage={stage} data-testid='menu-overlay'>
     <div className={css.layout}>
-      {/* The pause menu’s sides: the map of the floor the player is on, and every work in the world. */}
-      <Branch if={paused} then={Minimap} />
-      <div className={css.content}>
-        <h1 id='menu-title' tabIndex={-1} ref={heading}><Branch if={paused} then={room.title} else={world.title} /></h1>
-        <Branch not={stage === 'unfocus'}><p className={css.tagline}>{tagline}</p></Branch>
-        <button id='enter-gallery' className={css.enter} disabled={!s.ready} type='button' onClick={stage === 'reset' ? startNewGame : enterGallery}>{enterButtonLabel(s.ready, stage)}<Icon name='arrow' size={18} /></button>
-        <Branch if={stage === 'return'}><button className={css.newGame} disabled={!s.ready} type='button' onClick={startNewGame}>Reroll seed</button></Branch>
-        <Branch not={stage === 'unfocus'}>
-          <MenuOptions />
-          <Branch if={settings.available}><OpenRouterConnection {...settings} /></Branch>
-          <MenuNarration />
-        </Branch>
-      </div>
+      {/* The pause menu’s sides: the map of the floor the player is on, and every work in the world. A work clicked there shows up close in place of the map and the middle. */}
+      <Branch
+        if={spectated} else={<>
+          <Branch if={paused} then={Minimap} />
+          <div className={css.content}>
+            <h1 id='menu-title' tabIndex={-1} ref={heading}><Branch if={paused} then={room.title} else={world.title} /></h1>
+            <Branch not={stage === 'unfocus'}><p className={css.tagline}>{tagline}</p></Branch>
+            <button id='enter-gallery' className={css.enter} disabled={!s.ready} type='button' onClick={stage === 'reset' ? startNewGame : enterGallery}>{enterButtonLabel(s.ready, stage)}<Icon name='arrow' size={18} /></button>
+            <Branch if={stage === 'return'}><button className={css.newGame} disabled={!s.ready} type='button' onClick={startNewGame}>Reroll seed</button></Branch>
+            <Branch not={stage === 'unfocus'}>
+              <MenuOptions />
+              <Branch if={settings.available}><OpenRouterConnection {...settings} /></Branch>
+              <MenuNarration />
+            </Branch>
+          </div>
+        </>}
+      ><PortraitSpectation className={css.spectation} portrait={spectated!} /></Branch>
       <Branch if={paused} then={PortraitCollection} />
     </div>
   </section>
