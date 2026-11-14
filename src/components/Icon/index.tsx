@@ -18,6 +18,12 @@ const paths = {
       <circle cx='12' cy='12' r='9' />
       <path d='M9.5 9.5a2.5 2.5 0 1 1 3.4 2.33c-.55.22-.9.74-.9 1.32v.6M12 16.75v.01' />
     </>,
+  download: <path d='M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14' />,
+  copy:
+    <>
+      <rect height='13' rx='2' width='13' x='8' y='8' />
+      <path d='M5 16H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v1' />
+    </>,
 
 } satisfies Record<string, ReactNode>
 

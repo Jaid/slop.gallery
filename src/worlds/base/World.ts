@@ -130,6 +130,11 @@ export default abstract class World<Kind extends Room = Room> {
     return this.roomById(room)?.groundSurface(position) ?? 'generic'
   }
 
+  /** Whether the position in the room with the id `roomId` shows on the lower floor of the minimap; false by default for single-floor worlds. */
+  isLowerFloor(_roomId: string, _position: Vec3): boolean {
+    return false
+  }
+
   /** The rooms the player must be in for the lamp to shine, or undefined for everywhere, the default. */
   lampRooms(_lamp: PlacedLamp): ReadonlyArray<string> | undefined {
     return undefined

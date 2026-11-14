@@ -124,10 +124,11 @@ test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('renders th
     expect(html.includes('data-testid="minimap"')).toBe(stage === 'pause')
     expect(html.includes('Reroll seed')).toBe(stage === 'return' || stage === 'reset')
     expect(html.includes('Your position')).toBe(stage === 'pause')
+    expect(html.includes('data-testid="portrait-collection"')).toBe(stage === 'pause')
     if (stage === 'pause') {
-      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(2)
+      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(1)
       expect(html.indexOf('aria-label="Upper gallery map"')).toBeLessThan(html.indexOf('id="menu-title"'))
-      expect(html.indexOf('aria-label="Lower gallery map"')).toBeGreaterThan(html.indexOf('id="openrouter-title"'))
+      expect(html.indexOf('data-testid="portrait-collection"')).toBeGreaterThan(html.indexOf('id="openrouter-title"'))
     }
     expect(html.includes('OpenRouter')).toBe(stage !== 'unfocus')
     expect(html.includes('Mute audio')).toBe(stage !== 'unfocus')
@@ -187,6 +188,8 @@ test.each(['lobby', 'oculus'] as const)('pause heading identifies the %s room an
     }))
     expect(html).toContain(room === 'lobby' ? '>Lobby</h1>' : '>Oculus</h1>')
     expect(html).toContain(room === 'lobby' ? '>upper floor room</p>' : '>lower floor room</p>')
+    expect(html.includes('aria-label="Upper gallery map"')).toBe(room === 'lobby')
+    expect(html.includes('aria-label="Lower gallery map"')).toBe(room === 'oculus')
     expect(html).not.toContain('>Slop Gallery</h1>')
     expect(html).not.toContain('Good taste.')
   } finally {

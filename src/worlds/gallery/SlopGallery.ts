@@ -102,6 +102,16 @@ export default class SlopGallery extends World<GalleryRoom> {
     return this.navigation.floorHeight(position)
   }
 
+  /** Whether a position in the room shows on the lower floor of the map: by the room’s floor, unless the floor under it lies in the part of the room that climbs to the floor above; a position outside of every room counts by its own height. */
+  override isLowerFloor(roomId: string, position: Vec3): boolean {
+    const room = this.roomById(roomId)
+    if (!room) {
+      return position[1] < 0
+    }
+    const {floorY, upperMap} = room
+    return floorY < 0 && !(upperMap && this.floorHeight(position) >= floorY + upperMap.from)
+  }
+
   /** A lamp only shines while the player is in its own room or in one that keeps it on, because it reaches in or can be seen from there. */
   override lampRooms(lamp: PlacedLamp) {
     return litRooms(lamp.room as GalleryRoomId, lamp.id)

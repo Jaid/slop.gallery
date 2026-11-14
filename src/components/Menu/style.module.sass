@@ -7,7 +7,7 @@
   display: grid
   overflow: auto
   overscroll-behavior: contain
-  padding: 2rem 1rem
+  padding: 2rem clamp(1.25rem, 3.5vw, 3.5rem)
   background: rgb(0 0 0 / 80%)
   backdrop-filter: sepia(50%) grayscale(50%) blur(12px)
 
@@ -21,6 +21,19 @@
 .container[data-stage='pause'] .layout
   width: min(1500px, 100%)
   grid-template-columns: repeat(3, minmax(0, 1fr))
+
+@media (max-width: 1024px)
+  .container[data-stage='pause'] .layout
+    gap: 1.25rem
+
+@media (max-width: 720px)
+  .container[data-stage='pause']
+    padding-top: 4rem
+    .layout
+      grid-template-columns: minmax(0, 1fr)
+      width: min(560px, 100%)
+      .content
+        order: -1
 
 .content
   width: min(440px, 100%)
