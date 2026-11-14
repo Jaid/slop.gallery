@@ -27,3 +27,9 @@ test('the Sandbox’s map frames the Cell’s floor plan with the player on it, 
 test('the Sandbox has a single floor, so its map stays empty for the lower one', () => {
   expect(renderToStaticMarkup(createElement(SandboxMinimap, {lower: true}))).toBe('')
 })
+test('the pause menu shows the Sandbox’s map of its upper floor wherever the player stands', () => {
+  const cell = sandbox.room('cell')
+  for (const position of [cell.spawn.position, [1, 1.6, -2], [0, 0, 0]] as const) {
+    expect(sandbox.isLowerFloor(cell, [...position])).toBe(false)
+  }
+})

@@ -8,6 +8,7 @@ import KnotStudyMap from '../../src/components/KnotStudyMap/index.tsx'
 import KnottinghamMinimap from '../../src/components/KnottinghamMinimap/index.tsx'
 import {cameraPose} from '../../src/lib/gallery.ts'
 import {knotGalleryBounds, knotGallerySize} from '../../src/lib/gallery/knotGallery.ts'
+import knottingham from '../../src/worlds/knottingham/index.ts'
 
 const pose = {
   position: cameraPose.position,
@@ -48,4 +49,10 @@ test('minimap viewBox and hall outline share the dynamically sized room', () => 
 })
 test('Knottingham has a single floor, so its map stays empty for the lower one', () => {
   expect(renderToStaticMarkup(createElement(KnottinghamMinimap, {lower: true}))).toBe('')
+})
+test('the pause menu shows Knottingham’s map of its upper floor wherever the player stands', () => {
+  const arena = knottingham.room('arena')
+  for (const position of [arena.spawn.position, [-14, 1.6, -9], [0, 0, 0]] as const) {
+    expect(knottingham.isLowerFloor(arena, [...position])).toBe(false)
+  }
 })
