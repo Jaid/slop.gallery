@@ -1,5 +1,9 @@
 # Slop Gallery
 
-[slop.gallery](https://slop.gallery)
+<center>
+<a href="https://slop.gallery">
+<img src="https://slop.gallery/jGSspOJ6.svg" width=200>
+</a>
 
-[knot.slop.gallery](https://knot.slop.gallery)
+[slop.gallery](https://slop.gallery) | [main.slop.gallery](https://main.slop.gallery) | [github.com/Jaid/slop.gallery](https://github.com/Jaid/slop.gallery)
+</center>
