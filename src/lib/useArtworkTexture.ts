@@ -75,6 +75,11 @@ export function holdArtworkTexture(source: Blob | string) {
   }
 }
 
+/** The artwork as already decoded for the texture the artworks share, like a work the world shows, without loading it; undefined while no texture of it is ready. */
+export function peekArtworkImage(source: Blob | string) {
+  return assets.get(source)?.texture?.image
+}
+
 function acquire(source: Blob | string) {
   let asset = assets.get(source)
   if (!asset) {

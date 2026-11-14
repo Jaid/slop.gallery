@@ -9,7 +9,7 @@ import ContextMenu from '#component/ContextMenu'
 import PortraitCollection from '#component/PortraitCollection'
 import PortraitTooltip from '#component/PortraitTooltip'
 
-import {ArtworkThumbnails} from '../../src/lib/artworkThumbnails.ts'
+import {ArtworkThumbnails, makeThumbnail, thumbnailSize} from '../../src/lib/artworkThumbnails.ts'
 import {copyPortrait, portraitFileName, portraitImage} from '../../src/lib/gallery/portraitExport.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import samplePortraits from './fixtures/portraits.ts'
@@ -331,6 +331,43 @@ describe('portrait export', () => {
   })
 })
 describe('artwork thumbnails', () => {
+  test('draws a thumbnail from the artwork as the world already decoded it, without decoding its image again', async () => {
+    const {decode, drawn, encoded, restore} = stubCanvas()
+    try {
+      const decoded = {
+        width: 3072,
+        height: 2048,
+      } as HTMLCanvasElement
+      const thumbnail = await makeThumbnail('/art/goose.jxl', source => (source === '/art/goose.jxl' ? decoded : undefined))
+      expect(thumbnail.type).toBe('image/webp')
+      expect(decode).not.toHaveBeenCalled()
+      expect(drawn).toEqual([{
+        image: decoded,
+        width: thumbnailSize,
+        height: Math.round(thumbnailSize * 2048 / 3072),
+      }])
+      expect(encoded).toHaveLength(1)
+    } finally {
+      restore()
+    }
+  })
+  test('decodes the image of an artwork nothing decoded yet, scaled to the thumbnail’s size, and lets go of it', async () => {
+    const {bitmap, decode, drawn, restore} = stubCanvas()
+    try {
+      const source = new Blob([jxl], {type: 'image/jxl'})
+      const thumbnail = await makeThumbnail(source, () => {})
+      expect(thumbnail.type).toBe('image/webp')
+      expect(decode).toHaveBeenCalledWith(source)
+      expect(drawn).toEqual([{
+        image: bitmap,
+        width: thumbnailSize,
+        height: thumbnailSize / 2,
+      }])
+      expect(bitmap.close).toHaveBeenCalledTimes(1)
+    } finally {
+      restore()
+    }
+  })
   test('makes each artwork’s thumbnail once and has it ready from then on', async () => {
     const {create, restore} = stubUrls()
     try {
