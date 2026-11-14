@@ -33,6 +33,8 @@ type State = {
   }) | null
   inspecting: string | null
   locked: boolean
+  /** Remembers an interaction with a work; props and already marked works leave the state alone. */
+  markInteracted: (id: string) => void
   /** Read-only projection for telemetry; the shared narrator owns playback and UI state. */
   narration: NarrationState | null
   notice: string
@@ -72,6 +74,13 @@ export const useGallery = create<State>((set, get) => ({
   revision: 0,
   importFiles: null,
   importTarget: null,
+  markInteracted: id => {
+    const state = get()
+    const portrait = state.portraits.find(candidate => candidate.id === id)
+    if (portrait && !portrait.interacted) {
+      state.update(id, {interacted: true})
+    }
+  },
   update: (id, patch) => set(s => {
     const portraits = s.portraits.map(p => (p.id === id ? {
       ...p,

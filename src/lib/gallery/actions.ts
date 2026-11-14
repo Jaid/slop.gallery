@@ -99,6 +99,13 @@ export function narrate(id: string) {
   galleryEvents.dispatchEvent(new CustomEvent('narrate', {detail: id}))
 }
 
+/** Records a successful V-view of a portrait, its name plate or another inspectable object. */
+export function inspect(id: string) {
+  useGallery.getState().markInteracted(id)
+  useGallery.setState({inspecting: id})
+  galleryEvents.dispatchEvent(new CustomEvent('inspect', {detail: id}))
+}
+
 export function narrateModel(id: string) {
   void SoundEngine.get().resume().catch(() => notify('Audio could not be enabled.'))
   galleryEvents.dispatchEvent(new CustomEvent('narrate-model', {detail: id}))

@@ -4,14 +4,16 @@ import {afterEach, expect, test} from 'bun:test'
 
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
+import {Vector3} from 'three/webgpu'
 
 import Minimap from '#component/GalleryMinimap'
+import {frames} from '#src/frames/index.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 import {cameraPose, useGallery} from '../../src/lib/gallery.ts'
 import {climbApex} from '../../src/lib/gallery/climb.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
-import {isLowerPosition, minimapHeading, minimapPortrait, minimapRooms, minimapViewBox} from '../../src/lib/gallery/minimap.ts'
+import {isLowerPosition, minimapHeading, minimapPortrait, minimapPortraitFootprint, minimapPortraitStatus, minimapRooms, minimapViewBox} from '../../src/lib/gallery/minimap.ts'
 import portraitObjects from '../../src/lib/gallery/portraitObjects.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
@@ -112,7 +114,7 @@ test('the Bastion shows on the lower floor up to the apex of its western hairpin
   }
   expect(isLowerPosition('bastion', eye(slopGallery.room('bastion').spawn.position))).toBe(true)
 })
-test('portrait dots follow rigid bodies instead of the positions in the store', () => {
+test('portrait rectangles follow rigid bodies instead of the positions in the store', () => {
   const portrait = {
     ...samplePortraits[0],
     id: 'minimap-test',
@@ -129,7 +131,7 @@ test('portrait dots follow rigid bodies instead of the positions in the store', 
   }
   portraitObjects.set(portrait.id, Object.assign(Object.create(null) as PortraitObject, {body: {translation: () => physical}}))
   try {
-    expect(minimapPortrait(portrait)).toEqual({
+    expect(minimapPortrait(portrait)).toMatchObject({
       position: [physical.x, physical.y, physical.z],
       lower: true,
     })
@@ -137,5 +139,105 @@ test('portrait dots follow rigid bodies instead of the positions in the store', 
     expect(minimapPortrait(portrait).position).toEqual([2, physical.y, physical.z])
   } finally {
     portraitObjects.delete(portrait.id)
+  }
+})
+// Use the mesh, not the clearance envelope: some frames have asymmetric ornaments or a shallower actual front.
+test.each(Object.entries(frames))('%s portrait footprint matches the actual hanging mesh, including its frame', (frame, model) => {
+  for (const [width, height] of [[0.65, 1.3], [2.7, 1.1]]) {
+    const geometry = model.createGeometry(width, height)
+    try {
+      geometry.computeBoundingBox()
+      const {min, max} = geometry.boundingBox!
+      expect(minimapPortraitFootprint({
+        width,
+        height,
+        frame: frame as keyof typeof frames,
+      })).toEqual({
+        x: min.x,
+        y: min.z,
+        width: max.x - min.x,
+        height: max.z - min.z,
+      })
+    } finally {
+      geometry.dispose()
+    }
+  }
+})
+test.each([0, Math.PI / 2, -Math.PI / 2, Math.PI, 0.72])('portrait footprint follows the mesh’s yaw %d, offset from its pivot', rotation => {
+  const portrait = {
+    ...samplePortraits[0],
+    rotation,
+  }
+  const {x, y, width, height} = minimapPortraitFootprint(portrait)
+  const marker = minimapPortrait(portrait)
+  expect(marker.transform).toBe(`translate(${portrait.position[0]} ${portrait.position[2]}) rotate(${-rotation * 180 / Math.PI})`)
+  const angle = Number(/rotate\(([^)]+)\)/u.exec(marker.transform)![1]) * Math.PI / 180
+  for (const [dx, dz] of [[x, y], [x + width, y + height]]) {
+    const actual = new Vector3(dx, 0, dz)
+    actual.applyAxisAngle(new Vector3(0, 1, 0), rotation).add(new Vector3(...portrait.position))
+    expect(portrait.position[0] + dx * Math.cos(angle) - dz * Math.sin(angle)).toBeCloseTo(actual.x, 8)
+    expect(portrait.position[2] + dx * Math.sin(angle) + dz * Math.cos(angle)).toBeCloseTo(actual.z, 8)
+  }
+})
+test('imports take precedence over interaction, and loose works retain their hanging footprint', () => {
+  const portrait = samplePortraits[0]
+  expect(minimapPortraitStatus(portrait)).toBe('unvisited')
+  expect(minimapPortraitStatus({
+    ...portrait,
+    interacted: true,
+  })).toBe('interacted')
+  expect(minimapPortraitStatus({
+    ...portrait,
+    imported: true,
+  })).toBe('imported')
+  expect(minimapPortraitStatus({
+    ...portrait,
+    imported: true,
+    interacted: true,
+  })).toBe('imported')
+  const loose = {
+    ...portrait,
+    hung: false,
+    orientation: [0.7, 0, 0, 0.7] as const,
+  }
+  expect(minimapPortraitFootprint(loose)).toEqual(minimapPortraitFootprint(portrait))
+})
+test('the map renders dimensioned rectangles with the status of their work and hides reserved works', () => {
+  const portraits = [
+    {
+      ...samplePortraits[0],
+      id: 'new',
+    },
+    {
+      ...samplePortraits[0],
+      id: 'seen',
+      interacted: true,
+    },
+    {
+      ...samplePortraits[0],
+      id: 'import',
+      imported: true,
+      interacted: true,
+    },
+    {
+      ...samplePortraits[0],
+      id: 'reserved',
+      reserved: true,
+    },
+  ]
+  Object.assign(useGallery.getInitialState(), {portraits})
+  const html = renderToStaticMarkup(createElement(Minimap, {lower: false}))
+  const markers = html.match(/<g[^>]+data-portrait=[^>]+>.*?<\/g>/gu)!
+  expect(markers).toHaveLength(portraits.length)
+  for (const [index, portrait] of portraits.entries()) {
+    const marker = markers[index]
+    // The colored rectangle and its outline share the exact footprint.
+    expect(marker.match(/<rect\b/gu)).toHaveLength(2)
+    for (const [key, value] of Object.entries(minimapPortraitFootprint(portrait))) {
+      expect(marker).toContain(`${key}="${value}"`)
+    }
+    expect(marker).toContain(`data-status="${minimapPortraitStatus(portrait)}"`)
+    expect(marker).toContain(`display="${portrait.reserved ? 'none' : 'inline'}"`)
+    expect(marker).toContain(`transform="${minimapPortrait(portrait).transform}"`)
   }
 })

@@ -44,6 +44,10 @@ export function attachNarration(target: Narrator = narrator, events: Pick<EventT
   followWorld()
   const publish = () => {
     const next = narrationState(target.getSnapshot())
+    // Queued, preparing or canceled stories do not count as listened to.
+    if (next?.status === 'playing') {
+      useGallery.getState().markInteracted(next.id)
+    }
     const previous = useGallery.getState().narration
     if (next?.id !== previous?.id || next?.title !== previous?.title || next?.text !== previous?.text || next?.source !== previous?.source || next?.status !== previous?.status) {
       useGallery.setState({narration: next})

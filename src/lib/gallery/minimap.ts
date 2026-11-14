@@ -1,6 +1,7 @@
 import type {RoomMap} from '#src/rooms/index.ts'
 import type {Portrait, Vec3} from './types.ts'
 
+import {portraitFrame} from '#src/frames/index.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 import portraitObjects from './portraitObjects.ts'
@@ -22,12 +23,34 @@ const isLower = (room: MinimapRoom | undefined, position: Vec3) => {
 export const isLowerPosition = (id: string, position: Vec3) => isLower(slopGallery.roomById(id), position)
 export const minimapHeading = ([x, , z]: Vec3) => Math.atan2(x, -z) * 180 / Math.PI
 
+/** The framed work’s footprint in its hanging pose, in map meters, without the name plate. Loose works keep that readable footprint rather than growing when they fall flat. */
+export function minimapPortraitFootprint(portrait: Pick<Portrait, 'frame' | 'height' | 'width'>) {
+  const geometry = portraitFrame(portrait.frame).createGeometry(portrait.width, portrait.height)
+  try {
+    geometry.computeBoundingBox()
+    const {min, max} = geometry.boundingBox!
+    return {
+      x: min.x,
+      y: min.z,
+      width: max.x - min.x,
+      height: max.z - min.z,
+    }
+  } finally {
+    geometry.dispose()
+  }
+}
+
+/** Imports stay green, even after interaction. */
+export const minimapPortraitStatus = (portrait: Portrait) => (portrait.imported ? 'imported' : (portrait.interacted ? 'interacted' : 'unvisited'))
+
 export function minimapPortrait(portrait: Portrait) {
   const physical = portraitObjects.get(portrait.id)?.body.translation()
   const position: Vec3 = physical ? [physical.x, physical.y, physical.z] : portrait.position
   const wall = portrait.hung ? walls.find(candidate => candidate.id === portrait.wallId) : undefined
   return {
     position,
+    // SVG’s vertical axis is world +z, so its rotation is the opposite of the mesh’s yaw.
+    transform: `translate(${position[0]} ${position[2]}) rotate(${-portrait.rotation * 180 / Math.PI})`,
     lower: isLower(wall ? slopGallery.roomById(wall.room) : slopGallery.roomAt(position), position),
   }
 }

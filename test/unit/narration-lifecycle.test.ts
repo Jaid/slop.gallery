@@ -7,6 +7,7 @@ import {attachNarration} from '../../src/lib/audio/narration.ts'
 import {galleryEvents} from '../../src/lib/gallery/actions.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import worldClock from '../../src/lib/worldClock.ts'
+import samplePortraits from './fixtures/portraits.ts'
 
 let narrator: Narrator
 let clock: FakeClock
@@ -152,4 +153,30 @@ test('effect replay clears abandoned work without permanently disposing the app 
   await clock.advance(0.1)
   expect(narrator.getSnapshot().current?.id).toBe(next.id)
   expect(players.at(-1)?.playing).toBe(true)
+})
+test('listening marks only the portrait whose narration actually starts, not a queued or canceled story', async () => {
+  const original = useGallery.getState().portraits
+  const portraits = samplePortraits.slice(0, 2).map(portrait => ({...portrait}))
+  useGallery.setState({portraits})
+  const interacted = () => useGallery.getState().portraits.map(portrait => portrait.interacted === true)
+  try {
+    const first = narrator.push({
+      audio: '/first.opus',
+      title: 'First',
+    }, {id: portraits[0].id})
+    const second = narrator.push({
+      audio: '/second.opus',
+      title: 'Second',
+    }, {id: portraits[1].id})
+    await flush()
+    expect(interacted()).toEqual([false, false])
+    await clock.advance(0.1)
+    expect(interacted()).toEqual([true, false])
+    second.cancel()
+    narrator.stop()
+    await first.finished
+    expect(interacted()).toEqual([true, false])
+  } finally {
+    useGallery.setState({portraits: original})
+  }
 })

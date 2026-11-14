@@ -3,11 +3,21 @@
   width: 100%
 
 .portraits
-  fill: #398cff
-  stroke: #fff
-  stroke-width: 0.25
-  circle
+  color: #74c9ff
+  // Real frame depths can be subpixel: a colored keyline inside a white outline keeps their state legible without enlarging the scaled rectangle.
+  rect
+    fill: currentColor
+    stroke: currentColor
+    stroke-width: 2.5px
+    vector-effect: non-scaling-stroke
+  .outline
+    stroke: #fff
+    stroke-width: 4px
     filter: drop-shadow(0 0 1px #000)
+  [data-status='interacted']
+    color: #2463b5
+  [data-status='imported']
+    color: #34c982
 
 .player
   fill: #c50000
