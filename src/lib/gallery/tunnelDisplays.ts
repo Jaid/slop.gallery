@@ -7,7 +7,7 @@ import type {Vec3} from './types.ts'
 import {wallCoordinates} from '../placement/wallGeometry.ts'
 import {wallFace} from './architectureDimensions.ts'
 import {floorChunks, insidePolygon} from './floorPolygons.ts'
-import lowerGallery, {tunnelDiagonalEast, tunnelDiagonalFloorY, tunnelDiagonalHeading, tunnelDiagonalPoint, tunnelDiagonalYaw} from './lowerGallery.ts'
+import lowerGallery, {tunnelDiagonalEast, tunnelDiagonalFloorY, tunnelDiagonalHeading, tunnelDiagonalPoint, tunnelDiagonalYaw, tunnelSlope} from './lowerGallery.ts'
 import oculusBalcony from './oculusBalcony.ts'
 import StairFlight, {stairThickness} from './stairs/StairFlight.ts'
 
@@ -206,12 +206,15 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
   }
   const southEndAcross = (frontAcross + cutout.fromAcross) / 2
   const southEndWidth = Math.abs(cutout.fromAcross - frontAcross)
+  // The shell’s sheared boxes share one floor plane, extrapolated past the tunnel’s level stubs where the north end wall reaches beyond the slope.
+  const shellFloorY = (s: number) => tunnelDiagonalFloorY(centerS) + (s - centerS) * tunnelSlope
+  // The back and north walls reach through the floor and ceiling slabs and the north wall past the back wall, so no seam is a bare edge the sky could show through.
   const shell: Array<DisplayBox> = [
-    dispBox(centerS + thickness / 2, tunnelDiagonalFloorY(centerS + thickness / 2) - thickness / 2, centerAcross, [depth, thickness, length + thickness]),
-    dispBox(centerS + thickness / 2, tunnelDiagonalFloorY(centerS + thickness / 2) + tunnel.height + thickness / 2, centerAcross, [depth, thickness, length + thickness]),
-    dispBox(centerS + thickness / 2, tunnelDiagonalFloorY(centerS + thickness / 2) + tunnel.height / 2, backAcross + direction * thickness / 2, [thickness, tunnel.height, length + thickness]),
-    dispBox(northS - thickness / 2, tunnelDiagonalFloorY(northS - thickness / 2) + tunnel.height / 2, centerAcross, [depth, tunnel.height, thickness]),
-    dispBox(southS + thickness / 2, tunnelDiagonalFloorY(southS + thickness / 2) + tunnel.height / 2, southEndAcross, [southEndWidth, tunnel.height, thickness]),
+    dispBox(centerS + thickness / 2, shellFloorY(centerS + thickness / 2) - thickness / 2, centerAcross, [depth, thickness, length + thickness]),
+    dispBox(centerS + thickness / 2, shellFloorY(centerS + thickness / 2) + tunnel.height + thickness / 2, centerAcross, [depth, thickness, length + thickness]),
+    dispBox(centerS + thickness / 2, shellFloorY(centerS + thickness / 2) + tunnel.height / 2, backAcross + direction * thickness / 2, [thickness, tunnel.height + 2 * thickness, length + thickness]),
+    dispBox(northS - thickness / 2, shellFloorY(northS - thickness / 2) + tunnel.height / 2, centerAcross + direction * thickness / 2, [depth + thickness, tunnel.height + 2 * thickness, thickness]),
+    dispBox(southS + thickness / 2, shellFloorY(southS + thickness / 2) + tunnel.height / 2, southEndAcross, [southEndWidth, tunnel.height, thickness]),
   ]
   // Staff stairway from the Oculus balcony door down to the landing behind the display’s south end wall.
   const {headroom, going, rise, width: stairWidth} = displayStairway

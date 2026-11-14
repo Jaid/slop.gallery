@@ -233,6 +233,31 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
         material.dispose()
       }
     })
+    test(`${display.side}: the shell’s floor, ceiling, back and north walls overlap at their seams instead of only touching along an edge`, () => {
+      const solid = ([x, y, z]: Vec3) => display.shell.some(({position, rotation, size: [width, height, depth]}) => {
+        const local = new Vector3(x - position[0], y - position[1], z - position[2])
+        const turn = new Quaternion
+        local.applyQuaternion(turn.setFromEuler(new Euler(...rotation ?? [0, 0, 0])).invert())
+        return Math.abs(local.x) <= width / 2 && Math.abs(local.z) <= depth / 2 && Math.abs(local.y - local.z * tunnelSlope) <= height / 2
+      })
+      const floorAt = (s: number) => tunnelDiagonalFloorY(display.southS) + (s - display.southS) * tunnelSlope
+      const behind = 0.05
+      const midS = (display.northS + display.southS) / 2
+      const backOut = display.backAcross + sign * behind
+      const northOut = display.northS - behind
+      const seams: Array<[string, number, number, number]> = [
+        ['floor and back wall', midS, backOut, floorAt(midS) - behind],
+        ['ceiling and back wall', midS, backOut, floorAt(midS) + tunnel.height + behind],
+        ['floor and north wall', northOut, (display.frontAcross + display.backAcross) / 2, floorAt(northOut) - behind],
+        ['ceiling and north wall', northOut, (display.frontAcross + display.backAcross) / 2, floorAt(northOut) + tunnel.height + behind],
+        ['back and north walls', northOut, backOut, floorAt(northOut) + tunnel.height / 2],
+        ['floor, back and north walls', northOut, backOut, floorAt(northOut) - behind],
+      ]
+      for (const [seam, s, across, y] of seams) {
+        const [x, z] = tunnelDiagonalPoint(s, across)
+        expect(solid([x, y, z]), seam).toBe(true)
+      }
+    })
     for (const returning of [false, true]) {
       test(`${display.side}: the player walks ${returning ? 'up from the display to the balcony' : 'down from the balcony into the display'}`, () => {
         const world = stairwayWorld(display)
