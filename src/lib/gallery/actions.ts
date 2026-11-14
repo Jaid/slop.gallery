@@ -94,6 +94,14 @@ export function playSound(voices: ReadonlyArray<Voice>, seed: string, position?:
   }
 }
 
+/** Marks the work with the id as one the player has interacted with, on the work itself or on its name plate; other ids, like a prop’s, mark nothing. */
+export function markPortraitInteracted(id: string) {
+  const state = useGallery.getState()
+  if (state.portraits.some(portrait => portrait.id === id && !portrait.interacted)) {
+    state.update(id, {interacted: true})
+  }
+}
+
 export function narrate(id: string) {
   void SoundEngine.get().resume().catch(() => notify('Audio could not be enabled.'))
   galleryEvents.dispatchEvent(new CustomEvent('narrate', {detail: id}))

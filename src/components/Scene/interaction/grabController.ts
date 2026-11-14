@@ -4,7 +4,7 @@ import type {RootState} from '@react-three/fiber'
 
 import {Vector3} from 'three/webgpu'
 
-import {cameraPose, chime, useGallery} from '#src/lib/gallery.ts'
+import {cameraPose, chime, markPortraitInteracted, useGallery} from '#src/lib/gallery.ts'
 import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import world from '#src/worlds/current.ts'
@@ -25,6 +25,9 @@ const grab = () => {
   if (prop && !prop.grab()) {
     useGallery.setState({held: null})
     return
+  }
+  if (portrait) {
+    markPortraitInteracted(portrait.id)
   }
   chime(440)
 }

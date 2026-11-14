@@ -9,7 +9,7 @@ export default function GalleryMinimap({lower}: {lower: boolean}) {
   const portraits = useGallery(s => s.portraits)
   const current = useGallery(s => s.room)
   const player = useRef<SVGPathElement>(null)
-  const dots = useRef(new Map<string, SVGCircleElement>)
+  const markers = useRef(new Map<string, SVGRectElement>)
   useEffect(() => {
     // Read the live camera and rigid bodies without rerendering the menu every frame.
     const attribute = (element: SVGElement, name: string, value: string) => {
@@ -24,14 +24,13 @@ export default function GalleryMinimap({lower}: {lower: boolean}) {
         attribute(player.current, 'display', isLowerPosition(useGallery.getState().room, cameraPose.position) === lower ? 'inline' : 'none')
       }
       for (const portrait of portraits) {
-        const dot = dots.current.get(portrait.id)
-        if (!dot) {
+        const element = markers.current.get(portrait.id)
+        if (!element) {
           continue
         }
         const marker = minimapPortrait(portrait)
-        attribute(dot, 'cx', String(marker.position[0]))
-        attribute(dot, 'cy', String(marker.position[2]))
-        attribute(dot, 'display', !portrait.reserved && marker.lower === lower ? 'inline' : 'none')
+        attribute(element, 'transform', `translate(${marker.center[0]} ${marker.center[1]}) rotate(${marker.angle})`)
+        attribute(element, 'display', !portrait.reserved && marker.lower === lower ? 'inline' : 'none')
       }
       frame = requestAnimationFrame(update)
     }
@@ -43,12 +42,12 @@ export default function GalleryMinimap({lower}: {lower: boolean}) {
     {minimapRooms.filter(room => room.lower === lower).map(room => <g key={room.id} dangerouslySetInnerHTML={{__html: room.markup}} data-room={room.id} opacity={room.opacity(current)} transform={room.transform} />)}
     <g className={css.portraits}>{portraits.map(portrait => {
       const marker = minimapPortrait(portrait)
-      return <circle
-        key={portrait.id} cx={marker.position[0]} cy={marker.position[2]} data-portrait={portrait.id} display={!portrait.reserved && marker.lower === lower ? 'inline' : 'none'} r='0.6' ref={element => {
+      return <rect
+        key={portrait.id} data-portrait={portrait.id} data-tone={marker.tone} display={!portrait.reserved && marker.lower === lower ? 'inline' : 'none'} height={marker.thickness} transform={`translate(${marker.center[0]} ${marker.center[1]}) rotate(${marker.angle})`} width={marker.width} x={-marker.width / 2} y={-marker.thickness / 2} ref={element => {
           if (element) {
-            dots.current.set(portrait.id, element)
+            markers.current.set(portrait.id, element)
           } else {
-            dots.current.delete(portrait.id)
+            markers.current.delete(portrait.id)
           }
         }}
       />
