@@ -1,8 +1,12 @@
+// The padding keeps the text shadow’s blur inside the box that clips the overflowing title, with the offsets moving it back up.
+$shadow-room: 16px
+
 .container
   position: absolute
-  top: 56px
+  top: 56px - $shadow-room
   left: 50%
   max-width: calc(100% - 2rem)
+  padding: $shadow-room
   overflow: hidden
   color: #f2eee4
   font-size: 2rem
@@ -33,5 +37,5 @@
 
 @media (max-height: 600px)
   .container
-    top: 32px
+    top: 32px - $shadow-room
     font-size: 1.5rem
