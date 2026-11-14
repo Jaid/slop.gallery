@@ -1,0 +1,114 @@
+@use '../../style/colors'
+@use '../../style/ui'
+
+// In place of the pause menu’s map and main columns, beside the collection
+.container
+  grid-column: 1 / span 2
+  display: grid
+  grid-template-rows: clamp(240px, 44vh, 500px) auto
+  gap: 1.25rem
+  min-width: 0
+  text-align: left
+
+// The studio the work alone is shown in: a pool of light on a dark backdrop, which the transparent canvas in front of it lets through everywhere but on the model
+.stage
+  position: relative
+  overflow: hidden
+  border: 1px solid colors.$border
+  border-radius: 6px
+  background: radial-gradient(ellipse 75% 65% at 50% 38%, #3d3a34, #232220 55%, #141413)
+
+.canvas
+  position: absolute
+  inset: 0
+  cursor: grab
+  &:active
+    cursor: grabbing
+
+// A work the player hasn’t interacted with yet, at a third of its strength over the same backdrop
+.faded
+  opacity: 35%
+
+.loading
+  position: absolute
+  inset: 0
+  display: grid
+  place-items: center
+  margin: 0
+  color: colors.$muted
+  font-size: 0.85rem
+  pointer-events: none
+
+.stageButton
+  position: absolute
+  top: 0.75rem
+  z-index: 1
+  display: inline-flex
+  align-items: center
+  gap: 0.5rem
+  padding: 0.5rem 0.75rem
+  background: rgb(0 0 0 / 45%)
+  backdrop-filter: blur(4px)
+  font-size: 0.85rem
+  &:hover
+    background: rgb(0 0 0 / 60%)
+
+.back
+  left: 0.75rem
+
+.reset
+  right: 0.75rem
+
+.hint
+  position: absolute
+  right: 0
+  bottom: 0.6rem
+  left: 0
+  margin: 0
+  color: #fffc
+  font-size: 0.75rem
+  text-align: center
+  text-shadow: 0 1px 3px #000
+  pointer-events: none
+
+.details
+  min-width: 0
+
+.status
+  @include ui.eyebrow
+  margin: 0
+
+.title
+  margin: 0.4rem 0 0
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem)
+  overflow-wrap: anywhere
+  &:focus
+    outline: none
+
+.description
+  max-height: 22vh
+  overflow-y: auto
+  overscroll-behavior: contain
+  scrollbar-width: thin
+  scrollbar-color: #fff3 transparent
+  margin: 0.75rem 0 0
+  font-size: 0.9rem
+  line-height: 1.7
+  white-space: pre-line
+  overflow-wrap: anywhere
+  user-select: text
+
+.missing
+  color: colors.$muted
+
+.facts
+  display: grid
+  grid-template-columns: repeat(3, minmax(0, 1fr))
+  gap: 1rem
+  margin: 1.25rem 0 0
+  dt
+    @include ui.eyebrow
+  dd
+    margin: 0.3rem 0 0
+    overflow-wrap: anywhere
+    user-select: text

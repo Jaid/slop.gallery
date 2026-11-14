@@ -11,7 +11,7 @@
   // A tooltip opens soon after the pointer rests on a work and leaves with it.
   interest-delay: 0.2s 0.1s
   transition: scale 0.12s, box-shadow 0.12s
-  &:hover:not(.locked), &:focus-visible, &.chosen
+  &:hover, &:focus-visible, &.chosen
     scale: 1.05
     box-shadow: 0 0 0 1px #fff9
   // A work the player has not interacted with yet stays faint and pale.
@@ -19,11 +19,7 @@
     filter: saturate(50%)
     opacity: 20%
 
-// A default work the player has not interacted with yet, which offers nothing to do with it
-.locked
-  cursor: default
-
-// The work its open menu or its pinned tooltip is about
+// The work its open menu or its spectation view is about
 .chosen
   outline: 2px solid colors.$accent
   outline-offset: 2px

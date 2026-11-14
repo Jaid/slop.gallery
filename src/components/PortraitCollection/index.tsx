@@ -49,11 +49,18 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
   },
 ]
 
+export type PortraitCollectionProps = {
+  /** Called with the id of the work the player left-clicked, spectated or not. */
+  onSelect?: (id: string) => void
+  /** the id of the work the spectation view is showing, if any */
+  selectedId?: string
+}
+
 /**
  * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie.
- * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
+ * Left-clicking one calls `onSelect` with its id, which the pause menu spectates it by. Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
  */
-export default function PortraitCollection() {
+export default function PortraitCollection({onSelect, selectedId}: PortraitCollectionProps) {
   const portraits = useGallery(s => s.portraits)
   const [menu, setMenu] = useState<{
     id: string
@@ -68,11 +75,11 @@ export default function PortraitCollection() {
       <ul className={css.grid}>
         {portraits.map(portrait => <li key={portrait.id} className={css.cell}>
           <PortraitCollectionItem
-            menuOpen={portrait === chosen} portrait={portrait} onMenu={(x, y) => setMenu({
+            menuOpen={portrait === chosen} portrait={portrait} selected={portrait.id === selectedId} onMenu={(x, y) => setMenu({
               id: portrait.id,
               x,
               y,
-            })}
+            })} onSelect={onSelect ? () => onSelect(portrait.id) : undefined}
           />
         </li>)}
       </ul>
