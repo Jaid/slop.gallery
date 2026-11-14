@@ -20,7 +20,7 @@ export type PortraitCollectionItemProps = {
 
 /**
  * A work of the collection as a small image in the shape of its frame, which opens the work’s menu.
- * Once the player has interacted with the work in the world, showing interest in it by hovering or focusing it also tells what the gallery knows about it; until then, it stays gray and keeps even its title to itself.
+ * Once the player has interacted with the work in the world, showing interest in it by hovering or focusing it also tells what the gallery knows about it; until then, it stays faint and pale and keeps even its title to itself.
  * A default work the player hasn’t interacted with yet offers no menu at all, only works that arrived since, which the player brought in, do from the start.
  */
 export default function PortraitCollectionItem({menuOpen = false, onMenu, portrait: p}: PortraitCollectionItemProps) {

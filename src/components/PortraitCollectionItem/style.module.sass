@@ -14,9 +14,10 @@
   &:hover:not(.locked), &:focus-visible, &.chosen
     scale: 1.05
     box-shadow: 0 0 0 1px #fff9
-  // A work the player has not interacted with yet stays gray.
+  // A work the player has not interacted with yet stays faint and pale.
   &:not(.known) .image
-    filter: grayscale(100%) brightness(80%)
+    filter: saturate(50%)
+    opacity: 20%
 
 // A default work the player has not interacted with yet, which offers nothing to do with it
 .locked
