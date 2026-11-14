@@ -1,0 +1,80 @@
+import type {ContextMenuItem} from '#component/ContextMenu'
+import type {Portrait} from '#src/lib/gallery.ts'
+import type {PortraitImageFormat} from '#src/lib/gallery/portraitExport.ts'
+
+import Branch from 'branch-component'
+import {useEffect, useState} from 'react'
+
+import ContextMenu from '#component/ContextMenu'
+import PortraitCollectionItem from '#component/PortraitCollectionItem'
+import artworkThumbnails from '#src/lib/artworkThumbnails.ts'
+import {notify, useGallery} from '#src/lib/gallery.ts'
+import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
+
+import css from './style.module.sass'
+
+const save = (portrait: Portrait, format: PortraitImageFormat) => {
+  void exportPortrait(portrait, format).catch((error: unknown) => {
+    console.warn(`“${portrait.title}” could not be exported.`, error)
+    notify(`“${portrait.title}” could not be exported.`)
+  })
+}
+const copy = (portrait: Portrait) => {
+  void copyPortrait(portrait).then(() => notify(`“${portrait.title}” was copied to the clipboard.`), (error: unknown) => {
+    console.warn(`“${portrait.title}” could not be copied to the clipboard.`, error)
+    notify(`“${portrait.title}” could not be copied to the clipboard.`)
+  })
+}
+/** what the menu of a work offers: its image, without its frame, as a file or on the clipboard */
+const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
+  {
+    id: 'export-png',
+    icon: 'download',
+    label: 'Export as PNG',
+    onSelect: () => save(portrait, 'png'),
+  },
+  {
+    id: 'export-webp',
+    icon: 'download',
+    label: 'Export as WebP',
+    onSelect: () => save(portrait, 'webp'),
+  },
+  {
+    id: 'copy',
+    icon: 'copy',
+    label: 'Copy to clipboard',
+    onSelect: () => copy(portrait),
+  },
+]
+
+/**
+ * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie.
+ * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}.
+ */
+export default function PortraitCollection() {
+  const portraits = useGallery(s => s.portraits)
+  const [menu, setMenu] = useState<{
+    id: string
+    x: number
+    y: number
+  } | null>(null)
+  // Works that left, like one a fusion used up, take their thumbnails with them.
+  useEffect(() => artworkThumbnails.retain(portraits.map(portrait => portrait.source)), [portraits])
+  const chosen = menu ? portraits.find(portrait => portrait.id === menu.id) : undefined
+  return <section className={css.container} aria-label='Portrait collection' data-testid='portrait-collection'>
+    <Branch if={portraits.length} else={<p className={css.empty}>No works here yet. Drop an image anywhere to bring one in.</p>}>
+      <ul className={css.grid}>
+        {portraits.map(portrait => <li key={portrait.id} className={css.cell}>
+          <PortraitCollectionItem
+            menuOpen={portrait === chosen} portrait={portrait} onMenu={(x, y) => setMenu({
+              id: portrait.id,
+              x,
+              y,
+            })}
+          />
+        </li>)}
+      </ul>
+    </Branch>
+    <Branch if={chosen}><ContextMenu items={menuItems(chosen!)} label={`Image of “${chosen?.title}”`} x={menu?.x ?? 0} y={menu?.y ?? 0} onClose={() => setMenu(null)} /></Branch>
+  </section>
+}

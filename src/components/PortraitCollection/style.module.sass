@@ -1,0 +1,33 @@
+@use '../../style/ui'
+
+.container
+  min-width: 0
+  // Room for the works at its edges to grow under the pointer and for their focus rings
+  padding: 1rem 0.5rem
+  max-height: 80vh
+  overflow-y: auto
+  overscroll-behavior: contain
+  scrollbar-width: thin
+  scrollbar-color: #fff3 transparent
+  // Works scrolled out of view fade away at its top and bottom, beyond the reach of the focus rings.
+  mask-image: linear-gradient(transparent, #000 0.5rem, #000 calc(100% - 0.5rem), transparent)
+
+.grid
+  display: grid
+  grid-template-columns: repeat(4, minmax(0, 1fr))
+  gap: 0.75rem
+  margin: 0
+  padding: 0
+  list-style: none
+
+// A square the work lies in the middle of, in the shape of its frame
+.cell
+  display: grid
+  place-items: center
+  aspect-ratio: 1
+  min-width: 0
+
+.empty
+  @include ui.copy
+  margin: 0
+  text-align: center
