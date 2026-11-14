@@ -303,6 +303,8 @@ const relations = {
         'wall_west_4',
         'wall_east_north',
         'wall_east_south',
+        'wall_north_west',
+        'wall_north_east',
         'spotlight',
         'planet_glow',
         'ember',

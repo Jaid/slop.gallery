@@ -1,31 +1,24 @@
+import type {MoonfallWallLed} from '#src/lib/gallery/moonfall/fixtures.ts'
 import type {Lamp} from '../base/Room.ts'
 
-import moonfallWallFixtures from '#src/lib/gallery/moonfall/fixtures.ts'
+import moonfallWallLeds from '#src/lib/gallery/moonfall/fixtures.ts'
 
-const [west, east] = moonfallWallFixtures
-/** 60 cm in front of the wall LED’s housing at `z` on the side’s wall */
-const wallLed = ({side, lightX}: typeof west, z: number, y: number, lamp: Pick<Lamp, 'range' | 'strength'>) => ({
+/** 60 cm in front of the wall LED’s housing, `lift` over its middle */
+const wallLed = ({position: [x, y, z], inward: [inwardX, inwardZ]}: MoonfallWallLed, lift: number, lamp: Pick<Lamp, 'range' | 'strength'>) => ({
   ...lamp,
-  position: [lightX - side * 0.6, y, z],
+  position: [x + inwardX * 0.6, y + lift, z + inwardZ * 0.6],
   tint: '#91c9c4',
 }) satisfies Lamp
-const [north, south] = east.lightZs
 
 export default {
-  // Four wall LEDs down the west wall, leaving its middle dark.
-  ...Object.fromEntries(west.lightZs.map((z, index) => [`wall_west_${index + 1}`, wallLed(west, z, 2.8, {
+  // The four down the west wall shine dim from over their middles, the pairs flanking the openings lower and brighter.
+  ...Object.fromEntries(moonfallWallLeds.map(led => [led.id, led.wall === 'west' ? wallLed(led, 0.6, {
     strength: 5,
     range: 6,
+  }) : wallLed(led, 0, {
+    strength: 15,
+    range: 10,
   })])),
-  // On the east only the pair flanking the stair door, hanging lower and brighter.
-  wall_east_north: wallLed(east, north, 2.2, {
-    strength: 15,
-    range: 10,
-  }),
-  wall_east_south: wallLed(east, south, 2.2, {
-    strength: 15,
-    range: 10,
-  }),
   spotlight: {
     kind: 'spot',
     position: [-7, 3.3, -4],
