@@ -22,7 +22,7 @@ import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import {registerOrbitable} from '#src/lib/gallery/orbitables.ts'
 import GrabbableBody from '#src/lib/physics/GrabbableBody.ts'
 import {bodyThrow, clearBodyThrow} from '#src/lib/physics/ThrowState.ts'
-import {snapshotObject} from '#src/lib/rendering/StudioSnapshotRenderer.ts'
+import {snapshotObject} from '#src/lib/rendering/studio/StudioSnapshotRenderer.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 
 export type PropHandle = {

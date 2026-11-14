@@ -1,8 +1,8 @@
 import {BoxGeometry, Euler, Group, Mesh, MeshBasicNodeMaterial, PerspectiveCamera, RenderTarget, Scene, SphereGeometry, WebGPURenderer} from 'three/webgpu'
 
 import gold from '../../src/lib/materials/gold.ts'
-import {backdropLightness, gray, snapshotSize, snapshotWindow} from '../../src/lib/rendering/studioSnapshot.ts'
-import StudioSnapshotRenderer from '../../src/lib/rendering/StudioSnapshotRenderer.ts'
+import {backdropLightness, gray, snapshotSize, snapshotWindow} from '../../src/lib/rendering/studio/studioSnapshot.ts'
+import StudioSnapshotRenderer from '../../src/lib/rendering/studio/StudioSnapshotRenderer.ts'
 
 /**
  * Photographs a gold apple with the studio after the gallery’s own kind of renderer has drawn its shared gold, like a throw in the game does, and checks the WebP: nothing but the backdrop outside the 960 px window, the object reaching its edge, and the gray contrasting with the object: dark behind a white ball, light behind a charcoal one.

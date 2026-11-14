@@ -2,7 +2,7 @@ import {describe, expect, test} from 'bun:test'
 
 import {Box3, BoxGeometry, Group, Mesh, MeshBasicMaterial, PerspectiveCamera, Sphere, SphereGeometry, TorusGeometry, Vector3} from 'three/webgpu'
 
-import {averageLightness, backdropFor, backdropLightness, fallbackBackdrop, frameObject, gray, lightnessOf, snapshotFov, snapshotSize, snapshotWindow} from '../../src/lib/rendering/studioSnapshot.ts'
+import {averageLightness, backdropFor, backdropLightness, fallbackBackdrop, frameObject, gray, lightnessOf, snapshotFov, snapshotSize, snapshotWindow} from '../../src/lib/rendering/studio/studioSnapshot.ts'
 
 const material = new MeshBasicMaterial
 /** the projections of every vertex of `object` seen by `camera`, in pixels: the farthest from the image center on either axis and the midpoints of the projected x and y ranges */
