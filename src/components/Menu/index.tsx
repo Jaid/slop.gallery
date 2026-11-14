@@ -3,7 +3,7 @@ import type {PauseMenuStage} from 'use-pause-menu'
 
 import Branch from 'branch-component'
 import clsx from 'clsx'
-import {useEffect, useRef} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import useGraphicsMode from 'use-graphics-mode'
 import usePauseMenu from 'use-pause-menu'
 
@@ -13,6 +13,7 @@ import MenuOptions from '#component/MenuOptions'
 import Minimap from '#component/Minimap'
 import OpenRouterConnection from '#component/OpenRouterConnection'
 import PortraitCollection from '#component/PortraitCollection'
+import PortraitSpectation from '#component/PortraitSpectation'
 import icon from '#root/assets/icon.svg'
 import {enterGallery, useGallery} from '#src/lib/gallery.ts'
 import {useIntro} from '#src/lib/gallery/intro.ts'
@@ -30,11 +31,31 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
   const paused = stage === 'pause'
   const tagline = paused ? world.roomTagline(room) : world.tagline
   const heading = useRef<HTMLHeadingElement>(null)
+  const [spectatedId, setSpectatedId] = useState<string | null>(null)
+  const spectated = paused && spectatedId ? s.portraits.find(portrait => portrait.id === spectatedId) ?? null : null
   // Until the player first enters, the menu leaves the intro in full view: the title above it, the buttons below.
   const intro = useIntro(state => state.orbit !== null) && (stage === 'first' || stage === 'return')
   useEffect(() => {
     heading.current?.focus({preventScroll: true})
   }, [])
+  useEffect(() => pauseMenu.subscribe(() => {
+    if (pauseMenu.getSnapshot().stage !== 'pause') {
+      setSpectatedId(null)
+    }
+  }), [])
+  useEffect(() => {
+    if (!spectated) {
+      return
+    }
+    const keydown = (event: KeyboardEvent) => {
+      if (event.code === 'Escape' && !event.defaultPrevented && !document.querySelector(':popover-open')) {
+        event.preventDefault()
+        setSpectatedId(null)
+      }
+    }
+    globalThis.addEventListener('keydown', keydown)
+    return () => globalThis.removeEventListener('keydown', keydown)
+  }, [spectated])
   if (intro) {
     return <section className={clsx(css.container, css.intro, isHeavy && css.heavy)} aria-labelledby='menu-title' data-stage={stage} data-testid='menu-overlay'>
       <header className={css.header}>
@@ -50,22 +71,32 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
       </div>
     </section>
   }
-  return <section className={css.container} aria-labelledby='menu-title' data-stage={stage} data-testid='menu-overlay'>
+  return <section className={css.container} aria-label={spectated ? 'Portrait spectation' : undefined} aria-labelledby={spectated ? undefined : 'menu-title'} data-stage={stage} data-testid='menu-overlay'>
     <div className={css.layout}>
-      {/* The pause menu’s sides: the map of the floor the player is on, and every work in the world. */}
-      <Branch if={paused} then={Minimap} />
-      <div className={css.content}>
-        <h1 id='menu-title' tabIndex={-1} ref={heading}><Branch if={paused} then={room.title} else={world.title} /></h1>
-        <Branch not={stage === 'unfocus'}><p className={css.tagline}>{tagline}</p></Branch>
-        <button id='enter-gallery' className={css.enter} disabled={!s.ready} type='button' onClick={stage === 'reset' ? startNewGame : enterGallery}>{enterButtonLabel(s.ready, stage)}<Icon name='arrow' size={18} /></button>
-        <Branch if={stage === 'return'}><button className={css.newGame} disabled={!s.ready} type='button' onClick={startNewGame}>Reroll seed</button></Branch>
-        <Branch not={stage === 'unfocus'}>
-          <MenuOptions />
-          <Branch if={settings.available}><OpenRouterConnection {...settings} /></Branch>
-          <MenuNarration />
-        </Branch>
-      </div>
-      <Branch if={paused} then={PortraitCollection} />
+      {/* The pause menu’s sides: the map of the floor the player is on (or the spectated portrait across both left columns), and every work in the world. */}
+      <Branch if={paused && !spectated} then={Minimap} />
+      <Branch not={Boolean(spectated)}>
+        <div className={css.content}>
+          <h1 id='menu-title' tabIndex={-1} ref={heading}><Branch if={paused} then={room.title} else={world.title} /></h1>
+          <Branch not={stage === 'unfocus'}><p className={css.tagline}>{tagline}</p></Branch>
+          <button id='enter-gallery' className={css.enter} disabled={!s.ready} type='button' onClick={stage === 'reset' ? startNewGame : enterGallery}>{enterButtonLabel(s.ready, stage)}<Icon name='arrow' size={18} /></button>
+          <Branch if={stage === 'return'}><button className={css.newGame} disabled={!s.ready} type='button' onClick={startNewGame}>Reroll seed</button></Branch>
+          <Branch not={stage === 'unfocus'}>
+            <MenuOptions />
+            <Branch if={settings.available}><OpenRouterConnection {...settings} /></Branch>
+            <MenuNarration />
+          </Branch>
+        </div>
+      </Branch>
+      <Branch if={Boolean(spectated)}>
+        <PortraitSpectation portrait={spectated!} onClose={() => setSpectatedId(null)} />
+      </Branch>
+      <Branch if={paused}>
+        <PortraitCollection
+          selectedId={spectated?.id ?? null}
+          onSelect={portrait => setSpectatedId(current => (current === portrait.id ? null : portrait.id))}
+        />
+      </Branch>
     </div>
   </section>
 }

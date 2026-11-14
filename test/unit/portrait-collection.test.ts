@@ -7,11 +7,14 @@ import {renderToStaticMarkup} from 'react-dom/server'
 
 import ContextMenu from '#component/ContextMenu'
 import PortraitCollection from '#component/PortraitCollection'
+import PortraitSpectation from '#component/PortraitSpectation'
 import PortraitTooltip from '#component/PortraitTooltip'
 
 import {ArtworkThumbnails, makeThumbnail, thumbnailSize} from '../../src/lib/artworkThumbnails.ts'
 import {copyPortrait, portraitFileName, portraitImage} from '../../src/lib/gallery/portraitExport.ts'
+import {portraitRoomTitle} from '../../src/lib/gallery/portraitRoom.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
+import slopGallery from '../../src/worlds/gallery/index.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
 const initial = {...useGallery.getInitialState()}
@@ -118,7 +121,7 @@ afterEach(() => {
   Object.assign(useGallery.getInitialState(), initial)
 })
 describe('portrait collection', () => {
-  test('shows every work in the world in the shape of its frame, as a button named after it once interacted with', () => {
+  test('shows every work in the world in the shape of its frame as a button, named after it once interacted with', () => {
     const portraits = initial.portraits.map((portrait, index) => ({
       ...portrait,
       interacted: index % 2 === 0,
@@ -130,7 +133,7 @@ describe('portrait collection', () => {
     for (const portrait of portraits) {
       const work = workOf(html, portrait.id)
       expect(work).toContain(`aspect-ratio:${portrait.width} / ${portrait.height}`)
-      expect(work).toStartWith(portrait.interacted ? '<button' : '<div')
+      expect(work).toStartWith('<button')
       expect(work).toContain(`aria-label="${portrait.interacted ? portrait.title : 'Untouched work'}"`)
     }
     // No menu is open before the player asks for one.
@@ -161,23 +164,21 @@ describe('portrait collection', () => {
       expect(workOf(html, id)).toBeString()
     }
   })
-  test('a default work the player hasn’t interacted with yet offers no menu at all, while one that arrived since does from the start', () => {
+  test('a default work the player hasn’t interacted with yet can be spectated on click, while offering no context menu; one that arrived since offers both', () => {
     const untouched = samplePortraits[0]
     const arrival = {
       ...samplePortraits[1],
       imported: true,
     }
     const html = render([untouched, arrival])
-    const work = workOf(html, untouched.id)!
-    expect(work).toStartWith('<div')
-    expect(work).toContain('role="img"')
+    const work = itemOf(html, untouched.id)!
+    expect(work).toStartWith('<button')
     expect(work).not.toContain('aria-haspopup')
-    expect(itemOf(html, untouched.id)).toBeUndefined()
+    expect(work).toContain('aria-pressed="false"')
     // Its title stays hidden until the player meets it, but the player brought it in.
     expect(itemOf(html, arrival.id)).toContain('aria-haspopup="menu"')
     expect(itemOf(html, arrival.id)).toContain('aria-label="Untouched work"')
-    // Without a tooltip, a click has nothing to pin.
-    expect(itemOf(html, arrival.id)).not.toContain('aria-pressed')
+    expect(itemOf(html, arrival.id)).toContain('aria-pressed="false"')
     expect(html).not.toContain(arrival.title)
   })
   test('only a work the player has interacted with has a tooltip, with its title, description, creator and year', () => {
@@ -191,7 +192,6 @@ describe('portrait collection', () => {
     const tooltipId = /\binterestfor="([^"]+)"/u.exec(itemOf(html, known.id)!)?.[1]
     expect(tooltipId).toBeString()
     expect(itemOf(html, known.id)).toContain('data-interacted="true"')
-    // A click pins the tooltip instead of opening the menu.
     expect(itemOf(html, known.id)).toContain('aria-pressed="false"')
     const tooltips = html.match(/<div\b[^>]*popover="hint"[^>]*>.*?<\/div>/gu)!
     expect(tooltips).toHaveLength(1)
@@ -205,6 +205,13 @@ describe('portrait collection', () => {
     for (const value of [untouched.title, untouched.description, untouched.creator]) {
       expect(html).not.toContain(value)
     }
+  })
+  test('marks the spectated work as pressed', () => {
+    const html = renderToStaticMarkup(createElement(PortraitCollection, {
+      selectedId: initial.portraits[0].id,
+    }))
+    expect(itemOf(html, initial.portraits[0].id)).toContain('aria-pressed="true"')
+    expect(itemOf(html, initial.portraits[1].id)).toContain('aria-pressed="false"')
   })
   test('a pinned tooltip stays open as a popover of its own instead of a hint', () => {
     const portrait = samplePortraits[0]
@@ -468,5 +475,70 @@ describe('artwork thumbnails', () => {
     } finally {
       restore()
     }
+  })
+})
+describe('portrait spectation', () => {
+  test('shows the 3D canvas, title, flavor text, creator, year and current room, reducing canvas opacity for unvisited works', () => {
+    const oculusSlot = slopGallery.portraitSlots().find(slot => slot.wallId.startsWith('oculus-'))!
+    const visited = {
+      ...samplePortraits[0],
+      hung: true,
+      wallId: oculusSlot.wallId,
+      position: oculusSlot.position,
+      interacted: true,
+      year: 1924,
+    }
+    const unvisited = {
+      ...visited,
+      interacted: false,
+      year: undefined,
+    }
+    const visitedHtml = renderToStaticMarkup(createElement(PortraitSpectation, {
+      portrait: visited,
+      onClose: () => {},
+    }))
+    const unvisitedHtml = renderToStaticMarkup(createElement(PortraitSpectation, {
+      portrait: unvisited,
+      onClose: () => {},
+    }))
+    expect(visitedHtml).toContain('data-testid="portrait-spectation"')
+    expect(visitedHtml).toContain('data-interacted="true"')
+    expect(visitedHtml).toContain('<canvas')
+    expect(visitedHtml).toContain('aria-label="Close portrait view"')
+    for (const value of [visited.title, visited.description, visited.creator, '1924', 'Oculus']) {
+      expect(visitedHtml).toContain(value)
+    }
+    const visitedCanvas = /<div\b[^>]*data-testid="portrait-spectation-canvas"[^>]*>/u.exec(visitedHtml)?.[0]
+    const unvisitedCanvas = /<div\b[^>]*data-testid="portrait-spectation-canvas"[^>]*>/u.exec(unvisitedHtml)?.[0]
+    expect(visitedCanvas).not.toContain('unvisited')
+    expect(unvisitedCanvas).toContain('unvisited')
+    expect(unvisitedHtml).toContain('data-interacted="false"')
+    expect(unvisitedHtml).toContain('Undated')
+  })
+  test('resolves the current room for hung, loose, carried and passage works', () => {
+    const oculus = slopGallery.room('oculus')
+    const lobbySlot = slopGallery.portraitSlots().find(slot => slot.wallId.startsWith('lobby-'))!
+    expect(portraitRoomTitle({
+      ...samplePortraits[0],
+      hung: true,
+      wallId: lobbySlot.wallId,
+    })).toBe('Lobby')
+    expect(portraitRoomTitle({
+      ...samplePortraits[0],
+      hung: false,
+      wallId: undefined,
+      position: [oculus.center[0], oculus.floorY + 1, oculus.center[1]],
+    })).toBe('Oculus')
+    expect(portraitRoomTitle({
+      ...samplePortraits[0],
+      hung: false,
+      wallId: undefined,
+      position: [999, 0, 999],
+    })).toBe('Passage')
+    expect(portraitRoomTitle({
+      ...samplePortraits[0],
+      hung: true,
+      wallId: lobbySlot.wallId,
+    }, samplePortraits[0].id, 'banquet')).toBe('The Banquet')
   })
 })
