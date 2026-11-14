@@ -54,14 +54,18 @@ afterEach(() => {
   Object.assign(useGallery.getInitialState(), initial)
 })
 describe('portrait collection', () => {
-  test('shows every work in the world as a button named after it, in the shape of its frame', () => {
-    const html = render(initial.portraits)
-    expect(initial.portraits.length).toBeGreaterThan(0)
+  test('shows every work in the world as a button in the shape of its frame, named after it once interacted with', () => {
+    const portraits = initial.portraits.map((portrait, index) => ({
+      ...portrait,
+      interacted: index % 2 === 0,
+    }))
+    const html = render(portraits)
+    expect(portraits.length).toBeGreaterThan(1)
     expect(html).toContain('data-testid="portrait-collection"')
-    expect(html.match(/<li\b/gu)).toHaveLength(initial.portraits.length)
-    for (const portrait of initial.portraits) {
+    expect(html.match(/<li\b/gu)).toHaveLength(portraits.length)
+    for (const portrait of portraits) {
       const item = itemOf(html, portrait.id)
-      expect(item).toContain(`aria-label="${portrait.title}"`)
+      expect(item).toContain(`aria-label="${portrait.interacted ? portrait.title : 'Untouched work'}"`)
       expect(item).toContain('aria-haspopup="menu"')
       expect(item).toContain(`aspect-ratio:${portrait.width} / ${portrait.height}`)
     }
@@ -112,8 +116,10 @@ describe('portrait collection', () => {
     }
     expect(itemOf(html, untouched.id)).not.toContain('interestfor')
     expect(itemOf(html, untouched.id)).toContain('data-interacted="false"')
-    expect(html).not.toContain(untouched.description)
-    expect(html).not.toContain(untouched.creator)
+    // The untouched work gives away nothing of its plate, not even to assistive technology.
+    for (const value of [untouched.title, untouched.description, untouched.creator]) {
+      expect(html).not.toContain(value)
+    }
   })
   test('a tooltip tells a missing year apart from year zero', () => {
     expect(tooltip()).toContain('Undated')

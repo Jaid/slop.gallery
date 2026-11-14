@@ -20,7 +20,7 @@ export type PortraitCollectionItemProps = {
 
 /**
  * A work of the collection as a small image in the shape of its frame, which opens the work’s menu.
- * Once the player has interacted with the work in the world, showing interest in it by hovering or focusing it also tells what the gallery knows about it; until then, it stays gray.
+ * Once the player has interacted with the work in the world, showing interest in it by hovering or focusing it also tells what the gallery knows about it; until then, it stays gray and keeps even its title to itself.
  */
 export default function PortraitCollectionItem({menuOpen = false, onMenu, portrait: p}: PortraitCollectionItemProps) {
   const thumbnail = useArtworkThumbnail(p.source)
@@ -37,7 +37,7 @@ export default function PortraitCollectionItem({menuOpen = false, onMenu, portra
   }
   return <>
     <button
-      className={clsx(css.container, p.width < p.height ? css.tall : css.wide, known && css.known, menuOpen && css.chosen)} aria-expanded={menuOpen} aria-haspopup='menu' aria-label={p.title} data-interacted={known} data-portrait={p.id} interestfor={known ? tooltipId : undefined} style={{aspectRatio: `${p.width} / ${p.height}`}} type='button' onClick={handleClick} onContextMenu={event => {
+      className={clsx(css.container, p.width < p.height ? css.tall : css.wide, known && css.known, menuOpen && css.chosen)} aria-expanded={menuOpen} aria-haspopup='menu' aria-label={known ? p.title : 'Untouched work'} data-interacted={known} data-portrait={p.id} interestfor={known ? tooltipId : undefined} style={{aspectRatio: `${p.width} / ${p.height}`}} type='button' onClick={handleClick} onContextMenu={event => {
         event.preventDefault()
         onMenu(event.clientX, event.clientY)
       }}

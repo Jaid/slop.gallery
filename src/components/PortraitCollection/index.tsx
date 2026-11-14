@@ -13,16 +13,18 @@ import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
 
 import css from './style.module.sass'
 
+/** What the menu and its messages call a work: by its title only once the player has interacted with it, like its tooltip. */
+const called = (portrait: Portrait) => (portrait.interacted ? `“${portrait.title}”` : 'The untouched work')
 const save = (portrait: Portrait, format: PortraitImageFormat) => {
   void exportPortrait(portrait, format).catch((error: unknown) => {
     console.warn(`“${portrait.title}” could not be exported.`, error)
-    notify(`“${portrait.title}” could not be exported.`)
+    notify(`${called(portrait)} could not be exported.`)
   })
 }
 const copy = (portrait: Portrait) => {
-  void copyPortrait(portrait).then(() => notify(`“${portrait.title}” was copied to the clipboard.`), (error: unknown) => {
+  void copyPortrait(portrait).then(() => notify(`${called(portrait)} was copied to the clipboard.`), (error: unknown) => {
     console.warn(`“${portrait.title}” could not be copied to the clipboard.`, error)
-    notify(`“${portrait.title}” could not be copied to the clipboard.`)
+    notify(`${called(portrait)} could not be copied to the clipboard.`)
   })
 }
 /** what the menu of a work offers: its image, without its frame, as a file or on the clipboard */
@@ -75,6 +77,6 @@ export default function PortraitCollection() {
         </li>)}
       </ul>
     </Branch>
-    <Branch if={chosen}><ContextMenu items={menuItems(chosen!)} label={`Image of “${chosen?.title}”`} x={menu?.x ?? 0} y={menu?.y ?? 0} onClose={() => setMenu(null)} /></Branch>
+    <Branch if={chosen}><ContextMenu items={menuItems(chosen!)} label={chosen?.interacted ? `Image of “${chosen.title}”` : 'Image of an untouched work'} x={menu?.x ?? 0} y={menu?.y ?? 0} onClose={() => setMenu(null)} /></Branch>
   </section>
 }
