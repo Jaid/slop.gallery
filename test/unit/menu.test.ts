@@ -10,7 +10,8 @@ import {GraphicsModeProvider} from 'use-graphics-mode'
 import Menu from '#component/Menu'
 
 import {readAiSettings} from '../../src/lib/ai/settings.ts'
-import {setApiKey, toggleSound} from '../../src/lib/gallery/actions.ts'
+import {cameraPose, setApiKey, toggleSound} from '../../src/lib/gallery/actions.ts'
+import {climbApex} from '../../src/lib/gallery/climb.ts'
 import {useIntro} from '../../src/lib/gallery/intro.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import {startNewGame} from '../../src/lib/gameSeed.ts'
@@ -124,10 +125,14 @@ test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('renders th
     expect(html.includes('data-testid="minimap"')).toBe(stage === 'pause')
     expect(html.includes('Reroll seed')).toBe(stage === 'return' || stage === 'reset')
     expect(html.includes('Your position')).toBe(stage === 'pause')
+    expect(html.includes('data-testid="portrait-collection"')).toBe(stage === 'pause')
     if (stage === 'pause') {
-      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(2)
-      expect(html.indexOf('aria-label="Upper gallery map"')).toBeLessThan(html.indexOf('id="menu-title"'))
-      expect(html.indexOf('aria-label="Lower gallery map"')).toBeGreaterThan(html.indexOf('id="openrouter-title"'))
+      // The map of the player’s floor on one side, every work in the world on the other.
+      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(1)
+      expect(html.match(/<svg\b[^>]*aria-label="(?:Lower|Upper) gallery minimap"/gu)).toHaveLength(1)
+      expect(html.indexOf('data-testid="minimap"')).toBeLessThan(html.indexOf('id="menu-title"'))
+      expect(html.indexOf('data-testid="portrait-collection"')).toBeGreaterThan(html.indexOf('id="openrouter-title"'))
+      expect(html.match(/<button\b[^>]*data-portrait=/gu)).toHaveLength(useGallery.getInitialState().portraits.length)
     }
     expect(html.includes('OpenRouter')).toBe(stage !== 'unfocus')
     expect(html.includes('Mute audio')).toBe(stage !== 'unfocus')
@@ -187,6 +192,12 @@ test.each(['lobby', 'oculus'] as const)('pause heading identifies the %s room an
     }))
     expect(html).toContain(room === 'lobby' ? '>Lobby</h1>' : '>Oculus</h1>')
     expect(html).toContain(room === 'lobby' ? '>upper floor room</p>' : '>lower floor room</p>')
+    // Only the map of the floor the player is on shows.
+    expect(html.match(/data-testid="minimap"/gu)).toHaveLength(1)
+    expect(html).toContain(room === 'lobby' ? 'aria-label="Upper gallery map"' : 'aria-label="Lower gallery map"')
+    expect(html).toContain(room === 'lobby' ? 'aria-label="Upper gallery minimap"' : 'aria-label="Lower gallery minimap"')
+    expect(html).not.toContain(room === 'lobby' ? 'Lower gallery' : 'Upper gallery')
+    expect(html.match(/<path[^>]+aria-label="Your position"[^>]*>/gu)).toEqual([expect.stringContaining('display="inline"')])
     expect(html).not.toContain('>Slop Gallery</h1>')
     expect(html).not.toContain('Good taste.')
   } finally {
@@ -229,6 +240,41 @@ test.each(['first', 'return'] as const)('the %s menu stage leaves the intro in v
     snapshot.mockRestore()
     Object.assign(useGallery.getInitialState(), initial)
     Object.assign(useIntro.getInitialState(), {orbit: null})
+  }
+})
+test('the pause menu’s map follows the player where a room climbs to the floor above', () => {
+  const initial = {...useGallery.getInitialState()}
+  const pose = cameraPose.position
+  const snapshot = spyOn(pauseMenu, 'getServerSnapshot').mockReturnValue({
+    stage: 'pause',
+    locked: false,
+  })
+  Object.assign(useGallery.getInitialState(), {room: 'bastion'})
+  const [apexX, apexZ] = climbApex.point
+  try {
+    // On the Bastion’s hairpin just short of its apex and just past it, see the minimap’s own tests.
+    for (const [position, label] of [
+      [[apexX - 0.3, -2 + 1.62, apexZ], 'Lower gallery map'],
+      [[apexX + 0.3, -1.9 + 1.62, apexZ], 'Upper gallery map'],
+    ] as const) {
+      cameraPose.position = [...position]
+      const html = renderToStaticMarkup(createElement(GraphicsModeProvider, {
+        isHeavy: true,
+        onChange: () => {},
+        children: createElement(Menu, {
+          available: true,
+          params: readAiSettings(),
+          setParams: () => {},
+        }),
+      }))
+      expect(html.match(/data-testid="minimap"/gu)).toHaveLength(1)
+      expect(html).toContain(`aria-label="${label}"`)
+      expect(html).toContain('>The Bastion</h1>')
+    }
+  } finally {
+    cameraPose.position = pose
+    snapshot.mockRestore()
+    Object.assign(useGallery.getInitialState(), initial)
   }
 })
 test('the pause menu after the intro keeps the OpenRouter section', () => {

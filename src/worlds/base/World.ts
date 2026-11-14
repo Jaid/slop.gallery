@@ -42,7 +42,7 @@ export default abstract class World<Kind extends Room = Room> {
   abstract readonly id: WorldId
   /** where the camera circles behind the first menu until the player first enters, there and then taking over the camera’s pose, or undefined for none, the default */
   readonly introOrbit: IntroOrbit | undefined = undefined
-  /** the map of the world in the pause menu, once for its lower floors and once for its upper ones */
+  /** the map of one floor of the world, its lower floors or its upper ones, of which the pause menu shows the one the player is on, see {@link isLowerFloor} */
   abstract readonly Minimap: ComponentType<{lower: boolean}>
   /** whether the welcome narration may play once the player first looks around */
   readonly narratesIntroduction: boolean = false
@@ -128,6 +128,18 @@ export default abstract class World<Kind extends Room = Room> {
   /** What the ground under the position sounds like in the room the player is in. */
   groundSurface(room: string, position: Vec3): GroundSurface {
     return this.roomById(room)?.groundSurface(position) ?? 'generic'
+  }
+
+  /**
+   * Whether a position in the room shows on the lower floor of the map: by the room’s floor, unless the floor under it lies in the part of the room that climbs to the floor above; a position outside of every room counts by its own height.
+   * A world whose rooms all lie on the ground has no lower floor.
+   */
+  isLowerFloor(room: PlacedRoom<Kind> | undefined, position: Vec3) {
+    if (!room) {
+      return position[1] < 0
+    }
+    const {floorY, upperMap} = room
+    return floorY < 0 && !(upperMap && this.floorHeight(position) >= floorY + upperMap.from)
   }
 
   /** The rooms the player must be in for the lamp to shine, or undefined for everywhere, the default. */

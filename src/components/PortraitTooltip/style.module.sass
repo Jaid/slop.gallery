@@ -1,0 +1,44 @@
+@use '../../style/colors'
+
+.container
+  // The button that names it in interestfor is its implicit anchor.
+  position-area: top
+  position-try-fallbacks: flip-block
+  inset: auto
+  margin: 0.5rem
+  width: max-content
+  max-width: min(22rem, calc(100vw - 1rem))
+  max-height: calc(100vh - 1rem)
+  overflow: hidden
+  padding: 0.85rem 1rem
+  border: 1px solid colors.$border
+  border-radius: 4px
+  background: colors.$surface
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 60%)
+  color: inherit
+  text-align: left
+  // The works under it stay in reach of the pointer.
+  pointer-events: none
+
+.title
+  margin: 0
+  font-size: 1.1rem
+  overflow-wrap: anywhere
+
+.description
+  // A long story ends in an ellipsis after a dozen lines.
+  display: -webkit-box
+  -webkit-box-orient: vertical
+  -webkit-line-clamp: 12
+  overflow: hidden
+  margin: 0.5rem 0 0
+  font-size: 0.8rem
+  line-height: 1.6
+  white-space: pre-line
+  overflow-wrap: anywhere
+
+.byline
+  margin: 0.65rem 0 0
+  color: colors.$muted
+  font-size: 0.75rem
+  overflow-wrap: anywhere

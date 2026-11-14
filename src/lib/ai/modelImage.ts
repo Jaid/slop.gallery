@@ -1,3 +1,5 @@
+import reencodeImage from '../reencodeImage.ts'
+
 /** the file signatures of the image formats every image model takes, each at its offset into the file */
 const signatures = {
   'image/png': [[0, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]]],
@@ -14,21 +16,7 @@ export function modelImageType(bytes: Uint8Array): ModelImageType | undefined {
 
 /** The image as a lossy WebP of the same size, decoded by the browser, which takes every format the page shows, like JXL and AVIF. */
 export async function toWebp(image: Blob): Promise<Blob> {
-  const bitmap = await createImageBitmap(image)
-  try {
-    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
-    const context = canvas.getContext('2d')
-    if (!context) {
-      throw new Error('Could not create a 2D canvas context to re-encode an image.')
-    }
-    context.drawImage(bitmap, 0, 0)
-    return await canvas.convertToBlob({
-      type: 'image/webp',
-      quality: 0.95,
-    })
-  } finally {
-    bitmap.close()
-  }
+  return reencodeImage(image, 'image/webp', 0.95)
 }
 
 /** The bytes of the image as an image model takes them: PNG, JPEG and WebP as they are, anything else re-encoded with `encode`, to WebP by default. */

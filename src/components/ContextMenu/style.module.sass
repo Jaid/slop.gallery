@@ -1,0 +1,34 @@
+@use '../../style/colors'
+
+.container
+  // The component places it at the pointer.
+  position: fixed
+  inset: auto
+  margin: 0
+  min-width: 11rem
+  padding: 0.25rem
+  border: 1px solid colors.$border
+  border-radius: 4px
+  background: colors.$surface
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 60%)
+  color: inherit
+  font-size: 0.8rem
+  user-select: none
+  &:popover-open
+    display: grid
+
+.item
+  display: flex
+  align-items: center
+  gap: 0.6rem
+  padding: 0.5rem 0.75rem 0.5rem 0.6rem
+  border-radius: 2px
+  text-align: left
+  white-space: nowrap
+  &:hover, &:focus-visible
+    background: #fff2
+  &:focus-visible
+    outline-offset: -2px
+  svg
+    flex: none
+    color: colors.$muted

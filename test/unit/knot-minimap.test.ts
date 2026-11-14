@@ -46,3 +46,6 @@ test('minimap viewBox and hall outline share the dynamically sized room', () => 
   expect(outline).toContain(`width="${knotGallerySize[0]}"`)
   expect(outline).toContain(`height="${knotGallerySize[2]}"`)
 })
+test('Knottingham has a single floor, so its map stays empty for the lower one', () => {
+  expect(renderToStaticMarkup(createElement(KnottinghamMinimap, {lower: true}))).toBe('')
+})

@@ -1,8 +1,8 @@
 import Branch from 'branch-component'
-import {knotBays} from 'knot-materials/exhibition.ts'
 
 import KnotStudyMap from '#component/KnotStudyMap'
 
+/** The exhibition hall with its Knots and the player in it, on the map’s upper side only, as Knottingham has a single floor. */
 export default function KnottinghamMinimap({lower}: {lower: boolean}) {
-  return <Branch if={lower} else={<KnotStudyMap compact />}><div><p>Knottingham · single level</p>{knotBays.map(bay => <p key={bay.candidate.id}>{bay.labels} · {bay.candidate.title}</p>)}</div></Branch>
+  return <Branch not={lower}><KnotStudyMap compact /></Branch>
 }

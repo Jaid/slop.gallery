@@ -11,6 +11,12 @@ const paths = {
     </>,
   arrow: <path d='M4 12h16m-6-6 6 6-6 6' />,
   close: <path d='m6 6 12 12M6 18 18 6' />,
+  download: <path d='M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14' />,
+  copy:
+    <>
+      <rect height='11' rx='1.5' width='11' x='9' y='9' />
+      <path d='M15 9V5.5A1.5 1.5 0 0 0 13.5 4h-8A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15H9' />
+    </>,
   check: <path d='m5 12.5 4.5 4.5L19 7' />,
   cross: <path d='m7 7 10 10M7 17 17 7' />,
   question:
@@ -21,8 +27,11 @@ const paths = {
 
 } satisfies Record<string, ReactNode>
 
+/** the name of one of the icons */
+export type IconName = keyof typeof paths
+
 export default function Icon({name, size = 20}: {
-  name: keyof typeof paths
+  name: IconName
   size?: number
 }) {
   return (
