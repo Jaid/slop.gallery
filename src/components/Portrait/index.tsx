@@ -5,12 +5,11 @@ import type {Group} from 'three/webgpu'
 import {useFrame} from '@react-three/fiber'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
-import useDisposable from 'disposable-lifetime/react'
-import {useEffect, useMemo, useRef} from 'react'
+import {useEffect, useRef} from 'react'
 import {Quaternion, Vector3} from 'three/webgpu'
 
-import DynamicImageMaterial from '#component/DynamicImageMaterial'
 import PortraitLabel from '#component/PortraitLabel'
+import PortraitModel from '#component/PortraitModel'
 import {frameBack} from '#src/frames/base/PortraitFrame.ts'
 import {portraitFrame} from '#src/frames/index.ts'
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
@@ -30,7 +29,6 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
   const w = p.width
   const h = p.height
   const frame = portraitFrame(p.frame)
-  const geometry = useDisposable(useMemo(() => frame.createGeometry(w, h), [frame, w, h]))
   useHanging(p, frame, held, art, placard)
   useEffect(() => {
     if (body.current && group.current) {
@@ -135,10 +133,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
     >
       {/* The frame and its image, which move on their own while the work arrives on its wall. */}
       <group ref={art}>
-        {/* Only a held work fades; hung ones stay opaque so the floor glass, which refracts opaque surfaces only, shows them in the room below. */}
-        <mesh castShadow geometry={geometry} material={held ? frame.heldMaterial : frame.materials} name='portrait-frame' receiveShadow />
-        {/* Shadows draw back faces only, so the frame’s backing board blocks the lights in front of the work and the image those behind it, which a loose work can turn its back to. */}
-        <mesh castShadow name='portrait-image' position={[0, 0, frame.imageDepth]}><planeGeometry args={[w, h]} /><DynamicImageMaterial opacity={held ? 0.3 : 1} source={p.source} toneMapped={false} transparent={held} /></mesh>
+        <PortraitModel held={held} portrait={p} />
       </group>
       {/* The placard hides while the work orbits a fusion’s portal. */}
       <group ref={placard}>

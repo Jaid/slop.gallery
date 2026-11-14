@@ -113,3 +113,12 @@ BROWSER=/path/to/chromium bun run test:live:spawn
 ```
 
 This builds the gallery and starts it once in every room with `?room`, each in a private headless browser without input. Every room but the Lobby streams in after the page, bringing its floors, so the physics waits for them; once none is loading anymore, the player has to stand grounded at the room’s spawn. It caught the physics hold reaching the scene too late, which let the player fall through the floors of a start room that had not mounted yet. `LIVE_TARGET` reuses a build like for the Oculus test.
+## Portrait pause-menu studio
+
+On a ready Vite gallery with at least two works, enter the game and open the **Escape** pause menu first. Unlike the passive shader fixtures, this one drives the menu and temporarily changes two works, then restores the collection:
+
+```sh
+BROWSER_TEST_ORIGIN=http://localhost:5173 bun test/browser/run.ts portraitSpectation.ts
+```
+
+It checks the actual frame materials and image texture, unknown/known opacity, metadata, keyboard orbit/zoom/reset, export gating, renderer reuse between works, focus restoration, live room updates, selected-work removal and renderer disposal/reopening. It measures **zero world draws during orbit** and **zero draws in either canvas at rest**. Native popover dismissal and pointer gestures need real browser input and are checked separately.
