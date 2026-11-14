@@ -22,10 +22,15 @@
   width: min(1500px, 100%)
   grid-template-columns: repeat(3, minmax(0, 1fr))
 
-// A narrow window stacks the map, the buttons and the collection instead of squeezing all three.
+// A narrow window stacks the buttons, the map and the collection instead of squeezing all three, the buttons first so Resume stays in reach and the map no wider than they are.
 @media (max-width: 900px)
   .container[data-stage='pause'] .layout
     grid-template-columns: minmax(0, 1fr)
+    > section:first-of-type
+      width: min(440px, 100%)
+      margin-inline: auto
+  .container[data-stage='pause'] .content
+    order: -1
 
 .content
   width: min(440px, 100%)

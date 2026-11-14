@@ -25,7 +25,6 @@ test('a long title’s slug stops at 80 characters and never ends on a dash', ()
   expect(fileName).not.toContain('-.png')
   expect(fileName).toEndWith('.png')
 })
-
 /** the browser parts an export touches, faked just far enough to watch it work */
 class FakeCanvas {
   static drawn: unknown
@@ -36,15 +35,15 @@ class FakeCanvas {
     this.width = width
     this.height = height
   }
+  convertToBlob({type}: {type: string}) {
+    return Promise.resolve(new Blob(['pixels'], {type: FakeCanvas.encodedType || type}))
+  }
   getContext() {
     return {
       drawImage: (image: unknown) => {
         FakeCanvas.drawn = image
       },
     }
-  }
-  convertToBlob({type}: {type: string}) {
-    return Promise.resolve(new Blob(['pixels'], {type: FakeCanvas.encodedType || type}))
   }
 }
 const bitmap = {
@@ -56,7 +55,7 @@ const bitmap = {
   },
 }
 const replaced = ['createImageBitmap', 'OffscreenCanvas', 'ClipboardItem', 'document', 'fetch', 'navigator'] as const
-const descriptors = new Map<string, PropertyDescriptor | undefined>()
+const descriptors = new Map<string, PropertyDescriptor | undefined>
 const replaceGlobal = (name: string, value: unknown) => {
   if (!descriptors.has(name)) {
     descriptors.set(name, Object.getOwnPropertyDescriptor(globalThis, name))
@@ -142,6 +141,7 @@ test('copying a work puts its PNG on the clipboard', async () => {
   expect(clipboard).toHaveLength(1)
   const item = (clipboard[0] as {items: Record<string, unknown>}).items
   expect(Object.keys(item)).toEqual(['image/png'])
-  expect(await (item['image/png'] as Promise<Blob>)).toBeInstanceOf(Blob)
-  expect((await (item['image/png'] as Promise<Blob>)).type).toBe('image/png')
+  const blob = await (item['image/png'] as Promise<Blob>)
+  expect(blob).toBeInstanceOf(Blob)
+  expect(blob.type).toBe('image/png')
 })

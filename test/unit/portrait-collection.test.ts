@@ -13,7 +13,6 @@ afterEach(() => {
   Object.assign(useGallery.getInitialState(), initial)
 })
 const render = () => renderToStaticMarkup(createElement(PortraitCollection))
-
 test('the collection grids every work of the world as a thumbnail tile, counting the interacted ones', () => {
   Object.assign(useGallery.getInitialState(), {portraits: samplePortraits})
   const html = render()
@@ -29,7 +28,6 @@ test('the collection grids every work of the world as a thumbnail tile, counting
   expect(html).toContain('width="256"')
   expect(html).toContain('height="256"')
 })
-
 test('only a work already interacted with carries its rich tooltip of name, flavor text, author and year', () => {
   const dated = {
     ...samplePortraits[0],
@@ -52,7 +50,8 @@ test('only a work already interacted with carries its rich tooltip of name, flav
     expect(html).toContain(`<span>${portrait.creator}</span>`)
     expect(html).toContain(`aria-label="${portrait.title} by ${portrait.creator}"`)
     // The tile names the tooltip it shows interest in, and that tooltip is in the page.
-    const tooltipId = new RegExp(`aria-label="${portrait.title} by ${portrait.creator}"[^>]*interestfor="([^"]+)"`, 'u').exec(html)?.[1]
+    const tilePattern = new RegExp(`aria-label="${portrait.title} by ${portrait.creator}"[^>]*interestfor="([^"]+)"`, 'u')
+    const tooltipId = tilePattern.exec(html)?.[1]
     expect(tooltipId).toBeString()
     expect(html).toMatch(new RegExp(`<div id="${tooltipId}"[^>]*data-testid="collection-tooltip"`, 'u'))
   }
@@ -66,7 +65,6 @@ test('only a work already interacted with carries its rich tooltip of name, flav
   expect(html.match(/interestfor=/gu)).toHaveLength(2)
   expect(html.match(/data-interacted="true"/gu)).toHaveLength(2)
 })
-
 test('a world without works says so instead of gridding nothing', () => {
   Object.assign(useGallery.getInitialState(), {portraits: []})
   const html = render()
