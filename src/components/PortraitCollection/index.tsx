@@ -51,9 +51,12 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
 
 /**
  * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie.
- * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
+ * Each opens the portrait studio on activation. Its right-click menu offers exports, except for a default work the player hasn’t interacted with yet.
  */
-export default function PortraitCollection() {
+export default function PortraitCollection({onInspect, selectedId}: {
+  onInspect: (id: string, button: HTMLButtonElement) => void
+  selectedId?: string
+}) {
   const portraits = useGallery(s => s.portraits)
   const [menu, setMenu] = useState<{
     id: string
@@ -68,7 +71,10 @@ export default function PortraitCollection() {
       <ul className={css.grid}>
         {portraits.map(portrait => <li key={portrait.id} className={css.cell}>
           <PortraitCollectionItem
-            menuOpen={portrait === chosen} portrait={portrait} onMenu={(x, y) => setMenu({
+            menuOpen={portrait === chosen} portrait={portrait} selected={portrait.id === selectedId} onInspect={button => {
+              setMenu(null)
+              onInspect(portrait.id, button)
+            }} onMenu={(x, y) => setMenu({
               id: portrait.id,
               x,
               y,

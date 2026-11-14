@@ -22,7 +22,7 @@ const jxl = new Uint8Array([0xFF, 0x0A, 0xFA, 0x1F, 0x19, 0])
 /** The collection’s markup with the given works in it. Server rendering reads the store’s initial state. */
 const render = (portraits: Array<Portrait>) => {
   Object.assign(useGallery.getInitialState(), {portraits})
-  return renderToStaticMarkup(createElement(PortraitCollection))
+  return renderToStaticMarkup(createElement(PortraitCollection, {onInspect: () => {}}))
 }
 /** The opening tag of the button of the work with the id. */
 const itemOf = (html: string, id: string) => {
@@ -130,7 +130,7 @@ describe('portrait collection', () => {
     for (const portrait of portraits) {
       const work = workOf(html, portrait.id)
       expect(work).toContain(`aspect-ratio:${portrait.width} / ${portrait.height}`)
-      expect(work).toStartWith(portrait.interacted ? '<button' : '<div')
+      expect(work).toStartWith('<button')
       expect(work).toContain(`aria-label="${portrait.interacted ? portrait.title : 'Untouched work'}"`)
     }
     // No menu is open before the player asks for one.
@@ -161,7 +161,7 @@ describe('portrait collection', () => {
       expect(workOf(html, id)).toBeString()
     }
   })
-  test('a default work the player hasn’t interacted with yet offers no menu at all, while one that arrived since does from the start', () => {
+  test('untouched default and imported works are inspectable buttons without revealing their titles in the grid', () => {
     const untouched = samplePortraits[0]
     const arrival = {
       ...samplePortraits[1],
@@ -169,15 +169,16 @@ describe('portrait collection', () => {
     }
     const html = render([untouched, arrival])
     const work = workOf(html, untouched.id)!
-    expect(work).toStartWith('<div')
-    expect(work).toContain('role="img"')
+    expect(work).toStartWith('<button')
+    expect(work).toContain('aria-pressed="false"')
     expect(work).not.toContain('aria-haspopup')
-    expect(itemOf(html, untouched.id)).toBeUndefined()
+    expect(itemOf(html, untouched.id)).toBeString()
     // Its title stays hidden until the player meets it, but the player brought it in.
-    expect(itemOf(html, arrival.id)).toContain('aria-haspopup="menu"')
+    // Left click opens the studio, not a menu.
+    expect(itemOf(html, arrival.id)).not.toContain('aria-haspopup')
     expect(itemOf(html, arrival.id)).toContain('aria-label="Untouched work"')
-    // Without a tooltip, a click has nothing to pin.
-    expect(itemOf(html, arrival.id)).not.toContain('aria-pressed')
+    // Even without a tooltip, a click can inspect it.
+    expect(itemOf(html, arrival.id)).toContain('aria-pressed="false"')
     expect(html).not.toContain(arrival.title)
   })
   test('only a work the player has interacted with has a tooltip, with its title, description, creator and year', () => {
@@ -191,7 +192,7 @@ describe('portrait collection', () => {
     const tooltipId = /\binterestfor="([^"]+)"/u.exec(itemOf(html, known.id)!)?.[1]
     expect(tooltipId).toBeString()
     expect(itemOf(html, known.id)).toContain('data-interacted="true"')
-    // A click pins the tooltip instead of opening the menu.
+    // A click opens the studio instead of pinning the tooltip.
     expect(itemOf(html, known.id)).toContain('aria-pressed="false"')
     const tooltips = html.match(/<div\b[^>]*popover="hint"[^>]*>.*?<\/div>/gu)!
     expect(tooltips).toHaveLength(1)
@@ -206,16 +207,19 @@ describe('portrait collection', () => {
       expect(html).not.toContain(value)
     }
   })
-  test('a pinned tooltip stays open as a popover of its own instead of a hint', () => {
-    const portrait = samplePortraits[0]
-    const pinned = renderToStaticMarkup(createElement(PortraitTooltip, {
-      id: 'tooltip',
-      portrait,
-      pinnedTo: {} as HTMLElement,
+  test('the selected work is marked and no longer offers a hover tooltip over its studio', () => {
+    const portrait = {
+      ...samplePortraits[0],
+      interacted: true,
+    }
+    Object.assign(useGallery.getInitialState(), {portraits: [portrait]})
+    const html = renderToStaticMarkup(createElement(PortraitCollection, {
+      onInspect: () => {},
+      selectedId: portrait.id,
     }))
-    expect(pinned).toMatch(/^<div\b[^>]*\bpopover="auto"/u)
-    expect(tooltip()).toMatch(/^<div\b[^>]*\bpopover="hint"/u)
-    expect(pinned).toContain(portrait.description)
+    expect(itemOf(html, portrait.id)).toContain('aria-pressed="true"')
+    expect(itemOf(html, portrait.id)).not.toContain('interestfor')
+    expect(html).not.toContain('popover=')
   })
   test('a tooltip tells a missing year apart from year zero', () => {
     expect(tooltip()).toContain('Undated')

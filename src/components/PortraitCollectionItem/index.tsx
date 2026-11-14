@@ -2,7 +2,7 @@ import type {Portrait} from '#src/lib/gallery.ts'
 
 import Branch from 'branch-component'
 import clsx from 'clsx'
-import {useId, useState} from 'react'
+import {useId} from 'react'
 
 import PortraitTooltip from '#component/PortraitTooltip'
 import useArtworkThumbnail from '#src/lib/useArtworkThumbnail.ts'
@@ -10,42 +10,43 @@ import useArtworkThumbnail from '#src/lib/useArtworkThumbnail.ts'
 import css from './style.module.sass'
 
 export type PortraitCollectionItemProps = {
-  /** whether the work’s menu is open, which marks the work it is about */
+  /** whether the work’s export menu is open */
   menuOpen?: boolean
-  /** Called with a point of the viewport as the player asks for the work’s menu there: by a right click or by the context menu key. */
+  /** Called by left click, Enter or Space to inspect the work, even before meeting it in the world. */
+  onInspect: (button: HTMLButtonElement) => void
+  /** Called with a viewport point by right click or the keyboard’s context-menu command. */
   onMenu: (x: number, y: number) => void
   portrait: Portrait
+  selected?: boolean
 }
 
-/**
- * A work of the collection as a small image in the shape of its frame, whose right click opens the work’s menu.
- * Once the player has interacted with the work in the world, showing interest in it by hovering or focusing it also tells what the gallery knows about it, and clicking it pins that tooltip, so its text can be selected and copied; until then, it stays faint and pale, keeps even its title to itself and does nothing on a click.
- * A default work the player hasn’t interacted with yet offers no menu at all, only works that arrived since, which the player brought in, do from the start.
- */
-export default function PortraitCollectionItem({menuOpen = false, onMenu, portrait: p}: PortraitCollectionItemProps) {
+/** Every work opens the studio on activation. Known works still offer a hover hint; only known or imported works offer exports, as before. */
+export default function PortraitCollectionItem({menuOpen = false, onInspect, onMenu, portrait: p, selected = false}: PortraitCollectionItemProps) {
   const thumbnail = useArtworkThumbnail(p.source)
   const tooltipId = useId()
-  // the button while it pins the tooltip
-  const [pinnedTo, setPinnedTo] = useState<HTMLElement>()
-  const pinned = pinnedTo !== undefined
   const known = Boolean(p.interacted)
-  const shape = clsx(css.container, p.width < p.height ? css.tall : css.wide, known && css.known, (menuOpen || pinned) && css.chosen)
-  const style = {aspectRatio: `${p.width} / ${p.height}`}
-  // Dragging it would offer the page its own image as a new arrival.
-  const image = <Branch if={thumbnail}><img className={css.image} alt='' draggable={false} src={thumbnail} /></Branch>
-  if (!known && !p.imported) {
-    // Not even the browser’s own menu, whose “Save image as…” would hand out its thumbnail.
-    return <div className={clsx(shape, css.locked)} aria-label='Untouched work' data-interacted={false} data-portrait={p.id} role='img' style={style} onContextMenu={event => event.preventDefault()}>{image}</div>
-  }
+  const canExport = known || p.imported
+  const shape = clsx(css.container, p.width < p.height ? css.tall : css.wide, known && css.known, (menuOpen || selected) && css.chosen)
   return <>
     <button
-      className={shape} aria-expanded={menuOpen} aria-haspopup='menu' aria-label={known ? p.title : 'Untouched work'} aria-pressed={known ? pinned : undefined} data-interacted={known} data-portrait={p.id} interestfor={known && !pinned ? tooltipId : undefined} style={style} type='button' onClick={known ? event => setPinnedTo(pinned ? undefined : event.currentTarget) : undefined} onContextMenu={event => {
+      className={shape} aria-label={known ? p.title : 'Untouched work'} aria-pressed={selected} data-interacted={known} data-portrait={p.id} interestfor={known && !selected && !menuOpen ? tooltipId : undefined} style={{aspectRatio: `${p.width} / ${p.height}`}} type='button' onClick={event => onInspect(event.currentTarget)} onContextMenu={event => {
         event.preventDefault()
-        onMenu(event.clientX, event.clientY)
+        if (canExport) {
+          onMenu(event.clientX, event.clientY)
+        }
+      }} onKeyDown={event => {
+        if (event.key === 'ContextMenu' || event.shiftKey && event.key === 'F10') {
+          event.preventDefault()
+          if (canExport) {
+            const rect = event.currentTarget.getBoundingClientRect()
+            onMenu(rect.left + rect.width / 2, rect.top + rect.height / 2)
+          }
+        }
       }}
     >
-      {image}
+      {/* Dragging it would offer the page its own image as a new arrival. */}
+      <Branch if={thumbnail}><img className={css.image} alt='' draggable={false} src={thumbnail} /></Branch>
     </button>
-    <Branch if={known}><PortraitTooltip id={tooltipId} pinnedTo={pinnedTo} portrait={p} onUnpin={() => setPinnedTo(undefined)} /></Branch>
+    <Branch if={known && !selected && !menuOpen}><PortraitTooltip id={tooltipId} portrait={p} /></Branch>
   </>
 }

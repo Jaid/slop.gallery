@@ -1,0 +1,78 @@
+@use '../../style/colors'
+@use '../../style/ui'
+
+.container
+  grid-column: 1 / 3
+  min-width: 0
+  max-height: calc(100dvh - 4rem)
+  overflow-y: auto
+  overscroll-behavior: contain
+  scrollbar-width: thin
+  padding: 0 0.5rem 1rem
+
+.toolbar, .controls
+  display: flex
+  align-items: center
+  justify-content: space-between
+  gap: 1rem
+  button
+    @include ui.textButton
+
+.toolbar
+  position: sticky
+  top: 0
+  z-index: 1
+  padding-block: 0.25rem
+  background: rgb(17 17 17 / 95%)
+
+.studio
+  height: clamp(220px, 43dvh, 520px)
+  cursor: grab
+  touch-action: none
+  &:active
+    cursor: grabbing
+  // Only the model fades, never the controls or the plate. No material changes and no impact on its world instance.
+  &[data-interacted='false'] canvas
+    opacity: 0.25
+  > p
+    padding: 2rem
+    color: colors.$muted
+
+.controls
+  color: colors.$muted
+  font-size: 0.75rem
+  border-bottom: 1px solid colors.$border
+  padding-block: 0.25rem
+
+.details
+  padding: 1.25rem 1rem 0
+  user-select: text
+  h1
+    margin: 0
+    font-size: clamp(1.5rem, 2.5vw, 2rem)
+    &:focus
+      outline: none
+
+.byline, .location
+  color: colors.$muted
+  font-size: 0.85rem
+  line-height: 1.6
+  span
+    color: #eee
+
+.byline
+  margin: 0.5rem 0 1.25rem
+
+.description
+  margin: 0
+  white-space: pre-line
+  font-size: 0.95rem
+  line-height: 1.7
+
+.location
+  margin: 1.25rem 0 0
+
+.untouched
+  margin: 0.5rem 0 0
+  color: colors.$muted
+  font-size: 0.75rem
