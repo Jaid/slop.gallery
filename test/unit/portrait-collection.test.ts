@@ -29,6 +29,11 @@ const itemOf = (html: string, id: string) => {
   const pattern = new RegExp(String.raw`<button\b[^>]*data-portrait="${id}"[^>]*>`, 'u')
   return pattern.exec(html)?.[0]
 }
+/** The opening tag of the work with the id, a button or a mere image. */
+const workOf = (html: string, id: string) => {
+  const pattern = new RegExp(String.raw`<(?:button|div)\b[^>]*data-portrait="${id}"[^>]*>`, 'u')
+  return pattern.exec(html)?.[0]
+}
 const tooltip = (year?: number) => renderToStaticMarkup(createElement(PortraitTooltip, {
   id: 'tooltip',
   portrait: {
@@ -113,7 +118,7 @@ afterEach(() => {
   Object.assign(useGallery.getInitialState(), initial)
 })
 describe('portrait collection', () => {
-  test('shows every work in the world as a button in the shape of its frame, named after it once interacted with', () => {
+  test('shows every work in the world in the shape of its frame, as a button named after it once interacted with', () => {
     const portraits = initial.portraits.map((portrait, index) => ({
       ...portrait,
       interacted: index % 2 === 0,
@@ -123,10 +128,10 @@ describe('portrait collection', () => {
     expect(html).toContain('data-testid="portrait-collection"')
     expect(html.match(/<li\b/gu)).toHaveLength(portraits.length)
     for (const portrait of portraits) {
-      const item = itemOf(html, portrait.id)
-      expect(item).toContain(`aria-label="${portrait.interacted ? portrait.title : 'Untouched work'}"`)
-      expect(item).toContain('aria-haspopup="menu"')
-      expect(item).toContain(`aspect-ratio:${portrait.width} / ${portrait.height}`)
+      const work = workOf(html, portrait.id)
+      expect(work).toContain(`aspect-ratio:${portrait.width} / ${portrait.height}`)
+      expect(work).toStartWith(portrait.interacted ? '<button' : '<div')
+      expect(work).toContain(`aria-label="${portrait.interacted ? portrait.title : 'Untouched work'}"`)
     }
     // No menu is open before the player asks for one.
     expect(html).not.toContain('role="menu"')
@@ -153,8 +158,25 @@ describe('portrait collection', () => {
       },
     ])
     for (const id of [samplePortraits[0].id, 'loose', 'reserved', 'arrival']) {
-      expect(itemOf(html, id)).toBeString()
+      expect(workOf(html, id)).toBeString()
     }
+  })
+  test('a default work the player hasn’t interacted with yet offers no menu at all, while one that arrived since does from the start', () => {
+    const untouched = samplePortraits[0]
+    const arrival = {
+      ...samplePortraits[1],
+      imported: true,
+    }
+    const html = render([untouched, arrival])
+    const work = workOf(html, untouched.id)!
+    expect(work).toStartWith('<div')
+    expect(work).toContain('role="img"')
+    expect(work).not.toContain('aria-haspopup')
+    expect(itemOf(html, untouched.id)).toBeUndefined()
+    // Its title stays hidden until the player meets it, but the player brought it in.
+    expect(itemOf(html, arrival.id)).toContain('aria-haspopup="menu"')
+    expect(itemOf(html, arrival.id)).toContain('aria-label="Untouched work"')
+    expect(html).not.toContain(arrival.title)
   })
   test('only a work the player has interacted with has a tooltip, with its title, description, creator and year', () => {
     const known = {
@@ -173,8 +195,8 @@ describe('portrait collection', () => {
     for (const value of [known.title, known.description, known.creator, known.year]) {
       expect(tooltips[0]).toContain(String(value))
     }
-    expect(itemOf(html, untouched.id)).not.toContain('interestfor')
-    expect(itemOf(html, untouched.id)).toContain('data-interacted="false"')
+    expect(workOf(html, untouched.id)).not.toContain('interestfor')
+    expect(workOf(html, untouched.id)).toContain('data-interacted="false"')
     // The untouched work gives away nothing of its plate, not even to assistive technology.
     for (const value of [untouched.title, untouched.description, untouched.creator]) {
       expect(html).not.toContain(value)

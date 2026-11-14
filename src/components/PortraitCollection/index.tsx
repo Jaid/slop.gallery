@@ -51,7 +51,7 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
 
 /**
  * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie.
- * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}.
+ * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
  */
 export default function PortraitCollection() {
   const portraits = useGallery(s => s.portraits)

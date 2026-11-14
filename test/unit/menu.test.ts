@@ -132,7 +132,7 @@ test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('renders th
       expect(html.match(/<svg\b[^>]*aria-label="(?:Lower|Upper) gallery minimap"/gu)).toHaveLength(1)
       expect(html.indexOf('data-testid="minimap"')).toBeLessThan(html.indexOf('id="menu-title"'))
       expect(html.indexOf('data-testid="portrait-collection"')).toBeGreaterThan(html.indexOf('id="openrouter-title"'))
-      expect(html.match(/<button\b[^>]*data-portrait=/gu)).toHaveLength(useGallery.getInitialState().portraits.length)
+      expect(html.match(/<(?:button|div)\b[^>]*data-portrait=/gu)).toHaveLength(useGallery.getInitialState().portraits.length)
     }
     expect(html.includes('OpenRouter')).toBe(stage !== 'unfocus')
     expect(html.includes('Mute audio')).toBe(stage !== 'unfocus')
