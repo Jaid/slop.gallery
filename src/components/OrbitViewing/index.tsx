@@ -125,6 +125,7 @@ export default function OrbitViewing() {
       if (session.current) {
         if (session.current.id === state.active && session.current.orbit.returning) {
           session.current.orbit.returning = false
+          useGallery.getState().markInteracted(state.active)
           useGallery.setState({inspecting: state.active})
           galleryEvents.dispatchEvent(new CustomEvent('inspect', {detail: state.active}))
         }
@@ -160,6 +161,7 @@ export default function OrbitViewing() {
         galleryEvents.dispatchEvent(new Event('inspection-focus-start'))
       }
       setCameraFocused(true)
+      useGallery.getState().markInteracted(state.active)
       useGallery.setState({inspecting: state.active})
       galleryEvents.dispatchEvent(new CustomEvent('inspect', {detail: state.active}))
     }

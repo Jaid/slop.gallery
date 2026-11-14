@@ -1,3 +1,5 @@
+import type {Portrait} from '#src/lib/gallery.ts'
+
 import {useEffect, useRef} from 'react'
 
 import {cameraPose, useGallery} from '#src/lib/gallery.ts'
@@ -7,9 +9,10 @@ import css from './style.module.sass'
 
 export default function GalleryMinimap({lower}: {lower: boolean}) {
   const portraits = useGallery(s => s.portraits)
+  const interacted = useGallery(s => s.interacted)
   const current = useGallery(s => s.room)
   const player = useRef<SVGPathElement>(null)
-  const dots = useRef(new Map<string, SVGCircleElement>)
+  const markers = useRef(new Map<string, SVGRectElement>)
   useEffect(() => {
     // Read the live camera and rigid bodies without rerendering the menu every frame.
     const attribute = (element: SVGElement, name: string, value: string) => {
@@ -24,14 +27,13 @@ export default function GalleryMinimap({lower}: {lower: boolean}) {
         attribute(player.current, 'display', isLowerPosition(useGallery.getState().room, cameraPose.position) === lower ? 'inline' : 'none')
       }
       for (const portrait of portraits) {
-        const dot = dots.current.get(portrait.id)
-        if (!dot) {
+        const markerElement = markers.current.get(portrait.id)
+        if (!markerElement) {
           continue
         }
         const marker = minimapPortrait(portrait)
-        attribute(dot, 'cx', String(marker.position[0]))
-        attribute(dot, 'cy', String(marker.position[2]))
-        attribute(dot, 'display', !portrait.reserved && marker.lower === lower ? 'inline' : 'none')
+        attribute(markerElement, 'transform', `translate(${marker.position[0]} ${marker.position[2]}) rotate(${marker.angle})`)
+        attribute(markerElement, 'display', !portrait.reserved && marker.lower === lower ? 'inline' : 'none')
       }
       frame = requestAnimationFrame(update)
     }
@@ -43,16 +45,25 @@ export default function GalleryMinimap({lower}: {lower: boolean}) {
     {minimapRooms.filter(room => room.lower === lower).map(room => <g key={room.id} dangerouslySetInnerHTML={{__html: room.markup}} data-room={room.id} opacity={room.opacity(current)} transform={room.transform} />)}
     <g className={css.portraits}>{portraits.map(portrait => {
       const marker = minimapPortrait(portrait)
-      return <circle
-        key={portrait.id} cx={marker.position[0]} cy={marker.position[2]} data-portrait={portrait.id} display={!portrait.reserved && marker.lower === lower ? 'inline' : 'none'} r='0.6' ref={element => {
+      return <rect
+        key={portrait.id} className={portraitStatusClass(portrait, interacted)} data-portrait={portrait.id} display={!portrait.reserved && marker.lower === lower ? 'inline' : 'none'} height={marker.depth} transform={`translate(${marker.position[0]} ${marker.position[2]}) rotate(${marker.angle})`} width={marker.width} x={-marker.width / 2} y={marker.y} ref={element => {
           if (element) {
-            dots.current.set(portrait.id, element)
+            markers.current.set(portrait.id, element)
           } else {
-            dots.current.delete(portrait.id)
+            markers.current.delete(portrait.id)
           }
         }}
       />
     })}</g>
     <path className={css.player} aria-label='Your position' d='M 0 -2.4 L 1.35 1.5 L 0 0.85 L -1.35 1.5 Z' display={isLowerPosition(current, cameraPose.position) === lower ? 'inline' : 'none'} transform={`translate(${cameraPose.position[0]} ${cameraPose.position[2]}) rotate(${minimapHeading(cameraPose.direction)})`} ref={player} />
   </svg>
+}
+
+function portraitStatusClass(portrait: Portrait, interacted: ReadonlySet<string>) {
+  if (portrait.imported) {
+    return css.imported
+  }
+  if (interacted.has(portrait.id)) {
+    return css.interacted
+  }
 }

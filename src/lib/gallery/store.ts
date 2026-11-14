@@ -32,7 +32,10 @@ type State = {
     origin: Vec3
   }) | null
   inspecting: string | null
+  /** the ids of portraits the player has listened to, grabbed or inspected */
+  interacted: ReadonlySet<string>
   locked: boolean
+  markInteracted: (id: string) => void
   /** Read-only projection for telemetry; the shared narrator owns playback and UI state. */
   narration: NarrationState | null
   notice: string
@@ -56,6 +59,7 @@ export const useGallery = create<State>((set, get) => ({
   held: null,
   consumed: [],
   remains: [],
+  interacted: new Set,
   locked: false,
   ready: false,
   dragging: false,
@@ -72,6 +76,14 @@ export const useGallery = create<State>((set, get) => ({
   revision: 0,
   importFiles: null,
   importTarget: null,
+  markInteracted: id => set(s => {
+    if (s.interacted.has(id) || !s.portraits.some(p => p.id === id)) {
+      return s
+    }
+    const interacted = new Set(s.interacted)
+    interacted.add(id)
+    return {interacted}
+  }),
   update: (id, patch) => set(s => {
     const portraits = s.portraits.map(p => (p.id === id ? {
       ...p,
@@ -84,12 +96,17 @@ export const useGallery = create<State>((set, get) => ({
   }),
   commit: portraits => {
     validateCollectionImages(portraits)
-    set(s => ({
-      portraits,
-      revision: s.revision + 1,
-      held: null,
-      placement: null,
-    }))
+    set(s => {
+      const ids = new Set(portraits.map(p => p.id))
+      const interacted = s.interacted.size ? s.interacted.intersection(ids) : s.interacted
+      return {
+        portraits,
+        interacted,
+        revision: s.revision + 1,
+        held: null,
+        placement: null,
+      }
+    })
   },
   add: portrait => {
     const s = get()

@@ -95,6 +95,7 @@ export function playSound(voices: ReadonlyArray<Voice>, seed: string, position?:
 }
 
 export function narrate(id: string) {
+  useGallery.getState().markInteracted(id)
   void SoundEngine.get().resume().catch(() => notify('Audio could not be enabled.'))
   galleryEvents.dispatchEvent(new CustomEvent('narrate', {detail: id}))
 }

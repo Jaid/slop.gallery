@@ -26,6 +26,9 @@ const grab = () => {
     useGallery.setState({held: null})
     return
   }
+  if (portrait) {
+    state.markInteracted(portrait.id)
+  }
   chime(440)
 }
 
