@@ -91,6 +91,8 @@ narrator.push({audio: knotUrl, title: knotTitle}, {once: knotId, repeat: true})
 
 `narrator.stop()` cancels every owned lane without forgetting completed announcements. Setting `enabled = false` also cancels every lane and skips new requests until re-enabled. `dispose()` / `[Symbol.dispose]()` additionally releases the controller permanently. Disposing a queue never closes an application-owned AudioContext.
 
+`narrator.pause()` holds every narration still until `narrator.resume()`, for a paused game: recordings pause mid-word, silences stop running down and nothing new starts to speak, while narrations can still be pushed, prepared and stopped. Native speech restarts at the last word boundary it reported, like after an injection. `narrator.paused` and the snapshot’s `paused` tell whether it is held; see `use-audio-queue` for the details.
+
 A lazy input `(signal) => reference | Promise<reference>` can wait for a label, fetch data or select a recording only when its queue slot becomes active. Providers should respect the signal. Late-created playback resources are still disposed when a provider ignores cancellation.
 
 ## Speech providers and browser fallback
@@ -148,7 +150,7 @@ A `NarrationTiming` holds every whitespace-separated word of the text (`narratio
 
 ## Slop Gallery integration
 
-`src/lib/audio/narration.ts` owns the one application narrator, its 0.15-second gap, 0.12-second leading silence and 0.5-second trailing silence. It wires mute, stop, teleport, page-hide, the real audio meter and a read-only gallery-state projection for existing telemetry.
+`src/lib/audio/narration.ts` owns the one application narrator, its 0.15-second gap, 0.12-second leading silence and 0.5-second trailing silence. It wires mute, the pause of a frozen world, stop, teleport, page-hide, the real audio meter and a read-only gallery-state projection for existing telemetry.
 
 `PortraitNarration.ts` handles portrait readiness and provider configuration. `KnotNarration.ts` selects bundled model/candidate/knot recordings. Neither owns audio elements, speech synthesis, timers or indicator state. Components can enqueue directly on the shared narrator. Player sound effects remain separate by design.
 

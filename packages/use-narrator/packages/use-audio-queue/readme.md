@@ -28,6 +28,10 @@ All timing values are seconds. `gap`, `prependedSilence` and `appendedSilence` a
 
 The gap is the minimum interval between serialized sounds stopping and starting. Leading/trailing silence already contributes to it; it is not double-counted. Concurrent entries have independent padding and ignore the serialized gap. Immediate priorities still honor the configured timing. Resuming a paused sound does not prepend silence again.
 
+## Pausing
+
+`queue.pause()` holds the whole queue still until `queue.resume()`, like a paused game does: the current sound and every concurrent one pause where they are, leading and trailing silences stop running down, and nothing new starts to sound. Entries can still be pushed, prepared and cancelled meanwhile, and an injection takes over as usual, just silently. Resuming plays every sound on from its position and lets silences run down the rest of their time; the pause counts toward neither the padding nor the gap between sounds. `queue.paused` and the snapshot’s `paused` tell whether the queue is held; a held entry has no `phaseEndsAt`. Pausing and resuming twice is harmless, and clearing or disposing a paused queue releases everything as usual.
+
 ## Custom playback
 
 A task is created lazily when its slot becomes active:
@@ -91,4 +95,4 @@ For text-to-speech, completion memory, provider caching and indicator metadata, 
 bun run test
 ```
 
-Tests use a deterministic clock and fake transports for every priority, timer interruption, cancellation race and backend failure. Browser-adapter tests cover media events, cancellation while preparing, exact element/position reuse, URL ownership and cleanup, and decoded playback through a fake context, its pauses, resumption and failures.
+Tests use a deterministic clock and fake transports for every priority, timer interruption, pause, cancellation race and backend failure. Browser-adapter tests cover media events, cancellation while preparing, exact element/position reuse, URL ownership and cleanup, and decoded playback through a fake context, its pauses, resumption and failures.

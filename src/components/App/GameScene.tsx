@@ -9,6 +9,7 @@ import Postprocessing from '#component/Postprocessing'
 import TelemetryBridge from '#component/TelemetryBridge'
 import WebgpuCaptureBridge from '#component/WebgpuCaptureBridge'
 import WireframeVision from '#component/WireframeVision'
+import WorldFreeze from '#component/WorldFreeze'
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {isShowingAlbedo} from '#src/lib/rendering/albedo.ts'
 import {getAntiAliasing, readAntiAliasing} from '#src/lib/rendering/antiAliasing.ts'
@@ -24,6 +25,7 @@ export default function GameScene({children}: GameWrapperProps) {
   const antiAliasing = getAntiAliasing(isHeavy, requestedAntiAliasing)
   const settings = useMemo(() => getRenderPipelineSettings(profile, antiAliasing), [profile, antiAliasing])
   return <>
+    <WorldFreeze />
     <WebgpuCaptureBridge />
     <TelemetryBridge />
     {children}

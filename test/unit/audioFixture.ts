@@ -45,6 +45,7 @@ export default function audioFixture() {
     state: 'running',
     destination: node(),
     resume: mock(async () => {}),
+    suspend: mock(async () => {}),
     createGain() {
       const result = gain()
       gains.push(result)

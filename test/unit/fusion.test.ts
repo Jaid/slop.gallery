@@ -10,6 +10,7 @@ import {choreographed, emberRhythm, grab, ignition, implosion, introSeconds, int
 import {introOrbitRate, orbitAngle, orbitPoint, orbitSpeed, satellitePose} from '../../src/lib/gallery/fusion/orbit.ts'
 import {portalFrame, portalRebound, satelliteSize, touchesPortal} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {firstTurn, fusionPulse, fusionTiming, imageAt, introTurns, minimumTurns, nextTurn} from '../../src/lib/gallery/fusion/timing.ts'
+import worldClock from '../../src/lib/worldClock.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 
 const work = {
@@ -495,6 +496,34 @@ describe('fusion', () => {
     expect(fusion.closed).toBe(false)
     await new Promise(resolve => setTimeout(resolve, 0.2 * 1000))
     expect(fusion.closed).toBe(true)
+  })
+  test('its timeline stands still while the world is frozen and goes on from where it stood, however long the image model took meanwhile', async () => {
+    const fusion = new Fusion(spec(), {
+      frame,
+      timing,
+    })
+    await new Promise(resolve => setTimeout(resolve, 40))
+    const resume = worldClock.freeze()
+    try {
+      const held = fusion.elapsed()
+      expect(held).toBeLessThan(timing.minimum)
+      let shown = false
+      // The result comes in during the pause, but its climax waits for the timeline.
+      const succeeding = fusion.succeed(new Blob(['result'])).then(() => {
+        shown = true
+      })
+      await new Promise(resolve => setTimeout(resolve, (timing.minimum + timing.climax) * 1000 + 150))
+      expect(fusion.elapsed()).toBe(held)
+      expect(shown).toBe(false)
+      resume()
+      expect(fusion.elapsed()).toBeCloseTo(held, 2)
+      await succeeding
+      expect(fusion.elapsed()).toBeGreaterThanOrEqual(timing.minimum + timing.climax)
+      expect(fusion.elapsed()).toBeLessThan(timing.minimum + timing.climax + 0.25)
+    } finally {
+      resume()
+      fusion.abort()
+    }
   })
   test('aborting ends a fusion at once, and only once', async () => {
     let closed = 0

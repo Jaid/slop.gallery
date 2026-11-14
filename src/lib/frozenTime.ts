@@ -1,6 +1,5 @@
 import optis from 'optis'
 import readPermalink, {parseNumber} from 'read-permalink'
-import {NodeFrame} from 'three/webgpu'
 
 import world from '#src/worlds/current.ts'
 
@@ -26,18 +25,8 @@ export function readFrozenTime(input: URL | string = typeof location === 'undefi
   return readPermalink(input, {schema: frozenTimeSchema}).frozen_time ?? (spawn ? world.cameraBookmarks().find(bookmark => bookmark.id === spawn)?.frozenTime : undefined)
 }
 
-/** the seconds of `?frozen_time`, or undefined while the engine time runs */
+/** the seconds of `?frozen_time`, which every renderer’s node time stands at (see `rendering/nodeTime.ts`), or undefined while the engine time runs */
 export const frozenSeconds = readFrozenTime()
-
-// Every renderer’s node time, which shaders read as TSL `time`, stands still at the frozen seconds from its first frame on. Nothing else reads it, so the real clock still drives physics and input.
-if (frozenSeconds !== undefined) {
-  // eslint-disable-next-line typescript/unbound-method -- called with the frame as this
-  const {update} = NodeFrame.prototype
-  NodeFrame.prototype.update = function (this: NodeFrame) {
-    update.call(this)
-    this.time = frozenSeconds
-  }
-}
 
 /** The time of a CPU-side animation in seconds: the frame deltas summed up, each capped at `maxDelta`, or the frozen seconds under `?frozen_time`, like the shaders’ time. */
 export class AnimationClock {

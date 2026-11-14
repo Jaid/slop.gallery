@@ -2,6 +2,7 @@ import type {EgoState, EgoZoomTransition} from 'ego-player'
 
 import {useGallery} from '#src/lib/gallery/store.ts'
 import {getPlayerZoom, setPlayerZoom} from '#src/lib/rendering/playerView.ts'
+import worldClock from '#src/lib/worldClock.ts'
 import world from '#src/worlds/current.ts'
 
 import SoundEngine from './SoundEngine.ts'
@@ -45,7 +46,8 @@ export function attachPlayerAudio(events: Pick<EventTarget, 'addEventListener' |
     const sound = SoundEngine.existing()
     if (state.locked !== previous.locked) {
       if (!state.locked && previous.locked) {
-        if (state.sound) {
+        // The Escape key’s pause menu opens in silence: it froze the world and its sound before the lock was noticed here, and an effect started now would only sound once the world goes on.
+        if (state.sound && !worldClock.frozen) {
           sound?.playEffect('SFX-42')
         }
         hasEnteredGame = true

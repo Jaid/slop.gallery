@@ -1,3 +1,5 @@
+import type {AudioPlayback} from '../src/core.ts'
+
 import {expect, test} from 'bun:test'
 
 import {AudioQueue} from '../src/core.ts'
@@ -416,4 +418,208 @@ test('reentrant subscribers can replace newly prepared jobs without resurrecting
   expect(players.get('original')!.plays).toBe(0)
   expect(players.get('replacement')!.plays).toBe(1)
   queue.dispose()
+})
+test('pausing holds the playing sound and every concurrent one where they are, and resuming plays them on', async () => {
+  const {queue, players, push} = setup()
+  const a = push('a')
+  push('later')
+  const side = push('side', {priority: 'async'})
+  await flush()
+  players.get('a')!.position = 2.5
+  const running = queue.getSnapshot()
+  expect(running.paused).toBe(false)
+  queue.pause()
+  queue.pause()
+  expect(queue.paused).toBe(true)
+  expect(queue.getSnapshot()).not.toBe(running)
+  expect(queue.getSnapshot().paused).toBe(true)
+  expect(queue.getSnapshot().current?.id).toBe(a.id)
+  expect(queue.getSnapshot().current?.suspended).toBe(false)
+  expect(queue.getSnapshot().interrupted).toHaveLength(0)
+  expect(players.get('a')!.pauses).toBe(1)
+  expect(players.get('a')!.playing).toBe(false)
+  expect(players.get('side')!.pauses).toBe(1)
+  await flush()
+  expect(players.get('later')).toMatchObject({plays: 0})
+  queue.resume()
+  queue.resume()
+  await flush()
+  expect(queue.getSnapshot().paused).toBe(false)
+  expect(players.get('a')!.plays).toBe(2)
+  expect(players.get('a')!.position).toBe(2.5)
+  expect(players.get('a')!.playing).toBe(true)
+  expect(players.get('side')!.playing).toBe(true)
+  expect(queue.getSnapshot().current?.phase).toBe('playing')
+  players.get('a')!.end()
+  await flush()
+  expect(await a.finished).toEqual({status: 'completed'})
+  expect(players.get('later')!.plays).toBe(1)
+  players.get('side')!.end()
+  await flush()
+  expect(await side.finished).toEqual({status: 'completed'})
+  queue.dispose()
+})
+test('a pause freezes leading and trailing silence and does not count toward the gap', async () => {
+  const {queue, clock, players, push} = setup({
+    gap: 1,
+    prependedSilence: 0.5,
+    appendedSilence: 0.3,
+  })
+  const a = push('a')
+  push('b')
+  await clock.advance(0.2)
+  expect(queue.getSnapshot().current?.phaseEndsAt).toBe(0.5)
+  queue.pause()
+  expect(queue.getSnapshot().current?.phaseEndsAt).toBeUndefined()
+  expect(clock.size).toBe(0)
+  await clock.advance(10)
+  expect(players.get('a')!.plays).toBe(0)
+  queue.resume()
+  expect(queue.getSnapshot().current?.phaseEndsAt).toBeCloseTo(10.5)
+  await clock.advance(0.29)
+  expect(players.get('a')!.plays).toBe(0)
+  await clock.advance(0.02)
+  expect(players.get('a')!.plays).toBe(1)
+  players.get('a')!.end()
+  await flush()
+  // 0.1 s into the trailing silence, which the gap has already begun with
+  await clock.advance(0.1)
+  queue.pause()
+  await clock.advance(5)
+  expect(queue.getSnapshot().current?.id).toBe(a.id)
+  queue.resume()
+  await clock.advance(0.19)
+  expect(queue.getSnapshot().current?.id).toBe(a.id)
+  await clock.advance(0.02)
+  expect(await a.finished).toEqual({status: 'completed'})
+  // Of the gap of 1 s, 0.3 s passed before the pause and during the trailing silence, none of it during the pause.
+  await clock.advance(0.68)
+  expect(players.get('b')!.plays).toBe(0)
+  await clock.advance(0.03)
+  expect(players.get('b')!.plays).toBe(1)
+  queue.dispose()
+  expect(clock.size).toBe(0)
+})
+test('a paused queue still takes, prepares and cancels entries, but nothing sounds before it resumes', async () => {
+  const {queue, clock, players, push} = setup({prependedSilence: 0.2})
+  queue.pause()
+  const a = push('a')
+  const b = push('b')
+  await flush()
+  expect(queue.getSnapshot().current).toMatchObject({
+    id: a.id,
+    phase: 'before',
+  })
+  await clock.advance(3)
+  expect(players.get('a')!.plays).toBe(0)
+  a.cancel('not anymore')
+  await flush()
+  expect(await a.finished).toEqual({
+    status: 'cancelled',
+    reason: 'not anymore',
+  })
+  expect(players.get('a')!.disposals).toBe(1)
+  expect(queue.getSnapshot().current?.id).toBe(b.id)
+  await clock.advance(3)
+  expect(players.get('b')!.plays).toBe(0)
+  queue.resume()
+  await clock.advance(0.19)
+  expect(players.get('b')!.plays).toBe(0)
+  await clock.advance(0.02)
+  expect(players.get('b')!.plays).toBe(1)
+  queue.dispose()
+})
+test('an injection during a pause takes over silently, and both play in turn once the queue resumes', async () => {
+  const {queue, clock, players, push} = setup({gap: 0.5})
+  const a = push('a')
+  await flush()
+  await clock.advance(2)
+  players.get('a')!.position = 1.5
+  queue.pause()
+  await clock.advance(4)
+  const injected = push('injected', {priority: 'inject'})
+  await flush()
+  expect(players.get('a')!.pauses).toBe(1)
+  expect(queue.getSnapshot().interrupted.map(job => job.id)).toEqual([a.id])
+  expect(queue.getSnapshot().current?.id).toBe(injected.id)
+  expect(players.get('injected')!.plays).toBe(0)
+  await clock.advance(4)
+  queue.resume()
+  // The sound it interrupted fell silent when the pause began, so the gap runs from where the queue resumes.
+  await clock.advance(0.49)
+  expect(players.get('injected')!.plays).toBe(0)
+  await clock.advance(0.02)
+  expect(players.get('injected')!.plays).toBe(1)
+  players.get('injected')!.end()
+  await clock.advance(0.49)
+  expect(players.get('a')!.plays).toBe(1)
+  await clock.advance(0.02)
+  expect(players.get('a')!.plays).toBe(2)
+  expect(players.get('a')!.position).toBe(1.5)
+  queue.dispose()
+})
+test('pausing between a start and its playback keeps the stale start from sounding', async () => {
+  const {queue, players, push} = setup()
+  const started = Promise.withResolvers<void>()
+  const ended = Promise.withResolvers<void>()
+  let plays = 0
+  // Its first start only resolves once the test says so, like a media element still buffering.
+  const player: AudioPlayback = {
+    finished: ended.promise,
+    dispose() {},
+    pause() {},
+    play: () => (++plays === 1 ? started.promise : undefined),
+  }
+  const handle = queue.push(() => player)
+  await flush()
+  expect(queue.getSnapshot().current?.phase).toBe('starting')
+  queue.pause()
+  // A media element rejects the start a pause interrupts.
+  started.reject(new Error('interrupted by pause'))
+  await flush()
+  expect(queue.has(handle.id)).toBe(true)
+  expect(queue.getSnapshot().current?.phase).toBe('starting')
+  queue.resume()
+  await flush()
+  expect(plays).toBe(2)
+  expect(queue.getSnapshot().current?.phase).toBe('playing')
+  // A pause right as a start is due skips it, and resuming starts it again.
+  push('next')
+  ended.resolve()
+  queue.pause()
+  await flush()
+  expect(players.get('next')!.plays).toBe(0)
+  queue.resume()
+  await flush()
+  expect(players.get('next')!.plays).toBe(1)
+  queue.dispose()
+})
+test('clearing or disposing a paused queue releases everything, and a failing pause fails only its entry', async () => {
+  const {queue, players, push} = setup()
+  const broken = new FakePlayback('broken')
+  broken.pause = () => {
+    throw new Error('cannot pause')
+  }
+  const failing = queue.push(() => broken)
+  const next = push('next')
+  await flush()
+  queue.pause()
+  expect(await failing.finished).toMatchObject({status: 'failed'})
+  expect(broken.disposals).toBe(1)
+  await flush()
+  expect(queue.getSnapshot().current?.id).toBe(next.id)
+  expect(players.get('next')!.plays).toBe(0)
+  queue.clear('stopped')
+  expect(await next.finished).toEqual({
+    status: 'cancelled',
+    reason: 'stopped',
+  })
+  expect(queue.getSnapshot()).toMatchObject({
+    idle: true,
+    paused: true,
+  })
+  queue.dispose()
+  queue.resume()
+  queue.pause()
+  expect(() => push('late')).toThrow('disposed')
 })

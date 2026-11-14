@@ -60,6 +60,11 @@ export default class Narrator implements Disposable {
     this.queue.gap = value
   }
 
+  /** whether every narration stands still, see {@link pause} */
+  get paused() {
+    return this.queue.paused
+  }
+
   get prependedSilence() {
     return this.queue.prependedSilence
   }
@@ -84,6 +89,14 @@ export default class Narrator implements Disposable {
 
   hasSpoken(key: string) {
     return this.spoken.has(key)
+  }
+
+  /**
+   * Holds every narration still until {@link resume}, like a paused game does: voices pause mid-word, silences stop running down and nothing new starts to speak, while narrations can still be pushed, prepared and stopped.
+   * Native speech restarts at the last word boundary it reported, like after an injection.
+   */
+  pause() {
+    this.queue.pause()
   }
 
   /** Where a narration’s playback stands, by its `instanceId`, for visuals that follow the speech, like subtitles. Cheap enough to read every frame. */
@@ -212,6 +225,11 @@ export default class Narrator implements Disposable {
     }
     return handle
   }
+  /** Lets narrations held by {@link pause} go on right where they stood. */
+  resume() {
+    this.queue.resume()
+  }
+
   stop(reason?: unknown) {
     this.queue.clear(reason)
   }

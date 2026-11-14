@@ -12,6 +12,8 @@ export type MoodLensView = {
   fading?: boolean
   /** whether the camera is the player’s own view rather than one taken from them, like V-viewing’s, the intro’s or a bookmark’s, which keep their own field of view */
   own: boolean
+  /** whether the frame shows the same moment as the one before, like a frame of a frozen world, so the share of the widening stays where its easing stands instead of cutting for want of a `delta` */
+  still?: boolean
   /** how far the player has zoomed in, 0–1, which gives the widening up along the way */
   zoom?: number
 }
@@ -63,11 +65,11 @@ export default class MoodLens {
   }
 
   /** Works out how far views widen from now on: by `degrees`, as far as `view` lets them. */
-  update(degrees: number, {delta, exact = false, fading = true, own, zoom = 0}: MoodLensView) {
+  update(degrees: number, {delta, exact = false, fading = true, own, still = false, zoom = 0}: MoodLensView) {
     const target = own && !exact ? 1 : 0
-    if (exact || !fading || !(delta > 0)) {
+    if (exact || !fading || !still && !(delta > 0)) {
       this.share = target
-    } else {
+    } else if (!still) {
       this.share += (target - this.share) * (1 - Math.exp(-Math.min(delta, 0.06) * pace))
       if (Math.abs(target - this.share) < 0.001) {
         this.share = target

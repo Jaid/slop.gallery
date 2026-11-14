@@ -20,6 +20,7 @@ import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
 import {attachGraphicsTuningTelemetry} from '#src/lib/telemetry/graphicsTuningTelemetry.ts'
 import {playerTelemetry, telemetry} from '#src/lib/telemetry/index.ts'
 import {roomChangeDetails} from '#src/lib/telemetry/SlopGalleryTelemetry.ts'
+import worldClock from '#src/lib/worldClock.ts'
 
 function Collectors() {
   usePauseMenuTelemetry({
@@ -89,6 +90,8 @@ function Collectors() {
       }
     },
     getTraceContext: () => telemetry!.getContext(),
+    // The Escape key’s pause menu stops the frames, which is no stall.
+    pauses: worldClock,
     getHitchAttributes: (): Attributes => {
       const player = playerTelemetry.read?.()
       return player ? {'ego.speed': Math.hypot(player.velocity.x, player.velocity.y, player.velocity.z)} : {}

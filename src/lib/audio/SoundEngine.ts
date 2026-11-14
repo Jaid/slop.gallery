@@ -5,6 +5,7 @@ import type {AudioOutput, Hearing, Playback, Voice} from 'procedural-audio'
 import {clamp} from 'math'
 import playVoices, {osc} from 'procedural-audio'
 
+import worldClock from '../worldClock.ts'
 import {audioVolume} from './audioParameter.ts'
 import {footstepVoices, impactFootstepStrength, playerSoundEffects} from './playerSoundEffects.ts'
 import {playSoundEffect} from './soundEffects.ts'
@@ -39,6 +40,8 @@ export default class SoundEngine {
   private extendedZoom = false
   private lastLanding = Number.NEGATIVE_INFINITY
   private muted = false
+  /** whether the engine was let to sound, which it does again once a frozen world goes on */
+  private sounding = false
   private viewMotion?: Playback
   private zoomAmount = 0
   private zoomBed?: Playback
@@ -55,6 +58,9 @@ export default class SoundEngine {
       master: world,
     }
     this.transformers = new TransformerChain(this.context, world, this.master)
+    // Its clock is the context’s, which stands still with the world’s and goes on with it, so every sound stops where it is and plays on from there, in step with what the world shows.
+    worldClock.subscribe(() => this.followWorld())
+    this.followWorld()
   }
 
   land(surface: FootstepSurface, speed: number, crouching: boolean, impactSpeed: number) {
@@ -75,7 +81,13 @@ export default class SoundEngine {
       return
     }
     this.muted = muted
-    this.master.gain.setTargetAtTime(muted ? 0 : effectsGain, this.context.currentTime, 0.08)
+    const gain = muted ? 0 : effectsGain
+    if (worldClock.frozen) {
+      // No time passes for a fade, so the world’s sound goes on at the level it was switched to.
+      this.master.gain.setValueAtTime(gain, this.context.currentTime)
+    } else {
+      this.master.gain.setTargetAtTime(gain, this.context.currentTime, 0.08)
+    }
     if (muted) {
       this.stopPlayerSounds()
     }
@@ -100,8 +112,10 @@ export default class SoundEngine {
     })
   }
 
+  /** Lets the engine sound, which the browser only allows once the player clicked or pressed a key. While the world is frozen, it stays silent until the world goes on. */
   async resume() {
-    if (this.context.state === 'suspended') {
+    this.sounding = true
+    if (!worldClock.frozen && this.context.state === 'suspended') {
       await this.context.resume()
     }
   }
@@ -175,6 +189,18 @@ export default class SoundEngine {
       seed: effect.id,
       duration,
     })
+  }
+
+  /** Suspends the context while the world is frozen and resumes it as the world goes on, unless it never sounded before. */
+  private followWorld() {
+    if (worldClock.frozen) {
+      // A context the browser let sound right away sounds again afterward too.
+      this.sounding ||= this.context.state === 'running'
+      void this.context.suspend().catch(() => {})
+    } else if (this.sounding) {
+      // Whatever state it reports: a suspension still underway only takes effect after this.
+      void this.context.resume().catch(() => {})
+    }
   }
 
   private updateZoomGain() {

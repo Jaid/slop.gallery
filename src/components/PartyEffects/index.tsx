@@ -7,6 +7,7 @@ import {useEffect} from 'react'
 
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {galleryEvents, spawnPartyEffect, useGallery} from '#src/lib/gallery.ts'
+import worldClock from '#src/lib/worldClock.ts'
 import {endParty, startParty, useParties} from '#src/party_effects/lib/parties.ts'
 
 /** how long after a party is over it stays in the world, in seconds, so nothing of it is cut off */
@@ -35,11 +36,11 @@ export default function PartyEffects() {
   return parties.map(party => <SpawnedParty key={party.id} party={party} />)
 }
 
-/** One party, brought along by the clock the renderer follows until a moment after it is over. */
+/** One party, brought along by the world’s clock, which the renderer follows too, until a moment after it is over. */
 function SpawnedParty({party}: {party: Party}) {
   const show = useDisposable(party.show)
   useFrame(() => {
-    const since = (performance.now() - party.startsAt) / 1000
+    const since = (worldClock.now() - party.startsAt) / 1000
     const engine = SoundEngine.existing()
     show.update(since, engine && useGallery.getState().sound ? engine : undefined)
     if (show.over(since - lingering)) {

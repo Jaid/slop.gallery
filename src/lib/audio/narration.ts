@@ -2,6 +2,7 @@ import {narrationState, Narrator} from 'use-narrator/core'
 
 import {galleryEvents, notify} from '../gallery/actions.ts'
 import {useGallery} from '../gallery/store.ts'
+import worldClock from '../worldClock.ts'
 import {narrationMeter} from './NarrationMeter.ts'
 import SoundEngine from './SoundEngine.ts'
 
@@ -28,9 +29,19 @@ export const narrator = new Narrator({
   onFallback: () => notify('The recorded voice is unavailable. Using the browser voice instead.'),
 })
 
-/** Gallery-specific mute, navigation and telemetry projection. Playback state lives in the package. */
+/** Gallery-specific mute, pause, navigation and telemetry projection. Playback state lives in the package. */
 export function attachNarration(target: Narrator = narrator, events: Pick<EventTarget, 'addEventListener' | 'removeEventListener'> = globalThis) {
   target.enabled = useGallery.getState().sound
+  // The narrator falls silent mid-word while the world is frozen and speaks on from there once it goes on.
+  const followWorld = () => {
+    if (worldClock.frozen) {
+      target.pause()
+    } else {
+      target.resume()
+    }
+  }
+  const unsubscribeWorld = worldClock.subscribe(followWorld)
+  followWorld()
   const publish = () => {
     const next = narrationState(target.getSnapshot())
     const previous = useGallery.getState().narration
@@ -50,6 +61,8 @@ export function attachNarration(target: Narrator = narrator, events: Pick<EventT
   events.addEventListener('pagehide', stop)
   publish()
   return () => {
+    unsubscribeWorld()
+    target.resume()
     unsubscribeGallery()
     galleryEvents.removeEventListener('stop-narration', stop)
     galleryEvents.removeEventListener('teleport', stop)
