@@ -10,7 +10,7 @@ import {PerspectiveCamera, Vector3} from 'three/webgpu'
 
 import inspectionPointerSensitivity from '#src/lib/camera/inspectionPointerSensitivity.ts'
 import OrbitInspection, {orbitKeySpeed, orbitPointerSpeed} from '#src/lib/camera/OrbitInspection.ts'
-import {cameraPose, galleryEvents, isTextInput, setCameraFocused, useGallery} from '#src/lib/gallery.ts'
+import {cameraPose, galleryEvents, isTextInput, markPortraitInteracted, setCameraFocused, useGallery} from '#src/lib/gallery.ts'
 import {orbitables} from '#src/lib/gallery/orbitables.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import portraitOrbit from '#src/lib/gallery/portraitOrbit.ts'
@@ -125,6 +125,7 @@ export default function OrbitViewing() {
       if (session.current) {
         if (session.current.id === state.active && session.current.orbit.returning) {
           session.current.orbit.returning = false
+          markPortraitInteracted(state.active)
           useGallery.setState({inspecting: state.active})
           galleryEvents.dispatchEvent(new CustomEvent('inspect', {detail: state.active}))
         }
@@ -160,6 +161,7 @@ export default function OrbitViewing() {
         galleryEvents.dispatchEvent(new Event('inspection-focus-start'))
       }
       setCameraFocused(true)
+      markPortraitInteracted(state.active)
       useGallery.setState({inspecting: state.active})
       galleryEvents.dispatchEvent(new CustomEvent('inspect', {detail: state.active}))
     }

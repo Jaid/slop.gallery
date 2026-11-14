@@ -24,6 +24,8 @@ export type Portrait = {
   hung: boolean
   id: string
   imported?: boolean
+  /** whether the player has interacted with it in this session: listened to it, grabbed it or viewed it with V, on the work itself or on its name plate */
+  interacted?: boolean
   /** whether the placard hangs above the frame instead of below it, as in a low slot */
   labelAbove?: boolean
   narration?: Narration

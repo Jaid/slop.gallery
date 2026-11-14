@@ -10,7 +10,7 @@ import {Euler, PerspectiveCamera, Quaternion, Vector3} from 'three/webgpu'
 
 import {attachPlayerAudio, onPlayerLand, onPlayerStep, onPlayerZoomChange, onPlayerZoomTransition} from '#src/lib/audio/playerAudio.ts'
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
-import {bodyPose, cameraPose, dropPortrait, flingPlayer, galleryEvents, narrate, setCameraFocused, useGallery, wallRebound} from '#src/lib/gallery.ts'
+import {bodyPose, cameraPose, dropPortrait, flingPlayer, galleryEvents, markPortraitInteracted, narrate, setCameraFocused, useGallery, wallRebound} from '#src/lib/gallery.ts'
 import {cameraBookmarkFeet, findCameraBookmark} from '#src/lib/gallery/bookmarks.ts'
 import {flyMode} from '#src/lib/gallery/flyMode.ts'
 import {activateInteractiveObject} from '#src/lib/gallery/interactiveObjects.ts'
@@ -37,6 +37,7 @@ const onInteract = () => {
     return
   }
   if (portraitObjects.has(active)) {
+    markPortraitInteracted(active)
     narrate(active)
   }
 }

@@ -8,10 +8,12 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import Minimap from '#component/GalleryMinimap'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
-import {cameraPose, useGallery} from '../../src/lib/gallery.ts'
+import createGrabController from '../../src/components/Scene/interaction/grabController.ts'
+import {portraitFrame} from '../../src/frames/index.ts'
+import {cameraPose, markPortraitInteracted, useGallery} from '../../src/lib/gallery.ts'
 import {climbApex} from '../../src/lib/gallery/climb.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
-import {isLowerPosition, minimapHeading, minimapPortrait, minimapRooms, minimapViewBox} from '../../src/lib/gallery/minimap.ts'
+import {isLowerPosition, minimapHeading, minimapPortrait, minimapRooms, minimapViewBox, portraitMarkerMinimumThickness} from '../../src/lib/gallery/minimap.ts'
 import portraitObjects from '../../src/lib/gallery/portraitObjects.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
@@ -63,10 +65,42 @@ test('both layers render every room’s drawing without visible labels, numbers 
   for (const room of minimapRooms) {
     expect((room.lower ? lower : upper).split(`<g data-room="${room.id}" opacity="${room.opacity(initial.room)}" transform="${room.transform}"><svg `)).toHaveLength(2)
   }
-  expect(html.match(/data-portrait=/gu) ?? []).toHaveLength(initial.portraits.length * 2)
+  expect(html.match(/<rect[^>]+data-portrait=/gu) ?? []).toHaveLength(initial.portraits.length * 2)
+  expect(html).not.toMatch(/<circle[^>]+data-portrait=/u)
+  expect(html.match(/data-tone="untouched"/gu) ?? []).toHaveLength(initial.portraits.length * 2)
   const players = html.match(/<path[^>]+aria-label="Your position"[^>]*>/gu)!
   expect(players).toHaveLength(2)
   expect(players.filter(player => player.includes('display="inline"'))).toHaveLength(1)
+})
+test('both layers render each work as a rectangle of its marker size in its tone', () => {
+  const portraits = [
+    {
+      ...samplePortraits[0],
+      id: 'tone-untouched',
+    },
+    {
+      ...samplePortraits[1],
+      id: 'tone-interacted',
+      interacted: true,
+    },
+    {
+      ...samplePortraits[2],
+      id: 'tone-imported',
+      imported: true,
+      interacted: true,
+    },
+  ]
+  Object.assign(useGallery.getInitialState(), {portraits})
+  const html = [false, true].map(isLower => renderToStaticMarkup(createElement(Minimap, {lower: isLower}))).join('')
+  for (const tone of ['untouched', 'interacted', 'imported']) {
+    expect(html.match(new RegExp(`data-tone="${tone}"`, 'gu')) ?? []).toHaveLength(2)
+  }
+  const marker = minimapPortrait(portraits[0])
+  expect(html).toContain(`width="${marker.width}"`)
+  expect(html).toContain(`height="${marker.thickness}"`)
+  expect(html).toContain(`x="${-marker.width / 2}"`)
+  expect(html).toContain(`y="${-marker.thickness / 2}"`)
+  expect(html).toContain(`transform="translate(${marker.center[0]} ${marker.center[1]}) rotate(${marker.angle})"`)
 })
 test('the room the player stands in shows a little stronger than the others', () => {
   const current = minimapRooms.find(room => room.id === initial.room)!
@@ -112,7 +146,115 @@ test('the Bastion shows on the lower floor up to the apex of its western hairpin
   }
   expect(isLowerPosition('bastion', eye(slopGallery.room('bastion').spawn.position))).toBe(true)
 })
-test('portrait dots follow rigid bodies instead of the positions in the store', () => {
+test('portrait markers take their length and depth from the framed work hanging, with a readable thickness out of its back', () => {
+  const portrait = {
+    ...samplePortraits[8],
+    frame: 'barbizon' as const,
+    position: [3, 2, -4] as [number, number, number],
+    rotation: 0,
+  }
+  const frame = portraitFrame(portrait.frame)
+  const marker = minimapPortrait(portrait)
+  expect(marker.width).toBeCloseTo(portrait.width + frame.reach * 2)
+  expect(marker.depth).toBeCloseTo(frame.depth)
+  expect(marker.thickness).toBe(portraitMarkerMinimumThickness)
+  expect(marker.thickness).toBeGreaterThan(marker.depth)
+  // Facing south, its back edge stays where the frame’s back lies behind its middle.
+  expect(marker.center[0]).toBeCloseTo(portrait.position[0])
+  expect(marker.center[1] - marker.thickness / 2).toBeCloseTo(portrait.position[2] + frame.front - frame.depth)
+  expect(marker.angle).toBeCloseTo(0)
+  expect(marker.tone).toBe('untouched')
+})
+test.each([
+  [0, 0],
+  [Math.PI / 2, -90],
+  [-Math.PI / 2, 90],
+  [Math.PI, -180],
+  [Math.PI / 4, -45],
+  [-Math.PI / 4, 45],
+] as const)('a work hanging at %f radians turns its marker to %d degrees and grows toward where it faces', (rotation, degrees) => {
+  const portrait = {
+    ...samplePortraits[0],
+    position: [1, 2, 2] as [number, number, number],
+    rotation,
+  }
+  const frame = portraitFrame(portrait.frame)
+  const marker = minimapPortrait(portrait)
+  const out = frame.front - frame.depth + marker.thickness / 2
+  expect(marker.angle).toBeCloseTo(degrees)
+  expect(marker.center[0]).toBeCloseTo(portrait.position[0] + Math.sin(rotation) * out)
+  expect(marker.center[1]).toBeCloseTo(portrait.position[2] + Math.cos(rotation) * out)
+})
+test('a loose work lying flat keeps its hanging marker size, centered on it and turned with its width', () => {
+  const portrait = {
+    ...samplePortraits[8],
+    hung: false,
+    orientation: [-Math.SQRT1_2, 0, 0, Math.SQRT1_2] as [number, number, number, number],
+    position: [1, 0.2, 2] as [number, number, number],
+    rotation: 0,
+    wallId: undefined,
+  }
+  const hanging = minimapPortrait({
+    ...portrait,
+    hung: true,
+    orientation: undefined,
+  })
+  const marker = minimapPortrait(portrait)
+  expect(marker.width).toBeCloseTo(hanging.width)
+  expect(marker.thickness).toBeCloseTo(hanging.thickness)
+  expect(marker.angle).toBeCloseTo(0)
+  expect(marker.center[0]).toBeCloseTo(portrait.position[0])
+  expect(marker.center[1]).toBeCloseTo(portrait.position[2])
+})
+test.each([
+  [{}, 'untouched'],
+  [{interacted: true}, 'interacted'],
+  [{imported: true}, 'imported'],
+  [{
+    imported: true,
+    interacted: true,
+  }, 'imported'],
+] as const)('a work that is %j fills its marker as %s', (flags, tone) => {
+  expect(minimapPortrait({
+    ...samplePortraits[0],
+    ...flags,
+  }).tone).toBe(tone)
+})
+test('marking a work interacted changes only that work and only once', () => {
+  const previous = {...useGallery.getState()}
+  const portrait = {...samplePortraits[0]}
+  useGallery.setState({portraits: [portrait]})
+  try {
+    markPortraitInteracted('prop-orb-spook')
+    expect(useGallery.getState().portraits).toEqual([portrait])
+    markPortraitInteracted(portrait.id)
+    const marked = useGallery.getState().portraits
+    expect(marked[0].interacted).toBe(true)
+    markPortraitInteracted(portrait.id)
+    expect(useGallery.getState().portraits).toBe(marked)
+  } finally {
+    useGallery.setState(previous)
+  }
+})
+test('grabbing a work marks it interacted, by its name plate too', () => {
+  const previous = {...useGallery.getState()}
+  const portrait = {...samplePortraits[0]}
+  useGallery.setState({
+    active: portrait.id,
+    activeLabel: portrait.id,
+    held: null,
+    portraits: [portrait],
+    sound: false,
+  })
+  try {
+    createGrabController({} as never, {current: null}).grab()
+    expect(useGallery.getState().held).toBe(portrait.id)
+    expect(useGallery.getState().portraits[0].interacted).toBe(true)
+  } finally {
+    useGallery.setState(previous)
+  }
+})
+test('portrait markers follow rigid bodies instead of the positions in the store', () => {
   const portrait = {
     ...samplePortraits[0],
     id: 'minimap-test',
@@ -127,14 +269,43 @@ test('portrait dots follow rigid bodies instead of the positions in the store', 
     y: lowerGallery.floorY + 1,
     z: lowerGallery.oculus.center[1],
   }
-  portraitObjects.set(portrait.id, Object.assign(Object.create(null) as PortraitObject, {body: {translation: () => physical}}))
+  let turned = {
+    x: 0,
+    y: 0,
+    z: 0,
+    w: 1,
+  }
+  portraitObjects.set(portrait.id, Object.assign(Object.create(null) as PortraitObject, {
+    body: {
+      translation: () => physical,
+      rotation: () => turned,
+    },
+  }))
   try {
-    expect(minimapPortrait(portrait)).toEqual({
-      position: [physical.x, physical.y, physical.z],
-      lower: true,
-    })
+    const frame = portraitFrame(portrait.frame)
+    const out = frame.front - frame.depth + portraitMarkerMinimumThickness / 2
+    const marker = minimapPortrait(portrait)
+    expect(marker.position).toEqual([physical.x, physical.y, physical.z])
+    expect(marker.lower).toBe(true)
+    expect(marker.angle).toBeCloseTo(0)
+    expect(marker.center[0]).toBeCloseTo(physical.x)
+    expect(marker.center[1]).toBeCloseTo(physical.z + out)
+    expect(marker.width).toBeCloseTo(portrait.width + frame.reach * 2)
+    expect(marker.depth).toBeCloseTo(frame.depth)
+    expect(marker.thickness).toBe(portraitMarkerMinimumThickness)
+    expect(marker.tone).toBe('untouched')
     physical.x = 2
-    expect(minimapPortrait(portrait).position).toEqual([2, physical.y, physical.z])
+    turned = {
+      x: 0,
+      y: Math.SQRT1_2,
+      z: 0,
+      w: Math.SQRT1_2,
+    }
+    const moved = minimapPortrait(portrait)
+    expect(moved.position).toEqual([2, physical.y, physical.z])
+    expect(moved.angle).toBeCloseTo(-90)
+    expect(moved.center[0]).toBeCloseTo(2 + out)
+    expect(moved.center[1]).toBeCloseTo(physical.z)
   } finally {
     portraitObjects.delete(portrait.id)
   }
