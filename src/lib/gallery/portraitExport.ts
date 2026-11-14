@@ -1,7 +1,7 @@
 import type {EncodedImageType} from '../reencodeImage.ts'
 import type {Portrait} from './types.ts'
 
-import {modelImageType, toWebp} from '../ai/modelImage.ts'
+import {modelImageType} from '../ai/modelImage.ts'
 import downloadBlob from '../downloadBlob.ts'
 import reencodeImage from '../reencodeImage.ts'
 import {loadBlob} from './actions.ts'
@@ -20,10 +20,10 @@ const formats: Record<PortraitImageFormat, FormatDescription> = {
     type: 'image/png',
     encode: image => reencodeImage(image, 'image/png'),
   },
-  // lossy, like the WebP a fusion’s result is shared as, since PNG is the lossless choice
+  // lossless, as Chromium encodes a WebP of quality 1 without loss, so it keeps every pixel like the PNG at little more than half its size
   webp: {
     type: 'image/webp',
-    encode: toWebp,
+    encode: image => reencodeImage(image, 'image/webp', 1),
   },
 }
 /** what file names may not contain on one system or another: control characters and the characters Windows reserves */

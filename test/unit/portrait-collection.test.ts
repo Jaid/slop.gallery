@@ -50,6 +50,65 @@ const stubUrls = () => {
     },
   }
 }
+/** The browser’s image decoding and canvas, faked just far enough to watch what is decoded, drawn at which size and encoded how, until `restore` puts the real ones back. */
+const stubCanvas = () => {
+  const descriptors = {
+    createImageBitmap: Object.getOwnPropertyDescriptor(globalThis, 'createImageBitmap'),
+    OffscreenCanvas: Object.getOwnPropertyDescriptor(globalThis, 'OffscreenCanvas'),
+  }
+  const bitmap = {
+    width: 3072,
+    height: 1536,
+    close: mock(() => {}),
+  }
+  const decode = mock(async (_image: Blob) => bitmap)
+  const drawn: Array<{
+    height: number
+    image: unknown
+    width: number
+  }> = []
+  const encoded: Array<ImageEncodeOptions> = []
+  Object.defineProperty(globalThis, 'createImageBitmap', {
+    configurable: true,
+    writable: true,
+    value: decode,
+  })
+  Object.defineProperty(globalThis, 'OffscreenCanvas', {
+    configurable: true,
+    writable: true,
+    value: class {
+      constructor(readonly width: number, readonly height: number) {}
+      convertToBlob(options: ImageEncodeOptions) {
+        encoded.push(options)
+        return Promise.resolve(new Blob([options.type === 'image/png' ? png : webp], {type: options.type}))
+      }
+      getContext() {
+        return {
+          drawImage: (image: unknown) => drawn.push({
+            image,
+            width: this.width,
+            height: this.height,
+          }),
+        }
+      }
+    },
+  })
+  return {
+    bitmap,
+    decode,
+    drawn,
+    encoded,
+    restore: () => {
+      for (const [key, descriptor] of Object.entries(descriptors)) {
+        if (descriptor) {
+          Object.defineProperty(globalThis, key, descriptor)
+        } else {
+          Reflect.deleteProperty(globalThis, key)
+        }
+      }
+    },
+  }
+}
 afterEach(() => {
   Object.assign(useGallery.getInitialState(), initial)
 })
@@ -203,6 +262,19 @@ describe('portrait export', () => {
     await portraitImage({source: lying}, 'png', encode)
     expect(encode).toHaveBeenLastCalledWith(lying)
     expect(encode).toHaveBeenCalledTimes(3)
+  })
+  test('encodes a WebP anew without loss, at quality 1', async () => {
+    const {encoded, restore} = stubCanvas()
+    try {
+      const image = await portraitImage({source: new Blob([jxl], {type: 'image/jxl'})}, 'webp')
+      expect(image.type).toBe('image/webp')
+      expect(encoded).toEqual([{
+        type: 'image/webp',
+        quality: 1,
+      }])
+    } finally {
+      restore()
+    }
   })
   test('loads the image of a work kept by its URL', async () => {
     const fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(png, {headers: {'Content-Type': 'image/png'}}))
