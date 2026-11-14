@@ -130,7 +130,10 @@ describe('portrait collection', () => {
     for (const portrait of portraits) {
       const work = workOf(html, portrait.id)
       expect(work).toContain(`aspect-ratio:${portrait.width} / ${portrait.height}`)
-      expect(work).toStartWith(portrait.interacted ? '<button' : '<div')
+      // Every work is a button: left-clicking it opens its spectation view, untouched works included.
+      expect(work).toStartWith('<button')
+      expect(work).toContain('aria-pressed="false"')
+      expect(work).toContain('data-selected="false"')
       expect(work).toContain(`aria-label="${portrait.interacted ? portrait.title : 'Untouched work'}"`)
     }
     // No menu is open before the player asks for one.
@@ -169,15 +172,16 @@ describe('portrait collection', () => {
     }
     const html = render([untouched, arrival])
     const work = workOf(html, untouched.id)!
-    expect(work).toStartWith('<div')
-    expect(work).toContain('role="img"')
+    // It is still a button, whose click spectates it, only without a menu.
+    expect(work).toStartWith('<button')
+    expect(work).toContain('aria-pressed="false"')
     expect(work).not.toContain('aria-haspopup')
-    expect(itemOf(html, untouched.id)).toBeUndefined()
+    expect(work).not.toContain('aria-expanded')
     // Its title stays hidden until the player meets it, but the player brought it in.
     expect(itemOf(html, arrival.id)).toContain('aria-haspopup="menu"')
     expect(itemOf(html, arrival.id)).toContain('aria-label="Untouched work"')
-    // Without a tooltip, a click has nothing to pin.
-    expect(itemOf(html, arrival.id)).not.toContain('aria-pressed')
+    // A click spectates it instead.
+    expect(itemOf(html, arrival.id)).toContain('aria-pressed="false"')
     expect(html).not.toContain(arrival.title)
   })
   test('only a work the player has interacted with has a tooltip, with its title, description, creator and year', () => {
@@ -191,7 +195,7 @@ describe('portrait collection', () => {
     const tooltipId = /\binterestfor="([^"]+)"/u.exec(itemOf(html, known.id)!)?.[1]
     expect(tooltipId).toBeString()
     expect(itemOf(html, known.id)).toContain('data-interacted="true"')
-    // A click pins the tooltip instead of opening the menu.
+    // A click spectates the work instead of opening the menu, which its pressed state follows.
     expect(itemOf(html, known.id)).toContain('aria-pressed="false"')
     const tooltips = html.match(/<div\b[^>]*popover="hint"[^>]*>.*?<\/div>/gu)!
     expect(tooltips).toHaveLength(1)
@@ -206,16 +210,31 @@ describe('portrait collection', () => {
       expect(html).not.toContain(value)
     }
   })
-  test('a pinned tooltip stays open as a popover of its own instead of a hint', () => {
-    const portrait = samplePortraits[0]
-    const pinned = renderToStaticMarkup(createElement(PortraitTooltip, {
-      id: 'tooltip',
-      portrait,
-      pinnedTo: {} as HTMLElement,
-    }))
-    expect(pinned).toMatch(/^<div\b[^>]*\bpopover="auto"/u)
-    expect(tooltip()).toMatch(/^<div\b[^>]*\bpopover="hint"/u)
-    expect(pinned).toContain(portrait.description)
+  test('a tooltip is only a hint: clicking a work spectates it instead of pinning its tooltip', () => {
+    const hint = tooltip()
+    expect(hint).toMatch(/^<div\b[^>]*\bpopover="hint"/u)
+    expect(hint).not.toContain('popover="auto"')
+    expect(hint).toContain(samplePortraits[0].description)
+  })
+  test('the spectated work is pressed and keeps its tooltip out of the way', () => {
+    const known = {
+      ...samplePortraits[0],
+      interacted: true,
+    }
+    const other = {
+      ...samplePortraits[1],
+      interacted: true,
+    }
+    Object.assign(useGallery.getInitialState(), {portraits: [known, other]})
+    const html = renderToStaticMarkup(createElement(PortraitCollection, {selectedId: known.id}))
+    const selected = itemOf(html, known.id)!
+    expect(selected).toContain('aria-pressed="true"')
+    expect(selected).toContain('data-selected="true"')
+    expect(selected).not.toContain('interestfor')
+    const rest = itemOf(html, other.id)!
+    expect(rest).toContain('aria-pressed="false"')
+    expect(rest).toContain('data-selected="false"')
+    expect(rest).toContain('interestfor=')
   })
   test('a tooltip tells a missing year apart from year zero', () => {
     expect(tooltip()).toContain('Undated')

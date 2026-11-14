@@ -10,6 +10,7 @@ const paths = {
       <circle cx='16' cy='17' r='3' />
     </>,
   arrow: <path d='M4 12h16m-6-6 6 6-6 6' />,
+  back: <path d='M20 12H4m6 6-6-6 6-6' />,
   close: <path d='m6 6 12 12M6 18 18 6' />,
   download: <path d='M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 19h14' />,
   copy:
