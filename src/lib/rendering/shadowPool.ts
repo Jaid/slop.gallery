@@ -2,11 +2,10 @@ import type {Camera, Light, Object3D} from 'three/webgpu'
 
 import {Frustum, Matrix4, PointLight, Sphere, Vector3} from 'three/webgpu'
 
-import {readCinematicGraphics} from './graphicsMode.ts'
 import {isShadowSlot, lightShadow, shadowSlotKey, useLightEdits} from './lightLevels.ts'
 
 /** how many shadow-casting point lights the pool keeps; each one costs every lit pixel, in use or not */
-export const shadowSlotCount = readCinematicGraphics() ? 8 : 4
+export const shadowSlotCount = 4
 /** how far a slot’s shadow reaches when its light has no cutoff, in meters */
 const openReach = 30
 /** how much nearer than a light holding a slot another must come to take it over, in meters, so two lights about as near don’t trade it back and forth, rendering their shadow maps afresh each time */
