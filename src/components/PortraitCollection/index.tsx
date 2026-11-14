@@ -13,6 +13,13 @@ import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
 
 import css from './style.module.sass'
 
+export type PortraitCollectionProps = {
+  /** Called when a work is left-clicked to spectate it in the pause menu. */
+  onSelect?: (portrait: Portrait) => void
+  /** the id of the work currently shown in the spectation view */
+  selectedId?: string | null
+}
+
 /** What the menu and its messages call a work: by its title only once the player has interacted with it, like its tooltip. */
 const called = (portrait: Portrait) => (portrait.interacted ? `“${portrait.title}”` : 'The untouched work')
 const save = (portrait: Portrait, format: PortraitImageFormat) => {
@@ -51,9 +58,9 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
 
 /**
  * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie.
- * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
+ * Left-clicking a work opens it in the spectation view; each also has a context menu of its own in place of the browser’s, see {@link menuItems}, except a default work the player hasn’t interacted with yet.
  */
-export default function PortraitCollection() {
+export default function PortraitCollection({onSelect, selectedId = null}: PortraitCollectionProps) {
   const portraits = useGallery(s => s.portraits)
   const [menu, setMenu] = useState<{
     id: string
@@ -68,11 +75,11 @@ export default function PortraitCollection() {
       <ul className={css.grid}>
         {portraits.map(portrait => <li key={portrait.id} className={css.cell}>
           <PortraitCollectionItem
-            menuOpen={portrait === chosen} portrait={portrait} onMenu={(x, y) => setMenu({
+            menuOpen={portrait === chosen} portrait={portrait} selected={portrait.id === selectedId} onMenu={(x, y) => setMenu({
               id: portrait.id,
               x,
               y,
-            })}
+            })} onSelect={onSelect}
           />
         </li>)}
       </ul>
