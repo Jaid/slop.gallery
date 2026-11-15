@@ -13,7 +13,7 @@ import {frozenSeconds} from '#src/lib/frozenTime.ts'
 import {galleryEvents, isTextInput, setCameraFocused} from '#src/lib/gallery.ts'
 import {endIntro, introDirection} from '#src/lib/gallery/intro.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
-import pauseMenu from '#src/lib/pauseMenu.ts'
+import pauseMenu, {isPausing} from '#src/lib/pauseMenu.ts'
 import {setInspectionFocus} from '#src/lib/rendering/playerView.ts'
 
 /** the seconds the background blur takes to clear once the player has entered */
@@ -23,7 +23,7 @@ const rightKeys = new Set(['ArrowRight', 'KeyD'])
 /**
  * Circles the camera on the world’s intro orbit while the first menu shows, one turn a minute, which way the game’s seed decides, with every sound of the world heard from it.
  * It is V-inspection’s orbit, held at the intro’s height and distance and circling on its own, with its blur of the background beyond the subject: dragging with the left mouse button anywhere but on the menu’s buttons and text or holding A and D turns it, and a few seconds after the last turn, it circles on its own again.
- * Once the player enters, the player stands with its eyes right where the camera was, looking the same way, and falls from there while the blur clears, which ends the intro. If the first menu jumps straight to the pause menu instead, the player takes over in the same way but at once, without the fade, and hangs frozen there until the player resumes.
+ * Once the player enters, or Escape jumps straight to the pause menu, the player stands with its eyes right where the camera was, looking the same way, and falls from there while the blur clears, which ends the intro. Under that pause menu, the fall and the blur wait for Resume.
  *
  * Mount it after the Player: the player’s own spawn releases the camera on mounting, and the player writes the camera before this does every frame.
  */
@@ -81,38 +81,21 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
       state.dragging = false
       state.keys.clear()
     }
-    /**
-     * Hands the orbiting camera to the player’s body, eyes and gaze unchanged. Entering lets its background blur clear over the fall; `instant` clears it and ends the intro right away, as no frame of the frozen world will fade it.
-     */
-    const takeOver = (instant: boolean) => {
-      if (fading.current === null) {
-        // The teleport releases the camera and puts the player there at once, camera included, so the view never moves.
-        galleryEvents.dispatchEvent(new CustomEvent('teleport', {
-          detail: {
-            feet: true,
-            position: [camera.position.x, camera.position.y - defaultEgoOptions.eyeHeight, camera.position.z],
-            rotation: camera.quaternion.toArray(),
-          },
-        }))
-        fading.current = instant ? 0 : 1
-      } else if (instant) {
-        fading.current = 0
-      } else {
+    const enter = () => {
+      const menu = pauseMenu.getSnapshot()
+      if (!menu.locked && !isPausing(menu) || fading.current !== null) {
         return
       }
+      // The teleport releases the camera and puts the player there at once, camera included, so the view never moves.
+      galleryEvents.dispatchEvent(new CustomEvent('teleport', {
+        detail: {
+          feet: true,
+          position: [camera.position.x, camera.position.y - defaultEgoOptions.eyeHeight, camera.position.z],
+          rotation: camera.quaternion.toArray(),
+        },
+      }))
+      fading.current = 1
       stop()
-      if (instant) {
-        setInspectionFocus(0, focus.current.distance, focus.current.proximity)
-        endIntro()
-      }
-    }
-    const followMenu = () => {
-      const {locked, stage} = pauseMenu.getSnapshot()
-      if (locked) {
-        takeOver(false)
-      } else if (stage === 'pause') {
-        takeOver(true)
-      }
     }
     const down = (event: PointerEvent) => {
       if (event.button === 0 && fading.current === null && grabsScene(event.target)) {
@@ -144,7 +127,7 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
     const keyUp = (event: KeyboardEvent) => {
       state.keys.delete(event.code)
     }
-    const unsubscribe = pauseMenu.subscribe(followMenu)
+    const unsubscribe = pauseMenu.subscribe(enter)
     globalThis.addEventListener('pointerdown', down, true)
     globalThis.addEventListener('pointermove', move, true)
     globalThis.addEventListener('pointerup', up, true)
