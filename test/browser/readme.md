@@ -121,3 +121,13 @@ BROWSER=/path/to/chromium bun run test:live:spawn
 ```
 
 This builds the gallery and starts it once in every room with `?room`, each in a private headless browser without input. Every room but the Lobby streams in after the page, bringing its floors, so the physics waits for them; once none is loading anymore, the player has to stand grounded at the room’s spawn. It caught the physics hold reaching the scene too late, which let the player fall through the floors of a start room that had not mounted yet. `LIVE_TARGET` reuses a build like for the Oculus test.
+
+## Intro → frozen pause
+
+```sh
+BROWSER=/path/to/chromium bun run test:live:intro-pause
+```
+
+This builds the gallery and presses the real Escape key on fresh and returning intro menus in Fast and Heavy graphics, then on a returning menu opened with `?room=oculus` instead of the intro orbit. It checks the synchronous camera-to-body handoff into the air above the floor, the pause heading taking the focus, no pointer-lock round trip, frozen camera/physics/audio, no frames at rest, resize redraws, Resume dropping the body straight down from where it hung and unchanged nonfreezing focus-loss menus. Modified, repeated, already-handled and text-input Escape events are ignored. Unlike capture tests, it opens the page with `test: 'false'` (`--test false`), as `?test=true` leaves the intro out, and `waitForGallery(page, {pose: false})` waits for readiness without requiring the camera-posing hook.
+
+To reuse a build, run `LIVE_TEST=true BROWSER=/path/to/chromium bun test test/intro-pause.live.test.ts`; `LIVE_TARGET` selects another build directory.
