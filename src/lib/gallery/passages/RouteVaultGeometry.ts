@@ -268,26 +268,30 @@ export default class RouteVaultGeometry {
     this.ribs = mergeParts(passage.ribs.flatMap(along => sweep(runs(along - routeRibDepth / 2, along + routeRibDepth / 2), ring(-routeRibThickness, 0), true)))
     /** how many strips the paving is cut into from either wall to the centerline, at most `pavingStrip` wide, so it bends with its crossfall and stays close to flat through the twist of a ramp round a turn */
     const strips = Math.ceil(width / 2 / pavingStrip)
-    const floorRuns = runs(0, route.length, [...passage.creases, ...passage.floorInlet ? [passage.floorInlet.inlet.length] : []])
+    const floorRuns = runs(0, route.length, [...passage.creases, ...passage.floorInlet ? [passage.floorInlet.inlet.length] : [], ...passage.floorSpill ? [passage.floorSpill.from] : []])
     const pavingSection: Section = (station, run) => {
       const [left, right] = [-1, 1].map(side => passage.reach(station, side))
-      // Only the inlet needs extra columns; the rest keeps the ordinary paving tessellation.
+      // Only an inlet or a spill needs its sampled profile’s columns; the rest keeps the ordinary paving tessellation.
       const inlet = passage.floorInlet && run[0].along < passage.floorInlet.inlet.length ? passage.floorInlet : undefined
-      const across = inlet?.across ?? [
+      const spill = passage.floorSpill && run.at(-1)!.along > passage.floorSpill.from + 1e-9 ? passage.floorSpill : undefined
+      const sampled = inlet ?? spill
+      const across = sampled?.across ?? [
         ...Array.from({length: strips + 1}, (_, index) => -left + left * index / strips),
         ...Array.from({length: strips}, (_, index) => right * (index + 1) / strips),
       ]
       const top = across.map(lateral => [lateral, passage.floorY(station, lateral) - station.y] as const)
       const leftY = top[0][1]
       const rightY = top.at(-1)![1]
+      // An inlet’s slab is as thick under its sampled floor as anywhere. A spill keeps the thickness the route’s own paving had under it, its crossfall’s thinning included, so its underside runs on from the paving before it and only rises with the spill itself.
+      const bottom = inlet ? top.toReversed().map(([lateral, y]) => [lateral, y - pavingThickness] as const) : (spill ? top.toReversed().map(([lateral, y]) => [lateral, y - pavingThickness + passage.sag(station, lateral)] as const) : [[right, -pavingThickness], [-left, -pavingThickness]] as const)
       return [
         top,
         [[right, rightY], [right, rightY - pavingThickness]],
-        inlet ? top.toReversed().map(([lateral, y]) => [lateral, y - pavingThickness] as const) : [[right, -pavingThickness], [-left, -pavingThickness]],
+        bottom,
         [[-left, leftY - pavingThickness], [-left, leftY]],
       ]
     }
-    const makePaving = (pavingRuns: ReadonlyArray<ReadonlyArray<RouteStation>>) => breakPits(mergeParts(sweep(pavingRuns, pavingSection, false, passage.floorInlet ? [2] : [])), passage, passage.pits)
+    const makePaving = (pavingRuns: ReadonlyArray<ReadonlyArray<RouteStation>>) => breakPits(mergeParts(sweep(pavingRuns, pavingSection, false, passage.floorInlet || passage.floorSpill ? [2] : [])), passage, passage.pits)
     const paving = makePaving(floorRuns)
     const tail = route.pieces.at(-1)!
     if (passage.floorInlet && !passage.pits.length && !passage.drains.length && tail.kind === 'line' && tail.from >= passage.floorInlet.inlet.length && tail.startY === tail.endY) {

@@ -10,12 +10,12 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} fro
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {corniceBands, vaultShellThickness, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionCrater, bastionCurve, bastionLinkStart} from '../../src/lib/gallery/bastion.ts'
-import {bastionLink, bastionLinkCrossfall, bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, bastionLinkCrossfall, bastionLinkGate, bastionLinkGateSpillLength, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import {climbMouth} from '../../src/lib/gallery/climb.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse from '../../src/lib/gallery/oculusApse.ts'
-import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
+import RouteVaultGeometry, {pavingThickness} from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import {openingArc, openingTop} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls, {floorHeight, insideGallery, roomAt} from './fixtures/gallery.ts'
@@ -56,13 +56,13 @@ test('both wings and the link belong to one Bastion', () => {
     const position: Vec3 = [x, y + 1.6, z]
     expect(roomAt(position)).toBe('bastion')
     expect(insideGallery(position)).toBe(true)
-    // its paving falling toward its middle; where it meets the landing, the landing’s floor over its sill counts
-    expect(floorHeight(position)).toBeCloseTo(along < 0.05 ? y : y - bastionLink.sag(route.at(along), 0), 5)
+    // its paving falling toward its middle and, over its last stretch, spilling up to the hollow at the gate; where it meets the landing, the landing’s floor over its sill counts
+    expect(floorHeight(position)).toBeCloseTo(along < 0.05 ? y : bastionLink.floorY(route.at(along), 0), 5)
     if (along > 0.3 && along < route.length - 0.1) {
       expect(Math.abs(route.at(along + 0.01).y - route.at(along - 0.01).y) / 0.02).toBeLessThan(0.25)
     }
   }
-  // It leaves the curve’s landing heading south, level with it, and ends in the mouth’s north wall at its elbow, a step under the hollow in front of its gate, its west wall in line with the mouth’s.
+  // It leaves the curve’s landing heading south, level with it, and ends in the mouth’s north wall at its elbow, at the hollow’s outlet under the spill in front of its gate, its west wall in line with the mouth’s.
   expect(route.start).toEqual(bastionLinkStart.point)
   expect(route.start[1]).toBeCloseTo(landing.start[1] + bastionCurve.width / 2, 9)
   expect([route.y, route.heading]).toEqual([bastionLinkStart.y, Math.PI / 2])
@@ -72,11 +72,11 @@ test('both wings and the link belong to one Bastion', () => {
   expect(route.end.y).toBe(climbMouthHollow.outletY)
   // under the elbow’s fall toward its middle and the hollow sunk into it
   expect(climbMouth.floorY - route.end.y).toBeLessThan(0.35)
-  // It stands taller there than at the landing by the step down to its floor, so its crown meets the mouth’s ceiling.
+  // It stands taller there than at the landing by the step down to its route’s floor, so its crown meets the mouth’s ceiling.
   expect(route.end.y + route.end.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
   expect(route.height).toBe(bastionLinkStart.height)
 })
-test('its paving falls 1 in 20 from both walls toward its middle, but levels out toward the gate, which stands on a level floor', () => {
+test('its paving falls 1 in 20 from both walls toward its middle, and over its last stretch the hollow’s bow spills into it up to the gate', () => {
   expect(bastionLink.crossfall?.slope).toBe(bastionLinkCrossfall)
   expect(bastionLinkCrossfall).toBe(1 / 20)
   for (const along of [0, 5, 12, 20]) {
@@ -88,12 +88,76 @@ test('its paving falls 1 in 20 from both walls toward its middle, but levels out
     expect(bastionLink.sag(station, half)).toBe(0)
     expect(bastionLink.sag(station, bastionLink.width / 2)).toBe(0)
   }
-  // Under the gate, level across
+  const spill = bastionLink.floorSpill!
+  expect(spill.spill.length).toBe(bastionLinkGateSpillLength)
+  expect(bastionLink.crossfall?.easeOut).toBe(bastionLinkGateSpillLength)
+  expect(spill.from).toBeCloseTo(route.length - bastionLinkGateSpillLength, 9)
+  // Its own crossfall still eases out under the spill, and the gate’s foot is still cut down to the route’s floor, so its bars stay buried across the bow.
   expect(bastionLink.sag(route.end, 0)).toBe(0)
   expect(bastionLinkGate.hole.bottom).toBeCloseTo(route.end.y - climbMouth.floorY, 9)
+  // Where the spill begins, the paving is still the route’s own, falling toward its middle.
+  const started = route.at(spill.from)
+  for (const right of [-bastionLink.width / 2, -1, 0, 1, bastionLink.width / 2]) {
+    expect(bastionLink.floorY(started, right)).toBeCloseTo(started.y - bastionLink.sag(started, right), 9)
+  }
+  // At the gate it meets the hollow’s surface across its whole width — its sampled profile exactly, and the hollow itself to well under a millimeter between samples — so no slice of the hollow’s step stands over the tunnel’s floor there.
+  for (const [right, y] of spill.spill.profile) {
+    expect(bastionLink.floorY(route.end, right)).toBeCloseTo(y, 9)
+  }
+  const [endX] = route.end.point
+  for (let x = endX - bastionLinkGate.hole.width / 2; x <= endX + bastionLinkGate.hole.width / 2; x += 0.01) {
+    const south = climbMouth.floorY - climbMouthHollow.sink(x, gateZ)
+    // The route heads south at the gate, so its right runs west.
+    expect(Math.abs(bastionLink.floorY(route.end, endX - x) - south)).toBeLessThan(0.001)
+  }
+  // From where it begins to the gate it climbs toward the hollow all across, barely at its middle under the hatch and by the whole step at its walls.
+  for (const right of [-bastionLink.width / 2, 0, bastionLink.width / 2]) {
+    let previous = bastionLink.floorY(started, right)
+    for (let back = bastionLinkGateSpillLength - 0.1; back >= 0; back -= 0.1) {
+      const height = bastionLink.floorY(route.at(route.length - back), right)
+      expect(height).toBeGreaterThan(previous)
+      previous = height
+    }
+  }
+  expect(bastionLink.floorY(route.end, 0) - route.end.y).toBeGreaterThan(0.01)
+  expect(bastionLink.floorY(route.end, 0) - route.end.y).toBeLessThan(0.03)
+  expect(bastionLink.floorY(route.end, bastionLink.width / 2)).toBe(climbMouth.floorY)
   // At the landing, it lies a hand’s breadth under the landing’s floor in its middle and meets it at the walls, a low sill along the doorway.
   expect(bastionLink.floorAt(...route.start)).toBeCloseTo(bastionLinkStart.y - bastionLinkCrossfall * (bastionLink.width / 2 - wallFace), 9)
   expect(bastionCurve.floorAt(route.start[0], route.start[1] - 0.05)).toBe(bastionLinkStart.y)
+})
+test('the spill’s paving and collision follow its floor queries, and the last turn’s west baseboard climbs with it to the mouth’s floor', () => {
+  const vault = new RouteVaultGeometry(bastionLink)
+  const material = new MeshBasicMaterial({side: DoubleSide})
+  const paving = new Mesh(vault.paving, material)
+  const down = new Raycaster(new Vector3, new Vector3(0, -1, 0))
+  const up = new Raycaster(new Vector3, new Vector3(0, 1, 0))
+  try {
+    expect(vault.pavingCollision).toBe(vault.paving)
+    // On the last turn the swept triangles chord across the arc, so they and the queries through the route’s stations agree to a couple of millimeters, not to the last float.
+    for (let back = 0.013; back < bastionLinkGateSpillLength; back += 0.087) {
+      const station = route.at(route.length - back)
+      for (let right = -1.74; right < 1.75; right += 0.113) {
+        const [x, z] = [station.point[0] - Math.sin(station.heading) * right, station.point[1] + Math.cos(station.heading) * right]
+        down.ray.origin.set(x, 0, z)
+        const top = down.intersectObject(paving)[0]
+        expect(top).toBeDefined()
+        expect(Math.abs(top.point.y - bastionLink.floorAt(x, z)!)).toBeLessThan(0.002)
+        up.ray.origin.set(x, -8, z)
+        const bottom = up.intersectObject(paving)[0]
+        expect(bottom).toBeDefined()
+        const projected = route.project(x, z)!
+        expect(Math.abs(bottom.point.y - (top.point.y - pavingThickness + bastionLink.sag(route.at(projected.along), projected.right)))).toBeLessThan(0.002)
+      }
+    }
+    // The west wall runs on into the mouth’s west wall, so its baseboard climbs with the spill to the mouth’s floor; the little east wall that turns the corner back along the strip keeps standing on the route’s floor instead of climbing the whole step round its corner.
+    const [eastWall, westWall] = bastionLink.walls.slice(-2)
+    expect(Math.max(...westWall.baseboardProfile!.map(([, rise]) => rise))).toBeCloseTo(climbMouth.floorY - westWall.center[1], 9)
+    expect(Math.max(...eastWall.baseboardProfile!.map(([, rise]) => rise))).toBeCloseTo(route.end.y - eastWall.center[1], 9)
+  } finally {
+    material.dispose()
+    vault.dispose()
+  }
 })
 test('beside the Lodge, the tunnel takes up all the room between the Lodge and the mouth of the western climb', () => {
   const strip = route.pieces.filter(straight).find(piece => Math.abs(piece.heading - Math.PI) < 1e-9)!

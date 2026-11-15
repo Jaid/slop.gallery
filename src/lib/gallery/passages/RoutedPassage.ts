@@ -3,11 +3,13 @@ import type {Wall, WallOpening} from '../../placement/wallGeometry.ts'
 import type {Vec3} from '../types.ts'
 import type {PassageCutout} from './Passage.ts'
 import type {FloorInlet} from './PassageFloorInlet.ts'
+import type {FloorSpill} from './PassageFloorSpill.ts'
 import type {RoutePiece, RouteStation} from './PassageRoute.ts'
 
 import {wallCoordinates} from '../../placement/wallGeometry.ts'
 import {vaultShellThickness, wallFace} from '../architectureDimensions.ts'
 import PassageFloorInlet from './PassageFloorInlet.ts'
+import PassageFloorSpill from './PassageFloorSpill.ts'
 import PassageRoute from './PassageRoute.ts'
 
 /** the box around a stretch of a passage’s air, from its lowest floor to its highest ceiling */
@@ -52,6 +54,8 @@ export type RoutedPassageOptions = {
   fixPavingEdges?: boolean
   /** a floor profile at its mouth that blends into its route’s floor; only for a straight entry without crossfall or outlines */
   floorInlet?: FloorInlet
+  /** a floor profile at its far end, sampled from the floor beyond it, that blends back into its route’s floor, crossfall included; only without a floor inlet or outlines */
+  floorSpill?: FloorSpill
   openings?: ReadonlyArray<RouteOpening>
   /** at most one for each side */
   outlines?: ReadonlyArray<RouteOutline>
@@ -120,6 +124,7 @@ export default class RoutedPassage {
   readonly drains: ReadonlyArray<ReadonlyArray<Point>>
   readonly fixPavingEdges: boolean
   readonly floorInlet?: PassageFloorInlet
+  readonly floorSpill?: PassageFloorSpill
   /** the room’s id followed by the passage’s own, which its walls’ ids start with */
   readonly name: string
   /** the outlines, each with the stretch along the route it stands in for its side’s walls on */
@@ -131,7 +136,7 @@ export default class RoutedPassage {
   /** a wall on each side of each of the route’s pieces in turn, the left one first, where the walls of an outline take the place of those of its side along its stretch, in its first piece’s place */
   readonly walls: ReadonlyArray<Wall>
 
-  constructor(readonly id: string, readonly room: RoomId, readonly route: PassageRoute, readonly width = 2.6, {abutments = [], cornice = true, crossfall, drains = [], floorInlet, openings = [], outlines = [], pits = [], fixPavingEdges = true}: RoutedPassageOptions = {}) {
+  constructor(readonly id: string, readonly room: RoomId, readonly route: PassageRoute, readonly width = 2.6, {abutments = [], cornice = true, crossfall, drains = [], floorInlet, floorSpill, openings = [], outlines = [], pits = [], fixPavingEdges = true}: RoutedPassageOptions = {}) {
     if (abutments.some(box => ![...box.position, ...box.size].every(Number.isFinite) || box.size.some(size => size <= 0))) {
       throw new RangeError('A routed passage’s abutments need finite centers and positive dimensions.')
     }
@@ -176,6 +181,13 @@ export default class RoutedPassage {
     this.creases = this.outlines.flatMap(({creases}) => creases).toSorted((a, b) => a - b)
     for (const outline of this.outlines) {
       this.checkOutline(outline)
+    }
+    if (floorSpill) {
+      if (floorInlet || outlines.length) {
+        throw new RangeError('A floor spill needs a passage without a floor inlet or outlines.')
+      }
+      // Its grid is laid over the route’s own floor, crossfall included, which is only known once the outlines stand, empty as they have to be for one.
+      this.floorSpill = new PassageFloorSpill(route, width, floorSpill, (station, right) => station.y - this.sag(station, right))
     }
     const placed: Array<PlacedWall> = route.pieces.flatMap((piece, index) => [-1, 1].flatMap((side): Array<PlacedWall> => {
       const outline = this.outlineAt(piece.from + piece.length / 2, side)
@@ -254,9 +266,9 @@ export default class RoutedPassage {
     return abreast && this.floorY(abreast.station, abreast.right)
   }
 
-  /** The paving’s height at a station and lateral offset, including its inlet or crossfall. The vault follows the unmodified route instead. */
+  /** The paving’s height at a station and lateral offset, including its inlet, its spill or its crossfall. The vault follows the unmodified route instead. */
   floorY(station: RouteStation, right: number) {
-    return this.floorInlet?.height(station.along, right) ?? station.y - this.sag(station, right)
+    return this.floorInlet?.height(station.along, right) ?? this.floorSpill?.height(station.along, right) ?? station.y - this.sag(station, right)
   }
 
   /** How far straight across from the station toward `side`, −1 its left and 1 its right, that side’s walls stand, along their center line: half the passage’s width, or further out along an outline. */
@@ -293,11 +305,13 @@ export default class RoutedPassage {
   stations(from: number, to: number) {
     const stations = this.route.stations(from, to, routeTurnStep)
     const {easeIn = 0, easeOut = 0} = this.crossfall ?? {}
+    const spill = this.floorSpill
+    // A spill’s grid already lays its rows over the crossfall’s easing; an easing station of its own in between would cut across its triangles instead of running along them.
     const easing = [
       ...Array.from({length: Math.ceil(easeIn / crossfallStep)}, (_, index) => easeIn * index / Math.ceil(easeIn / crossfallStep)),
       ...Array.from({length: Math.ceil(easeOut / crossfallStep)}, (_, index) => this.route.length - easeOut * index / Math.ceil(easeOut / crossfallStep)),
-    ]
-    const extra = [...this.creases, ...easing, ...this.floorInlet?.along ?? []].filter((along, index, all) => along > from && along < to && stations.every(station => Math.abs(station.along - along) > 1e-9) && all.findIndex(other => Math.abs(other - along) < 1e-9) === index).map(along => this.route.at(along))
+    ].filter(along => !spill || along <= spill.from || along >= this.route.length || spill.along.some(value => Math.abs(value - along) <= 1e-9))
+    const extra = [...this.creases, ...easing, ...this.floorInlet?.along ?? [], ...spill?.along ?? []].filter((along, index, all) => along > from && along < to && stations.every(station => Math.abs(station.along - along) > 1e-9) && all.findIndex(other => Math.abs(other - along) < 1e-9) === index).map(along => this.route.at(along))
     return [...stations, ...extra].toSorted((a, b) => a.along - b.along)
   }
 
@@ -512,7 +526,7 @@ export default class RoutedPassage {
   private plainWall(piece: RoutePiece, side: number): Omit<Wall, 'id'> {
     const half = this.width / 2
     // A ramp climbs or falls and grows taller or lower steadily, so the lowest floor and the highest crown lie at the piece’s ends.
-    const foot = this.floorInlet ? Math.min(...this.stations(piece.from, piece.from + piece.length).map(station => this.floorY(station, side * this.width / 2))) : Math.min(piece.startY, piece.endY)
+    const foot = this.floorInlet || this.floorSpill ? Math.min(...this.stations(piece.from, piece.from + piece.length).map(station => this.floorY(station, side * this.width / 2))) : Math.min(piece.startY, piece.endY)
     const common = {
       room: this.room,
       height: Math.max(piece.startY + piece.startHeight, piece.endY + piece.endHeight) - foot - 0.3,
@@ -571,12 +585,13 @@ export default class RoutedPassage {
   /** The wall along one side of a piece, `side` −1 on its left and 1 on its right, facing into the passage. Like a room’s, it stops 30 cm short of the ceiling, here the vault’s crown. */
   private wall(piece: RoutePiece, side: number): Omit<Wall, 'id'> {
     const wall = this.plainWall(piece, side)
-    if (piece.startY === piece.endY && (!this.floorInlet || piece.from >= this.floorInlet.inlet.length)) {
+    const spilled = this.floorSpill !== undefined && piece.from + piece.length > this.floorSpill.from + tolerance
+    if (piece.startY === piece.endY && !spilled && (!this.floorInlet || piece.from >= this.floorInlet.inlet.length)) {
       return wall
     }
     // Where the floor meets the wall along its center line, at the piece’s ends and at every knot of its ramp in between
     const half = this.width / 2
-    const stations = this.floorInlet ? this.stations(piece.from, piece.from + piece.length) : [0, ...PassageRoute.knots(piece), piece.length].map(offset => PassageRoute.station(piece, offset))
+    const stations = this.floorInlet || spilled ? this.stations(piece.from, piece.from + piece.length) : [0, ...PassageRoute.knots(piece), piece.length].map(offset => PassageRoute.station(piece, offset))
     const contact = stations.map((station): readonly [number, number] => {
       const {point: [x, z], heading} = station
       const y = this.floorY(station, side * half)

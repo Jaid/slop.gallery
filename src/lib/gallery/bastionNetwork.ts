@@ -65,10 +65,10 @@ export const climbMouthHollow = new FloorHollow(climbMouth.floorY, {
   },
   sag: elbowSag,
 })
-/** How tall the tunnel stands over its floor at the gate: its floor there lies a step under the mouth’s, so it stands that much taller than at the landing, and its crown meets the mouth’s ceiling instead of leaving a gap over the gate that shows the sky. Its height grows along the whole climb, like its floor. */
+/** How tall the tunnel stands over its route’s floor at the gate: that floor lies a step under the mouth’s, under the spill that rises to it at the jambs, so it stands that much taller than at the landing, and its crown meets the mouth’s ceiling instead of leaving a gap over the gate that shows the sky. Its height grows along the whole climb, like its floor. */
 const gateHeight = climbMouth.floorY + climbMouth.height - climbMouthHollow.outletY
 /**
- * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow, easing up from the platform’s level all the way to a step under the hollow in front of it.
+ * The connecting tunnel from the landing south of the curve’s S bend south along the Oculus, round a corner west into the strip south of the Lodge and along it, then round a last turn south into the mouth’s elbow, easing up from the platform’s level all the way to the hollow’s outlet in front of it.
  */
 const route = new PassageRoute([startX, startZ], heading, y, height, [
   {
@@ -92,16 +92,29 @@ const route = new PassageRoute([startX, startZ], heading, y, height, [
  * How steeply the tunnel’s paving falls from both walls toward its middle: 1 in 20, gentler than the climb’s, so the sill it leaves along the doorway at the landing only slows orbs coming out of it into the crater instead of stopping them short of it.
  */
 export const bastionLinkCrossfall = 1 / 20
+/** How far back from the gate the hollow’s bow spills into the tunnel’s paving: the same last stretch over which its own crossfall eases out under the spill, so the tunnel’s shallow fall toward its middle runs on into the hollow’s deeper one instead of flattening out against it. */
+export const bastionLinkGateSpillLength = 1.5
+const gateSpillRights = [...Array.from({length: 41}, (_, index) => -bastionLinkWidth / 2 + bastionLinkWidth * index / 40), -linkVault.width / 2, linkVault.width / 2, -climbMouthHollow.shape.throat, climbMouthHollow.shape.throat].toSorted((a, b) => a - b).filter((right, index, all) => index === 0 || right - all[index - 1] > 1e-9)
+// At the gate the route heads south, so its right runs west: the point `right` meters right of its end lies that far west of the tunnel’s mouth on the mouth’s north wall, where the hollow’s surface meets it.
+// On the west, that run goes on to the center line of the mouth’s west wall, which the tunnel’s west wall runs into on the same face. On the east it stops at the jamb’s face: beyond it, inside the little curved wall that turns the corner back along the strip, the profile drops to the tunnel route’s own floor, so that wall keeps standing on the strip’s floor round the corner instead of its skirting climbing the whole step in its 20 cm of length.
+const gateSpillProfile = gateSpillRights.map(right => [right, right === -bastionLinkWidth / 2 ? climbMouthHollow.outletY : climbMouth.floorY - climbMouthHollow.sink(endX - right, mouthNorthZ)] as const)
 const lodgeSpurAlong = route.project(lodgeSpurX, bastionLinkStripZ)!.along
 const lodgeSpurFloorY = route.at(lodgeSpurAlong).y
 /** how tall the tunnel stands where the spur leaves it, which the spur’s own vault starts at too, so their crowns meet over the spur’s doorway */
 const lodgeSpurLinkHeight = route.at(lodgeSpurAlong).height
 const lodgeSpurStartZ = bastionLinkStripZ - bastionLinkWidth / 2
-/** Its paving falls toward its middle, but for its last stretch to the gate, where it eases out to stand on a level floor; at the landing, it meets the landing’s floor on a sill along the doorway, a hand’s breadth over its middle. */
+/**
+ * Its paving falls toward its middle, easing out over its last stretch to the gate under a spill of the hollow beyond it: there it rises across its width to meet the hollow’s bowed surface at the gate, by barely 2 cm at its middle, under the hatch, and by the whole step down from the mouth’s floor at its jambs, instead of ending flat against that bow in a hard slice.
+ * At the landing, it meets the landing’s floor on a sill along the doorway, a hand’s breadth over its middle.
+ */
 export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLinkWidth, {
   crossfall: {
     slope: bastionLinkCrossfall,
-    easeOut: 1.5,
+    easeOut: bastionLinkGateSpillLength,
+  },
+  floorSpill: {
+    length: bastionLinkGateSpillLength,
+    profile: gateSpillProfile,
   },
   openings: [{
     ...vaultOpening(lodgeSpurWidth, lodgeSpurLinkHeight),
@@ -185,12 +198,12 @@ const linkHole = {
   casing: false,
 } as const satisfies WallOpening
 mouthWall.holes = [linkHole]
-/** how far under the mouth’s floor the gate’s foot stands, on the tunnel’s floor, a step under the hollow */
+/** how far under the mouth’s floor the gate’s foot is cut, at the tunnel route’s floor under the spill that rises to the hollow at the gate, so its bars stay buried in the paving across the bow */
 const gateFoot = climbMouthHollow.outletY - climbMouth.floorY
 /**
  * The iron gate barring the tunnel where it opens into the mouth’s elbow, barred like the apse’s gate, low over the floor and on up its bars, but for a hatch in the middle of its foot, round-headed like a mouse hole: wide enough for an orb rolling at it to slip through and on down the tunnel, far too low for anyone to follow.
  * Orbs rolling down the hairpin come out of its turn along the west leg’s west wall, and the paving falling toward its middle carries them across to the hatch; those that miss it roll back down into the hollow in front of it.
- * It stands on the tunnel’s level floor at its mouth, a step under the hollow. In the frame of the mouth’s north wall, facing south into the elbow.
+ * It stands where the tunnel’s paving, spilled up to the hollow, meets the hollow itself. In the frame of the mouth’s north wall, facing south into the elbow.
  */
 export const bastionLinkGate = {
   wall: mouthWall,
