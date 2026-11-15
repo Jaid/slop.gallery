@@ -163,7 +163,7 @@ function cutArchitecture(wall: Wall) {
       // horizontal molding in the ramp and exposing a tapering triangular stub.
       // Repeated coordinates mark a discontinuity, such as the end of a raised landing. Sweeping one polygon through a vertical
       // jump would cross its own offset edges. Terminate both bands there instead of leaving self-intersecting trim or a tall riser.
-      const sections: Array<Array<readonly [number, number]>> = [[]]
+      const sections: Array<Array<NonNullable<Wall['baseboardProfile']>[number]>> = [[]]
       for (const point of wall.baseboardProfile) {
         const section = sections.at(-1)!
         if (section.at(-1)?.[0] === point[0]) {
@@ -174,11 +174,12 @@ function cutArchitecture(wall: Wall) {
       }
       const shapes = sections.filter(section => section.length >= 2).map(section => {
         const shape = new Shape
-        for (const [i, [u, y]] of section.entries()) {
+        for (const [i, [u, y, drop = 0]] of section.entries()) {
+          const floorY = y + bottom - (bottom ? 0 : drop)
           if (i === 0) {
-            shape.moveTo(u, y + bottom)
+            shape.moveTo(u, floorY)
           } else {
-            shape.lineTo(u, y + bottom)
+            shape.lineTo(u, floorY)
           }
         }
         for (const [u, y] of section.toReversed()) {

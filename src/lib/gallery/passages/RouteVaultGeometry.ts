@@ -7,7 +7,7 @@ import {BoxGeometry, BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, Me
 
 import {mergeParts} from '../../geometry.ts'
 import {openingShape} from '../architecture.ts'
-import {vaultShellThickness} from '../architectureDimensions.ts'
+import {vaultShellThickness, wallFace} from '../architectureDimensions.ts'
 import {routeRibDepth, routeRibThickness} from './RoutedPassage.ts'
 
 export type PavingBox = {
@@ -268,26 +268,34 @@ export default class RouteVaultGeometry {
     this.ribs = mergeParts(passage.ribs.flatMap(along => sweep(runs(along - routeRibDepth / 2, along + routeRibDepth / 2), ring(-routeRibThickness, 0), true)))
     /** how many strips the paving is cut into from either wall to the centerline, at most `pavingStrip` wide, so it bends with its crossfall and stays close to flat through the twist of a ramp round a turn */
     const strips = Math.ceil(width / 2 / pavingStrip)
-    const floorRuns = runs(0, route.length, [...passage.creases, ...passage.floorInlet ? [passage.floorInlet.inlet.length] : []])
+    const floorSplits = [
+      ...passage.creases,
+      ...passage.floorInlet ? [passage.floorInlet.inlet.length] : [],
+      ...passage.floorOutlet ? [passage.floorOutlet.fromAlong] : [],
+    ]
+    const floorRuns = runs(0, route.length, floorSplits)
     const pavingSection: Section = (station, run) => {
       const [left, right] = [-1, 1].map(side => passage.reach(station, side))
-      // Only the inlet needs extra columns; the rest keeps the ordinary paving tessellation.
+      // Only floor blends need extra columns; the rest keeps the ordinary paving tessellation.
       const inlet = passage.floorInlet && run[0].along < passage.floorInlet.inlet.length ? passage.floorInlet : undefined
-      const across = inlet?.across ?? [
+      const outlet = passage.floorOutlet && run[0].along >= passage.floorOutlet.fromAlong - 1e-9 ? passage.floorOutlet : undefined
+      const blend = inlet ?? outlet
+      const standardAcross = [
         ...Array.from({length: strips + 1}, (_, index) => -left + left * index / strips),
         ...Array.from({length: strips}, (_, index) => right * (index + 1) / strips),
       ]
+      const across = blend?.across ?? (passage.floorOutlet && passage.crossfall ? [...standardAcross, -(width / 2 - wallFace), width / 2 - wallFace].toSorted((a, b) => a - b).filter((value, index, all) => index === 0 || value - all[index - 1] > 1e-9) : standardAcross)
       const top = across.map(lateral => [lateral, passage.floorY(station, lateral) - station.y] as const)
       const leftY = top[0][1]
       const rightY = top.at(-1)![1]
       return [
         top,
         [[right, rightY], [right, rightY - pavingThickness]],
-        inlet ? top.toReversed().map(([lateral, y]) => [lateral, y - pavingThickness] as const) : [[right, -pavingThickness], [-left, -pavingThickness]],
+        blend || passage.floorOutlet ? top.toReversed().map(([lateral, y]) => [lateral, y - pavingThickness] as const) : [[right, -pavingThickness], [-left, -pavingThickness]],
         [[-left, leftY - pavingThickness], [-left, leftY]],
       ]
     }
-    const makePaving = (pavingRuns: ReadonlyArray<ReadonlyArray<RouteStation>>) => breakPits(mergeParts(sweep(pavingRuns, pavingSection, false, passage.floorInlet ? [2] : [])), passage, passage.pits)
+    const makePaving = (pavingRuns: ReadonlyArray<ReadonlyArray<RouteStation>>) => breakPits(mergeParts(sweep(pavingRuns, pavingSection, false, passage.floorInlet || passage.floorOutlet ? [2] : [])), passage, passage.pits)
     const paving = makePaving(floorRuns)
     const tail = route.pieces.at(-1)!
     if (passage.floorInlet && !passage.pits.length && !passage.drains.length && tail.kind === 'line' && tail.from >= passage.floorInlet.inlet.length && tail.startY === tail.endY) {
