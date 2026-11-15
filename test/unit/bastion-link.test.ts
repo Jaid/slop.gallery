@@ -9,8 +9,8 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} fro
 
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {corniceBands, vaultShellThickness, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
-import {bastionCrater, bastionCurve, bastionLinkStart} from '../../src/lib/gallery/bastion.ts'
-import {bastionLink, bastionLinkCrossfall, bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionCrater, bastionCurve, bastionLinkStart, bastionLinkStripZ, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
+import {bastionLink, bastionLinkCrossfall, bastionLinkGate, climbMouthHollow, lodgeSpur} from '../../src/lib/gallery/bastionNetwork.ts'
 import {climbMouth} from '../../src/lib/gallery/climb.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
@@ -225,6 +225,36 @@ test('its vault rises to the gate’s arch, so no sky shows over the gate', () =
   } finally {
     vault.dispose()
     material.dispose()
+  }
+})
+test('the player walks out of the tunnel into the spur and back across both sides of their warped seam', () => {
+  const world = physicsWorld(colliders)
+  // Up the spur’s east side, which climbs the whole fall across the doorway, across its level floor and back down its west side, which stays at the Lodge’s floor until the tunnel’s paving falls away to its middle.
+  const path: Array<readonly [number, number]> = [[lodgeSpurX + 0.9, bastionLinkStripZ], [lodgeSpurX + 0.9, -32.5], [lodgeSpurX - 0.9, -32.5], [lodgeSpurX - 0.9, bastionLinkStripZ], [lodgeSpurX + 0.9, bastionLinkStripZ]]
+  const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(path[0][0], bastionLink.floorAt(...path[0])! + 0.04, path[0][1]))
+  const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
+  const motor = new EgoMotor(RAPIER, world, body, collider)
+  const facing = new Quaternion
+  try {
+    let target = 1
+    for (let frame = 0; frame < 60 * 45 && target < path.length; frame++) {
+      const position = body.translation()
+      const dx = path[target][0] - position.x
+      const dz = path[target][1] - position.z
+      if (Math.hypot(dx, dz) < 0.15) {
+        target++
+        continue
+      }
+      facing.setFromAxisAngle(new Vector3(0, 1, 0), Math.atan2(-dx, -dz))
+      motor.step(world.timestep, {forward: true}, facing)
+      world.step()
+    }
+    expect(target).toBe(path.length)
+    expect(motor.grounded).toBe(true)
+    expect(lodgeSpur.floorAt(path[1][0], path[1][1])).toBe(-5)
+  } finally {
+    motor.dispose()
+    world.free()
   }
 })
 for (const returning of [false, true]) {

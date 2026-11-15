@@ -111,13 +111,24 @@ export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLi
     casing: false,
   }],
 })
+/** how far the spur takes to climb from the tunnel’s floor at its doorway’s middle to the Lodge’s floor, and to unwind the slope of that floor across its doorway */
+const lodgeSpurRampLength = 2
+/**
+ * How steeply the spur’s paving banks at its mouth, toward its right as it runs north: the tunnel climbs westward all across the spur’s doorway, so its floor at the spur’s east jamb lies about 16 cm under the doorway’s middle and at its west jamb as far over it, already level with the Lodge’s floor.
+ * The spur’s paving starts on that same slope and unwinds it while its center climbs over its ramp to the Lodge’s floor, so its west side runs level on into the spur while its east side climbs twice the center’s rise, instead of the two floors crossing at the doorway’s middle and standing a step apart at both jambs.
+ */
+export const lodgeSpurBankSlope = (route.at(lodgeSpurAlong - lodgeSpurWidth / 2).y - route.at(lodgeSpurAlong + lodgeSpurWidth / 2).y) / lodgeSpurWidth
 /** Straight north past the Lodge’s side window, on to the existing passage toward the Lodge, where its closing wall stands back to back with that passage’s left wall. */
 const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, lodgeSpurFloorY, lodgeSpurLinkHeight, [{
   y: lodge.floorY,
   height: lodgeSpurHeight,
-  steps: [{length: 2}],
-}, {length: lodgeSpurStartZ - lodgeSpurEndZ - 2}])
+  steps: [{length: lodgeSpurRampLength}],
+}, {length: lodgeSpurStartZ - lodgeSpurEndZ - lodgeSpurRampLength}])
 export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, lodgeSpurWidth, {
+  bank: {
+    slope: lodgeSpurBankSlope,
+    length: lodgeSpurRampLength,
+  },
   fixPavingEdges: false,
   // Cut round the window’s timber reveal, which runs on through the stone and frames it flush with the passage’s face.
   openings: [{

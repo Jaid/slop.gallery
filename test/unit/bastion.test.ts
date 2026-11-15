@@ -374,6 +374,36 @@ describe('the Bastion’s route round the Oculus', () => {
       }
     }
   })
+  test('a banked mouth starts tilted across and unwinds to level, its walls standing on the side it drops', () => {
+    // Heading east, a passage 2 m wide has its right walls 1 m to the south.
+    const run = new PassageRoute([0, 0], 0, 0, 3, [{length: 4}])
+    const banked = new RoutedPassage('test', 'bastion', run, 2, {
+      bank: {
+        slope: 0.1,
+        length: 2,
+      },
+    })
+    // At its mouth the south side stands 10 cm over the centerline and the north side as far under it; halfway through the unwind, both stand half as far from it, and beyond it the floor is level across.
+    expect([banked.floorAt(0, 1), banked.floorAt(0, 0), banked.floorAt(0, -1)]).toEqual([0.1, 0, -0.1])
+    expect(banked.floorAt(1, 1)).toBeCloseTo(0.05, 12)
+    expect(banked.floorAt(1, -1)).toBeCloseTo(-0.05, 12)
+    expect([banked.floorAt(2, 1), banked.floorAt(4, -1)]).toEqual([0, 0])
+    // The north wall stands on its dropped side and the south one on the level floor it unwinds to, both with baseboards following the floor between.
+    expect(banked.walls.map(wall => wall.center[1])).toEqual([-0.1, 0])
+    for (const wall of banked.walls) {
+      const heights = wall.baseboardProfile!.map(([, y]) => y)
+      expect(Math.min(...heights)).toBeCloseTo(0, 9)
+      expect(Math.max(...heights)).toBeCloseTo(0.1, 9)
+    }
+    expect(() => new RoutedPassage('test', 'bastion', run, 2, {bank: {
+      slope: 0,
+      length: 2,
+    }})).toThrow(RangeError)
+    expect(() => new RoutedPassage('test', 'bastion', run, 2, {bank: {
+      slope: 0.1,
+      length: 5,
+    }})).toThrow(RangeError)
+  })
   for (const sprint of [false, true]) {
     for (const returning of [false, true]) {
       test(`a player walks from the east bridge through the doorway round the apse into the Lodge, sprint ${sprint}, returning ${returning}`, () => {

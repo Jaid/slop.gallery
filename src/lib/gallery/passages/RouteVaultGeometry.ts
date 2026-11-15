@@ -256,7 +256,7 @@ export default class RouteVaultGeometry {
     const hasOpenings = vaultOpenings(passage).length > 0 || passage.abutments.length > 0
     this.shell = hasOpenings ? openVault(solid(vaultShellThickness), passage, solid(0, 0.5)) : mergeParts(sweep(runs(0, route.length), ring(0, vaultShellThickness), true))
     this.ribs = mergeParts(passage.ribs.flatMap(along => sweep(runs(along - routeRibDepth / 2, along + routeRibDepth / 2), ring(-routeRibThickness, 0), true)))
-    /** how many strips the paving is cut into from either wall to the centerline, at most `pavingStrip` wide, so it bends with its crossfall and stays close to flat through the twist of a ramp round a turn */
+    /** how many strips the paving is cut into from either wall to the centerline, at most `pavingStrip` wide, so it bends with its crossfall and bank and stays close to flat through the twist of a ramp round a turn */
     const strips = Math.ceil(width / 2 / pavingStrip)
     const paving = breakPits(mergeParts(sweep(runs(0, route.length), station => {
       const [left, right] = [-1, 1].map(side => passage.reach(station, side))
@@ -264,11 +264,13 @@ export default class RouteVaultGeometry {
         ...Array.from({length: strips + 1}, (_, index) => -left + left * index / strips),
         ...Array.from({length: strips}, (_, index) => right * (index + 1) / strips),
       ]
+      const rightTop = passage.floorOffset(station, right)
+      const leftTop = passage.floorOffset(station, -left)
       return [
-        across.map(lateral => [lateral, -passage.sag(station, lateral)] as const),
-        [[right, 0], [right, -pavingThickness]],
-        [[right, -pavingThickness], [-left, -pavingThickness]],
-        [[-left, -pavingThickness], [-left, 0]],
+        across.map(lateral => [lateral, passage.floorOffset(station, lateral)] as const),
+        [[right, rightTop], [right, rightTop - pavingThickness]],
+        [[right, rightTop - pavingThickness], [-left, leftTop - pavingThickness]],
+        [[-left, leftTop - pavingThickness], [-left, leftTop]],
       ]
     })), passage, passage.pits)
     this.pavingCollision = paving

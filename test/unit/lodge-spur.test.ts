@@ -6,12 +6,14 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/web
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionCurve, lodgeSpurEndZ, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
-import {bastionLink, insideBastion, lodgeSpur, lodgeSpurEnd, lodgeSpurGrille, lodgeSpurLanterns} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, insideBastion, lodgeSpur, lodgeSpurBankSlope, lodgeSpurEnd, lodgeSpurGrille, lodgeSpurLanterns} from '../../src/lib/gallery/bastionNetwork.ts'
 import gateGeometry from '../../src/lib/gallery/gateGeometry.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import LodgeEastWindowGeometry from '../../src/lib/gallery/LodgeEastWindowGeometry.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import {routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
+import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import {bastionBaseboard} from '../../src/rooms/bastion/walls.ts'
 import {openings} from '../../src/worlds/gallery/relations.ts'
 import walls from './fixtures/gallery.ts'
 
@@ -47,6 +49,118 @@ test('the link wall at the marked point has a walkable bare arch leading into th
   expect(start.y + start.height).toBeCloseTo(linkStation.y + linkStation.height, 9)
   expect(wallHit(linkWall, [lodgeSpurX, start.y + 1.2, -28], [0, 0, -1])).toBeUndefined()
   expect(wallHit(linkWall, [lodgeSpurX - 3, start.y + 1.2, -28], [0, 0, -1])).toBeDefined()
+})
+test('the spur’s paving meets the tunnel’s across the whole doorway, instead of crossing it at its middle and standing apart at both jambs', () => {
+  const start = lodgeSpur.route.at(0)
+  const seamZ = start.point[1]
+  const [west, east] = [-1, 1].map(side => bastionLink.floorAt(lodgeSpurX + side * lodgeSpurWidth / 2, seamZ)!)
+  // The tunnel climbs westward across the doorway, by about 32 cm from its east jamb to its west one, which already lies level with the Lodge’s floor.
+  expect(east).toBeLessThan(start.y - 0.15)
+  expect(west).toBeGreaterThan(start.y + 0.15)
+  expect(west).toBeCloseTo(lodge.floorY, 2)
+  expect(lodgeSpur.bank).toEqual({
+    slope: lodgeSpurBankSlope,
+    length: 2,
+  })
+  expect(lodgeSpurBankSlope).toBeCloseTo((east - west) / lodgeSpurWidth, 12)
+  // The doorway between them cuts on below the wall’s foot too, instead of leaving a sill at its middle’s floor height across the east side, where both floors lie under it.
+  expect(linkWall.holes!.find(hole => hole.name === 'lodge_spur')!.bottom).toBeUndefined()
+  // Their floors meet all across the doorway, the eased tunnel floor’s slight bend across it aside.
+  for (let dx = -lodgeSpurWidth / 2; dx <= lodgeSpurWidth / 2 + 1e-9; dx += 0.05) {
+    const x = lodgeSpurX + dx
+    expect(Math.abs(lodgeSpur.floorAt(x, seamZ)! - bastionLink.floorAt(x, seamZ)!)).toBeLessThan(0.001)
+  }
+  const material = new MeshBasicMaterial({side: DoubleSide})
+  const linkVault = new RouteVaultGeometry(bastionLink)
+  const spurVault = new RouteVaultGeometry(lodgeSpur)
+  try {
+    const floors = [new Mesh(linkVault.paving, material), new Mesh(spurVault.paving, material)]
+    const ray = new Raycaster(new Vector3, new Vector3(0, -1, 0), 0, 5)
+    const pavingAt = (mesh: Mesh, x: number, z: number) => {
+      ray.ray.origin.set(x, -3, z)
+      return ray.intersectObject(mesh)[0]?.point.y
+    }
+    // The built paving too, 2 cm to either side of the wall’s center line their slabs meet under: no exposed edge of either slab in between.
+    for (let dx = -1.35; dx <= 1.35 + 1e-9; dx += 0.05) {
+      const x = lodgeSpurX + dx
+      const south = pavingAt(floors[0], x, seamZ + 0.02)
+      const north = pavingAt(floors[1], x, seamZ - 0.02)
+      expect(south).toBeDefined()
+      expect(north).toBeDefined()
+      expect(Math.abs(north - south)).toBeLessThan(0.0025)
+    }
+    // And it follows the floor it reports, through the whole warped stretch.
+    for (let along = 0; along <= 2; along += 0.05) {
+      for (let dx = -1.4; dx <= 1.4 + 1e-9; dx += 0.1) {
+        const x = lodgeSpurX + dx
+        const z = seamZ - along
+        expect(Math.abs(pavingAt(floors[1], x, z) - lodgeSpur.floorAt(x, z)!)).toBeLessThan(0.002)
+      }
+    }
+    // No wall or baseboard stands across the doorway just over either floor there.
+    const architecture = createArchitectureGeometry(linkWall)
+    try {
+      const doorway = [architecture.surface, ...architecture.trim].map(part => {
+        const mesh = new Mesh(part, material)
+        mesh.position.set(...linkWall.center)
+        mesh.rotation.y = linkWall.rotation
+        mesh.updateMatrixWorld(true)
+        return mesh
+      })
+      const through = new Raycaster(new Vector3, new Vector3(0, 0, -1), 0, 2.5)
+      for (let dx = -1.2; dx <= 1.2 + 1e-9; dx += 0.1) {
+        const x = lodgeSpurX + dx
+        through.ray.origin.set(x, bastionLink.floorAt(x, seamZ)! + 0.05, seamZ + 1)
+        expect(through.intersectObjects(doorway)).toHaveLength(0)
+      }
+    } finally {
+      architecture.dispose()
+    }
+  } finally {
+    material.dispose()
+    linkVault.dispose()
+    spurVault.dispose()
+  }
+})
+test('into the spur, its west side runs level at the Lodge’s floor while its east side climbs the fall across the doorway, no steeper than the Bastion’s other ramps', () => {
+  const seamZ = lodgeSpur.route.at(0).point[1]
+  let east = -Infinity
+  for (let along = 0; along <= 2; along += 0.05) {
+    const z = seamZ - along
+    expect(Math.abs(lodgeSpur.floorAt(lodgeSpurX - lodgeSpurWidth / 2, z)! - lodge.floorY)).toBeLessThan(0.001)
+    const side = lodgeSpur.floorAt(lodgeSpurX + lodgeSpurWidth / 2, z)!
+    expect(side).toBeGreaterThanOrEqual(east)
+    east = side
+    if (along >= 2) {
+      continue
+    }
+    const next = lodgeSpur.floorAt(lodgeSpurX + lodgeSpurWidth / 2, seamZ - along - 0.01)!
+    expect(Math.abs(next - lodgeSpur.floorAt(lodgeSpurX + lodgeSpurWidth / 2, z)!) / 0.01).toBeLessThan(0.25)
+  }
+  // Past the ramp, level across at the Lodge’s floor, where the suit of armor stands.
+  for (const dx of [-lodgeSpurWidth / 2, 0, lodgeSpurWidth / 2]) {
+    expect(lodgeSpur.floorAt(lodgeSpurX + dx, seamZ - 2)).toBe(lodge.floorY)
+  }
+  // Both side walls stand on the floor against them, their baseboards 40 cm over it all along the warped stretch and meeting the tunnel’s round both corners.
+  const material = new MeshBasicMaterial({side: DoubleSide})
+  for (const [id, x] of [['bastion-lodge-spur_wall_0', lodgeSpurX - lodgeSpurWidth / 2], ['bastion-lodge-spur_wall_1', lodgeSpurX + lodgeSpurWidth / 2]] as const) {
+    const wall = walls.find(value => value.id === id)!
+    expect(wall.center[1]).toBeCloseTo(Math.min(lodgeSpur.floorAt(x, seamZ)!, lodge.floorY), 7)
+    const geometry = createArchitectureGeometry(wall)
+    try {
+      const trim = new Mesh(geometry.trim[0], material)
+      for (let step = 0; step <= 16; step++) {
+        const u = (wall.width / 2 - 0.02) * (step / 8 - 1)
+        const [px, , pz] = wallPosition(wall, u, 0, 0)
+        const floor = lodgeSpur.floorAt(px, pz)! - wall.center[1]
+        const down = new Raycaster(new Vector3(u, floor + 1, 0.23), new Vector3(0, -1, 0), 0, 2)
+        expect(down.intersectObject(trim)[0]?.point.y).toBeCloseTo(floor + bastionBaseboard.baseboardHeight, 3)
+      }
+    } finally {
+      geometry.dispose()
+    }
+  }
+  material.dispose()
 })
 test('the link’s junction roof is continuous across the doorway and faces into the passage', () => {
   const vault = new RouteVaultGeometry(bastionLink)
