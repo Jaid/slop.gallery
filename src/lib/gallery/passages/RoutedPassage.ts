@@ -48,6 +48,8 @@ export type RoutedPassageOptions = {
   drains?: ReadonlyArray<ReadonlyArray<Point>>
   /** repair internal paving edges for rolling objects; disable on straight paving where Rapier’s edge repair destabilizes resting convex hulls */
   fixPavingEdges?: boolean
+  /** how far under the route’s floor at `station` its paving lies `right` meters right of its centerline, added to any `crossfall` */
+  floorSag?: (station: RouteStation, right: number) => number
   openings?: ReadonlyArray<RouteOpening>
   /** at most one for each side */
   outlines?: ReadonlyArray<RouteOutline>
@@ -125,13 +127,15 @@ export default class RoutedPassage {
   readonly ribs: ReadonlyArray<number>
   /** a wall on each side of each of the route’s pieces in turn, the left one first, where the walls of an outline take the place of those of its side along its stretch, in its first piece’s place */
   readonly walls: ReadonlyArray<Wall>
+  private readonly floorSag?: (station: RouteStation, right: number) => number
 
-  constructor(readonly id: string, readonly room: RoomId, readonly route: PassageRoute, readonly width = 2.6, {abutments = [], cornice = true, crossfall, drains = [], openings = [], outlines = [], pits = [], fixPavingEdges = true}: RoutedPassageOptions = {}) {
+  constructor(readonly id: string, readonly room: RoomId, readonly route: PassageRoute, readonly width = 2.6, {abutments = [], cornice = true, crossfall, drains = [], floorSag, openings = [], outlines = [], pits = [], fixPavingEdges = true}: RoutedPassageOptions = {}) {
     if (abutments.some(box => ![...box.position, ...box.size].every(Number.isFinite) || box.size.some(size => size <= 0))) {
       throw new RangeError('A routed passage’s abutments need finite centers and positive dimensions.')
     }
     this.abutments = abutments
     this.fixPavingEdges = fixPavingEdges
+    this.floorSag = floorSag
     if (!(width > 0) || route.pieces.some(piece => Math.min(piece.startHeight, piece.endHeight) <= width / 2 || piece.kind === 'arc' && piece.radius <= width / 2)) {
       throw new RangeError('A routed passage needs a positive width, room for its vault all along and turns wider than half of it.')
     }
@@ -201,8 +205,8 @@ export default class RoutedPassage {
         ...opening,
         name,
         u: wallCoordinates(wall, [hit.point[0], station.y, hit.point[1]]),
-        // A doorway down to the wall’s foot leaves its bottom out, so it cuts on below it instead of along it.
-        ...foot + bottom > 0 ? {bottom: foot + bottom} : {},
+        // A doorway down to the floor leaves its bottom out, so it cuts on below it instead of along it, even when the wall is ramped.
+        ...bottom > 0 ? {bottom: foot + bottom} : {},
         height: foot + height,
       }]
     }
@@ -233,8 +237,8 @@ export default class RoutedPassage {
 
   /** Whether the position lies on the passage’s floor, from a meter under it to its ceiling. */
   contains([x, y, z]: Vec3) {
-    const station = this.stationAt(x, z)
-    return station !== undefined && y >= station.y - 1 && y <= station.y + station.height
+    const abreast = this.abreast(x, z)
+    return abreast !== undefined && y >= abreast.station.y - this.sag(abreast.station, abreast.right) - 1 && y <= abreast.station.y + abreast.station.height
   }
 
   /** The height of the floor under the point, or undefined beside the passage. */
@@ -257,15 +261,16 @@ export default class RoutedPassage {
     return (this.ribs[next - 1] + this.ribs[next]) / 2
   }
 
-  /** How far under the route’s floor at the station its paving lies `right` meters right of the centerline, where its crossfall makes it fall toward the middle: nowhere along the walls’ faces and behind them, deepest along the centerline. */
+  /** How far under the route’s floor at the station its paving lies `right` meters right of the centerline, where its crossfall or custom floor profile makes it deviate: for crossfall alone, nowhere along the walls’ faces and behind them, deepest along the centerline. */
   sag(station: RouteStation, right: number) {
+    const extra = this.floorSag?.(station, right) ?? 0
     if (!this.crossfall) {
-      return 0
+      return extra
     }
     const {easeIn = 0, easeOut = 0, slope} = this.crossfall
     const eased = Math.min(easeIn > 0 ? smoothstep(station.along / easeIn) : 1, easeOut > 0 ? smoothstep((this.route.length - station.along) / easeOut) : 1)
     const half = Math.min(this.reach(station, -1), this.reach(station, 1)) - wallFace
-    return slope * eased * Math.max(0, half - Math.abs(right))
+    return extra + slope * eased * Math.max(0, half - Math.abs(right))
   }
 
   /** The station of the route abreast of the point, or undefined beside the passage. */
@@ -345,7 +350,7 @@ export default class RoutedPassage {
     const points = this.footprint(piece, from, to)
     const ends = [from, to].map(offset => PassageRoute.station(piece, offset))
     return {
-      min: [Math.min(...points.map(([x]) => x)), Math.min(...ends.map(({y}) => y)), Math.min(...points.map(([, z]) => z))],
+      min: [Math.min(...points.map(([x]) => x)), Math.min(...ends.flatMap(station => [station.y, station.y - this.sag(station, -this.reach(station, -1)), station.y - this.sag(station, this.reach(station, 1))])), Math.min(...points.map(([, z]) => z))],
       max: [Math.max(...points.map(([x]) => x)), Math.max(...ends.map(({y, height}) => y + height)), Math.max(...points.map(([, z]) => z))],
     }
   }
@@ -495,8 +500,8 @@ export default class RoutedPassage {
   /** The wall along one side of a piece, standing level from the piece’s lowest floor, without the profile its baseboard follows. */
   private plainWall(piece: RoutePiece, side: number): Omit<Wall, 'id'> {
     const half = this.width / 2
-    // A ramp climbs or falls and grows taller or lower steadily, so the lowest floor and the highest crown lie at the piece’s ends.
-    const foot = Math.min(piece.startY, piece.endY)
+    // A ramp climbs or falls and grows taller or lower steadily, so without a custom floor profile the lowest floor lies at the piece’s ends.
+    const foot = this.floorSag ? Math.min(...this.stations(piece.from, piece.from + piece.length).flatMap(station => [station.y - this.sag(station, side * half), station.y - this.sag(station, side * (half - wallFace))])) : Math.min(piece.startY, piece.endY)
     const common = {
       room: this.room,
       height: Math.max(piece.startY + piece.startHeight, piece.endY + piece.endHeight) - foot - 0.3,
@@ -555,19 +560,24 @@ export default class RoutedPassage {
   /** The wall along one side of a piece, `side` −1 on its left and 1 on its right, facing into the passage. Like a room’s, it stops 30 cm short of the ceiling, here the vault’s crown. */
   private wall(piece: RoutePiece, side: number): Omit<Wall, 'id'> {
     const wall = this.plainWall(piece, side)
-    if (piece.startY === piece.endY) {
+    if (piece.startY === piece.endY && !this.floorSag) {
       return wall
     }
-    // Where the floor meets the wall along its center line, at the piece’s ends and at every knot of its ramp in between
+    // Where the floor meets the wall face, at the piece’s ends and at every station in between
     const half = this.width / 2
-    const contact = [0, ...PassageRoute.knots(piece), piece.length].map((offset): readonly [number, number] => {
-      const {point: [x, z], heading, y} = PassageRoute.station(piece, offset)
-      const u = wallCoordinates(wall, [x - Math.sin(heading) * side * half, y, z + Math.cos(heading) * side * half])
+    const stations = this.floorSag ? this.stations(piece.from, piece.from + piece.length) : [0, ...PassageRoute.knots(piece), piece.length].map(offset => PassageRoute.station(piece, offset))
+    const contact = stations.map((station): readonly [number, number] => {
+      const [x, z] = station.point
+      const y = station.y - this.sag(station, side * (half - wallFace))
+      const u = wallCoordinates(wall, [x - Math.sin(station.heading) * side * half, y, z + Math.cos(station.heading) * side * half])
       return [Math.min(Math.max(u, -wall.width / 2), wall.width / 2), y - wall.center[1]]
-    })
+    }).toSorted((a, b) => a[0] - b[0])
+    if (contact.every(([, y]) => Math.abs(y) < tolerance)) {
+      return wall
+    }
     return {
       ...wall,
-      baseboardProfile: contact.toSorted((a, b) => a[0] - b[0]),
+      baseboardProfile: contact,
     }
   }
 }

@@ -264,11 +264,13 @@ export default class RouteVaultGeometry {
         ...Array.from({length: strips + 1}, (_, index) => -left + left * index / strips),
         ...Array.from({length: strips}, (_, index) => right * (index + 1) / strips),
       ]
+      const sagLeft = passage.sag(station, -left)
+      const sagRight = passage.sag(station, right)
       return [
         across.map(lateral => [lateral, -passage.sag(station, lateral)] as const),
-        [[right, 0], [right, -pavingThickness]],
-        [[right, -pavingThickness], [-left, -pavingThickness]],
-        [[-left, -pavingThickness], [-left, 0]],
+        [[right, -sagRight], [right, -sagRight - pavingThickness]],
+        [[right, -sagRight - pavingThickness], [-left, -sagLeft - pavingThickness]],
+        [[-left, -sagLeft - pavingThickness], [-left, -sagLeft]],
       ]
     })), passage, passage.pits)
     this.pavingCollision = paving
