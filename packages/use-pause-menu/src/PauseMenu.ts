@@ -98,16 +98,17 @@ export default class PauseMenu {
   }
   getServerSnapshot = () => this.serverSnapshot
   getSnapshot = () => this.snapshot
-  /** Brings the pause menu up: while playing, releases the owned lock as a pause; while a menu is already up, turns it into the pause menu at once. */
+  /** Opens the pause stage without requiring a prior lock, or requests a pause release while playing. The application owns shortcuts and readiness checks. */
   pause = () => {
+    this.start()
     if (this.snapshot.locked) {
       this.release('pause')
-      return
+    } else {
+      this.publish({
+        locked: false,
+        stage: 'pause',
+      })
     }
-    this.publish({
-      locked: false,
-      stage: 'pause',
-    })
   }
   /** React 19 callback ref alternative to attach(). */
   ref = (target: HTMLElement | null) => {
@@ -174,10 +175,6 @@ export default class PauseMenu {
     let stage: PauseMenuSnapshot['stage'] = 'first'
     if (returning) {
       stage = this.hasGameData === false ? 'reset' : 'return'
-    }
-    // Resolving the visit never replaces a pause or unfocus reason that is already in effect.
-    if (this.snapshot.stage === 'pause' || this.snapshot.stage === 'unfocus') {
-      stage = this.snapshot.stage
     }
     this.publish({
       stage,
