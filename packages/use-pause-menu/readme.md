@@ -37,7 +37,7 @@ React is an optional peer for the framework-free core entry; it is required when
 | `first` | This page visit has not been recognized as a returning visitor. |
 | `return` | A previous visit was recorded, or the application supplied `initialStage: 'return'`. |
 | `reset` | A previous visit was recorded, but the application reports no stored game data. |
-| `pause` | Pointer lock was released by Escape or `release('pause')`. |
+| `pause` | Pointer lock was released by Escape, or `pause()`/`release('pause')` brought the pause menu up. |
 | `unfocus` | Focus was lost, the canvas disappeared, lock transferred elsewhere or the application called `release()`. |
 
 `locked` refers only to the attached element, not any element in the document. It changes on actual pointer-lock events, not optimistically when a request is made. While locked, `stage` retains the last menu stage. Render an overlay using `!locked`, not by checking whether `stage` exists. Other visibility conditions, such as a separate inventory panel, are the game’s responsibility. This package does not pause physics, audio or your render loop automatically: a game that wants to, for example only under the `pause` stage while leaving `unfocus` running, subscribes and stops them itself (`!locked && stage === 'pause'`).
@@ -55,6 +55,7 @@ The browser does not expose the reason for `pointerlockchange` and may consume E
 - `ref`: A stable React 19 callback ref returning attachment-owned cleanup. Use either this or `attach()`, not both for the same canvas.
 - `enter(options?)`: Requests pointer lock immediately, before its first await. Call directly from a user gesture. Forwards `PointerLockOptions`, including `unadjustedMovement`. Returns a promise; unattached targets and rejected requests reject without changing the stage. The game owns error presentation and readiness checks.
 - `release(reason = 'unfocus')`: Requests release only if this controller’s target owns the lock. `release('pause')` supports explicit pause buttons. Does not release other canvases.
+- `pause()`: Brings the pause menu up. While this controller’s target is locked, it is `release('pause')`; while a menu is already up, it turns that menu into the `pause` stage at once, which lets an opening menu’s own Escape handler jump straight to the pause menu.
 - `getSnapshot()`: Returns the same frozen `{stage, locked}` object until either value changes.
 - `subscribe(listener)`: Notifies after changes and returns cleanup. Methods are bound, so they can be passed directly to React or another external-store adapter.
 - `getServerSnapshot()`: Returns the stable construction-time snapshot for hydration.
