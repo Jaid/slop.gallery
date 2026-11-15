@@ -22,15 +22,15 @@
   position: relative
   min-width: 0
   min-height: 0
-  border-radius: 4px
   cursor: grab
   // Dragging turns the model instead of scrolling or selecting anything.
   touch-action: none
   user-select: none
   &:active
     cursor: grabbing
+  // No focus ring: the model reaches past the stage, so a ring around the stage would cut through it like a box. The model answering the keys shows the focus well enough.
   &:focus-visible
-    outline-offset: -2px
+    outline: none
 
 // The studio’s canvas over the whole screen, in the top layer above the menu and whatever else covers the scene, so a model turned or moved close up reaches past its stage over all of it. The pointer goes through it to whatever lies below, the stage included.
 .layer
