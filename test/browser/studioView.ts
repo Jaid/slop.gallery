@@ -35,7 +35,7 @@ type Extent = {
 
 /**
  * Shows works in the studio view the pause menu looks into, with their real frames and an image whose corners tell each other apart, and checks the pixels the canvas really shows:
- * a work stands upright and unmirrored on a transparent backdrop, in the middle, filling the share of the canvas its framing aims for; it stays whole in view turned to its back and at an angle; the camera moves closer and away; on a stage off the middle of the canvas, it stands in the middle of the stage and close up reaches past it; another work takes its place; hiding it empties the canvas; and a work asked for and replaced before it got there never shows.
+ * a work stands upright and unmirrored on a transparent backdrop, in the middle, filling the share of the canvas its framing aims for; it fills as much turned to its back and doesn’t shrink at an angle; the camera moves closer and away; on a stage off the middle of the canvas, it stands in the middle of the stage and close up reaches past it; another work takes its place; hiding it empties the canvas; and a work asked for and replaced before it got there never shows.
  */
 export default async function verifyStudioView() {
   const view = new StudioView
@@ -74,13 +74,12 @@ export default async function verifyStudioView() {
     assertFilled(backExtent, 'From behind')
     const backColors = [[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([x, y]) => dominantChannels(back, x * imageHalfWidth, y * imageHalfHeight))
     assert(backColors.every(color => color === backColors[0]), `The back shows something like the image: “${backColors.join(' ')}”.`)
-    // At an angle from above, a corner comes toward the camera, which backs off just far enough.
+    // At an angle from above, a corner comes toward the camera, which keeps its distance, so the work doesn’t shrink: the corner reaches farther out than the front did.
     view.reset()
     redraw(view)
     view.turn(0.9, 0.5)
     const angledExtent = extentOf(redraw(view))
-    assertWithin(angledExtent, 'At an angle')
-    assert(reachOf(angledExtent) > viewFill - 0.12, `At an angle, the work only reaches ${reachOf(angledExtent).toFixed(3)} of the view, far from ${viewFill}.`)
+    assert(reachOf(angledExtent) > reachOf(frontExtent), `At an angle, the work only reaches ${reachOf(angledExtent).toFixed(3)} of the view, less than the ${reachOf(frontExtent).toFixed(3)} from the front.`)
     // Closer, it covers more of the canvas, here nearly all of it, farther away less.
     view.reset()
     redraw(view)

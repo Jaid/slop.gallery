@@ -28,8 +28,6 @@ export type OrbitSettings = {
   ceilingY?: number
   /** where the orbit starts, framing the radius by default */
   distance?: number
-  /** the distance the orbit keeps by the direction from the center, a unit vector, in place of {@link distance}: the camera holds it for wherever it is right now as it turns, times however much closer or farther W and S moved it, like the distance something that isn’t round fits the view from on each side */
-  distanceToward?: (direction: Vector3) => number
   /** the direction from the center the orbit starts in, instead of wherever the camera is */
   facing?: [number, number, number]
   /** the height the camera stays 18 cm above; no limit unless set */
@@ -63,8 +61,6 @@ export default class OrbitInspection {
   private readonly aimOffset = new Quaternion
   private readonly destination = new Spherical
   private distanceFactor = 1
-  /** a direction from the center the distance is asked for */
-  private readonly heading = new Vector3
   /** the seconds since the last input that turned the orbit */
   private idle = Infinity
   private readonly lookRotation = new Quaternion
@@ -79,8 +75,6 @@ export default class OrbitInspection {
   private readonly startTheta: number
   private readonly targetRotation = new Quaternion
   private theta: number
-  /** how much closer or farther than {@link OrbitSettings.distanceToward} tells the camera is right now, as a factor that eases to the one the player chose */
-  private zoom = 1
 
   constructor(readonly camera: PerspectiveCamera, center: Vector3, private readonly settings: OrbitSettings) {
     const {radius, distance, minDistance, maxDistance} = settings
@@ -184,8 +178,6 @@ export default class OrbitInspection {
         this.orbiting = true
         this.sphere.setFromVector3(this.offset.copy(this.camera.position).sub(this.pivot))
         this.theta = this.sphere.theta + deltaAngle(this.sphere.theta, this.theta)
-        // From however far the camera is right now.
-        this.zoom = this.sphere.radius / this.getDistanceToward(this.sphere.phi, this.sphere.theta)
       }
       // How far the view is turned away from the Knot, measured before this frame’s move.
       // Only this residual eases out; orbiting itself must never pull the Knot off-center.
@@ -194,19 +186,12 @@ export default class OrbitInspection {
       // Smooth on the sphere around the Knot rather than in world space, so fast orbits
       // follow the arc instead of cutting a chord toward (or through) the object.
       const [min, max] = this.getDistanceFactors()
-      const factor = clamp(this.distanceFactor, min, max)
-      const distance = this.getBaseDistance() * factor
+      const distance = this.getBaseDistance() * clamp(this.distanceFactor, min, max)
       const floorLimit = Math.acos(clamp(((this.settings.floorY ?? -Infinity) + 0.18 - center.y) / distance, -1, 1))
       const ceilingLimit = Math.acos(clamp(((this.settings.ceilingY ?? Infinity) - 0.18 - center.y) / distance, -1, 1))
       this.sphere.theta = lerp(this.sphere.theta, this.theta, blend)
       this.sphere.phi = lerp(this.sphere.phi, clamp(this.phi, ceilingLimit, floorLimit), blend)
-      if (this.settings.distanceToward) {
-        // Only how much closer or farther the player went eases; the distance itself holds for wherever the camera is on its way.
-        this.zoom = lerp(this.zoom, factor, blend)
-        this.sphere.radius = this.getDistanceToward(this.sphere.phi, this.sphere.theta) * this.zoom
-      } else {
-        this.sphere.radius = lerp(this.sphere.radius, distance, blend)
-      }
+      this.sphere.radius = lerp(this.sphere.radius, distance, blend)
       const {keepOut} = this.settings
       if (keepOut) {
         this.sphere.radius = Math.max(this.sphere.radius, keepOut(this.offset.setFromSphericalCoords(1, this.sphere.phi, this.sphere.theta)))
@@ -224,11 +209,7 @@ export default class OrbitInspection {
   }
 
   private getBaseDistance() {
-    const {distance, distanceToward} = this.settings
-    if (distanceToward) {
-      // Where the orbit is headed for.
-      return this.getDistanceToward(this.phi, this.theta)
-    }
+    const {distance} = this.settings
     if (distance) {
       return distance
     }
@@ -243,11 +224,6 @@ export default class OrbitInspection {
     const min = this.settings.minDistance === undefined ? minDistanceFactor : this.settings.minDistance / base
     const max = this.settings.maxDistance === undefined ? maxDistanceFactor : this.settings.maxDistance / base
     return [Math.min(min, 1), Math.max(max, 1)] as const
-  }
-
-  /** What {@link OrbitSettings.distanceToward} tells for the direction of the angles, or 1 without it. */
-  private getDistanceToward(phi: number, theta: number) {
-    return this.settings.distanceToward?.(this.heading.setFromSphericalCoords(1, phi, theta)) ?? 1
   }
 
   private lookAt(center: Vector3) {

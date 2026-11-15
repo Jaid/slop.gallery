@@ -78,7 +78,7 @@ For the studio view the pause menu shows a work of its collection in:
 bun test/browser/run.ts studioView.ts --standalone
 ```
 
-This standalone fixture shows works in a `StudioView` with their real frames and an image whose quarters tell its corners apart, and reads the canvas back. It checks that a work stands upright and unmirrored in the middle of a transparent backdrop and fills the share of the canvas its framing aims for, that all of it stays in view from behind and at an angle, that the camera moves closer and away, that on a stage off the middle of the canvas it stands in the middle of the stage and close up reaches past it, that another work takes its place while one replaced before it got there never shows, and that hiding empties the canvas. It reports how long the first work (device and pipelines) and the next one took to show.
+This standalone fixture shows works in a `StudioView` with their real frames and an image whose quarters tell its corners apart, and reads the canvas back. It checks that a work stands upright and unmirrored in the middle of a transparent backdrop and fills the share of the canvas its framing aims for, that it fills as much from behind and doesn’t shrink at an angle, where the camera keeps its distance, that the camera moves closer and away, that on a stage off the middle of the canvas it stands in the middle of the stage and close up reaches past it, that another work takes its place while one replaced before it got there never shows, and that hiding empties the canvas. It reports how long the first work (device and pipelines) and the next one took to show.
 
 For the sound of a fusion’s portal:
 

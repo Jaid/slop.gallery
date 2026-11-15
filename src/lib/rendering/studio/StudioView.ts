@@ -229,8 +229,6 @@ export default class StudioView extends Studio {
         facing: [0, 0, 1],
         fov: studioFov,
         keepOut: boxClearance(size),
-        // From every side as far away as all of the object takes to fit the stage, so turning it never moves any of it out of the stage.
-        distanceToward: direction => fitDistance(size, direction, this.camera.aspect),
       }
       this.fitOrbit()
       // Nearer than the camera gets to the box around the object.
@@ -292,7 +290,7 @@ export default class StudioView extends Studio {
     this.requestFrame()
   }
 
-  /** Moves the camera away from the object, by a share of the distance all of the object fits the stage from, or toward it if negative; it gets as far as 1.75 times that distance and as close as about a third of it, but never into the box around the object. */
+  /** Moves the camera away from the object, by a share of the distance its front fits the stage from, or toward it if negative; it gets as far as 1.75 times that distance and as close as about a third of it, but never into the box around the object. */
   zoom(amount: number) {
     this.orbit?.adjustDistance(amount)
     this.requestFrame()
@@ -303,10 +301,15 @@ export default class StudioView extends Studio {
     return new OrbitInspection(this.camera, origin, this.orbiting)
   }
 
-  /** Sets how close the camera gets by the stage’s shape, which the orbit reads anew as it moves the camera. */
+  /**
+   * Sets how far away the camera stays by the stage’s shape, which the orbit reads anew as it moves the camera: as far as the object’s front takes to fit the stage, from every side alike.
+   * Turning it is like turning it in one’s hands, without the camera backing off for a corner coming toward it, which would shrink it while it turns; whatever reaches past the stage then shows on the rest of the canvas.
+   */
   private fitOrbit() {
     if (this.size) {
-      this.orbiting.minDistance = fitDistance(this.size, front, this.camera.aspect) * closest
+      const distance = fitDistance(this.size, front, this.camera.aspect)
+      this.orbiting.distance = distance
+      this.orbiting.minDistance = distance * closest
     }
   }
 

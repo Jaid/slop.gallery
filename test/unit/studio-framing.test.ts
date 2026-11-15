@@ -146,7 +146,7 @@ describe('an orbit around an object in a studio', () => {
       facing: [0, 0, 1],
       fov: studioFov,
       keepOut: boxClearance(wide),
-      distanceToward: direction => fitDistance(wide, direction, camera.aspect),
+      distance: fitDistance(wide, front, aspect),
     }
     return {
       camera,
@@ -175,29 +175,31 @@ describe('an orbit around an object in a studio', () => {
     orbit.update(origin, 1 / 60)
     expect(camera.position.distanceTo(before)).toBeLessThan(1e-9)
   })
-  test('keeps all of the object in view while it turns, all the way round and over the top', () => {
+  test('keeps its distance while it turns, all the way round and over the top, so the object doesn’t shrink as a corner comes toward the camera', () => {
     const {camera, orbit} = setup()
     orbit.settle(origin)
     expect(reachIn(camera)).toBeCloseTo(viewFill, 8)
+    const fitted = camera.position.length()
     let farthestTurn = 0
     let highest = 0
     for (let step = 0; step < 900; step++) {
       // Around, then up and over while still turning.
       orbit.addInput(0.02, step > 300 ? 0.004 : 0)
       orbit.update(origin, 1 / 60)
-      // The view lags a little behind a fast orbit, which the margin around the object takes.
-      expect(reachIn(camera)).toBeLessThan(1)
+      expect(camera.position.length()).toBeCloseTo(fitted, 8)
       farthestTurn = Math.max(farthestTurn, Math.abs(Math.atan2(camera.position.x, camera.position.z)))
       highest = Math.max(highest, camera.position.y)
     }
     // It got behind the object, where the wall is in the world, and well above it.
     expect(farthestTurn).toBeGreaterThan(3)
     expect(highest).toBeGreaterThan(wide.height)
-    // At rest again, the object fits exactly, wherever the camera ended up.
-    for (let step = 0; step < 300; step++) {
-      orbit.update(origin, 1 / 60)
-    }
-    expect(reachIn(camera)).toBeCloseTo(viewFill, 6)
+    // From behind, it fits exactly like from the front.
+    const {orbit: behind, camera: behindCamera} = setup()
+    behind.settle(origin)
+    behind.addInput(Math.PI, 0)
+    behind.settle(origin)
+    expect(behindCamera.position.z).toBeCloseTo(-fitted, 8)
+    expect(reachIn(behindCamera)).toBeCloseTo(viewFill, 8)
   })
   test('moves closer and away by a share of that distance, on every side', () => {
     const {camera, orbit} = setup()
@@ -208,12 +210,12 @@ describe('an orbit around an object in a studio', () => {
       orbit.update(origin, 1 / 60)
     }
     expect(camera.position.length()).toBeCloseTo(fitted * 1.5, 6)
-    // Turned to its edge, it is still half again as far as the object fits from there.
+    // Turned to its edge, it is still half again as far as the front fits from.
     orbit.addInput(Math.PI / 2, 0)
     for (let step = 0; step < 300; step++) {
       orbit.update(origin, 1 / 60)
     }
-    expect(camera.position.x).toBeCloseTo(fitDistance(wide, new Vector3(1, 0, 0), aspect) * 1.5, 5)
+    expect(camera.position.x).toBeCloseTo(fitted * 1.5, 5)
     expect(Math.abs(camera.position.z)).toBeLessThan(1e-5)
   })
   test('never gets its lens into the box around the object, however close and however turned', () => {
@@ -239,11 +241,13 @@ describe('an orbit around an object in a studio', () => {
     expect(closest).toBeLessThan(margin * 1.5)
   })
   test('follows a view that changes its shape meanwhile', () => {
-    const {camera, orbit} = setup()
+    const {camera, orbit, settings} = setup()
     orbit.settle(origin)
     const wideView = camera.position.z
     camera.aspect = 0.6
     camera.updateProjectionMatrix()
+    // Whoever handed the settings over tells the orbit the distance for the new shape.
+    settings.distance = fitDistance(wide, front, 0.6)
     orbit.settle(origin)
     expect(camera.position.z).toBeCloseTo(fitDistance(wide, front, 0.6), 10)
     expect(camera.position.z).toBeGreaterThan(wideView)
