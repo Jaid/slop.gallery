@@ -73,6 +73,18 @@ export function enterGallery() {
   void pauseMenu.enter().catch(() => {})
 }
 
+/**
+ * Turns the menu before the game into the Escape key’s pause menu, which freezes the ready world behind it. A camera still circling on the intro’s orbit hands its pose to the player’s body in the same menu change, before the frozen world is drawn again (see `IntroCamera`).
+ * The menus of a game already left, the pause menu itself and a world that hasn’t loaded stay as they are.
+ */
+export function pauseGallery() {
+  const {locked, stage} = pauseMenu.getSnapshot()
+  if (!useGallery.getState().ready || locked || stage === 'pause' || stage === 'unfocus') {
+    return
+  }
+  pauseMenu.pause()
+}
+
 export function chime(frequency = 320) {
   if (useGallery.getState().sound) {
     SoundEngine.get().tone(frequency)
@@ -262,6 +274,9 @@ export function handleGalleryKey(event: KeyboardEvent) {
     return
   }
   const s = useGallery.getState()
+  if (event.code === 'Escape') {
+    pauseGallery()
+  }
   if (event.code === 'KeyM') {
     toggleSound()
   }

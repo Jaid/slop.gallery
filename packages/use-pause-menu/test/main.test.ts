@@ -235,6 +235,38 @@ test('hidden tabs, lost focus, removed targets and transferred locks are unfocus
     expect(menu.getSnapshot().stage).toBe('unfocus')
   }
 })
+test('pause turns a menu already up into the pause menu, and visit tracking keeps it there', () => {
+  const menu = new PauseMenu({initialStage: 'return'})
+  menu.pause()
+  expect(menu.getSnapshot()).toEqual({
+    stage: 'pause',
+    locked: false,
+  })
+  menu.start()
+  expect(menu.getSnapshot().stage).toBe('pause')
+  const {menu: unfocused, document, target} = setup()
+  document.change(target)
+  unfocused.release()
+  document.change(null)
+  expect(unfocused.getSnapshot().stage).toBe('unfocus')
+  unfocused.pause()
+  expect(unfocused.getSnapshot()).toEqual({
+    stage: 'pause',
+    locked: false,
+  })
+})
+test('pause while playing releases the owned lock as a pause', () => {
+  const {menu, document, target} = setup()
+  document.change(target)
+  menu.pause()
+  expect(document.exits).toBe(1)
+  expect(menu.getSnapshot().locked).toBe(true)
+  document.change(null)
+  expect(menu.getSnapshot()).toEqual({
+    stage: 'pause',
+    locked: false,
+  })
+})
 test('non-playing focus changes and unrelated locks preserve the initial menu', () => {
   const {menu, document} = setup()
   document.blur()

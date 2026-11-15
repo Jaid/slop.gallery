@@ -3,6 +3,7 @@ import {useEffect, useLayoutEffect, useState} from 'react'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import {galleryEvents, useGallery} from '#src/lib/gallery.ts'
+import {useIntro} from '#src/lib/gallery/intro.ts'
 import {useLighting} from '#src/lib/gallery/lighting.ts'
 import {useHiddenUi} from '#src/lib/hiddenUi.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
@@ -19,7 +20,7 @@ const busy = () => useGallery.getState().dragging || loadingItems().length > 0
 /**
  * Stops the canvas while the world is frozen, under the pause menu of the Escape key: no frame is drawn, so nothing of the world runs, neither its physics nor its animations, until the world goes on, which continues with a frame as long as the last one before.
  * It does so inside the Canvas, at once as the clock freezes, since Canvas props only reach the scene with React’s next commit.
- * The frozen moment is drawn again whenever it would show differently: on a resized canvas, in another graphics mode or with other values from the tuning panel, with a work hung, moved or dragged in, after a teleport, with the UI hidden or shown and, in development, after a hot update. No time passes in those frames (see `FrozenFrames`).
+ * The frozen moment is drawn again whenever it would show differently: on a resized canvas, in another graphics mode or with other values from the tuning panel, with a work hung, moved or dragged in, after a teleport, as the intro’s camera hands over to the player, with the UI hidden or shown and, in development, after a hot update. No time passes in those frames (see `FrozenFrames`).
  */
 export default function WorldFreeze() {
   const store = useStore()
@@ -67,6 +68,7 @@ export default function WorldFreeze() {
         }
       }),
       useCustomGraphics.subscribe(refresh),
+      useIntro.subscribe(refresh),
       useLighting.subscribe(refresh),
       useHiddenUi.subscribe(refresh),
     ]

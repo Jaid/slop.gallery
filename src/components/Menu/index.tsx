@@ -37,9 +37,10 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
   const heading = useRef<HTMLHeadingElement>(null)
   // Until the player first enters, the menu leaves the intro in full view: the title above it, the buttons below.
   const intro = useIntro(state => state.orbit !== null) && (stage === 'first' || stage === 'return')
+  // The pause menu can also replace the first menu in place, without this menu remounting, so its heading takes the focus whenever it becomes the pause menu.
   useEffect(() => {
     heading.current?.focus({preventScroll: true})
-  }, [])
+  }, [paused])
   if (intro) {
     return <section className={clsx(css.container, css.intro, isHeavy && css.heavy)} aria-labelledby='menu-title' data-stage={stage} data-testid='menu-overlay'>
       <header className={css.header}>

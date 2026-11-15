@@ -171,6 +171,25 @@ describe('the pause menu freezing the world', () => {
     expect(clock.frozen).toBe(false)
     expect(clock.now()).toBe(1000)
   })
+  test('the opening menu can jump straight to the frozen pause menu without first entering the game', () => {
+    const {clock, document, menu, target} = setup()
+    expect(menu.getSnapshot()).toEqual({
+      stage: 'return',
+      locked: false,
+    })
+    expect(clock.frozen).toBe(false)
+    menu.pause()
+    expect(menu.getSnapshot()).toEqual({
+      stage: 'pause',
+      locked: false,
+    })
+    expect(clock.frozen).toBe(true)
+    wall = 61_000
+    expect(clock.now()).toBe(1000)
+    document.change(target)
+    expect(clock.frozen).toBe(false)
+    expect(clock.now()).toBe(1000)
+  })
   test('the Windows key, another tab and a hidden page leave the world running', () => {
     for (const leave of ['blur', 'hide'] as const) {
       const {clock, document, target, menu} = setup()
