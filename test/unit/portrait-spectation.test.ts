@@ -211,7 +211,7 @@ describe('a work up close', () => {
       year: 0,
     })).toContain('<dt>Year</dt><dd>0</dd>')
   })
-  test('a work the player hasn’t interacted with yet shows faint and keeps everything but its size and its room to itself', () => {
+  test('a work the player hasn’t interacted with yet shows faint and keeps everything but its room to itself', () => {
     const known = renderSpectation({
       ...goose,
       interacted: true,
@@ -220,10 +220,10 @@ describe('a work up close', () => {
     expect(html).toContain('data-interacted="false"')
     expect(html).toContain('<h1 id="menu-title">Untouched work</h1>')
     expect(html).toContain('aria-label="An untouched work in its frame"')
-    for (const secret of [goose.title, goose.description, goose.creator, 'Creator', 'Year', 'Undated']) {
+    for (const secret of [goose.title, goose.description, goose.creator, 'Creator', 'Year', 'Undated', 'Size']) {
       expect(html).not.toContain(secret)
     }
-    expect(textOf(html, 'portrait-size')).toBe('205\u{202F}cm × 205\u{202F}cm')
+    expect(html).not.toContain('data-testid="portrait-size"')
     expect(textOf(html, 'portrait-room')).toBe('Lobby')
     // Only the untouched work’s stage carries the class that fades its model.
     expect(stageClasses(html)).toHaveLength(stageClasses(known).length + 1)

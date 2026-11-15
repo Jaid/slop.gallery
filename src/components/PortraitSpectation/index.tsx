@@ -25,7 +25,7 @@ const sizeOf = ({width, height}: Portrait) => `${Math.round(width * 100)} cm �
 
 /**
  * A work of the collection up close, in place of the pause menu’s map and its main column: above, the work as the object it is in the world, to turn around, see `PortraitViewer`, and below what the gallery tells about it, its title, description, creator, year and size, and the room it is in right now, which follows a loose work around.
- * A work the player hasn’t interacted with yet shows faint and keeps all of that to itself but its size, which its model shows anyway, and its room, like it has no tooltip in the collection.
+ * A work the player hasn’t interacted with yet shows faint and keeps all of that to itself but its room, like it has no tooltip in the collection.
  * The Escape key or another click on the work in the collection brings the map back.
  */
 export default function PortraitSpectation({className, portrait: p}: {
@@ -57,8 +57,8 @@ export default function PortraitSpectation({className, portrait: p}: {
         <Branch if={known}>
           <div><dt>Creator</dt><dd>{p.creator}</dd></div>
           <div><dt>Year</dt><dd>{p.year ?? 'Undated'}</dd></div>
+          <div><dt>Size</dt><dd data-testid='portrait-size'>{sizeOf(p)}</dd></div>
         </Branch>
-        <div><dt>Size</dt><dd data-testid='portrait-size'>{sizeOf(p)}</dd></div>
         <div><dt>Room</dt><dd data-testid='portrait-room'>{room ?? 'Between rooms'}</dd></div>
       </dl>
       <Branch if={known} else={<p className={css.secret}>Find it in the gallery and listen to it, grab it or view it up close to learn what there is to know about it.</p>}><p className={css.description}>{p.description}</p></Branch>
