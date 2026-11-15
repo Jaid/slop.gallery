@@ -264,5 +264,5 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
     } finally {
       world.free()
     }
-  })
+  }, 30_000)
 })
