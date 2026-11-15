@@ -151,7 +151,7 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
       const position: Vec3 = [x, y + 1.6, z]
       expect(climbMouth.floorAt(x, z)).toBe(y)
       expect(insideGallery(position)).toBe(true)
-      expect(floorHeight(position)).toBeCloseTo(y, 6)
+      expect(floorHeight(position)).toBeCloseTo(climbMouthHollow.floorAt(x, z) ?? y, 6)
       expect(roomAt(position)).toBe('bastion')
     }
     for (const passage of routed) {
@@ -335,7 +335,7 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
     }
     expect(climbMouthHollow.hollowAt(footX, footZ)).toBe(0)
     expect(climbMouthHollow.sink(hatchX, mouthNorthZ) - climbMouthHollow.hollowAt(hatchX, mouthNorthZ)).toBeCloseTo(climbCrossfall * (climbMouth.width / 2 - wallFace), 9)
-    // Deepest just beyond the gate, under the hatch, where it steps down onto the tunnel’s floor
+    // Deepest just beyond the gate, under the hatch; the tunnel blends into this profile instead of meeting a vertical step.
     expect(climbMouthHollow.hollowAt(hatchX, mouthNorthZ)).toBeGreaterThan(0.1)
     expect(climbMouthHollow.hollowAt(hatchX, mouthNorthZ - 0.3)).toBeGreaterThan(climbMouthHollow.hollowAt(hatchX, mouthNorthZ))
     expect(climbMouthHollow.outletY).toBeLessThan(climbMouth.floorY - climbMouthHollow.sink(hatchX, mouthNorthZ))
@@ -365,7 +365,7 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
     expect(inFloors(footX, footZ - 0.1)).toBe(false)
     expect(inFloors(elbowEastX + 0.2, cz)).toBe(true)
     expect(inFloors((climbDoorway.x + elbowEastX) / 2, climbDoorway.z)).toBe(true)
-    // Its surface meets the floor round it along its edges and reaches down to the tunnel’s floor under the gate.
+    // Its surface meets the floor round it along its edges; no vertical drop face remains under the gate.
     const position = sunkenPaving.getAttribute('position')
     let lowest = Infinity
     for (let i = 0; i < position.count; i++) {
@@ -380,7 +380,8 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
         expect(y).toBeCloseTo(climbHairpin.floorAt(x, z + 1e-4)!, 4)
       }
     }
-    expect(lowest).toBeLessThan(climbMouthHollow.outletY)
+    expect(lowest).toBeGreaterThan(climbMouthHollow.outletY)
+    expect(lowest).toBeLessThan(climbMouthHollow.outletY + 0.03)
   })
   test('the doorways at both ends match the passages that lead through them', () => {
     const oculusWest = wallById('oculus-west')
