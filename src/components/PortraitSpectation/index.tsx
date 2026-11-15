@@ -4,7 +4,6 @@ import Branch from 'branch-component'
 import clsx from 'clsx'
 import {useEffect, useSyncExternalStore} from 'react'
 
-import Icon from '#component/Icon'
 import PortraitViewer from '#component/PortraitViewer'
 import {isTextInput} from '#src/lib/gallery.ts'
 import portraitRoom from '#src/lib/gallery/portraitRoom.ts'
@@ -13,22 +12,21 @@ import subscribeToFrames from '#src/lib/subscribeToFrames.ts'
 
 import css from './style.module.sass'
 
-/**
- * Puts the view away.
- * @param byKeyboard whether a key did, which hands the focus back to the work in the collection the view came from instead of leaving it nowhere
- */
-const close = (byKeyboard: boolean) => {
+/** Puts the view away and hands the focus back to the work in the collection the view came from instead of leaving it nowhere. */
+const close = () => {
   const {id} = usePortraitSpectation.getState()
   usePortraitSpectation.getState().close()
-  if (byKeyboard && id !== null) {
+  if (id !== null) {
     document.querySelector<HTMLElement>(`[data-testid='portrait-collection'] [data-portrait='${CSS.escape(id)}']`)?.focus({preventScroll: true})
   }
 }
+/** The size of a work’s image, in whole centimeters, like “212 cm × 141 cm”. */
+const sizeOf = ({width, height}: Portrait) => `${Math.round(width * 100)} cm × ${Math.round(height * 100)} cm`
 
 /**
- * A work of the collection up close, in place of the pause menu’s map and its main column: above, the work as the object it is in the world, to turn around, see `PortraitViewer`, and below what the gallery tells about it, its title, description, creator and year, and the room it is in right now, which follows a loose work around.
- * A work the player hasn’t interacted with yet shows faint and keeps all of that to itself but its room, like it has no tooltip in the collection.
- * The Escape key and its close button bring the map back.
+ * A work of the collection up close, in place of the pause menu’s map and its main column: above, the work as the object it is in the world, to turn around, see `PortraitViewer`, and below what the gallery tells about it, its title, description, creator, year and size, and the room it is in right now, which follows a loose work around.
+ * A work the player hasn’t interacted with yet shows faint and keeps all of that to itself but its size, which its model shows anyway, and its room, like it has no tooltip in the collection.
+ * The Escape key or another click on the work in the collection brings the map back.
  */
 export default function PortraitSpectation({className, portrait: p}: {
   className?: string
@@ -45,7 +43,7 @@ export default function PortraitSpectation({className, portrait: p}: {
         return
       }
       event.preventDefault()
-      close(true)
+      close()
     }
     globalThis.addEventListener('keydown', keydown)
     return () => globalThis.removeEventListener('keydown', keydown)
@@ -53,7 +51,6 @@ export default function PortraitSpectation({className, portrait: p}: {
   return <article className={clsx(css.container, className)} data-interacted={known} data-portrait={p.id} data-testid='portrait-spectation'>
     {/* A stage of its own for every work, so nothing it knows of the work before, like that its model stood there, passes for this one’s. */}
     <PortraitViewer key={p.id} faint={!known} label={known ? `“${p.title}” in its frame` : 'An untouched work in its frame'} portrait={p} />
-    <button className={css.close} aria-label='Back to the map' title='Back to the map' type='button' onClick={event => close(event.detail === 0)}><Icon name='close' size={18} /></button>
     <div className={css.details}>
       <h1 id='menu-title'><Branch if={known} then={p.title} else='Untouched work' /></h1>
       <dl className={css.facts}>
@@ -61,6 +58,7 @@ export default function PortraitSpectation({className, portrait: p}: {
           <div><dt>Creator</dt><dd>{p.creator}</dd></div>
           <div><dt>Year</dt><dd>{p.year ?? 'Undated'}</dd></div>
         </Branch>
+        <div><dt>Size</dt><dd data-testid='portrait-size'>{sizeOf(p)}</dd></div>
         <div><dt>Room</dt><dd data-testid='portrait-room'>{room ?? 'Between rooms'}</dd></div>
       </dl>
       <Branch if={known} else={<p className={css.secret}>Find it in the gallery and listen to it, grab it or view it up close to learn what there is to know about it.</p>}><p className={css.description}>{p.description}</p></Branch>

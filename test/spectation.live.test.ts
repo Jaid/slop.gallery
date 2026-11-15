@@ -162,6 +162,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: a work of the col
   expect(told).toContain(known!.title)
   expect(told).toMatch(/creator/iu)
   expect(told).toMatch(/year/iu)
+  expect(await textOf(page, '[data-testid="portrait-size"]')).toBe(`${Math.round(known!.width * 100)}\u{202F}cm × ${Math.round(known!.height * 100)}\u{202F}cm`)
   expect(await textOf(page, '[data-testid="portrait-room"]')).not.toBe('')
   expect(await page.$eval(stage, element => element.getAttribute('aria-label'))).toContain(known!.title)
   await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-testid="portrait-viewer"] canvas')!).opacity === '1')
@@ -225,13 +226,9 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: a work of the col
   expect(await isOpen(page)).toBe(false)
   expect(await spectating(page)).toBeNull()
   expect(await page.evaluate(() => document.activeElement?.getAttribute('data-portrait'))).toBe(known!.id)
-  // A click on the work shown puts the view away too, as does its close button.
+  // A click on the work shown puts the view away too.
   await spectate(page, known!.id)
   await page.click(`${collection} [data-portrait="${known!.id}"]`)
-  await page.waitForSelector('[data-testid="minimap"]')
-  expect(await isOpen(page)).toBe(false)
-  await spectate(page, known!.id)
-  await page.click('[aria-label="Back to the map"]')
   await page.waitForSelector('[data-testid="minimap"]')
   expect(await isOpen(page)).toBe(false)
   // The menu is whole again, so the player can go on, which the world follows as the browser reports the pointer locked.

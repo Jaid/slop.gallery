@@ -180,22 +180,25 @@ describe('the pause menu with a work up close', () => {
   })
 })
 describe('a work up close', () => {
-  test('tells its title, description, creator, year and room once the player has interacted with it', () => {
+  test('tells its title, description, creator, year, size and room once the player has interacted with it', () => {
     const html = renderSpectation({
       ...goose,
       interacted: true,
       year: 1924,
+      width: 2.121,
+      height: 1.414,
     })
     expect(html).toContain('data-interacted="true"')
     expect(html).toContain(`<h1 id="menu-title">${goose.title}</h1>`)
     expect(html).toContain(goose.description)
     expect(html).toContain(`<dt>Creator</dt><dd>${goose.creator}</dd>`)
     expect(html).toContain('<dt>Year</dt><dd>1924</dd>')
+    // The size of its image in whole centimeters, width first.
+    expect(textOf(html, 'portrait-size')).toBe('212\u{202F}cm × 141\u{202F}cm')
     expect(textOf(html, 'portrait-room')).toBe('Lobby')
     // Its model stands above all of that, named after it, at full strength.
     expect(html.indexOf('data-testid="portrait-viewer"')).toBeLessThan(html.indexOf('id="menu-title"'))
     expect(html).toContain(`aria-label="“${goose.title}” in its frame"`)
-    expect(html).toContain('aria-label="Back to the map"')
   })
   test('tells a missing year apart from year zero', () => {
     const known = {
@@ -208,7 +211,7 @@ describe('a work up close', () => {
       year: 0,
     })).toContain('<dt>Year</dt><dd>0</dd>')
   })
-  test('a work the player hasn’t interacted with yet shows faint and keeps everything but its room to itself', () => {
+  test('a work the player hasn’t interacted with yet shows faint and keeps everything but its size and its room to itself', () => {
     const known = renderSpectation({
       ...goose,
       interacted: true,
@@ -220,6 +223,7 @@ describe('a work up close', () => {
     for (const secret of [goose.title, goose.description, goose.creator, 'Creator', 'Year', 'Undated']) {
       expect(html).not.toContain(secret)
     }
+    expect(textOf(html, 'portrait-size')).toBe('205\u{202F}cm × 205\u{202F}cm')
     expect(textOf(html, 'portrait-room')).toBe('Lobby')
     // Only the untouched work’s stage carries the class that fades its model.
     expect(stageClasses(html)).toHaveLength(stageClasses(known).length + 1)

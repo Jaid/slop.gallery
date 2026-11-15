@@ -177,8 +177,6 @@ export default function PortraitViewer({className, faint = false, label, portrai
     >
       <Branch if={progress === 'failed'}><p className={css.failure}>This work can’t be shown as a model right now.</p></Branch>
     </div>
-    {/* Below the stage, so only a model moved close up gets over it. */}
-    <p className={css.hint} aria-hidden='true'>Drag to turn · Scroll to zoom · Double-click to reset</p>
     {/* The studio’s canvas, over the whole screen in the top layer. */}
     <div className={css.layer} aria-hidden='true' popover='manual' ref={layer} />
   </div>

@@ -5,8 +5,7 @@
   // Its glow lies behind its own stage, but in front of whatever is behind it.
   isolation: isolate
   display: grid
-  grid-template-rows: minmax(0, 1fr) auto
-  gap: 0.5rem
+  grid-template-rows: minmax(0, 1fr)
   min-width: 0
   min-height: 0
   // A glow like a lamp on a studio’s backdrop, which keeps the outline of a dark model apart from a dark scene behind it. It reaches past the stage, whose corners a model that fills the stage comes close to, and fades out before it ends, so it has no edge.
@@ -60,12 +59,6 @@
 // A work the player hasn’t interacted with yet: the stage shows nothing but the model, so the canvas fades it as a whole.
 .faint[data-progress='ready'] canvas
   opacity: 0.25
-
-.hint
-  @include ui.eyebrow
-  margin: 0
-  text-align: center
-  text-transform: uppercase
 
 .failure
   @include ui.copy

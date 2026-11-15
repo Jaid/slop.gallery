@@ -2,7 +2,6 @@
 @use '../../style/ui'
 
 .container
-  position: relative
   display: grid
   // The model takes whatever the text below it leaves, which gets at most 45% of the height and scrolls beyond.
   grid-template-rows: minmax(0, 1fr) fit-content(45%)
@@ -11,19 +10,6 @@
   // As tall as the collection beside it gets.
   height: 80vh
   min-height: 22rem
-
-.close
-  position: absolute
-  inset: 0 0 auto auto
-  display: grid
-  place-items: center
-  padding: 0.6rem
-  // The model can get over it, close up, but the pointer goes through to it.
-  background: rgb(0 0 0 / 45%)
-  color: colors.$muted
-  &:hover
-    background: rgb(0 0 0 / 65%)
-    color: inherit
 
 .details
   min-height: 0
