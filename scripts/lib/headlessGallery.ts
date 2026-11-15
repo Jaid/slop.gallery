@@ -12,7 +12,7 @@ import {parseStreamBudget} from '#src/lib/rendering/streamBudget.ts'
 import {readWorld, worldParameters} from '#src/worlds/index.ts'
 
 export const repositoryRoot = resolve(import.meta.dir, '..', '..')
-const dedicatedQueryOptionNames = new Set(['graphics', 'seed', 'stream_budget', 'warmup_scale'])
+const dedicatedQueryOptionNames = new Set(['graphics', 'seed', 'stream_budget', 'test', 'warmup_scale'])
 /** rows of the drawing buffer while a page warms up, see --warmup_scale */
 export const warmupRows = 360
 // These have dedicated options with validation and defaults. A world’s own parameters open it, like --shots opens Knottingham and --item the Sandbox.
@@ -29,6 +29,7 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}:
   return `  --target <dir>          use this static build (e.g. dist) instead of the dev server, which suits captures better: the dev server can reload the page while it captures
   --graphics <mode>       mirrors ?graphics (fast, heavy, cinematic, which is heavy with larger maps and more samples for non-realtime renders, or auto, which picks fast or heavy for the GPU). Default: heavy
   --seed <number>         mirrors ?seed, the environment seed (0–${maximumSeed}) that decides random details like the potted plants. Default: 1
+  --test <true|false>     mirrors ?test, which gives the page its pose and teleport hooks and leaves the intro out. Default: true; false opens the page as players get it, without those hooks
   --stream_budget <ms|false>
                           mirrors ?stream_budget, the milliseconds a frame after loading may spend building objects. Default: false, which builds everything in the first frame, so the scene is complete about three times sooner than at the players’ 8 and, in cinematic graphics, whose every streaming frame renders the whole view, three to six times sooner than at 100
   --warmup_scale <scale|false>
@@ -51,6 +52,7 @@ export const galleryOptions = {
   },
   stream_budget: {type: 'string'},
   swiftshader: {type: 'boolean'},
+  test: {type: 'string'},
   warmup_scale: {type: 'string'},
   target: {type: 'string'},
   width: {type: 'string'},
@@ -63,6 +65,7 @@ export type GalleryValues = Partial<Record<string, boolean | string>> & {
   stream_budget?: string
   swiftshader?: boolean
   target?: string
+  test?: string
   warmup_scale?: string
   width?: string
 }
@@ -178,9 +181,13 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
   if (target !== undefined && !await fs.stat(join(target, 'index.html')).then(entry => entry.isFile(), () => false)) {
     throw new Error(`--target ${values.target} has no index.html. Build it first, e.g. bun run build.`)
   }
+  const test = values.test ?? 'true'
+  if (test !== 'true' && test !== 'false') {
+    throw new Error(`--test must be true or false, got “${test}”.`)
+  }
   const search = new URLSearchParams({
     ai: 'false',
-    test: 'true',
+    test,
   })
   const seed = parseSeed(values.seed)
   if (seed === undefined) {
@@ -208,6 +215,7 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
   return {
     swiftshader: values.swiftshader === true,
     target,
+    test: test === 'true',
     /** the world the page opens, which --room or a world’s own parameters choose */
     world: readWorld(`?${search}`),
     search,
@@ -274,8 +282,8 @@ export const watchPage = (page: Page) => {
     void page.browser().close().catch((closeError: unknown) => console.error(`Closing the browser after the crash failed: ${String(closeError)}`))
   })
 }
-/** Waits until the scene is ready and checks the debug hooks that captures rely on. Fails early when the app shows its render error screen instead. */
-export const waitForGallery = async (page: Page) => {
+/** Waits until the scene is ready and checks the debug hooks that captures rely on, the pose hook only where `pose` asks for it, as a page without `?test=true` has none. Fails early when the app shows its render error screen instead. */
+export const waitForGallery = async (page: Page, {pose = true}: {pose?: boolean} = {}) => {
   const outcome = await page.waitForFunction(() => {
     // RenderError replaces the scene when WebGPU is missing or rendering threw, e.g. because no adapter could be created; ready would never come.
     const renderError = document.querySelector('[data-testid="render-error"]')
@@ -288,7 +296,7 @@ export const waitForGallery = async (page: Page) => {
   if (error !== undefined) {
     throw new Error(`The gallery showed its render error screen (“${error}”). The console errors above name the cause.`)
   }
-  if (!await page.evaluate(() => Boolean(globalThis.slopGallery!.pose))) {
+  if (pose && !await page.evaluate(() => Boolean(globalThis.slopGallery!.pose))) {
     throw new Error('This build has no slopGallery.pose() hook. Rebuild it from a version that includes scripts/snap.ts.')
   }
   if (!await page.evaluate(() => globalThis.slopGallery!.snapshot!().webGPU)) {
@@ -343,7 +351,7 @@ export const openHeadlessGallery = async (setup: GallerySetup, options: {
       waitUntil: 'domcontentloaded',
       timeout: 300_000,
     })
-    await waitForGallery(page)
+    await waitForGallery(page, {pose: setup.test})
     return {
       page,
       [Symbol.asyncDispose]: close,
