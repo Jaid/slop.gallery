@@ -1,3 +1,4 @@
+import type {PavingBox} from '../../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import type {Vec3} from '../../../src/lib/gallery/types.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
@@ -65,6 +66,9 @@ export function bastionColliders() {
     }
     const vault = new RouteVaultGeometry(passage)
     colliders.surface(vault.pavingCollision, passage.fixPavingEdges)
+    if (vault.pavingBox) {
+      colliders.boxes.push(vault.pavingBox)
+    }
     colliders.surface(vault.shell)
     colliders.surface(vault.ribs)
     vault.dispose()
@@ -169,6 +173,7 @@ export function addArmor(world: RAPIER.World) {
 
 /** Collects the shapes once, as the game builds them, to put into as many worlds as asked. */
 class Colliders {
+  readonly boxes: Array<PavingBox> = []
   readonly hulls: Array<Float32Array> = []
   readonly shapes: Array<Shape> = []
 
@@ -187,6 +192,11 @@ class Colliders {
         shape.setRotation(turn.setFromAxisAngle(new Vector3(0, 1, 0), rotation))
       }
       world.createCollider(shape)
+    }
+    for (const {position, rotation, halfSize} of this.boxes) {
+      const turn = new Quaternion
+      turn.setFromAxisAngle(new Vector3(0, 1, 0), rotation)
+      world.createCollider(RAPIER.ColliderDesc.cuboid(...halfSize).setTranslation(...position).setRotation(turn))
     }
     for (const vertices of this.hulls) {
       world.createCollider(RAPIER.ColliderDesc.convexHull(vertices)!)

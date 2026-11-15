@@ -1,3 +1,4 @@
+import type {Vec3} from '../types.ts'
 import type {RouteStation} from './PassageRoute.ts'
 import type RoutedPassage from './RoutedPassage.ts'
 
@@ -9,9 +10,15 @@ import {openingShape} from '../architecture.ts'
 import {vaultShellThickness} from '../architectureDimensions.ts'
 import {routeRibDepth, routeRibThickness} from './RoutedPassage.ts'
 
+export type PavingBox = {
+  halfSize: [x: number, y: number, z: number]
+  position: Vec3
+  rotation: number
+}
+
 type Profile = ReadonlyArray<readonly [lateral: number, up: number]>
 /** the cross section of a swept solid at a station, as faces in the order they follow around it, each a polyline from where the previous one ended; every station’s has as many points in each face */
-type Section = (station: RouteStation) => ReadonlyArray<Profile>
+type Section = (station: RouteStation, run: ReadonlyArray<RouteStation>) => ReadonlyArray<Profile>
 
 /** how thick the slab of a routed passage’s paving is, under its floor */
 export const pavingThickness = 0.24
@@ -31,11 +38,11 @@ function arch(middle: number, halfSpan: number, rise: number, spring: number, re
  * A solid swept along stations of a route: each face of its cross section becomes a strip of its own, smooth along the route and across curved faces but creased between faces and at the stations where `runs` meet, and the first and the last station are capped.
  * The heights of the cross section stand over the floor or, `fromCrown`, over the passage’s crown.
  */
-function sweep(runs: ReadonlyArray<ReadonlyArray<RouteStation>>, section: Section, fromCrown = false) {
+function sweep(runs: ReadonlyArray<ReadonlyArray<RouteStation>>, section: Section, fromCrown = false, oppositeDiagonals: ReadonlyArray<number> = []) {
   const place = ({point, heading, y, height}: RouteStation, [lateral, up]: readonly [number, number]) => [point[0] - Math.sin(heading) * lateral, y + (fromCrown ? height : 0) + up, point[1] + Math.cos(heading) * lateral] as const
-  const outlineAt = (station: RouteStation) => section(station).flatMap(face => face.slice(1))
+  const outlineAt = (station: RouteStation, run: ReadonlyArray<RouteStation>) => section(station, run).flatMap(face => face.slice(1))
   const first = runs[0][0]
-  const outline = outlineAt(first)
+  const outline = outlineAt(first, runs[0])
   // Walking along the route with the cross section ordered counterclockwise, as seen from behind, each quad’s corners need this order to face outward.
   const area = outline.reduce((sum, [l, v], i) => {
     const [nextL, nextV] = outline[(i + 1) % outline.length]
@@ -43,7 +50,7 @@ function sweep(runs: ReadonlyArray<ReadonlyArray<RouteStation>>, section: Sectio
   }, 0)
   const flip = area < 0
   const parts = runs.flatMap(stations => {
-    const sections = stations.map(section)
+    const sections = stations.map(station => section(station, stations))
     return sections[0].map((face, index) => {
       const positions: Array<number> = []
       for (const [row, station] of stations.entries()) {
@@ -59,7 +66,8 @@ function sweep(runs: ReadonlyArray<ReadonlyArray<RouteStation>>, section: Sectio
           const b = a + 1
           const c = a + columns
           const d = c + 1
-          indices.push(...flip ? [a, b, c, b, d, c] : [a, c, b, b, c, d])
+          // Reversing a face’s columns (the slab’s underside) otherwise reverses its physical diagonal, making a twisted slab’s thickness vary between vertices.
+          indices.push(...oppositeDiagonals.includes(index) ? (flip ? [a, b, d, a, d, c] : [a, d, b, a, c, d]) : (flip ? [a, b, c, b, d, c] : [a, c, b, b, c, d]))
         }
       }
       const strip = new BufferGeometry
@@ -70,7 +78,7 @@ function sweep(runs: ReadonlyArray<ReadonlyArray<RouteStation>>, section: Sectio
     })
   })
   for (const [index, station] of [first, runs.at(-1)!.at(-1)!].entries()) {
-    const ring = outlineAt(station)
+    const ring = outlineAt(station, index ? runs.at(-1)! : runs[0])
     const triangles = ShapeUtils.triangulateShape(ring.map(([l, v]) => new Vector2(l, v)), [])
     const corners = ring.map(point => place(station, point))
     // The start’s cap looks back along the route, the end’s ahead.
@@ -211,7 +219,9 @@ function openVault(geometry: BufferGeometry, passage: RoutedPassage, air: Buffer
 export default class RouteVaultGeometry {
   /** the slab under the floor, flush with the passage’s walls, broken through by its pits and cut round its drains */
   readonly paving: BufferGeometry
-  /** what collides of the paving: broken through by its pits, but running on under its drains’ grates; the paving itself without drains */
+  /** A level, rectangular tail after an inlet, colliding as one face rather than internal triangle edges under resting props. Excluded from `pavingCollision`. */
+  readonly pavingBox?: PavingBox
+  /** the paving’s collision mesh: broken through by pits but running on under drains, with any `pavingBox` tail left out */
   readonly pavingCollision: BufferGeometry
   readonly ribs: BufferGeometry
   readonly shell: BufferGeometry
@@ -222,11 +232,11 @@ export default class RouteVaultGeometry {
     // under the crown
     const spring = -rise
     /** The stations between two distances along the route, in runs that meet where the outline turns its corners. */
-    const runs = (from: number, to: number) => {
+    const runs = (from: number, to: number, creases = passage.creases) => {
       const result: Array<Array<RouteStation>> = [[]]
       for (const station of passage.stations(from, to)) {
         result.at(-1)!.push(station)
-        if (passage.creases.some(along => Math.abs(along - station.along) < 1e-9) && station.along > from && station.along < to) {
+        if (creases.some(along => Math.abs(along - station.along) < 1e-9) && station.along > from && station.along < to) {
           result.push([station])
         }
       }
@@ -258,20 +268,40 @@ export default class RouteVaultGeometry {
     this.ribs = mergeParts(passage.ribs.flatMap(along => sweep(runs(along - routeRibDepth / 2, along + routeRibDepth / 2), ring(-routeRibThickness, 0), true)))
     /** how many strips the paving is cut into from either wall to the centerline, at most `pavingStrip` wide, so it bends with its crossfall and stays close to flat through the twist of a ramp round a turn */
     const strips = Math.ceil(width / 2 / pavingStrip)
-    const paving = breakPits(mergeParts(sweep(runs(0, route.length), station => {
+    const floorRuns = runs(0, route.length, [...passage.creases, ...passage.floorInlet ? [passage.floorInlet.inlet.length] : []])
+    const pavingSection: Section = (station, run) => {
       const [left, right] = [-1, 1].map(side => passage.reach(station, side))
-      const across = [
+      // Only the inlet needs extra columns; the rest keeps the ordinary paving tessellation.
+      const inlet = passage.floorInlet && run[0].along < passage.floorInlet.inlet.length ? passage.floorInlet : undefined
+      const across = inlet?.across ?? [
         ...Array.from({length: strips + 1}, (_, index) => -left + left * index / strips),
         ...Array.from({length: strips}, (_, index) => right * (index + 1) / strips),
       ]
+      const top = across.map(lateral => [lateral, passage.floorY(station, lateral) - station.y] as const)
+      const leftY = top[0][1]
+      const rightY = top.at(-1)![1]
       return [
-        across.map(lateral => [lateral, -passage.sag(station, lateral)] as const),
-        [[right, 0], [right, -pavingThickness]],
-        [[right, -pavingThickness], [-left, -pavingThickness]],
-        [[-left, -pavingThickness], [-left, 0]],
+        top,
+        [[right, rightY], [right, rightY - pavingThickness]],
+        inlet ? top.toReversed().map(([lateral, y]) => [lateral, y - pavingThickness] as const) : [[right, -pavingThickness], [-left, -pavingThickness]],
+        [[-left, leftY - pavingThickness], [-left, leftY]],
       ]
-    })), passage, passage.pits)
-    this.pavingCollision = paving
+    }
+    const makePaving = (pavingRuns: ReadonlyArray<ReadonlyArray<RouteStation>>) => breakPits(mergeParts(sweep(pavingRuns, pavingSection, false, passage.floorInlet ? [2] : [])), passage, passage.pits)
+    const paving = makePaving(floorRuns)
+    const tail = route.pieces.at(-1)!
+    if (passage.floorInlet && !passage.pits.length && !passage.drains.length && tail.kind === 'line' && tail.from >= passage.floorInlet.inlet.length && tail.startY === tail.endY) {
+      const middle = route.at(tail.from + tail.length / 2)
+      this.pavingBox = {
+        position: [middle.point[0], middle.y - pavingThickness / 2, middle.point[1]],
+        rotation: -tail.heading,
+        halfSize: [tail.length / 2, pavingThickness / 2, width / 2],
+      }
+      // Coplanar triangles without edge repair made resting armor sensitive to the distant inlet’s triangle order. One face under the level tail has no internal edges.
+      this.pavingCollision = makePaving(runs(0, tail.from, [...passage.creases, passage.floorInlet.inlet.length]))
+    } else {
+      this.pavingCollision = paving
+    }
     this.paving = passage.drains.length ? breakPits(paving.clone(), passage, passage.drains) : paving
   }
 
@@ -279,6 +309,8 @@ export default class RouteVaultGeometry {
     this.shell.dispose()
     this.ribs.dispose()
     this.paving.dispose()
-    this.pavingCollision.dispose()
+    if (this.pavingCollision !== this.paving) {
+      this.pavingCollision.dispose()
+    }
   }
 }

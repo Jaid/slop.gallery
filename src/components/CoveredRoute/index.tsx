@@ -1,7 +1,7 @@
 import type RoutedPassage from '#src/lib/gallery/passages/RoutedPassage.ts'
 import type {Material} from 'three/webgpu'
 
-import {RigidBody, TrimeshCollider} from '@react-three/rapier'
+import {CuboidCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
@@ -22,11 +22,13 @@ export default function CoveredRoute({passage, material, lanterns}: {
   const geometry = useDisposable(useMemo(() => new RouteVaultGeometry(passage), [passage]))
   const mounts = useMemo(() => routePendantMounts(passage, [geometry.shell, geometry.ribs], lanterns), [geometry, lanterns, passage])
   const paving = colliderGeometry(geometry.pavingCollision)
+  const box = geometry.pavingBox
   const collision = [geometry.shell, geometry.ribs].map(colliderGeometry)
   return <group name={passage.name}>
     <RigidBody colliders={false} type='fixed'>
       {/* Welded, so orbs roll on across its facets round the turns instead of catching on their edges */}
       <Branch if={passage.fixPavingEdges} else={<TrimeshCollider args={paving} />}><MeshSurfaceCollider args={paving} /></Branch>
+      <Branch if={box}><CuboidCollider args={box?.halfSize ?? [0, 0, 0]} position={box?.position} rotation={[0, box?.rotation ?? 0, 0]} /></Branch>
       {collision.map((args, i) => <TrimeshCollider key={i} args={args} />)}
       <mesh castShadow geometry={geometry.paving} material={material} name='castle-paving' receiveShadow />
       <mesh castShadow geometry={geometry.shell} material={material} name='castle-barrel-vault' receiveShadow />

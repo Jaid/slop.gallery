@@ -106,19 +106,27 @@ export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLi
   openings: [{
     ...vaultOpening(lodgeSpurWidth, lodgeSpurLinkHeight),
     name: 'lodge_spur',
+    // Cut to the link’s lowest floor, not a level sill at the doorway’s midpoint on the ramp.
+    bottom: route.y - lodgeSpurFloorY,
     along: lodgeSpurAlong,
     side: 1,
     casing: false,
   }],
 })
+const lodgeSpurRampLength = 2
 /** Straight north past the Lodge’s side window, on to the existing passage toward the Lodge, where its closing wall stands back to back with that passage’s left wall. */
 const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, lodgeSpurFloorY, lodgeSpurLinkHeight, [{
   y: lodge.floorY,
   height: lodgeSpurHeight,
-  steps: [{length: 2}],
-}, {length: lodgeSpurStartZ - lodgeSpurEndZ - 2}])
+  steps: [{length: lodgeSpurRampLength}],
+}, {length: lodgeSpurStartZ - lodgeSpurEndZ - lodgeSpurRampLength}])
 export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, lodgeSpurWidth, {
   fixPavingEdges: false,
+  floorInlet: {
+    length: lodgeSpurRampLength,
+    // The link climbs across the doorway. Carry every knot of that ramp into the spur’s mouth, then ease its tilt out over the spur’s own climb, not a level sill that leaves a step at each jamb.
+    profile: [...bastionLink.stations(lodgeSpurAlong - lodgeSpurWidth / 2, lodgeSpurAlong + lodgeSpurWidth / 2), bastionLink.route.at(lodgeSpurAlong)].map(({point: [x]}) => [x - lodgeSpurX, bastionLink.floorAt(x, lodgeSpurStartZ)!] as const).toSorted(([a], [b]) => a - b).filter(([right], index, all) => index === 0 || right - all[index - 1][0] > 1e-9),
+  },
   // Cut round the window’s timber reveal, which runs on through the stone and frames it flush with the passage’s face.
   openings: [{
     name: 'lodge_window',
