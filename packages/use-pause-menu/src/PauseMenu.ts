@@ -39,8 +39,26 @@ export default class PauseMenu {
       })
     }
     const keydown = (event: KeyboardEvent) => {
-      if (event.code === 'Escape' && !event.repeat) {
+      if (event.code !== 'Escape' || event.repeat) {
+        return
+      }
+      if (document.pointerLockElement && document.pointerLockElement !== target) {
+        return
+      }
+      if (document.pointerLockElement === target || this.snapshot.locked) {
         note('pause')
+        return
+      }
+      // The intro and return menus are shown before any lock, so Escape can jump there straight to the pause stage while the document remains focused.
+      if (!document.hasFocus() || document.hidden || !target.isConnected) {
+        return
+      }
+      if (this.snapshot.stage === 'first' || this.snapshot.stage === 'return' || this.snapshot.stage === 'reset') {
+        this.reason = 'pause'
+        this.publish({
+          locked: false,
+          stage: 'pause',
+        })
       }
     }
     const blur = () => note('unfocus')

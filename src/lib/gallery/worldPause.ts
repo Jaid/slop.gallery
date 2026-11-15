@@ -3,6 +3,7 @@ import type PauseMenu from 'use-pause-menu/core'
 
 import pauseMenu, {isPausing} from '../pauseMenu.ts'
 import worldClock from '../worldClock.ts'
+import {useIntro} from './intro.ts'
 import {useGallery} from './store.ts'
 
 /** what tells whether the world has loaded, like the gallery’s store */
@@ -19,14 +20,16 @@ type Readiness = {
 export default function freezeWhilePaused(menu: Pick<PauseMenu, 'getSnapshot' | 'subscribe'> = pauseMenu, clock: WorldClock = worldClock, gallery: Readiness = useGallery) {
   let release: (() => void) | undefined
   const follow = () => {
-    if (isPausing(menu.getSnapshot()) && gallery.getState().ready) {
+    const snapshot = menu.getSnapshot()
+    const orbit = useIntro.getState().orbit
+    if (isPausing(snapshot) && gallery.getState().ready && orbit === null) {
       release ??= clock.freeze()
     } else {
       release?.()
       release = undefined
     }
   }
-  const unsubscribers = [menu.subscribe(follow), gallery.subscribe(follow)]
+  const unsubscribers = [menu.subscribe(follow), gallery.subscribe(follow), useIntro.subscribe(follow)]
   follow()
   return () => {
     for (const unsubscribe of unsubscribers) {

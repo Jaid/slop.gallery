@@ -205,6 +205,23 @@ test('Escape and a consumed Escape key both produce pause', () => {
     })
   }
 })
+
+test('Escape opens the pause menu before any pointer lock, including the intro and return stages', () => {
+  for (const stage of ['first', 'return', 'reset'] as const) {
+    const menu = new PauseMenu({initialStage: stage})
+    const target = new TestTarget
+    const disconnect = menu.attach(target.element)
+    try {
+      target.ownerDocument.escape()
+      expect(menu.getSnapshot()).toEqual({
+        stage: 'pause',
+        locked: false,
+      })
+    } finally {
+      disconnect()
+    }
+  }
+})
 test('Windows-key-style blur remains unfocus even if focus returns before unlock', () => {
   const {menu, document, target} = setup()
   document.change(target)

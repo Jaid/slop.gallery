@@ -11,7 +11,7 @@ import inspectionPointerSensitivity from '#src/lib/camera/inspectionPointerSensi
 import OrbitInspection, {orbitKeySpeed, orbitPointerSpeed} from '#src/lib/camera/OrbitInspection.ts'
 import {frozenSeconds} from '#src/lib/frozenTime.ts'
 import {galleryEvents, isTextInput, setCameraFocused} from '#src/lib/gallery.ts'
-import {endIntro, introDirection} from '#src/lib/gallery/intro.ts'
+import {endIntro, introDirection, useIntro} from '#src/lib/gallery/intro.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
 import {setInspectionFocus} from '#src/lib/rendering/playerView.ts'
@@ -81,6 +81,20 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
       state.dragging = false
       state.keys.clear()
     }
+    const takeOver = () => {
+      if (fading.current !== null || !useIntro.getState().orbit) {
+        return
+      }
+      galleryEvents.dispatchEvent(new CustomEvent('teleport', {
+        detail: {
+          feet: true,
+          position: [camera.position.x, camera.position.y - defaultEgoOptions.eyeHeight, camera.position.z],
+          rotation: camera.quaternion.toArray(),
+        },
+      }))
+      endIntro()
+      stop()
+    }
     const enter = () => {
       if (!pauseMenu.getSnapshot().locked || fading.current !== null) {
         return
@@ -126,7 +140,15 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
     const keyUp = (event: KeyboardEvent) => {
       state.keys.delete(event.code)
     }
-    const unsubscribe = pauseMenu.subscribe(enter)
+    const unsubscribe = pauseMenu.subscribe(() => {
+      if (pauseMenu.getSnapshot().locked) {
+        enter()
+        return
+      }
+      if (pauseMenu.getSnapshot().stage === 'pause') {
+        takeOver()
+      }
+    })
     globalThis.addEventListener('pointerdown', down, true)
     globalThis.addEventListener('pointermove', move, true)
     globalThis.addEventListener('pointerup', up, true)
