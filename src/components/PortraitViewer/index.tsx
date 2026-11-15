@@ -57,11 +57,13 @@ const orbitKeys: Partial<Record<string, Action>> = {
 /**
  * A work as the object it is in the world, its image in its frame, on a stage of the page’s studio, see `StudioView`: in the studio’s own light instead of its room’s, with nothing around it.
  * Dragging turns it and the wheel moves closer and away, like the arrow keys and + and − do while it has the focus, or A, D, W and S like while holding V in the world; a double click or the Home key turns it back to its front.
- * A faint model fades as a whole: the stage shows nothing but the model, so the canvas takes the opacity instead of every material.
+ * The studio’s canvas covers the whole screen, above everything else, and lets the pointer through: the model stands on the stage as if the canvas were only as large as the stage, but whatever of it reaches past the stage, turned or close up, shows over the rest of the page.
+ * A faint model fades as a whole: the canvas shows nothing but the model, so it takes the opacity instead of every material.
  * A glow behind the stage, reaching a little past it, keeps the outline of a dark frame apart from a dark scene behind the menu.
  */
 export default function PortraitViewer({className, faint = false, label, portrait}: PortraitViewerProps) {
   const stage = useRef<HTMLDivElement>(null)
+  const layer = useRef<HTMLDivElement>(null)
   const studio = useRef<StudioView>(undefined)
   const [outcome, setOutcome] = useState<Outcome>()
   const {frame, height, source, width} = portrait
@@ -70,14 +72,31 @@ export default function PortraitViewer({className, faint = false, label, portrai
   // The studio’s canvas lives on while this stage is not there, so it moves in and out.
   useEffect(() => {
     const element = stage.current!
+    const overlay = layer.current!
     const {release, view} = holdStudioView()
+    const {canvas} = view
     studio.current = view
-    element.prepend(view.canvas)
+    overlay.append(canvas)
+    overlay.showPopover()
     const observer = new ResizeObserver(([entry]) => {
       const [{blockSize, inlineSize}] = entry.devicePixelContentBoxSize
       view.resize(inlineSize, blockSize)
     })
-    observer.observe(element, {box: 'device-pixel-content-box'})
+    observer.observe(canvas, {box: 'device-pixel-content-box'})
+    // The stage moves with the menu’s layout and its scrolling, which nothing tells of at once, so the canvas looks it up every frame, before anything is drawn.
+    let following = 0
+    const follow = () => {
+      following = requestAnimationFrame(follow)
+      const bounds = canvas.getBoundingClientRect()
+      const area = element.getBoundingClientRect()
+      view.place({
+        x: (area.x - bounds.x) / bounds.width,
+        y: (area.y - bounds.y) / bounds.height,
+        width: area.width / bounds.width,
+        height: area.height / bounds.height,
+      })
+    }
+    follow()
     // The page behind must not scroll along, which only a listener that isn’t passive can keep it from.
     const wheel = (event: WheelEvent) => {
       event.preventDefault()
@@ -87,10 +106,12 @@ export default function PortraitViewer({className, faint = false, label, portrai
     view.start()
     return () => {
       studio.current = undefined
+      cancelAnimationFrame(following)
       observer.disconnect()
       element.removeEventListener('wheel', wheel)
       view.stop()
-      view.canvas.remove()
+      canvas.remove()
+      overlay.hidePopover()
       release()
     }
   }, [])
@@ -156,7 +177,9 @@ export default function PortraitViewer({className, faint = false, label, portrai
     >
       <Branch if={progress === 'failed'}><p className={css.failure}>This work can’t be shown as a model right now.</p></Branch>
     </div>
-    {/* Below the stage, so the model never lies under it however close the camera gets. */}
+    {/* Below the stage, so only a model moved close up gets over it. */}
     <p className={css.hint} aria-hidden='true'>Drag to turn · Scroll to zoom · Double-click to reset</p>
+    {/* The studio’s canvas, over the whole screen in the top layer. */}
+    <div className={css.layer} aria-hidden='true' popover='manual' ref={layer} />
   </div>
 }

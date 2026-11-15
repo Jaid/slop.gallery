@@ -17,9 +17,24 @@ const origin = new Vector3
 const front = new Vector3(0, 0, 1)
 const position = new Vector3
 const rotation = new Quaternion
+/** where on the canvas the stage lies, the part of it the object is framed for, as shares of the canvas’s width and height from its top left corner */
+export type StudioStageArea = {
+  height: number
+  width: number
+  x: number
+  y: number
+}
+
 /** a lamp of the view’s rig: where it shines from as the viewer sees it, x to the right, y up and z toward the viewer, with its color and intensity */
 type Lamp = readonly [color: string, intensity: number, x: number, y: number, z: number]
 
+/** all of the canvas */
+const wholeCanvas: StudioStageArea = {
+  x: 0,
+  y: 0,
+  width: 1,
+  height: 1,
+}
 /**
  * The lamps of a showroom as the viewer sees them, to be turned along with the camera, which looks down −z, so turning the camera around an object lights it like turning the object in one’s hands under fixed lamps: whichever side comes into view is lit.
  *
@@ -56,10 +71,17 @@ function viewerLights() {
  * A studio the player looks into: it shows one object at a time on a canvas of its own, transparent around the object, and orbits the camera around it like holding V does in the world, by {@link turn}, {@link zoom} and {@link reset}, all the way round and never into it.
  *
  * Put its {@link canvas} into the page, tell it its size with {@link resize} and let it draw with {@link start}. It only draws a frame when the view changed, and every frame while the world’s clock runs, which the time of its shaders follows: animated materials stand still under the Escape key’s pause menu, like in the world.
+ *
+ * The object is framed for a stage, all of the canvas unless {@link place} tells it a part of it: there it stands like on a canvas of the stage’s own size, while whatever of it reaches past the stage, turned or close up, shows on the rest of the canvas.
  */
 export default class StudioView extends Studio {
   /** what the studio draws on, for the page to lay out; its drawing buffer follows {@link resize} */
   readonly canvas: HTMLCanvasElement
+  /** the size of the drawing buffer, see {@link resize} */
+  private readonly buffer = {
+    width: 1,
+    height: 1,
+  }
   private readonly camera = new PerspectiveCamera(studioFov, 1, 0.05, 100)
   /** whether pipelines are compiling, which nothing is drawn during */
   private compiling = false
@@ -91,12 +113,14 @@ export default class StudioView extends Studio {
   /** the lamps that turn along with the camera */
   private readonly lights: Group
   private orbit: OrbitInspection | undefined
-  /** how the camera orbits the object on the stage, its distances following the canvas’s shape */
+  /** how the camera orbits the object on the stage, its distances following the shape of the stage on the canvas */
   private orbiting: OrbitSettings = {radius: 1}
   /** whether the GPU device is there */
   private ready = false
   /** the box around the object on the stage */
   private size: StudioSubjectSize | undefined
+  /** where on the canvas the stage lies, see {@link place} */
+  private stageArea = wholeCanvas
   /** what was last asked to be shown, on the stage or on its way there */
   private subject: Object3D | undefined
   private unfollowClock: (() => void) | undefined
@@ -127,6 +151,33 @@ export default class StudioView extends Studio {
     }
   }
 
+  /**
+   * Lays the stage out on the canvas, the part of it the object is framed for, which follows it there.
+   * Of the same shape as before, the stage only moves, as while the page scrolls, and the camera goes on where it was headed.
+   */
+  place(area: StudioStageArea) {
+    const {height, width, x, y} = area
+    const before = this.stageArea
+    if (!(width > 0 && height > 0) || ![x, y, width, height].every(Number.isFinite) || this.disposed || x === before.x && y === before.y && width === before.width && height === before.height) {
+      return
+    }
+    this.stageArea = {
+      x,
+      y,
+      width,
+      height,
+    }
+    if (width / height === before.width / before.height) {
+      this.project()
+      // A frame on its way draws the stage where it is now. Otherwise at once, so the object doesn’t lag behind its stage.
+      if (this.frame === undefined && this.canRender) {
+        this.render()
+      }
+      return
+    }
+    this.reshape()
+  }
+
   protected override releaseResources() {
     this.stop()
     this.stage.clear()
@@ -147,20 +198,14 @@ export default class StudioView extends Studio {
     if (!(width > 0 && height > 0) || this.disposed) {
       return
     }
-    this.renderer.setSize(Math.round(width), Math.round(height), false)
-    this.camera.aspect = width / height
-    this.camera.updateProjectionMatrix()
-    // Right where the object fits the new shape, and drawn at once: the resized canvas is blank, and the browser paints before the next frame is due.
-    this.fitOrbit()
-    this.orbit?.settle(origin)
-    if (this.canRender) {
-      this.render()
-    }
-    this.requestFrame()
+    this.buffer.width = Math.round(width)
+    this.buffer.height = Math.round(height)
+    this.renderer.setSize(this.buffer.width, this.buffer.height, false)
+    this.reshape()
   }
 
   /**
-   * Puts the object on the stage in place of whatever is there, seen from straight in front of it (its +z), which fills most of the canvas, and resolves with whether it got there: its pipelines compile first, without stalling the page, and whatever was asked to be shown or hidden meanwhile takes its place.
+   * Puts the object on the stage in place of whatever is there, seen from straight in front of it (its +z), which fills most of the stage, and resolves with whether it got there: its pipelines compile first, without stalling the page, and whatever was asked to be shown or hidden meanwhile takes its place.
    * The object is shown as it is, so its middle belongs at its origin. Rejects if the GPU has no device for the studio or reported an error.
    * @param size the box around the object’s origin that holds all of it
    */
@@ -184,7 +229,7 @@ export default class StudioView extends Studio {
         facing: [0, 0, 1],
         fov: studioFov,
         keepOut: boxClearance(size),
-        // From every side as far away as all of the object takes to fit the canvas, so turning it never moves any of it out of view.
+        // From every side as far away as all of the object takes to fit the stage, so turning it never moves any of it out of the stage.
         distanceToward: direction => fitDistance(size, direction, this.camera.aspect),
       }
       this.fitOrbit()
@@ -247,7 +292,7 @@ export default class StudioView extends Studio {
     this.requestFrame()
   }
 
-  /** Moves the camera away from the object, by a share of the distance all of the object fits the canvas from, or toward it if negative; it gets as far as 1.75 times that distance and as close as about a third of it, but never into the box around the object. */
+  /** Moves the camera away from the object, by a share of the distance all of the object fits the stage from, or toward it if negative; it gets as far as 1.75 times that distance and as close as about a third of it, but never into the box around the object. */
   zoom(amount: number) {
     this.orbit?.adjustDistance(amount)
     this.requestFrame()
@@ -258,11 +303,18 @@ export default class StudioView extends Studio {
     return new OrbitInspection(this.camera, origin, this.orbiting)
   }
 
-  /** Sets how close the camera gets by the canvas’s shape, which the orbit reads anew as it moves the camera. */
+  /** Sets how close the camera gets by the stage’s shape, which the orbit reads anew as it moves the camera. */
   private fitOrbit() {
     if (this.size) {
       this.orbiting.minDistance = fitDistance(this.size, front, this.camera.aspect) * closest
     }
+  }
+
+  /** Has the camera see the stage like a canvas of its own and all of the canvas around it, with the stage’s shape as its aspect, which the framing follows. */
+  private project() {
+    const {width, height} = this.buffer
+    const area = this.stageArea
+    this.camera.setViewOffset(area.width * width, area.height * height, -area.x * width, -area.y * height, width, height)
   }
 
   /** Draws the stage as the camera sees it right now. */
@@ -279,5 +331,16 @@ export default class StudioView extends Studio {
     if (this.drawing && !this.compiling) {
       this.frame ??= requestAnimationFrame(this.draw)
     }
+  }
+
+  /** Puts the camera right where the object fits the stage’s new shape and draws at once: a resized canvas is blank, and the browser paints before the next frame is due. */
+  private reshape() {
+    this.project()
+    this.fitOrbit()
+    this.orbit?.settle(origin)
+    if (this.canRender) {
+      this.render()
+    }
+    this.requestFrame()
   }
 }

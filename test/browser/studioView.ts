@@ -1,4 +1,5 @@
 import type {PortraitModelSubject} from '../../src/lib/gallery/PortraitModel.ts'
+import type {StudioStageArea} from '../../src/lib/rendering/studio/StudioView.ts'
 
 import PortraitModel from '../../src/lib/gallery/PortraitModel.ts'
 import {viewFill} from '../../src/lib/rendering/studio/studioFraming.ts'
@@ -9,6 +10,19 @@ const height = 480
 /** the colors of the test image’s quarters, which tell its corners apart: top left, top right, bottom left and bottom right */
 const quarters = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'] as const
 type Pixels = Uint8ClampedArray
+/** a stage off the middle of the canvas in both directions, 360 × 288 pixels from 324, 96 */
+const offStage: StudioStageArea = {
+  x: 0.45,
+  y: 0.2,
+  width: 0.5,
+  height: 0.6,
+}
+const wholeCanvas: StudioStageArea = {
+  x: 0,
+  y: 0,
+  width: 1,
+  height: 1,
+}
 /** what of the canvas is opaque, in the view’s own measure from −1 to 1 on each axis, up being positive */
 type Extent = {
   bottom: number
@@ -21,7 +35,7 @@ type Extent = {
 
 /**
  * Shows works in the studio view the pause menu looks into, with their real frames and an image whose corners tell each other apart, and checks the pixels the canvas really shows:
- * a work stands upright and unmirrored on a transparent backdrop, in the middle, filling the share of the canvas its framing aims for; it stays whole in view turned to its back and at an angle; the camera moves closer and away; another work takes its place; hiding it empties the canvas; and a work asked for and replaced before it got there never shows.
+ * a work stands upright and unmirrored on a transparent backdrop, in the middle, filling the share of the canvas its framing aims for; it stays whole in view turned to its back and at an angle; the camera moves closer and away; on a stage off the middle of the canvas, it stands in the middle of the stage and close up reaches past it; another work takes its place; hiding it empties the canvas; and a work asked for and replaced before it got there never shows.
  */
 export default async function verifyStudioView() {
   const view = new StudioView
@@ -76,6 +90,18 @@ export default async function verifyStudioView() {
     const farther = extentOf(redraw(view))
     assert(closer.opaque > frontExtent.opaque * 1.3, `Moving closer did not enlarge the work: ${closer.opaque.toFixed(3)} of the canvas after ${frontExtent.opaque.toFixed(3)}.`)
     assert(farther.opaque < frontExtent.opaque * 0.6, `Moving away did not shrink the work: ${farther.opaque.toFixed(3)} of the canvas after ${frontExtent.opaque.toFixed(3)}.`)
+    // On a stage off the middle of the canvas, the work stands in the middle of the stage as on a canvas of its own, and close up, it reaches past the stage onto the rest of the canvas.
+    view.reset()
+    view.place(offStage)
+    const placed = onStage(extentOf(redraw(view)), offStage)
+    assertCentered(placed, 'On a stage off the middle')
+    assertFilled(placed, 'On a stage off the middle')
+    view.zoom(-0.6)
+    const reaching = onStage(extentOf(redraw(view)), offStage)
+    assert(reachOf(reaching) > 1.5, `Close up, the work only reaches ${reachOf(reaching).toFixed(3)} of its stage instead of past it.`)
+    view.place(wholeCanvas)
+    view.reset()
+    redraw(view)
     // Another work takes its place, one that never got there doesn’t show.
     started = performance.now()
     const superseded = view.show(late.object, late.size)
@@ -97,6 +123,8 @@ export default async function verifyStudioView() {
       front: frontExtent,
       back: backExtent,
       angled: angledExtent,
+      placed,
+      reaching,
       tall: tallExtent,
       timings,
     }
@@ -173,6 +201,18 @@ function extentOf(pixels: Pixels): Extent {
     top: 1 - minY / height * 2,
     bottom: 1 - (maxY + 1) / height * 2,
     opaque: opaque / (width * height),
+  }
+}
+/** The extent in the stage’s own measure, from −1 to 1 across it, up being positive, for a stage on the part of the canvas. */
+function onStage(extent: Extent, {height: stageHeight, width: stageWidth, x, y}: StudioStageArea): Extent {
+  const middleX = (x + stageWidth / 2) * 2 - 1
+  const middleY = 1 - (y + stageHeight / 2) * 2
+  return {
+    left: (extent.left - middleX) / stageWidth,
+    right: (extent.right - middleX) / stageWidth,
+    top: (extent.top - middleY) / stageHeight,
+    bottom: (extent.bottom - middleY) / stageHeight,
+    opaque: extent.opaque / (stageWidth * stageHeight),
   }
 }
 /** how far the work reaches from the middle of the view at most, 1 being the view’s edge */

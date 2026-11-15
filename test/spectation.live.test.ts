@@ -165,14 +165,23 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: a work of the col
   expect(await textOf(page, '[data-testid="portrait-room"]')).not.toBe('')
   expect(await page.$eval(stage, element => element.getAttribute('aria-label'))).toContain(known!.title)
   await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-testid="portrait-viewer"] canvas')!).opacity === '1')
-  // Its canvas is as large as its stage, in device pixels, and shows a picture.
+  // Its canvas covers the whole screen, its drawing buffer in device pixels, lets the pointer through and shows a picture on the stage.
   const fit = await page.$eval(`${viewer} canvas`, element => {
     const canvas = element
-    const {width, height} = canvas.getBoundingClientRect()
-    return [canvas.width - Math.round(width), canvas.height - Math.round(height)]
+    const {height, width, x, y} = canvas.getBoundingClientRect()
+    return {
+      buffer: [canvas.width - Math.round(width * devicePixelRatio), canvas.height - Math.round(height * devicePixelRatio)],
+      bounds: [x, y, width - innerWidth, height - innerHeight],
+      layered: canvas.parentElement!.matches(':popover-open'),
+      through: document.elementFromPoint(innerWidth / 2, innerHeight / 2) !== canvas,
+    }
   })
-  expect(Math.abs(fit[0])).toBeLessThanOrEqual(1)
-  expect(Math.abs(fit[1])).toBeLessThanOrEqual(1)
+  for (const difference of fit.buffer) {
+    expect(Math.abs(difference)).toBeLessThanOrEqual(1)
+  }
+  expect(fit.bounds).toEqual([0, 0, 0, 0])
+  expect(fit.layered).toBe(true)
+  expect(fit.through).toBe(true)
   expect(await stageVariance(page)).toBeGreaterThan(200)
   // At rest, nothing draws: neither the studio nor the frozen world behind the menu.
   await Bun.sleep(700)
