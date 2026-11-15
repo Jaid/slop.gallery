@@ -92,11 +92,10 @@ const route = new PassageRoute([startX, startZ], heading, y, height, [
  * How steeply the tunnel’s paving falls from both walls toward its middle: 1 in 20, gentler than the climb’s, so the sill it leaves along the doorway at the landing only slows orbs coming out of it into the crater instead of stopping them short of it.
  */
 export const bastionLinkCrossfall = 1 / 20
-const lodgeSpurAlong = route.project(lodgeSpurX, bastionLinkStripZ)!.along
-const lodgeSpurFloorY = route.at(lodgeSpurAlong).y
+const lodgeSpurStartZ = bastionLinkStripZ - bastionLinkWidth / 2
+const lodgeSpurAlong = route.project(lodgeSpurX, lodgeSpurStartZ)!.along
 /** how tall the tunnel stands where the spur leaves it, which the spur’s own vault starts at too, so their crowns meet over the spur’s doorway */
 const lodgeSpurLinkHeight = route.at(lodgeSpurAlong).height
-const lodgeSpurStartZ = bastionLinkStripZ - bastionLinkWidth / 2
 /** Its paving falls toward its middle, but for its last stretch to the gate, where it eases out to stand on a level floor; at the landing, it meets the landing’s floor on a sill along the doorway, a hand’s breadth over its middle. */
 export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLinkWidth, {
   crossfall: {
@@ -112,6 +111,8 @@ export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLi
   }],
 })
 /** Straight north past the Lodge’s side window, on to the existing passage toward the Lodge, where its closing wall stands back to back with that passage’s left wall. */
+// The spur leaves the link at the wall seam, not on its centerline, so the floor keeps the same level across the joint.
+const lodgeSpurFloorY = bastionLink.floorAt(lodgeSpurX, lodgeSpurStartZ)!
 const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, lodgeSpurFloorY, lodgeSpurLinkHeight, [{
   y: lodge.floorY,
   height: lodgeSpurHeight,
