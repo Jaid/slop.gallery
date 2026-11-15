@@ -5,18 +5,19 @@ import {afterAll, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
 import EgoMotor from 'ego-player/motor'
+import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
 import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
-import {corniceBands, vaultShellThickness, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
+import {baseboardBandFront, baseboardCapFront, corniceBands, defaultBaseboardHeight, vaultShellThickness, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionCrater, bastionCurve, bastionLinkStart} from '../../src/lib/gallery/bastion.ts'
 import {bastionLink, bastionLinkCrossfall, bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import {climbMouth} from '../../src/lib/gallery/climb.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse from '../../src/lib/gallery/oculusApse.ts'
-import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
-import {openingArc, openingTop} from '../../src/lib/placement/wallGeometry.ts'
+import RouteVaultGeometry, {pavingThickness} from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
+import {openingArc, openingTop, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls, {floorHeight, insideGallery, roomAt} from './fixtures/gallery.ts'
 import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
@@ -56,8 +57,8 @@ test('both wings and the link belong to one Bastion', () => {
     const position: Vec3 = [x, y + 1.6, z]
     expect(roomAt(position)).toBe('bastion')
     expect(insideGallery(position)).toBe(true)
-    // its paving falling toward its middle; where it meets the landing, the landing’s floor over its sill counts
-    expect(floorHeight(position)).toBeCloseTo(along < 0.05 ? y : y - bastionLink.sag(route.at(along), 0), 5)
+    // its paving falling toward its middle, then easing into the gate’s bowed hollow; where it meets the landing, the landing’s floor over its sill counts
+    expect(floorHeight(position)).toBeCloseTo(along < 0.05 ? y : bastionLink.floorAt(x, z)!, 5)
     if (along > 0.3 && along < route.length - 0.1) {
       expect(Math.abs(route.at(along + 0.01).y - route.at(along - 0.01).y) / 0.02).toBeLessThan(0.25)
     }
@@ -76,7 +77,7 @@ test('both wings and the link belong to one Bastion', () => {
   expect(route.end.y + route.end.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
   expect(route.height).toBe(bastionLinkStart.height)
 })
-test('its paving falls 1 in 20 from both walls toward its middle, but levels out toward the gate, which stands on a level floor', () => {
+test('its paving falls 1 in 20 from both walls toward its middle, then eases smoothly into the hollow’s bowed profile at the gate', () => {
   expect(bastionLink.crossfall?.slope).toBe(bastionLinkCrossfall)
   expect(bastionLinkCrossfall).toBe(1 / 20)
   for (const along of [0, 5, 12, 20]) {
@@ -286,4 +287,132 @@ for (const returning of [false, true]) {
       }
     })
   }
+}
+test('the golf passage meets the south hollow across the entire gate width without a slice or step', () => {
+  expect(bastionLink.floorOutlet).toBeDefined()
+  const [gateX] = route.end.point
+  const half = bastionLink.width / 2
+  const material = new MeshBasicMaterial
+  const vault = new RouteVaultGeometry(bastionLink)
+  const hollow = climbMouthHollow.geometry()
+  vault.paving.boundsTree = new MeshBVH(vault.paving)
+  hollow.boundsTree = new MeshBVH(hollow)
+  const linkMesh = new Mesh(vault.paving, material)
+  const hollowMesh = new Mesh(hollow, material)
+  linkMesh.raycast = acceleratedRaycast
+  hollowMesh.raycast = acceleratedRaycast
+  const down = new Raycaster(new Vector3, new Vector3(0, -1, 0))
+  down.firstHitOnly = true
+  const heightAt = (mesh: Mesh, px: number, pz: number) => {
+    down.ray.origin.set(px, 0, pz)
+    return down.intersectObject(mesh)[0]?.point.y
+  }
+  try {
+    for (let acrossGate = -half + 0.01; acrossGate <= half - 0.01; acrossGate += 0.029) {
+      const px = gateX + acrossGate
+      const hollowFloor = climbMouthHollow.y - climbMouthHollow.sink(px, gateZ)
+      expect(bastionLink.floorAt(px, gateZ)).toBeCloseTo(hollowFloor, 3)
+      const linkY = heightAt(linkMesh, px, gateZ - 0.0001)
+      const hollowY = heightAt(hollowMesh, px, gateZ + 0.0001)
+      expect(linkY).toBeDefined()
+      expect(hollowY).toBeDefined()
+      expect(Math.abs(linkY - hollowY)).toBeLessThan(0.002)
+    }
+  } finally {
+    vault.dispose()
+    hollow.dispose()
+    material.dispose()
+  }
+})
+test('the golf passage’s walls and baseboards sweep smoothly up to the hollow’s threshold with no floating gaps', () => {
+  const material = new MeshBasicMaterial
+  const vault = new RouteVaultGeometry(bastionLink)
+  const paving = new Mesh(vault.paving, material)
+  const up = new Raycaster(new Vector3, new Vector3(0, 1, 0))
+  try {
+    for (const id of ['bastion-link_wall_4', 'bastion-link_wall_6', 'bastion-link_wall_7']) {
+      const wall = wallById(id)
+      const arch = architecture.find(entry => entry.wall === wall)!.geometry
+      const trims = arch.trim.map(part => new Mesh(part, material))
+      for (const [u, y, drop = 0] of wall.baseboardProfile!) {
+        const [px, , pz] = wallPosition(wall, u, 0, 0)
+        expect(wall.center[1] + y).toBeCloseTo(bastionLink.floorAt(px, pz)!, 5)
+        expect(wall.center[1] + y - drop).toBeGreaterThanOrEqual(wall.center[1] - 1e-9)
+      }
+      // Visible baseboard caps follow the curved floor, and the lower band reaches down to the floor under its toe.
+      const steps = id === 'bastion-link_wall_6' ? 6 : 16
+      for (let step = 0; step <= steps; step++) {
+        const u = -wall.width / 2 + 0.01 + (wall.width - 0.02) * step / steps
+        const [px, , pz] = wallPosition(wall, u, 0, 0)
+        const radius = wall.curveRadius
+        const [localX, localZ] = radius ? [(radius - baseboardCapFront + 0.01) * Math.sin(u / radius), radius - (radius - baseboardCapFront + 0.01) * Math.cos(u / radius)] : [u, baseboardCapFront - 0.01]
+        const capRay = new Raycaster(new Vector3(localX, 2, localZ), new Vector3(0, -1, 0))
+        const cap = capRay.intersectObjects(trims)[0]
+        expect(cap).toBeDefined()
+        expect(cap.point.y + wall.center[1]).toBeCloseTo(bastionLink.floorAt(px, pz)! + (wall.baseboardHeight ?? defaultBaseboardHeight), 3)
+        // Under the baseboard’s lower band in world space, the baseboard reaches at least down to the floor there.
+        const [bandX, , bandZ] = wallPosition(wall, u, 0, baseboardBandFront - 0.01)
+        const bandFloor = bastionLink.floorAt(bandX, bandZ)
+        if (bandFloor === undefined) {
+          continue
+        }
+        const [bandLocalX, bandLocalZ] = radius ? [(radius - baseboardBandFront + 0.01) * Math.sin(u / radius), radius - (radius - baseboardBandFront + 0.01) * Math.cos(u / radius)] : [u, baseboardBandFront - 0.01]
+        const bottomRay = new Raycaster(new Vector3(bandLocalX, -2, bandLocalZ), new Vector3(0, 1, 0))
+        const bottom = bottomRay.intersectObjects(trims)[0]
+        expect(bottom).toBeDefined()
+        expect(bottom.point.y + wall.center[1]).toBeLessThanOrEqual(bandFloor + 1e-4)
+      }
+    }
+    // Slab thickness stays equal to pavingThickness across the outlet spill.
+    for (let along = bastionLink.floorOutlet!.fromAlong; along < route.length - 0.02; along += 0.21) {
+      const station = route.at(along)
+      for (const right of [-1.5, -0.7, 0, 0.7, 1.5]) {
+        const x = station.point[0] - Math.sin(station.heading) * right
+        const z = station.point[1] + Math.cos(station.heading) * right
+        up.ray.origin.set(x, -7, z)
+        const bottom = up.intersectObject(paving)[0]
+        expect(bottom).toBeDefined()
+        expect(bottom.point.y).toBeCloseTo(bastionLink.floorAt(x, z)! - pavingThickness, 3)
+      }
+    }
+  } finally {
+    vault.dispose()
+    material.dispose()
+  }
+})
+for (const acrossGate of [-0.6, 0, 0.6]) {
+  test(`the player walks smoothly up to the gate along lane ${acrossGate} without jumping or losing ground`, () => {
+    const world = physicsWorld(colliders)
+    const [gateX] = route.end.point
+    const startZ = gateZ - 1.5
+    const px = gateX + acrossGate
+    const startY = bastionLink.floorAt(px, startZ)!
+    const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(px, startY + 0.005, startZ))
+    const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
+    const motor = new EgoMotor(RAPIER, world, body, collider, {stepHeight: 0})
+    const facing = new Quaternion
+    facing.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI)
+    try {
+      for (let frame = 0; frame < 20; frame++) {
+        motor.step(world.timestep, {}, facing)
+        world.step()
+      }
+      let previousY = body.translation().y
+      let maxStep = 0
+      for (let frame = 0; frame < 120; frame++) {
+        motor.step(world.timestep, {forward: true}, facing)
+        world.step()
+        const pos = body.translation()
+        maxStep = Math.max(maxStep, Math.abs(pos.y - previousY))
+        previousY = pos.y
+      }
+      expect(body.translation().z).toBeGreaterThan(gateZ - 0.6)
+      expect(body.translation().z).toBeLessThan(gateZ - 0.2)
+      expect(maxStep).toBeLessThan(0.05)
+      expect(motor.grounded).toBe(true)
+    } finally {
+      motor.dispose()
+      world.free()
+    }
+  })
 }

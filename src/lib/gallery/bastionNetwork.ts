@@ -97,11 +97,37 @@ const lodgeSpurFloorY = route.at(lodgeSpurAlong).y
 /** how tall the tunnel stands where the spur leaves it, which the spur’s own vault starts at too, so their crowns meet over the spur’s doorway */
 const lodgeSpurLinkHeight = route.at(lodgeSpurAlong).height
 const lodgeSpurStartZ = bastionLinkStripZ - bastionLinkWidth / 2
-/** Its paving falls toward its middle, but for its last stretch to the gate, where it eases out to stand on a level floor; at the landing, it meets the landing’s floor on a sill along the doorway, a hand’s breadth over its middle. */
+const linkHalf = bastionLinkWidth / 2
+const linkFace = linkHalf - wallFace
+const gateProfileStep = 0.06
+const gateColumns = Math.ceil(linkFace * 2 / gateProfileStep)
+const gateOffsets = [
+  -linkHalf,
+  -linkFace,
+  ...Array.from({length: gateColumns + 1}, (_, index) => -linkFace + linkFace * 2 * index / gateColumns),
+  -1.2,
+  -0.3,
+  0,
+  0.3,
+  1.2,
+  linkFace,
+  linkHalf,
+].toSorted((a, b) => a - b)
+const gateOutletOffsets: Array<number> = []
+for (const right of gateOffsets) {
+  if (!gateOutletOffsets.length || right - gateOutletOffsets.at(-1)! > 1e-6 && (Math.abs(right) === linkHalf || Math.abs(right) === linkFace || right - gateOutletOffsets.at(-1)! > 0.03 && linkHalf - right > 0.03)) {
+    gateOutletOffsets.push(right)
+  }
+}
+/** Its paving falls toward its middle, easing into the bowed hollow at the gate so its curvature spills smoothly onto the north side; at the landing, it meets the landing’s floor on a sill along the doorway, a hand’s breadth over its middle. */
 export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLinkWidth, {
   crossfall: {
     slope: bastionLinkCrossfall,
     easeOut: 1.5,
+  },
+  floorOutlet: {
+    length: 1.2,
+    profile: gateOutletOffsets.map(right => [right, climbMouthHollow.y - climbMouthHollow.sink(endX - right, mouthNorthZ)] as const),
   },
   openings: [{
     ...vaultOpening(lodgeSpurWidth, lodgeSpurLinkHeight),
