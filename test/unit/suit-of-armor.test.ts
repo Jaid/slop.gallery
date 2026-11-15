@@ -8,7 +8,7 @@ import {Box3, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector
 
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
-import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
 import {gorgetBorderReach, helmetHeight} from '../../src/lib/gallery/curios/helmet/Helmet.ts'
 import {helmet} from '../../src/lib/gallery/curios/index.ts'
 import {lodgeEastWindow} from '../../src/lib/gallery/lodge.ts'
@@ -291,7 +291,10 @@ describe('pushed, the suit of armor tips over, and the helmet holds on by nothin
         run(15, [Math.sin(angle) * 200, Math.cos(angle) * 200])
         expect(lean()).toBeGreaterThan(20)
         expect(body.isSleeping()).toBe(true)
-        expect(head.isSleeping()).toBe(true)
+        // A helmet that stays in the branch sleeps; one that rolls out onto the link’s welded chute rests on `fixPavingEdges` paving, whose edge repair keeps convex hulls slightly active.
+        const {x, y, z} = head.translation()
+        const {x: vx, y: vy, z: vz} = head.linvel()
+        expect(head.isSleeping() || bastionLink.contains([x, y, z]) && Math.hypot(vx, vy, vz) < 0.3).toBe(true)
         return seated()
       } finally {
         world.free()

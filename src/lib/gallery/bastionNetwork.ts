@@ -5,6 +5,7 @@ import {vaultShellThickness, wallFace} from './architectureDimensions.ts'
 import {bastionLinkStart, bastionLinkStripZ, bastionLinkWidth, bastionPassages, lodgeSpurEndZ, lodgeSpurHeight, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from './bastion.ts'
 import {cisternFloor, insideCistern} from './cistern/cistern.ts'
 import {climbCrossfall, climbHairpin, climbMouth, climbPassages} from './climb.ts'
+import easedRamp from './easedRamp.ts'
 import gateMouseHole from './gateMouseHole.ts'
 import lodge, {lodgeEastWindow} from './lodge.ts'
 import FloorHollow from './passages/FloorHollow.ts'
@@ -111,14 +112,22 @@ export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLi
     casing: false,
   }],
 })
+const lodgeSpurRampLength = 2
 /** Straight north past the Lodge’s side window, on to the existing passage toward the Lodge, where its closing wall stands back to back with that passage’s left wall. */
 const spurRoute = new PassageRoute([lodgeSpurX, lodgeSpurStartZ], -Math.PI / 2, lodgeSpurFloorY, lodgeSpurLinkHeight, [{
   y: lodge.floorY,
   height: lodgeSpurHeight,
-  steps: [{length: 2}],
-}, {length: lodgeSpurStartZ - lodgeSpurEndZ - 2}])
+  steps: [{length: lodgeSpurRampLength}],
+}, {length: lodgeSpurStartZ - lodgeSpurEndZ - lodgeSpurRampLength}])
 export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, lodgeSpurWidth, {
   fixPavingEdges: false,
+  // Meet the link’s sloping paving flush across the whole doorway, then ease out into the level branch.
+  floorSag(station, right) {
+    if (station.along >= lodgeSpurRampLength) {
+      return 0
+    }
+    return (1 - easedRamp(station.along, lodgeSpurRampLength)) * (lodgeSpurFloorY - bastionLink.floorAt(lodgeSpurX + right, lodgeSpurStartZ)!)
+  },
   // Cut round the window’s timber reveal, which runs on through the stone and frames it flush with the passage’s face.
   openings: [{
     name: 'lodge_window',

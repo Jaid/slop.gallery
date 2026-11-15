@@ -1,20 +1,25 @@
 import {afterAll, expect, test} from 'bun:test'
 
+import RAPIER from '@dimforge/rapier3d-compat'
+import EgoMotor from 'ego-player/motor'
 import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
-import {DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
+import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
-import {bastionCurve, lodgeSpurEndZ, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
+import {bastionCurve, bastionLinkStripZ, bastionLinkWidth, lodgeSpurEndZ, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
 import {bastionLink, insideBastion, lodgeSpur, lodgeSpurEnd, lodgeSpurGrille, lodgeSpurLanterns} from '../../src/lib/gallery/bastionNetwork.ts'
 import gateGeometry from '../../src/lib/gallery/gateGeometry.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import LodgeEastWindowGeometry from '../../src/lib/gallery/LodgeEastWindowGeometry.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import {routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
+import {bastionBaseboard} from '../../src/rooms/bastion/walls.ts'
 import {openings} from '../../src/worlds/gallery/relations.ts'
 import walls from './fixtures/gallery.ts'
+import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
+await RAPIER.init()
 const linkWall = walls.find(wall => wall.id === 'bastion-link_wall_5')!
 const lodgeWall = walls.find(wall => wall.id === 'lodge-east')!
 const window = new LodgeEastWindowGeometry
@@ -278,3 +283,104 @@ test('the east window surround is stone on the Bastion face and timber inside th
     stone.dispose()
   }
 })
+test('the seam with the link aligns flush across the whole doorway, with the link’s wall and baseboard cut cleanly to the floor and both branch baseboards meeting the link’s', () => {
+  const seamZ = bastionLinkStripZ - bastionLinkWidth / 2
+  const hole = linkWall.holes!.find(value => value.name === 'lodge_spur')!
+  expect(hole.bottom).toBeUndefined()
+  const material = new MeshBasicMaterial({side: DoubleSide})
+  const link = new RouteVaultGeometry(bastionLink)
+  const spur = new RouteVaultGeometry(lodgeSpur)
+  const wallGeometries = [linkWall, walls.find(wall => wall.id === 'bastion-lodge-spur_wall_0')!, walls.find(wall => wall.id === 'bastion-lodge-spur_wall_1')!].map(wall => {
+    const architecture = createArchitectureGeometry(wall)
+    const place = (geometry: typeof architecture.surface) => {
+      const mesh = new Mesh(geometry, material)
+      mesh.position.set(...wall.center)
+      mesh.rotation.y = wall.rotation
+      mesh.updateMatrixWorld(true)
+      return mesh
+    }
+    return {
+      architecture,
+      wall,
+      surface: place(architecture.surface),
+      trim: place(architecture.trim[0]),
+    }
+  })
+  const linkPaving = new Mesh(link.paving, material)
+  const spurPaving = new Mesh(spur.paving, material)
+  try {
+    const [{surface: linkSurface, trim: linkTrim}, west, east] = wallGeometries
+    const down = new Raycaster(new Vector3, new Vector3(0, -1, 0), 0, 3)
+    const downAt = (x: number, z: number, target: Mesh) => {
+      down.ray.origin.set(x, -4, z)
+      return down.intersectObject(target)
+    }
+    // Across the whole opening, the link’s paving and the branch’s meet flush with no leftover wall or baseboard sill.
+    for (let x = lodgeSpurX - hole.width / 2 + 0.05; x <= lodgeSpurX + hole.width / 2 - 0.05; x += 0.15) {
+      expect(lodgeSpur.floorAt(x, seamZ)).toBeCloseTo(bastionLink.floorAt(x, seamZ)!, 7)
+      const [fromLink] = downAt(x, seamZ + 0.002, linkPaving)
+      const [fromSpur] = downAt(x, seamZ - 0.002, spurPaving)
+      expect(fromLink).toBeDefined()
+      expect(fromSpur).toBeDefined()
+      expect(Math.abs(fromSpur.point.y - fromLink.point.y)).toBeLessThan(0.001)
+      expect(downAt(x, seamZ + 0.05, linkSurface)).toHaveLength(0)
+      expect(downAt(x, seamZ + wallFace + 0.05, linkTrim)).toHaveLength(0)
+    }
+    // Past the 2 m ramp, the branch floor levels out completely at the Lodge’s height.
+    for (let x = lodgeSpurX - hole.width / 2 + 0.05; x <= lodgeSpurX + hole.width / 2 - 0.05; x += 0.25) {
+      expect(lodgeSpur.floorAt(x, seamZ - 2)).toBeCloseTo(-5, 9)
+    }
+    // Both side walls’ baseboards meet the link wall’s at the jambs’ floor height and follow the skewed floor up to the level branch.
+    for (const [entry, jambX, capX] of [[west, lodgeSpurX - hole.width / 2, lodgeSpurX - hole.width / 2 + 0.14], [east, lodgeSpurX + hole.width / 2, lodgeSpurX + hole.width / 2 - 0.14]] as const) {
+      const outsideX = jambX + (jambX < lodgeSpurX ? -0.05 : 0.05)
+      const linkTop = downAt(outsideX, seamZ + wallFace + 0.1, linkTrim)[0].point.y
+      const spurTop = downAt(capX, seamZ - 0.001, entry.trim)[0].point.y
+      expect(spurTop).toBeCloseTo(bastionLink.floorAt(jambX, seamZ)! + bastionBaseboard.baseboardHeight, 3)
+      expect(Math.abs(spurTop - linkTop)).toBeLessThan(0.007)
+      expect(entry.wall.center[1]).toBeLessThanOrEqual(bastionLink.floorAt(jambX, seamZ)! + 1e-6)
+    }
+  } finally {
+    material.dispose()
+    link.dispose()
+    spur.dispose()
+    for (const {architecture} of wallGeometries) {
+      architecture.dispose()
+    }
+  }
+})
+test('a player walks smoothly across both the west and east sides of the seam without catching on a step', () => {
+  const colliders = bastionColliders()
+  const seamZ = bastionLinkStripZ - bastionLinkWidth / 2
+  for (const x of [lodgeSpurX - 0.8, lodgeSpurX, lodgeSpurX + 0.8]) {
+    const world = physicsWorld(colliders)
+    const startY = bastionLink.floorAt(x, seamZ + 1.2)!
+    const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(x, startY + 0.04, seamZ + 1.2))
+    const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
+    const motor = new EgoMotor(RAPIER, world, body, collider)
+    const north = new Quaternion
+    const south = new Quaternion
+    south.setFromAxisAngle(new Vector3(0, 1, 0), Math.PI)
+    try {
+      for (const [facing, targetZ] of [[north, seamZ - 2.4], [south, seamZ + 1.2]] as const) {
+        for (let frame = 0; frame < 60 * 6; frame++) {
+          const {z} = body.translation()
+          if (facing === north ? z <= targetZ : z >= targetZ) {
+            break
+          }
+          motor.step(world.timestep, {forward: true}, facing)
+          world.step()
+        }
+        expect(motor.grounded).toBe(true)
+        if (facing === north) {
+          expect(body.translation().z).toBeLessThanOrEqual(targetZ + 0.05)
+          expect(body.translation().y).toBeCloseTo(-5, 1)
+        } else {
+          expect(body.translation().z).toBeGreaterThanOrEqual(targetZ - 0.05)
+        }
+      }
+    } finally {
+      motor.dispose()
+      world.free()
+    }
+  }
+}, 20_000)
