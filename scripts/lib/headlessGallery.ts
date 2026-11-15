@@ -274,8 +274,8 @@ export const watchPage = (page: Page) => {
     void page.browser().close().catch((closeError: unknown) => console.error(`Closing the browser after the crash failed: ${String(closeError)}`))
   })
 }
-/** Waits until the scene is ready and checks the debug hooks that captures rely on. Fails early when the app shows its render error screen instead. */
-export const waitForGallery = async (page: Page) => {
+/** Waits until the scene is ready and checks the debug hooks that captures rely on. Without test mode, e.g. for the intro, the camera-posing hook is absent. Fails early when the app shows its render error screen instead. */
+export const waitForGallery = async (page: Page, {testHooks = true} = {}) => {
   const outcome = await page.waitForFunction(() => {
     // RenderError replaces the scene when WebGPU is missing or rendering threw, e.g. because no adapter could be created; ready would never come.
     const renderError = document.querySelector('[data-testid="render-error"]')
@@ -288,7 +288,7 @@ export const waitForGallery = async (page: Page) => {
   if (error !== undefined) {
     throw new Error(`The gallery showed its render error screen (“${error}”). The console errors above name the cause.`)
   }
-  if (!await page.evaluate(() => Boolean(globalThis.slopGallery!.pose))) {
+  if (testHooks && !await page.evaluate(() => Boolean(globalThis.slopGallery!.pose))) {
     throw new Error('This build has no slopGallery.pose() hook. Rebuild it from a version that includes scripts/snap.ts.')
   }
   if (!await page.evaluate(() => globalThis.slopGallery!.snapshot!().webGPU)) {
@@ -343,7 +343,7 @@ export const openHeadlessGallery = async (setup: GallerySetup, options: {
       waitUntil: 'domcontentloaded',
       timeout: 300_000,
     })
-    await waitForGallery(page)
+    await waitForGallery(page, {testHooks: setup.search.get('test') === 'true'})
     return {
       page,
       [Symbol.asyncDispose]: close,

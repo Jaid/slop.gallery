@@ -13,7 +13,7 @@ import {frozenSeconds} from '#src/lib/frozenTime.ts'
 import {galleryEvents, isTextInput, setCameraFocused} from '#src/lib/gallery.ts'
 import {endIntro, introDirection} from '#src/lib/gallery/intro.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
-import pauseMenu from '#src/lib/pauseMenu.ts'
+import pauseMenu, {isPausing} from '#src/lib/pauseMenu.ts'
 import {setInspectionFocus} from '#src/lib/rendering/playerView.ts'
 
 /** the seconds the background blur takes to clear once the player has entered */
@@ -23,7 +23,7 @@ const rightKeys = new Set(['ArrowRight', 'KeyD'])
 /**
  * Circles the camera on the world’s intro orbit while the first menu shows, one turn a minute, which way the game’s seed decides, with every sound of the world heard from it.
  * It is V-inspection’s orbit, held at the intro’s height and distance and circling on its own, with its blur of the background beyond the subject: dragging with the left mouse button anywhere but on the menu’s buttons and text or holding A and D turns it, and a few seconds after the last turn, it circles on its own again.
- * Once the player enters, the player stands with its eyes right where the camera was, looking the same way, and falls from there while the blur clears, which ends the intro.
+ * On Play or a direct Escape pause, the player stands with its eyes right where the camera was, looking the same way. While playing, it falls from there while the blur clears, which ends the intro; under the pause menu both wait until Resume.
  *
  * Mount it after the Player: the player’s own spawn releases the camera on mounting, and the player writes the camera before this does every frame.
  */
@@ -82,7 +82,8 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
       state.keys.clear()
     }
     const enter = () => {
-      if (!pauseMenu.getSnapshot().locked || fading.current !== null) {
+      const menu = pauseMenu.getSnapshot()
+      if (!menu.locked && !isPausing(menu) || fading.current !== null) {
         return
       }
       // The teleport releases the camera and puts the player there at once, camera included, so the view never moves.

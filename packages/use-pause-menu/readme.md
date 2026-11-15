@@ -37,7 +37,7 @@ React is an optional peer for the framework-free core entry; it is required when
 | `first` | This page visit has not been recognized as a returning visitor. |
 | `return` | A previous visit was recorded, or the application supplied `initialStage: 'return'`. |
 | `reset` | A previous visit was recorded, but the application reports no stored game data. |
-| `pause` | Pointer lock was released by Escape or `release('pause')`. |
+| `pause` | Pointer lock was released by Escape or `release('pause')`, or the application called `pause()` without a lock. |
 | `unfocus` | Focus was lost, the canvas disappeared, lock transferred elsewhere or the application called `release()`. |
 
 `locked` refers only to the attached element, not any element in the document. It changes on actual pointer-lock events, not optimistically when a request is made. While locked, `stage` retains the last menu stage. Render an overlay using `!locked`, not by checking whether `stage` exists. Other visibility conditions, such as a separate inventory panel, are the game’s responsibility. This package does not pause physics, audio or your render loop automatically: a game that wants to, for example only under the `pause` stage while leaving `unfocus` running, subscribes and stops them itself (`!locked && stage === 'pause'`).
@@ -54,6 +54,7 @@ The browser does not expose the reason for `pointerlockchange` and may consume E
 - `attach(element)`: Observes the element’s owner document and window, synchronizes an existing lock and returns an idempotent cleanup. One active attachment per controller. Attaching a new target disconnects the previous one; stale cleanup cannot detach a newer attachment.
 - `ref`: A stable React 19 callback ref returning attachment-owned cleanup. Use either this or `attach()`, not both for the same canvas.
 - `enter(options?)`: Requests pointer lock immediately, before its first await. Call directly from a user gesture. Forwards `PointerLockOptions`, including `unadjustedMovement`. Returns a promise; unattached targets and rejected requests reject without changing the stage. The game owns error presentation and readiness checks.
+- `pause()`: Opens the pause stage immediately if unlocked, even before the first entry. While locked, requests `release('pause')` and waits for the actual unlock event. Starts visit tracking first, so a later attachment or hook cannot restore the initial stage. The game owns keyboard shortcuts and readiness checks.
 - `release(reason = 'unfocus')`: Requests release only if this controller’s target owns the lock. `release('pause')` supports explicit pause buttons. Does not release other canvases.
 - `getSnapshot()`: Returns the same frozen `{stage, locked}` object until either value changes.
 - `subscribe(listener)`: Notifies after changes and returns cleanup. Methods are bound, so they can be passed directly to React or another external-store adapter.

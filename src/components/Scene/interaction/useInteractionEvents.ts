@@ -68,7 +68,7 @@ export default function useInteractionEvents({
       }
     }
     const keydown = (event: KeyboardEvent) => {
-      if (event.ctrlKey || event.metaKey || event.altKey || isTextInput(event.target)) {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || isTextInput(event.target)) {
         return
       }
       if (event.repeat) {
@@ -77,6 +77,12 @@ export default function useInteractionEvents({
       const state = useGallery.getState()
       if (event.code === 'Escape') {
         grabbing.cancel()
+        const {stage, locked} = pauseMenu.getSnapshot()
+        if (state.ready && !locked && ['first', 'reset', 'return'].includes(stage)) {
+          // No transient pointer lock or running frame: the intro hands its current pose to the body as the menu freezes the world.
+          event.preventDefault()
+          pauseMenu.pause()
+        }
       }
       if (!state.locked) {
         return

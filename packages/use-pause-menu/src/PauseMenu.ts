@@ -98,6 +98,18 @@ export default class PauseMenu {
   }
   getServerSnapshot = () => this.serverSnapshot
   getSnapshot = () => this.snapshot
+  /** Opens the pause stage without requiring a prior lock, or requests a pause release while playing. The application owns shortcuts and readiness checks. */
+  pause = () => {
+    this.start()
+    if (this.snapshot.locked) {
+      this.release('pause')
+    } else {
+      this.publish({
+        locked: false,
+        stage: 'pause',
+      })
+    }
+  }
   /** React 19 callback ref alternative to attach(). */
   ref = (target: HTMLElement | null) => {
     if (target) {

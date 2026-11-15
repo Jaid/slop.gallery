@@ -423,3 +423,82 @@ test('listeners added during a notification wait for the next transition', () =>
   document.change(null)
   expect(later).toBe(1)
 })
+test.each(['first', 'return', 'reset'] as const)('pause opens directly from %s without ever requesting pointer lock', initialStage => {
+  const menu = new PauseMenu({initialStage})
+  const target = new TestTarget
+  const disconnect = menu.attach(target.element)
+  const snapshots: Array<ReturnType<typeof menu.getSnapshot>> = []
+  menu.subscribe(() => snapshots.push(menu.getSnapshot()))
+  menu.pause()
+  const paused = menu.getSnapshot()
+  expect(paused).toEqual({
+    stage: 'pause',
+    locked: false,
+  })
+  menu.pause()
+  menu.setGameData(false)
+  target.ownerDocument.blur()
+  target.ownerDocument.escape()
+  target.ownerDocument.change(null)
+  expect(menu.getSnapshot()).toBe(paused)
+  expect(snapshots).toEqual([paused])
+  expect(target.requests).toEqual([])
+  expect(target.ownerDocument.exits).toBe(0)
+  disconnect()
+  menu.attach(target.element)
+  expect(menu.getSnapshot()).toBe(paused)
+  // A later real entry resumes normally; a lost focus still has its own stage.
+  target.ownerDocument.change(target)
+  expect(menu.getSnapshot()).toEqual({
+    stage: 'pause',
+    locked: true,
+  })
+  target.ownerDocument.change(null)
+  expect(menu.getSnapshot()).toEqual({
+    stage: 'unfocus',
+    locked: false,
+  })
+})
+test('pausing before attachment starts the visit once and preserves the pause through start and attachment', () => {
+  let writes = 0
+  const menu = new PauseMenu({
+    storageKey: 'game',
+    storage: () => ({
+      getItem: () => 'true',
+      setItem: () => {
+        writes++
+      },
+    }),
+  })
+  const server = menu.getServerSnapshot()
+  menu.pause()
+  const paused = menu.getSnapshot()
+  menu.start()
+  const target = new TestTarget
+  menu.attach(target.element)
+  expect(menu.getSnapshot()).toBe(paused)
+  expect(paused).toEqual({
+    stage: 'pause',
+    locked: false,
+  })
+  expect(menu.getServerSnapshot()).toBe(server)
+  expect(writes).toBe(1)
+})
+test('pause while playing waits for the real unlock and preserves the focus-loss priority', () => {
+  for (const blur of [false, true]) {
+    const {menu, target, document} = setup()
+    document.change(target)
+    if (blur) {
+      document.blur()
+    }
+    const playing = menu.getSnapshot()
+    menu.pause()
+    expect(menu.getSnapshot()).toBe(playing)
+    expect(document.exits).toBe(1)
+    document.change(null)
+    expect(menu.getSnapshot()).toEqual({
+      stage: blur ? 'unfocus' : 'pause',
+      locked: false,
+    })
+  }
+})

@@ -157,6 +157,28 @@ describe('the pause menu freezing the world', () => {
       locked: true,
     })).toBe(false)
   })
+  test.each(['first', 'return', 'reset'] as const)('a direct pause from %s freezes without a prior playing frame', initialStage => {
+    const menu = new PauseMenu({initialStage})
+    const target = new TestTarget
+    menu.attach(target.element)
+    const clock = new WorldClock
+    const stop = freezeWhilePaused(menu, clock, loaded())
+    try {
+      expect(clock.frozen).toBe(false)
+      menu.pause()
+      expect(clock.frozen).toBe(true)
+      expect(target.requests).toEqual([])
+      wall += 60_000
+      expect(clock.now()).toBe(1000)
+      target.ownerDocument.change(target)
+      expect(clock.frozen).toBe(false)
+      expect(clock.now()).toBe(1000)
+      wall += 100
+      expect(clock.now()).toBe(1100)
+    } finally {
+      stop()
+    }
+  })
   test('Escape freezes the world until the player resumes', () => {
     const {clock, document, target} = setup()
     expect(clock.frozen).toBe(false)
