@@ -6,6 +6,7 @@ import {Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {baseboardCapFront, defaultBaseboardHeight, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
+import {bastionGolfSill} from '../../src/lib/gallery/BastionLanding.ts'
 import {bastionLink, bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import FloorHollow from '../../src/lib/gallery/passages/FloorHollow.ts'
 import PassageRoute from '../../src/lib/gallery/passages/PassageRoute.ts'
@@ -144,7 +145,12 @@ test('the reshaped slab retains its full vertical thickness, with no drop face l
     }
   }
   const normal = hollow.getAttribute('normal')
+  const position = hollow.getAttribute('position')
   for (let i = 0; i < normal.count; i++) {
+    // The return threshold has a solid underside and upright front; the bowl itself stays gentle.
+    if (position.getX(i) >= bastionGolfSill.x - 1e-6) {
+      continue
+    }
     expect(normal.getY(i)).toBeGreaterThan(0.9)
   }
 })

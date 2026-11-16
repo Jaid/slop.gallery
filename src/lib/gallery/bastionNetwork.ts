@@ -3,11 +3,11 @@ import type {Vec3} from './types.ts'
 
 import {vaultShellThickness, wallFace} from './architectureDimensions.ts'
 import {bastionLinkStart, bastionLinkStripZ, bastionLinkWidth, bastionPassages, lodgeSpurEndZ, lodgeSpurHeight, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from './bastion.ts'
+import BastionLanding from './BastionLanding.ts'
 import {cisternFloor, insideCistern} from './cistern/cistern.ts'
 import {climbCrossfall, climbHairpin, climbMouth, climbPassages} from './climb.ts'
 import gateMouseHole from './gateMouseHole.ts'
 import lodge, {lodgeEastWindow} from './lodge.ts'
-import FloorHollow from './passages/FloorHollow.ts'
 import PassageRoute from './passages/PassageRoute.ts'
 import RoutedPassage from './passages/RoutedPassage.ts'
 import vaultOpening from './passages/vaultOpening.ts'
@@ -45,16 +45,17 @@ function elbowSag(x: number, z: number) {
 }
 /**
  * The hollow the elbow’s paving has sunk into in front of the gate, between the hairpin’s foot and the tunnel, as though water had long drained off down the tunnel through the gate’s hatch: deepest just beyond the gate, under the hatch, and shallow over most of the elbow.
+ * A 25 cm hollow over 4 m of approach, with a low return threshold toward the hallway, catches rebounds without relying on the old dense baseboards’ contact edges.
  * It keeps off the walls beside the tunnel’s mouth and widens out from the gate into the elbow, so orbs that miss the hatch roll back down to it. Its surface takes the place of the elbow’s whole floor, falling toward its middle like the hairpin’s, and its bow spills into the tunnel beyond the gate.
  */
-export const climbMouthHollow = new FloorHollow(climbMouth.floorY, {
+export const climbMouthHollow = new BastionLanding(climbMouth.floorY, {
   center: [endX, mouthNorthZ],
   half: linkVault.width / 2,
   into: [0, -1],
 }, {
-  depth: 0.15,
+  depth: 0.25,
   beyond: 0.5,
-  reach: 3.5,
+  reach: 4.5,
   throat: 1.2,
   spread: [1, 1],
   width: [1.5, 1.8],
@@ -100,7 +101,7 @@ const lodgeSpurStartZ = bastionLinkStripZ - bastionLinkWidth / 2
 /** Its paving falls toward its middle, blending into the mouth’s bowed floor at the gate; at the landing, it meets the landing’s floor on a sill along the doorway, a hand’s breadth over its middle. */
 export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLinkWidth, {
   floorOutlet: {
-    // The bow’s rise of a third of a meter at the jambs eases out over 5.5 m along every lane: round the last turn’s tight inside corner, that carries it on along the strip’s wall instead of squeezing it into a lip there.
+    // The bow’s rise at the jambs eases out over 5.5 m along every lane: round the last turn’s tight inside corner, that carries it on along the strip’s wall instead of squeezing it into a lip there.
     reach: 5.5,
     profile: climbMouthHollow.outletProfile(bastionLinkWidth / 2).map(([across, floorY, grade]) => [-across, floorY, grade] as const).toSorted(([a], [b]) => a - b),
   },

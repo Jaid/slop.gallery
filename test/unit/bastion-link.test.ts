@@ -71,7 +71,8 @@ test('both wings and the link belong to one Bastion', () => {
   expect(route.end.heading).toBeCloseTo(Math.PI / 2, 9)
   expect(route.end.y).toBe(climbMouthHollow.outletY)
   // under the elbow’s fall toward its middle and the hollow sunk into it
-  expect(climbMouth.floorY - route.end.y).toBeLessThan(0.35)
+  // The longer, deeper golf bowl still stays within 45 cm of the landing.
+  expect(climbMouth.floorY - route.end.y).toBeLessThan(0.45)
   // It stands taller there than at the landing by the step down to its floor, so its crown meets the mouth’s ceiling.
   expect(route.end.y + route.end.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
   expect(route.height).toBe(bastionLinkStart.height)

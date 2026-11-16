@@ -8,7 +8,7 @@ import {Box3, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector
 
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
-import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
 import {gorgetBorderReach, helmetHeight} from '../../src/lib/gallery/curios/helmet/Helmet.ts'
 import {helmet} from '../../src/lib/gallery/curios/index.ts'
 import {lodgeEastWindow} from '../../src/lib/gallery/lodge.ts'
@@ -291,7 +291,18 @@ describe('pushed, the suit of armor tips over, and the helmet holds on by nothin
         run(15, [Math.sin(angle) * 200, Math.cos(angle) * 200])
         expect(lean()).toBeGreaterThan(20)
         expect(body.isSleeping()).toBe(true)
-        expect(head.isSleeping()).toBe(true)
+        if (!head.isSleeping()) {
+          // With the new inlet profile, a detached helmet can leave the spur and keep rolling down the link. It must be out of the spur, on that floor and rolling slowly, not jittering on the armor’s level support.
+          expect(seated()).toBe(false)
+          const {x, y, z} = head.translation()
+          expect(z).toBeGreaterThan(lodgeSpur.route.start[1])
+          const floor = bastionLink.floorAt(x, z)
+          expect(floor).toBeDefined()
+          expect(y).toBeGreaterThan(floor!)
+          expect(y).toBeLessThan(floor! + helmetHeight)
+          const velocity = head.linvel()
+          expect(Math.hypot(velocity.x, velocity.y, velocity.z)).toBeLessThan(0.15)
+        }
         return seated()
       } finally {
         world.free()

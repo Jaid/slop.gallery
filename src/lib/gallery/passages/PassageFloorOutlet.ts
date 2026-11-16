@@ -13,7 +13,7 @@ export type FloorOutlet = {
 type Point = readonly [x: number, z: number]
 type Vertex = readonly [x: number, y: number, z: number]
 /** how far apart its rows stand at most, in meters along the centerline: the blend bends gently over meters, so it needs no rows as fine as the ones a turn’s walls are cut at */
-const rowStep = 0.12
+const rowStep = 0.24
 const place = ({point: [x, z], heading}: RouteStation, right: number): Point => [x - Math.sin(heading) * right, z + Math.cos(heading) * right]
 /** The interval containing a value, including tolerated roundoff just beyond either endpoint. */
 const interval = (values: ReadonlyArray<number>, value: number) => {

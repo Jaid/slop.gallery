@@ -24,7 +24,7 @@ type Section = (station: RouteStation, run: ReadonlyArray<RouteStation>) => Read
 /** how thick the slab of a routed passage’s paving is, under its floor */
 export const pavingThickness = 0.24
 /** An odd count leaves a level facet along the crown, wide enough for a lantern’s canopy to sit flush. */
-const archSegments = 33
+const archSegments = 21
 /** Points around a half ellipse over the spring, `halfSpan` to either side of `middle` and `rise` high, from its left foot over its crown to its right foot, or back with `reverse`; as wide as it is high, it is a semicircle. */
 function arch(middle: number, halfSpan: number, rise: number, spring: number, reverse = false): Profile {
   const points = Array.from({length: archSegments + 1}, (_, i): readonly [number, number] => {
@@ -32,6 +32,41 @@ function arch(middle: number, halfSpan: number, rise: number, spring: number, re
     return [middle + Math.cos(angle) * halfSpan, spring + Math.sin(angle) * rise]
   })
   return reverse ? points.toReversed() : points
+}
+/** Keep only stations needed to match the original sweep’s section controls within 3 mm. Floor knots and crossfall easing are not automatically vault subdivisions. The three controls bound the whole elliptical section, including widened outlines. */
+function vaultStations(stations: ReadonlyArray<RouteStation>, passage: RoutedPassage) {
+  const controls = stations.map(station => {
+    const [left, right] = [-1, 1].map(side => passage.reach(station, side))
+    const crown = station.y + station.height
+    return [[-left, crown - passage.width / 2], [(right - left) / 2, crown], [right, crown - passage.width / 2]].flatMap(([across, y]) => [station.point[0] - Math.sin(station.heading) * across, y, station.point[1] + Math.cos(station.heading) * across])
+  })
+  const kept = new Set([0, stations.length - 1])
+  const split = (first: number, last: number) => {
+    let worst = -1
+    let error = 0.003
+    for (let i = first + 1; i < last; i++) {
+      const t = (stations[i].along - stations[first].along) / (stations[last].along - stations[first].along)
+      // Bound each control’s Euclidean error, not its per-axis error.
+      for (let corner = 0; corner < 9; corner += 3) {
+        const distance = Math.hypot(...[0, 1, 2].map(axis => {
+          const k = corner + axis
+          return controls[i][k] - (controls[first][k] * (1 - t) + controls[last][k] * t)
+        }))
+        if (!(distance > error)) {
+          continue
+        }
+        error = distance
+        worst = i
+      }
+    }
+    if (worst !== -1) {
+      kept.add(worst)
+      split(first, worst)
+      split(worst, last)
+    }
+  }
+  split(0, stations.length - 1)
+  return stations.filter((_, i) => kept.has(i))
 }
 /**
  * A solid swept along stations of a route: each face of its cross section becomes a strip of its own, smooth along the route and across curved faces but creased between faces and at the stations where `runs` meet, and the first and the last station are capped.
@@ -239,7 +274,7 @@ export default class RouteVaultGeometry {
           result.push([station])
         }
       }
-      return result
+      return floor ? result : result.map(stations => vaultStations(stations, passage))
     }
     /** The inner arch from the left wall to the right one, the right foot, the outer arch back and the left foot, `inner` and `outer` meters outside of the span between both walls. */
     const ring = (inner: number, outer: number): Section => station => {
@@ -272,7 +307,7 @@ export default class RouteVaultGeometry {
       const inlet = passage.floorInlet && run[0].along < passage.floorInlet.inlet.length ? passage.floorInlet : undefined
       const outlet = passage.floorOutlet && run[0].along >= passage.floorOutlet.from - 1e-9 ? passage.floorOutlet : undefined
       const shaped = inlet || outlet
-      const across = shaped?.across ?? pavingColumns(width, left, right)
+      const across = shaped?.across ?? (passage.crossfall ? pavingColumns(width, left, right) : [-left, right])
       const top = across.map(lateral => [lateral, passage.floorY(station, lateral) - station.y] as const)
       const leftY = top[0][1]
       const rightY = top.at(-1)![1]
@@ -295,7 +330,7 @@ export default class RouteVaultGeometry {
         halfSize: [tail.length / 2, pavingThickness / 2, width / 2],
       }
       // Coplanar triangles without edge repair made resting armor sensitive to the distant inlet’s triangle order. One face under the level tail has no internal edges.
-      this.pavingCollision = makePaving(runs(0, tail.from, [...passage.creases, passage.floorInlet.inlet.length]))
+      this.pavingCollision = makePaving(runs(0, tail.from, [...passage.creases, passage.floorInlet.inlet.length], true))
     } else {
       this.pavingCollision = paving
     }

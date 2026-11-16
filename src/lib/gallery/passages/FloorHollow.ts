@@ -39,7 +39,7 @@ export type HollowOptions = {
 type Point = readonly [x: number, z: number]
 
 /** how finely its surface is cut, in meters */
-const step = 0.06
+const step = 0.12
 /** how far below the seam’s deepest point the adjoining floor’s datum lies */
 const outletStep = 0.02
 /** a bump from 1 in its middle down to 0, smoothly, at ±1 and beyond */

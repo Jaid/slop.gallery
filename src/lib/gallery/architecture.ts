@@ -7,6 +7,7 @@ import {BoxGeometry, BufferGeometry, ExtrudeGeometry, Matrix4, MeshBasicNodeMate
 import {openingArc, openingCircle} from '../placement/wallGeometry.ts'
 import {baseboardBandFront, baseboardCapFront, baseboardCapHeight, corniceBands, defaultBaseboardHeight, openingCasingFronts, wallFace, wallOpeningTrim} from './architectureDimensions.ts'
 import {bendGeometry, curveSegments as bendSegments, sliceAlongX} from './CurvedBoxGeometry.ts'
+import ProfiledBaseboardGeometry from './ProfiledBaseboardGeometry.ts'
 
 export {wallFace, wallOpeningTrim, wallTop} from './architectureDimensions.ts'
 
@@ -87,6 +88,7 @@ export function colliderGeometry(geometry: BufferGeometry): [Float32Array, Uint3
 }
 // CSG runs once per wall layout, never in the animation loop.
 function cutArchitecture(wall: Wall) {
+  const bendStep = wall.curveRadius ? Math.min(wall.width / bendSegments(wall.width, wall.curveRadius), Math.sqrt(8 * Math.abs(wall.curveRadius) * bendTolerance)) : undefined
   const top = wall.height + 0.3
   const baseboardHeight = wall.baseboardHeight ?? defaultBaseboardHeight
   const capHeight = wall.baseboardCapHeight ?? baseboardCapHeight
@@ -212,12 +214,15 @@ function cutArchitecture(wall: Wall) {
       return brush(smooth)
     }
     const trim: Array<BufferGeometry> = []
+    // A profiled band already has stations for its bend. Only CSG-cut faces need slicing afterward.
+    const sweptBaseboard = Boolean(wall.curveRadius) && wall.baseboardProfile !== undefined && !baseboardSection
+    const needsSlicing = new Set<BufferGeometry>
     if (wall.trimStyle !== 'none') {
-      let molding = baseboardSection ? sectionBand(baseboardSection) : baseboardBand(0, baseboardHeight - capHeight, baseboardBandFront)
+      let molding = sweptBaseboard ? brush(new ProfiledBaseboardGeometry(wall.baseboardProfile!, baseboardHeight, capHeight, bendStep, -wall.width / 2)) : (baseboardSection ? sectionBand(baseboardSection) : baseboardBand(0, baseboardHeight - capHeight, baseboardBandFront))
       const join = (part: Brush) => {
         molding = evaluator.evaluate(molding, part, ADDITION, brush(new BufferGeometry))
       }
-      if (!baseboardSection) {
+      if (!baseboardSection && !sweptBaseboard) {
         join(baseboardBand(baseboardHeight - capHeight, capHeight, baseboardCapFront))
       }
       for (const hole of holes) {
@@ -234,7 +239,11 @@ function cutArchitecture(wall: Wall) {
       }
       // Cut the assembled solid once, leaving a single reveal instead of coplanar faces
       // from the baseboard, arch and plinth. Rendering and collision share this geometry.
-      trim.push(cut(molding))
+      const skirting = cut(molding)
+      trim.push(skirting)
+      if (holes.length || !sweptBaseboard) {
+        needsSlicing.add(skirting)
+      }
     }
     const glazing = (wall.holes ?? []).filter(hole => hole.glassThickness).map(hole => {
       const bottom = hole.bottom ?? 0
@@ -270,8 +279,8 @@ function cutArchitecture(wall: Wall) {
     for (const part of retained) {
       if (wall.curveRadius) {
         // Cutting the openings and sweeping the baseboards along the floor leave long faces; cut again, they curve with the wall instead of running straight across, and the cut’s T-junctions stay a fraction of a millimeter apart.
-        if (wall.holes?.length || wall.baseboardProfile) {
-          sliceAlongX(part, Math.min(wall.width / bendSegments(wall.width, wall.curveRadius), Math.sqrt(8 * Math.abs(wall.curveRadius) * bendTolerance)), -wall.width / 2)
+        if (wall.holes?.length || needsSlicing.has(part)) {
+          sliceAlongX(part, bendStep!, -wall.width / 2)
         }
         bendGeometry(part, wall.curveRadius)
       }

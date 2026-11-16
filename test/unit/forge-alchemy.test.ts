@@ -735,7 +735,7 @@ describe('the alchemy machine’s orbs', () => {
     const scatter = (size: number) => (mulberry32.sample(state) * 2 - 1) * size
     const {hatch, wall} = bastionLinkGate
     const [hatchX, gateZ] = [wall.center[0] + hatch.u, wall.center[2]]
-    const shots = 20
+    const shots = 100
     const [cx, cz] = cisternChannel.turn.center
     const [windowX] = cisternWindow.center
     /** how far the point in plan lies from the channel’s middle, in the cistern */
@@ -814,10 +814,11 @@ describe('the alchemy machine’s orbs', () => {
         world.free()
       }
     }
+    console.info(`Bastion golf: ${through}/${shots} through the mouse hole, ${caught}/${shots} in the crater after 60 s.`)
     // Out of the culvert, they come at a brisk pace, slower than they came in.
     expect(Math.min(...exitSpeeds)).toBeGreaterThan(2)
     expect(Math.max(...exitSpeeds)).toBeLessThan(5)
-    expect(through).toBeGreaterThanOrEqual(shots * 0.9)
+    expect(through).toBeGreaterThanOrEqual(shots * 0.95)
     expect(caught).toBeGreaterThanOrEqual(through * 0.8)
     // but where they strike something
     expect(dragged / rolling).toBeLessThan(0.02)
