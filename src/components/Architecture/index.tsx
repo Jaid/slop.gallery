@@ -6,7 +6,6 @@ import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import GalleryLighting from '#component/GalleryLighting'
 import GalleryStairs from '#component/GalleryStairs'
-import PottedPlants from '#component/PottedPlants'
 import WallDecorations from '#component/WallDecorations'
 import World from '#component/World'
 import {surfaceTexture} from '#src/components/Scene/materials.ts'
@@ -132,7 +131,6 @@ export default function Architecture() {
   return <>
     <GalleryLighting />
     {walls.map(wall => <WallSurface key={wall.id} decorations={WallDecorations} glass={glass.tunnel} material={wallMaterial(wall)} plaster={plaster} surfaceMaterial={surfaceMaterial(wall)} wall={wall} />)}
-    <PottedPlants />
     <GalleryStairs />
     <World castleStone={castleStone} corridorWood={corridorWood} glass={glass} joinery={joinery} lobbyWall={lobbyWall} lodge={lodgeMaterials} oculus={oculusMaterial} stone={stone} windowReveal={windowReveal} wood={wood} />
   </>

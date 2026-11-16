@@ -24,6 +24,7 @@ export function pottedPlantKind(seed: number, id: string) {
   return environmentRandom(seed).makeChild(['potted-plant', id]).rollItem(pottedPlantKinds)
 }
 
+/** where the potted plants would stand, which the world doesn’t mount for now */
 export const potPlacements: Array<PotPlacement> = [
   {
     id: 'prop-banquet-southwest-plant',
