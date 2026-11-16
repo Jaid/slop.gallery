@@ -266,7 +266,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         properties: {
           orb: {
             type: 'string',
-            description: 'the kind of orb, like horror, spook, halloween, paint or transparent',
+            description: 'the kind of orb, like horror, spook, halloween, impasto, paint or transparent',
           },
           position: point('world-space point in meters where its middle enters the world, [x, y, z]'),
           id: {
@@ -312,7 +312,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         properties: {
           effect: {
             type: 'string',
-            description: 'the id of the party effect: bats, blood, eyes, ghosts, strokes or tendrils',
+            description: 'the id of the party effect: bats, blood, eyes, ghosts, smears, strokes or tendrils',
           },
           position: point('world-space point in meters it bursts out of, [x, y, z], like the middle of a portal, about 1.8 m over the floor'),
           rotation: {
