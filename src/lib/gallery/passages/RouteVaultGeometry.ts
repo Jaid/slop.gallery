@@ -9,7 +9,7 @@ import {mergeParts} from '../../geometry.ts'
 import {openingShape} from '../architecture.ts'
 import {vaultShellThickness} from '../architectureDimensions.ts'
 import pavingColumns from './pavingColumns.ts'
-import {routeRibDepth, routeRibThickness} from './RoutedPassage.ts'
+import {routeRibDepth, routeRibThickness, routeTurnStep} from './RoutedPassage.ts'
 
 export type PavingBox = {
   halfSize: [x: number, y: number, z: number]
@@ -23,12 +23,10 @@ type Section = (station: RouteStation, run: ReadonlyArray<RouteStation>) => Read
 
 /** how thick the slab of a routed passage’s paving is, under its floor */
 export const pavingThickness = 0.24
-/** An odd count leaves a level facet along the crown, wide enough for a lantern’s canopy to sit flush. */
-const archSegments = 33
-/** Points around a half ellipse over the spring, `halfSpan` to either side of `middle` and `rise` high, from its left foot over its crown to its right foot, or back with `reverse`; as wide as it is high, it is a semicircle. */
-function arch(middle: number, halfSpan: number, rise: number, spring: number, reverse = false): Profile {
-  const points = Array.from({length: archSegments + 1}, (_, i): readonly [number, number] => {
-    const angle = Math.PI * (1 - i / archSegments)
+/** Points around a half ellipse over the spring in `segments` chords – an odd count leaves a level facet along the crown, wide enough for a lantern’s canopy to sit flush – `halfSpan` to either side of `middle` and `rise` high, from its left foot over its crown to its right foot, or back with `reverse`; as wide as it is high, it is a semicircle. */
+function arch(middle: number, halfSpan: number, rise: number, spring: number, segments: number, reverse = false): Profile {
+  const points = Array.from({length: segments + 1}, (_, i): readonly [number, number] => {
+    const angle = Math.PI * (1 - i / segments)
     return [middle + Math.cos(angle) * halfSpan, spring + Math.sin(angle) * rise]
   })
   return reverse ? points.toReversed() : points
@@ -223,17 +221,27 @@ export default class RouteVaultGeometry {
   /** the paving’s collision mesh: broken through by pits but running on under drains, with any `pavingBox` tail left out */
   readonly pavingCollision: BufferGeometry
   readonly ribs: BufferGeometry
+  /** the ribs’ collision mesh, swept at the canonical fidelity below: the very geometry `ribs` draws in realtime graphics modes, a coarser one of its own beside Cinematic’s finer ribs, so Rapier meets the same triangles in every mode */
+  readonly ribsCollision: BufferGeometry
   readonly shell: BufferGeometry
+  /** the shell’s collision mesh, like {@link ribsCollision} beside `shell` */
+  readonly shellCollision: BufferGeometry
 
-  constructor(passage: RoutedPassage) {
+  /**
+   * `curveDetail` multiplies the shell’s and ribs’ render tessellation – the chords of their arches and the stations round the route’s turns – from its canonical fidelity at 1, which realtime graphics draw and every mode collides with, to the finer sweep Cinematic draws at 2. The shell’s back, which no one sees, takes half the chords of its face at either fidelity; a rib’s back takes as many as its face, so the two concentric arches’ chords can never cross through the rib’s thin section. The paving takes no part in any of this: whatever rolls on it has to meet the floor it sees, in every mode alike.
+   */
+  constructor(passage: RoutedPassage, curveDetail = 1) {
+    if (!Number.isInteger(curveDetail) || curveDetail < 1) {
+      throw new RangeError('A routed vault’s curve detail is a whole multiplier of its canonical fidelity, at least 1.')
+    }
     const {route, width} = passage
     const rise = width / 2
     // under the crown
     const spring = -rise
-    /** The stations between two distances along the route, in runs that meet where the outline turns its corners. */
-    const runs = (from: number, to: number, creases = passage.creases, floor = false) => {
+    /** The stations between two distances along the route, in runs that meet where the outline turns its corners, its turns cut into steps of `turnStep` radians for the vault’s sweeps. The paving keeps the passage’s own stations. */
+    const runs = (from: number, to: number, creases = passage.creases, floor = false, turnStep?: number) => {
       const result: Array<Array<RouteStation>> = [[]]
-      for (const station of floor ? passage.floorStations(from, to) : passage.stations(from, to)) {
+      for (const station of floor ? passage.floorStations(from, to) : passage.stations(from, to, turnStep)) {
         result.at(-1)!.push(station)
         if (creases.some(along => Math.abs(along - station.along) < 1e-9) && station.along > from && station.along < to) {
           result.push([station])
@@ -241,30 +249,44 @@ export default class RouteVaultGeometry {
       }
       return result
     }
-    /** The inner arch from the left wall to the right one, the right foot, the outer arch back and the left foot, `inner` and `outer` meters outside of the span between both walls. */
-    const ring = (inner: number, outer: number): Section => station => {
+    /** The inner arch from the left wall to the right one in `face` chords, the right foot, the outer arch back in `back` chords and the left foot, `inner` and `outer` meters outside of the span between both walls. */
+    const ring = (inner: number, outer: number, face: number, back: number): Section => station => {
       const [left, right] = [-1, 1].map(side => passage.reach(station, side))
       const middle = (right - left) / 2
       const half = (left + right) / 2
       return [
-        arch(middle, half + inner, rise + inner, spring),
+        arch(middle, half + inner, rise + inner, spring, face),
         [[middle + half + inner, spring], [middle + half + outer, spring]],
-        arch(middle, half + outer, rise + outer, spring, true),
+        arch(middle, half + outer, rise + outer, spring, back, true),
         [[middle - half - outer, spring], [middle - half - inner, spring]],
       ]
     }
     // The outer envelope stops at the spring; only the air extends down to the floor. Extending the outer solid down would backfill the passage’s separate walls and their windows.
-    const solid = (padding: number, below?: number) => mergeParts(sweep(runs(0, route.length), station => {
+    const solid = (padding: number, segments: number, turnStep: number, below?: number) => mergeParts(sweep(runs(0, route.length, passage.creases, false, turnStep), station => {
       const [left, right] = [-1, 1].map(side => passage.reach(station, side))
       const foot = below === undefined ? spring : -station.height - below
       return [
-        arch((right - left) / 2, (left + right) / 2 + padding, rise + padding, spring),
+        arch((right - left) / 2, (left + right) / 2 + padding, rise + padding, spring, segments),
         below === undefined ? [[right + padding, spring], [-left - padding, spring]] : [[right + padding, spring], [right + padding, foot], [-left - padding, foot], [-left - padding, spring]],
       ]
     }, true))
     const hasOpenings = vaultOpenings(passage).length > 0 || passage.abutments.length > 0
-    this.shell = hasOpenings ? openVault(solid(vaultShellThickness), passage, solid(0, 0.5)) : mergeParts(sweep(runs(0, route.length), ring(0, vaultShellThickness), true))
-    this.ribs = mergeParts(passage.ribs.flatMap(along => sweep(runs(along - routeRibDepth / 2, along + routeRibDepth / 2), ring(-routeRibThickness, 0), true)))
+    /** The shell and its ribs at one fidelity, whose 1 is canonical: their faces in odd chords from 17 up, the shell’s back in half as many and its turns cut twice as coarsely as the paving’s stations, whose facets whatever rolls on the floor feels – the vault only has to meet what is thrown at it, and its chords’ ends stay buried in the walls and below their cornices however coarsely it turns. */
+    const vaultAt = (detail: number) => {
+      const face = 16 * detail + 1
+      const back = 8 * detail + 1
+      const turnStep = routeTurnStep * 2 / detail
+      return {
+        shell: hasOpenings ? openVault(solid(vaultShellThickness, back, turnStep), passage, solid(0, face, turnStep, 0.5)) : mergeParts(sweep(runs(0, route.length, passage.creases, false, turnStep), ring(0, vaultShellThickness, face, back), true)),
+        ribs: mergeParts(passage.ribs.flatMap(along => sweep(runs(along - routeRibDepth / 2, along + routeRibDepth / 2, passage.creases, false, turnStep), ring(-routeRibThickness, 0, face, face), true))),
+      }
+    }
+    const drawn = vaultAt(curveDetail)
+    const canonical = curveDetail === 1 ? drawn : vaultAt(1)
+    this.shell = drawn.shell
+    this.ribs = drawn.ribs
+    this.shellCollision = canonical.shell
+    this.ribsCollision = canonical.ribs
     const floorRuns = runs(0, route.length, [...passage.creases, ...passage.floorInlet ? [passage.floorInlet.inlet.length] : [], ...passage.floorOutlet ? [passage.floorOutlet.from] : []], true)
     const pavingSection: Section = (station, run) => {
       const [left, right] = [-1, 1].map(side => passage.reach(station, side))
@@ -305,6 +327,12 @@ export default class RouteVaultGeometry {
   dispose() {
     this.shell.dispose()
     this.ribs.dispose()
+    if (this.shellCollision !== this.shell) {
+      this.shellCollision.dispose()
+    }
+    if (this.ribsCollision !== this.ribs) {
+      this.ribsCollision.dispose()
+    }
     this.paving.dispose()
     if (this.pavingCollision !== this.paving) {
       this.pavingCollision.dispose()

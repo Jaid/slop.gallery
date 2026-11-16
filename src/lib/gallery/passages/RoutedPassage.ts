@@ -341,9 +341,9 @@ export default class RoutedPassage {
     return this.abreast(x, z)?.station
   }
 
-  /** Stations between two distances along the route, as it gives them with its turns cut into steps of `routeTurnStep`, straight across from where the outline’s walls turn their corners, and every `crossfallStep` where its crossfall eases in or out. */
-  stations(from: number, to: number) {
-    const stations = this.route.stations(from, to, routeTurnStep)
+  /** Stations between two distances along the route, as it gives them with its turns cut into steps of `turnStep` radians – `routeTurnStep` unless a caller sweeps a surface of its own at another fidelity, like a vault’s render shell – straight across from where the outline’s walls turn their corners, and every `crossfallStep` where its crossfall eases in or out. The passage’s own walls, paving and floor queries always take the default, so their tessellation never depends on the graphics mode. */
+  stations(from: number, to: number, turnStep = routeTurnStep) {
+    const stations = this.route.stations(from, to, turnStep)
     const {easeIn = 0, easeOut = 0} = this.crossfall ?? {}
     const easing = [
       ...Array.from({length: Math.ceil(easeIn / crossfallStep)}, (_, index) => easeIn * index / Math.ceil(easeIn / crossfallStep)),
