@@ -100,9 +100,8 @@ const lodgeSpurStartZ = bastionLinkStripZ - bastionLinkWidth / 2
 /** Its paving falls toward its middle, blending into the mouth’s bowed floor at the gate; at the landing, it meets the landing’s floor on a sill along the doorway, a hand’s breadth over its middle. */
 export const bastionLink = new RoutedPassage('link', 'bastion', route, bastionLinkWidth, {
   floorOutlet: {
-    // Distance to the gate in world space lets the bow spill around the tight inside corner onto the preceding straight, rather than squeezing a new lip into its tiny inner radius.
-    reach: 1.5,
-    length: route.pieces.at(-1)!.length + 1.5,
+    // The bow’s rise of a third of a meter at the jambs eases out over 5.5 m along every lane: round the last turn’s tight inside corner, that carries it on along the strip’s wall instead of squeezing it into a lip there.
+    reach: 5.5,
     profile: climbMouthHollow.outletProfile(bastionLinkWidth / 2).map(([across, floorY, grade]) => [-across, floorY, grade] as const).toSorted(([a], [b]) => a - b),
   },
   crossfall: {

@@ -5,16 +5,15 @@ import pavingColumns from './pavingColumns.ts'
 
 /** A floor joined across the route’s end, spilling back into the passage before returning to its ordinary paving. */
 export type FloorOutlet = {
-  /** the stretch at the route’s end to tessellate; it must contain the whole blend, including around a tight inside corner */
-  length: number
   /** heights and grades into the passage, from the left wall’s center line to the right one’s, sampled from the adjoining floor */
   profile: ReadonlyArray<readonly [right: number, y: number, grade: number]>
-  /** how far the shape spills into the passage, measured in world meters from the end segment, not around the route’s centerline */
+  /** how far the shape spills back into the passage, in meters along each lane from the route’s end */
   reach: number
 }
 type Point = readonly [x: number, z: number]
 type Vertex = readonly [x: number, y: number, z: number]
-const step = 0.06
+/** how far apart its rows stand at most, in meters along the centerline: the blend bends gently over meters, so it needs no rows as fine as the ones a turn’s walls are cut at */
+const rowStep = 0.12
 const place = ({point: [x, z], heading}: RouteStation, right: number): Point => [x - Math.sin(heading) * right, z + Math.cos(heading) * right]
 /** The interval containing a value, including tolerated roundoff just beyond either endpoint. */
 const interval = (values: ReadonlyArray<number>, value: number) => {
@@ -24,65 +23,96 @@ const interval = (values: ReadonlyArray<number>, value: number) => {
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high)
 
 /**
- * A tangent-matched floor blend near a route’s end. Distance to the end segment keeps the blend gentle even around a tiny-radius inside wall, carrying it into the preceding run if needed.
+ * A tangent-matched floor blend near a route’s end. Every lane, a line at a fixed distance from the centerline, eases from the seam’s height at its own place across back into the ordinary paving over the same distance along itself, so the blend keeps one gentle grade throughout: round a turn, the lanes toward its center run shorter and carry the blend on into the run before, instead of steepening it into a lip at a tight inside corner.
  * The sampled rows drive the mesh and triangle-interpolated height queries alike. The vault remains on the original route.
  */
 export default class PassageFloorOutlet {
+  /** How far a lane `right` meters right of the centerline runs from `along` meters down the route to its end: round a turn, a lane toward its center runs shorter than the centerline, one away from it longer. */
+  static laneDistance(route: PassageRoute, along: number, right: number) {
+    let distance = 0
+    for (const piece of route.pieces) {
+      const run = piece.from + piece.length - Math.max(along, piece.from)
+      if (run > 0) {
+        // A clockwise turn has its center on the right.
+        distance += run * (piece.kind === 'arc' ? 1 - Math.sign(piece.sweep) * right / piece.radius : 1)
+      }
+    }
+    return distance
+  }
+
+  /** How far along the route a blend `reach` meters long along every lane starts: where the lane running shortest from there to the end, along one of the walls, has run that far. */
+  static start(route: PassageRoute, width: number, reach: number) {
+    if (!Number.isFinite(reach) || reach <= 0 || [-1, 1].some(side => PassageFloorOutlet.laneDistance(route, 0, side * width / 2) < reach)) {
+      throw new RangeError('A floor outlet needs a finite positive reach that every lane of its route can run.')
+    }
+    return Math.min(...[-1, 1].map(side => {
+      const right = side * width / 2
+      let remaining = reach
+      for (const piece of route.pieces.toReversed()) {
+        const scale = piece.kind === 'arc' ? 1 - Math.sign(piece.sweep) * right / piece.radius : 1
+        if (piece.length * scale >= remaining) {
+          return piece.from + piece.length - remaining / scale
+        }
+        remaining -= piece.length * scale
+      }
+      return 0
+    }))
+  }
+
   readonly across: ReadonlyArray<number>
   readonly along: ReadonlyArray<number>
+  /** how far along the route the blend starts, see {@link PassageFloorOutlet.start} */
   readonly from: number
   private readonly normalHeight: (station: RouteStation, right: number) => number
   private readonly rows: ReadonlyArray<ReadonlyArray<Vertex>>
 
-  constructor(readonly route: PassageRoute, width: number, readonly outlet: FloorOutlet, base: (station: RouteStation, right: number) => number, stations: ReadonlyArray<RouteStation>) {
-    const {length, profile: supplied, reach} = outlet
+  constructor(readonly route: PassageRoute, width: number, readonly outlet: FloorOutlet, base: (station: RouteStation, right: number) => number) {
+    const {profile: supplied, reach} = outlet
     const profile = supplied.map(([right, y, grade], index) => [index === 0 ? -width / 2 : (index === supplied.length - 1 ? width / 2 : right), y, grade] as const)
-    if (!Number.isFinite(length) || length <= 0 || length > route.length || !Number.isFinite(reach) || reach <= 0 || supplied.length < 2 || profile.some(([right], index) => index > 0 && right <= profile[index - 1][0]) || supplied.some((values, index) => values.some(value => !Number.isFinite(value)) || index > 0 && values[0] <= supplied[index - 1][0]) || Math.abs(supplied[0][0] + width / 2) > 1e-9 || Math.abs(supplied.at(-1)![0] - width / 2) > 1e-9) {
-      throw new RangeError('A floor outlet needs a finite positive reach, a length within its route and an ordered, finite height and grade profile spanning both walls.')
+    if (supplied.length < 2 || profile.some(([right], index) => index > 0 && right <= profile[index - 1][0]) || supplied.some((values, index) => values.some(value => !Number.isFinite(value)) || index > 0 && values[0] <= supplied[index - 1][0]) || Math.abs(supplied[0][0] + width / 2) > 1e-9 || Math.abs(supplied.at(-1)![0] - width / 2) > 1e-9) {
+      throw new RangeError('A floor outlet needs an ordered, finite height and grade profile spanning both walls.')
     }
-    this.from = route.length - length
+    this.from = PassageFloorOutlet.start(route, width, reach)
     const offsets = profile.map(([right]) => right)
     const ordinary = pavingColumns(width)
     this.across = [...ordinary, ...offsets].toSorted((a, b) => a - b).filter((value, index, all) => index === 0 || value - all[index - 1] > 1e-9)
-    // Subdivide the existing intervals rather than overlaying a second grid that makes needle-thin slivers.
-    this.along = stations.flatMap(({along}, index) => {
-      if (index === stations.length - 1) {
+    // Between the joints of the route’s pieces and the knots of its ramps, where its floor bends, rather than overlaying a second grid that makes needle-thin slivers.
+    const knots = route.stations(this.from, route.length, Math.PI * 2)
+    this.along = knots.flatMap(({along}, index) => {
+      if (index === knots.length - 1) {
         return along
       }
-      const span = stations[index + 1].along - along
-      const count = Math.ceil(span / step)
+      const span = knots[index + 1].along - along
+      const count = Math.ceil(span / rowStep)
       return Array.from({length: count}, (_, i) => along + span * i / count)
     })
-    const end = route.end
-    const forward: Point = [Math.cos(end.heading), Math.sin(end.heading)]
-    const rightAxis: Point = [-forward[1], forward[0]]
     // Retain the ordinary paving’s crosswise facets at the upstream join, including the strips under its walls.
     this.normalHeight = (station: RouteStation, right: number) => {
       const i = interval(ordinary, right)
       const u = clamp((right - ordinary[i]) / (ordinary[i + 1] - ordinary[i]), 0, 1)
       return base(station, ordinary[i]) * (1 - u) + base(station, ordinary[i + 1]) * u
     }
+    // How far the seam stands over or under the ordinary paving at the end, which each lane carries back and eases out, so the route’s own ramp runs on underneath: holding the seam’s height instead would add whatever the ramp falls away over the blend.
+    const seam = this.across.map(right => {
+      const i = interval(offsets, right)
+      const u = clamp((right - profile[i][0]) / (profile[i + 1][0] - profile[i][0]), 0, 1)
+      const y = profile[i][1] * (1 - u) + profile[i + 1][1] * u
+      const excess = y - this.normalHeight(route.end, right)
+      return {
+        y,
+        excess,
+        // Monotone Hermite blend: no overshoot, dam or new pocket beside the hatch.
+        grade: clamp(profile[i][2] * (1 - u) + profile[i + 1][2] * u, Math.min(-3 * excess / reach, 0), Math.max(-3 * excess / reach, 0)),
+      }
+    })
     this.rows = this.along.map((along, row) => {
       const station = route.at(along)
-      return this.across.map((right): Vertex => {
+      return this.across.map((right, column): Vertex => {
         const [x, z] = place(station, right)
-        const lateral = (x - end.point[0]) * rightAxis[0] + (z - end.point[1]) * rightAxis[1]
-        const closest = clamp(lateral, -width / 2, width / 2)
-        const distance = Math.hypot(x - end.point[0] - rightAxis[0] * closest, z - end.point[1] - rightAxis[1] * closest)
-        const t = clamp(distance / reach, 0, 1)
-        const i = interval(offsets, closest)
-        const u = clamp((closest - profile[i][0]) / (profile[i + 1][0] - profile[i][0]), 0, 1)
-        const y = this.normalHeight(station, right)
-        const seamY = profile[i][1] * (1 - u) + profile[i + 1][1] * u
-        const delta = seamY - y
-        // Monotone Hermite blend: no overshoot, dam or new pocket beside the hatch.
-        const grade = clamp(profile[i][2] * (1 - u) + profile[i + 1][2] * u, Math.min(-3 * delta / reach, 0), Math.max(-3 * delta / reach, 0))
-        if (row === 0 && distance < reach - 1e-9) {
-          throw new RangeError('A floor outlet’s tessellated stretch must contain its entire blend.')
-        }
-        const correction = delta * (1 - 3 * t * t + 2 * t ** 3) + reach * grade * t * (1 - t) ** 2
+        const {y, excess, grade} = seam[column]
+        const t = clamp(PassageFloorOutlet.laneDistance(route, along, right) / reach, 0, 1)
         // Preserve the exact supplied seam heights, including at the walls.
-        return [x, row === this.along.length - 1 ? seamY : y + correction, z]
+        return [x, row === this.along.length - 1 ? y : this.normalHeight(station, right) + excess * (1 - 3 * t * t + 2 * t ** 3) + reach * grade * t * (1 - t) ** 2, z]
       })
     })
   }

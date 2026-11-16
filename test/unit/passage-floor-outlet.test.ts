@@ -2,16 +2,20 @@ import {expect, test} from 'bun:test'
 
 import {Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
 
+import PassageFloorOutlet from '../../src/lib/gallery/passages/PassageFloorOutlet.ts'
 import PassageRoute from '../../src/lib/gallery/passages/PassageRoute.ts'
 import RoutedPassage from '../../src/lib/gallery/passages/RoutedPassage.ts'
 import RouteVaultGeometry, {pavingThickness} from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 
 const route = new PassageRoute([0, 0], 0, 0, 3, [{length: 5}])
 const outlet = {
-  length: 2,
   reach: 1.5,
   profile: [[-1, 0.3, 0], [0, 0.1, -0.02], [1, 0.3, 0]] as const,
 }
+const curved = new PassageRoute([0, 0], 0, 0, 3, [{length: 2}, {
+  radius: 4,
+  angle: Math.PI / 2,
+}])
 test('an end-floor blend matches its seam, preserves its incoming grade and returns to its original floor', () => {
   const passage = new RoutedPassage('outlet', 'bastion', route, 2, {floorOutlet: outlet})
   for (const [right, y] of outlet.profile) {
@@ -29,26 +33,6 @@ test('an end-floor blend matches its seam, preserves its incoming grade and retu
   }
 })
 for (const [name, invalid] of Object.entries({
-  'zero length': {
-    ...outlet,
-    length: 0,
-  },
-  'negative length': {
-    ...outlet,
-    length: -1,
-  },
-  'infinite length': {
-    ...outlet,
-    length: Infinity,
-  },
-  'excessive length': {
-    ...outlet,
-    length: 6,
-  },
-  'NaN length': {
-    ...outlet,
-    length: NaN,
-  },
   'zero reach': {
     ...outlet,
     reach: 0,
@@ -61,9 +45,13 @@ for (const [name, invalid] of Object.entries({
     ...outlet,
     reach: NaN,
   },
-  'too short to contain the blend': {
+  'negative reach': {
     ...outlet,
-    length: 1,
+    reach: -1,
+  },
+  'reach beyond the route': {
+    ...outlet,
+    reach: 6,
   },
   'empty profile': {
     ...outlet,
@@ -98,7 +86,6 @@ for (const [name, invalid] of Object.entries({
     profile: [[-1, 0, 0], [1, 0, Infinity]],
   },
 } satisfies Record<string, {
-  length: number
   profile: ReadonlyArray<readonly [number, number, number]>
   reach: number
 }>)) {
@@ -122,15 +109,42 @@ test('an outlet cannot silently override an inlet or an outline', () => {
     }],
   })).toThrow(RangeError)
 })
+test('lanes toward a turn’s center run shorter, so a blend reaching past the turn starts in the run before it', () => {
+  // The turn is clockwise, so its center lies on the right.
+  expect(PassageFloorOutlet.laneDistance(curved, 2, 0)).toBeCloseTo(2 * Math.PI, 12)
+  expect(PassageFloorOutlet.laneDistance(curved, 2, 1)).toBeCloseTo(1.5 * Math.PI, 12)
+  expect(PassageFloorOutlet.laneDistance(curved, 2, -1)).toBeCloseTo(2.5 * Math.PI, 12)
+  expect(PassageFloorOutlet.laneDistance(curved, 1, 1)).toBeCloseTo(1 + 1.5 * Math.PI, 12)
+  expect(PassageFloorOutlet.laneDistance(curved, curved.length, 1)).toBe(0)
+  // The right wall’s lane runs 1.5π m round the turn and the rest of the reach along the run.
+  expect(PassageFloorOutlet.start(curved, 2, 5)).toBeCloseTo(2 - (5 - 1.5 * Math.PI), 12)
+  // Within the turn, the right wall’s lane still sets it.
+  expect(PassageFloorOutlet.start(curved, 2, 3)).toBeCloseTo(curved.length - 3 / 0.75, 12)
+  expect(() => PassageFloorOutlet.start(curved, 2, 1 + 1.5 * Math.PI + 1.01)).toThrow(RangeError)
+})
+test('every lane eases out over the same distance along itself, round a turn as on the run before it', () => {
+  const profile = [[-1, 0.3, 0], [-0.5, 0.2, 0], [0, 0.1, 0], [0.5, 0.2, 0], [1, 0.3, 0]] as const
+  const reach = 5
+  const passage = new RoutedPassage('even-outlet', 'bastion', curved, 2, {floorOutlet: {
+    reach,
+    profile,
+  }})
+  for (const [right, seamY] of profile) {
+    for (const share of [0.25, 0.5, 0.75]) {
+      // Back along the lane by its own length from the end
+      let along = curved.length
+      while (PassageFloorOutlet.laneDistance(curved, along, right) < reach * share) {
+        along -= 0.0005
+      }
+      const t = PassageFloorOutlet.laneDistance(curved, along, right) / reach
+      expect(passage.floorY(curved.at(along), right)).toBeCloseTo(seamY * (1 - 3 * t * t + 2 * t ** 3), 2)
+    }
+  }
+})
 test('a blend beginning inside an arc uses the same authoritative triangle grid for queries and paving', () => {
-  const curved = new PassageRoute([0, 0], 0, 0, 3, [{length: 2}, {
-    radius: 4,
-    angle: Math.PI / 2,
-  }])
   const passage = new RoutedPassage('arc-outlet', 'bastion', curved, 2, {
     floorOutlet: {
       ...outlet,
-      length: 1.8,
       reach: 0.7,
     },
     crossfall: {slope: 0.05},

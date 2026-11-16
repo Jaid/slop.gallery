@@ -62,10 +62,9 @@ test('the gate’s bowed seam matches on both sides, not only under its hatch', 
 })
 test('the bow spills north and around the inside corner, then returns to the ordinary tunnel floor', () => {
   const floor = bastionLink.floorOutlet!
-  const patch = floor.outlet
-  expect(patch.reach).toBe(1.5)
   // At the inner jamb there is only 12.5 cm of turn radius. The shaping must spill into the preceding straight, not become a steep lip round that little post.
   const turn = route.pieces.at(-1)!
+  expect(floor.from).toBeLessThan(turn.from)
   const upstream = route.at(turn.from - 0.5)
   expect(bastionLink.floorY(upstream, -half + wallFace)).toBeGreaterThan(upstream.y - bastionLink.sag(upstream, -half + wallFace) + 0.1)
   for (let along = 0; along < floor.from; along += 0.117) {
@@ -78,12 +77,41 @@ test('the bow spills north and around the inside corner, then returns to the ord
     expect(bastionLink.floorY(route.at(floor.from), right)).toBeCloseTo(route.at(floor.from).y - bastionLink.sag(route.at(floor.from), right), 9)
   }
 })
+test('the trough under the hatch runs on down the middle of the tunnel through the whole blend, so orbs keep draining along it', () => {
+  for (let along = bastionLink.floorOutlet!.from; along <= route.length; along += 0.05) {
+    const station = route.at(along)
+    const middle = bastionLink.floorY(station, 0)
+    for (const right of [-1.7, -1.2, -0.8, -0.4, 0.4, 0.8, 1.2, 1.7]) {
+      expect(bastionLink.floorY(station, right)).toBeGreaterThan(middle)
+    }
+  }
+})
+test('the spill steepens no lane by more than a gentle ramp on top of the tunnel’s own climb to the gate', () => {
+  for (const right of [-1.7, -1.5, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.7]) {
+    // In steps of 10 cm along the lane itself, back from the gate past where the blend starts
+    let previous: readonly [x: number, z: number, spill: number] | undefined
+    for (let along = route.length; along > bastionLink.floorOutlet!.from - 1; along -= 0.002) {
+      const station = route.at(along)
+      const x = station.point[0] - Math.sin(station.heading) * right
+      const z = station.point[1] + Math.cos(station.heading) * right
+      if (previous && Math.hypot(x - previous[0], z - previous[1]) < 0.1) {
+        continue
+      }
+      const spill = bastionLink.floorY(station, right) - station.y + bastionLink.sag(station, right)
+      if (previous) {
+        expect(Math.abs(spill - previous[2]) / Math.hypot(x - previous[0], z - previous[1]), `lane ${right} ${(route.length - along).toFixed(2)} m from the gate`).toBeLessThan(0.15)
+      }
+      previous = [x, z, spill]
+    }
+  }
+})
 test('visible paving, collision and floor queries share the same triangles throughout the curved blend and southern hollow', () => {
   expect(vault.pavingCollision).toBe(vault.paving)
   expect(colliderGeometry(vault.pavingCollision)).toEqual(colliderGeometry(vault.paving))
   for (let along = bastionLink.floorOutlet!.from + 0.013; along < route.length; along += 0.097) {
     const station = route.at(along)
-    for (let right = -half + 0.015; right < half - 0.01; right += 0.151) {
+    // Between the walls’ faces: under the bullnose of the last turn’s inside corner, the hidden paving twists steeply round its 12.5 cm radius, as it always has.
+    for (let right = -half + wallFace + 0.005; right < half - wallFace; right += 0.151) {
       const x = station.point[0] - Math.sin(station.heading) * right
       const z = station.point[1] + Math.cos(station.heading) * right
       const hit = cast(meshes[0], x, z)!

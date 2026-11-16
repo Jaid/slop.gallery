@@ -54,7 +54,7 @@ export type RoutedPassageOptions = {
   fixPavingEdges?: boolean
   /** a floor profile at its mouth that blends into its route’s floor; only for a straight entry without crossfall or outlines */
   floorInlet?: FloorInlet
-  /** a sampled adjoining floor at the end, blended back into its ordinary paving in world space */
+  /** a sampled adjoining floor at the end, blended back into its ordinary paving along every lane */
   floorOutlet?: FloorOutlet
   openings?: ReadonlyArray<RouteOpening>
   /** at most one for each side */
@@ -186,7 +186,7 @@ export default class RoutedPassage {
       if (floorInlet || outlines.length) {
         throw new RangeError('A floor outlet needs a passage without an inlet or outlines.')
       }
-      this.floorOutlet = new PassageFloorOutlet(route, width, floorOutlet, (station, right) => station.y - this.sag(station, right), this.stations(route.length - floorOutlet.length, route.length))
+      this.floorOutlet = new PassageFloorOutlet(route, width, floorOutlet, (station, right) => station.y - this.sag(station, right))
     }
     const placed: Array<PlacedWall> = route.pieces.flatMap((piece, index) => [-1, 1].flatMap((side): Array<PlacedWall> => {
       const outline = this.outlineAt(piece.from + piece.length / 2, side)
