@@ -1,6 +1,8 @@
+import type {Vec3} from '../../src/lib/gallery/types.ts'
+
 import {afterEach, beforeEach, expect, spyOn, test} from 'bun:test'
 
-import {galleryEvents, importDroppedFiles, isTextInput, viewPortrait} from '../../src/lib/gallery/actions.ts'
+import {bodyPose, cameraPose, galleryEvents, importDroppedFiles, isTextInput, viewPortrait} from '../../src/lib/gallery/actions.ts'
 import ImageImporter from '../../src/lib/gallery/ImageImporter.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 
@@ -30,6 +32,7 @@ beforeEach(() => {
   Object.assign(globalThis, {HTMLElement: ElementDouble})
 })
 afterEach(() => Object.assign(globalThis, previous))
+const file = () => new File(['pixels'], 'square.png', {type: 'image/png'})
 test('renderer-free drops decode and commit', async () => {
   Object.assign(globalThis, {
     createImageBitmap: async () => ({
@@ -57,6 +60,70 @@ test('renderer-free drops decode and commit', async () => {
     expect(useGallery.getState().portraits).toHaveLength(original.portraits.length + 1)
   } finally {
     importer.dispose()
+  }
+})
+test('dropped images flip off their wall only where their square preview fit in reach, otherwise land at the player’s feet', async () => {
+  Object.assign(globalThis, {
+    createImageBitmap: async () => ({
+      width: 64,
+      height: 64,
+      close() {},
+    }),
+    OffscreenCanvas: class {
+      async convertToBlob() {
+        return new Blob(['normalized'], {type: 'image/webp'})
+      }
+      getContext() {
+        return {
+          fillStyle: '',
+          fillRect() {},
+          drawImage() {},
+        }
+      }
+    },
+  })
+  const importer = new ImageImporter(() => {})
+  const arrivals = async (files: Array<File>, origin: Vec3, direction: Vec3) => {
+    const before = new Set(useGallery.getState().portraits.map(portrait => portrait.id))
+    bodyPose.center = [origin[0], origin[1] - 0.8, origin[2]]
+    cameraPose.position = origin
+    cameraPose.direction = direction
+    await importer.import(files, {
+      origin,
+      direction,
+    })
+    return useGallery.getState().portraits.filter(portrait => !before.has(portrait.id))
+  }
+  const poses = {
+    center: bodyPose.center,
+    position: cameraPose.position,
+    direction: cameraPose.direction,
+  }
+  try {
+    useGallery.setState({portraits: []})
+    // in reach of a free spot: the first hangs, the next no longer fits there and flips off
+    const [hung, flipped] = await arrivals([file(), file()], [4, 2.5, -24], [0, 0, -1])
+    expect(hung.hung).toBe(true)
+    expect(flipped.hung).toBe(false)
+    expect(flipped.velocity?.[2]).toBeGreaterThan(0)
+    // out of reach: at the feet, no matter that the square would fit there
+    const [far] = await arrivals([file()], [4, 2.5, 5], [0, 0, -1])
+    expect(far.hung).toBe(false)
+    expect(far.velocity).toBeUndefined()
+    expect(far.position[2]).toBeLessThan(5)
+    expect(far.position[2]).toBeGreaterThan(4)
+    expect(far.position[1]).toBeLessThan(2)
+    // in reach, but its square already did not fit: at the feet too
+    const [blocked] = await arrivals([file()], [4, 2.5, -24], [0, 0, -1])
+    expect(blocked.hung).toBe(false)
+    expect(blocked.velocity).toBeUndefined()
+    expect(blocked.position[2]).toBeLessThan(-24)
+    expect(blocked.position[2]).toBeGreaterThan(-25)
+  } finally {
+    importer.dispose()
+    bodyPose.center = poses.center
+    cameraPose.position = poses.position
+    cameraPose.direction = poses.direction
   }
 })
 test('scene placement is optional', async () => {

@@ -8,7 +8,7 @@ import world from '#src/worlds/current.ts'
 import arrivalVoices, {arrivalGap} from '../audio/arrivalVoices.ts'
 import {defaultPortraitArea} from '../placement/portraitSlots.ts'
 import worldClock from '../worldClock.ts'
-import {arrivalFrame, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'
+import {arrivalFrame, bodyPose, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'
 import {holdPoint, requestHanging} from './hanging/hangings.ts'
 import {hangingAnimation} from './hanging/index.ts'
 import {maximumPortraits, validateImage} from './imagePolicy.ts'
@@ -16,8 +16,10 @@ import {useGallery} from './store.ts'
 
 /** how far out from where it would have hung an imported work that does not fit there flips off its wall, in meters: its back clear of the fronts of the works hung beside it, which it would fuse with on touching them */
 const flipClearance = 0.03 - frameBack
-/** how much further out each further work of the same import flips off, a little more than the deepest frame, so none starts inside another */
-const flipSpacing = 0.12
+/** how much further out each further work of the same import flips off its wall or lands in front of the player, a little more than the deepest frame, so none starts inside another */
+const arrivalSpacing = 0.12
+/** how far in front of the player’s body a work dropped at their feet stands up, in meters past their capsule */
+const feetClearance = 0.3
 /** how fast a work flipping off its wall turns its top toward the room at most, in radians per second; a tall one turns slower, so its bottom edge swinging back still leaves the wall at a fifth of the speed it flies out at */
 const flipSpin = 4
 
@@ -47,6 +49,15 @@ export function imageSize(width: number, height: number, area = defaultPortraitA
 /** The side in meters of the square an image dragged in previews as, before its shape is known: one at the portrait area it would take on the wall with the id `wallId` or dropped while the player is in the room with the id `room`. */
 export function importPreviewSide(wallId: string | undefined, room: string) {
   return Math.sqrt(world.portraitArea(wallId, room) / 10_000)
+}
+
+/** Where the square an image dragged in previews as would hang, aimed along `direction` from `origin` while the player is in the room with the id `room`: at the portrait area of the room owning the wall it is aimed at, which the ray hits whatever the size. */
+export function importPreviewPlacement(origin: Vec3, direction: Vec3, room: string, portraits: ReadonlyArray<Portrait>) {
+  const aim = (side: number) => world.placement.findPlacement(origin, direction, side, side, portraits)
+  const droppedSide = importPreviewSide(undefined, room)
+  const placement = aim(droppedSide)
+  const hungSide = placement && importPreviewSide(placement.wallId, room)
+  return hungSide && hungSide !== droppedSide ? aim(hungSide) : placement
 }
 
 /** The centered part of an image, as x, y, width and height, that is at most `limit` times as wide as tall or as tall as wide. */
@@ -185,6 +196,27 @@ export async function tintImage(source: Blob | string, color: string) {
   }
 }
 
+/** Where a work `height` meters tall lands that hangs nowhere: standing on the floor right in front of the feet of the player, whose `body` is a capsule, facing them, the `index`th of the same import further out than those before, but never through the wall they face, from where it topples over. */
+export function atFeet(pose: {
+  direction: Vec3
+  position: Vec3
+}, body: {
+  center: Vec3
+  radius: number
+}, height: number, index = 0) {
+  const level = Math.hypot(pose.direction[0], pose.direction[2])
+  // Looking straight down, the view has no heading, which the work then takes as north.
+  const [dx, dz] = level > 1e-6 ? [pose.direction[0] / level, pose.direction[2] / level] : [0, -1]
+  const wall = world.wallDistance(pose.position, [dx, 0, dz]) - 0.45
+  const distance = Math.max(body.radius + 0.1, Math.min(body.radius + feetClearance + index * arrivalSpacing, wall))
+  const x = body.center[0] + dx * distance
+  const z = body.center[2] + dz * distance
+  return {
+    position: [x, world.placement.floorHeight([x, body.center[1], z]) + height / 2 + 0.02, z] as Vec3,
+    rotation: Math.atan2(-dx, -dz),
+  }
+}
+
 async function canvasImage(canvas: OffscreenCanvas): Promise<SizedImage> {
   return {
     image: await canvas.convertToBlob({
@@ -218,13 +250,19 @@ export default class ImageImporter {
       position: [...cameraPose.position] as Vec3,
       direction: [...cameraPose.direction] as Vec3,
     }
-    const {room} = useGallery.getState()
+    const body = {
+      center: [...bodyPose.center] as Vec3,
+      radius: bodyPose.radius,
+    }
+    const {room, portraits} = useGallery.getState()
+    // What the preview showed as the images were dropped: a square in place of each one’s shape, still unknown then.
+    const previewed = target && importPreviewPlacement(target.origin, target.direction, room, portraits)
     this.queue = this.queue.catch(() => {}).then(async () => {
       if (this.disposed) {
         return
       }
-      let count = 0
       let flips = 0
+      let drops = 0
       for (const file of files.slice(0, 12)) {
         try {
           validateImage(file)
@@ -252,7 +290,9 @@ export default class ImageImporter {
               place = aim(size)
             }
           }
-          if (!place?.inReach) {
+          // It only flips off its wall where its preview promised it would hang.
+          const flip = place && !place.valid && previewed?.valid ? place : null
+          if (!place?.valid && !flip) {
             size = dropped
           }
           const p = newPortrait(source, title, size.width, size.height, pose)
@@ -264,21 +304,21 @@ export default class ImageImporter {
               labelAbove: place.labelAbove === true ? true : undefined,
               hung: true,
             })
-          } else if (place?.inReach) {
+          } else if (flip) {
             // In its own shape it does not fit where it was aimed, which the square previewing it could not tell: it flips off the wall back into the room as the player’s body bounces off a work it knocked down, its top tipping toward the room, each one after the first further out, clear of the one before.
-            const normal = [Math.sin(place.rotation), Math.cos(place.rotation)] as const
-            const out = flipClearance + flips * flipSpacing
+            const normal = [Math.sin(flip.rotation), Math.cos(flip.rotation)] as const
+            const out = flipClearance + flips * arrivalSpacing
             const turn = Math.min(flipSpin, wallRebound.out * 0.8 / (size.height / 2))
             Object.assign(p, {
-              position: [place.position[0] + normal[0] * out, place.position[1], place.position[2] + normal[1] * out],
-              rotation: place.rotation,
+              position: [flip.position[0] + normal[0] * out, flip.position[1], flip.position[2] + normal[1] * out],
+              rotation: flip.rotation,
               velocity: [normal[0] * wallRebound.out, wallRebound.lift, normal[1] * wallRebound.out],
               spin: [normal[1] * turn, 0.6, -normal[0] * turn],
             })
             flips++
           } else {
-            const distance = Math.min(1.6, Math.max(0.25, world.wallDistance(pose.position, pose.direction) - 0.35))
-            p.position = [pose.position[0] + pose.direction[0] * distance, Math.max(world.placement.floorHeight([pose.position[0] + pose.direction[0] * distance, pose.position[1], pose.position[2] + pose.direction[2] * distance]) + 0.8, pose.position[1] + pose.direction[1] * distance + count * 0.15), pose.position[2] + pose.direction[2] * distance]
+            Object.assign(p, atFeet(pose, body, size.height, drops))
+            drops++
           }
           // Where it hangs or lands decides its frame, which may be another room’s than the player’s, through a doorway.
           p.frame = arrivalFrame(p.position, pose.position, p.id)
@@ -287,7 +327,6 @@ export default class ImageImporter {
             requestHanging(p.id, p.position, p.rotation, holdPoint(pose))
           }
           this.arrive(p.hung)
-          count++
           this.onImport(p)
         } catch (error) {
           notify(Error.isError(error) ? `${file.name}: ${error.message}` : 'That image could not be imported.')
