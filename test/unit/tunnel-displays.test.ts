@@ -19,7 +19,7 @@ import walls, {floorHeight, galleryPlacement, insideGallery, roomAt} from './fix
 await RAPIER.init()
 const {oculus, tunnel} = lowerGallery
 const balconyY = oculusBalcony.position[1] + oculusBalcony.size[1] / 2
-type Display = (typeof tunnelDisplays)[number]
+type Display = typeof tunnelDisplays[number]
 
 /** Build the colliders between the Oculus balcony and the display: balcony, Oculus side wall, stairway, and display shell. */
 function stairwayWorld(display: Display) {

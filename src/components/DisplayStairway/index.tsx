@@ -14,7 +14,7 @@ import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {PolygonalSlabGeometry} from '#src/lib/gallery/ExhibitionTunnelGeometry.ts'
 import {stairwayTint} from '#src/rooms/exhibition/lamps.ts'
 
-type Stairway = (typeof tunnelDisplays)[number]['stairway']
+type Stairway = typeof tunnelDisplays[number]['stairway']
 
 /** The staff stairway from a door at the Oculus balcony’s end down to the landing before the cutout in a display’s south end wall. */
 export default function DisplayStairway({stairway, material}: {

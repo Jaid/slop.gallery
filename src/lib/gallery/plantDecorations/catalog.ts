@@ -36,7 +36,7 @@ export const pots = [
     radius: 0.335,
   },
 ] as const
-export type PotKind = (typeof pots)[number]['id']
+export type PotKind = typeof pots[number]['id']
 
 export const plants = [
   {
@@ -80,7 +80,7 @@ export const plants = [
     subtitle: 'Sculpted trunk & succulent leaves',
   },
 ] as const
-export type PlantKind = (typeof plants)[number]['id']
+export type PlantKind = typeof plants[number]['id']
 
 // Preserve the preview’s catalog numbers for referencing pot/plant pairs.
 export const plantCombinations = pots.flatMap((pot, row) => plants.map((plant, column) => ({

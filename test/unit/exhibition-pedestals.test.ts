@@ -12,7 +12,7 @@ import tunnelDisplays, {tunnelDisplayWindow} from '../../src/lib/gallery/tunnelD
 import {exhibitHeight, exhibitionPedestal, exhibitionPedestalLobes, exhibitionSidecar, exhibitionSlots, exhibitOffset} from '../../src/rooms/exhibition/exhibits.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
-const displayOf = (slot: (typeof exhibitionSlots)[number]) => tunnelDisplays.find(display => display.exhibits.some(exhibit => exhibit.id === slot.id))!
+const displayOf = (slot: typeof exhibitionSlots[number]) => tunnelDisplays.find(display => display.exhibits.some(exhibit => exhibit.id === slot.id))!
 test('every display shows three exhibits at eye level over their pedestals, inside the Exhibition', () => {
   expect(exhibitionSlots).toHaveLength(6)
   expect(exhibitHeight).toBeGreaterThan(tunnelDisplayWindow.bottom)

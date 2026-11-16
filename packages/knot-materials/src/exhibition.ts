@@ -11,7 +11,7 @@ import parseRarityMode from './rarityMode.ts'
 export const knotFloatHeight = 1
 
 /** Curatorial score of a candidate row. Unknown and special entries are excluded, so neither lifts nor lowers it. */
-export function candidateScore(candidate: (typeof knotCandidates)[number]) {
+export function candidateScore(candidate: typeof knotCandidates[number]) {
   const rated = candidate.items.filter(item => item.rarity !== unknownRarity && item.rarity !== specialRarity)
   if (!rated.length) {
     return 1.1
@@ -73,8 +73,8 @@ export function selectKnotBays(search = '') {
   }
   // Rows without an eligible knot must not take a slot under candidate_limit.
   selected = selected.filter(candidate => candidate.select(1, selection).length > 0)
-  const byName = (a: (typeof knotCandidates)[number], b: (typeof knotCandidates)[number]) => a.data.title.localeCompare(b.data.title) || a.data.id.localeCompare(b.data.id)
-  const byScore = (a: (typeof knotCandidates)[number], b: (typeof knotCandidates)[number]) => candidateScore(b) - candidateScore(a) || byName(a, b)
+  const byName = (a: typeof knotCandidates[number], b: typeof knotCandidates[number]) => a.data.title.localeCompare(b.data.title) || a.data.id.localeCompare(b.data.id)
+  const byScore = (a: typeof knotCandidates[number], b: typeof knotCandidates[number]) => candidateScore(b) - candidateScore(a) || byName(a, b)
   const ordered = selected.toSorted(candidateOrder === 'score' ? byScore : byName)
   const candidates = exactKnotSelection ? ordered : ordered.slice(0, candidateLimit)
   return candidates.map(candidate => ({

@@ -143,7 +143,7 @@ describe('the apse’s barred gate and windows onto the Bastion', () => {
         const direction = through.clone().sub(light).normalize()
         const ray = new Raycaster(light, direction, 0, 30)
         const hits = ray.intersectObjects([...stone, floor])
-        expect(`${opening.name} at ${fraction}: ${hits[0].object === floor ? 'platform' : `stone ${stone.indexOf(hits[0].object as (typeof stone)[number])}`}`).toBe(`${opening.name} at ${fraction}: platform`)
+        expect(`${opening.name} at ${fraction}: ${hits[0].object === floor ? 'platform' : `stone ${stone.indexOf(hits[0].object as typeof stone[number])}`}`).toBe(`${opening.name} at ${fraction}: platform`)
         expect(hits[0].point.y).toBeCloseTo(platformY, 4)
         expect(lamp.range! > hits[0].distance).toBe(true)
       }

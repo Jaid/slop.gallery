@@ -13,6 +13,6 @@ const destructiblePlants = [
     pot: 'ivory',
   },
 ] as const
-export type DestructiblePlantKind = (typeof destructiblePlants)[number]['id']
+export type DestructiblePlantKind = typeof destructiblePlants[number]['id']
 
 export default destructiblePlants

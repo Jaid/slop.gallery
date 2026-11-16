@@ -108,7 +108,7 @@ export const renderPipelineStructure = ['ambientOcclusion', 'ambientOcclusionRes
 export type RenderPipelineStructure = Pick<RenderPipelineSettings, typeof renderPipelineStructure[number]>
 
 /** the settings a pipeline can change live */
-export type RenderPipelineUniform = {[Key in RenderPipelineSetting]: RenderPipelineSettings[Key] extends number ? (Key extends typeof renderPipelineStructure[number] ? never : Key) : never}[RenderPipelineSetting]
+export type RenderPipelineUniform = {[Key in RenderPipelineSetting]: RenderPipelineSettings[Key] extends number ? Key extends typeof renderPipelineStructure[number] ? never : Key : never}[RenderPipelineSetting]
 
 /** The render pipeline of a graphics profile. */
 export function getRenderPipelineSettings(profile: GraphicsProfile, antiAliasing: AntiAliasing): RenderPipelineSettings {
