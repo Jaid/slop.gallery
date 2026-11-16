@@ -16,8 +16,8 @@ import walls from './fixtures/gallery.ts'
 
 await RAPIER.init()
 const lowerBandHeight = defaultBaseboardHeight - baseboardCapHeight
-/** a half circle in the 128 chords the openings’ cutters and casings take */
-const halfDisc = (radius: number) => 64 * radius ** 2 * Math.sin(Math.PI / 128)
+/** a half circle in the 64 chords the openings’ cutters and casings take */
+const halfDisc = (radius: number) => 32 * radius ** 2 * Math.sin(Math.PI / 64)
 /** The area of the casing round a hole with a sill, on the wall’s face. */
 function casingArea({width, height, bottom = 0, profile}: WallOpening) {
   const trim = wallOpeningTrim

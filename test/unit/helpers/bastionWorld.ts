@@ -42,7 +42,7 @@ export function bastionColliders() {
   for (const passage of bastionNetwork) {
     if (passage instanceof Passage) {
       const vault = new VaultGeometry(passage)
-      for (const part of [vault.shell, vault.ribs]) {
+      for (const part of [vault.shellCollision, vault.ribsCollision]) {
         if (part.hasAttribute('position')) {
           colliders.surface(part)
         }
@@ -69,8 +69,8 @@ export function bastionColliders() {
     if (vault.pavingBox) {
       colliders.boxes.push(vault.pavingBox)
     }
-    colliders.surface(vault.shell)
-    colliders.surface(vault.ribs)
+    colliders.surface(vault.shellCollision)
+    colliders.surface(vault.ribsCollision)
     vault.dispose()
   }
   for (const grille of [bastionLinkGate, lodgeSpurGrille]) {
