@@ -5,7 +5,7 @@ import {RigidBody, TrimeshCollider} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
-import useGraphicsMode from 'use-graphics-mode'
+import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import PendantLamps from '#component/PendantLamps'
@@ -21,6 +21,7 @@ import {routeRibDepth, routeRibThickness} from '#src/lib/gallery/passages/Routed
 import {passageLantern, passageLanternGlow} from '#src/lib/gallery/pendants/passageLantern.ts'
 import CisternWaterMaterial from '#src/lib/materials/CisternWaterMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
+import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 const mounts = [cisternLantern]
 
@@ -30,7 +31,8 @@ const mounts = [cisternLantern]
  */
 export default function BastionCistern({stone}: {stone: Material}) {
   const isHeavy = useGraphicsMode()
-  const parts = useDisposable(useMemo(() => new CisternGeometry, []))
+  const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
+  const parts = useDisposable(useMemo(() => new CisternGeometry(curveDetail), [curveDetail]))
   const dome = useDisposable(useMemo(() => new HalfDomeGeometry({
     center: cistern.center,
     radius: cistern.radius - wallFace,
@@ -40,9 +42,9 @@ export default function BastionCistern({stone}: {stone: Material}) {
     ribs: cisternDomeRibs,
     ribSection: [routeRibDepth, routeRibThickness],
     thickness: vaultShellThickness,
-  }), []))
+  }, curveDetail), [curveDetail]))
   const drain = useDisposable(useMemo(() => new DrainGeometry, []))
-  const inflow = useDisposable(useMemo(() => new InflowGeometry, []))
+  const inflow = useDisposable(useMemo(() => new InflowGeometry(curveDetail), [curveDetail]))
   const reveal = useDisposable(useMemo(cisternWindowGeometry, []))
   const collision = useMemo(() => ({
     floor: colliderGeometry(parts.floor),

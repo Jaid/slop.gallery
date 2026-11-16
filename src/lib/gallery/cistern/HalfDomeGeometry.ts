@@ -21,8 +21,8 @@ export type HalfDomeOptions = {
   thickness: number
 }
 
-/** how many pieces it is cut into round its half, and from its spring up to its crown */
-const [around, up] = [48, 16] as const
+/** how many pieces it is cut into round its half, and from its spring up to its crown at base detail */
+const [baseAround, baseUp] = [24, 8] as const
 /** how close to the crown its ribs run, where they would crowd into each other */
 const ribCrown = 0.35
 
@@ -37,10 +37,11 @@ export default class HalfDomeGeometry {
   /** the inside alone, which collides */
   readonly surface: BufferGeometry
 
-  constructor(private readonly dome: HalfDome, {ribs, ribSection: [ribWidth, ribDepth], thickness}: HalfDomeOptions) {
-    this.surface = this.ellipsoid(0, true)
-    this.shell = mergeParts([this.ellipsoid(0, true), this.ellipsoid(thickness, false), this.foot(thickness)])
-    this.ribs = mergeParts(Array.from({length: ribs}, (_, index) => this.rib(Math.PI * (index + 1) / (ribs + 1), ribWidth, ribDepth)))
+  constructor(private readonly dome: HalfDome, {ribs, ribSection: [ribWidth, ribDepth], thickness}: HalfDomeOptions, curveDetail = 1) {
+    const [around, up] = [baseAround * curveDetail, baseUp * curveDetail]
+    this.surface = this.ellipsoid(0, true, baseAround, baseUp)
+    this.shell = mergeParts([this.ellipsoid(0, true, around, up), this.ellipsoid(thickness, false, around, up), this.foot(thickness, around)])
+    this.ribs = mergeParts(Array.from({length: ribs}, (_, index) => this.rib(Math.PI * (index + 1) / (ribs + 1), ribWidth, ribDepth, 12 * curveDetail)))
   }
 
   dispose() {
@@ -64,7 +65,7 @@ export default class HalfDomeGeometry {
   }
 
   /** The ellipsoid `out` meters out of the inside, facing in or out, fanning in to its crown. */
-  private ellipsoid(out: number, inward: boolean) {
+  private ellipsoid(out: number, inward: boolean, around: number, up: number) {
     const positions: Array<number> = []
     for (let row = 0; row < up; row++) {
       for (let column = 0; column <= around; column++) {
@@ -97,7 +98,7 @@ export default class HalfDomeGeometry {
   }
 
   /** The shell’s foot over the round wall, from the inside out to its back, facing down. */
-  private foot(thickness: number) {
+  private foot(thickness: number, around: number) {
     const positions: Array<number> = []
     for (let column = 0; column <= around; column++) {
       const azimuth = Math.PI * column / around
@@ -116,12 +117,11 @@ export default class HalfDomeGeometry {
   }
 
   /** A rib up the dome round its half by `azimuth`, from its spring to near its crown: a band `width` wide standing `depth` out of the inside, its face and its sides. */
-  private rib(azimuth: number, width: number, depth: number) {
+  private rib(azimuth: number, width: number, depth: number, steps: number) {
     const {radius} = this.dome
     const top = Math.acos(ribCrown / radius)
     const across = new Vector3(-Math.sin(azimuth), 0, -Math.cos(azimuth))
     const positions: Array<number> = []
-    const steps = up * 2
     for (let step = 0; step <= steps; step++) {
       const {point, normal} = this.at(azimuth, top * step / steps)
       const face = point.clone().addScaledVector(normal, -depth)

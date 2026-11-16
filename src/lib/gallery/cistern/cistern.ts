@@ -290,7 +290,7 @@ export function cisternChunks() {
 }
 
 /** how often the baseboard’s contact with the floor is sampled along a wall, at most this far apart */
-const contactStep = 0.25
+const contactStep = 0.5
 /** Where the floor meets the wall along its face, in the wall’s own coordinates, for its baseboard to follow. */
 function floorContact(wall: Omit<Wall, 'id'>, at: (u: number) => Point) {
   const steps = Math.ceil(wall.width / contactStep)

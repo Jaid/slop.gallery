@@ -2,6 +2,7 @@ import {CoefficientCombineRule, CuboidCollider, RigidBody, TrimeshCollider} from
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {DoubleSide} from 'three/webgpu'
+import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import {lodgeSpurArmor} from '#src/lib/gallery/bastionNetwork.ts'
 import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '#src/lib/gallery/suitOfArmor.ts'
@@ -9,13 +10,15 @@ import suitOfArmorGeometry from '#src/lib/gallery/suitOfArmorGeometry.ts'
 import ForgedSteelMaterial from '#src/lib/materials/ForgedSteelMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
+import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /**
  * The empty suit of armor standing at the end of the Bastion’s blind branch beside the Lodge, looking back down it toward the link, the knight’s helmet resting on its shoulders, in the helmet’s steel.
  * It is a body of its own, top-heavy on its narrow feet: pushed, it tips over against the wall or onto the floor, and the helmet, loose on its shoulders, goes wherever the fall takes it, or holds on.
  */
 export default function BastionArmor() {
-  const geometry = useDisposable(useMemo(suitOfArmorGeometry, []))
+  const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
+  const geometry = useDisposable(useMemo(() => suitOfArmorGeometry(curveDetail), [curveDetail]))
   const shoulders = useMemo(suitOfArmorShoulders, [])
   const steel = useDisposable(useMemo(() => {
     const material = lightIndoors(new ForgedSteelMaterial({

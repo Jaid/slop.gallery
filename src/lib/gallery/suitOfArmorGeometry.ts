@@ -119,9 +119,9 @@ const waist = chestSections[0]
  * The steel of the suit of armor, see `suitOfArmor`, every plate carrying its `steelMask` for `ForgedSteelMaterial`: only the inside of its empty neck lies in a hole, showing dark.
  * Its plates are open where they lap over each other, so show it from both sides.
  */
-export default function suitOfArmorGeometry() {
+export default function suitOfArmorGeometry(curveDetail = 1) {
   const rivets: Array<Rivet> = []
-  const parts = [...cuirass(rivets), ...fauld(rivets), ...[1, -1].flatMap(outside => [...leg(outside, rivets), ...arm(outside, rivets)])]
+  const parts = [...cuirass(rivets, curveDetail), ...fauld(rivets, curveDetail), ...[1, -1].flatMap(outside => [...leg(outside, rivets, curveDetail), ...arm(outside, rivets, curveDetail)])]
   return mergeParts([...parts, ...rivets.flatMap(({normal, position, radius}) => rivetHeads([{
     normal,
     position,
@@ -131,8 +131,8 @@ export default function suitOfArmorGeometry() {
 /**
  * The breastplate and the backplate in one, and the plackart over the breast: from deep in the dark of its empty neck up over the rolled lip of its collar, out under the helmet’s gorget, sloping off it just under its border all round, so the gorget rests on it, then over the shoulders and down the swelling breast with its crease to the waist, where it flares into a lip; the plackart laps up over the breast from the waist to an ogee point, its edge rolled.
  */
-function cuirass(rivets: Array<Rivet>) {
-  const thetas = columnsOf(48)
+function cuirass(rivets: Array<Rivet>, curveDetail: number) {
+  const thetas = columnsOf(curveDetail > 1 ? 48 : 32)
   const ring = (y: number, reach: (theta: number) => readonly [side: number, front: number], finish?: Finish) => thetas.map(theta => {
     const [across, forward] = reach(theta)
     return steel(new Vector3(across, y, forward), finish)
@@ -146,7 +146,7 @@ function cuirass(rivets: Array<Rivet>) {
     // The yoke, a low dome under the gorget, down to a hair under its border
     ...[0.66, 0.8, 0.91, 1].map(share => ring(collar - 0.0015 + 0.0215 * (1 - share ** 2), theta => round(share * gorgetBorderReach(theta))(theta))),
   ]
-  const breast = [1.585, 1.568, 1.548, 1.524, 1.498, 1.47, 1.44, 1.41, 1.38, 1.35, 1.32, 1.29, 1.26, 1.23, 1.2, 1.177, 1.16]
+  const breast = curveDetail > 1 ? [1.585, 1.568, 1.548, 1.524, 1.498, 1.47, 1.44, 1.41, 1.38, 1.35, 1.32, 1.29, 1.26, 1.23, 1.2, 1.177, 1.16] : [1.585, 1.548, 1.5, 1.44, 1.38, 1.32, 1.26, 1.2, 1.16]
   for (const y of breast) {
     rows.push(thetas.map(theta => steel(chest(y, theta))))
   }
@@ -162,14 +162,16 @@ function cuirass(rivets: Array<Rivet>) {
   const span = 74
   const bottom = 1.168
   const top = (theta: number) => 1.215 + 0.135 * (1 - Math.abs(theta) / span) ** 1.7
-  const plackartThetas = Array.from({length: 33}, (_, index) => -span + index * span * 2 / 32)
+  const plackartSteps = curveDetail > 1 ? 32 : 16
+  const plackartThetas = Array.from({length: plackartSteps + 1}, (_, index) => -span + index * span * 2 / plackartSteps)
+  const plackartShares = curveDetail > 1 ? [0.18, 0.4, 0.62, 0.82, 1] : [0.33, 0.67, 1]
   const plackartRows = [
     ...[[0, 0.0012], [0, 0.0058], [0.003, 0.0068], [0.0085, 0.0045]].map(([down, out]) => ({
       y: (theta: number) => top(theta) - down,
       out,
       polish: out === 0.0045 ? 0.12 : 0.4,
     })),
-    ...[0.18, 0.4, 0.62, 0.82, 1].map(share => ({
+    ...plackartShares.map(share => ({
       y: (theta: number) => top(theta) - 0.0085 - (top(theta) - 0.0085 - bottom) * share,
       out: 0.0045,
       polish: 0.12,
@@ -182,7 +184,7 @@ function cuirass(rivets: Array<Rivet>) {
 /**
  * The fauld: three hoops of lames lapping down over the hips from under the cuirass’ waist, each dipping lower at the front and flaring out a little further, most to the sides and least over the rump, their lower edges rolled; under them a plain skirt between the legs, and over the front of the thighs the two tassets of two lames each, hanging from the lowest hoop.
  */
-function fauld(rivets: Array<Rivet>) {
+function fauld(rivets: Array<Rivet>, curveDetail: number) {
   const parts: Array<BufferGeometry> = []
   for (let index = 0; index < 3; index++) {
     const y = waist.at + 0.006 - index * 0.05
@@ -194,9 +196,9 @@ function fauld(rivets: Array<Rivet>) {
       square: 2.2,
     })
     parts.push(plate([0, y, 0], [0, y - 0.064, 0], [section(0, -0.006), section(0.35, 0.002), section(1, 0.012)], {
-      columns: 40,
+      columns: 20 * curveDetail,
       rolls: [undefined, 0.0035],
-      samples: [0, 0.35, 0.7, 1],
+      samples: curveDetail > 1 ? [0, 0.35, 0.7, 1] : [0, 0.5, 1],
       shift: dip,
     }))
     for (const theta of [-34, 34]) {
@@ -221,9 +223,9 @@ function fauld(rivets: Array<Rivet>) {
       back: 0.15,
     },
   ], {
-    columns: 36,
+    columns: 18 * curveDetail,
     finish: skirtSteel,
-    samples: [0, 0.5, 1],
+    samples: curveDetail > 1 ? [0, 0.5, 1] : [0, 1],
   }))
   // The tassets, each a pair of lames curving round the front of a thigh with the fauld, tucked under its lowest hoop and parting from the middle downward like an A over the skirt, the lower lame under the upper, their lower edges rolled
   const hem = waist.at + 0.006 - 2 * 0.05 - 0.064
@@ -231,7 +233,7 @@ function fauld(rivets: Array<Rivet>) {
   const tassetFoot = 0.818
   for (const outside of [1, -1]) {
     for (const [index, [from, to]] of [[tassetTop, 0.905], [0.915, tassetFoot]].entries()) {
-      parts.push(tasset(outside, from, to, index))
+      parts.push(tasset(outside, from, to, index, curveDetail))
     }
     rivets.push(rivet(tassetPoint(18 * outside, tassetTop - 0.016, 0, 0.002).toArray(), [0.3 * outside, 0.2, 1], 0.0048))
   }
@@ -249,9 +251,9 @@ function tassetPoint(theta: number, y: number, index: number, out = 0) {
   return new Vector3(x * (1 + out / reach), y, z * (1 + out / reach))
 }
 /** One lame of a tasset, `outside` 1 for the left and -1 for the right, from `from` down to `to` over the floor, parting further from the middle the lower it hangs, its lower edge rolled. */
-function tasset(outside: number, from: number, to: number, index: number) {
+function tasset(outside: number, from: number, to: number, index: number, curveDetail: number) {
   const roll = 0.0032
-  const columns = 12
+  const columns = 6 * curveDetail
   const span = from - to
   const rows = [0, 0.5, ...rollRows(roll, span).map(({u}) => u)]
   const bulges = [0, 0, ...rollRows(roll, span).map(({bulge}) => bulge)]
@@ -271,7 +273,7 @@ function tasset(outside: number, from: number, to: number, index: number) {
   return sheetGeometry(outside > 0 ? sheet : sheet.map(row => row.toReversed()))
 }
 /** One leg, `outside` 1 for the left and -1 for the right: the cuisse down the thigh, the poleyn over the knee with its lame above, the greave down the shin and the calf and the sabaton of lames over the foot, its toes turned a little out. */
-function leg(outside: number, rivets: Array<Rivet>) {
+function leg(outside: number, rivets: Array<Rivet>, curveDetail: number) {
   const mirror = ([x, y, z]: Joint): Joint => [x * outside, y, z]
   const hip: Joint = [0.1, 1, 0.005]
   const knee: Joint = [0.11, 0.53, 0.03]
@@ -307,9 +309,9 @@ function leg(outside: number, rivets: Array<Rivet>) {
         crease: 0.004,
       },
     ], {
-      columns: 20,
+      columns: 10 * curveDetail,
       rolls: [0.0035, undefined],
-      samples: [0, 0.18, 0.36, 0.54, 0.72, 0.88, 1],
+      samples: curveDetail > 1 ? [0, 0.18, 0.36, 0.54, 0.72, 0.88, 1] : [0, 0.3, 0.65, 1],
     }),
     // The lame between the cuisse and the poleyn
     plate(mirror([0.108, 0.615, 0.022]), mirror([0.109, 0.565, 0.026]), [
@@ -326,7 +328,7 @@ function leg(outside: number, rivets: Array<Rivet>) {
         back: 0.072,
       },
     ], {
-      columns: 28,
+      columns: 14 * curveDetail,
       rolls: [undefined, 0.003],
       samples: [0, 1],
     }),
@@ -335,8 +337,8 @@ function leg(outside: number, rivets: Array<Rivet>) {
       front: 0.08,
       back: 0.076,
       height: 0.068,
-    }, [0.12, 0.25, 0.4, 0.55, 0.7, 0.85, 1], {
-      columns: 28,
+    }, curveDetail > 1 ? [0.12, 0.25, 0.4, 0.55, 0.7, 0.85, 1] : [0.22, 0.45, 0.7, 0.9, 1], {
+      columns: 14 * curveDetail,
       rim: () => 100,
       roll: 0.003,
     }),
@@ -391,9 +393,9 @@ function leg(outside: number, rivets: Array<Rivet>) {
         crease: 0.002,
       },
     ], {
-      columns: 20,
+      columns: 10 * curveDetail,
       rolls: [undefined, 0.003],
-      samples: [0, 0.14, 0.3, 0.48, 0.68, 0.88, 1],
+      samples: curveDetail > 1 ? [0, 0.14, 0.3, 0.48, 0.68, 0.88, 1] : [0, 0.25, 0.5, 0.75, 1],
     }),
   ]
   rivets.push(rivet(mirror([knee[0] + 0.1 * 0.068 * 0.97, knee[1] + 0.06 * 0.068 * 0.97, knee[2] + 0.068 * 0.99]), mirror([0.1, 0.06, 1]), 0.0065))
@@ -425,13 +427,13 @@ function leg(outside: number, rivets: Array<Rivet>) {
   const direction = [Math.sin(toeOut) * outside, 0, Math.cos(toeOut)] as const
   parts.push(plate([x + direction[0] * heel, 0, z + direction[2] * heel], [x + direction[0] * toe, 0, z + direction[2] * toe], sections, {
     caps: [true, true],
-    columns: 16,
+    columns: 8 * curveDetail,
     front: [0, 1, 0],
   }))
   return parts
 }
 /** One arm, `outside` 1 for the left and -1 for the right, hanging a little away from the body with its elbow a little bent: the pauldron over the shoulder, a broad cap with two lames under it, the rerebrace down the upper arm, the couter round the elbow, the vambrace down the forearm and the gauntlet, a flared cuff and a mitten of a hand of lames with its thumb, its fingers curling in a little. */
-function arm(outside: number, rivets: Array<Rivet>) {
+function arm(outside: number, rivets: Array<Rivet>, curveDetail: number) {
   const mirror = ([x, y, z]: Joint): Joint => [x * outside, y, z]
   const elbow: Joint = [0.296, 1.165, -0.036]
   const wrist: Joint = [0.312, 0.905, 0.03]
@@ -445,8 +447,8 @@ function arm(outside: number, rivets: Array<Rivet>) {
       front: 0.14,
       back: 0.15,
       height: 0.1,
-    }, [0.14, 0.28, 0.42, 0.56, 0.7, 0.82, 0.92, 1], {
-      columns: 24,
+    }, curveDetail > 1 ? [0.14, 0.28, 0.42, 0.56, 0.7, 0.82, 0.92, 1] : [0.22, 0.45, 0.68, 0.86, 1], {
+      columns: 12 * curveDetail,
       rim: theta => 112 - 6 * Math.cos(theta * degree),
       roll: 0.0035,
       // flaring out toward its rim like a bell
@@ -467,7 +469,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
         back: bottom + 0.016,
       },
     ], {
-      columns: 20,
+      columns: 10 * curveDetail,
       rolls: [undefined, 0.003],
       samples: [0, 1],
     })),
@@ -491,16 +493,16 @@ function arm(outside: number, rivets: Array<Rivet>) {
         back: 0.049,
       },
     ], {
-      columns: 18,
-      samples: [0, 0.35, 0.7, 1],
+      columns: 9 * curveDetail,
+      samples: curveDetail > 1 ? [0, 0.35, 0.7, 1] : [0, 0.5, 1],
     }),
     dome(mirror([0.297, 1.16, -0.04]), mirror([0.25, 0, -1]), [0, 1, 0], {
       side: 0.058,
       front: 0.066,
       back: 0.064,
       height: 0.054,
-    }, [0.15, 0.3, 0.45, 0.6, 0.75, 0.88, 1], {
-      columns: 20,
+    }, curveDetail > 1 ? [0.15, 0.3, 0.45, 0.6, 0.75, 0.88, 1] : [0.25, 0.5, 0.75, 0.9, 1], {
+      columns: 10 * curveDetail,
       rim: () => 100,
       roll: 0.0028,
     }),
@@ -524,8 +526,8 @@ function arm(outside: number, rivets: Array<Rivet>) {
         back: 0.038,
       },
     ], {
-      columns: 18,
-      samples: [0, 0.3, 0.65, 1],
+      columns: 9 * curveDetail,
+      samples: curveDetail > 1 ? [0, 0.3, 0.65, 1] : [0, 0.5, 1],
     }),
     // The gauntlet’s cuff, flaring open over the end of the vambrace like an hourglass
     plate(mirror([0.31, 0.95, 0.02]), mirror([0.313, 0.868, 0.04]), [
@@ -554,9 +556,9 @@ function arm(outside: number, rivets: Array<Rivet>) {
         back: 0.04,
       },
     ], {
-      columns: 20,
+      columns: 10 * curveDetail,
       rolls: [0.003, undefined],
-      samples: [0, 0.3, 0.65, 1],
+      samples: curveDetail > 1 ? [0, 0.3, 0.65, 1] : [0, 0.4, 1],
     }),
     plate(mirror([0.313, 0.876, 0.038]), mirror([0.306, 0.715, 0.078]), withEdges([0, 0.2, 0.38, 0.55, 0.7, 0.85, 1], fingerLames.slice(1, -1), 0.008).map((at): Section => {
       const knuckles = Math.exp(-(((at - 0.38) / 0.24) ** 2))
@@ -572,7 +574,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
       }
     }), {
       caps: [true, true],
-      columns: 16,
+      columns: 8 * curveDetail,
     }),
     plate(mirror([0.297, 0.835, 0.08]), mirror([0.29, 0.772, 0.104]), [
       {
@@ -595,7 +597,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
       },
     ], {
       caps: [true, true],
-      columns: 10,
+      columns: 6 * curveDetail,
     }),
   ]
   const crown = new Vector3(...mirror(capCrown))

@@ -62,13 +62,13 @@ export function barredIron(hole: WallOpening, bands: ReadonlyArray<number>, {cur
     // Over the hatch, a bar stands on the middle of its strap.
     const foot = Math.max(bottom - embed, hatch ? openingTop(hatch, u, bandHeight / 2) : -Infinity)
     const head = openingTop(hole, u) + embed
-    const bar = new CylinderGeometry(barRadius, barRadius, head - foot, 8)
+    const bar = new CylinderGeometry(barRadius, barRadius, head - foot, 6, 1, true)
     parts.push(bar.translate(u, (foot + head) / 2, barDepth))
   }
   /** a flat band from `from` to `to` along the wall at the height */
   const band = (from: number, to: number, y: number) => {
     const length = to - from
-    const geometry = new BoxGeometry(length, bandHeight, bandThickness, curveRadius ? curveSegments(length, curveRadius) * 4 : 1)
+    const geometry = new BoxGeometry(length, bandHeight, bandThickness, curveRadius ? Math.max(2, Math.ceil(Math.abs(length / curveRadius) * 16)) : 1)
     return geometry.translate((from + to) / 2, y, barDepth)
   }
   for (const y of bands) {
@@ -93,7 +93,7 @@ export function barredIron(hole: WallOpening, bands: ReadonlyArray<number>, {cur
       parts.push(strap.translate(hatch.u + side * jamb, (foot + spring) / 2, barDepth))
     }
     const start = Math.atan2(Math.sqrt(Math.max(0, middle ** 2 - jamb ** 2)), jamb)
-    const chords = 12
+    const chords = 10
     const sweep = (Math.PI - start * 2) / chords
     for (let chord = 0; chord < chords; chord++) {
       const angle = start + sweep * (chord + 0.5)

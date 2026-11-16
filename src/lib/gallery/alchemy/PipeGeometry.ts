@@ -58,9 +58,9 @@ export function pipeCenterline(corners: ReadonlyArray<Vec3>, bend: number) {
 }
 
 /** A flange round a pipe of radius `radius` at the point, square to the direction. */
-export function flangeAt(point: Vector3, direction: Vector3, radius: number) {
-  const ring = new CylinderGeometry(radius + flange[0], radius + flange[0], flange[1], 40, 1, true)
-  const bead = new TorusGeometry(radius + flange[0], 0.006, 6, 40)
+export function flangeAt(point: Vector3, direction: Vector3, radius: number, radial = 40) {
+  const ring = new CylinderGeometry(radius + flange[0], radius + flange[0], flange[1], radial, 1, true)
+  const bead = new TorusGeometry(radius + flange[0], 0.006, 6, radial)
   bead.rotateX(Math.PI / 2)
   const turn = new Quaternion
   turn.setFromUnitVectors(up, direction)
