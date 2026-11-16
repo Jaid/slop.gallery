@@ -270,7 +270,7 @@ function tasset(outside: number, from: number, to: number, index: number) {
   // Seen from outside, the points of every row run to the right, from the outside of the right thigh and from the middle over the left one
   return sheetGeometry(outside > 0 ? sheet : sheet.map(row => row.toReversed()))
 }
-/** One leg, `outside` 1 for the left and -1 for the right: the cuisse down the thigh, the poleyn over the knee with its lame above, its fan of a wing on the outside, the greave down the shin and the calf and the sabaton of lames over the foot, its toes turned a little out. */
+/** One leg, `outside` 1 for the left and -1 for the right: the cuisse down the thigh, the poleyn over the knee with its lame above, the greave down the shin and the calf and the sabaton of lames over the foot, its toes turned a little out. */
 function leg(outside: number, rivets: Array<Rivet>) {
   const mirror = ([x, y, z]: Joint): Joint => [x * outside, y, z]
   const hip: Joint = [0.1, 1, 0.005]
@@ -339,17 +339,6 @@ function leg(outside: number, rivets: Array<Rivet>) {
       columns: 28,
       rim: () => 100,
       roll: 0.003,
-    }),
-    // The fan of a wing on the outside of the knee, a thin dished plate notched like a heart at its back
-    dome(mirror([0.176, 0.53, 0.012]), mirror([1, 0, 0.35]), [0, 0, -1], {
-      side: 0.05,
-      front: 0.062,
-      back: 0.052,
-      height: 0.007,
-    }, [0.3, 0.6, 0.85, 1], {
-      columns: 20,
-      rim: theta => 88 - 26 * Math.exp(-((theta / 26) ** 2)),
-      roll: 0.0025,
     }),
     plate(mirror([0.11, 0.49, 0.022]), mirror(ankle), [
       {
@@ -441,7 +430,7 @@ function leg(outside: number, rivets: Array<Rivet>) {
   }))
   return parts
 }
-/** One arm, `outside` 1 for the left and -1 for the right, hanging a little away from the body with its elbow a little bent: the pauldron over the shoulder, a broad cap with two lames under it and a rondel guarding the armpit in front, the rerebrace down the upper arm, the couter round the elbow with its fan of a wing, the vambrace down the forearm and the gauntlet, a flared cuff and a mitten of a hand of lames with its thumb, its fingers curling in a little. */
+/** One arm, `outside` 1 for the left and -1 for the right, hanging a little away from the body with its elbow a little bent: the pauldron over the shoulder, a broad cap with two lames under it, the rerebrace down the upper arm, the couter round the elbow, the vambrace down the forearm and the gauntlet, a flared cuff and a mitten of a hand of lames with its thumb, its fingers curling in a little. */
 function arm(outside: number, rivets: Array<Rivet>) {
   const mirror = ([x, y, z]: Joint): Joint => [x * outside, y, z]
   const elbow: Joint = [0.296, 1.165, -0.036]
@@ -449,8 +438,6 @@ function arm(outside: number, rivets: Array<Rivet>) {
   const capCenter: Joint = [0.235, 1.488, -0.008]
   const capCrown: Joint = [0.56, 1, 0]
   const fingerLames = [0.46, 0.6, 0.74, 0.88, 1.02]
-  const rondel: Joint = [0.236, 1.365, 0.122]
-  const rondelFacing: Joint = [0.4, 0.05, 1]
   const parts = [
     // The cap over the shoulder, its rim rolled
     dome(mirror(capCenter), mirror(capCrown), [0, 0, 1], {
@@ -484,17 +471,6 @@ function arm(outside: number, rivets: Array<Rivet>) {
       rolls: [undefined, 0.003],
       samples: [0, 1],
     })),
-    // The rondel in front of the armpit
-    dome(mirror(rondel), mirror(rondelFacing), [0, 1, 0], {
-      side: 0.046,
-      front: 0.046,
-      back: 0.046,
-      height: 0.0075,
-    }, [0.4, 0.8, 1], {
-      columns: 16,
-      rim: () => 90,
-      roll: 0.0025,
-    }),
     plate(mirror([0.268, 1.37, -0.016]), mirror(elbow), [
       {
         at: 0,
@@ -527,17 +503,6 @@ function arm(outside: number, rivets: Array<Rivet>) {
       columns: 20,
       rim: () => 100,
       roll: 0.0028,
-    }),
-    // The fan of a wing on the outside of the elbow
-    dome(mirror([0.346, 1.16, -0.032]), mirror([1, 0, -0.4]), [0, 1, 0], {
-      side: 0.036,
-      front: 0.05,
-      back: 0.046,
-      height: 0.007,
-    }, [0.35, 0.7, 1], {
-      columns: 16,
-      rim: theta => 88 - 22 * Math.exp(-(((Math.abs(theta) - 180) / 28) ** 2)),
-      roll: 0.0022,
     }),
     plate(mirror([0.298, 1.15, -0.031]), mirror(wrist), [
       {
@@ -637,13 +602,6 @@ function arm(outside: number, rivets: Array<Rivet>) {
   crown.normalize()
   const capTop = new Vector3(...mirror(capCenter))
   capTop.addScaledVector(crown, 0.1 * 0.985)
-  const facing = new Vector3(...mirror(rondelFacing))
-  facing.normalize()
-  const rondelBoss = new Vector3(...mirror(rondel))
-  rondelBoss.addScaledVector(facing, 0.0075)
-  rivets.push(
-    rivet(capTop.toArray(), crown.toArray(), 0.0065),
-    rivet(rondelBoss.toArray(), mirror(rondelFacing), 0.007),
-  )
+  rivets.push(rivet(capTop.toArray(), crown.toArray(), 0.0065))
   return parts
 }
