@@ -2,7 +2,7 @@ import {describe, expect, test} from 'bun:test'
 
 import {PerspectiveCamera, Vector3} from 'three/webgpu'
 
-import OrbitInspection from '../../src/lib/camera/OrbitInspection.ts'
+import OrbitInspection, {inspectionFov} from '../../src/lib/camera/OrbitInspection.ts'
 
 const center = new Vector3(0, 1, 0)
 function setup() {
@@ -22,19 +22,27 @@ function settle(orbit: OrbitInspection) {
     orbit.update(center, 1 / 60)
   }
 }
+/** how much of the narrower half of the view the orbited sphere takes up, by angle, a little over 1 where it just overflows it */
+function framing(camera: PerspectiveCamera) {
+  const vertical = camera.fov * Math.PI / 180
+  const horizontal = 2 * Math.atan(Math.tan(vertical / 2) * camera.aspect)
+  return Math.asin(0.85 / camera.position.distanceTo(center)) / (Math.min(vertical, horizontal) / 2)
+}
 function aimError(camera: PerspectiveCamera, target: Vector3) {
   return camera.getWorldDirection(new Vector3).angleTo(target.clone().sub(camera.position).normalize())
 }
 describe('hold-to-orbit camera', () => {
-  test('approaches smoothly, narrows FOV and stays aimed at the Knot', () => {
+  test('approaches smoothly, narrows FOV, frames the Knot snugly and stays aimed at it', () => {
     const {camera, orbit} = setup()
     const original = camera.position.clone()
     orbit.update(center, 1 / 60)
     expect(camera.position.distanceTo(original)).toBeGreaterThan(0)
     expect(camera.position.distanceTo(original)).toBeLessThan(1)
     settle(orbit)
-    expect(camera.fov).toBeCloseTo(50, 5)
-    expect(camera.position.distanceTo(center)).toBeCloseTo(0.85 / Math.sin(50 * Math.PI / 360) * 0.96, 5)
+    expect(camera.fov).toBeCloseTo(inspectionFov, 5)
+    expect(inspectionFov).toBeLessThan(75)
+    expect(framing(camera)).toBeGreaterThan(0.95)
+    expect(framing(camera)).toBeLessThan(1.1)
     expect(camera.getWorldDirection(new Vector3).dot(center.clone().sub(camera.position).normalize())).toBeGreaterThan(0.9999)
   })
   test('adjusts inspection distance within a wide bounded range', () => {
@@ -125,7 +133,8 @@ describe('hold-to-orbit camera', () => {
     orbit.addInput(0, 100)
     settle(orbit)
     expect(camera.position.y).toBeLessThanOrEqual(2 - 0.1799)
-    expect(camera.position.distanceTo(center)).toBeCloseTo(0.85 / Math.sin(50 * Math.PI / 360) * 0.96, 5)
+    expect(framing(camera)).toBeGreaterThan(0.95)
+    expect(framing(camera)).toBeLessThan(1.1)
   })
   test('starts from a given direction at a given distance and keeps within its turn limits, as in front of a portrait', () => {
     const {camera} = setup()

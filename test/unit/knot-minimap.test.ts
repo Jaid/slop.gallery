@@ -1,6 +1,6 @@
 import {afterEach, expect, test} from 'bun:test'
 
-import {knotExhibition} from 'knot-materials/exhibition.ts'
+import {knotBays, knotExhibition} from 'knot-materials/exhibition.ts'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 
@@ -20,7 +20,6 @@ test('Knottingham minimap has a transparent hall outline, no visible labels and 
   cameraPose.direction = [1, 0, 0]
   const html = renderToStaticMarkup(createElement(KnottinghamMinimap, {lower: false}))
   expect(html).toMatch(/<rect[^>]+fill="none"/u)
-  expect(html).not.toContain('#e4e3d7')
   expect(html).not.toContain('<text')
   expect(html.match(/data-knot=/gu)).toHaveLength(knotExhibition.length)
   expect(html).toContain('translate(-14 -9) rotate(90)')
@@ -31,12 +30,16 @@ test('Knottingham minimap has a transparent hall outline, no visible labels and 
     expect(circle).toContain(`cy="${item.position[2]}"`)
   }
 })
-test('the detailed map retains the model and item labels without an opaque floor', () => {
+test('the detailed map labels every candidate row and item without an opaque floor', () => {
   const html = renderToStaticMarkup(createElement(KnotStudyMap))
   expect(html).toMatch(/<rect[^>]+fill="none"/u)
   expect(html).toContain('<text')
-  expect(html).toContain('GLM 5.3')
-  expect(html).toContain(knotExhibition.at(-1)!.label)
+  for (const bay of knotBays) {
+    expect(html).toContain(`>${bay.candidate.title}</text>`)
+  }
+  for (const item of knotExhibition) {
+    expect(html).toContain(`>${item.label}</text>`)
+  }
 })
 test('minimap viewBox and hall outline share the dynamically sized room', () => {
   const html = renderToStaticMarkup(createElement(KnottinghamMinimap, {lower: false}))

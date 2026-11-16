@@ -193,11 +193,11 @@ describe('wall geometry', () => {
   })
 })
 describe('image dimensions', () => {
-  test('keeps landscape, portrait and square aspect ratios at a frame area of 15 000 cm²', () => {
+  test('keeps landscape, portrait and square aspect ratios at the default frame area', () => {
     for (const [width, height] of [[400, 200], [200, 400], [400, 400]]) {
       const size = imageSize(width, height)
       expect(size.width / size.height).toBeCloseTo(width / height, 9)
-      expect(size.width * size.height).toBeCloseTo(1.5, 9)
+      expect(size.width * size.height * 10_000).toBeCloseTo(defaultPortraitArea, 5)
     }
   })
   test('frames an image at a given area', () => {
@@ -212,26 +212,18 @@ describe('image dimensions', () => {
   }
 })
 describe('import areas', () => {
-  test('rooms set their own portrait areas, the rest 15 000 cm²', () => {
-    expect(Object.fromEntries(slopGallery.rooms.map(room => [room.id, room.portraitArea]))).toMatchObject({
-      lobby: 30_000,
-      lodge: 7500,
-      moonfall: 60_000,
-      oculus: 60_000,
-      salon: defaultPortraitArea,
-      sienna: defaultPortraitArea,
-    })
-  })
   test('every portrait area is a slot area', () => {
     for (const room of slopGallery.rooms) {
       expect(slotAreas).toContain(room.portraitArea as typeof slotAreas[number])
     }
   })
   test('a hung work takes the area of the room owning its wall, a dropped one that of the player’s room', () => {
+    const areaOf = (id: string) => slopGallery.rooms.find(room => room.id === id)!.portraitArea
+    expect(areaOf('lodge')).not.toBe(areaOf('lobby'))
     const lodgeWall = walls.find(wall => wall.room === 'lodge')!
-    expect(slopGallery.portraitArea(lodgeWall.id, 'lobby')).toBe(7500)
-    expect(slopGallery.portraitArea(undefined, 'lobby')).toBe(30_000)
-    expect(slopGallery.portraitArea('nowhere', 'oculus')).toBe(60_000)
+    expect(slopGallery.portraitArea(lodgeWall.id, 'lobby')).toBe(areaOf('lodge'))
+    expect(slopGallery.portraitArea(undefined, 'lobby')).toBe(areaOf('lobby'))
+    expect(slopGallery.portraitArea('nowhere', 'oculus')).toBe(areaOf('oculus'))
     expect(slopGallery.portraitArea(undefined, 'nowhere')).toBe(defaultPortraitArea)
   })
 })

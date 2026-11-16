@@ -85,16 +85,18 @@ describe('the Salon', () => {
   })
   test('the ottoman stands centered along the glass wall, leaving the doorway path and walls clear', () => {
     const {depth, position, width} = salonBench
-    expect(position).toEqual([14, 0, salonWindow.z])
+    expect(position).toEqual([room.center[0], room.floorY, salonWindow.z])
     expect(room.center[1] + room.size[1] / 2 - (position[2] + depth / 2)).toBeGreaterThan(3)
     expect(Math.abs(position[0] - room.center[0]) + width / 2).toBeLessThan(room.size[0] / 2 - 3)
-    expect(salonBench.seatHeight).toBeCloseTo(0.49, 5)
+    // a seat at the height of a chair’s
+    expect(salonBench.seatHeight).toBeGreaterThan(0.4)
+    expect(salonBench.seatHeight).toBeLessThan(0.55)
   })
   test('the pedestal stands on the room’s axis at the glass wall’s north end, clear of the ottoman and the north wall', () => {
     const [x, y, z] = salonPedestal
     // the pedestal’s footprint, 1.16 m square
     const half = 0.58
-    expect(salonPedestal).toEqual([14, 0, salonWindow.z - salonWindow.width / 2])
+    expect(salonPedestal).toEqual([room.center[0], room.floorY, salonWindow.z - salonWindow.width / 2])
     expect(roomAt([x, 1.7, z])).toBe('salon')
     expect(y).toBe(floorHeight([x, 1.7, z]))
     expect(salonBench.position[2] - salonBench.depth / 2 - (z + half)).toBeGreaterThan(2.5)

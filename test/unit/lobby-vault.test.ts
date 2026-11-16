@@ -9,7 +9,7 @@ import {getLightingTuning, lightingPresets} from '../../src/lib/gallery/lighting
 import LobbyChandelierGeometry, {lobbyChandelier, lobbyChandelierBottom} from '../../src/lib/gallery/LobbyChandelierGeometry.ts'
 import lobbyVault, {glazingStart, lobbyChandeliers, vaultBays, vaultCoffers, vaultHeight, vaultRibs} from '../../src/lib/gallery/lobbyVault.ts'
 import LobbyVaultGeometry, {lobbyVaultCollision, roseCenterY} from '../../src/lib/gallery/LobbyVaultGeometry.ts'
-import {middaySun, sunClearance, sunGeometry, sunlitPoints} from '../../src/lib/gallery/sun.ts'
+import {middaySun, sunClearance, sunDirectionFromAngles, sunGeometry, sunlitPoints} from '../../src/lib/gallery/sun.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import proceduralSky from '../../src/lib/materials/ProceduralSky.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -186,14 +186,16 @@ describe('the Lobby’s chandeliers', () => {
   })
 })
 describe('the sun and the sky', () => {
-  test('the Noon preset matches the committed Sun settings', () => {
+  test('the Noon preset shines the midday sun, and the tuning panel opens with its own angles and intensities', () => {
     const noon = lightingPresets.noon
     const tuning = getLightingTuning(noon)
-    expect(tuning.hemisphereIntensity).toBe(1)
-    expect(tuning.sunIntensity).toBe(2)
-    expect(tuning.sunAzimuth).toBeCloseTo(193.7, 9)
-    expect(tuning.sunElevation).toBeCloseTo(51, 9)
     expect(noon.sun.direction).toEqual(middaySun)
+    expect(tuning.hemisphereIntensity).toBe(noon.hemisphere.intensity)
+    expect(tuning.sunIntensity).toBe(noon.sun.intensity)
+    const direction = sunDirectionFromAngles(tuning.sunAzimuth, tuning.sunElevation)
+    for (const [axis, value] of direction.entries()) {
+      expect(value).toBeCloseTo(middaySun[axis], 9)
+    }
   })
   test('the shadow map covers every sunlit room, and the vault stays in front of its near plane', () => {
     const points = sunlitPoints(slopGallery.rooms)

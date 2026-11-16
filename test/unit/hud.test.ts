@@ -59,9 +59,13 @@ describe('title plate targeting', () => {
 describe('narration linger animation', () => {
   test('falls slowly at first, accelerates, and reaches zero at the deadline', () => {
     expect(lingerBarScale(0.8, 0)).toBe(0.8)
-    expect(lingerBarScale(0.8, 0.5)).toBeCloseTo(0.7)
-    expect(lingerBarScale(0.8, 0.9)).toBeCloseTo(0.2168)
+    const steps = Array.from({length: 11}, (_, i) => lingerBarScale(0.8, i / 10))
+    const drops = steps.slice(1).map((scale, i) => steps[i] - scale)
+    for (const [i, drop] of drops.entries()) {
+      expect(drop).toBeGreaterThan(i ? drops[i - 1] : 0)
+    }
     expect(lingerBarScale(0.8, 1)).toBe(0)
+    expect(lingerBarScale(0.8, 2)).toBe(0)
   })
 })
 describe('contextual HUD', () => {
@@ -154,10 +158,16 @@ for (const status of ['before', 'after'] as const) {
       source: 'audio',
     }))
     expect(html).toContain('data-testid="audio-bars"')
+    const scales = html.matchAll(/scaleY\(([\d.]+)\)/gu).map(([, scale]) => Number(scale)).toArray()
     if (status === 'before') {
-      expect(html).toContain('scaleY(0.03)')
+      expect(scales).toHaveLength(5)
+      for (const scale of scales) {
+        expect(scale).toBeGreaterThan(0)
+        expect(scale).toBeLessThan(0.1)
+      }
     } else {
-      expect(html).not.toContain('scaleY(0.03)')
+      // Lingering bars fall from wherever the playback left them.
+      expect(scales).toEqual([])
     }
     expect(html).not.toContain('data-testid="narration-static"')
   })

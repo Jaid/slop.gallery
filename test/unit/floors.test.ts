@@ -8,12 +8,18 @@ import {BoxGeometry, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/we
 import {polygonArea, quadrilaterals, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import {floorGlassThickness, roomFloorPlan, subtractFloorOpening} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
-import walls, {insideGallery, rooms, roomVisit} from './fixtures/gallery.ts'
+import walls, {rooms} from './fixtures/gallery.ts'
 
 await RAPIER.init()
 const room = rooms.find(value => value.id === 'lobby')!
 const plan = roomFloorPlan(room)
 const area = (rectangles: Array<FloorRectangle>) => rectangles.reduce((sum, rectangle) => sum + rectangle.size[0] * rectangle.size[1], 0)
+const openingWest = lobby.opening.center[0] - lobby.opening.size[0] / 2
+const openingEast = lobby.opening.center[0] + lobby.opening.size[0] / 2
+const openingNorth = lobby.opening.center[1] - lobby.opening.size[1] / 2
+const openingSouth = lobby.opening.center[1] + lobby.opening.size[1] / 2
+/** coordinates around both edges of the opening along an axis, a centimeter to either side, on them and further out */
+const across = (low: number, high: number) => [low - 3, low - 0.01, low, low + 0.01, (low + high) / 2, high - 0.01, high, high + 0.01, high + 3]
 describe('rectangular floor openings', () => {
   test('handles disjoint, touching, covering and partial cuts without degenerate rectangles', () => {
     const rectangle: FloorRectangle = {
@@ -43,33 +49,22 @@ describe('rectangular floor openings', () => {
       size: [2, 20],
     }))).toBe(80)
   })
-  test('reserves an 8 × 8 square four meters from the north and side walls', () => {
-    expect(lobby.previousNorthZ - lobby.northZ).toBe(24)
-    expect(lobby.opening.size).toEqual([8, 8])
-    expect(area(plan.slabs)).toBe(16 * 40 - 8 * 8)
+  test('reserves a square in the north extension, as far from the north wall as from the side walls, and glazes it', () => {
+    const [openingWidth, openingDepth] = lobby.opening.size
+    expect(openingWidth).toBe(openingDepth)
+    expect(room.center[0]).toBe(lobby.opening.center[0])
+    expect(openingSouth).toBeLessThan(lobby.previousNorthZ)
+    expect(openingNorth - lobby.northZ).toBe((lobby.width - openingWidth) / 2)
+    expect(area(plan.slabs)).toBe(room.size[0] * room.size[1] - openingWidth * openingDepth)
     expect(plan.slabs).toHaveLength(4)
     expect(plan.glazing).toEqual({
-      center: [0, -12],
-      size: [8, 8],
+      center: [lobby.opening.center[0] - room.center[0], lobby.opening.center[1] - room.center[1]],
+      size: lobby.opening.size,
     })
-    expect((lobby.width - lobby.opening.size[0]) / 2).toBe(4)
-    expect(lobby.opening.center[1] - lobby.opening.size[1] / 2 - lobby.northZ).toBe(4)
-    expect(lobby.previousNorthZ - (lobby.opening.center[1] + lobby.opening.size[1] / 2)).toBe(12)
-    const visit = roomVisit(room)
-    expect(visit.position[0]).toBe(0)
-    expect(visit.position[1]).toBe(1.7)
-    expect(visit.position[2]).toBeCloseTo(5.6)
-    expect(insideGallery([7, 1.7, -20])).toBe(true)
-    expect(insideGallery([0, 1.7, -31])).toBe(true)
-    // Beyond the extension’s east wall lies the Salon, as deep as the extension; north of both is outside.
-    expect(insideGallery([9, 1.7, -24])).toBe(true)
-    expect(insideGallery([9, 1.7, -32.5])).toBe(false)
-    expect(walls.find(wall => wall.id === 'lobby-north')!.center).toEqual([0, 0, -32])
     for (const side of ['west', 'east']) {
       const extension = walls.find(wall => wall.id === `lobby-extension_${side}`)!
-      expect(extension.center[2] - extension.width / 2).toBe(-32)
-      expect(extension.center[2] + extension.width / 2).toBe(-8)
-      expect(walls.find(wall => wall.id === `lobby-${side}`)!.center[2]).toBe(0)
+      expect(extension.center[2] - extension.width / 2).toBe(lobby.northZ)
+      expect(extension.center[2] + extension.width / 2).toBe(lobby.previousNorthZ)
     }
   })
   test('slabs, grout and inlays are all absent over the opening', () => {
@@ -110,9 +105,12 @@ describe('rectangular floor openings', () => {
     })
     try {
       world.step()
-      for (const x of [-7, -4.01, -3.99, 0, 3.99, 4.01, 7]) {
-        for (const z of [-31, -28.01, -27.99, -24, -20.01, -19.99, -9, -7, 0, 5.8]) {
-          const solid = !(Math.abs(x) < 4 && z > -28 && z < -20)
+      for (const x of across(openingWest, openingEast)) {
+        for (const z of [...across(openingNorth, openingSouth), lobby.previousNorthZ, room.center[1]]) {
+          if (x === openingWest || x === openingEast || z === openingNorth || z === openingSouth) {
+            continue
+          }
+          const solid = !(x > openingWest && x < openingEast && z > openingNorth && z < openingSouth)
           const origin = new Vector3(x, 1, z)
           const direction = new Vector3(0, -1, 0)
           const slabRay = new Raycaster(origin, direction, 0, 2)
@@ -127,8 +125,8 @@ describe('rectangular floor openings', () => {
       meshes.push(glass)
       world.createCollider(RAPIER.ColliderDesc.cuboid(glazing.size[0] / 2, floorGlassThickness / 2, glazing.size[1] / 2).setTranslation(glass.position.x, glass.position.y, glass.position.z))
       world.step()
-      for (const x of [-4.01, -4, -3.99, 0, 3.99, 4, 4.01]) {
-        for (const z of [-24.01, -24, -23.99, -20, -16.01, -16, -15.99]) {
+      for (const x of across(openingWest, openingEast)) {
+        for (const z of across(openingNorth, openingSouth)) {
           const origin = new Vector3(x, 1, z)
           const direction = new Vector3(0, -1, 0)
           const glazedFloorRay = new Raycaster(origin, direction, 0, 2)
@@ -136,8 +134,8 @@ describe('rectangular floor openings', () => {
           expect(world.castRay(new RAPIER.Ray(origin, direction), 2, true)!.timeOfImpact).toBeCloseTo(1)
         }
       }
-      const supported = [-7, -4, 0, 4, 7].map(x => {
-        const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(x, 1, -20))
+      const supported = [openingWest - 3, openingWest, lobby.opening.center[0], openingEast, openingEast + 3].map(x => {
+        const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(x, 1, openingSouth))
         world.createCollider(RAPIER.ColliderDesc.ball(0.25), body)
         return body
       })

@@ -192,13 +192,12 @@ describe('rhythm', () => {
   test('every peak of the ceremony falls on the pulse: the burst, the ignition, the landing, every turn and the result flipping out', () => {
     const {climax, image, intro, lull, minimum} = fusionTiming
     expect(introSeconds(pulse, fusionTiming)).toBe(fusionPulse)
-    expect(introSeconds(implosion, fusionTiming)).toBe(1.5)
-    expect(introSeconds(ignition, fusionTiming)).toBe(3)
-    expect(intro).toBe(4.5)
-    expect(firstTurn()).toBe(6)
     expect([image, lull, climax]).toEqual([fusionPulse, fusionPulse, fusionPulse])
-    expect(minimum).toBe(12)
-    expect(minimum + climax).toBe(13.5)
+    const peaks = [introSeconds(implosion, fusionTiming), introSeconds(ignition, fusionTiming), intro, firstTurn(), minimum, minimum + climax]
+    for (const [index, peak] of peaks.entries()) {
+      expect(peak).toBeGreaterThan(index ? peaks[index - 1] : 0)
+      expect(peak / fusionPulse).toBeCloseTo(Math.round(peak / fusionPulse), 9)
+    }
   })
   test('for each number of ingredients, the ember’s beats divide the pulse between the burst and the ignition evenly', () => {
     for (const ingredients of [2, 3, 4]) {

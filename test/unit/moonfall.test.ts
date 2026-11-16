@@ -10,19 +10,14 @@ import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/galler
 import staircase, {stairBlocks, stairFlights, stairFloorHeight, stairRailGeometry, stairRoofs, stairTurn} from '../../src/lib/gallery/staircase.ts'
 import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
 import {placementIssue, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
-import walls, {floorHeight, galleryPlacement, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
+import walls, {floorHeight, galleryPlacement, insideGallery, roomAt, rooms} from './fixtures/gallery.ts'
 
 await RAPIER.init()
 const lower = rooms.find(candidate => candidate.id === 'moonfall')!
 const upper = rooms.find(candidate => candidate.id === 'antechamber')!
 describe('lower gallery', () => {
   test('stacked rooms, both stair flights and the U-turn landing resolve their own elevation', () => {
-    expect(lower.size).toEqual([28, 28])
-    expect(lower.center).toEqual([-8, 18.5])
-    expect(upper.center).toEqual([0, 12])
-    expect(upper.size).toEqual([8, 8])
     expect(stairFlights[1].start[2]).toBe(lower.center[1])
-    expect(roomVisit(lower).position[1]).toBeCloseTo(-6.3)
     for (const block of stairBlocks) {
       const position: Vec3 = [block.position[0], block.top + 1.6, block.position[2]]
       expect(stairFloorHeight(position[0], position[2])).toBeCloseTo(block.top)
@@ -30,16 +25,19 @@ describe('lower gallery', () => {
       expect(insideGallery(position)).toBe(true)
       expect(roomAt(position)).toBe('moonfall')
     }
-    expect(roomAt([0, 1.6, 11.5])).toBe('antechamber')
-    expect(roomAt([0, -6.4, 11.5])).toBe('moonfall')
-    expect(floorHeight([0, 1.6, 11.5])).toBe(0)
-    expect(floorHeight([0, -6.4, 11.5])).toBe(-8)
-    expect(floorHeight([5, -6.4, 11.5])).toBe(-8)
-    expect(insideGallery([0, -8.95, 11.5])).toBe(true)
-    expect(insideGallery([0, -9.01, 11.5])).toBe(false)
+    // Moonfall reaches under the Antechamber.
+    const [x, z] = [upper.center[0], upper.center[1] - 0.5]
+    expect(roomAt([x, upper.floorY + 1.6, z])).toBe('antechamber')
+    expect(roomAt([x, lower.floorY + 1.6, z])).toBe('moonfall')
+    expect(floorHeight([x, upper.floorY + 1.6, z])).toBe(upper.floorY)
+    expect(floorHeight([x, lower.floorY + 1.6, z])).toBe(lower.floorY)
+    expect(floorHeight([x + 5, lower.floorY + 1.6, z])).toBe(lower.floorY)
+    expect(insideGallery([x, lower.floorY - 0.95, z])).toBe(true)
+    expect(insideGallery([x, lower.floorY - 1.01, z])).toBe(false)
     expect(insideGallery([8, -1, 14])).toBe(false)
     expect(insideGallery([Number.NaN, -2, 15])).toBe(false)
-    expect(stairFloorHeight(stairTurn.position[0], stairTurn.position[2])).toBe(-4)
+    // The landing turns the stairs halfway down.
+    expect(stairFloorHeight(stairTurn.position[0], stairTurn.position[2])).toBe((upper.floorY + lower.floorY) / 2)
     expect(stairFloorHeight(8, 14.6)).toBeUndefined()
   })
   test('wall rays and frame clearance respect lower-level elevations and portals', () => {

@@ -2,10 +2,13 @@ import {expect, test} from 'bun:test'
 
 import inspectionPointerSensitivity from '../../src/lib/camera/inspectionPointerSensitivity.ts'
 
-test('inspection pointer modifiers provide normal, precision and accelerated look speeds', () => {
+test('inspection pointer modifiers slow the look down for precision and speed it up otherwise, precision winning over both', () => {
   const base = 0.002
+  const precise = inspectionPointerSensitivity(base, true, false)
+  const accelerated = inspectionPointerSensitivity(base, false, true)
   expect(inspectionPointerSensitivity(base, false, false)).toBe(base)
-  expect(inspectionPointerSensitivity(base, true, false)).toBe(base * 0.1)
-  expect(inspectionPointerSensitivity(base, false, true)).toBe(base * 2)
-  expect(inspectionPointerSensitivity(base, true, true)).toBe(base * 0.1)
+  expect(precise).toBeGreaterThan(0)
+  expect(precise).toBeLessThan(base)
+  expect(accelerated).toBeGreaterThan(base)
+  expect(inspectionPointerSensitivity(base, true, true)).toBe(precise)
 })

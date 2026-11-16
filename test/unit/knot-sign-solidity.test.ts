@@ -114,14 +114,17 @@ test('stand stays on the left with its back turned toward its knot', () => {
   }
 })
 test('stand parts share one half-millimeter silhouette tolerance and drop only buried stem caps', () => {
-  expect(circleSegments(0.2)).toBe(48)
-  expect(circleSegments(0.018)).toBe(16)
-  expect(circleSegments(0.0001)).toBe(8)
+  const sag = (radius: number, segments: number) => radius * (1 - Math.cos(Math.PI / segments))
   expect(() => circleSegments(0)).toThrow(RangeError)
-  for (const {radius} of knotSignRoundParts) {
+  expect(circleSegments(0.0001)).toBe(circleSegments(0.00001))
+  for (const radius of [0.0001, 0.018, 0.2, ...knotSignRoundParts.map(part => part.radius)]) {
     const segments = circleSegments(radius)
     expect(segments % 4).toBe(0)
-    expect(radius * (1 - Math.cos(Math.PI / segments))).toBeLessThanOrEqual(0.0005)
+    expect(sag(radius, segments)).toBeLessThanOrEqual(0.0005)
+    // Four fewer would show, unless it is as coarse as any circle gets.
+    if (segments > circleSegments(0.00001)) {
+      expect(sag(radius, segments - 4)).toBeGreaterThan(0.0005)
+    }
   }
   const [stem, base, , boss] = knotSignRoundParts
   expect(knotSignRoundParts.filter(part => part.openEnded)).toEqual([stem])
