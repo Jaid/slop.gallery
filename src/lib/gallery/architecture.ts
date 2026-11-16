@@ -2,7 +2,7 @@ import type {Wall, WallOpening} from '../placement/wallGeometry.ts'
 
 import {ADDITION, Brush, Evaluator, SUBTRACTION} from 'three-bvh-csg'
 import {mergeVertices, toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js'
-import {BoxGeometry, BufferGeometry, ExtrudeGeometry, Matrix4, MeshBasicNodeMaterial, Shape, Vector3} from 'three/webgpu'
+import {BoxGeometry, BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, Matrix4, MeshBasicNodeMaterial, Shape, Vector3} from 'three/webgpu'
 
 import {openingArc, openingCircle} from '../placement/wallGeometry.ts'
 import {baseboardBandFront, baseboardCapFront, baseboardCapHeight, corniceBands, defaultBaseboardHeight, openingCasingFronts, wallFace, wallOpeningTrim} from './architectureDimensions.ts'
@@ -10,11 +10,11 @@ import {bendGeometry, curveSegments as bendSegments, sliceAlongX} from './Curved
 
 export {wallFace, wallOpeningTrim, wallTop} from './architectureDimensions.ts'
 
-const curveSegments = 64
+const curveSegments = 32
 /** a molded baseboard’s faces bend smoothly round its curves, but break at sharper turns than this, like those at its fillets */
 const baseboardCrease = Math.PI / 6
 /** how far a straight edge of a curved wall’s face may stand off its curve, in meters: an edge of length l on radius r stands l² / 8r off */
-const bendTolerance = 0.0005
+const bendTolerance = 0.002
 /** The opening’s outline in the wall’s plane, `padding` meters further out around its sides and top, like its casing, from `bottom` up, or for a round opening, all round its circle. */
 export const openingShape = (hole: WallOpening, padding = 0, bottom = hole.bottom ?? -0.5) => {
   const shape = new Shape
@@ -53,6 +53,10 @@ const extrude = (shape: Array<Shape> | Shape, depth: number, z: number) => {
 
 export type ArchitectureGeometry = ReturnType<typeof createArchitectureGeometry>
 type ArchitectureParts = ReturnType<typeof cutArchitecture>
+type PrismCorner = {
+  at: readonly [x: number, y: number, z: number]
+  uv: readonly [u: number, v: number]
+}
 export function colliderGeometry(geometry: BufferGeometry): [Float32Array, Uint32Array] {
   // UV seams and lathe poles are render attributes, not physical cracks. Weld only
   // positions and remove zero-area faces before Rapier builds its contact topology.
@@ -84,6 +88,54 @@ export function colliderGeometry(geometry: BufferGeometry): [Float32Array, Uint3
     welded.dispose()
     surface.dispose()
   }
+}
+/** A closed prism for each section of a floor-following baseboard band, between the depths `back` and `front` out of the wall’s center line, from each section’s points up by `height`: the solid an extrusion of the band’s profile shape would give, but built as quad strips between neighboring points so that bending it with a curved wall stays cheap, see `baseboardBand`. Each quad is flat-shaded and wound to face outward. */
+function bandedPrism(sections: ReadonlyArray<ReadonlyArray<readonly [u: number, y: number]>>, height: number, back: number, front: number) {
+  const positions: Array<number> = []
+  const normals: Array<number> = []
+  const uvs: Array<number> = []
+  const corner = (point: readonly [number, number], top: boolean, z: number, uv: readonly [number, number]): PrismCorner => ({
+    at: [point[0], point[1] + (top ? height : 0), z],
+    uv,
+  })
+  const flat = ([u, y]: readonly [number, number], top: boolean, z: number) => corner([u, y], top, z, [u, y + (top ? height : 0)])
+  const quad = (corners: readonly [PrismCorner, PrismCorner, PrismCorner, PrismCorner], outward: readonly [number, number, number]) => {
+    const [a, b, c] = corners.slice(0, 3).map(({at}) => new Vector3(...at))
+    const normal = b.clone().sub(a).cross(c.clone().sub(a))
+    if (normal.lengthSq() < 1e-20) {
+      return
+    }
+    normal.normalize()
+    const order = normal.dot(new Vector3(...outward)) < 0 ? [corners[0], corners[3], corners[2], corners[1]] : corners
+    if (normal.dot(new Vector3(...outward)) < 0) {
+      normal.negate()
+    }
+    for (const vertex of [order[0], order[1], order[2], order[0], order[2], order[3]]) {
+      positions.push(...vertex.at)
+      normals.push(normal.x, normal.y, normal.z)
+      uvs.push(...vertex.uv)
+    }
+  }
+  const across = ([point, top, z]: readonly [readonly [number, number], boolean, number]) => corner(point, top, z, [point[0], z])
+  const cap = (point: readonly [number, number], outward: readonly [number, number, number]) => quad([corner(point, false, back, [back, point[1]]), corner(point, false, front, [front, point[1]]), corner(point, true, front, [front, point[1] + height]), corner(point, true, back, [back, point[1] + height])], outward)
+  for (const section of sections) {
+    const last = section.length - 1
+    for (let i = 0; i < last; i++) {
+      const [from, to] = [section[i], section[i + 1]]
+      const [du, dy] = [to[0] - from[0], to[1] - from[1]]
+      quad([flat(from, false, front), flat(to, false, front), flat(to, true, front), flat(from, true, front)], [0, 0, 1])
+      quad([flat(from, false, back), flat(to, false, back), flat(to, true, back), flat(from, true, back)], [0, 0, -1])
+      quad([across([from, true, back]), across([to, true, back]), across([to, true, front]), across([from, true, front])], [-dy, du, 0])
+      quad([across([from, false, front]), across([to, false, front]), across([to, false, back]), across([from, false, back])], [dy, -du, 0])
+    }
+    cap(section[0], [-1, 0, 0])
+    cap(section[last], [1, 0, 0])
+  }
+  const geometry = new BufferGeometry
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3))
+  geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
+  return geometry
 }
 // CSG runs once per wall layout, never in the animation loop.
 function cutArchitecture(wall: Wall) {
@@ -172,22 +224,9 @@ function cutArchitecture(wall: Wall) {
           section.push(point)
         }
       }
-      const shapes = sections.filter(section => section.length >= 2).map(section => {
-        const shape = new Shape
-        for (const [i, [u, y]] of section.entries()) {
-          if (i === 0) {
-            shape.moveTo(u, y + bottom)
-          } else {
-            shape.lineTo(u, y + bottom)
-          }
-        }
-        for (const [u, y] of section.toReversed()) {
-          shape.lineTo(u, y + bottom + height)
-        }
-        shape.closePath()
-        return shape
-      })
-      return brush(extrude(shapes, front - wallFace, wallFace))
+      // Built as quad strips between the contact’s points, not as an extruded shape: an extrusion triangulates its front and back as fans across the whole wall, and every bend slice further down multiplies those fans by the number of cuts. Strips keep every triangle between neighboring points, so bending costs one cut per strip instead.
+      const kept = sections.filter(section => section.length >= 2)
+      return brush(bandedPrism(kept.map(section => section.map(([u, y]) => [u, y + bottom] as const)), height, wallFace, front))
     }
     /** The baseboard swept along the wall through its {@link Wall.baseboardSection}, between its wall face and the toe and top that meet it. */
     const sectionBand = (points: NonNullable<Wall['baseboardSection']>) => {
@@ -269,9 +308,9 @@ function cutArchitecture(wall: Wall) {
     }
     for (const part of retained) {
       if (wall.curveRadius) {
-        // Cutting the openings and sweeping the baseboards along the floor leave long faces; cut again, they curve with the wall instead of running straight across, and the cut’s T-junctions stay a fraction of a millimeter apart.
+        // Cutting the openings and sweeping the baseboards along the floor leave long faces; cut again at the bend tolerance, they curve with the wall instead of running straight across, and the cut’s T-junctions stay within that tolerance of the curve. The boxes’ own finer segmentation needs no matching cut: their faces already follow the curve closer than the tolerance, and every part’s back stays buried in its neighbor.
         if (wall.holes?.length || wall.baseboardProfile) {
-          sliceAlongX(part, Math.min(wall.width / bendSegments(wall.width, wall.curveRadius), Math.sqrt(8 * Math.abs(wall.curveRadius) * bendTolerance)), -wall.width / 2)
+          sliceAlongX(part, Math.sqrt(8 * Math.abs(wall.curveRadius) * bendTolerance), -wall.width / 2)
         }
         bendGeometry(part, wall.curveRadius)
       }

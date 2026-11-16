@@ -27,7 +27,7 @@ export function bendGeometry(geometry: BufferGeometry, radius: number) {
 }
 
 export function curveSegments(width: number, radius: number) {
-  return Math.max(1, Math.ceil(Math.abs(width / radius) * 32))
+  return Math.max(1, Math.ceil(Math.abs(width / radius) * 16))
 }
 
 /**
