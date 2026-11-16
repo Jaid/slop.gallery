@@ -99,12 +99,12 @@ const rampLevels = (ramp: RampSpan, along: number) => {
  */
 export default class PassageRoute {
   /** Where the profile of a piece bends between its ends: the knots of the ramp it is part of, in meters into the piece. Between them, and between them and its ends, the floor and the crown run straight. */
-  static knots(piece: RoutePiece) {
+  static knots(piece: RoutePiece, spacing?: number) {
     const {ramp} = piece
     if (!ramp) {
       return []
     }
-    return easedRampKnots(ramp.length).map(knot => ramp.from + knot - piece.from).filter(offset => offset > tolerance && offset < piece.length - tolerance)
+    return easedRampKnots(ramp.length, spacing).map(knot => ramp.from + knot - piece.from).filter(offset => offset > tolerance && offset < piece.length - tolerance)
   }
 
   /** Where the point lies relative to the piece, or undefined beside its span. */
@@ -297,7 +297,7 @@ export default class PassageRoute {
   }
 
   /** Stations between two distances along the route: where they start and end, at every joint between its pieces, at every knot of its ramps and in steps of at most `turnStep` radians around its turns. */
-  stations(from: number, to: number, turnStep: number) {
+  stations(from: number, to: number, turnStep: number, rampSpacing?: number) {
     const stations: Array<RouteStation> = []
     for (const piece of this.pieces) {
       const start = Math.max(from, piece.from) - piece.from
@@ -308,7 +308,7 @@ export default class PassageRoute {
       const steps = piece.kind === 'arc' ? Math.max(1, Math.ceil(Math.abs(piece.sweep) * (end - start) / piece.length / turnStep)) : 1
       const offsets = Array.from({length: steps + 1}, (_, step) => start + (end - start) * step / steps)
       // Knots that all but coincide with a step would only leave slivers.
-      const knots = PassageRoute.knots(piece).filter(knot => knot > start && knot < end && offsets.every(offset => Math.abs(offset - knot) > 1e-6))
+      const knots = PassageRoute.knots(piece, rampSpacing).filter(knot => knot > start && knot < end && offsets.every(offset => Math.abs(offset - knot) > 1e-6))
       for (const offset of [...offsets, ...knots].toSorted((a, b) => a - b).slice(stations.length ? 1 : 0)) {
         stations.push(PassageRoute.station(piece, offset))
       }

@@ -293,8 +293,8 @@ export default class RoutedPassage {
   }
 
   /** Paving stations use the outlet’s authoritative grid, not a second arc grid whose diagonals could cut across its triangles. */
-  floorStations(from: number, to: number) {
-    const original = this.stations(from, to)
+  floorStations(from: number, to: number, turnStep = routeTurnStep) {
+    const original = this.stations(from, to, turnStep)
     if (!this.floorOutlet) {
       return original
     }
@@ -341,15 +341,22 @@ export default class RoutedPassage {
     return this.abreast(x, z)?.station
   }
 
-  /** Stations between two distances along the route, as it gives them with its turns cut into steps of `routeTurnStep`, straight across from where the outline’s walls turn their corners, and every `crossfallStep` where its crossfall eases in or out. */
-  stations(from: number, to: number) {
-    const stations = this.route.stations(from, to, routeTurnStep)
+  /** Stations between two distances along the route, as it gives them with its turns cut into steps of `turnStep`, straight across from where the outline’s walls turn their corners, and every `crossfallStep` where its crossfall eases in or out. */
+  stations(from: number, to: number, turnStep = routeTurnStep) {
+    const stations = this.route.stations(from, to, turnStep)
     const {easeIn = 0, easeOut = 0} = this.crossfall ?? {}
     const easing = [
       ...Array.from({length: Math.ceil(easeIn / crossfallStep)}, (_, index) => easeIn * index / Math.ceil(easeIn / crossfallStep)),
       ...Array.from({length: Math.ceil(easeOut / crossfallStep)}, (_, index) => this.route.length - easeOut * index / Math.ceil(easeOut / crossfallStep)),
     ]
     const extra = [...this.creases, ...easing, ...this.floorInlet?.along ?? []].filter((along, index, all) => along > from && along < to && stations.every(station => Math.abs(station.along - along) > 1e-9) && all.findIndex(other => Math.abs(other - along) < 1e-9) === index).map(along => this.route.at(along))
+    return [...stations, ...extra].toSorted((a, b) => a.along - b.along)
+  }
+
+  /** Stations for sweeping the barrel vault: only piece joints, outline creases, turn steps and ramp knots at `rampSpacing`, without floor crossfall or inlet rows. */
+  vaultStations(from: number, to: number, turnStep = Math.PI / 18, rampSpacing = 0.8) {
+    const stations = this.route.stations(from, to, turnStep, rampSpacing)
+    const extra = this.creases.filter((along, index, all) => along > from && along < to && stations.every(station => Math.abs(station.along - along) > 1e-9) && all.findIndex(other => Math.abs(other - along) < 1e-9) === index).map(along => this.route.at(along))
     return [...stations, ...extra].toSorted((a, b) => a.along - b.along)
   }
 

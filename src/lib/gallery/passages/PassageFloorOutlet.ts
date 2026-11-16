@@ -13,7 +13,8 @@ export type FloorOutlet = {
 type Point = readonly [x: number, z: number]
 type Vertex = readonly [x: number, y: number, z: number]
 /** how far apart its rows stand at most, in meters along the centerline: the blend bends gently over meters, so it needs no rows as fine as the ones a turn’s walls are cut at */
-const rowStep = 0.12
+const rowStep = 0.4
+const seamRowStep = 0.14
 const place = ({point: [x, z], heading}: RouteStation, right: number): Point => [x - Math.sin(heading) * right, z + Math.cos(heading) * right]
 /** The interval containing a value, including tolerated roundoff just beyond either endpoint. */
 const interval = (values: ReadonlyArray<number>, value: number) => {
@@ -82,7 +83,13 @@ export default class PassageFloorOutlet {
       if (index === knots.length - 1) {
         return along
       }
-      const span = knots[index + 1].along - along
+      const next = knots[index + 1].along
+      const span = next - along
+      if (index === knots.length - 2 && span > seamRowStep + 1e-6) {
+        const prefix = span - seamRowStep
+        const count = Math.ceil(prefix / rowStep)
+        return Array.from({length: count + 1}, (_, i) => along + prefix * i / count)
+      }
       const count = Math.ceil(span / rowStep)
       return Array.from({length: count}, (_, i) => along + span * i / count)
     })
