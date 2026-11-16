@@ -54,9 +54,10 @@ test('every pedestal’s orb is rolled by the seed among the random orbs, the sa
   }
   // Every kind turns up about as often, and the seeds lay the pedestals out in many ways.
   expect(seen.keys().toArray().toSorted()).toEqual(randomOrbs.map(orb => orb.id).toSorted())
+  const share = 1 / randomOrbs.length
   for (const count of seen.values()) {
-    expect(count / (200 * vesperOrbPedestals.length)).toBeGreaterThan(0.27)
-    expect(count / (200 * vesperOrbPedestals.length)).toBeLessThan(0.4)
+    expect(count / (200 * vesperOrbPedestals.length)).toBeGreaterThan(share - 0.06)
+    expect(count / (200 * vesperOrbPedestals.length)).toBeLessThan(share + 0.06)
   }
   expect(layouts.size).toBeGreaterThan(65)
 })

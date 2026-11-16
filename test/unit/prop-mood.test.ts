@@ -3,16 +3,17 @@ import type {MoodId} from '../../src/moods/index.ts'
 import {describe, expect, test} from 'bun:test'
 
 import {flavorSteering} from '../../src/lib/gallery/alchemy/flavor.ts'
-import {hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
+import {hatchet, helmet, paintingSet, paletteKnife, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import {moods} from '../../src/moods/index.ts'
 import MoodMixer, {moodFade} from '../../src/moods/lib/MoodMixer.ts'
 import {propMood} from '../../src/moods/lib/propMood.ts'
-import {halloweenOrb, horrorOrb, orbs, paintOrb, spookOrb} from '../../src/orbs/index.ts'
+import {halloweenOrb, horrorOrb, impastoOrb, orbs, paintOrb, spookOrb} from '../../src/orbs/index.ts'
 
 const magicItems = [
   [helmet, spookOrb],
   [hatchet, horrorOrb],
   [paintingSet, paintOrb],
+  [paletteKnife, impastoOrb],
   [pumpkin, halloweenOrb],
 ] as const
 const props = new Map<string, {mood?: MoodId}>([

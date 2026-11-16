@@ -7,12 +7,13 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import {Box3, Euler, Quaternion, Vector3} from 'three/webgpu'
 
 import {banquet, banquetTable} from '../../src/lib/gallery/banquet.ts'
-import {curios, hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
+import {curios, hatchet, helmet, paintingSet, paletteKnife, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import forge, {forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
 import {ironTableColliders} from '../../src/lib/gallery/ironTable.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
+import salon, {salonBench} from '../../src/lib/gallery/salon.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {addArmor, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
@@ -40,12 +41,12 @@ const boundsOf = (geometry: BufferGeometry) => {
 const sizeOf = (geometry: BufferGeometry) => boundsOf(geometry).getSize(new Vector3)
 describe('the curios', () => {
   test('each is a prop of its own, lying in its room when a game begins', () => {
-    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set'])
+    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set', 'prop-palette-knife'])
     for (const curio of curios) {
       expect(slopGallery.roomAt(curio.position)?.id).toBe(curio.room)
     }
-    expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge'])
-    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic'])
+    expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room, paletteKnife.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge', 'salon'])
+    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic', 'dynamic'])
   })
   for (const curio of curios) {
     test(`the ${curio.id.replaceAll('-', ' ')}’s meshes face out, carry what their materials read and fit its reach`, () => {
@@ -143,6 +144,20 @@ describe('the curios', () => {
       expect(filled[1]).toBeLessThan(finish.max.y)
       expect(model.parts[0].geometry.hasAttribute('woodGrain')).toBe(true)
       expect(model.parts[1].geometry.hasAttribute('woodGrain')).toBe(true)
+    } finally {
+      model.dispose()
+    }
+  })
+  test('the palette knife has a grained rosewood handle, brass ferrule, flat trowel blade and painted impasto scoop', () => {
+    const model = paletteKnife.createModel()
+    try {
+      expect(model.parts.map(({name}) => name)).toEqual(['palette-knife-wood', 'palette-knife-brass', 'palette-knife-steel', 'palette-knife-paint'])
+      const [wood, , steel, paint] = model.parts.map(({geometry}) => boundsOf(geometry))
+      expect(wood.min.y).toBeCloseTo(0, 6)
+      expect(steel.min.y).toBeCloseTo(0, 6)
+      expect(paint.min.y).toBeGreaterThan(0)
+      expect(model.parts[0].geometry.hasAttribute('woodGrain')).toBe(true)
+      expect(model.parts[3].geometry.getAttribute('color').count).toBe(model.parts[3].geometry.getAttribute('position').count)
     } finally {
       model.dispose()
     }
@@ -265,4 +280,24 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
       world.free()
     }
   }, 30_000)
+  test('the palette knife rests calmly on the Salon’s velvet ottoman', () => {
+    const world = new RAPIER.World({
+      x: 0,
+      y: -9.81,
+      z: 0,
+    })
+    world.timestep = 1 / 60
+    try {
+      world.createCollider(RAPIER.ColliderDesc.cuboid(salon.size[0] / 2, 0.12, salon.size[1] / 2).setTranslation(salon.center[0], -0.12, salon.center[1]))
+      world.createCollider(RAPIER.ColliderDesc.cuboid(salonBench.width / 2, salonBench.seatHeight / 2, salonBench.depth / 2).setTranslation(salonBench.position[0], salonBench.seatHeight / 2, salonBench.position[2]))
+      const {asleep, moved, up, y} = settle(paletteKnife, world)
+      expect(asleep).toBe(true)
+      expect(moved).toBeLessThan(0.02)
+      expect(y).toBeGreaterThan(salonBench.seatHeight - 0.005)
+      expect(y).toBeLessThan(salonBench.seatHeight + 0.005)
+      expect(up.y).toBeGreaterThan(0.99)
+    } finally {
+      world.free()
+    }
+  })
 })

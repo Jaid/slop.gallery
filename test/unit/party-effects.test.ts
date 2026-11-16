@@ -11,10 +11,11 @@ import {portalFrame, portalRadius} from '../../src/lib/gallery/fusion/portalFram
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import spawnThroughTool from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import worldClock from '../../src/lib/worldClock.ts'
-import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
+import {halloweenOrb, horrorOrb, impastoOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/party_effects/blood/flights.ts'
+import {daubOffset, daubsDone, impastoDaubs} from '../../src/party_effects/daubs/flights.ts'
 import {shutting, staring, staringEyes} from '../../src/party_effects/eyes/flights.ts'
 import {escapingGhosts, ghostOffset} from '../../src/party_effects/ghosts/flights.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
@@ -25,7 +26,7 @@ import {brushStrokes, strokeDrying, strokePoint} from '../../src/party_effects/s
 import {lashing, lashingTendrils, snapping, tendrilReach} from '../../src/party_effects/tendrils/flights.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
-const {bats: batsEffect, blood: bloodEffect, eyes: eyesEffect, ghosts: ghostsEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
+const {bats: batsEffect, blood: bloodEffect, daubs: daubsEffect, eyes: eyesEffect, ghosts: ghostsEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
 const effects = Object.values<PartyEffect>(partyEffects)
 const hung = portraitIngredient({
   title: 'The hung portrait',
@@ -114,6 +115,7 @@ describe('party effects', () => {
     expect(horrorOrb.effect).toEqual(['blood', 'eyes', 'tendrils'])
     expect(spookOrb.effect).toBe('ghosts')
     expect(paintOrb.effect).toBe('strokes')
+    expect(impastoOrb.effect).toBe('daubs')
     expect(transparentOrb.effect).toBeUndefined()
     expect(transparentOrb.partyEffect(3)).toBeUndefined()
     for (const seed of [0, 3, 4, 977, 0xFF_FF_FF_FF]) {
@@ -336,7 +338,7 @@ describe('party effects', () => {
     expect(() => spawnThroughTool({
       effect: 'confetti',
       position: [0, 0, 0],
-    })).toThrow(/bats, blood, eyes, ghosts, strokes, tendrils/)
+    })).toThrow(/bats, blood, daubs, eyes, ghosts, strokes, tendrils/)
     expect(() => spawnThroughTool({
       effect: 'toString',
       position: [0, 0, 0],
@@ -352,6 +354,7 @@ describe('party effects', () => {
     expect(bloodEffect.duration).toBeCloseTo(Math.max(bloodFading.start + bloodFading.stagger + bloodFading.duration, bloodPool.draining.start + bloodPool.draining.seconds), 9)
     expect(eyesEffect.duration).toBeCloseTo(Math.max(...staringEyes.map(({close}) => close)) + shutting.lids + shutting.fading, 9)
     expect(tendrilsEffect.duration).toBe(Math.max(...lashingTendrils.map(({retract}) => retract)) + snapping)
+    expect(daubsEffect.duration).toBe(daubsDone)
   })
   test('the eyes open round their origin clear of its ball before they stare and shut a while after it', () => {
     for (const {close, open, size, spot: [along, up]} of staringEyes) {
@@ -462,6 +465,7 @@ describe('party effects', () => {
     at(strokesEffect, brushStrokes.flatMap(stroke => [0.2, 0.7].flatMap(share => [0, 1, 2].map(seconds => strokePoint(stroke, share, seconds)))))
     at(eyesEffect, staringEyes.map(({spot}) => spot))
     at(tendrilsEffect, lashingTendrils.map(tendrilReach))
+    at(daubsEffect, impastoDaubs.flatMap(daub => [0, 0.4, 0.8].map(seconds => daubOffset(daub, seconds))))
     // every stain where its drop strikes the floor, and the pool at its widest
     const splats = bloodDrops.filter(drop => drop.kind === 'drop').map(drop => bloodFlight(drop, bloodLanding(drop, floor).landing).offset)
     expect(Math.max(...splats.map(([, up]) => Math.abs(up - floor - splatLift)))).toBeLessThan(1e-3)
