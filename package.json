@@ -42,7 +42,8 @@
   },
   "patchedDependencies": {
     "three@0.187.0": "patches/three@0.187.0.patch",
-    "three-bvh-csg@0.0.18": "patches/three-bvh-csg@0.0.18.patch"
+    "three-bvh-csg@0.0.18": "patches/three-bvh-csg@0.0.18.patch",
+    "@react-three/rapier@2.2.0": "patches/@react-three%2Frapier@2.2.0.patch"
   },
   "dependencies": {
     "ai": "7.0.173",

@@ -662,6 +662,7 @@
   "patchedDependencies": {
     "three-bvh-csg@0.0.18": "patches/three-bvh-csg@0.0.18.patch",
     "three@0.187.0": "patches/three@0.187.0.patch",
+    "@react-three/rapier@2.2.0": "patches/@react-three%2Frapier@2.2.0.patch",
   },
   "overrides": {
     "@dimforge/rapier3d-compat": "0.21.0",

@@ -1,0 +1,87 @@
+diff --git a/dist/react-three-rapier.cjs.dev.js b/dist/react-three-rapier.cjs.dev.js
+index 5457a71526770bf8eb5968588c1d6d2af0177d3b..0d519da0c3666d208e8ca3e095e16efd623cbc1e 100644
+--- a/dist/react-three-rapier.cjs.dev.js
++++ b/dist/react-three-rapier.cjs.dev.js
+@@ -918,6 +918,7 @@ const Physics = props => {
+       afterStepCallbacks.forEach(callback => {
+         callback.current(world);
+       });
++      drainEvents();
+     };
+     if (timeStepVariable) {
+       stepWorld(clampedDelta);
+@@ -987,6 +988,8 @@ const Physics = props => {
+         state.object.quaternion.slerp(_rotation, interpolationAlpha);
+       }
+     });
++    // Drained after every step, while the pairs that began in it still exist, as world.contactPair() only finds those: drained once per frame of several steps, a collision that already ended again was lost.
++    function drainEvents() {
+     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
+       const source1 = getSourceFromColliderHandle(handle1);
+       const source2 = getSourceFromColliderHandle(handle2);
+@@ -1081,6 +1084,7 @@ const Physics = props => {
+         maxForceMagnitude: event.maxForceMagnitude()
+       }));
+     });
++    }
+     world.forEachActiveRigidBody(() => {
+       invalidate();
+     });
+diff --git a/dist/react-three-rapier.cjs.prod.js b/dist/react-three-rapier.cjs.prod.js
+index 5457a71526770bf8eb5968588c1d6d2af0177d3b..0d519da0c3666d208e8ca3e095e16efd623cbc1e 100644
+--- a/dist/react-three-rapier.cjs.prod.js
++++ b/dist/react-three-rapier.cjs.prod.js
+@@ -918,6 +918,7 @@ const Physics = props => {
+       afterStepCallbacks.forEach(callback => {
+         callback.current(world);
+       });
++      drainEvents();
+     };
+     if (timeStepVariable) {
+       stepWorld(clampedDelta);
+@@ -987,6 +988,8 @@ const Physics = props => {
+         state.object.quaternion.slerp(_rotation, interpolationAlpha);
+       }
+     });
++    // Drained after every step, while the pairs that began in it still exist, as world.contactPair() only finds those: drained once per frame of several steps, a collision that already ended again was lost.
++    function drainEvents() {
+     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
+       const source1 = getSourceFromColliderHandle(handle1);
+       const source2 = getSourceFromColliderHandle(handle2);
+@@ -1081,6 +1084,7 @@ const Physics = props => {
+         maxForceMagnitude: event.maxForceMagnitude()
+       }));
+     });
++    }
+     world.forEachActiveRigidBody(() => {
+       invalidate();
+     });
+diff --git a/dist/react-three-rapier.esm.js b/dist/react-three-rapier.esm.js
+index f3f41fbd35857d9cfed865b9a955500407759c3f..028b9f4308be8c8be0d3441c137e02a5cdb0f9a3 100644
+--- a/dist/react-three-rapier.esm.js
++++ b/dist/react-three-rapier.esm.js
+@@ -893,6 +893,7 @@ const Physics = props => {
+       afterStepCallbacks.forEach(callback => {
+         callback.current(world);
+       });
++      drainEvents();
+     };
+     if (timeStepVariable) {
+       stepWorld(clampedDelta);
+@@ -962,6 +963,8 @@ const Physics = props => {
+         state.object.quaternion.slerp(_rotation, interpolationAlpha);
+       }
+     });
++    // Drained after every step, while the pairs that began in it still exist, as world.contactPair() only finds those: drained once per frame of several steps, a collision that already ended again was lost.
++    function drainEvents() {
+     eventQueue.drainCollisionEvents((handle1, handle2, started) => {
+       const source1 = getSourceFromColliderHandle(handle1);
+       const source2 = getSourceFromColliderHandle(handle2);
+@@ -1056,6 +1059,7 @@ const Physics = props => {
+         maxForceMagnitude: event.maxForceMagnitude()
+       }));
+     });
++    }
+     world.forEachActiveRigidBody(() => {
+       invalidate();
+     });

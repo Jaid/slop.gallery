@@ -1,12 +1,13 @@
 import {expect, test} from 'bun:test'
 
-test('the Three patch tracks the installed Three version and root lock', async () => {
+// Bun silently drops a patch from the lock once its key no longer names the installed version.
+test.each(['three', '@react-three/rapier'])('the %s patch tracks the installed version and root lock', async name => {
   const manifest = await Bun.file('package.json').json() as {
-    dependencies: {three: string}
+    dependencies: Record<string, string>
     patchedDependencies: Record<string, string>
   }
-  const patchKey = `three@${manifest.dependencies.three}`
-  const patchPath = `patches/${patchKey}.patch`
+  const patchKey = `${name}@${manifest.dependencies[name]}`
+  const patchPath = `patches/${patchKey.replace('/', '%2F')}.patch`
   expect(manifest.patchedDependencies[patchKey]).toBe(patchPath)
   expect(await Bun.file(patchPath).exists()).toBe(true)
   expect(await Bun.file('bun.lock').text()).toContain(`"${patchKey}": "${patchPath}"`)
