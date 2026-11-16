@@ -9,6 +9,7 @@ import {ConvexHullCollider, RigidBody, TrimeshCollider} from '@react-three/rapie
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
+import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import FloorSlab from '#component/FloorSlab'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -21,6 +22,7 @@ import TimberGeometry from '#src/lib/gallery/passages/TimberGeometry.ts'
 import VaultGeometry from '#src/lib/gallery/passages/VaultGeometry.ts'
 import {corridorLightSpacing, passagePendantMounts} from '#src/lib/gallery/pendants/mounts.ts'
 import {passageLantern, passageLanternGlow} from '#src/lib/gallery/pendants/passageLantern.ts'
+import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /** how thick the slabs under a passage’s floor and over its ceiling are */
 const slabDepth = 0.24
@@ -48,7 +50,8 @@ export default function CoveredPassage({passage, sole = false, material, paving:
   /** a stone passage’s timber end, rendered separately; the paving and vault ribs stop where it begins */
   transition?: PassageTransition
 }) {
-  const geometry = useDisposable(useMemo(() => (timber ? TimberGeometry.passage(passage, ribCutouts) : new VaultGeometry(passage, transition?.length)), [passage, ribCutouts, timber, transition]))
+  const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
+  const geometry = useDisposable(useMemo(() => (timber ? TimberGeometry.passage(passage, ribCutouts) : new VaultGeometry(passage, transition?.length, curveDetail)), [curveDetail, passage, ribCutouts, timber, transition]))
   const lanterns = passageLanterns[passage.name]
   // Under timber, lanterns hang from the ribs rather than the planks between them.
   const mounts = useMemo(() => passagePendantMounts(passage, [geometry.shell, geometry.ribs], sole ? corridorLightSpacing : undefined, timber && geometry.ribs).filter((_, index) => lanterns?.[index] ?? !lanterns), [geometry, lanterns, sole, passage, timber])
@@ -58,7 +61,7 @@ export default function CoveredPassage({passage, sole = false, material, paving:
   // A timber lining’s crown is the ceiling along its spans; a slab there would share its plane. Only the open elbows show the slab.
   const ceilings = timber ? passage.junctions : passage.floors
   // A run too short for a rib has none to draw or collide with.
-  const collision = timber ? [] : [geometry.shell, geometry.ribs].filter(part => part.hasAttribute('position')).map(colliderGeometry)
+  const collision = geometry instanceof VaultGeometry ? [geometry.shellCollision, geometry.ribsCollision].filter(part => part.hasAttribute('position')).map(colliderGeometry) : []
   const crown = passage.floorY + passage.height
   return <group name={passage.name}>
     <RigidBody colliders={false} type='fixed'>
