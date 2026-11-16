@@ -4,6 +4,7 @@ import FlavorGenerator from '../../src/lib/ai/FlavorGenerator.ts'
 import FusionGenerator from '../../src/lib/ai/FusionGenerator.ts'
 import * as modelImageModule from '../../src/lib/ai/modelImage.ts'
 import FusionRecipe, {fusionInstruction, itemIngredient, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
+import {impastoOrb} from '../../src/orbs/index.ts'
 
 const bitmap = globalThis.createImageBitmap
 /** a chat completion answering with the PNG `data` as its image, as OpenRouter answers image models */
@@ -117,7 +118,7 @@ test('the real image adapter sends the images the ingredients contributed in the
     `data:image/png;base64,${secondImageBytes.toBase64()}`,
   ])
 })
-test('the real image adapter sends an orb’s prompt verbatim with the hung portrait’s as the only image, and nothing of the orb’s look', async () => {
+test('the real image adapter sends the Impasto Orb’s prompt verbatim with the hung portrait’s as the only image, and nothing of the orb’s look', async () => {
   const data = Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMAAABIeJ9nAAAAA1BMVEX/AAAZ4gk3AAAADElEQVQI12NgYGAAAAAEAAEnNCcKAAAAAElFTkSuQmCC')
   fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(chatImage(data))
   const work = new Blob([data], {type: 'image/png'})
@@ -127,22 +128,13 @@ test('the real image adapter sends an orb’s prompt verbatim with the hung port
       title: 'work',
       source: work,
     }),
-    itemIngredient('Test Orb', {
-      contributions: [
-        {
-          kind: 'instruction',
-          instruction: 'Make it spooky.',
-        },
-      ],
-      glow: '#8a3cff',
-      look: '/orbs/test.jxl',
-    }),
+    itemIngredient(impastoOrb.title, impastoOrb.ingredient(7)),
   ])
   const result = await fusionGenerator.generate(await recipe.content())
   expect(result.size).toBe(data.byteLength)
   const request = chatRequest(fetchSpy.mock.calls[0])
   expect(chatImages(request)).toEqual([`data:image/png;base64,${data.toBase64()}`])
-  expect(chatText(request)).toBe('Make it spooky.')
+  expect(chatText(request)).toBe(impastoOrb.prompt(7))
 })
 test('the real image adapter asks a known model for the supported ratio closest to the hung work and an unknown one for none', async () => {
   const data = Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMAAABIeJ9nAAAAA1BMVEX/AAAZ4gk3AAAADElEQVQI12NgYGAAAAAEAAEnNCcKAAAAAElFTkSuQmCC')

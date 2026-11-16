@@ -11,7 +11,7 @@ import {portalFrame, portalRadius} from '../../src/lib/gallery/fusion/portalFram
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import spawnThroughTool from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import worldClock from '../../src/lib/worldClock.ts'
-import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
+import {halloweenOrb, horrorOrb, impastoOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/party_effects/blood/flights.ts'
@@ -114,6 +114,7 @@ describe('party effects', () => {
     expect(horrorOrb.effect).toEqual(['blood', 'eyes', 'tendrils'])
     expect(spookOrb.effect).toBe('ghosts')
     expect(paintOrb.effect).toBe('strokes')
+    expect(impastoOrb.effect).toBe('strokes')
     expect(transparentOrb.effect).toBeUndefined()
     expect(transparentOrb.partyEffect(3)).toBeUndefined()
     for (const seed of [0, 3, 4, 977, 0xFF_FF_FF_FF]) {
@@ -132,10 +133,10 @@ describe('party effects', () => {
       expect(effect.id).toBe(id)
       expect(effect.title).toBeTruthy()
     }
-    // No two orbs share one, and none is left without an orb to bring it.
+    // Both painting orbs bring strokes; no effect is left without an orb to bring it.
     const brought: Array<string> = promptOrbs.flatMap(orb => choiceEffects(orb.effect))
-    expect([...new Set(brought)]).toEqual(brought)
-    expect(brought.toSorted()).toEqual(Object.keys(partyEffects).toSorted())
+    expect(brought.filter(effect => effect === 'strokes')).toHaveLength(2)
+    expect([...new Set(brought)].toSorted()).toEqual(Object.keys(partyEffects).toSorted())
   })
   test('the Horror Orb’s game rolls its blood, its staring eyes or its flesh tendrils by its seed, each in some games', () => {
     const rolled = Array.from({length: 64}, (_, seed) => pickEffect(seed, horrorOrb.effect))

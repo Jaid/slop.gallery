@@ -46,7 +46,7 @@ export default abstract class PromptOrb extends Orb {
     }
   }
 
-  /** the orb’s whole instruction to the image model in the environment of `seed`, sent verbatim along with the image: its premise and change, then 3 to 5 of its adjectives in their listed order, never two synonyms, the last one joined by its {@link conjunction} */
+  /** the orb’s whole instruction to the image model in the environment of `seed`, sent verbatim along with the image: its premise and change, then as many of its adjectives as its adjectiveCounts asks for in their listed order, never two synonyms, the last one joined by its {@link conjunction} */
   prompt(seed: number) {
     const random = environmentRandom(seed).makeChild(['orb', this.id])
     const count = random.makeChild('count').rollItem(this.adjectiveCounts)

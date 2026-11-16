@@ -131,3 +131,11 @@ BROWSER=/path/to/chromium bun run test:live:intro-pause
 This builds the gallery and presses the real Escape key on fresh and returning intro menus in Fast and Heavy graphics, then on a returning menu opened with `?room=oculus` instead of the intro orbit. It checks the synchronous camera-to-body handoff into the air above the floor, the pause heading taking the focus, no pointer-lock round trip, frozen camera/physics/audio, no frames at rest, resize redraws, Resume dropping the body straight down from where it hung and unchanged nonfreezing focus-loss menus. Modified, repeated, already-handled and text-input Escape events are ignored. Unlike capture tests, it opens the page with `test: 'false'` (`--test false`), as `?test=true` leaves the intro out, and `waitForGallery(page, {pose: false})` waits for readiness without requiring the camera-posing hook.
 
 To reuse a build, run `LIVE_TEST=true BROWSER=/path/to/chromium bun test test/intro-pause.live.test.ts`; `LIVE_TARGET` selects another build directory.
+
+For the Impasto Orb’s glass and sculpted paint:
+
+```sh
+bun test/browser/run.ts impastoOrb.ts --standalone
+```
+
+This detached fixture draws the actual orb material over an opaque studio backdrop from three orientations and two animation phases. It checks pigment swatches, relief contrast, black/blown-out pixels, deterministic frozen time and visible rotation, and rejects WebGPU validation errors. The swatches specifically catch a nested TSL loop shadowing the stroke index with the march index. Its optional `true` argument returns a supersampled PNG for the portal photograph. Set `BROWSER_TEST_ORIGIN` to the existing page’s origin when it is not the runner’s default.

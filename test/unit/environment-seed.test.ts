@@ -38,7 +38,7 @@ test('the environment’s rolls depend only on the seed and the ID, never on cal
   expect(environmentRandom(1).seed).toBe(1)
 })
 for (const orb of promptOrbs) {
-  test(`the ${orb.title}’s prompt names 3 to 5 of its adjectives in their order, never two synonyms, the same for the same seed`, () => {
+  test(`the ${orb.title}’s prompt names its requested count of adjectives in their order, never two synonyms, the same for the same seed`, () => {
     const pool = orb.adjectives.flat()
     const distinctPool = new Set(pool)
     expect(distinctPool.size).toBe(pool.length)
@@ -63,10 +63,14 @@ for (const orb of promptOrbs) {
         named.add(adjective)
       }
     }
-    expect(counts).toEqual(new Set([3, 4, 5]))
+    expect(counts).toEqual(new Set(orb.adjectiveCounts))
     expect(named).toEqual(distinctPool)
     const prompts = new Set(Array.from({length: 50}, (_, seed) => orb.prompt(seed)))
-    expect(prompts.size).toBeGreaterThan(40)
+    if (orb.adjectiveCounts.length > 1 || orb.adjectives.some(entry => typeof entry !== 'string') || orb.adjectiveCounts.some(count => count < orb.adjectives.length)) {
+      expect(prompts.size).toBeGreaterThan(40)
+    } else {
+      expect(prompts.size).toBe(1)
+    }
   })
 }
 test('the orbs’ props are told apart by their ids', () => {
