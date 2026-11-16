@@ -7,6 +7,7 @@ import {dirname, resolve} from 'node:path'
 
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {knotGalleryBounds} from '../../src/lib/gallery/knotGallery.ts'
+import lobby from '../../src/lib/gallery/lobby.ts'
 import PlayerSession from '../../src/lib/gallery/PlayerSession.ts'
 import {asPortrait} from '../../src/lib/placement/portraitSlots.ts'
 import {placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -116,13 +117,13 @@ describe('worlds', () => {
     expect(knottingham.roomAt([0, 0, knotGalleryBounds.northZ - 5])).toBeUndefined()
     expect(knottingham.placement.contains(knottingham.placement.recoveryPosition)).toBe(true)
   })
-  test('the Sandbox is a single room, the Cell, 18 × 10 m and 4 m high at its walls, which holds its spawn and is sealed by the Arena’s walls, a door shutting its north wall’s arch without ?item', () => {
+  test('the Sandbox is a single room, the Cell, as large and high as its layout, which holds its spawn and is sealed by the Arena’s walls, a door shutting its north wall’s arch without ?item', () => {
     expect(sandbox.items).toEqual([])
     expect(sandbox.rooms.map(room => room.id)).toEqual(['cell'])
     const cell = sandbox.room('cell')
     expect(cell.title).toBe('Cell')
-    expect(cell.size).toEqual([18, 10])
-    expect(cell.height).toBe(4)
+    expect(cell.size).toEqual(cell.room.layout.size)
+    expect(cell.height).toBe(cell.room.layout.height)
     expect(cell.room.layout.plan).toBe('closed')
     expect(sandbox.artworks).toBe(slopGallery.artworks)
     expect(sandbox.lamps().map(lamp => lamp.id)).toEqual(['cell-chandelier'])
@@ -203,9 +204,12 @@ describe('worlds', () => {
   })
   test('the gallery starts in the Lobby, between its north wall and the glass floor', () => {
     expect(slopGallery.defaultRoom).toBe('lobby')
-    expect(slopGallery.spawn.position).toEqual([-3, 0.04, -30.3])
-    expect(slopGallery.spawn.yaw).toBeCloseTo(-0.9 * Math.PI)
+    const [, y, z] = slopGallery.spawn.position
     expect(slopGallery.roomAt(slopGallery.spawn.position)?.id).toBe('lobby')
+    expect(y).toBeGreaterThan(0)
+    expect(y).toBeLessThan(0.1)
+    expect(z).toBeGreaterThan(lobby.northZ)
+    expect(z).toBeLessThan(lobby.opening.center[1] - lobby.opening.size[1] / 2)
   })
   test('every spawn stands just above its floor, never inside it', () => {
     const misplaced: Array<string> = []

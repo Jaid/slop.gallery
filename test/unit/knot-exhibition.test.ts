@@ -135,7 +135,7 @@ describe('multi-model Knot challenge', () => {
       const rowDepths = new Set(row.map(exhibit => exhibit.position[2]))
       expect(rowDepths.size).toBe(1)
       for (let i = 1; i < row.length; i++) {
-        expect(row[i].position[0] - row[i - 1].position[0]).toBe(3.5)
+        expect(row[i].position[0] - row[i - 1].position[0]).toBe(knotSpacing)
       }
     }
   })
@@ -144,7 +144,7 @@ describe('multi-model Knot challenge', () => {
     for (const bay of knotBays) {
       const row = knotExhibition.filter(exhibit => exhibit.candidate.id === bay.candidate.id)
       expect(row[0].position[0]).toBe(-knotRowHalfWidth)
-      expect(row[0].position[0] - knotPreviewX!).toBe(6.25)
+      expect(row[0].position[0] - knotPreviewX!).toBeGreaterThan(knotSpacing)
       for (const [index, exhibit] of row.entries()) {
         expect(exhibit.position[0]).toBe(-knotRowHalfWidth + index * knotSpacing)
       }

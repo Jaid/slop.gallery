@@ -32,19 +32,22 @@ describe('the Forge', () => {
     expect(forge.size).toEqual(salon.size)
     expect(vesperRoom.center).toEqual([-banquet.center[0], banquet.center[1]])
     expect(vesperRoom.size).toEqual(banquet.size)
-    expect(vesper.size).toEqual([12, 24])
-    expect(roomOrigins.vesper).toEqual([-14, 0, -4])
+    expect(vesperRoom.size).toEqual(vesper.size)
+    expect([roomOrigins.vesper[0], roomOrigins.vesper[2]]).toEqual([...vesperRoom.center])
     // Against the Lobby’s west extension, with the Vesper south of it
-    expect(room.center[0] + room.size[0] / 2).toBe(-8)
+    expect(room.center[0] + room.size[0] / 2).toBe(-lobby.width / 2)
     expect(room.center[1] + room.size[1] / 2).toBe(vesperRoom.center[1] - vesperRoom.size[1] / 2)
-    for (const [x, z] of [[-8.5, -19.5], [-19.5, -16.5], [-14, -24], [-8.5, -31.5], [-19.5, -31.5]]) {
-      expect(roomAt([x, 1.7, z])).toBe('forge')
-      expect(floorHeight([x, 1.7, z])).toBe(0)
+    const [x, z] = room.center
+    const [halfWidth, halfDepth] = [room.size[0] / 2 - 0.5, room.size[1] / 2 - 0.5]
+    for (const [dx, dz] of [[0, 0], [-halfWidth, -halfDepth], [halfWidth, -halfDepth], [-halfWidth, halfDepth], [halfWidth, halfDepth]]) {
+      expect(roomAt([x + dx, 1.7, z + dz])).toBe('forge')
+      expect(floorHeight([x + dx, 1.7, z + dz])).toBe(0)
     }
-    expect(roomAt([-14, 1.7, -12])).toBe('vesper')
+    expect(roomAt([vesperRoom.center[0], 1.7, vesperRoom.center[1]])).toBe('vesper')
     // Behind its north wall lies its round vestibule, in the middle; beside that, nothing.
-    expect(roomAt([-14, 1.7, -32.5])).toBe('forge')
-    expect(insideGallery([-18, 1.7, -32.5])).toBe(false)
+    const north = z - room.size[1] / 2
+    expect(roomAt([x, 1.7, north - 0.5])).toBe('forge')
+    expect(insideGallery([x - room.size[0] / 3, 1.7, north - 0.5])).toBe(false)
     expect(roomAt(roomVisit(room).position)).toBe('forge')
   })
   test('a solid shared wall separates the Vesper and the Forge', () => {

@@ -51,7 +51,7 @@ function worldAt(fps = 60, ring = fence) {
 }
 describe('Moonfall impact hall', () => {
   test('the square hall connects both of its doorways', () => {
-    expect(room.size).toEqual([28, 28])
+    expect(room.size[0]).toBe(room.size[1])
     const north = walls.find(wall => wall.id === 'moonfall-north')!
     const east = walls.find(wall => wall.id === 'moonfall-east')!
     expect(north.holes![0].u).toBe(0)

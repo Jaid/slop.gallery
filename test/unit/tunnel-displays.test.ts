@@ -126,7 +126,7 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
       }
     }
     const exhibitIds = new Set(tunnelDisplays.flatMap(display => display.exhibits.map(exhibit => exhibit.id)))
-    expect(exhibitIds.size).toBe(6)
+    expect(exhibitIds.size).toBe(tunnelDisplays.flatMap(display => display.exhibits).length)
   })
   for (const display of tunnelDisplays) {
     const {corners, cutout, door, flights, landing, ramp, waypoints} = display.stairway

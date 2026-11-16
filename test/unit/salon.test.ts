@@ -2,6 +2,7 @@ import {beforeEach, describe, expect, test} from 'bun:test'
 
 import {wallFace} from '../../src/lib/gallery/architecture.ts'
 import {roomFloorPlan} from '../../src/lib/gallery/floors.ts'
+import lobby from '../../src/lib/gallery/lobby.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
 import {salonBench, salonCeiling, salonPedestal, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
@@ -26,7 +27,7 @@ describe('the Salon', () => {
     expect(room.floorY).toBe(0)
     expect(room.center[0]).toBe(banquet.center[0])
     expect(room.center[1] + room.size[1] / 2).toBe(banquet.center[1] - banquet.size[1] / 2)
-    expect(room.center[0] - room.size[0] / 2).toBe(8)
+    expect(room.center[0] - room.size[0] / 2).toBe(lobby.width / 2)
     const upper = rooms.filter(candidate => candidate.floorY === 0 && candidate.id !== 'salon')
     for (const other of upper) {
       const overlapX = Math.min(room.center[0] + room.size[0] / 2, other.center[0] + other.size[0] / 2) - Math.max(room.center[0] - room.size[0] / 2, other.center[0] - other.size[0] / 2)

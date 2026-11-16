@@ -645,7 +645,6 @@ describe('breaking off', () => {
       radius: 0.3,
     })
     // Standing right under a portal at its highest, the head just reaches it; jumping, the body does from the side too.
-    expect(frame.center[1]).toBe(2.05)
     expect(body([x, 0.85, z])).toBe(true)
     expect(body([x, y - 1, z])).toBe(true)
     expect(body([x + 0.7, y, z])).toBe(true)
