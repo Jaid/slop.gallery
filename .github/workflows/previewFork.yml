@@ -90,7 +90,7 @@ jobs:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: 94b07787e8a720b65196137d6224ec90
         packageManager: bun
-        wranglerVersion: 4.160.0
+        wranglerVersion: 4.162.0
         workingDirectory: ${{ runner.temp }}/preview
         command: pages deploy dist --project-name=slop-gallery --branch=pr-${{ steps.resolve.outputs.number }} --commit-hash=${{ steps.resolve.outputs.sha }} --commit-dirty=false
     # The default branch’s script, which runs with the token, not the fork’s.
