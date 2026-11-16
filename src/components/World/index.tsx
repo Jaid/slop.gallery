@@ -12,6 +12,7 @@ import {Vector3} from 'three/webgpu'
 import {useGallery} from '#src/lib/gallery.ts'
 import {clearRooms, endRoom, expectRooms, startRoom} from '#src/lib/gallery/roomLoading.ts'
 import {roomsAt} from '#src/lib/gallery/roomVisibility.ts'
+import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
 import LobbyRoom from '#src/rooms/lobby/components/LobbyRoom/index.tsx'
 import relations from '#src/worlds/gallery/relations.ts'
 
@@ -140,7 +141,8 @@ export default function World(materials: WorldMaterials) {
         }
         asked.current.set(room, null)
         startRoom(room)
-        loaders[room]().then(part => {
+        // Listed apart from the room, which only a frame mounts, so a frozen world that stopped drawing while it downloaded is drawn again once it is in.
+        trackLoadingPromise(`room-chunk:${room}`, loaders[room]()).then(part => {
           asked.current.set(room, part)
         }).catch((error: unknown) => {
           console.warn(`The ${room} room could not be loaded:`, error)

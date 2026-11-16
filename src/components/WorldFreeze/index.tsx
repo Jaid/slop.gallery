@@ -13,8 +13,11 @@ import worldClock from '#src/lib/worldClock.ts'
 
 /** what of the gallery’s state shows in the scene: its works, the one held with its placement preview, an image dragged over it and the props fusions used up */
 const pictured = ['portraits', 'held', 'placement', 'dragging', 'consumed', 'remains'] as const
-/** Something is underway that only further frames bring along: objects, pipelines, works and rooms still loading, or an image dragged over the scene, whose placement preview follows the pointer. */
-const busy = () => useGallery.getState().dragging || loadingItems().length > 0
+/** what is underway that only further frames bring along: objects, pipelines, works and rooms still loading, or an image dragged over the scene, whose placement preview follows the pointer */
+const pending = () => {
+  const items = loadingItems()
+  return useGallery.getState().dragging ? [...items, 'dragging'] : items
+}
 
 /**
  * Stops the canvas while the world is frozen, under the pause menu of the Escape key: no frame is drawn, so nothing of the world runs, neither its physics nor its animations, until the world goes on, which continues with a frame as long as the last one before.
@@ -28,12 +31,12 @@ export default function WorldFreeze() {
     let moment: number | undefined
     return {
       frames: new FrozenFrames({
-        busy,
         draw: () => {
           if (moment !== undefined) {
             store.getState().advance(moment)
           }
         },
+        pending,
         run: running => store.getState().setFrameloop(running ? 'always' : 'never'),
       }),
       drawn: (time: number) => {

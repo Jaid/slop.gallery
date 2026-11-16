@@ -4,11 +4,11 @@ import FrozenFrames, {patience, settling} from '../../src/lib/rendering/FrozenFr
 import {WorldClock} from '../../src/lib/worldClock.ts'
 
 /** A canvas double: its frames come 16 ms apart, only while asked for. */
-function setup({busy = false} = {}) {
+function setup({pending = [] as Array<string>} = {}) {
   const clock = new WorldClock
   const state = {
-    busy,
     now: 0,
+    pending,
     running: undefined as boolean | undefined,
   }
   let requested: (() => void) | undefined
@@ -18,9 +18,9 @@ function setup({busy = false} = {}) {
     state.running = running
   })
   const frames = new FrozenFrames({
-    busy: () => state.busy,
     clock,
     draw,
+    pending: () => state.pending,
     run,
     now: () => state.now,
     requestFrame: callback => {
@@ -113,23 +113,73 @@ test('a change is drawn at least once, however late the browser paints next, lik
   expect(paint(1000)).toBe(0)
   expect(frames.drawing).toBe(false)
 })
-test('what is still underway as the world freezes finishes behind the menu, but not for longer than its patience lasts', () => {
-  const {clock, frames, paint, state} = setup({busy: true})
+test('what is still underway as the world freezes finishes behind the menu, and what finished is drawn until it settled', () => {
+  const {clock, frames, paint, state} = setup({pending: ['stream:a']})
   frames.connect()
   clock.freeze()
   expect(frames.drawing).toBe(true)
   expect(paint(3000)).toBeGreaterThan(150)
-  state.busy = false
-  paint(32)
+  state.pending = []
+  // The last load to finish only shows in a frame after it.
+  expect(paint(settling - 32)).toBeGreaterThan(0)
+  expect(frames.drawing).toBe(true)
+  paint(64)
   expect(frames.drawing).toBe(false)
-  // Something that never finishes gives up.
-  state.busy = true
-  frames.refresh()
+  expect(paint(1000)).toBe(0)
+})
+test('loading that keeps moving on is drawn for as long as it takes, however long that is', () => {
+  const {clock, frames, paint, state} = setup({pending: ['room:0']})
+  frames.connect()
+  clock.freeze()
+  // Rooms mount one after another behind the menu, each a while after the last.
+  for (let room = 1; room <= 10; room++) {
+    expect(paint(patience - 1000)).toBeGreaterThan(0)
+    state.pending = [`room:${room}`]
+  }
+  expect(frames.drawing).toBe(true)
+  state.pending = []
+  paint(settling + 32)
+  expect(frames.drawing).toBe(false)
+})
+test('loading that stays the same runs out of patience, and is drawn again once it changes', () => {
+  const {clock, draw, frames, paint, state} = setup({pending: ['pipeline:a', 'pipeline:b']})
+  frames.connect()
+  const release = clock.freeze()
   paint(patience - 100)
   expect(frames.drawing).toBe(true)
   paint(200)
   expect(frames.drawing).toBe(false)
+  expect(paint(60_000)).toBe(0)
+  // One load finishing as another starts is a change too, though as many are left.
+  state.pending = ['pipeline:a', 'pipeline:c']
+  expect(paint(32)).toBeGreaterThan(0)
+  expect(frames.drawing).toBe(true)
+  // A change to the frozen world renews the patience as well.
+  paint(patience + 100)
+  expect(frames.drawing).toBe(false)
+  frames.refresh()
+  expect(frames.drawing).toBe(true)
+  paint(patience - 100)
+  expect(frames.drawing).toBe(true)
+  paint(200)
+  expect(frames.drawing).toBe(false)
+  // Once everything finished, nothing is watched anymore.
+  state.pending = []
+  const drawn = draw.mock.calls.length
+  paint(settling + 32)
+  expect(draw.mock.calls.length).toBeGreaterThan(drawn)
+  expect(frames.drawing).toBe(false)
   expect(paint(1000)).toBe(0)
+  // The world going on ends a watch, and the next freeze looks afresh, even at what stalled before.
+  state.pending = ['pipeline:a', 'pipeline:c']
+  frames.refresh()
+  paint(patience + 100)
+  expect(frames.drawing).toBe(false)
+  release()
+  expect(paint(1000)).toBe(0)
+  clock.freeze()
+  expect(frames.drawing).toBe(true)
+  expect(paint(patience - 100)).toBeGreaterThan(1000)
 })
 test('a frame that asks to be drawn again keeps a single run of frames going, and the world going on ends it', () => {
   const {clock, draw, frames, paint} = setup()
