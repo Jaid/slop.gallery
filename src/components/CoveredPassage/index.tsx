@@ -57,7 +57,7 @@ export default function CoveredPassage({passage, sole = false, material, paving:
   const paving = pavingOverride ?? transition?.stoneFloors ?? floors
   // A timber lining’s crown is the ceiling along its spans; a slab there would share its plane. Only the open elbows show the slab.
   const ceilings = timber ? passage.junctions : passage.floors
-  // A run too short for a rib has none to collide with.
+  // A run too short for a rib has none to draw or collide with.
   const collision = timber ? [] : [geometry.shell, geometry.ribs].filter(part => part.hasAttribute('position')).map(colliderGeometry)
   const crown = passage.floorY + passage.height
   return <group name={passage.name}>
@@ -71,7 +71,7 @@ export default function CoveredPassage({passage, sole = false, material, paving:
       <Branch if={timber}><TimberFrame geometry={geometry} lining={material} material={timber!} /></Branch>
       <Branch not={timber}>
         <mesh castShadow geometry={geometry.shell} material={material} name='castle-barrel-vault' receiveShadow />
-        <mesh castShadow geometry={geometry.ribs} material={material} name='castle-vault-ribs' receiveShadow />
+        <Branch if={geometry.ribs.hasAttribute('position')}><mesh castShadow geometry={geometry.ribs} material={material} name='castle-vault-ribs' receiveShadow /></Branch>
       </Branch>
     </RigidBody>
     <PendantLamps body={passageLantern} glow={passageLanternGlow} mounts={mounts} name={`${passage.name}-pendants`} />
