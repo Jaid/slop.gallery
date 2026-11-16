@@ -11,12 +11,13 @@ import {portalFrame, portalRadius} from '../../src/lib/gallery/fusion/portalFram
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import spawnThroughTool from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import worldClock from '../../src/lib/worldClock.ts'
-import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
+import {halloweenOrb, horrorOrb, impastoOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/party_effects/blood/flights.ts'
 import {shutting, staring, staringEyes} from '../../src/party_effects/eyes/flights.ts'
 import {escapingGhosts, ghostOffset} from '../../src/party_effects/ghosts/flights.ts'
+import {knifeStrokes} from '../../src/party_effects/impasto/flights.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 import {choiceEffects, pickEffect} from '../../src/party_effects/lib/effectChoice.ts'
 import {endParty, startParty, useParties} from '../../src/party_effects/lib/parties.ts'
@@ -25,7 +26,7 @@ import {brushStrokes, strokeDrying, strokePoint} from '../../src/party_effects/s
 import {lashing, lashingTendrils, snapping, tendrilReach} from '../../src/party_effects/tendrils/flights.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
-const {bats: batsEffect, blood: bloodEffect, eyes: eyesEffect, ghosts: ghostsEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
+const {bats: batsEffect, blood: bloodEffect, eyes: eyesEffect, ghosts: ghostsEffect, impasto: impastoEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
 const effects = Object.values<PartyEffect>(partyEffects)
 const hung = portraitIngredient({
   title: 'The hung portrait',
@@ -114,6 +115,7 @@ describe('party effects', () => {
     expect(horrorOrb.effect).toEqual(['blood', 'eyes', 'tendrils'])
     expect(spookOrb.effect).toBe('ghosts')
     expect(paintOrb.effect).toBe('strokes')
+    expect(impastoOrb.effect).toBe('impasto')
     expect(transparentOrb.effect).toBeUndefined()
     expect(transparentOrb.partyEffect(3)).toBeUndefined()
     for (const seed of [0, 3, 4, 977, 0xFF_FF_FF_FF]) {
@@ -336,7 +338,7 @@ describe('party effects', () => {
     expect(() => spawnThroughTool({
       effect: 'confetti',
       position: [0, 0, 0],
-    })).toThrow(/bats, blood, eyes, ghosts, strokes, tendrils/)
+    })).toThrow(/bats, blood, eyes, ghosts, impasto, strokes, tendrils/)
     expect(() => spawnThroughTool({
       effect: 'toString',
       position: [0, 0, 0],
@@ -439,6 +441,25 @@ describe('party effects', () => {
     expect(Math.atan2(laterUp, laterAlong)).not.toBeCloseTo(Math.atan2(up, along), 2)
     expect(laterOut).toBeGreaterThan(out)
   })
+  test('the palette-knife smears lie clear of the portal’s ball, are troweled one after another before they dry, neighbors dragged against each other, shorter and broader than any brush stroke', () => {
+    for (const stroke of knifeStrokes) {
+      for (const share of [0, 0.5, 1]) {
+        const [along, up] = strokePoint(stroke, share, 0)
+        expect(Math.hypot(along, up) - stroke.width / 2).toBeGreaterThan(portalRadius)
+      }
+      expect(stroke.delay + stroke.duration).toBeLessThan(strokeDrying.start)
+      expect(stroke.paint.every(paint => Number.isInteger(paint) && paint >= 0 && paint < 5)).toBe(true)
+      // A knife lays a slab and lifts: no smear is dragged as far round, and every one is broader.
+      expect(Math.abs(stroke.sweep)).toBeLessThan(Math.min(...brushStrokes.map(({sweep}) => Math.abs(sweep))))
+      expect(stroke.width).toBeGreaterThan(Math.max(...brushStrokes.map(({width}) => width)))
+    }
+    const delays = knifeStrokes.map(({delay}) => delay)
+    expect(delays).toEqual(delays.toSorted((a, b) => a - b))
+    // Neighboring slabs are dragged against each other, like the facets of a heavily worked canvas.
+    expect(knifeStrokes.some(({sweep}) => sweep > 0)).toBe(true)
+    expect(knifeStrokes.some(({sweep}) => sweep < 0)).toBe(true)
+    expect(impastoEffect.duration).toBe(strokesEffect.duration)
+  })
   test('every effect tells where it reaches over its whole show, holding everything it flies, lays or spills, never below the floor', () => {
     const floor = frame.floor - frame.center[1]
     for (const effect of effects) {
@@ -460,6 +481,7 @@ describe('party effects', () => {
     at(batsEffect, flyingBats.flatMap(bat => [0.1, 0.4, 0.8].map(share => batOffset(bat, bat.life * share))))
     at(ghostsEffect, escapingGhosts.flatMap(ghost => [0.1, 0.4, 0.8].map(share => ghostOffset(ghost, ghost.life * share))))
     at(strokesEffect, brushStrokes.flatMap(stroke => [0.2, 0.7].flatMap(share => [0, 1, 2].map(seconds => strokePoint(stroke, share, seconds)))))
+    at(impastoEffect, knifeStrokes.flatMap(stroke => [0.2, 0.7].flatMap(share => [0, 1, 2].map(seconds => strokePoint(stroke, share, seconds)))))
     at(eyesEffect, staringEyes.map(({spot}) => spot))
     at(tendrilsEffect, lashingTendrils.map(tendrilReach))
     // every stain where its drop strikes the floor, and the pool at its widest

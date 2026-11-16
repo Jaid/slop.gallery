@@ -23,13 +23,13 @@ import CisternGeometry from '../../src/lib/gallery/cistern/CisternGeometry.ts'
 import InflowGeometry from '../../src/lib/gallery/cistern/InflowGeometry.ts'
 import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
 import {climbApproach, climbCulvert, climbRun} from '../../src/lib/gallery/climb.ts'
-import {hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
+import {hatchet, helmet, paintingSet, paletteKnife, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import forge, {forgeRooflight, forgeVestibule} from '../../src/lib/gallery/forge.ts'
 import {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
 import {salonCeiling} from '../../src/lib/gallery/salon.ts'
 import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
 import {insideOpening, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
-import {halloweenOrb, horrorOrb, orbRadius, paintOrb, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
+import {halloweenOrb, horrorOrb, impastoOrb, orbRadius, paintOrb, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 import {bastionBaseboard} from '../../src/rooms/bastion/walls.ts'
 import CannonFx, {charging} from '../../src/rooms/forge/components/AlchemyMachine/CannonFx.ts'
@@ -690,7 +690,7 @@ describe('the alchemy machine’s orbs', () => {
     expect(orbAround([['prop-sculpture', [forge.center[0], 1, forge.center[1]]]], roomAt)).toBe(false)
   })
   test('a flavored orb comes out as itself, while a Transparent Orb takes the flavor the Forge steers it to', () => {
-    for (const flavored of [halloweenOrb, horrorOrb, paintOrb, spookOrb]) {
+    for (const flavored of [halloweenOrb, horrorOrb, impastoOrb, paintOrb, spookOrb]) {
       for (const random of [0, 0.5, 0.99]) {
         expect(transmutedOrb(flavored, [['prop-pumpkin', [forge.center[0], 1, forge.center[1]]]], roomAt, random)).toBe(flavored)
       }
@@ -709,21 +709,24 @@ describe('the alchemy machine’s orbs', () => {
     expect(flavoredOrb([], roomAt, 0)).toBe(transparentOrb)
     expect(flavoredOrb([], roomAt, 1 - 1e-12)).toBe(transparentOrb)
   })
-  test('gives it the flavor of a pumpkin, a hatchet, a helmet or a Painting Set lying in the Forge or carried into it, and of those there one at random, but heeds neither them outside it nor other props in it', () => {
+  test('gives it the flavor of a pumpkin, a hatchet, a helmet, a Painting Set or a palette knife lying in the Forge or carried into it, and of those there one at random, but heeds neither them outside it nor other props in it', () => {
     const inForge: Vec3 = [forge.center[0], 1, forge.center[1]]
     const inVestibule: Vec3 = [forgeVestibule.center[0], 1.4, forgeVestibule.center[1]]
     const inLobby: Vec3 = [0, 1, -20]
     expect(roomAt(inVestibule)).toBe('forge')
     expect(roomAt(inLobby)).not.toBe('forge')
-    expect([pumpkin, hatchet, helmet, paintingSet].map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set'])
+    expect([pumpkin, hatchet, helmet, paintingSet, paletteKnife].map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set', 'prop-palette-knife'])
     expect(flavorCandidates([['prop-pumpkin', inForge]], roomAt)).toEqual([halloweenOrb])
     expect(flavorCandidates([['prop-hatchet', inVestibule]], roomAt)).toEqual([horrorOrb])
     expect(flavorCandidates([['prop-knife', inForge]], roomAt)).toEqual([transparentOrb])
     expect(flavorCandidates([['prop-helmet-2', inForge]], roomAt)).toEqual([spookOrb])
     expect(flavorCandidates([['prop-painting-set', inVestibule]], roomAt)).toEqual([paintOrb])
     expect(flavorCandidates([['prop-painting-set', inLobby]], roomAt)).toEqual([transparentOrb])
-    // Where they lie when a game begins, only the Painting Set is in the Forge already.
-    expect(flavorCandidates([pumpkin, hatchet, helmet, paintingSet].map(curio => [curio.propId, curio.position] as const), roomAt)).toEqual([paintOrb])
+    expect(flavorCandidates([['prop-palette-knife', inForge]], roomAt)).toEqual([impastoOrb])
+    expect(flavorCandidates([['prop-palette-knife-2', inVestibule]], roomAt)).toEqual([impastoOrb])
+    expect(flavorCandidates([['prop-palette-knife', inLobby]], roomAt)).toEqual([transparentOrb])
+    // Where they lie when a game begins, only the Painting Set is in the Forge already; the palette knife waits in the Salon to be carried in.
+    expect(flavorCandidates([pumpkin, hatchet, helmet, paintingSet, paletteKnife].map(curio => [curio.propId, curio.position] as const), roomAt)).toEqual([paintOrb])
     // Several of a kind steer it no harder than one.
     expect(flavorCandidates([['prop-pumpkin', inForge], ['prop-pumpkin-2', inForge], ['prop-hatchet', inForge]], roomAt)).toEqual([halloweenOrb, horrorOrb])
     expect([0, 0.49, 0.5, 0.99].map(random => flavoredOrb([['prop-pumpkin', inForge], ['prop-hatchet', inForge]], roomAt, random))).toEqual([halloweenOrb, halloweenOrb, horrorOrb, horrorOrb])

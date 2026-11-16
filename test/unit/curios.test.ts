@@ -7,12 +7,13 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import {Box3, Euler, Quaternion, Vector3} from 'three/webgpu'
 
 import {banquet, banquetTable} from '../../src/lib/gallery/banquet.ts'
-import {curios, hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
+import {curios, hatchet, helmet, paintingSet, paletteKnife, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import forge, {forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
 import {ironTableColliders} from '../../src/lib/gallery/ironTable.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
+import salon from '../../src/lib/gallery/salon.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {addArmor, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
@@ -40,12 +41,12 @@ const boundsOf = (geometry: BufferGeometry) => {
 const sizeOf = (geometry: BufferGeometry) => boundsOf(geometry).getSize(new Vector3)
 describe('the curios', () => {
   test('each is a prop of its own, lying in its room when a game begins', () => {
-    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set'])
+    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set', 'prop-palette-knife'])
     for (const curio of curios) {
       expect(slopGallery.roomAt(curio.position)?.id).toBe(curio.room)
     }
-    expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge'])
-    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic'])
+    expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room, paletteKnife.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge', 'salon'])
+    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic', 'dynamic'])
   })
   for (const curio of curios) {
     test(`the ${curio.id.replaceAll('-', ' ')}’s meshes face out, carry what their materials read and fit its reach`, () => {
@@ -248,6 +249,43 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
       expect(up.y).toBeGreaterThan(0.99)
       // Its front looks out into the room, away from the wall behind the table.
       expect(facing.x).toBeGreaterThan(0.9)
+    } finally {
+      world.free()
+    }
+  })
+  test('the palette knife lies flat on the Salon’s floor in front of its ottoman, its blade down and its cranked handle resting with it', () => {
+    const world = new RAPIER.World({
+      x: 0,
+      y: -9.81,
+      z: 0,
+    })
+    world.timestep = 1 / 60
+    try {
+      world.createCollider(RAPIER.ColliderDesc.cuboid(salon.size[0] / 2, 0.12, salon.size[1] / 2).setTranslation(salon.center[0], -0.12, salon.center[1]))
+      const {asleep, moved, up, y} = settle(paletteKnife, world)
+      expect(asleep).toBe(true)
+      expect(moved).toBeLessThan(0.03)
+      expect(y).toBeGreaterThan(-0.006)
+      expect(y).toBeLessThan(0.014)
+      expect(up.y).toBeGreaterThan(0.95)
+      const model = paletteKnife.createModel()
+      try {
+        expect(model.parts.map(part => part.name)).toEqual(['palette-knife-blade', 'palette-knife-shank', 'palette-knife-ferrule', 'palette-knife-handle'])
+        const bounds = new Box3
+        for (const {geometry} of model.parts) {
+          bounds.union(boundsOf(geometry))
+        }
+        const size = bounds.getSize(new Vector3)
+        // A knife a hand and a half long, flat, its handle cranked barely a centimeter over its blade.
+        expect(size.x).toBeGreaterThan(0.24)
+        expect(size.x).toBeLessThan(0.3)
+        expect(size.y).toBeLessThan(0.025)
+        expect(size.z).toBeLessThan(0.04)
+        expect(bounds.min.y).toBeCloseTo(0, 6)
+        expect(model.parts[3].geometry.hasAttribute('woodGrain')).toBe(true)
+      } finally {
+        model.dispose()
+      }
     } finally {
       world.free()
     }
