@@ -266,7 +266,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         properties: {
           orb: {
             type: 'string',
-            description: 'the kind of orb, like horror, spook, halloween, paint or transparent',
+            description: 'the kind of orb, like horror, spook, halloween, paint, impasto or transparent',
           },
           position: point('world-space point in meters where its middle enters the world, [x, y, z]'),
           id: {

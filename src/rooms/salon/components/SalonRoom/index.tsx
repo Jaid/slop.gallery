@@ -153,7 +153,7 @@ function Ottoman() {
     <CuboidCollider args={[width / 2, seatHeight / 2, depth / 2]} position={[0, seatHeight / 2, 0]} />
     {salonBenchLegs.map(([x, z]) => <mesh key={`${x}:${z}`} castShadow material={walnut} position={[x, legHeight / 2, z]} receiveShadow><cylinderGeometry args={[0.04, 0.026, legHeight, 16]} /></mesh>)}
     <Box material={walnut} position={[0, legHeight + apronHeight / 2, 0]} size={[width - 0.06, apronHeight, depth - 0.06]} />
-    <BenchSeat material={velvet} position={[0, legHeight + apronHeight + cushionHeight / 2, 0]} size={[width, cushionHeight + 0.02, depth]} />
+    <BenchSeat material={velvet} position={[0, legHeight + apronHeight + cushionHeight / 2 - 0.01, 0]} size={[width, cushionHeight + 0.02, depth]} />
   </RigidBody>
 }
 
