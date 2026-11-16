@@ -35,11 +35,13 @@ export type HollowOptions = {
   area?: FloorRectangle
   /** how far under `y` the floor round it lies at a point in plan, like a crossfall falling toward the opening, which the hollow sinks into further: level if left out */
   sag?: (x: number, z: number) => number
+  /** how finely its surface is cut, in meters, along both axes at most: 6 cm if left out */
+  step?: number
 }
 type Point = readonly [x: number, z: number]
 
-/** how finely its surface is cut, in meters */
-const step = 0.06
+/** how finely its surface is cut by default, in meters */
+const defaultStep = 0.06
 /** how far below the seam’s deepest point the adjoining floor’s datum lies */
 const outletStep = 0.02
 /** a bump from 1 in its middle down to 0, smoothly, at ±1 and beyond */
@@ -58,8 +60,10 @@ export default class FloorHollow {
   /** the direction to the right of `into`, seen from above with north up */
   private readonly right: Point
   private readonly sagAt: (x: number, z: number) => number
+  /** how finely its surface is cut, in meters, along both axes at most */
+  private readonly step: number
 
-  constructor(readonly y: number, readonly outlet: HollowOutlet, readonly shape: HollowShape, {area, sag = () => 0}: HollowOptions = {}) {
+  constructor(readonly y: number, readonly outlet: HollowOutlet, readonly shape: HollowShape, {area, sag = () => 0, step = defaultStep}: HollowOptions = {}) {
     const {into: [ix, iz], half} = outlet
     if (Math.abs(Math.abs(ix) + Math.abs(iz) - 1) > 1e-9 || ix * iz !== 0) {
       throw new RangeError('A hollow sinks toward an opening through a wall running along a point of the compass.')
@@ -67,8 +71,12 @@ export default class FloorHollow {
     if (!(shape.depth > 0 && shape.reach > shape.beyond && shape.beyond >= 0 && shape.throat > 0 && shape.throat <= half && shape.width.every(width => width >= shape.throat))) {
       throw new RangeError('A hollow needs a depth, a throat within its opening and at most as wide as itself, and to reach out in front of its wall.')
     }
+    if (!(step > 0)) {
+      throw new RangeError('A hollow’s surface needs a positive step.')
+    }
     this.right = [-iz, ix]
     this.sagAt = sag
+    this.step = step
     // From the wall’s center line out to where it ends, from its left edge to its right.
     const out = shape.reach - shape.beyond
     const corners = [this.at(-this.wide(0, out), 0), this.at(this.wide(1, out), out)]
@@ -82,7 +90,7 @@ export default class FloorHollow {
     if (min[0] < ax - aw / 2 - 1e-9 || max[0] > ax + aw / 2 + 1e-9 || min[1] < az - ad / 2 - 1e-9 || max[1] > az + ad / 2 + 1e-9) {
       throw new RangeError('A hollow’s surface has to take in all of the hollow.')
     }
-    const segments = Math.ceil(half * 2 / step)
+    const segments = Math.ceil(half * 2 / defaultStep)
     const deepest = Math.max(...Array.from({length: segments + 1}, (_, segment) => this.sink(...this.at(-half + half * 2 * segment / segments, 0))))
     this.outletY = y - deepest - outletStep
   }
@@ -95,8 +103,8 @@ export default class FloorHollow {
   /** The height on its visible triangles, or undefined outside its footprint. */
   floorAt(x: number, z: number) {
     const {center: [cx, cz], size: [width, depth]} = this.footprint
-    const columns = Math.ceil(width / step)
-    const rows = Math.ceil(depth / step)
+    const columns = Math.ceil(width / this.step)
+    const rows = Math.ceil(depth / this.step)
     const across = (x - cx + width / 2) / width * columns
     const along = (z - cz + depth / 2) / depth * rows
     if (across < -1e-9 || across > columns + 1e-9 || along < -1e-9 || along > rows + 1e-9) {
@@ -116,8 +124,8 @@ export default class FloorHollow {
    */
   geometry() {
     const {center: [cx, cz], size: [width, depth]} = this.footprint
-    const columns = Math.ceil(width / step)
-    const rows = Math.ceil(depth / step)
+    const columns = Math.ceil(width / this.step)
+    const rows = Math.ceil(depth / this.step)
     const positions: Array<number> = []
     const indices: Array<number> = []
     for (let row = 0; row <= rows; row++) {
@@ -169,9 +177,9 @@ export default class FloorHollow {
     if (!Number.isFinite(half) || half <= 0 || Math.abs(Math.abs(this.outlet.center[normalAxis] - center[normalAxis]) - size[normalAxis] / 2) > 1e-9) {
       throw new RangeError('A hollow’s outlet profile needs a positive half width and an outlet on its surface’s edge.')
     }
-    const count = Math.ceil(size[axis] / step)
+    const count = Math.ceil(size[axis] / this.step)
     const samples = Array.from({length: count + 1}, (_, i) => (center[axis] - size[axis] / 2 + size[axis] * i / count - this.outlet.center[axis]) / this.right[axis]).filter(across => across > -half && across < half)
-    const rowDepth = size[normalAxis] / Math.ceil(size[normalAxis] / step)
+    const rowDepth = size[normalAxis] / Math.ceil(size[normalAxis] / this.step)
     return [-half, ...samples, half].toSorted((a, b) => a - b).map(across => {
       const [x, z] = this.at(across, 0)
       const y = this.floorAt(x, z)

@@ -4,13 +4,14 @@ import type {Vec3} from '../types.ts'
 import type {PassageCutout} from './Passage.ts'
 import type {FloorInlet} from './PassageFloorInlet.ts'
 import type {FloorOutlet} from './PassageFloorOutlet.ts'
-import type {RoutePiece, RouteStation} from './PassageRoute.ts'
+import type {RouteArc, RoutePiece, RouteStation} from './PassageRoute.ts'
 
 import {wallCoordinates} from '../../placement/wallGeometry.ts'
 import {vaultShellThickness, wallFace} from '../architectureDimensions.ts'
 import PassageFloorInlet from './PassageFloorInlet.ts'
 import PassageFloorOutlet from './PassageFloorOutlet.ts'
 import PassageRoute from './PassageRoute.ts'
+import pavingColumns from './pavingColumns.ts'
 
 /** the box around a stretch of a passage’s air, from its lowest floor to its highest ceiling */
 export type RouteChunk = {
@@ -89,8 +90,19 @@ type PlacedWall = {
 export const routeRibSpacing = 3.2
 export const routeRibDepth = 0.22
 export const routeRibThickness = 0.085
-/** Turns are cut into steps of at most this many radians, like the curved walls beside them, for the vault and the paving as for the baseboards along an outline’s walls. */
-export const routeTurnStep = 1 / 32
+/**
+ * How many straight pieces the inside of a vault’s arch, its ribs included, is cut into across, at a `detail`: an odd count leaves a level facet along the crown, wide enough for a lantern’s canopy to sit flush.
+ * As finely as the vaults always were at the base detail, as their outline shows wherever a rib stands out of them or they meet a wall: cut coarser, the ribs’ arches broke into visible kinks.
+ */
+export const routeArchSegments = (detail = 1) => 16 * (detail + 1) + 1
+/** How many pieces the back of a vault’s arch is cut into across, at a `detail`: coarsely, as it lies hidden in the rock behind the walls and over the vault, never further inside its arch than a few centimeters of its 22 cm thickness. */
+export const routeBackSegments = (detail = 1) => 8 * detail + 1
+/** How far, in meters, the straight facets a routed passage’s turns are cut into may stand off their curves, for the vault and the paving as for the curved walls beside them and the baseboards along an outline’s walls, see {@link RoutedPassage.turnStep}. */
+export const routeCurveTolerance = 0.004
+/** the finest and the coarsest steps a turn is cut into, in radians, at the base detail */
+const turnSteps = [1 / 32, 1 / 8] as const
+/** how wide the strips across a ramp round a turn are at most, which follow its twist, see `pavingColumns` */
+const twistStep = 0.25
 /** how far the first and the last rib stand in from the route’s ends */
 const ribInset = 0.15
 /** the steps in which a chunk of air grows around a turn, in meters along the centerline */
@@ -213,7 +225,7 @@ export default class RoutedPassage {
       if (floorInlet || outlines.length) {
         throw new RangeError('A floor outlet needs a passage without an inlet or outlines.')
       }
-      this.floorOutlet = new PassageFloorOutlet(route, width, floorOutlet, (station, right) => station.y - this.sag(station, right))
+      this.floorOutlet = new PassageFloorOutlet(route, width, floorOutlet, (station, right) => station.y - this.sag(station, right), this.columns(width / 2, width / 2, PassageFloorOutlet.start(route, width, floorOutlet.reach)))
     }
     const placed: Array<PlacedWall> = route.pieces.flatMap((piece, index) => [-1, 1].flatMap((side): Array<PlacedWall> => {
       const outline = this.outlineAt(piece.from + piece.length / 2, side)
@@ -263,6 +275,16 @@ export default class RoutedPassage {
     this.drains = drains
   }
 
+  /** Where along the route its floor turns from twisting to lying flat or back, see {@link RoutedPassage.twisted}, where its paving changes columns. */
+  get twists() {
+    const {easeIn = 0, easeOut = 0} = this.crossfall ?? {}
+    return [
+      ...this.route.pieces.flatMap(piece => (piece.kind === 'arc' && piece.ramp ? [piece.from, piece.from + piece.length] : [])),
+      ...easeIn > 0 ? [easeIn] : [],
+      ...easeOut > 0 ? [this.route.length - easeOut] : [],
+    ]
+  }
+
   /** Boxes around the passage’s air, from its floor to its ceiling, each piece cut into as many as it takes for none to reach more than `slack` meters past the passage’s walls. */
   chunks(slack: number): Array<RouteChunk> {
     return this.route.pieces.flatMap(piece => {
@@ -280,6 +302,17 @@ export default class RoutedPassage {
     })
   }
 
+  /**
+   * The columns across its ordinary paving `along` meters down the route, between walls `left` and `right` meters from the centerline, between which its floor runs straight across: its walls, its centerline and where its crossfall starts falling, at the faces of the nearer wall’s distance on both sides.
+   * Where its floor twists, strips about `twistStep` wide, see {@link RoutedPassage.twisted}.
+   */
+  columns(left: number, right: number, along: number) {
+    return pavingColumns(left, right, this.crossfall ? Math.min(left, right) - wallFace : undefined, this.twisted(along) ? {
+      step: twistStep,
+      width: this.width,
+    } : undefined)
+  }
+
   /** Whether the position lies on the passage’s floor, from a meter under it to its ceiling. */
   contains([x, y, z]: Vec3) {
     const station = this.stationAt(x, z)
@@ -292,9 +325,19 @@ export default class RoutedPassage {
     return abreast && this.floorY(abreast.station, abreast.right)
   }
 
-  /** Paving stations use the outlet’s authoritative grid, not a second arc grid whose diagonals could cut across its triangles. */
+  /**
+   * The stations its paving, its walls’ baseboards and its floor queries follow: its route’s, through every knot of its ramps, with its turns cut into steps of {@link RoutedPassage.turnStep}, straight across from where the outline’s walls turn their corners, and every `crossfallStep` where its crossfall eases in or out and at every row of its inlet, where its floor bends but its vault doesn’t.
+   * Along its outlet, they follow the outlet’s authoritative grid, not a second arc grid whose diagonals could cut across its triangles.
+   */
   floorStations(from: number, to: number) {
-    const original = this.stations(from, to)
+    const stations = this.withCreases(this.route.stations(from, to, piece => this.turnStep(piece)), from, to)
+    const {easeIn = 0, easeOut = 0} = this.crossfall ?? {}
+    const easing = [
+      ...Array.from({length: Math.ceil(easeIn / crossfallStep)}, (_, index) => easeIn * index / Math.ceil(easeIn / crossfallStep)),
+      ...Array.from({length: Math.ceil(easeOut / crossfallStep)}, (_, index) => this.route.length - easeOut * index / Math.ceil(easeOut / crossfallStep)),
+    ]
+    const bends = [...easing, ...this.floorInlet?.along ?? []].filter((along, index, all) => along > from && along < to && stations.every(station => Math.abs(station.along - along) > 1e-9) && all.findIndex(other => Math.abs(other - along) < 1e-9) === index).map(along => this.route.at(along))
+    const original = [...stations, ...bends].toSorted((a, b) => a.along - b.along)
     if (!this.floorOutlet) {
       return original
     }
@@ -341,16 +384,31 @@ export default class RoutedPassage {
     return this.abreast(x, z)?.station
   }
 
-  /** Stations between two distances along the route, as it gives them with its turns cut into steps of `routeTurnStep`, straight across from where the outline’s walls turn their corners, and every `crossfallStep` where its crossfall eases in or out. */
-  stations(from: number, to: number) {
-    const stations = this.route.stations(from, to, routeTurnStep)
+  /**
+   * Stations between two distances along the route, which its vault follows: as the route gives them for the vault, with far fewer knots along its ramps than its floor, see `routeKnotTurn`, its turns cut into steps of {@link RoutedPassage.turnStep}, and straight across from where the outline’s walls turn their corners. Its floor follows {@link RoutedPassage.floorStations}.
+   * A `detail` over 1 cuts the turns that many times more finely, for a vault drawn more smoothly than the one that collides; everything else follows the base detail.
+   */
+  stations(from: number, to: number, detail = 1) {
+    return this.withCreases(this.route.stations(from, to, piece => this.turnStep(piece, detail), true), from, to)
+  }
+
+  /**
+   * How many radians a step round the turn takes: as many as keep the back of the vault over its outer wall within {@link routeCurveTolerance} of its curve, an edge of length l on radius r standing l² / 8r off, at most 1/8 and at least 1/32 radian; `detail` times finer.
+   * A wide, sweeping turn like the curve’s round the apse’s crown keeps the 1/32 radian it was always cut into, a tight one like the hairpin’s takes less than half the steps.
+   */
+  turnStep(piece: RouteArc, detail = 1) {
+    const outer = piece.radius + this.width / 2 + vaultShellThickness
+    return Math.min(Math.max(Math.sqrt(8 * routeCurveTolerance / outer), turnSteps[0]), turnSteps[1]) / detail
+  }
+
+  /**
+   * Whether its floor twists `along` meters down the route, where its paving takes narrow strips across, see {@link RoutedPassage.columns}: on a ramp round a turn, whose inner edge climbs as much as its outer one over a shorter run, and where its crossfall eases in or out, deepening along the route as it falls across.
+   * Elsewhere, each of its paving’s quads between columns and stations lies flat.
+   */
+  twisted(along: number) {
+    const piece = this.route.pieces.find(value => along <= value.from + value.length + tolerance) ?? this.route.pieces.at(-1)!
     const {easeIn = 0, easeOut = 0} = this.crossfall ?? {}
-    const easing = [
-      ...Array.from({length: Math.ceil(easeIn / crossfallStep)}, (_, index) => easeIn * index / Math.ceil(easeIn / crossfallStep)),
-      ...Array.from({length: Math.ceil(easeOut / crossfallStep)}, (_, index) => this.route.length - easeOut * index / Math.ceil(easeOut / crossfallStep)),
-    ]
-    const extra = [...this.creases, ...easing, ...this.floorInlet?.along ?? []].filter((along, index, all) => along > from && along < to && stations.every(station => Math.abs(station.along - along) > 1e-9) && all.findIndex(other => Math.abs(other - along) < 1e-9) === index).map(along => this.route.at(along))
-    return [...stations, ...extra].toSorted((a, b) => a.along - b.along)
+    return piece.kind === 'arc' && piece.ramp !== undefined || along < easeIn || along > this.route.length - easeOut
   }
 
   /** The station of the route abreast of the point and how far right of the centerline the point lies there, or undefined beside the passage. */
@@ -525,7 +583,7 @@ export default class RoutedPassage {
   /** The straight walls through the outline’s corners, standing level from their lowest floor, their baseboards following the floor wherever it changes along them. */
   private outlineWalls({corners, side, from, to}: PlacedOutline): Array<Omit<Wall, 'id'>> {
     // Where the floor meets the walls, straight across from every station along the stretch
-    const contacts = this.stations(from, to).map(station => ({
+    const contacts = this.floorStations(from, to).map(station => ({
       station,
       point: this.hit(station, side).point,
     }))
@@ -547,6 +605,7 @@ export default class RoutedPassage {
         height: Math.max(...touching.map(({station}) => station.y + station.height)) - foot - 0.3,
         sticky: false,
         trimStyle: 'plain',
+        curveTolerance: routeCurveTolerance,
       }
       if (touching.every(({station}) => station.y === foot)) {
         return wall
@@ -570,6 +629,7 @@ export default class RoutedPassage {
       height: Math.max(piece.startY + piece.startHeight, piece.endY + piece.endHeight) - foot - 0.3,
       sticky: false,
       trimStyle: 'plain',
+      curveTolerance: routeCurveTolerance,
     } as const
     if (piece.kind === 'line') {
       const middle = PassageRoute.station(piece, piece.length / 2)
@@ -640,5 +700,11 @@ export default class RoutedPassage {
       ...wall,
       baseboardProfile: outlet ? simplifyProfile(contact.toSorted((a, b) => a[0] - b[0])) : contact.toSorted((a, b) => a[0] - b[0]),
     }
+  }
+
+  /** The stations and those straight across from where the outline’s walls turn their corners between `from` and `to`, in order. */
+  private withCreases(stations: ReadonlyArray<RouteStation>, from: number, to: number) {
+    const extra = this.creases.filter((along, index, all) => along > from && along < to && stations.every(station => Math.abs(station.along - along) > 1e-9) && all.findIndex(other => Math.abs(other - along) < 1e-9) === index).map(along => this.route.at(along))
+    return [...stations, ...extra].toSorted((a, b) => a.along - b.along)
   }
 }

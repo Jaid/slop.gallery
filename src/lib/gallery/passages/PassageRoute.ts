@@ -1,4 +1,4 @@
-import easedRamp, {easedRampKnots} from '../easedRamp.ts'
+import easedRamp, {easedRampKnots, easedRampTurnKnots} from '../easedRamp.ts'
 
 /** a straight run of a route */
 export type RouteRun = {
@@ -28,6 +28,8 @@ export type RampSpan = {
   length: number
   startHeight: number
   startY: number
+  /** where the vault over it bends, in meters into it, from its start to its end: far fewer than the floor’s knots, see {@link routeKnotTurn} */
+  vaultKnots: ReadonlyArray<number>
 }
 /** a straight run from `start` along `heading` */
 export type RouteLine = PieceBase & {
@@ -80,6 +82,13 @@ type PieceBase = {
 type Profile = Pick<PieceBase, 'endHeight' | 'endY' | 'ramp' | 'startHeight' | 'startY'>
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
 
+/**
+ * How much the vault over a route’s ramp bends at each of its own knots, rise over run, between which it runs straight: at most twice that, which strays at most a few millimeters from the floor’s finer knots under it.
+ * Its knots crowd where the eased curve bends most, near the ramp’s ends, and spread out toward its middle, see `easedRampTurnKnots`: every one costs a row of its arch, while the floor keeps a knot every 25 cm, like every eased ramp, as orbs rolling over it feel even its gentlest bends. Where its crown climbs so steeply that it would take more, it takes the floor’s.
+ */
+export const routeKnotTurn = 0.025
+/** how far apart the vault’s knots over a route’s ramp lie at most, where it hardly bends */
+export const routeKnotSpacing = 1
 const tolerance = 1e-9
 const direction = (heading: number): Point => [Math.cos(heading), Math.sin(heading)]
 /** the direction to the right of a heading, seen from above with north up */
@@ -98,13 +107,13 @@ const rampLevels = (ramp: RampSpan, along: number) => {
  * Its floor height starts at `y` and its height at `height`; both change only along ramps, see {@link RouteRamp}.
  */
 export default class PassageRoute {
-  /** Where the profile of a piece bends between its ends: the knots of the ramp it is part of, in meters into the piece. Between them, and between them and its ends, the floor and the crown run straight. */
-  static knots(piece: RoutePiece) {
+  /** Where the profile of a piece bends between its ends: the knots of the ramp it is part of, in meters into the piece, or with `vault`, the vault’s far fewer knots over it, see {@link routeKnotTurn}. Between them, and between them and its ends, the floor and the crown run straight. */
+  static knots(piece: RoutePiece, vault = false) {
     const {ramp} = piece
     if (!ramp) {
       return []
     }
-    return easedRampKnots(ramp.length).map(knot => ramp.from + knot - piece.from).filter(offset => offset > tolerance && offset < piece.length - tolerance)
+    return (vault ? ramp.vaultKnots : easedRampKnots(ramp.length)).map(knot => ramp.from + knot - piece.from).filter(offset => offset > tolerance && offset < piece.length - tolerance)
   }
 
   /** Where the point lies relative to the piece, or undefined beside its span. */
@@ -240,6 +249,8 @@ export default class PassageRoute {
       }
       const from = along
       const laid = step.steps.map(lay)
+      // The crown climbs or falls as the floor does and as the passage grows taller or lower, the vault bending with the steeper of both.
+      const vaultRise = Math.max(Math.abs(endY - floor), Math.abs(endY + endHeight - floor - tall))
       const ramp: RampSpan = {
         from,
         length: along - from,
@@ -247,6 +258,7 @@ export default class PassageRoute {
         endY,
         startHeight: tall,
         endHeight,
+        vaultKnots: [easedRampTurnKnots(along - from, vaultRise, routeKnotTurn, routeKnotSpacing), easedRampKnots(along - from)].reduce((fewer, knots) => (knots.length < fewer.length ? knots : fewer)),
       }
       for (const piece of laid) {
         const [first, last] = [piece.from, piece.from + piece.length].map(offset => rampLevels(ramp, offset - from))
@@ -296,8 +308,8 @@ export default class PassageRoute {
     return this.pieces.flatMap(piece => PassageRoute.projectOnto(piece, x, z) ?? [])
   }
 
-  /** Stations between two distances along the route: where they start and end, at every joint between its pieces, at every knot of its ramps and in steps of at most `turnStep` radians around its turns. */
-  stations(from: number, to: number, turnStep: number) {
+  /** Stations between two distances along the route: where they start and end, at every joint between its pieces, at every knot of its ramps, or with `vault`, of the vault over them, and in steps of at most `turnStep` radians around its turns, or as many as it gives for each turn. */
+  stations(from: number, to: number, turnStep: ((piece: RouteArc) => number) | number, vault = false) {
     const stations: Array<RouteStation> = []
     for (const piece of this.pieces) {
       const start = Math.max(from, piece.from) - piece.from
@@ -305,10 +317,10 @@ export default class PassageRoute {
       if (end <= start) {
         continue
       }
-      const steps = piece.kind === 'arc' ? Math.max(1, Math.ceil(Math.abs(piece.sweep) * (end - start) / piece.length / turnStep)) : 1
+      const steps = piece.kind === 'arc' ? Math.max(1, Math.ceil(Math.abs(piece.sweep) * (end - start) / piece.length / (typeof turnStep === 'number' ? turnStep : turnStep(piece)) - 1e-9)) : 1
       const offsets = Array.from({length: steps + 1}, (_, step) => start + (end - start) * step / steps)
       // Knots that all but coincide with a step would only leave slivers.
-      const knots = PassageRoute.knots(piece).filter(knot => knot > start && knot < end && offsets.every(offset => Math.abs(offset - knot) > 1e-6))
+      const knots = PassageRoute.knots(piece, vault).filter(knot => knot > start && knot < end && offsets.every(offset => Math.abs(offset - knot) > 1e-6))
       for (const offset of [...offsets, ...knots].toSorted((a, b) => a - b).slice(stations.length ? 1 : 0)) {
         stations.push(PassageRoute.station(piece, offset))
       }

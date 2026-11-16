@@ -4,12 +4,12 @@ import {afterAll, describe, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
 import EgoMotor from 'ego-player/motor'
-import {Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
+import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
 import {corniceBands} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionApproach, bastionCurve, bastionDoorway, bastionMouth, bastionOrigin, bastionPassages, bastionTransition} from '../../src/lib/gallery/bastion.ts'
-import {bastionLink, lodgeSpur} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, bastionNetwork, lodgeSpur} from '../../src/lib/gallery/bastionNetwork.ts'
 import {easedRampGradient} from '../../src/lib/gallery/easedRamp.ts'
 import {slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
@@ -17,8 +17,8 @@ import {oculusPlatform} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse, {apseArcs, insideApse} from '../../src/lib/gallery/oculusApse.ts'
 import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import tower, {towerBridge, towerFloorHeight} from '../../src/lib/gallery/oculusTower.ts'
-import PassageRoute from '../../src/lib/gallery/passages/PassageRoute.ts'
-import RoutedPassage from '../../src/lib/gallery/passages/RoutedPassage.ts'
+import PassageRoute, {routeKnotSpacing, routeKnotTurn} from '../../src/lib/gallery/passages/PassageRoute.ts'
+import RoutedPassage, {routeRibThickness} from '../../src/lib/gallery/passages/RoutedPassage.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
 import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -235,6 +235,43 @@ describe('the Bastion’s route round the Oculus', () => {
       material.dispose()
     }
   })
+  test('the ribs of every routed passage stand out of its vault as deep as they always did, all the way across, in every graphics detail', () => {
+    const material = new MeshBasicMaterial({side: DoubleSide})
+    try {
+      const routed = bastionNetwork.filter(value => value instanceof RoutedPassage)
+      for (const passage of routed) {
+        for (const detail of [1, 2]) {
+          const {ribs, shell} = RouteVaultGeometry.vault(passage, detail)
+          try {
+            const [ribMesh, shellMesh] = [ribs, shell].map(geometry => new Mesh(geometry, material))
+            for (const along of passage.ribs) {
+              const station = passage.route.at(along)
+              const {point: [x, z], heading, y, height} = station
+              const [left, right] = [-1, 1].map(side => passage.reach(station, side))
+              const middle = (right - left) / 2
+              const half = (left + right) / 2
+              // Up its crown and halfway down its sides, square to the arch from its middle
+              for (const angle of [Math.PI / 2, Math.PI / 4, Math.PI * 3 / 4]) {
+                const lateral = middle + Math.cos(angle) * half * 0.5
+                const origin = new Vector3(x - Math.sin(heading) * lateral, y + height - half + Math.sin(angle) * half * 0.5, z + Math.cos(heading) * lateral)
+                const direction = new Vector3(-Math.sin(heading) * Math.cos(angle), Math.sin(angle), Math.cos(heading) * Math.cos(angle))
+                const ray = new Raycaster(origin, direction, 0, 5)
+                const rib = ray.intersectObject(ribMesh)[0]
+                const vault = ray.intersectObject(shellMesh)[0]
+                expect(rib, `${passage.name} at ${along.toFixed(2)}`).toBeDefined()
+                expect(vault.distance - rib.distance).toBeCloseTo(routeRibThickness, 2)
+              }
+            }
+          } finally {
+            ribs.dispose()
+            shell.dispose()
+          }
+        }
+      }
+    } finally {
+      material.dispose()
+    }
+  })
   test('outside the curve, from the run north to the run west, straight walls stand: on along the run north, past the apse’s crown, touching the curve where the gate opens, and back at 45° to the run west', () => {
     const outline = bastionCurve.outlines.find(({side}) => side === 1)
     const [bend, landing, climb] = route.pieces.slice(-3)
@@ -347,7 +384,7 @@ describe('the Bastion’s route round the Oculus', () => {
     }, {length: 1}])
     const [before, run, turn, after] = ramped.pieces
     const length = 3 + Math.PI
-    expect(run.ramp).toEqual({
+    expect(run.ramp).toMatchObject({
       from: 1,
       length,
       startY: 0,
@@ -371,6 +408,29 @@ describe('the Bastion’s route round the Oculus', () => {
       expect(rampStations.some(({point: [x, z]}) => Math.abs(ramped.project(x, z)!.along - knot) < 1e-6)).toBe(true)
       if (i) {
         expect(ramped.at((knots[i - 1] + knot) / 2).y).toBeCloseTo((ramped.at(knots[i - 1]).y + ramped.at(knot).y) / 2, 12)
+      }
+    }
+    // The vault over it takes far fewer knots, crowding toward its ends, where the eased curve bends most, at most a meter apart; through them, it strays from the floor’s profile by no more than a few millimeters.
+    const vaultKnots = [run.from, ...PassageRoute.knots(run, true).map(knot => run.from + knot), ...PassageRoute.knots(turn, true).map(knot => turn.from + knot), turn.from + turn.length]
+    expect(run.ramp!.vaultKnots.map(knot => run.from + knot)).toEqual(vaultKnots)
+    // Along the Bastion’s own ramps, never more than the floor’s, and along the long ramp down from the doorway, whose crown stays level, less than half as many.
+    const ramps = [...new Set(route.pieces.flatMap(piece => piece.ramp ?? []))]
+    for (const ramp of ramps) {
+      expect(ramp.vaultKnots.length).toBeLessThanOrEqual(Math.ceil(ramp.length / 0.25) + 1)
+    }
+    expect(ramps[0].vaultKnots.length).toBeLessThan(Math.ceil(ramps[0].length / 0.25) / 2)
+    expect(vaultKnots[1] - vaultKnots[0]).toBeLessThan(vaultKnots[Math.floor(vaultKnots.length / 2)] - vaultKnots[Math.floor(vaultKnots.length / 2) - 1])
+    const vaultStations = ramped.stations(0, ramped.length, 1 / 32, true)
+    for (const [i, knot] of vaultKnots.entries()) {
+      expect(vaultStations.some(station => Math.abs(station.along - knot) < 1e-6)).toBe(true)
+      if (!i) {
+        continue
+      }
+      expect(knot - vaultKnots[i - 1]).toBeLessThanOrEqual(routeKnotSpacing + 1e-9)
+      for (let share = 0.1; share < 1; share += 0.2) {
+        const along = vaultKnots[i - 1] + (knot - vaultKnots[i - 1]) * share
+        const chord = ramped.at(vaultKnots[i - 1]).y + (ramped.at(knot).y - ramped.at(vaultKnots[i - 1]).y) * share
+        expect(Math.abs(chord - ramped.at(along).y)).toBeLessThan(routeKnotTurn * routeKnotSpacing / 4)
       }
     }
   })

@@ -4,9 +4,9 @@ import {describe, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
 import {computeMeshVolume} from 'three-bvh-csg'
-import {BufferGeometry, DoubleSide, Float32BufferAttribute, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
+import {BufferGeometry, DoubleSide, Float32BufferAttribute, Mesh, MeshBasicMaterial, Raycaster, ShapeUtils, Vector3} from 'three/webgpu'
 
-import {colliderGeometry, createArchitectureGeometry, wallFace, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
+import {colliderGeometry, createArchitectureGeometry, openingSegments, openingShape, wallFace, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
 import {baseboardCapHeight, defaultBaseboardHeight} from '../../src/lib/gallery/architectureDimensions.ts'
 import {insideOpening, openingArc, openingCircle, openingTop} from '../../src/lib/placement/wallGeometry.ts'
 import walls, {galleryPlacement} from './fixtures/gallery.ts'
@@ -100,7 +100,9 @@ describe('boolean architecture', () => {
             }
           }
         }
-        const area = wall.width * (wall.height + 0.3) - wall.holes!.reduce((sum, hole) => sum + openingArea(hole), 0)
+        // A wall cut to a tolerance cuts its openings’ arches into as few chords as keep within it; its cut is measured against them.
+        const cutArea = (hole: WallOpening) => (wall.curveTolerance === undefined ? openingArea(hole) : Math.abs(ShapeUtils.area(openingShape(hole, 0, hole.bottom ?? 0).getPoints(openingSegments(wall, hole)))))
+        const area = wall.width * (wall.height + 0.3) - wall.holes!.reduce((sum, hole) => sum + cutArea(hole), 0)
         // A curved wall is cut flat before it bends, which leaves the cut’s T-junctions a hair apart; its cut is measured flat.
         const flat = wall.curveRadius ? createArchitectureGeometry({
           ...wall,
