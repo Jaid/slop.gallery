@@ -57,7 +57,7 @@ test('both wings and the link belong to one Bastion', () => {
     expect(roomAt(position)).toBe('bastion')
     expect(insideGallery(position)).toBe(true)
     // its paving falling toward its middle; where it meets the landing, the landing’s floor over its sill counts
-    expect(floorHeight(position)).toBeCloseTo(along < 0.05 ? y : y - bastionLink.sag(route.at(along), 0), 5)
+    expect(floorHeight(position)).toBeCloseTo(along < 0.05 ? y : bastionLink.floorY(route.at(along), 0), 5)
     if (along > 0.3 && along < route.length - 0.1) {
       expect(Math.abs(route.at(along + 0.01).y - route.at(along - 0.01).y) / 0.02).toBeLessThan(0.25)
     }
@@ -76,7 +76,7 @@ test('both wings and the link belong to one Bastion', () => {
   expect(route.end.y + route.end.height).toBeCloseTo(climbMouth.floorY + climbMouth.height, 9)
   expect(route.height).toBe(bastionLinkStart.height)
 })
-test('its paving falls 1 in 20 from both walls toward its middle, but levels out toward the gate, which stands on a level floor', () => {
+test('its paving falls 1 in 20 from both walls toward its middle, then blends into the bowed floor at the gate', () => {
   expect(bastionLink.crossfall?.slope).toBe(bastionLinkCrossfall)
   expect(bastionLinkCrossfall).toBe(1 / 20)
   for (const along of [0, 5, 12, 20]) {
@@ -88,7 +88,7 @@ test('its paving falls 1 in 20 from both walls toward its middle, but levels out
     expect(bastionLink.sag(station, half)).toBe(0)
     expect(bastionLink.sag(station, bastionLink.width / 2)).toBe(0)
   }
-  // Under the gate, level across
+  // The original crossfall eases out; the sampled outlet supplies the bow under the gate instead.
   expect(bastionLink.sag(route.end, 0)).toBe(0)
   expect(bastionLinkGate.hole.bottom).toBeCloseTo(route.end.y - climbMouth.floorY, 9)
   // At the landing, it lies a hand’s breadth under the landing’s floor in its middle and meets it at the walls, a low sill along the doorway.

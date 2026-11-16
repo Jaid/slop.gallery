@@ -8,6 +8,7 @@ import {BoxGeometry, BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, Me
 import {mergeParts} from '../../geometry.ts'
 import {openingShape} from '../architecture.ts'
 import {vaultShellThickness} from '../architectureDimensions.ts'
+import pavingColumns from './pavingColumns.ts'
 import {routeRibDepth, routeRibThickness} from './RoutedPassage.ts'
 
 export type PavingBox = {
@@ -22,8 +23,6 @@ type Section = (station: RouteStation, run: ReadonlyArray<RouteStation>) => Read
 
 /** how thick the slab of a routed passage’s paving is, under its floor */
 export const pavingThickness = 0.24
-/** how wide the strips its paving is cut into across at most, in meters */
-const pavingStrip = 0.25
 /** An odd count leaves a level facet along the crown, wide enough for a lantern’s canopy to sit flush. */
 const archSegments = 33
 /** Points around a half ellipse over the spring, `halfSpan` to either side of `middle` and `rise` high, from its left foot over its crown to its right foot, or back with `reverse`; as wide as it is high, it is a semicircle. */
@@ -232,9 +231,9 @@ export default class RouteVaultGeometry {
     // under the crown
     const spring = -rise
     /** The stations between two distances along the route, in runs that meet where the outline turns its corners. */
-    const runs = (from: number, to: number, creases = passage.creases) => {
+    const runs = (from: number, to: number, creases = passage.creases, floor = false) => {
       const result: Array<Array<RouteStation>> = [[]]
-      for (const station of passage.stations(from, to)) {
+      for (const station of floor ? passage.floorStations(from, to) : passage.stations(from, to)) {
         result.at(-1)!.push(station)
         if (creases.some(along => Math.abs(along - station.along) < 1e-9) && station.along > from && station.along < to) {
           result.push([station])
@@ -266,28 +265,26 @@ export default class RouteVaultGeometry {
     const hasOpenings = vaultOpenings(passage).length > 0 || passage.abutments.length > 0
     this.shell = hasOpenings ? openVault(solid(vaultShellThickness), passage, solid(0, 0.5)) : mergeParts(sweep(runs(0, route.length), ring(0, vaultShellThickness), true))
     this.ribs = mergeParts(passage.ribs.flatMap(along => sweep(runs(along - routeRibDepth / 2, along + routeRibDepth / 2), ring(-routeRibThickness, 0), true)))
-    /** how many strips the paving is cut into from either wall to the centerline, at most `pavingStrip` wide, so it bends with its crossfall and stays close to flat through the twist of a ramp round a turn */
-    const strips = Math.ceil(width / 2 / pavingStrip)
-    const floorRuns = runs(0, route.length, [...passage.creases, ...passage.floorInlet ? [passage.floorInlet.inlet.length] : []])
+    const floorRuns = runs(0, route.length, [...passage.creases, ...passage.floorInlet ? [passage.floorInlet.inlet.length] : [], ...passage.floorOutlet ? [passage.floorOutlet.from] : []], true)
     const pavingSection: Section = (station, run) => {
       const [left, right] = [-1, 1].map(side => passage.reach(station, side))
       // Only the inlet needs extra columns; the rest keeps the ordinary paving tessellation.
       const inlet = passage.floorInlet && run[0].along < passage.floorInlet.inlet.length ? passage.floorInlet : undefined
-      const across = inlet?.across ?? [
-        ...Array.from({length: strips + 1}, (_, index) => -left + left * index / strips),
-        ...Array.from({length: strips}, (_, index) => right * (index + 1) / strips),
-      ]
+      const outlet = passage.floorOutlet && run[0].along >= passage.floorOutlet.from - 1e-9 ? passage.floorOutlet : undefined
+      const shaped = inlet || outlet
+      const across = shaped?.across ?? pavingColumns(width, left, right)
       const top = across.map(lateral => [lateral, passage.floorY(station, lateral) - station.y] as const)
       const leftY = top[0][1]
       const rightY = top.at(-1)![1]
       return [
         top,
         [[right, rightY], [right, rightY - pavingThickness]],
-        inlet ? top.toReversed().map(([lateral, y]) => [lateral, y - pavingThickness] as const) : [[right, -pavingThickness], [-left, -pavingThickness]],
+        // A joined floor keeps this thickness upstream too, so active crossfall cannot leave an open underside at the split.
+        shaped || passage.floorOutlet ? top.toReversed().map(([lateral, y]) => [lateral, y - pavingThickness] as const) : [[right, -pavingThickness], [-left, -pavingThickness]],
         [[-left, leftY - pavingThickness], [-left, leftY]],
       ]
     }
-    const makePaving = (pavingRuns: ReadonlyArray<ReadonlyArray<RouteStation>>) => breakPits(mergeParts(sweep(pavingRuns, pavingSection, false, passage.floorInlet ? [2] : [])), passage, passage.pits)
+    const makePaving = (pavingRuns: ReadonlyArray<ReadonlyArray<RouteStation>>) => breakPits(mergeParts(sweep(pavingRuns, pavingSection, false, passage.floorInlet || passage.floorOutlet ? [2] : [])), passage, passage.pits)
     const paving = makePaving(floorRuns)
     const tail = route.pieces.at(-1)!
     if (passage.floorInlet && !passage.pits.length && !passage.drains.length && tail.kind === 'line' && tail.from >= passage.floorInlet.inlet.length && tail.startY === tail.endY) {

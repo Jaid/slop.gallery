@@ -5,7 +5,6 @@ import {BufferGeometry, Float32BufferAttribute} from 'three/webgpu'
 
 import {wallFace} from '../architectureDimensions.ts'
 import {cutFloorOpening} from '../floorPolygons.ts'
-import {pavingThickness} from './RouteVaultGeometry.ts'
 
 /** the opening down to the floor a hollow sinks toward, in a wall running east and west or north and south */
 export type HollowOutlet = {
@@ -41,7 +40,7 @@ type Point = readonly [x: number, z: number]
 
 /** how finely its surface is cut, in meters */
 const step = 0.06
-/** how far under the floor beyond the wall its surface runs, a little step down onto that floor */
+/** how far below the seam’s deepest point the adjoining floor’s datum lies */
 const outletStep = 0.02
 /** a bump from 1 in its middle down to 0, smoothly, at ±1 and beyond */
 const bump = (s: number) => (Math.abs(s) < 1 ? (1 - s * s) ** 2 : 0)
@@ -49,12 +48,12 @@ const bump = (s: number) => (Math.abs(s) < 1 ? (1 - s * s) ** 2 : 0)
 /**
  * A hollow the paving of a floor at `y` has sunk into in front of an opening down to the floor, deepest just beyond the opening, as though water had long drained off through it: whatever rolls across it runs down into the opening.
  * It sinks nowhere beyond its throat along the wall, so the walls beside the opening keep standing on the floor; in front of the wall it widens out as far as its `spread` lets it.
- * Floors it lies in lose the rectangle its surface takes up, see {@link FloorHollow.cut}, and its surface, which steps down onto the floor beyond the opening at {@link FloorHollow.outletY}, is a geometry of its own, see {@link FloorHollow.geometry}.
+ * Floors it lies in lose the rectangle its surface takes up, see {@link FloorHollow.cut}, and its surface is a geometry of its own, see {@link FloorHollow.geometry}.
  */
 export default class FloorHollow {
   /** the rectangle its surface takes up in plan */
   readonly footprint: FloorRectangle
-  /** how high the floor beyond the opening has to lie: a little lower than its surface anywhere along the opening */
+  /** the datum for the floor beyond the opening, a little below the deepest point of the seam; blend its outlet profile into that floor */
   readonly outletY: number
   /** the direction to the right of `into`, seen from above with north up */
   private readonly right: Point
@@ -93,8 +92,27 @@ export default class FloorHollow {
     return cutFloorOpening(polygon, this.footprint)
   }
 
+  /** The height on its visible triangles, or undefined outside its footprint. */
+  floorAt(x: number, z: number) {
+    const {center: [cx, cz], size: [width, depth]} = this.footprint
+    const columns = Math.ceil(width / step)
+    const rows = Math.ceil(depth / step)
+    const across = (x - cx + width / 2) / width * columns
+    const along = (z - cz + depth / 2) / depth * rows
+    if (across < -1e-9 || across > columns + 1e-9 || along < -1e-9 || along > rows + 1e-9) {
+      return
+    }
+    const column = Math.min(Math.max(Math.floor(across), 0), columns - 1)
+    const row = Math.min(Math.max(Math.floor(along), 0), rows - 1)
+    const u = Math.min(Math.max(across - column, 0), 1)
+    const t = Math.min(Math.max(along - row, 0), 1)
+    const at = (c: number, r: number) => this.y - this.sink(cx - width / 2 + width * c / columns, cz - depth / 2 + depth * r / rows)
+    const [a, b, c, d] = [at(column, row), at(column + 1, row), at(column, row + 1), at(column + 1, row + 1)]
+    return t + u <= 1 ? a + (b - a) * u + (c - a) * t : d + (c - d) * (1 - u) + (b - d) * (1 - t)
+  }
+
   /**
-   * Its surface, facing up, in world space, with the paving’s metric UVs: sunk into the floor over its rectangle, and the step down from its edge along the wall’s center line between the opening’s jambs to the floor beyond and a paving’s depth under it, facing through the opening.
+   * Its surface, facing up, in world space, with the paving’s metric UVs. The adjoining floor must match its outlet profile; no vertical drop face slices across their join.
    */
   geometry() {
     const {center: [cx, cz], size: [width, depth]} = this.footprint
@@ -119,22 +137,6 @@ export default class FloorHollow {
         indices.push(a, c, b, b, c, d)
       }
     }
-    // The step down beyond the opening, its top along the surface’s edge.
-    const {half, into: [ix, iz]} = this.outlet
-    const segments = Math.ceil(half * 2 / step)
-    const start = positions.length / 3
-    for (let segment = 0; segment <= segments; segment++) {
-      const [x, z] = this.at(-half + half * 2 * segment / segments, 0)
-      positions.push(x, this.y - this.sink(x, z), z, x, this.outletY - pavingThickness, z)
-    }
-    // Wound to face through the opening, down onto the floor beyond: the step runs to the right along its top, down its face.
-    const [rx, rz] = this.right
-    const facing = rz * ix - rx * iz > 0
-    for (let segment = 0; segment < segments; segment++) {
-      const top = start + segment * 2
-      const [bottom, nextTop, nextBottom] = [top + 1, top + 2, top + 3]
-      indices.push(...facing ? [top, nextTop, bottom, nextTop, nextBottom, bottom] : [top, bottom, nextTop, nextTop, bottom, nextBottom])
-    }
     const geometry = new BufferGeometry
     geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
     const uv: Array<number> = []
@@ -157,6 +159,28 @@ export default class FloorHollow {
     const out = -((x - cx) * ix + (z - cz) * iz)
     const across = (x - cx) * this.right[0] + (z - cz) * this.right[1]
     return depth * bump(across / this.wide(across < 0 ? 0 : 1, out)) * bump((out + beyond) / reach)
+  }
+
+  /** Every knot of the surface’s seam, with its grade through the outlet, across a span between wall center lines. */
+  outletProfile(half: number) {
+    const axis = this.right[0] === 0 ? 1 : 0
+    const {center, size} = this.footprint
+    const normalAxis = 1 - axis
+    if (!Number.isFinite(half) || half <= 0 || Math.abs(Math.abs(this.outlet.center[normalAxis] - center[normalAxis]) - size[normalAxis] / 2) > 1e-9) {
+      throw new RangeError('A hollow’s outlet profile needs a positive half width and an outlet on its surface’s edge.')
+    }
+    const count = Math.ceil(size[axis] / step)
+    const samples = Array.from({length: count + 1}, (_, i) => (center[axis] - size[axis] / 2 + size[axis] * i / count - this.outlet.center[axis]) / this.right[axis]).filter(across => across > -half && across < half)
+    const rowDepth = size[normalAxis] / Math.ceil(size[normalAxis] / step)
+    return [-half, ...samples, half].toSorted((a, b) => a - b).map(across => {
+      const [x, z] = this.at(across, 0)
+      const y = this.floorAt(x, z)
+      const before = this.floorAt(x - this.outlet.into[0] * rowDepth, z - this.outlet.into[1] * rowDepth)
+      if (y === undefined || before === undefined) {
+        throw new RangeError('A hollow’s outlet profile must lie on its surface’s edge, with paving immediately before it.')
+      }
+      return [across, y, (y - before) / rowDepth] as const
+    })
   }
 
   /** How far under `y` its surface lies at the point in plan: the floor’s own sag round it and the hollow sunk into that. */
