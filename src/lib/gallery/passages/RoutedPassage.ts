@@ -103,6 +103,33 @@ const tolerance = 1e-6
 /** the direction to the right of a heading, seen from above with north up */
 const rightOf = (heading: number): Point => [-Math.sin(heading), Math.cos(heading)]
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high)
+/** how far a baseboard along a floor outlet may stray from the floor it follows, in meters, so its profile needs no knot for every row of the outlet: every knot costs a cut across its whole trim, and round a tight turn, many rows fall onto a few centimeters of wall */
+const profileTolerance = 0.0005
+/** The profile without the knots that lie within `profileTolerance` of the straight line between the ones kept around them, its ends always kept. */
+const simplifyProfile = (profile: ReadonlyArray<readonly [number, number]>) => {
+  const kept = new Set([0, profile.length - 1])
+  const split = (first: number, last: number) => {
+    const [[u0, y0], [u1, y1]] = [profile[first], profile[last]]
+    let worst = -1
+    let deviation = profileTolerance
+    for (let index = first + 1; index < last; index++) {
+      const [u, y] = profile[index]
+      const off = Math.abs(y - (u1 - u0 > 1e-12 ? y0 + (y1 - y0) * (u - u0) / (u1 - u0) : y0))
+      if (off <= deviation) {
+        continue
+      }
+      deviation = off
+      worst = index
+    }
+    if (worst !== -1) {
+      kept.add(worst)
+      split(first, worst)
+      split(worst, last)
+    }
+  }
+  split(0, profile.length - 1)
+  return profile.filter((_, index) => kept.has(index))
+}
 /** a smooth step from 0 at `s` = 0 and below up to 1 at 1 and beyond */
 const smoothstep = (s: number) => {
   const t = clamp(s, 0, 1)
@@ -599,9 +626,10 @@ export default class RoutedPassage {
     if (piece.startY === piece.endY && (!this.floorInlet || piece.from >= this.floorInlet.inlet.length) && (!this.floorOutlet || piece.from + piece.length <= this.floorOutlet.from)) {
       return wall
     }
-    // Where the floor meets the wall along its center line, at the piece’s ends and at every knot of its ramp in between
+    // Where the floor meets the wall along its center line, at the piece’s ends and at every knot of its ramp in between, or of the shaped floor along the inlet or the outlet
     const half = this.width / 2
-    const stations = this.floorInlet || this.floorOutlet ? this.floorStations(piece.from, piece.from + piece.length) : [0, ...PassageRoute.knots(piece), piece.length].map(offset => PassageRoute.station(piece, offset))
+    const outlet = this.floorOutlet !== undefined && piece.from + piece.length > this.floorOutlet.from
+    const stations = this.floorInlet || outlet ? this.floorStations(piece.from, piece.from + piece.length) : [0, ...PassageRoute.knots(piece), piece.length].map(offset => PassageRoute.station(piece, offset))
     const contact = stations.map((station): readonly [number, number] => {
       const {point: [x, z], heading} = station
       const y = this.floorY(station, side * half)
@@ -610,7 +638,7 @@ export default class RoutedPassage {
     })
     return {
       ...wall,
-      baseboardProfile: contact.toSorted((a, b) => a[0] - b[0]),
+      baseboardProfile: outlet ? simplifyProfile(contact.toSorted((a, b) => a[0] - b[0])) : contact.toSorted((a, b) => a[0] - b[0]),
     }
   }
 }

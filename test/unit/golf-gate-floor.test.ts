@@ -8,9 +8,10 @@ import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/galler
 import {baseboardCapFront, defaultBaseboardHeight, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionLink, bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import FloorHollow from '../../src/lib/gallery/passages/FloorHollow.ts'
+import PassageRoute from '../../src/lib/gallery/passages/PassageRoute.ts'
 import pavingColumns from '../../src/lib/gallery/passages/pavingColumns.ts'
 import RouteVaultGeometry, {pavingThickness} from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
-import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import {wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import {floorHeight} from './fixtures/gallery.ts'
 import {addOrb, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
 
@@ -158,6 +159,31 @@ test('both tunnel baseboards follow the blend through their profiles, while the 
   expect(bastionLinkGate.wall.center[1] + bastionLinkGate.hatch.bottom!).toBe(route.end.y)
   // Space for the 28 cm orb remains under the hatch’s 50 cm crown.
   expect(bastionLinkGate.wall.center[1] + bastionLinkGate.hatch.height - bastionLink.floorAt(gateX, gateZ)!).toBeGreaterThan(0.45)
+})
+test('baseboards spend knots only where the blend bends them: none for its rows on walls before it, and along it none closer to the floor than half a millimeter', () => {
+  for (const [index, piece] of route.pieces.entries()) {
+    const walls = bastionLink.walls.slice(index * 2, index * 2 + 2)
+    if (piece.from + piece.length <= bastionLink.floorOutlet!.from) {
+      for (const wall of walls) {
+        expect(wall.baseboardProfile?.length ?? 2).toBeLessThanOrEqual(PassageRoute.knots(piece).length + 2)
+      }
+      continue
+    }
+    for (const [side, wall] of [[-1, walls[0]], [1, walls[1]]] as const) {
+      const profile = wall.baseboardProfile!
+      expect(profile.length).toBeLessThan(bastionLink.floorStations(piece.from, piece.from + piece.length).length)
+      for (const station of bastionLink.floorStations(piece.from, piece.from + piece.length)) {
+        const x = station.point[0] - Math.sin(station.heading) * side * half
+        const z = station.point[1] + Math.cos(station.heading) * side * half
+        const u = Math.min(Math.max(wallCoordinates(wall, [x, 0, z]), -wall.width / 2), wall.width / 2)
+        const following = profile.findIndex(([knot]) => knot >= u)
+        const next = following === -1 ? profile.length - 1 : Math.max(1, following)
+        const [[u0, y0], [u1, y1]] = [profile[next - 1], profile[next]]
+        const rise = u1 - u0 > 1e-12 ? y0 + (y1 - y0) * (u - u0) / (u1 - u0) : y0
+        expect(Math.abs(wall.center[1] + rise - bastionLink.floorY(station, side * half))).toBeLessThan(0.0006)
+      }
+    }
+  }
 })
 test('the rendered baseboard caps follow the reshaped floor around both sides of the turn', () => {
   for (const wall of bastionLink.walls.slice(-4)) {
