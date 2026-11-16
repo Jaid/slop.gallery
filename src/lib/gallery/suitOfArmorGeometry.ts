@@ -441,7 +441,7 @@ function leg(outside: number, rivets: Array<Rivet>) {
   }))
   return parts
 }
-/** One arm, `outside` 1 for the left and -1 for the right, hanging a little away from the body with its elbow a little bent: the pauldron over the shoulder, a broad cap and a rondel guarding the armpit in front, the rerebrace down the upper arm, the couter round the elbow with its fan of a wing, the vambrace down the forearm and the gauntlet, a flared cuff and a mitten of a hand of lames with its thumb, its fingers curling in a little. */
+/** One arm, `outside` 1 for the left and -1 for the right, hanging a little away from the body with its elbow a little bent: the pauldron over the shoulder, a broad cap with two lames under it and a rondel guarding the armpit in front, the rerebrace down the upper arm, the couter round the elbow with its fan of a wing, the vambrace down the forearm and the gauntlet, a flared cuff and a mitten of a hand of lames with its thumb, its fingers curling in a little. */
 function arm(outside: number, rivets: Array<Rivet>) {
   const mirror = ([x, y, z]: Joint): Joint => [x * outside, y, z]
   const elbow: Joint = [0.296, 1.165, -0.036]
@@ -465,6 +465,25 @@ function arm(outside: number, rivets: Array<Rivet>) {
       // flaring out toward its rim like a bell
       swell: share => 1 + 0.15 * share ** 3,
     }),
+    // Two lames lapping down the top of the arm from under it, each a little narrower than the one above
+    ...[[1.44, 1.385, 0.07, 0.074], [1.4, 1.35, 0.064, 0.07]].map(([from, to, top, bottom]) => plate(mirror([0.262, from, -0.012]), mirror([0.27, to, -0.016]), [
+      {
+        at: 0,
+        side: top,
+        front: top + 0.012,
+        back: top + 0.016,
+      },
+      {
+        at: 1,
+        side: bottom,
+        front: bottom + 0.012,
+        back: bottom + 0.016,
+      },
+    ], {
+      columns: 20,
+      rolls: [undefined, 0.003],
+      samples: [0, 1],
+    })),
     // The rondel in front of the armpit
     dome(mirror(rondel), mirror(rondelFacing), [0, 1, 0], {
       side: 0.046,
@@ -476,8 +495,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
       rim: () => 90,
       roll: 0.0025,
     }),
-    // The rerebrace, rising up under the cap
-    plate(mirror([0.2557, 1.46, -0.0248]), mirror(elbow), [
+    plate(mirror([0.268, 1.37, -0.016]), mirror(elbow), [
       {
         at: 0,
         side: 0.056,
@@ -485,13 +503,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
         back: 0.056,
       },
       {
-        at: 0.3,
-        side: 0.056,
-        front: 0.058,
-        back: 0.056,
-      },
-      {
-        at: 0.72,
+        at: 0.6,
         side: 0.052,
         front: 0.053,
         back: 0.052,
@@ -504,7 +516,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
       },
     ], {
       columns: 18,
-      samples: [0, 0.3, 0.55, 0.8, 1],
+      samples: [0, 0.35, 0.7, 1],
     }),
     dome(mirror([0.297, 1.16, -0.04]), mirror([0.25, 0, -1]), [0, 1, 0], {
       side: 0.058,
