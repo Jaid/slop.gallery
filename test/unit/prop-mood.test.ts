@@ -18,7 +18,7 @@ const magicItems = [
 const props = new Map<string, {mood?: MoodId}>([
   ...magicItems.flatMap(([item]) => [[item.propId, {}], [`${item.propId}-2`, {}]] as const),
   ...orbs.map(orb => [orb.propId, {mood: orb.mood}] as const),
-  ['prop-cube', {}],
+  ['prop-plain', {}],
   ['prop-pumpkinseed', {}],
 ])
 describe('held magic items’ moods', () => {
@@ -90,7 +90,7 @@ describe('held magic items’ moods', () => {
     expect(propMood(helmet.propId, new Map([[helmet.propId, {mood: 'paint'}]]), 'forge')).toBe(moods.paint)
   })
   test('empty hands and ordinary props do not cast a mood', () => {
-    for (const id of [null, '', 'prop-cube', 'prop-pumpkinseed', 'unknown']) {
+    for (const id of [null, '', 'prop-plain', 'prop-pumpkinseed', 'unknown']) {
       expect(propMood(id, props, 'forge')).toBeUndefined()
     }
   })

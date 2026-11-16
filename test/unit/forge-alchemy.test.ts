@@ -727,7 +727,7 @@ describe('the alchemy machine’s orbs', () => {
     // Several of a kind steer it no harder than one.
     expect(flavorCandidates([['prop-pumpkin', inForge], ['prop-pumpkin-2', inForge], ['prop-hatchet', inForge]], roomAt)).toEqual([halloweenOrb, horrorOrb])
     expect([0, 0.49, 0.5, 0.99].map(random => flavoredOrb([['prop-pumpkin', inForge], ['prop-hatchet', inForge]], roomAt, random))).toEqual([halloweenOrb, halloweenOrb, horrorOrb, horrorOrb])
-    expect(flavorCandidates([['prop-pumpkin', inLobby], ['prop-cube', inForge], ['prop-pumpkinseed', inForge], [halloweenOrb.propId, inForge]], roomAt)).toEqual([transparentOrb])
+    expect(flavorCandidates([['prop-pumpkin', inLobby], ['prop-plain', inForge], ['prop-pumpkinseed', inForge], [halloweenOrb.propId, inForge]], roomAt)).toEqual([transparentOrb])
   })
   test('scattered cannon shots pass the arch and the window untouched, come down into the cistern’s channel and ride it round without leaving its groove, out through the culvert and on down the Bastion to its crater, never dragged across the welded surfaces', () => {
     const colliders = forgeAndBastionColliders()

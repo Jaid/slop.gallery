@@ -1,6 +1,6 @@
 import type {Material} from 'three/webgpu'
 
-import {ConvexHullCollider, CuboidCollider, CylinderCollider, RigidBody} from '@react-three/rapier'
+import {ConvexHullCollider, CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {ExtrudeGeometry, Shape, Vector2} from 'three/webgpu'
@@ -8,7 +8,7 @@ import {ExtrudeGeometry, Shape, Vector2} from 'three/webgpu'
 import OculusGround from '#component/OculusGround'
 import OculusRailings from '#component/OculusRailings'
 import Box from '#src/components/Scene/primitives.tsx'
-import lowerGallery, {oculusCeiling, oculusLandingPlinths} from '#src/lib/gallery/lowerGallery.ts'
+import lowerGallery, {oculusCeiling} from '#src/lib/gallery/lowerGallery.ts'
 import {apseOutline} from '#src/lib/gallery/oculusApse.ts'
 import oculusBalcony from '#src/lib/gallery/oculusBalcony.ts'
 import ApseGrilles from '#src/rooms/oculus/components/ApseGrilles/index.tsx'
@@ -28,10 +28,6 @@ export default function OculusRoom({material, stone}: {
     <RigidBody colliders={false} type='fixed'>
       <CuboidCollider args={oculusBalcony.size.map(value => value / 2) as [number, number, number]} position={oculusBalcony.position} />
       <Box material={material} name='oculus-balcony' position={oculusBalcony.position} size={oculusBalcony.size} />
-      {oculusLandingPlinths.map(({side, position, radius, height}) => <group key={side} position={position}>
-        <CylinderCollider args={[height / 2, radius]} />
-        <mesh castShadow material={material} name={`oculus-landing-plinth-${side}`} receiveShadow><cylinderGeometry args={[radius, radius, height, 32]} /></mesh>
-      </group>)}
       <CuboidCollider args={[oculus.size[0] / 2, 0.12, oculus.size[1] / 2]} position={[oculus.center[0], floorY - 0.12, oculus.center[1]]} />
       <Box material={material} name='oculus-floor' position={[oculus.center[0], floorY - 0.12, oculus.center[1]]} size={[oculus.size[0], 0.24, oculus.size[1]]} />
       {oculusCeiling.map(({center: [x, z], size: [width, depth]}, i) => <group key={i}>

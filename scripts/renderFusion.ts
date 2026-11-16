@@ -56,7 +56,7 @@ Starts a private Vite dev server (or serves --target) and a private headless bro
 With --emphasis result, a probe renders the fusion small first to learn where the result lands, which the camera of the film then plans for.
 
 Options:
-  --ingredient <orb|prop> what is thrown: a kind of orb, which enters the world just for the throw, or the id of a prop already in the world, like prop-cube. Default: spook
+  --ingredient <orb|prop> what is thrown: a kind of orb, which enters the world just for the throw, or the id of a prop already in the world, like prop-pumpkin. Default: spook
                           ${orbs.map(orb => orb.id).join(', ')}
   --portrait <id|file|url>
                           the work it is thrown into: a default work by its id, which hangs where the seed hangs it, or an image file or URL, which hangs in a portrait slot of --room as an imported work. Default: the first work hung in --room
@@ -614,7 +614,7 @@ const resolveIngredient = (ingredient: string) => {
     }
   }
   if (!ingredient.startsWith('prop-')) {
-    throw new Error(`--ingredient must be a kind of orb (${orbs.map(candidate => candidate.id).join(', ')}) or the id of a prop, like prop-cube, got “${ingredient}”.`)
+    throw new Error(`--ingredient must be a kind of orb (${orbs.map(candidate => candidate.id).join(', ')}) or the id of a prop, like prop-pumpkin, got “${ingredient}”.`)
   }
   return {
     label: ingredient.replace(/^prop-/, ''),
