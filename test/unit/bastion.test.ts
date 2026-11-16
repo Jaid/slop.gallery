@@ -7,9 +7,13 @@ import EgoMotor from 'ego-player/motor'
 import {Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
-import {corniceBands} from '../../src/lib/gallery/architectureDimensions.ts'
+import {corniceBands, vaultShellThickness, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionApproach, bastionCurve, bastionDoorway, bastionMouth, bastionOrigin, bastionPassages, bastionTransition} from '../../src/lib/gallery/bastion.ts'
-import {bastionLink, lodgeSpur} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, bastionNetwork, climbMouthHollow, lodgeSpur} from '../../src/lib/gallery/bastionNetwork.ts'
+import {cistern, cisternDomeRibs} from '../../src/lib/gallery/cistern/cistern.ts'
+import CisternGeometry from '../../src/lib/gallery/cistern/CisternGeometry.ts'
+import HalfDomeGeometry from '../../src/lib/gallery/cistern/HalfDomeGeometry.ts'
+import InflowGeometry from '../../src/lib/gallery/cistern/InflowGeometry.ts'
 import {easedRampGradient} from '../../src/lib/gallery/easedRamp.ts'
 import {slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
@@ -17,10 +21,12 @@ import {oculusPlatform} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse, {apseArcs, insideApse} from '../../src/lib/gallery/oculusApse.ts'
 import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import tower, {towerBridge, towerFloorHeight} from '../../src/lib/gallery/oculusTower.ts'
+import Passage from '../../src/lib/gallery/passages/Passage.ts'
 import PassageRoute from '../../src/lib/gallery/passages/PassageRoute.ts'
 import RoutedPassage from '../../src/lib/gallery/passages/RoutedPassage.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
+import suitOfArmorGeometry from '../../src/lib/gallery/suitOfArmorGeometry.ts'
 import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import walls, {floorHeight, insideGallery, roomAt} from './fixtures/gallery.ts'
 import {addBastionCrater} from './helpers/bastionCrater.ts'
@@ -47,6 +53,11 @@ afterAll(() => {
 const platformY = oculusPlatform.position[1] + oculusPlatform.size[1] / 2
 /** how steeply the curve’s floor climbs `along` meters down it, over 2 cm */
 const slope = (along: number) => (route.at(along + 0.01).y - route.at(along - 0.01).y) / 0.02
+const triCount = (geometry: NonNullable<ConstructorParameters<typeof Mesh>[0]>) => {
+  const pos = geometry.getAttribute('position') as {count: number} | undefined
+  const count = geometry.index?.count ?? pos?.count ?? 0
+  return Math.floor(count / 3)
+}
 /** stations every half meter along the curve’s center line */
 const stations = Array.from({length: Math.floor(route.length / 0.5) + 1}, (_, i) => route.at(i * 0.5))
 describe('the Bastion’s route round the Oculus', () => {
@@ -457,5 +468,85 @@ describe('the Bastion’s route round the Oculus', () => {
     expect(bastionOrigin[0]).toBeCloseTo(tower.x, 9)
     expect(bastionOrigin[1]).toBe(platformY)
     expect(bastionOrigin[2]).toBeCloseTo(oculusApse.northZ - oculusApse.depth - 0.3 - bastionCurve.width / 2, 9)
+  })
+  test('the Bastion’s visual geometry keeps within its reduced triangle budget while sharing one Rapier topology with Cinematic', () => {
+    let visual = 0
+    for (const passage of bastionNetwork) {
+      if (passage instanceof RoutedPassage) {
+        const base = new RouteVaultGeometry(passage)
+        const cin = new RouteVaultGeometry(passage, 2)
+        visual += triCount(base.paving) + triCount(base.shell) + triCount(base.ribs)
+        expect(colliderGeometry(cin.pavingCollision)).toEqual(colliderGeometry(base.pavingCollision))
+        expect(colliderGeometry(cin.shellCollision)).toEqual(colliderGeometry(base.shellCollision))
+        expect(colliderGeometry(cin.ribsCollision)).toEqual(colliderGeometry(base.ribsCollision))
+        expect(triCount(cin.shell)).toBeGreaterThan(triCount(base.shell))
+        base.dispose()
+        cin.dispose()
+      } else if (passage instanceof Passage) {
+        const ribFree = passage.id === 'approach' ? bastionTransition.length : 0
+        const base = new VaultGeometry(passage, ribFree)
+        const cin = new VaultGeometry(passage, ribFree, 2)
+        visual += triCount(base.shell) + triCount(base.ribs)
+        if (base.shell.hasAttribute('position')) {
+          expect(colliderGeometry(cin.shellCollision)).toEqual(colliderGeometry(base.shellCollision))
+        }
+        if (base.ribs.hasAttribute('position')) {
+          expect(colliderGeometry(cin.ribsCollision)).toEqual(colliderGeometry(base.ribsCollision))
+        }
+        expect(triCount(cin.shell)).toBeGreaterThan(triCount(base.shell))
+        base.dispose()
+        cin.dispose()
+      }
+    }
+    const hollow = climbMouthHollow.geometry()
+    visual += triCount(hollow)
+    hollow.dispose()
+    const cis = new CisternGeometry
+    const cisCin = new CisternGeometry(2)
+    visual += triCount(cis.floor) + triCount(cis.channel) + triCount(cis.water) + triCount(cis.falling)
+    expect(colliderGeometry(cisCin.channelCollision)).toEqual(colliderGeometry(cis.channelCollision))
+    expect(colliderGeometry(cisCin.floor)).toEqual(colliderGeometry(cis.floor))
+    cis.dispose()
+    cisCin.dispose()
+    const dome = new HalfDomeGeometry({
+      center: cistern.center,
+      radius: cistern.radius - wallFace,
+      spring: cistern.spring,
+      rise: cistern.rise,
+    }, {
+      ribs: cisternDomeRibs,
+      ribSection: [0.22, 0.085],
+      thickness: vaultShellThickness,
+    })
+    const domeCin = new HalfDomeGeometry({
+      center: cistern.center,
+      radius: cistern.radius - wallFace,
+      spring: cistern.spring,
+      rise: cistern.rise,
+    }, {
+      ribs: cisternDomeRibs,
+      ribSection: [0.22, 0.085],
+      thickness: vaultShellThickness,
+    }, 2)
+    visual += triCount(dome.shell) + triCount(dome.ribs)
+    expect(colliderGeometry(domeCin.surface)).toEqual(colliderGeometry(dome.surface))
+    dome.dispose()
+    domeCin.dispose()
+    const inflow = new InflowGeometry
+    const inflowCin = new InflowGeometry(2)
+    visual += triCount(inflow.pipe)
+    expect(colliderGeometry(inflowCin.collision)).toEqual(colliderGeometry(inflow.collision))
+    inflow.dispose()
+    inflowCin.dispose()
+    const armor = suitOfArmorGeometry()
+    visual += triCount(armor)
+    armor.dispose()
+    for (const {wall, geometry} of architecture) {
+      if (wall.room !== 'bastion') {
+        continue
+      }
+      visual += triCount(geometry.surface) + geometry.trim.reduce((s, g) => s + triCount(g), 0) + geometry.cornice.reduce((s, g) => s + triCount(g), 0)
+    }
+    expect(visual).toBeLessThan(110_000)
   })
 })
