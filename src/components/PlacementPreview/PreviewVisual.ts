@@ -99,8 +99,8 @@ export default class PreviewVisual {
     this.imageMaterial.dispose()
   }
 
-  update(valid: boolean, delta: number, inReach = true) {
-    this.tint.value.set(valid ? previewColors.valid : previewColors.invalid)
+  update(fits: boolean, delta: number, inReach = true) {
+    this.tint.value.set(fits ? previewColors.valid : previewColors.invalid)
     this.opacity.value = previewOpacity(inReach)
     this.time.value = (this.time.value + clamp(delta, 0, 0.06)) % 1024
   }

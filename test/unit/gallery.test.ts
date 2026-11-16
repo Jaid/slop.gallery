@@ -72,11 +72,19 @@ describe('wall geometry', () => {
       expect(galleryPlacement.findPlacement([4, 2.5, z], [0, 0, -1], 2, 2, [])).toMatchObject({
         wallId: 'lobby-north',
         position: [4, 2.5, -31.78],
+        fits: true,
         inReach: false,
         valid: false,
         reason: 'reach',
       })
     }
+    const p = samplePortraits[0]
+    expect(galleryPlacement.findPlacement([p.position[0], p.position[1], 5], [0, 0, -1], p.width, p.height, samplePortraits)).toMatchObject({
+      fits: false,
+      inReach: false,
+      valid: false,
+      reason: 'reach',
+    })
     expect(galleryPlacement.findPlacement([4, 2.5, -22], [0, 0, -1], 2, 2, [])).toMatchObject({
       inReach: true,
       valid: true,

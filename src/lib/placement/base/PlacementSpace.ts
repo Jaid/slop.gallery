@@ -53,12 +53,15 @@ export abstract class PlacementSpace {
       const position = wallPosition(candidateWall, u, point[1])
       const inReach = distance * length <= this.reach
       let above = labelAbove
-      let reason: Placement['reason'] = inReach ? this.placementIssue(candidateWall, position, width, height, portraits, ignoreId, above) : placementIssues.reach
-      if (reason && inReach && !this.placementIssue(candidateWall, position, width, height, portraits, ignoreId, !above)) {
+      // The spot is judged even out of reach, so its preview tells whether walking up to it would do.
+      let issue: Placement['reason'] = this.placementIssue(candidateWall, position, width, height, portraits, ignoreId, above)
+      if (issue && !this.placementIssue(candidateWall, position, width, height, portraits, ignoreId, !above)) {
         above = !above
-        reason = ''
+        issue = ''
       }
+      const reason: Placement['reason'] = inReach ? issue : placementIssues.reach
       result = {
+        fits: !issue,
         inReach,
         labelAbove: above,
         position,

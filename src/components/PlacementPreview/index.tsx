@@ -22,7 +22,8 @@ export default function PlacementPreview({width, height, frame, source, title, c
   width: number
 }) {
   const {texture} = useArtworkTexture(source)
-  const valid = useGallery(s => s.placement?.valid === true)
+  // A spot that would take the work shows green even out of reach, only faded.
+  const fits = useGallery(s => s.placement?.fits === true)
   const inReach = useGallery(s => s.placement?.inReach === true)
   // The placard previews on the side it would hang, which flips when only the placard blocks a spot.
   const above = useGallery(s => s.placement?.labelAbove === true)
@@ -30,7 +31,7 @@ export default function PlacementPreview({width, height, frame, source, title, c
   const visual = useDisposable(useMemo(() => new PreviewVisual(width, height, frame.reach, texture), [frame, height, texture, width]))
   useFrame((_, delta) => {
     const {placement} = useGallery.getState()
-    visual.update(placement?.valid === true, delta, placement?.inReach === true)
+    visual.update(placement?.fits === true, delta, placement?.inReach === true)
   })
   return <>
     <mesh position={[0, 0, frame.imageDepth + 0.01]}>
@@ -43,7 +44,7 @@ export default function PlacementPreview({width, height, frame, source, title, c
     </mesh>
     <PortraitLabel
       above={above} creator={creator} height={height} pending={pending} preview={{
-        color: valid ? previewColors.valid : previewColors.invalid,
+        color: fits ? previewColors.valid : previewColors.invalid,
         opacity: previewOpacity(inReach),
       }} title={title} width={width}
     />

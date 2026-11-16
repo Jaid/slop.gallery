@@ -89,6 +89,8 @@ export type PortraitSlot = {
   width: number
 }
 export type Placement = {
+  /** whether the spot itself takes the artwork, however far away it is */
+  fits: boolean
   inReach: boolean
   /** whether the placard goes above the frame, because below it would block the spot */
   labelAbove?: boolean

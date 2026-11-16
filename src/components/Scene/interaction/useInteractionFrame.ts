@@ -126,7 +126,7 @@ export default function useInteractionFrame(camera: RootState['camera'], rendere
       }
     }
     placement.current = candidate
-    if (candidate?.valid !== s.placement?.valid || candidate?.inReach !== s.placement?.inReach || candidate?.reason !== s.placement?.reason || candidate?.wallId !== s.placement?.wallId || candidate?.labelAbove !== s.placement?.labelAbove || !candidate && s.placement) {
+    if (candidate?.valid !== s.placement?.valid || candidate?.fits !== s.placement?.fits || candidate?.inReach !== s.placement?.inReach || candidate?.reason !== s.placement?.reason || candidate?.wallId !== s.placement?.wallId || candidate?.labelAbove !== s.placement?.labelAbove || !candidate && s.placement) {
       useGallery.setState({placement: candidate})
     }
     ghost.current.visible = !!candidate

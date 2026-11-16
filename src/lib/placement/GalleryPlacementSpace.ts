@@ -54,6 +54,7 @@ export class GalleryPlacementSpace extends PlacementSpace {
     return {
       distance,
       placement: {
+        fits: false,
         inReach: distance * Math.hypot(...direction) <= this.reach,
         position: [origin[0] + direction[0] * distance, origin[1] + direction[1] * distance, origin[2] + direction[2] * distance],
         rotation: direction[0] < 0 ? Math.PI / 2 : -Math.PI / 2,
