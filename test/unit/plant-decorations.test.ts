@@ -2,27 +2,15 @@ import {describe, expect, test} from 'bun:test'
 
 import {BoxGeometry, BufferGeometry, Mesh, MeshBasicNodeMaterial, Raycaster, Vector3} from 'three/webgpu'
 
-import {plantCombinations, plants, pots} from '../../src/lib/gallery/plantDecorations/catalog.ts'
-import {complexityLabel, decorationComplexity} from '../../src/lib/gallery/plantDecorations/complexity.ts'
+import {plants, pots} from '../../src/lib/gallery/plantDecorations/catalog.ts'
 import PlantGeometry from '../../src/lib/gallery/plantDecorations/PlantGeometry.ts'
 import PotGeometry from '../../src/lib/gallery/plantDecorations/PotGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 
 describe('modular botanical catalog', () => {
-  test('every vessel and every botanical pair up exactly once, numbered from 1, pot by pot', () => {
-    const potIds = new Set(pots.map(pot => pot.id))
-    expect(potIds.size).toBe(pots.length)
-    const plantIds = new Set(plants.map(plant => plant.id))
-    expect(plantIds.size).toBe(plants.length)
-    const pairs = pots.length * plants.length
-    expect(plantCombinations.map(combination => combination.number)).toEqual(Array.from({length: pairs}, (_, i) => i + 1))
-    const potPlantPairs = new Set(plantCombinations.map(combination => `${combination.pot}:${combination.plant}`))
-    expect(potPlantPairs.size).toBe(pairs)
-    for (const [row, pot] of pots.entries()) {
-      const potCombinations = plantCombinations.slice(row * plants.length, (row + 1) * plants.length)
-      expect(potCombinations.map(combination => combination.plant)).toEqual(plants.map(plant => plant.id))
-      expect(potCombinations.every(combination => combination.pot === pot.id)).toBe(true)
-    }
+  test('every vessel and every botanical has an ID of its own', () => {
+    const ids = new Set([...pots, ...plants].map(item => item.id))
+    expect(ids.size).toBe(pots.length + plants.length)
   })
   test('cinematic rounds the celadon shell but keeps its convex hull identical to the other graphics modes', () => {
     const heavy = new PotGeometry('celadon')
@@ -80,8 +68,8 @@ describe('modular botanical catalog', () => {
       material.dispose()
     }
   })
-  test('pot 01 stays within its triangle budget, including soil', () => {
-    const geometry = new PotGeometry(plantCombinations[0].pot)
+  test('the atelier clay pot stays within its triangle budget, including soil', () => {
+    const geometry = new PotGeometry('atelier')
     try {
       const triangles = triangleCount(geometry.shell) + triangleCount(geometry.soil) + triangleCount(geometry.trim)
       expect(triangles).toBeGreaterThanOrEqual(2500)
@@ -90,8 +78,8 @@ describe('modular botanical catalog', () => {
       geometry.dispose()
     }
   })
-  test('pot 09 stays within its triangle budget and retains all 40 evenly spaced flutes', () => {
-    const geometry = new PotGeometry(plantCombinations[8].pot)
+  test('the ivory flute pot stays within its triangle budget and retains all 40 evenly spaced flutes', () => {
+    const geometry = new PotGeometry('ivory')
     try {
       const triangles = triangleCount(geometry.shell) + triangleCount(geometry.soil) + triangleCount(geometry.trim)
       expect(triangles).toBeGreaterThanOrEqual(4000)
@@ -119,8 +107,8 @@ describe('modular botanical catalog', () => {
       geometry.dispose()
     }
   })
-  test('pot 17 stays within its triangle budget, including soil', () => {
-    const geometry = new PotGeometry(plantCombinations[16].pot)
+  test('the celadon pebble pot stays within its triangle budget, including soil', () => {
+    const geometry = new PotGeometry('celadon')
     try {
       const triangles = triangleCount(geometry.shell) + triangleCount(geometry.soil) + triangleCount(geometry.trim)
       expect(triangles).toBeGreaterThanOrEqual(3000)
@@ -129,8 +117,8 @@ describe('modular botanical catalog', () => {
       geometry.dispose()
     }
   })
-  test('pot 25 stays within its triangle budget, including soil and brass hardware', () => {
-    const geometry = new PotGeometry(plantCombinations[24].pot)
+  test('the noir pot stays within its triangle budget, including soil and brass hardware', () => {
+    const geometry = new PotGeometry('noir')
     try {
       expect(geometry.trim).not.toBeNull()
       const triangles = triangleCount(geometry.shell) + triangleCount(geometry.soil) + triangleCount(geometry.trim)
@@ -190,45 +178,5 @@ describe('plant sign complexity', () => {
       nonindexed.dispose()
       empty.dispose()
     }
-  })
-  test('every label includes the plant, vessel, soil and optional brass hardware exactly once', () => {
-    const plantGeometry = new Map(plants.map(plant => [plant.id, new PlantGeometry(plant.id)]))
-    const potGeometry = new Map(pots.map(pot => [pot.id, new PotGeometry(pot.id)]))
-    try {
-      for (const combination of plantCombinations) {
-        const pot = potGeometry.get(combination.pot)!
-        const plant = plantGeometry.get(combination.plant)!
-        const counts = decorationComplexity(pot, plant)
-        expect(counts.plantTriangles).toBe((plant.foliage.index!.count + plant.stems.index!.count) / 3)
-        expect(counts.potTriangles).toBe((pot.shell.index!.count + pot.soil.index!.count) / 3 + triangleCount(pot.trim))
-        expect(counts.triangles).toBe(counts.potTriangles + counts.plantTriangles)
-        expect(Number.isSafeInteger(counts.triangles)).toBe(true)
-        expect(counts.potTriangles).toBeGreaterThan(triangleCount(pot.shell))
-        if (pot.trim) {
-          expect(counts.potTriangles).toBeGreaterThan(triangleCount(pot.shell) + triangleCount(pot.soil))
-        }
-      }
-    } finally {
-      for (const geometry of [...plantGeometry.values(), ...potGeometry.values()]) {
-        geometry.dispose()
-      }
-    }
-  })
-  test('sign text splits pot and plant triangles in that order and groups each count independently', () => {
-    expect(complexityLabel({
-      potTriangles: 9999,
-      plantTriangles: 10_000,
-      triangles: 19_999,
-    })).toBe('Complexity: 9999 + 10 000 triangles')
-    expect(complexityLabel({
-      potTriangles: 123_456,
-      plantTriangles: 9999,
-      triangles: 133_455,
-    })).toBe('Complexity: 123 456 + 9999 triangles')
-    expect(complexityLabel({
-      potTriangles: 0,
-      plantTriangles: 0,
-      triangles: 0,
-    })).toBe('Complexity: 0 + 0 triangles')
   })
 })

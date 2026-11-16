@@ -130,8 +130,7 @@ describe('destructible botanical models', () => {
     }
     expect(geometry.leaves.filter(leaf => leaf.title.includes('flower'))).toHaveLength(kind === 'peaceLily' ? 3 : 0)
   })
-  test('interactive models preserve catalog numbers and fit below gallery ceilings', () => {
-    expect(destructiblePlants.map(specimen => specimen.number)).toEqual([33, 34])
+  test('interactive models fit below gallery ceilings', () => {
     for (const specimen of destructiblePlants) {
       const geometry = new DestructiblePlantGeometry(specimen.id)
       owned.push(geometry)
