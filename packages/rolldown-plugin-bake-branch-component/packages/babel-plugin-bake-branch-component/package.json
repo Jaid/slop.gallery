@@ -19,9 +19,9 @@
   "dependencies": {
     "@babel/helper-module-imports": "8.0.0",
     "@babel/helper-plugin-utils": "8.0.1",
-    "@babel/template": "8.0.0"
+    "@babel/template": "8.1.2"
   },
   "peerDependencies": {
-    "@babel/core": "^8.1.0"
+    "@babel/core": "^8.1.2"
   }
 }

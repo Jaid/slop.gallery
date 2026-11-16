@@ -18,11 +18,11 @@
   },
   "dependencies": {
     "vite-plugin-bake-core": "workspace:*",
-    "@napi-rs/canvas": "1.1.0"
+    "@napi-rs/canvas": "1.1.1"
   },
   "peerDependencies": {
     "three": "^0.187.0",
-    "vite": "^8.3.7"
+    "vite": "^8.3.8"
   },
   "devDependencies": {
     "fs-extra": "11.4.1",

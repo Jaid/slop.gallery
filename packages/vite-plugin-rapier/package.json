@@ -18,7 +18,7 @@
     "test": "bun test ./test"
   },
   "peerDependencies": {
-    "vite": "^8.3.7"
+    "vite": "^8.3.8"
   },
   "devDependencies": {
     "fs-extra": "11.4.1",

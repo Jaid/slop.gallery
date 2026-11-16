@@ -23,7 +23,7 @@
     "knot-materials": "workspace:*"
   },
   "peerDependencies": {
-    "puppeteer-core": "^25.16.0",
+    "puppeteer-core": "^25.17.0",
     "three": "^0.187.0"
   },
   "peerDependenciesMeta": {
