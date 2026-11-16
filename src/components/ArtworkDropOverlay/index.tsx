@@ -11,19 +11,27 @@ const messages = {
     title: 'It would look lovely here.',
     description: 'Drop to hang. The final size is checked before placement.',
   },
+  collecting: {
+    title: 'Straight into the collection.',
+    description: 'Drop to add it to your works. It waits at your feet once you resume.',
+  },
   rejected: {
     title: 'Not quite a canvas.',
-    description: 'Choose a supported image under 25 mb.',
+    description: 'Choose a supported image under 25 mb.',
   },
 }
 
-export default function ArtworkDropOverlay({rejected, valid}: {
+export default function ArtworkDropOverlay({collecting, rejected, valid}: {
+  /** whether the image goes into the collection, dragged in under the pause menu, instead of aiming into the scene */
+  collecting: boolean
   rejected: boolean
   valid: boolean
 }) {
   let message = messages.idle
   if (rejected) {
     message = messages.rejected
+  } else if (collecting) {
+    message = messages.collecting
   } else if (valid) {
     message = messages.valid
   }

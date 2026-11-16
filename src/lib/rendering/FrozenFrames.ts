@@ -11,7 +11,7 @@ export type FrozenFramesOptions = {
   draw: () => void
   /** the wall clock in ms, which the world’s own stands still against */
   now?: () => number
-  /** the IDs of what is underway that only further frames bring along, like objects still streaming in or an image dragged over the scene; the frozen world is drawn on while there is any, as long as it keeps changing (see {@link patience}) */
+  /** the IDs of what is underway that only further frames bring along, like objects still streaming in; the frozen world is drawn on while there is any, as long as it keeps changing (see {@link patience}) */
   pending?: () => ReadonlyArray<string>
   /** asks for a callback before the browser paints next */
   requestFrame?: (callback: () => void) => number

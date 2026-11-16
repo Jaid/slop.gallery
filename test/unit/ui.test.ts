@@ -5,13 +5,16 @@ import {renderToStaticMarkup} from 'react-dom/server'
 
 import ArtworkDropOverlay from '#component/ArtworkDropOverlay'
 
-test('the drop overlay distinguishes hanging, loose placement and rejected images', () => {
-  for (const [rejected, valid, title] of [
-    [false, false, 'Make an entrance.'],
-    [false, true, 'It would look lovely here.'],
-    [true, true, 'Not quite a canvas.'],
+test('the drop overlay distinguishes hanging, loose placement, collecting under the pause menu and rejected images', () => {
+  for (const [collecting, rejected, valid, title] of [
+    [false, false, false, 'Make an entrance.'],
+    [false, false, true, 'It would look lovely here.'],
+    [true, false, true, 'Straight into the collection.'],
+    [false, true, true, 'Not quite a canvas.'],
+    [true, true, false, 'Not quite a canvas.'],
   ] as const) {
     const html = renderToStaticMarkup(createElement(ArtworkDropOverlay, {
+      collecting,
       rejected,
       valid,
     }))

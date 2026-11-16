@@ -241,10 +241,13 @@ export default class ImageImporter {
     this.disposed = true
   }
 
-  import(files: Array<File>, target?: {
+  /** Brings in up to 12 images, each hung where `aimed` if it fits there, flipped off that wall if only the square previewing it fit, or else standing at the player’s feet (see {@link atFeet}). Under the pause menu, they go straight into the collection: aiming at nothing in the frozen scene, they wait at the player’s feet, already known to the player, who brought them in. */
+  import(files: Array<File>, aimed?: {
     direction: Vec3
     origin: Vec3
   }) {
+    const collecting = worldClock.frozen
+    const target = collecting ? undefined : aimed
     // Capture the drop location before decoding; walking must not move an in-flight import.
     const pose = {
       position: [...cameraPose.position] as Vec3,
@@ -296,6 +299,9 @@ export default class ImageImporter {
             size = dropped
           }
           const p = newPortrait(source, title, size.width, size.height, pose)
+          if (collecting) {
+            p.interacted = true
+          }
           if (place?.valid) {
             Object.assign(p, {
               position: place.position,

@@ -5,6 +5,7 @@ import {afterEach, beforeEach, expect, spyOn, test} from 'bun:test'
 import {bodyPose, cameraPose, galleryEvents, importDroppedFiles, isTextInput, viewPortrait} from '../../src/lib/gallery/actions.ts'
 import ImageImporter from '../../src/lib/gallery/ImageImporter.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
+import worldClock from '../../src/lib/worldClock.ts'
 
 const original = useGallery.getState()
 const previous = {
@@ -62,7 +63,7 @@ test('renderer-free drops decode and commit', async () => {
     importer.dispose()
   }
 })
-test('dropped images flip off their wall only where their square preview fit in reach, otherwise land at the player’s feet', async () => {
+test('dropped images flip off their wall only where their square preview fit in reach, otherwise land at the player’s feet, and go into the collection under the pause menu', async () => {
   Object.assign(globalThis, {
     createImageBitmap: async () => ({
       width: 64,
@@ -119,6 +120,22 @@ test('dropped images flip off their wall only where their square preview fit in 
     expect(blocked.velocity).toBeUndefined()
     expect(blocked.position[2]).toBeLessThan(-24)
     expect(blocked.position[2]).toBeGreaterThan(-25)
+    // under the pause menu: into the collection, known already, at the feet even aimed at a free wall in reach
+    useGallery.setState({portraits: []})
+    const release = worldClock.freeze()
+    try {
+      const [collected] = await arrivals([file()], [4, 2.5, -24], [0, 0, -1])
+      expect(collected.hung).toBe(false)
+      expect(collected.interacted).toBe(true)
+      expect(collected.velocity).toBeUndefined()
+      expect(collected.position[2]).toBeLessThan(-24)
+      expect(collected.position[2]).toBeGreaterThan(-25)
+    } finally {
+      release()
+    }
+    const [unfrozen] = await arrivals([file()], [4, 2.5, -24], [0, 0, -1])
+    expect(unfrozen.hung).toBe(true)
+    expect(unfrozen.interacted).toBeUndefined()
   } finally {
     importer.dispose()
     bodyPose.center = poses.center
