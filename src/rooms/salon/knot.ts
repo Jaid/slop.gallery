@@ -34,7 +34,7 @@ export const salonKnotSign = {
 
 const knotsByRarity = Map.groupBy(salonKnots, knot => knot.rarity)
 
-/** The Knot hovering over the Salon’s pedestal in the environment of `seed`: rarity is rolled first, then a Knot of that rarity, so the seed alone decides it. */
+/** The Knot that would hover over the Salon’s pedestal in the environment of `seed`, which the Salon doesn’t mount for now: rarity is rolled first, then a Knot of that rarity, so the seed alone decides it. */
 export default function salonKnot(seed: number): ShowcasedKnot {
   const random = environmentRandom(seed).makeChild('salon-knot')
   const [rarity] = random.makeChild('rarity').rollItem(salonKnotRarityChances, {weights: ([, chance]) => chance})
