@@ -10,8 +10,8 @@ import {cisternWindow} from './window.ts'
 
 type Section = ReadonlyArray<readonly [lateral: number, y: number]>
 
-/** how many stations the channel’s visible stone and water are cut into along it, and its collider: coarsely, as a welded collider cut into triangles a few centimeters long holds an orb at rest in it until it falls asleep */
-const stations = [380, 190] as const
+/** how many stations the channel’s visible stone and water are cut into along it, and its collider: the same count for both – coarsely, as a welded collider cut into triangles a few centimeters long holds an orb at rest in it until it falls asleep, and at a station every few centimeters the groove’s smooth normals already shade it round, so the eye needs no finer cut than the orb rides on */
+const channelStations = 190
 /** how many pieces the channel’s round bottom is cut into, for the eye and for its collider, which an odd count leaves a level facet along its bottom, for an orb to roll along */
 const bottomSegments = [12, 15] as const
 /** how deep the water runs in the channel, over its bottom */
@@ -216,7 +216,7 @@ export default class CisternGeometry {
     }
     // Through the walls, the stone fills the culvert across, up to the channel’s rim, down to its sill.
     const half = climbCulvert.width / 2 - 0.005
-    const runAlongs = alongs(stations[0]).filter(along => along >= loop - 1e-9)
+    const runAlongs = alongs(channelStations).filter(along => along >= loop - 1e-9)
     const masonry = (side: number) => [
       strip(runAlongs, along => (side > 0 ? [[bore, sideTop(along)], [half, sideTop(along)]] : [[-half, sideTop(along)], [-bore, sideTop(along)]]), [0, 1, 0]),
       strip(runAlongs, along => (side > 0 ? [[half, sideTop(along)], [half, climbCulvert.bottom]] : [[-half, climbCulvert.bottom], [-half, sideTop(along)]]), rightOf(loop, side)),
@@ -230,14 +230,14 @@ export default class CisternGeometry {
       [-half, sideTop(along)],
     ]
     this.channel = mergeParts([
-      ...channelStrips(stations[0], bottomSegments[0]),
+      ...channelStrips(channelStations, bottomSegments[0]),
       ...masonry(1),
       ...masonry(-1),
       // Where it enters the culvert, under the floor’s edge, and its lip
       cap(loop, culvertOutline(loop), false),
       cap(lipAlong, culvertOutline(lipAlong), true),
     ])
-    this.channelCollision = mergeParts(channelStrips(stations[1], bottomSegments[1]))
+    this.channelCollision = mergeParts(channelStrips(channelStations, bottomSegments[1]))
     this.water = this.flowingWater()
     this.falling = mergeParts([this.fallingWater(), this.pouringWater()])
     const [cx] = turn.center
@@ -309,7 +309,7 @@ export default class CisternGeometry {
   /** The water’s surface in the channel, `channelWaterDepth` over its bottom, from where the inflow pours it in to its lip, and a little way up the channel from there, where it thins out; its UV runs across it and along the channel in meters. */
   private flowingWater() {
     const from = cisternInflow.along - backwater
-    const along = alongs(stations[0], from)
+    const along = alongs(channelStations, from)
     const columns = 4
     const positions: Array<number> = []
     const uvs: Array<number> = []
