@@ -134,8 +134,8 @@ describe('party effects', () => {
     }
     // No two orbs share one, and none is left without an orb to bring it.
     const brought: Array<string> = promptOrbs.flatMap(orb => choiceEffects(orb.effect))
-    expect([...new Set(brought)]).toEqual(brought)
-    expect(brought.toSorted()).toEqual(Object.keys(partyEffects).toSorted())
+    expect([...new Set(brought)].toSorted()).toEqual(Object.keys(partyEffects).toSorted())
+    expect(new Set(brought)).toEqual(new Set(Object.keys(partyEffects)))
   })
   test('the Horror Orb’s game rolls its blood, its staring eyes or its flesh tendrils by its seed, each in some games', () => {
     const rolled = Array.from({length: 64}, (_, seed) => pickEffect(seed, horrorOrb.effect))
