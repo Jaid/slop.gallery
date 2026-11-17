@@ -3,15 +3,15 @@ import {beforeEach, describe, expect, test} from 'bun:test'
 import {Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
 
 import {wallFace} from '../../src/lib/gallery/architecture.ts'
+import CrumbledStoneGeometry from '../../src/lib/gallery/CrumbledStoneGeometry.ts'
 import {roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
-import {salonBench, salonCarvingBlock, salonCeiling, salonPedestal, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
+import {salonBench, salonCeiling, salonPedestal, salonSculptureSocket, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '../../src/lib/materials/TerrazzoFloorMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
-import CarvingBlockGeometry from '../../src/rooms/salon/CarvingBlockGeometry.ts'
 import walls, {floorHeight, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
@@ -98,28 +98,29 @@ describe('the Salon', () => {
     expect(salonBench.seatHeight).toBeGreaterThan(0.4)
     expect(salonBench.seatHeight).toBeLessThan(0.55)
   })
-  test('the carving blank sits inside the glass wall’s north end and keeps a flat working face inside its chipped edges', () => {
-    const {position: [x, y, z], size} = salonCarvingBlock
+  test('the sculpture socket sits inside the glass wall’s north end and keeps a flat working face inside its chipped edges', () => {
+    const {position: [x, y, z], size} = salonSculptureSocket
     const [width, height, depth] = size
+    expect([width, depth]).toEqual([salonBench.width, salonBench.width])
     expect(z - depth / 2).toBeCloseTo(salonWindow.z - salonWindow.width / 2, 9)
     expect(z + depth / 2).toBeLessThan(salonBench.position[2] - salonBench.depth / 2)
-    const geometry = new CarvingBlockGeometry(size)
+    const geometry = new CrumbledStoneGeometry(size)
     const material = new MeshBasicMaterial
     try {
-      const block = new Mesh(geometry, material)
-      block.position.set(x, y + height / 2, z)
-      block.updateMatrixWorld()
+      const socket = new Mesh(geometry, material)
+      socket.position.set(x, y + height / 2, z)
+      socket.updateMatrixWorld()
       expect(y).toBe(floorHeight([x, 1.7, z]))
       const above = (dx: number, dz: number) => {
         const ray = new Raycaster(new Vector3(x + dx, y + 1, z + dz), new Vector3(0, -1, 0))
-        return ray.intersectObject(block).at(0)
+        return ray.intersectObject(socket).at(0)
       }
       for (const dx of [-width / 3, 0, width / 3]) {
         for (const dz of [-depth / 3, 0, depth / 3]) {
           expect(above(dx, dz)?.point.y).toBeCloseTo(y + height, 6)
         }
       }
-      expect(above(width / 2 - 0.001, depth / 2 - 0.001)).toBeUndefined()
+      expect(above(width / 2 - 0.001, depth / 2 - 0.001)?.point.y ?? y).toBeLessThan(y + height / 2)
     } finally {
       geometry.dispose()
       material.dispose()

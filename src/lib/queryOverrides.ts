@@ -2,6 +2,7 @@ import {readShowAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitt
 import {readFountain} from '#src/fountains/lib/forcedFountain.ts'
 import {readFrame} from '#src/frames/lib/frameParameter.ts'
 import {readMood} from '#src/moods/lib/forcedMood.ts'
+import {readSculpture} from '#src/sculptures/lib/forcedSculpture.ts'
 import {readWorldReach} from '#src/worlds/base/WorldReach.ts'
 import {readItems} from '#src/worlds/sandbox/items.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
@@ -82,6 +83,7 @@ const readers: Record<string, Reader> = {
   room: readRoom,
   room_announcements: readRoomAnnouncements,
   scale: readScale,
+  sculpture: readSculpture,
   seed: readSeedOverride,
   show_ambience_emitters: readShowAmbienceEmitters,
   show_lamps: readShowLamps,

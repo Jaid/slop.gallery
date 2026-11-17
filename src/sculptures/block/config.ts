@@ -1,0 +1,3 @@
+import type {Vec3} from 'math'
+
+export const blockSize: Vec3 = [1.7, 3.4, 1.7]

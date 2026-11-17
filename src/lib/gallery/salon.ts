@@ -108,12 +108,12 @@ export const salonTerrazzo = {
   },
 } as const
 
-const carvingBlockSize: Vec3 = [3, 0.3, 3]
+const sculptureSocketSize: Vec3 = [salonBench.width, 0.3, salonBench.width]
 
-/** A flat blank of carving stone with its north edge flush with the glass wall’s north end. */
-export const salonCarvingBlock = {
-  position: [14.05, 0, salonWindow.z - (salonWindow.width - carvingBlockSize[2]) / 2] as Vec3,
-  size: carvingBlockSize,
+/** A sculpture socket of sawn stone with its north edge flush with the glass wall’s north end. */
+export const salonSculptureSocket = {
+  position: [14.05, 0, salonWindow.z - (salonWindow.width - sculptureSocketSize[2]) / 2] as Vec3,
+  size: sculptureSocketSize,
 } as const
 
 /** where a sculpture pedestal stands on the floor, on the room’s axis, centered on the line of the glass wall’s north end */
