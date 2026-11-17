@@ -6,6 +6,10 @@ import {Curve, Quaternion, Vector3} from 'three/webgpu'
 export type RailingAnchor = {
   ground: Vec3
   height: number
+  /** An unsupported end tip; its neighboring anchor carries the last upright. */
+  overhang?: boolean
+  /** Put an upright here and space the neighboring posts evenly up to it. */
+  post?: boolean
 }
 
 type RailingPost = {
@@ -61,8 +65,22 @@ export default class RailingPath extends Curve<Vector3> {
         halfLength: direction.length() / 2,
       }
     })
-    const count = Math.max(1, Math.round(this.horizontalLength / RailingPath.postSpacing))
-    this.posts = Array.from({length: count + 1}, (_, i) => this.post(i / count))
+    const first = anchors[0].overhang ? 1 : 0
+    const last = anchors.length - (anchors.at(-1)!.overhang ? 2 : 1)
+    let start = this.horizontalDistances[first]
+    this.posts = [this.post(start / (this.horizontalLength || 1))]
+    for (let i = first + 1; i <= last; i++) {
+      if (!anchors[i].post && i !== last) {
+        continue
+      }
+      const end = this.horizontalDistances[i]
+      const span = end - start
+      const gaps = Math.max(1, Math.round(span / RailingPath.postSpacing))
+      for (let j = 1; j <= gaps; j++) {
+        this.posts.push(this.post((start + span * j / gaps) / (this.horizontalLength || 1)))
+      }
+      start = end
+    }
   }
 
   getPoint(t: number, target = new Vector3) {

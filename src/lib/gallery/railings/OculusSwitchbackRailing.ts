@@ -47,9 +47,13 @@ export default class OculusSwitchbackRailing extends RailingPath {
       const angle = i / 16 * Math.PI / 2
       top([corner.x + corner.sign * radius * Math.cos(angle), topY, corner.z + radius * Math.sin(angle)])
     }
-    top([wallX, topY, southZ])
+    // Support the straight end near the wall, leaving 40 cm of handrail past the post.
+    top([wallX - sign * 0.4, topY, southZ])
+    anchors.push({
+      ground: [wallX, topY, southZ],
+      height: landingHeight,
+      overhang: true,
+    })
     super(anchors)
-    // The end stops short of the wall and overhangs its last post.
-    this.posts.pop()
   }
 }

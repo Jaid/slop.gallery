@@ -16,17 +16,21 @@ import {addOculusRailings, oculusRailings} from './helpers/oculusRailings.ts'
 
 await RAPIER.init()
 const [west, south, east] = oculusRailings
-/** how far a rail along a bridge stops short of its wall’s center line */
+/** how far the last bridge upright stands from its wall’s center line */
 const wallGap = 0.3
 describe('connected Oculus railings', () => {
   test('the west and east paths run from the side ramps up the tower’s ramp onto the bridges, the south one round the deck from bridge to bridge', () => {
     const wallX = towerBridges[0].wallDistance - wallGap
     expect(west.anchors[0].ground[2]).toBe(oculusRamps[0].startZ)
-    expect(west.anchors.at(-1)!.ground[0]).toBeCloseTo(tower.x - wallX)
+    expect(west.posts.at(-1)!.position[0]).toBeCloseTo(tower.x - wallX)
     expect(east.anchors.at(-1)!.ground[2]).toBe(oculusRamps[1].startZ)
-    expect(east.anchors[0].ground[0]).toBeCloseTo(tower.x + wallX)
-    expect(south.anchors[0].ground[0]).toBeCloseTo(tower.x + wallX)
-    expect(south.anchors.at(-1)!.ground[0]).toBeCloseTo(tower.x - wallX)
+    expect(east.posts[0].position[0]).toBeCloseTo(tower.x + wallX)
+    expect(south.posts[0].position[0]).toBeCloseTo(tower.x + wallX)
+    expect(south.posts.at(-1)!.position[0]).toBeCloseTo(tower.x - wallX)
+    for (const end of [west.anchors.at(-1)!, east.anchors[0], south.anchors[0], south.anchors.at(-1)!]) {
+      expect(Math.abs(end.ground[0] - tower.x)).toBeGreaterThan(wallX)
+      expect(Math.abs(end.ground[2] - tower.z)).toBeLessThan(towerBridge.mouthWidth / 2)
+    }
     // North of each bridge’s middle the outer paths end, south of it the south one, on the fillets that widen the bridges into their doorways.
     for (const path of [west, east]) {
       const end = path === west ? path.anchors.at(-1)! : path.anchors[0]
@@ -127,14 +131,18 @@ describe('connected Oculus railings', () => {
       resampled.dispose()
     }
   })
-  test('the deck’s rails and posts are half-height while the ramps’ and the bridges’ remain one meter tall', () => {
+  test('the half-height deck fence starts rising on the shoulders and reaches a meter on the bridges', () => {
     const anchors = oculusRailings.flatMap(railing => railing.anchors)
     const onDeck = (x: number, z: number) => Math.hypot(x - tower.x, z - tower.z) < tower.radius && z > ramp.endZ
-    const perimeter = anchors.filter(({ground}) => onDeck(ground[0], ground[2]))
-    expect(perimeter.length).toBeGreaterThan(100)
-    for (const anchor of perimeter) {
-      expect(anchor.height).toBe(0.5)
-      expect(anchor.ground[1]).toBe(ramp.endY)
+    for (const railing of oculusRailings) {
+      const perimeter = railing.anchors.filter(({ground}) => onDeck(ground[0], ground[2]))
+      const shoulder = perimeter.toSorted((a, b) => Math.abs(a.ground[0] - tower.x) - Math.abs(b.ground[0] - tower.x))
+      expect(shoulder.at(-1)!.height).toBeGreaterThan(0.5)
+      expect(shoulder.map(anchor => anchor.height)).toEqual(shoulder.map(anchor => anchor.height).toSorted((a, b) => a - b))
+      for (const anchor of perimeter) {
+        expect(anchor.height).toBeLessThan(1)
+        expect(anchor.ground[1]).toBe(ramp.endY)
+      }
     }
     // Out along the bridges, past their rails’ climb from the deck’s fence, and on the ramps
     const full = anchors.filter(({ground}) => Math.abs(ground[0] - tower.x) > tower.radius + 0.1 + bridgeRailRise)
@@ -146,8 +154,7 @@ describe('connected Oculus railings', () => {
       if (!onDeck(post.position[0], post.position[2])) {
         continue
       }
-      expect(post.height).toBe(0.5)
-      expect(post.position[1]).toBe(ramp.endY + 0.25)
+      expect(post.position[1] - post.height / 2).toBeCloseTo(ramp.endY, 8)
     }
     expect(Math.min(...anchors.map(anchor => anchor.height))).toBe(0.5)
     expect(Math.max(...anchors.map(anchor => anchor.height))).toBeCloseTo(1, 10)

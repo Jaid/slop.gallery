@@ -6,16 +6,20 @@ import tower, {towerRamp as ramp, towerBridge, towerBridgeLift, towerBridges, to
 import RailingPath from './RailingPath.ts'
 
 const inset = 0.12
-/** how far short of a wall’s center line the rails along a bridge stop, like the balcony’s */
+/** How far short of a wall’s center line the last bridge upright stands. */
 const wallGap = 0.3
+/** Handrail past the last upright, tangent to the flared bridge mouth. */
+const bridgeOverhang = 0.4
 const count = towerDeck.length
 const at = (index: number) => (index + count) % count
 const deckY = ramp.endY
 const fenceHeight = ramp.railHeight / 2
 const along = (neck: number, [x, z]: readonly [number, number]) => x * Math.cos(towerNecks[neck].angle) + z * Math.sin(towerNecks[neck].angle)
 const neckReach = towerNecks[0].reach
-/** Over the first meter and a half of a bridge past its shoulders, its rails climb from the deck’s fence to their full height. */
+/** How far onto each bridge its rails reach full height. Their rise begins back on the deck, as the ramp rails start turning outward. */
 export const bridgeRailRise = 1.5
+const riseStart = ramp.width / 2 - inset
+const riseEnd = neckReach + bridgeRailRise
 /** the unit normal to the left of an edge of the deck’s outline, which runs counterclockwise, so it points into the deck */
 const inward = (from: readonly [number, number], to: readonly [number, number]) => {
   const length = Math.hypot(to[0] - from[0], to[1] - from[1])
@@ -28,12 +32,9 @@ const insetOutline = towerDeck.map(({point}, i): readonly [number, number] => {
   const scale = inset / (1 + n1[0] * n2[0] + n1[1] * n2[1])
   return [point[0] + (n1[0] + n2[0]) * scale, point[1] + (n1[1] + n2[1]) * scale]
 })
-/** The fence around the deck is half the ramps’ height; along a bridge, the rail climbs to the bridge’s full height. */
-const fenceAt = (neck: number, point: readonly [number, number]) => {
-  if (!neck) {
-    return fenceHeight
-  }
-  const t = Math.min(1, Math.max(0, (along(neck, point) - neckReach) / bridgeRailRise))
+/** One height profile across the turn and the bridge keeps the handrail climbing gently through their join. */
+const fenceAt = (localX: number) => {
+  const t = Math.min(1, Math.max(0, (Math.abs(localX) - riseStart) / (riseEnd - riseStart)))
   return fenceHeight + (towerBridge.railHeight - fenceHeight) * t * t * (3 - 2 * t)
 }
 /** how far apart the rail’s points follow its climb */
@@ -93,10 +94,28 @@ const perimeter = (indices: ReadonlyArray<number>): Array<RailingAnchor> => {
       point: [inner[0] + (outer[0] - inner[0]) * t, inner[1] + (outer[1] - inner[1]) * t] as const,
     }, ...list.slice(inside)]
   }
-  return cut(cut(anchors).toReversed()).toReversed().map(({neck, point}) => ({
+  const path: Array<RailingAnchor> = cut(cut(anchors).toReversed()).toReversed().map(({neck, point}) => ({
     ground: [tower.x + point[0], deckY + liftAt(neck, point), tower.z + point[1]],
-    height: fenceAt(neck, point),
+    height: fenceAt(point[0]),
   }))
+  const tip = (end: RailingAnchor, previous: RailingAnchor): RailingAnchor => {
+    const [x, y, z] = end.ground
+    const dx = x - previous.ground[0]
+    const dz = z - previous.ground[2]
+    const scale = bridgeOverhang / Math.hypot(dx, dz)
+    return {
+      ground: [x + dx * scale, y, z + dz * scale],
+      height: end.height,
+      overhang: true,
+    }
+  }
+  if (reachesWall(anchors[0].neck, anchors[0].point)) {
+    path.unshift(tip(path[0], path[1]))
+  }
+  if (reachesWall(anchors.at(-1)!.neck, anchors.at(-1)!.point)) {
+    path.push(tip(path.at(-1)!, path.at(-2)!))
+  }
+  return path
 }
 /** the deck’s indices from `from` to `to`, both included, forward or backward */
 const indices = (from: number, to: number, step: -1 | 1) => {
@@ -111,19 +130,20 @@ const neckIndices = (neck: number) => towerDeck.keys().filter(index => {
   const {neck: owner, shoulder, local} = towerDeck[index]
   return owner === neck && !shoulder && Math.hypot(...local) > tower.radius + 1e-6
 }).toArray()
-const [northNeck, eastNeck, westNeck] = [0, 1, 2].map(neckIndices)
+const [eastNeck, westNeck] = [1, 2].map(neckIndices)
 /** where a bridge’s body crosses its wall: the last point of its left side and the first of its right side */
 const wallEnds = (body: ReadonlyArray<number>) => [body[body.length / 2 - 1], body[body.length / 2]] as const
-/** Up the west side ramp’s inner edge, along the platform’s front and the ramp’s rounded base, and up the ramp’s west side to the deck’s fence. */
+/** Up the west side ramp, along the platform and up the tower ramp, turning onto the west bridge. */
 function westRamp() {
   const west = oculusRamps.find(value => value.side === 'west')!
   const left: Array<RailingAnchor> = []
-  const add = (ground: Vec3, height = ramp.railHeight) => {
+  const add = (ground: Vec3, height = ramp.railHeight, post = false) => {
     const previous = left.at(-1)
     if (!previous || Math.hypot(...ground.map((value, i) => value - previous.ground[i])) > 0.00001 || height !== previous.height) {
       left.push({
         ground,
         height,
+        post,
       })
     }
   }
@@ -133,7 +153,7 @@ function westRamp() {
   // Round the turn onto the base without cutting across the opening beside the lower slope.
   for (let i = 1; i <= 12; i++) {
     const theta = Math.PI + i / 12 * Math.PI / 2
-    add([lowerX + inset + Math.cos(theta) * inset, ramp.startY, ramp.startZ + Math.sin(theta) * inset])
+    add([lowerX + inset + Math.cos(theta) * inset, ramp.startY, ramp.startZ + Math.sin(theta) * inset], ramp.railHeight, i === 6)
   }
   const cornerX = tower.x - ramp.width / 2 - ramp.baseCornerRadius
   add([cornerX, ramp.startY, ramp.startZ - inset])
@@ -143,18 +163,31 @@ function westRamp() {
     const z = ramp.startZ + ramp.baseCornerRadius - (ramp.baseCornerRadius + inset) * Math.cos(theta)
     add([cornerX + (ramp.baseCornerRadius + inset) * Math.sin(theta), towerRampHeight((z - ramp.startZ) / (ramp.endZ - ramp.startZ)), z])
   }
-  // The sloped rail climbs until it reaches the tower fence’s level, easing into it with a smooth minimum instead of rising past it and dropping back. It ends where the deck’s outline leaves the ramp’s end, at its west corner moved in along the end, not off it.
+  // The sloped rail climbs until it reaches the tower fence’s level, easing into it with a smooth minimum instead of rising past it and dropping back.
   const fenceY = ramp.endY + fenceHeight
   const blend = 0.4
   const straightStart = ramp.startZ + ramp.baseCornerRadius
+  // One quarter circle tangent to both straight rails. Start the turn just before the deck so it sweeps across the two stone shoulders in one bend.
+  const turnReach = neckReach + 0.35
+  const turnRadius = turnReach - (ramp.width / 2 - inset)
+  const turnZ = tower.z - turnReach
   for (let i = 1; i <= 64; i++) {
-    const z = straightStart + (ramp.endZ - straightStart) * i / 64
+    const z = straightStart + (turnZ - straightStart) * i / 64
     const groundY = towerRampHeight((z - ramp.startZ) / (ramp.endZ - ramp.startZ))
     const sloped = groundY + ramp.railHeight
     const overlap = Math.max(blend - Math.abs(sloped - fenceY), 0) / blend
     add([tower.x - ramp.width / 2 + inset, groundY, z], Math.min(sloped, fenceY) - overlap * overlap * blend / 4 - groundY)
   }
-  return left
+  for (let i = 1; i <= 24; i++) {
+    const angle = i / 24 * Math.PI / 2
+    const x = -turnReach + turnRadius * Math.cos(angle)
+    const z = turnZ + turnRadius * Math.sin(angle)
+    const point = [x, z - tower.z] as const
+    const groundY = z < ramp.endZ ? towerRampHeight((z - ramp.startZ) / (ramp.endZ - ramp.startZ)) : deckY + liftAt(2, point)
+    add([tower.x + x, groundY, z], fenceAt(x) + Math.max(0, deckY - groundY))
+  }
+  const bridge = perimeter(indices(westNeck.at(-1)!, wallEnds(westNeck)[1], -1))
+  return [...left, ...bridge.filter(({ground}) => ground[0] < tower.x - turnReach - minimumGap)]
 }
 
 /**
@@ -167,11 +200,11 @@ export default class OculusRailing extends RailingPath {
       super(perimeter(indices(wallEnds(eastNeck)[1], wallEnds(westNeck)[0], 1)))
       return
     }
-    const west = [...westRamp(), ...perimeter(indices(at(northNeck[0] - 1), wallEnds(westNeck)[1], -1))]
+    const west = westRamp()
     // The east is the west’s mirror image, run from its far end.
-    super(run === 'west' ? west : west.map(({ground: [x, y, z], height}): RailingAnchor => ({
+    super(run === 'west' ? west : west.map(({ground: [x, y, z], ...anchor}): RailingAnchor => ({
       ground: [2 * tower.x - x, y, z],
-      height,
+      ...anchor,
     })).toReversed())
   }
 }
