@@ -164,6 +164,21 @@ describe('room frames', () => {
       }
     }
   })
+  test('in the default environment, every work of a room wears its first frame, while ingredients still roll theirs', () => {
+    const several = [...slopGallery.rooms, ...sandbox.rooms].filter(room => room.room.frame && choiceFrames(room.room.frame).length > 1)
+    expect(several.length).toBeGreaterThan(0)
+    for (const room of several) {
+      for (let index = 0; index < 24; index++) {
+        expect(room.frame(0, `work-${index}`)).toBe(choiceFrames(room.room.frame!)[0])
+      }
+    }
+    for (const portrait of hangDefaultWorks(slopGallery.portraitSlots(), artworks, 0)) {
+      const room = slopGallery.roomById(slopGallery.walls.find(wall => wall.id === portrait.wallId)!.room)!
+      expect(portrait.frame).toBe(room.room.frame && choiceFrames(room.room.frame)[0])
+    }
+    const severalOrbs = orbChoices.filter(choice => choiceFrames(choice).length > 1)
+    expect(severalOrbs.some(choice => pickFrame(0, choice) !== choiceFrames(choice)[0])).toBe(true)
+  })
   test('the works of a room with several frames wear all of them between them', () => {
     const several = slopGallery.rooms.filter(room => room.room.frame && choiceFrames(room.room.frame).length > 1)
     expect(several.length).toBeGreaterThan(0)

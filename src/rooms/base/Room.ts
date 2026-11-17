@@ -67,7 +67,7 @@ export type RoomOptions = {
   ambience?: Record<string, RoomAmbience>
   /** the camera bookmarks by their id within the room, in snake_case */
   cameras?: Record<string, RoomCamera>
-  /** the frame the works wear that hang in the room’s slots or arrive in the room, or several, of which every work draws its own, the default frame if left out */
+  /** the frame the works wear that hang in the room’s slots or arrive in the room, or several, of which every work draws its own, but the first in the default environment, the default frame if left out */
   frame?: FrameChoice
   /** the lamps by their id within the room, in snake_case, positioned relative to the room’s origin */
   lamps?: Record<string, Lamp>
