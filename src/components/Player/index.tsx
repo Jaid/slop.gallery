@@ -4,6 +4,7 @@ import type {Camera} from 'three/webgpu'
 
 import {useKeyboardControls} from '@react-three/drei/webgpu'
 import {useThree} from '@react-three/fiber'
+import {useAfterPhysicsStep} from '@react-three/rapier'
 import EgoPlayer, {defaultEgoOptions} from 'ego-player'
 import {useEffect, useRef, useState} from 'react'
 import {Euler, PerspectiveCamera, Quaternion, Vector3} from 'three/webgpu'
@@ -16,6 +17,8 @@ import {flyMode} from '#src/lib/gallery/flyMode.ts'
 import {activateInteractiveObject} from '#src/lib/gallery/interactiveObjects.ts'
 import {playerSession} from '#src/lib/gallery/PlayerSession.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import {playerCollisionGroups} from '#src/lib/physics/collisionGroups.ts'
+import PlayerGrace from '#src/lib/physics/PlayerGrace.ts'
 import {playerTelemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumpHandler, playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
 import world from '#src/worlds/current.ts'
@@ -66,6 +69,8 @@ export default function Player() {
   const camera = useThree(s => s.camera)
   const [initial] = useState(() => playerSession.snapshot())
   const [angles] = useState(() => new Euler(0, 0, 0, 'YXZ'))
+  // Props that just left the player’s hands pass through the capsule until they are clear of it.
+  useAfterPhysicsStep(physicsWorld => PlayerGrace.step(physicsWorld, physicsWorld.timestep))
   // where a ?spawn camera bookmark holds the camera, until the next teleport
   const heldCamera = useRef<{
     fov: number
@@ -191,5 +196,5 @@ export default function Player() {
       }
     }
   }
-  return <EgoPlayer cameraEnabled={cameraEnabled} enabled={enabled} fallbackPosition={world.spawnInReach.position} flying={flying} input={input} pitch={initial.pitch} pointerLock={pointerLock} position={initial.position} yaw={initial.yaw} ref={player} onDump={playerDumpHandler} onImpact={onImpact} onInteract={onInteract} onLand={onPlayerLand} onStep={onPlayerStep} onUpdate={onUpdate} onZoomChange={onPlayerZoomChange} onZoomTransition={onPlayerZoomTransition} />
+  return <EgoPlayer cameraEnabled={cameraEnabled} collisionGroups={playerCollisionGroups} enabled={enabled} fallbackPosition={world.spawnInReach.position} flying={flying} input={input} pitch={initial.pitch} pointerLock={pointerLock} position={initial.position} yaw={initial.yaw} ref={player} onDump={playerDumpHandler} onImpact={onImpact} onInteract={onInteract} onLand={onPlayerLand} onStep={onPlayerStep} onUpdate={onUpdate} onZoomChange={onPlayerZoomChange} onZoomTransition={onPlayerZoomTransition} />
 }

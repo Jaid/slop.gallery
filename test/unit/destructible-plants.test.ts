@@ -14,6 +14,7 @@ import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import initializeFoliageCollider from '../../src/lib/physics/initializeFoliageCollider.ts'
 import PlantAttachment from '../../src/lib/physics/PlantAttachment.ts'
 import {leafPhysics} from '../../src/lib/physics/plantPhysics.ts'
+import {throwSpeed, throwSpeedFor} from '../../src/lib/physics/throwMotion.ts'
 
 await RAPIER.init()
 let world: RAPIER.World
@@ -81,7 +82,7 @@ function plant(kind: DestructiblePlantKind, id = kind as string, x = 0) {
 function pluckAll(leaves: Array<GrabbableBody>) {
   for (const [i, leaf] of leaves.entries()) {
     expect(leaf.grab()).toBe(true)
-    leaf.release([10 + i, 2, -1], [10 + i, 2, 0], false)
+    leaf.release([10 + i, 2, -1], [10 + i, 2, 0])
   }
 }
 describe('destructible botanical models', () => {
@@ -228,18 +229,23 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
       const leaf = leaves[1]
       expect(leaf.body.numColliders()).toBe(2)
       leaf.grab()
-      leaf.release([0, 2, 2], [0, 2, 3], true)
+      leaf.release([0, 2, 2], [0, 2, 3], {throwing: true})
       expect(leaf.body.isDynamic()).toBe(true)
-      expect(leaf.body.linvel().z).toBe(10)
+      // A leaf weighs grams, so it leaves the hand far slower than an orb and flutters down soon after.
+      const mass = geometry.leaves[1].mass + geometry.leaves[1].stemMass
+      expect(leaf.mass).toBeCloseTo(mass, 5)
+      expect(leaf.body.linvel().z).toBeCloseTo(throwSpeedFor(mass), 5)
+      expect(leaf.body.linvel().z).toBeLessThan(throwSpeed * 0.75)
       for (let i = 0; i < leaf.body.numColliders(); i++) {
         expect(leaf.body.collider(i).isEnabled()).toBe(true)
       }
       world.step()
-      expect(leaf.body.mass()).toBeCloseTo(geometry.leaves[1].mass + geometry.leaves[1].stemMass, 5)
+      expect(leaf.body.mass()).toBeCloseTo(mass, 5)
       for (let i = 0; i < 360; i++) {
         world.step()
       }
       expect(leaf.body.translation().z).toBeGreaterThan(3)
+      expect(leaf.body.translation().z).toBeLessThan(3 + throwSpeed ** 2 / 9.81)
       expect(leaf.body.translation().y).toBeGreaterThan(-0.1)
       expect(leaf.body.translation().y).toBeLessThan(0.8)
     })
@@ -248,7 +254,7 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
       pluckAll(leaves)
       const positions = leaves.map(leaf => leaf.body.translation())
       pot.grab()
-      pot.release([0, 2, 2], [0, 2, 3], true)
+      pot.release([0, 2, 2], [0, 2, 3], {throwing: true})
       expect(pot.body.isDynamic()).toBe(true)
       expect(pot.body.numColliders()).toBe(geometry.leaves.length + 2)
       expect(leaves.map(leaf => leaf.body.translation())).toEqual(positions)
@@ -319,7 +325,7 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
       const handle = pot.body.handle
       world.createCollider(RAPIER.ColliderDesc.cuboid(40, 0.1, 40).setTranslation(0, -0.1, 0))
       pot.grab()
-      pot.release([0, 2, 3], [0, 2, 4], false)
+      pot.release([0, 2, 3], [0, 2, 4])
       for (let i = 0; i < 360; i++) {
         world.step()
       }
@@ -354,9 +360,9 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
       expect(attachments.remaining).toBe(1)
       expect(pot.grab()).toBe(false)
       leaf.grab()
-      leaf.release([10, 2, -1], [10, 2, 0], false)
+      leaf.release([10, 2, -1], [10, 2, 0])
       pot.grab()
-      pot.release([0, 2, 3], [0, 2, 4], false)
+      pot.release([0, 2, 3], [0, 2, 4])
       leaf.body.setTranslation({
         x: 0,
         y: -13,

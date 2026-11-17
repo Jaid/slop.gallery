@@ -12,6 +12,7 @@ import {mountedRoomIds} from '#src/lib/gallery/roomLoading.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
+import PlayerGrace from '#src/lib/physics/PlayerGrace.ts'
 import worldClock from '#src/lib/worldClock.ts'
 import world from '#src/worlds/current.ts'
 
@@ -44,9 +45,12 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
         rooms: world.reach.rooms,
       },
       mountedRooms: mountedRoomIds(),
-      props: [...propObjects].map(([id, {body, group}]) => ({
+      props: [...propObjects].map(([id, {body, group, mass}]) => ({
         id,
+        mass: mass(),
+        passing: PlayerGrace.of(body).active,
         position: body.translation(),
+        velocity: body.linvel(),
         bodyType: body.bodyType(),
         sleeping: body.isSleeping(),
         visualPosition: group.getWorldPosition(new Vector3).toArray(),

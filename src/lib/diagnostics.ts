@@ -36,12 +36,21 @@ export type GalleryDiagnostics = {
     bodyType: number
     collidersEnabled: Array<boolean>
     id: string
+    /** its mass in kg, which its throws go by */
+    mass: number
+    /** whether it still passes through the player’s capsule after leaving the player’s hands */
+    passing: boolean
     position: {
       x: number
       y: number
       z: number
     }
     sleeping: boolean
+    velocity: {
+      x: number
+      y: number
+      z: number
+    }
     visualPosition: Vec3
   }>
   ready: boolean

@@ -8,6 +8,7 @@ import {triangleCount} from '../../src/lib/geometry.ts'
 import LimestoneMaterial from '../../src/lib/materials/LimestoneMaterial.ts'
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import PropPlacement from '../../src/lib/physics/PropPlacement.ts'
+import {throwSpeedFor} from '../../src/lib/physics/throwMotion.ts'
 
 await RAPIER.init()
 let geometry: PedestalGeometry
@@ -105,8 +106,7 @@ describe('sculpture pedestals', () => {
     world.createCollider(RAPIER.ColliderDesc.cuboid(0.345, 0.0725, 0.455).setEnabled(false), body)
     const placement = new PropPlacement(world, body)
     world.step()
-    const position = placement.reach([0, pedestalHeight + 0.05, 1.8], [0, pedestalHeight - 0.15, 0.35])!
-    expect(position).not.toBeNull()
+    const position = placement.letGo([0, pedestalHeight + 0.05, 1.8], [0, pedestalHeight - 0.15, 0.35])
     expect(placement.hasRoom(position)).toBe(true)
     expect(position[2]).toBeGreaterThan(capReach + 0.455)
   })
@@ -135,12 +135,13 @@ describe('sculpture pedestals', () => {
           expect(body.translation()).toEqual(resting)
         } else {
           // Held level toward the pedestal’s middle, it comes to rest against the cap’s edge.
-          expect(controller.release([x * 1.8, pedestalHeight + 0.05, z * 1.8], [x * 0.35, pedestalHeight + 0.05, z * 0.35], true)).toBe(false)
+          expect(controller.release([x * 1.8, pedestalHeight + 0.05, z * 1.8], [x * 0.35, pedestalHeight + 0.05, z * 0.35], {throwing: true})).toBeDefined()
           const released = body.translation()
           expect(Math.hypot(released.x - resting.x, released.z - resting.z)).toBeGreaterThan(capReach + 0.345)
           expect(controller.placement.hasRoom([released.x, released.y, released.z])).toBe(true)
           expect(body.isDynamic()).toBe(true)
-          expect(body.linvel().y).toBe(2)
+          // Level, it lifts by a fifth of how fast it is thrown, which its mass, at Rapier’s default density of 1 kg/m³, decides.
+          expect(body.linvel().y).toBeCloseTo(throwSpeedFor(body.mass()) * 0.2, 5)
           for (let i = 0; i < body.numColliders(); i++) {
             expect(body.collider(i).isEnabled()).toBe(true)
           }

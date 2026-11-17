@@ -1,17 +1,29 @@
 import type {Vec3} from '../gallery/types.ts'
+import type {Toss} from './throwMotion.ts'
 import type {RigidBody, Vector, World} from '@dimforge/rapier3d-compat'
 
 import {RigidBodyType} from '@dimforge/rapier3d-compat'
 
 import currentWorld from '#src/worlds/current.ts'
 
+import PlayerGrace from './PlayerGrace.ts'
 import PropPlacement from './PropPlacement.ts'
+import {throwSpin, toss} from './throwMotion.ts'
 import {beginBodyThrow, clearBodyThrow} from './ThrowState.ts'
 
 export type GrabbableBodyOptions = {
   canGrab?: () => boolean
   onAttachmentChange?: (attached: boolean) => void
   recoverAsDynamic?: () => boolean
+}
+/** how a carried prop is let go of */
+export type ReleaseOptions = {
+  /** how fast the one letting go moves, in m/s, which the prop carries on with, like the player running or jumping */
+  carrier?: Vec3
+  /** where a throw is aimed, the line from `origin` to `target` by default */
+  direction?: Vec3
+  /** whether it is thrown, rather than just let go of */
+  throwing?: boolean
 }
 
 type BodyPose = {
@@ -26,36 +38,39 @@ type BodyPose = {
   type: ReturnType<RigidBody['bodyType']>
 }
 
-/** how fast a thrown prop leaves the hand, in meters per second, with a little extra upward */
-export const throwSpeed = 10
-const throwLift = 2
-/** how a thrown prop tumbles, in radians per second */
-const throwSpin = {
-  x: 3,
-  y: 2,
-  z: 1,
-}
 const still = {
   x: 0,
   y: 0,
   z: 0,
 }
+const vector = ([x, y, z]: Vec3): Vector => ({
+  x,
+  y,
+  z,
+})
 
 /**
- * The physics side of carrying a prop: while carried, its body is out of the simulation altogether, so nothing collides with it, not even the player, and whoever carries it shows it by its own object. Only letting go asks the world where the prop fits.
+ * The physics side of carrying a prop: while carried, its body is out of the simulation altogether, so nothing collides with it, not even the player, and whoever carries it shows it by its own object. Letting go puts it where it fits near the hand, passing through the player for a moment (see `PlayerGrace`).
  * Shared by sculptures, orbs and detachable foliage. A canceled pluck leaves a leaf attached where it was; a canceled re-grab leaves a loose leaf where it lay.
  */
 export default class GrabbableBody {
+  readonly grace: PlayerGrace
   readonly placement: PropPlacement
   private carrying = false
   private home: BodyPose | null = null
 
   constructor(readonly body: RigidBody, world: World, private readonly options: GrabbableBodyOptions = {}) {
     this.placement = new PropPlacement(world, body)
+    this.grace = PlayerGrace.of(body)
   }
 
   get active() {
     return this.carrying
+  }
+
+  /** the prop’s mass in kg, by its colliders, also while they are disabled, like an attached leaf’s, which the body’s own mass leaves out */
+  get mass() {
+    return this.colliders().reduce((sum, collider) => sum + collider.mass(), 0)
   }
 
   /** Leaves the prop where it was before it was grabbed, which is where its body never stopped being. */
@@ -78,11 +93,8 @@ export default class GrabbableBody {
       return false
     }
     this.rememberHome()
-    this.loose(position, {
-      x: velocity[0],
-      y: velocity[1],
-      z: velocity[2],
-    }, throwSpin)
+    this.loose(position, vector(velocity), vector(throwSpin))
+    this.grace.begin()
     beginBodyThrow(this.body)
     return true
   }
@@ -93,6 +105,7 @@ export default class GrabbableBody {
     }
     this.rememberHome()
     clearBodyThrow(this.body)
+    this.grace.end()
     this.carrying = true
     this.stop()
     this.body.setEnabled(false)
@@ -115,31 +128,27 @@ export default class GrabbableBody {
   }
 
   /**
-   * Lets go of the prop as far from `origin`, inside the player’s capsule, toward `target`, where it was held, as it fits, loose and, if `throwing`, thrown along `direction`, by default that line. Where it fits nowhere, it stays where it was before it was grabbed.
-   * Returns whether it did.
+   * Lets go of the prop near `target`, where it was held, coming from `origin`, inside the player’s capsule: as far toward it as it fits, pushed out of what it would reach into (see `PropPlacement.letGo`), always near the hand. Loose from then on, it passes through the player for a moment and carries on with the `carrier`’s velocity, and, if `throwing`, flies off along `direction`, by its mass, as `toss` says.
+   * Returns how it left the hand, or undefined while it isn’t carried.
    */
-  release(origin: Vec3, target: Vec3, throwing: boolean, direction?: Vec3) {
+  release(origin: Vec3, target: Vec3, {carrier, direction, throwing = false}: ReleaseOptions = {}): Toss | undefined {
     if (!this.carrying) {
-      return false
+      return
     }
-    const position = this.placement.reach(origin, target)
-    if (!position) {
-      this.cancel()
-      return true
-    }
+    const position = this.placement.letGo(origin, target)
     this.carrying = false
-    const line = direction ?? target.map((value, axis) => value - origin[axis])
-    const length = Math.hypot(...line) || 1
-    const [x, y, z] = line.map(value => value / length)
-    this.loose(position, throwing ? {
-      x: x * throwSpeed,
-      y: y * throwSpeed + throwLift,
-      z: z * throwSpeed,
-    } : still, throwing ? throwSpin : still)
+    const thrown = toss({
+      carrier,
+      direction: direction ?? target.map((value, axis) => value - origin[axis]) as Vec3,
+      mass: this.mass,
+      throwing,
+    })
+    this.loose(position, vector(thrown.velocity), vector(thrown.spin))
+    this.grace.begin()
     if (throwing) {
       beginBodyThrow(this.body)
     }
-    return false
+    return thrown
   }
 
   rememberHome() {
@@ -165,11 +174,7 @@ export default class GrabbableBody {
 
   /** Puts the body at `position`, dynamic and colliding, moving and turning as given. */
   private loose(position: Vec3, velocity: Vector, spin: Vector) {
-    this.body.setTranslation({
-      x: position[0],
-      y: position[1],
-      z: position[2],
-    }, false)
+    this.body.setTranslation(vector(position), false)
     this.body.setBodyType(RigidBodyType.Dynamic, false)
     // Rapier hands the colliders their own state again at its next step.
     this.body.setEnabled(true)
@@ -183,12 +188,9 @@ export default class GrabbableBody {
 
   private restore(pose: BodyPose) {
     clearBodyThrow(this.body)
+    this.grace.end()
     this.body.setBodyType(pose.type, true)
-    this.body.setTranslation({
-      x: pose.position[0],
-      y: pose.position[1],
-      z: pose.position[2],
-    }, false)
+    this.body.setTranslation(vector(pose.position), false)
     this.body.setRotation(pose.rotation, true)
     for (const [i, collider] of this.colliders().entries()) {
       collider.setEnabled(pose.collisions[i] ?? false)

@@ -1,15 +1,20 @@
 import type {Placement} from '#src/lib/gallery.ts'
+import type {Toss} from '#src/lib/physics/throwMotion.ts'
 import type {MutableRef} from './types.ts'
 import type {RootState} from '@react-three/fiber'
 
 import {Vector3} from 'three/webgpu'
 
-import {cameraPose, chime, markPortraitInteracted, useGallery} from '#src/lib/gallery.ts'
+import tossVoices from '#src/lib/audio/tossVoices.ts'
+import {cameraPose, chime, markPortraitInteracted, playSound, useGallery} from '#src/lib/gallery.ts'
 import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
+import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import PlayerGrace from '#src/lib/physics/PlayerGrace.ts'
+import {toss} from '#src/lib/physics/throwMotion.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import world from '#src/worlds/current.ts'
 
-import {propObjects} from '../GrabbableProp.tsx'
+import {carrierVelocity, propObjects} from '../GrabbableProp.tsx'
 
 const grab = () => {
   const state = useGallery.getState()
@@ -31,12 +36,26 @@ const grab = () => {
   }
   chime(440)
 }
+/** how fast the player throws a work standing still, in m/s, flat like a frisbee, and how much it lifts on top, as a share of that */
+const workThrow = {
+  speed: 14,
+  lift: 1.5 / 14,
+}
+/** the mass of a work, in kg, by its frame’s collider, for one that isn’t in the world */
+const workMass = 2
+let tosses = 0
+/** Sounds a throw or a drop as it leaves the hand. */
+const sound = (thrown: Toss) => {
+  const index = tosses++
+  playSound(tossVoices(thrown, Math.sin(index * 2.39996)), `toss:${index}`)
+}
 
 export default function createGrabController(camera: RootState['camera'], placement: MutableRef<Placement | null>) {
+  /** Ends carrying whatever the player carries, as the pause menu opening or the window losing focus do: a prop drops from the hand, silently, a work stays where it hangs or lies. */
   const cancel = () => {
     const state = useGallery.getState()
     if (state.held) {
-      propObjects.get(state.held)?.cancel()
+      propObjects.get(state.held)?.release(false, true)
     }
     useGallery.setState({
       held: null,
@@ -52,12 +71,14 @@ export default function createGrabController(camera: RootState['camera'], placem
     }
     const prop = propObjects.get(id)
     if (prop) {
-      prop.release(throwing)
+      const thrown = prop.release(throwing)
       useGallery.setState({
         held: null,
         placement: null,
       })
-      chime(throwing ? 130 : 400)
+      if (thrown) {
+        sound(thrown)
+      }
       return
     }
     const portrait = state.portraits.find(candidate => candidate.id === id)
@@ -69,6 +90,14 @@ export default function createGrabController(camera: RootState['camera'], placem
       const origin = camera.position.toArray()
       const distance = Math.min(1.45, Math.max(0.35, world.wallDistance(origin, direction.toArray()) - 0.4))
       const position = camera.position.clone().addScaledVector(direction, distance)
+      const body = portraitObjects.get(id)?.body
+      const thrown = toss({
+        carrier: carrierVelocity(),
+        direction: direction.toArray(),
+        mass: body?.mass() || workMass,
+        throwing: true,
+        ...workThrow,
+      })
       state.commit(state.portraits.map(candidate => {
         return candidate.id === id ? {
           ...candidate,
@@ -77,10 +106,14 @@ export default function createGrabController(camera: RootState['camera'], placem
           orientation: undefined,
           position: position.toArray(),
           rotation: Math.atan2(-direction.x, -direction.z),
-          velocity: direction.multiplyScalar(14).add(new Vector3(0, 1.5, 0)).toArray(),
+          velocity: thrown.velocity,
         } : candidate
       }))
-      chime(130)
+      // A work let go of this close to the eye starts out in the player’s capsule as often as not.
+      if (body) {
+        PlayerGrace.of(body).begin()
+      }
+      sound(thrown)
     } else {
       const candidate = world.placement.findPlacement(camera.position.toArray(), camera.getWorldDirection(new Vector3).toArray(), portrait.width, portrait.height, state.portraits, portrait.id, portrait.labelAbove === true)
       if (candidate?.valid) {

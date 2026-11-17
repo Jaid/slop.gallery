@@ -80,7 +80,7 @@ function fixture(kind: DestructibleCatalogKind) {
 function clearLeaves(leaves: Array<GrabbableBody>) {
   for (const [i, leaf] of leaves.entries()) {
     expect(leaf.grab()).toBe(true)
-    leaf.release([3 + i * 0.5, 2, 3], [3 + i * 0.5, 2, 4], false)
+    leaf.release([3 + i * 0.5, 2, 3], [3 + i * 0.5, 2, 4])
     expect(leaf.body.isDynamic()).toBe(true)
   }
 }
@@ -143,7 +143,7 @@ describe('catalog plant destruction', () => {
     expect(state.rootAttached).toBe(true)
     expect(pot.grab()).toBe(false)
     expect(root.grab()).toBe(true)
-    root.release([0, 2, 3], [0, 2, 4], true)
+    root.release([0, 2, 3], [0, 2, 4], {throwing: true})
     expect(root.body.isDynamic()).toBe(true)
     root.grab()
     root.cancel()
@@ -157,10 +157,10 @@ describe('catalog plant destruction', () => {
     const {model, leaves, root, pot} = fixture(kind)
     clearLeaves(leaves)
     root.grab()
-    root.release([0, 2, 3], [0, 2, 4], true)
+    root.release([0, 2, 3], [0, 2, 4], {throwing: true})
     const positions = [root, ...leaves].map(piece => piece.body.translation())
     pot.grab()
-    pot.release([-3, 2, 3], [-3, 2, 4], true)
+    pot.release([-3, 2, 3], [-3, 2, 4], {throwing: true})
     expect([root, ...leaves].map(piece => piece.body.translation())).toEqual(positions)
     expect(pot.body.numColliders()).toBe(2)
     expect(root.body.numColliders()).toBe(model.stemColliders.length)
@@ -177,7 +177,7 @@ describe('catalog plant destruction', () => {
     const state = attachments
     clearLeaves(leaves)
     root.grab()
-    root.release([0, 2, 3], [0, 2, 4], false)
+    root.release([0, 2, 3], [0, 2, 4])
     leaves[0].body.setTranslation({
       x: 0,
       y: -13,
@@ -195,9 +195,9 @@ describe('catalog plant destruction', () => {
     expect(state.rootAttached).toBe(true)
     expect(pot.grab()).toBe(false)
     root.grab()
-    root.release([0, 2, 3], [0, 2, 4], false)
+    root.release([0, 2, 3], [0, 2, 4])
     pot.grab()
-    pot.release([-3, 2, 3], [-3, 2, 4], false)
+    pot.release([-3, 2, 3], [-3, 2, 4])
     root.body.setTranslation({
       x: 0,
       y: -13,
@@ -215,7 +215,7 @@ describe('catalog plant destruction', () => {
     // Attached, the root sits inside its pot; carried out of the physics and let go of elsewhere, it never has to be pulled out of it.
     expect(root.placement.hasRoom([home.x, home.y, home.z])).toBe(false)
     root.grab()
-    expect(root.release([0, 2, 2], [0, 2, 3], false)).toBe(false)
+    expect(root.release([0, 2, 2], [0, 2, 3])).toBeDefined()
     expect(root.body.translation().z).toBeCloseTo(3, 6)
     expect(root.body.isDynamic()).toBe(true)
     expect(root.body.collider(0).isEnabled()).toBe(true)
@@ -223,7 +223,7 @@ describe('catalog plant destruction', () => {
     world.createCollider(RAPIER.ColliderDesc.cuboid(0.5, 2, 0.1).setTranslation(0, 2, 4))
     world.step()
     root.grab()
-    expect(root.release([0, 2, 2], [0, 2, 5], false)).toBe(false)
+    expect(root.release([0, 2, 2], [0, 2, 5])).toBeDefined()
     const stopped = root.body.translation()
     expect(stopped.z).toBeLessThan(3.9)
     expect(root.placement.hasRoom([stopped.x, stopped.y, stopped.z])).toBe(true)
