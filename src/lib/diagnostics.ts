@@ -35,13 +35,20 @@ export type GalleryDiagnostics = {
   props: Array<{
     bodyType: number
     collidersEnabled: Array<boolean>
+    enabled: boolean
     id: string
+    mass: number
     position: {
       x: number
       y: number
       z: number
     }
     sleeping: boolean
+    velocity: {
+      x: number
+      y: number
+      z: number
+    }
     visualPosition: Vec3
   }>
   ready: boolean

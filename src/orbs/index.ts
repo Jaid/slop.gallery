@@ -7,6 +7,8 @@ import {transparentOrb} from './transparent/TransparentOrb.ts'
 
 /** the radius of every orb’s ball, in meters */
 export const orbRadius = 0.14
+/** the glass ball’s mass, in kilograms; assigned to the collider, not the RigidBody’s ignored `mass` prop */
+export const orbMass = 1.8
 
 export const halloweenOrb = new HalloweenOrb
 export const horrorOrb = new HorrorOrb

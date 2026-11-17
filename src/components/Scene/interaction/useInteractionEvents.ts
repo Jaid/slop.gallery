@@ -2,6 +2,7 @@ import type {Placement} from '#src/lib/gallery.ts'
 import type {FirstPose, MutableRef} from './types.ts'
 import type {RootState} from '@react-three/fiber'
 
+import {useRapier} from '@react-three/rapier'
 import {useEffect} from 'react'
 import {Raycaster, Vector2} from 'three/webgpu'
 
@@ -24,9 +25,10 @@ export default function useInteractionEvents({
   placement: MutableRef<Placement | null>
   renderer: RootState['renderer']
 }) {
+  const {world} = useRapier()
   useEffect(() => pauseMenu.attach(renderer.domElement), [renderer])
   useEffect(() => {
-    const grabbing = createGrabController(camera, placement)
+    const grabbing = createGrabController(camera, placement, world)
     const lock = () => {
       const {locked} = pauseMenu.getSnapshot()
       if (locked === useGallery.getState().locked) {
@@ -124,5 +126,5 @@ export default function useInteractionEvents({
       }
       galleryEvents.removeEventListener('cancel-interaction', grabbing.cancel)
     }
-  }, [camera, controls, firstPose, placement, renderer])
+  }, [camera, controls, firstPose, placement, renderer, world])
 }

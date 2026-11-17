@@ -7,7 +7,7 @@ import {Vector3} from 'three/webgpu'
 import {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import {useGallery} from '#src/lib/gallery/store.ts'
 import {aimThrow} from '#src/lib/physics/aimThrow.ts'
-import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
+import {throwSpeed} from '#src/lib/physics/itemLaunch.ts'
 
 /** how far below the middle of the view and how far from the eye a carried orb floats, where a throw leaves from by default: 15° and 0.55 m */
 const holdTilt = 15 * Math.PI / 180

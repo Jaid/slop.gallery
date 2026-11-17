@@ -128,7 +128,7 @@ describe('existing specimen geometry', () => {
   })
 })
 describe('catalog plant destruction', () => {
-  test.each(['snake', 'calathea'] as const)('%s enforces leaves → root → pot and cancel restores each stage', kind => {
+  test.each(['snake', 'calathea'] as const)('%s enforces leaves → root → pot and quiet releases never reattach them', kind => {
     const {leaves, root, pot, attachments} = fixture(kind)
     const state = attachments
     expect(root.grab()).toBe(false)
@@ -139,18 +139,18 @@ describe('catalog plant destruction', () => {
     expect(pot.grab()).toBe(false)
     expect(root.grab()).toBe(true)
     expect(state.canGrabPot()).toBe(true)
-    root.cancel()
-    expect(state.rootAttached).toBe(true)
-    expect(pot.grab()).toBe(false)
+    expect(root.release([0, 2, 3], [0, 2, 4], false)).toBe(true)
+    expect(state.rootAttached).toBe(false)
+    expect(state.canGrabPot()).toBe(true)
     expect(root.grab()).toBe(true)
     root.release([0, 2, 3], [0, 2, 4], true)
     expect(root.body.isDynamic()).toBe(true)
     root.grab()
-    root.cancel()
+    root.release([0, 2, 3], [0, 2, 4], false)
     expect(state.rootAttached).toBe(false)
     expect(pot.grab()).toBe(true)
-    pot.cancel()
-    expect(state.potAttached).toBe(true)
+    pot.release([-3, 2, 3], [-3, 2, 4], false)
+    expect(state.potAttached).toBe(false)
     expect(state.rootAttached).toBe(false)
   })
   test.each(['snake', 'calathea'] as const)('%s root and loose leaves remain independent when the pot moves', kind => {
@@ -215,7 +215,7 @@ describe('catalog plant destruction', () => {
     // Attached, the root sits inside its pot; carried out of the physics and let go of elsewhere, it never has to be pulled out of it.
     expect(root.placement.hasRoom([home.x, home.y, home.z])).toBe(false)
     root.grab()
-    expect(root.release([0, 2, 2], [0, 2, 3], false)).toBe(false)
+    expect(root.release([0, 2, 2], [0, 2, 3], false)).toBe(true)
     expect(root.body.translation().z).toBeCloseTo(3, 6)
     expect(root.body.isDynamic()).toBe(true)
     expect(root.body.collider(0).isEnabled()).toBe(true)
@@ -223,14 +223,14 @@ describe('catalog plant destruction', () => {
     world.createCollider(RAPIER.ColliderDesc.cuboid(0.5, 2, 0.1).setTranslation(0, 2, 4))
     world.step()
     root.grab()
-    expect(root.release([0, 2, 2], [0, 2, 5], false)).toBe(false)
+    expect(root.release([0, 2, 2], [0, 2, 5], false)).toBe(true)
     const stopped = root.body.translation()
     expect(stopped.z).toBeLessThan(3.9)
     expect(root.placement.hasRoom([stopped.x, stopped.y, stopped.z])).toBe(true)
     // A loose root still fits nowhere inside its former pot.
     expect(root.placement.hasRoom([home.x, home.y, home.z], false)).toBe(false)
     root.grab()
-    root.cancel()
+    root.release([0, 2, 3], [0, 2, 4], false)
     expect(attachments.remaining).toBe(0)
   })
   test('fresh attachment state resets all three stages and foreign leaf IDs are ignored', () => {

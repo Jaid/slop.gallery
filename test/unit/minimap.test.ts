@@ -247,7 +247,7 @@ test('grabbing a work marks it interacted, by its name plate too', () => {
     sound: false,
   })
   try {
-    createGrabController({} as never, {current: null}).grab()
+    createGrabController({} as never, {current: null}, {} as never).grab()
     expect(useGallery.getState().held).toBe(portrait.id)
     expect(useGallery.getState().portraits[0].interacted).toBe(true)
   } finally {

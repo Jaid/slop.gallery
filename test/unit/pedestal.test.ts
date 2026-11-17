@@ -7,6 +7,7 @@ import PedestalGeometry, {pedestalHeight, pedestalScale} from '../../src/lib/gal
 import {triangleCount} from '../../src/lib/geometry.ts'
 import LimestoneMaterial from '../../src/lib/materials/LimestoneMaterial.ts'
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
+import {itemMass, launchSpeed} from '../../src/lib/physics/itemLaunch.ts'
 import PropPlacement from '../../src/lib/physics/PropPlacement.ts'
 
 await RAPIER.init()
@@ -111,7 +112,7 @@ describe('sculpture pedestals', () => {
     expect(position[2]).toBeGreaterThan(capReach + 0.455)
   })
   for (const [x, z] of [[0, 1], [0, -1], [1, 0], [-1, 0], [-0.96, 0.28]] as const) {
-    test(`picks up a settled three-part prop from direction ${x}, ${z}, including after canceling`, () => {
+    test(`picks up a settled three-part prop from direction ${x}, ${z}, including after a quiet release`, () => {
       // Separate parts, not a single bounding box: a lower part spawned inside the cap
       // can settle below it and trap the whole prop.
       const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, pedestalHeight + 0.08, 0).setCcdEnabled(true))
@@ -131,16 +132,16 @@ describe('sculpture pedestals', () => {
         expect(controller.grab()).toBe(true)
         expect(body.isEnabled()).toBe(false)
         if (attempt === 0) {
-          controller.cancel()
-          expect(body.translation()).toEqual(resting)
+          expect(controller.release([x * 1.8, pedestalHeight + 0.05, z * 1.8], [x * 0.35, pedestalHeight + 0.05, z * 0.35], false)).toBe(true)
+          expect(body.translation()).not.toEqual(resting)
         } else {
           // Held level toward the pedestal’s middle, it comes to rest against the cap’s edge.
-          expect(controller.release([x * 1.8, pedestalHeight + 0.05, z * 1.8], [x * 0.35, pedestalHeight + 0.05, z * 0.35], true)).toBe(false)
+          expect(controller.release([x * 1.8, pedestalHeight + 0.05, z * 1.8], [x * 0.35, pedestalHeight + 0.05, z * 0.35], true)).toBe(true)
           const released = body.translation()
           expect(Math.hypot(released.x - resting.x, released.z - resting.z)).toBeGreaterThan(capReach + 0.345)
           expect(controller.placement.hasRoom([released.x, released.y, released.z])).toBe(true)
           expect(body.isDynamic()).toBe(true)
-          expect(body.linvel().y).toBe(2)
+          expect(body.linvel().y).toBeCloseTo(launchSpeed(itemMass(body)) / 6, 5)
           for (let i = 0; i < body.numColliders(); i++) {
             expect(body.collider(i).isEnabled()).toBe(true)
           }

@@ -12,6 +12,7 @@ import PotGeometry from '../../src/lib/gallery/plantDecorations/PotGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import initializeFoliageCollider from '../../src/lib/physics/initializeFoliageCollider.ts'
+import {itemMass, launchSpeed} from '../../src/lib/physics/itemLaunch.ts'
 import PlantAttachment from '../../src/lib/physics/PlantAttachment.ts'
 import {leafPhysics} from '../../src/lib/physics/plantPhysics.ts'
 
@@ -183,44 +184,27 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
         }
       }
     })
-    test('plucking, canceling and re-grabbing preserve attachment rules', () => {
-      const {attachments, leaves, pot} = plant(kind)
+    test('dropped plucks stay detached, re-grabs stay loose and only their own pot unlocks', () => {
+      const first = plant(kind, 'first')
+      const second = plant(kind, 'second', 4)
+      const {attachments, leaves, pot} = first
       expect(pot.grab()).toBe(false)
       const leaf = leaves[1]
-      const original = leaf.body.translation()
-      const rotation = leaf.body.rotation()
       expect(leaf.grab()).toBe(true)
-      // Carried, the leaf is out of the physics where it hung.
-      expect(leaf.body.isEnabled()).toBe(false)
-      expect(leaf.body.translation()).toEqual(original)
       expect(attachments.remaining).toBe(leaves.length - 1)
-      leaf.cancel()
-      expect(leaf.body.translation()).toEqual(original)
-      for (const axis of ['x', 'y', 'z', 'w'] as const) {
-        expect(leaf.body.rotation()[axis]).toBeCloseTo(rotation[axis], 6)
-      }
-      expect(attachments.remaining).toBe(leaves.length)
+      expect(leaf.release([0, 2, 2], [0, 2, 3], false)).toBe(true)
+      expect(leaf.body.translation().z).toBeCloseTo(3)
+      expect(leaf.body.isDynamic()).toBe(true)
+      expect(attachments.remaining).toBe(leaves.length - 1)
       pluckAll(leaves)
       expect(attachments.canGrabPot()).toBe(true)
+      expect(second.pot.grab()).toBe(false)
       leaf.grab()
-      leaf.cancel()
+      leaf.release([0, 2, 2], [0, 2, 3], false)
+      attachments.setLeafAttached('second-leaf-0', false)
       expect(attachments.remaining).toBe(0)
       expect(leaf.body.isDynamic()).toBe(true)
       expect(pot.grab()).toBe(true)
-    })
-    test('the last canceled pluck relocks only its own pot', () => {
-      const first = plant(kind, 'first')
-      const second = plant(kind, 'second', 4)
-      for (const leaf of first.leaves) {
-        leaf.grab()
-      }
-      expect(first.attachments.canGrabPot()).toBe(true)
-      expect(second.pot.grab()).toBe(false)
-      first.leaves.at(-1)!.cancel()
-      first.leaves.at(-1)!.cancel()
-      first.attachments.setLeafAttached('second-leaf-0', false)
-      expect(first.attachments.remaining).toBe(1)
-      expect(first.pot.grab()).toBe(false)
     })
     test('leaves and carried stalks become a single throwable compound body and land on the floor', () => {
       const {geometry, leaves} = plant(kind)
@@ -230,7 +214,7 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
       leaf.grab()
       leaf.release([0, 2, 2], [0, 2, 3], true)
       expect(leaf.body.isDynamic()).toBe(true)
-      expect(leaf.body.linvel().z).toBe(10)
+      expect(leaf.body.linvel().z).toBeCloseTo(launchSpeed(itemMass(leaf.body)), 5)
       for (let i = 0; i < leaf.body.numColliders(); i++) {
         expect(leaf.body.collider(i).isEnabled()).toBe(true)
       }
@@ -297,20 +281,18 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
       obstacle.setEnabled(false)
       expect(pot.placement.hasRoom([position.x, position.y, position.z])).toBe(true)
     })
-    test('canceling a pot pickup restores its pose and collider flags without moving loose leaves', () => {
+    test('a quiet pot release detaches it locally without moving loose leaves', () => {
       const {attachments, leaves, pot} = plant(kind)
       pluckAll(leaves)
-      const original = pot.body.translation()
       const loose = leaves.map(leaf => leaf.body.translation())
-      const enabled = Array.from({length: pot.body.numColliders()}, (_, i) => pot.body.collider(i).isEnabled())
       pot.grab()
       expect(pot.body.isEnabled()).toBe(false)
-      pot.cancel()
-      expect(pot.body.translation()).toEqual(original)
-      expect(pot.body.isFixed()).toBe(true)
-      expect(attachments.potAttached).toBe(true)
+      expect(pot.release([0, 2, 2], [0, 2, 3], false)).toBe(true)
+      expect(pot.body.translation().z).toBeCloseTo(3)
+      expect(pot.body.isDynamic()).toBe(true)
+      expect(attachments.potAttached).toBe(false)
       expect(leaves.map(leaf => leaf.body.translation())).toEqual(loose)
-      expect(Array.from({length: pot.body.numColliders()}, (_, i) => pot.body.collider(i).isEnabled())).toEqual(enabled)
+      expect(Array.from({length: pot.body.numColliders()}, (_, i) => pot.body.collider(i).isEnabled()).every(Boolean)).toBe(true)
     })
     test('released pots land on the floor and lost pots recover empty without replanting leaves', () => {
       const {attachments, leaves, pot} = plant(kind)

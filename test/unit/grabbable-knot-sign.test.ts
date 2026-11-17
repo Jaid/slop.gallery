@@ -6,9 +6,10 @@ import {BoxGeometry, Euler, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMateri
 
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import InstancedPropVisuals from '../../src/lib/physics/InstancedPropVisuals.ts'
+import {itemMass, launchSpeed} from '../../src/lib/physics/itemLaunch.ts'
 
 await RAPIER.init()
-test('a complete nameplate can be picked up, canceled, thrown and picked up again', () => {
+test('a complete nameplate can be picked up, dropped, thrown and picked up again', () => {
   const world = new RAPIER.World({
     x: 0,
     y: -9.81,
@@ -31,7 +32,6 @@ test('a complete nameplate can be picked up, canceled, thrown and picked up agai
     }
     expect(body.translation().y).toBeCloseTo(knotSign.elevation, 2)
     expect(body.mass()).toBeCloseTo(knotSign.plateMass * knotSignParts.length + knotSignRoundParts.reduce((mass, part) => mass + part.mass, 0))
-    const resting = body.translation()
     const rotation = body.rotation()
     body.sleep()
     expect(carried.grab()).toBe(true)
@@ -39,14 +39,14 @@ test('a complete nameplate can be picked up, canceled, thrown and picked up agai
     for (let i = 0; i < 90; i++) {
       world.step()
     }
-    carried.cancel()
-    expect(body.translation()).toEqual(resting)
+    carried.release([0, 1.5, 1], [0, 1.5, 2], false)
+    expect(body.translation().z).toBeCloseTo(2)
     expect(body.rotation()).toEqual(rotation)
     expect(body.isDynamic()).toBe(true)
     expect(carried.grab()).toBe(true)
-    expect(carried.release([0, 1.5, 1], [0, 1.5, 2], true)).toBe(false)
-    expect(body.linvel().z).toBe(10)
-    expect(body.angvel().x).toBe(3)
+    expect(carried.release([0, 1.5, 1], [0, 1.5, 2], true)).toBe(true)
+    expect(body.linvel().z).toBeCloseTo(launchSpeed(itemMass(body)), 5)
+    expect(body.angvel().x).toBeCloseTo(launchSpeed(itemMass(body)) / 4, 5)
     // Rapier reports colliders as their body left them until its next step.
     world.step()
     for (let i = 0; i < body.numColliders(); i++) {
@@ -62,8 +62,9 @@ test('a complete nameplate can be picked up, canceled, thrown and picked up agai
     for (let i = 0; i < 90; i++) {
       world.step()
     }
-    carried.cancel()
-    expect(body.translation()).toEqual(landed)
+    carried.release([0, 1.5, 1], [0, 1.5, 2], false)
+    expect(body.translation()).not.toEqual(landed)
+    expect(body.translation().z).toBeCloseTo(2)
     expect(body.isDynamic()).toBe(true)
   } finally {
     world.free()

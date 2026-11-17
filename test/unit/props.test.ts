@@ -62,7 +62,7 @@ describe('where a released prop goes', () => {
     expect(position[2]).toBeLessThan(0.43)
     expect(placement.hasRoom(position)).toBe(true)
   })
-  test('sweeps out of the player’s capsule but never ends inside it', () => {
+  test('ignores the player during placement and leaves overlap handling to release grace', () => {
     const placement = slab()
     const player = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased())
     player.userData = {isPlayer: true}
@@ -100,7 +100,7 @@ describe('where a released prop goes', () => {
   })
   test('does not return an intersecting pose when there is no room', () => {
     const placement = slab()
-    world.createCollider(RAPIER.ColliderDesc.cuboid(2, 2, 2))
+    world.createCollider(RAPIER.ColliderDesc.cuboid(2, 3, 2))
     world.step()
     expect(placement.reach([0, 1.4, 0], [0, 1.2, 1.45])).toBeNull()
     expect(placement.reach([0, 1.4, 0], [0, 1.4, 0])).toBeNull()

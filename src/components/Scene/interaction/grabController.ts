@@ -1,11 +1,16 @@
 import type {Placement} from '#src/lib/gallery.ts'
 import type {MutableRef} from './types.ts'
+import type {World} from '@dimforge/rapier3d-compat'
 import type {RootState} from '@react-three/fiber'
 
-import {Vector3} from 'three/webgpu'
+import {Quaternion, Vector3} from 'three/webgpu'
 
-import {cameraPose, chime, markPortraitInteracted, useGallery} from '#src/lib/gallery.ts'
+import throwVoices from '#src/lib/audio/throwVoices.ts'
+import {bodyPose, cameraPose, chime, markPortraitInteracted, notify, playSound, useGallery} from '#src/lib/gallery.ts'
 import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
+import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import {itemLaunch, itemMass} from '#src/lib/physics/itemLaunch.ts'
+import PropPlacement from '#src/lib/physics/PropPlacement.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import world from '#src/worlds/current.ts'
 
@@ -32,19 +37,15 @@ const grab = () => {
   chime(440)
 }
 
-export default function createGrabController(camera: RootState['camera'], placement: MutableRef<Placement | null>) {
-  const cancel = () => {
-    const state = useGallery.getState()
-    if (state.held) {
-      propObjects.get(state.held)?.cancel()
-    }
+export default function createGrabController(camera: RootState['camera'], placement: MutableRef<Placement | null>, physics: World) {
+  const clear = () => {
     useGallery.setState({
       held: null,
       placement: null,
     })
     placement.current = null
   }
-  const release = (throwing = false) => {
+  const release = (throwing = false, hanging = true) => {
     const state = useGallery.getState()
     const id = state.held
     if (!id) {
@@ -52,36 +53,18 @@ export default function createGrabController(camera: RootState['camera'], placem
     }
     const prop = propObjects.get(id)
     if (prop) {
-      prop.release(throwing)
-      useGallery.setState({
-        held: null,
-        placement: null,
-      })
-      chime(throwing ? 130 : 400)
+      if (!prop.release(throwing)) {
+        return
+      }
+      clear()
       return
     }
     const portrait = state.portraits.find(candidate => candidate.id === id)
     if (!portrait) {
       return
     }
-    if (throwing) {
-      const direction = camera.getWorldDirection(new Vector3)
-      const origin = camera.position.toArray()
-      const distance = Math.min(1.45, Math.max(0.35, world.wallDistance(origin, direction.toArray()) - 0.4))
-      const position = camera.position.clone().addScaledVector(direction, distance)
-      state.commit(state.portraits.map(candidate => {
-        return candidate.id === id ? {
-          ...candidate,
-          hung: false,
-          wallId: undefined,
-          orientation: undefined,
-          position: position.toArray(),
-          rotation: Math.atan2(-direction.x, -direction.z),
-          velocity: direction.multiplyScalar(14).add(new Vector3(0, 1.5, 0)).toArray(),
-        } : candidate
-      }))
-      chime(130)
-    } else {
+    // Releasing onto a valid wall still hangs the work. Everywhere else, including Escape/unfocus, it drops locally just like a prop.
+    if (!throwing && hanging) {
       const candidate = world.placement.findPlacement(camera.position.toArray(), camera.getWorldDirection(new Vector3).toArray(), portrait.width, portrait.height, state.portraits, portrait.id, portrait.labelAbove === true)
       if (candidate?.valid) {
         state.commit(state.portraits.map(item => {
@@ -97,24 +80,51 @@ export default function createGrabController(camera: RootState['camera'], placem
           } : item
         }))
         requestHanging(id, candidate.position, candidate.rotation)
-      } else {
-        const reason = candidate?.reason ?? 'noWall'
-        telemetry?.event('placement.refused', {
-          reason,
-          room: state.room,
-          'wall.id': candidate?.wallId ?? 'none',
-          'placement.in_reach': candidate?.inReach ?? false,
-        }, `Placement refused: ${reason}`)
+        clear()
+        return
       }
+      const reason = candidate?.reason ?? 'noWall'
+      telemetry?.event('placement.refused', {
+        reason,
+        room: state.room,
+        'wall.id': candidate?.wallId ?? 'none',
+        'placement.in_reach': candidate?.inReach ?? false,
+      }, `Placement refused: ${reason}`)
     }
-    useGallery.setState({
-      held: null,
-      placement: null,
-    })
-    placement.current = null
+    const physical = portraitObjects.get(id)
+    if (!physical) {
+      return
+    }
+    const direction = camera.getWorldDirection(new Vector3)
+    const origin = camera.getWorldPosition(new Vector3)
+    origin.y -= 0.22
+    const rotation = Math.atan2(-direction.x, -direction.z)
+    const previous = physical.body.rotation()
+    const orientation = new Quaternion
+    physical.body.setRotation(orientation.setFromAxisAngle(new Vector3(0, 1, 0), rotation), false)
+    const clearance = new PropPlacement(physics, physical.body)
+    const position = clearance.reach(origin.toArray(), origin.clone().addScaledVector(direction, 1.45).toArray())
+    physical.body.setRotation(previous, false)
+    if (!position) {
+      notify('Not enough room to let go. Move into a more open space.')
+      return
+    }
+    const launch = itemLaunch(itemMass(physical.body), direction.toArray(), cameraPose.posed ? [0, 0, 0] : bodyPose.velocity, throwing)
+    state.commit(state.portraits.map(candidate => (candidate.id === id ? {
+      ...candidate,
+      hung: false,
+      wallId: undefined,
+      orientation: undefined,
+      position,
+      rotation,
+      velocity: launch.velocity,
+      spin: launch.spin,
+    } : candidate)))
+    playSound(throwVoices(launch), `release:${id}`)
+    clear()
   }
   return {
-    cancel,
+    cancel: () => release(false, false),
     grab,
     release,
   }

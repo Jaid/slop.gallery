@@ -71,7 +71,7 @@ test('showcase state blocks grabbing until the Knot has been physically released
   rotation.release(body)
   expect(carried.grab()).toBe(true)
   expect(body.isEnabled()).toBe(false)
-  carried.cancel()
+  carried.release([0, 1.5, 0], [0, 1.5, 1], false)
   expect(body.isDynamic()).toBe(true)
 })
 test('Knots that appear late turn in sync with the shared clock, which resets to the start', () => {

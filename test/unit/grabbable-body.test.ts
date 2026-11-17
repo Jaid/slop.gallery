@@ -3,6 +3,7 @@ import {afterEach, beforeEach, describe, expect, test} from 'bun:test'
 import RAPIER from '@dimforge/rapier3d-compat'
 
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
+import {itemMass, launchSpeed} from '../../src/lib/physics/itemLaunch.ts'
 import {bodyThrow} from '../../src/lib/physics/ThrowState.ts'
 
 await RAPIER.init()
@@ -47,7 +48,7 @@ describe('shared grabbing regressions', () => {
       z: 3,
     })
   })
-  test('a carried prop leaves the physics where it lay, and canceling puts it back in untouched', () => {
+  test('carrying disables the pickup body; even a quiet release puts it at the hand', () => {
     const body = sculpture()
     body.setLinvel({
       x: 1,
@@ -67,7 +68,8 @@ describe('shared grabbing regressions', () => {
       y: 2,
       z: 3,
     })
-    carried.cancel()
+    expect(carried.release([0, 1.4, 0], [0, 1.4, 1], false)).toBe(true)
+    expect(body.translation().z).toBeCloseTo(1)
     expect(body.isEnabled()).toBe(true)
     expect(body.isDynamic()).toBe(true)
     expect(body.linvel()).toEqual({
@@ -89,7 +91,7 @@ describe('shared grabbing regressions', () => {
     world.step()
     const carried = new GrabbableBody(body, world)
     carried.grab()
-    expect(carried.release([0, 1.4, 0], [0, 1.4, 1.45], false)).toBe(false)
+    expect(carried.release([0, 1.4, 0], [0, 1.4, 1.45], false)).toBe(true)
     const {z} = body.translation()
     // The prop’s cover reaches 0.45 m ahead of its middle and the wall’s face is at 1.7 m, so it stops 1.25 m out, short of the 1.45 m it was held at.
     expect(z).toBeLessThan(1.7 - 0.45)
@@ -97,17 +99,20 @@ describe('shared grabbing regressions', () => {
     expect(carried.placement.hasRoom([0, 1.4, z])).toBe(true)
     expect(body.isEnabled()).toBe(true)
   })
-  test('without room anywhere along the way, the prop stays where it was picked up', () => {
+  test('without room nearby, the prop remains disabled in hand until a later release fits', () => {
     world.createCollider(RAPIER.ColliderDesc.cuboid(2, 2, 2).setTranslation(0, 1.4, 0))
     const body = sculpture()
     world.step()
     const resting = body.translation()
     const carried = new GrabbableBody(body, world)
     carried.grab()
-    expect(carried.release([0, 1.4, 0], [0, 1.4, 1.45], true)).toBe(true)
+    expect(carried.release([0, 1.4, 0], [0, 1.4, 1.45], true)).toBe(false)
     expect(body.translation()).toEqual(resting)
-    expect(body.isEnabled()).toBe(true)
+    expect(body.isEnabled()).toBe(false)
     expect(bodyThrow(body)).toBeUndefined()
+    expect(carried.active).toBe(true)
+    expect(carried.release([0, 5, 4], [0, 5, 5], false)).toBe(true)
+    expect(body.translation().z).toBeCloseTo(5)
     expect(carried.active).toBe(false)
   })
   test('a throw flies along the line it was held on, spinning, and a drop just falls', () => {
@@ -115,12 +120,10 @@ describe('shared grabbing regressions', () => {
     const carried = new GrabbableBody(body, world)
     carried.grab()
     carried.release([0, 1.4, 0], [0, 1.4, 1.45], true)
-    expect(body.linvel()).toEqual({
-      x: 0,
-      y: 2,
-      z: 10,
-    })
-    expect(body.angvel().x).toBe(3)
+    expect(body.linvel().x).toBe(0)
+    expect(body.linvel().y).toBeCloseTo(launchSpeed(itemMass(body)) / 6, 5)
+    expect(body.linvel().z).toBeCloseTo(launchSpeed(itemMass(body)), 5)
+    expect(body.angvel().x).toBeCloseTo(launchSpeed(itemMass(body)) / 4, 5)
     carried.grab()
     carried.release([0, 1.4, 0], [0, 1.4, -1.45], false)
     expect(body.linvel()).toEqual({
@@ -136,11 +139,9 @@ describe('shared grabbing regressions', () => {
     carried.grab()
     carried.release([0, 1.4, 0], [0, 1.2, 0.5], true, [0, 0, 1])
     expect(body.translation().z).toBeCloseTo(0.5, 6)
-    expect(body.linvel()).toEqual({
-      x: 0,
-      y: 2,
-      z: 10,
-    })
+    expect(body.linvel().x).toBe(0)
+    expect(body.linvel().y).toBeCloseTo(launchSpeed(itemMass(body)) / 6, 5)
+    expect(body.linvel().z).toBeCloseTo(launchSpeed(itemMass(body)), 5)
   })
   test('released fixed props come loose with all their colliders', () => {
     const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(1, 2, 3))
@@ -148,14 +149,10 @@ describe('shared grabbing regressions', () => {
     const attached: Array<boolean> = []
     const carried = new GrabbableBody(body, world, {onAttachmentChange: value => attached.push(value)})
     carried.grab()
-    carried.cancel()
-    expect(body.isFixed()).toBe(true)
-    expect(body.collider(0).isEnabled()).toBe(false)
-    carried.grab()
     carried.release([0, 1.4, 0], [0, 1.4, 1.45], false)
     expect(body.isDynamic()).toBe(true)
     expect(body.collider(0).isEnabled()).toBe(true)
-    expect(attached).toEqual([false, true, false])
+    expect(attached).toEqual([false])
   })
   test('each deliberate throw gets one stable attack identity until the prop is grabbed again', () => {
     const body = sculpture()
@@ -175,7 +172,7 @@ describe('shared grabbing regressions', () => {
     carried.release([0, 1.4, 0], [0, 1.4, 1.45], false)
     expect(bodyThrow(body)).toBeUndefined()
   })
-  test('cancel after a completed throw does not stop or teleport the prop', () => {
+  test('a redundant release after a completed throw does not stop or teleport the prop', () => {
     const body = sculpture()
     const carried = new GrabbableBody(body, world)
     carried.grab()
@@ -185,7 +182,7 @@ describe('shared grabbing regressions', () => {
     }
     const before = body.translation()
     const velocity = body.linvel()
-    carried.cancel()
+    expect(carried.release([0, 1.4, 0], [0, 1.4, 1], false)).toBe(false)
     expect(body.translation()).toEqual(before)
     expect(body.linvel()).toEqual(velocity)
   })

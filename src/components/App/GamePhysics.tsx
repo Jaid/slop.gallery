@@ -1,8 +1,9 @@
 import type {GameWrapperProps} from 'three-fiber-game'
 
-import {Physics} from '@react-three/rapier'
+import {Physics, useBeforePhysicsStep} from '@react-three/rapier'
 
 import {usePhysicsHold} from '#src/lib/gallery/roomLoading.ts'
+import ReleaseGrace from '#src/lib/physics/ReleaseGrace.ts'
 
 /**
  * Rapier for the scene, paused while rooms that bring their own floors are still loading, so that nothing falls through them.
@@ -10,5 +11,11 @@ import {usePhysicsHold} from '#src/lib/gallery/roomLoading.ts'
  */
 export default function GamePhysics({children}: GameWrapperProps) {
   const held = usePhysicsHold(state => state.held)
-  return <Physics paused={held}>{children}</Physics>
+  return <Physics paused={held}><ReleaseContacts />{children}</Physics>
+}
+
+/** Registered before the player’s motor, so its queries see the same groups as the solver. */
+function ReleaseContacts() {
+  useBeforePhysicsStep(world => ReleaseGrace.for(world).step(world))
+  return null
 }

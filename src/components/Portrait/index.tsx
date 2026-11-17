@@ -3,7 +3,7 @@ import type {RapierRigidBody} from '@react-three/rapier'
 import type {Group} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {CuboidCollider, RigidBody} from '@react-three/rapier'
+import {CuboidCollider, RigidBody, useRapier} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useEffect, useMemo, useRef} from 'react'
@@ -17,11 +17,13 @@ import {impactSounds} from '#src/lib/audio/impactSounds.ts'
 import {requestFusion, useGallery} from '#src/lib/gallery.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import ReleaseGrace from '#src/lib/physics/ReleaseGrace.ts'
 import world from '#src/worlds/current.ts'
 
 import useHanging from './useHanging.ts'
 
 export default function Portrait({portrait: p}: {portrait: PortraitData}) {
+  const {world: physics} = useRapier()
   const body = useRef<RapierRigidBody>(null)
   const group = useRef<Group>(null)
   const art = useRef<Group>(null)
@@ -39,10 +41,14 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
         group: group.current,
       })
     }
+    const current = body.current
     return () => {
+      if (current) {
+        ReleaseGrace.for(physics).end(current)
+      }
       portraitObjects.delete(p.id)
     }
-  }, [p.id])
+  }, [p.id, physics])
   // Hung, held or flown around by a fusion, the body is fixed or disabled, so only a loose work strikes anything.
   useEffect(() => {
     if (body.current) {
@@ -71,6 +77,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
   }, [p.position, p.rotation, p.orientation])
   useEffect(() => {
     if (!p.hung && p.velocity && body.current) {
+      ReleaseGrace.for(physics).begin(body.current)
       body.current.setLinvel({
         x: p.velocity[0],
         y: p.velocity[1],
@@ -83,7 +90,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
         z,
       }, true)
     }
-  }, [p.hung, p.velocity, p.spin])
+  }, [p.hung, p.velocity, p.spin, physics])
   useFrame(() => {
     const position = body.current?.translation()
     if (body.current && position && !p.hung && position.y < world.placement.floorHeight([position.x, position.y, position.z]) - 4) {
