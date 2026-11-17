@@ -11,6 +11,8 @@ let expected: ReadonlyArray<RoomId> = []
 /** the expected rooms that have neither mounted nor failed yet */
 const unsettled = new Set<RoomId>
 let mounted = 0
+/** the rooms that have mounted, in that order, until the world unmounts */
+const mountedIds = new Set<RoomId>
 trackLoadingItems(() => [...pending].map(room => `room:${room}`))
 
 /**
@@ -24,6 +26,9 @@ export const pendingRooms = () => pending.size
 
 /** how many rooms have mounted so far, which grows whenever the world gains a room’s geometry */
 export const mountedRooms = () => mounted
+
+/** The ids of the rooms that have mounted so far, in that order. */
+export const mountedRoomIds = (): ReadonlyArray<RoomId> => [...mountedIds]
 
 /** Holds the physics until each of these rooms has mounted or failed to load. */
 export function expectRooms(rooms: ReadonlyArray<RoomId>) {
@@ -44,6 +49,7 @@ export function startRoom(room: RoomId) {
 export function endRoom(room: RoomId, failed = false) {
   if (pending.delete(room) && !failed) {
     mounted++
+    mountedIds.add(room)
   }
   if (unsettled.delete(room) && unsettled.size === 0) {
     usePhysicsHold.setState({held: false})
@@ -53,5 +59,6 @@ export function endRoom(room: RoomId, failed = false) {
 /** Forgets every room still loading once the world unmounts, and holds the physics again for a world that mounts anew. */
 export function clearRooms() {
   pending.clear()
+  mountedIds.clear()
   expectRooms(expected)
 }

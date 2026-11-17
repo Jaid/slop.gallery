@@ -24,6 +24,8 @@ export type GalleryDiagnostics = {
   loadingItems: Array<string>
   locked: boolean
   menuStage: PauseMenuStage
+  /** the ids of the rooms that streamed in and mounted so far, in that order; worlds that bring their rooms with the page, like the Sandbox, stream none */
+  mountedRooms: ReadonlyArray<string>
   placement: Placement | null
   portraits: Array<Pick<Portrait, 'fusing' | 'height' | 'hung' | 'id' | 'pending' | 'position' | 'reserved' | 'title' | 'wallId' | 'width'> & {physical?: {
     x: number

@@ -112,6 +112,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
       origin: expected.origin,
       rooms: expected.rooms,
     })
+    expect(snapshot.mountedRooms.toSorted(), label).toEqual(expected.rooms.toSorted())
     const analysis = await callWebmcpTool(page, 'analyze_world') as WorldAnalysis
     const regions = [...Object.values(analysis.rooms), analysis.elsewhere]
     for (const {path} of regions.flatMap(region => [...region.meshes, ...region.lights])) {
@@ -148,6 +149,8 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
       await page.evaluate(position => globalThis.slopGallery!.pose!({position}), eye)
       await waitForFrames(page, 30)
     }
+    const mountedLater = await page.evaluate(() => globalThis.slopGallery!.snapshot!().mountedRooms)
+    expect(mountedLater.toSorted(), `${label} after posing out of reach`).toEqual(expected.rooms.toSorted())
     const requested = new Set(await requestedFiles(page))
     for (const [id, file] of roomChunks) {
       if (requested.has(file) !== expected.covers(id)) {

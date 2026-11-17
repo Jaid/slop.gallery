@@ -8,6 +8,7 @@ import {Euler, PerspectiveCamera, Vector3} from 'three/webgpu'
 import {cameraPose, galleryEvents, setCameraFocused, useGallery} from '#src/lib/gallery.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
+import {mountedRoomIds} from '#src/lib/gallery/roomLoading.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
@@ -42,6 +43,7 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
         origin: world.reach.origin,
         rooms: world.reach.rooms,
       },
+      mountedRooms: mountedRoomIds(),
       props: [...propObjects].map(([id, {body, group}]) => ({
         id,
         position: body.translation(),
