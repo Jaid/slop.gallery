@@ -10,16 +10,40 @@ import {placementIssues} from './wallGeometry.ts'
 /**
  * The museum’s rooms, stairs and passages.
  *
- * The gallery world constructs it with its walls, floors and volume, which it cannot import itself without a cycle.
+ * The gallery world constructs it with its walls, floors and volume, which it cannot import itself without a cycle, and with which of the walls are there, see {@link GalleryPlacementSpace.walls}.
  */
 export class GalleryPlacementSpace extends PlacementSpace {
-  readonly recoveryPosition: Vec3 = [0, 1, 4]
+  private presentWalls: ReadonlyArray<Wall> | undefined = undefined
 
-  constructor(readonly walls: ReadonlyArray<Wall>, private readonly navigation: {
+  /**
+   * @param allWalls every wall of the gallery
+   * @param presence which walls are there and where lost works return to, asked once the space is first used: the part of the gallery this page mounts and a point in it, by default every wall and the Lobby
+   */
+  constructor(private readonly allWalls: ReadonlyArray<Wall>, private readonly navigation: {
     contains: (position: Vec3) => boolean
     floorHeight: (position: Vec3) => number
+  }, private readonly presence: {
+    covers: (wall: Wall) => boolean
+    recovery: () => Vec3
+  } = {
+    covers: () => true,
+    recovery: () => [0, 1, 4],
   }) {
     super()
+  }
+
+  /** where works that fell out of the world reappear, which `presence` picks */
+  get recoveryPosition(): Vec3 {
+    return this.presence.recovery()
+  }
+
+  /** the walls that are there, which works hang on and rays stop at: those of the rooms this page mounts */
+  get walls() {
+    if (!this.presentWalls) {
+      const present = this.allWalls.filter(wall => this.presence.covers(wall))
+      this.presentWalls = present.length === this.allWalls.length ? this.allWalls : present
+    }
+    return this.presentWalls
   }
 
   contains(position: Vec3) {

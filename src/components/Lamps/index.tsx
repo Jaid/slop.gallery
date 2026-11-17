@@ -11,7 +11,8 @@ import world from '#src/worlds/current.ts'
 
 type PlacedSpotLamp = Extract<PlacedLamp, {kind: 'spot'}>
 
-const lamps = world.lamps()
+// Lamps of rooms out of reach never exist, so they neither light nor compile into anything.
+const lamps = world.lamps().filter(lamp => world.reach.covers(lamp.room))
 const spots = lamps.filter((lamp): lamp is PlacedSpotLamp => lamp.kind === 'spot')
 const points = lamps.filter(lamp => lamp.kind !== 'spot')
 /** Registers the lamp’s light by its global id while it is mounted, so that fixtures can find it and lighting knows where it shines. */
@@ -26,7 +27,7 @@ const useRegistered = <Kind extends Light>(lamp: PlacedLamp) => {
 }
 
 /**
- * Every lamp of the world as a light at the scene’s root, named by its global id. All of them exist from the first frame on, wherever their rooms are still loading: a light mounting later would rebuild every lit material.
+ * Every lamp of the rooms in the world’s reach as a light at the scene’s root, named by its global id. All of them exist from the first frame on, wherever their rooms are still loading: a light mounting later would rebuild every lit material.
  * Fixtures only draw their lamps’ bodies; the ones that animate their light, like a flickering fire, find it with `useLamp`.
  */
 export default function Lamps() {

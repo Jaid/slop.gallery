@@ -28,7 +28,7 @@ import World from '../base/World.ts'
 import {worlds} from '../index.ts'
 import artworks from './artworks.ts'
 import GalleryNavigation from './navigation.ts'
-import {audibleRooms, litRooms} from './relations.ts'
+import relations, {audibleRooms, litRooms} from './relations.ts'
 import sky from './sky.ts'
 
 /** a room of the gallery */
@@ -54,6 +54,8 @@ const placements: ReadonlyArray<RoomPlacement<GalleryRoom>> = [
   new Oculus,
   new Exhibition,
 ].map(room => [room, roomOrigins[room.id]])
+/** where works that fell out of the gallery reappear: a meter over the Lobby’s floor, south of its fountain */
+const lobbyRecovery: Vec3 = [0, 1, 4]
 const minimap = lazy(() => import('#component/GalleryMinimap'))
 const scene = lazy(() => import('#component/GalleryScene'))
 
@@ -81,7 +83,17 @@ export default class SlopGallery extends World<GalleryRoom> {
   constructor() {
     super(worlds.gallery, placements)
     this.navigation = new GalleryNavigation(this.rooms)
-    this.placement = new GalleryPlacementSpace(this.walls, this.navigation)
+    // Walls of rooms out of reach aren’t there to hang anything on or to stop a ray, and lost works return to the Lobby only while it is there.
+    this.placement = new GalleryPlacementSpace(this.walls, this.navigation, {
+      covers: wall => this.reach.covers(wall.room),
+      recovery: () => {
+        if (this.reach.covers(this.defaultRoom)) {
+          return lobbyRecovery
+        }
+        const [x, y, z] = this.spawnInReach.position
+        return [x, y + 1, z]
+      },
+    })
   }
 
   /** An ambient sound is only audible while the player is in its own room or in one it carries into. */
@@ -105,6 +117,11 @@ export default class SlopGallery extends World<GalleryRoom> {
   /** A lamp only shines while the player is in its own room or in one that keeps it on, because it reaches in or can be seen from there. */
   override lampRooms(lamp: PlacedLamp) {
     return litRooms(lamp.room as GalleryRoomId, lamp.id)
+  }
+
+  /** A room’s neighbors are the rooms its {@link relations} entry keeps enabled, the rooms a player can see into from it. */
+  override neighbors(room: string): ReadonlyArray<GalleryRoomId> {
+    return Object.hasOwn(relations, room) ? relations[room as GalleryRoomId].rooms : []
   }
 
   override roomTagline(room: PlacedRoom<GalleryRoom>) {

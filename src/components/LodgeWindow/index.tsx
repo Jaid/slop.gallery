@@ -11,33 +11,42 @@ import LodgeEastWindowGeometry from '#src/lib/gallery/LodgeEastWindowGeometry.ts
 import LodgeWindowGeometry from '#src/lib/gallery/LodgeWindowGeometry.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 
-export default function LodgeWindow({glass, masonry, material}: {
+/** The brass that stops the Lodge windows’ glass, between the Lodge and the passages around it, out of the sun’s reach. */
+const useBrass = () => useDisposable(useMemo(() => lightIndoors(new MeshStandardNodeMaterial({
+  color: '#ac8c58',
+  metalness: 0.65,
+  roughness: 0.4,
+})), []))
+
+/** The Lodge’s west window onto the Corridor: the reveal through both walls, its glass and the brass stop. */
+export function LodgeTunnelWindow({glass, material}: {
+  glass: Material
+  material: Material
+}) {
+  const geometry = useDisposable(useMemo(() => new LodgeWindowGeometry, []))
+  const brass = useBrass()
+  const collision = useMemo(() => [geometry.lining, geometry.glass, geometry.frame].map(colliderGeometry), [geometry])
+  return <RigidBody colliders={false} name='lodge-tunnel-window' type='fixed'>
+    {collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
+    <mesh castShadow geometry={geometry.lining} material={material} name='lodge-window-reveal' receiveShadow />
+    <mesh geometry={geometry.glass} material={glass} name='lodge-window-tunnel-glass' />
+    <mesh castShadow geometry={geometry.frame} material={brass} name='lodge-window-glazing-stop' receiveShadow />
+  </RigidBody>
+}
+
+/** The Lodge’s east window onto the Bastion: the reveal, timber on the Lodge’s side and `masonry` on the Bastion’s, its glass and the brass stop. */
+export function LodgeEastWindow({glass, masonry, material}: {
   glass: Material
   masonry: Material
   material: Material
 }) {
-  const geometry = useDisposable(useMemo(() => new LodgeWindowGeometry, []))
-  const eastGeometry = useDisposable(useMemo(() => new LodgeEastWindowGeometry, []))
-  // The brass stop sits between the Lodge and the corridor, out of the sun’s reach.
-  const brass = useDisposable(useMemo(() => lightIndoors(new MeshStandardNodeMaterial({
-    color: '#ac8c58',
-    metalness: 0.65,
-    roughness: 0.4,
-  })), []))
-  const collision = [geometry.lining, geometry.glass, geometry.frame].map(colliderGeometry)
-  const eastCollision = [eastGeometry.lining, eastGeometry.glass, eastGeometry.frame].map(colliderGeometry)
-  return <group name='lodge-tunnel-window'>
-    <RigidBody colliders={false} type='fixed'>
-      {collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
-      <mesh castShadow geometry={geometry.lining} material={material} name='lodge-window-reveal' receiveShadow />
-      <mesh geometry={geometry.glass} material={glass} name='lodge-window-tunnel-glass' />
-      <mesh castShadow geometry={geometry.frame} material={brass} name='lodge-window-glazing-stop' receiveShadow />
-    </RigidBody>
-    <RigidBody colliders={false} name='lodge-east-window' type='fixed'>
-      {eastCollision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
-      <mesh castShadow geometry={eastGeometry.lining} material={[material, masonry]} name='lodge-east-window-reveal' receiveShadow />
-      <mesh geometry={eastGeometry.glass} material={glass} name='lodge-east-window-glass' />
-      <mesh castShadow geometry={eastGeometry.frame} material={brass} name='lodge-east-window-glazing-stop' receiveShadow />
-    </RigidBody>
-  </group>
+  const geometry = useDisposable(useMemo(() => new LodgeEastWindowGeometry, []))
+  const brass = useBrass()
+  const collision = useMemo(() => [geometry.lining, geometry.glass, geometry.frame].map(colliderGeometry), [geometry])
+  return <RigidBody colliders={false} name='lodge-east-window' type='fixed'>
+    {collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
+    <mesh castShadow geometry={geometry.lining} material={[material, masonry]} name='lodge-east-window-reveal' receiveShadow />
+    <mesh geometry={geometry.glass} material={glass} name='lodge-east-window-glass' />
+    <mesh castShadow geometry={geometry.frame} material={brass} name='lodge-east-window-glazing-stop' receiveShadow />
+  </RigidBody>
 }

@@ -1,4 +1,5 @@
 import type {PartyEffectId, PartyOptions, PartyPlacement} from '#src/party_effects/index.ts'
+import type {WorldReachMode} from '#src/worlds/base/WorldReach.ts'
 import type {Placement, Portrait, Vec3} from './gallery/types.ts'
 import type {PlayerDumpSnapshot} from './telemetry/recordPlayerDump.ts'
 import type {EulerTuple} from 'three/webgpu'
@@ -50,6 +51,11 @@ export type GalleryDiagnostics = {
   /** the id of the work the pause menu shows up close in place of its map, or null while it shows the map; playing on puts the view away */
   spectating: string | null
   webGPU: boolean
+  /** how much of the world this page mounts by its `?world_reach`, with the ids of the rooms that are there */
+  worldReach: {
+    mode: WorldReachMode
+    rooms: ReadonlyArray<string>
+  }
 }
 /** where the Sandbox’s turntable floats its work and how large the work is in its frame */
 export type TurntablePose = {
