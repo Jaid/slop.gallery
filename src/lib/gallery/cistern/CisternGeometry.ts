@@ -10,22 +10,25 @@ import {cisternWindow} from './window.ts'
 
 type Section = ReadonlyArray<readonly [lateral: number, y: number]>
 
-/** how many stations the channel’s visible stone and water are cut into along it, and its collider: coarsely, as a welded collider cut into triangles a few centimeters long holds an orb at rest in it until it falls asleep */
-const stations = [380, 190] as const
+/** how many stations the channel’s collider is cut into along it: coarsely, as a welded collider cut into triangles a few centimeters long holds an orb at rest in it until it falls asleep */
+const collisionStations = 190
 /** how many pieces the channel’s round bottom is cut into, for the eye and for its collider, which an odd count leaves a level facet along its bottom, for an orb to roll along */
 const bottomSegments = [12, 15] as const
 /** how deep the water runs in the channel, over its bottom */
 export const channelWaterDepth = 0.06
 /** how far up the channel from where the inflow’s water lands it runs on, thinning out to nothing against the fall */
 const backwater = 0.3
-/** how many pieces the cistern’s floor is cut into along each of the channel’s legs and round its turn, and how many rings it is cut into inside and outside the channel */
-const [legSegments, turnSegments, innerRings, outerRings] = [8, 80, 14, 6] as const
+/** how many rows the water takes where it thins out up the channel */
+const backwaterRows = 6
+/** how many pieces the cistern’s floor is cut into along each of the channel’s legs and round its turn, and how many rings it is cut into inside and outside the channel: it falls evenly out from the channel along every spoke, so a few rings follow it */
+const [legSegments, turnSegments, innerRings, outerRings] = [8, 48, 3, 2] as const
 /** how long the water takes from the channel’s lip down into the drain, a little past the floor, through the grate */
 const outfallBelow = 0.04
 /** how fast the inflow’s water leaves its spout, downward, and how wide its stream is there */
 const [spoutSpeed, spoutStream] = [1.1, 0.042] as const
 const gravity = 9.81
-const {bore, leg, length, loop, turn} = cisternChannel
+const {bore, head, leg, length, loop, turn} = cisternChannel
+const turnLength = turn.to - turn.from
 const lipAlong = length
 /** How far along the channel, from `from` to its lip: evenly over its stretch in the cistern, out of `count` stations along all of it, and five through the culvert. */
 const alongs = (count: number, from = 0) => {
@@ -35,6 +38,17 @@ const alongs = (count: number, from = 0) => {
     ...Array.from({length: 5}, (_, index) => loop + (length - loop) * index / 4),
   ]
 }
+/**
+ * The stations the channel’s stone and water are drawn at, from `from` on: where the floor’s spokes meet it, so its sides meet the floor’s edge at the same points, where its head starts and ends rising and five through the culvert. Between them its bottom and its sides run straight, but round the turn.
+ */
+const visibleAlongs = (from = 0) => [
+  ...Array.from({length: legSegments}, (_, index) => leg * index / legSegments),
+  ...Array.from({length: turnSegments}, (_, index) => turn.from + turnLength * index / turnSegments),
+  ...Array.from({length: legSegments}, (_, index) => turn.to + leg * index / legSegments),
+  ...Array.from({length: 5}, (_, index) => loop + (length - loop) * index / 4),
+  ...head,
+  from,
+].filter((along, index, all) => along >= from - 1e-9 && all.findIndex(other => Math.abs(other - along) < 1e-9) === index).toSorted((a, b) => a - b)
 /** Where a point of the channel’s section lies `along` meters down it, `lateral` meters to the right of its middle, at the height `y`. */
 function place(along: number, lateral: number, y: number): Vec3 {
   const {point: [x, , z], direction: [dx, , dz]} = cisternChannel.at(along)
@@ -206,9 +220,9 @@ export default class CisternGeometry {
 
   constructor() {
     // Its groove faces in, which its left side does toward its right.
-    const channelStrips = (count: number, segments: number) => {
-      const insideAlongs = alongs(count).filter(along => along <= loop + 1e-9)
-      const runAlongs = alongs(count).filter(along => along >= loop - 1e-9)
+    const channelStrips = (stations: ReadonlyArray<number>, segments: number) => {
+      const insideAlongs = stations.filter(along => along <= loop + 1e-9)
+      const runAlongs = stations.filter(along => along >= loop - 1e-9)
       return [
         strip(insideAlongs, along => groove(along, sideTop(along), segments), rightOf(0)),
         strip(runAlongs, along => groove(along, sideTop(along), segments), rightOf(loop)),
@@ -216,7 +230,7 @@ export default class CisternGeometry {
     }
     // Through the walls, the stone fills the culvert across, up to the channel’s rim, down to its sill.
     const half = climbCulvert.width / 2 - 0.005
-    const runAlongs = alongs(stations[0]).filter(along => along >= loop - 1e-9)
+    const runAlongs = visibleAlongs().filter(along => along >= loop - 1e-9)
     const masonry = (side: number) => [
       strip(runAlongs, along => (side > 0 ? [[bore, sideTop(along)], [half, sideTop(along)]] : [[-half, sideTop(along)], [-bore, sideTop(along)]]), [0, 1, 0]),
       strip(runAlongs, along => (side > 0 ? [[half, sideTop(along)], [half, climbCulvert.bottom]] : [[-half, climbCulvert.bottom], [-half, sideTop(along)]]), rightOf(loop, side)),
@@ -230,14 +244,14 @@ export default class CisternGeometry {
       [-half, sideTop(along)],
     ]
     this.channel = mergeParts([
-      ...channelStrips(stations[0], bottomSegments[0]),
+      ...channelStrips(visibleAlongs(), bottomSegments[0]),
       ...masonry(1),
       ...masonry(-1),
       // Where it enters the culvert, under the floor’s edge, and its lip
       cap(loop, culvertOutline(loop), false),
       cap(lipAlong, culvertOutline(lipAlong), true),
     ])
-    this.channelCollision = mergeParts(channelStrips(stations[1], bottomSegments[1]))
+    this.channelCollision = mergeParts(channelStrips(alongs(collisionStations), bottomSegments[1]))
     this.water = this.flowingWater()
     this.falling = mergeParts([this.fallingWater(), this.pouringWater()])
     const [cx] = turn.center
@@ -309,7 +323,7 @@ export default class CisternGeometry {
   /** The water’s surface in the channel, `channelWaterDepth` over its bottom, from where the inflow pours it in to its lip, and a little way up the channel from there, where it thins out; its UV runs across it and along the channel in meters. */
   private flowingWater() {
     const from = cisternInflow.along - backwater
-    const along = alongs(stations[0], from)
+    const along = [...visibleAlongs(from), ...Array.from({length: backwaterRows - 1}, (_, index) => from + backwater * (index + 1) / backwaterRows)].filter((value, index, all) => all.findIndex(other => Math.abs(other - value) < 1e-9) === index).toSorted((a, b) => a - b)
     const columns = 4
     const positions: Array<number> = []
     const uvs: Array<number> = []

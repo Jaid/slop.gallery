@@ -16,7 +16,7 @@ import lodge from '../../src/lib/gallery/lodge.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse from '../../src/lib/gallery/oculusApse.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
-import {openingArc, openingTop} from '../../src/lib/placement/wallGeometry.ts'
+import {openingArc} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls, {floorHeight, insideGallery, roomAt} from './fixtures/gallery.ts'
 import {bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
@@ -220,7 +220,27 @@ test('its vault rises to the gate’s arch, so no sky shows over the gate', () =
       const ray = new Raycaster(new Vector3(route.end.point[0] + offset, route.end.y + 0.3, gateZ - 0.05), new Vector3(0, 1, 0), 0, route.end.height)
       const hit = ray.intersectObject(shell)[0]
       expect(hit).toBeDefined()
-      expect(Math.abs(hit.point.y - (wall.center[1] + openingTop(hole, hole.u + offset)))).toBeLessThan(0.02)
+      // Measured square to the arch, as the vault’s facets cut across its curve: near its springing, a vertical ray meets a facet much further above or below the arch than the facet stands off it.
+      const {radius, center} = openingArc(hole)
+      expect(Math.abs(Math.hypot(offset, hit.point.y - wall.center[1] - center) - radius)).toBeLessThan(0.02)
+    }
+  } finally {
+    vault.dispose()
+    material.dispose()
+  }
+})
+test('round its last, tight turn, the back of its vault folds no fin of its foot across the gate’s opening', () => {
+  const vault = new RouteVaultGeometry(bastionLink)
+  const material = new MeshBasicMaterial({side: DoubleSide})
+  try {
+    const shell = new Mesh(vault.shell, material)
+    const spring = route.end.y + route.end.height - bastionLink.width / 2
+    // Just past the vault’s end, inside the gate’s opening, nothing of it hangs across the opening at its spring, where the turn round the bullnose once folded the vault’s foot back past the turn’s center.
+    for (const beyond of [0.001, 0.003, 0.006]) {
+      for (let x = route.end.point[0] - bastionLink.width / 2 + wallFace + 0.01; x < route.end.point[0] + bastionLink.width / 2 - wallFace; x += 0.1) {
+        const ray = new Raycaster(new Vector3(x, spring - 0.5, gateZ + beyond), new Vector3(0, 1, 0), 0, 1)
+        expect(ray.intersectObject(shell)).toHaveLength(0)
+      }
     }
   } finally {
     vault.dispose()

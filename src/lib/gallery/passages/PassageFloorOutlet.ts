@@ -1,8 +1,6 @@
 import type {RouteStation} from './PassageRoute.ts'
 import type PassageRoute from './PassageRoute.ts'
 
-import pavingColumns from './pavingColumns.ts'
-
 /** A floor joined across the route’s end, spilling back into the passage before returning to its ordinary paving. */
 export type FloorOutlet = {
   /** heights and grades into the passage, from the left wall’s center line to the right one’s, sampled from the adjoining floor */
@@ -12,8 +10,8 @@ export type FloorOutlet = {
 }
 type Point = readonly [x: number, z: number]
 type Vertex = readonly [x: number, y: number, z: number]
-/** how far apart its rows stand at most, in meters along the centerline: the blend bends gently over meters, so it needs no rows as fine as the ones a turn’s walls are cut at */
-const rowStep = 0.12
+/** how far apart its rows stand at most, in meters along the centerline: the blend bends gently over meters, so it needs no rows as fine as the ones a turn’s walls are cut at, and its eased Hermite strays less than a millimeter from the straights between rows this far apart */
+const rowStep = 0.25
 const place = ({point: [x, z], heading}: RouteStation, right: number): Point => [x - Math.sin(heading) * right, z + Math.cos(heading) * right]
 /** The interval containing a value, including tolerated roundoff just beyond either endpoint. */
 const interval = (values: ReadonlyArray<number>, value: number) => {
@@ -66,15 +64,18 @@ export default class PassageFloorOutlet {
   private readonly normalHeight: (station: RouteStation, right: number) => number
   private readonly rows: ReadonlyArray<ReadonlyArray<Vertex>>
 
-  constructor(readonly route: PassageRoute, width: number, readonly outlet: FloorOutlet, base: (station: RouteStation, right: number) => number) {
+  /** `ordinary` are the columns across the passage’s ordinary paving, from its left wall’s center line to its right one’s, between which its floor runs straight across. */
+  constructor(readonly route: PassageRoute, width: number, readonly outlet: FloorOutlet, base: (station: RouteStation, right: number) => number, ordinary: ReadonlyArray<number> = [-width / 2, 0, width / 2]) {
     const {profile: supplied, reach} = outlet
     const profile = supplied.map(([right, y, grade], index) => [index === 0 ? -width / 2 : (index === supplied.length - 1 ? width / 2 : right), y, grade] as const)
     if (supplied.length < 2 || profile.some(([right], index) => index > 0 && right <= profile[index - 1][0]) || supplied.some((values, index) => values.some(value => !Number.isFinite(value)) || index > 0 && values[0] <= supplied[index - 1][0]) || Math.abs(supplied[0][0] + width / 2) > 1e-9 || Math.abs(supplied.at(-1)![0] - width / 2) > 1e-9) {
       throw new RangeError('A floor outlet needs an ordered, finite height and grade profile spanning both walls.')
     }
+    if (ordinary.length < 2 || Math.abs(ordinary[0] + width / 2) > 1e-9 || Math.abs(ordinary.at(-1)! - width / 2) > 1e-9 || ordinary.some((value, index) => index > 0 && value <= ordinary[index - 1])) {
+      throw new RangeError('A floor outlet’s ordinary columns run in order from one wall to the other.')
+    }
     this.from = PassageFloorOutlet.start(route, width, reach)
     const offsets = profile.map(([right]) => right)
-    const ordinary = pavingColumns(width)
     this.across = [...ordinary, ...offsets].toSorted((a, b) => a - b).filter((value, index, all) => index === 0 || value - all[index - 1] > 1e-9)
     // Between the joints of the route’s pieces and the knots of its ramps, where its floor bends, rather than overlaying a second grid that makes needle-thin slivers.
     const knots = route.stations(this.from, route.length, Math.PI * 2)

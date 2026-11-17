@@ -64,6 +64,8 @@ export const climbMouthHollow = new FloorHollow(climbMouth.floorY, {
     size: [climbMouth.width, footZ - mouthNorthZ],
   },
   sag: elbowSag,
+  // Its bow and the elbow’s fall bend over meters; cut any finer, its grid and the tunnel’s blend, which shares its knots along the gate, cost tens of thousands of triangles.
+  step: 0.12,
 })
 /** How tall the tunnel stands over its floor at the gate: its floor there lies a step under the mouth’s, so it stands that much taller than at the landing, and its crown meets the mouth’s ceiling instead of leaving a gap over the gate that shows the sky. Its height grows along the whole climb, like its floor. */
 const gateHeight = climbMouth.floorY + climbMouth.height - climbMouthHollow.outletY
@@ -130,7 +132,7 @@ export const lodgeSpur = new RoutedPassage('lodge-spur', 'bastion', spurRoute, l
   floorInlet: {
     length: lodgeSpurRampLength,
     // The link climbs across the doorway. Carry every knot of that ramp into the spur’s mouth, then ease its tilt out over the spur’s own climb, not a level sill that leaves a step at each jamb.
-    profile: [...bastionLink.stations(lodgeSpurAlong - lodgeSpurWidth / 2, lodgeSpurAlong + lodgeSpurWidth / 2), bastionLink.route.at(lodgeSpurAlong)].map(({point: [x]}) => [x - lodgeSpurX, bastionLink.floorAt(x, lodgeSpurStartZ)!] as const).toSorted(([a], [b]) => a - b).filter(([right], index, all) => index === 0 || right - all[index - 1][0] > 1e-9),
+    profile: [...bastionLink.floorStations(lodgeSpurAlong - lodgeSpurWidth / 2, lodgeSpurAlong + lodgeSpurWidth / 2), bastionLink.route.at(lodgeSpurAlong)].map(({point: [x]}) => [x - lodgeSpurX, bastionLink.floorAt(x, lodgeSpurStartZ)!] as const).toSorted(([a], [b]) => a - b).filter(([right], index, all) => index === 0 || right - all[index - 1][0] > 1e-9),
   },
   // Cut round the window’s timber reveal, which runs on through the stone and frames it flush with the passage’s face.
   openings: [{

@@ -3,7 +3,7 @@ import type {Wall, WallOpening} from './wallGeometry.ts'
 import {BufferGeometry, Float32BufferAttribute} from 'three/webgpu'
 
 import {wallFace} from '../gallery/architectureDimensions.ts'
-import {curveSegments} from '../gallery/CurvedBoxGeometry.ts'
+import {wallCurveSegments} from '../gallery/CurvedBoxGeometry.ts'
 import {openingBottom, openingTop, wallPosition} from './wallGeometry.ts'
 
 /** a stretch of a wall from `from` to `to` along it and from `bottom` to `top` over its foot, in meters */
@@ -81,7 +81,7 @@ function wallColumns(wall: Wall, cutouts: ReadonlyArray<WallOpening>, range: rea
     }
   }
   const sorted = [...edges].toSorted((a, b) => a - b)
-  const bendStep = wall.curveRadius ? wall.width / curveSegments(wall.width, wall.curveRadius) : Infinity
+  const bendStep = wall.curveRadius ? wall.width / wallCurveSegments(wall) : Infinity
   const columns: Array<readonly [number, number]> = []
   for (const [index, from] of sorted.slice(0, -1).entries()) {
     const to = sorted[index + 1]

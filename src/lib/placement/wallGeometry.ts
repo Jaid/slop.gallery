@@ -66,6 +66,8 @@ export type Wall = {
   cornice?: boolean
   /** Signed bend radius, measured from the untrimmed wall plane. */
   curveRadius?: number
+  /** how far, in meters, the straight facets a curved wall, its trim and its cornice are cut into may stand off its curve, see `curveSegments`; without one, they are cut every 1/32 radian and long faces, like those beside openings, within half a millimeter */
+  curveTolerance?: number
   height: number
   holes?: Array<WallOpening>
   id: string

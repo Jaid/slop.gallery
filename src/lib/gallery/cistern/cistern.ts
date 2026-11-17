@@ -8,6 +8,7 @@ import {orbRadius} from '#src/orbs/index.ts'
 import {cannonLaunch, flight} from '../alchemy/alchemyMachine.ts'
 import {wallFace} from '../architectureDimensions.ts'
 import {climbCrossfall, climbCulvert, climbRun} from '../climb.ts'
+import {routeCurveTolerance} from '../passages/RoutedPassage.ts'
 import {cisternWindow, cisternWindowHole} from './window.ts'
 
 type Point = readonly [x: number, z: number]
@@ -317,6 +318,8 @@ const roundWall: Omit<Wall, 'id'> = {
   rotation: 0,
   width: Math.PI * radius,
   curveRadius: radius,
+  // Cut as coarsely as the passages’ curved walls.
+  curveTolerance: routeCurveTolerance,
   height: spring,
   sticky: false,
   trimStyle: 'plain',

@@ -26,15 +26,37 @@ export function bendGeometry(geometry: BufferGeometry, radius: number) {
   return geometry
 }
 
-export function curveSegments(width: number, radius: number) {
-  return Math.max(1, Math.ceil(Math.abs(width / radius) * 32))
+/** the finest and the coarsest a curve cut to a tolerance turns from facet to facet, in radians: never finer than the 1/32 radian curves are cut into without one, and never so coarse that its smooth normals bend visibly across a facet */
+const toleratedTurn = [1 / 32, 1 / 8] as const
+
+/**
+ * How many straight facets a curve of `width` meters along a circle of `radius` is cut into: one every 1/32 radian, or with a `tolerance`, as few as keep each facet’s middle within that many meters of the curve, an edge of length l on radius r standing l² / 8r off, between {@link toleratedTurn}.
+ */
+export function curveSegments(width: number, radius: number, tolerance?: number) {
+  if (tolerance === undefined) {
+    return Math.max(1, Math.ceil(Math.abs(width / radius) * 32))
+  }
+  if (!(tolerance > 0)) {
+    throw new RangeError('A curve’s tolerance needs to be positive.')
+  }
+  const turn = Math.min(Math.max(Math.sqrt(8 * tolerance / Math.abs(radius)), toleratedTurn[0]), toleratedTurn[1])
+  return Math.max(1, Math.ceil(Math.abs(width / radius) / turn - 1e-9))
+}
+
+/** How many facets a curved wall is cut into along its whole width, see {@link curveSegments}, or 1 for a flat one. */
+export function wallCurveSegments(wall: {
+  curveRadius?: number
+  curveTolerance?: number
+  width: number
+}) {
+  return wall.curveRadius ? curveSegments(wall.width, wall.curveRadius, wall.curveTolerance) : 1
 }
 
 /**
- * Splits every triangle where it crosses one of the planes x = `origin` + k · `step`, in place, so that {@link bendGeometry} curves long faces, like those CSG leaves beside an opening, instead of leaving them straight chords.
+ * Splits every triangle where it crosses one of the planes x = `origin` + k · `step` or x = one of the `extra` planes, in place, so that {@link bendGeometry} curves long faces, like those CSG leaves beside an opening, instead of leaving them straight chords.
  * Every attribute is interpolated along the cut edges, normals renormalized; the result is indexed anew, without groups.
  */
-export function sliceAlongX(geometry: BufferGeometry, step: number, origin = 0) {
+export function sliceAlongX(geometry: BufferGeometry, step: number, origin = 0, extra: ReadonlyArray<number> = []) {
   const names = Object.keys(geometry.attributes)
   const sources = names.map(name => geometry.getAttribute(name))
   const offsets = sources.map((_, index) => sources.slice(0, index).reduce((sum, attribute) => sum + attribute.itemSize, 0))
@@ -70,7 +92,8 @@ export function sliceAlongX(geometry: BufferGeometry, step: number, origin = 0) 
       indices.push(...[polygon[0], polygon[i], polygon[i + 1]].map(add))
     }
   }
-  const tolerance = 1e-7
+  // Positions are single precision: a vertex meant to lie on a plane, like one of a part built with stations on it, lies up to a few micrometers off it at the walls’ widths, which a finer tolerance cut again into slivers that broke the colliders’ edge repair.
+  const tolerance = 1e-5
   for (let corner = 0; corner < count; corner += 3) {
     let polygon = [read(corner), read(corner + 1), read(corner + 2)]
     const xs = polygon.map(vertex => vertex[x])
@@ -81,6 +104,12 @@ export function sliceAlongX(geometry: BufferGeometry, step: number, origin = 0) 
       }
       planes.push(origin + k * step)
     }
+    for (const plane of extra) {
+      if (plane > Math.min(...xs) + tolerance && plane < Math.max(...xs) - tolerance && planes.every(other => Math.abs(other - plane) > tolerance)) {
+        planes.push(plane)
+      }
+    }
+    planes.sort((a, b) => a - b)
     for (const plane of planes) {
       const below: Array<Vertex> = []
       const above: Array<Vertex> = []

@@ -9,7 +9,6 @@ import {baseboardCapFront, defaultBaseboardHeight, wallFace} from '../../src/lib
 import {bastionLink, bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import FloorHollow from '../../src/lib/gallery/passages/FloorHollow.ts'
 import PassageRoute from '../../src/lib/gallery/passages/PassageRoute.ts'
-import pavingColumns from '../../src/lib/gallery/passages/pavingColumns.ts'
 import RouteVaultGeometry, {pavingThickness} from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import {wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import {floorHeight} from './fixtures/gallery.ts'
@@ -74,7 +73,7 @@ test('the bow spills north and around the inside corner, then returns to the ord
       expect(bastionLink.floorY(station, right)).toBeCloseTo(station.y - bastionLink.sag(station, right), 12)
     }
   }
-  for (const right of pavingColumns(bastionLink.width)) {
+  for (const right of bastionLink.columns(half, half, floor.from)) {
     expect(bastionLink.floorY(route.at(floor.from), right)).toBeCloseTo(route.at(floor.from).y - bastionLink.sag(route.at(floor.from), right), 9)
   }
 })
