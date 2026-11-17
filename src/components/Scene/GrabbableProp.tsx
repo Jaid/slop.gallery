@@ -3,6 +3,7 @@ import type {OrbitSettings} from '#src/lib/camera/OrbitInspection.ts'
 import type {Vec3} from '#src/lib/gallery.ts'
 import type {ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type {GrabbableBodyOptions} from '#src/lib/physics/GrabbableBody.ts'
+import type {Toss} from '#src/lib/physics/throwMotion.ts'
 import type {MoodId} from '#src/moods/index.ts'
 import type {Orb} from '#src/orbs/index.ts'
 import type {CollisionEnterPayload, RapierRigidBody, RigidBodyProps} from '@react-three/rapier'
@@ -16,7 +17,7 @@ import {useEffect, useLayoutEffect, useRef} from 'react'
 import {Box3, Vector3} from 'three/webgpu'
 
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
-import {cameraPose, notify, requestItemFusion, useGallery} from '#src/lib/gallery.ts'
+import {bodyPose, cameraPose, notify, requestItemFusion, useGallery} from '#src/lib/gallery.ts'
 import {handBack, settle} from '#src/lib/gallery/fusion/handBack.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import {registerOrbitable} from '#src/lib/gallery/orbitables.ts'
@@ -27,18 +28,22 @@ import {telemetry} from '#src/lib/telemetry/index.ts'
 
 export type PropHandle = {
   body: RapierRigidBody
-  cancel: () => void
   /** whether a grab would currently succeed, without attempting it */
   canGrab: () => boolean
   /** Throws the prop from `position` with `velocity`, in m/s, as if the player had let go of it there, like the `throw_prop` tool does; false while it is carried or a fusion holds it. */
   fling: (position: Vec3, velocity: Vec3) => boolean
   grab: () => boolean
   group: Group
+  /** the prop’s mass in kg, which its throws go by */
+  mass: () => number
   /** the id of the mood that comes over the world while the player holds the prop */
   mood?: MoodId
   /** the kind of orb the prop is, if it is one */
   orb?: Orb
-  release: (throwing: boolean) => void
+  /**
+   * Lets go of the carried prop near the hand, where it is shown, carrying on with the player’s velocity: thrown, or else dropped, which `interrupted` tells came from something else than the player letting go, like the pause menu opening. Returns how it left the hand, or undefined while it isn’t carried.
+   */
+  release: (throwing: boolean, interrupted?: boolean) => Toss | undefined
   /** Takes the prop out of the physics for a fusion, which flies it around by its `group` until it calls `unleash`; false while the player carries it. */
   seize: () => boolean
   /** whether a fusion holds the prop */
@@ -66,9 +71,19 @@ const holdTilt = 15 * Math.PI / 180
 const holdGap = 0.35
 /** how much a carried prop’s size, half its longest side, adds to its distance, so a large one stays in view instead of filling it; an orb floats 0.55 m away */
 const holdSpread = 1.4
-/** how far below the eye the line a carried prop is let go along starts, in meters, safely inside the player’s capsule */
+/** how far below the eye the line a carried prop is let go along starts, in meters, inside the player’s capsule */
 const holdDrop = 0.22
 const worldUp: Vec3 = [0, 1, 0]
+/**
+ * How fast the hand moves with the player’s body, which whatever leaves it flies on with, running or jumping, in m/s: its actual velocity, but level while it stands on the ground, where it only jitters up and down as it hugs the floor, and none while the camera is posed apart from it.
+ */
+export const carrierVelocity = (): Vec3 | undefined => {
+  if (cameraPose.posed) {
+    return
+  }
+  const [x, y, z] = bodyPose.velocity
+  return [x, bodyPose.grounded ? 0 : y, z]
+}
 type HoldLine = {
   /** where the view looks, which a throw follows */
   direction: Vec3
@@ -92,8 +107,8 @@ const holdLine = (position: Vec3, direction: Vec3, distance: number, up: Vec3 = 
 }
 /** what the player does with a prop, logged as `gallery.prop.<event>` */
 type PropEvent = 'dropped' | 'grabbed' | 'thrown'
-/** why a dropped prop left the hand: let go of, put back where it was picked up for want of room, or put back as carrying it was canceled */
-type DropCause = 'canceled' | 'no_room' | 'released'
+/** why a dropped prop left the hand: let go of, or dropped as something else ended carrying it, like the pause menu opening */
+type DropCause = 'canceled' | 'released'
 const propVerbs: Record<PropEvent, string> = {
   dropped: 'Dropped',
   grabbed: 'Grabbed',
@@ -141,7 +156,7 @@ type GrabbablePropProps = Omit<RigidBodyProps, 'children' | 'position' | 'ref'> 
 }
 
 /**
- * A prop the player can pick up, carry, drop and throw. Carried, it is out of the physics altogether: its body stays disabled where it was picked up, and its inner group floats in front of the camera, so nothing bumps into it on the way. Letting go puts the body where it fits along the line from the player to the prop.
+ * A prop the player can pick up, carry, drop and throw. Carried, it is out of the physics altogether: its body stays disabled where it was picked up, and its inner group floats in front of the camera, so nothing bumps into it on the way. Letting go puts the body where it fits near where it was shown, passing through the player for a moment, and flying on with the player’s own motion.
  * Once a fusion used it up, like an orb, it is gone.
  */
 export default function GrabbableProp(props: GrabbablePropProps) {
@@ -208,7 +223,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         return
       }
       const {x, y, z} = rigidBody.translation()
-      const velocity = event === 'thrown' ? rigidBody.linvel() : undefined
+      const velocity = event === 'grabbed' ? undefined : rigidBody.linvel()
       telemetry.event(`prop.${event}`, {
         'prop.id': id,
         ...orb ? {'orb.id': orb.id} : {},
@@ -216,7 +231,8 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         'position.x': round(x),
         'position.y': round(y),
         'position.z': round(z),
-        ...velocity ? {
+        // A drop on the move flies off too, like a little throw.
+        ...velocity && (event === 'thrown' || Math.hypot(velocity.x, velocity.y, velocity.z) > 0) ? {
           'velocity.x': round(velocity.x),
           'velocity.y': round(velocity.y),
           'velocity.z': round(velocity.z),
@@ -262,6 +278,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         }
       },
       canGrab: () => !seized.current && !carried.active && (callbacks.current.canGrab?.() ?? true),
+      mass: () => carried.mass,
       fling: (position, velocity) => {
         if (seized.current || !carried.fling(position, velocity)) {
           return false
@@ -284,30 +301,24 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         record('grabbed')
         return true
       },
-      cancel: () => {
-        shownOn.current = null
-        if (carried.active) {
-          carried.cancel()
-          settle(rigidBody, prop)
-          record('dropped', 'canceled')
+      release: (throwing, interrupted = false) => {
+        // Nothing to let go of, like when the release that ended carrying it lets the held prop go: its group may already be flown around by a fusion.
+        if (!carried.active) {
+          return
         }
-      },
-      release: throwing => {
         // Let go of where it was shown, or before it was ever shown, where the camera holds it.
         const {direction, origin, target} = shownOn.current ?? holdLine(cameraPose.position, cameraPose.direction, holdDistance.current)
         shownOn.current = null
-        const carrying = carried.active
-        const returned = carried.release(origin, target, throwing, direction)
+        const thrown = carried.release(origin, target, {
+          carrier: carrierVelocity(),
+          direction,
+          throwing,
+        })
         settle(rigidBody, prop)
-        if (!carrying) {
-          return
+        if (thrown) {
+          record(throwing ? 'thrown' : 'dropped', throwing ? undefined : (interrupted ? 'canceled' : 'released'))
         }
-        // With no room to let go of it anywhere along the line, it went back where it was picked up, also when thrown.
-        if (returned) {
-          record('dropped', 'no_room')
-        } else {
-          record(throwing ? 'thrown' : 'dropped', throwing ? undefined : 'released')
-        }
+        return thrown
       },
     }
     propObjects.set(id, handle)
@@ -327,9 +338,10 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       }
     }
   }, [id, mood, orb, title, world])
+  // Whatever else ends carrying the prop, like a work arriving in the collection, drops it at the hand.
   useEffect(() => {
     if (!held) {
-      propObjects.get(id)?.cancel()
+      propObjects.get(id)?.release(false, true)
     }
   }, [held, id])
   useEffect(() => {
@@ -387,8 +399,8 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       },
     }, impactOf(current))
   }
-  // A withheld prop’s colliders are built from its children while they are hidden.
-  return <RigidBody ccd colliders={collider ? false : 'cuboid'} friction={0.8} includeInvisible={withheld} mass={1.8} restitution={0.32} ref={body} onCollisionEnter={struck} {...props}>
+  // A withheld prop’s colliders are built from its children while they are hidden. Colliders built from its children weigh by their volume, at the density of water; its own `collider`s bring their own masses.
+  return <RigidBody ccd colliders={collider ? false : 'cuboid'} friction={0.8} includeInvisible={withheld} restitution={0.32} ref={body} onCollisionEnter={struck} {...props}>
     {collider}
     <group
       name={id} userData={{

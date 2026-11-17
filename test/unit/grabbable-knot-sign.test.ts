@@ -6,6 +6,7 @@ import {BoxGeometry, Euler, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMateri
 
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import InstancedPropVisuals from '../../src/lib/physics/InstancedPropVisuals.ts'
+import {throwSpeed, throwSpeedFor} from '../../src/lib/physics/throwMotion.ts'
 
 await RAPIER.init()
 test('a complete nameplate can be picked up, canceled, thrown and picked up again', () => {
@@ -44,9 +45,12 @@ test('a complete nameplate can be picked up, canceled, thrown and picked up agai
     expect(body.rotation()).toEqual(rotation)
     expect(body.isDynamic()).toBe(true)
     expect(carried.grab()).toBe(true)
-    expect(carried.release([0, 1.5, 1], [0, 1.5, 2], true)).toBe(false)
-    expect(body.linvel().z).toBe(10)
-    expect(body.angvel().x).toBe(3)
+    expect(carried.release([0, 1.5, 1], [0, 1.5, 2], {throwing: true})).toBeDefined()
+    // A nameplate is twice as heavy as an orb, so it leaves slower and tumbles slower.
+    const speed = throwSpeedFor(body.mass())
+    expect(speed).toBeLessThan(throwSpeed)
+    expect(body.linvel().z).toBeCloseTo(speed, 5)
+    expect(body.angvel().x).toBeCloseTo(3 * speed / throwSpeed, 5)
     // Rapier reports colliders as their body left them until its next step.
     world.step()
     for (let i = 0; i < body.numColliders(); i++) {

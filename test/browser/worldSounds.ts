@@ -8,8 +8,10 @@ import {frameImpactSounds, frameImpactVoices} from '../../src/lib/audio/frameImp
 import hangingVoices from '../../src/lib/audio/hangingVoices.ts'
 import {orbImpactVoices} from '../../src/lib/audio/orbImpacts.ts'
 import {footstepVoices, impactFootstepStrength} from '../../src/lib/audio/playerSoundEffects.ts'
+import tossVoices from '../../src/lib/audio/tossVoices.ts'
 import TransformerChain from '../../src/lib/audio/transformers/TransformerChain.ts'
 import {hangingAnimation} from '../../src/lib/gallery/hanging/index.ts'
+import {toss} from '../../src/lib/physics/throwMotion.ts'
 import {moods} from '../../src/moods/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
@@ -121,6 +123,23 @@ export default async function verify() {
     dropped: await recipe('a work dropped into the room', arrivalVoices(false)),
     three: await recipe('three works dropped together', [0, 1, 2].flatMap(index => shiftVoices(arrivalVoices(false, index - 1), index * arrivalGap))),
   }
+  // Throws and drops of a leaf, an orb and a potted plant, standing, sprinting and in a jump shot
+  const tosses: Record<string, Measure> = {}
+  for (const [thing, mass] of [['a leaf', 0.008], ['an orb', 1.8], ['a pot', 5.4]] as const) {
+    for (const [motion, carrier] of [['standing', [0, 0, 0]], ['sprinting', [0, 0, -9]], ['jumping', [0, 5.4, 0]]] as const) {
+      for (const throwing of [false, true]) {
+        const name = `${throwing ? 'throwing' : 'dropping'} ${thing} ${motion}`
+        tosses[name] = await recipe(name, tossVoices(toss({
+          carrier: [...carrier],
+          direction: [0, 0, -1],
+          mass,
+          throwing,
+        })))
+      }
+    }
+  }
+  assert(tosses['throwing an orb sprinting'].loudest > tosses['throwing an orb standing'].loudest, 'A throw on the run must sound stronger than one standing')
+  assert(tosses['dropping an orb sprinting'].loudest > tosses['dropping an orb standing'].loudest, 'A drop on the run must swish')
   const rooms: Record<string, Measure & {dry: number}> = {}
   for (const placed of slopGallery.rooms) {
     const landing = footstepVoices(placed.groundSurface(placed.toWorld([0, 0, 0])), 3, {strength: impactFootstepStrength(9)})
@@ -158,6 +177,7 @@ export default async function verify() {
       far,
     },
     arrivals,
+    tosses,
     rooms,
   }
 }
