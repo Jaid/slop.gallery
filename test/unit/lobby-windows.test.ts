@@ -8,7 +8,7 @@ import forge from '../../src/lib/gallery/forge.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {forgeWindow, lobbyWindowGlassDistance, salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import salon from '../../src/lib/gallery/salon.ts'
-import {createArchitecturalGlassMaterials, disposeArchitecturalGlassMaterials} from '../../src/lib/materials/ArchitecturalGlassMaterials.ts'
+import ArchitecturalGlassMaterials from '../../src/lib/materials/ArchitecturalGlassMaterials.ts'
 import CastFloorGlassMaterial from '../../src/lib/materials/CastFloorGlassMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import walls, {galleryPlacement, rooms} from './fixtures/gallery.ts'
@@ -143,7 +143,7 @@ for (const {title, glazing, layout, room, roomSide, lobbySide, out} of windows) 
 }
 test('both glass walls are cast from the floor window’s glass, sharing one material of their own', () => {
   for (const isHeavy of [true, false]) {
-    const materials = createArchitecturalGlassMaterials(isHeavy)
+    const materials = new ArchitecturalGlassMaterials(isHeavy)
     try {
       expect(materials.lobbyWindow.constructor).toBe(materials.lobby.constructor)
       if (isHeavy) {
@@ -152,7 +152,7 @@ test('both glass walls are cast from the floor window’s glass, sharing one mat
         expect(materials.lobbyWindow.depthWrite).toBe(false)
       }
     } finally {
-      disposeArchitecturalGlassMaterials(materials)
+      materials.dispose()
     }
   }
   expect(salonWindow.thickness).toBe(floorGlassThickness)

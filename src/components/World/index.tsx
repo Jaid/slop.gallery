@@ -1,4 +1,4 @@
-import type {createArchitecturalGlassMaterials} from '#src/lib/materials/ArchitecturalGlassMaterials.ts'
+import type ArchitecturalGlassMaterials from '#src/lib/materials/ArchitecturalGlassMaterials.ts'
 import type LodgeMaterials from '#src/lib/materials/LodgeMaterials.ts'
 import type SiennaRoom from '#src/rooms/sienna/components/SiennaRoom/index.tsx'
 import type WorldReach from '#src/worlds/base/WorldReach.ts'
@@ -23,7 +23,7 @@ import relations from '#src/worlds/gallery/relations.ts'
 export type WorldMaterials = {
   castleStone: NodeMaterial
   corridorWood: NodeMaterial
-  glass: ReturnType<typeof createArchitecturalGlassMaterials>
+  glass: ArchitecturalGlassMaterials
   joinery: Parameters<typeof SiennaRoom>[0]['joinery']
   lobbyWall: NodeMaterial
   lodge: LodgeMaterials

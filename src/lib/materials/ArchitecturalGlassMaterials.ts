@@ -5,22 +5,16 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 import {floorGlassThickness} from '../gallery/floors.ts'
 import {salonWindow} from '../gallery/lobbyWindows.ts'
 import {lodgeWindow} from '../gallery/lodge.ts'
+import MadeOnDemand from './base/MadeOnDemand.ts'
 import CastFloorGlassMaterial from './CastFloorGlassMaterial.ts'
 import ClearGlassMaterial from './ClearGlassMaterial.ts'
 import CrownGlassMaterial from './CrownGlassMaterial.ts'
 import {lightIndoors} from './lights/index.ts'
 
-export type ArchitecturalGlassMaterials = {
-  cabin: Material
-  lobby: Material
-  /** the glass walls between the Lobby and the Salon and the Forge, cast like the Lobby’s floor window */
-  lobbyWindow: Material
-  tunnel: Material
-}
-
 /** Edge length of the cast pavers in the lobby’s 8 m floor window and in the glass wall beside it. */
 const floorGlassTileSize = salonWindow.tileSize
-const createFastMaterials = (): ArchitecturalGlassMaterials => {
+/** the one pane of fast graphics for every glass but the tunnel displays’ */
+const createFastGlass = () => {
   const material = new MeshStandardNodeMaterial({
     color: '#afd0d4',
     roughness: 0.24,
@@ -31,8 +25,11 @@ const createFastMaterials = (): ArchitecturalGlassMaterials => {
     envMapIntensity: 0,
   })
   material.name = 'architectural-glass-fast'
-  // The tunnel displays keep their original fast-mode pane.
-  const tunnel = new MeshStandardNodeMaterial({
+  return material
+}
+// The tunnel displays keep their original fast-mode pane.
+const createFastTunnelGlass = () => {
+  const material = new MeshStandardNodeMaterial({
     color: '#b7d8d9',
     roughness: 0.16,
     metalness: 0.1,
@@ -40,62 +37,30 @@ const createFastMaterials = (): ArchitecturalGlassMaterials => {
     opacity: 0.16,
     depthWrite: false,
   })
-  tunnel.name = 'tunnel-glass-fast'
-  return {
-    cabin: material,
-    lobby: material,
-    lobbyWindow: material,
-    tunnel,
-  }
+  material.name = 'tunnel-glass-fast'
+  return material
 }
-
-export function createArchitecturalGlassMaterials(isHeavy: boolean): ArchitecturalGlassMaterials {
-  if (!isHeavy) {
-    return createFastMaterials()
-  }
-  return {
-    // Old drawn cabin glass: a faint green body, ripples that bend the view and the reflections, a pale veil, wiped smudges and grime along the frame, plus a warm clearcoat sheen that catches the lodge’s firelight.
-    // It sits between two underground spaces, so it only reflects their lamps and their darkness.
-    cabin: lightIndoors(new CrownGlassMaterial({
-      name: 'cabin-glass-heavy',
-      ior: 1.52,
-      absorption: 0.06,
-      specularColor: '#ffeacc',
-      clearcoat: 0.5,
-      envMapIntensity: 1.6,
-      paneSize: [lodgeWindow.width, lodgeWindow.top - lodgeWindow.bottom],
-      bodyColor: '#eef4ea',
-      haze: 0.035,
-      smudges: 0.065,
-      grime: 0.5,
-      waviness: 0.005,
-    })),
-    // Cast pavers that bend the Oculus below into a rippling, dispersive view.
-    lobby: new CastFloorGlassMaterial({
-      thickness: floorGlassThickness,
-      tileSize: floorGlassTileSize,
-    }),
-    lobbyWindow: createLobbyWindowGlass(),
-    // Low-iron museum display glass whose anti-reflective coating leaves a faint violet and green sheen at grazing angles.
-    tunnel: new ClearGlassMaterial({
-      name: 'tunnel-glass-heavy',
-      ior: 1.5,
-      absorption: 0.015,
-      iridescence: 0.7,
-      iridescenceIOR: 1.38,
-      iridescenceThicknessMinimum: 220,
-      iridescenceThicknessMaximum: 420,
-      envMapIntensity: 1.3,
-    }),
-  }
-}
-
-export function disposeArchitecturalGlassMaterials(materials: ArchitecturalGlassMaterials) {
-  for (const material of new Set(Object.values(materials))) {
-    material.dispose()
-  }
-}
-
+// Old drawn cabin glass: a faint green body, ripples that bend the view and the reflections, a pale veil, wiped smudges and grime along the frame, plus a warm clearcoat sheen that catches the lodge’s firelight.
+// It sits between two underground spaces, so it only reflects their lamps and their darkness.
+const createCabinGlass = () => lightIndoors(new CrownGlassMaterial({
+  name: 'cabin-glass-heavy',
+  ior: 1.52,
+  absorption: 0.06,
+  specularColor: '#ffeacc',
+  clearcoat: 0.5,
+  envMapIntensity: 1.6,
+  paneSize: [lodgeWindow.width, lodgeWindow.top - lodgeWindow.bottom],
+  bodyColor: '#eef4ea',
+  haze: 0.035,
+  smudges: 0.065,
+  grime: 0.5,
+  waviness: 0.005,
+}))
+// Cast pavers that bend the Oculus below into a rippling, dispersive view.
+const createFloorGlass = () => new CastFloorGlassMaterial({
+  thickness: floorGlassThickness,
+  tileSize: floorGlassTileSize,
+})
 /**
  * The Lobby’s cast pavers, set upright between the Lobby and the Salon and the Forge.
  *
@@ -103,7 +68,7 @@ export function disposeArchitecturalGlassMaterials(materials: ArchitecturalGlass
  * would replace the floor window behind it with the Oculus below. Drawn before every other transparent surface and without depth,
  * the floor window still draws over it.
  */
-function createLobbyWindowGlass() {
+const createLobbyWindowGlass = () => {
   const material = new CastFloorGlassMaterial({
     thickness: salonWindow.thickness,
     tileSize: salonWindow.tileSize,
@@ -111,4 +76,44 @@ function createLobbyWindowGlass() {
   material.name = 'lobby-window-glass-heavy'
   material.depthWrite = false
   return material
+}
+// Low-iron museum display glass whose anti-reflective coating leaves a faint violet and green sheen at grazing angles.
+const createTunnelGlass = () => new ClearGlassMaterial({
+  name: 'tunnel-glass-heavy',
+  ior: 1.5,
+  absorption: 0.015,
+  iridescence: 0.7,
+  iridescenceIOR: 1.38,
+  iridescenceThicknessMinimum: 220,
+  iridescenceThicknessMaximum: 420,
+  envMapIntensity: 1.3,
+})
+
+/**
+ * The gallery’s architectural glass in heavy or fast graphics, each kind made the first time a wall or a room asks for it, so the panes of rooms out of the world’s reach are never made. Fast graphics share one plain pane among every kind but the tunnel displays’.
+ */
+export default class ArchitecturalGlassMaterials extends MadeOnDemand {
+  constructor(private readonly heavy: boolean) {
+    super()
+  }
+
+  /** the Lodge’s windows */
+  get cabin(): Material {
+    return this.heavy ? this.once('cabin', createCabinGlass) : this.lobby
+  }
+
+  /** the cast pavers of the floor windows, like the Lobby’s */
+  get lobby(): Material {
+    return this.once('lobby', this.heavy ? createFloorGlass : createFastGlass)
+  }
+
+  /** the glass walls between the Lobby and the Salon and the Forge, cast like the Lobby’s floor window */
+  get lobbyWindow(): Material {
+    return this.heavy ? this.once('lobbyWindow', createLobbyWindowGlass) : this.lobby
+  }
+
+  /** the panes of the tunnel’s displays, set in the openings of its walls */
+  get tunnel(): Material {
+    return this.once('tunnel', this.heavy ? createTunnelGlass : createFastTunnelGlass)
+  }
 }

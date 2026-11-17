@@ -367,29 +367,8 @@ export function createArchitectureGeometry(wall: Wall) {
 }
 
 const architectureKey = (wall: Wall) => JSON.stringify([wall.width, wall.height, wall.holes ?? [], wall.slope ?? 0, wall.baseboardProfile ?? null, wall.trimStyle ?? 'classic', wall.cornice ?? true, wall.curveRadius ?? 0, wall.baseboardHeight ?? defaultBaseboardHeight, wall.baseboardCapHeight ?? baseboardCapHeight, wall.baseboardSection ?? null, wall.miters ?? null, wall.baseboardMiters ?? null, wall.curveTolerance ?? null])
-/** Cuts each distinct layout among `walls` once. Called at module level on fixed walls, the build bakes the result for {@link provideArchitecture}. */
-export function cutArchitectures(walls: ReadonlyArray<Wall>) {
-  const cuts = new Map<string, ArchitectureParts>
-  for (const wall of walls) {
-    const key = architectureKey(wall)
-    if (!cuts.has(key)) {
-      cuts.set(key, cutArchitecture(wall))
-    }
-  }
-  return cuts
-}
 const cache = new Map<string, ArchitectureGeometry>
-/** Lets {@link architectureGeometry} hand out walls cut ahead of time. */
-export function provideArchitecture(cuts: ReadonlyMap<string, ArchitectureParts>) {
-  for (const [key, parts] of cuts) {
-    const geometry = withDisposal(parts)
-    if (cache.has(key)) {
-      geometry.dispose()
-    } else {
-      cache.set(key, geometry)
-    }
-  }
-}
+/** The wall’s architecture, cut the first time a wall of its layout asks for it and shared by every wall of that layout. */
 export function architectureGeometry(wall: Wall) {
   const key = architectureKey(wall)
   let geometry = cache.get(key)

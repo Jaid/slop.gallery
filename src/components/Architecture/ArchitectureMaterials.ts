@@ -4,6 +4,7 @@ import type {Material, NodeMaterial} from 'three/webgpu'
 import {siennaWainscotFields} from '#src/lib/gallery/siennaWainscot.ts'
 import ArchitecturalConcreteMaterial from '#src/lib/materials/ArchitecturalConcreteMaterial.ts'
 import BanquetMaterials from '#src/lib/materials/BanquetMaterials.ts'
+import MadeOnDemand from '#src/lib/materials/base/MadeOnDemand.ts'
 import CastleStoneMaterial from '#src/lib/materials/CastleStoneMaterial.ts'
 import DamaskWallpaperMaterial from '#src/lib/materials/DamaskWallpaperMaterial.ts'
 import FrescoMaterials from '#src/lib/materials/FrescoMaterials.ts'
@@ -16,8 +17,6 @@ import {TravertineWallMaterial} from '#src/lib/materials/travertine/index.ts'
 import VesperWallMaterial from '#src/lib/materials/VesperWallMaterial.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
-type Releasable = {dispose: () => void}
-
 const vesper = slopGallery.room('vesper')
 // Five courses of 1.1 m reach the cornice; slabs are twice as long as they are high.
 const lobbyCladding = {
@@ -28,9 +27,7 @@ const lobbyCladding = {
 /**
  * The materials of the gallery’s walls and of the rooms that share them, which need nothing but themselves: each is made the first time a wall or a room asks for it, so the rooms out of the world’s reach never make theirs. Released together.
  */
-export default class ArchitectureMaterials {
-  private readonly made = new Map<string, Releasable>
-
+export default class ArchitectureMaterials extends MadeOnDemand {
   /** the Banquet’s gilt boiserie, laid out around each wall’s doorways, for its walls’ surfaces and trim */
   get banquet() {
     return this.once('banquet', () => new BanquetMaterials)
@@ -116,13 +113,6 @@ export default class ArchitectureMaterials {
     return this.once('windowReveal', () => lightIndoors(new LodgeWoodMaterial))
   }
 
-  dispose() {
-    for (const material of this.made.values()) {
-      material.dispose()
-    }
-    this.made.clear()
-  }
-
   /** What the wall’s face is surfaced with, or undefined for the plain plaster of the shared wall surfaces. */
   surface(wall: Wall): Material | undefined {
     switch (wall.room) {
@@ -182,14 +172,5 @@ export default class ArchitectureMaterials {
         return undefined
       }
     }
-  }
-
-  private once<Kind extends Releasable>(key: string, create: () => Kind): Kind {
-    let material = this.made.get(key) as Kind | undefined
-    if (!material) {
-      material = create()
-      this.made.set(key, material)
-    }
-    return material
   }
 }

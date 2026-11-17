@@ -4,14 +4,15 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import {lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import LodgeWindowGeometry from '../../src/lib/gallery/LodgeWindowGeometry.ts'
-import {createArchitecturalGlassMaterials, disposeArchitecturalGlassMaterials} from '../../src/lib/materials/ArchitecturalGlassMaterials.ts'
+import ArchitecturalGlassMaterials from '../../src/lib/materials/ArchitecturalGlassMaterials.ts'
 import CastFloorGlassMaterial from '../../src/lib/materials/CastFloorGlassMaterial.ts'
 import ClearGlassMaterial from '../../src/lib/materials/ClearGlassMaterial.ts'
 import CrownGlassMaterial from '../../src/lib/materials/CrownGlassMaterial.ts'
 
 test('fast glass shares one plain pane between lobby and cabin and gives the tunnel its own', () => {
-  const materials = createArchitecturalGlassMaterials(false)
+  const materials = new ArchitecturalGlassMaterials(false)
   expect(materials.lobby).toBe(materials.cabin)
+  expect(materials.lobbyWindow).toBe(materials.lobby)
   expect(materials.lobby).toBeInstanceOf(MeshStandardNodeMaterial)
   const material = materials.lobby as MeshStandardNodeMaterial
   expect(material.transparent).toBe(true)
@@ -23,13 +24,13 @@ test('fast glass shares one plain pane between lobby and cabin and gives the tun
   expect(tunnel.opacity).toBeGreaterThan(0)
   expect(tunnel.opacity).toBeLessThan(0.5)
   const disposals = [material, tunnel].map(entry => spyOn(entry, 'dispose'))
-  disposeArchitecturalGlassMaterials(materials)
+  materials.dispose()
   for (const dispose of disposals) {
     expect(dispose).toHaveBeenCalledTimes(1)
   }
 })
 test('heavy floor glass refracts the room below through cast pavers', () => {
-  const materials = createArchitecturalGlassMaterials(true)
+  const materials = new ArchitecturalGlassMaterials(true)
   const lobby = materials.lobby as CastFloorGlassMaterial
   expect(lobby).toBeInstanceOf(CastFloorGlassMaterial)
   expect(lobby.name).toBe('lobby-glass-heavy')
@@ -38,10 +39,10 @@ test('heavy floor glass refracts the room below through cast pavers', () => {
   expect(lobby.transmission).toBe(0)
   expect(lobby.emissiveNode).not.toBeNull()
   expect(lobby.normalNode).not.toBeNull()
-  disposeArchitecturalGlassMaterials(materials)
+  materials.dispose()
 })
 test('heavy tunnel glass blends over the untouched backdrop so the view stays sharp', () => {
-  const materials = createArchitecturalGlassMaterials(true)
+  const materials = new ArchitecturalGlassMaterials(true)
   const tunnel = materials.tunnel as ClearGlassMaterial
   expect(tunnel).toBeInstanceOf(ClearGlassMaterial)
   expect(tunnel).not.toBeInstanceOf(CrownGlassMaterial)
@@ -55,10 +56,10 @@ test('heavy tunnel glass blends over the untouched backdrop so the view stays sh
   expect(tunnel.opacityNode).not.toBeNull()
   expect(tunnel.emissiveNode).toBeNull()
   expect(tunnel.iridescence).toBeGreaterThan(0)
-  disposeArchitecturalGlassMaterials(materials)
+  materials.dispose()
 })
 test('heavy cabin glass shows its surface through ripples, haze, smudges and grime instead of reading as an empty opening', () => {
-  const materials = createArchitecturalGlassMaterials(true)
+  const materials = new ArchitecturalGlassMaterials(true)
   const cabin = materials.cabin as CrownGlassMaterial
   expect(cabin).toBeInstanceOf(CrownGlassMaterial)
   expect(cabin).not.toBe(materials.tunnel)
@@ -71,10 +72,23 @@ test('heavy cabin glass shows its surface through ripples, haze, smudges and gri
   for (const node of [cabin.normalNode, cabin.colorNode, cabin.roughnessNode, cabin.clearcoatRoughnessNode, cabin.emissiveNode, cabin.opacityNode]) {
     expect(node).not.toBeNull()
   }
-  const disposals = Object.values(materials).map(material => spyOn(material, 'dispose'))
-  disposeArchitecturalGlassMaterials(materials)
+  const disposals = [cabin, materials.lobby, materials.lobbyWindow, materials.tunnel].map(material => spyOn(material, 'dispose'))
+  materials.dispose()
   for (const dispose of disposals) {
     expect(dispose).toHaveBeenCalledTimes(1)
+  }
+})
+test('each kind of glass is made once, however often it is asked for, and released once', () => {
+  for (const heavy of [false, true]) {
+    const materials = new ArchitecturalGlassMaterials(heavy)
+    const kinds = [materials.cabin, materials.lobby, materials.lobbyWindow, materials.tunnel]
+    expect([materials.cabin, materials.lobby, materials.lobbyWindow, materials.tunnel]).toEqual(kinds)
+    const disposals = [...new Set(kinds)].map(material => spyOn(material, 'dispose'))
+    materials.dispose()
+    materials.dispose()
+    for (const dispose of disposals) {
+      expect(dispose).toHaveBeenCalledTimes(1)
+    }
   }
 })
 test('the lodge pane’s UVs span its face exactly, so the cabin glass measures grime and ripples in meters', () => {
