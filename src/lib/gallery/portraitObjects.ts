@@ -1,3 +1,4 @@
+import type {PlayerCollisionGrace} from '../physics/playerCollision.ts'
 import type {Portrait, Vec3} from './types.ts'
 import type {RapierRigidBody} from '@react-three/rapier'
 import type {Group} from 'three/webgpu'
@@ -5,6 +6,7 @@ import type {Group} from 'three/webgpu'
 const portraitObjects = new Map<string, {
   body: RapierRigidBody
   group: Group
+  playerGrace?: PlayerCollisionGrace
 }>
 export default portraitObjects
 

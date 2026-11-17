@@ -6,6 +6,7 @@ import {BoxGeometry, Euler, Group, InstancedMesh, Matrix4, Mesh, MeshBasicMateri
 
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import InstancedPropVisuals from '../../src/lib/physics/InstancedPropVisuals.ts'
+import {throwStrength} from '../../src/lib/physics/throwMotion.ts'
 
 await RAPIER.init()
 test('a complete nameplate can be picked up, canceled, thrown and picked up again', () => {
@@ -44,8 +45,8 @@ test('a complete nameplate can be picked up, canceled, thrown and picked up agai
     expect(body.rotation()).toEqual(rotation)
     expect(body.isDynamic()).toBe(true)
     expect(carried.grab()).toBe(true)
-    expect(carried.release([0, 1.5, 1], [0, 1.5, 2], true)).toBe(false)
-    expect(body.linvel().z).toBe(10)
+    expect(carried.release([0, 1.5, 1], [0, 1.5, 2], true)).toBe(true)
+    expect(body.linvel().z).toBeCloseTo(throwStrength(body.mass()), 5)
     expect(body.angvel().x).toBe(3)
     // Rapier reports colliders as their body left them until its next step.
     world.step()

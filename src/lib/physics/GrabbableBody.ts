@@ -5,7 +5,9 @@ import {RigidBodyType} from '@dimforge/rapier3d-compat'
 
 import currentWorld from '#src/worlds/current.ts'
 
+import {PlayerCollisionGrace} from './playerCollision.ts'
 import PropPlacement from './PropPlacement.ts'
+import {throwMotion} from './throwMotion.ts'
 import {beginBodyThrow, clearBodyThrow} from './ThrowState.ts'
 
 export type GrabbableBodyOptions = {
@@ -26,9 +28,7 @@ type BodyPose = {
   type: ReturnType<RigidBody['bodyType']>
 }
 
-/** how fast a thrown prop leaves the hand, in meters per second, with a little extra upward */
-export const throwSpeed = 10
-const throwLift = 2
+export {throwSpeed} from './throwMotion.ts'
 /** how a thrown prop tumbles, in radians per second */
 const throwSpin = {
   x: 3,
@@ -43,22 +43,24 @@ const still = {
 
 /**
  * The physics side of carrying a prop: while carried, its body is out of the simulation altogether, so nothing collides with it, not even the player, and whoever carries it shows it by its own object. Only letting go asks the world where the prop fits.
- * Shared by sculptures, orbs and detachable foliage. A canceled pluck leaves a leaf attached where it was; a canceled re-grab leaves a loose leaf where it lay.
+ * Shared by sculptures, orbs and detachable foliage. Interactive cancellation releases at the hand; an aborted grab can still be rolled back before it is shown.
  */
 export default class GrabbableBody {
   readonly placement: PropPlacement
+  readonly playerGrace: PlayerCollisionGrace
   private carrying = false
   private home: BodyPose | null = null
 
   constructor(readonly body: RigidBody, world: World, private readonly options: GrabbableBodyOptions = {}) {
     this.placement = new PropPlacement(world, body)
+    this.playerGrace = new PlayerCollisionGrace(world, body)
   }
 
   get active() {
     return this.carrying
   }
 
-  /** Leaves the prop where it was before it was grabbed, which is where its body never stopped being. */
+  /** Restores an aborted, not-yet-presented grab. Interactive cancellation releases at the hand instead. */
   cancel() {
     if (!this.carrying) {
       return
@@ -83,6 +85,7 @@ export default class GrabbableBody {
       y: velocity[1],
       z: velocity[2],
     }, throwSpin)
+    this.playerGrace.begin()
     beginBodyThrow(this.body)
     return true
   }
@@ -92,6 +95,7 @@ export default class GrabbableBody {
       return false
     }
     this.rememberHome()
+    this.playerGrace.restore()
     clearBodyThrow(this.body)
     this.carrying = true
     this.stop()
@@ -114,32 +118,27 @@ export default class GrabbableBody {
     }
   }
 
-  /**
-   * Lets go of the prop as far from `origin`, inside the player’s capsule, toward `target`, where it was held, as it fits, loose and, if `throwing`, thrown along `direction`, by default that line. Where it fits nowhere, it stays where it was before it was grabbed.
-   * Returns whether it did.
-   */
-  release(origin: Vec3, target: Vec3, throwing: boolean, direction?: Vec3) {
+  /** Releases at the last reachable point, or at the hand if all of it is obstructed. The solver separates any overlap rather than returning the prop to its old location. Returns false if it was not being carried. */
+  release(origin: Vec3, target: Vec3, throwing: boolean, direction?: Vec3, carrier: Vec3 = [0, 0, 0]) {
     if (!this.carrying) {
       return false
     }
-    const position = this.placement.reach(origin, target)
-    if (!position) {
-      this.cancel()
-      return true
-    }
+    const position = this.placement.reach(origin, target) ?? origin
     this.carrying = false
-    const line = direction ?? target.map((value, axis) => value - origin[axis])
-    const length = Math.hypot(...line) || 1
-    const [x, y, z] = line.map(value => value / length)
-    this.loose(position, throwing ? {
-      x: x * throwSpeed,
-      y: y * throwSpeed + throwLift,
-      z: z * throwSpeed,
-    } : still, throwing ? throwSpin : still)
+    const line = direction ?? target.map((value, axis) => value - origin[axis]) as Vec3
+    // Collider mass is available even for a fixed or disabled body.
+    const mass = this.colliders().reduce((total, collider) => total + collider.mass(), 0) || this.body.mass() || 1.8
+    const [x, y, z] = throwMotion(mass, line, carrier, throwing)
+    this.loose(position, {
+      x,
+      y,
+      z,
+    }, throwing ? throwSpin : still)
+    this.playerGrace.begin()
     if (throwing) {
       beginBodyThrow(this.body)
     }
-    return false
+    return true
   }
 
   rememberHome() {
@@ -182,6 +181,7 @@ export default class GrabbableBody {
   }
 
   private restore(pose: BodyPose) {
+    this.playerGrace.restore()
     clearBodyThrow(this.body)
     this.body.setBodyType(pose.type, true)
     this.body.setTranslation({

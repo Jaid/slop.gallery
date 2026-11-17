@@ -16,7 +16,7 @@ import {useEffect, useLayoutEffect, useRef} from 'react'
 import {Box3, Vector3} from 'three/webgpu'
 
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
-import {cameraPose, notify, requestItemFusion, useGallery} from '#src/lib/gallery.ts'
+import {bodyPose, cameraPose, notify, requestItemFusion, useGallery} from '#src/lib/gallery.ts'
 import {handBack, settle} from '#src/lib/gallery/fusion/handBack.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import {registerOrbitable} from '#src/lib/gallery/orbitables.ts'
@@ -24,6 +24,7 @@ import GrabbableBody from '#src/lib/physics/GrabbableBody.ts'
 import {bodyThrow, clearBodyThrow} from '#src/lib/physics/ThrowState.ts'
 import {snapshotObject} from '#src/lib/rendering/studio/StudioSnapshotRenderer.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
+import worldClock from '#src/lib/worldClock.ts'
 
 export type PropHandle = {
   body: RapierRigidBody
@@ -92,8 +93,8 @@ const holdLine = (position: Vec3, direction: Vec3, distance: number, up: Vec3 = 
 }
 /** what the player does with a prop, logged as `gallery.prop.<event>` */
 type PropEvent = 'dropped' | 'grabbed' | 'thrown'
-/** why a dropped prop left the hand: let go of, put back where it was picked up for want of room, or put back as carrying it was canceled */
-type DropCause = 'canceled' | 'no_room' | 'released'
+/** why a dropped prop left the hand */
+type DropCause = 'canceled' | 'released'
 const propVerbs: Record<PropEvent, string> = {
   dropped: 'Dropped',
   grabbed: 'Grabbed',
@@ -285,29 +286,25 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         return true
       },
       cancel: () => {
-        shownOn.current = null
         if (carried.active) {
-          carried.cancel()
+          const {direction, origin, target} = shownOn.current ?? holdLine(cameraPose.position, cameraPose.direction, holdDistance.current)
+          carried.release(origin, target, false, direction, bodyPose.velocity)
           settle(rigidBody, prop)
           record('dropped', 'canceled')
         }
+        shownOn.current = null
       },
       release: throwing => {
         // Let go of where it was shown, or before it was ever shown, where the camera holds it.
         const {direction, origin, target} = shownOn.current ?? holdLine(cameraPose.position, cameraPose.direction, holdDistance.current)
         shownOn.current = null
         const carrying = carried.active
-        const returned = carried.release(origin, target, throwing, direction)
+        carried.release(origin, target, throwing, direction, bodyPose.velocity)
         settle(rigidBody, prop)
         if (!carrying) {
           return
         }
-        // With no room to let go of it anywhere along the line, it went back where it was picked up, also when thrown.
-        if (returned) {
-          record('dropped', 'no_room')
-        } else {
-          record(throwing ? 'thrown' : 'dropped', throwing ? undefined : 'released')
-        }
+        record(throwing ? 'thrown' : 'dropped', throwing ? undefined : 'released')
       },
     }
     propObjects.set(id, handle)
@@ -318,6 +315,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       title,
     })
     return () => {
+      carried.playerGrace.restore()
       unregisterOrbitable?.()
       if (propObjects.get(id) === handle) {
         propObjects.delete(id)
@@ -337,7 +335,10 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       return impactSounds.register(body.current, striker)
     }
   }, [striker])
-  useFrame(() => {
+  useFrame((_, delta) => {
+    if (!worldClock.frozen) {
+      controller.current?.playerGrace.update(delta)
+    }
     controller.current?.recover()
   })
   // Placed right before the frame is drawn, once the camera has moved for it, so the prop never trails it by a frame: very near, low in the middle of the view. It keeps the turn it had when picked up, which is its body’s and so its holder’s.

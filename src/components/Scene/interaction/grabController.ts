@@ -4,8 +4,10 @@ import type {RootState} from '@react-three/fiber'
 
 import {Vector3} from 'three/webgpu'
 
-import {cameraPose, chime, markPortraitInteracted, useGallery} from '#src/lib/gallery.ts'
+import {bodyPose, cameraPose, chime, markPortraitInteracted, useGallery} from '#src/lib/gallery.ts'
 import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
+import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import {throwMotion, throwTone} from '#src/lib/physics/throwMotion.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import world from '#src/worlds/current.ts'
 
@@ -57,7 +59,14 @@ export default function createGrabController(camera: RootState['camera'], placem
         held: null,
         placement: null,
       })
-      chime(throwing ? 130 : 400)
+      if (throwing) {
+        const {body} = prop
+        const velocity = body.linvel()
+        const mass = Array.from({length: body.numColliders()}, (_, i) => body.collider(i).mass()).reduce((a, b) => a + b, 0) || 1.8
+        chime(throwTone(mass, [velocity.x, velocity.y, velocity.z]))
+      } else {
+        chime(400)
+      }
       return
     }
     const portrait = state.portraits.find(candidate => candidate.id === id)
@@ -69,6 +78,8 @@ export default function createGrabController(camera: RootState['camera'], placem
       const origin = camera.position.toArray()
       const distance = Math.min(1.45, Math.max(0.35, world.wallDistance(origin, direction.toArray()) - 0.4))
       const position = camera.position.clone().addScaledVector(direction, distance)
+      const velocity = throwMotion(2, direction.toArray(), bodyPose.velocity, true)
+      portraitObjects.get(id)?.playerGrace?.begin()
       state.commit(state.portraits.map(candidate => {
         return candidate.id === id ? {
           ...candidate,
@@ -77,10 +88,10 @@ export default function createGrabController(camera: RootState['camera'], placem
           orientation: undefined,
           position: position.toArray(),
           rotation: Math.atan2(-direction.x, -direction.z),
-          velocity: direction.multiplyScalar(14).add(new Vector3(0, 1.5, 0)).toArray(),
+          velocity,
         } : candidate
       }))
-      chime(130)
+      chime(throwTone(2, velocity))
     } else {
       const candidate = world.placement.findPlacement(camera.position.toArray(), camera.getWorldDirection(new Vector3).toArray(), portrait.width, portrait.height, state.portraits, portrait.id, portrait.labelAbove === true)
       if (candidate?.valid) {

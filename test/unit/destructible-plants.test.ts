@@ -14,6 +14,7 @@ import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import initializeFoliageCollider from '../../src/lib/physics/initializeFoliageCollider.ts'
 import PlantAttachment from '../../src/lib/physics/PlantAttachment.ts'
 import {leafPhysics} from '../../src/lib/physics/plantPhysics.ts'
+import {throwStrength} from '../../src/lib/physics/throwMotion.ts'
 
 await RAPIER.init()
 let world: RAPIER.World
@@ -230,7 +231,7 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
       leaf.grab()
       leaf.release([0, 2, 2], [0, 2, 3], true)
       expect(leaf.body.isDynamic()).toBe(true)
-      expect(leaf.body.linvel().z).toBe(10)
+      expect(leaf.body.linvel().z).toBeCloseTo(throwStrength(geometry.leaves[1].mass + geometry.leaves[1].stemMass), 5)
       for (let i = 0; i < leaf.body.numColliders(); i++) {
         expect(leaf.body.collider(i).isEnabled()).toBe(true)
       }

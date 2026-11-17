@@ -25,7 +25,7 @@ export default class PropPlacement {
   }
 
   /**
-   * How far toward `target` the prop gets from `origin`, which lies inside the player’s capsule, before any of its parts meets something: the place to let it go, short of walls, pedestals and floors in the way. Null where it fits nowhere along the way, not even clear of the player.
+   * How far toward `target` the prop gets from `origin`, which lies inside the player’s capsule, before any of its parts meets something: the place to let it go, short of walls, pedestals and floors in the way. Null where it fits nowhere along the way, excluding the player’s capsule.
    * Every part sweeps, offset covers and labels too: a center ray misses pedestals below the sightline and lets the prop’s edges enter the stone.
    */
   reach(origin: Vec3, target: Vec3): Vec3 | null {
@@ -41,7 +41,7 @@ export default class PropPlacement {
       }
     }
     const position = start.addScaledVector(direction, distance).toArray()
-    return this.hasRoom(position) ? position : null
+    return this.hasRoom(position, false) ? position : null
   }
 
   private shapes(position: Vec3) {

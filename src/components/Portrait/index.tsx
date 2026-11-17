@@ -3,7 +3,7 @@ import type {RapierRigidBody} from '@react-three/rapier'
 import type {Group} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {CuboidCollider, RigidBody} from '@react-three/rapier'
+import {CuboidCollider, RigidBody, useRapier} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useEffect, useMemo, useRef} from 'react'
@@ -17,11 +17,15 @@ import {impactSounds} from '#src/lib/audio/impactSounds.ts'
 import {requestFusion, useGallery} from '#src/lib/gallery.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import {PlayerCollisionGrace} from '#src/lib/physics/playerCollision.ts'
+import worldClock from '#src/lib/worldClock.ts'
 import world from '#src/worlds/current.ts'
 
 import useHanging from './useHanging.ts'
 
 export default function Portrait({portrait: p}: {portrait: PortraitData}) {
+  const {world: physics} = useRapier()
+  const grace = useRef<PlayerCollisionGrace | null>(null)
   const body = useRef<RapierRigidBody>(null)
   const group = useRef<Group>(null)
   const art = useRef<Group>(null)
@@ -34,15 +38,19 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
   useHanging(p, frame, held, art, placard)
   useEffect(() => {
     if (body.current && group.current) {
+      grace.current = new PlayerCollisionGrace(physics, body.current)
       portraitObjects.set(p.id, {
         body: body.current,
         group: group.current,
+        playerGrace: grace.current,
       })
     }
     return () => {
+      grace.current?.restore()
+      grace.current = null
       portraitObjects.delete(p.id)
     }
-  }, [p.id])
+  }, [p.id, physics])
   // Hung, held or flown around by a fusion, the body is fixed or disabled, so only a loose work strikes anything.
   useEffect(() => {
     if (body.current) {
@@ -54,6 +62,9 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
   }, [frame])
   // A fusion flies the work around by its group meanwhile, so its body neither stands in the way nor falls.
   useEffect(() => {
+    if (held || p.reserved || p.fusing) {
+      grace.current?.restore()
+    }
     body.current?.setEnabled(!held && !p.reserved && !p.fusing)
   }, [held, p.reserved, p.fusing])
   useEffect(() => {
@@ -84,7 +95,10 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
       }, true)
     }
   }, [p.hung, p.velocity, p.spin])
-  useFrame(() => {
+  useFrame((_, delta) => {
+    if (!worldClock.frozen) {
+      grace.current?.update(delta)
+    }
     const position = body.current?.translation()
     if (body.current && position && !p.hung && position.y < world.placement.floorHeight([position.x, position.y, position.z]) - 4) {
       const [x, y, z] = world.placement.recoveryPosition
