@@ -31,14 +31,16 @@ const displayPlans = {
     upperSteps: 6,
     lowerSteps: 10,
   },
-  // Its south end lies due west of the lower flight’s end, which runs along Moonfall’s north wall: moving the display across the tunnel means moving it along the tunnel too, so that end only shifts along x.
+  // The lower flight returns west along Moonfall’s north wall; a level landing then reaches the unchanged display opening.
   east: {
     winNorthS: 1.34,
     northExtension: 0.7,
-    upperCorner: [12.6, -16.5525] as Point,
+    // Follow the open eastern perimeter rather than cutting back toward the display.
+    upperCorner: [14.4, -16.5525] as Point,
     upperSteps: 3,
     lowerSteps: 16,
-    lowerEnd: [-1.62, 3.2] as Point,
+    lowerZ: 3.2,
+    landingEndX: -1.62,
   },
 } as const
 
@@ -92,7 +94,8 @@ type DisplayAir = FloorRectangle & Record<'bottom' | 'top', number>
 type DisplayLevel = {
   floor: number
   headroom: number
-  polygon: FloorPolygon
+  /** convex pieces of the level’s footprint */
+  polygons: ReadonlyArray<FloorPolygon>
   /** start point, unit direction, length and vertical rise per meter along a sloped ramp level */
   ramp?: {
     direction: Point
@@ -225,22 +228,25 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
   const p0: Point = [innerX, doorZ]
   const p1 = plan.upperCorner
   const landingY = tunnelDiagonalFloorY(southS)
+  let p2: Point
   let p3: Point
   let d3: Point
   if (side === 'west') {
     d3 = tunnelDiagonalEast
     p3 = tunnelDiagonalPoint(cutout.sOuter + halfW, backAcross - thickness)
+    // Place corner2 along p3 - t * d3 so the lower flight has an exact integer step count and zero landing overhang.
+    p2 = add(p3, d3, -(plan.lowerSteps * going + halfW))
+    for (let i = 0; i < 12; i++) {
+      const d2Try = dir(p1, p2)
+      const turn2Try = Math.atan2(d2Try[0] * d3[1] - d2Try[1] * d3[0], d2Try[0] * d3[0] + d2Try[1] * d3[1])
+      const elbow2Try = halfW * Math.tan(Math.abs(turn2Try) / 2)
+      p2 = add(p3, d3, -(plan.lowerSteps * going + elbow2Try))
+    }
   } else {
+    // Two square turns keep the long run wholly east of the Oculus. Moving the lower flight with it leaves a level approach to the display, not a longer or steeper flight.
     d3 = [-1, 0]
-    p3 = displayPlans.east.lowerEnd
-  }
-  // Place corner2 along p3 - t * d3 so the lower flight has an exact integer step count and zero landing overhang.
-  let p2 = add(p3, d3, -(plan.lowerSteps * going + halfW))
-  for (let i = 0; i < 12; i++) {
-    const d2Try = dir(p1, p2)
-    const turn2Try = Math.atan2(d2Try[0] * d3[1] - d2Try[1] * d3[0], d2Try[0] * d3[0] + d2Try[1] * d3[1])
-    const elbow2Try = halfW * Math.tan(Math.abs(turn2Try) / 2)
-    p2 = add(p3, d3, -(plan.lowerSteps * going + elbow2Try))
+    p2 = [p1[0], displayPlans.east.lowerZ]
+    p3 = add(p2, d3, plan.lowerSteps * going + halfW)
   }
   const d1 = dir(p0, p1)
   const d2 = dir(p1, p2)
@@ -276,18 +282,18 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
   ]
   const corners: [DisplayLevel, DisplayLevel] = [
     {
-      polygon: c1.polygon,
+      polygons: [c1.polygon],
       floor: corner1Y,
       headroom,
     },
     {
-      polygon: c2.polygon,
+      polygons: [c2.polygon],
       floor: corner2Y,
       headroom,
     },
   ]
   const ramp: DisplayLevel = {
-    polygon: rampPolygon,
+    polygons: [rampPolygon],
     floor: corner1Y,
     headroom,
     ramp: {
@@ -303,8 +309,9 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
   const cutOuter = tunnelDiagonalPoint(cutout.sOuter, cutout.toAcross)
   const landingInnerAcross = cutout.fromAcross - direction * wallFace
   const landingWalls: Array<Wall> = []
-  let landingPolygon: FloorPolygon
+  let landingPolygons: Array<FloorPolygon>
   let landingLamp: Vec3
+  const returnLamps: Array<Vec3> = []
   const landingRoofTop = landingY + landingHeadroom + ceilingThickness / 2
   if (side === 'west') {
     const sNorth = cutout.sOuter
@@ -312,7 +319,7 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     const landNorthOut = tunnelDiagonalPoint(sNorth, cutout.toAcross - thickness)
     const landSouthOut = tunnelDiagonalPoint(sSouth, cutout.toAcross - thickness)
     const landSouthIn = tunnelDiagonalPoint(sSouth, cutout.fromAcross)
-    landingPolygon = [cutInner, landNorthOut, landSouthOut, landSouthIn]
+    landingPolygons = [[cutInner, landNorthOut, landSouthOut, landSouthIn]]
     const wallNorthIn = tunnelDiagonalPoint(sNorth, landingInnerAcross)
     const wallSouthIn = tunnelDiagonalPoint(sSouth, landingInnerAcross)
     const [lampX, lampZ] = tunnelDiagonalPoint((sNorth + sSouth) / 2, (cutout.fromAcross + cutout.toAcross - thickness) / 2)
@@ -324,21 +331,27 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
   } else {
     const p3North: Point = [p3[0], p3[1] - halfW]
     const p3South: Point = [p3[0], p3[1] + halfW]
+    // Keep the original short throat at the display. The longer return is a rectangle, not a tapered, concave polygon (floor and air queries require convex pieces).
+    const joinNorth: Point = [displayPlans.east.landingEndX, p3North[1]]
+    const joinSouth: Point = [displayPlans.east.landingEndX, p3South[1]]
     const landSouthIn = tunnelDiagonalPoint(cutout.sOuter + stairWidth, cutout.fromAcross)
-    landingPolygon = [cutInner, cutOuter, p3North, p3South, landSouthIn]
+    landingPolygons = [[cutInner, cutOuter, joinNorth, joinSouth, landSouthIn], [joinNorth, p3North, p3South, joinSouth]]
     const wallNorthIn = tunnelDiagonalPoint(cutout.sOuter, landingInnerAcross)
     const wallSouthIn = tunnelDiagonalPoint(cutout.sOuter + stairWidth, landingInnerAcross)
-    const cx = (cutInner[0] + cutOuter[0] + p3North[0] + p3South[0] + landSouthIn[0]) / 5
-    const cz = (cutInner[1] + cutOuter[1] + p3North[1] + p3South[1] + landSouthIn[1]) / 5
+    const cx = (cutInner[0] + cutOuter[0] + joinNorth[0] + joinSouth[0] + landSouthIn[0]) / 5
+    const cz = (cutInner[1] + cutOuter[1] + joinNorth[1] + joinSouth[1] + landSouthIn[1]) / 5
     landingLamp = [cx, landingY + landingHeadroom - ceilingThickness / 2, cz]
+    returnLamps.push([(joinNorth[0] + p3North[0]) / 2, landingLamp[1], p3[1]])
     landingWalls.push(
-      segmentWall(`exhibition-stairs_${id.replaceAll('-', '_')}_landing_north`, cutOuter, p3North, landingY, landingHeadroom - 0.3, 1),
-      segmentWall(`exhibition-stairs_${id.replaceAll('-', '_')}_landing_south`, p3South, wallSouthIn, landingY, landingHeadroom - 0.3, 1),
+      segmentWall(`exhibition-stairs_${id.replaceAll('-', '_')}_return_north`, joinNorth, p3North, landingY, landingHeadroom - 0.3, 1),
+      segmentWall(`exhibition-stairs_${id.replaceAll('-', '_')}_return_south`, p3South, joinSouth, landingY, landingHeadroom - 0.3, 1),
+      segmentWall(`exhibition-stairs_${id.replaceAll('-', '_')}_landing_north`, cutOuter, joinNorth, landingY, landingHeadroom - 0.3, 1),
+      segmentWall(`exhibition-stairs_${id.replaceAll('-', '_')}_landing_south`, joinSouth, wallSouthIn, landingY, landingHeadroom - 0.3, 1),
       segmentWall(`exhibition-stairs_${id.replaceAll('-', '_')}_landing_west`, wallSouthIn, wallNorthIn, landingY, landingHeadroom - 0.3, 1),
     )
   }
   const landing: DisplayLevel = {
-    polygon: landingPolygon,
+    polygons: landingPolygons,
     floor: landingY,
     headroom: landingHeadroom,
   }
@@ -442,13 +455,13 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     polySlab('display-stairway-floor', c1.polygon, corner1Y - oculusBalcony.size[1], corner1Y),
     polySlab('display-stairway-floor', c2.polygon, corner2Y - oculusBalcony.size[1], corner2Y),
     boxSlab('display-stairway-floor', rampMid, d2, stairWidth, rampLen, corner1Y, oculusBalcony.size[1], rampSlope),
-    polySlab('display-landing-floor', landingPolygon, landingY - oculusBalcony.size[1], landingY),
+    ...landingPolygons.map(polygon => polySlab('display-landing-floor', polygon, landingY - oculusBalcony.size[1], landingY)),
     boxSlab('display-stairway-ceiling', upperMid, d1, stairWidth, upperLen, balconyY + headroom + ceilingThickness / 2, ceilingThickness),
     boxSlab('display-stairway-header', add(c1.end1, d1, thickness / 2), d1, stairWidth, thickness, balconyY + headroom + ceilingThickness / 2, balconyY - corner1Y),
     polySlab('display-stairway-ceiling', c1.polygon, corner1Y + headroom - ceilingThickness / 2, corner1Y + headroom + ceilingThickness / 2),
     boxSlab('display-stairway-ceiling', add(rampMid, d2, 0.05), d2, stairWidth, rampLen + 0.1, corner1Y + headroom + ceilingThickness / 2, ceilingThickness, rampSlope),
     polySlab('display-stairway-ceiling', c2.polygon, corner2Y + headroom - ceilingThickness / 2, corner2Y + headroom + ceilingThickness / 2),
-    polySlab('display-landing-ceiling', landingPolygon, landingRoofTop - ceilingThickness, landingRoofTop),
+    ...landingPolygons.map(polygon => polySlab('display-landing-ceiling', polygon, landingRoofTop - ceilingThickness, landingRoofTop)),
     boxSlab('display-landing-header', add(p3, d3, -thickness / 2), d3, stairWidth, thickness, landingRoofTop, landingRoofTop - (flights[2].end[1] + headroom - ceilingThickness / 2)),
   ]
   const rampLampAlong = rampLen * 0.6
@@ -457,6 +470,7 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     [innerX + direction * (wallFace + 0.5), balconyY + headroom - ceilingThickness / 2, doorZ],
     [rampLampPt[0], corner1Y + rampLampAlong * rampSlope + headroom - ceilingThickness / 2, rampLampPt[1]],
     landingLamp,
+    ...returnLamps,
   ]
   const polyAir = (poly: FloorPolygon, bottom: number, top: number, slack = 0.55): Array<DisplayAir> => floorChunks([poly], bottom, top - bottom, slack).map(({min, max}) => ({
     center: [(min[0] + max[0]) / 2, (min[2] + max[2]) / 2],
@@ -477,7 +491,7 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     ...flightAir(flights[1]),
     ...polyAir(c2.polygon, corner2Y, corner2Y + headroom),
     ...flightAir(flights[2]),
-    ...polyAir(landingPolygon, landingY, landingY + landingHeadroom),
+    ...landingPolygons.flatMap(polygon => polyAir(polygon, landingY, landingY + landingHeadroom)),
     ...polyAir(polygon, tunnelDiagonalFloorY(northS), tunnelDiagonalFloorY(southS) + tunnel.height, 0.25),
     ...polyAir([
       tunnelDiagonalPoint(cutout.sInner, cutout.fromAcross),
@@ -556,7 +570,7 @@ function displayGround(x: number, z: number) {
       }
     }
     for (const level of [...stairway.corners, stairway.ramp, stairway.landing] as ReadonlyArray<DisplayLevel>) {
-      if (!insidePolygon(level.polygon, x, z)) {
+      if (!level.polygons.some(polygon => insidePolygon(polygon, x, z))) {
         continue
       }
       if (level.ramp) {
