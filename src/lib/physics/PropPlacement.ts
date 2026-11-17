@@ -26,7 +26,7 @@ type Fit = {
   position: Vec3
 }
 
-/** Where a prop fits in the world, with its own shapes and its current rotation, asked only when a carried prop is let go of. */
+/** Where a prop fits in the world, with its own shapes and its current rotation, asked while a prop is carried, which shows it where it fits, and when it is let go of. */
 export default class PropPlacement {
   private obstacle = (collider: Collider) => collider.isEnabled() && !collider.isSensor()
 

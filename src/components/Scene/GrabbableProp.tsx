@@ -74,6 +74,9 @@ const holdSpread = 1.4
 /** how far below the eye the line a carried prop is let go along starts, in meters, inside the player’s capsule */
 const holdDrop = 0.22
 const worldUp: Vec3 = [0, 1, 0]
+/** how far, in meters, the line a carried prop is held on may move before where it fits is asked again, and how long, in milliseconds, the answer holds while it stays put, as the world may change around it */
+const shownTolerance = 0.001
+const shownLifetime = 100
 /**
  * How fast the hand moves with the player’s body, which whatever leaves it flies on with, running or jumping, in m/s: its actual velocity, but level while it stands on the ground, where it only jitters up and down as it hugs the floor, and none while the camera is posed apart from it.
  */
@@ -105,6 +108,7 @@ const holdLine = (position: Vec3, direction: Vec3, distance: number, up: Vec3 = 
     target: position.map((value, axis) => value + tilt[axis] * distance) as Vec3,
   }
 }
+const near = (a: Vec3, b: Vec3) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) < shownTolerance
 /** what the player does with a prop, logged as `gallery.prop.<event>` */
 type PropEvent = 'dropped' | 'grabbed' | 'thrown'
 /** why a dropped prop left the hand: let go of, or dropped as something else ended carrying it, like the pause menu opening */
@@ -157,7 +161,7 @@ type GrabbablePropProps = Omit<RigidBodyProps, 'children' | 'mass' | 'position' 
 }
 
 /**
- * A prop the player can pick up, carry, drop and throw. Carried, it is out of the physics altogether: its body stays disabled where it was picked up, and its inner group floats in front of the camera, so nothing bumps into it on the way. Letting go puts the body where it fits near where it was shown, passing through the player for a moment, and flying on with the player’s own motion.
+ * A prop the player can pick up, carry, drop and throw. Carried, it is out of the physics altogether: its body stays disabled where it was picked up, and its inner group floats in front of the camera, so nothing bumps into it on the way, shown where it fits, out of walls and whatever else it would reach into. Letting go puts the body right there, passing through the player for a moment, and flying on with the player’s own motion.
  * Once a fusion used it up, like an orb, it is gone.
  */
 export default function GrabbableProp(props: GrabbablePropProps) {
@@ -174,6 +178,12 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
   const controller = useRef<GrabbableBody | null>(null)
   /** the line the carried prop was last shown on, which letting go of it continues from */
   const shownOn = useRef<HoldLine | null>(null)
+  /** where the carried prop was last shown, which is where it would be let go of, the line it was found for and when, in milliseconds of the frame clock */
+  const shownAt = useRef<{
+    line: HoldLine
+    position: Vec3
+    time: number
+  } | null>(null)
   /** how far from the eye the prop floats while carried, by its size when it was picked up */
   const holdDistance = useRef(0)
   const callbacks = useRef({
@@ -298,6 +308,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         }
         bounds.setFromObject(prop).getSize(size)
         holdDistance.current = holdGap + holdSpread * Math.max(size.x, size.y, size.z) / 2
+        shownAt.current = null
         // Where it was picked up, as its body stays there while carried.
         record('grabbed')
         return true
@@ -310,6 +321,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         // Let go of where it was shown, or before it was ever shown, where the camera holds it.
         const {direction, origin, target} = shownOn.current ?? holdLine(cameraPose.position, cameraPose.direction, holdDistance.current)
         shownOn.current = null
+        shownAt.current = null
         const thrown = carried.release(origin, target, {
           carrier: carrierVelocity(),
           direction,
@@ -354,10 +366,12 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
     controller.current?.recover()
   })
   // Placed right before the frame is drawn, once the camera has moved for it, so the prop never trails it by a frame: very near, low in the middle of the view. It keeps the turn it had when picked up, which is its body’s and so its holder’s.
-  useFrame(({camera}) => {
+  // It is shown where letting go would put it, kept out of walls, pedestals and floors the way the hand would be, so it never reaches into them and leaves the hand right where it is seen.
+  useFrame(({camera, time}) => {
     const prop = group.current
     const holder = prop?.parent
-    if (!controller.current?.active || !holder) {
+    const carried = controller.current
+    if (!carried?.active || !holder) {
       return
     }
     camera.getWorldPosition(eye)
@@ -365,8 +379,18 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
     viewUp.setFromMatrixColumn(camera.matrixWorld, 1)
     const line = holdLine(eye.toArray(), look.toArray(), holdDistance.current, viewUp.toArray())
     shownOn.current = line
+    const last = shownAt.current
+    // A player standing still keeps asking the same, which a prop of many hulls takes a while to answer.
+    const position = last && time - last.time < shownLifetime && near(last.line.origin, line.origin) && near(last.line.target, line.target) ? last.position : carried.placement.letGo(line.origin, line.target)
+    if (position !== last?.position) {
+      shownAt.current = {
+        line,
+        position,
+        time,
+      }
+    }
     holder.updateWorldMatrix(true, false)
-    prop.position.copy(holder.worldToLocal(holding.fromArray(line.target)))
+    prop.position.copy(holder.worldToLocal(holding.fromArray(position)))
   }, {before: 'render'})
   const struck = (event: CollisionEnterPayload) => {
     const current = body.current

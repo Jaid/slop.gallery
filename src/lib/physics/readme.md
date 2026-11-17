@@ -11,6 +11,8 @@ Every prop the player can pick up is a `GrabbableProp` (`src/components/Scene`) 
 3. Where that doesn’t free it, or pushes it through to the far side of something between it and the hand, the same is tried further back along the line, at ¾, ½, ¼ and right at `origin`.
 4. Where it fits nowhere, it is let go of wherever it is in the least, and the solver pushes it out of the rest.
 
+The same `letGo` places a carried prop in front of the camera every frame (`GrabbableProp`), so it is never shown reaching into a wall, a pedestal or the floor, and letting go puts it right where it was seen. A player standing still reuses the last answer for up to 0.1 s, as a prop of many hulls takes a while to place.
+
 So a prop always leaves the hand near it. Nothing ever teleports back to where it was picked up anymore. That only happens to a prop that fell out of the world (`GrabbableBody.recover`), and to a canceled pluck or re-grab in the tests.
 
 ## Passing through the player
