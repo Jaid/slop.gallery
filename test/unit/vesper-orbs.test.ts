@@ -61,3 +61,7 @@ test('every pedestal’s orb is rolled by the seed among the random orbs, the sa
   }
   expect(layouts.size).toBeGreaterThan(65)
 })
+test('in the default environment, the pedestals stand the random orbs in their order instead of rolling them', () => {
+  expect(vesperOrbs(0).map(({orb}) => orb)).toEqual(randomOrbs.slice(0, vesperOrbPedestals.length))
+  expect(vesperOrbs(0).map(({id}) => id)).toEqual(randomOrbs.map(orb => orb.propId))
+})

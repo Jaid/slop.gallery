@@ -31,7 +31,7 @@ export function readSeedOverride(input: URL | string = typeof location === 'unde
 /** The `?seed` of this page, which replaces the seed of the game for this page without replacing the stored one. */
 export const seedOverride = readSeedOverride()
 
-/** the seed of the default environment, `?seed=0`: whatever has a default of its own takes it instead of rolling for it, like the Lobby’s first fountain and every room’s first frame */
+/** the seed of the default environment, `?seed=0`: whatever has a default of its own takes it instead of rolling for it, like the Lobby’s first fountain, every room’s first frame and the random orbs in their order on the Vesper’s pedestals */
 export const defaultSeed = 0
 
 /** Whether `seed` asks for the default environment, which skips the rolls that have a default. */
