@@ -11,6 +11,7 @@ import WallObstructionScan from '#src/lib/placement/WallObstructionScan.ts'
 import {patchGeometry, reservationGeometry, stickySurfaceGeometry} from '#src/lib/placement/wallOverlayGeometry.ts'
 import world from '#src/worlds/current.ts'
 
+const reachedWalls = world.placement.walls.filter(wall => world.reach.includes(wall.room))
 const stickyColor = '#38e08c'
 const reservedColor = '#ff2a2a'
 /** how many meters out of their wall the red overlays are drawn, toward the camera, so whatever stands out of their wall less far, like a chimney breast, can’t hide them, while furniture and walls further in front still do */
@@ -30,8 +31,8 @@ const scanPause = 2000
  * The declared reservations are red, and red stripes mark where something stands out of a sticky wall in the way of hung frames without the wall declaring it, which probably should be a reservation; both show through whatever stands out of their wall.
  */
 export default function StickySurfaces() {
-  const sticky = useDisposable(useMemo(() => stickySurfaceGeometry(world.placement.walls), []))
-  const reserved = useDisposable(useMemo(() => reservationGeometry(world.placement.walls), []))
+  const sticky = useDisposable(useMemo(() => stickySurfaceGeometry(reachedWalls), []))
+  const reserved = useDisposable(useMemo(() => reservationGeometry(reachedWalls), []))
   const reservedMaterial = useDisposable(useMemo(() => nudgedMaterial(0.55, false), []))
   return <>
     <mesh frustumCulled={false} geometry={sticky} name='sticky-surfaces' raycast={() => {}} renderOrder={1}>
@@ -64,7 +65,7 @@ function nudgedMaterial(opacity: number, striped: boolean) {
 /** The stripes over what the {@link WallObstructionScan} finds, scanning a little every frame once the world is ready. */
 function Obstructions() {
   const scene = useThree(state => state.scene)
-  const scan = useMemo(() => new WallObstructionScan(world.placement.walls, scene), [scene])
+  const scan = useMemo(() => new WallObstructionScan(reachedWalls, scene), [scene])
   const material = useDisposable(useMemo(() => nudgedMaterial(0.85, true), []))
   const [geometry, setGeometry] = useState<BufferGeometry | null>(null)
   const pass = useRef<Generator<void, void, void>>(null)
@@ -86,7 +87,7 @@ function Obstructions() {
     }
     if (scan.version !== version.current) {
       version.current = scan.version
-      setGeometry(patchGeometry(world.placement.walls.filter(wall => scan.patches.get(wall.id)?.length).map(wall => [wall, scan.patches.get(wall.id)!])))
+      setGeometry(patchGeometry(reachedWalls.filter(wall => scan.patches.get(wall.id)?.length).map(wall => [wall, scan.patches.get(wall.id)!])))
     }
   })
   return geometry && <mesh frustumCulled={false} geometry={geometry} material={material} name='sticky-obstructions' raycast={() => {}} renderOrder={3} />

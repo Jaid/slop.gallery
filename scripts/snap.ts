@@ -82,6 +82,12 @@ const main = async (options: SnapOptions) => {
     if (!bookmark) {
       throw new Error(`--bookmark must be one of the ${setup.world} camera bookmarks: ${cameraBookmarks.map(entry => entry.id).join(', ') || 'none'}.`)
     }
+    // A scoped bookmark capture must load the room of that bookmark, not the unrelated default spawn.
+    if (setup.search.get('world_reach') === 'room' || setup.search.get('world_reach') === 'neighbors') {
+      if (!setup.search.has('spawn') && !setup.search.has('room')) {
+        setup.search.set('spawn', bookmark.id)
+      }
+    }
     setup.viewport = resolveSize(options, snapHeight, bookmark.ratio)
     if (bookmark.frozenTime !== undefined && !setup.search.has('frozen_time')) {
       setup.search.set('frozen_time', String(bookmark.frozenTime))

@@ -2,6 +2,7 @@ import type {CameraBookmark, SpawnBookmark, Vec3} from './types.ts'
 
 import {Euler, Quaternion} from 'three/webgpu'
 
+import {cameraFeet} from '#src/worlds/base/WorldReach.ts'
 import world from '#src/worlds/current.ts'
 
 import {isDevelopmentMode} from '../developmentMode.ts'
@@ -43,8 +44,7 @@ export function findRoomSpawn(input?: URL | string): SpawnBookmark | null | unde
 
 /** Where the player stands below a camera bookmark: a standing eye height under the camera, but never below the floor unless `flying`. */
 export function cameraBookmarkFeet({position}: CameraBookmark, flying = false): Vec3 {
-  const feet = position[1] - 1.6
-  return [position[0], flying ? feet : Math.max(world.floorHeight(position) + 0.04, feet), position[2]]
+  return cameraFeet(world, position, flying)
 }
 
 /** Move the player session to the `?spawn` bookmark; for a camera bookmark, below it, and with `?development` flying with its eyes at the bookmark. A camera bookmark wins over a spawn bookmark with the same ID, which T still reaches. Without `?spawn`, `?room` starts at the default spawn of that room. */

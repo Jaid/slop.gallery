@@ -34,6 +34,8 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}:
                           mirrors ?stream_budget, the milliseconds a frame after loading may spend building objects. Default: false, which builds everything in the first frame, so the scene is complete about three times sooner than at the players’ 8 and, in cinematic graphics, whose every streaming frame renders the whole view, three to six times sooner than at 100
   --warmup_scale <scale|false>
                           mirrors ?warmup_scale, the renderer scale the page loads, compiles and streams everything in at until the script ends its warmup right before capturing, so those frames stay cheap and the full-size render targets don’t exist yet. Default: ${warmupRows} rows, ${warmupRows} divided by the height, unless the regular scale is smaller; false renders at the full size from the start
+  --world_reach <room|neighbors|all>
+                          mirrors ?world_reach, a fixed scope around the spawn selected by --spawn or --room (not later --position or film camera poses). Neighbors means the spawn room and its relations.ts room list, one hop only. Default: all
   --swiftshader           renders on Chrome’s software Vulkan instead of a GPU, for machines without one like CI runners, which also need a system Vulkan driver like Mesa’s (mesa-vulkan-drivers on Ubuntu); slow, but enough to load and analyze the scene
   --width <pixels>        render width. Default: ${sides[0]}, or ${Math.round(defaultHeight * ratio)}
   --height <pixels>       render height. Default: ${sides[1]}, or ${defaultHeight}

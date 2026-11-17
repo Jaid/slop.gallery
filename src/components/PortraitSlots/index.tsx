@@ -6,6 +6,7 @@ import {Color, Euler, Matrix4, Quaternion, Vector3} from 'three/webgpu'
 
 import {slotIssue, usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
 import {invalidSlotColor, slotBorder, slotColors, slotPanels} from '#src/lib/gallery/portraitSlotVisuals.ts'
+import world from '#src/worlds/current.ts'
 
 const aimedColor = '#ffffff'
 /** room for slots created while editing before the meshes are rebuilt */
@@ -19,7 +20,7 @@ export default function PortraitSlots() {
   const aimed = usePortraitSlots(state => state.aimed)
   const dragging = usePortraitSlots(state => state.dragging)
   // The editor draws a dragged slot where it would drop, so it leaves its old place.
-  const shown = useMemo(() => (dragging ? slots.filter(slot => slot.id !== dragging) : slots), [dragging, slots])
+  const shown = useMemo(() => slots.filter(slot => slot.id !== dragging && (world.reach.mode === 'all' || world.reach.includes(world.placement.wall(slot.wallId)?.room ?? ''))), [dragging, slots])
   const capacity = Math.ceil((slots.length + headroom) / headroom) * headroom
   return <SlotPanels key={capacity} aimed={aimed} capacity={capacity} slots={shown} />
 }

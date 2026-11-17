@@ -98,7 +98,6 @@ const getProductionConfig = () => {
       bakeThreePlugin({
         geometry: {
           include: [
-            'src/components/Architecture/index.tsx',
             'src/lib/gallery/OculusGroundGeometry.ts',
             'src/lib/gallery/moonfall/CraterGeometry.ts',
             // The lattice is quicker to build than to download.

@@ -17,6 +17,7 @@ import miterCorners from '#src/lib/gallery/cornerMiters.ts'
 import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
 
 import PlacedRoom from './PlacedRoom.ts'
+import WorldReach from './WorldReach.ts'
 
 /** a room and the world position of its origin */
 export type RoomPlacement<Kind extends Room = Room> = readonly [room: Kind, origin: Vec3]
@@ -48,7 +49,7 @@ export default abstract class World<Kind extends Room = Room> {
   readonly narratesIntroduction: boolean = false
   /** where artworks hang and land */
   abstract readonly placement: PlacementSpace
-  /** every room of the world, placed, in the order their fences are checked */
+  /** every room’s metadata, including excluded rooms, placed in the order their fences are checked */
   readonly rooms: ReadonlyArray<PlacedRoom<Kind>>
   /** everything the world renders: its rooms, its lighting and its props */
   abstract readonly Scene: ComponentType
@@ -59,6 +60,7 @@ export default abstract class World<Kind extends Room = Room> {
   /** every wall of every room in world meters, room by room, their trim mitered where two walls meet in an inside corner */
   readonly walls: ReadonlyArray<Wall>
   private readonly byId: ReadonlyMap<Kind['id'], PlacedRoom<Kind>>
+  private startupReach: WorldReach | undefined
 
   constructor({enterLabel, tagline, title, wallpaper}: WorldInfo, placements: ReadonlyArray<RoomPlacement<Kind>>) {
     this.enterLabel = enterLabel
@@ -72,6 +74,16 @@ export default abstract class World<Kind extends Room = Room> {
     }
     this.geofences = new Geofences(this.rooms.map(room => [room.id, room.fence]))
     this.walls = miterCorners(this.rooms.flatMap(room => room.walls()))
+  }
+
+  /** The fixed startup scope, resolved after the subclass has supplied its spawn and navigation. */
+  get reach(): WorldReach {
+    return this.startupReach ??= new WorldReach(this)
+  }
+
+  /** The rooms allowed to create scene objects on this page; metadata in `rooms` stays complete. */
+  get reachedRooms() {
+    return this.rooms.filter(room => this.reach.includes(room.id))
   }
 
   /** the player’s pose on arrival: the default spawn of the {@link defaultRoom} */
@@ -99,9 +111,9 @@ export default abstract class World<Kind extends Room = Room> {
     return [room]
   }
 
-  /** Every ambient sound of the world with its global id, from its point in world meters, room by room. */
+  /** Every reached ambient sound with its global id, from its point in world meters, room by room. */
   ambiences() {
-    return this.rooms.flatMap(room => room.ambiences())
+    return this.reachedRooms.flatMap(room => room.ambiences())
   }
 
   /** Every camera bookmark of the world in world meters, room by room. */
@@ -147,14 +159,19 @@ export default abstract class World<Kind extends Room = Room> {
     return undefined
   }
 
-  /** Every lamp of the world with its global id in world meters, room by room. */
+  /** Every reached lamp with its global id in world meters, room by room. */
   lamps() {
-    return this.rooms.flatMap(room => room.lamps())
+    return this.reachedRooms.flatMap(room => room.lamps())
   }
 
   /** How opaque the drawing of a room is on the map while the player is in the room with the id `current`: faint for every room and a little stronger for the player’s own. */
   mapOpacity(room: PlacedRoom<Kind>, current: string) {
     return room.id === current ? 0.25 : 0.1
+  }
+
+  /** The world’s neighbor registry, one hop only; a single-room world has none. */
+  neighborRooms(_room: string): ReadonlyArray<string> {
+    return []
   }
 
   /** The frame area in cm² of a work imported onto the wall with the id `wallId`, that of the room owning the wall, or, dropped instead, that of the player’s room `room`; {@link defaultPortraitArea} for a room the world doesn’t know. */
@@ -172,6 +189,11 @@ export default abstract class World<Kind extends Room = Room> {
   /** Every portrait slot of the world in world meters, room by room. */
   portraitSlots() {
     return this.rooms.flatMap(room => room.slots())
+  }
+
+  /** Whether the work may create a model in this startup scope. Keep the complete collection and slot assignment, so narrowing reach never reshuffles the seed’s works or discards saved ones. */
+  reachesPortrait(portrait: Pick<Portrait, 'hung' | 'position' | 'wallId'>) {
+    return this.reach.mode === 'all' || this.reach.includes(this.portraitRoom(portrait, portrait.position)?.id ?? '')
   }
 
   /** The placed room with the id. */

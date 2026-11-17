@@ -8,10 +8,12 @@ import {Euler, PerspectiveCamera, Vector3} from 'three/webgpu'
 import {cameraPose, galleryEvents, setCameraFocused, useGallery} from '#src/lib/gallery.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
+import {loadedRoomIds} from '#src/lib/gallery/roomLoading.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
 import worldClock from '#src/lib/worldClock.ts'
+import world from '#src/worlds/current.ts'
 
 import {propObjects} from '../GrabbableProp.tsx'
 
@@ -20,6 +22,12 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
     globalThis.slopGallery ??= {}
     const api = globalThis.slopGallery
     api.snapshot = () => ({
+      worldReach: {
+        mode: world.reach.mode,
+        room: world.reach.room,
+        rooms: [...world.reach.rooms],
+      },
+      mountedRooms: loadedRoomIds(),
       webGPU: 'isWebGPUBackend' in renderer.backend && renderer.backend.isWebGPUBackend === true,
       camera: camera.position.toArray(),
       rotation: camera.rotation.toArray(),

@@ -163,4 +163,22 @@ const salonSources = await Promise.all([...salon].map(read))
 if (salonSources.some(code => announcementPath.test(code))) {
   fail('The Salon loads the Knots’ announcements with it.')
 }
+// Each reached room is a complete loading boundary: a shared utility must not pull another room’s component into its static closure, not even the Lobby.
+const galleryRoomIds = ['lobby', 'vesper', 'banquet', 'antechamber', 'sienna', 'salon', 'forge', 'moonfall', 'bastion', 'lodge', 'corridor', 'oculus', 'exhibition']
+const galleryRoomChunks = new Map(galleryRoomIds.map(id => {
+  const title = id[0].toUpperCase() + id.slice(1)
+  return [id, chunkOf(`src/rooms/${id}/components/${title}Room/index.tsx`).fileName]
+}))
+const galleryScene = closure(chunkOf('src/components/GalleryScene/index.tsx').fileName)
+for (const [room, chunk] of galleryRoomChunks) {
+  if (galleryScene.has(chunk)) {
+    fail(`The gallery scene loads ${room} eagerly, bypassing world_reach.`)
+  }
+  const needed = closure(chunk)
+  for (const [other, otherChunk] of galleryRoomChunks) {
+    if (other !== room && needed.has(otherChunk)) {
+      fail(`The ${room} room loads ${other} as a side effect, bypassing world_reach.`)
+    }
+  }
+}
 console.log(`Verified the build: ${initial.size} chunks load with the page, ${knotChunks.size} Knot materials and ${worldIds.length} worlds load on demand, and ${files.length - named.length} of ${files.length} files are named by their content.`)

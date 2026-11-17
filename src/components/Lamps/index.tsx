@@ -26,7 +26,7 @@ const useRegistered = <Kind extends Light>(lamp: PlacedLamp) => {
 }
 
 /**
- * Every lamp of the world as a light at the scene’s root, named by its global id. All of them exist from the first frame on, wherever their rooms are still loading: a light mounting later would rebuild every lit material.
+ * Every reached lamp of the world as a light at the scene’s root, named by its global id. All of them exist from the first frame on, wherever their rooms are still loading: a light mounting later would rebuild every lit material.
  * Fixtures only draw their lamps’ bodies; the ones that animate their light, like a flickering fire, find it with `useLamp`.
  */
 export default function Lamps() {

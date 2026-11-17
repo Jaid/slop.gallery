@@ -1,4 +1,5 @@
 import type {PartyEffectId, PartyOptions, PartyPlacement} from '#src/party_effects/index.ts'
+import type {WorldReachMode} from '#src/worlds/base/WorldReach.ts'
 import type {Placement, Portrait, Vec3} from './gallery/types.ts'
 import type {PlayerDumpSnapshot} from './telemetry/recordPlayerDump.ts'
 import type {EulerTuple} from 'three/webgpu'
@@ -23,6 +24,8 @@ export type GalleryDiagnostics = {
   loadingItems: Array<string>
   locked: boolean
   menuStage: PauseMenuStage
+  /** streamed gallery rooms that have committed their models and walls */
+  mountedRooms: Array<string>
   placement: Placement | null
   portraits: Array<Pick<Portrait, 'fusing' | 'height' | 'hung' | 'id' | 'pending' | 'position' | 'reserved' | 'title' | 'wallId' | 'width'> & {physical?: {
     x: number
@@ -50,6 +53,12 @@ export type GalleryDiagnostics = {
   /** the id of the work the pause menu shows up close in place of its map, or null while it shows the map; playing on puts the view away */
   spectating: string | null
   webGPU: boolean
+  /** the fixed startup mounting scope; moving the camera never expands it */
+  worldReach: {
+    mode: WorldReachMode
+    room: string
+    rooms: Array<string>
+  }
 }
 /** where the Sandbox’s turntable floats its work and how large the work is in its frame */
 export type TurntablePose = {
