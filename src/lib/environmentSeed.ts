@@ -2,7 +2,7 @@ import FatedRandom from 'fated-random'
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
-/** the largest seed of a game state; environment randomization (which plant grows in which pot, for example) is never drawn from `Math.random()`, but rolled from the game state’s seed by {@link environmentRandom} */
+/** the largest seed of a game state, which `?seed` may ask for even though new games only roll {@link rolledSeeds}; environment randomization (which plant grows in which pot, for example) is never drawn from `Math.random()`, but rolled from the game state’s seed by {@link environmentRandom} */
 export const maximumSeed = 0xFF_FF_FF_FF
 
 /** An unsigned 32-bit integer, given as a number or as a string of decimal digits; anything else is `undefined`. */
@@ -39,13 +39,23 @@ export function isDefaultSeed(seed: number) {
   return seed === defaultSeed
 }
 
-/** A random seed for a new game state, never {@link defaultSeed}, which only `?seed=0` asks for. */
+/** the seeds a new game state rolls from, both inclusive: short enough to read out, and never {@link defaultSeed}, which only `?seed=0` asks for */
+export const rolledSeeds = {
+  minimum: 1,
+  maximum: 9999,
+} as const
+
+/** A random seed for a new game state, any of {@link rolledSeeds} equally likely. */
 export function rollSeed() {
+  const {minimum, maximum} = rolledSeeds
+  const span = maximum - minimum + 1
+  // Draws from the top beyond the last whole span would favor the lower seeds, so they are drawn again.
+  const limit = Math.floor(2 ** 32 / span) * span
   const values = new Uint32Array(1)
   do {
     crypto.getRandomValues(values)
-  } while (isDefaultSeed(values[0]))
-  return values[0]
+  } while (values[0] >= limit)
+  return minimum + values[0] % span
 }
 
 /** The seed the environment is built from: the `?seed` override wins over the seed stored in the game state. */

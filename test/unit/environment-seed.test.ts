@@ -1,7 +1,7 @@
 import {expect, spyOn, test} from 'bun:test'
 
 import {narratorCharacter, narratorTraits, narratorVoice, narratorVoices} from '../../src/lib/audio/narratorCharacter.ts'
-import {defaultSeed, effectiveSeed, environmentRandom, isDefaultSeed, isSeed, maximumSeed, parseSeed, readSeedOverride, rollSeed} from '../../src/lib/environmentSeed.ts'
+import {defaultSeed, effectiveSeed, environmentRandom, isDefaultSeed, isSeed, maximumSeed, parseSeed, readSeedOverride, rolledSeeds, rollSeed} from '../../src/lib/environmentSeed.ts'
 import {potPlacements, pottedPlantKind, pottedPlantKinds} from '../../src/lib/gallery/plantDecorations/placements.ts'
 import {orbs, promptOrbs} from '../../src/orbs/index.ts'
 
@@ -27,18 +27,36 @@ test('an override wins over the stored seed, and rolls are random', () => {
   const distinct = new Set(rolled)
   expect(distinct.size).toBeGreaterThan(1)
 })
-test('only ?seed=0 asks for the default environment, a new game never rolls it', () => {
+test('only ?seed=0 asks for the default environment', () => {
   expect(defaultSeed).toBe(0)
   expect(isDefaultSeed(0)).toBe(true)
   expect(isDefaultSeed(1)).toBe(false)
   expect(isDefaultSeed(readSeedOverride('?seed=0')!)).toBe(true)
-  const draws = [0, 0, 7]
+})
+test('a new game rolls a seed from 1 to 9999, every one equally likely, and never the default one', () => {
+  expect(rolledSeeds).toEqual({
+    minimum: 1,
+    maximum: 9999,
+  })
+  for (let index = 0; index < 2000; index++) {
+    const seed = rollSeed()
+    expect(Number.isInteger(seed)).toBe(true)
+    expect(seed).toBeGreaterThanOrEqual(1)
+    expect(seed).toBeLessThanOrEqual(9999)
+    expect(isDefaultSeed(seed)).toBe(false)
+  }
+  const span = 9999
+  const limit = Math.floor(2 ** 32 / span) * span
+  // The lowest and highest draws map to both ends; the uneven rest at the very top is drawn again.
+  const draws = [0, span - 1, 2 ** 32 - 1, limit, limit - 1]
   const random = spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView>(array: T) => {
     (array as unknown as Uint32Array)[0] = draws.shift()!
     return array
   })
   try {
-    expect(rollSeed()).toBe(7)
+    expect(rollSeed()).toBe(1)
+    expect(rollSeed()).toBe(9999)
+    expect(rollSeed()).toBe(9999)
     expect(draws).toEqual([])
   } finally {
     random.mockRestore()
