@@ -131,3 +131,10 @@ BROWSER=/path/to/chromium bun run test:live:intro-pause
 This builds the gallery and presses the real Escape key on fresh and returning intro menus in Fast and Heavy graphics, then on a returning menu opened with `?room=oculus` instead of the intro orbit. It checks the synchronous camera-to-body handoff into the air above the floor, the pause heading taking the focus, no pointer-lock round trip, frozen camera/physics/audio, no frames at rest, resize redraws, Resume dropping the body straight down from where it hung and unchanged nonfreezing focus-loss menus. Modified, repeated, already-handled and text-input Escape events are ignored. Unlike capture tests, it opens the page with `test: 'false'` (`--test false`), as `?test=true` leaves the intro out, and `waitForGallery(page, {pose: false})` waits for readiness without requiring the camera-posing hook.
 
 To reuse a build, run `LIVE_TEST=true BROWSER=/path/to/chromium bun test test/intro-pause.live.test.ts`; `LIVE_TARGET` selects another build directory.
+## World reach
+
+```sh
+BROWSER=/path/to/chromium bun run test:live:world-reach
+```
+
+This builds the gallery and starts it in the Bastion with `?world_reach=room` and in the Sienna with `?world_reach=neighbors`. It checks the snapshot’s `worldReach`, that through `analyze_world` no room out of reach has meshes, items or lamps in the scene – apart from the far-side walls and fixtures of openings into a reached room, which seal it against the void – that only the reached rooms’ works and curios built models, and that the player ends up standing grounded at the spawn, so the physics did not wait for rooms that never load. `LIVE_TARGET` reuses a build like for the other tests.
