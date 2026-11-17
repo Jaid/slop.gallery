@@ -140,7 +140,7 @@ describe('sculpture pedestals', () => {
           expect(Math.hypot(released.x - resting.x, released.z - resting.z)).toBeGreaterThan(capReach + 0.345)
           expect(controller.placement.hasRoom([released.x, released.y, released.z])).toBe(true)
           expect(body.isDynamic()).toBe(true)
-          // Level, it lifts by a fifth of how fast it is thrown, which its mass, at the density of water, decides.
+          // Level, it lifts by a fifth of how fast it is thrown, which its mass, at Rapier’s default density of 1 kg/m³, decides.
           expect(body.linvel().y).toBeCloseTo(throwSpeedFor(body.mass()) * 0.2, 5)
           for (let i = 0; i < body.numColliders(); i++) {
             expect(body.collider(i).isEnabled()).toBe(true)

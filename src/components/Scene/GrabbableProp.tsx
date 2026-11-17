@@ -399,7 +399,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       },
     }, impactOf(current))
   }
-  // A withheld prop’s colliders are built from its children while they are hidden. Colliders built from its children weigh by their volume, at the density of water; its own `collider`s bring their own masses.
+  // A withheld prop’s colliders are built from its children while they are hidden. Colliders built from its children weigh by their volume at Rapier’s default density of 1 kg/m³, next to nothing, so a prop that is thrown gives its own `collider`s their masses.
   return <RigidBody ccd colliders={collider ? false : 'cuboid'} friction={0.8} includeInvisible={withheld} restitution={0.32} ref={body} onCollisionEnter={struck} {...props}>
     {collider}
     <group
