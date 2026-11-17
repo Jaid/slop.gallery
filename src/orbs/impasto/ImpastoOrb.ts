@@ -1,10 +1,10 @@
 import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
-import KnifeworkOrbMaterial from './KnifeworkOrbMaterial.ts'
+import ImpastoOrbMaterial from './ImpastoOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
-/** A lump of heavy paint sculpted with a palette knife, hanging in clear oil. It has a work redone as a bold digital impasto artwork of its own content, every prompt asking for all of the traits it names, and an unseen palette knife slaps thick smears of paint into the air around the portal as the result flips out. */
+/** A sculpture of thick palette-knife strokes over an umber underpainting, slowly turning in clear glass. It has a work redone as a bold digital impasto artwork of its own content, every prompt asking for all of the traits it names, and an unseen palette knife slaps thick smears of paint into the air around the portal as the result flips out. */
 export default class ImpastoOrb extends PromptOrb {
   readonly adjectives = [
     // craft
@@ -21,7 +21,7 @@ export default class ImpastoOrb extends PromptOrb {
     ['expressive', 'gestural'],
   ]
   readonly change = 'change it to a high-quality digital impasto artwork while keeping the original content intact. The artwork should be'
-  readonly color = '#1fb5ad'
+  readonly color = '#ed9364'
   override readonly conjunction = 'and'
   override readonly effect = 'smears'
   readonly frame = ['impasto', 'palette'] as const
@@ -32,6 +32,6 @@ export default class ImpastoOrb extends PromptOrb {
   readonly title = 'Impasto Orb'
 
   createMaterial(options: OrbGlassOptions) {
-    return new KnifeworkOrbMaterial(options)
+    return new ImpastoOrbMaterial(options)
   }
 }

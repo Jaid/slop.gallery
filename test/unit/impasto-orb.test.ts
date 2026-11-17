@@ -1,11 +1,15 @@
 import {describe, expect, test} from 'bun:test'
 
+import {Vector3} from 'three/webgpu'
+
 import {crustStrokes} from '../../src/frames/impasto/ImpastoFrame.ts'
 import {frames} from '../../src/frames/index.ts'
 import {choiceFrames} from '../../src/frames/lib/frameChoice.ts'
 import {impastoColor, impastoIndex, impastoOrder, impastoPaints} from '../../src/lib/materials/impastoPaints.ts'
 import {moods} from '../../src/moods/index.ts'
-import {impastoOrb, promptOrbs, randomOrbs, transparentOrb} from '../../src/orbs/index.ts'
+import ImpastoOrbMaterial from '../../src/orbs/impasto/ImpastoOrbMaterial.ts'
+import {impastoPalette, impastoStrokes} from '../../src/orbs/impasto/strokes.ts'
+import {impastoOrb, orbRadius, promptOrbs, randomOrbs, transparentOrb} from '../../src/orbs/index.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 
 describe('Impasto Orb', () => {
@@ -62,5 +66,43 @@ describe('Impasto Orb', () => {
     const colors = new Set(Object.values(impastoPaints))
     expect(colors.size).toBe(impastoOrder.length)
     expect(impastoColor).toBeFunction()
+  })
+  test('creates a glass material of its own for every orb, opaque to depth despite its transmission', () => {
+    const first = impastoOrb.createMaterial({radius: orbRadius})
+    const second = impastoOrb.createMaterial({radius: orbRadius})
+    try {
+      expect(first).toBeInstanceOf(ImpastoOrbMaterial)
+      expect(first).not.toBe(second)
+      expect(first.name).toBe('orb-impasto')
+      expect(first.emissiveNode).toBeTruthy()
+      expect(first.emissionIsTransmission).toBe(true)
+      expect(first.depthWrite).toBe(true)
+      expect(first.opacity).toBe(1)
+    } finally {
+      first.dispose()
+      second.dispose()
+    }
+  })
+  test('keeps the padded box every stroke of its glass is marched in inside the glass, with orthonormal axes and paints of its palette', () => {
+    expect(impastoStrokes.length).toBeGreaterThan(12)
+    for (const {across, along, center, normal, pigment, radii} of impastoStrokes) {
+      for (const axis of [along, across, normal]) {
+        expect(axis.length()).toBeCloseTo(1, 9)
+      }
+      expect(along.dot(across)).toBeCloseTo(0, 9)
+      expect(along.dot(normal)).toBeCloseTo(0, 9)
+      expect(across.dot(normal)).toBeCloseTo(0, 9)
+      expect(pigment).toBeGreaterThanOrEqual(0)
+      expect(pigment).toBeLessThan(impastoPalette.length)
+      for (const x of [-1.1, 1.1]) {
+        for (const y of [-1.1, 1.1]) {
+          for (const z of [-1.1, 1.1]) {
+            const corner = new Vector3
+            corner.copy(center).addScaledVector(along, x * radii[0]).addScaledVector(across, y * radii[1]).addScaledVector(normal, z * radii[2])
+            expect(corner.length()).toBeLessThan(0.95)
+          }
+        }
+      }
+    }
   })
 })
