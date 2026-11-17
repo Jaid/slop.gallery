@@ -24,7 +24,7 @@ export default class ImpastoOrb extends PromptOrb {
   readonly color = '#ed9364'
   override readonly conjunction = 'and'
   override readonly effect = 'smears'
-  readonly frame = ['impasto', 'palette'] as const
+  readonly frame = ['impasto', 'slabs', 'canvas', 'palette'] as const
   readonly id = 'impasto'
   readonly mood = 'impasto'
   readonly photo = photo

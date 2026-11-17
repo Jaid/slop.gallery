@@ -50,6 +50,7 @@ import RippleFrame from './ripple/RippleFrame.ts'
 import SeanceFrame from './seance/SeanceFrame.ts'
 import SevresFrame from './sevres/SevresFrame.ts'
 import SgraffitoFrame from './sgraffito/SgraffitoFrame.ts'
+import SlabsFrame from './slabs/SlabsFrame.ts'
 import StrapworkFrame from './strapwork/StrapworkFrame.ts'
 import TrampFrame from './tramp/TrampFrame.ts'
 import TravertineFrame from './travertine/TravertineFrame.ts'
@@ -110,6 +111,7 @@ export const frames = {
   seance: new SeanceFrame,
   sevres: new SevresFrame,
   sgraffito: new SgraffitoFrame,
+  slabs: new SlabsFrame,
   strapwork: new StrapworkFrame,
   tramp: new TrampFrame,
   travertine: new TravertineFrame,
