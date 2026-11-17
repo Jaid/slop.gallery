@@ -140,6 +140,57 @@ export class PolygonalSlabGeometry extends BufferGeometry {
 }
 
 /**
+ * Watertight level slab swept along a band from `bottom` to `top`, like the floor of a bend: its outline runs along the left and the right edges of the stations, from the first station to the last, with flat ends at both.
+ * Every facet between two stations has to be convex, as those of a stair bend are.
+ */
+export class SweptSlabGeometry extends BufferGeometry {
+  constructor(stations: ReadonlyArray<readonly [left: Point, right: Point]>, bottom: number, top: number) {
+    super()
+    if (stations.length < 2 || !Number.isFinite(bottom) || !Number.isFinite(top) || !(top > bottom)) {
+      throw new RangeError('A swept slab needs at least two stations and a positive height.')
+    }
+    const positions: Array<number> = []
+    const last = stations.length - 2
+    for (let i = 0; i <= last; i++) {
+      const [leftA, rightA] = stations[i]
+      const [leftB, rightB] = stations[i + 1]
+      // Round the facet, each edge with whether it lies on the slab’s outline.
+      const edges: ReadonlyArray<readonly [Point, Point, boolean]> = [
+        [leftA, leftB, true],
+        [leftB, rightB, i === last],
+        [rightB, rightA, true],
+        [rightA, leftA, i === 0],
+      ]
+      const area2 = edges.reduce((sum, [[ax, az], [bx, bz]]) => sum + ax * bz - bx * az, 0)
+      // Clockwise in (x, z), (a → b → c) faces up, as in a polygonal slab.
+      const clockwise = area2 < 0
+      const ring = clockwise ? edges.map(([a]) => a) : edges.map(([a]) => a).toReversed()
+      const [p0x, p0z] = ring[0]
+      for (let k = 1; k < ring.length - 1; k++) {
+        const [ax, az] = ring[k]
+        const [bx, bz] = ring[k + 1]
+        pushTriangle(positions, [p0x, top, p0z], [ax, top, az], [bx, top, bz])
+        pushTriangle(positions, [p0x, bottom, p0z], [bx, bottom, bz], [ax, bottom, az])
+      }
+      for (const [[ax, az], [bx, bz], outline] of edges) {
+        if (!outline) {
+          continue
+        }
+        if (clockwise) {
+          pushQuad(positions, [ax, top, az], [ax, bottom, az], [bx, bottom, bz], [bx, top, bz])
+        } else {
+          pushQuad(positions, [bx, top, bz], [bx, bottom, bz], [ax, bottom, az], [ax, top, az])
+        }
+      }
+    }
+    this.setAttribute('position', new Float32BufferAttribute(positions, 3))
+    this.computeVertexNormals()
+    this.computeBoundingBox()
+    this.computeBoundingSphere()
+  }
+}
+
+/**
  * Fills the small vertical corner wedges at the Exhibition passage’s four beveled corners:
  * the inside-corner wall-face wedges behind the mitered trim (`w1`, `e2`) and the outside-corner baseboard/cornice miter wedges (`e1`, `w2`), with zero coplanar overlap.
  */

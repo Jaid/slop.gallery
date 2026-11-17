@@ -1,5 +1,5 @@
-import type {FloorPolygon} from '#src/lib/gallery/floorPolygons.ts'
 import type tunnelDisplays from '#src/lib/gallery/tunnelDisplays.ts'
+import type {StairSlab} from '#src/lib/gallery/tunnelDisplays.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {Material} from 'three/webgpu'
 
@@ -11,7 +11,7 @@ import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
-import {PolygonalSlabGeometry} from '#src/lib/gallery/ExhibitionTunnelGeometry.ts'
+import {PolygonalSlabGeometry, SweptSlabGeometry} from '#src/lib/gallery/ExhibitionTunnelGeometry.ts'
 import {stairwayTint} from '#src/rooms/exhibition/lamps.ts'
 
 type Stairway = typeof tunnelDisplays[number]['stairway']
@@ -33,7 +33,7 @@ export default function DisplayStairway({stairway, material}: {
         <CuboidCollider args={[slab.size[0] / 2, slab.size[1] / 2, slab.size[2] / 2]} />
         <Box material={material} name={slab.name} size={slab.size} />
       </group>)}
-      {slabs.filter(slab => slab.kind === 'polygon').map((slab, i) => <PolygonSlab key={`poly-${i}`} bottom={slab.bottom} material={material} name={slab.name} polygon={slab.polygon} top={slab.top} />)}
+      {slabs.filter(slab => slab.kind !== 'box').map((slab, i) => <ShapedSlab key={`shaped-${i}`} material={material} slab={slab} />)}
       {roofs.map(({position, rotation, size}, i) => <group key={i} position={position} rotation={rotation}>
         <CuboidCollider args={[size[0] / 2, size[1] / 2, size[2] / 2]} />
         <Box material={material} name='display-stairway-roof' size={size} />
@@ -53,7 +53,7 @@ export default function DisplayStairway({stairway, material}: {
         </mesh>
       </group>
     })}
-    {lamps.map((position, i) => <group key={i} position={position}>
+    {lamps.map(({name, position}) => <group key={name} position={position}>
       <Box color='#242f32' position={[0, -0.04, 0]} size={[0.5, 0.1, 0.5]} />
       <mesh position={[0, -0.091, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.16, 24]} /><meshBasicNodeMaterial color={stairwayTint} toneMapped={false} />
@@ -62,17 +62,15 @@ export default function DisplayStairway({stairway, material}: {
   </StaticBatch>
 }
 
-function PolygonSlab({bottom, material, name, polygon, top}: {
-  bottom: number
+/** A level slab over a polygon or swept along a bend, with its collider. */
+function ShapedSlab({material, slab}: {
   material: Material
-  name: string
-  polygon: FloorPolygon
-  top: number
+  slab: Exclude<StairSlab, {kind: 'box'}>
 }) {
-  const geometry = useDisposable(useMemo(() => new PolygonalSlabGeometry(polygon, bottom, top), [bottom, polygon, top]))
+  const geometry = useDisposable(useMemo(() => (slab.kind === 'polygon' ? new PolygonalSlabGeometry(slab.polygon, slab.bottom, slab.top) : new SweptSlabGeometry(slab.stations, slab.bottom, slab.top)), [slab]))
   const collider = useMemo(() => colliderGeometry(geometry), [geometry])
   return <>
-    <mesh castShadow geometry={geometry} material={material} name={name} receiveShadow />
+    <mesh castShadow geometry={geometry} material={material} name={slab.name} receiveShadow />
     <MeshSurfaceCollider args={collider} />
   </>
 }

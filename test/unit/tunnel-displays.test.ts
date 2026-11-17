@@ -8,12 +8,14 @@ import EgoMotor from 'ego-player/motor'
 import {Euler, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry, wallFace, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
-import {ExhibitionTunnelSlabGeometry, PolygonalSlabGeometry} from '../../src/lib/gallery/ExhibitionTunnelGeometry.ts'
+import {ExhibitionTunnelSlabGeometry, PolygonalSlabGeometry, SweptSlabGeometry} from '../../src/lib/gallery/ExhibitionTunnelGeometry.ts'
 import lowerGallery, {tunnelDiagonalEast, tunnelDiagonalFloorY, tunnelDiagonalHeading, tunnelDiagonalPoint, tunnelDiagonalYaw, tunnelFloorHeight, tunnelSlope} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusBalcony from '../../src/lib/gallery/oculusBalcony.ts'
 import SlopedBoxGeometry from '../../src/lib/gallery/SlopedBoxGeometry.ts'
 import staircase from '../../src/lib/gallery/staircase.ts'
 import tunnelDisplays, {displayStairway, tunnelDisplayWindow} from '../../src/lib/gallery/tunnelDisplays.ts'
+import {wallOffset} from '../../src/lib/placement/wallGeometry.ts'
+import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls, {floorHeight, galleryPlacement, insideGallery, roomAt} from './fixtures/gallery.ts'
 
 await RAPIER.init()
@@ -54,7 +56,7 @@ function stairwayWorld(display: Display) {
     if (slab.kind === 'box') {
       box(slab.position, slab.size, slab.rotation)
     } else {
-      const geom = new PolygonalSlabGeometry(slab.polygon, slab.bottom, slab.top)
+      const geom = slab.kind === 'polygon' ? new PolygonalSlabGeometry(slab.polygon, slab.bottom, slab.top) : new SweptSlabGeometry(slab.stations, slab.bottom, slab.top)
       world.createCollider(RAPIER.ColliderDesc.trimesh(...colliderGeometry(geom)))
       geom.dispose()
     }
@@ -128,8 +130,115 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
     const exhibitIds = new Set(tunnelDisplays.flatMap(display => display.exhibits.map(exhibit => exhibit.id)))
     expect(exhibitIds.size).toBe(tunnelDisplays.flatMap(display => display.exhibits).length)
   })
+  describe('east: the stairway bows out into the free space east of it', () => {
+    const display = tunnelDisplays.find(value => value.side === 'east')!
+    const {door, flights, turns, waypoints, walls: stairWalls} = display.stairway
+    const halfW = displayStairway.width / 2
+    const bends = stairWalls.filter(wall => wall.curveRadius)
+    test('it only ever turns right, half a revolution round from leaving the door eastward to entering the lower flight westward, and bulges east of both', () => {
+      const headings = waypoints.slice(1).map(([x, z], i) => Math.atan2(z - waypoints[i][1], x - waypoints[i][0]))
+      const turnsBetween = headings.slice(1).map((heading, i) => Math.atan2(Math.sin(heading - headings[i]), Math.cos(heading - headings[i])))
+      // Plan x is east and z south, so turning right turns the heading toward +z: a positive angle.
+      for (const turn of turnsBetween) {
+        expect(turn).toBeGreaterThanOrEqual(-1e-9)
+        expect(turn).toBeLessThan(Math.PI / 4)
+      }
+      expect(turnsBetween.reduce((sum, turn) => sum + turn, 0)).toBeCloseTo(Math.PI, 9)
+      expect(headings[0]).toBeCloseTo(0, 9)
+      expect(Math.abs(headings.at(-1)!)).toBeCloseTo(Math.PI, 9)
+      const easternmost = Math.max(...waypoints.map(([x]) => x))
+      expect(easternmost - Math.max(flights[0].end[0], flights[2].start[0])).toBeGreaterThan(4)
+      expect(easternmost + halfW + wallFace).toBeLessThan(18)
+    })
+    test('each bend has a concave wall on its outside and a convex one on its inside, both standing half the stairway’s width off its centerline all along it', () => {
+      expect(bends).toHaveLength(4)
+      for (const wall of bends) {
+        expect(wall.room).toBe('exhibition')
+        expect(wall.sticky).toBe(false)
+      }
+      const samples = [...waypoints.slice(2, 5), ...waypoints.slice(7, -2)]
+      for (const [x, z] of samples) {
+        const near = bends.filter(wall => Math.abs(Math.abs(wallOffset(wall, [x, 0, z])) - halfW) < 1e-6)
+        expect(near.map(wall => Math.sign(wall.curveRadius!)).toSorted((a, b) => a - b)).toEqual([-1, 1])
+        for (const wall of near) {
+          // in front of both, so each faces into the stairway
+          expect(wallOffset(wall, [x, 0, z])).toBeCloseTo(halfW, 6)
+        }
+      }
+    })
+    test('the bends’ walls, floors and ceilings close the stairway round them: rays across hit the walls’ faces, rays up and down the ceiling and the floor', () => {
+      const material = new MeshBasicMaterial
+      const built = wallMeshes(bends, material)
+      const slabs = display.stairway.slabs.filter(slab => slab.kind === 'swept').map(slab => {
+        const mesh = new Mesh(new SweptSlabGeometry(slab.stations, slab.bottom, slab.top), material)
+        mesh.updateMatrixWorld(true)
+        return mesh
+      })
+      try {
+        const levels = [turns[0].floor, turns.at(-1)!.floor]
+        // the waypoints round the upper bend, then round the lower one, evenly spaced along each from its start to its end
+        const rounds = [[1, 5], [6, waypoints.length - 2]] as const
+        for (const [index, [first, last]] of rounds.entries()) {
+          const floor = levels[index]
+          for (let i = first + 1; i < last; i++) {
+            const [x, z] = waypoints[i]
+            // Between its neighbors, equally far along the arc on either side, the chord runs along the tangent.
+            const [[px, pz], [nx, nz]] = [waypoints[i - 1], waypoints[i + 1]]
+            const length = Math.hypot(nx - px, nz - pz)
+            const right = new Vector3(-(nz - pz) / length, 0, (nx - px) / length)
+            for (const height of [0.5, 1.6, 2.4]) {
+              for (const side of [-1, 1]) {
+                const ray = new Raycaster(new Vector3(x, floor + height, z), right.clone().multiplyScalar(side), 0, 3)
+                expect(ray.intersectObjects(built.meshes)[0]?.distance).toBeCloseTo(halfW - wallFace, 2)
+              }
+            }
+            const down = new Raycaster(new Vector3(x, floor + 1, z), new Vector3(0, -1, 0), 0, 2)
+            expect(down.intersectObjects(slabs).at(0)?.point.y).toBeCloseTo(floor, 5)
+            const up = new Raycaster(new Vector3(x, floor + 1, z), new Vector3(0, 1, 0), 0, 3)
+            expect(up.intersectObjects(slabs).at(0)?.point.y).toBeCloseTo(floor + displayStairway.headroom - 0.09, 5)
+          }
+        }
+        for (const slab of slabs) {
+          const normals = slab.geometry.getAttribute('normal')
+          let up = 0
+          let down = 0
+          for (let i = 0; i < normals.count; i++) {
+            up += Number(normals.getY(i) > 0.999)
+            down += Number(normals.getY(i) < -0.999)
+          }
+          // as many corners facing up as down, the rest on the sides
+          expect(up).toBeGreaterThan(0)
+          expect(up).toBe(down)
+        }
+      } finally {
+        built.dispose()
+        for (const slab of slabs) {
+          slab.geometry.dispose()
+        }
+        material.dispose()
+      }
+    })
+    test('the bowed stairway stays clear of every other room and of the Oculus behind its door', () => {
+      for (const placed of slopGallery.rooms) {
+        if (placed.id === 'exhibition') {
+          continue
+        }
+        for (const box of placed.air) {
+          for (const air of display.stairway.air) {
+            const [x, z] = air.center
+            const [width, depth] = air.size
+            const overlaps = x - width / 2 < box.max.x - 1e-6 && x + width / 2 > box.min.x + 1e-6 && z - depth / 2 < box.max.z - 1e-6 && z + depth / 2 > box.min.z + 1e-6 && air.bottom < box.max.y && air.top > box.min.y
+            expect(overlaps, `${placed.id} and the stairway at ${x.toFixed(2)}, ${z.toFixed(2)}`).toBe(false)
+          }
+        }
+      }
+      expect(door[0]).toBe(oculus.center[0] + oculus.size[0] / 2)
+    })
+  })
   for (const display of tunnelDisplays) {
-    const {corners, cutout, door, flights, landing, ramp, waypoints} = display.stairway
+    const {cutout, door, flights, landing, ramp, turns, waypoints} = display.stairway
+    const [firstTurn] = turns
+    const lastTurn = turns.at(-1)!
     const sign = display.direction
     const floorAtSouth = tunnelDiagonalFloorY(display.southS)
     test(`${display.side}: a door in the Oculus’ side wall at the balcony’s end opens onto the stairway, whose even steps and floors are the Exhibition’s`, () => {
@@ -138,10 +247,10 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
       expect(door[2] - displayStairway.doorWidth / 2 - wallOpeningTrim).toBeGreaterThan(balconyNorthZ)
       expect(door[2] + displayStairway.doorWidth / 2 + wallOpeningTrim).toBeLessThan(tunnel.northZ - wallFace)
       const rampDrop = -ramp.ramp!.slope * ramp.ramp!.length
-      expect(ramp.floor).toBe(corners[0].floor)
+      expect(ramp.floor).toBe(firstTurn.floor)
       expect(rampDrop).toBeGreaterThanOrEqual(0)
       expect(rampDrop).toBeLessThan(displayStairway.rise)
-      const floors: Array<[number, number]> = [[balconyY, corners[0].floor], [ramp.floor - rampDrop, corners[1].floor], [corners[1].floor, landing.floor]]
+      const floors: Array<[number, number]> = [[balconyY, firstTurn.floor], [ramp.floor - rampDrop, lastTurn.floor], [lastTurn.floor, landing.floor]]
       expect(landing.floor).toBeCloseTo(floorAtSouth)
       expect(flights[0].start).toEqual([door[0], balconyY, door[2]])
       expect(flights[0].entryLanding).toBeGreaterThanOrEqual(wallFace + displayStairway.threshold)
@@ -170,7 +279,7 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
       }
       const positions: Array<[Vec3, number]> = [
         ...display.stairway.treads.map((block): [Vec3, number] => [[block.position[0], block.top + 1.6, block.position[2]], block.top]),
-        ...[...corners, landing].map(({polygon, floor}): [Vec3, number] => {
+        ...[...turns, landing].map(({polygon, floor}): [Vec3, number] => {
           const cx = polygon.reduce((sum, [x]) => sum + x, 0) / polygon.length
           const cz = polygon.reduce((sum, [, z]) => sum + z, 0) / polygon.length
           return [[cx, floor + 1.6, cz], floor]
@@ -188,7 +297,8 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
         expect(roomAt(position)).toBe('exhibition')
         expect(floorHeight(position)).toBeCloseTo(floor)
       }
-      expect(waypoints).toHaveLength(4)
+      expect(waypoints.length).toBeGreaterThanOrEqual(4)
+      expect(waypoints[0]).toEqual([door[0], door[2]])
     })
     test(`${display.side}: the cutout in the display’s south end wall opens onto the landing up to the display’s ceiling`, () => {
       const material = new MeshBasicMaterial
@@ -267,8 +377,7 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
         const dispMidPt = tunnelDiagonalPoint((display.northS + display.southS) / 2, (display.frontAcross + display.backAcross) / 2)
         const path: Array<readonly [number, number]> = [
           [door[0] - sign * 1.5, door[2]],
-          waypoints[1],
-          waypoints[2],
+          ...waypoints.slice(1, -1),
           landPt,
           dispSouthPt,
           dispMidPt,
