@@ -122,6 +122,14 @@ BROWSER=/path/to/chromium bun run test:live:spawn
 
 This builds the gallery and starts it once in every room with `?room`, each in a private headless browser without input. Every room but the Lobby streams in after the page, bringing its floors, so the physics waits for them; once none is loading anymore, the player has to stand grounded at the room’s spawn. It caught the physics hold reaching the scene too late, which let the player fall through the floors of a start room that had not mounted yet. `LIVE_TARGET` reuses a build like for the Oculus test.
 
+## World reach
+
+```sh
+BROWSER=/path/to/chromium bun run test:live:world-reach
+```
+
+This builds the gallery and opens it with every `?world_reach`: `all`, `room` from the Lobby, the Oculus and the Bastion, and `neighbors` from Moonfall and the Lodge. Through the `analyze_world` WebMCP tool it checks that no mesh or light of a room out of reach is in the scene, that every lamp of a room in reach and none of the others exists, that only the works hanging in rooms in reach mounted, that the player stands at the spawn reached out from and that the page logs no new warnings. Reverting the lamp filter of `Lamps` makes it fail. `LIVE_TARGET` reuses a build like for the Oculus test.
+
 ## Intro → frozen pause
 
 ```sh
