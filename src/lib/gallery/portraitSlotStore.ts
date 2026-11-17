@@ -54,12 +54,12 @@ type PortraitSlotState = {
   template: readonly [ratio: PortraitRatio, area: number, labelAbove: boolean]
 }
 
-/** The world’s portrait slots: the shipped ones, with `?edit_portrait_slots` as edited on this page. */
+/** The world’s portrait slots on walls of rooms in its reach, see `World.reach`: the shipped ones, with `?edit_portrait_slots` as edited on this page. The others have no wall to show on, edit or hang anything in. */
 export const usePortraitSlots = create<PortraitSlotState>(() => ({
   aimed: null,
   dragging: null,
   template: ['1:1', slotAreas[2], false],
-  slots: world.portraitSlots(),
+  slots: world.portraitSlots().filter(({wallId}) => world.reach.covers(world.wall(wallId)?.room)),
 }))
 
 const nextRatio = (ratio: PortraitRatio, step: -1 | 1) => ratioCycle[(ratioCycle.indexOf(ratio) + step + ratioCycle.length) % ratioCycle.length]

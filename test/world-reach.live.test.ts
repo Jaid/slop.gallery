@@ -1,15 +1,17 @@
-import type {Vec3} from '../src/lib/gallery/types.ts'
+import type {PortraitSlot, Vec3} from '../src/lib/gallery/types.ts'
 import type {OutputList} from '../src/lib/vite/outputListPlugin.ts'
 import type {WorldAnalysis} from '../src/lib/webmcp/analyzeWorld.ts'
 import type {WorldReachMode} from '../src/worlds/base/WorldReach.ts'
 import type {Page} from 'puppeteer-core'
 
 import {expect, test} from 'bun:test'
+import {relative} from 'node:path'
 
 import {callWebmcpTool} from 'capture-session/script'
 
 import {openHeadlessGallery, resolveGallerySetup, waitForFrames} from '../scripts/lib/headlessGallery.ts'
 import {outputListFile} from '../src/lib/vite/outputListPlugin.ts'
+import artworks from '../src/worlds/gallery/artworks.ts'
 import slopGallery from '../src/worlds/gallery/index.ts'
 
 type Visit = {
@@ -52,9 +54,11 @@ const settle = async (page: Page) => {
 }
 /** the files the page has requested so far, by their paths */
 const requestedFiles = (page: Page) => page.evaluate(() => performance.getEntriesByType('resource').map(entry => URL.parse(entry.name)!.pathname.slice(1)))
-// What a limited ?world_reach leaves out has to stay out of the scene for good, however the rooms in reach load: geometry, walls, lamps, works and props of other rooms, whose chunks never even download, not even once the camera moves into one of them. The player has to stand at the spawn of the room reached out from.
+// What a limited ?world_reach leaves out has to stay out of the scene for good, however the rooms in reach load: geometry, walls, lamps, works and props of other rooms, whose chunks never even download, not even once the camera moves into one of them, and the slots and the pause menu’s collection leave out what hangs there, whose images never download either. The player has to stand at the spawn of the room reached out from.
 test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach mounts the start room, its neighbors or every room, and nothing else', async () => {
-  const {chunks} = await Bun.file(outputListFile).json() as OutputList
+  const {assets, chunks} = await Bun.file(outputListFile).json() as OutputList
+  /** the file of each default work’s image, by the work’s id */
+  const images = new Map(artworks.map(({id, source}) => [id, assets.find(asset => typeof source === 'string' && asset.originalFileNames.includes(relative(process.cwd(), source).replaceAll('\\', '/')))!.fileName]))
   const roomChunks = slopGallery.rooms.map(({id}) => [id, chunks.find(chunk => chunk.facadeModule === `src/rooms/${id}/components/${id[0].toUpperCase()}${id.slice(1)}Room/index.tsx`)!.fileName] as const)
   const visits: ReadonlyArray<Visit> = [
     {mode: 'all'},
@@ -148,6 +152,24 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     for (const [id, file] of roomChunks) {
       if (requested.has(file) !== expected.covers(id)) {
         problems.push(`${label}: the ${id} room ${requested.has(file) ? 'downloaded' : 'never downloaded'}`)
+      }
+    }
+    const slots = await callWebmcpTool(page, 'dump_portrait_slots') as ReadonlyArray<PortraitSlot>
+    const expectedSlots = slopGallery.portraitSlots().filter(slot => expected.covers(slopGallery.wall(slot.wallId)?.room))
+    expect(slots.map(slot => slot.id), label).toEqual(expectedSlots.map(slot => slot.id))
+    // The pause menu’s collection, once every work in it shows its thumbnail
+    await page.waitForSelector('#enter-gallery:not([disabled])')
+    await page.click('#enter-gallery')
+    await page.waitForFunction(() => Boolean(document.pointerLockElement))
+    await page.evaluate(() => document.exitPointerLock())
+    await page.waitForFunction(count => document.querySelectorAll('[data-testid="portrait-collection"] [data-portrait] img').length === count, {timeout: 60_000}, works.length)
+    const listed = await page.evaluate(() => [...document.querySelectorAll('[data-testid="portrait-collection"] [data-portrait]')].map(item => item.getAttribute('data-portrait')!))
+    expect(listed.toSorted(), label).toEqual(works.map(work => work.id).toSorted())
+    const downloaded = new Set(await requestedFiles(page))
+    for (const portrait of snapshot.portraits) {
+      const image = images.get(portrait.id)
+      if (image && downloaded.has(image) !== works.includes(portrait)) {
+        problems.push(`${label}: the image of ${portrait.id} ${downloaded.has(image) ? 'downloaded' : 'never downloaded'}`)
       }
     }
     problems.push(...errors.map(error => `${label}: ${error}`))

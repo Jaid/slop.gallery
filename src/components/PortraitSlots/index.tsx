@@ -6,13 +6,10 @@ import {Color, Euler, Matrix4, Quaternion, Vector3} from 'three/webgpu'
 
 import {slotIssue, usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
 import {invalidSlotColor, slotBorder, slotColors, slotPanels} from '#src/lib/gallery/portraitSlotVisuals.ts'
-import world from '#src/worlds/current.ts'
 
 const aimedColor = '#ffffff'
 /** room for slots created while editing before the meshes are rebuilt */
 const headroom = 64
-/** Whether the slot hangs on a wall of a room in the world’s reach; the others have no wall to show on, though editing keeps them, so dumping the slots still dumps every one. */
-const inReach = ({wallId}: PortraitSlot) => world.reach.covers(world.wall(wallId)?.room)
 /**
  * What `?show_portrait_slots` shows: every portrait slot of the rooms in the world’s reach and its name plate as tinted panels with solid borders, colored by ratio. While editing, the aimed slot gets a white border, a dragged slot leaves its old place and slots that could not hang where they are turn red.
  */
@@ -21,7 +18,7 @@ export default function PortraitSlots() {
   const aimed = usePortraitSlots(state => state.aimed)
   const dragging = usePortraitSlots(state => state.dragging)
   // The editor draws a dragged slot where it would drop, so it leaves its old place.
-  const shown = useMemo(() => slots.filter(slot => slot.id !== dragging && inReach(slot)), [dragging, slots])
+  const shown = useMemo(() => (dragging ? slots.filter(slot => slot.id !== dragging) : slots), [dragging, slots])
   const capacity = Math.ceil((slots.length + headroom) / headroom) * headroom
   return <SlotPanels key={capacity} aimed={aimed} capacity={capacity} slots={shown} />
 }

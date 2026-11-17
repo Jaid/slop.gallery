@@ -42,11 +42,8 @@ const hangsIn = (portrait: Portrait, slot: {
 export default async function hangWork({id, image, slot, title}: WorkHangingInput): Promise<WorkHanging> {
   const target = usePortraitSlots.getState().slots.find(candidate => candidate.id === slot)
   if (!target) {
-    throw new Error(`There is no portrait slot “${slot}”; dump_portrait_slots lists them.`)
-  }
-  const room = world.wall(target.wallId)?.room
-  if (!world.reach.covers(room)) {
-    throw new Error(`The portrait slot “${slot}” hangs in the ${room}, out of this page’s ?world_reach ${world.reach.mode}, which only mounts ${world.reach.rooms.join(', ')}.`)
+    const elsewhere = world.portraitSlots().find(candidate => candidate.id === slot)
+    throw new Error(elsewhere ? `The portrait slot “${slot}” hangs in the ${world.wall(elsewhere.wallId)?.room}, out of this page’s ?world_reach ${world.reach.mode}, which only mounts ${world.reach.rooms.join(', ')}.` : `There is no portrait slot “${slot}”; dump_portrait_slots lists them.`)
   }
   if (id !== undefined && useGallery.getState().portraits.some(candidate => candidate.id === id)) {
     throw new Error(`A work already has the id “${id}”.`)
