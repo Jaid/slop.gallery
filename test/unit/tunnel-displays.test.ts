@@ -21,7 +21,7 @@ const {oculus, tunnel} = lowerGallery
 const balconyY = oculusBalcony.position[1] + oculusBalcony.size[1] / 2
 type Display = typeof tunnelDisplays[number]
 
-/** Build the colliders between the Oculus balcony and the display: balcony, Oculus side wall, stairway, and display shell. */
+/** Build the colliders between the Oculus balcony and the display, including Moonfall’s neighboring walls. */
 function stairwayWorld(display: Display) {
   const world = new RAPIER.World({
     x: 0,
@@ -29,7 +29,7 @@ function stairwayWorld(display: Display) {
     z: 0,
   })
   world.timestep = 1 / 60
-  for (const wall of [walls.find(value => value.id === `oculus-${display.side}`)!, ...display.stairway.walls]) {
+  for (const wall of [walls.find(value => value.id === `oculus-${display.side}`)!, ...display.stairway.walls, ...walls.filter(value => value.room === 'moonfall')]) {
     const geometry = createArchitectureGeometry(wall)
     const wallRotation = new Quaternion
     wallRotation.setFromAxisAngle(new Vector3(0, 1, 0), wall.rotation)
@@ -127,6 +127,58 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
     }
     const exhibitIds = new Set(tunnelDisplays.flatMap(display => display.exhibits.map(exhibit => exhibit.id)))
     expect(exhibitIds.size).toBe(tunnelDisplays.flatMap(display => display.exhibits).length)
+  })
+  test('the east passage bows outward and its new level approach has floor, ceiling, walls and room coverage', () => {
+    const east = tunnelDisplays.find(display => display.side === 'east')!
+    const west = tunnelDisplays.find(display => display.side === 'west')!
+    const {approach, waypoints, slabs} = east.stairway
+    expect(west.stairway.approach).toBeUndefined()
+    expect(approach).toBeDefined()
+    expect(waypoints[2][0]).toBeGreaterThan(waypoints[1][0])
+    const level = approach!
+    const [a, b] = [0.1, 0.9].map(t => [
+      level.polygon[0][0] + (level.polygon[1][0] - level.polygon[0][0]) * t,
+      level.polygon[0][1] + (level.polygon[1][1] - level.polygon[0][1]) * t,
+    ] as const)
+    for (const t of [0.1, 0.5, 0.9]) {
+      const x = level.polygon[0][0] * (1 - t) + level.polygon[1][0] * t + (level.polygon[3][0] - level.polygon[0][0]) / 2
+      const z = level.polygon[0][1] * (1 - t) + level.polygon[1][1] * t + (level.polygon[3][1] - level.polygon[0][1]) / 2
+      expect(floorHeight([x, level.floor + 1.6, z])).toBeCloseTo(level.floor)
+      expect(roomAt([x, level.floor + 1.6, z])).toBe('exhibition')
+      for (const [name, height] of [['display-stairway-floor', level.floor], ['display-stairway-ceiling', level.floor + level.headroom - 0.09]] as const) {
+        const slab = slabs.find(item => item.kind === 'polygon' && item.name === name && item.polygon === level.polygon)!
+        expect(slab.kind).toBe('polygon')
+        if (slab.kind !== 'polygon') {
+          continue
+        }
+        const geometry = new PolygonalSlabGeometry(slab.polygon, slab.bottom, slab.top)
+        const material = new MeshBasicMaterial
+        const mesh = new Mesh(geometry, material)
+        const ray = new Raycaster(new Vector3(x, level.floor + 1.6, z), new Vector3(0, name.endsWith('floor') ? -1 : 1, 0), 0, 4)
+        expect(ray.intersectObject(mesh)[0]?.point.y).toBeCloseTo(height, 4)
+        geometry.dispose()
+        material.dispose()
+      }
+    }
+    expect(Math.hypot(a[0] - b[0], a[1] - b[1])).toBeGreaterThan(6)
+    const approachWalls = east.stairway.walls.filter(wall => wall.id.includes('approach'))
+    expect(approachWalls).toHaveLength(2)
+    const material = new MeshBasicMaterial
+    const sides = wallMeshes(approachWalls, material)
+    try {
+      const x = (level.polygon[0][0] + level.polygon[1][0]) / 2
+      const z = (level.polygon[0][1] + level.polygon[3][1]) / 2
+      for (const side of [-1, 1]) {
+        for (const height of [0.2, 1.6, 2.4]) {
+          const ray = new Raycaster(new Vector3(x, level.floor + height, z), new Vector3(0, 0, side), 0, displayStairway.width)
+          expect(ray.intersectObjects(sides.meshes).length).toBeGreaterThan(0)
+        }
+      }
+    } finally {
+      sides.dispose()
+      material.dispose()
+    }
+    expect(east.stairway.lamps).toHaveLength(4)
   })
   for (const display of tunnelDisplays) {
     const {corners, cutout, door, flights, landing, ramp, waypoints} = display.stairway
