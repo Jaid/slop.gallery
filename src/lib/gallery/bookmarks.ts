@@ -2,9 +2,9 @@ import type {CameraBookmark, SpawnBookmark, Vec3} from './types.ts'
 
 import {Euler, Quaternion} from 'three/webgpu'
 
+import {bookmarkFeet, resolveArrival} from '#src/worlds/arrival.ts'
 import world from '#src/worlds/current.ts'
 
-import {isDevelopmentMode} from '../developmentMode.ts'
 import {galleryEvents, notify} from './actions.ts'
 import {flyMode} from './flyMode.ts'
 import {playerSession} from './PlayerSession.ts'
@@ -43,32 +43,16 @@ export function findRoomSpawn(input?: URL | string): SpawnBookmark | null | unde
 
 /** Where the player stands below a camera bookmark: a standing eye height under the camera, but never below the floor unless `flying`. */
 export function cameraBookmarkFeet({position}: CameraBookmark, flying = false): Vec3 {
-  const feet = position[1] - 1.6
-  return [position[0], flying ? feet : Math.max(world.floorHeight(position) + 0.04, feet), position[2]]
+  return bookmarkFeet(world, position, flying)
 }
 
 /** Move the player session to the `?spawn` bookmark; for a camera bookmark, below it, and with `?development` flying with its eyes at the bookmark. A camera bookmark wins over a spawn bookmark with the same ID, which T still reaches. Without `?spawn`, `?room` starts at the default spawn of that room. */
 export function applySpawnBookmark() {
-  const cameraBookmark = findCameraBookmark()
-  const spawnBookmark = cameraBookmark ? null : findSpawnBookmark()
-  if (spawnBookmark) {
-    playerSession.restore(spawnBookmark)
-  } else if (cameraBookmark) {
-    // With ?development, the bookmark is a starting point to fly on from instead of a held camera.
-    flyMode.active ||= isDevelopmentMode
-    playerSession.restore({
-      position: cameraBookmarkFeet(cameraBookmark, isDevelopmentMode),
-      ...cameraBookmark.aim,
-    })
-  } else if (spawnBookmark === undefined) {
-    notify(`${world.title} has no bookmark “${readSpawn()}”.`)
-  } else {
-    const roomSpawn = findRoomSpawn()
-    if (roomSpawn) {
-      playerSession.restore(roomSpawn)
-    } else if (roomSpawn === undefined) {
-      notify(`${world.title} has no room “${readRoom()}”.`)
-    }
+  const arrival = resolveArrival(world)
+  flyMode.active ||= arrival.flying
+  playerSession.restore(arrival.pose)
+  if (arrival.error) {
+    notify(arrival.error)
   }
 }
 

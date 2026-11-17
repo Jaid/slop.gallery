@@ -1,3 +1,5 @@
+import type {Vec3} from '#src/lib/gallery/types.ts'
+import type World from '#src/worlds/base/World.ts'
 import type {Browser, Page} from 'puppeteer-core'
 
 import {basename, join, resolve, sep} from 'node:path'
@@ -10,6 +12,7 @@ import {maximumSeed, parseSeed} from '#src/lib/environmentSeed.ts'
 import {queryParameters} from '#src/lib/queryOverrides.ts'
 import {parseStreamBudget} from '#src/lib/rendering/streamBudget.ts'
 import {readWorld, worldParameters} from '#src/worlds/index.ts'
+import {readWorldReach} from '#src/worlds/reach.ts'
 
 export const repositoryRoot = resolve(import.meta.dir, '..', '..')
 const dedicatedQueryOptionNames = new Set(['graphics', 'seed', 'stream_budget', 'test', 'warmup_scale'])
@@ -25,10 +28,12 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}:
   without?: ReadonlyArray<string>
 } = {}) => {
   const sides = ratio === 1 ? ['--height', '--width'] : (ratio === 16 / 9 ? ['--height × 16/9', '--width × 9/16'] : [`--height × ${ratio}`, `--width ÷ ${ratio}`])
-  const listed = queryOptionNames.filter(key => !without.includes(key))
+  const listed = queryOptionNames.filter(key => key !== 'world_reach' && !without.includes(key))
   return `  --target <dir>          use this static build (e.g. dist) instead of the dev server, which suits captures better: the dev server can reload the page while it captures
   --graphics <mode>       mirrors ?graphics (fast, heavy, cinematic, which is heavy with larger maps and more samples for non-realtime renders, or auto, which picks fast or heavy for the GPU). Default: heavy
   --seed <number>         mirrors ?seed, the environment seed (0–${maximumSeed}) that decides random details like the potted plants. Default: 1
+  --world_reach <room|neighbors|all>
+                          mirrors ?world_reach. Default: all. Fixed at startup from --spawn or --room; snap’s view or film’s first output position supplies --room when neither is given. Moving the camera never loads more rooms
   --test <true|false>     mirrors ?test, which gives the page its pose and teleport hooks and leaves the intro out. Default: true; false opens the page as players get it, without those hooks
   --stream_budget <ms|false>
                           mirrors ?stream_budget, the milliseconds a frame after loading may spend building objects. Default: false, which builds everything in the first frame, so the scene is complete about three times sooner than at the players’ 8 and, in cinematic graphics, whose every streaming frame renders the whole view, three to six times sooner than at 100
@@ -223,6 +228,19 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
     viewport,
   }
 }
+/** Anchor a limited capture before the browser loads, not after posing into an absent room. An explicit --room/--spawn wins, allowing cameras outside the chosen room to look into it. */
+export async function anchorCapture(setup: GallerySetup, position?: Vec3) {
+  if (!position || readWorldReach(`http://localhost/?${setup.search}`) === 'all' || setup.search.has('room') || setup.search.has('spawn')) {
+    return
+  }
+  const {default: world} = await import(join(repositoryRoot, 'src', 'worlds', setup.world, 'index.ts')) as {default: World}
+  const room = world.roomAt(position)
+  if (!room) {
+    throw new Error('The capture position is outside every room. Choose --room or --spawn to anchor --world_reach, or use --world_reach all.')
+  }
+  setup.search.set('room', room.id)
+}
+
 /** Without these, headless Chrome on a machine without a GPU hands out a fallback adapter whose canvas can’t present, which loses the device on the first frame. ANGLE’s Vulkan backend additionally needs the surface extensions of a system Vulkan driver, without which the GPU process exits. */
 const swiftshaderArgs = ['--use-angle=vulkan', '--use-vulkan=swiftshader', '--enable-unsafe-swiftshader']
 /** Starts a private Vite dev server, or serves the static target, and resolves with the page URL. Dispose it to stop the server. */

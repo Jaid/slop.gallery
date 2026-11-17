@@ -16,6 +16,7 @@ import Geofences from 'geofency'
 import miterCorners from '#src/lib/gallery/cornerMiters.ts'
 import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
 
+import WorldReach from '../reach.ts'
 import PlacedRoom from './PlacedRoom.ts'
 
 /** a room and the world position of its origin */
@@ -59,6 +60,7 @@ export default abstract class World<Kind extends Room = Room> {
   /** every wall of every room in world meters, room by room, their trim mitered where two walls meet in an inside corner */
   readonly walls: ReadonlyArray<Wall>
   private readonly byId: ReadonlyMap<Kind['id'], PlacedRoom<Kind>>
+  private scope: WorldReach | undefined
 
   constructor({enterLabel, tagline, title, wallpaper}: WorldInfo, placements: ReadonlyArray<RoomPlacement<Kind>>) {
     this.enterLabel = enterLabel
@@ -72,6 +74,16 @@ export default abstract class World<Kind extends Room = Room> {
     }
     this.geofences = new Geofences(this.rooms.map(room => [room.id, room.fence]))
     this.walls = miterCorners(this.rooms.flatMap(room => room.walls()))
+  }
+
+  /** The immutable startup mounting scope, resolved only after the subclass has finished constructing its navigation. */
+  get reach() {
+    return this.scope ??= new WorldReach(this)
+  }
+
+  /** The rooms whose scene resources may be created. The full `rooms` catalog is metadata, not a mounting list. */
+  get reachableRooms() {
+    return this.rooms.filter(room => this.reach.includes(room.id))
   }
 
   /** the player’s pose on arrival: the default spawn of the {@link defaultRoom} */
@@ -155,6 +167,16 @@ export default abstract class World<Kind extends Room = Room> {
   /** How opaque the drawing of a room is on the map while the player is in the room with the id `current`: faint for every room and a little stronger for the player’s own. */
   mapOpacity(room: PlacedRoom<Kind>, current: string) {
     return room.id === current ? 0.25 : 0.1
+  }
+
+  /** Whether a portrait belongs to this page’s scene. Keep the full collection in state so reaching fewer rooms never reshuffles or deletes works. */
+  mountsPortrait(portrait: Pick<Portrait, 'hung' | 'position' | 'wallId'>) {
+    return this.reach.mode === 'all' || this.reach.includes(this.portraitRoom(portrait, portrait.position)?.id ?? '')
+  }
+
+  /** Direct entries of the world’s neighbor registry, not a traversal. Single-room worlds have none. */
+  neighborRooms(_room: string): ReadonlyArray<string> {
+    return []
   }
 
   /** The frame area in cm² of a work imported onto the wall with the id `wallId`, that of the room owning the wall, or, dropped instead, that of the player’s room `room`; {@link defaultPortraitArea} for a room the world doesn’t know. */

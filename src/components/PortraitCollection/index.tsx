@@ -11,6 +11,7 @@ import artworkThumbnails from '#src/lib/artworkThumbnails.ts'
 import {notify, useGallery} from '#src/lib/gallery.ts'
 import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
+import world from '#src/worlds/current.ts'
 
 import css from './style.module.sass'
 
@@ -56,7 +57,8 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
  * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
  */
 export default function PortraitCollection() {
-  const portraits = useGallery(s => s.portraits)
+  const collection = useGallery(s => s.portraits)
+  const portraits = collection.filter(portrait => world.mountsPortrait(portrait))
   const spectatedId = usePortraitSpectation(state => state.id)
   const toggleSpectation = usePortraitSpectation(state => state.toggle)
   const [menu, setMenu] = useState<{

@@ -1,9 +1,6 @@
-import type {createArchitecturalGlassMaterials} from '#src/lib/materials/ArchitecturalGlassMaterials.ts'
-import type LodgeMaterials from '#src/lib/materials/LodgeMaterials.ts'
-import type SiennaRoom from '#src/rooms/sienna/components/SiennaRoom/index.tsx'
+import type GalleryMaterials from '#src/worlds/gallery/GalleryMaterials.ts'
 import type {GalleryRoomId as RoomId} from '#src/worlds/gallery/index.ts'
-import type {ReactNode} from 'react'
-import type {NodeMaterial, Texture} from 'three/webgpu'
+import type {ComponentType} from 'react'
 
 import {useFrame} from '@react-three/fiber'
 import {startTransition, useEffect, useLayoutEffect, useRef, useState} from 'react'
@@ -13,92 +10,29 @@ import {useGallery} from '#src/lib/gallery.ts'
 import {clearRooms, endRoom, expectRooms, startRoom} from '#src/lib/gallery/roomLoading.ts'
 import {roomsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
-import LobbyRoom from '#src/rooms/lobby/components/LobbyRoom/index.tsx'
+import slopGallery from '#src/worlds/gallery/index.ts'
 import relations from '#src/worlds/gallery/relations.ts'
 
-/** the materials the rooms share with each other and with the walls around them */
-export type WorldMaterials = {
-  castleStone: NodeMaterial
-  corridorWood: NodeMaterial
-  glass: ReturnType<typeof createArchitecturalGlassMaterials>
-  joinery: Parameters<typeof SiennaRoom>[0]['joinery']
-  lobbyWall: NodeMaterial
-  lodge: LodgeMaterials
-  oculus: NodeMaterial
-  stone: Texture
-  windowReveal: NodeMaterial
-  wood: Texture
-}
-
-/** a room with what it builds beyond its walls */
-type RoomPart = (materials: WorldMaterials) => ReactNode
-type LaterRoom = Exclude<RoomId, 'lobby'>
-
-/** Every room but the Lobby, each in chunks of its own that only download once the world asks for the room. */
-const loaders: Record<LaterRoom, () => Promise<RoomPart>> = {
-  vesper: async () => {
-    const {default: Room} = await import('#src/rooms/vesper/components/VesperRoom/index.tsx')
-    return ({glass, stone, wood}) => <Room glass={glass.lobby} stone={stone} wood={wood} />
-  },
-  banquet: async () => {
-    const {default: Room} = await import('#src/rooms/banquet/components/BanquetRoom/index.tsx')
-    return ({glass, stone, wood}) => <Room glass={glass.lobby} stone={stone} wood={wood} />
-  },
-  antechamber: async () => {
-    const {default: Room} = await import('#src/rooms/antechamber/components/AntechamberRoom/index.tsx')
-    return ({glass, stone, wood}) => <Room glass={glass.lobby} stone={stone} wood={wood} />
-  },
-  sienna: async () => {
-    const {default: Room} = await import('#src/rooms/sienna/components/SiennaRoom/index.tsx')
-    return ({joinery}) => <Room joinery={joinery} />
-  },
-  salon: async () => {
-    const [{default: Room}, {default: LobbyWindow}, {salonWindow}] = await Promise.all([import('#src/rooms/salon/components/SalonRoom/index.tsx'), import('#component/LobbyWindow'), import('#src/lib/gallery/lobbyWindows.ts')])
-    return ({glass, stone, wood}) => <>
-      <Room glass={glass.lobby} stone={stone} wood={wood} />
-      <LobbyWindow glass={glass.lobbyWindow} glazing={salonWindow} name='salon-window' />
-    </>
-  },
-  forge: async () => {
-    const [{default: Room}, {default: LobbyWindow}, {forgeWindow}] = await Promise.all([import('#src/rooms/forge/components/ForgeRoom/index.tsx'), import('#component/LobbyWindow'), import('#src/lib/gallery/lobbyWindows.ts')])
-    return ({castleStone, glass, stone, wood}) => <>
-      <Room glass={glass.lobby} masonry={castleStone} stone={stone} wood={wood} />
-      <LobbyWindow glass={glass.lobbyWindow} glazing={forgeWindow} name='forge-window' />
-    </>
-  },
-  lodge: async () => {
-    const [{default: Room}, {default: LodgeWindow}, {default: LodgeThreshold}] = await Promise.all([import('#src/rooms/lodge/components/LodgeRoom/index.tsx'), import('#component/LodgeWindow'), import('#src/rooms/lodge/components/LodgeThreshold/index.tsx')])
-    return ({castleStone, glass, lodge, windowReveal, wood}) => <>
-      <Room materials={lodge} />
-      <LodgeWindow glass={glass.cabin} masonry={castleStone} material={windowReveal} />
-      <LodgeThreshold wood={wood} />
-    </>
-  },
-  bastion: async () => {
-    const {default: Room} = await import('#src/rooms/bastion/components/BastionRoom/index.tsx')
-    return ({castleStone, wood}) => <Room material={castleStone} wood={wood} />
-  },
-  corridor: async () => {
-    const {default: Room} = await import('#src/rooms/corridor/components/CorridorRoom/index.tsx')
-    return ({corridorWood, wood}) => <Room lining={corridorWood} wood={wood} />
-  },
-  moonfall: async () => {
-    const {default: Room} = await import('#src/rooms/moonfall/components/MoonfallRoom/index.tsx')
-    return () => <Room />
-  },
-  oculus: async () => {
-    const {default: Room} = await import('#src/rooms/oculus/components/OculusRoom/index.tsx')
-    return ({castleStone, oculus}) => <Room material={oculus} stone={castleStone} />
-  },
-  exhibition: async () => {
-    const {default: Room} = await import('#src/rooms/exhibition/components/ExhibitionRoom/index.tsx')
-    return ({oculus}) => <Room material={oculus} />
-  },
-}
-const laterRooms = Object.keys(loaders) as Array<LaterRoom>
-// Holds the physics from before its first step until every room is in.
-expectRooms(laterRooms)
-const isLater = (room: RoomId): room is LaterRoom => room in loaders
+/** Each room owns its architecture and contents, including the Lobby. Nothing imports a room’s render module before it is admitted. */
+const loaders = {
+  lobby: () => import('#src/rooms/lobby/scene.tsx'),
+  vesper: () => import('#src/rooms/vesper/scene.tsx'),
+  banquet: () => import('#src/rooms/banquet/scene.tsx'),
+  antechamber: () => import('#src/rooms/antechamber/scene.tsx'),
+  sienna: () => import('#src/rooms/sienna/scene.tsx'),
+  salon: () => import('#src/rooms/salon/scene.tsx'),
+  forge: () => import('#src/rooms/forge/scene.tsx'),
+  lodge: () => import('#src/rooms/lodge/scene.tsx'),
+  bastion: () => import('#src/rooms/bastion/scene.tsx'),
+  corridor: () => import('#src/rooms/corridor/scene.tsx'),
+  moonfall: () => import('#src/rooms/moonfall/scene.tsx'),
+  oculus: () => import('#src/rooms/oculus/scene.tsx'),
+  exhibition: () => import('#src/rooms/exhibition/scene.tsx'),
+} satisfies Record<RoomId, () => Promise<{default: ComponentType<{materials: GalleryMaterials}>}>>
+type RoomPart = ComponentType<{materials: GalleryMaterials}>
+const includedRooms = slopGallery.reachableRooms.map(room => room.id)
+// Hold physics only for rooms that this page can actually mount.
+expectRooms(includedRooms)
 const position = new Vector3
 /** Every later room, nearest first: the given rooms, the rooms they see into, the rooms those see into and so on. */
 const nearestFirst = (from: ReadonlyArray<RoomId>) => {
@@ -109,21 +43,16 @@ const nearestFirst = (from: ReadonlyArray<RoomId>) => {
     // The next round is the rooms that this round sees into.
     round = [...new Set(round.flatMap(room => relations[room].rooms))].filter(room => !order.includes(room))
   }
-  return [...order, ...laterRooms.filter(room => !order.includes(room))]
+  return [...order, ...includedRooms.filter(room => !order.includes(room))]
 }
 
-/**
- * Every room of the gallery, each with what it builds beyond its walls.
- * The Lobby, where visitors start, comes with the page. Behind the loading screen, only the rooms the camera is in load too, or every room outside of all rooms, where culling leaves nothing out.
- * The rest download once Enter is enabled and mount one at a time, nearest first, so that no single frame sets them all up.
- */
-export default function World(materials: WorldMaterials) {
-  const {glass, lobbyWall, stone, wood} = materials
-  const [parts, setParts] = useState<ReadonlyArray<readonly [LaterRoom, RoomPart]>>([])
+/** Streams admitted rooms, the camera’s rooms first and then the rest, without ever expanding the startup reach. */
+export default function World({materials}: {materials: GalleryMaterials}) {
+  const [parts, setParts] = useState<ReadonlyArray<readonly [RoomId, RoomPart]>>([])
   /** each room asked for, with its part once it loaded */
-  const asked = useRef(new Map<LaterRoom, RoomPart | null>)
-  const mounted = useRef(new Set<LaterRoom>)
-  const mounting = useRef<LaterRoom>(null)
+  const asked = useRef(new Map<RoomId, RoomPart | null>)
+  const mounted = useRef(new Set<RoomId>)
+  const mounting = useRef<RoomId>(null)
   useEffect(() => clearRooms, [])
   useLayoutEffect(() => {
     if (mounting.current && parts.some(([room]) => room === mounting.current)) {
@@ -132,18 +61,18 @@ export default function World(materials: WorldMaterials) {
     }
   }, [parts])
   useFrame(({camera}) => {
-    if (asked.current.size < laterRooms.length) {
+    if (asked.current.size < includedRooms.length) {
       const from = roomsAt(camera.getWorldPosition(position).toArray())
       const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from) : from
       for (const room of wanted) {
-        if (!isLater(room) || asked.current.has(room)) {
+        if (!includedRooms.includes(room) || asked.current.has(room)) {
           continue
         }
         asked.current.set(room, null)
         startRoom(room)
         // Listed apart from the room, which only a frame mounts, so a frozen world that stopped drawing while it downloaded is drawn again once it is in.
         trackLoadingPromise(`room-chunk:${room}`, loaders[room]()).then(part => {
-          asked.current.set(room, part)
+          asked.current.set(room, part.default)
         }).catch((error: unknown) => {
           console.warn(`The ${room} room could not be loaded:`, error)
           endRoom(room, true)
@@ -153,7 +82,7 @@ export default function World(materials: WorldMaterials) {
     if (mounting.current) {
       return
     }
-    const next = asked.current.entries().find((entry): entry is [LaterRoom, RoomPart] => entry[1] !== null && !mounted.current.has(entry[0]))
+    const next = asked.current.entries().find((entry): entry is [RoomId, RoomPart] => entry[1] !== null && !mounted.current.has(entry[0]))
     if (!next) {
       return
     }
@@ -165,11 +94,7 @@ export default function World(materials: WorldMaterials) {
       setParts(previous => [...previous, [room, part]])
     })
   })
-  // Each room owns everything its part builds, see ownerRoom.
   return <group name='world'>
-    <group userData={{room: 'lobby'}}>
-      <LobbyRoom cladding={lobbyWall} glass={glass.lobby} stone={stone} wood={wood} />
-    </group>
-    {parts.map(([room, part]) => <group key={room} userData={{room}}>{part(materials)}</group>)}
+    {parts.map(([room, Part]) => <group key={room} userData={{room}}><Part materials={materials} /></group>)}
   </group>
 }

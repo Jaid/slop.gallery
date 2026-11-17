@@ -11,7 +11,7 @@ import getFree from 'get-free'
 import {jxlEffort, lossyJxlOptions} from 'knot-materials/scripts/lib/encodeJxl.ts'
 import {Packr} from 'msgpackr'
 
-import {degrees, galleryHelp, galleryOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
+import {anchorCapture, degrees, galleryHelp, galleryOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
 
 type DownloadFrameResult = {
   dump: Record<string, unknown> | null
@@ -88,6 +88,7 @@ const main = async (options: SnapOptions) => {
     }
   }
   const position = options.position === undefined ? bookmark?.position : parseNumbers(options.position, 'position', [3]) as Vec3
+  await anchorCapture(setup, position)
   const angle = options.angle === undefined ? bookmark && [degrees(bookmark.aim.yaw), degrees(bookmark.aim.pitch)] : parseNumbers(options.angle, 'angle', [2, 3])
   const fov = options.fov === undefined ? bookmark?.fov : parseNumbers(options.fov, 'fov', [1])[0]
   if (fov !== undefined && (fov <= 0 || fov >= 180)) {

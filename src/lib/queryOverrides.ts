@@ -2,6 +2,7 @@ import {readShowAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitt
 import {readFountain} from '#src/fountains/lib/forcedFountain.ts'
 import {readFrame} from '#src/frames/lib/frameParameter.ts'
 import {readMood} from '#src/moods/lib/forcedMood.ts'
+import {readWorldReach} from '#src/worlds/reach.ts'
 import {readItems} from '#src/worlds/sandbox/items.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
 
@@ -91,6 +92,7 @@ const readers: Record<string, Reader> = {
   stream_budget: readStreamBudget,
   warmup_scale: readWarmupScale,
   weather: readWeather,
+  world_reach: readWorldReach,
   wireframe_highlight: readWireframeHighlight,
   telemetry: readTelemetry,
   turntable: input => readTurntable(input)?.artwork,

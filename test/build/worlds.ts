@@ -150,8 +150,20 @@ for (const chunk of chunks) {
     fail(`${chunk.facadeModule ?? chunk.name} imports the Knot material chunk of ${knotChunks.get(leaked)}.`)
   }
 }
+// Room render modules and their architecture must load independently, even the Lobby.
+const roomScenes = chunks.filter(chunk => /^src\/rooms\/[^/]+\/scene\.tsx$/u.test(chunk.facadeModule ?? ''))
+if (roomScenes.length !== 13) {
+  fail(`Expected 13 independently loadable gallery scenes, found ${roomScenes.length}.`)
+}
+for (const scene of roomScenes) {
+  const needed = closure(scene.fileName)
+  const other = roomScenes.find(candidate => candidate !== scene && needed.has(candidate.fileName))
+  if (other || initial.has(scene.fileName) || closure(worldChunks.get('gallery')!).has(scene.fileName)) {
+    fail(`The scene ${scene.facadeModule} is not isolated from ${other?.facadeModule ?? 'world startup'}.`)
+  }
+}
 // The Salon’s showcased Knot loads its material once it mounts and its announcements once it first speaks.
-const salon = closure(chunkOf('src/rooms/salon/components/SalonRoom/index.tsx').fileName)
+const salon = closure(chunkOf('src/rooms/salon/scene.tsx').fileName)
 if (salon.has(worldChunks.get('knottingham')!)) {
   fail('The Salon loads the Knottingham world with it.')
 }

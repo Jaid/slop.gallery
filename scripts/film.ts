@@ -11,7 +11,7 @@ import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
 import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
-import {degrees, galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
+import {anchorCapture, degrees, galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
 
 /** how many characters of a tool’s result the log shows */
 const logLength = 400
@@ -169,6 +169,16 @@ const main = async (options: FilmOptions) => {
       duration: leadIn + frameCount / fps,
       sampleRate,
     }])
+  }
+  if (recipe.some(key => key.position !== undefined)) {
+    const first = sampleRecipe(recipe, frameSeconds(0), {
+      position: [0, 0, 0],
+      yaw: 0,
+      pitch: 0,
+      roll: 0,
+      fov: 60,
+    })
+    await anchorCapture(setup, first.position)
   }
   await using gallery = await openHeadlessGallery(setup, {
     cacheDir: 'node_modules/.vite-film',

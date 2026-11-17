@@ -50,6 +50,12 @@ export type GalleryDiagnostics = {
   /** the id of the work the pause menu shows up close in place of its map, or null while it shows the map; playing on puts the view away */
   spectating: string | null
   webGPU: boolean
+  /** Fixed mounting admission, independent of the camera’s current room. */
+  worldReach: {
+    anchor: string
+    mode: string
+    rooms: Array<string>
+  }
 }
 /** where the Sandbox’s turntable floats its work and how large the work is in its frame */
 export type TurntablePose = {

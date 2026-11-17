@@ -11,7 +11,7 @@ import world from '#src/worlds/current.ts'
 
 type PlacedSpotLamp = Extract<PlacedLamp, {kind: 'spot'}>
 
-const lamps = world.lamps()
+const lamps = world.reachableRooms.flatMap(room => room.lamps())
 const spots = lamps.filter((lamp): lamp is PlacedSpotLamp => lamp.kind === 'spot')
 const points = lamps.filter(lamp => lamp.kind !== 'spot')
 /** Registers the lamp’s light by its global id while it is mounted, so that fixtures can find it and lighting knows where it shines. */

@@ -20,73 +20,68 @@ export type ArchitecturalGlassMaterials = {
 
 /** Edge length of the cast pavers in the lobby’s 8 m floor window and in the glass wall beside it. */
 const floorGlassTileSize = salonWindow.tileSize
-const createFastMaterials = (): ArchitecturalGlassMaterials => {
-  const material = new MeshStandardNodeMaterial({
-    color: '#afd0d4',
-    roughness: 0.24,
-    metalness: 0,
-    transparent: true,
-    opacity: 0.24,
-    depthWrite: false,
-    envMapIntensity: 0,
-  })
-  material.name = 'architectural-glass-fast'
-  // The tunnel displays keep their original fast-mode pane.
-  const tunnel = new MeshStandardNodeMaterial({
-    color: '#b7d8d9',
-    roughness: 0.16,
-    metalness: 0.1,
-    transparent: true,
-    opacity: 0.16,
-    depthWrite: false,
-  })
-  tunnel.name = 'tunnel-glass-fast'
-  return {
-    cabin: material,
-    lobby: material,
-    lobbyWindow: material,
-    tunnel,
+const heavyMaterials = {
+  // Old drawn cabin glass: a faint green body, ripples that bend the view and the reflections, a pale veil, wiped smudges and grime along the frame, plus a warm clearcoat sheen that catches the lodge’s firelight.
+  // It sits between two underground spaces, so it only reflects their lamps and their darkness.
+  cabin: () => lightIndoors(new CrownGlassMaterial({
+    name: 'cabin-glass-heavy',
+    ior: 1.52,
+    absorption: 0.06,
+    specularColor: '#ffeacc',
+    clearcoat: 0.5,
+    envMapIntensity: 1.6,
+    paneSize: [lodgeWindow.width, lodgeWindow.top - lodgeWindow.bottom],
+    bodyColor: '#eef4ea',
+    haze: 0.035,
+    smudges: 0.065,
+    grime: 0.5,
+    waviness: 0.005,
+  })),
+  // Cast pavers that bend the Oculus below into a rippling, dispersive view.
+  lobby: () => new CastFloorGlassMaterial({
+    thickness: floorGlassThickness,
+    tileSize: floorGlassTileSize,
+  }),
+  lobbyWindow: () => createLobbyWindowGlass(),
+  // Low-iron museum display glass whose anti-reflective coating leaves a faint violet and green sheen at grazing angles.
+  tunnel: () => new ClearGlassMaterial({
+    name: 'tunnel-glass-heavy',
+    ior: 1.5,
+    absorption: 0.015,
+    iridescence: 0.7,
+    iridescenceIOR: 1.38,
+    iridescenceThicknessMinimum: 220,
+    iridescenceThicknessMaximum: 420,
+    envMapIntensity: 1.3,
+  }),
+}
+
+/** Create just one kind of glazing. Room-scoped scenes must not allocate the other rooms’ glass as a side effect. */
+export function createArchitecturalGlassMaterial(kind: keyof ArchitecturalGlassMaterials, heavy: boolean): Material {
+  if (heavy) {
+    return heavyMaterials[kind]()
   }
+  const tunnel = kind === 'tunnel'
+  const material = new MeshStandardNodeMaterial({
+    color: tunnel ? '#b7d8d9' : '#afd0d4',
+    roughness: tunnel ? 0.16 : 0.24,
+    metalness: tunnel ? 0.1 : 0,
+    transparent: true,
+    opacity: tunnel ? 0.16 : 0.24,
+    depthWrite: false,
+    envMapIntensity: tunnel ? 1 : 0,
+  })
+  material.name = tunnel ? 'tunnel-glass-fast' : 'architectural-glass-fast'
+  return material
 }
 
 export function createArchitecturalGlassMaterials(isHeavy: boolean): ArchitecturalGlassMaterials {
-  if (!isHeavy) {
-    return createFastMaterials()
-  }
+  const lobby = createArchitecturalGlassMaterial('lobby', isHeavy)
   return {
-    // Old drawn cabin glass: a faint green body, ripples that bend the view and the reflections, a pale veil, wiped smudges and grime along the frame, plus a warm clearcoat sheen that catches the lodge’s firelight.
-    // It sits between two underground spaces, so it only reflects their lamps and their darkness.
-    cabin: lightIndoors(new CrownGlassMaterial({
-      name: 'cabin-glass-heavy',
-      ior: 1.52,
-      absorption: 0.06,
-      specularColor: '#ffeacc',
-      clearcoat: 0.5,
-      envMapIntensity: 1.6,
-      paneSize: [lodgeWindow.width, lodgeWindow.top - lodgeWindow.bottom],
-      bodyColor: '#eef4ea',
-      haze: 0.035,
-      smudges: 0.065,
-      grime: 0.5,
-      waviness: 0.005,
-    })),
-    // Cast pavers that bend the Oculus below into a rippling, dispersive view.
-    lobby: new CastFloorGlassMaterial({
-      thickness: floorGlassThickness,
-      tileSize: floorGlassTileSize,
-    }),
-    lobbyWindow: createLobbyWindowGlass(),
-    // Low-iron museum display glass whose anti-reflective coating leaves a faint violet and green sheen at grazing angles.
-    tunnel: new ClearGlassMaterial({
-      name: 'tunnel-glass-heavy',
-      ior: 1.5,
-      absorption: 0.015,
-      iridescence: 0.7,
-      iridescenceIOR: 1.38,
-      iridescenceThicknessMinimum: 220,
-      iridescenceThicknessMaximum: 420,
-      envMapIntensity: 1.3,
-    }),
+    lobby,
+    cabin: isHeavy ? createArchitecturalGlassMaterial('cabin', true) : lobby,
+    lobbyWindow: isHeavy ? createArchitecturalGlassMaterial('lobbyWindow', true) : lobby,
+    tunnel: createArchitecturalGlassMaterial('tunnel', isHeavy),
   }
 }
 
