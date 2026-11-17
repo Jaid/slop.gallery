@@ -11,7 +11,7 @@ import getFree from 'get-free'
 import {jxlEffort, lossyJxlOptions} from 'knot-materials/scripts/lib/encodeJxl.ts'
 import {Packr} from 'msgpackr'
 
-import {degrees, galleryHelp, galleryOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
+import {anchorWorldReach, degrees, galleryHelp, galleryOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
 
 type DownloadFrameResult = {
   dump: Record<string, unknown> | null
@@ -102,6 +102,7 @@ const main = async (options: SnapOptions) => {
   if (wireframe !== undefined && (typeof wireframe !== 'object' || wireframe === null || Array.isArray(wireframe))) {
     throw new Error('--wireframe needs a JSON object of set_wireframe input.')
   }
+  await anchorWorldReach(setup, position)
   await using server = await serveGallery(setup, {cacheDir: 'node_modules/.vite-snap'})
   console.log(`Loading ${server.url}`)
   let pose: {

@@ -11,20 +11,15 @@ import Box from '#src/components/Scene/primitives.tsx'
 import lowerGallery, {oculusCeiling} from '#src/lib/gallery/lowerGallery.ts'
 import {apseOutline} from '#src/lib/gallery/oculusApse.ts'
 import oculusBalcony from '#src/lib/gallery/oculusBalcony.ts'
-import ApseGrilles from '#src/rooms/oculus/components/ApseGrilles/index.tsx'
 
 const {oculus} = lowerGallery
 const {floorY} = oculus
 const ceilingY = oculus.ceiling.topY - oculus.ceiling.thickness / 2
-/** The Oculus with its tower, ramps, balcony and apse, the barred openings in the apse lined with `stone` like the Bastion behind them. */
-export default function OculusRoom({material, stone}: {
-  material: Material
-  stone: Material
-}) {
+/** The Oculus with its tower, ramps, balcony and apse; the bars of the apse’s openings onto the Bastion, which `ApseGrilles` draws, fill them for whichever of the two rooms mounts first. */
+export default function OculusRoom({material}: {material: Material}) {
   return <group name='oculus-room'>
     <OculusGround material={material} />
     <OculusRailings />
-    <ApseGrilles stone={stone} />
     <RigidBody colliders={false} type='fixed'>
       <CuboidCollider args={oculusBalcony.size.map(value => value / 2) as [number, number, number]} position={oculusBalcony.position} />
       <Box material={material} name='oculus-balcony' position={oculusBalcony.position} size={oculusBalcony.size} />

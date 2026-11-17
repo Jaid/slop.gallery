@@ -176,10 +176,7 @@ describe('oculus and connecting tunnel', () => {
           visit(child.props.children)
         })
       }
-      visit(renderOculusRoom({
-        material,
-        stone: material,
-      }))
+      visit(renderOculusRoom({material}))
     } finally {
       for (const mesh of meshes) {
         mesh.geometry.dispose()

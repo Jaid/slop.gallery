@@ -8,6 +8,7 @@ import {usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
 import {useGallery} from '#src/lib/gallery/store.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {slotArea} from '#src/lib/placement/portraitSlots.ts'
+import world from '#src/worlds/current.ts'
 
 export type WorkHangingInput = {
   /** its id, unique in the collection; by default a new one */
@@ -42,6 +43,10 @@ export default async function hangWork({id, image, slot, title}: WorkHangingInpu
   const target = usePortraitSlots.getState().slots.find(candidate => candidate.id === slot)
   if (!target) {
     throw new Error(`There is no portrait slot “${slot}”; dump_portrait_slots lists them.`)
+  }
+  const room = world.wall(target.wallId)?.room
+  if (!world.reach.covers(room)) {
+    throw new Error(`The portrait slot “${slot}” hangs in the ${room}, out of this page’s ?world_reach ${world.reach.mode}, which only mounts ${world.reach.rooms.join(', ')}.`)
   }
   if (id !== undefined && useGallery.getState().portraits.some(candidate => candidate.id === id)) {
     throw new Error(`A work already has the id “${id}”.`)

@@ -1,3 +1,5 @@
+import type {Vec3} from '#src/lib/gallery/types.ts'
+import type World from '#src/worlds/base/World.ts'
 import type {Browser, Page} from 'puppeteer-core'
 
 import {basename, join, resolve, sep} from 'node:path'
@@ -9,10 +11,11 @@ import {createServer} from 'vite'
 import {maximumSeed, parseSeed} from '#src/lib/environmentSeed.ts'
 import {queryParameters} from '#src/lib/queryOverrides.ts'
 import {parseStreamBudget} from '#src/lib/rendering/streamBudget.ts'
+import {readWorldReach, worldReachModes} from '#src/worlds/base/WorldReach.ts'
 import {readWorld, worldParameters} from '#src/worlds/index.ts'
 
 export const repositoryRoot = resolve(import.meta.dir, '..', '..')
-const dedicatedQueryOptionNames = new Set(['graphics', 'seed', 'stream_budget', 'test', 'warmup_scale'])
+const dedicatedQueryOptionNames = new Set(['graphics', 'seed', 'stream_budget', 'test', 'warmup_scale', 'world_reach'])
 /** rows of the drawing buffer while a page warms up, see --warmup_scale */
 export const warmupRows = 360
 // These have dedicated options with validation and defaults. A world’s own parameters open it, like --shots opens Knottingham and --item the Sandbox.
@@ -34,6 +37,8 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}:
                           mirrors ?stream_budget, the milliseconds a frame after loading may spend building objects. Default: false, which builds everything in the first frame, so the scene is complete about three times sooner than at the players’ 8 and, in cinematic graphics, whose every streaming frame renders the whole view, three to six times sooner than at 100
   --warmup_scale <scale|false>
                           mirrors ?warmup_scale, the renderer scale the page loads, compiles and streams everything in at until the script ends its warmup right before capturing, so those frames stay cheap and the full-size render targets don’t exist yet. Default: ${warmupRows} rows, ${warmupRows} divided by the height, unless the regular scale is smaller; false renders at the full size from the start
+  --world_reach <room|neighbors|all>
+                          mirrors ?world_reach, how much of the world mounts: only the room the page starts in, that room and its neighbors, or every room. Default: all. snap.ts and film.ts reach out from the room their camera starts in, unless --room or --spawn names where to start; openings out of reach look into the void
   --swiftshader           renders on Chrome’s software Vulkan instead of a GPU, for machines without one like CI runners, which also need a system Vulkan driver like Mesa’s (mesa-vulkan-drivers on Ubuntu); slow, but enough to load and analyze the scene
   --width <pixels>        render width. Default: ${sides[0]}, or ${Math.round(defaultHeight * ratio)}
   --height <pixels>       render height. Default: ${sides[1]}, or ${defaultHeight}
@@ -54,6 +59,7 @@ export const galleryOptions = {
   swiftshader: {type: 'boolean'},
   test: {type: 'string'},
   warmup_scale: {type: 'string'},
+  world_reach: {type: 'string'},
   target: {type: 'string'},
   width: {type: 'string'},
   height: {type: 'string'},
@@ -68,6 +74,7 @@ export type GalleryValues = Partial<Record<string, boolean | string>> & {
   test?: string
   warmup_scale?: string
   width?: string
+  world_reach?: string
 }
 export type GallerySetup = Awaited<ReturnType<typeof resolveGallerySetup>>
 export const parseNumbers = (value: string, name: string, lengths: Array<number>) => {
@@ -169,6 +176,25 @@ const resolveWarmupScale = (value: string | undefined, height: number, scale: nu
   }
   return warmupScale
 }
+/**
+ * Lets a limited `--world_reach` reach out from the room the camera is going to be in, `eye`, instead of the room the player spawns in: without `--room` or `--spawn`, it sets `--room` to the room whose fence holds the eye, or the feet below it, so its spawn is where the page starts and its rooms are what it mounts. Returns the room it picked, if any.
+ * Captures pose the camera only once the page has loaded, too late to change what it mounts; with every room in reach, there is nothing to pick.
+ */
+export const anchorWorldReach = async (setup: GallerySetup, eye: Vec3 | undefined) => {
+  const {search} = setup
+  if (!eye || readWorldReach(`?${search}`) === 'all' || search.has('room') || search.has('spawn')) {
+    return
+  }
+  const {default: world} = await import(join(repositoryRoot, 'src', 'worlds', setup.world, 'index.ts')) as {default: World}
+  const room = world.roomAt(eye) ?? world.roomAt(world.cameraBookmarkFeet({position: eye}))
+  if (!room) {
+    console.warn(`Warning: --world_reach ${readWorldReach(`?${search}`)} reaches out from the spawn, as the camera at ${eye.join(', ')} stands in none of the ${setup.world}’s rooms; --room names another room to reach out from.`)
+    return
+  }
+  search.set('room', room.id)
+  console.error(`--world_reach ${readWorldReach(`?${search}`)} reaches out from the camera’s room, --room ${room.id}`)
+  return room.id
+}
 /** Warns on stderr when a capture runs against the dev server instead of a static build: Vite reloads the page whenever it optimizes newly found dependencies, as on a cold cache, and a reload after posing silently leaves the camera at the player spawn. */
 export const warnAboutDevServer = (setup: GallerySetup) => {
   if (setup.target === undefined) {
@@ -201,6 +227,12 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
     throw new Error(`--stream_budget must be milliseconds from 0 up or false, got “${streamBudget}”.`)
   }
   search.set('stream_budget', streamBudget)
+  if (values.world_reach !== undefined) {
+    if (!(worldReachModes as ReadonlyArray<string>).includes(values.world_reach)) {
+      throw new Error(`--world_reach must be ${worldReachModes.join(', ')}, got “${values.world_reach}”.`)
+    }
+    search.set('world_reach', values.world_reach)
+  }
   for (const key of queryOptionNames) {
     const value = values[key]
     if (typeof value === 'string') {
