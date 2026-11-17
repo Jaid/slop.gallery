@@ -77,11 +77,13 @@ export function wainscotFields(start: number, end: number) {
   return Array.from({length: count}, (_, i) => [start + pitch * (i + 0.5), pitch - margin * 2] as const).filter(([, width]) => width > 0.1)
 }
 
-/** A double-sided velvet ottoman on the room axis, centered along the glass wall. */
+const benchDepth = 0.9
+
+/** A double-sided velvet ottoman on the room axis, its south edge flush with the glass wall’s south end. */
 export const salonBench = {
-  position: [salon.center[0], 0, salonWindow.z] as Vec3,
+  position: [salon.center[0], 0, salonWindow.z + (salonWindow.width - benchDepth) / 2] as Vec3,
   width: 3.2,
-  depth: 0.9,
+  depth: benchDepth,
   legHeight: 0.28,
   apronHeight: 0.1,
   cushionHeight: 0.11,
@@ -104,6 +106,14 @@ export const salonTerrazzo = {
     loss: 0,
     roughness: 0.1,
   },
+} as const
+
+const carvingBlockSize: Vec3 = [3, 0.3, 3]
+
+/** A flat blank of carving stone with its north edge flush with the glass wall’s north end. */
+export const salonCarvingBlock = {
+  position: [14.05, 0, salonWindow.z - (salonWindow.width - carvingBlockSize[2]) / 2] as Vec3,
+  size: carvingBlockSize,
 } as const
 
 /** where a sculpture pedestal stands on the floor, on the room’s axis, centered on the line of the glass wall’s north end */

@@ -1,14 +1,17 @@
 import {beforeEach, describe, expect, test} from 'bun:test'
 
+import {Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
+
 import {wallFace} from '../../src/lib/gallery/architecture.ts'
 import {roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
-import {salonBench, salonCeiling, salonPedestal, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
+import {salonBench, salonCarvingBlock, salonCeiling, salonPedestal, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '../../src/lib/materials/TerrazzoFloorMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import CarvingBlockGeometry from '../../src/rooms/salon/CarvingBlockGeometry.ts'
 import walls, {floorHeight, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
@@ -84,14 +87,43 @@ describe('the Salon', () => {
     }
     expect(placementIssue(banquetNorth, wallPosition(banquetNorth, 0, 2.6), 1, 1, [])).toBe('doorway')
   })
-  test('the ottoman stands centered along the glass wall, leaving the doorway path and walls clear', () => {
+  test('the ottoman’s south edge aligns with the glass wall’s south end, leaving the doorway path and walls clear', () => {
     const {depth, position, width} = salonBench
-    expect(position).toEqual([room.center[0], room.floorY, salonWindow.z])
+    expect(position[0]).toBe(room.center[0])
+    expect(position[1]).toBe(room.floorY)
+    expect(position[2] + depth / 2).toBeCloseTo(salonWindow.z + salonWindow.width / 2, 9)
     expect(room.center[1] + room.size[1] / 2 - (position[2] + depth / 2)).toBeGreaterThan(3)
     expect(Math.abs(position[0] - room.center[0]) + width / 2).toBeLessThan(room.size[0] / 2 - 3)
     // a seat at the height of a chair’s
     expect(salonBench.seatHeight).toBeGreaterThan(0.4)
     expect(salonBench.seatHeight).toBeLessThan(0.55)
+  })
+  test('the carving blank sits inside the glass wall’s north end and keeps a flat working face inside its chipped edges', () => {
+    const {position: [x, y, z], size} = salonCarvingBlock
+    const [width, height, depth] = size
+    expect(z - depth / 2).toBeCloseTo(salonWindow.z - salonWindow.width / 2, 9)
+    expect(z + depth / 2).toBeLessThan(salonBench.position[2] - salonBench.depth / 2)
+    const geometry = new CarvingBlockGeometry(size)
+    const material = new MeshBasicMaterial
+    try {
+      const block = new Mesh(geometry, material)
+      block.position.set(x, y + height / 2, z)
+      block.updateMatrixWorld()
+      expect(y).toBe(floorHeight([x, 1.7, z]))
+      const above = (dx: number, dz: number) => {
+        const ray = new Raycaster(new Vector3(x + dx, y + 1, z + dz), new Vector3(0, -1, 0))
+        return ray.intersectObject(block).at(0)
+      }
+      for (const dx of [-width / 3, 0, width / 3]) {
+        for (const dz of [-depth / 3, 0, depth / 3]) {
+          expect(above(dx, dz)?.point.y).toBeCloseTo(y + height, 6)
+        }
+      }
+      expect(above(width / 2 - 0.001, depth / 2 - 0.001)).toBeUndefined()
+    } finally {
+      geometry.dispose()
+      material.dispose()
+    }
   })
   test('the pedestal stands on the room’s axis at the glass wall’s north end, clear of the ottoman and the north wall', () => {
     const [x, y, z] = salonPedestal

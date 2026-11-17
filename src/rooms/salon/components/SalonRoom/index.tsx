@@ -12,13 +12,16 @@ import RoomFloor from '#component/RoomFloor'
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {wallFace, wallOpeningTrim} from '#src/lib/gallery/architecture.ts'
-import {salonBench, salonBenchLegs, salonCeiling, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
+import {salonBench, salonBenchLegs, salonCarvingBlock, salonCeiling, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
 import FauxMarbleMaterial, {gialloAntico, portoro} from '#src/lib/materials/FauxMarbleMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
+import SawnCarvingStoneMaterial from '#src/lib/materials/SawnCarvingStoneMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '#src/lib/materials/TerrazzoFloorMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
+
+import CarvingBlockGeometry from '../../CarvingBlockGeometry.ts'
 
 const room = slopGallery.room('salon')
 const salonWalls = slopGallery.walls.filter(wall => wall.room === 'salon')
@@ -78,6 +81,7 @@ export default function SalonRoom({glass, stone, wood}: {
     </group>
     {salonWalls.map(wall => <WallDressing key={wall.id} fields={fields} gilt={gold} socle={socle} wall={wall} />)}
     <Ottoman />
+    <CarvingBlock />
   </group>
 }
 
@@ -134,6 +138,16 @@ function WallDressing({fields, gilt, socle, wall}: {
     </group>)}
     {rails.map(([start, end]) => <Box key={start} material={gilt} position={[(start + end) / 2, railBottom + railHeight / 2, wallFace + railDepth / 2]} size={[end - start, railHeight, railDepth]} />)}
   </StaticBatch>
+}
+function CarvingBlock() {
+  const {position, size} = salonCarvingBlock
+  const [width, height, depth] = size
+  const geometry = useDisposable(useMemo(() => new CarvingBlockGeometry(size), [size]))
+  const stone = useDisposable(useMemo(() => new SawnCarvingStoneMaterial, []))
+  return <RigidBody colliders={false} position={position} type='fixed'>
+    <CuboidCollider args={[width / 2, height / 2, depth / 2]} position={[0, height / 2, 0]} />
+    <mesh castShadow geometry={geometry} material={stone} name='salon-carving-block' position={[0, height / 2, 0]} receiveShadow />
+  </RigidBody>
 }
 function Ottoman() {
   const {apronHeight, cushionHeight, depth, legHeight, position, seatHeight, width} = salonBench
