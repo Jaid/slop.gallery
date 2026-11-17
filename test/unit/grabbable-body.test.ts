@@ -9,6 +9,7 @@ import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import PlayerGrace, {graceTime} from '../../src/lib/physics/PlayerGrace.ts'
 import {throwSpeed, throwSpeedFor} from '../../src/lib/physics/throwMotion.ts'
 import {bodyThrow} from '../../src/lib/physics/ThrowState.ts'
+import {orbMass} from '../../src/orbs/index.ts'
 
 await RAPIER.init()
 let world: RAPIER.World
@@ -23,7 +24,7 @@ afterEach(() => world.free())
 /** a dynamic box with two colliders, like a sculpture with a cover, as heavy as an orb */
 const sculpture = () => {
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(1, 2, 3))
-  world.createCollider(RAPIER.ColliderDesc.cuboid(0.3, 0.05, 0.4).setMass(1.5), body)
+  world.createCollider(RAPIER.ColliderDesc.cuboid(0.3, 0.05, 0.4).setMass(orbMass - 0.3), body)
   world.createCollider(RAPIER.ColliderDesc.cuboid(0.35, 0.01, 0.45).setTranslation(0, 0.06, 0).setMass(0.3), body)
   return body
 }
@@ -148,7 +149,7 @@ describe('shared grabbing regressions', () => {
   test('a throw flies along the line it was held on, spinning, and a drop standing still just falls', () => {
     const body = sculpture()
     const carried = new GrabbableBody(body, world)
-    expect(carried.mass).toBeCloseTo(1.8, 5)
+    expect(carried.mass).toBeCloseTo(orbMass, 5)
     carried.grab()
     carried.release([0, 1.4, 0], [0, 1.4, 1.45], {throwing: true})
     expect(body.linvel().x).toBeCloseTo(0, 6)
@@ -253,7 +254,7 @@ describe('shared grabbing regressions', () => {
       walk(30)
       // a box as heavy as an orb, too tall to step over and light enough to shove along
       const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(1, 2, 3))
-      world.createCollider(RAPIER.ColliderDesc.cuboid(0.2, 0.2, 0.2).setMass(1.8), body)
+      world.createCollider(RAPIER.ColliderDesc.cuboid(0.2, 0.2, 0.2).setMass(orbMass), body)
       const carried = new GrabbableBody(body, world)
       carried.grab()
       const feet = capsule.translation()
@@ -295,7 +296,7 @@ describe('shared grabbing regressions', () => {
     expect(interacts(body.collider(0).collisionGroups(), playerCollisionGroups)).toBe(true)
   })
   test('heavier and lighter props than an orb fly shorter', () => {
-    expect(throwSpeedFor(1.8)).toBeCloseTo(throwSpeed, 9)
+    expect(throwSpeedFor(orbMass)).toBeCloseTo(throwSpeed, 9)
     const body = sculpture()
     body.collider(0).setMass(4.2)
     const carried = new GrabbableBody(body, world)

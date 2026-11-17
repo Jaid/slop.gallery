@@ -23,6 +23,7 @@ import roundRevealGeometry from '../../../src/lib/gallery/roundRevealGeometry.ts
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '../../../src/lib/gallery/roundVestibule.ts'
 import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '../../../src/lib/gallery/suitOfArmor.ts'
 import {weldedSurfaceSkin} from '../../../src/lib/physics/weldedSurface.ts'
+import {orbMass} from '../../../src/orbs/index.ts'
 import walls from '../fixtures/gallery.ts'
 import {bastionCraterGeometry} from './bastionCrater.ts'
 
@@ -146,10 +147,10 @@ export function physicsWorld(colliders: Colliders) {
   return world
 }
 
-/** An orb’s body in the world at the position, as `GrabbableProp` builds it: a ball of 1.8 kg, friction 0.8 and restitution 0.32. */
+/** An orb’s body in the world at the position, as `GrabbableProp` builds it: a ball of `orbMass`, friction 0.8 and restitution 0.32. */
 export function addOrb(world: RAPIER.World, position: Vec3) {
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...position).setCcdEnabled(true))
-  world.createCollider(RAPIER.ColliderDesc.ball(0.14).setMass(1.8).setFriction(0.8).setRestitution(0.32), body)
+  world.createCollider(RAPIER.ColliderDesc.ball(0.14).setMass(orbMass).setFriction(0.8).setRestitution(0.32), body)
   return body
 }
 

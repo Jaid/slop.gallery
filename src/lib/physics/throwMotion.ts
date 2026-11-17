@@ -3,8 +3,8 @@ import type {Vec3} from '../gallery/types.ts'
 import {defaultEgoOptions} from 'ego-player/motor'
 import {clamp} from 'math'
 
-/** the mass a throw is tuned around, in kg: an orb’s */
-export const referenceMass = 1.8
+/** the mass a throw is tuned around, in kg: an orb’s `orbMass` */
+export const referenceMass = 2
 /** how fast the player throws an orb standing still, in m/s; everything else leaves as fast as its mass lets it, see {@link throwSpeedFor} */
 export const throwSpeed = 10
 /** how much a throw lifts on top of where it is aimed, as a share of its speed: 2 m/s for an orb */
@@ -69,7 +69,7 @@ export type Toss = {
   velocity: Vec3
 }
 /**
- * How fast the player throws a thing of `mass` kg standing still, in m/s: {@link throwSpeed} for an orb, fastest at about 0.3 kg (13 m/s), slower for anything lighter, like a leaf (4.7 m/s), and ever slower for anything heavier, like a pumpkin (7.3 m/s) or a potted plant (about 7 m/s).
+ * How fast the player throws a thing of `mass` kg standing still, in m/s: {@link throwSpeed} for an orb, fastest at about 0.3 kg (13.5 m/s), slower for anything lighter, like a leaf (4.8 m/s), and ever slower for anything heavier, like a pumpkin (7.5 m/s), a potted plant (about 7 m/s) or a Knot (3.9 m/s).
  * Heavy things are thrown with all the arm’s swing, which their mass has to share; light ones catch on the air and slip out of the hand, which a speed stands in for, since nothing else in the physics slows them. A mass that isn’t positive, like one unknown, throws like an orb.
  */
 export function throwSpeedFor(mass: number) {

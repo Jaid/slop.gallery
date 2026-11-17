@@ -55,7 +55,7 @@ const surfaces: Record<OrbImpactSurface, SurfaceProfile> = {
 }
 
 /**
- * A 1.8 kg glass orb striking `surface` at `speed` m/s along the contact’s normal: a thump of its weight, a click of first contact and the glass ringing on briefly, all louder and brighter the harder it hits. Rough stone adds grit, boards a hollow knock, carpet only thuds and two orbs clink like marbles.
+ * A 2 kg glass orb striking `surface` at `speed` m/s along the contact’s normal: a thump of its weight, a click of first contact and the glass ringing on briefly, all louder and brighter the harder it hits. Rough stone adds grit, boards a hollow knock, carpet only thuds and two orbs clink like marbles.
  * Strength follows impact energy loosely (speed^1.25), so a nudge stays a tap and a throw cracks. `variation` (−1–1) detunes it a little, so strike after strike never sounds the same.
  */
 export function orbImpactVoices(surface: OrbImpactSurface, speed: number, variation = 0): Array<Voice> {

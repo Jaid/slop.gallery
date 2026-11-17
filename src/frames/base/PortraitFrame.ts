@@ -12,6 +12,8 @@ export const frameBack = -0.095
 export const frameTriangleBudget = 2048
 /** how far a frame may reach out past its work’s edge at most, its mat included, which the clearance between hung works leaves room for */
 export const maximumFrameReach = 0.15
+/** how much a work weighs per square centimeter of its frame’s face, in kg: canvas, stretcher, backing board and moulding together, about 9 kg for a frame 1.2 m square */
+export const workAreaMass = 0.0006
 /** how much of what a frame leaves in sight of its image fills a view of it, the rest lying just outside, so the antialiased rim of the sight edge stays out of the view’s outermost pixels */
 const sightFill = 0.997
 
@@ -84,6 +86,11 @@ export default abstract class PortraitFrame {
   abstract createGeometry(width: number, height: number): BufferGeometry
 
   protected abstract createMaterials(): Array<Material>
+
+  /** How much a work of `width` × `height` meters in the frame weighs, in kg, by {@link workAreaMass} over the frame’s face, its {@link reach} included. */
+  mass(width: number, height: number) {
+    return (width + 2 * this.reach) * (height + 2 * this.reach) * 1e4 * workAreaMass
+  }
 
   /**
    * How much of the image of a work of `width` × `height` meters shows in the frame from straight in front of its middle, `distance` meters from it: the moulding’s sight edge lies over the image’s edges, and what of it rises toward the viewer further in hides more of them the closer they look from. Ornaments reaching in over the image don’t count.

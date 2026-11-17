@@ -16,6 +16,7 @@ import GrabbableProp, {propObjects} from '#src/components/Scene/GrabbableProp.ts
 import {frozenSeconds} from '#src/lib/frozenTime.ts'
 import {narrate, narrateModel, notify} from '#src/lib/gallery/actions.ts'
 import {trackLoadingItems} from '#src/lib/loadingItems.ts'
+import {knotMass} from '#src/lib/physics/knotPhysics.ts'
 import KnotRotation from '#src/lib/physics/KnotRotation.ts'
 import {readKnotRotation} from '#src/lib/physics/rotatingKnots.ts'
 import {getPmremEnvironment} from '#src/lib/rendering/pmrem.ts'
@@ -107,7 +108,7 @@ export default function KnotExhibition() {
         key={finish.id} id={id} blockedMessage={() => 'Knock this Knot out of its showcase first.'} canGrab={outOfShowcase} colliders={false} orbit={{radius: baseRadius + (finish.displacement ?? 0)}} position={[finish.position[0], knotFloatHeight, finish.position[2]]} recoverAsDynamic={outOfShowcase} rotation={[0, finish.rotation, 0]} title={`${finish.label} · ${finish.title} · ${finish.modelTitle}`} type='fixed'
       >
         <ConvexHullCollider
-          args={[colliderVertices]} contactSkin={finish.displacement ?? 0} onContactForce={({target}) => {
+          args={[colliderVertices]} contactSkin={finish.displacement ?? 0} mass={knotMass} onContactForce={({target}) => {
             if (target.rigidBody) {
               rotation.release(target.rigidBody)
             }

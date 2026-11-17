@@ -126,7 +126,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
       })
     }}
   >
-    <CuboidCollider args={[w / 2 + frame.reach, h / 2 + frame.reach, frame.depth / 2]} mass={2} position={[0, 0, frameBack + frame.depth / 2]} />
+    <CuboidCollider args={[w / 2 + frame.reach, h / 2 + frame.reach, frame.depth / 2]} mass={frame.mass(w, h)} position={[0, 0, frameBack + frame.depth / 2]} />
     <group
       userData={{
         pickup: true,

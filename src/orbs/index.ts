@@ -7,8 +7,8 @@ import {transparentOrb} from './transparent/TransparentOrb.ts'
 
 /** the radius of every orb’s ball, in meters */
 export const orbRadius = 0.14
-/** the mass of every orb, in kg: a hollow ball of glass about 3 mm thick, which everything that strikes, pushes or is struck by an orb, like the Knottingham panes, goes by */
-export const orbMass = 1.8
+/** the mass of every orb, in kg: a hollow ball of glass a little over 3 mm thick, which everything that strikes, pushes or is struck by an orb, like the Knottingham panes, goes by, and which throws are tuned around (`referenceMass` of `throwMotion.ts`) */
+export const orbMass = 2
 
 export const halloweenOrb = new HalloweenOrb
 export const horrorOrb = new HorrorOrb

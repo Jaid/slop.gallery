@@ -13,6 +13,7 @@ import lightSwitch, {switchButtonY} from '../../src/lib/gallery/lightSwitch.ts'
 import KnotLightImpacts from '../../src/lib/physics/KnotLightImpacts.ts'
 import {beginBodyThrow} from '../../src/lib/physics/ThrowState.ts'
 import {obstructionIssue, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import {orbMass} from '../../src/orbs/index.ts'
 import {lightSwitchSpots} from '../../src/rooms/banquet/walls.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {rooms} from './fixtures/gallery.ts'
@@ -123,8 +124,8 @@ test('a prop thrown at a banquet pane cracks it first, then knocks the diffuser 
     impacts.register(world.createCollider(RAPIER.ColliderDesc.cuboid(knotLightDiffuserSize[0] / 2, knotLightDiffuserSize[1] / 2, knotLightDiffuserSize[2] / 2).setTranslation(x, y + knotLightDiffuserY, z), fixed), target)
     const damage = new KnotLightDamage(banquetLedSlots.length)
     const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setCcdEnabled(true))
-    // Same mass as every grabbable prop.
-    world.createCollider(RAPIER.ColliderDesc.ball(0.15).setMass(1.8), body)
+    // as heavy as an orb
+    world.createCollider(RAPIER.ColliderDesc.ball(0.15).setMass(orbMass), body)
     const hits: Array<KnotLightImpact> = []
     const throwAt = (time: number) => {
       body.setTranslation({

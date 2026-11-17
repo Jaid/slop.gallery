@@ -14,6 +14,7 @@ import {frozenSeconds} from '#src/lib/frozenTime.ts'
 import {galleryEvents, narrateModel, useGallery} from '#src/lib/gallery.ts'
 import showcasedKnots, {knotShowcaseHoverGap} from '#src/lib/gallery/showcasedKnots.ts'
 import {trackLoadingItems} from '#src/lib/loadingItems.ts'
+import {knotMass} from '#src/lib/physics/knotPhysics.ts'
 import KnotRotation from '#src/lib/physics/KnotRotation.ts'
 import {readKnotRotation} from '#src/lib/physics/rotatingKnots.ts'
 import {standKnot} from '#src/lib/physics/standingKnot.ts'
@@ -145,7 +146,7 @@ export default function KnotShowcase({knots}: {knots: ReadonlyArray<ShowcasedKno
         key={id} id={id} blockedMessage={() => 'Knock this Knot out of its showcase first.'} canGrab={outOfShowcase} colliders={false} orbit={{radius}} position={[x, y + radius + knotShowcaseHoverGap, z]} recoverAsDynamic={outOfShowcase} rotation={[0, yaw, 0]} title={`${entry.title} · ${entry.modelTitle}`} type='fixed'
       >
         <ConvexHullCollider
-          args={[vertices]} contactSkin={skin} onContactForce={({target}) => {
+          args={[vertices]} contactSkin={skin} mass={knotMass} onContactForce={({target}) => {
             if (target.rigidBody) {
               rotation.release(target.rigidBody)
             }

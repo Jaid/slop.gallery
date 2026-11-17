@@ -9,6 +9,7 @@ import {Matrix4} from 'three/webgpu'
 
 import KnotLightImpacts from '../../src/lib/physics/KnotLightImpacts.ts'
 import {beginBodyThrow} from '../../src/lib/physics/ThrowState.ts'
+import {orbMass} from '../../src/orbs/index.ts'
 
 await RAPIER.init()
 test('the exposed emitter hangs under its housing without overlapping it and glows untouched by tone mapping', () => {
@@ -71,7 +72,7 @@ test('real CCD impacts use incoming motion, accept ordinary props and deduplicat
     const face = world.createCollider(RAPIER.ColliderDesc.cuboid(1.14, 0.012, 1.04).setTranslation(0, -0.04, 0).setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS), fixed)
     world.createCollider(RAPIER.ColliderDesc.cuboid(1.28, 0.05, 1.18).setTranslation(0, 0.025, 0), fixed)
     const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0.25, 3, -0.3).setCcdEnabled(true).setLinvel(0, 10, 0))
-    world.createCollider(RAPIER.ColliderDesc.ball(0.2).setMass(1.8), body)
+    world.createCollider(RAPIER.ColliderDesc.ball(0.2).setMass(orbMass), body)
     const damage = new KnotLightDamage(1)
     const impacts = new KnotLightImpacts
     const hits: Array<KnotLightImpact> = []
@@ -88,7 +89,7 @@ test('real CCD impacts use incoming motion, accept ordinary props and deduplicat
       })
     }
     expect(hits).toHaveLength(1)
-    expect(hits[0].mass).toBeCloseTo(1.8)
+    expect(hits[0].mass).toBeCloseTo(orbMass)
     expect(hits[0].speed).toBeGreaterThan(6)
     expect(hits[0].point.x).toBeCloseTo(0.25, 2)
     expect(hits[0].point.z).toBeCloseTo(-0.3, 2)

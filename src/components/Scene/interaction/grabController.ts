@@ -5,6 +5,7 @@ import type {RootState} from '@react-three/fiber'
 
 import {Vector3} from 'three/webgpu'
 
+import {portraitFrame} from '#src/frames/index.ts'
 import tossVoices from '#src/lib/audio/tossVoices.ts'
 import {cameraPose, chime, markPortraitInteracted, playSound, useGallery} from '#src/lib/gallery.ts'
 import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
@@ -41,8 +42,6 @@ const workThrow = {
   speed: 14,
   lift: 1.5 / 14,
 }
-/** the mass of a work, in kg, by its frame’s collider, for one that isn’t in the world */
-const workMass = 2
 let tosses = 0
 /** Sounds a throw or a drop as it leaves the hand. */
 const sound = (thrown: Toss) => {
@@ -94,7 +93,7 @@ export default function createGrabController(camera: RootState['camera'], placem
       const thrown = toss({
         carrier: carrierVelocity(),
         direction: direction.toArray(),
-        mass: body?.mass() || workMass,
+        mass: body?.mass() || portraitFrame(portrait.frame).mass(portrait.width, portrait.height),
         throwing: true,
         ...workThrow,
       })

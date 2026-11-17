@@ -5,6 +5,7 @@ import {describe, expect, test} from 'bun:test'
 
 import tossVoices from '../../src/lib/audio/tossVoices.ts'
 import {referenceMass, throwSpeed, throwSpeedFor, toss} from '../../src/lib/physics/throwMotion.ts'
+import {orbMass} from '../../src/orbs/index.ts'
 
 const gravity = 9.81
 /** how far a throw at `velocity` flies over level ground from the height it left at, in meters */
@@ -13,6 +14,7 @@ const forward: Vec3 = [0, 0, -1]
 const masses = [0.008, 0.025, 0.1, 0.35, 0.908, 1.25, referenceMass, 2.4, 3.2, 4.5, 5.4, 30]
 describe('throw strength by mass', () => {
   test('an orb leaves at the player’s throw speed and anything much lighter or heavier flies shorter', () => {
+    expect(referenceMass).toBe(orbMass)
     expect(throwSpeedFor(referenceMass)).toBeCloseTo(throwSpeed, 9)
     const ranges = masses.map(mass => range(toss({
       direction: forward,

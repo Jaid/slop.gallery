@@ -7,6 +7,8 @@ import {knotPreviewHeight, knotPreviewMountY, knotPreviewPanelOffsetY, knotPrevi
 import {billboardParts} from 'knot-materials/signs.ts'
 import {Euler, Quaternion, Vector3} from 'three/webgpu'
 
+import {orbMass} from '../../src/orbs/index.ts'
+
 await RAPIER.init()
 function billboardWorld() {
   const world = new RAPIER.World({
@@ -66,7 +68,7 @@ function throwBall(world: RAPIER.World, position: [number, number, number], velo
     .setLinvel(...velocity)
     .setGravityScale(0)
     .setCcdEnabled(true))
-  world.createCollider(RAPIER.ColliderDesc.ball(0.18).setMass(1.8), body)
+  world.createCollider(RAPIER.ColliderDesc.ball(0.18).setMass(orbMass), body)
 }
 test('billboard sign simply rests on the stand and can be knocked flat from behind', () => {
   const {panel, sign, standParts, world} = billboardWorld()
