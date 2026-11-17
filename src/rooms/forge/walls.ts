@@ -3,7 +3,7 @@ import type {RoomWall} from '../base/Room.ts'
 
 import {alchemyCannon, alchemyPipe, workbench} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {cisternWindowHole} from '#src/lib/gallery/cistern/window.ts'
-import forge, {forgeTable, forgeTableCenter, forgeVestibule} from '#src/lib/gallery/forge.ts'
+import forge, {forgeSideTable, forgeSideTableCenter, forgeTable, forgeTableCenter, forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {forgeArch, forgeRoundVestibule} from '#src/lib/gallery/forgeVestibule.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import {forgeWindow, lobbyWindowHole} from '#src/lib/gallery/lobbyWindows.ts'
@@ -35,6 +35,7 @@ const [benchX, benchZ] = workbench.center
 const machineReservation = (westX: number, eastX: number, top: number) => standReservation(south, [westX, benchZ], [eastX, benchZ], top)
 const riserX = alchemyPipe.corners[1][0]
 const [tableX, tableZ] = forgeTableCenter
+const [sideTableX, sideTableZ] = forgeSideTableCenter
 
 export default {
   // The arch into the vestibule, where its round wall touches the middle of this one, which the alchemy machine’s cannon shoots orbs through.
@@ -47,12 +48,13 @@ export default {
       },
     },
   },
-  // The cast-glass window into the Lobby, the Salon’s mirrored, whose glass stands in the shared plane.
+  // The cast-glass window into the Lobby, the Salon’s mirrored, whose glass stands in the shared plane, and north of it the side table.
   east: {
     ...east,
     holes: {
       lobby_window: lobbyWindowHole(forgeWindow, east, roomOrigins.forge),
     },
+    reservations: [standReservation(east, [sideTableX, sideTableZ - forgeSideTable.length / 2], [sideTableX, sideTableZ + forgeSideTable.length / 2], forgeSideTable.height + 0.1)],
   },
   // Behind the alchemy machine: its workbench, and the pipe and the cannon on the wall over it.
   south: {

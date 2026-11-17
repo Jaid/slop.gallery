@@ -13,7 +13,7 @@ import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {floorThickness} from '#src/lib/gallery/floors.ts'
-import {forgeRooflight, forgeTable, forgeTableCenter, forgeTableTurn, forgeVestibule} from '#src/lib/gallery/forge.ts'
+import {forgeRooflight, forgeSideTable, forgeSideTableCenter, forgeSideTableTurn, forgeTable, forgeTableCenter, forgeTableTurn, forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {forgeRoundVestibule, vestibuleArches} from '#src/lib/gallery/forgeVestibule.ts'
 import roundRevealGeometry from '#src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/roundVestibule.ts'
@@ -29,7 +29,7 @@ const vestibuleWall = slopGallery.walls.find(wall => wall.id === 'forge-vestibul
 const circleSegments = 96
 /** how far in from the vestibule’s wall its brass ring lies, on the line of the room’s inlays */
 const vestibuleInlay = 1.25
-/** The Forge: a workshop with plain walls and floors for now, under a plaster ceiling pierced by a round rooflight, with the alchemy machine against its south wall, whose cannon shoots orbs across it into its round vestibule north of it, alike on a smaller scale, and on through the window in its north wall into the Bastion’s cistern, and a painter’s iron table under a slab of soapstone against its west wall. */
+/** The Forge: a workshop with plain walls and floors for now, under a plaster ceiling pierced by a round rooflight, with the alchemy machine against its south wall, whose cannon shoots orbs across it into its round vestibule north of it, alike on a smaller scale, and on through the window in its north wall into the Bastion’s cistern, a painter’s iron table under a slab of soapstone against its west wall and a smaller one against its east wall, north of its window into the Lobby. */
 export default function ForgeRoom({glass, masonry, stone, wood}: {
   glass: Material
   /** the Bastion’s stone, which lines the vestibule’s arch onto its approach */
@@ -65,6 +65,9 @@ export default function ForgeRoom({glass, masonry, stone, wood}: {
     <AlchemyMachine />
     <group position={[forgeTableCenter[0], 0, forgeTableCenter[1]]} rotation-y={forgeTableTurn}>
       <IronTable name='forge-table' seed={5303} table={forgeTable} />
+    </group>
+    <group position={[forgeSideTableCenter[0], 0, forgeSideTableCenter[1]]} rotation-y={forgeSideTableTurn}>
+      <IronTable name='forge-side-table' seed={7411} table={forgeSideTable} />
     </group>
   </group>
 }

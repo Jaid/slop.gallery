@@ -7,8 +7,8 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import {Box3, Euler, Quaternion, Vector3} from 'three/webgpu'
 
 import {banquet, banquetTable} from '../../src/lib/gallery/banquet.ts'
-import {curios, hatchet, helmet, paintingSet, pumpkin} from '../../src/lib/gallery/curios/index.ts'
-import forge, {forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
+import {curios, hatchet, helmet, paintingSet, paletteKnife, pumpkin} from '../../src/lib/gallery/curios/index.ts'
+import forge, {forgeSideTable, forgeSideTableCenter, forgeSideTableTurn, forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
 import {ironTableColliders} from '../../src/lib/gallery/ironTable.ts'
 import lodge from '../../src/lib/gallery/lodge.ts'
 import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
@@ -40,12 +40,12 @@ const boundsOf = (geometry: BufferGeometry) => {
 const sizeOf = (geometry: BufferGeometry) => boundsOf(geometry).getSize(new Vector3)
 describe('the curios', () => {
   test('each is a prop of its own, lying in its room when a game begins', () => {
-    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set'])
+    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set', 'prop-palette-knife'])
     for (const curio of curios) {
       expect(slopGallery.roomAt(curio.position)?.id).toBe(curio.room)
     }
-    expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge'])
-    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic'])
+    expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room, paletteKnife.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge', 'forge'])
+    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic', 'dynamic'])
   })
   for (const curio of curios) {
     test(`the ${curio.id.replaceAll('-', ' ')}’s meshes face out, carry what their materials read and fit its reach`, () => {
@@ -143,6 +143,20 @@ describe('the curios', () => {
       expect(filled[1]).toBeLessThan(finish.max.y)
       expect(model.parts[0].geometry.hasAttribute('woodGrain')).toBe(true)
       expect(model.parts[1].geometry.hasAttribute('woodGrain')).toBe(true)
+    } finally {
+      model.dispose()
+    }
+  })
+  test('the palette knife has a grained rosewood handle, a brass ferrule, a flat trowel blade and a mound of paint on it', () => {
+    const model = paletteKnife.createModel()
+    try {
+      expect(model.parts.map(({name}) => name)).toEqual(['palette-knife-wood', 'palette-knife-brass', 'palette-knife-steel', 'palette-knife-paint'])
+      const [wood, , steel, paint] = model.parts.map(({geometry}) => boundsOf(geometry))
+      expect(wood.min.y).toBeCloseTo(0, 6)
+      expect(steel.min.y).toBeCloseTo(0, 6)
+      expect(paint.min.y).toBeGreaterThan(0)
+      expect(model.parts[0].geometry.hasAttribute('woodGrain')).toBe(true)
+      expect(model.parts[3].geometry.getAttribute('color').count).toBe(model.parts[3].geometry.getAttribute('position').count)
     } finally {
       model.dispose()
     }
@@ -248,6 +262,32 @@ describe('where a game begins, each curio comes to rest where it lies', () => {
       expect(up.y).toBeGreaterThan(0.99)
       // Its front looks out into the room, away from the wall behind the table.
       expect(facing.x).toBeGreaterThan(0.9)
+    } finally {
+      world.free()
+    }
+  })
+  test('the palette knife lies flat on the Forge’s side table', () => {
+    const world = new RAPIER.World({
+      x: 0,
+      y: -9.81,
+      z: 0,
+    })
+    world.timestep = 1 / 60
+    try {
+      const [tableX, tableZ] = forgeSideTableCenter
+      world.createCollider(RAPIER.ColliderDesc.cuboid(forge.size[0] / 2, 0.12, forge.size[1] / 2).setTranslation(forge.center[0], -0.12, forge.center[1]))
+      const turn = new Quaternion
+      turn.setFromAxisAngle(new Vector3(0, 1, 0), forgeSideTableTurn)
+      const table = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(tableX, 0, tableZ).setRotation(turn))
+      for (const {center: [x, y, z], size: [width, height, depth]} of ironTableColliders(forgeSideTable, 'forge-side-table')) {
+        world.createCollider(RAPIER.ColliderDesc.cuboid(width / 2, height / 2, depth / 2).setTranslation(x, y, z), table)
+      }
+      const {asleep, moved, up, y} = settle(paletteKnife, world)
+      expect(asleep).toBe(true)
+      expect(moved).toBeLessThan(0.02)
+      expect(y).toBeGreaterThan(forgeSideTable.height - 0.005)
+      expect(y).toBeLessThan(forgeSideTable.height + 0.005)
+      expect(up.y).toBeGreaterThan(0.99)
     } finally {
       world.free()
     }

@@ -8,9 +8,10 @@ import {Matrix4, Vector3} from 'three/webgpu'
 import {cannonFlight, machineBody, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import WorkbenchGeometry from '../../src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {baseboardCapFront, defaultBaseboardHeight, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
-import forge, {forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
+import forge, {forgeSideTable, forgeSideTableCenter, forgeSideTableTurn, forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
 import {ironTableColliders} from '../../src/lib/gallery/ironTable.ts'
 import IronTableGeometry from '../../src/lib/gallery/IronTableGeometry.ts'
+import {forgeWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {wallCoordinates, wallOffset} from '../../src/lib/placement/wallGeometry.ts'
 import forgeSpawns from '../../src/rooms/forge/spawns.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -19,6 +20,7 @@ const [tableX, tableZ] = forgeTableCenter
 const [benchX, benchZ] = workbench.center
 const west = slopGallery.walls.find(wall => wall.id === 'forge-west')!
 const south = slopGallery.walls.find(wall => wall.id === 'forge-south')!
+const east = slopGallery.walls.find(wall => wall.id === 'forge-east')!
 /** the floor’s brass inlay runs this far out of every wall’s center line */
 const inlayOffset = 1.25 - 0.013
 /** The extremes of a table’s geometry, turned and placed in the world: how near and how far from the wall’s center line it reaches, below the baseboard’s top and over all. */
@@ -56,6 +58,14 @@ const tables = [
     center: forgeTableCenter,
     turn: forgeTableTurn,
     geometry: () => new IronTableGeometry(forgeTable),
+  },
+  {
+    name: 'the side table',
+    table: forgeSideTable,
+    wall: east,
+    center: forgeSideTableCenter,
+    turn: forgeSideTableTurn,
+    geometry: () => new IronTableGeometry(forgeSideTable),
   },
   {
     name: 'the alchemy machine’s workbench',
@@ -149,5 +159,35 @@ describe('the Forge’s painter’s table', () => {
     expect(Math.abs(benchZ - tableZ)).toBeGreaterThan(5)
     const [spawnX, , spawnZ] = forgeSpawns[''].position
     expect(Math.hypot(forge.center[0] + spawnX - tableX, forge.center[1] + spawnZ - tableZ)).toBeGreaterThan(8)
+  })
+})
+describe('the Forge’s side table', () => {
+  const [sideX, sideZ] = forgeSideTableCenter
+  test('stands in the Forge against its east wall, running along it between the north wall and the window into the Lobby', () => {
+    expect(slopGallery.roomAt([sideX, 0.5, sideZ])?.id).toBe('forge')
+    const up = new Vector3(0, 1, 0)
+    const along = new Vector3(1, 0, 0)
+    const back = new Vector3(0, 0, 1)
+    along.applyAxisAngle(up, forgeSideTableTurn)
+    back.applyAxisAngle(up, forgeSideTableTurn)
+    expect(Math.abs(along.z)).toBeCloseTo(1, 9)
+    expect(back.x).toBeCloseTo(1, 9)
+    const northZ = forge.center[1] - forge.size[1] / 2
+    const windowZ = forgeWindow.z - forgeWindow.width / 2
+    expect(sideZ - forgeSideTable.length / 2 - northZ).toBeCloseTo(windowZ - sideZ - forgeSideTable.length / 2, 9)
+    expect(windowZ - sideZ - forgeSideTable.length / 2).toBeGreaterThan(1)
+  })
+  test('keeps works from hanging on the stretch of the wall behind it', () => {
+    const reservation = east.reservations?.find(({u, width}) => Math.abs(u - wallCoordinates(east, [sideX, 0, sideZ])) < 1e-9 && Math.abs(width - forgeSideTable.length) < 1e-9)
+    expect(reservation?.height).toBeCloseTo(forgeSideTable.height + 0.1, 9)
+  })
+  test('stands out of the alchemy machine’s way, the cannon’s shot and where visitors arrive', () => {
+    const reach = Math.hypot(forgeSideTable.depth, forgeSideTable.length) / 2
+    for (const [x, , z] of cannonFlight.points) {
+      expect(Math.hypot(x - sideX, z - sideZ)).toBeGreaterThan(reach + 3)
+    }
+    expect(Math.abs(benchZ - sideZ)).toBeGreaterThan(10)
+    const [spawnX, , spawnZ] = forgeSpawns[''].position
+    expect(Math.hypot(forge.center[0] + spawnX - sideX, forge.center[1] + spawnZ - sideZ)).toBeGreaterThan(8)
   })
 })
