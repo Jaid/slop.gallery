@@ -19,6 +19,7 @@ test('every sculpture has its own model and fits on the Salon socket under the s
     expect(sculpture.id).toBe(id)
     expect(sculpture.title).toBeTruthy()
     expect(sculpture.description).toBeTruthy()
+    expect(Number.isFinite(sculpture.mass) && sculpture.mass > 0).toBe(true)
     expect(sculpture.size.every(side => Number.isFinite(side) && side > 0)).toBe(true)
     expect(sculpture.size[0]).toBeLessThanOrEqual(width)
     expect(sculpture.size[2]).toBeLessThanOrEqual(depth)

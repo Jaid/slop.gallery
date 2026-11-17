@@ -4,6 +4,7 @@ import {blockSize} from './config.ts'
 export default class BlockSculpture extends Sculpture {
   readonly description = 'An upright block with flat sawn faces and irregular chips along its upper and vertical edges, cut from the same stone as its socket.'
   readonly id = 'block'
+  readonly mass = 1000
   readonly size = blockSize
   readonly title = 'Block'
 
