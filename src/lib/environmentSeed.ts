@@ -31,10 +31,21 @@ export function readSeedOverride(input: URL | string = typeof location === 'unde
 /** The `?seed` of this page, which replaces the seed of the game for this page without replacing the stored one. */
 export const seedOverride = readSeedOverride()
 
-/** A random seed for a new game state. */
+/** the seed of the default environment, `?seed=0`: whatever has a default of its own takes it instead of rolling for it, like the Lobby’s first fountain */
+export const defaultSeed = 0
+
+/** Whether `seed` asks for the default environment, which skips the rolls that have a default. */
+export function isDefaultSeed(seed: number) {
+  return seed === defaultSeed
+}
+
+/** A random seed for a new game state, never {@link defaultSeed}, which only `?seed=0` asks for. */
 export function rollSeed() {
-  const [seed] = crypto.getRandomValues(new Uint32Array(1))
-  return seed
+  const values = new Uint32Array(1)
+  do {
+    crypto.getRandomValues(values)
+  } while (isDefaultSeed(values[0]))
+  return values[0]
 }
 
 /** The seed the environment is built from: the `?seed` override wins over the seed stored in the game state. */

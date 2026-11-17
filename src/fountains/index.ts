@@ -3,10 +3,13 @@ import type Fountain from './base/Fountain.ts'
 import LimestoneFountain from './limestone/LimestoneFountain.ts'
 import MarbleFountain from './marble/MarbleFountain.ts'
 
-/** every kind of fountain there is by its id, unbuilt, so only whichever one stands somewhere becomes a fountain */
+/**
+ * Every kind of fountain there is by its id, unbuilt, so only whichever one stands somewhere becomes a fountain.
+ * The order counts: seeds roll them by their place in it, and the first one stands wherever the default seed asks for one.
+ */
 export const fountains = {
-  limestone: LimestoneFountain,
   marble: MarbleFountain,
+  limestone: LimestoneFountain,
 } as const
 
 /** the id of one of the fountains */

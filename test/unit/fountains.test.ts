@@ -58,6 +58,13 @@ describe('the Lobby’s fountain', () => {
       expect(rolled.filter(roll => roll === id).length).toBeGreaterThan(seeds.length / entries.length / 2)
     }
   })
+  test('seed 0 stands the first fountain there is, the marble one, unless ?fountain asks for another', () => {
+    expect(Object.keys(fountains)[0]).toBe('marble')
+    expect(lobbyFountainId(0, '')).toBe('marble')
+    for (const id of Object.keys(fountains) as Array<FountainId>) {
+      expect(lobbyFountainId(0, id)).toBe(id)
+    }
+  })
   test('the game builds only the fountain its seed rolled, and the intro keeps that one in focus', () => {
     expect(lobbyFountain).toBeInstanceOf(fountains[lobbyFountainId(environmentSeed)])
     expect(lobbyFountain.id).toBe(lobbyFountainId(environmentSeed))

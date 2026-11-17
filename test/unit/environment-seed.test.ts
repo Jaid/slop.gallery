@@ -1,7 +1,7 @@
-import {expect, test} from 'bun:test'
+import {expect, spyOn, test} from 'bun:test'
 
 import {narratorCharacter, narratorTraits, narratorVoice, narratorVoices} from '../../src/lib/audio/narratorCharacter.ts'
-import {effectiveSeed, environmentRandom, isSeed, maximumSeed, parseSeed, readSeedOverride, rollSeed} from '../../src/lib/environmentSeed.ts'
+import {defaultSeed, effectiveSeed, environmentRandom, isDefaultSeed, isSeed, maximumSeed, parseSeed, readSeedOverride, rollSeed} from '../../src/lib/environmentSeed.ts'
 import {potPlacements, pottedPlantKind, pottedPlantKinds} from '../../src/lib/gallery/plantDecorations/placements.ts'
 import {orbs, promptOrbs} from '../../src/orbs/index.ts'
 
@@ -26,6 +26,23 @@ test('an override wins over the stored seed, and rolls are random', () => {
   expect(rolled.every(isSeed)).toBe(true)
   const distinct = new Set(rolled)
   expect(distinct.size).toBeGreaterThan(1)
+})
+test('only ?seed=0 asks for the default environment, a new game never rolls it', () => {
+  expect(defaultSeed).toBe(0)
+  expect(isDefaultSeed(0)).toBe(true)
+  expect(isDefaultSeed(1)).toBe(false)
+  expect(isDefaultSeed(readSeedOverride('?seed=0')!)).toBe(true)
+  const draws = [0, 0, 7]
+  const random = spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView>(array: T) => {
+    (array as unknown as Uint32Array)[0] = draws.shift()!
+    return array
+  })
+  try {
+    expect(rollSeed()).toBe(7)
+    expect(draws).toEqual([])
+  } finally {
+    random.mockRestore()
+  }
 })
 test('the environment’s rolls depend only on the seed and the ID, never on call order', () => {
   const ids = potPlacements.map(placement => placement.id)
