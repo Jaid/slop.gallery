@@ -2,59 +2,59 @@ import type {NoiseBed, Range} from 'ambience-emitter'
 
 import {AmbienceLoop} from 'ambience-emitter'
 
-/** the hush of a painter’s loft at dusk and, faint behind it, the sea under its window, swelling and drawing back. A single band-pass falls off only 6 dB per octave and lets the white noise through as hiss, so each one is cascaded. */
+/** the warm hush of a quiet workshop and the deeper resonance of stretched canvas, cascaded so no white hiss escapes */
 const beds: ReadonlyArray<NoiseBed> = [
   {
     filter: 'bandpass',
-    frequency: 200,
-    q: 0.8,
+    frequency: 190,
+    q: 0.85,
     stages: 3,
-    volume: 0.05,
-    sway: [0.08, 0.6],
-    drift: [0.04, 500],
+    volume: 0.052,
+    sway: [0.12, 0.45],
+    drift: [0.05, 320],
   },
   {
-    filter: 'lowpass',
-    frequency: 520,
-    q: 0.7,
+    filter: 'bandpass',
+    frequency: 420,
+    q: 1.1,
     stages: 2,
-    volume: 0.012,
-    sway: [0.12, 0.9],
+    volume: 0.01,
+    sway: [0.18, 0.7],
+    drift: [0.04, 500],
   },
 ]
-/** a palette knife working a lump of heavy paint now and then: it slaps a few times on the board, each slap a wet thud with a brief scrape as the blade drags on */
-const knifework = {
-  rate: 1 / 8,
-  count: [2, 4] as Range,
-  /** seconds from one slap to the next */
-  spacing: [0.38, 0.6] as Range,
-  frequency: [320, 520] as Range,
-  scrape: [2400, 3600] as Range,
-  volume: [0.01, 0.018] as Range,
+/** a palette knife troweling thick paste across linen, pressing in at the start and lifting off */
+const trowels = {
+  rate: 1 / 6,
+  count: [1, 3] as Range,
+  spacing: [0.42, 0.7] as Range,
+  frequency: [1100, 2100] as Range,
+  duration: [0.24, 0.5] as Range,
+  volume: [0.009, 0.016] as Range,
 }
-/** the knife scraped clean on the rim of the palette, rarely */
-const cleanings = {
-  rate: 1 / 26,
-  frequency: [5200, 6800] as Range,
-  duration: [0.25, 0.45] as Range,
-  volume: [0.0025, 0.0045] as Range,
+/** stiff hog bristles stippling heavy paint onto the weave in brisk dabs */
+const dabs = {
+  rate: 1 / 9,
+  count: [3, 6] as Range,
+  spacing: [0.09, 0.16] as Range,
+  frequency: [1600, 2800] as Range,
+  duration: [0.05, 0.09] as Range,
+  volume: [0.005, 0.01] as Range,
 }
-/** a gull far off over the sea, crying twice or three times */
-const gull = {
-  rate: 1 / 30,
-  cries: [2, 3] as Range,
-  spacing: 0.34,
-  frequency: [1500, 1800] as Range,
-  volume: 0.0025,
+/** a steel knife blade flexing cleanly against the palette’s rim */
+const flexes = {
+  rate: 1 / 18,
+  frequency: [2900, 3900] as Range,
+  volume: 0.0035,
 }
 
-/** The Impasto Orb’s knifework: the hush of a loft by the sea at dusk, its waves swelling and drawing back under the window, a palette knife slapping and dragging heavy paint now and then, scraped clean on the palette’s rim, and, rarer, a gull far off. */
+/** The Impasto Orb’s relief: a warm studio hush, a palette knife pressing and troweling thick paste across taut linen, stiff hog-bristle stippling and the occasional springy flex of a steel blade. */
 export default class ImpastoAmbience extends AmbienceLoop {
   constructor() {
     super({
       id: 'mood-impasto',
-      title: 'Knifework',
-      gain: 0.5,
+      title: 'Impasto',
+      gain: 0.55,
     })
   }
 
@@ -63,33 +63,32 @@ export default class ImpastoAmbience extends AmbienceLoop {
   }
 
   protected override schedule(from: number, until: number) {
-    for (const time of this.scatter(knifework.rate, from, until)) {
-      const count = Math.round(this.vary(knifework.count))
+    for (const time of this.scatter(trowels.rate, from, until)) {
+      const count = Math.round(this.vary(trowels.count))
+      const frequency = this.vary(trowels.frequency)
       let at = time
       for (let i = 0; i < count; i++) {
-        const volume = this.vary(knifework.volume)
-        // The slap of the blade into heavy paint, low and wet, then a short scrape as it drags on.
-        this.burst(at, 0.09, volume, this.vary(knifework.frequency), 1.4, 0.004)
-        this.burst(at + 0.05, 0.22, volume * 0.35, this.vary(knifework.scrape), 2.5, 0.06)
-        at += this.vary(knifework.spacing)
+        const duration = this.vary(trowels.duration)
+        // A soft drum-like press into the canvas followed by the thick paste scraping under the trowel.
+        this.burst(at, 0.08, 0.005, 220, 1.4, 0.015)
+        this.burst(at + 0.01, duration, this.vary(trowels.volume), frequency * (i % 2 ? 0.88 : 1.05), 1.8, duration * 0.32)
+        at += this.vary(trowels.spacing)
       }
     }
-    for (const time of this.scatter(cleanings.rate, from, until)) {
-      const duration = this.vary(cleanings.duration)
-      this.burst(time, duration, this.vary(cleanings.volume), this.vary(cleanings.frequency), 3.5, duration * 0.25)
-    }
-    for (const time of this.scatter(gull.rate, from, until)) {
-      const cries = Math.round(this.vary(gull.cries))
-      const frequency = this.vary(gull.frequency)
-      for (let i = 0; i < cries; i++) {
-        // Each cry rises, then falls away.
-        this.swell(time + i * gull.spacing, 0.26, gull.volume, frequency, {
-          attack: 0.05,
-          endFrequency: frequency * 0.7,
-          type: 'triangle',
-          vibrato: [11, 30],
-        })
+    for (const time of this.scatter(dabs.rate, from, until)) {
+      const count = Math.round(this.vary(dabs.count))
+      const frequency = this.vary(dabs.frequency)
+      let at = time
+      for (let i = 0; i < count; i++) {
+        const duration = this.vary(dabs.duration)
+        this.burst(at, duration, this.vary(dabs.volume), frequency * (0.9 + i % 3 * 0.08), 1.2, duration * 0.25)
+        at += this.vary(dabs.spacing)
       }
+    }
+    for (const time of this.scatter(flexes.rate, from, until)) {
+      const frequency = this.vary(flexes.frequency)
+      this.chirp(time, 0.24, flexes.volume, frequency)
+      this.chirp(time, 0.1, flexes.volume * 0.3, frequency * 2.38)
     }
   }
 }
