@@ -4,7 +4,8 @@ import KnotLayout from 'knot-materials/KnotLayout.ts'
 
 import {knotFloorOrigin, knotFloorTile, knotGalleryBounds, knotGalleryCenter} from '../../src/lib/gallery/knotGallery.ts'
 import {checkeredTile, cremaMarfil, neroMarquina} from '../../src/lib/materials/marble/index.ts'
-import VelvetWallMaterial, {oxbloodVelvet} from '../../src/lib/materials/VelvetWallMaterial.ts'
+import {oxbloodVelvet} from '../../src/lib/materials/VelvetMaterial.ts'
+import VelvetWallMaterial from '../../src/lib/materials/VelvetWallMaterial.ts'
 import lightness from './helpers/lightness.ts'
 
 const layout = {

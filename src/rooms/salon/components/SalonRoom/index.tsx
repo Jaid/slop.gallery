@@ -4,7 +4,8 @@ import type {Material, Texture} from 'three/webgpu'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
-import {MeshPhysicalNodeMaterial, MeshStandardNodeMaterial, PlaneGeometry} from 'three/webgpu'
+import {float, normalGeometry, positionGeometry} from 'three/tsl'
+import {MeshStandardNodeMaterial, PlaneGeometry} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import BenchSeat from '#component/BenchSeat'
@@ -19,6 +20,7 @@ import gold from '#src/lib/materials/gold.ts'
 import SawnCarvingStoneMaterial from '#src/lib/materials/SawnCarvingStoneMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '#src/lib/materials/TerrazzoFloorMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
+import VelvetMaterial from '#src/lib/materials/VelvetMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
@@ -155,14 +157,12 @@ function SculptureSocket() {
 }
 function Ottoman() {
   const {apronHeight, cushionHeight, depth, legHeight, position, seatHeight, width} = salonBench
-  const velvet = useDisposable(useMemo(() => new MeshPhysicalNodeMaterial({
-    // Deep claret: the sheen lifts it at grazing angles, so the base stays darker than the velvet should read.
-    color: '#4a0f19',
-    roughness: 0.92,
-    sheen: 1,
-    sheenColor: '#9c4651',
-    sheenRoughness: 0.5,
-  }), []))
+  const seatThickness = cushionHeight + 0.02
+  const velvet = useDisposable(useMemo(() => {
+    // Carry the nap from the flat seat over the rounded edges instead of stretching it down the sides.
+    const drop = float(seatThickness / 2).sub(positionGeometry.y)
+    return new VelvetMaterial(positionGeometry.xz.add(normalGeometry.xz.mul(drop)))
+  }, [seatThickness]))
   const walnut = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: '#3a2214',
     roughness: 0.45,
@@ -171,7 +171,7 @@ function Ottoman() {
     <CuboidCollider args={[width / 2, seatHeight / 2, depth / 2]} position={[0, seatHeight / 2, 0]} />
     {salonBenchLegs.map(([x, z]) => <mesh key={`${x}:${z}`} castShadow material={walnut} position={[x, legHeight / 2, z]} receiveShadow><cylinderGeometry args={[0.04, 0.026, legHeight, 16]} /></mesh>)}
     <Box material={walnut} position={[0, legHeight + apronHeight / 2, 0]} size={[width - 0.06, apronHeight, depth - 0.06]} />
-    <BenchSeat material={velvet} position={[0, legHeight + apronHeight + cushionHeight / 2, 0]} size={[width, cushionHeight + 0.02, depth]} />
+    <BenchSeat material={velvet} position={[0, legHeight + apronHeight + cushionHeight / 2, 0]} size={[width, seatThickness, depth]} />
   </RigidBody>
 }
 
