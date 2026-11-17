@@ -26,6 +26,8 @@ export type RoomPlacement<Kind extends Room = Room> = readonly [room: Kind, orig
 
 /** where a page starts in a world, as its URL says */
 export type WorldStart = {
+  /** where the camera starts when `?spawn` names a camera bookmark: at the bookmark, which may lie in another room than the feet below it, like those of a low one with `?development`, which sink below its floor */
+  eye?: Vec3
   /** whether `?spawn` makes the player start flying: a camera bookmark with `?development`, to fly on from there */
   flying: boolean
   /** where the player starts: on the spawn bookmark `?spawn` names, below the camera bookmark it names, at the default spawn of the room `?room` names, or else at the world’s spawn, which also stands in for a place outside of the world */
@@ -93,7 +95,7 @@ export default abstract class World<Kind extends Room = Room> {
   }
 
   /**
-   * How much of the world this page mounts, by its `?world_reach`, around the room the player starts in; read once.
+   * How much of the world this page mounts, by its `?world_reach`, around the room the page starts in; read once.
    * Everything that builds a part of the world asks it before building that part, which no other part builds as a side effect: a room’s geometry, walls, lamps, works and props.
    */
   get reach(): WorldReach {
@@ -224,10 +226,11 @@ export default abstract class World<Kind extends Room = Room> {
     return this.rooms.flatMap(room => room.slots())
   }
 
-  /** How much of the world a page with the URL mounts, by its `?world_reach`, around the room the player {@link start}s in, the world’s default room outside of every fence. */
+  /** How much of the world a page with the URL mounts, by its `?world_reach`, around the room it {@link start}s in: the one the camera starts in, or else the one the player stands in, or the world’s default room outside of every fence. */
   reachOf(input?: URL | string) {
-    const {position} = this.start(input).pose
-    return new WorldReach(readWorldReach(input), this.roomAt(position)?.id ?? this.defaultRoom, this)
+    const {eye, pose} = this.start(input)
+    const room = (eye && this.roomAt(eye)) ?? this.roomAt(pose.position)
+    return new WorldReach(readWorldReach(input), room?.id ?? this.defaultRoom, this)
   }
 
   /** The placed room with the id. */
@@ -272,8 +275,12 @@ export default abstract class World<Kind extends Room = Room> {
   start(input?: URL | string): WorldStart {
     const camera = findNamedBookmark(this.cameraBookmarks(), input)
     const bookmark = camera ? null : findNamedBookmark(this.spawnBookmarks(), input)
-    const at = (pose: PlayerPose, flying = false): WorldStart => ({
-      pose: this.contains(pose.position) ? pose : this.spawn,
+    const at = (pose: PlayerPose, flying = false, eye?: Vec3): WorldStart => (this.contains(pose.position) ? {
+      pose,
+      flying,
+      ...eye ? {eye} : {},
+    } : {
+      pose: this.spawn,
       flying,
     })
     if (bookmark) {
@@ -289,7 +296,7 @@ export default abstract class World<Kind extends Room = Room> {
       return at({
         position: this.cameraBookmarkFeet(camera, flying),
         ...camera.aim,
-      }, flying)
+      }, flying, camera.position)
     }
     if (bookmark === undefined) {
       return {

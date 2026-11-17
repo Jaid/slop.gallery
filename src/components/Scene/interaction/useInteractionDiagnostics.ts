@@ -39,6 +39,7 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
       spectating: usePortraitSpectation.getState().id,
       worldReach: {
         mode: world.reach.mode,
+        origin: world.reach.origin,
         rooms: world.reach.rooms,
       },
       props: [...propObjects].map(([id, {body, group}]) => ({

@@ -66,16 +66,31 @@ describe('?world_reach', () => {
     }
     expect(reach('?world_reach=neighbors&room=moonfall').rooms).toEqual(['antechamber', 'moonfall', 'oculus', 'exhibition'])
   })
-  test('reaches out from where ?spawn starts, a spawn bookmark or the feet below a camera bookmark, which wins over ?room', () => {
+  test('reaches out from where ?spawn starts, a spawn bookmark or a camera bookmark, which wins over ?room', () => {
     for (const bookmark of slopGallery.spawnBookmarks()) {
       expect(reach(`?world_reach=room&spawn=${bookmark.id}`).rooms).toEqual([slopGallery.roomAt(bookmark.position)!.id])
     }
     for (const bookmark of slopGallery.cameraBookmarks()) {
-      const start = slopGallery.start(`http://localhost/?spawn=${bookmark.id}&room=lobby`)
-      expect(start.pose.position).toEqual(slopGallery.cameraBookmarkFeet(bookmark))
-      expect(reach(`?world_reach=room&spawn=${bookmark.id}&room=lobby`).rooms).toEqual([slopGallery.roomAt(start.pose.position)!.id])
+      for (const development of ['', '&development']) {
+        const search = `?spawn=${bookmark.id}&room=lobby${development}`
+        const start = slopGallery.start(`http://localhost/${search}`)
+        const feet = slopGallery.cameraBookmarkFeet(bookmark, Boolean(development))
+        // Feet sunk out of the world start at the world’s spawn instead, where the camera then starts too.
+        if (!slopGallery.contains(feet)) {
+          expect(start.pose).toEqual(slopGallery.spawn)
+          expect(start.eye).toBeUndefined()
+          continue
+        }
+        expect(start.pose.position).toEqual(feet)
+        expect(start.eye).toEqual(bookmark.position)
+        // The camera’s room, as the feet of a low camera flying with ?development sink below its floor, into another room or none
+        expect(reach(`${search}&world_reach=room`).rooms).toEqual([slopGallery.roomAt(bookmark.position)!.id])
+      }
     }
     expect(reach('?world_reach=room&spawn=moonfall-overview').origin).toBe('moonfall')
+    // Its feet stand in no room, and it isn’t the Lobby’s.
+    expect(reach('?world_reach=room&spawn=antechamber-overview&development').origin).toBe('antechamber')
+    expect(reach('?world_reach=room&spawn=sienna-overview&development').origin).toBe('sienna')
   })
   test('an unknown ?room or ?spawn starts at the world’s spawn, which the reach reaches out from', () => {
     expect(slopGallery.start('http://localhost/?room=attic').unknown).toEqual({

@@ -105,6 +105,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     const snapshot = await page.evaluate(() => globalThis.slopGallery!.snapshot!())
     expect(snapshot.worldReach).toEqual({
       mode,
+      origin: expected.origin,
       rooms: expected.rooms,
     })
     const analysis = await callWebmcpTool(page, 'analyze_world') as WorldAnalysis

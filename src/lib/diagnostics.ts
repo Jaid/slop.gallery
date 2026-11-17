@@ -51,9 +51,10 @@ export type GalleryDiagnostics = {
   /** the id of the work the pause menu shows up close in place of its map, or null while it shows the map; playing on puts the view away */
   spectating: string | null
   webGPU: boolean
-  /** how much of the world this page mounts by its `?world_reach`, with the ids of the rooms that are there */
+  /** how much of the world this page mounts by its `?world_reach`, with the id of the room it reaches out from and the ids of the rooms that are there */
   worldReach: {
     mode: WorldReachMode
+    origin: string
     rooms: ReadonlyArray<string>
   }
 }
