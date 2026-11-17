@@ -5,10 +5,11 @@ import {describe, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
 import EgoMotor from 'ego-player/motor'
-import {Euler, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
+import {BoxGeometry, Euler, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry, wallFace, wallOpeningTrim} from '../../src/lib/gallery/architecture.ts'
 import {ExhibitionTunnelSlabGeometry, PolygonalSlabGeometry} from '../../src/lib/gallery/ExhibitionTunnelGeometry.ts'
+import {insidePolygon, polygonCentroid} from '../../src/lib/gallery/floorPolygons.ts'
 import lowerGallery, {tunnelDiagonalEast, tunnelDiagonalFloorY, tunnelDiagonalHeading, tunnelDiagonalPoint, tunnelDiagonalYaw, tunnelFloorHeight, tunnelSlope} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusBalcony from '../../src/lib/gallery/oculusBalcony.ts'
 import SlopedBoxGeometry from '../../src/lib/gallery/SlopedBoxGeometry.ts'
@@ -29,7 +30,7 @@ function stairwayWorld(display: Display) {
     z: 0,
   })
   world.timestep = 1 / 60
-  for (const wall of [walls.find(value => value.id === `oculus-${display.side}`)!, ...display.stairway.walls]) {
+  for (const wall of walls.filter(wall => wall.id === `oculus-${display.side}` || display.stairway.walls.some(stairWall => stairWall.id === wall.id))) {
     const geometry = createArchitectureGeometry(wall)
     const wallRotation = new Quaternion
     wallRotation.setFromAxisAngle(new Vector3(0, 1, 0), wall.rotation)
@@ -129,7 +130,7 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
     expect(exhibitIds.size).toBe(tunnelDisplays.flatMap(display => display.exhibits).length)
   })
   for (const display of tunnelDisplays) {
-    const {corners, cutout, door, flights, landing, ramp, waypoints} = display.stairway
+    const {corners, cutout, door, flights, landing, levels, ramp, waypoints} = display.stairway
     const sign = display.direction
     const floorAtSouth = tunnelDiagonalFloorY(display.southS)
     test(`${display.side}: a door in the Oculus’ side wall at the balcony’s end opens onto the stairway, whose even steps and floors are the Exhibition’s`, () => {
@@ -170,7 +171,7 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
       }
       const positions: Array<[Vec3, number]> = [
         ...display.stairway.treads.map((block): [Vec3, number] => [[block.position[0], block.top + 1.6, block.position[2]], block.top]),
-        ...[...corners, landing].map(({polygon, floor}): [Vec3, number] => {
+        ...levels.filter(level => !level.ramp).map(({polygon, floor}): [Vec3, number] => {
           const cx = polygon.reduce((sum, [x]) => sum + x, 0) / polygon.length
           const cz = polygon.reduce((sum, [, z]) => sum + z, 0) / polygon.length
           return [[cx, floor + 1.6, cz], floor]
@@ -258,9 +259,10 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
         expect(solid([x, y, z]), seam).toBe(true)
       }
     })
-    for (const returning of [false, true]) {
-      test(`${display.side}: the player walks ${returning ? 'up from the display to the balcony' : 'down from the balcony into the display'}`, () => {
+    for (const [fps, returning] of [30, 60, 120].flatMap(fps => [false, true].map(returning => [fps, returning] as const))) {
+      test(`${display.side}: the player walks ${returning ? 'up from the display to the balcony' : 'down from the balcony into the display'} at ${fps} Hz`, () => {
         const world = stairwayWorld(display)
+        world.timestep = 1 / fps
         const cutMid = (cutout.fromAcross + cutout.toAcross) / 2
         const landPt = tunnelDiagonalPoint(display.southS + 0.8, cutMid)
         const dispSouthPt = tunnelDiagonalPoint(display.southS - 1, cutMid)
@@ -285,7 +287,7 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
         try {
           for (const target of path.slice(1)) {
             const distance = () => Math.hypot(body.translation().x - target[0], body.translation().z - target[1])
-            for (let i = 0; i < 60 * 14 && distance() > 0.2; i++) {
+            for (let i = 0; i < fps * 14 && distance() > 0.2; i++) {
               const {x, y, z} = body.translation()
               facing.setFromAxisAngle(new Vector3(0, 1, 0), Math.atan2(x - target[0], z - target[1]))
               motor.step(world.timestep, {forward: true}, facing)
@@ -427,6 +429,131 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
           }
         })
       }
+    }
+  }
+})
+
+describe('the east staff route bows away from the Exhibition', () => {
+  const east = tunnelDisplays.find(display => display.side === 'east')!
+  const {door, flights, landing, levels, waypoints} = east.stairway
+  const [entry, north, south, foot] = waypoints
+  const returning = levels.find(level => level !== landing && level.floor === landing.floor)!
+
+  test('the middle run heads southeast and returns west without moving either doorway or changing the stairs', () => {
+    expect(entry).toEqual([oculus.size[0] / 2, door[2]])
+    expect(north[0]).toBeGreaterThan(entry[0])
+    expect(south[0]).toBeGreaterThan(north[0] + 3)
+    expect(south[1]).toBeGreaterThan(north[1])
+    expect(foot[0]).toBeLessThan(south[0])
+    expect(flights.map(flight => flight.count)).toEqual([3, 3, 16])
+    expect(landing.polygon).toContainEqual([-1.62, foot[1] - displayStairway.width / 2])
+    expect(landing.polygon).toContainEqual(tunnelDiagonalPoint(east.stairway.cutout.sOuter, east.stairway.cutout.fromAcross))
+    // Even the outer edge of the returning corridor stays north of Moonfall’s wall.
+    expect(foot[1] + displayStairway.width / 2 + wallFace).toBeLessThan(lowerGallery.moonfall.center[1] - lowerGallery.moonfall.size[1] / 2)
+    expect(returning).toBeDefined()
+  })
+
+  test('all floor pieces stay convex, including the separate return corridor', () => {
+    for (const display of tunnelDisplays) {
+      for (const {polygon} of display.stairway.levels) {
+        const [cx, cz] = polygonCentroid(polygon)
+        expect(insidePolygon(polygon, cx, cz)).toBe(true)
+        // Every corner and every point just inside an edge must belong to its convex piece. Simply stretching the old pentagonal landing fails this.
+        for (const [i, [ax, az]] of polygon.entries()) {
+          const [bx, bz] = polygon[(i + 1) % polygon.length]
+          expect(insidePolygon(polygon, ax, az)).toBe(true)
+          expect(insidePolygon(polygon, (ax + bx) * 0.45 + cx * 0.1, (az + bz) * 0.45 + cz * 0.1)).toBe(true)
+        }
+      }
+    }
+  })
+
+  test('the westbound flight closes its north inside corner, not its south outside corner', () => {
+    const lower = flights[2]
+    const prefix = `exhibition-stairs_${lower.id.replaceAll('-', '_')}`
+    const northWall = east.stairway.walls.find(wall => wall.id === `${prefix}_north`)!
+    const southWall = east.stairway.walls.find(wall => wall.id === `${prefix}_south`)!
+    expect(northWall.width).toBeGreaterThan(lower.length + wallFace)
+    expect(southWall.width).toBeCloseTo(lower.length, 9)
+    expect(northWall.center[2]).toBeCloseTo(foot[1] - lower.width / 2, 9)
+    expect(southWall.center[2]).toBeCloseTo(foot[1] + lower.width / 2, 9)
+  })
+
+  test('the return corridor has matching rendered and physical floors and ceilings, solid sides and Exhibition navigation', () => {
+    const world = stairwayWorld(east)
+    const material = new MeshBasicMaterial
+    const slabs = east.stairway.slabs.map(slab => {
+      const geometry = slab.kind === 'box' ? new BoxGeometry(...slab.size) : new PolygonalSlabGeometry(slab.polygon, slab.bottom, slab.top)
+      const mesh = new Mesh(geometry, material)
+      if (slab.kind === 'box') {
+        mesh.position.set(...slab.position)
+        mesh.rotation.set(...slab.rotation)
+      }
+      mesh.updateMatrixWorld(true)
+      return mesh
+    })
+    world.step()
+    try {
+      for (const x of [-1.5, 0, 3.6, 6, foot[0] - 0.15]) {
+        for (const offset of [-0.6, 0, 0.6]) {
+          const position: Vec3 = [x, landing.floor + 1.6, foot[1] + offset]
+          const origin = new Vector3(...position)
+          expect(insideGallery(position)).toBe(true)
+          expect(roomAt(position)).toBe('exhibition')
+          expect(floorHeight(position)).toBeCloseTo(landing.floor, 9)
+          for (const direction of [new Vector3(0, -1, 0), new Vector3(0, 1, 0)]) {
+            const visible = new Raycaster(origin, direction).intersectObjects(slabs)[0]
+            const physical = world.castRay(new RAPIER.Ray(origin, direction), 4, true)
+            expect(visible).toBeDefined()
+            expect(physical).not.toBeNull()
+            expect(physical!.timeOfImpact).toBeCloseTo(visible.distance, 5)
+            expect(visible.point.y).toBeCloseTo(direction.y < 0 ? landing.floor : landing.floor + landing.headroom - 0.09, 5)
+          }
+          for (const sign of [-1, 1]) {
+            const hit = world.castRay(new RAPIER.Ray(origin, new Vector3(0, 0, sign)), 2, true)
+            expect(hit?.timeOfImpact).toBeCloseTo(displayStairway.width / 2 - wallFace - sign * offset, 4)
+          }
+        }
+      }
+    } finally {
+      world.free()
+      material.dispose()
+      for (const mesh of slabs) {
+        mesh.geometry.dispose()
+      }
+    }
+  })
+
+  for (const offset of [-0.5, 0, 0.5]) {
+    for (const reverse of [false, true]) {
+      test(`the lower flight and both return seams are walkable in lane ${offset}, ${reverse ? 'up' : 'down'}`, () => {
+        const world = stairwayWorld(east)
+        const lower = flights[2]
+        const startX = reverse ? -2.1 : lower.start[0] + 0.3
+        const endX = reverse ? lower.start[0] + 0.3 : -2.1
+        const startY = reverse ? landing.floor : lower.start[1]
+        const z = foot[1] + offset
+        const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(startX, startY + 0.04, z))
+        const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
+        const motor = new EgoMotor(RAPIER, world, body, collider)
+        const facing = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), reverse ? -Math.PI / 2 : Math.PI / 2)
+        try {
+          for (let i = 0; i < 60 * 12 && Math.abs(body.translation().x - endX) > 0.2; i++) {
+            motor.step(world.timestep, {forward: true}, facing)
+            world.step()
+            const {x, y, z} = body.translation()
+            expect(insideGallery([x, y + 1.6, z])).toBe(true)
+            expect(roomAt([x, y + 1.6, z])).toBe('exhibition')
+          }
+          expect(Math.abs(body.translation().x - endX)).toBeLessThan(0.2)
+          expect(body.translation().y).toBeCloseTo((reverse ? lower.start[1] : landing.floor) + 0.02, 1)
+          expect(motor.grounded).toBe(true)
+          expect(motor.crouching).toBe(false)
+        } finally {
+          motor.dispose()
+          world.free()
+        }
+      })
     }
   }
 })
