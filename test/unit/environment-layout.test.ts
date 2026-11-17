@@ -1,11 +1,14 @@
+import type {FountainId} from '../../src/fountains/index.ts'
+
 import {expect, test} from 'bun:test'
 
 import {Box3, Euler, Matrix4, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
 
+import {createFountain, fountains} from '../../src/fountains/index.ts'
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {corridorLanding, corridorPassage} from '../../src/lib/gallery/corridor.ts'
 import {fountainBench, fountainBenches} from '../../src/lib/gallery/fountainBenches.ts'
-import {lobbyFountainReach, lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
+import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import lodge, {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
 import SlattedBenchGeometry from '../../src/lib/gallery/SlattedBenchGeometry.ts'
@@ -35,8 +38,10 @@ test('four matching slatted benches surround the fountain under the middle chand
       bounds.copy(seat).applyMatrix4(transform)
       expect(bounds.distanceToPoint(new Vector3(...slopGallery.spawn.position))).toBeGreaterThan(0.5)
       const center = new Vector3(lobbyFountainSpot[0], 0.48, lobbyFountainSpot[2])
-      // The widest fountain’s foot reaches a little further than the others’ basins; the benches still leave a walkway of over 1.3 m.
-      expect(bounds.distanceToPoint(center) - lobbyFountainReach).toBeGreaterThan(1.3)
+      // Whichever fountain the seed rolls, even the widest foot, the benches leave a walkway of over 1.3 m.
+      for (const id of Object.keys(fountains) as Array<FountainId>) {
+        expect(bounds.distanceToPoint(center) - createFountain(id).radius).toBeGreaterThan(1.3)
+      }
     }
     // Six continuous lengthwise battens, with genuine openings between them.
     expect(fountainBench.slats).toBe(6)

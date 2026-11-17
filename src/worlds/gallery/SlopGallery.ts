@@ -7,7 +7,7 @@ import {lazy} from 'react'
 
 import IntroOrbit from '#src/lib/camera/IntroOrbit.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
-import {lobbyFountainReach, lobbyFountainSpot} from '#src/lib/gallery/lobbyFountain.ts'
+import {lobbyFountain, lobbyFountainSpot} from '#src/lib/gallery/lobbyFountain.ts'
 import showcasedKnots from '#src/lib/gallery/showcasedKnots.ts'
 import {GalleryPlacementSpace} from '#src/lib/placement/GalleryPlacementSpace.ts'
 import Antechamber from '#src/rooms/antechamber/Antechamber.ts'
@@ -69,7 +69,7 @@ export default class SlopGallery extends World<GalleryRoom> {
     elevation: 3.1,
     period: 60,
     start: Math.PI / 4,
-    subject: lobbyFountainReach,
+    subject: lobbyFountain.radius,
   })
   override readonly Minimap = minimap
   override readonly narratesIntroduction = true

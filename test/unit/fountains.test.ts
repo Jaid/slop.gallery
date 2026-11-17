@@ -2,14 +2,15 @@ import type {Fountain, FountainId} from '../../src/fountains/index.ts'
 
 import {describe, expect, test} from 'bun:test'
 
-import {fountains} from '../../src/fountains/index.ts'
+import {createFountain, fountains} from '../../src/fountains/index.ts'
 import {readFountain} from '../../src/fountains/lib/forcedFountain.ts'
 import {fountainBench} from '../../src/lib/gallery/fountainBenches.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
-import {lobbyFountainId, lobbyFountainReach, lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
+import {lobbyFountain, lobbyFountainId, lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
+import {environmentSeed} from '../../src/lib/gameSeed.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
-const entries = Object.entries<Fountain>(fountains)
+const entries = (Object.keys(fountains) as Array<FountainId>).map((id): [FountainId, Fountain] => [id, createFountain(id)])
 describe('fountains', () => {
   test('every fountain goes by its id and tells its size without being built', () => {
     expect(entries.length).toBeGreaterThan(0)
@@ -40,7 +41,6 @@ describe('the Lobby’s fountain', () => {
     const room = slopGallery.room('lobby')
     expect(lobbyFountainSpot[0]).toBe(0)
     expect(room.room.fence.contains(room.toLocal(lobbyFountainSpot))).toBe(true)
-    expect(lobbyFountainReach).toBe(Math.max(...entries.map(([, fountain]) => fountain.radius)))
     for (const [, fountain] of entries) {
       expect(fountain.height).toBeLessThan(room.height)
       expect(lobbyFountainSpot[2] - fountain.radius).toBeGreaterThan(lobby.opening.center[1] + lobby.opening.size[1] / 2 + 1)
@@ -57,6 +57,11 @@ describe('the Lobby’s fountain', () => {
     for (const [id] of entries) {
       expect(rolled.filter(roll => roll === id).length).toBeGreaterThan(seeds.length / entries.length / 2)
     }
+  })
+  test('the game builds only the fountain its seed rolled, and the intro keeps that one in focus', () => {
+    expect(lobbyFountain).toBeInstanceOf(fountains[lobbyFountainId(environmentSeed)])
+    expect(lobbyFountain.id).toBe(lobbyFountainId(environmentSeed))
+    expect(slopGallery.introOrbit.subject).toBe(lobbyFountain.radius)
   })
   test('?fountain stands one of them in the Lobby whatever the seed rolls, and ignores anything else', () => {
     for (const id of Object.keys(fountains) as Array<FountainId>) {
