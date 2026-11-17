@@ -11,7 +11,7 @@ import {colliderGeometry, createArchitectureGeometry, wallFace} from '../../src/
 import {ExhibitionTunnelSlabGeometry} from '../../src/lib/gallery/ExhibitionTunnelGeometry.ts'
 import {floorThickness, roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
-import lowerGallery, {oculusCeiling, oculusPlatform, tunnelDiagonalPoint, tunnelFloorHeight} from '../../src/lib/gallery/lowerGallery.ts'
+import lowerGallery, {oculusApproach, oculusCeiling, oculusPlatform, tunnelDiagonalPoint, tunnelFloorHeight} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse, {apseBoundaryZ} from '../../src/lib/gallery/oculusApse.ts'
 import StairFlight from '../../src/lib/gallery/stairs/StairFlight.ts'
 import renderOculusRoom from '../../src/rooms/oculus/components/OculusRoom/index.tsx'
@@ -76,8 +76,7 @@ describe('oculus and connecting tunnel', () => {
     expect(position[1] - size[1] / 2).toBe(floorY)
     expect(position[2] - size[2] / 2).toBe(oculus.center[1] - oculus.size[1] / 2)
     expect(floorHeight([0, top + 1.6, south - 1])).toBe(top)
-    expect(floorHeight([0, 1.6, south - 1])).toBe(0)
-    expect(floorHeight([0, floorY + 1.6, south + 0.1])).toBe(floorY)
+    expect(floorHeight([0, floorY + 1.6, south + 0.1])).toBe(floorY + oculusApproach.rise)
     // In the apse, up to its round wall
     for (const [x, z] of [[0, -39.8], [-6, -38.9], [7, -38.4], [8.8, -35.3]] as const) {
       expect(floorHeight([x, top + 1.6, z])).toBe(top)

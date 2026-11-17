@@ -6,7 +6,7 @@ import {BoxGeometry, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} fr
 
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {ExhibitionTunnelSlabGeometry} from '../../src/lib/gallery/ExhibitionTunnelGeometry.ts'
-import lowerGallery, {oculusCornerRamps, oculusLowerRamps, oculusPlatform, oculusQuarterLandings, oculusRampLandings, oculusRamps, rampFloorHeight, tunnelDiagonalFloorY, tunnelDiagonalPoint, tunnelFloorHeight, tunnelSlope, tunnelSlopeEndS, tunnelSlopeLength, tunnelSlopeStartS} from '../../src/lib/gallery/lowerGallery.ts'
+import lowerGallery, {oculusApproach, oculusLowerRamps, oculusPlatform, oculusRampLandings, oculusRamps, rampFloorHeight, tunnelDiagonalFloorY, tunnelDiagonalPoint, tunnelFloorHeight, tunnelSlope, tunnelSlopeEndS, tunnelSlopeLength, tunnelSlopeStartS} from '../../src/lib/gallery/lowerGallery.ts'
 import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import OculusSwitchbackRailing from '../../src/lib/gallery/railings/OculusSwitchbackRailing.ts'
 import SlopedBoxGeometry from '../../src/lib/gallery/SlopedBoxGeometry.ts'
@@ -89,16 +89,9 @@ test('sloped floor, ceiling, display shells and upright pedestal bases have matc
 for (const lower of oculusLowerRamps) {
   const upper = oculusRamps.find(flight => flight.side === lower.side)!
   const landing = oculusRampLandings.find(value => value.side === lower.side)!
-  const corner = oculusCornerRamps.find(value => value.side === lower.side)!
-  const quarter = oculusQuarterLandings.find(value => value.side === lower.side)!
+  const crossingZ = (oculusApproach.northZ + oculusApproach.southZ) / 2
   describe(`${lower.side} two-flight switchback`, () => {
-    test('a short flight from the center turns onto the lower flight, opposite flights meet a shared landing and every rail post is supported', () => {
-      expect(corner.floorY).toBe(-11)
-      expect(corner.floorY + corner.rise).toBe(lower.floorY)
-      expect(corner.rise / corner.run).toBeCloseTo(lower.rise / lower.run)
-      expect(Math.sign(corner.startX - lower.x)).toBe(-Math.sign(lower.x))
-      expect(quarter.position[1] + quarter.size[1] / 2).toBe(lower.floorY)
-      expect(quarter.position[2] - quarter.size[2] / 2).toBeCloseTo(oculusPlatform.position[2] + oculusPlatform.size[2] / 2)
+    test('the level approach meets the lower flight, opposite flights meet a shared landing and every rail post is supported', () => {
       expect(lower.floorY + lower.rise).toBeCloseTo(upper.floorY)
       expect(lower.startZ + lower.run).toBeCloseTo(upper.startZ)
       expect(landing.position[1] + landing.size[1] / 2).toBe(upper.floorY)
@@ -112,7 +105,7 @@ for (const lower of oculusLowerRamps) {
           for (const t of [0.001, 0.1, 0.5, 0.9, 0.999]) {
             const z = flight.startZ + flight.direction * flight.run * t
             const top = flight.floorY + t * flight.rise
-            const ray = new Raycaster(new Vector3(flight.x, -2, z), new Vector3(0, -1, 0))
+            const ray = new Raycaster(new Vector3(flight.x, top + 0.5, z), new Vector3(0, -1, 0))
             const hits = ray.intersectObject(mesh)
             expect(hits).toHaveLength(1)
             expect(hits[0].point.y).toBeCloseTo(top, 5)
@@ -121,13 +114,10 @@ for (const lower of oculusLowerRamps) {
           }
         }
         for (const t of [0.001, 0.1, 0.5, 0.9, 0.999]) {
-          const x = corner.startX + corner.direction * corner.run * t
-          const top = corner.floorY + t * corner.rise
-          const ray = new Raycaster(new Vector3(x, -2, corner.z), new Vector3(0, -1, 0))
-          const hits = ray.intersectObject(mesh)
-          expect(hits).toHaveLength(1)
-          expect(hits[0].point.y).toBeCloseTo(top, 5)
-          expect(rampFloorHeight(x, corner.z)).toBeCloseTo(top, 5)
+          const x = oculusApproach.x + (lower.x - oculusApproach.x) * t
+          const ray = new Raycaster(new Vector3(x, lower.floorY + 0.5, crossingZ), new Vector3(0, -1, 0))
+          expect(ray.intersectObject(mesh)[0].point.y).toBeCloseTo(lower.floorY, 5)
+          expect(floorHeight([x, lower.floorY + 0.5, crossingZ])).toBeCloseTo(lower.floorY, 5)
         }
         const rail = new OculusSwitchbackRailing(lower.side)
         for (const post of rail.posts) {
@@ -145,7 +135,7 @@ for (const lower of oculusLowerRamps) {
     for (const fps of [30, 60, 120]) {
       for (const sprint of [false, true]) {
         for (const ascending of [false, true]) {
-          test(`${ascending ? 'ascends' : 'descends'} all three flights, the corner and the U-turn with real walls/rails at ${fps} Hz, sprint ${sprint}`, () => {
+          test(`${ascending ? 'ascends' : 'descends'} the center ramp, level crossing and switchback with real walls/rails at ${fps} Hz, sprint ${sprint}`, () => {
             const world = new RAPIER.World({
               x: 0,
               y: -9.81,
@@ -163,8 +153,9 @@ for (const lower of oculusLowerRamps) {
             }
             addOculusRailings(world)
             const path = [
-              [corner.startX - corner.direction * 0.6, corner.floorY, corner.z],
-              [quarter.position[0], lower.floorY, quarter.position[2]],
+              [oculusApproach.x, oculus.floorY, oculusApproach.southZ + oculusApproach.rampRun + 0.6],
+              [oculusApproach.x, lower.floorY, crossingZ],
+              [lower.x, lower.floorY, crossingZ],
               [lower.x, upper.floorY, landing.position[2]],
               [upper.x, upper.floorY, landing.position[2]],
               [upper.x, upper.floorY + upper.rise, upper.startZ - upper.run - 0.8],

@@ -185,7 +185,7 @@ export const oculusCeiling = subtractFloorOpening({
 const platformTopY = moonfallFloorY + 2
 const platformHeight = platformTopY - lowerGallery.oculus.floorY
 // measured from the side walls’ north ends, where the apse begins; the platform fills the apse behind it too
-const platformDepth = 4
+const platformDepth = 3
 /** the platform along the north end, as a box from the side walls’ north ends; the apse behind it is level with its top */
 export const oculusPlatform: {
   position: Vec3
@@ -207,45 +207,32 @@ export const oculusRamps = (['west', 'east'] as const).map(side => ({
   direction: -1,
   railHeight: 1,
 }))
-/** how far the short flight from the room’s center runs toward the quarter landing */
-const cornerRun = 1.8
-// The lower flights start on a quarter landing against the platform’s face, reached by a short flight from the room’s center.
-// Both share one slope, so the whole climb to the turning landing feels even.
+/** One level landing along the platform face joins the feet of both switchbacks. Its approach ramp fills the opening between their lower flights. */
+const approachDepth = oculusRamps[0].width
+const approachStartZ = oculusPlatform.position[2] + oculusPlatform.size[2] / 2
+export const oculusApproach = {
+  x: lowerGallery.oculus.center[0],
+  width: oculusPlatform.size[0] - 2 * approachDepth,
+  northZ: approachStartZ,
+  southZ: approachStartZ + approachDepth,
+  rise: 1,
+  rampWidth: oculusPlatform.size[0] - 4 * approachDepth,
+  rampRun: approachDepth,
+}
+const approachY = lowerGallery.oculus.floorY + oculusApproach.rise
 export const oculusLowerRamps = oculusRamps.map(ramp => {
-  const startZ = oculusPlatform.position[2] + oculusPlatform.size[2] / 2 + ramp.width
-  const run = ramp.startZ - startZ
-  const slope = oculusDrop / (run + cornerRun)
+  const startZ = oculusApproach.southZ
   return {
     ...ramp,
     x: ramp.x + (ramp.side === 'west' ? 1 : -1) * ramp.width,
     startZ,
-    run,
-    floorY: lowerGallery.oculus.floorY + slope * cornerRun,
-    rise: slope * run,
+    run: ramp.startZ - startZ,
+    floorY: approachY,
+    rise: ramp.floorY - approachY,
     direction: 1,
   }
 })
 export const oculusRampFlights = [...oculusRamps, ...oculusLowerRamps]
-/** Runs along x, rising from its foot toward the side wall. */
-export const oculusCornerRamps = oculusLowerRamps.map(ramp => {
-  const towardCenter = ramp.side === 'west' ? 1 : -1
-  return {
-    side: ramp.side,
-    z: ramp.startZ - ramp.width / 2,
-    startX: ramp.x + towardCenter * (ramp.width / 2 + cornerRun),
-    direction: -towardCenter,
-    run: cornerRun,
-    width: ramp.width,
-    floorY: lowerGallery.oculus.floorY,
-    rise: ramp.floorY - lowerGallery.oculus.floorY,
-    railHeight: ramp.railHeight,
-  }
-})
-export const oculusQuarterLandings = oculusLowerRamps.map(ramp => ({
-  side: ramp.side,
-  position: [ramp.x, (lowerGallery.oculus.floorY + ramp.floorY) / 2, ramp.startZ - ramp.width / 2] as Vec3,
-  size: [ramp.width, ramp.floorY - lowerGallery.oculus.floorY, ramp.width] as Vec3,
-}))
 /** how far the turning landing reaches south past the flights, leaving a gap before the balcony */
 const rampLandingDepth = 4
 // The open corner is rounded by one flight width.
@@ -292,15 +279,13 @@ export function rampFloorHeight(x: number, z: number) {
       return ramp.floorY + distance / ramp.run * ramp.rise
     }
   }
-  for (const ramp of oculusCornerRamps) {
-    const distance = (x - ramp.startX) * ramp.direction
-    if (Math.abs(z - ramp.z) <= ramp.width / 2 && distance >= 0 && distance <= ramp.run) {
-      return ramp.floorY + distance / ramp.run * ramp.rise
-    }
+  const {northZ, southZ, rampWidth, rampRun, rise, width} = oculusApproach
+  const across = Math.abs(x - oculusApproach.x)
+  if (across <= width / 2 && z >= northZ && z <= southZ) {
+    return approachY
   }
-  const quarter = oculusQuarterLandings.find(({position, size}) => Math.abs(x - position[0]) <= size[0] / 2 && Math.abs(z - position[2]) <= size[2] / 2)
-  if (quarter) {
-    return quarter.position[1] + quarter.size[1] / 2
+  if (across <= rampWidth / 2 && z > southZ && z <= southZ + rampRun) {
+    return approachY - (z - southZ) / rampRun * rise
   }
   const landing = oculusRampLandings.find(value => rampLandingContains(value, x, z))
   if (landing) {

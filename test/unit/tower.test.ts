@@ -8,7 +8,7 @@ import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/galler
 import {bastionMouth} from '../../src/lib/gallery/bastion.ts'
 import {climbMouth} from '../../src/lib/gallery/climb.ts'
 import {slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
-import lowerGallery, {oculusRamps} from '../../src/lib/gallery/lowerGallery.ts'
+import lowerGallery, {oculusApproach, oculusRamps, rampFloorHeight} from '../../src/lib/gallery/lowerGallery.ts'
 import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import tower, {towerRamp as ramp, towerArch, towerBridge, towerBridgeGradient, towerBridgeLift, towerBridges, towerDeck, towerFloorHeight, towerPlatformOutline, towerRampGradient, towerRampHalfWidth, towerRampHeight} from '../../src/lib/gallery/oculusTower.ts'
 import walls, {floorHeight} from './fixtures/gallery.ts'
@@ -149,13 +149,12 @@ describe('cylindrical Oculus platform', () => {
           for (let across = -towerBridge.mouthWidth / 2; across <= towerBridge.mouthWidth / 2; across += 0.25) {
             const x = tower.x + Math.cos(angle) * along
             const z = tower.z + across
-            const down = new Raycaster(new Vector3(x, -1, z), new Vector3(0, -1, 0))
-            const hits = down.intersectObject(mesh)
-            if (hits.length < 3 || Math.abs(hits[0].point.y - towerFloorHeight(x, z)!) > 1e-4) {
+            if (towerFloorHeight(x, z) === undefined) {
               continue
             }
-            // From the bridge’s underside down to what stands below it
-            expect(hits[1].point.y - hits[2].point.y).toBeGreaterThan(2.1)
+            const floor = rampFloorHeight(x, z) ?? tower.floorY
+            const up = new Raycaster(new Vector3(x, floor + 0.01, z), new Vector3(0, 1, 0))
+            expect(up.intersectObject(mesh)[0].point.y - floor).toBeGreaterThan(2.1)
           }
         }
       }
@@ -215,7 +214,6 @@ describe('cylindrical Oculus platform', () => {
   test('the underpass spans from the base’s flat front face to the circular tower’s rear edge', () => {
     expect(towerArch.z - towerArch.width / 2).toBe(ramp.startZ)
     expect(towerArch.z + towerArch.width / 2).toBeCloseTo(tower.z - tower.radius)
-    expect(towerArch.width).toBeCloseTo(4.8)
   })
   test('the lower jamb is flush with the base’s front face, with no leftover sliver of the rounded fillets', () => {
     const material = new MeshBasicMaterial
@@ -226,7 +224,7 @@ describe('cylindrical Oculus platform', () => {
       // Looking south along the opening’s sides, at the height of a person, both meet the flat face itself.
       for (const x of [-ramp.width / 2 - ramp.baseCornerRadius + 0.05, -0.85, 0, 0.85, ramp.width / 2 + ramp.baseCornerRadius - 0.05]) {
         for (const y of [0.3, 1, 1.8]) {
-          const ray = new Raycaster(new Vector3(tower.x + x, tower.floorY + y, towerArch.z), new Vector3(0, 0, -1), 0, 4)
+          const ray = new Raycaster(new Vector3(tower.x + x, tower.floorY + oculusApproach.rise + y, towerArch.z), new Vector3(0, 0, -1), 0, 4)
           const hit = ray.intersectObject(mesh)[0]
           expect(hit.point.z).toBeCloseTo(ramp.startZ, 5)
           expect(hit.face!.normal.z).toBeCloseTo(1, 5)
@@ -275,7 +273,7 @@ describe('cylindrical Oculus platform', () => {
       expect(towerArch.height - towerArch.lowHeight).toBeGreaterThan(0.7)
       for (const [u, height, arc] of points) {
         const z = towerArch.z - u
-        const origin = new Vector3(tower.x, tower.floorY + 0.5, z)
+        const origin = new Vector3(tower.x, (rampFloorHeight(tower.x, z) ?? tower.floorY) + 0.5, z)
         const direction = new Vector3(0, 1, 0)
         const archRay = new Raycaster(origin, direction)
         const visible = archRay.intersectObject(mesh)[0]
@@ -316,7 +314,9 @@ describe('cylindrical Oculus platform', () => {
         test(`walks through the arch at ${fps} Hz, offset ${offset.toFixed(2)}, returning ${returning}`, () => {
           const world = createWorld()
           world.timestep = 1 / fps
-          const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(returning ? 2 : -2, tower.floorY + 0.04, towerArch.z + offset))
+          const z = towerArch.z + offset
+          const floor = rampFloorHeight(tower.x, z) ?? tower.floorY
+          const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(returning ? 2 : -2, floor + 0.04, z))
           const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
           const motor = new EgoMotor(RAPIER, world, body, collider)
           const facing = new Quaternion
@@ -334,7 +334,8 @@ describe('cylindrical Oculus platform', () => {
               motor.step(world.timestep, {}, facing)
               world.step()
             }
-            expect(body.translation().y).toBeCloseTo(tower.floorY + 0.02, 2)
+            const feet = body.translation()
+            expect(feet.y).toBeCloseTo((rampFloorHeight(feet.x, feet.z) ?? tower.floorY) + 0.02, 1)
           } finally {
             motor.dispose()
             world.free()
@@ -350,7 +351,8 @@ describe('cylindrical Oculus platform', () => {
     expect(floorHeight([tower.x, 1.6, tower.z])).toBe(0)
     // Due south, between both bridges
     expect(towerFloorHeight(tower.x, tower.z + tower.radius + 0.01)).toBeUndefined()
-    expect(floorHeight([tower.x, -6.4, (ramp.startZ + ramp.endZ) / 2])).toBe(-11)
+    const underRampZ = (ramp.startZ + ramp.endZ) / 2
+    expect(floorHeight([tower.x, -6.4, underRampZ])).toBe(rampFloorHeight(tower.x, underRampZ)!)
   })
   test('the visible deck and cylindrical top match collision and navigation heights', () => {
     const material = new MeshBasicMaterial

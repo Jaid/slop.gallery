@@ -1,13 +1,12 @@
 import type {RailingAnchor} from './RailingPath.ts'
 
-import {oculusCornerRamps, oculusLowerRamps, oculusRampLandings, rampLandingCorner} from '../lowerGallery.ts'
+import {oculusLowerRamps, oculusRampLandings, rampLandingCorner} from '../lowerGallery.ts'
 import RailingPath from './RailingPath.ts'
 
 /** Guards the lower flight’s open edge and the outside of its turning landing, leaving the center divider open at the turn. */
 export default class OculusSwitchbackRailing extends RailingPath {
   constructor(side: 'east' | 'west') {
     const flight = oculusLowerRamps.find(ramp => ramp.side === side)!
-    const cornerFlight = oculusCornerRamps.find(ramp => ramp.side === side)!
     const landing = oculusRampLandings.find(value => value.side === side)!
     const sign = side === 'west' ? -1 : 1
     const inset = 0.12
@@ -31,9 +30,7 @@ export default class OculusSwitchbackRailing extends RailingPath {
         height: railY - groundY,
       })
     }
-    // Next to the low end of the flight and the short one from the center, the drop is too small to need a guard; the rail starts where it reaches a meter.
-    const start = (1 - (flight.floorY - cornerFlight.floorY)) / slope
-    rail(start, flight.floorY + slope * start + flight.railHeight)
+    rail(0, flight.floorY + flight.railHeight)
     for (let i = 0; i <= 12; i++) {
       const offset = i / 12 * blend * 2
       const distance = meet - blend + offset

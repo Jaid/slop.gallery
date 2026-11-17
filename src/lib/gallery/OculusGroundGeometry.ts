@@ -1,7 +1,7 @@
 import {ADDITION, Brush, Evaluator, SUBTRACTION} from 'three-bvh-csg'
 import {BoxGeometry, BufferGeometry, ExtrudeGeometry, Float32BufferAttribute, MeshBasicNodeMaterial, Shape, ShapeUtils, Vector2} from 'three/webgpu'
 
-import lowerGallery, {oculusCornerRamps, oculusLowerRamps, oculusPlatform, oculusQuarterLandings, oculusRampLandings, oculusRamps, rampLandingCorner, rampLandingOutline} from './lowerGallery.ts'
+import lowerGallery, {oculusApproach, oculusLowerRamps, oculusPlatform, oculusRampLandings, oculusRamps, rampLandingCorner, rampLandingOutline} from './lowerGallery.ts'
 import {apseArcs, apseOutline} from './oculusApse.ts'
 import tower, {towerArch, towerBridge, towerBridgeGradient, towerDeck, towerNecks, towerRamp, towerRampGradient, towerRampHalfWidth, towerRampHeight, towerRampSections} from './oculusTower.ts'
 import RampGeometry from './RampGeometry.ts'
@@ -132,14 +132,13 @@ export default class OculusGroundGeometry extends BufferGeometry {
         const rampPrism = new SlopedBoxGeometry(ramp.width, height, ramp.run, ramp.rise / ramp.run, 0)
         solid = combine(solid, brush(rampPrism.translate(ramp.x, floorY + height / 2, ramp.startZ + ramp.run / 2)))
       }
-      for (const landing of oculusQuarterLandings) {
-        solid = combine(solid, block(landing))
-      }
-      for (const ramp of oculusCornerRamps) {
-        // The prism rises toward local −z, turned to rise along the flight’s direction on x.
-        const rampPrism = new RampGeometry(ramp.width, ramp.rise, ramp.run)
-        solid = combine(solid, brush(rampPrism.rotateY(-ramp.direction * Math.PI / 2).translate(ramp.startX, ramp.floorY, ramp.z)))
-      }
+      const {x: approachX, width, northZ, southZ, rise, rampWidth, rampRun} = oculusApproach
+      solid = combine(solid, block({
+        position: [approachX, floorY + rise / 2, (northZ + southZ) / 2],
+        size: [width, rise, southZ - northZ],
+      }))
+      const centerRamp = new RampGeometry(rampWidth, rise, rampRun)
+      solid = combine(solid, brush(centerRamp.translate(approachX, floorY, southZ + rampRun)))
       for (const landing of oculusRampLandings) {
         const landingBlock = footprintBlock(rampLandingOutline(landing), landing.position[1] + landing.size[1] / 2)
         const corner = rampLandingCorner(landing)

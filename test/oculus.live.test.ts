@@ -4,7 +4,7 @@ import type {KeyInput} from 'puppeteer-core'
 import {expect, test} from 'bun:test'
 
 import {openHeadlessGallery, resolveGallerySetup, waitForFrames} from '../scripts/lib/headlessGallery.ts'
-import lowerGallery, {oculusPlatform, oculusQuarterLandings, tunnelDiagonalYaw} from '../src/lib/gallery/lowerGallery.ts'
+import lowerGallery, {oculusApproach, oculusLowerRamps, oculusPlatform, oculusRampLandings, oculusRamps, tunnelDiagonalYaw} from '../src/lib/gallery/lowerGallery.ts'
 
 // Separate from the collection/import smoke test: exercise the actual baked meshes, React collider wiring and keyboard motor.
 test.skipIf(Bun.env.LIVE_TEST !== 'true')('production Oculus: inclined connection and two-flight switchbacks', async () => {
@@ -67,17 +67,19 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production Oculus: inclined connectio
   await walk('w', 'z', tunnel.southBendZ - 0.5, true, moonfallFeet)
   await face(Math.PI)
   await walk('w', 'z', tunnel.southZ + 1, true, moonfallFeet)
-  // Climb the east switchback from its quarter landing, including the flat lateral turn at Moonfall’s level, up onto the platform, then descend the west one.
+  // Cross the level approach to the east switchback, climb to the platform and descend the west one.
   const platformFeet = oculusPlatform.position[1] + oculusPlatform.size[1] / 2 + 0.02
-  const [quarterLanding] = oculusQuarterLandings
-  const quarterLandingFeet = quarterLanding.position[1] + quarterLanding.size[1] / 2 + 0.02
-  await teleport([5.7, quarterLandingFeet + 1.6, -29])
-  await walk('s', 'z', -19.95, true, moonfallFeet)
-  await walk('d', 'x', 7.8, true, moonfallFeet)
-  await walk('w', 'z', -30.6, false, platformFeet)
-  await teleport([-7.9, platformFeet + 1.6, -30.8])
-  await walk('s', 'z', -19.95, true, moonfallFeet)
-  await walk('d', 'x', -5.8, true, moonfallFeet)
-  await walk('w', 'z', -28.9, false, quarterLandingFeet)
+  const approachFeet = oculusFeet + oculusApproach.rise
+  const crossingZ = (oculusApproach.northZ + oculusApproach.southZ) / 2
+  const turnZ = oculusRampLandings[0].position[2]
+  await teleport([oculusApproach.x, approachFeet + 1.6, crossingZ])
+  await walk('d', 'x', oculusLowerRamps[1].x - 0.1, true, approachFeet)
+  await walk('s', 'z', turnZ, true, moonfallFeet)
+  await walk('d', 'x', oculusRamps[1].x - 0.1, true, moonfallFeet)
+  await walk('w', 'z', oculusApproach.northZ - 0.2, false, platformFeet)
+  await teleport([oculusRamps[0].x, platformFeet + 1.6, oculusApproach.northZ - 0.2])
+  await walk('s', 'z', turnZ, true, moonfallFeet)
+  await walk('d', 'x', oculusLowerRamps[0].x - 0.1, true, moonfallFeet)
+  await walk('w', 'z', crossingZ, false, approachFeet)
   expect(errors).toEqual([])
 }, 180_000)
