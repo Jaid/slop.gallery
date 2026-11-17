@@ -3,7 +3,7 @@ import type {RapierRigidBody} from '@react-three/rapier'
 import type {Group} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {CuboidCollider, RigidBody} from '@react-three/rapier'
+import {CuboidCollider, RigidBody, useBeforePhysicsStep, useRapier} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useEffect, useMemo, useRef} from 'react'
@@ -15,13 +15,17 @@ import {frameBack} from '#src/frames/base/PortraitFrame.ts'
 import {portraitFrame} from '#src/frames/index.ts'
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
 import {requestFusion, useGallery} from '#src/lib/gallery.ts'
+import {settle} from '#src/lib/gallery/fusion/handBack.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import ItemRelease from '#src/lib/physics/ItemRelease.ts'
 import world from '#src/worlds/current.ts'
 
 import useHanging from './useHanging.ts'
 
 export default function Portrait({portrait: p}: {portrait: PortraitData}) {
+  const {world: physics} = useRapier()
+  const release = useRef<ItemRelease | null>(null)
   const body = useRef<RapierRigidBody>(null)
   const group = useRef<Group>(null)
   const art = useRef<Group>(null)
@@ -34,15 +38,37 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
   useHanging(p, frame, held, art, placard)
   useEffect(() => {
     if (body.current && group.current) {
+      const rigidBody = body.current
+      const releasing = new ItemRelease(rigidBody, physics)
+      release.current = releasing
       portraitObjects.set(p.id, {
-        body: body.current,
+        release: (origin, target, throwing, direction, playerVelocity) => {
+          const previous = rigidBody.rotation()
+          const rotation = new Quaternion
+          rotation.setFromAxisAngle(new Vector3(0, 1, 0), Math.atan2(-direction[0], -direction[2]))
+          rigidBody.setRotation(rotation, false)
+          const motion = releasing.release(origin, target, throwing, direction, playerVelocity)
+          if (!motion) {
+            rigidBody.setRotation(previous, false)
+          }
+          return motion
+        },
+        body: rigidBody,
         group: group.current,
       })
     }
     return () => {
+      release.current?.grace.clear()
+      release.current = null
       portraitObjects.delete(p.id)
     }
-  }, [p.id])
+  }, [p.id, physics])
+  useBeforePhysicsStep(() => release.current?.step(physics.timestep))
+  useFrame(() => {
+    if (release.current?.interpolationPending && body.current && group.current) {
+      settle(body.current, group.current)
+    }
+  }, {before: 'render'})
   // Hung, held or flown around by a fusion, the body is fixed or disabled, so only a loose work strikes anything.
   useEffect(() => {
     if (body.current) {
@@ -54,6 +80,9 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
   }, [frame])
   // A fusion flies the work around by its group meanwhile, so its body neither stands in the way nor falls.
   useEffect(() => {
+    if (held || p.reserved || p.fusing) {
+      release.current?.grace.clear()
+    }
     body.current?.setEnabled(!held && !p.reserved && !p.fusing)
   }, [held, p.reserved, p.fusing])
   useEffect(() => {

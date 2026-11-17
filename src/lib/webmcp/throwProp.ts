@@ -7,7 +7,7 @@ import {Vector3} from 'three/webgpu'
 import {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import {useGallery} from '#src/lib/gallery/store.ts'
 import {aimThrow} from '#src/lib/physics/aimThrow.ts'
-import {throwSpeed} from '#src/lib/physics/GrabbableBody.ts'
+import {handSpeed, itemMass} from '#src/lib/physics/itemMotion.ts'
 
 /** how far below the middle of the view and how far from the eye a carried orb floats, where a throw leaves from by default: 15° and 0.55 m */
 const holdTilt = 15 * Math.PI / 180
@@ -34,7 +34,7 @@ export type PropThrow = {
 }
 
 /** Throws a prop like the player does, from in front of `camera` unless `from` says otherwise, at a portrait, through a point or with a velocity of its own; see the `throw_prop` tool. */
-export default function throwProp(camera: Camera, {from, portrait, prop, speed = throwSpeed, target, velocity}: PropThrowInput): PropThrow {
+export default function throwProp(camera: Camera, {from, portrait, prop, speed, target, velocity}: PropThrowInput): PropThrow {
   const handle = propObjects.get(prop)
   if (!handle) {
     throw new Error(`There is no prop “${prop}” in the world. Props: ${propObjects.keys().toArray().join(', ')}.`)
@@ -43,9 +43,10 @@ export default function throwProp(camera: Camera, {from, portrait, prop, speed =
   if (velocity) {
     return fling(prop, handle, start, {velocity})
   }
-  const aim = aimThrow(start, targetPoint(portrait, target), speed)
+  const launchSpeed = speed ?? handSpeed(itemMass(handle.body))
+  const aim = aimThrow(start, targetPoint(portrait, target), launchSpeed)
   if (!aim) {
-    throw new Error(`A throw at ${speed} m/s falls short of ${portrait === undefined ? 'the target' : `“${portrait}”`}.`)
+    throw new Error(`A throw at ${launchSpeed} m/s falls short of ${portrait === undefined ? 'the target' : `“${portrait}”`}.`)
   }
   return fling(prop, handle, start, aim)
 }

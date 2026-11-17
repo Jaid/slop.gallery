@@ -1,3 +1,4 @@
+import type {ItemMotion} from '../physics/itemMotion.ts'
 import type {Portrait, Vec3} from './types.ts'
 import type {RapierRigidBody} from '@react-three/rapier'
 import type {Group} from 'three/webgpu'
@@ -5,6 +6,7 @@ import type {Group} from 'three/webgpu'
 const portraitObjects = new Map<string, {
   body: RapierRigidBody
   group: Group
+  release?: (origin: Vec3, target: Vec3, throwing: boolean, direction: Vec3, playerVelocity: Vec3) => ItemMotion | null
 }>
 export default portraitObjects
 

@@ -7,6 +7,8 @@ import {transparentOrb} from './transparent/TransparentOrb.ts'
 
 /** the radius of every orb’s ball, in meters */
 export const orbRadius = 0.14
+/** the mass of an orb’s glass and contents, in kilograms; explicit on the collider, since Rapier’s React adapter does not forward a body’s mass to its automatic shapes */
+export const orbMass = 1.8
 
 export const halloweenOrb = new HalloweenOrb
 export const horrorOrb = new HorrorOrb

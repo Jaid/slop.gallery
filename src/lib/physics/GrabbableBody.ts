@@ -5,7 +5,7 @@ import {RigidBodyType} from '@dimforge/rapier3d-compat'
 
 import currentWorld from '#src/worlds/current.ts'
 
-import PropPlacement from './PropPlacement.ts'
+import ItemRelease from './ItemRelease.ts'
 import {beginBodyThrow, clearBodyThrow} from './ThrowState.ts'
 
 export type GrabbableBodyOptions = {
@@ -26,9 +26,6 @@ type BodyPose = {
   type: ReturnType<RigidBody['bodyType']>
 }
 
-/** how fast a thrown prop leaves the hand, in meters per second, with a little extra upward */
-export const throwSpeed = 10
-const throwLift = 2
 /** how a thrown prop tumbles, in radians per second */
 const throwSpin = {
   x: 3,
@@ -42,20 +39,24 @@ const still = {
 }
 
 /**
- * The physics side of carrying a prop: while carried, its body is out of the simulation altogether, so nothing collides with it, not even the player, and whoever carries it shows it by its own object. Only letting go asks the world where the prop fits.
+ * The physics side of carrying a prop: while carried, its body is out of the simulation altogether, so nothing collides with it, not even the player, and whoever carries it shows it by its own object. Its placement also constrains the carried visual; letting go validates it again.
  * Shared by sculptures, orbs and detachable foliage. A canceled pluck leaves a leaf attached where it was; a canceled re-grab leaves a loose leaf where it lay.
  */
 export default class GrabbableBody {
-  readonly placement: PropPlacement
+  readonly releaseBody: ItemRelease
+
   private carrying = false
   private home: BodyPose | null = null
-
   constructor(readonly body: RigidBody, world: World, private readonly options: GrabbableBodyOptions = {}) {
-    this.placement = new PropPlacement(world, body)
+    this.releaseBody = new ItemRelease(body, world)
   }
 
   get active() {
     return this.carrying
+  }
+
+  get placement() {
+    return this.releaseBody.placement
   }
 
   /** Leaves the prop where it was before it was grabbed, which is where its body never stopped being. */
@@ -78,6 +79,7 @@ export default class GrabbableBody {
       return false
     }
     this.rememberHome()
+    this.releaseBody.begin()
     this.loose(position, {
       x: velocity[0],
       y: velocity[1],
@@ -92,6 +94,7 @@ export default class GrabbableBody {
       return false
     }
     this.rememberHome()
+    this.releaseBody.grace.clear()
     clearBodyThrow(this.body)
     this.carrying = true
     this.stop()
@@ -114,32 +117,20 @@ export default class GrabbableBody {
     }
   }
 
-  /**
-   * Lets go of the prop as far from `origin`, inside the player’s capsule, toward `target`, where it was held, as it fits, loose and, if `throwing`, thrown along `direction`, by default that line. Where it fits nowhere, it stays where it was before it was grabbed.
-   * Returns whether it did.
-   */
-  release(origin: Vec3, target: Vec3, throwing: boolean, direction?: Vec3) {
+  /** Release where the full shape fits, ignoring only the player. If scenery leaves no room, keep holding it instead of returning it to the pickup spot. */
+  release(origin: Vec3, target: Vec3, throwing: boolean, direction?: Vec3, playerVelocity?: Vec3) {
     if (!this.carrying) {
-      return false
+      return null
     }
-    const position = this.placement.reach(origin, target)
-    if (!position) {
-      this.cancel()
-      return true
+    const motion = this.releaseBody.release(origin, target, throwing, direction ?? target.map((value, axis) => value - origin[axis]) as Vec3, playerVelocity)
+    if (!motion) {
+      return null
     }
     this.carrying = false
-    const line = direction ?? target.map((value, axis) => value - origin[axis])
-    const length = Math.hypot(...line) || 1
-    const [x, y, z] = line.map(value => value / length)
-    this.loose(position, throwing ? {
-      x: x * throwSpeed,
-      y: y * throwSpeed + throwLift,
-      z: z * throwSpeed,
-    } : still, throwing ? throwSpin : still)
     if (throwing) {
       beginBodyThrow(this.body)
     }
-    return false
+    return motion
   }
 
   rememberHome() {
@@ -182,6 +173,7 @@ export default class GrabbableBody {
   }
 
   private restore(pose: BodyPose) {
+    this.releaseBody.grace.clear()
     clearBodyThrow(this.body)
     this.body.setBodyType(pose.type, true)
     this.body.setTranslation({

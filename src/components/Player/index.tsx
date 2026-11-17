@@ -16,6 +16,7 @@ import {flyMode} from '#src/lib/gallery/flyMode.ts'
 import {activateInteractiveObject} from '#src/lib/gallery/interactiveObjects.ts'
 import {playerSession} from '#src/lib/gallery/PlayerSession.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import {playerCollisionGroups} from '#src/lib/physics/PlayerReleaseGrace.ts'
 import {playerTelemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumpHandler, playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
 import world from '#src/worlds/current.ts'
@@ -191,5 +192,5 @@ export default function Player() {
       }
     }
   }
-  return <EgoPlayer cameraEnabled={cameraEnabled} enabled={enabled} fallbackPosition={world.spawnInReach.position} flying={flying} input={input} pitch={initial.pitch} pointerLock={pointerLock} position={initial.position} yaw={initial.yaw} ref={player} onDump={playerDumpHandler} onImpact={onImpact} onInteract={onInteract} onLand={onPlayerLand} onStep={onPlayerStep} onUpdate={onUpdate} onZoomChange={onPlayerZoomChange} onZoomTransition={onPlayerZoomTransition} />
+  return <EgoPlayer cameraEnabled={cameraEnabled} collisionGroups={playerCollisionGroups} enabled={enabled} fallbackPosition={world.spawnInReach.position} flying={flying} input={input} pitch={initial.pitch} pointerLock={pointerLock} position={initial.position} yaw={initial.yaw} ref={player} onDump={playerDumpHandler} onImpact={onImpact} onInteract={onInteract} onLand={onPlayerLand} onStep={onPlayerStep} onUpdate={onUpdate} onZoomChange={onPlayerZoomChange} onZoomTransition={onPlayerZoomTransition} />
 }

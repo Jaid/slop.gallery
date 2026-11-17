@@ -12,6 +12,7 @@ import PotGeometry from '../../src/lib/gallery/plantDecorations/PotGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import initializeFoliageCollider from '../../src/lib/physics/initializeFoliageCollider.ts'
+import {handSpeed} from '../../src/lib/physics/itemMotion.ts'
 import PlantAttachment from '../../src/lib/physics/PlantAttachment.ts'
 import {leafPhysics} from '../../src/lib/physics/plantPhysics.ts'
 
@@ -230,7 +231,7 @@ for (const kind of ['birdOfParadise', 'peaceLily'] as const) {
       leaf.grab()
       leaf.release([0, 2, 2], [0, 2, 3], true)
       expect(leaf.body.isDynamic()).toBe(true)
-      expect(leaf.body.linvel().z).toBe(10)
+      expect(leaf.body.linvel().z).toBeCloseTo(handSpeed(geometry.leaves[1].mass + geometry.leaves[1].stemMass), 5)
       for (let i = 0; i < leaf.body.numColliders(); i++) {
         expect(leaf.body.collider(i).isEnabled()).toBe(true)
       }

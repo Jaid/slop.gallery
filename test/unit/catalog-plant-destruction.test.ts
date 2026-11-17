@@ -215,7 +215,7 @@ describe('catalog plant destruction', () => {
     // Attached, the root sits inside its pot; carried out of the physics and let go of elsewhere, it never has to be pulled out of it.
     expect(root.placement.hasRoom([home.x, home.y, home.z])).toBe(false)
     root.grab()
-    expect(root.release([0, 2, 2], [0, 2, 3], false)).toBe(false)
+    expect(root.release([0, 2, 2], [0, 2, 3], false)).not.toBeNull()
     expect(root.body.translation().z).toBeCloseTo(3, 6)
     expect(root.body.isDynamic()).toBe(true)
     expect(root.body.collider(0).isEnabled()).toBe(true)
@@ -223,7 +223,7 @@ describe('catalog plant destruction', () => {
     world.createCollider(RAPIER.ColliderDesc.cuboid(0.5, 2, 0.1).setTranslation(0, 2, 4))
     world.step()
     root.grab()
-    expect(root.release([0, 2, 2], [0, 2, 5], false)).toBe(false)
+    expect(root.release([0, 2, 2], [0, 2, 5], false)).not.toBeNull()
     const stopped = root.body.translation()
     expect(stopped.z).toBeLessThan(3.9)
     expect(root.placement.hasRoom([stopped.x, stopped.y, stopped.z])).toBe(true)

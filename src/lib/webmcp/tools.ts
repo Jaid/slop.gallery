@@ -214,7 +214,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           from: point('world-space point in meters it leaves from, [x, y, z]. Default: where a carried orb floats, 0.55 m from the camera, 15° below the middle of the view'),
           speed: {
             type: 'number',
-            description: 'm/s it leaves with toward a portrait or a target. Default: 10, the player’s throw',
+            description: 'm/s it leaves with toward a portrait or a target. Default: the prop’s mass-dependent hand speed, up to 10 m/s',
             exclusiveMinimum: 0,
           },
         },

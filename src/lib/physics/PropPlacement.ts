@@ -3,6 +3,8 @@ import type {Collider, RigidBody, World} from '@dimforge/rapier3d-compat'
 
 import {Quaternion, Vector3} from 'three/webgpu'
 
+import {isPlayer} from './PlayerReleaseGrace.ts'
+
 /** how far a released prop stays from what its sweep hits, in meters */
 const skin = 0.025
 
@@ -11,9 +13,7 @@ export default class PropPlacement {
   private obstacle = (collider: Collider) => collider.isEnabled() && !collider.isSensor()
 
   private sweepObstacle = (collider: Collider) => {
-    const data = collider.parent()?.userData
-    const player = data && typeof data === 'object' && 'isPlayer' in data && data.isPlayer === true
-    return this.obstacle(collider) && !player
+    return this.obstacle(collider) && !isPlayer(collider)
   }
 
   constructor(readonly world: World, readonly body: RigidBody) {}
@@ -25,23 +25,27 @@ export default class PropPlacement {
   }
 
   /**
-   * How far toward `target` the prop gets from `origin`, which lies inside the player’s capsule, before any of its parts meets something: the place to let it go, short of walls, pedestals and floors in the way. Null where it fits nowhere along the way, not even clear of the player.
+   * How far toward `target` the prop gets from `origin`, which lies inside the player’s capsule, before any of its parts meets something: the place to let it go, short of walls, pedestals and floors in the way. Null if the starting pose is embedded in scenery or there is no safe pose. Player overlap is allowed by the release grace period.
    * Every part sweeps, offset covers and labels too: a center ray misses pedestals below the sightline and lets the prop’s edges enter the stone.
    */
   reach(origin: Vec3, target: Vec3): Vec3 | null {
+    // A cast that starts in penetration is not a depenetration solver: allowing it to exit could put an item through a thin wall.
+    if (!this.hasRoom(origin, false)) {
+      return null
+    }
     const start = new Vector3(...origin)
     const direction = new Vector3(...target)
     direction.sub(start)
     let distance = direction.length()
     direction.normalize()
     for (const {center, orientation, shape} of this.shapes(origin)) {
-      const hit = this.world.castShape(center, orientation, direction, shape, skin, distance, false, undefined, undefined, undefined, this.body, this.sweepObstacle)
+      const hit = this.world.castShape(center, orientation, direction, shape, skin, distance, true, undefined, undefined, undefined, this.body, this.sweepObstacle)
       if (hit) {
         distance = Math.max(0, hit.time_of_impact)
       }
     }
     const position = start.addScaledVector(direction, distance).toArray()
-    return this.hasRoom(position) ? position : null
+    return this.hasRoom(position, false) ? position : null
   }
 
   private shapes(position: Vec3) {

@@ -62,13 +62,14 @@ describe('where a released prop goes', () => {
     expect(position[2]).toBeLessThan(0.43)
     expect(placement.hasRoom(position)).toBe(true)
   })
-  test('sweeps out of the player’s capsule but never ends inside it', () => {
+  test('allows a release inside the player’s capsule, which release grace handles', () => {
     const placement = slab()
     const player = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased())
     player.userData = {isPlayer: true}
     world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), player)
     world.step()
     expect(placement.reach([0, 1.4, 0], [0, 1.4, 1.45])).toEqual([0, 1.4, 1.45])
+    expect(placement.reach([0, 1.4, 0], [0, 1.4, 0])).toEqual([0, 1.4, 0])
     expect(placement.hasRoom([0, 1.4, 0])).toBe(false)
     expect(placement.hasRoom([0, 1.4, 0], false)).toBe(true)
   })

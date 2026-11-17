@@ -10,13 +10,14 @@ import type {ReactNode} from 'react'
 import type {Group, Object3D} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {RigidBody, useRapier} from '@react-three/rapier'
+import {RigidBody, useBeforePhysicsStep, useRapier} from '@react-three/rapier'
 import Branch from 'branch-component'
 import {useEffect, useLayoutEffect, useRef} from 'react'
 import {Box3, Vector3} from 'three/webgpu'
 
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
-import {cameraPose, notify, requestItemFusion, useGallery} from '#src/lib/gallery.ts'
+import throwVoices from '#src/lib/audio/throwVoices.ts'
+import {bodyPose, cameraPose, notify, playSound, requestItemFusion, useGallery} from '#src/lib/gallery.ts'
 import {handBack, settle} from '#src/lib/gallery/fusion/handBack.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import {registerOrbitable} from '#src/lib/gallery/orbitables.ts'
@@ -27,7 +28,8 @@ import {telemetry} from '#src/lib/telemetry/index.ts'
 
 export type PropHandle = {
   body: RapierRigidBody
-  cancel: () => void
+  /** Drops in place on interruption too; false when scenery leaves no room. */
+  cancel: () => boolean
   /** whether a grab would currently succeed, without attempting it */
   canGrab: () => boolean
   /** Throws the prop from `position` with `velocity`, in m/s, as if the player had let go of it there, like the `throw_prop` tool does; false while it is carried or a fusion holds it. */
@@ -38,7 +40,7 @@ export type PropHandle = {
   mood?: MoodId
   /** the kind of orb the prop is, if it is one */
   orb?: Orb
-  release: (throwing: boolean) => void
+  release: (throwing: boolean) => boolean
   /** Takes the prop out of the physics for a fusion, which flies it around by its `group` until it calls `unleash`; false while the player carries it. */
   seize: () => boolean
   /** whether a fusion holds the prop */
@@ -92,8 +94,8 @@ const holdLine = (position: Vec3, direction: Vec3, distance: number, up: Vec3 = 
 }
 /** what the player does with a prop, logged as `gallery.prop.<event>` */
 type PropEvent = 'dropped' | 'grabbed' | 'thrown'
-/** why a dropped prop left the hand: let go of, put back where it was picked up for want of room, or put back as carrying it was canceled */
-type DropCause = 'canceled' | 'no_room' | 'released'
+/** why a prop was dropped locally; an interrupted carry is a drop too */
+type DropCause = 'canceled' | 'released'
 const propVerbs: Record<PropEvent, string> = {
   dropped: 'Dropped',
   grabbed: 'Grabbed',
@@ -224,6 +226,23 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         ...cause ? {'drop.cause': cause} : {},
       }, `${propVerbs[event]} ${title}`)
     }
+    const release = (throwing: boolean, cause: DropCause) => {
+      if (!carried.active) {
+        return true
+      }
+      // Recheck against the latest scenery; an obstacle could have moved since the last displayed frame.
+      const {direction, origin, target} = shownOn.current ?? holdLine(cameraPose.position, cameraPose.direction, holdDistance.current)
+      const motion = carried.release(origin, target, throwing, direction, cameraPose.posed ? [0, 0, 0] : bodyPose.velocity)
+      if (!motion) {
+        notify('Not enough room to let go. Move away from the obstacle.')
+        return false
+      }
+      shownOn.current = null
+      settle(rigidBody, prop)
+      record(throwing ? 'thrown' : 'dropped', throwing ? undefined : cause)
+      playSound(throwVoices(motion), `release:${id}`, [rigidBody.translation().x, rigidBody.translation().y, rigidBody.translation().z])
+      return true
+    }
     const handle: PropHandle = {
       body: rigidBody,
       group: prop,
@@ -235,6 +254,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
           return false
         }
         seized.current = true
+        carried.releaseBody.grace.clear()
         clearBodyThrow(rigidBody)
         rigidBody.setEnabled(false)
         return true
@@ -284,31 +304,8 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         record('grabbed')
         return true
       },
-      cancel: () => {
-        shownOn.current = null
-        if (carried.active) {
-          carried.cancel()
-          settle(rigidBody, prop)
-          record('dropped', 'canceled')
-        }
-      },
-      release: throwing => {
-        // Let go of where it was shown, or before it was ever shown, where the camera holds it.
-        const {direction, origin, target} = shownOn.current ?? holdLine(cameraPose.position, cameraPose.direction, holdDistance.current)
-        shownOn.current = null
-        const carrying = carried.active
-        const returned = carried.release(origin, target, throwing, direction)
-        settle(rigidBody, prop)
-        if (!carrying) {
-          return
-        }
-        // With no room to let go of it anywhere along the line, it went back where it was picked up, also when thrown.
-        if (returned) {
-          record('dropped', 'no_room')
-        } else {
-          record(throwing ? 'thrown' : 'dropped', throwing ? undefined : 'released')
-        }
-      },
+      cancel: () => release(false, 'canceled'),
+      release: throwing => release(throwing, 'released'),
     }
     propObjects.set(id, handle)
     const unregisterOrbitable = orbitSettings.current && registerOrbitable(id, {
@@ -318,6 +315,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       title,
     })
     return () => {
+      carried.releaseBody.grace.clear()
       unregisterOrbitable?.()
       if (propObjects.get(id) === handle) {
         propObjects.delete(id)
@@ -337,6 +335,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
       return impactSounds.register(body.current, striker)
     }
   }, [striker])
+  useBeforePhysicsStep(() => controller.current?.releaseBody.step(world.timestep))
   useFrame(() => {
     controller.current?.recover()
   })
@@ -345,6 +344,9 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
     const prop = group.current
     const holder = prop?.parent
     if (!controller.current?.active || !holder) {
+      if (controller.current?.releaseBody.interpolationPending && prop) {
+        settle(controller.current.body, prop)
+      }
       return
     }
     camera.getWorldPosition(eye)
@@ -353,7 +355,11 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
     const line = holdLine(eye.toArray(), look.toArray(), holdDistance.current, viewUp.toArray())
     shownOn.current = line
     holder.updateWorldMatrix(true, false)
-    prop.position.copy(holder.worldToLocal(holding.fromArray(line.target)))
+    const safe = controller.current.placement.reach(line.origin, line.target)
+    // Constrain the visible held pose too, so releasing beside a wall does not suddenly pull the prop back. If even the chest pose is blocked, keep showing the last pose and refuse release until the player makes room.
+    if (safe) {
+      prop.position.copy(holder.worldToLocal(holding.fromArray(safe)))
+    }
   }, {before: 'render'})
   const struck = (event: CollisionEnterPayload) => {
     const current = body.current

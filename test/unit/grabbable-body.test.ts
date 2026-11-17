@@ -18,8 +18,8 @@ afterEach(() => world.free())
 /** a dynamic box with two colliders, like a sculpture with a cover */
 const sculpture = () => {
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(1, 2, 3))
-  world.createCollider(RAPIER.ColliderDesc.cuboid(0.3, 0.05, 0.4), body)
-  world.createCollider(RAPIER.ColliderDesc.cuboid(0.35, 0.01, 0.45).setTranslation(0, 0.06, 0), body)
+  world.createCollider(RAPIER.ColliderDesc.cuboid(0.3, 0.05, 0.4).setMass(0.9), body)
+  world.createCollider(RAPIER.ColliderDesc.cuboid(0.35, 0.01, 0.45).setMass(0.9).setTranslation(0, 0.06, 0), body)
   return body
 }
 describe('shared grabbing regressions', () => {
@@ -89,7 +89,7 @@ describe('shared grabbing regressions', () => {
     world.step()
     const carried = new GrabbableBody(body, world)
     carried.grab()
-    expect(carried.release([0, 1.4, 0], [0, 1.4, 1.45], false)).toBe(false)
+    expect(carried.release([0, 1.4, 0], [0, 1.4, 1.45], false)).not.toBeNull()
     const {z} = body.translation()
     // The prop’s cover reaches 0.45 m ahead of its middle and the wall’s face is at 1.7 m, so it stops 1.25 m out, short of the 1.45 m it was held at.
     expect(z).toBeLessThan(1.7 - 0.45)
@@ -97,17 +97,21 @@ describe('shared grabbing regressions', () => {
     expect(carried.placement.hasRoom([0, 1.4, z])).toBe(true)
     expect(body.isEnabled()).toBe(true)
   })
-  test('without room anywhere along the way, the prop stays where it was picked up', () => {
+  test('without room anywhere along the way, release is refused and the prop stays held', () => {
     world.createCollider(RAPIER.ColliderDesc.cuboid(2, 2, 2).setTranslation(0, 1.4, 0))
     const body = sculpture()
     world.step()
     const resting = body.translation()
     const carried = new GrabbableBody(body, world)
     carried.grab()
-    expect(carried.release([0, 1.4, 0], [0, 1.4, 1.45], true)).toBe(true)
+    expect(carried.release([0, 1.4, 0], [0, 1.4, 1.45], true)).toBeNull()
     expect(body.translation()).toEqual(resting)
-    expect(body.isEnabled()).toBe(true)
+    expect(body.isEnabled()).toBe(false)
     expect(bodyThrow(body)).toBeUndefined()
+    expect(carried.active).toBe(true)
+    // Making room retries the same carry rather than leaving anything at the pickup point.
+    expect(carried.release([5, 1.4, 0], [5, 1.4, 1.45], true)).not.toBeNull()
+    expect(body.translation().x).toBe(5)
     expect(carried.active).toBe(false)
   })
   test('a throw flies along the line it was held on, spinning, and a drop just falls', () => {
