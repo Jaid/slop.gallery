@@ -11,7 +11,7 @@ import {portalFrame, portalRadius} from '../../src/lib/gallery/fusion/portalFram
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import spawnThroughTool from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import worldClock from '../../src/lib/worldClock.ts'
-import {halloweenOrb, horrorOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
+import {halloweenOrb, horrorOrb, impastoOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/party_effects/blood/flights.ts'
@@ -21,11 +21,12 @@ import {partyEffects} from '../../src/party_effects/index.ts'
 import {choiceEffects, pickEffect} from '../../src/party_effects/lib/effectChoice.ts'
 import {endParty, startParty, useParties} from '../../src/party_effects/lib/parties.ts'
 import {offsetPosition, partySite} from '../../src/party_effects/lib/partySite.ts'
+import {knifeSmears, smearCrumbling, smearHeading, smearPoint, smearSpread} from '../../src/party_effects/smears/flights.ts'
 import {brushStrokes, strokeDrying, strokePoint} from '../../src/party_effects/strokes/flights.ts'
 import {lashing, lashingTendrils, snapping, tendrilReach} from '../../src/party_effects/tendrils/flights.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
-const {bats: batsEffect, blood: bloodEffect, eyes: eyesEffect, ghosts: ghostsEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
+const {bats: batsEffect, blood: bloodEffect, eyes: eyesEffect, ghosts: ghostsEffect, smears: smearsEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
 const effects = Object.values<PartyEffect>(partyEffects)
 const hung = portraitIngredient({
   title: 'The hung portrait',
@@ -114,6 +115,7 @@ describe('party effects', () => {
     expect(horrorOrb.effect).toEqual(['blood', 'eyes', 'tendrils'])
     expect(spookOrb.effect).toBe('ghosts')
     expect(paintOrb.effect).toBe('strokes')
+    expect(impastoOrb.effect).toBe('smears')
     expect(transparentOrb.effect).toBeUndefined()
     expect(transparentOrb.partyEffect(3)).toBeUndefined()
     for (const seed of [0, 3, 4, 977, 0xFF_FF_FF_FF]) {
@@ -336,7 +338,7 @@ describe('party effects', () => {
     expect(() => spawnThroughTool({
       effect: 'confetti',
       position: [0, 0, 0],
-    })).toThrow(/bats, blood, eyes, ghosts, strokes, tendrils/)
+    })).toThrow(/bats, blood, eyes, ghosts, smears, strokes, tendrils/)
     expect(() => spawnThroughTool({
       effect: 'toString',
       position: [0, 0, 0],
@@ -349,6 +351,8 @@ describe('party effects', () => {
     }
     expect(batsEffect.duration).toBe(Math.max(...flyingBats.map(({delay, life}) => delay + life)))
     expect(strokesEffect.duration).toBe(strokeDrying.start + strokeDrying.stagger + strokeDrying.seconds)
+    expect(smearsEffect.duration).toBe(Math.max(...knifeSmears.map(({crumble}) => crumble + smearCrumbling.seconds)))
+    expect(smearsEffect.duration).toBeLessThanOrEqual(smearCrumbling.start + smearCrumbling.stagger + smearCrumbling.seconds)
     expect(bloodEffect.duration).toBeCloseTo(Math.max(bloodFading.start + bloodFading.stagger + bloodFading.duration, bloodPool.draining.start + bloodPool.draining.seconds), 9)
     expect(eyesEffect.duration).toBeCloseTo(Math.max(...staringEyes.map(({close}) => close)) + shutting.lids + shutting.fading, 9)
     expect(tendrilsEffect.duration).toBe(Math.max(...lashingTendrils.map(({retract}) => retract)) + snapping)
@@ -439,6 +443,38 @@ describe('party effects', () => {
     expect(Math.atan2(laterUp, laterAlong)).not.toBeCloseTo(Math.atan2(up, along), 2)
     expect(laterOut).toBeGreaterThan(out)
   })
+  test('the knife smears are slapped down round the portal clear of its ball, one after another, each dragged straight out away from it before it crumbles, the later ones in front, and drift out into the room once laid', () => {
+    for (const smear of knifeSmears) {
+      const [startAlong, startUp] = smearPoint(smear, 0, 0)
+      const [endAlong, endUp] = smearPoint(smear, 1, 0)
+      // clear of the ball by more than the paint spreads round the knife’s path
+      for (const [along, up] of [[startAlong, startUp], [endAlong, endUp]]) {
+        expect(Math.hypot(along, up) - smear.width * smearSpread).toBeGreaterThan(portalRadius)
+      }
+      // dragged out away from the portal rather than round it, farther than the blade is wide, so it reads as a smear rather than a dab
+      expect(Math.hypot(endAlong, endUp) - Math.hypot(startAlong, startUp)).toBeGreaterThan(smear.width)
+      expect(Math.abs(smear.slant)).toBeLessThan(Math.PI / 4)
+      const heading = smearHeading(smear, 0)
+      expect(Math.atan2(endUp - startUp, endAlong - startAlong)).toBeCloseTo(Math.atan2(Math.sin(heading), Math.cos(heading)), 9)
+      expect(smear.delay + smear.duration).toBeLessThan(smear.crumble)
+      expect(smear.crumble).toBeGreaterThanOrEqual(smearCrumbling.start)
+      expect(smear.crumble).toBeLessThanOrEqual(smearCrumbling.start + smearCrumbling.stagger)
+      expect(smear.paint.every(paint => Number.isInteger(paint) && paint >= 0 && paint < 6)).toBe(true)
+      const [, , out] = smearPoint(smear, 0.5, 0)
+      const [, , laterOut] = smearPoint(smear, 0.5, 1)
+      expect(laterOut).toBeGreaterThan(out)
+    }
+    const delays = knifeSmears.map(({delay}) => delay)
+    expect(delays).toEqual(delays.toSorted((a, b) => a - b))
+    for (const [index, smear] of knifeSmears.entries()) {
+      for (const later of knifeSmears.slice(index + 1)) {
+        expect(later.ring).toBeGreaterThanOrEqual(smear.ring)
+        if (later.ring > smear.ring) {
+          expect(later.out).toBeGreaterThan(smear.out)
+        }
+      }
+    }
+  })
   test('every effect tells where it reaches over its whole show, holding everything it flies, lays or spills, never below the floor', () => {
     const floor = frame.floor - frame.center[1]
     for (const effect of effects) {
@@ -460,6 +496,7 @@ describe('party effects', () => {
     at(batsEffect, flyingBats.flatMap(bat => [0.1, 0.4, 0.8].map(share => batOffset(bat, bat.life * share))))
     at(ghostsEffect, escapingGhosts.flatMap(ghost => [0.1, 0.4, 0.8].map(share => ghostOffset(ghost, ghost.life * share))))
     at(strokesEffect, brushStrokes.flatMap(stroke => [0.2, 0.7].flatMap(share => [0, 1, 2].map(seconds => strokePoint(stroke, share, seconds)))))
+    at(smearsEffect, knifeSmears.flatMap(smear => [0, 0.5, 1].flatMap(share => [0, 1, 2].map(seconds => smearPoint(smear, share, seconds)))))
     at(eyesEffect, staringEyes.map(({spot}) => spot))
     at(tendrilsEffect, lashingTendrils.map(tendrilReach))
     // every stain where its drop strikes the floor, and the pool at its widest

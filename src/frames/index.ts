@@ -25,6 +25,7 @@ import EvidenceFrame from './evidence/EvidenceFrame.ts'
 import FleshFrame from './flesh/FleshFrame.ts'
 import FloatFrame from './float/FloatFrame.ts'
 import GildingFrame from './gilding/GildingFrame.ts'
+import ImpastoFrame from './impasto/ImpastoFrame.ts'
 import ImpressionistFrame from './impressionist/ImpressionistFrame.ts'
 import InfestedFrame from './infested/InfestedFrame.ts'
 import KumikoFrame from './kumiko/KumikoFrame.ts'
@@ -85,6 +86,7 @@ export const frames = {
   flesh: new FleshFrame,
   float: new FloatFrame,
   gilding: new GildingFrame,
+  impasto: new ImpastoFrame,
   impressionist: new ImpressionistFrame,
   infested: new InfestedFrame,
   kumiko: new KumikoFrame,
