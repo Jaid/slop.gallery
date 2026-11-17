@@ -129,8 +129,8 @@ const shoulderAngle = 40 * Math.PI / 180
 const neckHalfWidth = towerRamp.width / 2
 /** where the ramp ends, a little beyond the round wall */
 const neckReach = oculusTower.z - endZ
-/** the deck’s outline steps around the round wall at about this angle */
-const arcStep = 2.64 * Math.PI / 180
+/** Sample the round wall about every 10 cm along its rim. */
+const arcStep = 0.1 / oculusTower.radius
 const flareSteps = 12
 /** how long a bridge’s climb is, from the deck’s shoulders to where its fillets begin to flare out into the doorway in its wall */
 const climbLength = (wallDistance: number) => wallDistance - wallFace - towerBridge.flareRadius - neckReach
