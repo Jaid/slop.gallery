@@ -127,7 +127,8 @@ export type SnapshotSubject = {
   dispose: () => void
   object: Object3D
 }
-type GrabbablePropProps = Omit<RigidBodyProps, 'children' | 'position' | 'ref'> & GrabbableBodyOptions & {
+/** Without `mass`, which react-three-rapier hands neither to the colliders it builds from the children nor to any other, so it would do nothing: a prop weighs what the masses of its colliders add up to. */
+type GrabbablePropProps = Omit<RigidBodyProps, 'children' | 'mass' | 'position' | 'ref'> & GrabbableBodyOptions & {
   blockedMessage?: () => string
   children: ReactNode
   /** colliders of its own, like a hull round all of its meshes, instead of those built from its children; they stay with its body while its children float in front of the camera */

@@ -18,7 +18,6 @@ export default function DestructiblePlantLeaf({id, leaf, attachments, foliageMat
   const resources = decorationResources()
   return <GrabbableProp
     id={id} colliders={false} position={leaf.position} rotation={leaf.rotation} title={leaf.title} type='fixed' {...leafPhysics}
-    mass={leaf.mass}
     recoverAsDynamic={attachments.recoverLeafAsDynamic}
     onAttachmentChange={attached => attachments.setLeafAttached(id, attached)}
   >

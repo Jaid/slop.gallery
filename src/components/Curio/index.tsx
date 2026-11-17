@@ -10,7 +10,7 @@ import GrabbableProp from '#src/components/Scene/GrabbableProp.tsx'
 export default function Curio({curio}: {curio: CurioKind}) {
   const model = useDisposable(useMemo(() => curio.createModel(), [curio]))
   const collider = useMemo(() => <ConvexHullCollider args={[model.hull]} mass={curio.mass} />, [model, curio])
-  return <GrabbableProp id={curio.propId} collider={collider} mass={curio.mass} orbit={{radius: curio.reach}} position={curio.position} rotation={curio.rotation} title={curio.title} type={curio.type}>
+  return <GrabbableProp id={curio.propId} collider={collider} orbit={{radius: curio.reach}} position={curio.position} rotation={curio.rotation} title={curio.title} type={curio.type}>
     {model.parts.map(({geometry, material, name}) => <mesh key={name} castShadow geometry={geometry} material={material} name={name} receiveShadow />)}
   </GrabbableProp>
 }
