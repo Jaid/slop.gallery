@@ -9,10 +9,11 @@ import {createServer} from 'vite'
 import {maximumSeed, parseSeed} from '#src/lib/environmentSeed.ts'
 import {queryParameters} from '#src/lib/queryOverrides.ts'
 import {parseStreamBudget} from '#src/lib/rendering/streamBudget.ts'
+import {worldReaches} from '#src/lib/worldReach.ts'
 import {readWorld, worldParameters} from '#src/worlds/index.ts'
 
 export const repositoryRoot = resolve(import.meta.dir, '..', '..')
-const dedicatedQueryOptionNames = new Set(['graphics', 'seed', 'stream_budget', 'test', 'warmup_scale'])
+const dedicatedQueryOptionNames = new Set(['graphics', 'seed', 'stream_budget', 'test', 'warmup_scale', 'world_reach'])
 /** rows of the drawing buffer while a page warms up, see --warmup_scale */
 export const warmupRows = 360
 // These have dedicated options with validation and defaults. A world’s own parameters open it, like --shots opens Knottingham and --item the Sandbox.
@@ -30,6 +31,7 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}:
   --graphics <mode>       mirrors ?graphics (fast, heavy, cinematic, which is heavy with larger maps and more samples for non-realtime renders, or auto, which picks fast or heavy for the GPU). Default: heavy
   --seed <number>         mirrors ?seed, the environment seed (0–${maximumSeed}) that decides random details like the potted plants. Default: 1
   --test <true|false>     mirrors ?test, which gives the page its pose and teleport hooks and leaves the intro out. Default: true; false opens the page as players get it, without those hooks
+  --world_reach <reach>   mirrors ?world_reach (room, neighbors or all). Default: all, every room; room loads only the room the spawn (--room or --spawn) belongs to and neighbors also its neighbor rooms, so a capture of one room loads far sooner, its openings looking out on the void
   --stream_budget <ms|false>
                           mirrors ?stream_budget, the milliseconds a frame after loading may spend building objects. Default: false, which builds everything in the first frame, so the scene is complete about three times sooner than at the players’ 8 and, in cinematic graphics, whose every streaming frame renders the whole view, three to six times sooner than at 100
   --warmup_scale <scale|false>
@@ -54,6 +56,7 @@ export const galleryOptions = {
   swiftshader: {type: 'boolean'},
   test: {type: 'string'},
   warmup_scale: {type: 'string'},
+  world_reach: {type: 'string'},
   target: {type: 'string'},
   width: {type: 'string'},
   height: {type: 'string'},
@@ -68,6 +71,7 @@ export type GalleryValues = Partial<Record<string, boolean | string>> & {
   test?: string
   warmup_scale?: string
   width?: string
+  world_reach?: string
 }
 export type GallerySetup = Awaited<ReturnType<typeof resolveGallerySetup>>
 export const parseNumbers = (value: string, name: string, lengths: Array<number>) => {
@@ -185,6 +189,10 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
   if (test !== 'true' && test !== 'false') {
     throw new Error(`--test must be true or false, got “${test}”.`)
   }
+  const reach = values.world_reach
+  if (reach !== undefined && (typeof reach !== 'string' || !(worldReaches as ReadonlyArray<string>).includes(reach))) {
+    throw new Error(`--world_reach must be one of ${worldReaches.join(', ')}, got “${reach}”.`)
+  }
   const search = new URLSearchParams({
     ai: 'false',
     test,
@@ -195,6 +203,9 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
   }
   search.set('seed', String(seed))
   search.set('graphics', values.graphics)
+  if (typeof reach === 'string') {
+    search.set('world_reach', reach)
+  }
   // ?test=true implies it already; it is explicit so captures keep it without the test hooks. Building everything in the first frame is fastest in every graphics mode: a budget spreads the building over frames that each render the whole view, over 200 of them in cinematic graphics, 0.35 s each at 2160p and 2.3 s at 8K. The warmup keeps that first frame small; even without it, it no longer lost the device on hive’s RX 9060 XT at 2160p or 8K.
   const streamBudget = values.stream_budget ?? 'false'
   if (parseStreamBudget(streamBudget) === undefined) {
