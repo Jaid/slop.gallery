@@ -10,7 +10,7 @@ import {referenceMass, throwSpeed} from '../physics/throwMotion.ts'
 const fullSpeed = 16
 
 /**
- * The sound of a prop leaving the hand, by how it left (see `toss` of `throwMotion.ts`), heard where the player is.
+ * The sound of a prop leaving the hand, by how it left (see `toss` of `throwMotion.ts`), heard where it left the hand.
  *
  * - A throw sounds the interaction tone falling from 130 Hz, as ever, a drop from 400 Hz; a jump shot’s rises instead, by how much of the jump went into it.
  * - Everything sounds lower the heavier it is, by a third of the octaves it weighs more than an orb, and higher the lighter: a pumpkin heaves down to about 0.75×, a leaf flicks up to 2.5×.

@@ -1,4 +1,4 @@
-import type {Placement} from '#src/lib/gallery.ts'
+import type {Placement, Vec3} from '#src/lib/gallery.ts'
 import type {Toss} from '#src/lib/physics/throwMotion.ts'
 import type {MutableRef} from './types.ts'
 import type {RootState} from '@react-three/fiber'
@@ -43,10 +43,10 @@ const workThrow = {
   lift: 1.5 / 14,
 }
 let tosses = 0
-/** Sounds a throw or a drop as it leaves the hand. */
-const sound = (thrown: Toss) => {
+/** Sounds a throw or a drop as it leaves the hand, heard from where it left it. */
+const sound = (thrown: Toss, position: Vec3) => {
   const index = tosses++
-  playSound(tossVoices(thrown, Math.sin(index * 2.39996)), `toss:${index}`)
+  playSound(tossVoices(thrown, Math.sin(index * 2.39996)), `toss:${index}`, position)
 }
 
 export default function createGrabController(camera: RootState['camera'], placement: MutableRef<Placement | null>) {
@@ -76,7 +76,8 @@ export default function createGrabController(camera: RootState['camera'], placem
         placement: null,
       })
       if (thrown) {
-        sound(thrown)
+        const {x, y, z} = prop.body.translation()
+        sound(thrown, [x, y, z])
       }
       return
     }
@@ -112,7 +113,7 @@ export default function createGrabController(camera: RootState['camera'], placem
       if (body) {
         PlayerGrace.of(body).begin()
       }
-      sound(thrown)
+      sound(thrown, position.toArray())
     } else {
       const candidate = world.placement.findPlacement(camera.position.toArray(), camera.getWorldDirection(new Vector3).toArray(), portrait.width, portrait.height, state.portraits, portrait.id, portrait.labelAbove === true)
       if (candidate?.valid) {
