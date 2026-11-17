@@ -157,6 +157,11 @@ export default abstract class World<Kind extends Room = Room> {
     return room.id === current ? 0.25 : 0.1
   }
 
+  /** The ids of the neighbor rooms of the room with the id, which load next to it under `?world_reach=neighbors`; none by default. */
+  neighborRooms(_room: string): ReadonlyArray<string> {
+    return []
+  }
+
   /** The frame area in cm² of a work imported onto the wall with the id `wallId`, that of the room owning the wall, or, dropped instead, that of the player’s room `room`; {@link defaultPortraitArea} for a room the world doesn’t know. */
   portraitArea(wallId: string | undefined, room: string) {
     const owner = wallId === undefined ? room : this.placement.wall(wallId)?.room ?? room

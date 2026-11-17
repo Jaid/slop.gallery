@@ -12,6 +12,7 @@ import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
 import worldClock from '#src/lib/worldClock.ts'
+import {reachedRooms, worldReach} from '#src/lib/worldReach.ts'
 
 import {propObjects} from '../GrabbableProp.tsx'
 
@@ -36,6 +37,10 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
       activeLabel: useGallery.getState().activeLabel,
       seed: environmentSeed,
       spectating: usePortraitSpectation.getState().id,
+      worldReach: {
+        mode: worldReach,
+        rooms: reachedRooms() && [...reachedRooms()!],
+      },
       props: [...propObjects].map(([id, {body, group}]) => ({
         id,
         position: body.translation(),

@@ -340,6 +340,11 @@ export function floorMirror(room: string): FloorMirror | undefined {
   return Object.hasOwn(relations, room) ? (relations[room as RoomId] as RoomRelations).floorMirror : undefined
 }
 
+/** The neighbor rooms of the room: the other rooms that stay on while the player is inside it, from its {@link RoomRelations.rooms}; none for an id the gallery doesn’t know. */
+export function neighborRooms(room: string): ReadonlyArray<RoomId> {
+  return Object.hasOwn(relations, room) ? relations[room as RoomId].rooms : []
+}
+
 const roomIds = Object.keys(relations) as Array<RoomId>
 /** The global ids of other rooms’ objects, given by the room they belong to. */
 const globalIds = (byRoom: ForeignIds = {}) => Object.entries(byRoom).flatMap(([owner, ids = []]) => [ids].flat().map(id => `${owner}-${id}`))

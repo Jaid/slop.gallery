@@ -28,7 +28,7 @@ import World from '../base/World.ts'
 import {worlds} from '../index.ts'
 import artworks from './artworks.ts'
 import GalleryNavigation from './navigation.ts'
-import {audibleRooms, litRooms} from './relations.ts'
+import {audibleRooms, litRooms, neighborRooms} from './relations.ts'
 import sky from './sky.ts'
 
 /** a room of the gallery */
@@ -105,6 +105,11 @@ export default class SlopGallery extends World<GalleryRoom> {
   /** A lamp only shines while the player is in its own room or in one that keeps it on, because it reaches in or can be seen from there. */
   override lampRooms(lamp: PlacedLamp) {
     return litRooms(lamp.room as GalleryRoomId, lamp.id)
+  }
+
+  /** The rooms a room’s relations keep on while the player is inside it, see `relations.ts`. */
+  override neighborRooms(room: string) {
+    return neighborRooms(room)
   }
 
   override roomTagline(room: PlacedRoom<GalleryRoom>) {

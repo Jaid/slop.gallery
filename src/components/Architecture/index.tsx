@@ -1,16 +1,22 @@
 import type {Wall} from '#src/lib/gallery.ts'
 
+import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
+import ApseGrilles from '#component/ApseGrilles'
 import GalleryLighting from '#component/GalleryLighting'
 import GalleryStairs from '#component/GalleryStairs'
+import LobbyWindow from '#component/LobbyWindow'
+import LodgeThreshold from '#component/LodgeThreshold'
+import LodgeWindow from '#component/LodgeWindow'
 import WallDecorations from '#component/WallDecorations'
 import World from '#component/World'
 import {surfaceTexture} from '#src/components/Scene/materials.ts'
 import WallSurface from '#src/components/Scene/WallSurface.tsx'
 import {cutArchitectures, provideArchitecture} from '#src/lib/gallery/architecture.ts'
+import {forgeWindow, salonWindow} from '#src/lib/gallery/lobbyWindows.ts'
 import {siennaWainscotFields} from '#src/lib/gallery/siennaWainscot.ts'
 import ArchitecturalConcreteMaterial from '#src/lib/materials/ArchitecturalConcreteMaterial.ts'
 import {createArchitecturalGlassMaterials, disposeArchitecturalGlassMaterials} from '#src/lib/materials/ArchitecturalGlassMaterials.ts'
@@ -26,7 +32,9 @@ import MarmorinoMaterial from '#src/lib/materials/MarmorinoMaterial.ts'
 import {TravertineWallMaterial} from '#src/lib/materials/travertine/index.ts'
 import VesperWallMaterial from '#src/lib/materials/VesperWallMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {reachedRooms} from '#src/lib/worldReach.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
+import {openings} from '#src/worlds/gallery/relations.ts'
 import walls from '#src/worlds/gallery/walls.ts'
 
 // The gallery’s walls never change, so the build cuts their openings instead of every visit.
@@ -128,10 +136,20 @@ export default function Architecture() {
     }
     return banquet.surface(wall)
   }
+  const reached = reachedRooms()
+  // The walls of rooms out of reach stay unbuilt, apart from a wall an opening into a reached room passes through: it seals that room, its opening looking out on the void instead of leaving a gap in it.
+  const boundary = reached ? new Set(openings.filter(opening => opening.rooms.some(room => reached.has(room))).flatMap(opening => opening.holes.map(([wallId]) => wallId))) : undefined
+  const shownWalls = reached ? walls.filter(wall => reached.has(wall.room) || boundary!.has(wall.id)) : walls
   return <>
     <GalleryLighting />
-    {walls.map(wall => <WallSurface key={wall.id} decorations={WallDecorations} glass={glass.tunnel} material={wallMaterial(wall)} plaster={plaster} surfaceMaterial={surfaceMaterial(wall)} wall={wall} />)}
-    <GalleryStairs />
-    <World castleStone={castleStone} corridorWood={corridorWood} glass={glass} joinery={joinery} lobbyWall={lobbyWall} lodge={lodgeMaterials} oculus={oculusMaterial} stone={stone} windowReveal={windowReveal} wood={wood} />
+    {shownWalls.map(wall => <WallSurface key={wall.id} decorations={WallDecorations} glass={glass.tunnel} material={wallMaterial(wall)} plaster={plaster} surfaceMaterial={surfaceMaterial(wall)} wall={wall} />)}
+    {/* What fills the openings between two rooms belongs to neither room alone, like their far-side walls above, so either side within reach keeps it: the stairway between the Antechamber and Moonfall, the apse grilles between the Oculus and the Bastion, the cast glass between the Lobby and the Salon and the Forge, and the Lodge’s windows and threshold toward the corridor and the Bastion. Their rooms own them for culling as before. */}
+    <Branch if={!reached || reached.has('antechamber') || reached.has('moonfall')} then={GalleryStairs} />
+    <Branch if={!reached || reached.has('bastion') || reached.has('oculus')}><group userData={{room: 'oculus'}}><ApseGrilles stone={castleStone} /></group></Branch>
+    <Branch if={!reached || reached.has('lobby') || reached.has('salon')}><group userData={{room: 'salon'}}><LobbyWindow glass={glass.lobbyWindow} glazing={salonWindow} name='salon-window' /></group></Branch>
+    <Branch if={!reached || reached.has('forge') || reached.has('lobby')}><group userData={{room: 'forge'}}><LobbyWindow glass={glass.lobbyWindow} glazing={forgeWindow} name='forge-window' /></group></Branch>
+    <Branch if={!reached || reached.has('bastion') || reached.has('corridor') || reached.has('lodge')}><group userData={{room: 'lodge'}}><LodgeWindow glass={glass.cabin} masonry={castleStone} material={windowReveal} /></group></Branch>
+    <Branch if={!reached || reached.has('corridor') || reached.has('lodge')}><group userData={{room: 'lodge'}}><LodgeThreshold wood={wood} /></group></Branch>
+    <World castleStone={castleStone} corridorWood={corridorWood} glass={glass} joinery={joinery} lobbyWall={lobbyWall} lodge={lodgeMaterials} oculus={oculusMaterial} stone={stone} wood={wood} />
   </>
 }

@@ -6,13 +6,15 @@ import type {ReactNode} from 'react'
 import type {NodeMaterial, Texture} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {startTransition, useEffect, useLayoutEffect, useRef, useState} from 'react'
+import Branch from 'branch-component'
+import {startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
 import {clearRooms, endRoom, expectRooms, startRoom} from '#src/lib/gallery/roomLoading.ts'
 import {roomsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
+import {reachedRooms} from '#src/lib/worldReach.ts'
 import LobbyRoom from '#src/rooms/lobby/components/LobbyRoom/index.tsx'
 import relations from '#src/worlds/gallery/relations.ts'
 
@@ -26,7 +28,6 @@ export type WorldMaterials = {
   lodge: LodgeMaterials
   oculus: NodeMaterial
   stone: Texture
-  windowReveal: NodeMaterial
   wood: Texture
 }
 
@@ -53,26 +54,16 @@ const loaders: Record<LaterRoom, () => Promise<RoomPart>> = {
     return ({joinery}) => <Room joinery={joinery} />
   },
   salon: async () => {
-    const [{default: Room}, {default: LobbyWindow}, {salonWindow}] = await Promise.all([import('#src/rooms/salon/components/SalonRoom/index.tsx'), import('#component/LobbyWindow'), import('#src/lib/gallery/lobbyWindows.ts')])
-    return ({glass, stone, wood}) => <>
-      <Room glass={glass.lobby} stone={stone} wood={wood} />
-      <LobbyWindow glass={glass.lobbyWindow} glazing={salonWindow} name='salon-window' />
-    </>
+    const {default: Room} = await import('#src/rooms/salon/components/SalonRoom/index.tsx')
+    return ({glass, stone, wood}) => <Room glass={glass.lobby} stone={stone} wood={wood} />
   },
   forge: async () => {
-    const [{default: Room}, {default: LobbyWindow}, {forgeWindow}] = await Promise.all([import('#src/rooms/forge/components/ForgeRoom/index.tsx'), import('#component/LobbyWindow'), import('#src/lib/gallery/lobbyWindows.ts')])
-    return ({castleStone, glass, stone, wood}) => <>
-      <Room glass={glass.lobby} masonry={castleStone} stone={stone} wood={wood} />
-      <LobbyWindow glass={glass.lobbyWindow} glazing={forgeWindow} name='forge-window' />
-    </>
+    const {default: Room} = await import('#src/rooms/forge/components/ForgeRoom/index.tsx')
+    return ({castleStone, glass, stone, wood}) => <Room glass={glass.lobby} masonry={castleStone} stone={stone} wood={wood} />
   },
   lodge: async () => {
-    const [{default: Room}, {default: LodgeWindow}, {default: LodgeThreshold}] = await Promise.all([import('#src/rooms/lodge/components/LodgeRoom/index.tsx'), import('#component/LodgeWindow'), import('#src/rooms/lodge/components/LodgeThreshold/index.tsx')])
-    return ({castleStone, glass, lodge, windowReveal, wood}) => <>
-      <Room materials={lodge} />
-      <LodgeWindow glass={glass.cabin} masonry={castleStone} material={windowReveal} />
-      <LodgeThreshold wood={wood} />
-    </>
+    const {default: Room} = await import('#src/rooms/lodge/components/LodgeRoom/index.tsx')
+    return ({lodge}) => <Room materials={lodge} />
   },
   bastion: async () => {
     const {default: Room} = await import('#src/rooms/bastion/components/BastionRoom/index.tsx')
@@ -88,7 +79,7 @@ const loaders: Record<LaterRoom, () => Promise<RoomPart>> = {
   },
   oculus: async () => {
     const {default: Room} = await import('#src/rooms/oculus/components/OculusRoom/index.tsx')
-    return ({castleStone, oculus}) => <Room material={oculus} stone={castleStone} />
+    return ({oculus}) => <Room material={oculus} />
   },
   exhibition: async () => {
     const {default: Room} = await import('#src/rooms/exhibition/components/ExhibitionRoom/index.tsx')
@@ -96,7 +87,7 @@ const loaders: Record<LaterRoom, () => Promise<RoomPart>> = {
   },
 }
 const laterRooms = Object.keys(loaders) as Array<LaterRoom>
-// Holds the physics from before its first step until every room is in.
+// Holds the physics from before its first step; mounting settles which rooms it waits for, under `?world_reach` only those within reach.
 expectRooms(laterRooms)
 const isLater = (room: RoomId): room is LaterRoom => room in loaders
 const position = new Vector3
@@ -113,9 +104,10 @@ const nearestFirst = (from: ReadonlyArray<RoomId>) => {
 }
 
 /**
- * Every room of the gallery, each with what it builds beyond its walls.
+ * Every room of the gallery within reach, each with what it builds beyond its walls.
  * The Lobby, where visitors start, comes with the page. Behind the loading screen, only the rooms the camera is in load too, or every room outside of all rooms, where culling leaves nothing out.
  * The rest download once Enter is enabled and mount one at a time, nearest first, so that no single frame sets them all up.
+ * Under `?world_reach`, the rooms out of reach are never asked for at all: their chunks never download, the Lobby among them never mounts and the physics only waits for the rooms within reach.
  */
 export default function World(materials: WorldMaterials) {
   const {glass, lobbyWall, stone, wood} = materials
@@ -124,6 +116,12 @@ export default function World(materials: WorldMaterials) {
   const asked = useRef(new Map<LaterRoom, RoomPart | null>)
   const mounted = useRef(new Set<LaterRoom>)
   const mounting = useRef<LaterRoom>(null)
+  const reached = reachedRooms()
+  const included = useMemo(() => laterRooms.filter(room => !reached || reached.has(room)), [reached])
+  // The reach never changes on a page, so the rooms the physics waits for are settled once, before the first frame can mount any of them.
+  useLayoutEffect(() => {
+    expectRooms(included)
+  }, [included])
   useEffect(() => clearRooms, [])
   useLayoutEffect(() => {
     if (mounting.current && parts.some(([room]) => room === mounting.current)) {
@@ -132,11 +130,11 @@ export default function World(materials: WorldMaterials) {
     }
   }, [parts])
   useFrame(({camera}) => {
-    if (asked.current.size < laterRooms.length) {
+    if (asked.current.size < included.length) {
       const from = roomsAt(camera.getWorldPosition(position).toArray())
       const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from) : from
       for (const room of wanted) {
-        if (!isLater(room) || asked.current.has(room)) {
+        if (!isLater(room) || !included.includes(room) || asked.current.has(room)) {
           continue
         }
         asked.current.set(room, null)
@@ -167,9 +165,9 @@ export default function World(materials: WorldMaterials) {
   })
   // Each room owns everything its part builds, see ownerRoom.
   return <group name='world'>
-    <group userData={{room: 'lobby'}}>
+    <Branch if={!reached || reached.has('lobby')}><group userData={{room: 'lobby'}}>
       <LobbyRoom cladding={lobbyWall} glass={glass.lobby} stone={stone} wood={wood} />
-    </group>
+    </group></Branch>
     {parts.map(([room, part]) => <group key={room} userData={{room}}>{part(materials)}</group>)}
   </group>
 }
