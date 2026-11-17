@@ -1,3 +1,5 @@
+import type {Vec3} from '../src/lib/gallery/types.ts'
+import type {OutputList} from '../src/lib/vite/outputListPlugin.ts'
 import type {WorldAnalysis} from '../src/lib/webmcp/analyzeWorld.ts'
 import type {WorldReachMode} from '../src/worlds/base/WorldReach.ts'
 import type {Page} from 'puppeteer-core'
@@ -7,6 +9,7 @@ import {expect, test} from 'bun:test'
 import {callWebmcpTool} from 'capture-session/script'
 
 import {openHeadlessGallery, resolveGallerySetup, waitForFrames} from '../scripts/lib/headlessGallery.ts'
+import {outputListFile} from '../src/lib/vite/outputListPlugin.ts'
 import slopGallery from '../src/worlds/gallery/index.ts'
 
 type Visit = {
@@ -47,8 +50,12 @@ const settle = async (page: Page) => {
   })
   await waitForFrames(page, 60)
 }
-// What a limited ?world_reach leaves out has to stay out of the scene for good, however the rooms in reach load: geometry, walls, lamps, works and props of other rooms. The player has to stand at the spawn of the room reached out from.
+/** the files the page has requested so far, by their paths */
+const requestedFiles = (page: Page) => page.evaluate(() => performance.getEntriesByType('resource').map(entry => URL.parse(entry.name)!.pathname.slice(1)))
+// What a limited ?world_reach leaves out has to stay out of the scene for good, however the rooms in reach load: geometry, walls, lamps, works and props of other rooms, whose chunks never even download, not even once the camera moves into one of them. The player has to stand at the spawn of the room reached out from.
 test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach mounts the start room, its neighbors or every room, and nothing else', async () => {
+  const {chunks} = await Bun.file(outputListFile).json() as OutputList
+  const roomChunks = slopGallery.rooms.map(({id}) => [id, chunks.find(chunk => chunk.facadeModule === `src/rooms/${id}/components/${id[0].toUpperCase()}${id.slice(1)}Room/index.tsx`)!.fileName] as const)
   const visits: ReadonlyArray<Visit> = [
     {mode: 'all'},
     {mode: 'room'},
@@ -82,7 +89,11 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
       height: '450',
     })
     const expected = slopGallery.reachOf(`http://localhost/?${setup.search}`)
-    await using gallery = await openHeadlessGallery(setup, {cacheDir: 'node_modules/.vite-world-reach'})
+    await using gallery = await openHeadlessGallery(setup, {
+      cacheDir: 'node_modules/.vite-world-reach',
+      // Room for every file the page requests, beyond the 250 entries Chrome keeps by default
+      initScripts: [() => performance.setResourceTimingBufferSize(10_000)],
+    })
     const {page} = gallery
     const errors: Array<string> = []
     page.on('console', message => {
@@ -123,6 +134,20 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     const [x, y, z] = slopGallery.start(`http://localhost/?${setup.search}`).pose.position
     if (!player?.grounded || Math.abs(player.position.y - y) > 0.06 || Math.hypot(player.position.x - x, player.position.z - z) > 0.06) {
       problems.push(`${label}: the player should stand at ${[x, y, z].join(', ')}`)
+    }
+    // A camera posed in a room out of reach brings nothing of it along.
+    const outside = slopGallery.rooms.find(candidate => !expected.covers(candidate.id))
+    if (outside) {
+      const [outsideX, outsideY, outsideZ] = outside.spawn.position
+      const eye: Vec3 = [outsideX, outsideY + 1.6, outsideZ]
+      await page.evaluate(position => globalThis.slopGallery!.pose!({position}), eye)
+      await waitForFrames(page, 30)
+    }
+    const requested = new Set(await requestedFiles(page))
+    for (const [id, file] of roomChunks) {
+      if (requested.has(file) !== expected.covers(id)) {
+        problems.push(`${label}: the ${id} room ${requested.has(file) ? 'downloaded' : 'never downloaded'}`)
+      }
     }
     problems.push(...errors.map(error => `${label}: ${error}`))
   }

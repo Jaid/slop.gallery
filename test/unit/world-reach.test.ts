@@ -4,7 +4,7 @@ import type WorldReach from '../../src/worlds/base/WorldReach.ts'
 
 import {describe, expect, test} from 'bun:test'
 
-import {laterParts, openingFills} from '../../src/components/World/index.tsx'
+import {openingFills, roomParts} from '../../src/components/World/index.tsx'
 import {GalleryPlacementSpace} from '../../src/lib/placement/GalleryPlacementSpace.ts'
 import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
@@ -116,19 +116,16 @@ describe('?world_reach', () => {
 describe('what a limited reach mounts', () => {
   test('every opening between two rooms is filled for the first of them in reach, and for none while neither is', () => {
     for (const room of allRooms) {
-      const parts = laterParts(reach(`?world_reach=room&room=${room}`))
+      const parts = roomParts(reach(`?world_reach=room&room=${room}`))
       const hosted = openingFills.filter(fill => fill.rooms.includes(room))
-      if (room === 'lobby' && hosted.length === 0) {
-        expect(parts.size).toBe(0)
-        continue
-      }
       expect(parts.keys().toArray()).toEqual([room])
       expect(parts.get(room)).toEqual(hosted)
     }
   })
-  test('with every room in reach, the Lobby brings nothing later and each fill comes with the room it came with before', () => {
-    const parts = laterParts(reach(''))
-    expect(parts.keys().toArray()).toEqual(allRooms.filter(room => room !== 'lobby'))
+  test('with every room in reach, each room loads and each fill comes with the room it came with before', () => {
+    const parts = roomParts(reach(''))
+    expect(parts.keys().toArray()).toEqual(allRooms)
+    expect(parts.get('lobby')).toEqual([])
     expect(parts.get('salon')!.map(fill => fill.rooms)).toEqual([['salon', 'lobby']])
     expect(parts.get('forge')!.map(fill => fill.rooms)).toEqual([['forge', 'lobby']])
     expect(parts.get('lodge')!.map(fill => fill.rooms)).toEqual([['lodge', 'corridor'], ['lodge', 'bastion']])
@@ -138,9 +135,8 @@ describe('what a limited reach mounts', () => {
   test('only the rooms in reach load, each fill once', () => {
     for (const room of allRooms) {
       const within = reach(`?world_reach=neighbors&room=${room}`)
-      const parts = laterParts(within)
-      expect(parts.keys().every(id => within.covers(id))).toBe(true)
-      expect<ReadonlyArray<string>>(parts.keys().toArray()).toEqual(within.rooms.filter(id => id !== 'lobby' || parts.has('lobby')))
+      const parts = roomParts(within)
+      expect<ReadonlyArray<string>>(parts.keys().toArray()).toEqual(within.rooms)
       const fills = parts.values().toArray().flat()
       const unique = new Set(fills)
       expect(unique.size).toBe(fills.length)

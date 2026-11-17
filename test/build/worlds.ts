@@ -8,9 +8,10 @@ import {knots} from 'knot-materials'
 import {hashedFileName, immutableExtensions} from '../../src/lib/vite/immutableHeadersPlugin.ts'
 import {outputListFile} from '../../src/lib/vite/outputListPlugin.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
+import slopGallery from '../../src/worlds/gallery/index.ts'
 import {worldIds, worlds} from '../../src/worlds/index.ts'
 
-// Verifies the production build in dist (bun run build first): one page for every world, with each world, every Knot material and the Knots’ announcements in chunks of their own that only load on demand, and every file but the page named by its content.
+// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material and the Knots’ announcements in chunks of their own that only load on demand, and every file but the page named by its content.
 // Files are named by their content hash, so the chunks and assets are looked up in the output list the build writes next to it.
 const directory = 'dist'
 const root = join(import.meta.dir, '..', '..')
@@ -163,4 +164,23 @@ const salonSources = await Promise.all([...salon].map(read))
 if (salonSources.some(code => announcementPath.test(code))) {
   fail('The Salon loads the Knots’ announcements with it.')
 }
-console.log(`Verified the build: ${initial.size} chunks load with the page, ${knotChunks.size} Knot materials and ${worldIds.length} worlds load on demand, and ${files.length - named.length} of ${files.length} files are named by their content.`)
+// Each room of the gallery and what fills the openings between two of them load only once a page with the room in its ?world_reach asks for them: neither the page, the gallery nor its scene hold any of their code, no room loads another and no fill loads a room.
+const fillModules = ['src/components/LobbyWindow/index.tsx', 'src/components/LodgeWindow/index.tsx', 'src/rooms/oculus/components/ApseGrilles/index.tsx']
+const chunkHolding = (module: string) => chunks.find(chunk => chunk.modules.includes(module)) ?? fail(`No chunk holds ${module}.`)
+/** the chunks holding the code of each room’s components, but for those filling openings */
+const roomChunks = new Map(slopGallery.rooms.map(({id}) => [id, new Set(chunks.filter(chunk => chunk.modules.some(module => module.startsWith(`src/rooms/${id}/components/`) && !fillModules.includes(module))).map(chunk => chunk.fileName))]))
+const gallery = new Set([...initial, ...closure(worldChunks.get('gallery')!), ...closure(chunkOf('src/components/GalleryScene/index.tsx').fileName)])
+for (const [part, held] of [...roomChunks, ...fillModules.map(module => [module, new Set([chunkHolding(module).fileName])] as const)]) {
+  if (held.size === 0) {
+    fail(`No chunk holds the ${part} room.`)
+  }
+  if (!held.isDisjointFrom(gallery)) {
+    fail(`${part} loads with the gallery instead of on demand.`)
+  }
+  const needed = new Set(held.values().flatMap(chunk => closure(chunk)))
+  const room = roomChunks.entries().find(([id, other]) => id !== part && !other.isDisjointFrom(needed))?.[0]
+  if (room) {
+    fail(`${part} loads the ${room} room with it.`)
+  }
+}
+console.log(`Verified the build: ${initial.size} chunks load with the page, ${knotChunks.size} Knot materials, ${worldIds.length} worlds and ${roomChunks.size} rooms load on demand, and ${files.length - named.length} of ${files.length} files are named by their content.`)

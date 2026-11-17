@@ -14,6 +14,8 @@ export type ListedChunk = {
   imports: ReadonlyArray<string>
   isDynamicEntry: boolean
   isEntry: boolean
+  /** the modules whose code it holds */
+  modules: ReadonlyArray<string>
   name: string
 }
 /** an asset of the build, its original files relative to the root */
@@ -53,6 +55,8 @@ export default function outputListPlugin(file = outputListFile): Plugin {
           isDynamicEntry: chunk.isDynamicEntry,
           imports: chunk.imports,
           dynamicImports: chunk.dynamicImports,
+          // Virtual modules have no file.
+          modules: chunk.moduleIds.filter(id => !id.startsWith('\0')).map(fromRoot),
         })),
         assets: Object.values(bundle).filter(output => output.type === 'asset').map(asset => ({
           fileName: asset.fileName,

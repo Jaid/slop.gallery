@@ -3,7 +3,7 @@ import {expect, test} from 'bun:test'
 import {openHeadlessGallery, resolveGallerySetup, waitForFrames} from '../scripts/lib/headlessGallery.ts'
 import slopGallery from '../src/worlds/gallery/index.ts'
 
-// Every room but the Lobby brings its floors with it once it streams in, so the physics waits for them. Starting the production build in each room, the player has to stand at the room’s spawn once it runs.
+// Every room brings its floors with it once it streams in, so the physics waits for them. Starting the production build in each room, the player has to stand at the room’s spawn once it runs.
 test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: the player keeps standing after spawning in any room', async () => {
   const misplaced: Array<string> = []
   for (const room of slopGallery.rooms) {

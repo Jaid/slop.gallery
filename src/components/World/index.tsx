@@ -7,7 +7,6 @@ import type {ReactNode} from 'react'
 import type {NodeMaterial, Texture} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import Branch from 'branch-component'
 import {Fragment, startTransition, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import {Vector3} from 'three/webgpu'
 
@@ -15,7 +14,6 @@ import {useGallery} from '#src/lib/gallery.ts'
 import {clearRooms, endRoom, expectRooms, startRoom} from '#src/lib/gallery/roomLoading.ts'
 import {roomsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
-import LobbyRoom from '#src/rooms/lobby/components/LobbyRoom/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 import relations from '#src/worlds/gallery/relations.ts'
 
@@ -36,16 +34,19 @@ export type WorldMaterials = {
 /** what fills an opening between two rooms, like the glass of a window through both of their walls */
 export type OpeningFill = {
   load: () => Promise<RoomPart>
-  /** the rooms it lies between, the one it comes with first, see {@link laterParts} */
+  /** the rooms it lies between, the one it comes with first, see {@link roomParts} */
   rooms: readonly [RoomId, RoomId]
 }
 /** a room with what it builds beyond its walls */
 type RoomPart = (materials: WorldMaterials) => ReactNode
-type LaterRoom = Exclude<RoomId, 'lobby'>
 
 const {reach} = slopGallery
-/** Every room but the Lobby, each in chunks of its own that only download once the world asks for the room. */
-const roomLoaders: Record<LaterRoom, () => Promise<RoomPart>> = {
+/** Every room, each in chunks of its own that only download once the world asks for the room. */
+const roomLoaders: Record<RoomId, () => Promise<RoomPart>> = {
+  lobby: async () => {
+    const {default: Room} = await import('#src/rooms/lobby/components/LobbyRoom/index.tsx')
+    return ({glass, lobbyWall, stone, wood}) => <Room cladding={lobbyWall} glass={glass.lobby} stone={stone} wood={wood} />
+  },
   vesper: async () => {
     const {default: Room} = await import('#src/rooms/vesper/components/VesperRoom/index.tsx')
     return ({glass, stone, wood}) => <Room glass={glass.lobby} stone={stone} wood={wood} />
@@ -140,29 +141,24 @@ export const openingFills: ReadonlyArray<OpeningFill> = [
     },
   },
 ]
-/**
- * What a page with the reach loads after the Lobby, which comes with it: the rooms in reach that bring parts later, in the gallery’s order, each with the fills of the openings it hosts, the first of the opening’s rooms in reach.
- * The Lobby only counts among them for the fills it hosts, once the rooms on their other sides are out of reach.
- */
-export function laterParts(within: Pick<WorldReach, 'covers'>): ReadonlyMap<RoomId, ReadonlyArray<OpeningFill>> {
+/** What a page with the reach loads: the rooms in reach, in the gallery’s order, each with the fills of the openings it hosts, the first of the opening’s rooms in reach. */
+export function roomParts(within: Pick<WorldReach, 'covers'>): ReadonlyMap<RoomId, ReadonlyArray<OpeningFill>> {
   const hosted = Map.groupBy(openingFills.filter(fill => fill.rooms.some(room => within.covers(room))), (fill): RoomId => fill.rooms.find(room => within.covers(room))!)
-  const rooms = slopGallery.rooms.map((room): RoomId => room.id).filter(room => within.covers(room) && (room !== 'lobby' || hosted.has(room)))
+  const rooms = slopGallery.rooms.map((room): RoomId => room.id).filter(room => within.covers(room))
   return new Map(rooms.map(room => [room, hosted.get(room) ?? []]))
 }
-/** Everything the room brings that the page loads later: its own part, but none for the Lobby, which comes with the page, and the fills of the openings it hosts. */
+/** Everything the room brings: its own part and the fills of the openings it hosts. */
 const partLoader = (room: RoomId, fills: ReadonlyArray<OpeningFill>) => async (): Promise<RoomPart> => {
-  const parts = await Promise.all([...room === 'lobby' ? [] : [roomLoaders[room]()], ...fills.map(fill => fill.load())])
+  const parts = await Promise.all([roomLoaders[room](), ...fills.map(fill => fill.load())])
   return materials => parts.map((part, index) => <Fragment key={index}>{part(materials)}</Fragment>)
 }
-/** whether the Lobby, which comes with the page, is in reach */
-const hasLobby = reach.covers('lobby')
-const loaders = new Map(laterParts(reach).entries().map(([room, fills]) => [room, partLoader(room, fills)] as const))
-const laterRooms: ReadonlyArray<RoomId> = loaders.keys().toArray()
+const loaders = new Map(roomParts(reach).entries().map(([room, fills]) => [room, partLoader(room, fills)] as const))
+const reachedRooms: ReadonlyArray<RoomId> = loaders.keys().toArray()
 // Holds the physics from before its first step until every room is in.
-expectRooms(laterRooms)
-const isLater = (room: RoomId) => loaders.has(room)
+expectRooms(reachedRooms)
+const isReached = (room: RoomId) => loaders.has(room)
 const position = new Vector3
-/** Every later room, nearest first: the given rooms, the rooms they see into, the rooms those see into and so on. */
+/** Every room in reach, nearest first: the given rooms, the rooms they see into, the rooms those see into and so on. */
 const nearestFirst = (from: ReadonlyArray<RoomId>): ReadonlyArray<RoomId> => {
   const order: Array<RoomId> = []
   let round: ReadonlyArray<RoomId> = from
@@ -171,13 +167,13 @@ const nearestFirst = (from: ReadonlyArray<RoomId>): ReadonlyArray<RoomId> => {
     // The next round is the rooms that this round sees into.
     round = [...new Set(round.flatMap(room => relations[room].rooms))].filter(room => !order.includes(room))
   }
-  return [...order, ...laterRooms.filter(room => !order.includes(room))]
+  return [...order, ...reachedRooms.filter(room => !order.includes(room))]
 }
 
 /**
- * Every room of the gallery in reach of this page, see `World.reach`, each with what it builds beyond its walls; rooms out of reach never download.
- * The Lobby, where visitors start, comes with the page. Behind the loading screen, only the rooms the camera is in load too, or every room outside of all rooms, where culling leaves nothing out.
- * The rest download once Enter is enabled and mount one at a time, nearest first, so that no single frame sets them all up.
+ * Every room of the gallery in reach of this page, see `World.reach`, each with what it builds beyond its walls, in chunks of its own; rooms out of reach never download.
+ * Behind the loading screen, only the rooms the camera is in load, or every room outside of all rooms, where culling leaves nothing out.
+ * The rest download once Enter is enabled. They mount one at a time, nearest first, so that no single frame sets them all up.
  */
 export default function World({materials}: {
   /** what the rooms share, which a room only makes by asking for it */
@@ -196,11 +192,11 @@ export default function World({materials}: {
     }
   }, [parts])
   useFrame(({camera}) => {
-    if (asked.current.size < laterRooms.length) {
+    if (asked.current.size < reachedRooms.length) {
       const from = roomsAt(camera.getWorldPosition(position).toArray())
       const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from) : from
       for (const room of wanted) {
-        if (!isLater(room) || asked.current.has(room)) {
+        if (!isReached(room) || asked.current.has(room)) {
           continue
         }
         asked.current.set(room, null)
@@ -231,14 +227,6 @@ export default function World({materials}: {
   })
   // Each room owns everything its part builds, see ownerRoom.
   return <group name='world'>
-    <Branch if={hasLobby}><Lobby materials={materials} /></Branch>
     {parts.map(([room, part]) => <group key={room} userData={{room}}>{part(materials)}</group>)}
-  </group>
-}
-
-/** The Lobby, which comes with the page. */
-function Lobby({materials: {glass, lobbyWall, stone, wood}}: {materials: WorldMaterials}) {
-  return <group userData={{room: 'lobby'}}>
-    <LobbyRoom cladding={lobbyWall} glass={glass.lobby} stone={stone} wood={wood} />
   </group>
 }
