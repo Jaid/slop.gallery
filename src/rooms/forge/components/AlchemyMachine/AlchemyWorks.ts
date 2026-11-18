@@ -93,7 +93,7 @@ export default class AlchemyWorks {
   } | undefined
   private readonly passage = new IntakePassage
 
-  constructor(private readonly add: (orb: AlchemyOrb) => void, private readonly fx: CannonFx) {}
+  constructor(private readonly add: (orb: AlchemyOrb) => void, private readonly fx: CannonFx, private readonly puff: () => void) {}
 
   /** Puts another Transparent Orb into the holder whenever the player leaves the Bastion while no orb is left in the Forge or the Bastion and nothing lies in the holder’s way; returns the unsubscription. */
   restock() {
@@ -152,6 +152,7 @@ export default class AlchemyWorks {
         product.unleash(cannonLaunch.velocity, [0, 0, 0])
       }
       this.fx.fire(this.clock, id)
+      this.puff()
       playSound(cannonVoices(Math.random() * 2 - 1), `alchemy:shot:${++this.counts.sounds}`, alchemyCannon.muzzle)
       return
     }

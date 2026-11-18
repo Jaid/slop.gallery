@@ -3,7 +3,7 @@ import type {AlchemyOrb} from './AlchemyWorks.ts'
 import type {Group} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {CapsuleCollider, CuboidCollider, CylinderCollider, RigidBody, useAfterPhysicsStep} from '@react-three/rapier'
+import {CapsuleCollider, CuboidCollider, CylinderCollider, RigidBody, useAfterPhysicsStep, useRapier} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useEffect, useMemo, useRef, useState} from 'react'
 import {color, exp, positionLocal, smoothstep, vec3} from 'three/tsl'
@@ -16,6 +16,7 @@ import {alchemyCannon, alchemyPipe, alchemySink, holderSpot, machineBody, workbe
 import CannonGeometry, {trunnionReach} from '#src/lib/gallery/alchemy/CannonGeometry.ts'
 import MachineBodyGeometry from '#src/lib/gallery/alchemy/MachineBodyGeometry.ts'
 import PipeGeometry, {pipeCenterline} from '#src/lib/gallery/alchemy/PipeGeometry.ts'
+import puffFromLid from '#src/lib/gallery/alchemy/puffFromLid.ts'
 import SinkGeometry from '#src/lib/gallery/alchemy/SinkGeometry.ts'
 import WorkbenchGeometry from '#src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
@@ -72,7 +73,8 @@ const breechBlock = alchemyCannon.breech.map((value, axis) => value + alchemyCan
 export default function AlchemyMachine() {
   const [orbs, setOrbs] = useState<ReadonlyArray<AlchemyOrb>>([AlchemyWorks.firstOrb])
   const fx = useDisposable(useMemo(() => new CannonFx, []))
-  const works = useMemo(() => new AlchemyWorks(orb => setOrbs(current => [...current, orb]), fx), [fx])
+  const {world} = useRapier()
+  const works = useMemo(() => new AlchemyWorks(orb => setOrbs(current => [...current, orb]), fx, () => puffFromLid(world)), [fx, world])
   const barrel = useRef<Group>(null)
   const holder = useOrbHolder()
   const parts = useDisposable(useMemo(() => {
