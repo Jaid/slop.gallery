@@ -68,7 +68,7 @@ export function flangeAt(point: Vector3, direction: Vector3, radius: number) {
 }
 
 /**
- * The alchemy machine’s pipe, see {@link alchemyPipe}, in the world’s frame: hammered brass along its rounded corners with a flange at either end of every bend and a coupling before the cannon, and the iron `brackets` holding its riser and its run along the south wall, a clamp round the pipe on a pair of stays out of the wall each.
+ * The alchemy machine’s pipe, see {@link alchemyPipe}, in the world’s frame: hammered brass along its rounded corners with a flange at either end of every bend and a coupling before the cannon. Two iron brackets hold the riser to the south wall.
  */
 export default class PipeGeometry {
   readonly brackets: BufferGeometry
@@ -87,29 +87,15 @@ export default class PipeGeometry {
     this.pipe = mergeParts([tube, ...[...joints, coupling].flatMap(({direction, point}) => flangeAt(point, direction, radius))])
     const face = southWallFace
     const clamps: Array<BufferGeometry> = []
-    const [, riserBottom, riserTop, runEnd] = corners.map(corner => new Vector3(...corner))
-    const spots = [
-      {
-        point: riserBottom.clone().lerp(riserTop, 0.4),
-        along: up,
-      },
-      {
-        point: riserBottom.clone().lerp(riserTop, 0.82),
-        along: up,
-      },
-      {
-        point: riserTop.clone().lerp(runEnd, 0.5),
-        along: new Vector3(1, 0, 0),
-      },
-    ]
-    for (const {along, point} of spots) {
+    const [, riserBottom, riserTop] = corners.map(corner => new Vector3(...corner))
+    for (const fraction of [0.3, 0.75]) {
+      const point = riserBottom.clone().lerp(riserTop, fraction)
       const clamp = new TorusGeometry(radius + 0.012, 0.012, 8, 40)
-      const turn = new Quaternion
-      clamp.rotateX(Math.PI / 2).applyQuaternion(turn.setFromUnitVectors(up, along))
+      clamp.rotateX(Math.PI / 2)
       clamps.push(clamp.translate(point.x, point.y, point.z))
       // Two stays from the clamp’s back to the wall, either side of it along the pipe
       for (const side of [-1, 1]) {
-        const from = point.clone().addScaledVector(along, side * 0.05).add(new Vector3(0, 0, radius))
+        const from = new Vector3(point.x, point.y + side * 0.05, point.z + radius)
         clamps.push(rod(from, new Vector3(from.x, from.y, face + 0.01), 0.011, 8))
       }
       const plate = new CylinderGeometry(0.035, 0.035, 0.012, 20)

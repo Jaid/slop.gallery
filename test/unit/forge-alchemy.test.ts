@@ -8,7 +8,7 @@ import EgoMotor, {defaultEgoOptions} from 'ego-player/motor'
 import {mulberry32} from 'math/random'
 import {Mesh, MeshBasicMaterial, Object3D, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
-import {alchemyCannon, alchemyPipe, alchemySink, cannonFlight, cannonLaunch, cannonTarget, holderSpot, inSinkThroat, machineBody, southWallFace, flight as stepsFrom, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
+import {alchemyCannon, alchemyPipe, alchemySink, cannonFlight, cannonLaunch, cannonTarget, holderSpot, inBodyInlet, machineBody, southWallFace, flight as stepsFrom, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import CannonGeometry from '../../src/lib/gallery/alchemy/CannonGeometry.ts'
 import {flavorCandidates, flavoredOrb, orbAround, transmutedOrb} from '../../src/lib/gallery/alchemy/flavor.ts'
 import MachineBodyGeometry from '../../src/lib/gallery/alchemy/MachineBodyGeometry.ts'
@@ -49,6 +49,7 @@ afterAll(() => {
 const wallById = (id: string) => walls.find(wall => wall.id === id)!
 const [benchX, benchZ] = workbench.center
 const [sinkX, sinkY, sinkZ] = alchemySink.center
+const [bodyX, bodyZ] = machineBody.center
 const northZ = forge.center[1] - forge.size[1] / 2
 const roomAt = (position: Vec3) => slopGallery.roomAt(position)?.id
 /** where the orb is after every step before it passes the face of the cistern’s wall behind the window */
@@ -72,23 +73,21 @@ const wallAhead = ([x, z]: readonly [number, number], [dx, dz]: readonly [number
   return -along + Math.sqrt(along ** 2 - (ox ** 2 + oz ** 2 - (cistern.radius - wallFace) ** 2))
 }
 describe('the Forge’s alchemy machine', () => {
-  test('stands against the middle of the south wall: its bench on the room’s axis, its sink in the bench’s east end and its body under the sink, between the legs', () => {
+  test('stands centered beneath the cannon with its sink to the visitor’s left', () => {
     expect(benchX).toBe(forge.center[0])
-    // Its slab reaches back over the baseboard, short of the wall’s face, see forge-table.test.ts.
-    expect(southWallFace - (benchZ + workbench.depth / 2)).toBeGreaterThan(0.02)
-    expect(southWallFace - (benchZ + workbench.depth / 2)).toBeLessThan(0.1)
     expect(roomAt([benchX, 1, benchZ])).toBe('forge')
-    // Left of the bench’s middle, seen from the room, with room for the flange and the aprons round it
-    expect(sinkX).toBeGreaterThan(benchX)
+    expect(bodyX).toBe(benchX)
+    expect(bodyX).toBe(alchemyCannon.breech[0])
+    expect(sinkX - alchemySink.radius).toBeGreaterThan(bodyX + machineBody.size[0] / 2)
     expect(benchX + workbench.length / 2 - (sinkX + alchemySink.radius)).toBeGreaterThan(0.1)
-    expect(workbench.depth / 2 - workbench.overhang - workbench.apron[1] - (alchemySink.radius + alchemySink.thickness)).toBeGreaterThan(0.01)
+    expect(sinkZ - (benchZ + workbench.frameZ[0]) - workbench.apron[1] - (alchemySink.radius + alchemySink.thickness)).toBeGreaterThan(0.01)
     expect(sinkY).toBe(workbench.height)
     // An orb drops through the throat with room to spare, into the body under it.
     expect(alchemySink.throat - orbRadius - weldedSurfaceSkin).toBeGreaterThan(0.015)
     expect(alchemySink.throatY).toBeGreaterThan(machineBody.size[1] + orbRadius)
-    expect(machineBody.center).toEqual([sinkX, benchZ])
+    expect(bodyZ).toBe(sinkZ)
     const legInside = workbench.length / 2 - workbench.overhang - workbench.leg
-    expect(sinkX + machineBody.size[0] / 2 - benchX).toBeLessThan(legInside)
+    expect(bodyX + machineBody.size[0] / 2 - benchX).toBeLessThan(legInside)
     expect(machineBody.size[2] / 2).toBeLessThan(workbench.depth / 2 - workbench.overhang - workbench.leg)
     // The holder stands right of the bench’s middle, on its top, an orb’s width clear of the cannon’s bracket over it.
     expect(holderSpot[0]).toBeLessThan(benchX - 0.4)
@@ -111,6 +110,7 @@ describe('the Forge’s alchemy machine', () => {
         return ray.intersectObject(top).length > 0
       }
       expect(hits(sinkX, sinkZ)).toBe(false)
+      expect(hits(bodyX, bodyZ)).toBe(true)
       expect(hits(sinkX + alchemySink.radius + alchemySink.thickness - 0.005, sinkZ)).toBe(false)
       expect(hits(sinkX + alchemySink.radius + alchemySink.thickness + 0.005, sinkZ)).toBe(true)
       expect(hits(holderSpot[0], holderSpot[2])).toBe(true)
@@ -123,7 +123,8 @@ describe('the Forge’s alchemy machine', () => {
     expect(max.y).toBeGreaterThan(0)
     expect(max.y).toBeLessThan(0.005)
     expect(sinkY + min.y).toBeLessThan(machineBody.size[1])
-    expect(Math.max(max.x, -min.x)).toBeLessThan(alchemySink.radius + 0.04)
+    expect(sinkX + min.x).toBeCloseTo(bodyX + machineBody.size[0] / 2, 5)
+    expect(max.x).toBeLessThan(alchemySink.radius + 0.04)
   })
   test('takes in every orb dropped into its sink and some thrown at it from in front of the bench, nearly at eye height, which roll down the throat into its body', () => {
     const world = new RAPIER.World({
@@ -144,7 +145,7 @@ describe('the Forge’s alchemy machine', () => {
         for (let step = 0; step < 60 * 10; step++) {
           world.step()
           const {x, y, z} = body.translation()
-          if (inSinkThroat([x, y, z])) {
+          if (inBodyInlet([x, y, z])) {
             return true
           }
         }
@@ -161,7 +162,7 @@ describe('the Forge’s alchemy machine', () => {
       })
       welded(colliderGeometry(bench.top), [benchX, 0, benchZ])
       welded(colliderGeometry(sink.collision), alchemySink.center)
-      world.createCollider(RAPIER.ColliderDesc.cuboid(machineBody.size[0] / 2, machineBody.size[1] / 2, machineBody.size[2] / 2).setTranslation(sinkX, machineBody.size[1] / 2, sinkZ))
+      world.createCollider(RAPIER.ColliderDesc.cuboid(machineBody.size[0] / 2, machineBody.size[1] / 2, machineBody.size[2] / 2).setTranslation(bodyX, machineBody.size[1] / 2, bodyZ))
       world.createCollider(RAPIER.ColliderDesc.cuboid(8, 0.1, 8).setTranslation(benchX, -0.1, benchZ - 4))
       world.createCollider(RAPIER.ColliderDesc.cuboid(8, 3, 0.1).setTranslation(benchX, 3, southWallFace + 0.1))
       let dropped = 0
@@ -213,15 +214,17 @@ describe('the Forge’s alchemy machine', () => {
       world.free()
     }
   })
-  test('its pipe runs from its body under the bench, up the south wall and along it into the cannon’s breech, and the cannon over the bench’s middle points north along the room’s axis', () => {
-    const [start, riserFoot, riserTop, turn, end] = alchemyPipe.corners
-    expect(start).toEqual([sinkX, start[1], benchZ])
-    expect(riserFoot[0] - alchemyPipe.radius).toBeGreaterThan(benchX + workbench.length / 2)
-    expect(riserTop[0]).toBe(riserFoot[0])
-    expect(turn[0]).toBe(benchX)
+  test('its outlet rises straight behind the centered chest and turns forward into the cannon’s breech', () => {
+    const [start, riserFoot, feedTurn, end] = alchemyPipe.corners
+    expect(start).toEqual([bodyX, machineBody.outletY, bodyZ + machineBody.size[2] / 2])
+    expect(riserFoot).toEqual([bodyX, start[1], feedTurn[2]])
+    expect(riserFoot[2] - alchemyPipe.radius).toBeGreaterThan(benchZ + workbench.depth / 2)
     expect(end).toEqual(alchemyCannon.breech)
+    const feed = new Vector3(...end)
+    feed.sub(new Vector3(...feedTurn)).normalize()
+    expect(feed.distanceTo(new Vector3(...alchemyCannon.axis))).toBeLessThan(1e-9)
     // Clear of the bench’s top, the wall and the ceiling
-    expect(riserTop[1] - alchemyPipe.radius).toBeGreaterThan(workbench.height + 0.5)
+    expect(feedTurn[1] - alchemyPipe.radius).toBeGreaterThan(workbench.height + 0.5)
     for (const corner of alchemyPipe.corners) {
       expect(southWallFace - corner[2]).toBeGreaterThan(alchemyPipe.radius)
     }

@@ -1,9 +1,9 @@
 import type {WallReservation} from '#src/lib/placement/wallGeometry.ts'
 import type {RoomWall} from '../base/Room.ts'
 
-import {alchemyCannon, alchemyPipe, workbench} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
+import {alchemyCannon, workbench} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {cisternWindowHole} from '#src/lib/gallery/cistern/window.ts'
-import forge, {forgeSideTable, forgeSideTableCenter, forgeTable, forgeTableCenter, forgeVestibule} from '#src/lib/gallery/forge.ts'
+import forge, {forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {forgeArch, forgeRoundVestibule} from '#src/lib/gallery/forgeVestibule.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import {forgeWindow, lobbyWindowHole} from '#src/lib/gallery/lobbyWindows.ts'
@@ -33,9 +33,6 @@ const standReservation = (wall: RoomWall, [fromX, fromZ]: readonly [number, numb
 const [benchX, benchZ] = workbench.center
 /** The stretch of the south wall from `west` to `east`, world x coordinates, up to `top` over the floor, which the alchemy machine stands in front of. */
 const machineReservation = (westX: number, eastX: number, top: number) => standReservation(south, [westX, benchZ], [eastX, benchZ], top)
-const riserX = alchemyPipe.corners[1][0]
-const [tableX, tableZ] = forgeTableCenter
-const [sideTableX, sideTableZ] = forgeSideTableCenter
 
 export default {
   // The arch into the vestibule, where its round wall touches the middle of this one, which the alchemy machine’s cannon shoots orbs through.
@@ -48,27 +45,22 @@ export default {
       },
     },
   },
-  // The cast-glass window into the Lobby, the Salon’s mirrored, whose glass stands in the shared plane, and north of it the side table.
+  // The cast-glass window into the Lobby, the Salon’s mirrored, whose glass stands in the shared plane.
   east: {
     ...east,
     holes: {
       lobby_window: lobbyWindowHole(forgeWindow, east, roomOrigins.forge),
     },
-    reservations: [standReservation(east, [sideTableX, sideTableZ - forgeSideTable.length / 2], [sideTableX, sideTableZ + forgeSideTable.length / 2], forgeSideTable.height + 0.1)],
   },
   // Behind the alchemy machine: its workbench, and the pipe and the cannon on the wall over it.
   south: {
     ...south,
     reservations: [
       machineReservation(benchX - workbench.length / 2, benchX + workbench.length / 2, workbench.height + 0.1),
-      machineReservation(benchX - 0.35, riserX + alchemyPipe.radius + 0.1, alchemyCannon.muzzle[1] + 0.35),
+      machineReservation(benchX - 0.45, benchX + 0.45, alchemyCannon.muzzle[1] + 0.35),
     ],
   },
-  // Behind the painter’s table.
-  west: {
-    ...west,
-    reservations: [standReservation(west, [tableX, tableZ - forgeTable.length / 2], [tableX, tableZ + forgeTable.length / 2], forgeTable.height + 0.1)],
-  },
+  west,
   // The vestibule’s round wall, one ring facing its center, with its two arches and the window into the Bastion’s cistern on the north side, where it touches the cistern’s flat wall.
   vestibule: {
     ...vestibule,

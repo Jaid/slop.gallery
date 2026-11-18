@@ -1,5 +1,4 @@
-import {ironTable, ironTableStandOff} from './ironTable.ts'
-import {forgeWindow} from './lobbyWindows.ts'
+import {ironTable} from './ironTable.ts'
 import salon, {salonCeiling} from './salon.ts'
 
 /**
@@ -35,44 +34,43 @@ const forge = {
   size: readonly [number, number]
 }
 const northZ = forge.center[1] - forge.size[1] / 2
-const westX = forge.center[0] - forge.size[0] / 2
-const eastX = forge.center[0] + forge.size[0] / 2
 
-/** The painter’s table against the middle of the west wall, which the painting set lies on: an iron one under a slab of soapstone, like the alchemy machine’s workbench, running along the wall. */
+/** The dimensions of each Forge table, in meters. */
+export const forgeTableSize = {
+  depth: 1.2,
+  height: 1.2,
+  length: 4,
+} as const
+
+/** The soapstone-topped iron tables flanking the central aisle. */
 export const forgeTable = ironTable({
-  length: 2.4,
-  depth: 1,
-  height: 0.9,
+  ...forgeTableSize,
   top: 0.05,
-  overhang: 0.05,
+  overhang: 0.14,
   back: 0.12,
   apron: [0.1, 0.012],
   leg: 0.06,
   stretcher: [0.12, 0.035],
   pairs: 2,
 })
-/** where the middle of the table stands in plan, in the world’s frame: as close to the west wall as its legs stand clear of the baseboard, its slab reaching back out over it */
-export const forgeTableCenter = [westX + ironTableStandOff(forgeTable), forge.center[1]] as const
-/** how the painter’s table turns about y from its own frame, its back toward +z, to face the room from the west wall */
-export const forgeTableTurn = -Math.PI / 2
+/** The four outer tables fan out toward the open space halfway down the room. */
+function outerTable(side: -1 | 1, end: -1 | 1) {
+  const angle = Math.PI / 9
+  return {
+    center: [forge.center[0] + side * 3.25, forge.center[1] - 0.4 + end * 4.01] as const,
+    name: `${side < 0 ? 'forge-table' : 'forge-side-table'}-${end < 0 ? 'north' : 'south'}`,
+    seed: (side < 0 ? 5303 : 7411) + end,
+    turn: side * (Math.PI / 2 - end * angle),
+  }
+}
+const painter = outerTable(-1, -1)
+const palette = outerTable(1, -1)
+export const forgeRowTables = [painter, outerTable(-1, 1), palette, outerTable(1, 1)]
 
-/** The side table against the east wall, which the palette knife lies on: a smaller one of the painter’s table’s kind, facing it across the room. */
-export const forgeSideTable = ironTable({
-  length: 1.2,
-  depth: 0.6,
-  height: 0.9,
-  top: 0.05,
-  overhang: 0.05,
-  back: 0.12,
-  apron: [0.1, 0.012],
-  leg: 0.06,
-  stretcher: [0.12, 0.035],
-  pairs: 2,
-})
-/** where the middle of the side table stands in plan, in the world’s frame: halfway between the north wall and the window into the Lobby, as close to the east wall as its legs stand clear of the baseboard */
-export const forgeSideTableCenter = [eastX - ironTableStandOff(forgeSideTable), (northZ + forgeWindow.z - forgeWindow.width / 2) / 2] as const
-/** how the side table turns about y from its own frame, its back toward +z, to face the room from the east wall */
-export const forgeSideTableTurn = Math.PI / 2
+/** The painting set and palette knife rest on the two tables nearest the north entrance. */
+export const {center: forgeTableCenter, turn: forgeTableTurn} = painter
+export const {center: forgeSideTableCenter, turn: forgeSideTableTurn} = palette
+export const forgeSideTable = forgeTable
 
 /** The round rooflight in the middle of the ceiling, relative to the room’s center. */
 export const forgeRooflight = {

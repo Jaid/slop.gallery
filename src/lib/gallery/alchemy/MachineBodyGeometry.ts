@@ -15,7 +15,7 @@ const rivetPitch = 0.075
 const rivetRadius = 0.007
 
 /**
- * The body of the alchemy machine, see {@link machineBody}, in its own frame on the floor under its middle, its front toward the room, along −z: an iron chest on a plinth band with a lid band round its top, both riveted, a collar round the sink’s throat coming down into its lid, a flange where its pipe leaves its east side, four squat feet and a round window in its front behind a brass bezel.
+ * The body of the alchemy machine, see {@link machineBody}, in its own frame on the floor under its middle, its front toward the room, along −z: an iron chest with riveted bands, a collar round its side intake, a flange where its pipe leaves its back, four squat feet and a round window in its front behind a brass bezel.
  * The window’s `glass` is a disc of its own, which glows while the machine works on an orb.
  */
 export default class MachineBodyGeometry {
@@ -55,16 +55,16 @@ export default class MachineBodyGeometry {
     this.iron = mergeParts(iron)
     const throat = alchemySink.throat + alchemySink.thickness
     const pipe = alchemyPipe.radius
-    const lowPipe = alchemyPipe.corners[0][1]
     const windowY = feet + chest * 0.52
     const bezel = new TorusGeometry(windowRadius + 0.012, 0.016, 10, 48)
+    const inlet = new CylinderGeometry(throat + 0.03, throat + 0.04, 0.035, 48)
     const outlet = new CylinderGeometry(pipe + 0.035, pipe + 0.035, 0.03, 48)
     const glass = new CircleGeometry(windowRadius + 0.004, 48)
     this.brass = mergeParts([
-      // The collar round the throat, standing on the lid
-      place(new CylinderGeometry(throat + 0.03, throat + 0.04, 0.035, 48), 0, height + 0.0175, 0),
-      // The flange where the pipe leaves through the east side
-      place(outlet.rotateZ(Math.PI / 2), width / 2 + 0.015, lowPipe, 0),
+      // The side collar at the end of the sloping intake
+      place(inlet.rotateZ(-Math.PI / 2), width / 2 + 0.0175, machineBody.inletY, 0),
+      // The flange where the pipe leaves through the back
+      place(outlet.rotateX(Math.PI / 2), 0, machineBody.outletY, depth / 2 + 0.015),
       place(bezel, 0, windowY, -depth / 2 - 0.004),
     ])
     this.glass = place(glass.rotateY(Math.PI), 0, windowY, -depth / 2 - 0.002)

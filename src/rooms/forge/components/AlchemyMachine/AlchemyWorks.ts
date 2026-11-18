@@ -11,7 +11,7 @@ import {Vector3} from 'three/webgpu'
 import {propObjects, showPropAt} from '#src/components/Scene/GrabbableProp.tsx'
 import {alchemyBrewVoices, alchemySwallowVoices, cannonVoices} from '#src/lib/audio/alchemySounds.ts'
 import {bodyPose, playSound, useGallery} from '#src/lib/gallery.ts'
-import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, inSinkThroat, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
+import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, inBodyInlet, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {orbAround, transmutedOrb} from '#src/lib/gallery/alchemy/flavor.ts'
 import {orbSeat} from '#src/lib/gallery/OrbHolderGeometry.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
@@ -40,7 +40,7 @@ type Batch = {
   since: number
 }
 
-/** how long an orb taken in takes to sink out of sight down the throat, in seconds, and how far it sinks */
+/** Time in seconds and distance in meters to draw an orb through the side inlet into the chest. */
 const sinking = [0.3, 0.22] as const
 /** how long the machine works on an orb from taking it in until it shoots it out, in seconds */
 const brewing = 2.6
@@ -157,7 +157,7 @@ export default class AlchemyWorks {
     this.fx.charge(this.clock)
   }
 
-  /** Lets every orb just taken in sink down the throat, faster and faster, and hides it once it is out of sight, using it up if a new orb comes out in its stead. */
+  /** Draws an orb through the side collar and hides it inside the chest, using it up if a new orb comes out in its stead. */
   private sink(step: number) {
     for (const batch of this.batches) {
       const was = batch.since
@@ -168,7 +168,7 @@ export default class AlchemyWorks {
       }
       const share = Math.min(batch.since / sinking[0], 1)
       const [x, y, z] = batch.from
-      showPropAt(intake, [x, y - sinking[1] * share * share, z])
+      showPropAt(intake, [x - sinking[1] * share * share, y, z])
       if (share < 1) {
         continue
       }
@@ -217,7 +217,7 @@ export default class AlchemyWorks {
         continue
       }
       const {x, y, z} = prop.body.translation()
-      if (inSinkThroat([x, y, z]) && prop.seize()) {
+      if (inBodyInlet([x, y, z]) && prop.seize()) {
         this.take(id, prop, prop.orb)
       }
     }

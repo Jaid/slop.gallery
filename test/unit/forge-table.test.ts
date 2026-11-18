@@ -8,28 +8,24 @@ import {Matrix4, Vector3} from 'three/webgpu'
 import {cannonFlight, machineBody, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import WorkbenchGeometry from '../../src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {baseboardCapFront, defaultBaseboardHeight, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
-import forge, {forgeSideTable, forgeSideTableCenter, forgeSideTableTurn, forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
+import forge, {forgeRowTables, forgeSideTable, forgeSideTableCenter, forgeSideTableTurn, forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
 import {ironTableColliders} from '../../src/lib/gallery/ironTable.ts'
 import IronTableGeometry from '../../src/lib/gallery/IronTableGeometry.ts'
-import {forgeWindow} from '../../src/lib/gallery/lobbyWindows.ts'
-import {wallCoordinates, wallOffset} from '../../src/lib/placement/wallGeometry.ts'
+import {wallOffset} from '../../src/lib/placement/wallGeometry.ts'
 import forgeSpawns from '../../src/rooms/forge/spawns.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
-const [tableX, tableZ] = forgeTableCenter
 const [benchX, benchZ] = workbench.center
 const west = slopGallery.walls.find(wall => wall.id === 'forge-west')!
 const south = slopGallery.walls.find(wall => wall.id === 'forge-south')!
 const east = slopGallery.walls.find(wall => wall.id === 'forge-east')!
-/** the floor’s brass inlay runs this far out of every wall’s center line */
-const inlayOffset = 1.25 - 0.013
-/** The extremes of a table’s geometry, turned and placed in the world: how near and how far from the wall’s center line it reaches, below the baseboard’s top and over all. */
+/** A table’s clearances in the world: its feet from the inlay, its lower frame from the baseboard and its closest point to the wall. */
 function wallReach({frame, top}: IronTableGeometry, wall: Wall, [x, z]: readonly [number, number], turn: number) {
   const placement = new Matrix4
   placement.makeRotationY(turn).setPosition(x, 0, z)
   const point = new Vector3
   let nearestLow = Infinity
-  let farthestLow = -Infinity
+  let footToInlay = Infinity
   let nearest = Infinity
   for (const geometry of [frame, top]) {
     const position = geometry.getAttribute('position')
@@ -37,15 +33,17 @@ function wallReach({frame, top}: IronTableGeometry, wall: Wall, [x, z]: readonly
       point.fromBufferAttribute(position, index).applyMatrix4(placement)
       const offset = wallOffset(wall, [point.x, point.y, point.z])
       nearest = Math.min(nearest, offset)
+      if (point.y < 0.01) {
+        footToInlay = Math.min(footToInlay, Math.abs(offset - 1.25))
+      }
       if (point.y >= defaultBaseboardHeight + 0.01) {
         continue
       }
       nearestLow = Math.min(nearestLow, offset)
-      farthestLow = Math.max(farthestLow, offset)
     }
   }
   return {
-    farthestLow,
+    footToInlay,
     nearest,
     nearestLow,
   }
@@ -78,21 +76,21 @@ const tables = [
 ] as const
 describe('the Forge’s tables', () => {
   for (const {center, geometry: build, name, table, turn, wall} of tables) {
-    test(`${name} is of iron, standing clear of the wall’s baseboard, its slab reaching back out over it, short of the wall’s face`, () => {
+    test(`${name} has a 4 m × 1.2 m slab at 1.2 m on an iron frame clear of the baseboard`, () => {
       const geometry = build()
       try {
-        const {farthestLow, nearest, nearestLow} = wallReach(geometry, wall, center, turn)
+        const {footToInlay, nearest, nearestLow} = wallReach(geometry, wall, center, turn)
         expect(nearestLow - baseboardCapFront).toBeGreaterThan(0.005)
-        expect(nearestLow - baseboardCapFront).toBeLessThan(0.03)
-        expect(nearest).toBeLessThan(baseboardCapFront)
         expect(nearest).toBeGreaterThan(wallFace + 0.02)
         // Its feet stay off the floor’s brass inlay.
-        expect(farthestLow).toBeLessThan(inlayOffset)
+        expect(footToInlay).toBeGreaterThan(0.013)
         expect(geometry.top.hasAttribute('woodGrain')).toBe(false)
         expect(geometry.frame.hasAttribute('woodGrain')).toBe(false)
         // Its slab rests on the band under it, as high as the table is.
         geometry.top.computeBoundingBox()
-        expect(geometry.top.boundingBox!.max.y).toBeCloseTo(table.height, 6)
+        expect(geometry.top.boundingBox!.max.y).toBeCloseTo(1.2, 6)
+        expect(geometry.top.boundingBox!.max.x - geometry.top.boundingBox!.min.x).toBeCloseTo(4, 6)
+        expect(geometry.top.boundingBox!.max.z - geometry.top.boundingBox!.min.z).toBeCloseTo(1.2, 6)
         expect(geometry.top.boundingBox!.min.y).toBeCloseTo(table.height - table.top, 6)
       } finally {
         geometry.dispose()
@@ -113,26 +111,29 @@ describe('the Forge’s tables', () => {
       expect(Math.max(...gaps)).toBeGreaterThan(0.004)
     }
   })
-  test('both are larger than the wooden ones they replace', () => {
-    expect(forgeTable.length).toBeGreaterThan(1.8)
-    expect(forgeTable.depth).toBeGreaterThan(0.8)
-    expect(workbench.length).toBeGreaterThan(2.8)
-    expect(workbench.depth).toBeGreaterThan(1.1)
-  })
 })
-describe('the Forge’s painter’s table', () => {
-  test('stands in the Forge against the middle of its west wall, running along it', () => {
-    expect(slopGallery.roomAt([tableX, 0.5, tableZ])?.id).toBe('forge')
-    expect(wallCoordinates(west, [tableX, 0, tableZ])).toBeCloseTo(0, 9)
-    expect(forgeTable.legs).toHaveLength(2)
-    // Its length runs along the wall, its back toward it.
-    const up = new Vector3(0, 1, 0)
-    const along = new Vector3(1, 0, 0)
-    const back = new Vector3(0, 0, 1)
-    along.applyAxisAngle(up, forgeTableTurn)
-    back.applyAxisAngle(up, forgeTableTurn)
-    expect(Math.abs(along.z)).toBeCloseTo(1, 9)
-    expect(back.x).toBeCloseTo(-1, 9)
+describe('the Forge’s two rows of tables', () => {
+  test('leave a continuous aisle from the vestibule to the alchemy workbench, and room to walk around the outside', () => {
+    const [spawnX, , spawnZ] = forgeSpawns[''].position
+    for (const {center: [x, z], turn} of forgeRowTables) {
+      const cos = Math.cos(turn)
+      const sin = Math.sin(turn)
+      const halfWidth = (Math.abs(cos) * forgeTable.length + Math.abs(sin) * forgeTable.depth) / 2
+      const halfLength = (Math.abs(sin) * forgeTable.length + Math.abs(cos) * forgeTable.depth) / 2
+      expect(forge.size[0] / 2 - Math.abs(x - forge.center[0]) - halfWidth).toBeGreaterThan(1.5)
+      expect(z - halfLength - (forge.center[1] - forge.size[1] / 2)).toBeGreaterThan(1)
+      expect(z + halfLength).toBeLessThan(benchZ - workbench.depth / 2)
+      expect(Math.abs(x - benchX) - halfWidth).toBeGreaterThan(workbench.length / 2)
+      // Measure from the spawn to the rotated slab, rather than its enclosing box.
+      const sx = forge.center[0] + spawnX - x
+      const sz = forge.center[1] + spawnZ - z
+      const dx = Math.max(0, Math.abs(cos * sx - sin * sz) - forgeTable.length / 2)
+      const dz = Math.max(0, Math.abs(sin * sx + cos * sz) - forgeTable.depth / 2)
+      expect(Math.hypot(dx, dz)).toBeGreaterThan(1)
+      for (const [orbX] of cannonFlight.points) {
+        expect(Math.abs(orbX - x) - halfWidth).toBeGreaterThan(2)
+      }
+    }
   })
   test('its colliders hold up whatever lies on its slab and stand where its legs do', () => {
     const [slab, ...rest] = ironTableColliders(forgeTable, 'forge-table')
@@ -144,50 +145,5 @@ describe('the Forge’s painter’s table', () => {
       expect(forgeTable.legs).toContain(x)
       expect(forgeTable.legZ).toContain(z)
     }
-  })
-  test('keeps works from hanging on the stretch of the wall behind it', () => {
-    const reservation = west.reservations?.find(({u, width}) => Math.abs(u) < 1e-9 && Math.abs(width - forgeTable.length) < 1e-9)
-    expect(reservation?.height).toBeCloseTo(forgeTable.height + 0.1, 9)
-    expect(reservation?.bottom).toBeUndefined()
-  })
-  test('stands out of the alchemy machine’s way, the cannon’s shot and where visitors arrive', () => {
-    const reach = Math.hypot(forgeTable.depth, forgeTable.length) / 2
-    for (const [x, , z] of cannonFlight.points) {
-      expect(Math.hypot(x - tableX, z - tableZ)).toBeGreaterThan(reach + 3)
-    }
-    expect(Math.abs(benchX - tableX) - (workbench.length + forgeTable.depth) / 2).toBeGreaterThan(2)
-    expect(Math.abs(benchZ - tableZ)).toBeGreaterThan(5)
-    const [spawnX, , spawnZ] = forgeSpawns[''].position
-    expect(Math.hypot(forge.center[0] + spawnX - tableX, forge.center[1] + spawnZ - tableZ)).toBeGreaterThan(8)
-  })
-})
-describe('the Forge’s side table', () => {
-  const [sideX, sideZ] = forgeSideTableCenter
-  test('stands in the Forge against its east wall, running along it between the north wall and the window into the Lobby', () => {
-    expect(slopGallery.roomAt([sideX, 0.5, sideZ])?.id).toBe('forge')
-    const up = new Vector3(0, 1, 0)
-    const along = new Vector3(1, 0, 0)
-    const back = new Vector3(0, 0, 1)
-    along.applyAxisAngle(up, forgeSideTableTurn)
-    back.applyAxisAngle(up, forgeSideTableTurn)
-    expect(Math.abs(along.z)).toBeCloseTo(1, 9)
-    expect(back.x).toBeCloseTo(1, 9)
-    const northZ = forge.center[1] - forge.size[1] / 2
-    const windowZ = forgeWindow.z - forgeWindow.width / 2
-    expect(sideZ - forgeSideTable.length / 2 - northZ).toBeCloseTo(windowZ - sideZ - forgeSideTable.length / 2, 9)
-    expect(windowZ - sideZ - forgeSideTable.length / 2).toBeGreaterThan(1)
-  })
-  test('keeps works from hanging on the stretch of the wall behind it', () => {
-    const reservation = east.reservations?.find(({u, width}) => Math.abs(u - wallCoordinates(east, [sideX, 0, sideZ])) < 1e-9 && Math.abs(width - forgeSideTable.length) < 1e-9)
-    expect(reservation?.height).toBeCloseTo(forgeSideTable.height + 0.1, 9)
-  })
-  test('stands out of the alchemy machine’s way, the cannon’s shot and where visitors arrive', () => {
-    const reach = Math.hypot(forgeSideTable.depth, forgeSideTable.length) / 2
-    for (const [x, , z] of cannonFlight.points) {
-      expect(Math.hypot(x - sideX, z - sideZ)).toBeGreaterThan(reach + 3)
-    }
-    expect(Math.abs(benchZ - sideZ)).toBeGreaterThan(10)
-    const [spawnX, , spawnZ] = forgeSpawns[''].position
-    expect(Math.hypot(forge.center[0] + spawnX - sideX, forge.center[1] + spawnZ - sideZ)).toBeGreaterThan(8)
   })
 })

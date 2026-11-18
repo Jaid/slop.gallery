@@ -1,9 +1,9 @@
 import type {Vec3} from '../types.ts'
 
-import {wallFace} from '../architectureDimensions.ts'
+import {baseboardCapFront, wallFace} from '../architectureDimensions.ts'
 import {cisternWindow} from '../cistern/window.ts'
-import forge from '../forge.ts'
-import {ironTable, ironTableStandOff} from '../ironTable.ts'
+import forge, {forgeTableSize} from '../forge.ts'
+import {ironTable} from '../ironTable.ts'
 
 const southZ = forge.center[1] + forge.size[1] / 2
 /** where the face of the Forge’s south wall stands, which the alchemy machine stands against */
@@ -15,30 +15,30 @@ export const physicsSteps = {
   substeps: 4,
 } as const
 const gravity = -9.81
+const pipeRadius = 0.18
+/** The pipe and its flanges fit between the slab and the south baseboard, with room for the wall clamps. */
+const pipeClearance = pipeRadius + 0.06
+const riserZ = southZ - baseboardCapFront - pipeClearance
 /** the workbench in its own frame, which lines up with the world’s: running east to west along the wall, its back toward it */
 const bench = ironTable({
-  length: 3.2,
-  depth: 1.15,
-  height: 1.3,
-  // As thick as leaves an orb resting on the body’s lid down in the throat, which the sink’s bowl starts under
+  ...forgeTableSize,
   top: 0.045,
-  // Deep enough to keep the front feet off the floor’s brass inlay
   overhang: 0.12,
   back: 0.12,
   apron: [0.12, 0.014],
   leg: 0.07,
-  // Low enough for the machine’s pipe to pass over the stretcher across the east end on its way to the riser
+  // The outlet passes over the stretcher at the back.
   stretcher: [0.12, 0.04],
   pairs: 2,
 })
 /**
- * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: an iron table under a thick slab of soapstone, see {@link ironTable}, the round hole of the machine’s sink cut into its east end, left of its middle as seen from the room.
+ * The workbench against the middle of the Forge’s south wall, which the alchemy machine is built into: an iron table under a thick slab of soapstone, see {@link ironTable}, with a round hole for the intake on the visitor’s left.
  * All values are in meters; its middle and its top’s height are in the world’s frame, everything else measured on the bench.
  */
 export const workbench = {
   ...bench,
-  /** the middle of its slab in plan, on the room’s axis, as close to the wall as its legs stand clear of the baseboard, its slab reaching back out over it */
-  center: [forge.center[0], southZ - ironTableStandOff(bench)] as const,
+  /** the middle of its slab in plan, on the room’s axis with the pipe behind its back edge */
+  center: [forge.center[0], riserZ - pipeClearance - bench.depth / 2] as const,
 }
 const [benchX, benchZ] = workbench.center
 /** how far the sink’s bowl turns round from upright at its rim down to the throat, in radians: it meets the throat at a fall of 25° */
@@ -54,9 +54,11 @@ export const alchemySink = (() => {
   // The bowl is a quarter circle’s arc turning from upright at the rim by `bowlSweep`, down to the throat.
   const curve = (radius - throat) / (1 - Math.cos(bowlSweep))
   const rim = workbench.height - workbench.top
+  // Keep the bowl within reach from the front edge as the slab gets deeper.
+  const sinkZ = benchZ - workbench.depth / 2 + 0.175 + radius
   return {
-    /** the middle of its rim, flush with the bench’s top, far enough from the east end for the cube under it to clear the legs */
-    center: [benchX + workbench.length / 2 - 0.2 - radius, workbench.height, benchZ] as Vec3,
+    /** the middle of its rim, flush with the top and halfway along the east half of the bench */
+    center: [benchX + workbench.length / 4, workbench.height, sinkZ] as Vec3,
     radius,
     /** the radius of the throat inside, wide enough for an orb to drop through with a little room to spare */
     throat,
@@ -71,28 +73,35 @@ export const alchemySink = (() => {
 })()
 
 /**
- * The body of the alchemy machine under its sink, standing on the floor between the bench’s legs: an iron cube the sink’s throat runs down into, with a round window in its front glowing while it works on an orb.
- * Its pipe leaves it through the middle of its east side. In meters, its middle in plan in the world’s frame.
+ * The iron chest centered under the workbench. The intake enters its east side and the outlet leaves through the back; its front window glows while it works on an orb.
  */
 export const machineBody = {
-  center: [alchemySink.center[0], benchZ] as const,
-  /** a cube, low enough for an orb dropping down the throat to come to rest on its lid under the bowl */
-  size: [0.72, 0.72, 0.72] as const,
+  center: [benchX, alchemySink.center[2]] as const,
+  size: [0.72, 0.62, 0.72] as const,
+  inletY: 0.32,
+  outletY: 0.35,
 }
 
-/** whether an orb with its middle at the position has dropped into the throat of the sink, out of reach of the bowl, so the machine takes it in: its middle under the bowl and over the throat */
-export function inSinkThroat([x, y, z]: Vec3) {
-  const [sinkX, , sinkZ] = alchemySink.center
-  return y < alchemySink.throatY - 0.02 && y > machineBody.size[1] - 0.05 && Math.hypot(x - sinkX, z - sinkZ) < alchemySink.throat
+const inletX = machineBody.center[0] + machineBody.size[0] / 2
+/** The intake drops from the bowl, slopes toward the chest and turns through its side collar. World-space centerline, in meters. */
+export const alchemyIntake = {
+  bend: 0.21,
+  corners: [
+    [alchemySink.center[0], alchemySink.throatY - 0.025, alchemySink.center[2]],
+    [alchemySink.center[0], alchemySink.throatY - 0.16, alchemySink.center[2]],
+    [inletX + 0.12, machineBody.inletY, machineBody.center[1]],
+    [inletX, machineBody.inletY, machineBody.center[1]],
+  ] as ReadonlyArray<Vec3>,
 }
 
-/** how high the pipe runs west along the wall to the cannon */
-const pipeRun = 2.1
-/** how far the riser stands east of the bench’s east end, clear of it */
-const riserX = benchX + workbench.length / 2 + 0.07 + 0.18
-/** where the pipe’s run along the wall turns into the cannon, over the bench’s middle */
-const turn: Vec3 = [benchX, pipeRun, benchZ]
-/** how far up the barrel from where the pipe turns into it the cannon’s breech starts */
+/** An orb rolling down the intake reaches the side collar just before the chest’s solid collider stops it. */
+export function inBodyInlet([x, y, z]: Vec3) {
+  return x >= inletX && x < inletX + alchemySink.throat && Math.hypot(y - machineBody.inletY, z - machineBody.center[1]) < alchemySink.throat
+}
+
+/** A fixed point on the wall-mounted cannon’s axis, independent of the bench and pipe. */
+const cannonAnchor: Vec3 = [forge.center[0], 2.1, southWallFace - 0.62]
+/** how far up the barrel from its anchor the cannon’s breech starts */
 const feed = 0.32
 /** how long the barrel is, from its breech to its muzzle */
 const barrel = 0.95
@@ -111,7 +120,7 @@ export const cannonTarget = {
 /** How the cannon lies when its barrel points north along the room’s axis, raised by `elevation` radians: its axis, breech and muzzle, and where an orb starts down the barrel. */
 function cannonPose(elevation: number) {
   const axis: Vec3 = [0, Math.sin(elevation), -Math.cos(elevation)]
-  const along = (length: number) => turn.map((value, index) => value + axis[index] * length) as Vec3
+  const along = (length: number) => cannonAnchor.map((value, index) => value + axis[index] * length) as Vec3
   return {
     axis,
     breech: along(feed),
@@ -163,19 +172,18 @@ const elevation = (() => {
 const {axis, breech, muzzle, start: launchPosition} = cannonPose(elevation)
 
 /**
- * The brass pipe the alchemy machine blasts an orb through, from its body up to the cannon: out of the middle of the body’s east side, east under the bench past its east end, up the south wall on brackets and west along it again to over the bench’s middle, where it turns north and up into the cannon’s breech.
+ * The brass outlet leaves the back of the body, rises straight up behind the bench and bends forward into the cannon.
  * Its corners are in the world’s frame, every one but the first and the last rounded by `bend`; its radii are meters.
  */
 export const alchemyPipe = {
   corners: [
-    [machineBody.center[0], machineBody.size[1] / 2, benchZ],
-    [riserX, machineBody.size[1] / 2, benchZ],
-    [riserX, pipeRun, benchZ],
-    turn,
+    [machineBody.center[0], machineBody.outletY, machineBody.center[1] + machineBody.size[2] / 2],
+    [machineBody.center[0], machineBody.outletY, riserZ],
+    [benchX, breech[1] + (riserZ - breech[2]) * axis[1] / axis[2], riserZ],
     breech,
   ] as ReadonlyArray<Vec3>,
   bend: 0.25,
-  radius: 0.18,
+  radius: pipeRadius,
   /** the radius of its bore, wide enough for an orb */
   bore: 0.165,
 }
