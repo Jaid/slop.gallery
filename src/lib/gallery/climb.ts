@@ -186,7 +186,5 @@ export const climbElbowLantern: PendantMount = {
   drop: passageLightDrop,
   light: [elbowAnchor[0], elbowAnchor[1] - passageLightDrop, elbowAnchor[2]],
 }
-/** How far along the hairpin its lantern hangs, between two ribs halfway up the east leg. */
-export const climbHairpinLantern = climbHairpin.ribGap(route.length - legLength / 2)
 /** How far along the run its lantern hangs, between two ribs halfway along it, over the Lodge’s roof. */
 export const climbRunLantern = climbRun.ribGap(climbRun.route.length / 2)

@@ -9,7 +9,7 @@ import CoveredRoute from '#component/CoveredRoute'
 import TimberTransition from '#component/TimberTransition'
 import {bastionApproach, bastionCurve, bastionGateLantern, bastionMouth, bastionTransition} from '#src/lib/gallery/bastion.ts'
 import {bastionLink, bastionLinkGate, climbMouthHollow, lodgeSpur, lodgeSpurGrille} from '#src/lib/gallery/bastionNetwork.ts'
-import {climbApproach, climbElbowLantern, climbHairpin, climbHairpinLantern, climbMouth, climbRun, climbRunLantern} from '#src/lib/gallery/climb.ts'
+import {climbApproach, climbElbowLantern, climbHairpin, climbMouth, climbRun, climbRunLantern} from '#src/lib/gallery/climb.ts'
 import {lodgeFloorPlanks} from '#src/lib/gallery/lodge.ts'
 import lodgeTimber from '#src/lib/gallery/lodgeTimber.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
@@ -34,7 +34,7 @@ export default function BastionRoom({material, wood}: {
   const floor = useDisposable(useMemo(() => lightIndoors(new PlankMaterial(lodgeFloorPlanks)), []))
   return <group name='bastion-room'>
     <CoveredPassage hollow={climbMouthHollow} material={material} mounts={elbowMounts} passage={climbMouth} />
-    <CoveredRoute lanterns={[climbHairpinLantern]} material={material} passage={climbHairpin} />
+    <CoveredRoute material={material} passage={climbHairpin} />
     <CoveredRoute lanterns={[climbRunLantern]} material={material} passage={climbRun} />
     <CoveredRoute material={material} passage={climbApproach} />
     <BastionCistern stone={material} />

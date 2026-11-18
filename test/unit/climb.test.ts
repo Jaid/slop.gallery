@@ -11,7 +11,7 @@ import {vaultShellThickness} from '../../src/lib/gallery/architectureDimensions.
 import {bastionClearance, bastionDoorway} from '../../src/lib/gallery/bastion.ts'
 import {bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import {insideCisternPlan} from '../../src/lib/gallery/cistern/cistern.ts'
-import {climbApproach, climbArch, climbCrossfall, climbCulvert, climbDoorway, climbDrain, climbHairpin, climbHairpinLantern, climbMouth, climbRun} from '../../src/lib/gallery/climb.ts'
+import {climbApproach, climbArch, climbCrossfall, climbCulvert, climbDoorway, climbDrain, climbHairpin, climbMouth, climbRun, climbRunLantern} from '../../src/lib/gallery/climb.ts'
 import {easedRampGradient} from '../../src/lib/gallery/easedRamp.ts'
 import {insidePolygon, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import forge, {forgeVestibule} from '../../src/lib/gallery/forge.ts'
@@ -407,14 +407,13 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
     expect(roomAt([endX + 0.05, 1.7, endZ])).toBe('forge')
     expect(roomAt([endX - 0.05, 1.7, endZ])).toBe('bastion')
   })
-  test('its lanterns hang between the hairpin’s ribs and its lamps under them', () => {
-    expect(climbHairpin.ribs.some(rib => Math.abs(rib - climbHairpinLantern) < 0.3)).toBe(false)
-    const ids = ['climb', 'elbow', 'run'].map(id => `bastion-lantern_${id}`)
+  test('the run’s lantern clears its ribs and the climb’s lamps hang above head height', () => {
+    expect(climbRun.ribs.some(rib => Math.abs(rib - climbRunLantern) < 0.3)).toBe(false)
+    const ids = ['elbow', 'run'].map(id => `bastion-lantern_${id}`)
     const lamps = slopGallery.room('bastion').lamps().filter(({id}) => ids.includes(id))
     expect(lamps.map(({id}) => id).toSorted()).toEqual(ids)
     for (const {position} of lamps) {
       expect(roomAt(position)).toBe('bastion')
-      // Under the crown, over a person’s head, even over the middle of the hairpin, where its paving falls lowest
       expect(position[1] - floorHeight(position)).toBeGreaterThan(1.7)
       expect(position[1] - floorHeight(position)).toBeLessThan(2.4)
     }
