@@ -9,6 +9,7 @@ import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {isFading} from '#src/lib/fade.ts'
 import {cameraPose, useGallery} from '#src/lib/gallery.ts'
 import {useFusions} from '#src/lib/gallery/fusion/fusions.ts'
+import {pageFov} from '#src/lib/rendering/fov.ts'
 import {lightTint, noTint} from '#src/lib/rendering/lightLevels.ts'
 import {getPlayerZoom} from '#src/lib/rendering/playerView.ts'
 import worldClock from '#src/lib/worldClock.ts'
@@ -30,7 +31,7 @@ const noMoods: ReadonlyArray<Mood> = []
  * Under `?fade=false`, they cut in and out instead of fading, for captures right after the camera jumped from room to room.
  * None show while suppressed with N under `?development`, which cuts the moods showing off at once and, when lifted, brings the moods due back in full at once.
  * Their loops and transformers sound once the sound engine exists, which only happens with the player’s first click.
- * What they widen the player’s view by only applies while it is drawn, each frame and every capture, see `MoodLens`.
+ * What they widen the player’s view by only applies while it is drawn, each frame and every capture, see `MoodLens`, and not at all under `?fov`.
  */
 export default function Moods() {
   const [mixer] = useState(() => new MoodMixer({fade: isFading}))
@@ -65,7 +66,8 @@ export default function Moods() {
   })
   // After every regular frame callback, so whatever sets the camera’s field of view this frame has set it, and given back once the frame is drawn.
   useFrame(({camera}, delta) => {
-    moodLens.update(mixer.fov, {
+    // Under ?fov, the view keeps exactly that.
+    moodLens.update(pageFov === undefined ? mixer.fov : 0, {
       delta,
       fading: isFading,
       own: !cameraPose.focused,

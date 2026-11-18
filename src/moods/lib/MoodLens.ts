@@ -24,7 +24,7 @@ const limits = [1, 179] as const
 /**
  * Widens the player’s view by what the moods showing ask for, their `fov`, only while it is drawn: {@link widen} right before a frame, {@link restore} right after, or {@link during} a render of its own, like a capture’s.
  * In between, the camera keeps the field of view everything else set and reads back, like the player’s zoom, V-viewing and the tuning panel, which each remember the one they found to return to it, so the lens never ends up in what they remember.
- * Only the player’s own view widens: zooming in gives the widening up along the way, and a camera taken from the player eases out of it. A flying player’s view is the player’s own too, so captures, which fly, show it as wide as players see it.
+ * Only the player’s own view widens: zooming in gives the widening up along the way, and a camera taken from the player eases out of it. A flying player’s view is the player’s own too, so captures, which fly, show it as wide as players see it. Under `?fov`, nothing widens: `Moods` asks for no degrees.
  */
 export default class MoodLens {
   /** how many degrees it widens a view by now, narrower where negative, as {@link update} last worked it out */

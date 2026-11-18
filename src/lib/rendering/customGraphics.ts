@@ -14,7 +14,7 @@ import {readScale} from './scale.ts'
 /** key that shows or hides the tuning panel with `?development` */
 export const graphicsTuningKey = 'KeyG'
 
-/** the game camera’s vertical field of view in degrees, before any zoom, unless `?fov` sets another */
+/** the game camera’s vertical field of view in degrees, before any zoom, unless `?fov` sets another, which moods and camera bookmarks then leave alone */
 export const defaultFov = 62
 
 /** How the camera sees and the canvas resolves: values outside the render pipeline that the tuning panel changes too. */

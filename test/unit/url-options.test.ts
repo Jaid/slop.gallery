@@ -9,7 +9,7 @@ import {includesResult, readDownload, readWebhook, readWebhookEndpoint} from '..
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {readAlbedo} from '../../src/lib/rendering/albedo.ts'
 import {getAntiAliasing, readAntiAliasing} from '../../src/lib/rendering/antiAliasing.ts'
-import {readFov} from '../../src/lib/rendering/fov.ts'
+import {pageFov, readFov} from '../../src/lib/rendering/fov.ts'
 import {readNear} from '../../src/lib/rendering/near.ts'
 import {readRatio} from '../../src/lib/rendering/ratio.ts'
 import {readScale, readWarmupScale} from '../../src/lib/rendering/scale.ts'
@@ -98,6 +98,8 @@ describe('URL options', () => {
     for (const search of ['', '?fov', '?fov=', '?fov=0', '?fov=-60', '?fov=180', '?fov=270', '?fov=wide', '?fov=NaN', '?fov=Infinity']) {
       expect(readFov(search)).toBeUndefined()
     }
+    // A page without ?fov, like this one, leaves the field of view to its modifiers.
+    expect(pageFov).toBeUndefined()
   })
   test('?ratio accepts a positive width-to-height ratio as x:x, x/x or a number', () => {
     for (const [value, expected] of [['16:9', 16 / 9], ['16/9', 16 / 9], ['9:16', 9 / 16], ['19.5:9', 19.5 / 9], ['2.39', 2.39], ['1', 1], ['1e1', 10], ['4%2F3', 4 / 3]] as const) {

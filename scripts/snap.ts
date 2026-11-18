@@ -33,7 +33,7 @@ ${galleryHelp(snapHeight)}
   --position <x,y,z>      where the player flies to, its eyes’ position in meters. Default: the bookmark’s, or the player spawn
   --angle <yaw,pitch[,roll]>
                           camera angle in degrees. Yaw 0 looks toward −z, positive pitch looks up. Default: the bookmark’s, or the player spawn
-  --fov <degrees>         vertical field of view, which a mood of the room may widen like for any player, like the Corridor’s. Default: the bookmark’s, or the game camera’s
+  --fov <degrees>         vertical field of view, exactly: it also mirrors ?fov, under which no mood widens the view. Default: the bookmark’s, or the game camera’s, which a mood of the room may widen like for any player, like the Corridor’s
   --jxl-distance <number> cjxl Butteraugli distance, 0 is lossless. Default: 1
   --jxl-effort <1–10>     cjxl effort; lossless 2160p takes about a second at 6 and minutes at 10. Default: ${jxlEffort}
   --settle <frames>       frames to render after flying there and again once everything has loaded. Default: 2, enough even with TRAA

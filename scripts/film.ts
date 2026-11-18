@@ -52,7 +52,7 @@ A recipe is a JSON array of keyframes, ordered by time:
   yaw       degrees, 0 looks toward −z, positive turns left. Not wrapped, so 0 → 720 spins twice
   pitch     degrees, positive looks up
   roll      degrees, positive tilts the camera counterclockwise
-  fov       vertical field of view in degrees, which a mood of the room may widen like for any player
+  fov       vertical field of view in degrees, which a mood of the room may widen like for any player, unless --fov, which mirrors ?fov, gives the film a field of view of its own to start from
   tween     how this keyframe’s properties travel toward it from their previous keyframe. Default: linear
             ${Object.keys(tweens).join(', ')}
   wireframe input for the app’s set_wireframe WebMCP tool, in effect from this keyframe on. See below

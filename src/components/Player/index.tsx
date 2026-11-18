@@ -19,6 +19,7 @@ import {playerSession} from '#src/lib/gallery/PlayerSession.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import {playerCollisionGroups} from '#src/lib/physics/collisionGroups.ts'
 import PlayerGrace from '#src/lib/physics/PlayerGrace.ts'
+import {pageFov} from '#src/lib/rendering/fov.ts'
 import {playerTelemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumpHandler, playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
 import world from '#src/worlds/current.ts'
@@ -167,8 +168,8 @@ export default function Player() {
         rotation: sessionRotation.setFromEuler(new Euler(pose.pitch, pose.yaw, 0, 'YXZ')).toArray(),
       },
     }))
-    const bookmark = isDevelopmentMode ? null : findCameraBookmark()
-    // The player starts flying at a ?spawn camera bookmark, its eyes where the camera is, and looks through the bookmark’s field of view while still there. With ?development, the player flies on with the game’s own.
+    const bookmark = isDevelopmentMode || pageFov !== undefined ? null : findCameraBookmark()
+    // The player starts flying at a ?spawn camera bookmark, its eyes where the camera is, and looks through the bookmark’s field of view while still there. With ?development or ?fov, the player flies on with the game’s own.
     if (bookmark && cameraBookmarkFeet(bookmark).every((value, index) => value === pose.position[index])) {
       setFov(camera, bookmark.fov)
     }
