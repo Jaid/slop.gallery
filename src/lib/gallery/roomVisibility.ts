@@ -10,7 +10,7 @@ import slopGallery from '#src/worlds/gallery/index.ts'
 import relations, {openings} from '#src/worlds/gallery/relations.ts'
 
 import lobby from './lobby.ts'
-import {vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY} from './vesperCeiling.ts'
+import {vesperLanternRidgeY, vesperLanterns, vesperLanternSillY} from './vesperCeiling.ts'
 
 /** a rectangle on screen in normalized device coordinates: left, bottom, right, top */
 export type ScreenRect = readonly [number, number, number, number]
@@ -75,13 +75,12 @@ const holeBox = (wallId: string, name: string) => {
   }
   return box
 }
-/** the glass of the Vesper’s lantern, through which the vault of the Lobby next door rises against the sky, or with `mirrored` its reflection in the floor */
-const vesperLanternBox = (mirrored: boolean) => {
+/** the glass of both halves of the Vesper’s lantern, through which the vault of the Lobby next door rises against the sky, or with `mirrored` their reflections in the floor */
+const vesperLanternBoxes = (mirrored: boolean) => {
   const vesper = slopGallery.room('vesper')
-  const [halfX, halfZ] = vesperLanternHalf(vesper.size)
   const [x, z] = vesper.center
   const [bottom, top] = mirrored ? [-vesperLanternRidgeY, -vesperLanternSillY] : [vesperLanternSillY, vesperLanternRidgeY]
-  return new Box3(new Vector3(x - halfX, vesper.floorY + bottom, z - halfZ), new Vector3(x + halfX, vesper.floorY + top, z + halfZ))
+  return vesperLanterns(vesper.size).map(({centerZ, half: [halfX, halfZ]}) => new Box3(new Vector3(x - halfX, vesper.floorY + bottom, z + centerZ - halfZ), new Vector3(x + halfX, vesper.floorY + top, z + centerZ + halfZ)))
 }
 
 export const portals: Array<Portal> = [
@@ -94,10 +93,10 @@ export const portals: Array<Portal> = [
     rooms: ['lobby', 'oculus'],
     box: new Box3(new Vector3(lobby.opening.center[0] - lobby.opening.size[0] / 2, -1, lobby.opening.center[1] - lobby.opening.size[1] / 2), new Vector3(lobby.opening.center[0] + lobby.opening.size[0] / 2, 0.5, lobby.opening.center[1] + lobby.opening.size[1] / 2)),
   },
-  ...[false, true].map(mirrored => ({
+  ...[false, true].flatMap(mirrored => vesperLanternBoxes(mirrored).map(box => ({
     rooms: ['vesper', 'lobby'] as const,
-    box: vesperLanternBox(mirrored),
-  })),
+    box,
+  }))),
 ]
 
 /** the boxes of each room’s air, a room’s air can take several (like the Corridor’s strips round the Lodge’s bay, its hall and its stair flight up to the Sienna); they reach below the floor for its reflection */

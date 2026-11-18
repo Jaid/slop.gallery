@@ -9,7 +9,7 @@ import {wallFace, wallTop} from '../../src/lib/gallery/architecture.ts'
 import lobbyVault from '../../src/lib/gallery/lobbyVault.ts'
 import {portals, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
 import {middaySun} from '../../src/lib/gallery/sun.ts'
-import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY, vesperOpeningInset} from '../../src/lib/gallery/vesperCeiling.ts'
+import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternHalf, vesperLanternRidgeY, vesperLanterns, vesperLanternSillY, vesperOpeningInset} from '../../src/lib/gallery/vesperCeiling.ts'
 import VesperCeilingGeometry, {vesperCeilingCollision} from '../../src/lib/gallery/VesperCeilingGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import walls, {roomAt, roomClearHeight, rooms} from './fixtures/gallery.ts'
@@ -19,6 +19,7 @@ const room = rooms.find(candidate => candidate.id === 'vesper')!
 const lobby = rooms.find(candidate => candidate.id === 'lobby')!
 const [faceX, faceZ] = room.size.map(size => size / 2 - wallFace)
 const [halfX, halfZ] = vesperLanternHalf(room.size)
+const lanterns = vesperLanterns(room.size)
 const {rise} = vesperCeiling.lantern
 const geometry = new VesperCeilingGeometry(room.size)
 const material = new MeshBasicMaterial({side: DoubleSide})
@@ -35,8 +36,8 @@ const vertices = (part: typeof geometry.plaster) => {
   const position = part.getAttribute('position')
   return Array.from({length: position.count}, (_, index) => vectorAt(position, index))
 }
-/** height of the lantern’s hipped roof over the point on the plan */
-const roofY = (x: number, z: number) => vesperLanternEavesY + rise * Math.min(halfX - Math.abs(x), halfZ - Math.abs(z)) / halfX
+/** height of a lantern half’s hipped roof over the point relative to that lantern’s middle */
+const roofY = (x: number, z: number, [lHalfX, lHalfZ]: readonly [number, number]) => vesperLanternEavesY + rise * Math.min(lHalfX - Math.abs(x), lHalfZ - Math.abs(z)) / lHalfX
 const view = (position: Vec3, target: Vec3) => {
   const camera = new PerspectiveCamera(62, 16 / 9, 0.05, 90)
   camera.position.set(...position)
@@ -106,22 +107,40 @@ describe('the Vesper’s coved ceiling', () => {
   test('the plaster shell is a closed solid', () => {
     expectClosedAndOutward(geometry.plaster)
   })
-  test('the lantern’s bronze stays inside its glass', () => {
+  test('splits the opening into two whole-pane lanterns bridged across the middle, with every bronze bar inside its lantern or spandrel', () => {
+    const {pane} = vesperCeiling.lantern
+    const {arch, deck, halfWidth} = vesperCeiling.bridge
+    expect(lanterns).toHaveLength(2)
+    for (const {centerZ, half: [lHalfX, lHalfZ]} of lanterns) {
+      expect(Math.abs(centerZ)).toBeCloseTo(halfWidth + lHalfZ, 9)
+      expect(lHalfX).toBeCloseTo(halfX, 9)
+      expect(lHalfZ).toBeGreaterThanOrEqual(lHalfX)
+      expect(lHalfZ * 2 / pane % 1).toBeCloseTo(0, 9)
+    }
     for (const {x, y, z} of vertices(geometry.bars)) {
       expect(Math.abs(x)).toBeLessThanOrEqual(halfX + 1e-5)
       expect(Math.abs(z)).toBeLessThanOrEqual(halfZ + 1e-5)
-      expect(y).toBeGreaterThanOrEqual(vesperLanternSillY - 1e-5)
-      expect(y).toBeLessThanOrEqual(roofY(x, z) + 1e-5)
+      const host = lanterns.find(({centerZ, half: [, lHalfZ]}) => Math.abs(z - centerZ) <= lHalfZ + 1e-5)
+      if (host) {
+        expect(y).toBeGreaterThanOrEqual(vesperLanternSillY - 1e-5)
+        expect(y).toBeLessThanOrEqual(roofY(x, z - host.centerZ, host.half) + 1e-5)
+      } else {
+        // Bronze colonnettes in the bridge’s open spandrels sit between the arch extrados and the deck soffit.
+        expect(Math.abs(z)).toBeLessThanOrEqual(halfWidth + 1e-5)
+        expect(y).toBeGreaterThanOrEqual(arch.springY - 1e-5)
+        expect(y).toBeLessThanOrEqual(deck.bottomY + 0.02)
+      }
     }
   })
-  test('the glass faces into the lantern, counting its panes in its UVs', () => {
+  test('the glass faces into each lantern half, counting its panes in its UVs', () => {
     const position = geometry.glass.getAttribute('position')
     const normal = geometry.glass.getAttribute('normal')
     const uv = geometry.glass.getAttribute('uv')
-    const center = new Vector3(0, vesperLanternSillY, 0)
     for (let index = 0; index < position.count; index++) {
       const corner = vectorAt(position, index)
-      expect(vectorAt(normal, index).dot(center.clone().sub(corner))).toBeGreaterThan(0)
+      const host = corner.z < 0 ? lanterns[0] : lanterns[1]
+      const center = new Vector3(0, vesperLanternSillY, host.centerZ)
+      expect(vectorAt(normal, index).dot(center.sub(corner))).toBeGreaterThan(0)
       // Corners of the glass lie on the joints between panes, where the bars run.
       for (const value of [uv.getX(index), uv.getY(index)]) {
         expect(Math.abs(value - Math.round(value))).toBeLessThan(1e-5)
