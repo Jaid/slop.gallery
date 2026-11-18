@@ -7,11 +7,9 @@ import {useMemo} from 'react'
 import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import Chandelier from '#component/Chandelier'
-import PendantLamps from '#component/PendantLamps'
 import SiennaWainscot from '#component/SiennaWainscot'
 import Box from '#src/components/Scene/primitives.tsx'
-import {passageLantern, passageLanternGlow} from '#src/lib/gallery/pendants/passageLantern.ts'
-import {siennaCeilingBeam, siennaCeilingBeamOffsets, siennaCeilingBeamY, siennaCeilingPlanks, siennaRugSize, siennaRugThickness, siennaVestibule, siennaVestibuleCeiling, siennaVestibuleLantern} from '#src/lib/gallery/sienna.ts'
+import {siennaCeilingBeam, siennaCeilingBeamOffsets, siennaCeilingBeamY, siennaCeilingPlanks, siennaRugSize, siennaRugThickness, siennaVestibule, siennaVestibuleCeiling} from '#src/lib/gallery/sienna.ts'
 import rugFringeGeometry from '#src/lib/gallery/sienna/RugFringeGeometry.ts'
 import PersianRugMaterial from '#src/lib/materials/PersianRugMaterial.ts'
 import PlankFloorMaterial from '#src/lib/materials/PlankFloorMaterial.ts'
@@ -20,9 +18,8 @@ import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const room = slopGallery.room('sienna')
-const vestibuleMounts = [siennaVestibuleLantern]
 
-/** The Sienna’s floor, rug, beams, wainscot and chandelier, and its vestibule’s floor, ceiling, joists and lantern; its papered walls and their trim come from the shared wall surfaces. */
+/** The Sienna’s floor, rug, beams, wainscot and chandelier, and its vestibule’s floor, ceiling and joists; its papered walls and their trim come from the shared wall surfaces. */
 export default function SiennaRoom({joinery}: {
   /** dark wood with its grain along each mesh’s x axis (varnished, shared with the walls’ trim) and z axis (oiled, for the joists) */
   joinery: {
@@ -75,7 +72,6 @@ export default function SiennaRoom({joinery}: {
       </mesh>
       {siennaCeilingBeamOffsets(vestibuleWidth, 2).map(x => <Box key={x} material={joinery.z} name='sienna-vestibule-ceiling-beam' position={[x, siennaCeilingBeamY(siennaVestibule.height), 0]} size={[siennaCeilingBeam.width, siennaCeilingBeam.height, vestibuleDepth]} />)}
     </group>
-    <PendantLamps body={passageLantern} glow={passageLanternGlow} mounts={vestibuleMounts} name='sienna-vestibule-pendant' />
     {slopGallery.walls.filter(wall => wall.room === 'sienna').map(wall => <SiennaWainscot key={wall.id} field={joinery.panel} frame={joinery.x} wall={wall} />)}
   </>
 }

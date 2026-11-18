@@ -7,9 +7,9 @@ import SlopedBox from '#component/SlopedBox'
 import Box from '#src/components/Scene/primitives.tsx'
 import lowerGallery, {tunnelDiagonalFloorY, tunnelDiagonalPoint, tunnelDiagonalYaw, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
 import tunnelDisplays from '#src/lib/gallery/tunnelDisplays.ts'
-import lamps, {tunnelLightSs, tunnelThresholdLights} from '#src/rooms/exhibition/lamps.ts'
+import lamps, {tunnelLightSs} from '#src/rooms/exhibition/lamps.ts'
 
-/** Three housings on the tunnel’s diagonal ceiling, abreast of the rows of exhibits, plus threshold housings at the level north and south ends. */
+/** Three housings on the tunnel’s diagonal ceiling, abreast of the rows of exhibits. */
 const tunnelLightColors = [lamps.tunnel_green, lamps.tunnel_blue, lamps.tunnel_red].map(lamp => lamp.tint)
 
 export default function TunnelDisplays({material}: {material: Material}) {
@@ -33,11 +33,5 @@ export default function TunnelDisplays({material}: {material: Material}) {
         </group>
       </group>
     })}
-    {Object.entries(tunnelThresholdLights).map(([end, {position, tint}]) => <group key={end} name={`tunnel-threshold-light-${end}`} position={position}>
-      <Box color='#242f32' position={[0, -0.04, 0]} size={[0.5, 0.1, 0.5]} />
-      <mesh position={[0, -0.091, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.16, 24]} /><meshBasicNodeMaterial color={tint} toneMapped={false} />
-      </mesh>
-    </group>)}
   </group>
 }

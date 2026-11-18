@@ -181,8 +181,6 @@ export const lodgeSpurGrille = {
 }
 /** where the empty suit of armor stands near the spur’s end, its middle straight across from where the Lodge’s window ends, at the end of its reveal, looking back down the spur toward the link, the barred window behind it, see `suitOfArmor` */
 export const lodgeSpurArmor = [lodgeSpurX, lodge.floorY, lodgeEastWindow.z - lodgeEastWindow.width / 2 - lodgeEastWindow.border] as const satisfies Vec3
-export const lodgeSpurLanterns = [lodgeSpur.ribGap(2)]
-export const bastionLinkLanterns = [bastionLink.ribGap(4), bastionLink.ribGap(route.length - 5)]
 const mouthWall = climbMouth.walls[2]
 /** The tunnel opens into the mouth’s north wall at the elbow, the size of its vault and bare like the ends of the mouth’s own vaults there. */
 const linkHole = {

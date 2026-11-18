@@ -2,9 +2,9 @@ import type {PendantBody, PendantMount} from '../../src/lib/gallery/pendants/ind
 
 import {afterAll, describe, expect, test} from 'bun:test'
 
-import {BoxGeometry, DoubleSide, ExtrudeGeometry, Mesh, MeshBasicMaterial, Raycaster, Shape, Vector2, Vector3} from 'three/webgpu'
+import {DoubleSide, ExtrudeGeometry, Mesh, MeshBasicMaterial, Raycaster, Shape, Vector2, Vector3} from 'three/webgpu'
 
-import {bastionApproach, bastionCurve, bastionLanterns, bastionMouth, bastionTransition} from '../../src/lib/gallery/bastion.ts'
+import {bastionApproach, bastionCurve, bastionGateLantern, bastionMouth, bastionTransition} from '../../src/lib/gallery/bastion.ts'
 import {corridorLanding, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import LodgeWindowGeometry from '../../src/lib/gallery/LodgeWindowGeometry.ts'
@@ -15,7 +15,6 @@ import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
 import {CeilingProbe, LanternBody, PendantGeometry} from '../../src/lib/gallery/pendants/index.ts'
 import {corridorLightSpacing, passageLightDrop, passagePendantMounts, routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
 import {canopyEmbed, canopyHeight, canopyRadius} from '../../src/lib/gallery/pendants/PendantGeometry.ts'
-import {siennaCeilingBeam, siennaCeilingBeamOffsets, siennaCeilingBeamY, siennaVestibule, siennaVestibuleCeiling, siennaVestibuleLantern} from '../../src/lib/gallery/sienna.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 
 const mouth = new VaultGeometry(bastionMouth)
@@ -27,11 +26,7 @@ const stairs = TimberGeometry.stairs(corridorStairs, true)
 const transition = new TransitionGeometry(bastionTransition)
 const lodgeWindow = new LodgeWindowGeometry
 const material = new MeshBasicMaterial({side: DoubleSide})
-const translatedBox = (size: [number, number, number], position: [number, number, number]) => {
-  const box = new BoxGeometry(...size)
-  return box.translate(...position)
-}
-// The flat roof slabs over passage elbows, as rendered by CoveredPassage, and the Sienna vestibule’s ceiling slab and joists.
+// The flat roof slabs over passage elbows, as rendered by CoveredPassage.
 const slabs = [
   ...[bastionMouth, bastionApproach].flatMap(passage => passage.floors.map(floor => {
     const slab = new ExtrudeGeometry(new Shape(floor.map(([x, z]) => new Vector2(x, -z))), {
@@ -47,8 +42,6 @@ const slabs = [
     })
     return slab.rotateX(-Math.PI / 2).translate(0, passage.floorY + passage.height, 0)
   })),
-  translatedBox([siennaVestibule.size[0], siennaVestibuleCeiling.thickness, siennaVestibule.size[1]], [siennaVestibule.center[0], siennaVestibuleCeiling.y, siennaVestibule.center[1]]),
-  ...siennaCeilingBeamOffsets(siennaVestibule.size[0], 2).map(x => translatedBox([siennaCeilingBeam.width, siennaCeilingBeam.height, siennaVestibule.size[1]], [siennaVestibule.center[0] + x, siennaCeilingBeamY(siennaVestibule.height), siennaVestibule.center[1]])),
 ]
 const meshes = [mouth.shell, mouth.ribs, curve.shell, curve.ribs, approach.shell, approach.ribs, corridor.shell, corridor.ribs, landing.shell, landing.ribs, stairs.shell, stairs.ribs, transition.timber, transition.lining, lodgeWindow.frame, lodgeWindow.lining, ...slabs].map(geometry => {
   const mesh = new Mesh(geometry, material)
@@ -56,6 +49,7 @@ const meshes = [mouth.shell, mouth.ribs, curve.shell, curve.ribs, approach.shell
   return mesh
 })
 const lantern = new LanternBody
+const gate = bastionCurve.route.at(bastionGateLantern)
 const groups: Array<{
   body: PendantBody
   label: string
@@ -66,8 +60,8 @@ const groups: Array<{
   {
     label: 'castle curve',
     body: lantern,
-    lights: Object.values(bastionLanterns).map(along => bastionCurve.route.at(along).y + bastionCurve.route.at(along).height - passageLightDrop),
-    mounts: routePendantMounts(bastionCurve, [curve.shell, curve.ribs], Object.values(bastionLanterns)),
+    lights: [gate.y + gate.height - passageLightDrop],
+    mounts: routePendantMounts(bastionCurve, [curve.shell, curve.ribs], [bastionGateLantern]),
   },
   // The approach to the Lodge is all timber transition, with no room for a lantern.
   (() => {
@@ -91,12 +85,6 @@ const groups: Array<{
     lights: Array.from({length: 2}, () => corridorLanding.floorY + corridorLanding.height - passageLightDrop),
     mounts: passagePendantMounts(corridorLanding, [landing.shell, landing.ribs], corridorLightSpacing, landing.ribs),
   },
-  {
-    label: 'sienna vestibule',
-    body: lantern,
-    lights: [siennaVestibuleCeiling.y - siennaVestibuleCeiling.thickness / 2 - passageLightDrop],
-    mounts: [siennaVestibuleLantern],
-  },
 ]
 afterAll(() => {
   for (const geometry of [mouth, curve, approach, corridor, landing, stairs, transition, lodgeWindow, ...slabs]) {
@@ -110,7 +98,7 @@ const firstHit = (origin: Vector3, direction: Vector3, far = Infinity) => {
 }
 describe('ceiling-hung pendants', () => {
   test('every light hangs its drop under its passage’s crown', () => {
-    expect(groups[0].mounts).toHaveLength(2)
+    expect(groups[0].mounts).toHaveLength(1)
     expect(groups[2].mounts).toHaveLength(9)
     expect(groups[3].mounts).toHaveLength(2)
     for (const {mounts, lights} of groups) {

@@ -6,14 +6,13 @@ import type {BufferGeometry} from 'three/webgpu'
 
 import {expect, test} from 'bun:test'
 
-import {bastionCurve, bastionLanterns} from '../../src/lib/gallery/bastion.ts'
+import {bastionCurve, bastionGateLantern} from '../../src/lib/gallery/bastion.ts'
 import {corridorLanding, corridorPassage} from '../../src/lib/gallery/corridor.ts'
 import {lobbyChandeliers} from '../../src/lib/gallery/lobbyVault.ts'
 import {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
 import {corridorLightSpacing, passagePendantMounts, routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
-import {siennaVestibuleLantern} from '../../src/lib/gallery/sienna.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import relations, {visibleLamps} from '../../src/worlds/gallery/relations.ts'
 
@@ -53,11 +52,10 @@ test('a lamp shines in its own room and in the rooms that keep it', () => {
   expect(slopGallery.lampRooms(lamp('lodge-fire')).toSorted()).toEqual(['bastion', 'corridor', 'lodge'])
   expect(slopGallery.lampRooms(lamp('exhibition-tunnel_red')).toSorted()).toEqual(['exhibition', 'moonfall', 'oculus'])
   expect(slopGallery.lampRooms(lamp('exhibition-west_stairway_door')).toSorted()).toEqual(['exhibition', 'lobby', 'oculus'])
-  expect(slopGallery.lampRooms(lamp('bastion-lantern_east')).toSorted()).toEqual(['bastion', 'oculus'])
   // The lantern behind the apse’s gate lights the platform through the gate and both windows beside it.
   expect(slopGallery.lampRooms(lamp('bastion-lantern_north')).toSorted()).toEqual(['bastion', 'lodge', 'oculus'])
   expect(slopGallery.lampRooms(lamp('corridor-lantern_landing')).toSorted()).toEqual(['corridor', 'sienna'])
-  expect(slopGallery.lampRooms(lamp('sienna-vestibule')).toSorted()).toEqual(['corridor', 'sienna', 'vesper'])
+  expect(slopGallery.lampRooms(lamp('sienna-chandelier')).toSorted()).toEqual(['corridor', 'lobby', 'sienna', 'vesper'])
   // The approach’s last lantern hangs right before the arch of the Forge’s vestibule and lights it too.
   expect(slopGallery.lampRooms(lamp('bastion-lantern_strip')).toSorted()).toEqual(['bastion', 'forge'])
 })
@@ -66,15 +64,8 @@ test('the passages’ lamps hang under the lanterns the fixtures hang from their
   const timber = TimberGeometry.passage(corridorPassage, lodgeWindowRibCutouts)
   const landingTimber = TimberGeometry.passage(corridorLanding)
   try {
-    const mounts = routePendantMounts(bastionCurve, [vault.shell, vault.ribs], Object.values(bastionLanterns))
-    const below = {
-      east: 0.3,
-      north: 0.6,
-    }
-    for (const [index, name] of (Object.keys(bastionLanterns) as Array<keyof typeof bastionLanterns>).entries()) {
-      const {light} = mounts[index]
-      expectNear(lamp(`bastion-lantern_${name}`).position, [light[0], light[1] - below[name], light[2]])
-    }
+    const [{light}] = routePendantMounts(bastionCurve, [vault.shell, vault.ribs], [bastionGateLantern])
+    expectNear(lamp('bastion-lantern_north').position, [light[0], light[1] - 0.6, light[2]])
     const [doorway, north, middle, south] = lanterns(corridorPassage, [timber.shell, timber.ribs], [[0, -0.3], [3, -0.3], [5, -0.4], [8, -0.4]], corridorLightSpacing, timber.ribs)
     const [landing] = lanterns(corridorLanding, [landingTimber.shell, landingTimber.ribs], [[1, -0.3]], corridorLightSpacing, landingTimber.ribs)
     expectNear(lamp('corridor-lantern_lodge').position, doorway)
@@ -82,7 +73,6 @@ test('the passages’ lamps hang under the lanterns the fixtures hang from their
     expectNear(lamp('corridor-lantern_middle').position, middle)
     expectNear(lamp('corridor-lantern_south').position, south)
     expectNear(lamp('corridor-lantern_landing').position, landing)
-    expectNear(lamp('sienna-vestibule').position, [siennaVestibuleLantern.light[0], siennaVestibuleLantern.light[1] - 0.3, siennaVestibuleLantern.light[2]])
   } finally {
     vault.dispose()
     timber.dispose()

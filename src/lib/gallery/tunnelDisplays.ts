@@ -474,11 +474,6 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     [rampLampPt[0], corner1Y + rampLampAlong * rampSlope + headroom - ceilingThickness / 2, rampLampPt[1]],
     landingLamp,
   ]
-  if (returnLanding) {
-    // The lower flight is now too far from the display’s lamp to borrow its light.
-    const lower = flights[2]
-    lamps.push([(lower.start[0] + lower.end[0]) / 2, (lower.start[1] + lower.end[1]) / 2 + headroom - ceilingThickness / 2, (lower.start[2] + lower.end[2]) / 2])
-  }
   const polyAir = (poly: FloorPolygon, bottom: number, top: number, slack = 0.55): Array<DisplayAir> => floorChunks([poly], bottom, top - bottom, slack).map(({min, max}) => ({
     center: [(min[0] + max[0]) / 2, (min[2] + max[2]) / 2],
     size: [max[0] - min[0], max[2] - min[2]],

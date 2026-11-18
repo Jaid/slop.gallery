@@ -144,7 +144,6 @@ const relations = {
         'led_south',
       ],
       exhibition: [
-        'tunnel_north',
         'tunnel_green',
         'west_stairway_door',
         'east_stairway_door',
@@ -166,10 +165,7 @@ const relations = {
         'led_middle',
         'led_south',
       ],
-      sienna: [
-        'chandelier',
-        'vestibule',
-      ],
+      sienna: 'chandelier',
     },
   },
   banquet: {
@@ -242,17 +238,13 @@ const relations = {
         'tunnel_green',
         'tunnel_blue',
         'tunnel_red',
-        'tunnel_south',
       ],
     },
   },
   corridor: {
     rooms: ['sienna', 'lodge', 'vesper', 'bastion'],
     visibleLamps: {
-      sienna: [
-        'chandelier',
-        'vestibule',
-      ],
+      sienna: 'chandelier',
       lodge: [
         'fire',
         'chandelier',
@@ -267,7 +259,6 @@ const relations = {
         'ember',
       ],
       exhibition: [
-        'tunnel_north',
         'tunnel_green',
         'tunnel_blue',
         'tunnel_red',
@@ -277,7 +268,6 @@ const relations = {
         'east_stairway_landing',
       ],
       bastion: [
-        'lantern_east',
         'lantern_north',
         'lantern_mouth',
         'lantern_elbow',
@@ -321,7 +311,7 @@ const relations = {
         'lantern_middle',
         'lantern_south',
       ],
-      bastion: ['lantern_north', 'lantern_spur_0'],
+      bastion: 'lantern_north',
     },
   },
   bastion: {

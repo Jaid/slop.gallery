@@ -24,21 +24,10 @@ const tunnelLamp = (s: number, lamp: Omit<PointLamp, 'position'>): PointLamp => 
 export const tunnelLightSs: readonly [number, number, number] = [0, 1, 2].map(index => (tunnelDisplays[0].exhibits[index].s + tunnelDisplays[1].exhibits[index].s) / 2) as unknown as readonly [number, number, number]
 const [northS, middleS, southS] = tunnelLightSs
 
-export const tunnelThresholdLights = {
-  north: {
-    position: [tunnel.northX, tunnel.northY + tunnel.height, (tunnel.northZ + tunnel.northBendZ) / 2] as const,
-    tint: '#4dff6a',
-  },
-  south: {
-    position: [tunnel.southX, tunnel.southY + tunnel.height, (tunnel.southBendZ + tunnel.southZ) / 2] as const,
-    tint: '#ff4d4d',
-  },
-} as const
-
 /** the color of the staff stairways’ lamps */
 export const stairwayTint = '#a3d2cc'
-/** where each stairway’s lamps hang under its ceilings; the longer east route also lights its lower flight */
-const stairwayLamps = ['door', 'ramp', 'landing', 'lower'] as const
+/** where each stairway’s lamps hang under its ceilings */
+const stairwayLamps = ['door', 'ramp', 'landing'] as const
 const stairways = Object.fromEntries(tunnelDisplays.flatMap(({side, stairway}) => stairway.lamps.map(([x, y, z], index) => [`${side}_stairway_${stairwayLamps[index]}`, {
   position: [x - originX, y - drop - originY, z - originZ],
   strength: 16,
@@ -48,22 +37,6 @@ const stairways = Object.fromEntries(tunnelDisplays.flatMap(({side, stairway}) =
 } satisfies Lamp])))
 
 export default {
-  // Threshold fills under the flat north and south ceilings so both beveled ends glow cleanly into Oculus and Moonfall.
-  tunnel_north: {
-    position: [tunnelThresholdLights.north.position[0] - originX, tunnelThresholdLights.north.position[1] - drop - originY, tunnelThresholdLights.north.position[2] - originZ],
-    strength: 6,
-    tint: tunnelThresholdLights.north.tint,
-    range: 4.5,
-    decay: 1.25,
-  },
-  tunnel_south: {
-    position: [tunnelThresholdLights.south.position[0] - originX, tunnelThresholdLights.south.position[1] - drop - originY, tunnelThresholdLights.south.position[2] - originZ],
-    strength: 22,
-    tint: tunnelThresholdLights.south.tint,
-    range: 12,
-    decay: 1.5,
-    shadow: true,
-  },
   // Green, blue and red, from the tunnel’s low north end up to its high south end, abreast of each row of exhibits, lighting both displays at once.
   tunnel_green: tunnelLamp(northS, {
     strength: 25,

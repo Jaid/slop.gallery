@@ -7,8 +7,8 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 import CoveredPassage from '#component/CoveredPassage'
 import CoveredRoute from '#component/CoveredRoute'
 import TimberTransition from '#component/TimberTransition'
-import {bastionApproach, bastionCurve, bastionLanterns, bastionMouth, bastionTransition} from '#src/lib/gallery/bastion.ts'
-import {bastionLink, bastionLinkGate, bastionLinkLanterns, climbMouthHollow, lodgeSpur, lodgeSpurGrille, lodgeSpurLanterns} from '#src/lib/gallery/bastionNetwork.ts'
+import {bastionApproach, bastionCurve, bastionGateLantern, bastionMouth, bastionTransition} from '#src/lib/gallery/bastion.ts'
+import {bastionLink, bastionLinkGate, climbMouthHollow, lodgeSpur, lodgeSpurGrille} from '#src/lib/gallery/bastionNetwork.ts'
 import {climbApproach, climbApproachLantern, climbHairpin, climbLanterns, climbMouth, climbRun, climbRunLantern} from '#src/lib/gallery/climb.ts'
 import {lodgeFloorPlanks} from '#src/lib/gallery/lodge.ts'
 import lodgeTimber from '#src/lib/gallery/lodgeTimber.ts'
@@ -20,7 +20,7 @@ import BastionCistern from '#src/rooms/bastion/components/BastionCistern/index.t
 import BastionCrater from '#src/rooms/bastion/components/BastionCrater/index.tsx'
 import BastionGrille from '#src/rooms/bastion/components/BastionGrille/index.tsx'
 
-const lanterns = Object.values(bastionLanterns)
+const lanterns = [bastionGateLantern]
 
 /** Both castle-stone wings and their curved link: around the apse into Lodge and up the western hairpin into Forge, with the crater in the landing where the link opens, the cistern behind the Forge’s vestibule and the suit of armor at the end of the blind branch beside the Lodge, in front of the barred window onto the climb to the Lodge. */
 export default function BastionRoom({material, wood}: {
@@ -37,8 +37,8 @@ export default function BastionRoom({material, wood}: {
     <CoveredRoute lanterns={[climbRunLantern]} material={material} passage={climbRun} />
     <CoveredRoute lanterns={[climbApproachLantern]} material={material} passage={climbApproach} />
     <BastionCistern stone={material} />
-    <CoveredRoute lanterns={bastionLinkLanterns} material={material} passage={bastionLink} />
-    <CoveredRoute lanterns={lodgeSpurLanterns} material={material} passage={lodgeSpur} />
+    <CoveredRoute material={material} passage={bastionLink} />
+    <CoveredRoute material={material} passage={lodgeSpur} />
     <BastionArmor />
     <BastionGrille grille={lodgeSpurGrille} name='bastion-lodge-spur-window' />
     <BastionGrille grille={bastionLinkGate} name='bastion-link-gate' />
