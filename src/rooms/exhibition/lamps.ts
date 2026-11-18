@@ -8,7 +8,7 @@ const [originX, originY, originZ] = tunnelCenter
 /** how far each light hangs under its housing, along the housing’s tilt with the tunnel’s ceiling */
 const drop = 0.35
 const tilt = -Math.atan(tunnelSlope)
-/** under the housing on the tunnel’s ceiling abreast of a row of exhibits, `s` meters along the diagonal gallery */
+/** under the housing on the tunnel’s ceiling, `s` meters along the diagonal gallery */
 const tunnelLamp = (s: number, lamp: Omit<PointLamp, 'position'>): PointLamp => {
   const [cx, cz] = tunnelDiagonalPoint(s)
   const forward = -drop * Math.sin(tilt)
@@ -21,7 +21,10 @@ const tunnelLamp = (s: number, lamp: Omit<PointLamp, 'position'>): PointLamp => 
     ],
   }
 }
-export const tunnelLightSs: readonly [number, number, number] = [0, 1, 2].map(index => (tunnelDisplays[0].exhibits[index].s + tunnelDisplays[1].exhibits[index].s) / 2) as unknown as readonly [number, number, number]
+const rowCenterS = (index: number) => (tunnelDisplays[0].exhibits[index].s + tunnelDisplays[1].exhibits[index].s) / 2
+/** The blue housing sits over the middle row; green and red sit 1.5 m beyond their rows toward the tunnel ends. */
+const outerOffset = 1.5
+export const tunnelLightSs = [rowCenterS(0) - outerOffset, rowCenterS(1), rowCenterS(2) + outerOffset] as const
 const [northS, middleS, southS] = tunnelLightSs
 
 /** the color of the staff stairways’ lamps */
@@ -35,7 +38,7 @@ const stairways = Object.fromEntries(tunnelDisplays.flatMap(({side, stairway}) =
 } satisfies Lamp])))
 
 export default {
-  // Green, blue and red, from the tunnel’s low north end up to its high south end, abreast of each row of exhibits, lighting both displays at once.
+  // Green, blue and red, from the tunnel’s low north end up to its high south end, lighting both displays at once.
   tunnel_green: tunnelLamp(northS, {
     strength: 25,
     tint: '#4dff6a',

@@ -9,7 +9,7 @@ import lowerGallery, {tunnelDiagonalFloorY, tunnelDiagonalPoint, tunnelDiagonalY
 import tunnelDisplays from '#src/lib/gallery/tunnelDisplays.ts'
 import lamps, {tunnelLightSs} from '#src/rooms/exhibition/lamps.ts'
 
-/** Three housings on the tunnel’s diagonal ceiling, abreast of the rows of exhibits. */
+/** Housing colors in order up the tunnel’s diagonal ceiling. */
 const tunnelLightColors = [lamps.tunnel_green, lamps.tunnel_blue, lamps.tunnel_red].map(lamp => lamp.tint)
 
 export default function TunnelDisplays({material}: {material: Material}) {
