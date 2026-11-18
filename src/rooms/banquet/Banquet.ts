@@ -32,7 +32,7 @@ export default class Banquet extends Room {
     super({
       title: 'The Banquet',
       mood: 'banquet',
-      frame: ['perspective', 'deco', 'checker'],
+      frame: ['adam'],
       cameras,
       spawns,
       lamps,

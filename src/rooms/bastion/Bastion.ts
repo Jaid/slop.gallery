@@ -41,7 +41,7 @@ export default class Bastion extends Room {
     super({
       title: 'The Bastion',
       mood: 'bastion',
-      frame: ['strapwork', 'oak'],
+      frame: ['strapwork'],
       cameras,
       spawns,
       lamps,

@@ -40,7 +40,7 @@ export default class Oculus extends Room {
     super({
       title: 'Oculus',
       mood: 'oculus',
-      frame: ['float', 'acrylic', 'dichroic'],
+      frame: ['float'],
       portraitArea: 60_000,
       cameras,
       spawns,

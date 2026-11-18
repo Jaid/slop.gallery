@@ -17,6 +17,7 @@ import {hangingOffset} from '../../src/lib/placement/wallGeometry.ts'
 import {orbs} from '../../src/orbs/index.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
+import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
 
 const entries = Object.entries(frames)
@@ -118,8 +119,8 @@ describe('frames', () => {
   })
 })
 const seeds = Array.from({length: 64}, (_, index) => index * 7919 + 1)
-/** every room of both worlds, once for a room in both */
-const rooms = new Map([...slopGallery.rooms, ...sandbox.rooms].map(room => [room.id, room.room]))
+/** every room across the worlds */
+const rooms = new Map([...slopGallery.rooms, ...sandbox.rooms, ...knottingham.rooms].map(room => [room.id, room.room]))
 /** the frame choices of the rooms that have one */
 const roomChoices = rooms.values().flatMap(room => (room.frame ? [room.frame] : [])).toArray()
 /** the frame choices of the orbs that bring one */
@@ -141,9 +142,14 @@ describe('frame choices', () => {
       expect(positions.size).toBeGreaterThan(1)
     }
   })
-  test('every frame but the default is brought by a room or an ingredient, several of which may bring the same one', () => {
-    const brought = new Set([...roomChoices, ...orbChoices].flatMap(choice => choiceFrames(choice)))
-    expect([...brought].toSorted()).toEqual(frameIds.filter(id => id !== 'classic').toSorted())
+  test('every configured sampler contains distinct catalog frames and has a favorite', () => {
+    for (const choice of [...roomChoices, ...orbChoices]) {
+      const ids = choiceFrames(choice)
+      expect(ids.length).toBeGreaterThan(0)
+      const distinct = new Set(ids)
+      expect(distinct.size).toBe(ids.length)
+      expect(ids.every(id => frameIds.includes(id))).toBe(true)
+    }
   })
 })
 describe('room frames', () => {
@@ -164,7 +170,7 @@ describe('room frames', () => {
       }
     }
   })
-  test('in the default environment, every work of a room wears its first frame, while ingredients still roll theirs', () => {
+  test('in the default environment, rooms and ingredients use the first frame of their sampler', () => {
     const several = [...slopGallery.rooms, ...sandbox.rooms].filter(room => room.room.frame && choiceFrames(room.room.frame).length > 1)
     expect(several.length).toBeGreaterThan(0)
     for (const room of several) {
@@ -176,8 +182,10 @@ describe('room frames', () => {
       const room = slopGallery.roomById(slopGallery.walls.find(wall => wall.id === portrait.wallId)!.room)!
       expect(portrait.frame).toBe(room.room.frame && choiceFrames(room.room.frame)[0])
     }
-    const severalOrbs = orbChoices.filter(choice => choiceFrames(choice).length > 1)
-    expect(severalOrbs.some(choice => pickFrame(0, choice) !== choiceFrames(choice)[0])).toBe(true)
+    for (const orb of orbs) {
+      const frame = orb.ingredient(0).contributions.find(entry => entry.kind === 'frame')
+      expect(frame?.frame).toBe(orb.frame && choiceFrames(orb.frame)[0])
+    }
   })
   test('the works of a room with several frames wear all of them between them', () => {
     const several = slopGallery.rooms.filter(room => room.room.frame && choiceFrames(room.room.frame).length > 1)

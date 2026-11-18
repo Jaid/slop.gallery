@@ -22,6 +22,7 @@ export default class Arena extends Room {
     const size = [width, depth] as const
     super({
       title: 'Arena',
+      frame: ['louis'],
       mood: 'arena',
       // Four plain walls around the rows, which artworks may hang on.
       walls: {

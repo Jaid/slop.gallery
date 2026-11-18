@@ -37,7 +37,7 @@ export default class Sienna extends Room {
     super({
       title: 'The Sienna',
       mood: 'sienna',
-      frame: ['velvet', 'burl', 'leather'],
+      frame: ['velvet', 'leather'],
       cameras,
       spawns,
       lamps,

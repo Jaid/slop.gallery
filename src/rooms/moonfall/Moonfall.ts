@@ -49,7 +49,7 @@ export default class Moonfall extends Room {
     super({
       title: 'Moonfall',
       mood: 'moonfall',
-      frame: ['meteorite', 'orbit', 'regolith'],
+      frame: ['regolith', 'meteorite', 'orbit'],
       portraitArea: 60_000,
       cameras,
       spawns,

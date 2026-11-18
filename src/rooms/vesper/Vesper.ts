@@ -36,7 +36,7 @@ export default class Vesper extends Room {
     super({
       title: 'The Vesper',
       mood: 'vesper',
-      frame: ['ripple', 'sgraffito', 'auricular'],
+      frame: ['louis'],
       cameras,
       spawns,
       skybox: 'sky',

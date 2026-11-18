@@ -40,7 +40,7 @@ export default class Lobby extends Room {
     super({
       title: 'Lobby',
       mood: 'lobby',
-      frame: ['travertine', 'louis'],
+      frame: ['barbizon'],
       portraitArea: 30_000,
       cameras,
       spawns,

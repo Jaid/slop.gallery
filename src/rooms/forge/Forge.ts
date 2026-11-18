@@ -35,7 +35,7 @@ export default class Forge extends Room {
     super({
       title: 'The Forge',
       mood: 'forge',
-      frame: ['meander', 'palette', 'brushes'],
+      frame: ['impressionist'],
       cameras,
       spawns,
       skybox: 'sky',
