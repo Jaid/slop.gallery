@@ -118,3 +118,79 @@ test('warming draws every object outside the frustum once per camera, a budget�
   expect(frames).toBeGreaterThan(3)
   expect(renderer.warmedAll).toBe(true)
 })
+test('warming admits unbuilt objects nearest first by perceptual distance', () => {
+  const renderer = createRenderer()
+  const scene = new Scene
+  // All three are outside the camera’s frustum (+z is behind), listed farthest first in the scene graph.
+  const below = new Mesh(box, material)
+  below.position.set(0, -4, 1) // 1 + 3 * 4 = 13
+  const sameFloor = new Mesh(box, material)
+  sameFloor.position.set(4, 0, 5) // 4 + 5 = 9
+  const near = new Mesh(box, material)
+  near.position.set(0, 0, 2) // 2
+  scene.add(below, sameFloor, near)
+  const camera = new PerspectiveCamera
+  renderer.setFrameScene(scene)
+  renderer.setWarming(true)
+  const order: Array<Object3D> = []
+  for (let frame = 0; frame < 4; frame++) {
+    projected = []
+    nextFrame(renderer)
+    renderer.render(scene, camera)
+    order.push(...projected)
+  }
+  expect(order).toEqual([near, sameFloor, below])
+})
+test('streaming prioritizes by room tier, visibility and perceptual distance, including for shadow passes and nested meshes', () => {
+  const renderer = createRenderer()
+  const scene = new Scene
+  const camera = new PerspectiveCamera
+  camera.position.set(0, 1.6, 0)
+  // Geometries translated off-origin should measure to their world bounds, not their object origin.
+  const farGeometry = new BoxGeometry
+  farGeometry.translate(0, 0, -25)
+  const unrelatedNear = new Mesh(box, material)
+  unrelatedNear.position.set(0, 0, -2)
+  unrelatedNear.userData.tier = Number.POSITIVE_INFINITY
+  const relatedCulled = new Mesh(box, material)
+  relatedCulled.position.set(0, 1.6, -3)
+  relatedCulled.userData.tier = 1
+  const relatedVisible = new Mesh(box, material)
+  relatedVisible.position.set(0, 1.6, -8)
+  relatedVisible.userData.tier = 1
+  const ownFar = new Mesh(farGeometry, material)
+  ownFar.userData.tier = 0
+  const ownNear = new Mesh(box, material)
+  ownNear.position.set(0, 1.6, -4)
+  ownNear.userData.tier = 0
+  const nestedChild = new Mesh(box, material)
+  nestedChild.position.set(0, 0, -2) // world z = -6
+  nestedChild.userData.tier = 0
+  ownNear.add(nestedChild)
+  scene.add(unrelatedNear, relatedCulled, relatedVisible, ownFar, ownNear)
+  renderer.setFrameScene(scene)
+  renderer.hiddenFromView.add(relatedCulled)
+  renderer.setStreamPriority(object => object.userData.tier as number)
+  renderer.setStreaming(true)
+  const admissions: Array<Object3D> = []
+  for (let frame = 0; frame < 8; frame++) {
+    projected = []
+    nextFrame(renderer)
+    renderer.render(scene, camera)
+    for (const object of projected) {
+      if (!admissions.includes(object)) {
+        admissions.push(object)
+      }
+    }
+  }
+  // Tier 0 nearest first (ownNear -> nestedChild -> ownFar), then Tier 1 visible before culled, then unrelated.
+  expect(admissions).toEqual([ownNear, nestedChild, ownFar, relatedVisible, relatedCulled, unrelatedNear])
+  // A shadow pass still prioritizes relative to the viewer’s camera, not the shadow camera’s own origin.
+  const shadowCamera = new PerspectiveCamera
+  shadowCamera.position.set(0, 100, -100)
+  renderer.shadowCameras.add(shadowCamera)
+  scene.matrixWorldAutoUpdate = false
+  projected = []
+  renderer.render(scene, shadowCamera)
+  expect(projected).toEqual([ownNear])
+})

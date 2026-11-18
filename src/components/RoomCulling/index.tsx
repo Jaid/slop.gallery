@@ -103,6 +103,8 @@ export default function RoomCulling() {
     const {hidden, hiddenFromView, shadowCameras, unculledCameras} = galleryRenderer
     const shadows = new ShadowCache
     const refresher = new ShadowRefresher
+    const fromRooms = new Set<RoomId>
+    const visibleInSight = new Set<RoomId>
     const related = new Set<RoomId>
     const cull = (camera: Camera) => {
       hidden.clear()
@@ -113,11 +115,19 @@ export default function RoomCulling() {
       // The floor reflection shows the rooms behind openings mirrored by the floors it mirrors, by default those of the room the camera is in.
       const floorY = getFloorReflectionHeight() ?? roomBoxes.find(({id}) => id === from[0])?.floorY ?? 0
       const regions = from.length ? relatedRegions(from) : undefined
+      fromRooms.clear()
+      visibleInSight.clear()
       related.clear()
       for (const room of from) {
+        fromRooms.add(room)
         related.add(room)
         for (const other of relations[room].rooms) {
           related.add(other)
+        }
+      }
+      if (regions) {
+        for (const room of regions.keys()) {
+          visibleInSight.add(room)
         }
       }
       const inSight = (rects: ReadonlyArray<ScreenRect>, box: Box3) => {
@@ -169,10 +179,19 @@ export default function RoomCulling() {
       })
     }
     galleryRenderer.setCuller(cull)
-    // Objects of no room never get culled, so they count as nearby.
+    // Objects of no room never get culled, so they count as nearby; then the camera’s own rooms, rooms visible through openings, other related rooms, and finally the rest.
     galleryRenderer.setStreamPriority(object => {
       const room = ownerOf(object)
-      return !related.size || !room || related.has(room)
+      if (!related.size || !room || fromRooms.has(room)) {
+        return 0
+      }
+      if (visibleInSight.has(room)) {
+        return 1
+      }
+      if (related.has(room)) {
+        return 2
+      }
+      return Number.POSITIVE_INFINITY
     })
     return () => {
       galleryRenderer.setCuller(null)

@@ -10,7 +10,14 @@ type Asset = {
   refs: number
   texture?: Texture<HTMLCanvasElement>
 }
+type QueuedLoad = {
+  priority: number
+  start: () => void
+}
+
 const assets = new Map<Blob | string, Asset>
+const queuedLoads = new Map<Asset, QueuedLoad>
+let flushing = false
 let pending = 0
 let blobs = 0
 export const pendingImages = () => pending
@@ -20,7 +27,7 @@ export const artworkPlaceholders = {
   failed: '#a17969',
 } as const
 
-export default function useArtworkTexture(source: Blob | string | null | undefined) {
+export default function useArtworkTexture(source: Blob | string | null | undefined, priority = 0) {
   const [result, setResult] = useState<{
     failed: boolean
     texture: Texture<HTMLCanvasElement> | null
@@ -36,7 +43,7 @@ export default function useArtworkTexture(source: Blob | string | null | undefin
       })
       return
     }
-    const entry = acquire(source)
+    const entry = acquire(source, priority)
     let active = true
     setResult({
       texture: entry.texture ?? null,
@@ -66,8 +73,8 @@ export default function useArtworkTexture(source: Blob | string | null | undefin
 }
 
 /** Loads the artwork’s texture into the cache the artworks share and keeps it there until released, so whatever shows the artwork next finds it decoded; `texture` resolves with it. */
-export function holdArtworkTexture(source: Blob | string) {
-  const entry = acquire(source)
+export function holdArtworkTexture(source: Blob | string, priority = 0) {
+  const entry = acquire(source, priority)
   let held = true
   return {
     texture: entry.promise,
@@ -85,27 +92,66 @@ export function peekArtworkImage(source: Blob | string) {
   return assets.get(source)?.texture?.image
 }
 
-function acquire(source: Blob | string) {
+export function acquireArtworkTexture(source: Blob | string, priority = 0, load = loadArtworkTexture) {
+  return acquire(source, priority, load)
+}
+
+function flushLoads() {
+  flushing = false
+  const items = queuedLoads.values().toArray().toSorted((a, b) => a.priority - b.priority)
+  queuedLoads.clear()
+  for (const item of items) {
+    item.start()
+  }
+}
+function acquire(source: Blob | string, priority = 0, load = loadArtworkTexture) {
   let asset = assets.get(source)
   if (!asset) {
     pending++
-    const promise = trackLoadingPromise(`artwork:${typeof source === 'string' ? source : (source as Partial<File>).name ?? `blob-${++blobs}`}`, loadArtworkTexture(source).finally(() => {
+    let cancelled = false
+    const deferred = Promise.withResolvers<Texture<HTMLCanvasElement>>()
+    const promise = trackLoadingPromise(`artwork:${typeof source === 'string' ? source : (source as Partial<File>).name ?? `blob-${++blobs}`}`, deferred.promise.finally(() => {
       pending--
     }))
-    asset = {
+    const entry: Asset = {
       refs: 0,
       promise,
     }
-    const entry = asset
     void promise.then(texture => {
       entry.texture = texture
     }).catch(error => {
       if (assets.get(source) === entry) {
         assets.delete(source)
       }
-      console.warn('Artwork texture failed to load:', source, error)
+      if (!cancelled) {
+        console.warn('Artwork texture failed to load:', source, error)
+      }
     })
-    assets.set(source, asset)
+    assets.set(source, entry)
+    queuedLoads.set(entry, {
+      priority,
+      start: () => {
+        if (entry.refs === 0) {
+          cancelled = true
+          if (assets.get(source) === entry) {
+            assets.delete(source)
+          }
+          deferred.reject(new Error('Cancelled before load'))
+          return
+        }
+        void load(source).then(deferred.resolve, deferred.reject)
+      },
+    })
+    if (!flushing) {
+      flushing = true
+      queueMicrotask(flushLoads)
+    }
+    asset = entry
+  } else {
+    const queued = queuedLoads.get(asset)
+    if (queued && priority < queued.priority) {
+      queued.priority = priority
+    }
   }
   asset.refs++
   return asset

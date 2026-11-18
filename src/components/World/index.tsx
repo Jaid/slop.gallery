@@ -1,5 +1,6 @@
 import type ArchitecturalGlassMaterials from '#src/lib/materials/ArchitecturalGlassMaterials.ts'
 import type LodgeMaterials from '#src/lib/materials/LodgeMaterials.ts'
+import type {Point3} from '#src/lib/perceptualDistance.ts'
 import type SiennaRoom from '#src/rooms/sienna/components/SiennaRoom/index.tsx'
 import type WorldReach from '#src/worlds/base/WorldReach.ts'
 import type {GalleryRoomId as RoomId} from '#src/worlds/gallery/index.ts'
@@ -14,6 +15,7 @@ import {useGallery} from '#src/lib/gallery.ts'
 import {clearRooms, endRoom, expectRooms, startRoom} from '#src/lib/gallery/roomLoading.ts'
 import {roomsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
+import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 import relations from '#src/worlds/gallery/relations.ts'
 
@@ -158,16 +160,41 @@ const reachedRooms: ReadonlyArray<RoomId> = loaders.keys().toArray()
 expectRooms(reachedRooms)
 const isReached = (room: RoomId) => loaders.has(room)
 const position = new Vector3
-/** Every room in reach, nearest first: the given rooms, the rooms they see into, the rooms those see into and so on. */
-const nearestFirst = (from: ReadonlyArray<RoomId>): ReadonlyArray<RoomId> => {
+const closest = new Vector3
+const roomDistance = (roomId: RoomId, origin: Vector3) => {
+  const room = slopGallery.room(roomId)
+  if (!room.air.length) {
+    return perceptualDistance(origin, room.origin)
+  }
+  let best = Number.POSITIVE_INFINITY
+  for (const box of room.air) {
+    box.clampPoint(origin, closest)
+    best = Math.min(best, perceptualDistance(origin, closest))
+  }
+  return best
+}
+
+/** Every room in reach, nearest first: the given rooms, the rooms they see into, the rooms those see into and so on, ordered within each hop by perceptual distance from `origin`. */
+export const nearestFirst = (from: ReadonlyArray<RoomId>, origin: Point3 = [0, 0, 0], candidates: ReadonlyArray<RoomId> = reachedRooms): ReadonlyArray<RoomId> => {
+  const at = 'x' in origin ? new Vector3(origin.x, origin.y, origin.z) : new Vector3(origin[0], origin[1], origin[2])
+  const distances = new Map<RoomId, number>
+  const distanceOf = (room: RoomId) => {
+    let value = distances.get(room)
+    if (value === undefined) {
+      value = roomDistance(room, at)
+      distances.set(room, value)
+    }
+    return value
+  }
+  const byDistance = (a: RoomId, b: RoomId) => distanceOf(a) - distanceOf(b)
   const order: Array<RoomId> = []
-  let round: ReadonlyArray<RoomId> = from
+  let round: ReadonlyArray<RoomId> = from.toSorted(byDistance)
   while (round.length > 0) {
     order.push(...round)
     // The next round is the rooms that this round sees into.
-    round = [...new Set(round.flatMap(room => relations[room].rooms))].filter(room => !order.includes(room))
+    round = [...new Set(round.flatMap(room => relations[room].rooms))].filter(room => !order.includes(room)).toSorted(byDistance)
   }
-  return [...order, ...reachedRooms.filter(room => !order.includes(room))]
+  return [...order, ...candidates.filter(room => !order.includes(room)).toSorted(byDistance)]
 }
 
 /**
@@ -192,9 +219,15 @@ export default function World({materials}: {
     }
   }, [parts])
   useFrame(({camera}) => {
-    if (asked.current.size < reachedRooms.length) {
-      const from = roomsAt(camera.getWorldPosition(position).toArray())
-      const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from) : from
+    const needAsk = asked.current.size < reachedRooms.length
+    const hasReady = !mounting.current && asked.current.entries().some(([room, part]) => part !== null && !mounted.current.has(room))
+    if (!needAsk && !hasReady) {
+      return
+    }
+    const cameraPosition = camera.getWorldPosition(position)
+    const from = roomsAt(cameraPosition.toArray())
+    const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from, cameraPosition) : from
+    if (needAsk) {
       for (const room of wanted) {
         if (!isReached(room) || asked.current.has(room)) {
           continue
@@ -210,14 +243,18 @@ export default function World({materials}: {
         })
       }
     }
-    if (mounting.current) {
+    if (!hasReady) {
       return
     }
-    const next = asked.current.entries().find((entry): entry is [RoomId, RoomPart] => entry[1] !== null && !mounted.current.has(entry[0]))
-    if (!next) {
+    const isReadyToMount = (candidate: RoomId) => {
+      const part = asked.current.get(candidate)
+      return part !== undefined && part !== null && !mounted.current.has(candidate)
+    }
+    const room = wanted.find(isReadyToMount) ?? asked.current.keys().find(isReadyToMount)
+    if (!room) {
       return
     }
-    const [room, part] = next
+    const part = asked.current.get(room)!
     mounted.current.add(room)
     mounting.current = room
     // A transition lets React build the room’s objects over several tasks.

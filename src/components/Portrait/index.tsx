@@ -14,9 +14,10 @@ import PortraitLabel from '#component/PortraitLabel'
 import {frameBack} from '#src/frames/base/PortraitFrame.ts'
 import {portraitFrame} from '#src/frames/index.ts'
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
-import {requestFusion, useGallery} from '#src/lib/gallery.ts'
+import {cameraPose, requestFusion, useGallery} from '#src/lib/gallery.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
-import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import portraitObjects, {portraitPosition} from '#src/lib/gallery/portraitObjects.ts'
+import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import world from '#src/worlds/current.ts'
 
 import useHanging from './useHanging.ts'
@@ -138,7 +139,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
         {/* Only a held work fades; hung ones stay opaque so the floor glass, which refracts opaque surfaces only, shows them in the room below. */}
         <mesh castShadow geometry={geometry} material={held ? frame.heldMaterial : frame.materials} name='portrait-frame' receiveShadow />
         {/* Shadows draw back faces only, so the frame’s backing board blocks the lights in front of the work and the image those behind it, which a loose work can turn its back to. */}
-        <mesh castShadow name='portrait-image' position={[0, 0, frame.imageDepth]}><planeGeometry args={[w, h]} /><DynamicImageMaterial opacity={held ? 0.3 : 1} source={p.source} toneMapped={false} transparent={held} /></mesh>
+        <mesh castShadow name='portrait-image' position={[0, 0, frame.imageDepth]}><planeGeometry args={[w, h]} /><DynamicImageMaterial opacity={held ? 0.3 : 1} priority={perceptualDistance(cameraPose.position, portraitPosition(p))} source={p.source} toneMapped={false} transparent={held} /></mesh>
       </group>
       {/* The placard hides while the work orbits a fusion’s portal. */}
       <group ref={placard}>
