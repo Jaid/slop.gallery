@@ -92,6 +92,7 @@ const getProductionConfig = () => {
       jxlPlugin(),
       // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
       loadingScreenPlugin({
+        deferScript: ({type}) => type !== 'application/ld+json',
         screens: worlds,
         defaultScreen: defaultWorld,
         select: selectWorld,

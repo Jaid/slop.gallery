@@ -13,7 +13,7 @@ type Options = Parameters<typeof loadingScreenPlugin>[0]
 
 // The smallest PNG there is, a single transparent pixel.
 const pixel = Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==')
-const page = '<!doctype html><html><head><title>Fixture</title></head><body><script type="module" src="main.js" data-loading-screen-entry></script></body></html>'
+const page = '<!doctype html><html><head><title>Fixture</title></head><body><script type="module" src="./main.js"></script></body></html>'
 let root: string
 beforeEach(async () => {
   root = await fs.mkdtemp(join(tmpdir(), 'loading-screen-'))
@@ -115,7 +115,6 @@ test('a single screen is all HTML and CSS, with its wallpaper preloaded', async 
   expect(html).toContain(`<link rel="preload" as="image" type="image/png" href="${wallpaper}" fetchpriority="high">`)
   expect(html).toContain('#loading-screen {')
   expect(html).toContain('font-family: system-ui, sans-serif;')
-  expect(html).not.toContain('<script>')
   // The screen comes first in the body, before the app’s own elements.
   expect(html.indexOf('id="loading-screen"')).toBeLessThan(html.indexOf('</body>'))
   expect(html).toContain('<title>Fixture</title>')
@@ -135,10 +134,34 @@ test('the HTML app entry and its wallpaper build under the base path', async () 
     title: 'Based',
     wallpaper: 'wallpaper.png',
   }, '/game/')
-  const entries = html.matchAll(/<script type="module"[^>]* src="\/game\/([^"]+)"/gu).toArray()
+  expect(html).not.toContain('<script type="module"')
+  const entries = html.matchAll(/<template type="module"[^>]* src="\/game\/([^"]+)"/gu).toArray()
   expect(entries).toHaveLength(1)
   expect(await fs.readFile(join(root, 'dist', entries[0][1]), 'utf8')).toContain(fileOf('wallpaper.png'))
   expect(html).toContain(`href="/game/${fileOf('wallpaper.png')}"`)
+})
+test('the predicate decides separately for output chunks, classic scripts and inline metadata', async () => {
+  const metadata = '<script type="application/ld+json">{"name":"Fixture"}</script>'
+  await fs.outputFile(join(root, 'index.html'), page.replace('</head>', () => `${metadata}<script id="setup">window.label = "</template>&amp;"</script></head>`))
+  const seen: Array<string> = []
+  const {html} = await buildPage({
+    title: 'Selective',
+    deferScript: ({id, type = ''}) => {
+      seen.push(id ?? type)
+      return type !== 'application/ld+json'
+    },
+  })
+  expect(seen.toSorted()).toEqual(['application/ld+json', 'module', 'setup'])
+  expect(html).toContain(metadata)
+  expect(html).not.toContain('<script id="setup"')
+  expect(html).not.toContain('<script type="module"')
+  expect(html).toContain('&lt;/template&gt;&amp;amp;')
+  const kept = await buildPage({
+    title: 'Native',
+    deferScript: () => false,
+  })
+  expect(kept.html).not.toContain('data-loading-screen-script')
+  expect(kept.html).toContain('<script type="module"')
 })
 test('several screens start with the default one and let the URL pick', async () => {
   const {fileOf, html} = await buildPage(selected())
@@ -216,7 +239,7 @@ test('the development server shows the wallpaper’s file itself', async () => {
   })
   try {
     const insideHtml = await server.transformIndexHtml('/', page)
-    expect(insideHtml).not.toContain('data-loading-screen-entry')
+    expect(insideHtml).not.toContain('<script type="module" src=')
     expect(insideHtml).toContain('<link rel="preload" as="image" type="image/png" href="/wallpaper.png" fetchpriority="high">')
     const html = await elsewhere.transformIndexHtml('/', page)
     expect(html).toContain(`type="image/jxl" href="/@fs/${join(outside, 'far.jxl').replaceAll('\\', '/')}"`)

@@ -95,8 +95,8 @@ const closure = (chunk: string) => {
   return seen
 }
 const main = chunkNamed('main').fileName
-// The page runs its module scripts and preloads the chunks they import.
-const entries = html.matchAll(/<(?:script type="module"[^>]*src|link rel="modulepreload"[^>]*href)="\/([^"]+\.js)"/gu).map(match => match[1]).toArray()
+// The loading screen starts the deferred module entries. Also count anything the page loads directly.
+const entries = html.matchAll(/<(?:(?:script|template) type="module"[^>]*src|link rel="modulepreload"[^>]*href)="\/([^"]+\.js)"/gu).map(match => match[1]).toArray()
 if (!entries.includes(main)) {
   fail('index.html does not run the main chunk.')
 }

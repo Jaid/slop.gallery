@@ -29,10 +29,12 @@ The plugin adds a `<style>`, a `<div id="loading-screen">` at the start of the b
 Keep the app entry in `index.html`, so the same page also works without the plugin:
 
 ```html
-<script type="module" src="/src/main.tsx" data-loading-screen-entry></script>
+<script type="module" src="/src/main.tsx"></script>
 ```
 
-During the HTML transform, the plugin replaces the marked script’s `src` with a module import for Vite to bundle. Other scripts are left alone. Without the plugin, the browser loads the entry directly from `src`.
+The plugin inspects the output HTML after Vite resolves module URLs. By default it defers every script already in the page, including inline scripts. Deferred scripts become inert templates during the transform. Once the splash is installed, the loader restores each script in place with its original attributes and text. The app can then dismiss the splash when it is ready.
+
+To keep selected scripts in the HTML, pass a `deferScript` predicate. For example, `deferScript: ({type}) => type !== 'application/ld+json'` keeps structured data readable without JavaScript while deferring the app. A `src` seen by the predicate in a production build is the emitted URL, which may be hashed.
 
 ## Wallpaper
 
@@ -71,6 +73,7 @@ The page’s HTML holds the default screen. A small inline script right after it
 
 | Option | Default | Description |
 | --- | --- | --- |
+| `deferScript` | `() => true` | called with each output script’s attributes; `true` defers that script, `false` keeps it in place |
 | `title` | | the screen’s heading |
 | `tagline` | none | the line under the title |
 | `wallpaper` | none | the file of the image behind the title |

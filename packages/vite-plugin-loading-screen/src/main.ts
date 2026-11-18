@@ -1,9 +1,11 @@
+import type {DeferScript} from './lib/deferScripts.ts'
 import type {HtmlTagDescriptor, Plugin, Rolldown} from 'vite'
 
 import {extname, isAbsolute, relative, resolve} from 'node:path'
 
 import {normalizePath} from 'vite'
 
+import deferScripts from './lib/deferScripts.ts'
 import elementId from './lib/elementId.ts'
 
 export type LoadingScreen = {
@@ -14,6 +16,8 @@ export type LoadingScreen = {
   wallpaper?: string
 }
 export type LoadingScreenAppearance = {
+  /** Which output scripts to start behind the loading screen; all by default. */
+  deferScript?: DeferScript
   /** the CSS `font-family` of the screen, by default the system’s; a font the page’s stylesheet declares takes over once it has loaded */
   fontFamily?: string
   /** the pulsing line that says the page is loading, by default “Loading…” */
@@ -102,7 +106,7 @@ const cssUrl = (url: string) => `url(${JSON.stringify(url)})`
  *
  * A page that opens differently by its URL, like one build holding several worlds, gives several {@link SelectedLoadingScreenOptions.screens} and a function that picks one: a small inline script right after the screen runs it before the first paint and sets the picked screen’s title, tagline and wallpaper, and the document’s title.
  */
-export default function loadingScreenPlugin<Id extends string>(options: LoadingScreenOptions<Id>): Array<Plugin> {
+export default function loadingScreenPlugin<Id extends string>(options: LoadingScreenOptions<Id>): Plugin {
   const {fontFamily = 'system-ui, sans-serif', label = 'Loading…'} = options
   let base: string
   let root: string
@@ -135,53 +139,56 @@ export default function loadingScreenPlugin<Id extends string>(options: LoadingS
       ...wallpaperType ? {wallpaperType} : {},
     }
   }
-  const screenPlugin: Plugin = {
+  return {
     name: 'loading-screen',
+    enforce: 'post',
     configResolved(config) {
       base = config.base
       root = config.root
     },
-    transformIndexHtml(_html, {bundle}) {
-      const tags: Array<HtmlTagDescriptor> = [
-        {
-          tag: 'style',
-          children: makeStyle(fontFamily),
-          injectTo: 'head',
-        },
-      ]
-      const element = ({tagline, title, wallpaper}: PageScreen): HtmlTagDescriptor => ({
-        tag: 'div',
-        attrs: {
-          id: elementId,
-          'aria-busy': 'true',
-          ...wallpaper ? {style: `--wallpaper: ${cssUrl(wallpaper)}`} : {},
-        },
-        children: `<div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(tagline)}</p><span>${escapeHtml(label)}</span></div>`,
-        injectTo: 'body-prepend',
-      })
-      if (!('screens' in options)) {
-        const screen = pageScreen(options, bundle)
-        if (screen.wallpaper) {
-          // The preload scanner does not look into style attributes, so without the hint the wallpaper would only start downloading once the loading screen is styled.
-          tags.push({
-            tag: 'link',
-            attrs: {
-              rel: 'preload',
-              as: 'image',
-              ...screen.wallpaperType ? {type: screen.wallpaperType} : {},
-              href: screen.wallpaper,
-              fetchpriority: 'high',
-            },
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, {bundle}) {
+        const tags: Array<HtmlTagDescriptor> = [
+          {
+            tag: 'style',
+            children: makeStyle(fontFamily),
             injectTo: 'head',
-          })
+          },
+        ]
+        const element = ({tagline, title, wallpaper}: PageScreen): HtmlTagDescriptor => ({
+          tag: 'div',
+          attrs: {
+            id: elementId,
+            'aria-busy': 'true',
+            ...wallpaper ? {style: `--wallpaper: ${cssUrl(wallpaper)}`} : {},
+          },
+          children: `<div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(tagline)}</p><span>${escapeHtml(label)}</span></div>`,
+          injectTo: 'body-prepend',
+        })
+        if (!('screens' in options)) {
+          const screen = pageScreen(options, bundle)
+          if (screen.wallpaper) {
+          // The preload scanner does not look into style attributes, so without the hint the wallpaper would only start downloading once the loading screen is styled.
+            tags.push({
+              tag: 'link',
+              attrs: {
+                rel: 'preload',
+                as: 'image',
+                ...screen.wallpaperType ? {type: screen.wallpaperType} : {},
+                href: screen.wallpaper,
+                fetchpriority: 'high',
+              },
+              injectTo: 'head',
+            })
+          }
+          tags.push(element(screen))
+          return deferScripts(html, tags, options.deferScript)
         }
-        tags.push(element(screen))
-        return tags
-      }
-      const {defaultScreen, screens, select, selectorArguments = []} = options
-      const pageScreens = Object.fromEntries(Object.entries<LoadingScreen>(screens).map(([id, screen]) => [id, pageScreen(screen, bundle)]))
+        const {defaultScreen, screens, select, selectorArguments = []} = options
+        const pageScreens = Object.fromEntries(Object.entries<LoadingScreen>(screens).map(([id, screen]) => [id, pageScreen(screen, bundle)]))
       // The preload does for the picked wallpaper what the link element does for a single screen’s.
-      const script = `{
+        const script = `{
 const screens = ${scriptJson(pageScreens)}
 const screen = screens[(${select.toString()})(location.search, ...${scriptJson(selectorArguments)})] ?? screens[${scriptJson(defaultScreen)}]
 const element = document.querySelector('#${elementId}')
@@ -198,37 +205,17 @@ if (screen.wallpaper) {
 }
 }`
       // Without its wallpaper, which only the script knows to be the right one.
-      const {tagline, title} = pageScreens[defaultScreen]
-      tags.push(element({
-        title,
-        tagline,
-      }), {
-        tag: 'script',
-        children: script,
-        injectTo: 'body-prepend',
-      })
-      return tags
-    },
-  }
-  // Vite processes the app import with the HTML. The screen itself needs the finished bundle to resolve its wallpapers.
-  return [{
-    name: 'loading-screen:entry',
-    transformIndexHtml: {
-      order: 'pre',
-      handler(html) {
-        const rewriter = new HTMLRewriter()
-        rewriter.on('script[type="module"][src][data-loading-screen-entry]', {
-          element(script) {
-            const src = script.getAttribute('src')!
-            // A bare file name is relative in src, but a package name in an import.
-            const entry = /^(?:\.{1,2}\/|\/|[a-z][\w+.-]*:)/iu.test(src) ? src : `./${src}`
-            script.removeAttribute('src')
-            script.removeAttribute('data-loading-screen-entry')
-            script.setInnerContent(`import ${scriptJson(entry)}`, {html: true})
-          },
+        const {tagline, title} = pageScreens[defaultScreen]
+        tags.push(element({
+          title,
+          tagline,
+        }), {
+          tag: 'script',
+          children: script,
+          injectTo: 'body-prepend',
         })
-        return rewriter.transform(html)
+        return deferScripts(html, tags, options.deferScript)
       },
     },
-  }, screenPlugin]
+  }
 }
