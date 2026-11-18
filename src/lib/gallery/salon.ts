@@ -32,23 +32,29 @@ export const salonCeiling = {
 } as const
 
 /**
- * One skylight along the room’s long axis, centered on it: clear cast glass open to the sky, held by a deep coffered frame. All
- * values are in meters, relative to the room center.
+ * The Salon’s petal lantern: a softly lobed, elongated glazed rosette in a flared plaster well rather than a rectangular hole.
+ * Dimensions are in room-center meters.
  */
 export const salonSkylight = {
-  /** glazed opening along x and z, cut through the slab; as long as the glass wall below it, so their ends line up */
-  opening: [6, salonWindow.width],
-  /** width of the coffer beams around the opening */
-  frame: 0.55,
-  /** how far the coffer beams hang below the ceiling */
-  depth: 0.34,
-  /** glazing bars split the glass into square panes of this size */
-  pane: 1,
-  barWidth: 0.05,
+  opening: [5.4, 7.4],
+  /** subtle perimeter lobes, with a convex outline even at the valleys */
+  lobes: 8,
+  lobeDepth: 0.06,
+  /** width of the plaster well from the glazing to the slab */
+  frame: 0.65,
+  /** how far the well hangs below the slab */
+  depth: 0.38,
+  glassY: salonCeiling.underside - 0.2,
+  barWidth: 0.055,
   barDepth: 0.07,
-  /** the glass sits 1 cm below the slab, above the glazing bars */
-  glassY: salonCeiling.underside - 0.01,
+  segments: 128,
+  ribs: 8,
 } as const
+
+/** Scale of the well and slab opening outside the glazing. */
+export const salonSkylightOuterScale = 1 + salonSkylight.frame / (salonSkylight.opening[0] / 2)
+/** The bounding half-extents of that opening, for the matching collision roof. */
+export const salonSkylightOuter = salonSkylight.opening.map(size => size / 2 * salonSkylightOuterScale) as [number, number]
 
 /**
  * Lower wall finish: raised field panels on a painted dado under a gilt chair rail. The rail stays low enough that the placards

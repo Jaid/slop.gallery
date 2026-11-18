@@ -9,6 +9,7 @@ import lobby from '../../src/lib/gallery/lobby.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
 import {salonBench, salonCeiling, salonPedestal, salonSculptureSocket, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
+import {salonCeilingSlabGeometry, salonSkylightGlassGeometry, salonSkylightPoint, salonSkylightWellGeometry} from '../../src/lib/gallery/salonSkylight.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '../../src/lib/materials/TerrazzoFloorMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -136,15 +137,41 @@ describe('the Salon', () => {
     expect(salonBench.position[2] - salonBench.depth / 2 - (z + half)).toBeGreaterThan(2.5)
     expect(z - half - (room.center[1] - room.size[1] / 2)).toBeGreaterThan(2)
   })
-  test('the skylight sits inside the room, under its slab, along the glass wall, in whole panes', () => {
-    const {depth, frame, glassY, opening, pane} = salonSkylight
+  test('the petal skylight fits inside the room and hangs in a shallow, convex plaster well', () => {
+    const {depth, frame, glassY, opening, lobes, segments} = salonSkylight
     for (const [axis, size] of opening.entries()) {
       expect(size / 2 + frame).toBeLessThan(room.size[axis] / 2)
-      expect(size / pane % 1).toBeCloseTo(0, 9)
     }
+    expect(lobes).toBeGreaterThan(2)
+    expect(segments % lobes).toBe(0)
     expect(glassY).toBeLessThan(salonCeiling.underside)
     expect(salonCeiling.underside - depth).toBeGreaterThan(0)
-    expect(opening[1]).toBe(salonWindow.width)
+    const perimeter = Array.from({length: segments}, (_, i) => salonSkylightPoint(i / segments * Math.PI * 2))
+    for (const [x, z] of perimeter) {
+      // Each lobe remains inside the ellipse described by opening, instead of cutting across the well.
+      expect((x / (opening[0] / 2)) ** 2 + (z / (opening[1] / 2)) ** 2).toBeLessThanOrEqual(1 + 1e-6)
+    }
+    const slab = salonCeilingSlabGeometry()
+    const glass = salonSkylightGlassGeometry()
+    const well = salonSkylightWellGeometry()
+    const ceilingMaterial = new MeshBasicMaterial
+    try {
+      slab.rotateX(-Math.PI / 2)
+      const ceiling = new Mesh(slab, ceilingMaterial)
+      ceiling.updateMatrixWorld()
+      const sky = new Raycaster(new Vector3(0, 10, 0), new Vector3(0, -1, 0))
+      const roof = new Raycaster(new Vector3(5, 10, 0), new Vector3(0, -1, 0))
+      expect(sky.intersectObject(ceiling)).toHaveLength(0)
+      expect(roof.intersectObject(ceiling)).toHaveLength(1)
+      glass.computeBoundingBox()
+      expect(glass.boundingBox).not.toBeNull()
+      expect(well.getAttribute('position').count).toBe(segments * 3)
+    } finally {
+      ceilingMaterial.dispose()
+      slab.dispose()
+      glass.dispose()
+      well.dispose()
+    }
   })
   test('wainscot runs stop at the arch trim and fit between the corners', () => {
     const south = walls.find(wall => wall.id === 'salon-south')!

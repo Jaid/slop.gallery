@@ -5,7 +5,7 @@ import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {float, normalGeometry, positionGeometry} from 'three/tsl'
-import {MeshStandardNodeMaterial, PlaneGeometry} from 'three/webgpu'
+import {CatmullRomCurve3, DoubleSide, MeshStandardNodeMaterial, TubeGeometry, Vector3} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import BenchSeat from '#component/BenchSeat'
@@ -14,8 +14,10 @@ import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {wallFace, wallOpeningTrim} from '#src/lib/gallery/architecture.ts'
 import CrumbledStoneGeometry from '#src/lib/gallery/CrumbledStoneGeometry.ts'
-import {salonBench, salonBenchLegs, salonCeiling, salonSculptureSocket, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
+import {salonBench, salonBenchLegs, salonCeiling, salonSculptureSocket, salonSkylight, salonSkylightOuter, salonSkylightOuterScale, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
+import {salonCeilingSlabGeometry, salonSkylightGlassGeometry, salonSkylightPoint, salonSkylightWellGeometry} from '#src/lib/gallery/salonSkylight.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
+import BronzeMaterial from '#src/lib/materials/BronzeMaterial.ts'
 import FauxMarbleMaterial, {gialloAntico, portoro} from '#src/lib/materials/FauxMarbleMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
 import SawnCarvingStoneMaterial from '#src/lib/materials/SawnCarvingStoneMaterial.ts'
@@ -39,16 +41,11 @@ export default function SalonRoom({glass, stone, wood}: {
   // Painted as nero portoro round raised fields of giallo antico, the way Pompeian socles were.
   const socle = useDisposable(useMemo(() => new FauxMarbleMaterial(portoro), []))
   const fields = useDisposable(useMemo(() => new FauxMarbleMaterial(gialloAntico), []))
-  const plaster = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#e6decb',
-    roughness: 0.9,
-  }), []))
-  // Painted cast iron, as old skylight glazing bars are; gilt would catch the lamps right below it as a glaring streak.
-  const ironwork = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#4c463c',
-    metalness: 0.2,
-    roughness: 0.7,
-  }), []))
+  const plaster = useDisposable(useMemo(() => {
+    const material = new SawnCarvingStoneMaterial
+    material.side = DoubleSide
+    return material
+  }, []))
   const isHeavy = useGraphicsMode()
   const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
   const terrazzo = useDisposable(useMemo(() => new TerrazzoFloorMaterial({
@@ -67,21 +64,26 @@ export default function SalonRoom({glass, stone, wood}: {
   // The Lobby vault’s cast glass, divided into the same panes as the bars below it.
   const skylight = useDisposable(useMemo(() => new VaultGlassMaterial({
     heavy: isHeavy,
-    paneSize: [salonSkylight.pane, salonSkylight.pane],
+    paneSize: salonSkylight.opening,
   }), [isHeavy]))
-  const [openingX, openingZ] = salonSkylight.opening
+  const ceilingGeometry = useDisposable(useMemo(() => {
+    const geometry = salonCeilingSlabGeometry()
+    geometry.rotateX(-Math.PI / 2)
+    return geometry
+  }, []))
   return <group name='salon'>
     <group position={[room.center[0], 0, room.center[1]]}>
       <RigidBody colliders={false} type='fixed'>
-        <CuboidCollider args={[room.size[0] / 2, 0.15, room.size[1] / 2]} position={[0, 5.9, 0]} />
+        {/* The rectangular collision envelope can be hollow too: props and the flying player are not stopped over the glazed rosette. */}
+        <CuboidCollider args={[(room.size[0] / 2 - salonSkylightOuter[0]) / 2, 0.09, room.size[1] / 2]} position={[-(room.size[0] / 2 + salonSkylightOuter[0]) / 2, salonCeiling.y, 0]} />
+        <CuboidCollider args={[(room.size[0] / 2 - salonSkylightOuter[0]) / 2, 0.09, room.size[1] / 2]} position={[(room.size[0] / 2 + salonSkylightOuter[0]) / 2, salonCeiling.y, 0]} />
+        <CuboidCollider args={[salonSkylightOuter[0], 0.09, (room.size[1] / 2 - salonSkylightOuter[1]) / 2]} position={[0, salonCeiling.y, -(room.size[1] / 2 + salonSkylightOuter[1]) / 2]} />
+        <CuboidCollider args={[salonSkylightOuter[0], 0.09, (room.size[1] / 2 - salonSkylightOuter[1]) / 2]} position={[0, salonCeiling.y, (room.size[1] / 2 + salonSkylightOuter[1]) / 2]} />
       </RigidBody>
       <RoomFloor glass={glass} materials={floor} room={room} stone={stone} wood={wood} />
-      {/* The slab, cut around the skylight’s opening. */}
-      {[-1, 1].map(side => <group key={side}>
-        <Box material={plaster} position={[0, salonCeiling.y, side * (room.size[1] + openingZ) / 4]} size={[room.size[0], salonCeiling.thickness, (room.size[1] - openingZ) / 2]} />
-        <Box material={plaster} position={[side * (room.size[0] + openingX) / 4, salonCeiling.y, 0]} size={[(room.size[0] - openingX) / 2, salonCeiling.thickness, openingZ]} />
-      </group>)}
-      <Skylight gilt={gold} glass={skylight} ironwork={ironwork} plaster={plaster} />
+      {/* A continuous ceiling rather than four slabs: its petal-shaped opening lets the rosette read as one architectural idea. */}
+      <mesh castShadow geometry={ceilingGeometry} material={plaster} name='salon-ceiling' position={[0, salonCeiling.underside, 0]} receiveShadow />
+      <Skylight glass={skylight} plaster={plaster} />
     </group>
     {salonWalls.map(wall => <WallDressing key={wall.id} fields={fields} gilt={gold} socle={socle} wall={wall} />)}
     <Ottoman />
@@ -89,37 +91,54 @@ export default function SalonRoom({glass, stone, wood}: {
   </group>
 }
 
-function Skylight({gilt, glass, ironwork, plaster}: {
-  gilt: Material
+function Skylight({glass, plaster}: {
   glass: Material
-  ironwork: Material
   plaster: Material
 }) {
-  const {barDepth, barWidth, depth, frame, opening, pane} = salonSkylight
-  const [halfX, halfZ] = opening.map(size => size / 2)
-  const beamY = salonCeiling.underside - depth / 2
-  const barY = salonSkylight.glassY - 0.005 - barDepth / 2
-  const bars = (size: number) => Array.from({length: Math.round(size / pane) - 1}, (_, i) => -size / 2 + (i + 1) * pane)
-  // Metric UVs, so the glass’s panes line up with the bars.
-  const geometry = useDisposable(useMemo(() => {
-    const plane = new PlaneGeometry(opening[0], opening[1])
-    const uv = plane.getAttribute('uv')
-    for (let i = 0; i < uv.count; i++) {
-      uv.setXY(i, uv.getX(i) * opening[0], uv.getY(i) * opening[1])
+  const bronze = useDisposable(useMemo(() => new BronzeMaterial, []))
+  const {barDepth, barWidth, glassY, ribs} = salonSkylight
+  const geometry = useDisposable(useMemo(() => ({
+    glass: salonSkylightGlassGeometry(),
+    well: salonSkylightWellGeometry(),
+    rings: [
+      [0.42, glassY - 0.02],
+      [0.73, glassY - 0.02],
+      [1, glassY - 0.02],
+      [salonSkylightOuterScale, salonCeiling.underside - 0.015],
+    ].map(([scale, y]) => {
+      const points = Array.from({length: salonSkylight.segments}, (_, i) => {
+        const [x, z] = salonSkylightPoint(i / salonSkylight.segments * Math.PI * 2, scale)
+        return new Vector3(x, y, z)
+      })
+      return new TubeGeometry(new CatmullRomCurve3(points, true), salonSkylight.segments, scale > 1 ? 0.045 : 0.026, 5, true)
+    }),
+    dispose() {
+      this.glass.dispose()
+      this.well.dispose()
+      for (const ring of this.rings) {
+        ring.dispose()
+      }
+    },
+  }), [glassY]))
+  const spokes = Array.from({length: ribs}, (_, i) => {
+    const angle = i / ribs * Math.PI * 2
+    const [x, z] = salonSkylightPoint(angle)
+    const radialLength = Math.hypot(x, z)
+    const hubRadius = 0.12
+    return {
+      angle,
+      length: radialLength - hubRadius,
+      position: [(x + x / radialLength * hubRadius) / 2, glassY - barDepth / 2, (z + z / radialLength * hubRadius) / 2] as const,
     }
-    return plane
-  }, [opening]))
+  })
   return <StaticBatch name='salon-skylight'>
-    {/* The coffer ring hangs below the slab and frames the glass, with a gilt bead along its lower inner edge. */}
-    {[-1, 1].map(side => <group key={side}>
-      <Box material={plaster} position={[0, beamY, side * (halfZ + frame / 2)]} size={[opening[0] + frame * 2, depth, frame]} />
-      <Box material={plaster} position={[side * (halfX + frame / 2), beamY, 0]} size={[frame, depth, opening[1]]} />
-      <Box material={gilt} position={[0, salonCeiling.underside - depth - 0.02, side * (halfZ + 0.02)]} size={[opening[0] + 0.08, 0.04, 0.04]} />
-      <Box material={gilt} position={[side * (halfX + 0.02), salonCeiling.underside - depth - 0.02, 0]} size={[0.04, 0.04, opening[1]]} />
-    </group>)}
-    {bars(opening[0]).map(x => <Box key={x} material={ironwork} position={[x, barY, 0]} size={[barWidth, barDepth, opening[1]]} />)}
-    {bars(opening[1]).map(z => <Box key={z} material={ironwork} position={[0, barY, z]} size={[opening[0], barDepth, barWidth]} />)}
-    <mesh geometry={geometry} material={glass} name='salon-skylight-glass' position={[0, salonSkylight.glassY, 0]} rotation={[Math.PI / 2, 0, 0]} />
+    {/* Chalky plaster turns the ceiling into a shallow flared well; the asymmetrically lit folds reveal its lobes without ornament. */}
+    <mesh castShadow geometry={geometry.well} material={plaster} name='salon-skylight-well' receiveShadow />
+    {/* A rosette of hand-rubbed bronze divides the sunlight into petals, with fine concentric seams between them. */}
+    {spokes.map(({angle, length, position}) => <mesh key={angle} castShadow material={bronze} position={position} receiveShadow rotation={[0, -angle, 0]}><boxGeometry args={[length, barDepth, barWidth]} /></mesh>)}
+    {geometry.rings.map((ring, index) => <mesh key={index} castShadow geometry={ring} material={bronze} name={`salon-skylight-ring-${index}`} receiveShadow />)}
+    <mesh castShadow material={bronze} position={[0, glassY - barDepth / 2, 0]} receiveShadow><cylinderGeometry args={[0.12, 0.12, barDepth, 24]} /></mesh>
+    <mesh castShadow geometry={geometry.glass} material={glass} name='salon-skylight-glass' position={[0, glassY + 0.01, 0]} />
   </StaticBatch>
 }
 function WallDressing({fields, gilt, socle, wall}: {
