@@ -9,7 +9,7 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} fro
 
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {barDepth} from '../../src/lib/gallery/architectureDimensions.ts'
-import {apseOpeningPoint, apseOpenings, bastionClearance, bastionCurve, bastionLanterns} from '../../src/lib/gallery/bastion.ts'
+import {apseOpeningPoint, apseOpenings, bastionClearance, bastionCurve, bastionGateLantern} from '../../src/lib/gallery/bastion.ts'
 import {bastionLinkGate} from '../../src/lib/gallery/bastionNetwork.ts'
 import {oculusPlatform} from '../../src/lib/gallery/lowerGallery.ts'
 import oculusApse from '../../src/lib/gallery/oculusApse.ts'
@@ -127,8 +127,7 @@ describe('the apse’s barred gate and windows onto the Bastion', () => {
   })
   test('a single lantern hangs behind the gate, and its light falls through all three openings between the bars onto the platform', () => {
     const [x, z] = apseOpeningPoint(apseOpenings.find(opening => opening.name === 'gate')!, bastionClearance + bastionCurve.width / 2)
-    expect(Math.abs(bastionLanterns.north - bastionCurve.route.project(x, z)!.along)).toBeLessThan(0.3)
-    expect(Object.keys(bastionLanterns)).toEqual(['east', 'north'])
+    expect(Math.abs(bastionGateLantern - bastionCurve.route.project(x, z)!.along)).toBeLessThan(0.3)
     const lamp = slopGallery.lamps().find(value => value.id === 'bastion-lantern_north')!
     expect(lamp.shadow).toBe(true)
     const light = new Vector3(...lamp.position)

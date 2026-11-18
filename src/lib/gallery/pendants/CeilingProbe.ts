@@ -15,6 +15,8 @@ export type CeilingHit = {
 export type PendantMount = {
   /** where the rod meets the ceiling, straight above the light */
   anchor: Vec3
+  /** radius of a custom ceiling plate where the standard one would be too wide */
+  canopyRadius?: number
   /** vertical rod length from the light source to the anchor */
   drop: number
   /** light source position */

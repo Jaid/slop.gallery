@@ -1,3 +1,4 @@
+import type {MoodCastInput} from '../../src/lib/webmcp/castMood.ts'
 import type {WorkHangingInput} from '../../src/lib/webmcp/hangWork.ts'
 import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
 import type {PartyEffectSpawnInput} from '../../src/lib/webmcp/spawnPartyEffect.ts'
@@ -19,6 +20,14 @@ const bridge: WebmcpBridge = {
       lights: [],
     },
     globalLights: [],
+  }),
+  castMood: ({mood}: MoodCastInput) => (mood === null ? {mood} : {
+    mood,
+    title: 'Atelier',
+    fade: {
+      in: 3.5,
+      out: 1,
+    },
   }),
   downloadFrame: ({name, format = 'webp'}) => Promise.resolve({
     fileName: `${name ?? 'gallery-default'}.${format}`,
@@ -129,7 +138,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'hang_work', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'hang_work', 'set_wireframe'])
   for (const tool of tools.slice(0, 7)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -439,6 +448,29 @@ test('spawn_party_effect takes an effect, a point and an optional rotation, floo
     effect: 'blood',
     position: [0, 0, 0],
   })).rejects.toThrow()
+})
+test('cast_mood takes the id of a mood or null and casts through the bridge', async () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'cast_mood')!
+  const controller = new AbortController
+  const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  expect(await execute({mood: 'paint'})).toEqual({
+    mood: 'paint',
+    title: 'Atelier',
+    fade: {
+      in: 3.5,
+      out: 1,
+    },
+  })
+  expect(await execute({mood: null})).toEqual({mood: null})
+  for (const input of [null, [], {}, {mood: ''}, {mood: 3}, {mood: undefined}, {
+    mood: 'paint',
+    fade: 2,
+  }]) {
+    await expect(execute(input)).rejects.toThrow(TypeError)
+  }
+  controller.abort()
+  await expect(execute({mood: 'paint'})).rejects.toThrow()
 })
 test('hang_work takes an image URL, a slot and an optional title and id, and hangs through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'hang_work')!

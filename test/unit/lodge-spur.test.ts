@@ -6,12 +6,11 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/web
 import {createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {bastionCurve, lodgeSpurEndZ, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
-import {bastionLink, insideBastion, lodgeSpur, lodgeSpurEnd, lodgeSpurGrille, lodgeSpurLanterns} from '../../src/lib/gallery/bastionNetwork.ts'
+import {bastionLink, insideBastion, lodgeSpur, lodgeSpurEnd, lodgeSpurGrille} from '../../src/lib/gallery/bastionNetwork.ts'
 import gateGeometry from '../../src/lib/gallery/gateGeometry.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import LodgeEastWindowGeometry from '../../src/lib/gallery/LodgeEastWindowGeometry.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
-import {routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
 import {openings} from '../../src/worlds/gallery/relations.ts'
 import walls from './fixtures/gallery.ts'
 
@@ -98,12 +97,12 @@ test('the vaulted passage stays straight past the window and closes back to back
     expect(insideBastion([x, y + 1, z])).toBe(true)
     expect(lodgeSpur.floorAt(x, z)).toBeCloseTo(y, 7)
   }
-  // The branch has its own vault, paving, ribs and a supported pendant lantern.
+  // The branch has its own vault, paving and ribs.
   const vault = new RouteVaultGeometry(lodgeSpur)
   try {
     expect(vault.paving.getAttribute('position').count).toBeGreaterThan(0)
     expect(vault.shell.getAttribute('position').count).toBeGreaterThan(0)
-    expect(routePendantMounts(lodgeSpur, [vault.shell, vault.ribs], lodgeSpurLanterns)).toHaveLength(1)
+    expect(vault.ribs.getAttribute('position').count).toBeGreaterThan(0)
   } finally {
     vault.dispose()
   }

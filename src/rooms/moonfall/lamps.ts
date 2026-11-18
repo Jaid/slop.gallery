@@ -1,24 +1,15 @@
-import type {MoonfallWallLed} from '#src/lib/gallery/moonfall/fixtures.ts'
 import type {Lamp} from '../base/Room.ts'
 
 import moonfallWallLeds from '#src/lib/gallery/moonfall/fixtures.ts'
 
-/** 60 cm in front of the wall LED’s housing, `lift` over its middle */
-const wallLed = ({position: [x, y, z], inward: [inwardX, inwardZ]}: MoonfallWallLed, lift: number, lamp: Pick<Lamp, 'range' | 'strength'>) => ({
-  ...lamp,
-  position: [x + inwardX * 0.6, y + lift, z + inwardZ * 0.6],
-  tint: '#91c9c4',
-}) satisfies Lamp
-
 export default {
-  // The four down the west wall shine dim from over their middles, the pairs flanking the openings lower and brighter.
-  ...Object.fromEntries(moonfallWallLeds.map(led => [led.id, led.wall === 'west' ? wallLed(led, 0.6, {
-    strength: 5,
-    range: 6,
-  }) : wallLed(led, 0, {
+  // Each source sits 60 cm in front of the middle of its housing.
+  ...Object.fromEntries(moonfallWallLeds.map(({id, position: [x, y, z], inward: [inwardX, inwardZ]}) => [id, {
+    position: [x + inwardX * 0.6, y, z + inwardZ * 0.6],
+    tint: '#91c9c4',
     strength: 15,
     range: 10,
-  })])),
+  } satisfies Lamp])),
   spotlight: {
     kind: 'spot',
     position: [-7, 3.3, -4],

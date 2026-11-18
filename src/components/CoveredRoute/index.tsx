@@ -1,4 +1,5 @@
 import type RoutedPassage from '#src/lib/gallery/passages/RoutedPassage.ts'
+import type {PendantMount} from '#src/lib/gallery/pendants/CeilingProbe.ts'
 import type {Material} from 'three/webgpu'
 
 import {CuboidCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
@@ -16,9 +17,11 @@ import {passageLantern, passageLanternGlow} from '#src/lib/gallery/pendants/pass
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /** A stone-vaulted passage along a winding route, its paving and vault swept along it, with lanterns hung from the vault at the given distances along the route. Their lamps belong to the room, see its `lamps.ts`. Its drains’ grates and sumps are the room’s to build. Graphics with more curve detail draw a finer vault, which neither collides nor carries the lanterns, so every graphics mode collides alike. */
-export default function CoveredRoute({passage, material, lanterns}: {
-  lanterns: ReadonlyArray<number>
+export default function CoveredRoute({passage, material, lanterns, mounts: fixedMounts}: {
+  lanterns?: ReadonlyArray<number>
   material: Material
+  /** fixed mounts for lanterns placed off the route’s center line */
+  mounts?: ReadonlyArray<PendantMount>
   passage: RoutedPassage
 }) {
   const geometry = useDisposable(useMemo(() => new RouteVaultGeometry(passage), [passage]))
@@ -29,7 +32,7 @@ export default function CoveredRoute({passage, material, lanterns}: {
     // The base detail’s belong to the passage’s geometry.
     dispose() {},
   }), [curveDetail, geometry, passage]))
-  const mounts = useMemo(() => routePendantMounts(passage, [geometry.shell, geometry.ribs], lanterns), [geometry, lanterns, passage])
+  const mounts = useMemo(() => fixedMounts ?? (lanterns ? routePendantMounts(passage, [geometry.shell, geometry.ribs], lanterns) : []), [fixedMounts, geometry, lanterns, passage])
   const paving = colliderGeometry(geometry.pavingCollision)
   const box = geometry.pavingBox
   const collision = [geometry.shell, geometry.ribs].map(colliderGeometry)
@@ -43,6 +46,6 @@ export default function CoveredRoute({passage, material, lanterns}: {
       <mesh castShadow geometry={vault.shell} material={material} name='castle-barrel-vault' receiveShadow />
       <mesh castShadow geometry={vault.ribs} material={material} name='castle-vault-ribs' receiveShadow />
     </RigidBody>
-    <PendantLamps body={passageLantern} glow={passageLanternGlow} mounts={mounts} name={`${passage.name}-pendants`} />
+    <Branch if={mounts.length > 0}><PendantLamps body={passageLantern} glow={passageLanternGlow} mounts={mounts} name={`${passage.name}-pendants`} /></Branch>
   </group>
 }

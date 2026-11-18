@@ -9,7 +9,6 @@ import lodge, {lodgeBay, lodgeOutline} from '../../src/lib/gallery/lodge.ts'
 import lodgeInterior, {lodgeFurnitureColliders} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import LodgeCeilingGeometry from '../../src/lib/gallery/lodgeInterior/LodgeCeilingGeometry.ts'
 import UpholsteredSeatGeometry from '../../src/lib/gallery/lodgeInterior/UpholsteredSeatGeometry.ts'
-import WagonWheelGeometry from '../../src/lib/gallery/lodgeInterior/WagonWheelGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import {IndoorLightsNode, reachesIndoors} from '../../src/lib/materials/lights/index.ts'
 import LodgeMaterials from '../../src/lib/materials/LodgeMaterials.ts'
@@ -41,9 +40,8 @@ test('the gallery’s sun stays outside while lamps, fire and fill lights reach 
 test('furniture geometry is finite, merged per material and within its triangle budget', () => {
   const sofa = new UpholsteredSeatGeometry(3)
   const chair = new UpholsteredSeatGeometry(1, 0.76)
-  const wheel = new WagonWheelGeometry(0.85)
   try {
-    const parts = [sofa.leather, sofa.timber, chair.leather, chair.timber, wheel.iron, wheel.wax, wheel.flames]
+    const parts = [sofa.leather, sofa.timber, chair.leather, chair.timber]
     for (const geometry of parts) {
       const position = geometry.getAttribute('position')
       expect(position.count).toBeGreaterThan(0)
@@ -57,13 +55,9 @@ test('furniture geometry is finite, merged per material and within its triangle 
     sofa.leather.computeBoundingBox()
     expect(sofa.leather.boundingBox!.max.y).toBeLessThanOrEqual(UpholsteredSeatGeometry.backHeight + 0.01)
     expect(sofa.leather.boundingBox!.min.y).toBeGreaterThanOrEqual(0)
-    // The wheel’s canopy meets the ceiling.
-    wheel.iron.computeBoundingBox()
-    expect(wheel.iron.boundingBox!.max.y).toBeCloseTo(0.85, 3)
   } finally {
-    for (const resource of [sofa, chair, wheel]) {
-      resource.dispose()
-    }
+    sofa.dispose()
+    chair.dispose()
   }
 })
 test('furniture colliders cover every piece that stands on the floor', () => {
@@ -97,8 +91,7 @@ function surfacesAbove(meshes: Array<Mesh>, x: number, z: number, far: number) {
   const hits = ray.intersectObjects(meshes)
   return hits.filter(hit => hit.distance - hits[0].distance < 1e-4)
 }
-describe('the bay’s ceiling and chandelier', () => {
-  const {bayFraming, chandelier} = lodgeInterior
+describe('the Lodge’s ceiling beams', () => {
   const ceiling = new LodgeCeilingGeometry
   const material = new MeshBasicMaterial({side: DoubleSide})
   afterAll(() => {
@@ -122,48 +115,25 @@ describe('the bay’s ceiling and chandelier', () => {
     // The outline runs from the south-west corner north first, which turns this edge normal into the room.
     return ((x - a[0]) * (a[1] - b[1]) + (z - a[1]) * (b[0] - a[0])) / length
   }))
-  test('the chandelier hangs from the boss in the middle of the bay’s mouth, in line with its first corners', () => {
+  test('only the crossbeams hang from the ceiling, with the header across the bay’s mouth', () => {
     const [frontWest, , , frontEast] = lodgeBay.corners
-    expect(bayFraming.center[0] + lodge.center[0]).toBeCloseTo((frontWest[0] + frontEast[0]) / 2, 6)
-    expect(bayFraming.center[1] + lodge.center[1]).toBeCloseTo(frontWest[1], 6)
-    expect(bayFraming.center[1] + lodge.center[1]).toBeCloseTo(frontEast[1], 6)
-    expect([chandelier.position[0], chandelier.position[2]]).toEqual([...bayFraming.center])
-    expect(chandelier.position[1] + chandelier.drop).toBeCloseTo(lodge.height - bayFraming.boss.height, 6)
-    expect(chandelier.position[1] - 0.15).toBeGreaterThan(2.5)
-    const boss = meshes.find(mesh => mesh.name === 'lodge-ceiling-boss')!
-    const [bottom] = surfacesAbove([boss], chandelier.position[0], chandelier.position[2], lodge.height)
-    expect(bottom.point.y).toBeCloseTo(chandelier.position[1] + chandelier.drop, 6)
-    // The header across the bay’s mouth runs right through the boss.
-    expect(lodgeInterior.beams.z[0]).toBeCloseTo(bayFraming.center[1], 6)
-  })
-  test('hips run from the boss into the bay’s back corners and a rafter to its back wall, square to the boss and the wheel’s spokes but for the hips’ 5.5°', () => {
-    const fan = meshes.filter(mesh => mesh.name === 'lodge-hip' || mesh.name === 'lodge-rafter')
-    expect(fan.map(mesh => mesh.name)).toEqual(['lodge-hip', 'lodge-rafter', 'lodge-hip'])
-    for (const [i, mesh] of fan.entries()) {
-      const [x, z] = bayFraming.rafters[i]
-      // The hips come to a point in their corners; the rafter ends square, half its width to either side of its target.
-      expect(Math.min(...corners(mesh).map(point => Math.hypot(point.x - x, point.z - z)))).toBeLessThan(i === 1 ? Math.hypot(bayFraming.rafter[0] / 2, 0.07) : 0.07)
-      // The boss’ faces look along multiples of 45°, after the wheel turns by its yaw so do its spokes.
-      const angle = Math.atan2(z - bayFraming.center[1], x - bayFraming.center[0]) / Math.PI * 180
-      const offFace = Math.abs((angle % 45 + 67.5) % 45 - 22.5)
-      expect(offFace).toBeLessThan(i === 1 ? 1e-6 : 6)
-    }
-    expect(Math.abs(((chandelier.yaw / Math.PI * 180 + 22.5) % 45 + 45) % 45)).toBeCloseTo(0, 6)
+    expect(meshes.map(mesh => mesh.name)).toEqual(['lodge-beam', 'lodge-beam', 'lodge-beam'])
+    const headerZ = meshes[0].position.z + lodge.center[1]
+    expect(headerZ).toBeCloseTo(frontWest[1], 6)
+    expect(headerZ).toBeCloseTo(frontEast[1], 6)
   })
   test('every member ends inside the walls, behind their log faces', () => {
     for (const mesh of meshes) {
       const depths = corners(mesh).map(inside)
       expect(Math.min(...depths)).toBeGreaterThan(0.04)
-      if (mesh.name !== 'lodge-ceiling-boss') {
-        expect(Math.min(...depths)).toBeLessThan(wallFace - 0.04)
-      }
+      expect(Math.min(...depths)).toBeLessThan(wallFace - 0.04)
     }
   })
   test('seen from below, no two members share a face', () => {
     for (const radius of [0.3, 0.45, 0.7, 1.5, 3]) {
       for (let angle = 0; angle < 360; angle += 3.75) {
-        const x = bayFraming.center[0] + radius * Math.cos(angle * Math.PI / 180)
-        const z = bayFraming.center[1] + radius * Math.sin(angle * Math.PI / 180)
+        const x = radius * Math.cos(angle * Math.PI / 180)
+        const z = lodgeInterior.beams.z[0] + radius * Math.sin(angle * Math.PI / 180)
         // The ceiling slab is not among the meshes, so a ray can go between the members and hit nothing.
         expect(surfacesAbove(meshes, x, z, lodge.height - 0.01).length).toBeLessThanOrEqual(1)
       }
@@ -173,5 +143,4 @@ describe('the bay’s ceiling and chandelier', () => {
 test('furniture geometry rejects impossible inputs', () => {
   expect(() => new UpholsteredSeatGeometry(0)).toThrow(RangeError)
   expect(() => new UpholsteredSeatGeometry(1.5)).toThrow(RangeError)
-  expect(() => new WagonWheelGeometry(0.2)).toThrow(RangeError)
 })

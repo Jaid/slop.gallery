@@ -10,6 +10,7 @@ import slopGallery from '#src/worlds/gallery/index.ts'
 import relations, {openings} from '#src/worlds/gallery/relations.ts'
 
 import lobby from './lobby.ts'
+import salonLantern, {salonDrumOuterApothem} from './salonLantern.ts'
 import {vesperLanternLayout, vesperLanternRidgeY, vesperLanternSillY} from './vesperCeiling.ts'
 
 /** a rectangle on screen in normalized device coordinates: left, bottom, right, top */
@@ -83,6 +84,15 @@ const vesperLanternBoxes = (mirrored: boolean) => {
   const [bottom, top] = mirrored ? [-vesperLanternRidgeY, -vesperLanternSillY] : [vesperLanternSillY, vesperLanternRidgeY]
   return centers.map(offset => new Box3(new Vector3(x - halfX, vesper.floorY + bottom, z + offset - halfZ), new Vector3(x + halfX, vesper.floorY + top, z + offset + halfZ)))
 }
+/** the windows round the Salon’s drum, through which the Lobby’s vault rises next door, or with `mirrored` their reflection in the floor */
+const salonDrumBox = (mirrored: boolean) => {
+  const salon = slopGallery.room('salon')
+  const [x, z] = salon.center
+  const reach = salonDrumOuterApothem / Math.cos(Math.PI / 8)
+  const {crown, sill} = salonLantern.window
+  const [bottom, top] = mirrored ? [-crown, -sill] : [sill, crown]
+  return new Box3(new Vector3(x - reach, salon.floorY + bottom, z - reach), new Vector3(x + reach, salon.floorY + top, z + reach))
+}
 
 export const portals: Array<Portal> = [
   ...openings.map(({rooms: pair, holes}) => ({
@@ -97,6 +107,10 @@ export const portals: Array<Portal> = [
   ...[false, true].flatMap(vesperLanternBoxes).map(box => ({
     rooms: ['vesper', 'lobby'] as const,
     box,
+  })),
+  ...[false, true].map(mirrored => ({
+    rooms: ['salon', 'lobby'] as const,
+    box: salonDrumBox(mirrored),
   })),
 ]
 

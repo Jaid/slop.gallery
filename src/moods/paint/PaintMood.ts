@@ -1,23 +1,16 @@
 import Mood from '../base/Mood.ts'
 import PaintAmbience from './PaintAmbience.ts'
+import PaintScreen from './PaintScreen.ts'
 
-/** The Paint Orb’s atelier: the world turns into a painter’s study of it, warm in the lights and cool in the shadows, like an old master would lay it out. */
+/** The Paint Orb’s atelier: as it comes over the world, unseen brushes paint a vignette of oil strokes into the corners of the view and go on painting for as long as it holds, laying every stroke again once it has dried away; as it leaves, all of them dry away into bristle streaks, while the hush of a studio sounds. The world itself keeps its colors. */
 export default class PaintMood extends Mood {
   override readonly ambience = PaintAmbience
-  override readonly fill = {
-    color: '#d4dcff',
-    gain: 0.9,
-  }
-  override readonly grade = {
-    shadow: '#16204a',
-    midtone: '#b8844a',
-    highlight: '#fff0cc',
-    strength: 0.45,
+  /** The brushes take their time laying the strokes, and the strokes take a moment to dry away, slower than other moods leave, so their bristle streaks can be seen breaking up. */
+  override readonly fade = {
+    in: 3.5,
+    out: 1,
   }
   readonly id = 'paint'
-  override readonly lamps = {
-    color: '#ffd49c',
-    gain: 1.1,
-  }
+  override readonly screen = new PaintScreen(this.fade.in)
   readonly title = 'Atelier'
 }

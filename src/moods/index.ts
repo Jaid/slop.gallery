@@ -1,3 +1,6 @@
+import type Mood from './base/Mood.ts'
+import type MoodScreen from './base/MoodScreen.ts'
+
 import AntechamberMood from './antechamber/AntechamberMood.ts'
 import ArenaMood from './arena/ArenaMood.ts'
 import BanquetMood from './banquet/BanquetMood.ts'
@@ -48,4 +51,8 @@ export const moods = {
 /** the id of one of the moods */
 export type MoodId = keyof typeof moods
 
+/** the screen shaders of every mood that has one, which the render pipeline builds in up front, so a mood coming over the world compiles nothing; each draws only while its mood shows */
+export const moodScreens: ReadonlyArray<MoodScreen> = Object.values<Mood>(moods).flatMap(mood => mood.screen ?? [])
+
 export type {default as Mood} from './base/Mood.ts'
+export type {default as MoodScreen} from './base/MoodScreen.ts'

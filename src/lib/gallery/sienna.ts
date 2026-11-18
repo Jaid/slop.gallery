@@ -1,9 +1,7 @@
 import type {PlankOptions} from '../materials/PlankMaterial.ts'
 import type {FloorRectangle} from './floors.ts'
-import type {PendantMount} from './pendants/CeilingProbe.ts'
 
 import lodge from './lodge.ts'
-import {passageLightDrop} from './pendants/mounts.ts'
 import {salonCeiling} from './salon.ts'
 
 /** The Sienna’s square floor plan, west of the Lobby on the ground floor, where the layout puts it. */
@@ -37,14 +35,6 @@ export const siennaVestibuleCeiling = {
   y: siennaVestibule.height - (sienna.height - salonCeiling.y),
   thickness: salonCeiling.thickness,
 } as const
-const vestibuleCeilingUnderside = siennaVestibuleCeiling.y - siennaVestibuleCeiling.thickness / 2
-/** The lantern hung from the middle of the vestibule’s ceiling, like the Corridor’s from its linings, its light as far under the ceiling as theirs. */
-export const siennaVestibuleLantern: PendantMount = {
-  light: [siennaVestibule.center[0], vestibuleCeilingUnderside - passageLightDrop, siennaVestibule.center[1]],
-  anchor: [siennaVestibule.center[0], vestibuleCeilingUnderside, siennaVestibule.center[1]],
-  drop: passageLightDrop,
-  normal: [0, -1, 0],
-}
 
 /** The Sienna’s floor height under the point in its vestibule, which lies outside its square floor plan. */
 export function siennaVestibuleFloor(x: number, z: number) {

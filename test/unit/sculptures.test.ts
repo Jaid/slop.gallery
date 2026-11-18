@@ -2,7 +2,8 @@ import type {SculptureId} from '../../src/sculptures/index.ts'
 
 import {expect, test} from 'bun:test'
 
-import {salonCeiling, salonSculptureSocket, salonSkylight} from '../../src/lib/gallery/salon.ts'
+import {salonSculptureSocket} from '../../src/lib/gallery/salon.ts'
+import salonLantern, {salonLanternBase} from '../../src/lib/gallery/salonLantern.ts'
 import {salonSculpture, salonSculptureId, salonSculptureSpot} from '../../src/lib/gallery/salonSculpture.ts'
 import {environmentSeed} from '../../src/lib/gameSeed.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
@@ -10,7 +11,7 @@ import {createSculpture, sculptures} from '../../src/sculptures/index.ts'
 import {readSculpture} from '../../src/sculptures/lib/forcedSculpture.ts'
 
 const ids = Object.keys(sculptures) as Array<SculptureId>
-test('every sculpture has its own model and fits on the Salon socket under the skylight', async () => {
+test('every sculpture has its own model and fits on the Salon socket under the ceiling', async () => {
   const {position: [x, y, z], size: [width, height, depth]} = salonSculptureSocket
   expect(salonSculptureSpot).toEqual([x, y + height, z])
   const models = new Set
@@ -23,7 +24,7 @@ test('every sculpture has its own model and fits on the Salon socket under the s
     expect(sculpture.size.every(side => Number.isFinite(side) && side > 0)).toBe(true)
     expect(sculpture.size[0]).toBeLessThanOrEqual(width)
     expect(sculpture.size[2]).toBeLessThanOrEqual(depth)
-    expect(salonSculptureSpot[1] + sculpture.size[1]).toBeLessThan(salonCeiling.underside - salonSkylight.depth)
+    expect(salonSculptureSpot[1] + sculpture.size[1]).toBeLessThan(salonLanternBase - salonLantern.ring[1] - salonLantern.bead)
     const model = await sculpture.loadModel()
     expect(model).toBeFunction()
     models.add(model)

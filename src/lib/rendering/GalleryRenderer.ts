@@ -1,18 +1,21 @@
 import type {Projection} from './GalleryDrawingPipeline.ts'
+import type {Drawable} from './worldBounds.ts'
 import type {WebgpuRendererOptions} from 'three-fiber-game'
 import type {Camera, Material, Scene} from 'three/webgpu'
 
 import {WebgpuRenderer} from 'three-fiber-game'
-import {Object3D} from 'three/webgpu'
+import {Object3D, Vector3} from 'three/webgpu'
 
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {startLoading, trackLoadingItems} from '#src/lib/loadingItems.ts'
 import {BatchedLighting} from '#src/lib/materials/lights/base/BatchedLightsNode.ts'
+import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 
 import GalleryDrawingPipeline from './GalleryDrawingPipeline.ts'
 import {cinematicMaxTextureSize, readCinematicGraphics} from './graphicsMode.ts'
 import {readStreamBudget} from './streamBudget.ts'
+import {hasGeometry, worldBounds} from './worldBounds.ts'
 
 type Culler = (camera: Camera) => void
 type RenderObject = {
@@ -155,6 +158,8 @@ export class GalleryRenderer extends WebgpuRenderer {
   private culler: Culler | null = null
   /** how every render projects its scene; the frame scene’s passes swap in {@link frameProjection} */
   private readonly drawing = new GalleryDrawingPipeline
+  /** The main view’s position, also used by its nested shadow and reflection passes. */
+  private readonly eye = new Vector3
   private frame = -1
   /** how the passes of the frame scene project objects, see {@link installProjection} */
   private frameProjection: Projection = this.drawing.standard
@@ -275,7 +280,7 @@ export class GalleryRenderer extends WebgpuRenderer {
       pass()
       return
     }
-    this.startFrame()
+    this.startFrame(camera)
     if (this.culler && this.culledCamera !== camera) {
       this.culledCamera = camera
       this.culler(camera)
@@ -382,7 +387,7 @@ export class GalleryRenderer extends WebgpuRenderer {
         cost += (material && known?.get(material)) ?? fresh
       }
     }
-    if (this.warmupAdmissions > 0 && (this.buildTime >= budget || this.plannedBuildCost + cost > budget)) {
+    if (!this.withinBudget(budget, cost)) {
       return false
     }
     this.warmupAdmissions++
@@ -510,34 +515,11 @@ export class GalleryRenderer extends WebgpuRenderer {
         standard(object, camera, groupOrder, renderList, clippingContext)
       }
     }
-    this.projectWarming = (object, camera, groupOrder, renderList, clippingContext) => {
-      if (hidden.has(object) && !unculledCameras.has(camera)) {
-        return
-      }
-      if (!object.frustumCulled || !('geometry' in object)) {
-        standard(object, camera, groupOrder, renderList, clippingContext)
-        return
-      }
-      let cameras = this.warmObjects.get(object)
-      if (!cameras) {
-        if (!this.admit(object, camera, warmupBuildBudget)) {
-          // Postpone the rest of the scene to the next frames.
-          this.warmedFrame = -1
-          standard(object, camera, groupOrder, renderList, clippingContext)
-          return
-        }
-        cameras = new Set
-        this.warmObjects.set(object, cameras)
-      }
-      // One draw per pass requests the object’s pipelines. Drawing it outside the frustum again would only redo the work, which in every shadow map of every loading frame adds up to seconds.
-      if (cameras.has(camera)) {
-        // Shadow maps drawn while loading are redrawn once the shadow cache takes over, so they only draw what still needs its pipelines.
-        if (!this.frameScene?.overrideMaterial) {
-          standard(object, camera, groupOrder, renderList, clippingContext)
-        }
-        return
-      }
-      cameras.add(camera)
+    // A long floor can start at the player’s feet even when its mesh origin lies across the room.
+    const nearest = new Vector3
+    const distance = (object: Drawable) => perceptualDistance(this.eye, worldBounds(object).clampPoint(this.eye, nearest))
+    const drawNew: Projection = (object, camera, groupOrder, renderList, clippingContext) => {
+      this.warmObjects.getOrInsertComputed(object, () => new Set).add(camera)
       object.frustumCulled = false
       try {
         standard(object, camera, groupOrder, renderList, clippingContext)
@@ -545,10 +527,51 @@ export class GalleryRenderer extends WebgpuRenderer {
         object.frustumCulled = true
       }
     }
+    const gate = (object: Object3D, camera: Camera) => {
+      // Left out until its turn, which keeps a shadow map rendering; its children still go their own way.
+      if (shadowCameras.has(camera)) {
+        this.gatedCameras.getOrInsertComputed(camera, () => new Set).add(object)
+      } else {
+        this.gatedObjects.add(object)
+      }
+    }
+    const build: Projection = (object, camera, groupOrder, renderList, clippingContext) => {
+      if (this.admit(object, camera, this.warming ? warmupBuildBudget : streamedBuildBudget)) {
+        drawNew(object, camera, groupOrder, renderList, clippingContext)
+      } else if (this.warming) {
+        // Warming budgets the extra draws outside the frustum, never what the camera already sees.
+        this.warmedFrame = -1
+        standard(object, camera, groupOrder, renderList, clippingContext)
+      } else {
+        gate(object, camera)
+      }
+    }
+    this.projectWarming = (object, camera, groupOrder, renderList, clippingContext) => {
+      if (hidden.has(object) && !unculledCameras.has(camera)) {
+        return
+      }
+      if (!object.visible || !object.layers.test(camera.layers) || !object.frustumCulled || !hasGeometry(object) || drawing.recordingBundle) {
+        standard(object, camera, groupOrder, renderList, clippingContext)
+        return
+      }
+      const cameras = this.warmObjects.get(object)
+      if (!cameras && !this.withinBudget(warmupBuildBudget)) {
+        this.warmedFrame = -1
+        standard(object, camera, groupOrder, renderList, clippingContext)
+      } else if (!cameras) {
+        drawing.rank(distance(object), true, build, object, camera, groupOrder, renderList, clippingContext)
+      } else if (!cameras.has(camera)) {
+        // Once admitted, draw it once in each pass to request that pass’s pipelines too.
+        drawNew(object, camera, groupOrder, renderList, clippingContext)
+      } else if (!this.frameScene?.overrideMaterial) {
+        // Shadow maps drawn while loading are redrawn once the shadow cache takes over.
+        standard(object, camera, groupOrder, renderList, clippingContext)
+      }
+    }
     this.projectStreaming = (object, camera, groupOrder, renderList, clippingContext) => {
       const culled = hidden.has(object) && !unculledCameras.has(camera) || hiddenFromView.has(object) && !shadowCameras.has(camera)
       const cameras = this.warmObjects.get(object)
-      if (!object.visible || !object.layers.test(camera.layers) || !object.frustumCulled || !('geometry' in object) || cameras?.has(camera)) {
+      if (!object.visible || !object.layers.test(camera.layers) || !object.frustumCulled || !hasGeometry(object) || drawing.recordingBundle || cameras?.has(camera)) {
         if (!culled) {
           standard(object, camera, groupOrder, renderList, clippingContext)
         }
@@ -557,33 +580,16 @@ export class GalleryRenderer extends WebgpuRenderer {
       const priority = this.streamPriority?.(object) ?? true
       this.streamFound = true
       this.streamPriorityFound ||= priority
-      if (!(priority || this.streamRest) || !this.admit(object, camera, streamedBuildBudget)) {
-        // Left out until its turn, which keeps a shadow map rendering; its children still go their own way.
-        if (shadowCameras.has(camera)) {
-          let gated = this.gatedCameras.get(camera)
-          if (!gated) {
-            gated = new Set
-            this.gatedCameras.set(camera, gated)
-          }
-          gated.add(object)
-        } else {
-          this.gatedObjects.add(object)
-        }
+      if (!(priority || this.streamRest) || !this.withinBudget(streamedBuildBudget)) {
+        gate(object, camera)
         for (const child of object.children) {
           drawing.project(child, camera, groupOrder, renderList, clippingContext)
         }
-        return
-      }
-      if (cameras) {
-        cameras.add(camera)
+      } else if (streamBudget === false) {
+        // Everything eligible fits, so ranking it would only slow down unbudgeted captures.
+        drawNew(object, camera, groupOrder, renderList, clippingContext)
       } else {
-        this.warmObjects.set(object, new Set([camera]))
-      }
-      object.frustumCulled = false
-      try {
-        standard(object, camera, groupOrder, renderList, clippingContext)
-      } finally {
-        object.frustumCulled = true
+        drawing.rank(distance(object), priority, build, object, camera, groupOrder, renderList, clippingContext)
       }
     }
     this.installProjection()
@@ -610,7 +616,7 @@ export class GalleryRenderer extends WebgpuRenderer {
     }
   }
 
-  private startFrame() {
+  private startFrame(camera: Camera) {
     const {frameId} = this.internals._nodes.nodeFrame
     if (this.frame === frameId) {
       return
@@ -630,6 +636,14 @@ export class GalleryRenderer extends WebgpuRenderer {
     this.plannedBuildCost = 0
     this.buildTime = 0
     updateChangedMatrices(this.frameScene!, false)
+    if (this.warming || this.streaming && streamBudget !== false) {
+      camera.getWorldPosition(this.eye)
+    }
+  }
+
+  /** The first build always fits. At zero cost this also tells later passes not to rank candidates at all if the frame’s budget is already spent. */
+  private withinBudget(budget: number, cost = 0) {
+    return this.warmupAdmissions === 0 || this.buildTime < budget && this.plannedBuildCost + cost <= budget
   }
 }
 

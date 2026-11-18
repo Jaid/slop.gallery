@@ -467,18 +467,14 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     ...landings.map(level => polySlab('display-landing-ceiling', level.polygon, landingRoofTop - ceilingThickness, landingRoofTop)),
     boxSlab('display-landing-header', add(p3, d3, -thickness / 2), d3, stairWidth, thickness, landingRoofTop, landingRoofTop - (flights[2].end[1] + headroom - ceilingThickness / 2)),
   ]
-  const rampLampAlong = rampLen * 0.6
-  const rampLampPt = add(c1.start2, d2, rampLampAlong)
-  const lamps: Array<Vec3> = [
-    [innerX + direction * (wallFace + 0.5), balconyY + headroom - ceilingThickness / 2, doorZ],
-    [rampLampPt[0], corner1Y + rampLampAlong * rampSlope + headroom - ceilingThickness / 2, rampLampPt[1]],
-    landingLamp,
-  ]
-  if (returnLanding) {
-    // The lower flight is now too far from the display’s lamp to borrow its light.
-    const lower = flights[2]
-    lamps.push([(lower.start[0] + lower.end[0]) / 2, (lower.start[1] + lower.end[1]) / 2 + headroom - ceilingThickness / 2, (lower.start[2] + lower.end[2]) / 2])
+  const lamps: Record<string, Vec3> = {
+    door: [innerX + direction * (wallFace + 0.5), balconyY + headroom - ceilingThickness / 2, doorZ],
   }
+  if (side === 'east') {
+    // On the flat ceiling at the turn onto the lower flight.
+    lamps.ramp = [16.212, corner2Y + headroom - ceilingThickness / 2, 2.833]
+  }
+  lamps.landing = landingLamp
   const polyAir = (poly: FloorPolygon, bottom: number, top: number, slack = 0.55): Array<DisplayAir> => floorChunks([poly], bottom, top - bottom, slack).map(({min, max}) => ({
     center: [(min[0] + max[0]) / 2, (min[2] + max[2]) / 2],
     size: [max[0] - min[0], max[2] - min[2]],

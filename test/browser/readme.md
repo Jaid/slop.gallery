@@ -139,3 +139,13 @@ BROWSER=/path/to/chromium bun run test:live:intro-pause
 This builds the gallery and presses the real Escape key on fresh and returning intro menus in Fast and Heavy graphics, then on a returning menu opened with `?room=oculus` instead of the intro orbit. It checks the synchronous camera-to-body handoff into the air above the floor, the pause heading taking the focus, no pointer-lock round trip, frozen camera/physics/audio, no frames at rest, resize redraws, Resume dropping the body straight down from where it hung and unchanged nonfreezing focus-loss menus. Modified, repeated, already-handled and text-input Escape events are ignored. Unlike capture tests, it opens the page with `test: 'false'` (`--test false`), as `?test=true` leaves the intro out, and `waitForGallery(page, {pose: false})` waits for readiness without requiring the camera-posing hook.
 
 To reuse a build, run `LIVE_TEST=true BROWSER=/path/to/chromium bun test test/intro-pause.live.test.ts`; `LIVE_TARGET` selects another build directory.
+
+## Mood screens
+
+```sh
+BROWSER=/path/to/chromium bun run test:live:mood-vignette
+```
+
+This builds the gallery and captures the Paint Orb’s vignette from the real output quad through the capture bridge, facing a papered wall of the Cell, where nothing else moves, without antialiasing, so only paint tells two captures apart. In Fast graphics, whose pipeline is only the scene and the moods’ screens, on a portrait view: paint in the margins and none in the middle, other paint a few seconds later, as the brushes go on, and no trace of it once N suppresses the moods. In Heavy graphics under `?frozen_time`, on a landscape view: the same vignette standing still. And cast by the `cast_mood` tool with fading on: less of it a third of the way in than once it has arrived, and nothing left after the tool let go of it.
+
+To reuse a build, run `LIVE_TEST=true BROWSER=/path/to/chromium bun test test/mood-vignette.live.test.ts`; `LIVE_TARGET` selects another build directory.

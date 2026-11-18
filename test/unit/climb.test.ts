@@ -11,7 +11,7 @@ import {vaultShellThickness} from '../../src/lib/gallery/architectureDimensions.
 import {bastionClearance, bastionDoorway} from '../../src/lib/gallery/bastion.ts'
 import {bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import {insideCisternPlan} from '../../src/lib/gallery/cistern/cistern.ts'
-import {climbApproach, climbArch, climbCrossfall, climbCulvert, climbDoorway, climbDrain, climbHairpin, climbLanterns, climbMouth, climbRun} from '../../src/lib/gallery/climb.ts'
+import {climbApproach, climbApproachLantern, climbArch, climbCrossfall, climbCulvert, climbDoorway, climbDrain, climbHairpin, climbMouth, climbRun} from '../../src/lib/gallery/climb.ts'
 import {easedRampGradient} from '../../src/lib/gallery/easedRamp.ts'
 import {insidePolygon, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import forge, {forgeVestibule} from '../../src/lib/gallery/forge.ts'
@@ -21,6 +21,7 @@ import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import tower, {towerBridge, towerFloorHeight} from '../../src/lib/gallery/oculusTower.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
+import CeilingProbe from '../../src/lib/gallery/pendants/CeilingProbe.ts'
 import roundRevealGeometry from '../../src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '../../src/lib/gallery/roundVestibule.ts'
 import {vesper} from '../../src/lib/gallery/vesper.ts'
@@ -407,16 +408,18 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
     expect(roomAt([endX + 0.05, 1.7, endZ])).toBe('forge')
     expect(roomAt([endX - 0.05, 1.7, endZ])).toBe('bastion')
   })
-  test('its lanterns hang between the hairpin’s ribs and its lamps under them', () => {
-    for (const hung of Object.values(climbLanterns)) {
-      expect(climbHairpin.ribs.some(rib => Math.abs(rib - hung) < 0.3)).toBe(false)
-    }
-    const ids = ['climb', 'elbow', 'mouth', 'run', 'strip', 'turn', 'west'].map(id => `bastion-lantern_${id}`)
+  test('the lantern meets the approach vault and the climb’s lamps hang above head height', () => {
+    const {shell, ribs} = routeVaults[2]
+    const probe = new CeilingProbe([shell, ribs])
+    const hit = probe.hit(climbApproachLantern.light)!
+    expect(hit.point[1]).toBeCloseTo(climbApproachLantern.anchor[1], 3)
+    const surfaceNormal = new Vector3(...hit.normal)
+    expect(surfaceNormal.dot(new Vector3(...climbApproachLantern.normal))).toBeCloseTo(1, 5)
+    const ids = ['elbow', 'run'].map(id => `bastion-lantern_${id}`)
     const lamps = slopGallery.room('bastion').lamps().filter(({id}) => ids.includes(id))
     expect(lamps.map(({id}) => id).toSorted()).toEqual(ids)
     for (const {position} of lamps) {
       expect(roomAt(position)).toBe('bastion')
-      // Under the crown, over a person’s head, even over the middle of the hairpin, where its paving falls lowest
       expect(position[1] - floorHeight(position)).toBeGreaterThan(1.7)
       expect(position[1] - floorHeight(position)).toBeLessThan(2.4)
     }

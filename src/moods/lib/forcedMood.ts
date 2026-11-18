@@ -1,4 +1,4 @@
-import type {MoodId} from '../index.ts'
+import type {Mood, MoodId} from '../index.ts'
 
 import optis from 'optis'
 import readPermalink from 'read-permalink'
@@ -23,5 +23,5 @@ export function readMood(input: URL | string = typeof location === 'undefined' ?
 
 const forcedMoodId = readMood()
 
-/** the mood `?mood` holds for the page’s whole session, read once at startup */
-export const forcedMood = forcedMoodId ? moods[forcedMoodId] : null
+/** the mood held all the time as if its prop were held: the one `?mood` names, read once at startup, until the `cast_mood` WebMCP tool holds another one or none */
+export const forcedMood: {current: Mood | null} = {current: forcedMoodId ? moods[forcedMoodId] : null}

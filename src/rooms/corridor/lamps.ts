@@ -1,20 +1,20 @@
+import type {PendantMount} from '#src/lib/gallery/pendants/CeilingProbe.ts'
+import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {Lamp} from '../base/Room.ts'
 
+import corridor, {corridorLandingLantern, corridorNorthLantern, corridorSouthLantern} from '#src/lib/gallery/corridor.ts'
+
+/** The source in room coordinates, `below` meters under the lantern body. */
+const underLantern = ({light: [x, y, z]}: PendantMount, below = 0.3): Vec3 => [x - corridor.center[0], y - below - corridor.floorY, z - corridor.center[1]]
 const lantern = {
   tint: '#ffb363',
 } as const
 
-// Five lanterns: in the doorway passage from the Lodge’s bay, at the north end and in the middle of the long hall, in the open elbow at the foot of the flight and in the landing’s elbow at its head; the middle one reaches farthest.
+// The middle lantern reaches farthest down the long hall.
 export default {
-  lantern_lodge: {
-    ...lantern,
-    position: [8.7, 2.5, -24.8979],
-    strength: 14,
-    range: 8,
-  },
   lantern_north: {
     ...lantern,
-    position: [0, 2.5, -17.6444],
+    position: underLantern(corridorNorthLantern),
     strength: 14,
     range: 8,
   },
@@ -27,13 +27,13 @@ export default {
   },
   lantern_south: {
     ...lantern,
-    position: [0.2929, 2.4, 22.3734],
+    position: underLantern(corridorSouthLantern, 0.4),
     strength: 22.4,
     range: 6,
   },
   lantern_landing: {
     ...lantern,
-    position: [7.4787, 7.5, 29.5592],
+    position: underLantern(corridorLandingLantern),
     strength: 14,
     range: 8,
   },

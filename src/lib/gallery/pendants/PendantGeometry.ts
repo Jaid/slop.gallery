@@ -17,8 +17,8 @@ export default class PendantGeometry {
   readonly frame: BufferGeometry
   readonly glow: BufferGeometry
 
-  constructor(body: PendantBody, mount: Pick<PendantMount, 'drop' | 'normal'>) {
-    const {drop, normal} = mount
+  constructor(body: PendantBody, mount: Pick<PendantMount, 'canopyRadius' | 'drop' | 'normal'>) {
+    const {canopyRadius: radius = canopyRadius, drop, normal} = mount
     if (!(drop > body.hook + canopyHeight) || !Number.isFinite(drop) || Math.abs(Math.hypot(...normal) - 1) > 1e-6 || normal[1] >= 0) {
       throw new RangeError('A pendant needs a downward-facing ceiling above its fixture.')
     }
@@ -31,7 +31,7 @@ export default class PendantGeometry {
     rod.translate(0, (rodTop + body.hook) / 2, 0)
     const tilt = new Quaternion
     tilt.setFromUnitVectors(new Vector3(0, 1, 0), down.clone().negate())
-    const canopy = new CylinderGeometry(canopyRadius, canopyRadius * 0.75, canopyHeight, 16)
+    const canopy = new CylinderGeometry(radius, radius * 0.75, canopyHeight, 16)
     canopy.applyQuaternion(tilt).translate(canopyCenter.x, canopyCenter.y, canopyCenter.z)
     this.frame = mergeParts([...body.frame(), rod, canopy])
     try {

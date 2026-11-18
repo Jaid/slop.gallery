@@ -171,28 +171,6 @@ export const cistern = {
 
 /** how many ribs run up the half dome, evenly round it between its ends */
 export const cisternDomeRibs = 7
-/**
- * The lantern hanging from the half dome over the floor inside the channel’s turn, between two of the dome’s ribs, which lights the cistern and shines out through the window into the vestibule: the middle of its body, and where its rod meets the dome, straight above it, with the dome’s face there, facing down.
- * In the world’s frame.
- */
-export const cisternLantern = (() => {
-  const azimuth = Math.PI * (3.5 / (cisternDomeRibs + 1))
-  const out = 3
-  const [x, z] = [cistern.center[0] + Math.cos(azimuth) * out, cistern.center[1] - Math.sin(azimuth) * out]
-  const inside = radius - wallFace
-  const height = Math.sqrt(1 - (out / inside) ** 2)
-  const anchorY = spring + rise * height
-  // the ellipsoid’s gradient there, out and up, turned to face down into the cistern
-  const [outward, upward] = [out / inside ** 2, rise * height / rise ** 2]
-  const norm = Math.hypot(outward, upward)
-  const light: Vec3 = [x, anchorY - 1.1, z]
-  return {
-    light,
-    anchor: [x, anchorY, z] as Vec3,
-    normal: [-outward / norm * Math.cos(azimuth), -upward / norm, outward / norm * Math.sin(azimuth)] as Vec3,
-    drop: 1.1,
-  }
-})()
 
 /** how far down the channel the inflow’s water pours into it, near the end of its first leg */
 const inflowAlong = leg - 0.05

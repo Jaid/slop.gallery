@@ -395,11 +395,8 @@ const behind = (along: number) => {
   const rib = bastionCurve.ribs.find(value => Math.abs(value - along) < ribClearance)
   return rib === undefined ? along : rib + (along < rib ? -ribClearance : ribClearance)
 }
-/** How far along the curve its lanterns hang: a little way into the run north from the mouth, between two ribs, and behind the apse’s gate, whose light throws the bars of the gate and both windows onto the platform. */
-export const bastionLanterns = {
-  east: bastionCurve.ribGap(2),
-  north: behind(crownMiddle),
-} as const
+/** How far along the curve the lantern hangs behind the apse’s gate, casting the shadows of its bars and both windows onto the platform. */
+export const bastionGateLantern = behind(crownMiddle)
 /** The Bastion’s passages from the Oculus to the Lodge, each continuing where the one before it ends. */
 export const bastionPassages = [bastionMouth, bastionCurve, bastionApproach] as const
 

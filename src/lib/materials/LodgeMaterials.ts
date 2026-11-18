@@ -1,10 +1,9 @@
 import type {PlankOptions} from './PlankMaterial.ts'
 
-import {Material, MeshStandardNodeMaterial, NodeMaterial} from 'three/webgpu'
+import {Material, NodeMaterial} from 'three/webgpu'
 
 import lodge, {lodgeFloorPlanks} from '../gallery/lodge.ts'
 import lodgeInterior from '../gallery/lodgeInterior/layout.ts'
-import CandleFlameMaterial from './CandleFlameMaterial.ts'
 import FieldstoneMaterial from './FieldstoneMaterial.ts'
 import LeatherMaterial from './LeatherMaterial.ts'
 import {lightIndoors} from './lights/index.ts'
@@ -35,7 +34,6 @@ const ceilingPlanks: PlankOptions = {
 /** Every surface of the Lodge interior, created once and disposed together. */
 export default class LodgeMaterials {
   readonly ceiling = new PlankMaterial(ceilingPlanks)
-  readonly flame = new CandleFlameMaterial
   readonly floor = new PlankMaterial(lodgeFloorPlanks)
   readonly iron = new WroughtIronMaterial
   readonly leather = new LeatherMaterial
@@ -47,15 +45,8 @@ export default class LodgeMaterials {
   readonly stone = new FieldstoneMaterial({soot: [lodge.center[0], lodge.floorY + lodgeInterior.fireplace.opening, lodge.center[1] + lodgeInterior.fireplace.front]})
   readonly timber = new LodgeTimberMaterial
 
-  readonly wax = new MeshStandardNodeMaterial({
-    color: '#eadcbc',
-    roughness: 0.55,
-    emissive: '#ffb066',
-    emissiveIntensity: 0.15,
-  })
-
   constructor() {
-    // The Lodge is underground: only its own fire and chandelier light it, not the gallery’s sun.
+    // The Lodge is underground, out of reach of the gallery’s sun.
     for (const material of this.all()) {
       if (material instanceof NodeMaterial) {
         lightIndoors(material)

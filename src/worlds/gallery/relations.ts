@@ -22,7 +22,7 @@ export type Opening = {
   rooms: readonly [RoomId, RoomId]
 }
 
-/** the openings between rooms that RoomCulling looks through, as global wall ids with the names of their holes; passages list the holes at both of their ends. The glazed Lobby floor into the Oculus is an opening too, but takes its box from the Lobby’s floor, and so is the Vesper’s lantern, which looks out onto the Lobby’s vault. */
+/** the openings between rooms that RoomCulling looks through, as global wall ids with the names of their holes; passages list the holes at both of their ends. The glazed Lobby floor into the Oculus is an opening too, but takes its box from the Lobby’s floor, and so are the Vesper’s lantern and the windows of the Salon’s, which look out onto the Lobby’s vault. */
 export const openings: ReadonlyArray<Opening> = [
   {
     rooms: ['lobby', 'vesper'],
@@ -144,7 +144,6 @@ const relations = {
         'led_south',
       ],
       exhibition: [
-        'tunnel_north',
         'tunnel_green',
         'west_stairway_door',
         'east_stairway_door',
@@ -166,10 +165,7 @@ const relations = {
         'led_middle',
         'led_south',
       ],
-      sienna: [
-        'chandelier',
-        'vestibule',
-      ],
+      sienna: 'chandelier',
     },
   },
   banquet: {
@@ -207,7 +203,7 @@ const relations = {
         'chandelier_middle',
         'chandelier_south',
       ],
-      // Through the vestibule’s arch: the lantern in the landing’s elbow, and down the flight the one at its foot.
+      // Through the vestibule’s arch: the landing lantern just inside it, and down the flight the one at its foot.
       corridor: [
         'lantern_landing',
         'lantern_south',
@@ -229,10 +225,6 @@ const relations = {
     // Through its window, across the Lobby and through the Salon’s window, as the Salon sees across it the other way
     rooms: ['bastion', 'lobby', 'salon', 'vesper', 'banquet', 'antechamber', 'oculus', 'sienna', 'exhibition'],
     floorMirror: 'base',
-    // The last lantern along the approach hangs right before the vestibule’s arch, and the cistern’s shines out through the window.
-    visibleLamps: {
-      bastion: ['lantern_strip', 'lantern_cistern'],
-    },
   },
   moonfall: {
     rooms: ['antechamber', 'exhibition', 'oculus'],
@@ -242,21 +234,14 @@ const relations = {
         'tunnel_green',
         'tunnel_blue',
         'tunnel_red',
-        'tunnel_south',
       ],
     },
   },
   corridor: {
     rooms: ['sienna', 'lodge', 'vesper', 'bastion'],
     visibleLamps: {
-      sienna: [
-        'chandelier',
-        'vestibule',
-      ],
-      lodge: [
-        'fire',
-        'chandelier',
-      ],
+      sienna: 'chandelier',
+      lodge: 'fire',
     },
   },
   oculus: {
@@ -267,7 +252,6 @@ const relations = {
         'ember',
       ],
       exhibition: [
-        'tunnel_north',
         'tunnel_green',
         'tunnel_blue',
         'tunnel_red',
@@ -277,9 +261,7 @@ const relations = {
         'east_stairway_landing',
       ],
       bastion: [
-        'lantern_east',
         'lantern_north',
-        'lantern_mouth',
         'lantern_elbow',
       ],
     },
@@ -297,10 +279,6 @@ const relations = {
         'led_south',
       ],
       moonfall: [
-        'wall_west_1',
-        'wall_west_2',
-        'wall_west_3',
-        'wall_west_4',
         'wall_east_north',
         'wall_east_south',
         'wall_north_west',
@@ -316,22 +294,17 @@ const relations = {
     rooms: ['bastion', 'corridor', 'oculus'],
     visibleLamps: {
       corridor: [
-        'lantern_lodge',
         'lantern_north',
         'lantern_middle',
         'lantern_south',
       ],
-      bastion: ['lantern_north', 'lantern_spur_0'],
+      bastion: 'lantern_north',
     },
   },
   bastion: {
     rooms: ['oculus', 'lodge', 'lobby', 'exhibition', 'corridor', 'salon', 'forge', 'vesper'],
     visibleLamps: {
-      corridor: 'lantern_lodge',
-      lodge: [
-        'fire',
-        'chandelier',
-      ],
+      lodge: 'fire',
     },
   },
 } satisfies Record<RoomId, RoomRelations>

@@ -6,15 +6,13 @@ import {useMemo} from 'react'
 
 import lodgeInterior, {lodgeFurnitureColliders} from '#src/lib/gallery/lodgeInterior/layout.ts'
 import UpholsteredSeatGeometry from '#src/lib/gallery/lodgeInterior/UpholsteredSeatGeometry.ts'
-import WagonWheelGeometry from '#src/lib/gallery/lodgeInterior/WagonWheelGeometry.ts'
 
-const {armchairs, chandelier, rug, sofa} = lodgeInterior
+const {armchairs, rug, sofa} = lodgeInterior
 
-/** Seating, rug and wagon-wheel chandelier of the Lodge, in the room’s frame. */
+/** Seating and rug of the Lodge, in the room’s frame. */
 export default function LodgeFurnishings({materials}: {materials: LodgeMaterials}) {
   const sofaGeometry = useDisposable(useMemo(() => new UpholsteredSeatGeometry(sofa.seats, lodgeInterior.seatWidth), []))
   const armchairGeometry = useDisposable(useMemo(() => new UpholsteredSeatGeometry(1, lodgeInterior.seatWidth + 0.08), []))
-  const wheel = useDisposable(useMemo(() => new WagonWheelGeometry(chandelier.drop), []))
   const seats = [
     {
       geometry: sofaGeometry,
@@ -36,11 +34,5 @@ export default function LodgeFurnishings({materials}: {materials: LodgeMaterials
       <mesh castShadow geometry={geometry.leather} material={materials.leather} receiveShadow />
       <mesh castShadow geometry={geometry.timber} material={materials.timber} receiveShadow />
     </group>)}
-    <group name='lodge-chandelier' position={chandelier.position} rotation={[0, chandelier.yaw, 0]}>
-      {/* The light burns among the candles, so the wheel would throw its spokes across the whole room; real candle flames are too broad for that. */}
-      <mesh geometry={wheel.iron} material={materials.iron} />
-      <mesh geometry={wheel.wax} material={materials.wax} />
-      <mesh geometry={wheel.flames} material={materials.flame} />
-    </group>
   </group>
 }

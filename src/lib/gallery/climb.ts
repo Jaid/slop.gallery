@@ -1,4 +1,6 @@
 import type {RouteCrossfall, RouteOutline} from './passages/RoutedPassage.ts'
+import type {PendantMount} from './pendants/CeilingProbe.ts'
+import type {Vec3} from './types.ts'
 
 import {wallFace} from './architectureDimensions.ts'
 import {bastionClearance, bastionDoorway} from './bastion.ts'
@@ -8,6 +10,7 @@ import lowerGallery from './lowerGallery.ts'
 import Passage from './passages/Passage.ts'
 import PassageRoute from './passages/PassageRoute.ts'
 import RoutedPassage from './passages/RoutedPassage.ts'
+import {passageLightDrop} from './pendants/mounts.ts'
 
 const {oculus} = lowerGallery
 /** the western climb is as wide as the Bastion’s route from the east bridge */
@@ -175,19 +178,19 @@ export const climbPassages = [climbMouth, climbHairpin, climbRun, climbApproach]
 const apex = legLength + Math.PI * turnRadius / 2
 /** the apex of the hairpin’s turn, halfway up its climb, where the map cuts the Bastion in two: from there on to the Forge, it shows the climb on the upper floor */
 export const climbApex = route.at(apex)
-/**
- * Which of the mouth’s evenly spaced lanterns it keeps, in mount order from its start, see CoveredPassage: the second and the fourth of the four along its run west, which hang under the Forge and before the elbow, and none in its elbow’s span.
- */
-export const climbPassageLanterns = {
-  mouth: [false, true, false, true, false],
-} as const satisfies Record<string, ReadonlyArray<boolean>>
-/** How far along the hairpin its lanterns hang, each between two ribs: halfway up the west leg, round the apex of the turn and halfway up the east leg. */
-export const climbLanterns = {
-  west: climbHairpin.ribGap(legLength / 2),
-  turn: climbHairpin.ribGap(apex),
-  east: climbHairpin.ribGap(route.length - legLength / 2),
-} as const
-/** How far along the run its lantern hangs, between two ribs halfway along it, over the Lodge’s roof. */
-export const climbRunLantern = climbRun.ribGap(climbRun.route.length / 2)
-/** How far along the approach its lantern hangs, between its last two ribs, on its straight stretch right before the vestibule’s arch. */
-export const climbApproachLantern = climbApproach.ribGap(climbApproach.route.length - 0.5)
+/** The flat ceiling of the elbow at the foot of the hairpin. */
+const elbowAnchor: Vec3 = [-29.116, climbMouth.floorY + climbMouth.height, -23.899]
+export const climbElbowLantern: PendantMount = {
+  anchor: elbowAnchor,
+  normal: [0, -1, 0],
+  drop: passageLightDrop,
+  light: [elbowAnchor[0], elbowAnchor[1] - passageLightDrop, elbowAnchor[2]],
+}
+/** The run’s lantern hangs from the sloping vault where the climb turns toward the Forge. */
+const approachAnchor: Vec3 = [-22.563, 3.056, -35.911]
+export const climbApproachLantern: PendantMount = {
+  anchor: approachAnchor,
+  normal: [0.165903, -0.986116, 0.0072],
+  drop: passageLightDrop,
+  light: [approachAnchor[0], approachAnchor[1] - passageLightDrop, approachAnchor[2]],
+}

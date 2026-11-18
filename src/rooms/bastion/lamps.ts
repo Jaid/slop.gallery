@@ -1,55 +1,22 @@
 import type {Lamp} from '../base/Room.ts'
 
-import {bastionCurve, bastionLanterns, bastionOrigin} from '#src/lib/gallery/bastion.ts'
-import {bastionLink, bastionLinkLanterns, lodgeSpur, lodgeSpurLanterns} from '#src/lib/gallery/bastionNetwork.ts'
-import {cisternLantern} from '#src/lib/gallery/cistern/cistern.ts'
+import {bastionCurve, bastionGateLantern, bastionOrigin} from '#src/lib/gallery/bastion.ts'
 import {routeLight} from '#src/lib/gallery/pendants/mounts.ts'
 
 import climbLamps from './climbLamps.ts'
 
 const [originX, originY, originZ] = bastionOrigin
-/** `below` meters under the middle of the lantern hanging `along` meters down the curve, with how it shines */
-const lantern = (along: number, shine: Pick<Lamp, 'decay' | 'range' | 'strength'> = {}, below = 0.3): Lamp => {
-  const [x, y, z] = routeLight(bastionCurve, along)
-  return {
-    position: [x - originX, y - below - originY, z - originZ],
-    strength: 30,
-    tint: '#ffcd8a',
-    range: 7,
-    decay: 1.75,
-    shadow: true,
-    ...shine,
-  }
-}
+const [gateX, gateY, gateZ] = routeLight(bastionCurve, bastionGateLantern)
 
 export default {
   ...climbLamps,
-  ...Object.fromEntries(bastionLinkLanterns.map((along, index) => {
-    const [x, y, z] = routeLight(bastionLink, along)
-    return [`lantern_link_${index}`, {
-      ...climbLamps.lantern_mouth,
-      position: [x - originX, y - 0.3 - originY, z - originZ] as const,
-    }]
-  })),
-  ...Object.fromEntries(lodgeSpurLanterns.map((along, index) => {
-    const [x, y, z] = routeLight(lodgeSpur, along)
-    return [`lantern_spur_${index}`, {
-      ...climbLamps.lantern_mouth,
-      position: [x - originX, y - 0.3 - originY, z - originZ] as const,
-    }]
-  })),
-  // Under the cistern’s half dome, lighting the channel and shining out through the window into the Forge’s vestibule.
-  lantern_cistern: {
-    ...climbLamps.lantern_mouth,
-    position: [cisternLantern.light[0] - originX, cisternLantern.light[1] - 0.3 - originY, cisternLantern.light[2] - originZ],
-    range: 9,
-  },
-  // The curve’s lanterns, hung low, stronger than the corridor’s and fading more gently: a little way north of the mouth, which the Oculus sees, and behind the apse’s gate, which the Lodge also looks down the approach at.
-  lantern_east: lantern(bastionLanterns.east),
-  // It throws the bars of the gate onto the platform right in front of it and those of the windows beside it, slanting through them, far out across it: it reaches that far, fading more gently, and shines a little lower than the other one.
-  lantern_north: lantern(bastionLanterns.north, {
+  // Behind the apse’s gate, low enough to cast the bars’ shadows across the Oculus platform through the gate and the windows beside it.
+  lantern_north: {
+    position: [gateX - originX, gateY - 0.6 - originY, gateZ - originZ],
     strength: 35,
+    tint: '#ffcd8a',
     range: 20,
     decay: 1.25,
-  }, 0.6),
+    shadow: true,
+  },
 } satisfies Record<string, Lamp>
