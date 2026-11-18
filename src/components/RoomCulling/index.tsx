@@ -1,6 +1,6 @@
 import type {ScreenRect} from '#src/lib/gallery/roomVisibility.ts'
 import type {GalleryRoomId as RoomId} from '#src/worlds/gallery/index.ts'
-import type {BufferGeometry, Camera, DirectionalLight, Light, LightShadow, Object3D} from 'three/webgpu'
+import type {Camera, DirectionalLight, Light, LightShadow, Object3D} from 'three/webgpu'
 
 import {useThree} from '@react-three/fiber'
 import {useLayoutEffect} from 'react'
@@ -12,47 +12,14 @@ import {ownerRoom, roomBoxes, roomContaining, roomsAt, screenRect, updatePickupR
 import {getFloorReflectionHeight} from '#src/lib/materials/FloorMaterial.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
 import {lightActive} from '#src/lib/rendering/lightLevels.ts'
+import {hasGeometry, worldBounds} from '#src/lib/rendering/worldBounds.ts'
 import relations from '#src/worlds/gallery/relations.ts'
-
-type Drawable = Object3D & {
-  boundingBox?: Box3 | null
-  computeBoundingBox?: () => void
-  geometry?: BufferGeometry
-}
-type Placement = {
-  bounds: Box3
-  matrix: Matrix4
-  world: Box3
-}
 
 const viewProjection = new Matrix4
 const frustum = new Frustum
 const position = new Vector3
 const mirrored = new Box3
 const lightHolders = new WeakMap<Object3D, boolean>
-const placements = new WeakMap<Object3D, Placement>
-/** the drawable’s world bounds, kept until it moves or its bounds change */
-const boundsOf = (drawable: Drawable, geometry: BufferGeometry) => {
-  // Instanced and batched meshes bound all of their instances themselves.
-  if (drawable.computeBoundingBox && drawable.boundingBox === null) {
-    drawable.computeBoundingBox()
-  }
-  if (!drawable.boundingBox && !geometry.boundingBox) {
-    geometry.computeBoundingBox()
-  }
-  const bounds = drawable.boundingBox ?? geometry.boundingBox!
-  const cached = placements.get(drawable)
-  if (cached?.matrix.equals(drawable.matrixWorld) && cached.bounds.equals(bounds)) {
-    return cached.world
-  }
-  const placement = {
-    bounds: bounds.clone(),
-    matrix: drawable.matrixWorld.clone(),
-    world: bounds.clone().applyMatrix4(drawable.matrixWorld),
-  }
-  placements.set(drawable, placement)
-  return placement.world
-}
 const ownerOf = (object: Object3D): RoomId | undefined => ownerRoom(object, object.parent ? ownerOf(object.parent) : undefined)
 const holdsLight = (object: Object3D) => {
   let result = lightHolders.get(object)
@@ -127,7 +94,6 @@ export default function RoomCulling() {
       const visit = (object: Object3D, parentRoom: RoomId | undefined) => {
         updatePickupRoom(object)
         const room = ownerRoom(object, parentRoom)
-        const drawable = object as Drawable
         const light = object as Light & {shadow?: LightShadow}
         if (light.isLight && light.shadow) {
           shadowCameras.add(light.shadow.camera)
@@ -137,13 +103,13 @@ export default function RoomCulling() {
           }
           refresher.visit(light as Light & {shadow: LightShadow}, shadowCamera => galleryRenderer.shadowIncomplete(shadowCamera))
         }
-        if (regions && room && !from.includes(room) && drawable.geometry && drawable.frustumCulled && !holdsLight(object)) {
+        if (regions && room && !from.includes(room) && hasGeometry(object) && object.frustumCulled && !holdsLight(object)) {
           // Behind the loading screen, only the camera’s rooms get built; the rooms seen through their openings stream in first afterward.
           const rects = ready ? regions.get(room) : undefined
           if (!rects) {
             hidden.add(object)
           } else {
-            const world = boundsOf(drawable, drawable.geometry)
+            const world = worldBounds(object)
             if (!inSight(rects, world) && !inSight(rects, mirror(world, floorY))) {
               hiddenFromView.add(object)
             }

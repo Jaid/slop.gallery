@@ -17,10 +17,15 @@ beforeEach(() => {
   Renderer.prototype.render = function (this: Renderer, scene: Object3D, camera: Camera) {
     camera.updateMatrixWorld()
     this.drawingPipeline.begin(camera, {})
-    this.drawingPipeline.project(scene, camera, 0, {
+    const list = {
+      begin() {},
+      finish() {},
       push: (object: Object3D) => projected.push(object),
       pushLight() {},
-    }, null as never)
+    }
+    this.drawingPipeline.beginRenderList(list)
+    this.drawingPipeline.project(scene, camera, 0, list, null as never)
+    this.drawingPipeline.finishRenderList(list)
   }
 })
 afterEach(() => {
@@ -117,4 +122,68 @@ test('warming draws every object outside the frustum once per camera, a budgetâ€
   // Its budget admits about one new object per frame here, so warming took several.
   expect(frames).toBeGreaterThan(3)
   expect(renderer.warmedAll).toBe(true)
+})
+test.each(['warming', 'streaming'] as const)('%s admits new drawables by walking distance to their world bounds, independently of their parents', mode => {
+  const renderer = createRenderer()
+  const scene = new Scene
+  const camera = new PerspectiveCamera
+  camera.position.x = 100
+  // All three lie behind the camera, so only newly admitted draws reach the list. The most distant mesh has its pivot closest to the camera, but its geometry starts 20 m to the side.
+  const far = new Mesh(box.clone().translate(20, 0, 0), material)
+  far.position.set(100, 0, 4)
+  const upstairs = new Mesh(box, material)
+  upstairs.position.set(100, 3, 4)
+  // The childâ€™s near edge is just 4.5 m away horizontally. Its middle alone would rank it behind both other meshes.
+  const long = new BoxGeometry(40, 1, 1)
+  const level = new Mesh(long.translate(19.5, 0, 0), material)
+  level.position.x = 5
+  far.add(level)
+  scene.add(upstairs, far)
+  renderer.setFrameScene(scene)
+  if (mode === 'warming') {
+    renderer.setWarming(true)
+  } else {
+    renderer.setStreaming(true)
+  }
+  for (const expected of [level, upstairs, far]) {
+    nextFrame(renderer)
+    projected = []
+    renderer.render(scene, camera)
+    expect(projected).toEqual([expected])
+  }
+  expect(scene.children).toEqual([upstairs, far])
+  expect(far.children).toEqual([level])
+})
+test('shadows stream from the main view, with related rooms before unrelated ones and a new ranking after a move', () => {
+  const renderer = createRenderer()
+  const camera = new PerspectiveCamera
+  const shadow = new PerspectiveCamera
+  shadow.position.x = 50
+  const scene = new Scene
+  const meshes = [0, 15, 20, 50].map(x => {
+    const mesh = new Mesh(box, material)
+    mesh.position.set(x, 0, 5)
+    scene.add(mesh)
+    return mesh
+  })
+  renderer.setFrameScene(scene)
+  renderer.setStreamPriority(object => object !== meshes[0])
+  renderer.setStreaming(true)
+  renderer.shadowCameras.add(shadow)
+  const drawShadow = () => {
+    nextFrame(renderer)
+    projected = []
+    renderer.prepass(scene, camera, () => renderer.render(scene, shadow))
+    return projected
+  }
+  expect(drawShadow()).toEqual([meshes[1]])
+  camera.position.x = 45
+  expect(drawShadow()).toEqual([meshes[3]])
+  expect(drawShadow()).toEqual([meshes[2]])
+  expect(renderer.shadowIncomplete(shadow)).toBe(true)
+  // The unrelated room follows once the last priority work clears the gate.
+  const rest = [...drawShadow(), ...drawShadow()]
+  expect(rest).toEqual([meshes[0]])
+  drawShadow()
+  expect(renderer.shadowIncomplete(shadow)).toBe(false)
 })
