@@ -10,11 +10,12 @@ import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Sce
 
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
+import castMood from '../../src/lib/webmcp/castMood.ts'
 import Mood from '../../src/moods/base/Mood.ts'
 import MoodScreen from '../../src/moods/base/MoodScreen.ts'
 import RoomMood, {roomMoodFade} from '../../src/moods/base/RoomMood.ts'
 import {moods, moodScreens} from '../../src/moods/index.ts'
-import {readMood} from '../../src/moods/lib/forcedMood.ts'
+import {forcedMood, readMood} from '../../src/moods/lib/forcedMood.ts'
 import MoodLens from '../../src/moods/lib/MoodLens.ts'
 import MoodMixer, {moodFade, noMood} from '../../src/moods/lib/MoodMixer.ts'
 import {moodSuppression, toggleMoodSuppression} from '../../src/moods/lib/moodSuppression.ts'
@@ -653,6 +654,27 @@ describe('moods', () => {
     expect(moodSuppression.active).toBe(true)
     expect(toggleMoodSuppression()).toBe(false)
     expect(moodSuppression.active).toBe(false)
+  })
+  test('the cast_mood tool’s caster holds any mood by its id like ?mood does, tells its pace, lets go of it with null and names the moods for an id none has', () => {
+    const held = forcedMood.current
+    try {
+      expect(castMood({mood: 'paint'})).toEqual({
+        mood: 'paint',
+        title: moods.paint.title,
+        fade: moods.paint.fade,
+      })
+      expect(forcedMood.current).toBe(moods.paint)
+      // A mood without a pace of its own comes and goes at the mixer’s.
+      expect(castMood({mood: 'horror'}).fade).toEqual(moods.horror.fade ?? moodFade)
+      expect(forcedMood.current).toBe(moods.horror)
+      expect(() => castMood({mood: 'sunshine'})).toThrow(new RegExp(Object.keys(moods).join(', ')))
+      expect(() => castMood({mood: 'toString'})).toThrow(/no mood/)
+      expect(forcedMood.current).toBe(moods.horror)
+      expect(castMood({mood: null})).toEqual({mood: null})
+      expect(forcedMood.current).toBeNull()
+    } finally {
+      forcedMood.current = held
+    }
   })
   test('?mood names a mood by its id, a room’s too, and ignores anything else', () => {
     expect(readMood('http://localhost/?mood=horror')).toBe('horror')

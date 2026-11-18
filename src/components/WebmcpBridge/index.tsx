@@ -13,6 +13,7 @@ import {captureWarmup, getRenderScale} from '#src/lib/rendering/captureWarmup.ts
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
 import analyzeWorld from '#src/lib/webmcp/analyzeWorld.ts'
+import castMood from '#src/lib/webmcp/castMood.ts'
 import dumpPortraits from '#src/lib/webmcp/dumpPortraits.ts'
 import hangWork from '#src/lib/webmcp/hangWork.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
@@ -30,6 +31,7 @@ export default function WebmcpBridge() {
     const inspector = new AimInspector(scene, camera)
     const bridge = {
       analyzeWorld: () => analyzeWorld(scene, world.worldRooms()),
+      castMood,
       downloadFrame: async ({name, format}: {
         format?: FrameFormat
         name?: string

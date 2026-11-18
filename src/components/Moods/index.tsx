@@ -25,7 +25,7 @@ const roomMoods = Object.fromEntries(Object.entries(moods).map(([id, mood]) => [
 const noMoods: ReadonlyArray<Mood> = []
 
 /**
- * Lets moods come over the world and leave it again: that of the room the player is in, and over it the one cast over the world, the fusion’s while any fusion’s portal is open, otherwise that of the prop the player holds or views with V until it is let go of or V released, with `?mood` that mood all the time.
+ * Lets moods come over the world and leave it again: that of the room the player is in, and over it the one cast over the world, the fusion’s while any fusion’s portal is open, otherwise that of the prop the player holds or views with V until it is let go of or V released, with `?mood` or after the `cast_mood` WebMCP tool that mood all the time.
  * Magic items held in the Forge cast their associated orb’s mood, reevaluated each frame so entering or leaving the Forge fades it in or out too.
  * Under `?fade=false`, they cut in and out instead of fading, for captures right after the camera jumped from room to room.
  * None show while suppressed with N under `?development`, which cuts the moods showing off at once and, when lifted, brings the moods due back in full at once.
@@ -53,7 +53,7 @@ export default function Moods() {
     const fusing = useFusions.getState().fusions.length > 0
     const roomMood = world.roomById(room)?.mood
     const target: MoodTarget = {
-      cast: forcedMood ?? (fusing ? moods.fusion : null) ?? propMood(held, propObjects, room) ?? propMood(inspecting, propObjects) ?? null,
+      cast: forcedMood.current ?? (fusing ? moods.fusion : null) ?? propMood(held, propObjects, room) ?? propMood(inspecting, propObjects) ?? null,
       room: roomMood ? roomMoods[roomMood] : noMoods,
     }
     if (suppressed.current) {

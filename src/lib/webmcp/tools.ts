@@ -2,6 +2,7 @@ import type {FrameDownload, FrameFormat} from '#src/lib/downloadFrame.ts'
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
 import type {WorldAnalysis} from './analyzeWorld.ts'
+import type {MoodCast, MoodCastInput} from './castMood.ts'
 import type {PortraitDump} from './dumpPortraits.ts'
 import type {WorkHanging, WorkHangingInput} from './hangWork.ts'
 import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
@@ -24,6 +25,7 @@ export type KnotDump = {
 
 export type WebmcpBridge = {
   analyzeWorld: () => WorldAnalysis
+  castMood: (input: MoodCastInput) => MoodCast
   downloadFrame: (options: {
     format?: FrameFormat
     name?: string
@@ -362,6 +364,36 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           floor: floor as number | undefined,
           delay,
         })
+      },
+    },
+    {
+      name: 'cast_mood',
+      title: 'Cast mood',
+      description: 'Hold a mood over the world from now on as if its prop were held, like ?mood does from the start: it fades in at its own pace over whatever the room casts, once the mood cast before it has gone, and stays until this tool casts another one or, with null, none, which lets it fade out. Film recipes run it through their tools keyframes to show a mood coming and going. Fails for an unknown mood, whose error lists the moods. Returns the mood held now, its title and the seconds it takes to come and to go. Does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          mood: {
+            type: ['string', 'null'],
+            description: 'the id of the mood, like paint, horror or fusion, or null to hold none anymore',
+          },
+        },
+        required: ['mood'],
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).join(',') !== 'mood') {
+          throw new TypeError('This tool takes an object with mood.')
+        }
+        const {mood} = input as Record<string, unknown>
+        if (mood !== null && (typeof mood !== 'string' || !mood)) {
+          throw new TypeError('mood must be the id of a mood or null.')
+        }
+        return getBridge().castMood({mood})
       },
     },
     {
