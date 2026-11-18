@@ -24,8 +24,7 @@ const [elbow] = keptLights(climbMouth, climbPassageLanterns.mouth)
 export default {
   // Before the elbow at the end of the run west under the Forge.
   lantern_elbow: lantern(elbow),
-  // Halfway up the west leg, round the apex of the turn and halfway up the east leg.
-  lantern_west: lantern(routeLight(climbHairpin, climbLanterns.west)),
+  // At the apex of the turn and halfway up the east leg.
   lantern_turn: lantern(routeLight(climbHairpin, climbLanterns.turn)),
   lantern_climb: lantern(routeLight(climbHairpin, climbLanterns.east)),
   // Halfway along the run north, over the Lodge’s roof, and along the approach east, right before the arch of the Forge’s vestibule.
