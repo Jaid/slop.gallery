@@ -4,11 +4,11 @@ import {wallFace, wallTop} from './architectureDimensions.ts'
 export type CeilingSection = readonly [inward: number, y: number]
 
 /**
- * The Vesper’s coved ceiling and the glazed lantern that crowns it, in meters relative to the room’s middle at floor level.
+ * The Vesper’s coved ceiling and the twin glazed lanterns that crown it, in meters relative to the room’s middle at floor level.
  *
- * A flat ledge runs around the room on top of the walls. From its edge, a cove curves up and in like a quarter ellipse to a flat band that frames the lantern’s opening. The coves of the four sides meet on the diagonals, as in a cloister vault.
- * Gilt fillets line the edge of the ledge, the top of the cove and the opening, and gilt beads follow the creases where the coves meet.
- * A low curb rises around the opening and carries the lantern: upright sides and a hipped roof, all of cast glass held by bronze bars, which lets the sun in.
+ * A flat ledge runs around the room on top of the walls. From its edge, a cove curves up and in like a quarter ellipse to a flat band that frames the two openings. The coves of the four sides meet on the diagonals, as in a cloister vault.
+ * Gilt fillets line the edge of the ledge, the top of the cove and the openings, and gilt beads follow the creases where the coves meet.
+ * A bridge spans the middle. A low curb rises around each opening and carries a lantern: upright sides and a hipped roof, all of cast glass held by bronze bars, which lets the sun in.
  */
 const vesperCeiling = {
   springY: wallTop,
@@ -30,6 +30,8 @@ const vesperCeiling = {
     /** radius of the beads in the creases of the cove */
     bead: 0.028,
   },
+  /** width along z of the bridge separating the glasshouses: two bays of the glazing grid */
+  bridgeWidth: 2,
   lantern: {
     /** height of the upright glazed sides */
     side: 1,
@@ -61,13 +63,18 @@ export const vesperCoveEnd = vesperCeiling.ledge + vesperCeiling.cove.run
 /** How far in from the walls’ faces the opening starts. */
 export const vesperOpeningInset = vesperCeiling.inset - wallFace
 
-/** Half the extent of the lantern’s opening along x and z in a room of the size. Its ridge runs along z, so the room needs to be at least as deep as it is wide. */
-export function vesperLanternHalf([width, depth]: readonly [number, number]) {
-  const half = [width / 2 - vesperCeiling.inset, depth / 2 - vesperCeiling.inset] as const
-  if (!(half[0] > 0) || half[1] < half[0]) {
-    throw new RangeError('The Vesper’s lantern needs a room wider than twice its inset and at least as deep as it is wide.')
+/** Half extents and z offsets of the two equal hipped lanterns, relative to the center of the room. */
+export function vesperLanternLayout([width, depth]: readonly [number, number]) {
+  const {bridgeWidth, inset} = vesperCeiling
+  const half = [width / 2 - inset, (depth - 2 * inset - bridgeWidth) / 4] as const
+  if (!(half[0] > 0 && half[1] > half[0])) {
+    throw new RangeError('Each of the Vesper’s lanterns needs a clear span and a longitudinal ridge.')
   }
-  return half
+  const offset = half[1] + bridgeWidth / 2
+  return {
+    half,
+    centers: [-offset, offset] as const,
+  }
 }
 
 /** The cove’s section at `angle`, from 0 where it rises upright from the ledge to π/2 where it meets the band level, with its normal toward the room. */

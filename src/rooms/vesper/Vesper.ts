@@ -17,12 +17,12 @@ import walls from './walls.ts'
 
 const {size, height} = vesper
 
-/** Lit through the lantern crowning its coved ceiling, without lamps of its own. */
+/** Lit through twin lanterns crowning its coved ceiling, without lamps of its own. */
 export default class Vesper extends Room {
-  // Up to the ridge of the lantern.
+  // Up to the ridges of the lanterns.
   override readonly air = floorBox(size, 0, vesperLanternRidgeY)
   override readonly description = 'Old masters. New misunderstandings.'
-  // Everything over its floor plan from the slab up, the cove and the lantern included; it comes before the Forge, so the wall they share is the Vesper’s.
+  // Everything over its floor plan from the slab up, the cove and both lanterns included; it comes before the Forge, so the wall they share is the Vesper’s.
   override readonly fence = new Geofence([{
     ...footprint([this.air]),
     floor: groundFenceY,

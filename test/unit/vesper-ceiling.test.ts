@@ -2,6 +2,7 @@ import type {Vec3} from '../../src/lib/gallery/types.ts'
 
 import {afterAll, describe, expect, test} from 'bun:test'
 
+import RAPIER from '@dimforge/rapier3d-compat'
 import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
 import {DoubleSide, Frustum, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Vector3} from 'three/webgpu'
 
@@ -9,7 +10,7 @@ import {wallFace, wallTop} from '../../src/lib/gallery/architecture.ts'
 import lobbyVault from '../../src/lib/gallery/lobbyVault.ts'
 import {portals, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
 import {middaySun} from '../../src/lib/gallery/sun.ts'
-import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY, vesperOpeningInset} from '../../src/lib/gallery/vesperCeiling.ts'
+import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternLayout, vesperLanternRidgeY, vesperLanternSillY, vesperOpeningInset} from '../../src/lib/gallery/vesperCeiling.ts'
 import VesperCeilingGeometry, {vesperCeilingCollision} from '../../src/lib/gallery/VesperCeilingGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import walls, {roomAt, roomClearHeight, rooms} from './fixtures/gallery.ts'
@@ -18,7 +19,7 @@ import {expectClosedAndOutward} from './fixtures/geometry.ts'
 const room = rooms.find(candidate => candidate.id === 'vesper')!
 const lobby = rooms.find(candidate => candidate.id === 'lobby')!
 const [faceX, faceZ] = room.size.map(size => size / 2 - wallFace)
-const [halfX, halfZ] = vesperLanternHalf(room.size)
+const {half: [halfX, halfZ], centers} = vesperLanternLayout(room.size)
 const {rise} = vesperCeiling.lantern
 const geometry = new VesperCeilingGeometry(room.size)
 const material = new MeshBasicMaterial({side: DoubleSide})
@@ -26,7 +27,7 @@ afterAll(() => {
   geometry.dispose()
   material.dispose()
 })
-const parts = () => [geometry.plaster, geometry.gilt, geometry.bars, geometry.glass]
+const parts = () => [geometry.plaster, geometry.gilt, geometry.bars, geometry.bridge, geometry.glass]
 const vectorAt = (attribute: ReturnType<typeof geometry.plaster.getAttribute>, index: number) => {
   const vector = new Vector3
   return vector.fromBufferAttribute(attribute, index)
@@ -69,15 +70,17 @@ describe('the Vesper’s coved ceiling', () => {
     expect(roomClearHeight(room)).toBeCloseTo(vesperLanternRidgeY, 9)
     expect(roomAt([room.center[0], vesperLanternRidgeY - 0.3, room.center[1]])).toBe('vesper')
   })
-  test('opens into a lantern of whole panes, whose hipped roof has a ridge along the room', () => {
+  test('opens into two equal lanterns of whole panes, each with a ridge along the room', () => {
     const {pane} = vesperCeiling.lantern
     expect(halfX).toBeCloseTo(faceX - vesperOpeningInset, 9)
-    expect(halfZ).toBeCloseTo(faceZ - vesperOpeningInset, 9)
+    expect(centers[0]).toBe(-centers[1])
+    expect(centers[1] + halfZ).toBeCloseTo(faceZ - vesperOpeningInset, 9)
+    expect(centers[1] - halfZ).toBeCloseTo(vesperCeiling.bridgeWidth / 2, 9)
     for (const half of [halfX, halfZ]) {
       expect(half * 2 / pane % 1).toBeCloseTo(0, 9)
     }
     expect(halfZ).toBeGreaterThan(halfX)
-    expect(() => vesperLanternHalf([12, 10])).toThrow(RangeError)
+    expect(() => vesperLanternLayout([12, 10])).toThrow(RangeError)
   })
   test('keeps the cove and its gilding clear of the Lobby vault’s shell, which overhangs the wall the two rooms share', () => {
     // The Vesper’s east wall face, measured from the axis of the Lobby’s vault.
@@ -106,12 +109,13 @@ describe('the Vesper’s coved ceiling', () => {
   test('the plaster shell is a closed solid', () => {
     expectClosedAndOutward(geometry.plaster)
   })
-  test('the lantern’s bronze stays inside its glass', () => {
+  test('each lantern’s bronze stays inside its glass', () => {
     for (const {x, y, z} of vertices(geometry.bars)) {
       expect(Math.abs(x)).toBeLessThanOrEqual(halfX + 1e-5)
-      expect(Math.abs(z)).toBeLessThanOrEqual(halfZ + 1e-5)
+      const localZ = Math.abs(z) - centers[1]
+      expect(Math.abs(localZ)).toBeLessThanOrEqual(halfZ + 1e-5)
       expect(y).toBeGreaterThanOrEqual(vesperLanternSillY - 1e-5)
-      expect(y).toBeLessThanOrEqual(roofY(x, z) + 1e-5)
+      expect(y).toBeLessThanOrEqual(roofY(x, localZ) + 1e-5)
     }
   })
   test('the glass faces into the lantern, counting its panes in its UVs', () => {
@@ -121,6 +125,7 @@ describe('the Vesper’s coved ceiling', () => {
     const center = new Vector3(0, vesperLanternSillY, 0)
     for (let index = 0; index < position.count; index++) {
       const corner = vectorAt(position, index)
+      center.z = centers[corner.z < 0 ? 0 : 1]
       expect(vectorAt(normal, index).dot(center.clone().sub(corner))).toBeGreaterThan(0)
       // Corners of the glass lie on the joints between panes, where the bars run.
       for (const value of [uv.getX(index), uv.getY(index)]) {
@@ -128,11 +133,76 @@ describe('the Vesper’s coved ceiling', () => {
       }
     }
   })
+  test('the glazing stops on both sides of the bridge, with a complete hipped roof on either side', () => {
+    const glass = new Mesh(geometry.glass, material)
+    const deck = new Mesh(geometry.plaster, material)
+    const up = new Vector3(0, 1, 0)
+    for (const x of [-halfX + 0.13, 0.17, halfX - 0.21]) {
+      for (let z = centers[0] - halfZ + 0.07; z < centers[1] + halfZ; z += 0.19) {
+        const ray = new Raycaster(new Vector3(x, 0, z), up)
+        const pane = ray.intersectObject(glass).at(0)
+        const soffit = ray.intersectObject(deck).at(0)
+        if (Math.abs(z) < vesperCeiling.bridgeWidth / 2) {
+          expect(pane).toBeUndefined()
+          expect(soffit!.distance).toBeCloseTo(vesperCoveTopY, 5)
+        } else {
+          expect(pane!.distance).toBeCloseTo(roofY(x, Math.abs(z) - centers[1]), 5)
+          expect(soffit).toBeUndefined()
+        }
+      }
+    }
+  })
+  test('the physical ceiling follows both roofs, the deck and the pierced arches rather than a bounding box', async () => {
+    await RAPIER.init()
+    const world = new RAPIER.World({
+      x: 0,
+      y: 0,
+      z: 0,
+    })
+    try {
+      world.createCollider(RAPIER.ColliderDesc.trimesh(...vesperCeilingCollision(room.size), RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES))
+      world.step()
+      // As elsewhere on the ceiling, fine applied gilding and glazing bars do not snag a thrown orb.
+      const solids = [geometry.plaster, geometry.bridge, geometry.glass].map(part => new Mesh(part, material))
+      const probe = (origin: Vector3, direction: Vector3, far: number) => {
+        const ray = new Raycaster(origin, direction, 0, far)
+        const visible = ray.intersectObjects(solids).at(0)
+        const hit = world.castRay(new RAPIER.Ray(origin, direction), far, true)
+        if (visible) {
+          expect(hit?.timeOfImpact).toBeCloseTo(visible.distance, 4)
+        } else {
+          expect(hit).toBeNull()
+        }
+        return visible
+      }
+      const up = new Vector3(0, 1, 0)
+      for (const z of [...centers, 0]) {
+        const hit = probe(new Vector3(1.47, 0, z + 0.07), up, 12)
+        expect(hit!.object).toBe(z === 0 ? solids[0] : solids[2])
+      }
+      // Across the haunches just below the deck: some rays hit the web, others pass through both castings.
+      let openings = 0
+      let bronze = 0
+      for (let x = -halfX + 0.11; x < halfX; x += 0.07) {
+        const hit = probe(new Vector3(x, vesperCoveTopY - 0.18, -2), new Vector3(0, 0, 1), 4)
+        if (hit) {
+          expect(hit.object).toBe(solids[1])
+          bronze++
+        } else {
+          openings++
+        }
+      }
+      expect(bronze).toBeGreaterThan(0)
+      expect(openings).toBeGreaterThan(0)
+    } finally {
+      world.free()
+    }
+  })
   test('keeps a modest triangle budget', () => {
     expect(parts().reduce((sum, part) => sum + triangleCount(part), 0)).toBeLessThan(20_000)
   })
   test('lets the sun in through the lantern and nowhere else', () => {
-    const opaque = [geometry.plaster, geometry.gilt, geometry.bars].map(part => new Mesh(part, material))
+    const opaque = [geometry.plaster, geometry.gilt, geometry.bars, geometry.bridge].map(part => new Mesh(part, material))
     const glass = new Mesh(geometry.glass, material)
     for (const mesh of [...opaque, glass]) {
       mesh.geometry.boundsTree = new MeshBVH(mesh.geometry)
@@ -177,9 +247,16 @@ describe('the Vesper’s coved ceiling', () => {
       expect(Math.abs(positions[index + 2])).toBeLessThanOrEqual(faceZ + 1e-5)
     }
   })
-  test('the lantern shows the Lobby’s vault rising next door', () => {
-    expect(portals.some(portal => portal.rooms.includes('vesper') && portal.rooms.includes('lobby') && portal.box.min.y > vesperCeiling.springY)).toBe(true)
-    // Looking steeply up at the lantern’s east side, with the door to the Lobby far below the view.
-    expect(visibleRooms('vesper', view([room.center[0], 1.6, room.center[1]], [room.center[0] + halfX, vesperLanternEavesY, room.center[1]])).has('lobby')).toBe(true)
+  test('each lantern shows the Lobby’s vault rising next door, including in reflection', () => {
+    for (const sign of [-1, 1]) {
+      const boxes = portals.filter(({rooms: pair, box}) => pair.includes('vesper') && pair.includes('lobby') && box.getCenter(new Vector3).y * sign > vesperCeiling.springY).map(({box}) => box)
+      expect(boxes).toHaveLength(2)
+      expect(boxes.some(box => box.containsPoint(new Vector3(room.center[0], sign * vesperLanternEavesY, room.center[1])))).toBe(false)
+      for (const z of centers) {
+        const target: Vec3 = [room.center[0] + halfX, sign * vesperLanternEavesY, room.center[1] + z]
+        expect(boxes.some(box => box.containsPoint(new Vector3(...target)))).toBe(true)
+        expect(visibleRooms('vesper', view([room.center[0], 1.6, target[2]], target)).has('lobby')).toBe(true)
+      }
+    }
   })
 })

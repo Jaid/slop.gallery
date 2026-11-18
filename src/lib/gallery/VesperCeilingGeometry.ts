@@ -4,13 +4,15 @@ import {BoxGeometry, BufferGeometry, CatmullRomCurve3, Float32BufferAttribute, M
 
 import {mergeParts} from '../geometry.ts'
 import {colliderGeometry, wallFace} from './architecture.ts'
-import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY, vesperOpeningInset} from './vesperCeiling.ts'
+import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternLayout, vesperLanternRidgeY, vesperLanternSillY} from './vesperCeiling.ts'
+import {bridgeFrame, bridgeGilding} from './vesperLanternBridge.ts'
 
 /** a stretch of a section with its normals toward the outside of the solid as [inward, up], one for each point or one for all */
 type SectionRun = {
   normals: ReadonlyArray<CeilingSection>
   points: ReadonlyArray<CeilingSection>
 }
+type LanternLayout = ReturnType<typeof vesperLanternLayout>
 type Size = readonly [width: number, depth: number]
 
 const down: CeilingSection = [0, -1]
@@ -25,12 +27,12 @@ const sides = [
   ['z', 1],
 ] as const
 /**
- * A surface along the ceiling’s faces toward the room and the lantern’s glass, so thrown things bounce off the cove and the lantern instead of disappearing into them.
+ * A surface along the ceiling’s faces toward the room, both lanterns and their bridge, so thrown things bounce off them instead of disappearing into them.
  * Returned as vertices and indices for a triangle mesh collider.
  */
 export function vesperCeilingCollision(size: Size) {
-  const half = wallFaces(size)
-  const surface = mergeParts([sectionLoft(half, innerRuns()), lanternGlass(vesperLanternHalf(size))])
+  const layout = vesperLanternLayout(size)
+  const surface = mergeParts([ceilingShell(wallFaces(size), layout, false), inBothBays(lanternGlass(layout.half), layout), ...bridgeFrame(layout.half[0])])
   try {
     return colliderGeometry(surface)
   } finally {
@@ -101,24 +103,53 @@ function coveRun(): SectionRun {
     normals: sections.map(({normal}) => normal),
   }
 }
-/** The faces of the ceiling toward the room, from the ledge to the top of the curb. */
-function innerRuns(): Array<SectionRun> {
-  const {springY} = vesperCeiling
-  return [
+/** Places a copy in each opening, merging by material, not by pane or bay. */
+function inBothBays(part: BufferGeometry, {centers: [north, south]}: LanternLayout) {
+  return mergeParts([part.clone().translate(0, 0, north), part.translate(0, 0, south)])
+}
+/** The flat ceiling around both curbs and the deck between them. Split the long inner edges at the deck’s corners so the plaster has no T-junctions. */
+function piercedBand([outerX, outerZ]: Size, {half: [x, z], centers}: LanternLayout, y: number, normalY: number) {
+  const innerZ = centers[1] + z
+  const deckZ = vesperCeiling.bridgeWidth / 2
+  const soup = new TriangleSoup
+  const face = (corners: Array<readonly [number, number]>) => {
+    const indices = corners.map(([u, v]) => soup.add(new Vector3(u, y, v), new Vector3(0, normalY, 0), [u, v]))
+    for (let i = 2; i < indices.length; i++) {
+      soup.triangle(indices[0], indices[i - 1], indices[i])
+    }
+  }
+  for (const side of [-1, 1]) {
+    face([[side * outerX, -outerZ], [side * x, -innerZ], [side * x, -deckZ], [side * x, deckZ], [side * x, innerZ], [side * outerX, outerZ]])
+    face([[-outerX, side * outerZ], [-x, side * innerZ], [x, side * innerZ], [outerX, side * outerZ]])
+  }
+  face([[-x, -deckZ], [x, -deckZ], [x, deckZ], [-x, deckZ]])
+  return soup.toGeometry()
+}
+/** The collision shell stops at the sills; the render shell also closes over the top and down the outside. */
+function ceilingShell(half: Size, layout: LanternLayout, closed: boolean) {
+  const {springY, ledge} = vesperCeiling
+  const runs: Array<SectionRun> = [
     {
-      points: [[0, springY], [vesperCeiling.ledge, springY]],
+      points: [[0, springY], [ledge, springY]],
       normals: [down],
     },
     coveRun(),
-    {
-      points: [[vesperCoveEnd, vesperCoveTopY], [vesperOpeningInset, vesperCoveTopY]],
-      normals: [down],
-    },
-    {
-      points: [[vesperOpeningInset, vesperCoveTopY], [vesperOpeningInset, vesperLanternSillY]],
-      normals: [inward],
-    },
   ]
+  const parts = [
+    piercedBand([half[0] - vesperCoveEnd, half[1] - vesperCoveEnd], layout, vesperCoveTopY, -1),
+    inBothBays(sectionLoft(layout.half, [{
+      points: [[0, vesperCoveTopY], [0, vesperLanternSillY]],
+      normals: [inward],
+    }]), layout),
+  ]
+  if (closed) {
+    runs.push({
+      points: [[0, vesperLanternSillY], [0, springY]],
+      normals: [outward],
+    })
+    parts.push(piercedBand(half, layout, vesperLanternSillY, 1))
+  }
+  return mergeParts([...parts, sectionLoft(half, runs)])
 }
 /** A convex polygon of glass facing `normal`, with the given UVs at its corners. */
 function addPane(soup: TriangleSoup, corners: ReadonlyArray<Vector3>, uvs: ReadonlyArray<readonly [number, number]>, normal: Vector3) {
@@ -242,14 +273,14 @@ function lanternBars([halfX, halfZ]: Size) {
   return parts
 }
 /** The gilding: fillets along the edge of the ledge, the top of the cove and the edge of the opening, and a bead with a ball at either end in every crease of the cove. */
-function gilding(half: Size, curveDetail: number) {
+function gilding(half: Size, layout: LanternLayout, curveDetail: number) {
   const {gilt, ledge, springY} = vesperCeiling
   const {bead, fillet} = gilt
   const parts: Array<BufferGeometry> = [
     // Each fillet wraps an edge, except the one at the top of the cove, where it lies flat on the curve’s level end.
     sectionLoft(half, moldingRuns([ledge - fillet * 0.7, ledge + fillet * 0.3], [springY - fillet * 0.35, springY + fillet])),
     sectionLoft(half, moldingRuns([vesperCoveEnd - fillet / 2, vesperCoveEnd + fillet / 2], [vesperCoveTopY - fillet * 0.3, vesperCoveTopY + 0.01])),
-    sectionLoft(half, moldingRuns([vesperOpeningInset - fillet * 0.7, vesperOpeningInset + fillet * 0.3], [vesperCoveTopY - fillet * 0.35, vesperCoveTopY + fillet])),
+    inBothBays(sectionLoft(layout.half, moldingRuns([-fillet * 0.7, fillet * 0.3], [vesperCoveTopY - fillet * 0.35, vesperCoveTopY + fillet])), layout),
   ]
   const {segments} = vesperCeiling.cove
   for (const x of [-1, 1]) {
@@ -274,11 +305,12 @@ function wallFaces([width, depth]: Size): Size {
 }
 
 /**
- * Merged meshes of the Vesper’s coved ceiling and its lantern for a room of the size, relative to its middle at floor level, by material: the plaster shell, the gilding, the lantern’s bronze and its glass.
+ * Merged meshes of the Vesper’s coved ceiling and its twin lanterns for a room of the size, relative to its middle at floor level, by material: the plaster shell, the gilding, the patinated bridge, the bronze glazing bars and the glass.
  * The shell is a closed solid resting on the walls, inside their faces, and flat on top at the height of the curb. It keeps out of the coffers of the Lobby’s vault, which reach into the wall the two rooms share. `curveDetail` multiplies the segments of the gilt beads.
  */
 export default class VesperCeilingGeometry {
   readonly bars: BufferGeometry
+  readonly bridge: BufferGeometry
   readonly gilt: BufferGeometry
   /** the lantern’s glass, its faces toward the room, with UVs in panes */
   readonly glass: BufferGeometry
@@ -286,29 +318,16 @@ export default class VesperCeilingGeometry {
 
   constructor(size: Size, curveDetail = 1) {
     const half = wallFaces(size)
-    const lantern = vesperLanternHalf(size)
-    this.plaster = sectionLoft(half, [
-      ...innerRuns(),
-      {
-        points: [[vesperOpeningInset, vesperLanternSillY], [0, vesperLanternSillY]],
-        normals: [up],
-      },
-      {
-        points: [[0, vesperLanternSillY], [0, vesperCeiling.springY]],
-        normals: [outward],
-      },
-    ])
-    this.plaster.computeBoundingBox()
-    this.plaster.computeBoundingSphere()
-    this.gilt = mergeParts(gilding(half, curveDetail))
-    this.bars = mergeParts(lanternBars(lantern))
-    this.glass = lanternGlass(lantern)
-    this.glass.computeBoundingBox()
-    this.glass.computeBoundingSphere()
+    const lantern = vesperLanternLayout(size)
+    this.plaster = ceilingShell(half, lantern, true)
+    this.gilt = mergeParts([...gilding(half, lantern, curveDetail), ...bridgeGilding(lantern.half[0])])
+    this.bars = inBothBays(mergeParts(lanternBars(lantern.half)), lantern)
+    this.glass = inBothBays(lanternGlass(lantern.half), lantern)
+    this.bridge = mergeParts(bridgeFrame(lantern.half[0]))
   }
 
   dispose() {
-    for (const geometry of [this.bars, this.gilt, this.glass, this.plaster]) {
+    for (const geometry of [this.bars, this.bridge, this.gilt, this.glass, this.plaster]) {
       geometry.dispose()
     }
   }
