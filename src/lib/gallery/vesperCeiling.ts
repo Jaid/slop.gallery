@@ -8,7 +8,7 @@ export type CeilingSection = readonly [inward: number, y: number]
  *
  * A flat ledge runs around the room on top of the walls. From its edge, a cove curves up and in like a quarter ellipse to a flat band that frames the lantern’s opening. The coves of the four sides meet on the diagonals, as in a cloister vault.
  * Gilt fillets line the edge of the ledge, the top of the cove and the opening, and gilt beads follow the creases where the coves meet.
- * A low curb rises around the opening and carries the lantern: upright sides and a hipped roof, all of cast glass held by bronze bars, which lets the sun in.
+ * A low curb rises around the opening and carries two hipped glazed lanterns, separated across their middle by an arched gallery bridge that turns the window into two equal halves.
  */
 const vesperCeiling = {
   springY: wallTop,

@@ -12,7 +12,7 @@ import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /**
- * The Vesper’s coved ceiling with its glazed lantern, which lights the room from the sky instead of lamps.
+ * The Vesper’s coved ceiling with two glazed lanterns and the arched bridge that divides them, which light the room from the sky instead of lamps.
  * Rendered inside the room’s group, at its middle.
  */
 export default function VesperCeiling({size}: {
@@ -39,6 +39,16 @@ export default function VesperCeiling({size}: {
     metalness: 0.5,
     roughness: 0.5,
   }), []))
+  const bridgeBronze = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
+    color: '#b17831',
+    metalness: 0.65,
+    roughness: 0.3,
+  }), []))
+  const bridgeStone = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
+    color: '#315d55',
+    metalness: 0.03,
+    roughness: 0.72,
+  }), []))
   // The Lobby vault’s cast glass, divided into the same panes as the bars in front of it.
   const glass = useDisposable(useMemo(() => new VaultGlassMaterial({
     heavy: isHeavy,
@@ -52,6 +62,8 @@ export default function VesperCeiling({size}: {
     <mesh castShadow geometry={geometry.plaster} material={plaster} name='vesper-ceiling-plaster' receiveShadow />
     <mesh castShadow geometry={geometry.gilt} material={gilt} name='vesper-ceiling-gilding' receiveShadow />
     <mesh castShadow geometry={geometry.bars} material={bronze} name='vesper-lantern-bars' />
+    <mesh castShadow geometry={geometry.bridge.stone} material={bridgeStone} name='vesper-lantern-bridge-deck' receiveShadow />
+    <mesh castShadow geometry={geometry.bridge.bronze} material={bridgeBronze} name='vesper-lantern-bridge-rails' receiveShadow />
     {/* The glass lets the sun through: it casts no shadow, only its bars do. */}
     <mesh castShadow={false} geometry={geometry.glass} material={glass} name='vesper-lantern-glass' />
   </group>

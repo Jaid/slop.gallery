@@ -4,6 +4,7 @@ import {BoxGeometry, BufferGeometry, CatmullRomCurve3, Float32BufferAttribute, M
 
 import {mergeParts} from '../geometry.ts'
 import {colliderGeometry, wallFace} from './architecture.ts'
+import VesperBridgeGeometry, {vesperBridge} from './VesperBridgeGeometry.ts'
 import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY, vesperOpeningInset} from './vesperCeiling.ts'
 
 /** a stretch of a section with its normals toward the outside of the solid as [inward, up], one for each point or one for all */
@@ -30,11 +31,13 @@ const sides = [
  */
 export function vesperCeilingCollision(size: Size) {
   const half = wallFaces(size)
-  const surface = mergeParts([sectionLoft(half, innerRuns()), lanternGlass(vesperLanternHalf(size))])
+  const bridge = new VesperBridgeGeometry(size)
+  const surface = mergeParts([sectionLoft(half, innerRuns()), lanternGlass(vesperLanternHalf(size)), bridge.stone, bridge.bronze])
   try {
     return colliderGeometry(surface)
   } finally {
     surface.dispose()
+    bridge.dispose()
   }
 }
 /**
@@ -130,7 +133,7 @@ function addPane(soup: TriangleSoup, corners: ReadonlyArray<Vector3>, uvs: Reado
 /**
  * The lantern’s glass facing into it: four upright sides and a hipped roof. UVs count the panes of the bars in front of them: u in meters along the sides and eaves from the corners, v in meters up the sides and in rows up the slopes.
  */
-function lanternGlass([halfX, halfZ]: Size) {
+function lanternSectionGlass([halfX, halfZ]: Size) {
   const {rise, rows} = vesperCeiling.lantern
   const soup = new TriangleSoup
   const sill = vesperLanternSillY
@@ -146,6 +149,15 @@ function lanternGlass([halfX, halfZ]: Size) {
     addPane(soup, [new Vector3(-halfX, eaves, side * halfZ), new Vector3(halfX, eaves, side * halfZ), new Vector3(0, ridge, side * ridgeEnd)], [[0, 0], [halfX * 2, 0], [halfX, rows]], slopeNormal('z', side, halfX, rise))
   }
   return soup.toGeometry()
+}
+/** Two glazed hipped lanterns, one on either side of the bridge. */
+function lanternGlass([halfX, halfZ]: Size) {
+  const halfLength = (halfZ - vesperBridge.width / 2) / 2
+  if (halfLength < halfX) {
+    throw new RangeError('The Vesper’s two lanterns need a bridge-width gap between full hipped roofs.')
+  }
+  const center = vesperBridge.width / 2 + halfLength
+  return mergeParts([-1, 1].map(side => lanternSectionGlass([halfX, halfLength]).translate(0, 0, side * center)))
 }
 /** The normal into the lantern of the roof slope that falls toward the side at `side` along `axis`. */
 function slopeNormal(axis: 'x' | 'z', side: number, run: number, rise: number) {
@@ -172,7 +184,7 @@ function member(from: Vector3, to: Vector3, [width, depth]: readonly [number, nu
   return box.applyMatrix4(placement)
 }
 /** The lantern’s bronze: sill and eaves plate around it, corner posts, ridge and hips, and the bars dividing its glass into panes. */
-function lanternBars([halfX, halfZ]: Size) {
+function lanternSectionBars([halfX, halfZ]: Size) {
   const {bar, frame, gap, pane, rise, rows} = vesperCeiling.lantern
   const parts: Array<BufferGeometry> = []
   const sill = vesperLanternSillY
@@ -241,6 +253,15 @@ function lanternBars([halfX, halfZ]: Size) {
   parts.push(member(new Vector3(0, ridge, -ridgeEnd), new Vector3(0, ridge, ridgeEnd), frame, new Vector3(0, -1, 0), {gap: crestGap}))
   return parts
 }
+/** One independent bronze lantern frame on each side of the bridge. */
+function lanternBars([halfX, halfZ]: Size) {
+  const halfLength = (halfZ - vesperBridge.width / 2) / 2
+  if (halfLength < halfX) {
+    throw new RangeError('The Vesper’s two lanterns need a bridge-width gap between full hipped roofs.')
+  }
+  const center = vesperBridge.width / 2 + halfLength
+  return [-1, 1].flatMap(side => lanternSectionBars([halfX, halfLength]).map(part => part.translate(0, 0, side * center)))
+}
 /** The gilding: fillets along the edge of the ledge, the top of the cove and the edge of the opening, and a bead with a ball at either end in every crease of the cove. */
 function gilding(half: Size, curveDetail: number) {
   const {gilt, ledge, springY} = vesperCeiling
@@ -274,11 +295,12 @@ function wallFaces([width, depth]: Size): Size {
 }
 
 /**
- * Merged meshes of the Vesper’s coved ceiling and its lantern for a room of the size, relative to its middle at floor level, by material: the plaster shell, the gilding, the lantern’s bronze and its glass.
+ * Merged meshes of the Vesper’s coved ceiling and its twin lanterns, divided by the gallery bridge, for a room of the size, relative to its middle at floor level, by material: the plaster shell, the gilding, the lantern’s bronze and its glass.
  * The shell is a closed solid resting on the walls, inside their faces, and flat on top at the height of the curb. It keeps out of the coffers of the Lobby’s vault, which reach into the wall the two rooms share. `curveDetail` multiplies the segments of the gilt beads.
  */
 export default class VesperCeilingGeometry {
   readonly bars: BufferGeometry
+  readonly bridge: VesperBridgeGeometry
   readonly gilt: BufferGeometry
   /** the lantern’s glass, its faces toward the room, with UVs in panes */
   readonly glass: BufferGeometry
@@ -302,6 +324,7 @@ export default class VesperCeilingGeometry {
     this.plaster.computeBoundingSphere()
     this.gilt = mergeParts(gilding(half, curveDetail))
     this.bars = mergeParts(lanternBars(lantern))
+    this.bridge = new VesperBridgeGeometry(size)
     this.glass = lanternGlass(lantern)
     this.glass.computeBoundingBox()
     this.glass.computeBoundingSphere()
@@ -311,6 +334,7 @@ export default class VesperCeilingGeometry {
     for (const geometry of [this.bars, this.gilt, this.glass, this.plaster]) {
       geometry.dispose()
     }
+    this.bridge.dispose()
   }
 }
 
