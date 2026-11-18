@@ -1,6 +1,7 @@
-import {beforeEach, describe, expect, test} from 'bun:test'
+import {afterAll, beforeEach, describe, expect, test} from 'bun:test'
 
-import {Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
+import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
+import {BufferAttribute, BufferGeometry, DoubleSide, Frustum, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Vector3} from 'three/webgpu'
 
 import {wallFace} from '../../src/lib/gallery/architecture.ts'
 import CrumbledStoneGeometry from '../../src/lib/gallery/CrumbledStoneGeometry.ts'
@@ -8,14 +9,79 @@ import {roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
-import {salonBench, salonCeiling, salonPedestal, salonSculptureSocket, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
+import {portals, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
+import {salonBench, salonCeiling, salonPedestal, salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
+import salonLantern, {domeSection, octagon, salonDomeEyeY, salonDomeSpringY, salonDrumOuterApothem, salonLanternBase, salonLanternTopY, salonWindowSpringY} from '../../src/lib/gallery/salonLantern.ts'
+import SalonLanternGeometry, {salonLanternCollision, salonSailLength, shellCourses} from '../../src/lib/gallery/SalonLanternGeometry.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
+import {middaySun} from '../../src/lib/gallery/sun.ts'
+import {triangleCount} from '../../src/lib/geometry.ts'
+import {shellAttributes} from '../../src/lib/materials/ShellInlayMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '../../src/lib/materials/TerrazzoFloorMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
-import walls, {floorHeight, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
+import walls, {floorHeight, insideGallery, roomAt, roomClearHeight, rooms, roomVisit} from './fixtures/gallery.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
 const room = rooms.find(candidate => candidate.id === 'salon')!
+const lantern = new SalonLanternGeometry(room.size)
+const doubleSided = new MeshBasicMaterial({side: DoubleSide})
+afterAll(() => {
+  lantern.dispose()
+  doubleSided.dispose()
+})
+/** the parts of the lantern as meshes in the room’s frame, ready for fast raycasts */
+const lanternMeshes = (parts: ReadonlyArray<typeof lantern.stucco>) => parts.map(part => {
+  const mesh = new Mesh(part, doubleSided)
+  part.boundsTree ??= new MeshBVH(part)
+  mesh.raycast = acceleratedRaycast
+  mesh.updateMatrixWorld()
+  return mesh
+})
+const opaque = lanternMeshes([lantern.stucco, lantern.sails, lantern.gilt, lantern.bronze])
+const glazing = lanternMeshes([lantern.windowGlass, lantern.lanternGlass])
+const [faceX, faceZ] = room.size.map(size => size / 2 - wallFace)
+/** Where a ray of the midday sun from the point on the floor, in the room’s frame, leaves the room: through the glass, or into the ceiling, or nowhere for a ray that leaves through the walls below it. */
+const sunlight = (x: number, z: number) => {
+  const origin = new Vector3(x, 0.1, z)
+  const direction = new Vector3(...middaySun)
+  const ceiling = origin.clone().addScaledVector(direction, (salonLanternBase - origin.y) / direction.y)
+  if (Math.abs(ceiling.x) > faceX || Math.abs(ceiling.z) > faceZ) {
+    return
+  }
+  const raycaster = new Raycaster(origin, direction)
+  const blocked = raycaster.intersectObjects(opaque, false).at(0)
+  const pane = raycaster.intersectObjects(glazing, false).toSorted((a, b) => a.distance - b.distance).at(0)
+  if (pane && (!blocked || blocked.distance > pane.distance)) {
+    return pane.object === glazing[1] ? 'lantern' : 'window'
+  }
+  return blocked ? 'shade' : 'open'
+}
+/** the points on the floor, in the room’s frame, that the sun reaches through the windows or through the lantern */
+const sunlitBy = (kind: 'lantern' | 'window') => {
+  const points: Array<readonly [number, number]> = []
+  for (let x = -5.8; x <= 5.8; x += 0.1) {
+    for (let z = -7.8; z <= 7.8; z += 0.1) {
+      if (sunlight(x, z) === kind) {
+        points.push([x, z])
+      }
+    }
+  }
+  return points
+}
+const pointKey = (vector: Vector3) => [vector.x, vector.y, vector.z].map(value => Math.round(value * 1e5)).join(':')
+const vertex = (attribute: ReturnType<typeof lantern.stucco.getAttribute>, index: number) => {
+  const point = new Vector3
+  return point.fromBufferAttribute(attribute, index)
+}
+const view = (position: Vector3, target: Vector3) => {
+  const camera = new PerspectiveCamera(70, 16 / 9, 0.05, 90)
+  camera.position.copy(position)
+  camera.lookAt(target)
+  camera.updateMatrixWorld()
+  const frustum = new Frustum
+  const viewProjection = new Matrix4
+  return frustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse))
+}
 const shipped = {
   ...useGallery.getState(),
   portraits: samplePortraits.map(p => ({...p})),
@@ -136,15 +202,160 @@ describe('the Salon', () => {
     expect(salonBench.position[2] - salonBench.depth / 2 - (z + half)).toBeGreaterThan(2.5)
     expect(z - half - (room.center[1] - room.size[1] / 2)).toBeGreaterThan(2)
   })
-  test('the skylight sits inside the room, under its slab, along the glass wall, in whole panes', () => {
-    const {depth, frame, glassY, opening, pane} = salonSkylight
-    for (const [axis, size] of opening.entries()) {
-      expect(size / 2 + frame).toBeLessThan(room.size[axis] / 2)
-      expect(size / pane % 1).toBeCloseTo(0, 9)
+  test('the lantern rises from the ceiling over the room’s middle, clear of the walls, and the room’s air reaches its finial', () => {
+    const corners = octagon(salonDrumOuterApothem + 0.1)
+    for (const [x, z] of corners) {
+      expect(Math.abs(x)).toBeLessThan(faceX - 1)
+      expect(Math.abs(z)).toBeLessThan(faceZ - 1)
     }
-    expect(glassY).toBeLessThan(salonCeiling.underside)
-    expect(salonCeiling.underside - depth).toBeGreaterThan(0)
-    expect(opening[1]).toBe(salonWindow.width)
+    expect(salonLanternBase).toBe(salonCeiling.underside)
+    expect(salonLantern.window.sill).toBeGreaterThan(salonCeiling.y + salonCeiling.thickness / 2)
+    expect(salonWindowSpringY).toBeGreaterThan(salonLantern.window.sill)
+    expect(salonLantern.window.crown).toBeCloseTo(salonWindowSpringY + salonLantern.window.width / 2, 9)
+    // The architrave round every window’s head stays clear of the cornice under the dome.
+    expect(salonLantern.window.crown + salonLantern.architrave[0]).toBeLessThan(salonDomeSpringY - salonLantern.cornice[0][0] - salonLantern.cornice[1][0])
+    expect(domeSection(0)).toEqual([salonLantern.apothem, salonDomeSpringY])
+    expect(domeSection(Math.PI / 2)[1]).toBeCloseTo(salonDomeEyeY, 9)
+    expect(roomClearHeight(room)).toBeCloseTo(salonLanternTopY, 9)
+    expect(roomAt([room.center[0], salonDomeEyeY - 0.3, room.center[1]])).toBe('salon')
+    for (const part of [lantern.stucco, lantern.sails, lantern.gilt, lantern.bronze, lantern.windowGlass, lantern.lanternGlass]) {
+      part.computeBoundingBox()
+      const {min, max} = part.boundingBox!
+      expect(Math.max(-min.x, max.x)).toBeLessThanOrEqual(room.size[0] / 2 + 1e-6)
+      expect(Math.max(-min.z, max.z)).toBeLessThanOrEqual(room.size[1] / 2 + 1e-6)
+      expect(min.y).toBeGreaterThan(5.5)
+      expect(max.y).toBeLessThanOrEqual(salonLanternTopY + 1e-6)
+    }
+  })
+  test('the stucco and the sails close up into solids, touching but never open, and face out of them', () => {
+    const edges = new Map<string, number>
+    for (const part of [lantern.stucco, lantern.sails]) {
+      const position = part.getAttribute('position')
+      const normal = part.getAttribute('normal')
+      const triangles = part.index!
+      for (let index = 0; index < triangles.count; index += 3) {
+        const ids = [0, 1, 2].map(corner => triangles.getX(index + corner))
+        const [a, b, c] = ids.map(id => vertex(position, id))
+        const face = b.clone().sub(a).cross(c.clone().sub(a))
+        expect(face.length()).toBeGreaterThan(1e-10)
+        const shading = ids.reduce((sum, id) => sum.add(vertex(normal, id)), new Vector3).normalize()
+        expect(face.normalize().dot(shading)).toBeGreaterThan(0.5)
+        for (const [from, to] of [[a, b], [b, c], [c, a]]) {
+          const edge = [pointKey(from), pointKey(to)].toSorted().join('/')
+          edges.set(edge, (edges.get(edge) ?? 0) + 1)
+        }
+      }
+    }
+    // Solids that touch share edges, but an edge on the border of an opening would show up once, or three times.
+    expect(edges.values().filter(count => count % 2 === 1).toArray()).toEqual([])
+  })
+  test('lets the sun in through the drum’s southern windows and the lantern, in patches crossed by their bars, and nowhere else', () => {
+    const counts = {
+      lantern: 0,
+      open: 0,
+      shade: 0,
+      window: 0,
+    }
+    let total = 0
+    for (let x = -5.8; x <= 5.8; x += 0.1) {
+      for (let z = -7.8; z <= 7.8; z += 0.1) {
+        const result = sunlight(x, z)
+        if (!result) {
+          continue
+        }
+        counts[result]++
+        total++
+      }
+    }
+    expect(total).toBeGreaterThan(5000)
+    // Nothing reaches the floor through a gap.
+    expect(counts.open).toBe(0)
+    expect(counts.window / total).toBeGreaterThan(0.02)
+    expect(counts.window / total).toBeLessThan(0.2)
+    // Most of the lantern’s beam lands on the north wall’s socle, the rest on the floor in front of it.
+    expect(counts.lantern).toBeGreaterThan(10)
+    // The arched patches of the windows on the sunny side fall north of the room’s middle, and the lantern’s farther north, by the north wall.
+    const windows = sunlitBy('window')
+    expect(windows.every(([, z]) => z < 0)).toBe(true)
+    const sides = new Set(windows.map(([x]) => Math.sign(Math.round(x))))
+    expect(sides.size).toBe(3)
+    for (const [, z] of sunlitBy('lantern')) {
+      expect(z).toBeLessThan(-4)
+      expect(z).toBeGreaterThan(-faceZ)
+    }
+  })
+  test('the sails hold courses of whole shells between the creases, each about as wide as the next, half as high as wide', () => {
+    const courses = shellCourses()
+    expect(courses.length).toBeGreaterThan(20)
+    const {course, margins, width} = salonLantern.shells
+    for (const [index, shells] of courses.entries()) {
+      expect(Number.isInteger(shells.count)).toBe(true)
+      expect(shells.count).toBeGreaterThan(0)
+      expect(shells.width).toBeGreaterThan(width * 0.75)
+      expect(shells.width).toBeLessThan(width * 1.25)
+      expect(shells.height).toBeCloseTo(shells.width * course, 9)
+      expect(shells.stagger).toBe(index % 2 === 1)
+      if (index === 0) {
+        continue
+      }
+      const previous = courses[index - 1]
+      expect(shells.start).toBeCloseTo(previous.start + previous.height, 9)
+      expect(shells.count).toBeLessThanOrEqual(previous.count)
+    }
+    expect(courses[0].start).toBe(margins.foot)
+    expect(courses.at(-1)!.start + courses.at(-1)!.height).toBeLessThanOrEqual(salonSailLength - margins.eye)
+    // The sails carry their layout to the shader on every vertex.
+    const layout = lantern.sails.getAttribute(shellAttributes.course)
+    const sail = lantern.sails.getAttribute(shellAttributes.sail)
+    const uv = lantern.sails.getAttribute('uv')
+    expect(layout.count).toBe(uv.count)
+    for (let index = 0; index < uv.count; index++) {
+      expect(Math.abs(uv.getX(index))).toBeCloseTo(sail.getZ(index), 5)
+      if (!(layout.getW(index) > 0)) {
+        continue
+      }
+      expect(uv.getY(index)).toBeGreaterThanOrEqual(layout.getX(index) - 1e-5)
+      expect(uv.getY(index)).toBeLessThanOrEqual(layout.getX(index) + layout.getY(index) + 1e-5)
+      // Every shell fits between the creases, measured across its course’s middle, where its margins along them are as wide as they should be.
+      expect(layout.getZ(index) * layout.getW(index) / 2).toBeLessThanOrEqual(sail.getZ(index) - margins.ribs / 2)
+    }
+  })
+  test('keeps a modest triangle budget', () => {
+    const parts = [lantern.stucco, lantern.sails, lantern.gilt, lantern.bronze, lantern.windowGlass, lantern.lanternGlass]
+    expect(parts.reduce((sum, part) => sum + triangleCount(part), 0)).toBeLessThan(25_000)
+  })
+  test('a smooth collision surface lines the ceiling, the drum, the dome and the lantern', () => {
+    const [positions, indices] = salonLanternCollision(room.size)
+    expect(indices.length % 3).toBe(0)
+    expect(indices.length).toBeGreaterThan(0)
+    for (let index = 0; index < positions.length; index += 3) {
+      expect(Math.abs(positions[index])).toBeLessThanOrEqual(faceX + 1e-5)
+      expect(positions[index + 1]).toBeGreaterThanOrEqual(salonLanternBase - 1e-5)
+      expect(Math.abs(positions[index + 2])).toBeLessThanOrEqual(faceZ + 1e-5)
+    }
+    // Something thrown straight up anywhere in the room meets it, under the ceiling or the dome.
+    const geometry = new BufferGeometry
+    geometry.setAttribute('position', new BufferAttribute(positions, 3))
+    geometry.setIndex(new BufferAttribute(indices, 1))
+    const surface = new Mesh(geometry, doubleSided)
+    try {
+      for (let x = -faceX + 0.2; x < faceX; x += 0.5) {
+        for (let z = -faceZ + 0.2; z < faceZ; z += 0.5) {
+          const raycaster = new Raycaster(new Vector3(x, 2, z), new Vector3(0, 1, 0))
+          const hit = raycaster.intersectObject(surface).at(0)
+          expect(hit).toBeDefined()
+          expect(hit!.point.y).toBeLessThan(salonLanternTopY)
+        }
+      }
+    } finally {
+      geometry.dispose()
+    }
+  })
+  test('the drum’s windows show the Lobby’s vault rising next door', () => {
+    expect(portals.some(portal => portal.rooms.includes('salon') && portal.rooms.includes('lobby') && portal.box.min.y > salonCeiling.y)).toBe(true)
+    // Looking up at the drum’s west windows from under its eastern side, with the glass wall to the Lobby below the view.
+    const eye = new Vector3(room.center[0] + 2.5, 1.6, room.center[1])
+    expect(visibleRooms('salon', view(eye, new Vector3(room.center[0] - salonLantern.apothem, 7, room.center[1]))).has('lobby')).toBe(true)
   })
   test('wainscot runs stop at the arch trim and fit between the corners', () => {
     const south = walls.find(wall => wall.id === 'salon-south')!

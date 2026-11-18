@@ -92,7 +92,7 @@ export type RoomOptions = {
   title: string
   /** the part of the room’s floor plan that climbs to the floor above, which the map shows there instead of on the room’s own floor */
   upperMap?: UpperMapOptions
-  /** how strongly the air holds sun shafts while the player is inside, 1 at full strength; 0 turns volumetric sunlight off */
+  /** how strongly the air holds sun shafts while the player is inside, 1 at full strength, more for air that has to show narrow shafts; 0 turns volumetric sunlight off */
   volumetricSun?: number
   /** the room’s walls by their id within the room, in snake_case */
   walls?: Record<string, RoomWall>

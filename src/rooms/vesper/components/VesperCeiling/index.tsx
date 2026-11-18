@@ -33,7 +33,7 @@ export default function VesperCeiling({size}: {
     metalness: 0.55,
     roughness: 0.34,
   }), []))
-  // Painted bronze glazing bars, as on the Lobby vault and the Salon’s skylight.
+  // Painted bronze glazing bars, as on the Lobby vault and the Salon’s lantern.
   const bronze = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: '#5b4a35',
     metalness: 0.5,
