@@ -70,7 +70,13 @@ const nextFrame = (renderer: GalleryRenderer) => {
 }
 test('three still projects every render through the renderer’s drawing pipeline, which the gallery’s culling, warming and streaming hook into', () => {
   const {_renderScene: renderScene} = Renderer.prototype as unknown as {_renderScene: () => void}
-  expect(renderScene.toString()).toContain('this.drawingPipeline.project(')
+  // Cold drawables are admitted when the list finishes, before three sorts it for drawing.
+  const source = renderScene.toString()
+  const project = source.indexOf('this.drawingPipeline.project(')
+  const finish = source.indexOf('this.drawingPipeline.finishRenderList(')
+  expect(project).toBeGreaterThanOrEqual(0)
+  expect(finish).toBeGreaterThan(project)
+  expect(source.indexOf('renderList.sort(')).toBeGreaterThan(finish)
   expect(createRenderer().drawingPipeline).toBeInstanceOf(GalleryDrawingPipeline)
 })
 test('the frame scene’s passes leave out hidden objects, except for unculled cameras', () => {
