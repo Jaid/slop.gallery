@@ -12,7 +12,7 @@ import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /**
- * The Vesper’s coved ceiling with its glazed lantern, which lights the room from the sky instead of lamps.
+ * A pierced bridge divides the Vesper’s coved ceiling into two glazed lanterns. They light the room from the sky instead of lamps.
  * Rendered inside the room’s group, at its middle.
  */
 export default function VesperCeiling({size}: {
@@ -52,7 +52,8 @@ export default function VesperCeiling({size}: {
     <mesh castShadow geometry={geometry.plaster} material={plaster} name='vesper-ceiling-plaster' receiveShadow />
     <mesh castShadow geometry={geometry.gilt} material={gilt} name='vesper-ceiling-gilding' receiveShadow />
     <mesh castShadow geometry={geometry.bars} material={bronze} name='vesper-lantern-bars' />
-    {/* The glass lets the sun through: it casts no shadow, only its bars do. */}
+    <mesh castShadow geometry={geometry.bridge} name='vesper-lantern-bridge' receiveShadow><meshStandardNodeMaterial color='#405b51' metalness={0.58} roughness={0.4} /></mesh>
+    {/* The glass lets the sun through: only the framing and the bridge cast shadows. */}
     <mesh castShadow={false} geometry={geometry.glass} material={glass} name='vesper-lantern-glass' />
   </group>
 }
