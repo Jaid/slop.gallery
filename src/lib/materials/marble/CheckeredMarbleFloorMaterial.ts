@@ -42,21 +42,6 @@ const groutHalfWidth = 0.0022
 const arrisDepth = 0.0006
 
 /**
- * The tile of a checkered grid that covers a world point, and whether it is cut from the dark stone.
- *
- * Kept on the CPU too, so tests can check the pattern against the room.
- */
-export function checkeredTile(x: number, z: number, {origin, tile}: Pick<CheckeredMarbleFloorOptions, 'origin' | 'tile'>) {
-  const column = Math.floor((x - origin[0]) / tile)
-  const row = Math.floor((z - origin[1]) / tile)
-  return {
-    column,
-    row,
-    dark: (column + row) % 2 !== 0,
-  }
-}
-
-/**
  * Polished checkered marble, alternating a light and a dark cut, mapped by world position so the pattern stays put however the floor is split into slabs.
  *
  * Every tile is cut from another part of its block and turned at random, so neighbors never continue each other’s veins. Tiles are set with hairline grout and eased arrises. In heavy mode the polish mirrors the room, bent faintly by the waviness of hand-polished stone; the grout stays matte.

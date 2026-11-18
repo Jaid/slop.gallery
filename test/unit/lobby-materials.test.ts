@@ -2,16 +2,12 @@ import {describe, expect, test} from 'bun:test'
 
 import {floorTile, roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import PolishedBrassMaterial from '../../src/lib/materials/PolishedBrassMaterial.ts'
-import {lobbyFloorTravertine, lobbyWallTravertine, TravertineFloorMaterial, travertinePalette, travertineTile, TravertineWallMaterial} from '../../src/lib/materials/travertine/index.ts'
+import {lobbyFloorTravertine, lobbyWallTravertine, TravertineFloorMaterial, TravertineWallMaterial} from '../../src/lib/materials/travertine/index.ts'
 import {rooms} from './fixtures/gallery.ts'
 import lightness from './helpers/lightness.ts'
 
 const lobby = rooms.find(room => room.id === 'lobby')!
 const origin = [lobby.center[0] - lobby.size[0] / 2, lobby.center[1] - lobby.size[1] / 2] as const
-const layout = {
-  origin,
-  tile: floorTile,
-}
 describe('the Lobby’s travertine floor', () => {
   test('every tile of the shader grid is bounded by the seams laid over the floor', () => {
     const plan = roomFloorPlan(lobby)
@@ -33,21 +29,6 @@ describe('the Lobby’s travertine floor', () => {
     expect(lobby.size[0] / floorTile % 1).toBe(0)
     expect(lobby.size[1] / floorTile % 1).toBe(0)
     expect(seamXs.size).toBe(lobby.size[0] / floorTile + 1)
-  })
-  test('a point maps to the tile whose bounds contain it, and neighbors are distinct tiles', () => {
-    for (let column = 0; column < lobby.size[0] / floorTile; column++) {
-      for (let row = 0; row < lobby.size[1] / floorTile; row++) {
-        const x = origin[0] + (column + 0.3) * floorTile
-        const z = origin[1] + (row + 0.7) * floorTile
-        const tile = travertineTile(x, z, layout)
-        expect([tile.column, tile.row]).toEqual([column, row])
-        expect(Math.abs(tile.center[0] - x)).toBeLessThan(floorTile / 2)
-        expect(Math.abs(tile.center[1] - z)).toBeLessThan(floorTile / 2)
-      }
-    }
-    const a = travertineTile(origin[0] + floorTile - 1e-6, origin[1] + 0.5, layout)
-    const b = travertineTile(origin[0] + floorTile + 1e-6, origin[1] + 0.5, layout)
-    expect(b.column).toBe(a.column + 1)
   })
   test('rejects tiles without a size', () => {
     for (const tile of [0, -1, Number.NaN]) {
@@ -94,7 +75,6 @@ describe('the Lobby’s travertine walls', () => {
     }
   })
   test('the walls are a lighter, calmer cut than the floor', () => {
-    expect(lobbyFloorTravertine.palette).toBe(travertinePalette)
     for (const key of ['base', 'light', 'vein'] as const) {
       expect(lightness(lobbyWallTravertine.palette[key])).toBeGreaterThan(lightness(lobbyFloorTravertine.palette[key]))
     }

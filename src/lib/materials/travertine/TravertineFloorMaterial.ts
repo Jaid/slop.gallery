@@ -30,21 +30,6 @@ export const lobbyFloorTravertine: TravertineStyle = {
 const bedding = 0.2
 
 /**
- * The tile of a grid that covers a world point, with the per-tile bedding angle and stone offset the shader derives from its hash.
- *
- * Kept on the CPU too, so tests can check that neighbors never share a cut.
- */
-export function travertineTile(x: number, z: number, {origin, tile}: Pick<TravertineFloorOptions, 'origin' | 'tile'>) {
-  const column = Math.floor((x - origin[0]) / tile)
-  const row = Math.floor((z - origin[1]) / tile)
-  return {
-    column,
-    row,
-    center: [origin[0] + (column + 0.5) * tile, origin[1] + (row + 0.5) * tile] as const,
-  }
-}
-
-/**
  * Polished travertine tiles, mapped by world position so the pattern stays put however the floor is split into slabs.
  *
  * Every tile is cut from a different part of the block: its stone is offset far into the pattern and its bedding turned by a few degrees, so neighbors never continue each other’s veins. The polish mirrors the room in heavy mode; the pores stay matte, dark and recessed.
