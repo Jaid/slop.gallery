@@ -282,10 +282,6 @@ const relations = {
         'led_south',
       ],
       moonfall: [
-        'wall_west_1',
-        'wall_west_2',
-        'wall_west_3',
-        'wall_west_4',
         'wall_east_north',
         'wall_east_south',
         'wall_north_west',
