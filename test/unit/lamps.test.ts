@@ -1,13 +1,12 @@
-import type Passage from '../../src/lib/gallery/passages/Passage.ts'
+import type {PendantMount} from '../../src/lib/gallery/pendants/CeilingProbe.ts'
 import type {Vec3} from '../../src/lib/gallery/types.ts'
 import type {PlacedLamp} from '../../src/worlds/base/PlacedRoom.ts'
 import type {GalleryRoomId} from '../../src/worlds/gallery/SlopGallery.ts'
-import type {BufferGeometry} from 'three/webgpu'
 
 import {expect, test} from 'bun:test'
 
 import {bastionCurve, bastionGateLantern} from '../../src/lib/gallery/bastion.ts'
-import {corridorLandingLantern, corridorPassage} from '../../src/lib/gallery/corridor.ts'
+import {corridorHallLanterns, corridorLandingLantern, corridorPassage} from '../../src/lib/gallery/corridor.ts'
 import {lobbyChandeliers} from '../../src/lib/gallery/lobbyVault.ts'
 import {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
@@ -30,11 +29,7 @@ const expectNear = (actual: Vec3, expected: Vec3) => {
     expect(value).toBeCloseTo(expected[index], 3)
   }
 }
-/** The lights of a passage’s kept lanterns in world meters, hung like the fixtures that carry them: the mounts the lantern bodies hang from, by index, each light lowered by its drop. */
-const lanterns = (passage: Passage, surfaces: ReadonlyArray<BufferGeometry>, kept: ReadonlyArray<readonly [index: number, drop: number]>, spacing?: number, ribs?: BufferGeometry) => {
-  const mounts = passagePendantMounts(passage, surfaces, spacing, ribs)
-  return kept.map(([index, drop]): Vec3 => [mounts[index].light[0], mounts[index].light[1] + drop, mounts[index].light[2]])
-}
+const below = ({light: [x, y, z]}: PendantMount, distance: number): Vec3 => [x, y - distance, z]
 test('every lamp has a world-wide id of its own and lies in its own room', () => {
   expect(byId.size).toBe(lamps.length)
   for (const {id, position, room} of lamps) {
@@ -65,13 +60,12 @@ test('the passages’ lamps hang under the lanterns the fixtures hang from their
   try {
     const [{light}] = routePendantMounts(bastionCurve, [vault.shell, vault.ribs], [bastionGateLantern])
     expectNear(lamp('bastion-lantern_north').position, [light[0], light[1] - 0.6, light[2]])
-    const [doorway, north, middle, south] = lanterns(corridorPassage, [timber.shell, timber.ribs], [[0, -0.3], [3, -0.3], [5, -0.4], [8, -0.4]], corridorLightSpacing, timber.ribs)
-    expectNear(lamp('corridor-lantern_lodge').position, doorway)
-    expectNear(lamp('corridor-lantern_north').position, north)
-    expectNear(lamp('corridor-lantern_middle').position, middle)
-    expectNear(lamp('corridor-lantern_south').position, south)
-    const [x, y, z] = corridorLandingLantern.light
-    expectNear(lamp('corridor-lantern_landing').position, [x, y - 0.3, z])
+    const [doorway, north, middle, south] = corridorHallLanterns(passagePendantMounts(corridorPassage, [timber.shell, timber.ribs], corridorLightSpacing, timber.ribs))
+    expectNear(lamp('corridor-lantern_lodge').position, below(doorway, 0.3))
+    expectNear(lamp('corridor-lantern_north').position, below(north, 0.3))
+    expectNear(lamp('corridor-lantern_middle').position, below(middle, 0.4))
+    expectNear(lamp('corridor-lantern_south').position, below(south, 0.4))
+    expectNear(lamp('corridor-lantern_landing').position, below(corridorLandingLantern, 0.3))
   } finally {
     vault.dispose()
     timber.dispose()

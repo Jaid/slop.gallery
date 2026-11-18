@@ -5,7 +5,7 @@ import {afterAll, describe, expect, test} from 'bun:test'
 import {DoubleSide, ExtrudeGeometry, Mesh, MeshBasicMaterial, Raycaster, Shape, Vector2, Vector3} from 'three/webgpu'
 
 import {bastionApproach, bastionCurve, bastionGateLantern, bastionMouth, bastionTransition} from '../../src/lib/gallery/bastion.ts'
-import {corridorLanding, corridorLandingLantern, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
+import {corridorHallLanterns, corridorLanding, corridorLandingLantern, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import LodgeWindowGeometry from '../../src/lib/gallery/LodgeWindowGeometry.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
@@ -76,8 +76,8 @@ const groups: Array<{
   {
     label: 'timber corridor',
     body: lantern,
-    lights: Array.from({length: 9}, () => corridorPassage.floorY + corridorPassage.height - passageLightDrop),
-    mounts: passagePendantMounts(corridorPassage, [corridor.shell, corridor.ribs], corridorLightSpacing, corridor.ribs),
+    lights: Array.from({length: 4}, () => corridorPassage.floorY + corridorPassage.height - passageLightDrop),
+    mounts: corridorHallLanterns(passagePendantMounts(corridorPassage, [corridor.shell, corridor.ribs], corridorLightSpacing, corridor.ribs)),
   },
   {
     label: 'timber corridor landing',
@@ -99,7 +99,7 @@ const firstHit = (origin: Vector3, direction: Vector3, far = Infinity) => {
 describe('ceiling-hung pendants', () => {
   test('every light hangs its drop under its passage’s crown', () => {
     expect(groups[0].mounts).toHaveLength(1)
-    expect(groups[2].mounts).toHaveLength(9)
+    expect(groups[2].mounts).toHaveLength(4)
     expect(groups[3].mounts).toHaveLength(1)
     for (const {mounts, lights} of groups) {
       expect(mounts).toHaveLength(lights.length)
