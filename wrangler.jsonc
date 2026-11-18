@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.esm.sh/wrangler/config-schema.json",
   "name": "slop-gallery",
-  // GitHub Actions builds dist with ImageMagick and cjxl, then uploads it with Wrangler. In Pages branch controls, turn off automatic production deployments and set preview branches to None.
+  // GitHub Actions builds and uploads dist. Git-triggered Pages builds are disabled in node-scripts/src/maintain_domains/options.ts.
   "pages_build_output_dir": "dist"
 }
