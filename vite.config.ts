@@ -49,15 +49,6 @@ const getCommonConfig = (context: ConfigEnv) => {
       robotsTxtPlugin(),
       sourceCodeMetadataPlugin(manifest, import.meta.dirname),
       socialPreviewPlugin(manifest, {cardImage: 'assets/wallpaper.jxl'}),
-      // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
-      loadingScreenPlugin({
-        entry: '/src/main.tsx',
-        screens: worlds,
-        defaultScreen: defaultWorld,
-        select: selectWorld,
-        selectorArguments: [worldParameters, worldRooms],
-        fontFamily: 'main, system-ui, sans-serif',
-      }),
       reactPlugin({compiler: true}),
       mediaMixinsPlugin(),
     ],
@@ -99,6 +90,14 @@ const getProductionConfig = () => {
   const config: UserConfig = {
     plugins: [
       jxlPlugin(),
+      // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
+      loadingScreenPlugin({
+        screens: worlds,
+        defaultScreen: defaultWorld,
+        select: selectWorld,
+        selectorArguments: [worldParameters, worldRooms],
+        fontFamily: 'main, system-ui, sans-serif',
+      }),
       jxlHeadersPlugin(),
       immutableHeadersPlugin(),
       outputListPlugin(),

@@ -9,7 +9,6 @@ import loadingScreenPlugin from 'vite-plugin-loading-screen'
 export default defineConfig({
   plugins: [
     loadingScreenPlugin({
-      entry: '/src/main.tsx',
       title: 'Slop Gallery',
       tagline: 'Good taste. Questionable art.',
       wallpaper: 'assets/wallpaper.jxl',
@@ -27,7 +26,13 @@ hideLoadingScreen()
 
 The plugin adds a `<style>`, a `<div id="loading-screen">` at the start of the body and a preload of the wallpaper, in development and in builds. Nothing of it waits for JavaScript.
 
-With `entry` set, leave the app’s module script out of `index.html`. The plugin supplies it to Vite, so the browser can fetch the app while the splash is visible and run it after the HTML has been parsed. Vite resolves the development URL and generates the production chunk and its preload links as usual.
+Keep the app entry in `index.html`, so the same page also works without the plugin:
+
+```html
+<script type="module" src="/src/main.tsx" data-loading-screen-entry></script>
+```
+
+During the HTML transform, the plugin replaces the marked script’s `src` with a module import for Vite to bundle. Other scripts are left alone. Without the plugin, the browser loads the entry directly from `src`.
 
 ## Wallpaper
 
@@ -66,7 +71,6 @@ The page’s HTML holds the default screen. A small inline script right after it
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `entry` | none | the app module URL, as in `<script type="module" src="…">`; omit it if the page supplies its own entry |
 | `title` | | the screen’s heading |
 | `tagline` | none | the line under the title |
 | `wallpaper` | none | the file of the image behind the title |

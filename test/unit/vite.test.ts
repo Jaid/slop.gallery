@@ -19,6 +19,7 @@ test.each(['development', 'staging', 'production'])('Vite %s keeps the shared pi
   expect(config.build.cssTarget).toEqual(config.build.target)
   expect(config.plugins.some(plugin => plugin.name === 'browserslist-target')).toBe(true)
   expect(config.plugins.some(plugin => plugin.name === 'title')).toBe(true)
+  expect(config.plugins.some(plugin => plugin.name === 'loading-screen')).toBe(mode === 'production')
   expect(config.plugins.some(plugin => plugin.name === 'vite:react-compiler')).toBe(true)
   if (mode === 'production') {
     expect(config.build.sourcemap).toBe(false)
