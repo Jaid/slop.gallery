@@ -111,7 +111,7 @@ export function ironTableColliders({apron: [apronDepth, apronThickness], depth, 
 
 /** Most of a side table’s mass is in the slab; the frame’s share is distributed by volume. */
 export function sideTableColliders(table: IronTable, name: string) {
-  const totalMass = 200 // kg per free-standing table
+  const totalMass = 150 // kg per free-standing table
   const frameMass = totalMass * 5 / 16
   const [slab, ...frame] = ironTableColliders(table, name)
   const volumes = frame.map(({size: [x, y, z]}) => x * y * z)
