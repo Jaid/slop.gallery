@@ -20,9 +20,9 @@ export type LoadingScreenAppearance = {
   label?: string
 }
 /** a page that always starts with the same screen */
-export type SingleLoadingScreenOptions = LoadingScreen & LoadingScreenAppearance
+export type SingleLoadingScreenOptions = LoadingScreen & SharedLoadingScreenOptions
 /** a page that starts with one of several screens, picked by its URL */
-export type SelectedLoadingScreenOptions<Id extends string> = LoadingScreenAppearance & {
+export type SelectedLoadingScreenOptions<Id extends string> = SharedLoadingScreenOptions & {
   /** the screen the page’s HTML holds, before the script right after it picks the URL’s, and the one of an ID that {@link select} returns without a screen */
   defaultScreen: NoInfer<Id>
   screens: Readonly<Record<Id, LoadingScreen>>
@@ -32,6 +32,10 @@ export type SelectedLoadingScreenOptions<Id extends string> = LoadingScreenAppea
   selectorArguments?: ReadonlyArray<unknown>
 }
 export type LoadingScreenOptions<Id extends string = string> = SelectedLoadingScreenOptions<Id> | SingleLoadingScreenOptions
+type SharedLoadingScreenOptions = LoadingScreenAppearance & {
+  /** The app module’s URL, as it would appear in a module script’s `src` in the page. */
+  entry?: string
+}
 /** what the page knows of a screen */
 type PageScreen = {
   tagline: string
@@ -102,8 +106,8 @@ const cssUrl = (url: string) => `url(${JSON.stringify(url)})`
  *
  * A page that opens differently by its URL, like one build holding several worlds, gives several {@link SelectedLoadingScreenOptions.screens} and a function that picks one: a small inline script right after the screen runs it before the first paint and sets the picked screen’s title, tagline and wallpaper, and the document’s title.
  */
-export default function loadingScreenPlugin<Id extends string>(options: LoadingScreenOptions<Id>): Plugin {
-  const {fontFamily = 'system-ui, sans-serif', label = 'Loading…'} = options
+export default function loadingScreenPlugin<Id extends string>(options: LoadingScreenOptions<Id>): Array<Plugin> {
+  const {entry, fontFamily = 'system-ui, sans-serif', label = 'Loading…'} = options
   let base: string
   let root: string
   /** the wallpaper’s URL: the file itself during development, otherwise what the build made of the page’s import of it, which other plugins may have converted */
@@ -135,7 +139,7 @@ export default function loadingScreenPlugin<Id extends string>(options: LoadingS
       ...wallpaperType ? {wallpaperType} : {},
     }
   }
-  return {
+  const screenPlugin: Plugin = {
     name: 'loading-screen',
     configResolved(config) {
       base = config.base
@@ -210,4 +214,22 @@ if (screen.wallpaper) {
       return tags
     },
   }
+  if (!entry) {
+    return [screenPlugin]
+  }
+  // Vite must see the app entry before it processes HTML. The screen itself needs the finished bundle to resolve its wallpapers.
+  return [{
+    name: 'loading-screen:entry',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: () => [{
+        tag: 'script',
+        attrs: {
+          type: 'module',
+          src: entry,
+        },
+        injectTo: 'body',
+      }],
+    },
+  }, screenPlugin]
 }

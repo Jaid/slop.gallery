@@ -13,7 +13,8 @@ type Options = Parameters<typeof loadingScreenPlugin>[0]
 
 // The smallest PNG there is, a single transparent pixel.
 const pixel = Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==')
-const page = '<!doctype html><html><head><title>Fixture</title></head><body><script type="module" src="./main.js"></script></body></html>'
+const emptyPage = '<!doctype html><html><head><title>Fixture</title></head><body></body></html>'
+const page = emptyPage.replace('</body>', '<script type="module" src="./main.js"></script></body>')
 let root: string
 beforeEach(async () => {
   root = await fs.mkdtemp(join(tmpdir(), 'loading-screen-'))
@@ -130,11 +131,16 @@ test('a screen needs neither tagline nor wallpaper, and takes its own label and 
   expect(html).toContain('font-family: main, serif;')
   expect(html).not.toContain('rel="preload" as="image"')
 })
-test('the base path leads to the wallpaper', async () => {
+test('the configured app entry and its wallpaper build under the base path', async () => {
+  await fs.outputFile(join(root, 'index.html'), emptyPage)
   const {fileOf, html} = await buildPage({
+    entry: '/main.js',
     title: 'Based',
     wallpaper: 'wallpaper.png',
   }, '/game/')
+  const entries = html.matchAll(/<script type="module"[^>]* src="\/game\/([^"]+)"/gu).toArray()
+  expect(entries).toHaveLength(1)
+  expect(await fs.readFile(join(root, 'dist', entries[0][1]), 'utf8')).toContain(fileOf('wallpaper.png'))
   expect(html).toContain(`href="/game/${fileOf('wallpaper.png')}"`)
 })
 test('several screens start with the default one and let the URL pick', async () => {
@@ -193,6 +199,7 @@ test('the development server shows the wallpaper’s file itself', async () => {
     server: {middlewareMode: true},
     plugins: [
       loadingScreenPlugin({
+        entry: '/main.js',
         title: 'Inside',
         wallpaper: join(root, 'wallpaper.png'),
       }),
@@ -212,7 +219,9 @@ test('the development server shows the wallpaper’s file itself', async () => {
     ],
   })
   try {
-    expect(await server.transformIndexHtml('/', page)).toContain('<link rel="preload" as="image" type="image/png" href="/wallpaper.png" fetchpriority="high">')
+    const insideHtml = await server.transformIndexHtml('/', emptyPage)
+    expect(insideHtml).toContain('<script type="module" src="/main.js"></script>')
+    expect(insideHtml).toContain('<link rel="preload" as="image" type="image/png" href="/wallpaper.png" fetchpriority="high">')
     const html = await elsewhere.transformIndexHtml('/', page)
     expect(html).toContain(`type="image/jxl" href="/@fs/${join(outside, 'far.jxl').replaceAll('\\', '/')}"`)
   } finally {

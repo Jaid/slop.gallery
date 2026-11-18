@@ -51,6 +51,7 @@ const getCommonConfig = (context: ConfigEnv) => {
       socialPreviewPlugin(manifest, {cardImage: 'assets/wallpaper.jxl'}),
       // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
       loadingScreenPlugin({
+        entry: '/src/main.tsx',
         screens: worlds,
         defaultScreen: defaultWorld,
         select: selectWorld,
