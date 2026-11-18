@@ -467,13 +467,15 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     ...landings.map(level => polySlab('display-landing-ceiling', level.polygon, landingRoofTop - ceilingThickness, landingRoofTop)),
     boxSlab('display-landing-header', add(p3, d3, -thickness / 2), d3, stairWidth, thickness, landingRoofTop, landingRoofTop - (flights[2].end[1] + headroom - ceilingThickness / 2)),
   ]
-  const rampLampAlong = rampLen * 0.6
-  const rampLampPt = add(c1.start2, d2, rampLampAlong)
-  const lamps: Array<Vec3> = [
-    [innerX + direction * (wallFace + 0.5), balconyY + headroom - ceilingThickness / 2, doorZ],
-    [rampLampPt[0], corner1Y + rampLampAlong * rampSlope + headroom - ceilingThickness / 2, rampLampPt[1]],
-    landingLamp,
-  ]
+  const lamps: Record<string, Vec3> = {
+    door: [innerX + direction * (wallFace + 0.5), balconyY + headroom - ceilingThickness / 2, doorZ],
+  }
+  if (side === 'east') {
+    const along = rampLen * 0.6
+    const [x, z] = add(c1.start2, d2, along)
+    lamps.ramp = [x, corner1Y + along * rampSlope + headroom - ceilingThickness / 2, z]
+  }
+  lamps.landing = landingLamp
   const polyAir = (poly: FloorPolygon, bottom: number, top: number, slack = 0.55): Array<DisplayAir> => floorChunks([poly], bottom, top - bottom, slack).map(({min, max}) => ({
     center: [(min[0] + max[0]) / 2, (min[2] + max[2]) / 2],
     size: [max[0] - min[0], max[2] - min[2]],

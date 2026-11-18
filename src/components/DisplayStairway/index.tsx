@@ -53,7 +53,7 @@ export default function DisplayStairway({stairway, material}: {
         </mesh>
       </group>
     })}
-    {lamps.map((position, i) => <group key={i} position={position}>
+    {Object.entries(lamps).map(([name, position]) => <group key={name} position={position}>
       <Box color='#242f32' position={[0, -0.04, 0]} size={[0.5, 0.1, 0.5]} />
       <mesh position={[0, -0.091, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.16, 24]} /><meshBasicNodeMaterial color={stairwayTint} toneMapped={false} />
