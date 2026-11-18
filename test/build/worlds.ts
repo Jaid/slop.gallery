@@ -37,9 +37,9 @@ const lost = [...listed].find(file => !files.includes(file))
 if (lost) {
   fail(`${lost} is in the output list but not in the build, like when another file’s hash differs from its hash only in case.`)
 }
-// The page, social card and headers have stable public URLs.
+// The page, social card, crawler policy and headers keep their names.
 const named = files.filter(file => !hashedFileName.test(file))
-const unexpected = named.find(file => !['_headers', 'index.html', 'preview.jpg'].includes(file))
+const unexpected = named.find(file => !['_headers', 'index.html', 'preview.jpg', 'robots.txt'].includes(file))
 if (unexpected) {
   fail(`${unexpected} is not named by its content hash.`)
 }

@@ -22,6 +22,7 @@ import titlePlugin from 'vite-plugin-title'
 
 import immutableHeadersPlugin from '#src/lib/vite/immutableHeadersPlugin.ts'
 import outputListPlugin from '#src/lib/vite/outputListPlugin.ts'
+import robotsTxtPlugin from '#src/lib/vite/robotsTxtPlugin.ts'
 import socialPreviewPlugin from '#src/lib/vite/socialPreviewPlugin.ts'
 import sourceCodeMetadataPlugin from '#src/lib/vite/sourceCodeMetadataPlugin.ts'
 import worldChunksPlugin from '#src/lib/vite/worldChunksPlugin.ts'
@@ -45,6 +46,7 @@ const getCommonConfig = (context: ConfigEnv) => {
         optional: true,
       }),
       titlePlugin(worlds[defaultWorld].title),
+      robotsTxtPlugin(),
       sourceCodeMetadataPlugin(manifest, import.meta.dirname),
       socialPreviewPlugin(manifest, {cardImage: 'assets/wallpaper.jxl'}),
       // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
