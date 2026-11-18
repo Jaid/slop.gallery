@@ -1,4 +1,6 @@
-import {afterEach, expect, test} from 'bun:test'
+import type {MinimapPose} from '../../src/lib/minimapPlayer.ts'
+
+import {expect, test} from 'bun:test'
 
 import {knotBays, knotExhibition} from 'knot-materials/exhibition.ts'
 import {createElement} from 'react'
@@ -6,19 +8,18 @@ import {renderToStaticMarkup} from 'react-dom/server'
 
 import KnotStudyMap from '../../src/components/KnotStudyMap/index.tsx'
 import KnottinghamMinimap from '../../src/components/KnottinghamMinimap/index.tsx'
-import {cameraPose} from '../../src/lib/gallery.ts'
 import {knotGalleryBounds, knotGallerySize} from '../../src/lib/gallery/knotGallery.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 
-const pose = {
-  position: cameraPose.position,
-  direction: cameraPose.direction,
+const pose: MinimapPose = {
+  position: [-14, 1.6, -9],
+  direction: [1, 0, 0],
 }
-afterEach(() => Object.assign(cameraPose, pose))
 test('Knottingham minimap has a transparent hall outline, no visible labels and a positioned player', () => {
-  cameraPose.position = [-14, 1.6, -9]
-  cameraPose.direction = [1, 0, 0]
-  const html = renderToStaticMarkup(createElement(KnottinghamMinimap, {lower: false}))
+  const html = renderToStaticMarkup(createElement(KnottinghamMinimap, {
+    lower: false,
+    pose,
+  }))
   expect(html).toMatch(/<rect[^>]+fill="none"/u)
   expect(html).not.toContain('<text')
   expect(html.match(/data-knot=/gu)).toHaveLength(knotExhibition.length)
@@ -31,7 +32,7 @@ test('Knottingham minimap has a transparent hall outline, no visible labels and 
   }
 })
 test('the detailed map labels every candidate row and item without an opaque floor', () => {
-  const html = renderToStaticMarkup(createElement(KnotStudyMap))
+  const html = renderToStaticMarkup(createElement(KnotStudyMap, {pose}))
   expect(html).toMatch(/<rect[^>]+fill="none"/u)
   expect(html).toContain('<text')
   for (const bay of knotBays) {
@@ -42,7 +43,10 @@ test('the detailed map labels every candidate row and item without an opaque flo
   }
 })
 test('minimap viewBox and hall outline share the dynamically sized room', () => {
-  const html = renderToStaticMarkup(createElement(KnottinghamMinimap, {lower: false}))
+  const html = renderToStaticMarkup(createElement(KnottinghamMinimap, {
+    lower: false,
+    pose,
+  }))
   expect(html).toContain(`viewBox="${knotGalleryBounds.minX - 1} ${knotGalleryBounds.northZ - 1} ${knotGallerySize[0] + 2} ${knotGallerySize[2] + 2}"`)
   const outline = /<rect[^>]+fill="none"[^>]*>/u.exec(html)?.[0]
   expect(outline).toContain(`x="${knotGalleryBounds.minX}"`)
@@ -51,7 +55,10 @@ test('minimap viewBox and hall outline share the dynamically sized room', () => 
   expect(outline).toContain(`height="${knotGallerySize[2]}"`)
 })
 test('Knottingham has a single floor, so its map stays empty for the lower one', () => {
-  expect(renderToStaticMarkup(createElement(KnottinghamMinimap, {lower: true}))).toBe('')
+  expect(renderToStaticMarkup(createElement(KnottinghamMinimap, {
+    lower: true,
+    pose,
+  }))).toBe('')
 })
 test('the pause menu shows Knottingham’s map of its upper floor wherever the player stands', () => {
   const arena = knottingham.room('arena')

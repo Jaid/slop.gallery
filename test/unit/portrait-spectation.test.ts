@@ -2,11 +2,12 @@ import type {Portrait, Vec3} from '../../src/lib/gallery/types.ts'
 
 import {afterEach, beforeAll, describe, expect, spyOn, test} from 'bun:test'
 
-import {createElement, Suspense} from 'react'
+import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import Menu from '#component/Menu'
+import Minimap from '#component/Minimap'
 import PortraitSpectation from '#component/PortraitSpectation'
 
 import {readAiSettings} from '../../src/lib/ai/settings.ts'
@@ -73,7 +74,7 @@ const textOf = (html: string, testId: string) => {
 const stageClasses = (html: string) => /class="([^"]*)"[^>]*data-testid="portrait-viewer"/u.exec(html)![1].split(' ')
 beforeAll(async () => {
   // The world’s minimap loads lazily: rendering it once starts the download, so the pause stage below renders it in place.
-  renderToStaticMarkup(createElement(Suspense, null, createElement(slopGallery.Minimap, {lower: false})))
+  renderToStaticMarkup(createElement(Minimap))
   await import('#component/GalleryMinimap')
 })
 afterEach(() => {

@@ -110,6 +110,9 @@ export default function Player() {
         return
       }
       player.current?.teleport(destination, rotation)
+      // The menu can freeze the scene before the next interaction frame samples the new camera.
+      cameraPose.position = camera.position.toArray()
+      cameraPose.direction = camera.getWorldDirection(new Vector3).toArray()
       // The body is there before the player’s next update, so whatever follows it, like the room the player is in, never sees it where it was.
       bodyPose.center = [destination[0], destination[1] + defaultEgoOptions.height / 2, destination[2]]
       bodyPose.velocity = [0, 0, 0]

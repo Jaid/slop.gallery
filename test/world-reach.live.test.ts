@@ -65,6 +65,10 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     {mode: 'room'},
     {
       mode: 'room',
+      room: 'forge',
+    },
+    {
+      mode: 'room',
       room: 'oculus',
     },
     {
@@ -151,6 +155,11 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     }
     const mountedLater = await page.evaluate(() => globalThis.slopGallery!.snapshot!().mountedRooms)
     expect(mountedLater.toSorted(), `${label} after posing out of reach`).toEqual(expected.rooms.toSorted())
+    if (outside) {
+      // Return to the player before checking what the pause menu shows there.
+      await page.evaluate(position => globalThis.slopGallery!.pose!({position}), snapshot.camera)
+      await waitForFrames(page, 2)
+    }
     const requested = new Set(await requestedFiles(page))
     for (const [id, file] of roomChunks) {
       if (requested.has(file) !== expected.covers(id)) {
@@ -168,6 +177,23 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     await page.waitForFunction(count => document.querySelectorAll('[data-testid="portrait-collection"] [data-portrait] img').length === count, {timeout: 60_000}, works.length)
     const listed = await page.evaluate(() => [...document.querySelectorAll('[data-testid="portrait-collection"] [data-portrait]')].map(item => item.getAttribute('data-portrait')!))
     expect(listed.toSorted(), label).toEqual(works.map(work => work.id).toSorted())
+    const marker = await page.waitForSelector('[data-testid="minimap"] path[aria-label="Your position"][display="inline"]')
+    const map = await marker!.evaluate(arrow => {
+      const svg = arrow.ownerSVGElement!
+      const {matrix} = arrow.transform.baseVal.getItem(0)
+      return {
+        rooms: [...svg.querySelectorAll('[data-room]')].map(item => item.getAttribute('data-room')),
+        works: [...svg.querySelectorAll('[data-portrait]')].map(item => item.getAttribute('data-portrait')!),
+        x: matrix.e,
+        z: matrix.f,
+      }
+    })
+    const lower = slopGallery.isLowerFloor(slopGallery.roomById(snapshot.room), snapshot.camera)
+    const onFloor = slopGallery.rooms.filter(candidate => expected.covers(candidate.id) && (lower ? candidate.floorY < 0 : candidate.floorY >= 0 || candidate.upperMap))
+    expect(map.rooms, label).toEqual(onFloor.map(candidate => candidate.id))
+    expect(map.works.toSorted(), label).toEqual(listed.toSorted())
+    expect(map.x, label).toBeCloseTo(x, 1)
+    expect(map.z, label).toBeCloseTo(z, 1)
     const downloaded = new Set(await requestedFiles(page))
     for (const portrait of snapshot.portraits) {
       const image = images.get(portrait.id)

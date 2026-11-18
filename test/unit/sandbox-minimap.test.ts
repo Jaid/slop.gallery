@@ -1,21 +1,22 @@
-import {afterEach, expect, test} from 'bun:test'
+import type {MinimapPose} from '../../src/lib/minimapPlayer.ts'
+
+import {expect, test} from 'bun:test'
 
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 
 import SandboxMinimap from '../../src/components/SandboxMinimap/index.tsx'
-import {cameraPose} from '../../src/lib/gallery.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
 
-const pose = {
-  position: cameraPose.position,
-  direction: cameraPose.direction,
+const pose: MinimapPose = {
+  position: [1, 1.6, -2],
+  direction: [1, 0, 0],
 }
-afterEach(() => Object.assign(cameraPose, pose))
 test('the Sandbox’s map frames the Cell’s floor plan with the player on it, the room alone while a door shuts its north wall', () => {
-  cameraPose.position = [1, 1.6, -2]
-  cameraPose.direction = [1, 0, 0]
-  const html = renderToStaticMarkup(createElement(SandboxMinimap, {lower: false}))
+  const html = renderToStaticMarkup(createElement(SandboxMinimap, {
+    lower: false,
+    pose,
+  }))
   const cell = sandbox.room('cell')
   const [width, depth] = cell.size
   const [x, z, frameWidth, frameDepth] = cell.map!.frame
@@ -25,7 +26,10 @@ test('the Sandbox’s map frames the Cell’s floor plan with the player on it, 
   expect(html).toContain('translate(1 -2) rotate(90)')
 })
 test('the Sandbox has a single floor, so its map stays empty for the lower one', () => {
-  expect(renderToStaticMarkup(createElement(SandboxMinimap, {lower: true}))).toBe('')
+  expect(renderToStaticMarkup(createElement(SandboxMinimap, {
+    lower: true,
+    pose,
+  }))).toBe('')
 })
 test('the pause menu shows the Sandbox’s map of its upper floor wherever the player stands', () => {
   const cell = sandbox.room('cell')

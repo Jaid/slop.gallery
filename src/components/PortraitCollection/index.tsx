@@ -4,15 +4,14 @@ import type {PortraitImageFormat} from '#src/lib/gallery/portraitExport.ts'
 
 import Branch from 'branch-component'
 import {useEffect, useState} from 'react'
-import {useShallow} from 'zustand/react/shallow'
 
 import ContextMenu from '#component/ContextMenu'
 import PortraitCollectionItem from '#component/PortraitCollectionItem'
 import artworkThumbnails from '#src/lib/artworkThumbnails.ts'
-import {notify, useGallery} from '#src/lib/gallery.ts'
+import {notify} from '#src/lib/gallery.ts'
 import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
-import world from '#src/worlds/current.ts'
+import usePortraitsInReach from '#src/lib/gallery/usePortraitsInReach.ts'
 
 import css from './style.module.sass'
 
@@ -58,7 +57,7 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
  * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
  */
 export default function PortraitCollection() {
-  const portraits = useGallery(useShallow(s => (world.reach.limited ? s.portraits.filter(portrait => world.portraitInReach(portrait)) : s.portraits)))
+  const portraits = usePortraitsInReach()
   const spectatedId = usePortraitSpectation(state => state.id)
   const toggleSpectation = usePortraitSpectation(state => state.toggle)
   const [menu, setMenu] = useState<{

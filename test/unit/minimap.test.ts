@@ -1,6 +1,6 @@
 import type {Vec3} from '../../src/lib/gallery/types.ts'
 
-import {afterEach, expect, test} from 'bun:test'
+import {expect, test} from 'bun:test'
 
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
@@ -10,26 +10,28 @@ import slopGallery from '#src/worlds/gallery/index.ts'
 
 import createGrabController from '../../src/components/Scene/interaction/grabController.ts'
 import {portraitFrame} from '../../src/frames/index.ts'
-import {cameraPose, markPortraitInteracted, useGallery} from '../../src/lib/gallery.ts'
+import {markPortraitInteracted, useGallery} from '../../src/lib/gallery.ts'
 import {climbApex} from '../../src/lib/gallery/climb.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
-import {isLowerPosition, minimapHeading, minimapPortrait, minimapRooms, minimapViewBox, portraitMarkerMinimumThickness} from '../../src/lib/gallery/minimap.ts'
+import {isLowerPosition, minimapPortrait, minimapRooms, minimapViewBox, portraitMarkerMinimumThickness} from '../../src/lib/gallery/minimap.ts'
 import portraitObjects from '../../src/lib/gallery/portraitObjects.ts'
+import {minimapHeading} from '../../src/lib/minimapPlayer.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
 type PortraitObject = Parameters<typeof portraitObjects.set>[1]
 
 /** where the eyes of a player standing on the floor at the height are */
 const eye = ([x, floor, z]: Readonly<Vec3>): Vec3 => [x, floor + 1.62, z]
-const initial = {...useGallery.getInitialState()}
-const pose = {
-  position: cameraPose.position,
-  direction: cameraPose.direction,
-}
-afterEach(() => {
-  Object.assign(useGallery.getInitialState(), initial)
-  Object.assign(cameraPose, pose)
-})
+const initial = useGallery.getInitialState()
+const renderLayers = (portraits = initial.portraits) => [false, true].map(lower => renderToStaticMarkup(createElement(Minimap, {
+  lower,
+  portraits,
+  pose: {
+    position: [-13.869, 1.62, -19.272],
+    direction: [1, 0, 0],
+  },
+  room: 'forge',
+})))
 test.each([
   [[0, 0, -1], 0],
   [[1, 0, 0], 90],
@@ -51,19 +53,17 @@ test('both layers share a scale and frame every room’s drawing', () => {
   }
 })
 test('both layers render every room’s drawing without visible labels, numbers or legends', () => {
-  cameraPose.position = [1, 1.6, 2]
-  cameraPose.direction = [1, 0, 0]
-  const [upper, lower] = [false, true].map(isLower => renderToStaticMarkup(createElement(Minimap, {lower: isLower})))
+  const [upper, lower] = renderLayers()
   const html = upper + lower
   expect(html.match(/<svg\b/gu)).toHaveLength(2 + minimapRooms.length)
   expect(html.match(/viewBox="/gu)).toHaveLength(2 + minimapRooms.length)
   expect(html).not.toContain('Upper level')
   expect(html).not.toContain('Lower level')
   expect(html).not.toMatch(/<(?:button|h[1-6]|text)\b/u)
-  expect(html).toContain('translate(1 2) rotate(90)')
+  expect(upper).toContain('translate(-13.869 -19.272) rotate(90)')
   // Every room’s drawing on its own floor, placed at the room’s origin.
   for (const room of minimapRooms) {
-    expect((room.lower ? lower : upper).split(`<g data-room="${room.id}" opacity="${room.opacity(initial.room)}" transform="${room.transform}"><svg `)).toHaveLength(2)
+    expect((room.lower ? lower : upper).split(`<g data-room="${room.id}" opacity="${room.opacity('forge')}" transform="${room.transform}"><svg `)).toHaveLength(2)
   }
   expect(html.match(/<rect[^>]+data-portrait=/gu) ?? []).toHaveLength(initial.portraits.length * 2)
   expect(html).not.toMatch(/<circle[^>]+data-portrait=/u)
@@ -90,8 +90,7 @@ test('both layers render each work as a rectangle of its marker size in its tone
       interacted: true,
     },
   ]
-  Object.assign(useGallery.getInitialState(), {portraits})
-  const html = [false, true].map(isLower => renderToStaticMarkup(createElement(Minimap, {lower: isLower}))).join('')
+  const html = renderLayers(portraits).join('')
   for (const tone of ['untouched', 'interacted', 'imported']) {
     expect(html.match(new RegExp(`data-tone="${tone}"`, 'gu')) ?? []).toHaveLength(2)
   }

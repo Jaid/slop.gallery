@@ -8,7 +8,6 @@ import portraitObjects, {portraitPosition} from './portraitObjects.ts'
 
 /** Whether a position in the room with the id, like the player’s, shows on the lower floor of the map. */
 export const isLowerPosition = (id: string, position: Vec3) => slopGallery.isLowerFloor(slopGallery.roomById(id), position)
-export const minimapHeading = ([x, , z]: Vec3) => Math.atan2(x, -z) * 180 / Math.PI
 
 /** how a work’s marker is filled: an imported work’s own tone, otherwise dark once the player interacted with it and light while it is still untouched */
 export type MinimapPortraitTone = 'imported' | 'interacted' | 'untouched'
@@ -43,8 +42,8 @@ export function minimapPortrait(portrait: Portrait) {
   }
 }
 
-/** Every drawing of a room’s floor plan, its own and the part on the floor above where it climbs there, each stitched to the others’ by placing it at the room’s origin. */
-export const minimapRooms = slopGallery.rooms.flatMap(room => {
+/** The floor plans in this page’s reach, including the part on the floor above where a room climbs there, all placed in world meters like the markers. */
+export const minimapRooms = slopGallery.rooms.filter(room => slopGallery.reach.covers(room.id)).flatMap(room => {
   const {id, center: [x, z], floorY, map, upperMap} = room
   const drawing = (part: RoomMap, lower: boolean) => ({
     id,

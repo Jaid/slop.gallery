@@ -3,11 +3,12 @@ import type {PauseMenuStage as MenuStage} from 'use-pause-menu/core'
 
 import {afterEach, beforeAll, beforeEach, describe, expect, spyOn, test} from 'bun:test'
 
-import {createElement, Suspense} from 'react'
+import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import Menu from '#component/Menu'
+import Minimap from '#component/Minimap'
 
 import {readAiSettings} from '../../src/lib/ai/settings.ts'
 import {cameraPose, setApiKey, toggleSound} from '../../src/lib/gallery/actions.ts'
@@ -22,7 +23,7 @@ const state = useGallery.getState()
 const {orbit} = useIntro.getInitialState()
 beforeAll(async () => {
   // The world’s minimap loads lazily: rendering it once starts the download, so the pause stage below renders it in place.
-  renderToStaticMarkup(createElement(Suspense, null, createElement(slopGallery.Minimap, {lower: false})))
+  renderToStaticMarkup(createElement(Minimap))
   await import('#component/GalleryMinimap')
 })
 const storageDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
