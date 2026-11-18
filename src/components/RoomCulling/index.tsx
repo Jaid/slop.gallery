@@ -9,6 +9,7 @@ import {Box3, Frustum, Matrix4, Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
 import {ownerRoom, roomBoxes, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions} from '#src/lib/gallery/roomVisibility.ts'
+import {perceptualDistance} from '#src/lib/geometry.ts'
 import {getFloorReflectionHeight} from '#src/lib/materials/FloorMaterial.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
 import {lightActive} from '#src/lib/rendering/lightLevels.ts'
@@ -28,6 +29,9 @@ type Placement = {
 const viewProjection = new Matrix4
 const frustum = new Frustum
 const position = new Vector3
+/** the objects closest to the camera which get the next streaming or warming admissions */
+const priorityObjectCount = 32
+const priorityPoint = new Vector3
 const mirrored = new Box3
 const lightHolders = new WeakMap<Object3D, boolean>
 const placements = new WeakMap<Object3D, Placement>
@@ -53,7 +57,6 @@ const boundsOf = (drawable: Drawable, geometry: BufferGeometry) => {
   placements.set(drawable, placement)
   return placement.world
 }
-const ownerOf = (object: Object3D): RoomId | undefined => ownerRoom(object, object.parent ? ownerOf(object.parent) : undefined)
 const holdsLight = (object: Object3D) => {
   let result = lightHolders.get(object)
   if (result === undefined) {
@@ -104,11 +107,17 @@ export default function RoomCulling() {
     const shadows = new ShadowCache
     const refresher = new ShadowRefresher
     const related = new Set<RoomId>
+    const prioritized = new Set<Object3D>
     const cull = (camera: Camera) => {
       hidden.clear()
       hiddenFromView.clear()
       camera.updateWorldMatrix(true, false)
       const from = roomsAt(camera.getWorldPosition(position).toArray())
+      const priorityCandidates: Array<{
+        distance: number
+        object: Object3D
+      }> = []
+      prioritized.clear()
       viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
       // The floor reflection shows the rooms behind openings mirrored by the floors it mirrors, by default those of the room the camera is in.
       const floorY = getFloorReflectionHeight() ?? roomBoxes.find(({id}) => id === from[0])?.floorY ?? 0
@@ -137,6 +146,12 @@ export default function RoomCulling() {
           }
           refresher.visit(light as Light & {shadow: LightShadow}, shadowCamera => galleryRenderer.shadowIncomplete(shadowCamera))
         }
+        if (drawable.geometry && drawable.frustumCulled && (!room || !related.size || (ready ? related.has(room) : from.includes(room)))) {
+          priorityCandidates.push({
+            distance: perceptualDistance(position, object.getWorldPosition(priorityPoint)),
+            object,
+          })
+        }
         if (regions && room && !from.includes(room) && drawable.geometry && drawable.frustumCulled && !holdsLight(object)) {
           // Behind the loading screen, only the camera’s rooms get built; the rooms seen through their openings stream in first afterward.
           const rects = ready ? regions.get(room) : undefined
@@ -154,6 +169,10 @@ export default function RoomCulling() {
         }
       }
       visit(scene, undefined)
+      priorityCandidates.sort((a, b) => a.distance - b.distance)
+      for (const {object} of priorityCandidates.slice(0, priorityObjectCount)) {
+        prioritized.add(object)
+      }
       refresher.endFrame()
       frustum.setFromProjectionMatrix(viewProjection, camera.coordinateSystem, camera.reversedDepth)
       shadows.update(scene, {
@@ -169,11 +188,8 @@ export default function RoomCulling() {
       })
     }
     galleryRenderer.setCuller(cull)
-    // Objects of no room never get culled, so they count as nearby.
-    galleryRenderer.setStreamPriority(object => {
-      const room = ownerOf(object)
-      return !related.size || !room || related.has(room)
-    })
+    // Admit a small, distance-sorted neighborhood first, both while warming behind the loading screen and while streaming later. Room culling still decides whether an object is eligible at all.
+    galleryRenderer.setStreamPriority(object => prioritized.has(object))
     return () => {
       galleryRenderer.setCuller(null)
       galleryRenderer.setStreamPriority(null)

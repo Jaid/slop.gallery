@@ -118,3 +118,12 @@ test('warming draws every object outside the frustum once per camera, a budgetâ€
   expect(frames).toBeGreaterThan(3)
   expect(renderer.warmedAll).toBe(true)
 })
+test('warming admits prioritized objects before the rest outside the frustum', () => {
+  const {behind, camera, renderer, scene} = setup()
+  renderer.setStreamPriority(object => object === behind)
+  renderer.setWarming(true)
+  nextFrame(renderer)
+  renderer.render(scene, camera)
+  // The distant mesh is last in the scene graph, but it is the first one admitted and forced into the cameraâ€™s projection.
+  expect(projected).toContain(behind)
+})

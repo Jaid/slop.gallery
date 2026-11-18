@@ -10,6 +10,7 @@ import PortraitCollection from '#component/PortraitCollection'
 import PortraitTooltip from '#component/PortraitTooltip'
 
 import {ArtworkThumbnails, makeThumbnail, thumbnailSize} from '../../src/lib/artworkThumbnails.ts'
+import {bodyPose} from '../../src/lib/gallery/actions.ts'
 import {copyPortrait, portraitFileName, portraitImage} from '../../src/lib/gallery/portraitExport.ts'
 import {usePortraitSpectation} from '../../src/lib/gallery/portraitSpectation.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
@@ -464,4 +465,26 @@ describe('artwork thumbnails', () => {
       restore()
     }
   })
+})
+test('portrait collection puts the shortest walking distance first', () => {
+  const from: Array<Portrait> = [
+    {
+      ...samplePortraits[0],
+      id: 'horizontal',
+      position: [3, 1, 0],
+    },
+    {
+      ...samplePortraits[0],
+      id: 'vertical',
+      position: [0, 1.5, 0],
+    },
+  ]
+  const original = bodyPose.center
+  bodyPose.center = [0, 1, 0]
+  try {
+    const html = render(from)
+    expect(html.indexOf('data-portrait="vertical"')).toBeLessThan(html.indexOf('data-portrait="horizontal"'))
+  } finally {
+    bodyPose.center = original
+  }
 })

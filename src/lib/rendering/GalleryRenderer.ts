@@ -196,6 +196,9 @@ export class GalleryRenderer extends WebgpuRenderer {
   private waitingObjects = new Set<Object3D>
   private warmedFrame = -1
   private warming = false
+  private warmingPriorityFound = false
+  private warmingRest = false
+  private warmingSeenFrame = false
   /** the cameras each object was drawn for outside their frustum while loading */
   private readonly warmObjects = new WeakMap<Object3D, Set<Camera>>
   private warmupAdmissions = 0
@@ -352,6 +355,9 @@ export class GalleryRenderer extends WebgpuRenderer {
   /** Draws every object of the frame scene in every pass, regardless of the camera frustum, so that all their pipelines compile while loading. */
   setWarming(warming: boolean) {
     this.warming = warming
+    this.warmingPriorityFound = false
+    this.warmingRest = false
+    this.warmingSeenFrame = false
     this.installProjection()
   }
 
@@ -520,6 +526,14 @@ export class GalleryRenderer extends WebgpuRenderer {
       }
       let cameras = this.warmObjects.get(object)
       if (!cameras) {
+        const priority = this.streamPriority?.(object) ?? true
+        this.warmingPriorityFound ||= priority
+        if (!priority && !this.warmingRest) {
+          // Leave distant objects to the ordinary frustum for now, but keep them in their scene order once every nearby one has warmed.
+          this.warmedFrame = -1
+          standard(object, camera, groupOrder, renderList, clippingContext)
+          return
+        }
         if (!this.admit(object, camera, warmupBuildBudget)) {
           // Postpone the rest of the scene to the next frames.
           this.warmedFrame = -1
@@ -622,6 +636,12 @@ export class GalleryRenderer extends WebgpuRenderer {
       this.warmup.frames++
       this.warmup.objects += this.warmupAdmissions
       this.warmup.buildMs += this.buildTime
+      // One frame of the old phase may already have crossed into a new camera pose. Only start admitting the rest after a whole pass found no prioritized object left.
+      if (this.warmingSeenFrame) {
+        this.warmingRest = !this.warmingPriorityFound
+      }
+      this.warmingSeenFrame = true
+      this.warmingPriorityFound = false
     }
     if (this.streaming) {
       this.advanceStreaming()
