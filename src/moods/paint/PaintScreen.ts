@@ -4,7 +4,7 @@ import {array, Break, exp, float, If, Loop, max, mix, mx_noise_float, screenSize
 import {Color, SRGBColorSpace} from 'three/webgpu'
 
 import MoodScreen from '../base/MoodScreen.ts'
-import {strokeMargin, vignettePaints, vignetteStrokes} from './vignetteStrokes.ts'
+import {strokeMargin, strokeRounds, vignettePaints, vignetteStrokes} from './vignetteStrokes.ts'
 
 type Float = Node<'float'>
 
@@ -52,15 +52,32 @@ const anchors = array(vignetteStrokes.map(({anchorFrom, anchorTo}) => vec4(...an
 const offsets = array(vignetteStrokes.map(({from, to}) => vec4(...from, ...to)))
 const shapes = array(vignetteStrokes.map(({bow, duration, start, width}) => vec4(width, bow, start, duration)))
 const looks = array(vignetteStrokes.map(({dryness, paint, phase, second}) => vec4(paint, second, phase, dryness)))
+const rounds = array(vignetteStrokes.map(({lead, period}) => vec2(period, lead)))
+/** how long a stroke keeps its wet gloss after the brush laid it and by when it has gone matte, in arrivals */
+const glossy = [1, 2.2] as const
+/** how much of its gloss paint keeps once it has gone matte */
+const matte = 0.15
+/** how much drier a stroke is by the end of its round than the brush left it, where it dries the most: enough to leave nothing of its far end and streaks of its middle */
+const weathering = 0.95
 
 /**
  * The Paint Orb’s vignette: as its mood comes in, unseen brushes paint the edges of the view one stroke after another, the dark ground hatched across the corners and brushed along the edges, earth tones over it and last a few bright accents on the inner rim, leaving the middle clear (see `vignetteStrokes.ts`).
+ * None of them stays as it is: each goes matte and dries into bristle streaks after a while, from where the brush lifted off back toward where it set down, until the brush comes back and lays it again over what is left of it, round after round and every stroke at a pace of its own, so somewhere along the edges a brush is always at work while the mood holds (see `strokeAt`).
  * Every stroke grows from a blunt round start behind the wet bead of paint the bristles push ahead, pressed down where it sets out and tapering where the brush lifts off, its edges ragged where single bristles reach out or fall short, its paint dragged into grooves and breaking up into dry streaks toward its end, and lit like impasto from the upper left, so every ridge and groove catches the light and glints wet, and its body shades what it was laid over. As the mood leaves, the strokes dry away into bristle streaks in the opposite order they were laid in.
  * The strokes are composited front to back, the last one laid first, so a pixel stops working out the strokes beneath once the paint above covers it.
  */
 export default class PaintScreen extends MoodScreen {
+  /**
+   * @param arrivalTime seconds its mood takes to come in, which the strokes’ rounds are counted in
+   */
+  constructor(private readonly arrivalTime: number) {
+    super()
+  }
+
   draw(frame: Node<'vec3'>): Node<'vec3'> {
     const {arrival, presence} = this
+    /** the mood’s time in arrivals: how far it has arrived, counting on from 1 once it has */
+    const clock = arrival.add(this.stay.div(this.arrivalTime)).toVar('vignetteClock')
     const aspect = screenSize.x.div(screenSize.y)
     const halfWidth = aspect.mul(0.5)
     /** the pixel in screen heights from the middle, x to the right and y up */
@@ -89,9 +106,19 @@ export default class PaintScreen extends MoodScreen {
         const offset = offsets.element(i)
         const shape = shapes.element(i)
         const look = looks.element(i)
+        const pace = rounds.element(i)
         const width = shape.x
         const bow = shape.y
-        const laid = smoothstep(shape.z, shape.z.add(shape.w), arrival)
+        // As `strokeAt` has it: which round the stroke is in, how far into it and how long ago the brush set down for it.
+        const since = clock.sub(shape.z)
+        const turn = since.div(pace.x).add(pace.y)
+        const round = turn.floor()
+        /** 0 in the round the stroke is first laid in and 1 in every one after, in which the brush lays it over what dried of it */
+        const again = round.min(1)
+        const turned = turn.sub(round)
+        const passed = turned.sub(pace.y.mul(again.oneMinus())).mul(pace.x)
+        const laid = smoothstep(0, shape.w.mul(mix(float(1), float(strokeRounds.patience), again)), passed).mul(since.step(0))
+        const dried = smoothstep(strokeRounds.drying, 1, turned)
         // As `strokePoint` lays it out.
         const from = vec2(anchor.x.mul(halfWidth), anchor.y.mul(0.5)).add(offset.xy)
         const to = vec2(anchor.z.mul(halfWidth), anchor.w.mul(0.5)).add(offset.zw)
@@ -106,8 +133,8 @@ export default class PaintScreen extends MoodScreen {
         // with room for its shadow
         const reach = width.mul(0.5 * strokeMargin).add(shadowReach)
         const capped = width.mul(caps).add(shadowReach)
-        // Only the strokes the brush has begun near the pixel are worked out.
-        If(laid.greaterThan(0).and(straightAside.abs().lessThan(reach.add(bow.abs()))).and(meters.greaterThan(capped.negate())).and(meters.lessThan(laid.mul(length).add(capped))), () => {
+        // Only the strokes the brush has begun near the pixel are worked out, as far as it came, or all along once it comes back for what it laid before.
+        If(laid.greaterThan(0).and(straightAside.abs().lessThan(reach.add(bow.abs()))).and(meters.greaterThan(capped.negate())).and(meters.lessThan(laid.max(again).mul(length).add(capped))), () => {
           const share = meters.div(length).clamp(0, 1)
           const aside = straightAside.sub(bow.mul(share.mul(Math.PI).sin()))
           const phase = look.z
@@ -130,14 +157,23 @@ export default class PaintScreen extends MoodScreen {
           const front = head.sub(meters).add(half.mul(crown.mul(pushing.mul(0.2).add(0.4)).add(tips.mul(pushing.oneMinus().mul(0.9).add(0.15)))))
           // how close behind the head of a stroke still being laid the pixel lies, where the bead of wet paint the bristles push ahead swells, 1 in its middle
           const beading = exp(head.sub(half.mul(0.3)).sub(meters).div(half.mul(0.45)).pow2().negate()).mul(pushing)
-          const cover = edges.min(start).min(front).div(pixel).add(0.5).clamp(0, 1)
+          // where the stroke ended as the brush lifted off in the round before, whose paint still lies there ahead of the brush coming back
+          const end = length.sub(meters).add(half.mul(crown.mul(0.4).add(tips.mul(1.05))))
+          const sides = edges.min(start)
+          /** how much of the pixel this round’s paint covers, behind the brush, and how much the paint of the round before, all along the stroke */
+          const fresh = sides.min(front).div(pixel).add(0.5).clamp(0, 1)
+          const stale = sides.min(end).div(pixel).add(0.5).clamp(0, 1).mul(again)
           // The brush runs dry toward the stroke’s end and along its edges, leaving bristle streaks; as the mood leaves, the strokes dry away into them in the opposite order they were laid in, the accents first and the ground last, each from where the brush lifted off back to where it set down.
           const leaving = float(1).sub(presence).mul(2.4).sub(shape.z.oneMinus().mul(0.45)).sub(phase.mul(0.25)).sub(share.oneMinus().mul(0.45)).max(0)
+          // Left alone, it dries the same way through its round, though never all away: by its end, when the brush comes back, its far end is gone and its middle is streaks, which is what the brush then lays it over.
+          const weathered = float(weathering).sub(share.oneMinus().mul(0.45)).max(0)
+          const withering = dried.mul(weathering).sub(share.oneMinus().mul(0.45)).max(0)
           const fringe = smoothstep(0.7, 1.05, across.abs()).mul(0.55)
-          const dry = smoothstep(0.55, 1, share).mul(0.7).add(fringe).add(leaving).add(look.w).sub(0.12).sub(beading.mul(0.8))
+          const dry = smoothstep(0.55, 1, share).mul(0.7).add(fringe).add(leaving).add(look.w).sub(0.12)
           // About a pixel soft, so the streaks don’t crawl.
           const softness = max(float(0.06), pixel.div(half).mul(4))
-          const opacity = cover.mul(smoothstep(dry.sub(softness), dry.add(softness), bristles)).mul(lingering).toVar()
+          const streaks = (dryness: Float) => smoothstep(dryness.sub(softness), dryness.add(softness), bristles)
+          const opacity = max(fresh.mul(streaks(dry.add(withering).sub(beading.mul(0.8)))), stale.mul(streaks(dry.add(weathered)))).mul(lingering).toVar()
           If(opacity.greaterThan(0.002), () => {
             // The ridges are never narrower than a couple of pixels, or their glints would flicker along them.
             const ridgeWidth = max(float(0.1), pixel.mul(1.5).div(half))
@@ -161,19 +197,20 @@ export default class PaintScreen extends MoodScreen {
             const dipped = smoothstep(-0.2, 0.5, across.add(wavering.mul(0.35)))
             const second = smoothstep(-0.08, 0.02, mx_noise_float(vec2(aside.div(grooves[0] * 1.25), meters.mul(4.2)).add(seed.yx))).mul(dipped)
             const pigment = mix(paints.element(look.x.toInt()), paints.element(look.y.toInt()), second).mul(wavering.mul(0.12).add(1))
-            // Raking light like on impasto, so every ridge and groove shows, glossy and glinting while wet.
+            // Raking light like on impasto, so every ridge and groove shows, glossy and glinting while wet, which it stays for a while after the brush laid it.
             const lit = max(facing.dot(light), 0).mul(0.72).add(0.45)
             const shine = max(facing.dot(halfway), 0)
-            const gloss = shine.pow(40).mul(0.22).add(shine.pow(8).mul(0.04)).mul(presence)
+            const wet = mix(float(matte), mix(float(1), float(matte), smoothstep(glossy[0], glossy[1], passed)), fresh)
+            const gloss = shine.pow(40).mul(0.22).add(shine.pow(8).mul(0.04)).mul(presence).mul(wet)
             laidOver.addAssign(pigment.mul(lit).add(vec3(gloss)).mul(opacity).mul(through))
           })
           // The paint stands off what it was laid over, which its body shades a little down and to the right of it, away from the light.
           const castMeters = meters.sub(castBy.dot(along))
           const castAcross = aside.sub(castBy.dot(left)).div(half)
           const castCrown = float(1).sub(castAcross.mul(castAcross)).max(0).sqrt()
-          const castInside = float(1).sub(castAcross.abs()).mul(half).min(castMeters.add(half.mul(castCrown).mul(0.7))).min(head.sub(castMeters).add(half.mul(castCrown).mul(0.4)))
-          // Only as much as there is paint to cast it: little where the brush ran dry toward the end and none once the paint dried away.
-          const castDry = smoothstep(0.55, 1, castMeters.div(length).clamp(0, 1)).mul(0.7).add(look.w).add(leaving)
+          const castInside = float(1).sub(castAcross.abs()).mul(half).min(castMeters.add(half.mul(castCrown).mul(0.7))).min(head.max(length.mul(again)).sub(castMeters).add(half.mul(castCrown).mul(0.4)))
+          // Only as much as there is paint to cast it: little where the brush ran dry toward the end or the paint dried since, and none once it dried away.
+          const castDry = smoothstep(0.55, 1, castMeters.div(length).clamp(0, 1)).mul(0.7).add(look.w).add(leaving).add(mix(weathered.mul(again), withering, laid))
           const shade = smoothstep(half.mul(-0.25), half.mul(0.35), castInside).mul(smoothstep(0.3, 0.9, castDry).oneMinus()).mul(shadow.strength).mul(lingering)
           through.mulAssign(opacity.oneMinus().mul(shade.oneMinus()))
         })

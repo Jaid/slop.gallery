@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {halfWidth, strokeEnds, strokeMargin, strokePoint, strokeTaper, vignettePaints, vignetteStrokes} from '../../src/moods/paint/vignetteStrokes.ts'
+import {halfWidth, strokeAt, strokeEnds, strokeMargin, strokePoint, strokeRounds, strokeTaper, vignettePaints, vignetteStrokes} from '../../src/moods/paint/vignetteStrokes.ts'
 
 /** the screens the vignette has to frame, by their width divided by their height: 4:3 up to 21:9 */
 const aspects = [4 / 3, 16 / 10, 16 / 9, 21 / 9]
@@ -37,6 +37,73 @@ describe('the Paint Orb’s vignette', () => {
     // Two brushes are at work at once now and then, and none waits long for the one before.
     const overlapping = vignetteStrokes.slice(1).filter((stroke, index) => stroke.start < vignetteStrokes[index].start + vignetteStrokes[index].duration)
     expect(overlapping.length).toBe(vignetteStrokes.length - 1)
+  })
+  test('as the mood has arrived, every stroke is laid and none has begun to dry, though each is at another point of its round', () => {
+    for (const stroke of vignetteStrokes) {
+      expect(strokeAt(stroke, stroke.start - 0.01)).toEqual({
+        round: -1,
+        laid: 0,
+        dried: 0,
+      })
+      expect(strokeAt(stroke, 1)).toEqual({
+        round: 0,
+        laid: 1,
+        dried: 0,
+      })
+      expect(stroke.lead).toBeGreaterThanOrEqual(0)
+      // The brush is done laying it, also when it takes its time over it again, before it begins to dry.
+      expect(stroke.lead + stroke.duration / stroke.period).toBeLessThan(strokeRounds.drying)
+      expect(stroke.duration * strokeRounds.patience / stroke.period).toBeLessThan(strokeRounds.drying)
+    }
+    const leads = new Set(vignetteStrokes.map(stroke => stroke.lead))
+    expect(leads.size).toBeGreaterThan(vignetteStrokes.length / 2)
+    // The more paint a stroke holds, the longer its rounds: the broadest takes longer than the most slender one.
+    const byWidth = vignetteStrokes.toSorted((a, b) => a.width - b.width)
+    expect(byWidth.at(-1)!.period).toBeGreaterThan(byWidth[0].period)
+    const periods = new Set(vignetteStrokes.map(stroke => stroke.period))
+    expect(periods.size).toBe(vignetteStrokes.length)
+  })
+  test('the brushes never rest: every stroke dries and is laid again round after round without a jump, and somewhere a brush is always at work', () => {
+    const tick = 0.004
+    const until = 30
+    /** when a brush was last laying each stroke, by the clock */
+    let lastAtWork = 1
+    let longestRest = 0
+    const states = vignetteStrokes.map(stroke => strokeAt(stroke, 1))
+    for (let clock = 1 + tick; clock <= until; clock += tick) {
+      let atWork = false
+      for (const [index, stroke] of vignetteStrokes.entries()) {
+        const before = states[index]
+        const now = strokeAt(stroke, clock)
+        if (now.round === before.round) {
+          expect(now.laid).toBeGreaterThanOrEqual(before.laid)
+          expect(now.dried).toBeGreaterThanOrEqual(before.dried)
+          expect(now.dried - before.dried).toBeLessThan(0.02)
+          expect(now.laid - before.laid).toBeLessThan(0.1)
+        } else {
+          // The brush only comes back for a stroke as dry as it gets, and starts over what is left of it.
+          expect(now.round).toBe(before.round + 1)
+          expect(before.dried).toBeGreaterThan(0.999)
+          expect(before.laid).toBe(1)
+          expect(now.laid).toBeLessThan(0.01)
+          expect(now.dried).toBe(0)
+        }
+        atWork ||= now.laid > 0 && now.laid < 1
+        states[index] = now
+      }
+      if (atWork) {
+        lastAtWork = clock
+      }
+      // Counted from the first round a stroke can end with.
+      if (clock > 1 + Math.max(...strokeRounds.period) * strokeRounds.body) {
+        longestRest = Math.max(longestRest, clock - lastAtWork)
+      }
+    }
+    for (const state of states) {
+      expect(state.round).toBeGreaterThan(2)
+    }
+    // No longer than the mood takes to come in.
+    expect(longestRest).toBeLessThan(1)
   })
   test('the strokes leave the middle of the view clear on every screen from 4:3 to 21:9', () => {
     for (const aspect of aspects) {

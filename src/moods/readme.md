@@ -19,9 +19,18 @@ Two things cast moods, both asked for by `#component/Moods` every frame:
 
 `MoodMixer` (`lib/MoodMixer.ts`) stacks every mood showing, the room’s beneath the cast one, each at its own eased progress: gradient maps one over the other (four at most, the faintest left out beyond), screens over them in the same order, light tints multiplied, loops summed, the views’ degrees added up and transformers chained (six links, see `src/lib/audio/readme.md`). N under `?development` cuts every mood at once, the rooms’ included, and brings the ones due back in full when lifted. `?fade=false` (`src/lib/fade.ts`) makes every fade a hard cut, so captures taken right after the camera jumped to another room show it as it is: each mood shows in full or not at all from one frame to the next, the cast ones swap within a frame instead of taking turns, and their loops and transformers cut in and out along with them, as do the ambience emitters.
 
-A screen can do more than fade with its mood: `MoodMixer` tells it every frame how far its mood has come, in uniforms it reads on the GPU, and where in the stack of the screens showing it draws, so a mood coming or going only changes uniforms. `strength` is the eased amount the color filters follow; `arrival`, the furthest the fade has come since the mood began showing, rises in step with the fade in and holds while the mood leaves, so whatever plays out along it, like strokes being painted, stays as it was; `presence` stays at 1 until the mood leaves and then falls linearly to 0, for a way of going of its own, like the strokes drying away into bristle streaks. A mood asked back before it is gone picks up where it was instead of playing out anew. Under `?fade=false`, a screen shows its end state or nothing.
+A screen can do more than fade with its mood: `MoodMixer` tells it every frame how far its mood has come, in uniforms it reads on the GPU, and where in the stack of the screens showing it draws, so a mood coming or going only changes uniforms:
 
-To add a screen to a mood, subclass `MoodScreen` in the mood’s folder, build the frame with it drawn over in `draw`, and give the mood an instance as its `screen`; `moodScreens` in `index.ts` picks it up. To look at one without a held orb, `?mood=<id>` casts its mood for the whole session; `?mood=paint&fade=false` shows the Paint Orb’s vignette complete from the first frame. The `cast_mood` WebMCP tool casts a mood or none at any time, which is how film recipes show one coming and going:
+| Uniform | What it tells |
+| --- | --- |
+| `strength` | The eased amount the color filters follow, 0–1. |
+| `arrival` | The furthest the fade has come since the mood began showing, 0–1 and linear in time: it rises in step with the fade in and holds while the mood leaves, so whatever plays out along it, like strokes being painted, stays as it was. |
+| `stay` | Seconds since the mood arrived in full, 0 until then, counted by the shaders’ `time`: whatever played out along `arrival` goes on along it without a seam for as long as the mood holds, like the strokes drying and being painted again. |
+| `presence` | 1 until the mood leaves, then falling linearly to 0, for a way of going of its own, like the strokes drying away into bristle streaks. |
+
+A mood asked back before it is gone picks up where it was instead of playing out anew. Under `?fade=false`, a screen shows nothing or the state it is in as its mood has just arrived, from which it goes on. Whatever a screen moves follows `stay` or TSL’s `time`, both of which stand still with the frozen world and under `?frozen_time`, so captures of the same view match.
+
+To add a screen to a mood, subclass `MoodScreen` in the mood’s folder, build the frame’s color with the screen drawn over it in `draw`, and give the mood an instance as its `screen`; `moodScreens` in `index.ts` picks it up. To look at one without a held orb, `?mood=<id>` casts its mood for the whole session; `?mood=paint&fade=false&frozen_time=0` shows the Paint Orb’s vignette as it stands when its mood has arrived, every stroke laid and wet. The `cast_mood` WebMCP tool casts a mood or none at any time, which is how film recipes show one coming and going:
 
 ```json
 [
@@ -31,3 +40,7 @@ To add a screen to a mood, subclass `MoodScreen` in the mood’s folder, build t
   {"time": 23, "yaw": -150}
 ]
 ```
+
+## Atelier
+
+The Paint Orb’s mood (`paint`) leaves the world’s colors alone and paints a vignette over the view instead (`paint/PaintScreen.ts`, its strokes in `paint/vignetteStrokes.ts`). As it comes in, unseen brushes lay strokes of oil paint into the corners one after another, the dark ground first, earth tones over it and a few bright accents last, each behind the wet bead of paint the bristles push ahead. From then on the brushes never rest: every stroke goes matte and dries into bristle streaks from its far end back, and the brush comes back to lay it again over what is left of it, round after round, each stroke at a pace of its own, the broad ones more slowly. As the mood leaves, all of them dry away, the accents first and the ground last. The middle of the view stays clear on every screen from 4:3 to 21:9, which `test/unit/paint-vignette.test.ts` checks along with the rounds. On an RX 9060 XT, it costs about 1.1 ms a frame at 2160p while it shows and nothing while it doesn’t.

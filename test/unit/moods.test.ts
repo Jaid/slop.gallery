@@ -388,6 +388,42 @@ describe('mood mixer', () => {
     cutting.update(noMood, step)
     expect(other.screen.showing).toBe(false)
   })
+  test('a screen’s stay counts the shaders’ time from when its mood has arrived in full, on while the mood leaves, and starts over with the mood', () => {
+    const mixer = new MoodMixer
+    class ScreenMood extends TestMood {
+      override readonly screen = new TestScreen
+    }
+    const mood = new ScreenMood('screen', {
+      in: 2,
+      out: 1,
+    })
+    const {screen} = mood
+    run(mixer, cast(mood), 1)
+    expect(screen.staying(10)).toBe(0)
+    expect(screen.staying(11)).toBe(0)
+    run(mixer, cast(mood), 1 + step)
+    expect(screen.arrival.value).toBe(1)
+    // The first frame that finds it arrived is when it arrived.
+    expect(screen.staying(12)).toBe(0)
+    expect(screen.staying(15.5)).toBe(3.5)
+    run(mixer, noMood, 0.5)
+    expect(screen.staying(16)).toBe(4)
+    // The frame’s uniform takes it from the frame’s time.
+    const {update} = screen.stay as unknown as {update: (frame: {time: number}) => void}
+    update.call(screen.stay, {time: 17})
+    expect(screen.stay.value).toBe(5)
+    run(mixer, noMood, 0.5 + step * 2)
+    expect(screen.staying(18)).toBe(0)
+    // Shown in full at once, it has just arrived, whatever the time.
+    mixer.snap(cast(mood))
+    expect(screen.staying(40)).toBe(0)
+    expect(screen.staying(41)).toBe(1)
+    // Gone and back within the same frame, it starts over as well.
+    mixer.cut()
+    mixer.snap(cast(mood))
+    expect(screen.staying(50)).toBe(0)
+    mixer.dispose()
+  })
   test('moods widen or narrow the view by their degrees as far as they show, added up, and give it back as they go', () => {
     const mixer = new MoodMixer
     const room = new TestMood('room', roomMoodFade, 10)

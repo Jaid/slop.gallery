@@ -1,5 +1,6 @@
 /**
  * The brush strokes of the Paint Orb’s vignette, laid around the edges of the screen in the order the brush sets them down: the dark ground hatched across the corners and brushed along the edges first, then the earth tones over it and last a few bright accents on the inner rim, leaving the middle of the view clear.
+ * None of them stays as it is: each dries into bristle streaks after a while and the brush comes back to lay it again over what is left of it, round after round, every stroke at a pace of its own, so the brushes never rest while the mood holds.
  * Screen points are in screen heights from the middle, x to the right and y up, so the screen spans ±{@link halfWidth} across and ±0.5 up and down. A stroke’s ends hang on the screen’s edges, so they slide along with them as its aspect changes.
  */
 
@@ -41,13 +42,17 @@ export type VignetteStroke = {
   duration: number
   /** how far from its anchor the brush sets down, in screen heights */
   from: readonly [x: number, y: number]
+  /** how much of its first round the stroke skips, 0–1, so that the strokes, all first laid within the one arrival, don’t dry and get laid again as one */
+  lead: number
   /** the index of its paint in {@link vignettePaints} */
   paint: number
+  /** how long one of its rounds takes, from the brush laying it to the brush coming back for it, in arrivals, the time the mood takes to come in */
+  period: number
   /** a number 0–1 of its own that its grooves, its ragged edges and the wavering of its paint follow */
   phase: number
   /** the index of the second paint the brush was dipped into on one side */
   second: number
-  /** when the brush sets down, as how far the mood has arrived, 0–1 */
+  /** when the brush first sets down, as how far the mood has arrived, 0–1 */
   start: number
   /** how far from its anchor the brush lifts off, in screen heights */
   to: readonly [x: number, y: number]
@@ -59,6 +64,17 @@ export type VignetteStroke = {
 export const strokeMargin = 1.3
 /** how much of the mood’s arrival the last stroke is laid by, so the vignette stands complete a little before the mood shows in full */
 const laidBy = 0.92
+/** how the strokes go round after they were first laid */
+export const strokeRounds = {
+  /** how many times longer the round of the broadest stroke takes than that of the most slender one: the more paint a stroke holds, the longer it takes to dry */
+  body: 1.5,
+  /** the share of a round after which a stroke begins to dry, as dry as it gets by the round’s end */
+  drying: 0.4,
+  /** how many times longer the brush takes to lay a stroke again than it took the first time, when it was in a hurry to have the vignette stand */
+  patience: 2,
+  /** the shortest and the longest a round of the most slender stroke takes, in arrivals */
+  period: [2.4, 4],
+} as const
 /** A pseudo-random number from 0 to 1 for the number, the same on every run. */
 const scatter = (seed: number) => {
   const value = Math.sin(seed * 127.1 + 311.7) * 43_758.5453
@@ -72,7 +88,7 @@ export const halfWidth = (aspect: number) => aspect / 2
 /** the corners in the order the brush works round them: upper left, upper right, lower right, lower left */
 const corners = [[-1, 1], [1, 1], [1, -1], [-1, -1]] as const
 
-type Layout = Omit<VignetteStroke, 'duration' | 'phase' | 'start'>
+type Layout = Omit<VignetteStroke, 'duration' | 'lead' | 'period' | 'phase' | 'start'>
 type Point = readonly [x: number, y: number]
 
 /** the brush’s dryness for the dark ground, which is only scumbled on, and for the paint over it */
@@ -127,16 +143,28 @@ function edgeStroke([sx, sy]: Point, horizontal: boolean, inset: number, length:
     dryness: brush,
   }
 }
-/** Lays the strokes out one after another over the mood’s arrival, each taking a little longer than the gap to the next, so two brushes are often at work at once. */
+/**
+ * Lays the strokes out one after another over the mood’s arrival, each taking a little longer than the gap to the next, so two brushes are often at work at once, and gives each a round of its own length to dry away and be laid again in.
+ * Each skips some of its first round, though never so much that it would begin to dry before the mood has arrived: as the mood arrives, the vignette stands complete and wet.
+ */
 function schedule(layouts: ReadonlyArray<Layout>): Array<VignetteStroke> {
   const durations = layouts.map((_, index) => between(index * 3.7 + 11, 0.13, 0.2))
   const gap = (laidBy - durations.at(-1)!) / (layouts.length - 1)
-  return layouts.map((layout, index) => ({
-    ...layout,
-    start: index * gap,
-    duration: durations[index],
-    phase: scatter(index * 5.3 + 2),
-  }))
+  const widths = layouts.map(layout => layout.width)
+  const slender = Math.min(...widths)
+  const broad = Math.max(...widths)
+  return layouts.map((layout, index) => {
+    const start = index * gap
+    const period = between(index * 2.3 + 5, ...strokeRounds.period) * (1 + (strokeRounds.body - 1) * (layout.width - slender) / (broad - slender))
+    return {
+      ...layout,
+      start,
+      duration: durations[index],
+      period,
+      lead: scatter(index * 7.9 + 3) * Math.max(0, strokeRounds.drying - 0.04 - (1 - start) / period),
+      phase: scatter(index * 5.3 + 2),
+    }
+  })
 }
 /** the earth tones each corner is laid in over the ground, and its accents on the inner rim, the first of each the paint and the second what the brush was dipped into besides */
 const cornerPaints = [
@@ -203,6 +231,30 @@ const smooth = (low: number, high: number, value: number) => {
   const t = Math.min(1, Math.max(0, (value - low) / (high - low)))
   return t * t * (3 - 2 * t)
 }
+/**
+ * How a stroke stands at `clock`, the mood’s time in arrivals, which is how far the mood has arrived and counts on from 1 once it has, as the screen shader has it: the round it is in, −1 before the brush first set down, how far the brush has laid it in this round, 0–1, over what the round before left of it, and how far it has dried since, 0–1, as dry as it gets when the brush comes back.
+ */
+export function strokeAt(stroke: VignetteStroke, clock: number) {
+  const since = clock - stroke.start
+  if (since < 0) {
+    return {
+      round: -1,
+      laid: 0,
+      dried: 0,
+    }
+  }
+  const turn = since / stroke.period + stroke.lead
+  const round = Math.floor(turn)
+  const phase = turn - round
+  // how long ago the brush set down for this round, in arrivals
+  const passed = (phase - (round ? 0 : stroke.lead)) * stroke.period
+  return {
+    round,
+    laid: smooth(0, stroke.duration * (round ? strokeRounds.patience : 1), passed),
+    dried: smooth(strokeRounds.drying, 1, phase),
+  }
+}
+
 /** How wide a stroke is `share` 0–1 of the way along, in its full width: pressed down as the brush sets out, then easing off and tapering toward where it lifts off. */
 export function strokeTaper(share: number) {
   return (0.72 + 0.28 * smooth(0, 0.22, share)) * (1 - 0.45 * smooth(0.45, 1, share))
