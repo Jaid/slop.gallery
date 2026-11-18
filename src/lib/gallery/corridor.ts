@@ -1,10 +1,12 @@
 import type {FloorRectangle} from './floors.ts'
+import type {PendantMount} from './pendants/CeilingProbe.ts'
 import type {Vec3} from './types.ts'
 
 import {cutFloorOpening} from './floorPolygons.ts'
 import lodge, {lodgeBay, lodgeWindowCutout} from './lodge.ts'
 import Passage from './passages/Passage.ts'
 import {passageRibs} from './passages/timberLayout.ts'
+import {passageLightDrop} from './pendants/mounts.ts'
 import sienna, {siennaVestibule} from './sienna.ts'
 import StairFlight from './stairs/StairFlight.ts'
 import StairRunner from './stairs/StairRunner.ts'
@@ -55,6 +57,15 @@ export const corridorPassage = new Passage('corridor', 'corridor', [[doorwayX, b
  * The landing at the Sienna’s floor between the flight’s top and the arch of the Sienna’s vestibule: from the arch west, a short lined reveal, then an open elbow turning 45° north-west onto the diagonal, where the flight begins.
  */
 export const corridorLanding = new Passage('landing', 'corridor', [[vestibuleX, lodge.siennaZ], landingTurn, flightHead], sienna.floorY, lodge.timberWidth, corridor.height)
+/** The lantern in the short reveal of the Sienna arch, fixed to the plank between two ribs 11 cm apart. */
+const landingAnchor: Vec3 = [-24.934, corridorLanding.floorY + corridorLanding.height, 10.346]
+export const corridorLandingLantern: PendantMount = {
+  anchor: landingAnchor,
+  normal: [0, -1, 0],
+  drop: passageLightDrop,
+  light: [landingAnchor[0], landingAnchor[1] - passageLightDrop, landingAnchor[2]],
+  canopyRadius: 0.05,
+}
 /** The doorway passage from the Lodge’s bay north to the run along it, `from` to `to` meters out of the bay, as a rectangle across the passage. */
 const doorwayPassage = (from: number, to: number): FloorRectangle => ({
   center: [doorwayX, backZ - (from + to) / 2],

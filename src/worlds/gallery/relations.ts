@@ -203,7 +203,7 @@ const relations = {
         'chandelier_middle',
         'chandelier_south',
       ],
-      // Through the vestibule’s arch: the lantern in the landing’s elbow, and down the flight the one at its foot.
+      // Through the vestibule’s arch: the landing lantern just inside it, and down the flight the one at its foot.
       corridor: [
         'lantern_landing',
         'lantern_south',

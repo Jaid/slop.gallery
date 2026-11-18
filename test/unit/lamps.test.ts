@@ -7,7 +7,7 @@ import type {BufferGeometry} from 'three/webgpu'
 import {expect, test} from 'bun:test'
 
 import {bastionCurve, bastionGateLantern} from '../../src/lib/gallery/bastion.ts'
-import {corridorLanding, corridorPassage} from '../../src/lib/gallery/corridor.ts'
+import {corridorLandingLantern, corridorPassage} from '../../src/lib/gallery/corridor.ts'
 import {lobbyChandeliers} from '../../src/lib/gallery/lobbyVault.ts'
 import {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
@@ -62,21 +62,19 @@ test('a lamp shines in its own room and in the rooms that keep it', () => {
 test('the passages’ lamps hang under the lanterns the fixtures hang from their vaults and ribs', () => {
   const vault = new RouteVaultGeometry(bastionCurve)
   const timber = TimberGeometry.passage(corridorPassage, lodgeWindowRibCutouts)
-  const landingTimber = TimberGeometry.passage(corridorLanding)
   try {
     const [{light}] = routePendantMounts(bastionCurve, [vault.shell, vault.ribs], [bastionGateLantern])
     expectNear(lamp('bastion-lantern_north').position, [light[0], light[1] - 0.6, light[2]])
     const [doorway, north, middle, south] = lanterns(corridorPassage, [timber.shell, timber.ribs], [[0, -0.3], [3, -0.3], [5, -0.4], [8, -0.4]], corridorLightSpacing, timber.ribs)
-    const [landing] = lanterns(corridorLanding, [landingTimber.shell, landingTimber.ribs], [[1, -0.3]], corridorLightSpacing, landingTimber.ribs)
     expectNear(lamp('corridor-lantern_lodge').position, doorway)
     expectNear(lamp('corridor-lantern_north').position, north)
     expectNear(lamp('corridor-lantern_middle').position, middle)
     expectNear(lamp('corridor-lantern_south').position, south)
-    expectNear(lamp('corridor-lantern_landing').position, landing)
+    const [x, y, z] = corridorLandingLantern.light
+    expectNear(lamp('corridor-lantern_landing').position, [x, y - 0.3, z])
   } finally {
     vault.dispose()
     timber.dispose()
-    landingTimber.dispose()
   }
 })
 test('the Lobby’s lamps hang under its chandeliers', () => {

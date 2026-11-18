@@ -5,7 +5,7 @@ import {afterAll, describe, expect, test} from 'bun:test'
 import {DoubleSide, ExtrudeGeometry, Mesh, MeshBasicMaterial, Raycaster, Shape, Vector2, Vector3} from 'three/webgpu'
 
 import {bastionApproach, bastionCurve, bastionGateLantern, bastionMouth, bastionTransition} from '../../src/lib/gallery/bastion.ts'
-import {corridorLanding, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
+import {corridorLanding, corridorLandingLantern, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import LodgeWindowGeometry from '../../src/lib/gallery/LodgeWindowGeometry.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
@@ -82,8 +82,8 @@ const groups: Array<{
   {
     label: 'timber corridor landing',
     body: lantern,
-    lights: Array.from({length: 2}, () => corridorLanding.floorY + corridorLanding.height - passageLightDrop),
-    mounts: passagePendantMounts(corridorLanding, [landing.shell, landing.ribs], corridorLightSpacing, landing.ribs),
+    lights: [corridorLanding.floorY + corridorLanding.height - passageLightDrop],
+    mounts: [corridorLandingLantern],
   },
 ]
 afterAll(() => {
@@ -100,7 +100,7 @@ describe('ceiling-hung pendants', () => {
   test('every light hangs its drop under its passage’s crown', () => {
     expect(groups[0].mounts).toHaveLength(1)
     expect(groups[2].mounts).toHaveLength(9)
-    expect(groups[3].mounts).toHaveLength(2)
+    expect(groups[3].mounts).toHaveLength(1)
     for (const {mounts, lights} of groups) {
       expect(mounts).toHaveLength(lights.length)
       for (const [i, mount] of mounts.entries()) {
@@ -133,9 +133,10 @@ describe('ceiling-hung pendants', () => {
         // The canopy’s top face, sunk into the ceiling.
         const top = new Vector3(...mount.anchor)
         top.addScaledVector(down, -canopyEmbed)
+        const radius = mount.canopyRadius ?? canopyRadius
         for (let i = 0; i < 24; i++) {
           const angle = i / 24 * Math.PI * 2
-          const rim = top.clone().addScaledVector(tangent, Math.cos(angle) * canopyRadius).addScaledVector(bitangent, Math.sin(angle) * canopyRadius)
+          const rim = top.clone().addScaledVector(tangent, Math.cos(angle) * radius).addScaledVector(bitangent, Math.sin(angle) * radius)
           const below = rim.clone().addScaledVector(down, canopyHeight)
           const hit = firstHit(below, down.clone().negate(), 1)
           // The ceiling crosses the canopy’s side wall: neither floating below nor buried above it.
