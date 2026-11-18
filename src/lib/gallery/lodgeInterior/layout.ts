@@ -3,17 +3,8 @@ import type {Vec3} from '../types.ts'
 import lodge, {lodgeBay} from '../lodge.ts'
 import UpholsteredSeatGeometry from './UpholsteredSeatGeometry.ts'
 
-/** A point of the world plan in the room’s frame. */
-const toRoom = ([x, z]: readonly [number, number]) => [x - lodge.center[0], z - lodge.center[1]] as const
-const [frontWest, backWest, backEast, frontEast] = lodgeBay.corners.map(toRoom)
-/** the middle of the bay’s mouth, on the old north wall’s line between its first two corners */
-const bayMouth = [(frontWest[0] + frontEast[0]) / 2, (frontWest[1] + frontEast[1]) / 2] as const
-/** the octagonal boss on the header beam across the bay’s mouth that the rafters run out of and the chandelier hangs from */
-const boss = {
-  /** to its corners, wide enough that the rafters only meet inside it */
-  radius: 0.45,
-  height: 0.44,
-}
+/** The bay’s mouth in the room’s frame. */
+const bayMouthZ = lodgeBay.corners[0][1] - lodge.center[1]
 /** The beams cross the room in even bays from the header across the bay’s mouth to the south wall, which takes none. */
 const beamSpacing = lodge.size[1] / 3
 
@@ -48,7 +39,7 @@ const armchairs: ReadonlyArray<Placement> = [
 /**
  * Furnishings of the Lodge in the room’s frame: the origin is the middle of the floor and +z points toward the fireplace on the south wall.
  *
- * Seating gathers around the hearth and keeps clear of the walkway from the tunnel’s doorway at z −2.7 round under the chandelier at the north bay’s mouth to the Corridor’s doorway in the bay’s back wall.
+ * Seating gathers around the hearth and keeps clear of the walkway from the tunnel’s doorway at z −2.7 through the north bay to the Corridor’s doorway in its back wall.
  */
 const lodgeInterior = {
   /** north edge of the furniture; the walkway between the doorways stays free north of it */
@@ -62,15 +53,6 @@ const lodgeInterior = {
   sofa,
   seatWidth,
   armchairs,
-  /** the wagon wheel’s hub, hanging from the boss in the middle of the bay’s mouth, turned so its spokes look along the boss’ faces */
-  chandelier: {
-    position: [bayMouth[0], 2.8, bayMouth[1]] as Vec3,
-    yaw: Math.PI / 8,
-    /** from the hub up to the boss’ underside */
-    drop: lodge.height - boss.height - 2.8,
-    /** light height relative to the hub, a little below the wheel */
-    lightY: -0.14,
-  },
   /**
    * The fieldstone chimney breast on the south wall. Lengths are along the room’s z; the fireplace group itself is turned by 180°, so its frame uses the negated values.
    *
@@ -118,22 +100,9 @@ const lodgeInterior = {
   },
   /** hewn beams across the room, resting on the east and west walls; the first is the header across the bay’s mouth, from corner to corner */
   beams: {
-    z: [bayMouth[1], bayMouth[1] + beamSpacing, bayMouth[1] + beamSpacing * 2],
+    z: [bayMouthZ, bayMouthZ + beamSpacing, bayMouthZ + beamSpacing * 2],
     /** width and height of each beam */
     size: [0.3, 0.34] as [number, number],
-  },
-  /**
-   * The bay’s ceiling framing: from the boss on the header, hips run into the bay’s two back corners and a rafter runs straight to the middle of its back wall, fanning out like half a wheel.
-   *
-   * The header and the middle rafter meet faces of the boss square, the hips 5.5° off theirs.
-   */
-  bayFraming: {
-    center: bayMouth,
-    boss,
-    /** width and height of the hips and rafter, lighter than the beams */
-    rafter: [0.24, 0.3] as [number, number],
-    /** where the hips and rafter run to, on the planes of the bay’s walls */
-    rafters: [backWest, [(backWest[0] + backEast[0]) / 2, (backWest[1] + backEast[1]) / 2], backEast] as ReadonlyArray<readonly [number, number]>,
   },
 } as const
 

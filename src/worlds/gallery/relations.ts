@@ -241,10 +241,7 @@ const relations = {
     rooms: ['sienna', 'lodge', 'vesper', 'bastion'],
     visibleLamps: {
       sienna: 'chandelier',
-      lodge: [
-        'fire',
-        'chandelier',
-      ],
+      lodge: 'fire',
     },
   },
   oculus: {
@@ -307,10 +304,7 @@ const relations = {
   bastion: {
     rooms: ['oculus', 'lodge', 'lobby', 'exhibition', 'corridor', 'salon', 'forge', 'vesper'],
     visibleLamps: {
-      lodge: [
-        'fire',
-        'chandelier',
-      ],
+      lodge: 'fire',
     },
   },
 } satisfies Record<RoomId, RoomRelations>

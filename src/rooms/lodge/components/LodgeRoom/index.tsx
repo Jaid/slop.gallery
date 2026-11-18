@@ -34,7 +34,7 @@ const floorHulls = slabHulls(plan, -floorSlab.depth, 0)
 const ceilingHulls = slabHulls(plan, lodge.height, lodge.height + ceilingSlab.depth)
 
 /**
- * The Lodge: log walls with chinking and a half-octagon bay to the north, a wide-plank oak floor, a smoke-darkened board ceiling on hewn beams, hips fanning into the bay from the chandelier’s boss and a fieldstone fireplace, furnished around the hearth.
+ * The Lodge: log walls with chinking and a half-octagon bay to the north, a wide-plank oak floor, a smoke-darkened board ceiling on hewn beams and a fieldstone fireplace, furnished around the hearth.
  *
  * The walls themselves are drawn by `WallSurface` with `materials.logWall`; this adds everything inside them.
  */
