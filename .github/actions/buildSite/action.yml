@@ -5,8 +5,6 @@ runs:
   steps:
   - name: setupBun
     uses: oven-sh/setup-bun@v2.2.0
-    with:
-      bun-version: 1.4.4
   - name: setupMediaTools
     uses: ./.github/actions/setupMediaTools
   - name: install

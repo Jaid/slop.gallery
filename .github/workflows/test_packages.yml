@@ -16,8 +16,6 @@ jobs:
       uses: actions/checkout@v7.0.1
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
-      with:
-        bun-version: 1.4.4
     - name: listPackages
       id: listPackages
       shell: bash
@@ -51,8 +49,6 @@ jobs:
       uses: actions/checkout@v7.0.1
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
-      with:
-        bun-version: 1.4.4
     # Some packages encode media in their tests, like capture-session with ffmpeg and vite-plugin-jxl with cjxl and ImageMagick.
     - name: setupMediaTools
       uses: ./.github/actions/setupMediaTools

@@ -3,7 +3,7 @@ description: Installs what production builds and the tests encode media with on 
 inputs:
   imageMagickVersion:
     description: the ImageMagick release to build
-    default: 7.1.2-35
+    default: 7.1.2-36
   libjxlVersion:
     description: the libjxl release to install, whose packages for Ubuntu 24.04 install on 26.04 too
     default: 0.13.0

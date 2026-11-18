@@ -38,13 +38,12 @@ jobs:
       uses: actions/checkout@v7.0.1
       with:
         sparse-checkout: |
+          /package.json
           scripts/previewDomain.ts
           scripts/prunePreviewDomains.ts
         sparse-checkout-cone-mode: false
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
-      with:
-        bun-version: 1.4.4
     - name: prune
       env:
         CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

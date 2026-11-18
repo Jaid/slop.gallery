@@ -76,11 +76,18 @@ jobs:
           echo "::error::The artifact build holds a _worker.js."
           exit 1
         fi
+    # The default branch’s script, which runs with the token, not the fork’s.
+    - name: checkout
+      if: steps.resolve.outputs.number != ''
+      uses: actions/checkout@v7.0.1
+      with:
+        sparse-checkout: |
+          /package.json
+          scripts/previewDomain.ts
+        sparse-checkout-cone-mode: false
     - name: setupBun
       if: steps.resolve.outputs.number != ''
       uses: oven-sh/setup-bun@v2.2.0
-      with:
-        bun-version: 1.4.4
     # Labeled with the fork’s commit, as the folder is no Git repository Wrangler could read it from.
     - name: deploy
       id: deploy
@@ -90,16 +97,9 @@ jobs:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: 94b07787e8a720b65196137d6224ec90
         packageManager: bun
-        wranglerVersion: 4.162.0
+        wranglerVersion: 4.164.0
         workingDirectory: ${{ runner.temp }}/preview
         command: pages deploy dist --project-name=slop-gallery --branch=pr-${{ steps.resolve.outputs.number }} --commit-hash=${{ steps.resolve.outputs.sha }} --commit-dirty=false
-    # The default branch’s script, which runs with the token, not the fork’s.
-    - name: checkout
-      if: steps.resolve.outputs.number != ''
-      uses: actions/checkout@v7.0.1
-      with:
-        sparse-checkout: scripts/previewDomain.ts
-        sparse-checkout-cone-mode: false
     # The deployment stands without its domain, which fails once the project has as many as Pages takes, so the comment then links the pages.dev alias instead.
     - name: attachDomain
       id: attachDomain

@@ -22,7 +22,7 @@
     "check": "bun run typecheck && bun run lint && bun run test && bun run test:capture-session && bun run test:knot-materials && bun run test:rolldown-plugins && bun run build && bun run check:build",
     "check:build": "bun test/build/worlds.ts",
     "dev": "bun run vite --mode development",
-    "lint": "bun --bun eslint .",
+    "lint": "bun --bun eslint . --max-warnings 0",
     "preview": "bun run vite preview --host 127.0.0.1",
     "test": "bun test --max-concurrency 1 ./test/unit",
     "test:baking": "bun run --cwd packages/vite-plugin-bake-three test",
@@ -48,7 +48,7 @@
     "@react-three/rapier@2.2.0": "patches/@react-three%2Frapier@2.2.0.patch"
   },
   "dependencies": {
-    "ai": "7.0.173",
+    "ai": "7.0.176",
     "ambience-emitter": "workspace:*",
     "branch-component": "0.4.0",
     "canvas-textures": "workspace:*",
@@ -105,7 +105,7 @@
   },
   "devDependencies": {
     "autoprefixer": "10.6.2",
-    "browserslist": "4.29.5",
+    "browserslist": "4.29.6",
     "caniuse-lite": "1.0.30001826",
     "capture-page": "0.3.0",
     "cssnano-preset-advanced": "10.0.0",
@@ -119,7 +119,7 @@
     "oxc-transform-react": "0.156.0",
     "postcss": "8.5.33",
     "postcss-normalize": "13.0.1",
-    "puppeteer-core": "25.17.0",
+    "puppeteer-core": "25.18.1",
     "rolldown": "1.2.19",
     "rolldown-plugin-bake-branch-component": "workspace:*",
     "rolldown-plugin-hoist-popular-constants": "workspace:*",
@@ -146,6 +146,7 @@
     "@types/react-dom": "19.3.0",
     "@types/three": "0.187.0"
   },
+  "packageManager": "bun@1.4.4",
   "workspaces": [
     "packages/*",
     "packages/use-narrator/packages/*",
