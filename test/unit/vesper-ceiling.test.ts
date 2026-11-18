@@ -9,6 +9,7 @@ import {wallFace, wallTop} from '../../src/lib/gallery/architecture.ts'
 import lobbyVault from '../../src/lib/gallery/lobbyVault.ts'
 import {portals, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
 import {middaySun} from '../../src/lib/gallery/sun.ts'
+import VesperBridgeGeometry, {vesperBridge, vesperBridgeRailHeight} from '../../src/lib/gallery/VesperBridgeGeometry.ts'
 import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY, vesperOpeningInset} from '../../src/lib/gallery/vesperCeiling.ts'
 import VesperCeilingGeometry, {vesperCeilingCollision} from '../../src/lib/gallery/VesperCeilingGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
@@ -21,9 +22,11 @@ const [faceX, faceZ] = room.size.map(size => size / 2 - wallFace)
 const [halfX, halfZ] = vesperLanternHalf(room.size)
 const {rise} = vesperCeiling.lantern
 const geometry = new VesperCeilingGeometry(room.size)
+const bridge = new VesperBridgeGeometry(room.size)
 const material = new MeshBasicMaterial({side: DoubleSide})
 afterAll(() => {
   geometry.dispose()
+  bridge.dispose()
   material.dispose()
 })
 const parts = () => [geometry.plaster, geometry.gilt, geometry.bars, geometry.glass]
@@ -118,9 +121,9 @@ describe('the Vesper’s coved ceiling', () => {
     const position = geometry.glass.getAttribute('position')
     const normal = geometry.glass.getAttribute('normal')
     const uv = geometry.glass.getAttribute('uv')
-    const center = new Vector3(0, vesperLanternSillY, 0)
     for (let index = 0; index < position.count; index++) {
       const corner = vectorAt(position, index)
+      const center = new Vector3(0, vesperLanternSillY, Math.sign(corner.z) * (vesperBridge.width / 2 + (halfZ - vesperBridge.width / 2) / 2))
       expect(vectorAt(normal, index).dot(center.clone().sub(corner))).toBeGreaterThan(0)
       // Corners of the glass lie on the joints between panes, where the bars run.
       for (const value of [uv.getX(index), uv.getY(index)]) {
@@ -156,7 +159,10 @@ describe('the Vesper’s coved ceiling', () => {
         const pane = raycaster.intersectObject(glass, false).at(0)
         total++
         // Light that misses the glass meets the ceiling; nothing reaches the floor through a gap.
-        expect(blocked ?? pane).toBeDefined()
+        // The clear gallery lane is deliberately open between the two lanterns; it is daylight, not a hole in their glazing.
+        const atSill = origin.clone().addScaledVector(direction, (vesperLanternSillY - origin.y) / direction.y)
+        const bridgeLane = Math.abs(atSill.z) <= vesperBridge.width / 2 + 1e-6 && Math.abs(atSill.x) <= halfX
+        expect(blocked ?? pane ?? (bridgeLane ? direction : undefined)).toBeDefined()
         if (pane && (!blocked || blocked.distance > pane.distance)) {
           lit++
         }
@@ -166,6 +172,27 @@ describe('the Vesper’s coved ceiling', () => {
     // A patch of sunlight falls into the room, crossed by the shadows of the bars.
     expect(lit / total).toBeGreaterThan(0.15)
     expect(lit / total).toBeLessThan(0.75)
+  })
+  test('a transverse gallery anchors the bridge into both sides of the ceiling and divides the glazing into equal halves', () => {
+    const {min, max} = bridge.stone.boundingBox!
+    expect(min.x).toBeCloseTo(-halfX, 6)
+    expect(max.x).toBeCloseTo(halfX, 6)
+    expect(max.z - min.z).toBeGreaterThanOrEqual(vesperBridge.width)
+    expect(bridge.stone.boundingBox!.max.y).toBeLessThan(vesperLanternEavesY)
+    expect(bridge.bronze.boundingBox!.max.y).toBeGreaterThan(vesperLanternEavesY)
+    const halfSpan = halfX
+    expect(vesperBridgeRailHeight(0, halfSpan)).toBeGreaterThan(vesperBridgeRailHeight(halfSpan, halfSpan))
+    const position = geometry.glass.getAttribute('position')
+    let northern = 0
+    let southern = 0
+    for (let index = 0; index < position.count; index++) {
+      const z = position.getZ(index)
+      expect(Math.abs(z)).toBeGreaterThanOrEqual(vesperBridge.width / 2 - 1e-5)
+      northern += Number(z > 0)
+      southern += Number(z < 0)
+    }
+    expect(northern).toBe(southern)
+    expect(triangleCount(bridge.stone) + triangleCount(bridge.bronze)).toBeLessThan(12_000)
   })
   test('a smooth collision surface lines the ceiling and the lantern', () => {
     const [positions, indices] = vesperCeilingCollision(room.size)
