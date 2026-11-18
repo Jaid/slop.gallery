@@ -4,7 +4,7 @@ import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 
-import {ironTableColliders, ironTableFinish} from '#src/lib/gallery/ironTable.ts'
+import {ironTableFinish, sideTableColliders} from '#src/lib/gallery/ironTable.ts'
 import IronTableGeometry from '#src/lib/gallery/IronTableGeometry.ts'
 import SoapstoneMaterial from '#src/lib/materials/SoapstoneMaterial.ts'
 import WroughtIronMaterial from '#src/lib/materials/WroughtIronMaterial.ts'
@@ -16,6 +16,7 @@ export default function IronTable({name, seed, table}: {
   table: IronTableLayout
 }) {
   const geometry = useDisposable(useMemo(() => new IronTableGeometry(table), [table]))
+  const colliders = useMemo(() => sideTableColliders(table, name), [table, name])
   const materials = useDisposable(useMemo(() => {
     const stone = new SoapstoneMaterial({seed})
     const iron = new WroughtIronMaterial(ironTableFinish)
@@ -28,11 +29,9 @@ export default function IronTable({name, seed, table}: {
       },
     }
   }, [seed]))
-  return <group name={name}>
-    <RigidBody colliders={false} type='fixed'>
-      {ironTableColliders(table, name).map(({center, name: part, size}, index) => <CuboidCollider key={index} args={[size[0] / 2, size[1] / 2, size[2] / 2]} name={part} position={center} />)}
-    </RigidBody>
+  return <RigidBody colliders={false} friction={0.65} name={name} type='dynamic'>
+    {colliders.map(({center, mass, name: part, size}, index) => <CuboidCollider key={index} args={[size[0] / 2, size[1] / 2, size[2] / 2]} mass={mass} name={part} position={center} />)}
     <mesh castShadow geometry={geometry.top} material={materials.stone} name={`${name}-top`} receiveShadow />
     <mesh castShadow geometry={geometry.frame} material={materials.iron} name={`${name}-frame`} receiveShadow />
-  </group>
+  </RigidBody>
 }

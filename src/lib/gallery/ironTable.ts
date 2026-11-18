@@ -109,6 +109,20 @@ export function ironTableColliders({apron: [apronDepth, apronThickness], depth, 
   return boxes
 }
 
+/** Each free-standing side table weighs 80 kg: 55 kg in the slab and 25 kg distributed through the frame by volume. */
+export function sideTableColliders(table: IronTable, name: string) {
+  const [slab, ...frame] = ironTableColliders(table, name)
+  const volumes = frame.map(({size: [x, y, z]}) => x * y * z)
+  const frameVolume = volumes.reduce((sum, volume) => sum + volume, 0)
+  return [{
+    ...slab,
+    mass: 55,
+  }, ...frame.map((box, i) => ({
+    ...box,
+    mass: 25 * volumes[i] / frameVolume,
+  }))]
+}
+
 /** the blackened iron of every iron table’s frame, see `WroughtIronMaterial`: more scale than bare metal and a shade lighter than the alchemy machine’s chest, so its thin bars take the room’s light and keep their shape instead of reading as flat black */
 export const ironTableFinish = {
   tone: '#4a4743',
