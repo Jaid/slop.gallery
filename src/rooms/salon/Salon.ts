@@ -1,7 +1,7 @@
 import {Geofence} from 'geofency'
 
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
-import salon from '#src/lib/gallery/salon.ts'
+import salon, {salonSkylight} from '#src/lib/gallery/salon.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -13,7 +13,7 @@ import walls from './walls.ts'
 
 /** Lit through its skylight, without lamps of its own. */
 export default class Salon extends Room {
-  override readonly air = floorBox(salon.size, 0, 5.8)
+  override readonly air = floorBox(salon.size, 0, salonSkylight.glassY)
   override readonly description = 'Hung frame to frame. Judged elbow to elbow.'
   // Everything over its floor plan from the slab up, the skylight included.
   override readonly fence = new Geofence([{

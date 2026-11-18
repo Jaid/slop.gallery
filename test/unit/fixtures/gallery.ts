@@ -19,7 +19,7 @@ export const insideGallery = (position: Vec3) => slopGallery.contains(position)
 export const floorHeight = (position: Vec3) => slopGallery.floorHeight(position)
 /** the id of the room whose fence holds the position first */
 export const roomAt = (position: Vec3) => slopGallery.roomAt(position)?.id
-/** Height from a room’s floor to the highest point of its ceiling: the crown of the Lobby’s vault or the Antechamber’s dome, the ridge of the Vesper’s lantern, the flat ceiling everywhere else. */
+/** Height from a room’s floor to the highest point of its ceiling: the crown of the Lobby’s vault or the Antechamber’s dome, the Vesper’s lantern, the Salon’s laylight or the room’s flat ceiling. */
 export const roomClearHeight = (room: PlacedRoom) => room.air[0].max.y - room.floorY
 
 /** Where a visitor stands to look around a room: 1.7 m over its floor, 2.4 m in front of its south wall facing north, in the middle of the Corridor and just north of the Antechamber’s middle, facing south. */

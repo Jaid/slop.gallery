@@ -34,7 +34,7 @@ export default function LobbyVault({cladding}: {
     heavy: isHeavy,
     roughness: 0.86,
   }), [isHeavy]))
-  // Painted bronze glazing bars, as on the Salon’s skylight.
+  // Painted bronze glazing bars.
   const bars = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: '#5b4a35',
     metalness: 0.5,

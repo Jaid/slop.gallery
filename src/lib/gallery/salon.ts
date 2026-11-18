@@ -31,23 +31,13 @@ export const salonCeiling = {
   underside: 5.78 - 0.18 / 2,
 } as const
 
-/**
- * One skylight along the room’s long axis, centered on it: clear cast glass open to the sky, held by a deep coffered frame. All
- * values are in meters, relative to the room center.
- */
+/** The oval laylight above the Salon. The sill rests on a fluted plaster cove rising from the old cornice line. */
 export const salonSkylight = {
-  /** glazed opening along x and z, cut through the slab; as long as the glass wall below it, so their ends line up */
-  opening: [6, salonWindow.width],
-  /** width of the coffer beams around the opening */
-  frame: 0.55,
-  /** how far the coffer beams hang below the ceiling */
-  depth: 0.34,
-  /** glazing bars split the glass into square panes of this size */
-  pane: 1,
-  barWidth: 0.05,
-  barDepth: 0.07,
-  /** the glass sits 1 cm below the slab, above the glazing bars */
-  glassY: salonCeiling.underside - 0.01,
+  /** semi-axes of the glass, across and along the room */
+  radii: [3.15, 4.55],
+  glassY: salonCeiling.underside + 0.94,
+  /** lowest point of the plaster bead round the foot of the cove */
+  footY: salonCeiling.underside - 0.08,
 } as const
 
 /**

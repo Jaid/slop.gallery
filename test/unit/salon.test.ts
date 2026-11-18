@@ -8,7 +8,7 @@ import {roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
-import {salonBench, salonCeiling, salonPedestal, salonSculptureSocket, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
+import {salonBench, salonPedestal, salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '../../src/lib/materials/TerrazzoFloorMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -135,16 +135,6 @@ describe('the Salon', () => {
     expect(y).toBe(floorHeight([x, 1.7, z]))
     expect(salonBench.position[2] - salonBench.depth / 2 - (z + half)).toBeGreaterThan(2.5)
     expect(z - half - (room.center[1] - room.size[1] / 2)).toBeGreaterThan(2)
-  })
-  test('the skylight sits inside the room, under its slab, along the glass wall, in whole panes', () => {
-    const {depth, frame, glassY, opening, pane} = salonSkylight
-    for (const [axis, size] of opening.entries()) {
-      expect(size / 2 + frame).toBeLessThan(room.size[axis] / 2)
-      expect(size / pane % 1).toBeCloseTo(0, 9)
-    }
-    expect(glassY).toBeLessThan(salonCeiling.underside)
-    expect(salonCeiling.underside - depth).toBeGreaterThan(0)
-    expect(opening[1]).toBe(salonWindow.width)
   })
   test('wainscot runs stop at the arch trim and fit between the corners', () => {
     const south = walls.find(wall => wall.id === 'salon-south')!

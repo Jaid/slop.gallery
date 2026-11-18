@@ -5,13 +5,13 @@ import {RigidBody} from '@react-three/rapier'
 import {useRef} from 'react'
 
 import Orbitable from '#component/Orbitable'
-import {salonCeiling} from '#src/lib/gallery/salon.ts'
+import {salonSkylight} from '#src/lib/gallery/salon.ts'
 import {salonSculpture, salonSculptureSpot} from '#src/lib/gallery/salonSculpture.ts'
 
 const Model = await salonSculpture.loadModel()
 const orbit = {
   radius: Math.hypot(...salonSculpture.size) / 2,
-  ceilingY: salonCeiling.underside,
+  ceilingY: salonSkylight.footY,
 }
 
 /** The Salon supplies the placement and inspection target; the selected model supplies the sculpture, not its socket. */
