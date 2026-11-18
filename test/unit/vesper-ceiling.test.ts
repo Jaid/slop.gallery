@@ -2,6 +2,7 @@ import type {Vec3} from '../../src/lib/gallery/types.ts'
 
 import {afterAll, describe, expect, test} from 'bun:test'
 
+import RAPIER from '@dimforge/rapier3d-compat'
 import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
 import {DoubleSide, Frustum, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Vector3} from 'three/webgpu'
 
@@ -9,6 +10,7 @@ import {wallFace, wallTop} from '../../src/lib/gallery/architecture.ts'
 import lobbyVault from '../../src/lib/gallery/lobbyVault.ts'
 import {portals, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
 import {middaySun} from '../../src/lib/gallery/sun.ts'
+import VesperBridgeGeometry from '../../src/lib/gallery/VesperBridgeGeometry.ts'
 import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY, vesperOpeningInset} from '../../src/lib/gallery/vesperCeiling.ts'
 import VesperCeilingGeometry, {vesperCeilingCollision} from '../../src/lib/gallery/VesperCeilingGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
@@ -20,13 +22,17 @@ const lobby = rooms.find(candidate => candidate.id === 'lobby')!
 const [faceX, faceZ] = room.size.map(size => size / 2 - wallFace)
 const [halfX, halfZ] = vesperLanternHalf(room.size)
 const {rise} = vesperCeiling.lantern
+await RAPIER.init()
 const geometry = new VesperCeilingGeometry(room.size)
+const bridge = new VesperBridgeGeometry(room.size)
+const bridgeParts = [bridge.deck, bridge.bronze, bridge.gilt]
 const material = new MeshBasicMaterial({side: DoubleSide})
 afterAll(() => {
   geometry.dispose()
+  bridge.dispose()
   material.dispose()
 })
-const parts = () => [geometry.plaster, geometry.gilt, geometry.bars, geometry.glass]
+const parts = [geometry.plaster, geometry.gilt, geometry.bars, geometry.glass, ...bridgeParts]
 const vectorAt = (attribute: ReturnType<typeof geometry.plaster.getAttribute>, index: number) => {
   const vector = new Vector3
   return vector.fromBufferAttribute(attribute, index)
@@ -37,6 +43,7 @@ const vertices = (part: typeof geometry.plaster) => {
 }
 /** height of the lantern’s hipped roof over the point on the plan */
 const roofY = (x: number, z: number) => vesperLanternEavesY + rise * Math.min(halfX - Math.abs(x), halfZ - Math.abs(z)) / halfX
+const fromBelow = (x: number, z: number) => new Raycaster(new Vector3(x, 5, z), new Vector3(0, 1, 0))
 const view = (position: Vec3, target: Vec3) => {
   const camera = new PerspectiveCamera(62, 16 / 9, 0.05, 90)
   camera.position.set(...position)
@@ -95,7 +102,7 @@ describe('the Vesper’s coved ceiling', () => {
     }
   })
   test('stays inside the walls’ faces, above their cornice and below the ridge', () => {
-    for (const part of parts()) {
+    for (const part of parts) {
       const {min, max} = part.boundingBox!
       expect(Math.max(-min.x, max.x)).toBeLessThanOrEqual(faceX + 1e-6)
       expect(Math.max(-min.z, max.z)).toBeLessThanOrEqual(faceZ + 1e-6)
@@ -129,10 +136,10 @@ describe('the Vesper’s coved ceiling', () => {
     }
   })
   test('keeps a modest triangle budget', () => {
-    expect(parts().reduce((sum, part) => sum + triangleCount(part), 0)).toBeLessThan(20_000)
+    expect(parts.reduce((sum, part) => sum + triangleCount(part), 0)).toBeLessThan(20_000)
   })
   test('lets the sun in through the lantern and nowhere else', () => {
-    const opaque = [geometry.plaster, geometry.gilt, geometry.bars].map(part => new Mesh(part, material))
+    const opaque = [geometry.plaster, geometry.gilt, geometry.bars, ...bridgeParts].map(part => new Mesh(part, material))
     const glass = new Mesh(geometry.glass, material)
     for (const mesh of [...opaque, glass]) {
       mesh.geometry.boundsTree = new MeshBVH(mesh.geometry)
@@ -157,7 +164,7 @@ describe('the Vesper’s coved ceiling', () => {
         total++
         // Light that misses the glass meets the ceiling; nothing reaches the floor through a gap.
         expect(blocked ?? pane).toBeDefined()
-        if (pane && (!blocked || blocked.distance > pane.distance)) {
+        if (pane && !blocked) {
           lit++
         }
       }
@@ -175,6 +182,66 @@ describe('the Vesper’s coved ceiling', () => {
       expect(Math.abs(positions[index])).toBeLessThanOrEqual(faceX + 1e-5)
       expect(positions[index + 1]).toBeGreaterThanOrEqual(vesperCeiling.springY - 1e-5)
       expect(Math.abs(positions[index + 2])).toBeLessThanOrEqual(faceZ + 1e-5)
+    }
+  })
+  test('the arch divides the opening from curb to curb without blocking either half', () => {
+    const [arch, ...trim] = bridgeParts.map(part => new Mesh(part, material))
+    const glass = new Mesh(geometry.glass, material)
+    for (const x of [-halfX + 0.01, -2, -1, 0, 1, 2, halfX - 0.01]) {
+      for (const z of [-0.69, 0, 0.69]) {
+        expect(fromBelow(x, z).intersectObject(arch)[0]?.point.y).toBeLessThan(vesperCoveTopY)
+      }
+      for (const z of [1, 4, halfZ - 0.01]) {
+        for (const side of [-1, 1]) {
+          const ray = fromBelow(x, side * z)
+          expect(ray.intersectObjects([arch, ...trim])).toHaveLength(0)
+          expect(ray.intersectObject(glass)[0]?.point.y).toBeCloseTo(roofY(x, z), 5)
+        }
+      }
+    }
+    const crown = fromBelow(0, 0).intersectObject(arch)[0].point.y
+    const springing = fromBelow(halfX - 0.01, 0).intersectObject(arch)[0].point.y
+    expect(crown - springing).toBeGreaterThan(0.45)
+  })
+  test('the bridge stays clear of the lantern’s glass', () => {
+    for (const part of bridgeParts) {
+      for (const {x, y, z} of vertices(part)) {
+        if (!(y > vesperLanternSillY)) {
+          continue
+        }
+        expect(Math.abs(x)).toBeLessThan(halfX)
+        expect(Math.abs(z)).toBeLessThan(halfZ)
+        expect(y).toBeLessThan(roofY(x, z))
+      }
+    }
+  })
+  test('the bridge’s deck, arch and handrails collide where they are drawn', () => {
+    const arch = new Mesh(bridge.deck, material)
+    const rail = new Mesh(bridge.bronze, material)
+    const world = new RAPIER.World({
+      x: 0,
+      y: -9.81,
+      z: 0,
+    })
+    try {
+      world.createCollider(RAPIER.ColliderDesc.trimesh(...bridge.collision, RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES))
+      world.step()
+      const check = (mesh: Mesh, origin: Vector3, direction: Vector3) => {
+        const ray = new Raycaster(origin, direction)
+        const visible = ray.intersectObject(mesh)[0]
+        const physical = world.castRay(new RAPIER.Ray(origin, direction), 3, true)
+        expect(physical?.timeOfImpact).toBeCloseTo(visible.distance, 5)
+      }
+      for (const x of [-2.9, -2, -1, 0, 1, 2, 2.9]) {
+        check(arch, new Vector3(x, 8, 0), new Vector3(0, -1, 0))
+        check(arch, new Vector3(x, 6, 0), new Vector3(0, 1, 0))
+      }
+      for (const side of [-1, 1]) {
+        check(rail, new Vector3(0.15, 8.32, side * 1.5), new Vector3(0, 0, -side))
+      }
+      expect(world.castRay(new RAPIER.Ray(new Vector3(0, 6, 1.3), new Vector3(0, 1, 0)), 3, true)).toBeNull()
+    } finally {
+      world.free()
     }
   })
   test('the lantern shows the Lobby’s vault rising next door', () => {
