@@ -18,8 +18,6 @@ const sprintSpeed = defaultEgoOptions.speed * defaultEgoOptions.sprintFactor
 const jumpSpeed = Math.sqrt(2 * defaultEgoOptions.gravity * defaultEgoOptions.jumpHeight)
 /** how much a run-up flat out adds to a throw’s own speed */
 const driveBoost = 0.2
-/** how much of a throw’s lift a run-up flat out flattens away */
-const driveFlattening = 0.6
 /** how far a throw at the start of a jump turns up from where it is aimed, like a jump shot, in radians */
 const riseTilt = 40 * Math.PI / 180
 /** how much softer a jump shot leaves than a throw from the ground, so it lobs up high and drops steeply instead of flying off far */
@@ -84,7 +82,7 @@ const length = (vector: Vec3) => Math.hypot(...vector)
 /**
  * How a prop of `mass` leaves the hand, thrown along `direction` or let go of, by someone moving at `carrier`.
  * It carries on with the carrier’s velocity either way, as a hand moves with its body, so a prop let go of on the run sails on ahead like a little throw, and one let go of mid-jump flies on up.
- * A throw adds the arm’s speed for its mass (see {@link throwSpeedFor}) along `direction` and a lift of a fifth of that. Running into it drives it harder and flatter, up to a fifth faster with little lift flat out; rising at the start of a jump turns it up to 40° higher and two fifths softer, so it lobs up in a high arc and drops steeply like a jump shot. Both scale with how much of the run or the jump’s speed there is, and only toward the throw: backing away or falling only takes from it what the carrier’s velocity does.
+ * A throw adds the arm’s speed for its mass (see {@link throwSpeedFor}) along `direction` and a lift of a fifth of that. Running into it adds up to a fifth to the arm’s speed, with lift to match; rising at the start of a jump turns it up to 40° higher and two fifths softer, so it lobs up in a high arc and drops steeply like a jump shot. Both scale with how much of the run or the jump’s speed there is, and only toward the throw: backing away or falling only takes from it what the carrier’s velocity does.
  */
 export function toss({carrier = [0, 0, 0], direction, lift: liftShare = defaultLift, mass, speed = throwSpeedFor(mass), throwing}: TossInput): Toss {
   const carried: Vec3 = [...carrier]
@@ -110,7 +108,7 @@ export function toss({carrier = [0, 0, 0], direction, lift: liftShare = defaultL
   // A jump shot turns the throw up in its own vertical plane; straight up or down it has no plane to turn in.
   const elevation = level > 1e-6 ? Math.min(Math.atan2(y, level) + riseTilt * rise, Math.max(steepest, Math.atan2(y, level))) : Math.sign(y) * Math.PI / 2
   const aim: Vec3 = level > 1e-6 ? [heading[0] * Math.cos(elevation), Math.sin(elevation), heading[2] * Math.cos(elevation)] : [0, Math.sign(y) || 1, 0]
-  const lift = liftShare * effort * (1 - driveFlattening * drive)
+  const lift = liftShare * effort
   const tumble = effort / throwSpeed
   return {
     carried,

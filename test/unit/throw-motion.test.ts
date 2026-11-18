@@ -65,8 +65,11 @@ describe('throws on the move', () => {
     })
     expect(sprint.drive).toBe(1)
     expect(sprint.effort).toBeGreaterThan(still.effort * 1.15)
-    // flatter: little lift for how fast it goes
-    expect(sprint.velocity[1] / Math.hypot(sprint.velocity[0], sprint.velocity[2])).toBeLessThan(still.velocity[1] / Math.hypot(still.velocity[0], still.velocity[2]) / 3)
+    const forwardSpeed = Math.hypot(sprint.velocity[0], sprint.velocity[2])
+    expect(sprint.velocity[1] / forwardSpeed).toBeLessThan(still.velocity[1] / Math.hypot(still.velocity[0], still.velocity[2]))
+    // An orb leaves the hand about 14 cm below a level crosshair. Eight meters on, its center should pass within 10 cm of the sightline.
+    const time = 8 / forwardSpeed
+    expect(Math.abs(-0.14 + sprint.velocity[1] * time - gravity * time ** 2 / 2)).toBeLessThan(0.1)
     expect(range(sprint.velocity)).toBeGreaterThan(range(still.velocity) + range([0, 0, -9]) * 0.5)
     // Walking drives it far less.
     const walk = toss({
