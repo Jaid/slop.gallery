@@ -15,6 +15,7 @@ import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {wallFace, wallOpeningTrim} from '#src/lib/gallery/architecture.ts'
 import CrumbledStoneGeometry from '#src/lib/gallery/CrumbledStoneGeometry.ts'
 import {salonBench, salonBenchLegs, salonCeiling, salonSculptureSocket, salonSkylight, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
+import {environmentSeed} from '#src/lib/gameSeed.ts'
 import FauxMarbleMaterial, {gialloAntico, portoro} from '#src/lib/materials/FauxMarbleMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
 import SawnCarvingStoneMaterial from '#src/lib/materials/SawnCarvingStoneMaterial.ts'
@@ -161,7 +162,8 @@ function Ottoman() {
   const velvet = useDisposable(useMemo(() => {
     // Carry the nap from the flat seat over the rounded edges instead of stretching it down the sides.
     const drop = float(seatThickness / 2).sub(positionGeometry.y)
-    return new VelvetMaterial(positionGeometry.xz.add(normalGeometry.xz.mul(drop)))
+    const coordinates = positionGeometry.xz.add(normalGeometry.xz.mul(drop))
+    return new VelvetMaterial(coordinates.mul(4), {seed: environmentSeed})
   }, [seatThickness]))
   const walnut = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: '#3a2214',
@@ -174,4 +176,3 @@ function Ottoman() {
     <BenchSeat material={velvet} position={[0, legHeight + apronHeight + cushionHeight / 2, 0]} size={[width, seatThickness, depth]} />
   </RigidBody>
 }
-
