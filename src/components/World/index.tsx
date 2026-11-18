@@ -14,6 +14,7 @@ import {useGallery} from '#src/lib/gallery.ts'
 import {clearRooms, endRoom, expectRooms, startRoom} from '#src/lib/gallery/roomLoading.ts'
 import {roomsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
+import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 import relations from '#src/worlds/gallery/relations.ts'
 
@@ -158,22 +159,38 @@ const reachedRooms: ReadonlyArray<RoomId> = loaders.keys().toArray()
 expectRooms(reachedRooms)
 const isReached = (room: RoomId) => loaders.has(room)
 const position = new Vector3
-/** Every room in reach, nearest first: the given rooms, the rooms they see into, the rooms those see into and so on. */
-const nearestFirst = (from: ReadonlyArray<RoomId>): ReadonlyArray<RoomId> => {
-  const order: Array<RoomId> = []
+/** Rank rooms in reach by openings from the camera’s rooms, then by walking distance to their nearest air. Outside the graph only distance decides. */
+export const nearestFirst = (from: ReadonlyArray<RoomId>, eye: Vector3): ReadonlyArray<RoomId> => {
+  const hops = new Map<RoomId, number>
   let round: ReadonlyArray<RoomId> = from
-  while (round.length > 0) {
-    order.push(...round)
-    // The next round is the rooms that this round sees into.
-    round = [...new Set(round.flatMap(room => relations[room].rooms))].filter(room => !order.includes(room))
+  for (let depth = 0; round.length; depth++) {
+    for (const room of round) {
+      hops.set(room, depth)
+    }
+    round = [...new Set(round.flatMap(room => relations[room].rooms))].filter(room => !hops.has(room))
   }
-  return [...order, ...reachedRooms.filter(room => !order.includes(room))]
+  const local = new Vector3
+  const nearest = new Vector3
+  return reachedRooms.map(id => {
+    const {origin, room} = slopGallery.room(id)
+    // Move the eye into room coordinates once rather than translating all the passage boxes into world space.
+    local.set(eye.x - origin[0], eye.y - origin[1], eye.z - origin[2])
+    let distance = Infinity
+    for (const box of room.airBoxes) {
+      distance = Math.min(distance, perceptualDistance(local, box.clampPoint(local, nearest)))
+    }
+    return {
+      id,
+      depth: hops.get(id) ?? hops.size,
+      distance,
+    } as const
+  }).toSorted((a, b) => a.depth - b.depth || a.distance - b.distance).map(({id}) => id)
 }
 
 /**
  * Every room of the gallery in reach of this page, see `World.reach`, each with what it builds beyond its walls, in chunks of its own; rooms out of reach never download.
  * Behind the loading screen, only the rooms the camera is in load, or every room outside of all rooms, where culling leaves nothing out.
- * The rest download once Enter is enabled. They mount one at a time, nearest first, so that no single frame sets them all up.
+ * The rest download once Enter is enabled. Each frame takes the highest-ranked room whose chunk is ready, so a slow download never blocks another room.
  */
 export default function World({materials}: {
   /** what the rooms share, which a room only makes by asking for it */
@@ -194,7 +211,7 @@ export default function World({materials}: {
   useFrame(({camera}) => {
     if (asked.current.size < reachedRooms.length) {
       const from = roomsAt(camera.getWorldPosition(position).toArray())
-      const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from) : from
+      const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from, position) : from
       for (const room of wanted) {
         if (!isReached(room) || asked.current.has(room)) {
           continue
