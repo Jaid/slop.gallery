@@ -23,10 +23,10 @@
     "@babel/parser": "8.1.2"
   },
   "peerDependencies": {
-    "vite": "^8.3.8"
+    "vite": "^8.4.0-beta.1"
   },
   "devDependencies": {
-    "vite": "8.3.8",
+    "vite": "8.4.0-beta.1",
     "@types/fs-extra": "11.0.4"
   },
   "workspaces": [

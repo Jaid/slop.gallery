@@ -5,7 +5,7 @@ import postcss from 'postcss'
 import {preprocessCSS, resolveConfig} from 'vite'
 
 const config = await resolveConfig({
-  configLoader: 'runner',
+  configLoader: 'native',
   logLevel: 'silent',
 }, 'serve')
 function expectStaticStyles(code: string) {

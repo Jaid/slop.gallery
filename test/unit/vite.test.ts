@@ -31,7 +31,7 @@ test.each(['development', 'staging', 'production'])('Vite %s keeps the shared pi
 test('production CSS preserves resources and stacking levels used outside the stylesheet', async () => {
   const config = await resolveConfig({
     mode: 'production',
-    configLoader: 'runner',
+    configLoader: 'native',
   }, 'build')
   const options = config.css.postcss
   if (!options || typeof options === 'string') {

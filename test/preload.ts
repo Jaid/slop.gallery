@@ -2,7 +2,7 @@ import {preprocessCSS, resolveConfig} from 'vite'
 
 // Compile real modules for renderer-free component tests instead of mocking class names.
 const config = resolveConfig({
-  configLoader: 'runner',
+  configLoader: 'native',
   logLevel: 'silent',
 }, 'serve')
 Bun.plugin({
