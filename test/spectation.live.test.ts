@@ -4,6 +4,7 @@ import type {Page} from 'puppeteer-core'
 import {expect, test} from 'bun:test'
 
 import {openHeadlessGallery, resolveGallerySetup, waitForFrames} from '../scripts/lib/headlessGallery.ts'
+import {perceptualDistance} from '../src/lib/perceptualDistance.ts'
 
 type FrameCounts = {
   /** frames drawn on the studio view’s canvas since the last count */
@@ -140,6 +141,16 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: a work of the col
   const untouched = portraits.find(portrait => portrait.hung && portrait.id !== known!.id)!
   await pause(page)
   await page.waitForSelector(`${collection} [data-portrait="${known!.id}"][data-interacted="true"]`)
+  // The works nearest to the camera come first, the one the player just listened to among them.
+  const paused = await snapshot(page)
+  const listed = await page.$$eval(`${collection} [data-portrait]`, items => items.map(item => item.getAttribute('data-portrait')!))
+  const distanceOf = (id: string) => {
+    const {physical, position} = paused.portraits.find(portrait => portrait.id === id)!
+    return perceptualDistance(paused.camera, physical ?? position)
+  }
+  expect(listed.length).toBeGreaterThan(1)
+  expect(listed.map(distanceOf)).toEqual(listed.map(distanceOf).toSorted((a, b) => a - b))
+  expect(listed[0]).toBe(known!.id)
   expect(await isOpen(page)).toBe(false)
   expect(await spectating(page)).toBeNull()
   expect(await page.$('[data-testid="minimap"]')).not.toBeNull()

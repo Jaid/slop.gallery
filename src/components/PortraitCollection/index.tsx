@@ -3,12 +3,13 @@ import type {Portrait} from '#src/lib/gallery.ts'
 import type {PortraitImageFormat} from '#src/lib/gallery/portraitExport.ts'
 
 import Branch from 'branch-component'
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 
 import ContextMenu from '#component/ContextMenu'
 import PortraitCollectionItem from '#component/PortraitCollectionItem'
 import artworkThumbnails from '#src/lib/artworkThumbnails.ts'
-import {notify} from '#src/lib/gallery.ts'
+import {cameraPose, notify} from '#src/lib/gallery.ts'
+import nearestPortraits from '#src/lib/gallery/nearestPortraits.ts'
 import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import usePortraitsInReach from '#src/lib/gallery/usePortraitsInReach.ts'
@@ -53,11 +54,14 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
 
 /**
  * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie, but those hanging in rooms out of its reach, see `World.reach`, whose images never load.
+ * The works nearest to the camera come first, by how far a walk to them feels (see `perceptualDistance`), measured as the collection mounts with the pause menu, while the world stands still.
  * A click on one shows it up close in place of the pause menu’s map and middle, see `PortraitSpectation`, and another click on it puts that view away again.
  * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
  */
 export default function PortraitCollection() {
-  const portraits = usePortraitsInReach()
+  const inReach = usePortraitsInReach()
+  // Sorted again only as the works change, not as the camera moves, so a cell never moves under the pointer; the camera stands still behind the pause menu anyway.
+  const portraits = useMemo(() => nearestPortraits(inReach, cameraPose.position), [inReach])
   const spectatedId = usePortraitSpectation(state => state.id)
   const toggleSpectation = usePortraitSpectation(state => state.toggle)
   const [menu, setMenu] = useState<{
