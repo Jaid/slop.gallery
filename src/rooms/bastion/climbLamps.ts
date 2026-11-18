@@ -3,7 +3,7 @@ import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {Lamp} from '../base/Room.ts'
 
 import {bastionOrigin} from '#src/lib/gallery/bastion.ts'
-import {climbApproach, climbApproachLantern, climbHairpin, climbHairpinLantern, climbMouth, climbPassageLanterns, climbRun, climbRunLantern} from '#src/lib/gallery/climb.ts'
+import {climbHairpin, climbHairpinLantern, climbMouth, climbPassageLanterns, climbRun, climbRunLantern} from '#src/lib/gallery/climb.ts'
 import {passageLight, passageLightCount, routeLight} from '#src/lib/gallery/pendants/mounts.ts'
 
 const [originX, originY, originZ] = bastionOrigin
@@ -26,7 +26,6 @@ export default {
   lantern_elbow: lantern(elbow),
   // Halfway up the hairpin’s east leg.
   lantern_climb: lantern(routeLight(climbHairpin, climbHairpinLantern)),
-  // Halfway along the run north, over the Lodge’s roof, and along the approach east, right before the arch of the Forge’s vestibule.
+  // Halfway along the run north, over the Lodge’s roof.
   lantern_run: lantern(routeLight(climbRun, climbRunLantern)),
-  lantern_strip: lantern(routeLight(climbApproach, climbApproachLantern)),
 } satisfies Record<string, Lamp>

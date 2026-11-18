@@ -51,8 +51,7 @@ test('a lamp shines in its own room and in the rooms that keep it', () => {
   expect(slopGallery.lampRooms(lamp('bastion-lantern_north')).toSorted()).toEqual(['bastion', 'lodge', 'oculus'])
   expect(slopGallery.lampRooms(lamp('corridor-lantern_landing')).toSorted()).toEqual(['corridor', 'sienna'])
   expect(slopGallery.lampRooms(lamp('sienna-chandelier')).toSorted()).toEqual(['corridor', 'lobby', 'sienna', 'vesper'])
-  // The approach’s last lantern hangs right before the arch of the Forge’s vestibule and lights it too.
-  expect(slopGallery.lampRooms(lamp('bastion-lantern_strip')).toSorted()).toEqual(['bastion', 'forge'])
+  expect(slopGallery.lampRooms(lamp('bastion-lantern_cistern')).toSorted()).toEqual(['bastion', 'forge'])
 })
 test('the passages’ lamps hang under the lanterns the fixtures hang from their vaults and ribs', () => {
   const vault = new RouteVaultGeometry(bastionCurve)

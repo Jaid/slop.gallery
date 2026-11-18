@@ -409,7 +409,7 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
   })
   test('its lanterns hang between the hairpin’s ribs and its lamps under them', () => {
     expect(climbHairpin.ribs.some(rib => Math.abs(rib - climbHairpinLantern) < 0.3)).toBe(false)
-    const ids = ['climb', 'elbow', 'run', 'strip'].map(id => `bastion-lantern_${id}`)
+    const ids = ['climb', 'elbow', 'run'].map(id => `bastion-lantern_${id}`)
     const lamps = slopGallery.room('bastion').lamps().filter(({id}) => ids.includes(id))
     expect(lamps.map(({id}) => id).toSorted()).toEqual(ids)
     for (const {position} of lamps) {

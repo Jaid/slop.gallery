@@ -225,9 +225,9 @@ const relations = {
     // Through its window, across the Lobby and through the Salon’s window, as the Salon sees across it the other way
     rooms: ['bastion', 'lobby', 'salon', 'vesper', 'banquet', 'antechamber', 'oculus', 'sienna', 'exhibition'],
     floorMirror: 'base',
-    // The last lantern along the approach hangs right before the vestibule’s arch, and the cistern’s shines out through the window.
+    // The cistern lantern shines through the vestibule’s window.
     visibleLamps: {
-      bastion: ['lantern_strip', 'lantern_cistern'],
+      bastion: 'lantern_cistern',
     },
   },
   moonfall: {

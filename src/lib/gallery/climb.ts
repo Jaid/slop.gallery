@@ -185,5 +185,3 @@ export const climbPassageLanterns = {
 export const climbHairpinLantern = climbHairpin.ribGap(route.length - legLength / 2)
 /** How far along the run its lantern hangs, between two ribs halfway along it, over the Lodge’s roof. */
 export const climbRunLantern = climbRun.ribGap(climbRun.route.length / 2)
-/** How far along the approach its lantern hangs, between its last two ribs, on its straight stretch right before the vestibule’s arch. */
-export const climbApproachLantern = climbApproach.ribGap(climbApproach.route.length - 0.5)
