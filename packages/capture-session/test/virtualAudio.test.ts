@@ -8,14 +8,14 @@ import {installVirtualAudio} from '../src/script/virtualAudio.ts'
 
 const rate = 48_000
 const fps = 60
-// The page renders sound offline, so any Chromium will do, without a GPU.
+// Exercise both feature states independently of the Chromium build’s default.
 describe.skipIf(!process.env.BROWSER)('virtual audio (needs BROWSER)', () => {
   let browser: Browser
   beforeAll(async () => {
     browser = await puppeteer.launch({
       executablePath: process.env.BROWSER,
       headless: true,
-      args: ['--disable-gpu'],
+      args: ['--disable-gpu', '--enable-features=OfflineAudioContextIncrementalRendering'],
     })
   })
   afterAll(() => browser.close())

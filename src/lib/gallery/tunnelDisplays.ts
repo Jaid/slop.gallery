@@ -360,7 +360,7 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
   const stairWallName = (name: string) => `exhibition-stairs_${id.replaceAll('-', '_')}_${name.replaceAll('-', '_')}`
   const flightWall = (flight: StairFlight, cross: number): Wall => ({
     // StairFlight’s axial sides follow world +x/+z, while these corners follow the right of the route. The east return runs toward −x, so its inside wall is the north one, not the south one.
-    ...flight.wall(flight.axis === 0 ? flight.direction * cross : flight.axis === 2 ? -flight.direction * cross : cross),
+    ...flight.wall(flight.axis === 0 ? flight.direction * cross : (flight.axis === 2 ? -flight.direction * cross : cross)),
     trimStyle: 'plain',
   })
   // Close inside corners of both turns by wallFace * tan(|turn| / 2) so wall faces meet without a wedge gap.

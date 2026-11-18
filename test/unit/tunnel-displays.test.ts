@@ -30,7 +30,11 @@ function stairwayWorld(display: Display) {
     z: 0,
   })
   world.timestep = 1 / 60
-  for (const wall of walls.filter(wall => wall.id === `oculus-${display.side}` || display.stairway.walls.some(stairWall => stairWall.id === wall.id))) {
+  const wallIds = new Set([`oculus-${display.side}`, ...display.stairway.walls.map(wall => wall.id)])
+  for (const wall of walls) {
+    if (!wallIds.has(wall.id)) {
+      continue
+    }
     const geometry = createArchitectureGeometry(wall)
     const wallRotation = new Quaternion
     wallRotation.setFromAxisAngle(new Vector3(0, 1, 0), wall.rotation)
@@ -259,7 +263,8 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
         expect(solid([x, y, z]), seam).toBe(true)
       }
     })
-    for (const [fps, returning] of [30, 60, 120].flatMap(fps => [false, true].map(returning => [fps, returning] as const))) {
+    const walks = [30, 60, 120].flatMap(fps => [false, true].map(returning => [fps, returning] as const))
+    for (const [fps, returning] of walks) {
       test(`${display.side}: the player walks ${returning ? 'up from the display to the balcony' : 'down from the balcony into the display'} at ${fps} Hz`, () => {
         const world = stairwayWorld(display)
         world.timestep = 1 / fps
@@ -432,13 +437,11 @@ describe('beveled tunnel with display rooms and asymmetric staff stairways', () 
     }
   }
 })
-
 describe('the east staff route bows away from the Exhibition', () => {
   const east = tunnelDisplays.find(display => display.side === 'east')!
   const {door, flights, landing, levels, waypoints} = east.stairway
   const [entry, north, south, foot] = waypoints
   const returning = levels.find(level => level !== landing && level.floor === landing.floor)!
-
   test('the middle run heads southeast and returns west without moving either doorway or changing the stairs', () => {
     expect(entry).toEqual([oculus.size[0] / 2, door[2]])
     expect(north[0]).toBeGreaterThan(entry[0])
@@ -452,7 +455,6 @@ describe('the east staff route bows away from the Exhibition', () => {
     expect(foot[1] + displayStairway.width / 2 + wallFace).toBeLessThan(lowerGallery.moonfall.center[1] - lowerGallery.moonfall.size[1] / 2)
     expect(returning).toBeDefined()
   })
-
   test('all floor pieces stay convex, including the separate return corridor', () => {
     for (const display of tunnelDisplays) {
       for (const {polygon} of display.stairway.levels) {
@@ -467,7 +469,6 @@ describe('the east staff route bows away from the Exhibition', () => {
       }
     }
   })
-
   test('the westbound flight closes its north inside corner, not its south outside corner', () => {
     const lower = flights[2]
     const prefix = `exhibition-stairs_${lower.id.replaceAll('-', '_')}`
@@ -478,7 +479,6 @@ describe('the east staff route bows away from the Exhibition', () => {
     expect(northWall.center[2]).toBeCloseTo(foot[1] - lower.width / 2, 9)
     expect(southWall.center[2]).toBeCloseTo(foot[1] + lower.width / 2, 9)
   })
-
   test('the return corridor has matching rendered and physical floors and ceilings, solid sides and Exhibition navigation', () => {
     const world = stairwayWorld(east)
     const material = new MeshBasicMaterial
@@ -502,7 +502,8 @@ describe('the east staff route bows away from the Exhibition', () => {
           expect(roomAt(position)).toBe('exhibition')
           expect(floorHeight(position)).toBeCloseTo(landing.floor, 9)
           for (const direction of [new Vector3(0, -1, 0), new Vector3(0, 1, 0)]) {
-            const visible = new Raycaster(origin, direction).intersectObjects(slabs)[0]
+            const ray = new Raycaster(origin, direction)
+            const visible = ray.intersectObjects(slabs)[0]
             const physical = world.castRay(new RAPIER.Ray(origin, direction), 4, true)
             expect(visible).toBeDefined()
             expect(physical).not.toBeNull()
@@ -523,7 +524,6 @@ describe('the east staff route bows away from the Exhibition', () => {
       }
     }
   })
-
   for (const offset of [-0.5, 0, 0.5]) {
     for (const reverse of [false, true]) {
       test(`the lower flight and both return seams are walkable in lane ${offset}, ${reverse ? 'up' : 'down'}`, () => {
@@ -532,11 +532,12 @@ describe('the east staff route bows away from the Exhibition', () => {
         const startX = reverse ? -2.1 : lower.start[0] + 0.3
         const endX = reverse ? lower.start[0] + 0.3 : -2.1
         const startY = reverse ? landing.floor : lower.start[1]
-        const z = foot[1] + offset
-        const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(startX, startY + 0.04, z))
+        const startZ = foot[1] + offset
+        const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(startX, startY + 0.04, startZ))
         const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
         const motor = new EgoMotor(RAPIER, world, body, collider)
-        const facing = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), reverse ? -Math.PI / 2 : Math.PI / 2)
+        const facing = new Quaternion
+        facing.setFromAxisAngle(new Vector3(0, 1, 0), reverse ? -Math.PI / 2 : Math.PI / 2)
         try {
           for (let i = 0; i < 60 * 12 && Math.abs(body.translation().x - endX) > 0.2; i++) {
             motor.step(world.timestep, {forward: true}, facing)
