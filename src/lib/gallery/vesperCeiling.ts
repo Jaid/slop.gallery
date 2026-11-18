@@ -9,6 +9,7 @@ export type CeilingSection = readonly [inward: number, y: number]
  * A flat ledge runs around the room on top of the walls. From its edge, a cove curves up and in like a quarter ellipse to a flat band that frames the lantern’s opening. The coves of the four sides meet on the diagonals, as in a cloister vault.
  * Gilt fillets line the edge of the ledge, the top of the cove and the opening, and gilt beads follow the creases where the coves meet.
  * A low curb rises around the opening and carries the lantern: upright sides and a hipped roof, all of cast glass held by bronze bars, which lets the sun in.
+ * Across the middle of the lantern, a bronze footbridge splits its glass into two halves: an arch springing from the gilt fillets of the opening’s long sides, with gilt rings diminishing toward the crown in its spandrels, carrying a cambered deck between railings.
  */
 const vesperCeiling = {
   springY: wallTop,
@@ -45,6 +46,52 @@ const vesperCeiling = {
     frame: [0.08, 0.1],
     /** gap between the glass and the bars inside it */
     gap: 0.005,
+  },
+  bridge: {
+    /** half its width along the ridge, to the faces of its deck girders */
+    halfWidth: 0.55,
+    /** height of the deck girders’ top over the lantern’s sill at the pylons and at the crown */
+    deck: [0.42, 0.82],
+    /** the deck girders along both faces: depth and thickness */
+    girder: [0.12, 0.06],
+    /** the plaster deck between the girders: how far its top lies under theirs, and its thickness */
+    plate: [0.02, 0.05],
+    /** the arch ribs, one behind each face and one along the middle: thickness and depth */
+    rib: [0.055, 0.09],
+    /** how far the back of the arch stays under the girders at the crown, where a gilt medallion fills the spandrel between the two chains of rings */
+    crownGap: 0.2,
+    /** how far the outer ribs stand back from the girders’ faces */
+    ribInset: 0.01,
+    /** the bronze corbels the arch springs from, which sit on the gilt fillet along the edge of the opening: length along the span at their top, and how far their top rises over the arch’s springing */
+    shoe: [0.24, 0.17],
+    /** the medallion at the crown: how much larger than the circle between the arch and the girders, so it breaks over both, and how far it stands out of the girders’ faces */
+    medallion: [1.45, 0.014],
+    /** the square pylons at the bridge’s corners, as heavy as the lantern’s frame, which rise from the corbels into its eaves plate and carry the ends of the railings */
+    pylon: 0.08,
+    rings: {
+      /** the width of their bars in their plane: a share of their radius, but between the two widths */
+      bar: [0.012, 0.022],
+      barShare: 0.15,
+      /** the gap between neighboring rings at least, which grows until the rings fill the spandrel evenly from pylon to medallion, and how many of these gaps keep them from the medallion */
+      gap: 0.012,
+      medallionGaps: 2.5,
+      /** how far they stand back from the girders’ faces, the far side included */
+      inset: [0.022, 0.05],
+    },
+    railing: {
+      /** height of the handrail’s middle over the deck girders and how far it stands back from their faces */
+      height: 0.44,
+      inset: 0.035,
+      /** bays between the pylons along the span */
+      bays: 8,
+      /** the width of the posts between the bays, which the ties under the deck line up with, and of the balusters */
+      post: 0.03,
+      baluster: 0.016,
+      /** how far apart the balusters stand at most */
+      spacing: 0.1,
+      /** radius of the gilt handrail */
+      handrail: 0.018,
+    },
   },
 } as const
 
