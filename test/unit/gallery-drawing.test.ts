@@ -2,7 +2,7 @@ import type {Camera, Object3D} from 'three/webgpu'
 
 import {afterEach, beforeEach, expect, test} from 'bun:test'
 
-import {BoxGeometry, Mesh, MeshBasicNodeMaterial, PerspectiveCamera, Renderer, Scene} from 'three/webgpu'
+import {BoxGeometry, Group, Mesh, MeshBasicNodeMaterial, PerspectiveCamera, Renderer, Scene} from 'three/webgpu'
 
 import GalleryDrawingPipeline from '../../src/lib/rendering/GalleryDrawingPipeline.ts'
 import {GalleryRenderer} from '../../src/lib/rendering/GalleryRenderer.ts'
@@ -117,4 +117,100 @@ test('warming draws every object outside the frustum once per camera, a budgetâ€
   // Its budget admits about one new object per frame here, so warming took several.
   expect(frames).toBeGreaterThan(3)
   expect(renderer.warmedAll).toBe(true)
+})
+test('warmup budgets the visible draws too and ranks by perceptual distance, not traversal or straight-line distance', () => {
+  const {camera, renderer, scene} = setup()
+  const across = new Mesh(box, material)
+  const upstairs = new Mesh(box, material)
+  across.position.z = -6
+  upstairs.position.set(0, 1.5, -4)
+  scene.clear().add(upstairs, across)
+  renderer.setWarming(true)
+  renderer.render(scene, camera)
+  expect(projected).toEqual([across])
+  expect(renderer.warmedAll).toBe(false)
+  projected = []
+  nextFrame(renderer)
+  renderer.render(scene, camera)
+  expect(projected).toContain(upstairs)
+  expect(scene.children).toEqual([upstairs, across])
+})
+test('streaming builds related rooms first, then ranks unbuilt objects from the current view each frame', () => {
+  const {camera, renderer, scene} = setup()
+  const related = new Mesh(box, material)
+  // An offset geometry inside a translated parent, as in a batch: its world center, not its pivot, is nearer.
+  const offsetBox = new BoxGeometry
+  offsetBox.translate(-15, 0, 0)
+  const shifted = new Mesh(offsetBox, material)
+  const group = new Group
+  group.position.x = 14
+  group.add(shifted)
+  const far = new Mesh(box, material)
+  const closer = new Mesh(box, material)
+  const last = new Mesh(box, material)
+  related.position.set(0, 0, -20)
+  far.position.set(10, 0, -5)
+  closer.position.set(4, 0, -5)
+  last.position.set(-6, 0, -5)
+  shifted.position.z = -5
+  scene.clear().add(far, last, related, closer, group)
+  renderer.hidden.add(shifted)
+  renderer.setStreamPriority(object => object === related)
+  renderer.setStreaming(true)
+  const firstDraws = new Set<Object3D>
+  const step = () => {
+    projected = []
+    nextFrame(renderer)
+    renderer.render(scene, camera)
+    const fresh = projected.filter(object => !firstDraws.has(object))
+    for (const object of fresh) {
+      firstDraws.add(object)
+    }
+    return fresh
+  }
+  expect(step()).toEqual([related])
+  expect(step()).toEqual([])
+  expect(step()).toEqual([shifted])
+  camera.position.x = 10
+  expect(step()).toEqual([far])
+  expect(step()).toEqual([closer])
+  expect(step()).toEqual([last])
+  expect(scene.children).toEqual([far, last, related, closer, group])
+})
+test('shadow streaming ranks casters from the main camera, not the light, and tracks deferred draws', () => {
+  const {camera, renderer, scene, shown, behind, hidden} = setup()
+  const shadow = new PerspectiveCamera
+  shadow.position.z = 10
+  renderer.shadowCameras.add(shadow)
+  shown.castShadow = true
+  behind.castShadow = true
+  hidden.position.z = -1
+  camera.position.z = -2
+  renderer.setStreaming(true)
+  renderer.prepass(scene, camera, () => renderer.render(scene, shadow))
+  expect(projected).toContain(shown)
+  expect(projected).not.toContain(behind)
+  projected = []
+  nextFrame(renderer)
+  renderer.prepass(scene, camera, () => {
+    expect(renderer.shadowIncomplete(shadow)).toBe(true)
+    renderer.render(scene, shadow)
+  })
+  expect(projected).toContain(behind)
+  nextFrame(renderer)
+  renderer.prepass(scene, camera, () => expect(renderer.shadowIncomplete(shadow)).toBe(false))
+})
+test('a queued mesh is admitted once for all its material groups, without invisible meshes taking its turn', () => {
+  const {camera, renderer, scene} = setup()
+  const invisibleParent = new Group
+  invisibleParent.visible = false
+  invisibleParent.add(new Mesh(box, material))
+  const invisibleMaterial = new MeshBasicNodeMaterial({visible: false})
+  const invisibleMesh = new Mesh(box, invisibleMaterial)
+  const grouped = new Mesh(box, Array.from({length: 6}, () => material))
+  grouped.position.z = -6
+  scene.clear().add(invisibleParent, invisibleMesh, grouped)
+  renderer.setStreaming(true)
+  renderer.render(scene, camera)
+  expect(projected).toEqual(Array.from({length: 6}, () => grouped))
 })

@@ -1,13 +1,14 @@
 import type {Projection} from './GalleryDrawingPipeline.ts'
 import type {WebgpuRendererOptions} from 'three-fiber-game'
-import type {Camera, Material, Scene} from 'three/webgpu'
+import type {BufferGeometry, Camera, Material, Scene, Sphere, Vector3Tuple} from 'three/webgpu'
 
 import {WebgpuRenderer} from 'three-fiber-game'
-import {Object3D} from 'three/webgpu'
+import {Object3D, Vector3, VSMShadowMap} from 'three/webgpu'
 
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {startLoading, trackLoadingItems} from '#src/lib/loadingItems.ts'
 import {BatchedLighting} from '#src/lib/materials/lights/base/BatchedLightsNode.ts'
+import {perceptualDistance} from '#src/lib/perceptualDistance.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 
 import GalleryDrawingPipeline from './GalleryDrawingPipeline.ts'
@@ -23,6 +24,11 @@ type RenderObject = {
   }
   object: Object3D
   scene: Object3D
+}
+type BoundedObject = Object3D & {
+  boundingSphere?: Sphere | null
+  computeBoundingSphere?: () => void
+  geometry: BufferGeometry
 }
 type PromiseSink = {push: (promise: Promise<void>) => void}
 /** WebGPUBackend parameters three doesn’t type, which it reads when it requests the device in `init` */
@@ -123,6 +129,25 @@ const initialFreshBuildCost = 30
 const slowPipelineMs = 500
 /** frames in a row without anything left to stream after which streaming stops */
 const streamedIdleFrames = 300
+const center = new Vector3
+const centerTuple: Vector3Tuple = [0, 0, 0]
+/** The distance to the world-space center of the geometry, not to its pivot (which can be an entire room away for batches). */
+const distanceToObject = (origin: Vector3Tuple, object: BoundedObject) => {
+  const {geometry, matrixWorld} = object
+  if (object.boundingSphere === null) {
+    object.computeBoundingSphere?.()
+  }
+  if (!object.boundingSphere && !geometry.boundingSphere) {
+    geometry.computeBoundingSphere()
+  }
+  const sphere = object.boundingSphere ?? geometry.boundingSphere
+  if (sphere && !sphere.isEmpty()) {
+    center.copy(sphere.center).applyMatrix4(matrixWorld)
+  } else {
+    center.setFromMatrixPosition(matrixWorld)
+  }
+  return perceptualDistance(origin, center.toArray(centerTuple))
+}
 
 /**
  * Instruments real lifecycle operations and keeps per-frame work in the frame scene to once per frame:
@@ -174,11 +199,12 @@ export class GalleryRenderer extends WebgpuRenderer {
   private pipelineSequence = 0
   /** the build cost this frame’s admissions are expected to add up to */
   private plannedBuildCost = 0
+  /** the world-space position of the main camera this frame, even when a reflection or shadow map renders */
+  private readonly priorityOrigin: Vector3Tuple = [0, 0, 0]
   /** projects objects outside of loading, leaving out {@link hidden} outside of {@link unculledCameras} and, outside of shadow maps, {@link hiddenFromView} */
   private projectCulled?: Projection
-  private projectStreaming?: Projection
-  /** projects objects while loading, admitting the next ones outside the frustum */
-  private projectWarming?: Projection
+  /** projects objects while warming or streaming, deferring first-time draws until they fit the budget */
+  private projectLoading?: Projection
   /** shadow cameras whose map rendered this frame while streaming */
   private readonly renderedShadowCameras = new Set<Camera>
   /** shadow cameras whose map left out objects whose pipelines were still compiling, with the sequence number of the last pipeline that had started by then */
@@ -275,7 +301,7 @@ export class GalleryRenderer extends WebgpuRenderer {
       pass()
       return
     }
-    this.startFrame()
+    this.startFrame(camera)
     if (this.culler && this.culledCamera !== camera) {
       this.culledCamera = camera
       this.culler(camera)
@@ -331,7 +357,7 @@ export class GalleryRenderer extends WebgpuRenderer {
 
   /**
    * Builds the objects not drawn in a pass yet a few per frame after loading, instead of all at once when they first come into view. Until then, a pass leaves them out.
-   * Objects the priority accepts come first, the rest once no prioritized one is left, and streaming stops after a while without anything left to build.
+   * Objects the priority accepts come first, nearest first within each tier, and streaming stops after a while without anything left to build.
    */
   setStreaming(streaming: boolean) {
     this.streaming = streaming
@@ -344,7 +370,7 @@ export class GalleryRenderer extends WebgpuRenderer {
     this.installProjection()
   }
 
-  /** Sets which objects streaming builds first, all by default. */
+  /** Sets the first tier of streaming objects, all by default. */
   setStreamPriority(priority: ((object: Object3D) => boolean) | null) {
     this.streamPriority = priority
   }
@@ -388,6 +414,50 @@ export class GalleryRenderer extends WebgpuRenderer {
     this.warmupAdmissions++
     this.plannedBuildCost += cost
     return true
+  }
+
+  /** Selects the first-time draws for this pass in priority order, without changing the scene graph or Three’s draw sorting. */
+  private *admitDraws(objects: Iterable<Object3D>, camera: Camera) {
+    const priority = this.warming ? null : this.streamPriority
+    const budget = this.warming ? warmupBuildBudget : streamedBuildBudget
+    const ranked = Array.from(objects, object => ({
+      object,
+      distance: distanceToObject(this.priorityOrigin, object as BoundedObject),
+      tier: priority && !priority(object) ? 1 : 0,
+    })).toSorted((a, b) => a.tier - b.tier || a.distance - b.distance)
+    for (const {object, tier} of ranked) {
+      let cameras = this.warmObjects.get(object)
+      if (this.warming) {
+        // Warmup charges once per object. Other passes can build their variants as soon as the first pass admits it.
+        if (!cameras && !this.admit(object, camera, budget)) {
+          this.warmedFrame = -1
+          continue
+        }
+      } else {
+        this.streamFound = true
+        this.streamPriorityFound ||= tier === 0
+        if (!(tier === 0 || this.streamRest) || !this.admit(object, camera, budget)) {
+          // A shadow map that left something out must render again; the shadow cache alone would leave it incomplete.
+          if (this.shadowCameras.has(camera)) {
+            let gated = this.gatedCameras.get(camera)
+            if (!gated) {
+              gated = new Set
+              this.gatedCameras.set(camera, gated)
+            }
+            gated.add(object)
+          } else {
+            this.gatedObjects.add(object)
+          }
+          continue
+        }
+      }
+      if (!cameras) {
+        cameras = new Set
+        this.warmObjects.set(object, cameras)
+      }
+      cameras.add(camera)
+      yield object
+    }
   }
 
   /** Carries what the last streaming frame found over to the next one. */
@@ -510,91 +580,40 @@ export class GalleryRenderer extends WebgpuRenderer {
         standard(object, camera, groupOrder, renderList, clippingContext)
       }
     }
-    this.projectWarming = (object, camera, groupOrder, renderList, clippingContext) => {
-      if (hidden.has(object) && !unculledCameras.has(camera)) {
+    this.projectLoading = (...input) => {
+      const [object, camera] = input
+      const shadow = shadowCameras.has(camera)
+      if (object === this.frameScene) {
+        drawing.projectQueued(input, candidate => this.needsAdmission(candidate, camera, shadow), objects => this.admitDraws(objects, camera))
         return
       }
-      if (!object.frustumCulled || !('geometry' in object)) {
-        standard(object, camera, groupOrder, renderList, clippingContext)
-        return
-      }
-      let cameras = this.warmObjects.get(object)
-      if (!cameras) {
-        if (!this.admit(object, camera, warmupBuildBudget)) {
-          // Postpone the rest of the scene to the next frames.
-          this.warmedFrame = -1
-          standard(object, camera, groupOrder, renderList, clippingContext)
+      const hiddenForPass = hidden.has(object) && !unculledCameras.has(camera)
+      if (this.warming) {
+        // Shadow maps drawn while loading are redrawn once the shadow cache takes over. Only draw what still needs its pipelines.
+        if (hiddenForPass || this.frameScene?.overrideMaterial && this.warmObjects.get(object)?.has(camera)) {
           return
         }
-        cameras = new Set
-        this.warmObjects.set(object, cameras)
-      }
-      // One draw per pass requests the object’s pipelines. Drawing it outside the frustum again would only redo the work, which in every shadow map of every loading frame adds up to seconds.
-      if (cameras.has(camera)) {
-        // Shadow maps drawn while loading are redrawn once the shadow cache takes over, so they only draw what still needs its pipelines.
-        if (!this.frameScene?.overrideMaterial) {
-          standard(object, camera, groupOrder, renderList, clippingContext)
-        }
+      } else if ((hiddenForPass || hiddenFromView.has(object) && !shadow) && !(object.layers.test(camera.layers) && this.needsAdmission(object, camera, shadow))) {
+        // Streaming gives even room-culled objects one draw, so their pipelines are ready if the player moves there.
         return
       }
-      cameras.add(camera)
-      object.frustumCulled = false
-      try {
-        standard(object, camera, groupOrder, renderList, clippingContext)
-      } finally {
-        object.frustumCulled = true
-      }
-    }
-    this.projectStreaming = (object, camera, groupOrder, renderList, clippingContext) => {
-      const culled = hidden.has(object) && !unculledCameras.has(camera) || hiddenFromView.has(object) && !shadowCameras.has(camera)
-      const cameras = this.warmObjects.get(object)
-      if (!object.visible || !object.layers.test(camera.layers) || !object.frustumCulled || !('geometry' in object) || cameras?.has(camera)) {
-        if (!culled) {
-          standard(object, camera, groupOrder, renderList, clippingContext)
-        }
-        return
-      }
-      const priority = this.streamPriority?.(object) ?? true
-      this.streamFound = true
-      this.streamPriorityFound ||= priority
-      if (!(priority || this.streamRest) || !this.admit(object, camera, streamedBuildBudget)) {
-        // Left out until its turn, which keeps a shadow map rendering; its children still go their own way.
-        if (shadowCameras.has(camera)) {
-          let gated = this.gatedCameras.get(camera)
-          if (!gated) {
-            gated = new Set
-            this.gatedCameras.set(camera, gated)
-          }
-          gated.add(object)
-        } else {
-          this.gatedObjects.add(object)
-        }
-        for (const child of object.children) {
-          drawing.project(child, camera, groupOrder, renderList, clippingContext)
-        }
-        return
-      }
-      if (cameras) {
-        cameras.add(camera)
-      } else {
-        this.warmObjects.set(object, new Set([camera]))
-      }
-      object.frustumCulled = false
-      try {
-        standard(object, camera, groupOrder, renderList, clippingContext)
-      } finally {
-        object.frustumCulled = true
-      }
+      standard(...input)
     }
     this.installProjection()
   }
 
   /** Projection runs for every object of every pass of the frame scene, so outside of loading it does nothing but leave out {@link hidden}. */
   private installProjection() {
-    const project = this.warming ? this.projectWarming : (this.streaming ? this.projectStreaming : this.projectCulled)
+    const project = this.warming || this.streaming ? this.projectLoading : this.projectCulled
     if (project) {
       this.frameProjection = project
     }
+  }
+
+  private needsAdmission(object: Object3D, camera: Camera, shadow: boolean) {
+    return object.frustumCulled && 'geometry' in object
+      && (!shadow || object.castShadow || object.receiveShadow && this.shadowMap.type === VSMShadowMap)
+      && !this.warmObjects.get(object)?.has(camera)
   }
 
   /** Raises the sampled texture limit for cinematic to what the adapter offers, up to {@link cinematicSampledTextures}, so GPUs with fewer still get a device. */
@@ -610,12 +629,15 @@ export class GalleryRenderer extends WebgpuRenderer {
     }
   }
 
-  private startFrame() {
+  private startFrame(camera: Camera) {
     const {frameId} = this.internals._nodes.nodeFrame
     if (this.frame === frameId) {
       return
     }
     this.frame = frameId
+    if (this.warming || this.streaming) {
+      camera.getWorldPosition(center).toArray(this.priorityOrigin)
+    }
     this.culledCamera = null
     this.warmedFrame = this.warming && this.warmupAdmissions === 0 ? frameId : -1
     if (this.warming) {
