@@ -10,9 +10,11 @@ import App from '#component/App'
 import {applySpawnBookmark} from './lib/gallery/bookmarks.ts'
 import freezeWhilePaused from './lib/gallery/worldPause.ts'
 import pauseMenu from './lib/pauseMenu.ts'
+import {currentWorldInfo} from './worlds/index.ts'
 
 import css from './style.module.sass'
 
+document.title = currentWorldInfo.title
 pauseMenu.start()
 // Before anything else follows the menu, so whatever does finds the world already frozen, or going on again.
 freezeWhilePaused()

@@ -1,5 +1,4 @@
 import type {OutputList} from '../../src/lib/vite/outputListPlugin.ts'
-import type {WorldInfo} from '../../src/worlds/index.ts'
 
 import {join, relative} from 'node:path'
 
@@ -9,7 +8,7 @@ import {hashedFileName, immutableExtensions} from '../../src/lib/vite/immutableH
 import {outputListFile} from '../../src/lib/vite/outputListPlugin.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import {worldIds, worlds} from '../../src/worlds/index.ts'
+import {defaultWorld, worldIds, worlds} from '../../src/worlds/index.ts'
 
 // Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material and the Knots’ announcements in chunks of their own that only load on demand, and the game’s chunks and assets named by their content.
 // Files are named by their content hash, so the chunks and assets are looked up in the output list the build writes next to it.
@@ -67,16 +66,13 @@ const html = await Bun.file(join(directory, 'index.html')).text()
 if (html.includes('data:image/')) {
   fail('index.html inlines an image.')
 }
-for (const id of worldIds) {
-  const {title, tagline, wallpaper}: WorldInfo = worlds[id]
-  if (!html.includes(JSON.stringify(title)) || !html.includes(JSON.stringify(tagline))) {
-    fail(`The loading screen does not know ${title}.`)
-  }
-  // Bun imports the wallpaper as its file, which the build emits encoded as JXL.
-  const wallpaperFile = wallpaper && assetOf(wallpaper)?.fileName
-  if (wallpaper && (!wallpaperFile?.endsWith('.jxl') || !html.includes(JSON.stringify(`/${wallpaperFile}`)))) {
-    fail(`The loading screen’s wallpaper of ${title} is missing.`)
-  }
+const {title, tagline, wallpaper} = worlds[defaultWorld]
+if (!html.includes(`<h1>${title}</h1>`) || !html.includes(`<p>${tagline}</p>`)) {
+  fail('The shared loading screen is missing its title or tagline.')
+}
+const wallpaperFile = assetOf(wallpaper)?.fileName
+if (!wallpaperFile?.endsWith('.jxl') || !html.includes(`href="/${wallpaperFile}"`)) {
+  fail('The shared loading screen does not preload its built wallpaper.')
 }
 const knotChunks = new Map(knots.map(knot => [chunks.find(chunk => chunk.facadeModule === `packages/knot-materials/src/entries/${knot.id}/Material.ts`)?.fileName ?? fail(`The Knot material ${knot.id} has no chunk of its own.`), knot.id]))
 const staticImports = new Map(chunks.map(chunk => [chunk.fileName, chunk.imports]))

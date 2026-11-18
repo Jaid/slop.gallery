@@ -19,8 +19,7 @@ beforeEach(async () => {
   root = await fs.mkdtemp(join(tmpdir(), 'loading-screen-'))
   await fs.outputFile(join(root, 'index.html'), page)
   await fs.outputFile(join(root, 'wallpaper.png'), pixel)
-  await fs.outputFile(join(root, 'night.png'), pixel.toReversed())
-  await fs.outputFile(join(root, 'main.js'), 'import wallpaper from "./wallpaper.png"\nimport night from "./night.png"\nconsole.log(wallpaper, night)')
+  await fs.outputFile(join(root, 'main.js'), 'import wallpaper from "./wallpaper.png"\nconsole.log(wallpaper)')
 })
 afterEach(() => fs.remove(root))
 const buildPage = async (options: Options, base = '/') => {
@@ -43,67 +42,6 @@ const buildPage = async (options: Options, base = '/') => {
     fileOf,
   }
 }
-/** What the page’s inline script makes of the screen when the page opens with the query. */
-const runScript = (html: string, search: string) => {
-  const script = /<script>(\{[\s\S]*?\n\})<\/script>/u.exec(html)?.[1]
-  if (!script) {
-    throw new Error('The page has no inline script.')
-  }
-  const texts = {
-    h1: '',
-    p: '',
-  }
-  const properties = new Map<string, string>
-  const appended: Array<Record<string, unknown>> = []
-  const element = {
-    querySelector: (selector: 'h1' | 'p') => ({
-      set textContent(value: string) {
-        texts[selector] = value
-      },
-    }),
-    style: {setProperty: (name: string, value: string) => properties.set(name, value)},
-  }
-  const document = {
-    title: '',
-    querySelector: (selector: string) => (selector === '#loading-screen' ? element : null),
-    createElement: (tag: string) => ({tag}),
-    head: {append: (node: Record<string, unknown>) => appended.push(node)},
-  }
-  const run = new Function('document', 'location', script) as (document: unknown, location: unknown) => void
-  run(document, {search})
-  return {
-    title: document.title,
-    heading: texts.h1,
-    tagline: texts.p,
-    wallpaper: properties.get('--wallpaper'),
-    appended,
-  }
-}
-const worlds = {
-  day: {
-    title: 'Day <World>',
-    tagline: 'Bright & early',
-    wallpaper: 'wallpaper.png',
-  },
-  night: {
-    title: 'Night',
-    tagline: 'Late',
-    wallpaper: 'night.png',
-  },
-  void: {title: 'Void'},
-}
-/** Self-contained, as the page runs its source alone. */
-const select = (search: string, parameter: string, known: ReadonlyArray<string>) => {
-  const query = new URLSearchParams(search)
-  const picked = query.get(parameter)
-  return (picked && known.includes(picked) ? picked : (picked === 'lost' ? 'lost' : 'day')) as keyof typeof worlds
-}
-const selected = (): Options => ({
-  screens: worlds,
-  defaultScreen: 'day',
-  select,
-  selectorArguments: ['world', ['night', 'void']],
-})
 test('a single screen is all HTML and CSS, with its wallpaper preloaded', async () => {
   const {fileOf, html} = await buildPage({
     title: 'Slop <Gallery>',
@@ -162,45 +100,6 @@ test('the predicate decides separately for output chunks, classic scripts and in
   })
   expect(kept.html).not.toContain('data-loading-screen-script')
   expect(kept.html).toContain('<script type="module"')
-})
-test('several screens start with the default one and let the URL pick', async () => {
-  const {fileOf, html} = await buildPage(selected())
-  // The default screen’s texts are in the HTML, its wallpaper only comes with the script, which knows whether it is the one.
-  expect(html).toContain('<div id="loading-screen" aria-busy="true"><div><h1>Day &lt;World&gt;</h1><p>Bright &amp; early</p><span>Loading…</span></div></div>')
-  expect(html).not.toContain('rel="preload" as="image"')
-  // Nothing a title holds can end the script early.
-  expect(html).not.toContain('Day <World>')
-  const day = runScript(html, '')
-  expect(day).toEqual({
-    title: 'Day <World>',
-    heading: 'Day <World>',
-    tagline: 'Bright & early',
-    wallpaper: `url("/${fileOf('wallpaper.png')}")`,
-    appended: [
-      {
-        tag: 'link',
-        rel: 'preload',
-        as: 'image',
-        href: `/${fileOf('wallpaper.png')}`,
-        fetchPriority: 'high',
-        type: 'image/png',
-      },
-    ],
-  })
-  const night = runScript(html, '?world=night')
-  expect(night.title).toBe('Night')
-  expect(night.tagline).toBe('Late')
-  expect(night.wallpaper).toBe(`url("/${fileOf('night.png')}")`)
-  expect(fileOf('night.png')).not.toBe(fileOf('wallpaper.png'))
-  expect(runScript(html, '?world=void')).toEqual({
-    title: 'Void',
-    heading: 'Void',
-    tagline: '',
-    wallpaper: undefined,
-    appended: [],
-  })
-  // An ID without a screen falls back to the default.
-  expect(runScript(html, '?world=lost').title).toBe('Day <World>')
 })
 test('a wallpaper no module imports fails the build', async () => {
   await fs.outputFile(join(root, 'main.js'), 'console.log(1)')

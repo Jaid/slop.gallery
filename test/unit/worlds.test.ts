@@ -14,7 +14,7 @@ import {placementIssue, wallCoordinates, wallPosition} from '../../src/lib/place
 import world from '../../src/worlds/current.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import galleryWalls from '../../src/worlds/gallery/walls.ts'
-import {defaultWorld, readWorld, selectWorld, worldIds, worldParameters, worldRooms, worlds} from '../../src/worlds/index.ts'
+import {defaultWorld, readWorld, selectWorld, worldIds, worldParameters, worlds} from '../../src/worlds/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
 import Sandbox from '../../src/worlds/sandbox/Sandbox.ts'
@@ -63,18 +63,6 @@ describe('world selection', () => {
     expect(selectWorld('?seed=3&item=prop-orb-spook,prop-orb-horror')).toBe('sandbox')
     expect(selectWorld('?item')).toBe('sandbox')
     expect(readWorld('https://slop.gallery/?item=prop-orb-halloween')).toBe('sandbox')
-  })
-  test('runs on its own, as the loading screen inlines its source', () => {
-    const source = new Function(`return (${selectWorld.toString()})`) as () => typeof selectWorld
-    const inlined = source()
-    // Copies of its parameters and rooms, as the page gets them as JSON.
-    const parameters = structuredClone(worldParameters)
-    const rooms = structuredClone(worldRooms)
-    expect(inlined('?shots=2', parameters, rooms)).toBe('knottingham')
-    expect(inlined('?item=prop-orb-spook', parameters, rooms)).toBe('sandbox')
-    expect(inlined('?room=cell&shots=2', parameters, rooms)).toBe('sandbox')
-    expect(inlined('?room=arena', parameters, rooms)).toBe('knottingham')
-    expect(inlined('?room=lobby', parameters, rooms)).toBe('gallery')
   })
   test('every world has a title and storage key of its own', async () => {
     expect(worldIds).toEqual(['gallery', 'knottingham', 'sandbox'])

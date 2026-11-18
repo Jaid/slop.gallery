@@ -3,7 +3,7 @@ import wallpaper from '#root/assets/wallpaper.jxl' with {distance: '5', format: 
 /** the ids of every world, which also name their telemetry service */
 export const worldIds = ['gallery', 'knottingham', 'sandbox'] as const
 export type WorldId = typeof worldIds[number]
-/** what the loading screen and the menu show of a world before it has loaded */
+/** the world’s menu and storage settings */
 export type WorldInfo = {
   enterLabel: string
   /** the prefix of every key the world stores in the browser, so that worlds never share a game */
@@ -40,34 +40,29 @@ export const worlds = {
 
 /** the world a URL opens without any other world’s room in `?room` and without any other world’s own parameters */
 export const defaultWorld = 'gallery' satisfies WorldId
+const otherWorlds = worldIds.filter(id => id !== defaultWorld)
 
 /** the URL parameters only one world reads, by that world, which open it: Knottingham’s, like `?shots`, and the Sandbox’s `?item` and `?turntable` */
 export const worldParameters = {
   knottingham: ['candidate', 'knot_id', 'model', 'shots', 'candidate_limit', 'candidate_order', 'rarity', 'rarity_filter'],
   sandbox: ['item', 'turntable'],
-} as const satisfies Partial<Record<WorldId, ReadonlyArray<string>>>
+} satisfies Record<typeof otherWorlds[number], ReadonlyArray<string>>
 
 /** the ids of the rooms of every world but the gallery, by that world, which open it when `?room` names one: Knottingham’s Arena and the Sandbox’s Cell */
-export const worldRooms = {
+const worldRooms = {
   knottingham: ['arena'],
   sandbox: ['cell'],
-} as const satisfies Partial<Record<WorldId, ReadonlyArray<string>>>
+} satisfies Record<typeof otherWorlds[number], ReadonlyArray<string>>
 
-/**
- * The world a URL query opens: the one whose room, from `rooms`, `?room` names, otherwise the first whose own parameters, from `parameters`, it gives any of, otherwise the gallery.
- *
- * Self-contained, so the loading screen can run its source before any script loads.
- */
-export function selectWorld(search: string, parameters: Partial<Record<WorldId, ReadonlyArray<string>>> = worldParameters, rooms: Partial<Record<WorldId, ReadonlyArray<string>>> = worldRooms): WorldId {
+/** A named room takes precedence over a world-specific parameter. */
+export function selectWorld(search: string): WorldId {
   const query = new URLSearchParams(search)
-  // The world ids once more, as the loading screen runs this function without the module around it.
-  const known: ReadonlyArray<WorldId> = ['gallery', 'knottingham', 'sandbox']
   const room = query.get('room')
-  const holder = room ? known.find(id => rooms[id]?.includes(room)) : undefined
+  const holder = room && otherWorlds.find(id => worldRooms[id].includes(room))
   if (holder) {
     return holder
   }
-  return known.find(id => parameters[id]?.some(parameter => query.has(parameter))) ?? 'gallery'
+  return otherWorlds.find(id => worldParameters[id].some(parameter => query.has(parameter))) ?? defaultWorld
 }
 
 /** Read the world a URL opens, see {@link selectWorld}. */
@@ -79,5 +74,5 @@ export function readWorld(input: URL | string = typeof location === 'undefined' 
 /** the world this page opens, read once at startup */
 export const currentWorldId = readWorld()
 
-/** the loading screen’s and the menu’s view of the world this page opens */
+/** the settings of the world this page opens */
 export const currentWorldInfo: WorldInfo = worlds[currentWorldId]

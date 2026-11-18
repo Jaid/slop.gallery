@@ -44,31 +44,6 @@ To keep selected scripts in the HTML, pass a `deferScript` predicate. For exampl
 import wallpaper from './assets/wallpaper.jxl'
 ```
 
-## Several screens
-
-Where one page opens several ways, like a build that holds several worlds picked by the URL, give every one a screen and a function that picks one from the URL’s query:
-
-```typescript
-loadingScreenPlugin({
-  screens: {
-    gallery: {
-      title: 'Slop Gallery',
-      tagline: 'Good taste. Questionable art.',
-      wallpaper: 'assets/gallery.jxl',
-    },
-    sandbox: {
-      title: 'Sandbox',
-      tagline: 'One empty room to try things in.',
-    },
-  },
-  defaultScreen: 'gallery',
-  select: (search, parameter) => (new URLSearchParams(search).has(parameter) ? 'sandbox' : 'gallery'),
-  selectorArguments: ['item'],
-})
-```
-
-The page’s HTML holds the default screen. A small inline script right after it runs `select` before the first paint and sets the picked screen’s title, tagline and wallpaper, and the document’s title. The script holds the function’s source, so it has to be self-contained: it may only use its arguments, which are the query (`location.search`) followed by `selectorArguments`, which have to survive JSON. That way the app can call the very same function to decide what to open.
-
 ## Options
 
 | Option | Default | Description |
@@ -79,10 +54,6 @@ The page’s HTML holds the default screen. A small inline script right after it
 | `wallpaper` | none | the file of the image behind the title |
 | `label` | `'Loading…'` | the pulsing line that says the page is loading |
 | `fontFamily` | `'system-ui, sans-serif'` | the CSS `font-family` of the screen; a font the page’s stylesheet declares takes over once it has loaded |
-| `screens` | | several screens by their IDs, each with `title`, `tagline` and `wallpaper`, instead of a single one |
-| `defaultScreen` | | the ID of the screen in the page’s HTML, also shown for an ID without a screen |
-| `select` | | the self-contained function that picks a screen’s ID from the query |
-| `selectorArguments` | `[]` | what `select` gets after the query |
 
 ## Client
 

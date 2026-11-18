@@ -26,7 +26,7 @@ import robotsTxtPlugin from '#src/lib/vite/robotsTxtPlugin.ts'
 import socialPreviewPlugin from '#src/lib/vite/socialPreviewPlugin.ts'
 import sourceCodeMetadataPlugin from '#src/lib/vite/sourceCodeMetadataPlugin.ts'
 import worldChunksPlugin from '#src/lib/vite/worldChunksPlugin.ts'
-import {defaultWorld, selectWorld, worldIds, worldParameters, worldRooms, worlds} from '#src/worlds/index.ts'
+import {defaultWorld, worldIds, worlds} from '#src/worlds/index.ts'
 
 import manifest from './package.json' with {type: 'json'}
 
@@ -90,13 +90,9 @@ const getProductionConfig = () => {
   const config: UserConfig = {
     plugins: [
       jxlPlugin(),
-      // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
       loadingScreenPlugin({
+        ...worlds[defaultWorld],
         deferScript: ({type}) => type !== 'application/ld+json',
-        screens: worlds,
-        defaultScreen: defaultWorld,
-        select: selectWorld,
-        selectorArguments: [worldParameters, worldRooms],
         fontFamily: 'main, system-ui, sans-serif',
       }),
       jxlHeadersPlugin(),
