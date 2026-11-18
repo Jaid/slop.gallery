@@ -43,7 +43,7 @@ const style = `
   height: 1em;
   transform-origin: center;
   filter: drop-shadow(0 0 0.4em black);
-  animation: ${elementId} 0.8s linear infinite;
+  animation: ${elementId} 1s linear infinite;
 }
 @keyframes ${elementId} {
   to { rotate: 1turn; }
