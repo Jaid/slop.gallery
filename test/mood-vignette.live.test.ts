@@ -2,7 +2,7 @@ import {expect, test} from 'bun:test'
 
 import {openHeadlessGallery, resolveGallerySetup, waitForFrames} from '../scripts/lib/headlessGallery.ts'
 
-// Exercise the real output quad and capture bridge, including switching from and back to plain rendering in Fast. The camera faces a stationary papered wall so temporal noise will not look like animated paint.
+// Exercise the real output quad and capture bridge, also in Fast without antialiasing, whose pipeline is only the scene and the moods’ screens. The camera faces a stationary papered wall so temporal noise will not look like paint.
 for (const graphics of ['fast', 'heavy']) {
   test.skipIf(Bun.env.LIVE_TEST !== 'true')(`Atelier paints only the margins in ${graphics} graphics`, async () => {
     const frozen = graphics === 'heavy'
@@ -82,10 +82,7 @@ for (const graphics of ['fast', 'heavy']) {
     expect(result.paint.center).toBeLessThan(0.005)
     expect(result.suppressed.edge).toBeLessThan(0.005)
     expect(result.animation.center).toBeLessThan(0.005)
-    if (frozen) {
-      expect(result.animation.edge).toBeLessThan(0.005)
-    } else {
-      expect(result.animation.edge).toBeGreaterThan(0.02)
-    }
+    // Once laid, the strokes stand still.
+    expect(result.animation.edge).toBeLessThan(0.005)
   }, 180_000)
 }

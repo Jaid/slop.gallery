@@ -1,6 +1,6 @@
 # Rendering pipeline
 
-`GalleryRenderPipeline` owns the render graph and its intermediate resources. The React `Postprocessing` component attaches it to Fiber.
+`GalleryRenderPipeline` owns the render graph and its intermediate resources. The React `Postprocessing` component attaches it to Fiber in every graphics mode.
 
 Quality rendering runs:
 
@@ -13,12 +13,12 @@ current-frame scene color + depth + normals + velocity
   → bloom from the resolved color, masked by the resolved alpha
   → Z zoom tilt-shift and vignette
   → output color transform
-  → mood gradient maps, mood screen shaders and final dither
+  → the moods’ gradient maps and screens (`moodGrade.ts`, `moodScreens.ts`), dither
 ```
 
 ## Antialiasing
 
-Heavy graphics resolve with TRAA and fast graphics without antialiasing, unless `?anti_aliasing` says `traa` or `false`. The renderer has `antialias: false` and the scene pass is single-sampled for GTAO, so TRAA is the only antialiasing path. It jitters the camera, needs the velocity MRT, runs on linear color before the output transform and calms shimmering materials such as `bismuth_staircase` and `magnetite_field`. In fast graphics, `?anti_aliasing=traa` mounts a light pipeline (scene pass and the resolve only, no knot focus or other heavy effects) that renders every frame.
+Heavy graphics resolve with TRAA and fast graphics without antialiasing, unless `?anti_aliasing` says `traa` or `false`. The renderer has `antialias: false` and the scene pass is single-sampled for GTAO, so TRAA is the only antialiasing path. It jitters the camera, needs the velocity MRT, runs on linear color before the output transform and calms shimmering materials such as `bismuth_staircase` and `magnetite_field`. In fast graphics, `?anti_aliasing=traa` makes it a light pipeline (scene pass and the resolve only, no knot focus or other heavy effects). Without antialiasing, fast graphics draw what the renderer would draw by itself, the scene pass and its output transform, with nothing over it but the moods’ screens: no gradient maps, like before the screens came. The renderer goes through a target of its own and an output quad there anyway, so the pipeline costs nothing on top, and since it is there from the first frame, a screen coming up switches nothing and builds nothing.
 
 ## Wireframe
 

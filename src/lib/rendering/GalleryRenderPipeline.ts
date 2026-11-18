@@ -15,6 +15,8 @@ import {traa} from 'three/addons/tsl/display/TRAANode.js'
 import {convertToTexture, diffuseColor, exp, float, int, interleavedGradientNoise, length, luminance, max, metalness, min, mix, mrt, normalView, output, pass, renderOutput, roughness, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, uniform, uv, vec2, vec3, vec4, velocity} from 'three/tsl'
 import {BlendMode, DirectionalLight, HalfFloatType, NoBlending, NormalBlending, PerspectiveCamera, RenderPipeline, Vector2} from 'three/webgpu'
 
+import {moodScreens} from '#src/moods/index.ts'
+
 import {mountedRooms, pendingRooms} from '../gallery/roomLoading.ts'
 import {floorReflectionBlur, floorReflectionGrazing, floorReflectionLevel, floorReflectionRoughness, floorReflectionStrength, renderFloorReflection} from '../materials/FloorMaterial.ts'
 import ConditionalTexture from './ConditionalTexture.ts'
@@ -22,7 +24,7 @@ import ConfigurableBloomNode from './ConfigurableBloomNode.ts'
 import {GalleryRenderer} from './GalleryRenderer.ts'
 import KnotBokeh from './KnotBokeh.ts'
 import {gradeMood} from './moodGrade.ts'
-import {compositeVignettes, useMoodVignettes} from './moodVignettes.ts'
+import {drawMoodScreens} from './moodScreens.ts'
 import {impactActive, screenImpact} from './screenImpact.ts'
 import {resetWarp, screenWarp, warpedScreenUV} from './screenWarp.ts'
 import tiltShift from './tiltShift.ts'
@@ -82,9 +84,10 @@ export default class GalleryRenderPipeline extends RenderPipeline {
     // GTAO and TRAA require single-sampled scene depth.
     const scenePass = own(pass(scene, camera, {samples: 0}))
     this.scenePass = scenePass
-    // In Fast without AA, the vignette is the only reason to mount a pipeline. Keep the direct view’s colors and skip the usual passes.
+    // Fast graphics without antialiasing draw what the renderer would draw by itself, the scene and its output transform, and nothing over it but the moods’ screens.
     if (!heavy && !antiAliasing) {
-      this.finish(renderOutput(scenePass.getTextureNode('output')), false)
+      this.outputColorTransform = false
+      this.outputNode = drawMoodScreens(renderOutput(scenePass.getTextureNode('output')), moodScreens)
       return
     }
     const renderScene = scenePass.updateBefore.bind(scenePass)
@@ -394,7 +397,14 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       current = current.mul(vec4(vec3(float(1).sub(edge.mul(vignette))), 1))
     }
     current = flood.compose(current)
-    this.finish(gradeMood(renderOutput(current)), heavy && settings.dither)
+    // The moods’ gradient maps, their screens over them and the dither work on the image as it is shown, so the output transform comes before them.
+    this.outputColorTransform = false
+    current = drawMoodScreens(gradeMood(renderOutput(current)), moodScreens)
+    if (heavy && settings.dither) {
+      // Dithers by half an 8-bit step in display space, so the smooth, dark gradients of the sun shafts don’t band.
+      current = vec4(current.rgb.add(interleavedGradientNoise(screenCoordinate.xy).sub(0.5).div(255)), current.a)
+    }
+    this.outputNode = current
   }
 
   override dispose() {
@@ -403,18 +413,5 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       effect.dispose()
     }
     this.effects.length = 0
-  }
-
-  /** Only the output quad changes when a vignette comes or goes. The scene passes and their temporal history stay in place. */
-  private finish(display: Node<'vec4'>, dither: boolean) {
-    this.outputColorTransform = false
-    const compose = (layers: ReturnType<typeof useMoodVignettes.getState>) => {
-      const frame = compositeVignettes(display, layers)
-      // Dither last, by half an 8-bit step in display space.
-      this.outputNode = dither ? vec4(frame.rgb.add(interleavedGradientNoise(screenCoordinate.xy).sub(0.5).div(255)), frame.a) : frame
-      this.needsUpdate = true
-    }
-    compose(useMoodVignettes.getState())
-    this.effects.push({dispose: useMoodVignettes.subscribe(compose)})
   }
 }

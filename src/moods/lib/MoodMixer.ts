@@ -1,6 +1,7 @@
 import type TransformerChain from '#src/lib/audio/transformers/TransformerChain.ts'
 import type Mood from '../base/Mood.ts'
 import type {MoodFade, MoodLight} from '../base/Mood.ts'
+import type MoodScreen from '../base/MoodScreen.ts'
 import type {AmbienceLoop} from 'ambience-emitter'
 import type {AudioOutput} from 'procedural-audio'
 import type {Light} from 'three/webgpu'
@@ -10,7 +11,7 @@ import {Color} from 'three/webgpu'
 
 import {noTint} from '#src/lib/rendering/lightLevels.ts'
 import {paintMoodGrades} from '#src/lib/rendering/moodGrade.ts'
-import {showMoodVignettes, vignetteLayer} from '#src/lib/rendering/moodVignettes.ts'
+import {showMoodScreens} from '#src/lib/rendering/moodScreens.ts'
 
 /** where moods sound: their loops on the effects master, centered, and their transformers between the world and it, as `SoundEngine` offers both */
 export type MoodOutput = AudioOutput & {
@@ -30,13 +31,14 @@ export type MoodTarget = {
 /** a mood while it shows, also while it fades in or out */
 type Showing = {
   ambience?: AmbienceLoop
+  /** the furthest its fade came since it began showing, which its screen plays out by */
+  arrival: number
   /** the level the loop was last set to */
   level: number
   mood: Mood
   progress: number
   /** where the mood’s transformer takes its share of the world’s sound, once it does */
   transformers?: TransformerChain
-  vignette?: ReturnType<typeof vignetteLayer>
 }
 
 /** seconds a mood takes to come over the world, slowly, and to leave it again, quickly, once its prop is thrown or dropped, unless the mood has a pace of its own */
@@ -66,7 +68,7 @@ const ease = (progress: number) => progress * progress * (3 - 2 * progress)
 /**
  * Blends the moods the world asks for over it, stacked: those of the listener’s room beneath the one cast over the world. Each fades in while it is asked for and out otherwise, at its own pace, while the others hold on.
  * The moods cast over the world take turns: only once the one showing is gone does the next one fade in, so two of them never mix. The moods of two rooms cross over as the listener walks from one into the other.
- * It paints the render pipeline’s gradient maps, keeps the tints of the lamps and of the fill and how much wider the view gets, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
+ * It paints the render pipeline’s gradient maps, shows the moods’ screens as far as each has come and in the order of the stack, keeps the tints of the lamps and of the fill and how much wider the view gets, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
  * Without `fade`, every mood shows in full while it is asked for and not at all otherwise, the next mood cast replacing the last one within the same frame.
  */
 export default class MoodMixer {
@@ -152,6 +154,7 @@ export default class MoodMixer {
       } else {
         showing.progress = rising ? 1 : 0
       }
+      showing.arrival = Math.max(showing.arrival, showing.progress)
       if (!rising && showing.progress === 0) {
         this.release(showing, this.smoothing())
         continue
@@ -172,24 +175,32 @@ export default class MoodMixer {
     this.lampTint.setRGB(1, 1, 1)
     this.fillTint.setRGB(1, 1, 1)
     this.fov = 0
-    const vignettes = []
-    for (const {mood, progress, vignette} of stack) {
+    const screens: Array<MoodScreen> = []
+    for (const {arrival, mood, progress} of stack) {
       const amount = ease(progress)
-      if (vignette && amount > 0) {
-        vignette.amount.value = amount
-        vignettes.push(vignette)
-      }
       tint(this.lampTint, mood.lamps, amount)
       tint(this.fillTint, mood.fill, amount)
       this.fov += (mood.fov ?? 0) * amount
+      if (!mood.screen) {
+        continue
+      }
+      mood.screen.show({
+        arrival,
+        progress,
+        strength: amount,
+      })
+      if (amount > 0) {
+        screens.push(mood.screen)
+      }
     }
-    showMoodVignettes(vignettes)
+    showMoodScreens(screens)
   }
 
-  /** Forgets a mood, which has faded out, stops its loop, which has gone silent with it, and lets its transformer ring out. */
+  /** Forgets a mood, which has faded out, stops its loop, which has gone silent with it, takes its screen off the frame and lets its transformer ring out. */
   private release(showing: Showing, fade?: number) {
     const {mood} = showing
     showing.ambience?.stop(fade)
+    mood.screen?.hide()
     if (mood.transformer) {
       showing.transformers?.transform(mood, mood.transformer, 0, this.smoothing())
     }
@@ -204,10 +215,10 @@ export default class MoodMixer {
     let showing = this.showing.get(mood)
     if (!showing) {
       showing = {
+        arrival: 0,
         level: 0,
         mood,
         progress: 0,
-        vignette: mood.vignette && vignetteLayer(mood.vignette),
       }
       this.showing.set(mood, showing)
     }

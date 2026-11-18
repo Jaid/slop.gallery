@@ -51,14 +51,15 @@ describe('held magic items’ moods', () => {
           expect(mixer.amountOf(moods[orb.mood])).toBe(0)
           held = item.propId
           room = 'forge'
-          // The very same mood instance and fade curve as its orb, not a second effect.
+          // The very same mood instance and fade curve as its orb, not a second effect, at its own pace if it has one.
+          const fade = moods[orb.mood].fade ?? moodFade
           const orbTarget = {
             cast: propMood(orb.propId, props, room)!,
             room: [moods.forge],
           }
           for (let frame = 0; frame < 240; frame++) {
-            mixer.update(target(), moodFade.in / 240)
-            orbMixer.update(orbTarget, moodFade.in / 240)
+            mixer.update(target(), fade.in / 240)
+            orbMixer.update(orbTarget, fade.in / 240)
             expect(mixer.amountOf(moods[orb.mood])).toBe(orbMixer.amountOf(moods[orb.mood]))
             if (frame === 119) {
               expect(mixer.amountOf(moods[orb.mood])).toBeCloseTo(0.5)
@@ -71,9 +72,9 @@ describe('held magic items’ moods', () => {
           } else {
             room = 'bastion'
           }
-          mixer.update(target(), moodFade.out / 2)
+          mixer.update(target(), fade.out / 2)
           expect(mixer.amountOf(moods[orb.mood])).toBeCloseTo(0.5)
-          mixer.update(target(), moodFade.out)
+          mixer.update(target(), fade.out)
           expect(mixer.amountOf(moods[orb.mood])).toBe(0)
         } finally {
           mixer.dispose()

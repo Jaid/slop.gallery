@@ -14,7 +14,6 @@ import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {isShowingAlbedo} from '#src/lib/rendering/albedo.ts'
 import {getAntiAliasing, readAntiAliasing} from '#src/lib/rendering/antiAliasing.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
-import {useMoodVignettes} from '#src/lib/rendering/moodVignettes.ts'
 import {getRenderPipelineSettings} from '#src/lib/rendering/renderPipelineSettings.ts'
 import {isShowingWireframe} from '#src/lib/rendering/showWireframe.ts'
 
@@ -25,7 +24,6 @@ export default function GameScene({children}: GameWrapperProps) {
   const [requestedAntiAliasing] = useState(() => readAntiAliasing())
   const antiAliasing = getAntiAliasing(isHeavy, requestedAntiAliasing)
   const settings = useMemo(() => getRenderPipelineSettings(profile, antiAliasing), [profile, antiAliasing])
-  const hasVignette = useMoodVignettes(layers => layers.length > 0)
   return <>
     <WorldFreeze />
     <WebgpuCaptureBridge />
@@ -34,6 +32,7 @@ export default function GameScene({children}: GameWrapperProps) {
     {/* ?show_wireframe and ?albedo replace the regular frame, the wireframe taking precedence. */}
     <Branch if={isShowingWireframe} then={WireframeVision} />
     <Branch if={isShowingAlbedo} not={isShowingWireframe} then={AlbedoVision} />
-    <Branch if={profile.postprocessing || antiAliasing !== false || hasVignette} none={[isShowingWireframe, isShowingAlbedo]}><Postprocessing focus={profile.postprocessing} heavy={profile.postprocessing} settings={settings} tunable={isDevelopmentMode && isHeavy} /></Branch>
+    {/* Every graphics mode draws through the pipeline, which in Fast without antialiasing is the scene, its output transform and the moods’ screens. */}
+    <Branch none={[isShowingWireframe, isShowingAlbedo]}><Postprocessing focus={profile.postprocessing} heavy={profile.postprocessing} settings={settings} tunable={isDevelopmentMode && isHeavy} /></Branch>
   </>
 }

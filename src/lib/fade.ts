@@ -16,7 +16,7 @@ const fadeSchema = optis({
   },
 })
 
-/** Read the `?fade` flag; only an explicit `false` or `0` turns every fade of the moods (their color filters, ambiences and transformers) and of the ambience emitters into a hard cut, so captures taken right after the camera jumped from room to room show the new room as it is. */
+/** Read the `?fade` flag; only an explicit `false` or `0` turns every fade of the moods (their color filters, screens, ambiences and transformers) and of the ambience emitters into a hard cut, so captures taken right after the camera jumped from room to room show the new room as it is. */
 export function readFade(input: URL | string = typeof location === 'undefined' ? '' : location.href): boolean {
   return readPermalink(input, {schema: fadeSchema}).fade
 }
