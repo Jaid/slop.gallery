@@ -1,5 +1,5 @@
 /**
- * The brush strokes of the Paint Orb’s vignette, laid around the edges of the screen in the order the brush sets them down: the dark ground hatched across the corners and brushed along the edges first, then the earth tones over it and last a few bright accents on the inner rim, leaving the middle of the view clear.
+ * The brush strokes of the Atelier’s vignette, laid around the edges of the screen in the order the brush sets them down: the dark ground hatched across the corners and brushed along the edges first, then the earth tones over it and last a few bright accents on the inner rim, leaving the middle of the view clear.
  * None of them stays as it is: each dries into bristle streaks after a while and the brush comes back to lay it again over what is left of it, round after round, every stroke at a pace of its own, so the brushes never rest while the mood holds.
  * Screen points are in screen heights from the middle, x to the right and y up, so the screen spans ±{@link halfWidth} across and ±0.5 up and down. A stroke’s ends hang on the screen’s edges, so they slide along with them as its aspect changes.
  */

@@ -13,7 +13,7 @@ export type ScreenShowing = {
 }
 
 /**
- * A screen shader a mood draws over the finished frame while it shows, like the Paint Orb’s painted vignette, instead of or along with color filters.
+ * A screen shader a mood draws over the finished frame while it shows, like the Atelier’s painted vignette, instead of or along with color filters.
  * The render pipeline builds every mood’s screen in once, after the moods’ gradient maps and before the dither, and runs each only while its mood shows, so a mood coming over the world compiles nothing. Those showing draw one over the other like their moods stack, the room’s beneath the one cast over the world (see `src/lib/rendering/moodScreens.ts`).
  * Its uniforms tell it how far its mood has come, which `MoodMixer` writes every frame: what it draws can play out as the mood comes in, along with {@link arrival}, go on from there for as long as the mood holds, along with {@link stay}, and leave in a way of its own as {@link presence} falls, or simply fade with {@link strength}. What moves regardless of the mood follows TSL’s `time`, which stands still with the frozen world and under `?frozen_time`, as {@link stay} does.
  * It works in display space, after tone mapping, and places what it draws by `screenUV` and `screenSize`, which also hold in captures of any size.

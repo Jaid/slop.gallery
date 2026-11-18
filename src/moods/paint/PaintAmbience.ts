@@ -49,7 +49,7 @@ const rinses = {
   volume: 0.004,
 }
 
-/** The Paint Orb’s atelier: the hush of a quiet studio with a town outside its window, a brush working the canvas now and then, a palette knife scraping and, rarer, a brush tapped against the glass of its jar. */
+/** The atelier of the Paint Orb and the Impasto Orb: the hush of a quiet studio with a town outside its window, a brush working the canvas now and then, a palette knife scraping and, rarer, a brush tapped against the glass of its jar. */
 export default class PaintAmbience extends AmbienceLoop {
   constructor() {
     super({

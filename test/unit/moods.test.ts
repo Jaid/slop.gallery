@@ -630,10 +630,10 @@ describe('moods', () => {
       expect(ambience.id).toBe(`mood-${id}`)
     }
   })
-  test('every orb that casts a mood casts one of its own, sharing its id, and only the Transparent Orb casts none', () => {
+  test('every orb that casts a mood casts one of its own, sharing its id, but the Impasto Orb, which casts the Paint Orb’s, and only the Transparent Orb casts none', () => {
     const moody = orbs.filter(orb => orb.mood)
     expect(orbs.filter(orb => !orb.mood).map(orb => orb.id)).toEqual(['transparent'])
-    expect(moody.map<string | undefined>(orb => orb.mood)).toEqual(moody.map(orb => orb.id))
+    expect(moody.filter(orb => orb.mood !== orb.id).map<[string, string | undefined]>(orb => [orb.id, orb.mood])).toEqual([['impasto', 'paint']])
     for (const orb of moody) {
       const mood: Mood = moods[orb.mood!]
       expect(mood.ambience).toBeDefined()
@@ -649,7 +649,7 @@ describe('moods', () => {
       }
     }
   })
-  test('the Paint Orb’s atelier paints a vignette over the view instead of filtering the world’s colors, and the pipeline knows every mood’s screen', () => {
+  test('the Atelier paints a vignette over the view instead of filtering the world’s colors, and the pipeline knows every mood’s screen', () => {
     const {paint} = moods
     expect(paint.screen).toBeInstanceOf(MoodScreen)
     expect(paint.grade).toBeUndefined()
@@ -677,7 +677,7 @@ describe('moods', () => {
     for (const mood of roomMoods) {
       expect(mood.fade).toEqual(roomMoodFade)
     }
-    const castOver = ['fusion', ...orbs.flatMap(orb => orb.mood ?? [])]
+    const castOver = new Set(['fusion', ...orbs.flatMap(orb => orb.mood ?? [])])
     expect(Object.keys(moods).toSorted()).toEqual([...named, ...castOver].toSorted())
     expect(roomMoods.filter(mood => mood.ambience).map(mood => mood.id)).toEqual(['bastion'])
     // The Corridor’s widens the view.

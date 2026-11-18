@@ -26,7 +26,7 @@ export default class ImpastoOrb extends PromptOrb {
   override readonly effect = 'smears'
   readonly frame = ['impasto'] as const
   readonly id = 'impasto'
-  readonly mood = 'impasto'
+  readonly mood = 'paint'
   readonly photo = photo
   readonly premise = 'This picture is in a game – and a digital painter has just loaded a palette knife with thick paint to sculpt it anew.'
   readonly title = 'Impasto Orb'

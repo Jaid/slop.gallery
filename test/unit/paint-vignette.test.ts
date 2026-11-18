@@ -17,7 +17,7 @@ const covered = (point: readonly [number, number], aspect: number) => vignetteSt
   }
   return false
 })
-describe('the Paint Orb’s vignette', () => {
+describe('the Atelier’s vignette', () => {
   test('the brushes lay their strokes one after another while the mood comes in, done before it shows in full', () => {
     expect(vignetteStrokes.length).toBeGreaterThan(12)
     for (const [index, stroke] of vignetteStrokes.entries()) {
