@@ -21,13 +21,15 @@ const tunnelLamp = (s: number, lamp: Omit<PointLamp, 'position'>): PointLamp => 
     ],
   }
 }
-/** Green and red line up with the outermost edges of the two display windows; blue hangs over the middle row. */
-export const tunnelLightSs = [
-  Math.min(...tunnelDisplays.map(display => display.winNorthS)),
-  (tunnelDisplays[0].exhibits[1].s + tunnelDisplays[1].exhibits[1].s) / 2,
-  Math.max(...tunnelDisplays.map(display => display.winSouthS)),
-] as const
-const [northS, middleS, southS] = tunnelLightSs
+/** Blue sits halfway between the outermost glass edges. */
+const northEdgeS = Math.min(...tunnelDisplays.map(display => display.winNorthS))
+const southEdgeS = Math.max(...tunnelDisplays.map(display => display.winSouthS))
+const middleS = (northEdgeS + southEdgeS) / 2
+/** 730 cm along the sloped ceiling, projected onto the horizontal tunnel axis. */
+const spacingS = 7.3 * Math.cos(tilt)
+const northS = middleS - spacingS
+const southS = middleS + spacingS
+export const tunnelLightSs = [northS, middleS, southS] as const
 
 /** the color of the staff stairways’ lamps */
 export const stairwayTint = '#a3d2cc'
