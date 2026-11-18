@@ -22,8 +22,11 @@ import titlePlugin from 'vite-plugin-title'
 
 import immutableHeadersPlugin from '#src/lib/vite/immutableHeadersPlugin.ts'
 import outputListPlugin from '#src/lib/vite/outputListPlugin.ts'
+import sourceCodeMetadataPlugin from '#src/lib/vite/sourceCodeMetadataPlugin.ts'
 import worldChunksPlugin from '#src/lib/vite/worldChunksPlugin.ts'
 import {defaultWorld, selectWorld, worldIds, worldParameters, worldRooms, worlds} from '#src/worlds/index.ts'
+
+import manifest from './package.json' with {type: 'json'}
 
 const getCommonConfig = (context: ConfigEnv) => {
   const env = loadEnv(context.mode, process.cwd(), '')
@@ -41,6 +44,7 @@ const getCommonConfig = (context: ConfigEnv) => {
         optional: true,
       }),
       titlePlugin(worlds[defaultWorld].title),
+      sourceCodeMetadataPlugin(manifest),
       // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
       loadingScreenPlugin({
         screens: worlds,
