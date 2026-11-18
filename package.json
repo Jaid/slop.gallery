@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "description": "A living museum of happy accidents. A local-first WebGPU art gallery.",
+  "description": "Explore a surreal 3D art gallery powered by WebGPU. Discover strange rooms, transform paintings, and experiment with AI-generated art.",
+  "homepage": "https://slop.gallery/",
   "funding": "https://github.com/sponsors/Jaid",
   "license": "MIT",
   "repository": {
@@ -147,6 +148,11 @@
     "@types/three": "0.187.0"
   },
   "packageManager": "bun@1.4.4",
+  "socialPreview": {
+    "tagline": "Good taste. Questionable art.",
+    "description": "An interactive 3D museum of happy accidents.",
+    "imageAlt": "A view inside the Slop Gallery 3D museum."
+  },
   "workspaces": [
     "packages/*",
     "packages/use-narrator/packages/*",

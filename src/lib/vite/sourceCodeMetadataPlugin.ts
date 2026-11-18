@@ -4,11 +4,12 @@ import fs from 'fs-extra'
 
 type GalleryManifest = {
   displayName: string
+  homepage: string
   license: string
   repository?: {url: string} | string
 }
 
-export default function sourceCodeMetadataPlugin({displayName, license, repository}: GalleryManifest, packageFolder: string): Plugin {
+export default function sourceCodeMetadataPlugin({displayName, homepage, license, repository}: GalleryManifest, packageFolder: string): Plugin {
   const url = typeof repository === 'string' ? repository : repository?.url
   return {
     name: 'source-code-metadata',
@@ -29,7 +30,7 @@ export default function sourceCodeMetadataPlugin({displayName, license, reposito
         targetProduct: {
           '@type': 'VideoGame',
           name: displayName,
-          url: 'https://slop.gallery/',
+          url: homepage,
         },
       }
       return [{

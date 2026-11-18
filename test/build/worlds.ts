@@ -11,7 +11,7 @@ import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {worldIds, worlds} from '../../src/worlds/index.ts'
 
-// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material and the Knots’ announcements in chunks of their own that only load on demand, and every file but the page named by its content.
+// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material and the Knots’ announcements in chunks of their own that only load on demand, and the game’s chunks and assets named by their content.
 // Files are named by their content hash, so the chunks and assets are looked up in the output list the build writes next to it.
 const directory = 'dist'
 const root = join(import.meta.dir, '..', '..')
@@ -37,9 +37,9 @@ const lost = [...listed].find(file => !files.includes(file))
 if (lost) {
   fail(`${lost} is in the output list but not in the build, like when another file’s hash differs from its hash only in case.`)
 }
-// Only the page and the headers keep their names.
+// The page, social card and headers have stable public URLs.
 const named = files.filter(file => !hashedFileName.test(file))
-const unexpected = named.find(file => !['_headers', 'index.html'].includes(file))
+const unexpected = named.find(file => !['_headers', 'index.html', 'preview.jpg'].includes(file))
 if (unexpected) {
   fail(`${unexpected} is not named by its content hash.`)
 }

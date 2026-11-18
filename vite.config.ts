@@ -22,6 +22,7 @@ import titlePlugin from 'vite-plugin-title'
 
 import immutableHeadersPlugin from '#src/lib/vite/immutableHeadersPlugin.ts'
 import outputListPlugin from '#src/lib/vite/outputListPlugin.ts'
+import socialPreviewPlugin from '#src/lib/vite/socialPreviewPlugin.ts'
 import sourceCodeMetadataPlugin from '#src/lib/vite/sourceCodeMetadataPlugin.ts'
 import worldChunksPlugin from '#src/lib/vite/worldChunksPlugin.ts'
 import {defaultWorld, selectWorld, worldIds, worldParameters, worldRooms, worlds} from '#src/worlds/index.ts'
@@ -45,6 +46,7 @@ const getCommonConfig = (context: ConfigEnv) => {
       }),
       titlePlugin(worlds[defaultWorld].title),
       sourceCodeMetadataPlugin(manifest, import.meta.dirname),
+      socialPreviewPlugin(manifest, {cardImage: 'assets/wallpaper.jxl'}),
       // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
       loadingScreenPlugin({
         screens: worlds,
@@ -170,7 +172,7 @@ const getProductionConfig = () => {
               },
             ],
           },
-          // Every file but the page is named by its content, so browsers can keep it for good and a deploy can never leave them running stale chunks under the same name; see immutableHeadersPlugin. The build’s output list (outputListPlugin) tells which is which.
+          // The game’s chunks and assets are named by their content, so browsers can keep them for good and a deploy can never leave them running stale chunks under the same name; see immutableHeadersPlugin. The build’s output list (outputListPlugin) tells which is which.
           entryFileNames: '[hash:8].js',
           chunkFileNames: '[hash:8].js',
           assetFileNames: '[hash:8].[ext]',
