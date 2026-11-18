@@ -1,4 +1,4 @@
-import type {CameraPose} from '#src/lib/diagnostics.ts'
+import type {CameraView} from '#src/lib/diagnostics.ts'
 import type {CameraBookmark, Vec3} from '#src/lib/gallery/types.ts'
 
 import {join, relative} from 'node:path'
@@ -25,19 +25,19 @@ const help = `Usage: bun scripts/snap.ts [options]
 
 Takes a headless photo of a world and writes it to out/snap/<name>.jxl, next to out/snap/<name>.msgpack with the X dump of the same view.
 Starts a private Vite dev server (or serves --target) and a private headless browser through capture-page; never touches the visible browser.
-The photo is a fresh WebGPU render of the scene, so menus and other DOM overlays are not in it.
+The photo is a fresh WebGPU render of the scene, so menus and other DOM overlays are not in it. Its camera is the player, flying: the room its eyes are in is the player’s.
 
 Options:
 ${galleryHelp(snapHeight)}
   --bookmark <id>         camera bookmark of the world (its rooms’ cameras.ts, like lobby-overview) that supplies the defaults of --position, --angle, --fov, the width-to-height ratio and --frozen_time
-  --position <x,y,z>      camera (eye) position in meters. Default: the bookmark’s, or the player spawn
+  --position <x,y,z>      where the player flies to, its eyes’ position in meters. Default: the bookmark’s, or the player spawn
   --angle <yaw,pitch[,roll]>
                           camera angle in degrees. Yaw 0 looks toward −z, positive pitch looks up. Default: the bookmark’s, or the player spawn
-  --fov <degrees>         vertical field of view. Default: the bookmark’s, or the game camera’s
+  --fov <degrees>         vertical field of view, which a mood of the room may widen like for any player, like the Corridor’s. Default: the bookmark’s, or the game camera’s
   --jxl-distance <number> cjxl Butteraugli distance, 0 is lossless. Default: 1
   --jxl-effort <1–10>     cjxl effort; lossless 2160p takes about a second at 6 and minutes at 10. Default: ${jxlEffort}
-  --settle <frames>       frames to render after posing and again once everything has loaded. Default: 2, enough even with TRAA
-  --wireframe <json>      input for the app’s set_wireframe WebMCP tool, sent after posing, e.g. {"direction": "in", "position": [0, 0.5, -12], "radius": 6}
+  --settle <frames>       frames to render after flying there and again once everything has loaded. Default: 2, enough even with TRAA
+  --wireframe <json>      input for the app’s set_wireframe WebMCP tool, sent after flying there, e.g. {"direction": "in", "position": [0, 0.5, -12], "radius": 6}
   --name <name>           output file name without extension. Default: the next free number, starting at 1
   -h, --help              show this help
 
@@ -105,7 +105,7 @@ const main = async (options: SnapOptions) => {
   await anchorWorldReach(setup, position)
   await using server = await serveGallery(setup, {cacheDir: 'node_modules/.vite-snap'})
   console.log(`Loading ${server.url}`)
-  let pose: {
+  let view: {
     fov: number | null
     position: Vec3
     rotation: Vec3
@@ -123,7 +123,7 @@ const main = async (options: SnapOptions) => {
     hook: async page => {
       watchPage(page)
       await waitForGallery(page)
-      pose = await page.evaluate((requested: Partial<CameraPose>) => globalThis.slopGallery!.pose!(requested), {
+      view = await page.evaluate((requested: Partial<CameraView>) => globalThis.slopGallery!.fly!(requested), {
         position,
         rotation: angle ? [radians(angle[1]), radians(angle[0]), radians(angle[2] ?? 0)] as Vec3 : undefined,
         fov,
@@ -131,7 +131,7 @@ const main = async (options: SnapOptions) => {
       if (wireframe) {
         await setWireframe(page, wireframe as Record<string, unknown>)
       }
-      // A new pose can bring artworks into view that still need decoding, and objects whose pipelines still compile.
+      // A new view can bring artworks into view that still need decoding, and objects whose pipelines still compile.
       await waitForFrames(page, settle)
       await waitForLoadingItems(page)
       // All of it loaded at the warmup scale; the photo renders at the full size, after frames that build TRAA’s history there.
@@ -186,8 +186,8 @@ const main = async (options: SnapOptions) => {
     dump,
     height,
     output,
-    /** the camera the photo was taken from */
-    pose: pose!,
+    /** the view the photo was taken from */
+    view: view!,
     /** the size the canvas rendered at, larger than the photo with --scale above 1 */
     source: {
       width: frame.width,
@@ -213,9 +213,9 @@ if (import.meta.main) {
   if (values.help) {
     console.log(help)
   } else {
-    const {dump, height, output, pose, source, width} = await main(values)
-    const [pitch, yaw, roll] = pose.rotation
+    const {dump, height, output, source, view, width} = await main(values)
+    const [pitch, yaw, roll] = view.rotation
     console.log(`Wrote ${relative(repositoryRoot, output).replaceAll('\\', '/')} (${width}×${height}${source.width === width && source.height === height ? '' : `, downsampled from ${source.width}×${source.height}`})${dump ? ' and its .msgpack X dump' : ''}`)
-    console.log(`--position ${pose.position.map(value => Math.round(value * 1000) / 1000).join(',')} --angle ${[yaw, pitch, roll].map(degrees).join(',')} --fov ${pose.fov}`)
+    console.log(`--position ${view.position.map(value => Math.round(value * 1000) / 1000).join(',')} --angle ${[yaw, pitch, roll].map(degrees).join(',')} --fov ${view.fov}`)
   }
 }

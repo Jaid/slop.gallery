@@ -1,4 +1,4 @@
-import type {CameraPose} from '#src/lib/diagnostics.ts'
+import type {CameraView} from '#src/lib/diagnostics.ts'
 import type {InitScript} from './lib/headlessGallery.ts'
 import type {AudioTrack, Shot, ToolCall} from 'capture-session/script'
 
@@ -17,7 +17,7 @@ import {anchorWorldReach, degrees, galleryHelp, galleryOptions, openHeadlessGall
 const logLength = 400
 const help = `Usage: bun scripts/film.ts [options]
 
-Renders a camera flight through a world and writes it as an animated JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
+Renders a flight of the player through a world and writes it as an animated JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
 Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser.
 The engine clock is virtual: every frame advances the scene by exactly 1/fps seconds, however long it takes to render. Artworks that come into view are decoded before their frame is captured, so nothing pops in.
 With --audio on (true, or a volume from 1 to 100, like ?audio), the page’s sound renders offline in step with the clock, at 48 kHz, so every sound starts on the frame that starts it, and the film carries it as Opus: WebM and Matroska inside, the other formats in an Opus file of the same name beside them. Sound the page plays through media elements or speech synthesis is not recorded.
@@ -48,11 +48,11 @@ A recipe is a JSON array of keyframes, ordered by time:
   ]
 
   time      seconds since the start of the video. Required
-  position  [x, y, z] camera (eye) position in meters
+  position  [x, y, z] position of the player’s eyes in meters; the player flies, so the room they are in is the player’s
   yaw       degrees, 0 looks toward −z, positive turns left. Not wrapped, so 0 → 720 spins twice
   pitch     degrees, positive looks up
   roll      degrees, positive tilts the camera counterclockwise
-  fov       vertical field of view in degrees
+  fov       vertical field of view in degrees, which a mood of the room may widen like for any player
   tween     how this keyframe’s properties travel toward it from their previous keyframe. Default: linear
             ${Object.keys(tweens).join(', ')}
   wireframe input for the app’s set_wireframe WebMCP tool, in effect from this keyframe on. See below
@@ -158,7 +158,7 @@ const main = async (options: FilmOptions) => {
   const audible = readAudioOverride(`http://localhost/?${setup.search}`) === true
   // The first frame shows the clock 1/fps after it started, which is where the film’s sound begins.
   const leadIn = 1 / fps
-  const toPose = (shot: Shot): Partial<CameraPose> => ({
+  const toView = (shot: Shot): Partial<CameraView> => ({
     position: shot.position,
     rotation: [radians(shot.pitch), radians(shot.yaw), radians(shot.roll)],
     fov: shot.fov,
@@ -184,7 +184,7 @@ const main = async (options: FilmOptions) => {
     initScripts,
   })
   const {page} = gallery
-  const spawn = await page.evaluate(() => globalThis.slopGallery!.pose!())
+  const spawn = await page.evaluate(() => globalThis.slopGallery!.fly!())
   const fallback: Shot = {
     position: spawn.position,
     yaw: degrees(spawn.rotation[1]),
@@ -198,8 +198,8 @@ const main = async (options: FilmOptions) => {
   if (firstFlood) {
     await setWireframe(page, firstFlood)
   }
-  const first = toPose(sampleRecipe(recipe, frameSeconds(0), fallback))
-  await page.evaluate((pose: Partial<CameraPose>) => globalThis.slopGallery!.pose!(pose), first)
+  const first = toView(sampleRecipe(recipe, frameSeconds(0), fallback))
+  await page.evaluate((view: Partial<CameraView>) => globalThis.slopGallery!.fly!(view), first)
   await waitForFrames(page, settle)
   await waitForLoadingItems(page)
   // All of it loaded at the warmup scale; the film renders at the full size, after frames that build TRAA’s history there.
@@ -296,7 +296,7 @@ const main = async (options: FilmOptions) => {
     })
     const startedAt = performance.now()
     for (let index = 0; index < frameCount; index++) {
-      const pose = toPose(sampleRecipe(recipe, frameSeconds(index), fallback))
+      const view = toView(sampleRecipe(recipe, frameSeconds(index), fallback))
       const frameFlood = flood(index)
       if (frameFlood) {
         await setWireframe(page, frameFlood)
@@ -305,18 +305,18 @@ const main = async (options: FilmOptions) => {
       // The sound renders up to the frame’s moment first, so whatever the frame starts sounds from there.
       await page.evaluate(async (frame: {
         delta: number
-        pose: Partial<CameraPose>
         step: boolean
+        view: Partial<CameraView>
       }) => {
-        globalThis.slopGallery!.pose!(frame.pose)
+        globalThis.slopGallery!.fly!(frame.view)
         await globalThis.virtualAudio?.advance(frame.delta)
         if (frame.step) {
           globalThis.virtualClock!.step(frame.delta)
         }
       }, {
         delta: 1 / fps,
-        pose,
         step: !frameCalls,
+        view,
       })
       if (frameCalls) {
         for (const {input, name, time} of frameCalls) {

@@ -1,4 +1,4 @@
-import type {CameraPose} from '#src/lib/diagnostics.ts'
+import type {CameraView} from '#src/lib/diagnostics.ts'
 import type {RenderFrame} from 'knot-materials/scripts/lib/renderSettings.ts'
 import type {KnotScene} from 'knot-materials/scripts/renderKnot.ts'
 
@@ -8,7 +8,7 @@ import {animationFps, frameSizes, previewCamera, previewDistance} from 'knot-mat
 
 import {openHeadlessGallery, resolveGallerySetup} from './headlessGallery.ts'
 
-/** frames a still renders at its pose before the capture, so temporal antialiasing and filtering settle */
+/** frames a still renders at its view before the capture, so temporal antialiasing and filtering settle */
 const stillSettleFrames = 16
 const knotRadius = (displacement = 0) => {
   const geometry = createKnotGeometry()
@@ -21,7 +21,7 @@ const knotRadius = (displacement = 0) => {
 
 /**
  * The knot alone in its own Knottingham room (`?knot_id`), held still (`?knot_rotation=false`) and reflecting the gallery’s environment (`?pmrem=slop_gallery`), rendered by the full game under the given graphics.
- * The camera takes the same views around the knot as in the transparent renders. Engine time only moves between animation frames, by the frames’ own steps, so stills settle and animations stay exact however slowly each frame renders.
+ * The player flies to the same views around the knot as in the transparent renders. Engine time only moves between animation frames, by the frames’ own steps, so stills settle and animations stay exact however slowly each frame renders.
  */
 export const knottinghamScene = (graphics: 'cinematic' | 'heavy'): KnotScene => async (item, run) => {
   const [stillWidth, stillHeight] = frameSizes.still
@@ -48,7 +48,7 @@ export const knottinghamScene = (graphics: 'cinematic' | 'heavy'): KnotScene => 
     throw new Error(`Knottingham did not exhibit ${item.id}.`)
   }
   const baseDistance = previewDistance(knotRadius(item.displacement))
-  const pose = (frame: RenderFrame): Partial<CameraPose> => {
+  const view = (frame: RenderFrame): Partial<CameraView> => {
     const {fov, position: [x, y, z]} = previewCamera(frame, baseDistance)
     return {
       fov,
@@ -71,7 +71,7 @@ export const knottinghamScene = (graphics: 'cinematic' | 'heavy'): KnotScene => 
     },
   })
   try {
-    // Everything loads at the warmup scale; the frames render at the full size, whose still frames settle at every pose anyway.
+    // Everything loads at the warmup scale; the frames render at the full size, whose still frames settle at every view anyway.
     await waitForLoadingItems(page)
     await endWarmup(page)
     await page.evaluate(() => {
@@ -102,14 +102,14 @@ export const knottinghamScene = (graphics: 'cinematic' | 'heavy'): KnotScene => 
       await page.evaluate(async (input: {
         delta: number
         height: number
-        pose: Partial<CameraPose>
         settle: number
         url: string
+        view: Partial<CameraView>
         width: number
       }) => {
         const api = globalThis.slopGallery!
         const clock = globalThis.virtualClock!
-        api.pose!(input.pose)
+        api.fly!(input.view)
         clock.step(input.delta)
         const canvas = document.querySelector('canvas')!
         const deadline = Date.now() + 120_000
@@ -135,9 +135,9 @@ export const knottinghamScene = (graphics: 'cinematic' | 'heavy'): KnotScene => 
       }, {
         delta,
         height: frameHeight,
-        pose: pose(frame),
         settle: delta === 0 || isResized ? stillSettleFrames : 0,
         url: `http://127.0.0.1:${frameServer.port}/`,
+        view: view(frame),
         width: frameWidth,
       })
       const [image] = received

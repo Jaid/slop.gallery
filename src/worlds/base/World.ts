@@ -12,9 +12,9 @@ import type {Geofence} from 'geofency'
 import type {ComponentType} from 'react'
 import type {Node} from 'three/webgpu'
 
+import {defaultEgoOptions} from 'ego-player/motor'
 import Geofences from 'geofency'
 
-import {readDevelopmentMode} from '#src/lib/developmentMode.ts'
 import miterCorners from '#src/lib/gallery/cornerMiters.ts'
 import {findNamedBookmark, readRoom, readSpawn} from '#src/lib/gallery/spawn.ts'
 import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
@@ -35,11 +35,11 @@ export type MinimapProps = {
 
 /** where a page starts in a world, as its URL says */
 export type WorldStart = {
-  /** where the camera starts when `?spawn` names a camera bookmark: at the bookmark, which may lie in another room than the feet below it, like those of a low one with `?development`, which sink below its floor */
+  /** where the eyes start when `?spawn` names a camera bookmark: at the bookmark, which is where a flying player is, and may lie in another room than the feet hanging below it, like those of a low one, which sink below its floor */
   eye?: Vec3
-  /** whether `?spawn` makes the player start flying: a camera bookmark with `?development`, to fly on from there */
+  /** whether `?spawn` makes the player start flying: a camera bookmark, whose view no player on its feet has */
   flying: boolean
-  /** where the player starts: on the spawn bookmark `?spawn` names, below the camera bookmark it names, at the default spawn of the room `?room` names, or else at the world’s spawn, which also stands in for a place outside of the world */
+  /** where the player starts: on the spawn bookmark `?spawn` names, with its eyes at the camera bookmark it names, at the default spawn of the room `?room` names, or else at the world’s spawn, which also stands in for a place outside of the world */
   pose: PlayerPose
   /** what `?spawn` or `?room` names that the world doesn’t have, which leaves the player at the world’s spawn */
   unknown?: {
@@ -148,10 +148,9 @@ export default abstract class World<Kind extends Room = Room> {
     return this.rooms.flatMap(room => room.ambiences())
   }
 
-  /** Where the player stands below a camera bookmark: a standing eye height under the camera, but never below the floor unless `flying`. */
-  cameraBookmarkFeet({position}: Pick<CameraBookmark, 'position'>, flying = false): Vec3 {
-    const feet = position[1] - 1.6
-    return [position[0], flying ? feet : Math.max(this.floorHeight(position) + 0.04, feet), position[2]]
+  /** Where the feet of a player hang who flies with its eyes at a camera bookmark: a standing eye height below it, through the floor under a low one. */
+  cameraBookmarkFeet({position}: Pick<CameraBookmark, 'position'>): Vec3 {
+    return [position[0], position[1] - defaultEgoOptions.eyeHeight, position[2]]
   }
 
   /** Every camera bookmark of the world in world meters, room by room. */
@@ -235,7 +234,7 @@ export default abstract class World<Kind extends Room = Room> {
     return this.rooms.flatMap(room => room.slots())
   }
 
-  /** How much of the world a page with the URL mounts, by its `?world_reach`, around the room it {@link start}s in: the one the camera starts in, or else the one the player stands in, or the world’s default room outside of every fence. */
+  /** How much of the world a page with the URL mounts, by its `?world_reach`, around the room it {@link start}s in: the one the eyes of a flying player start in, or else the one the player stands in, or the world’s default room outside of every fence. */
   reachOf(input?: URL | string) {
     const {eye, pose} = this.start(input)
     const room = (eye && this.roomAt(eye)) ?? this.roomAt(pose.position)
@@ -278,13 +277,14 @@ export default abstract class World<Kind extends Room = Room> {
   }
 
   /**
-   * Where a page with the URL starts: with `?spawn`, on that spawn bookmark or below that camera bookmark, which wins over a spawn bookmark of the same ID, with `?development` flying with its eyes at the bookmark; without `?spawn`, at the default spawn of the room `?room` names; otherwise at the world’s spawn.
+   * Where a page with the URL starts: with `?spawn`, on that spawn bookmark or flying with its eyes at that camera bookmark, which wins over a spawn bookmark of the same ID; without `?spawn`, at the default spawn of the room `?room` names; otherwise at the world’s spawn.
    * Pure, so the {@link reach} that depends on it is known before anything places the player.
    */
   start(input?: URL | string): WorldStart {
     const camera = findNamedBookmark(this.cameraBookmarks(), input)
     const bookmark = camera ? null : findNamedBookmark(this.spawnBookmarks(), input)
-    const at = (pose: PlayerPose, flying = false, eye?: Vec3): WorldStart => (this.contains(pose.position) ? {
+    // A flying player is where its eyes are, whose feet may hang out of the world.
+    const at = (pose: PlayerPose, flying = false, eye?: Vec3): WorldStart => (this.contains(eye ?? pose.position) ? {
       pose,
       flying,
       ...eye ? {eye} : {},
@@ -301,11 +301,10 @@ export default abstract class World<Kind extends Room = Room> {
       })
     }
     if (camera) {
-      const flying = readDevelopmentMode(input)
       return at({
-        position: this.cameraBookmarkFeet(camera, flying),
+        position: this.cameraBookmarkFeet(camera),
         ...camera.aim,
-      }, flying, camera.position)
+      }, true, camera.position)
     }
     if (bookmark === undefined) {
       return {

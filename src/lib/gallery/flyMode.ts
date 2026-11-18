@@ -23,7 +23,7 @@ export function readFlying(input: URL | string = typeof location === 'undefined'
   return readDevelopmentMode(input) && readPermalink(input, {schema: flyingSchema}).flying
 }
 
-/** Whether the player flies, read by the Player without a React subscription; starts from `?flying`. */
+/** Whether the player flies, read by the Player without a React subscription; starts from `?flying`, and a `?spawn` camera bookmark or `flyPlayer` starts it too. */
 export const flyMode = {active: readFlying()}
 
 /** Starts or stops flying, returning whether the player flies now. */

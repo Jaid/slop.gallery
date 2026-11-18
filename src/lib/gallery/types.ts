@@ -115,7 +115,7 @@ export type SpawnBookmark = PlayerPose & {
   id: string
 }
 
-/** named camera view for `?spawn`, which holds the camera there, detached from the player until the next teleport (with `?development`, flies from there instead), and for `scripts/snap.ts --bookmark` */
+/** named camera view for `?spawn`, which starts the player flying with its eyes there, looking through its field of view (with `?development`, through the game’s own), and for `scripts/snap.ts --bookmark` */
 export type CameraBookmark = {
   /** camera angle in radians, Euler order YXZ like the player’s look: yaw 0 looks toward −z, positive pitch looks up */
   aim: {

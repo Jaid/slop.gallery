@@ -6,11 +6,9 @@ import {PerspectiveCamera} from 'three/webgpu'
 export type MoodLensView = {
   /** seconds since the last frame, which the share of the widening eases over */
   delta: number
-  /** whether the camera shows exactly what something else set it to, like a capture that posed it, so none of the widening applies, at once */
-  exact?: boolean
   /** whether the share of the widening eases as the camera is taken from the player and handed back; without, it cuts, as `?fade=false` asks for */
   fading?: boolean
-  /** whether the camera is the player’s own view rather than one taken from them, like V-viewing’s, the intro’s or a bookmark’s, which keep their own field of view */
+  /** whether the camera is the player’s own view rather than one taken from them, like V-viewing’s or the intro’s, which keep their own field of view */
   own: boolean
   /** whether the frame shows the same moment as the one before, like a frame of a frozen world, so the share of the widening stays where its easing stands instead of cutting for want of a `delta` */
   still?: boolean
@@ -26,7 +24,7 @@ const limits = [1, 179] as const
 /**
  * Widens the player’s view by what the moods showing ask for, their `fov`, only while it is drawn: {@link widen} right before a frame, {@link restore} right after, or {@link during} a render of its own, like a capture’s.
  * In between, the camera keeps the field of view everything else set and reads back, like the player’s zoom, V-viewing and the tuning panel, which each remember the one they found to return to it, so the lens never ends up in what they remember.
- * Only the player’s own view widens: zooming in gives the widening up along the way, and a camera taken from the player eases out of it, or drops it at once where it must show exactly what it was set to.
+ * Only the player’s own view widens: zooming in gives the widening up along the way, and a camera taken from the player eases out of it. A flying player’s view is the player’s own too, so captures, which fly, show it as wide as players see it.
  */
 export default class MoodLens {
   /** how many degrees it widens a view by now, narrower where negative, as {@link update} last worked it out */
@@ -65,9 +63,9 @@ export default class MoodLens {
   }
 
   /** Works out how far views widen from now on: by `degrees`, as far as `view` lets them. */
-  update(degrees: number, {delta, exact = false, fading = true, own, still = false, zoom = 0}: MoodLensView) {
-    const target = own && !exact ? 1 : 0
-    if (exact || !fading || !still && !(delta > 0)) {
+  update(degrees: number, {delta, fading = true, own, still = false, zoom = 0}: MoodLensView) {
+    const target = own ? 1 : 0
+    if (!fading || !still && !(delta > 0)) {
       this.share = target
     } else if (!still) {
       this.share += (target - this.share) * (1 - Math.exp(-Math.min(delta, 0.06) * pace))

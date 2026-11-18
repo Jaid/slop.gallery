@@ -19,22 +19,25 @@ import {hiddenUiKey, toggleHiddenUi} from '../hiddenUi.ts'
 import pauseMenu from '../pauseMenu.ts'
 import {graphicsTuningKey, toggleGraphicsTuning} from '../rendering/customGraphics.ts'
 import {bookmarkKey, teleportToNextBookmark} from './bookmarks.ts'
-import {flyModeKey, toggleFlyMode} from './flyMode.ts'
+import {flyMode, flyModeKey, toggleFlyMode} from './flyMode.ts'
 import {useGallery} from './store.ts'
 
 const {spawn: playerSpawn} = world
 export const cameraPose = {
   focused: false,
-  /** whether a capture posed the camera apart from the player (`slopGallery.pose`) until the next teleport, which makes the room the camera is in the player’s, so the world looks and sounds as it does there */
-  posed: false,
   position: [playerSpawn.position[0], playerSpawn.position[1] + 1.6, playerSpawn.position[2]] as Vec3,
   direction: [-Math.sin(playerSpawn.yaw) * Math.cos(playerSpawn.pitch), Math.sin(playerSpawn.pitch), -Math.cos(playerSpawn.yaw) * Math.cos(playerSpawn.pitch)] as Vec3,
 }
-/** the player’s capsule: its middle, which decides the room the player is in, its height, standing or crouching, whether it stands on something and how fast it actually moves, in m/s */
+/**
+ * The player’s capsule: its middle, whether it flies, out of the physics, its height, standing or crouching, whether it stands on something and how fast it actually moves, in m/s.
+ * Its `place` is where the player is, which decides the room the player is in and the fences crossed: the capsule’s middle, or, flying, the eyes, below which the capsule only hangs, through the floor wherever they skim it.
+ */
 export const bodyPose = {
   center: [playerSpawn.position[0], playerSpawn.position[1] + defaultEgoOptions.height / 2, playerSpawn.position[2]] as Vec3,
+  flying: false,
   grounded: true,
   height: defaultEgoOptions.height,
+  place: [playerSpawn.position[0], playerSpawn.position[1] + defaultEgoOptions.height / 2, playerSpawn.position[2]] as Vec3,
   radius: defaultEgoOptions.radius,
   velocity: [0, 0, 0] as Vec3,
 }
@@ -56,6 +59,14 @@ export type PartyEffectRequest = {
   effect: PartyEffectId
   options?: PartyOptions
   placement: PartyPlacement
+}
+
+/** where a flight takes the player, see {@link flyPlayer} */
+export type Flight = {
+  /** where the eyes go, in world meters */
+  position?: Vec3
+  /** the way they look, as a quaternion [x, y, z, w] */
+  rotation?: [number, number, number, number]
 }
 
 export function notify(notice: string) {
@@ -131,6 +142,15 @@ export function stopNarration() {
 /** Flings the player’s body off with the velocity, in m/s, replacing its momentum. */
 export function flingPlayer(velocity: Vec3) {
   galleryEvents.dispatchEvent(new CustomEvent('fling', {detail: velocity}))
+}
+
+/**
+ * Makes the player fly, like `?flying` does, and puts its eyes at the flight’s position, looking the way its rotation turns them, each as it is unless given: anywhere, also inside walls and outside of the world, as a flying body is out of the physics.
+ * This is how a camera moves freely: there is none apart from the player, so the room the eyes are in is the player’s, and the world looks and sounds as it does there.
+ */
+export function flyPlayer(flight: Flight = {}) {
+  flyMode.active = true
+  galleryEvents.dispatchEvent(new CustomEvent<Flight>('fly', {detail: flight}))
 }
 
 /**

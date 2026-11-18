@@ -1,4 +1,4 @@
-import type {CameraPose, TurntablePose} from '#src/lib/diagnostics.ts'
+import type {CameraView, TurntablePose} from '#src/lib/diagnostics.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {GalleryValues} from './lib/headlessGallery.ts'
 
@@ -114,7 +114,7 @@ const positiveNumber = (value: string, name: string) => {
   }
   return number
 }
-const looking = (eye: Vec3, target: Vec3, fov: number): Partial<CameraPose> => {
+const looking = (eye: Vec3, target: Vec3, fov: number): Partial<CameraView> => {
   const direction = [target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]]
   const length = Math.hypot(...direction)
   return {
@@ -223,7 +223,7 @@ const main = async (frame: string, options: RenderFrameOptions) => {
     await waitForFrames(page, settle)
     const pose = await hold(0)
     const camera = turntableCamera(pose, fov, width / height)
-    await page.evaluate((requested: Partial<CameraPose>) => globalThis.slopGallery!.pose!(requested), camera)
+    await page.evaluate((requested: Partial<CameraView>) => globalThis.slopGallery!.fly!(requested), camera)
     return pose
   }
   await frameView()

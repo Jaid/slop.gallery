@@ -101,7 +101,7 @@ test('a throw leaves from where the game’s camera holds an orb, however the ca
     const {pitch, yaw} = shotAngles(shot)
     const camera = new PerspectiveCamera(shot.fov)
     camera.position.set(...shot.position)
-    // as slopGallery.pose turns it
+    // as slopGallery.fly turns it
     camera.quaternion.setFromEuler(new Euler(radians(pitch), radians(yaw), radians(roll), 'YXZ'))
     const expected = gameHoldPoint(camera)
     const actual = holdPoint(shot)

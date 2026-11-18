@@ -1,4 +1,4 @@
-import type {Vec3} from '#src/lib/gallery.ts'
+import type {Flight, Vec3} from '#src/lib/gallery.ts'
 import type {EgoAction, EgoImpact, EgoPlayerHandle, EgoState} from 'ego-player'
 import type {Camera} from 'three/webgpu'
 
@@ -25,8 +25,14 @@ import world from '#src/worlds/current.ts'
 
 const enabled = () => !cameraPose.focused
 const cameraEnabled = () => !cameraPose.focused
-// A camera a capture poses apart from the player leaves nobody where the body stands, so the body leaves the physics as it does while flying, and nothing, like the result a fusion flips out, bounces off it.
-const flying = () => flyMode.active || cameraPose.posed
+const flying = () => flyMode.active
+/** Takes the body’s capsule and place along with its feet. */
+const placeBody = ([x, y, z]: Vec3, isFlying: boolean, crouching = false) => {
+  bodyPose.height = crouching ? defaultEgoOptions.crouchHeight : defaultEgoOptions.height
+  bodyPose.center = [x, y + bodyPose.height / 2, z]
+  bodyPose.flying = isFlying
+  bodyPose.place = isFlying ? [x, y + (crouching ? defaultEgoOptions.crouchEyeHeight : defaultEgoOptions.eyeHeight), z] : bodyPose.center
+}
 const setFov = (camera: Camera, fov: number) => {
   if (camera instanceof PerspectiveCamera && camera.fov !== fov) {
     camera.fov = fov
@@ -71,14 +77,6 @@ export default function Player() {
   const [angles] = useState(() => new Euler(0, 0, 0, 'YXZ'))
   // Props that just left the player’s hands pass through the capsule until they are clear of it.
   useAfterPhysicsStep(physicsWorld => PlayerGrace.step(physicsWorld, physicsWorld.timestep))
-  // where a ?spawn camera bookmark holds the camera, until the next teleport
-  const heldCamera = useRef<{
-    fov: number
-    position: Vector3
-    quaternion: Quaternion
-    /** the camera’s field of view before the bookmark took it, restored on release */
-    releaseFov: number
-  } | null>(null)
   useEffect(() => {
     const read = () => player.current?.getState() ?? null
     playerTelemetry.read = read
@@ -92,6 +90,16 @@ export default function Player() {
     globalThis.slopGallery.dump = dump
     const releaseZoom = () => player.current?.releaseZoom()
     galleryEvents.addEventListener('release-zoom', releaseZoom)
+    /** Puts the feet there, flying or not as the fly mode says. */
+    const arrive = (feet: Vec3, rotation?: Flight['rotation']) => {
+      player.current?.teleport(feet, rotation)
+      // The menu can freeze the scene before the next interaction frame samples the new camera.
+      cameraPose.position = camera.position.toArray()
+      cameraPose.direction = camera.getWorldDirection(new Vector3).toArray()
+      // The body is there before the player’s next update, so whatever follows it, like the room the player is in, never sees it where it was.
+      placeBody(feet, flyMode.active)
+      bodyPose.velocity = [0, 0, 0]
+    }
     const teleport = (event: Event) => {
       const {position, rotation, feet} = (event as CustomEvent<{
         feet?: boolean
@@ -99,25 +107,27 @@ export default function Player() {
         rotation: [number, number, number, number]
       }>).detail
       setCameraFocused(false)
-      cameraPose.posed = false
-      if (heldCamera.current) {
-        setFov(camera, heldCamera.current.releaseFov)
-      }
-      heldCamera.current = null
       // Gallery navigation describes camera poses; ego-player consistently uses feet.
-      const destination = feet ? position : [position[0], Math.max(world.floorHeight(position) + 0.04, position[1] - 1.6), position[2]] as [number, number, number]
-      if (!world.contains(destination)) {
+      const destination = feet ? position : [position[0], Math.max(world.floorHeight(position) + 0.04, position[1] - defaultEgoOptions.eyeHeight), position[2]] as [number, number, number]
+      // A flying player is where its eyes are.
+      if (!world.contains(flyMode.active ? [destination[0], destination[1] + defaultEgoOptions.eyeHeight, destination[2]] : destination)) {
         return
       }
-      player.current?.teleport(destination, rotation)
-      // The menu can freeze the scene before the next interaction frame samples the new camera.
-      cameraPose.position = camera.position.toArray()
-      cameraPose.direction = camera.getWorldDirection(new Vector3).toArray()
-      // The body is there before the player’s next update, so whatever follows it, like the room the player is in, never sees it where it was.
-      bodyPose.center = [destination[0], destination[1] + defaultEgoOptions.height / 2, destination[2]]
-      bodyPose.velocity = [0, 0, 0]
+      arrive(destination, rotation)
     }
     galleryEvents.addEventListener('teleport', teleport)
+    // A flight goes anywhere, so nothing asks whether the world holds its destination. Without one, the eyes stay where the body has them.
+    const fly = (event: Event) => {
+      const {position, rotation} = (event as CustomEvent<Flight>).detail
+      setCameraFocused(false)
+      const state = player.current?.getState()
+      if (!state) {
+        return
+      }
+      const [x, y, z] = position ?? [state.position.x, state.position.y + (state.crouching ? defaultEgoOptions.crouchEyeHeight : defaultEgoOptions.eyeHeight), state.position.z]
+      arrive([x, y - defaultEgoOptions.eyeHeight, z], rotation)
+    }
+    galleryEvents.addEventListener('fly', fly)
     const fling = (event: Event) => {
       const [x, y, z] = (event as CustomEvent<Vec3>).detail
       player.current?.fling({
@@ -130,6 +140,7 @@ export default function Player() {
     return () => {
       galleryEvents.removeEventListener('release-zoom', releaseZoom)
       galleryEvents.removeEventListener('teleport', teleport)
+      galleryEvents.removeEventListener('fly', fly)
       galleryEvents.removeEventListener('fling', fling)
       if (playerTelemetry.read === read) {
         playerTelemetry.read = null
@@ -157,28 +168,14 @@ export default function Player() {
       },
     }))
     const bookmark = isDevelopmentMode ? null : findCameraBookmark()
-    // The teleport above released the camera; a ?spawn camera bookmark takes it again while the player still stands below it. With ?development, the player flies on from it instead.
+    // The player starts flying at a ?spawn camera bookmark, its eyes where the camera is, and looks through the bookmark’s field of view while still there. With ?development, the player flies on with the game’s own.
     if (bookmark && cameraBookmarkFeet(bookmark).every((value, index) => value === pose.position[index])) {
-      setCameraFocused(true)
-      const bookmarkRotation = new Quaternion
-      heldCamera.current = {
-        fov: bookmark.fov,
-        position: new Vector3(...bookmark.position),
-        quaternion: bookmarkRotation.setFromEuler(new Euler(bookmark.aim.pitch, bookmark.aim.yaw, 0, 'YXZ')),
-        releaseFov: camera instanceof PerspectiveCamera ? camera.fov : bookmark.fov,
-      }
+      setFov(camera, bookmark.fov)
     }
   }, [camera])
   const onUpdate = (state: EgoState) => {
-    // The player applies the teleport, camera included, on its next frame, so the held camera is set after every update.
-    if (heldCamera.current) {
-      camera.position.copy(heldCamera.current.position)
-      camera.quaternion.copy(heldCamera.current.quaternion)
-      setFov(camera, heldCamera.current.fov)
-    }
     const {x, y, z} = state.position
-    bodyPose.height = state.crouching ? defaultEgoOptions.crouchHeight : defaultEgoOptions.height
-    bodyPose.center = [x, y + bodyPose.height / 2, z]
+    placeBody([x, y, z], state.flying, state.crouching)
     bodyPose.grounded = state.grounded
     bodyPose.velocity = [state.velocity.x, state.velocity.y, state.velocity.z]
     if (!cameraPose.focused) {
@@ -187,7 +184,7 @@ export default function Player() {
         position: [x, y, z],
         yaw: angles.y,
         pitch: angles.x,
-      })
+      }, state.flying)
     }
     const diagnostics = globalThis.slopGallery
     if (diagnostics) {

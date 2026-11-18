@@ -202,6 +202,7 @@ export default function OrbitViewing() {
     document.addEventListener('mousemove', move)
     galleryEvents.addEventListener('cancel-view', release)
     galleryEvents.addEventListener('teleport', teleport)
+    galleryEvents.addEventListener('fly', teleport)
     return () => {
       unsubscribe()
       globalThis.removeEventListener('keydown', down)
@@ -210,6 +211,7 @@ export default function OrbitViewing() {
       document.removeEventListener('mousemove', move)
       galleryEvents.removeEventListener('cancel-view', release)
       galleryEvents.removeEventListener('teleport', teleport)
+      galleryEvents.removeEventListener('fly', teleport)
       finish(true)
     }
   }, [camera, controls, rapier, renderer, world])

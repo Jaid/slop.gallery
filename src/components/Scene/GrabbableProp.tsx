@@ -84,12 +84,9 @@ const worldUp: Vec3 = [0, 1, 0]
 const shownTolerance = 0.001
 const shownLifetime = 100
 /**
- * How fast the hand moves with the player’s body, which whatever leaves it flies on with, running or jumping, in m/s: its actual velocity, but level while it stands on the ground, where it only jitters up and down as it hugs the floor, and none while the camera is posed apart from it.
+ * How fast the hand moves with the player’s body, which whatever leaves it flies on with, running or jumping, in m/s: its actual velocity, but level while it stands on the ground, where it only jitters up and down as it hugs the floor.
  */
-export const carrierVelocity = (): Vec3 | undefined => {
-  if (cameraPose.posed) {
-    return
-  }
+export const carrierVelocity = (): Vec3 => {
   const [x, y, z] = bodyPose.velocity
   return [x, bodyPose.grounded ? 0 : y, z]
 }

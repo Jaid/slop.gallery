@@ -3,9 +3,10 @@ import type {MutableRef} from './types.ts'
 import type {RootState} from '@react-three/fiber'
 
 import {useEffect} from 'react'
-import {Euler, PerspectiveCamera, Vector3} from 'three/webgpu'
+import {Euler, PerspectiveCamera, Quaternion, Vector3} from 'three/webgpu'
 
-import {cameraPose, galleryEvents, setCameraFocused, useGallery} from '#src/lib/gallery.ts'
+import {flyPlayer, galleryEvents, useGallery} from '#src/lib/gallery.ts'
+import {flyMode} from '#src/lib/gallery/flyMode.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import {mountedRoomIds} from '#src/lib/gallery/roomLoading.ts'
@@ -72,23 +73,24 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
     })
     const pageQuery = new URLSearchParams(location.search)
     if (pageQuery.get('test') === 'true') {
-      api.teleport = (position: Vec3, rotation: Array<number>) => galleryEvents.dispatchEvent(new CustomEvent('teleport', {
-        detail: {
-          position,
-          rotation,
-        },
-      }))
+      api.teleport = (position: Vec3, rotation: Array<number>) => {
+        flyMode.active = false
+        galleryEvents.dispatchEvent(new CustomEvent('teleport', {
+          detail: {
+            position,
+            rotation,
+          },
+        }))
+      }
       api.fuse = (first: string, second: string) => galleryEvents.dispatchEvent(new CustomEvent('fusion', {detail: [first, second]}))
-      // Detaches the camera from the player until the next teleport, so a still photo can be framed exactly, and makes the room it is in the player’s.
-      api.pose = ({position, rotation, fov} = {}) => {
-        setCameraFocused(true)
-        cameraPose.posed = true
-        if (position) {
-          camera.position.set(...position)
-        }
-        if (rotation) {
-          camera.quaternion.setFromEuler(new Euler(...rotation, 'YXZ'))
-        }
+      // The player flies wherever a view is to be framed exactly, so there is no camera apart from the player.
+      api.fly = ({position, rotation, fov} = {}) => {
+        const turned = new Quaternion
+        flyPlayer({
+          position,
+          rotation: rotation && turned.setFromEuler(new Euler(...rotation, 'YXZ')).toArray(),
+        })
+        // The flight let go of the zoom, so this is the view’s own field of view, which the moods still widen while it is drawn.
         if (fov !== undefined && camera instanceof PerspectiveCamera) {
           camera.fov = fov
           camera.updateProjectionMatrix()
@@ -106,7 +108,7 @@ export default function useInteractionDiagnostics(camera: RootState['camera'], r
       delete api.snapshot
       delete api.teleport
       delete api.fuse
-      delete api.pose
+      delete api.fly
     }
   }, [camera, placement, renderer])
 }

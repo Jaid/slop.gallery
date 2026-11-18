@@ -4,6 +4,8 @@ import type WorldReach from '../../src/worlds/base/WorldReach.ts'
 
 import {describe, expect, test} from 'bun:test'
 
+import {defaultEgoOptions} from 'ego-player/motor'
+
 import {openingFills, roomParts} from '../../src/components/World/index.tsx'
 import {GalleryPlacementSpace} from '../../src/lib/placement/GalleryPlacementSpace.ts'
 import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -74,23 +76,18 @@ describe('?world_reach', () => {
       for (const development of ['', '&development']) {
         const search = `?spawn=${bookmark.id}&room=lobby${development}`
         const start = slopGallery.start(`http://localhost/${search}`)
-        const feet = slopGallery.cameraBookmarkFeet(bookmark, Boolean(development))
-        // Feet sunk out of the world start at the world’s spawn instead, where the camera then starts too.
-        if (!slopGallery.contains(feet)) {
-          expect(start.pose).toEqual(slopGallery.spawn)
-          expect(start.eye).toBeUndefined()
-          continue
-        }
-        expect(start.pose.position).toEqual(feet)
+        expect(start.flying).toBe(true)
+        // Also where the feet hang out of the world, below eyes near the floor
+        expect(start.pose.position).toEqual(slopGallery.cameraBookmarkFeet(bookmark))
         expect(start.eye).toEqual(bookmark.position)
-        // The camera’s room, as the feet of a low camera flying with ?development sink below its floor, into another room or none
+        // The camera’s room, as the feet below low eyes sink below its floor, into another room or none
         expect(reach(`${search}&world_reach=room`).rooms).toEqual([slopGallery.roomAt(bookmark.position)!.id])
       }
     }
     expect(reach('?world_reach=room&spawn=moonfall-overview').origin).toBe('moonfall')
     // Its feet stand in no room, and it isn’t the Lobby’s.
-    expect(reach('?world_reach=room&spawn=antechamber-overview&development').origin).toBe('antechamber')
-    expect(reach('?world_reach=room&spawn=sienna-overview&development').origin).toBe('sienna')
+    expect(reach('?world_reach=room&spawn=antechamber-overview').origin).toBe('antechamber')
+    expect(reach('?world_reach=room&spawn=sienna-overview').origin).toBe('sienna')
   })
   test('an unknown ?room or ?spawn starts at the world’s spawn, which the reach reaches out from', () => {
     expect(slopGallery.start('http://localhost/?room=attic').unknown).toEqual({
@@ -108,12 +105,12 @@ describe('?world_reach', () => {
     expect(reach('?world_reach=room&room=attic').rooms).toEqual(['lobby'])
     expect(reach('?world_reach=room&spawn=attic&room=oculus').rooms).toEqual(['lobby'])
   })
-  test('a camera bookmark with ?development starts flying with the eyes at the bookmark', () => {
+  test('a camera bookmark starts flying with the eyes at the bookmark, a spawn bookmark on its feet', () => {
     const [bookmark] = slopGallery.cameraBookmarks()
-    const start = slopGallery.start(`http://localhost/?spawn=${bookmark.id}&development`)
+    const start = slopGallery.start(`http://localhost/?spawn=${bookmark.id}`)
     expect(start.flying).toBe(true)
-    expect(start.pose.position).toEqual(slopGallery.cameraBookmarkFeet(bookmark, true))
-    expect(slopGallery.start(`http://localhost/?spawn=${bookmark.id}`).flying).toBe(false)
+    expect(start.pose.position[1] + defaultEgoOptions.eyeHeight).toBeCloseTo(bookmark.position[1], 10)
+    expect(slopGallery.start(`http://localhost/?spawn=${slopGallery.spawnBookmarks()[0].id}`).flying).toBe(false)
   })
   test('worlds of a single room have it in reach whatever the mode', () => {
     for (const world of [sandbox, knottingham]) {

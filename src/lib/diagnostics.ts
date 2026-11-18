@@ -6,7 +6,8 @@ import type {EulerTuple} from 'three/webgpu'
 import type {PauseMenuStage} from 'use-pause-menu/core'
 import type {CaptureFrameApi} from 'webgpu-capture-bridge'
 
-export type CameraPose = {
+/** what a camera shows, which is the player’s: there is no camera apart from the player */
+export type CameraView = {
   /** vertical field of view in degrees */
   fov: number
   position: Vec3
@@ -20,7 +21,7 @@ export type GalleryDiagnostics = {
   /** whether the world stands still under the pause menu of the Escape key: no frames, physics, animations or sound until the player resumes */
   frozen: boolean
   held: string | null
-  /** the IDs of everything still loading that would leave something out of the next frame; a fresh pose can bring more */
+  /** the IDs of everything still loading that would leave something out of the next frame; a new view can bring more */
   loadingItems: Array<string>
   locked: boolean
   menuStage: PauseMenuStage
@@ -81,6 +82,12 @@ export type TurntablePose = {
 type GalleryDebugApi = Partial<CaptureFrameApi> & {
   /** the X dump snapshot of the current view, without logging, copying or sound; null before the player is ready */
   dump?: () => PlayerDumpSnapshot | null
+  /** test mode only: makes the player fly, like `?flying`, with its eyes at the view’s position, looking the way its rotation turns them, a YXZ Euler in radians, through its field of view, each as it is unless given, and returns the view from there; the room the eyes are in is the player’s. `teleport` lands again */
+  fly?: (view?: Partial<CameraView>) => {
+    fov: number | null
+    position: Vec3
+    rotation: Vec3
+  }
   fuse?: (first: string, second: string) => void
   /** Sandbox only, with `?turntable`: holds the turntable’s work turned `angle` radians round from facing the room, rising and sinking with the angle as it does while turning, or lets it turn on its own again without one, and tells where it floats */
   holdTurntable?: (angle?: number) => TurntablePose
@@ -94,17 +101,12 @@ type GalleryDebugApi = Partial<CaptureFrameApi> & {
       z: number
     }
   }
-  /** test mode only: detach the camera from the player and frame it exactly, rotation is a YXZ Euler in radians */
-  pose?: (pose?: Partial<CameraPose>) => {
-    fov: number | null
-    position: Vec3
-    rotation: Vec3
-  }
   /** Knottingham only: turns every showcased Knot back to the start of its revolution, so films begin at the same angles */
   resetKnotRotation?: () => void
   snapshot?: () => GalleryDiagnostics
   /** plays the party effect with the id, like `blood`, anywhere in the world: bursting out of the placement’s position, facing the way its rotation turns it around y, right away or after the options’ delay */
   spawnPartyEffect?: (id: PartyEffectId, placement: PartyPlacement, options?: PartyOptions) => void
+  /** test mode only: puts the player on its feet below the eye position, on the floor at the lowest, looking the way the quaternion turns it, and ends a flight */
   teleport?: (position: Vec3, rotation: Array<number>) => void
 }
 

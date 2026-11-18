@@ -525,7 +525,7 @@ describe('mood lens', () => {
     expect(zoomed(0.5)).toBe(65)
     expect(zoomed(1)).toBe(60)
   })
-  test('a camera taken from the player eases out of the widening and back into it, while one posed exactly drops it at once', () => {
+  test('a camera taken from the player eases out of the widening and back into it, and cuts under ?fade=false', () => {
     const lens = new MoodLens
     const camera = new PerspectiveCamera(60, 1)
     const seen = (view: Parameters<MoodLens['update']>[1]) => widened(lens, camera, 10, view)
@@ -562,20 +562,9 @@ describe('mood lens', () => {
       ...own,
       delta: 0,
     })).toBe(70)
-    // A capture’s pose shows exactly what it set, from its first frame, also in a frozen world, and so does every cut under ?fade=false.
-    expect(seen({
-      ...own,
-      exact: true,
-      still: true,
-    })).toBe(60)
-    expect(seen(own)).toBeGreaterThan(60)
     for (let frame = 0; frame < 120; frame++) {
-      seen(own)
+      seen(taken)
     }
-    expect(seen({
-      ...own,
-      exact: true,
-    })).toBe(60)
     expect(seen({
       ...own,
       fading: false,

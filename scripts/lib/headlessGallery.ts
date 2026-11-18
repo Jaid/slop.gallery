@@ -32,7 +32,7 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}:
   return `  --target <dir>          use this static build (e.g. dist) instead of the dev server, which suits captures better: the dev server can reload the page while it captures
   --graphics <mode>       mirrors ?graphics (fast, heavy, cinematic, which is heavy with larger maps and more samples for non-realtime renders, or auto, which picks fast or heavy for the GPU). Default: heavy
   --seed <number>         mirrors ?seed, the environment seed (0–${maximumSeed}) that decides random details like the potted plants. Default: 1
-  --test <true|false>     mirrors ?test, which gives the page its pose and teleport hooks and leaves the intro out. Default: true; false opens the page as players get it, without those hooks
+  --test <true|false>     mirrors ?test, which gives the page its fly and teleport hooks and leaves the intro out. Default: true; false opens the page as players get it, without those hooks
   --stream_budget <ms|false>
                           mirrors ?stream_budget, the milliseconds a frame after loading may spend building objects. Default: false, which builds everything in the first frame, so the scene is complete about three times sooner than at the players’ 8 and, in cinematic graphics, whose every streaming frame renders the whole view, three to six times sooner than at 100
   --warmup_scale <scale|false>
@@ -177,8 +177,8 @@ const resolveWarmupScale = (value: string | undefined, height: number, scale: nu
   return warmupScale
 }
 /**
- * Lets a limited `--world_reach` reach out from the room the camera is going to be in, `eye`, instead of the room the player spawns in: without `--room` or `--spawn`, it sets `--room` to the room whose fence holds the eye, or the feet below it, so its spawn is where the page starts and its rooms are what it mounts. Returns the room it picked, if any.
- * Captures pose the camera only once the page has loaded, too late to change what it mounts; with every room in reach, there is nothing to pick.
+ * Lets a limited `--world_reach` reach out from the room the player is going to fly to, with its eyes at `eye`, instead of the room the player spawns in: without `--room` or `--spawn`, it sets `--room` to the room whose fence holds the eye, so its spawn is where the page starts and its rooms are what it mounts. Returns the room it picked, if any.
+ * Captures fly there only once the page has loaded, too late to change what it mounts; with every room in reach, there is nothing to pick.
  */
 export const anchorWorldReach = async (setup: GallerySetup, eye: Vec3 | undefined) => {
   const {search} = setup
@@ -186,7 +186,7 @@ export const anchorWorldReach = async (setup: GallerySetup, eye: Vec3 | undefine
     return
   }
   const {default: world} = await import(join(repositoryRoot, 'src', 'worlds', setup.world, 'index.ts')) as {default: World}
-  const room = world.roomAt(eye) ?? world.roomAt(world.cameraBookmarkFeet({position: eye}))
+  const room = world.roomAt(eye)
   if (!room) {
     console.warn(`Warning: --world_reach ${readWorldReach(`?${search}`)} reaches out from the spawn, as the camera at ${eye.join(', ')} stands in none of the ${setup.world}’s rooms; --room names another room to reach out from.`)
     return
@@ -195,10 +195,10 @@ export const anchorWorldReach = async (setup: GallerySetup, eye: Vec3 | undefine
   console.error(`--world_reach ${readWorldReach(`?${search}`)} reaches out from the camera’s room, --room ${room.id}`)
   return room.id
 }
-/** Warns on stderr when a capture runs against the dev server instead of a static build: Vite reloads the page whenever it optimizes newly found dependencies, as on a cold cache, and a reload after posing silently leaves the camera at the player spawn. */
+/** Warns on stderr when a capture runs against the dev server instead of a static build: Vite reloads the page whenever it optimizes newly found dependencies, as on a cold cache, and a reload after flying somewhere silently leaves the player at its spawn. */
 export const warnAboutDevServer = (setup: GallerySetup) => {
   if (setup.target === undefined) {
-    console.warn('Warning: capturing from the Vite dev server, which can reload the page mid-capture and lose the pose; captures should target a static build: bun run build, then --target dist.')
+    console.warn('Warning: capturing from the Vite dev server, which can reload the page mid-capture and put the player back at its spawn; captures should target a static build: bun run build, then --target dist.')
   }
 }
 /** Validates the shared gallery options before anything is started; a missing side of the viewport follows `ratio`, width divided by height. */
@@ -314,8 +314,8 @@ export const watchPage = (page: Page) => {
     void page.browser().close().catch((closeError: unknown) => console.error(`Closing the browser after the crash failed: ${String(closeError)}`))
   })
 }
-/** Waits until the scene is ready and checks the debug hooks that captures rely on, the pose hook only where `pose` asks for it, as a page without `?test=true` has none. Fails early when the app shows its render error screen instead. */
-export const waitForGallery = async (page: Page, {pose = true}: {pose?: boolean} = {}) => {
+/** Waits until the scene is ready and checks the debug hooks that captures rely on, the fly hook only where `fly` asks for it, as a page without `?test=true` has none. Fails early when the app shows its render error screen instead. */
+export const waitForGallery = async (page: Page, {fly = true}: {fly?: boolean} = {}) => {
   const outcome = await page.waitForFunction(() => {
     // RenderError replaces the scene when WebGPU is missing or rendering threw, e.g. because no adapter could be created; ready would never come.
     const renderError = document.querySelector('[data-testid="render-error"]')
@@ -328,8 +328,8 @@ export const waitForGallery = async (page: Page, {pose = true}: {pose?: boolean}
   if (error !== undefined) {
     throw new Error(`The gallery showed its render error screen (“${error}”). The console errors above name the cause.`)
   }
-  if (pose && !await page.evaluate(() => Boolean(globalThis.slopGallery!.pose))) {
-    throw new Error('This build has no slopGallery.pose() hook. Rebuild it from a version that includes scripts/snap.ts.')
+  if (fly && !await page.evaluate(() => Boolean(globalThis.slopGallery!.fly))) {
+    throw new Error('This build has no slopGallery.fly() hook. Rebuild it from the current version.')
   }
   if (!await page.evaluate(() => globalThis.slopGallery!.snapshot!().webGPU)) {
     throw new Error('The browser fell back to WebGL. Captures need native WebGPU.')
@@ -383,7 +383,7 @@ export const openHeadlessGallery = async (setup: GallerySetup, options: {
       waitUntil: 'domcontentloaded',
       timeout: 300_000,
     })
-    await waitForGallery(page, {pose: setup.test})
+    await waitForGallery(page, {fly: setup.test})
     return {
       page,
       [Symbol.asyncDispose]: close,

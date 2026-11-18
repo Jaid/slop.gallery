@@ -185,7 +185,7 @@ for (const graphics of ['fast', 'heavy']) {
       graphics,
       width: '1280',
       height: '720',
-      // ?test=true deliberately leaves the intro out; diagnostics except teleport and pose are there without it.
+      // ?test=true deliberately leaves the intro out; diagnostics except teleport and fly are there without it.
       test: 'false',
       warmup_scale: 'false',
     })
@@ -247,7 +247,7 @@ for (const graphics of ['fast', 'heavy']) {
         url.searchParams.set('room', room)
       }
       await page.goto(url.href, {waitUntil: 'domcontentloaded'})
-      await waitForGallery(page, {pose: false})
+      await waitForGallery(page, {fly: false})
       await page.waitForFunction(() => !document.querySelector('#loading-screen'))
       await pauseFromIntro(page, 'return', room === undefined)
     }

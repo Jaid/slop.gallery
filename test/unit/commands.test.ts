@@ -2,7 +2,8 @@ import type {Vec3} from '../../src/lib/gallery/types.ts'
 
 import {afterEach, beforeEach, expect, spyOn, test} from 'bun:test'
 
-import {bodyPose, cameraPose, galleryEvents, importDroppedFiles, isTextInput, viewPortrait} from '../../src/lib/gallery/actions.ts'
+import {bodyPose, cameraPose, flyPlayer, galleryEvents, importDroppedFiles, isTextInput, viewPortrait} from '../../src/lib/gallery/actions.ts'
+import {flyMode} from '../../src/lib/gallery/flyMode.ts'
 import ImageImporter from '../../src/lib/gallery/ImageImporter.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import worldClock from '../../src/lib/worldClock.ts'
@@ -175,4 +176,25 @@ test('only editable controls count as text input, not whole dialogs', () => {
   const content = new ElementDouble
   content.isContentEditable = true
   expect(isTextInput(content)).toBe(true)
+})
+test('a flight starts the fly mode and asks the player to fly there, without counting as a teleport', () => {
+  const flights: Array<unknown> = []
+  let teleports = 0
+  const fly = (event: Event) => flights.push((event as CustomEvent).detail)
+  const teleport = () => teleports++
+  galleryEvents.addEventListener('fly', fly)
+  galleryEvents.addEventListener('teleport', teleport)
+  const flying = flyMode.active
+  try {
+    flyMode.active = false
+    flyPlayer({position: [1, 2, 3]})
+    expect(flyMode.active).toBe(true)
+    flyPlayer()
+    expect(flights).toEqual([{position: [1, 2, 3]}, {}])
+    expect(teleports).toBe(0)
+  } finally {
+    flyMode.active = flying
+    galleryEvents.removeEventListener('fly', fly)
+    galleryEvents.removeEventListener('teleport', teleport)
+  }
 })

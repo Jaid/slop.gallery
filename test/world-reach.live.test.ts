@@ -54,7 +54,7 @@ const settle = async (page: Page) => {
 }
 /** the files the page has requested so far, by their paths */
 const requestedFiles = (page: Page) => page.evaluate(() => performance.getEntriesByType('resource').map(entry => URL.parse(entry.name)!.pathname.slice(1)))
-// What a limited ?world_reach leaves out has to stay out of the scene for good, however the rooms in reach load: geometry, walls, lamps, works and props of other rooms, whose chunks never even download, not even once the camera moves into one of them, and the slots and the pause menu’s collection leave out what hangs there, whose images never download either. The player has to stand at the spawn of the room reached out from.
+// What a limited ?world_reach leaves out has to stay out of the scene for good, however the rooms in reach load: geometry, walls, lamps, works and props of other rooms, whose chunks never even download, not even once the player flies into one of them, and the slots and the pause menu’s collection leave out what hangs there, whose images never download either. The player has to stand at the spawn of the room reached out from.
 test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach mounts the start room, its neighbors or every room, and nothing else', async () => {
   const {assets, chunks} = await Bun.file(outputListFile).json() as OutputList
   /** the file of each default work’s image, by the work’s id */
@@ -145,19 +145,19 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     if (!player?.grounded || Math.abs(player.position.y - y) > 0.06 || Math.hypot(player.position.x - x, player.position.z - z) > 0.06) {
       problems.push(`${label}: the player should stand at ${[x, y, z].join(', ')}`)
     }
-    // A camera posed in a room out of reach brings nothing of it along.
+    // A player flying into a room out of reach brings nothing of it along.
     const outside = slopGallery.rooms.find(candidate => !expected.covers(candidate.id))
     if (outside) {
       const [outsideX, outsideY, outsideZ] = outside.spawn.position
       const eye: Vec3 = [outsideX, outsideY + 1.6, outsideZ]
-      await page.evaluate(position => globalThis.slopGallery!.pose!({position}), eye)
+      await page.evaluate(position => globalThis.slopGallery!.fly!({position}), eye)
       await waitForFrames(page, 30)
     }
     const mountedLater = await page.evaluate(() => globalThis.slopGallery!.snapshot!().mountedRooms)
-    expect(mountedLater.toSorted(), `${label} after posing out of reach`).toEqual(expected.rooms.toSorted())
+    expect(mountedLater.toSorted(), `${label} after flying out of reach`).toEqual(expected.rooms.toSorted())
     if (outside) {
-      // Return to the player before checking what the pause menu shows there.
-      await page.evaluate(position => globalThis.slopGallery!.pose!({position}), snapshot.camera)
+      // Fly back before checking what the pause menu shows there.
+      await page.evaluate(position => globalThis.slopGallery!.fly!({position}), snapshot.camera)
       await waitForFrames(page, 2)
     }
     const requested = new Set(await requestedFiles(page))

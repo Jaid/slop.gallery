@@ -19,7 +19,7 @@ const frozenTimeSchema = optis({
     },
   },
 })
-/** Read the optional `?frozen_time` from the permalink, or else, without `?development`, the `frozenTime` of the `?spawn` camera bookmark: the engine time in seconds that every animation stands still at, so captures of the same view match. Only animations stand still: physics, the player and a flying camera keep moving through the frozen world. */
+/** Read the optional `?frozen_time` from the permalink, or else, without `?development`, the `frozenTime` of the `?spawn` camera bookmark: the engine time in seconds that every animation stands still at, so captures of the same view match. Only animations stand still: physics and the player, flying too, keep moving through the frozen world. */
 export function readFrozenTime(input: URL | string = typeof location === 'undefined' ? '' : location.href): number | undefined {
   const spawn = readDevelopmentMode(input) ? '' : readSpawn(input)
   return readPermalink(input, {schema: frozenTimeSchema}).frozen_time ?? (spawn ? world.cameraBookmarks().find(bookmark => bookmark.id === spawn)?.frozenTime : undefined)

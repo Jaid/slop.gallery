@@ -67,7 +67,6 @@ export default function Moods() {
   useFrame(({camera}, delta) => {
     moodLens.update(mixer.fov, {
       delta,
-      exact: cameraPose.posed,
       fading: isFading,
       own: !cameraPose.focused,
       // A frame of the frozen world passes no time, which would cut the lens’s easing short.

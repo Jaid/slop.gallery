@@ -77,7 +77,7 @@ const openCell = async (graphics: string, query: Record<string, string>) => {
   })
   const gallery = await openHeadlessGallery(setup, {cacheDir: 'node_modules/.vite-mood-vignette'})
   const {page} = gallery
-  await page.evaluate(() => globalThis.slopGallery!.pose!({
+  await page.evaluate(() => globalThis.slopGallery!.fly!({
     position: [0, 1.8, 0],
     rotation: [0, Math.PI / 2, 0],
   }))

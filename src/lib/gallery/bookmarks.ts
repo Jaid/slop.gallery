@@ -38,16 +38,16 @@ export function findRoomSpawn(input?: URL | string): SpawnBookmark | null | unde
   }
 }
 
-/** Where the player stands below a camera bookmark: a standing eye height under the camera, but never below the floor unless `flying`. */
-export function cameraBookmarkFeet(bookmark: CameraBookmark, flying = false): Vec3 {
-  return world.cameraBookmarkFeet(bookmark, flying)
+/** Where the feet of a player hang who flies with its eyes at a camera bookmark: a standing eye height below it. */
+export function cameraBookmarkFeet(bookmark: CameraBookmark): Vec3 {
+  return world.cameraBookmarkFeet(bookmark)
 }
 
-/** Move the player session to where the URL starts in the world, see `World.start`, which `?world_reach` also reaches out from: the `?spawn` bookmark, for a camera bookmark below it, and with `?development` flying with its eyes at the bookmark, or else the default spawn of the `?room`. */
+/** Move the player session to where the URL starts in the world, see `World.start`, which `?world_reach` also reaches out from: the `?spawn` bookmark, for a camera bookmark flying with its eyes at it, or else the default spawn of the `?room`. */
 export function applySpawnBookmark() {
   const {flying, pose, unknown} = world.start()
   flyMode.active ||= flying
-  playerSession.restore(pose)
+  playerSession.restore(pose, flyMode.active)
   if (unknown) {
     notify(`${world.title} has no ${unknown.parameter === 'spawn' ? 'bookmark' : 'room'} “${unknown.id}”.`)
   }

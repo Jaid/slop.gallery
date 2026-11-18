@@ -16,7 +16,7 @@ import {partyEffects} from '../../src/party_effects/index.ts'
 import {offsetPosition} from '../../src/party_effects/lib/partySite.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
 
-/** the game’s camera as slopGallery.pose turns it for the shot, square */
+/** the game’s camera as slopGallery.fly turns it for the shot, square */
 const cameraOf = (shot: Shot) => {
   const {pitch, yaw} = shotAngles(shot)
   const camera = new PerspectiveCamera(shot.fov, 1, 0.01, 100)
