@@ -47,7 +47,7 @@ export default class Lodge extends Room {
     super({
       title: 'Lodge',
       mood: 'lodge',
-      frame: ['burl'],
+      frame: ['tramp', 'charred'],
       portraitArea: 7500,
       cameras,
       spawns,
