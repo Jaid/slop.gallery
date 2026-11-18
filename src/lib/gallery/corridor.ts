@@ -53,18 +53,19 @@ const corridor = {
  * From the doorway in the middle of the Lodge’s bay north, west along the bay’s back wall and diagonally along its north-west wall round to the long hall, which runs south past the Lodge’s window and turns 45° south-east onto the diagonal, where the stair flight up to the Sienna’s vestibule begins. Its walls keep the same distance from the Lodge’s all the way round.
  */
 export const corridorPassage = new Passage('corridor', 'corridor', [[doorwayX, backZ], [doorwayX, runZ], [diagonal - runZ, runZ], [lodge.approachX, hallNorthZ], [lodge.approachX, hallSouthZ], flightFoot], lodge.floorY, lodge.timberWidth, corridor.height, [lodgeWindowCutout])
-/** The north lantern hangs from the timber rib at the start of the long hall. */
-const northAnchor: Vec3 = [-33.747, -1.76, -40.601]
-const northLightY = corridor.floorY + corridor.height - passageLightDrop
-export const corridorNorthLantern: PendantMount = {
-  anchor: northAnchor,
+/** The end lanterns hang from timber ribs at the same height as the middle lantern. */
+const hallLightY = corridor.floorY + corridor.height - passageLightDrop
+const ribLantern = (anchor: Vec3): PendantMount => ({
+  anchor,
   normal: [0, -1, 0],
-  drop: northAnchor[1] - northLightY,
-  light: [northAnchor[0], northLightY, northAnchor[2]],
-}
+  drop: anchor[1] - hallLightY,
+  light: [anchor[0], hallLightY, anchor[2]],
+})
+export const corridorNorthLantern = ribLantern([-33.747, -1.76, -40.601])
+export const corridorSouthLantern = ribLantern([-33.652, -1.76, 1.696])
 /** The hall lanterns, from the north rib to the foot of the flight. */
 export function corridorHallLanterns(spaced: ReadonlyArray<PendantMount>) {
-  return [corridorNorthLantern, spaced[5], spaced[8]]
+  return [corridorNorthLantern, spaced[5], corridorSouthLantern]
 }
 /**
  * The landing at the Sienna’s floor between the flight’s top and the arch of the Sienna’s vestibule: from the arch west, a short lined reveal, then an open elbow turning 45° north-west onto the diagonal, where the flight begins.

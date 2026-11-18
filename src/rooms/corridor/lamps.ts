@@ -2,10 +2,10 @@ import type {PendantMount} from '#src/lib/gallery/pendants/CeilingProbe.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {Lamp} from '../base/Room.ts'
 
-import corridor, {corridorLandingLantern, corridorNorthLantern} from '#src/lib/gallery/corridor.ts'
+import corridor, {corridorLandingLantern, corridorNorthLantern, corridorSouthLantern} from '#src/lib/gallery/corridor.ts'
 
-/** The source in room coordinates, 30 cm below the lantern body. */
-const underLantern = ({light: [x, y, z]}: PendantMount): Vec3 => [x - corridor.center[0], y - 0.3 - corridor.floorY, z - corridor.center[1]]
+/** The source in room coordinates, `below` meters under the lantern body. */
+const underLantern = ({light: [x, y, z]}: PendantMount, below = 0.3): Vec3 => [x - corridor.center[0], y - below - corridor.floorY, z - corridor.center[1]]
 const lantern = {
   tint: '#ffb363',
 } as const
@@ -27,7 +27,7 @@ export default {
   },
   lantern_south: {
     ...lantern,
-    position: [0.2929, 2.4, 22.3734],
+    position: underLantern(corridorSouthLantern, 0.4),
     strength: 22.4,
     range: 6,
   },
