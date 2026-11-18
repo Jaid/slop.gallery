@@ -27,7 +27,10 @@ const width = 1200
 const height = 630
 const size = `${width}x${height}`
 const encodeCard = async (path: string) => {
-  const {stdout} = await Bun.$`magick ${`${path}[0]`} -auto-orient -resize ${`${size}^`} -gravity center -extent ${size} -colorspace sRGB -strip -quality 85 jpeg:-`.quiet()
+  const {stdout, stderr, exitCode} = await Bun.$`magick ${`${path}[0]`} -auto-orient -resize ${`${size}^`} -gravity center -extent ${size} -colorspace sRGB -strip -quality 85 jpeg:-`.nothrow().quiet()
+  if (exitCode !== 0) {
+    throw new Error(`Could not generate ${fileName} from ${path} with magick (exit code ${exitCode}): ${stderr.toString().trim()}`)
+  }
   return stdout
 }
 const og = (property: string, content: string): HtmlTagDescriptor => ({

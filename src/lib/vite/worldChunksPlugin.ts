@@ -34,7 +34,11 @@ export default function worldChunksPlugin(worlds: Readonly<Record<string, string
     configResolved(config) {
       root = config.root
     },
-    buildEnd() {
+    buildEnd(error) {
+      // A failed scan can leave the graph incomplete. Preserve the error that interrupted it.
+      if (error) {
+        return
+      }
       const closure = (from: ReadonlyArray<string>) => {
         const seen = new Set<string>
         const pending = [...from]
