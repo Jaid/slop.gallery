@@ -44,32 +44,24 @@ const buildPage = async (options: Options, base = '/') => {
 }
 test('a single screen is all HTML and CSS, with its wallpaper preloaded', async () => {
   const {fileOf, html} = await buildPage({
-    title: 'Slop <Gallery>',
-    tagline: 'Good taste & questionable art',
+
     wallpaper: join(root, 'wallpaper.png'),
   })
   const wallpaper = `/${fileOf('wallpaper.png')}`
-  expect(html).toContain(`<div id="loading-screen" aria-busy="true" style="--wallpaper: url(&quot;${wallpaper}&quot;)"><div><h1>Slop &lt;Gallery&gt;</h1><p>Good taste &amp; questionable art</p><span>Loading…</span></div></div>`)
+  expect(html).toContain(`<div id="loading-screen" role="status" aria-label="Loading" aria-busy="true" style="--wallpaper: url(&quot;${wallpaper}&quot;)"><svg`)
   expect(html).toContain(`<link rel="preload" as="image" type="image/png" href="${wallpaper}" fetchpriority="high">`)
   expect(html).toContain('#loading-screen {')
-  expect(html).toContain('font-family: system-ui, sans-serif;')
   // The screen comes first in the body, before the app’s own elements.
   expect(html.indexOf('id="loading-screen"')).toBeLessThan(html.indexOf('</body>'))
   expect(html).toContain('<title>Fixture</title>')
 })
-test('a screen needs neither tagline nor wallpaper, and takes its own label and font', async () => {
-  const {html} = await buildPage({
-    title: 'Plain',
-    label: 'Brewing…',
-    fontFamily: 'main, serif',
-  })
-  expect(html).toContain('<div id="loading-screen" aria-busy="true"><div><h1>Plain</h1><p></p><span>Brewing…</span></div></div>')
-  expect(html).toContain('font-family: main, serif;')
+test('without a wallpaper the spinner needs no image preload', async () => {
+  const {html} = await buildPage({})
   expect(html).not.toContain('rel="preload" as="image"')
 })
 test('the HTML app entry and its wallpaper build under the base path', async () => {
   const {fileOf, html} = await buildPage({
-    title: 'Based',
+
     wallpaper: 'wallpaper.png',
   }, '/game/')
   expect(html).not.toContain('<script type="module"')
@@ -83,7 +75,7 @@ test('the predicate decides separately for output chunks, classic scripts and in
   await fs.outputFile(join(root, 'index.html'), page.replace('</head>', () => `${metadata}<script id="setup">window.label = "</template>&amp;"</script></head>`))
   const seen: Array<string> = []
   const {html} = await buildPage({
-    title: 'Selective',
+
     deferScript: ({id, type = ''}) => {
       seen.push(id ?? type)
       return type !== 'application/ld+json'
@@ -95,7 +87,7 @@ test('the predicate decides separately for output chunks, classic scripts and in
   expect(html).not.toContain('<script type="module"')
   expect(html).toContain('&lt;/template&gt;&amp;amp;')
   const kept = await buildPage({
-    title: 'Native',
+
     deferScript: () => false,
   })
   expect(kept.html).not.toContain('data-loading-screen-script')
@@ -104,7 +96,7 @@ test('the predicate decides separately for output chunks, classic scripts and in
 test('a wallpaper no module imports fails the build', async () => {
   await fs.outputFile(join(root, 'main.js'), 'console.log(1)')
   expect(buildPage({
-    title: 'Lost',
+
     wallpaper: 'wallpaper.png',
   })).rejects.toThrow('The build holds no wallpaper.png')
 })
@@ -118,7 +110,7 @@ test('the development server shows the wallpaper’s file itself', async () => {
     server: {middlewareMode: true},
     plugins: [
       loadingScreenPlugin({
-        title: 'Inside',
+
         wallpaper: join(root, 'wallpaper.png'),
       }),
     ],
@@ -131,7 +123,7 @@ test('the development server shows the wallpaper’s file itself', async () => {
     server: {middlewareMode: true},
     plugins: [
       loadingScreenPlugin({
-        title: 'Outside',
+
         wallpaper: join(outside, 'far.jxl'),
       }),
     ],

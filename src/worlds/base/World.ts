@@ -81,7 +81,7 @@ export default abstract class World<Kind extends Room = Room> {
   abstract readonly Scene: ComponentType
   readonly tagline: string
   readonly title: string
-  /** the URL of the image behind the loading screen’s title */
+  /** the URL of the image behind the loading spinner */
   readonly wallpaper: string
   /** every wall of every room in world meters, room by room, their trim mitered where two walls meet in an inside corner */
   readonly walls: ReadonlyArray<Wall>

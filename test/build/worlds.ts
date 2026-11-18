@@ -66,10 +66,7 @@ const html = await Bun.file(join(directory, 'index.html')).text()
 if (html.includes('data:image/')) {
   fail('index.html inlines an image.')
 }
-const {title, tagline, wallpaper} = worlds[defaultWorld]
-if (!html.includes(`<h1>${title}</h1>`) || !html.includes(`<p>${tagline}</p>`)) {
-  fail('The shared loading screen is missing its title or tagline.')
-}
+const {wallpaper} = worlds[defaultWorld]
 const wallpaperFile = assetOf(wallpaper)?.fileName
 if (!wallpaperFile?.endsWith('.jxl') || !html.includes(`href="/${wallpaperFile}"`)) {
   fail('The shared loading screen does not preload its built wallpaper.')

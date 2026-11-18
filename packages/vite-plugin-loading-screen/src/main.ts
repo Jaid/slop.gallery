@@ -11,14 +11,7 @@ import elementId from './lib/elementId.ts'
 export type LoadingScreenOptions = {
   /** Which output scripts to start behind the loading screen; all by default. */
   deferScript?: DeferScript
-  /** the CSS `font-family` of the screen, by default the system’s; a font the page’s stylesheet declares takes over once it has loaded */
-  fontFamily?: string
-  /** the pulsing line that says the page is loading, by default “Loading…” */
-  label?: string
-  /** the line under the title */
-  tagline?: string
-  title: string
-  /** the file of the image behind the title, absolute or relative to Vite’s root, which a module of the page has to import as well, so that the build holds it */
+  /** the image behind the spinner, absolute or relative to the Vite root; a page module must import it for the build */
   wallpaper?: string
 }
 
@@ -32,53 +25,36 @@ const mediaTypes: Partial<Record<string, string>> = {
   '.svg': 'image/svg+xml',
   '.webp': 'image/webp',
 }
-// Covers everything else until the page hides it. The gradient keeps the title readable on bright wallpapers.
-const makeStyle = (fontFamily: string) => `
+const style = `
 #${elementId} {
   position: fixed;
   inset: 0;
   z-index: 20;
   display: grid;
-  padding: 2rem 1rem;
-  font-family: ${fontFamily};
-  color: #eee;
-  text-align: center;
-  text-shadow: 0 0 1rem #000;
-  background: radial-gradient(rgb(0 0 0 / 50%), rgb(0 0 0 / 10%) 75%), #111 var(--wallpaper, none) center / cover no-repeat;
+  place-items: center;
+  font-size: 40px;
+  background: #111 var(--wallpaper, none) center / cover no-repeat;
 }
 #${elementId}[aria-busy=false] {
   pointer-events: none;
 }
-#${elementId} > div {
-  width: min(440px, 100%);
-  margin: auto;
-}
-#${elementId} h1 {
-  margin: 0;
-  font-size: clamp(1.8rem, 5vw, 2.5rem);
-  font-weight: 400;
-}
-#${elementId} p {
-  margin: 0.75rem 0 2rem;
-  color: #ccc;
-}
-#${elementId} span {
-  color: #e5cf87;
-  animation: ${elementId} 1.2s ease-in-out infinite alternate;
+#${elementId} > svg {
+  width: auto;
+  height: 1em;
+  transform-origin: center;
+  filter: drop-shadow(0 0 0.4em black);
+  animation: ${elementId} 0.8s linear infinite;
 }
 @keyframes ${elementId} {
-  from {
-    opacity: 0.3;
-  }
+  to { rotate: 1turn; }
 }
 `
-const escapeHtml = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 const cssUrl = (url: string) => `url(${JSON.stringify(url)})`
 
 /**
- * Paints a title over a wallpaper as plain HTML and CSS right in the page, which covers it while the scripts download and the app starts. The app hides it with `hideLoadingScreen` of `vite-plugin-loading-screen/client` once it is ready.
+ * Paints a spinner over a wallpaper as plain HTML and CSS right in the page, which covers it while the scripts download and the app starts. The app hides it with `hideLoadingScreen` of `vite-plugin-loading-screen/client` once it is ready.
  */
-export default function loadingScreenPlugin({title, tagline = '', wallpaper, fontFamily = 'system-ui, sans-serif', label = 'Loading…', deferScript}: LoadingScreenOptions): Plugin {
+export default function loadingScreenPlugin({wallpaper, deferScript}: LoadingScreenOptions = {}): Plugin {
   let base: string
   let root: string
   /** the wallpaper’s URL: the file itself during development, otherwise what the build made of the page’s import of it, which other plugins may have converted */
@@ -108,7 +84,7 @@ export default function loadingScreenPlugin({title, tagline = '', wallpaper, fon
         const tags: Array<HtmlTagDescriptor> = [
           {
             tag: 'style',
-            children: makeStyle(fontFamily),
+            children: style,
             injectTo: 'head',
           },
         ]
@@ -116,10 +92,12 @@ export default function loadingScreenPlugin({title, tagline = '', wallpaper, fon
           tag: 'div',
           attrs: {
             id: elementId,
+            role: 'status',
+            'aria-label': 'Loading',
             'aria-busy': 'true',
             ...url ? {style: `--wallpaper: ${cssUrl(url)}`} : {},
           },
-          children: `<div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(tagline)}</p><span>${escapeHtml(label)}</span></div>`,
+          children: '<svg aria-hidden="true" viewBox="-16 -16 32 32"><circle r="10" pathLength="6" stroke-dasharray="5 1" fill="none" stroke="white" stroke-width="2.5"/></svg>',
           injectTo: 'body-prepend',
         })
         if (url) {

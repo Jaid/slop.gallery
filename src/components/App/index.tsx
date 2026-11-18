@@ -46,7 +46,7 @@ export default function App() {
   const loading = useLoadingScreen(state => state.shown)
   // lib.dom types navigator.gpu as always present, but browsers without WebGPU leave it undefined.
   const gpu = (navigator.gpu as GPU | undefined) !== undefined && globalThis.isSecureContext
-  // index.html covers the page with the title over the world’s wallpaper while the scene loads. It fades out to the menu over the ready scene, or to the error that keeps it from rendering.
+  // index.html covers the page with a spinner over the wallpaper while the scene loads. It fades out to the menu over the ready scene, or to the error that keeps it from rendering.
   useEffect(() => {
     if (s.ready || renderFailed || !gpu) {
       hideLoadingScreen()
@@ -68,8 +68,8 @@ export default function App() {
         {/* Hidden with O, the paused scene stays in full view, e.g. while tweaking values in an editor; O brings the menu back. Hovering the tuning panel hides it too. The loading screen stands in for it until the scene is ready. */}
         <Branch none={[loading, s.locked, s.dragging, renderFailed, uiHidden, tuning.hovered]}><Menu {...settings} /></Branch>
         <Branch not={uiHidden} then={Hud} />
-        {/* Counts what is still loading, over the loading screen as well as after it, while the rest streams in. */}
-        <Branch not={uiHidden} then={LoadingIndicator} />
+        {/* Count items that are still streaming once the initial loading screen gives way. */}
+        <Branch none={[loading, uiHidden]} then={LoadingIndicator} />
         <Branch if={s.notice} not={uiHidden}><Toast>{s.notice}</Toast></Branch>
       </div>
     </div>

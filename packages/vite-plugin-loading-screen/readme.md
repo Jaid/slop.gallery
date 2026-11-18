@@ -1,6 +1,6 @@
 # vite-plugin-loading-screen
 
-A loading screen that is part of the page’s HTML: a title over a wallpaper, painted with the first bytes of the page, long before the scripts have downloaded and the app has started. The app fades it out once it is ready.
+A loading screen that is part of the page’s HTML: a centered CSS spinner over a wallpaper, painted with the first bytes of the page, long before the scripts have downloaded and the app has started. The app fades it out once it is ready.
 
 ```typescript
 import {defineConfig} from 'vite'
@@ -9,8 +9,6 @@ import loadingScreenPlugin from 'vite-plugin-loading-screen'
 export default defineConfig({
   plugins: [
     loadingScreenPlugin({
-      title: 'Slop Gallery',
-      tagline: 'Good taste. Questionable art.',
       wallpaper: 'assets/wallpaper.jxl',
     }),
   ],
@@ -24,7 +22,7 @@ await startApp()
 hideLoadingScreen()
 ```
 
-The plugin adds a `<style>`, a `<div id="loading-screen">` at the start of the body and a preload of the wallpaper, in development and in builds. Nothing of it waits for JavaScript.
+The plugin adds a `<style>`, a `<div id="loading-screen">` at the start of the body and a preload of the wallpaper, in development and in builds. The spinner is an inline SVG ring with a 60° gap. It rotates continuously around its center.
 
 Keep the app entry in `index.html`, so the same page also works without the plugin:
 
@@ -49,24 +47,14 @@ import wallpaper from './assets/wallpaper.jxl'
 | Option | Default | Description |
 | --- | --- | --- |
 | `deferScript` | `() => true` | called with each output script’s attributes; `true` defers that script, `false` keeps it in place |
-| `title` | | the screen’s heading |
-| `tagline` | none | the line under the title |
-| `wallpaper` | none | the file of the image behind the title |
-| `label` | `'Loading…'` | the pulsing line that says the page is loading |
-| `fontFamily` | `'system-ui, sans-serif'` | the CSS `font-family` of the screen; a font the page’s stylesheet declares takes over once it has loaded |
+| `wallpaper` | none | the file of the image behind the spinner |
 
 ## Client
 
 `vite-plugin-loading-screen/client` is for the page:
 
-- `hideLoadingScreen(options?)` lets clicks through the screen at once, fades it out and removes it. It returns a promise that resolves once the screen is gone. Its options are `fadeMs` (600), `glideMs` (300) and `titleTarget`: an element, or a selector looked up a frame later, where the page shows the same title afterward. The screen’s title then glides there first, so the page fades in around it instead of showing the title twice.
+- `hideLoadingScreen(options?)` lets clicks through the screen at once, fades it out and removes it. It returns a promise that resolves once the screen is gone. Set `fadeMs` to change the 600 ms fade.
 - `isLoadingScreenShown()` tells whether the screen still covers the page.
 - `findLoadingScreen()` returns its element while it is in the page.
-
-```typescript
-import hideLoadingScreen from 'vite-plugin-loading-screen/client'
-
-hideLoadingScreen({titleTarget: '#menu-title'})
-```
 
 The screen has a `z-index` of 20, so anything that should show above it while the page loads, like a progress indicator, needs a higher one.

@@ -2,7 +2,7 @@
   "name": "vite-plugin-loading-screen",
   "version": "0.1.0",
   "type": "module",
-  "description": "Vite plugin that paints a title over a wallpaper right in the page’s HTML until the app is ready",
+  "description": "Vite plugin that paints a spinner over a wallpaper right in the page’s HTML until the app is ready",
   "funding": "https://github.com/sponsors/Jaid",
   "license": "MIT",
   "repository": {

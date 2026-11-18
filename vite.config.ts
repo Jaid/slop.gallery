@@ -91,9 +91,8 @@ const getProductionConfig = () => {
     plugins: [
       jxlPlugin(),
       loadingScreenPlugin({
-        ...worlds[defaultWorld],
+        wallpaper: 'assets/wallpaper.jxl',
         deferScript: ({type}) => type !== 'application/ld+json',
-        fontFamily: 'main, system-ui, sans-serif',
       }),
       jxlHeadersPlugin(),
       immutableHeadersPlugin(),

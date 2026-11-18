@@ -10,7 +10,7 @@ export type WorldInfo = {
   storageKey: string
   tagline: string
   title: string
-  /** the image behind the loading screen’s title: its URL in the page, its file where Bun imports the catalog, like Vite’s config */
+  /** the image behind the loading spinner: its URL in the page, its file where Bun imports the catalog, like Vite’s config */
   wallpaper: string
 }
 
