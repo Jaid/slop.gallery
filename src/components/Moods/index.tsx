@@ -10,6 +10,7 @@ import {isFading} from '#src/lib/fade.ts'
 import {cameraPose, useGallery} from '#src/lib/gallery.ts'
 import {useFusions} from '#src/lib/gallery/fusion/fusions.ts'
 import {lightTint, noTint} from '#src/lib/rendering/lightLevels.ts'
+import {moodVignettes} from '#src/lib/rendering/moodVignettes.ts'
 import {getPlayerZoom} from '#src/lib/rendering/playerView.ts'
 import worldClock from '#src/lib/worldClock.ts'
 import {moods} from '#src/moods/index.ts'
@@ -40,6 +41,7 @@ export default function Moods() {
     return () => {
       lightTint.current = () => noTint
       mixer.dispose()
+      moodVignettes.show([])
       moodLens.reset()
     }
   }, [mixer])
@@ -47,6 +49,7 @@ export default function Moods() {
     if (moodSuppression.active) {
       suppressed.current = true
       mixer.cut()
+      moodVignettes.show(mixer.vignettes)
       return
     }
     const {held, inspecting, room} = useGallery.getState()
@@ -59,9 +62,10 @@ export default function Moods() {
     if (suppressed.current) {
       suppressed.current = false
       mixer.snap(target, SoundEngine.existing())
-      return
+    } else {
+      mixer.update(target, delta, SoundEngine.existing())
     }
-    mixer.update(target, delta, SoundEngine.existing())
+    moodVignettes.show(mixer.vignettes)
   })
   // After every regular frame callback, so whatever sets the camera’s field of view this frame has set it, and given back once the frame is drawn.
   useFrame(({camera}, delta) => {

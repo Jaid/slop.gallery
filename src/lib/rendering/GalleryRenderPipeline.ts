@@ -22,6 +22,7 @@ import ConfigurableBloomNode from './ConfigurableBloomNode.ts'
 import {GalleryRenderer} from './GalleryRenderer.ts'
 import KnotBokeh from './KnotBokeh.ts'
 import {gradeMood} from './moodGrade.ts'
+import {moodVignettes} from './moodVignettes.ts'
 import {impactActive, screenImpact} from './screenImpact.ts'
 import {resetWarp, screenWarp, warpedScreenUV} from './screenWarp.ts'
 import tiltShift from './tiltShift.ts'
@@ -58,6 +59,8 @@ export default class GalleryRenderPipeline extends RenderPipeline {
   constructor(renderer: Renderer, scene: Object3D, camera: Camera, {focus, heavy = true, settings, volumetricLightReach = () => 1, zoom = () => 0}: GalleryRenderPipelineOptions) {
     super(renderer)
     const {antiAliasing, mirrorReflections, screenSpaceReflections} = settings
+    // Fast without AA only needs a scene pass and the mood vignette.
+    const standardEffects = heavy || antiAliasing !== false
     const indirectLight = settings.screenSpaceIndirectLight || settings.voxelIndirectLight
     const own = <T extends {dispose: () => void}>(effect: T) => {
       this.effects.push(effect)
@@ -83,7 +86,7 @@ export default class GalleryRenderPipeline extends RenderPipeline {
     this.scenePass = scenePass
     const renderScene = scenePass.updateBefore.bind(scenePass)
     // The wireframe flood draws into targets of its own right after the scene pass, with the same camera, but only while it is enabled
-    const flood = own(new WireframeFloodPass(renderer, scene as Scene, camera))
+    const flood = standardEffects ? own(new WireframeFloodPass(renderer, scene as Scene, camera)) : undefined
     scenePass.updateBefore = frame => {
       // A fusion’s warp tells where it bends the view again while the scene pass draws it.
       resetWarp()
@@ -108,7 +111,7 @@ export default class GalleryRenderPipeline extends RenderPipeline {
         reflect()
       }
       const result = renderScene(frame)
-      flood.draw()
+      flood?.draw()
       return result
     }
     if (heavy || antiAliasing === 'traa') {
@@ -387,10 +390,17 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       set(vignette, 'vignette')
       current = current.mul(vec4(vec3(float(1).sub(edge.mul(vignette))), 1))
     }
-    current = flood.compose(current)
-    // The mood’s gradient map and the dither work on the image as it is shown, so the output transform comes before them.
+    if (flood) {
+      current = flood.compose(current)
+    }
+    // Grades, mood vignettes and dither work on the finished display-space image, outside the temporal history.
     this.outputColorTransform = false
-    current = gradeMood(renderOutput(current))
+    current = renderOutput(current)
+    // Activating a vignette in fast graphics without AA shouldn’t bring in grades otherwise absent there.
+    if (standardEffects) {
+      current = gradeMood(current)
+    }
+    current = moodVignettes.compose(current)
     if (heavy && settings.dither) {
       // Dithers by half an 8-bit step in display space, so the smooth, dark gradients of the sun shafts don’t band.
       current = vec4(current.rgb.add(interleavedGradientNoise(screenCoordinate.xy).sub(0.5).div(255)), current.a)

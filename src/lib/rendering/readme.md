@@ -1,6 +1,6 @@
 # Rendering pipeline
 
-`GalleryRenderPipeline` owns the render graph and its intermediate resources. The React `Postprocessing` component only attaches it to Fiber and handles the focus lifecycle.
+`GalleryRenderPipeline` owns the render graph and its intermediate resources. The React `Postprocessing` component attaches it to Fiber and switches between direct rendering and the light pipeline in Fast without antialiasing.
 
 Quality rendering runs:
 
@@ -13,11 +13,14 @@ current-frame scene color + depth + normals + velocity
   → bloom from the resolved color, masked by the resolved alpha
   → Z zoom tilt-shift and vignette
   → output color transform
+  → mood grades, screen vignettes and dither
 ```
 
 ## Antialiasing
 
 Heavy graphics resolve with TRAA and fast graphics without antialiasing, unless `?anti_aliasing` says `traa` or `false`. The renderer has `antialias: false` and the scene pass is single-sampled for GTAO, so TRAA is the only antialiasing path. It jitters the camera, needs the velocity MRT, runs on linear color before the output transform and calms shimmering materials such as `bismuth_staircase` and `magnetite_field`. In fast graphics, `?anti_aliasing=traa` mounts a light pipeline (scene pass and the resolve only, no knot focus or other heavy effects) that renders every frame.
+
+Without antialiasing, Fast uses direct scene rendering unless a mood vignette is showing. It then switches to the light pipeline without enabling color grades or heavy passes, and returns to direct rendering once the vignette fades out. The vignette is part of the final shader, not another framebuffer pass, and its paint code doesn’t run while no vignette is showing.
 
 ## Wireframe
 

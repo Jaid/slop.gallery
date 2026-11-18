@@ -139,3 +139,7 @@ BROWSER=/path/to/chromium bun run test:live:intro-pause
 This builds the gallery and presses the real Escape key on fresh and returning intro menus in Fast and Heavy graphics, then on a returning menu opened with `?room=oculus` instead of the intro orbit. It checks the synchronous camera-to-body handoff into the air above the floor, the pause heading taking the focus, no pointer-lock round trip, frozen camera/physics/audio, no frames at rest, resize redraws, Resume dropping the body straight down from where it hung and unchanged nonfreezing focus-loss menus. Modified, repeated, already-handled and text-input Escape events are ignored. Unlike capture tests, it opens the page with `test: 'false'` (`--test false`), as `?test=true` leaves the intro out, and `waitForGallery(page, {pose: false})` waits for readiness without requiring the camera-posing hook.
 
 To reuse a build, run `LIVE_TEST=true BROWSER=/path/to/chromium bun test test/intro-pause.live.test.ts`; `LIVE_TARGET` selects another build directory.
+
+## Mood vignettes
+
+With a debug browser open on the game’s origin, `bun test/browser/run.ts moodVignette.ts --standalone` captures the native WebGPU vignette on its own renderer in landscape, portrait and ultrawide formats. It checks that the brush reveal grows, the center stays unchanged, the paint fades without retracting and two vignettes stack in mixer order. Set `BROWSER_TEST_ORIGIN` if the game is open on localhost.

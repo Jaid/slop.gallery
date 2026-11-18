@@ -32,6 +32,6 @@ export default function GameScene({children}: GameWrapperProps) {
     {/* ?show_wireframe and ?albedo replace the regular frame, the wireframe taking precedence. */}
     <Branch if={isShowingWireframe} then={WireframeVision} />
     <Branch if={isShowingAlbedo} not={isShowingWireframe} then={AlbedoVision} />
-    <Branch if={profile.postprocessing || antiAliasing !== false} none={[isShowingWireframe, isShowingAlbedo]}><Postprocessing focus={profile.postprocessing} heavy={profile.postprocessing} settings={settings} tunable={isDevelopmentMode && isHeavy} /></Branch>
+    <Branch none={[isShowingWireframe, isShowingAlbedo]}><Postprocessing focus={profile.postprocessing} heavy={profile.postprocessing} settings={settings} tunable={isDevelopmentMode && isHeavy} /></Branch>
   </>
 }

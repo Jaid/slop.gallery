@@ -1,15 +1,15 @@
 import type {RenderPipelineSettings, RenderPipelineStructure} from '#src/lib/rendering/renderPipelineSettings.ts'
 
-import {useStore, useThree} from '@react-three/fiber'
-import {useLayoutEffect, useMemo} from 'react'
+import {useFrame, useStore, useThree} from '@react-three/fiber'
+import {useLayoutEffect, useMemo, useRef} from 'react'
 import {PerspectiveCamera} from 'three/webgpu'
 import {useShallow} from 'zustand/react/shallow'
 
-import {galleryEvents} from '#src/lib/gallery/actions.ts'
 import {getSunReach} from '#src/lib/gallery/sunReach.ts'
 import {activateRenderPipeline, releaseRenderPipeline} from '#src/lib/rendering/activeRenderPipeline.ts'
 import {useCustomGraphics} from '#src/lib/rendering/customGraphics.ts'
 import GalleryRenderPipeline from '#src/lib/rendering/GalleryRenderPipeline.ts'
+import {moodVignettes} from '#src/lib/rendering/moodVignettes.ts'
 import {getInspectionFocus, getInspectionFocusBlur, getInspectionFocusDistance, getInspectionFocusProximity, getPlayerZoom} from '#src/lib/rendering/playerView.ts'
 import {getRenderPipelineStructure} from '#src/lib/rendering/renderPipelineSettings.ts'
 import TunableRenderPipeline from '#src/lib/rendering/TunableRenderPipeline.ts'
@@ -50,6 +50,8 @@ const Postprocessing = ({focus = false, heavy = true, settings, tunable = false}
       renderer.toneMapping = toneMapping as typeof renderer.toneMapping
     }
   }, [renderer, toneMapping, tunable])
+  const syncPipeline = useRef<(() => void) | null>(null)
+  useFrame(() => syncPipeline.current?.(), {before: 'render'})
   // The scene pass renders into targets with their own outputs. Activated after the first frame, every material of the scene would build a second time for them. The world’s scene suspends the canvas until it is in, so the pipeline finds its sun.
   useLayoutEffect(() => {
     const options = {
@@ -67,27 +69,23 @@ const Postprocessing = ({focus = false, heavy = true, settings, tunable = false}
       ...options,
       settings,
     })
-    // Antialiasing has to run every frame; otherwise a light pipeline only takes over during inspection focus.
-    const isPersistent = heavy || structure.antiAliasing !== false
-    const activate = () => {
+    // Fast without AA normally renders straight to the canvas. Use its light pipeline only while an effect needs it (including the fade-out).
+    if (heavy || structure.antiAliasing !== false) {
       activateRenderPipeline(store, pipeline)
-    }
-    const deactivate = () => {
-      releaseRenderPipeline(store, pipeline)
-    }
-    if (isPersistent || focus && getInspectionFocus() > 0) {
-      activate()
-    }
-    if (!isPersistent && focus) {
-      galleryEvents.addEventListener('inspection-focus-start', activate)
-      galleryEvents.addEventListener('inspection-focus-end', deactivate)
+    } else {
+      syncPipeline.current = () => {
+        const needed = moodVignettes.active || focus && getInspectionFocus() > 0
+        const active = store.getState().renderPipeline === pipeline
+        if (needed && !active) {
+          activateRenderPipeline(store, pipeline)
+        } else if (!needed && active) {
+          releaseRenderPipeline(store, pipeline)
+        }
+      }
     }
     return () => {
-      if (!isPersistent && focus) {
-        galleryEvents.removeEventListener('inspection-focus-start', activate)
-        galleryEvents.removeEventListener('inspection-focus-end', deactivate)
-      }
-      deactivate()
+      syncPipeline.current = null
+      releaseRenderPipeline(store, pipeline)
       pipeline.dispose()
     }
   }, [camera, focus, heavy, renderer, scene, settings, store, structure, tunable])

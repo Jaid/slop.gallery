@@ -5,6 +5,7 @@ import type {AmbienceLoop} from 'ambience-emitter'
 
 import {afterEach, describe, expect, mock, test} from 'bun:test'
 
+import {vec4} from 'three/tsl'
 import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
@@ -104,6 +105,56 @@ const run = (mixer: MoodMixer, target: MoodTarget, seconds: number, audio?: Mood
 }
 /** the share the mood’s transformer was last told to take on `audio` */
 const share = (audio: ReturnType<typeof engine>, mood: Mood) => audio.transformers.transform.mock.calls.findLast(([key]) => key === mood)?.[2]
+describe('mood vignettes', () => {
+  const paint = moods.paint
+  test('a brush stroke draws in, holds its reveal while fading out and starts fresh after release', () => {
+    const mixer = new MoodMixer
+    mixer.update(cast(paint), moodFade.in / 4)
+    expect(mixer.vignettes).toEqual([{
+      vignette: paint.vignette,
+      amount: 0.15625,
+      reveal: 0.25,
+    }])
+    mixer.update(noMood, moodFade.out / 8)
+    expect(mixer.vignettes[0].amount).toBeLessThan(0.15625)
+    expect(mixer.vignettes[0].reveal).toBe(0.25)
+    mixer.update(cast(paint), moodFade.in / 16)
+    expect(mixer.vignettes[0].reveal).toBe(0.25)
+    mixer.update(noMood, moodFade.out)
+    expect(mixer.vignettes).toEqual([])
+    mixer.update(cast(paint), moodFade.in / 8)
+    expect(mixer.vignettes[0].reveal).toBe(0.125)
+  })
+  test('no-fade mode and snap show the finished vignette all at once; cut removes it', () => {
+    const mixer = new MoodMixer({fade: false})
+    const full = [{
+      vignette: paint.vignette,
+      amount: 1,
+      reveal: 1,
+    }]
+    mixer.update(cast(paint), 0)
+    expect(mixer.vignettes).toEqual(full)
+    mixer.update(cast(moods.horror), 0)
+    expect(mixer.vignettes).toEqual([])
+    const fading = new MoodMixer
+    fading.snap(cast(paint))
+    expect(fading.vignettes).toEqual(full)
+    fading.dispose()
+    expect(fading.vignettes).toEqual([])
+  })
+  test('the cast vignette shows over room vignettes regardless of arrival order', () => {
+    class TestRoomMood extends RoomMood {
+      readonly id = 'test-room'
+      readonly title = 'Test room'
+      override readonly vignette = () => vec4(1)
+    }
+    const room = new TestRoomMood
+    const mixer = new MoodMixer
+    mixer.snap(cast(paint))
+    mixer.update(cast(paint, room), roomMoodFade.in)
+    expect(mixer.vignettes.map(layer => layer.vignette)).toEqual([room.vignette, paint.vignette])
+  })
+})
 describe('mood mixer', () => {
   test('a mood fades in over its fade time, tints lamps and fill apart and fades out again', () => {
     const mixer = new MoodMixer
@@ -521,6 +572,13 @@ describe('moods', () => {
     for (const orb of moody) {
       const mood: Mood = moods[orb.mood!]
       expect(mood.ambience).toBeDefined()
+      if (mood === moods.paint) {
+        expect(mood.vignette).toBeFunction()
+        expect(mood.grade).toBeUndefined()
+        expect(mood.lamps).toBeUndefined()
+        expect(mood.fill).toBeUndefined()
+        continue
+      }
       expect(mood.grade!.strength).toBeGreaterThan(0)
       expect(mood.grade!.strength).toBeLessThanOrEqual(1)
       for (const color of [mood.grade!.shadow, mood.grade!.midtone, mood.grade!.highlight, mood.lamps!.color, mood.fill!.color]) {
