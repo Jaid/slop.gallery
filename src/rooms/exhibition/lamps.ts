@@ -21,10 +21,12 @@ const tunnelLamp = (s: number, lamp: Omit<PointLamp, 'position'>): PointLamp => 
     ],
   }
 }
-const rowCenterS = (index: number) => (tunnelDisplays[0].exhibits[index].s + tunnelDisplays[1].exhibits[index].s) / 2
-/** The blue housing sits over the middle row; green and red sit 1.5 m beyond their rows toward the tunnel ends. */
-const outerOffset = 1.5
-export const tunnelLightSs = [rowCenterS(0) - outerOffset, rowCenterS(1), rowCenterS(2) + outerOffset] as const
+/** Green and red line up with the outermost edges of the two display windows; blue hangs over the middle row. */
+export const tunnelLightSs = [
+  Math.min(...tunnelDisplays.map(display => display.winNorthS)),
+  (tunnelDisplays[0].exhibits[1].s + tunnelDisplays[1].exhibits[1].s) / 2,
+  Math.max(...tunnelDisplays.map(display => display.winSouthS)),
+] as const
 const [northS, middleS, southS] = tunnelLightSs
 
 /** the color of the staff stairways’ lamps */
