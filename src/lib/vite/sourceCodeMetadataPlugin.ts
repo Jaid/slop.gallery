@@ -1,26 +1,31 @@
 import type {Plugin} from 'vite'
 
+import fs from 'fs-extra'
+
 type GalleryManifest = {
   displayName: string
   license: string
   repository?: {url: string} | string
 }
 
-export default function sourceCodeMetadataPlugin({displayName, license, repository}: GalleryManifest): Plugin {
+export default function sourceCodeMetadataPlugin({displayName, license, repository}: GalleryManifest, packageFolder: string): Plugin {
   const url = typeof repository === 'string' ? repository : repository?.url
   return {
     name: 'source-code-metadata',
-    transformIndexHtml() {
+    async transformIndexHtml() {
       if (!url) {
         return
       }
+      const codeRepository = url.replace(/^git\+/u, '').replace(/\.git$/u, '')
+      const files = await fs.readdir(packageFolder, {withFileTypes: true})
+      const licenseFile = files.filter(file => file.isFile() && /^license\.(?:html|md|txt)$/iu.test(file.name)).map(file => file.name).toSorted()[0]
       const metadata = {
         '@context': 'https://schema.org',
         '@type': 'SoftwareSourceCode',
         name: displayName,
-        codeRepository: url.replace(/^git\+/u, '').replace(/\.git$/u, ''),
+        codeRepository,
         programmingLanguage: 'TypeScript',
-        license: `https://opensource.org/licenses/${license}`,
+        license: licenseFile ? `${codeRepository}/blob/main/${licenseFile}` : `https://opensource.org/licenses/${license}`,
         targetProduct: {
           '@type': 'VideoGame',
           name: displayName,

@@ -44,7 +44,7 @@ const getCommonConfig = (context: ConfigEnv) => {
         optional: true,
       }),
       titlePlugin(worlds[defaultWorld].title),
-      sourceCodeMetadataPlugin(manifest),
+      sourceCodeMetadataPlugin(manifest, import.meta.dirname),
       // Every world shares one page, so the loading screen picks the world from the URL with the same function the app picks it with.
       loadingScreenPlugin({
         screens: worlds,
