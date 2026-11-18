@@ -1,3 +1,4 @@
+import Bowler from './bowler/Bowler.ts'
 import Hatchet from './hatchet/Hatchet.ts'
 import Helmet from './helmet/Helmet.ts'
 import PaintingSet from './paintingSet/PaintingSet.ts'
@@ -9,7 +10,8 @@ export const hatchet = new Hatchet
 export const helmet = new Helmet
 export const paintingSet = new PaintingSet
 export const paletteKnife = new PaletteKnife
+export const bowler = new Bowler
 /** every curio lying about the gallery when a game begins */
-export const curios = [pumpkin, hatchet, helmet, paintingSet, paletteKnife] as const
+export const curios = [pumpkin, hatchet, helmet, paintingSet, paletteKnife, bowler] as const
 
 export type {default as Curio} from './base/Curio.ts'

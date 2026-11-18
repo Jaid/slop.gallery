@@ -23,7 +23,8 @@ const riserZ = southZ - baseboardCapFront - pipeClearance
 const bench = ironTable({
   ...forgeTableSize,
   top: 0.045,
-  overhang: 0.12,
+  // Bring the front stretcher forward so it clears the chest’s front band.
+  overhang: 0.08,
   back: 0.12,
   apron: [0.12, 0.014],
   leg: 0.07,
@@ -77,7 +78,7 @@ export const alchemySink = (() => {
  */
 export const machineBody = {
   center: [benchX, alchemySink.center[2]] as const,
-  size: [0.72, 0.62, 0.72] as const,
+  size: [0.75, 0.75, 0.75] as const,
   inletY: 0.32,
   outletY: 0.35,
 }

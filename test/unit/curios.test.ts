@@ -40,12 +40,12 @@ const boundsOf = (geometry: BufferGeometry) => {
 const sizeOf = (geometry: BufferGeometry) => boundsOf(geometry).getSize(new Vector3)
 describe('the curios', () => {
   test('each is a prop of its own, lying in its room when a game begins', () => {
-    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set', 'prop-palette-knife'])
+    expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set', 'prop-palette-knife', 'prop-bowler-hat'])
     for (const curio of curios) {
       expect(slopGallery.roomAt(curio.position)?.id).toBe(curio.room)
     }
     expect([pumpkin.room, hatchet.room, helmet.room, paintingSet.room, paletteKnife.room]).toEqual(['banquet', 'lodge', 'bastion', 'forge', 'forge'])
-    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic', 'dynamic'])
+    expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic', 'dynamic', 'dynamic'])
   })
   for (const curio of curios) {
     test(`the ${curio.id.replaceAll('-', ' ')}’s meshes face out, carry what their materials read and fit its reach`, () => {

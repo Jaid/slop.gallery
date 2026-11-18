@@ -84,7 +84,7 @@ describe('the Forge’s alchemy machine', () => {
     expect(sinkY).toBe(workbench.height)
     // An orb drops through the throat with room to spare, into the body under it.
     expect(alchemySink.throat - orbRadius - weldedSurfaceSkin).toBeGreaterThan(0.015)
-    expect(alchemySink.throatY).toBeGreaterThan(machineBody.size[1] + orbRadius)
+    expect(alchemySink.throatY).toBeGreaterThan(machineBody.inletY + orbRadius)
     expect(bodyZ).toBe(sinkZ)
     const legInside = workbench.length / 2 - workbench.overhang - workbench.leg
     expect(bodyX + machineBody.size[0] / 2 - benchX).toBeLessThan(legInside)
