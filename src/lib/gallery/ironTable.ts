@@ -109,17 +109,19 @@ export function ironTableColliders({apron: [apronDepth, apronThickness], depth, 
   return boxes
 }
 
-/** Each free-standing side table weighs 80 kg: 55 kg in the slab and 25 kg distributed through the frame by volume. */
+/** Most of a side table’s mass is in the slab; the frame’s share is distributed by volume. */
 export function sideTableColliders(table: IronTable, name: string) {
+  const totalMass = 100 // kg per free-standing table
+  const frameMass = totalMass * 5 / 16
   const [slab, ...frame] = ironTableColliders(table, name)
   const volumes = frame.map(({size: [x, y, z]}) => x * y * z)
   const frameVolume = volumes.reduce((sum, volume) => sum + volume, 0)
   return [{
     ...slab,
-    mass: 55,
+    mass: totalMass - frameMass,
   }, ...frame.map((box, i) => ({
     ...box,
-    mass: 25 * volumes[i] / frameVolume,
+    mass: frameMass * volumes[i] / frameVolume,
   }))]
 }
 
