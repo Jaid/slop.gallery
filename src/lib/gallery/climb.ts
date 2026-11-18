@@ -1,4 +1,6 @@
 import type {RouteCrossfall, RouteOutline} from './passages/RoutedPassage.ts'
+import type {PendantMount} from './pendants/CeilingProbe.ts'
+import type {Vec3} from './types.ts'
 
 import {wallFace} from './architectureDimensions.ts'
 import {bastionClearance, bastionDoorway} from './bastion.ts'
@@ -8,6 +10,7 @@ import lowerGallery from './lowerGallery.ts'
 import Passage from './passages/Passage.ts'
 import PassageRoute from './passages/PassageRoute.ts'
 import RoutedPassage from './passages/RoutedPassage.ts'
+import {passageLightDrop} from './pendants/mounts.ts'
 
 const {oculus} = lowerGallery
 /** the western climb is as wide as the Bastion’s route from the east bridge */
@@ -175,12 +178,14 @@ export const climbPassages = [climbMouth, climbHairpin, climbRun, climbApproach]
 const apex = legLength + Math.PI * turnRadius / 2
 /** the apex of the hairpin’s turn, halfway up its climb, where the map cuts the Bastion in two: from there on to the Forge, it shows the climb on the upper floor */
 export const climbApex = route.at(apex)
-/**
- * The mouth keeps only the fourth lantern along its run west, just before the elbow.
- */
-export const climbPassageLanterns = {
-  mouth: [false, false, false, true, false],
-} as const satisfies Record<string, ReadonlyArray<boolean>>
+/** The flat ceiling of the elbow at the foot of the hairpin. */
+const elbowAnchor: Vec3 = [-29.116, climbMouth.floorY + climbMouth.height, -23.899]
+export const climbElbowLantern: PendantMount = {
+  anchor: elbowAnchor,
+  normal: [0, -1, 0],
+  drop: passageLightDrop,
+  light: [elbowAnchor[0], elbowAnchor[1] - passageLightDrop, elbowAnchor[2]],
+}
 /** How far along the hairpin its lantern hangs, between two ribs halfway up the east leg. */
 export const climbHairpinLantern = climbHairpin.ribGap(route.length - legLength / 2)
 /** How far along the run its lantern hangs, between two ribs halfway along it, over the Lodge’s roof. */

@@ -17,7 +17,6 @@ import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import PendantLamps from '#component/PendantLamps'
 import TimberFrame from '#component/TimberFrame'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
-import {climbPassageLanterns} from '#src/lib/gallery/climb.ts'
 import {slabHulls} from '#src/lib/gallery/floorPolygons.ts'
 import TimberGeometry from '#src/lib/gallery/passages/TimberGeometry.ts'
 import VaultGeometry from '#src/lib/gallery/passages/VaultGeometry.ts'
@@ -27,19 +26,11 @@ import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /** how thick the slabs under a passage’s floor and over its ceiling are */
 const slabDepth = 0.24
-/**
- * Which evenly spaced lanterns each Bastion passage keeps. Its eastern straight passages keep none, as their lantern hangs in the curve; its western climb keeps a few, see `climbPassageLanterns`. Their lamps belong to the room, see its `lamps.ts`.
- */
-const passageLanterns: Partial<Record<string, ReadonlyArray<boolean>>> = {
-  'bastion-mouth': [],
-  'bastion-approach': [],
-  'bastion-climb_mouth': climbPassageLanterns.mouth,
-}
 export default function CoveredPassage({passage, sole = false, material, mounts: layout, paving: pavingOverride, timber, ribCutouts, hollow, transition}: {
   /** a hollow its paving has sunk into */
   hollow?: FloorHollow
   material: Material
-  /** fixed lantern mounts or a selection from the passage’s evenly spaced mounts */
+  /** fixed lantern mounts or a selection from the passage’s evenly spaced mounts; omit for an unlit passage */
   mounts?: ((spaced: ReadonlyArray<PendantMount>) => ReadonlyArray<PendantMount>) | ReadonlyArray<PendantMount>
   passage: Passage
   /** the floor laid in the passage’s material when other floors cover the rest; collision still uses the full passage floors */
@@ -60,15 +51,14 @@ export default function CoveredPassage({passage, sole = false, material, mounts:
     // The base detail’s belong to the passage’s geometry.
     dispose() {},
   }), [curveDetail, geometry, passage, timber, transition]))
-  const lanterns = passageLanterns[passage.name]
   // Under timber, lanterns hang from the ribs rather than the planks between them.
   const mounts = useMemo(() => {
-    if (layout && typeof layout !== 'function') {
-      return layout
+    if (typeof layout !== 'function') {
+      return layout ?? []
     }
     const spaced = passagePendantMounts(passage, [geometry.shell, geometry.ribs], sole ? corridorLightSpacing : undefined, timber && geometry.ribs)
-    return layout ? layout(spaced) : spaced.filter((_, index) => lanterns?.[index] ?? !lanterns)
-  }, [geometry, lanterns, layout, sole, passage, timber])
+    return layout(spaced)
+  }, [geometry, layout, sole, passage, timber])
   // The hollow takes its footprint out of the floors.
   const floors = hollow ? passage.floors.flatMap(floor => hollow.cut(floor)) : passage.floors
   const paving = pavingOverride ?? transition?.stoneFloors ?? floors
