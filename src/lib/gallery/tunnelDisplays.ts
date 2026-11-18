@@ -471,9 +471,8 @@ const tunnelDisplays = (['west', 'east'] as const).map(side => {
     door: [innerX + direction * (wallFace + 0.5), balconyY + headroom - ceilingThickness / 2, doorZ],
   }
   if (side === 'east') {
-    const along = rampLen * 0.6
-    const [x, z] = add(c1.start2, d2, along)
-    lamps.ramp = [x, corner1Y + along * rampSlope + headroom - ceilingThickness / 2, z]
+    // On the flat ceiling at the turn onto the lower flight.
+    lamps.ramp = [16.212, corner2Y + headroom - ceilingThickness / 2, 2.833]
   }
   lamps.landing = landingLamp
   const polyAir = (poly: FloorPolygon, bottom: number, top: number, slack = 0.55): Array<DisplayAir> => floorChunks([poly], bottom, top - bottom, slack).map(({min, max}) => ({
