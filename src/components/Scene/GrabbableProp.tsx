@@ -54,7 +54,13 @@ export type PropHandle = {
   /** Hands the prop back to the physics where its `group` is, flying off with the velocities, and shows it if it was withheld. */
   unleash: (velocity: Vec3, spin: Vec3) => void
 }
-export const propObjects = new Map<string, PropHandle>
+// Mounted props and refreshed consumers must keep using the same registry across Vite hot updates.
+const hot = import.meta.hot as ImportMeta['hot'] | undefined
+const registry = hot?.data as {propObjects?: Map<string, PropHandle>} | undefined
+export const propObjects = registry?.propObjects ?? new Map<string, PropHandle>
+if (registry) {
+  registry.propObjects = propObjects
+}
 const propTarget = new Vector3
 /** Moves a seized prop’s group, inside its body’s object, to the point in the world. */
 export function showPropAt({group}: PropHandle, point: Vec3) {
