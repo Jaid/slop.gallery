@@ -10,6 +10,7 @@ import {getSunReach} from '#src/lib/gallery/sunReach.ts'
 import {activateRenderPipeline, releaseRenderPipeline} from '#src/lib/rendering/activeRenderPipeline.ts'
 import {useCustomGraphics} from '#src/lib/rendering/customGraphics.ts'
 import GalleryRenderPipeline from '#src/lib/rendering/GalleryRenderPipeline.ts'
+import {moodScreenActive, subscribeMoodScreen} from '#src/lib/rendering/moodScreen.ts'
 import {getInspectionFocus, getInspectionFocusBlur, getInspectionFocusDistance, getInspectionFocusProximity, getPlayerZoom} from '#src/lib/rendering/playerView.ts'
 import {getRenderPipelineStructure} from '#src/lib/rendering/renderPipelineSettings.ts'
 import TunableRenderPipeline from '#src/lib/rendering/TunableRenderPipeline.ts'
@@ -75,17 +76,30 @@ const Postprocessing = ({focus = false, heavy = true, settings, tunable = false}
     const deactivate = () => {
       releaseRenderPipeline(store, pipeline)
     }
-    if (isPersistent || focus && getInspectionFocus() > 0) {
-      activate()
+    let active = false
+    const sync = () => {
+      const needed = isPersistent || moodScreenActive() || focus && getInspectionFocus() > 0
+      if (needed === active) {
+        return
+      }
+      active = needed
+      if (needed) {
+        activate()
+      } else {
+        deactivate()
+      }
     }
+    sync()
+    const stopWatchingScreens = isPersistent ? undefined : subscribeMoodScreen(sync)
     if (!isPersistent && focus) {
-      galleryEvents.addEventListener('inspection-focus-start', activate)
-      galleryEvents.addEventListener('inspection-focus-end', deactivate)
+      galleryEvents.addEventListener('inspection-focus-start', sync)
+      galleryEvents.addEventListener('inspection-focus-end', sync)
     }
     return () => {
+      stopWatchingScreens?.()
       if (!isPersistent && focus) {
-        galleryEvents.removeEventListener('inspection-focus-start', activate)
-        galleryEvents.removeEventListener('inspection-focus-end', deactivate)
+        galleryEvents.removeEventListener('inspection-focus-start', sync)
+        galleryEvents.removeEventListener('inspection-focus-end', sync)
       }
       deactivate()
       pipeline.dispose()

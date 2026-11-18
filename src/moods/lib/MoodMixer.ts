@@ -10,6 +10,7 @@ import {Color} from 'three/webgpu'
 
 import {noTint} from '#src/lib/rendering/lightLevels.ts'
 import {paintMoodGrades} from '#src/lib/rendering/moodGrade.ts'
+import {paintMoodScreens} from '#src/lib/rendering/moodScreen.ts'
 
 /** where moods sound: their loops on the effects master, centered, and their transformers between the world and it, as `SoundEngine` offers both */
 export type MoodOutput = AudioOutput & {
@@ -64,7 +65,7 @@ const ease = (progress: number) => progress * progress * (3 - 2 * progress)
 /**
  * Blends the moods the world asks for over it, stacked: those of the listener’s room beneath the one cast over the world. Each fades in while it is asked for and out otherwise, at its own pace, while the others hold on.
  * The moods cast over the world take turns: only once the one showing is gone does the next one fade in, so two of them never mix. The moods of two rooms cross over as the listener walks from one into the other.
- * It paints the render pipeline’s gradient maps, keeps the tints of the lamps and of the fill and how much wider the view gets, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
+ * It paints the render pipeline’s gradient maps and screen shaders, keeps the tints of the lamps and of the fill and how much wider the view gets, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
  * Without `fade`, every mood shows in full while it is asked for and not at all otherwise, the next mood cast replacing the last one within the same frame.
  */
 export default class MoodMixer {
@@ -165,6 +166,10 @@ export default class MoodMixer {
     const stack = this.stack()
     paintMoodGrades(stack.filter(({mood}) => mood.grade).map(({mood, progress}) => ({
       grade: mood.grade!,
+      amount: ease(progress),
+    })))
+    paintMoodScreens(stack.filter(({mood}) => mood.screen).map(({mood, progress}) => ({
+      screen: mood.screen!,
       amount: ease(progress),
     })))
     this.lampTint.setRGB(1, 1, 1)

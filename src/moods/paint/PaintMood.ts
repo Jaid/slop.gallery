@@ -8,16 +8,14 @@ export default class PaintMood extends Mood {
     color: '#d4dcff',
     gain: 0.9,
   }
-  override readonly grade = {
-    shadow: '#16204a',
-    midtone: '#b8844a',
-    highlight: '#fff0cc',
-    strength: 0.45,
-  }
   readonly id = 'paint'
   override readonly lamps = {
     color: '#ffd49c',
     gain: 1.1,
   }
+  override readonly screen = {
+    id: 'brush-vignette',
+    strength: 0.9,
+  } as const
   readonly title = 'Atelier'
 }

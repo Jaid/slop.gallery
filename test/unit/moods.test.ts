@@ -9,6 +9,7 @@ import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Sce
 
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
+import {moodScreenActive} from '../../src/lib/rendering/moodScreen.ts'
 import Mood from '../../src/moods/base/Mood.ts'
 import RoomMood, {roomMoodFade} from '../../src/moods/base/RoomMood.ts'
 import {moods} from '../../src/moods/index.ts'
@@ -521,12 +522,26 @@ describe('moods', () => {
     for (const orb of moody) {
       const mood: Mood = moods[orb.mood!]
       expect(mood.ambience).toBeDefined()
-      expect(mood.grade!.strength).toBeGreaterThan(0)
-      expect(mood.grade!.strength).toBeLessThanOrEqual(1)
-      for (const color of [mood.grade!.shadow, mood.grade!.midtone, mood.grade!.highlight, mood.lamps!.color, mood.fill!.color]) {
+      if (mood.grade) {
+        expect(mood.grade.strength).toBeGreaterThan(0)
+        expect(mood.grade.strength).toBeLessThanOrEqual(1)
+      } else {
+        expect(mood.screen).toBeDefined()
+        expect(mood.screen!.strength).toBeGreaterThan(0)
+        expect(mood.screen!.strength).toBeLessThanOrEqual(1)
+      }
+      const gradeColors = mood.grade ? [mood.grade.shadow, mood.grade.midtone, mood.grade.highlight] : []
+      for (const color of [...gradeColors, mood.lamps!.color, mood.fill!.color]) {
         expect(color).toMatch(/^#[\da-f]{6}$/)
       }
     }
+  })
+  test('the Paint Orb uses its animated screen vignette instead of a global gradient map', () => {
+    expect(moods.paint.grade).toBeUndefined()
+    expect(moods.paint.screen).toEqual({
+      id: 'brush-vignette',
+      strength: 0.9,
+    })
   })
   test('the fusion’s mood belongs to no orb and comes over the world while the intro plays', () => {
     expect(orbs.map(orb => orb.mood)).not.toContain('fusion')
@@ -563,5 +578,26 @@ describe('moods', () => {
     expect(readMood('http://localhost/?mood=sunshine')).toBe('')
     expect(readMood('http://localhost/?mood=toString')).toBe('')
     expect(readMood('http://localhost/')).toBe('')
+  })
+})
+// The Postprocessing component mounts while a screen shader is showing, including for otherwise filter-free Fast graphics.
+describe('mood screen lifecycle', () => {
+  test('a screen mood activates the pipeline for its fade and releases it on a cut', () => {
+    class ScreenMood extends Mood {
+      readonly id = 'screen-test'
+      override readonly screen = {
+        id: 'brush-vignette',
+        strength: 0.5,
+      } as const
+      readonly title = 'Screen test'
+    }
+    const mixer = new MoodMixer
+    const mood = new ScreenMood
+    mixer.cut()
+    expect(moodScreenActive()).toBe(false)
+    mixer.update(cast(mood), step)
+    expect(moodScreenActive()).toBe(true)
+    mixer.cut()
+    expect(moodScreenActive()).toBe(false)
   })
 })
