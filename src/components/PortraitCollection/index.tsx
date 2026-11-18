@@ -3,18 +3,22 @@ import type {Portrait} from '#src/lib/gallery.ts'
 import type {PortraitImageFormat} from '#src/lib/gallery/portraitExport.ts'
 
 import Branch from 'branch-component'
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState, useSyncExternalStore} from 'react'
 
 import ContextMenu from '#component/ContextMenu'
 import PortraitCollectionItem from '#component/PortraitCollectionItem'
 import artworkThumbnails from '#src/lib/artworkThumbnails.ts'
-import {notify} from '#src/lib/gallery.ts'
+import {cameraPose, notify} from '#src/lib/gallery.ts'
 import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
+import {portraitPosition} from '#src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import usePortraitsInReach from '#src/lib/gallery/usePortraitsInReach.ts'
+import perceptualDistance from '#src/lib/perceptualDistance.ts'
+import subscribeToFrames from '#src/lib/subscribeToFrames.ts'
 
 import css from './style.module.sass'
 
+const readPosition = () => cameraPose.position
 /** What the menu and its messages call a work: by its title only once the player has interacted with it, like its tooltip. */
 const called = (portrait: Portrait) => (portrait.interacted ? `“${portrait.title}”` : 'The untouched work')
 const save = (portrait: Portrait, format: PortraitImageFormat) => {
@@ -58,6 +62,12 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
  */
 export default function PortraitCollection() {
   const portraits = usePortraitsInReach()
+  // A teleport can move the player even behind the pause menu. Rank the displayed copy, sampling each work’s body only once.
+  const position = useSyncExternalStore(subscribeToFrames, readPosition, readPosition)
+  const nearest = useMemo(() => portraits.map(portrait => ({
+    portrait,
+    distance: perceptualDistance(position, portraitPosition(portrait)),
+  })).toSorted((a, b) => a.distance - b.distance), [portraits, position])
   const spectatedId = usePortraitSpectation(state => state.id)
   const toggleSpectation = usePortraitSpectation(state => state.toggle)
   const [menu, setMenu] = useState<{
@@ -71,7 +81,7 @@ export default function PortraitCollection() {
   return <section className={css.container} aria-label='Portrait collection' data-testid='portrait-collection'>
     <Branch if={portraits.length} else={<p className={css.empty}>No works here yet. Drop an image anywhere to bring one in.</p>}>
       <ul className={css.grid}>
-        {portraits.map(portrait => <li key={portrait.id} className={css.cell}>
+        {nearest.map(({portrait}) => <li key={portrait.id} className={css.cell}>
           <PortraitCollectionItem
             menuOpen={portrait === chosen} portrait={portrait} spectated={portrait.id === spectatedId} onMenu={(x, y) => setMenu({
               id: portrait.id,
