@@ -8,24 +8,20 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
-import PendantLamps from '#component/PendantLamps'
 import MarbleFountainWaterMaterial from '#src/fountains/marble/MarbleFountainWaterMaterial.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {vaultShellThickness, wallFace} from '#src/lib/gallery/architectureDimensions.ts'
-import {cistern, cisternDomeRibs, cisternInflow, cisternLantern} from '#src/lib/gallery/cistern/cistern.ts'
+import {cistern, cisternDomeRibs, cisternInflow} from '#src/lib/gallery/cistern/cistern.ts'
 import CisternGeometry, {cisternWindowGeometry} from '#src/lib/gallery/cistern/CisternGeometry.ts'
 import DrainGeometry from '#src/lib/gallery/cistern/DrainGeometry.ts'
 import HalfDomeGeometry from '#src/lib/gallery/cistern/HalfDomeGeometry.ts'
 import InflowGeometry from '#src/lib/gallery/cistern/InflowGeometry.ts'
 import {routeRibDepth, routeRibThickness} from '#src/lib/gallery/passages/RoutedPassage.ts'
-import {passageLantern, passageLanternGlow} from '#src/lib/gallery/pendants/passageLantern.ts'
 import CisternWaterMaterial from '#src/lib/materials/CisternWaterMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 
-const mounts = [cisternLantern]
-
 /**
- * The Bastion’s cistern behind the Forge’s vestibule: its floor with the channel sunk into it, the inflow’s pipe pouring water into it and the water running along it, the half dome with its ribs and its lantern, the window’s reveal, and the drain in the approach’s floor that the channel’s water spills into out of the culvert.
+ * The Bastion’s cistern behind the Forge’s vestibule: its floor with the channel sunk into it, the inflow’s pipe pouring water into it and the water running along it, the ribbed half dome, the window’s reveal and the drain in the approach’s floor that the channel’s water spills into out of the culvert.
  * The channel’s water swallows any bounce: an orb the cannon shoots in comes down into the channel and rides it round and out through the culvert.
  */
 export default function BastionCistern({stone}: {stone: Material}) {
@@ -88,6 +84,5 @@ export default function BastionCistern({stone}: {stone: Material}) {
       <mesh geometry={drain.water} material={sump} name='cistern-drain-water' />
       <mesh castShadow geometry={drain.grate} material={iron} name='cistern-drain-grate' receiveShadow />
     </group>
-    <PendantLamps body={passageLantern} glow={passageLanternGlow} mounts={mounts} name='cistern-pendants' />
   </group>
 }

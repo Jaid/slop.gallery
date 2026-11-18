@@ -7,15 +7,14 @@ import {climbHairpin, climbHairpinLantern, climbMouth, climbPassageLanterns, cli
 import {passageLight, passageLightCount, routeLight} from '#src/lib/gallery/pendants/mounts.ts'
 
 const [originX, originY, originZ] = bastionOrigin
-/** `below` meters under the middle of the lantern whose light hangs at the position, with how it shines: like the Bastion’s lanterns */
-export const lantern = ([x, y, z]: Vec3, shine: Pick<Lamp, 'decay' | 'range' | 'strength'> = {}, below = 0.3): Lamp => ({
-  position: [x - originX, y - below - originY, z - originZ],
+/** The light source sits 30 cm below the middle of the lantern. */
+const lantern = ([x, y, z]: Vec3): Lamp => ({
+  position: [x - originX, y - 0.3 - originY, z - originZ],
   strength: 30,
   tint: '#ffcd8a',
   range: 7,
   decay: 1.75,
   shadow: true,
-  ...shine,
 })
 /** The lights of the lanterns a straight passage keeps, by their mount order across its spans. */
 const keptLights = (passage: Passage, kept: ReadonlyArray<boolean>) => passage.spans.flatMap((_, span) => Array.from({length: passageLightCount(passage, span)}, (__, index) => passageLight(passage, span, index))).filter((_, mount) => kept[mount])
