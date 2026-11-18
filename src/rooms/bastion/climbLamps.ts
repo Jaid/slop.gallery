@@ -2,8 +2,7 @@ import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {Lamp} from '../base/Room.ts'
 
 import {bastionOrigin} from '#src/lib/gallery/bastion.ts'
-import {climbElbowLantern, climbRun, climbRunLantern} from '#src/lib/gallery/climb.ts'
-import {routeLight} from '#src/lib/gallery/pendants/mounts.ts'
+import {climbApproachLantern, climbElbowLantern} from '#src/lib/gallery/climb.ts'
 
 const [originX, originY, originZ] = bastionOrigin
 /** The light source sits 30 cm below the middle of the lantern. */
@@ -18,6 +17,5 @@ const lantern = ([x, y, z]: Vec3): Lamp => ({
 
 export default {
   lantern_elbow: lantern(climbElbowLantern.light),
-  // Halfway along the run north, over the Lodge’s roof.
-  lantern_run: lantern(routeLight(climbRun, climbRunLantern)),
+  lantern_run: lantern(climbApproachLantern.light),
 } satisfies Record<string, Lamp>

@@ -186,5 +186,11 @@ export const climbElbowLantern: PendantMount = {
   drop: passageLightDrop,
   light: [elbowAnchor[0], elbowAnchor[1] - passageLightDrop, elbowAnchor[2]],
 }
-/** How far along the run its lantern hangs, between two ribs halfway along it, over the Lodge’s roof. */
-export const climbRunLantern = climbRun.ribGap(climbRun.route.length / 2)
+/** The run’s lantern hangs from the sloping vault where the climb turns toward the Forge. */
+const approachAnchor: Vec3 = [-22.563, 3.056, -35.911]
+export const climbApproachLantern: PendantMount = {
+  anchor: approachAnchor,
+  normal: [0.165903, -0.986116, 0.0072],
+  drop: passageLightDrop,
+  light: [approachAnchor[0], approachAnchor[1] - passageLightDrop, approachAnchor[2]],
+}
