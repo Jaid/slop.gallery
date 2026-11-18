@@ -9,6 +9,7 @@ import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Sce
 
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
+import {useMoodVignettes} from '../../src/lib/rendering/moodVignettes.ts'
 import Mood from '../../src/moods/base/Mood.ts'
 import RoomMood, {roomMoodFade} from '../../src/moods/base/RoomMood.ts'
 import {moods} from '../../src/moods/index.ts'
@@ -165,6 +166,37 @@ describe('mood mixer', () => {
     run(mixer, cast(mood), moodFade.in)
     expect(mixer.tintOf(lamp).equals(noTint)).toBe(false)
     expect(mixer.tintOf(portal)).toBe(noTint)
+  })
+  test('vignettes stack above the room, fade by uniform without rebuilding the stack and leave with their mood', () => {
+    const mixer = new MoodMixer
+    class RoomWithPaint extends TestMood {
+      override readonly vignette = moods.paint.vignette
+    }
+    const room = new RoomWithPaint('room')
+    const layers = useMoodVignettes.getState
+    try {
+      // Let the cast arrive first. A new room still goes underneath it, even when both use the same shader.
+      mixer.snap(cast(moods.paint))
+      const [paint] = layers()
+      expect(paint.amount.value).toBe(1)
+      mixer.update(cast(moods.paint, room), moodFade.in / 4)
+      const pair = layers()
+      expect(pair).toHaveLength(2)
+      expect(pair[1]).toBe(paint)
+      expect(pair[0].amount.value).toBe(0.15625)
+      mixer.update(inRoom(room), moodFade.out / 2)
+      expect(layers()).toBe(pair)
+      expect(paint.amount.value).toBe(0.5)
+      mixer.update(inRoom(room), moodFade.out)
+      expect(layers()).toEqual([pair[0]])
+      mixer.cut()
+      expect(layers()).toHaveLength(0)
+      mixer.snap(cast(moods.paint))
+      expect(layers()[0].amount.value).toBe(1)
+    } finally {
+      mixer.dispose()
+    }
+    expect(layers()).toHaveLength(0)
   })
   test('the room’s moods hold beneath the one cast over the world, stacking their tints, loops and transformers', () => {
     const mixer = new MoodMixer
@@ -521,12 +553,23 @@ describe('moods', () => {
     for (const orb of moody) {
       const mood: Mood = moods[orb.mood!]
       expect(mood.ambience).toBeDefined()
+      if (mood.vignette) {
+        expect(typeof mood.vignette).toBe('function')
+        continue
+      }
       expect(mood.grade!.strength).toBeGreaterThan(0)
       expect(mood.grade!.strength).toBeLessThanOrEqual(1)
       for (const color of [mood.grade!.shadow, mood.grade!.midtone, mood.grade!.highlight, mood.lamps!.color, mood.fill!.color]) {
         expect(color).toMatch(/^#[\da-f]{6}$/)
       }
     }
+  })
+  test('Atelier paints the screen instead of grading the scene or tinting its lights', () => {
+    const {grade, lamps, fill, vignette} = moods.paint
+    expect(vignette).toBeDefined()
+    expect(grade).toBeUndefined()
+    expect(lamps).toBeUndefined()
+    expect(fill).toBeUndefined()
   })
   test('the fusion’s mood belongs to no orb and comes over the world while the intro plays', () => {
     expect(orbs.map(orb => orb.mood)).not.toContain('fusion')

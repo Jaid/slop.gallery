@@ -10,6 +10,7 @@ import {Color} from 'three/webgpu'
 
 import {noTint} from '#src/lib/rendering/lightLevels.ts'
 import {paintMoodGrades} from '#src/lib/rendering/moodGrade.ts'
+import {showMoodVignettes, vignetteLayer} from '#src/lib/rendering/moodVignettes.ts'
 
 /** where moods sound: their loops on the effects master, centered, and their transformers between the world and it, as `SoundEngine` offers both */
 export type MoodOutput = AudioOutput & {
@@ -35,6 +36,7 @@ type Showing = {
   progress: number
   /** where the mood’s transformer takes its share of the world’s sound, once it does */
   transformers?: TransformerChain
+  vignette?: ReturnType<typeof vignetteLayer>
 }
 
 /** seconds a mood takes to come over the world, slowly, and to leave it again, quickly, once its prop is thrown or dropped, unless the mood has a pace of its own */
@@ -170,11 +172,18 @@ export default class MoodMixer {
     this.lampTint.setRGB(1, 1, 1)
     this.fillTint.setRGB(1, 1, 1)
     this.fov = 0
-    for (const {mood, progress} of stack) {
-      tint(this.lampTint, mood.lamps, ease(progress))
-      tint(this.fillTint, mood.fill, ease(progress))
-      this.fov += (mood.fov ?? 0) * ease(progress)
+    const vignettes = []
+    for (const {mood, progress, vignette} of stack) {
+      const amount = ease(progress)
+      if (vignette && amount > 0) {
+        vignette.amount.value = amount
+        vignettes.push(vignette)
+      }
+      tint(this.lampTint, mood.lamps, amount)
+      tint(this.fillTint, mood.fill, amount)
+      this.fov += (mood.fov ?? 0) * amount
     }
+    showMoodVignettes(vignettes)
   }
 
   /** Forgets a mood, which has faded out, stops its loop, which has gone silent with it, and lets its transformer ring out. */
@@ -198,6 +207,7 @@ export default class MoodMixer {
         level: 0,
         mood,
         progress: 0,
+        vignette: mood.vignette && vignetteLayer(mood.vignette),
       }
       this.showing.set(mood, showing)
     }

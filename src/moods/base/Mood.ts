@@ -1,5 +1,6 @@
 import type {SoundTransformer} from '#src/lib/audio/transformers/TransformerChain.ts'
 import type {AmbienceLoop} from 'ambience-emitter'
+import type {Node} from 'three/webgpu'
 
 /** what a kind of light is multiplied by while a mood holds: a color, whose channels pass that share of the light, and a gain on top */
 export type MoodLight = {
@@ -15,6 +16,9 @@ export type MoodGrade = {
   strength: number
 }
 
+/** A screen shader: the finished, graded RGB in display space → its color at full strength. The mixer handles the fade. */
+export type MoodVignette = (frame: Node<'vec3'>) => Node<'vec3'>
+
 /** seconds a mood takes to come over the world and to leave it again */
 export type MoodFade = {
   in: number
@@ -25,7 +29,7 @@ export type MoodFade = {
 export type MoodAmbience = new () => AmbienceLoop
 
 /**
- * A spell over the whole world while something casts it, like a held prop that carries it, a fusion in progress or the room the listener is in, made of whatever it contributes, all fading in and out together: color filters (a gradient map over the finished frame and tints of the lights), an ambience (a loop sounding centered), a sound transformer (which every sound of the world passes through) and a wider or narrower view.
+ * A spell over the whole world while something casts it, like a held prop that carries it, a fusion in progress or the room the listener is in, made of whatever it contributes, all fading in and out together: color filters (a gradient map over the finished frame and tints of the lights), a screen vignette, an ambience (a loop sounding centered), a sound transformer (which every sound of the world passes through) and a wider or narrower view.
  * Moods stack: several may show at once, like a room’s and that of the orb held in it, the filters of each over those of the moods beneath, the transformers one after the other, their changes of the view added up.
  * Colors are sRGB hex.
  */
@@ -45,4 +49,5 @@ export default abstract class Mood {
   abstract readonly title: string
   /** what every sound of the world passes through while the mood holds, like the ringing of a room’s walls, taking as much of it as the mood shows */
   readonly transformer?: SoundTransformer
+  readonly vignette?: MoodVignette
 }
