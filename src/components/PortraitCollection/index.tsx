@@ -1,19 +1,31 @@
 import type {ContextMenuItem} from '#component/ContextMenu'
 import type {Portrait} from '#src/lib/gallery.ts'
 import type {PortraitImageFormat} from '#src/lib/gallery/portraitExport.ts'
+import type {Point3} from '#src/lib/perceptualDistance.ts'
 
 import Branch from 'branch-component'
-import {useEffect, useState} from 'react'
+import {useEffect, useState, useSyncExternalStore} from 'react'
 
 import ContextMenu from '#component/ContextMenu'
 import PortraitCollectionItem from '#component/PortraitCollectionItem'
 import artworkThumbnails from '#src/lib/artworkThumbnails.ts'
-import {notify} from '#src/lib/gallery.ts'
+import {cameraPose, notify} from '#src/lib/gallery.ts'
 import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
+import {portraitPosition} from '#src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import usePortraitsInReach from '#src/lib/gallery/usePortraitsInReach.ts'
+import perceptualDistance from '#src/lib/perceptualDistance.ts'
+import subscribeToFrames from '#src/lib/subscribeToFrames.ts'
 
 import css from './style.module.sass'
+
+const getCameraPosition = () => cameraPose.position
+
+/** Orders works nearest first by perceptual distance from `from`, keeping the existing order on ties. */
+export function sortPortraitsByDistance(portraits: ReadonlyArray<Portrait>, from: Point3 = cameraPose.position): Array<Portrait> {
+  const distances = new Map(portraits.map(portrait => [portrait, perceptualDistance(from, portraitPosition(portrait))]))
+  return portraits.toSorted((a, b) => distances.get(a)! - distances.get(b)!)
+}
 
 /** What the menu and its messages call a work: by its title only once the player has interacted with it, like its tooltip. */
 const called = (portrait: Portrait) => (portrait.interacted ? `“${portrait.title}”` : 'The untouched work')
@@ -52,12 +64,14 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
 ]
 
 /**
- * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie, but those hanging in rooms out of its reach, see `World.reach`, whose images never load.
+ * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie, nearest first by perceptual distance from the player, but those hanging in rooms out of its reach, see `World.reach`, whose images never load.
  * A click on one shows it up close in place of the pause menu’s map and middle, see `PortraitSpectation`, and another click on it puts that view away again.
  * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
  */
 export default function PortraitCollection() {
-  const portraits = usePortraitsInReach()
+  const portraitsInReach = usePortraitsInReach()
+  const playerPosition = useSyncExternalStore(subscribeToFrames, getCameraPosition, getCameraPosition)
+  const portraits = sortPortraitsByDistance(portraitsInReach, playerPosition)
   const spectatedId = usePortraitSpectation(state => state.id)
   const toggleSpectation = usePortraitSpectation(state => state.toggle)
   const [menu, setMenu] = useState<{

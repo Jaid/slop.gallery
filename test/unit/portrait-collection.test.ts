@@ -6,10 +6,11 @@ import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 
 import ContextMenu from '#component/ContextMenu'
-import PortraitCollection from '#component/PortraitCollection'
+import PortraitCollection, {sortPortraitsByDistance} from '#component/PortraitCollection'
 import PortraitTooltip from '#component/PortraitTooltip'
 
 import {ArtworkThumbnails, makeThumbnail, thumbnailSize} from '../../src/lib/artworkThumbnails.ts'
+import {cameraPose} from '../../src/lib/gallery/actions.ts'
 import {copyPortrait, portraitFileName, portraitImage} from '../../src/lib/gallery/portraitExport.ts'
 import {usePortraitSpectation} from '../../src/lib/gallery/portraitSpectation.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
@@ -223,6 +224,43 @@ describe('portrait collection', () => {
     expect(html).toContain('No works here yet.')
     expect(html).not.toContain('<ul')
     expect(html).not.toContain('<button')
+  })
+  test('sorts works nearest first by perceptual distance from the player, penalizing elevation changes 3×', () => {
+    const previousPose = cameraPose.position
+    const farBelow = {
+      ...samplePortraits[0],
+      id: 'below',
+      position: [0, -2.5, 0] as [number, number, number], // |dy| = 4 -> perceptual distance 12
+    }
+    const sameFloor = {
+      ...samplePortraits[1],
+      id: 'same-floor',
+      position: [6, 1.5, 4] as [number, number, number], // |dx| + |dz| = 10 < 12
+    }
+    const rightHere = {
+      ...samplePortraits[2],
+      id: 'near',
+      position: [1, 1.5, 1] as [number, number, number], // 2
+    }
+    const tie = {
+      ...samplePortraits[3],
+      id: 'tie',
+      position: [-1, 1.5, -1] as [number, number, number], // 2
+    }
+    try {
+      cameraPose.position = [0, 1.5, 0]
+      const html = render([farBelow, sameFloor, rightHere, tie])
+      const order = html.matchAll(/data-portrait="([^"]+)"/gu).map(match => match[1]).toArray()
+      expect(order).toEqual(['near', 'tie', 'same-floor', 'below'])
+      // Moving down next to the lower work puts it first.
+      cameraPose.position = [0, -2.5, 0]
+      const movedHtml = render([farBelow, sameFloor, rightHere, tie])
+      const movedOrder = movedHtml.matchAll(/data-portrait="([^"]+)"/gu).map(match => match[1]).toArray()
+      expect(movedOrder[0]).toBe('below')
+      expect(sortPortraitsByDistance([farBelow, sameFloor, rightHere], [6, 1.5, 4]).map(p => p.id)).toEqual(['same-floor', 'near', 'below'])
+    } finally {
+      cameraPose.position = previousPose
+    }
   })
 })
 describe('context menu', () => {
