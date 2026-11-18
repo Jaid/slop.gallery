@@ -13,6 +13,7 @@ current-frame scene color + depth + normals + velocity
   → bloom from the resolved color, masked by the resolved alpha
   → Z zoom tilt-shift and vignette
   → output color transform
+  → mood gradient maps and screen shaders
 ```
 
 ## Antialiasing

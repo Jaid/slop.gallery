@@ -8,8 +8,10 @@ import type {Light} from 'three/webgpu'
 import {clamp} from 'math'
 import {Color} from 'three/webgpu'
 
+import {AnimationClock} from '#src/lib/frozenTime.ts'
 import {noTint} from '#src/lib/rendering/lightLevels.ts'
 import {paintMoodGrades} from '#src/lib/rendering/moodGrade.ts'
+import {paintMoodScreens} from '#src/lib/rendering/moodScreen.ts'
 
 /** where moods sound: their loops on the effects master, centered, and their transformers between the world and it, as `SoundEngine` offers both */
 export type MoodOutput = AudioOutput & {
@@ -28,6 +30,7 @@ export type MoodTarget = {
 }
 /** a mood while it shows, also while it fades in or out */
 type Showing = {
+  age: AnimationClock
   ambience?: AmbienceLoop
   /** the level the loop was last set to */
   level: number
@@ -154,6 +157,7 @@ export default class MoodMixer {
         this.release(showing, this.smoothing())
         continue
       }
+      showing.age.advance(delta)
       if (output) {
         this.sound(showing, output)
       }
@@ -166,6 +170,11 @@ export default class MoodMixer {
     paintMoodGrades(stack.filter(({mood}) => mood.grade).map(({mood, progress}) => ({
       grade: mood.grade!,
       amount: ease(progress),
+    })))
+    paintMoodScreens(stack.filter(({mood}) => mood.screen).map(({age, mood, progress}) => ({
+      age: age.time,
+      amount: ease(progress),
+      mood,
     })))
     this.lampTint.setRGB(1, 1, 1)
     this.fillTint.setRGB(1, 1, 1)
@@ -195,6 +204,7 @@ export default class MoodMixer {
     let showing = this.showing.get(mood)
     if (!showing) {
       showing = {
+        age: new AnimationClock,
         level: 0,
         mood,
         progress: 0,

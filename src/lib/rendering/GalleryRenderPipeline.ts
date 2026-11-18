@@ -22,6 +22,7 @@ import ConfigurableBloomNode from './ConfigurableBloomNode.ts'
 import {GalleryRenderer} from './GalleryRenderer.ts'
 import KnotBokeh from './KnotBokeh.ts'
 import {gradeMood} from './moodGrade.ts'
+import {screenMood} from './moodScreen.ts'
 import {impactActive, screenImpact} from './screenImpact.ts'
 import {resetWarp, screenWarp, warpedScreenUV} from './screenWarp.ts'
 import tiltShift from './tiltShift.ts'
@@ -388,9 +389,9 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       current = current.mul(vec4(vec3(float(1).sub(edge.mul(vignette))), 1))
     }
     current = flood.compose(current)
-    // The mood’s gradient map and the dither work on the image as it is shown, so the output transform comes before them.
+    // The mood’s gradient map, screen shaders and the dither work on the image as it is shown, so the output transform comes before them.
     this.outputColorTransform = false
-    current = gradeMood(renderOutput(current))
+    current = screenMood(gradeMood(renderOutput(current)))
     if (heavy && settings.dither) {
       // Dithers by half an 8-bit step in display space, so the smooth, dark gradients of the sun shafts don’t band.
       current = vec4(current.rgb.add(interleavedGradientNoise(screenCoordinate.xy).sub(0.5).div(255)), current.a)

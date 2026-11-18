@@ -1,5 +1,6 @@
 import type {SoundTransformer} from '#src/lib/audio/transformers/TransformerChain.ts'
 import type {AmbienceLoop} from 'ambience-emitter'
+import type {Node} from 'three/webgpu'
 
 /** what a kind of light is multiplied by while a mood holds: a color, whose channels pass that share of the light, and a gain on top */
 export type MoodLight = {
@@ -15,6 +16,17 @@ export type MoodGrade = {
   strength: number
 }
 
+/** inputs handed to a mood’s screen shader in display space */
+export type MoodScreenContext = {
+  /** seconds the mood has been showing, advancing with the world’s clock (or `?frozen_time`) */
+  age: Node<'float'>
+  /** how strongly the mood shows right now, 0–1, eased in and out */
+  amount: Node<'float'>
+}
+
+/** a display-space screen shader laid over `frame` while a mood shows */
+export type MoodScreen = (frame: Node<'vec4'>, context: MoodScreenContext) => Node<'vec4'>
+
 /** seconds a mood takes to come over the world and to leave it again */
 export type MoodFade = {
   in: number
@@ -25,8 +37,8 @@ export type MoodFade = {
 export type MoodAmbience = new () => AmbienceLoop
 
 /**
- * A spell over the whole world while something casts it, like a held prop that carries it, a fusion in progress or the room the listener is in, made of whatever it contributes, all fading in and out together: color filters (a gradient map over the finished frame and tints of the lights), an ambience (a loop sounding centered), a sound transformer (which every sound of the world passes through) and a wider or narrower view.
- * Moods stack: several may show at once, like a room’s and that of the orb held in it, the filters of each over those of the moods beneath, the transformers one after the other, their changes of the view added up.
+ * A spell over the whole world while something casts it, like a held prop that carries it, a fusion in progress or the room the listener is in, made of whatever it contributes, all fading in and out together: color filters (a gradient map over the finished frame and tints of the lights), a screen shader laid over the finished frame, an ambience (a loop sounding centered), a sound transformer (which every sound of the world passes through) and a wider or narrower view.
+ * Moods stack: several may show at once, like a room’s and that of the orb held in it, the filters and screen shaders of each over those of the moods beneath, the transformers one after the other, their changes of the view added up.
  * Colors are sRGB hex.
  */
 export default abstract class Mood {
@@ -42,6 +54,8 @@ export default abstract class Mood {
   abstract readonly id: string
   /** point and spot lights: the rooms’ lamps */
   readonly lamps?: MoodLight
+  /** a display-space screen shader laid over the finished frame after `renderOutput` and `grade`, taking `frame` and `{age, amount}` */
+  readonly screen?: MoodScreen
   abstract readonly title: string
   /** what every sound of the world passes through while the mood holds, like the ringing of a room’s walls, taking as much of it as the mood shows */
   readonly transformer?: SoundTransformer

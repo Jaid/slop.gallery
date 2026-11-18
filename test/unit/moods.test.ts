@@ -1,14 +1,16 @@
-import type {MoodFade} from '../../src/moods/base/Mood.ts'
+import type {MoodFade, MoodScreen} from '../../src/moods/base/Mood.ts'
 import type {MoodOutput, MoodTarget} from '../../src/moods/lib/MoodMixer.ts'
 import type PlacedRoom from '../../src/worlds/base/PlacedRoom.ts'
 import type {AmbienceLoop} from 'ambience-emitter'
 
 import {afterEach, describe, expect, mock, test} from 'bun:test'
 
+import {vec4} from 'three/tsl'
 import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
+import {moodScreenState, orderedScreenMoods, screenMood} from '../../src/lib/rendering/moodScreen.ts'
 import Mood from '../../src/moods/base/Mood.ts'
 import RoomMood, {roomMoodFade} from '../../src/moods/base/RoomMood.ts'
 import {moods} from '../../src/moods/index.ts'
@@ -329,6 +331,71 @@ describe('mood mixer', () => {
     mixer.snap(cast(orb, room))
     expect(mixer.fov).toBe(6)
   })
+  test('a mood with a screen shader drives its amount and age, resets age when gone, and respects cut, snap and no-fade', () => {
+    class ScreenMood extends Mood {
+      override readonly screen: MoodScreen = frame => frame
+      readonly title: string
+
+      constructor(readonly id: string) {
+        super()
+        this.title = id
+      }
+    }
+    const mixer = new MoodMixer
+    const screen = new ScreenMood('screen')
+    expect(moodScreenState(screen)).toEqual({
+      age: 0,
+      amount: 0,
+    })
+    run(mixer, cast(screen), moodFade.in / 2)
+    expect(moodScreenState(screen).amount).toBeCloseTo(0.5, 1)
+    expect(moodScreenState(screen).age).toBeCloseTo(moodFade.in / 2, 1)
+    // Screen-only moods leave every light untouched.
+    expect(mixer.tintOf(new PointLight).equals(noTint)).toBe(true)
+    expect(mixer.tintOf(new AmbientLight).equals(noTint)).toBe(true)
+    run(mixer, noMood, moodFade.out + step)
+    expect(moodScreenState(screen)).toEqual({
+      age: 0,
+      amount: 0,
+    })
+    // Returning starts the screen animation cleanly from 0 again.
+    mixer.update(cast(screen), 0.25)
+    expect(moodScreenState(screen).age).toBeCloseTo(0.25, 6)
+    mixer.snap(cast(screen))
+    expect(moodScreenState(screen).amount).toBe(1)
+    mixer.cut()
+    expect(moodScreenState(screen)).toEqual({
+      age: 0,
+      amount: 0,
+    })
+    const instant = new MoodMixer({fade: false})
+    instant.update(cast(screen), 0.5)
+    expect(moodScreenState(screen).amount).toBe(1)
+    expect(moodScreenState(screen).age).toBeCloseTo(0.5, 6)
+    instant.update(noMood, 0.5)
+    expect(moodScreenState(screen)).toEqual({
+      age: 0,
+      amount: 0,
+    })
+  })
+  test('screenMood layers room moods beneath cast moods and leaves the frame alone without any', () => {
+    class RoomScreen extends RoomMood {
+      readonly id = 'room-screen'
+      override readonly screen: MoodScreen = frame => frame
+      readonly title = 'Room screen'
+    }
+    class CastScreen extends Mood {
+      readonly id = 'cast-screen'
+      override readonly screen: MoodScreen = frame => frame
+      readonly title = 'Cast screen'
+    }
+    const roomScreen = new RoomScreen
+    const castScreen = new CastScreen
+    const frame = vec4(1, 0, 0, 1)
+    expect(screenMood(frame, [moods.bastion])).toBe(frame)
+    expect(orderedScreenMoods([castScreen, moods.bastion, roomScreen])).toEqual([roomScreen, castScreen])
+    expect(screenMood(frame, [castScreen, roomScreen])).not.toBe(frame)
+  })
 })
 /** The camera’s field of view while the lens widens it by `degrees` as `view` lets it. */
 const widened = (lens: MoodLens, camera: PerspectiveCamera, degrees: number, view: Parameters<MoodLens['update']>[1]) => {
@@ -521,9 +588,13 @@ describe('moods', () => {
     for (const orb of moody) {
       const mood: Mood = moods[orb.mood!]
       expect(mood.ambience).toBeDefined()
-      expect(mood.grade!.strength).toBeGreaterThan(0)
-      expect(mood.grade!.strength).toBeLessThanOrEqual(1)
-      for (const color of [mood.grade!.shadow, mood.grade!.midtone, mood.grade!.highlight, mood.lamps!.color, mood.fill!.color]) {
+      expect(Boolean(mood.grade ?? mood.screen)).toBe(true)
+      if (!mood.grade) {
+        continue
+      }
+      expect(mood.grade.strength).toBeGreaterThan(0)
+      expect(mood.grade.strength).toBeLessThanOrEqual(1)
+      for (const color of [mood.grade.shadow, mood.grade.midtone, mood.grade.highlight, mood.lamps!.color, mood.fill!.color]) {
         expect(color).toMatch(/^#[\da-f]{6}$/)
       }
     }
