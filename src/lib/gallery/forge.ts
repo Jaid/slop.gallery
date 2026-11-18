@@ -39,7 +39,7 @@ const northZ = forge.center[1] - forge.size[1] / 2
 export const forgeTableSize = {
   depth: 1.2,
   height: 1.2,
-  length: 4,
+  length: 5,
 } as const
 
 /** The soapstone-topped iron tables flanking the central aisle. */
@@ -57,7 +57,8 @@ export const forgeTable = ironTable({
 function outerTable(side: -1 | 1, end: -1 | 1) {
   const angle = Math.PI / 9
   return {
-    center: [forge.center[0] + side * 3.25, forge.center[1] - 0.4 + end * 4.01] as const,
+    // Leave a walking gap between the facing ends on each side.
+    center: [forge.center[0] + side * 3.25, forge.center[1] + (end < 0 ? -3.81 : 2.2)] as const,
     name: `${side < 0 ? 'forge-table' : 'forge-side-table'}-${end < 0 ? 'north' : 'south'}`,
     seed: (side < 0 ? 5303 : 7411) + end,
     turn: side * (Math.PI / 2 - end * angle),

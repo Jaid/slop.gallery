@@ -58,8 +58,8 @@ export const alchemySink = (() => {
   // Keep the bowl within reach from the front edge as the slab gets deeper.
   const sinkZ = benchZ - workbench.depth / 2 + 0.175 + radius
   return {
-    /** the middle of its rim, flush with the top and halfway along the east half of the bench */
-    center: [benchX + workbench.length / 4, workbench.height, sinkZ] as Vec3,
+    /** The intake is plumbed one meter east of the chest, independent of the slab’s length. */
+    center: [benchX + 1, workbench.height, sinkZ] as Vec3,
     radius,
     /** the radius of the throat inside, wide enough for an orb to drop through with a little room to spare */
     throat,
@@ -250,4 +250,4 @@ export const cannonFlight = (() => {
 })()
 
 /** where the orb holder stands on the bench’s top, in the world’s frame: in the west half, right of the cannon as seen from the room */
-export const holderSpot: Vec3 = [benchX - workbench.length / 4 - 0.1, workbench.height, benchZ]
+export const holderSpot: Vec3 = [benchX - 1.1, workbench.height, benchZ]

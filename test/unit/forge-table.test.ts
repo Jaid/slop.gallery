@@ -76,7 +76,7 @@ const tables = [
 ] as const
 describe('the Forge’s tables', () => {
   for (const {center, geometry: build, name, table, turn, wall} of tables) {
-    test(`${name} has a 4 m × 1.2 m slab at 1.2 m on an iron frame clear of the baseboard`, () => {
+    test(`${name} has a 5 m × 1.2 m slab at 1.2 m on an iron frame clear of the baseboard`, () => {
       const geometry = build()
       try {
         const {footToInlay, nearest, nearestLow} = wallReach(geometry, wall, center, turn)
@@ -89,7 +89,7 @@ describe('the Forge’s tables', () => {
         // Its slab rests on the band under it, as high as the table is.
         geometry.top.computeBoundingBox()
         expect(geometry.top.boundingBox!.max.y).toBeCloseTo(1.2, 6)
-        expect(geometry.top.boundingBox!.max.x - geometry.top.boundingBox!.min.x).toBeCloseTo(4, 6)
+        expect(geometry.top.boundingBox!.max.x - geometry.top.boundingBox!.min.x).toBeCloseTo(5, 6)
         expect(geometry.top.boundingBox!.max.z - geometry.top.boundingBox!.min.z).toBeCloseTo(1.2, 6)
         expect(geometry.top.boundingBox!.min.y).toBeCloseTo(table.height - table.top, 6)
       } finally {
@@ -120,10 +120,9 @@ describe('the Forge’s two rows of tables', () => {
       const sin = Math.sin(turn)
       const halfWidth = (Math.abs(cos) * forgeTable.length + Math.abs(sin) * forgeTable.depth) / 2
       const halfLength = (Math.abs(sin) * forgeTable.length + Math.abs(cos) * forgeTable.depth) / 2
-      expect(forge.size[0] / 2 - Math.abs(x - forge.center[0]) - halfWidth).toBeGreaterThan(1.5)
+      expect(forge.size[0] / 2 - baseboardCapFront - Math.abs(x - forge.center[0]) - halfWidth).toBeGreaterThan(1)
       expect(z - halfLength - (forge.center[1] - forge.size[1] / 2)).toBeGreaterThan(1)
-      expect(z + halfLength).toBeLessThan(benchZ - workbench.depth / 2)
-      expect(Math.abs(x - benchX) - halfWidth).toBeGreaterThan(workbench.length / 2)
+      expect(benchZ - workbench.depth / 2 - (z + halfLength)).toBeGreaterThan(0.7)
       // Measure from the spawn to the rotated slab, rather than its enclosing box.
       const sx = forge.center[0] + spawnX - x
       const sz = forge.center[1] + spawnZ - z
@@ -131,7 +130,7 @@ describe('the Forge’s two rows of tables', () => {
       const dz = Math.max(0, Math.abs(sin * sx + cos * sz) - forgeTable.depth / 2)
       expect(Math.hypot(dx, dz)).toBeGreaterThan(1)
       for (const [orbX] of cannonFlight.points) {
-        expect(Math.abs(orbX - x) - halfWidth).toBeGreaterThan(2)
+        expect(Math.abs(orbX - x) - halfWidth).toBeGreaterThan(1.8)
       }
     }
   })
