@@ -181,11 +181,8 @@ export const climbApex = route.at(apex)
 export const climbPassageLanterns = {
   mouth: [false, false, false, true, false],
 } as const satisfies Record<string, ReadonlyArray<boolean>>
-/** How far along the hairpin its lanterns hang, each between two ribs: at the apex of the turn and halfway up the east leg. */
-export const climbLanterns = {
-  turn: climbHairpin.ribGap(apex),
-  east: climbHairpin.ribGap(route.length - legLength / 2),
-} as const
+/** How far along the hairpin its lantern hangs, between two ribs halfway up the east leg. */
+export const climbHairpinLantern = climbHairpin.ribGap(route.length - legLength / 2)
 /** How far along the run its lantern hangs, between two ribs halfway along it, over the Lodge’s roof. */
 export const climbRunLantern = climbRun.ribGap(climbRun.route.length / 2)
 /** How far along the approach its lantern hangs, between its last two ribs, on its straight stretch right before the vestibule’s arch. */

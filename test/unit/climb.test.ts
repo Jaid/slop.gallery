@@ -11,7 +11,7 @@ import {vaultShellThickness} from '../../src/lib/gallery/architectureDimensions.
 import {bastionClearance, bastionDoorway} from '../../src/lib/gallery/bastion.ts'
 import {bastionLinkGate, climbMouthHollow} from '../../src/lib/gallery/bastionNetwork.ts'
 import {insideCisternPlan} from '../../src/lib/gallery/cistern/cistern.ts'
-import {climbApproach, climbArch, climbCrossfall, climbCulvert, climbDoorway, climbDrain, climbHairpin, climbLanterns, climbMouth, climbRun} from '../../src/lib/gallery/climb.ts'
+import {climbApproach, climbArch, climbCrossfall, climbCulvert, climbDoorway, climbDrain, climbHairpin, climbHairpinLantern, climbMouth, climbRun} from '../../src/lib/gallery/climb.ts'
 import {easedRampGradient} from '../../src/lib/gallery/easedRamp.ts'
 import {insidePolygon, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import forge, {forgeVestibule} from '../../src/lib/gallery/forge.ts'
@@ -408,10 +408,8 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
     expect(roomAt([endX - 0.05, 1.7, endZ])).toBe('bastion')
   })
   test('its lanterns hang between the hairpin’s ribs and its lamps under them', () => {
-    for (const hung of Object.values(climbLanterns)) {
-      expect(climbHairpin.ribs.some(rib => Math.abs(rib - hung) < 0.3)).toBe(false)
-    }
-    const ids = ['climb', 'elbow', 'run', 'strip', 'turn'].map(id => `bastion-lantern_${id}`)
+    expect(climbHairpin.ribs.some(rib => Math.abs(rib - climbHairpinLantern) < 0.3)).toBe(false)
+    const ids = ['climb', 'elbow', 'run', 'strip'].map(id => `bastion-lantern_${id}`)
     const lamps = slopGallery.room('bastion').lamps().filter(({id}) => ids.includes(id))
     expect(lamps.map(({id}) => id).toSorted()).toEqual(ids)
     for (const {position} of lamps) {
