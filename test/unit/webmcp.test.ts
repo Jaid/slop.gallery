@@ -1,5 +1,6 @@
 import type {MoodCastInput} from '../../src/lib/webmcp/castMood.ts'
 import type {WorkHangingInput} from '../../src/lib/webmcp/hangWork.ts'
+import type {GraphicsQualityInput} from '../../src/lib/webmcp/setGraphicsQuality.ts'
 import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
 import type {PartyEffectSpawnInput} from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import type {PropThrowInput} from '../../src/lib/webmcp/throwProp.ts'
@@ -121,6 +122,11 @@ const bridge: WebmcpBridge = {
     width: 1.732,
     height: 1.732,
   }),
+  setGraphicsQuality: ({quality}: GraphicsQualityInput) => Promise.resolve({
+    quality: quality === 'heavy' ? 'heavy' : 'fast',
+    previous: 'fast',
+    initial: 'fast',
+  }),
   spawnOrb: ({orb, position, id = `prop-orb-${orb}-spawned-1`}: OrbSpawnInput) => Promise.resolve({
     prop: id,
     orb,
@@ -138,7 +144,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'hang_work', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'hang_work', 'set_wireframe'])
   for (const tool of tools.slice(0, 7)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -471,6 +477,30 @@ test('cast_mood takes the id of a mood or null and casts through the bridge', as
   }
   controller.abort()
   await expect(execute({mood: 'paint'})).rejects.toThrow()
+})
+test('set_graphics_quality takes the name of the graphics or null and switches through the bridge', async () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'set_graphics_quality')!
+  const controller = new AbortController
+  const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  expect(await execute({quality: 'heavy'})).toEqual({
+    quality: 'heavy',
+    previous: 'fast',
+    initial: 'fast',
+  })
+  expect(await execute({quality: null})).toEqual({
+    quality: 'fast',
+    previous: 'fast',
+    initial: 'fast',
+  })
+  for (const input of [null, [], {}, {quality: ''}, {quality: 3}, {quality: undefined}, {
+    quality: 'heavy',
+    scale: 2,
+  }]) {
+    await expect(execute(input)).rejects.toThrow(TypeError)
+  }
+  controller.abort()
+  await expect(execute({quality: 'heavy'})).rejects.toThrow()
 })
 test('hang_work takes an image URL, a slot and an optional title and id, and hangs through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'hang_work')!

@@ -1,13 +1,13 @@
 import type {ReactNode} from 'react'
 
-import {useState} from 'react'
 import {GraphicsModeProvider} from 'use-graphics-mode'
 
-import {readCinematicGraphics, readGraphicsMode} from '#src/lib/rendering/graphicsMode.ts'
+import {toggledGraphicsQuality, useGraphicsQuality} from '#src/lib/rendering/graphicsQuality.ts'
 
-/** Seed the graphics mode from the permalink, then keep menu changes local to this session. Cinematic graphics only come from the permalink and return whenever the menu switches back to heavy. */
+const setIsHeavy = (isHeavy: boolean) => useGraphicsQuality.setState({quality: toggledGraphicsQuality(isHeavy)})
+
+/** Hands the session’s graphics to every component: seeded from the permalink, then changed by the menu and by the `set_graphics_quality` WebMCP tool, local to this session. Cinematic graphics only come from the permalink and return whenever the menu switches back to heavy. */
 export default function GraphicsMode({children}: {children: ReactNode}) {
-  const [isHeavy, setIsHeavy] = useState(() => readGraphicsMode())
-  const [isCinematic] = useState(() => readCinematicGraphics())
-  return <GraphicsModeProvider isCinematic={isCinematic} isHeavy={isHeavy} onChange={setIsHeavy}>{children}</GraphicsModeProvider>
+  const quality = useGraphicsQuality(state => state.quality)
+  return <GraphicsModeProvider isCinematic={quality === 'cinematic'} isHeavy={quality !== 'fast'} onChange={setIsHeavy}>{children}</GraphicsModeProvider>
 }

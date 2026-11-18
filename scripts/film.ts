@@ -36,7 +36,7 @@ ${galleryHelp()}
   --keyframe-interval <n> at most how many frames .webm and .mkv run from one keyframe to the next; small ones, like 6, let players seek and scrub without decoding long stretches, for a larger file. Default: the encoder’s own, about 5 s
   --fast-decode <0–2>     how much of the AV1 compression of .webm and .mkv to trade for a faster decoder: SVT-AV1’s fast-decode level, and from 1 on four tiles, which the decoder’s threads take on side by side. Default: 0
   --preset <number>       SVT-AV1 preset for .webm and .mkv, lower compresses better and encodes slower. Default: ${av1Preset}
-  --settle <frames>       wall-clock frames to render at the first keyframe before recording. Default: 2
+  --settle <frames>       frames to render before recording, on the wall clock at the first keyframe, and at the same moment after a keyframe’s tools ran. Default: 2
   -h, --help              show this help
 
 A recipe is a JSON array of keyframes, ordered by time:
@@ -332,7 +332,15 @@ const main = async (options: FilmOptions) => {
         await page.evaluate((delta: number) => globalThis.virtualClock!.step(delta), 1 / fps)
       }
       // The clock stands still while whatever just came into view loads; frames at the same moment let what needs them, like objects streaming in, get there.
-      await waitForLoadingItems(page, {between: () => page.evaluate(() => globalThis.virtualClock!.step(0))})
+      const still = () => page.evaluate(() => globalThis.virtualClock!.step(0))
+      await waitForLoadingItems(page, {between: still})
+      if (frameCalls) {
+        // A tool can change how everything renders, like set_graphics_quality, whose first frames lack shadow maps and TRAA’s history: frames at the same moment settle them, like before the first frame.
+        for (let frame = 0; frame < settle; frame++) {
+          await still()
+        }
+        await waitForLoadingItems(page, {between: still})
+      }
       await page.evaluate(async (url: string) => {
         const {pixels} = await globalThis.slopGallery!.capturePixels!()
         const response = await fetch(url, {
