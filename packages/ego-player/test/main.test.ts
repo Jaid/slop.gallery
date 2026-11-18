@@ -766,6 +766,37 @@ test('unsafe restore falls back only when even the crouched capsule cannot fit',
   expect(() => motor.teleport([4, 0.02, 0], [4, 0.04, 0])).toThrow(RangeError)
   expect(motor.getState()).toEqual(before)
 })
+test('a flying teleport goes anywhere upright, and a walking one lands where the capsule fits', () => {
+  floor()
+  const motor = player()
+  world.createCollider(RAPIER.ColliderDesc.cuboid(1, 2, 1).setTranslation(4, 1, 0))
+  tick(motor, {crouch: true}, 30)
+  expect(motor.crouching).toBe(true)
+  // Before any step flew
+  motor.teleport([4, 0.5, 0], undefined, true)
+  expect(motor.flying).toBe(true)
+  expect(motor.crouching).toBe(false)
+  expect(motor.body.collider(0).isEnabled()).toBe(false)
+  expect(motor.body.translation()).toEqual({
+    x: 4,
+    y: 0.5,
+    z: 0,
+  })
+  tick(motor, {}, 10, true, true)
+  expect(motor.body.translation().y).toBe(0.5)
+  // Still flying by default
+  motor.teleport([4, -3, 0])
+  expect(motor.body.translation().y).toBe(-3)
+  const before = motor.getState()
+  expect(() => motor.teleport([4, 0.02, 0], undefined, false)).toThrow(RangeError)
+  expect(motor.getState()).toEqual(before)
+  motor.teleport([4, 0.02, 0], [0, 0.04, 0], false)
+  expect(motor.flying).toBe(false)
+  expect(motor.body.collider(0).isEnabled()).toBe(true)
+  expect(motor.body.translation().x).toBe(0)
+  tick(motor, {}, 30)
+  expect(motor.grounded).toBe(true)
+})
 test('restore clearance ignores sensors, disabled bodies and noninteracting groups before broad-phase updates', () => {
   floor()
   const motor = player({collisionGroups: 0x00_01_00_01})

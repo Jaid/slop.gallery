@@ -303,38 +303,50 @@ export default class EgoMotor {
     }
   }
 
-  teleport(position: EgoPosition, fallback?: EgoPosition) {
+  /**
+   * Puts the feet at `position`, or at `fallback` where the capsule fits neither standing nor crouching, and throws where it fits at neither.
+   * `flying`, as the next {@link step} goes on, by default as the last one went, takes off or lands first. Flying, it goes anywhere, upright: nothing is in the way of a capsule out of the physics.
+   */
+  teleport(position: EgoPosition, fallback?: EgoPosition, flying = this.isFlying) {
     if (!position.every(Number.isFinite) || fallback && !fallback.every(Number.isFinite)) {
       throw new RangeError('ego-player: teleport position must be finite.')
     }
-    // Direct collider queries also see newly mounted/moved geometry before the first world step.
-    this.world.propagateModifiedBodyPositionsToColliders()
-    const destinations = fallback ? [position, fallback] : [position]
-    let selected: {
-      crouching: boolean
-      position: EgoPosition
-    } | undefined
-    for (const destination of destinations) {
-      if (!this.isCrouching && this.canOccupy(destination, this.standingHeight)) {
-        selected = {
-          position: destination,
-          crouching: false,
+    if (flying) {
+      this.takeOff()
+      this.isCrouching = false
+    } else {
+      // Direct collider queries also see newly mounted/moved geometry before the first world step.
+      this.world.propagateModifiedBodyPositionsToColliders()
+      const destinations = fallback ? [position, fallback] : [position]
+      let selected: {
+        crouching: boolean
+        position: EgoPosition
+      } | undefined
+      for (const destination of destinations) {
+        if (!this.isCrouching && this.canOccupy(destination, this.standingHeight)) {
+          selected = {
+            position: destination,
+            crouching: false,
+          }
+        } else if (this.canOccupy(destination, this.crouchingHeight)) {
+          selected = {
+            position: destination,
+            crouching: true,
+          }
         }
-      } else if (this.canOccupy(destination, this.crouchingHeight)) {
-        selected = {
-          position: destination,
-          crouching: true,
+        if (selected) {
+          break
         }
       }
-      if (selected) {
-        break
+      if (!selected) {
+        throw new RangeError('ego-player: neither the destination nor its fallback fits the player capsule.')
       }
+      if (this.isFlying) {
+        this.land()
+      }
+      position = selected.position
+      this.isCrouching = selected.crouching
     }
-    if (!selected) {
-      throw new RangeError('ego-player: neither the destination nor its fallback fits the player capsule.')
-    }
-    position = selected.position
-    this.isCrouching = selected.crouching
     this.freshClearance = true
     this.updateShape()
     const translation = {
@@ -425,13 +437,7 @@ export default class EgoMotor {
 
   private fly(dt: number, delta: number, input: EgoInput, rotation: Quaternion) {
     const o = this.options
-    if (!this.isFlying) {
-      this.isFlying = true
-      this.collider.setEnabled(false)
-      this.velocity.y = this.verticalVelocity
-      this.verticalVelocity = 0
-      this.isGrounded = false
-    }
+    this.takeOff()
     const active = this.active
     // Latch jump so that holding Space while landing does not jump.
     this.jumpHeld = active && !!input.jump
@@ -501,6 +507,17 @@ export default class EgoMotor {
         z: this.push.z * impulse,
       }, collision.witness1, true)
     }
+  }
+
+  private takeOff() {
+    if (this.isFlying) {
+      return
+    }
+    this.isFlying = true
+    this.collider.setEnabled(false)
+    this.velocity.y = this.verticalVelocity
+    this.verticalVelocity = 0
+    this.isGrounded = false
   }
 
   private updateShape() {

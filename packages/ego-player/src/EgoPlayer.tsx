@@ -29,7 +29,7 @@ export type EgoPlayerProps = EgoOptions & Partial<EgoZoomOptions> & {
   enabled?: EgoToggle
   /** Safe feet position used when a spawn/teleport fits neither standing nor crouching. */
   fallbackPosition?: EgoPosition
-  /** Free flight: forward/backward follow the camera direction including pitch, jump/crouch rise/sink, no gravity or collisions. */
+  /** Free flight: forward/backward follow the camera direction including pitch, jump/crouch rise/sink, no gravity or collisions, and teleports go anywhere. */
   flying?: EgoToggle
   input: EgoInputReader
   /** Enables the dump action. Called once per press with a detached diagnostic snapshot. */
@@ -185,7 +185,7 @@ export default function EgoPlayer({cameraEnabled = true, casualZoomFactor = 2, c
   const applyTeleport = (destination: EgoPosition, rotation?: EgoRotation, writeCamera = true) => {
     resetZoom()
     const motor = motorRef.current!
-    motor.teleport(destination, fallbackPosition)
+    motor.teleport(destination, fallbackPosition, readToggle(flying))
     const eyeHeight = motor.crouching ? resolved.crouchEyeHeight : resolved.eyeHeight
     view.reset(eyeHeight)
     const actual = motor.body.translation()
