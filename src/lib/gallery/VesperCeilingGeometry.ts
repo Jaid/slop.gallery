@@ -1,9 +1,11 @@
 import type {CeilingSection} from './vesperCeiling.ts'
+import type {BufferGeometry} from 'three/webgpu'
 
-import {BoxGeometry, BufferGeometry, CatmullRomCurve3, Float32BufferAttribute, Matrix4, SphereGeometry, TubeGeometry, Vector3} from 'three/webgpu'
+import {BoxGeometry, CatmullRomCurve3, Matrix4, SphereGeometry, TubeGeometry, Vector3} from 'three/webgpu'
 
 import {mergeParts} from '../geometry.ts'
 import {colliderGeometry, wallFace} from './architecture.ts'
+import TriangleSoup from './TriangleSoup.ts'
 import vesperCeiling, {vesperCoveEnd, vesperCoveSection, vesperCoveTopY, vesperLanternEavesY, vesperLanternHalf, vesperLanternRidgeY, vesperLanternSillY, vesperOpeningInset} from './vesperCeiling.ts'
 
 /** a stretch of a section with its normals toward the outside of the solid as [inward, up], one for each point or one for all */
@@ -36,6 +38,30 @@ export function vesperCeilingCollision(size: Size) {
   } finally {
     surface.dispose()
   }
+}
+/** The normal into the lantern of the roof slope that falls toward the side at `side` along `axis`. */
+export function slopeNormal(axis: 'x' | 'z', side: number, run: number, rise: number) {
+  const normal = axis === 'x' ? new Vector3(-side * rise, -run, 0) : new Vector3(0, -run, -side * rise)
+  return normal.normalize()
+}
+/**
+ * A straight member from `from` to `to` of the cross-section `[width, depth]`, standing `gap` off the line toward `toward` and reaching `depth` beyond it, like a glazing bar behind its glass.
+ * `extend` lengthens it at both ends, so members meet in corners without gaps.
+ */
+export function member(from: Vector3, to: Vector3, [width, depth]: readonly [number, number], toward: Vector3, {extend = 0, gap = vesperCeiling.lantern.gap}: {
+  extend?: number
+  gap?: number
+} = {}) {
+  const axis = to.clone().sub(from)
+  const length = axis.length() + extend * 2
+  axis.normalize()
+  const depthAxis = toward.clone().addScaledVector(axis, -toward.dot(axis)).normalize()
+  const widthAxis = axis.clone().cross(depthAxis)
+  const center = from.clone().add(to).multiplyScalar(0.5).addScaledVector(depthAxis, depth / 2 + gap)
+  const placement = new Matrix4
+  placement.makeBasis(axis, depthAxis, widthAxis).setPosition(center)
+  const box = new BoxGeometry(length, depth, width)
+  return box.applyMatrix4(placement)
 }
 /**
  * A band around the room that follows a section: every point of the section traces the rectangle that far inside the walls’ faces, so the four sides meet on the diagonals.
@@ -146,30 +172,6 @@ function lanternGlass([halfX, halfZ]: Size) {
     addPane(soup, [new Vector3(-halfX, eaves, side * halfZ), new Vector3(halfX, eaves, side * halfZ), new Vector3(0, ridge, side * ridgeEnd)], [[0, 0], [halfX * 2, 0], [halfX, rows]], slopeNormal('z', side, halfX, rise))
   }
   return soup.toGeometry()
-}
-/** The normal into the lantern of the roof slope that falls toward the side at `side` along `axis`. */
-function slopeNormal(axis: 'x' | 'z', side: number, run: number, rise: number) {
-  const normal = axis === 'x' ? new Vector3(-side * rise, -run, 0) : new Vector3(0, -run, -side * rise)
-  return normal.normalize()
-}
-/**
- * A straight member from `from` to `to` of the cross-section `[width, depth]`, standing `gap` off the line toward `toward` and reaching `depth` beyond it, like a glazing bar behind its glass.
- * `extend` lengthens it at both ends, so members meet in corners without gaps.
- */
-function member(from: Vector3, to: Vector3, [width, depth]: readonly [number, number], toward: Vector3, {extend = 0, gap = vesperCeiling.lantern.gap}: {
-  extend?: number
-  gap?: number
-} = {}) {
-  const axis = to.clone().sub(from)
-  const length = axis.length() + extend * 2
-  axis.normalize()
-  const depthAxis = toward.clone().addScaledVector(axis, -toward.dot(axis)).normalize()
-  const widthAxis = axis.clone().cross(depthAxis)
-  const center = from.clone().add(to).multiplyScalar(0.5).addScaledVector(depthAxis, depth / 2 + gap)
-  const placement = new Matrix4
-  placement.makeBasis(axis, depthAxis, widthAxis).setPosition(center)
-  const box = new BoxGeometry(length, depth, width)
-  return box.applyMatrix4(placement)
 }
 /** The lantern’s bronze: sill and eaves plate around it, corner posts, ridge and hips, and the bars dividing its glass into panes. */
 function lanternBars([halfX, halfZ]: Size) {
@@ -310,47 +312,6 @@ export default class VesperCeilingGeometry {
   dispose() {
     for (const geometry of [this.bars, this.gilt, this.glass, this.plaster]) {
       geometry.dispose()
-    }
-  }
-}
-
-/** Collects triangles and winds each of them to face along the normals of its corners. */
-class TriangleSoup {
-  readonly indices: Array<number> = []
-  readonly normals: Array<number> = []
-  readonly positions: Array<number> = []
-  readonly uvs: Array<number> = []
-
-  /** Adds a vertex and returns its index. */
-  add(position: Vector3, normal: Vector3, uv: readonly [number, number]) {
-    this.positions.push(position.x, position.y, position.z)
-    this.normals.push(normal.x, normal.y, normal.z)
-    this.uvs.push(...uv)
-    return this.positions.length / 3 - 1
-  }
-
-  toGeometry() {
-    const geometry = new BufferGeometry
-    geometry.setAttribute('position', new Float32BufferAttribute(this.positions, 3))
-    geometry.setAttribute('normal', new Float32BufferAttribute(this.normals, 3))
-    geometry.setAttribute('uv', new Float32BufferAttribute(this.uvs, 2))
-    geometry.setIndex(this.indices)
-    return geometry
-  }
-
-  /** Adds a triangle, skipping it if it has no area. */
-  triangle(a: number, b: number, c: number) {
-    const corner = (index: number) => new Vector3(this.positions[index * 3], this.positions[index * 3 + 1], this.positions[index * 3 + 2])
-    const [pa, pb, pc] = [corner(a), corner(b), corner(c)]
-    const face = pb.sub(pa).cross(pc.sub(pa))
-    if (face.lengthSq() < 1e-14) {
-      return
-    }
-    const normal = [a, b, c].reduce((sum, index) => sum.add(new Vector3(this.normals[index * 3], this.normals[index * 3 + 1], this.normals[index * 3 + 2])), new Vector3)
-    if (face.dot(normal) >= 0) {
-      this.indices.push(a, b, c)
-    } else {
-      this.indices.push(a, c, b)
     }
   }
 }
