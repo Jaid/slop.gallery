@@ -10,14 +10,8 @@ const lantern = {
   tint: '#ffb363',
 } as const
 
-// Five lanterns: in the doorway passage from the Lodge’s bay, at the north end and in the middle of the long hall, in the open elbow at the foot of the flight and by the Sienna arch at its head; the middle one reaches farthest.
+// The middle lantern reaches farthest down the long hall.
 export default {
-  lantern_lodge: {
-    ...lantern,
-    position: [8.7, 2.5, -24.8979],
-    strength: 14,
-    range: 8,
-  },
   lantern_north: {
     ...lantern,
     position: underLantern(corridorNorthLantern),

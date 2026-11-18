@@ -76,7 +76,7 @@ const groups: Array<{
   {
     label: 'timber corridor',
     body: lantern,
-    lights: Array.from({length: 4}, () => corridorPassage.floorY + corridorPassage.height - passageLightDrop),
+    lights: Array.from({length: 3}, () => corridorPassage.floorY + corridorPassage.height - passageLightDrop),
     mounts: corridorHallLanterns(passagePendantMounts(corridorPassage, [corridor.shell, corridor.ribs], corridorLightSpacing, corridor.ribs)),
   },
   {
@@ -99,7 +99,7 @@ const firstHit = (origin: Vector3, direction: Vector3, far = Infinity) => {
 describe('ceiling-hung pendants', () => {
   test('every light hangs its drop under its passage’s crown', () => {
     expect(groups[0].mounts).toHaveLength(1)
-    expect(groups[2].mounts).toHaveLength(4)
+    expect(groups[2].mounts).toHaveLength(3)
     expect(groups[3].mounts).toHaveLength(1)
     for (const {mounts, lights} of groups) {
       expect(mounts).toHaveLength(lights.length)

@@ -62,9 +62,9 @@ export const corridorNorthLantern: PendantMount = {
   drop: northAnchor[1] - northLightY,
   light: [northAnchor[0], northLightY, northAnchor[2]],
 }
-/** The four hall lanterns, from the Lodge doorway to the foot of the flight. */
+/** The hall lanterns, from the north rib to the foot of the flight. */
 export function corridorHallLanterns(spaced: ReadonlyArray<PendantMount>) {
-  return [spaced[0], corridorNorthLantern, spaced[5], spaced[8]]
+  return [corridorNorthLantern, spaced[5], spaced[8]]
 }
 /**
  * The landing at the Sienna’s floor between the flight’s top and the arch of the Sienna’s vestibule: from the arch west, a short lined reveal, then an open elbow turning 45° north-west onto the diagonal, where the flight begins.

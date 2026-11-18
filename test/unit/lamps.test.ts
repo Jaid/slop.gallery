@@ -60,8 +60,7 @@ test('the passages’ lamps hang under the lanterns the fixtures hang from their
   try {
     const [{light}] = routePendantMounts(bastionCurve, [vault.shell, vault.ribs], [bastionGateLantern])
     expectNear(lamp('bastion-lantern_north').position, [light[0], light[1] - 0.6, light[2]])
-    const [doorway, north, middle, south] = corridorHallLanterns(passagePendantMounts(corridorPassage, [timber.shell, timber.ribs], corridorLightSpacing, timber.ribs))
-    expectNear(lamp('corridor-lantern_lodge').position, below(doorway, 0.3))
+    const [north, middle, south] = corridorHallLanterns(passagePendantMounts(corridorPassage, [timber.shell, timber.ribs], corridorLightSpacing, timber.ribs))
     expectNear(lamp('corridor-lantern_north').position, below(north, 0.3))
     expectNear(lamp('corridor-lantern_middle').position, below(middle, 0.4))
     expectNear(lamp('corridor-lantern_south').position, below(south, 0.4))

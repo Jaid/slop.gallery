@@ -306,7 +306,6 @@ const relations = {
     rooms: ['bastion', 'corridor', 'oculus'],
     visibleLamps: {
       corridor: [
-        'lantern_lodge',
         'lantern_north',
         'lantern_middle',
         'lantern_south',
@@ -317,7 +316,6 @@ const relations = {
   bastion: {
     rooms: ['oculus', 'lodge', 'lobby', 'exhibition', 'corridor', 'salon', 'forge', 'vesper'],
     visibleLamps: {
-      corridor: 'lantern_lodge',
       lodge: [
         'fire',
         'chandelier',
