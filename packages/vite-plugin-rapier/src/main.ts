@@ -24,24 +24,24 @@ export default function rapierPlugin({preload = true}: RapierPluginOptions = {})
     configResolved(config) {
       base = config.base
     },
-    transform(code, id) {
-      const flavor = rapierModule.exec(id)?.[1]
-      if (!flavor) {
-        return
-      }
-      const inlined = inlinedWasm.exec(code)
-      if (!inlined) {
-        this.error(`${flavor} no longer inlines its WebAssembly the expected way.`)
-      }
-      const name = `${flavor}.wasm`
-      assetNames.add(name)
-      const reference = this.emitFile({
-        type: 'asset',
-        name,
-        source: Uint8Array.fromBase64(inlined[1]),
-      })
-      // Its initializer fetches a URL string just as well as it takes the bytes.
-      return `${code.slice(0, inlined.index)}import.meta.ROLLUP_FILE_URL_${reference}${code.slice(inlined.index + inlined[0].length)}`
+    transform: {
+      filter: {id: rapierModule},
+      handler(code, id) {
+        const flavor = rapierModule.exec(id)![1]
+        const inlined = inlinedWasm.exec(code)
+        if (!inlined) {
+          this.error(`${flavor} no longer inlines its WebAssembly the expected way.`)
+        }
+        const name = `${flavor}.wasm`
+        assetNames.add(name)
+        const reference = this.emitFile({
+          type: 'asset',
+          name,
+          source: Uint8Array.fromBase64(inlined[1]),
+        })
+        // Its initializer fetches a URL string just as well as it takes the bytes.
+        return `${code.slice(0, inlined.index)}import.meta.ROLLUP_FILE_URL_${reference}${code.slice(inlined.index + inlined[0].length)}`
+      },
     },
     transformIndexHtml: {
       order: 'post',

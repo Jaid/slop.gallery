@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url'
 import {brotliCompressSync, constants} from 'node:zlib'
 
 import MagicString from 'magic-string'
+import {withFilter} from 'vite'
 
 import {deferredDefinition, definitionCandidate} from './candidates.ts'
 import {Inclusion, scopePath} from './filters.ts'
@@ -50,7 +51,7 @@ export default function createBakePlugin(adapter: BakeAdapter, options: BakeOpti
     diagnostics.push(value)
     options.onDiagnostic?.(value)
   }
-  return {
+  const plugin: Plugin = {
     name: `bake-${adapter.name}`,
     apply: 'build',
     enforce: 'pre',
@@ -67,17 +68,12 @@ export default function createBakePlugin(adapter: BakeAdapter, options: BakeOpti
       })
     },
     resolveId(id) {
-      if (id.startsWith(prefix)) {
-        return {
-          id: `\0${id}`,
-          moduleSideEffects: false,
-        }
+      return {
+        id: `\0${id}`,
+        moduleSideEffects: false,
       }
     },
     load(id) {
-      if (!id.startsWith(resolvedPrefix)) {
-        return
-      }
       const hash = id.slice(resolvedPrefix.length)
       const artifact = artifacts.get(hash)
       if (!artifact) {
@@ -104,7 +100,7 @@ export default function createBakePlugin(adapter: BakeAdapter, options: BakeOpti
     },
     async transform(code, rawId) {
       const id = normalize(rawId)
-      if (config.build.ssr || !sourceFile.test(id) || id.includes('/node_modules/') || id.includes('\0') || id === runtime || id.includes('/vite-plugin-bake-core/')) {
+      if (config.build.ssr || id === runtime) {
         return
       }
       const select = inclusion.select(id)
@@ -340,4 +336,12 @@ export default function createBakePlugin(adapter: BakeAdapter, options: BakeOpti
       },
     },
   }
+  return withFilter(plugin, {
+    resolveId: {id: new RegExp(`^${RegExp.escape(prefix)}`, 'u')},
+    load: {id: new RegExp(`^${RegExp.escape(resolvedPrefix)}`, 'u')},
+    transform: {id: {
+      include: sourceFile,
+      exclude: [/[/\\](?:node_modules|vite-plugin-bake-core)[/\\]/u, /\0/u],
+    }},
+  })
 }

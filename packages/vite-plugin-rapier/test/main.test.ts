@@ -92,19 +92,21 @@ test('Rapier still runs from the file', async () => {
   // A second of free fall
   expect(await fall()).toBeCloseTo(-9.81 / 2, 0)
 }, 60_000)
-test('modules other than Rapier’s pass untouched', () => {
-  const plugin = rapierPlugin()
-  const transform = plugin.transform as (this: unknown, code: string, id: string) => unknown
-  expect(transform.call({}, 'export default 1', '/project/node_modules/three/build/three.webgpu.js')).toBeUndefined()
-  expect(transform.call({}, 'export default 1', '/project/node_modules/@dimforge/rapier3d/rapier.js')).toBeUndefined()
-})
-test('a Rapier that inlines its WebAssembly another way fails the build', () => {
-  const plugin = rapierPlugin()
-  const transform = plugin.transform as (this: unknown, code: string, id: string) => unknown
-  const context = {
-    error(message: string): never {
-      throw new Error(message)
+test.each(['rapier2d-simd-compat', 'rapier3d'])('only a compat module without the expected Wasm fails the build: %s', async flavor => {
+  const input = join(root, '@dimforge', flavor, 'dist/rapier.mjs')
+  await fs.outputFile(input, 'export default 1')
+  const result = build({
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [rapierPlugin()],
+    build: {
+      write: false,
+      rolldownOptions: {input},
     },
+  })
+  if (flavor === 'rapier2d-simd-compat') {
+    await expect(result).rejects.toThrow('rapier2d-simd no longer inlines its WebAssembly the expected way.')
+  } else {
+    await result
   }
-  expect(() => transform.call(context, 'export default 1', String.raw`C:\project\node_modules\@dimforge\rapier2d-simd-compat\dist\rapier.mjs`)).toThrow('rapier2d-simd no longer inlines its WebAssembly the expected way.')
 })
