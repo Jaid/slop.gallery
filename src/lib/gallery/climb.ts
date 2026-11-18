@@ -176,10 +176,10 @@ const apex = legLength + Math.PI * turnRadius / 2
 /** the apex of the hairpin’s turn, halfway up its climb, where the map cuts the Bastion in two: from there on to the Forge, it shows the climb on the upper floor */
 export const climbApex = route.at(apex)
 /**
- * Which of the mouth’s evenly spaced lanterns it keeps, in mount order from its start, see CoveredPassage: the second and the fourth of the four along its run west, which hang under the Forge and before the elbow, and none in its elbow’s span.
+ * The mouth keeps only the fourth lantern along its run west, just before the elbow.
  */
 export const climbPassageLanterns = {
-  mouth: [false, true, false, true, false],
+  mouth: [false, false, false, true, false],
 } as const satisfies Record<string, ReadonlyArray<boolean>>
 /** How far along the hairpin its lanterns hang, each between two ribs: halfway up the west leg, round the apex of the turn and halfway up the east leg. */
 export const climbLanterns = {

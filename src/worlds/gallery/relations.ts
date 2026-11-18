@@ -269,7 +269,6 @@ const relations = {
       ],
       bastion: [
         'lantern_north',
-        'lantern_mouth',
         'lantern_elbow',
       ],
     },
