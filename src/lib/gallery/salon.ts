@@ -32,25 +32,6 @@ export const salonCeiling = {
 } as const
 
 /**
- * One skylight along the room’s long axis, centered on it: clear cast glass open to the sky, held by a deep coffered frame. All
- * values are in meters, relative to the room center.
- */
-export const salonSkylight = {
-  /** glazed opening along x and z, cut through the slab; as long as the glass wall below it, so their ends line up */
-  opening: [6, salonWindow.width],
-  /** width of the coffer beams around the opening */
-  frame: 0.55,
-  /** how far the coffer beams hang below the ceiling */
-  depth: 0.34,
-  /** glazing bars split the glass into square panes of this size */
-  pane: 1,
-  barWidth: 0.05,
-  barDepth: 0.07,
-  /** the glass sits 1 cm below the slab, above the glazing bars */
-  glassY: salonCeiling.underside - 0.01,
-} as const
-
-/**
  * Lower wall finish: raised field panels on a painted dado under a gilt chair rail. The rail stays low enough that the placards
  * of the lowest frames clear it by more than a hand’s width, even seen from above.
  */

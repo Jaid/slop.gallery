@@ -13,6 +13,7 @@ import {cycleLighting, lightingPresets, pickLightingTuning, tuneLighting, useLig
 import lobbyVault from '#src/lib/gallery/lobbyVault.ts'
 import {sunGeometry, sunlitPoints, sunShadowMapSize} from '#src/lib/gallery/sun.ts'
 import {getDefaultCustomGraphics, useCustomGraphics} from '#src/lib/rendering/customGraphics.ts'
+import {shineDaylightFrom} from '#src/lib/rendering/daylight.ts'
 import {getGraphicsProfile, getSunShadowSettings} from '#src/lib/rendering/graphicsMode.ts'
 import {lampOf} from '#src/lib/rendering/lamps.ts'
 import {isShadowSlot, lightActive, lightGain, lightShadow, useLightEdits} from '#src/lib/rendering/lightLevels.ts'
@@ -50,12 +51,13 @@ export default function GalleryLighting() {
   const sunLight = useRef<DirectionalLight>(null)
   const {samples: sunShadowSamples, ...sunShadow} = useSunShadow(sunShadowMapSize)
   const environment = useRef<CanvasTexture>(null)
-  // Only the Antechamber, under its stained-glass dome, takes the glass’ colors; the light is set up before its first frame, so its pipelines compile once.
+  // Only the Antechamber, under its stained-glass dome, takes the glass’ colors; the light is set up before its first frame, so its pipelines compile once. Materials that bounce the daylight follow each new sun.
   useLayoutEffect(() => {
     const light = sunLight.current!
     light.shadow.shadowNode = new StainedGlassShadowNode(light, position => position.y.greaterThan(antechamber.floorY - 0.05)
       .and(position.x.sub(antechamber.center[0]).abs().lessThan(antechamber.size[0] / 2))
       .and(position.z.sub(antechamber.center[1]).abs().lessThan(antechamber.size[1] / 2)))
+    return shineDaylightFrom(light)
   }, [sunShadowSamples])
   // The environment is part of every lit material’s cache key. Set after the first frame, it would build all of them a second time; a preset only redraws its pixels.
   useLayoutEffect(() => {
