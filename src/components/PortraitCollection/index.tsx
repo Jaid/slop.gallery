@@ -1,5 +1,5 @@
 import type {ContextMenuItem} from '#component/ContextMenu'
-import type {Portrait} from '#src/lib/gallery.ts'
+import type {Portrait, Vec3} from '#src/lib/gallery.ts'
 import type {PortraitImageFormat} from '#src/lib/gallery/portraitExport.ts'
 
 import Branch from 'branch-component'
@@ -8,10 +8,12 @@ import {useEffect, useState} from 'react'
 import ContextMenu from '#component/ContextMenu'
 import PortraitCollectionItem from '#component/PortraitCollectionItem'
 import artworkThumbnails from '#src/lib/artworkThumbnails.ts'
-import {notify} from '#src/lib/gallery.ts'
+import {bodyPose, notify} from '#src/lib/gallery.ts'
 import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
+import {portraitPosition} from '#src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import usePortraitsInReach from '#src/lib/gallery/usePortraitsInReach.ts'
+import {perceptualDistance} from '#src/lib/perceptualDistance.ts'
 
 import css from './style.module.sass'
 
@@ -52,12 +54,21 @@ const menuItems = (portrait: Portrait): Array<ContextMenuItem> => [
 ]
 
 /**
- * Every work in the world as a grid of small images, the default ones and those that arrived since, wherever they hang or lie, but those hanging in rooms out of its reach, see `World.reach`, whose images never load.
+ * Every work in the world as a grid of small images, the default ones and those that arrived since, ordered from nearest to farthest from the player, but excluding those hanging in rooms out of its reach, see `World.reach`, whose images never load.
  * A click on one shows it up close in place of the pause menu’s map and middle, see `PortraitSpectation`, and another click on it puts that view away again.
  * Each has a menu of its own in place of the browser’s context menu, see {@link menuItems}, but a default work the player hasn’t interacted with yet.
  */
 export default function PortraitCollection() {
   const portraits = usePortraitsInReach()
+  // The pause menu freezes movement. Take the player’s feet on opening, not the camera, which may be looking from somewhere else.
+  const [origin] = useState((): Vec3 => {
+    const [x, y, z] = bodyPose.center
+    return [x, y - bodyPose.height / 2, z]
+  })
+  const ordered = portraits.map(portrait => ({
+    portrait,
+    distance: perceptualDistance(origin, portraitPosition(portrait)),
+  })).toSorted((a, b) => a.distance - b.distance)
   const spectatedId = usePortraitSpectation(state => state.id)
   const toggleSpectation = usePortraitSpectation(state => state.toggle)
   const [menu, setMenu] = useState<{
@@ -71,7 +82,7 @@ export default function PortraitCollection() {
   return <section className={css.container} aria-label='Portrait collection' data-testid='portrait-collection'>
     <Branch if={portraits.length} else={<p className={css.empty}>No works here yet. Drop an image anywhere to bring one in.</p>}>
       <ul className={css.grid}>
-        {portraits.map(portrait => <li key={portrait.id} className={css.cell}>
+        {ordered.map(({portrait}) => <li key={portrait.id} className={css.cell}>
           <PortraitCollectionItem
             menuOpen={portrait === chosen} portrait={portrait} spectated={portrait.id === spectatedId} onMenu={(x, y) => setMenu({
               id: portrait.id,

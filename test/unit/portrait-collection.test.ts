@@ -10,7 +10,9 @@ import PortraitCollection from '#component/PortraitCollection'
 import PortraitTooltip from '#component/PortraitTooltip'
 
 import {ArtworkThumbnails, makeThumbnail, thumbnailSize} from '../../src/lib/artworkThumbnails.ts'
+import {bodyPose, cameraPose} from '../../src/lib/gallery/actions.ts'
 import {copyPortrait, portraitFileName, portraitImage} from '../../src/lib/gallery/portraitExport.ts'
+import portraitObjects from '../../src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '../../src/lib/gallery/portraitSpectation.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import samplePortraits from './fixtures/portraits.ts'
@@ -133,6 +135,36 @@ describe('portrait collection', () => {
     }
     // No menu is open before the player asks for one.
     expect(html).not.toContain('role="menu"')
+  })
+  test('orders works by perceptual distance from the player’s feet, using live positions when available', () => {
+    const [vertical, level, loose, tied] = samplePortraits.slice(0, 4).map(portrait => ({...portrait}))
+    vertical.position = [0, 2, 0]
+    level.position = [3, 0, 1]
+    loose.position = [8, 0, 8]
+    loose.hung = false
+    tied.position = [4, 0, 0]
+    const portraits = [vertical, level, loose, tied]
+    const originalBody = bodyPose.center
+    const originalCamera = cameraPose.position
+    bodyPose.center = [0, bodyPose.height / 2, 0]
+    cameraPose.position = [0, 2, 0]
+    const physical = {body: {translation: () => ({
+      x: 1,
+      y: 0,
+      z: 0,
+    })}} as NonNullable<ReturnType<typeof portraitObjects.get>>
+    portraitObjects.set(loose.id, physical)
+    try {
+      const ids = () => Array.from(render(portraits).matchAll(/data-portrait="([^"]+)"/gu), ([, id]) => id)
+      expect(ids()).toEqual([loose.id, level.id, tied.id, vertical.id])
+      expect(portraits).toEqual([vertical, level, loose, tied])
+      bodyPose.center = [4, bodyPose.height / 2, 0]
+      expect(ids()).toEqual([tied.id, level.id, loose.id, vertical.id])
+    } finally {
+      portraitObjects.delete(loose.id)
+      bodyPose.center = originalBody
+      cameraPose.position = originalCamera
+    }
   })
   test('includes works that arrived since, loose, reserved or imported', () => {
     const html = render([
