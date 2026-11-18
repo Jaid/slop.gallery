@@ -2,6 +2,7 @@ import type {MoodFade} from '../../src/moods/base/Mood.ts'
 import type {MoodOutput, MoodTarget} from '../../src/moods/lib/MoodMixer.ts'
 import type PlacedRoom from '../../src/worlds/base/PlacedRoom.ts'
 import type {AmbienceLoop} from 'ambience-emitter'
+import type {Node} from 'three/webgpu'
 
 import {afterEach, describe, expect, mock, test} from 'bun:test'
 
@@ -10,8 +11,9 @@ import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Sce
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {applyLightLevels, lightTint, noTint} from '../../src/lib/rendering/lightLevels.ts'
 import Mood from '../../src/moods/base/Mood.ts'
+import MoodScreen from '../../src/moods/base/MoodScreen.ts'
 import RoomMood, {roomMoodFade} from '../../src/moods/base/RoomMood.ts'
-import {moods} from '../../src/moods/index.ts'
+import {moods, moodScreens} from '../../src/moods/index.ts'
 import {readMood} from '../../src/moods/lib/forcedMood.ts'
 import MoodLens from '../../src/moods/lib/MoodLens.ts'
 import MoodMixer, {moodFade, noMood} from '../../src/moods/lib/MoodMixer.ts'
@@ -43,6 +45,12 @@ class RecordingLoop {
   stop(fade?: number) {
     this.stopped++
     this.smoothings.push(fade)
+  }
+}
+/** a screen that draws the frame as it is, which only tells how far its mood has come */
+class TestScreen extends MoodScreen {
+  draw(frame: Node<'vec4'>) {
+    return frame
   }
 }
 const noRelease = () => {}
@@ -308,6 +316,55 @@ describe('mood mixer', () => {
     expect(mood.loops[1].stopped).toBe(1)
     expect(mixer.moods).toEqual([])
   })
+  test('a mood’s screen plays out as the mood arrives, holds what came while it leaves and is taken off the frame once it is gone', () => {
+    const mixer = new MoodMixer
+    class ScreenMood extends TestMood {
+      override readonly screen = new TestScreen
+    }
+    const mood = new ScreenMood('screen', {
+      in: 2,
+      out: 1,
+    })
+    const {screen} = mood
+    expect(screen.showing).toBe(false)
+    run(mixer, cast(mood), 1)
+    expect(screen.arrival.value).toBeCloseTo(0.5, 1)
+    expect(screen.presence.value).toBe(1)
+    expect(screen.strength.value).toBeCloseTo(mixer.amountOf(mood), 9)
+    expect(screen.showing).toBe(true)
+    run(mixer, cast(mood), 1 + step)
+    expect(screen.arrival.value).toBe(1)
+    expect(screen.strength.value).toBe(1)
+    // Leaving, it keeps what came and lets it go linearly, while its strength eases out.
+    run(mixer, noMood, 0.5)
+    expect(screen.arrival.value).toBe(1)
+    expect(screen.presence.value).toBeCloseTo(0.5, 1)
+    expect(screen.strength.value).toBeCloseTo(0.5, 1)
+    // Asked back before it is gone, what is left comes back, and nothing is played out anew.
+    run(mixer, cast(mood), 0.25)
+    expect(screen.arrival.value).toBe(1)
+    expect(screen.presence.value).toBeCloseTo(0.625, 2)
+    run(mixer, noMood, 0.75 + step * 2)
+    expect(mixer.moods).toEqual([])
+    expect(screen.showing).toBe(false)
+    expect([screen.arrival.value, screen.presence.value, screen.strength.value]).toEqual([0, 0, 0])
+    // Coming again, it plays out from the start.
+    run(mixer, cast(mood), 0.5)
+    expect(screen.arrival.value).toBeCloseTo(0.25, 1)
+    expect(screen.presence.value).toBe(1)
+    // Cut and snapped, it shows nothing at once, then all of it at once.
+    mixer.cut()
+    expect(screen.showing).toBe(false)
+    mixer.snap(cast(mood))
+    expect([screen.arrival.value, screen.presence.value, screen.strength.value]).toEqual([1, 1, 1])
+    // Without fading, it shows all of it or nothing.
+    const cutting = new MoodMixer({fade: false})
+    const other = new ScreenMood('other')
+    cutting.update(cast(other), step)
+    expect([other.screen.arrival.value, other.screen.presence.value, other.screen.strength.value]).toEqual([1, 1, 1])
+    cutting.update(noMood, step)
+    expect(other.screen.showing).toBe(false)
+  })
   test('moods widen or narrow the view by their degrees as far as they show, added up, and give it back as they go', () => {
     const mixer = new MoodMixer
     const room = new TestMood('room', roomMoodFade, 10)
@@ -521,12 +578,31 @@ describe('moods', () => {
     for (const orb of moody) {
       const mood: Mood = moods[orb.mood!]
       expect(mood.ambience).toBeDefined()
-      expect(mood.grade!.strength).toBeGreaterThan(0)
-      expect(mood.grade!.strength).toBeLessThanOrEqual(1)
-      for (const color of [mood.grade!.shadow, mood.grade!.midtone, mood.grade!.highlight, mood.lamps!.color, mood.fill!.color]) {
+      // Each shows itself through color filters, a screen or both.
+      expect(Boolean(mood.grade || mood.screen)).toBe(true)
+      if (!mood.grade) {
+        continue
+      }
+      expect(mood.grade.strength).toBeGreaterThan(0)
+      expect(mood.grade.strength).toBeLessThanOrEqual(1)
+      for (const color of [mood.grade.shadow, mood.grade.midtone, mood.grade.highlight, mood.lamps!.color, mood.fill!.color]) {
         expect(color).toMatch(/^#[\da-f]{6}$/)
       }
     }
+  })
+  test('the Paint Orb’s atelier paints a vignette over the view instead of filtering the world’s colors, and the pipeline knows every mood’s screen', () => {
+    const {paint} = moods
+    expect(paint.screen).toBeInstanceOf(MoodScreen)
+    expect(paint.grade).toBeUndefined()
+    expect(paint.lamps).toBeUndefined()
+    expect(paint.fill).toBeUndefined()
+    const screened = Object.values<Mood>(moods).filter(mood => mood.screen)
+    expect(moodScreens).toEqual(screened.map(mood => mood.screen!))
+    const unique = new Set(moodScreens)
+    expect(unique.size).toBe(moodScreens.length)
+    expect(moodScreens).toContain(paint.screen)
+    // Nothing shows before its mood does.
+    expect(moodScreens.filter(screen => screen.showing)).toEqual([])
   })
   test('the fusion’s mood belongs to no orb and comes over the world while the intro plays', () => {
     expect(orbs.map(orb => orb.mood)).not.toContain('fusion')

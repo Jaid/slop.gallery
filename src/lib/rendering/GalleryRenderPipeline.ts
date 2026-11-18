@@ -15,6 +15,8 @@ import {traa} from 'three/addons/tsl/display/TRAANode.js'
 import {convertToTexture, diffuseColor, exp, float, int, interleavedGradientNoise, length, luminance, max, metalness, min, mix, mrt, normalView, output, pass, renderOutput, roughness, rtt, screenCoordinate, screenSize, screenUV, select, smoothstep, uniform, uv, vec2, vec3, vec4, velocity} from 'three/tsl'
 import {BlendMode, DirectionalLight, HalfFloatType, NoBlending, NormalBlending, PerspectiveCamera, RenderPipeline, Vector2} from 'three/webgpu'
 
+import {moodScreens} from '#src/moods/index.ts'
+
 import {mountedRooms, pendingRooms} from '../gallery/roomLoading.ts'
 import {floorReflectionBlur, floorReflectionGrazing, floorReflectionLevel, floorReflectionRoughness, floorReflectionStrength, renderFloorReflection} from '../materials/FloorMaterial.ts'
 import ConditionalTexture from './ConditionalTexture.ts'
@@ -22,6 +24,7 @@ import ConfigurableBloomNode from './ConfigurableBloomNode.ts'
 import {GalleryRenderer} from './GalleryRenderer.ts'
 import KnotBokeh from './KnotBokeh.ts'
 import {gradeMood} from './moodGrade.ts'
+import {drawMoodScreens} from './moodScreens.ts'
 import {impactActive, screenImpact} from './screenImpact.ts'
 import {resetWarp, screenWarp, warpedScreenUV} from './screenWarp.ts'
 import tiltShift from './tiltShift.ts'
@@ -388,9 +391,9 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       current = current.mul(vec4(vec3(float(1).sub(edge.mul(vignette))), 1))
     }
     current = flood.compose(current)
-    // The mood’s gradient map and the dither work on the image as it is shown, so the output transform comes before them.
+    // The moods’ gradient maps, their screens over them and the dither work on the image as it is shown, so the output transform comes before them.
     this.outputColorTransform = false
-    current = gradeMood(renderOutput(current))
+    current = drawMoodScreens(gradeMood(renderOutput(current)), moodScreens)
     if (heavy && settings.dither) {
       // Dithers by half an 8-bit step in display space, so the smooth, dark gradients of the sun shafts don’t band.
       current = vec4(current.rgb.add(interleavedGradientNoise(screenCoordinate.xy).sub(0.5).div(255)), current.a)

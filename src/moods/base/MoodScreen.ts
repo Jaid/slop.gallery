@@ -1,0 +1,50 @@
+import type {Node} from 'three/webgpu'
+
+import {uniform} from 'three/tsl'
+
+/** how far a mood with a screen has come, as `MoodMixer` tells it every frame it shows */
+export type ScreenShowing = {
+  /** the furthest its fade has come since it began showing this time, 0–1, linear in time */
+  arrival: number
+  /** how far its fade stands now, 0–1, linear in time */
+  progress: number
+  /** how strongly it shows now, 0–1, eased like its color filters */
+  strength: number
+}
+
+/**
+ * A screen shader a mood draws over the finished frame while it shows, like the Paint Orb’s painted vignette, instead of or along with color filters.
+ * The render pipeline builds every mood’s screen in once, after the moods’ gradient maps and before the dither, and runs each only while its mood shows, so a mood coming over the world compiles nothing.
+ * Its uniforms tell it how far its mood has come, which `MoodMixer` writes every frame: what it draws can play out as the mood comes in, along with {@link arrival}, and leave in a way of its own as {@link presence} falls, rather than only fading with {@link strength}.
+ * It works in display space, after tone mapping; the canvas is opaque, so its alpha is ignored. Fast graphics without antialiasing have no render pipeline and show no screens, like no gradient maps.
+ */
+export default abstract class MoodScreen {
+  /** the furthest the mood’s fade has come since it began showing this time, 0–1 and linear in time: it rises along with the fade in and holds while the mood leaves, so whatever played out as the mood came stays as it was */
+  readonly arrival = uniform(0)
+  /** how much of what came is still there: 1 while the mood comes in or holds, falling linearly to 0 as it leaves, and rising again if it is asked back before it is gone */
+  readonly presence = uniform(0)
+  /** how strongly the mood shows now, 0–1, eased in and out like its color filters; the screen runs only above 0 */
+  readonly strength = uniform(0)
+
+  /** whether the screen draws anything this frame */
+  get showing() {
+    return this.strength.value > 0
+  }
+
+  /** The frame, a color in display space, with the screen drawn over it; built once with the render pipeline and only run while {@link showing}. */
+  abstract draw(frame: Node<'vec4'>): Node<'vec4'>
+
+  /** Stops drawing, once the mood is gone. */
+  hide() {
+    this.arrival.value = 0
+    this.presence.value = 0
+    this.strength.value = 0
+  }
+
+  /** Draws as far as the mood has come. */
+  show({arrival, progress, strength}: ScreenShowing) {
+    this.arrival.value = arrival
+    this.presence.value = arrival > 0 ? Math.min(1, progress / arrival) : 0
+    this.strength.value = strength
+  }
+}

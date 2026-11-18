@@ -29,6 +29,8 @@ export type MoodTarget = {
 /** a mood while it shows, also while it fades in or out */
 type Showing = {
   ambience?: AmbienceLoop
+  /** the furthest its fade came since it began showing, which its screen plays out by */
+  arrival: number
   /** the level the loop was last set to */
   level: number
   mood: Mood
@@ -64,7 +66,7 @@ const ease = (progress: number) => progress * progress * (3 - 2 * progress)
 /**
  * Blends the moods the world asks for over it, stacked: those of the listener’s room beneath the one cast over the world. Each fades in while it is asked for and out otherwise, at its own pace, while the others hold on.
  * The moods cast over the world take turns: only once the one showing is gone does the next one fade in, so two of them never mix. The moods of two rooms cross over as the listener walks from one into the other.
- * It paints the render pipeline’s gradient maps, keeps the tints of the lamps and of the fill and how much wider the view gets, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
+ * It paints the render pipeline’s gradient maps, shows the moods’ screens as far as each has come, keeps the tints of the lamps and of the fill and how much wider the view gets, sounds the moods’ loops and lets their transformers take the world’s sound, each mood’s at its own eased strength.
  * Without `fade`, every mood shows in full while it is asked for and not at all otherwise, the next mood cast replacing the last one within the same frame.
  */
 export default class MoodMixer {
@@ -150,6 +152,7 @@ export default class MoodMixer {
       } else {
         showing.progress = rising ? 1 : 0
       }
+      showing.arrival = Math.max(showing.arrival, showing.progress)
       if (!rising && showing.progress === 0) {
         this.release(showing, this.smoothing())
         continue
@@ -170,17 +173,23 @@ export default class MoodMixer {
     this.lampTint.setRGB(1, 1, 1)
     this.fillTint.setRGB(1, 1, 1)
     this.fov = 0
-    for (const {mood, progress} of stack) {
+    for (const {arrival, mood, progress} of stack) {
       tint(this.lampTint, mood.lamps, ease(progress))
       tint(this.fillTint, mood.fill, ease(progress))
       this.fov += (mood.fov ?? 0) * ease(progress)
+      mood.screen?.show({
+        arrival,
+        progress,
+        strength: ease(progress),
+      })
     }
   }
 
-  /** Forgets a mood, which has faded out, stops its loop, which has gone silent with it, and lets its transformer ring out. */
+  /** Forgets a mood, which has faded out, stops its loop, which has gone silent with it, takes its screen off the frame and lets its transformer ring out. */
   private release(showing: Showing, fade?: number) {
     const {mood} = showing
     showing.ambience?.stop(fade)
+    mood.screen?.hide()
     if (mood.transformer) {
       showing.transformers?.transform(mood, mood.transformer, 0, this.smoothing())
     }
@@ -195,6 +204,7 @@ export default class MoodMixer {
     let showing = this.showing.get(mood)
     if (!showing) {
       showing = {
+        arrival: 0,
         level: 0,
         mood,
         progress: 0,
