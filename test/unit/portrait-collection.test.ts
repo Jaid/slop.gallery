@@ -10,7 +10,9 @@ import PortraitCollection from '#component/PortraitCollection'
 import PortraitTooltip from '#component/PortraitTooltip'
 
 import {ArtworkThumbnails, makeThumbnail, thumbnailSize} from '../../src/lib/artworkThumbnails.ts'
+import {cameraPose} from '../../src/lib/gallery/actions.ts'
 import {copyPortrait, portraitFileName, portraitImage} from '../../src/lib/gallery/portraitExport.ts'
+import portraitObjects from '../../src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '../../src/lib/gallery/portraitSpectation.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import samplePortraits from './fixtures/portraits.ts'
@@ -133,6 +135,46 @@ describe('portrait collection', () => {
     }
     // No menu is open before the player asks for one.
     expect(html).not.toContain('role="menu"')
+  })
+  test('orders only the displayed copy by walking distance from the player to each live work, keeping ties in collection order', () => {
+    const previous = cameraPose.position
+    const portraits: Array<Portrait> = [
+      {
+        ...samplePortraits[0],
+        position: [20, 2, -10],
+      }, // upstairs: 6
+      {
+        ...samplePortraits[1],
+        position: [16, 0, -10],
+      }, // level: 4
+      {
+        ...samplePortraits[2],
+        position: [20, 0, -6],
+      }, // also 4
+      {
+        ...samplePortraits[3],
+        hung: false,
+        position: [0, 0, 0],
+      }, // away from its stored pose, now 1
+    ]
+    const ids = portraits.map(portrait => portrait.id)
+    const physical = {
+      x: 21,
+      y: 0,
+      z: -10,
+    }
+    portraitObjects.set(ids[3], {body: {translation: () => physical}} as Parameters<typeof portraitObjects.set>[1])
+    const order = () => render(portraits).matchAll(/data-portrait="([^"]+)"/gu).map(match => match[1]).toArray()
+    try {
+      cameraPose.position = [20, 0, -10]
+      expect(order()).toEqual([ids[3], ids[1], ids[2], ids[0]])
+      cameraPose.position = [20, 2, -10]
+      expect(order()).toEqual([ids[0], ids[3], ids[1], ids[2]])
+      expect(portraits.map(portrait => portrait.id)).toEqual(ids)
+    } finally {
+      cameraPose.position = previous
+      portraitObjects.delete(ids[3])
+    }
   })
   test('includes works that arrived since, loose, reserved or imported', () => {
     const html = render([
