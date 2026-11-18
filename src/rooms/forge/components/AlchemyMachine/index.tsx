@@ -3,7 +3,7 @@ import type {AlchemyOrb} from './AlchemyWorks.ts'
 import type {Group} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {CapsuleCollider, CuboidCollider, CylinderCollider, RigidBody} from '@react-three/rapier'
+import {CapsuleCollider, CuboidCollider, CylinderCollider, RigidBody, useAfterPhysicsStep} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useEffect, useMemo, useRef, useState} from 'react'
 import {color, exp, positionLocal, smoothstep, vec3} from 'three/tsl'
@@ -129,6 +129,7 @@ export default function AlchemyMachine() {
     }
   }, [fx, works]))
   useEffect(() => works.restock(), [works])
+  useAfterPhysicsStep(() => works.takeIn())
   useFrame((_, delta) => {
     works.update(delta, barrel.current)
   })

@@ -11,8 +11,9 @@ import {Vector3} from 'three/webgpu'
 import {propObjects, showPropAt} from '#src/components/Scene/GrabbableProp.tsx'
 import {alchemyBrewVoices, alchemySwallowVoices, cannonVoices} from '#src/lib/audio/alchemySounds.ts'
 import {bodyPose, playSound, useGallery} from '#src/lib/gallery.ts'
-import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, inBodyInlet, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
+import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {orbAround, transmutedOrb} from '#src/lib/gallery/alchemy/flavor.ts'
+import IntakePassage from '#src/lib/gallery/alchemy/IntakePassage.ts'
 import {orbSeat} from '#src/lib/gallery/OrbHolderGeometry.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
@@ -83,13 +84,14 @@ export default class AlchemyWorks {
     made: 0,
     sounds: 0,
   }
-
   private lastShot = -Infinity
+
   /** the orb the cannon gathers itself to shoot, and since when */
   private loaded: {
     product: string
     since: number
   } | undefined
+  private readonly passage = new IntakePassage
 
   constructor(private readonly add: (orb: AlchemyOrb) => void, private readonly fx: CannonFx) {}
 
@@ -112,11 +114,19 @@ export default class AlchemyWorks {
     })
   }
 
+  /** Follow each orb through the sink at physics rate so even fast drops register before they reach the chest. */
+  takeIn() {
+    for (const [id, prop] of propObjects) {
+      if (prop.orb && this.passage.reachedChest(prop.body) && prop.seize()) {
+        this.take(id, prop, prop.orb)
+      }
+    }
+  }
+
   /** Runs the machine on by `delta` seconds: takes in what dropped down the throat, sinks it out of sight, shoots out what is done, lets the window glow and the cannon’s `barrel` go off, see {@link CannonFx}. */
   update(delta: number, barrel: Object3D | null) {
     const step = Math.min(delta, 0.1)
     this.clock += step
-    this.takeIn()
     this.sink(step)
     this.shoot()
     // The window glows up while the machine works on an orb and flashes as it shoots.
@@ -208,18 +218,5 @@ export default class AlchemyWorks {
     const sound = ++this.counts.sounds
     playSound(alchemySwallowVoices(variation), `alchemy:swallow:${sound}`, sinkPosition)
     playSound(shiftVoices(alchemyBrewVoices(brewing - sinking[0], variation), sinking[0]), `alchemy:brew:${sound}`, bodyPosition)
-  }
-
-  /** Takes in every orb that dropped down the sink’s throat, unless the player holds it or something else does. */
-  private takeIn() {
-    for (const [id, prop] of propObjects) {
-      if (!prop.orb || prop.seized() || !prop.body.isEnabled() || this.batches.some(batch => batch.intake === id)) {
-        continue
-      }
-      const {x, y, z} = prop.body.translation()
-      if (inBodyInlet([x, y, z]) && prop.seize()) {
-        this.take(id, prop, prop.orb)
-      }
-    }
   }
 }

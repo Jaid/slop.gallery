@@ -11,6 +11,7 @@ import {Mesh, MeshBasicMaterial, Object3D, Quaternion, Raycaster, Vector3} from 
 import {alchemyCannon, alchemyPipe, alchemySink, cannonFlight, cannonLaunch, cannonTarget, holderSpot, inBodyInlet, machineBody, southWallFace, flight as stepsFrom, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import CannonGeometry from '../../src/lib/gallery/alchemy/CannonGeometry.ts'
 import {flavorCandidates, flavoredOrb, orbAround, transmutedOrb} from '../../src/lib/gallery/alchemy/flavor.ts'
+import IntakePassage from '../../src/lib/gallery/alchemy/IntakePassage.ts'
 import MachineBodyGeometry from '../../src/lib/gallery/alchemy/MachineBodyGeometry.ts'
 import PipeGeometry from '../../src/lib/gallery/alchemy/PipeGeometry.ts'
 import SinkGeometry from '../../src/lib/gallery/alchemy/SinkGeometry.ts'
@@ -134,6 +135,7 @@ describe('the Forge’s alchemy machine', () => {
     })
     const welded = (triangles: [Float32Array, Uint32Array], [x, y, z]: Vec3) => world.createCollider(RAPIER.ColliderDesc.trimesh(...triangles, RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES).setContactSkin(weldedSurfaceSkin).setTranslation(x, y, z))
     /** whether an orb set off from the point with the velocity drops down the throat within 10 s */
+    const passage = new IntakePassage
     const taken = (start: Vec3, velocity: Vec3) => {
       const body = addOrb(world, start)
       body.setLinvel({
@@ -144,8 +146,7 @@ describe('the Forge’s alchemy machine', () => {
       try {
         for (let step = 0; step < 60 * 10; step++) {
           world.step()
-          const {x, y, z} = body.translation()
-          if (inBodyInlet([x, y, z])) {
+          if (passage.reachedChest(body)) {
             return true
           }
         }
@@ -165,6 +166,12 @@ describe('the Forge’s alchemy machine', () => {
       world.createCollider(RAPIER.ColliderDesc.cuboid(machineBody.size[0] / 2, machineBody.size[1] / 2, machineBody.size[2] / 2).setTranslation(bodyX, machineBody.size[1] / 2, bodyZ))
       world.createCollider(RAPIER.ColliderDesc.cuboid(8, 0.1, 8).setTranslation(benchX, -0.1, benchZ - 4))
       world.createCollider(RAPIER.ColliderDesc.cuboid(8, 3, 0.1).setTranslation(benchX, 3, southWallFace + 0.1))
+      // The reported shot at the outside of the collar, below the worktop.
+      expect(taken([-12.096, 1.18, -18.754], [-6.646, -2.169, 6.201])).toBe(false)
+      // Even reaching the actual endpoint without passing through the bowl can’t start a brew.
+      const collar: Vec3 = [bodyX + machineBody.size[0] / 2 + orbRadius, machineBody.inletY, bodyZ]
+      expect(inBodyInlet(collar)).toBe(true)
+      expect(taken(collar, [0, 0, 0])).toBe(false)
       let dropped = 0
       for (let index = 0; index < 24; index++) {
         // Spread evenly over the bowl, 30 cm over the bench
