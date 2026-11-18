@@ -1,18 +1,21 @@
 import type {Projection} from './GalleryDrawingPipeline.ts'
+import type {Drawable} from './worldBounds.ts'
 import type {WebgpuRendererOptions} from 'three-fiber-game'
 import type {Camera, Material, Scene} from 'three/webgpu'
 
 import {WebgpuRenderer} from 'three-fiber-game'
-import {Object3D} from 'three/webgpu'
+import {Object3D, Vector3} from 'three/webgpu'
 
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {startLoading, trackLoadingItems} from '#src/lib/loadingItems.ts'
 import {BatchedLighting} from '#src/lib/materials/lights/base/BatchedLightsNode.ts'
+import {perceptualDistance, perceptualDistanceToBox} from '#src/lib/perceptualDistance.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 
 import GalleryDrawingPipeline from './GalleryDrawingPipeline.ts'
 import {cinematicMaxTextureSize, readCinematicGraphics} from './graphicsMode.ts'
 import {readStreamBudget} from './streamBudget.ts'
+import worldBounds from './worldBounds.ts'
 
 type Culler = (camera: Camera) => void
 type RenderObject = {
@@ -25,6 +28,21 @@ type RenderObject = {
   scene: Object3D
 }
 type PromiseSink = {push: (promise: Promise<void>) => void}
+/** the turns of a camera’s passes, which warming and streaming give the objects nearest to the frame’s camera first, see {@link GalleryRenderer.planTurns} */
+type Turns = {
+  /** how far from the frame’s camera the objects that get their turn in the camera’s passes in {@link frame} may be at most; Infinity admits by the budget alone, and -Infinity with an infinite {@link reserved} admits nothing */
+  cutoff: number
+  /** the frame the camera’s passes last ran in */
+  frame: number
+  /** the objects the camera’s passes left out in {@link frame} */
+  left: Set<Object3D>
+  /** what building the objects within the cutoff that the camera’s passes haven’t admitted yet in {@link frame} is expected to cost, in milliseconds, which farther objects leave to them */
+  reserved: number
+  /** where the frame’s camera stood in {@link frame} */
+  viewpoint: Vector3
+  /** how many objects within the cutoff the camera’s passes came across in {@link frame}, admitted or left for the budget */
+  within: number
+}
 /** WebGPUBackend parameters three doesn’t type, which it reads when it requests the device in `init` */
 type BackendInternals = {parameters: {
   device?: GPUDevice
@@ -179,6 +197,11 @@ export class GalleryRenderer extends WebgpuRenderer {
   private projectStreaming?: Projection
   /** projects objects while loading, admitting the next ones outside the frustum */
   private projectWarming?: Projection
+  /** each object’s {@link perceptualDistanceToBox} from the frame’s camera, with the frame it was measured in */
+  private readonly ranks = new WeakMap<Object3D, {
+    frame: number
+    rank: number
+  }>
   /** shadow cameras whose map rendered this frame while streaming */
   private readonly renderedShadowCameras = new Set<Camera>
   /** shadow cameras whose map left out objects whose pipelines were still compiling, with the sequence number of the last pipeline that had started by then */
@@ -191,7 +214,13 @@ export class GalleryRenderer extends WebgpuRenderer {
   private streamPriority: ((object: Object3D) => boolean) | null = null
   private streamPriorityFound = false
   private streamRest = false
+  /** the turns of each camera’s passes, see {@link planTurns} */
+  private readonly turns = new Map<Camera, Turns>
   private readonly untrackLoading: () => void
+  /** the camera whose position {@link viewpoint} holds this frame, if any yet */
+  private viewedCamera: Camera | null = null
+  /** where the frame’s camera stands, which warming and streaming build the nearest objects to first */
+  private readonly viewpoint = new Vector3
   /** objects that streaming left out of passes other than shadow maps last frame although they will get their turn */
   private waitingObjects = new Set<Object3D>
   private warmedFrame = -1
@@ -199,6 +228,8 @@ export class GalleryRenderer extends WebgpuRenderer {
   /** the cameras each object was drawn for outside their frustum while loading */
   private readonly warmObjects = new WeakMap<Object3D, Set<Camera>>
   private warmupAdmissions = 0
+  /** how many times this frame left an object out of a pass for a later turn */
+  private warmupPostponements = 0
 
   constructor(options: WebgpuRendererOptions) {
     super({
@@ -276,6 +307,10 @@ export class GalleryRenderer extends WebgpuRenderer {
       return
     }
     this.startFrame()
+    if (this.viewedCamera !== camera) {
+      this.viewedCamera = camera
+      camera.getWorldPosition(this.viewpoint)
+    }
     if (this.culler && this.culledCamera !== camera) {
       this.culledCamera = camera
       this.culler(camera)
@@ -331,11 +366,12 @@ export class GalleryRenderer extends WebgpuRenderer {
 
   /**
    * Builds the objects not drawn in a pass yet a few per frame after loading, instead of all at once when they first come into view. Until then, a pass leaves them out.
-   * Objects the priority accepts come first, the rest once no prioritized one is left, and streaming stops after a while without anything left to build.
+   * Objects the priority accepts come first, the rest once no prioritized one is left, either of them nearest to the camera first (see {@link planTurns}), and streaming stops after a while without anything left to build.
    */
   setStreaming(streaming: boolean) {
     this.streaming = streaming
     this.streamIdle = 0
+    this.turns.clear()
     this.incompleteCameras.clear()
     this.gatedCameras.clear()
     this.renderedShadowCameras.clear()
@@ -349,9 +385,10 @@ export class GalleryRenderer extends WebgpuRenderer {
     this.streamPriority = priority
   }
 
-  /** Draws every object of the frame scene in every pass, regardless of the camera frustum, so that all their pipelines compile while loading. */
+  /** Draws every object of the frame scene in every pass, regardless of the camera frustum, so that all their pipelines compile while loading, those nearest to the camera first (see {@link planTurns}). */
   setWarming(warming: boolean) {
     this.warming = warming
+    this.turns.clear()
     this.installProjection()
   }
 
@@ -361,29 +398,25 @@ export class GalleryRenderer extends WebgpuRenderer {
   }
 
   /**
-   * Admits an object to be built this frame, unless its expected cost would exceed the frame’s budget; a frame always admits at least one.
-   * Objects are admitted while projecting, before any of them is built, so the cost is a guess: an object whose material the camera’s passes haven’t built yet costs what that material took in another pass, or else about as much as the last such ones did in its passes, while one that shares a built material is cheap. A single average would let a run of cheap objects lower it until a frame admits dozens of expensive ones at once.
+   * Admits an object to be built this frame for the camera’s pass if its expected cost fits the frame’s budget, of which a frame always admits at least one: first the turns {@link planTurns} gave the camera’s passes in this frame, the objects nearest to the camera, and then, in what of the budget they leave, any other.
+   * Otherwise, it waits for a later turn, which it gets by its distance.
    */
   private admit(object: Object3D, camera: Camera, budget: number) {
-    const built = this.builtMaterials.get(camera)
-    const materials = (object as Object3D & {material?: Array<Material> | Material}).material
-    const fresh = this.freshBuildCosts.get(camera) ?? initialFreshBuildCost
-    // Shadow maps draw with materials of their own, so what the object’s material cost elsewhere tells nothing about them.
-    const known = this.shadowCameras.has(camera) ? null : this.materialBuildCosts
-    // They draw with the light’s shadow material in place of the object’s, so only their first object builds it from scratch.
-    const override = this.frameScene?.overrideMaterial
-    let cost = 0
-    const list: ReadonlyArray<Material | undefined> = Array.isArray(materials) ? materials : [materials]
-    for (const own of list) {
-      const material = override && own?.allowOverride !== false ? override : own
-      if (material && built?.has(material)) {
-        cost += this.sharedBuildCost
-      } else {
-        cost += (material && known?.get(material)) ?? fresh
-      }
+    const turns = this.turnsOf(camera, budget)
+    const cost = this.buildCost(object, camera)
+    const turn = this.rankOf(object) <= turns.cutoff
+    // What the turns are expected to build still is kept for them, and so is the one object a frame always admits.
+    const reserved = turn ? 0 : turns.reserved
+    if (turn) {
+      turns.within++
     }
-    if (this.warmupAdmissions > 0 && (this.buildTime >= budget || this.plannedBuildCost + cost > budget)) {
+    if ((this.warmupAdmissions > 0 || reserved > 0) && (this.buildTime >= budget || this.plannedBuildCost + reserved + cost > budget)) {
+      this.warmupPostponements++
+      turns.left.add(object)
       return false
+    }
+    if (turn) {
+      turns.reserved = Math.max(0, turns.reserved - cost)
     }
     this.warmupAdmissions++
     this.plannedBuildCost += cost
@@ -423,6 +456,31 @@ export class GalleryRenderer extends WebgpuRenderer {
     // Sequence numbers only grow and the set keeps their order, so its first one is the oldest still compiling.
     const oldest = this.compilingPipelines.values().next().value
     return until !== undefined && oldest !== undefined && oldest <= until
+  }
+
+  /**
+   * What building the object for the camera’s pass is expected to cost, in milliseconds.
+   * Objects are admitted while projecting, before any of them is built, so the cost is a guess: an object whose material the camera’s passes haven’t built yet costs what that material took in another pass, or else about as much as the last such ones did in its passes, while one that shares a built material is cheap. A single average would let a run of cheap objects lower it until a frame admits dozens of expensive ones at once.
+   */
+  private buildCost(object: Object3D, camera: Camera) {
+    const built = this.builtMaterials.get(camera)
+    const materials = (object as Object3D & {material?: Array<Material> | Material}).material
+    const fresh = this.freshBuildCosts.get(camera) ?? initialFreshBuildCost
+    // Shadow maps draw with materials of their own, so what the object’s material cost elsewhere tells nothing about them.
+    const known = this.shadowCameras.has(camera) ? null : this.materialBuildCosts
+    // They draw with the light’s shadow material in place of the object’s, so only their first object builds it from scratch.
+    const override = this.frameScene?.overrideMaterial
+    let cost = 0
+    const list: ReadonlyArray<Material | undefined> = Array.isArray(materials) ? materials : [materials]
+    for (const own of list) {
+      const material = override && own?.allowOverride !== false ? override : own
+      if (material && built?.has(material)) {
+        cost += this.sharedBuildCost
+      } else {
+        cost += (material && known?.get(material)) ?? fresh
+      }
+    }
+    return cost
   }
 
   /** Replaces three’s synchronous pipeline creation for the frame scene. Objects are drawn once their pipeline is ready, so a new variant no longer stalls the frame. */
@@ -589,12 +647,78 @@ export class GalleryRenderer extends WebgpuRenderer {
     this.installProjection()
   }
 
+  /** Lets the turns admit nothing, only find out what waits and how far it is, for the next frame to plan from. */
+  private findOut(turns: Turns) {
+    turns.cutoff = Number.NEGATIVE_INFINITY
+    turns.reserved = Number.POSITIVE_INFINITY
+  }
+
   /** Projection runs for every object of every pass of the frame scene, so outside of loading it does nothing but leave out {@link hidden}. */
   private installProjection() {
     const project = this.warming ? this.projectWarming : (this.streaming ? this.projectStreaming : this.projectCulled)
     if (project) {
       this.frameProjection = project
     }
+  }
+
+  /**
+   * Plans which of the objects that the camera’s passes left out the last time they ran get their turn now: the nearest to the frame’s camera by {@link perceptualDistanceToBox}, as many as the budget fits, and always the nearest one. Any other object as near, give or take how far the camera moved since, gets its turn too, like one of a room that just mounted. What the turns leave of the budget goes to whatever else comes up first.
+   * Passes admit objects while projecting, in the order of the scene graph, so a plan can only come from what they came across before. Which passes run changes from frame to frame, like the shadow maps that render again one per frame in turn, so each camera plans its own.
+   * Where the passes left nothing out the last time, they only find out what waits and how far it is, admitting nothing, like they do the first time they run. Where they came across nothing within their turns, because what they planned for moved away or left, they admit by the budget alone, in the order of the scene graph, so loading never stalls.
+   */
+  private planTurns(turns: Turns, camera: Camera, budget: number) {
+    const stalled = turns.cutoff > Number.NEGATIVE_INFINITY && turns.within === 0 && turns.left.size > 0
+    const waiting = turns.left.values().filter(object => {
+      // Warming builds an object for every pass once one admitted it, and streaming for each pass that admitted it.
+      const warmed = this.warmObjects.get(object)
+      return !warmed || !this.warming && !warmed.has(camera)
+    }).map(object => ({
+      object,
+      rank: this.ranks.get(object)?.rank ?? Number.POSITIVE_INFINITY,
+    })).toArray()
+    turns.reserved = 0
+    if (stalled || budget === Number.POSITIVE_INFINITY) {
+      turns.cutoff = Number.POSITIVE_INFINITY
+    } else if (!waiting.length) {
+      this.findOut(turns)
+    } else {
+      waiting.sort((a, b) => a.rank - b.rank)
+      let cutoff = waiting[0].rank
+      let planned = 0
+      for (const {object, rank} of waiting) {
+        const cost = this.buildCost(object, camera)
+        if (planned > 0 && planned + cost > budget) {
+          break
+        }
+        planned += cost
+        cutoff = rank
+      }
+      turns.cutoff = cutoff + perceptualDistance(this.viewpoint, turns.viewpoint)
+      turns.reserved = planned
+    }
+    turns.frame = this.frame
+    turns.left.clear()
+    turns.viewpoint.copy(this.viewpoint)
+    turns.within = 0
+  }
+
+  /** The object’s {@link perceptualDistanceToBox} from the frame’s camera, measured once per frame; objects without bounds count as farthest. */
+  private rankOf(object: Object3D) {
+    let entry = this.ranks.get(object)
+    if (!entry) {
+      entry = {
+        frame: -1,
+        rank: 0,
+      }
+      this.ranks.set(object, entry)
+    }
+    if (entry.frame !== this.frame) {
+      entry.frame = this.frame
+      const {geometry} = object as Drawable
+      const rank = geometry ? perceptualDistanceToBox(this.viewpoint, worldBounds(object, geometry)) : Number.POSITIVE_INFINITY
+      entry.rank = rank >= 0 ? rank : Number.POSITIVE_INFINITY
+    }
+    return entry.rank
   }
 
   /** Raises the sampled texture limit for cinematic to what the adapter offers, up to {@link cinematicSampledTextures}, so GPUs with fewer still get a device. */
@@ -617,7 +741,9 @@ export class GalleryRenderer extends WebgpuRenderer {
     }
     this.frame = frameId
     this.culledCamera = null
-    this.warmedFrame = this.warming && this.warmupAdmissions === 0 ? frameId : -1
+    this.viewedCamera = null
+    // A frame that admitted nothing and left nothing out had drawn everything already.
+    this.warmedFrame = this.warming && this.warmupAdmissions === 0 && this.warmupPostponements === 0 ? frameId : -1
     if (this.warming) {
       this.warmup.frames++
       this.warmup.objects += this.warmupAdmissions
@@ -627,9 +753,33 @@ export class GalleryRenderer extends WebgpuRenderer {
       this.advanceStreaming()
     }
     this.warmupAdmissions = 0
+    this.warmupPostponements = 0
     this.plannedBuildCost = 0
     this.buildTime = 0
     updateChangedMatrices(this.frameScene!, false)
+  }
+
+  /** The turns of the camera’s passes in this frame, planned as the first of them comes across an object to admit. */
+  private turnsOf(camera: Camera, budget: number) {
+    let turns = this.turns.get(camera)
+    if (!turns) {
+      turns = {
+        cutoff: Number.POSITIVE_INFINITY,
+        frame: this.frame,
+        left: new Set,
+        reserved: 0,
+        viewpoint: this.viewpoint.clone(),
+        within: 0,
+      }
+      // Building everything at once needs no turns.
+      if (budget !== Number.POSITIVE_INFINITY) {
+        this.findOut(turns)
+      }
+      this.turns.set(camera, turns)
+    } else if (turns.frame !== this.frame) {
+      this.planTurns(turns, camera, budget)
+    }
+    return turns
   }
 }
 

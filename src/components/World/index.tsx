@@ -1,3 +1,4 @@
+import type {Vec3} from '#src/lib/gallery.ts'
 import type ArchitecturalGlassMaterials from '#src/lib/materials/ArchitecturalGlassMaterials.ts'
 import type LodgeMaterials from '#src/lib/materials/LodgeMaterials.ts'
 import type SiennaRoom from '#src/rooms/sienna/components/SiennaRoom/index.tsx'
@@ -12,8 +13,9 @@ import {Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
 import {clearRooms, endRoom, expectRooms, startRoom} from '#src/lib/gallery/roomLoading.ts'
-import {roomsAt} from '#src/lib/gallery/roomVisibility.ts'
+import {roomBoxes, roomsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
+import {perceptualDistanceToBox} from '#src/lib/perceptualDistance.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 import relations from '#src/worlds/gallery/relations.ts'
 
@@ -158,16 +160,21 @@ const reachedRooms: ReadonlyArray<RoomId> = loaders.keys().toArray()
 expectRooms(reachedRooms)
 const isReached = (room: RoomId) => loaders.has(room)
 const position = new Vector3
-/** Every room in reach, nearest first: the given rooms, the rooms they see into, the rooms those see into and so on. */
-const nearestFirst = (from: ReadonlyArray<RoomId>): ReadonlyArray<RoomId> => {
+/** The rooms sorted by their {@link perceptualDistanceToBox} from the point, to the nearest box of their air. */
+export const byDistance = (rooms: ReadonlyArray<RoomId>, [x, y, z]: Vec3) => {
+  const distances = new Map(rooms.map(room => [room, Math.min(...roomBoxes.filter(({id}) => id === room).map(({box}) => perceptualDistanceToBox([x, y, z], box)))]))
+  return rooms.toSorted((a, b) => distances.get(a)! - distances.get(b)!)
+}
+/** Every room in reach, nearest first: the given rooms, the rooms they see into, the rooms those see into and so on, and among the rooms of each of these rounds, as well as those beyond them, the nearest to the point first. */
+export const nearestFirst = (from: ReadonlyArray<RoomId>, point: Vec3): ReadonlyArray<RoomId> => {
   const order: Array<RoomId> = []
   let round: ReadonlyArray<RoomId> = from
   while (round.length > 0) {
-    order.push(...round)
+    order.push(...byDistance(round, point))
     // The next round is the rooms that this round sees into.
     round = [...new Set(round.flatMap(room => relations[room].rooms))].filter(room => !order.includes(room))
   }
-  return [...order, ...reachedRooms.filter(room => !order.includes(room))]
+  return [...order, ...byDistance(reachedRooms.filter(room => !order.includes(room)), point)]
 }
 
 /**
@@ -193,8 +200,9 @@ export default function World({materials}: {
   }, [parts])
   useFrame(({camera}) => {
     if (asked.current.size < reachedRooms.length) {
-      const from = roomsAt(camera.getWorldPosition(position).toArray())
-      const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from) : from
+      const point = camera.getWorldPosition(position).toArray()
+      const from = roomsAt(point)
+      const wanted = useGallery.getState().ready || !from.length ? nearestFirst(from, point) : from
       for (const room of wanted) {
         if (!isReached(room) || asked.current.has(room)) {
           continue

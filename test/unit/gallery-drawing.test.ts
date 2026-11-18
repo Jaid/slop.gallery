@@ -118,3 +118,104 @@ test('warming draws every object outside the frustum once per camera, a budget�
   expect(frames).toBeGreaterThan(3)
   expect(renderer.warmedAll).toBe(true)
 })
+/** A scene of boxes behind the camera, which only warming or streaming draws, added farthest first, with the frame in which each was first drawn once it is. */
+const spread = (renderer: GalleryRenderer, distances: ReadonlyArray<number>) => {
+  const scene = new Scene
+  const camera = new PerspectiveCamera
+  const meshes = distances.map(distance => {
+    const mesh = new Mesh(box, material)
+    mesh.position.z = distance
+    return mesh
+  })
+  scene.add(...meshes.toSorted((a, b) => b.position.z - a.position.z))
+  renderer.setFrameScene(scene)
+  const firstDrawn = new Map<Object3D, number>
+  let frame = 0
+  const run = (frames: number) => {
+    for (const end = frame + frames; frame < end; frame++) {
+      projected = []
+      nextFrame(renderer)
+      renderer.render(scene, camera)
+      for (const object of projected) {
+        if (!firstDrawn.has(object)) {
+          firstDrawn.set(object, frame)
+        }
+      }
+    }
+  }
+  return {
+    camera,
+    firstDrawn,
+    meshes,
+    run,
+    scene,
+  }
+}
+test('warming draws the objects nearest to the camera first, whatever their order in the scene', () => {
+  const renderer = createRenderer()
+  renderer.setWarming(true)
+  const {firstDrawn, meshes, run} = spread(renderer, [3, 9, 20, 45])
+  run(12)
+  const frames = meshes.map(mesh => firstDrawn.get(mesh))
+  expect(frames.every(frame => frame !== undefined)).toBe(true)
+  // A budget’s worth per frame admits one of them here, so each comes in a frame of its own.
+  expect(frames).toEqual(frames.toSorted((a, b) => a! - b!))
+  const distinct = new Set(frames)
+  expect(distinct.size).toBe(meshes.length)
+  expect(renderer.warmedAll).toBe(true)
+})
+test('warming measures how far an object is by its nearest point, weighing height three times', () => {
+  const renderer = createRenderer()
+  renderer.setWarming(true)
+  const {firstDrawn, meshes, run, scene} = spread(renderer, [6, 12])
+  // Right below the camera, two floors down: 7.5 m away by height alone, which counts as 22.5 m.
+  const below = new Mesh(box, material)
+  below.position.set(0, -8, 3)
+  scene.add(below)
+  run(10)
+  expect(firstDrawn.get(meshes[0])!).toBeLessThan(firstDrawn.get(meshes[1])!)
+  expect(firstDrawn.get(meshes[1])!).toBeLessThan(firstDrawn.get(below)!)
+})
+test('warming goes on when what it planned to draw next leaves the scene', () => {
+  const renderer = createRenderer()
+  renderer.setWarming(true)
+  const {firstDrawn, meshes, run, scene} = spread(renderer, [3, 9, 20])
+  // The first frame finds out what waits and the second draws the nearest.
+  run(2)
+  expect(firstDrawn.has(meshes[0])).toBe(true)
+  // The next nearest is the one the next frame plans for.
+  scene.remove(meshes[1])
+  run(8)
+  expect(firstDrawn.has(meshes[1])).toBe(false)
+  expect(firstDrawn.has(meshes[2])).toBe(true)
+  expect(renderer.warmedAll).toBe(true)
+})
+test('streaming builds the objects nearest to the camera first, after those the priority accepts', () => {
+  const renderer = createRenderer()
+  renderer.setStreaming(true)
+  const {firstDrawn, meshes, run} = spread(renderer, [4, 11, 25, 60])
+  const preferred = meshes[2]
+  renderer.setStreamPriority(object => object === preferred)
+  run(12)
+  const order = meshes.toSorted((a, b) => firstDrawn.get(a)! - firstDrawn.get(b)!)
+  expect(meshes.every(mesh => firstDrawn.has(mesh))).toBe(true)
+  expect(order).toEqual([preferred, meshes[0], meshes[1], meshes[3]])
+})
+test('what the nearest objects’ turns leave of the budget goes to farther objects that fit it', () => {
+  const renderer = createRenderer()
+  renderer.setWarming(true)
+  // Objects of a material the camera’s passes built already cost little, those of one they haven’t, much.
+  const cheap = new MeshBasicNodeMaterial
+  const {camera, firstDrawn, meshes, run} = spread(renderer, [3, 8, 20, 30])
+  meshes[2].material = cheap
+  meshes[3].material = cheap
+  ;(renderer as unknown as {builtMaterials: WeakMap<object, WeakSet<object>>}).builtMaterials.set(camera, new WeakSet([cheap]))
+  run(2)
+  // The nearest one gets its turn, the next expensive one waits for its own, and the cheap ones behind it fill the rest of the budget.
+  expect(firstDrawn.get(meshes[0])).toBe(1)
+  expect(firstDrawn.get(meshes[2])).toBe(1)
+  expect(firstDrawn.get(meshes[3])).toBe(1)
+  expect(firstDrawn.has(meshes[1])).toBe(false)
+  run(1)
+  expect(firstDrawn.get(meshes[1])).toBe(2)
+})
