@@ -11,8 +11,10 @@ import LightSwitch from '#component/LightSwitch'
 import PlankTable from '#component/PlankTable'
 import SelectorSwitch from '#component/SelectorSwitch'
 import Box from '#src/components/Scene/primitives.tsx'
+import {environmentRandom} from '#src/lib/environmentSeed.ts'
 import {wallFace} from '#src/lib/gallery/architectureDimensions.ts'
 import {banquetLedSlots, banquetLightTemperatures, banquetTable} from '#src/lib/gallery/banquet.ts'
+import {environmentSeed} from '#src/lib/gameSeed.ts'
 import lamps from '#src/rooms/banquet/lamps.ts'
 import walls, {lightSwitchSpots} from '#src/rooms/banquet/walls.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
@@ -25,6 +27,9 @@ const leds = (['led_north', 'led_middle', 'led_south'] as const).map(id => ({
   strength: lamps[id].strength,
 }))
 type Temperature = keyof typeof banquetLightTemperatures
+const lightRandom = environmentRandom(environmentSeed).makeChild(['banquet', 'lights'])
+const initialOn = lightRandom.makeChild('power').rollBoolean({chance: 0.2})
+const initialTemperature = lightRandom.makeChild('temperature').rollItem(Object.keys(banquetLightTemperatures) as Array<Temperature>)
 /** Rec. 709 luminance of a linear color */
 const luminance = ({r, g, b}: Color) => 0.2126 * r + 0.7152 * g + 0.0722 * b
 /** The color scaled to the luminance of the reference, so a warmer or cooler light shines as bright as the white one. */
@@ -45,7 +50,6 @@ const temperatures = mapValues(banquetLightTemperatures, ({light, surface}): Cei
 
 /** Lit by breakable LED panes with their own dimming lights instead of fixed light boxes, over a long table down its middle. */
 export default function BanquetRoom({glass, stone, wood}: Omit<Parameters<typeof BanquetFloor>[0], 'room'>) {
-  // A new game switches the lights back on.
   return <>
     <group name='banquet-room' position={[room.center[0], 0, room.center[1]]}>
       <RigidBody colliders={false} type='fixed'>
@@ -61,8 +65,8 @@ export default function BanquetRoom({glass, stone, wood}: Omit<Parameters<typeof
 
 /** The LED panes and the switches beside the Lobby arch that turn them on and off and pick their color temperature, which they only take on while on. */
 function BanquetLights() {
-  const [on, setOn] = useState(true)
-  const [temperature, setTemperature] = useState<Temperature>('white')
+  const [on, setOn] = useState(initialOn)
+  const [temperature, setTemperature] = useState(initialTemperature)
   const wall = walls.west
   const {power, temperature: temperatureSpot} = lightSwitchSpots
   return <>
