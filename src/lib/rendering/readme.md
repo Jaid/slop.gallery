@@ -1,6 +1,6 @@
 # Rendering pipeline
 
-`GalleryRenderPipeline` owns the render graph and its intermediate resources. The React `Postprocessing` component only attaches it to Fiber and handles the focus lifecycle.
+`GalleryRenderPipeline` owns the render graph and its intermediate resources. The React `Postprocessing` component attaches it to Fiber.
 
 Quality rendering runs:
 
@@ -13,6 +13,7 @@ current-frame scene color + depth + normals + velocity
   → bloom from the resolved color, masked by the resolved alpha
   → Z zoom tilt-shift and vignette
   → output color transform
+  → mood gradient maps, mood screen shaders and final dither
 ```
 
 ## Antialiasing

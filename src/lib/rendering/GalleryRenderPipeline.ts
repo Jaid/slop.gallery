@@ -22,6 +22,7 @@ import ConfigurableBloomNode from './ConfigurableBloomNode.ts'
 import {GalleryRenderer} from './GalleryRenderer.ts'
 import KnotBokeh from './KnotBokeh.ts'
 import {gradeMood} from './moodGrade.ts'
+import {compositeVignettes, useMoodVignettes} from './moodVignettes.ts'
 import {impactActive, screenImpact} from './screenImpact.ts'
 import {resetWarp, screenWarp, warpedScreenUV} from './screenWarp.ts'
 import tiltShift from './tiltShift.ts'
@@ -81,6 +82,11 @@ export default class GalleryRenderPipeline extends RenderPipeline {
     // GTAO and TRAA require single-sampled scene depth.
     const scenePass = own(pass(scene, camera, {samples: 0}))
     this.scenePass = scenePass
+    // In Fast without AA, the vignette is the only reason to mount a pipeline. Keep the direct view’s colors and skip the usual passes.
+    if (!heavy && !antiAliasing) {
+      this.finish(renderOutput(scenePass.getTextureNode('output')), false)
+      return
+    }
     const renderScene = scenePass.updateBefore.bind(scenePass)
     // The wireframe flood draws into targets of its own right after the scene pass, with the same camera, but only while it is enabled
     const flood = own(new WireframeFloodPass(renderer, scene as Scene, camera))
@@ -388,14 +394,7 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       current = current.mul(vec4(vec3(float(1).sub(edge.mul(vignette))), 1))
     }
     current = flood.compose(current)
-    // The mood’s gradient map and the dither work on the image as it is shown, so the output transform comes before them.
-    this.outputColorTransform = false
-    current = gradeMood(renderOutput(current))
-    if (heavy && settings.dither) {
-      // Dithers by half an 8-bit step in display space, so the smooth, dark gradients of the sun shafts don’t band.
-      current = vec4(current.rgb.add(interleavedGradientNoise(screenCoordinate.xy).sub(0.5).div(255)), current.a)
-    }
-    this.outputNode = current
+    this.finish(gradeMood(renderOutput(current)), heavy && settings.dither)
   }
 
   override dispose() {
@@ -404,5 +403,18 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       effect.dispose()
     }
     this.effects.length = 0
+  }
+
+  /** Only the output quad changes when a vignette comes or goes. The scene passes and their temporal history stay in place. */
+  private finish(display: Node<'vec4'>, dither: boolean) {
+    this.outputColorTransform = false
+    const compose = (layers: ReturnType<typeof useMoodVignettes.getState>) => {
+      const frame = compositeVignettes(display, layers)
+      // Dither last, by half an 8-bit step in display space.
+      this.outputNode = dither ? vec4(frame.rgb.add(interleavedGradientNoise(screenCoordinate.xy).sub(0.5).div(255)), frame.a) : frame
+      this.needsUpdate = true
+    }
+    compose(useMoodVignettes.getState())
+    this.effects.push({dispose: useMoodVignettes.subscribe(compose)})
   }
 }
