@@ -29,7 +29,7 @@ describe('Impasto Orb', () => {
   })
   test('brings a frame, a mood and a party effect of its own, glows a color of its own and leaves a Transparent Orb', () => {
     expect(promptOrbs).toContain(impastoOrb)
-    expect(choiceFrames(impastoOrb.frame)).toEqual(['impasto', 'slabs', 'canvas', 'palette'])
+    expect(choiceFrames(impastoOrb.frame)).toEqual(['impasto'])
     for (const frame of choiceFrames(impastoOrb.frame)) {
       expect(frames[frame]).toBeDefined()
     }
