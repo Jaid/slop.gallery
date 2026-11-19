@@ -15,15 +15,22 @@ const sienna = {
   height: number
 }
 const westX = sienna.center[0] - sienna.size[0] / 2
-const northZ = sienna.center[1] - sienna.size[1] / 2
-/** the vestibule’s width and depth: centered on the arch and flush with the Sienna’s north wall */
-const vestibuleSize = (lodge.siennaZ - northZ) * 2
+const southZ = sienna.center[1] + sienna.size[1] / 2
+/** The Sienna’s arch to the Vesper sits just inside the north-east corner, leaving a full pier to the east return. */
+export const siennaVesperDoorway = {
+  u: 4,
+  width: 2.8,
+  height: 3.8,
+  profile: 'arch',
+} as const
+/** the vestibule’s width and depth, wide enough for the Corridor’s 4 m timber passage and both arches’ casings */
+const vestibuleSize = lodge.timberWidth + 0.8
 /**
- * The vestibule west of the Sienna’s arch, still the Sienna’s: a square anteroom at the Sienna’s floor, flush with the Sienna’s north wall, with a second arch in its west wall, where the Corridor arrives up its stair flight.
+ * The vestibule west of the Sienna’s arch, still the Sienna’s: a square anteroom at the Sienna’s floor, flush with the room’s south and west walls, with a second arch in its west wall, where the Corridor arrives up its stair flight.
  * Its ceiling is as low as the arches’ casings and the cornice above them allow.
  */
 export const siennaVestibule = {
-  center: [westX - vestibuleSize / 2, lodge.siennaZ],
+  center: [westX - vestibuleSize / 2, southZ - vestibuleSize / 2],
   size: [vestibuleSize, vestibuleSize],
   height: 4.3,
 } as const satisfies FloorRectangle & {
