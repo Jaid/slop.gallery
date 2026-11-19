@@ -129,7 +129,7 @@ export default function RoomCulling() {
             return false
           }
           const lightRoom = regions && roomContaining(position.setFromMatrixPosition(light.matrixWorld).toArray())
-          // A lamp in a room out of sight that shines into view, like the Exhibition’s green one up through the Lobby’s floor, needs its shadows as much as one in sight: a stale map lets its light through whatever stood in its way.
+          // A lamp in a room out of sight that shines into view, like the Exhibition’s north tunnel lamp up through the Lobby’s floor, needs its shadows as much as one in sight: a stale map lets its light through whatever stood in its way.
           return !lightRoom || regions.has(lightRoom) || reachesFrustum(light, frustum)
         },
       })

@@ -1,7 +1,10 @@
 import type {Lamp, PointLamp} from '../base/Room.ts'
 
+import {environmentRandom, isDefaultSeed} from '#src/lib/environmentSeed.ts'
 import lowerGallery, {tunnelCenter, tunnelDiagonalFloorY, tunnelDiagonalHeading, tunnelDiagonalPoint, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
 import tunnelDisplays from '#src/lib/gallery/tunnelDisplays.ts'
+import {environmentSeed} from '#src/lib/gameSeed.ts'
+import {hslHex} from '#src/lib/seededHsl.ts'
 
 const {tunnel} = lowerGallery
 const [originX, originY, originZ] = tunnelCenter
@@ -31,6 +34,22 @@ const northS = middleS - spacingS
 const southS = middleS + spacingS
 export const tunnelLightSs = [northS, middleS, southS] as const
 
+/** the OkHSL hue of the middle tunnel lamp in the default environment, a blue between the north lamp’s green and the south lamp’s red */
+export const defaultTunnelHue = 266
+/** The OkHSL hue of the middle tunnel lamp: {@link defaultTunnelHue} in the default environment, otherwise a whole degree rolled from the seed. */
+export function tunnelHue(seed: number) {
+  if (isDefaultSeed(seed)) {
+    return defaultTunnelHue
+  }
+  return environmentRandom(seed).makeChild(['exhibition', 'tunnel-hue']).rollInteger(359)
+}
+/** The tints of the tunnel lamps, north to south: their hues a third of the circle apart round the middle one’s, each with its own saturation and lightness in OkHSL. */
+export function tunnelTints(middleHue: number) {
+  const shades = [[100, 86], [100, 56], [100, 62]] as const
+  return shades.map(([saturation, lightness], index) => hslHex([middleHue + (index - 1) * 120, saturation, lightness])) as [string, string, string]
+}
+const [northTint, middleTint, southTint] = tunnelTints(tunnelHue(environmentSeed))
+
 /** the color of the staff stairways’ lamps */
 export const stairwayTint = '#a3d2cc'
 const stairways = Object.fromEntries(tunnelDisplays.flatMap(({side, stairway}) => Object.entries(stairway.lamps).map(([name, [x, y, z]]) => [`${side}_stairway_${name}`, {
@@ -42,23 +61,23 @@ const stairways = Object.fromEntries(tunnelDisplays.flatMap(({side, stairway}) =
 } satisfies Lamp])))
 
 export default {
-  // Green, blue and red, from the tunnel’s low north end up to its high south end, lighting both displays at once.
-  tunnel_green: tunnelLamp(northS, {
+  // From the tunnel’s low north end up to its high south end, lighting both displays at once: green, blue and red by default.
+  tunnel_north: tunnelLamp(northS, {
     strength: 25,
-    tint: '#4dff6a',
+    tint: northTint,
     range: 10,
     decay: 1.25,
     shadow: true,
   }),
-  tunnel_blue: tunnelLamp(middleS, {
+  tunnel_middle: tunnelLamp(middleS, {
     strength: 13.2,
-    tint: '#4d7aff',
+    tint: middleTint,
     range: 10,
     decay: 1,
   }),
-  tunnel_red: tunnelLamp(southS, {
+  tunnel_south: tunnelLamp(southS, {
     strength: 33,
-    tint: '#ff4d4d',
+    tint: southTint,
     range: 17,
     decay: 1.5,
     shadow: true,

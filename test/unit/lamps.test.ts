@@ -45,7 +45,7 @@ test('the rooms only keep lamps that exist, and none of their own', () => {
 })
 test('a lamp shines in its own room and in the rooms that keep it', () => {
   expect(slopGallery.lampRooms(lamp('lodge-fire')).toSorted()).toEqual(['bastion', 'corridor', 'lodge'])
-  expect(slopGallery.lampRooms(lamp('exhibition-tunnel_red')).toSorted()).toEqual(['exhibition', 'moonfall', 'oculus'])
+  expect(slopGallery.lampRooms(lamp('exhibition-tunnel_south')).toSorted()).toEqual(['exhibition', 'moonfall', 'oculus'])
   expect(slopGallery.lampRooms(lamp('exhibition-west_stairway_door')).toSorted()).toEqual(['exhibition', 'lobby', 'oculus'])
   // The lantern behind the apse’s gate lights the platform through the gate and both windows beside it.
   expect(slopGallery.lampRooms(lamp('bastion-lantern_north')).toSorted()).toEqual(['bastion', 'lodge', 'oculus'])

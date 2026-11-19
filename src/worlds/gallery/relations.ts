@@ -144,7 +144,7 @@ const relations = {
         'led_south',
       ],
       exhibition: [
-        'tunnel_green',
+        'tunnel_north',
         'west_stairway_door',
         'east_stairway_door',
       ],
@@ -231,9 +231,9 @@ const relations = {
     floorMirror: 'moonfall',
     visibleLamps: {
       exhibition: [
-        'tunnel_green',
-        'tunnel_blue',
-        'tunnel_red',
+        'tunnel_north',
+        'tunnel_middle',
+        'tunnel_south',
       ],
     },
   },
@@ -252,9 +252,9 @@ const relations = {
         'ember',
       ],
       exhibition: [
-        'tunnel_green',
-        'tunnel_blue',
-        'tunnel_red',
+        'tunnel_north',
+        'tunnel_middle',
+        'tunnel_south',
         'west_stairway_door',
         'west_stairway_landing',
         'east_stairway_door',
