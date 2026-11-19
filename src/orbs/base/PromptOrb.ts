@@ -50,7 +50,7 @@ export default abstract class PromptOrb extends Orb {
   prompt(seed: number) {
     const random = environmentRandom(seed).makeChild(['orb', this.id])
     const count = random.makeChild('count').rollItem(this.adjectiveCounts)
-    const entries = random.makeChild('adjectives').rollItems(this.adjectives, count, {keepOrder: true})
+    const entries = random.makeChild('adjectives').pick(this.adjectives, count)
     const adjectives = entries.map(entry => (typeof entry === 'string' ? entry : random.makeChild(['synonym', entry[0]]).rollItem(entry)))
     return `${this.premise}\n\nPlease edit this image and ${this.change} ${adjectives.slice(0, -1).join(', ')} ${this.conjunction} ${adjectives.at(-1)}.`
   }

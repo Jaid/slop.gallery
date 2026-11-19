@@ -32,7 +32,7 @@ const narratorSuffixes = ['', 'pleasant to listen to', 'easy to listen to', 'hoo
 export function narratorCharacter(seed: number) {
   const random = environmentRandom(seed).makeChild('narrator-character')
   const count = random.makeChild('count').rollInteger(2, 5)
-  const entries = random.makeChild('traits').rollItems(narratorTraits, count, {keepOrder: true})
+  const entries = random.makeChild('traits').pick(narratorTraits, count)
   const traits = entries.map(entry => (typeof entry === 'string' ? entry : random.makeChild(['synonym', entry[0]]).rollItem(entry)))
   const noun = random.makeChild('noun').rollItem(narratorNouns)
   const suffix = random.makeChild('suffix').rollItem(narratorSuffixes)

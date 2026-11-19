@@ -51,7 +51,7 @@ test('a roll returns the same forever, whatever was rolled before and in which o
   expect(first).toBeGreaterThanOrEqual(0)
   expect(first).toBeLessThan(1)
   expect(random.roll()).toBe(first)
-  random.rollItems(['a', 'b', 'c'], 2, {count: 5})
+  random.shuffle(['a', 'b', 'c'], 2, {count: 5})
   random.makeChild('other').roll()
   expect(random.roll()).toBe(first)
   expect(make().roll()).toBe(first)
@@ -275,25 +275,24 @@ test('weights make items as likely as their share of them', () => {
   expect(() => random.rollItem(items, {weights: [1, -1, 1]})).toThrow(RangeError)
   expect(() => random.rollItem(items, {weights: [1, Infinity, 1]})).toThrow(RangeError)
 })
-test('several items never overlap and come in the order they were rolled in, or in their own', () => {
+test('a shuffle draws without replacement and a pick keeps the same entries in input order', () => {
   const random = make()
   const items = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-  const pair: Array<string> = random.rollItems(items, 2)
+  const pair: Array<string> = random.shuffle(items, 2)
   expect(pair).toHaveLength(2)
   expect(pair[0]).not.toBe(pair[1])
-  const series: Array<Array<string>> = random.rollItems(['apple', 'banana', 'cherry'], 2, {count: 5})
+  const series: Array<Array<string>> = random.shuffle(['apple', 'banana', 'cherry'], 2, {count: 5})
   expect(series).toHaveLength(5)
   for (const rolled of series) {
     expect(rolled).toHaveLength(2)
     const distinct = new Set(rolled)
     expect(distinct.size).toBe(2)
   }
-  expect(random.rollItems(items, 0)).toEqual([])
   // As many as there are shuffle them.
   const orders = new Set<string>
   const firsts = new Map<string, number>
   for (let seed = 0; seed < 8000; seed++) {
-    const shuffled = make(seed).rollItems(items, items.length)
+    const shuffled = make(seed).shuffle(items)
     expect(shuffled.toSorted(alphabetical)).toEqual(items)
     orders.add(shuffled.join(''))
     firsts.set(shuffled[0], (firsts.get(shuffled[0]) ?? 0) + 1)
@@ -306,9 +305,9 @@ test('several items never overlap and come in the order they were rolled in, or 
   // Each item lands in 5 of 8 rolls of five.
   const picks = new Map(items.map(item => [item, 0]))
   for (let seed = 0; seed < 8000; seed++) {
-    const kept = make(seed).rollItems(items, 5, {keepOrder: true})
+    const kept = make(seed).pick(items, 5)
     expect(kept).toEqual(items.filter(item => kept.includes(item)))
-    expect(kept).toEqual(make(seed).rollItems(items, 5).toSorted(alphabetical))
+    expect(kept).toEqual(make(seed).shuffle(items, 5).toSorted(alphabetical))
     for (const item of kept) {
       picks.set(item, picks.get(item)! + 1)
     }
@@ -317,9 +316,64 @@ test('several items never overlap and come in the order they were rolled in, or 
     expect(count).toBeGreaterThan(4700)
     expect(count).toBeLessThan(5300)
   }
-  expect(() => random.rollItems(items, 9)).toThrow(RangeError)
-  expect(() => random.rollItems(items, -1)).toThrow(RangeError)
-  expect(() => random.rollItems(items, 1.5)).toThrow(RangeError)
+})
+test('sample draws with replacement, even when every draw hits the same entry', () => {
+  const random = make()
+  const items = ['a', 'b'] as const
+  const sampled: Array<'a' | 'b'> = random.sample(items)
+  expect(sampled).toEqual(random.rollItem(items, {count: items.length}))
+  const samples = random.sample(items, 3, {count: 100})
+  expect(samples).toContainEqual(['a', 'a', 'a'])
+  expect(samples).toContainEqual(['b', 'b', 'b'])
+  expect(samples.flat()).toEqual(random.rollItem(items, {count: 300}))
+  expect(random.sample(items, 5, {weights: [1, 0]})).toEqual(['a', 'a', 'a', 'a', 'a'])
+})
+test('oversized shuffles draw a fresh permutation for each pass, including the partial last one', () => {
+  const random = make()
+  const items = Object.freeze(['b', 'a', 'c', 'a'])
+  const passes = random.shuffle(items, undefined, {count: 5})
+  for (const pass of passes) {
+    expect(pass.toSorted(alphabetical)).toEqual(['a', 'a', 'b', 'c'])
+  }
+  const orders = new Set(passes.map(pass => pass.join('')))
+  expect(orders.size).toBeGreaterThan(1)
+  expect(random.shuffle(items, 18)).toEqual(passes.flat().slice(0, 18))
+})
+test('ordered draws prepend whole copies and only randomize the remainder', () => {
+  const items = Object.freeze(['c', 'a', 'd', 'b'])
+  const random = make()
+  for (const method of ['pick', 'slice'] as const) {
+    expect(random[method](items)).toEqual([random.rollItem(items)])
+    expect(random[method](items, 8)).toEqual([...items, ...items])
+    for (const result of random[method](items, 10, {count: 20})) {
+      expect(result.slice(0, 8)).toEqual([...items, ...items])
+      const tail = result.slice(8)
+      expect(tail).toHaveLength(2)
+      expect(tail).toEqual(items.filter(item => tail.includes(item)))
+      if (method === 'slice') {
+        expect(items.indexOf(tail[1])).toBe(items.indexOf(tail[0]) + 1)
+      }
+    }
+  }
+  const pairs = random.slice(items, 2, {count: 100}).map(pair => pair.join(''))
+  expect(new Set(pairs)).toEqual(new Set(['ca', 'ad', 'db']))
+})
+test('collection amounts, empty inputs and count have the same rules for all four methods', () => {
+  const random = make()
+  const items = ['a', 'b', 'c'] as const
+  expect(random.sample([])).toEqual([])
+  expect(random.shuffle([])).toEqual([])
+  for (const method of ['sample', 'shuffle', 'pick', 'slice'] as const) {
+    expect(random[method]([], 0)).toEqual([])
+    expect(random[method](items, 0, {count: 2})).toEqual([[], []])
+    expect(() => random[method]([], 1)).toThrow(RangeError)
+    for (const amount of [-1, 0.5, Number.NaN, Infinity, 2 ** 32]) {
+      expect(() => random[method](items, amount)).toThrow(RangeError)
+    }
+    const series: Array<Array<'a' | 'b' | 'c'>> = random[method](items, 5, {count: 3})
+    expect(series).toHaveLength(3)
+    expect(series[0]).toEqual(random[method](items, 5))
+  }
 })
 test('several weighted items favor the heavy ones and leave out the weightless', () => {
   const items = ['heavy', 'light', 'never', 'other'] as const
@@ -328,7 +382,7 @@ test('several weighted items favor the heavy ones and leave out the weightless',
   let heavy = 0
   const seeds = 4000
   for (let seed = 0; seed < seeds; seed++) {
-    const rolled = make(seed).rollItems(items, 2, {weights})
+    const rolled = make(seed).shuffle(items, 2, {weights})
     const distinct = new Set(rolled)
     expect(distinct.size).toBe(2)
     expect(rolled).not.toContain('never')
@@ -337,11 +391,9 @@ test('several weighted items favor the heavy ones and leave out the weightless',
   }
   expect(heavyFirst / seeds).toBeCloseTo(0.8, 1)
   expect(heavy / seeds).toBeGreaterThan(0.95)
-  expect(make().rollItems(items, 3, {
-    keepOrder: true,
-    weights,
-  })).toEqual(['heavy', 'light', 'other'])
-  expect(() => make().rollItems(items, 4, {weights})).toThrow(RangeError)
+  expect(make().pick(items, 3, {weights})).toEqual(['heavy', 'light', 'other'])
+  expect(() => make().shuffle(items, 4, {weights})).toThrow(RangeError)
+  expect(() => make().pick(items, 5, {weights})).toThrow(RangeError)
 })
 test('anything but numbers and strings as IDs and anything but numbers, strings and bytes as seed is refused', () => {
   expect(() => new FatedRandom({id: [undefined as unknown as string]})).toThrow(TypeError)
@@ -358,7 +410,7 @@ test('rolls stay what they were, as worlds built from a seed rely on them', () =
     integer: random.rollInteger(1, 10),
     integers: random.rollInteger(5, {count: 8}),
     item: random.rollItem(['ghost', 'halloween', 'painting'], {count: 4}),
-    items: random.rollItems(['apple', 'banana', 'cherry'], 2, {count: 3}),
+    items: random.shuffle(['apple', 'banana', 'cherry'], 2, {count: 3}),
     radius: random.rollRadius(2),
     integerRadius: random.rollIntegerRadius(2, {count: 8}),
     next: random.next().roll(),

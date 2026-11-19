@@ -1,4 +1,5 @@
 import IngredientHash from './lib/IngredientHash.ts'
+import {checkAmount, makeIndexDraw, makeItemDraw, withFullCopies} from './lib/itemDraws.ts'
 import RollStream from './lib/RollStream.ts'
 
 export type Arrayable<Value> = ReadonlyArray<Value> | Value
@@ -25,38 +26,11 @@ export type RollItemOptions<Item, Count extends RollCount = RollCount> = RollOpt
   /** how likely each item is compared with the others, by default all the same: a number per item in the order of the items, or a function that tells it; an item of weight 0 is never rolled */
   weights?: ((item: Item, index: number) => number) | ReadonlyArray<number>
 }
-export type RollItemsOptions<Item, Count extends RollCount = RollCount> = RollItemOptions<Item, Count> & {
-  /** returns the rolled items in the order they have among the items instead of the order they were rolled in */
-  keepOrder?: boolean
-}
 /** what a roll returns: an array with a `count`, a single result without */
 export type Rolled<Value, Count extends RollCount> = Count extends number ? Array<Value> : Value
 
 const toArray = <Value>(value: Arrayable<Value>) => (Array.isArray(value) ? [...value as ReadonlyArray<Value>] : [value as Value])
 const isId = (value: unknown): value is FatedId => typeof value === 'number' || typeof value === 'string'
-/** The weight of every item, checked to be usable. */
-function resolveWeights<Item>(items: ReadonlyArray<Item>, weights: NonNullable<RollItemOptions<Item>['weights']>) {
-  const resolved = typeof weights === 'function' ? items.map((item, index) => weights(item, index)) : [...weights]
-  if (resolved.length !== items.length) {
-    throw new RangeError(`Got ${resolved.length} weights for ${items.length} items.`)
-  }
-  if (resolved.some(weight => !(weight >= 0) || !Number.isFinite(weight))) {
-    throw new RangeError('Weights have to be finite and not negative.')
-  }
-  return resolved
-}
-/** The index of one of the weights, each as likely as its share of their `total`. */
-function drawWeighted(stream: RollStream, weights: ReadonlyArray<number>, total: number) {
-  let remaining = stream.float() * total
-  for (const [index, weight] of weights.entries()) {
-    remaining -= weight
-    if (remaining < 0) {
-      return index
-    }
-  }
-  // Rounding can leave a sliver past the last weight.
-  return weights.findLastIndex(weight => weight > 0)
-}
 
 /**
  * Random rolls that are decided in advance: every roll only depends on the seed, the chain of IDs and the index, never on when, how often or in which order something rolls.
@@ -109,6 +83,13 @@ export default class FatedRandom {
     return this
   }
 
+  /** A random subset in input order. Whole copies of the input precede any remaining picks. */
+  pick<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount = 1, options?: RollItemOptions<Item, Count>) {
+    checkAmount(items.length, amount)
+    const draw = makeIndexDraw(items, options?.weights, amount)
+    return this.series(options, stream => withFullCopies(items, amount, take => draw(stream, take).toSorted((a, b) => a - b).map(index => items[index])))
+  }
+
   /** A float from 0 up to, but not including, 1. */
   roll<Count extends RollCount = undefined>(options?: RollOptions<Count>) {
     return this.series(options, stream => stream.float())
@@ -122,7 +103,6 @@ export default class FatedRandom {
     }
     return this.series(options, stream => stream.float() < chance)
   }
-
   /** An integer from 0 to `limit`, both included; a negative limit rolls from it up to 0. */
   rollInteger<Count extends RollCount = undefined>(limit: number, options?: RollOptions<Count>): Rolled<number, Count>
   /** An integer between `from` and `to`, both included, in either order. */
@@ -144,59 +124,8 @@ export default class FatedRandom {
 
   /** One of the items, each as likely as the others unless `weights` say otherwise. */
   rollItem<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, options?: RollItemOptions<Item, Count>) {
-    if (!items.length) {
-      throw new RangeError('Cannot roll one of no items.')
-    }
-    if (options?.weights === undefined) {
-      return this.series(options, stream => items[stream.below(items.length)])
-    }
-    const weights = resolveWeights(items, options.weights)
-    const total = weights.reduce((sum, weight) => sum + weight, 0)
-    if (!(total > 0)) {
-      throw new RangeError('Cannot roll one of items whose weights add up to nothing.')
-    }
-    return this.series(options, stream => items[drawWeighted(stream, weights, total)])
-  }
-
-  /**
-   * `amount` different items, in the order they were rolled in unless `keepOrder` keeps that of the items. Rolling as many as there are shuffles them.
-   * With `weights`, the heavier an item, the likelier it is among them and the earlier it tends to be rolled.
-   */
-  rollItems<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount: number, options?: RollItemsOptions<Item, Count>) {
-    if (!Number.isInteger(amount) || amount < 0 || amount > items.length) {
-      throw new RangeError(`Cannot roll ${amount} different ones of ${items.length} items.`)
-    }
-    const weights = options?.weights === undefined ? undefined : resolveWeights(items, options.weights)
-    if (weights && weights.filter(weight => weight > 0).length < amount) {
-      throw new RangeError(`Cannot roll ${amount} different items, as fewer of them have a weight.`)
-    }
-    return this.series(options, stream => {
-      const picked: Array<number> = []
-      if (weights) {
-        const left = [...weights]
-        let total = left.reduce((sum, weight) => sum + weight, 0)
-        while (picked.length < amount) {
-          const index = drawWeighted(stream, left, total)
-          picked.push(index)
-          left[index] = 0
-          // Summed up again instead of subtracted, so that rounding never adds up.
-          total = left.reduce((sum, weight) => sum + weight, 0)
-        }
-      } else {
-        // The start of a Fisher–Yates shuffle.
-        const indexes = items.keys().toArray()
-        for (let i = 0; i < amount; i++) {
-          const other = i + stream.below(indexes.length - i)
-          const taken = indexes[other]
-          indexes[other] = indexes[i]
-          picked.push(taken)
-        }
-      }
-      if (options?.keepOrder) {
-        picked.sort((a, b) => a - b)
-      }
-      return picked.map(index => items[index])
-    })
+    checkAmount(items.length, 1)
+    return this.series(options, makeItemDraw(items, options?.weights, 1))
   }
 
   /** A float from −`radius` up to, but not including, `radius`. */
@@ -207,6 +136,37 @@ export default class FatedRandom {
     const reach = Math.abs(radius)
     // Adding 0 turns the −0 of a radius of 0 into 0.
     return this.series(options, stream => (stream.float() * 2 - 1) * reach + 0)
+  }
+
+  /** Independent draws with replacement, in draw order. */
+  sample<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount = items.length, options?: RollItemOptions<Item, Count>) {
+    checkAmount(items.length, amount)
+    const draw = makeItemDraw(items, options?.weights, Math.min(amount, 1))
+    return this.series(options, stream => Array.from({length: amount}, () => draw(stream)))
+  }
+
+  /** Draws in random order without replacement, starting a fresh shuffle whenever the input runs out. */
+  shuffle<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount = items.length, options?: RollItemOptions<Item, Count>) {
+    checkAmount(items.length, amount)
+    const draw = makeIndexDraw(items, options?.weights, amount)
+    return this.series(options, stream => {
+      const result: Array<Item> = []
+      while (result.length < amount) {
+        for (const index of draw(stream, Math.min(items.length, amount - result.length))) {
+          result.push(items[index])
+        }
+      }
+      return result
+    })
+  }
+
+  /** A contiguous slice with a uniformly drawn start. Whole copies of the input precede any remaining slice. */
+  slice<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount = 1, options?: RollOptions<Count>) {
+    checkAmount(items.length, amount)
+    return this.series(options, stream => withFullCopies(items, amount, take => {
+      const start = stream.below(items.length - take + 1)
+      return items.slice(start, start + take)
+    }))
   }
 
   /** Rolls once, or `count` times in a row from the same stream of numbers, which starts over with every call. */

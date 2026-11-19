@@ -17,7 +17,7 @@ random.roll() // a float from 0 up to, but not including, 1
 random.rollBoolean() // true or false
 random.rollInteger(5) // an integer from 0 to 5
 random.rollInteger(1, 10) // an integer from 1 to 10
-random.rollItems(['apple', 'banana', 'cherry'], 2, {count: 5}) // 5 arrays of 2 different items each
+random.shuffle(['apple', 'banana', 'cherry'], 2, {count: 5}) // 5 arrays of 2 entries each, without replacement
 random.rollRadius(2) // a float from −2 up to, but not including, 2
 random.rollIntegerRadius(2) // −2, −1, 0, 1 or 2
 random.next() // moves on to the next index, which rolls everything anew
@@ -52,13 +52,19 @@ Every method takes `count` as an option and then returns an array of that many r
 | `rollIntegerRadius(radius, options?)` | an integer from −`radius` to `radius`, both included |
 | `rollRadius(radius, options?)` | a float from −`radius` up to, but not including, `radius` |
 | `rollItem(items, options?)` | one of the items, typed as the union of a literal array’s items |
-| `rollItems(items, amount, options?)` | an array of `amount` different items |
+| `sample(items, amount = items.length, options?)` | independent draws with replacement; even a single entry can fill the whole result |
+| `shuffle(items, amount = items.length, options?)` | entries in random order without replacement; starts a fresh shuffle each time it exhausts the input |
+| `pick(items, amount = 1, options?)` | a random subset in input order; prepends whole copies of the input when `amount` exceeds its length |
+| `slice(items, amount = 1, options?)` | neighboring entries from a uniformly chosen start, without wrapping; prepends whole copies just like `pick` |
 
-Integers are rolled without modulo bias. `rollItem` and `rollItems` take `weights`, either a number per item or a function `(item, index) => number`, which make an item as likely as its share of all weights; an item of weight 0 is never rolled. `rollItems` returns the items in the order they were rolled in, so rolling as many as there are shuffles them, unless `keepOrder` keeps the order they have among `items`.
+The four collection methods return a new array even when `amount` is 1. An amount of 0 gives an empty array; a positive amount requires a nonempty input. `count` repeats the entire selection, so `pick(items, 2, {count: 3})` gives three pairs. Entries are selected by index: equal values at different positions are separate entries.
+
+Integers are rolled without modulo bias. `rollItem`, `sample`, `shuffle` and `pick` take `weights`, either a number per item or a function `(item, index) => number`. Each draw favors an entry in proportion to its weight among the entries still available. A weight of 0 excludes the entry; `shuffle` and `pick` require enough positive weights to complete a pass or the requested part of one.
 
 ```typescript
 const rarity = random.makeChild('rarity').rollItem(['common', 'rare', 'epic'], {weights: [16, 4, 1]})
-const toppings = random.makeChild('toppings').rollItems(['basil', 'garlic', 'olives', 'onions'], 2, {keepOrder: true})
+const toppings = random.makeChild('toppings').pick(['basil', 'garlic', 'olives', 'onions'], 2)
+random.slice(['a', 'b', 'c'], 5) // ['a', 'b', 'c', 'a', 'b'] or ['a', 'b', 'c', 'b', 'c']
 ```
 
 ## Children
