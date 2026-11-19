@@ -6,6 +6,7 @@ import {DoubleSide, Matrix3, Matrix4, Mesh, MeshBasicMaterial, Raycaster, Vector
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {climbApproach, climbArch} from '../../src/lib/gallery/climb.ts'
 import forge, {forgeRooflight, forgeVestibule} from '../../src/lib/gallery/forge.ts'
+import {forgeCeilingGeometry} from '../../src/lib/gallery/forgeCeiling.ts'
 import {forgeArch, forgeRoundVestibule, forgeVestibuleFloor, vestibuleArches} from '../../src/lib/gallery/forgeVestibule.ts'
 import {isRing} from '../../src/lib/gallery/fresco.ts'
 import roomOrigins from '../../src/lib/gallery/layout.ts'
@@ -95,6 +96,43 @@ describe('the Forge', () => {
     const vesperSouth = wallById('vesper-south')
     expect(insideOpening(vesperSouth.holes![0], wallCoordinates(vesperSouth, [-14, 0, 8]), 1.7)).toBe(true)
     expect(roomAt([-14, 1.7, 7.9])).toBe('vesper')
+  })
+  test('the hipped metal ceiling spans the walls without gaps and leaves a round opening for the glass', () => {
+    const geometry = forgeCeilingGeometry({
+      size: forge.size,
+      openingRadius: forgeRooflight.radius,
+      springY: 5.5,
+      crownY: forgeRooflight.glassY + 0.01,
+    })
+    try {
+      const position = geometry.getAttribute('position')
+      const normal = geometry.getAttribute('normal')
+      const index = geometry.index!
+      const edges = new Map<string, number>
+      for (let triangle = 0; triangle < index.count; triangle += 3) {
+        for (let corner = 0; corner < 3; corner++) {
+          const [a, b] = [index.getX(triangle + corner), index.getX(triangle + (corner + 1) % 3)].toSorted((left, right) => left - right)
+          const edge = `${a},${b}`
+          edges.set(edge, (edges.get(edge) ?? 0) + 1)
+        }
+      }
+      for (const count of edges.values()) {
+        expect(count).toBeLessThanOrEqual(2)
+      }
+      expect(edges.values().filter(count => count === 1).toArray()).toHaveLength(position.count)
+      for (let vertex = 0; vertex < position.count; vertex++) {
+        expect(position.getY(vertex)).toBeGreaterThanOrEqual(5.5)
+        expect(normal.getY(vertex)).toBeLessThan(0)
+      }
+      for (let vertex = 0; vertex < position.count; vertex += 2) {
+        expect(Math.hypot(position.getX(vertex), position.getZ(vertex))).toBeCloseTo(forgeRooflight.radius, 6)
+        const outer = vertex + 1
+        const [x, z] = [position.getX(outer), position.getZ(outer)]
+        expect(Math.min(forge.size[0] / 2 - Math.abs(x), forge.size[1] / 2 - Math.abs(z))).toBeCloseTo(0, 8)
+      }
+    } finally {
+      geometry.dispose()
+    }
   })
   test('the rooflight is a round opening in whole panes, inside the room, under its slab, within the sun’s reach', () => {
     const {bead, depth, frame, glassY, pane, radius} = forgeRooflight

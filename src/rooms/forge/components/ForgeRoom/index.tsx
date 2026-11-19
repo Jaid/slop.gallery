@@ -1,7 +1,7 @@
 import type {Rooflight as RooflightLayout} from '#src/lib/gallery/forge.ts'
 import type {Material, Texture} from 'three/webgpu'
 
-import {CuboidCollider, CylinderCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
+import {RigidBody, TrimeshCollider} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {CircleGeometry, ExtrudeGeometry, MeshStandardNodeMaterial, Path, Shape} from 'three/webgpu'
@@ -14,10 +14,11 @@ import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {floorThickness} from '#src/lib/gallery/floors.ts'
 import {forgeRooflight, forgeRowTables, forgeTable, forgeVestibule} from '#src/lib/gallery/forge.ts'
+import {forgeCeilingGeometry} from '#src/lib/gallery/forgeCeiling.ts'
 import {forgeRoundVestibule, vestibuleArches} from '#src/lib/gallery/forgeVestibule.ts'
 import roundRevealGeometry from '#src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/roundVestibule.ts'
-import {salonCeiling} from '#src/lib/gallery/salon.ts'
+import {ForgeCeilingMaterial, ForgeFloorMaterial} from '#src/lib/materials/ForgeMaterials.ts'
 import gold from '#src/lib/materials/gold.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
@@ -42,23 +43,23 @@ export default function ForgeRoom({glass, masonry, stone, wood}: {
     roughness: 0.9,
   }), []))
   const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  const ceiling = useDisposable(useMemo(() => {
-    const [width, depth] = room.size
-    const outline = new Shape
-    outline.moveTo(-width / 2, -depth / 2)
-    outline.lineTo(width / 2, -depth / 2)
-    outline.lineTo(width / 2, depth / 2)
-    outline.lineTo(-width / 2, depth / 2)
-    outline.closePath()
-    return pierced(outline, forgeRooflight.radius)
-  }, []))
+  const floor = useDisposable(useMemo(() => new ForgeFloorMaterial, []))
   return <group name='forge'>
     <group position={[room.center[0], 0, room.center[1]]}>
-      <RigidBody colliders={false} type='fixed'>
-        <CuboidCollider args={[room.size[0] / 2, 0.15, room.size[1] / 2]} position={[0, 5.9, 0]} />
-      </RigidBody>
-      <RoomFloor glass={glass} room={room} stone={stone} wood={wood} />
-      <mesh castShadow geometry={ceiling} material={plaster} name='forge-ceiling' receiveShadow />
+      <RoomFloor
+        glass={glass} materials={{
+          inlay: gold,
+          slab: floor,
+        }} room={room} stone={stone} wood={wood}
+      />
+      <Canopy
+        name='forge-ceiling' plan={{
+          size: room.size,
+          openingRadius: forgeRooflight.radius,
+          springY: 5.5,
+          crownY: forgeRooflight.glassY + 0.01,
+        }}
+      />
       <Rooflight gilt={gold} layout={forgeRooflight} name='forge-rooflight' plaster={plaster} />
     </group>
     <Vestibule floorReflections={floorReflections} masonry={masonry} plaster={plaster} />
@@ -69,6 +70,29 @@ export default function ForgeRoom({glass, masonry, stone, wood}: {
   </group>
 }
 
+/** A shallow hipped hood of oxidized copper-iron, divided by flush bronze inlay converging on the glazed eye. */
+function Canopy({name, plan}: {
+  name: string
+  plan: Parameters<typeof forgeCeilingGeometry>[0]
+}) {
+  const {crownY, openingRadius, radius, segments, size, springY} = plan
+  const shell = useDisposable(useMemo(() => forgeCeilingGeometry({
+    crownY,
+    openingRadius,
+    radius,
+    segments,
+    size,
+    springY,
+  }), [crownY, openingRadius, radius, segments, size, springY]))
+  const collision = useMemo(() => colliderGeometry(shell), [shell])
+  const panel = useDisposable(useMemo(() => new ForgeCeilingMaterial, []))
+  return <StaticBatch name={name}>
+    <RigidBody colliders={false} type='fixed'>
+      <TrimeshCollider args={collision} />
+      <mesh castShadow geometry={shell} material={panel} receiveShadow />
+    </RigidBody>
+  </StaticBatch>
+}
 /** A flat ring lying in the x/z plane with its underside at y = 0, from `inner` to `outer` radius, `depth` thick. */
 function ring(inner: number, outer: number, depth: number) {
   const shape = new Shape
@@ -82,18 +106,6 @@ function ring(inner: number, outer: number, depth: number) {
     curveSegments: circleSegments,
   })
   return geometry.rotateX(-Math.PI / 2)
-}
-/** The ceiling slab over a floor plan, given as a shape in x and −z, cut round the opening of a rooflight in its middle. */
-function pierced(outline: Shape, radius: number) {
-  const hole = new Path
-  hole.absarc(0, 0, radius, 0, Math.PI * 2, true)
-  outline.holes.push(hole)
-  const slab = new ExtrudeGeometry(outline, {
-    depth: salonCeiling.thickness,
-    bevelEnabled: false,
-    curveSegments: circleSegments,
-  })
-  return slab.rotateX(-Math.PI / 2).translate(0, salonCeiling.y - salonCeiling.thickness / 2, 0)
 }
 /** The ring of plaster round a rooflight’s opening, hanging below the slab with a gilt bead along its lower inner edge, the glazing bars in a square grid and the disc of cast glass over them. */
 function Rooflight({gilt, layout, name, plaster}: {
@@ -126,6 +138,7 @@ function Rooflight({gilt, layout, name, plaster}: {
     }
     return disc
   }, [radius]))
+  const crownY = glassY + 0.01
   const barY = glassY - 0.005 - barDepth / 2
   // The bars on the joints between the panes, laid across the disc from edge to edge, each as long as its chord.
   const bars = Array.from({length: Math.round(radius * 2 / pane) - 1}, (_, i) => -radius + (i + 1) * pane).map(offset => ({
@@ -133,8 +146,8 @@ function Rooflight({gilt, layout, name, plaster}: {
     length: 2 * Math.sqrt(radius ** 2 - offset ** 2),
   }))
   return <StaticBatch name={name}>
-    <mesh castShadow geometry={frameGeometry} material={plaster} name={`${name}-frame`} position={[0, salonCeiling.underside - depth, 0]} receiveShadow />
-    <mesh castShadow geometry={beadGeometry} material={gilt} name={`${name}-bead`} position={[0, salonCeiling.underside - depth - bead, 0]} receiveShadow />
+    <mesh castShadow geometry={frameGeometry} material={plaster} name={`${name}-frame`} position={[0, crownY - depth, 0]} receiveShadow />
+    <mesh castShadow geometry={beadGeometry} material={gilt} name={`${name}-bead`} position={[0, crownY - depth - bead, 0]} receiveShadow />
     {bars.map(({offset, length}) => <Box key={`x${offset}`} material={ironwork} position={[offset, barY, 0]} size={[barWidth, barDepth, length]} />)}
     {bars.map(({offset, length}) => <Box key={`z${offset}`} material={ironwork} position={[0, barY, offset]} size={[length, barDepth, barWidth]} />)}
     <mesh geometry={glassGeometry} material={glass} name={`${name}-glass`} position={[0, glassY, 0]} rotation={[Math.PI / 2, 0, 0]} />
@@ -151,11 +164,7 @@ function Vestibule({floorReflections, masonry, plaster}: {
 }) {
   const {center, radius, rooflight} = forgeVestibule
   // Plain stone and plaster, like the room’s floor and walls.
-  const paving = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#f3eddf',
-    envMapIntensity: floorReflections ? 1 : 0,
-    roughness: floorReflections ? 0.36 : 0.8,
-  }), [floorReflections]))
+  const paving = useDisposable(useMemo(() => new ForgeFloorMaterial, []))
   const lining = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: '#eee7d7',
     roughness: 0.9,
@@ -181,32 +190,34 @@ function Vestibule({floorReflections, masonry, plaster}: {
       name: arch.name,
       geometry: roundRevealGeometry(vestibuleWall, vestibuleWall.holes!.find(hole => hole.name === arch.name)!, vestibuleArchOpening(forgeRoundVestibule, arch)),
     }))
-    const outline = new Shape
-    outline.absarc(0, 0, radius, 0, Math.PI * 2, false)
-    const ceiling = pierced(outline, rooflight.radius)
     return {
       slab,
       inlay,
       reveals,
-      ceiling,
       floorCollision: colliderGeometry(slab),
       revealCollision: reveals.map(({geometry}) => colliderGeometry(geometry)),
       dispose() {
-        for (const geometry of [slab, inlay, ceiling, ...reveals.map(reveal => reveal.geometry)]) {
+        for (const geometry of [slab, inlay, ...reveals.map(reveal => reveal.geometry)]) {
           geometry.dispose()
         }
       },
     }
-  }, [radius, rooflight]))
+  }, [radius]))
   return <>
     <group name='forge-vestibule' position={[center[0], 0, center[1]]}>
       <RigidBody colliders={false} type='fixed'>
         <TrimeshCollider args={parts.floorCollision} />
-        <CylinderCollider args={[0.15, radius]} position={[0, 5.9, 0]} />
         <mesh geometry={parts.slab} material={paving} name='forge-vestibule-floor' receiveShadow />
         <mesh geometry={parts.inlay} material={brass} name='forge-vestibule-inlay' receiveShadow />
       </RigidBody>
-      <mesh castShadow geometry={parts.ceiling} material={plaster} name='forge-vestibule-ceiling' receiveShadow />
+      <Canopy
+        name='forge-vestibule-ceiling' plan={{
+          radius,
+          openingRadius: rooflight.radius,
+          springY: 5.5,
+          crownY: rooflight.glassY + 0.01,
+        }}
+      />
       <Rooflight gilt={gold} layout={rooflight} name='forge-vestibule-rooflight' plaster={plaster} />
     </group>
     {/* In the round wall’s own frame, as the reveals are built, where its paint knows which way its face looks. */}
