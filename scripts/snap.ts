@@ -49,7 +49,6 @@ const snapOptions = {
   ...galleryOptions,
   angle: {type: 'string'},
   bookmark: {type: 'string'},
-  fov: {type: 'string'},
   'jxl-distance': {
     type: 'string',
     default: '1',
@@ -89,7 +88,8 @@ const main = async (options: SnapOptions) => {
   }
   const position = options.position === undefined ? bookmark?.position : parseNumbers(options.position, 'position', [3]) as Vec3
   const angle = options.angle === undefined ? bookmark && [degrees(bookmark.aim.yaw), degrees(bookmark.aim.pitch)] : parseNumbers(options.angle, 'angle', [2, 3])
-  const fov = options.fov === undefined ? bookmark?.fov : parseNumbers(options.fov, 'fov', [1])[0]
+  const requestedFov = setup.search.get('fov')
+  const fov = requestedFov === null ? bookmark?.fov : parseNumbers(requestedFov, 'fov', [1])[0]
   if (fov !== undefined && (fov <= 0 || fov >= 180)) {
     throw new Error('--fov must be between 0 and 180 degrees.')
   }
