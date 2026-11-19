@@ -29,10 +29,10 @@ import InflowGeometry from '../../src/lib/gallery/cistern/InflowGeometry.ts'
 import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
 import {climbApproach, climbCulvert, climbRun} from '../../src/lib/gallery/climb.ts'
 import {hatchet, helmet, paintingSet, paletteKnife, pumpkin} from '../../src/lib/gallery/curios/index.ts'
-import forge, {forgeRooflight, forgeVestibule} from '../../src/lib/gallery/forge.ts'
+import forge, {forgeVestibule} from '../../src/lib/gallery/forge.ts'
+import forgeCeiling, {forgePendantSpots} from '../../src/lib/gallery/forgeCeiling.ts'
 import {probeGeofences, startGeofences, useGeofences} from '../../src/lib/gallery/geofences.ts'
 import {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
-import {salonCeiling} from '../../src/lib/gallery/salon.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
 import {insideOpening, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -263,19 +263,20 @@ describe('the Forge’s alchemy machine', () => {
   })
 })
 describe('the alchemy machine’s cannon', () => {
-  test('shoots an orb along its barrel, from a step down it, under the rooflight’s ring and the ceiling across the Forge, through the arch over the middle of its threshold, and through the window, a hand over its sill', () => {
+  test('shoots an orb along its barrel, from a step down it, well clear of the foundry trusses, tie-rods and pendant lamps across the Forge, through the arch over the middle of its threshold, and through the window, a hand over its sill', () => {
     for (const axis of [0, 1, 2]) {
       expect(cannonLaunch.position[axis] + alchemyCannon.axis[axis] * alchemyCannon.depth).toBeCloseTo(alchemyCannon.muzzle[axis], 9)
       expect(cannonLaunch.velocity[axis] / cannonLaunch.speed).toBeCloseTo(alchemyCannon.axis[axis], 9)
     }
     expect(alchemyCannon.elevation).toBeGreaterThan(0)
-    const ring = salonCeiling.underside - forgeRooflight.depth - forgeRooflight.bead
-    for (const [x, y, z] of flight) {
+    for (const [x, y] of flight) {
       expect(x).toBe(cannonTarget.arch[0])
-      expect(y + orbRadius).toBeLessThan(salonCeiling.underside - 0.3)
-      if (Math.abs(Math.hypot(x - forge.center[0], z - forge.center[1]) - forgeRooflight.radius - forgeRooflight.frame / 2) < forgeRooflight.frame / 2 + orbRadius + 0.05) {
-        expect(y + orbRadius).toBeLessThan(ring - 0.1)
-      }
+      expect(y + orbRadius).toBeLessThan(forgeCeiling.baseY - 0.3)
+      expect(y + orbRadius).toBeLessThan(forgeCeiling.trusses.tieY - 0.5)
+    }
+    // Every workshop pendant hangs well off the central firing axis.
+    for (const spot of forgePendantSpots) {
+      expect(Math.abs(spot.x)).toBeGreaterThan(forgeCeiling.pendants.shadeRadius + orbRadius + 0.5)
     }
     expect(crossing(northZ)[1]).toBeCloseTo(cannonTarget.arch[1], 3)
     expect(cannonTarget.window).toEqual(cisternWindow.aim)

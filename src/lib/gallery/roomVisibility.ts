@@ -9,6 +9,7 @@ import {openingTop, wallCoordinates, wallOffset, wallPosition} from '#src/lib/pl
 import slopGallery from '#src/worlds/gallery/index.ts'
 import relations, {openings} from '#src/worlds/gallery/relations.ts'
 
+import forgeCeiling, {forgeMonitorRidgeY, forgeMonitorSillY} from './forgeCeiling.ts'
 import lobby from './lobby.ts'
 import salonLantern, {salonDrumOuterApothem} from './salonLantern.ts'
 import {vesperLanternLayout, vesperLanternRidgeY, vesperLanternSillY} from './vesperCeiling.ts'
@@ -93,6 +94,16 @@ const salonDrumBox = (mirrored: boolean) => {
   const [bottom, top] = mirrored ? [-crown, -sill] : [sill, crown]
   return new Box3(new Vector3(x - reach, salon.floorY + bottom, z - reach), new Vector3(x + reach, salon.floorY + top, z + reach))
 }
+/** the clerestory windows and skylight of the Forge’s monitor, through which the Lobby’s vault rises next door, or with `mirrored` their reflection in the floor */
+const forgeMonitorBox = (mirrored: boolean) => {
+  const forge = slopGallery.room('forge')
+  const [x, z] = forge.center
+  const {curbThickness, halfX, halfZ} = forgeCeiling.monitor
+  const reachX = halfX + curbThickness
+  const reachZ = halfZ + curbThickness
+  const [bottom, top] = mirrored ? [-forgeMonitorRidgeY, -forgeMonitorSillY] : [forgeMonitorSillY, forgeMonitorRidgeY]
+  return new Box3(new Vector3(x - reachX, forge.floorY + bottom, z - reachZ), new Vector3(x + reachX, forge.floorY + top, z + reachZ))
+}
 
 export const portals: Array<Portal> = [
   ...openings.map(({rooms: pair, holes}) => ({
@@ -111,6 +122,10 @@ export const portals: Array<Portal> = [
   ...[false, true].map(mirrored => ({
     rooms: ['salon', 'lobby'] as const,
     box: salonDrumBox(mirrored),
+  })),
+  ...[false, true].map(mirrored => ({
+    rooms: ['forge', 'lobby'] as const,
+    box: forgeMonitorBox(mirrored),
   })),
 ]
 

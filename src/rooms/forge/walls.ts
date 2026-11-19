@@ -4,6 +4,7 @@ import type {RoomWall} from '../base/Room.ts'
 import {alchemyCannon, workbench} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {cisternWindowHole} from '#src/lib/gallery/cistern/window.ts'
 import forge, {forgeVestibule} from '#src/lib/gallery/forge.ts'
+import forgeCeiling from '#src/lib/gallery/forgeCeiling.ts'
 import {forgeArch, forgeRoundVestibule} from '#src/lib/gallery/forgeVestibule.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import {forgeWindow, lobbyWindowHole} from '#src/lib/gallery/lobbyWindows.ts'
@@ -45,12 +46,18 @@ export default {
       },
     },
   },
-  // The cast-glass window into the Lobby, the Salon’s mirrored, whose glass stands in the shared plane.
+  // The cast-glass window into the Lobby, the Salon’s mirrored, whose glass stands in the shared plane, flanked by engaged bluestone pilasters.
   east: {
     ...east,
     holes: {
       lobby_window: lobbyWindowHole(forgeWindow, east, roomOrigins.forge),
     },
+    reservations: forgeCeiling.pilasters.eastOffsets.map((z): WallReservation => ({
+      u: wallCoordinates(east, [0, 0, z]),
+      width: forgeCeiling.pilasters.width + 0.08,
+      height,
+      profile: 'rectangle',
+    })),
   },
   // Behind the alchemy machine: its workbench, and the pipe and the cannon on the wall over it.
   south: {
@@ -60,7 +67,16 @@ export default {
       machineReservation(benchX - 0.45, benchX + 0.45, alchemyCannon.muzzle[1] + 0.35),
     ],
   },
-  west,
+  // Divided into five brick bays by four engaged bluestone-and-iron pilasters carrying the overhead arch trusses.
+  west: {
+    ...west,
+    reservations: forgeCeiling.trusses.offsets.map((z): WallReservation => ({
+      u: wallCoordinates(west, [0, 0, z]),
+      width: forgeCeiling.pilasters.width + 0.08,
+      height,
+      profile: 'rectangle',
+    })),
+  },
   // The vestibule’s round wall, one ring facing its center, with its two arches and the window into the Bastion’s cistern on the north side, where it touches the cistern’s flat wall.
   vestibule: {
     ...vestibule,

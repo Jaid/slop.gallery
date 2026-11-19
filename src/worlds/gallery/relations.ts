@@ -148,6 +148,14 @@ const relations = {
         'west_stairway_door',
         'east_stairway_door',
       ],
+      forge: [
+        'table_north',
+        'table_south',
+        'side_table_north',
+        'side_table_south',
+        'bench_west',
+        'bench_east',
+      ],
       sienna: 'chandelier',
     },
   },
@@ -303,6 +311,15 @@ const relations = {
   bastion: {
     rooms: ['oculus', 'lodge', 'lobby', 'exhibition', 'corridor', 'salon', 'forge', 'vesper'],
     visibleLamps: {
+      forge: [
+        'table_north',
+        'table_south',
+        'side_table_north',
+        'side_table_south',
+        'bench_west',
+        'bench_east',
+        'vestibule',
+      ],
       lodge: 'fire',
     },
   },
