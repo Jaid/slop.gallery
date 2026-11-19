@@ -9,7 +9,7 @@ import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {moonfallCrater} from '#src/lib/gallery/moonfall/config.ts'
 import CraterGeometry from '#src/lib/gallery/moonfall/CraterGeometry.ts'
 import {fencePosts, fenceShape} from '#src/lib/gallery/moonfall/fence.ts'
-import {moonfallRope, moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
+import {moonfallRope, moonfallSlate, moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import StanchionRingGeometry from '#src/lib/gallery/railings/StanchionRingGeometry.ts'
 import {useGallery} from '#src/lib/gallery/store.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
@@ -39,6 +39,7 @@ export default function MoonfallCrater() {
   const slate = useDisposable(useMemo(() => new SlateFloorMaterial({
     craterRadius: moonfallCrater.radius,
     reflections: floorReflections,
+    style: moonfallSlate(moonfallTheme),
   }), [floorReflections]))
   const reflection = slate.reflectionTarget
   const room = useGallery(state => state.room)

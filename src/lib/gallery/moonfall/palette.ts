@@ -1,3 +1,4 @@
+import type {SlateStyle} from '../../materials/SlateFloorMaterial.ts'
 import type {VelvetRopeStyle} from '../../materials/VelvetRopeMaterial.ts'
 import type {HslSpread} from '../../seededHsl.ts'
 import type {OkhslTuple} from 'okhsl'
@@ -18,7 +19,7 @@ export function moonfallHue(seed: number) {
   return environmentRandom(seed).makeChild(['moonfall', 'hue']).rollInteger(359)
 }
 
-/** Moonfall’s colors that turn with its theme, in OkHSL at {@link defaultMoonfallHue}; its gold, its stone, its iron and its rope keep their own. */
+/** Moonfall’s colors that turn with its theme, in OkHSL at {@link defaultMoonfallHue}; its gold, the quartz and pyrite in its slate, its regolith, its iron and its rope keep their own. */
 export const moonfallColors = {
   // the lights
   planetGlow: [186, 60, 70],
@@ -40,6 +41,14 @@ export const moonfallColors = {
   ledHousing: [231, 35, 12],
   stairway: [221, 26, 23],
   stairwayCeiling: [227, 34, 12],
+  // the slate floor: charcoal, blue-black, a greenish gray and the odd rust-stained slab at the default hue, the grout and the fractures
+  slateCharcoal: [233, 12, 19],
+  slateBlueBlack: [242, 19, 17],
+  slateGreenish: [177, 15, 21],
+  slateRusty: [81, 9, 21],
+  slateGrout: [237, 10, 7],
+  slateGap: [229, 7, 6],
+  slateDust: [234, 4, 48],
   // the Orbit frame
   frameTint: [214, 53, 14],
   framePile: [215, 54, 9],
@@ -55,6 +64,16 @@ export type MoonfallPalette = Record<keyof typeof moonfallColors, string>
 export function moonfallPalette(hue: number): MoonfallPalette {
   const turn = hue - defaultMoonfallHue
   return Object.fromEntries(Object.entries(moonfallColors).map(([key, [h, saturation, lightness]]) => [key, hslHex([h + turn, saturation, lightness])])) as MoonfallPalette
+}
+
+/** The slate floor of Moonfall’s {@link MoonfallPalette}. */
+export function moonfallSlate(palette: MoonfallPalette): SlateStyle {
+  return {
+    slabs: [palette.slateCharcoal, palette.slateBlueBlack, palette.slateGreenish, palette.slateRusty],
+    grout: palette.slateGrout,
+    gap: palette.slateGap,
+    dust: palette.slateDust,
+  }
 }
 
 /** the garnet velvet of the rope round Moonfall’s crater in OkHSL */

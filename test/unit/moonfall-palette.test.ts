@@ -3,7 +3,7 @@ import {expect, test} from 'bun:test'
 import {fromHex} from 'okhsl'
 
 import {readMoonfallHue} from '../../src/lib/gallery/moonfall/hueParameter.ts'
-import {defaultMoonfallHue, moonfallColors, moonfallHue, moonfallPalette, moonfallRope, moonfallRopeColors, moonfallRopeRandom, moonfallRopeSpread} from '../../src/lib/gallery/moonfall/palette.ts'
+import {defaultMoonfallHue, moonfallColors, moonfallHue, moonfallPalette, moonfallRope, moonfallRopeColors, moonfallRopeRandom, moonfallRopeSpread, moonfallSlate} from '../../src/lib/gallery/moonfall/palette.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {hslHex, rollHslShift} from '../../src/lib/seededHsl.ts'
 
@@ -42,6 +42,14 @@ test('all of Moonfall’s themed colors turn together with its hue, keeping thei
       expect(Math.abs(turnedSaturation - saturation)).toBeLessThanOrEqual(2)
     }
   }
+})
+test('the slate floor turns with the theme, its slabs, grout and fractures all from the palette', () => {
+  for (const hue of [0, defaultMoonfallHue, 300]) {
+    const palette = moonfallPalette(hue)
+    const slate = moonfallSlate(palette)
+    expect([...slate.slabs, slate.grout, slate.gap, slate.dust].every(hex => Object.values(palette).includes(hex))).toBe(true)
+  }
+  expect(moonfallSlate(moonfallPalette(0)).slabs).not.toEqual(moonfallSlate(moonfallPalette(defaultMoonfallHue)).slabs)
 })
 test('the rope keeps its garnet by default, otherwise all its colors move alike within the spread', () => {
   const unturned = moonfallRope(0)

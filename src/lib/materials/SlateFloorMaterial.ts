@@ -5,6 +5,18 @@ import {atan, color, float, hash, max, min, mix, mx_noise_float, normalWorldGeom
 import {inside, line, visibleDetail} from './filters.ts'
 import FloorMaterial from './FloorMaterial.ts'
 
+/** The colors of a slate floor, as sRGB hex strings. */
+export type SlateStyle = {
+  /** the pale dust the fractures crushed the stone into along their edges */
+  dust: string
+  /** the dark gap of a fracture */
+  gap: string
+  /** the dark grout of the joints */
+  grout: string
+  /** the slabs, split from different parts of the quarry: most often the first, rarest the last */
+  slabs: readonly [string, string, string, string]
+}
+
 type Float = Node<'float'>
 
 /** the slabs, in meters, laid in courses along x */
@@ -14,14 +26,15 @@ const unit = (node: Float) => node.mul(0.5).add(0.5)
 /**
  * Polished slate laid around an impact, for the Moonfall: the floor is mapped in its own frame, the crater’s middle at its origin.
  *
- * Large slabs in staggered courses, each split from a different part of the quarry: charcoal, blue-black, a greenish gray and the odd rust-stained one, with the cleavage showing as faint, wavy bands across the polish. Hairline veins of white quartz run through some slabs and specks of pyrite glint gold. Out from the crater’s edge the impact has cracked the slabs in radial fractures that branch and peter out a few meters away; the cracks and the joints stay matte while the polish mirrors the room.
+ * Large slabs in staggered courses in the colors of `style`, each split from a different part of the quarry, with the cleavage showing as faint, wavy bands across the polish. Hairline veins of white quartz run through some slabs and specks of pyrite glint gold. Out from the crater’s edge the impact has cracked the slabs in radial fractures that branch and peter out a few meters away; the cracks and the joints stay matte while the polish mirrors the room.
  */
 export default class SlateFloorMaterial extends FloorMaterial {
-  constructor({craterRadius, reflections = true}: {
+  constructor({craterRadius, reflections = true, style}: {
     /** where the cracks start, in meters from the origin */
     craterRadius: number
     /** whether the polish mirrors the room (heavy mode) */
     reflections?: boolean
+    style: SlateStyle
   }) {
     const x = positionLocal.x.toVar('slateX')
     const z = positionLocal.z.toVar('slateZ')
@@ -38,7 +51,8 @@ export default class SlateFloorMaterial extends FloorMaterial {
     const key = rowKey.add(column.add(1000)).toVar('slateSlab')
     const random = (stream: number) => hash(key.add(stream * 2_097_143))
     const pick = random(1)
-    const tone = select(pick.lessThan(0.4), color('#262d31'), select(pick.lessThan(0.72), color('#1f282f'), select(pick.lessThan(0.94), color('#283330'), color('#33302b')))).mul(random(2).sub(0.5).mul(0.14).add(1))
+    const [first, second, third, fourth] = style.slabs.map(hex => color(hex))
+    const tone = select(pick.lessThan(0.4), first, select(pick.lessThan(0.72), second, select(pick.lessThan(0.94), third, fourth))).mul(random(2).sub(0.5).mul(0.14).add(1))
     // Cleavage: wavy bands across the slab at an angle of its own.
     const angle = random(3).mul(Math.PI)
     const across = lu.mul(angle.cos()).add(lv.mul(angle.sin()))
@@ -81,8 +95,8 @@ export default class SlateFloorMaterial extends FloorMaterial {
     surface = mix(surface, color('#b0913c'), pyrite.mul(0.6))
     // The fractures crushed the stone along their edges into pale dust around a dark gap; the joints are plain dark grout.
     const crackDust = cracks.mul(crackField.mul(radius).div(7).abs().div(crackWidth.add(0.0006)).clamp(0, 1))
-    surface = mix(surface, color('#0d1012'), joint.mul(0.85))
-    surface = mix(surface, mix(color('#0a0c0d'), color('#6d7275'), crackDust), cracks.mul(0.9))
+    surface = mix(surface, color(style.grout), joint.mul(0.85))
+    surface = mix(surface, mix(color(style.gap), color(style.dust), crackDust), cracks.mul(0.9))
     this.colorNode = surface
     this.roughnessNode = mix(float(roughness).add(bands.mul(0.04)).sub(pyrite.mul(0.05)), float(0.95), rough)
     this.metalnessNode = pyrite.mul(0.6)

@@ -4,6 +4,7 @@ import {expect, test} from 'bun:test'
 
 import {PerspectiveCamera, Texture} from 'three/webgpu'
 
+import {moonfallPalette, moonfallSlate} from '../../src/lib/gallery/moonfall/palette.ts'
 import ArchitecturalPlasterMaterial from '../../src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import {CheckeredMarbleFloorMaterial} from '../../src/lib/materials/marble/index.ts'
 import PlankFloorMaterial, {siennaFloorPlanks} from '../../src/lib/materials/PlankFloorMaterial.ts'
@@ -35,6 +36,7 @@ const floors: Array<[string, (reflections: boolean) => FloorMaterial]> = [
   ['slate', reflections => new SlateFloorMaterial({
     craterRadius: 3,
     reflections,
+    style: moonfallSlate(moonfallPalette(0)),
   })],
 ]
 for (const [kind, create] of floors) {
