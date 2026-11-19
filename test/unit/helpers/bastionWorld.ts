@@ -12,7 +12,8 @@ import CisternGeometry, {cisternWindowGeometry} from '../../../src/lib/gallery/c
 import InflowGeometry from '../../../src/lib/gallery/cistern/InflowGeometry.ts'
 import {climbMouth} from '../../../src/lib/gallery/climb.ts'
 import {slabHulls} from '../../../src/lib/gallery/floorPolygons.ts'
-import forge from '../../../src/lib/gallery/forge.ts'
+import forge, {forgeVestibule} from '../../../src/lib/gallery/forge.ts'
+import ForgeRoofGeometry, {ForgeCupolaGeometry} from '../../../src/lib/gallery/ForgeRoofGeometry.ts'
 import {forgeRoundVestibule, vestibuleArches} from '../../../src/lib/gallery/forgeVestibule.ts'
 import gateGeometry from '../../../src/lib/gallery/gateGeometry.ts'
 import LodgeEastWindowGeometry from '../../../src/lib/gallery/LodgeEastWindowGeometry.ts'
@@ -90,10 +91,18 @@ export function bastionColliders() {
   return colliders
 }
 
-/** The Bastion’s colliders and the Forge’s: its walls, its floor, its vestibule’s floor and the reveals of its arches, and the Bastion’s cistern behind the vestibule, its floor, its dead channel, its inflow’s pipe and the window onto the vestibule. */
+/** The Bastion’s colliders and the Forge’s: its walls, floors, roofs and the reveals of its arches, and the Bastion’s cistern behind the vestibule, its floor, its dead channel, its inflow’s pipe and the window onto the vestibule. */
 export function forgeAndBastionColliders() {
   const colliders = bastionColliders()
   colliders.walls(['forge'])
+  for (const [roof, [x, z]] of [[new ForgeRoofGeometry, forge.center], [new ForgeCupolaGeometry, forgeVestibule.center]] as const) {
+    colliders.shapes.push({
+      triangles: roof.collision,
+      fix: true,
+      translation: [x, 0, z],
+    })
+    roof.dispose()
+  }
   const floor = new ExtrudeGeometry(roundVestibuleFloorShape(forgeRoundVestibule), {
     depth: 0.24,
     bevelEnabled: false,

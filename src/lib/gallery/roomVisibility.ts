@@ -9,6 +9,7 @@ import {openingTop, wallCoordinates, wallOffset, wallPosition} from '#src/lib/pl
 import slopGallery from '#src/worlds/gallery/index.ts'
 import relations, {openings} from '#src/worlds/gallery/relations.ts'
 
+import {forgeRoof, forgeRoofBays} from './forgeRoof.ts'
 import lobby from './lobby.ts'
 import salonLantern, {salonDrumOuterApothem} from './salonLantern.ts'
 import {vesperLanternLayout, vesperLanternRidgeY, vesperLanternSillY} from './vesperCeiling.ts'
@@ -93,6 +94,16 @@ const salonDrumBox = (mirrored: boolean) => {
   const [bottom, top] = mirrored ? [-crown, -sill] : [sill, crown]
   return new Box3(new Vector3(x - reach, salon.floorY + bottom, z - reach), new Vector3(x + reach, salon.floorY + top, z + reach))
 }
+/** The Lobby vault is visible above the Forge’s east eave through its clerestories. */
+const forgeClerestoryBoxes = () => {
+  const forge = slopGallery.room('forge')
+  const [x, z] = forge.center
+  const half = forgeRoof.glassHalfWidth
+  return forgeRoofBays.map(({glassTop, glassBottom}) => new Box3(
+    new Vector3(x - half, forge.floorY + glassBottom[0], z + glassTop[1]),
+    new Vector3(x + half, forge.floorY + glassTop[0], z + glassBottom[1]),
+  ))
+}
 
 export const portals: Array<Portal> = [
   ...openings.map(({rooms: pair, holes}) => ({
@@ -111,6 +122,10 @@ export const portals: Array<Portal> = [
   ...[false, true].map(mirrored => ({
     rooms: ['salon', 'lobby'] as const,
     box: salonDrumBox(mirrored),
+  })),
+  ...forgeClerestoryBoxes().map(box => ({
+    rooms: ['forge', 'lobby'] as const,
+    box,
   })),
 ]
 

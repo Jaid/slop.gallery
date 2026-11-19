@@ -70,8 +70,8 @@ export default class GalleryNavigation {
     const [x, y, z] = position
     const ground = Math.min(room.floorY, groundOf(room, x, z))
     const main = inPlan(room, x, z)
-    const ceiling = room.id === 'sienna' && !main ? siennaVestibule.height : room.air[0].max.y
-    // Up to the top of its box, the vault’s or the dome’s crown included, or the Sienna’s vestibule’s lower ceiling; the Forge’s round one is as high as the room.
+    const ceiling = !main && room.id === 'sienna' ? siennaVestibule.height : (!main && room.id === 'forge' ? room.air[1].max.y : room.air[0].max.y)
+    // Up to the top of its box, the vault’s or the dome’s crown included, or the lower ceiling of the room’s vestibule.
     return y >= ground - 1 && y <= ceiling + 0.2 && (main || room.id === 'lodge' && lodgeBayFloor(x, z) !== undefined || room.id === 'sienna' && siennaVestibuleFloor(x, z) !== undefined || room.id === 'forge' && forgeVestibuleFloor(x, z) !== undefined || room.id === 'oculus' && insideApse(x, z))
   }
 }

@@ -85,6 +85,14 @@ test('a room shows the rooms behind the openings in view', () => {
   // The Moonfall stairway is visible from the Lobby at the reported camera position.
   expect(visibleRegions(['lobby'], viewProjection([-2.321, 1.62, 5.655], [5.248, 0.815, 13.195])).has('moonfall')).toBe(true)
 })
+test('the Forge keeps the Lobby vault drawn when looking through a clerestory above the east eave', () => {
+  const camera = new PerspectiveCamera(10, 16 / 9, 0.05, 90)
+  camera.position.set(-18.6, 1.6, -28.5)
+  camera.lookAt(-10.91, 6.92, -27.06)
+  camera.updateMatrixWorld()
+  const projection = new Matrix4
+  expect(visibleRegions(['forge'], projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)).has('lobby')).toBe(true)
+})
 /** the owner room of the object, by its ancestors like RoomCulling’s traversal */
 const ownerOf = (object: Object3D): GalleryRoomId | undefined => ownerRoom(object, object.parent ? ownerOf(object.parent) : undefined)
 test('a mesh belongs to the room that names itself its owner nearest above it, wherever its bounds reach', () => {

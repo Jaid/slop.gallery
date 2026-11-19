@@ -3,7 +3,7 @@ import type {RoomWall} from '../base/Room.ts'
 
 import {alchemyCannon, workbench} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {cisternWindowHole} from '#src/lib/gallery/cistern/window.ts'
-import forge, {forgeVestibule} from '#src/lib/gallery/forge.ts'
+import forge, {forgeBenchLamps, forgeBenchSign, forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {forgeArch, forgeRoundVestibule} from '#src/lib/gallery/forgeVestibule.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import {forgeWindow, lobbyWindowHole} from '#src/lib/gallery/lobbyWindows.ts'
@@ -58,6 +58,20 @@ export default {
     reservations: [
       machineReservation(benchX - workbench.length / 2, benchX + workbench.length / 2, workbench.height + 0.1),
       machineReservation(benchX - 0.45, benchX + 0.45, alchemyCannon.muzzle[1] + 0.35),
+      {
+        u: 0,
+        width: forgeBenchSign.width,
+        bottom: forgeBenchSign.y - forgeBenchSign.height / 2,
+        height: forgeBenchSign.y + forgeBenchSign.height / 2,
+        profile: 'rectangle',
+      },
+      ...Object.values(forgeBenchLamps.sites).map((x): WallReservation => ({
+        u: -x,
+        width: 0.46,
+        bottom: forgeBenchLamps.y - 0.18,
+        height: forgeBenchLamps.y + 0.24,
+        profile: 'rectangle',
+      })),
     ],
   },
   west,

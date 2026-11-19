@@ -2,11 +2,10 @@ import reverberation from '#src/lib/audio/transformers/reverberation.ts'
 
 import RoomMood from '../base/RoomMood.ts'
 
-/** The Forge’s own: plain stone and plaster round a rooflight, its round vestibule ringing faintly. */
+/** The Forge’s own: hard brick, tile and iron, with a faint ring in the round vestibule. */
 export default class ForgeMood extends RoomMood {
   readonly id = 'forge'
-  readonly title = 'Rooflit stone'
-  // Plain stone and plaster round a rooflight, its round vestibule ringing faintly.
+  readonly title = 'Brick and iron'
   override readonly transformer = reverberation({
     decay: 1.8,
     predelay: 0.018,

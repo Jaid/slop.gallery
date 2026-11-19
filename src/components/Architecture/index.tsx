@@ -38,6 +38,12 @@ export default function Architecture() {
     get corridorWood() {
       return shared.corridorWood
     },
+    get forgeTrim() {
+      return shared.forgeTrim
+    },
+    get forgeWall() {
+      return shared.forgeWall
+    },
     glass,
     get joinery() {
       return shared.joinery
