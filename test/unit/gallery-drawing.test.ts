@@ -129,6 +129,21 @@ test('warming draws every object outside the frustum once per camera, a budgetâ€
   expect(frames).toBeGreaterThan(3)
   expect(renderer.warmedAll).toBe(true)
 })
+test('streaming builds hidden objects that skip frustum culling once, like any other, and leaves their culling off', () => {
+  const {camera, hidden, renderer, scene} = setup()
+  hidden.frustumCulled = false
+  renderer.hidden.add(hidden)
+  renderer.setStreaming(true)
+  let hiddenDrawn = 0
+  for (let frame = 0; frame < 10; frame++) {
+    projected = []
+    nextFrame(renderer)
+    renderer.render(scene, camera)
+    hiddenDrawn += projected.filter(object => object === hidden).length
+    expect(hidden.frustumCulled).toBe(false)
+  }
+  expect(hiddenDrawn).toBe(1)
+})
 test.each(['warming', 'streaming'] as const)('%s admits new drawables by walking distance to their world bounds, independently of their parents', mode => {
   const renderer = createRenderer()
   const scene = new Scene

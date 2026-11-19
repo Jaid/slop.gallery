@@ -520,11 +520,12 @@ export class GalleryRenderer extends WebgpuRenderer {
     const distance = (object: Drawable) => perceptualDistance(this.eye, worldBounds(object).clampPoint(this.eye, nearest))
     const drawNew: Projection = (object, camera, groupOrder, renderList, clippingContext) => {
       this.warmObjects.getOrInsertComputed(object, () => new Set).add(camera)
+      const {frustumCulled} = object
       object.frustumCulled = false
       try {
         standard(object, camera, groupOrder, renderList, clippingContext)
       } finally {
-        object.frustumCulled = true
+        object.frustumCulled = frustumCulled
       }
     }
     const gate = (object: Object3D, camera: Camera) => {
@@ -571,7 +572,8 @@ export class GalleryRenderer extends WebgpuRenderer {
     this.projectStreaming = (object, camera, groupOrder, renderList, clippingContext) => {
       const culled = hidden.has(object) && !unculledCameras.has(camera) || hiddenFromView.has(object) && !shadowCameras.has(camera)
       const cameras = this.warmObjects.get(object)
-      if (!object.visible || !object.layers.test(camera.layers) || !object.frustumCulled || !hasGeometry(object) || drawing.recordingBundle || cameras?.has(camera)) {
+      // An object that skips frustum culling builds wherever it is drawn, but one in a hidden room needs its turn like any other.
+      if (!object.visible || !object.layers.test(camera.layers) || !object.frustumCulled && !culled || !hasGeometry(object) || drawing.recordingBundle || cameras?.has(camera)) {
         if (!culled) {
           standard(object, camera, groupOrder, renderList, clippingContext)
         }

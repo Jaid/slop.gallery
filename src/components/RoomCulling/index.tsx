@@ -103,12 +103,13 @@ export default function RoomCulling() {
           }
           refresher.visit(light as Light & {shadow: LightShadow}, shadowCamera => galleryRenderer.shadowIncomplete(shadowCamera))
         }
-        if (regions && room && !from.includes(room) && hasGeometry(object) && object.frustumCulled && !holdsLight(object)) {
+        if (regions && room && !from.includes(room) && hasGeometry(object) && !holdsLight(object)) {
           // Behind the loading screen, only the camera’s rooms get built; the rooms seen through their openings stream in first afterward.
           const rects = ready ? regions.get(room) : undefined
           if (!rects) {
             hidden.add(object)
-          } else {
+          } else if (object.frustumCulled) {
+            // Objects that skip frustum culling, like spray their shader moves, reach past their bounds, so they show wherever their room does.
             const world = worldBounds(object)
             if (!inSight(rects, world) && !inSight(rects, mirror(world, floorY))) {
               hiddenFromView.add(object)
