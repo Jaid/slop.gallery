@@ -13,7 +13,7 @@ import {useEffect, useMemo, useSyncExternalStore} from 'react'
 import InteractiveObject from '#component/InteractiveObject'
 import KnotLabels from '#component/KnotLabels'
 import GrabbableProp, {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
-import {frozenSeconds} from '#src/lib/frozenTime.ts'
+import {animationTimeOverride} from '#src/lib/frozenTime.ts'
 import {narrate, narrateModel, notify} from '#src/lib/gallery/actions.ts'
 import {trackLoadingItems} from '#src/lib/loadingItems.ts'
 import {knotMass} from '#src/lib/physics/knotPhysics.ts'
@@ -60,11 +60,11 @@ export default function KnotExhibition() {
   const rotation = useMemo(() => new KnotRotation, [])
   useBeforePhysicsStep(world => {
     if (isRotating) {
-      // Under ?frozen_time the Knots stand at the frozen angle, while physics keeps stepping for whatever moves through the frozen world.
-      if (frozenSeconds === undefined) {
+      const seconds = animationTimeOverride()
+      if (seconds === undefined) {
         rotation.advance(world.timestep)
       } else {
-        rotation.set(frozenSeconds)
+        rotation.set(seconds)
       }
     }
     for (const exhibit of knotExhibition) {
@@ -74,17 +74,6 @@ export default function KnotExhibition() {
       }
     }
   })
-  useEffect(() => {
-    globalThis.slopGallery ??= {}
-    const gallery = globalThis.slopGallery
-    const reset = () => rotation.reset()
-    gallery.resetKnotRotation = reset
-    return () => {
-      if (gallery.resetKnotRotation === reset) {
-        delete gallery.resetKnotRotation
-      }
-    }
-  }, [rotation])
   const materials = useDisposable(useMemo(() => new DirectKnotMaterials(knotExhibition, loadKnotMaterial, getPmremEnvironment()), []))
   const worn = useSyncExternalStore(materials.subscribe, materials.getSnapshot, materials.getSnapshot)
   useEffect(() => trackLoadingItems(() => materials.pendingMaterials.map(id => `knot-material:${id}`)), [materials])

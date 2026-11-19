@@ -31,8 +31,11 @@ export class FilmRecipeClock {
 
   take(stitchedStart: number, startingFrame: number) {
     const start = this.#continueAcrossClips ? stitchedStart : 0
-    const recipeFrame = (index: number) => start + (index + startingFrame - 1) % this.clipFrames
+    const localFrame = (index: number) => (index + startingFrame - 1) % this.clipFrames
+    const recipeFrame = (index: number) => start + localFrame(index)
     return {
+      // World animations keep running even when each take repeats the camera recipe.
+      animationSecondsAt: (index: number) => (stitchedStart + localFrame(index)) / this.fps,
       secondsAt: (index: number) => recipeFrame(index) / this.fps,
       callsAt: (index: number) => this.#calls.get(recipeFrame(index)),
     }

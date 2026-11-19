@@ -1,4 +1,6 @@
 export type VirtualClock = {
+  /** Absolute animation time of the image being drawn, in seconds on the movie timeline, independent of this page’s performance clock. */
+  animationSeconds?: number
   /** freezes performance.now() and requestAnimationFrame(); from now on, time only moves through step() */
   start: () => void
   /** advances the frozen clock, a hair further than asked unless by 0, and runs the animation frame callbacks that were queued until then */
@@ -13,7 +15,7 @@ declare global {
  * Page init script that lets an offline renderer own the engine clock, so animation deltas stay exact however slow each frame renders.
  * Until start(), everything runs on the wall clock. It must stay self-contained: Puppeteer serializes it into the page.
  */
-export const installVirtualClock = () => {
+export const installVirtualClock = (animationSeconds?: number) => {
   /**
    * How much further than asked every step goes, in ms: a nanosecond, microseconds over a whole film.
    * Adding up frame durations like 16.666… ms rounds, which leaves the clock short of the frame’s moment about half the time, so a deadline falling exactly on a frame, like a fusion’s, would wait a whole frame longer; this outweighs that rounding.
@@ -60,6 +62,7 @@ export const installVirtualClock = () => {
     queue.delete(id)
   }
   globalThis.virtualClock = {
+    animationSeconds,
     start: () => {
       if (!frozen) {
         now = realNow()

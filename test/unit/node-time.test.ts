@@ -4,6 +4,7 @@ import {afterEach, beforeEach, expect, spyOn, test} from 'bun:test'
 
 import {NodeFrame} from 'three/webgpu'
 
+import {AnimationClock} from '../../src/lib/frozenTime.ts'
 import worldClock from '../../src/lib/worldClock.ts'
 
 let wall = 0
@@ -59,4 +60,26 @@ test('every renderer’s frame keeps its own time, and a time set from outside i
   wall += 20
   second.update()
   expect(second.time).toBeCloseTo(12.02, 9)
+})
+test('the fire shader and its CPU light use the same movie time, independent of warmup, delta caps and extra settling frames', () => {
+  const previous = globalThis.virtualClock
+  try {
+    globalThis.virtualClock = {
+      start() {},
+      step() {},
+      animationSeconds: 0,
+    }
+    const shader = new NodeFrame
+    const firelight = new AnimationClock(0.1)
+    for (const seconds of [0, 2.5, 2.5, 2.5 + 1 / 60]) {
+      wall += 4000
+      globalThis.virtualClock.animationSeconds = seconds
+      shader.update()
+      expect(shader.time).toBe(seconds)
+      expect(firelight.advance(4)).toBe(seconds)
+      expect(firelight.time).toBe(shader.time)
+    }
+  } finally {
+    globalThis.virtualClock = previous
+  }
 })

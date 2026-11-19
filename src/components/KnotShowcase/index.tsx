@@ -10,7 +10,7 @@ import InteractiveObject from '#component/InteractiveObject'
 import GrabbableProp, {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import KnotNarration from '#src/lib/audio/KnotNarration.ts'
 import {narrator} from '#src/lib/audio/narration.ts'
-import {frozenSeconds} from '#src/lib/frozenTime.ts'
+import {animationTimeOverride} from '#src/lib/frozenTime.ts'
 import {galleryEvents, narrateModel, useGallery} from '#src/lib/gallery.ts'
 import showcasedKnots, {knotShowcaseHoverGap} from '#src/lib/gallery/showcasedKnots.ts'
 import {trackLoadingItems} from '#src/lib/loadingItems.ts'
@@ -34,10 +34,11 @@ export default function KnotShowcase({knots}: {knots: ReadonlyArray<ShowcasedKno
   const rotation = useMemo(() => new KnotRotation, [])
   useBeforePhysicsStep(world => {
     if (isRotating) {
-      if (frozenSeconds === undefined) {
+      const seconds = animationTimeOverride()
+      if (seconds === undefined) {
         rotation.advance(world.timestep)
       } else {
-        rotation.set(frozenSeconds)
+        rotation.set(seconds)
       }
     }
     for (const knot of knots) {
@@ -47,17 +48,6 @@ export default function KnotShowcase({knots}: {knots: ReadonlyArray<ShowcasedKno
       }
     }
   })
-  useEffect(() => {
-    globalThis.slopGallery ??= {}
-    const gallery = globalThis.slopGallery
-    const reset = () => rotation.reset()
-    gallery.resetKnotRotation = reset
-    return () => {
-      if (gallery.resetKnotRotation === reset) {
-        delete gallery.resetKnotRotation
-      }
-    }
-  }, [rotation])
   const materials = useDisposable(useMemo(() => new DirectKnotMaterials(knots.map(knot => knot.entry), loadKnotMaterial, getPmremEnvironment()), [knots]))
   const worn = useSyncExternalStore(materials.subscribe, materials.getSnapshot, materials.getSnapshot)
   useEffect(() => trackLoadingItems(() => materials.pendingMaterials.map(material => `knot-material:${material}`)), [materials])

@@ -28,7 +28,10 @@ export function readFrozenTime(input: URL | string = typeof location === 'undefi
 /** the seconds of `?frozen_time`, which every renderer’s node time stands at (see `rendering/nodeTime.ts`), or undefined while the engine time runs */
 export const frozenSeconds = readFrozenTime()
 
-/** The time of a CPU-side animation in seconds: the frame deltas summed up, each capped at `maxDelta`, or the frozen seconds under `?frozen_time`, like the shaders’ time. */
+/** Absolute pose time for CPU and shader animations. A frozen view wins over the film clock; ordinary play uses each animation’s own deltas. */
+export const animationTimeOverride = () => frozenSeconds ?? globalThis.virtualClock?.animationSeconds
+
+/** The time of a CPU-side animation in seconds: its absolute pose time, or the frame deltas summed up, each capped at `maxDelta`. */
 export class AnimationClock {
   private elapsed = 0
 
@@ -36,13 +39,14 @@ export class AnimationClock {
 
   /** the animation’s time in seconds as of the last {@link advance} */
   get time() {
-    return frozenSeconds ?? this.elapsed
+    return animationTimeOverride() ?? this.elapsed
   }
 
   /** adds a frame’s delta in seconds and returns the animation’s time */
   advance(delta: number) {
-    if (frozenSeconds !== undefined) {
-      return frozenSeconds
+    const seconds = animationTimeOverride()
+    if (seconds !== undefined) {
+      return seconds
     }
     this.elapsed += Math.min(delta, this.maxDelta)
     return this.elapsed

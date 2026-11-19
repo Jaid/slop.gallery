@@ -37,11 +37,6 @@ export default class KnotRotation {
     return true
   }
 
-  /** turns the shared clock back to the start of a revolution, so captures begin at the same angles every run */
-  reset() {
-    this.elapsed = 0
-  }
-
   /** sets the shared clock to an absolute time in seconds */
   set(seconds: number) {
     this.elapsed = seconds % knotRotationPeriod

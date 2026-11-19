@@ -67,3 +67,16 @@ test('duration requires positive finite seconds and can give a still recipe a re
   const still = new FilmRecipeClock([{time: 0}], 24, 0.1)
   expect(still.clipFrames).toBe(2)
 })
+test('world animation advances across cuts and agrees on every overlapping frame even when the camera repeats its recipe', () => {
+  const clock = new FilmRecipeClock(recipe, 4)
+  for (const fade of [0, 0.5]) {
+    const timeline = new StitchTimeline(2, clock.clipFrames, 4, fade)
+    const first = clock.take(0, timeline.recipeStart)
+    const next = clock.take(timeline.clipStart(1), timeline.recipeStart)
+    expect(first.secondsAt(0)).toBe(next.secondsAt(0))
+    for (let i = 0; i < timeline.fadeFrames; i++) {
+      expect(next.animationSecondsAt(i)).toBe(first.animationSecondsAt(clock.clipFrames - timeline.fadeFrames + i))
+    }
+    expect(next.animationSecondsAt(timeline.fadeFrames) - first.animationSecondsAt(clock.clipFrames - 1)).toBe(1 / 4)
+  }
+})

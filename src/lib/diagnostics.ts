@@ -101,8 +101,6 @@ type GalleryDebugApi = Partial<CaptureFrameApi> & {
       z: number
     }
   }
-  /** Knottingham only: turns every showcased Knot back to the start of its revolution, so films begin at the same angles */
-  resetKnotRotation?: () => void
   snapshot?: () => GalleryDiagnostics
   /** plays the party effect with the id, like `blood`, anywhere in the world: bursting out of the placement’s position, facing the way its rotation turns it around y, right away or after the options’ delay */
   spawnPartyEffect?: (id: PartyEffectId, placement: PartyPlacement, options?: PartyOptions) => void

@@ -89,7 +89,7 @@ test('Knots that appear late turn in sync with the shared clock, which resets to
   }
   expect(late.rotation().y).toBeCloseTo(early.rotation().y, 5)
   expect(late.rotation().w).toBeCloseTo(early.rotation().w, 5)
-  rotation.reset()
+  rotation.set(0)
   rotation.step(early)
   expect(early.rotation().y).toBeCloseTo(0, 5)
   expect(early.rotation().w).toBeCloseTo(1, 5)

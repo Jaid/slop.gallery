@@ -23,7 +23,7 @@ const help = `Usage: bun scripts/film.ts [options]
 
 Renders a flight of the player through a world and writes it as an animated AVIF or JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
 Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser.
-The engine clock is virtual: every frame advances the scene by exactly 1/fps seconds, however long it takes to render. Artworks that come into view are decoded before their frame is captured, so nothing pops in.
+The engine clock is virtual: every frame advances the scene by exactly 1/fps seconds, however long it takes to render. Shaders and timed animations like the Lodge firelight use the movie’s time across seeds, including during crossfades, unless --frozen_time holds them still. Each take still starts its own physics and sound. Artworks that come into view are decoded before their frame is captured, so nothing pops in.
 With --audio on (true, or a volume from 1 to 100, like ?audio), the page’s sound renders offline in step with the clock, at 48 kHz, so every sound starts on the frame that starts it, and the film carries it as Opus: WebM and Matroska inside, the other formats in an Opus file of the same name beside them. Sound the page plays through media elements or speech synthesis is not recorded.
 
 Options:
@@ -195,7 +195,7 @@ type Film = Awaited<ReturnType<typeof prepareFilm>>
 type FrameWriter = (source: GallerySetup['viewport']) => FrameSink['write']
 
 /** Records one whole take on a fresh virtual clock. Its frames are delivered at the canvas size, before downsampling and encoding. */
-const captureFilm = async ({encoding: {audio: audible, fps, frameCount}, recipe, settle}: Film, setup: GallerySetup, {secondsAt: frameSeconds, callsAt}: ReturnType<FilmRecipeClock['take']>, frames: FrameWriter) => {
+const captureFilm = async ({encoding: {audio: audible, fps, frameCount}, recipe, settle}: Film, setup: GallerySetup, {animationSecondsAt, secondsAt: frameSeconds, callsAt}: ReturnType<FilmRecipeClock['take']>, frames: FrameWriter) => {
   warnAboutDevServer(setup)
   // The first frame shows the clock 1/fps after it started, which is where the film’s sound begins.
   const leadIn = 1 / fps
@@ -204,7 +204,7 @@ const captureFilm = async ({encoding: {audio: audible, fps, frameCount}, recipe,
     rotation: [radians(shot.pitch), radians(shot.yaw), radians(shot.roll)],
     fov: shot.fov,
   })
-  const initScripts: Array<InitScript> = [installVirtualClock]
+  const initScripts: Array<InitScript> = [[installVirtualClock, animationSecondsAt(0)]]
   if (audible) {
     initScripts.push([installVirtualAudio, {
       duration: leadIn + frameCount / fps,
@@ -315,8 +315,6 @@ const captureFilm = async ({encoding: {audio: audible, fps, frameCount}, recipe,
   try {
     const frameUrl = `http://127.0.0.1:${frameServer.port}/`
     await page.evaluate(() => {
-      // Knots turned on the wall clock while the world loaded; every film starts them at the same angle.
-      globalThis.slopGallery!.resetKnotRotation?.()
       globalThis.virtualClock!.start()
       // Fiber measures its first frozen delta from the last wall-clock frame; this aligns it without recording.
       globalThis.virtualClock!.step(0)
@@ -331,16 +329,19 @@ const captureFilm = async ({encoding: {audio: audible, fps, frameCount}, recipe,
       const frameCalls = callsAt(index)
       // The sound renders up to the frame’s moment first, so whatever the frame starts sounds from there.
       await page.evaluate(async (frame: {
+        animationSeconds: number
         delta: number
         step: boolean
         view: Partial<CameraView>
       }) => {
+        globalThis.virtualClock!.animationSeconds = frame.animationSeconds
         globalThis.slopGallery!.fly!(frame.view)
         await globalThis.virtualAudio?.advance(frame.delta)
         if (frame.step) {
           globalThis.virtualClock!.step(frame.delta)
         }
       }, {
+        animationSeconds: animationSecondsAt(index),
         delta: 1 / fps,
         step: !frameCalls,
         view,
