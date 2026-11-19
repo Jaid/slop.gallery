@@ -88,18 +88,20 @@ export default class PipeGeometry {
     const face = southWallFace
     const clamps: Array<BufferGeometry> = []
     const [, riserBottom, riserTop] = corners.map(corner => new Vector3(...corner))
+    const boltRadius = 0.012
+    const clampRadius = radius + boltRadius
     for (const fraction of [0.3, 0.75]) {
       const point = riserBottom.clone().lerp(riserTop, fraction)
-      const clamp = new TorusGeometry(radius + 0.012, 0.012, 8, 40)
-      clamp.rotateX(Math.PI / 2)
+      // A U-bolt wraps the room-facing half of the pipe; each leg seats in a plate against the plaster.
+      const clamp = new TorusGeometry(clampRadius, boltRadius, 8, 20, Math.PI)
+      clamp.rotateX(-Math.PI / 2)
       clamps.push(clamp.translate(point.x, point.y, point.z))
-      // Two stays from the clamp’s back to the wall, either side of it along the pipe
       for (const side of [-1, 1]) {
-        const from = new Vector3(point.x, point.y + side * 0.05, point.z + radius)
-        clamps.push(rod(from, new Vector3(from.x, from.y, face + 0.01), 0.011, 8))
+        const from = new Vector3(point.x + side * clampRadius, point.y, point.z)
+        clamps.push(rod(from, new Vector3(from.x, from.y, face - 0.006), boltRadius, 8))
+        const plate = new CylinderGeometry(0.035, 0.035, 0.012, 20)
+        clamps.push(plate.rotateX(Math.PI / 2).translate(from.x, from.y, face - 0.006))
       }
-      const plate = new CylinderGeometry(0.035, 0.035, 0.012, 20)
-      clamps.push(plate.rotateX(Math.PI / 2).translate(point.x, point.y, face - 0.006))
     }
     this.brackets = mergeParts(clamps)
   }

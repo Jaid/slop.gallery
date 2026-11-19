@@ -76,7 +76,7 @@ const tables = [
 ] as const
 describe('the Forge’s tables', () => {
   for (const {center, geometry: build, name, table, turn, wall} of tables) {
-    test(`${name} has a 5 m × 1.2 m slab at 1.2 m on an iron frame clear of the baseboard`, () => {
+    test(`${name} has a 5 m × 1.3 m slab at 1.2 m on an iron frame clear of the baseboard`, () => {
       const geometry = build()
       try {
         const {footToInlay, nearest, nearestLow} = wallReach(geometry, wall, center, turn)
@@ -90,7 +90,7 @@ describe('the Forge’s tables', () => {
         geometry.top.computeBoundingBox()
         expect(geometry.top.boundingBox!.max.y).toBeCloseTo(1.2, 6)
         expect(geometry.top.boundingBox!.max.x - geometry.top.boundingBox!.min.x).toBeCloseTo(5, 6)
-        expect(geometry.top.boundingBox!.max.z - geometry.top.boundingBox!.min.z).toBeCloseTo(1.2, 6)
+        expect(geometry.top.boundingBox!.max.z - geometry.top.boundingBox!.min.z).toBeCloseTo(1.3, 6)
         expect(geometry.top.boundingBox!.min.y).toBeCloseTo(table.height - table.top, 6)
       } finally {
         geometry.dispose()

@@ -1,6 +1,6 @@
 import type {Vec3} from '../types.ts'
 
-import {baseboardCapFront, wallFace} from '../architectureDimensions.ts'
+import {wallFace} from '../architectureDimensions.ts'
 import {cisternWindow} from '../cistern/window.ts'
 import forge, {forgeTableSize} from '../forge.ts'
 import {ironTable} from '../ironTable.ts'
@@ -16,9 +16,8 @@ export const physicsSteps = {
 } as const
 const gravity = -9.81
 const pipeRadius = 0.18
-/** The pipe and its flanges fit between the slab and the south baseboard, with room for the wall clamps. */
-const pipeClearance = pipeRadius + 0.06
-const riserZ = southZ - baseboardCapFront - pipeClearance
+/** The upright pipe’s outer surface stands 5 cm off the plaster. */
+const riserZ = southWallFace - 0.05 - pipeRadius
 /** the workbench in its own frame, which lines up with the world’s: running east to west along the wall, its back toward it */
 const bench = ironTable({
   ...forgeTableSize,
@@ -38,8 +37,8 @@ const bench = ironTable({
  */
 export const workbench = {
   ...bench,
-  /** the middle of its slab in plan, on the room’s axis with the pipe behind its back edge */
-  center: [forge.center[0], riserZ - pipeClearance - bench.depth / 2] as const,
+  /** At rest its back edge clears the pipe by 8.5 cm, leaving room for the slab to turn around the sink. */
+  center: [forge.center[0], riserZ - pipeRadius - 0.085 - bench.depth / 2] as const,
 }
 const [benchX, benchZ] = workbench.center
 /** how far the sink’s bowl turns round from upright at its rim down to the throat, in radians: it meets the throat at a fall of 25° */
@@ -55,11 +54,9 @@ export const alchemySink = (() => {
   // The bowl is a quarter circle’s arc turning from upright at the rim by `bowlSweep`, down to the throat.
   const curve = (radius - throat) / (1 - Math.cos(bowlSweep))
   const rim = workbench.height - workbench.top
-  // Keep the bowl within reach from the front edge as the slab gets deeper.
-  const sinkZ = benchZ - workbench.depth / 2 + 0.175 + radius
   return {
     /** The intake is plumbed one meter east of the chest, independent of the slab’s length. */
-    center: [benchX + 1, workbench.height, sinkZ] as Vec3,
+    center: [benchX + 1, workbench.height, benchZ] as Vec3,
     radius,
     /** the radius of the throat inside, wide enough for an orb to drop through with a little room to spare */
     throat,
@@ -75,7 +72,7 @@ export const alchemySink = (() => {
 
 /** The bench turns around the fixed sink, with just enough play to keep its frame clear of the machine. */
 export const workbenchPivot: Vec3 = [alchemySink.center[0] - benchX, workbench.height, alchemySink.center[2] - benchZ]
-export const workbenchYawLimit = 2 * Math.PI / 180
+export const workbenchYawLimit = 4 * Math.PI / 180
 
 /**
  * The iron chest centered under the workbench. The intake enters its east side and the outlet leaves through the back; its front window glows while it works on an orb.

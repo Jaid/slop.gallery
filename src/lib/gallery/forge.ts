@@ -37,7 +37,7 @@ const northZ = forge.center[1] - forge.size[1] / 2
 
 /** The dimensions of each Forge table, in meters. */
 export const forgeTableSize = {
-  depth: 1.2,
+  depth: 1.3,
   height: 1.2,
   length: 5,
 } as const
@@ -55,7 +55,7 @@ export const forgeTable = ironTable({
 })
 /** The four outer tables fan out toward the open space halfway down the room. */
 function outerTable(side: -1 | 1, end: -1 | 1) {
-  const angle = Math.PI / 9
+  const angle = 19 * Math.PI / 180
   return {
     // Leave a walking gap between the facing ends on each side.
     center: [forge.center[0] + side * 3.25, forge.center[1] + (end < 0 ? -3.81 : 2.2)] as const,
