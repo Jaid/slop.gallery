@@ -7,7 +7,25 @@ import slopGallery from '#src/worlds/gallery/index.ts'
 test('a room map renders at its viewBox and unclipped, whatever size the file gives it', () => {
   const map = new RoomMap('<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="160" height="400" viewBox="-8 -20, 16 40" overflow="hidden" stroke-width="0.2"><path d="M 0 0 H 1"/></svg>\n')
   expect(map.frame).toEqual([-8, -20, 16, 40])
-  expect(map.markup).toBe('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -20, 16 40" stroke-width="0.2" x="-8" y="-20" width="16" height="40" overflow="visible"><path d="M 0 0 H 1"/></svg>')
+  const svg: Array<Record<string, string>> = []
+  const paths: Array<string | null> = []
+  const rewriter = new HTMLRewriter
+  rewriter.on('svg', {element: element => {
+    svg.push(Object.fromEntries(element.attributes))
+  }}).on('svg > path', {element: element => {
+    paths.push(element.getAttribute('d'))
+  }}).transform(map.markup)
+  expect(svg).toHaveLength(1)
+  expect(svg[0].viewbox.trim().split(/[\s,]+/u).map(Number)).toEqual([...map.frame])
+  expect(svg[0]).toMatchObject({
+    x: '-8',
+    y: '-20',
+    width: '16',
+    height: '40',
+    overflow: 'visible',
+    'stroke-width': '0.2',
+  })
+  expect(paths).toEqual(['M 0 0 H 1'])
   expect(map.placedFrame([10, -5])).toEqual([2, -25, 16, 40])
 })
 test.each([

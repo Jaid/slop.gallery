@@ -13,6 +13,7 @@ import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {readWorldReach} from '../../src/worlds/base/WorldReach.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import relations from '../../src/worlds/gallery/relations.ts'
+import SlopGallery from '../../src/worlds/gallery/SlopGallery.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
 
@@ -112,6 +113,14 @@ describe('?world_reach', () => {
     }
   })
   test('the spawn of a room in reach stands in for the world’s spawn while the default room is out of reach', () => {
+    class ForgeOnlyGallery extends SlopGallery {
+      override get reach() {
+        return this.reachOf('http://localhost/?world_reach=room&room=forge')
+      }
+    }
+    const gallery = new ForgeOnlyGallery
+    expect(gallery.reach.covers(gallery.defaultRoom)).toBe(false)
+    expect(gallery.spawnInReach).toEqual(gallery.room('forge').spawn)
     expect(slopGallery.spawnInReach).toEqual(slopGallery.spawn)
   })
 })

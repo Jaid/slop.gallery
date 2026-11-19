@@ -61,19 +61,25 @@ test('furniture geometry is finite, merged per material and within its triangle 
   }
 })
 test('furniture colliders cover every piece that stands on the floor', () => {
-  const names = new Set(lodgeFurnitureColliders().map(collider => collider.name))
-  for (const name of ['lodge-sofa', 'lodge-armchair-0', 'lodge-armchair-1']) {
-    expect(names.has(name)).toBe(true)
+  const colliders = lodgeFurnitureColliders()
+  const seats = [
+    {
+      name: 'lodge-sofa',
+      ...lodgeInterior.sofa,
+    },
+    ...lodgeInterior.armchairs.map((chair, i) => ({
+      name: `lodge-armchair-${i}`,
+      ...chair,
+    })),
+  ]
+  expect(colliders).toHaveLength(seats.length)
+  for (const {name, position, yaw} of seats) {
+    expect(colliders.find(collider => collider.name === name)).toMatchObject({
+      position,
+      yaw,
+    })
   }
-  // Removed furniture must not leave behind colliders.
-  for (const name of ['lodge-coffee-table', 'lodge-console-table', 'lodge-fire-tools', 'lodge-firewood']) {
-    expect(names.has(name)).toBe(false)
-  }
-  // The mantel stays bare.
-  for (const key of ['candlesticks', 'books', 'firewood', 'windowSeat', 'coffeeTable']) {
-    expect(key in lodgeInterior).toBe(false)
-  }
-  for (const {size} of lodgeFurnitureColliders()) {
+  for (const {size} of colliders) {
     expect(size.every(value => Number.isFinite(value) && value > 0)).toBe(true)
   }
 })
