@@ -143,11 +143,13 @@ describe('wall geometry', () => {
       wallId: 'vesper-north',
       inReach: false,
     })
+    // The Vesper’s centered south arch opens into the Sienna’s north-east corner.
+    expect(sienna.holes![0].u).toBeCloseTo(4)
     expect(galleryPlacement.findPlacement([-10.2, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
       wallId: 'vesper-south',
       inReach: true,
     })
-    expect(galleryPlacement.findPlacement([-10.2, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([-18, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
       wallId: 'sienna-north',
       inReach: true,
     })
@@ -161,10 +163,10 @@ describe('wall geometry', () => {
     })
   })
   test('gallery bounds include the Sienna but not the empty space beside it', () => {
-    for (const position of [[-14, 2, 14], [-14, 2, 19.8], [0, 2, 14], [-20, 0, 20]] as const) {
+    for (const position of [[-18, 2, 14], [-14, 2, 19.8], [0, 2, 14], [-24, 0, 20], [-21.4, 2, 22.6]] as const) {
       expect(insideGallery([...position])).toBe(true)
     }
-    for (const position of [[-6, 2, 18], [14, 3, 14], [-14, 2, 20.01], [-20.01, 2, 14], [-14, -1.01, 14], [-14, 6.01, 14], [Number.NaN, 2, 14]] as const) {
+    for (const position of [[-6, 2, 18], [-11.99, 2, 14], [14, 3, 14], [-14, 2, 20.01], [-24.01, 2, 14], [-18, -1.01, 14], [-18, 6.01, 14], [Number.NaN, 2, 14]] as const) {
       expect(insideGallery([...position])).toBe(false)
     }
   })

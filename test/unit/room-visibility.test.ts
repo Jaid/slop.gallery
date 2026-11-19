@@ -136,11 +136,11 @@ test('a pickup belongs to the room it is in and keeps it in passages', () => {
   expect(ownerOf(lost)).toBeUndefined()
 })
 test('the Corridor’s stair flight and landing belong to the Corridor, and the vestibule beyond to the Sienna', () => {
-  expect(roomContaining([-29.8, -0.9, 6.5])).toBe('corridor')
-  expect(roomContaining([-26.1, 1.6, 10.2])).toBe('corridor')
-  expect(roomContaining([-22.4, 1.6, 10.4])).toBe('sienna')
+  expect(roomContaining([-29.4, -0.9, 18.3])).toBe('corridor')
+  expect(roomContaining([-25.2, 1.6, 22.5])).toBe('corridor')
+  expect(roomContaining([-21.4, 1.6, 22.6])).toBe('sienna')
   // Flying at the hall’s south end, where the flight turns off onto the diagonal, with the vestibule’s arch out of view.
-  expect(roomsAt([-33.7, -3.4, 2.6])).toEqual(['corridor'])
+  expect(roomsAt([-33.7, -3.4, 14])).toEqual(['corridor'])
 })
 test('a camera stands in the rooms around it', () => {
   expect(roomsAt([-14, 1.6, 0])).toEqual(['vesper'])

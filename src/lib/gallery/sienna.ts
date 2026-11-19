@@ -4,9 +4,9 @@ import type {FloorRectangle} from './floors.ts'
 import lodge from './lodge.ts'
 import {salonCeiling} from './salon.ts'
 
-/** The Sienna’s square floor plan, west of the Lobby on the ground floor, where the layout puts it. */
+/** The Sienna’s square floor plan, shifted west under the Vesper so the Vesper’s centered south arch opens into its north-east corner. */
 const sienna = {
-  center: [-14, 14],
+  center: [-18, 14],
   size: [12, 12],
   floorY: 0,
   height: 5.8,
@@ -15,15 +15,17 @@ const sienna = {
   height: number
 }
 const westX = sienna.center[0] - sienna.size[0] / 2
-const northZ = sienna.center[1] - sienna.size[1] / 2
-/** the vestibule’s width and depth: centered on the arch and flush with the Sienna’s north wall */
-const vestibuleSize = (lodge.siennaZ - northZ) * 2
+const southZ = sienna.center[1] + sienna.size[1] / 2
+/** the pier beside each arch of the vestibule: wide enough for the adjacent classic casings and plinths in its north-west corner to clear each other, matching the pier beside the Vesper arch */
+const vestibulePier = 0.6
+/** the vestibule’s width and depth: centered on both 4 m arches and flush with the Sienna’s west wall */
+const vestibuleSize = lodge.timberWidth + vestibulePier * 2
 /**
- * The vestibule west of the Sienna’s arch, still the Sienna’s: a square anteroom at the Sienna’s floor, flush with the Sienna’s north wall, with a second arch in its west wall, where the Corridor arrives up its stair flight.
+ * The vestibule south of the Sienna’s south-west arch, still the Sienna’s: a square anteroom at the Sienna’s floor, flush with the Sienna’s west wall, with a second arch in its west wall, where the Corridor arrives up its stair flight.
  * Its ceiling is as low as the arches’ casings and the cornice above them allow.
  */
 export const siennaVestibule = {
-  center: [westX - vestibuleSize / 2, lodge.siennaZ],
+  center: [westX + vestibuleSize / 2, southZ + vestibuleSize / 2],
   size: [vestibuleSize, vestibuleSize],
   height: 4.3,
 } as const satisfies FloorRectangle & {

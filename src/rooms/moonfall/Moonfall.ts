@@ -27,7 +27,7 @@ export default class Moonfall extends Room {
   override readonly air = floorBox(plan.size, bottom, 5.8 - bottom)
   override readonly description = 'Down the stairs. Out of the ordinary.'
   override readonly fence = new Geofence([
-    // Everything under its floor plan, up to just over its ceiling; it comes before the Corridor, whose stairs climb over a corner of it.
+    // Everything under its floor plan, up to just over its ceiling.
     {
       ...footprint([this.air]),
       ceiling: 6,

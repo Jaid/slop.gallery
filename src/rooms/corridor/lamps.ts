@@ -22,7 +22,7 @@ export default {
     ...lantern,
     position: [0, 2.4, 0],
     strength: 5.6,
-    range: 20,
+    range: 25,
     decay: 1,
   },
   lantern_south: {
