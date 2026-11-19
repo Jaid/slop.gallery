@@ -55,8 +55,6 @@ const lodgeInterior = {
   armchairs,
   /** how much wider than a seat of the sofa an armchair’s is */
   armchairSpread: 0.08,
-  /** the armchair the stranger sits in while the player is in the Bastion’s knight’s alley: the one in front of the east window onto that alley, its back to the window, so all the alley sees of him is his hat and his shoulders over it */
-  strangerSeat: armchairs[0],
   /**
    * The fieldstone chimney breast on the south wall. Lengths are along the room’s z; the fireplace group itself is turned by 180°, so its frame uses the negated values.
    *

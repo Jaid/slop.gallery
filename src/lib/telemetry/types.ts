@@ -36,6 +36,20 @@ export type GeofenceState = {
 export type GeofenceStore = {
   subscribe: (listener: (state: GeofenceState, previous: GeofenceState) => void) => () => void
 }
+/** Telemetry only needs how the player caught sight of the Sloperator, at the sights not left since. */
+export type SloperatorState = {
+  sighted: ReadonlyArray<{
+    /** how far from the eye he sat, in meters */
+    distance: number
+    /** where the eye was, in world meters */
+    position: readonly [x: number, y: number, z: number]
+    /** the id of the sight he sat at */
+    sight: string
+  }>
+}
+export type SloperatorStore = {
+  subscribe: (listener: (state: SloperatorState, previous: SloperatorState) => void) => () => void
+}
 export type SlopGalleryTelemetryOptions = Omit<VictoriaClientOptions, 'endpoint' | 'endpoints' | 'resource' | 'serviceName'> & {
   /** full ingestion URLs of VictoriaLogs JSON lines, VictoriaMetrics JSON import and VictoriaTraces OTLP JSON; a missing signal is not sent */
   endpoints?: Partial<Record<'logs' | 'metrics' | 'traces', string>>
