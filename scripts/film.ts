@@ -1,7 +1,8 @@
 import type {CameraView} from '#src/lib/diagnostics.ts'
-import type {InitScript} from './lib/headlessGallery.ts'
-import type {AudioTrack, Shot, ToolCall} from 'capture-session/script'
+import type {GallerySetup, InitScript} from './lib/headlessGallery.ts'
+import type {AudioTrack, FrameSink, Shot, ToolCall} from 'capture-session/script'
 
+import {tmpdir} from 'node:os'
 import {dirname, join, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
@@ -11,7 +12,9 @@ import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
 import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
+import {defaultSeedRange, describeInput, filmInputs} from './lib/filmInputs.ts'
 import {anchorWorldReach, degrees, galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
+import {StitchTimeline} from './lib/stitchTimeline.ts'
 
 /** how many characters of a tool’s result the log shows */
 const logLength = 400
@@ -25,6 +28,9 @@ With --audio on (true, or a volume from 1 to 100, like ?audio), the page’s sou
 Options:
   --recipe <file>         JSON camera recipe, or - to read it from stdin. Default: scripts/recipes/spawn.json, a two-second metronome sway at the gallery spawn
 ${galleryHelp()}
+  --seed-range <min..max> inclusive search range for seed wildcards. Default: ${defaultSeedRange} (the default environment and all seeds a game rolls). Literal seeds and brace ranges can use any unsigned 32-bit seed
+  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). With three or more clips, at most half the length of one clip
+  --list                  print the target and seed of each clip in playback order and exit without recording
   --output-file <file>    the extension picks the format. Default: out/film/<world>-<timestamp>.jxl
                           .jxl  animated JPEG XL
                           .webm, .mkv  AV1 video
@@ -38,6 +44,12 @@ ${galleryHelp()}
   --preset <number>       SVT-AV1 preset for .webm and .mkv, lower compresses better and encodes slower. Default: ${av1Preset}
   --settle <frames>       frames to render before recording, on the wall clock at the first keyframe, and at the same moment after a keyframe’s tools ran. Default: 2
   -h, --help              show this help
+
+To film the same recipe across builds or seeds, repeat --target and/or --seed, or quote patterns:
+
+  bun scripts/film.ts --target 'builds/v[12]' --seed '[12]' --recipe scripts/recipes/fountain_dolly.json --crossfade 0.25 --output-file comparison.webm
+
+This plays v1/1, v1/2, v2/1, v2/2. --target accepts globby folder patterns, including exclusions like --target '!builds/old'; use forward slashes. Literal paths play in argument order, glob results in path order. --seed accepts minimatch patterns against decimal seeds, like '[12]' or '{10..13}'. Seed arguments play in order with each pattern’s matches sorted numerically. Overlapping matches play once.
 
 A recipe is a JSON array of keyframes, ordered by time:
 
@@ -85,6 +97,16 @@ const filmRoot = join(repositoryRoot, 'out', 'film')
 const sampleRate = 48_000
 const filmOptions = {
   ...galleryOptions,
+  seed: {
+    type: 'string',
+    multiple: true,
+  },
+  target: {
+    type: 'string',
+    multiple: true,
+  },
+  'seed-range': {type: 'string'},
+  crossfade: {type: 'string'},
   crf: {type: 'string'},
   'fast-decode': {type: 'string'},
   fps: {
@@ -109,10 +131,12 @@ const filmOptions = {
   },
 } as const
 
+export type FilmOptions = Omit<ParsedOptions, 'seed' | 'target'> & Parameters<typeof filmInputs>[0]
 /** the command line options without --help, as parsed strings */
-export type FilmOptions = ReturnType<typeof parseArgs<{options: typeof filmOptions}>>['values']
+type ParsedOptions = ReturnType<typeof parseArgs<{options: typeof filmOptions}>>['values']
 
-const main = async (options: FilmOptions) => {
+/** Reads the recipe once (including stdin) and resolves settings common to every take. */
+const prepareFilm = async (options: FilmOptions, setup: GallerySetup) => {
   const recipeFile = options.recipe ?? join(import.meta.dir, 'recipes', 'spawn.json')
   const recipeText = recipeFile === '-' ? await Bun.stdin.text() : await fs.readFile(recipeFile, 'utf8')
   const recipe = parseRecipe(JSON.parse(recipeText))
@@ -138,8 +162,6 @@ const main = async (options: FilmOptions) => {
   if (fps <= 0) {
     throw new Error('--fps must be positive.')
   }
-  const setup = await resolveGallerySetup(options)
-  warnAboutDevServer(setup)
   const settle = resolveSettle(options.settle)
   const output = options['output-file'] === undefined ? join(filmRoot, `${setup.world}-${timestamp()}.jxl`) : resolve(options['output-file'])
   const format = frameFormat(output)
@@ -152,10 +174,37 @@ const main = async (options: FilmOptions) => {
   if (!Number.isSafeInteger(startingFrame) || startingFrame < 1 || startingFrame > frameCount) {
     throw new Error(`--starting-frame must be a whole number between 1 and ${frameCount}.`)
   }
+  return {
+    duration,
+    encoding: {
+      audio: readAudioOverride(`http://localhost/?${setup.search}`) === true,
+      crf,
+      fastDecode,
+      fps,
+      frameCount,
+      height,
+      jxlDistance,
+      keyframeInterval,
+      output,
+      preset,
+      width,
+    },
+    format,
+    recipe,
+    settle,
+    startingFrame,
+  }
+}
+
+type Film = Awaited<ReturnType<typeof prepareFilm>>
+type FrameWriter = (source: GallerySetup['viewport']) => FrameSink['write']
+
+/** Records one whole take on a fresh virtual clock. Its frames are delivered at the canvas size, before downsampling and encoding. */
+const captureFilm = async ({duration, encoding: {audio: audible, fps, frameCount}, recipe, settle, startingFrame}: Film, setup: GallerySetup, frames: FrameWriter) => {
+  warnAboutDevServer(setup)
   const frameSeconds = (index: number) => (index + startingFrame - 1) % frameCount / fps
   // Each call runs before the output frame showing the first recipe frame at or after its time, wrapping around with --starting-frame.
   const calls = Map.groupBy(recipeToolCalls(recipe), (call: ToolCall) => (Math.ceil(call.time * fps - 1e-6) - startingFrame + 1 + frameCount) % frameCount)
-  const audible = readAudioOverride(`http://localhost/?${setup.search}`) === true
   // The first frame shows the clock 1/fps after it started, which is where the film’s sound begins.
   const leadIn = 1 / fps
   const toView = (shot: Shot): Partial<CameraView> => ({
@@ -217,21 +266,7 @@ const main = async (options: FilmOptions) => {
       height: frame.height,
     }
   })
-  await fs.mkdir(dirname(output), {recursive: true})
-  const sink = createFrameSink(format, {
-    audio: audible,
-    crf,
-    fastDecode,
-    fps,
-    frameCount,
-    height,
-    jxlDistance,
-    keyframeInterval,
-    output,
-    preset,
-    source,
-    width,
-  })
+  const write = frames(source)
   const frameBytes = source.width * source.height * 4
   // stereo at 32 bits, with a second to spare
   const audioBytes = Math.ceil((leadIn + frameCount / fps + 1) * sampleRate) * 2 * 4
@@ -277,7 +312,7 @@ const main = async (options: FilmOptions) => {
           headers,
         })
       }
-      await sink.write(pixels)
+      await write(pixels)
       received++
       return new Response(null, {
         status: 204,
@@ -385,25 +420,89 @@ const main = async (options: FilmOptions) => {
         console.warn('Warning: the page never made an audio context, so the film has no sound.')
       }
     }
-  } catch (error) {
-    sink.abort()
-    throw error
   } finally {
     await frameServer.stop(true)
   }
-  await sink.finish(audio)
   return {
-    /** where the sound went, if any */
-    audio: audio && (carriesAudio(format) ? output : audioSidecar(output)),
-    format,
-    fps,
-    frameCount,
-    height,
-    output,
-    /** what the recipe’s tool calls returned, in the order they ran */
+    audio,
     tools: results,
-    width,
   }
+}
+/** Opens one encoder at the first take’s canvas size and keeps it for the entire movie. */
+const main = async (options: FilmOptions) => {
+  const inputs = await filmInputs(options)
+  const first = await resolveGallerySetup({
+    ...options,
+    ...inputs[0],
+  })
+  const film = await prepareFilm(options, first)
+  const {encoding, format} = film
+  const {fps, height, output, width} = encoding
+  const timeline = new StitchTimeline(inputs.length, encoding.frameCount, fps, Number(options.crossfade ?? 0))
+  const {frameCount} = timeline
+  await fs.mkdir(dirname(output), {recursive: true})
+  const scratch = timeline.fadeFrames ? await fs.mkdtemp(join(tmpdir(), 'film-fade-')) : undefined
+  let sink: FrameSink | undefined
+  let size: GallerySetup['viewport'] | undefined
+  const tools: Awaited<ReturnType<typeof captureFilm>>['tools'] = []
+  try {
+    for (const [clip, input] of inputs.entries()) {
+      if (inputs.length > 1) {
+        console.error(`Recording clip ${clip + 1}/${inputs.length}: ${describeInput(input)}`)
+      }
+      const setup = clip === 0 ? first : await resolveGallerySetup({
+        ...options,
+        ...input,
+      })
+      const recording = await captureFilm(film, setup, source => {
+        if (size && (size.width !== source.width || size.height !== source.height)) {
+          throw new Error(`Canvas size changed between takes: ${size.width}×${size.height} → ${source.width}×${source.height}.`)
+        }
+        size = source
+        sink ??= createFrameSink(format, {
+          ...encoding,
+          frameCount,
+          source,
+        })
+        return timeline.writer(clip, sink.write, scratch)
+      })
+      if (recording.audio) {
+        timeline.mix(clip, recording.audio)
+      }
+      for (const tool of recording.tools) {
+        tools.push(tool)
+      }
+    }
+    const {audio} = timeline
+    await sink!.finish(audio)
+    return {
+      /** where the sound went, if any */
+      audio: audio && (carriesAudio(format) ? output : audioSidecar(output)),
+      format,
+      fps,
+      frameCount,
+      height,
+      output,
+      tools,
+      width,
+    }
+  } catch (error) {
+    sink?.abort()
+    throw error
+  } finally {
+    if (scratch) {
+      await fs.remove(scratch)
+    }
+  }
+}
+const shorten = (file: string) => relative(repositoryRoot, file).replaceAll('\\', '/')
+const reportFilm = ({audio, format, fps, frameCount, height, output, width}: Awaited<ReturnType<typeof main>>) => {
+  const written = shorten(output)
+  let sound = ''
+  if (audio !== undefined) {
+    sound = audio === output ? ' with sound' : `, sound in ${shorten(audio)}`
+  }
+  console.log(`Wrote ${format === 'png' ? `${frameCount} numbered PNGs for ${written}` : written} (${width}×${height}, ${frameCount} frames at ${fps} fps, ${(frameCount / fps).toFixed(2)} s${sound})`)
 }
 
 export default main
@@ -413,6 +512,7 @@ if (import.meta.main) {
     args: Bun.argv.slice(2),
     options: {
       ...filmOptions,
+      list: {type: 'boolean'},
       help: {
         type: 'boolean',
         short: 'h',
@@ -421,14 +521,11 @@ if (import.meta.main) {
   })
   if (values.help) {
     console.log(help)
-  } else {
-    const {audio, format, fps, frameCount, height, output, width} = await main(values)
-    const shorten = (file: string) => relative(repositoryRoot, file).replaceAll('\\', '/')
-    const written = shorten(output)
-    let sound = ''
-    if (audio !== undefined) {
-      sound = audio === output ? ' with sound' : `, sound in ${shorten(audio)}`
+  } else if (values.list) {
+    for (const input of await filmInputs(values)) {
+      console.log(describeInput(input))
     }
-    console.log(`Wrote ${format === 'png' ? `${frameCount} numbered PNGs for ${written}` : written} (${width}×${height}, ${frameCount} frames at ${fps} fps, ${(frameCount / fps).toFixed(2)} s${sound})`)
+  } else {
+    reportFilm(await main(values))
   }
 }
