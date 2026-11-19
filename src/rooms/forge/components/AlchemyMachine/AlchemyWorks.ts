@@ -14,7 +14,7 @@ import {bodyPose, playSound, useGallery} from '#src/lib/gallery.ts'
 import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {orbAround, transmutedOrb} from '#src/lib/gallery/alchemy/flavor.ts'
 import IntakePassage from '#src/lib/gallery/alchemy/IntakePassage.ts'
-import {onGeofenceEnter} from '#src/lib/gallery/geofences.ts'
+import {onRoomEnter} from '#src/lib/gallery/geofences.ts'
 import {orbSeat} from '#src/lib/gallery/OrbHolderGeometry.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
@@ -64,7 +64,7 @@ const roomAt = (position: Vec3) => slopGallery.roomAt(position)?.id
 
 /**
  * What the alchemy machine does, frame by frame: it takes in every orb that drops down its sink’s throat, out of the physics, lets it sink out of sight, works on it for a while and shoots out what it made of it through its cannon, one orb at a time, see {@link transmutedOrb}. A flavored orb comes out as itself; a Transparent Orb that takes a flavor is used up, and a new orb of that flavor comes out in its stead, made hidden in the barrel as soon as the machine takes in the old one.
- * It keeps a Transparent Orb in its holder: one when a game begins, and another whenever the player comes onto the Bastion’s approach to the Forge, the gallery’s `imminent_forge` fence, while no orb is left in the Forge or the Bastion, inside the machine included.
+ * It keeps a Transparent Orb in its holder: one when a game begins, and another whenever the player enters the Forge while no orb is left in the Forge or the Bastion, inside the machine included.
  * Every orb it brings into the world it hands to `add`, which mounts it.
  */
 export default class AlchemyWorks {
@@ -96,9 +96,12 @@ export default class AlchemyWorks {
 
   constructor(private readonly add: (orb: AlchemyOrb) => void, private readonly fx: CannonFx, private readonly puff: () => void) {}
 
-  /** Puts another Transparent Orb into the holder whenever the player enters the gallery’s `imminent_forge` fence, about to arrive in the Forge, while no orb is left in the Forge or the Bastion and nothing lies in the holder’s way; returns the unsubscription. */
+  /**
+   * Puts another Transparent Orb into the holder whenever the player enters the Forge while no orb is left in the Forge or the Bastion and nothing lies in the holder’s way; returns the unsubscription.
+   * The Forge begins at the west arch of its vestibule, from where the wall beside the arch into the room still hides the holder, so the orb is there before the player can see it.
+   */
   restock() {
-    return onGeofenceEnter('imminent_forge', () => {
+    return onRoomEnter('forge', () => {
       if (this.batches.length || this.loaded || orbAround(propPositions(), roomAt)) {
         return
       }

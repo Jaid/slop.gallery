@@ -395,15 +395,14 @@ describe('the alchemy machine’s cannon going off', () => {
   })
 })
 describe('the alchemy machine’s holder', () => {
-  test('gets another Transparent Orb whenever the player comes onto the Bastion’s approach to the Forge while no orb is left in the Forge or the Bastion and nothing lies in its way', () => {
+  test('gets another Transparent Orb whenever the player enters the Forge while no orb is left in the Forge or the Bastion and nothing lies in its way', () => {
     const {id: first, position: seat} = AlchemyWorks.firstOrb
     const second = `${transparentOrb.propId}-holder-2`
     const still: Vec3 = [0, 0, 0]
-    // A standing player’s place on the Bastion’s run north behind the Forge, on its approach to the vestibule and in the Lobby
-    const [runX, runZ] = climbRun.route.at(-3).point
-    const [approachX, approachZ] = climbApproach.route.at(2).point
-    const onRun: Vec3 = [runX, 0.9, runZ]
-    const onApproach: Vec3 = [approachX, 0.9, approachZ]
+    // A standing player’s place on the Bastion’s approach to the Forge’s vestibule, half a meter short of its west arch, half a meter through it, where the Forge begins, and in the Lobby
+    const {point: [archX, archZ]} = climbApproach.route.end
+    const onApproach: Vec3 = [archX - 0.5, 0.9, archZ]
+    const inVestibule: Vec3 = [archX + 0.5, 0.9, archZ]
     const inLobby: Vec3 = [0, 0.9, -20]
     const added: Array<AlchemyOrb> = []
     const fx = new CannonFx
@@ -414,17 +413,19 @@ describe('the alchemy machine’s holder', () => {
       placed.add(id)
       propObjects.set(id, {group: {getWorldPosition: (target: Vector3) => target.set(...position)}} as unknown as PropHandle)
     }
-    /** Walks the player up the run onto the approach. */
+    /** Walks the player up the approach and through the arch into the vestibule. */
     const arrive = () => {
-      probeGeofences(onRun, still)
-      probeGeofences(onApproach, [0, 0, -3])
+      probeGeofences(onApproach, still)
+      expect(useGallery.getState().room).toBe('bastion')
+      probeGeofences(inVestibule, [3, 0, 0])
+      expect(useGallery.getState().room).toBe('forge')
     }
     const {center} = bodyPose
     const stop = works.restock()
     try {
-      // A player starting on the approach has not come onto it.
-      startGeofences(onApproach)
-      expect(useGeofences.getState().fences).toContain('imminent_forge')
+      // A player starting in the Forge has not entered it.
+      startGeofences(inVestibule)
+      expect(useGallery.getState().room).toBe('forge')
       expect(added).toEqual([])
       // The orb still waits in the holder, lies in the Forge, rolled down into the Bastion or comes back in the player’s hands.
       place(first, seat)
@@ -435,12 +436,14 @@ describe('the alchemy machine’s holder', () => {
       arrive()
       place(first, inLobby)
       useGallery.setState({held: first})
-      bodyPose.center = onApproach
+      bodyPose.center = inVestibule
       arrive()
       expect(added).toEqual([])
-      // Left behind in the Lobby, it leaves the holder to a new one, which the machine puts there as the player comes up, not as the player leaves the Bastion.
+      // Left behind in the Lobby, it leaves the holder to a new one, which the machine puts there as the player enters the Forge, neither as the player leaves the Bastion for another room nor back on the approach.
       useGallery.setState({held: null})
+      probeGeofences(onApproach, still)
       probeGeofences(inLobby, still)
+      probeGeofences(onApproach, still)
       expect(added).toEqual([])
       arrive()
       expect(added).toEqual([{
