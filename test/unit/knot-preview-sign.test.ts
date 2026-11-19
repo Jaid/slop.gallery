@@ -1,10 +1,13 @@
 import {expect, test} from 'bun:test'
+import {fileURLToPath} from 'node:url'
 
 import {knotBays, knotNumberLabel} from 'knot-materials/exhibition.ts'
 import {knotPreviewBottomClearance, knotPreviewHeight, knotPreviewMountY, knotPreviewPanelOffsetY, knotPreviewTextureHeight, knotPreviewTextureLayout, knotPreviewTextureWidth, knotPreviewWidth} from 'knot-materials/KnotPreviewLayout.ts'
 import {billboardParts} from 'knot-materials/signs.ts'
+import puppeteer from 'puppeteer-core'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
+import {preprocessCSS, resolveConfig} from 'vite'
 
 import KnotPreviewFace, {knotPreviewBackground} from '#component/KnotPreviewFace'
 
@@ -16,52 +19,63 @@ test('runtime billboards keep one 3:2 mesh and pack stickers to fit the fixed ra
   const parts = billboardParts(knotPreviewWidth, knotPreviewHeight, knotPreviewPanelOffsetY)
   expect(knotPreviewMountY + parts[0].position[1] - parts[0].size[1] / 2).toBeCloseTo(knotPreviewBottomClearance)
   expect(Math.min(...parts.filter(part => !part.rotation).map(part => knotPreviewMountY + part.position[1] - part.size[1] / 2))).toBeCloseTo(0)
-  const formats = new Map<number, [number, number]>([
-    [1, [1, 1]],
-    [2, [2, 1]],
-    [3, [3, 1]],
-    [4, [2, 2]],
-    [5, [3, 2]],
-    [6, [3, 2]],
-    [7, [4, 2]],
-    [8, [4, 2]],
-    [9, [5, 2]],
-    [10, [5, 2]],
-    [11, [4, 3]],
-    [16, [6, 3]],
-    [22, [6, 4]],
-    [36, [8, 5]],
-  ])
-  for (const [count, [columns, rows]] of formats) {
-    const layout = knotPreviewTextureLayout(count)
-    expect([layout.columns, layout.rows]).toEqual([columns, rows])
-    expect(layout.width).toBe(knotPreviewTextureWidth)
-    expect(layout.height).toBe(knotPreviewTextureHeight)
-    expect(layout.rowCounts.reduce((sum, rowCount) => sum + rowCount, 0)).toBe(count)
-    expect(Math.max(...layout.rowCounts)).toBe(columns)
+  for (let count = 0; count <= 36; count++) {
+    const {rows, rowCounts, width, height, tileWidth, rowHeight} = knotPreviewTextureLayout(count)
+    expect([width, height]).toEqual([knotPreviewTextureWidth, knotPreviewTextureHeight])
+    expect(tileWidth).toBeGreaterThan(0)
+    expect(rowHeight).toBeGreaterThan(0)
+    expect(rowCounts).toHaveLength(rows)
+    expect(rows * rowHeight).toBeLessThanOrEqual(height + 1e-9)
+    expect(rowCounts.reduce((sum, length) => sum + length, 0)).toBe(count)
+    for (const [row, length] of rowCounts.entries()) {
+      expect(Number.isSafeInteger(length)).toBe(true)
+      expect(length).toBeGreaterThanOrEqual(count ? 1 : 0)
+      expect(length * tileWidth).toBeLessThanOrEqual(width + 1e-9)
+      // Moving in from either edge, shorter rows belong toward the middle.
+      const opposite = rows - 1 - row
+      if (!(row + 1 < opposite)) {
+        continue
+      }
+      expect(rowCounts[row + 1]).toBeLessThanOrEqual(length)
+      expect(rowCounts[opposite - 1]).toBeLessThanOrEqual(rowCounts[opposite])
+    }
   }
 })
-test('shorter rows are kept in the middle and centered within the billboard', () => {
-  expect(knotPreviewTextureLayout(11).rowCounts).toEqual([4, 3, 4])
-  expect(knotPreviewTextureLayout(13).rowCounts).toEqual([5, 3, 5])
-  expect(knotPreviewTextureLayout(36).rowCounts).toEqual([8, 7, 6, 7, 8])
-  const source = knotBays.find(bay => bay.finishes.length === 4)!
-  const bay = {
-    ...source,
-    finishes: [...source.finishes, {
-      ...source.finishes[0],
-      number: source.finishes.at(-1)!.number + 1,
-    }],
-  }
-  const layout = knotPreviewTextureLayout(bay.finishes.length)
-  expect(layout.rowCounts).toEqual([2, 3])
+test.skipIf(!Bun.env.BROWSER)('the billboard centers the tiles in each row and shows each finish exactly once', async () => {
+  const count = 11
+  const finishes = Array.from({length: count}, (_, i) => ({
+    ...knotBays[0].finishes[0],
+    id: String(i),
+    number: i + 1,
+    title: `Finish ${i}`,
+  }))
   const markup = renderToStaticMarkup(createElement(KnotPreviewFace, {
-    bay,
+    bay: {finishes},
     images: new Map,
   }))
-  const rows = markup.split(`height:${layout.rowHeight}px`).slice(1)
-  expect(rows.map(row => row.split('data-fit').length - 1)).toEqual([2, 3])
-  expect(markup.split(`width:${layout.tileWidth}px`)).toHaveLength(6)
+  const file = fileURLToPath(new URL('../../src/components/KnotPreviewFace/style.module.sass', import.meta.url))
+  const config = await resolveConfig({
+    configLoader: 'native',
+    logLevel: 'silent',
+  }, 'serve')
+  const {code} = await preprocessCSS(await Bun.file(file).text(), file, config)
+  await using browser = await puppeteer.launch({executablePath: Bun.env.BROWSER})
+  const page = await browser.newPage()
+  await page.setContent(`<style>${code}</style>${markup}`)
+  const rows = await page.$$eval('body > div > div', elements => elements.map(row => {
+    const tiles = [...row.children]
+    const bounds = row.getBoundingClientRect()
+    return {
+      left: tiles[0].getBoundingClientRect().left - bounds.left,
+      right: bounds.right - tiles.at(-1)!.getBoundingClientRect().right,
+      captions: tiles.map(tile => tile.textContent),
+    }
+  }))
+  expect(rows.flatMap(row => row.captions)).toEqual(finishes.map(finish => `${knotNumberLabel(finish.number)} · ${finish.title}`))
+  for (const {left, right} of rows) {
+    expect(left).toBeGreaterThanOrEqual(-0.5)
+    expect(Math.abs(left - right)).toBeLessThan(0.5)
+  }
 })
 test('runtime billboard textures keep the default preview population below 192 MiB', () => {
   const bytes = knotBays.reduce((total, bay) => {
