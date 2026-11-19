@@ -44,7 +44,7 @@ export type PortraitAdditionInput = {
   /** its frame area in cm²; by default the slot’s or that of the room it arrives in */
   size?: number
   target: PortraitTarget
-  /** its title; by default the image’s file name, as an import names it */
+  /** its title; by default the image’s file name, as an import names it, which a data or blob URL has none of */
   title?: string
 }
 export type PortraitAddition = {
@@ -190,8 +190,10 @@ export default async function addPortrait({frame: frameId, id, image, size, targ
   if (!replaced && portraits.length >= maximumPortraits) {
     throw new Error('The collection is full. Remove a work to make room.')
   }
-  const {pathname} = new URL(image, typeof location === 'undefined' ? undefined : location.href)
-  const portrait = newPortrait(source, title ?? importedTitle(decodeURIComponent(pathname.split('/').at(-1)!)), width, height, {
+  const {pathname, protocol} = new URL(image, typeof location === 'undefined' ? undefined : location.href)
+  // Only a file on a server has a name: a data URL’s path is its content, a blob URL’s a random id.
+  const fileName = protocol === 'data:' || protocol === 'blob:' ? '' : decodeURIComponent(pathname.split('/').at(-1)!)
+  const portrait = newPortrait(source, title ?? importedTitle(fileName), width, height, {
     position: placed.position,
     direction: [0, 0, -1],
   })

@@ -526,7 +526,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           },
           title: {
             type: 'string',
-            description: 'its title. Default: the image’s file name without its extension, dashes and underscores as spaces, as an import names it',
+            description: 'its title. Default: the image’s file name without its extension, dashes and underscores as spaces, as an import names it, or “An untitled arrival” for a data or blob URL, which names no file',
             minLength: 1,
             maxLength: 150,
           },

@@ -212,6 +212,29 @@ test('a world position takes the image loose, in the frame and at the area of th
     z: 900,
   }})).toThrow(/outside of the world/)
 })
+test('a work is named after the file of its image, which only a URL on a server has', async () => {
+  const target = {position: {
+    x: slopGallery.spawn.position[0],
+    y: slopGallery.spawn.position[1] + 1.5,
+    z: slopGallery.spawn.position[2],
+  }}
+  for (const [url, title] of [
+    ['http://127.0.0.1:8080/works/The%20Night_Watch.final.png?width=640#top', 'The Night Watch.final'],
+    ['http://127.0.0.1:8080/', 'An untitled arrival'],
+    ['data:image/png;base64,iVBORw0KGgo/AAAANSUhEUgAAA+yAAAAB/CAYAAADc', 'An untitled arrival'],
+    ['blob:http://127.0.0.1:8080/1b671a64-40d5-491e-99b0-da01ff1f3341', 'An untitled arrival'],
+  ]) {
+    expect(await addPortrait({
+      image: url,
+      target,
+    })).toHaveProperty('title', title)
+  }
+  expect(await addPortrait({
+    image: 'data:image/png;base64,iVBORw0KGgo/AAAANSUhEUgAAA+yAAAAB/CAYAAADc',
+    target,
+    title: 'Told',
+  })).toHaveProperty('title', 'Told')
+})
 test('unknown frames, images that do not load and a full collection add nothing', async () => {
   const target = {position: {
     x: slopGallery.spawn.position[0],
