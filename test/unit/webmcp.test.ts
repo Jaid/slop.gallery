@@ -1,5 +1,6 @@
 import type {PortraitAdditionInput} from '../../src/lib/webmcp/addPortrait.ts'
 import type {MoodCastInput} from '../../src/lib/webmcp/castMood.ts'
+import type {GeofenceQuery} from '../../src/lib/webmcp/getGeofences.ts'
 import type {GraphicsQualityInput} from '../../src/lib/webmcp/setGraphicsQuality.ts'
 import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
 import type {PartyEffectSpawnInput} from '../../src/lib/webmcp/spawnPartyEffect.ts'
@@ -53,6 +54,30 @@ const bridge: WebmcpBridge = {
     bytes: 3,
     dump: null,
   }),
+  dumpGeofences: () => [{
+    id: 'lobby',
+    boxes: [{
+      x: -8,
+      z: -32,
+      x2: 8,
+      z2: 8,
+      floor: -0.2,
+    }],
+  }, {
+    id: 'moonfall',
+    boxes: [{
+      x: -22,
+      z: 4.5,
+      x2: 6,
+      z2: 32.5,
+      ceiling: -2,
+    }, {
+      x: 4,
+      z: 10.7,
+      x2: 19.15,
+      z2: 21,
+    }],
+  }],
   getAim: () => ({
     origin: {
       x: 0,
@@ -67,6 +92,8 @@ const bridge: WebmcpBridge = {
     hit: null,
     hits: [],
   }),
+  // the player stands in the Lobby, and every position asked about lies on its wall to the Vesper
+  getGeofences: ({position}: GeofenceQuery) => (position ? ['lobby', 'vesper'] : ['lobby']),
   endWarmup: () => Promise.resolve({
     warmed: true,
     width: 3840,
@@ -150,8 +177,8 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'add_portrait', 'set_wireframe'])
-  for (const tool of tools.slice(0, 7)) {
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'analyze_world', 'get_loading_items', 'get_geofences', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'add_portrait', 'set_wireframe'])
+  for (const tool of tools.slice(0, 8)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
   }
@@ -172,10 +199,53 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   expect(tools[2].execute({}, {signal: controller.signal})).toEqual(current.getKnots())
   expect(tools[3].execute({}, {signal: controller.signal})).toEqual(current.getPortraitSlots())
   expect(tools[4].execute({}, {signal: controller.signal})).toEqual(current.getPortraits())
-  expect(tools[5].execute({}, {signal: controller.signal})).toEqual(current.analyzeWorld())
-  expect(tools[6].execute({}, {signal: controller.signal})).toBe('pipeline:lobby-floor/MeshStandardNodeMaterial\nwarmup')
+  expect(tools[5].execute({}, {signal: controller.signal})).toEqual(current.dumpGeofences())
+  expect(tools[6].execute({}, {signal: controller.signal})).toEqual(current.analyzeWorld())
+  expect(tools[7].execute({}, {signal: controller.signal})).toBe('pipeline:lobby-floor/MeshStandardNodeMaterial\nwarmup')
   controller.abort()
   expect(() => tools[0].execute({}, {signal: controller.signal})).toThrow()
+})
+test('get_geofences is read-only, takes an optional position of x, y and z and asks the bridge', () => {
+  const queries: Array<GeofenceQuery> = []
+  const tool = createWebmcpTools(() => ({
+    ...bridge,
+    getGeofences(query) {
+      queries.push(query)
+      return bridge.getGeofences(query)
+    },
+  })).find(({name}) => name === 'get_geofences')!
+  const controller = new AbortController
+  const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
+  const position = {
+    x: -8,
+    y: 1.5,
+    z: 0,
+  }
+  expect(tool.annotations?.readOnlyHint).toBe(true)
+  expect(execute({})).toEqual(['lobby'])
+  expect(execute({position})).toEqual(['lobby', 'vesper'])
+  expect(queries).toEqual([{position: undefined}, {position}])
+  for (const input of [null, [], 'lobby', {unexpected: true}, {
+    position,
+    room: 'lobby',
+  }, {position: null}, {position: [-8, 1.5, 0]}, {position: {
+    x: -8,
+    z: 0,
+  }}, {position: {
+    ...position,
+    w: 1,
+  }}, {position: {
+    ...position,
+    y: Number.NaN,
+  }}, {position: {
+    ...position,
+    y: '1.5',
+  }}]) {
+    expect(() => execute(input)).toThrow(TypeError)
+  }
+  expect(queries).toHaveLength(2)
+  controller.abort()
+  expect(() => execute({})).toThrow()
 })
 test('download_frame validates its optional name and downloads through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'download_frame')!

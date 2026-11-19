@@ -4,7 +4,7 @@ import type {MinimapPose} from '#src/lib/minimapPlayer.ts'
 import type {PlacementSpace} from '#src/lib/placement/base/PlacementSpace.ts'
 import type {Wall} from '#src/lib/placement/wallGeometry.ts'
 import type {WorldRoom} from '#src/lib/webmcp/analyzeWorld.ts'
-import type {KnotDump} from '#src/lib/webmcp/tools.ts'
+import type {GeofenceDump, KnotDump} from '#src/lib/webmcp/tools.ts'
 import type {GroundSurface, Room, SkyboxId} from '#src/rooms/index.ts'
 import type {WorldId, WorldInfo} from '../index.ts'
 import type {PlacedLamp} from './PlacedRoom.ts'
@@ -13,7 +13,7 @@ import type {ComponentType} from 'react'
 import type {Node} from 'three/webgpu'
 
 import {defaultEgoOptions} from 'ego-player/motor'
-import Geofences from 'geofency'
+import Geofences, {boxInputSchema} from 'geofency'
 
 import miterCorners from '#src/lib/gallery/cornerMiters.ts'
 import {findNamedBookmark, readRoom, readSpawn} from '#src/lib/gallery/spawn.ts'
@@ -160,6 +160,14 @@ export default abstract class World<Kind extends Room = Room> {
 
   /** Whether the position lies anywhere a player or an artwork may be. */
   abstract contains(position: Vec3): boolean
+
+  /** Every fence of the world in the order they are checked, each with its boxes as the plain data geofency builds them from, in world meters rounded to the tenth of a millimeter, for the `dump_geofences` WebMCP tool. */
+  dumpGeofences(): Array<GeofenceDump> {
+    return this.geofences.entries().map(([id, fence]) => ({
+      id,
+      boxes: fence.boxes.map(box => boxInputSchema.parse(Object.fromEntries(Object.entries(box).map(([key, value]) => [key, round(value as number)])))),
+    })).toArray()
+  }
 
   /** Every Knot in the world with its current session rarity, for the `dump_knots` WebMCP tool; none by default. */
   dumpKnots(): ReadonlyArray<KnotDump> {

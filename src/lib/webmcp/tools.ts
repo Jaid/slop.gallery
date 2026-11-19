@@ -5,6 +5,7 @@ import type {PortraitAddition, PortraitAdditionInput, PortraitTarget} from './ad
 import type {WorldAnalysis} from './analyzeWorld.ts'
 import type {MoodCast, MoodCastInput} from './castMood.ts'
 import type {PortraitDump} from './dumpPortraits.ts'
+import type {GeofenceQuery} from './getGeofences.ts'
 import type {GraphicsQualityChange, GraphicsQualityInput} from './setGraphicsQuality.ts'
 import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
 import type {PartyEffectSpawn, PartyEffectSpawnInput} from './spawnPartyEffect.ts'
@@ -12,10 +13,18 @@ import type {PropThrow, PropThrowInput} from './throwProp.ts'
 import type {WireframeFlood} from 'capture-session'
 import type {WarmupEnd} from 'capture-session/script'
 import type {AimSnapshot} from 'ego-player'
+import type {BoxInput} from 'geofency'
 import type {Rarity} from 'knot-materials/rarities.ts'
 import type VictoriaClient from 'victoria-browser-client'
 
 import {normalizeMeshPath, wireframeFloodAnchors, wireframeFloodDirections, wireframeFloodModes, wireframeFloodShapes, wireframeLineStyles} from 'capture-session'
+
+/** a fence of the world as the union of its boxes */
+export type GeofenceDump = {
+  /** its boxes in world meters, each as the plain data geofency’s `createBox` builds it from: its footprint, and how far it reaches up and down */
+  boxes: Array<BoxInput>
+  id: string
+}
 
 export type KnotDump = {
   id: string
@@ -32,8 +41,10 @@ export type WebmcpBridge = {
     format?: FrameFormat
     name?: string
   }) => Promise<FrameDownload & {dump: PlayerDumpSnapshot | null}>
+  dumpGeofences: () => ReadonlyArray<GeofenceDump>
   endWarmup: () => Promise<WarmupEnd>
   getAim: () => AimSnapshot
+  getGeofences: (query: GeofenceQuery) => ReadonlyArray<string>
   getKnots: () => ReadonlyArray<KnotDump>
   getLoadingItems: () => ReadonlyArray<string>
   getPortraits: () => ReadonlyArray<PortraitDump>
@@ -130,6 +141,12 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       read: () => getBridge().getPortraits(),
     },
     {
+      name: 'dump_geofences',
+      title: 'Dump geofences',
+      description: 'Return every geofence of the world in the order the world checks them, each with its ID and all of its boxes in world meters, rounded to the tenth of a millimeter. A fence is the union of its boxes. A box stands on the rectangle between the corners (x, z) and (x2, z2) on the ground and reaches from its floor up without end, from its ceiling down without end, from y up to y2, or, with none of them, up and down without end; its faces count as inside. Every fence is a room’s, under the room’s ID: where a visitor counts as being in it, which overlaps its neighbors’ along shared walls and wherever one room lies over another. The first fence holding the player’s place is the room the player is in, which stays the last one while none holds it, and the gallery.geofence.entered and gallery.geofence.left telemetry counts every fence on its own. Rooms this page’s ?world_reach leaves out are fenced too. get_geofences tells which fences hold a position.',
+      read: () => getBridge().dumpGeofences(),
+    },
+    {
       name: 'analyze_world',
       title: 'Analyze world per room',
       description: 'Sort every visible mesh of the scene into the room holding most of its world bounding box (summed over instances) and every light into the room whose fence holds it, and report rooms keyed by id, each with its title, its fence (one axis-aligned box of min/max corners in world meters from floor to clear height, or a list of them: the Corridor’s strips round the Lodge’s bay, its hall and its stair to the Sienna, the Lodge with its threshold and the box around its bay), its static meshes (scene path of named ancestors, instances unless just 1, material name or type, a list for several and left out for a plain MeshStandardNodeMaterial, spill: the other rooms holding at least 1% of its bounding volume, and triangles, most triangles first), its items (what can be picked up and carried into another room, like props and portraits, in the room holding their origin now: prop or portrait id, meshes and triangles, most triangles first) and its lights (type, world position, color, intensity, range, decay, spot cone and shadow: own for a shadow map of its own, pooled for one borrowed from the shadow pool while in view, left out without one; the pool’s own slots are not listed). A mesh meeting no fence, like a crater floor, goes to the room above or below it. Meshes mostly outside every room, such as in passages and stairways, and lights outside every fence seen from above are listed under elsewhere; ambient, hemisphere and directional lights under globalLights. Triangle counts follow draw ranges and instance counts, not per-frame culling. Worlds without rooms list everything under elsewhere.',
@@ -162,6 +179,43 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
   }))
   return [
     ...readTools,
+    {
+      name: 'get_geofences',
+      title: 'Find geofences at a position',
+      description: 'Return the IDs of every geofence that holds a position, in the order the world checks them, or an empty array outside of every fence, like outside of the world. Without a position, it takes the player’s place, which the game follows through the fences itself: the middle of the player’s capsule, or, flying, the eyes. The first ID is the room there; several come back where fences overlap, like on the plane of a wall two rooms share. A player outside of every fence stays in the room entered last, which this tool does not tell. Fence IDs are what dump_geofences lists with their boxes. Read-only: does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          position: {
+            type: 'object',
+            description: 'world-space point in meters. Default: the player’s place',
+            properties: {
+              x: {type: 'number'},
+              y: {type: 'number'},
+              z: {type: 'number'},
+            },
+            required: ['x', 'y', 'z'],
+            additionalProperties: false,
+          },
+        },
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: true,
+        untrustedContentHint: true,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).some(key => key !== 'position')) {
+          throw new TypeError('This tool takes an object with an optional position.')
+        }
+        const {position} = input
+        if (position !== undefined && !isCoordinates(position, 'x,y,z')) {
+          throw new TypeError('position must be {x, y, z}, three finite numbers in world meters.')
+        }
+        return getBridge().getGeofences({position: position as GeofenceQuery['position']})
+      },
+    },
     {
       name: 'download_frame',
       title: 'Download current frame',

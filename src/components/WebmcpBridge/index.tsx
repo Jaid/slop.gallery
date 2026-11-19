@@ -17,6 +17,7 @@ import addPortrait from '#src/lib/webmcp/addPortrait.ts'
 import analyzeWorld from '#src/lib/webmcp/analyzeWorld.ts'
 import castMood from '#src/lib/webmcp/castMood.ts'
 import dumpPortraits from '#src/lib/webmcp/dumpPortraits.ts'
+import getGeofences from '#src/lib/webmcp/getGeofences.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
 import setGraphicsQuality from '#src/lib/webmcp/setGraphicsQuality.ts'
 import spawnOrb from '#src/lib/webmcp/spawnOrb.ts'
@@ -57,6 +58,7 @@ export default function WebmcpBridge() {
           dump,
         }
       },
+      dumpGeofences: () => world.dumpGeofences(),
       endWarmup: async () => {
         const warmed = captureWarmup.end()
         // World hands Fiber the regular pixel ratio when it renders again, which takes no animation frame, so this also resolves under a stopped virtual clock.
@@ -76,6 +78,7 @@ export default function WebmcpBridge() {
         }
       },
       getAim: () => inspector.getAim(),
+      getGeofences,
       getKnots: () => world.dumpKnots(),
       getLoadingItems: loadingItems,
       getPortraits: dumpPortraits,
