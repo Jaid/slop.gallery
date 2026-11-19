@@ -1,27 +1,35 @@
 import type {PlankOptions} from '../materials/PlankMaterial.ts'
 import type {FloorRectangle} from './floors.ts'
 
-import lodge from './lodge.ts'
+import {wallFace} from './architectureDimensions.ts'
 import {salonCeiling} from './salon.ts'
+import {siennaWainscotPanel} from './siennaWainscot.ts'
 
-/** The Sienna’s square floor plan, shifted west under the Vesper so the Vesper’s centered south arch opens into its north-east corner. */
+/** how long each of the walls round the Sienna’s square floor plan is */
+const side = 12
+/**
+ * How far the middle of an opening by one of the Sienna’s corners lies from the line of the wall across that corner, where it takes the place of the `panels` wainscot panels nearest the corner: halfway between the end of the paneling and that wall’s face, so equal strips of damask flank the opening’s casing.
+ * The 12 m walls take six 2 m panels from corner to corner, so the paneling ends a whole number of panels short of the corner’s line.
+ */
+const besideCorner = (panels: number) => (panels * siennaWainscotPanel.width + wallFace) / 2
+/** where the layout puts the Vesper’s middle along x, and with it the arch in the middle of its south wall */
+const vesperX = -14
+/** The Sienna’s square floor plan, under the Vesper’s south wall and west of it, so the Vesper’s centered south arch opens by the Sienna’s north-east corner, in the place of its north wall’s two easternmost wainscot panels. */
 const sienna = {
-  center: [-18, 14],
-  size: [12, 12],
+  center: [vesperX + besideCorner(2) - side / 2, 14],
+  size: [side, side],
   floorY: 0,
   height: 5.8,
 } as const satisfies FloorRectangle & {
   floorY: number
   height: number
 }
-const westX = sienna.center[0] - sienna.size[0] / 2
-const southZ = sienna.center[1] + sienna.size[1] / 2
-/** the pier beside each arch of the vestibule: wide enough for the adjacent classic casings and plinths in its north-west corner to clear each other, matching the pier beside the Vesper arch */
-const vestibulePier = 0.6
-/** the vestibule’s width and depth: centered on both 4 m arches and flush with the Sienna’s west wall */
-const vestibuleSize = lodge.timberWidth + vestibulePier * 2
+const westX = sienna.center[0] - side / 2
+const southZ = sienna.center[1] + side / 2
+/** the vestibule’s width and depth: centered on the Sienna’s arch into it, which takes the place of the south wall’s three westernmost wainscot panels, and flush with the Sienna’s west wall */
+const vestibuleSize = besideCorner(3) * 2
 /**
- * The vestibule south of the Sienna’s south-west arch, still the Sienna’s: a square anteroom at the Sienna’s floor, flush with the Sienna’s west wall, with a second arch in its west wall, where the Corridor arrives up its stair flight.
+ * The vestibule south of the Sienna’s arch by its south-west corner, still the Sienna’s: a square anteroom at the Sienna’s floor, centered on that arch and flush with the Sienna’s west wall, with a second arch in its west wall, where the Corridor arrives up its stair flight.
  * Its ceiling is as low as the arches’ casings and the cornice above them allow.
  */
 export const siennaVestibule = {

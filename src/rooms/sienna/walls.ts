@@ -15,7 +15,7 @@ const arch = {
   height: corridorLanding.height,
   profile: 'arch',
 } as const
-/** The vestibule’s walls, around its square floor plan south of the south-west arch like the room’s around its own, placed at its middle. */
+/** The vestibule’s walls, around its square floor plan south of the arch by the south-west corner like the room’s around its own, placed at its middle. */
 const vestibuleWall = (side: PlanSide, wall: Partial<RoomWall> = {}): RoomWall => {
   const {center, ...planned} = planWall(siennaVestibule.size, side, siennaVestibule.height - 0.3, wall)
   return {
@@ -25,7 +25,7 @@ const vestibuleWall = (side: PlanSide, wall: Partial<RoomWall> = {}): RoomWall =
 }
 
 export default {
-  // The arch through to the Vesper, in the north-east corner, aligned with the Vesper’s centered south arch.
+  // The arch through to the Vesper by the north-east corner, where the Vesper has it in the middle of its south wall.
   north: planWall(sienna.size, 'north', height, {
     holes: {
       vesper: {

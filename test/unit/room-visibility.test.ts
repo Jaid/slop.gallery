@@ -6,8 +6,10 @@ import {expect, test} from 'bun:test'
 
 import {Box3, Frustum, Group, Matrix4, Mesh, PerspectiveCamera, Vector3} from 'three/webgpu'
 
+import {corridorLanding, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import lobbyLayout from '../../src/lib/gallery/lobby.ts'
 import {ownerRoom, portals, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
+import {siennaVestibule} from '../../src/lib/gallery/sienna.ts'
 import {openingTop, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import relations, {openings} from '../../src/worlds/gallery/relations.ts'
@@ -136,11 +138,25 @@ test('a pickup belongs to the room it is in and keeps it in passages', () => {
   expect(ownerOf(lost)).toBeUndefined()
 })
 test('the Corridor’s stair flight and landing belong to the Corridor, and the vestibule beyond to the Sienna', () => {
-  expect(roomContaining([-29.4, -0.9, 18.3])).toBe('corridor')
-  expect(roomContaining([-25.2, 1.6, 22.5])).toBe('corridor')
-  expect(roomContaining([-21.4, 1.6, 22.6])).toBe('sienna')
+  const head = new Vector3(...corridorStairs.start)
+  const {x, y, z} = head.lerp(new Vector3(...corridorStairs.end), 0.5)
+  expect(roomContaining([x, y + 1.6, z])).toBe('corridor')
+  const [landingX, landingZ] = corridorLanding.path[1]
+  expect(roomContaining([landingX, 1.6, landingZ])).toBe('corridor')
+  expect(roomContaining([siennaVestibule.center[0], 1.6, siennaVestibule.center[1]])).toBe('sienna')
   // Flying at the hall’s south end, where the flight turns off onto the diagonal, with the vestibule’s arch out of view.
-  expect(roomsAt([-33.7, -3.4, 14])).toEqual(['corridor'])
+  const [hallX, hallZ] = corridorPassage.path.at(-2)!
+  expect(roomsAt([hallX, corridorPassage.floorY + 1.6, hallZ])).toEqual(['corridor'])
+})
+test('the Sienna’s arches by its corners show where they lead, both ways', () => {
+  const vesperArch = slopGallery.walls.find(wall => wall.id === 'sienna-north')!
+  const [archX, , archZ] = wallPosition(vesperArch, vesperArch.holes![0].u, 1.6, 0)
+  expect(visibleRegions(['vesper'], viewProjection([archX, 1.6, archZ - 3], [archX, 1.6, archZ + 6])).has('sienna')).toBe(true)
+  expect(visibleRegions(['sienna'], viewProjection([archX, 1.6, archZ + 3], [archX, 1.6, archZ - 6])).has('vesper')).toBe(true)
+  const [vestibuleX, vestibuleZ] = siennaVestibule.center
+  const [landingX] = corridorLanding.path[1]
+  expect(visibleRegions(['sienna'], viewProjection([vestibuleX, 1.6, vestibuleZ], [landingX, 1.6, vestibuleZ])).has('corridor')).toBe(true)
+  expect(visibleRegions(['corridor'], viewProjection([landingX, 1.6, vestibuleZ], [vestibuleX, 1.6, vestibuleZ])).has('sienna')).toBe(true)
 })
 test('a camera stands in the rooms around it', () => {
   expect(roomsAt([-14, 1.6, 0])).toEqual(['vesper'])

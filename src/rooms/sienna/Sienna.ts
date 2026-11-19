@@ -19,7 +19,7 @@ import walls from './walls.ts'
 export default class Sienna extends Room {
   override readonly air = [
     floorBox(sienna.size, 0, sienna.height),
-    // The vestibule south of its south-west arch, lower, where the Corridor arrives.
+    // The vestibule south of its arch by the south-west corner, lower, where the Corridor arrives.
     floorBox(siennaVestibule.size, 0, siennaVestibule.height, [siennaVestibule.center[0] - sienna.center[0], siennaVestibule.center[1] - sienna.center[1]]),
   ]
   override readonly description = 'Low light. Rich textures. Questionable company.'

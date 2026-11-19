@@ -1,5 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
+import {wallFace, wallOpeningTrim} from '../../src/lib/gallery/architectureDimensions.ts'
 import {lodgeFloorPlanks} from '../../src/lib/gallery/lodge.ts'
 import {siennaCeilingPlanks, siennaRugSize, siennaRugThickness} from '../../src/lib/gallery/sienna.ts'
 import {siennaWainscot} from '../../src/lib/gallery/siennaWainscot.ts'
@@ -17,7 +18,7 @@ describe('the Sienna’s wainscot', () => {
   test('panels tile each wall in 2 m steps without running into an opening or past the wall’s ends', () => {
     for (const wall of siennaWalls) {
       const panels = siennaWainscot(wall)
-      // The vestibule’s 5.2 m north and west walls hold 4 m arches, leaving 60 cm piers too narrow for a 2 m panel; every other wall has room.
+      // The vestibule’s north and west walls hold 4 m arches, leaving piers too narrow for a 2 m panel; every other wall has room.
       if (wall.id === 'sienna-vestibule_north' || wall.id === 'sienna-vestibule_west') {
         expect(panels).toEqual([])
         continue
@@ -41,7 +42,20 @@ describe('the Sienna’s wainscot', () => {
     }
     for (const id of ['sienna-vestibule_east', 'sienna-vestibule_south']) {
       const wall = siennaWalls.find(candidate => candidate.id === id)!
-      expect(siennaWainscot(wall)).toEqual([-1, 1])
+      expect(siennaWainscot(wall)).toEqual([-2, 0, 2])
+    }
+  })
+  test('the arches by the corners take the place of whole panels, flanked by equal strips of damask', () => {
+    for (const id of ['sienna-north', 'sienna-south']) {
+      const wall = siennaWalls.find(candidate => candidate.id === id)!
+      const [hole] = wall.holes!
+      // Along the wall toward the corner the arch stands by
+      const toward = Math.sign(hole.u)
+      const paneling = Math.max(...siennaWainscot(wall).map(u => toward * u + panelWidth / 2))
+      const corner = wall.width / 2 - wallFace
+      const [near, far] = [toward * hole.u - hole.width / 2, toward * hole.u + hole.width / 2]
+      expect(near - paneling).toBeCloseTo(corner - far)
+      expect(near - paneling).toBeGreaterThan(wallOpeningTrim)
     }
   })
 })

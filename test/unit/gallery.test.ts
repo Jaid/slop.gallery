@@ -5,6 +5,7 @@ import {dropPortrait} from '../../src/lib/gallery/actions.ts'
 import {imageSize} from '../../src/lib/gallery/ImageImporter.ts'
 import {maximumPortraits} from '../../src/lib/gallery/imagePolicy.ts'
 import portraitLabel, {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
+import {siennaVestibule} from '../../src/lib/gallery/sienna.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import {defaultPortraitArea, slotAreas} from '../../src/lib/placement/portraitSlots.ts'
 import {placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -143,13 +144,15 @@ describe('wall geometry', () => {
       wallId: 'vesper-north',
       inReach: false,
     })
-    // The Vesper’s centered south arch opens into the Sienna’s north-east corner.
-    expect(sienna.holes![0].u).toBeCloseTo(4)
+    // The Vesper’s centered south arch opens by the Sienna’s north-east corner, whose middle is solid.
+    const siennaRoom = rooms.find(room => room.id === 'sienna')!
+    expect(entrance[0]).toBeCloseTo(rooms.find(room => room.id === 'vesper')!.center[0])
+    expect(sienna.holes![0].u).toBeGreaterThan(sienna.width / 4)
     expect(galleryPlacement.findPlacement([-10.2, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
       wallId: 'vesper-south',
       inReach: true,
     })
-    expect(galleryPlacement.findPlacement([-18, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([siennaRoom.center[0], 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
       wallId: 'sienna-north',
       inReach: true,
     })
@@ -162,11 +165,14 @@ describe('wall geometry', () => {
       valid: true,
     })
   })
-  test('gallery bounds include the Sienna but not the empty space beside it', () => {
-    for (const position of [[-18, 2, 14], [-14, 2, 19.8], [0, 2, 14], [-24, 0, 20], [-21.4, 2, 22.6]] as const) {
+  test('gallery bounds include the Sienna and its vestibule but not the empty space beside them', () => {
+    const {center: [x, z], size: [width, depth]} = rooms.find(room => room.id === 'sienna')!
+    const [west, east, south] = [x - width / 2, x + width / 2, z + depth / 2]
+    for (const position of [[x, 2, z], [-14, 2, 19.8], [0, 2, 14], [west, 0, south], [siennaVestibule.center[0], 2, siennaVestibule.center[1]]] as const) {
       expect(insideGallery([...position])).toBe(true)
     }
-    for (const position of [[-6, 2, 18], [-11.99, 2, 14], [14, 3, 14], [-14, 2, 20.01], [-24.01, 2, 14], [-18, -1.01, 14], [-18, 6.01, 14], [Number.NaN, 2, 14]] as const) {
+    // East of the Sienna, west of it, south of it beside the vestibule, under it and over it
+    for (const position of [[-6, 2, 18], [east + 0.01, 2, z], [14, 3, 14], [east - 1, 2, south + 0.01], [west - 0.01, 2, z], [x, -1.01, z], [x, 6.01, z], [Number.NaN, 2, z]] as const) {
       expect(insideGallery([...position])).toBe(false)
     }
   })
