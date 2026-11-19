@@ -18,7 +18,7 @@ import icon from '#root/assets/icon.svg'
 import {enterGallery, useGallery} from '#src/lib/gallery.ts'
 import {useIntro} from '#src/lib/gallery/intro.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
-import {startNewGame} from '#src/lib/gameSeed.ts'
+import {rerollSeed} from '#src/lib/gameSeed.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
 import world from '#src/worlds/current.ts'
 
@@ -50,7 +50,7 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
       <div className={css.actions}>
         <div className={css.play}>
           <button id='enter-gallery' className={css.enter} disabled={!s.ready} type='button' onClick={enterGallery}>{s.ready ? 'Play' : enterButtonLabel(false, stage)}</button>
-          <Branch if={stage === 'return'}><button className={css.newGame} disabled={!s.ready} type='button' onClick={startNewGame}>Reroll seed</button></Branch>
+          <Branch if={stage === 'return'}><button className={css.newGame} disabled={!s.ready} type='button' onClick={rerollSeed}>Reroll seed</button></Branch>
         </div>
         <MenuOptions className={css.options} />
       </div>
@@ -65,8 +65,8 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
           <div className={css.content}>
             <h1 id='menu-title' tabIndex={-1} ref={heading}><Branch if={paused} then={room.title} else={world.title} /></h1>
             <Branch not={stage === 'unfocus'}><p className={css.tagline}>{tagline}</p></Branch>
-            <button id='enter-gallery' className={css.enter} disabled={!s.ready} type='button' onClick={stage === 'reset' ? startNewGame : enterGallery}>{enterButtonLabel(s.ready, stage)}<Icon name='arrow' size={18} /></button>
-            <Branch if={stage === 'return'}><button className={css.newGame} disabled={!s.ready} type='button' onClick={startNewGame}>Reroll seed</button></Branch>
+            <button id='enter-gallery' className={css.enter} disabled={!s.ready} type='button' onClick={stage === 'reset' ? rerollSeed : enterGallery}>{enterButtonLabel(s.ready, stage)}<Icon name='arrow' size={18} /></button>
+            <Branch if={stage === 'return'}><button className={css.newGame} disabled={!s.ready} type='button' onClick={rerollSeed}>Reroll seed</button></Branch>
             <Branch not={stage === 'unfocus'}>
               <MenuOptions />
               <Branch if={settings.available}><OpenRouterConnection {...settings} /></Branch>

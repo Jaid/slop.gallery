@@ -16,8 +16,16 @@ if (!isContinuing) {
 /** the seed this page’s environment is built from: the game’s, unless `?seed` overrides it */
 export const environmentSeed = effectiveSeed(gameSeed)
 
-/** Forgets the seed and reloads the page, which starts a new game in a new environment. */
-export function startNewGame() {
+/**
+ * Builds the page from a new seed. A page with `?seed` goes to the same URL with a newly rolled `?seed`, which leaves the stored seed and its game alone. Without it, the stored seed is forgotten and the page reloads, which starts a new game in a new environment.
+ */
+export function rerollSeed() {
+  const url = new URL(location.href)
+  if (url.searchParams.has('seed')) {
+    url.searchParams.set('seed', String(rollSeed()))
+    location.assign(url)
+    return
+  }
   writeStored('seed', null)
   location.reload()
 }

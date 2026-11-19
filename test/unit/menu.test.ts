@@ -15,7 +15,7 @@ import {cameraPose, setApiKey, toggleSound} from '../../src/lib/gallery/actions.
 import {climbApex} from '../../src/lib/gallery/climb.ts'
 import {useIntro} from '../../src/lib/gallery/intro.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
-import {startNewGame} from '../../src/lib/gameSeed.ts'
+import {rerollSeed} from '../../src/lib/gameSeed.ts'
 import pauseMenu from '../../src/lib/pauseMenu.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
@@ -147,31 +147,56 @@ test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('renders th
     Object.assign(useGallery.getInitialState(), initial)
   }
 })
-test('Reroll seed forgets the stored seed and reloads', () => {
+describe('Reroll seed', () => {
   const locationDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'location')
-  let reloads = 0
-  Object.defineProperty(globalThis, 'location', {
-    configurable: true,
-    value: {
-      reload: () => {
-        reloads++
+  let reloads: number
+  let assigned: Array<string>
+  const mockLocation = (href: string) => {
+    reloads = 0
+    assigned = []
+    Object.defineProperty(globalThis, 'location', {
+      configurable: true,
+      value: {
+        href,
+        assign: (url: URL | string) => {
+          assigned.push(String(url))
+        },
+        reload: () => {
+          reloads++
+        },
       },
-    },
-  })
-  try {
-    values.set('knot-gallery-seed', '7')
-    values.set('slop-gallery-seed', '7')
-    startNewGame()
-    expect(values.has('slop-gallery-seed')).toBe(false)
-    expect(values.get('knot-gallery-seed')).toBe('7')
-    expect(reloads).toBe(1)
-  } finally {
+    })
+  }
+  afterEach(() => {
     if (locationDescriptor) {
       Object.defineProperty(globalThis, 'location', locationDescriptor)
     } else {
       Reflect.deleteProperty(globalThis, 'location')
     }
-  }
+  })
+  test('forgets the stored seed and reloads without ?seed', () => {
+    mockLocation('https://slop.gallery/?graphics=fast')
+    values.set('knot-gallery-seed', '7')
+    values.set('slop-gallery-seed', '7')
+    rerollSeed()
+    expect(values.has('slop-gallery-seed')).toBe(false)
+    expect(values.get('knot-gallery-seed')).toBe('7')
+    expect(reloads).toBe(1)
+    expect(assigned).toEqual([])
+  })
+  test.each(['1', '', 'nonsense'])('goes to the same URL with a rolled ?seed in place of ?seed=%s, keeping the stored seed', seed => {
+    mockLocation(`https://slop.gallery/?graphics=fast&seed=${seed}&audio#knot`)
+    values.set('slop-gallery-seed', '7')
+    rerollSeed()
+    expect(reloads).toBe(0)
+    expect(assigned).toHaveLength(1)
+    const url = new URL(assigned[0])
+    expect(url.origin + url.pathname + url.hash).toBe('https://slop.gallery/#knot')
+    expect(url.searchParams.keys().toArray()).toEqual(['graphics', 'seed', 'audio'])
+    expect(url.searchParams.get('graphics')).toBe('fast')
+    expect(url.searchParams.get('seed')).toMatch(/^[1-9]\d{0,3}$/u)
+    expect(values.get('slop-gallery-seed')).toBe('7')
+  })
 })
 test.each(['lobby', 'oculus'] as const)('pause heading identifies the %s room and floor', room => {
   const initial = {...useGallery.getInitialState()}

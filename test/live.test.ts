@@ -318,13 +318,20 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     })
     await page.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth)
     await page.screenshot({path: 'out/live-test/production-narrow.png'})
-    // Reroll seed starts a new game with the first menu.
+    // With ?seed, Reroll seed rolls a new one into the URL and leaves the stored game alone, so the menu still offers to continue it.
     await page.reload({waitUntil: 'domcontentloaded'})
     await waitForGallery(page)
     await page.waitForSelector('xpath/.//button[normalize-space(.)="Reroll seed"]')
+    const urlBeforeReroll = URL.parse(page.url())!
     await Promise.all([page.waitForNavigation({waitUntil: 'domcontentloaded'}), page.click('xpath/.//button[normalize-space(.)="Reroll seed"]')])
     await waitForGallery(page)
-    expect(await snapshotOf(page, 'menuStage')).toBe('first')
+    const urlAfterReroll = URL.parse(page.url())!
+    expect(urlAfterReroll.searchParams.get('seed')).toMatch(/^[1-9]\d{0,3}$/u)
+    for (const url of [urlBeforeReroll, urlAfterReroll]) {
+      url.searchParams.set('seed', '')
+    }
+    expect(urlAfterReroll.href).toBe(urlBeforeReroll.href)
+    expect(await snapshotOf(page, 'menuStage')).toBe('return')
     // Every file the page loaded came from its own server.
     const origins = await page.evaluate(() => [...new Set(performance.getEntriesByType('resource').map(entry => URL.parse(entry.name)!.origin))])
     expect(origins.filter(origin => origin !== URL.parse(page.url())!.origin && origin !== 'null')).toEqual([])
