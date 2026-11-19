@@ -54,12 +54,17 @@ export const forgeSideTable = forgeTable
 
 /** The south-facing sawtooth lights. Heights are measured from the workshop floor. */
 export const forgeRoof = {
+  /** how many teeth span the room from north to south, each over an equal share of its length */
   bays: 3,
+  /** the height of the valleys between the teeth and of the roof’s foot over the north and south walls */
   eave: 5.72,
+  /** the height of the ridges, where the sheeted pitch turns down into the glass */
   ridge: 7.68,
+  /** how far each tooth’s glass reaches north of its valley, in plan */
   glassRun: 1.55,
   // The Lobby vault’s outer shell overhangs the shared wall. Seat the east gables on a box girder inside its springing.
   eastSetback: 0.55,
+  /** how many panes the glazing bars split each light into across the room */
   panesAcross: 8,
 } as const
 
@@ -74,14 +79,24 @@ export const forgeBays = Array.from({length: forgeRoof.bays}, (_, i) => {
     peak: south - forgeRoof.glassRun,
   }
 })
+/** how wide the bearings under the ridges are along the walls: of the iron columns on the west floor and of the posts on the box girder over the Lobby window */
 export const forgePierWidth = 0.45
 
 const vestibuleRadius = 3
-/** The round anteroom between the workshop and the Bastion, under a folded metal hood with a bull’s-eye of wired glass. */
+/**
+ * The vestibule north of the Forge, still the Forge’s: a round anteroom at its floor on its axis, whose wall touches the middle of its north wall back to back, where an arch opens through both into the room.
+ * The Bastion’s approach arrives through a second arch, from the west. Over it rises a fluted smoke hood of zinc to a bull’s-eye of opal wired glass round a brass hub.
+ */
 export const forgeVestibule = {
   center: [forge.center[0], northZ - vestibuleRadius],
+  /** the radius of its wall’s center line */
   radius: vestibuleRadius,
+  /** the height of the top of its hood’s hub over the floor */
   crown: 6.44,
-} as const
+} as const satisfies {
+  center: readonly [number, number]
+  crown: number
+  radius: number
+}
 
 export default forge

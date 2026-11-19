@@ -18,6 +18,7 @@ import {displayFloorHeight, insideTunnelDisplay} from '#src/lib/gallery/tunnelDi
 
 type Hall = PlacedRoom<GalleryRoom> & {size: NonNullable<GalleryRoom['size']>}
 
+/** how high the rooms’ vestibules beyond their floor plans reach: the Sienna’s under its lower ceiling, the Forge’s up to the hub of its hood */
 const annexCeilings: Partial<Record<Hall['id'], number>> = {
   sienna: siennaVestibule.height,
   forge: forgeVestibule.crown,
@@ -75,6 +76,7 @@ export default class GalleryNavigation {
     const [x, y, z] = position
     const ground = Math.min(room.floorY, groundOf(room, x, z))
     const main = inPlan(room, x, z)
+    // Up to the top of its box, the vault’s or the dome’s crown or the Forge’s ridges included, and beyond its floor plan up to its vestibule’s own ceiling where it has one.
     const ceiling = main ? room.air[0].max.y : annexCeilings[room.id] ?? room.air[0].max.y
     return y >= ground - 1 && y <= ceiling + 0.2 && (main || room.id === 'lodge' && lodgeBayFloor(x, z) !== undefined || room.id === 'sienna' && siennaVestibuleFloor(x, z) !== undefined || room.id === 'forge' && forgeVestibuleFloor(x, z) !== undefined || room.id === 'oculus' && insideApse(x, z))
   }

@@ -11,7 +11,7 @@ export default {
     fov: 73,
     ratio: 16 / 9,
   },
-  // The low view through the vestibule arch from issue #277.
+  // From the middle of the vestibule, knee-high, looking south through the arch down the aisle to the alchemy machine.
   threshold: {
     position: [0.687, 0.724, -10.921],
     aim: {

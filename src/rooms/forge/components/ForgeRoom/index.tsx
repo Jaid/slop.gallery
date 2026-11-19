@@ -21,8 +21,9 @@ import slopGallery from '#src/worlds/gallery/index.ts'
 
 const room = slopGallery.room('forge')
 const vestibuleWall = slopGallery.walls.find(wall => wall.id === 'forge-vestibule')!
-/** Two rows of soapstone tables flank the measuring aisle from the north vestibule to the alchemy workbench. */
+/** The Forge: two rows of soapstone tables flank the measuring aisle from the north vestibule to the alchemy workbench under the south wall’s cannon, beneath the sawtooth roof. */
 export default function ForgeRoom({materials, masonry}: {
+  /** the Bastion’s stone, which lines the vestibule’s arch onto its approach */
   masonry: Material
   materials: ForgeMaterials
 }) {
@@ -43,6 +44,7 @@ export default function ForgeRoom({materials, masonry}: {
   </group>
 }
 
+/** The room’s sawtooth roof or the vestibule’s hood, in the frame of the floor below: one mesh per finish, and colliders on every surface seen from below, the glass included. */
 function Roof({kind, materials}: {
   kind: 'hood' | 'sawtooth'
   materials: ForgeMaterials
@@ -53,7 +55,10 @@ function Roof({kind, materials}: {
     {(['deck', 'frame', 'brass', 'glass'] as const).map(finish => <mesh key={finish} castShadow={finish !== 'glass'} geometry={roof.surfaces[finish]} material={materials[finish]} name={`forge-${kind}-${finish}`} receiveShadow={finish !== 'glass'} />)}
   </RigidBody>
 }
-/** The vestibule keeps its walkable thresholds and the Bastion’s masonry through the western arch. */
+/**
+ * The round vestibule north of the room: its floor, out under its arches, its hood, and the reveals that line its arches out to the planes touching its wall there:
+ * enameled iron through to the room’s north wall, and the Bastion’s stone on from the end of its approach.
+ */
 function Vestibule({materials, masonry}: {
   masonry: Material
   materials: ForgeMaterials
