@@ -22,7 +22,7 @@ export type Opening = {
   rooms: readonly [RoomId, RoomId]
 }
 
-/** the openings between rooms that RoomCulling looks through, as global wall ids with the names of their holes; passages list the holes at both of their ends. The glazed Lobby floor into the Oculus is an opening too, but takes its box from the Lobby’s floor, and so are the Vesper’s lantern and the windows of the Salon’s, which look out onto the Lobby’s vault. */
+/** the openings between rooms that RoomCulling looks through, as global wall ids with the names of their holes; passages list the holes at both of their ends. The glazed Lobby floor into the Oculus is an opening too, but takes its box from the Lobby’s floor, and so are the Vesper’s lantern, the windows of the Salon’s and the glazing of the Forge’s sawtooth roof, which look out onto the Lobby’s vault. */
 export const openings: ReadonlyArray<Opening> = [
   {
     rooms: ['lobby', 'vesper'],

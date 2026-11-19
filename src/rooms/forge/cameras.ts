@@ -1,7 +1,7 @@
 import type {RoomCamera} from '../base/Room.ts'
 
 export default {
-  // From the north-east corner, looking south-west across the pedestal under the rooflight toward the south wall.
+  // From the north-east corner, looking south-west across the tables and the sunlit floor under the sawtooth roof toward the alchemy machine at the south wall.
   overview: {
     position: [2.646, 2.856, -7.442],
     aim: {
@@ -11,7 +11,7 @@ export default {
     fov: 80,
     ratio: 16 / 9,
   },
-  // Before the north wall’s arch, looking up through it into the round vestibule, at its rooflight and its arch onto the Bastion’s approach.
+  // Before the north wall’s arch, looking up through it into the round vestibule, at its brick dome and its arch onto the Bastion’s approach.
   vestibule: {
     position: [0, 1.6, -6.6],
     aim: {

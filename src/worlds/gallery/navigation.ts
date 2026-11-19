@@ -5,6 +5,7 @@ import type {GalleryRoom} from './SlopGallery.ts'
 import {bastionFloors, insideBastion} from '#src/lib/gallery/bastionNetwork.ts'
 import {corridorLanding, corridorPassage, corridorStairFloor, insideCorridor} from '#src/lib/gallery/corridor.ts'
 import {forgeVestibuleFloor} from '#src/lib/gallery/forgeVestibule.ts'
+import {forgeDomeTopY} from '#src/lib/gallery/forgeVestibuleDome.ts'
 import {insideLodgeWindow, lodgeBayFloor, lodgeWindowFloor} from '#src/lib/gallery/lodge.ts'
 import {rampFloorHeight, tunnelContains, tunnelFloorHeight} from '#src/lib/gallery/lowerGallery.ts'
 import {craterTerrain} from '#src/lib/gallery/moonfall/CraterTerrain.ts'
@@ -70,8 +71,13 @@ export default class GalleryNavigation {
     const [x, y, z] = position
     const ground = Math.min(room.floorY, groundOf(room, x, z))
     const main = inPlan(room, x, z)
-    const ceiling = room.id === 'sienna' && !main ? siennaVestibule.height : room.air[0].max.y
-    // Up to the top of its box, the vault’s or the dome’s crown included, or the Sienna’s vestibule’s lower ceiling; the Forge’s round one is as high as the room.
+    let ceiling = room.air[0].max.y
+    if (room.id === 'sienna' && !main) {
+      ceiling = siennaVestibule.height
+    } else if (room.id === 'forge' && !main) {
+      ceiling = forgeDomeTopY
+    }
+    // Up to the top of its box, the vault’s or the dome’s crown included, the roof’s ridges, or the Sienna’s vestibule’s lower ceiling, or the Forge’s vestibule’s higher dome.
     return y >= ground - 1 && y <= ceiling + 0.2 && (main || room.id === 'lodge' && lodgeBayFloor(x, z) !== undefined || room.id === 'sienna' && siennaVestibuleFloor(x, z) !== undefined || room.id === 'forge' && forgeVestibuleFloor(x, z) !== undefined || room.id === 'oculus' && insideApse(x, z))
   }
 }

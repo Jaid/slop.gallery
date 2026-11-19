@@ -38,6 +38,12 @@ export default function Architecture() {
     get corridorWood() {
       return shared.corridorWood
     },
+    get forgeBrick() {
+      return shared.forgeBrick
+    },
+    get forgeDressings() {
+      return shared.forgeDressings
+    },
     glass,
     get joinery() {
       return shared.joinery
@@ -63,7 +69,7 @@ export default function Architecture() {
   }), [glass, shared, textures])
   return <>
     <GalleryLighting />
-    {presentWalls.map(wall => <WallSurface key={wall.id} decorations={WallDecorations} glass={wall.holes?.some(hole => hole.glassThickness) ? glass.tunnel : undefined} material={shared.trim(wall)} plaster={textures.plaster} surfaceMaterial={shared.surface(wall)} wall={wall} />)}
+    {presentWalls.map(wall => <WallSurface key={wall.id} decorations={WallDecorations} glass={wall.holes?.some(hole => hole.glassThickness) ? glass.tunnel : undefined} material={shared.trim(wall)} plaster={textures.plaster} revealMaterial={shared.reveal(wall)} surfaceMaterial={shared.surface(wall)} wall={wall} />)}
     <Branch if={hasStairway} then={GalleryStairs} />
     <World materials={materials} />
   </>

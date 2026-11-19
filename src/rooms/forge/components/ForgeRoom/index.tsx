@@ -1,67 +1,69 @@
-import type {Rooflight as RooflightLayout} from '#src/lib/gallery/forge.ts'
-import type {Material, Texture} from 'three/webgpu'
+import type {Material} from 'three/webgpu'
 
-import {CuboidCollider, CylinderCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
+import {CuboidCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
-import {CircleGeometry, ExtrudeGeometry, MeshStandardNodeMaterial, Path, Shape} from 'three/webgpu'
+import {vec3} from 'three/tsl'
+import {Color, ExtrudeGeometry, MeshStandardNodeMaterial, Path, Shape} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import IronTable from '#component/IronTable'
-import RoomFloor from '#component/RoomFloor'
-import Box from '#src/components/Scene/primitives.tsx'
-import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
+import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {floorThickness} from '#src/lib/gallery/floors.ts'
-import {forgeRooflight, forgeRowTables, forgeTable, forgeVestibule} from '#src/lib/gallery/forge.ts'
+import {forgeRowTables, forgeTable, forgeVestibule} from '#src/lib/gallery/forge.ts'
+import forgeRoof, {forgeRoofSpan} from '#src/lib/gallery/forgeRoof.ts'
+import ForgeRoofGeometry, {forgeDomeCollision, ForgeDomeGeometry, forgeRoofCollision} from '#src/lib/gallery/ForgeRoofGeometry.ts'
 import {forgeRoundVestibule, vestibuleArches} from '#src/lib/gallery/forgeVestibule.ts'
+import {forgeVestibuleDome} from '#src/lib/gallery/forgeVestibuleDome.ts'
 import roundRevealGeometry from '#src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/roundVestibule.ts'
-import {salonCeiling} from '#src/lib/gallery/salon.ts'
-import gold from '#src/lib/materials/gold.ts'
+import BrickMaterial from '#src/lib/materials/BrickMaterial.ts'
+import EndGrainFloorMaterial from '#src/lib/materials/EndGrainFloorMaterial.ts'
+import ForgeRoofMaterial from '#src/lib/materials/ForgeRoofMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
+import {daylight} from '#src/lib/rendering/daylight.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import AlchemyMachine from '#src/rooms/forge/components/AlchemyMachine/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const room = slopGallery.room('forge')
+const brunswickGreen = '#3a5a49'
 const vestibuleWall = slopGallery.walls.find(wall => wall.id === 'forge-vestibule')!
 const circleSegments = 96
 /** how far in from the vestibule’s wall its brass ring lies, on the line of the room’s inlays */
 const vestibuleInlay = 1.25
-/** The Forge: two rows of soapstone tables flank the aisle from the north vestibule to the alchemy workbench under the south wall’s cannon. */
-export default function ForgeRoom({glass, masonry, stone, wood}: {
-  glass: Material
+
+/**
+ * The Forge, a Victorian workshop: walls of red brick in Flemish bond over a glazed dado, with sandstone dressings, under a sawtooth roof of iron and glass that lets the midday sun in, over a floor of end-grain oak blocks. Two rows of soapstone tables flank the aisle from the north vestibule, domed in brick, to the alchemy workbench under the south wall’s cannon.
+ */
+export default function ForgeRoom({brick, dressings, masonry}: {
+  /** the brick of the room’s walls, which its gables continue */
+  brick: Material
+  /** the sandstone that lines the walls’ openings, and on through the arch into its vestibule */
+  dressings: Material
   /** the Bastion’s stone, which lines the vestibule’s arch onto its approach */
   masonry: Material
-  stone: Texture
-  wood: Texture
 }) {
-  const plaster = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#e6decb',
-    roughness: 0.9,
-  }), []))
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  const ceiling = useDisposable(useMemo(() => {
-    const [width, depth] = room.size
-    const outline = new Shape
-    outline.moveTo(-width / 2, -depth / 2)
-    outline.lineTo(width / 2, -depth / 2)
-    outline.lineTo(width / 2, depth / 2)
-    outline.lineTo(-width / 2, depth / 2)
-    outline.closePath()
-    return pierced(outline, forgeRooflight.radius)
+  const isHeavy = useGraphicsMode()
+  const blocks = useDisposable(useMemo(() => new EndGrainFloorMaterial({seed: 3}), []))
+  // Iron painted Brunswick green in an eggshell oil paint, as Victorian ironwork was: the plate, the girders, the sash bars, the rafters and the dome’s rings.
+  const ironwork = useDisposable(useMemo(() => {
+    const material = new MeshStandardNodeMaterial({
+      color: brunswickGreen,
+      metalness: 0,
+      roughness: 0.45,
+    })
+    // Without indirect light, the undersides of the girders and rafters would go black; they get the daylight the floor and the limewash bounce up.
+    material.emissiveNode = vec3(...new Color(brunswickGreen)).mul(daylight).mul(0.06)
+    return material
   }, []))
   return <group name='forge'>
     <group position={[room.center[0], 0, room.center[1]]}>
-      <RigidBody colliders={false} type='fixed'>
-        <CuboidCollider args={[room.size[0] / 2, 0.15, room.size[1] / 2]} position={[0, 5.9, 0]} />
-      </RigidBody>
-      <RoomFloor glass={glass} room={room} stone={stone} wood={wood} />
-      <mesh castShadow geometry={ceiling} material={plaster} name='forge-ceiling' receiveShadow />
-      <Rooflight gilt={gold} layout={forgeRooflight} name='forge-rooflight' plaster={plaster} />
+      <Floor material={blocks} />
+      <Roof brick={brick} dressings={dressings} heavy={isHeavy} ironwork={ironwork} />
     </group>
-    <Vestibule floorReflections={floorReflections} masonry={masonry} plaster={plaster} />
+    <Vestibule blocks={blocks} dressings={dressings} heavy={isHeavy} ironwork={ironwork} masonry={masonry} />
     <AlchemyMachine />
     {forgeRowTables.map(({center: [x, z], name, seed, turn}) => <group key={name} position={[x, 0, z]} rotation-y={turn}>
       <IronTable name={name} seed={seed} table={forgeTable} />
@@ -69,6 +71,44 @@ export default function ForgeRoom({glass, masonry, stone, wood}: {
   </group>
 }
 
+/** The floor slab over the room’s plan, under the walls to their middles, its top in end-grain blocks. */
+function Floor({material}: {material: Material}) {
+  const [width, depth] = room.size
+  return <RigidBody colliders={false} type='fixed'>
+    <CuboidCollider args={[width / 2, floorThickness / 2, depth / 2]} position={[0, -floorThickness / 2, 0]} />
+    <mesh material={material} name='forge-floor' position={[0, -floorThickness / 2, 0]} receiveShadow>
+      <boxGeometry args={[width, floorThickness, depth]} />
+    </mesh>
+  </RigidBody>
+}
+/** The sawtooth roof over the room: its boarded, slated slopes, its brick gables and parapet, its iron and its wired glass, which lets the sun through and casts no shadow, only its iron does. */
+function Roof({brick, dressings, heavy, ironwork}: {
+  brick: Material
+  dressings: Material
+  heavy: boolean
+  ironwork: Material
+}) {
+  const geometry = useDisposable(useMemo(() => new ForgeRoofGeometry, []))
+  const collision = useMemo(() => forgeRoofCollision(), [])
+  const boarding = useDisposable(useMemo(() => new ForgeRoofMaterial, []))
+  // The Lobby vault’s cast glass with a wire mesh in it, one pane between every two sash bars.
+  const glass = useDisposable(useMemo(() => new VaultGlassMaterial({
+    heavy,
+    paneSize: [forgeRoofSpan[0] / forgeRoof.girder.panels, 3],
+    wire: forgeRoof.wire,
+  }), [heavy]))
+  return <group name='forge-roof'>
+    <RigidBody colliders={false} type='fixed'>
+      <MeshSurfaceCollider args={collision} />
+    </RigidBody>
+    <mesh castShadow geometry={geometry.roof} material={boarding} name='forge-roof-boarding' receiveShadow />
+    <mesh castShadow geometry={geometry.gables} material={brick} name='forge-roof-gables' receiveShadow />
+    <mesh castShadow geometry={geometry.parapet} material={brick} name='forge-roof-parapet' receiveShadow />
+    <mesh castShadow geometry={geometry.coping} material={dressings} name='forge-roof-coping' receiveShadow />
+    <mesh castShadow geometry={geometry.iron} material={ironwork} name='forge-roof-iron' receiveShadow />
+    <mesh castShadow={false} geometry={geometry.glass} material={glass} name='forge-roof-glass' />
+  </group>
+}
 /** A flat ring lying in the x/z plane with its underside at y = 0, from `inner` to `outer` radius, `depth` thick. */
 function ring(inner: number, outer: number, depth: number) {
   const shape = new Shape
@@ -83,92 +123,44 @@ function ring(inner: number, outer: number, depth: number) {
   })
   return geometry.rotateX(-Math.PI / 2)
 }
-/** The ceiling slab over a floor plan, given as a shape in x and −z, cut round the opening of a rooflight in its middle. */
-function pierced(outline: Shape, radius: number) {
-  const hole = new Path
-  hole.absarc(0, 0, radius, 0, Math.PI * 2, true)
-  outline.holes.push(hole)
-  const slab = new ExtrudeGeometry(outline, {
-    depth: salonCeiling.thickness,
-    bevelEnabled: false,
-    curveSegments: circleSegments,
-  })
-  return slab.rotateX(-Math.PI / 2).translate(0, salonCeiling.y - salonCeiling.thickness / 2, 0)
-}
-/** The ring of plaster round a rooflight’s opening, hanging below the slab with a gilt bead along its lower inner edge, the glazing bars in a square grid and the disc of cast glass over them. */
-function Rooflight({gilt, layout, name, plaster}: {
-  gilt: Material
-  layout: RooflightLayout
-  name: string
-  plaster: Material
-}) {
-  const {barDepth, barWidth, bead, depth, frame, glassY, pane, radius} = layout
-  const isHeavy = useGraphicsMode()
-  // Painted cast iron, as old rooflight glazing bars are.
-  const ironwork = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#4c463c',
-    metalness: 0.2,
-    roughness: 0.7,
-  }), []))
-  // The Lobby vault’s cast glass, divided into the same panes as the bars below it.
-  const glass = useDisposable(useMemo(() => new VaultGlassMaterial({
-    heavy: isHeavy,
-    paneSize: [pane, pane],
-  }), [isHeavy, pane]))
-  const frameGeometry = useDisposable(useMemo(() => ring(radius, radius + frame, depth), [depth, frame, radius]))
-  const beadGeometry = useDisposable(useMemo(() => ring(radius - bead, radius + bead, bead), [bead, radius]))
-  // Metric UVs from the disc’s south-west corner, so the glass’s panes line up with the bars.
-  const glassGeometry = useDisposable(useMemo(() => {
-    const disc = new CircleGeometry(radius, circleSegments)
-    const uv = disc.getAttribute('uv')
-    for (let i = 0; i < uv.count; i++) {
-      uv.setXY(i, uv.getX(i) * radius * 2, uv.getY(i) * radius * 2)
-    }
-    return disc
-  }, [radius]))
-  const barY = glassY - 0.005 - barDepth / 2
-  // The bars on the joints between the panes, laid across the disc from edge to edge, each as long as its chord.
-  const bars = Array.from({length: Math.round(radius * 2 / pane) - 1}, (_, i) => -radius + (i + 1) * pane).map(offset => ({
-    offset,
-    length: 2 * Math.sqrt(radius ** 2 - offset ** 2),
-  }))
-  return <StaticBatch name={name}>
-    <mesh castShadow geometry={frameGeometry} material={plaster} name={`${name}-frame`} position={[0, salonCeiling.underside - depth, 0]} receiveShadow />
-    <mesh castShadow geometry={beadGeometry} material={gilt} name={`${name}-bead`} position={[0, salonCeiling.underside - depth - bead, 0]} receiveShadow />
-    {bars.map(({offset, length}) => <Box key={`x${offset}`} material={ironwork} position={[offset, barY, 0]} size={[barWidth, barDepth, length]} />)}
-    {bars.map(({offset, length}) => <Box key={`z${offset}`} material={ironwork} position={[0, barY, offset]} size={[length, barDepth, barWidth]} />)}
-    <mesh geometry={glassGeometry} material={glass} name={`${name}-glass`} position={[0, glassY, 0]} rotation={[Math.PI / 2, 0, 0]} />
-  </StaticBatch>
-}
 /**
- * The round vestibule north of the room: its floor, out under its arches, with a brass ring like the room’s inlays, its ceiling and rooflight like the room’s, and the reveals that line its arches out to the planes touching its wall there:
- * plaster through to the room’s north wall, and the Bastion’s stone on from the end of its approach.
+ * The round vestibule north of the room: its floor, out under its arches, in the room’s blocks with a brass ring round it, its brick dome open to the sky at its crown, and the reveals that line its arches out to the planes touching its wall there:
+ * sandstone through to the room’s north wall, and the Bastion’s stone on from the end of its approach.
  */
-function Vestibule({floorReflections, masonry, plaster}: {
-  floorReflections: boolean
+function Vestibule({blocks, dressings, heavy, ironwork, masonry}: {
+  blocks: Material
+  dressings: Material
+  heavy: boolean
+  ironwork: Material
   masonry: Material
-  plaster: Material
 }) {
-  const {center, radius, rooflight} = forgeVestibule
-  // Plain stone and plaster, like the room’s floor and walls.
-  const paving = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#f3eddf',
-    envMapIntensity: floorReflections ? 1 : 0,
-    roughness: floorReflections ? 0.36 : 0.8,
-  }), [floorReflections]))
-  const lining = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#eee7d7',
-    roughness: 0.9,
-  }), []))
+  const {center, radius} = forgeVestibule
+  const {curveDetail, floorReflections} = useGraphicsModeValue(getGraphicsProfile)
   const brass = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: '#9d8354',
-    metalness: 0.45,
-    envMapIntensity: floorReflections ? 1 : 0,
+    metalness: 0.6,
+    roughness: 0.35,
+    envMapIntensity: floorReflections ? 1 : 0.5,
   }), [floorReflections]))
+  const domeBrick = useDisposable(useMemo(() => new BrickMaterial({
+    mapping: {
+      kind: 'dome',
+      center: [center[0], forgeVestibuleDome.springY, center[1]],
+      radius: forgeVestibuleDome.radius,
+    },
+    soot: [7, 10],
+  }), [center]))
+  const glass = useDisposable(useMemo(() => new VaultGlassMaterial({
+    heavy,
+    paneSize: [forgeVestibuleDome.oculus * 2 + 0.08, forgeVestibuleDome.oculus * 2 + 0.08],
+    wire: forgeRoof.wire,
+  }), [heavy]))
   const linings = {
-    forge: lining,
+    forge: dressings,
     bastion: masonry,
   }
+  const dome = useDisposable(useMemo(() => new ForgeDomeGeometry(64 * curveDetail), [curveDetail]))
+  const domeCollision = useMemo(() => forgeDomeCollision(), [])
   const parts = useDisposable(useMemo(() => {
     const slab = new ExtrudeGeometry(roundVestibuleFloorShape(forgeRoundVestibule), {
       depth: floorThickness,
@@ -176,38 +168,35 @@ function Vestibule({floorReflections, masonry, plaster}: {
       curveSegments: circleSegments,
     })
     slab.rotateX(-Math.PI / 2).translate(0, -floorThickness, 0)
-    const inlay = ring(radius - vestibuleInlay - 0.013, radius - vestibuleInlay + 0.013, 0.012).translate(0, 0.009, 0)
+    const inlay = ring(radius - vestibuleInlay - 0.013, radius - vestibuleInlay + 0.013, 0.012).translate(0, -0.01, 0)
     const reveals = vestibuleArches.map(arch => ({
       name: arch.name,
       geometry: roundRevealGeometry(vestibuleWall, vestibuleWall.holes!.find(hole => hole.name === arch.name)!, vestibuleArchOpening(forgeRoundVestibule, arch)),
     }))
-    const outline = new Shape
-    outline.absarc(0, 0, radius, 0, Math.PI * 2, false)
-    const ceiling = pierced(outline, rooflight.radius)
     return {
       slab,
       inlay,
       reveals,
-      ceiling,
       floorCollision: colliderGeometry(slab),
       revealCollision: reveals.map(({geometry}) => colliderGeometry(geometry)),
       dispose() {
-        for (const geometry of [slab, inlay, ceiling, ...reveals.map(reveal => reveal.geometry)]) {
+        for (const geometry of [slab, inlay, ...reveals.map(reveal => reveal.geometry)]) {
           geometry.dispose()
         }
       },
     }
-  }, [radius, rooflight]))
+  }, [radius]))
   return <>
     <group name='forge-vestibule' position={[center[0], 0, center[1]]}>
       <RigidBody colliders={false} type='fixed'>
         <TrimeshCollider args={parts.floorCollision} />
-        <CylinderCollider args={[0.15, radius]} position={[0, 5.9, 0]} />
-        <mesh geometry={parts.slab} material={paving} name='forge-vestibule-floor' receiveShadow />
+        <MeshSurfaceCollider args={domeCollision} />
+        <mesh geometry={parts.slab} material={blocks} name='forge-vestibule-floor' receiveShadow />
         <mesh geometry={parts.inlay} material={brass} name='forge-vestibule-inlay' receiveShadow />
       </RigidBody>
-      <mesh castShadow geometry={parts.ceiling} material={plaster} name='forge-vestibule-ceiling' receiveShadow />
-      <Rooflight gilt={gold} layout={rooflight} name='forge-vestibule-rooflight' plaster={plaster} />
+      <mesh castShadow geometry={dome.shell} material={domeBrick} name='forge-vestibule-dome' receiveShadow />
+      <mesh castShadow geometry={dome.iron} material={ironwork} name='forge-vestibule-dome-iron' receiveShadow />
+      <mesh castShadow={false} geometry={dome.glass} material={glass} name='forge-vestibule-dome-glass' />
     </group>
     {/* In the round wall’s own frame, as the reveals are built, where its paint knows which way its face looks. */}
     <group name='forge-vestibule-reveals' position={vestibuleWall.center} rotation={[0, vestibuleWall.rotation, 0]}>

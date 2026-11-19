@@ -1,12 +1,16 @@
 import type {Wall} from '#src/lib/gallery.ts'
 import type {Material, NodeMaterial} from 'three/webgpu'
 
+import {wallFace} from '#src/lib/gallery/architectureDimensions.ts'
+import {forgeBrickwork, forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {siennaWainscotFields} from '#src/lib/gallery/siennaWainscot.ts'
 import ArchitecturalConcreteMaterial from '#src/lib/materials/ArchitecturalConcreteMaterial.ts'
 import BanquetMaterials from '#src/lib/materials/BanquetMaterials.ts'
 import MadeOnDemand from '#src/lib/materials/base/MadeOnDemand.ts'
+import BrickMaterial from '#src/lib/materials/BrickMaterial.ts'
 import CastleStoneMaterial from '#src/lib/materials/CastleStoneMaterial.ts'
 import DamaskWallpaperMaterial from '#src/lib/materials/DamaskWallpaperMaterial.ts'
+import DressedSandstoneMaterial from '#src/lib/materials/DressedSandstoneMaterial.ts'
 import FrescoMaterials from '#src/lib/materials/FrescoMaterials.ts'
 import JoineryWoodMaterial from '#src/lib/materials/JoineryWoodMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
@@ -18,6 +22,12 @@ import VesperWallMaterial from '#src/lib/materials/VesperWallMaterial.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const vesper = slopGallery.room('vesper')
+const forgeVestibuleWall = slopGallery.walls.find(wall => wall.id === 'forge-vestibule')!
+/** The angle round its center, from world x toward world z, at which a round wall’s ends meet: across from its middle, which lies in front of its center by its radius. */
+const ringSeam = ({center: [x, , z], curveRadius = 1, rotation}: Wall) => {
+  const [centerX, centerZ] = [x + curveRadius * Math.sin(rotation), z + curveRadius * Math.cos(rotation)]
+  return Math.atan2(centerZ - z, centerX - x)
+}
 // Five courses of 1.1 m reach the cornice; slabs are twice as long as they are high.
 const lobbyCladding = {
   course: 1.1,
@@ -46,6 +56,32 @@ export default class ArchitectureMaterials extends MadeOnDemand {
   /** the Sienna’s damask, above its dark wood */
   get damask(): NodeMaterial {
     return this.once('damask', () => new DamaskWallpaperMaterial)
+  }
+
+  /** the Forge’s red brick in Flemish bond over a glazed dado, its flat walls’, and its gables’ under the roof */
+  get forgeBrick(): NodeMaterial {
+    return this.once('forgeBrick', () => new BrickMaterial({
+      ...forgeBrickwork,
+      mapping: {kind: 'planar'},
+    }))
+  }
+
+  /** the Forge’s buff sandstone dressings: its baseboards, the casings round its openings and its string courses */
+  get forgeDressings(): NodeMaterial {
+    return this.once('forgeDressings', () => new DressedSandstoneMaterial)
+  }
+
+  /** the brick of the Forge’s round vestibule, its courses following the wall round from where its ends meet */
+  get forgeVestibuleBrick(): NodeMaterial {
+    return this.once('forgeVestibuleBrick', () => new BrickMaterial({
+      ...forgeBrickwork,
+      mapping: {
+        kind: 'ring',
+        center: forgeVestibule.center,
+        radius: forgeVestibule.radius - wallFace,
+        seam: ringSeam(forgeVestibuleWall),
+      },
+    }))
   }
 
   /**
@@ -113,6 +149,11 @@ export default class ArchitectureMaterials extends MadeOnDemand {
     return this.once('windowReveal', () => lightIndoors(new LodgeWoodMaterial))
   }
 
+  /** What lines the wall’s openings instead of its face’s material, or undefined where its face’s material lines them too. */
+  reveal(wall: Wall): Material | undefined {
+    return wall.room === 'forge' ? this.forgeDressings : undefined
+  }
+
   /** What the wall’s face is surfaced with, or undefined for the plain plaster of the shared wall surfaces. */
   surface(wall: Wall): Material | undefined {
     switch (wall.room) {
@@ -136,6 +177,9 @@ export default class ArchitectureMaterials extends MadeOnDemand {
       }
       case 'banquet': {
         return this.banquet.surface(wall)
+      }
+      case 'forge': {
+        return wall.curveRadius ? this.forgeVestibuleBrick : this.forgeBrick
       }
       default: {
         return undefined
@@ -167,6 +211,9 @@ export default class ArchitectureMaterials extends MadeOnDemand {
       }
       case 'banquet': {
         return this.banquet.trim(wall)
+      }
+      case 'forge': {
+        return this.forgeDressings
       }
       default: {
         return undefined

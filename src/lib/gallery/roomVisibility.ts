@@ -9,6 +9,7 @@ import {openingTop, wallCoordinates, wallOffset, wallPosition} from '#src/lib/pl
 import slopGallery from '#src/worlds/gallery/index.ts'
 import relations, {openings} from '#src/worlds/gallery/relations.ts'
 
+import {forgeRoofSpan, forgeRoofTeeth} from './forgeRoof.ts'
 import lobby from './lobby.ts'
 import salonLantern, {salonDrumOuterApothem} from './salonLantern.ts'
 import {vesperLanternLayout, vesperLanternRidgeY, vesperLanternSillY} from './vesperCeiling.ts'
@@ -93,6 +94,19 @@ const salonDrumBox = (mirrored: boolean) => {
   const [bottom, top] = mirrored ? [-crown, -sill] : [sill, crown]
   return new Box3(new Vector3(x - reach, salon.floorY + bottom, z - reach), new Vector3(x + reach, salon.floorY + top, z + reach))
 }
+/** the glazed faces of the Forge’s sawtooth roof, which look south, over the Lobby’s vault rising next door */
+const forgeRoofBox = () => {
+  const forge = slopGallery.room('forge')
+  const [x, z] = forge.center
+  const teeth = forgeRoofTeeth()
+  const [spanX] = forgeRoofSpan
+  const box = new Box3
+  for (const {foot, ridge} of teeth) {
+    box.expandByPoint(new Vector3(x - spanX, forge.floorY + foot[1], z + ridge[0]))
+    box.expandByPoint(new Vector3(x + spanX, forge.floorY + ridge[1], z + foot[0]))
+  }
+  return box
+}
 
 export const portals: Array<Portal> = [
   ...openings.map(({rooms: pair, holes}) => ({
@@ -112,6 +126,10 @@ export const portals: Array<Portal> = [
     rooms: ['salon', 'lobby'] as const,
     box: salonDrumBox(mirrored),
   })),
+  {
+    rooms: ['forge', 'lobby'],
+    box: forgeRoofBox(),
+  },
 ]
 
 /** the boxes of each room’s air, a room’s air can take several (like the Corridor’s strips round the Lodge’s bay, its hall and its stair flight up to the Sienna); they reach below the floor for its reflection */
