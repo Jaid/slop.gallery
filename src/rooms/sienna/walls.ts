@@ -2,6 +2,7 @@ import type {RoomWall} from '../base/Room.ts'
 import type {PlanSide} from '../lib/walls.ts'
 
 import {corridorLanding} from '#src/lib/gallery/corridor.ts'
+import roomOrigins from '#src/lib/gallery/layout.ts'
 import lodge from '#src/lib/gallery/lodge.ts'
 import sienna, {siennaVestibule} from '#src/lib/gallery/sienna.ts'
 
@@ -14,7 +15,7 @@ const arch = {
   height: corridorLanding.height,
   profile: 'arch',
 } as const
-/** The vestibule’s walls, around its square floor plan west of the arch like the room’s around its own, placed at its middle. */
+/** The vestibule’s walls, around its square floor plan south of the south-west arch like the room’s around its own, placed at its middle. */
 const vestibuleWall = (side: PlanSide, wall: Partial<RoomWall> = {}): RoomWall => {
   const {center, ...planned} = planWall(siennaVestibule.size, side, siennaVestibule.height - 0.3, wall)
   return {
@@ -24,31 +25,30 @@ const vestibuleWall = (side: PlanSide, wall: Partial<RoomWall> = {}): RoomWall =
 }
 
 export default {
-  // The arch through to the Vesper, in the middle.
+  // The arch through to the Vesper, in the north-east corner, aligned with the Vesper’s centered south arch.
   north: planWall(sienna.size, 'north', height, {
     holes: {
       vesper: {
-        u: 0,
+        u: roomOrigins.vesper[0] - sienna.center[0],
         width: 2.8,
         height: 3.8,
         profile: 'arch',
       },
     },
   }),
-  // The arch into the vestibule, by the north-west corner.
-  west: planWall(sienna.size, 'west', height, {
+  west: planWall(sienna.size, 'west', height),
+  east: planWall(sienna.size, 'east', height),
+  // The arch into the vestibule, by the south-west corner.
+  south: planWall(sienna.size, 'south', height, {
     holes: {
       vestibule: {
         ...arch,
-        u: sienna.center[1] - lodge.siennaZ,
+        u: sienna.center[0] - siennaVestibule.center[0],
       },
     },
   }),
-  east: planWall(sienna.size, 'east', height),
-  south: planWall(sienna.size, 'south', height),
-  vestibule_north: vestibuleWall('north'),
-  // The back of the room’s west wall, with the same arch.
-  vestibule_east: vestibuleWall('east', {
+  // The back of the room’s south wall, with the same arch.
+  vestibule_north: vestibuleWall('north', {
     holes: {
       sienna: {
         ...arch,
@@ -56,6 +56,7 @@ export default {
       },
     },
   }),
+  vestibule_east: vestibuleWall('east'),
   vestibule_south: vestibuleWall('south'),
   // The arch onto the Corridor’s landing at the top of its stair flight.
   vestibule_west: vestibuleWall('west', {

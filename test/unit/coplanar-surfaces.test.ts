@@ -148,7 +148,7 @@ describe('inside corners of room walls', () => {
   })
   // Where both walls ran their baseboards and cornices into the corner, the bands overlapped with shared tops, bottoms and fronts.
   // The casings of the tunnel’s doorway and the Corridor’s fill the corners beside them, of the east wall and of the bay’s back wall, up to their arches’ springing, so only the cornices meet there.
-  for (const [first, second, baseboard] of [['lodge-south', 'lodge-east', true], ['lodge-south', 'lodge-west', true], ['vesper-north', 'vesper-west', true], ['lodge-northwest', 'lodge-west', true], ['lodge-northwest', 'lodge-north', false], ['lodge-north', 'lodge-northeast', false], ['lodge-northeast', 'lodge-east', false]] as const) {
+  for (const [first, second, baseboard] of [['lodge-south', 'lodge-east', true], ['lodge-south', 'lodge-west', true], ['vesper-north', 'vesper-west', true], ['sienna-north', 'sienna-east', true], ['sienna-south', 'sienna-west', true], ['sienna-vestibule_north', 'sienna-vestibule_west', true], ['lodge-northwest', 'lodge-west', true], ['lodge-northwest', 'lodge-north', false], ['lodge-north', 'lodge-northeast', false], ['lodge-northeast', 'lodge-east', false]] as const) {
     test(`${first} and ${second} meet with single, mitered trim surfaces`, () => {
       const a = wallById(first)
       const b = wallById(second)

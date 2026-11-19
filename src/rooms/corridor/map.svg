@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -28.99 12.7 60.84" fill="#fff">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -34.69 12.7 73.04" fill="#fff">
   <defs>
-    <linearGradient id="corridor-stairs-climb" gradientUnits="userSpaceOnUse" x1="0.59" y1="22.67" x2="7.19" y2="29.27">
+    <linearGradient id="corridor-stairs-climb" gradientUnits="userSpaceOnUse" x1="0.59" y1="28.37" x2="7.99" y2="35.77">
       <stop offset="0" stop-color="#ffffff"/>
       <stop offset="1" stop-color="#262626"/>
     </linearGradient>
     <mask id="corridor-stairs">
-      <rect x="-2" y="-28.99" width="12.7" height="60.84" fill="url(#corridor-stairs-climb)"/>
+      <rect x="-2" y="-34.69" width="12.7" height="73.04" fill="url(#corridor-stairs-climb)"/>
     </mask>
   </defs>
-  <path mask="url(#corridor-stairs)" d="M 7 -23.29 V -25.29 H 5.61 L 1.7 -21.38 V 21.38 L 8.48 28.15 H 8.9 V 31.55 H 7.07 L -1.7 22.78 V -22.78 L 4.2 -28.69 H 10.4 V -23.29 Z"/>
+  <path mask="url(#corridor-stairs)" d="M 7 -28.99 V -30.99 H 5.61 L 1.7 -27.08 V 27.08 L 9.28 34.65 H 9.7 V 38.05 H 7.87 L -1.7 28.48 V -28.48 L 4.2 -34.39 H 10.4 V -28.99 Z"/>
 </svg>
