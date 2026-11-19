@@ -52,6 +52,18 @@ export const {center: forgeTableCenter, turn: forgeTableTurn} = painter
 export const {center: forgeSideTableCenter, turn: forgeSideTableTurn} = palette
 export const forgeSideTable = forgeTable
 
+/** The brass gauge let flush into the floor down both sides of the aisle, in meters: a strip out from the room’s axis, with ticks reaching out from it every decimeter, farther every half meter and meter. */
+export const forgeGauge = {
+  /** how far out from the room’s axis the strip runs */
+  offset: 1.05,
+  /** how wide the strip is */
+  strip: 0.032,
+  /** the spacing of each division of ticks, and how far they reach out from the strip’s middle */
+  ticks: [[0.1, 0.056], [0.5, 0.115], [1, 0.18]],
+  /** how far short of the north and south walls’ center lines it ends */
+  inset: 0.23,
+} as const
+
 /** The south-facing sawtooth lights. Heights are measured from the workshop floor. */
 export const forgeRoof = {
   /** how many teeth span the room from north to south, each over an equal share of its length */

@@ -1,7 +1,7 @@
 import {color, float, hash, mix, mx_noise_float, positionWorld, vec2} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
-import forge, {forgeVestibule} from '#src/lib/gallery/forge.ts'
+import forge, {forgeGauge, forgeVestibule} from '#src/lib/gallery/forge.ts'
 
 import {heightNormal, insideBy, visibleDetail} from '../filters.ts'
 
@@ -25,11 +25,11 @@ export default class EndGrainMaterial extends MeshStandardNodeMaterial {
     const edge = float(0.155).sub(cell.x.abs()).min(float(0.105).sub(cell.y.abs()))
     const joint = insideBy(edge.sub(0.002), pixel)
     // Tick every decimeter, with longer half-meter and meter divisions. Nothing is raised above the orb’s rolling surface.
-    const rule = p.x.abs().sub(1.05)
+    const rule = p.x.abs().sub(forgeGauge.offset)
     const stripe = (distance: typeof rule, half: number) => insideBy(distance.abs().sub(half), pixel).mul(float(2 * half).div(pixel.max(0.00001)).min(1))
     const tick = (step: number, length: number) => stripe(p.y.div(step).sub(p.y.div(step).round()).mul(step), 0.005).mul(insideBy(rule.sub(length / 2).abs().sub(length / 2), pixel))
-    const tracks = stripe(rule, 0.016).max(tick(0.1, 0.056)).max(tick(0.5, 0.115)).max(tick(1, 0.18))
-    const inHall = insideBy(p.y.abs().sub(forge.size[1] / 2 - 0.23), pixel)
+    const tracks = forgeGauge.ticks.reduce((marks, [step, length]) => marks.max(tick(step, length)), stripe(rule, forgeGauge.strip / 2))
+    const inHall = insideBy(p.y.abs().sub(forge.size[1] / 2 - forgeGauge.inset), pixel)
     const radial = positionWorld.xz.sub(vec2(...forgeVestibule.center)).length()
     const brass = tracks.mul(inHall).max(stripe(radial.sub(1.78), 0.018)).max(stripe(radial.sub(1.89), 0.008))
     this.colorNode = mix(mix(wood, color('#504437'), joint), color('#d2a55d'), brass)

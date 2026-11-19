@@ -8,7 +8,7 @@ import {Matrix4, Vector3} from 'three/webgpu'
 import {cannonFlight, machineBody, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import WorkbenchGeometry from '../../src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {baseboardCapFront, defaultBaseboardHeight, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
-import forge, {forgeRowTables, forgeSideTable, forgeSideTableCenter, forgeSideTableTurn, forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
+import forge, {forgeGauge, forgeRowTables, forgeSideTable, forgeSideTableCenter, forgeSideTableTurn, forgeTable, forgeTableCenter, forgeTableTurn} from '../../src/lib/gallery/forge.ts'
 import {ironTableColliders} from '../../src/lib/gallery/ironTable.ts'
 import IronTableGeometry from '../../src/lib/gallery/IronTableGeometry.ts'
 import {wallOffset} from '../../src/lib/placement/wallGeometry.ts'
@@ -19,12 +19,15 @@ const [benchX, benchZ] = workbench.center
 const west = slopGallery.walls.find(wall => wall.id === 'forge-west')!
 const south = slopGallery.walls.find(wall => wall.id === 'forge-south')!
 const east = slopGallery.walls.find(wall => wall.id === 'forge-east')!
-/** A table’s clearances in the world: its lower frame from the baseboard and its closest point to the wall. */
+/** how far out from the room’s axis the floor’s brass gauge reaches, from the inner edge of its strip to the ends of its longest ticks */
+const gauge = [forgeGauge.offset - forgeGauge.strip / 2, forgeGauge.offset + Math.max(...forgeGauge.ticks.map(([, reach]) => reach))] as const
+/** A table’s clearances in the world: its feet from the gauge, its lower frame from the baseboard and its closest point to the wall. */
 function wallReach({frame, top}: IronTableGeometry, wall: Wall, [x, z]: readonly [number, number], turn: number) {
   const placement = new Matrix4
   placement.makeRotationY(turn).setPosition(x, 0, z)
   const point = new Vector3
   let nearestLow = Infinity
+  let footToGauge = Infinity
   let nearest = Infinity
   for (const geometry of [frame, top]) {
     const position = geometry.getAttribute('position')
@@ -32,6 +35,10 @@ function wallReach({frame, top}: IronTableGeometry, wall: Wall, [x, z]: readonly
       point.fromBufferAttribute(position, index).applyMatrix4(placement)
       const offset = wallOffset(wall, [point.x, point.y, point.z])
       nearest = Math.min(nearest, offset)
+      if (point.y < 0.01 && Math.abs(point.z - forge.center[1]) < forge.size[1] / 2 - forgeGauge.inset) {
+        const out = Math.abs(point.x - forge.center[0])
+        footToGauge = Math.min(footToGauge, Math.max(gauge[0] - out, out - gauge[1]))
+      }
       if (point.y >= defaultBaseboardHeight + 0.01) {
         continue
       }
@@ -39,6 +46,7 @@ function wallReach({frame, top}: IronTableGeometry, wall: Wall, [x, z]: readonly
     }
   }
   return {
+    footToGauge,
     nearest,
     nearestLow,
   }
@@ -74,9 +82,11 @@ describe('the Forge’s tables', () => {
     test(`${name} has a 5 m × 1.3 m slab at 1.2 m on an iron frame clear of the baseboard`, () => {
       const geometry = build()
       try {
-        const {nearest, nearestLow} = wallReach(geometry, wall, center, turn)
+        const {footToGauge, nearest, nearestLow} = wallReach(geometry, wall, center, turn)
         expect(nearestLow - baseboardCapFront).toBeGreaterThan(0.005)
         expect(nearest).toBeGreaterThan(wallFace + 0.02)
+        // Its feet stay off the floor’s brass gauge.
+        expect(footToGauge).toBeGreaterThan(0.013)
         expect(geometry.top.hasAttribute('woodGrain')).toBe(false)
         expect(geometry.frame.hasAttribute('woodGrain')).toBe(false)
         // Its slab rests on the band under it, as high as the table is.
