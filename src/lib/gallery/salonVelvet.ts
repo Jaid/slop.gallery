@@ -4,19 +4,19 @@ import type {HslSpread} from '../seededHsl.ts'
 import {environmentRandom, isDefaultSeed} from '../environmentSeed.ts'
 import {seededVelvet} from '../materials/VelvetMaterial.ts'
 
-/** the Salon ottoman’s velvet in OkHSL, by default the oxblood of the other velvets */
+/** the Salon ottoman’s velvet in OkHSL, a darker, redder oxblood than the other velvets’ */
 export const salonVelvetColors = {
-  crushed: [23, 97, 32],
-  deep: [16, 89, 6],
-  pile: [21, 96, 18],
-  sheen: [22, 96, 48],
+  crushed: [20, 100, 25],
+  deep: [13, 91.75, 4.69],
+  pile: [18, 98.97, 14.06],
+  sheen: [19, 98.97, 37.5],
 } as const satisfies VelvetColors
 
 /** how far the Salon ottoman’s velvet may stray from {@link salonVelvetColors} in OkHSL, either way */
 export const salonVelvetSpread = {
-  hue: 20,
+  hue: 25,
   saturation: 0,
-  lightness: 0,
+  lightness: 5,
 } as const satisfies HslSpread
 
 /** The stream the velvet of the Salon ottoman is rolled from. */
