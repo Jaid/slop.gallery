@@ -1,5 +1,6 @@
 import type FatedRandom from 'fated-random'
 
+import {rollHslShift} from '../seededHsl.ts'
 import SlimeMaterial from './SlimeMaterial.ts'
 
 /** how far a Slop’s greens may stray round the hue circle from the slime’s, either way, in degrees */
@@ -11,7 +12,7 @@ export default class SlopMaterial extends SlimeMaterial {
   readonly hueShift: number
 
   constructor(random: FatedRandom) {
-    const hueShift = random.rollRadius(slopHueSpread)
+    const [hueShift] = rollHslShift(random, {hue: slopHueSpread})
     super(hueShift)
     this.hueShift = hueShift
     this.name = 'slop'
