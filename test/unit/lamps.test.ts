@@ -1,6 +1,5 @@
 import type {PendantMount} from '../../src/lib/gallery/pendants/CeilingProbe.ts'
 import type {Vec3} from '../../src/lib/gallery/types.ts'
-import type {PlacedLamp} from '../../src/worlds/base/PlacedRoom.ts'
 import type {GalleryRoomId} from '../../src/worlds/gallery/SlopGallery.ts'
 
 import {expect, test} from 'bun:test'
@@ -73,9 +72,4 @@ test('the Lobby’s lamps hang under its chandeliers', () => {
   const chandeliers = ['north', 'middle', 'south'].map(name => lamp(`lobby-chandelier_${name}`))
   expect(chandeliers.map(({position}) => position[2] - lobby.origin[2])).toEqual([...lobbyChandeliers.offsets])
   expect(chandeliers.every(({position}) => position[1] === lobbyChandeliers.lightY)).toBe(true)
-})
-test('only Moonfall’s spotlight is a spot, and it casts a real shadow', () => {
-  const spots = lamps.filter((value): value is Extract<PlacedLamp, {kind: 'spot'}> => value.kind === 'spot')
-  expect(spots.map(({id}) => id)).toEqual(['moonfall-spotlight'])
-  expect(spots[0].shadow).toBe(true)
 })

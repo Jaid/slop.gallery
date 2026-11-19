@@ -283,7 +283,6 @@ const relations = {
         'wall_east_south',
         'wall_north_west',
         'wall_north_east',
-        'spotlight',
         'planet_glow',
         'ember',
         'stairs',

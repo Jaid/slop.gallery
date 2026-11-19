@@ -10,17 +10,6 @@ export default {
     strength: 15,
     range: 10,
   } satisfies Lamp])),
-  spotlight: {
-    kind: 'spot',
-    position: [-7, 3.3, -4],
-    target: [0, -1.5, 0],
-    angle: 0.9,
-    penumbra: 0.28,
-    strength: 860,
-    tint: '#e0d0b2',
-    range: 15,
-    shadow: true,
-  },
   // The planet’s glow, rising from the crater, throws the orbital sculpture’s shadow onto the ceiling.
   planet_glow: {
     position: [5.37, 1.02, -0.19],
