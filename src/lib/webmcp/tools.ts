@@ -1,10 +1,10 @@
 import type {FrameDownload, FrameFormat} from '#src/lib/downloadFrame.ts'
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
+import type {PortraitAddition, PortraitAdditionInput, PortraitTarget} from './addPortrait.ts'
 import type {WorldAnalysis} from './analyzeWorld.ts'
 import type {MoodCast, MoodCastInput} from './castMood.ts'
 import type {PortraitDump} from './dumpPortraits.ts'
-import type {WorkHanging, WorkHangingInput} from './hangWork.ts'
 import type {GraphicsQualityChange, GraphicsQualityInput} from './setGraphicsQuality.ts'
 import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
 import type {PartyEffectSpawn, PartyEffectSpawnInput} from './spawnPartyEffect.ts'
@@ -25,6 +25,7 @@ export type KnotDump = {
 }
 
 export type WebmcpBridge = {
+  addPortrait: (input: PortraitAdditionInput) => Promise<PortraitAddition>
   analyzeWorld: () => WorldAnalysis
   castMood: (input: MoodCastInput) => MoodCast
   downloadFrame: (options: {
@@ -42,7 +43,6 @@ export type WebmcpBridge = {
     delivery: ReturnType<VictoriaClient['status']>
     sessionId: string
   } | null
-  hangWork: (input: WorkHangingInput) => Promise<WorkHanging>
   setGraphicsQuality: (input: GraphicsQualityInput) => Promise<GraphicsQualityChange>
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
   spawnOrb: (input: OrbSpawnInput) => Promise<OrbSpawn>
@@ -56,7 +56,7 @@ const colorPattern = /^#(?:[\da-f]{3}){1,2}$/iu
 const throwKeys = ['prop', 'portrait', 'target', 'velocity', 'from', 'speed']
 const spawnKeys = new Set(['orb', 'position', 'id'])
 const partyKeys = new Set(['effect', 'position', 'rotation', 'floor', 'delay'])
-const hangKeys = new Set(['image', 'slot', 'title', 'id'])
+const portraitKeys = new Set(['image', 'target', 'title', 'id', 'frame', 'size'])
 const workIdPattern = /^[\w-]{1,100}$/u
 const propIdPattern = /^prop-[\w-]{1,100}$/u
 const isPoint = (value: unknown): value is [number, number, number] => Array.isArray(value) && value.length === 3 && value.every(number => typeof number === 'number' && Number.isFinite(number))
@@ -67,6 +67,34 @@ const point = (description: string) => ({
   minItems: 3,
   maxItems: 3,
 })
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+/** Whether the value is an object of exactly these keys, each a finite number. */
+const isCoordinates = (value: unknown, keys: string) => isRecord(value) && Object.keys(value).toSorted().join(',') === keys && Object.values(value).every(number => typeof number === 'number' && Number.isFinite(number))
+/** The target of add_portrait as its bridge takes it, or a TypeError for anything but exactly one of its three shapes. */
+const readPortraitTarget = (target: unknown): PortraitTarget => {
+  const shape = isRecord(target) ? Object.keys(target).toSorted().join(',') : ''
+  const {slot, wall_id: wallId, position} = isRecord(target) ? target : {}
+  if (shape === 'slot' && typeof slot === 'string' && slot) {
+    return {slot}
+  }
+  if (shape === 'position,wall_id' && typeof wallId === 'string' && wallId && isCoordinates(position, 'x,y')) {
+    return {
+      wallId,
+      position: position as {
+        x: number
+        y: number
+      },
+    }
+  }
+  if (shape === 'position' && isCoordinates(position, 'x,y,z')) {
+    return {position: position as {
+      x: number
+      y: number
+      z: number
+    }}
+  }
+  throw new TypeError('target must be exactly one of {slot}, the id of a portrait slot, {wall_id, position}, the id of a wall with {x, y} on it in meters, or {position}, {x, y, z} in world meters.')
+}
 const wireframeKeys = ['enabled', 'direction', 'mode', 'anchor', 'shape', 'position', 'radius', 'highlight', 'color', 'highlight_color', 'seam_width', 'glow_duration', 'seam_color', 'seam_intensity', 'angle_indicator_strength', 'speed', 'burst', 'burst_duration', 'antialiasing', 'line_style', 'line_width']
 
 export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<WebMCP.ModelContextTool> {
@@ -429,9 +457,9 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       },
     },
     {
-      name: 'hang_work',
-      title: 'Hang work',
-      description: 'Hang an image in a portrait slot as an imported work, in place of the work hanging there, if any: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect at the slot’s frame area, wearing the roll of its id of the slot’s frames or of its room’s, right away without the hanging animation or the sound of an arrival. Resolves once it hangs, while its image may still decode. Fails for an unknown slot, an id a work already has, an image that does not load or is no PNG, JPEG, WebP, AVIF or GIF up to 25 mb, and a full collection. Returns its new id, its title, the slot, the id of the work it replaced, where its frame’s middle is, its rotation and its frame width and height in meters. Slot ids are what dump_portrait_slots lists. Does not move the player, change focus or simulate input.',
+      name: 'add_portrait',
+      title: 'Add portrait',
+      description: 'Bring an image into the world as an imported work: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect, right away without the hanging animation or the sound of an arrival. Its target is exactly one of a portrait slot, where it hangs in place of the work hanging there, if any, whatever its size; a spot on a wall, where it hangs if it fits, its placard below it or else above it; or a world position, where it enters the world loose, upright and facing +z, and falls like a work the player dropped. Unless told a frame and a size, it wears its id’s roll of the frames of the slot or of the room it arrives in, at the slot’s frame area or that room’s. Resolves once it is in the collection, while its image may still decode. Fails for an unknown slot, wall or frame, whose errors say what there is, a slot, a wall or a position in a room this page’s ?world_reach leaves out, a position outside of the world, a spot on a wall it does not fit at, with the reason, an id a work already has, an image that does not load or is no PNG, JPEG, WebP, AVIF or GIF up to 25 mb, and a full collection. Returns its id, its title, whether it hangs, the slot and the wall if any, the id of the work it replaced, the frame it wears unless the default one, where its frame’s middle is, its rotation, its frame width and height in meters and its frame area in cm². Slot ids are what dump_portrait_slots lists, which names their walls too. Does not move the player, change focus or simulate input.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -439,9 +467,62 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             type: 'string',
             description: 'URL of the image, which the page fetches',
           },
-          slot: {
-            type: 'string',
-            description: 'id of the portrait slot it hangs in',
+          target: {
+            description: 'where it goes: {slot}, {wall_id, position} or {position}',
+            oneOf: [
+              {
+                type: 'object',
+                properties: {
+                  slot: {
+                    type: 'string',
+                    description: 'id of the portrait slot it hangs in',
+                    minLength: 1,
+                  },
+                },
+                required: ['slot'],
+                additionalProperties: false,
+              },
+              {
+                type: 'object',
+                properties: {
+                  wall_id: {
+                    type: 'string',
+                    description: 'id of the wall it hangs on, like banquet-south',
+                    minLength: 1,
+                  },
+                  position: {
+                    type: 'object',
+                    description: 'the middle of its frame on the wall, in meters: x along the wall from its middle, to the right as seen from its room, and y above its foot',
+                    properties: {
+                      x: {type: 'number'},
+                      y: {type: 'number'},
+                    },
+                    required: ['x', 'y'],
+                    additionalProperties: false,
+                  },
+                },
+                required: ['wall_id', 'position'],
+                additionalProperties: false,
+              },
+              {
+                type: 'object',
+                properties: {
+                  position: {
+                    type: 'object',
+                    description: 'the world-space middle of its frame in meters, where it enters the world loose',
+                    properties: {
+                      x: {type: 'number'},
+                      y: {type: 'number'},
+                      z: {type: 'number'},
+                    },
+                    required: ['x', 'y', 'z'],
+                    additionalProperties: false,
+                  },
+                },
+                required: ['position'],
+                additionalProperties: false,
+              },
+            ],
           },
           title: {
             type: 'string',
@@ -454,8 +535,18 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             description: 'its id, unique in the collection, which tells the same roll of frames every time, for it and for the result of a fusion that takes it. Default: a new one',
             pattern: workIdPattern.source,
           },
+          frame: {
+            type: 'string',
+            description: 'id of the frame it wears, like classic, louis or travertine. Default: its id’s roll of the frames of the slot, or else of the room the target lies in',
+            minLength: 1,
+          },
+          size: {
+            type: 'number',
+            description: 'its frame area in cm², like 15000, which its own aspect divides into width and height. Default: the slot’s, or else that of the room the target lies in',
+            exclusiveMinimum: 0,
+          },
         },
-        required: ['image', 'slot'],
+        required: ['image', 'target'],
         additionalProperties: false,
       },
       annotations: {
@@ -463,15 +554,12 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       },
       execute: (input: unknown, {signal}) => {
         signal.throwIfAborted()
-        if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !hangKeys.has(key))) {
-          throw new TypeError('This tool takes an object with image, slot and an optional title and id.')
+        if (!isRecord(input) || Object.keys(input).some(key => !portraitKeys.has(key))) {
+          throw new TypeError('This tool takes an object with image, target and an optional title, id, frame and size.')
         }
-        const {image, slot, title, id} = input as Record<string, unknown>
+        const {image, target, title, id, frame, size} = input
         if (typeof image !== 'string' || !URL.canParse(image, typeof location === 'undefined' ? undefined : location.href)) {
           throw new TypeError('image must be the URL of an image.')
-        }
-        if (typeof slot !== 'string' || !slot) {
-          throw new TypeError('slot must be the id of a portrait slot.')
         }
         if (title !== undefined && (typeof title !== 'string' || !title.trim() || title.length > 150)) {
           throw new TypeError('title must be a text of 1 to 150 characters.')
@@ -479,11 +567,19 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (id !== undefined && (typeof id !== 'string' || !workIdPattern.test(id))) {
           throw new TypeError(`id must match ${workIdPattern}.`)
         }
-        return getBridge().hangWork({
+        if (frame !== undefined && (typeof frame !== 'string' || !frame)) {
+          throw new TypeError('frame must be the id of a frame.')
+        }
+        if (size !== undefined && !(typeof size === 'number' && Number.isFinite(size) && size > 0)) {
+          throw new TypeError('size must be a finite number of cm² above 0.')
+        }
+        return getBridge().addPortrait({
           image,
-          slot,
+          target: readPortraitTarget(target),
           title,
           id,
+          frame,
+          size,
         })
       },
     },

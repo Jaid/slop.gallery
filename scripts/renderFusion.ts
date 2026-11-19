@@ -809,9 +809,9 @@ const main = async (options: RenderFusionOptions) => {
       },
     } : {},
     ...imageUrl === undefined ? {} : {
-      hang_work: {
+      add_portrait: {
         image: imageUrl,
-        slot: slot.id,
+        target: {slot: slot.id},
         // The same in the probe and in the film, as the result of an ingredient that brings no frame rolls its own by the id of the work.
         id: workId,
       },
@@ -850,7 +850,7 @@ const main = async (options: RenderFusionOptions) => {
   }
   /** the id of the work the orb is thrown into, whose place the result takes in the collection, from a film’s tool calls */
   const workIdIn = (calls: Awaited<ReturnType<typeof film>>['tools']) => {
-    const hung = calls.find(call => call.name === 'hang_work')
+    const hung = calls.find(call => call.name === 'add_portrait')
     return hung ? (JSON.parse(hung.result) as {id: string}).id : work.label
   }
   const workspace = await fs.mkdtemp(join(tmpdir(), 'render-fusion-'))

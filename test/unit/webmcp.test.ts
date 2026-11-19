@@ -1,5 +1,5 @@
+import type {PortraitAdditionInput} from '../../src/lib/webmcp/addPortrait.ts'
 import type {MoodCastInput} from '../../src/lib/webmcp/castMood.ts'
-import type {WorkHangingInput} from '../../src/lib/webmcp/hangWork.ts'
 import type {GraphicsQualityInput} from '../../src/lib/webmcp/setGraphicsQuality.ts'
 import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
 import type {PartyEffectSpawnInput} from '../../src/lib/webmcp/spawnPartyEffect.ts'
@@ -12,7 +12,22 @@ import registerWebmcp from '../../src/lib/webmcp/register.ts'
 import createWebmcpTools from '../../src/lib/webmcp/tools.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
+/** what the bridge got as the target, which the real one resolves to a slot or a wall */
+type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<PortraitAdditionInput, 'target'>
+
 const bridge: WebmcpBridge = {
+  addPortrait: ({id = 'work-1', frame, size = 30_000, target, title = 'xf14RxM8'}: PortraitAdditionInput) => Promise.resolve<EchoedAddition>({
+    id,
+    title,
+    hung: !('position' in target) || 'wallId' in target,
+    target,
+    ...frame === 'louis' ? {frame} : {},
+    position: [10.2, 3.13, 7.78],
+    rotation: Math.PI,
+    width: 1.732,
+    height: 1.732,
+    size,
+  }),
   analyzeWorld: () => ({
     rooms: {},
     elsewhere: {
@@ -113,15 +128,6 @@ const bridge: WebmcpBridge = {
     position: [14, 3.13, 7.78],
     quaternion: [0, 1, 0, 0],
   }],
-  hangWork: ({id = 'work-1', slot, title = 'xf14RxM8'}: WorkHangingInput) => Promise.resolve({
-    id,
-    title,
-    slot,
-    position: [10.2, 3.13, 7.78],
-    rotation: Math.PI,
-    width: 1.732,
-    height: 1.732,
-  }),
   setGraphicsQuality: ({quality}: GraphicsQualityInput) => Promise.resolve({
     quality: quality === 'heavy' ? 'heavy' : 'fast',
     previous: 'fast',
@@ -144,7 +150,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'hang_work', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'analyze_world', 'get_loading_items', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'add_portrait', 'set_wireframe'])
   for (const tool of tools.slice(0, 7)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -502,62 +508,146 @@ test('set_graphics_quality takes the name of the graphics or null and switches t
   controller.abort()
   await expect(execute({quality: 'heavy'})).rejects.toThrow()
 })
-test('hang_work takes an image URL, a slot and an optional title and id, and hangs through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'hang_work')!
+test('add_portrait takes an image URL, exactly one kind of target and an optional title, id, frame and size, and adds through the bridge', async () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'add_portrait')!
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
+  const image = 'http://127.0.0.1:8080/xf14RxM8.png'
+  const slot = {slot: 'banquet-south_2'}
   expect(tool.annotations?.readOnlyHint).toBe(false)
   expect(await execute({
-    image: 'http://127.0.0.1:8080/xf14RxM8.png',
-    slot: 'banquet-south_2',
+    image,
+    target: slot,
   })).toEqual({
     id: 'work-1',
     title: 'xf14RxM8',
-    slot: 'banquet-south_2',
+    hung: true,
+    target: slot,
     position: [10.2, 3.13, 7.78],
     rotation: Math.PI,
     width: 1.732,
     height: 1.732,
+    size: 30_000,
+  })
+  // The wall’s id arrives as the bridge names it.
+  expect(await execute({
+    image,
+    target: {
+      wall_id: 'banquet-south',
+      position: {
+        x: -1.5,
+        y: 2,
+      },
+    },
+  })).toHaveProperty('target', {
+    wallId: 'banquet-south',
+    position: {
+      x: -1.5,
+      y: 2,
+    },
+  })
+  const loose = {position: {
+    x: 0,
+    y: 1.5,
+    z: -9,
+  }}
+  expect(await execute({
+    image,
+    target: loose,
+  })).toMatchObject({
+    target: loose,
+    hung: false,
   })
   expect(await execute({
-    image: 'http://127.0.0.1:8080/xf14RxM8.png',
-    slot: 'banquet-south_2',
+    image,
+    target: slot,
     title: 'Invader',
-  })).toHaveProperty('title', 'Invader')
-  expect(await execute({
-    image: 'http://127.0.0.1:8080/xf14RxM8.png',
-    slot: 'banquet-south_2',
     id: 'film-invader',
-  })).toHaveProperty('id', 'film-invader')
-  for (const input of [null, [], {}, {slot: 'banquet-south_2'}, {image: 'http://127.0.0.1/a.png'}, {
-    image: 'http://127.0.0.1/a.png',
+    frame: 'louis',
+    size: 7500,
+  })).toMatchObject({
+    title: 'Invader',
+    id: 'film-invader',
+    frame: 'louis',
+    size: 7500,
+  })
+  const targets: Array<unknown> = [undefined, null, 'banquet-south_2', [], {}, {slot: ''}, {slot: 3}, {
     slot: 'banquet-south_2',
-    id: 'no spaces',
+    wall_id: 'banquet-south',
+  }, {
+    slot: 'banquet-south_2',
+    position: loose.position,
+  }, {wall_id: 'banquet-south'}, {
+    wall_id: 'banquet-south',
+    position: loose.position,
+  }, {
+    wall_id: 'banquet-south',
+    position: [0, 2],
+  }, {
+    wall_id: '',
+    position: {
+      x: 0,
+      y: 2,
+    },
+  }, {position: {
+    x: 0,
+    y: 2,
+  }}, {position: [0, 1.5, -9]}, {position: {
+    x: 0,
+    y: Number.NaN,
+    z: -9,
+  }}, {position: {
+    x: 0,
+    y: '1.5',
+    z: -9,
+  }}, {
+    position: loose.position,
+    rotation: 0,
+  }]
+  for (const input of [null, [], {}, {target: slot}, {image}, {
+    image,
+    slot: 'banquet-south_2',
   }, {
     image: 'not a url',
-    slot: 'banquet-south_2',
+    target: slot,
   }, {
-    image: 'http://127.0.0.1/a.png',
-    slot: '',
+    image,
+    target: slot,
+    id: 'no spaces',
   }, {
-    image: 'http://127.0.0.1/a.png',
-    slot: 'banquet-south_2',
+    image,
+    target: slot,
     title: ' ',
   }, {
-    image: 'http://127.0.0.1/a.png',
-    slot: 'banquet-south_2',
+    image,
+    target: slot,
     title: 'x'.repeat(151),
   }, {
-    image: 'http://127.0.0.1/a.png',
-    slot: 'banquet-south_2',
-    frame: 'gilt',
-  }]) {
+    image,
+    target: slot,
+    frame: '',
+  }, {
+    image,
+    target: slot,
+    frame: 3,
+  }, ...[0, -7500, Infinity, '7500'].map(size => ({
+    image,
+    target: slot,
+    size,
+  })), {
+    image,
+    target: slot,
+    rotation: 0,
+  }, ...targets.map(target => ({
+    image,
+    target,
+  }))]) {
     await expect(execute(input)).rejects.toThrow(TypeError)
   }
   controller.abort()
   await expect(execute({
-    image: 'http://127.0.0.1/a.png',
-    slot: 'banquet-south_2',
+    image,
+    target: slot,
   })).rejects.toThrow()
 })
 test('worlds without Knots expose an empty dump', () => {

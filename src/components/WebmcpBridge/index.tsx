@@ -13,10 +13,10 @@ import {loadingItems} from '#src/lib/loadingItems.ts'
 import {captureWarmup, getRenderScale} from '#src/lib/rendering/captureWarmup.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
+import addPortrait from '#src/lib/webmcp/addPortrait.ts'
 import analyzeWorld from '#src/lib/webmcp/analyzeWorld.ts'
 import castMood from '#src/lib/webmcp/castMood.ts'
 import dumpPortraits from '#src/lib/webmcp/dumpPortraits.ts'
-import hangWork from '#src/lib/webmcp/hangWork.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
 import setGraphicsQuality from '#src/lib/webmcp/setGraphicsQuality.ts'
 import spawnOrb from '#src/lib/webmcp/spawnOrb.ts'
@@ -38,6 +38,7 @@ export default function WebmcpBridge() {
     const controller = new AbortController
     const inspector = new AimInspector(scene, camera)
     const bridge = {
+      addPortrait,
       analyzeWorld: () => analyzeWorld(scene, world.worldRooms()),
       castMood,
       downloadFrame: async ({name, format}: {
@@ -79,7 +80,6 @@ export default function WebmcpBridge() {
       getLoadingItems: loadingItems,
       getPortraits: dumpPortraits,
       getPortraitSlots: () => usePortraitSlots.getState().slots,
-      hangWork,
       setGraphicsQuality: async (input: Parameters<typeof setGraphicsQuality>[0]) => {
         const change = setGraphicsQuality(input)
         // The scene commits on React’s own schedule, which takes no animation frame, so this also resolves under a stopped virtual clock.
