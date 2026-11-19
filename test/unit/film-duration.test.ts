@@ -1,0 +1,69 @@
+import {expect, test} from 'bun:test'
+
+import {parseRecipe, sampleRecipe} from 'capture-session/script'
+
+import {FilmRecipeClock} from '../../scripts/lib/filmRecipeClock.ts'
+import {StitchTimeline} from '../../scripts/lib/stitchTimeline.ts'
+
+const recipe = parseRecipe([
+  {
+    time: 0,
+    yaw: 0,
+  },
+  {
+    time: 1.25,
+    tools: {first: {}},
+  },
+  {
+    time: 2.5,
+    tools: {second: {}},
+  },
+  {
+    time: 3,
+    yaw: 60,
+    tools: {last: {}},
+  },
+])
+const spawn = {
+  position: [0, 0, 0] as [number, number, number],
+  yaw: 0,
+  pitch: 0,
+  roll: 0,
+  fov: 60,
+}
+const shot = (clock: FilmRecipeClock, stitchedStart: number, startingFrame = 1) => {
+  const take = clock.take(stitchedStart, startingFrame)
+  return Array.from({length: clock.clipFrames}, (_, frame) => ({
+    yaw: sampleRecipe(recipe, take.secondsAt(frame), spawn).yaw,
+    tools: take.callsAt(frame)?.map(call => call.name),
+  }))
+}
+test('a short take trims camera motion and tool calls, and a longer take holds the final pose without replaying tools', () => {
+  const short = shot(new FilmRecipeClock(recipe, 2, 2), 0)
+  expect(short.map(frame => frame.yaw)).toEqual([0, 10, 20, 30])
+  expect(short.flatMap(frame => frame.tools ?? [])).toEqual(['first'])
+  const long = new FilmRecipeClock(recipe, 2, 4.5)
+  const first = shot(long, 0)
+  expect(first.map(frame => frame.yaw)).toEqual([0, 10, 20, 30, 40, 50, 60, 60, 60])
+  expect(first.flatMap(frame => frame.tools ?? [])).toEqual(['first', 'second', 'last'])
+  expect(shot(long, 9)).toEqual(first)
+  expect(shot(long, 0, 7)).toEqual([...first.slice(6), ...first.slice(0, 6)])
+})
+test('short stitched takes continue the flight, with the same camera and tools on both sides of a crossfade', () => {
+  const clock = new FilmRecipeClock(recipe, 2, 2)
+  const timeline = new StitchTimeline(3, clock.clipFrames, 2, 0.5)
+  const takes = [0, 1, 2].map(clip => shot(clock, timeline.clipStart(clip)))
+  expect(takes.map(frames => frames.map(frame => frame.yaw))).toEqual([[0, 10, 20, 30], [30, 40, 50, 60], [60, 60, 60, 60]])
+  expect(takes[0].at(-1)).toEqual(takes[1][0])
+  expect(takes[1].at(-1)).toEqual(takes[2][0])
+  expect(takes[2].flatMap(frame => frame.tools ?? [])).toEqual(['last'])
+  const full = new FilmRecipeClock(recipe, 2)
+  expect(shot(full, 6)).toEqual(shot(full, 0))
+})
+test('duration requires positive finite seconds and can give a still recipe a recording length', () => {
+  for (const invalid of [-1, 0, NaN, Infinity]) {
+    expect(() => new FilmRecipeClock(recipe, 24, invalid)).toThrow('--duration')
+  }
+  const still = new FilmRecipeClock([{time: 0}], 24, 0.1)
+  expect(still.clipFrames).toBe(2)
+})

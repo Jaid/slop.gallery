@@ -1,18 +1,19 @@
 import type {CameraView} from '#src/lib/diagnostics.ts'
 import type {GallerySetup, InitScript} from './lib/headlessGallery.ts'
-import type {AudioTrack, FrameSink, Shot, ToolCall} from 'capture-session/script'
+import type {AudioTrack, FrameSink, Shot} from 'capture-session/script'
 
 import {tmpdir} from 'node:os'
 import {dirname, join, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
-import {audioSidecar, carriesAudio, createFrameSink, endWarmup, executeWebmcpTool, frameFormat, installVirtualAudio, installVirtualClock, parseRecipe, recipeDuration, recipeToolCalls, sampleRecipe, sampleWireframe, setWireframe, tweens, waitForLoadingItems} from 'capture-session/script'
+import {audioSidecar, carriesAudio, createFrameSink, endWarmup, executeWebmcpTool, frameFormat, installVirtualAudio, installVirtualClock, parseRecipe, sampleRecipe, sampleWireframe, setWireframe, tweens, waitForLoadingItems} from 'capture-session/script'
 import fs from 'fs-extra'
 import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
 import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
 import {defaultSeedRange, describeInput, filmInputs} from './lib/filmInputs.ts'
+import {FilmRecipeClock} from './lib/filmRecipeClock.ts'
 import {anchorWorldReach, degrees, galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
 import {StitchTimeline} from './lib/stitchTimeline.ts'
 
@@ -36,7 +37,8 @@ ${galleryHelp()}
                           .webm, .mkv  AV1 video
                           .png  one PNG per frame, each written to the next free name after the given one (shot.png → shot_001.png, shot_002.png, …)
   --fps <number>          frames per second. Default: 60
-  --starting-frame <n>    frame that becomes the first frame of the output, wrapping once at the end. For one clip this is a recipe frame; for multiple clips it counts frames in the whole movie after crossfades. Default: 1
+  --duration <seconds>    recording time per clip, rounded to the nearest frame (at least one). Default: the recipe’s length. Shorter clips share one continuous flight across inputs; longer clips each play the recipe and hold its final camera pose for the remaining time
+  --starting-frame <n>    frame that becomes the first frame of the output, wrapping once at the end. Count frames after applying --duration and any crossfades. Default: 1
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
   --crf <number>          AV1 quality for .webm and .mkv, lower is better. Default: ${av1Crf}
   --keyframe-interval <n> at most how many frames .webm and .mkv run from one keyframe to the next; small ones, like 6, let players seek and scrub without decoding long stretches, for a larger file. Default: the encoder’s own, about 5 s
@@ -50,6 +52,8 @@ To film the same recipe across builds or seeds, repeat --target and/or --seed, o
   bun scripts/film.ts --target 'builds/v[12]' --seed '[12]' --recipe scripts/recipes/fountain_dolly.json --crossfade 0.25 --output-file comparison.webm
 
 This plays v1/1, v1/2, v2/1, v2/2. --target accepts globby folder patterns, including exclusions like --target '!builds/old'; use forward slashes. Literal paths play in argument order, glob results in path order. --seed accepts minimatch patterns against decimal seeds, like '[12]' or '{10..13}'. Seed arguments play in order with each pattern’s matches sorted numerically. Overlapping matches play once.
+
+For one continuous flight through three seeds, use --seed '{1..3}' --duration 1 with a three-second recipe. The seeds show seconds 0–1, 1–2 and 2–3. A crossfade samples the same recipe time on both sides of its overlap. Recording stops with the last input; if the recipe ends first, the camera holds still while the scene and sound continue.
 
 A recipe is a JSON array of keyframes, ordered by time:
 
@@ -72,7 +76,7 @@ A recipe is a JSON array of keyframes, ordered by time:
             {"throw_prop": {"prop": "prop-orb-spook", "portrait": "goose"}}; their results go to stderr, the first ${logLength} characters of each
 
 Each property animates on its own track, so a keyframe only affects the properties it sets. Before its first keyframe and after its last, a property holds still; properties no keyframe sets stay at the player spawn’s camera.
-The video lasts until the last keyframe, which is not rendered itself: 1 second at 60 fps is 60 frames, and a recipe that ends where it starts loops seamlessly.
+By default a clip lasts until the last keyframe, which is not rendered itself: 1 second at 60 fps is 60 frames, and a recipe that ends where it starts loops seamlessly.
 
 A wireframe flood is a sphere growing from a position that turns everything it reaches into wireframe, or back out of it. A keyframe with a new direction starts one, from radius 0 unless it sets another:
 
@@ -107,6 +111,7 @@ const filmOptions = {
   },
   'seed-range': {type: 'string'},
   crossfade: {type: 'string'},
+  duration: {type: 'string'},
   crf: {type: 'string'},
   'fast-decode': {type: 'string'},
   fps: {
@@ -140,10 +145,6 @@ const prepareFilm = async (options: FilmOptions, setup: GallerySetup) => {
   const recipeFile = options.recipe ?? join(import.meta.dir, 'recipes', 'spawn.json')
   const recipeText = recipeFile === '-' ? await Bun.stdin.text() : await fs.readFile(recipeFile, 'utf8')
   const recipe = parseRecipe(JSON.parse(recipeText))
-  const duration = recipeDuration(recipe)
-  if (duration === 0) {
-    throw new Error('The recipe needs a keyframe with a time after 0.')
-  }
   const crf = options.crf === undefined ? av1Crf : parseNumbers(options.crf, 'crf', [1])[0]
   const jxlDistance = parseNumbers(options['jxl-distance'], 'jxl-distance', [1])[0]
   const keyframeInterval = options['keyframe-interval'] === undefined ? undefined : parseNumbers(options['keyframe-interval'], 'keyframe-interval', [1])[0]
@@ -169,15 +170,15 @@ const prepareFilm = async (options: FilmOptions, setup: GallerySetup) => {
   if ((format === 'webm' || format === 'mkv') && (width % 2 || height % 2)) {
     throw new Error('--width and --height need to be even for 4:2:0 video.')
   }
-  const frameCount = Math.max(1, Math.round(duration * fps))
+  const clock = new FilmRecipeClock(recipe, fps, options.duration === undefined ? undefined : Number(options.duration))
   return {
-    duration,
+    clock,
     encoding: {
       audio: readAudioOverride(`http://localhost/?${setup.search}`) === true,
       crf,
       fastDecode,
       fps,
-      frameCount,
+      frameCount: clock.clipFrames,
       height,
       jxlDistance,
       keyframeInterval,
@@ -195,11 +196,8 @@ type Film = Awaited<ReturnType<typeof prepareFilm>>
 type FrameWriter = (source: GallerySetup['viewport']) => FrameSink['write']
 
 /** Records one whole take on a fresh virtual clock. Its frames are delivered at the canvas size, before downsampling and encoding. */
-const captureFilm = async ({duration, encoding: {audio: audible, fps, frameCount}, recipe, settle}: Film, setup: GallerySetup, startingFrame: number, frames: FrameWriter) => {
+const captureFilm = async ({encoding: {audio: audible, fps, frameCount}, recipe, settle}: Film, setup: GallerySetup, {secondsAt: frameSeconds, callsAt}: ReturnType<FilmRecipeClock['take']>, frames: FrameWriter) => {
   warnAboutDevServer(setup)
-  const frameSeconds = (index: number) => (index + startingFrame - 1) % frameCount / fps
-  // Each call runs before the output frame showing the first recipe frame at or after its time, wrapping around with --starting-frame.
-  const calls = Map.groupBy(recipeToolCalls(recipe), (call: ToolCall) => (Math.ceil(call.time * fps - 1e-6) - startingFrame + 1 + frameCount) % frameCount)
   // The first frame shows the clock 1/fps after it started, which is where the film’s sound begins.
   const leadIn = 1 / fps
   const toView = (shot: Shot): Partial<CameraView> => ({
@@ -331,7 +329,7 @@ const captureFilm = async ({duration, encoding: {audio: audible, fps, frameCount
       if (frameFlood) {
         await setWireframe(page, frameFlood)
       }
-      const frameCalls = calls.get(index)
+      const frameCalls = callsAt(index)
       // The sound renders up to the frame’s moment first, so whatever the frame starts sounds from there.
       await page.evaluate(async (frame: {
         delta: number
@@ -386,7 +384,7 @@ const captureFilm = async ({duration, encoding: {audio: audible, fps, frameCount
         continue
       }
       const rate = rendered / ((performance.now() - startedAt) / 1000)
-      console.log(`Rendered ${(rendered / fps).toFixed(1)}/${duration.toFixed(1)} s (frame ${rendered}/${frameCount}, ${rate.toFixed(1)} frames per second)`)
+      console.log(`Rendered ${(rendered / fps).toFixed(1)}/${(frameCount / fps).toFixed(1)} s (frame ${rendered}/${frameCount}, ${rate.toFixed(1)} frames per second)`)
     }
     if (audible) {
       // The sound before the first frame’s moment is left out.
@@ -451,7 +449,8 @@ const main = async (options: FilmOptions) => {
         ...options,
         ...input,
       })
-      const recording = await captureFilm(film, setup, timeline.recipeStart, source => {
+      const take = film.clock.take(timeline.clipStart(clip), timeline.recipeStart)
+      const recording = await captureFilm(film, setup, take, source => {
         if (size && (size.width !== source.width || size.height !== source.height)) {
           throw new Error(`Canvas size changed between takes: ${size.width}×${size.height} → ${source.width}×${source.height}.`)
         }

@@ -29,6 +29,11 @@ export class StitchTimeline {
     this.offset = clips === 1 ? 0 : startingFrame - 1
   }
 
+  /** First output frame of this take before rotating the seam; both sides of a crossfade cover the same output frames. */
+  clipStart(clip: number) {
+    return clip * (this.clipFrames - this.fadeFrames)
+  }
+
   /** Place samples at absolute frame boundaries (no accumulated rounding at fractional fps). A missing track leaves silence. */
   mix(clip: number, track: AudioTrack) {
     if (this.clips === 1) {
@@ -46,7 +51,7 @@ export class StitchTimeline {
     if (output.channels !== channels || output.sampleRate !== sampleRate) {
       throw new Error('Audio format changed between takes.')
     }
-    const firstFrame = clip * (this.clipFrames - this.fadeFrames)
+    const firstFrame = this.clipStart(clip)
     const start = at(firstFrame)
     const end = at(firstFrame + this.clipFrames)
     const fadeIn = clip === 0 ? 0 : at(firstFrame + this.fadeFrames) - start
@@ -67,8 +72,8 @@ export class StitchTimeline {
 
   /** Captures every take once, starting with those needed from the seam onward. Only takes straddling the seam (two if it splits a crossfade) need their prefix saved for the wrap. */
   async stitch(capture: (clip: number, accept: FrameSink['write']) => Promise<void>, write: FrameSink['write'], scratch?: string) {
-    const {clips, clipFrames, fadeFrames, offset} = this
-    const prefix = (clip: number) => Math.min(clipFrames, Math.max(0, offset - clip * (clipFrames - fadeFrames)))
+    const {clips, clipFrames, offset} = this
+    const prefix = (clip: number) => Math.min(clipFrames, Math.max(0, offset - this.clipStart(clip)))
     const saved = (clip: number, frame: number) => Bun.file(join(scratch!, `prefix-${clip}-${frame}`))
     for (let clip = 0; clip < clips; clip++) {
       const start = prefix(clip)
