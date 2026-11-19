@@ -50,7 +50,7 @@
     "@react-three/rapier@2.2.0": "patches/@react-three%2Frapier@2.2.0.patch"
   },
   "dependencies": {
-    "ai": "7.0.176",
+    "ai": "7.0.177",
     "ambience-emitter": "workspace:*",
     "branch-component": "0.4.0",
     "canvas-textures": "workspace:*",
@@ -74,7 +74,7 @@
     "rasterize-element": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "react-dropzone": "20.2.0",
+    "react-dropzone": "20.2.1",
     "read-permalink": "0.4.0",
     "stringify-clank": "0.1.1",
     "telemethree": "workspace:*",
@@ -107,7 +107,7 @@
     "@react-three/tsl": "10.0.0-alpha.6"
   },
   "devDependencies": {
-    "autoprefixer": "10.6.2",
+    "autoprefixer": "10.7.0",
     "browserslist": "4.29.6",
     "caniuse-lite": "1.0.30001826",
     "capture-page": "0.3.0",
@@ -125,7 +125,7 @@
     "postcss": "8.5.33",
     "postcss-normalize": "13.0.1",
     "puppeteer-core": "25.18.1",
-    "rolldown": "1.3.2",
+    "rolldown": "1.3.3",
     "rolldown-plugin-bake-branch-component": "workspace:*",
     "rolldown-plugin-hoist-popular-constants": "workspace:*",
     "rolldown-plugin-thematic-chunks": "workspace:*",
@@ -151,7 +151,7 @@
     "@types/react-dom": "19.3.0",
     "@types/three": "0.187.0"
   },
-  "packageManager": "bun@1.4.4",
+  "packageManager": "bun@1.4.5",
   "socialPreview": {
     "tagline": "Good taste. Questionable art.",
     "description": "An interactive 3D museum of happy accidents.",

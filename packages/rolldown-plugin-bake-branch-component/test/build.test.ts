@@ -56,7 +56,7 @@ for (const backend of ['Rolldown', 'Vite'] as const) {
       }
       expect(chunk.imports).not.toContain('branch-component')
       expect(chunk.imports).not.toContain('react/jsx-runtime')
-      expect(chunk.map?.sources.some(source => source.endsWith('main.tsx'))).toBe(true)
+      expect(chunk.map?.sources.some(source => source?.endsWith('main.tsx'))).toBe(true)
       const outputFile = resolve(root, 'bundle.mjs')
       await fs.writeFile(outputFile, chunk.code)
       const module = await import(pathToFileURL(outputFile).href) as {choose: (ready: boolean) => string | null}

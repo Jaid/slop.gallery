@@ -75,7 +75,7 @@ for (const backend of ['Rolldown', 'Vite'] as const) {
         throw new TypeError('Expected an entry chunk.')
       }
       expect(beforeMinification.split(value)).toHaveLength(2)
-      expect(chunk.map?.sources.some(source => source.endsWith('main.ts'))).toBe(true)
+      expect(chunk.map?.sources.some(source => source?.endsWith('main.ts'))).toBe(true)
       const outputFile = resolve(root, 'bundle.mjs')
       await fs.writeFile(outputFile, chunk.code)
       const module = await import(pathToFileURL(outputFile).href) as {

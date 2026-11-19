@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 
 // Bun silently drops a patch from the lock once its key no longer names the installed version.
-test.each(['three', '@react-three/rapier'])('the %s patch tracks the installed version and root lock', async name => {
+test.each(['three', 'three-bvh-csg', '@react-three/rapier'])('the %s patch tracks the installed version and root lock', async name => {
   const manifest = await Bun.file('package.json').json() as {
     dependencies: Record<string, string>
     patchedDependencies: Record<string, string>
