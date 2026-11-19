@@ -6,6 +6,7 @@ import {PerspectiveCamera, Texture} from 'three/webgpu'
 
 import {moonfallPalette, moonfallSlate} from '../../src/lib/gallery/moonfall/palette.ts'
 import ArchitecturalPlasterMaterial from '../../src/lib/materials/ArchitecturalPlasterMaterial.ts'
+import EndGrainMaterial from '../../src/lib/materials/forge/EndGrainMaterial.ts'
 import {CheckeredMarbleFloorMaterial} from '../../src/lib/materials/marble/index.ts'
 import PlankFloorMaterial, {siennaFloorPlanks} from '../../src/lib/materials/PlankFloorMaterial.ts'
 import SlateFloorMaterial from '../../src/lib/materials/SlateFloorMaterial.ts'
@@ -38,6 +39,7 @@ const floors: Array<[string, (reflections: boolean) => FloorMaterial]> = [
     reflections,
     style: moonfallSlate(moonfallPalette(0)),
   })],
+  ['end-grain', reflections => new EndGrainMaterial(reflections)],
 ]
 for (const [kind, create] of floors) {
   test(`${kind} floors shade themselves and mirror the room in heavy only, through the one filtered, nonrecursive reflection all floors share until the last lets go of it`, () => {

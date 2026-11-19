@@ -1,20 +1,36 @@
-import {color, float, hash, mix, mx_noise_float, positionWorld, vec2} from 'three/tsl'
-import {MeshStandardNodeMaterial} from 'three/webgpu'
+import {color, float, hash, mix, mx_noise_float, normalWorldGeometry, positionWorld, vec2} from 'three/tsl'
 
 import forge, {forgeGauge, forgeVestibule} from '#src/lib/gallery/forge.ts'
 
 import {heightNormal, insideBy, visibleDetail} from '../filters.ts'
+import FloorMaterial from '../FloorMaterial.ts'
 
-/** Creosoted end-grain blocks like a machine shop floor: quieter and kinder to a dropped tool than stone. Brass gauge strips lead up the aisle; the circular threshold has a pair of rings inlaid in the same alloy. */
-export default class EndGrainMaterial extends MeshStandardNodeMaterial {
-  constructor() {
-    super({envMapIntensity: 0.65})
-    this.name = 'End-grain block paving with brass gauge'
+/**
+ * Creosoted end-grain blocks like a machine shop floor: quieter and kinder to a dropped tool than stone. Brass gauge strips lead up the aisle; the circular threshold has a pair of rings inlaid in the same alloy.
+ *
+ * In heavy mode, the oil worn into the blocks mirrors the room faintly, a soft smear of the sunlit roof that clears toward grazing angles; the joints stay matte.
+ */
+export default class EndGrainMaterial extends FloorMaterial {
+  constructor(reflections = true) {
     const p = positionWorld.xz.sub(vec2(...forge.center))
     const pixel = p.fwidth().x.max(p.fwidth().y)
     const v = p.y.div(0.21)
     const u = p.x.div(0.31).add(v.floor().mod(2).mul(0.5))
     const cell = vec2(u.fract(), v.fract()).sub(0.5).mul(vec2(0.31, 0.21))
+    const edge = float(0.155).sub(cell.x.abs()).min(float(0.105).sub(cell.y.abs()))
+    const joint = insideBy(edge.sub(0.002), pixel)
+    super(null, {
+      color: '#ffffff',
+      envMapIntensity: 0.65,
+      roughness: 0.58,
+      reflection: reflections ? {
+        strength: 0.05,
+        grazingStrength: 0.3,
+        loss: 2,
+        mask: joint.oneMinus().mul(normalWorldGeometry.y.step(0.5)),
+      } : undefined,
+    })
+    this.name = 'End-grain block paving with brass gauge'
     const key = v.floor().add(512).mul(2048).add(u.floor()).add(512)
     const tone = hash(key)
     const eccentric = vec2(hash(key.add(7417)), hash(key.add(71_227))).sub(0.5).mul(0.68)
@@ -22,8 +38,6 @@ export default class EndGrainMaterial extends MeshStandardNodeMaterial {
     const saw = mx_noise_float(p.mul(32)).mul(visibleDetail(pixel, 0.035))
     const ring = radius.mul(tone.mul(95).add(385)).add(saw.mul(0.9)).sin().smoothstep(0.18, 0.98).mul(visibleDetail(pixel, 0.024))
     const wood = mix(color('#836047'), color('#be9262'), tone.mul(0.78).add(0.1)).mul(ring.mul(-0.19).add(saw.mul(0.048)).add(1))
-    const edge = float(0.155).sub(cell.x.abs()).min(float(0.105).sub(cell.y.abs()))
-    const joint = insideBy(edge.sub(0.002), pixel)
     // Tick every decimeter, with longer half-meter and meter divisions. Nothing is raised above the orb’s rolling surface.
     const rule = p.x.abs().sub(forgeGauge.offset)
     const stripe = (distance: typeof rule, half: number) => insideBy(distance.abs().sub(half), pixel).mul(float(2 * half).div(pixel.max(0.00001)).min(1))

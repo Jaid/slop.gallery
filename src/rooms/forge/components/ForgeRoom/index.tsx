@@ -2,9 +2,11 @@ import type ForgeMaterials from '#src/lib/materials/forge/ForgeMaterials.ts'
 import type {Material} from 'three/webgpu'
 
 import {CuboidCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
+import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {ExtrudeGeometry} from 'three/webgpu'
+import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import IronTable from '#component/IronTable'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -16,6 +18,8 @@ import ForgeRoofGeometry from '#src/lib/gallery/forge/ForgeRoofGeometry.ts'
 import {forgeRoundVestibule, vestibuleArches} from '#src/lib/gallery/forgeVestibule.ts'
 import roundRevealGeometry from '#src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/roundVestibule.ts'
+import EndGrainMaterial from '#src/lib/materials/forge/EndGrainMaterial.ts'
+import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import AlchemyMachine from '#src/rooms/forge/components/AlchemyMachine/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
@@ -28,12 +32,14 @@ export default function ForgeRoom({materials, masonry}: {
   materials: ForgeMaterials
 }) {
   const [width, depth] = room.size
+  const floor = useEndGrain()
   return <group name='forge'>
     <group position={[room.center[0], 0, room.center[1]]}>
       <RigidBody colliders={false} type='fixed'>
         {/* A collider takes its offset from `position` alone; dashed props like position-y never reach it. */}
         <CuboidCollider args={[width / 2, floorThickness / 2, depth / 2]} position={[0, -floorThickness / 2, 0]} />
-        <Box material={materials.floor} name='forge-block-floor' position-y={-floorThickness / 2} size={[width, floorThickness, depth]} />
+        <Box material={floor} name='forge-block-floor' position-y={-floorThickness / 2} size={[width, floorThickness, depth]} />
+        <Mirror floor={floor} />
       </RigidBody>
       <Roof kind='sawtooth' materials={materials} />
     </group>
@@ -45,6 +51,15 @@ export default function ForgeRoom({materials, masonry}: {
   </group>
 }
 
+/** One floor’s end-grain paving, mirroring the room in heavy mode. The room and its vestibule take one each, so either one in view renders the mirror, as its target bounds only the floor it lies in. */
+function useEndGrain() {
+  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  return useDisposable(useMemo(() => new EndGrainMaterial(floorReflections), [floorReflections]))
+}
+/** The floor’s reflection target, laid at the surface of the floor whose body holds it, if the floor mirrors the room. */
+function Mirror({floor}: {floor: EndGrainMaterial}) {
+  return <Branch if={floor.reflectionTarget}><group rotation-x={-Math.PI / 2}><primitive object={floor.reflectionTarget!} /></group></Branch>
+}
 /** The room’s sawtooth roof or the vestibule’s hood, in the frame of the floor below: one mesh per finish, and colliders on every surface seen from below, the glass included. */
 function Roof({kind, materials}: {
   kind: 'hood' | 'sawtooth'
@@ -65,6 +80,7 @@ function Vestibule({materials, masonry}: {
   materials: ForgeMaterials
 }) {
   const {center} = forgeVestibule
+  const floor = useEndGrain()
   const parts = useDisposable(useMemo(() => {
     const slab = new ExtrudeGeometry(roundVestibuleFloorShape(forgeRoundVestibule), {
       depth: floorThickness,
@@ -92,7 +108,8 @@ function Vestibule({materials, masonry}: {
     <group name='forge-vestibule' position={[center[0], 0, center[1]]}>
       <RigidBody colliders={false} type='fixed'>
         <TrimeshCollider args={parts.floorCollision} />
-        <mesh geometry={parts.slab} material={materials.floor} name='forge-vestibule-floor' receiveShadow />
+        <mesh geometry={parts.slab} material={floor} name='forge-vestibule-floor' receiveShadow />
+        <Mirror floor={floor} />
       </RigidBody>
       <Roof kind='hood' materials={materials} />
     </group>
