@@ -24,7 +24,9 @@ const regolith = {
  * The ejecta blocks are dark breccia: angular pale clasts set in a basaltic matrix pitted by gas bubbles, their upward faces dusted with regolith. Pebbles, grit and cracks fade to their average before they could shimmer.
  */
 export default class CraterMaterial extends MeshStandardNodeMaterial {
-  constructor({rock = false}: {
+  constructor({lava = '#ff5a1c', rock = false}: {
+    /** the color of the melt still glowing deep in the pond’s cracks */
+    lava?: string
     /** dresses the ejecta blocks instead of the terrain */
     rock?: boolean
   } = {}) {
@@ -93,10 +95,10 @@ export default class CraterMaterial extends MeshStandardNodeMaterial {
     surface = mix(surface, mix(color('#3b3935'), color('#6e6a62'), pebbleShade), pebble.mul(pond.oneMinus()))
     this.colorNode = surface
     this.roughnessNode = mix(float(0.97).sub(grit.mul(0.04)), float(0.3).add(flowRipples.mul(0.12)), pond).add(cracks.mul(0.4)).min(1)
-    // Deep in the cracks the melt is still cooling: a dull orange glow that swells and ebbs slowly, unevenly along every crack.
+    // Deep in the cracks the melt is still cooling: a dull glow that swells and ebbs slowly, unevenly along every crack.
     const embers = unit(mx_noise_float(vec3(p.xz.mul(1.6), time.mul(0.12)))).mul(0.7).add(unit(time.mul(0.6).add(radius.mul(1.3)).sin()).mul(0.3))
     const crackHeat = inside(crackDistance.sub(0.009)).mul(pond).mul(visibleDetail(footprint, 0.03))
-    this.emissiveNode = color('#ff5a1c').mul(crackHeat.mul(embers.smoothstep(0.2, 0.85)).mul(4))
+    this.emissiveNode = color(lava).mul(crackHeat.mul(embers.smoothstep(0.2, 0.85)).mul(4))
     const height = grit.mul(0.0015).add(pebble.mul(0.006)).sub(cracks.mul(0.004)).add(flowRipples.mul(0.0012).mul(pond))
     this.normalNode = heightNormal(height.mul(detail))
   }

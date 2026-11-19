@@ -10,6 +10,7 @@ import {useAmbienceEmitter} from '#src/ambience_emitters/lib/ambienceEmitters.ts
 import {AnimationClock} from '#src/lib/frozenTime.ts'
 import armillaryBandGeometry from '#src/lib/gallery/moonfall/ArmillaryBandGeometry.ts'
 import meteoriteGeometry from '#src/lib/gallery/moonfall/MeteoriteGeometry.ts'
+import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import ArmillaryRingMaterial from '#src/lib/materials/ArmillaryRingMaterial.ts'
 import MeteoriteMaterial from '#src/lib/materials/MeteoriteMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
@@ -30,7 +31,8 @@ const rings = [0, 1, 2].map(i => ({
   precession: [0.12, -0.085, 0.06][i],
   nod: 0.06 + i * 0.02,
   revolution: [0.95, 0.62, 0.41][i],
-  hue: i === 1 ? '#d5ad73' : '#62b6b1',
+  // The middle one is gold, the others in Moonfall’s theme.
+  hue: i === 1 ? '#d5ad73' : moonfallTheme.ring,
 }))
 /** how large the meteorite at the sculpture’s middle is round */
 const coreRadius = 0.7

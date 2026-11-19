@@ -9,6 +9,7 @@ import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {moonfallCrater} from '#src/lib/gallery/moonfall/config.ts'
 import CraterGeometry from '#src/lib/gallery/moonfall/CraterGeometry.ts'
 import {fencePosts, fenceShape} from '#src/lib/gallery/moonfall/fence.ts'
+import {moonfallRope, moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import StanchionRingGeometry from '#src/lib/gallery/railings/StanchionRingGeometry.ts'
 import {useGallery} from '#src/lib/gallery/store.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
@@ -31,8 +32,8 @@ export default function MoonfallCrater() {
   }, []))
   const collision = [geometry.floor, geometry.terrain, geometry.rocks, ...fence.collision].map(colliderGeometry)
   const rock = useDisposable(useMemo(() => new CraterMaterial({rock: true}), []))
-  const terrain = useDisposable(useMemo(() => new CraterMaterial, []))
-  const velvet = useDisposable(useMemo(() => new VelvetRopeMaterial, []))
+  const terrain = useDisposable(useMemo(() => new CraterMaterial({lava: moonfallTheme.lava}), []))
+  const velvet = useDisposable(useMemo(() => new VelvetRopeMaterial(moonfallRope(environmentSeed)), []))
   const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
   // Honed slate in fast mode; polished in heavy mode, where it mirrors the room around the crater.
   const slate = useDisposable(useMemo(() => new SlateFloorMaterial({

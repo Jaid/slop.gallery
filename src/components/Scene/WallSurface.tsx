@@ -9,6 +9,7 @@ import {useMemo} from 'react'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import {architectureGeometry} from '#src/lib/gallery/architecture.ts'
+import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import withOpeningReveals from '#src/lib/gallery/openingReveals.ts'
 
 /** what a world draws on one of its walls beyond the wall itself, like an entrance surround */
@@ -38,7 +39,7 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
   wall: Wall
 }) {
   const colors: Partial<Record<Wall['room'], string>> = {
-    moonfall: '#14282f',
+    moonfall: moonfallTheme.wall,
     oculus: '#4b5559',
     vesper: '#658578',
     antechamber: '#ded4b8',
@@ -46,7 +47,7 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
   }
   const color = colors[surfaceRoom] ?? '#eee7d7'
   const trims: Partial<Record<Wall['room'], string>> = {
-    moonfall: '#253a40',
+    moonfall: moonfallTheme.trim,
     oculus: '#303d42',
     vesper: '#44655a',
     // ivory stucco, as the baseboards and cornices of Pompeii’s red rooms were

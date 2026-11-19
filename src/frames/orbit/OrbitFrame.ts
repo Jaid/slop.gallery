@@ -1,6 +1,8 @@
 import {color, float, max, mix, select, time, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
+import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {assembleFrame, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -33,11 +35,11 @@ const profile = FrameProfile.from([-0.005, imageDepth], gold)
   .line(-0.005, frameBack)
 /** Moonfall’s: a dark velvet panel ringed by a gold rod, a bead of light orbiting round it like the beads round the sculpture’s rings. */
 export default class OrbitFrame extends PortraitFrame {
-  override readonly description = 'An orbit for the sculpture’s neighbors: a broad panel of midnight teal velvet ringed by a polished gold rod, round which a bead of light keeps running like the beads on Moonfall’s rings, a pale cyan tail trailing behind it, the work held in by a second, slimmer rod.'
+  override readonly description = 'An orbit for the sculpture’s neighbors: a broad panel of midnight velvet in Moonfall’s hue ringed by a polished gold rod, round which a bead of light keeps running like the beads on Moonfall’s rings, a pale tail of the same hue trailing behind it, the work held in by a second, slimmer rod.'
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#0c2328'
+  override readonly tint = moonfallTheme.frameTint
   override readonly title = 'Orbiting bead'
 
   override createGeometry(width: number, height: number) {
@@ -46,9 +48,9 @@ export default class OrbitFrame extends PortraitFrame {
 
   protected override createMaterials() {
     return [new FrameVelvetMaterial({
-      pile: '#06171b',
-      crushed: '#0f3138',
-      sheen: '#3aa6a0',
+      pile: moonfallTheme.framePile,
+      crushed: moonfallTheme.frameCrushed,
+      sheen: moonfallTheme.frameSheen,
     }), new OrbitGoldMaterial]
   }
 }
@@ -75,6 +77,6 @@ class OrbitGoldMaterial extends MeshPhysicalNodeMaterial {
     const tail = select(behind.greaterThan(0.5), behind.sub(1).mul(26).exp(), float(0))
     const onRod = surface.reach.greaterThan(rod.from - 0.001).and(surface.isOrnament.lessThan(0.5))
     const glow = select(onRod, max(head.mul(6), tail.mul(1.4)), float(0))
-    this.emissiveNode = mix(color('#7af2e6'), vec3(1, 0.96, 0.85), head).mul(glow)
+    this.emissiveNode = mix(color(moonfallTheme.frameTail), vec3(1, 0.96, 0.85), head).mul(glow)
   }
 }

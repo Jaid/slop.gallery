@@ -5,6 +5,7 @@ import {MeshPhysicalNodeMaterial, Vector3} from 'three/webgpu'
 
 import {moonfallCrater} from '../../src/lib/gallery/moonfall/config.ts'
 import {fenceShape} from '../../src/lib/gallery/moonfall/fence.ts'
+import {moonfallRope} from '../../src/lib/gallery/moonfall/palette.ts'
 import {stanchionHeight} from '../../src/lib/gallery/railings/stanchion.ts'
 import StanchionRingGeometry from '../../src/lib/gallery/railings/StanchionRingGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
@@ -44,7 +45,7 @@ describe('gold', () => {
 })
 describe('the stanchion barrier', () => {
   test('its rope is braided garnet velvet', () => {
-    const velvet = new VelvetRopeMaterial
+    const velvet = new VelvetRopeMaterial(moonfallRope(0))
     try {
       expect(velvet).toBeInstanceOf(MeshPhysicalNodeMaterial)
       expect(velvet.metalness).toBe(0)

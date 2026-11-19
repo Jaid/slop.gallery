@@ -19,6 +19,7 @@ import {readPortraitSet} from './gallery/defaultPortraits.ts'
 import {readFlying} from './gallery/flyMode.ts'
 import {readDownload, readWebhook, readWebhookEndpoint} from './gallery/fusion/resultSharing.ts'
 import {readWeather} from './gallery/lighting.ts'
+import {readMoonfallHue} from './gallery/moonfall/hueParameter.ts'
 import {readPortraitSlotEditing, readShowPortraitSlots} from './gallery/portraitSlotStore.ts'
 import {readRoom, readSpawn} from './gallery/spawn.ts'
 import {readKnotRotation} from './physics/rotatingKnots.ts'
@@ -76,6 +77,7 @@ const readers: Record<string, Reader> = {
   item: input => readItems(input).join(','),
   knot_rotation: readKnotRotation,
   mood: readMood,
+  moonfall_hue: readMoonfallHue,
   near: readNear,
   pmrem: readPmrem,
   portrait_set: readPortraitSet,
