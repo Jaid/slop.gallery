@@ -95,8 +95,7 @@ export default function createBakePlugin(adapter: BakeAdapter, options: BakeOpti
         imports.push(`import {${codec.exportName} as R${index}} from ${JSON.stringify(codec.module)}`)
         codecs.push(`${JSON.stringify(codec.name)}:R${index}`)
       }
-      const placeholder = this.meta.rolldownVersion ? 'ROLLDOWN' : 'ROLLUP'
-      return `${imports.join('\n')}\nexport default await loadSnapshot(import.meta.${placeholder}_FILE_URL_${artifact.reference},{${constructors.join(',')}},${artifact.compressed},{${codecs.join(',')}})\n`
+      return `${imports.join('\n')}\nexport default await loadSnapshot(import.meta.ROLLDOWN_FILE_URL_${artifact.reference},{${constructors.join(',')}},${artifact.compressed},{${codecs.join(',')}})\n`
     },
     async transform(code, rawId) {
       const id = normalize(rawId)

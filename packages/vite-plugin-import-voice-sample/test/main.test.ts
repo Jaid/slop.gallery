@@ -1,4 +1,4 @@
-import type {InlineConfig, Rollup} from 'vite'
+import type {InlineConfig} from 'vite'
 import type {VoiceSampleFetch} from 'voice-sample-store'
 
 import {afterEach, describe, expect, test} from 'bun:test'
@@ -83,9 +83,7 @@ const buildConfig = (root: string): InlineConfig => ({
 })
 const outputCode = (result: Awaited<ReturnType<typeof build>>) => {
   const buildResults = Array.isArray(result) ? result : [result]
-  return buildResults.flatMap(item => {
-    return 'output' in item ? item.output : []
-  }).filter((output): output is Rollup.OutputChunk => output.type === 'chunk').map(output => output.code).join('\n')
+  return buildResults.flatMap(item => ('output' in item ? item.output : [])).filter(output => output.type === 'chunk').map(output => output.code).join('\n')
 }
 // The built entry’s exports as sorted entries, so an export missing altogether cannot pass for one that is undefined.
 const outputExports = async (root: string, result: Awaited<ReturnType<typeof build>>) => {

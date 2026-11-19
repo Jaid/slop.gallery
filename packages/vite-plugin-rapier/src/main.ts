@@ -40,7 +40,7 @@ export default function rapierPlugin({preload = true}: RapierPluginOptions = {})
           source: Uint8Array.fromBase64(inlined[1]),
         })
         // Its initializer fetches a URL string just as well as it takes the bytes.
-        return `${code.slice(0, inlined.index)}import.meta.ROLLUP_FILE_URL_${reference}${code.slice(inlined.index + inlined[0].length)}`
+        return `${code.slice(0, inlined.index)}import.meta.ROLLDOWN_FILE_URL_${reference}${code.slice(inlined.index + inlined[0].length)}`
       },
     },
     transformIndexHtml: {
