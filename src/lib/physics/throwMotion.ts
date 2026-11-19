@@ -13,8 +13,9 @@ const defaultLift = 0.2
 const armMass = 1
 /** below about this mass, in kg, a thing gets little out of the arm and the air takes the rest, like a leaf or a scrap of paper */
 const graspMass = 0.1
-/** how fast the player runs flat out and rises at the start of a jump, in m/s, which make the most of a throw’s run-up and of a jump shot */
-const sprintSpeed = defaultEgoOptions.speed * defaultEgoOptions.sprintFactor
+/** how fast the player runs flat out, in m/s, for a throw’s full run-up */
+export const sprintSpeed = defaultEgoOptions.speed * defaultEgoOptions.sprintFactor
+/** how fast the player rises at the start of a jump, in m/s, for a full jump shot */
 const jumpSpeed = Math.sqrt(2 * defaultEgoOptions.gravity * defaultEgoOptions.jumpHeight)
 /** how much a run-up flat out adds to a throw’s own speed */
 const driveBoost = 0.2
