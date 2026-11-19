@@ -6,6 +6,7 @@ import {PerspectiveCamera, Texture} from 'three/webgpu'
 
 import {moonfallPalette, moonfallSlate} from '../../src/lib/gallery/moonfall/palette.ts'
 import ArchitecturalPlasterMaterial from '../../src/lib/materials/ArchitecturalPlasterMaterial.ts'
+import ForgeFloorMaterial from '../../src/lib/materials/ForgeFloorMaterial.ts'
 import {CheckeredMarbleFloorMaterial} from '../../src/lib/materials/marble/index.ts'
 import PlankFloorMaterial, {siennaFloorPlanks} from '../../src/lib/materials/PlankFloorMaterial.ts'
 import SlateFloorMaterial from '../../src/lib/materials/SlateFloorMaterial.ts'
@@ -37,6 +38,16 @@ const floors: Array<[string, (reflections: boolean) => FloorMaterial]> = [
     craterRadius: 3,
     reflections,
     style: moonfallSlate(moonfallPalette(0)),
+  })],
+  ['forge basalt', reflections => new ForgeFloorMaterial({
+    center: [0, 0],
+    size: [12, 16],
+    reflections,
+  })],
+  ['forge vestibule basalt', reflections => new ForgeFloorMaterial({
+    center: [0, 0],
+    radius: 3,
+    reflections,
   })],
 ]
 for (const [kind, create] of floors) {

@@ -7,6 +7,7 @@ import BanquetMaterials from '#src/lib/materials/BanquetMaterials.ts'
 import MadeOnDemand from '#src/lib/materials/base/MadeOnDemand.ts'
 import CastleStoneMaterial from '#src/lib/materials/CastleStoneMaterial.ts'
 import DamaskWallpaperMaterial from '#src/lib/materials/DamaskWallpaperMaterial.ts'
+import ForgeMaterials from '#src/lib/materials/ForgeMaterials.ts'
 import FrescoMaterials from '#src/lib/materials/FrescoMaterials.ts'
 import JoineryWoodMaterial from '#src/lib/materials/JoineryWoodMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
@@ -46,6 +47,11 @@ export default class ArchitectureMaterials extends MadeOnDemand {
   /** the Sienna’s damask, above its dark wood */
   get damask(): NodeMaterial {
     return this.once('damask', () => new DamaskWallpaperMaterial)
+  }
+
+  /** the Forge’s kiln-fired brick walls and honed dark bluestone trim */
+  get forge() {
+    return this.once('forge', () => new ForgeMaterials)
   }
 
   /**
@@ -137,6 +143,9 @@ export default class ArchitectureMaterials extends MadeOnDemand {
       case 'banquet': {
         return this.banquet.surface(wall)
       }
+      case 'forge': {
+        return this.forge.surface(wall)
+      }
       default: {
         return undefined
       }
@@ -167,6 +176,9 @@ export default class ArchitectureMaterials extends MadeOnDemand {
       }
       case 'banquet': {
         return this.banquet.trim(wall)
+      }
+      case 'forge': {
+        return this.forge.stone
       }
       default: {
         return undefined

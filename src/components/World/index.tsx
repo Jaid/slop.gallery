@@ -22,6 +22,7 @@ import relations from '#src/worlds/gallery/relations.ts'
 export type WorldMaterials = {
   castleStone: NodeMaterial
   corridorWood: NodeMaterial
+  forgeStone: NodeMaterial
   glass: ArchitecturalGlassMaterials
   joinery: Parameters<typeof SiennaRoom>[0]['joinery']
   lobbyWall: NodeMaterial
@@ -70,7 +71,7 @@ const roomLoaders: Record<RoomId, () => Promise<RoomPart>> = {
   },
   forge: async () => {
     const {default: Room} = await import('#src/rooms/forge/components/ForgeRoom/index.tsx')
-    return ({castleStone, glass, stone, wood}) => <Room glass={glass.lobby} masonry={castleStone} stone={stone} wood={wood} />
+    return ({castleStone, forgeStone, glass, stone, wood}) => <Room bluestone={forgeStone} glass={glass.lobby} masonry={castleStone} stone={stone} wood={wood} />
   },
   lodge: async () => {
     const [{default: Room}, {default: LodgeThreshold}] = await Promise.all([import('#src/rooms/lodge/components/LodgeRoom/index.tsx'), import('#src/rooms/lodge/components/LodgeThreshold/index.tsx')])

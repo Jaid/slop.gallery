@@ -21,10 +21,12 @@ export type RoomFloorMaterials = {
   slab: Material
 }
 
-export default function RoomFloor({glass, materials, room, stone, wood}: {
+export default function RoomFloor({glass, materials, room, seams = true, stone, wood}: {
   glass: Material
   materials?: RoomFloorMaterials
   room: FloorRoom
+  /** whether to draw the 2 m tile seam strips over the slabs; procedural stone floors with their own joints pass false */
+  seams?: boolean
   stone: Texture
   wood: Texture
 }) {
@@ -56,7 +58,9 @@ export default function RoomFloor({glass, materials, room, stone, wood}: {
     <Branch if={reflection}><group rotation={[-Math.PI / 2, 0, 0]}><primitive object={reflection!} /></group></Branch>
     <Branch if={room.id === 'vesper'}><WoodFloor depth={room.size[1]} texture={wood} width={room.size[0]} /></Branch>
     <Branch not={room.id === 'banquet'}>
-      {plan.seams.map(({center: [x, z], size: [width, depth]}, i) => <Box key={i} color='#a8a18f' envMapIntensity={envMapIntensity} name={`${room.id}-floor-seam`} position={[x, 0.008, z]} size={[width, 0.008, depth]} />)}
+      <Branch if={seams}>
+        {plan.seams.map(({center: [x, z], size: [width, depth]}, i) => <Box key={i} color='#a8a18f' envMapIntensity={envMapIntensity} name={`${room.id}-floor-seam`} position={[x, 0.008, z]} size={[width, 0.008, depth]} />)}
+      </Branch>
       {plan.inlays.map(({center: [x, z], size: [width, depth]}, i) => <Box key={i} color='#9d8354' envMapIntensity={envMapIntensity} material={materials?.inlay} metalness={0.45} name={`${room.id}-floor-inlay`} position={[x, 0.015, z]} size={[width, 0.012, depth]} />)}
     </Branch>
   </StaticBatch>
