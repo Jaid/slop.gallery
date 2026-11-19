@@ -5,7 +5,7 @@ import type {GalleryValues} from './lib/headlessGallery.ts'
 import {dirname, join, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
-import {createFrameSink, endWarmup, frameFormat, installVirtualClock, waitForLoadingItems} from 'capture-session/script'
+import {createFrameSink, endWarmup, frameFormat, installVirtualClock, validateFrameSize, waitForLoadingItems} from 'capture-session/script'
 import fs from 'fs-extra'
 import {av1Crf} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
@@ -37,8 +37,8 @@ Options:
   --fov <degrees>         the camera’s vertical field of view; it stands back as far as it takes to keep the turning frame in view. Default: 36
   --settle-frames <n>     frames rendered at each frame’s moment before it is captured, so temporal antialiasing converges. Default: 8
   --settle <frames>       wall-clock frames to render before recording. Default: 2
-  --output-file <file>    the extension picks the format: .webm or .mkv for AV1 video, .jxl for an animated JPEG XL, .png for one PNG per frame. Default: out/frame/<frame-id>-<timestamp>.webm
-  --crf <number>          AV1 quality for .webm and .mkv, lower is better. Default: ${av1Crf}
+  --output-file <file>    the extension picks the format: .webm or .mkv for AV1 video, .avif or .jxl for an animated image, .png for one PNG per frame. Default: out/frame/<frame-id>-<timestamp>.webm
+  --crf <number>          AV1 quality for .avif, .webm and .mkv, lower is better. Default: ${av1Crf}
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
 ${galleryHelp(videoSize, {
   ratio: 1,
@@ -202,9 +202,7 @@ const main = async (frame: string, options: RenderFrameOptions) => {
     throw new Error('The turntable stands in the Sandbox, so --room may only name the Cell.')
   }
   const {width, height} = setup.viewport
-  if ((format === 'webm' || format === 'mkv') && (width % 2 || height % 2)) {
-    throw new Error('--width and --height need to be even for 4:2:0 video.')
-  }
+  validateFrameSize(format, width, height)
   const settle = resolveSettle(options.settle)
   await using gallery = await openHeadlessGallery(setup, {
     cacheDir: 'node_modules/.vite-render-frame',

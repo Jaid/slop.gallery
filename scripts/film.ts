@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os'
 import {dirname, join, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
-import {audioSidecar, carriesAudio, createFrameSink, endWarmup, executeWebmcpTool, frameFormat, installVirtualAudio, installVirtualClock, parseRecipe, sampleRecipe, sampleWireframe, setWireframe, tweens, waitForLoadingItems} from 'capture-session/script'
+import {audioSidecar, carriesAudio, createFrameSink, endWarmup, executeWebmcpTool, frameFormat, installVirtualAudio, installVirtualClock, parseRecipe, sampleRecipe, sampleWireframe, setWireframe, tweens, validateFrameSize, waitForLoadingItems} from 'capture-session/script'
 import fs from 'fs-extra'
 import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
@@ -21,7 +21,7 @@ import {StitchTimeline} from './lib/stitchTimeline.ts'
 const logLength = 400
 const help = `Usage: bun scripts/film.ts [options]
 
-Renders a flight of the player through a world and writes it as an animated JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
+Renders a flight of the player through a world and writes it as an animated AVIF or JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
 Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser.
 The engine clock is virtual: every frame advances the scene by exactly 1/fps seconds, however long it takes to render. Artworks that come into view are decoded before their frame is captured, so nothing pops in.
 With --audio on (true, or a volume from 1 to 100, like ?audio), the page’s sound renders offline in step with the clock, at 48 kHz, so every sound starts on the frame that starts it, and the film carries it as Opus: WebM and Matroska inside, the other formats in an Opus file of the same name beside them. Sound the page plays through media elements or speech synthesis is not recorded.
@@ -34,16 +34,17 @@ ${galleryHelp()}
   --list                  print the target and seed of each clip before seam rotation and exit without recording
   --output-file <file>    the extension picks the format. Default: out/film/<world>-<timestamp>.jxl
                           .jxl  animated JPEG XL
+                          .avif  looping animated AVIF (AV1); --audio writes a separate .opus file
                           .webm, .mkv  AV1 video
                           .png  one PNG per frame, each written to the next free name after the given one (shot.png → shot_001.png, shot_002.png, …)
   --fps <number>          frames per second. Default: 60
   --duration <seconds>    recording time per clip, rounded to the nearest frame (at least one). Default: the recipe’s length. Shorter clips share one continuous flight across inputs; longer clips each play the recipe and hold its final camera pose for the remaining time
   --starting-frame <n>    frame that becomes the first frame of the output, wrapping once at the end. Count frames after applying --duration and any crossfades. Default: 1
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
-  --crf <number>          AV1 quality for .webm and .mkv, lower is better. Default: ${av1Crf}
-  --keyframe-interval <n> at most how many frames .webm and .mkv run from one keyframe to the next; small ones, like 6, let players seek and scrub without decoding long stretches, for a larger file. Default: the encoder’s own, about 5 s
-  --fast-decode <0–2>     how much of the AV1 compression of .webm and .mkv to trade for a faster decoder: SVT-AV1’s fast-decode level, and from 1 on four tiles, which the decoder’s threads take on side by side. Default: 0
-  --preset <number>       SVT-AV1 preset for .webm and .mkv, lower compresses better and encodes slower. Default: ${av1Preset}
+  --crf <number>          AV1 quality for .avif, .webm and .mkv, lower is better. Default: ${av1Crf}
+  --keyframe-interval <n> at most how many frames AV1 runs from one keyframe to the next; small ones, like 6, let players seek and scrub without decoding long stretches, for a larger file. Default: the encoder’s own, about 5 s
+  --fast-decode <0–2>     how much AV1 compression to trade for a faster decoder: SVT-AV1’s fast-decode level, and from 1 on four tiles, which the decoder’s threads take on side by side. Default: 0
+  --preset <number>       SVT-AV1 preset, lower compresses better and encodes slower. Default: ${av1Preset}
   --settle <frames>       frames to render before recording, on the wall clock at the first keyframe, and at the same moment after a keyframe’s tools ran. Default: 2
   -h, --help              show this help
 
@@ -167,9 +168,7 @@ const prepareFilm = async (options: FilmOptions, setup: GallerySetup) => {
   const output = options['output-file'] === undefined ? join(filmRoot, `${setup.world}-${timestamp()}.jxl`) : resolve(options['output-file'])
   const format = frameFormat(output)
   const {width, height} = setup.viewport
-  if ((format === 'webm' || format === 'mkv') && (width % 2 || height % 2)) {
-    throw new Error('--width and --height need to be even for 4:2:0 video.')
-  }
+  validateFrameSize(format, width, height)
   const clock = new FilmRecipeClock(recipe, fps, options.duration === undefined ? undefined : Number(options.duration))
   return {
     clock,

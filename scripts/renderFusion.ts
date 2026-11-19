@@ -68,9 +68,9 @@ Options:
   --end <seconds>         how long the film lasts. Default: with --emphasis party, until ${partyOutro} s after the ingredient’s effect is over and the portal has closed; otherwise the end of the path of --camera, otherwise ${filmLength}
   --fps <number>          frames per second. Default: 60
   --settle <frames>       wall-clock frames to render before recording. Default: 2
-  --output-file <file>    the extension picks the format: .webm or .mkv for AV1 video, .jxl for an animated JPEG XL, .png for one PNG per frame. Default: out/fusion/<portrait>-<ingredient>-<timestamp>.webm
-  --crf <number>          AV1 quality for .webm and .mkv, lower is better. Default: ${av1Crf}
-  --keyframe-interval <n> at most how many frames .webm and .mkv run from one keyframe to the next, like 6 for a film to scrub through, see scripts/film.ts. Default: the encoder’s own, about 5 s
+  --output-file <file>    the extension picks the format: .webm or .mkv for AV1 video, .avif or .jxl for an animated image, .png for one PNG per frame. Default: out/fusion/<portrait>-<ingredient>-<timestamp>.webm
+  --crf <number>          AV1 quality for .avif, .webm and .mkv, lower is better. Default: ${av1Crf}
+  --keyframe-interval <n> at most how many frames AV1 runs from one keyframe to the next, like 6 for a film to scrub through, see scripts/film.ts. Default: the encoder’s own, about 5 s
   --fast-decode <0–2>     how much of the AV1 compression to trade for a faster decoder, see scripts/film.ts. Default: 0
   --preset <number>       SVT-AV1 preset, lower compresses better and encodes slower. Default: ${av1Preset}
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1

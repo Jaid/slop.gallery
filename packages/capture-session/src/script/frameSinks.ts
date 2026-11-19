@@ -5,7 +5,7 @@ import getFree from 'get-free'
 import {av1Preset, av1SvtParams, webmColorFilter} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 import {lossyJxlOptions} from 'knot-materials/scripts/lib/encodeJxl.ts'
 
-export const frameFormats = ['jxl', 'webm', 'mkv', 'png'] as const
+export const frameFormats = ['jxl', 'avif', 'webm', 'mkv', 'png'] as const
 export type FrameFormat = typeof frameFormats[number]
 /** sound to go with the frames: interleaved 32-bit float samples of every channel, frame by frame, like a `VirtualAudioRecording` */
 export type AudioTrack = {
@@ -51,6 +51,11 @@ export const frameFormat = (output: string) => {
 }
 /** whether the format holds sound along with its frames */
 export const carriesAudio = (format: FrameFormat) => format === 'webm' || format === 'mkv'
+export const validateFrameSize = (format: FrameFormat, width: number, height: number) => {
+  if (['avif', 'mkv', 'webm'].includes(format) && (width % 2 || height % 2)) {
+    throw new Error(`--width and --height need to be even for 4:2:0 .${format} output.`)
+  }
+}
 /** where the sound of an output in a format that can’t hold it goes: an Opus file of the same name */
 export const audioSidecar = (output: string) => `${output.slice(0, -extname(output).length)}.opus`
 const rawInput = ({width, height, source}: FrameSinkOptions) => ['-f', 'rawvideo', '-pix_fmt', 'rgba', '-video_size', `${source?.width ?? width}x${source?.height ?? height}`]
@@ -118,22 +123,24 @@ const withSidecar = (sink: ReturnType<typeof pipeSink>, {output}: FrameSinkOptio
     }
   },
 })
-/**
- * AV1 in WebM or Matroska, tagged like the knot inspection videos.
- * With sound, which only comes at the end, the frames go into a file beside the output first, which the sound is muxed with.
- */
-const av1Sink = (options: FrameSinkOptions): FrameSink => {
-  const {fastDecode = 0, keyframeInterval, output, preset = av1Preset} = options
+/** One AV1 stream; the filename selects ffmpeg’s WebM, Matroska or (infinitely looping) AVIF muxer. */
+const encodeAv1 = (options: FrameSinkOptions, video: string) => {
+  const {fastDecode = 0, keyframeInterval, preset = av1Preset} = options
   const gop = keyframeInterval === undefined ? [] : ['-g', String(keyframeInterval)]
   // Two tile columns and two tile rows, log2 each
   const svtParams = fastDecode ? `${av1SvtParams}:fast-decode=${fastDecode}:tile-columns=1:tile-rows=1` : av1SvtParams
-  const extension = extname(output)
-  const video = options.audio ? `${output.slice(0, -extension.length)}.video${extension}` : output
-  const sink = pipeSink([[Bun.spawn([...ffmpeg, ...rawInput(options), '-framerate', String(options.fps), '-i', '-', '-an', ...filters(options, webmColorFilter), '-c:v', 'libsvtav1', '-preset', String(preset), '-crf', String(options.crf), ...gop, '-svtav1-params', svtParams, '-pix_fmt', 'yuv420p', '-color_range', 'pc', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'iec61966-2-1', video], {
+  return pipeSink([[Bun.spawn([...ffmpeg, ...rawInput(options), '-framerate', String(options.fps), '-i', '-', '-an', ...filters(options, webmColorFilter), '-c:v', 'libsvtav1', '-preset', String(preset), '-crf', String(options.crf), ...gop, '-svtav1-params', svtParams, '-pix_fmt', 'yuv420p', '-color_range', 'pc', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'iec61966-2-1', video], {
     stdin: 'pipe',
     stderr: 'inherit',
     env: quietEnvironment,
   }), 'ffmpeg']])
+}
+/** WebM and Matroska mux the Opus track after recording. */
+const av1Sink = (options: FrameSinkOptions): FrameSink => {
+  const {output} = options
+  const extension = extname(output)
+  const video = options.audio ? `${output.slice(0, -extension.length)}.video${extension}` : output
+  const sink = encodeAv1(options, video)
   return {
     ...sink,
     finish: async audio => {
@@ -217,6 +224,7 @@ const pngSink = (options: FrameSinkOptions): FrameSink => {
 export const createFrameSink = (format: FrameFormat, options: FrameSinkOptions): FrameSink => {
   switch (format) {
     case 'jxl': { return jxlSink(options) }
+    case 'avif': { return withSidecar(encodeAv1(options, options.output), options) }
     case 'webm':
     case 'mkv': { return av1Sink(options) }
     case 'png': { return pngSink(options) }
