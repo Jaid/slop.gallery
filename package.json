@@ -50,12 +50,6 @@
     "@react-three/rapier@2.2.0": "patches/@react-three%2Frapier@2.2.0.patch"
   },
   "dependencies": {
-    "@dimforge/rapier3d-compat": "0.21.0",
-    "@openrouter/ai-sdk-provider": "3.1.0",
-    "@react-three/drei": "11.0.0-alpha.7",
-    "@react-three/fiber": "10.0.0-alpha.6",
-    "@react-three/rapier": "2.2.0",
-    "@react-three/tsl": "10.0.0-alpha.6",
     "ai": "7.0.176",
     "ambience-emitter": "workspace:*",
     "branch-component": "0.4.0",
@@ -104,7 +98,13 @@
     "vite-plugin-rapier": "workspace:*",
     "voice-sample-store": "workspace:*",
     "webgpu-capture-bridge": "workspace:*",
-    "zustand": "5.1.0"
+    "zustand": "5.1.0",
+    "@dimforge/rapier3d-compat": "0.21.0",
+    "@openrouter/ai-sdk-provider": "3.1.0",
+    "@react-three/drei": "11.0.0-alpha.7",
+    "@react-three/fiber": "10.0.0-alpha.6",
+    "@react-three/rapier": "2.2.0",
+    "@react-three/tsl": "10.0.0-alpha.6"
   },
   "devDependencies": {
     "autoprefixer": "10.6.2",
