@@ -2,8 +2,9 @@ import type {GalleryRoomId} from '../../../../worlds/gallery/index.ts'
 import type {SloperatorSight} from '../../sloperator/sights.ts'
 import type {Vec3} from '../../types.ts'
 import type {LatticePoint} from '../lattice.ts'
+import type FatedRandom from 'fated-random'
 
-import SlimeMaterial from '../../../materials/SlimeMaterial.ts'
+import SlopMaterial from '../../../materials/SlopMaterial.ts'
 import Curio, {CurioModel} from '../base/Curio.ts'
 import latticeGeometry from '../lattice.ts'
 
@@ -33,8 +34,8 @@ export default class Slop extends Curio {
   readonly title = 'Slop'
   override readonly type = 'fixed'
 
-  /** `sight` is where he sat, which it lies on the seat of. */
-  constructor({id, position: [x, y, z], room, seat}: Pick<SloperatorSight, 'id' | 'position' | 'room' | 'seat'>) {
+  /** `sight` is where he sat, which it lies on the seat of, and `random` rolls its green, see {@link SlopMaterial}. */
+  constructor({id, position: [x, y, z], room, seat}: Pick<SloperatorSight, 'id' | 'position' | 'room' | 'seat'>, private readonly random: FatedRandom) {
     super()
     this.id = `slop-${id}`
     this.position = [x, y + seat.height, z]
@@ -61,7 +62,7 @@ export default class Slop extends Curio {
         start: {position: [0, height, 0]},
         end: {position: [0, 0, 0]},
       }),
-      material: new SlimeMaterial,
+      material: new SlopMaterial(this.random),
     }])
   }
 }

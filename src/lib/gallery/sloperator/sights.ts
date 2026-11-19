@@ -2,6 +2,7 @@ import type {GalleryRoomId} from '../../../worlds/gallery/index.ts'
 import type {Vec3} from '../types.ts'
 import type {SloperatorSeat} from './SloperatorGeometry.ts'
 
+import {environmentRandom} from '../../environmentSeed.ts'
 import {fountainBench, fountainBenches} from '../fountainBenches.ts'
 import lodge from '../lodge.ts'
 import lodgeInterior from '../lodgeInterior/layout.ts'
@@ -78,6 +79,11 @@ const seats = {
 } as const satisfies Record<string, Omit<SloperatorSight, 'id'>>
 
 export type SloperatorSightId = keyof typeof seats
+
+/** The rolls of the slop at a sight in the environment of `seed`: the slop in front of his face there and the Slop he leaves, which share their green. */
+export function slopRandom(seed: number, sight: SloperatorSightId) {
+  return environmentRandom(seed).makeChild(['slop', sight])
+}
 
 /** every sight of the Sloperator in the gallery */
 const sights: ReadonlyArray<SloperatorSight & {id: SloperatorSightId}> = (Object.keys(seats) as Array<SloperatorSightId>).map(id => ({

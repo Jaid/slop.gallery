@@ -13,10 +13,11 @@ import lodgeInterior from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import UpholsteredSeatGeometry from '../../src/lib/gallery/lodgeInterior/UpholsteredSeatGeometry.ts'
 import {salonBench} from '../../src/lib/gallery/salon.ts'
 import {sightSloperator, useSloperator} from '../../src/lib/gallery/sloperator/sightings.ts'
-import sights from '../../src/lib/gallery/sloperator/sights.ts'
+import sights, {slopRandom} from '../../src/lib/gallery/sloperator/sights.ts'
 import SloperatorGeometry from '../../src/lib/gallery/sloperator/SloperatorGeometry.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
+import SlopMaterial from '../../src/lib/materials/SlopMaterial.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const {armchairSpread, seatWidth} = lodgeInterior
@@ -239,7 +240,7 @@ test('each sight goes by its own fence, a room’s too, and a start elsewhere le
 })
 test('a Slop lies on the seat he sat on, a lobed mound of slime stuck there until it is picked up', () => {
   for (const candidate of sights) {
-    const slop = new Slop(candidate)
+    const slop = new Slop(candidate, slopRandom(1, candidate.id))
     expect(slop.id).toBe(`slop-${candidate.id}`)
     expect(slop.propId).toBe(`prop-slop-${candidate.id}`)
     expect(slop.title).toBe('Slop')
@@ -247,10 +248,17 @@ test('a Slop lies on the seat he sat on, a lobed mound of slime stuck there unti
     expect(slop.type).toBe('fixed')
     expect(slop.position).toEqual([candidate.position[0], candidate.position[1] + candidate.seat.height, candidate.position[2]])
   }
-  const slop = new Slop(armchair)
+  const slop = new Slop(armchair, slopRandom(1, armchair.id))
   const model = slop.createModel()
   try {
     expect(model.parts.map(({name}) => name)).toEqual(['slop-slime'])
+    // Its slime is the green the seed rolled for the slop at this sight, the one in front of his face there.
+    const [{material}] = model.parts
+    expect(material).toBeInstanceOf(SlopMaterial)
+    const face = new SlopMaterial(slopRandom(1, armchair.id))
+    expect((material as SlopMaterial).hueShift).toBe(face.hueShift)
+    expect((material as SlopMaterial).color.getHex()).toBe(face.color.getHex())
+    face.dispose()
     const [{geometry}] = model.parts
     geometry.computeBoundingBox()
     const box = geometry.boundingBox!

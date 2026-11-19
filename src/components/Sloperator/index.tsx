@@ -9,10 +9,11 @@ import {MeshStandardNodeMaterial, Vector3} from 'three/webgpu'
 import Curio from '#component/Curio'
 import Slop from '#src/lib/gallery/curios/slop/Slop.ts'
 import {sightSloperator, useSloperator, useSloperatorSeated} from '#src/lib/gallery/sloperator/sightings.ts'
-import sights from '#src/lib/gallery/sloperator/sights.ts'
+import sights, {slopRandom} from '#src/lib/gallery/sloperator/sights.ts'
 import SloperatorGeometry from '#src/lib/gallery/sloperator/SloperatorGeometry.ts'
+import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
-import SlimeMaterial from '#src/lib/materials/SlimeMaterial.ts'
+import SlopMaterial from '#src/lib/materials/SlopMaterial.ts'
 import Sightline from '#src/lib/rendering/Sightline.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import recordSloperatorSights from '#src/lib/telemetry/recordSloperatorSights.ts'
@@ -30,7 +31,7 @@ const lit = <T extends NodeMaterial>(material: T, {indoors}: Sight) => (indoors 
 
 /**
  * The Sloperator, the bowler-hatted gentleman of the gallery’s icon, at his sights about the gallery, see `sloperator/sights.ts`: at each, he only sits while the player’s place is in the sight’s fence, where his seat can be seen from afar, and is gone as soon as the player leaves it.
- * Once the player caught sight of him at a sight, a Slop lies there instead from then on, where he sat.
+ * Once the player caught sight of him at a sight, a Slop lies there instead from then on, where he sat, in the same green as the slop in front of his face there, which the seed rolls per sight.
  */
 export default function Sloperator() {
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function Sloperator() {
 function SloperatorSight({sight}: {sight: Sight}) {
   const seated = useSloperatorSeated(sight)
   const slopped = useSloperator(state => state.slopped.includes(sight.id))
-  const slop = useMemo(() => new Slop(sight), [sight])
+  const slop = useMemo(() => new Slop(sight, slopRandom(environmentSeed, sight.id)), [sight])
   return <>
     {/* His room owns him, so he shows and hides with it, see ownerRoom. */}
     <Branch if={seated}><group userData={{room: sight.room}}><Figure sight={sight} /></group></Branch>
@@ -70,7 +71,8 @@ function Figure({sight}: {sight: Sight}) {
     color: '#b79d8c',
     roughness: 0.7,
   }), sight), [sight]))
-  const slime = useDisposable(useMemo(() => lit(new SlimeMaterial, sight), [sight]))
+  // The same green as the Slop he leaves here
+  const slime = useDisposable(useMemo(() => lit(new SlopMaterial(slopRandom(environmentSeed, sight.id)), sight), [sight]))
   useFrame(({camera, scene}) => {
     if (sighted || !figure.current) {
       return
