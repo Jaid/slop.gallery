@@ -78,6 +78,11 @@ export default class CraterGeometry {
       const size = 0.065 + random() ** 3 * 0.42
       const rock = new IcosahedronGeometry(size, 0)
       rock.scale(0.7 + random(), 0.55 + random() * 0.6, 0.7 + random()).rotateY(random() * Math.PI).rotateZ(random() * 0.5).translate(x, craterTerrain.height(x, z) + size * 0.35, z)
+      // Omit the boulder on the east rim after its draws so the rest of the scatter stays in place.
+      if (i === 190) {
+        rock.dispose()
+        continue
+      }
       rocks.push(rock)
     }
     this.rocks = mergeParts(rocks)
