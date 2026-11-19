@@ -8,7 +8,7 @@ import {useGallery} from '../../src/lib/gallery/store.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const still: Vec3 = [0, 0, 0]
-/** where a standing player’s place is in the Lobby, on the plane of its wall to the Vesper, in the Vesper, in the Forge and its vestibule, on the Bastion’s run north behind the Forge, in its connecting tunnel in front of the doorway into the knight’s alley, in that alley, and outside of the world */
+/** where a standing player’s place is in the Lobby’s south half, on the plane of its wall to the Vesper, in the Vesper, in the Forge and its vestibule, on the Bastion’s run north behind the Forge, in its connecting tunnel in front of the doorway into the knight’s alley, in that alley, and outside of the world */
 const places = {
   lobby: [0, 0.9, 0],
   wall: [-8, 0.9, 0],
@@ -44,7 +44,7 @@ test('the player starts in the fences its place lies in without crossing any, in
   expect(fences()).toEqual(['bastion', 'knight_alley'])
   expect(room()).toBe('bastion')
   startGeofences(places.wall)
-  expect(fences()).toEqual(['lobby', 'vesper'])
+  expect(fences()).toEqual(['lobby', 'vesper', 'lobby_south'])
   expect(room()).toBe('lobby')
   startGeofences(places.nowhere)
   expect(fences()).toEqual([])
@@ -68,7 +68,7 @@ test('probing takes the player across the fences its place moved over, and only 
         position: places.wall,
         velocity,
       },
-      fences: ['lobby', 'vesper'],
+      fences: ['lobby', 'vesper', 'lobby_south'],
     },
     {
       crossing: {
@@ -93,6 +93,7 @@ test('the player’s room is the first room whose fence holds its place and stay
   })
   // On the plane of the wall, both rooms hold the place, and the Lobby comes first.
   probeGeofences(places.wall, still)
+  expect(fences()).toEqual(['lobby', 'vesper', 'lobby_south'])
   expect(room()).toBe('lobby')
   probeGeofences(places.vesper, still)
   expect(room()).toBe('vesper')
@@ -111,6 +112,26 @@ test('the player’s room is the first room whose fence holds its place and stay
   probeGeofences(places.vestibule, still)
   expect(room()).toBe('forge')
   expect(rooms).toEqual(['vesper', 'bastion', 'forge'])
+  stop()
+})
+test('crossing between two fences that are no room’s, like the Lobby’s halves, leaves the player in the room', () => {
+  startGeofences(places.lobby)
+  expect(fences()).toEqual(['lobby', 'lobby_south'])
+  const rooms: Array<string> = []
+  const stop = useGallery.subscribe(state => rooms.push(state.room))
+  const velocity: Vec3 = [0, 0, -3]
+  probeGeofences([0, 0.9, -15.9], velocity)
+  expect(useGeofences.getState().crossing).toBeNull()
+  probeGeofences([0, 0.9, -16.1], velocity)
+  expect(useGeofences.getState()).toEqual({
+    crossing: {
+      position: [0, 0.9, -16.1],
+      velocity,
+    },
+    fences: ['lobby', 'lobby_north'],
+  })
+  expect(room()).toBe('lobby')
+  expect(rooms).toEqual([])
   stop()
 })
 test('a fence that is no room’s never is the player’s room, neither after a crossing nor at a start', () => {
@@ -189,7 +210,7 @@ test('a room’s enter listener hears the player cross into the room from anothe
   const velocity: Vec3 = [-3, 0, 0]
   probeGeofences(places.lobby, [3, 0, 0])
   probeGeofences(places.wall, velocity)
-  expect(fences()).toEqual(['lobby', 'vesper'])
+  expect(fences()).toEqual(['lobby', 'vesper', 'lobby_south'])
   expect(crossings).toEqual([])
   probeGeofences(places.vesper, velocity)
   probeGeofences([-14.5, 0.9, 0], velocity)

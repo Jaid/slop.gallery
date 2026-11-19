@@ -7,7 +7,14 @@ import {Box3} from 'three/webgpu'
 
 import {bastionLinkStripZ} from '../../src/lib/gallery/bastion.ts'
 import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
-import {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
+import {cistern, cisternChunks, cisternFloor} from '../../src/lib/gallery/cistern/cistern.ts'
+import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
+import {climbApproach} from '../../src/lib/gallery/climb.ts'
+import lobby from '../../src/lib/gallery/lobby.ts'
+import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
+import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
+import {salonSouthZ} from '../../src/lib/gallery/salon.ts'
+import {stairFloorHeight, stairwayFootprint} from '../../src/lib/gallery/staircase.ts'
 import tunnelDisplays from '../../src/lib/gallery/tunnelDisplays.ts'
 import Cell from '../../src/rooms/cell/Cell.ts'
 import CellLayout from '../../src/rooms/cell/CellLayout.ts'
@@ -101,7 +108,7 @@ class FencedWorld extends World<Cell> {
 test('a world’s other fences come after its rooms’, under ids of their own, and never stand in for a room', () => {
   expect(knottingham.geofences.keys().toArray()).toEqual(['arena'])
   expect(sandbox.geofences.keys().toArray()).toEqual(['cell'])
-  expect(slopGallery.geofences.keys().toArray()).toEqual([...slopGallery.rooms.map(room => room.id), 'knight_alley'])
+  expect(slopGallery.geofences.keys().toArray()).toEqual([...slopGallery.rooms.map(room => room.id), 'lobby_north', 'lobby_south', 'moonfall_stairs', 'knight_alley', 'bastion_cistern'])
   // A fence reaching beyond the Cell and one far outside of it
   const corner = new Geofence([{
     x: 0,
@@ -171,6 +178,125 @@ test('the gallery’s knight_alley fences the Bastion’s blind branch beside th
   // The empty suit of armor stands in it, and no room’s visitors arrive in it.
   const [armorX, armorY, armorZ] = lodgeSpurArmor
   expect(fence.contains([armorX, armorY + 1, armorZ])).toBe(true)
+  for (const room of slopGallery.rooms) {
+    const [x, y, z] = room.spawn.position
+    expect(fence.contains([x, y + 0.9, z])).toBe(false)
+  }
+})
+/** The boxes of the gallery’s fence with the id as the plain data its dump gives, a tenth of a millimeter exact. */
+const dumped = (id: string) => slopGallery.dumpGeofences().find(fence => fence.id === id)!.boxes as Array<Record<string, number>>
+test('the gallery’s lobby_north and lobby_south split the Lobby’s fence in two along the line the Forge meets the Vesper on and the Salon the Banquet', () => {
+  const [whole] = dumped('lobby')
+  expect(dumped('lobby_north')).toEqual([{
+    ...whole,
+    z2: salonSouthZ,
+  }])
+  expect(dumped('lobby_south')).toEqual([{
+    ...whole,
+    z: salonSouthZ,
+  }])
+  // The rooms on either side of the Lobby meet on that line.
+  for (const [south, north] of [['vesper', 'forge'], ['banquet', 'salon']]) {
+    expect(dumped(south)[0].z).toBe(salonSouthZ)
+    expect(dumped(north)[0].z2).toBe(salonSouthZ)
+  }
+  // From wall to wall and from the slab up without end, a half on either side of the line and both on it
+  for (const x of [-lobby.width / 2 + 0.01, 0, lobby.width / 2 - 0.01]) {
+    for (const y of [0.05, 0.9, 1.75, 40]) {
+      expect(slopGallery.geofences.getMatches([x, y, lobby.northZ + 0.01])).toEqual(['lobby', 'lobby_north'])
+      expect(slopGallery.geofences.getMatches([x, y, salonSouthZ - 0.01])).toEqual(['lobby', 'lobby_north'])
+      expect(slopGallery.geofences.getMatches([x, y, salonSouthZ])).toEqual(['lobby', 'lobby_north', 'lobby_south'])
+      expect(slopGallery.geofences.getMatches([x, y, salonSouthZ + 0.01])).toEqual(['lobby', 'lobby_south'])
+      expect(slopGallery.geofences.getMatches([x, y, lobby.southZ - 0.01])).toEqual(['lobby', 'lobby_south'])
+    }
+  }
+  // The glazed floor over the Oculus lies in the north half, where visitors arrive too, and the Oculus under it in neither.
+  const [openingX, openingZ] = lobby.opening.center
+  expect(slopGallery.geofences.getMatches([openingX, 0.9, openingZ])).toEqual(['lobby', 'lobby_north'])
+  expect(slopGallery.geofences.getMatches([openingX, lowerGallery.oculus.floorY + 0.9, openingZ])).toEqual(['oculus'])
+  const [x, y, z] = slopGallery.spawn.position
+  expect(slopGallery.geofences.getMatches([x, y + 0.9, z])).toEqual(['lobby', 'lobby_north'])
+})
+test('the gallery’s moonfall_stairs fences the stairway between the Antechamber and Moonfall: whatever of Moonfall’s fence lies outside of its hall', () => {
+  const fence = slopGallery.geofences.get('moonfall_stairs')!
+  const [hall, stairway] = slopGallery.room('moonfall').fence.boxes
+  const eastX = lowerGallery.moonfall.center[0] + lowerGallery.moonfall.size[0] / 2
+  let treads = 0
+  // In columns over and around the stairway’s footprint, off the planes the boxes end on
+  for (let x = stairwayFootprint.x - 1.03; x < stairwayFootprint.x2 + 1.03; x += 0.31) {
+    for (let z = stairwayFootprint.z - 1.03; z < stairwayFootprint.z2 + 1.03; z += 0.31) {
+      for (const y of [-12, -7.1, -2.1, -1.9, 0.9, 9]) {
+        const position: Vec3 = [x, y, z]
+        expect(fence.contains(position)).toBe(stairway.contains(position) && !hall.contains(position))
+      }
+      // Wherever a body is on its flights and its turn, standing, crouching or jumping
+      const floor = stairFloorHeight(x, z)
+      if (floor === undefined) {
+        continue
+      }
+      treads++
+      for (const height of bodyHeights) {
+        const position: Vec3 = [x, floor + height, z]
+        expect(slopGallery.geofences.getMatches(position)).toEqual(['moonfall', 'moonfall_stairs'])
+        expect(slopGallery.roomAt(position)?.id).toBe('moonfall')
+      }
+    }
+  }
+  expect(treads).toBeGreaterThan(500)
+  // It begins in the plane of the Antechamber’s east wall, where the upper flight sets out, and ends in the plane of Moonfall’s east wall, where the lower flight arrives.
+  const [topX, topY, topZ] = [stairwayFootprint.x, 0.9, stairwayFootprint.z + 1.3]
+  expect(slopGallery.geofences.getMatches([topX - 0.01, topY, topZ])).toEqual(['antechamber'])
+  expect(slopGallery.geofences.getMatches([topX + 0.01, topY, topZ])).toEqual(['moonfall', 'moonfall_stairs'])
+  const [footY, footZ] = [lowerGallery.floorY + 0.9, lowerGallery.moonfall.center[1]]
+  expect(slopGallery.geofences.getMatches([eastX + 0.01, footY, footZ])).toEqual(['moonfall', 'moonfall_stairs'])
+  expect(slopGallery.geofences.getMatches([eastX - 0.01, footY, footZ])).toEqual(['moonfall'])
+  // Not the hall under where the upper flight sets out
+  expect(slopGallery.geofences.getMatches([topX + 1, footY, topZ])).toEqual(['moonfall'])
+  // Moonfall’s visitors arrive on its lower flight, in the fence.
+  const [x, y, z] = slopGallery.room('moonfall').spawn.position
+  expect(stairFloorHeight(x, z)).toBeDefined()
+  expect(fence.contains([x, y + 0.9, z])).toBe(true)
+})
+test('the gallery’s bastion_cistern fences the Bastion’s cistern, within the Bastion’s fence, behind the flat wall it shares with the Forge’s vestibule and the approach', () => {
+  const fence = slopGallery.geofences.get('bastion_cistern')!
+  const bastion = slopGallery.room('bastion').fence
+  const [centerX, wallZ] = cistern.center
+  let floors = 0
+  // Wherever a body is on its floor, standing, crouching or jumping
+  for (let x = centerX - cistern.radius - 0.53; x < centerX + cistern.radius + 0.53; x += 0.31) {
+    for (let z = wallZ - cistern.radius - 0.53; z < wallZ; z += 0.31) {
+      const floor = cisternFloor(x, z)
+      if (floor === undefined) {
+        continue
+      }
+      floors++
+      for (const height of bodyHeights) {
+        const position: Vec3 = [x, floor + height, z]
+        // The Bastion’s, and in its west the Lodge’s, whose fence reaches up through its roof
+        expect(slopGallery.geofences.getMatches(position).filter(id => id !== 'lodge')).toEqual(['bastion', 'bastion_cistern'])
+        expect(slopGallery.roomAt(position)?.id).toBe('bastion')
+      }
+    }
+  }
+  expect(floors).toBeGreaterThan(500)
+  // Its boxes are the Bastion’s own around the cistern, but for the rounding of the Bastion’s way from its origin and back, so the Bastion’s fence holds all of it.
+  expect(fence.boxes).toHaveLength(cisternChunks().length)
+  for (const box of fence.boxes) {
+    const twins = bastion.boxes.filter(candidate => sides(candidate).every(([side, value], index) => side === sides(box)[index][0] && Math.abs(value - sides(box)[index][1]) < 1e-9))
+    expect(twins).toHaveLength(1)
+  }
+  // It begins in the plane of its flat wall, which the window from the Forge’s vestibule leads through.
+  const [windowX] = cisternWindow.center
+  expect(slopGallery.geofences.getMatches([windowX, 1.6, wallZ + 0.3])).toEqual(['forge'])
+  expect(slopGallery.geofences.getMatches([windowX, 1.6, wallZ - 0.3])).toEqual(['bastion', 'bastion_cistern'])
+  // Neither the Bastion’s approach in front of that wall, nor the Lodge under its floor, nor anything over its dome
+  const {route} = climbApproach
+  for (let along = 0.05; along < route.length; along += 0.1) {
+    const {point: [x, z], y} = route.at(along)
+    expect(fence.contains([x, y + 0.9, z])).toBe(false)
+  }
+  expect(slopGallery.geofences.getMatches([centerX - 4, lodge.floorY + 0.9, wallZ - 1.5])).toEqual(['lodge'])
+  expect(fence.contains([centerX, cistern.crown + 1, wallZ - 1.5])).toBe(false)
   for (const room of slopGallery.rooms) {
     const [x, y, z] = room.spawn.position
     expect(fence.contains([x, y + 0.9, z])).toBe(false)
