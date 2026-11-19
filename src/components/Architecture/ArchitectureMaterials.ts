@@ -7,6 +7,7 @@ import BanquetMaterials from '#src/lib/materials/BanquetMaterials.ts'
 import MadeOnDemand from '#src/lib/materials/base/MadeOnDemand.ts'
 import CastleStoneMaterial from '#src/lib/materials/CastleStoneMaterial.ts'
 import DamaskWallpaperMaterial from '#src/lib/materials/DamaskWallpaperMaterial.ts'
+import ForgeMaterials from '#src/lib/materials/forge/ForgeMaterials.ts'
 import FrescoMaterials from '#src/lib/materials/FrescoMaterials.ts'
 import JoineryWoodMaterial from '#src/lib/materials/JoineryWoodMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
@@ -46,6 +47,10 @@ export default class ArchitectureMaterials extends MadeOnDemand {
   /** the Sienna’s damask, above its dark wood */
   get damask(): NodeMaterial {
     return this.once('damask', () => new DamaskWallpaperMaterial)
+  }
+
+  get forge() {
+    return this.once('forge', () => new ForgeMaterials)
   }
 
   /**
@@ -119,6 +124,9 @@ export default class ArchitectureMaterials extends MadeOnDemand {
       case 'lodge': {
         return this.lodge.logWall
       }
+      case 'forge': {
+        return wall.curveRadius ? this.forge.roundWall : this.forge.wall
+      }
       case 'vesper': {
         return this.vesperWall
       }
@@ -146,6 +154,9 @@ export default class ArchitectureMaterials extends MadeOnDemand {
   /** What the wall’s trim and reveals are made of, or undefined for the plain trim of the shared wall surfaces. */
   trim(wall: Wall): Material | undefined {
     switch (wall.room) {
+      case 'forge': {
+        return this.forge.frame
+      }
       case 'oculus':
       case 'exhibition': {
         return this.oculus

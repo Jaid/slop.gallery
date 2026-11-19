@@ -4,6 +4,7 @@ import type {GalleryRoom} from './SlopGallery.ts'
 
 import {bastionFloors, insideBastion} from '#src/lib/gallery/bastionNetwork.ts'
 import {corridorLanding, corridorPassage, corridorStairFloor, insideCorridor} from '#src/lib/gallery/corridor.ts'
+import {forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {forgeVestibuleFloor} from '#src/lib/gallery/forgeVestibule.ts'
 import {insideLodgeWindow, lodgeBayFloor, lodgeWindowFloor} from '#src/lib/gallery/lodge.ts'
 import {rampFloorHeight, tunnelContains, tunnelFloorHeight} from '#src/lib/gallery/lowerGallery.ts'
@@ -17,6 +18,10 @@ import {displayFloorHeight, insideTunnelDisplay} from '#src/lib/gallery/tunnelDi
 
 type Hall = PlacedRoom<GalleryRoom> & {size: NonNullable<GalleryRoom['size']>}
 
+const annexCeilings: Partial<Record<Hall['id'], number>> = {
+  sienna: siennaVestibule.height,
+  forge: forgeVestibule.crown,
+}
 // Tunnel containment and floor height are provided by lowerGallery.
 const inPlan = ({center, size}: Hall, x: number, z: number) => Math.abs(x - center[0]) <= size[0] / 2 && Math.abs(z - center[1]) <= size[1] / 2
 /** The ground under the point in the room: its floor, or Moonfall’s crater where it dips below. */
@@ -70,8 +75,7 @@ export default class GalleryNavigation {
     const [x, y, z] = position
     const ground = Math.min(room.floorY, groundOf(room, x, z))
     const main = inPlan(room, x, z)
-    const ceiling = room.id === 'sienna' && !main ? siennaVestibule.height : room.air[0].max.y
-    // Up to the top of its box, the vault’s or the dome’s crown included, or the Sienna’s vestibule’s lower ceiling; the Forge’s round one is as high as the room.
+    const ceiling = main ? room.air[0].max.y : annexCeilings[room.id] ?? room.air[0].max.y
     return y >= ground - 1 && y <= ceiling + 0.2 && (main || room.id === 'lodge' && lodgeBayFloor(x, z) !== undefined || room.id === 'sienna' && siennaVestibuleFloor(x, z) !== undefined || room.id === 'forge' && forgeVestibuleFloor(x, z) !== undefined || room.id === 'oculus' && insideApse(x, z))
   }
 }
