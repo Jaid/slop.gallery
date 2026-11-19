@@ -47,10 +47,15 @@ export function seededVelvet(colors: VelvetColors, random: FatedRandom, spread: 
 const unit = (node: Float) => node.mul(0.5).add(0.5)
 const noise = (x: Float, y: Float, seed: Float) => mx_noise_float(vec3(x, y, seed))
 
+/** a velvet color: an sRGB hex string, or a color node, like a uniform that changes the color without building a new shader */
+export type VelvetTint = Node<'color'> | string
+
 export type VelvetOptions = {
   seed?: number
-  style?: VelvetStyle
+  style?: Record<keyof VelvetStyle, VelvetTint>
 }
+
+const tint = (value: VelvetTint) => (typeof value === 'string' ? color(value) : value)
 
 /**
  * Crushed velvet laid out in meters of cloth: across the nap in u, along it in v.
@@ -109,13 +114,13 @@ export default class VelvetMaterial extends MeshPhysicalNodeMaterial {
     const fibers = mix(float(0.5), unit(noise(u.mul(170), v.mul(140), s.add(8))), resolved(1 / 170))
     // Upright pile swallows the light; the crushed patches, the pressed strokes and the tips of the tufts catch it.
     const light = float(0.31).add(crush.mul(0.15)).add(pressed.sub(0.5).mul(0.4)).add(facing).add(nap.sub(0.5).mul(0.1)).add(clumps.sub(0.5).mul(0.3)).add(tufts.sub(0.5).mul(0.3)).add(fibers.sub(0.5).mul(0.25)).clamp(0, 1).toVar('velvetLight')
-    const body = mix(color(style.deep), color(style.pile), light.smoothstep(0, 0.45))
+    const body = mix(tint(style.deep), tint(style.pile), light.smoothstep(0, 0.45))
     // Seen at a slant, the eye looks along the fibers into their lit flanks rather than down into the shadowed pile, so velvet brightens toward grazing angles.
     const slant = normalViewGeometry.dot(positionViewDirection).abs().oneMinus().pow(2)
-    this.colorNode = mix(body, color(style.crushed), light.smoothstep(0.45, 1)).mul(slant.mul(1.4).add(1))
+    this.colorNode = mix(body, tint(style.crushed), light.smoothstep(0.45, 1)).mul(slant.mul(1.4).add(1))
     // Flattened fibers lie smooth enough for a silky luster, and scatter more sheen.
     this.roughnessNode = float(0.88).sub(crush.mul(0.3))
-    this.sheenNode = color(style.sheen).mul(crush.mul(0.45).add(pressed.mul(0.3)).add(0.25).mul(fibers.mul(0.4).add(0.8)))
+    this.sheenNode = tint(style.sheen).mul(crush.mul(0.45).add(pressed.mul(0.3)).add(0.25).mul(fibers.mul(0.4).add(0.8)))
     this.sheenRoughnessNode = float(0.5).sub(crush.mul(0.12))
     // The pile leans differently in every crushed patch, and the strokes, the nap and the clumps ripple its surface.
     const height = crush.mul(0.002)
