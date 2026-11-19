@@ -115,9 +115,17 @@ describe('arbitrary Knot batches', () => {
     }
   })
   test('uses candidate titles independently from author model titles', () => {
-    const fable = knotCandidates.find(candidate => candidate.data.id === 'claude_fable')!
-    expect(fable.data.title).toBe('Claude Fable')
-    expect(fable.items.every(entry => entry.modelTitle === 'Claude Fable 5.1')).toBe(true)
+    const data = {
+      ...candidateData,
+      title: 'Test candidate',
+    }
+    const entry = {
+      ...item('damascus_ember'),
+      author: {model: {title: 'Test model'}},
+    }
+    const candidate = new KnotCandidate(data, [entry])
+    expect(candidate.data.title).toBe(data.title)
+    expect(candidate.items[0].modelTitle).toBe(entry.author.model.title)
   })
   test('collapses effort labels and spelling variants into one model identity', () => {
     for (const [slug, grouped] of Map.groupBy(knots, knotModelSlug)) {

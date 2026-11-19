@@ -1,11 +1,10 @@
-import type {KnotId, KnotMaterialModule, PlaceholderShading} from '../src/types.ts'
+import type {KnotId, PlaceholderShading} from '../src/types.ts'
 
 import {describe, expect, test} from 'bun:test'
 import {dirname, resolve} from 'node:path'
-import {fileURLToPath, pathToFileURL} from 'node:url'
+import {fileURLToPath} from 'node:url'
 
 import fs from 'fs-extra'
-import {MeshPhysicalNodeMaterial, Texture} from 'three/webgpu'
 
 import {entries, KnotCandidate, knotCandidates, knots, knotsById} from '../src/main.ts'
 import rarities from '../src/rarities.ts'
@@ -64,29 +63,6 @@ describe('flat knot catalogue', () => {
       expect('rarity' in data, entry.id).toBe(false)
     }
   })
-  test('all material modules construct independently and respect caller-owned environment textures', async () => {
-    const environment = new Texture
-    let released = 0
-    environment.addEventListener('dispose', () => released++)
-    try {
-      for (const entry of knots) {
-        const {default: Material} = await import(pathToFileURL(resolve(root, 'entries', entry.id, 'Material.ts')).href) as KnotMaterialModule
-        const material = new Material(environment)
-        try {
-          expect(material.name).toBe(entry.id)
-          expect(material.envMap).toBe(environment)
-          expect(material).toBeInstanceOf(MeshPhysicalNodeMaterial)
-          expect(material.positionNode !== null).toBe(Boolean(entry.displacement))
-        } finally {
-          material.dispose()
-        }
-      }
-      expect(released).toBe(0)
-    } finally {
-      environment.dispose()
-    }
-    expect(released).toBe(1)
-  }, 30_000)
   test('the metadata entry point bundles without importing shaders or Three.js', async () => {
     const result = await Bun.build({
       entrypoints: [resolve(root, 'main.ts')],

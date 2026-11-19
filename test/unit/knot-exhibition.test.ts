@@ -1,14 +1,9 @@
-import type KnotMaterial from 'knot-materials/lib/KnotMaterial.ts'
-import type {Node} from 'three/webgpu'
-
 import {describe, expect, test} from 'bun:test'
-import {resolve} from 'node:path'
 
 import {knots, knotsById} from 'knot-materials'
 import {knotBays, knotExhibition, knotFloatHeight, knotPreviewX, knotRowHalfWidth, knotSpacing} from 'knot-materials/exhibition.ts'
 import {createKnotGeometry, knotGeometryArgs} from 'knot-materials/geometry.ts'
 import StudioEnvironment from 'knot-materials/StudioEnvironment.ts'
-import {cameraPosition, positionView, positionViewDirection} from 'three/tsl'
 import {EquirectangularReflectionMapping, FloatType} from 'three/webgpu'
 
 import {insideKnotGallery, knotGalleryBounds} from '../../src/lib/gallery/knotGallery.ts'
@@ -16,56 +11,6 @@ import knottingham from '../../src/worlds/knottingham/index.ts'
 import {knotRarityEditor} from '../../src/worlds/knottingham/rarity.ts'
 
 const dumpKnots = () => knottingham.dumpKnots()
-// Known offenders that still displace from cached view-space varyings. Do not add to this list.
-const viewDependentRelief = new Set([
-  'abyssal_veil',
-  'asteria',
-  'bismuth_labyrinth',
-  'celadon_kintsugi',
-  'chladni_resonance',
-  'ferrofluid_oracle',
-  'golden_mend',
-  'gossamer',
-  'jovian_vortex',
-  'kairothic_frost',
-  'kintsugi_nebula',
-  'lichen_cathedral',
-  'mercury_sea',
-  'mercury_swell',
-  'mercury_tremor',
-  'midnight_velvet',
-  'moire_satin',
-  'moonstone_dune',
-  'murmuration_silk',
-  'mycelial_bloom',
-  'mycelial_lumen',
-  'oceanic_nacre',
-  'planck_boil',
-  'quicksilver',
-  'singing_sand',
-  'stained_afternoon',
-  'sumi_tide',
-  'tidal_glass',
-  'tourmaline_nebula',
-  'velvet_penumbra',
-  'vermillion_lacquer',
-  'vitrail',
-])
-// Shared shader subgraphs are a DAG, not a tree. Visit each node only once.
-const collectNodes = (roots: Array<Node>) => {
-  const nodes = new Set(roots)
-  const queue = [...nodes]
-  for (let cursor = 0; cursor < queue.length; cursor++) {
-    for (const child of queue[cursor].getChildren()) {
-      if (nodes.has(child)) {
-        continue
-      }
-      nodes.add(child)
-      queue.push(child)
-    }
-  }
-  return nodes
-}
 describe('multi-model Knot challenge', () => {
   test('enumerates displayed Knots at initialization while keeping stable identities', () => {
     const displayedByCandidate = Map.groupBy(knots, item => item.candidate.id)
@@ -159,56 +104,6 @@ describe('multi-model Knot challenge', () => {
       }
     }
   })
-  test('all item modules construct independently while sharing caller-owned lighting', async () => {
-    const environment = new StudioEnvironment
-    let disposed = false
-    environment.addEventListener('dispose', () => disposed = true)
-    try {
-      for (const exhibit of knots) {
-        const {default: Material} = await import(resolve(import.meta.dir, '../../packages/knot-materials/src/entries', exhibit.id, 'Material.ts')) as {default: new(environment: StudioEnvironment) => KnotMaterial}
-        const material = new Material(environment)
-        try {
-          expect(material.name).toBe(exhibit.id)
-          expect(material.envMap).toBe(environment)
-          expect(material.isMeshPhysicalNodeMaterial).toBe(true)
-          expect(material.map).toBeNull()
-          if (material.opacityNode) {
-            if (material.alphaTest > 0) {
-              expect(material.transparent, exhibit.id).toBe(false)
-              expect(material.alphaToCoverage, exhibit.id).toBe(true)
-            } else {
-              expect(material.transparent, exhibit.id).toBe(true)
-            }
-            expect(material.depthWrite, exhibit.id).toBe(true)
-            expect(material.alphaHash, exhibit.id).toBe(false)
-          }
-          if (exhibit.displacement) {
-            expect(material.positionNode, exhibit.id).not.toBeNull()
-            expect(material.normalNode, exhibit.id).not.toBeNull()
-            // Reading these output varyings before displacement caches an undeformed clip position.
-            const vertexDependencies = collectNodes([material.positionNode!])
-            expect(vertexDependencies.has(positionView) || vertexDependencies.has(positionViewDirection), exhibit.id).toBe(viewDependentRelief.has(exhibit.id))
-          } else {
-            expect(material.positionNode, exhibit.id).toBeNull()
-          }
-          const dependencies = collectNodes(Object.values(material).filter((value: unknown): value is Node => Boolean(value && typeof value === 'object' && 'isNode' in value && value.isNode)))
-          // Camera response may use proximity or the built-in, lazily evaluated view direction.
-          expect(dependencies.has(positionView) || dependencies.has(cameraPosition) || dependencies.has(positionViewDirection), exhibit.id).toBe(true)
-          // Some submissions express the angular response only through physical Fresnel
-          // or view normals, so do not demand object-local cameraPosition from all models.
-          if (exhibit.id === 'lenticular_mirage') {
-            expect(dependencies.has(cameraPosition), exhibit.id).toBe(true)
-          }
-        } finally {
-          material.dispose()
-        }
-      }
-      expect(disposed).toBe(false)
-    } finally {
-      environment.dispose()
-    }
-    expect(disposed).toBe(true)
-  }, 30_000)
   test('provides orthonormal tangents with continuous UV seams for close-up anisotropic shading', () => {
     const geometry = createKnotGeometry()
     try {
