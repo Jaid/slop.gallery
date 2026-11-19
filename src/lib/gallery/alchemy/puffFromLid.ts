@@ -1,36 +1,36 @@
 import type {RigidBody, World} from '@dimforge/rapier3d-compat'
 
+import {Cuboid, QueryFilterFlags} from '@dimforge/rapier3d-compat'
+
 import {machineBody, workbench} from './alchemyMachine.ts'
 
-const [width, lidY, depth] = machineBody.size
-const halfHeight = (workbench.height - workbench.top - lidY) / 2
-const center = {
-  x: machineBody.center[0],
-  y: lidY + halfHeight,
-  z: machineBody.center[1],
-}
-const half = {
-  x: width / 2,
-  y: halfHeight,
-  z: depth / 2,
-}
+/** Across the whole bench, from the chest lid up to 70 cm above the slab, including the orb in its holder. */
+const lidY = machineBody.size[1]
+const halfHeight = (workbench.height + 0.7 - lidY) / 2
+const box = new Cuboid(workbench.length / 2, halfHeight, workbench.depth / 2)
+/** Upward speed added to loose items, in m/s; from rest they rise about 13 cm. */
+const liftSpeed = 1.6
 
-/** A single upward kick to loose bodies in the space above the lid. From rest, 1 m/s lifts the bowler about 5 cm. */
-export default function puffFromLid(world: World) {
+export default function puffFromLid(world: World, table: RigidBody | null) {
+  if (!table) {
+    return
+  }
+  const center = table.translation()
+  center.y += lidY + halfHeight
+  const turn = table.rotation()
   const bodies = new Set<RigidBody>
-  world.collidersWithAabbIntersectingAabb(center, half, collider => {
+  world.intersectionsWithShape(center, turn, box, collider => {
     const body = collider.parent()
-    if (body?.isDynamic() && body.isEnabled()) {
+    if (body?.isEnabled()) {
       bodies.add(body)
     }
     return true
-  })
+  }, QueryFilterFlags.ONLY_DYNAMIC, undefined, undefined, table)
   for (const body of bodies) {
-    const {x, y, z} = body.worldCom()
-    if (Math.abs(x - center.x) <= half.x && Math.abs(y - center.y) <= half.y && Math.abs(z - center.z) <= half.z) {
+    if (box.containsPoint(center, turn, body.worldCom())) {
       body.applyImpulse({
         x: 0,
-        y: body.mass(),
+        y: body.mass() * liftSpeed,
         z: 0,
       }, true)
     }

@@ -415,7 +415,7 @@ describe('the alchemy machine’s holder', () => {
     const inLobby: Vec3 = [0, 0.9, -20]
     const added: Array<AlchemyOrb> = []
     const fx = new CannonFx
-    const works = new AlchemyWorks(orb => added.push(orb), fx, () => {})
+    const works = new AlchemyWorks(orb => added.push(orb), fx)
     const placed = new Set<string>
     /** Lets the prop lie at the position, like a mounted one does. */
     const place = (id: string, position: Vec3) => {

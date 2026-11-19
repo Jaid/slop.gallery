@@ -48,6 +48,11 @@ const sinking = [0.3, 0.22] as const
 const brewing = 2.6
 /** how long after a shot the cannon shoots again at the soonest, in seconds, so orbs never meet on the way */
 const reload = 2
+/** The iron chest lifts 2 cm off its feet and lands 140 ms after each shot. */
+const chestHop = {
+  height: 0.02,
+  duration: 0.14,
+} as const
 const sinkPosition: Vec3 = [alchemySink.center[0], alchemySink.throatY, alchemySink.center[2]]
 const bodyPosition: Vec3 = [machineBody.center[0], machineBody.size[1] / 2, machineBody.center[1]]
 const worldPosition = new Vector3
@@ -94,7 +99,7 @@ export default class AlchemyWorks {
   } | undefined
   private readonly passage = new IntakePassage
 
-  constructor(private readonly add: (orb: AlchemyOrb) => void, private readonly fx: CannonFx, private readonly puff: () => void) {}
+  constructor(private readonly add: (orb: AlchemyOrb) => void, private readonly fx: CannonFx) {}
 
   /**
    * Puts another Transparent Orb into the holder whenever the player enters the Forge while no orb is left in the Forge or the Bastion and nothing lies in the holder’s way; returns the unsubscription.
@@ -125,25 +130,29 @@ export default class AlchemyWorks {
     }
   }
 
-  /** Runs the machine on by `delta` seconds: takes in what dropped down the throat, sinks it out of sight, shoots out what is done, lets the window glow and the cannon’s `barrel` go off, see {@link CannonFx}. */
-  update(delta: number, barrel: Object3D | null) {
+  /** Advances the brew and its firing effects by `delta` seconds. Returns true on the frame of a shot so loose items get a single kick. */
+  update(delta: number, barrel: Object3D | null, chest: Object3D | null) {
     const step = Math.min(delta, 0.1)
     this.clock += step
     this.sink(step)
-    this.shoot()
-    // The window glows up while the machine works on an orb and flashes as it shoots.
+    const fired = this.shoot()
     const since = this.clock - this.lastShot
+    if (chest) {
+      const t = since / chestHop.duration
+      chest.position.y = t < 1 ? 4 * chestHop.height * t * (1 - t) : 0
+    }
     const working = this.batches.length || this.loaded ? 0.55 + 0.25 * Math.sin(this.clock * 7.3) * Math.sin(this.clock * 2.9) : 0
     const flash = since < 0.5 ? 2.2 * (1 - since / 0.5) : 0
     this.glow.value += (Math.max(working, flash) - this.glow.value) * Math.min(1, step * 6)
     this.fx.update(this.clock, barrel)
+    return fired
   }
 
   /** Shoots out what the machine is done with first, once the cannon is ready again and the orb has turned up: the cannon gathers itself for a moment, then goes off. */
   private shoot() {
     if (this.loaded) {
       if (this.clock - this.loaded.since < charging) {
-        return
+        return false
       }
       const {product: id} = this.loaded
       this.loaded = undefined
@@ -154,13 +163,12 @@ export default class AlchemyWorks {
         product.unleash(cannonLaunch.velocity, [0, 0, 0])
       }
       this.fx.fire(this.clock, id)
-      this.puff()
       playSound(cannonVoices(Math.random() * 2 - 1), `alchemy:shot:${++this.counts.sounds}`, alchemyCannon.muzzle)
-      return
+      return true
     }
     const next = this.batches.at(0)
     if (!next || next.since < brewing || this.clock - this.lastShot < reload || !propObjects.has(next.product)) {
-      return
+      return false
     }
     this.batches.shift()
     this.loaded = {
@@ -168,6 +176,7 @@ export default class AlchemyWorks {
       since: this.clock,
     }
     this.fx.charge(this.clock)
+    return false
   }
 
   /** Draws an orb through the side collar and hides it inside the chest, using it up if a new orb comes out in its stead. */

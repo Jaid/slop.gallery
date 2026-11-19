@@ -13,6 +13,7 @@ import {Euler, MeshStandardNodeMaterial, Quaternion, Vector3} from 'three/webgpu
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import Orb from '#component/Orb'
 import OrbHolder, {useOrbHolder} from '#component/OrbHolder'
+import {environmentRandom} from '#src/lib/environmentSeed.ts'
 import {alchemyCannon, alchemyPipe, alchemySink, holderSpot, machineBody, workbench, workbenchPivot, workbenchYawLimit} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import CannonGeometry, {trunnionReach} from '#src/lib/gallery/alchemy/CannonGeometry.ts'
 import MachineBodyGeometry from '#src/lib/gallery/alchemy/MachineBodyGeometry.ts'
@@ -22,6 +23,7 @@ import SinkGeometry from '#src/lib/gallery/alchemy/SinkGeometry.ts'
 import WorkbenchGeometry from '#src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {ironTableColliders, ironTableFinish, ironTableSlabMass} from '#src/lib/gallery/ironTable.ts'
+import {environmentSeed} from '#src/lib/gameSeed.ts'
 import BronzeMaterial from '#src/lib/materials/BronzeMaterial.ts'
 import HammeredBrassMaterial from '#src/lib/materials/HammeredBrassMaterial.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
@@ -36,6 +38,13 @@ const [bodyX, bodyZ] = machineBody.center
 /** the bench’s frame of iron, its slab having a collider of its own round the sink’s hole */
 const benchColliders = ironTableColliders(workbench, 'alchemy-workbench', {top: false})
 const up = new Vector3(0, 1, 0)
+const benchYaw = environmentSeed ? environmentRandom(environmentSeed).makeChild(['forge', 'workbench-yaw']).rollRadius(workbenchYawLimit) : 0
+/** Place the rotated bench so its local pivot still meets the fixed sink. */
+const benchOrigin = (() => {
+  const sink = new Vector3(...alchemySink.center)
+  const pivot = new Vector3(...workbenchPivot)
+  return sink.sub(pivot.applyAxisAngle(up, benchYaw)).toArray()
+})()
 /** The turn from up the y axis onto the direction, as Euler angles. */
 const turnOnto = (direction: Vector3) => {
   const turn = new Quaternion
@@ -75,8 +84,9 @@ export default function AlchemyMachine() {
   const [orbs, setOrbs] = useState<ReadonlyArray<AlchemyOrb>>([])
   const fx = useDisposable(useMemo(() => new CannonFx, []))
   const {world} = useRapier()
-  const works = useMemo(() => new AlchemyWorks(orb => setOrbs(current => [...current, orb]), fx, () => puffFromLid(world)), [fx, world])
+  const works = useMemo(() => new AlchemyWorks(orb => setOrbs(current => [...current, orb]), fx), [fx])
   const barrel = useRef<Group>(null)
+  const chest = useRef<Group>(null)
   const holderBase = useRef<Group>(null!)
   const machine = useRef<RapierRigidBody>(null!)
   const table = useRef<RapierRigidBody>(null!)
@@ -148,10 +158,12 @@ export default function AlchemyMachine() {
   }, [works])
   useAfterPhysicsStep(() => works.takeIn())
   useFrame((_, delta) => {
-    works.update(delta, barrel.current)
+    if (works.update(delta, barrel.current, chest.current)) {
+      puffFromLid(world, table.current)
+    }
   })
   return <group name='alchemy-machine'>
-    <RigidBody angularDamping={3} colliders={false} friction={0.65} name='alchemy-workbench' position={[benchX, 0, benchZ]} type='dynamic' ref={table}>
+    <RigidBody angularDamping={3} colliders={false} friction={0.65} name='alchemy-workbench' position={benchOrigin} rotation={[0, benchYaw, 0]} type='dynamic' ref={table}>
       <MeshSurfaceCollider args={parts.topCollision} mass={ironTableSlabMass} />
       {benchColliders.map(({center, mass, name, size}, index) => <CuboidCollider key={index} args={[size[0] / 2, size[1] / 2, size[2] / 2]} mass={mass} name={name} position={center} />)}
       <mesh castShadow geometry={parts.bench.top} material={materials.stone} name='alchemy-workbench-top' receiveShadow />
@@ -164,7 +176,7 @@ export default function AlchemyMachine() {
       {pipeCapsules.map(({half, position, rotation}) => <CapsuleCollider key={position.join()} args={[half, alchemyPipe.radius]} position={position} rotation={rotation} />)}
       <CylinderCollider args={[trunnionReach / 2, 0.27]} position={breechBlock} rotation={barrelTurn} />
       <mesh castShadow geometry={parts.sink.metal} material={materials.brass} name='alchemy-sink' position={alchemySink.center} receiveShadow />
-      <group position={[bodyX, 0, bodyZ]}>
+      <group position={[bodyX, 0, bodyZ]} ref={chest}>
         <mesh castShadow geometry={parts.body.iron} material={materials.iron} name='alchemy-body' receiveShadow />
         <mesh castShadow geometry={parts.body.brass} material={materials.brass} name='alchemy-body-brass' receiveShadow />
         <mesh geometry={parts.body.glass} material={materials.window} name='alchemy-body-window' />
