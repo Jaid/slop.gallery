@@ -27,6 +27,7 @@ import Vesper from '#src/rooms/vesper/Vesper.ts'
 import World from '../base/World.ts'
 import {worlds} from '../index.ts'
 import artworks from './artworks.ts'
+import fences from './fences.ts'
 import GalleryNavigation from './navigation.ts'
 import relations, {audibleRooms, litRooms} from './relations.ts'
 import sky from './sky.ts'
@@ -81,7 +82,7 @@ export default class SlopGallery extends World<GalleryRoom> {
   private readonly navigation: GalleryNavigation
 
   constructor() {
-    super(worlds.gallery, placements)
+    super(worlds.gallery, placements, fences)
     this.navigation = new GalleryNavigation(this.rooms)
     // Walls of rooms out of reach aren’t there to hang anything on or to stop a ray, and lost works return to the Lobby only while it is there.
     this.placement = new GalleryPlacementSpace(this.walls, this.navigation, {

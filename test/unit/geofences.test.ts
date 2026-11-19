@@ -2,11 +2,20 @@ import type {Vec3} from '../../src/lib/gallery/types.ts'
 
 import {expect, test} from 'bun:test'
 
+import {Geofence} from 'geofency'
 import {Box3} from 'three/webgpu'
 
-import {lodgeWindow} from '../../src/lib/gallery/lodge.ts'
+import {bastionLinkStripZ} from '../../src/lib/gallery/bastion.ts'
+import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
+import {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import tunnelDisplays from '../../src/lib/gallery/tunnelDisplays.ts'
+import Cell from '../../src/rooms/cell/Cell.ts'
+import CellLayout from '../../src/rooms/cell/CellLayout.ts'
+import World from '../../src/worlds/base/World.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
+import {worlds} from '../../src/worlds/index.ts'
+import knottingham from '../../src/worlds/knottingham/index.ts'
+import sandbox from '../../src/worlds/sandbox/index.ts'
 
 /** how far apart the sampled columns stand along x and z, in meters; they stand in the middles of the cells of this grid, off the planes fences and floors end on */
 const columnSpacing = 0.75
@@ -60,5 +69,110 @@ test('the balcony’s middle stays the Oculus’, the staff stairways behind the
   for (const side of [-1, 1]) {
     expect(slopGallery.roomAt([side * (Math.abs(door[0]) - 0.5), over, door[2]])?.id).toBe('oculus')
     expect(slopGallery.roomAt([side * (Math.abs(door[0]) + 0.5), over, door[2]])?.id).toBe('exhibition')
+  }
+})
+/** The sides of a fence’s box by their names, in the names’ order. */
+const sides = (box: object) => Object.entries(box).toSorted(([a], [b]) => a.localeCompare(b)) as Array<[string, number]>
+/** A world of a single Cell with fences beside its room’s. */
+class FencedWorld extends World<Cell> {
+  override readonly artworks = []
+  override readonly defaultRoom = 'cell'
+  override readonly id = 'sandbox'
+  override readonly Minimap = sandbox.Minimap
+  override readonly placement = sandbox.placement
+  override readonly Scene = sandbox.Scene
+
+  constructor(fences: Record<string, Geofence>) {
+    super(worlds.sandbox, [[new Cell(new CellLayout(0)), [0, 0, 0]]], fences)
+  }
+
+  override contains() {
+    return true
+  }
+
+  override floorHeight() {
+    return 0
+  }
+
+  override wallDistance() {
+    return Infinity
+  }
+}
+test('a world’s other fences come after its rooms’, under ids of their own, and never stand in for a room', () => {
+  expect(knottingham.geofences.keys().toArray()).toEqual(['arena'])
+  expect(sandbox.geofences.keys().toArray()).toEqual(['cell'])
+  expect(slopGallery.geofences.keys().toArray()).toEqual([...slopGallery.rooms.map(room => room.id), 'knight_alley'])
+  // A fence reaching beyond the Cell and one far outside of it
+  const corner = new Geofence([{
+    x: 0,
+    z: 0,
+    x2: 90,
+    z2: 90,
+  }])
+  const far = new Geofence([{
+    x: 500,
+    z: 500,
+    x2: 600,
+    z2: 600,
+  }])
+  const world = new FencedWorld({
+    corner,
+    far,
+  })
+  expect(world.geofences.keys().toArray()).toEqual(['cell', 'corner', 'far'])
+  expect(world.geofences.getMatches([1, 1, 1])).toEqual(['cell', 'corner'])
+  expect(world.roomAt([1, 1, 1])?.id).toBe('cell')
+  expect(world.geofences.getMatches([80, 1, 80])).toEqual(['corner'])
+  expect(world.roomAt([80, 1, 80])).toBeUndefined()
+  expect(world.roomById('corner')).toBeUndefined()
+  expect(() => new FencedWorld({cell: far})).toThrow('id of its own')
+})
+test('the gallery’s knight_alley fences the Bastion’s blind branch beside the Lodge, within the Bastion’s fence, from its doorway in the connecting tunnel’s wall to its closing wall', () => {
+  const fence = slopGallery.geofences.get('knight_alley')!
+  const bastion = slopGallery.room('bastion').fence
+  const {route, width} = lodgeSpur
+  // Along the whole branch from wall to wall, wherever a body is, standing, crouching or jumping
+  for (let along = 0.05; along < route.length; along += 0.1) {
+    const {point: [x, z], heading, y} = route.at(along)
+    for (const across of [-1, 0, 1]) {
+      const side = across * (width / 2 - 0.4)
+      for (const height of [0.05, 0.9, 1.75, 2.7]) {
+        const position: Vec3 = [x - Math.sin(heading) * side, y + height, z + Math.cos(heading) * side]
+        expect(slopGallery.geofences.getMatches(position)).toEqual(['bastion', 'knight_alley'])
+        expect(slopGallery.roomAt(position)?.id).toBe('bastion')
+      }
+    }
+  }
+  // Its boxes are the Bastion’s own around the branch, but for the rounding of the Bastion’s way from its origin and back, so the Bastion’s fence holds all of it.
+  expect(fence.boxes).toHaveLength(lodgeSpur.chunks(0.35).length)
+  for (const box of fence.boxes) {
+    const twins = bastion.boxes.filter(candidate => sides(candidate).every(([side, value], index) => side === sides(box)[index][0] && Math.abs(value - sides(box)[index][1]) < 1e-9))
+    expect(twins).toHaveLength(1)
+  }
+  // It begins in the plane of the connecting tunnel’s wall, where the doorway into it is, and ends at its closing wall, behind which the run toward the Lodge passes.
+  const [startX, startZ] = route.start
+  const startY = route.at(0).y + 0.9
+  expect(fence.contains([startX, startY, startZ + 0.01])).toBe(false)
+  expect(fence.contains([startX, startY, startZ - 0.01])).toBe(true)
+  expect(slopGallery.geofences.getMatches([startX, startY, bastionLinkStripZ])).toEqual(['bastion'])
+  const {point: [endX, endZ], y: floorY} = route.end
+  const endY = floorY + 0.9
+  expect(endZ).toBe(lodgeSpurEnd.center[2])
+  expect(fence.contains([endX, endY, endZ + 0.01])).toBe(true)
+  expect(fence.contains([endX, endY, endZ - 0.01])).toBe(false)
+  expect(slopGallery.geofences.getMatches([endX, endY, endZ - 1])).toEqual(['bastion'])
+  // Neither its walls’ far sides, nor the Lodge behind its side window, nor the Forge’s vestibule over its vault, nor the ground under it
+  for (const side of [-1, 1]) {
+    expect(fence.contains([endX + side * (width / 2 + 0.01), endY, endZ + 2])).toBe(false)
+  }
+  expect(slopGallery.geofences.getMatches([lodgeEastWindow.x - 0.5, endY, lodgeEastWindow.z])).toEqual(['lodge'])
+  expect(slopGallery.geofences.getMatches([endX, 0.9, endZ + 2])).toEqual(['forge'])
+  expect(fence.contains([endX, floorY - 1.5, endZ + 2])).toBe(false)
+  // The empty suit of armor stands in it, and no room’s visitors arrive in it.
+  const [armorX, armorY, armorZ] = lodgeSpurArmor
+  expect(fence.contains([armorX, armorY + 1, armorZ])).toBe(true)
+  for (const room of slopGallery.rooms) {
+    const [x, y, z] = room.spawn.position
+    expect(fence.contains([x, y + 0.9, z])).toBe(false)
   }
 })

@@ -24,7 +24,9 @@ const toPosition = ([x, y, z]: Vec3) => ({position: {
 test('the dump lists every fence of a world in its order with all of its boxes as plain data, a tenth of a millimeter exact', () => {
   for (const world of worlds) {
     const dump = world.dumpGeofences()
-    expect(dump.map(({id}) => id)).toEqual(world.rooms.map(({id}) => id))
+    // Its rooms’ fences first, then its other ones
+    expect(dump.map(({id}) => id)).toEqual(world.geofences.keys().toArray())
+    expect(dump.slice(0, world.rooms.length).map(({id}) => id)).toEqual(world.rooms.map(({id}) => id))
     for (const {id, boxes} of dump) {
       const fence = world.geofences.get(id)!
       expect(boxes).toHaveLength(fence.boxes.length)
@@ -56,8 +58,14 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
   expect(boxes('moonfall').map(box => createBox(box).constructor)).toEqual([VoidBox, BeamBox])
   expect(boxes('lobby').map(box => createBox(box).constructor)).toEqual([SkyBox])
   expect(boxes('bastion').every(box => 'y' in box && box.y < box.y2)).toBe(true)
+  // The knight’s alley, in the Bastion’s own boxes around it
+  expect(dump.at(-1)!.id).toBe('knight_alley')
+  expect(boxes('knight_alley')).toHaveLength(2)
+  for (const box of boxes('knight_alley')) {
+    expect(boxes('bastion')).toContainEqual(box)
+  }
 })
-test('the fences at a position are those of every room holding it, by default the player’s place', () => {
+test('the fences at a position are all that hold it, the rooms’ first, by default the player’s place', () => {
   const [x, y, z] = slopGallery.spawn.position
   expect(getGeofences()).toEqual(['lobby'])
   expect(getGeofences({})).toEqual(['lobby'])
@@ -66,12 +74,14 @@ test('the fences at a position are those of every room holding it, by default th
   expect(getGeofences(toPosition([-8, 1.5, 0]))).toEqual(['lobby', 'vesper'])
   // under the Lobby’s glazed floor
   expect(getGeofences(toPosition([0, -5, -27]))).toEqual(['oculus'])
+  // in the knight’s alley, the Bastion’s blind branch beside the Lodge, which a fence of its own marks
+  expect(getGeofences(toPosition([-16.93, -4.1, -33]))).toEqual(['bastion', 'knight_alley'])
   expect(getGeofences(toPosition([900, 900, 900]))).toEqual([])
   bodyPose.place = [14, 1.5, 0]
   expect(getGeofences()).toEqual(['banquet'])
   bodyPose.place = [900, 900, 900]
   expect(getGeofences()).toEqual([])
-  for (const position of [[x, y + 1, z], [-8, 1.5, 0], [-20, 0, -32], [0, -5, -27], [900, 900, 900]] satisfies Array<Vec3>) {
+  for (const position of [[x, y + 1, z], [-8, 1.5, 0], [-20, 0, -32], [0, -5, -27], [-16.93, -4.1, -33], [900, 900, 900]] satisfies Array<Vec3>) {
     expect(getGeofences(toPosition(position))).toEqual(slopGallery.geofences.getMatches(position))
   }
 })

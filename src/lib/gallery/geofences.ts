@@ -22,7 +22,7 @@ type GeofenceState = {
 }
 
 /**
- * The fences of the current world the player’s place (`bodyPose.place`) is in. The scene probes the world’s fences once per frame, see {@link probeGeofences}, and everything that depends on where the player is goes by what it finds: the room the player is in, whatever entering a room triggers, see {@link onRoomEnter}, and the telemetry’s geofence events.
+ * The fences of the current world the player’s place (`bodyPose.place`) is in. The scene probes the world’s fences once per frame, see {@link probeGeofences}, and everything that depends on where the player is goes by what it finds: the room the player is in, whatever entering a room or a fence triggers, see {@link onRoomEnter} and {@link onGeofenceEnter}, and the telemetry’s geofence events.
  * It only changes as the player’s place crosses a fence, so a subscription sees every crossing once, with the fences left and entered between its two states.
  */
 export const useGeofences = create<GeofenceState>(() => ({
@@ -30,10 +30,10 @@ export const useGeofences = create<GeofenceState>(() => ({
   fences: [],
 }))
 
-// Every fence is a room’s, and the room the player is in is the first whose fence holds the player’s place, so where fences overlap, the room the world checks first wins. Outside of every fence, it stays the room entered last, like in a passage between two rooms, but a player starting there starts in the world’s default room.
+// The room the player is in is the first room whose fence holds the player’s place, so where the fences of two rooms overlap, the room the world checks first wins, and a fence that is no room’s never counts. Outside of every room’s fence, it stays the room entered last, like in a passage between two rooms, but a player starting there starts in the world’s default room.
 // Subscribed before anything else can, so whoever hears of a crossing already finds the player in its room.
 useGeofences.subscribe(({crossing, fences}) => {
-  const room = fences.at(0) ?? (crossing ? undefined : world.defaultRoom)
+  const room = fences.find(id => world.roomById(id)) ?? (crossing ? undefined : world.defaultRoom)
   if (room !== undefined && room !== useGallery.getState().room) {
     useGallery.setState({room})
   }
@@ -64,6 +64,18 @@ export function probeGeofences(position: Vec3, velocity: Vec3) {
       velocity: [...velocity],
     },
     fences,
+  })
+}
+
+/**
+ * Calls the listener whenever the player’s place crosses into the fence with the id, a room’s or not, with how it did, though not for a player who starts in it; returns the unsubscription.
+ * A room’s fence is not the room, which only the first of the rooms holding the player’s place is, see {@link onRoomEnter}.
+ */
+export function onGeofenceEnter(id: string, listener: (crossing: GeofenceCrossing) => void) {
+  return useGeofences.subscribe(({crossing, fences}, previous) => {
+    if (crossing && fences.includes(id) && !previous.fences.includes(id)) {
+      listener(crossing)
+    }
   })
 }
 
