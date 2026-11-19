@@ -16,9 +16,9 @@ import OrbHolder, {useOrbHolder} from '#component/OrbHolder'
 import {environmentRandom} from '#src/lib/environmentSeed.ts'
 import {alchemyCannon, alchemyPipe, alchemySink, holderSpot, machineBody, workbench, workbenchPivot, workbenchYawLimit} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import CannonGeometry, {trunnionReach} from '#src/lib/gallery/alchemy/CannonGeometry.ts'
+import kickWorkbench from '#src/lib/gallery/alchemy/kickWorkbench.ts'
 import MachineBodyGeometry from '#src/lib/gallery/alchemy/MachineBodyGeometry.ts'
 import PipeGeometry, {pipeCenterline} from '#src/lib/gallery/alchemy/PipeGeometry.ts'
-import puffFromLid from '#src/lib/gallery/alchemy/puffFromLid.ts'
 import SinkGeometry from '#src/lib/gallery/alchemy/SinkGeometry.ts'
 import WorkbenchGeometry from '#src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
@@ -90,6 +90,7 @@ export default function AlchemyMachine() {
   const holderBase = useRef<Group>(null!)
   const machine = useRef<RapierRigidBody>(null!)
   const table = useRef<RapierRigidBody>(null!)
+  const shotKicks = useMemo(() => environmentRandom(environmentSeed).makeChild(['forge', 'workbench-kick']), [])
   const hinge = useRevoluteJoint(machine, table, [alchemySink.center, workbenchPivot, [0, 1, 0]])
   useEffect(() => {
     // Rapier 0.21 only applies revolute limits on the live joint. The joint itself models the fit at the rim.
@@ -159,7 +160,7 @@ export default function AlchemyMachine() {
   useAfterPhysicsStep(() => works.takeIn())
   useFrame((_, delta) => {
     if (works.update(delta, barrel.current, chest.current)) {
-      puffFromLid(world, table.current)
+      kickWorkbench(world, table.current, shotKicks.next().rollRadius(1))
     }
   })
   return <group name='alchemy-machine'>

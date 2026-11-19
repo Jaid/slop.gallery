@@ -11,7 +11,8 @@ const box = new Cuboid(workbench.length / 2, halfHeight, workbench.depth / 2)
 /** Upward speed added to loose items, in m/s; from rest they rise about 13 cm. */
 const liftSpeed = 1.6
 
-export default function puffFromLid(world: World, table: RigidBody | null) {
+/** One shot lifts loose items and twists the hinged bench. A signed roll in [−1, 1] varies the kick and breaks ties at center. */
+export default function kickWorkbench(world: World, table: RigidBody | null, roll: number) {
   if (!table) {
     return
   }
@@ -35,4 +36,13 @@ export default function puffFromLid(world: World, table: RigidBody | null) {
       }, true)
     }
   }
+  // The stops are symmetric about zero, so the farther one is opposite the live yaw. Ignore solver jitter at center.
+  const sinYaw = 2 * turn.w * turn.y // the hinge only rotates about Y
+  const direction = Math.abs(sinYaw) < 1e-5 ? (roll < 0 ? -1 : 1) : -Math.sign(sinYaw)
+  const impulse = 30 + 35 * Math.abs(roll) // N·m·s
+  table.applyTorqueImpulse({
+    x: 0,
+    y: direction * impulse,
+    z: 0,
+  }, true)
 }
