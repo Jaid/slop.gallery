@@ -32,7 +32,7 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
   glass?: Material
   material?: Material
   plaster: Texture
-  /** what lines the openings of a flat wall instead of `surfaceMaterial`, which it then needs */
+  /** what lines the wall’s openings instead of `surfaceMaterial`, which it then needs */
   revealMaterial?: Material
   surfaceMaterial?: Material
   surfaceRoom?: Wall['room']
@@ -56,14 +56,20 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
   const trim = trims[surfaceRoom] ?? '#ded5c1'
   const geometry = architectureGeometry(wall)
   const surface = useDisposable(useMemo(() => {
-    const lined = revealMaterial ? withOpeningReveals(geometry.surface, wall) : undefined
+    let lined = revealMaterial ? withOpeningReveals(geometry.surface, wall) : undefined
+    // A wall without openings has nothing to line, and its empty group would cost a draw call for nothing.
+    if (lined?.groups[1].count === 0) {
+      lined.dispose()
+      lined = undefined
+    }
     return {
       geometry: lined ?? geometry.surface,
+      lined: Boolean(lined),
       // The plain surface is shared through the architecture’s cache.
       dispose: () => lined?.dispose(),
     }
   }, [geometry.surface, revealMaterial, wall]))
-  const surfaceMaterials = revealMaterial && surfaceMaterial ? [surfaceMaterial, revealMaterial] : surfaceMaterial ?? material
+  const surfaceMaterials = surface.lined && revealMaterial && surfaceMaterial ? [surfaceMaterial, revealMaterial] : surfaceMaterial ?? material
   return <group
     name={wall.id} position={wall.center} rotation={[0, wall.rotation, 0]} userData={{
       wallId: wall.id,
