@@ -4,7 +4,7 @@ import type {Node} from 'three/webgpu'
 import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalView, perspectiveDepthToViewZ, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, uv, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
-import {heightNormal, visibleDetail} from './filters.ts'
+import {heightNormal, line, visibleDetail} from './filters.ts'
 
 export type VaultGlassOptions = {
   /** whether heavy refractive dispersion is active */
@@ -13,6 +13,8 @@ export type VaultGlassOptions = {
   paneSize?: readonly [number, number]
   /** glass thickness in meters */
   thickness?: number
+  /** the spacing of a square mesh of wire cast into the glass, as in wired glass, in meters; none if left out */
+  wire?: number
 }
 
 const ior = 1.52
@@ -44,9 +46,9 @@ const attenuationDepth = 0.28
 export default class VaultGlassMaterial extends MeshPhysicalNodeMaterial implements TransmittingEmission {
   readonly emissionIsTransmission = true
 
-  constructor({heavy = true, paneSize = [1, 1], thickness = 0.04}: VaultGlassOptions = {}) {
-    if (!(paneSize[0] > 0 && paneSize[1] > 0) || !(thickness > 0)) {
-      throw new RangeError('VaultGlassMaterial requires positive pane dimensions and thickness.')
+  constructor({heavy = true, paneSize = [1, 1], thickness = 0.04, wire}: VaultGlassOptions = {}) {
+    if (!(paneSize[0] > 0 && paneSize[1] > 0) || !(thickness > 0) || wire !== undefined && !(wire > 0)) {
+      throw new RangeError('VaultGlassMaterial requires positive pane dimensions, thickness and wire spacing.')
     }
     if (!heavy) {
       super({
@@ -94,8 +96,16 @@ export default class VaultGlassMaterial extends MeshPhysicalNodeMaterial impleme
     const flatNormal = normalView.normalize()
     const castNormal = heightNormal(totalHeight)
     this.normalNode = castNormal
+    // The wire mesh cast into wired glass: thin dark lines that thin to a faint gray before they could shimmer.
+    const wireCoverage = wire === undefined ? float(0) : (() => {
+      const halfWidth = 0.0004
+      const offset = metric.sub(metric.div(wire).round().mul(wire))
+      const lines = max(line(offset.x, halfWidth), line(offset.y, halfWidth))
+      // Once the mesh is finer than three pixels, it would beat against them; it fades to the share of the glass it covers before.
+      return mix(float(halfWidth * 4 / wire), lines, visibleDetail(footprint, wire * 0.55)).mul(0.85).toVar('vaultGlassWire')
+    })()
     // Dark bronze-silicone joint bead between panes; amber-tinted border frame inside each pane’s perimeter.
-    this.colorNode = mix(color('#1c1914'), color('#000000'), pane)
+    this.colorNode = mix(mix(color('#1c1914'), color('#000000'), pane), color('#2b2a27'), wireCoverage)
     this.roughnessNode = mix(float(0.55), float(0.055), pane)
     // Refract the opaque sky dome behind the glass with subtle prismatic dispersion and beveled edge bending.
     const backdropViewZ = perspectiveDepthToViewZ(viewportDepthTexture(screenUV), cameraNear, cameraFar)
@@ -117,6 +127,6 @@ export default class VaultGlassMaterial extends MeshPhysicalNodeMaterial impleme
     const bevelBand = smoothstep(0.004, 0.032, joint).mul(float(1).sub(smoothstep(0.032, 0.11, joint)))
     const bevelGlow = color('#eaf6f2').mul(bevelBand.mul(0.095))
     const surfaceSheen = mix(color('#fff7e8'), color('#d6ece8'), float(1).sub(cosine)).mul(fresnel.mul(0.32).add(0.025))
-    this.emissiveNode = transmitted.mul(bodyTint).mul(float(1).sub(fresnel.mul(0.75))).add(bevelGlow).add(surfaceSheen).mul(pane)
+    this.emissiveNode = transmitted.mul(bodyTint).mul(float(1).sub(fresnel.mul(0.75))).add(bevelGlow).add(surfaceSheen).mul(pane).mul(wireCoverage.oneMinus())
   }
 }
