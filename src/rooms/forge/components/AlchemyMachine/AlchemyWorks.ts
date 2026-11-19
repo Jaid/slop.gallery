@@ -49,7 +49,7 @@ const brewing = 2.6
 /** how long after a shot the cannon shoots again at the soonest, in seconds, so orbs never meet on the way */
 const reload = 2
 /** where an orb waits in the holder: let down onto its lip from just over it */
-const holderSeat: Vec3 = [holderSpot[0], holderSpot[1] + orbSeat + 0.002, holderSpot[2]]
+const holderSeat = ([x, y, z]: Vec3): Vec3 => [x, y + orbSeat + 0.002, z]
 const sinkPosition: Vec3 = [alchemySink.center[0], alchemySink.throatY, alchemySink.center[2]]
 const bodyPosition: Vec3 = [machineBody.center[0], machineBody.size[1] / 2, machineBody.center[1]]
 const worldPosition = new Vector3
@@ -72,7 +72,7 @@ export default class AlchemyWorks {
   static readonly firstOrb: AlchemyOrb = {
     id: `${transparentOrb.propId}-holder-1`,
     orb: transparentOrb,
-    position: holderSeat,
+    position: holderSeat(holderSpot),
   }
 
   /** how brightly the window in the machine’s body glows: while it works on an orb and in a flash as the cannon shoots */
@@ -100,20 +100,21 @@ export default class AlchemyWorks {
    * Puts another Transparent Orb into the holder whenever the player enters the Forge while no orb is left in the Forge or the Bastion and nothing lies in the holder’s way; returns the unsubscription.
    * The Forge begins at the west arch of its vestibule, from where the wall beside the arch into the room still hides the holder, so the orb is there before the player can see it.
    */
-  restock() {
+  restock(getHolderSpot: () => Vec3) {
     return onRoomEnter('forge', () => {
       if (this.batches.length || this.loaded || orbAround(propPositions(), roomAt)) {
         return
       }
+      const seat = holderSeat(getHolderSpot())
       for (const [, position] of propPositions()) {
-        if (Math.hypot(...position.map((value, axis) => value - holderSeat[axis])) < orbRadius * 2) {
+        if (Math.hypot(...position.map((value, axis) => value - seat[axis])) < orbRadius * 2) {
           return
         }
       }
       this.add({
         id: `${transparentOrb.propId}-holder-${++this.counts.holder}`,
         orb: transparentOrb,
-        position: holderSeat,
+        position: seat,
       })
     })
   }

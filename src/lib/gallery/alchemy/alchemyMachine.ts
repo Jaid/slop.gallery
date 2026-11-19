@@ -73,6 +73,10 @@ export const alchemySink = (() => {
   }
 })()
 
+/** The bench turns around the fixed sink, with just enough play to keep its frame clear of the machine. */
+export const workbenchPivot: Vec3 = [alchemySink.center[0] - benchX, workbench.height, alchemySink.center[2] - benchZ]
+export const workbenchYawLimit = 2 * Math.PI / 180
+
 /**
  * The iron chest centered under the workbench. The intake enters its east side and the outlet leaves through the back; its front window glows while it works on an orb.
  */

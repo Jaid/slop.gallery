@@ -1,5 +1,5 @@
 import IronTableGeometry from '../IronTableGeometry.ts'
-import {alchemySink, workbench} from './alchemyMachine.ts'
+import {alchemySink, workbench, workbenchPivot} from './alchemyMachine.ts'
 
 /**
  * The workbench of the alchemy machine, see {@link workbench}: an iron table under a slab of soapstone with a round hole for the sink.
@@ -7,10 +7,8 @@ import {alchemySink, workbench} from './alchemyMachine.ts'
  */
 export default class WorkbenchGeometry extends IronTableGeometry {
   constructor() {
-    const [sinkX, , sinkZ] = alchemySink.center
-    const [benchX, benchZ] = workbench.center
     super(workbench, [{
-      center: [sinkX - benchX, sinkZ - benchZ],
+      center: [workbenchPivot[0], workbenchPivot[2]],
       radius: alchemySink.radius + alchemySink.thickness,
     }])
   }

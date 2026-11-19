@@ -39,6 +39,10 @@ export const baseboardClearance = 0.02
 /** how thick the iron plates under the legs’ feet are */
 export const footPlate = 0.01
 
+/** Each 150 kg table carries most of its mass in the slab, including one cut for a sink. */
+const frameMass = 150 * 5 / 16
+export const ironTableSlabMass = 150 - frameMass
+
 /** A table of the size with `pairs` pairs of legs, one at either end and evenly between them so a long slab never sags. */
 export function ironTable({pairs, ...table}: Omit<IronTable, 'frameZ' | 'legs' | 'legZ'> & {pairs: number}): IronTable {
   const {back, depth, leg, length, overhang} = table
@@ -63,7 +67,7 @@ export function ironTableStandOff({depth, back}: IronTable) {
 /**
  * The table’s colliders, named after it, in its frame: its legs and stretchers, and either its slab with the band under it, solid down to the band’s bottom, or, with `top: false` for a slab with holes that has a collider of its own, only the band.
  */
-export function ironTableColliders({apron: [apronDepth, apronThickness], depth, frameZ, height, leg, legs, legZ, length, overhang, stretcher: [stretcherY, stretcherSide], top}: IronTable, name: string, {top: solidTop = true}: {top?: boolean} = {}): Array<ColliderBox> {
+export function ironTableColliders({apron: [apronDepth, apronThickness], depth, frameZ, height, leg, legs, legZ, length, overhang, stretcher: [stretcherY, stretcherSide], top}: IronTable, name: string, {top: solidTop = true}: {top?: boolean} = {}) {
   const underTop = height - top
   const apronY = underTop - apronDepth / 2
   const frameLength = length - overhang * 2
@@ -71,15 +75,9 @@ export function ironTableColliders({apron: [apronDepth, apronThickness], depth, 
   const frameMiddle = (frameZ[0] + frameZ[1]) / 2
   const legHeight = underTop - footPlate
   const reach = legs.at(-1)! - legs[0]
-  const boxes: Array<ColliderBox> = []
-  if (solidTop) {
-    boxes.push({
-      name: `${name}-top`,
-      center: [0, height - (top + apronDepth) / 2, 0],
-      size: [length, top + apronDepth, depth],
-    })
-  } else {
-    boxes.push(...frameZ.map((z, index): ColliderBox => ({
+  const frame: Array<ColliderBox> = []
+  if (!solidTop) {
+    frame.push(...frameZ.map((z, index): ColliderBox => ({
       name: `${name}-apron`,
       center: [0, apronY, z + (index ? -1 : 1) * apronThickness / 2],
       size: [frameLength, apronDepth, apronThickness],
@@ -89,7 +87,7 @@ export function ironTableColliders({apron: [apronDepth, apronThickness], depth, 
       size: [apronThickness, apronDepth, frameDepth],
     })))
   }
-  boxes.push(
+  frame.push(
     ...legs.flatMap(x => legZ.map((z): ColliderBox => ({
       name: `${name}-leg`,
       center: [x, footPlate + legHeight / 2, z],
@@ -106,23 +104,21 @@ export function ironTableColliders({apron: [apronDepth, apronThickness], depth, 
       size: [stretcherSide, stretcherSide, legZ[1] - legZ[0]],
     })),
   )
-  return boxes
-}
-
-/** Most of a side table’s mass is in the slab; the frame’s share is distributed by volume. */
-export function sideTableColliders(table: IronTable, name: string) {
-  const totalMass = 150 // kg per free-standing table
-  const frameMass = totalMass * 5 / 16
-  const [slab, ...frame] = ironTableColliders(table, name)
   const volumes = frame.map(({size: [x, y, z]}) => x * y * z)
   const frameVolume = volumes.reduce((sum, volume) => sum + volume, 0)
-  return [{
-    ...slab,
-    mass: totalMass - frameMass,
-  }, ...frame.map((box, i) => ({
+  const boxes = frame.map((box, i) => ({
     ...box,
     mass: frameMass * volumes[i] / frameVolume,
-  }))]
+  }))
+  if (solidTop) {
+    boxes.unshift({
+      name: `${name}-top`,
+      center: [0, height - (top + apronDepth) / 2, 0],
+      size: [length, top + apronDepth, depth],
+      mass: ironTableSlabMass,
+    })
+  }
+  return boxes
 }
 
 /** the blackened iron of every iron table’s frame, see `WroughtIronMaterial`: more scale than bare metal and a shade lighter than the alchemy machine’s chest, so its thin bars take the room’s light and keep their shape instead of reading as flat black */

@@ -396,7 +396,7 @@ describe('the alchemy machine’s cannon going off', () => {
 })
 describe('the alchemy machine’s holder', () => {
   test('gets another Transparent Orb whenever the player enters the Forge while no orb is left in the Forge or the Bastion and nothing lies in its way', () => {
-    const {id: first, position: seat} = AlchemyWorks.firstOrb
+    const {id: first, position: firstSeat} = AlchemyWorks.firstOrb
     const second = `${transparentOrb.propId}-holder-2`
     const still: Vec3 = [0, 0, 0]
     // A standing player’s place on the Bastion’s approach to the Forge’s vestibule, half a meter short of its west arch, half a meter through it, where the Forge begins, and in the Lobby
@@ -421,14 +421,15 @@ describe('the alchemy machine’s holder', () => {
       expect(useGallery.getState().room).toBe('forge')
     }
     const {center} = bodyPose
-    const stop = works.restock()
+    let base = holderSpot
+    const stop = works.restock(() => base)
     try {
       // A player starting in the Forge has not entered it.
       startGeofences(inVestibule)
       expect(useGallery.getState().room).toBe('forge')
       expect(added).toEqual([])
       // The orb still waits in the holder, lies in the Forge, rolled down into the Bastion or comes back in the player’s hands.
-      place(first, seat)
+      place(first, firstSeat)
       arrive()
       place(first, [forge.center[0], orbRadius, forge.center[1]])
       arrive()
@@ -445,6 +446,9 @@ describe('the alchemy machine’s holder', () => {
       probeGeofences(inLobby, still)
       probeGeofences(onApproach, still)
       expect(added).toEqual([])
+      // The bench was nudged while the holder was empty.
+      base = [holderSpot[0], holderSpot[1], holderSpot[2] + 0.035]
+      const seat: Vec3 = [firstSeat[0], firstSeat[1], base[2]]
       arrive()
       expect(added).toEqual([{
         id: second,

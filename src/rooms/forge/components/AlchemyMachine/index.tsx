@@ -1,9 +1,10 @@
 import type {Vec3} from '#src/lib/gallery.ts'
 import type {AlchemyOrb} from './AlchemyWorks.ts'
+import type {RapierRigidBody} from '@react-three/rapier'
 import type {Group} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {CapsuleCollider, CuboidCollider, CylinderCollider, RigidBody, useAfterPhysicsStep, useRapier} from '@react-three/rapier'
+import {CapsuleCollider, CuboidCollider, CylinderCollider, RigidBody, useAfterPhysicsStep, useRapier, useRevoluteJoint} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useEffect, useMemo, useRef, useState} from 'react'
 import {color, exp, positionLocal, smoothstep, vec3} from 'three/tsl'
@@ -12,7 +13,7 @@ import {Euler, MeshStandardNodeMaterial, Quaternion, Vector3} from 'three/webgpu
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import Orb from '#component/Orb'
 import OrbHolder, {useOrbHolder} from '#component/OrbHolder'
-import {alchemyCannon, alchemyPipe, alchemySink, holderSpot, machineBody, workbench} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
+import {alchemyCannon, alchemyPipe, alchemySink, holderSpot, machineBody, workbench, workbenchPivot, workbenchYawLimit} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import CannonGeometry, {trunnionReach} from '#src/lib/gallery/alchemy/CannonGeometry.ts'
 import MachineBodyGeometry from '#src/lib/gallery/alchemy/MachineBodyGeometry.ts'
 import PipeGeometry, {pipeCenterline} from '#src/lib/gallery/alchemy/PipeGeometry.ts'
@@ -20,7 +21,7 @@ import puffFromLid from '#src/lib/gallery/alchemy/puffFromLid.ts'
 import SinkGeometry from '#src/lib/gallery/alchemy/SinkGeometry.ts'
 import WorkbenchGeometry from '#src/lib/gallery/alchemy/WorkbenchGeometry.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
-import {ironTableColliders, ironTableFinish} from '#src/lib/gallery/ironTable.ts'
+import {ironTableColliders, ironTableFinish, ironTableSlabMass} from '#src/lib/gallery/ironTable.ts'
 import BronzeMaterial from '#src/lib/materials/BronzeMaterial.ts'
 import HammeredBrassMaterial from '#src/lib/materials/HammeredBrassMaterial.ts'
 import {studioEnvironment} from '#src/lib/materials/metal.ts'
@@ -76,6 +77,15 @@ export default function AlchemyMachine() {
   const {world} = useRapier()
   const works = useMemo(() => new AlchemyWorks(orb => setOrbs(current => [...current, orb]), fx, () => puffFromLid(world)), [fx, world])
   const barrel = useRef<Group>(null)
+  const holderBase = useRef<Group>(null!)
+  const machine = useRef<RapierRigidBody>(null!)
+  const table = useRef<RapierRigidBody>(null!)
+  const hinge = useRevoluteJoint(machine, table, [alchemySink.center, workbenchPivot, [0, 1, 0]])
+  useEffect(() => {
+    // Rapier 0.21 only applies revolute limits on the live joint. The joint itself models the fit at the rim.
+    hinge.current?.setLimits(-workbenchYawLimit, workbenchYawLimit)
+    hinge.current?.setContactsEnabled(false)
+  }, [hinge])
   const holder = useOrbHolder()
   const parts = useDisposable(useMemo(() => {
     const bench = new WorkbenchGeometry
@@ -130,23 +140,24 @@ export default function AlchemyMachine() {
       },
     }
   }, [fx, works]))
-  useEffect(() => works.restock(), [works])
+  useEffect(() => works.restock(() => holderBase.current.getWorldPosition(new Vector3).toArray()), [works])
   useAfterPhysicsStep(() => works.takeIn())
   useFrame((_, delta) => {
     works.update(delta, barrel.current)
   })
   return <group name='alchemy-machine'>
-    <RigidBody colliders={false} name='alchemy-machine' type='fixed'>
-      <MeshSurfaceCollider args={parts.topCollision} position={[benchX, 0, benchZ]} />
-      {benchColliders.map(({center, name, size}, index) => <CuboidCollider key={index} args={[size[0] / 2, size[1] / 2, size[2] / 2]} name={name} position={[benchX + center[0], center[1], benchZ + center[2]]} />)}
+    <RigidBody angularDamping={3} colliders={false} friction={0.65} name='alchemy-workbench' position={[benchX, 0, benchZ]} type='dynamic' ref={table}>
+      <MeshSurfaceCollider args={parts.topCollision} mass={ironTableSlabMass} />
+      {benchColliders.map(({center, mass, name, size}, index) => <CuboidCollider key={index} args={[size[0] / 2, size[1] / 2, size[2] / 2]} mass={mass} name={name} position={center} />)}
+      <mesh castShadow geometry={parts.bench.top} material={materials.stone} name='alchemy-workbench-top' receiveShadow />
+      <mesh castShadow geometry={parts.bench.frame} material={materials.benchIron} name='alchemy-workbench-frame' receiveShadow />
+      <group position={[holderSpot[0] - benchX, holderSpot[1], holderSpot[2] - benchZ]} ref={holderBase}><OrbHolder {...holder} /></group>
+    </RigidBody>
+    <RigidBody colliders={false} name='alchemy-machine' type='fixed' ref={machine}>
       <MeshSurfaceCollider args={parts.sinkCollision} position={alchemySink.center} />
       <CuboidCollider args={[machineBody.size[0] / 2, machineBody.size[1] / 2, machineBody.size[2] / 2]} position={[bodyX, machineBody.size[1] / 2, bodyZ]} />
       {pipeCapsules.map(({half, position, rotation}) => <CapsuleCollider key={position.join()} args={[half, alchemyPipe.radius]} position={position} rotation={rotation} />)}
       <CylinderCollider args={[trunnionReach / 2, 0.27]} position={breechBlock} rotation={barrelTurn} />
-      <group position={[benchX, 0, benchZ]}>
-        <mesh castShadow geometry={parts.bench.top} material={materials.stone} name='alchemy-workbench-top' receiveShadow />
-        <mesh castShadow geometry={parts.bench.frame} material={materials.benchIron} name='alchemy-workbench-frame' receiveShadow />
-      </group>
       <mesh castShadow geometry={parts.sink.metal} material={materials.brass} name='alchemy-sink' position={alchemySink.center} receiveShadow />
       <group position={[bodyX, 0, bodyZ]}>
         <mesh castShadow geometry={parts.body.iron} material={materials.iron} name='alchemy-body' receiveShadow />
@@ -156,7 +167,6 @@ export default function AlchemyMachine() {
       <mesh castShadow geometry={parts.pipe.pipe} material={materials.brass} name='alchemy-pipe' receiveShadow />
       <mesh castShadow geometry={parts.pipe.brackets} material={materials.iron} name='alchemy-pipe-brackets' receiveShadow />
       <mesh castShadow geometry={parts.cannon.bracket} material={materials.iron} name='alchemy-cannon-bracket' receiveShadow />
-      <group position={holderSpot}><OrbHolder {...holder} /></group>
     </RigidBody>
     <group position={alchemyCannon.breech} rotation={barrelTurn} ref={barrel}>
       <mesh castShadow geometry={parts.cannon.barrel} material={materials.bronze} name='alchemy-cannon' receiveShadow />

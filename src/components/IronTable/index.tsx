@@ -4,7 +4,7 @@ import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 
-import {ironTableFinish, sideTableColliders} from '#src/lib/gallery/ironTable.ts'
+import {ironTableColliders, ironTableFinish} from '#src/lib/gallery/ironTable.ts'
 import IronTableGeometry from '#src/lib/gallery/IronTableGeometry.ts'
 import SoapstoneMaterial from '#src/lib/materials/SoapstoneMaterial.ts'
 import WroughtIronMaterial from '#src/lib/materials/WroughtIronMaterial.ts'
@@ -16,7 +16,7 @@ export default function IronTable({name, seed, table}: {
   table: IronTableLayout
 }) {
   const geometry = useDisposable(useMemo(() => new IronTableGeometry(table), [table]))
-  const colliders = useMemo(() => sideTableColliders(table, name), [table, name])
+  const colliders = useMemo(() => ironTableColliders(table, name), [table, name])
   const materials = useDisposable(useMemo(() => {
     const stone = new SoapstoneMaterial({seed})
     const iron = new WroughtIronMaterial(ironTableFinish)
