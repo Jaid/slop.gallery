@@ -38,6 +38,9 @@ export default function Architecture() {
     get corridorWood() {
       return shared.corridorWood
     },
+    get forge() {
+      return shared.forge
+    },
     glass,
     get joinery() {
       return shared.joinery

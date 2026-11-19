@@ -13,6 +13,7 @@ import InflowGeometry from '../../../src/lib/gallery/cistern/InflowGeometry.ts'
 import {climbMouth} from '../../../src/lib/gallery/climb.ts'
 import {slabHulls} from '../../../src/lib/gallery/floorPolygons.ts'
 import forge from '../../../src/lib/gallery/forge.ts'
+import ForgeRoofGeometry from '../../../src/lib/gallery/forge/ForgeRoofGeometry.ts'
 import {forgeRoundVestibule, vestibuleArches} from '../../../src/lib/gallery/forgeVestibule.ts'
 import gateGeometry from '../../../src/lib/gallery/gateGeometry.ts'
 import LodgeEastWindowGeometry from '../../../src/lib/gallery/LodgeEastWindowGeometry.ts'
@@ -94,6 +95,17 @@ export function bastionColliders() {
 export function forgeAndBastionColliders() {
   const colliders = bastionColliders()
   colliders.walls(['forge'])
+  for (const [kind, [x, z]] of [['sawtooth', forge.center], ['hood', forgeRoundVestibule.center]] as const) {
+    const roof = new ForgeRoofGeometry(kind)
+    for (const triangles of roof.collision) {
+      colliders.shapes.push({
+        triangles,
+        fix: true,
+        translation: [x, 0, z],
+      })
+    }
+    roof.dispose()
+  }
   const floor = new ExtrudeGeometry(roundVestibuleFloorShape(forgeRoundVestibule), {
     depth: 0.24,
     bevelEnabled: false,

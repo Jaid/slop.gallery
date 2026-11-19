@@ -1,17 +1,27 @@
 import type {RoomCamera} from '../base/Room.ts'
 
 export default {
-  // From the north-east corner, looking south-west across the pedestal under the rooflight toward the south wall.
+  // From the north-east corner, looking south-west across the worktables under the sawtooth lights toward the south wall.
   overview: {
-    position: [2.646, 2.856, -7.442],
+    position: [2.65, 1.6, -6.9],
     aim: {
-      yaw: 3.0385,
-      pitch: -0.2872,
+      yaw: 2.9147,
+      pitch: 0.2269,
     },
-    fov: 80,
+    fov: 73,
     ratio: 16 / 9,
   },
-  // Before the north wall’s arch, looking up through it into the round vestibule, at its rooflight and its arch onto the Bastion’s approach.
+  // The low view through the vestibule arch from issue #277.
+  threshold: {
+    position: [0.687, 0.724, -10.921],
+    aim: {
+      yaw: 2.8476,
+      pitch: 0.1284,
+    },
+    fov: 62,
+    ratio: 16 / 9,
+  },
+  // Before the north wall’s arch, looking up through it into the round vestibule, at its glazed hood and its arch onto the Bastion’s approach.
   vestibule: {
     position: [0, 1.6, -6.6],
     aim: {

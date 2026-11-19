@@ -1,26 +1,5 @@
 import {ironTable} from './ironTable.ts'
-import salon, {salonCeiling} from './salon.ts'
-
-/**
- * A round rooflight: a disc of clear cast glass open to the sky, held in a square grid of bars and framed by a deep ring of plaster hanging below the slab, like the eye of a Roman dome let into a flat ceiling.
- * All values are in meters, relative to its middle.
- */
-export type Rooflight = {
-  barDepth: number
-  barWidth: number
-  /** the gilt bead along the ring’s lower inner edge */
-  bead: number
-  /** how far the ring hangs below the ceiling */
-  depth: number
-  /** width of the plaster ring around the opening */
-  frame: number
-  /** the glass sits 1 cm below the slab, above the glazing bars */
-  glassY: number
-  /** glazing bars split the glass into square panes of this size, a whole number of them across the opening */
-  pane: number
-  /** radius of the glazed opening cut through the slab */
-  radius: number
-}
+import salon from './salon.ts'
 
 /**
  * The Forge sits north of the Vesper, across the Lobby’s north extension from the Salon, whose floor plan it mirrors: its east wall backs onto the Lobby’s west extension, from the Lobby’s north wall to the Vesper’s north wall’s line.
@@ -73,42 +52,43 @@ export const {center: forgeTableCenter, turn: forgeTableTurn} = painter
 export const {center: forgeSideTableCenter, turn: forgeSideTableTurn} = palette
 export const forgeSideTable = forgeTable
 
-/** The round rooflight in the middle of the ceiling, relative to the room’s center. */
-export const forgeRooflight = {
-  radius: 2.5,
-  frame: 0.55,
-  depth: 0.34,
-  pane: 1,
-  barWidth: 0.05,
-  barDepth: 0.07,
-  glassY: salonCeiling.underside - 0.01,
-  bead: 0.04,
-} as const satisfies Rooflight
+/** The south-facing sawtooth lights. Heights are measured from the workshop floor. */
+export const forgeRoof = {
+  bays: 3,
+  eave: 5.72,
+  ridge: 7.68,
+  glassRun: 1.55,
+  // The Lobby vault’s outer shell overhangs the shared wall. Seat the east gables on a box girder inside its springing.
+  eastSetback: 0.55,
+  panesAcross: 8,
+} as const
+
+/** The three pitches and the lines of their iron columns, relative to the floor center. */
+export const forgeBays = Array.from({length: forgeRoof.bays}, (_, i) => {
+  const bay = forge.size[1] / forgeRoof.bays
+  const north = -forge.size[1] / 2 + i * bay
+  const south = north + bay
+  return {
+    north,
+    south,
+    peak: south - forgeRoof.glassRun,
+  }
+})
+export const forgePierWidth = 0.45
+
+/** The vitreous enamel works plate above the alchemy bench. */
+export const forgePlate = {
+  width: 4.8,
+  height: 1.2,
+  y: 3.94,
+} as const
 
 const vestibuleRadius = 3
-/**
- * The vestibule north of the Forge, still the Forge’s: a round anteroom at its floor on its axis, whose wall touches the middle of its north wall back to back, where an arch opens through both into the room.
- * The Bastion’s approach arrives through a second arch, from the west. Its ceiling is as high as the room’s, pierced in the middle by a round rooflight of its own.
- */
+/** The round anteroom between the workshop and the Bastion, under a folded metal hood with a bull’s-eye of wired glass. */
 export const forgeVestibule = {
   center: [forge.center[0], northZ - vestibuleRadius],
-  /** the radius of its wall’s center line */
   radius: vestibuleRadius,
-  /** relative to the vestibule’s center: a smaller eye than the room’s, in panes half as large */
-  rooflight: {
-    radius: 1,
-    frame: 0.4,
-    depth: 0.26,
-    pane: 0.5,
-    barWidth: 0.04,
-    barDepth: 0.06,
-    glassY: salonCeiling.underside - 0.01,
-    bead: 0.03,
-  },
-} as const satisfies {
-  center: readonly [number, number]
-  radius: number
-  rooflight: Rooflight
-}
+  crown: 6.44,
+} as const
 
 export default forge

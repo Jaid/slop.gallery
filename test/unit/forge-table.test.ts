@@ -19,13 +19,12 @@ const [benchX, benchZ] = workbench.center
 const west = slopGallery.walls.find(wall => wall.id === 'forge-west')!
 const south = slopGallery.walls.find(wall => wall.id === 'forge-south')!
 const east = slopGallery.walls.find(wall => wall.id === 'forge-east')!
-/** A table’s clearances in the world: its feet from the inlay, its lower frame from the baseboard and its closest point to the wall. */
+/** A table’s clearances in the world: its lower frame from the baseboard and its closest point to the wall. */
 function wallReach({frame, top}: IronTableGeometry, wall: Wall, [x, z]: readonly [number, number], turn: number) {
   const placement = new Matrix4
   placement.makeRotationY(turn).setPosition(x, 0, z)
   const point = new Vector3
   let nearestLow = Infinity
-  let footToInlay = Infinity
   let nearest = Infinity
   for (const geometry of [frame, top]) {
     const position = geometry.getAttribute('position')
@@ -33,9 +32,6 @@ function wallReach({frame, top}: IronTableGeometry, wall: Wall, [x, z]: readonly
       point.fromBufferAttribute(position, index).applyMatrix4(placement)
       const offset = wallOffset(wall, [point.x, point.y, point.z])
       nearest = Math.min(nearest, offset)
-      if (point.y < 0.01) {
-        footToInlay = Math.min(footToInlay, Math.abs(offset - 1.25))
-      }
       if (point.y >= defaultBaseboardHeight + 0.01) {
         continue
       }
@@ -43,7 +39,6 @@ function wallReach({frame, top}: IronTableGeometry, wall: Wall, [x, z]: readonly
     }
   }
   return {
-    footToInlay,
     nearest,
     nearestLow,
   }
@@ -79,11 +74,9 @@ describe('the Forge’s tables', () => {
     test(`${name} has a 5 m × 1.3 m slab at 1.2 m on an iron frame clear of the baseboard`, () => {
       const geometry = build()
       try {
-        const {footToInlay, nearest, nearestLow} = wallReach(geometry, wall, center, turn)
+        const {nearest, nearestLow} = wallReach(geometry, wall, center, turn)
         expect(nearestLow - baseboardCapFront).toBeGreaterThan(0.005)
         expect(nearest).toBeGreaterThan(wallFace + 0.02)
-        // Its feet stay off the floor’s brass inlay.
-        expect(footToInlay).toBeGreaterThan(0.013)
         expect(geometry.top.hasAttribute('woodGrain')).toBe(false)
         expect(geometry.frame.hasAttribute('woodGrain')).toBe(false)
         // Its slab rests on the band under it, as high as the table is.

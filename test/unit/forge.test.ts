@@ -5,14 +5,14 @@ import {DoubleSide, Matrix3, Matrix4, Mesh, MeshBasicMaterial, Raycaster, Vector
 
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {climbApproach, climbArch} from '../../src/lib/gallery/climb.ts'
-import forge, {forgeRooflight, forgeVestibule} from '../../src/lib/gallery/forge.ts'
+import forge, {forgeBays, forgePlate, forgeRoof, forgeVestibule} from '../../src/lib/gallery/forge.ts'
 import {forgeArch, forgeRoundVestibule, forgeVestibuleFloor, vestibuleArches} from '../../src/lib/gallery/forgeVestibule.ts'
 import {isRing} from '../../src/lib/gallery/fresco.ts'
 import roomOrigins from '../../src/lib/gallery/layout.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import roundRevealGeometry from '../../src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '../../src/lib/gallery/roundVestibule.ts'
-import salon, {salonCeiling} from '../../src/lib/gallery/salon.ts'
+import salon from '../../src/lib/gallery/salon.ts'
 import {vesper} from '../../src/lib/gallery/vesper.ts'
 import {insideOpening, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import {openings} from '../../src/worlds/gallery/relations.ts'
@@ -96,18 +96,26 @@ describe('the Forge', () => {
     expect(insideOpening(vesperSouth.holes![0], wallCoordinates(vesperSouth, [-14, 0, 8]), 1.7)).toBe(true)
     expect(roomAt([-14, 1.7, 7.9])).toBe('vesper')
   })
-  test('the rooflight is a round opening in whole panes, inside the room, under its slab, within the sun’s reach', () => {
-    const {bead, depth, frame, glassY, pane, radius} = forgeRooflight
-    expect(radius * 2 / pane % 1).toBeCloseTo(0, 9)
-    expect(radius + frame).toBeLessThan(Math.min(...room.size) / 2 - 1)
-    expect(glassY).toBeLessThan(salonCeiling.underside)
-    expect(salonCeiling.underside - depth - bead).toBeGreaterThan(5)
+  test('the air and the sun reach the three ridges and the works plate and columns keep their places on the walls', () => {
+    expect(room.air[0].max.y).toBe(forgeRoof.ridge)
     expect(room.room.sunlit).toBe(true)
     expect(room.room.hasVolumetricSun).toBe(true)
+    expect(wallById('forge-south').reservations).toContainEqual({
+      profile: 'rectangle',
+      u: 0,
+      width: forgePlate.width,
+      bottom: forgePlate.y - forgePlate.height / 2,
+      height: forgePlate.y + forgePlate.height / 2,
+    })
+    const west = wallById('forge-west')
+    for (const {peak} of forgeBays) {
+      const u = wallCoordinates(west, [forge.center[0] - forge.size[0] / 2, 0, forge.center[1] + peak])
+      expect(west.reservations?.some(r => Math.abs(r.u - u) < 1e-6)).toBe(true)
+    }
   })
 })
 describe('the Forge’s vestibule', () => {
-  const {center: [x, z], radius, rooflight} = forgeVestibule
+  const {center: [x, z], radius, crown} = forgeVestibule
   const ring = wallById('forge-vestibule')
   const north = wallById('forge-north')
   const northZ = forge.center[1] - forge.size[1] / 2
@@ -186,7 +194,8 @@ describe('the Forge’s vestibule', () => {
     }
     // Under its floor, the Bastion’s curve climbs west toward the Lodge.
     expect(roomAt([x, -4.4, z - 2.7])).toBe('bastion')
-    expect(insideGallery([x, 6.2, z])).toBe(false)
+    expect(insideGallery([x, crown, z])).toBe(true)
+    expect(insideGallery([x, crown + 0.21, z])).toBe(false)
   })
   test('its floor slab’s shape is what navigation holds: within the wall’s center line and out under each arch to the plane touching it', () => {
     // In the shape’s plane, y runs north.
@@ -265,12 +274,5 @@ describe('the Forge’s vestibule', () => {
         reveal.dispose()
       }
     }
-  })
-  test('its ceiling’s rooflight is a round opening in whole panes, well inside its wall, under its slab', () => {
-    const {bead, depth, frame, glassY, pane} = rooflight
-    expect(rooflight.radius * 2 / pane % 1).toBeCloseTo(0, 9)
-    expect(rooflight.radius + frame).toBeLessThan(radius - 1)
-    expect(glassY).toBeLessThan(salonCeiling.underside)
-    expect(salonCeiling.underside - depth - bead).toBeGreaterThan(5)
   })
 })
