@@ -1,12 +1,15 @@
 import {afterAll, describe, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
+import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
 import {DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
 
+import {wallFace, wallTop} from '../../src/lib/gallery/architecture.ts'
 import forge, {forgeBays, forgeRoof, forgeVestibule} from '../../src/lib/gallery/forge.ts'
 import ForgeRoofGeometry from '../../src/lib/gallery/forge/ForgeRoofGeometry.ts'
 import lobbyVault from '../../src/lib/gallery/lobbyVault.ts'
 import {middaySun} from '../../src/lib/gallery/sun.ts'
+import {triangleCount} from '../../src/lib/geometry.ts'
 
 await RAPIER.init()
 const {eave, ridge} = forgeRoof
@@ -19,6 +22,8 @@ for (const kind of ['sawtooth', 'hood'] as const) {
     const meshes = Object.entries(geometry.surfaces).map(([name, surface]) => {
       const mesh = new Mesh(surface, material)
       mesh.name = name
+      surface.boundsTree = new MeshBVH(surface)
+      mesh.raycast = acceleratedRaycast
       return mesh
     })
     const world = new RAPIER.World({
@@ -62,6 +67,40 @@ for (const kind of ['sawtooth', 'hood'] as const) {
       }
       expect(hits).toBeGreaterThan(70)
       expect(finishes.has('glass') && finishes.has('deck') && finishes.has('frame')).toBe(true)
+    })
+    test('keeps a reasonable triangle budget', () => {
+      const total = Object.values(geometry.surfaces).reduce((sum, surface) => sum + triangleCount(surface), 0)
+      expect(total).toBeLessThan(kind === 'sawtooth' ? 16_000 : 2000)
+    })
+    test('lets the midday sun onto the floor through nothing but its glass, never through a gap between its parts', () => {
+      const [halfX, halfZ] = kind === 'hood' ? [forgeVestibule.radius, forgeVestibule.radius] : [forge.size[0] / 2, forge.size[1] / 2]
+      const inside = (x: number, z: number) => (kind === 'hood' ? Math.hypot(x, z) < forgeVestibule.radius - wallFace : Math.abs(x) < halfX - wallFace && Math.abs(z) < halfZ - wallFace)
+      let lit = 0
+      let total = 0
+      for (let x = -halfX + 0.05; x < halfX; x += 0.1) {
+        for (let z = -halfZ + 0.05; z < halfZ; z += 0.1) {
+          const origin = new Vector3(x, y, z)
+          // Rays that leave through the walls below their tops are the walls’ business.
+          const top = origin.clone().addScaledVector(sun, (wallTop - y) / sun.y)
+          if (!inside(x, z) || !inside(top.x, top.z)) {
+            continue
+          }
+          const raycaster = new Raycaster(origin, sun, 0, 30)
+          const crossed = raycaster.intersectObjects(meshes, false)
+          expect(crossed.length).toBeGreaterThan(0)
+          total++
+          // Only the opaque finishes cast shadows, so the sun gets through wherever it crosses nothing but glass.
+          if (crossed.every(({object}) => object.name === 'glass')) {
+            lit++
+          }
+        }
+      }
+      expect(total).toBeGreaterThan(0)
+      if (kind === 'sawtooth') {
+        // Broad bands of sunlight fall through the lights, while the girders, bars and sheeted pitches shade the rest.
+        expect(lit / total).toBeGreaterThan(0.2)
+        expect(lit / total).toBeLessThan(0.6)
+      }
     })
     if (kind === 'sawtooth') {
       test('the east gables clear the springing of the Lobby vault and the bearer closes the setback below them', () => {
