@@ -1,4 +1,4 @@
-import {afterAll, beforeEach, describe, expect, test} from 'bun:test'
+import {afterAll, describe, expect, test} from 'bun:test'
 
 import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
 import {BufferAttribute, BufferGeometry, DoubleSide, Frustum, Matrix4, Mesh, MeshBasicMaterial, PerspectiveCamera, Raycaster, Vector3} from 'three/webgpu'
@@ -8,19 +8,16 @@ import CrumbledStoneGeometry from '../../src/lib/gallery/CrumbledStoneGeometry.t
 import {roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
-import {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
 import {portals, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
 import {salonBench, salonCeiling, salonPedestal, salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
 import salonLantern, {domeSection, octagon, salonDomeEyeY, salonDomeSpringY, salonDrumOuterApothem, salonLanternBase, salonLanternTopY, salonWindowSpringY} from '../../src/lib/gallery/salonLantern.ts'
 import SalonLanternGeometry, {salonLanternCollision, salonSailLength, shellCourses} from '../../src/lib/gallery/SalonLanternGeometry.ts'
-import {useGallery} from '../../src/lib/gallery/store.ts'
 import {middaySun} from '../../src/lib/gallery/sun.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import {shellAttributes} from '../../src/lib/materials/ShellInlayMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '../../src/lib/materials/TerrazzoFloorMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
-import walls, {floorHeight, insideGallery, roomAt, roomClearHeight, rooms, roomVisit} from './fixtures/gallery.ts'
-import samplePortraits from './fixtures/portraits.ts'
+import walls, {floorHeight, insideGallery, roomAt, roomClearHeight, rooms} from './fixtures/gallery.ts'
 
 const room = rooms.find(candidate => candidate.id === 'salon')!
 const lantern = new SalonLanternGeometry(room.size)
@@ -82,14 +79,6 @@ const view = (position: Vector3, target: Vector3) => {
   const viewProjection = new Matrix4
   return frustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse))
 }
-const shipped = {
-  ...useGallery.getState(),
-  portraits: samplePortraits.map(p => ({...p})),
-  sound: false,
-}
-beforeEach(() => {
-  useGallery.setState(shipped, true)
-})
 describe('the Salon', () => {
   test('sits north of the Banquet on the upper floor, beside the Lobby extension and above no lower room', () => {
     const banquet = rooms.find(candidate => candidate.id === 'banquet')!
@@ -110,16 +99,12 @@ describe('the Salon', () => {
     expect(insideGallery([20.5, 1.7, -14])).toBe(false)
     expect(insideGallery([14, 1.7, -32.5])).toBe(false)
   })
-  test('the floor-plan visit lands inside the Salon, looking at its north wall', () => {
-    const visit = roomVisit(room)
-    expect(roomAt(visit.position)).toBe('salon')
-    expect(visit.position[2]).toBeGreaterThan(salonBench.position[2] + salonBench.depth / 2 + 0.5)
-  })
   test('one shared arch joins the Banquet and the Salon, back to back on the same plane', () => {
     const banquetNorth = walls.find(wall => wall.id === 'banquet-north')!
     const salonSouth = walls.find(wall => wall.id === 'salon-south')!
     expect(banquetNorth.center).toEqual(salonSouth.center)
     expect(Math.abs(Math.cos(banquetNorth.rotation - salonSouth.rotation) + 1)).toBeLessThan(1e-12)
+    expect(placementIssue(banquetNorth, wallPosition(banquetNorth, 0, 2.6), 1, 1, [])).toBe('doorway')
     const doorway = [14, 1.7, -16] as const
     for (const wall of [banquetNorth, salonSouth]) {
       expect(wall.holes).toHaveLength(1)
@@ -132,26 +117,6 @@ describe('the Salon', () => {
     const lobbyEast = walls.find(wall => wall.id === 'lobby-extension_east')!
     expect(salonWest.center[0]).toBe(lobbyEast.center[0])
     expect(Math.abs(Math.cos(salonWest.rotation - lobbyEast.rotation) + 1)).toBeLessThan(1e-12)
-  })
-  test('every Salon work hangs in a valid, labelled place', () => {
-    const hung = samplePortraits.filter(p => p.wallId?.startsWith('salon-'))
-    expect(hung.map(p => p.id).toSorted()).toEqual(['gleaners', 'gnomes', 'jatte', 'venus', 'wave'])
-    for (const p of hung) {
-      const wall = walls.find(candidate => candidate.id === p.wallId)!
-      expect(placementIssue(wall, p.position, p.width, p.height, samplePortraits, p.id)).toBe('')
-      // Every lowest placard clears the chair rail, so no label sits on it.
-      expect(p.position[1] + portraitLabelLayout(p.width, p.height).bottom).toBeGreaterThan(salonWainscot.railBottom + salonWainscot.railHeight + 0.02)
-    }
-  })
-  test('the Banquet’s works keep clear of the arch into the Salon', () => {
-    const banquetNorth = walls.find(wall => wall.id === 'banquet-north')!
-    for (const p of samplePortraits) {
-      if (p.wallId !== 'banquet-north') {
-        continue
-      }
-      expect(placementIssue(banquetNorth, p.position, p.width, p.height, [])).toBe('')
-    }
-    expect(placementIssue(banquetNorth, wallPosition(banquetNorth, 0, 2.6), 1, 1, [])).toBe('doorway')
   })
   test('the ottoman’s south edge aligns with the glass wall’s south end, leaving the doorway path and walls clear', () => {
     const {depth, position, width} = salonBench

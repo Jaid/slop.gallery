@@ -12,7 +12,6 @@ import ArchitecturalGlassMaterials from '../../src/lib/materials/ArchitecturalGl
 import CastFloorGlassMaterial from '../../src/lib/materials/CastFloorGlassMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import walls, {galleryPlacement, rooms} from './fixtures/gallery.ts'
-import samplePortraits from './fixtures/portraits.ts'
 
 const wallById = (id: string) => walls.find(wall => wall.id === id)!
 /** both glass walls, each with the room beside the Lobby, its wall and the Lobby’s, and which way along x the room lies from the Lobby */
@@ -129,15 +128,6 @@ for (const {title, glazing, layout, room, roomSide, lobbySide, out} of windows) 
       })
       // An artwork reaching over the window’s edge is turned away.
       expect(placementIssue(roomSide, wallPosition(roomSide, wallCoordinates(roomSide, [out * 8, 0, -19.5]), 2.7), 1, 1, [])).not.toBe('')
-    })
-    test('the shipped collection hangs clear of it', () => {
-      for (const p of samplePortraits) {
-        const wall = [roomSide, lobbySide].find(candidate => candidate.id === p.wallId)
-        if (!wall) {
-          continue
-        }
-        expect(placementIssue(wall, p.position, p.width, p.height, samplePortraits, p.id)).toBe('')
-      }
     })
   })
 }

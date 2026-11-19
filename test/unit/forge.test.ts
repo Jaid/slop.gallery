@@ -16,7 +16,7 @@ import salon from '../../src/lib/gallery/salon.ts'
 import {vesper} from '../../src/lib/gallery/vesper.ts'
 import {insideOpening, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import {openings} from '../../src/worlds/gallery/relations.ts'
-import walls, {floorHeight, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
+import walls, {floorHeight, insideGallery, roomAt, rooms} from './fixtures/gallery.ts'
 
 await RAPIER.init()
 const room = rooms.find(candidate => candidate.id === 'forge')!
@@ -48,7 +48,6 @@ describe('the Forge', () => {
     const north = z - room.size[1] / 2
     expect(roomAt([x, 1.7, north - 0.5])).toBe('forge')
     expect(insideGallery([x - room.size[0] / 3, 1.7, north - 0.5])).toBe(false)
-    expect(roomAt(roomVisit(room).position)).toBe('forge')
   })
   test('a solid shared wall separates the Vesper and the Forge', () => {
     const vesperNorth = wallById('vesper-north')

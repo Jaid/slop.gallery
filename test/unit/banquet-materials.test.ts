@@ -6,7 +6,6 @@ import BanquetMaterials from '../../src/lib/materials/BanquetMaterials.ts'
 import {BoiserieTrimMaterial, BoiserieWallMaterial} from '../../src/lib/materials/boiserie/index.ts'
 import {calacatta, CheckeredMarbleFloorMaterial, portoro} from '../../src/lib/materials/marble/index.ts'
 import walls, {rooms} from './fixtures/gallery.ts'
-import samplePortraits from './fixtures/portraits.ts'
 import lightness from './helpers/lightness.ts'
 
 const banquet = rooms.find(room => room.id === 'banquet')!
@@ -99,11 +98,11 @@ describe('The Banquet’s boiserie layout', () => {
     expect(sliver.every(([left, right]) => right - left >= 0.6)).toBe(true)
     expect(sliver.some(([, right]) => right > 1)).toBe(false)
   })
-  test('the placards of the shipped artworks clear the chair rail', () => {
-    const hung = samplePortraits.filter(portrait => portrait.wallId?.startsWith('banquet-'))
-    expect(hung.length).toBeGreaterThan(0)
-    for (const portrait of hung) {
-      const bottom = portrait.position[1] + portraitLabelLayout(portrait.width, portrait.height).bottom
+  test('the placards in the Banquet’s slots clear the chair rail', () => {
+    const slots = banquet.slots()
+    expect(slots.length).toBeGreaterThan(0)
+    for (const slot of slots) {
+      const bottom = slot.position[1] + portraitLabelLayout(slot.width, slot.height, slot.labelAbove).bottom
       expect(bottom).toBeGreaterThanOrEqual(banquetBoiserie.rail[1])
     }
   })

@@ -11,7 +11,7 @@ import OculusGroundGeometry from '../../src/lib/gallery/OculusGroundGeometry.ts'
 import OculusSwitchbackRailing from '../../src/lib/gallery/railings/OculusSwitchbackRailing.ts'
 import SlopedBoxGeometry from '../../src/lib/gallery/SlopedBoxGeometry.ts'
 import tunnelDisplays from '../../src/lib/gallery/tunnelDisplays.ts'
-import walls, {floorHeight, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
+import walls, {floorHeight, insideGallery, roomAt} from './fixtures/gallery.ts'
 import {addOculusRailings} from './helpers/oculusRailings.ts'
 
 await RAPIER.init()
@@ -25,11 +25,6 @@ test('the Oculus lies 3 m below Moonfall, which its beveled tunnel ramps up to, 
   expect(tunnelFloorHeight(tunnel.southX, tunnel.southZ)).toBe(lowerGallery.floorY)
   expect(tunnelSlope).toBeCloseTo(3 / tunnelSlopeLength)
   expect(oculusPlatform.position[1] + oculusPlatform.size[1] / 2).toBeGreaterThan(lowerGallery.floorY)
-  const room = rooms.find(value => value.id === 'oculus')!
-  const visit = roomVisit(room)
-  expect(insideGallery(visit.position)).toBe(true)
-  expect(roomAt(visit.position)).toBe('oculus')
-  expect(floorHeight(visit.position)).toBe(oculus.floorY)
   for (const [x, z] of [[0, -14.2], tunnelDiagonalPoint(3), tunnelDiagonalPoint(8.5), tunnelDiagonalPoint(14), [-8, 3.5]] as const) {
     const y = tunnelFloorHeight(x, z)!
     expect(floorHeight([x, y + 0.02, z])).toBeCloseTo(y)

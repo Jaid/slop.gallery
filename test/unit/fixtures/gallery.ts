@@ -22,21 +22,4 @@ export const roomAt = (position: Vec3) => slopGallery.roomAt(position)?.id
 /** Height from a room’s floor to the highest point of its ceiling: the crown of the Lobby’s vault or the Antechamber’s dome, the ridge of the Vesper’s lantern, the flat ceiling everywhere else. */
 export const roomClearHeight = (room: PlacedRoom) => room.air[0].max.y - room.floorY
 
-/** Where a visitor stands to look around a room: 1.7 m over its floor, 2.4 m in front of its south wall facing north, in the middle of the Corridor and just north of the Antechamber’s middle, facing south. */
-export function roomVisit(room: Hall): {
-  position: Vec3
-  rotation: [number, number, number, number]
-} {
-  if (room.id === 'corridor') {
-    return {
-      position: [room.center[0], room.floorY + 1.7, room.center[1]],
-      rotation: [0, 0, 0, 1],
-    }
-  }
-  return {
-    position: [room.center[0], room.floorY + 1.7, room.center[1] + (room.id === 'antechamber' ? -1.1 : room.size[1] / 2 - 2.4)],
-    rotation: room.id === 'antechamber' ? [0, 1, 0, 0] : [0, 0, 0, 1],
-  }
-}
-
 export default walls

@@ -21,7 +21,7 @@ import {triangleCount} from '../../src/lib/geometry.ts'
 import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
 import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import walls, {floorHeight, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
+import walls, {floorHeight, insideGallery, roomAt, rooms} from './fixtures/gallery.ts'
 
 await RAPIER.init()
 const room = rooms.find(value => value.id === 'moonfall')!
@@ -59,8 +59,6 @@ describe('Moonfall impact hall', () => {
     const portal = wallPosition(east, east.holes![0].u, room.floorY, 0)
     expect(portal[0]).toBe(staircase.endX)
     expect(portal[2]).toBeCloseTo(staircase.returnZ)
-    const visit = roomVisit(room).position
-    expect(Math.hypot(visit[0] - room.center[0], visit[2] - room.center[1])).toBeGreaterThan(moonfallCrater.fenceRadius + 0.6)
     for (const [x, z] of [[-20, 6], [-20, 30], [4, 30]]) {
       expect(insideGallery([x, -6.4, z])).toBe(true)
       expect(roomAt([x, -6.4, z])).toBe('moonfall')

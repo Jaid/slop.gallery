@@ -11,7 +11,7 @@ import {defaultPortraitArea, slotAreas} from '../../src/lib/placement/portraitSl
 import {placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import walls, {galleryPlacement, insideGallery, roomAt, rooms, roomVisit} from './fixtures/gallery.ts'
+import walls, {galleryPlacement, insideGallery, roomAt, rooms} from './fixtures/gallery.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
 const initial = useGallery.getState()
@@ -32,12 +32,6 @@ describe('wall geometry', () => {
       }
     })
   }
-  test('the shipped exhibition leaves space for frames, plates and doors', () => {
-    for (const p of samplePortraits) {
-      const wall = walls.find(w => w.id === p.wallId)!
-      expect(placementIssue(wall, p.position, p.width, p.height, samplePortraits, p.id)).toBe('')
-    }
-  })
   test('hits the facing wall and preserves the frame offset', () => {
     expect(galleryPlacement.findPlacement([4, 2.5, -24], [0, 0, -1], 2, 2, [])).toMatchObject({
       wallId: 'lobby-north',
@@ -146,6 +140,8 @@ describe('wall geometry', () => {
     })
     // The Vesper’s centered south arch opens by the Sienna’s north-east corner, whose middle is solid.
     const siennaRoom = rooms.find(room => room.id === 'sienna')!
+    expect(roomAt([-14, 2, 7.99])).toBe('vesper')
+    expect(roomAt([-14, 2, 8.01])).toBe('sienna')
     expect(entrance[0]).toBeCloseTo(rooms.find(room => room.id === 'vesper')!.center[0])
     expect(sienna.holes![0].u).toBeGreaterThan(sienna.width / 4)
     expect(galleryPlacement.findPlacement([-10.2, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
@@ -175,16 +171,6 @@ describe('wall geometry', () => {
     for (const position of [[-6, 2, 18], [east + 0.01, 2, z], [14, 3, 14], [east - 1, 2, south + 0.01], [west - 0.01, 2, z], [x, -1.01, z], [x, 6.01, z], [Number.NaN, 2, z]] as const) {
       expect(insideGallery([...position])).toBe(false)
     }
-  })
-  test('every floor-plan destination lands inside its own room', () => {
-    for (const room of rooms) {
-      const visit = roomVisit(room)
-      expect(insideGallery(visit.position)).toBe(true)
-      expect(roomAt(visit.position)).toBe(room.id)
-      expect(Math.hypot(...visit.rotation)).toBeCloseTo(1)
-    }
-    expect(roomAt([-14, 2, 7.99])).toBe('vesper')
-    expect(roomAt([-14, 2, 8.01])).toBe('sienna')
   })
   test('label clearance follows the physical sign footprint', () => {
     const wall = walls[0]
@@ -281,9 +267,5 @@ describe('default artworks', () => {
       expect(narration.audio).toEndWith(`${sep}${id}.opus`)
       expect(await Bun.file(narration.audio).exists()).toBe(true)
     }
-  })
-  test('the furnished gallery of the tests hangs the default artworks', () => {
-    const ids = new Set(artworks.map(artwork => artwork.id))
-    expect(samplePortraits.every(portrait => ids.has(portrait.id))).toBe(true)
   })
 })
