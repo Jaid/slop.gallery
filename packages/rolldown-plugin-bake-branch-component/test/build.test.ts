@@ -14,8 +14,16 @@ for (const backend of ['Rolldown', 'Vite'] as const) {
     const root = await fs.mkdtemp(resolve(tmpdir(), 'bake-branch-component-'))
     try {
       const input = resolve(root, 'main.tsx')
+      await fs.writeFile(resolve(root, 'component.jsx'), `
+        /** @jsxRuntime classic */
+        /** @jsx element */
+        import Branch from 'branch-component'
+        const element = type => ({type})
+        export const component = (ready, Thing) => <Branch if={ready}><Thing /></Branch>
+      `)
       await fs.writeFile(input, `
         import Branch from 'branch-component'
+        export {component} from './component.jsx'
         export const choose = (ready: boolean) => <Branch if={ready}>visible</Branch>
       `)
       const plugins = [bakeBranchComponent()]
@@ -59,7 +67,13 @@ for (const backend of ['Rolldown', 'Vite'] as const) {
       expect(chunk.map?.sources.some(source => source?.endsWith('main.tsx'))).toBe(true)
       const outputFile = resolve(root, 'bundle.mjs')
       await fs.writeFile(outputFile, chunk.code)
-      const module = await import(pathToFileURL(outputFile).href) as {choose: (ready: boolean) => string | null}
+      const module = await import(pathToFileURL(outputFile).href) as {
+        choose: (ready: boolean) => string | null
+        component: (ready: boolean, type: () => null) => {type: () => null} | null
+      }
+      const Thing = () => null
+      expect(module.component(true, Thing)?.type).toBe(Thing)
+      expect(module.component(false, Thing)).toBeNull()
       expect(module.choose(true)).toBe('visible')
       expect(module.choose(false)).toBeNull()
     } finally {
