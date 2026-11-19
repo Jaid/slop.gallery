@@ -22,7 +22,7 @@ import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
 import {passageRibs, timberRibs, timberRibSpacing} from '../../src/lib/gallery/passages/timberLayout.ts'
 import TransitionGeometry from '../../src/lib/gallery/passages/TransitionGeometry.ts'
 import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
-import sienna, {siennaCeilingBeam, siennaCeilingBeamY, siennaVestibule, siennaVestibuleCeiling} from '../../src/lib/gallery/sienna.ts'
+import sienna, {siennaCeilingBeam, siennaCeilingBeamY, siennaVesperDoor, siennaVestibule, siennaVestibuleCeiling} from '../../src/lib/gallery/sienna.ts'
 import StairRunner from '../../src/lib/gallery/stairs/StairRunner.ts'
 import {placementIssue, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -32,7 +32,7 @@ import samplePortraits from './fixtures/portraits.ts'
 await RAPIER.init()
 const routePassages = [bastionApproach, corridorPassage, corridorLanding] as const
 const insideRoute = (position: Vec3) => insideLodgeWindow(position) || insideBastion(position) || insideCorridor(position)
-const routeWalls = walls.filter(wall => ['corridor', 'lodge', 'sienna'].includes(wall.room) || wall.id.startsWith('bastion-approach_') || wall.id === 'vesper-west')
+const routeWalls = walls.filter(wall => ['corridor', 'lodge', 'sienna'].includes(wall.room) || wall.id.startsWith('bastion-approach_') || wall.id === 'vesper-west' || wall.id === 'vesper-south')
 const architecture = routeWalls.map(wall => ({
   wall,
   geometry: createArchitectureGeometry(wall),
@@ -100,8 +100,11 @@ function createWorld(fps: number) {
   for (const saddle of saddles) {
     world.createCollider(RAPIER.ColliderDesc.convexHull(saddle.getAttribute('position').array as Float32Array)!)
   }
-  box([-14, -0.15, 14], [12, 0.3, 12])
-  box([-14, 5.9, 14], [12, 0.3, 12])
+  for (const id of ['sienna', 'vesper'] as const) {
+    const {center: [x, z], size} = slopGallery.room(id)
+    box([x, -0.15, z], [size[0], 0.3, size[1]])
+  }
+  box([sienna.center[0], 5.9, sienna.center[1]], [sienna.size[0], 0.3, sienna.size[1]])
   box([siennaVestibule.center[0], -0.15, siennaVestibule.center[1]], [siennaVestibule.size[0], 0.3, siennaVestibule.size[1]])
   box([siennaVestibule.center[0], siennaVestibuleCeiling.y, siennaVestibule.center[1]], [siennaVestibule.size[0], siennaVestibuleCeiling.thickness, siennaVestibule.size[1]])
   // The Lodge’s furniture and hearth, as the room mounts them.
@@ -407,8 +410,8 @@ describe('Lodge and Corridor route', () => {
     expect(wall.center[1] + hole.bottom!).toBeCloseTo(bastionDoorway.y - 0.02)
     expect(wallPosition(wall, hole.u, bastionDoorway.y, 0)).toEqual([expect.closeTo(bastionDoorway.x), bastionDoorway.y, expect.closeTo(bastionDoorway.z)])
     const siennaWest = walls.find(candidate => candidate.id === 'sienna-west')!
-    expect(wallPosition(siennaWest, siennaWest.holes![0].u, 0, 0)[2]).toBeCloseTo(lodge.siennaZ)
-    expect(siennaWest.holes![0].u + lodge.timberWidth / 2 + 0.17).toBeLessThan(siennaWest.width / 2)
+    expect(wallPosition(siennaWest, siennaWest.holes![0].u, 0, 0)[2]).toBeCloseTo(siennaVestibule.center[1])
+    expect(siennaWest.holes![0].u).toBeLessThan(-siennaWest.width / 4)
     // The Corridor leaves the Lodge through the middle of the bay’s back wall; only the window looks out of the west wall into it.
     const north = walls.find(candidate => candidate.id === 'lodge-north')!
     const [doorwayX, doorwayZ] = corridorPassage.path[0]
@@ -452,10 +455,10 @@ describe('Lodge and Corridor route', () => {
         expect(ribs[i][0] - ribs[i - 1][1]).toBeLessThanOrEqual(timberRibSpacing + 1e-9)
       }
     }
-    // The Sienna owns the 4.8 × 4.8 m vestibule, flush with its north wall, whose 4.3 m ceiling clears the 3.4 m arches’ casings, the cornice and the joists.
-    expect(siennaVestibule.size).toEqual([expect.closeTo(4.8), expect.closeTo(4.8)])
+    // The Sienna owns the 4 × 4.8 m vestibule, flush with its south wall, whose 4.3 m ceiling clears the 3.4 m arches’ casings, the cornice and the joists.
+    expect(siennaVestibule.size).toEqual([4, expect.closeTo(4.8)])
     expect(siennaVestibule.height).toBe(4.3)
-    expect(siennaVestibule.center[1] - siennaVestibule.size[1] / 2).toBeCloseTo(sienna.center[1] - sienna.size[1] / 2)
+    expect(siennaVestibule.center[1] + siennaVestibule.size[1] / 2).toBeCloseTo(sienna.center[1] + sienna.size[1] / 2)
     expect(slopGallery.roomAt([siennaVestibule.center[0], 1.6, siennaVestibule.center[1]])?.id).toBe('sienna')
     expect(insideGallery([siennaVestibule.center[0], siennaVestibule.height + 0.5, siennaVestibule.center[1]])).toBe(false)
     const casingTop = corridorLanding.height + 0.17
@@ -470,8 +473,10 @@ describe('Lodge and Corridor route', () => {
       for (const sprint of [false, true]) {
         test(`real player traverses the entire loop at ${fps} Hz, returning ${returning}, sprint ${sprint}`, () => {
           const world = createWorld(fps)
-          // From the flat planks beyond the Bastion’s raised timber saddle into the Lodge, north through its bay, round it along the Corridor, up the diagonal flight and through the landing and the Sienna’s vestibule.
-          const path = [[bastionApproach.path.at(-1)![0] + 0.4, lodge.tunnelZ], [lodge.center[0], lodge.tunnelZ], ...corridorPassage.path, ...corridorLanding.path.toReversed(), [-18.5, lodge.siennaZ]]
+          // From the flat planks beyond the Bastion’s raised timber saddle into the Lodge, north through its bay, round it along the Corridor, up the diagonal flight and through the landing and across Sienna to Vesper.
+          const doorX = sienna.center[0] + siennaVesperDoor.u
+          const northZ = sienna.center[1] - sienna.size[1] / 2
+          const path = [[bastionApproach.path.at(-1)![0] + 0.4, lodge.tunnelZ], [lodge.center[0], lodge.tunnelZ], ...corridorPassage.path, ...corridorLanding.path.toReversed(), [sienna.center[0] - sienna.size[0] / 2 + 1.5, siennaVestibule.center[1]], [doorX, northZ + 1.5], [doorX, northZ - 1.5]]
           if (returning) {
             path.reverse()
           }

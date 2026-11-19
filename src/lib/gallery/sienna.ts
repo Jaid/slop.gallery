@@ -6,7 +6,7 @@ import {salonCeiling} from './salon.ts'
 
 /** The Sienna’s square floor plan, west of the Lobby on the ground floor, where the layout puts it. */
 const sienna = {
-  center: [-14, 14],
+  center: [-14.8, 14],
   size: [12, 12],
   floorY: 0,
   height: 5.8,
@@ -15,16 +15,22 @@ const sienna = {
   height: number
 }
 const westX = sienna.center[0] - sienna.size[0] / 2
-const northZ = sienna.center[1] - sienna.size[1] / 2
-/** the vestibule’s width and depth: centered on the arch and flush with the Sienna’s north wall */
-const vestibuleSize = (lodge.siennaZ - northZ) * 2
-/**
- * The vestibule west of the Sienna’s arch, still the Sienna’s: a square anteroom at the Sienna’s floor, flush with the Sienna’s north wall, with a second arch in its west wall, where the Corridor arrives up its stair flight.
- * Its ceiling is as low as the arches’ casings and the cornice above them allow.
- */
+const southZ = sienna.center[1] + sienna.size[1] / 2
+/** Masonry between the nearest jamb and each corner, clear of the arch casing and the return wall’s trim. */
+const cornerPier = 0.4
+const doorWidth = 2.8
+/** The arch at the east end of the north wall, in Sienna wall coordinates. Vesper cuts the same arch in its opposite face. */
+export const siennaVesperDoor = {
+  u: sienna.size[0] / 2 - cornerPier - doorWidth / 2,
+  width: doorWidth,
+  height: 3.8,
+  profile: 'arch',
+} as const
+/** One passage width of level floor between the arches; a pier on either side. Its south wall continues Sienna’s. */
+const vestibuleDepth = lodge.timberWidth + 2 * cornerPier
 export const siennaVestibule = {
-  center: [westX - vestibuleSize / 2, lodge.siennaZ],
-  size: [vestibuleSize, vestibuleSize],
+  center: [westX - lodge.timberWidth / 2, southZ - vestibuleDepth / 2],
+  size: [lodge.timberWidth, vestibuleDepth],
   height: 4.3,
 } as const satisfies FloorRectangle & {
   height: number

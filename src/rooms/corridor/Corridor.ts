@@ -10,6 +10,7 @@ import chunkBoxes from '../lib/chunkBoxes.ts'
 import footprint from '../lib/footprint.ts'
 import lamps from './lamps.ts'
 import map from './map.svg?raw'
+import upperMap from './upperMap.svg?raw'
 import walls from './walls.ts'
 
 const origin = [corridor.center[0], corridor.floorY, corridor.center[1]] as const
@@ -48,6 +49,11 @@ export default class Corridor extends Room {
       volumetricSun: 0,
       walls,
       map,
+      // Show the landing with Sienna. The flight fades between the two maps; switch the player’s marker halfway up.
+      upperMap: {
+        from: (corridorLanding.floorY - corridor.floorY) / 2,
+        map: upperMap,
+      },
     })
   }
 

@@ -12,6 +12,7 @@ import createGrabController from '../../src/components/Scene/interaction/grabCon
 import {portraitFrame} from '../../src/frames/index.ts'
 import {markPortraitInteracted, useGallery} from '../../src/lib/gallery.ts'
 import {climbApex} from '../../src/lib/gallery/climb.ts'
+import {corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import {isLowerPosition, minimapPortrait, minimapRooms, minimapViewBox, portraitMarkerMinimumThickness} from '../../src/lib/gallery/minimap.ts'
 import portraitObjects from '../../src/lib/gallery/portraitObjects.ts'
@@ -123,6 +124,13 @@ test('hanging portraits belong to their wall’s floor even when rooms overlap v
     ...portrait,
     wallId: 'lobby-north',
   }).lower).toBe(false)
+})
+test('the Corridor’s landing and the upper half of its stairs share Sienna’s map', () => {
+  expect(minimapRooms.filter(room => room.id === 'corridor').map(room => room.lower)).toEqual([true, false])
+  for (const {position: [x, , z], top} of corridorStairs.blocks) {
+    expect(isLowerPosition('corridor', eye([x, top, z]))).toBe(top < -2.5)
+  }
+  expect(isLowerPosition('corridor', [-26.1, 1.6, 17.4])).toBe(false)
 })
 test('the Bastion shows on the lower floor up to the apex of its western hairpin and its climb to the Forge from there on the upper floor', () => {
   const drawings = minimapRooms.filter(room => room.id === 'bastion')

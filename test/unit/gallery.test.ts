@@ -127,7 +127,7 @@ describe('wall geometry', () => {
       inReach: false,
     })
   })
-  test('the Sienna connects through matching Vesper arches in both directions', () => {
+  test('the Sienna connects through matching north-east arches in both directions', () => {
     const vesper = walls.find(wall => wall.id === 'vesper-south')!
     const sienna = walls.find(wall => wall.id === 'sienna-north')!
     const entrance = wallPosition(vesper, vesper.holes![0].u, 2, 0)
@@ -135,19 +135,20 @@ describe('wall geometry', () => {
     for (const [i, value] of entrance.entries()) {
       expect(value).toBeCloseTo(exit[i])
     }
-    expect(galleryPlacement.findPlacement([-14, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
+    expect(sienna.holes![0].u).toBeGreaterThan(sienna.width / 4)
+    expect(galleryPlacement.findPlacement([entrance[0], 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
       wallId: 'sienna-south',
       inReach: false,
     })
-    expect(galleryPlacement.findPlacement([-14, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([exit[0], 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
       wallId: 'vesper-north',
       inReach: false,
     })
-    expect(galleryPlacement.findPlacement([-10.2, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([-14, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
       wallId: 'vesper-south',
       inReach: true,
     })
-    expect(galleryPlacement.findPlacement([-10.2, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([-14, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
       wallId: 'sienna-north',
       inReach: true,
     })
@@ -164,7 +165,7 @@ describe('wall geometry', () => {
     for (const position of [[-14, 2, 14], [-14, 2, 19.8], [0, 2, 14], [-20, 0, 20]] as const) {
       expect(insideGallery([...position])).toBe(true)
     }
-    for (const position of [[-6, 2, 18], [14, 3, 14], [-14, 2, 20.01], [-20.01, 2, 14], [-14, -1.01, 14], [-14, 6.01, 14], [Number.NaN, 2, 14]] as const) {
+    for (const position of [[-6, 2, 18], [14, 3, 14], [-14, 2, 20.01], [-20.81, 2, 14], [-14, -1.01, 14], [-14, 6.01, 14], [Number.NaN, 2, 14]] as const) {
       expect(insideGallery([...position])).toBe(false)
     }
   })

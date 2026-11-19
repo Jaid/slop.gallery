@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-0.62 25.06 9.52 10.09" fill="#fff">
+  <defs>
+    <linearGradient id="corridor-upper-climb" gradientUnits="userSpaceOnUse" x1="0.59" y1="26.27" x2="7.19" y2="32.87">
+      <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#corridor-upper-climb)" d="M -0.62 27.47 L 1.79 25.06 L 8.48 31.75 H 8.9 V 35.15 H 7.07 Z"/>
+</svg>

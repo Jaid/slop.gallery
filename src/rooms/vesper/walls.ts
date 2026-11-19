@@ -2,6 +2,7 @@ import type {RoomWall} from '../base/Room.ts'
 
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import lobby from '#src/lib/gallery/lobby.ts'
+import sienna, {siennaVesperDoor} from '#src/lib/gallery/sienna.ts'
 import {vesper} from '#src/lib/gallery/vesper.ts'
 import {wallCoordinates} from '#src/lib/placement/wallGeometry.ts'
 
@@ -21,10 +22,13 @@ const east = planWall(size, 'east', height)
 export default {
   north: planWall(size, 'north', height),
   west: planWall(size, 'west', height),
-  // The arch through to the Sienna, in the middle.
+  // The arch through to the Sienna, near the east end.
   south: planWall(size, 'south', height, {
     holes: {
-      sienna: doorway(0),
+      sienna: {
+        ...siennaVesperDoor,
+        u: originX - (sienna.center[0] + siennaVesperDoor.u),
+      },
     },
   }),
   // The arch through to the Lobby, cut where the Lobby’s west wall has it.

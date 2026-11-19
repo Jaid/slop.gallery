@@ -13,7 +13,7 @@ import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
 import TransitionGeometry from '../../src/lib/gallery/passages/TransitionGeometry.ts'
 import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
 import {CeilingProbe, LanternBody, PendantGeometry} from '../../src/lib/gallery/pendants/index.ts'
-import {corridorLightSpacing, passageLightDrop, passagePendantMounts, routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
+import {passageLightDrop, passagePendantMounts, routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
 import {canopyEmbed, canopyHeight, canopyRadius} from '../../src/lib/gallery/pendants/PendantGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 
@@ -77,7 +77,7 @@ const groups: Array<{
     label: 'timber corridor',
     body: lantern,
     lights: Array.from({length: 3}, () => corridorPassage.floorY + corridorPassage.height - passageLightDrop),
-    mounts: corridorHallLanterns(passagePendantMounts(corridorPassage, [corridor.shell, corridor.ribs], corridorLightSpacing, corridor.ribs)),
+    mounts: corridorHallLanterns,
   },
   {
     label: 'timber corridor landing',

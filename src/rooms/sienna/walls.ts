@@ -3,7 +3,7 @@ import type {PlanSide} from '../lib/walls.ts'
 
 import {corridorLanding} from '#src/lib/gallery/corridor.ts'
 import lodge from '#src/lib/gallery/lodge.ts'
-import sienna, {siennaVestibule} from '#src/lib/gallery/sienna.ts'
+import sienna, {siennaVesperDoor, siennaVestibule} from '#src/lib/gallery/sienna.ts'
 
 import {planWall} from '../lib/walls.ts'
 
@@ -14,7 +14,7 @@ const arch = {
   height: corridorLanding.height,
   profile: 'arch',
 } as const
-/** The vestibule’s walls, around its square floor plan west of the arch like the room’s around its own, placed at its middle. */
+/** The vestibule’s walls, around its floor plan west of the arch like the room’s around its own, placed at its middle. */
 const vestibuleWall = (side: PlanSide, wall: Partial<RoomWall> = {}): RoomWall => {
   const {center, ...planned} = planWall(siennaVestibule.size, side, siennaVestibule.height - 0.3, wall)
   return {
@@ -24,23 +24,18 @@ const vestibuleWall = (side: PlanSide, wall: Partial<RoomWall> = {}): RoomWall =
 }
 
 export default {
-  // The arch through to the Vesper, in the middle.
+  // The arch through to the Vesper, at the east end.
   north: planWall(sienna.size, 'north', height, {
     holes: {
-      vesper: {
-        u: 0,
-        width: 2.8,
-        height: 3.8,
-        profile: 'arch',
-      },
+      vesper: siennaVesperDoor,
     },
   }),
-  // The arch into the vestibule, by the north-west corner.
+  // The arch into the vestibule, by the south-west corner.
   west: planWall(sienna.size, 'west', height, {
     holes: {
       vestibule: {
         ...arch,
-        u: sienna.center[1] - lodge.siennaZ,
+        u: sienna.center[1] - siennaVestibule.center[1],
       },
     },
   }),
