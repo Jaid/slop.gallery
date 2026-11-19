@@ -6,8 +6,8 @@ import {cutFloorOpening} from './floorPolygons.ts'
 import lodge, {lodgeBay, lodgeWindowCutout} from './lodge.ts'
 import Passage from './passages/Passage.ts'
 import {passageRibs} from './passages/timberLayout.ts'
-import {passageLightDrop} from './pendants/mounts.ts'
-import sienna, {siennaVestibule} from './sienna.ts'
+import {corridorLightSpacing, passageLightCount, passageLightDrop} from './pendants/mounts.ts'
+import sienna, {siennaArchZ, siennaVestibule} from './sienna.ts'
 import StairFlight from './stairs/StairFlight.ts'
 import StairRunner from './stairs/StairRunner.ts'
 
@@ -33,9 +33,9 @@ const vestibuleX = siennaVestibule.center[0] - siennaVestibule.size[0] / 2
 /** how much of the landing’s passage is lined between the vestibule’s arch and its open elbow, a short reveal inside the arch */
 const landingReveal = 0.3
 /** where the landing turns from the diagonal east into the vestibule’s arch: its lined reveal and its open elbow short of the wall */
-const landingTurn: Point = [vestibuleX - landingReveal - elbow, lodge.siennaZ]
+const landingTurn: Point = [vestibuleX - landingReveal - elbow, siennaArchZ]
 /** where the hall ends, turning 45° onto the diagonal to the landing: as far north of the arch’s line as the landing’s turn lies east of the hall, as the diagonal gains as much east as south */
-const hallSouthZ = lodge.siennaZ - (landingTurn[0] - lodge.approachX)
+const hallSouthZ = siennaArchZ - (landingTurn[0] - lodge.approachX)
 /** a point `along` meters down the diagonal from another */
 const downDiagonal = ([x, z]: Point, along: number): Point => [x + along * Math.SQRT1_2, z + along * Math.SQRT1_2]
 /** the flight’s bottom and top, an open elbow down the diagonal from the hall’s end and an open elbow up it from the landing’s turn */
@@ -53,6 +53,8 @@ const corridor = {
  * From the doorway in the middle of the Lodge’s bay north, west along the bay’s back wall and diagonally along its north-west wall round to the long hall, which runs south past the Lodge’s window and turns 45° south-east onto the diagonal, where the stair flight up to the Sienna’s vestibule begins. Its walls keep the same distance from the Lodge’s all the way round.
  */
 export const corridorPassage = new Passage('corridor', 'corridor', [[doorwayX, backZ], [doorwayX, runZ], [diagonal - runZ, runZ], [lodge.approachX, hallNorthZ], [lodge.approachX, hallSouthZ], flightFoot], lodge.floorY, lodge.timberWidth, corridor.height, [lodgeWindowCutout])
+/** the span of the passage along the long hall */
+const hallSpan = 3
 /** The end lanterns hang from timber ribs at the same height as the middle lantern. */
 const hallLightY = corridor.floorY + corridor.height - passageLightDrop
 const ribLantern = (anchor: Vec3): PendantMount => ({
@@ -62,17 +64,22 @@ const ribLantern = (anchor: Vec3): PendantMount => ({
   light: [anchor[0], hallLightY, anchor[2]],
 })
 export const corridorNorthLantern = ribLantern([-33.747, -1.76, -40.601])
-export const corridorSouthLantern = ribLantern([-33.652, -1.76, 1.696])
-/** The hall lanterns, from the north rib to the foot of the flight. */
+/** the last rib down the long hall, flush with the open elbow onto the flight, as distances along the hall */
+const [southRibFront, southRibBack] = passageRibs(corridorPassage, hallSpan).at(-1)!
+/** At the foot of the flight, from the hall’s last rib, as high as the north one. */
+export const corridorSouthLantern = ribLantern([lodge.approachX, corridorNorthLantern.anchor[1], hallNorthZ + (southRibFront + southRibBack) / 2])
+/** the place of the hall’s middle lantern among the passage’s evenly spaced ones: the middle one of the hall’s odd count, after those of the spans before it */
+const hallMiddle = Array.from({length: hallSpan}, (_, span) => passageLightCount(corridorPassage, span, corridorLightSpacing)).reduce((sum, count) => sum + count, 0) + (passageLightCount(corridorPassage, hallSpan, corridorLightSpacing) - 1) / 2
+/** The hall lanterns, from the north rib over the middle of the hall to the foot of the flight. */
 export function corridorHallLanterns(spaced: ReadonlyArray<PendantMount>) {
-  return [corridorNorthLantern, spaced[5], corridorSouthLantern]
+  return [corridorNorthLantern, spaced[hallMiddle], corridorSouthLantern]
 }
 /**
  * The landing at the Sienna’s floor between the flight’s top and the arch of the Sienna’s vestibule: from the arch west, a short lined reveal, then an open elbow turning 45° north-west onto the diagonal, where the flight begins.
  */
-export const corridorLanding = new Passage('landing', 'corridor', [[vestibuleX, lodge.siennaZ], landingTurn, flightHead], sienna.floorY, lodge.timberWidth, corridor.height)
+export const corridorLanding = new Passage('landing', 'corridor', [[vestibuleX, siennaArchZ], landingTurn, flightHead], sienna.floorY, lodge.timberWidth, corridor.height)
 /** The lantern in the short reveal of the Sienna arch, fixed to the plank between two ribs 11 cm apart. */
-const landingAnchor: Vec3 = [-24.934, corridorLanding.floorY + corridorLanding.height, 10.346]
+const landingAnchor: Vec3 = [-24.934, corridorLanding.floorY + corridorLanding.height, siennaArchZ - 0.054]
 export const corridorLandingLantern: PendantMount = {
   anchor: landingAnchor,
   normal: [0, -1, 0],

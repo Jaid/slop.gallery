@@ -135,19 +135,23 @@ describe('wall geometry', () => {
     for (const [i, value] of entrance.entries()) {
       expect(value).toBeCloseTo(exit[i])
     }
-    expect(galleryPlacement.findPlacement([-14, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
+    // By the north-east corner of the Sienna, through the arch to the far wall of either room.
+    expect(entrance[0]).toBeGreaterThan(-10.5)
+    expect(entrance[0]).toBeLessThan(-9.5)
+    expect(galleryPlacement.findPlacement([-10, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
       wallId: 'sienna-south',
       inReach: false,
     })
-    expect(galleryPlacement.findPlacement([-14, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([-10, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
       wallId: 'vesper-north',
       inReach: false,
     })
-    expect(galleryPlacement.findPlacement([-10.2, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
+    // Their middles are solid now.
+    expect(galleryPlacement.findPlacement([-14, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
       wallId: 'vesper-south',
       inReach: true,
     })
-    expect(galleryPlacement.findPlacement([-10.2, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([-14, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
       wallId: 'sienna-north',
       inReach: true,
     })

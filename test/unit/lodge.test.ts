@@ -22,7 +22,7 @@ import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
 import {passageRibs, timberRibs, timberRibSpacing} from '../../src/lib/gallery/passages/timberLayout.ts'
 import TransitionGeometry from '../../src/lib/gallery/passages/TransitionGeometry.ts'
 import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
-import sienna, {siennaCeilingBeam, siennaCeilingBeamY, siennaVestibule, siennaVestibuleCeiling} from '../../src/lib/gallery/sienna.ts'
+import sienna, {siennaArchZ, siennaCeilingBeam, siennaCeilingBeamY, siennaVestibule, siennaVestibuleCeiling} from '../../src/lib/gallery/sienna.ts'
 import StairRunner from '../../src/lib/gallery/stairs/StairRunner.ts'
 import {placementIssue, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -407,8 +407,14 @@ describe('Lodge and Corridor route', () => {
     expect(wall.center[1] + hole.bottom!).toBeCloseTo(bastionDoorway.y - 0.02)
     expect(wallPosition(wall, hole.u, bastionDoorway.y, 0)).toEqual([expect.closeTo(bastionDoorway.x), bastionDoorway.y, expect.closeTo(bastionDoorway.z)])
     const siennaWest = walls.find(candidate => candidate.id === 'sienna-west')!
-    expect(wallPosition(siennaWest, siennaWest.holes![0].u, 0, 0)[2]).toBeCloseTo(lodge.siennaZ)
-    expect(siennaWest.holes![0].u + lodge.timberWidth / 2 + 0.17).toBeLessThan(siennaWest.width / 2)
+    // The arch into the vestibule by the Sienna’s south-west corner, its casing clear of the south wall, and the vestibule’s two arches in line.
+    expect(wallPosition(siennaWest, siennaWest.holes![0].u, 0, 0)[2]).toBeCloseTo(siennaArchZ)
+    expect(wallPosition(siennaWest, siennaWest.holes![0].u, 0, 0)[2]).toBeGreaterThan(sienna.center[1])
+    expect(Math.abs(siennaWest.holes![0].u) + lodge.timberWidth / 2 + 0.17).toBeLessThan(siennaWest.width / 2)
+    for (const id of ['sienna-vestibule_east', 'sienna-vestibule_west']) {
+      const vestibuleWall = walls.find(candidate => candidate.id === id)!
+      expect(wallPosition(vestibuleWall, vestibuleWall.holes![0].u, 0, 0)[2]).toBeCloseTo(siennaArchZ)
+    }
     // The Corridor leaves the Lodge through the middle of the bay’s back wall; only the window looks out of the west wall into it.
     const north = walls.find(candidate => candidate.id === 'lodge-north')!
     const [doorwayX, doorwayZ] = corridorPassage.path[0]
@@ -452,10 +458,11 @@ describe('Lodge and Corridor route', () => {
         expect(ribs[i][0] - ribs[i - 1][1]).toBeLessThanOrEqual(timberRibSpacing + 1e-9)
       }
     }
-    // The Sienna owns the 4.8 × 4.8 m vestibule, flush with its north wall, whose 4.3 m ceiling clears the 3.4 m arches’ casings, the cornice and the joists.
+    // The Sienna owns the 4.8 × 4.8 m vestibule by its south-west corner, short of its south wall, whose 4.3 m ceiling clears the 3.4 m arches’ casings, the cornice and the joists.
     expect(siennaVestibule.size).toEqual([expect.closeTo(4.8), expect.closeTo(4.8)])
     expect(siennaVestibule.height).toBe(4.3)
-    expect(siennaVestibule.center[1] - siennaVestibule.size[1] / 2).toBeCloseTo(sienna.center[1] - sienna.size[1] / 2)
+    expect(siennaVestibule.center[1]).toBeGreaterThan(sienna.center[1])
+    expect(siennaVestibule.center[1] + siennaVestibule.size[1] / 2).toBeLessThanOrEqual(sienna.center[1] + sienna.size[1] / 2)
     expect(slopGallery.roomAt([siennaVestibule.center[0], 1.6, siennaVestibule.center[1]])?.id).toBe('sienna')
     expect(insideGallery([siennaVestibule.center[0], siennaVestibule.height + 0.5, siennaVestibule.center[1]])).toBe(false)
     const casingTop = corridorLanding.height + 0.17
@@ -471,7 +478,7 @@ describe('Lodge and Corridor route', () => {
         test(`real player traverses the entire loop at ${fps} Hz, returning ${returning}, sprint ${sprint}`, () => {
           const world = createWorld(fps)
           // From the flat planks beyond the Bastion’s raised timber saddle into the Lodge, north through its bay, round it along the Corridor, up the diagonal flight and through the landing and the Sienna’s vestibule.
-          const path = [[bastionApproach.path.at(-1)![0] + 0.4, lodge.tunnelZ], [lodge.center[0], lodge.tunnelZ], ...corridorPassage.path, ...corridorLanding.path.toReversed(), [-18.5, lodge.siennaZ]]
+          const path = [[bastionApproach.path.at(-1)![0] + 0.4, lodge.tunnelZ], [lodge.center[0], lodge.tunnelZ], ...corridorPassage.path, ...corridorLanding.path.toReversed(), [-18.5, siennaArchZ]]
           if (returning) {
             path.reverse()
           }
