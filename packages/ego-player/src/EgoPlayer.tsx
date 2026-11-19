@@ -185,7 +185,7 @@ export default function EgoPlayer({cameraEnabled = true, casualZoomFactor = 2, c
   const applyTeleport = (destination: EgoPosition, rotation?: EgoRotation, writeCamera = true) => {
     resetZoom()
     const motor = motorRef.current!
-    motor.teleport(destination, fallbackPosition, readToggle(flying))
+    const feet = motor.teleport(destination, fallbackPosition, readToggle(flying))
     const eyeHeight = motor.crouching ? resolved.crouchEyeHeight : resolved.eyeHeight
     view.reset(eyeHeight)
     const actual = motor.body.translation()
@@ -195,6 +195,7 @@ export default function EgoPlayer({cameraEnabled = true, casualZoomFactor = 2, c
     if (rotation) {
       camera.quaternion.set(...rotation).normalize()
     }
+    return feet
   }
   const initialize = () => {
     if (!motorRef.current || initialized.current) {
@@ -244,7 +245,7 @@ export default function EgoPlayer({cameraEnabled = true, casualZoomFactor = 2, c
         }
         return
       }
-      applyTeleport(destination, rotation)
+      return applyTeleport(destination, rotation)
     },
   }))
   useBeforePhysicsStep(physicsWorld => {

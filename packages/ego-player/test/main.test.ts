@@ -735,7 +735,11 @@ test('restoring under a newly mounted low ceiling selects crouching before the f
   const motor = player()
   const roofBody = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(4, 1.4, 0))
   world.createCollider(RAPIER.ColliderDesc.cuboid(1, 0.1, 1), roofBody)
-  motor.teleport([4, 0.02, 0], [0, 0.04, 0])
+  const destination: [number, number, number] = [4, 0.02, 0]
+  const feet = motor.teleport(destination, [0, 0.04, 0])
+  // It arrives where it was sent, which it tells in an array of its own.
+  expect(feet).toEqual([4, 0.02, 0])
+  expect(feet).not.toBe(destination)
   expect(motor.crouching).toBe(true)
   expect(motor.body.translation().x).toBe(4)
   expect(motor.body.collider(0).halfHeight()).toBeCloseTo(0.3)
@@ -755,7 +759,7 @@ test('unsafe restore falls back only when even the crouched capsule cannot fit',
   floor()
   const motor = player()
   world.createCollider(RAPIER.ColliderDesc.cuboid(1, 2, 1).setTranslation(4, 1, 0))
-  motor.teleport([4, 0.02, 0], [0, 0.04, 0])
+  expect(motor.teleport([4, 0.02, 0], [0, 0.04, 0])).toEqual([0, 0.04, 0])
   expect(motor.body.translation()).toMatchObject({
     x: 0,
     z: 0,
@@ -773,7 +777,7 @@ test('a flying teleport goes anywhere upright, and a walking one lands where the
   tick(motor, {crouch: true}, 30)
   expect(motor.crouching).toBe(true)
   // Before any step flew
-  motor.teleport([4, 0.5, 0], undefined, true)
+  expect(motor.teleport([4, 0.5, 0], [0, 0.04, 0], true)).toEqual([4, 0.5, 0])
   expect(motor.flying).toBe(true)
   expect(motor.crouching).toBe(false)
   expect(motor.body.collider(0).isEnabled()).toBe(false)
@@ -790,7 +794,7 @@ test('a flying teleport goes anywhere upright, and a walking one lands where the
   const before = motor.getState()
   expect(() => motor.teleport([4, 0.02, 0], undefined, false)).toThrow(RangeError)
   expect(motor.getState()).toEqual(before)
-  motor.teleport([4, 0.02, 0], [0, 0.04, 0], false)
+  expect(motor.teleport([4, 0.02, 0], [0, 0.04, 0], false)).toEqual([0, 0.04, 0])
   expect(motor.flying).toBe(false)
   expect(motor.body.collider(0).isEnabled()).toBe(true)
   expect(motor.body.translation().x).toBe(0)

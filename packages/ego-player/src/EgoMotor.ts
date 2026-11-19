@@ -304,10 +304,10 @@ export default class EgoMotor {
   }
 
   /**
-   * Puts the feet at `position`, or at `fallback` where the capsule fits neither standing nor crouching, and throws where it fits at neither.
+   * Puts the feet at `position`, or at `fallback` where the capsule fits neither standing nor crouching, and throws where it fits at neither. Returns where it put them.
    * `flying`, as the next {@link step} goes on, by default as the last one went, takes off or lands first. Flying, it goes anywhere, upright: nothing is in the way of a capsule out of the physics.
    */
-  teleport(position: EgoPosition, fallback?: EgoPosition, flying = this.isFlying) {
+  teleport(position: EgoPosition, fallback?: EgoPosition, flying = this.isFlying): EgoPosition {
     if (!position.every(Number.isFinite) || fallback && !fallback.every(Number.isFinite)) {
       throw new RangeError('ego-player: teleport position must be finite.')
     }
@@ -375,6 +375,8 @@ export default class EgoMotor {
     this.lastGroundedAt = Number.NEGATIVE_INFINITY
     this.jumpBufferedUntil = Number.NEGATIVE_INFINITY
     // Keep the physical button latch: a held jump is not a new press after teleport.
+    const [x, y, z] = position
+    return [x, y, z]
   }
 
   private canOccupy(position: EgoPosition, height: number) {

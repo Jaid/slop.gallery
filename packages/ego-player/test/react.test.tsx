@@ -208,7 +208,7 @@ test('React lifecycle preserves the motor, camera ownership and ref contract wit
     state.camera.position.set(8, 9, 10)
     tick()
     expect(state.camera.position.toArray()).toEqual([8, 9, 10])
-    handle.teleport([3, 4, 5], [0, 2, 0, 0])
+    expect(handle.teleport([3, 4, 5], [0, 2, 0, 0])).toEqual([3, 4, 5])
     expect(handle.getState()?.velocity).toEqual({
       x: 0,
       y: 0,
@@ -279,8 +279,11 @@ test('React lifecycle preserves the motor, camera ownership and ref contract wit
       tick()
       expect(latest?.crouching).toBe(!blocked)
       expect(latest?.position.x).toBe(blocked ? 0 : 4)
+      // A later teleport there tells where it ended up: there, or at the fallback position.
+      expect(restored.teleport([4, 0.02, 0])).toEqual(blocked ? [0, 0.05, 0] : [4, 0.02, 0])
+      expect(restored.body!.translation().x).toBe(blocked ? 0 : 4)
       if (!blocked) {
-        restored.teleport([0, 0.05, 0])
+        expect(restored.teleport([0, 0.05, 0])).toEqual([0, 0.05, 0])
         tick(120)
         expect(restored.getState()?.crouching).toBe(false)
       }
@@ -297,7 +300,8 @@ test('React lifecycle preserves the motor, camera ownership and ref contract wit
     await act(async () => root.render(render({}, false)))
     await act(async () => root.render(render({position: [0, 0.05, 0]})))
     const pending: [number, number, number] = [4, 0.02, 0]
-    player.current!.teleport(pending, [0, 1, 0, 0])
+    // Queued, it has not put the feet anywhere yet.
+    expect(player.current!.teleport(pending, [0, 1, 0, 0])).toBeUndefined()
     pending[0] = 100
     frame()
     expect(player.current!.getState()?.crouching).toBe(true)

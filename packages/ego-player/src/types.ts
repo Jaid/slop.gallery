@@ -46,6 +46,9 @@ export type EgoPlayerHandle = {
   getState: () => EgoState | null
   /** Restore zoom before another camera controller snapshots the current FOV. */
   releaseZoom: () => void
-  /** World-space feet position and optional camera quaternion. Resolves capsule clearance, unless flying, which goes anywhere, then resets momentum and jump history. */
-  teleport: (position: EgoPosition, rotation?: EgoRotation) => void
+  /**
+   * World-space feet position and optional camera quaternion. Resolves capsule clearance, unless flying, which goes anywhere, then resets momentum and jump history.
+   * Returns where it put the feet, which is the fallback position where the capsule doesn’t fit the destination, or undefined before the body is ready, when the teleport waits for it.
+   */
+  teleport: (position: EgoPosition, rotation?: EgoRotation) => EgoPosition | undefined
 }

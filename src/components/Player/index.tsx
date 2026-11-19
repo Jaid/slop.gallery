@@ -91,14 +91,15 @@ export default function Player() {
     globalThis.slopGallery.dump = dump
     const releaseZoom = () => player.current?.releaseZoom()
     galleryEvents.addEventListener('release-zoom', releaseZoom)
-    /** Puts the feet there, flying or not as the fly mode says. */
+    /** Puts the feet there, flying or not as the fly mode says, or at the spawn where the capsule doesn’t fit there, like in a table. */
     const arrive = (feet: Vec3, rotation?: Flight['rotation']) => {
-      player.current?.teleport(feet, rotation)
+      // Before the player is set up, the teleport waits for it, and the destination is all there is to go by.
+      const [x, y, z] = player.current?.teleport(feet, rotation) ?? feet
       // The menu can freeze the scene before the next interaction frame samples the new camera.
       cameraPose.position = camera.position.toArray()
       cameraPose.direction = camera.getWorldDirection(new Vector3).toArray()
-      // The body is there before the player’s next update, so whatever follows it, like the room the player is in, never sees it where it was.
-      placeBody(feet, flyMode.active)
+      // The body is where it landed before the player’s next update, so whatever follows it, like the fences and the room the player is in, sees it neither where it was nor where it was sent in vain.
+      placeBody([x, y, z], flyMode.active, player.current?.getState()?.crouching)
       bodyPose.velocity = [0, 0, 0]
     }
     const teleport = (event: Event) => {
