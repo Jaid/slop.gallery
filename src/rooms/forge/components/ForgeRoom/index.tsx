@@ -31,7 +31,8 @@ export default function ForgeRoom({materials, masonry}: {
   return <group name='forge'>
     <group position={[room.center[0], 0, room.center[1]]}>
       <RigidBody colliders={false} type='fixed'>
-        <CuboidCollider args={[width / 2, floorThickness / 2, depth / 2]} position-y={-floorThickness / 2} />
+        {/* A collider takes its offset from `position` alone; dashed props like position-y never reach it. */}
+        <CuboidCollider args={[width / 2, floorThickness / 2, depth / 2]} position={[0, -floorThickness / 2, 0]} />
         <Box material={materials.floor} name='forge-block-floor' position-y={-floorThickness / 2} size={[width, floorThickness, depth]} />
       </RigidBody>
       <Roof kind='sawtooth' materials={materials} />
