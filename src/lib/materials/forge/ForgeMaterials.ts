@@ -9,7 +9,7 @@ import {heightNormal, visibleDetail} from '../filters.ts'
 import EndGrainMaterial from './EndGrainMaterial.ts'
 import FirebrickMaterial from './FirebrickMaterial.ts'
 
-/** The finishes shared by the two roofs, the floors and the walls of the assay works. */
+/** The finishes shared by the Forge’s two roofs, its floors, its walls and the reveals and trim of its openings. */
 export default class ForgeMaterials extends MadeOnDemand {
   get brass() {
     return this.once('brass', () => new MeshStandardNodeMaterial({
@@ -44,6 +44,7 @@ export default class ForgeMaterials extends MadeOnDemand {
     return this.once('floor', () => new EndGrainMaterial)
   }
 
+  /** the enameled iron of the roofs’ framing, of the walls’ baseboards, casings and cornices and of the reveals lining every opening */
   get frame() {
     return this.once('frame', () => new MeshStandardNodeMaterial({
       name: 'Petrol enamel on iron',

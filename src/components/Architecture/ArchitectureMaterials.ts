@@ -118,6 +118,12 @@ export default class ArchitectureMaterials extends MadeOnDemand {
     return this.once('windowReveal', () => lightIndoors(new LodgeWoodMaterial))
   }
 
+  /** What lines the wall’s openings instead of its face’s material, or undefined where its face’s material lines them too. */
+  reveal(wall: Wall): Material | undefined {
+    // The Forge’s openings are lined with the enameled iron of their casings, as its vestibule’s arch is beyond them.
+    return wall.room === 'forge' ? this.forge.frame : undefined
+  }
+
   /** What the wall’s face is surfaced with, or undefined for the plain plaster of the shared wall surfaces. */
   surface(wall: Wall): Material | undefined {
     switch (wall.room) {
