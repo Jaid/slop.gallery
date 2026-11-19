@@ -1,8 +1,12 @@
+import type {HslSpread} from '../seededHsl.ts'
+import type FatedRandom from 'fated-random'
 import type {Node} from 'three/webgpu'
 
+import {fromHex} from 'okhsl'
 import {color, float, max, mix, mx_noise_float, normalViewGeometry, positionViewDirection, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
+import {seededHsl} from '../seededHsl.ts'
 import {heightNormal, visibleDetail} from './filters.ts'
 
 /** The colors of a velvet, as sRGB hex strings. */
@@ -25,6 +29,20 @@ export const oxbloodVelvet: VelvetStyle = {
   deep: '#1c0104',
   pile: '#52040f',
   sheen: '#d01a34',
+}
+
+/** The velvet with all its colors moved alike by `random`, up to `spread` either way in OkHSL, see {@link seededHsl}. */
+export function seededVelvet(style: VelvetStyle, random: FatedRandom, spread: HslSpread): VelvetStyle {
+  const shifted = (hex: string) => {
+    const [hue, saturation, lightness] = fromHex(hex)
+    return seededHsl([hue, saturation, lightness], random, spread)
+  }
+  return {
+    crushed: shifted(style.crushed),
+    deep: shifted(style.deep),
+    pile: shifted(style.pile),
+    sheen: shifted(style.sheen),
+  }
 }
 
 const unit = (node: Float) => node.mul(0.5).add(0.5)

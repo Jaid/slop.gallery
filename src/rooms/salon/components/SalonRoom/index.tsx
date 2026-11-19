@@ -18,6 +18,7 @@ import CrumbledStoneGeometry from '#src/lib/gallery/CrumbledStoneGeometry.ts'
 import {salonBench, salonBenchLegs, salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
 import salonLantern, {salonDomeSpringY, salonLanternBase} from '#src/lib/gallery/salonLantern.ts'
 import SalonLanternGeometry, {lanternPaneSize, salonLanternCollision, shellFilletLines} from '#src/lib/gallery/SalonLanternGeometry.ts'
+import {salonVelvet} from '#src/lib/gallery/salonVelvet.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import ArchitecturalPlasterMaterial from '#src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import CrownGlassMaterial from '#src/lib/materials/CrownGlassMaterial.ts'
@@ -174,7 +175,10 @@ function Ottoman() {
     // Carry the nap from the flat seat over the rounded edges instead of stretching it down the sides.
     const drop = float(seatThickness / 2).sub(positionGeometry.y)
     const coordinates = positionGeometry.xz.add(normalGeometry.xz.mul(drop))
-    return new VelvetMaterial(coordinates.mul(4), {seed: environmentSeed})
+    return new VelvetMaterial(coordinates.mul(4), {
+      seed: environmentSeed,
+      style: salonVelvet(environmentSeed),
+    })
   }, [seatThickness]))
   const walnut = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: '#3a2214',
