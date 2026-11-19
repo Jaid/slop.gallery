@@ -5,7 +5,7 @@ import {DoubleSide, Matrix3, Matrix4, Mesh, MeshBasicMaterial, Raycaster, Vector
 
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
 import {climbApproach, climbArch} from '../../src/lib/gallery/climb.ts'
-import forge, {forgeBays, forgePlate, forgeRoof, forgeVestibule} from '../../src/lib/gallery/forge.ts'
+import forge, {forgeBays, forgeRoof, forgeVestibule} from '../../src/lib/gallery/forge.ts'
 import {forgeArch, forgeRoundVestibule, forgeVestibuleFloor, vestibuleArches} from '../../src/lib/gallery/forgeVestibule.ts'
 import {isRing} from '../../src/lib/gallery/fresco.ts'
 import roomOrigins from '../../src/lib/gallery/layout.ts'
@@ -96,17 +96,10 @@ describe('the Forge', () => {
     expect(insideOpening(vesperSouth.holes![0], wallCoordinates(vesperSouth, [-14, 0, 8]), 1.7)).toBe(true)
     expect(roomAt([-14, 1.7, 7.9])).toBe('vesper')
   })
-  test('the air and the sun reach the three ridges and the works plate and columns keep their places on the walls', () => {
+  test('the air and the sun reach the three ridges, and the columns under them keep their places on the west wall', () => {
     expect(room.air[0].max.y).toBe(forgeRoof.ridge)
     expect(room.room.sunlit).toBe(true)
     expect(room.room.hasVolumetricSun).toBe(true)
-    expect(wallById('forge-south').reservations).toContainEqual({
-      profile: 'rectangle',
-      u: 0,
-      width: forgePlate.width,
-      bottom: forgePlate.y - forgePlate.height / 2,
-      height: forgePlate.y + forgePlate.height / 2,
-    })
     const west = wallById('forge-west')
     for (const {peak} of forgeBays) {
       const u = wallCoordinates(west, [forge.center[0] - forge.size[0] / 2, 0, forge.center[1] + peak])

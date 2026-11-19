@@ -3,7 +3,7 @@ import type {RoomWall} from '../base/Room.ts'
 
 import {alchemyCannon, workbench} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {cisternWindowHole} from '#src/lib/gallery/cistern/window.ts'
-import forge, {forgeBays, forgePierWidth, forgePlate, forgeVestibule} from '#src/lib/gallery/forge.ts'
+import forge, {forgeBays, forgePierWidth, forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {forgeArch, forgeRoundVestibule} from '#src/lib/gallery/forgeVestibule.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import {forgeWindow, lobbyWindowHole} from '#src/lib/gallery/lobbyWindows.ts'
@@ -56,13 +56,6 @@ export default {
   south: {
     ...south,
     reservations: [
-      {
-        u: 0,
-        width: forgePlate.width,
-        bottom: forgePlate.y - forgePlate.height / 2,
-        height: forgePlate.y + forgePlate.height / 2,
-        profile: 'rectangle',
-      },
       machineReservation(benchX - workbench.length / 2, benchX + workbench.length / 2, workbench.height + 0.1),
       machineReservation(benchX - 0.45, benchX + 0.45, alchemyCannon.muzzle[1] + 0.35),
     ],

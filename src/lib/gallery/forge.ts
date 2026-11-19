@@ -76,13 +76,6 @@ export const forgeBays = Array.from({length: forgeRoof.bays}, (_, i) => {
 })
 export const forgePierWidth = 0.45
 
-/** The vitreous enamel works plate above the alchemy bench. */
-export const forgePlate = {
-  width: 4.8,
-  height: 1.2,
-  y: 3.94,
-} as const
-
 const vestibuleRadius = 3
 /** The round anteroom between the workshop and the Bastion, under a folded metal hood with a bull’s-eye of wired glass. */
 export const forgeVestibule = {

@@ -19,8 +19,6 @@ import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/r
 import AlchemyMachine from '#src/rooms/forge/components/AlchemyMachine/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
-import WorksPlate from './WorksPlate.tsx'
-
 const room = slopGallery.room('forge')
 const vestibuleWall = slopGallery.walls.find(wall => wall.id === 'forge-vestibule')!
 /** Two rows of soapstone tables flank the measuring aisle from the north vestibule to the alchemy workbench. */
@@ -36,7 +34,6 @@ export default function ForgeRoom({materials, masonry}: {
         <Box material={materials.floor} name='forge-block-floor' position-y={-floorThickness / 2} size={[width, floorThickness, depth]} />
       </RigidBody>
       <Roof kind='sawtooth' materials={materials} />
-      <WorksPlate materials={materials} />
     </group>
     <Vestibule masonry={masonry} materials={materials} />
     <AlchemyMachine />

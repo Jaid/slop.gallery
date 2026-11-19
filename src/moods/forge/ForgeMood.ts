@@ -5,7 +5,7 @@ import RoomMood from '../base/RoomMood.ts'
 /** The Forge’s own: glazed brick under a sawtooth roof, its round vestibule ringing faintly. */
 export default class ForgeMood extends RoomMood {
   readonly id = 'forge'
-  readonly title = 'Assay works'
+  readonly title = 'Sawtooth brick'
   // Glazed brick under a sawtooth roof, its round vestibule ringing faintly.
   override readonly transformer = reverberation({
     decay: 1.8,
