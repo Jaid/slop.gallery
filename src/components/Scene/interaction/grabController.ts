@@ -3,7 +3,7 @@ import type {Toss} from '#src/lib/physics/throwMotion.ts'
 import type {MutableRef} from './types.ts'
 import type {RootState} from '@react-three/fiber'
 
-import {Vector3} from 'three/webgpu'
+import {Euler, Quaternion, Vector3} from 'three/webgpu'
 
 import {portraitFrame} from '#src/frames/index.ts'
 import tossVoices from '#src/lib/audio/tossVoices.ts'
@@ -37,10 +37,32 @@ const grab = () => {
   }
   chime(440)
 }
-/** how fast the player throws a work standing still, in m/s, flat like a frisbee, and how much it lifts on top, as a share of that */
+/** how fast the player throws a work standing still, in m/s, and how much it lifts on top, as a share of that */
 const workThrow = {
   speed: 14,
   lift: 1.5 / 14,
+}
+/** A forward run-up beyond walking or dodging, still reachable on a diagonal sprint. */
+const frisbeeDrive = 0.6
+/** three turns per second about the portrait’s face normal at release, in radians per second */
+const frisbeeSpin = 6 * Math.PI
+const workThrowRotation = ({drive, velocity: [x, y, z]}: Toss) => {
+  if (drive < frisbeeDrive) {
+    return {
+      orientation: undefined,
+      spin: undefined,
+    }
+  }
+  // Lay the frame face-up with its top edge leading along the actual launch velocity, including on a jump shot.
+  const pitch = Math.atan2(y, Math.hypot(x, z))
+  const yaw = Math.atan2(-x, -z)
+  const orientation = new Quaternion
+  orientation.setFromEuler(new Euler(pitch - Math.PI / 2, yaw, 0, 'YXZ'))
+  const spin = new Vector3(0, 0, frisbeeSpin)
+  return {
+    orientation: orientation.toArray(),
+    spin: spin.applyQuaternion(orientation).toArray(),
+  }
 }
 let tosses = 0
 /** Sounds a throw or a drop as it leaves the hand, heard from where it left it. */
@@ -103,9 +125,9 @@ export default function createGrabController(camera: RootState['camera'], placem
           ...candidate,
           hung: false,
           wallId: undefined,
-          orientation: undefined,
           position: position.toArray(),
           rotation: Math.atan2(-direction.x, -direction.z),
+          ...workThrowRotation(thrown),
           velocity: thrown.velocity,
         } : candidate
       }))
@@ -126,6 +148,7 @@ export default function createGrabController(camera: RootState['camera'], placem
             labelAbove: candidate.labelAbove === true ? true : undefined,
             hung: true,
             orientation: undefined,
+            spin: undefined,
             velocity: undefined,
           } : item
         }))
