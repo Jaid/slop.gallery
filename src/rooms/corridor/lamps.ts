@@ -9,7 +9,6 @@ const underLantern = ({light: [x, y, z]}: PendantMount, below = 0.3): Vec3 => [x
 const lantern = {
   tint: '#ffb363',
 } as const
-
 const [north, middle, south] = corridorHallLanterns
 // The middle lantern reaches toward both ends of the long hall.
 export default {
