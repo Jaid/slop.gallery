@@ -11,13 +11,13 @@ const random = new FatedRandom({
 })
 
 const vesperRandom = random.makeChild(['vesper', 'orbs'])
-const orbIds = vesperRandom.rollItem(['ghost', 'halloween', 'painting'], {count: 4})
+const orbIds = vesperRandom.shuffle(['ghost', 'halloween', 'painting'])
 
 random.roll() // a float from 0 up to, but not including, 1
 random.rollBoolean() // true or false
 random.rollInteger(5) // an integer from 0 to 5
 random.rollInteger(1, 10) // an integer from 1 to 10
-random.shuffle(['apple', 'banana', 'cherry'], 2, {count: 5}) // 5 arrays of 2 entries each, without replacement
+random.shuffle(['apple', 'banana', 'cherry'], 2) // 2 entries without replacement, in random order
 random.rollRadius(2) // a float from −2 up to, but not including, 2
 random.rollIntegerRadius(2) // −2, −1, 0, 1 or 2
 random.next() // moves on to the next index, which rolls everything anew
@@ -41,23 +41,21 @@ Each ingredient counts on its own, so `['ab', 'c']` and `['a', 'bc']` are differ
 
 Without `next()`, a roll returns the same result forever. The methods share their numbers, so `rollBoolean()` is `roll() < 0.5` and `rollItem(items)` is the item at `rollInteger(items.length - 1)`. Whatever needs rolls of its own gets a child or moves on with `next()`.
 
-Every method takes `count` as an option and then returns an array of that many results rolled in a row, the first of which is the result without `count`.
-
 | Method | Returns |
 | --- | --- |
-| `roll(options?)` | a float from 0 up to, but not including, 1, with all 53 bits a float holds |
+| `roll()` | a float from 0 up to, but not including, 1, with all 53 bits a float holds |
 | `rollBoolean(options?)` | `true` or `false`; `chance` (0–1, default 0.5) says how likely `true` is |
-| `rollInteger(limit, options?)` | an integer from 0 to `limit`, both included |
-| `rollInteger(from, to, options?)` | an integer between `from` and `to`, both included, in either order |
-| `rollIntegerRadius(radius, options?)` | an integer from −`radius` to `radius`, both included |
-| `rollRadius(radius, options?)` | a float from −`radius` up to, but not including, `radius` |
+| `rollInteger(limit)` | an integer from 0 to `limit`, both included |
+| `rollInteger(from, to)` | an integer between `from` and `to`, both included, in either order |
+| `rollIntegerRadius(radius)` | an integer from −`radius` to `radius`, both included |
+| `rollRadius(radius)` | a float from −`radius` up to, but not including, `radius` |
 | `rollItem(items, options?)` | one of the items, typed as the union of a literal array’s items |
 | `sample(items, amount = items.length, options?)` | independent draws with replacement; even a single entry can fill the whole result |
 | `shuffle(items, amount = items.length, options?)` | entries in random order without replacement; starts a fresh shuffle each time it exhausts the input |
 | `pick(items, amount = 1, options?)` | a random subset in input order; prepends whole copies of the input when `amount` exceeds its length |
-| `slice(items, amount = 1, options?)` | neighboring entries from a uniformly chosen start, without wrapping; prepends whole copies just like `pick` |
+| `slice(items, amount = 1)` | neighboring entries from a uniformly chosen start, without wrapping; prepends whole copies just like `pick` |
 
-The four collection methods return a new array even when `amount` is 1. An amount of 0 gives an empty array; a positive amount requires a nonempty input. `count` repeats the entire selection, so `pick(items, 2, {count: 3})` gives three pairs. Entries are selected by index: equal values at different positions are separate entries.
+The four collection methods return a new array even when `amount` is 1. An amount of 0 gives an empty array; a positive amount requires a nonempty input. Entries are selected by index: equal values at different positions are separate entries.
 
 Integers are rolled without modulo bias. `rollItem`, `sample`, `shuffle` and `pick` take `weights`, either a number per item or a function `(item, index) => number`. Each draw favors an entry in proportion to its weight among the entries still available. A weight of 0 excludes the entry; `shuffle` and `pick` require enough positive weights to complete a pass or the requested part of one.
 

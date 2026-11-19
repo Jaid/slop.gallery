@@ -12,7 +12,7 @@ export function checkAmount(size: number, amount: number) {
   }
 }
 
-/** Resolves weights once per call, including when several results are drawn with `count`. */
+/** Resolves weights once, before drawing any items. */
 function resolveWeights<Item>(items: ReadonlyArray<Item>, weights: Weights<Item>, needed: number) {
   if (weights === undefined) {
     return

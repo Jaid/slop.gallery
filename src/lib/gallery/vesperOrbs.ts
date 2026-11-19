@@ -4,10 +4,10 @@ import {environmentRandom, isDefaultSeed} from '../environmentSeed.ts'
 import {vesperOrbPedestals} from './vesper.ts'
 
 /**
- * The orbs standing on the Vesper’s pedestals in the environment of `seed`, in the order of the pedestals: every pedestal rolls its own among the {@link randomOrbs}, so a seed alone decides them all, except for the default environment, whose pedestals stand the random orbs one after the other in their order. Each is a prop of its own, the first of a kind by the orb’s own prop id and every further one numbered from 2.
+ * The {@link randomOrbs} in pedestal order. Each pass through the orbs is shuffled by the environment seed, except in the default environment, which uses their listed order.
  */
 export function vesperOrbs(seed: number) {
-  const picked = isDefaultSeed(seed) ? vesperOrbPedestals.map((_, index) => randomOrbs[index % randomOrbs.length]) : environmentRandom(seed).makeChild(['vesper', 'orbs']).rollItem(randomOrbs, {count: vesperOrbPedestals.length})
+  const picked = isDefaultSeed(seed) ? vesperOrbPedestals.map((_, index) => randomOrbs[index % randomOrbs.length]) : environmentRandom(seed).makeChild(['vesper', 'orbs']).shuffle(randomOrbs, vesperOrbPedestals.length)
   return picked.map((orb, index) => {
     const count = picked.slice(0, index + 1).filter(other => other === orb).length
     return {

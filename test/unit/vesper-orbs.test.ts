@@ -4,7 +4,7 @@ import {columnPedestalRadius} from '../../src/lib/gallery/ColumnPedestalGeometry
 import {floorTile} from '../../src/lib/gallery/floors.ts'
 import {vesper, vesperOrbPedestals} from '../../src/lib/gallery/vesper.ts'
 import {vesperOrbs} from '../../src/lib/gallery/vesperOrbs.ts'
-import {horrorOrb, randomOrbs} from '../../src/orbs/index.ts'
+import {randomOrbs} from '../../src/orbs/index.ts'
 import {floorHeight, roomAt} from './fixtures/gallery.ts'
 
 test('the Vesper stands four orbs on column pedestals in two northern rows of two, centered on floor tiles and clear of the walls and each other', () => {
@@ -33,33 +33,22 @@ test('the Vesper stands four orbs on column pedestals in two northern rows of tw
     }
   }
 })
-test('every pedestal’s orb is rolled by the seed among the random orbs, the same every time for a seed, each a prop of its own numbered by its kind', () => {
+test('the seed shuffles the four eligible orbs across the pedestals without repeats', () => {
   expect(vesperOrbs(7)).toEqual(vesperOrbs(7))
-  const seen = new Map<string, number>
-  const layouts = new Set<string>
-  for (let seed = 0; seed < 200; seed++) {
+  const eligible = randomOrbs.map(orb => orb.propId).toSorted()
+  const seenAt = vesperOrbPedestals.map(() => new Set<string>)
+  for (let seed = 1; seed <= 200; seed++) {
     const exhibits = vesperOrbs(seed)
     expect(exhibits).toHaveLength(vesperOrbPedestals.length)
-    const ids = new Set(exhibits.map(({id}) => id))
-    expect(ids.size).toBe(exhibits.length)
-    layouts.add(exhibits.map(({orb}) => orb.id).join())
+    expect(exhibits.map(({id}) => id).toSorted()).toEqual(eligible)
     for (const [index, {id, orb}] of exhibits.entries()) {
-      expect(randomOrbs).toContain(orb)
-      expect(orb).not.toBe(horrorOrb)
-      // The first of its kind goes by the orb’s own prop id, every further one by its number among them.
-      const count = exhibits.slice(0, index + 1).filter(exhibit => exhibit.orb === orb).length
-      expect(id).toBe(count === 1 ? orb.propId : `${orb.propId}-${count}`)
-      seen.set(orb.id, (seen.get(orb.id) ?? 0) + 1)
+      expect(id).toBe(orb.propId)
+      seenAt[index].add(id)
     }
   }
-  // Every kind turns up about as often, and the seeds lay the pedestals out in many ways.
-  expect(seen.keys().toArray().toSorted()).toEqual(randomOrbs.map(orb => orb.id).toSorted())
-  const even = 1 / randomOrbs.length
-  for (const count of seen.values()) {
-    expect(count / (200 * vesperOrbPedestals.length)).toBeGreaterThan(even * 0.8)
-    expect(count / (200 * vesperOrbPedestals.length)).toBeLessThan(even * 1.2)
+  for (const atPedestal of seenAt) {
+    expect(atPedestal).toEqual(new Set(eligible))
   }
-  expect(layouts.size).toBeGreaterThan(65)
 })
 test('in the default environment, the pedestals stand the random orbs in their order instead of rolling them', () => {
   expect(vesperOrbs(0).map(({orb}) => orb)).toEqual(randomOrbs.slice(0, vesperOrbPedestals.length))

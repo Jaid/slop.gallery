@@ -12,22 +12,14 @@ export type FatedRandomOptions = {
   id?: Arrayable<FatedId>
   seed?: FatedSeed
 }
-/** how often a roll rolls in a row, if at all */
-export type RollCount = number | undefined
-export type RollOptions<Count extends RollCount = RollCount> = {
-  /** rolls that many times in a row and returns an array of the results, the first of which is the single roll’s */
-  count?: Count
-}
-export type RollBooleanOptions<Count extends RollCount = RollCount> = RollOptions<Count> & {
+export type RollBooleanOptions = {
   /** how likely `true` is, from 0 for never to 1 for always, by default 0.5 */
   chance?: number
 }
-export type RollItemOptions<Item, Count extends RollCount = RollCount> = RollOptions<Count> & {
+export type RollItemOptions<Item> = {
   /** how likely each item is compared with the others, by default all the same: a number per item in the order of the items, or a function that tells it; an item of weight 0 is never rolled */
   weights?: ((item: Item, index: number) => number) | ReadonlyArray<number>
 }
-/** what a roll returns: an array with a `count`, a single result without */
-export type Rolled<Value, Count extends RollCount> = Count extends number ? Array<Value> : Value
 
 const toArray = <Value>(value: Arrayable<Value>) => (Array.isArray(value) ? [...value as ReadonlyArray<Value>] : [value as Value])
 const isId = (value: unknown): value is FatedId => typeof value === 'number' || typeof value === 'string'
@@ -84,101 +76,93 @@ export default class FatedRandom {
   }
 
   /** A random subset in input order. Whole copies of the input precede any remaining picks. */
-  pick<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount = 1, options?: RollItemOptions<Item, Count>) {
+  pick<const Item>(items: ReadonlyArray<Item>, amount = 1, options?: RollItemOptions<Item>) {
     checkAmount(items.length, amount)
     const draw = makeIndexDraw(items, options?.weights, amount)
-    return this.series(options, stream => withFullCopies(items, amount, take => draw(stream, take).toSorted((a, b) => a - b).map(index => items[index])))
+    return withFullCopies(items, amount, take => draw(this.makeStream(), take).toSorted((a, b) => a - b).map(index => items[index]))
   }
 
   /** A float from 0 up to, but not including, 1. */
-  roll<Count extends RollCount = undefined>(options?: RollOptions<Count>) {
-    return this.series(options, stream => stream.float())
+  roll() {
+    return this.makeStream().float()
   }
 
   /** `true` or `false`, both as likely unless `chance` says otherwise. */
-  rollBoolean<Count extends RollCount = undefined>(options?: RollBooleanOptions<Count>) {
+  rollBoolean(options?: RollBooleanOptions) {
     const chance = options?.chance ?? 0.5
     if (!(chance >= 0 && chance <= 1)) {
       throw new RangeError(`A chance has to lie between 0 and 1, got ${chance}.`)
     }
-    return this.series(options, stream => stream.float() < chance)
+    return this.roll() < chance
   }
   /** An integer from 0 to `limit`, both included; a negative limit rolls from it up to 0. */
-  rollInteger<Count extends RollCount = undefined>(limit: number, options?: RollOptions<Count>): Rolled<number, Count>
+  rollInteger(limit: number): number
   /** An integer between `from` and `to`, both included, in either order. */
-  rollInteger<Count extends RollCount = undefined>(from: number, to: number, options?: RollOptions<Count>): Rolled<number, Count>
-  rollInteger(first: number, second?: RollOptions | number, third?: RollOptions): Array<number> | number {
-    const [from, to, options] = typeof second === 'number' ? [first, second, third] : [0, first, second]
+  rollInteger(from: number, to: number): number
+  rollInteger(from: number, to = 0) {
     const lowest = Math.min(from, to)
     const size = Math.max(from, to) - lowest + 1
     if (!Number.isSafeInteger(from) || !Number.isSafeInteger(to) || size > 2 ** 53) {
       throw new RangeError(`Cannot roll an integer between ${from} and ${to}: both have to be safe integers at most 2 ** 53 − 1 apart.`)
     }
-    return this.series(options, stream => lowest + stream.below(size))
+    return lowest + this.makeStream().below(size)
   }
 
   /** An integer from −`radius` to `radius`, both included. */
-  rollIntegerRadius<Count extends RollCount = undefined>(radius: number, options?: RollOptions<Count>) {
-    return this.rollInteger(-radius, radius, options)
+  rollIntegerRadius(radius: number) {
+    return this.rollInteger(-radius, radius)
   }
 
   /** One of the items, each as likely as the others unless `weights` say otherwise. */
-  rollItem<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, options?: RollItemOptions<Item, Count>) {
+  rollItem<const Item>(items: ReadonlyArray<Item>, options?: RollItemOptions<Item>) {
     checkAmount(items.length, 1)
-    return this.series(options, makeItemDraw(items, options?.weights, 1))
+    const draw = makeItemDraw(items, options?.weights, 1)
+    return draw(this.makeStream())
   }
 
   /** A float from −`radius` up to, but not including, `radius`. */
-  rollRadius<Count extends RollCount = undefined>(radius: number, options?: RollOptions<Count>) {
+  rollRadius(radius: number) {
     if (!Number.isFinite(radius)) {
       throw new RangeError(`A radius has to be finite, got ${radius}.`)
     }
     const reach = Math.abs(radius)
     // Adding 0 turns the −0 of a radius of 0 into 0.
-    return this.series(options, stream => (stream.float() * 2 - 1) * reach + 0)
+    return (this.roll() * 2 - 1) * reach + 0
   }
 
   /** Independent draws with replacement, in draw order. */
-  sample<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount = items.length, options?: RollItemOptions<Item, Count>) {
+  sample<const Item>(items: ReadonlyArray<Item>, amount = items.length, options?: RollItemOptions<Item>) {
     checkAmount(items.length, amount)
     const draw = makeItemDraw(items, options?.weights, Math.min(amount, 1))
-    return this.series(options, stream => Array.from({length: amount}, () => draw(stream)))
+    const stream = this.makeStream()
+    return Array.from({length: amount}, () => draw(stream))
   }
 
   /** Draws in random order without replacement, starting a fresh shuffle whenever the input runs out. */
-  shuffle<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount = items.length, options?: RollItemOptions<Item, Count>) {
+  shuffle<const Item>(items: ReadonlyArray<Item>, amount = items.length, options?: RollItemOptions<Item>) {
     checkAmount(items.length, amount)
     const draw = makeIndexDraw(items, options?.weights, amount)
-    return this.series(options, stream => {
-      const result: Array<Item> = []
-      while (result.length < amount) {
-        for (const index of draw(stream, Math.min(items.length, amount - result.length))) {
-          result.push(items[index])
-        }
+    const stream = this.makeStream()
+    const result: Array<Item> = []
+    while (result.length < amount) {
+      for (const index of draw(stream, Math.min(items.length, amount - result.length))) {
+        result.push(items[index])
       }
-      return result
-    })
+    }
+    return result
   }
 
   /** A contiguous slice with a uniformly drawn start. Whole copies of the input precede any remaining slice. */
-  slice<const Item, Count extends RollCount = undefined>(items: ReadonlyArray<Item>, amount = 1, options?: RollOptions<Count>) {
+  slice<const Item>(items: ReadonlyArray<Item>, amount = 1) {
     checkAmount(items.length, amount)
-    return this.series(options, stream => withFullCopies(items, amount, take => {
-      const start = stream.below(items.length - take + 1)
+    return withFullCopies(items, amount, take => {
+      const start = this.rollInteger(items.length - take)
       return items.slice(start, start + take)
-    }))
+    })
   }
 
-  /** Rolls once, or `count` times in a row from the same stream of numbers, which starts over with every call. */
-  private series<Value, Count extends RollCount>(options: RollOptions<Count> | undefined, draw: (stream: RollStream) => Value) {
-    const stream = new RollStream(this.hash.clone().absorb(this.position).finish())
-    const count: RollCount = options?.count
-    if (count === undefined) {
-      return draw(stream) as Rolled<Value, Count>
-    }
-    if (!Number.isSafeInteger(count) || count < 0) {
-      throw new RangeError(`A count has to be a whole number from 0 on, got ${count}.`)
-    }
-    return Array.from({length: count}, () => draw(stream)) as Rolled<Value, Count>
+  /** Every roll starts its own stream at the current index. */
+  private makeStream() {
+    return new RollStream(this.hash.clone().absorb(this.position).finish())
   }
 }
