@@ -127,7 +127,7 @@ describe('Lodge and Corridor route', () => {
     const geometry = TimberGeometry.passage(corridorPassage, lodgeWindowRibCutouts)
     try {
       const meshes = [geometry.shell, geometry.ribs].map(part => new Mesh(part, material))
-      for (const z of [-38, -28, -15, 1]) {
+      for (const z of [-38, -28, -15, 1, 12]) {
         for (const side of [-1, 1]) {
           const x = lodge.approachX + side * (corridorPassage.width / 2 - 0.3)
           expect(corridorPassage.floorAt(x, z)).toBe(lodge.floorY)
@@ -177,8 +177,11 @@ describe('Lodge and Corridor route', () => {
     for (const returning of [false, true]) {
       test(`the outer timber lanes are physically walkable, offset ${offset}, returning ${returning}`, () => {
         const world = createWorld(60)
-        const start = returning ? 1.5 : -39
-        const end = returning ? -39 : 1.5
+        // All along the long hall’s lining, a meter short of either of its ends.
+        const hall = corridorPassage.spans[3]
+        const [north, south] = [hall.start[1] + hall.from + 1, hall.start[1] + hall.to - 1]
+        const start = returning ? south : north
+        const end = returning ? north : south
         const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(lodge.approachX + offset, lodge.floorY + 0.04, start))
         const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
         const motor = new EgoMotor(RAPIER, world, body, collider)
