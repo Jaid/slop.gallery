@@ -13,7 +13,7 @@ const tierVariants = {
 } as const
 export type AiTier = keyof typeof tierVariants
 
-const defaultSttModel = 'x-ai/grok-stt-1.0'
+const defaultSttModel = 'x-ai/grok-stt-2.0'
 const defaults = {
   ai: true,
   /** the service tier to ask for; without one, model IDs go out unchanged */

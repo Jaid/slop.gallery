@@ -270,13 +270,13 @@ test('generated speech is aligned before it plays, so the narration carries its 
   })))
   create({
     ai: true,
-    stt_model: 'x-ai/grok-stt-1.0',
+    stt_model: 'x-ai/grok-stt-2.0',
   }, 'test-key')
   const first = producer.enqueue('goose')!
   await flush()
   expect(fetchSpy.mock.calls.map(([url]) => urlOf(url))).toEqual(['https://openrouter.ai/api/v1/audio/speech', 'https://openrouter.ai/api/v1/audio/transcriptions'])
   expect(JSON.parse(fetchSpy.mock.calls[1][1]!.body as string)).toMatchObject({
-    model: 'x-ai/grok-stt-1.0',
+    model: 'x-ai/grok-stt-2.0',
     input_audio: {format: 'mp3'},
   })
   const state = narrationState(narrator.getSnapshot())!
@@ -297,7 +297,7 @@ test('a failed alignment still plays the generated audio, just without a timing'
   fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(routedFetch(new Response('busy', {status: 503})))
   create({
     ai: true,
-    stt_model: 'x-ai/grok-stt-1.0',
+    stt_model: 'x-ai/grok-stt-2.0',
   }, 'test-key')
   producer.enqueue('goose')
   await flush()

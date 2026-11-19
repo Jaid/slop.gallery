@@ -25,14 +25,14 @@ test('generated audio goes to OpenRouter’s transcription endpoint for word tim
       },
     ],
   }))
-  const aligner = new NarrationAligner({key: 'test-key'}, 'x-ai/grok-stt-1.0')
+  const aligner = new NarrationAligner({key: 'test-key'}, 'x-ai/grok-stt-2.0')
   const timing = await aligner.align(new Blob(['RIFF'], {type: 'audio/wav'}), 'His Unbothered Majesty.')
   const [url, request] = fetchSpy.mock.calls[0]
   expect(url).toBe('https://openrouter.ai/api/v1/audio/transcriptions')
   const headers = new Headers(request!.headers)
   expect(headers.get('HTTP-Referer')).toBe('https://slop.gallery')
   expect(JSON.parse(request!.body as string)).toEqual({
-    model: 'x-ai/grok-stt-1.0',
+    model: 'x-ai/grok-stt-2.0',
     input_audio: {
       data: btoa('RIFF'),
       format: 'wav',
@@ -46,7 +46,7 @@ test('generated audio goes to OpenRouter’s transcription endpoint for word tim
   expect(timing.words.at(-1)!.to).toBe('His Unbothered Majesty.'.length)
 })
 test('a transcript without word timestamps or a failed request is an error, not an empty timing', async () => {
-  const aligner = new NarrationAligner({key: 'test-key'}, 'x-ai/grok-stt-1.0')
+  const aligner = new NarrationAligner({key: 'test-key'}, 'x-ai/grok-stt-2.0')
   fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({text: 'his'}))
   expect(aligner.align(new Blob(['x'], {type: 'audio/wav'}), 'His')).rejects.toThrow('no word timestamps')
   fetchSpy.mockResolvedValue(new Response('nope', {status: 400}))

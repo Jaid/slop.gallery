@@ -68,7 +68,7 @@ Every work hanging on its wall, rehung by the player or dropped onto it as an im
 
 Timings come from three places:
 
-- Generated narrations (`PortraitNarration`) go through `NarrationAligner` right after the TTS: OpenRouter’s `/audio/transcriptions` with word timestamps (`?stt_model`, `x-ai/grok-stt-1.0` by default, the most exact in hive’s 2026-11-01 comparison of 29 systems), mapped onto the text by `timingFromWords`. It runs inside the speech cache, so eager generation and replays get it for free; it gives up after 8 s, and a failed alignment plays the audio anyway.
+- Generated narrations (`PortraitNarration`) go through `NarrationAligner` right after the TTS: OpenRouter’s `/audio/transcriptions` with word timestamps (`?stt_model`, `x-ai/grok-stt-2.0` by default, the successor of `x-ai/grok-stt-1.0`, which was the most exact in hive’s 2026-11-01 comparison of 29 systems and is no longer served by OpenRouter), mapped onto the text by `timingFromWords`. It runs inside the speech cache, so eager generation and replays get it for free; it gives up after 8 s, and a failed alignment plays the audio anyway.
 - Bundled narrations carry letter timings measured offline by Meta’s MMS forced aligner: `bun scripts/alignNarrations.ts` (needs ffmpeg and uv; `scripts/lib/mmsAlign.py` brings its own CPU-only Torch) writes `src/worlds/gallery/narrationTimings.json`. Rerun it when a bundled narration or its text changes; `test/unit/narration-timings.test.ts` notices stale entries.
 - Audio without a timing, including every generated narration under `?stt_model=false`, is paced by `estimateTiming` over its duration.
 
