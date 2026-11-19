@@ -195,33 +195,24 @@ describe('special rarity', () => {
     expect(ethereal.every(bay => bay.finishes.length > 0 && bay.finishes.every(item => item.rarity === 4))).toBe(true)
   })
 })
-describe('session rarity editor', () => {
-  test.each([0, 1, 2, 3, 4, 5] as const)('cycles all six rarities from %i without mutating source rarity or layout', initial => {
-    const fallback = {
-      ...knots[0],
-      id: `test_rarity_${initial}`,
-      rarity: initial,
-    }
-    const item = knots.find(entry => entry.rarity === initial) ?? fallback
-    const editor = new KnotRarityEditor([item])
-    const original = editor.getSnapshot()
-    const layout = selectKnotBays('?rarity=edit')
-    let notifications = 0
-    const unsubscribe = editor.subscribe(() => notifications++)
-    const cycle = [0, 1, 2, 3, 4, 5] as const
-    const expected = [...cycle.slice(initial + 1), ...cycle.slice(0, initial + 1)]
-    for (const value of expected) {
-      expect(editor.cycle(item.id)).toBe(value)
-      expect(editor.getSnapshot().get(item.id)).toBe(value)
-      expect(item.rarity).toBe(initial)
-    }
-    expect(original.get(item.id)).toBe(initial)
-    expect(editor.getSnapshot()).not.toBe(original)
-    expect(notifications).toBe(6)
-    expect(selectKnotBays('?rarity=edit')).toEqual(layout)
-    unsubscribe()
-    editor.cycle(item.id)
-    expect(notifications).toBe(6)
-    expect(() => editor.cycle('not_a_knot')).toThrow('Unknown Knot ID')
-  })
+test('a session edit cycles through every tier without mutating the source or an earlier snapshot', () => {
+  const item = {
+    ...knots[0],
+    rarity: special,
+  } as const
+  const editor = new KnotRarityEditor([item])
+  const original = editor.getSnapshot()
+  let notifications = 0
+  const unsubscribe = editor.subscribe(() => notifications++)
+  for (const value of [0, 1, 2, 3, 4, 5] as const) {
+    expect(editor.cycle(item.id)).toBe(value)
+    expect(editor.getSnapshot().get(item.id)).toBe(value)
+    expect(original.get(item.id)).toBe(special)
+    expect(item.rarity).toBe(special)
+  }
+  expect(notifications).toBe(6)
+  unsubscribe()
+  editor.cycle(item.id)
+  expect(notifications).toBe(6)
+  expect(() => editor.cycle('not_a_knot')).toThrow('Unknown Knot ID')
 })

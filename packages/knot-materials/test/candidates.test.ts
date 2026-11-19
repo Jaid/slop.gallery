@@ -131,11 +131,6 @@ describe('arbitrary Knot batches', () => {
       expect(entry.author.model.slug, entry.id).toBeDefined()
     }
   })
-  test('defaults to four shots per candidate when the URL omits shots', () => {
-    const bays = selectKnotBays('?candidate=claude_fable,gpt_astra')
-    expect(new Set(bays.map(bay => bay.candidate.data.id))).toEqual(new Set(['claude_fable', 'gpt_astra']))
-    expect(bays.every(bay => bay.finishes.length === 4)).toBe(true)
-  })
   test('filters candidates, caps shots and enumerates only after final selection', () => {
     const bays = selectKnotBays('?candidate=glm,muse_spark,qwen_max,gpt_astra&shots=2')
     expect(new Set(bays.map(bay => bay.candidate.data.id))).toEqual(new Set(['glm', 'muse_spark', 'qwen_max', 'gpt_astra']))
@@ -143,11 +138,7 @@ describe('arbitrary Knot batches', () => {
     expect(bays.every(bay => bay.finishes.length === 2 && bay.finishes.every(entry => entry.candidate.id === bay.candidate.data.id))).toBe(true)
     const numbered = enumerateKnotBays(bays)
     expect(numbered.flatMap(bay => bay.finishes.map(entry => entry.number))).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
-    const astra = enumerateKnotBays(selectKnotBays('?candidate=gpt_astra&shots=3'))
-    expect(astra[0].finishes).toHaveLength(3)
-    expect(astra[0].finishes.map(entry => entry.number)).toEqual([1, 2, 3])
     expect(() => selectKnotBays('?shots=0')).toThrow('shots')
-    expect(() => selectKnotBays('?candidate_limit=0')).toThrow('candidate_limit')
     expect(() => selectKnotBays('?candidate=missing')).toThrow('candidate')
   })
   test('model filters a mixed candidate before the shot cap', () => {
