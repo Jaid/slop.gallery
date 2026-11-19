@@ -1,4 +1,5 @@
 import type {FrameFormat} from '#src/lib/downloadFrame.ts'
+import type {SeedInput} from '#src/lib/webmcp/changeSeed.ts'
 
 import {useThree} from '@react-three/fiber'
 import {applyWireframeFlood} from 'capture-session'
@@ -16,6 +17,7 @@ import {playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDu
 import addPortrait from '#src/lib/webmcp/addPortrait.ts'
 import analyzeWorld from '#src/lib/webmcp/analyzeWorld.ts'
 import castMood from '#src/lib/webmcp/castMood.ts'
+import changeSeed from '#src/lib/webmcp/changeSeed.ts'
 import dumpPortraits from '#src/lib/webmcp/dumpPortraits.ts'
 import getGeofences from '#src/lib/webmcp/getGeofences.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
@@ -95,6 +97,8 @@ export default function WebmcpBridge() {
         }
         return change
       },
+      rerollSeed: () => changeSeed(null),
+      setSeed: ({seed}: SeedInput) => changeSeed(seed),
       setWireframe: applyWireframeFlood,
       spawnOrb,
       spawnPartyEffect,

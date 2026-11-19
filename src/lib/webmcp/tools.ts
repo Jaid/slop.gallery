@@ -1,9 +1,11 @@
 import type {FrameDownload, FrameFormat} from '#src/lib/downloadFrame.ts'
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
+import type {SeedChange} from '#src/lib/gameSeed.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
 import type {PortraitAddition, PortraitAdditionInput, PortraitTarget} from './addPortrait.ts'
 import type {WorldAnalysis} from './analyzeWorld.ts'
 import type {MoodCast, MoodCastInput} from './castMood.ts'
+import type {SeedInput} from './changeSeed.ts'
 import type {PortraitDump} from './dumpPortraits.ts'
 import type {GeofenceQuery} from './getGeofences.ts'
 import type {GraphicsQualityChange, GraphicsQualityInput} from './setGraphicsQuality.ts'
@@ -18,6 +20,8 @@ import type {Rarity} from 'knot-materials/rarities.ts'
 import type VictoriaClient from 'victoria-browser-client'
 
 import {normalizeMeshPath, wireframeFloodAnchors, wireframeFloodDirections, wireframeFloodModes, wireframeFloodShapes, wireframeLineStyles} from 'capture-session'
+
+import {isSeed, maximumSeed} from '#src/lib/environmentSeed.ts'
 
 /** a fence of the world as the union of its boxes */
 export type GeofenceDump = {
@@ -54,7 +58,9 @@ export type WebmcpBridge = {
     delivery: ReturnType<VictoriaClient['status']>
     sessionId: string
   } | null
+  rerollSeed: () => SeedChange
   setGraphicsQuality: (input: GraphicsQualityInput) => Promise<GraphicsQualityChange>
+  setSeed: (input: SeedInput) => SeedChange
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
   spawnOrb: (input: OrbSpawnInput) => Promise<OrbSpawn>
   spawnPartyEffect: (input: PartyEffectSpawnInput) => PartyEffectSpawn
@@ -508,6 +514,58 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           throw new TypeError('quality must be the name of the graphics or null.')
         }
         return getBridge().setGraphicsQuality({quality})
+      },
+    },
+    {
+      name: 'reroll_seed',
+      title: 'Reroll seed',
+      description: 'Build the world anew from a newly rolled seed, like the menu’s Reroll seed button: on a page opened with ?seed, go to the same URL with a newly rolled ?seed in its place, which leaves the stored seed and its game alone, so the next page’s menu offers to continue it; otherwise forget the stored seed and reload, so the next page rolls one for a new game and greets with the first menu. Rolled seeds range from 1 to 9999. Returns how it goes (via url or storage), the seed this page is built from (previous), the seed of the next page, null where the next page rolls it itself, and with ?seed the URL it goes to. The page leaves right after answering, which ends this session and everything this page held that is not stored, like imported works, and the tools register anew once the next page has loaded.',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).length) {
+          throw new TypeError('This tool takes an empty input object.')
+        }
+        return getBridge().rerollSeed()
+      },
+    },
+    {
+      name: 'set_seed',
+      title: 'Set seed',
+      description: 'Build the world anew from a seed of your own, the way the menu’s Reroll seed button goes over to a rolled one: on a page opened with ?seed, go to the same URL with this ?seed in its place, which leaves the stored seed and its game alone; otherwise store the seed as the game’s and reload, so the next page continues a game of that seed and its menu offers to continue it. Seed 0 asks for the default environment, which skips the rolls that have a default. Returns how it goes (via url or storage), the seed this page is built from (previous), the seed of the next page and with ?seed the URL it goes to. The page leaves right after answering, even for the seed it already has, which ends this session and everything this page held that is not stored, like imported works, and the tools register anew once the next page has loaded.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          seed: {
+            type: 'integer',
+            description: `the seed to build the next page from, from 0 to ${maximumSeed}, like the 1 to 9999 the game rolls`,
+            minimum: 0,
+            maximum: maximumSeed,
+          },
+        },
+        required: ['seed'],
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).join(',') !== 'seed') {
+          throw new TypeError('This tool takes an object with seed.')
+        }
+        const {seed} = input
+        if (!isSeed(seed)) {
+          throw new TypeError(`seed must be an integer from 0 to ${maximumSeed}.`)
+        }
+        return getBridge().setSeed({seed})
       },
     },
     {

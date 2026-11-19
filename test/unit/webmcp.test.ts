@@ -1,5 +1,6 @@
 import type {PortraitAdditionInput} from '../../src/lib/webmcp/addPortrait.ts'
 import type {MoodCastInput} from '../../src/lib/webmcp/castMood.ts'
+import type {SeedInput} from '../../src/lib/webmcp/changeSeed.ts'
 import type {GeofenceQuery} from '../../src/lib/webmcp/getGeofences.ts'
 import type {GraphicsQualityInput} from '../../src/lib/webmcp/setGraphicsQuality.ts'
 import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
@@ -117,6 +118,17 @@ const bridge: WebmcpBridge = {
     rotation: 0,
   }],
   getTelemetry: () => null,
+  rerollSeed: () => ({
+    via: 'storage',
+    previous: 7,
+    seed: null,
+  }),
+  setSeed: ({seed}: SeedInput) => ({
+    via: 'url',
+    url: `https://slop.gallery/?seed=${seed}`,
+    previous: 7,
+    seed,
+  }),
   setWireframe: ({enabled = false, direction = 'in', mode = 'triangle', anchor = 'nearest', shape = 'sphere', position = [0, 0, 0], radius = 0, highlight = [], color = null, highlightColor = null, seamWidth = null, glowDuration = 1, seamColor = null, seamIntensity = 0.9, angleIndicatorStrength = 5, speed = null, burst = 1, burstDuration = 0.5, antialiasing = false, lineStyle = 'barycentric', lineWidth = 0.5}) => ({
     enabled,
     direction,
@@ -177,7 +189,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'analyze_world', 'get_loading_items', 'get_geofences', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'add_portrait', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'analyze_world', 'get_loading_items', 'get_geofences', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
   for (const tool of tools.slice(0, 8)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -577,6 +589,35 @@ test('set_graphics_quality takes the name of the graphics or null and switches t
   }
   controller.abort()
   await expect(execute({quality: 'heavy'})).rejects.toThrow()
+})
+test('reroll_seed takes an empty input object and rerolls through the bridge', async () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'reroll_seed')!
+  const controller = new AbortController
+  const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  expect(await execute({})).toEqual(bridge.rerollSeed())
+  for (const input of [null, [], {seed: 1}]) {
+    await expect(execute(input)).rejects.toThrow(TypeError)
+  }
+  controller.abort()
+  await expect(execute({})).rejects.toThrow()
+})
+test('set_seed takes an unsigned 32-bit integer and sets it through the bridge', async () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'set_seed')!
+  const controller = new AbortController
+  const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  for (const seed of [0, 42, 0xFF_FF_FF_FF]) {
+    expect(await execute({seed})).toEqual(bridge.setSeed({seed}))
+  }
+  for (const input of [null, [], {}, {seed: -1}, {seed: 1.5}, {seed: 2 ** 32}, {seed: '42'}, {seed: Number.NaN}, {seed: undefined}, {
+    seed: 1,
+    reload: true,
+  }]) {
+    await expect(execute(input)).rejects.toThrow(TypeError)
+  }
+  controller.abort()
+  await expect(execute({seed: 1})).rejects.toThrow()
 })
 test('add_portrait takes an image URL, exactly one kind of target and an optional title, id, frame and size, and adds through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'add_portrait')!

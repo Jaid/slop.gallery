@@ -2,6 +2,10 @@ import type {Lamp} from '../base/Room.ts'
 
 import moonfallWallLeds from '#src/lib/gallery/moonfall/fixtures.ts'
 import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
+import {moonfallSculpture, sculptureLampOffset} from '#src/lib/gallery/moonfall/sculpture.ts'
+
+const [sculptureX, sculptureY, sculptureZ] = moonfallSculpture.center
+const [lampX, lampY, lampZ] = sculptureLampOffset
 
 export default {
   // Each source sits 60 cm in front of the middle of its housing.
@@ -11,9 +15,9 @@ export default {
     strength: 15,
     range: 10,
   } satisfies Lamp])),
-  // The planet’s glow, rising from the crater, throws the orbital sculpture’s shadow onto the ceiling.
+  // Glued to the front of the orbital sculpture, `MoonfallOrbit` carries it along as the meteorite turns, so it lights the sawn face and throws the sculpture’s shadow round the room. This is where it sits before the first turn.
   planet_glow: {
-    position: [5.37, 1.02, -0.19],
+    position: [sculptureX + lampX, sculptureY + lampY, sculptureZ + lampZ],
     strength: 216,
     tint: moonfallTheme.planetGlow,
     range: 20,

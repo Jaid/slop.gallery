@@ -1,4 +1,4 @@
-import type {Group, Mesh} from 'three/webgpu'
+import type {Group, Mesh, Object3D} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
@@ -11,9 +11,11 @@ import {AnimationClock} from '#src/lib/frozenTime.ts'
 import armillaryBandGeometry from '#src/lib/gallery/moonfall/ArmillaryBandGeometry.ts'
 import meteoriteGeometry from '#src/lib/gallery/moonfall/MeteoriteGeometry.ts'
 import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
+import {moonfallSculpture, sculptureLampOffset} from '#src/lib/gallery/moonfall/sculpture.ts'
 import ArmillaryRingMaterial from '#src/lib/materials/ArmillaryRingMaterial.ts'
 import MeteoriteMaterial from '#src/lib/materials/MeteoriteMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {useLamp} from '#src/lib/rendering/lamps.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const room = slopGallery.room('moonfall')
@@ -34,16 +36,17 @@ const rings = [0, 1, 2].map(i => ({
   // The middle one is gold, the others in Moonfall’s theme.
   hue: i === 1 ? '#d5ad73' : moonfallTheme.ring,
 }))
-/** how large the meteorite at the sculpture’s middle is round */
-const coreRadius = 0.7
+const {center, coreRadius} = moonfallSculpture
 /** how fast the meteorite spins round its own vertical and, slower, tumbles over round the horizontal, in radians per second */
 const coreSpin = {
   x: 0.07,
   y: 0.2,
 }
-/** The Moonfall’s orbital sculpture: a slowly tumbling iron meteorite under three engraved bronze bands, each precessing and nodding on its own while its bead runs round it, trailing light through the band’s inlay. */
+/** The Moonfall’s orbital sculpture: a slowly tumbling iron meteorite under three engraved bronze bands, each precessing and nodding on its own while its bead runs round it, trailing light through the band’s inlay. The meteorite carries Moonfall’s planet glow in front of its sawn face along as it turns. */
 export default function MoonfallOrbit() {
   const meteorite = useRef<Mesh>(null)
+  const lampSource = useRef<Object3D>(null)
+  const lamp = useLamp('moonfall-planet_glow')
   const turns = useRef<Array<Group | null>>([])
   const beads = useRef<Array<Mesh | null>>([])
   const clock = useMemo(() => new AnimationClock(0.05), [])
@@ -87,9 +90,16 @@ export default function MoonfallOrbit() {
       const angle = t * ring.revolution
       beads.current[i]?.position.set(Math.cos(angle) * ring.radius, Math.sin(angle) * ring.radius, 0)
     }
+    const light = lamp()
+    if (light && lampSource.current) {
+      lampSource.current.updateWorldMatrix(true, false)
+      lampSource.current.getWorldPosition(light.position)
+    }
   })
-  return <Orbitable id='moonfall-orbital-sculpture' name='moonfall-orbital-sculpture' orbit={sculptureOrbit} position={[0, 2.5, 0]} title='Orbital sculpture'>
-    <mesh castShadow geometry={core} material={iron} name='moonfall-meteorite' ref={meteorite} />
+  return <Orbitable id='moonfall-orbital-sculpture' name='moonfall-orbital-sculpture' orbit={sculptureOrbit} position={center} title='Orbital sculpture'>
+    <mesh castShadow geometry={core} material={iron} name='moonfall-meteorite' ref={meteorite}>
+      <object3D position={sculptureLampOffset} ref={lampSource} />
+    </mesh>
     {rings.map((ring, i) => <group
       key={i} ref={group => {
         turns.current[i] = group

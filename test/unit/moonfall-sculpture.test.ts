@@ -4,13 +4,23 @@ import {Vector3} from 'three/webgpu'
 
 import armillaryBandGeometry, {armillaryBand} from '../../src/lib/gallery/moonfall/ArmillaryBandGeometry.ts'
 import meteoriteGeometry, {meteoriteCut} from '../../src/lib/gallery/moonfall/MeteoriteGeometry.ts'
+import {moonfallSculpture, sculptureLampOffset} from '../../src/lib/gallery/moonfall/sculpture.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 
-/** the innermost ring’s radius and its bead’s, as `MoonfallOrbit` builds them */
+/** the innermost and outermost ring’s radius and the beads’, as `MoonfallOrbit` builds them */
 const innerRing = 1.25
+const outerRing = 1.77
 const bead = 0.065
+test('the lamp glued to the sculpture shines 1–2 m straight out of the sawn face, clear of the bands and beads however they turn', () => {
+  const offset = new Vector3(...sculptureLampOffset)
+  const cutDistance = meteoriteCut.depth * moonfallSculpture.coreRadius
+  expect(offset.clone().normalize().dot(meteoriteCut.normal)).toBeCloseTo(1, 9)
+  expect(offset.length() - cutDistance).toBeGreaterThanOrEqual(1)
+  expect(offset.length() - cutDistance).toBeLessThanOrEqual(2)
+  expect(offset.length()).toBeGreaterThan(outerRing + armillaryBand.thickness / 2 + bead * 2)
+})
 test('the meteorite stays lean, keeps clear of the innermost band and its bead, and is sawn flat on one side', () => {
-  const radius = 0.7
+  const radius = moonfallSculpture.coreRadius
   const geometry = meteoriteGeometry(radius, 14)
   try {
     expect(triangleCount(geometry)).toBeLessThanOrEqual(5000)

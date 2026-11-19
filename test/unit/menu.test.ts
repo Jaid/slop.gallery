@@ -15,8 +15,9 @@ import {cameraPose, setApiKey, toggleSound} from '../../src/lib/gallery/actions.
 import {climbApex} from '../../src/lib/gallery/climb.ts'
 import {useIntro} from '../../src/lib/gallery/intro.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
-import {rerollSeed} from '../../src/lib/gameSeed.ts'
+import {environmentSeed, rerollSeed} from '../../src/lib/gameSeed.ts'
 import pauseMenu from '../../src/lib/pauseMenu.ts'
+import changeSeed from '../../src/lib/webmcp/changeSeed.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const state = useGallery.getState()
@@ -196,6 +197,44 @@ describe('Reroll seed', () => {
     expect(url.searchParams.get('graphics')).toBe('fast')
     expect(url.searchParams.get('seed')).toMatch(/^[1-9]\d{0,3}$/u)
     expect(values.get('slop-gallery-seed')).toBe('7')
+  })
+  test('the tools’ seed change answers first and leaves the page a task later: storing the seed without ?seed', async () => {
+    mockLocation('https://slop.gallery/?graphics=fast')
+    values.set('slop-gallery-seed', '7')
+    expect(changeSeed(42)).toEqual({
+      via: 'storage',
+      previous: environmentSeed,
+      seed: 42,
+    })
+    expect(values.get('slop-gallery-seed')).toBe('7')
+    expect(reloads).toBe(0)
+    await new Promise(resolve => setTimeout(resolve))
+    expect(values.get('slop-gallery-seed')).toBe('42')
+    expect(reloads).toBe(1)
+    expect(assigned).toEqual([])
+  })
+  test('the tools’ seed change answers first and leaves the page a task later: replacing ?seed', async () => {
+    mockLocation('https://slop.gallery/?seed=1&graphics=fast')
+    values.set('slop-gallery-seed', '7')
+    expect(changeSeed(42)).toEqual({
+      via: 'url',
+      url: 'https://slop.gallery/?seed=42&graphics=fast',
+      previous: environmentSeed,
+      seed: 42,
+    })
+    const rolled = changeSeed(null)
+    expect(rolled.seed).toBeWithin(1, 10_000)
+    expect(rolled).toEqual({
+      via: 'url',
+      url: `https://slop.gallery/?seed=${rolled.seed}&graphics=fast`,
+      previous: environmentSeed,
+      seed: rolled.seed,
+    })
+    expect(assigned).toEqual([])
+    await new Promise(resolve => setTimeout(resolve))
+    expect(assigned).toEqual(['https://slop.gallery/?seed=42&graphics=fast', `https://slop.gallery/?seed=${rolled.seed}&graphics=fast`])
+    expect(values.get('slop-gallery-seed')).toBe('7')
+    expect(reloads).toBe(0)
   })
 })
 test.each(['lobby', 'oculus'] as const)('pause heading identifies the %s room and floor', room => {
