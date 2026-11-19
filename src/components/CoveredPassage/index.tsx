@@ -20,24 +20,22 @@ import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {slabHulls} from '#src/lib/gallery/floorPolygons.ts'
 import TimberGeometry from '#src/lib/gallery/passages/TimberGeometry.ts'
 import VaultGeometry from '#src/lib/gallery/passages/VaultGeometry.ts'
-import {corridorLightSpacing, passagePendantMounts} from '#src/lib/gallery/pendants/mounts.ts'
 import {passageLantern, passageLanternGlow} from '#src/lib/gallery/pendants/passageLantern.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /** how thick the slabs under a passage’s floor and over its ceiling are */
 const slabDepth = 0.24
-export default function CoveredPassage({passage, sole = false, material, mounts: layout, paving: pavingOverride, timber, ribCutouts, hollow, transition}: {
+const unlit: ReadonlyArray<PendantMount> = []
+export default function CoveredPassage({passage, material, mounts = unlit, paving: pavingOverride, timber, ribCutouts, hollow, transition}: {
   /** a hollow its paving has sunk into */
   hollow?: FloorHollow
   material: Material
-  /** fixed lantern mounts or a selection from the passage’s evenly spaced mounts; omit for an unlit passage */
-  mounts?: ((spaced: ReadonlyArray<PendantMount>) => ReadonlyArray<PendantMount>) | ReadonlyArray<PendantMount>
+  /** fixed lantern mounts; omit for an unlit passage */
+  mounts?: ReadonlyArray<PendantMount>
   passage: Passage
   /** the floor laid in the passage’s material when other floors cover the rest; collision still uses the full passage floors */
   paving?: ReadonlyArray<FloorPolygon>
   ribCutouts?: ReadonlyArray<PassageCutout>
-  /** whether the passage’s lanterns are all that lights it, which spaces them out */
-  sole?: boolean
   timber?: Material
   /** a stone passage’s timber end, rendered separately; the paving and vault ribs stop where it begins */
   transition?: PassageTransition
@@ -51,14 +49,6 @@ export default function CoveredPassage({passage, sole = false, material, mounts:
     // The base detail’s belong to the passage’s geometry.
     dispose() {},
   }), [curveDetail, geometry, passage, timber, transition]))
-  // Under timber, lanterns hang from the ribs rather than the planks between them.
-  const mounts = useMemo(() => {
-    if (typeof layout !== 'function') {
-      return layout ?? []
-    }
-    const spaced = passagePendantMounts(passage, [geometry.shell, geometry.ribs], sole ? corridorLightSpacing : undefined, timber && geometry.ribs)
-    return layout(spaced)
-  }, [geometry, layout, sole, passage, timber])
   // The hollow takes its footprint out of the floors.
   const floors = hollow ? passage.floors.flatMap(floor => hollow.cut(floor)) : passage.floors
   const paving = pavingOverride ?? transition?.stoneFloors ?? floors

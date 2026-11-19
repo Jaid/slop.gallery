@@ -22,8 +22,9 @@ import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
 import {passageRibs, timberRibs, timberRibSpacing} from '../../src/lib/gallery/passages/timberLayout.ts'
 import TransitionGeometry from '../../src/lib/gallery/passages/TransitionGeometry.ts'
 import VaultGeometry from '../../src/lib/gallery/passages/VaultGeometry.ts'
-import sienna, {siennaCeilingBeam, siennaCeilingBeamY, siennaVestibule, siennaVestibuleCeiling} from '../../src/lib/gallery/sienna.ts'
+import sienna, {siennaCeilingBeam, siennaCeilingBeamY, siennaVesperDoor, siennaVestibule, siennaVestibuleCeiling} from '../../src/lib/gallery/sienna.ts'
 import StairRunner from '../../src/lib/gallery/stairs/StairRunner.ts'
+import {vesper} from '../../src/lib/gallery/vesper.ts'
 import {placementIssue, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import walls, {floorHeight, insideGallery} from './fixtures/gallery.ts'
@@ -32,7 +33,7 @@ import samplePortraits from './fixtures/portraits.ts'
 await RAPIER.init()
 const routePassages = [bastionApproach, corridorPassage, corridorLanding] as const
 const insideRoute = (position: Vec3) => insideLodgeWindow(position) || insideBastion(position) || insideCorridor(position)
-const routeWalls = walls.filter(wall => ['corridor', 'lodge', 'sienna'].includes(wall.room) || wall.id.startsWith('bastion-approach_') || wall.id === 'vesper-west')
+const routeWalls = walls.filter(wall => ['corridor', 'lodge', 'sienna'].includes(wall.room) || wall.id.startsWith('bastion-approach_') || ['vesper-south', 'vesper-west'].includes(wall.id))
 const architecture = routeWalls.map(wall => ({
   wall,
   geometry: createArchitectureGeometry(wall),
@@ -100,8 +101,9 @@ function createWorld(fps: number) {
   for (const saddle of saddles) {
     world.createCollider(RAPIER.ColliderDesc.convexHull(saddle.getAttribute('position').array as Float32Array)!)
   }
-  box([-14, -0.15, 14], [12, 0.3, 12])
-  box([-14, 5.9, 14], [12, 0.3, 12])
+  box([sienna.center[0], -0.12, sienna.center[1]], [sienna.size[0], 0.24, sienna.size[1]])
+  box([sienna.center[0], 5.78, sienna.center[1]], [sienna.size[0], 0.18, sienna.size[1]])
+  box([vesper.center[0], -0.12, vesper.center[1]], [vesper.size[0], 0.24, vesper.size[1]])
   box([siennaVestibule.center[0], -0.15, siennaVestibule.center[1]], [siennaVestibule.size[0], 0.3, siennaVestibule.size[1]])
   box([siennaVestibule.center[0], siennaVestibuleCeiling.y, siennaVestibule.center[1]], [siennaVestibule.size[0], siennaVestibuleCeiling.thickness, siennaVestibule.size[1]])
   // The Lodge’s furniture and hearth, as the room mounts them.
@@ -127,7 +129,7 @@ describe('Lodge and Corridor route', () => {
     const geometry = TimberGeometry.passage(corridorPassage, lodgeWindowRibCutouts)
     try {
       const meshes = [geometry.shell, geometry.ribs].map(part => new Mesh(part, material))
-      for (const z of [-38, -28, -15, 1]) {
+      for (const z of [-38, -28, -15, 1, 8]) {
         for (const side of [-1, 1]) {
           const x = lodge.approachX + side * (corridorPassage.width / 2 - 0.3)
           expect(corridorPassage.floorAt(x, z)).toBe(lodge.floorY)
@@ -177,8 +179,8 @@ describe('Lodge and Corridor route', () => {
     for (const returning of [false, true]) {
       test(`the outer timber lanes are physically walkable, offset ${offset}, returning ${returning}`, () => {
         const world = createWorld(60)
-        const start = returning ? 1.5 : -39
-        const end = returning ? -39 : 1.5
+        const start = returning ? 8 : -39
+        const end = returning ? -39 : 8
         const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(lodge.approachX + offset, lodge.floorY + 0.04, start))
         const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.5, 0.3).setTranslation(0, 0.8, 0), body)
         const motor = new EgoMotor(RAPIER, world, body, collider)
@@ -406,9 +408,6 @@ describe('Lodge and Corridor route', () => {
     const hole = wall.holes!.find(value => value.name === 'bastion')!
     expect(wall.center[1] + hole.bottom!).toBeCloseTo(bastionDoorway.y - 0.02)
     expect(wallPosition(wall, hole.u, bastionDoorway.y, 0)).toEqual([expect.closeTo(bastionDoorway.x), bastionDoorway.y, expect.closeTo(bastionDoorway.z)])
-    const siennaWest = walls.find(candidate => candidate.id === 'sienna-west')!
-    expect(wallPosition(siennaWest, siennaWest.holes![0].u, 0, 0)[2]).toBeCloseTo(lodge.siennaZ)
-    expect(siennaWest.holes![0].u + lodge.timberWidth / 2 + 0.17).toBeLessThan(siennaWest.width / 2)
     // The Corridor leaves the Lodge through the middle of the bay’s back wall; only the window looks out of the west wall into it.
     const north = walls.find(candidate => candidate.id === 'lodge-north')!
     const [doorwayX, doorwayZ] = corridorPassage.path[0]
@@ -452,10 +451,18 @@ describe('Lodge and Corridor route', () => {
         expect(ribs[i][0] - ribs[i - 1][1]).toBeLessThanOrEqual(timberRibSpacing + 1e-9)
       }
     }
-    // The Sienna owns the 4.8 × 4.8 m vestibule, flush with its north wall, whose 4.3 m ceiling clears the 3.4 m arches’ casings, the cornice and the joists.
+    // The Sienna owns the vestibule near its south-west corner. Its lower ceiling still clears the arch casings, cornice and joists.
     expect(siennaVestibule.size).toEqual([expect.closeTo(4.8), expect.closeTo(4.8)])
     expect(siennaVestibule.height).toBe(4.3)
-    expect(siennaVestibule.center[1] - siennaVestibule.size[1] / 2).toBeCloseTo(sienna.center[1] - sienna.size[1] / 2)
+    const southZ = sienna.center[1] + sienna.size[1] / 2
+    expect(siennaVestibule.center[1] + corridorLanding.width / 2).toBeCloseTo(southZ - 1)
+    const mouth = walls.find(candidate => candidate.id === 'sienna-vestibule_west')!
+    const [x, , z] = wallPosition(mouth, mouth.holes![0].u, 0, 0)
+    expect(corridorLanding.path[0]).toEqual([expect.closeTo(x), expect.closeTo(z)])
+    const siennaWest = walls.find(candidate => candidate.id === 'sienna-west')!
+    expect(wallPosition(siennaWest, siennaWest.holes![0].u, 0, 0)[2]).toBeCloseTo(z)
+    expect(insideCorridor([x - 0.5, 1.6, 10.4])).toBe(false)
+    expect(insideGallery([siennaVestibule.center[0], 1.6, 10.4])).toBe(false)
     expect(slopGallery.roomAt([siennaVestibule.center[0], 1.6, siennaVestibule.center[1]])?.id).toBe('sienna')
     expect(insideGallery([siennaVestibule.center[0], siennaVestibule.height + 0.5, siennaVestibule.center[1]])).toBe(false)
     const casingTop = corridorLanding.height + 0.17
@@ -468,10 +475,18 @@ describe('Lodge and Corridor route', () => {
   for (const fps of [30, 60, 120]) {
     for (const returning of [false, true]) {
       for (const sprint of [false, true]) {
-        test(`real player traverses the entire loop at ${fps} Hz, returning ${returning}, sprint ${sprint}`, () => {
+        test(`real player traverses the Lodge–Corridor–Sienna–Vesper route at ${fps} Hz, returning ${returning}, sprint ${sprint}`, () => {
           const world = createWorld(fps)
-          // From the flat planks beyond the Bastion’s raised timber saddle into the Lodge, north through its bay, round it along the Corridor, up the diagonal flight and through the landing and the Sienna’s vestibule.
-          const path = [[bastionApproach.path.at(-1)![0] + 0.4, lodge.tunnelZ], [lodge.center[0], lodge.tunnelZ], ...corridorPassage.path, ...corridorLanding.path.toReversed(), [-18.5, lodge.siennaZ]]
+          // From the flat planks beyond the Bastion’s saddle through the Lodge and along the Corridor. Cross the Sienna from its vestibule to the arch into the Vesper.
+          const path = [
+            [bastionApproach.path.at(-1)![0] + 0.4, lodge.tunnelZ],
+            [lodge.center[0], lodge.tunnelZ],
+            ...corridorPassage.path,
+            ...corridorLanding.path.toReversed(),
+            [-18.5, siennaVestibule.center[1]],
+            [siennaVesperDoor.x, 10.5],
+            [siennaVesperDoor.x, 6.5],
+          ]
           if (returning) {
             path.reverse()
           }

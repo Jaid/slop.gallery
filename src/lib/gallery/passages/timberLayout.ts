@@ -17,6 +17,8 @@ export type TimberSpan = {
 export const timberEntranceProjection = 0.03
 /** At most this far between two ribs of a lining, leaving a bay of plank backing wide enough for a work between them while framing the Lodge’s window cleanly. */
 export const timberRibSpacing = 1.8
+/** How far the ribs project into the passage from its plank backing. */
+export const timberRibInset = 0.16
 
 /** The timber spans lining a passage, one per span of its path. */
 export function passageTimberSpans(passage: Passage): Array<Required<TimberSpan>> {

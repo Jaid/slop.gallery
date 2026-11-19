@@ -15,8 +15,6 @@ const lodge = {
   // three meters over Moonfall’s floor
   floorY: lowerGallery.floorY + 3,
   height: 3.9,
-  // Keep the widened doorway inset from Sienna’s neighboring corner.
-  siennaZ: 8.4 + timberWidth / 2,
   // Expand the long timber passage westward, keeping its east wall fixed.
   approachX: -31.7 - timberWidth / 2,
   timberWidth,

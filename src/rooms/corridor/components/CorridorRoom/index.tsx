@@ -21,7 +21,7 @@ export default function CorridorRoom({lining, wood}: {
   // The corridor is lit by its lanterns alone, so its portals need their own copy of the timber.
   const timber = useDisposable(useMemo(() => lightIndoors(new MeshStandardNodeMaterial(lodgeTimber(wood))), [wood]))
   return <group name='corridor-room'>
-    <CoveredPassage material={lining} mounts={corridorHallLanterns} passage={corridorPassage} paving={corridorPaving} ribCutouts={lodgeWindowRibCutouts} sole timber={timber} />
+    <CoveredPassage material={lining} mounts={corridorHallLanterns} passage={corridorPassage} paving={corridorPaving} ribCutouts={lodgeWindowRibCutouts} timber={timber} />
     <CoveredPassage material={lining} mounts={landingMounts} passage={corridorLanding} timber={timber} />
     <CorridorStairs lining={lining} timber={timber} />
   </group>

@@ -93,7 +93,7 @@ describe('the Forge', () => {
     expect(vesperEast.holes).toHaveLength(1)
     expect(insideOpening(vesperEast.holes![0], wallCoordinates(vesperEast, [-8, 0, lobby.sideDoorZ]), 1.7)).toBe(true)
     const vesperSouth = wallById('vesper-south')
-    expect(insideOpening(vesperSouth.holes![0], wallCoordinates(vesperSouth, [-14, 0, 8]), 1.7)).toBe(true)
+    expect(insideOpening(vesperSouth.holes![0], wallCoordinates(vesperSouth, [-10.4, 0, 8]), 1.7)).toBe(true)
     expect(roomAt([-14, 1.7, 7.9])).toBe('vesper')
   })
   test('the rooflight is a round opening in whole panes, inside the room, under its slab, within the sun’s reach', () => {

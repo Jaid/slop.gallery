@@ -6,8 +6,10 @@ import {expect, test} from 'bun:test'
 
 import {Box3, Frustum, Group, Matrix4, Mesh, PerspectiveCamera, Vector3} from 'three/webgpu'
 
+import {corridorLanding, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import lobbyLayout from '../../src/lib/gallery/lobby.ts'
 import {ownerRoom, portals, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
+import {siennaVesperDoor, siennaVestibule} from '../../src/lib/gallery/sienna.ts'
 import {openingTop, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import relations, {openings} from '../../src/worlds/gallery/relations.ts'
@@ -136,11 +138,24 @@ test('a pickup belongs to the room it is in and keeps it in passages', () => {
   expect(ownerOf(lost)).toBeUndefined()
 })
 test('the Corridor’s stair flight and landing belong to the Corridor, and the vestibule beyond to the Sienna', () => {
-  expect(roomContaining([-29.8, -0.9, 6.5])).toBe('corridor')
-  expect(roomContaining([-26.1, 1.6, 10.2])).toBe('corridor')
-  expect(roomContaining([-22.4, 1.6, 10.4])).toBe('sienna')
-  // Flying at the hall’s south end, where the flight turns off onto the diagonal, with the vestibule’s arch out of view.
-  expect(roomsAt([-33.7, -3.4, 2.6])).toEqual(['corridor'])
+  const head = new Vector3(...corridorStairs.start)
+  const {x, y, z} = head.lerp(new Vector3(...corridorStairs.end), 0.5)
+  expect(roomContaining([x, y + 1.6, z])).toBe('corridor')
+  const [landingX, landingZ] = corridorLanding.path[1]
+  expect(roomContaining([landingX, 1.6, landingZ])).toBe('corridor')
+  expect(roomContaining([siennaVestibule.center[0], 1.6, siennaVestibule.center[1]])).toBe('sienna')
+  // The elbow where the hall turns onto the flight still lies in the Corridor alone.
+  const [hallX, hallZ] = corridorPassage.path.at(-2)!
+  expect(roomsAt([hallX, corridorPassage.floorY + 1.6, hallZ])).toEqual(['corridor'])
+})
+test('the corner arches keep their destinations visible in both directions', () => {
+  const x = siennaVesperDoor.x
+  expect(visibleRegions(['vesper'], viewProjection([x, 1.6, 5], [x, 1.6, 14])).has('sienna')).toBe(true)
+  expect(visibleRegions(['sienna'], viewProjection([x, 1.6, 11], [x, 1.6, 4])).has('vesper')).toBe(true)
+  const [vestibuleX, z] = siennaVestibule.center
+  const [landingX] = corridorLanding.path[1]
+  expect(visibleRegions(['sienna'], viewProjection([vestibuleX, 1.6, z], [landingX, 1.6, z])).has('corridor')).toBe(true)
+  expect(visibleRegions(['corridor'], viewProjection([landingX, 1.6, z], [vestibuleX, 1.6, z])).has('sienna')).toBe(true)
 })
 test('a camera stands in the rooms around it', () => {
   expect(roomsAt([-14, 1.6, 0])).toEqual(['vesper'])

@@ -5,7 +5,7 @@ import type {Vec3} from './types.ts'
 import {cutFloorOpening} from './floorPolygons.ts'
 import lodge, {lodgeBay, lodgeWindowCutout} from './lodge.ts'
 import Passage from './passages/Passage.ts'
-import {passageRibs} from './passages/timberLayout.ts'
+import {passageRibs, timberRibInset} from './passages/timberLayout.ts'
 import {passageLightDrop} from './pendants/mounts.ts'
 import sienna, {siennaVestibule} from './sienna.ts'
 import StairFlight from './stairs/StairFlight.ts'
@@ -28,14 +28,15 @@ const diagonal = lodgeWestX + northZ - (clearance + half) * Math.SQRT2
 const hallNorthZ = diagonal - lodge.approachX
 /** how far an open elbow of a 45° turn reaches into either of the spans it joins */
 const elbow = half * Math.tan(Math.PI / 8)
-/** where the vestibule’s west wall stands, which the Corridor ends at */
-const vestibuleX = siennaVestibule.center[0] - siennaVestibule.size[0] / 2
+/** the mouth of the Corridor, centered on the west wall of the Sienna’s vestibule */
+const [vestibuleCenterX, vestibuleZ] = siennaVestibule.center
+const vestibuleX = vestibuleCenterX - siennaVestibule.size[0] / 2
 /** how much of the landing’s passage is lined between the vestibule’s arch and its open elbow, a short reveal inside the arch */
 const landingReveal = 0.3
 /** where the landing turns from the diagonal east into the vestibule’s arch: its lined reveal and its open elbow short of the wall */
-const landingTurn: Point = [vestibuleX - landingReveal - elbow, lodge.siennaZ]
+const landingTurn: Point = [vestibuleX - landingReveal - elbow, vestibuleZ]
 /** where the hall ends, turning 45° onto the diagonal to the landing: as far north of the arch’s line as the landing’s turn lies east of the hall, as the diagonal gains as much east as south */
-const hallSouthZ = lodge.siennaZ - (landingTurn[0] - lodge.approachX)
+const hallSouthZ = vestibuleZ - (landingTurn[0] - lodge.approachX)
 /** a point `along` meters down the diagonal from another */
 const downDiagonal = ([x, z]: Point, along: number): Point => [x + along * Math.SQRT1_2, z + along * Math.SQRT1_2]
 /** the flight’s bottom and top, an open elbow down the diagonal from the hall’s end and an open elbow up it from the landing’s turn */
@@ -48,37 +49,36 @@ const corridor = {
   floorY: lodge.floorY,
   height: 3.4,
 } as const
-
+const bayPath: ReadonlyArray<Point> = [[doorwayX, backZ], [doorwayX, runZ], [diagonal - runZ, runZ], [lodge.approachX, hallNorthZ]]
 /**
  * From the doorway in the middle of the Lodge’s bay north, west along the bay’s back wall and diagonally along its north-west wall round to the long hall, which runs south past the Lodge’s window and turns 45° south-east onto the diagonal, where the stair flight up to the Sienna’s vestibule begins. Its walls keep the same distance from the Lodge’s all the way round.
  */
-export const corridorPassage = new Passage('corridor', 'corridor', [[doorwayX, backZ], [doorwayX, runZ], [diagonal - runZ, runZ], [lodge.approachX, hallNorthZ], [lodge.approachX, hallSouthZ], flightFoot], lodge.floorY, lodge.timberWidth, corridor.height, [lodgeWindowCutout])
-/** The end lanterns hang from timber ribs at the same height as the middle lantern. */
-const hallLightY = corridor.floorY + corridor.height - passageLightDrop
-const ribLantern = (anchor: Vec3): PendantMount => ({
-  anchor,
-  normal: [0, -1, 0],
-  drop: anchor[1] - hallLightY,
-  light: [anchor[0], hallLightY, anchor[2]],
-})
-export const corridorNorthLantern = ribLantern([-33.747, -1.76, -40.601])
-export const corridorSouthLantern = ribLantern([-33.652, -1.76, 1.696])
-/** The hall lanterns, from the north rib to the foot of the flight. */
-export function corridorHallLanterns(spaced: ReadonlyArray<PendantMount>) {
-  return [corridorNorthLantern, spaced[5], corridorSouthLantern]
+export const corridorPassage = new Passage('corridor', 'corridor', [...bayPath, [lodge.approachX, hallSouthZ], flightFoot], lodge.floorY, lodge.timberWidth, corridor.height, [lodgeWindowCutout])
+/** The hall lanterns hang under the first, middle and last ribs of the straight run. */
+const hallRibs = passageRibs(corridorPassage, bayPath.length - 1)
+const hallLantern = ([from, to]: Point): PendantMount => {
+  const z = hallNorthZ + (from + to) / 2
+  const crown = corridor.floorY + corridor.height
+  return {
+    anchor: [lodge.approachX, crown - timberRibInset, z],
+    normal: [0, -1, 0],
+    drop: passageLightDrop - timberRibInset,
+    light: [lodge.approachX, crown - passageLightDrop, z],
+  }
 }
+export const corridorHallLanterns = [hallRibs[0], hallRibs[Math.floor(hallRibs.length / 2)], hallRibs.at(-1)!].map(hallLantern)
 /**
  * The landing at the Sienna’s floor between the flight’s top and the arch of the Sienna’s vestibule: from the arch west, a short lined reveal, then an open elbow turning 45° north-west onto the diagonal, where the flight begins.
  */
-export const corridorLanding = new Passage('landing', 'corridor', [[vestibuleX, lodge.siennaZ], landingTurn, flightHead], sienna.floorY, lodge.timberWidth, corridor.height)
-/** The lantern in the short reveal of the Sienna arch, fixed to the plank between two ribs 11 cm apart. */
-const landingAnchor: Vec3 = [-24.934, corridorLanding.floorY + corridorLanding.height, 10.346]
+export const corridorLanding = new Passage('landing', 'corridor', [[vestibuleX, vestibuleZ], landingTurn, flightHead], sienna.floorY, lodge.timberWidth, corridor.height)
+/** The landing lantern hangs from the flat ceiling over the turn, lighting the stair head as well as the arch. */
+const [landingX, landingZ] = landingTurn
+const landingCrown = corridorLanding.floorY + corridorLanding.height
 export const corridorLandingLantern: PendantMount = {
-  anchor: landingAnchor,
+  anchor: [landingX, landingCrown, landingZ],
   normal: [0, -1, 0],
   drop: passageLightDrop,
-  light: [landingAnchor[0], landingAnchor[1] - passageLightDrop, landingAnchor[2]],
-  canopyRadius: 0.05,
+  light: [landingX, landingCrown - passageLightDrop, landingZ],
 }
 /** The doorway passage from the Lodge’s bay north to the run along it, `from` to `to` meters out of the bay, as a rectangle across the passage. */
 const doorwayPassage = (from: number, to: number): FloorRectangle => ({
