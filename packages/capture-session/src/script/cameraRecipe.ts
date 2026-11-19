@@ -27,9 +27,20 @@ export const tweens = Object.fromEntries([
     [`easeInOut${capitalize(curve)}`, (t: number) => (t < 0.5 ? ease(2 * t) / 2 : 1 - ease(2 - 2 * t) / 2)],
   ]),
 ]) as Record<Tween, (t: number) => number>
+export type CameraOrbit = {
+  /** world-space point the camera circles and looks at */
+  focus: Vec3
+  /** world-space eye positions at the start and end of the arc */
+  from: Vec3
+  to: Vec3
+  /** whole revolutions to add to the shortest arc, positive toward increasing yaw */
+  turns?: number
+}
 export type Keyframe = {
   /** vertical field of view in degrees */
   fov?: number
+  /** An arc ending at this keyframe, starting at the previous position, yaw, pitch or orbit keyframe (or time 0). */
+  orbit?: CameraOrbit
   /** degrees, positive looks up */
   pitch?: number
   /** camera (eye) position in meters */
@@ -51,13 +62,14 @@ export type Recipe = Array<Keyframe>
 export type Shot = Required<Pick<Keyframe, 'fov' | 'pitch' | 'position' | 'roll' | 'yaw'>>
 const properties = ['position', 'yaw', 'pitch', 'roll', 'fov'] as const
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
+const isVec3 = (value: unknown): value is Vec3 => Array.isArray(value) && value.length === 3 && value.every(isFiniteNumber)
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
 /** Validates a parsed recipe JSON document. */
 export const parseRecipe = (input: unknown): Recipe => {
   if (!Array.isArray(input) || input.length === 0) {
     throw new Error('A recipe is a non-empty JSON array of keyframes.')
   }
-  const known = new Set(['time', 'tools', 'tween', 'wireframe', ...properties])
+  const known = new Set(['time', 'tools', 'tween', 'wireframe', 'orbit', ...properties])
   return input.map((keyframe: unknown, index) => {
     const at = `Keyframe ${index}`
     if (!isRecord(keyframe)) {
@@ -68,7 +80,7 @@ export const parseRecipe = (input: unknown): Recipe => {
         throw new Error(`${at} has the unknown property “${key}”. Known: ${[...known].join(', ')}.`)
       }
     }
-    const {time, tween, position, yaw, pitch, roll, fov} = keyframe
+    const {time, tween, position, yaw, pitch, roll, fov, orbit} = keyframe
     if (!isFiniteNumber(time) || time < 0) {
       throw new Error(`${at} needs a time in seconds of at least 0.`)
     }
@@ -79,8 +91,28 @@ export const parseRecipe = (input: unknown): Recipe => {
     if (tween !== undefined && !Object.hasOwn(tweens, tween as string)) {
       throw new Error(`${at} has the unknown tween ${JSON.stringify(tween)}. Known: ${Object.keys(tweens).join(', ')}.`)
     }
-    if (position !== undefined && !(Array.isArray(position) && position.length === 3 && position.every(isFiniteNumber))) {
+    if (position !== undefined && !isVec3(position)) {
       throw new Error(`${at} needs position as [x, y, z] in meters.`)
+    }
+    if (orbit !== undefined) {
+      if (!isRecord(orbit) || !isVec3(orbit.from) || !isVec3(orbit.to) || !isVec3(orbit.focus)) {
+        throw new Error(`${at} needs orbit.from, orbit.to and orbit.focus as [x, y, z] in meters.`)
+      }
+      for (const key of Object.keys(orbit)) {
+        if (!['focus', 'from', 'to', 'turns'].includes(key)) {
+          throw new Error(`${at} has the unknown orbit property “${key}”.`)
+        }
+      }
+      if (orbit.turns !== undefined && !Number.isSafeInteger(orbit.turns)) {
+        throw new Error(`${at} needs orbit.turns as a whole number of extra revolutions.`)
+      }
+      if (time === 0 || position !== undefined || yaw !== undefined || pitch !== undefined) {
+        throw new Error(`${at}: an orbit ends after time 0 and supplies its own position, yaw and pitch.`)
+      }
+      const [x, , z] = orbit.focus
+      if ([orbit.from, orbit.to].some(eye => eye[0] === x && eye[2] === z)) {
+        throw new Error(`${at}: each orbit endpoint needs a nonzero horizontal distance from its focus.`)
+      }
     }
     for (const [name, value] of Object.entries({
       yaw,
@@ -108,13 +140,54 @@ export const parseRecipe = (input: unknown): Recipe => {
 }
 export const recipeDuration = (recipe: Recipe) => recipe.at(-1)!.time
 const lerp = (from: number, to: number, t: number) => from + (to - from) * t
+
+type OrbitPose = Pick<Shot, 'pitch' | 'position' | 'yaw'>
+const isOrbitProperty = (property: keyof Shot): property is keyof OrbitPose => property !== 'roll' && property !== 'fov'
+/** Interpolate in cylindrical coordinates around the focus. This keeps a level orbit level and a constant-radius orbit circular. */
+const sampleOrbit = ({from, to, focus, turns = 0}: CameraOrbit, t: number): OrbitPose => {
+  const [x, y, z] = focus
+  const start = Math.atan2(from[0] - x, from[2] - z)
+  const difference = Math.atan2(to[0] - x, to[2] - z) - start
+  const angle = start + t * (Math.atan2(Math.sin(difference), Math.cos(difference)) + turns * 2 * PI)
+  const radius = lerp(Math.hypot(from[0] - x, from[2] - z), Math.hypot(to[0] - x, to[2] - z), t)
+  const position: Vec3 = t === 0 ? from : (t === 1 ? to : [x + radius * Math.sin(angle), lerp(from[1], to[1], t), z + radius * Math.cos(angle)])
+  return {
+    position,
+    yaw: angle * 180 / PI + (radius < 0 ? 180 : 0),
+    pitch: Math.atan2(y - position[1], Math.abs(radius)) * 180 / PI,
+  }
+}
+/** The explicit ends of an orbit also serve as ordinary pose keys on either side of it. Tools and lens keys do not shorten the arc. */
+const poseKeys = (recipe: Recipe) => {
+  if (!recipe.some(key => key.orbit)) {
+    return recipe
+  }
+  const keys: Array<Keyframe> = []
+  for (const key of recipe) {
+    if (key.orbit) {
+      keys.push({
+        time: keys.at(-1)?.time ?? 0,
+        ...sampleOrbit(key.orbit, 0),
+      }, {
+        ...key,
+        ...sampleOrbit(key.orbit, 1),
+      })
+    } else if (key.position || key.yaw !== undefined || key.pitch !== undefined) {
+      keys.push(key)
+    }
+  }
+  return keys
+}
 /**
  * The camera at a point in time. Every property is animated on its own track: keyframes that leave it out do not affect it.
  * Before its first keyframe and after its last one, a property holds still. Properties no keyframe sets keep their fallback.
  */
 export const sampleRecipe = (recipe: Recipe, time: number, fallback: Shot): Shot => {
+  const poses = poseKeys(recipe)
+  let orbitPose: OrbitPose | undefined
   const sample = <T extends keyof Shot>(property: T): Shot[T] => {
-    const track = recipe.filter(keyframe => keyframe[property] !== undefined)
+    const isPose = isOrbitProperty(property)
+    const track = (isPose ? poses : recipe).filter(keyframe => keyframe[property] !== undefined)
     if (track.length === 0) {
       return fallback[property]
     }
@@ -128,6 +201,10 @@ export const sampleRecipe = (recipe: Recipe, time: number, fallback: Shot): Shot
     const from = track[nextIndex - 1]
     const to = track[nextIndex]
     const t = tweens[to.tween ?? 'linear']((time - from.time) / (to.time - from.time))
+    if (to.orbit && isPose) {
+      orbitPose ??= sampleOrbit(to.orbit, t)
+      return orbitPose[property] as Shot[T]
+    }
     const start = from[property]!
     const end = to[property]!
     if (Array.isArray(start)) {

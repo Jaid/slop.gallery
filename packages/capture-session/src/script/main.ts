@@ -1,4 +1,4 @@
-export type {Keyframe, Recipe, Shot, ToolCall, Tween} from './cameraRecipe.ts'
+export type {CameraOrbit, Keyframe, Recipe, Shot, ToolCall, Tween} from './cameraRecipe.ts'
 export {parseRecipe, recipeDuration, recipeToolCalls, sampleRecipe, sampleWireframe, tweens} from './cameraRecipe.ts'
 export type {AudioTrack, FrameFormat, FrameSink, FrameSinkOptions} from './frameSinks.ts'
 export {audioSidecar, carriesAudio, createFrameSink, frameFormat, frameFormats, validateFrameSize, writeOpus} from './frameSinks.ts'

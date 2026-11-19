@@ -103,6 +103,107 @@ describe('camera recipes', () => {
     }
   })
 })
+describe('orbit keyframes', () => {
+  test('tweens the angle, height and radius while looking at the focus; lens and tool keys do not interrupt the orbit', () => {
+    const recipe = parseRecipe([
+      {
+        time: 0,
+        fov: 60,
+      },
+      {
+        time: 1,
+        fov: 40,
+        tools: {flash: {}},
+      },
+      {
+        time: 2,
+        orbit: {
+          from: [10, 1, 7],
+          to: [14, 3, 5],
+          focus: [10, 0, 5],
+        },
+        tween: 'easeInQuad',
+      },
+      {
+        time: 4,
+        position: [14, 3, 9],
+      },
+    ])
+    const shot = sampleRecipe(recipe, 1, fallback)
+    expect(shot.fov).toBe(40)
+    expect(shot.yaw).toBeCloseTo(22.5)
+    expect(shot.pitch).toBeCloseTo(Math.atan2(-1.5, 2.5) * 180 / Math.PI)
+    expect(shot.position[0]).toBeCloseTo(10 + 2.5 * Math.sin(Math.PI / 8))
+    expect(shot.position[1]).toBe(1.5)
+    expect(shot.position[2]).toBeCloseTo(5 + 2.5 * Math.cos(Math.PI / 8))
+    expect(sampleRecipe(recipe, 0, fallback).position).toEqual([10, 1, 7])
+    expect(sampleRecipe(recipe, 2, fallback).position).toEqual([14, 3, 5])
+    expect(sampleRecipe(recipe, 3, fallback).position).toEqual([14, 3, 7])
+    expect(recipeToolCalls(recipe).map(call => call.time)).toEqual([1])
+  })
+  test('takes the short way across the yaw seam and can add a whole revolution with identical endpoints', () => {
+    const recipe = parseRecipe([
+      {
+        time: 2,
+        orbit: {
+          from: [1, 1, -1],
+          to: [-1, 1, -1],
+          focus: [0, 1, 0],
+        },
+      },
+      {
+        time: 6,
+        orbit: {
+          from: [-1, 1, -1],
+          to: [-1, 1, -1],
+          focus: [0, 1, 0],
+          turns: -1,
+        },
+      },
+    ])
+    expect(sampleRecipe(recipe, 1, fallback).yaw).toBeCloseTo(180)
+    const halfway = sampleRecipe(recipe, 4, fallback)
+    expect(halfway.position[0]).toBeCloseTo(1)
+    expect(halfway.position[2]).toBeCloseTo(1)
+    expect(halfway.yaw).toBeCloseTo(-315)
+    expect(sampleRecipe(recipe, 7, fallback).position).toEqual([-1, 1, -1])
+  })
+  test('rejects incomplete, ambiguous and degenerate arcs at parse time', () => {
+    const orbit = {
+      from: [1, 0, 0],
+      to: [0, 1, 2],
+      focus: [0, 0, 0],
+    }
+    for (const key of [{
+      time: 0,
+      orbit,
+    }, {
+      time: 2,
+      orbit,
+      yaw: 0,
+    }, {
+      time: 2,
+      orbit: {
+        ...orbit,
+        turns: 0.5,
+      },
+    }, {
+      time: 2,
+      orbit: {
+        ...orbit,
+        to: [1, 2],
+      },
+    }, {
+      time: 2,
+      orbit: {
+        ...orbit,
+        from: [0, 3, 0],
+      },
+    }]) {
+      expect(() => parseRecipe([key])).toThrow('Keyframe 0')
+    }
+  })
+})
 describe('tool keyframes', () => {
   test('every keyframe’s tools run once at its time, in the order they are given and the keyframes come', () => {
     const recipe = parseRecipe([
