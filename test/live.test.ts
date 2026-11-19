@@ -179,7 +179,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     expect(await page.$('[data-testid="artwork-overlay"]')).toBeNull()
     await page.mouse.down({button: 'left'})
     await page.waitForFunction(id => globalThis.slopGallery!.snapshot!().held === id, {}, work.id)
-    // Somewhere else along the wall where there is room for it
+    // Find another free spot along the same wall.
     let shift = 0
     let elsewhere = front
     for (const candidate of [0.5, -0.5, 1, -1, 1.5, -1.5, 2, -2]) {
@@ -267,6 +267,12 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     const carried = await propState()
     expect(carried.collidersEnabled.length).toBeGreaterThan(0)
     expect(carried.collidersEnabled.every(enabled => !enabled)).toBe(true)
+    // Drop on the clear floor in front of the painting. An orb dropped where it was picked up can keep rolling off furniture.
+    await teleport(page, front.eye, front.target)
+    await page.waitForFunction((id, eye) => {
+      const position = globalThis.slopGallery!.snapshot!().props.find(candidate => candidate.id === id)!.visualPosition
+      return Math.hypot(...position.map((value, axis) => value - eye[axis])) < 2
+    }, {}, prop.id, front.eye)
     await page.mouse.up({button: 'left'})
     await page.waitForFunction(id => globalThis.slopGallery!.snapshot!().held === null && globalThis.slopGallery!.snapshot!().props.find(candidate => candidate.id === id)!.collidersEnabled.every(Boolean), {}, prop.id)
     await page.waitForFunction(id => globalThis.slopGallery!.snapshot!().props.find(candidate => candidate.id === id)!.sleeping, {timeout: 30_000}, prop.id)
