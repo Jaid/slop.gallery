@@ -42,9 +42,6 @@ const displayPlans = {
     landingEnd: [-1.62, 3.2] as Point,
   },
 } as const
-
-export const displayNorthExtension = displayPlans.west.northExtension
-
 const depth = 3.2
 const thickness = 0.18
 const ceilingThickness = 0.18

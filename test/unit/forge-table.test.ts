@@ -79,21 +79,20 @@ const tables = [
 ] as const
 describe('the Forge’s tables', () => {
   for (const {center, geometry: build, name, table, turn, wall} of tables) {
-    test(`${name} has a 5 m × 1.3 m slab at 1.2 m on an iron frame clear of the baseboard`, () => {
+    test(`${name} supports its slab at the planned height on a frame clear of the baseboard`, () => {
       const geometry = build()
       try {
         const {footToGauge, nearest, nearestLow} = wallReach(geometry, wall, center, turn)
         expect(nearestLow - baseboardCapFront).toBeGreaterThan(0.005)
         expect(nearest).toBeGreaterThan(wallFace + 0.02)
-        // Its feet stay off the floor’s brass gauge.
         expect(footToGauge).toBeGreaterThan(0.013)
         expect(geometry.top.hasAttribute('woodGrain')).toBe(false)
         expect(geometry.frame.hasAttribute('woodGrain')).toBe(false)
         // Its slab rests on the band under it, as high as the table is.
         geometry.top.computeBoundingBox()
-        expect(geometry.top.boundingBox!.max.y).toBeCloseTo(1.2, 6)
-        expect(geometry.top.boundingBox!.max.x - geometry.top.boundingBox!.min.x).toBeCloseTo(5, 6)
-        expect(geometry.top.boundingBox!.max.z - geometry.top.boundingBox!.min.z).toBeCloseTo(1.3, 6)
+        expect(geometry.top.boundingBox!.max.y).toBeCloseTo(table.height, 6)
+        expect(geometry.top.boundingBox!.max.x - geometry.top.boundingBox!.min.x).toBeCloseTo(table.length, 6)
+        expect(geometry.top.boundingBox!.max.z - geometry.top.boundingBox!.min.z).toBeCloseTo(table.depth, 6)
         expect(geometry.top.boundingBox!.min.y).toBeCloseTo(table.height - table.top, 6)
       } finally {
         geometry.dispose()

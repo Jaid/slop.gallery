@@ -9,8 +9,7 @@ export type KnotLabel = Pick<KnotEntry, 'author' | 'harness' | 'id' | 'modelTitl
 }
 
 export const labelAtlasColumns = 10
-// 847 texels/m exceeds the previous title (800) and creator (686) densities.
-// The complete 167-label atlas fits within 8192 in both dimensions.
+// Keep at least 800 texels per meter for legible text, within the 8192 px atlas limit.
 export const labelWidth = 720
 export const labelHeight = 480
 export const labelBackground = '#122029'

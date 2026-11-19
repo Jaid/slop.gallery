@@ -1,7 +1,5 @@
 import type {ColliderBox} from './plankTable.ts'
 
-import {baseboardCapFront} from './architectureDimensions.ts'
-
 /**
  * A workshop table of blackened iron under a slab of honed stone, built to stand against a wall: square legs on foot plates, tied together under the slab by a band of flat bar round its sides and ends and a cross band at every pair of legs between the ends, and low down by square stretchers along both sides and across every pair.
  * In its own frame it runs along x, its back toward +z, its origin on the floor under the slab’s middle; its `height` is the slab’s upper face over the floor, all in meters.
@@ -34,8 +32,6 @@ export type IronTable = {
 
 /** how far a table’s legs stand back from the faces of its band, so their faces never fight */
 const legInset = 0.003
-/** how far the legs of a table against a wall stand clear of the wall’s baseboard */
-export const baseboardClearance = 0.02
 /** how thick the iron plates under the legs’ feet are */
 export const footPlate = 0.01
 
@@ -57,11 +53,6 @@ export function ironTable({pairs, ...table}: Omit<IronTable, 'frameZ' | 'legs' |
     legZ: [frameZ[0] + legInset + leg / 2, frameZ[1] - legInset - leg / 2],
     legs: Array.from({length: pairs}, (_, index) => (index * 2 / (pairs - 1) - 1) * reach),
   }
-}
-
-/** How far out of the center line of the wall it stands against the table’s middle lies: as close as leaves its legs, and everything else that reaches the floor, clear of the default baseboard’s cap, with its slab reaching back out over the baseboard. */
-export function ironTableStandOff({depth, back}: IronTable) {
-  return baseboardCapFront + baseboardClearance + depth / 2 - back
 }
 
 /**

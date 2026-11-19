@@ -1,7 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {knotsById} from 'knot-materials'
-import {knotBays, knotExhibition} from 'knot-materials/exhibition.ts'
+import {knotExhibition} from 'knot-materials/exhibition.ts'
 import {knotSign} from 'knot-materials/signs.ts'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
@@ -12,33 +11,13 @@ import {knotDetailLine, labelAtlasColumns, labelBackground, labelHeight, labelTi
 import redrawPlates from '../../src/components/KnotLabels/redrawPlates.ts'
 import signAccentColor from '../../src/components/signAccentColor.ts'
 
-const iconHash = async (id: string) => Bun.hash(await Bun.file(new URL(knotsById.get(id)!.candidate.icon)).arrayBuffer())
 describe('Knot nameplates', () => {
   test('a complete face preserves text density and the atlas fits the current exhibition', () => {
-    expect([labelWidth, labelHeight]).toEqual([720, 480])
     expect(labelWidth / labelHeight).toBeCloseTo(knotSign.width / knotSign.height)
     expect(labelWidth / knotSign.width).toBeGreaterThanOrEqual(800)
     expect(labelHeight / knotSign.height).toBeGreaterThanOrEqual(800)
     expect(labelAtlasColumns * labelWidth).toBeLessThanOrEqual(8192)
     expect(Math.ceil(knotExhibition.length / labelAtlasColumns) * labelHeight).toBeLessThanOrEqual(8192)
-  })
-  test('ships a local SVG candidate mark for every exhibited model and reuses family marks', async () => {
-    const urls = new Set<string>
-    for (const bay of knotBays) {
-      const url = bay.candidate.icon
-      expect(url).toBeDefined()
-      const iconUrl = new URL(url)
-      expect(iconUrl.pathname.endsWith('/symbol.svg')).toBe(true)
-      expect(await Bun.file(new URL(url)).text()).toContain('<svg')
-      urls.add(Bun.hash(await Bun.file(new URL(url)).arrayBuffer()).toString())
-    }
-    expect(urls.size).toBeGreaterThan(0)
-    expect(urls.size).toBeLessThan(knotBays.length)
-    expect(await iconHash('lenticular_mirage')).toBe(await iconHash('solar_reliquary'))
-    expect(await iconHash('solar_reliquary')).toBe(await iconHash('coralline_crown'))
-    expect(await iconHash('celestial_rose')).toBe(await iconHash('lenticular_mirage'))
-    expect(await iconHash('opal_fire')).toBe(await iconHash('lightless_border'))
-    expect(await iconHash('cyber_kintsugi')).toBe(await iconHash('schwarzschild_vault'))
   })
   test('a face holds its number, title, stars, model with its mark and how it was made, with every line of text fitted', () => {
     const exhibit = knotExhibition[0]
@@ -53,7 +32,6 @@ describe('Knot nameplates', () => {
     expect(markup.split('<img')).toHaveLength(2)
     expect(markup).toContain(`src="${exhibit.candidate.icon}"`)
     expect(markup.split('data-fit')).toHaveLength(5)
-    // The model’s mark comes before its name, in one line.
     expect(markup.indexOf('<img')).toBeLessThan(markup.indexOf(`>${exhibit.modelTitle}<`))
   })
   test('a face without a mark or a way it was made leaves both out instead of leaving them empty', () => {

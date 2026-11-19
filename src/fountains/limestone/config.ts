@@ -17,7 +17,7 @@ export type WaterSheet = {
 /**
  * Water thrown from a nozzle as a free jet, sampled at equal flight times like the sheets so that its UV v is the age of the water in seconds.
  *
- * The jet leaves the nozzle above the pool it falls back into, so apart from its launch it only descends.
+ * The jet lands below the nozzle, so its descent lasts longer than its ascent.
  */
 export type WaterJet = {
   /** horizontal speed away from the axis in m/s */
@@ -49,25 +49,10 @@ export function jetFlightTime(jet: Pick<WaterJet, 'rise' | 'until' | 'y'>) {
   return (jet.rise + Math.sqrt(jet.rise ** 2 + 2 * gravity * (jet.y - jet.until))) / gravity
 }
 
-export function jetPoint(jet: WaterJet, age: number): [number, number] {
-  return [jet.radius + jet.outward * age, jet.y + jet.rise * age - gravity / 2 * age ** 2]
-}
-
 /** where a jet meets its pool, measured from the axis */
 export function jetLanding(jet: WaterJet) {
-  return jetPoint(jet, jetFlightTime(jet))[0]
+  return jet.radius + jet.outward * jetFlightTime(jet)
 }
-
-/** Height of a jet above its nozzle after `age` seconds. */
-export function jetHeight(jet: WaterJet, age: number) {
-  return jetPoint(jet, age)[1]
-}
-
-/** The height a jet reaches before it falls back. */
-export function jetApex(jet: WaterJet) {
-  return jet.y + jet.rise ** 2 / (2 * gravity)
-}
-
 /**
  * The three bowls of the fountain, from the widest to the smallest.
  *
