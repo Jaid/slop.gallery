@@ -30,13 +30,13 @@ Options:
 ${galleryHelp()}
   --seed-range <min..max> inclusive search range for seed wildcards. Default: ${defaultSeedRange} (the default environment and all seeds a game rolls). Literal seeds and brace ranges can use any unsigned 32-bit seed
   --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). With three or more clips, at most half the length of one clip
-  --list                  print the target and seed of each clip in playback order and exit without recording
+  --list                  print the target and seed of each clip before seam rotation and exit without recording
   --output-file <file>    the extension picks the format. Default: out/film/<world>-<timestamp>.jxl
                           .jxl  animated JPEG XL
                           .webm, .mkv  AV1 video
                           .png  one PNG per frame, each written to the next free name after the given one (shot.png → shot_001.png, shot_002.png, …)
   --fps <number>          frames per second. Default: 60
-  --starting-frame <n>    recipe frame that becomes the first frame of the output, wrapping around at the end; moves the loop seam without changing the motion. Default: 1
+  --starting-frame <n>    frame that becomes the first frame of the output, wrapping once at the end. For one clip this is a recipe frame; for multiple clips it counts frames in the whole movie after crossfades. Default: 1
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
   --crf <number>          AV1 quality for .webm and .mkv, lower is better. Default: ${av1Crf}
   --keyframe-interval <n> at most how many frames .webm and .mkv run from one keyframe to the next; small ones, like 6, let players seek and scrub without decoding long stretches, for a larger file. Default: the encoder’s own, about 5 s
@@ -170,10 +170,6 @@ const prepareFilm = async (options: FilmOptions, setup: GallerySetup) => {
     throw new Error('--width and --height need to be even for 4:2:0 video.')
   }
   const frameCount = Math.max(1, Math.round(duration * fps))
-  const startingFrame = parseNumbers(options['starting-frame'], 'starting-frame', [1])[0]
-  if (!Number.isSafeInteger(startingFrame) || startingFrame < 1 || startingFrame > frameCount) {
-    throw new Error(`--starting-frame must be a whole number between 1 and ${frameCount}.`)
-  }
   return {
     duration,
     encoding: {
@@ -192,7 +188,6 @@ const prepareFilm = async (options: FilmOptions, setup: GallerySetup) => {
     format,
     recipe,
     settle,
-    startingFrame,
   }
 }
 
@@ -200,7 +195,7 @@ type Film = Awaited<ReturnType<typeof prepareFilm>>
 type FrameWriter = (source: GallerySetup['viewport']) => FrameSink['write']
 
 /** Records one whole take on a fresh virtual clock. Its frames are delivered at the canvas size, before downsampling and encoding. */
-const captureFilm = async ({duration, encoding: {audio: audible, fps, frameCount}, recipe, settle, startingFrame}: Film, setup: GallerySetup, frames: FrameWriter) => {
+const captureFilm = async ({duration, encoding: {audio: audible, fps, frameCount}, recipe, settle}: Film, setup: GallerySetup, startingFrame: number, frames: FrameWriter) => {
   warnAboutDevServer(setup)
   const frameSeconds = (index: number) => (index + startingFrame - 1) % frameCount / fps
   // Each call runs before the output frame showing the first recipe frame at or after its time, wrapping around with --starting-frame.
@@ -438,15 +433,17 @@ const main = async (options: FilmOptions) => {
   const film = await prepareFilm(options, first)
   const {encoding, format} = film
   const {fps, height, output, width} = encoding
-  const timeline = new StitchTimeline(inputs.length, encoding.frameCount, fps, Number(options.crossfade ?? 0))
+  const [startingFrame] = parseNumbers(options['starting-frame'], 'starting-frame', [1])
+  const timeline = new StitchTimeline(inputs.length, encoding.frameCount, fps, Number(options.crossfade ?? 0), startingFrame)
   const {frameCount} = timeline
   await fs.mkdir(dirname(output), {recursive: true})
-  const scratch = timeline.fadeFrames ? await fs.mkdtemp(join(tmpdir(), 'film-fade-')) : undefined
+  const scratch = timeline.fadeFrames || timeline.offset % encoding.frameCount ? await fs.mkdtemp(join(tmpdir(), 'film-stitch-')) : undefined
   let sink: FrameSink | undefined
   let size: GallerySetup['viewport'] | undefined
   const tools: Awaited<ReturnType<typeof captureFilm>>['tools'] = []
   try {
-    for (const [clip, input] of inputs.entries()) {
+    await timeline.stitch(async (clip, accept) => {
+      const input = inputs[clip]
       if (inputs.length > 1) {
         console.error(`Recording clip ${clip + 1}/${inputs.length}: ${describeInput(input)}`)
       }
@@ -454,7 +451,7 @@ const main = async (options: FilmOptions) => {
         ...options,
         ...input,
       })
-      const recording = await captureFilm(film, setup, source => {
+      const recording = await captureFilm(film, setup, timeline.recipeStart, source => {
         if (size && (size.width !== source.width || size.height !== source.height)) {
           throw new Error(`Canvas size changed between takes: ${size.width}×${size.height} → ${source.width}×${source.height}.`)
         }
@@ -464,7 +461,7 @@ const main = async (options: FilmOptions) => {
           frameCount,
           source,
         })
-        return timeline.writer(clip, sink.write, scratch)
+        return accept
       })
       if (recording.audio) {
         timeline.mix(clip, recording.audio)
@@ -472,7 +469,7 @@ const main = async (options: FilmOptions) => {
       for (const tool of recording.tools) {
         tools.push(tool)
       }
-    }
+    }, pixels => sink!.write(pixels), scratch)
     const {audio} = timeline
     await sink!.finish(audio)
     return {

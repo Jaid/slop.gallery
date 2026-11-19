@@ -43,10 +43,7 @@ test('the overlap shortens the movie once per cut and blends picture and audio a
   try {
     const timeline = new StitchTimeline(3, 4, 2, 1)
     const frames: Array<number> = []
-    for (const clip of [0, 1, 2]) {
-      const write = timeline.writer(clip, async pixels => {
-        frames.push(pixels[0])
-      }, scratch)
+    await timeline.stitch(async (clip, write) => {
       for (const frame of [0, 1, 2, 3]) {
         await write(Uint8Array.of(clip * 40 + frame))
       }
@@ -57,7 +54,9 @@ test('the overlap shortens the movie once per cut and blends picture and audio a
           samples: Float32Array.of(1, 1, 1, 1),
         })
       }
-    }
+    }, async pixels => {
+      frames.push(pixels[0])
+    }, scratch)
     expect(frames).toEqual([0, 1, 12, 32, 52, 72, 82, 83])
     expect(frames.length).toBe(timeline.frameCount)
     expect([...timeline.audio!.samples]).toEqual([1, 1, 0.75, 0.25, 0.25, 0.75, 1, 1])
@@ -70,4 +69,54 @@ test('hard cuts keep all frames and excessive overlaps fail before recording', (
   expect(timeline.frameCount).toBe(12)
   expect(() => new StitchTimeline(3, 3, 30, 2 / 30)).toThrow('--crossfade')
   expect(() => new StitchTimeline(2, 3, 30, -1)).toThrow('--crossfade')
+})
+test('every stitched starting frame is one rotation of the original picture and stereo mix, even inside overlaps', async () => {
+  const scratch = await fs.mkdtemp(join(tmpdir(), 'film-seam-test-'))
+  try {
+    const fps = 2.5
+    const sampleRate = 8
+    const render = async (clips: number, fadeFrames: number, startingFrame: number) => {
+      const timeline = new StitchTimeline(clips, 4, fps, fadeFrames / fps, startingFrame)
+      const frames: Array<number> = []
+      const takes: Array<number> = []
+      await timeline.stitch(async (clip, write) => {
+        takes.push(clip)
+        for (const frame of [0, 1, 2, 3]) {
+          await write(Uint8Array.of(clip * 50 + frame * 3))
+        }
+        timeline.mix(clip, {
+          channels: 2,
+          sampleRate,
+          samples: Float32Array.from({length: 26}, (_, i) => clip * 100 + i),
+        })
+      }, async pixels => {
+        frames.push(pixels[0])
+      }, scratch)
+      expect(takes.toSorted((a, b) => a - b)).toEqual(Array.from({length: clips}, (_, i) => i))
+      expect(timeline.recipeStart).toBe(1)
+      return {
+        frames,
+        samples: [...timeline.audio!.samples],
+      }
+    }
+    for (const [clips, fade] of [[3, 0], [3, 2], [2, 4]]) {
+      const original = await render(clips, fade, 1)
+      for (let offset = 1; offset < original.frames.length; offset++) {
+        const shifted = await render(clips, fade, offset + 1)
+        expect(shifted.frames).toEqual([...original.frames.slice(offset), ...original.frames.slice(0, offset)])
+        const channelOffset = Math.round(offset * sampleRate / fps) * 2
+        expect(shifted.samples).toEqual([...original.samples.slice(channelOffset), ...original.samples.slice(0, channelOffset)])
+      }
+    }
+  } finally {
+    await fs.remove(scratch)
+  }
+})
+test('starting-frame is bounded by the final frame count, and a single take still begins at the requested recipe frame', () => {
+  const single = new StitchTimeline(1, 4, 2, 0, 4)
+  expect(single.recipeStart).toBe(4)
+  expect(single.offset).toBe(0)
+  for (const invalid of [0, 1.5, 9]) {
+    expect(() => new StitchTimeline(3, 4, 2, 1, invalid)).toThrow('between 1 and 8')
+  }
 })
