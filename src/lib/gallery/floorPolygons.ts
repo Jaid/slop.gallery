@@ -120,12 +120,16 @@ export function quadrilaterals(polygon: FloorPolygon): Array<FloorPolygon> {
   return polygon.map((_, start) => fan(start)).reduce((best, pieces) => (seams(pieces) < seams(best) - tolerance ? pieces : best))
 }
 
+/** the farthest along x or z a hull of a slab reaches, see {@link slabHulls}: well short of where the Corridor’s hall went wrong, and as far as the Lodge’s floor, bay included, so its slab stays in one piece */
+export const slabHullReach = 16
+
 /**
- * The corners of convex hulls that together make a level slab over the polygon between two heights, one for each of its {@link quadrilaterals}.
+ * The corners of convex hulls that together make a level slab over the polygon between two heights, one for each of its {@link quadrilaterals}, and more along a long polygon, so none reaches farther than {@link slabHullReach}.
  * Rapier builds the contacts of boxes and hulls against a hull’s face out of at most four of its corners, so a box sank 8.5 cm into one hull round the Lodge’s six-cornered floor.
+ * Over a hull 4 m wide and 49 m long down the Corridor’s hall, the player’s capsule sank 4.5 cm through its top face halfway along and then caught on the rest, while hulls no longer than 20 m held it at every length and lane tried.
  */
 export function slabHulls(polygon: FloorPolygon, bottom: number, top: number) {
-  return quadrilaterals(polygon).map(piece => new Float32Array(piece.flatMap(([x, z]) => [x, bottom, z, x, top, z])))
+  return slabPieces(polygon).map(piece => new Float32Array(piece.flatMap(([x, z]) => [x, bottom, z, x, top, z])))
 }
 
 /**
@@ -156,4 +160,21 @@ export function floorChunks(polygons: ReadonlyArray<FloorPolygon>, bottom: numbe
       return clipPolygon(clipPolygon(polygon, [-1, 0], -west), [1, 0], west + width / count)
     }).filter(piece => piece.length).map(box)
   })
+}
+
+/** The convex polygon in {@link quadrilaterals} reaching at most {@link slabHullReach} along x and z, cut across its longer side into equal strips first where it reaches farther. */
+function slabPieces(polygon: FloorPolygon): Array<FloorPolygon> {
+  const {center, size} = polygonBounds(polygon)
+  const axis = size[0] >= size[1] ? 0 : 1
+  const count = Math.ceil(size[axis] / slabHullReach - tolerance)
+  if (count <= 1) {
+    return quadrilaterals(polygon)
+  }
+  const normal: Point = axis ? [0, 1] : [1, 0]
+  const start = center[axis] - size[axis] / 2
+  return Array.from({length: count}, (_, strip) => {
+    const from = start + size[axis] * strip / count
+    const to = start + size[axis] * (strip + 1) / count
+    return clipPolygon(clipPolygon(polygon, normal, to), [-normal[0], -normal[1]], -from)
+  }).filter(piece => piece.length).flatMap(slabPieces)
 }

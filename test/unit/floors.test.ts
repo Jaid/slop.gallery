@@ -5,7 +5,8 @@ import {describe, expect, test} from 'bun:test'
 import RAPIER from '@dimforge/rapier3d-compat'
 import {BoxGeometry, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/webgpu'
 
-import {polygonArea, quadrilaterals, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
+import {corridorPassage} from '../../src/lib/gallery/corridor.ts'
+import {polygonArea, polygonBounds, quadrilaterals, slabHullReach, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
 import {floorGlassThickness, roomFloorPlan, subtractFloorOpening} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import walls, {rooms} from './fixtures/gallery.ts'
@@ -156,6 +157,8 @@ describe('rectangular floor openings', () => {
 })
 /** a regular polygon with 3 m to its corners */
 const regular = (corners: number) => Array.from({length: corners}, (_, i) => [3 * Math.cos(i / corners * 2 * Math.PI), 3 * Math.sin(i / corners * 2 * Math.PI)] as const)
+/** the corners on the ground of a slab’s hull */
+const footprint = (corners: Float32Array) => Array.from({length: corners.length / 6}, (_, i) => [corners[i * 6], corners[i * 6 + 2]] as const)
 describe('convex floor slabs', () => {
   test('split into convex pieces of at most four corners that cover the polygon', () => {
     for (let corners = 3; corners <= 9; corners++) {
@@ -176,6 +179,21 @@ describe('convex floor slabs', () => {
     const [trapezoid, square] = pieces.map(piece => polygonArea(piece)).toSorted((a, b) => a - b)
     expect(trapezoid).toBeCloseTo(21)
     expect(square).toBeCloseTo(100)
+  })
+  // The player’s capsule sank 4.5 cm into a single hull over all of the Corridor’s 49 m hall, from where the Lodge route’s walking test sets out down its west lane.
+  test('cut long polygons across into hulls of a bounded reach that still cover them', () => {
+    // The Corridor’s long hall, an askew strip and a polygon small enough to stay whole
+    for (const polygon of [corridorPassage.floors.find(floor => polygonBounds(floor).size[1] > 40)!, [[0, 0], [40, 30], [37, 34], [-3, 4]], regular(8)] as const) {
+      const hulls = slabHulls(polygon, -0.24, 0).map(footprint)
+      const {size} = polygonBounds(polygon)
+      expect(hulls.length).toBeGreaterThanOrEqual(Math.ceil(Math.max(...size) / slabHullReach))
+      for (const hull of hulls) {
+        expect(hull.length).toBeGreaterThanOrEqual(3)
+        expect(hull.length).toBeLessThanOrEqual(4)
+        expect(Math.max(...polygonBounds(hull).size)).toBeLessThanOrEqual(slabHullReach + 1e-6)
+      }
+      expect(hulls.reduce((sum, hull) => sum + polygonArea(hull), 0)).toBeCloseTo(polygonArea(polygon), 4)
+    }
   })
   // Rapier builds a box’s contacts with a hull’s face out of at most four of its corners, so boxes sank into slabs with more.
   test('hold boxes up on every part of their surface', () => {
