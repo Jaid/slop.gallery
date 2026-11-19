@@ -7,10 +7,9 @@ import {expect, test} from 'bun:test'
 import {bastionCurve, bastionGateLantern} from '../../src/lib/gallery/bastion.ts'
 import {corridorHallLanterns, corridorLandingLantern, corridorPassage} from '../../src/lib/gallery/corridor.ts'
 import {lobbyChandeliers} from '../../src/lib/gallery/lobbyVault.ts'
-import {lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
-import TimberGeometry from '../../src/lib/gallery/passages/TimberGeometry.ts'
-import {corridorLightSpacing, passagePendantMounts, routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
+import {timberRibSpacing} from '../../src/lib/gallery/passages/timberLayout.ts'
+import {routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import relations, {visibleLamps} from '../../src/worlds/gallery/relations.ts'
 
@@ -53,19 +52,24 @@ test('a lamp shines in its own room and in the rooms that keep it', () => {
 })
 test('the passages’ lamps hang under the lanterns the fixtures hang from their vaults and ribs', () => {
   const vault = new RouteVaultGeometry(bastionCurve)
-  const timber = TimberGeometry.passage(corridorPassage, lodgeWindowRibCutouts)
   try {
     const [{light}] = routePendantMounts(bastionCurve, [vault.shell, vault.ribs], [bastionGateLantern])
     expectNear(lamp('bastion-lantern_north').position, [light[0], light[1] - 0.6, light[2]])
-    const [north, middle, south] = corridorHallLanterns(passagePendantMounts(corridorPassage, [timber.shell, timber.ribs], corridorLightSpacing, timber.ribs))
+    const [north, middle, south] = corridorHallLanterns
     expectNear(lamp('corridor-lantern_north').position, below(north, 0.3))
     expectNear(lamp('corridor-lantern_middle').position, below(middle, 0.4))
     expectNear(lamp('corridor-lantern_south').position, below(south, 0.4))
     expectNear(lamp('corridor-lantern_landing').position, below(corridorLandingLantern, 0.3))
   } finally {
     vault.dispose()
-    timber.dispose()
   }
+})
+test('the Corridor’s hall lanterns hang at both of its ends and in its middle', () => {
+  const hall = corridorPassage.spans[3]
+  const [north, middle, south] = corridorHallLanterns.map(({light}) => light[2] - hall.start[1])
+  expect(north).toBeLessThan(hall.from + timberRibSpacing)
+  expect(Math.abs(middle - hall.length / 2)).toBeLessThanOrEqual(timberRibSpacing / 2)
+  expect(south).toBeGreaterThan(hall.to - timberRibSpacing)
 })
 test('the Lobby’s lamps hang under its chandeliers', () => {
   const lobby = slopGallery.room('lobby')

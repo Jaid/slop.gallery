@@ -15,6 +15,8 @@ export type TimberSpan = {
 
 /** How far a timber lining projects past the structural wall ends at a room entrance, like a fitted reveal. */
 export const timberEntranceProjection = 0.03
+/** How far the ribs stand proud of a lining’s plank backing, into the passage and down from its crown. */
+export const timberRibInset = 0.16
 /** At most this far between two ribs of a lining, leaving a bay of plank backing wide enough for a work between them while framing the Lodge’s window cleanly. */
 export const timberRibSpacing = 1.8
 

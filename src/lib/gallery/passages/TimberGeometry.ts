@@ -7,7 +7,7 @@ import {Brush, Evaluator, SUBTRACTION} from 'three-bvh-csg'
 import {BoxGeometry, BufferGeometry, ExtrudeGeometry, Matrix4, MeshBasicNodeMaterial, Shape, Vector2} from 'three/webgpu'
 
 import {mergeParts} from '../../geometry.ts'
-import {passageTimberSpans, timberEntranceProjection, timberRibs} from './timberLayout.ts'
+import {passageTimberSpans, timberEntranceProjection, timberRibInset, timberRibs} from './timberLayout.ts'
 
 export type {TimberSpan} from './timberLayout.ts'
 
@@ -174,7 +174,7 @@ export default class TimberGeometry {
       transform.setPosition(...start)
       const backing = timberProfile(radius, height, 0)
       const outside = timberProfile(radius, height, -0.18)
-      const ribInside = timberProfile(radius, height, 0.16)
+      const ribInside = timberProfile(radius, height, timberRibInset)
       // Room entrances project past the structural wall ends like a fitted timber reveal.
       // At internal junctions the ends still butt together without overlapping lengths.
       const front = from - entryProjection

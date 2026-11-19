@@ -5,13 +5,15 @@ import type {Vec3} from './types.ts'
 import {cutFloorOpening} from './floorPolygons.ts'
 import lodge, {lodgeBay, lodgeWindowCutout} from './lodge.ts'
 import Passage from './passages/Passage.ts'
-import {passageRibs} from './passages/timberLayout.ts'
+import {passageRibs, timberRibInset} from './passages/timberLayout.ts'
 import {passageLightDrop} from './pendants/mounts.ts'
 import sienna, {siennaVestibule} from './sienna.ts'
 import StairFlight from './stairs/StairFlight.ts'
 import StairRunner from './stairs/StairRunner.ts'
 
 type Point = readonly [number, number]
+/** where a timber rib starts and ends along its span */
+type Rib = readonly [number, number]
 
 const half = lodge.timberWidth / 2
 const lodgeWestX = lodge.center[0] - lodge.size[0] / 2
@@ -43,6 +45,8 @@ const downDiagonal = ([x, z]: Point, along: number): Point => [x + along * Math.
 /** the flight’s bottom and top, an open elbow down the diagonal from the hall’s end and an open elbow up it from the landing’s turn */
 const flightFoot = downDiagonal([lodge.approachX, hallSouthZ], elbow)
 const flightHead = downDiagonal(landingTurn, -elbow)
+/** Of the ribs along a span, the one whose middle lies nearest `along` meters down it. */
+const ribNear = (ribs: ReadonlyArray<Rib>, along: number) => ribs.reduce((nearest, rib) => (Math.abs((rib[0] + rib[1]) / 2 - along) < Math.abs((nearest[0] + nearest[1]) / 2 - along) ? rib : nearest))
 /** The long hall south from the diagonal round the Lodge’s bay to the turn toward the Sienna, which the Corridor is laid out around. */
 const corridor = {
   center: [lodge.approachX, (hallNorthZ + hallSouthZ) / 2],
@@ -55,22 +59,22 @@ const corridor = {
  * From the doorway in the middle of the Lodge’s bay north, west along the bay’s back wall and diagonally along its north-west wall round to the long hall, which runs south past the Lodge’s window and turns 45° south-east onto the diagonal, where the stair flight up to the Sienna’s vestibule begins. Its walls keep the same distance from the Lodge’s all the way round.
  */
 export const corridorPassage = new Passage('corridor', 'corridor', [[doorwayX, backZ], [doorwayX, runZ], [diagonal - runZ, runZ], [lodge.approachX, hallNorthZ], [lodge.approachX, hallSouthZ], flightFoot], lodge.floorY, lodge.timberWidth, corridor.height, [lodgeWindowCutout])
-/** The end lanterns hang from timber ribs at the same height as the middle lantern. */
-const hallLightY = corridor.floorY + corridor.height - passageLightDrop
-const ribBottomY = corridor.floorY + corridor.height - 0.16
-const ribLantern = (anchor: Vec3): PendantMount => ({
-  anchor,
-  normal: [0, -1, 0],
-  drop: anchor[1] - hallLightY,
-  light: [anchor[0], hallLightY, anchor[2]],
-})
-const hallRibs = passageRibs(corridorPassage, 3)
-export const corridorNorthLantern = ribLantern([lodge.approachX, ribBottomY, hallNorthZ + (hallRibs[0][0] + hallRibs[0][1]) / 2])
-export const corridorSouthLantern = ribLantern([lodge.approachX, ribBottomY, hallNorthZ + (hallRibs.at(-1)![0] + hallRibs.at(-1)![1]) / 2])
-/** The hall lanterns, from the north rib to the foot of the flight. */
-export function corridorHallLanterns(spaced: ReadonlyArray<PendantMount>) {
-  return [corridorNorthLantern, spaced[6], corridorSouthLantern]
+/** the passage’s span down the long hall */
+const hallSpan = 3
+const hallRibs = passageRibs(corridorPassage, hallSpan)
+/** A lantern hanging from the hall’s rib `from` to `to` meters down it, under the middle of its crown and as far below the crown as passage lights hang. */
+const ribLantern = ([from, to]: Rib): PendantMount => {
+  const crown = corridor.floorY + corridor.height
+  const z = hallNorthZ + (from + to) / 2
+  return {
+    anchor: [lodge.approachX, crown - timberRibInset, z],
+    normal: [0, -1, 0],
+    drop: passageLightDrop - timberRibInset,
+    light: [lodge.approachX, crown - passageLightDrop, z],
+  }
 }
+/** The hall’s lanterns, from its ribs: the first one at its north end, the one nearest its middle and the last one, at the foot of the flight. */
+export const corridorHallLanterns = [hallRibs[0], ribNear(hallRibs, corridorPassage.spans[hallSpan].length / 2), hallRibs.at(-1)!].map(ribLantern)
 /**
  * The landing at the Sienna’s floor between the flight’s top and the arch of the Sienna’s vestibule: from the arch west, a short lined reveal, then an open elbow turning 45° north-west onto the diagonal, where the flight begins.
  */
@@ -91,10 +95,7 @@ const doorwayPassage = (from: number, to: number): FloorRectangle => ({
   size: [lodge.timberWidth, to - from],
 })
 /** The rib of the doorway passage nearest its middle, which the joint between the Lodge’s planks and the Corridor’s boards lies under. */
-const jointRib = passageRibs(corridorPassage, 0).reduce((nearest, rib) => {
-  const middle = corridorPassage.spans[0].to / 2
-  return Math.abs((rib[0] + rib[1]) / 2 - middle) < Math.abs((nearest[0] + nearest[1]) / 2 - middle) ? rib : nearest
-})
+const jointRib = ribNear(passageRibs(corridorPassage, 0), corridorPassage.spans[0].to / 2)
 /** Where the Corridor ends toward the Lodge: under the rib of the doorway passage between them nearest its middle. */
 export const corridorEndZ = backZ - (jointRib[0] + jointRib[1]) / 2
 /** The Lodge’s part of the doorway passage from the Corridor, laid with the Lodge’s planks to mark it. */

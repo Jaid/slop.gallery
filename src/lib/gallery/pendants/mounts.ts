@@ -4,19 +4,12 @@ import type {Vec3} from '../types.ts'
 import type {PendantMount} from './CeilingProbe.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
-import {timberRibSpacing} from '../passages/timberLayout.ts'
 import CeilingProbe from './CeilingProbe.ts'
 
 /** how far a passage’s lights hang under its crown */
 export const passageLightDrop = 0.6
 /** At most this far between two passage lights along a span. */
 export const passageLightSpacing = 5
-/** The timber corridor’s spans are much longer, so its lanterns hang about 9 m apart instead, an odd count down its long hall so one hangs at its center. */
-export const corridorLightSpacing = 9
-/** how far a light may slide to reach a timber rib: half the most the ribs are apart, plus enough to cross from an elbow’s flat roof slab to the first rib past it */
-export const ribSearch = timberRibSpacing / 2 + 0.15
-/** A rib is barely wider than a canopy, so the search for one goes in 1 cm steps not to skip over it. */
-const ribStep = 0.01
 
 /** How many lights a span of the passage gets, at most `spacing` apart: at least one. */
 export function passageLightCount(passage: Passage, span: number, spacing = passageLightSpacing) {
@@ -30,22 +23,18 @@ export function passageLight(passage: Passage, span: number, index: number, spac
   return [start[0] + (end[0] - start[0]) * t, passage.floorY + passage.height - passageLightDrop, start[1] + (end[1] - start[1]) * t]
 }
 
-/**
- * Evenly spaced lights along every span, hung from the vault, timber lining or the flat roof slabs over the elbows. Given timber
- * `ribs`, each light hangs from the nearest one instead where one is in reach.
- */
-export function passagePendantMounts(passage: Passage, surfaces: ReadonlyArray<BufferGeometry>, spacing = passageLightSpacing, ribs?: BufferGeometry): Array<PendantMount> {
+/** Evenly spaced lights along every span, hung from the vault, timber lining or the flat roof slabs over the elbows. */
+export function passagePendantMounts(passage: Passage, surfaces: ReadonlyArray<BufferGeometry>, spacing = passageLightSpacing): Array<PendantMount> {
   const probe = new CeilingProbe(surfaces, [
     {
       y: passage.floorY + passage.height,
       areas: passage.floors,
     },
   ])
-  const ribProbe = ribs && new CeilingProbe([ribs])
   return passage.spans.flatMap(({start, end}, span) => Array.from({length: passageLightCount(passage, span, spacing)}, (_, index) => {
     const light = passageLight(passage, span, index, spacing)
     const along: Vec3 = [end[0] - start[0], 0, end[1] - start[1]]
-    return ribProbe?.mount(light, along, ribSearch, ribStep) ?? mountOrThrow(probe, light, along, `${passage.id} span ${span}`)
+    return mountOrThrow(probe, light, along, `${passage.id} span ${span}`)
   }))
 }
 
