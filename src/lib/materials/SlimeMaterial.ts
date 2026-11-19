@@ -7,8 +7,8 @@ import {studioEnvironment} from './metal.ts'
 
 /** the slime’s green and the darker green it glows in, in OkHSL: hue in degrees, saturation and lightness in percent */
 export const slimeColors = {
-  color: [134, 94, 68],
-  emissive: [138, 98, 49],
+  color: [100, 92, 70],
+  emissive: [110, 100, 40],
 } as const satisfies Record<string, OkhslTuple>
 
 /** The green slime of the gallery’s icon, which the Sloperator wears in front of his face: wet and glossy, with a faint glow of its own, so it reads as slime in the dark too. `hueShift` turns both of its greens round the hue circle by that many degrees, keeping their saturation and lightness. */
@@ -21,7 +21,7 @@ export default class SlimeMaterial extends MeshPhysicalNodeMaterial {
       clearcoatRoughness: 0.08,
       color: `#${okhsl(hue + hueShift, saturation, lightness)}`,
       emissive: `#${okhsl(glowHue + hueShift, glowSaturation, glowLightness)}`,
-      emissiveIntensity: 0.18,
+      emissiveIntensity: 0.4,
       envMap: studioEnvironment,
       envMapIntensity: 0.7,
       roughness: 0.22,
