@@ -12,9 +12,8 @@ import walls, {rooms} from './fixtures/gallery.ts'
 
 const sienna = rooms.find(room => room.id === 'sienna')!
 const siennaWalls = walls.filter(wall => wall.room === 'sienna')
-const panelWidth = 2
 describe('the Sienna’s wainscot', () => {
-  test('panels tile each wall in 2 m steps without running into an opening or past the wall’s ends', () => {
+  test('whole panels fill each run up to the casing, leaving the narrow piers bare', () => {
     for (const wall of siennaWalls) {
       const panels = siennaWainscot(wall)
       // The vestibule’s 4.8 m east and west walls hold 4 m arches, leaving 40 cm piers too narrow for a 2 m panel; every other wall has room.
@@ -23,23 +22,30 @@ describe('the Sienna’s wainscot', () => {
         continue
       }
       expect(panels.length).toBeGreaterThan(0)
-      for (const u of panels) {
-        expect(Math.abs(u) + panelWidth / 2).toBeLessThanOrEqual(wall.width / 2 + 1e-9)
+      for (const {u, width} of panels) {
+        expect(width).toBeGreaterThan(1.7)
+        expect(width).toBeLessThan(2.3)
+        expect(Math.abs(u) + width / 2).toBeLessThanOrEqual(wall.width / 2 + 1e-9)
         for (const hole of wall.holes ?? []) {
-          expect(Math.abs(u - hole.u)).toBeGreaterThanOrEqual(hole.width / 2 + panelWidth / 2)
+          expect(Math.abs(u - hole.u)).toBeGreaterThanOrEqual(hole.width / 2 + width / 2 + 0.17 - 1e-9)
         }
       }
       // Neighbors butt against each other, so the paneling reads as one continuous run.
       for (let index = 1; index < panels.length; index++) {
-        expect((panels[index] - panels[index - 1]) % panelWidth).toBeCloseTo(0)
+        expect(panels[index].u - panels[index].width / 2).toBeCloseTo(panels[index - 1].u + panels[index - 1].width / 2)
       }
     }
-    // Plain walls are paneled with as many centered 2 m bays as fit, in the vestibule too.
+    // No bare strip between the last panel and the arch’s casing.
+    for (const id of ['sienna-north', 'sienna-west']) {
+      const wall = siennaWalls.find(candidate => candidate.id === id)!
+      const hole = wall.holes![0]
+      expect(siennaWainscot(wall).some(({u, width}) => Math.abs(Math.abs(u - hole.u) - (width / 2 + hole.width / 2 + 0.17)) < 1e-6)).toBe(true)
+    }
     const south = siennaWalls.find(wall => wall.id === 'sienna-south')!
-    expect(siennaWainscot(south)).toHaveLength(south.width / panelWidth)
+    expect(siennaWainscot(south)).toHaveLength(6)
     for (const id of ['sienna-vestibule_north', 'sienna-vestibule_south']) {
       const wall = siennaWalls.find(candidate => candidate.id === id)!
-      expect(siennaWainscot(wall)).toEqual([-1, 1])
+      expect(siennaWainscot(wall)).toHaveLength(2)
     }
   })
 })

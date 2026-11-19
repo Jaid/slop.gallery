@@ -6,7 +6,7 @@ import {siennaWainscot, siennaWainscotPanel} from '#src/lib/gallery/siennaWainsc
 
 const {field, frame, rail} = siennaWainscotPanel
 
-/** The Sienna’s wainscot along a papered wall: as many 2 m panels as fit, centered on it and clear of its openings, each a frame with a raised field and a rail along its top. */
+/** The Sienna’s wainscot along a papered wall: fitted between corners and door casings, each a frame with a raised field and a rail along its top. */
 export default function SiennaWainscot({field: fieldMaterial, frame: frameMaterial, wall}: {
   /** the darker wood of the raised fields */
   field: Material
@@ -15,7 +15,7 @@ export default function SiennaWainscot({field: fieldMaterial, frame: frameMateri
   wall: Wall
 }) {
   return <group position={wall.center} rotation={[0, wall.rotation, 0]}>
-    {siennaWainscot(wall).map(u => <group key={u} position={[u, 0, 0]}>
+    {siennaWainscot(wall).map(({u, width}) => <group key={u} position={[u, 0, 0]} scale-x={width / siennaWainscotPanel.width}>
       <Box material={frameMaterial} name='sienna-wainscot-frame' position={[0, frame.y, frame.front]} size={[...frame.size]} />
       <Box material={fieldMaterial} name='sienna-wainscot-panel' position={[0, field.y, field.front]} size={[...field.size]} />
       <Box material={frameMaterial} name='sienna-wainscot-rail' position={[0, rail.y, rail.front]} size={[...rail.size]} />

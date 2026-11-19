@@ -1,6 +1,9 @@
 import type {JoineryWoodOptions} from '../materials/JoineryWoodMaterial.ts'
 import type {Wall} from '../placement/wallGeometry.ts'
 
+import {wallOpeningTrim} from './architectureDimensions.ts'
+import wallDressingSpans from './wallDressingSpans.ts'
+
 /**
  * One panel of the Sienna’s wainscot along its papered walls, every part a board given by its middle (y over the floor, front out of the wall’s center line) and its size: a 2 m frame of varnished wood standing on the baseboard, a darker raised field in it and a rail along its top.
  * Kept apart from the Sienna’s floor plan, so other rooms papered like it can take it without the gallery’s layout.
@@ -34,9 +37,17 @@ export const siennaWainscotFields: JoineryWoodOptions = {
   seed: 3,
 }
 
-/** Centers of the 2 m wainscot panels along a wall, as many as fit, centered on it, skipping any that would run into an opening. */
+/** Fit whole panels of about 2 m between the corner and the casing, leaving the narrow corner piers in damask. */
 export function siennaWainscot(wall: Pick<Wall, 'holes' | 'width'>) {
-  const {width} = siennaWainscotPanel
-  const count = Math.floor(wall.width / width)
-  return Array.from({length: count}, (_, i) => (i - (count - 1) / 2) * width).filter(u => !wall.holes?.some(hole => Math.abs(u - hole.u) < hole.width / 2 + width / 2))
+  // Leave a reveal at each return, just beyond the projecting rail of the neighboring wall.
+  return wallDressingSpans(wall, wallOpeningTrim, 0.2).flatMap(([start, end]) => {
+    const count = Math.round((end - start) / siennaWainscotPanel.width)
+    return Array.from({length: count}, (_, i) => {
+      const width = (end - start) / count
+      return {
+        u: start + (i + 0.5) * width,
+        width,
+      }
+    })
+  })
 }

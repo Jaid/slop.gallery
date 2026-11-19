@@ -1,4 +1,4 @@
-import type {Wall, WallOpening} from '../placement/wallGeometry.ts'
+import type {WallOpening} from '../placement/wallGeometry.ts'
 import type {Vec3} from './types.ts'
 
 import lobby from './lobby.ts'
@@ -99,23 +99,6 @@ export const salonSculptureSocket = {
 
 /** where a sculpture pedestal stands on the floor, on the room’s axis, centered on the line of the glass wall’s north end */
 export const salonPedestal: Vec3 = [salon.center[0], 0, salonWindow.z - salonWindow.width / 2]
-
-/**
- * Wall-local u ranges a horizontal band of wall dressing can run along without crossing a walk-through opening or its trim.
- * The ends are pulled in by `inset`, so bands of neighboring walls meet at the corners instead of reaching through them.
- */
-export function wallDressingSpans(wall: Pick<Wall, 'holes' | 'width'>, padding: number, inset = 0): Array<readonly [number, number]> {
-  let spans: Array<readonly [number, number]> = [[-wall.width / 2 + inset, wall.width / 2 - inset]]
-  for (const hole of wall.holes ?? []) {
-    if ((hole.bottom ?? 0) > 0) {
-      continue
-    }
-    const left = hole.u - hole.width / 2 - padding
-    const right = hole.u + hole.width / 2 + padding
-    spans = spans.flatMap(([start, end]) => [[start, Math.min(end, left)], [Math.max(start, right), end]] as const).filter(([start, end]) => end - start > 1e-6)
-  }
-  return spans
-}
 
 /** The Banquet’s north wall, which the Salon’s south wall backs onto */
 export const salonSouthZ = salon.center[1] + salon.size[1] / 2
