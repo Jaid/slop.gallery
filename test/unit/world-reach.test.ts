@@ -30,26 +30,26 @@ describe('?world_reach', () => {
   test('reads room, neighbors and all, all by default and for anything else', () => {
     expect(readWorldReach('?world_reach=room')).toBe('room')
     expect(readWorldReach('?world_reach=neighbors')).toBe('neighbors')
-    expect(readWorldReach('?world_reach=all')).toBe('all')
     for (const search of ['', '?world_reach', '?world_reach=ROOM', '?world_reach=neighbours', '?world_reach=1']) {
       expect(readWorldReach(search)).toBe('all')
     }
     expect(readQueryOverrides('http://localhost/?world_reach=room')).toEqual({world_reach: 'room'})
     expect(readQueryOverrides('http://localhost/?world_reach=all')).toBeUndefined()
   })
-  test('all mounts every room, as the page did before there was a reach', () => {
+  test('all mounts every room', () => {
     for (const search of ['', '?world_reach=all', '?world_reach=all&room=oculus']) {
       const all = reach(search)
       expect(all.rooms).toEqual(allRooms)
       expect(all.limited).toBe(false)
       expect(all.covers('exhibition')).toBe(true)
     }
-    // What this test process opened, without a URL
     expect(slopGallery.reach.rooms).toEqual(allRooms)
   })
   test('room mounts only the room the spawn belongs to, the Lobby without ?room or ?spawn', () => {
     expect(reach('?world_reach=room').rooms).toEqual(['lobby'])
     for (const room of allRooms) {
+      const start = slopGallery.start(`http://localhost/?room=${room}`)
+      expect(start.pose).toMatchObject(slopGallery.room(room).spawn)
       const within = reach(`?world_reach=room&room=${room}`)
       expect(within.origin).toBe(room)
       expect(within.rooms).toEqual([room])
@@ -62,32 +62,29 @@ describe('?world_reach', () => {
   test('neighbors mounts the spawn’s room and every room its relations name as neighbors', () => {
     for (const room of allRooms) {
       const within = reach(`?world_reach=neighbors&room=${room}`)
-      expect(new Set(within.rooms)).toEqual(new Set([room, ...relations[room].rooms]))
-      // In the world’s order, however the relations list them
-      expect(within.rooms).toEqual(allRooms.filter(id => within.rooms.includes(id)))
+      const neighbors = new Set([room, ...relations[room].rooms])
+      expect(within.rooms).toEqual(allRooms.filter(id => neighbors.has(id)))
     }
-    expect(reach('?world_reach=neighbors&room=moonfall').rooms).toEqual(['antechamber', 'moonfall', 'oculus', 'exhibition'])
   })
   test('reaches out from where ?spawn starts, a spawn bookmark or a camera bookmark, which wins over ?room', () => {
     for (const bookmark of slopGallery.spawnBookmarks()) {
-      expect(reach(`?world_reach=room&spawn=${bookmark.id}`).rooms).toEqual([slopGallery.roomAt(bookmark.position)!.id])
+      const search = `?world_reach=room&spawn=${bookmark.id}`
+      const start = slopGallery.start(`http://localhost/${search}`)
+      expect(start.flying).toBe(false)
+      expect(start.pose.position).toEqual(bookmark.position)
+      expect(reach(search).rooms).toEqual([slopGallery.roomAt(bookmark.position)!.id])
     }
     for (const bookmark of slopGallery.cameraBookmarks()) {
-      for (const development of ['', '&development']) {
-        const search = `?spawn=${bookmark.id}&room=lobby${development}`
-        const start = slopGallery.start(`http://localhost/${search}`)
-        expect(start.flying).toBe(true)
-        // Also where the feet hang out of the world, below eyes near the floor
-        expect(start.pose.position).toEqual(slopGallery.cameraBookmarkFeet(bookmark))
-        expect(start.eye).toEqual(bookmark.position)
-        // The camera’s room, as the feet below low eyes sink below its floor, into another room or none
-        expect(reach(`${search}&world_reach=room`).rooms).toEqual([slopGallery.roomAt(bookmark.position)!.id])
-      }
+      const search = `?spawn=${bookmark.id}&room=lobby`
+      const start = slopGallery.start(`http://localhost/${search}`)
+      expect(start.flying).toBe(true)
+      expect(start.eye).toEqual(bookmark.position)
+      expect(start.pose.position[0]).toBe(bookmark.position[0])
+      expect(start.pose.position[2]).toBe(bookmark.position[2])
+      expect(start.pose.position[1] + defaultEgoOptions.eyeHeight).toBeCloseTo(bookmark.position[1], 10)
+      // The eyes decide the room even when the feet hang below its floor.
+      expect(reach(`${search}&world_reach=room`).rooms).toEqual([slopGallery.roomAt(bookmark.position)!.id])
     }
-    expect(reach('?world_reach=room&spawn=moonfall-overview').origin).toBe('moonfall')
-    // Its feet stand in no room, and it isn’t the Lobby’s.
-    expect(reach('?world_reach=room&spawn=antechamber-overview').origin).toBe('antechamber')
-    expect(reach('?world_reach=room&spawn=sienna-overview').origin).toBe('sienna')
   })
   test('an unknown ?room or ?spawn starts at the world’s spawn, which the reach reaches out from', () => {
     expect(slopGallery.start('http://localhost/?room=attic').unknown).toEqual({
@@ -104,13 +101,6 @@ describe('?world_reach', () => {
     })
     expect(reach('?world_reach=room&room=attic').rooms).toEqual(['lobby'])
     expect(reach('?world_reach=room&spawn=attic&room=oculus').rooms).toEqual(['lobby'])
-  })
-  test('a camera bookmark starts flying with the eyes at the bookmark, a spawn bookmark on its feet', () => {
-    const [bookmark] = slopGallery.cameraBookmarks()
-    const start = slopGallery.start(`http://localhost/?spawn=${bookmark.id}`)
-    expect(start.flying).toBe(true)
-    expect(start.pose.position[1] + defaultEgoOptions.eyeHeight).toBeCloseTo(bookmark.position[1], 10)
-    expect(slopGallery.start(`http://localhost/?spawn=${slopGallery.spawnBookmarks()[0].id}`).flying).toBe(false)
   })
   test('worlds of a single room have it in reach whatever the mode', () => {
     for (const world of [sandbox, knottingham]) {

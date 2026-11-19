@@ -32,9 +32,3 @@ const roomSchema = optis({
 export function readRoom(input: URL | string = typeof location === 'undefined' ? '' : location.href): string {
   return readPermalink(input, {schema: roomSchema}).room
 }
-
-/** The bookmark of the list that `?spawn` names, `null` without `?spawn` and `undefined` when none of them has that ID. */
-export function findNamedBookmark<Bookmark extends {id: string}>(list: ReadonlyArray<Bookmark>, input?: URL | string): Bookmark | null | undefined {
-  const id = readSpawn(input)
-  return id ? list.find(bookmark => bookmark.id === id) : null
-}

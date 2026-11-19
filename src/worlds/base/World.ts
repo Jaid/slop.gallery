@@ -16,7 +16,7 @@ import {defaultEgoOptions} from 'ego-player/motor'
 import Geofences, {boxInputSchema} from 'geofency'
 
 import miterCorners from '#src/lib/gallery/cornerMiters.ts'
-import {findNamedBookmark, readRoom, readSpawn} from '#src/lib/gallery/spawn.ts'
+import {readRoom, readSpawn} from '#src/lib/gallery/spawn.ts'
 import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
 
 import PlacedRoom from './PlacedRoom.ts'
@@ -150,6 +150,10 @@ export default abstract class World<Kind extends Room = Room> {
   /** Every ambient sound of the world with its global id, from its point in world meters, room by room. */
   ambiences() {
     return this.rooms.flatMap(room => room.ambiences())
+  }
+
+  cameraBookmark(id = readSpawn()) {
+    return id ? this.cameraBookmarks().find(bookmark => bookmark.id === id) : undefined
   }
 
   /** Where the feet of a player hang who flies with its eyes at a camera bookmark: a standing eye height below it, through the floor under a low one. */
@@ -292,8 +296,6 @@ export default abstract class World<Kind extends Room = Room> {
    * Pure, so the {@link reach} that depends on it is known before anything places the player.
    */
   start(input?: URL | string): WorldStart {
-    const camera = findNamedBookmark(this.cameraBookmarks(), input)
-    const bookmark = camera ? null : findNamedBookmark(this.spawnBookmarks(), input)
     // A flying player is where its eyes are, whose feet may hang out of the world.
     const at = (pose: PlayerPose, flying = false, eye?: Vec3): WorldStart => (this.contains(eye ?? pose.position) ? {
       pose,
@@ -303,27 +305,30 @@ export default abstract class World<Kind extends Room = Room> {
       pose: this.spawn,
       flying,
     })
-    if (bookmark) {
-      const {position, yaw, pitch} = bookmark
-      return at({
-        position,
-        yaw,
-        pitch,
-      })
-    }
-    if (camera) {
-      return at({
-        position: this.cameraBookmarkFeet(camera),
-        ...camera.aim,
-      }, true, camera.position)
-    }
-    if (bookmark === undefined) {
+    const spawnId = readSpawn(input)
+    if (spawnId) {
+      const camera = this.cameraBookmark(spawnId)
+      if (camera) {
+        return at({
+          position: this.cameraBookmarkFeet(camera),
+          ...camera.aim,
+        }, true, camera.position)
+      }
+      const bookmark = this.spawnBookmarks().find(candidate => candidate.id === spawnId)
+      if (bookmark) {
+        const {position, yaw, pitch} = bookmark
+        return at({
+          position,
+          yaw,
+          pitch,
+        })
+      }
       return {
         pose: this.spawn,
         flying: false,
         unknown: {
           parameter: 'spawn',
-          id: readSpawn(input),
+          id: spawnId,
         },
       }
     }

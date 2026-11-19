@@ -12,7 +12,6 @@ import {Euler, PerspectiveCamera, Quaternion, Vector3} from 'three/webgpu'
 import {attachPlayerAudio, onPlayerLand, onPlayerStep, onPlayerZoomChange, onPlayerZoomTransition} from '#src/lib/audio/playerAudio.ts'
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {bodyPose, cameraPose, dropPortrait, flingPlayer, galleryEvents, markPortraitInteracted, narrate, setCameraFocused, useGallery, wallRebound} from '#src/lib/gallery.ts'
-import {cameraBookmarkFeet, findCameraBookmark} from '#src/lib/gallery/bookmarks.ts'
 import {flyMode} from '#src/lib/gallery/flyMode.ts'
 import {activateInteractiveObject} from '#src/lib/gallery/interactiveObjects.ts'
 import {playerSession} from '#src/lib/gallery/PlayerSession.ts'
@@ -25,7 +24,6 @@ import {playerDumpHandler, playerDumps, snapshotPlayerDump} from '#src/lib/telem
 import world from '#src/worlds/current.ts'
 
 const enabled = () => !cameraPose.focused
-const cameraEnabled = () => !cameraPose.focused
 const flying = () => flyMode.active
 /** Takes the body’s capsule and place along with its feet. */
 const placeBody = ([x, y, z]: Vec3, isFlying: boolean, crouching = false) => {
@@ -169,9 +167,9 @@ export default function Player() {
         rotation: sessionRotation.setFromEuler(new Euler(pose.pitch, pose.yaw, 0, 'YXZ')).toArray(),
       },
     }))
-    const bookmark = isDevelopmentMode || pageFov !== undefined ? null : findCameraBookmark()
+    const bookmark = isDevelopmentMode || pageFov !== undefined ? null : world.cameraBookmark()
     // The player starts flying at a ?spawn camera bookmark, its eyes where the camera is, and looks through the bookmark’s field of view while still there. With ?development or ?fov, the player flies on with the game’s own.
-    if (bookmark && cameraBookmarkFeet(bookmark).every((value, index) => value === pose.position[index])) {
+    if (bookmark && world.cameraBookmarkFeet(bookmark).every((value, index) => value === pose.position[index])) {
       setFov(camera, bookmark.fov)
     }
   }, [camera])
@@ -198,5 +196,5 @@ export default function Player() {
       }
     }
   }
-  return <EgoPlayer cameraEnabled={cameraEnabled} collisionGroups={playerCollisionGroups} enabled={enabled} fallbackPosition={world.spawnInReach.position} flying={flying} input={input} pitch={initial.pitch} pointerLock={pointerLock} position={initial.position} yaw={initial.yaw} ref={player} onDump={playerDumpHandler} onImpact={onImpact} onInteract={onInteract} onLand={onPlayerLand} onStep={onPlayerStep} onUpdate={onUpdate} onZoomChange={onPlayerZoomChange} onZoomTransition={onPlayerZoomTransition} />
+  return <EgoPlayer cameraEnabled={enabled} collisionGroups={playerCollisionGroups} enabled={enabled} fallbackPosition={world.spawnInReach.position} flying={flying} input={input} pitch={initial.pitch} pointerLock={pointerLock} position={initial.position} yaw={initial.yaw} ref={player} onDump={playerDumpHandler} onImpact={onImpact} onInteract={onInteract} onLand={onPlayerLand} onStep={onPlayerStep} onUpdate={onUpdate} onZoomChange={onPlayerZoomChange} onZoomTransition={onPlayerZoomTransition} />
 }

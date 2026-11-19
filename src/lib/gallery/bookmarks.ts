@@ -1,4 +1,4 @@
-import type {CameraBookmark, SpawnBookmark, Vec3} from './types.ts'
+import type {SpawnBookmark, Vec3} from './types.ts'
 
 import {Euler, Quaternion} from 'three/webgpu'
 
@@ -7,41 +7,12 @@ import world from '#src/worlds/current.ts'
 import {galleryEvents, notify} from './actions.ts'
 import {flyMode} from './flyMode.ts'
 import {playerSession} from './PlayerSession.ts'
-import {findNamedBookmark, readRoom} from './spawn.ts'
 
 /** key that teleports the player to the next bookmark with `?development`, or to the previous one with Shift */
 export const bookmarkKey = 'KeyT'
 
 /** how close the player’s feet must be to a bookmark to count as standing in it, in meters */
-export const bookmarkRadius = 1
-
-/** The spawn bookmark `?spawn` names, `null` without `?spawn` and `undefined` when this world has no spawn bookmark with that ID. */
-export function findSpawnBookmark(input?: URL | string, list: ReadonlyArray<SpawnBookmark> = world.spawnBookmarks()): SpawnBookmark | null | undefined {
-  return findNamedBookmark(list, input)
-}
-
-/** The camera bookmark `?spawn` names, `null` without `?spawn` and `undefined` when this world has no camera bookmark with that ID. */
-export function findCameraBookmark(input?: URL | string, list: ReadonlyArray<CameraBookmark> = world.cameraBookmarks()): CameraBookmark | null | undefined {
-  return findNamedBookmark(list, input)
-}
-
-/** The default spawn in world meters of the room `?room` names, `null` without `?room` and `undefined` when this world has no room with that ID. */
-export function findRoomSpawn(input?: URL | string): SpawnBookmark | null | undefined {
-  const id = readRoom(input)
-  if (!id) {
-    return null
-  }
-  const room = world.roomById(id)
-  return room && {
-    id: room.id,
-    ...room.spawn,
-  }
-}
-
-/** Where the feet of a player hang who flies with its eyes at a camera bookmark: a standing eye height below it. */
-export function cameraBookmarkFeet(bookmark: CameraBookmark): Vec3 {
-  return world.cameraBookmarkFeet(bookmark)
-}
+const bookmarkRadius = 1
 
 /** Move the player session to where the URL starts in the world, see `World.start`, which `?world_reach` also reaches out from: the `?spawn` bookmark, for a camera bookmark flying with its eyes at it, or else the default spawn of the `?room`. */
 export function applySpawnBookmark() {
