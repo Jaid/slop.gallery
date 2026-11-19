@@ -3,11 +3,13 @@ import {expect, test} from 'bun:test'
 import FatedRandom from 'fated-random'
 import {fromHex} from 'okhsl'
 
-import {salonVelvet, salonVelvetRandom} from '../../src/lib/gallery/salonVelvet.ts'
+import {salonVelvet, salonVelvetColors, salonVelvetRandom} from '../../src/lib/gallery/salonVelvet.ts'
 import {oxbloodVelvet} from '../../src/lib/materials/VelvetMaterial.ts'
 import {hslHex, rollHslShift, seededHsl, seededHue} from '../../src/lib/seededHsl.ts'
 import {defaultTunnelHue, tunnelHue, tunnelTints} from '../../src/rooms/exhibition/lamps.ts'
 
+/** The red, green and blue bytes of a hex color. */
+const channels = (value: string) => [1, 3, 5].map(at => Number.parseInt(value.slice(at, at + 2), 16))
 /** How far apart two hues lie round the circle, in degrees. */
 const hueGap = (a: number, b: number) => Math.abs(((a - b) % 360 + 540) % 360 - 180)
 test('a seeded hue only turns the hue, by the same roll every time and up to the spread', () => {
@@ -60,7 +62,14 @@ test('the tunnel lamps sit a third of the hue circle apart round a whole-degree 
   expect(hueGap(red[0], fromHex('#ff4d4d')[0])).toBeLessThanOrEqual(1)
 })
 test('the Salon ottoman is oxblood by default, otherwise all its velvet’s colors turn alike', () => {
-  expect(salonVelvet(0)).toBe(oxbloodVelvet)
+  // Its OkHSL colors are oxblood’s, rounded to whole degrees and percent.
+  for (const [key, hex] of Object.entries(salonVelvet(0)) as Array<[keyof typeof oxbloodVelvet, string]>) {
+    expect(hex).toBe(hslHex(salonVelvetColors[key]))
+    const expected = channels(oxbloodVelvet[key])
+    for (const [index, channel] of channels(hex).entries()) {
+      expect(Math.abs(channel - expected[index])).toBeLessThanOrEqual(1)
+    }
+  }
   const shifts = new Set<string>
   for (let seed = 1; seed <= 20; seed++) {
     const [shift] = rollHslShift(salonVelvetRandom(seed), {hue: 20})
@@ -68,7 +77,7 @@ test('the Salon ottoman is oxblood by default, otherwise all its velvet’s colo
     const velvet = salonVelvet(seed, {hue: 20})
     for (const key of ['crushed', 'pile', 'sheen'] as const) {
       const [hue] = fromHex(velvet[key])
-      expect(hueGap(hue, fromHex(oxbloodVelvet[key])[0] + shift)).toBeLessThanOrEqual(2)
+      expect(hueGap(hue, salonVelvetColors[key][0] + shift)).toBeLessThanOrEqual(2)
     }
   }
   expect(shifts.size).toBe(20)

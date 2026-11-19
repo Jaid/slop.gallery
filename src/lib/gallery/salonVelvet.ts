@@ -1,10 +1,18 @@
-import type {VelvetStyle} from '../materials/VelvetMaterial.ts'
+import type {VelvetColors, VelvetStyle} from '../materials/VelvetMaterial.ts'
 import type {HslSpread} from '../seededHsl.ts'
 
 import {environmentRandom, isDefaultSeed} from '../environmentSeed.ts'
-import {oxbloodVelvet, seededVelvet} from '../materials/VelvetMaterial.ts'
+import {seededVelvet} from '../materials/VelvetMaterial.ts'
 
-/** how far the Salon ottoman’s velvet may stray from oxblood in OkHSL, either way */
+/** the Salon ottoman’s velvet in OkHSL, by default the oxblood of the other velvets */
+export const salonVelvetColors = {
+  crushed: [23, 97, 32],
+  deep: [16, 89, 6],
+  pile: [21, 96, 18],
+  sheen: [22, 96, 48],
+} as const satisfies VelvetColors
+
+/** how far the Salon ottoman’s velvet may stray from {@link salonVelvetColors} in OkHSL, either way */
 export const salonVelvetSpread = {
   hue: 20,
   saturation: 0,
@@ -14,10 +22,7 @@ export const salonVelvetSpread = {
 /** The stream the velvet of the Salon ottoman is rolled from. */
 export const salonVelvetRandom = (seed: number) => environmentRandom(seed).makeChild(['salon', 'velvet'])
 
-/** The velvet of the Salon ottoman: oxblood in the default environment, otherwise oxblood moved up to {@link salonVelvetSpread} by the seed. */
-export function salonVelvet(seed: number, spread: HslSpread = salonVelvetSpread): VelvetStyle {
-  if (isDefaultSeed(seed)) {
-    return oxbloodVelvet
-  }
-  return seededVelvet(oxbloodVelvet, salonVelvetRandom(seed), spread)
+/** The velvet of the Salon ottoman: {@link salonVelvetColors}, which the seed moves up to {@link salonVelvetSpread}, except in the default environment. */
+export function salonVelvet(seed: number, spread: HslSpread = salonVelvetSpread, colors: VelvetColors = salonVelvetColors): VelvetStyle {
+  return seededVelvet(colors, salonVelvetRandom(seed), isDefaultSeed(seed) ? {} : spread)
 }
