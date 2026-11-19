@@ -97,7 +97,7 @@ jobs:
         apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         accountId: 94b07787e8a720b65196137d6224ec90
         packageManager: bun
-        wranglerVersion: 4.164.0
+        wranglerVersion: 4.165.0
         workingDirectory: ${{ runner.temp }}/preview
         command: pages deploy dist --project-name=slop-gallery --branch=pr-${{ steps.resolve.outputs.number }} --commit-hash=${{ steps.resolve.outputs.sha }} --commit-dirty=false
     # The deployment stands without its domain, which fails once the project has as many as Pages takes, so the comment then links the pages.dev alias instead.
