@@ -1,5 +1,7 @@
+import type {PropHandle} from '../../src/components/Scene/GrabbableProp.tsx'
 import type {Vec3} from '../../src/lib/gallery/types.ts'
 import type {Orb} from '../../src/orbs/index.ts'
+import type {AlchemyOrb} from '../../src/rooms/forge/components/AlchemyMachine/AlchemyWorks.ts'
 
 import {afterAll, describe, expect, test} from 'bun:test'
 
@@ -8,6 +10,8 @@ import EgoMotor, {defaultEgoOptions} from 'ego-player/motor'
 import {mulberry32} from 'math/random'
 import {Mesh, MeshBasicMaterial, Object3D, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
+import {propObjects} from '../../src/components/Scene/GrabbableProp.tsx'
+import {bodyPose} from '../../src/lib/gallery/actions.ts'
 import {alchemyCannon, alchemyPipe, alchemySink, cannonFlight, cannonLaunch, cannonTarget, holderSpot, inBodyInlet, machineBody, southWallFace, flight as stepsFrom, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import CannonGeometry from '../../src/lib/gallery/alchemy/CannonGeometry.ts'
 import {flavorCandidates, flavoredOrb, orbAround, transmutedOrb} from '../../src/lib/gallery/alchemy/flavor.ts'
@@ -26,13 +30,16 @@ import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
 import {climbApproach, climbCulvert, climbRun} from '../../src/lib/gallery/climb.ts'
 import {hatchet, helmet, paintingSet, paletteKnife, pumpkin} from '../../src/lib/gallery/curios/index.ts'
 import forge, {forgeRooflight, forgeVestibule} from '../../src/lib/gallery/forge.ts'
+import {probeGeofences, startGeofences, useGeofences} from '../../src/lib/gallery/geofences.ts'
 import {orbSeat} from '../../src/lib/gallery/OrbHolderGeometry.ts'
 import {salonCeiling} from '../../src/lib/gallery/salon.ts'
+import {useGallery} from '../../src/lib/gallery/store.ts'
 import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
 import {insideOpening, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import {halloweenOrb, horrorOrb, impastoOrb, orbRadius, paintOrb, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 import {bastionBaseboard} from '../../src/rooms/bastion/walls.ts'
+import AlchemyWorks from '../../src/rooms/forge/components/AlchemyMachine/AlchemyWorks.ts'
 import CannonFx, {charging} from '../../src/rooms/forge/components/AlchemyMachine/CannonFx.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {openings} from '../../src/worlds/gallery/relations.ts'
@@ -384,6 +391,89 @@ describe('the alchemy machine’s cannon going off', () => {
       expect(fx.root.children).toEqual([fx.blast])
     } finally {
       fx.dispose()
+    }
+  })
+})
+describe('the alchemy machine’s holder', () => {
+  test('gets another Transparent Orb whenever the player comes onto the Bastion’s approach to the Forge while no orb is left in the Forge or the Bastion and nothing lies in its way', () => {
+    const {id: first, position: seat} = AlchemyWorks.firstOrb
+    const second = `${transparentOrb.propId}-holder-2`
+    const still: Vec3 = [0, 0, 0]
+    // A standing player’s place on the Bastion’s run north behind the Forge, on its approach to the vestibule and in the Lobby
+    const [runX, runZ] = climbRun.route.at(-3).point
+    const [approachX, approachZ] = climbApproach.route.at(2).point
+    const onRun: Vec3 = [runX, 0.9, runZ]
+    const onApproach: Vec3 = [approachX, 0.9, approachZ]
+    const inLobby: Vec3 = [0, 0.9, -20]
+    const added: Array<AlchemyOrb> = []
+    const fx = new CannonFx
+    const works = new AlchemyWorks(orb => added.push(orb), fx, () => {})
+    const placed = new Set<string>
+    /** Lets the prop lie at the position, like a mounted one does. */
+    const place = (id: string, position: Vec3) => {
+      placed.add(id)
+      propObjects.set(id, {group: {getWorldPosition: (target: Vector3) => target.set(...position)}} as unknown as PropHandle)
+    }
+    /** Walks the player up the run onto the approach. */
+    const arrive = () => {
+      probeGeofences(onRun, still)
+      probeGeofences(onApproach, [0, 0, -3])
+    }
+    const {center} = bodyPose
+    const stop = works.restock()
+    try {
+      // A player starting on the approach has not come onto it.
+      startGeofences(onApproach)
+      expect(useGeofences.getState().fences).toContain('imminent_forge')
+      expect(added).toEqual([])
+      // The orb still waits in the holder, lies in the Forge, rolled down into the Bastion or comes back in the player’s hands.
+      place(first, seat)
+      arrive()
+      place(first, [forge.center[0], orbRadius, forge.center[1]])
+      arrive()
+      place(first, [bastionCrater.center[0], bastionCrater.center[1] - 0.2, bastionCrater.center[2]])
+      arrive()
+      place(first, inLobby)
+      useGallery.setState({held: first})
+      bodyPose.center = onApproach
+      arrive()
+      expect(added).toEqual([])
+      // Left behind in the Lobby, it leaves the holder to a new one, which the machine puts there as the player comes up, not as the player leaves the Bastion.
+      useGallery.setState({held: null})
+      probeGeofences(inLobby, still)
+      expect(added).toEqual([])
+      arrive()
+      expect(added).toEqual([{
+        id: second,
+        orb: transparentOrb,
+        position: seat,
+      }])
+      place(second, seat)
+      arrive()
+      expect(added).toHaveLength(1)
+      // Both gone, something else lying in the holder keeps the next one out.
+      place(second, inLobby)
+      place('prop-pumpkin', [seat[0] + orbRadius, seat[1], seat[2]])
+      arrive()
+      expect(added).toHaveLength(1)
+      place('prop-pumpkin', [seat[0] + orbRadius * 2.1, seat[1], seat[2]])
+      arrive()
+      expect(added.map(orb => orb.id)).toEqual([second, `${transparentOrb.propId}-holder-3`])
+      stop()
+      arrive()
+      expect(added).toHaveLength(2)
+    } finally {
+      stop()
+      fx.dispose()
+      for (const id of placed) {
+        propObjects.delete(id)
+      }
+      bodyPose.center = center
+      useGallery.setState({
+        held: null,
+        room: slopGallery.defaultRoom,
+      })
+      useGeofences.setState(useGeofences.getInitialState(), true)
     }
   })
 })

@@ -7,7 +7,7 @@ import world from '#src/worlds/current.ts'
 import {useGallery} from './store.ts'
 
 /** how the player’s place crossed a fence */
-type GeofenceCrossing = {
+export type GeofenceCrossing = {
   /** where the player’s place was right after it, in world meters */
   position: Vec3
   /** how fast the player moved, in m/s, which tells the direction the fence was crossed in */
@@ -22,7 +22,7 @@ type GeofenceState = {
 }
 
 /**
- * The fences of the current world the player’s place (`bodyPose.place`) is in. The scene probes the world’s fences once per frame, see {@link probeGeofences}, and everything that depends on where the player is goes by what it finds: the room the player is in and the telemetry’s geofence events.
+ * The fences of the current world the player’s place (`bodyPose.place`) is in. The scene probes the world’s fences once per frame, see {@link probeGeofences}, and everything that depends on where the player is goes by what it finds: the room the player is in, whatever a fence triggers, see {@link onGeofenceEnter}, and the telemetry’s geofence events.
  * It only changes as the player’s place crosses a fence, so a subscription sees every crossing once, with the fences left and entered between its two states.
  */
 export const useGeofences = create<GeofenceState>(() => ({
@@ -64,5 +64,14 @@ export function probeGeofences(position: Vec3, velocity: Vec3) {
       velocity: [...velocity],
     },
     fences,
+  })
+}
+
+/** Calls the listener whenever the player’s place crosses into the fence with the id, with how it did, though not for a player who starts in it; returns the unsubscription. */
+export function onGeofenceEnter(id: string, listener: (crossing: GeofenceCrossing) => void) {
+  return useGeofences.subscribe(({crossing, fences}, previous) => {
+    if (crossing && fences.includes(id) && !previous.fences.includes(id)) {
+      listener(crossing)
+    }
   })
 }

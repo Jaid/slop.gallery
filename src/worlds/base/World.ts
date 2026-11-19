@@ -53,7 +53,7 @@ const round = (value: number) => Math.round(value * 1e4) / 1e4 + 0
 /**
  * A world the player can visit: the rooms it glues together, each at a placement of its own, and everything that spans them, like the walls artworks hang on, the floors and the scene that renders it all.
  *
- * Rooms come in the order their fences are checked, so where two fences overlap, the earlier room wins.
+ * Rooms come in the order their fences are checked, so where the fences of two rooms overlap, the earlier room wins.
  * Components that render the world load lazily: they import the current world themselves, which only exists once its module has finished loading.
  */
 export default abstract class World<Kind extends Room = Room> {
@@ -64,8 +64,8 @@ export default abstract class World<Kind extends Room = Room> {
   /** the id of the room visitors start in, at its default spawn */
   abstract readonly defaultRoom: Kind['id']
   readonly enterLabel: string
-  /** the rooms’ fences in world meters by room id, in the order of {@link rooms} */
-  readonly geofences: Geofences<Kind['id'], Geofence>
+  /** every fence of the world in world meters by its id, in the order they are checked: the rooms’ by room id, in the order of {@link rooms}, then the world’s other fences, which mark places where something happens, whatever room they lie in */
+  readonly geofences: Geofences<string, Geofence>
   abstract readonly id: WorldId
   /** where the camera circles behind the first menu until the player first enters, there and then taking over the camera’s pose, or undefined for none, the default */
   readonly introOrbit: IntroOrbit | undefined = undefined
@@ -89,7 +89,8 @@ export default abstract class World<Kind extends Room = Room> {
   private pageReach: WorldReach | undefined = undefined
   private wallIndex: ReadonlyMap<string, Wall> | undefined = undefined
 
-  constructor({enterLabel, tagline, title, wallpaper}: WorldInfo, placements: ReadonlyArray<RoomPlacement<Kind>>) {
+  /** `fences` are the world’s fences beside its rooms’, by their ids in snake_case, in world meters; none by default. */
+  constructor({enterLabel, tagline, title, wallpaper}: WorldInfo, placements: ReadonlyArray<RoomPlacement<Kind>>, fences: Readonly<Record<string, Geofence>> = {}) {
     this.enterLabel = enterLabel
     this.tagline = tagline
     this.title = title
@@ -99,7 +100,10 @@ export default abstract class World<Kind extends Room = Room> {
     if (this.byId.size !== this.rooms.length) {
       throw new Error('Every room of a world needs an id of its own.')
     }
-    this.geofences = new Geofences(this.rooms.map(room => [room.id, room.fence]))
+    this.geofences = new Geofences<string, Geofence>([...this.rooms.map(room => [room.id, room.fence] as const), ...Object.entries(fences)])
+    if (this.geofences.size !== this.rooms.length + Object.keys(fences).length) {
+      throw new Error('Every fence of a world needs an id of its own, which is no room’s.')
+    }
     this.walls = miterCorners(this.rooms.flatMap(room => room.walls()))
   }
 
@@ -161,7 +165,7 @@ export default abstract class World<Kind extends Room = Room> {
   /** Whether the position lies anywhere a player or an artwork may be. */
   abstract contains(position: Vec3): boolean
 
-  /** Every fence of the world in the order they are checked, each with its boxes as the plain data geofency builds them from, in world meters rounded to the tenth of a millimeter, for the `dump_geofences` WebMCP tool. */
+  /** Every fence of the world in the order they are checked, the rooms’ first, each with its boxes as the plain data geofency builds them from, in world meters rounded to the tenth of a millimeter, for the `dump_geofences` WebMCP tool. */
   dumpGeofences(): Array<GeofenceDump> {
     return this.geofences.entries().map(([id, fence]) => ({
       id,
@@ -260,8 +264,7 @@ export default abstract class World<Kind extends Room = Room> {
 
   /** The first room whose fence holds the position, or undefined outside of every fence. */
   roomAt(position: Vec3) {
-    const id = this.geofences.getMatch(position)
-    return id === null ? undefined : this.byId.get(id)
+    return this.rooms.find(room => room.fence.contains(position))
   }
 
   /** The placed room with the id, or undefined for an id the world doesn’t know, like one from a URL. */
