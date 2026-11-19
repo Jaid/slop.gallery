@@ -22,7 +22,7 @@ type GeofenceState = {
 }
 
 /**
- * The fences of the current world the player’s place (`bodyPose.place`) is in. The scene probes the world’s fences once per frame, see {@link probeGeofences}, and everything that depends on where the player is goes by what it finds: the room the player is in, whatever entering a room or a fence triggers, see {@link onRoomEnter} and {@link onGeofenceEnter}, and the telemetry’s geofence events.
+ * The fences of the current world the player’s place (`bodyPose.place`) is in. The scene probes the world’s fences once per frame, see {@link probeGeofences}, and everything that depends on where the player is goes by what it finds: the room the player is in, whatever entering a room or a fence triggers, see {@link onRoomEnter} and {@link onGeofenceEnter}, whatever is only there while the player is in a fence, see {@link useGeofence}, and the telemetry’s geofence events.
  * It only changes as the player’s place crosses a fence, so a subscription sees every crossing once, with the fences left and entered between its two states.
  */
 export const useGeofences = create<GeofenceState>(() => ({
@@ -65,6 +65,11 @@ export function probeGeofences(position: Vec3, velocity: Vec3) {
     },
     fences,
   })
+}
+
+/** Whether the player’s place is in the fence with the id, a room’s or not, for a component to render by: a player who starts in the fence is in it too. */
+export function useGeofence(id: string) {
+  return useGeofences(({fences}) => fences.includes(id))
 }
 
 /**
