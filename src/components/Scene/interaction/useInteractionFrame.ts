@@ -7,15 +7,13 @@ import {useEffect, useRef} from 'react'
 
 import {readIntroNarration} from '#src/lib/audio/intro.ts'
 import {bodyPose, cameraPose, dragPose, narrate, useGallery} from '#src/lib/gallery.ts'
+import {probeGeofences, startGeofences} from '#src/lib/gallery/geofences.ts'
 import {importPreviewPlacement} from '#src/lib/gallery/ImageImporter.ts'
 import {interactiveObjects} from '#src/lib/gallery/interactiveObjects.ts'
 import {orbitables} from '#src/lib/gallery/orbitables.ts'
 import {isPortraitLabelHit} from '#src/lib/gallery/portraitLabel.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
-import followRooms from '#src/lib/gallery/roomSession.ts'
 import interactionHint from '#src/lib/interactionHint.ts'
-import GeofenceTelemetry from '#src/lib/telemetry/GeofenceTelemetry.ts'
-import {telemetry} from '#src/lib/telemetry/index.ts'
 import world from '#src/worlds/current.ts'
 
 import {propObjects} from '../GrabbableProp.tsx'
@@ -33,18 +31,13 @@ export default function useInteractionFrame(camera: RootState['camera'], rendere
   previousHeld,
   ray,
 }: InteractionFrameRefs) {
-  const rooms = useRef<ReturnType<typeof followRooms> | null>(null)
-  const geofences = useRef<GeofenceTelemetry | null>(null)
+  // The player starts in the fences its place lies in once the Player has put it there, which no frame probes before.
+  const probing = useRef(false)
   useEffect(() => {
-    const session = followRooms(bodyPose.place)
-    rooms.current = session
-    const fences = telemetry ? new GeofenceTelemetry(telemetry, world.geofences, bodyPose.place, id => world.roomById(id)?.title) : null
-    geofences.current = fences
+    startGeofences(bodyPose.place)
+    probing.current = true
     return () => {
-      session.removeAllListeners()
-      fences?.dispose()
-      rooms.current = null
-      geofences.current = null
+      probing.current = false
     }
   }, [])
   useFrame(() => {
@@ -60,8 +53,9 @@ export default function useInteractionFrame(camera: RootState['camera'], rendere
     camera.getWorldDirection(direction.current)
     cameraPose.position = camera.position.toArray()
     cameraPose.direction = direction.current.toArray()
-    rooms.current?.update(bodyPose.place)
-    geofences.current?.update(bodyPose.place, bodyPose.velocity)
+    if (probing.current) {
+      probeGeofences(bodyPose.place, bodyPose.velocity)
+    }
     cursor.current.set(0, 0)
     if (dragPose.active) {
       const bounds = renderer.domElement.getBoundingClientRect()
