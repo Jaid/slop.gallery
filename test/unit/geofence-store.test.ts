@@ -3,7 +3,7 @@ import type {Vec3} from '../../src/lib/gallery/types.ts'
 
 import {afterEach, expect, test} from 'bun:test'
 
-import {onGeofenceEnter, onRoomEnter, probeGeofences, startGeofences, useGeofences} from '../../src/lib/gallery/geofences.ts'
+import {onGeofenceEnter, onGeofenceLeave, onRoomEnter, probeGeofences, startGeofences, useGeofences} from '../../src/lib/gallery/geofences.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
@@ -193,6 +193,37 @@ test('a fence’s enter listener hears every crossing into it, a room’s or not
   stopVesper()
   probeGeofences(places.link, still)
   probeGeofences(places.alley, still)
+  expect(crossings).toHaveLength(1)
+})
+test('a fence’s leave listener hears every crossing out of it, a room’s or not, but neither a start outside of it nor staying out of it', () => {
+  const crossings: Array<GeofenceCrossing> = []
+  const stop = onGeofenceLeave('knight_alley', crossing => crossings.push(crossing))
+  startGeofences(places.alley)
+  // Deeper into the alley, the player is still in it.
+  probeGeofences([-16.93, -4.1, -34], [0, 0, -3])
+  expect(crossings).toEqual([])
+  const velocity: Vec3 = [0, 0, 3]
+  probeGeofences(places.link, velocity)
+  probeGeofences(places.run, velocity)
+  expect(crossings).toEqual([{
+    position: places.link,
+    velocity,
+  }])
+  // Leaving a room’s fence counts where the player’s room has changed before: from the plane of the wall the Lobby shares with the Vesper, the player comes back out of the Vesper’s fence without ever having been in the Vesper.
+  const heard: Array<string> = []
+  const stopVesper = onGeofenceLeave('vesper', () => heard.push(room()))
+  probeGeofences(places.wall, [-3, 0, 0])
+  probeGeofences(places.lobby, [3, 0, 0])
+  expect(heard).toEqual(['lobby'])
+  expect(crossings).toHaveLength(1)
+  // A player in the alley who starts anew elsewhere has crossed nothing.
+  startGeofences(places.alley)
+  startGeofences(places.lobby)
+  expect(crossings).toHaveLength(1)
+  stop()
+  stopVesper()
+  probeGeofences(places.alley, still)
+  probeGeofences(places.link, still)
   expect(crossings).toHaveLength(1)
 })
 test('a room’s enter listener hears the player cross into the room from another one, not into its fence alone, and neither a start in it nor a return from outside of every fence', () => {
