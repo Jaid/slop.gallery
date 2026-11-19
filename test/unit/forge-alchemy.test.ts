@@ -12,7 +12,7 @@ import {Mesh, MeshBasicMaterial, Object3D, Quaternion, Raycaster, Vector3} from 
 
 import {propObjects} from '../../src/components/Scene/GrabbableProp.tsx'
 import {bodyPose} from '../../src/lib/gallery/actions.ts'
-import {alchemyCannon, alchemyPipe, alchemySink, cannonFlight, cannonLaunch, cannonTarget, holderSpot, inBodyInlet, machineBody, southWallFace, flight as stepsFrom, workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
+import {alchemyCannon, alchemyPipe, alchemySink, cannonFlight, cannonLaunch, cannonTarget, holderSpot, inBodyInlet, machineBody, southWallFace, flight as stepsFrom, workbench, workbenchYawLimit} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import CannonGeometry from '../../src/lib/gallery/alchemy/CannonGeometry.ts'
 import {flavorCandidates, flavoredOrb, orbAround, transmutedOrb} from '../../src/lib/gallery/alchemy/flavor.ts'
 import IntakePassage from '../../src/lib/gallery/alchemy/IntakePassage.ts'
@@ -396,7 +396,16 @@ describe('the alchemy machine’s cannon going off', () => {
 })
 describe('the alchemy machine’s holder', () => {
   test('gets another Transparent Orb whenever the player enters the Forge while no orb is left in the Forge or the Bastion and nothing lies in its way', () => {
-    const {id: first, position: firstSeat} = AlchemyWorks.firstOrb
+    const pivot = new Object3D
+    pivot.position.set(...alchemySink.center)
+    const holder = new Object3D
+    holder.position.set(...holderSpot).sub(pivot.position)
+    pivot.add(holder)
+    pivot.rotation.y = workbenchYawLimit
+    const seatNow = (): Vec3 => holder.getWorldPosition(new Vector3).add(new Vector3(0, orbSeat + 0.002, 0)).toArray()
+    const {id: first, position: firstSeat} = AlchemyWorks.holderOrb(holder, 1)
+    expect(first).toBe(`${transparentOrb.propId}-holder-1`)
+    expect(firstSeat).toEqual(seatNow())
     const second = `${transparentOrb.propId}-holder-2`
     const still: Vec3 = [0, 0, 0]
     // A standing player’s place on the Bastion’s approach to the Forge’s vestibule, half a meter short of its west arch, half a meter through it, where the Forge begins, and in the Lobby
@@ -421,8 +430,7 @@ describe('the alchemy machine’s holder', () => {
       expect(useGallery.getState().room).toBe('forge')
     }
     const {center} = bodyPose
-    let base = holderSpot
-    const stop = works.restock(() => base)
+    const stop = works.restock(holder)
     try {
       // A player starting in the Forge has not entered it.
       startGeofences(inVestibule)
@@ -447,8 +455,9 @@ describe('the alchemy machine’s holder', () => {
       probeGeofences(onApproach, still)
       expect(added).toEqual([])
       // The bench was nudged while the holder was empty.
-      base = [holderSpot[0], holderSpot[1], holderSpot[2] + 0.035]
-      const seat: Vec3 = [firstSeat[0], firstSeat[1], base[2]]
+      pivot.rotation.y = -workbenchYawLimit
+      const seat = seatNow()
+      expect(seat).not.toEqual(firstSeat)
       arrive()
       expect(added).toEqual([{
         id: second,
@@ -460,7 +469,7 @@ describe('the alchemy machine’s holder', () => {
       expect(added).toHaveLength(1)
       // Both gone, something else lying in the holder keeps the next one out.
       place(second, inLobby)
-      place('prop-pumpkin', [seat[0] + orbRadius, seat[1], seat[2]])
+      place('prop-pumpkin', [seat[0], seat[1], seat[2] - orbRadius * 1.8])
       arrive()
       expect(added).toHaveLength(1)
       place('prop-pumpkin', [seat[0] + orbRadius * 2.1, seat[1], seat[2]])

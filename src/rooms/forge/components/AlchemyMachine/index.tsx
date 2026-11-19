@@ -72,7 +72,7 @@ const breechBlock = alchemyCannon.breech.map((value, axis) => value + alchemyCan
  * An orb thrown or dropped into the sink rolls down its throat into the body, which works on it for a while, its window glowing, and shoots it out of the cannon, see {@link AlchemyWorks}.
  */
 export default function AlchemyMachine() {
-  const [orbs, setOrbs] = useState<ReadonlyArray<AlchemyOrb>>([AlchemyWorks.firstOrb])
+  const [orbs, setOrbs] = useState<ReadonlyArray<AlchemyOrb>>([])
   const fx = useDisposable(useMemo(() => new CannonFx, []))
   const {world} = useRapier()
   const works = useMemo(() => new AlchemyWorks(orb => setOrbs(current => [...current, orb]), fx, () => puffFromLid(world)), [fx, world])
@@ -140,7 +140,12 @@ export default function AlchemyMachine() {
       },
     }
   }, [fx, works]))
-  useEffect(() => works.restock(() => holderBase.current.getWorldPosition(new Vector3).toArray()), [works])
+  useEffect(() => {
+    const base = holderBase.current
+    const first = AlchemyWorks.holderOrb(base, 1)
+    setOrbs(current => (current.length ? current : [first]))
+    return works.restock(base)
+  }, [works])
   useAfterPhysicsStep(() => works.takeIn())
   useFrame((_, delta) => {
     works.update(delta, barrel.current)

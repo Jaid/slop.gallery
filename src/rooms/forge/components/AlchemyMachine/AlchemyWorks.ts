@@ -11,7 +11,7 @@ import {Vector3} from 'three/webgpu'
 import {propObjects, showPropAt} from '#src/components/Scene/GrabbableProp.tsx'
 import {alchemyBrewVoices, alchemySwallowVoices, cannonVoices} from '#src/lib/audio/alchemySounds.ts'
 import {bodyPose, playSound, useGallery} from '#src/lib/gallery.ts'
-import {alchemyCannon, alchemySink, cannonLaunch, holderSpot, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
+import {alchemyCannon, alchemySink, cannonLaunch, machineBody} from '#src/lib/gallery/alchemy/alchemyMachine.ts'
 import {orbAround, transmutedOrb} from '#src/lib/gallery/alchemy/flavor.ts'
 import IntakePassage from '#src/lib/gallery/alchemy/IntakePassage.ts'
 import {onRoomEnter} from '#src/lib/gallery/geofences.ts'
@@ -48,8 +48,6 @@ const sinking = [0.3, 0.22] as const
 const brewing = 2.6
 /** how long after a shot the cannon shoots again at the soonest, in seconds, so orbs never meet on the way */
 const reload = 2
-/** where an orb waits in the holder: let down onto its lip from just over it */
-const holderSeat = ([x, y, z]: Vec3): Vec3 => [x, y + orbSeat + 0.002, z]
 const sinkPosition: Vec3 = [alchemySink.center[0], alchemySink.throatY, alchemySink.center[2]]
 const bodyPosition: Vec3 = [machineBody.center[0], machineBody.size[1] / 2, machineBody.center[1]]
 const worldPosition = new Vector3
@@ -68,11 +66,13 @@ const roomAt = (position: Vec3) => slopGallery.roomAt(position)?.id
  * Every orb it brings into the world it hands to `add`, which mounts it.
  */
 export default class AlchemyWorks {
-  /** the orb the holder holds when a game begins */
-  static readonly firstOrb: AlchemyOrb = {
-    id: `${transparentOrb.propId}-holder-1`,
-    orb: transparentOrb,
-    position: holderSeat(holderSpot),
+  /** A free orb just above the holder’s lip, wherever the workbench is when it spawns. */
+  static holderOrb(holder: Object3D, number: number): AlchemyOrb {
+    return {
+      id: `${transparentOrb.propId}-holder-${number}`,
+      orb: transparentOrb,
+      position: holder.localToWorld(new Vector3(0, orbSeat + 0.002, 0)).toArray(),
+    }
   }
 
   /** how brightly the window in the machine’s body glows: while it works on an orb and in a flash as the cannon shoots */
@@ -100,22 +100,19 @@ export default class AlchemyWorks {
    * Puts another Transparent Orb into the holder whenever the player enters the Forge while no orb is left in the Forge or the Bastion and nothing lies in the holder’s way; returns the unsubscription.
    * The Forge begins at the west arch of its vestibule, from where the wall beside the arch into the room still hides the holder, so the orb is there before the player can see it.
    */
-  restock(getHolderSpot: () => Vec3) {
+  restock(holder: Object3D) {
     return onRoomEnter('forge', () => {
       if (this.batches.length || this.loaded || orbAround(propPositions(), roomAt)) {
         return
       }
-      const seat = holderSeat(getHolderSpot())
+      const next = AlchemyWorks.holderOrb(holder, this.counts.holder + 1)
       for (const [, position] of propPositions()) {
-        if (Math.hypot(...position.map((value, axis) => value - seat[axis])) < orbRadius * 2) {
+        if (Math.hypot(...position.map((value, axis) => value - next.position[axis])) < orbRadius * 2) {
           return
         }
       }
-      this.add({
-        id: `${transparentOrb.propId}-holder-${++this.counts.holder}`,
-        orb: transparentOrb,
-        position: seat,
-      })
+      this.counts.holder++
+      this.add(next)
     })
   }
 
