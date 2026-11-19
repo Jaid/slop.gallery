@@ -10,6 +10,9 @@ import {patchAiSettings, readAiSettings, tieredModel} from '../../src/lib/ai/set
 import {useIntro} from '../../src/lib/gallery/intro.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 
+test('Neon is the default model for generated flavor text', () => {
+  expect(readAiSettings('').text_model).toBe('google/gemini-4-neon')
+})
 test('model and narration preferences remain configurable through URL parameters', () => {
   const customSettingsQuery = new URLSearchParams({
     text_model: 'custom-text',
