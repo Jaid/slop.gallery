@@ -135,21 +135,22 @@ describe('wall geometry', () => {
     for (const [i, value] of entrance.entries()) {
       expect(value).toBeCloseTo(exit[i])
     }
+    expect(entrance[0]).toBeCloseTo(-10)
     expect(galleryPlacement.findPlacement([-14, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
-      wallId: 'sienna-south',
-      inReach: false,
-    })
-    expect(galleryPlacement.findPlacement([-14, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
-      wallId: 'vesper-north',
-      inReach: false,
-    })
-    expect(galleryPlacement.findPlacement([-10.2, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
       wallId: 'vesper-south',
       inReach: true,
     })
-    expect(galleryPlacement.findPlacement([-10.2, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([-14, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
       wallId: 'sienna-north',
       inReach: true,
+    })
+    expect(galleryPlacement.findPlacement([-10.2, 2.5, 6], [0, 0, 1], 2, 2, [])).toMatchObject({
+      wallId: 'sienna-south',
+      inReach: false,
+    })
+    expect(galleryPlacement.findPlacement([-10.2, 2.5, 10], [0, 0, -1], 2, 2, [])).toMatchObject({
+      wallId: 'vesper-north',
+      inReach: false,
     })
   })
   test('the Sienna has usable hanging walls', () => {
