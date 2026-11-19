@@ -6,12 +6,11 @@ import RAPIER from '@dimforge/rapier3d-compat'
 import EgoMotor from 'ego-player/motor'
 import {Box3, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
-import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
+import {baseboardCapFront, wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from '../../src/lib/gallery/bastion.ts'
 import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
 import {gorgetBorderReach, helmetHeight} from '../../src/lib/gallery/curios/helmet/Helmet.ts'
 import {helmet} from '../../src/lib/gallery/curios/index.ts'
-import {lodgeEastWindow} from '../../src/lib/gallery/lodge.ts'
 import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '../../src/lib/gallery/suitOfArmor.ts'
 import suitOfArmorGeometry from '../../src/lib/gallery/suitOfArmorGeometry.ts'
 import {addArmor, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
@@ -155,10 +154,13 @@ describe('the suit of armor', () => {
     }
     expect(bounds.max.z - reach.max.z).toBeLessThan(0.05)
   })
-  test('it stands on the level floor near the end of the Bastion’s blind branch beside the Lodge, abreast of where the Lodge’s window ends, clear of its walls, looking back down it', () => {
+  test('it stands on the level floor near the end of the Bastion’s blind branch beside the Lodge, as far from the closing wall’s baseboard as from the side walls’, clear of its walls, looking back down it', () => {
     const [x, y, z] = lodgeSpurArmor
-    expect(z).toBeCloseTo(lodgeEastWindow.z - lodgeEastWindow.width / 2 - lodgeEastWindow.border, 9)
     const bounds = boundsOf(steel).translate(new Vector3(x, y, z))
+    const margins = [bounds.min.x - (lodgeSpurX - lodgeSpurWidth / 2 + baseboardCapFront), lodgeSpurX + lodgeSpurWidth / 2 - baseboardCapFront - bounds.max.x, bounds.min.z - (lodgeSpurEnd.center[2] + baseboardCapFront)]
+    for (const margin of margins) {
+      expect(Math.abs(margin - margins[0])).toBeLessThan(0.02)
+    }
     for (const [px, pz] of [[bounds.min.x, bounds.min.z], [bounds.max.x, bounds.min.z], [bounds.min.x, bounds.max.z], [bounds.max.x, bounds.max.z]]) {
       expect(lodgeSpur.floorAt(px, pz)).toBeCloseTo(y, 6)
     }

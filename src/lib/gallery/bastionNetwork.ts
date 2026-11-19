@@ -1,7 +1,7 @@
 import type {Wall, WallOpening} from '../placement/wallGeometry.ts'
 import type {Vec3} from './types.ts'
 
-import {vaultShellThickness, wallFace} from './architectureDimensions.ts'
+import {baseboardCapFront, vaultShellThickness, wallFace} from './architectureDimensions.ts'
 import {bastionLinkStart, bastionLinkStripZ, bastionLinkWidth, bastionPassages, lodgeSpurEndZ, lodgeSpurHeight, lodgeSpurWidth, lodgeSpurWindow, lodgeSpurX} from './bastion.ts'
 import {cisternFloor, insideCistern} from './cistern/cistern.ts'
 import {climbCrossfall, climbHairpin, climbMouth, climbPassages} from './climb.ts'
@@ -11,6 +11,7 @@ import FloorHollow from './passages/FloorHollow.ts'
 import PassageRoute from './passages/PassageRoute.ts'
 import RoutedPassage from './passages/RoutedPassage.ts'
 import vaultOpening from './passages/vaultOpening.ts'
+import {suitOfArmorBoxes} from './suitOfArmor.ts'
 
 const {point: [startX, startZ], heading, y, height} = bastionLinkStart
 const mouthNorthZ = climbMouth.path[0][1] - climbMouth.width / 2
@@ -179,8 +180,12 @@ export const lodgeSpurGrille = {
   hole: WallOpening
   wall: Wall
 }
-/** where the empty suit of armor stands near the spur’s end, its middle straight across from where the Lodge’s window ends, at the end of its reveal, looking back down the spur toward the link, the barred window behind it, see `suitOfArmor` */
-export const lodgeSpurArmor = [lodgeSpurX, lodge.floorY, lodgeEastWindow.z - lodgeEastWindow.width / 2 - lodgeEastWindow.border] as const satisfies Vec3
+/** how far the suit of armor’s body reaches out to either side of the axis of its neck, and how far behind it */
+const [armorSide, armorBack] = [Math.max(...suitOfArmorBoxes.flatMap(({from, to}) => [-from[0], to[0]])), -Math.min(...suitOfArmorBoxes.map(({from}) => from[2]))]
+/** how far the suit of armor keeps from the caps of the baseboards along the spur’s walls, on both sides of it and behind it alike */
+const armorMargin = lodgeSpurWidth / 2 - baseboardCapFront - armorSide
+/** where the empty suit of armor stands near the spur’s end, on its center line and as far from the baseboard along its closing wall as from those along its side walls, looking back down the spur toward the link, the barred window behind it, see `suitOfArmor` */
+export const lodgeSpurArmor = [lodgeSpurX, lodge.floorY, lodgeSpurEndZ + baseboardCapFront + armorMargin + armorBack] as const satisfies Vec3
 const mouthWall = climbMouth.walls[2]
 /** The tunnel opens into the mouth’s north wall at the elbow, the size of its vault and bare like the ends of the mouth’s own vaults there. */
 const linkHole = {
