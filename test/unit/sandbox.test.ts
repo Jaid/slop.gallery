@@ -463,9 +463,25 @@ describe('the Cell’s trim and door', () => {
         }
       }
     }
+    // A round wall’s reveals are told apart along its curve: all of them inside its door, facing across it rather than toward the center of its bend.
     const lone = new Sandbox(ids.slice(0, 1))
     const ring = lone.walls.find(wall => wall.curveRadius)!
-    expect(() => withOpeningReveals(architectureGeometry(ring).surface, ring)).toThrow(RangeError)
+    const radius = ring.curveRadius!
+    const lined = withOpeningReveals(architectureGeometry(ring).surface, ring)
+    try {
+      const [door] = ring.holes!
+      const reveals = lined.groups[1]
+      expect(reveals.count).toBeGreaterThan(0)
+      const position = lined.getAttribute('position')
+      for (let index = reveals.start; index < reveals.start + reveals.count; index++) {
+        const corner = lined.index!.getX(index)
+        const u = Math.atan2(position.getX(corner) / radius, 1 - position.getZ(corner) / radius) * radius
+        expect(Math.abs(u - door.u)).toBeLessThanOrEqual(door.width / 2 + 0.01)
+        expect(position.getY(corner)).toBeLessThanOrEqual(door.height + 0.01)
+      }
+    } finally {
+      lined.dispose()
+    }
   })
   test('refuses baseboard sections that sink into the wall, run downward or end off its face', () => {
     const sandbox = new Sandbox([])
