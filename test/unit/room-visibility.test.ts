@@ -69,8 +69,11 @@ test('the fences only keep rooms enabled that the rooms they lie in can reach th
   expect(activations.forge.rooms.slice(0, 2).toSorted()).toEqual(['bastion', 'lobby'])
   expect(activations.bastion.rooms).toContain('forge' as never)
   expect(activations.lobby.rooms).toContain('forge' as never)
-  // Moonfall’s stairway is visible through the Antechamber from the Lobby.
-  expect(activations.lobby.rooms).toContain('moonfall' as never)
+  // Moonfall’s stairway is visible through the Antechamber from the Lobby, but only from its south part.
+  expect(activations.lobby_south.rooms).toContain('moonfall' as never)
+  for (const part of ['lobby_north', 'lobby_middle']) {
+    expect(enabledRooms(['lobby', part])).not.toContain('moonfall')
+  }
 })
 test('a room shows the rooms behind the openings in view', () => {
   // From the Vesper through both side doors of the Lobby into the Banquet, through the Lobby’s glass wall into the Salon and through the Antechamber down the stairway to Moonfall, but no further.
@@ -92,7 +95,7 @@ test('a room shows the rooms behind the openings in view', () => {
   expect(lobby.has('bastion')).toBe(false)
   expect(lobby.has('lodge')).toBe(false)
   expect(lobby.has('antechamber')).toBe(true)
-  // The Moonfall stairway is visible from the Lobby at the reported camera position, in its south part.
+  // The Moonfall stairway is visible from the Lobby at the reported camera position, in its south part, which keeps Moonfall enabled.
   const reported: Vec3 = [-2.321, 1.62, 5.655]
   expect(visibleRegions(['lobby'], viewProjection(reported, [5.248, 0.815, 13.195])).has('moonfall')).toBe(true)
   expect(whereaboutsAt(reported)).toEqual(['lobby', 'lobby_south'])
@@ -104,7 +107,7 @@ test('a camera is in the rooms around it and in every other fence holding it, wh
   expect(enabledRooms(whereaboutsAt([0, 1.6, -28]))).toEqual(lobby)
   expect(whereaboutsAt([0, 4, -12])).toEqual(['lobby', 'lobby_middle'])
   expect(enabledRooms(whereaboutsAt([0, 4, -12]))).toEqual(lobby)
-  expect(enabledRooms(whereaboutsAt([0, 1.6, 0]))).toEqual(lobby)
+  expect(enabledRooms(whereaboutsAt([0, 1.6, 0]))).toEqual([...lobby, 'moonfall'])
   // On the line between two parts, it is in both.
   expect(whereaboutsAt([0, 1.6, -10])).toEqual(['lobby', 'lobby_middle', 'lobby_south'])
   // In the doorway between the Vesper and the Lobby, which neither room’s air takes in alone, it is in both rooms and in the part of the Lobby the doorway opens into.

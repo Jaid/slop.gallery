@@ -21,12 +21,12 @@ export type Activation = {
 
 /**
  * Per fence, a whitelist of neighbor objects. While the player is in a room, every other room’s models are hidden, its lamps are off and its ambient sounds are silent unless a fence the player is in lists them here: the room’s own, under the room’s id, or any other fence holding the player’s place, like a part of the room.
- * Whatever any of those fences lists is on, so a part of a room adds to what the room lists, and what only shows or shines in a part of a room is only on there.
+ * Whatever any of those fences lists is on, so a part of a room adds to what the room lists, and what only shows or shines in a part of a room is only on there. A fence that adds nothing, like the Lobby’s middle part, is left out.
  * A room’s own models, lamps and ambient sounds are always on inside it. Hiding a model only skips its draws, and switching a lamp off only dims it, so neither recompiles a shader.
  */
 const activations = {
   lobby: {
-    rooms: ['vesper', 'banquet', 'antechamber', 'moonfall', 'salon', 'forge', 'oculus', 'sienna', 'exhibition', 'bastion'],
+    rooms: ['vesper', 'banquet', 'antechamber', 'salon', 'forge', 'oculus', 'sienna', 'exhibition', 'bastion'],
     floorMirror: 'base',
     visibleLamps: {
       banquet: [
@@ -35,12 +35,21 @@ const activations = {
         'led_south',
       ],
       exhibition: [
-        'tunnel_north',
         'west_stairway_door',
         'east_stairway_door',
       ],
       sienna: 'chandelier',
     },
+  },
+  // The lamp at the low north end of the Exhibition’s tunnel, green by default, shines up through the Lobby’s glazed floor, which only its north part lies around.
+  lobby_north: {
+    visibleLamps: {
+      exhibition: 'tunnel_north',
+    },
+  },
+  // Moonfall’s stairway shows through the doorway into the Antechamber and on through the one in the Antechamber’s east wall, whose jambs hide it from anywhere north of the Lobby’s south part.
+  lobby_south: {
+    rooms: ['moonfall'],
   },
   vesper: {
     rooms: ['lobby', 'bastion', 'sienna', 'banquet', 'antechamber', 'salon', 'forge', 'corridor', 'oculus'],
