@@ -23,6 +23,7 @@ import type VictoriaClient from 'victoria-browser-client'
 
 import {normalizeMeshPath, wireframeFloodAnchors, wireframeFloodDirections, wireframeFloodModes, wireframeFloodShapes, wireframeLineStyles} from 'capture-session'
 
+import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import {isSeed, maximumSeed} from '#src/lib/environmentSeed.ts'
 
 /** a fence of the world as the union of its boxes */
@@ -79,7 +80,7 @@ const colorPattern = /^#(?:[\da-f]{3}){1,2}$/iu
 const throwKeys = ['prop', 'portrait', 'target', 'velocity', 'from', 'speed']
 const spawnKeys = new Set(['orb', 'position', 'id'])
 const partyKeys = new Set(['effect', 'position', 'rotation', 'floor', 'delay'])
-const portraitKeys = new Set(['image', 'target', 'title', 'id', 'frame', 'size'])
+const portraitKeys = new Set(['image', 'target', 'title', 'id', 'frame', 'canvas_material', 'size'])
 const workIdPattern = /^[\w-]{1,100}$/u
 const sightingKeys = new Set(['sight', 'instant'])
 const propIdPattern = /^prop-[\w-]{1,100}$/u
@@ -150,7 +151,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'dump_portraits',
       title: 'Dump portraits',
-      description: 'Return every work of the collection where it is now, hung, lying, flying or held by a fusion: its ID, title, whether it hangs and on which wall, its frame width and height in meters, the frame it wears unless the default one, whether a fusion holds it (fusing) or waits for one (pending), the world-space middle of its frame and its rotation as a quaternion [x, y, z, w], before which its front faces +z and its top +y. Poll it to follow a work through the air, like the result a fusion flips out of its portal, which joins the collection as it does.',
+      description: 'Return every work of the collection where it is now, hung, lying, flying or held by a fusion: its ID, title, whether it hangs and on which wall, its frame width and height in meters, the frame it wears unless the default one, the canvas material its image is on (canvasMaterial) if any, whether a fusion holds it (fusing) or waits for one (pending), the world-space middle of its frame and its rotation as a quaternion [x, y, z, w], before which its front faces +z and its top +y. Poll it to follow a work through the air, like the result a fusion flips out of its portal, which joins the collection as it does.',
       read: () => getBridge().getPortraits(),
     },
     {
@@ -680,7 +681,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'add_portrait',
       title: 'Add portrait',
-      description: 'Bring an image into the world as an imported work: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect, right away without the hanging animation or the sound of an arrival. Its target is exactly one of a portrait slot, where it hangs in place of the work hanging there, if any, whatever its size; a spot on a wall, where it hangs if it fits, its placard below it or else above it; or a world position, where it enters the world loose, upright and facing +z, and falls like a work the player dropped. Unless told a frame and a size, it wears its id’s roll of the frames of the slot or of the room it arrives in, at the slot’s frame area or that room’s. Resolves once it is in the collection, while its image may still decode. Fails for an unknown slot, wall or frame, whose errors say what there is, a slot, a wall or a position in a room this page’s ?world_reach leaves out, a position outside of the world, a spot on a wall it does not fit at, with the reason, an id a work already has, an image that does not load or is no PNG, JPEG, WebP, AVIF or GIF up to 25 mb, and a full collection. Returns its id, its title, whether it hangs, the slot and the wall if any, the id of the work it replaced, the frame it wears unless the default one, where its frame’s middle is, its rotation, its frame width and height in meters and its frame area in cm². Slot ids are what dump_portrait_slots lists, which names their walls too. Does not move the player, change focus or simulate input.',
+      description: 'Bring an image into the world as an imported work: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect, right away without the hanging animation or the sound of an arrival. Its target is exactly one of a portrait slot, where it hangs in place of the work hanging there, if any, whatever its size; a spot on a wall, where it hangs if it fits, its placard below it or else above it; or a world position, where it enters the world loose, upright and facing +z, and falls like a work the player dropped. Unless told a frame and a size, it wears its id’s roll of the frames of the slot or of the room it arrives in, at the slot’s frame area or that room’s. Its image shows flat, as every work’s does, unless told a canvas material, the surface it is painted or printed on, which shades it in the room’s light and which it keeps through fusions. Resolves once it is in the collection, while its image may still decode. Fails for an unknown slot, wall, frame or canvas material, whose errors say what there is, a slot, a wall or a position in a room this page’s ?world_reach leaves out, a position outside of the world, a spot on a wall it does not fit at, with the reason, an id a work already has, an image that does not load or is no PNG, JPEG, WebP, AVIF or GIF up to 25 mb, and a full collection. Returns its id, its title, whether it hangs, the slot and the wall if any, the id of the work it replaced, the frame it wears unless the default one, its canvas material if it has one, where its frame’s middle is, its rotation, its frame width and height in meters and its frame area in cm². Slot ids are what dump_portrait_slots lists, which names their walls too. Does not move the player, change focus or simulate input.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -761,6 +762,11 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             description: 'id of the frame it wears, like classic, louis or travertine. Default: its id’s roll of the frames of the slot, or else of the room the target lies in',
             minLength: 1,
           },
+          canvas_material: {
+            type: 'string',
+            enum: [...canvasMaterialIds],
+            description: 'id of the canvas material its image is on, the surface it is painted or printed on: linen (loom linen), impasto (knife impasto), nacre (abalone ground), rag (cold-press rag), wax (beeswax veil), baryta (satin baryta), moire (watered silk) or karakami (karakami mica). Default: none, so its image shows flat like every other work’s',
+          },
           size: {
             type: 'number',
             description: 'its frame area in cm², like 15000, which its own aspect divides into width and height. Default: the slot’s, or else that of the room the target lies in',
@@ -776,9 +782,9 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       execute: (input: unknown, {signal}) => {
         signal.throwIfAborted()
         if (!isRecord(input) || Object.keys(input).some(key => !portraitKeys.has(key))) {
-          throw new TypeError('This tool takes an object with image, target and an optional title, id, frame and size.')
+          throw new TypeError('This tool takes an object with image, target and an optional title, id, frame, canvas_material and size.')
         }
-        const {image, target, title, id, frame, size} = input
+        const {image, target, title, id, frame, canvas_material: canvasMaterial, size} = input
         if (typeof image !== 'string' || !URL.canParse(image, typeof location === 'undefined' ? undefined : location.href)) {
           throw new TypeError('image must be the URL of an image.')
         }
@@ -791,6 +797,9 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (frame !== undefined && (typeof frame !== 'string' || !frame)) {
           throw new TypeError('frame must be the id of a frame.')
         }
+        if (canvasMaterial !== undefined && !isCanvasMaterialId(canvasMaterial)) {
+          throw new TypeError(`canvas_material must be one of ${canvasMaterialIds.join(', ')}.`)
+        }
         if (size !== undefined && !(typeof size === 'number' && Number.isFinite(size) && size > 0)) {
           throw new TypeError('size must be a finite number of cm² above 0.')
         }
@@ -800,6 +809,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           title,
           id,
           frame,
+          canvasMaterial,
           size,
         })
       },

@@ -66,9 +66,9 @@ export default function PortraitViewer({className, faint = false, label, portrai
   const layer = useRef<HTMLDivElement>(null)
   const studio = useRef<StudioView>(undefined)
   const [outcome, setOutcome] = useState<Outcome>()
-  const {frame, height, source, width} = portrait
+  const {canvasMaterial, frame, height, source, width} = portrait
   // The model of another work is on its way until its own outcome is in.
-  const progress = outcome !== undefined && outcome.frame === frame && outcome.height === height && outcome.source === source && outcome.width === width ? outcome.progress : 'loading'
+  const progress = outcome !== undefined && outcome.canvasMaterial === canvasMaterial && outcome.frame === frame && outcome.height === height && outcome.source === source && outcome.width === width ? outcome.progress : 'loading'
   // The studio’s canvas lives on while this stage is not there, so it moves in and out.
   useEffect(() => {
     const element = stage.current!
@@ -119,6 +119,7 @@ export default function PortraitViewer({className, faint = false, label, portrai
   useEffect(() => {
     const view = studio.current!
     const subject = {
+      canvasMaterial,
       frame,
       height,
       source,
@@ -148,7 +149,7 @@ export default function PortraitViewer({className, faint = false, label, portrai
       // Whatever still compiles it has to finish first.
       void shown.finally(() => model.dispose()).catch(() => {})
     }
-  }, [frame, height, source, width])
+  }, [canvasMaterial, frame, height, source, width])
   const handleKey = (event: KeyboardEvent) => {
     const act = keys[event.key] ?? orbitKeys[event.code]
     if (!act || !studio.current || event.ctrlKey || event.metaKey || event.altKey) {

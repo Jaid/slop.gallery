@@ -1,5 +1,6 @@
 import {afterEach, beforeEach, expect, test} from 'bun:test'
 
+import {canvasMaterialIds} from '../../src/canvas_materials/lib/canvasMaterialIds.ts'
 import {frameIds} from '../../src/frames/lib/frameParameter.ts'
 import {maximumPortraits} from '../../src/lib/gallery/imagePolicy.ts'
 import {usePortraitSlots} from '../../src/lib/gallery/portraitSlotStore.ts'
@@ -96,17 +97,24 @@ test('a slot takes the image in place of the work hanging there, at its own area
     id: 'told',
     title: 'Told',
     frame: 'louis',
+    canvasMaterial: 'moire',
     size: 7500,
   })
   expect(told).toMatchObject({
     id: 'told',
     title: 'Told',
     frame: 'louis',
+    canvasMaterial: 'moire',
     size: 7500,
     replaced: added.id,
   })
   expect(told.width * told.height).toBeCloseTo(0.75, 10)
-  expect(stored('told').frame).toBe('louis')
+  expect(stored('told')).toMatchObject({
+    frame: 'louis',
+    canvasMaterial: 'moire',
+  })
+  // Untold, it shows flat.
+  expect(added.canvasMaterial).toBeUndefined()
   await expect(addPortrait({
     image,
     target: {slot: slot.id},
@@ -235,17 +243,24 @@ test('a work is named after the file of its image, which only a URL on a server 
     title: 'Told',
   })).toHaveProperty('title', 'Told')
 })
-test('unknown frames, images that do not load and a full collection add nothing', async () => {
+test('unknown frames and canvas materials, images that do not load and a full collection add nothing', async () => {
   const target = {position: {
     x: slopGallery.spawn.position[0],
     y: slopGallery.spawn.position[1] + 1.5,
     z: slopGallery.spawn.position[2],
   }}
+  const {length} = useGallery.getState().portraits
   await expect(addPortrait({
     image,
     target,
     frame: 'gilt',
   })).rejects.toThrow(new RegExp(frameIds.slice(0, 3).join(', ')))
+  await expect(addPortrait({
+    image,
+    target,
+    canvasMaterial: 'velvet',
+  })).rejects.toThrow(`There is no canvas material “velvet”. Canvas materials: ${canvasMaterialIds.join(', ')}.`)
+  expect(useGallery.getState().portraits).toHaveLength(length)
   status = 404
   await expect(addPortrait({
     image,

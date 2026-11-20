@@ -11,6 +11,7 @@ import type {WebmcpBridge} from '../../src/lib/webmcp/tools.ts'
 
 import {expect, test} from 'bun:test'
 
+import {canvasMaterialIds} from '../../src/canvas_materials/lib/canvasMaterialIds.ts'
 import {useFenceDisplay} from '../../src/lib/gallery/fenceDisplay.ts'
 import registerWebmcp from '../../src/lib/webmcp/register.ts'
 import showFence from '../../src/lib/webmcp/showFence.ts'
@@ -23,12 +24,13 @@ type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<Po
 
 const bridge: WebmcpBridge = {
   showFence,
-  addPortrait: ({id = 'work-1', frame, size = 30_000, target, title = 'xf14RxM8'}: PortraitAdditionInput) => Promise.resolve<EchoedAddition>({
+  addPortrait: ({canvasMaterial, id = 'work-1', frame, size = 30_000, target, title = 'xf14RxM8'}: PortraitAdditionInput) => Promise.resolve<EchoedAddition>({
     id,
     title,
     hung: !('position' in target) || 'wallId' in target,
     target,
     ...frame === 'louis' ? {frame} : {},
+    ...canvasMaterial === 'linen' ? {canvasMaterial} : {},
     position: [10.2, 3.13, 7.78],
     rotation: Math.PI,
     width: 1.732,
@@ -735,7 +737,7 @@ test('set_seed takes an unsigned 32-bit integer and sets it through the bridge',
   controller.abort()
   await expect(execute({seed: 1})).rejects.toThrow()
 })
-test('add_portrait takes an image URL, exactly one kind of target and an optional title, id, frame and size, and adds through the bridge', async () => {
+test('add_portrait takes an image URL, exactly one kind of target and an optional title, id, frame, canvas material and size, and adds through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'add_portrait')!
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
@@ -791,13 +793,17 @@ test('add_portrait takes an image URL, exactly one kind of target and an optiona
     title: 'Invader',
     id: 'film-invader',
     frame: 'louis',
+    canvas_material: 'linen',
     size: 7500,
   })).toMatchObject({
     title: 'Invader',
     id: 'film-invader',
     frame: 'louis',
+    canvasMaterial: 'linen',
     size: 7500,
   })
+  // Its schema offers every canvas material there is.
+  expect(tool.inputSchema).toHaveProperty(['properties', 'canvas_material', 'enum'], [...canvasMaterialIds])
   const targets: Array<unknown> = [undefined, null, 'banquet-south_2', [], {}, {slot: ''}, {slot: 3}, {
     slot: 'banquet-south_2',
     wall_id: 'banquet-south',
@@ -857,7 +863,11 @@ test('add_portrait takes an image URL, exactly one kind of target and an optiona
     image,
     target: slot,
     frame: 3,
-  }, ...[0, -7500, Infinity, '7500'].map(size => ({
+  }, ...['', 'velvet', 'Linen', 3, null].map(canvasMaterial => ({
+    image,
+    target: slot,
+    canvas_material: canvasMaterial,
+  })), ...[0, -7500, Infinity, '7500'].map(size => ({
     image,
     target: slot,
     size,

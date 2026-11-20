@@ -87,6 +87,12 @@ const getProductionConfig = () => {
     zindex: false,
   }).plugins.filter(([, options]) => !(options && 'exclude' in options && options.exclude)).map(([createPlugin, options]) => createPlugin(options))
   const worldChunks = worldChunksPlugin(Object.fromEntries(worldIds.map(id => [id, `src/worlds/${id}/index.ts`])))
+  // The game’s chunks and assets are named by their content, so browsers can keep them for good and a deploy can never leave them running stale chunks under the same name; see immutableHeadersPlugin. The build’s output list (outputListPlugin) tells which is which.
+  const contentNames = {
+    entryFileNames: '[hash:8].js',
+    chunkFileNames: '[hash:8].js',
+    assetFileNames: '[hash:8].[ext]',
+  }
   const config: UserConfig = {
     plugins: [
       jxlPlugin(),
@@ -170,14 +176,18 @@ const getProductionConfig = () => {
               },
             ],
           },
-          // The game’s chunks and assets are named by their content, so browsers can keep them for good and a deploy can never leave them running stale chunks under the same name; see immutableHeadersPlugin. The build’s output list (outputListPlugin) tells which is which.
-          entryFileNames: '[hash:8].js',
-          chunkFileNames: '[hash:8].js',
-          assetFileNames: '[hash:8].[ext]',
+          ...contentNames,
         },
         checks: {
           pluginTimings: false,
         },
+      },
+    },
+    // Module workers, like the impasto canvas material’s knife strokes, named like the rest.
+    worker: {
+      format: 'es',
+      rolldownOptions: {
+        output: contentNames,
       },
     },
     css: {

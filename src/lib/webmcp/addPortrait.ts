@@ -1,7 +1,9 @@
+import type {CanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {Portrait, PortraitSlot, Vec3} from '#src/lib/gallery/types.ts'
 import type {PlacementIssue} from '#src/lib/placement/wallGeometry.ts'
 
+import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
 import {arrivalFrame, newPortrait} from '#src/lib/gallery/actions.ts'
@@ -35,6 +37,8 @@ export type PortraitTarget = {
   wallId: string
 }
 export type PortraitAdditionInput = {
+  /** the id of the canvas material its image is on; by default none, so it shows flat */
+  canvasMaterial?: string
   /** the id of the frame it wears; by default its roll of the frames of the slot or of the room it arrives in */
   frame?: string
   /** its id, unique in the collection; by default a new one */
@@ -48,6 +52,8 @@ export type PortraitAdditionInput = {
   title?: string
 }
 export type PortraitAddition = {
+  /** the canvas material its image is on, left out for none */
+  canvasMaterial?: CanvasMaterialId
   /** the frame it wears, left out for the default frame */
   frame?: PortraitFrameId
   height: number
@@ -166,11 +172,14 @@ export function findPortraitDestination(target: PortraitTarget): PortraitDestina
 /**
  * Brings the image at the URL `image` into the world as an imported work: hung in a portrait slot in place of the work hanging there, if any, hung on a wall where it fits, or loose at a position; see the `add_portrait` tool.
  */
-export default async function addPortrait({frame: frameId, id, image, size, target, title}: PortraitAdditionInput): Promise<PortraitAddition> {
+export default async function addPortrait({canvasMaterial, frame: frameId, id, image, size, target, title}: PortraitAdditionInput): Promise<PortraitAddition> {
   const destination = findPortraitDestination(target)
   const chosen = frameId === undefined ? undefined : frameIds.find(candidate => candidate === frameId)
   if (frameId !== undefined && !chosen) {
     throw new Error(`There is no frame “${frameId}”. Frames: ${frameIds.join(', ')}.`)
+  }
+  if (canvasMaterial !== undefined && !isCanvasMaterialId(canvasMaterial)) {
+    throw new Error(`There is no canvas material “${canvasMaterial}”. Canvas materials: ${canvasMaterialIds.join(', ')}.`)
   }
   if (id !== undefined && useGallery.getState().portraits.some(candidate => candidate.id === id)) {
     throw new Error(`A work already has the id “${id}”.`)
@@ -205,6 +214,9 @@ export default async function addPortrait({frame: frameId, id, image, size, targ
   if (!frame) {
     delete portrait.frame
   }
+  if (canvasMaterial) {
+    portrait.canvasMaterial = canvasMaterial
+  }
   commit([...portraits.filter(candidate => candidate !== replaced), portrait])
   return {
     id: portrait.id,
@@ -214,6 +226,7 @@ export default async function addPortrait({frame: frameId, id, image, size, targ
     ...portrait.wallId === undefined ? {} : {wallId: portrait.wallId},
     ...replaced ? {replaced: replaced.id} : {},
     ...frame ? {frame} : {},
+    ...canvasMaterial ? {canvasMaterial} : {},
     position: portrait.position,
     rotation: portrait.rotation,
     width,

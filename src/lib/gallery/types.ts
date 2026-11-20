@@ -1,3 +1,4 @@
+import type {CanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {Orb} from '#src/orbs/index.ts'
@@ -13,6 +14,8 @@ export type Narration = {
   timing?: NarrationTiming
 }
 export type Portrait = {
+  /** the surface its image is painted or printed on, which it keeps through fusions; the image shows flat if left out */
+  canvasMaterial?: CanvasMaterialId
   creator: string
   description: string
   flavorJob?: symbol

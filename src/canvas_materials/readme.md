@@ -1,0 +1,11 @@
+# Canvas materials
+
+A canvas material (`base/CanvasMaterial.ts`) is a kind of surface a work’s image is painted or printed on: `linen` (loom linen), `impasto` (knife impasto), `nacre` (abalone ground), `rag` (cold-press rag), `wax` (beeswax veil), `baryta` (satin baryta), `moire` (watered silk) and `karakami` (karakami mica). Every canvas material lives in a folder of its own, `src/canvas_materials/<id>`, with whatever only it needs, like the impasto’s `knifeRelief.ts`, and `index.ts` holds one of each by its id. `lib/canvasMaterialIds.ts` lists the ids, so the types and the WebMCP tools know them without loading any shader.
+
+A work wears one if its portrait names it in `canvasMaterial`, which only `add_portrait` does so far (`canvas_material`); every other work shows its image flat and unlit. The work keeps it through fusions, as it keeps its frame.
+
+`createMaterial(map)` makes a material of its own for each image: a physical node material that shades the image plane in the room’s light and mirrors the dim gallery the frames mirror (`frameStudio.ts`), and mixes that over the flat image by its `strength` in linear light, after the shading, so a faint finish keeps the image’s colors and only adds its relief and sheen. Strength 0 is the flat image to the pixel. The image plane lies around the image’s middle facing +z, in meters, so every feature has its real size whatever the size of the work, and `scale` grows them all. `lib/canvasSurface.ts` hands each material the image, its luminance, the position, the view direction and `fine(size)`, which fades features out before they shrink below a few pixels. The impasto’s knife strokes follow the picture’s contours, so they are laid for each image anew, which takes a few hundred milliseconds: a worker lays them (`impasto/knifeStrokes.worker.ts`), and its relief shows flat until they arrive.
+
+The materials came out of a review page with a slider for the strength and each of their knobs (`private/agent/surface-proofs`); their fields hold the values Jaid picked there, like the linen’s scale of 0.75 at 10% strength. While a work is carried it shows flat and faint, like any other.
+
+To add a canvas material, give it a folder with its class `<Id>CanvasMaterial.ts`, add its id to `canvasMaterialIds` and the material to `index.ts`.

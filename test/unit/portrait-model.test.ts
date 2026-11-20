@@ -3,7 +3,7 @@ import type {Mesh, MeshBasicNodeMaterial} from 'three/webgpu'
 
 import {describe, expect, mock, test} from 'bun:test'
 
-import {Box3, Texture, Vector3} from 'three/webgpu'
+import {Box3, MeshPhysicalNodeMaterial, Texture, Vector3} from 'three/webgpu'
 
 import {maximumFrameReach} from '../../src/frames/base/PortraitFrame.ts'
 import {classicFrame, frames} from '../../src/frames/index.ts'
@@ -140,6 +140,32 @@ describe('a work as an object apart from the world', () => {
         material.removeEventListener('dispose', disposed.frameMaterial)
       }
     }
+  })
+  test('a work on a canvas material shows its image on a material of its own of it, which goes with the model', async () => {
+    const shared = new Texture({
+      width: 4,
+      height: 4,
+    })
+    const {hold} = artwork(Promise.resolve(shared))
+    const model = new PortraitModel({
+      ...work,
+      canvasMaterial: 'moire',
+    }, hold)
+    const {image} = meshes(model)
+    const placeholder = image.material
+    const disposed = {
+      placeholder: mock(() => {}),
+      painted: mock(() => {}),
+    }
+    placeholder.addEventListener('dispose', disposed.placeholder)
+    await model.loaded
+    const painted = image.material as unknown as MeshPhysicalNodeMaterial
+    expect(painted).toBeInstanceOf(MeshPhysicalNodeMaterial)
+    expect(painted).not.toBe(placeholder)
+    expect(disposed.placeholder).toHaveBeenCalledTimes(1)
+    painted.addEventListener('dispose', disposed.painted)
+    model.dispose()
+    expect(disposed.painted).toHaveBeenCalledTimes(1)
   })
   test('an artwork that can’t be loaded shows as failed, and the model still counts as loaded', async () => {
     const failing = Promise.reject(new Error('gone'))

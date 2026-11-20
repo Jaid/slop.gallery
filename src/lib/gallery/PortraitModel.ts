@@ -1,15 +1,16 @@
 import type {StudioSubjectSize} from '../rendering/studio/studioFraming.ts'
 import type {Portrait} from './types.ts'
-import type {Texture} from 'three/webgpu'
+import type {Material, Texture} from 'three/webgpu'
 
 import {Box3, Group, Mesh, MeshBasicNodeMaterial, PlaneGeometry, Vector3} from 'three/webgpu'
 
+import {canvasMaterials} from '#src/canvas_materials/index.ts'
 import {portraitFrame} from '#src/frames/index.ts'
 
 import {artworkPlaceholders, holdArtworkTexture} from '../useArtworkTexture.ts'
 
 /** what of a work its model shows */
-export type PortraitModelSubject = Pick<Portrait, 'frame' | 'height' | 'source' | 'width'>
+export type PortraitModelSubject = Pick<Portrait, 'canvasMaterial' | 'frame' | 'height' | 'source' | 'width'>
 /** what loads an artwork’s texture and keeps it until released, like {@link holdArtworkTexture} */
 export type ArtworkHolder = (source: Portrait['source']) => {
   release: () => void
@@ -19,7 +20,7 @@ export type ArtworkHolder = (source: Portrait['source']) => {
 /**
  * A work as an object of its own apart from the world, for a renderer other than the world’s to show: its image in its frame, the two meshes a hung work is made of, around the middle of all they reach, which lies at {@link object}’s origin, facing +z.
  *
- * The frame’s materials are the ones every work in that frame shares. The image is a texture of its own from the artwork as the world already decoded it, so disposing the model frees it on that other renderer’s device without taking the world’s away.
+ * The frame’s materials are the ones every work in that frame shares. The image is a texture of its own from the artwork as the world already decoded it, so disposing the model frees it on that other renderer’s device without taking the world’s away, and so is the material of the work’s canvas material, if it has one.
  */
 export default class PortraitModel {
   /** resolves once the image shows, or its placeholder for good where the artwork can’t be loaded */
@@ -30,14 +31,14 @@ export default class PortraitModel {
   readonly size: StudioSubjectSize
   private readonly artwork: ReturnType<ArtworkHolder>
   private disposed = false
-  private readonly image: Mesh<PlaneGeometry, MeshBasicNodeMaterial>
+  private readonly image: Mesh<PlaneGeometry, Material>
   private readonly moulding: Mesh
   private texture: Texture | undefined
 
   /**
    * @param hold loads the artwork’s texture, from the textures the artworks share by default
    */
-  constructor({frame: frameId, height, source, width}: PortraitModelSubject, hold: ArtworkHolder = holdArtworkTexture) {
+  constructor({canvasMaterial, frame: frameId, height, source, width}: PortraitModelSubject, hold: ArtworkHolder = holdArtworkTexture) {
     const frame = portraitFrame(frameId)
     this.moulding = new Mesh(frame.createGeometry(width, height), frame.materials)
     this.moulding.name = 'portrait-frame'
@@ -66,6 +67,7 @@ export default class PortraitModel {
       depth: extent.z,
     }
     this.artwork = hold(source)
+    const placeholder = this.image.material as MeshBasicNodeMaterial
     this.loaded = this.artwork.texture.then(texture => {
       if (this.disposed) {
         return
@@ -73,12 +75,16 @@ export default class PortraitModel {
       // Its own upload of the same decoded image.
       this.texture = texture.clone()
       this.texture.needsUpdate = true
-      const {material} = this.image
-      material.map = this.texture
-      material.color.set('#ffffff')
-      material.needsUpdate = true
+      if (canvasMaterial) {
+        placeholder.dispose()
+        this.image.material = canvasMaterials[canvasMaterial].createMaterial(this.texture)
+        return
+      }
+      placeholder.map = this.texture
+      placeholder.color.set('#ffffff')
+      placeholder.needsUpdate = true
     }, () => {
-      this.image.material.color.set(artworkPlaceholders.failed)
+      placeholder.color.set(artworkPlaceholders.failed)
     })
   }
 
