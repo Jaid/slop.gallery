@@ -1,25 +1,37 @@
 import type {Geofence} from 'geofency'
 
-import {useThree} from '@react-three/fiber'
-import {useMemo} from 'react'
+import {createPortal, useThree} from '@react-three/fiber'
+import {useLayoutEffect, useMemo, useState} from 'react'
+import {Scene} from 'three/webgpu'
 
 import {selectFences, useFenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import {useGeofence} from '#src/lib/gallery/geofences.ts'
+import {registerGeofenceOverlay} from '#src/lib/rendering/geofenceOverlay.ts'
 import world from '#src/worlds/current.ts'
 
 import fenceEdges from './fenceEdges.ts'
 
-export default function GeofenceOutlines() {
+export default function GeofenceOutlines({visible}: {visible: boolean}) {
   const selection = useFenceDisplay(state => state.fence)
   const shown = useMemo(() => selectFences(world.geofences, selection), [selection])
   if (!shown.length) {
     return null
   }
-  return <group name='geofence-outlines'>
-    {shown.map(([id, fence]) => <Outline key={id} id={id} fence={fence} />)}
-  </group>
+  return <Overlay shown={shown} visible={visible} />
 }
 
+function Overlay({shown, visible}: {
+  shown: Array<[string, Geofence]>
+  visible: boolean
+}) {
+  const camera = useThree(state => state.camera)
+  const renderer = useThree(state => state.renderer)
+  const [scene] = useState(() => new Scene)
+  useLayoutEffect(() => (visible ? registerGeofenceOverlay(camera, renderer, scene) : undefined), [camera, renderer, scene, visible])
+  return createPortal(<group name='geofence-outlines'>
+    {shown.map(([id, fence]) => <Outline key={id} id={id} fence={fence} />)}
+  </group>, scene)
+}
 function Outline({fence, id}: {
   fence: Geofence
   id: string

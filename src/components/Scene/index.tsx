@@ -56,8 +56,8 @@ export default function Scene() {
     <SpawnedOrbs />
     <PartyEffects />
     {/* Hidden with O, the markers keep working: editors still aim, drag and switch what they mark. */}
+    <GeofenceOutlines visible={!uiHidden} />
     <group name='scene-ui' visible={!uiHidden}>
-      <GeofenceOutlines />
       <Branch if={isShowingSticky} then={StickySurfaces} />
       <Branch if={isShowingPortraitSlots} then={PortraitSlots} />
       <Branch if={isEditingPortraitSlots} then={PortraitSlotEditor} />
