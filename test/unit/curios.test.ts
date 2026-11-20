@@ -1,4 +1,6 @@
+import type {CurioShape} from '../../src/lib/gallery/curios/base/Curio.ts'
 import type {Curio} from '../../src/lib/gallery/curios/index.ts'
+import type {Vec3} from '../../src/lib/gallery/types.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
 import {describe, expect, test} from 'bun:test'
@@ -15,6 +17,7 @@ import {lodgeHatchetHook} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import {plankTableColliders} from '../../src/lib/gallery/plankTable.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {addArmor, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
+import {addCurioColliders} from './helpers/curioBody.ts'
 
 await RAPIER.init()
 /** the volume a surface encloses, positive while it faces out */
@@ -38,6 +41,37 @@ const boundsOf = (geometry: BufferGeometry) => {
   return bounds
 }
 const sizeOf = (geometry: BufferGeometry) => boundsOf(geometry).getSize(new Vector3)
+/** how far the shape reaches from its middle along its own axes */
+const halfOf = (shape: CurioShape): Vec3 => {
+  switch (shape.kind) {
+    case 'ball': {
+      return [shape.radius, shape.radius, shape.radius]
+    }
+    case 'box': {
+      return [shape.size[0] / 2, shape.size[1] / 2, shape.size[2] / 2]
+    }
+    case 'capsule': {
+      return [shape.radius, shape.length / 2 + shape.radius, shape.radius]
+    }
+    case 'cylinder': {
+      return [shape.radius, shape.height / 2, shape.radius]
+    }
+  }
+}
+/** the box round the curio’s shapes, in its own frame */
+const shapeBoundsOf = (curio: Curio) => {
+  const bounds = new Box3
+  for (const shape of curio.shapes) {
+    const [x, y, z] = halfOf(shape)
+    const turn = new Quaternion
+    turn.setFromEuler(new Euler(...shape.rotation ?? [0, 0, 0]))
+    for (const corner of [[-x, -y, -z], [x, -y, -z], [-x, y, -z], [x, y, -z], [-x, -y, z], [x, -y, z], [-x, y, z], [x, y, z]] as const) {
+      const point = new Vector3(...corner)
+      bounds.expandByPoint(point.applyQuaternion(turn).add(new Vector3(...shape.position)))
+    }
+  }
+  return bounds
+}
 describe('the curios', () => {
   test('each is a prop of its own, lying in its room when a game begins', () => {
     expect(curios.map(curio => curio.propId)).toEqual(['prop-pumpkin', 'prop-hatchet', 'prop-helmet', 'prop-painting-set', 'prop-palette-knife', 'prop-bowler-hat'])
@@ -48,7 +82,7 @@ describe('the curios', () => {
     expect(curios.map(curio => curio.type)).toEqual(['dynamic', 'fixed', 'dynamic', 'dynamic', 'dynamic', 'dynamic'])
   })
   for (const curio of curios) {
-    test(`the ${curio.id.replaceAll('-', ' ')}’s meshes face out, carry what their materials read and fit its reach`, () => {
+    test(`the ${curio.id.replaceAll('-', ' ')}’s meshes face out, carry what their materials read and fit its reach, and its body wraps them`, () => {
       const model = curio.createModel()
       try {
         for (const {geometry, material} of model.parts) {
@@ -65,14 +99,18 @@ describe('the curios', () => {
         }
         // The camera orbits it from outside.
         expect(bounds.getSize(new Vector3).length() / 2).toBeLessThan(curio.reach)
-        // Its hull is a few dozen of its corners, reaching out as far as its meshes do.
-        const {hull} = model
-        expect(hull.length / 3).toBeGreaterThan(30)
-        expect(hull.length / 3).toBeLessThanOrEqual(128)
-        const hullBounds = new Box3
-        hullBounds.setFromArray(hull)
-        expect(hullBounds.min.distanceTo(bounds.min)).toBeLessThan(0.01)
-        expect(hullBounds.max.distanceTo(bounds.max)).toBeLessThan(0.01)
+        // Its body is a few primitives reaching out about as far as its meshes do, standing on what they stand on, and as heavy as it all told.
+        const {colliders, shapes} = curio
+        expect(shapes.length).toBeGreaterThan(0)
+        expect(shapes.length).toBeLessThanOrEqual(4)
+        const body = shapeBoundsOf(curio)
+        for (const axis of ['x', 'y', 'z'] as const) {
+          expect(Math.abs(body.min[axis] - bounds.min[axis])).toBeLessThan(0.03)
+          expect(Math.abs(body.max[axis] - bounds.max[axis])).toBeLessThan(0.03)
+        }
+        expect(body.min.y).toBeCloseTo(bounds.min.y, 3)
+        expect(colliders.reduce((sum, {mass}) => sum + mass, 0)).toBeCloseTo(curio.mass, 9)
+        expect(colliders.every(({args}) => args.every(value => value > 0))).toBe(true)
       } finally {
         model.dispose()
       }
@@ -164,30 +202,25 @@ describe('the curios', () => {
 })
 /** Drops the curio where it lies when a game begins into the world, its body as `Curio` builds it, lets it settle for four seconds, and returns where it went, which way its own up then points and whether it has fallen asleep. */
 function settle(curio: Curio, world: RAPIER.World) {
-  const model = curio.createModel()
-  try {
-    const rotation = new Quaternion
-    rotation.setFromEuler(new Euler(...curio.rotation))
-    const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...curio.position).setRotation(rotation).setCcdEnabled(true))
-    world.createCollider(RAPIER.ColliderDesc.convexHull(model.hull)!.setMass(curio.mass).setFriction(0.8).setRestitution(0.32), body)
-    for (let step = 0; step < 60 * 4; step++) {
-      world.step()
-    }
-    const {x, y, z} = body.translation()
-    const {x: qx, y: qy, z: qz, w} = body.rotation()
-    const turn = new Quaternion(qx, qy, qz, w)
-    const up = new Vector3(0, 1, 0)
-    const facing = new Vector3(0, 0, 1)
-    return {
-      asleep: body.isSleeping(),
-      moved: Math.hypot(x - curio.position[0], z - curio.position[2]),
-      y,
-      /** its own up, and the axis its hatchet’s head faces along, in the world */
-      up: up.applyQuaternion(turn),
-      facing: facing.applyQuaternion(turn),
-    }
-  } finally {
-    model.dispose()
+  const rotation = new Quaternion
+  rotation.setFromEuler(new Euler(...curio.rotation))
+  const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...curio.position).setRotation(rotation).setCcdEnabled(true))
+  addCurioColliders(RAPIER, world, body, curio)
+  for (let step = 0; step < 60 * 4; step++) {
+    world.step()
+  }
+  const {x, y, z} = body.translation()
+  const {x: qx, y: qy, z: qz, w} = body.rotation()
+  const turn = new Quaternion(qx, qy, qz, w)
+  const up = new Vector3(0, 1, 0)
+  const facing = new Vector3(0, 0, 1)
+  return {
+    asleep: body.isSleeping(),
+    moved: Math.hypot(x - curio.position[0], z - curio.position[2]),
+    y,
+    /** its own up, and the axis its hatchet’s head faces along, in the world */
+    up: up.applyQuaternion(turn),
+    facing: facing.applyQuaternion(turn),
   }
 }
 /** the Banquet’s floor and table */

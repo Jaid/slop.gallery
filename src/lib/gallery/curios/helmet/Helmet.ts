@@ -1,4 +1,5 @@
 import type {Vec3} from '../../types.ts'
+import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
 
 import {DEGREES_TO_RADIANS as degree} from 'math'
@@ -134,6 +135,19 @@ export default class Helmet extends Curio {
   readonly position: Vec3 = [lodgeSpurArmor[0], lodgeSpurArmor[1] + suitOfArmor.collar + 0.001, lodgeSpurArmor[2]]
   readonly reach = 0.4
   readonly room = 'bastion'
+  // The bell of the gorget it stands on, as wide as its border, a little forward between the points at its front and its back, and the egg of the skull over it up to the top of its comb, as a box rounded off well, whose flat sides it comes to rest on lying on its side, where a round body would roll on in circles
+  readonly shapes: ReadonlyArray<CurioShape> = [{
+    border: 0.01,
+    height: gorgetTop[0],
+    kind: 'cylinder',
+    position: [0, gorgetTop[0] / 2, 0.009],
+    radius: gorgetBorder,
+  }, {
+    border: 0.07,
+    kind: 'box',
+    position: [0, (gorgetTop[0] + helmetHeight) / 2, 0.01],
+    size: [2 * skull.side, helmetHeight - gorgetTop[0], 0.3],
+  }]
   readonly title = 'A knight’s helmet, with nobody in it'
 
   createModel() {

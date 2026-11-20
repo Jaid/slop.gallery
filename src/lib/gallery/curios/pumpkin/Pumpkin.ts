@@ -1,4 +1,5 @@
 import type {Vec3} from '../../types.ts'
+import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
 
 import PumpkinRindMaterial from '#src/lib/materials/PumpkinRindMaterial.ts'
@@ -56,6 +57,19 @@ export default class Pumpkin extends Curio {
   readonly reach = 0.32
   readonly room = 'banquet'
   override readonly rotation: Vec3 = [0, 0.4, 0]
+  // A squat drum rounded off all round, as high as the tops of its ribs round the hollow, and the stem standing up out of it
+  readonly shapes: ReadonlyArray<CurioShape> = [{
+    border: 0.08,
+    height: 0.232,
+    kind: 'cylinder',
+    position: [0, 0.116, 0],
+    radius,
+  }, {
+    height: 0.075,
+    kind: 'cylinder',
+    position: [0, 0.23, 0],
+    radius: 0.014,
+  }]
   readonly title = 'A pumpkin waiting for a face'
 
   createModel() {

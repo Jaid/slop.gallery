@@ -277,8 +277,18 @@ test('a Slop lies on the seat he sat on, a lobed mound of slime stuck there unti
       outward += Math.sign(normal.getX(index) * position.getX(index) + normal.getZ(index) * position.getZ(index) + normal.getY(index) * 0.02)
     }
     expect(outward).toBeGreaterThan(position.count * 0.9)
-    expect(model.hull.length % 3).toBe(0)
-    expect(model.hull.length).toBeGreaterThan(30)
+    // Its body is a rounded cylinder as wide as its foot and as high as its mound, standing on what it stands on.
+    expect(slop.colliders).toHaveLength(1)
+    const [body] = slop.colliders
+    expect(body).toMatchObject({
+      mass: slop.mass,
+      rotation: [0, 0, 0],
+      shape: 'roundCylinder',
+    })
+    const [halfHeight, radius, border] = body.args as [number, number, number]
+    expect(body.position[1] - halfHeight - border).toBeCloseTo(0, 9)
+    expect(body.position[1] + halfHeight + border).toBeCloseTo(box.max.y, 2)
+    expect(radius + border).toBeGreaterThan((box.max.x - box.min.x) / 2 - 0.04)
   } finally {
     model.dispose()
   }

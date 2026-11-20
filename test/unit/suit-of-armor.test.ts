@@ -14,6 +14,7 @@ import {helmet} from '../../src/lib/gallery/curios/index.ts'
 import {suitOfArmor, suitOfArmorBoxes, suitOfArmorShoulders} from '../../src/lib/gallery/suitOfArmor.ts'
 import suitOfArmorGeometry from '../../src/lib/gallery/suitOfArmorGeometry.ts'
 import {addArmor, bastionColliders, physicsWorld} from './helpers/bastionWorld.ts'
+import {addCurioColliders} from './helpers/curioBody.ts'
 
 await RAPIER.init()
 const {collar} = suitOfArmor
@@ -183,7 +184,7 @@ function scene() {
   const world = physicsWorld(colliders)
   const body = addArmor(world)
   const head = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(...helmet.position).setCcdEnabled(true))
-  world.createCollider(RAPIER.ColliderDesc.convexHull(helmetModel.hull)!.setMass(helmet.mass).setFriction(0.8).setRestitution(0.32), head)
+  addCurioColliders(RAPIER, world, head, helmet)
   /** which way `of` turns its own up */
   const upOf = (of: RAPIER.RigidBody) => {
     const {w, x, y, z} = of.rotation()

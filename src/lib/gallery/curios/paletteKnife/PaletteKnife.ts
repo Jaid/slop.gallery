@@ -1,4 +1,5 @@
 import type {Vec3} from '../../types.ts'
+import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
@@ -153,6 +154,25 @@ export default class PaletteKnife extends Curio {
   readonly room = 'forge'
   // Handle toward the room, the blade toward the wall and a little south
   override readonly rotation: Vec3 = [0, 2, 0]
+  // The handle with its ferrule, lying along z on its belly, the blade flat on the floor a little thicker than it is, and the paint on it, the steel eight times and the paint twice as heavy as the rosewood
+  readonly shapes: ReadonlyArray<CurioShape> = [{
+    kind: 'capsule',
+    length: 0.115,
+    position: [0, handleAxisY, -0.0925],
+    radius: handleAxisY,
+    rotation: [Math.PI / 2, 0, 0],
+  }, {
+    density: 8,
+    kind: 'box',
+    position: [0, 0.002, 0.114],
+    size: [0.068, 0.004, 0.14],
+  }, {
+    border: 0.006,
+    density: 2,
+    kind: 'box',
+    position: [0, 0.014, 0.12],
+    size: [0.044, 0.024, 0.09],
+  }]
   readonly title = 'Palette Knife'
 
   createModel() {

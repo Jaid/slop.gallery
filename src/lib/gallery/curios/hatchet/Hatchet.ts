@@ -1,4 +1,5 @@
 import type {Vec3} from '../../types.ts'
+import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
 
 import {BufferGeometry, Float32BufferAttribute} from 'three/webgpu'
@@ -120,6 +121,25 @@ export default class Hatchet extends Curio {
   readonly room = 'lodge'
   // Turn the head downward while leaving the blade facing the outside of the hearth.
   override readonly rotation: Vec3 = [Math.PI, 0, 0]
+  // The haft, the head’s thick cheeks round the eye and its thin blade flaring out toward the edge, the steel ten times as heavy as the ash
+  readonly shapes: ReadonlyArray<CurioShape> = [{
+    kind: 'capsule',
+    length: 0.47,
+    position: [0.004, 0.255, 0],
+    radius: 0.016,
+  }, {
+    border: 0.005,
+    density: 10,
+    kind: 'box',
+    position: [-0.01, 0.4, 0],
+    size: [0.18, 0.16, 0.046],
+  }, {
+    border: 0.005,
+    density: 10,
+    kind: 'box',
+    position: [-0.137, 0.405, 0],
+    size: [0.094, 0.24, 0.024],
+  }]
   readonly title = 'A well-used hatchet, sharp as a warning'
   override readonly type = 'fixed'
 

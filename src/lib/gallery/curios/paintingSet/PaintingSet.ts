@@ -1,5 +1,6 @@
 import type {Vec3} from '../../types.ts'
 import type {GrainMapping} from '../../woodGrain.ts'
+import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
@@ -85,6 +86,9 @@ const turn = (axis: 'x' | 'y' | 'z', angle: number) => {
 }
 /** turns what is built into the shut lid open round the hinge */
 const opening = translation(0, hinge[0], hinge[1]).multiply(turn('x', -lid.open)).multiply(translation(0, -hinge[0], -hinge[1]))
+/** where the middle of the lid lies, standing open */
+const lidMiddle = new Vector3(0, box.height + lid.depth / 2, 0)
+lidMiddle.applyMatrix4(opening)
 /** carries what is built on the palette, its face at y = 0 looking up and its top edge toward −z, into the open lid, its face looking out of it */
 const onPalette = opening.clone().multiply(translation(0, box.height + lid.depth - lid.panel - palette.thickness, 0)).multiply(turn('x', Math.PI))
 const linear = (hex: string): Rgb => {
@@ -629,6 +633,19 @@ export default class PaintingSet extends Curio {
   readonly reach = 0.38
   readonly room = 'forge'
   override readonly rotation: Vec3 = [0, 1.25, 0]
+  // The box, and the lid standing open over its back, both as solid as shut
+  readonly shapes: ReadonlyArray<CurioShape> = [{
+    border: 0.004,
+    kind: 'box',
+    position: [0, box.height / 2, 0],
+    size: [box.width, box.height, box.depth],
+  }, {
+    border: 0.004,
+    kind: 'box',
+    position: lidMiddle.toArray(),
+    rotation: [-lid.open, 0, 0],
+    size: [box.width, lid.depth, box.depth],
+  }]
   readonly title = 'Painting Set'
 
   createModel() {

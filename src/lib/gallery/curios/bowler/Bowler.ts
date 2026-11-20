@@ -1,4 +1,5 @@
 import type {Vec3} from '../../types.ts'
+import type {CurioShape} from '../base/Curio.ts'
 
 import {color, mix, mx_noise_float, positionLocal} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
@@ -15,6 +16,20 @@ export default class Bowler extends Curio {
   readonly position: Vec3 = [machineBody.center[0], machineBody.size[1] + 0.002, machineBody.center[1] - 0.08]
   readonly reach = 0.4
   readonly room = 'forge'
+  // The brim it rests on, as wide as it is along the oval, and the rounded crown on it
+  readonly shapes: ReadonlyArray<CurioShape> = [{
+    border: 0.008,
+    height: 0.022,
+    kind: 'cylinder',
+    position: [0, 0.011, 0],
+    radius: 0.21,
+  }, {
+    border: 0.06,
+    height: 0.227,
+    kind: 'cylinder',
+    position: [0, 0.1175, 0],
+    radius: 0.145,
+  }]
   readonly title = 'Bowler Hat'
 
   createModel() {

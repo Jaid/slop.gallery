@@ -1,6 +1,7 @@
 import type {GalleryRoomId} from '../../../../worlds/gallery/index.ts'
 import type {SloperatorSight} from '../../sloperator/sights.ts'
 import type {Vec3} from '../../types.ts'
+import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
 import type FatedRandom from 'fated-random'
 
@@ -22,7 +23,7 @@ function lobes(u: number, low: number) {
 }
 
 /**
- * A Slop: a mass of green slime the Sloperator leaves where he sat, once the player caught sight of him there and went away again, see `sloperator/sightings.ts`. A lobed mound on a thin puddle of a foot, stuck to the seat until someone picks it up.
+ * A Slop: a mass of green slime the Sloperator leaves where he sat, once the player caught sight of him there and went away again, see `sloperator/sightings.ts`. A lobed mound on a thin puddle of a foot, stuck to the seat until someone picks it up. Its body is a rounded cylinder as wide as its foot and as high as its mound.
  * There is one for each of his sights, which is not in the world before he left it there.
  */
 export default class Slop extends Curio {
@@ -31,6 +32,13 @@ export default class Slop extends Curio {
   readonly position: Vec3
   readonly reach = 0.38
   readonly room: GalleryRoomId
+  readonly shapes: ReadonlyArray<CurioShape> = [{
+    border: 0.03,
+    height,
+    kind: 'cylinder',
+    position: [0, height / 2, 0],
+    radius: radius + foot,
+  }]
   readonly title = 'Slop'
   override readonly type = 'fixed'
 
