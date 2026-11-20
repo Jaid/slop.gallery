@@ -3,7 +3,7 @@ import type StairFlight from './StairFlight.ts'
 /**
  * Layout of a woven stair runner that is painted into the tread material instead of being separate geometry.
  *
- * The runner follows one continuous path down the flight: across each tread, over the rounded nosing and down the riser to the next brass stair rod. Path distance therefore never jumps, so the woven pattern flows from step to step like a real fitted runner.
+ * The runner follows one continuous path down the flight: from a tread laid into whatever the flight starts from, in front of its first riser, across each tread, over the rounded nosing and down the riser to the next brass stair rod. Path distance therefore never jumps, so the woven pattern flows from step to step like a real fitted runner.
  *
  * All values are meters. `u` is measured across the flight from its center line, `s` along a tread from its back edge toward the nosing and `h` down a riser from the nosing.
  */

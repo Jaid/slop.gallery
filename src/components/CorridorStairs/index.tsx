@@ -7,12 +7,12 @@ import {useMemo} from 'react'
 import TimberFrame from '#component/TimberFrame'
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
-import {corridorRails, corridorRunner, corridorStairs} from '#src/lib/gallery/corridor.ts'
+import {corridorRails, corridorRunner, corridorStairHead, corridorStairs} from '#src/lib/gallery/corridor.ts'
 import TimberGeometry from '#src/lib/gallery/passages/TimberGeometry.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 import StairRunnerMaterial from '#src/lib/materials/StairRunnerMaterial.ts'
 
-/** The flight from the corridor up the diagonal to the landing at the Sienna’s vestibule. Its materials must be lit by {@link lightIndoors}, like the treads. */
+/** The flight from the corridor up the diagonal to the landing at the Sienna’s vestibule, whose edge is laid as the flight’s head tread. Its materials must be lit by {@link lightIndoors}, like the treads. */
 export default function CorridorStairs({timber, lining}: {
   lining: Material
   timber: Material
@@ -27,6 +27,10 @@ export default function CorridorStairs({timber, lining}: {
         <CuboidCollider args={[block.size[0] / 2, block.size[1] / 2, block.size[2] / 2]} />
         <Box material={treads} name='corridor-stair-tread' size={block.size} />
       </group>)}
+      {/* The landing’s slab collides under its head. */}
+      <group position={corridorStairHead.position} rotation={[0, corridorStairHead.yaw ?? 0, 0]}>
+        <Box material={treads} name='corridor-stair-head' size={corridorStairHead.size} />
+      </group>
       <TimberFrame geometry={frame} lining={lining} material={timber} />
       {corridorRails.map((beam, i) => <group key={i} position={beam.position} rotation={beam.rotation}>
         <CuboidCollider args={[beam.size[0] / 2, beam.size[1] / 2, beam.size[2] / 2]} />

@@ -109,6 +109,10 @@ export const lodgeThresholdSaddle = doorwayPassage(...jointRib)
  * Its steps rise 19 cm, more than the player snaps down to the ground, so the landing’s floor never snaps a player down onto the top tread. It is lined as high over its grade as both passages over their floors.
  */
 export const corridorStairs = new StairFlight('return', [flightHead[0], sienna.floorY, flightHead[1]], [flightFoot[0], lodge.floorY, flightFoot[1]], lodge.timberWidth, 26, 0, 0, 'corridor', corridor.height)
+/** The landing’s edge over the flight’s top tread, laid as a tread itself. */
+export const corridorStairHead = corridorStairs.headBlock()
+/** The landing’s floorboards round the flight’s head, the Sienna’s like the floor they run on from; collision still uses the landing’s full floors. */
+export const corridorLandingPaving = corridorLanding.floors.flatMap(floor => corridorStairs.outsideHead(floor))
 // A 2.4 m runner leaves wide oak margins and clears both handrails’ posts.
 export const corridorRunner = new StairRunner(corridorStairs, 2.4)
 export const corridorRails = [-1, 1].map(side => corridorStairs.beam(1, 0.065, 0.065, side * (corridorStairs.width / 2 - 0.23)))

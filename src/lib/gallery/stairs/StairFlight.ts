@@ -3,7 +3,7 @@ import type {Wall} from '../../placement/wallGeometry.ts'
 import type {FloorChunk, FloorPolygon} from '../floorPolygons.ts'
 import type {Vec3} from '../types.ts'
 
-import {floorChunks} from '../floorPolygons.ts'
+import {clipPolygon, floorChunks} from '../floorPolygons.ts'
 import passageOrientation from '../passages/orientation.ts'
 
 export type StairBlock = {
@@ -133,12 +133,33 @@ export default class StairFlight {
     return this.blocks.find(block => Math.abs(along - this.along(block)) <= this.extent(block) / 2 + tolerance)?.top
   }
 
+  /** The block one tread deep in front of its first riser, flush with its top, where the edge of the floor it starts from is laid as a tread. Not one of its {@link blocks}: the floor carries it. */
+  headBlock(): StairBlock {
+    return this.block(this.entryLanding - this.run / 2, this.run, this.start[1], true)
+  }
+
   /** The flight’s footprint, round it from the corner at its top left. */
   outline(): FloorPolygon {
     const [hx, hz] = this.heading
     const half = this.width / 2
     const corner = ([x, , z]: Vec3, side: number): readonly [number, number] => [x - hz * side * half, z + hx * side * half]
     return [corner(this.start, -1), corner(this.end, -1), corner(this.end, 1), corner(this.start, 1)]
+  }
+
+  /** The convex floor polygon without the footprint of its {@link headBlock}, in convex pieces: behind it, in front of it and beside it on either side. */
+  outsideHead(polygon: FloorPolygon): Array<FloorPolygon> {
+    const [hx, hz] = this.heading
+    const [ax, az] = this.across
+    const front = hx * this.start[0] + hz * this.start[2] + this.entryLanding
+    const back = front - this.run
+    const middle = ax * this.start[0] + az * this.start[2]
+    const alongside = clipPolygon(clipPolygon(polygon, [-hx, -hz], -back), [hx, hz], front)
+    return [
+      clipPolygon(polygon, [hx, hz], back),
+      clipPolygon(polygon, [-hx, -hz], -front),
+      clipPolygon(alongside, [ax, az], middle - this.width / 2),
+      clipPolygon(alongside, [-ax, -az], -(middle + this.width / 2)),
+    ].filter(piece => piece.length)
   }
 
   wall(side: number): Wall {

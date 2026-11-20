@@ -6,10 +6,11 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import CorridorStairs from '#component/CorridorStairs'
 import CoveredPassage from '#component/CoveredPassage'
-import {corridorHallLanterns, corridorLanding, corridorLandingLantern, corridorPassage, corridorPaving} from '#src/lib/gallery/corridor.ts'
+import {corridorHallLanterns, corridorLanding, corridorLandingLantern, corridorLandingPaving, corridorPassage, corridorPaving} from '#src/lib/gallery/corridor.ts'
 import {lodgeWindowRibCutouts} from '#src/lib/gallery/lodge.ts'
 import lodgeTimber from '#src/lib/gallery/lodgeTimber.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
+import PlankFloorMaterial from '#src/lib/materials/PlankFloorMaterial.ts'
 
 const landingMounts = [corridorLandingLantern]
 
@@ -20,9 +21,11 @@ export default function CorridorRoom({lining, wood}: {
 }) {
   // The corridor is lit by its lanterns alone, so its portals need their own copy of the timber.
   const timber = useDisposable(useMemo(() => lightIndoors(new MeshStandardNodeMaterial(lodgeTimber(wood))), [wood]))
+  // The landing is laid with the Sienna’s boards, running on from its vestibule up to the stairs’ head tread.
+  const landing = useDisposable(useMemo(() => lightIndoors(new PlankFloorMaterial(undefined, false)), []))
   return <group name='corridor-room'>
     <CoveredPassage material={lining} mounts={corridorHallLanterns} passage={corridorPassage} paving={corridorPaving} ribCutouts={lodgeWindowRibCutouts} timber={timber} />
-    <CoveredPassage material={lining} mounts={landingMounts} passage={corridorLanding} timber={timber} />
+    <CoveredPassage material={lining} mounts={landingMounts} passage={corridorLanding} paving={corridorLandingPaving} pavingMaterial={landing} timber={timber} />
     <CorridorStairs lining={lining} timber={timber} />
   </group>
 }

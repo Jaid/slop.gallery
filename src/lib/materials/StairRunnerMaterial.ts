@@ -61,8 +61,10 @@ export default class StairRunnerMaterial extends MeshPhysicalNodeMaterial {
     const uSign = u.sign()
     const isTop = geometryNormal.y.greaterThan(0.5)
     const isRiser = downhillFacing.greaterThan(0.5)
-    const tread = step.greaterThanEqual(0).and(step.lessThan(count))
-    const rodded = step.greaterThanEqual(0)
+    // One tread’s depth of whatever the flight starts from, in front of its first riser, is laid as a tread too, the runner starting under its rod.
+    const entry = step.equal(-1).and(s.greaterThanEqual(0))
+    const tread = step.greaterThanEqual(0).and(step.lessThan(count)).or(entry)
+    const rodded = step.greaterThanEqual(0).or(entry)
     const t = step.mul(runner.stepLength).add(select(isTop, s, h.add(run))).toVar('stairPath')
     const footprint = max(u.fwidth(), t.fwidth()).toVar('stairFootprint')
     const fineDetail = footprint.smoothstep(0.0012, 0.005).oneMinus()
@@ -138,7 +140,8 @@ export default class StairRunnerMaterial extends MeshPhysicalNodeMaterial {
     const nosingWear = select(isTop, s.smoothstep(run - 0.012, run), h.smoothstep(0, 0.012).oneMinus())
     const wood = mix(mix(palette.oakDark, palette.oakLight, figure), palette.oakRing, rings.mul(0.4)).mul(pores.mul(0.18).add(0.91)).mul(boardTone).mul(nosingWear.mul(0.1).add(1))
     // Baked contact shading: the corner under each riser, the runner’s edge roll and the rod’s shadow line.
-    const cornerTop = s.smoothstep(0, 0.05).mul(0.45).add(0.55)
+    // The entry tread lies flush with the floor behind it, without a riser to cast a corner.
+    const cornerTop = select(entry, float(1), s.smoothstep(0, 0.05).mul(0.45).add(0.55))
     const cornerRiser = h.sub(rise).negate().smoothstep(0, 0.045).mul(0.4).add(0.6)
     const runnerShadow = select(tread.or(step.equal(count)), uAbs.sub(halfWidth).smoothstep(0, 0.022).mul(0.3).add(0.7), float(1))
     const rodShadow = s.sub(runner.rodCenter + runner.rodRadius).smoothstep(-0.002, 0.016).mul(0.5).add(0.5)

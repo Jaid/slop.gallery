@@ -26,15 +26,17 @@ import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 /** how thick the slabs under a passage’s floor and over its ceiling are */
 const slabDepth = 0.24
 const unlit: ReadonlyArray<PendantMount> = []
-export default function CoveredPassage({passage, material, mounts = unlit, paving: pavingOverride, timber, ribCutouts, hollow, transition}: {
+export default function CoveredPassage({passage, material, mounts = unlit, paving: pavingOverride, pavingMaterial = material, timber, ribCutouts, hollow, transition}: {
   /** a hollow its paving has sunk into */
   hollow?: FloorHollow
   material: Material
   /** the lanterns hanging in the passage; omit for an unlit passage */
   mounts?: ReadonlyArray<PendantMount>
   passage: Passage
-  /** the floor laid in the passage’s material when other floors cover the rest; collision still uses the full passage floors */
+  /** the floor laid in its paving material when other floors cover the rest; collision still uses the full passage floors */
   paving?: ReadonlyArray<FloorPolygon>
+  /** what the paving is laid with instead of the passage’s material */
+  pavingMaterial?: Material
   ribCutouts?: ReadonlyArray<PassageCutout>
   timber?: Material
   /** a stone passage’s timber end, rendered separately; the paving and vault ribs stop where it begins */
@@ -62,7 +64,7 @@ export default function CoveredPassage({passage, material, mounts = unlit, pavin
       {floors.flatMap(floor => slabHulls(floor, passage.floorY - slabDepth, passage.floorY)).map((corners, i) => <ConvexHullCollider key={i} args={[corners]} />)}
       {passage.floors.flatMap(floor => slabHulls(floor, crown, crown + slabDepth)).map((corners, i) => <ConvexHullCollider key={i} args={[corners]} />)}
       {ceilings.map((ceiling, i) => <FloorSlab key={i} bottom={crown} depth={slabDepth} material={material} polygon={ceiling} />)}
-      {paving.map((floor, i) => <FloorSlab key={i} bottom={passage.floorY - slabDepth} depth={slabDepth} material={material} polygon={floor} />)}
+      {paving.map((floor, i) => <FloorSlab key={i} bottom={passage.floorY - slabDepth} depth={slabDepth} material={pavingMaterial} polygon={floor} />)}
       <Branch if={hollow}><SunkenPaving hollow={hollow!} material={material} /></Branch>
       <Branch not={timber}>{collision.map((args, i) => <TrimeshCollider key={i} args={args} />)}</Branch>
       <Branch if={timber}><TimberFrame geometry={geometry} lining={material} material={timber!} /></Branch>
