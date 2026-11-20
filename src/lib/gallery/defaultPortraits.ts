@@ -9,22 +9,8 @@ import world from '#src/worlds/current.ts'
 import {environmentRandom} from '../environmentSeed.ts'
 import {maximumPortraits} from './imagePolicy.ts'
 
-const portraitSets = ['classic'] as const
-
-/** the set of default works new game states get, or `false` for none */
-export type PortraitSet = typeof portraitSets[number] | false
-
-const portraitSetSchema = optis({
-  defaults: {
-    portrait_set: 'classic',
-  },
+const portraitCountSchema = optis({
   normalizations: {
-    portrait_set(value: unknown): PortraitSet {
-      if (value === false || value === 'false') {
-        return false
-      }
-      return portraitSets.find(portraitSet => portraitSet === value) ?? 'classic'
-    },
     portraits(value: unknown): number | undefined {
       const text = typeof value === 'number' ? String(value) : value
       if (typeof text === 'string' && /^\d+$/.test(text)) {
@@ -37,18 +23,11 @@ const portraitSetSchema = optis({
   },
 })
 
-/** Read the `?portrait_set` of default works: `classic`, or `false` for none. Anything else is `classic`. */
-export function readPortraitSet(input: URL | string = typeof location === 'undefined' ? '' : location.href): PortraitSet {
-  return readPermalink(input, {schema: portraitSetSchema}).portrait_set
-}
-
 /** Read `?portraits=N`, the requested number of default works. Without a nonnegative integer, use the world’s usual selection. */
 export function readPortraitCount(input: URL | string = typeof location === 'undefined' ? '' : location.href): number | undefined {
-  return readPermalink(input, {schema: portraitSetSchema}).portraits
+  return readPermalink(input, {schema: portraitCountSchema}).portraits
 }
 
-/** the default works new game states get, read once at startup */
-export const portraitSet = readPortraitSet()
 const portraitCount = readPortraitCount()
 /**
  * The default works hung in the slots, each in a slot of its ratio, the free ones of higher priority first and among equal ones drawn by the environment `seed`. A work takes the size of its slot and its own roll of the slot’s frames, so the same work hangs larger or smaller, and in another frame, from one seed to the next.
@@ -91,9 +70,9 @@ export function hangDefaultWorks(slots: ReadonlyArray<PortraitSlot>, artworks: R
   return portraits
 }
 
-/** The world’s default works for a new game state, or none with `?portrait_set=false`, hung in its portrait slots, see {@link hangDefaultWorks}. */
+/** The world’s default works for a new game state, or none with `?portraits=0`, hung in its portrait slots, see {@link hangDefaultWorks}. */
 export default function defaultPortraits(seed: number): Array<Portrait> {
-  if (!portraitSet) {
+  if (portraitCount === 0) {
     return []
   }
   return hangDefaultWorks(world.portraitSlots(), world.artworks, seed, portraitCount)

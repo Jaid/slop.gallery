@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import defaultPortraits, {hangDefaultWorks, readPortraitCount, readPortraitSet} from '../../src/lib/gallery/defaultPortraits.ts'
+import defaultPortraits, {hangDefaultWorks, readPortraitCount} from '../../src/lib/gallery/defaultPortraits.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -69,10 +69,4 @@ test('only a nonnegative integer overrides the default portrait count', () => {
   for (const search of ['', '?portraits', '?portraits=-1', '?portraits=2.5', '?portraits=false']) {
     expect(readPortraitCount(search)).toBeUndefined()
   }
-})
-test('?portrait_set is classic unless it is false', () => {
-  for (const search of ['', '?portrait_set', '?portrait_set=classic', '?portrait_set=modern']) {
-    expect(readPortraitSet(`https://example.com/${search}`)).toBe('classic')
-  }
-  expect(readPortraitSet('https://example.com/?portrait_set=false')).toBe(false)
 })
