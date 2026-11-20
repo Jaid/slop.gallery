@@ -1,5 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-26.5 -2 14.9 35.5" fill="#fff">
   <defs>
+    <!-- In the hairpin’s frame: fade from the west cut to the edge of the straight run. -->
+    <linearGradient id="bastion-upper-end" gradientUnits="userSpaceOnUse" x1="-1.2" x2="1.3" y1="0" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
     <linearGradient id="bastion-upper-west-turn" gradientUnits="userSpaceOnUse" x1="-26.5" y1="0" x2="-25.3" y2="0"><stop offset="0" stop-color="#a4a4a4"/><stop offset="1" stop-color="#afafaf"/></linearGradient>
     <linearGradient id="bastion-upper-0" gradientUnits="userSpaceOnUse" x1="-25.3" y1="29.588" x2="-25.006" y2="29.573"><stop offset="0" stop-color="#afafaf"/><stop offset="1" stop-color="#b2b2b2"/></linearGradient>
     <linearGradient id="bastion-upper-1" gradientUnits="userSpaceOnUse" x1="-25.006" y1="29.573" x2="-24.715" y2="29.53"><stop offset="0" stop-color="#b2b2b2"/><stop offset="1" stop-color="#b4b4b4"/></linearGradient>
@@ -48,7 +53,7 @@
   </defs>
   <g mask="url(#bastion-upper-height)">
     <!-- The turn continues west of its apex to the same world x as the Corridor’s upper drawing. -->
-    <path transform="translate(-25.3 29.588)" d="M -1.2 1.544 A 4.7 4.7 0 0 0 4.7 -3 V -19.288 A 1.3 1.3 0 0 1 6 -20.588 H 8.3 V -23.988 H 6.3 L 5.3 -24.988 H 1.3 V -3 A 1.3 1.3 0 0 1 -1.2 -2.5 Z"/>
+    <path fill="url(#bastion-upper-end)" transform="translate(-25.3 29.588)" d="M -1.2 1.544 A 4.7 4.7 0 0 0 4.7 -3 V -19.288 A 1.3 1.3 0 0 1 6 -20.588 H 8.3 V -23.988 H 6.3 L 5.3 -24.988 H 1.3 V -3 A 1.3 1.3 0 0 1 -1.2 -2.5 Z"/>
     <path d="M -23.992 4 A 5.85 5.85 0 0 1 -12.308 4 Z"/>
   </g>
 </svg>

@@ -6,7 +6,7 @@ import {Geofence} from 'geofency'
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
 import {moonfallCrater} from '#src/lib/gallery/moonfall/config.ts'
 import {craterTerrain} from '#src/lib/gallery/moonfall/CraterTerrain.ts'
-import {stairwayFootprint} from '#src/lib/gallery/staircase.ts'
+import {stairTurn, stairwayFootprint} from '#src/lib/gallery/staircase.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -16,6 +16,7 @@ import cameras from './cameras.ts'
 import lamps from './lamps.ts'
 import map from './map.svg?raw'
 import spawns from './spawns.ts'
+import upperMap from './upperMap.svg?raw'
 import walls from './walls.ts'
 
 const {moonfall: plan} = lowerGallery
@@ -60,6 +61,11 @@ export default class Moonfall extends Room {
       volumetricSun: 0,
       walls,
       map,
+      // The upper flight and the near half of the landing, cut across the middle of the turn.
+      upperMap: {
+        from: stairTurn.top - lowerGallery.floorY,
+        map: upperMap,
+      },
     })
   }
 
