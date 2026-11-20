@@ -6,6 +6,7 @@ import AmbienceEmitterMarkers from '#component/AmbienceEmitterMarkers'
 import AmbienceListener from '#component/AmbienceListener'
 import FusionRemains from '#component/FusionRemains'
 import Fusions from '#component/Fusions'
+import GeofenceOutlines from '#component/GeofenceOutlines'
 import ImpactSounds from '#component/ImpactSounds'
 import IntroCamera from '#component/IntroCamera'
 import Lamps from '#component/Lamps'
@@ -56,6 +57,7 @@ export default function Scene() {
     <PartyEffects />
     {/* Hidden with O, the markers keep working: editors still aim, drag and switch what they mark. */}
     <group name='scene-ui' visible={!uiHidden}>
+      <GeofenceOutlines />
       <Branch if={isShowingSticky} then={StickySurfaces} />
       <Branch if={isShowingPortraitSlots} then={PortraitSlots} />
       <Branch if={isEditingPortraitSlots} then={PortraitSlotEditor} />

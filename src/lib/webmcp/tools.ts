@@ -1,4 +1,5 @@
 import type {FrameDownload, FrameFormat} from '#src/lib/downloadFrame.ts'
+import type {FenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
 import type {SeedChange} from '#src/lib/gameSeed.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
@@ -62,6 +63,7 @@ export type WebmcpBridge = {
   setGraphicsQuality: (input: GraphicsQualityInput) => Promise<GraphicsQualityChange>
   setSeed: (input: SeedInput) => SeedChange
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
+  showFence: (input: FenceDisplay) => FenceDisplay
   spawnOrb: (input: OrbSpawnInput) => Promise<OrbSpawn>
   spawnPartyEffect: (input: PartyEffectSpawnInput) => PartyEffectSpawn
   throwProp: (input: PropThrowInput) => PropThrow
@@ -220,6 +222,34 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           throw new TypeError('position must be {x, y, z}, three finite numbers in world meters.')
         }
         return getBridge().getGeofences({position: position as GeofenceQuery['position']})
+      },
+    },
+    {
+      name: 'show_fence',
+      title: 'Show geofence outlines',
+      description: 'Outline the boxes of one geofence by ID from dump_geofences, or show all fences. Lines are visible through walls and open at unbounded ends. Changes the selection made by ?show_fence for this page and returns the new selection.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          fence: {
+            type: ['boolean', 'string'],
+            minLength: 1,
+            description: 'a fence ID to isolate, true for all (the default) or false to hide the outlines',
+          },
+        },
+        additionalProperties: false,
+      },
+      annotations: {readOnlyHint: false},
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).some(key => key !== 'fence')) {
+          throw new TypeError('This tool takes an object with an optional fence.')
+        }
+        const {fence = true} = input
+        if (typeof fence !== 'boolean' && (typeof fence !== 'string' || !fence)) {
+          throw new TypeError('fence must be a fence ID, true for all or false for none.')
+        }
+        return getBridge().showFence({fence})
       },
     },
     {

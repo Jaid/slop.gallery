@@ -22,6 +22,7 @@ import dumpPortraits from '#src/lib/webmcp/dumpPortraits.ts'
 import getGeofences from '#src/lib/webmcp/getGeofences.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
 import setGraphicsQuality from '#src/lib/webmcp/setGraphicsQuality.ts'
+import showFence from '#src/lib/webmcp/showFence.ts'
 import spawnOrb from '#src/lib/webmcp/spawnOrb.ts'
 import spawnPartyEffect from '#src/lib/webmcp/spawnPartyEffect.ts'
 import throwProp from '#src/lib/webmcp/throwProp.ts'
@@ -100,6 +101,7 @@ export default function WebmcpBridge() {
       rerollSeed: () => changeSeed(null),
       setSeed: ({seed}: SeedInput) => changeSeed(seed),
       setWireframe: applyWireframeFlood,
+      showFence,
       spawnOrb,
       spawnPartyEffect,
       throwProp: (input: Parameters<typeof throwProp>[1]) => throwProp(camera, input),

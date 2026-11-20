@@ -16,6 +16,7 @@ import {readSeedOverride} from './environmentSeed.ts'
 import {readFade} from './fade.ts'
 import {readFrozenTime} from './frozenTime.ts'
 import {readPortraitSet} from './gallery/defaultPortraits.ts'
+import {readShowFence} from './gallery/fenceDisplay.ts'
 import {readFlying} from './gallery/flyMode.ts'
 import {readDownload, readWebhook, readWebhookEndpoint} from './gallery/fusion/resultSharing.ts'
 import {readWeather} from './gallery/lighting.ts'
@@ -88,6 +89,7 @@ const readers: Record<string, Reader> = {
   sculpture: readSculpture,
   seed: readSeedOverride,
   show_ambience_emitters: readShowAmbienceEmitters,
+  show_fence: readShowFence,
   show_lamps: readShowLamps,
   show_portrait_slots: readShowPortraitSlots,
   show_sticky: readShowSticky,

@@ -10,7 +10,9 @@ import type {WebmcpBridge} from '../../src/lib/webmcp/tools.ts'
 
 import {expect, test} from 'bun:test'
 
+import {useFenceDisplay} from '../../src/lib/gallery/fenceDisplay.ts'
 import registerWebmcp from '../../src/lib/webmcp/register.ts'
+import showFence from '../../src/lib/webmcp/showFence.ts'
 import createWebmcpTools from '../../src/lib/webmcp/tools.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
@@ -18,6 +20,7 @@ import slopGallery from '../../src/worlds/gallery/index.ts'
 type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<PortraitAdditionInput, 'target'>
 
 const bridge: WebmcpBridge = {
+  showFence,
   addPortrait: ({id = 'work-1', frame, size = 30_000, target, title = 'xf14RxM8'}: PortraitAdditionInput) => Promise.resolve<EchoedAddition>({
     id,
     title,
@@ -189,7 +192,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'analyze_world', 'get_loading_items', 'get_geofences', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'analyze_world', 'get_loading_items', 'get_geofences', 'show_fence', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
   for (const tool of tools.slice(0, 8)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -258,6 +261,28 @@ test('get_geofences is read-only, takes an optional position of x, y and z and a
   expect(queries).toHaveLength(2)
   controller.abort()
   expect(() => execute({})).toThrow()
+})
+test('show_fence selects all, one or no fences and preserves the selection on errors', () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'show_fence')!
+  const controller = new AbortController
+  const execute = (input: Record<string, unknown>) => tool.execute(input, {signal: controller.signal})
+  const original = useFenceDisplay.getState()
+  try {
+    expect(tool.annotations?.readOnlyHint).toBe(false)
+    expect(execute({})).toEqual({fence: true})
+    expect(useFenceDisplay.getState().fence).toBe(true)
+    expect(execute({fence: 'lobby_north'})).toEqual({fence: 'lobby_north'})
+    for (const input of [{fence: 'unknown'}, {fence: ''}, {fence: 7}, {unknown: true}]) {
+      expect(() => execute(input)).toThrow()
+    }
+    expect(useFenceDisplay.getState().fence).toBe('lobby_north')
+    expect(execute({fence: false})).toEqual({fence: false})
+    controller.abort()
+    expect(() => execute({})).toThrow()
+    expect(useFenceDisplay.getState().fence).toBe(false)
+  } finally {
+    useFenceDisplay.setState(original)
+  }
 })
 test('download_frame validates its optional name and downloads through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'download_frame')!
