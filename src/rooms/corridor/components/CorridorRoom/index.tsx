@@ -6,13 +6,11 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import CorridorStairs from '#component/CorridorStairs'
 import CoveredPassage from '#component/CoveredPassage'
-import {corridorHallLanterns, corridorLanding, corridorLandingLantern, corridorLandingPaving, corridorPassage, corridorPaving} from '#src/lib/gallery/corridor.ts'
+import {corridorHallLanterns, corridorLanding, corridorLandingPaving, corridorPassage, corridorPaving} from '#src/lib/gallery/corridor.ts'
 import {lodgeWindowRibCutouts} from '#src/lib/gallery/lodge.ts'
 import lodgeTimber from '#src/lib/gallery/lodgeTimber.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 import PlankFloorMaterial from '#src/lib/materials/PlankFloorMaterial.ts'
-
-const landingMounts = [corridorLandingLantern]
 
 export default function CorridorRoom({lining, wood}: {
   /** the corridor’s board lining, shared with its walls and already lit by {@link lightIndoors} */
@@ -25,7 +23,7 @@ export default function CorridorRoom({lining, wood}: {
   const landing = useDisposable(useMemo(() => lightIndoors(new PlankFloorMaterial(undefined, false)), []))
   return <group name='corridor-room'>
     <CoveredPassage material={lining} mounts={corridorHallLanterns} passage={corridorPassage} paving={corridorPaving} ribCutouts={lodgeWindowRibCutouts} timber={timber} />
-    <CoveredPassage material={lining} mounts={landingMounts} passage={corridorLanding} paving={corridorLandingPaving} pavingMaterial={landing} timber={timber} />
+    <CoveredPassage material={lining} passage={corridorLanding} paving={corridorLandingPaving} pavingMaterial={landing} timber={timber} />
     <CorridorStairs lining={lining} timber={timber} />
   </group>
 }

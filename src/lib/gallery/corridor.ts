@@ -5,7 +5,7 @@ import type {Vec3} from './types.ts'
 import {cutFloorOpening} from './floorPolygons.ts'
 import lodge, {lodgeBay, lodgeWindowCutout} from './lodge.ts'
 import Passage from './passages/Passage.ts'
-import {passageRibs, timberRibInset} from './passages/timberLayout.ts'
+import {passageRibs, timberRibInset, timberRibs} from './passages/timberLayout.ts'
 import {passageLightDrop} from './pendants/mounts.ts'
 import sienna, {siennaVestibule} from './sienna.ts'
 import StairFlight from './stairs/StairFlight.ts'
@@ -79,16 +79,6 @@ export const corridorHallLanterns = [hallRibs[0], ribNear(hallRibs, corridorPass
  * The landing at the Sienna’s floor between the flight’s top and the arch of the Sienna’s vestibule: from the arch west, a short lined reveal, then an open elbow turning 45° north-west onto the diagonal, where the flight begins.
  */
 export const corridorLanding = new Passage('landing', 'corridor', [[vestibuleX, vestibuleZ], landingTurn, flightHead], sienna.floorY, lodge.timberWidth, corridor.height)
-const landingRibs = passageRibs(corridorLanding, 0)
-/** The lantern in the short reveal of the Sienna arch, fixed to the plank between two ribs 11 cm apart. */
-const landingAnchor: Vec3 = [vestibuleX - (landingRibs[0][1] + landingRibs[1][0]) / 2, corridorLanding.floorY + corridorLanding.height, vestibuleZ]
-export const corridorLandingLantern: PendantMount = {
-  anchor: landingAnchor,
-  normal: [0, -1, 0],
-  drop: passageLightDrop,
-  light: [landingAnchor[0], landingAnchor[1] - passageLightDrop, landingAnchor[2]],
-  canopyRadius: 0.05,
-}
 /** The doorway passage from the Lodge’s bay north to the run along it, `from` to `to` meters out of the bay, as a rectangle across the passage. */
 const doorwayPassage = (from: number, to: number): FloorRectangle => ({
   center: [doorwayX, backZ - (from + to) / 2],
@@ -113,6 +103,23 @@ export const corridorStairs = new StairFlight('return', [flightHead[0], sienna.f
 export const corridorStairHead = corridorStairs.headBlock()
 /** The landing’s floorboards round the flight’s head, the Sienna’s like the floor they run on from; collision still uses the landing’s full floors. */
 export const corridorLandingPaving = corridorLanding.floors.flatMap(floor => corridorStairs.outsideHead(floor))
+/** how far down the flight the middle of its lining’s first rib lies, flush with the flight’s top over its first tread */
+const headRibAlong = timberRibs(0, corridorStairs.length)[0].reduce((sum, end) => sum + end) / 2
+const headRibAnchor: Vec3 = [
+  flightHead[0] + corridorStairs.heading[0] * headRibAlong,
+  corridorStairs.start[1] + corridorStairs.grade * headRibAlong + corridorStairs.headroom - timberRibInset,
+  flightHead[1] + corridorStairs.heading[1] * headRibAlong,
+]
+/** the underside of the flight’s ribs, which slopes down the flight with its grade */
+const headRibSlant = Math.hypot(corridorStairs.grade, 1)
+const headRibNormal: Vec3 = [corridorStairs.grade * corridorStairs.heading[0] / headRibSlant, -1 / headRibSlant, corridorStairs.grade * corridorStairs.heading[1] / headRibSlant]
+/** The lantern at the top of the flight, by the landing: hung from the middle of the flight’s first rib, as far under the lining’s crown as the hall’s lanterns. */
+export const corridorLandingLantern: PendantMount = {
+  anchor: headRibAnchor,
+  normal: headRibNormal,
+  drop: passageLightDrop - timberRibInset,
+  light: [headRibAnchor[0], headRibAnchor[1] - passageLightDrop + timberRibInset, headRibAnchor[2]],
+}
 // A 2.4 m runner leaves wide oak margins and clears both handrails’ posts.
 export const corridorRunner = new StairRunner(corridorStairs, 2.4)
 export const corridorRails = [-1, 1].map(side => corridorStairs.beam(1, 0.065, 0.065, side * (corridorStairs.width / 2 - 0.23)))

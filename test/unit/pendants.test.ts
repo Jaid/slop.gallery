@@ -79,12 +79,17 @@ const groups: Array<{
     lights: Array.from({length: 3}, () => corridorPassage.floorY + corridorPassage.height - passageLightDrop),
     mounts: corridorHallLanterns,
   },
-  {
-    label: 'timber corridor landing',
-    body: lantern,
-    lights: [corridorLanding.floorY + corridorLanding.height - passageLightDrop],
-    mounts: [corridorLandingLantern],
-  },
+  (() => {
+    // Its crown falls with the flight’s grade.
+    const {grade, headroom, heading: [hx, hz], start} = corridorStairs
+    const [x, , z] = corridorLandingLantern.light
+    return {
+      label: 'timber corridor flight',
+      body: lantern,
+      lights: [start[1] + grade * ((x - start[0]) * hx + (z - start[2]) * hz) + headroom - passageLightDrop],
+      mounts: [corridorLandingLantern],
+    }
+  })(),
 ]
 afterAll(() => {
   for (const geometry of [mouth, curve, approach, corridor, landing, stairs, transition, lodgeWindow, ...slabs]) {
