@@ -12,7 +12,7 @@ export type FusionTiming = {
   image: number
   /** The ceremony opens with this, once and never looped: the portal forms, takes hold of every ingredient and shows each image once, until they orbit it. */
   intro: number
-  /** After the intro, the portal brews this long without an image while the ring of fire’s landing dies away, before the images start taking turns, so the first one’s bell doesn’t drown in it. */
+  /** After the intro, the portal brews this long without an image while the ring of silk’s landing dies away, before the images start taking turns, so the first one’s bell doesn’t drown in it. */
   lull: number
   /** A result never shows before this, however fast the image model answers; a failure, from the model or the player breaking the fusion off, only waits for the intro. */
   minimum: number

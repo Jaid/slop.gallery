@@ -42,7 +42,7 @@ export function paletteOf(color?: string): PortalPalette {
 }
 
 /**
- * Everything a fusion’s portal draws: its glowing disc and its sparks, and the parts only the intro shows, the motes and a tether for each of the two things orbiting it, or the intro and the climax, the warp and a trail of fire for each. All but the tethers and the trails stand at the portal’s middle; those lay themselves out in the world.
+ * Everything a fusion’s portal draws: its glowing disc and its sparks, and the parts only the intro shows, the motes and a tether for each of the two things orbiting it, or the intro and the climax, the warp and a trail of silk for each. All but the tethers and the trails stand at the portal’s middle; those lay themselves out in the world.
  * At radius 0 and without energy, nothing shows, but every part still draws, which lets their pipelines compile behind the loading screen.
  */
 export default class PortalVisuals {

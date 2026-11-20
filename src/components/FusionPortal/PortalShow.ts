@@ -193,7 +193,7 @@ export default class PortalShow {
     const climax = this.climax()
     for (const [index, trail] of visuals.trails.entries()) {
       const head = this.satellites.centers[index]
-      // The intro’s trail of fire, or the comet trail the climax winds into the portal.
+      // The intro’s trail of silk, or the comet trail the climax winds into the portal.
       const intro = head && introTrail(index, elapsed, timing)
       const spiraling = head && !intro && climax ? reboundTrail(moment, orbitAngle(0, elapsed, climax) - orbitAngle(0, climax.at, climax)) : undefined
       const blazing = intro ? {

@@ -93,7 +93,7 @@ describe('timeline', () => {
     })
     expect(imageAt(first + 0.001, 2)!.clarity).toBeLessThan(0.05)
   })
-  test('the ring of fire’s shockwave rings through the lull, and every image after it gets one of its own', () => {
+  test('the ring of silk’s shockwave rings through the lull, and every image after it gets one of its own', () => {
     const {image, intro} = fusionTiming
     const first = firstTurn()
     const lulling = portalEnvelope(first - 0.1, undefined, undefined, fusionTiming, pair)
@@ -379,7 +379,7 @@ describe('intro', () => {
     expect(introOrbitRate(introSeconds(release, fusionTiming), fusionTiming)).toBeGreaterThan(orbitSpeed * 4)
     expect(Math.abs(introOrbitRate(just, fusionTiming) - orbitSpeed)).toBeLessThan(0.3)
   })
-  test('the ring of fire’s landing knocks everything out along the wall, from where it drifts back into its orbit', () => {
+  test('the ring of silk’s landing knocks everything out along the wall, from where it drifts back into its orbit', () => {
     const center = new Vector3(...frame.center)
     const normal = new Vector3(...frame.normal)
     const along = (point: Vector3) => {
@@ -397,7 +397,7 @@ describe('intro', () => {
       }
     }
   })
-  test('the ring of fire left behind falls into the portal and lands as the intro ends, with a blaze', () => {
+  test('the ring of silk left behind falls into the portal and lands as the intro ends, with a blaze', () => {
     for (const index of [0, 1]) {
       expect(introTrail(index, introSeconds(whirl, fusionTiming) - 1e-3, fusionTiming)).toBeUndefined()
       let reach = 1

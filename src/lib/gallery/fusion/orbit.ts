@@ -19,7 +19,7 @@ export const fizzleRelease = 0.3
 export const tumbleSpeed = 1.9
 /** how far the tethers pull the satellites in while the intro whirls them, as a share of the orbit */
 const tightened = 0.1
-/** how far out along the wall the ring of fire’s landing knocks the satellites at most, as a share of their distance from the portal’s middle */
+/** how far out along the wall the ring of silk’s landing knocks the satellites at most, as a share of their distance from the portal’s middle */
 const knockReach = 0.5
 /** seconds after the landing that the knock has flung them out furthest */
 const knockPeak = 0.15
@@ -76,7 +76,7 @@ const from: SatellitePose = {
   scale: 1,
 }
 
-/** How far out along the wall the ring of fire’s landing as the intro ends has knocked the satellites `elapsed` seconds into the fusion, as a share of their distance from the portal’s middle: flung out at once by its shockwave, they drift back in and are exactly in their orbit again {@link knockBack} seconds after it. */
+/** How far out along the wall the ring of silk’s landing as the intro ends has knocked the satellites `elapsed` seconds into the fusion, as a share of their distance from the portal’s middle: flung out at once by its shockwave, they drift back in and are exactly in their orbit again {@link knockBack} seconds after it. */
 export function landingKnock(elapsed: number, {intro}: Pick<FusionTiming, 'intro'>) {
   const after = elapsed - intro
   if (after <= 0 || after >= knockBack) {
@@ -130,7 +130,7 @@ export function orbitFacing(frame: PortalFrame, point: Vector3, wobble: number, 
 }
 
 /**
- * The satellite’s pose in the world `elapsed` seconds into the fusion: the intro takes it from where it was seized into orbit, the ring of fire landing as it ends knocks it out for a moment, it circles the portal and, on success, spirals into it during the climax, shrinking away.
+ * The satellite’s pose in the world `elapsed` seconds into the fusion: the intro takes it from where it was seized into orbit, the ring of silk landing as it ends knocks it out for a moment, it circles the portal and, on success, spirals into it during the climax, shrinking away.
  * On failure, the orbit stutters through the first part of the fizzle; then the work flies home to its wall, while anything else is spat out, which the caller does.
  */
 export function satellitePose(frame: PortalFrame, timing: FusionTiming, satellite: SatelliteOrbit, elapsed: number, outcome: FusionOutcome | undefined, out: SatellitePose): SatellitePose {

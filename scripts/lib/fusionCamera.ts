@@ -127,7 +127,7 @@ export const blows = ({emergence, strike}: Pick<Timeline, 'emergence' | 'strike'
   [strike, 0, 0.55, 0.35],
   // the singularity collapses and bursts
   [strike + 1.5, 0.34, 0.95, 0.7],
-  // the ring of fire lands
+  // the ring of silk lands
   [strike + 4.5, 0.08, 0.45, 0.5],
   // the result flips out with a blaze
   [emergence, 0.2, 0.7, 0.6],

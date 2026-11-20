@@ -74,7 +74,7 @@ export function portalEnvelope(elapsed: number, outcome: FusionOutcome | undefin
   }
 }
 
-/** The portal brewing once its intro is over, showing the images in turn from the end of its lull until the outcome is in. The intro settles into it as it ends, and the ring of fire the intro’s slingshot left behind lands in it with a blaze, a big shockwave and a burst of sparks. */
+/** The portal brewing once its intro is over, showing the images in turn from the end of its lull until the outcome is in. The intro settles into it as it ends, and the ring of silk the intro’s slingshot left behind lands in it with a blaze, a big shockwave and a burst of sparks. */
 export function brewing(elapsed: number, timing: FusionTiming, images: number): PortalEnvelope {
   const shown = imageAt(elapsed, images, timing)
   const energy = 0.92 + 0.08 * Math.sin(elapsed * 3.1) + 0.05 * Math.sin(elapsed * 7.3)
@@ -102,7 +102,7 @@ export function brewing(elapsed: number, timing: FusionTiming, images: number): 
   if (landed < 0) {
     return calm
   }
-  // The ring of fire lands: the portal blazes up, swells and lurches, and a big shockwave greets it, until the first image’s comes after it, or instead of that one without a lull.
+  // The ring of silk lands: the portal blazes up, swells and lurches, and a big shockwave greets it, until the first image’s comes after it, or instead of that one without a lull.
   const landing = landed <= surfaced
   const onset = Math.min(landed / 0.03, 1)
   const swell = Math.sin(Math.PI / 2 * Math.min(landed / 0.08, 1)) * Math.exp(-landed * 5)
@@ -260,7 +260,7 @@ function shaped(elapsed: number, outcome: FusionOutcome | undefined, emergedAt: 
 /** the ember’s size once the motes are in and once every ingredient’s beat has grown it a step, and the portal’s once the ignition did */
 const growth = [0.32, 0.75, 1] as const
 const easeOutBack = (t: number) => 1 + 2.6 * (t - 1) ** 3 + 1.6 * (t - 1) ** 2
-/** The portal during the intro (see `intro.ts`): a dark singularity feeding on the view, bursting into an ember that the motes kindle and that beats into the portal, which spins up as it whirls the satellites around and draws in the ring of fire they left, settling into {@link brewing} by its end. */
+/** The portal during the intro (see `intro.ts`): a dark singularity feeding on the view, bursting into an ember that the motes kindle and that beats into the portal, which spins up as it whirls the satellites around and draws in the ring of silk they left, settling into {@link brewing} by its end. */
 function opening(elapsed: number, timing: FusionTiming, {images, ingredients}: PortalCast): PortalEnvelope {
   const t = introClock(elapsed, timing)
   const {beats, dub, turns} = emberRhythm(ingredients)
@@ -345,7 +345,7 @@ function opening(elapsed: number, timing: FusionTiming, {images, ingredients}: P
   if (t <= whirl) {
     return settled
   }
-  // It spins up with the whirl, flares as it lets go and draws the ring of fire in.
+  // It spins up with the whirl, flares as it lets go and draws the ring of silk in.
   const speed = whirling(t)
   const fall = ringFall(t)
   const letGo = t - release

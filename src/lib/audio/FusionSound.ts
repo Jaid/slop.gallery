@@ -336,7 +336,7 @@ export default class FusionSound {
     this.play(source.connect(shaping), source, start, duration, volume, attack, Math.random() * 3)
   }
 
-  /** The intro (see `intro.ts`) that starts at `start`: a pinprick of glass and an inhale rising over a pressure drop while the work rattles and is dragged in, a crack, a boom and a gong as the singularity bursts, a swarm of glints as the motes stream back in, the ember’s heartbeat, a beat latching each ingredient on with a magnetic clamp charging up, an orb pinging like glass besides, rising toward the ignition, and yanking it in with a whoosh, and a last one igniting the portal with a short roar and a chord, and the portal’s slingshot: the zip of its tethers lashing out, a whir climbing to a howl under whooshes passing ever faster while it whirls them around, a snap and a twang as it lets go, a rush as the ring of fire falls in and a boom, a blast of air, a bright chord and glitter as it lands. */
+  /** The intro (see `intro.ts`) that starts at `start`: a pinprick of glass and an inhale rising over a pressure drop while the work rattles and is dragged in, a crack, a boom and a gong as the singularity bursts, a swarm of glints as the motes stream back in, the ember’s heartbeat, a beat latching each ingredient on with a magnetic clamp charging up, an orb pinging like glass besides, rising toward the ignition, and yanking it in with a whoosh, and a last one igniting the portal with a short roar and a chord, and the portal’s slingshot: the zip of its tethers lashing out, a whir climbing to a howl under whooshes passing ever faster while it whirls them around, a snap and a twang as it lets go, a rush as the ring of silk falls in and a boom, a blast of air, a bright chord and glitter as it lands. */
   private intro(start: number, timing: FusionTiming, kinds: ReadonlyArray<IngredientLatch>) {
     const ingredients = kinds.length
     const at = (seconds: number) => start + introSeconds(seconds, timing)
@@ -537,7 +537,7 @@ export default class FusionSound {
         attack: 0.03 + 0.04 * (1 - speed),
       })
     }
-    // It lets go: a snap and a twang, while the ring of fire falls in with a rush sucked into the portal.
+    // It lets go: a snap and a twang, while the ring of silk falls in with a rush sucked into the portal.
     this.hiss(at(release), 0.04, {
       filter: 'highpass',
       frequency: 3600,
