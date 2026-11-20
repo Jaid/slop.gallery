@@ -7,6 +7,8 @@ import salonLantern, {salonLanternBase} from '../../src/lib/gallery/salonLantern
 import {salonSculpture, salonSculptureId, salonSculptureSpot} from '../../src/lib/gallery/salonSculpture.ts'
 import {environmentSeed} from '../../src/lib/gameSeed.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
+import {hitchSize} from '../../src/sculptures/hitch/config.ts'
+import {HitchSculptureGeometry} from '../../src/sculptures/hitch/geometry.ts'
 import {createSculpture, sculptures} from '../../src/sculptures/index.ts'
 import {readSculpture} from '../../src/sculptures/lib/forcedSculpture.ts'
 
@@ -53,5 +55,22 @@ test('?sculpture previews any registered item and ignores unknown IDs', () => {
     const url = `http://localhost/?sculpture=${value}`
     expect(readSculpture(url)).toBe('')
     expect(readQueryOverrides(url)).toBeUndefined()
+  }
+})
+test('Hitch’s meshes fit their declared bounds under the sculpture triangle budget', () => {
+  const geometry = new HitchSculptureGeometry
+  geometry.foot.computeBoundingBox()
+  geometry.knot.computeBoundingBox()
+  const minimum = geometry.foot.boundingBox!.min.clone().min(geometry.knot.boundingBox!.min)
+  const maximum = geometry.foot.boundingBox!.max.clone().max(geometry.knot.boundingBox!.max)
+  const size = maximum.sub(minimum).toArray()
+  try {
+    expect(geometry.triangleCount).toBeLessThanOrEqual(32_768)
+    expect(size[0]).toBeLessThanOrEqual(hitchSize[0])
+    expect(size[1]).toBeLessThanOrEqual(hitchSize[1])
+    expect(size[2]).toBeLessThanOrEqual(hitchSize[2])
+    expect(geometry.knotColliders).toHaveLength(32)
+  } finally {
+    geometry.dispose()
   }
 })
