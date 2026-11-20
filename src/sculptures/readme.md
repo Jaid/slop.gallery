@@ -1,6 +1,8 @@
 # Sculptures
 
-The Salon displays one sculpture on its permanent 3.2 m × 3.2 m stone socket. The environment seed picks from the ordered registry in `index.ts`, independently of the fountain or other exhibits. Seed 0 always shows the first entry: **Block**, an upright block of the same sawn stone as its socket. To preview a specific design, open `?room=salon&sculpture=block` (replace `block` with its ID). An unknown ID falls back to the seeded pick.
+The Salon displays one sculpture on its permanent 3.2 m × 3.2 m stone socket. The environment seed picks from the ordered registry in `index.ts`, independently of the fountain or other exhibits. Seed 0 always shows the first entry: **Block**, an upright block of the same sawn stone as its socket.
+
+**Antiphon** (`?room=salon&sculpture=antiphon`) is a single loop of carved stone with seven twisting flutes and two hollow, scalloped bells. From the doorway its throats cross; orbit it with V to see the space between them. Use `?room=salon&sculpture=<id>` to preview either work regardless of the seed. An unknown ID falls back to the seeded pick.
 
 ## Contributing a sculpture
 
