@@ -1,7 +1,7 @@
 import type {Vec3} from './types.ts'
-import type {Box3} from 'three/webgpu'
 
 import {degreesToRadians, vec3} from 'math'
+import {Box3} from 'three/webgpu'
 
 import lobbyVault from './lobbyVault.ts'
 
@@ -12,11 +12,22 @@ export type SunlitRoom = {
   /** whether the sun may reach into it anywhere */
   readonly sunlit: boolean
 }
+/** a room whose walls and ceiling may keep the sun out */
+export type SunTightRoom = {
+  /** the room’s air in world meters */
+  readonly air: ReadonlyArray<Box3>
+  /** the world height of the room’s floor */
+  readonly floorY: number
+  /** whether the sun reaches none of its air above the floor */
+  readonly sunTight: boolean
+}
 
 /** How far the light’s shadow camera stands from the origin along its direction, well above the vault’s crown. */
 const sunDistance = 80
 const margin = 1
 const up: Vec3 = [0, 1, 0]
+/** How far a sun-tight space stays inside the room’s air at its sides and top, in meters: the air reaches into the walls, up to their centerlines, and their trim and the ceiling reach further in. */
+const sunTightClearance = 0.35
 
 /** texels along each axis of the sun’s shadow map in heavy graphics */
 export const sunShadowMapSize = 4096
@@ -39,6 +50,33 @@ export function sunlitPoints(rooms: Iterable<SunlitRoom>): Array<Vec3> {
     }
   }
   return points
+}
+
+/**
+ * The spaces the sun reaches no point of: the air of every sun-tight room from its floor up, clear of its walls, their trim and its ceiling.
+ * Whatever lies wholly inside one can’t change what the sun’s shadow map shows, since along every ray from there toward the sun, the room’s shell stands in the way first.
+ * They start at the floor: where the air reaches down into a pit, like Moonfall’s crater, it takes in the ground round the pit too, which isn’t modeled, so rays from there pass under the walls into the open.
+ */
+export function sunTightSpaces(rooms: Iterable<SunTightRoom>): Array<Box3> {
+  const spaces: Array<Box3> = []
+  for (const room of rooms) {
+    if (!room.sunTight) {
+      continue
+    }
+    for (const {min, max} of room.air) {
+      const space = new Box3(min.clone(), max.clone())
+      space.min.x += sunTightClearance
+      space.min.z += sunTightClearance
+      space.min.y = Math.max(space.min.y, room.floorY)
+      space.max.x -= sunTightClearance
+      space.max.z -= sunTightClearance
+      space.max.y -= sunTightClearance
+      if (!space.isEmpty()) {
+        spaces.push(space)
+      }
+    }
+  }
+  return spaces
 }
 
 /**

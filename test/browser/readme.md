@@ -130,6 +130,14 @@ BROWSER=/path/to/chromium bun run test:live:world-reach
 
 This builds the gallery and opens it with every `?world_reach`: `all`, `room` from the Lobby, the Forge, the Oculus and the Bastion, and `neighbors` from Moonfall and the Lodge. Through the `analyze_world` WebMCP tool it checks that no mesh or light of a room out of reach is in the scene, that every lamp of a room in reach and none of the others exists, that only the works hanging in rooms in reach mounted, that exactly the rooms in reach mounted (`snapshot().mountedRooms`) and only their chunks downloaded, even once the player flies into a room out of reach, that `dump_portrait_slots` and the pause menu’s collection list only the slots and works in reach and that only their images downloaded, that the player stands at the spawn reached out from and that the page logs no new warnings. The pause map must show only rooms in reach on the player’s floor, the collection’s works and the arrow at the player’s world coordinates. `LIVE_TARGET` reuses a build like for the Oculus test.
 
+## Sun-tight rooms
+
+```sh
+BROWSER=/path/to/chromium bun run test:live:sun-tight
+```
+
+This builds the gallery, opens it in the first room with `sunTight` and casts rays toward the sun of every lighting preset from points 75 cm apart throughout the sun-tight spaces (`sunTightSpaces` in `src/lib/gallery/sun.ts`). The shadow cache lets whatever changes wholly inside them leave the sun’s map alone, which only holds while the room’s shell stops every ray, so the rays only count the casters that stay in the map: neither those wholly inside, nor cutout, see-through or shader-moved ones. They cull faces as three’s shadow pass draws them. Every ray has to hit one. A failure lists where the sun gets in, like through a new opening in a ceiling: close it, or drop the room’s `sunTight`. `LIVE_TARGET` reuses a build like for the Oculus test.
+
 ## Intro → frozen pause
 
 ```sh

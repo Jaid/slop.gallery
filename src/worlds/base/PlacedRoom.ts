@@ -100,6 +100,10 @@ export default class PlacedRoom<Kind extends Room = Room> {
     return this.room.sunlit
   }
 
+  get sunTight() {
+    return this.room.sunTight
+  }
+
   get title() {
     return this.room.title
   }

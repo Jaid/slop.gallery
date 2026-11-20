@@ -1,4 +1,4 @@
-import type {BufferGeometry, Light, LightShadow, Matrix4, Object3D, PerspectiveCamera} from 'three/webgpu'
+import type {Box3, BufferGeometry, Light, LightShadow, Matrix4, Object3D, PerspectiveCamera} from 'three/webgpu'
 
 import {Sphere, Vector3} from 'three/webgpu'
 
@@ -11,6 +11,8 @@ export type ShadowCacheUpdate = {
   active?: (light: Light) => boolean
   /** the subtrees left out of this frame, like culled rooms, by default none; they count as absent for all but directional lights */
   hidden?: ReadonlySet<Object3D>
+  /** the spaces a light reaches no point of, like rooms its own casters shut it out of, by default none; a caster changing wholly inside one leaves the light’s map alone, since along every ray from there toward the light another caster stands in the way first */
+  unreached?: (light: Light) => ReadonlyArray<Box3> | undefined
 }
 type ShadowLight = Light & {
   distance?: number
@@ -50,6 +52,9 @@ type LightState = {
 const lightPosition = new Vector3
 const nothingHidden: ReadonlySet<Object3D> = new Set
 const alwaysActive = () => true
+const nowhere: ReadonlyArray<Box3> = []
+const reachesEverywhere = () => nowhere
+const within = (box: Box3, {center, radius}: Sphere) => center.x - radius >= box.min.x && center.x + radius <= box.max.x && center.y - radius >= box.min.y && center.y + radius <= box.max.y && center.z - radius >= box.min.z && center.z + radius <= box.max.z
 const worldSphere = (caster: Caster, target: Sphere) => {
   // Instanced meshes bound all of their instances themselves.
   if (caster.computeBoundingSphere && caster.instanceMatrix) {
@@ -66,6 +71,7 @@ const worldSphere = (caster: Caster, target: Sphere) => {
  * Where almost everything stands still, most lights then render their shadow map once instead of every frame.
  * Directional lights are taken to shine from outside of whatever is hidden and to draw hidden casters too, so hiding or showing a caster leaves their shadow maps alone. A caster changing while hidden only changes shadows nobody sees, so it waits until anything hidden shows again or something in sight changes.
  * All other lights leave hidden casters out of their maps, so they only notice them getting hidden or shown.
+ * Whatever changes wholly inside a space a light can’t reach, like a sculpture turning in a room shut off from the sun, leaves the light’s map alone.
  */
 export default class ShadowCache {
   private readonly casters = new Map<Caster, CasterState>
@@ -91,7 +97,7 @@ export default class ShadowCache {
    * Compares the scene with the last call and requests an update of every shadow map whose light can reach a change.
    * Call it once per frame, after the world matrices are up to date and before the renderer draws.
    */
-  update(scene: Object3D, {active = alwaysActive, hidden = nothingHidden}: ShadowCacheUpdate = {}) {
+  update(scene: Object3D, {active = alwaysActive, hidden = nothingHidden, unreached = reachesEverywhere}: ShadowCacheUpdate = {}) {
     const frame = ++this.frame
     this.changes.length = 0
     const visit = (object: Object3D, isHidden: boolean) => {
@@ -129,8 +135,9 @@ export default class ShadowCache {
         this.lights.delete(light)
         continue
       }
+      const shut = unreached(light)
       for (const change of this.changes) {
-        if (state.dirty || !this.reaches(light, change.sphere)) {
+        if (state.dirty || !this.reaches(light, change.sphere) || shut?.some(box => within(box, change.sphere))) {
           continue
         }
         if (!light.isDirectionalLight) {

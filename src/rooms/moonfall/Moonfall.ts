@@ -57,7 +57,8 @@ export default class Moonfall extends Room {
       ambience: ambienceEmitters,
       lamps,
       skybox: null,
-      // The room lies under its own ceiling, so the sun never lights its air.
+      // The room lies under its own ceiling, so the sun never lights its air, and the turning meteorite never redraws the sun’s shadow map.
+      sunTight: true,
       volumetricSun: 0,
       walls,
       map,

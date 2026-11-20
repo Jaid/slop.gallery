@@ -9,12 +9,17 @@ import {Box3, Frustum, Matrix4, Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
 import {ownerRoom, roomBoxes, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions} from '#src/lib/gallery/roomVisibility.ts'
+import {sunTightSpaces} from '#src/lib/gallery/sun.ts'
 import {getFloorReflectionHeight} from '#src/lib/materials/FloorMaterial.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
 import {lightActive} from '#src/lib/rendering/lightLevels.ts'
 import {hasGeometry, worldBounds} from '#src/lib/rendering/worldBounds.ts'
+import slopGallery from '#src/worlds/gallery/index.ts'
 import relations from '#src/worlds/gallery/relations.ts'
 
+/** what the sun reaches none of, so whatever turns or moves wholly inside, like Moonfall’s meteorite, leaves its shadow map alone */
+const sunTight = sunTightSpaces(slopGallery.rooms)
+const unreached = (light: Light) => ((light as DirectionalLight).isDirectionalLight ? sunTight : undefined)
 const viewProjection = new Matrix4
 const frustum = new Frustum
 const position = new Vector3
@@ -53,7 +58,7 @@ const relatedRegions = (from: ReadonlyArray<RoomId>) => {
 /**
  * Leaves out what the camera can’t see from the rooms it is in. Every mesh has one owner room (see `ownerRoom`), and a room only shows when the camera stands in it or when it is one of the rooms those list in `relations.ts` seen through an opening, and then only through the part of the screen the opening covers, up to three openings deep.
  * Rooms out of sight drop out of every pass of the frame: the camera, its reflection and the lamps’ shadow maps. Objects in a room in sight that miss its openings on screen only drop out of the camera and its reflection, so the shadows they cast stay.
- * The sun shines from outside every room, through openings and skylights that rooms out of sight may frame, so its shadow map keeps them all; otherwise the patches of sunlight would change shape whenever a room leaves the view.
+ * The sun shines from outside every room, through openings and skylights that rooms out of sight may frame, so its shadow map keeps them all; otherwise the patches of sunlight would change shape whenever a room leaves the view. It only leaves alone what changes wholly inside a room whose shell keeps it out (`Room.sunTight`).
  * Culling and the shadow cache start behind the loading screen, where culling leaves out every room but the camera’s, in the sun’s shadow map too, so that only what the start view sees gets built there. Objects in the camera’s rooms and the rooms related to them stream in first afterward.
  * Shadow maps only update when something in their light’s reach changes, and lights switched off by their room list, or in hidden rooms without reaching into the view, wait until they matter again. Lights themselves stay, since a different set of lights would recompile every lit material.
  */
@@ -125,6 +130,7 @@ export default function RoomCulling() {
       frustum.setFromProjectionMatrix(viewProjection, camera.coordinateSystem, camera.reversedDepth)
       shadows.update(scene, {
         hidden,
+        unreached,
         active(light) {
           if (!lightActive.current(light)) {
             return false

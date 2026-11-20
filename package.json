@@ -36,6 +36,7 @@
     "test:live:sculptures": "bun run build && LIVE_TEST=true bun test ./test/sculptures.live.test.ts",
     "test:live:spawn": "bun run build && LIVE_TEST=true bun test ./test/spawn.live.test.ts",
     "test:live:spectation": "bun run build && LIVE_TEST=true bun test ./test/spectation.live.test.ts",
+    "test:live:sun-tight": "bun run build && LIVE_TEST=true bun test ./test/sun-tight.live.test.ts",
     "test:live:world-reach": "bun run build && LIVE_TEST=true bun test ./test/world-reach.live.test.ts",
     "test:rolldown-plugins": "bun test --max-concurrency 1 ./packages/rolldown-plugin-thematic-chunks ./packages/rolldown-plugin-hoist-popular-constants ./packages/rolldown-plugin-bake-branch-component",
     "typecheck": "bun node_modules/typescript-native/bin/tsc --noEmit --noUnusedLocals --noUnusedParameters --pretty false",

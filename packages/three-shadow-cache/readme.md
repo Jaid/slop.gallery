@@ -35,6 +35,7 @@ const shadows = new ShadowCache({tolerance: 0.001})
 shadows.update(scene, {
   hidden,
   active: light => lightsInView.has(light),
+  unreached: light => (light === sun ? cellars : undefined),
 })
 ```
 
@@ -43,10 +44,13 @@ shadows.update(scene, {
 | `tolerance` | `0.001` | how far a caster or a light may move, in world units and in rotation matrix elements, before it counts as changed |
 | `hidden` | none | a set of the subtrees the frame leaves out without making them invisible, like the rooms a portal culling hides |
 | `active` | always | whether a light’s shadows matter right now; a light they don’t matter for keeps its pending update until they do |
+| `unreached` | none | the `Box3`s in world space a light reaches no point of, like cellars its own casters shut the sun out of; a caster whose bounding sphere stays wholly inside one leaves the light’s map alone however it changes |
 
 Hidden casters count as absent for point and spot lights, which then only notice them getting hidden or shown. Directional lights are taken to shine from outside of whatever is hidden and to draw hidden casters too, since a sun’s patches of light would change shape otherwise whenever a room leaves the view. So hiding or showing a caster leaves their maps alone, and a caster changing while hidden waits until anything hidden shows again or something in sight changes.
 
 A new light renders its map right away, even while it is not `active`, as it has nothing to keep yet.
+
+A space only counts as `unreached` if no point of it is lit, with all of its contents out of the map: then along every ray from inside toward the light, something outside of it stands in the way first, the walls and roof that keep the light out, so the map holds their depth wherever a caster inside would be and stays the same without it. The walls and roof themselves have to stay out of the space, as do the contents’ bounds; a light that may shine in through an opening needs a space clear of where it does.
 
 ## Helpers
 

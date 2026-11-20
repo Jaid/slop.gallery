@@ -2,7 +2,7 @@ import type {Camera} from 'three/webgpu'
 
 import {expect, test} from 'bun:test'
 
-import {BoxGeometry, DirectionalLight, Frustum, Matrix4, Mesh, PerspectiveCamera, PointLight, Scene, SpotLight} from 'three/webgpu'
+import {Box3, BoxGeometry, DirectionalLight, Frustum, Matrix4, Mesh, PerspectiveCamera, PointLight, Scene, SpotLight, Vector3} from 'three/webgpu'
 
 import ShadowCache, {reachesFrustum, ShadowRefresher} from '../src/main.ts'
 
@@ -237,6 +237,78 @@ test('directional lights put off casters changing out of sight until a room show
   hidden.add(caster)
   caster.position.x = 4
   expect(step()).toBe(true)
+})
+test('casters changing wholly inside a space a light can’t reach leave its map alone, those reaching out of it don’t', () => {
+  const scene = new Scene
+  const sun = new DirectionalLight
+  sun.castShadow = true
+  sun.position.set(0, 10, 0)
+  const lamp = new PointLight('#fff', 1, 20)
+  lamp.castShadow = true
+  // A cellar the sun can’t reach, 8 m wide, and a caster turning in its middle.
+  const cellar = new Box3(new Vector3(-4, -4, -4), new Vector3(4, 0, 4))
+  const sculpture = new Mesh(new BoxGeometry)
+  sculpture.castShadow = true
+  sculpture.position.set(0, -2, 0)
+  scene.add(sun, lamp, sculpture)
+  const cache = new ShadowCache
+  const step = () => {
+    sun.shadow.needsUpdate = false
+    lamp.shadow.needsUpdate = false
+    scene.updateMatrixWorld()
+    cache.update(scene, {unreached: light => (light === sun ? [cellar] : undefined)})
+    return {
+      lamp: lamp.shadow.needsUpdate,
+      sun: sun.shadow.needsUpdate,
+    }
+  }
+  step()
+  sculpture.rotation.y = 1
+  // The lamp may still reach into the cellar.
+  expect(step()).toEqual({
+    lamp: true,
+    sun: false,
+  })
+  sculpture.position.x = 3
+  expect(step()).toEqual({
+    lamp: true,
+    sun: false,
+  })
+  // Its bounds now reach out of the cellar, where the sun may see it.
+  sculpture.position.x = 3.5
+  expect(step()).toEqual({
+    lamp: true,
+    sun: true,
+  })
+  sculpture.position.y = 1
+  expect(step()).toEqual({
+    lamp: true,
+    sun: true,
+  })
+  // Coming back in clears the spot it left outside.
+  sculpture.position.set(0, -2, 0)
+  expect(step()).toEqual({
+    lamp: true,
+    sun: true,
+  })
+  expect(step()).toEqual({
+    lamp: false,
+    sun: false,
+  })
+  // A caster appearing or disappearing inside goes unnoticed too.
+  const added = new Mesh(new BoxGeometry)
+  added.castShadow = true
+  added.position.set(-2, -2, 2)
+  scene.add(added)
+  expect(step()).toEqual({
+    lamp: true,
+    sun: false,
+  })
+  added.removeFromParent()
+  expect(step()).toEqual({
+    lamp: true,
+    sun: false,
+  })
 })
 test('a light reaches the view where its range meets the camera’s frustum, wherever the light itself is', () => {
   // Standing on a floor and looking north, with a lamp hanging 7 m under the floor ahead.
