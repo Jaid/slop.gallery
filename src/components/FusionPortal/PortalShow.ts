@@ -74,6 +74,8 @@ export default class PortalShow {
   /** the frame the result will wear, shrunk to nothing, see {@link rehearseFrame} */
   private rehearsal?: Mesh
   private readonly satellites: Satellites
+  /** which turn of the images the disc showed last, which tells a new image surfacing from the last one still sinking */
+  private shown?: 'result' | number
   private sound?: FusionSound
   private stage: Stage = 'brewing'
   /** the strike that opened it: where, how hard and whether its crack still has to sound */
@@ -408,7 +410,17 @@ export default class PortalShow {
       core.image.value = texture
       core.uniforms.aspect.value = texture.image.width / Math.max(1, texture.image.height)
     }
-    core.uniforms.clarity.value = image.clarity
+    const {clarity, surfacing} = core.uniforms
+    const turn = 'result' in image ? 'result' : image.turn
+    if (turn !== this.shown) {
+      // A new image can only surface.
+      this.shown = turn
+      surfacing.value = 1
+    } else if (image.clarity !== clarity.value) {
+      // Which way it was headed stays while it rests.
+      surfacing.value = Number(image.clarity > clarity.value)
+    }
+    clarity.value = image.clarity
   }
 
   /** The strike that opened the fusion, `elapsed` seconds after it: its ripple, and its crack once, as soon as it can sound. */
