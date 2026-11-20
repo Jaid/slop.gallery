@@ -203,7 +203,7 @@ const relations = {
         'chandelier_middle',
         'chandelier_south',
       ],
-      // Through the vestibule’s arch: the lantern at the top of the flight, and down it the one at its foot.
+      // From the landing’s boards and through the vestibule’s arch: the lantern at the top of the flight, and down it the one at its foot.
       corridor: [
         'lantern_landing',
         'lantern_south',
@@ -238,7 +238,8 @@ const relations = {
     },
   },
   corridor: {
-    rooms: ['sienna', 'lodge', 'vesper', 'bastion'],
+    // The Sienna’s boards on the landing are the Sienna’s, so the Vesper lies beyond sight from the flight’s head down.
+    rooms: ['sienna', 'lodge', 'bastion'],
     visibleLamps: {
       sienna: 'chandelier',
       lodge: 'fire',

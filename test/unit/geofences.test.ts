@@ -10,6 +10,8 @@ import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bas
 import {cistern, cisternChunks, cisternFloor} from '../../src/lib/gallery/cistern/cistern.ts'
 import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
 import {climbApproach} from '../../src/lib/gallery/climb.ts'
+import {corridorLanding, corridorLandingPaving, corridorStairs} from '../../src/lib/gallery/corridor.ts'
+import {insidePolygon, polygonBounds} from '../../src/lib/gallery/floorPolygons.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
@@ -68,6 +70,23 @@ test('the Lodge’s window niche belongs to the Lodge, out to the glass in the C
     expect(slopGallery.roomAt([x, sill, lodgeWindow.z])?.id).toBe('lodge')
   }
   expect(slopGallery.roomAt([lodgeWindow.tunnelX - 0.3, sill, lodgeWindow.z])?.id).toBe('corridor')
+})
+test('the Sienna’s boards on the Corridor’s landing are the Sienna’s, the front half of the flight’s head tread and the flight the Corridor’s', () => {
+  const y = corridorLanding.floorY + 0.9
+  const boards = corridorLandingPaving.flatMap(polygon => {
+    const {center: [x, z], size: [width, depth]} = polygonBounds(polygon)
+    return Array.from({length: 40}, (_, i) => Array.from({length: 40}, (__, j): Vec3 => [x + width * ((i + 0.5) / 40 - 0.5), y, z + depth * ((j + 0.5) / 40 - 0.5)])).flat().filter(([px, , pz]) => insidePolygon(polygon, px, pz))
+  })
+  expect(boards.length).toBeGreaterThan(500)
+  expect(boards.filter(position => slopGallery.roomAt(position)?.id !== 'sienna')).toEqual([])
+  const [sx, , sz] = corridorStairs.start
+  const [hx, hz] = corridorStairs.heading
+  for (let along = -corridorStairs.run / 2 + 0.01; along <= 1; along += 0.05) {
+    for (let across = -1.9; across <= 1.9; across += 0.2) {
+      const position: Vec3 = [sx + hx * along - hz * across, corridorStairs.start[1] + Math.min(0, -along * corridorStairs.rise / corridorStairs.run) + 0.9, sz + hz * along + hx * across]
+      expect(slopGallery.roomAt(position)?.id).toBe('corridor')
+    }
+  }
 })
 test('the balcony’s middle stays the Oculus’, the staff stairways behind the doors at its ends are the Exhibition’s', () => {
   const {door} = tunnelDisplays[0].stairway

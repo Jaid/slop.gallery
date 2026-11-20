@@ -288,8 +288,9 @@ describe('Lodge and Corridor route', () => {
           const position: Vec3 = [px, passage.floorY + 1.6, pz]
           expect(insideRoute(position)).toBe(true)
           expect(insideGallery(position)).toBe(true)
-          // The Lodge owns its half of the doorway passage from the Corridor.
-          expect(slopGallery.roomAt(position)?.id).toBe(passage === corridorPassage && insidePolygon(threshold, px, pz) ? 'lodge' : passage.room)
+          // The Lodge owns its half of the doorway passage from the Corridor, the Sienna its boards on the landing.
+          const owner = passage === corridorPassage && insidePolygon(threshold, px, pz) ? 'lodge' : (passage === corridorLanding && !insidePolygon(corridorStairs.headOutline(), px, pz) ? 'sienna' : passage.room)
+          expect(slopGallery.roomAt(position)?.id).toBe(owner)
           expect(floorHeight(position)).toBeCloseTo(passage.floorY)
         }
       }

@@ -137,12 +137,16 @@ test('a pickup belongs to the room it is in and keeps it in passages', () => {
   updatePickupRoom(lost)
   expect(ownerOf(lost)).toBeUndefined()
 })
-test('the Corridor’s stair flight and landing belong to the Corridor, and the vestibule beyond to the Sienna', () => {
+test('the Corridor’s stair flight and its head tread belong to the Corridor, and the landing’s boards and the vestibule beyond to the Sienna', () => {
   const head = new Vector3(...corridorStairs.start)
-  const {x, y, z} = head.lerp(new Vector3(...corridorStairs.end), 0.5)
+  const {x, y, z} = head.clone().lerp(new Vector3(...corridorStairs.end), 0.5)
   expect(roomContaining([x, y + 1.6, z])).toBe('corridor')
+  // The front half of the head tread, out of reach of the boards’ chunks, from where the Vesper lies beyond sight.
+  const [hx, hz] = corridorStairs.heading
+  const tread: Vec3 = [head.x - hx * corridorStairs.run / 4, head.y + 1.6, head.z - hz * corridorStairs.run / 4]
+  expect(roomsAt(tread)).toEqual(['corridor'])
   const [landingX, landingZ] = corridorLanding.path[1]
-  expect(roomContaining([landingX, 1.6, landingZ])).toBe('corridor')
+  expect(roomsAt([landingX, 1.6, landingZ])).toEqual(['sienna'])
   expect(roomContaining([siennaVestibule.center[0], 1.6, siennaVestibule.center[1]])).toBe('sienna')
   // Flying at the hall’s south end, where the flight turns off onto the diagonal, with the vestibule’s arch out of view.
   const [hallX, hallZ] = corridorPassage.path.at(-2)!
@@ -156,7 +160,11 @@ test('the Sienna’s arches by its corners show where they lead, both ways', () 
   const [vestibuleX, vestibuleZ] = siennaVestibule.center
   const [landingX] = corridorLanding.path[1]
   expect(visibleRegions(['sienna'], viewProjection([vestibuleX, 1.6, vestibuleZ], [landingX, 1.6, vestibuleZ])).has('corridor')).toBe(true)
-  expect(visibleRegions(['corridor'], viewProjection([landingX, 1.6, vestibuleZ], [vestibuleX, 1.6, vestibuleZ])).has('sienna')).toBe(true)
+  // From the landing’s boards down the flight, and from its head back up into the vestibule.
+  const [headX, , headZ] = corridorStairs.start
+  const [hx, hz] = corridorStairs.heading
+  expect(visibleRegions(['sienna'], viewProjection([landingX, 1.6, vestibuleZ], [headX + hx * 6, -1, headZ + hz * 6])).has('corridor')).toBe(true)
+  expect(visibleRegions(['corridor'], viewProjection([headX - hx * 0.1, 1.6, headZ - hz * 0.1], [vestibuleX, 1.6, vestibuleZ])).has('sienna')).toBe(true)
 })
 test('a camera stands in the rooms around it', () => {
   expect(roomsAt([-14, 1.6, 0])).toEqual(['vesper'])

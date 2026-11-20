@@ -138,6 +138,16 @@ export default class StairFlight {
     return this.block(this.entryLanding - this.run / 2, this.run, this.start[1], true)
   }
 
+  /** The footprint of its {@link headBlock}, round it from the corner at its back left. */
+  headOutline(): FloorPolygon {
+    const [hx, hz] = this.heading
+    const half = this.width / 2
+    const corner = (along: number, side: number): readonly [number, number] => [this.start[0] + hx * along - hz * side * half, this.start[2] + hz * along + hx * side * half]
+    const front = this.entryLanding
+    const back = front - this.run
+    return [corner(back, -1), corner(front, -1), corner(front, 1), corner(back, 1)]
+  }
+
   /** The flight’s footprint, round it from the corner at its top left. */
   outline(): FloorPolygon {
     const [hx, hz] = this.heading
