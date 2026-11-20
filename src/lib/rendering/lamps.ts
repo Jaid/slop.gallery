@@ -4,12 +4,12 @@ import {useCallback} from 'react'
 
 /** what the world says about a lamp it renders */
 export type LampInfo = {
+  /** the ids of the fences the player must be in one of for it to shine, like its room’s, everywhere if left out */
+  fences?: ReadonlyArray<string>
   /** the lamp’s global id, also its light’s name */
   id: string
   /** whether it goes out with only the essential lamps */
   optional: boolean
-  /** the rooms the player must be in for it to shine, everywhere if left out */
-  rooms?: ReadonlyArray<string>
 }
 
 const lights = new Map<string, Light>

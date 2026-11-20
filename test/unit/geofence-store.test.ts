@@ -22,9 +22,13 @@ const places = {
 } satisfies Record<string, Vec3>
 const fences = () => useGeofences.getState().fences
 const room = () => useGallery.getState().room
+const whereabouts = () => useGallery.getState().whereabouts
 afterEach(() => {
   useGeofences.setState(useGeofences.getInitialState(), true)
-  useGallery.setState({room: slopGallery.defaultRoom})
+  useGallery.setState({
+    room: slopGallery.defaultRoom,
+    whereabouts: [slopGallery.defaultRoom],
+  })
 })
 test('the player starts in the fences its place lies in without crossing any, in the first room among them, or outside of every fence in the world’s default room', () => {
   expect(useGeofences.getState()).toEqual({
@@ -140,6 +144,43 @@ test('crossing between two fences that are no room’s, like the Lobby’s parts
   expect(rooms).toEqual([])
   stop()
 })
+test('the player’s whereabouts are its room and every fence that is no room’s holding its place, whatever other rooms’ fences hold it too', () => {
+  expect(whereabouts()).toEqual(['lobby'])
+  startGeofences(places.lobby)
+  expect(whereabouts()).toEqual(['lobby', 'lobby_south'])
+  const heard: Array<ReadonlyArray<string>> = []
+  const stop = useGallery.subscribe((state, previous) => {
+    if (state.whereabouts !== previous.whereabouts) {
+      heard.push(state.whereabouts)
+    }
+  })
+  // Moving within the same fences leaves them as they are, the very same list.
+  const before = whereabouts()
+  probeGeofences([1, 0.9, -3], still)
+  expect(whereabouts()).toBe(before)
+  // On the line between two parts of the Lobby, the player is in both.
+  probeGeofences([0, 0.9, -10], still)
+  expect(whereabouts()).toEqual(['lobby', 'lobby_middle', 'lobby_south'])
+  probeGeofences([0, 0.9, -12], still)
+  expect(whereabouts()).toEqual(['lobby', 'lobby_middle'])
+  probeGeofences(places.lobby, still)
+  // On the plane of the wall, the Vesper’s fence holds the player’s place too, but the player is in the Lobby alone, so the fences stay the same and nobody hears of any.
+  probeGeofences(places.wall, still)
+  expect(fences()).toEqual(['lobby', 'vesper', 'lobby_south'])
+  expect(whereabouts()).toEqual(['lobby', 'lobby_south'])
+  probeGeofences(places.vesper, still)
+  expect(whereabouts()).toEqual(['vesper'])
+  // Outside of every fence, the player stays in the room entered last.
+  probeGeofences(places.nowhere, still)
+  expect(whereabouts()).toEqual(['vesper'])
+  probeGeofences(places.alley, still)
+  expect(whereabouts()).toEqual(['bastion', 'knight_alley'])
+  expect(heard).toEqual([['lobby', 'lobby_middle', 'lobby_south'], ['lobby', 'lobby_middle'], ['lobby', 'lobby_south'], ['vesper'], ['bastion', 'knight_alley']])
+  // A player starting outside of every fence starts in the world’s default room.
+  startGeofences(places.nowhere)
+  expect(whereabouts()).toEqual(['lobby'])
+  stop()
+})
 test('a fence that is no room’s never is the player’s room, neither after a crossing nor at a start', () => {
   startGeofences(places.vesper)
   // Were it to reach out of every room’s fence, the player would stay in the room entered last, or start in the world’s default room.
@@ -151,18 +192,21 @@ test('a fence that is no room’s never is the player’s room, neither after a 
     fences: ['knight_alley'],
   })
   expect(room()).toBe('vesper')
+  expect(whereabouts()).toEqual(['vesper', 'knight_alley'])
   useGeofences.setState({
     crossing: null,
     fences: ['knight_alley'],
   })
   expect(room()).toBe('lobby')
+  expect(whereabouts()).toEqual(['lobby', 'knight_alley'])
 })
-test('whoever hears of a crossing already finds the player in its room', () => {
+test('whoever hears of a crossing already finds the player in its room and its whereabouts', () => {
   startGeofences(places.run)
   const heard: Array<string> = []
-  const stop = useGeofences.subscribe(() => heard.push(room()))
+  const stop = useGeofences.subscribe(() => heard.push(`${room()} in ${whereabouts().join(', ')}`))
   probeGeofences(places.vestibule, still)
-  expect(heard).toEqual(['forge'])
+  probeGeofences(places.alley, still)
+  expect(heard).toEqual(['forge in forge', 'bastion in bastion, knight_alley'])
   stop()
 })
 test('a fence’s enter listener hears every crossing into it, a room’s or not, but neither a start in it nor staying in it', () => {

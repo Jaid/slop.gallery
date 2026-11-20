@@ -124,14 +124,18 @@ export default function GalleryLighting() {
       lightShadow.current = () => 1
     }
   }, [lamps, lampSet, lampShadows])
-  // Lamps only shine while the player is in one of the rooms the world lights them in, unless selected with `?edit_lamps`, and the shadow pool’s slots only while lent to one.
+  // Lamps only shine while the player is in one of the fences the world lights them in, like their room’s, unless selected with `?edit_lamps`, and the shadow pool’s slots only while lent to one.
   useLayoutEffect(() => {
     lightActive.current = light => {
       if (isShadowSlot(light)) {
         return shadowPool.isInUse(light)
       }
-      const lampRooms = lampOf(light)?.rooms
-      return !lampRooms || lampRooms.includes(useGallery.getState().room) || useLightEdits.getState().selected.has(light)
+      const fences = lampOf(light)?.fences
+      if (!fences) {
+        return true
+      }
+      const {whereabouts} = useGallery.getState()
+      return fences.some(fence => whereabouts.includes(fence)) || useLightEdits.getState().selected.has(light)
     }
     return () => {
       lightActive.current = () => true

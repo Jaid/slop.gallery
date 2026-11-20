@@ -21,7 +21,7 @@ const useRegistered = <Kind extends Light>(lamp: PlacedLamp) => {
   useLayoutEffect(() => registerLamp(light.current!, {
     id: lamp.id,
     optional: lamp.optional ?? false,
-    rooms: world.lampRooms(lamp),
+    fences: world.lampFences(lamp),
   }), [lamp])
   return light
 }

@@ -22,7 +22,7 @@ type GeofenceState = {
 }
 
 /**
- * The fences of the current world the player’s place (`bodyPose.place`) is in. The scene probes the world’s fences once per frame, see {@link probeGeofences}, and everything that depends on where the player is goes by what it finds: the room the player is in, whatever entering a room or entering or leaving a fence triggers, see {@link onRoomEnter}, {@link onGeofenceEnter} and {@link onGeofenceLeave}, whatever is only there while the player is in a fence, see {@link useGeofence}, and the telemetry’s geofence events.
+ * The fences of the current world the player’s place (`bodyPose.place`) is in. The scene probes the world’s fences once per frame, see {@link probeGeofences}, and everything that depends on where the player is goes by what it finds: the room the player is in and the player’s whereabouts, which the world keeps lamps and rooms on by, whatever entering a room or entering or leaving a fence triggers, see {@link onRoomEnter}, {@link onGeofenceEnter} and {@link onGeofenceLeave}, whatever is only there while the player is in a fence, see {@link useGeofence}, and the telemetry’s geofence events.
  * It only changes as the player’s place crosses a fence, so a subscription sees every crossing once, with the fences left and entered between its two states.
  */
 export const useGeofences = create<GeofenceState>(() => ({
@@ -31,11 +31,17 @@ export const useGeofences = create<GeofenceState>(() => ({
 }))
 
 // The room the player is in is the first room whose fence holds the player’s place, so where the fences of two rooms overlap, the room the world checks first wins, and a fence that is no room’s never counts. Outside of every room’s fence, it stays the room entered last, like in a passage between two rooms, but a player starting there starts in the world’s default room.
-// Subscribed before anything else can, so whoever hears of a crossing already finds the player in its room.
+// The player’s whereabouts are that room and every fence that is no room’s holding the player’s place, so no other room’s fence counts among them, however far it overlaps the player’s room.
+// Subscribed before anything else can, so whoever hears of a crossing already finds the player in its room and its whereabouts.
 useGeofences.subscribe(({crossing, fences}) => {
-  const room = fences.find(id => world.roomById(id)) ?? (crossing ? undefined : world.defaultRoom)
-  if (room !== undefined && room !== useGallery.getState().room) {
-    useGallery.setState({room})
+  const {room: last, whereabouts: previous} = useGallery.getState()
+  const room = fences.find(id => world.roomById(id)) ?? (crossing ? last : world.defaultRoom)
+  const whereabouts = [room, ...fences.filter(id => !world.roomById(id))]
+  if (whereabouts.length !== previous.length || whereabouts.some((id, index) => id !== previous[index])) {
+    useGallery.setState({
+      room,
+      whereabouts,
+    })
   }
 })
 

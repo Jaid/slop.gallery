@@ -85,7 +85,10 @@ const place = (id: typeof sights[number]['id']) => spawnAtSight(id, {
 afterEach(() => {
   useGeofences.setState(useGeofences.getInitialState(), true)
   useSloperator.setState(useSloperator.getInitialState(), true)
-  useGallery.setState({room: slopGallery.defaultRoom})
+  useGallery.setState({
+    room: slopGallery.defaultRoom,
+    whereabouts: [slopGallery.defaultRoom],
+  })
 })
 test('the Sloperator sits a meter tall in the armchair, between its arms, his feet on the floor in front of it', () => {
   const figure = new SloperatorGeometry(armchair.seat)

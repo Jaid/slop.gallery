@@ -1,4 +1,5 @@
 import type {Vec3} from '../../src/lib/gallery/types.ts'
+import type {Activation} from '../../src/worlds/gallery/activations.ts'
 import type {GalleryRoomId} from '../../src/worlds/gallery/index.ts'
 import type {Object3D} from 'three/webgpu'
 
@@ -10,12 +11,13 @@ import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {corridorLanding, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import {floorTile} from '../../src/lib/gallery/floors.ts'
 import lobbyLayout from '../../src/lib/gallery/lobby.ts'
-import {ownerRoom, portals, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
+import {ownerRoom, portals, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, visibleRooms, whereaboutsAt} from '../../src/lib/gallery/roomVisibility.ts'
 import {siennaVestibule} from '../../src/lib/gallery/sienna.ts'
 import {stairFlights} from '../../src/lib/gallery/staircase.ts'
 import {openingTop, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import activations, {enabledRooms} from '../../src/worlds/gallery/activations.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import relations, {openings} from '../../src/worlds/gallery/relations.ts'
+import {openings} from '../../src/worlds/gallery/relations.ts'
 import {rooms} from './fixtures/gallery.ts'
 
 const viewProjection = (position: Vec3, target: Vec3) => {
@@ -39,7 +41,7 @@ test('every room is reachable through its portals', () => {
   const linked = new Set(portals.flatMap(portal => portal.rooms))
   expect(rooms.filter(room => !linked.has(room.id))).toEqual([])
 })
-test('the rooms only relate rooms they can reach through up to three openings', () => {
+test('the fences only keep rooms enabled that the rooms they lie in can reach through up to three openings', () => {
   const neighbours = new Map<string, Set<string>>
   for (const {rooms: pair} of portals) {
     for (const [from, to] of [pair, [pair[1], pair[0]]] as const) {
@@ -54,18 +56,21 @@ test('the rooms only relate rooms they can reach through up to three openings', 
     }
     return seen
   }
-  for (const [room, {rooms: related}] of Object.entries(relations)) {
-    const reachable = withinThree(room)
-    for (const other of related) {
-      expect(`${room} relates ${reachable.has(other) ? '' : 'unreachable '}${other}`).toBe(`${room} relates ${other}`)
+  for (const [fence, {rooms: enabled = []}] of Object.entries<Activation>(activations)) {
+    // A room’s fence lies in the room, and a part of a room in the room around it.
+    const within = slopGallery.rooms.filter(room => slopGallery.fencesIn(room.id).includes(fence)).map(room => room.id)
+    expect(`${fence} lies in ${within.length} rooms`).toBe(`${fence} lies in 1 rooms`)
+    const reachable = withinThree(within[0])
+    for (const other of enabled) {
+      expect(`${fence} keeps ${reachable.has(other) ? '' : 'unreachable '}${other === within[0] ? 'its own ' : ''}${other}`).toBe(`${fence} keeps ${other}`)
     }
   }
-  // The Forge’s doorway leads into the Bastion and its glass wall looks into the Lobby, which both relate it first, and it them.
-  expect(relations.forge.rooms.slice(0, 2).toSorted()).toEqual(['bastion', 'lobby'])
-  expect(relations.bastion.rooms).toContain('forge' as never)
-  expect(relations.lobby.rooms).toContain('forge' as never)
+  // The Forge’s doorway leads into the Bastion and its glass wall looks into the Lobby, which both keep it enabled first, and it them.
+  expect(activations.forge.rooms.slice(0, 2).toSorted()).toEqual(['bastion', 'lobby'])
+  expect(activations.bastion.rooms).toContain('forge' as never)
+  expect(activations.lobby.rooms).toContain('forge' as never)
   // Moonfall’s stairway is visible through the Antechamber from the Lobby.
-  expect(relations.lobby.rooms).toContain('moonfall' as never)
+  expect(activations.lobby.rooms).toContain('moonfall' as never)
 })
 test('a room shows the rooms behind the openings in view', () => {
   // From the Vesper through both side doors of the Lobby into the Banquet, through the Lobby’s glass wall into the Salon and through the Antechamber down the stairway to Moonfall, but no further.
@@ -87,8 +92,28 @@ test('a room shows the rooms behind the openings in view', () => {
   expect(lobby.has('bastion')).toBe(false)
   expect(lobby.has('lodge')).toBe(false)
   expect(lobby.has('antechamber')).toBe(true)
-  // The Moonfall stairway is visible from the Lobby at the reported camera position.
-  expect(visibleRegions(['lobby'], viewProjection([-2.321, 1.62, 5.655], [5.248, 0.815, 13.195])).has('moonfall')).toBe(true)
+  // The Moonfall stairway is visible from the Lobby at the reported camera position, in its south part.
+  const reported: Vec3 = [-2.321, 1.62, 5.655]
+  expect(visibleRegions(['lobby'], viewProjection(reported, [5.248, 0.815, 13.195])).has('moonfall')).toBe(true)
+  expect(whereaboutsAt(reported)).toEqual(['lobby', 'lobby_south'])
+  expect(enabledRooms(whereaboutsAt(reported))).toContain('moonfall')
+})
+test('a camera is in the rooms around it and in every other fence holding it, which keep rooms enabled together', () => {
+  const lobby = activations.lobby.rooms
+  expect(whereaboutsAt([0, 1.6, -28])).toEqual(['lobby', 'lobby_north'])
+  expect(enabledRooms(whereaboutsAt([0, 1.6, -28]))).toEqual(lobby)
+  expect(whereaboutsAt([0, 4, -12])).toEqual(['lobby', 'lobby_middle'])
+  expect(enabledRooms(whereaboutsAt([0, 4, -12]))).toEqual(lobby)
+  expect(enabledRooms(whereaboutsAt([0, 1.6, 0]))).toEqual(lobby)
+  // On the line between two parts, it is in both.
+  expect(whereaboutsAt([0, 1.6, -10])).toEqual(['lobby', 'lobby_middle', 'lobby_south'])
+  // In the doorway between the Vesper and the Lobby, which neither room’s air takes in alone, it is in both rooms and in the part of the Lobby the doorway opens into.
+  expect(whereaboutsAt([-8, 1.6, lobbyLayout.sideDoorZ])).toEqual(['lobby', 'vesper', 'lobby_south'])
+  expect(enabledRooms(whereaboutsAt([-8, 1.6, lobbyLayout.sideDoorZ]))).toEqual([...new Set<GalleryRoomId>([...lobby, ...activations.vesper.rooms, 'moonfall'])])
+  // Given the rooms, it takes them as they are.
+  expect(whereaboutsAt([0, 1.6, 0], ['vesper'])).toEqual(['vesper', 'lobby_south'])
+  expect(whereaboutsAt([-14, 1.6, 0])).toEqual(['vesper'])
+  expect(whereaboutsAt([500, 1.6, 500])).toEqual([])
 })
 test('no eye in the Lobby’s north and middle parts sees through the doorway into the Antechamber and on through the one onto Moonfall’s stairway', () => {
   const doorway = slopGallery.wall('lobby-south')!
@@ -153,11 +178,15 @@ test('a mesh belongs to the room that names itself its owner nearest above it, w
   wall.add(wallMesh)
   expect(ownerOf(wallMesh)).toBe('forge')
   expect(ownerOf(new Mesh)).toBeUndefined()
-  // Knottingham’s rooms are no rooms of the gallery.
+  // Knottingham’s rooms are no rooms of the gallery, and neither are its fences that are no room’s.
   const arena = new Group
   arena.userData.room = 'arena'
   lobby.add(arena)
   expect(ownerOf(arena)).toBeUndefined()
+  const part = new Group
+  part.userData.room = 'lobby_south'
+  lobby.add(part)
+  expect(ownerOf(part)).toBeUndefined()
 })
 test('a pickup belongs to the room it is in and keeps it in passages', () => {
   const lobby = new Group

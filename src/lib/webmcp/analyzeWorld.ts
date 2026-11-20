@@ -71,7 +71,7 @@ export type WorldAnalysis = {
   globalLights: Array<WorldLight>
   /** keyed by room id, in the world’s room order */
   rooms: Record<string, Omit<WorldRoom, 'id'> & WorldRegion & {
-    /** positioned lights of other regions left on while the player stands here: those the world lights everywhere and those it lights in this room */
+    /** positioned lights of other regions left on while the player stands here: those the world lights everywhere and those it lights in this room or in a part of it */
     foreignLights: Array<ForeignLight>
   }>
 }
@@ -159,8 +159,9 @@ const itemIdOf = (pickup: Object3D) => String(pickup.userData.propId ?? pickup.u
  * Fences count with a meter below their floor and 20 cm above their top to spare. A mesh that meets no fence, like a crater floor, and every light go to the room whose
  * fence holds their center seen from above, the one nearest in height where several do. Counts follow the geometry’s draw range and instance count, not what culling
  * skips in a given frame.
+ * `fencesIn` gives the ids of the fences a player in a room may be in, which the world lights its lamps by: by default only the room’s own.
  */
-export default function analyzeWorld(scene: Object3D, rooms: ReadonlyArray<WorldRoom>): WorldAnalysis {
+export default function analyzeWorld(scene: Object3D, rooms: ReadonlyArray<WorldRoom>, fencesIn: (room: string) => ReadonlyArray<string> = room => [room]): WorldAnalysis {
   scene.updateMatrixWorld()
   const regions = new Map<string | undefined, WorldRegion>([...rooms.map(room => room.id), undefined].map(id => [id, {
     meshes: [],
@@ -176,7 +177,7 @@ export default function analyzeWorld(scene: Object3D, rooms: ReadonlyArray<World
     triangles: number
   }> = []
   const globalLights: Array<WorldLight> = []
-  const placed: Array<ForeignLight & {rooms?: ReadonlyArray<string>}> = []
+  const placed: Array<ForeignLight & {fences?: ReadonlyArray<string>}> = []
   const fences = rooms.map(room => ({
     id: room.id,
     boxes: [room.fence].flat().map(({min, max}) => new Box3(new Vector3(min[0], min[1] - 1, min[2]), new Vector3(max[0], max[1] + 0.2, max[2]))),
@@ -224,7 +225,7 @@ export default function analyzeWorld(scene: Object3D, rooms: ReadonlyArray<World
         placed.push({
           path: light.path,
           ...room === undefined ? {} : {room},
-          rooms: lampOf(object as Light)?.rooms,
+          fences: lampOf(object as Light)?.fences,
         })
       }
       return
@@ -329,14 +330,17 @@ export default function analyzeWorld(scene: Object3D, rooms: ReadonlyArray<World
     region.items.sort((a, b) => b.triangles - a.triangles)
   }
   return {
-    rooms: Object.fromEntries(rooms.map(({id, ...room}) => [id, {
-      ...room,
-      ...regions.get(id)!,
-      foreignLights: placed.filter(light => light.room !== id && (!light.rooms || light.rooms.includes(id))).map(({path, room: home}) => (home === undefined ? {path} : {
-        path,
-        room: home,
-      })),
-    }])),
+    rooms: Object.fromEntries(rooms.map(({id, ...room}) => {
+      const within = fencesIn(id)
+      return [id, {
+        ...room,
+        ...regions.get(id)!,
+        foreignLights: placed.filter(light => light.room !== id && (!light.fences || light.fences.some(fence => within.includes(fence)))).map(({path, room: home}) => (home === undefined ? {path} : {
+          path,
+          room: home,
+        })),
+      }]
+    })),
     elsewhere: regions.get(undefined)!,
     globalLights,
   }

@@ -5,7 +5,7 @@ import {expect, test} from 'bun:test'
 import EgoTelemetry from 'telemethree-ego'
 import {createStore} from 'zustand/vanilla'
 
-import SlopGalleryTelemetry from '../../src/lib/telemetry/SlopGalleryTelemetry.ts'
+import SlopGalleryTelemetry, {roomChangeDetails} from '../../src/lib/telemetry/SlopGalleryTelemetry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 type RequestRecord = {
@@ -75,6 +75,7 @@ const traceSpans = (requests: ReadonlyArray<RequestRecord>) => requests.filter(r
 const initial: GalleryState = {
   portraits: [{hung: true}],
   room: 'lobby',
+  whereabouts: ['lobby', 'lobby_north'],
   ready: false,
   locked: false,
   held: null,
@@ -173,10 +174,14 @@ test('gallery adapters record bounded state and lifecycle data without private g
   }))
   const events = new EventTarget
   const stop = telemetry.connect(store, events)
+  // Whoever knows what a change of rooms switches tells by the player’s whereabouts before and after it.
+  roomChangeDetails.current = (from, to) => ({'lights.enabled': `from ${from.join('+')} to ${to.join('+')}`})
   store.setState({
     room: 'sienna',
+    whereabouts: ['sienna', 'sienna_landing'],
     ready: true,
   })
+  roomChangeDetails.current = () => ({})
   events.dispatchEvent(new CustomEvent('fusion', {detail: ['private-first-id', 'private-second-id']}))
   telemetry.sample(store.getState())
   stop()
@@ -184,6 +189,7 @@ test('gallery adapters record bounded state and lifecycle data without private g
   await telemetry.flush()
   const records = requests.map(request => request.body).join('\n')
   expect(records).toContain('gallery.room.changed')
+  expect(records).toContain('from lobby+lobby_north to sienna+sienna_landing')
   expect(records).toContain('gallery.fusion.requested')
   expect(records).not.toContain('secret-key')
   expect(records).not.toContain('private artwork')
@@ -274,7 +280,10 @@ test('startup, gameplay and operations share a session trace with state changes 
   store.setState({ready: true})
   store.setState({locked: true})
   const gameplay = telemetry.getContext()!
-  store.setState({room: 'sienna'})
+  store.setState({
+    room: 'sienna',
+    whereabouts: ['sienna'],
+  })
   await telemetry.wrap('gallery.fusion', async () => {})
   store.setState({locked: false})
   stop()

@@ -19,6 +19,7 @@ export type GalleryState = {
   ready: boolean
   revision: number
   room: string
+  whereabouts: ReadonlyArray<string>
 }
 export type GalleryStore = {
   getState: () => GalleryState

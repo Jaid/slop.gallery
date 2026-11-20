@@ -5,8 +5,8 @@ import VictoriaClient, {MemoryOutbox} from 'victoria-browser-client'
 
 import world from '#src/worlds/current.ts'
 
-/** More attributes for a `room.changed` event, set by whoever knows what the move switches; the scene lists the lights it turns on and off. */
-export const roomChangeDetails: {current: (from: string, to: string) => Attributes} = {current: () => ({})}
+/** More attributes for a `room.changed` event, by the player’s whereabouts before and after it, set by whoever knows what the move switches; the scene lists the lights it turns on and off. */
+export const roomChangeDetails: {current: (from: ReadonlyArray<string>, to: ReadonlyArray<string>) => Attributes} = {current: () => ({})}
 
 const roomTitle = (id: string) => world.roomById(id)?.title ?? id
 
@@ -96,7 +96,7 @@ export default class SlopGalleryTelemetry extends VictoriaClient {
         this.event('room.changed', {
           from: previous.room,
           to: state.room,
-          ...roomChangeDetails.current(previous.room, state.room),
+          ...roomChangeDetails.current(previous.whereabouts, state.whereabouts),
         }, `Room changed: ${roomTitle(previous.room)} → ${roomTitle(state.room)}`)
       }
       for (const key of ['locked', 'ready'] as const) {

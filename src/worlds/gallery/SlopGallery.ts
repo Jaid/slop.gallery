@@ -26,10 +26,10 @@ import Vesper from '#src/rooms/vesper/Vesper.ts'
 
 import World from '../base/World.ts'
 import {worlds} from '../index.ts'
+import {audibleFences, enabledRooms, litFences} from './activations.ts'
 import artworks from './artworks.ts'
 import fences from './fences.ts'
 import GalleryNavigation from './navigation.ts'
-import relations, {audibleRooms, litRooms} from './relations.ts'
 import sky from './sky.ts'
 
 /** a room of the gallery */
@@ -97,9 +97,9 @@ export default class SlopGallery extends World<GalleryRoom> {
     })
   }
 
-  /** An ambient sound is only audible while the player is in its own room or in one it carries into. */
-  override ambienceRooms(room: string, ambience: string) {
-    return audibleRooms(room as GalleryRoomId, ambience)
+  /** An ambient sound is only audible while the player is in its own room or in a fence it carries into. */
+  override ambienceFences(room: string, ambience: string) {
+    return audibleFences(room as GalleryRoomId, ambience)
   }
 
   override contains(position: Vec3) {
@@ -115,14 +115,14 @@ export default class SlopGallery extends World<GalleryRoom> {
     return this.navigation.floorHeight(position)
   }
 
-  /** A lamp only shines while the player is in its own room or in one that keeps it on, because it reaches in or can be seen from there. */
-  override lampRooms(lamp: PlacedLamp) {
-    return litRooms(lamp.room as GalleryRoomId, lamp.id)
+  /** A lamp only shines while the player is in its own room or in a fence that keeps it on, because it reaches in or can be seen from there. */
+  override lampFences(lamp: PlacedLamp) {
+    return litFences(lamp.room as GalleryRoomId, lamp.id)
   }
 
-  /** A room’s neighbors are the rooms its {@link relations} entry keeps enabled, the rooms a player can see into from it. */
+  /** A room’s neighbors are the rooms the fences a player in it may be in keep enabled, see `activations.ts`: the rooms a player can see into from anywhere in it. */
   override neighbors(room: string): ReadonlyArray<GalleryRoomId> {
-    return Object.hasOwn(relations, room) ? relations[room as GalleryRoomId].rooms : []
+    return enabledRooms(this.fencesIn(room))
   }
 
   override roomTagline(room: PlacedRoom<GalleryRoom>) {

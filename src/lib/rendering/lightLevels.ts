@@ -75,18 +75,18 @@ export function describeObject(object: Object3D) {
 const listTally = (tally: ReadonlyMap<string, number>) => [...tally].map(([name, count]) => (count > 1 ? `${name} ×${count}` : name)).toSorted().join(', ')
 const sumTally = (tally: ReadonlyMap<string, number>) => tally.values().reduce((sum, count) => sum + count, 0)
 /**
- * The lamps a move from one room to another switches on and off by the rooms the world lights them in, each as {@link describeObject} names it, with a count where several share a name.
+ * The lamps a move switches on and off by the fences the world lights them in, from the fences the player was in, `from`, to those the player is in now, `to`, like a player’s whereabouts before and after a change of rooms, each as {@link describeObject} names it, with a count where several share a name.
  */
-export function roomSwitches(scene: Object3D, from: string, to: string) {
+export function lampSwitches(scene: Object3D, from: ReadonlyArray<string>, to: ReadonlyArray<string>) {
   const enabled = new Map<string, number>
   const disabled = new Map<string, number>
   scene.traverse(object => {
-    const objectRooms = (object as Light).isLight ? lampOf(object as Light)?.rooms : undefined
-    if (!objectRooms) {
+    const fences = (object as Light).isLight ? lampOf(object as Light)?.fences : undefined
+    if (!fences) {
       return
     }
-    const after = objectRooms.includes(to)
-    if (objectRooms.includes(from) === after) {
+    const after = fences.some(fence => to.includes(fence))
+    if (fences.some(fence => from.includes(fence)) === after) {
       return
     }
     const tally = after ? enabled : disabled
@@ -254,7 +254,7 @@ export function setLightOn(light: Light, on: boolean) {
 export const lightGain = {current: (_light: Light) => 1}
 
 /**
- * Whether each light’s surroundings let it shine, such as the room the player is in; a light this rules out gets 0 like one switched off. Levels replace it while mounted.
+ * Whether each light’s surroundings let it shine, such as the fences the player is in; a light this rules out gets 0 like one switched off. Levels replace it while mounted.
  */
 export const lightActive = {current: (_light: Light) => true}
 

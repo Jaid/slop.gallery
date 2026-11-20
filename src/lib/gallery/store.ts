@@ -47,6 +47,8 @@ type State = {
   room: string
   sound: boolean
   update: (id: string, patch: Partial<Portrait>) => void
+  /** where the player is, as the ids of the fences of the current world that whatever the world keeps on around the player goes by, like its lamps: the {@link State.room} first, which stands in for every room’s fence, as those overlap, then every fence that is no room’s holding the player’s place, like a part of the room, in the order the world checks them */
+  whereabouts: ReadonlyArray<string>
 }
 
 export const useGallery = create<State>((set, get) => ({
@@ -62,6 +64,7 @@ export const useGallery = create<State>((set, get) => ({
   inspecting: null,
   notice: '',
   room: world.defaultRoom,
+  whereabouts: [world.defaultRoom],
   placement: null,
   ai: false,
   // A key from ?openrouter_key stands in for the saved one on this page, without replacing it.

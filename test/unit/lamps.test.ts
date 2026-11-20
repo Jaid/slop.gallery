@@ -1,6 +1,5 @@
 import type {PendantMount} from '../../src/lib/gallery/pendants/CeilingProbe.ts'
 import type {Vec3} from '../../src/lib/gallery/types.ts'
-import type {GalleryRoomId} from '../../src/worlds/gallery/SlopGallery.ts'
 
 import {expect, test} from 'bun:test'
 
@@ -10,8 +9,8 @@ import {lobbyChandeliers} from '../../src/lib/gallery/lobbyVault.ts'
 import RouteVaultGeometry from '../../src/lib/gallery/passages/RouteVaultGeometry.ts'
 import {timberRibSpacing} from '../../src/lib/gallery/passages/timberLayout.ts'
 import {routePendantMounts} from '../../src/lib/gallery/pendants/mounts.ts'
+import {visibleLamps} from '../../src/worlds/gallery/activations.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import relations, {visibleLamps} from '../../src/worlds/gallery/relations.ts'
 
 const lamps = slopGallery.lamps()
 const byId = new Map(lamps.map(lamp => [lamp.id, lamp]))
@@ -34,21 +33,23 @@ test('every lamp has a world-wide id of its own and lies in its own room', () =>
     expect(`${id} in ${slopGallery.roomAt(position)?.id}`).toBe(`${id} in ${room}`)
   }
 })
-test('the rooms only keep lamps that exist, and none of their own', () => {
-  for (const room of Object.keys(relations) as Array<GalleryRoomId>) {
-    for (const id of visibleLamps(room)) {
-      expect(`${room} keeps ${lamp(id).room === room ? 'its own ' : ''}${id}`).toBe(`${room} keeps ${id}`)
+test('the fences only keep lamps that exist, and none of the room they lie in, which are on there anyway', () => {
+  for (const {id: room} of slopGallery.rooms) {
+    for (const fence of slopGallery.fencesIn(room)) {
+      for (const id of visibleLamps(fence)) {
+        expect(`${fence} keeps ${lamp(id).room === room ? `${room}’s own ` : ''}${id}`).toBe(`${fence} keeps ${id}`)
+      }
     }
   }
 })
-test('a lamp shines in its own room and in the rooms that keep it', () => {
-  expect(slopGallery.lampRooms(lamp('lodge-fire')).toSorted()).toEqual(['bastion', 'corridor', 'lodge'])
-  expect(slopGallery.lampRooms(lamp('exhibition-tunnel_south')).toSorted()).toEqual(['exhibition', 'moonfall', 'oculus'])
-  expect(slopGallery.lampRooms(lamp('exhibition-west_stairway_door')).toSorted()).toEqual(['exhibition', 'lobby', 'oculus'])
+test('a lamp shines in its own room and in the fences that keep it', () => {
+  expect(slopGallery.lampFences(lamp('lodge-fire')).toSorted()).toEqual(['bastion', 'corridor', 'lodge'])
+  expect(slopGallery.lampFences(lamp('exhibition-tunnel_south')).toSorted()).toEqual(['exhibition', 'moonfall', 'oculus'])
+  expect(slopGallery.lampFences(lamp('exhibition-west_stairway_door')).toSorted()).toEqual(['exhibition', 'lobby', 'oculus'])
   // The lantern behind the apse’s gate lights the platform through the gate and both windows beside it.
-  expect(slopGallery.lampRooms(lamp('bastion-lantern_north')).toSorted()).toEqual(['bastion', 'lodge', 'oculus'])
-  expect(slopGallery.lampRooms(lamp('corridor-lantern_landing')).toSorted()).toEqual(['corridor', 'sienna'])
-  expect(slopGallery.lampRooms(lamp('sienna-chandelier')).toSorted()).toEqual(['corridor', 'lobby', 'sienna', 'vesper'])
+  expect(slopGallery.lampFences(lamp('bastion-lantern_north')).toSorted()).toEqual(['bastion', 'lodge', 'oculus'])
+  expect(slopGallery.lampFences(lamp('corridor-lantern_landing')).toSorted()).toEqual(['corridor', 'sienna'])
+  expect(slopGallery.lampFences(lamp('sienna-chandelier')).toSorted()).toEqual(['corridor', 'lobby', 'sienna', 'vesper'])
 })
 test('the passages’ lamps hang under the lanterns the fixtures hang from their vaults and ribs', () => {
   const vault = new RouteVaultGeometry(bastionCurve)

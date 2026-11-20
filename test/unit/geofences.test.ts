@@ -153,6 +153,9 @@ test('a world’s other fences come after its rooms’, under ids of their own, 
   expect(world.geofences.getMatches([80, 1, 80])).toEqual(['corner'])
   expect(world.roomAt([80, 1, 80])).toBeUndefined()
   expect(world.roomById('corner')).toBeUndefined()
+  // A player in the Cell may be in the fence reaching into it, but never in the one far outside of it.
+  expect(world.fencesIn('cell')).toEqual(['cell', 'corner'])
+  expect(world.fencesIn('corner')).toEqual([])
   expect(() => new FencedWorld({cell: far})).toThrow('id of its own')
 })
 test('the gallery’s knight_alley fences the Bastion’s blind branch beside the Lodge, within the Bastion’s fence, from its doorway in the connecting tunnel’s wall to its closing wall', () => {

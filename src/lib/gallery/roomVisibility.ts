@@ -7,7 +7,7 @@ import {Box3, Vector3} from 'three/webgpu'
 
 import {openingTop, wallCoordinates, wallOffset, wallPosition} from '#src/lib/placement/wallGeometry.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
-import relations, {openings} from '#src/worlds/gallery/relations.ts'
+import {openings} from '#src/worlds/gallery/relations.ts'
 
 import lobby from './lobby.ts'
 import salonLantern, {salonDrumOuterApothem} from './salonLantern.ts'
@@ -125,6 +125,8 @@ export const roomBoxes: ReadonlyArray<{
   box: new Box3(new Vector3(min.x, min.y - 1, min.z), new Vector3(max.x, max.y + 0.2, max.z)),
 })))
 
+/** the gallery’s fences that are no room’s, like the parts of its rooms */
+const otherFences = slopGallery.geofences.entries().filter(([id]) => !slopGallery.roomById(id)).toArray()
 const point = new Vector3
 
 type Owned = {
@@ -197,6 +199,13 @@ export function roomsAt([x, y, z]: Vec3) {
 }
 
 /**
+ * Where a camera at the position is, as the ids of the fences that what stays on around it goes by, like a player’s whereabouts: the rooms it stands in, by default those {@link roomsAt} gives, then every fence that is no room’s holding the position, like a part of a room.
+ */
+export function whereaboutsAt(position: Vec3, rooms: ReadonlyArray<RoomId> = roomsAt(position)): Array<string> {
+  return [...rooms, ...otherFences.filter(([, fence]) => fence.contains(position)).map(([id]) => id)]
+}
+
+/**
  * The room that owns the object, given the room that owns its parent: the room the object names in `userData.room`, which then owns everything below it too, or else its parent’s.
  * World names the room on the root of everything a room builds, walls name their own, the few objects mounted outside of the rooms name theirs, and pickups name the room they are in. Objects of no room, like the lamps’ lights and the player, have none, and neither has a room of another world.
  */
@@ -205,7 +214,7 @@ export function ownerRoom(object: Object3D, parentRoom?: RoomId): RoomId | undef
   if (room === undefined) {
     return parentRoom
   }
-  return Object.hasOwn(relations, room) ? room as RoomId : undefined
+  return slopGallery.roomById(room) ? room as RoomId : undefined
 }
 
 /** Hands a pickup over to the room it is in now, by its origin. Where that is ambiguous, in a passage or where rooms’ air overlaps, it stays with the room it had, and one that never had a room takes the first one around it. */

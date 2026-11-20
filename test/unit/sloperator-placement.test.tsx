@@ -156,7 +156,10 @@ afterEach(async () => {
   await act(async () => {
     useGeofences.setState(useGeofences.getInitialState(), true)
     useSloperator.setState(useSloperator.getInitialState(), true)
-    useGallery.setState({room: slopGallery.defaultRoom})
+    useGallery.setState({
+      room: slopGallery.defaultRoom,
+      whereabouts: [slopGallery.defaultRoom],
+    })
     usePhysicsHold.setState({held: false})
     setPlayerZoom(0)
     step(1.5)

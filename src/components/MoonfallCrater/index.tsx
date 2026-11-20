@@ -19,8 +19,8 @@ import gold from '#src/lib/materials/gold.ts'
 import SlateFloorMaterial from '#src/lib/materials/SlateFloorMaterial.ts'
 import VelvetRopeMaterial from '#src/lib/materials/VelvetRopeMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {floorMirror} from '#src/worlds/gallery/activations.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
-import {floorMirror} from '#src/worlds/gallery/relations.ts'
 
 const slateHeight = slopGallery.room('moonfall').floorY
 
@@ -42,11 +42,11 @@ export default function MoonfallCrater() {
     style: moonfallSlate(moonfallTheme),
   }), [floorReflections]))
   const reflection = slate.reflectionTarget
-  const room = useGallery(state => state.room)
+  // The fences that see the slate rather than the upper floors mirror its plane.
+  const mirror = useGallery(state => floorMirror(state.whereabouts))
   useEffect(() => {
-    // The rooms that see the slate rather than the upper floors mirror its plane.
-    setFloorReflectionHeight(floorMirror(room) === 'moonfall' ? slateHeight : 0)
-  }, [room])
+    setFloorReflectionHeight(mirror === 'moonfall' ? slateHeight : 0)
+  }, [mirror])
   useEffect(() => () => setFloorReflectionHeight(null), [])
   return <group name='moonfall-impact-crater'>
     <RigidBody colliders={false} type='fixed'>

@@ -8,14 +8,14 @@ import ShadowCache, {reachesFrustum, ShadowRefresher} from 'three-shadow-cache'
 import {Box3, Frustum, Matrix4, Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
-import {ownerRoom, roomBoxes, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions} from '#src/lib/gallery/roomVisibility.ts'
+import {ownerRoom, roomBoxes, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, whereaboutsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {sunTightSpaces} from '#src/lib/gallery/sun.ts'
 import {getFloorReflectionHeight} from '#src/lib/materials/FloorMaterial.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
 import {lightActive} from '#src/lib/rendering/lightLevels.ts'
 import {hasGeometry, worldBounds} from '#src/lib/rendering/worldBounds.ts'
+import {enabledRooms} from '#src/worlds/gallery/activations.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
-import relations from '#src/worlds/gallery/relations.ts'
 
 /** what the sun reaches none of, so whatever turns or moves wholly inside, like Moonfall’s meteorite, leaves its shadow map alone */
 const sunTight = sunTightSpaces(slopGallery.rooms)
@@ -44,23 +44,22 @@ const mirror = (box: Box3, floorY: number) => {
   mirrored.max.y = 2 * floorY - box.min.y
   return mirrored
 }
-/** what the camera sees of each room through the openings, limited to the rooms the camera’s rooms list in `relations.ts` */
-const relatedRegions = (from: ReadonlyArray<RoomId>) => {
+/** what the camera sees of each room through the openings, limited to the rooms it stands in and those the fences around it keep enabled, see `activations.ts` */
+const relatedRegions = (from: ReadonlyArray<RoomId>, related: ReadonlySet<RoomId>) => {
   const regions = visibleRegions(from, viewProjection)
-  const allowed = new Set<RoomId>(from.flatMap(room => [room, ...relations[room].rooms]))
   for (const room of regions.keys()) {
-    if (!allowed.has(room)) {
+    if (!related.has(room)) {
       regions.delete(room)
     }
   }
   return regions
 }
 /**
- * Leaves out what the camera can’t see from the rooms it is in. Every mesh has one owner room (see `ownerRoom`), and a room only shows when the camera stands in it or when it is one of the rooms those list in `relations.ts` seen through an opening, and then only through the part of the screen the opening covers, up to three openings deep.
+ * Leaves out what the camera can’t see from the rooms it is in. Every mesh has one owner room (see `ownerRoom`), and a room only shows when the camera stands in it or when it is one of the rooms the fences around the camera keep enabled in `activations.ts`, its rooms’ and those of the parts of them it is in, seen through an opening, and then only through the part of the screen the opening covers, up to three openings deep.
  * Rooms out of sight drop out of every pass of the frame: the camera, its reflection and the lamps’ shadow maps. Objects in a room in sight that miss its openings on screen only drop out of the camera and its reflection, so the shadows they cast stay.
  * The sun shines from outside every room, through openings and skylights that rooms out of sight may frame, so its shadow map keeps them all; otherwise the patches of sunlight would change shape whenever a room leaves the view. It only leaves alone what changes wholly inside a room whose shell keeps it out (`Room.sunTight`).
  * Culling and the shadow cache start behind the loading screen, where culling leaves out every room but the camera’s, in the sun’s shadow map too, so that only what the start view sees gets built there. Objects in the camera’s rooms and the rooms related to them stream in first afterward.
- * Shadow maps only update when something in their light’s reach changes, and lights switched off by their room list, or in hidden rooms without reaching into the view, wait until they matter again. Lights themselves stay, since a different set of lights would recompile every lit material.
+ * Shadow maps only update when something in their light’s reach changes, and lights switched off by the fences the player is in, or in hidden rooms without reaching into the view, wait until they matter again. Lights themselves stay, since a different set of lights would recompile every lit material.
  */
 export default function RoomCulling() {
   const renderer = useThree(state => state.renderer)
@@ -80,18 +79,16 @@ export default function RoomCulling() {
       hidden.clear()
       hiddenFromView.clear()
       camera.updateWorldMatrix(true, false)
-      const from = roomsAt(camera.getWorldPosition(position).toArray())
+      const eye = camera.getWorldPosition(position).toArray()
+      const from = roomsAt(eye)
       viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
       // The floor reflection shows the rooms behind openings mirrored by the floors it mirrors, by default those of the room the camera is in.
       const floorY = getFloorReflectionHeight() ?? roomBoxes.find(({id}) => id === from[0])?.floorY ?? 0
-      const regions = from.length ? relatedRegions(from) : undefined
       related.clear()
-      for (const room of from) {
+      for (const room of [...from, ...enabledRooms(whereaboutsAt(eye, from))]) {
         related.add(room)
-        for (const other of relations[room].rooms) {
-          related.add(other)
-        }
       }
+      const regions = from.length ? relatedRegions(from, related) : undefined
       const inSight = (rects: ReadonlyArray<ScreenRect>, box: Box3) => {
         const rect = screenRect(box, viewProjection)
         return rect !== undefined && rects.some(([left, bottom, right, top]) => rect[0] <= right && rect[2] >= left && rect[1] <= top && rect[3] >= bottom)

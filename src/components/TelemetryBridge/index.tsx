@@ -16,7 +16,7 @@ import pauseMenu from '#src/lib/pauseMenu.ts'
 import {getAntiAliasing} from '#src/lib/rendering/antiAliasing.ts'
 import {useGraphicsTuning} from '#src/lib/rendering/customGraphics.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
-import {describeObject, roomSwitches} from '#src/lib/rendering/lightLevels.ts'
+import {describeObject, lampSwitches} from '#src/lib/rendering/lightLevels.ts'
 import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
 import {attachGraphicsTuningTelemetry} from '#src/lib/telemetry/graphicsTuningTelemetry.ts'
 import {playerTelemetry, telemetry} from '#src/lib/telemetry/index.ts'
@@ -43,7 +43,7 @@ function Collectors() {
   const graphicsProfile = useGraphicsMode.getName(isHeavy, isCinematic)
   useEffect(() => {
     roomChangeDetails.current = (from, to) => {
-      const {enabled, enabledCount, disabled, disabledCount} = roomSwitches(scene, from, to)
+      const {enabled, enabledCount, disabled, disabledCount} = lampSwitches(scene, from, to)
       return {
         'lights.enabled': enabled,
         'lights.enabled.count': enabledCount,

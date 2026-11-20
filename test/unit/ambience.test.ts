@@ -5,9 +5,10 @@ import {expect, test} from 'bun:test'
 import AmbienceEmitter from 'ambience-emitter'
 
 import {ambienceEmitters} from '../../src/ambience_emitters/index.ts'
+import {hearingFence} from '../../src/ambience_emitters/lib/ambienceEmitters.ts'
 import {fireWorldOrigin} from '../../src/lib/gallery/fireplace/config.ts'
+import {audibleAmbiences} from '../../src/worlds/gallery/activations.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import relations, {audibleAmbiences} from '../../src/worlds/gallery/relations.ts'
 
 const ambiences = new Map(slopGallery.ambiences().map(ambience => [ambience.id, ambience]))
 test('every kind of ambience emitter sounds wherever it is placed, under the id and in the rooms it is given', () => {
@@ -43,7 +44,7 @@ test('the rooms name the kinds of their ambient sounds, which the world places u
       emitter,
       id,
       position,
-      rooms: slopGallery.ambienceRooms(room, id),
+      rooms: slopGallery.ambienceFences(room, id),
     })
     expect(slopGallery.roomAt(position)?.id).toBe(room as GalleryRoomId)
   }
@@ -54,15 +55,37 @@ test('the rooms name the kinds of their ambient sounds, which the world places u
   expect(fire[1]).toBeCloseTo(fireWorldOrigin[1] + 0.6, 9)
   expect(fire[2]).toBeCloseTo(fireWorldOrigin[2], 9)
 })
-test('the rooms only hear ambiences that exist, and none of their own', () => {
-  for (const room of Object.keys(relations) as Array<GalleryRoomId>) {
-    for (const id of audibleAmbiences(room)) {
-      const ambience = ambiences.get(id)
-      expect(`${room} hears ${ambience ? '' : 'missing '}${ambience?.room === room ? 'its own ' : ''}${id}`).toBe(`${room} hears ${id}`)
+test('the fences only hear ambiences that exist, and none of the room they lie in, which sound there anyway', () => {
+  for (const {id: room} of slopGallery.rooms) {
+    for (const fence of slopGallery.fencesIn(room)) {
+      for (const id of audibleAmbiences(fence)) {
+        const ambience = ambiences.get(id)
+        expect(`${fence} hears ${ambience ? '' : 'missing '}${ambience?.room === room ? `${room}’s own ` : ''}${id}`).toBe(`${fence} hears ${id}`)
+      }
     }
   }
 })
-test('an ambience sounds in its own room and in the rooms that hear it', () => {
-  expect(slopGallery.ambienceRooms('moonfall', 'moonfall-orbital_sculpture').toSorted()).toEqual(['exhibition', 'moonfall'])
-  expect(slopGallery.ambienceRooms('lobby', 'lobby-fountain')).toEqual(['lobby'])
+test('an ambience sounds in its own room and in the fences that hear it', () => {
+  expect(slopGallery.ambienceFences('moonfall', 'moonfall-orbital_sculpture').toSorted()).toEqual(['exhibition', 'moonfall'])
+  expect(slopGallery.ambienceFences('lobby', 'lobby-fountain')).toEqual(['lobby'])
+})
+test('a listener hears an emitter in the first of the fences it is in that the emitter sounds in', () => {
+  const [Emitter] = Object.values(ambienceEmitters)
+  const emitter = new Emitter({
+    id: 'attic-thing',
+    position: [1, 2, 3],
+    rooms: ['attic', 'cellar_stairs'],
+  })
+  expect(hearingFence(emitter, ['attic'])).toBe('attic')
+  // In a part of another room it carries into, though not in that room as a whole
+  expect(hearingFence(emitter, ['cellar', 'cellar_stairs'])).toBe('cellar_stairs')
+  expect(emitter.strengthAt([1, 2, 3], hearingFence(emitter, ['cellar', 'cellar_stairs']))).toBe(1)
+  expect(hearingFence(emitter, ['cellar', 'cellar_vault'])).toBeUndefined()
+  expect(hearingFence(emitter, [])).toBeUndefined()
+  // An emitter that sounds everywhere sounds in the listener’s room.
+  const everywhere = new Emitter({
+    id: 'cellar-thing',
+    position: [0, 0, 0],
+  })
+  expect(hearingFence(everywhere, ['cellar', 'cellar_vault'])).toBe('cellar')
 })

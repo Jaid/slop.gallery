@@ -44,7 +44,7 @@ export default function WebmcpBridge() {
     const inspector = new AimInspector(scene, camera)
     const bridge = {
       addPortrait,
-      analyzeWorld: () => analyzeWorld(scene, world.worldRooms()),
+      analyzeWorld: () => analyzeWorld(scene, world.worldRooms(), room => world.fencesIn(room)),
       castMood,
       downloadFrame: async ({name, format}: {
         format?: FrameFormat

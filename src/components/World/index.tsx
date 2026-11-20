@@ -17,7 +17,6 @@ import {roomsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
 import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
-import relations from '#src/worlds/gallery/relations.ts'
 
 /** the materials the rooms share with each other and with the walls around them, of which a room’s part only reads those it uses, so that rooms out of reach never make theirs */
 export type WorldMaterials = {
@@ -169,7 +168,7 @@ export const nearestFirst = (from: ReadonlyArray<RoomId>, eye: Vector3): Readonl
     for (const room of round) {
       hops.set(room, depth)
     }
-    round = [...new Set(round.flatMap(room => relations[room].rooms))].filter(room => !hops.has(room))
+    round = [...new Set(round.flatMap(room => slopGallery.neighbors(room)))].filter(room => !hops.has(room))
   }
   const local = new Vector3
   const nearest = new Vector3

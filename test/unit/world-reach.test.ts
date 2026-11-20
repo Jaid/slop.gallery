@@ -1,6 +1,7 @@
 import type {Vec3} from '../../src/lib/gallery/types.ts'
 import type {Wall} from '../../src/lib/placement/wallGeometry.ts'
 import type WorldReach from '../../src/worlds/base/WorldReach.ts'
+import type {Activation} from '../../src/worlds/gallery/activations.ts'
 
 import {describe, expect, test} from 'bun:test'
 
@@ -11,8 +12,8 @@ import {GalleryPlacementSpace} from '../../src/lib/placement/GalleryPlacementSpa
 import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {readWorldReach} from '../../src/worlds/base/WorldReach.ts'
+import activations from '../../src/worlds/gallery/activations.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import relations from '../../src/worlds/gallery/relations.ts'
 import SlopGallery from '../../src/worlds/gallery/SlopGallery.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -60,10 +61,11 @@ describe('?world_reach', () => {
       }
     }
   })
-  test('neighbors mounts the spawn’s room and every room its relations name as neighbors', () => {
+  test('neighbors mounts the spawn’s room and every room its fence and the fences of its parts keep enabled', () => {
+    const kept: Readonly<Partial<Record<string, Activation>>> = activations
     for (const room of allRooms) {
       const within = reach(`?world_reach=neighbors&room=${room}`)
-      const neighbors = new Set([room, ...relations[room].rooms])
+      const neighbors = new Set<string>([room, ...slopGallery.fencesIn(room).flatMap(fence => kept[fence]?.rooms ?? [])])
       expect(within.rooms).toEqual(allRooms.filter(id => neighbors.has(id)))
     }
   })

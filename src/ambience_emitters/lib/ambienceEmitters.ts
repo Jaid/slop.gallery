@@ -32,6 +32,14 @@ export const isShowingAmbienceEmitters = readShowAmbienceEmitters()
 /** the emitters of the mounted world; `AmbienceListener` starts them once the sound engine exists */
 export const useAmbienceEmitters = create<{emitters: ReadonlyArray<AmbienceEmitter>}>(() => ({emitters: []}))
 
+/**
+ * The fence a listener hears the emitter in who is in the fences with the ids, like a player’s whereabouts: the first of them the emitter sounds in, or undefined where it sounds in none of them.
+ * An emitter asks for the one room its listener is in, which this fence stands in for, so that it sounds wherever any of the listener’s fences lets it.
+ */
+export function hearingFence(emitter: AmbienceEmitter, fences: ReadonlyArray<string>) {
+  return fences.find(fence => emitter.isInside(fence))
+}
+
 /** Adds an emitter, returning how to stop and remove it again. */
 export function addAmbienceEmitter(emitter: AmbienceEmitter) {
   useAmbienceEmitters.setState(state => ({emitters: [...state.emitters, emitter]}))

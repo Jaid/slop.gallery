@@ -87,6 +87,7 @@ export default abstract class World<Kind extends Room = Room> {
   readonly walls: ReadonlyArray<Wall>
   private readonly byId: ReadonlyMap<Kind['id'], PlacedRoom<Kind>>
   private pageReach: WorldReach | undefined = undefined
+  private roomFences: ReadonlyMap<string, ReadonlyArray<string>> | undefined = undefined
   private wallIndex: ReadonlyMap<string, Wall> | undefined = undefined
 
   /** `fences` are the world’s fences beside its rooms’, by their ids in snake_case, in world meters; none by default. */
@@ -138,12 +139,12 @@ export default abstract class World<Kind extends Room = Room> {
       emitter: placed.emitter,
       id,
       position: placed.position,
-      rooms: this.ambienceRooms(room, id),
+      rooms: this.ambienceFences(room, id),
     }
   }
 
-  /** The rooms the player must be in to hear the room’s ambient sound with the global id: only its own room by default. */
-  ambienceRooms(room: string, _ambience: string): ReadonlyArray<string> {
+  /** The fences the player must be in one of, see {@link fencesIn}, to hear the room’s ambient sound with the global id: only its own room’s by default. */
+  ambienceFences(room: string, _ambience: string): ReadonlyArray<string> {
     return [room]
   }
 
@@ -182,6 +183,31 @@ export default abstract class World<Kind extends Room = Room> {
     return []
   }
 
+  /**
+   * The ids of the fences a player in the room with the id may be in, as whatever the world keeps on around the player goes by them: the room’s own, which the player is in while it is the player’s room, then every fence that is no room’s sharing space with it there, like the parts of the room, which the player is in while it holds the player’s place, in the order the world checks them. No other room’s fence counts, however far it overlaps the room’s. None for an id the world doesn’t know.
+   */
+  fencesIn(room: string): ReadonlyArray<string> {
+    if (!this.roomFences) {
+      const index = new Map(this.rooms.map(({id}): [string, Array<string>] => [id, [id]]))
+      for (const [id, fence] of this.geofences) {
+        if (this.roomById(id)) {
+          continue
+        }
+        // A room is only the player’s where no room checked before it holds the player’s place, so each room only gets what those before it leave of the fence.
+        let rest: Geofence | null = fence
+        for (const {fence: taken, id: owner} of this.rooms) {
+          if (!rest?.overlaps(taken)) {
+            continue
+          }
+          index.get(owner)!.push(id)
+          rest = rest.subtract(taken)
+        }
+      }
+      this.roomFences = index
+    }
+    return this.roomFences.get(room) ?? []
+  }
+
   /** The height of the walkable floor under the position. */
   abstract floorHeight(position: Vec3): number
 
@@ -207,8 +233,8 @@ export default abstract class World<Kind extends Room = Room> {
     return floorY < 0 && !(upperMap && upperMap.map.frames(position[0] - origin[0], position[2] - origin[2]) && this.floorHeight(position) >= floorY + upperMap.from)
   }
 
-  /** The rooms the player must be in for the lamp to shine, or undefined for everywhere, the default. */
-  lampRooms(_lamp: PlacedLamp): ReadonlyArray<string> | undefined {
+  /** The fences the player must be in one of, see {@link fencesIn}, for the lamp to shine, or undefined for everywhere, the default. */
+  lampFences(_lamp: PlacedLamp): ReadonlyArray<string> | undefined {
     return undefined
   }
 

@@ -119,17 +119,17 @@ test('meshes land in the room holding most of their volume and spill into the ot
   })
   expect(analysis.globalLights.map(light => light.type)).toEqual(['AmbientLight'])
 })
-test('each room lists the lights of other regions its room lists leave on', () => {
+test('each room lists the lights of other regions the fences a player in it may be in leave on', () => {
   const scene = new Scene
-  const lamp = (name: string, x: number, lightRooms?: Array<string>) => {
+  const lamp = (name: string, x: number, fences?: Array<string>) => {
     const light = new PointLight
     light.name = name
     light.position.set(x, 2, 0)
-    if (lightRooms) {
+    if (fences) {
       registerLamp(light, {
         id: name,
         optional: false,
-        rooms: lightRooms,
+        fences,
       })
     }
     scene.add(light)
@@ -138,10 +138,12 @@ test('each room lists the lights of other regions its room lists leave on', () =
   lamp('everywhere', 0)
   lamp('west-only', 0, ['west'])
   lamp('seen-from-east', 0, ['west', 'east'])
+  lamp('seen-from-east-window', 0, ['west', 'east_window'])
   lamp('passage', 30, ['east'])
   // The shadow pool’s slots only stand in for other lights.
   lamp('slot', 0).userData.shadowSlot = true
-  const {west, east} = analyzeWorld(scene, [square('west', 0), square('east', 10)]).rooms
+  const rooms = [square('west', 0), square('east', 10)]
+  const {west, east} = analyzeWorld(scene, rooms).rooms
   expect(west.foreignLights).toEqual([])
   expect(east.foreignLights).toEqual([
     {
@@ -150,6 +152,24 @@ test('each room lists the lights of other regions its room lists leave on', () =
     },
     {
       path: 'seen-from-east',
+      room: 'west',
+    },
+    {path: 'passage'},
+  ])
+  // A light the world only lights in a part of a room is left on for a player there, so it counts for the room once the world tells the room’s parts.
+  const parted = analyzeWorld(scene, rooms, room => (room === 'east' ? ['east', 'east_window'] : [room])).rooms
+  expect(parted.west.foreignLights).toEqual([])
+  expect(parted.east.foreignLights).toEqual([
+    {
+      path: 'everywhere',
+      room: 'west',
+    },
+    {
+      path: 'seen-from-east',
+      room: 'west',
+    },
+    {
+      path: 'seen-from-east-window',
       room: 'west',
     },
     {path: 'passage'},

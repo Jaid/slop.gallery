@@ -5,7 +5,7 @@ import {useFrame} from '@react-three/fiber'
 import {useRef} from 'react'
 import {Color, Vector3} from 'three/webgpu'
 
-import {useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
+import {hearingFence, useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {useGallery} from '#src/lib/gallery.ts'
 
 /** marker radius in meters, like the light markers */
@@ -31,7 +31,7 @@ export function strengthColor(strength: number, target: Color) {
 }
 
 /**
- * `?show_ambience_emitters`: a dark-rimmed ball at every ambience emitter, seen through walls, colored by how strongly it reaches the camera right now and crossed out while the camera’s room disables it.
+ * `?show_ambience_emitters`: a dark-rimmed ball at every ambience emitter, seen through walls, colored by how strongly it reaches the camera right now and crossed out while none of the fences the player is in lets it sound.
  */
 export default function AmbienceEmitterMarkers() {
   const emitters = useAmbienceEmitters(state => state.emitters)
@@ -45,10 +45,11 @@ function Marker({emitter}: {emitter: AmbienceEmitter}) {
   const cross = useRef<Group>(null)
   useFrame(state => {
     const {x, y, z} = state.camera.getWorldPosition(camera)
-    const {room} = useGallery.getState()
-    strengthColor(emitter.strengthAt([x, y, z], room), ball.current!.material.color)
+    const {room, whereabouts} = useGallery.getState()
+    const fence = hearingFence(emitter, whereabouts)
+    strengthColor(emitter.strengthAt([x, y, z], fence ?? room), ball.current!.material.color)
     // The cross lies in the view, like the light markers’.
-    cross.current!.visible = !emitter.isInside(room)
+    cross.current!.visible = fence === undefined
     state.camera.getWorldQuaternion(cross.current!.quaternion)
   })
   return <group name={emitter.id} position={emitter.position}>

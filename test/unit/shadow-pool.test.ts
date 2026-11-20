@@ -3,7 +3,7 @@ import {expect, test} from 'bun:test'
 import {Group, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
 import {registerLamp} from '../../src/lib/rendering/lamps.ts'
-import {roomSwitches, toggleLightShadow, useLightEdits} from '../../src/lib/rendering/lightLevels.ts'
+import {lampSwitches, toggleLightShadow, useLightEdits} from '../../src/lib/rendering/lightLevels.ts'
 import {ShadowPool} from '../../src/lib/rendering/shadowPool.ts'
 
 /** a scene holding a pool of `count` slots, and a camera at the origin looking down -z */
@@ -145,7 +145,7 @@ test('the pool reports once when more lights in view ask for a shadow than it ha
   update(world)
   expect(reports).toEqual([2, 2])
 })
-test('a room change names what it switches on and off', () => {
+test('a move between fences names the lamps it switches on and off', () => {
   const scene = new Scene
   const group = new Group
   group.name = 'lodge-chandelier'
@@ -154,7 +154,7 @@ test('a room change names what it switches on and off', () => {
   registerLamp(chandelier, {
     id: 'lodge-chandelier',
     optional: false,
-    rooms: ['lodge', 'corridor'],
+    fences: ['lodge', 'corridor'],
   })
   group.add(chandelier)
   for (const index of [0, 1]) {
@@ -163,17 +163,45 @@ test('a room change names what it switches on and off', () => {
     registerLamp(stairLamp, {
       id: `stair-lamp-${index}`,
       optional: false,
-      rooms: ['oculus'],
+      fences: ['oculus'],
     })
     scene.add(stairLamp)
   }
+  // Lit in the Oculus and in a part of the Lodge alone
+  const lantern = new PointLight
+  lantern.name = 'gate-lantern'
+  registerLamp(lantern, {
+    id: 'gate-lantern',
+    optional: false,
+    fences: ['oculus', 'lodge_window'],
+  })
+  scene.add(lantern)
   const everywhere = new PointLight
   everywhere.name = 'sun-fill'
   scene.add(everywhere)
-  expect(roomSwitches(scene, 'oculus', 'lodge')).toEqual({
+  expect(lampSwitches(scene, ['oculus'], ['lodge'])).toEqual({
+    enabled: 'PointLight in lodge-chandelier',
+    enabledCount: 1,
+    disabled: 'gate-lantern, stair-lamp ×2',
+    disabledCount: 3,
+  })
+  // Into that part of the Lodge, the lantern stays on, and within the Lodge, crossing into the part switches it on alone.
+  expect(lampSwitches(scene, ['oculus'], ['lodge', 'lodge_window'])).toEqual({
     enabled: 'PointLight in lodge-chandelier',
     enabledCount: 1,
     disabled: 'stair-lamp ×2',
     disabledCount: 2,
+  })
+  expect(lampSwitches(scene, ['lodge'], ['lodge', 'lodge_window'])).toEqual({
+    enabled: 'gate-lantern',
+    enabledCount: 1,
+    disabled: '',
+    disabledCount: 0,
+  })
+  expect(lampSwitches(scene, ['lodge', 'lodge_window'], ['lodge', 'lodge_window'])).toEqual({
+    enabled: '',
+    enabledCount: 0,
+    disabled: '',
+    disabledCount: 0,
   })
 })

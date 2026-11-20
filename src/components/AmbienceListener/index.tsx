@@ -4,7 +4,7 @@ import {useFrame} from '@react-three/fiber'
 import {useEffect} from 'react'
 import {Vector3} from 'three/webgpu'
 
-import {useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
+import {hearingFence, useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import hearAtOnce, {audioAutoplays} from '#src/lib/audio/hearAtOnce.ts'
 import SoundEngine from '#src/lib/audio/SoundEngine.ts'
 import {isFading} from '#src/lib/fade.ts'
@@ -15,7 +15,7 @@ const up = new Vector3
 const position = new Vector3
 
 /**
- * Hears the world’s positional sounds from the camera: moves the Web Audio listener along with it every frame and starts the ambience emitters once the sound engine exists, which happens with the player’s first click, or right away during the intro and where audio autoplays, like in a film recording the game’s sound. Under `?fade=false`, the emitters cut in and out instead of fading.
+ * Hears the world’s positional sounds from the camera: moves the Web Audio listener along with it every frame, tells the ambience emitters where it is and which of the fences the player is in they sound in, and starts them once the sound engine exists, which happens with the player’s first click, or right away during the intro and where audio autoplays, like in a film recording the game’s sound. Under `?fade=false`, the emitters cut in and out instead of fading.
  * Fusions’ portals sound positionally too, so the listener follows even in worlds without ambience.
  */
 export default function AmbienceListener() {
@@ -25,17 +25,16 @@ export default function AmbienceListener() {
     if (!engine) {
       return
     }
-    const {room} = useGallery.getState()
+    const {room, whereabouts} = useGallery.getState()
     camera.getWorldPosition(position)
     camera.getWorldDirection(forward)
     up.setFromMatrixColumn(camera.matrixWorld, 1)
     const listening: Vec3 = [position.x, position.y, position.z]
-    const hearing = {
-      room,
-      fading: isFading,
-    }
     for (const emitter of useAmbienceEmitters.getState().emitters) {
-      emitter.hear(listening, hearing)
+      emitter.hear(listening, {
+        room: hearingFence(emitter, whereabouts) ?? room,
+        fading: isFading,
+      })
       emitter.start(engine.world, isFading ? undefined : 0)
     }
     const {listener} = engine.context
