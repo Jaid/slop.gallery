@@ -6,7 +6,7 @@ import {openHeadlessGallery, resolveGallerySetup} from '../scripts/lib/headlessG
 import {sculptures} from '../src/sculptures/index.ts'
 
 for (const id of Object.keys(sculptures)) {
-  test.skipIf(Bun.env.LIVE_TEST !== 'true')(`the mounted ${id} sculpture shares its socket’s material`, async () => {
+  test.skipIf(Bun.env.LIVE_TEST !== 'true')(`the mounted ${id} sculpture shares its socket’s material and stays within budget`, async () => {
     const setup = await resolveGallerySetup({
       target: Bun.env.LIVE_TARGET ?? 'dist',
       room: 'salon',
@@ -35,19 +35,27 @@ for (const id of Object.keys(sculptures)) {
         })
       }],
     })
-    const materials = await gallery.page.evaluate(() => {
+    const meshes = await gallery.page.evaluate(() => {
       const {sculptureTestScenes} = globalThis as typeof globalThis & {sculptureTestScenes?: Array<Scene>}
       const scene = sculptureTestScenes?.find(candidate => candidate.getObjectByName('salon-sculpture'))
       const socket = scene?.getObjectByName('sculpture socket') as Mesh | undefined
-      const matches: Array<boolean> = []
+      const visible: Array<{
+        sharedStone: boolean
+        triangles: number
+      }> = []
       scene?.getObjectByName('salon-sculpture')?.traverseVisible(object => {
-        if ('isMesh' in object) {
-          matches.push(!!socket?.material && (object as Mesh).material === socket.material)
+        if ('isMesh' in object && object.isMesh) {
+          const {geometry, material} = object as Mesh
+          visible.push({
+            sharedStone: !!socket?.material && material === socket.material,
+            triangles: (geometry.index?.count ?? geometry.getAttribute('position').count) / 3,
+          })
         }
       })
-      return matches
+      return visible
     })
-    expect(materials.length).toBeGreaterThan(0)
-    expect(materials.every(Boolean)).toBe(true)
+    expect(meshes.length).toBeGreaterThan(0)
+    expect(meshes.every(mesh => mesh.sharedStone)).toBe(true)
+    expect(meshes.reduce((count, mesh) => count + mesh.triangles, 0)).toBeLessThanOrEqual(32_768)
   }, 120_000)
 }
