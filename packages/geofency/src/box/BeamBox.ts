@@ -13,6 +13,14 @@ export default class BeamBox extends Box {
     super(beamBoxInputSchema.parse(input))
   }
 
+  get bottom() {
+    return -Infinity
+  }
+
+  get top() {
+    return Infinity
+  }
+
   contains(position: Position) {
     return this.footprintContains(position)
   }

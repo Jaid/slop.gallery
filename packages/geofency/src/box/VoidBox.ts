@@ -20,6 +20,14 @@ export default class VoidBox extends Box {
     this.ceiling = ceiling
   }
 
+  get bottom() {
+    return -Infinity
+  }
+
+  get top() {
+    return this.ceiling
+  }
+
   contains(position: Position) {
     return position[1] <= this.ceiling && this.footprintContains(position)
   }

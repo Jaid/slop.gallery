@@ -23,6 +23,14 @@ export default class ClosedBox extends Box {
     this.y2 = Math.max(y, y2)
   }
 
+  get bottom() {
+    return this.y
+  }
+
+  get top() {
+    return this.y2
+  }
+
   contains(position: Position) {
     return this.y <= position[1] && position[1] <= this.y2 && this.footprintContains(position)
   }

@@ -315,6 +315,135 @@ describe('Box.translate', () => {
     expect(() => box.translate([Number.NaN, 0, 0])).toThrow()
   })
 })
+describe('Box.overlaps', () => {
+  const room = {
+    ...beam,
+    y: 0,
+    y2: 3,
+  }
+  const cases: Array<[string, BoxInput, BoxInput, boolean]> = [
+    ['a box and itself', room, room, true],
+    ['a closedBox reaching into another', room, {
+      x: 3,
+      z: 1,
+      x2: 9,
+      z2: 9,
+      y: 2,
+      y2: 8,
+    }, true],
+    ['a closedBox within another', room, {
+      x: 1,
+      z: 0.5,
+      x2: 2,
+      z2: 1,
+      y: 1,
+      y2: 2,
+    }, true],
+    ['closedBoxes side by side on x, sharing a face', room, {
+      ...room,
+      x: 4,
+      x2: 8,
+    }, false],
+    ['closedBoxes side by side on z, sharing a face', room, {
+      ...room,
+      z: -2,
+      z2: 0,
+    }, false],
+    ['closedBoxes on top of each other, sharing a face', room, {
+      ...beam,
+      y: 3,
+      y2: 6,
+    }, false],
+    ['closedBoxes sharing only an edge', room, {
+      x: 4,
+      z: 2,
+      x2: 8,
+      z2: 4,
+      y: 0,
+      y2: 3,
+    }, false],
+    ['closedBoxes apart', room, {
+      ...room,
+      x: 5,
+      x2: 9,
+    }, false],
+    ['a skyBox whose floor lies under a closedBox’s top', room, {
+      ...beam,
+      floor: 2.9,
+    }, true],
+    ['a skyBox standing on a closedBox', room, {
+      ...beam,
+      floor: 3,
+    }, false],
+    ['a voidBox whose ceiling lies over a closedBox’s bottom', room, {
+      ...beam,
+      ceiling: 0.1,
+    }, true],
+    ['a voidBox hanging under a closedBox', room, {
+      ...beam,
+      ceiling: 0,
+    }, false],
+    ['a skyBox standing on a voidBox', {
+      ...beam,
+      floor: 1,
+    }, {
+      ...beam,
+      ceiling: 1,
+    }, false],
+    ['a skyBox reaching into a voidBox', {
+      ...beam,
+      floor: 1,
+    }, {
+      ...beam,
+      ceiling: 1.5,
+    }, true],
+    ['two skyBoxes over crossing footprints, however far apart their floors', {
+      ...beam,
+      floor: -500,
+    }, {
+      x: 3,
+      z: -4,
+      x2: 3.5,
+      z2: 40,
+      floor: 900,
+    }, true],
+    ['a beamBox and a box of any kind over its footprint', beam, {
+      ...beam,
+      ceiling: -1000,
+    }, true],
+    ['a beamBox and a box beside its footprint', beam, {
+      ...beam,
+      x: 4,
+      x2: 5,
+      floor: 0,
+    }, false],
+    ['a flat closedBox, which takes up no space', room, {
+      ...beam,
+      y: 1,
+      y2: 1,
+    }, false],
+  ]
+  test.each(cases)('%s', (_, first, second, expected) => {
+    expect(createBox(first).overlaps(createBox(second))).toBe(expected)
+    expect(createBox(second).overlaps(createBox(first))).toBe(expected)
+  })
+  test('every kind of box tells how far down and up it reaches', () => {
+    expect([createBox(room).bottom, createBox(room).top]).toEqual([0, 3])
+    expect([createBox(beam).bottom, createBox(beam).top]).toEqual([-Infinity, Infinity])
+    const sky = createBox({
+      ...beam,
+      floor: 2,
+    })
+    expect([sky.bottom, sky.top]).toEqual([2, Infinity])
+    const hollow = createBox({
+      ...beam,
+      ceiling: 2,
+    })
+    expect([hollow.bottom, hollow.top]).toEqual([-Infinity, 2])
+    // Neither is a field of its own, so a box’s own fields stay the plain data it was built from.
+    expect(Object.keys(sky).toSorted()).toEqual(['floor', 'x', 'x2', 'z', 'z2'])
+  })
+})
 describe('Geofence', () => {
   test('turns plain data into boxes and keeps given boxes', () => {
     const sky = new SkyBox({
@@ -414,6 +543,160 @@ describe('Geofence.translate', () => {
     expect(geofence.contains([1, 1.5, 1])).toBe(true)
     expect(moved.contains([11, 6.5, -9])).toBe(true)
     expect(moved.contains([1, 1.5, 1])).toBe(false)
+  })
+})
+describe('Geofence.overlaps', () => {
+  const hall = new Geofence([{
+    ...beam,
+    floor: 0,
+  }])
+  test('shares space with a fence one of whose boxes reaches into one of its own', () => {
+    const part = new Geofence([{
+      x: 100,
+      z: 100,
+      x2: 101,
+      z2: 101,
+    }, {
+      x: 3,
+      z: 1,
+      x2: 6,
+      z2: 5,
+      y: 1,
+      y2: 2,
+    }])
+    expect(hall.overlaps(part)).toBe(true)
+    expect(part.overlaps(hall)).toBe(true)
+    expect(hall.overlaps(hall)).toBe(true)
+  })
+  test('shares none with fences beside it, under it or apart from it, whose boxes share faces with its own at most', () => {
+    const neighbor = new Geofence([{
+      x: 4,
+      z: 0,
+      x2: 9,
+      z2: 2,
+      floor: 0,
+    }])
+    const cellar = new Geofence([{
+      ...beam,
+      ceiling: 0,
+    }])
+    const far = new Geofence([{
+      x: 50,
+      z: 50,
+      x2: 60,
+      z2: 60,
+    }])
+    // On the plane between them, both hold a position, and yet they share no space.
+    expect(hall.contains([4, 1, 1]) && neighbor.contains([4, 1, 1])).toBe(true)
+    for (const other of [neighbor, cellar, far]) {
+      expect(hall.overlaps(other)).toBe(false)
+      expect(other.overlaps(hall)).toBe(false)
+    }
+  })
+})
+describe('Geofence.subtract', () => {
+  const hall = new Geofence([{
+    ...beam,
+    floor: 0,
+  }])
+  /** Positions off every plane the boxes of the fences below end on, in, around, under and far over them. */
+  const samples = [-0.75, 0.25, 1.25, 2.25, 3.25, 4.75].flatMap(x => [-0.75, 0.25, 0.75, 1.25, 1.75, 2.75].flatMap(z => [-900, -0.5, 0.5, 1.5, 2.5, 900].map((y): Position => [x, y, z])))
+  /** Whether no two boxes of the fence share any space. */
+  const apart = ({boxes}: Geofence) => boxes.every((box, index) => boxes.slice(index + 1).every(other => !box.overlaps(other)))
+  test('leaves a fence that shares no space with the other one as it is', () => {
+    const neighbor = new Geofence([{
+      x: 4,
+      z: 0,
+      x2: 9,
+      z2: 2,
+      floor: 0,
+    }])
+    const left = hall.subtract(neighbor)!
+    expect(left).not.toBe(hall)
+    expect(left.boxes).toEqual(hall.boxes)
+    expect(left.boxes[0]).toBe(hall.boxes[0])
+  })
+  test('leaves nothing of a fence the other one covers, in one box or in several', () => {
+    expect(hall.subtract(hall)).toBeNull()
+    expect(hall.subtract(new Geofence([beam]))).toBeNull()
+    const halves = new Geofence([{
+      ...beam,
+      x2: 1.5,
+      floor: -1,
+    }, {
+      ...beam,
+      x: 1.5,
+    }])
+    expect(hall.subtract(halves)).toBeNull()
+    // One half alone leaves the other.
+    expect(hall.subtract(new Geofence([halves.boxes[0]]))!.boxes).toEqual([new SkyBox({
+      ...beam,
+      x: 1.5,
+      floor: 0,
+    })])
+  })
+  test('cuts a box out of the middle of a column into boxes of the kinds that reach as far, which share no space', () => {
+    const cut = new Geofence([{
+      x: 1,
+      z: 0.5,
+      x2: 3,
+      z2: 1.5,
+      y: 1,
+      y2: 2,
+    }])
+    const left = hall.subtract(cut)!
+    // West and east of it and north and south of it between them, from the floor up, the rest under it and the column over it
+    expect(left.boxes.map(box => box.constructor)).toEqual([SkyBox, SkyBox, SkyBox, SkyBox, ClosedBox, SkyBox])
+    expect(apart(left)).toBe(true)
+    for (const position of samples) {
+      expect(left.contains(position)).toBe(hall.contains(position) && !cut.contains(position))
+    }
+    // Out of an endless column, an endless one is left under it too.
+    const column = new Geofence([beam])
+    expect(column.subtract(cut)!.boxes.map(box => box.constructor)).toEqual([BeamBox, BeamBox, BeamBox, BeamBox, VoidBox, SkyBox])
+    expect(column.subtract(hall)!.boxes).toEqual([new VoidBox({
+      ...beam,
+      ceiling: 0,
+    })])
+  })
+  test('takes every box of the other one out of every box of its own', () => {
+    const fence = new Geofence([{
+      ...beam,
+      y: 0,
+      y2: 3,
+    }, {
+      x: 3,
+      z: 1,
+      x2: 5,
+      z2: 3,
+      ceiling: 2,
+    }])
+    const other = new Geofence([{
+      x: -1,
+      z: -1,
+      x2: 1,
+      z2: 1,
+      floor: 1,
+    }, {
+      x: 2,
+      z: 0.5,
+      x2: 3.5,
+      z2: 2.5,
+      y: -1,
+      y2: 1,
+    }, {
+      x: 50,
+      z: 50,
+      x2: 60,
+      z2: 60,
+    }])
+    const left = fence.subtract(other)!
+    for (const position of samples) {
+      expect(left.contains(position)).toBe(fence.contains(position) && !other.contains(position))
+    }
+    // Neither fence changed.
+    expect(fence.boxes).toHaveLength(2)
+    expect(other.boxes).toHaveLength(3)
   })
 })
 describe('Geofences', () => {

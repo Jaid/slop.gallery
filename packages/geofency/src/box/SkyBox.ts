@@ -20,6 +20,14 @@ export default class SkyBox extends Box {
     this.floor = floor
   }
 
+  get bottom() {
+    return this.floor
+  }
+
+  get top() {
+    return Infinity
+  }
+
   contains(position: Position) {
     return position[1] >= this.floor && this.footprintContains(position)
   }
