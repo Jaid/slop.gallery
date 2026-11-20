@@ -5,6 +5,7 @@ import Branch from 'branch-component'
 import {useMemo} from 'react'
 
 import {useFenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
+import {useGeofence} from '#src/lib/gallery/geofences.ts'
 import world from '#src/worlds/current.ts'
 
 import fenceEdges from './fenceEdges.ts'
@@ -15,19 +16,20 @@ export default function GeofenceOutlines() {
     return null
   }
   return <group name='geofence-outlines'>
-    {Array.from(world.geofences, ([id, fence], index) => <Branch key={id} if={selection === true || selection === id}><Outline id={id} color={`hsl(${Math.round(index * 137.5 + 175) % 360}, 90%, 65%)`} fence={fence} /></Branch>)}
+    {Array.from(world.geofences, ([id, fence]) => <Branch key={id} if={selection === true || selection === id}><Outline id={id} fence={fence} /></Branch>)}
   </group>
 }
 
-function Outline({color, fence, id}: {
-  color: string
+function Outline({fence, id}: {
   fence: Geofence
   id: string
 }) {
+  const inside = useGeofence(id)
   const far = useThree(state => state.camera.far)
   const positions = useMemo(() => fenceEdges(fence, far), [fence, far])
-  return <lineSegments name={id} raycast={() => {}} renderOrder={10}>
+  // Draw occupied fences last so shared edges stay red.
+  return <lineSegments name={id} raycast={() => {}} renderOrder={inside ? 11 : 10}>
     <bufferGeometry><bufferAttribute args={[positions, 3]} attach='attributes-position' /></bufferGeometry>
-    <lineBasicNodeMaterial color={color} depthTest={false} depthWrite={false} toneMapped={false} transparent />
+    <lineBasicNodeMaterial color={inside ? 'red' : 'blue'} depthTest={false} depthWrite={false} toneMapped={false} transparent />
   </lineSegments>
 }

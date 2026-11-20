@@ -227,7 +227,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'show_fence',
       title: 'Show geofence outlines',
-      description: 'Outline the boxes of one geofence by ID from dump_geofences, or show all fences. Lines are visible through walls and open at unbounded ends. Changes the selection made by ?show_fence for this page and returns the new selection.',
+      description: 'Outline the boxes of one geofence by ID from dump_geofences, or show all fences. Outlines are blue, or red for every fence containing the player. Lines are visible through walls and open at unbounded ends. Changes the selection made by ?show_fence for this page and returns the new selection.',
       inputSchema: {
         type: 'object',
         properties: {
