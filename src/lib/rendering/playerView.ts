@@ -13,6 +13,11 @@ export function getPlayerZoom() {
   return zoom
 }
 
+/** Whether the player’s view is zoomed in all the way, casually or extended, rather than not at all or on its way in or out. */
+export function isPlayerZoomedIn() {
+  return zoom === 1
+}
+
 export function setPlayerZoom(amount: number) {
   zoom = clamp(amount, 0, 1)
   aimDot.setBlocked('zoom', zoom > 0)

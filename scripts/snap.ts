@@ -5,7 +5,7 @@ import {join, relative} from 'node:path'
 import {parseArgs} from 'node:util'
 
 import capturePage from 'capture-page'
-import {endWarmup, setWireframe, waitForLoadingItems} from 'capture-session/script'
+import {endWarmup, executeWebmcpTool, setWireframe, waitForLoadingItems} from 'capture-session/script'
 import fs from 'fs-extra'
 import getFree from 'get-free'
 import {jxlEffort, lossyJxlOptions} from 'knot-materials/scripts/lib/encodeJxl.ts'
@@ -38,6 +38,7 @@ ${galleryHelp(snapHeight)}
   --jxl-effort <1–10>     cjxl effort; lossless 2160p takes about a second at 6 and minutes at 10. Default: ${jxlEffort}
   --settle <frames>       frames to render after flying there and again once everything has loaded. Default: 2, enough even with TRAA
   --wireframe <json>      input for the app’s set_wireframe WebMCP tool, sent after flying there, e.g. {"direction": "in", "position": [0, 0.5, -12], "radius": 6}
+  --tools <json>          the app’s WebMCP tools to run once everything there has loaded, by name with their input, in order, like a film recipe’s tools, e.g. {"spawn_sloperator": {"sight": "lobby_east_bench"}}; what they bring loads and settles before the photo, and their results go to stderr
   --name <name>           output file name without extension. Default: the next free number, starting at 1
   -h, --help              show this help
 
@@ -59,6 +60,7 @@ const snapOptions = {
   },
   name: {type: 'string'},
   position: {type: 'string'},
+  tools: {type: 'string'},
   wireframe: {type: 'string'},
   settle: {
     type: 'string',
@@ -102,6 +104,11 @@ const main = async (options: SnapOptions) => {
   if (wireframe !== undefined && (typeof wireframe !== 'object' || wireframe === null || Array.isArray(wireframe))) {
     throw new Error('--wireframe needs a JSON object of set_wireframe input.')
   }
+  const tools = options.tools === undefined ? {} : JSON.parse(options.tools) as unknown
+  const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+  if (!isObject(tools) || !Object.values(tools).every(isObject)) {
+    throw new Error('--tools needs a JSON object of WebMCP tool inputs by tool name.')
+  }
   await anchorWorldReach(setup, position)
   await using server = await serveGallery(setup, {cacheDir: 'node_modules/.vite-snap'})
   console.log(`Loading ${server.url}`)
@@ -137,6 +144,14 @@ const main = async (options: SnapOptions) => {
       // All of it loaded at the warmup scale; the photo renders at the full size, after frames that build TRAA’s history there.
       const warmup = await endWarmup(page)
       if (warmup.warmed) {
+        await waitForFrames(page, settle)
+        await waitForLoadingItems(page)
+      }
+      // On the scene as it loaded, like a film recipe’s tools, and whatever they bring loads and settles in turn
+      if (Object.keys(tools).length > 0) {
+        for (const [name, input] of Object.entries(tools)) {
+          console.error(`${name}: ${await executeWebmcpTool(page, name, input as Record<string, unknown>)}`)
+        }
         await waitForFrames(page, settle)
         await waitForLoadingItems(page)
       }

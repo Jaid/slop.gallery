@@ -2,11 +2,14 @@ import type {Vec3} from '#src/lib/gallery/types.ts'
 
 import {Geofence} from 'geofency'
 
+import {apseOpeningPoint, apseOpenings, bastionCurve} from '#src/lib/gallery/bastion.ts'
 import {lodgeSpur} from '#src/lib/gallery/bastionNetwork.ts'
 import {cisternChunks} from '#src/lib/gallery/cistern/cistern.ts'
+import corridor from '#src/lib/gallery/corridor.ts'
 import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import lobby from '#src/lib/gallery/lobby.ts'
+import {lodgeWindow} from '#src/lib/gallery/lodge.ts'
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
 import {salonSouthZ} from '#src/lib/gallery/salon.ts'
 import {stairwayFootprint} from '#src/lib/gallery/staircase.ts'
@@ -16,6 +19,10 @@ const {moonfall} = lowerGallery
 const moonfallEastX = moonfall.center[0] + moonfall.size[0] / 2
 /** how high Moonfall’s own fence reaches under its floor plan, just over its ceiling */
 const moonfallCeilingY = lowerGallery.floorY + 6
+/** the line across the Bastion’s curve through the middle of the gate in the crown of the Oculus’ apse, on the apse wall’s center line */
+const [, gateZ] = apseOpeningPoint(apseOpenings.find(({name}) => name === 'gate')!)
+/** how far past either side of the Lodge’s west window the Corridor’s long hall still looks through it */
+const windowReach = 1
 /** A part of the Lobby from one line across it to another, in a box like the Lobby’s own: everything over that part of its floor plan from the slab up. */
 function lobbyPart(z: number, z2: number) {
   return new Geofence([{
@@ -65,6 +72,20 @@ const fences = {
   knight_alley: bastionPart(lodgeSpur.chunks(0.35)),
   /** The Bastion’s cistern behind the Forge’s vestibule, which the alchemy machine shoots its orbs into: from its flat wall with the window onto the vestibule to its round wall under the half dome. */
   bastion_cistern: bastionPart(cisternChunks()),
+  /** The Bastion’s curve behind the crown of the Oculus’ apse, where the barred gate and the windows beside it look out over the platform and down the Oculus: north of the gate, out to the curve’s outer walls, from the corner behind the apse’s east shoulder to the chamfer before the S bend, in the curve’s own boxes cut off along the gate. */
+  bastion_gate: bastionPart(bastionCurve.chunks(0.35).filter(({min}) => min[2] < gateZ).map(({min, max}) => ({
+    min,
+    max: [max[0], max[1], Math.min(max[2], gateZ)] as const,
+  }))),
+  /** The Corridor’s long hall abreast of the Lodge’s west window, which looks into the Lodge over the deep sill of its niche: from the hall’s west wall to the window’s glass, from a meter north of the window to a meter south of it, from a meter under the floor to half a meter over the hall’s crown, so it lies within the Corridor’s fence. */
+  corridor_window: new Geofence([{
+    x: corridor.center[0] - corridor.size[0] / 2,
+    z: lodgeWindow.z - lodgeWindow.width / 2 - windowReach,
+    x2: lodgeWindow.tunnelX,
+    z2: lodgeWindow.z + lodgeWindow.width / 2 + windowReach,
+    y: corridor.floorY - 1,
+    y2: corridor.floorY + corridor.height + 0.5,
+  }]),
 } as const satisfies Record<string, Geofence>
 
 export default fences

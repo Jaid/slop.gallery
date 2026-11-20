@@ -5,8 +5,7 @@ import {afterEach, beforeEach, describe, expect, test} from 'bun:test'
 import RAPIER from '@dimforge/rapier3d-compat'
 import {Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
-import {colliderGeometry} from '../../src/lib/gallery/architecture.ts'
-import {fountainBench, fountainBenches, fountainBenchFrame} from '../../src/lib/gallery/fountainBenches.ts'
+import {fountainBench, fountainBenchColliders, fountainBenches, fountainBenchFrame} from '../../src/lib/gallery/fountainBenches.ts'
 import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import SlattedBenchGeometry from '../../src/lib/gallery/SlattedBenchGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
@@ -18,6 +17,23 @@ function attributeVector(attribute: BufferAttribute | InterleavedBufferAttribute
 await RAPIER.init()
 const {centers, radius, bendRadius, halfDepth, topY} = fountainBenchFrame
 const bendY = topY - bendRadius
+const up = new Vector3(0, 1, 0)
+/** Gives the body a bench’s colliders as the bench’s component does: its seat as a slab, its legs as flat-footed cylinders and every other run of its tubes as a capsule. */
+function addBenchColliders(world: RAPIER.World, body: RAPIER.RigidBody) {
+  const {frame, seat} = fountainBenchColliders()
+  world.createCollider(RAPIER.ColliderDesc.cuboid(seat.size[0] / 2, seat.size[1] / 2, seat.size[2] / 2).setTranslation(...seat.center), body)
+  for (const {from, leg, to} of frame) {
+    const start = new Vector3(...from)
+    const direction = new Vector3(...to)
+    direction.sub(start)
+    const length = direction.length()
+    const rotation = new Quaternion
+    rotation.setFromUnitVectors(up, direction.divideScalar(length))
+    const center = start.addScaledVector(direction, length / 2)
+    const shape = leg ? RAPIER.ColliderDesc.cylinder(length / 2, radius) : RAPIER.ColliderDesc.capsule(length / 2, radius)
+    world.createCollider(shape.setTranslation(center.x, center.y, center.z).setRotation(rotation), body)
+  }
+}
 let geometry: SlattedBenchGeometry
 beforeEach(() => {
   geometry = new SlattedBenchGeometry
@@ -91,7 +107,7 @@ describe('round-tube fountain bench frames', () => {
     }
     expect(sharedVertices).toBeGreaterThan(200)
   })
-  test('physical hits follow the curved frame, including its shoulders', () => {
+  test('physical hits follow the curved frame, within a fraction of a millimeter along its straight runs and a few millimeters round its shoulders', () => {
     const world = new RAPIER.World({
       x: 0,
       y: 0,
@@ -100,15 +116,16 @@ describe('round-tube fountain bench frames', () => {
     const material = new MeshBasicMaterial
     const mesh = new Mesh(geometry.metal, material)
     try {
-      world.createCollider(RAPIER.ColliderDesc.trimesh(...colliderGeometry(geometry.metal), RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES))
+      addBenchColliders(world, world.createRigidBody(RAPIER.RigidBodyDesc.fixed()))
       world.step()
       for (const x of centers) {
         for (const side of [-1, 1]) {
-          const samples = [new Vector3(x, 0.15, side * halfDepth)]
-          for (const angle of [0, Math.PI / 8, Math.PI / 4, 3 * Math.PI / 8, Math.PI / 2]) {
-            samples.push(new Vector3(x, bendY + bendRadius * Math.sin(angle), side * (halfDepth - bendRadius + bendRadius * Math.cos(angle))))
+          // A leg and the cross rail, which the colliders follow exactly but for the visible tube’s 24 sides, and its shoulder between them
+          const samples = [[new Vector3(x, 0.15, side * halfDepth), 0.0005], [new Vector3(x, topY, side * (halfDepth - bendRadius) / 2), 0.0005]] as Array<[Vector3, number]>
+          for (const angle of [Math.PI / 8, Math.PI / 4, 3 * Math.PI / 8]) {
+            samples.push([new Vector3(x, bendY + bendRadius * Math.sin(angle), side * (halfDepth - bendRadius + bendRadius * Math.cos(angle))), 0.006])
           }
-          for (const center of samples) {
+          for (const [center, tolerance] of samples) {
             for (const angle of [0.1, 0.5, 1, 2, 3]) {
               const direction = new Vector3(Math.cos(angle), 0, Math.sin(angle))
               const origin = center.clone().addScaledVector(direction, 0.12)
@@ -118,7 +135,7 @@ describe('round-tube fountain bench frames', () => {
               const physical = world.castRay(new RAPIER.Ray(origin, direction), 0.24, true)
               expect(visual).toBeDefined()
               expect(physical).not.toBeNull()
-              expect(physical!.timeOfImpact).toBeCloseTo(visual.distance, 5)
+              expect(Math.abs(physical!.timeOfImpact - visual.distance)).toBeLessThan(tolerance)
             }
           }
         }
@@ -126,6 +143,19 @@ describe('round-tube fountain bench frames', () => {
     } finally {
       world.free()
       material.dispose()
+    }
+  })
+  test('a bench weighs 130 kg, shared between its teak battens and the steel of its two frames like their materials, the battens most of it', () => {
+    const {frame, seat} = fountainBenchColliders()
+    const frames = frame.reduce((sum, {mass}) => sum + mass, 0)
+    expect(fountainBench.mass).toBe(130)
+    expect(seat.mass + frames).toBeCloseTo(fountainBench.mass, 6)
+    expect(seat.mass).toBeGreaterThan(fountainBench.mass * 0.85)
+    expect(frames).toBeGreaterThan(fountainBench.mass * 0.1)
+    // Every run of the tubes weighs by its length; the legs stand on the floor, nothing else of the frames does.
+    expect(frame.filter(({leg}) => leg)).toHaveLength(4)
+    for (const {from, leg, to} of frame) {
+      expect(Math.min(from[1], to[1]) === 0).toBe(leg)
     }
   })
   test('all four seats collide, along their whole length, while the diagonals between them stay open', () => {
@@ -139,8 +169,7 @@ describe('round-tube fountain bench frames', () => {
         const orientation = new Quaternion
         orientation.setFromAxisAngle(new Vector3(0, 1, 0), rotation[1])
         const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(...position).setRotation(orientation))
-        world.createCollider(RAPIER.ColliderDesc.cuboid(fountainBench.width / 2, 0.0425, fountainBench.depth / 2).setTranslation(0, fountainBench.height - 0.0425, 0), body)
-        world.createCollider(RAPIER.ColliderDesc.trimesh(...colliderGeometry(geometry.metal), RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES), body)
+        addBenchColliders(world, body)
       }
       world.step()
       const down = (x: number, z: number) => world.castRay(new RAPIER.Ray({

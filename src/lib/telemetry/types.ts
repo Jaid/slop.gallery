@@ -36,16 +36,28 @@ export type GeofenceState = {
 export type GeofenceStore = {
   subscribe: (listener: (state: GeofenceState, previous: GeofenceState) => void) => () => void
 }
-/** Telemetry only needs how the player caught sight of the Sloperator, at the sights not left since. */
+/** Telemetry only needs how the player caught sight of the Sloperator, at the sights not left since, and what became of entering the fences of his sights the player is in. */
 export type SloperatorState = {
   sighted: ReadonlyArray<{
-    /** how far from the eye he sat, in meters */
+    /** how far from the eye he was, in meters */
     distance: number
+    /** how he sat on his seat or stood where it stood */
+    pose: string
     /** where the eye was, in world meters */
     position: readonly [x: number, y: number, z: number]
-    /** the id of the sight he sat at */
+    /** the id of the sight he was at */
     sight: string
   }>
+  /** by the id of the sight: whether he turned up there, how the physics found his seat and, where he turned up, how he sits or stands and where, the point on the floor under him in world meters and his turn around y in radians */
+  spawns: Partial<Record<string, {
+    detection: string
+    placement?: {
+      pose: string
+      position: readonly [x: number, y: number, z: number]
+      yaw: number
+    }
+    result: string
+  }>>
 }
 export type SloperatorStore = {
   subscribe: (listener: (state: SloperatorState, previous: SloperatorState) => void) => () => void

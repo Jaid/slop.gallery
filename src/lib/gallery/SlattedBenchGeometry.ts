@@ -12,20 +12,20 @@ export default class SlattedBenchGeometry {
   readonly wood: BufferGeometry
 
   constructor() {
-    const {width, depth, height, slats, slatGap} = fountainBench
+    const {width, depth, height, slats, slatGap, thickness} = fountainBench
     const pitch = (depth + slatGap) / slats
     const wood: Array<BufferGeometry> = []
     const metal: Array<BufferGeometry> = []
     for (let i = 0; i < slats; i++) {
       const z = (i + 0.5) * pitch - (depth + slatGap) / 2
       // Two smooth-shaded facets per 12 mm round-over stay within 1 mm of the true arc.
-      const slat = new RoundedBoxGeometry(width, 0.085, pitch - slatGap, 1, 0.012)
+      const slat = new RoundedBoxGeometry(width, thickness, pitch - slatGap, 1, 0.012)
       // Rotate the grain too, along the seat and the long edges of each batten.
       const uv = slat.getAttribute('uv')
       for (let vertex = 0; vertex < uv.count; vertex++) {
         uv.setXY(vertex, uv.getY(vertex), uv.getX(vertex))
       }
-      wood.push(slat.translate(0, height - 0.0425, z))
+      wood.push(slat.translate(0, height - thickness / 2, z))
       for (const x of fountainBenchFrame.centers) {
         const screwHead = new CylinderGeometry(0.01, 0.01, 0.003, 8)
         metal.push(screwHead.translate(x, height + 0.001, z))

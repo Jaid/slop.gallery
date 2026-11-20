@@ -3,6 +3,7 @@ import type {MoodCastInput} from '../../src/lib/webmcp/castMood.ts'
 import type {SeedInput} from '../../src/lib/webmcp/changeSeed.ts'
 import type {GeofenceQuery} from '../../src/lib/webmcp/getGeofences.ts'
 import type {GraphicsQualityInput} from '../../src/lib/webmcp/setGraphicsQuality.ts'
+import type {SloperatorSightingInput, SloperatorSpawnInput} from '../../src/lib/webmcp/sloperator.ts'
 import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
 import type {PartyEffectSpawnInput} from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import type {PropThrowInput} from '../../src/lib/webmcp/throwProp.ts'
@@ -13,6 +14,7 @@ import {expect, test} from 'bun:test'
 import {useFenceDisplay} from '../../src/lib/gallery/fenceDisplay.ts'
 import registerWebmcp from '../../src/lib/webmcp/register.ts'
 import showFence from '../../src/lib/webmcp/showFence.ts'
+import {dumpSloperator, provideSloperator, spawnSloperator, triggerSloperatorSighting} from '../../src/lib/webmcp/sloperator.ts'
 import createWebmcpTools from '../../src/lib/webmcp/tools.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
@@ -81,6 +83,15 @@ const bridge: WebmcpBridge = {
       x2: 19.15,
       z2: 21,
     }],
+  }],
+  dumpSloperator: () => [{
+    fence: 'salon',
+    id: 'lobby_east_bench',
+    pinned: false,
+    position: [4.06, 0, -11],
+    sighted: false,
+    state: 'standing',
+    yaw: -Math.PI / 2,
   }],
   getAim: () => ({
     origin: {
@@ -187,13 +198,31 @@ const bridge: WebmcpBridge = {
     floor,
     duration: 2.5,
   }),
+  // the player stands in the Salon, the fence of the east fountain bench, where he is drawn
+  spawnSloperator: ({sight = 'lobby_east_bench'}: SloperatorSpawnInput) => Promise.resolve([{
+    detection: 'present',
+    fence: 'salon',
+    id: sight,
+    pinned: true,
+    pose: 'sit',
+    position: [4.06, 0, -11],
+    sighted: false,
+    state: 'seated',
+    yaw: -Math.PI / 2,
+  }]),
+  triggerSloperatorSighting: ({sight = 'lobby_east_bench'}: SloperatorSightingInput) => [{
+    distance: 9.5,
+    pose: 'sit',
+    position: [9, 1.6, -27],
+    sight,
+  }],
 }
 test('WebMCP read tools are read-only, validate input and read the current bridge', () => {
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'analyze_world', 'get_loading_items', 'get_geofences', 'show_fence', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
-  for (const tool of tools.slice(0, 8)) {
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_geofences', 'show_fence', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
+  for (const tool of tools.slice(0, 9)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
   }
@@ -215,8 +244,9 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   expect(tools[3].execute({}, {signal: controller.signal})).toEqual(current.getPortraitSlots())
   expect(tools[4].execute({}, {signal: controller.signal})).toEqual(current.getPortraits())
   expect(tools[5].execute({}, {signal: controller.signal})).toEqual(current.dumpGeofences())
-  expect(tools[6].execute({}, {signal: controller.signal})).toEqual(current.analyzeWorld())
-  expect(tools[7].execute({}, {signal: controller.signal})).toBe('pipeline:lobby-floor/MeshStandardNodeMaterial\nwarmup')
+  expect(tools[6].execute({}, {signal: controller.signal})).toEqual(current.dumpSloperator())
+  expect(tools[7].execute({}, {signal: controller.signal})).toEqual(current.analyzeWorld())
+  expect(tools[8].execute({}, {signal: controller.signal})).toBe('pipeline:lobby-floor/MeshStandardNodeMaterial\nwarmup')
   controller.abort()
   expect(() => tools[0].execute({}, {signal: controller.signal})).toThrow()
 })
@@ -506,6 +536,66 @@ test('spawn_orb takes a kind, a point and an optional prop id, and spawns throug
     orb: 'horror',
     position: [0, 0, 0],
   })).rejects.toThrow()
+})
+test('spawn_sloperator takes an optional sight and brings him there through the bridge, and trigger_sloperator_sighting takes an optional sight and an optional instant', async () => {
+  const calls: Array<unknown> = []
+  const tools = createWebmcpTools(() => ({
+    ...bridge,
+    spawnSloperator(input) {
+      calls.push(input)
+      return bridge.spawnSloperator(input)
+    },
+    triggerSloperatorSighting(input) {
+      calls.push(input)
+      return bridge.triggerSloperatorSighting(input)
+    },
+  }))
+  const controller = new AbortController
+  const run = (name: string, input: unknown) => tools.find(tool => tool.name === name)!.execute(input as Record<string, unknown>, {signal: controller.signal})
+  for (const name of ['spawn_sloperator', 'trigger_sloperator_sighting']) {
+    expect(tools.find(tool => tool.name === name)!.annotations?.readOnlyHint).toBe(false)
+  }
+  expect(await run('spawn_sloperator', {sight: 'salon_ottoman'})).toEqual(await bridge.spawnSloperator({sight: 'salon_ottoman'}))
+  expect(await run('spawn_sloperator', {})).toEqual(await bridge.spawnSloperator({}))
+  expect(run('trigger_sloperator_sighting', {sight: 'salon_ottoman'})).toEqual(bridge.triggerSloperatorSighting({sight: 'salon_ottoman'}))
+  expect(run('trigger_sloperator_sighting', {instant: true})).toEqual(bridge.triggerSloperatorSighting({}))
+  expect(calls).toEqual([{sight: 'salon_ottoman'}, {sight: undefined}, {
+    instant: undefined,
+    sight: 'salon_ottoman',
+  }, {
+    instant: true,
+    sight: undefined,
+  }])
+  for (const input of [null, [], {sight: ''}, {sight: 3}, {
+    sight: 'lobby_east_bench',
+    instant: true,
+  }]) {
+    expect(() => run('spawn_sloperator', input)).toThrow(TypeError)
+  }
+  for (const input of [null, [], {sight: ''}, {sight: 3}, {
+    sight: 'lobby_east_bench',
+    instant: 'yes',
+  }, {
+    sight: 'lobby_east_bench',
+    pose: 'sit',
+  }]) {
+    expect(() => run('trigger_sloperator_sighting', input)).toThrow(TypeError)
+  }
+  controller.abort()
+  expect(() => run('spawn_sloperator', {sight: 'lobby_east_bench'})).toThrow()
+})
+test('in a world without the Sloperator, his tools do nothing without a sight and fail for one', async () => {
+  const withdraw = provideSloperator({
+    dump: () => [],
+    sight: () => [],
+    spawn: () => Promise.resolve([]),
+  })
+  withdraw()
+  expect(dumpSloperator()).toEqual([])
+  expect(await spawnSloperator({})).toEqual([])
+  expect(triggerSloperatorSighting({instant: true})).toEqual([])
+  await expect(spawnSloperator({sight: 'salon_ottoman'})).rejects.toThrow('This world has no Sloperator.')
+  expect(() => triggerSloperatorSighting({sight: 'salon_ottoman'})).toThrow('This world has no Sloperator.')
 })
 test('spawn_party_effect takes an effect, a point and an optional rotation, floor and delay, and spawns through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'spawn_party_effect')!

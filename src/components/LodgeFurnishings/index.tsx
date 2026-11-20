@@ -24,9 +24,10 @@ export default function LodgeFurnishings({materials}: {materials: LodgeMaterials
     })),
   ]
   return <group name='lodge-furnishings'>
-    <RigidBody colliders={false} type='fixed'>
-      {lodgeFurnitureColliders().map(({name, position, yaw, size}) => <CuboidCollider key={name} args={[size[0] / 2, size[1] / 2, size[2] / 2]} name={name} position={[position[0], position[1] + size[1] / 2, position[2]]} rotation={[0, yaw, 0]} />)}
-    </RigidBody>
+    {/* Each piece a body of its own, named after it, standing where it stands */}
+    {lodgeFurnitureColliders().map(({name, position, yaw, size}) => <RigidBody key={name} colliders={false} name={name} position={position} rotation={[0, yaw, 0]} type='fixed'>
+      <CuboidCollider args={[size[0] / 2, size[1] / 2, size[2] / 2]} position={[0, size[1] / 2, 0]} />
+    </RigidBody>)}
     <mesh material={materials.rug} name='lodge-rug' position={[rug.position[0], rug.thickness / 2, rug.position[2]]} receiveShadow>
       <boxGeometry args={[rug.size[0], rug.thickness, rug.size[1]]} />
     </mesh>

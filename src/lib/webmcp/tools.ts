@@ -10,6 +10,7 @@ import type {SeedInput} from './changeSeed.ts'
 import type {PortraitDump} from './dumpPortraits.ts'
 import type {GeofenceQuery} from './getGeofences.ts'
 import type {GraphicsQualityChange, GraphicsQualityInput} from './setGraphicsQuality.ts'
+import type {SloperatorDump, SloperatorSightingDump, SloperatorSightingInput, SloperatorSpawnInput} from './sloperator.ts'
 import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
 import type {PartyEffectSpawn, PartyEffectSpawnInput} from './spawnPartyEffect.ts'
 import type {PropThrow, PropThrowInput} from './throwProp.ts'
@@ -47,6 +48,7 @@ export type WebmcpBridge = {
     name?: string
   }) => Promise<FrameDownload & {dump: PlayerDumpSnapshot | null}>
   dumpGeofences: () => ReadonlyArray<GeofenceDump>
+  dumpSloperator: () => ReadonlyArray<SloperatorDump>
   endWarmup: () => Promise<WarmupEnd>
   getAim: () => AimSnapshot
   getGeofences: (query: GeofenceQuery) => ReadonlyArray<string>
@@ -66,7 +68,9 @@ export type WebmcpBridge = {
   showFence: (input: FenceDisplay) => FenceDisplay
   spawnOrb: (input: OrbSpawnInput) => Promise<OrbSpawn>
   spawnPartyEffect: (input: PartyEffectSpawnInput) => PartyEffectSpawn
+  spawnSloperator: (input: SloperatorSpawnInput) => Promise<Array<SloperatorDump>>
   throwProp: (input: PropThrowInput) => PropThrow
+  triggerSloperatorSighting: (input: SloperatorSightingInput) => Array<SloperatorSightingDump>
 }
 
 const frameFormats: Array<FrameFormat> = ['webp', 'png']
@@ -77,6 +81,7 @@ const spawnKeys = new Set(['orb', 'position', 'id'])
 const partyKeys = new Set(['effect', 'position', 'rotation', 'floor', 'delay'])
 const portraitKeys = new Set(['image', 'target', 'title', 'id', 'frame', 'size'])
 const workIdPattern = /^[\w-]{1,100}$/u
+const sightingKeys = new Set(['sight', 'instant'])
 const propIdPattern = /^prop-[\w-]{1,100}$/u
 const isPoint = (value: unknown): value is [number, number, number] => Array.isArray(value) && value.length === 3 && value.every(number => typeof number === 'number' && Number.isFinite(number))
 const point = (description: string) => ({
@@ -151,8 +156,14 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'dump_geofences',
       title: 'Dump geofences',
-      description: 'Return every geofence of the world in the order the world checks them, each with its ID and all of its boxes in world meters, rounded to the tenth of a millimeter. A fence is the union of its boxes. A box stands on the rectangle between the corners (x, z) and (x2, z2) on the ground and reaches from its floor up without end, from its ceiling down without end, from y up to y2, or, with none of them, up and down without end; its faces count as inside. The rooms’ fences come first, each under its room’s ID: where a visitor counts as being in the room, which overlaps its neighbors’ along shared walls and wherever one room lies over another. The first of them holding the player’s place is the room the player is in, which stays the last one while none holds it. After them come the world’s other fences, which mark places where something happens, whatever room they lie in, like the parts of the gallery’s rooms: the halves of its Lobby, lobby_north and lobby_south, on either side of the line the Forge meets the Vesper on, moonfall_stairs, the stairway between the Antechamber and Moonfall, knight_alley, the Bastion’s blind branch beside the Lodge, where an empty suit of armor stands, and bastion_cistern, the Bastion’s cistern behind the Forge’s vestibule. The game probes all of them for the player’s place once per frame, and the gallery.geofence.entered and gallery.geofence.left telemetry counts every fence on its own. Rooms this page’s ?world_reach leaves out are fenced too. get_geofences tells which fences hold a position.',
+      description: 'Return every geofence of the world in the order the world checks them, each with its ID and all of its boxes in world meters, rounded to the tenth of a millimeter. A fence is the union of its boxes. A box stands on the rectangle between the corners (x, z) and (x2, z2) on the ground and reaches from its floor up without end, from its ceiling down without end, from y up to y2, or, with none of them, up and down without end; its faces count as inside. The rooms’ fences come first, each under its room’s ID: where a visitor counts as being in the room, which overlaps its neighbors’ along shared walls and wherever one room lies over another. The first of them holding the player’s place is the room the player is in, which stays the last one while none holds it. After them come the world’s other fences, which mark places where something happens, whatever room they lie in, like the parts of the gallery’s rooms: the halves of its Lobby, lobby_north and lobby_south, on either side of the line the Forge meets the Vesper on, moonfall_stairs, the stairway between the Antechamber and Moonfall, knight_alley, the Bastion’s blind branch beside the Lodge, where an empty suit of armor stands, bastion_cistern, the Bastion’s cistern behind the Forge’s vestibule, bastion_gate, the Bastion’s curve behind the gate in the Oculus’ apse, and corridor_window, the Corridor’s hall abreast of the Lodge’s west window. The game probes all of them for the player’s place once per frame, and the gallery.geofence.entered and gallery.geofence.left telemetry counts every fence on its own. Rooms this page’s ?world_reach leaves out are fenced too. get_geofences tells which fences hold a position.',
       read: () => getBridge().dumpGeofences(),
+    },
+    {
+      name: 'dump_sloperator',
+      title: 'Dump the Sloperator',
+      description: 'Return every sight of the Sloperator, the bowler-hatted gentleman of the gallery’s icon, in rooms in this page’s ?world_reach, and what he is up to there, or an empty array in a world without him. A sight is a seat he turns up on, or a spot he stands on, while the player’s place is in its fence (id), seen from afar through a window or across a room: lodge_east_armchair from knight_alley, lodge_west_armchair from corridor_window, lobby_east_bench from salon, lobby_north_bench from oculus, salon_ottoman from forge, all seats, and exhibition_glass from bastion_gate, where he stands. Entering that fence makes the physics place him once, on its next step: on his seat where it stood when the game began, on it where it went if it was pushed or turned a little, or standing where it stood once it is gone, or on his spot; anything else in the box he takes up there from his neutral pose through his sight pose keeps him away until the player enters the fence anew. state is away while the player is out of the fence, waiting until the physics placed him, seated, standing, kept_away, or slopped once he left his Slop there after the player caught sight of him and left the fence, never to return; pinned whether spawn_sloperator keeps him there wherever the player goes. detection tells how the physics found his seat, like the gallery.sloperator_spawn log event: present, moved or missing where he turned up, none where he stands at a sight without a seat, moved (too little to be gone but too far to sit on) or blocked where he stays away. pose (sit, sit_armchair or stand), position (the point on the floor under him, in world meters) and yaw (his turn around y in radians) tell how and where he is or where he left his Slop; sighted whether the player caught sight of him there since entering the fence, by aiming at him zoomed in all the way or through trigger_sloperator_sighting, which makes him get up off his seat or bring his hands behind his back; seat, at a sight with one, how far his seat strayed from where it stood when the game began, as it stands now: moved, how far the spot he sits on moved along the floor in meters, turned and tilted, how far it turned around y and leans from upright in radians. He follows a seat that moved up to 0.3 m, turned up to 20° and leans up to 5°. Read-only.',
+      read: () => getBridge().dumpSloperator(),
     },
     {
       name: 'analyze_world',
@@ -483,6 +494,74 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           rotation: rotation as number | undefined,
           floor: floor as number | undefined,
           delay,
+        })
+      },
+    },
+    {
+      name: 'spawn_sloperator',
+      title: 'Spawn the Sloperator',
+      description: 'Bring the Sloperator, the bowler-hatted gentleman of the gallery’s icon, to one of his sights right away and keep him there wherever the player goes, for debugging, snaps and films, which fly the player out of the fence he is seen from. Without a sight, it brings him to the sight of every fence of his the player’s place is in, like get_geofences tells, which does nothing outside of all of them and in a world without him. Forgets that the player caught sight of him there and the Slop he left there, if any, and places him the way entering the sight’s fence does: on his seat where it stood when the game began, on it where it went if it was pushed or turned a little, standing where it stood once it is gone, or on his spot; anything else in the box he takes up from his neutral pose through his sight pose keeps him away (state kept_away). He stays until the player leaves the sight’s fence after catching sight of him, which leaves his Slop there as ever, or this tool brings him there anew. While rooms still load, which holds the physics still, it places him on its first step once they are in, like entering the fence then. Resolves once he is drawn there, so trigger_sloperator_sighting can follow right away, or once something keeps him away. Logs gallery.sloperator_spawn like entering the fence. Fails for a sight that is unknown or in a room this page’s ?world_reach leaves out, whose error lists the sights, and for a sight in a world without him. Returns what dump_sloperator tells about each sight it brought him to now, an empty array where it did nothing. Sights: lodge_east_armchair, lodge_west_armchair, lobby_east_bench, lobby_north_bench, salon_ottoman and exhibition_glass. Does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          sight: {
+            type: 'string',
+            description: 'the id of the sight, like lobby_east_bench. Default: the sight of every fence of his the player’s place is in',
+          },
+        },
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).some(key => key !== 'sight')) {
+          throw new TypeError('This tool takes an object with an optional sight.')
+        }
+        const {sight} = input
+        if (sight !== undefined && (typeof sight !== 'string' || !sight)) {
+          throw new TypeError('sight must be the id of a sight of the Sloperator.')
+        }
+        return getBridge().spawnSloperator({sight})
+      },
+    },
+    {
+      name: 'trigger_sloperator_sighting',
+      title: 'Trigger a Sloperator sighting',
+      description: 'Have the player catch sight of the Sloperator at one of his sights where he is now, as if aiming at him zoomed in all the way with nothing but glass in between, which is the only way the game itself does: he moves from his neutral pose into his sight pose, getting up off his seat and standing in front of it, or, standing, spinning his cane up and bringing his hands behind his back (1.8 s off a seat, 1.5 s standing, on the frame clock), and leaves his Slop there once the player leaves the sight’s fence. With instant, he is in his sight pose right away, for snaps. Without a sight, it catches sight of him wherever he is drawn now and was not caught sight of yet, which does nothing where there is no such sight and in a world without him. Logs gallery.sloperator_sight with how far the middle of him was from the camera and where the camera was. Fails for a sight that is unknown or out of reach, where he is not now (spawn_sloperator brings him there) and where the player caught sight of him already, and for a sight in a world without him. Returns each sighting: sight, pose, distance in meters and the camera’s position in world meters, an empty array where it did nothing. Does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          sight: {
+            type: 'string',
+            description: 'the id of the sight, like lobby_east_bench. Default: every sight he is drawn at and was not caught sight of yet',
+          },
+          instant: {
+            type: 'boolean',
+            description: 'whether he is in his sight pose right away instead of moving into it. Default: false',
+          },
+        },
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).some(key => !sightingKeys.has(key))) {
+          throw new TypeError('This tool takes an object with an optional sight and an optional instant.')
+        }
+        const {instant, sight} = input
+        if (sight !== undefined && (typeof sight !== 'string' || !sight)) {
+          throw new TypeError('sight must be the id of a sight of the Sloperator.')
+        }
+        if (instant !== undefined && typeof instant !== 'boolean') {
+          throw new TypeError('instant must be true or false.')
+        }
+        return getBridge().triggerSloperatorSighting({
+          sight,
+          instant,
         })
       },
     },

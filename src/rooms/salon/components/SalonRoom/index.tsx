@@ -4,22 +4,19 @@ import type {Material, Texture} from 'three/webgpu'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
-import {float, normalGeometry, positionGeometry, positionWorld, vec3} from 'three/tsl'
+import {positionWorld, vec3} from 'three/tsl'
 import {Color, MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
-import BenchSeat from '#component/BenchSeat'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import RoomFloor from '#component/RoomFloor'
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {wallFace, wallOpeningTrim} from '#src/lib/gallery/architecture.ts'
 import CrumbledStoneGeometry from '#src/lib/gallery/CrumbledStoneGeometry.ts'
-import {salonBench, salonBenchLegs, salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
+import {salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
 import salonLantern, {salonDomeSpringY, salonLanternBase} from '#src/lib/gallery/salonLantern.ts'
 import SalonLanternGeometry, {lanternPaneSize, salonLanternCollision, shellFilletLines} from '#src/lib/gallery/SalonLanternGeometry.ts'
-import {salonVelvet} from '#src/lib/gallery/salonVelvet.ts'
-import {environmentSeed} from '#src/lib/gameSeed.ts'
 import ArchitecturalPlasterMaterial from '#src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import CrownGlassMaterial from '#src/lib/materials/CrownGlassMaterial.ts'
 import FauxMarbleMaterial, {gialloAntico, portoro} from '#src/lib/materials/FauxMarbleMaterial.ts'
@@ -28,11 +25,11 @@ import SawnCarvingStoneMaterial from '#src/lib/materials/SawnCarvingStoneMateria
 import ShellInlayMaterial from '#src/lib/materials/ShellInlayMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '#src/lib/materials/TerrazzoFloorMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
-import VelvetMaterial from '#src/lib/materials/VelvetMaterial.ts'
 import {daylight} from '#src/lib/rendering/daylight.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
+import SalonOttoman from '../SalonOttoman/index.tsx'
 import SalonSculpture from '../SalonSculpture/index.tsx'
 
 const room = slopGallery.room('salon')
@@ -73,7 +70,7 @@ export default function SalonRoom({glass, stone, wood}: {
       <Lantern heavy={isHeavy} />
     </group>
     {salonWalls.map(wall => <WallDressing key={wall.id} fields={fields} gilt={gold} socle={socle} wall={wall} />)}
-    <Ottoman />
+    <SalonOttoman />
     <SculptureSocket />
   </group>
 }
@@ -167,27 +164,4 @@ function SculptureSocket() {
     </RigidBody>
     <SalonSculpture material={stone} />
   </>
-}
-function Ottoman() {
-  const {apronHeight, cushionHeight, depth, legHeight, position, seatHeight, width} = salonBench
-  const seatThickness = cushionHeight + 0.02
-  const velvet = useDisposable(useMemo(() => {
-    // Carry the nap from the flat seat over the rounded edges instead of stretching it down the sides.
-    const drop = float(seatThickness / 2).sub(positionGeometry.y)
-    const coordinates = positionGeometry.xz.add(normalGeometry.xz.mul(drop))
-    return new VelvetMaterial(coordinates.mul(4), {
-      seed: environmentSeed,
-      style: salonVelvet(environmentSeed),
-    })
-  }, [seatThickness]))
-  const walnut = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#3a2214',
-    roughness: 0.45,
-  }), []))
-  return <RigidBody colliders={false} name='salon-ottoman' position={position} type='fixed'>
-    <CuboidCollider args={[width / 2, seatHeight / 2, depth / 2]} position={[0, seatHeight / 2, 0]} />
-    {salonBenchLegs.map(([x, z]) => <mesh key={`${x}:${z}`} castShadow material={walnut} position={[x, legHeight / 2, z]} receiveShadow><cylinderGeometry args={[0.04, 0.026, legHeight, 16]} /></mesh>)}
-    <Box material={walnut} position={[0, legHeight + apronHeight / 2, 0]} size={[width - 0.06, apronHeight, depth - 0.06]} />
-    <BenchSeat material={velvet} position={[0, legHeight + apronHeight + cushionHeight / 2, 0]} size={[width, seatThickness, depth]} />
-  </RigidBody>
 }

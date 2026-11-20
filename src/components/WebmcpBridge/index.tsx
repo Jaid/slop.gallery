@@ -23,6 +23,7 @@ import getGeofences from '#src/lib/webmcp/getGeofences.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
 import setGraphicsQuality from '#src/lib/webmcp/setGraphicsQuality.ts'
 import showFence from '#src/lib/webmcp/showFence.ts'
+import {dumpSloperator, spawnSloperator, triggerSloperatorSighting} from '#src/lib/webmcp/sloperator.ts'
 import spawnOrb from '#src/lib/webmcp/spawnOrb.ts'
 import spawnPartyEffect from '#src/lib/webmcp/spawnPartyEffect.ts'
 import throwProp from '#src/lib/webmcp/throwProp.ts'
@@ -62,6 +63,7 @@ export default function WebmcpBridge() {
         }
       },
       dumpGeofences: () => world.dumpGeofences(),
+      dumpSloperator,
       endWarmup: async () => {
         const warmed = captureWarmup.end()
         // World hands Fiber the regular pixel ratio when it renders again, which takes no animation frame, so this also resolves under a stopped virtual clock.
@@ -104,7 +106,9 @@ export default function WebmcpBridge() {
       showFence,
       spawnOrb,
       spawnPartyEffect,
+      spawnSloperator,
       throwProp: (input: Parameters<typeof throwProp>[1]) => throwProp(camera, input),
+      triggerSloperatorSighting,
       getTelemetry: () => {
         if (!telemetry) {
           return null

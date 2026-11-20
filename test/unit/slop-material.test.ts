@@ -55,7 +55,7 @@ test('the slime keeps its greens, which a Slop’s turn round the hue circle a l
   expect(distinct.size).toBeGreaterThan(35)
 })
 test('the seed rolls a green per sight, the same every time it is asked', () => {
-  expect(shift(7, 'lobby_bench')).toBe(shift(7, 'lobby_bench'))
-  expect(shift(7, 'lobby_bench')).not.toBe(shift(8, 'lobby_bench'))
-  expect(shift(7, 'lobby_bench')).not.toBe(shift(7, 'salon_ottoman'))
+  expect(shift(7, 'lobby_east_bench')).toBe(shift(7, 'lobby_east_bench'))
+  expect(shift(7, 'lobby_east_bench')).not.toBe(shift(8, 'lobby_east_bench'))
+  expect(shift(7, 'lobby_east_bench')).not.toBe(shift(7, 'salon_ottoman'))
 })

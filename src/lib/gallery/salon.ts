@@ -66,8 +66,12 @@ export const salonBench = {
   width: 3.2,
   depth: benchDepth,
   legHeight: 0.28,
+  /** how thick its turned legs are under the apron and at their feet */
+  legRadius: [0.04, 0.026],
   apronHeight: 0.1,
   cushionHeight: 0.11,
+  /** how heavy it is, in kilograms: a walnut frame on four legs under a sprung cushion */
+  mass: 80,
   get seatHeight() {
     return this.legHeight + this.apronHeight + this.cushionHeight
   },
