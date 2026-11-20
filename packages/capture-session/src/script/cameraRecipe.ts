@@ -30,8 +30,11 @@ export const tweens = Object.fromEntries([
 export type CameraOrbit = {
   /** world-space point the camera circles and looks at */
   focus: Vec3
-  /** world-space eye positions at the start and end of the arc */
+  /** world-space eye position at the start of the arc */
   from: Vec3
+  /** easing for eye height; defaults to the keyframe’s tween */
+  heightTween?: Tween
+  /** world-space eye position at the end of the arc */
   to: Vec3
   /** whole revolutions to add to the shortest arc, positive toward increasing yaw */
   turns?: number
@@ -64,6 +67,7 @@ const properties = ['position', 'yaw', 'pitch', 'roll', 'fov'] as const
 const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
 const isVec3 = (value: unknown): value is Vec3 => Array.isArray(value) && value.length === 3 && value.every(isFiniteNumber)
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+const isTween = (value: unknown): value is Tween => typeof value === 'string' && Object.hasOwn(tweens, value)
 /** Validates a parsed recipe JSON document. */
 export const parseRecipe = (input: unknown): Recipe => {
   if (!Array.isArray(input) || input.length === 0) {
@@ -88,7 +92,7 @@ export const parseRecipe = (input: unknown): Recipe => {
     if (time <= previous) {
       throw new Error(`${at} must come after keyframe ${index - 1} (${time} ≤ ${previous} seconds).`)
     }
-    if (tween !== undefined && !Object.hasOwn(tweens, tween as string)) {
+    if (tween !== undefined && !isTween(tween)) {
       throw new Error(`${at} has the unknown tween ${JSON.stringify(tween)}. Known: ${Object.keys(tweens).join(', ')}.`)
     }
     if (position !== undefined && !isVec3(position)) {
@@ -99,9 +103,12 @@ export const parseRecipe = (input: unknown): Recipe => {
         throw new Error(`${at} needs orbit.from, orbit.to and orbit.focus as [x, y, z] in meters.`)
       }
       for (const key of Object.keys(orbit)) {
-        if (!['focus', 'from', 'to', 'turns'].includes(key)) {
+        if (!['focus', 'from', 'heightTween', 'to', 'turns'].includes(key)) {
           throw new Error(`${at} has the unknown orbit property “${key}”.`)
         }
+      }
+      if (orbit.heightTween !== undefined && !isTween(orbit.heightTween)) {
+        throw new Error(`${at} has the unknown orbit.heightTween ${JSON.stringify(orbit.heightTween)}. Known: ${Object.keys(tweens).join(', ')}.`)
       }
       if (orbit.turns !== undefined && !Number.isSafeInteger(orbit.turns)) {
         throw new Error(`${at} needs orbit.turns as a whole number of extra revolutions.`)
@@ -144,13 +151,18 @@ const lerp = (from: number, to: number, t: number) => from + (to - from) * t
 type OrbitPose = Pick<Shot, 'pitch' | 'position' | 'yaw'>
 const isOrbitProperty = (property: keyof Shot): property is keyof OrbitPose => property !== 'roll' && property !== 'fov'
 /** Interpolate in cylindrical coordinates around the focus. This keeps a level orbit level and a constant-radius orbit circular. */
-const sampleOrbit = ({from, to, focus, turns = 0}: CameraOrbit, t: number): OrbitPose => {
+const sampleOrbit = ({from, to, focus, turns = 0}: CameraOrbit, t: number, heightT = t): OrbitPose => {
   const [x, y, z] = focus
   const start = Math.atan2(from[0] - x, from[2] - z)
   const difference = Math.atan2(to[0] - x, to[2] - z) - start
   const angle = start + t * (Math.atan2(Math.sin(difference), Math.cos(difference)) + turns * 2 * PI)
   const radius = lerp(Math.hypot(from[0] - x, from[2] - z), Math.hypot(to[0] - x, to[2] - z), t)
-  const position: Vec3 = t === 0 ? from : (t === 1 ? to : [x + radius * Math.sin(angle), lerp(from[1], to[1], t), z + radius * Math.cos(angle)])
+  const endpoint = t === 0 ? from : (t === 1 ? to : undefined)
+  const position: Vec3 = [
+    endpoint?.[0] ?? x + radius * Math.sin(angle),
+    heightT === 1 ? to[1] : lerp(from[1], to[1], heightT),
+    endpoint?.[2] ?? z + radius * Math.cos(angle),
+  ]
   return {
     position,
     yaw: angle * 180 / PI + (radius < 0 ? 180 : 0),
@@ -200,9 +212,10 @@ export const sampleRecipe = (recipe: Recipe, time: number, fallback: Shot): Shot
     }
     const from = track[nextIndex - 1]
     const to = track[nextIndex]
-    const t = tweens[to.tween ?? 'linear']((time - from.time) / (to.time - from.time))
+    const progress = (time - from.time) / (to.time - from.time)
+    const t = tweens[to.tween ?? 'linear'](progress)
     if (to.orbit && isPose) {
-      orbitPose ??= sampleOrbit(to.orbit, t)
+      orbitPose ??= sampleOrbit(to.orbit, t, to.orbit.heightTween ? tweens[to.orbit.heightTween](progress) : t)
       return orbitPose[property] as Shot[T]
     }
     const start = from[property]!

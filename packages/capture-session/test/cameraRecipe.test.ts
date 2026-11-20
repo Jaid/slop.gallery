@@ -141,6 +141,31 @@ describe('orbit keyframes', () => {
     expect(sampleRecipe(recipe, 3, fallback).position).toEqual([14, 3, 7])
     expect(recipeToolCalls(recipe).map(call => call.time)).toEqual([1])
   })
+  test('can ease height while holding the horizontal orbit and still look at the focus', () => {
+    const orbit = {
+      from: [0, 1, 2],
+      to: [4, 5, 0],
+      focus: [0, 0, 0],
+      heightTween: 'easeInQuad',
+    }
+    const recipe = parseRecipe([{
+      time: 4,
+      orbit,
+      tween: 'hold',
+    }])
+    const halfway = sampleRecipe(recipe, 2, fallback)
+    expect(halfway.position).toEqual([0, 2, 2])
+    expect(halfway.yaw).toBe(0)
+    expect(halfway.pitch).toBeCloseTo(-45)
+    expect(sampleRecipe(recipe, 4, fallback).position).toEqual(orbit.to)
+    expect(() => parseRecipe([{
+      time: 4,
+      orbit: {
+        ...orbit,
+        heightTween: 'bouncy',
+      },
+    }])).toThrow('unknown orbit.heightTween')
+  })
   test('takes the short way across the yaw seam and can add a whole revolution with identical endpoints', () => {
     const recipe = parseRecipe([
       {
