@@ -12,7 +12,8 @@ export default {
     position: fromFire(fire.light.position),
     strength: 68,
     tint: '#ffb45b',
-    range: 10,
+    range: 12,
+    decay: 1.5,
     shadow: 'heavy',
   },
 } satisfies Record<string, Lamp>
