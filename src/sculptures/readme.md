@@ -1,6 +1,6 @@
 # Sculptures
 
-The Salon displays one sculpture on its permanent 3.2 m × 3.2 m stone socket. The environment seed picks from the ordered registry in `index.ts`, independently of the fountain or other exhibits. Seed 0 always shows the first entry: **Block**, an upright block of the same sawn stone as its socket. To preview a specific design, open `?room=salon&sculpture=block` (replace `block` with its ID). An unknown ID falls back to the seeded pick.
+The Salon displays one sculpture on its permanent 3.2 m × 3.2 m stone socket. The environment seed picks from the ordered registry in `index.ts`, independently of the fountain or other exhibits. Seed 0 always shows the first entry: **Block**, an upright block of the same sawn stone as its socket. To preview a specific design, open `?room=salon&sculpture=block` (replace `block` with its ID, such as `hitch` for the continuous stone trefoil). An unknown ID falls back to the seeded pick.
 
 ## Contributing a sculpture
 

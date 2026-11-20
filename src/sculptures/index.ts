@@ -1,10 +1,12 @@
 import type Sculpture from './base/Sculpture.ts'
 
 import BlockSculpture from './block/BlockSculpture.ts'
+import HitchSculpture from './hitch/HitchSculpture.ts'
 
 /** The first entry is the default seed’s sculpture. Append new entries rather than reordering existing ones. */
 export const sculptures = {
   block: BlockSculpture,
+  hitch: HitchSculpture,
 } as const
 
 export type SculptureId = keyof typeof sculptures
