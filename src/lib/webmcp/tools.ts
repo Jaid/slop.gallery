@@ -227,14 +227,14 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'show_fence',
       title: 'Show geofence outlines',
-      description: 'Outline the boxes of one geofence by ID from dump_geofences, or show all fences. Outlines are blue, or red for every fence containing the player. Lines are visible through walls and open at unbounded ends. Changes the selection made by ?show_fence for this page and returns the new selection.',
+      description: 'Outline geofences whose IDs match a minimatch pattern, or show all fences. IDs are listed by dump_geofences. Outlines are blue, or red for every fence containing the player. Lines are visible through walls and open at unbounded ends. Changes the selection made by ?show_fence for this page and returns the new selection. A pattern matching no fences leaves the selection unchanged and reports an error.',
       inputSchema: {
         type: 'object',
         properties: {
           fence: {
             type: ['boolean', 'string'],
             minLength: 1,
-            description: 'a fence ID to isolate, true for all (the default) or false to hide the outlines',
+            description: 'a minimatch pattern over fence IDs, like {lobby,lodge*}, true for all (the default) or false to hide the outlines',
           },
         },
         additionalProperties: false,
@@ -247,7 +247,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         }
         const {fence = true} = input
         if (typeof fence !== 'boolean' && (typeof fence !== 'string' || !fence)) {
-          throw new TypeError('fence must be a fence ID, true for all or false for none.')
+          throw new TypeError('fence must be a nonempty minimatch pattern, true for all or false for none.')
         }
         return getBridge().showFence({fence})
       },

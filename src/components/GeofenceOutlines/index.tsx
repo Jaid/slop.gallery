@@ -1,10 +1,9 @@
 import type {Geofence} from 'geofency'
 
 import {useThree} from '@react-three/fiber'
-import Branch from 'branch-component'
 import {useMemo} from 'react'
 
-import {useFenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
+import {selectFences, useFenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import {useGeofence} from '#src/lib/gallery/geofences.ts'
 import world from '#src/worlds/current.ts'
 
@@ -12,11 +11,12 @@ import fenceEdges from './fenceEdges.ts'
 
 export default function GeofenceOutlines() {
   const selection = useFenceDisplay(state => state.fence)
-  if (selection === false) {
+  const shown = useMemo(() => selectFences(world.geofences, selection), [selection])
+  if (!shown.length) {
     return null
   }
   return <group name='geofence-outlines'>
-    {Array.from(world.geofences, ([id, fence]) => <Branch key={id} if={selection === true || selection === id}><Outline id={id} fence={fence} /></Branch>)}
+    {shown.map(([id, fence]) => <Outline key={id} id={id} fence={fence} />)}
   </group>
 }
 

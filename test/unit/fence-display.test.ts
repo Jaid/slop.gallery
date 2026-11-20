@@ -3,7 +3,7 @@ import {expect, test} from 'bun:test'
 import {Geofence} from 'geofency'
 
 import fenceEdges from '../../src/components/GeofenceOutlines/fenceEdges.ts'
-import {readShowFence} from '../../src/lib/gallery/fenceDisplay.ts'
+import {readShowFence, selectFences} from '../../src/lib/gallery/fenceDisplay.ts'
 
 test('the fence overlay starts off unless the URL asks for every fence or names one', () => {
   expect(readShowFence('')).toBe(false)
@@ -11,6 +11,14 @@ test('the fence overlay starts off unless the URL asks for every fence or names 
   expect(readShowFence('?show_fence')).toBe(true)
   expect(readShowFence('?show_fence=true')).toBe(true)
   expect(readShowFence('?show_fence=moonfall_stairs')).toBe('moonfall_stairs')
+})
+test('a URL pattern selects matching fence IDs, not their prefixes or unmatched alternatives', () => {
+  const fences = new Map(['lobby', 'lobby_north', 'lodge', 'lodge_test', 'vesper'].map(id => [id, id]))
+  const shown = (url: string) => selectFences(fences, readShowFence(url)).map(([id]) => id)
+  expect(shown('?show_fence=%7Blobby%2Clodge*%7D')).toEqual(['lobby', 'lodge', 'lodge_test'])
+  expect(shown('?show_fence={lobby,logde*}')).toEqual(['lobby'])
+  expect(shown('?show_fence=lodge')).toEqual(['lodge'])
+  expect(shown('?show_fence=unknown*')).toEqual([])
 })
 test('each box of a translated compound fence gets four uprights and rims only at its real bounds', () => {
   const footprint = {
