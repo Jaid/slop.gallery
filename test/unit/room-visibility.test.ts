@@ -6,10 +6,13 @@ import {expect, test} from 'bun:test'
 
 import {Box3, Frustum, Group, Matrix4, Mesh, PerspectiveCamera, Vector3} from 'three/webgpu'
 
+import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {corridorLanding, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
+import {floorTile} from '../../src/lib/gallery/floors.ts'
 import lobbyLayout from '../../src/lib/gallery/lobby.ts'
 import {ownerRoom, portals, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
 import {siennaVestibule} from '../../src/lib/gallery/sienna.ts'
+import {stairFlights} from '../../src/lib/gallery/staircase.ts'
 import {openingTop, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import relations, {openings} from '../../src/worlds/gallery/relations.ts'
@@ -86,6 +89,53 @@ test('a room shows the rooms behind the openings in view', () => {
   expect(lobby.has('antechamber')).toBe(true)
   // The Moonfall stairway is visible from the Lobby at the reported camera position.
   expect(visibleRegions(['lobby'], viewProjection([-2.321, 1.62, 5.655], [5.248, 0.815, 13.195])).has('moonfall')).toBe(true)
+})
+test('no eye in the Lobby’s north and middle parts sees through the doorway into the Antechamber and on through the one onto Moonfall’s stairway', () => {
+  const doorway = slopGallery.wall('lobby-south')!
+  const door = doorway.holes!.find(hole => hole.name === 'antechamber')!
+  const stairwall = slopGallery.wall('antechamber-east')!
+  const stairs = stairwall.holes!.find(hole => hole.name === 'stairway')!
+  // Both openings in plan: the doorway’s jambs along x through the wall between the Lobby and the Antechamber, from face to face, and the stairway’s along z from the face of the Antechamber’s east wall to its center line, where Moonfall’s stairway begins. The casings round them stand out further and only narrow the view.
+  expect(stairwall.center[0]).toBe(stairFlights[0].start[0])
+  const [doorWest, doorEast] = [-1, 1].map(side => wallPosition(doorway, door.u + side * door.width / 2, 0, 0)[0]).toSorted((a, b) => a - b)
+  const [stairsNorth, stairsSouth] = [-1, 1].map(side => wallPosition(stairwall, stairs.u + side * stairs.width / 2, 0, 0)[2]).toSorted((a, b) => a - b)
+  const [doorZ, stairsX] = [doorway.center[2], stairwall.center[0]]
+  for (const [index, value] of [doorWest, doorEast, doorZ, stairsNorth, stairsSouth, stairsX].entries()) {
+    expect(value).toBeCloseTo([-1.3, 1.3, 8, 10.7, 13.3, 4][index], 9)
+  }
+  /** Whether a straight line from the eye passes both openings, seen from above: the headings that pass each face of each opening, as meters east per meter south, leave some heading in common. */
+  const sees = (x: number, z: number) => {
+    let [least, most] = [0, Infinity]
+    for (const face of [doorZ - wallFace, doorZ + wallFace]) {
+      least = Math.max(least, (doorWest - x) / (face - z))
+      most = Math.min(most, (doorEast - x) / (face - z))
+    }
+    for (const face of [stairsX - wallFace, stairsX]) {
+      least = Math.max(least, (face - x) / (stairsSouth - z))
+      most = Math.min(most, (face - x) / (stairsNorth - z))
+    }
+    return least <= most
+  }
+  // The reported camera position sees it, and so does an eye in the doorway.
+  expect(sees(-2.321, 5.655)).toBe(true)
+  expect(sees(0, 7)).toBe(true)
+  // Any line of sight from further north crosses the line the south part begins on, so no eye on that line seeing it means none north of it does, from wall face to wall face.
+  const [{z: line}] = slopGallery.dumpGeofences().find(fence => fence.id === 'lobby_south')!.boxes
+  const reach = lobbyLayout.width / 2 - wallFace
+  for (let x = -reach; x <= reach; x += 0.01) {
+    expect(`${x.toFixed(2)}: ${sees(x, line) ? 'sees' : 'blind'}`).toBe(`${x.toFixed(2)}: blind`)
+  }
+  // An eye hugging the west wall sees it from furthest north, and the south part begins on the seam of the floor’s tiles next north of there: less than a tile further.
+  let limit = line
+  while (!sees(-reach, limit)) {
+    limit += 0.001
+  }
+  expect(limit - line).toBeGreaterThan(0.1)
+  expect(limit - line).toBeLessThan(floorTile)
+  expect((line - lobbyLayout.northZ) % floorTile).toBe(0)
+  expect(slopGallery.geofences.getMatches([-reach, 1.6, limit])).toEqual(['lobby', 'lobby_south'])
+  // An eye by that wall just north of where the Lobby’s side walls with the arches begin still sees it, so that line would not do for the south part.
+  expect(sees(-reach + 0.3, lobbyLayout.previousNorthZ - 0.2)).toBe(true)
 })
 /** the owner room of the object, by its ancestors like RoomCulling’s traversal */
 const ownerOf = (object: Object3D): GalleryRoomId | undefined => ownerRoom(object, object.parent ? ownerOf(object.parent) : undefined)

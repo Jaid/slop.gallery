@@ -12,7 +12,9 @@ import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
 import {climbApproach} from '../../src/lib/gallery/climb.ts'
 import corridor, {corridorLanding, corridorLandingPaving, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import {insidePolygon, polygonBounds} from '../../src/lib/gallery/floorPolygons.ts'
+import {floorTile} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
+import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import lowerGallery, {oculusPlatform} from '../../src/lib/gallery/lowerGallery.ts'
 import {salonSouthZ} from '../../src/lib/gallery/salon.ts'
@@ -127,7 +129,7 @@ class FencedWorld extends World<Cell> {
 test('a world’s other fences come after its rooms’, under ids of their own, and never stand in for a room', () => {
   expect(knottingham.geofences.keys().toArray()).toEqual(['arena'])
   expect(sandbox.geofences.keys().toArray()).toEqual(['cell'])
-  expect(slopGallery.geofences.keys().toArray()).toEqual([...slopGallery.rooms.map(room => room.id), 'lobby_north', 'lobby_south', 'moonfall_stairs', 'knight_alley', 'bastion_cistern', 'bastion_gate', 'corridor_window'])
+  expect(slopGallery.geofences.keys().toArray()).toEqual([...slopGallery.rooms.map(room => room.id), 'lobby_north', 'lobby_middle', 'lobby_south', 'moonfall_stairs', 'knight_alley', 'bastion_cistern', 'bastion_gate', 'corridor_window'])
   // A fence reaching beyond the Cell and one far outside of it
   const corner = new Geofence([{
     x: 0,
@@ -204,32 +206,47 @@ test('the gallery’s knight_alley fences the Bastion’s blind branch beside th
 })
 /** The boxes of the gallery’s fence with the id as the plain data its dump gives, a tenth of a millimeter exact. */
 const dumped = (id: string) => slopGallery.dumpGeofences().find(fence => fence.id === id)!.boxes as Array<Record<string, number>>
-test('the gallery’s lobby_north and lobby_south split the Lobby’s fence in two along the line the Forge meets the Vesper on and the Salon the Banquet', () => {
+test('the gallery’s lobby_north, lobby_middle and lobby_south split the Lobby’s fence in three along the line the Forge meets the Vesper on and the Salon the Banquet and a seam of its floor’s tiles south of its fountain', () => {
   const [whole] = dumped('lobby')
+  const middleZ = -10
   expect(dumped('lobby_north')).toEqual([{
     ...whole,
     z2: salonSouthZ,
   }])
-  expect(dumped('lobby_south')).toEqual([{
+  expect(dumped('lobby_middle')).toEqual([{
     ...whole,
     z: salonSouthZ,
+    z2: middleZ,
   }])
-  // The rooms on either side of the Lobby meet on that line.
+  expect(dumped('lobby_south')).toEqual([{
+    ...whole,
+    z: middleZ,
+  }])
+  // The rooms on either side of the Lobby meet on the first line.
   for (const [south, north] of [['vesper', 'forge'], ['banquet', 'salon']]) {
     expect(dumped(south)[0].z).toBe(salonSouthZ)
     expect(dumped(north)[0].z2).toBe(salonSouthZ)
   }
-  // From wall to wall and from the slab up without end, a half on either side of the line and both on it
+  // The second is a seam of the floor’s tiles, which are laid from the Lobby’s north wall, south of the fountain in its middle part and north of the arches into the Vesper and the Banquet in its south part.
+  expect((middleZ - lobby.northZ) % floorTile).toBe(0)
+  expect(slopGallery.geofences.getMatches([lobbyFountainSpot[0], 0.9, lobbyFountainSpot[2]])).toEqual(['lobby', 'lobby_middle'])
+  for (const side of [-1, 1]) {
+    expect(slopGallery.geofences.getMatches([side * (lobby.width / 2 - 0.5), 0.9, lobby.sideDoorZ])).toEqual(['lobby', 'lobby_south'])
+  }
+  // From wall to wall and from the slab up without end, a part on either side of each line and both of them on it
   for (const x of [-lobby.width / 2 + 0.01, 0, lobby.width / 2 - 0.01]) {
     for (const y of [0.05, 0.9, 1.75, 40]) {
       expect(slopGallery.geofences.getMatches([x, y, lobby.northZ + 0.01])).toEqual(['lobby', 'lobby_north'])
       expect(slopGallery.geofences.getMatches([x, y, salonSouthZ - 0.01])).toEqual(['lobby', 'lobby_north'])
-      expect(slopGallery.geofences.getMatches([x, y, salonSouthZ])).toEqual(['lobby', 'lobby_north', 'lobby_south'])
-      expect(slopGallery.geofences.getMatches([x, y, salonSouthZ + 0.01])).toEqual(['lobby', 'lobby_south'])
+      expect(slopGallery.geofences.getMatches([x, y, salonSouthZ])).toEqual(['lobby', 'lobby_north', 'lobby_middle'])
+      expect(slopGallery.geofences.getMatches([x, y, salonSouthZ + 0.01])).toEqual(['lobby', 'lobby_middle'])
+      expect(slopGallery.geofences.getMatches([x, y, middleZ - 0.01])).toEqual(['lobby', 'lobby_middle'])
+      expect(slopGallery.geofences.getMatches([x, y, middleZ])).toEqual(['lobby', 'lobby_middle', 'lobby_south'])
+      expect(slopGallery.geofences.getMatches([x, y, middleZ + 0.01])).toEqual(['lobby', 'lobby_south'])
       expect(slopGallery.geofences.getMatches([x, y, lobby.southZ - 0.01])).toEqual(['lobby', 'lobby_south'])
     }
   }
-  // The glazed floor over the Oculus lies in the north half, where visitors arrive too, and the Oculus under it in neither.
+  // The glazed floor over the Oculus lies in the north part, where visitors arrive too, and the Oculus under it in none of them.
   const [openingX, openingZ] = lobby.opening.center
   expect(slopGallery.geofences.getMatches([openingX, 0.9, openingZ])).toEqual(['lobby', 'lobby_north'])
   expect(slopGallery.geofences.getMatches([openingX, lowerGallery.oculus.floorY + 0.9, openingZ])).toEqual(['oculus'])

@@ -8,7 +8,7 @@ import {useGallery} from '../../src/lib/gallery/store.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 const still: Vec3 = [0, 0, 0]
-/** where a standing player’s place is in the Lobby’s south half, on the plane of its wall to the Vesper, in the Vesper, in the Forge and its vestibule, on the Bastion’s run north behind the Forge, in its connecting tunnel in front of the doorway into the knight’s alley, in that alley, and outside of the world */
+/** where a standing player’s place is in the Lobby’s south part, on the plane of its wall to the Vesper, in the Vesper, in the Forge and its vestibule, on the Bastion’s run north behind the Forge, in its connecting tunnel in front of the doorway into the knight’s alley, in that alley, and outside of the world */
 const places = {
   lobby: [0, 0.9, 0],
   wall: [-8, 0.9, 0],
@@ -114,22 +114,28 @@ test('the player’s room is the first room whose fence holds its place and stay
   expect(rooms).toEqual(['vesper', 'bastion', 'forge'])
   stop()
 })
-test('crossing between two fences that are no room’s, like the Lobby’s halves, leaves the player in the room', () => {
+test('crossing between two fences that are no room’s, like the Lobby’s parts, leaves the player in the room', () => {
   startGeofences(places.lobby)
   expect(fences()).toEqual(['lobby', 'lobby_south'])
   const rooms: Array<string> = []
-  const stop = useGallery.subscribe(state => rooms.push(state.room))
+  const stop = useGallery.subscribe((state, previous) => {
+    if (state.room !== previous.room) {
+      rooms.push(state.room)
+    }
+  })
   const velocity: Vec3 = [0, 0, -3]
-  probeGeofences([0, 0.9, -15.9], velocity)
+  probeGeofences([0, 0.9, -9.9], velocity)
   expect(useGeofences.getState().crossing).toBeNull()
-  probeGeofences([0, 0.9, -16.1], velocity)
+  probeGeofences([0, 0.9, -10.1], velocity)
   expect(useGeofences.getState()).toEqual({
     crossing: {
-      position: [0, 0.9, -16.1],
+      position: [0, 0.9, -10.1],
       velocity,
     },
-    fences: ['lobby', 'lobby_north'],
+    fences: ['lobby', 'lobby_middle'],
   })
+  probeGeofences([0, 0.9, -16.1], velocity)
+  expect(fences()).toEqual(['lobby', 'lobby_north'])
   expect(room()).toBe('lobby')
   expect(rooms).toEqual([])
   stop()
