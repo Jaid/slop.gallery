@@ -49,7 +49,7 @@ export default class Corridor extends Room {
       volumetricSun: 0,
       walls,
       map,
-      // The flight shows on the upper floor from halfway up, fading in toward the landing, which shows there whole, beside the Sienna it leads into.
+      // The high end of the flight and its landing show beside the Sienna, east of the upper drawing’s west cut.
       upperMap: {
         from: (corridorLanding.floorY - corridor.floorY) / 2,
         map: upperMap,

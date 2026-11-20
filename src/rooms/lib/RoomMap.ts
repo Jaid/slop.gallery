@@ -30,6 +30,12 @@ export default class RoomMap {
     this.markup = `<svg${attributes} x="${x}" y="${z}" width="${width}" height="${depth}" overflow="visible">${svg.slice(root.index + root[0].length)}`.trim()
   }
 
+  /** Whether the drawing frames a point in the room’s own x and z. */
+  frames(x: number, z: number) {
+    const [west, north, width, depth] = this.frame
+    return x >= west && x <= west + width && z >= north && z <= north + depth
+  }
+
   /** The frame of the drawing placed at the world x and z of its room’s origin. */
   placedFrame([originX, originZ]: readonly [x: number, z: number]): MapFrame {
     const [x, z, width, depth] = this.frame

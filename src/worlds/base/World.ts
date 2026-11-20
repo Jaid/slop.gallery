@@ -203,8 +203,8 @@ export default abstract class World<Kind extends Room = Room> {
     if (!room) {
       return position[1] < 0
     }
-    const {floorY, upperMap} = room
-    return floorY < 0 && !(upperMap && this.floorHeight(position) >= floorY + upperMap.from)
+    const {floorY, origin, upperMap} = room
+    return floorY < 0 && !(upperMap && upperMap.map.frames(position[0] - origin[0], position[2] - origin[2]) && this.floorHeight(position) >= floorY + upperMap.from)
   }
 
   /** The rooms the player must be in for the lamp to shine, or undefined for everywhere, the default. */

@@ -12,7 +12,7 @@ import createGrabController from '../../src/components/Scene/interaction/grabCon
 import {portraitFrame} from '../../src/frames/index.ts'
 import {markPortraitInteracted, useGallery} from '../../src/lib/gallery.ts'
 import {climbApex} from '../../src/lib/gallery/climb.ts'
-import {corridorLanding, corridorPassage, corridorStairs} from '../../src/lib/gallery/corridor.ts'
+import {corridorLanding, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import {isLowerPosition, minimapPortrait, minimapRooms, minimapViewBox, portraitMarkerMinimumThickness} from '../../src/lib/gallery/minimap.ts'
 import portraitObjects from '../../src/lib/gallery/portraitObjects.ts'
@@ -125,15 +125,12 @@ test('hanging portraits belong to their wall’s floor even when rooms overlap v
     wallId: 'lobby-north',
   }).lower).toBe(false)
 })
-test('the Corridor shows its flight from halfway up and its landing on the upper floor, beside the Sienna they lead into', () => {
+test('the Corridor stays on the lower map until the flight crosses the same west cut as the Bastion’s upper hairpin', () => {
   expect(minimapRooms.filter(room => room.id === 'corridor').map(room => room.lower)).toEqual([true, false])
-  const halfway = (corridorPassage.floorY + corridorLanding.floorY) / 2
+  const westCut = minimapRooms.find(room => room.id === 'bastion' && !room.lower)!.frame[0]
+  expect(minimapRooms.find(room => room.id === 'corridor' && !room.lower)!.frame[0]).toBeCloseTo(westCut, 6)
   for (const {position: [x, , z], top} of corridorStairs.blocks) {
-    // The tread right at half the flight’s height may fall either way.
-    if (Math.abs(top - halfway) < 1e-6) {
-      continue
-    }
-    expect(isLowerPosition('corridor', eye([x, top, z]))).toBe(top < halfway)
+    expect(isLowerPosition('corridor', eye([x, top, z]))).toBe(x < westCut)
   }
   const [landingX, landingZ] = corridorLanding.path[1]
   expect(isLowerPosition('corridor', eye([landingX, corridorLanding.floorY, landingZ]))).toBe(false)
