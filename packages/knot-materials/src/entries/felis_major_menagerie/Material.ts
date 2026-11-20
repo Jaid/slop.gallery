@@ -1,3 +1,4 @@
+import type {Vec3 as Vector} from 'math'
 import type {Node, Texture} from 'three/webgpu'
 
 import {array, color, float, Fn, If, int, Loop, max, mix, modelWorldMatrixInverse, mx_atan2, mx_fractal_noise_float, mx_noise_float, negateOnBackSide, normalViewGeometry, positionView, positionViewDirection, select, step, struct, time, transformNormalToView, uniformArray, uv, varying, vec2, vec3, vec4} from 'three/tsl'
@@ -7,6 +8,7 @@ import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
 import {knotCurve} from '../../lib/knotCurve.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {TAU} from '../../lib/TAU.ts'
+import {add, cross, normalize, scale as scaleVector, sub, length as vectorLength} from '../../lib/tripleMath.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
 
@@ -1271,7 +1273,10 @@ function flakes(p: Node<'vec3'>, normal: Node<'vec3'>, scale: number, density: n
 const tubeRadius = 0.13
 const knotLength = 7.1772
 const parameterSpan = TAU * 2
-type Vector = [number, number, number]
+type CellLayout = {
+  columns: number
+  rows: number
+}
 /** Surface point of the torus-knot tube exactly as TorusKnotGeometry places it, for a curve parameter and an angle around the tube. */
 function tubePoint(t: Node<'float'>, angle: Node<'float'>) {
   const center = knotCurve(t)
@@ -1321,16 +1326,6 @@ function interpolatedTubeFrame(tube: Node<'vec2'>) {
     stretch: varying(frame.stretch),
   }
 }
-const add = (a: Vector, b: Vector): Vector => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
-const sub = (a: Vector, b: Vector): Vector => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-const scale = (a: Vector, s: number): Vector => [a[0] * s, a[1] * s, a[2] * s]
-const cross = (a: Vector, b: Vector): Vector => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-const length = (a: Vector) => Math.hypot(...a)
-const normalize = (a: Vector) => scale(a, 1 / length(a))
-type CellLayout = {
-  columns: number
-  rows: number
-}
 /** The exhibition knot’s centerline, identical to lib/knotCurve.ts. */
 function curve(t: number): Vector {
   const phase = t * 1.5
@@ -1350,7 +1345,7 @@ function surface(u: number, v: number) {
     return {
       normal,
       binormal,
-      position: add(center, add(scale(normal, -Math.cos(angle) * tubeRadius), scale(binormal, Math.sin(angle) * tubeRadius))),
+      position: add(center, add(scaleVector(normal, -Math.cos(angle) * tubeRadius), scaleVector(binormal, Math.sin(angle) * tubeRadius))),
     }
   }
   const here = point(t)
@@ -1358,8 +1353,8 @@ function surface(u: number, v: number) {
   const velocity = sub(point(t + delta).position, point(t - delta).position)
   return {
     along: normalize(velocity),
-    around: normalize(add(scale(here.normal, Math.sin(angle)), scale(here.binormal, Math.cos(angle)))),
-    stretch: length(velocity) / (delta * 2) * parameterSpan / knotLength,
+    around: normalize(add(scaleVector(here.normal, Math.sin(angle)), scaleVector(here.binormal, Math.cos(angle)))),
+    stretch: vectorLength(velocity) / (delta * 2) * parameterSpan / knotLength,
   }
 }
 /** Per-cell constants of the cat lattice, computed once on the CPU instead of for every fragment: the tube frame at the cell center (for sitting cats upright), the tightest stretch across the cell (for shrinking cats in bends) and the two knots on the cell’s side borders where the threads to the neighbors are tied. */

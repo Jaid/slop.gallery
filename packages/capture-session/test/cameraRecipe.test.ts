@@ -1,4 +1,4 @@
-import type {Shot} from '../src/script/cameraRecipe.ts'
+import type {CameraOrbit, Shot} from '../src/script/cameraRecipe.ts'
 
 import {describe, expect, test} from 'bun:test'
 
@@ -142,7 +142,7 @@ describe('orbit keyframes', () => {
     expect(recipeToolCalls(recipe).map(call => call.time)).toEqual([1])
   })
   test('can ease height while holding the horizontal orbit and still look at the focus', () => {
-    const orbit = {
+    const orbit: CameraOrbit = {
       from: [0, 1, 2],
       to: [4, 5, 0],
       focus: [0, 0, 0],

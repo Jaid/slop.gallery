@@ -1,3 +1,4 @@
+import type {Vec3 as Vector} from 'math'
 import type {Node, Texture} from 'three/webgpu'
 
 import {atan, bitangentView, cameraPosition, color, cos, exp, float, Fn, If, max, min, mix, modelWorldMatrixInverse, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, normalGeometry, normalViewGeometry, pmremTexture, positionGeometry, positionView, positionViewDirection, select, sin, smoothstep, tangentView, texture, time, uv, vec2, vec3, vec4} from 'three/tsl'
@@ -7,17 +8,10 @@ import {knotGeometryArgs} from '../../geometry.ts'
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {TAU} from '../../lib/TAU.ts'
+import {add, cross, dot, normalize, scale, sub} from '../../lib/tripleMath.ts'
 import knotData from './data.ts'
 
-type Vector = [number, number, number]
-
 const [radius, tube,,, windingP, windingQ] = knotGeometryArgs
-const sub = (a: Vector, b: Vector): Vector => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-const add = (a: Vector, b: Vector): Vector => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
-const scale = (a: Vector, s: number): Vector => [a[0] * s, a[1] * s, a[2] * s]
-const dot = (a: Vector, b: Vector) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-const cross = (a: Vector, b: Vector): Vector => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-const normalize = (a: Vector) => scale(a, 1 / Math.hypot(...a))
 type TubeChartOptions = {
 /** metric texels across each cell row */
   metricRows?: number

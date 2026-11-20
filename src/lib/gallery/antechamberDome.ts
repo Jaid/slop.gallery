@@ -1,11 +1,11 @@
 import type Node from 'three/src/nodes/core/Node.js'
 
+import {DEGREES_TO_RADIANS as degrees} from 'math'
 import {bool, normalize, positionLocal, vec3} from 'three/tsl'
 import {ExtrudeGeometry, Path, Shape, SphereGeometry, Vector2, Vector3} from 'three/webgpu'
 
 import antechamberDome from './antechamberDomeShape.ts'
 
-const degrees = Math.PI / 180
 /** Unit directions from the dome’s center toward the centers of its windows, with each window’s angular radius in radians and the index of its ring. */
 export function antechamberWindows() {
   return antechamberDome.windows.flatMap((ring, ringIndex) => Array.from({length: ring.count}, (_, i) => {

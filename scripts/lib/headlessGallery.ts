@@ -5,6 +5,7 @@ import type {Browser, Page} from 'puppeteer-core'
 import {basename, join, resolve, sep} from 'node:path'
 
 import fs from 'fs-extra'
+import {radiansToDegrees} from 'math'
 import puppeteer from 'puppeteer-core'
 import {createServer} from 'vite'
 
@@ -116,8 +117,8 @@ export const resolveSettle = (value: string) => {
   }
   return frames
 }
-export const degrees = (radians: number) => Math.round(radians * 180 / Math.PI * 1000) / 1000
-export const radians = (value: number) => value * Math.PI / 180
+export const degrees = (radians: number) => Math.round(radiansToDegrees(radians) * 1000) / 1000
+export {degreesToRadians as radians} from 'math'
 export const timestamp = () => {
   const now = new Date
   return now.toISOString().replaceAll(/[.:]/gu, '-').replace(/-\d{3}Z$/u, '')

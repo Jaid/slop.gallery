@@ -1,6 +1,7 @@
 import type FatedRandom from 'fated-random'
 import type {OkhslTuple} from 'okhsl'
 
+import {clamp} from 'math'
 import {okhsl} from 'okhsl'
 
 /** how far a color may stray from its own in OkHSL, either way: hue in degrees, saturation and lightness in percent; a missing axis stays put */
@@ -10,11 +11,9 @@ export type HslSpread = {
   saturation?: number
 }
 
-const clampPercent = (value: number) => Math.min(100, Math.max(0, value))
-
 /** The sRGB hex string, with its `#`, of an OkHSL color; the hue may lie anywhere round the circle, saturation and lightness are clamped to 0–100. */
 export function hslHex([hue, saturation, lightness]: OkhslTuple) {
-  return `#${okhsl(hue, clampPercent(saturation), clampPercent(lightness))}`
+  return `#${okhsl(hue, clamp(saturation, 0, 100), clamp(lightness, 0, 100))}`
 }
 
 /**

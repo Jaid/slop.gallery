@@ -6,6 +6,8 @@ import type {FloorInlet} from './PassageFloorInlet.ts'
 import type {FloorOutlet} from './PassageFloorOutlet.ts'
 import type {RouteArc, RoutePiece, RouteStation} from './PassageRoute.ts'
 
+import {clamp} from 'math'
+
 import {wallCoordinates} from '../../placement/wallGeometry.ts'
 import {vaultShellThickness, wallFace} from '../architectureDimensions.ts'
 import PassageFloorInlet from './PassageFloorInlet.ts'
@@ -114,7 +116,6 @@ const crossfallStep = 0.25
 const tolerance = 1e-6
 /** the direction to the right of a heading, seen from above with north up */
 const rightOf = (heading: number): Point => [-Math.sin(heading), Math.cos(heading)]
-const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high)
 /** how far a baseboard along a floor outlet may stray from the floor it follows, in meters, so its profile needs no knot for every row of the outlet: every knot costs a cut across its whole trim, and round a tight turn, many rows fall onto a few centimeters of wall */
 const profileTolerance = 0.0005
 /** The profile without the knots that lie within `profileTolerance` of the straight line between the ones kept around them, its ends always kept. */

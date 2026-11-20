@@ -1,6 +1,7 @@
 import type {SkyPalette} from '../materials/ProceduralSky.ts'
 import type {Vec3} from './types.ts'
 
+import {RADIANS_TO_DEGREES as degrees} from 'math'
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 import {create} from 'zustand'
@@ -215,8 +216,6 @@ export type LightingTuning = {
   sunElevation: number
   sunIntensity: number
 }
-
-const degrees = 180 / Math.PI
 
 /** A preset’s own values for the tuning panel. */
 export function getLightingTuning(preset: LightingPreset): LightingTuning {

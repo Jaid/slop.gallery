@@ -1,3 +1,6 @@
+import {lerp} from 'math'
+import {easing} from 'math/time'
+
 /** seconds that looping noise and sway curves last; white noise has no audible seam */
 export const loopLength = 6
 
@@ -27,8 +30,7 @@ export function swayCurve(context: BaseAudioContext, rate: number) {
   for (let i = 0; i < data.length; i++) {
     const position = i / step
     const index = Math.floor(position)
-    const blend = (1 - Math.cos((position - index) * Math.PI)) / 2
-    data[i] = targets[index % points] * (1 - blend) + targets[(index + 1) % points] * blend
+    data[i] = lerp(targets[index % points], targets[(index + 1) % points], easing.sineInOut(position - index))
   }
   return buffer
 }

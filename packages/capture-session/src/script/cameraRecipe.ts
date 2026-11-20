@@ -1,32 +1,43 @@
 import type {Vec3} from '../types.ts'
 
-const {PI, cos, sqrt} = Math
+import {lerp, radiansToDegrees} from 'math'
+import {easing} from 'math/time'
+
 const back = 1.70158
-const easeIn = {
-  sine: (t: number) => 1 - cos(t * PI / 2),
-  quad: (t: number) => t ** 2,
-  cubic: (t: number) => t ** 3,
-  quart: (t: number) => t ** 4,
-  quint: (t: number) => t ** 5,
-  expo: (t: number) => (t === 0 ? 0 : 2 ** (10 * t - 10)),
-  circ: (t: number) => 1 - sqrt(1 - t ** 2),
-  back: (t: number) => (back + 1) * t ** 3 - back * t ** 2,
+const quadIn = (t: number) => t ** 2
+const backIn = (t: number) => (back + 1) * t ** 3 - back * t ** 2
+const out = (ease: (t: number) => number) => (t: number) => 1 - ease(1 - t)
+const inOut = (ease: (t: number) => number) => (t: number) => (t < 0.5 ? ease(2 * t) / 2 : 1 - ease(2 - 2 * t) / 2)
+/** Recipe IDs for progress curves from 0 to 1. */
+export const tweens = {
+  linear: easing.linear,
+  hold: (t: number) => (t < 1 ? 0 : 1),
+  easeInSine: easing.sineIn,
+  easeOutSine: easing.sineOut,
+  easeInOutSine: easing.sineInOut,
+  easeInQuad: quadIn,
+  easeOutQuad: out(quadIn),
+  easeInOutQuad: inOut(quadIn),
+  easeInCubic: easing.cubicIn,
+  easeOutCubic: easing.cubicOut,
+  easeInOutCubic: easing.cubicInOut,
+  easeInQuart: easing.quartIn,
+  easeOutQuart: easing.quartOut,
+  easeInOutQuart: easing.quartInOut,
+  easeInQuint: easing.quintIn,
+  easeOutQuint: easing.quintOut,
+  easeInOutQuint: easing.quintInOut,
+  easeInExpo: easing.expoIn,
+  easeOutExpo: easing.expoOut,
+  easeInOutExpo: easing.expoInOut,
+  easeInCirc: easing.circIn,
+  easeOutCirc: easing.circOut,
+  easeInOutCirc: easing.circInOut,
+  easeInBack: backIn,
+  easeOutBack: out(backIn),
+  easeInOutBack: inOut(backIn),
 }
-export type Tween = 'hold' | 'linear' | `easeIn${Capitalized}` | `easeInOut${Capitalized}` | `easeOut${Capitalized}`
-type Curve = keyof typeof easeIn
-type Capitalized = Capitalize<Curve>
-const capitalize = <T extends string>(value: T) => value[0].toUpperCase() + value.slice(1) as Capitalize<T>
-/** progress curves from 0 to 1, see https://easings.net */
-export const tweens = Object.fromEntries([
-  ['linear', (t: number) => t],
-  // keeps the previous value until the keyframe is reached, then jumps
-  ['hold', (t: number) => (t < 1 ? 0 : 1)],
-  ...Object.entries(easeIn).flatMap(([curve, ease]) => [
-    [`easeIn${capitalize(curve)}`, ease],
-    [`easeOut${capitalize(curve)}`, (t: number) => 1 - ease(1 - t)],
-    [`easeInOut${capitalize(curve)}`, (t: number) => (t < 0.5 ? ease(2 * t) / 2 : 1 - ease(2 - 2 * t) / 2)],
-  ]),
-]) as Record<Tween, (t: number) => number>
+export type Tween = keyof typeof tweens
 export type CameraOrbit = {
   /** world-space point the camera circles and looks at */
   focus: Vec3
@@ -146,7 +157,6 @@ export const parseRecipe = (input: unknown): Recipe => {
   })
 }
 export const recipeDuration = (recipe: Recipe) => recipe.at(-1)!.time
-const lerp = (from: number, to: number, t: number) => from + (to - from) * t
 
 type OrbitPose = Pick<Shot, 'pitch' | 'position' | 'yaw'>
 const isOrbitProperty = (property: keyof Shot): property is keyof OrbitPose => property !== 'roll' && property !== 'fov'
@@ -155,7 +165,8 @@ const sampleOrbit = ({from, to, focus, turns = 0}: CameraOrbit, t: number, heigh
   const [x, y, z] = focus
   const start = Math.atan2(from[0] - x, from[2] - z)
   const difference = Math.atan2(to[0] - x, to[2] - z) - start
-  const angle = start + t * (Math.atan2(Math.sin(difference), Math.cos(difference)) + turns * 2 * PI)
+  // Preserve the sign of a half-turn; deltaAngle would send both ties toward increasing yaw.
+  const angle = start + t * (Math.atan2(Math.sin(difference), Math.cos(difference)) + turns * 2 * Math.PI)
   const radius = lerp(Math.hypot(from[0] - x, from[2] - z), Math.hypot(to[0] - x, to[2] - z), t)
   const endpoint = t === 0 ? from : (t === 1 ? to : undefined)
   const position: Vec3 = [
@@ -165,8 +176,8 @@ const sampleOrbit = ({from, to, focus, turns = 0}: CameraOrbit, t: number, heigh
   ]
   return {
     position,
-    yaw: angle * 180 / PI + (radius < 0 ? 180 : 0),
-    pitch: Math.atan2(y - position[1], Math.abs(radius)) * 180 / PI,
+    yaw: radiansToDegrees(angle) + (radius < 0 ? 180 : 0),
+    pitch: radiansToDegrees(Math.atan2(y - position[1], Math.abs(radius))),
   }
 }
 /** The explicit ends of an orbit also serve as ordinary pose keys on either side of it. Tools and lens keys do not shorten the arc. */

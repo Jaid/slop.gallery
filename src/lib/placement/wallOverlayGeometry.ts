@@ -1,5 +1,6 @@
 import type {Wall, WallOpening} from './wallGeometry.ts'
 
+import {clamp} from 'math'
 import {BufferGeometry, Float32BufferAttribute} from 'three/webgpu'
 
 import {wallFace} from '../gallery/architectureDimensions.ts'
@@ -22,7 +23,6 @@ const arcStep = 0.05
 const arcColumns = 32
 /** the largest cell of an overlay drawn toward the camera, so its faces stay close to the wall wherever it is seen from */
 const nudgedCell = 0.2
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 /**
  * The faces of the walls that artworks can hang on, every wall that isn’t `sticky: false`, with every opening and reservation left out, since nothing can hang over them.
  */

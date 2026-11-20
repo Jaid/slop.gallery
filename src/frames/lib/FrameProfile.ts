@@ -1,3 +1,5 @@
+import {easing} from 'math/time'
+
 /** a point of a frame’s cross-section: how far out past the opening’s edge it lies and how far in front of the frame’s middle */
 export type SectionPoint = readonly [r: number, z: number]
 
@@ -113,7 +115,7 @@ export default class FrameProfile {
     const dz = z - z0
     // Leaving along one axis and arriving along the other gives the S its shoulders.
     return this.path(t => {
-      const s = (1 - Math.cos(Math.PI * t)) / 2
+      const s = easing.sineInOut(t)
       return reverse ? [r0 + dr * t, z0 + dz * s] as const : [r0 + dr * s, z0 + dz * t] as const
     }, {
       material,

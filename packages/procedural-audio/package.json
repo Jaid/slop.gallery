@@ -22,6 +22,9 @@
     "readme.md",
     "license.txt"
   ],
+  "dependencies": {
+    "math": "0.1.0"
+  },
   "sideEffects": false,
   "types": "./src/main.ts"
 }

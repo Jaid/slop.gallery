@@ -132,6 +132,7 @@
       "dependencies": {
         "get-free": "0.2.0",
         "knot-materials": "workspace:*",
+        "math": "0.1.0",
       },
       "peerDependencies": {
         "puppeteer-core": "^25.18.1",
@@ -228,6 +229,9 @@
     "packages/procedural-audio": {
       "name": "procedural-audio",
       "version": "0.1.0",
+      "dependencies": {
+        "math": "0.1.0",
+      },
     },
     "packages/rapier-body-contact": {
       "name": "rapier-body-contact",

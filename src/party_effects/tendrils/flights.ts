@@ -1,5 +1,7 @@
 import type {PartyOffset} from '../lib/partySite.ts'
 
+import {DEGREES_TO_RADIANS as degrees} from 'math'
+
 /** a tendril that lashes out of the origin as it bursts */
 export type LashingTendril = {
   /** where it reaches toward, as an angle around the origin in the wall’s plane: 0 to the right along the wall, a quarter turn up */
@@ -24,7 +26,6 @@ export type LashingTendril = {
 export const lashing = 0.3
 /** seconds a tendril takes to snap back into the origin */
 export const snapping = 0.3
-const degrees = Math.PI / 180
 
 /** Seven fleshy tendrils lashing out of the origin in quick succession all round it, clear of where a fusion’s result flies out of its middle, out the way the site faces, writhing and groping about, until they snap back into it one after another, the first ones first. */
 export const lashingTendrils: ReadonlyArray<LashingTendril> = [

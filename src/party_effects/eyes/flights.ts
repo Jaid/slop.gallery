@@ -1,5 +1,7 @@
 import type {PartyOffset} from '../lib/partySite.ts'
 
+import {DEGREES_TO_RADIANS as degrees} from 'math'
+
 /** an eye that opens in the air around the origin as it bursts */
 export type StaringEye = {
   /** seconds after the burst that it shuts */
@@ -27,7 +29,6 @@ export const shutting = {
   lids: 0.1,
   fading: 0.35,
 } as const
-const degrees = Math.PI / 180
 /** where an eye opens: an angle around the origin in the wall’s plane and how far out from it, and how far out the way the site faces */
 const spot = (angle: number, distance: number, out: number): PartyOffset => [Math.cos(angle * degrees) * distance, Math.sin(angle * degrees) * distance, out]
 

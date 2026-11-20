@@ -1,6 +1,8 @@
 import type {RouteStation} from './PassageRoute.ts'
 import type PassageRoute from './PassageRoute.ts'
 
+import {clamp} from 'math'
+
 /** A floor joined across the route’s end, spilling back into the passage before returning to its ordinary paving. */
 export type FloorOutlet = {
   /** heights and grades into the passage, from the left wall’s center line to the right one’s, sampled from the adjoining floor */
@@ -18,7 +20,6 @@ const interval = (values: ReadonlyArray<number>, value: number) => {
   const next = values.findIndex(offset => offset >= value)
   return next === -1 ? values.length - 2 : Math.max(0, next - 1)
 }
-const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high)
 
 /**
  * A tangent-matched floor blend near a route’s end. Every lane, a line at a fixed distance from the centerline, eases from the seam’s height at its own place across back into the ordinary paving over the same distance along itself, so the blend keeps one gentle grade throughout: round a turn, the lanes toward its center run shorter and carry the blend on into the run before, instead of steepening it into a lip at a tight inside corner.

@@ -1,3 +1,5 @@
+import {clamp, remapClamp} from 'math'
+
 /** a point in the listener’s space, in meters */
 export type Position = readonly [x: number, y: number, z: number]
 /** how far a sound carries: at full level within `near` meters, fading linearly to silence at `far` */
@@ -16,17 +18,16 @@ export type HearingPath = {
 export const openCutoff = 18_000
 /** the cutoff of the lowpass a sound is heard through at the edge of its hearing, a muffled wash */
 const farCutoff = 2200
-const clamp = (value: number) => Math.min(Math.max(value, 0), 1)
 
 /** How far, 0–1, the listener at `listener` is on a sound’s way from `near` to `far` round `position`: 0 within `near`, 1 from `far` on. */
 export function hearingShare(position: Position, listener: Position, {far, near}: Hearing) {
   const distance = Math.hypot(listener[0] - position[0], listener[1] - position[1], listener[2] - position[2])
-  return clamp((distance - near) / (far - near))
+  return remapClamp(distance, near, far, 0, 1)
 }
 
 /** The lowpass cutoff in Hz a sound is heard through at `share` (0–1) of its way from `near` to `far`, see {@link hearingShare}: distance takes the highs before the level, open nearby and closing toward a muffled 2.2 kHz at the edge of hearing, quickly at first. */
 export function absorptionCutoff(share: number) {
-  return openCutoff * (farCutoff / openCutoff) ** clamp(share) ** 0.7
+  return openCutoff * (farCutoff / openCutoff) ** clamp(share, 0, 1) ** 0.7
 }
 
 /** Where the listener of the context stands. */

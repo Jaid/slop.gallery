@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import {DEGREES_TO_RADIANS as degrees} from 'math'
 import {acos, asin, atan, color, float, max, min, mix, mx_noise_float, normalize, positionLocal, vec3} from 'three/tsl'
 import {DoubleSide, MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -9,7 +10,6 @@ import {goldReflectance} from './GoldMaterial.ts'
 
 type Float = Node<'float'>
 
-const degrees = Math.PI / 180
 /** the angle between rings of stars, and roughly between stars along a ring */
 const spacing = 4.6 * degrees
 

@@ -1,6 +1,8 @@
 import type {Vec3} from './types.ts'
 import type {Box3} from 'three/webgpu'
 
+import {degreesToRadians, vec3} from 'math'
+
 import lobbyVault from './lobbyVault.ts'
 
 /** a room the sun may shine into, as far as its shadow map cares */
@@ -14,13 +16,7 @@ export type SunlitRoom = {
 /** How far the light’s shadow camera stands from the origin along its direction, well above the vault’s crown. */
 const sunDistance = 80
 const margin = 1
-const up = [0, 1, 0] as const
-const cross = (a: readonly [number, number, number], b: readonly [number, number, number]) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]] as const
-const normalize = (v: readonly [number, number, number]) => {
-  const l = Math.hypot(...v)
-  return [v[0] / l, v[1] / l, v[2] / l] as const
-}
-const dot = (a: readonly [number, number, number], b: readonly [number, number, number]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+const up: Vec3 = [0, 1, 0]
 
 /** texels along each axis of the sun’s shadow map in heavy graphics */
 export const sunShadowMapSize = 4096
@@ -50,16 +46,17 @@ export function sunlitPoints(rooms: Iterable<SunlitRoom>): Array<Vec3> {
  * It stands 80 m from the origin, or with `nearest` right beyond the points: the volumetric light fades with the depth into the frustum from the light, which then starts over the highest of them.
  */
 export function sunGeometry(toward: Vec3, points: ReadonlyArray<Vec3>, {nearest = false}: {nearest?: boolean} = {}) {
-  const direction = normalize(toward)
-  const distance = nearest ? Math.max(...points.map(point => dot(point, direction))) + margin + 0.5 : sunDistance
+  const direction = vec3.normalize(vec3.create(), toward)
+  const distance = nearest ? Math.max(...points.map(point => vec3.dot(point, direction))) + margin + 0.5 : sunDistance
   // The basis of a camera at the light, looking at the origin, as Object3D.lookAt builds it.
-  const right = normalize(cross(up, direction))
-  const top = cross(direction, right)
-  const projected = points.map(point => [dot(point, right), dot(point, top), distance - dot(point, direction)] as const)
+  const right = vec3.cross(vec3.create(), up, direction)
+  vec3.normalize(right, right)
+  const top = vec3.cross(vec3.create(), direction, right)
+  const projected = points.map(point => [vec3.dot(point, right), vec3.dot(point, top), distance - vec3.dot(point, direction)] as const)
   const bound = (axis: 0 | 1 | 2, pick: typeof Math.max) => pick(...projected.map(point => point[axis]))
   return {
-    direction: direction as Vec3,
-    position: direction.map(value => value * distance) as unknown as Vec3,
+    direction,
+    position: vec3.scale(vec3.create(), direction, distance),
     shadow: {
       left: bound(0, Math.min) - margin,
       right: bound(0, Math.max) + margin,
@@ -75,8 +72,8 @@ export function sunGeometry(toward: Vec3, points: ReadonlyArray<Vec3>, {nearest 
 
 /** Direction toward the sun from azimuth (clockwise from north, −z) and elevation, in degrees. */
 export function sunDirectionFromAngles(azimuth: number, elevation: number): Vec3 {
-  const a = azimuth * Math.PI / 180
-  const e = elevation * Math.PI / 180
+  const a = degreesToRadians(azimuth)
+  const e = degreesToRadians(elevation)
   return [Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)]
 }
 
@@ -85,5 +82,5 @@ export const middaySun = sunDirectionFromAngles(193.7, 51)
 
 /** How far in front of the shadow camera of a sun shining from `direction` the crown of the Lobby’s vault stands, which has to stay in front of it to cast a shadow. */
 export function sunClearance(direction: Vec3) {
-  return sunDistance - dot([0, lobbyVault.crownY, 0], normalize(direction))
+  return sunDistance - vec3.dot([0, lobbyVault.crownY, 0], vec3.normalize(vec3.create(), direction))
 }

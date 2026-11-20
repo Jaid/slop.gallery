@@ -1,8 +1,9 @@
 import type {LobedProfilePoint} from '#src/lib/gallery/LobedProfileGeometry.ts'
 import type {ProfilePoint} from '#src/lib/gallery/RevolvedProfileGeometry.ts'
 
+import {DEGREES_TO_RADIANS as degrees} from 'math'
+
 const gravity = 9.81
-const degrees = Math.PI / 180
 
 /** Water leaving the stone as a free sheet, sampled at equal flight times so that its UV v is the age of the water in seconds. */
 export type WaterSheet = {

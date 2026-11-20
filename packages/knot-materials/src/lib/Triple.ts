@@ -1,1 +1,1 @@
-export type Triple = [number, number, number]
+export type {Vec3 as Triple} from 'math'

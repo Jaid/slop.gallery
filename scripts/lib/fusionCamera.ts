@@ -1,6 +1,6 @@
 import type {Vec3} from '#src/lib/gallery/types.ts'
 
-import {clamp, fade} from 'math'
+import {clamp, fade, degreesToRadians as radians, radiansToDegrees, vec3} from 'math'
 
 /** where the camera is and what it looks at, at a moment of the film */
 export type Shot = {
@@ -38,17 +38,15 @@ export type CameraPath = {
   note?: string
 }
 
-export const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
-export const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-export const scale = (a: Vec3, factor: number): Vec3 => [a[0] * factor, a[1] * factor, a[2] * factor]
-export const length = (a: Vec3) => Math.hypot(...a)
-export const normalize = (a: Vec3) => scale(a, 1 / (length(a) || 1))
-export const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-export const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-export const mix = (a: number, b: number, t: number) => a + (b - a) * t
-export const mix3 = (a: Vec3, b: Vec3, t: number): Vec3 => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)]
+export const add = (a: Vec3, b: Vec3) => vec3.add(vec3.create(), a, b)
+export const sub = (a: Vec3, b: Vec3) => vec3.sub(vec3.create(), a, b)
+export const scale = (a: Vec3, factor: number) => vec3.scale(vec3.create(), a, factor)
+export const normalize = (a: Vec3) => vec3.normalize(vec3.create(), a)
+export const cross = (a: Vec3, b: Vec3) => vec3.cross(vec3.create(), a, b)
+export const {dot, length} = vec3
+export {lerp as mix, degreesToRadians as radians} from 'math'
+export const mix3 = (a: Vec3, b: Vec3, t: number) => vec3.lerp(vec3.create(), a, b, t)
 export const ease = (t: number) => fade(clamp(t, 0, 1))
-export const radians = (degrees: number) => degrees * Math.PI / 180
 
 /** Cubic Hermite through the keys’ values over their times, its slopes from the neighbors (Catmull–Rom), so the camera never stops at a key; it holds still before the first and after the last. */
 export function throughKeys(keys: ReadonlyArray<ReadonlyArray<number>>, time: number) {
@@ -101,7 +99,7 @@ export function parseCameraPath(value: unknown): CameraPath {
     if (!(Number.isFinite(key.time) && key.time > previous && isPoint(key.position) && isPoint(key.target) && Number.isFinite(key.fov) && key.fov > 0 && key.fov < 180 && Number.isFinite(key.roll))) {
       throw new TypeError(`Key ${index} of the camera path needs a time after the key before it, a position and a target of three numbers each, a field of view between 0 and 180 and a roll.`)
     }
-    if (length(sub(key.target, key.position)) < 1e-6) {
+    if (vec3.distance(key.target, key.position) < 1e-6) {
       throw new TypeError(`Key ${index} of the camera path looks at where it is.`)
     }
     previous = key.time
@@ -140,7 +138,7 @@ export function handheld(shot: Shot, time: number, timeline: Pick<Timeline, 'eme
   const look = normalize(sub(shot.target, shot.position))
   const right = normalize(cross(look, [0, 1, 0]))
   const up = cross(right, look)
-  const distance = length(sub(shot.target, shot.position))
+  const distance = vec3.distance(shot.target, shot.position)
   let {position, target} = shot
   for (const [at, push, shake, decay] of blows(timeline)) {
     const since = time - at
@@ -180,8 +178,8 @@ export function holdPoint({position, roll, target}: Shot): Vec3 {
 export function shotAngles({position, roll, target}: Shot) {
   const [x, y, z] = sub(target, position)
   return {
-    yaw: Math.atan2(-x, -z) * 180 / Math.PI,
-    pitch: Math.atan2(y, Math.hypot(x, z)) * 180 / Math.PI,
+    yaw: radiansToDegrees(Math.atan2(-x, -z)),
+    pitch: radiansToDegrees(Math.atan2(y, Math.hypot(x, z))),
     roll,
   }
 }

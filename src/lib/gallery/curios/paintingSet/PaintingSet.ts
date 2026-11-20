@@ -3,6 +3,7 @@ import type {GrainMapping} from '../../woodGrain.ts'
 import type {LatticePoint} from '../lattice.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
+import {DEGREES_TO_RADIANS as degree} from 'math'
 import {attribute, float, mix, positionGeometry, vec3} from 'three/tsl'
 import {Color, CylinderGeometry, ExtrudeGeometry, Float32BufferAttribute, Matrix4, MeshStandardNodeMaterial, Path, Shape, TorusGeometry, Vector3} from 'three/webgpu'
 
@@ -20,7 +21,6 @@ import Curio, {CurioModel} from '../base/Curio.ts'
 import latticeGeometry from '../lattice.ts'
 
 type Rgb = readonly [number, number, number]
-const degree = Math.PI / 180
 /** the box of the case: how wide, deep and high it is, and how thick its walls and its bottom are */
 const box = {
   width: 0.4,

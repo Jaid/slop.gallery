@@ -1,7 +1,7 @@
 import type {Vec3} from '../gallery/types.ts'
 
 import {defaultEgoOptions} from 'ego-player/motor'
-import {clamp} from 'math'
+import {clamp, degreesToRadians, vec3} from 'math'
 
 /** the mass a throw is tuned around, in kg: an orb’s `orbMass` */
 export const referenceMass = 2
@@ -20,11 +20,11 @@ const jumpSpeed = Math.sqrt(2 * defaultEgoOptions.gravity * defaultEgoOptions.ju
 /** how much a run-up flat out adds to a throw’s own speed */
 const driveBoost = 0.2
 /** how far a throw at the start of a jump turns up from where it is aimed, like a jump shot, in radians */
-const riseTilt = 40 * Math.PI / 180
+const riseTilt = degreesToRadians(40)
 /** how much softer a jump shot leaves than a throw from the ground, so it lobs up high and drops steeply instead of flying off far */
 const riseSoftening = 0.4
 /** the steepest a throw ever leaves, in radians from level */
-const steepest = 85 * Math.PI / 180
+const steepest = degreesToRadians(85)
 /** how a thrown orb tumbles, in radians per second, and anything else by its speed */
 export const throwSpin: Vec3 = [3, 2, 1]
 /** how much a prop let go of on the move tumbles, as a share of a throw’s spin at the same speed */
@@ -78,8 +78,6 @@ export function throwSpeedFor(mass: number) {
   return throwSpeed * armShare(mass) / armShare(referenceMass)
 }
 
-const length = (vector: Vec3) => Math.hypot(...vector)
-
 /**
  * How a prop of `mass` leaves the hand, thrown along `direction` or let go of, by someone moving at `carrier`.
  * It carries on with the carrier’s velocity either way, as a hand moves with its body, so a prop let go of on the run sails on ahead like a little throw, and one let go of mid-jump flies on up.
@@ -88,19 +86,19 @@ const length = (vector: Vec3) => Math.hypot(...vector)
 export function toss({carrier = [0, 0, 0], direction, lift: liftShare = defaultLift, mass, speed = throwSpeedFor(mass), throwing}: TossInput): Toss {
   const carried: Vec3 = [...carrier]
   if (!throwing) {
-    const tumble = dropSpin * length(carried) / throwSpeed
+    const tumble = dropSpin * vec3.length(carried) / throwSpeed
     return {
       carried,
       drive: 0,
       effort: 0,
       mass,
       rise: 0,
-      spin: throwSpin.map(value => value * tumble) as Vec3,
+      spin: vec3.scale(vec3.create(), throwSpin, tumble),
       throwing,
       velocity: carried,
     }
   }
-  const [x, y, z] = direction.map(value => value / (length(direction) || 1)) as Vec3
+  const [x, y, z] = vec3.normalize(vec3.create(), direction)
   const level = Math.hypot(x, z)
   const heading: Vec3 = level > 1e-6 ? [x / level, 0, z / level] : [0, 0, 0]
   const drive = clamp((carried[0] * heading[0] + carried[2] * heading[2]) / sprintSpeed, 0, 1)
@@ -117,7 +115,7 @@ export function toss({carrier = [0, 0, 0], direction, lift: liftShare = defaultL
     effort,
     mass,
     rise,
-    spin: throwSpin.map(value => value * tumble) as Vec3,
+    spin: vec3.scale(vec3.create(), throwSpin, tumble),
     throwing,
     velocity: [aim[0] * effort + carried[0], aim[1] * effort + lift + carried[1], aim[2] * effort + carried[2]],
   }

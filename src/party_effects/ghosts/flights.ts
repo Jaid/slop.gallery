@@ -1,5 +1,7 @@
 import type {PartyOffset} from '../lib/partySite.ts'
 
+import {DEGREES_TO_RADIANS as degrees} from 'math'
+
 /** a ghost that escapes its origin */
 export type EscapingGhost = {
   /** where it shoots out toward, as an angle around the origin in the wall’s plane: 0 to the right along the wall, a quarter turn up */
@@ -21,8 +23,6 @@ export type EscapingGhost = {
   /** how wide it is drawn, in meters; its head is about 0.4 of that */
   size: number
 }
-
-const degrees = Math.PI / 180
 
 /** Three ghosts escaping in quick succession right after the burst, fanning out to the left, straight up and to the right, wailing a dissonant chord. */
 export const escapingGhosts: ReadonlyArray<EscapingGhost> = [{

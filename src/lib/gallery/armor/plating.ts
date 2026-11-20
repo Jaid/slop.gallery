@@ -1,11 +1,10 @@
 import type {LatticePoint} from '../curios/lattice.ts'
 import type {Vec3} from '../types.ts'
 
+import {DEGREES_TO_RADIANS as degree} from 'math'
 import {BufferGeometry, Float32BufferAttribute, Quaternion, SphereGeometry, Vector3} from 'three/webgpu'
 
 import latticeGeometry from '../curios/lattice.ts'
-
-export const degree = Math.PI / 180
 
 /** the attribute `ForgedSteelMaterial` reads where a point of its steel lies: how far in a hole, and how freshly polished */
 export const steelMask = {
@@ -329,3 +328,5 @@ export function rivetHeads(points: ReadonlyArray<{
     return head
   })
 }
+
+export {DEGREES_TO_RADIANS as degree} from 'math'

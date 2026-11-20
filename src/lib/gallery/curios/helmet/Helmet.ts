@@ -1,6 +1,7 @@
 import type {Vec3} from '../../types.ts'
 import type {LatticePoint} from '../lattice.ts'
 
+import {DEGREES_TO_RADIANS as degree} from 'math'
 import {DoubleSide, Vector3} from 'three/webgpu'
 
 import ForgedSteelMaterial from '#src/lib/materials/ForgedSteelMaterial.ts'
@@ -13,7 +14,6 @@ import {suitOfArmor} from '../../suitOfArmor.ts'
 import Curio, {CurioModel} from '../base/Curio.ts'
 import latticeGeometry from '../lattice.ts'
 
-const degree = Math.PI / 180
 /** how tall it stands, from the border of its gorget to the top of its comb */
 export const helmetHeight = 0.4
 /** the point inside the head the shell is laid out round, by polar angles from straight up and angles round from straight ahead */

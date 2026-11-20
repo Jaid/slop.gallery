@@ -7,16 +7,9 @@ import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 import {knotCurve} from '../../lib/knotCurve.ts'
 import KnotMaterial from '../../lib/KnotMaterial.ts'
 import {TAU} from '../../lib/TAU.ts'
+import {add, cross, dot, length, normalize, scale, sub} from '../../lib/tripleMath.ts'
 import knotData from './data.ts'
 
-/** Minimal CPU vector math for constants that are baked into the shader graph. */
-const add = (a: Triple, b: Triple): Triple => [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
-const sub = (a: Triple, b: Triple): Triple => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-const scale = (a: Triple, s: number): Triple => [a[0] * s, a[1] * s, a[2] * s]
-const dot = (a: Triple, b: Triple) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-const cross = (a: Triple, b: Triple): Triple => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-const length = (a: Triple) => Math.hypot(a[0], a[1], a[2])
-const normalize = (a: Triple) => scale(a, 1 / length(a))
 /** Sum of scaled vectors. */
 const combine = (...terms: Array<[Triple, number]>) => terms.reduce<Triple>((sum, [vector, weight]) => add(sum, scale(vector, weight)), [0, 0, 0])
 /** CPU-side anatomy of the felt prince. Everything here is evaluated once at import time and baked into the node graph as constants, so the GPU only ever sees plain vectors and numbers. “Knot space” is the space of the stock TorusKnotGeometry. The face frame (right, up, forward) is anchored at the apex of one outer lobe, which grows into the head; the material re-poses the knot so that frame becomes object x, y and z. */

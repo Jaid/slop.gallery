@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "get-free": "0.2.0",
-    "knot-materials": "workspace:*"
+    "knot-materials": "workspace:*",
+    "math": "0.1.0"
   },
   "peerDependencies": {
     "puppeteer-core": "^25.18.1",

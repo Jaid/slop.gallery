@@ -1,7 +1,8 @@
+import {DEGREES_TO_RADIANS as degrees} from 'math'
+
 import {wallFace, wallTop} from './architectureDimensions.ts'
 import lobby from './lobby.ts'
 
-const degrees = Math.PI / 180
 /** Inner face of the long walls, measured from the room’s axis. The vault springs from this plane. */
 const halfSpan = lobby.width / 2 - wallFace
 /** Inner face of the end walls, measured from the room center. */
