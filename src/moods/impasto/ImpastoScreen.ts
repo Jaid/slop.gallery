@@ -30,7 +30,7 @@ const castBy = vec2(...shadow.offset)
 const shadowReach = Math.hypot(...shadow.offset)
 /** how far a stroke reaches past where the brush set down and lifted off, in its widths, with room for its round ends */
 const caps = 0.75
-/** how far out the strokes’ paint and shadows begin at the nearest, 1 on the ellipse through the middles of the screen’s edges; nothing nearer the middle is worked out (see `paint-vignette.test.ts`) */
+/** how far out the strokes’ paint and shadows begin at the nearest, 1 on the ellipse through the middles of the screen’s edges; nothing nearer the middle is worked out (see `impasto-vignette.test.ts`) */
 const clear = 0.66
 /** how much of the frame shows through the thin glaze of umber the corners are toned with before the strokes go on, at most */
 const wash = {
@@ -61,12 +61,12 @@ const matte = 0.15
 const weathering = 0.95
 
 /**
- * The Atelier’s vignette: as the mood comes in, unseen brushes paint the edges of the view one stroke after another, the dark ground hatched across the corners and brushed along the edges, earth tones over it and last a few bright accents on the inner rim, leaving the middle clear (see `vignetteStrokes.ts`).
+ * The Impasto Orb’s vignette: as the mood comes in, unseen brushes paint the edges of the view one stroke after another, the dark ground hatched across the corners and brushed along the edges, earth tones over it and last a few bright accents on the inner rim, leaving the middle clear (see `vignetteStrokes.ts`).
  * None of them stays as it is: each goes matte and dries into bristle streaks after a while, from where the brush lifted off back toward where it set down, until the brush comes back and lays it again over what is left of it, round after round and every stroke at a pace of its own, so somewhere along the edges a brush is always at work while the mood holds (see `strokeAt`).
  * Every stroke grows from a blunt round start behind the wet bead of paint the bristles push ahead, pressed down where it sets out and tapering where the brush lifts off, its edges ragged where single bristles reach out or fall short, its paint dragged into grooves and breaking up into dry streaks toward its end, and lit like impasto from the upper left, so every ridge and groove catches the light and glints wet, and its body shades what it was laid over. As the mood leaves, the strokes dry away into bristle streaks in the opposite order they were laid in.
  * The strokes are composited front to back, the last one laid first, so a pixel stops working out the strokes beneath once the paint above covers it.
  */
-export default class PaintScreen extends MoodScreen {
+export default class ImpastoScreen extends MoodScreen {
   /**
    * @param arrivalTime seconds its mood takes to come in, which the strokes’ rounds are counted in
    */

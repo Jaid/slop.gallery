@@ -619,11 +619,11 @@ describe('moods', () => {
       expect(ambience.id).toBe(`mood-${id}`)
     }
   })
-  test('every orb that casts a mood casts one of its own, sharing its id, but the Impasto Orb, which casts the Paint Orb’s, and only the Transparent Orb casts none', () => {
+  test('every orb that casts a mood casts one of its own, sharing its id, and only the Transparent Orb casts none', () => {
     const moody = orbs.filter(orb => orb.mood)
     expect(orbs.filter(orb => !orb.mood).map(orb => orb.id)).toEqual(['transparent'])
-    expect(moody.filter(orb => orb.mood !== orb.id).map<[string, string | undefined]>(orb => [orb.id, orb.mood])).toEqual([['impasto', 'paint']])
     for (const orb of moody) {
+      expect<string | undefined>(orb.mood).toBe(orb.id)
       const mood: Mood = moods[orb.mood!]
       expect(mood.ambience).toBeDefined()
       // Each shows itself through color filters, a screen or both.

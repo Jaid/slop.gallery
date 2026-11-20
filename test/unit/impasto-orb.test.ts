@@ -27,14 +27,14 @@ describe('Impasto Orb', () => {
       expect(named).toContain(trait)
     }
   })
-  test('brings a frame and a party effect of its own, casts the Atelier like the Paint Orb, glows a color of its own and leaves a Transparent Orb', () => {
+  test('brings a frame and a party effect of its own, casts its own workshop mood, glows a color of its own and leaves a Transparent Orb', () => {
     expect(promptOrbs).toContain(impastoOrb)
     expect(choiceFrames(impastoOrb.frame)).toEqual(['impasto'])
     for (const frame of choiceFrames(impastoOrb.frame)) {
       expect(frames[frame]).toBeDefined()
     }
-    expect(moods[impastoOrb.mood]).toBe(moods[paintOrb.mood])
-    expect(moods[impastoOrb.mood].title).toBe('Atelier')
+    expect(moods[impastoOrb.mood].ambience).not.toBe(moods[paintOrb.mood].ambience)
+    expect(moods[impastoOrb.mood].title).toBe('Impasto')
     expect(impastoOrb.partyEffect(1)).toBe('smears')
     expect(partyEffects.smears.id).toBe('smears')
     expect(impastoOrb.remains).toBe(transparentOrb)

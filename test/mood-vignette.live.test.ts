@@ -86,11 +86,31 @@ const openCell = async (graphics: string, query: Record<string, string>) => {
   return gallery
 }
 const live = test.skipIf(Bun.env.LIVE_TEST !== 'true')
-// The real output quad and capture bridge, also in Fast without antialiasing, whose pipeline is only the scene and the moods’ screens.
-live('Atelier paints only the margins of a portrait view in fast graphics and goes on painting', async () => {
+live('switching from the Paint Orb to the Impasto Orb replaces the watercolor without changing the center', async () => {
   await using gallery = await openCell('fast', {
     fade: 'false',
-    mood: 'paint',
+    frozen_time: '2',
+    width: '640',
+    height: '384',
+  })
+  const {page} = gallery
+  await take(page, 'plain')
+  for (const mood of ['paint', 'impasto']) {
+    await callWebmcpTool(page, 'cast_mood', {mood})
+    await waitForFrames(page, 3)
+    await take(page, mood)
+    const coverage = await difference(page, 'plain', mood)
+    expect(coverage.edge).toBeGreaterThan(0.025)
+    expect(coverage.center).toBeLessThan(0.005)
+  }
+  const switched = await difference(page, 'paint', 'impasto')
+  expect(switched.edge).toBeGreaterThan(0.025)
+}, 180_000)
+// The real output quad and capture bridge, also in Fast without antialiasing, whose pipeline is only the scene and the moods’ screens.
+live('Impasto paints only the margins of a portrait view in fast graphics and goes on painting', async () => {
+  await using gallery = await openCell('fast', {
+    fade: 'false',
+    mood: 'impasto',
     width: '384',
     height: '640',
   })
@@ -115,10 +135,10 @@ live('Atelier paints only the margins of a portrait view in fast graphics and go
   const suppressed = await difference(page, 'plain', 'suppressed')
   expect(suppressed.edge).toBeLessThan(0.005)
 }, 180_000)
-live('Atelier paints only the margins of a landscape view in heavy graphics and stands still under ?frozen_time', async () => {
+live('Impasto paints only the margins of a landscape view in heavy graphics and stands still under ?frozen_time', async () => {
   await using gallery = await openCell('heavy', {
     fade: 'false',
-    mood: 'paint',
+    mood: 'impasto',
     frozen_time: '2',
     width: '640',
     height: '384',
@@ -140,14 +160,14 @@ live('Atelier paints only the margins of a landscape view in heavy graphics and 
   const suppressed = await difference(page, 'plain', 'suppressed')
   expect(suppressed.edge).toBeLessThan(0.005)
 }, 180_000)
-live('Atelier cast by the cast_mood tool is painted stroke by stroke and dries away once it is let go of', async () => {
+live('Impasto cast by the cast_mood tool is painted stroke by stroke and dries away once it is let go of', async () => {
   await using gallery = await openCell('fast', {
     width: '640',
     height: '384',
   })
   const {page} = gallery
   await take(page, 'plain')
-  const {fade} = await callWebmcpTool(page, 'cast_mood', {mood: 'paint'}) as {fade: {
+  const {fade} = await callWebmcpTool(page, 'cast_mood', {mood: 'impasto'}) as {fade: {
     in: number
     out: number
   }}

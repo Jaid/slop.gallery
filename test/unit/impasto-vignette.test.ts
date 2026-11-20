@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {halfWidth, strokeAt, strokeEnds, strokeMargin, strokePoint, strokeRounds, strokeTaper, vignettePaints, vignetteStrokes} from '../../src/moods/paint/vignetteStrokes.ts'
+import {halfWidth, strokeAt, strokeEnds, strokeMargin, strokePoint, strokeRounds, strokeTaper, vignettePaints, vignetteStrokes} from '../../src/moods/impasto/vignetteStrokes.ts'
 
 /** the screens the vignette has to frame, by their width divided by their height: 4:3 up to 21:9 */
 const aspects = [4 / 3, 16 / 10, 16 / 9, 21 / 9]
@@ -17,7 +17,7 @@ const covered = (point: readonly [number, number], aspect: number) => vignetteSt
   }
   return false
 })
-describe('the Atelier’s vignette', () => {
+describe('the Impasto vignette', () => {
   test('the brushes lay their strokes one after another while the mood comes in, done before it shows in full', () => {
     expect(vignetteStrokes.length).toBeGreaterThan(12)
     for (const [index, stroke] of vignetteStrokes.entries()) {

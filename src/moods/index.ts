@@ -12,6 +12,7 @@ import ForgeMood from './forge/ForgeMood.ts'
 import FusionMood from './fusion/FusionMood.ts'
 import HalloweenMood from './halloween/HalloweenMood.ts'
 import HorrorMood from './horror/HorrorMood.ts'
+import ImpastoMood from './impasto/ImpastoMood.ts'
 import LobbyMood from './lobby/LobbyMood.ts'
 import LodgeMood from './lodge/LodgeMood.ts'
 import MoonfallMood from './moonfall/MoonfallMood.ts'
@@ -35,6 +36,7 @@ export const moods = {
   fusion: new FusionMood,
   halloween: new HalloweenMood,
   horror: new HorrorMood,
+  impasto: new ImpastoMood,
   lobby: new LobbyMood,
   lodge: new LodgeMood,
   moonfall: new MoonfallMood,
