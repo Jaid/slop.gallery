@@ -102,13 +102,18 @@ export default class BarbizonFrame extends PortraitFrame {
       new GiltMaterial({
         wear: 0.3,
         grime: 0.65,
+        roughness: {
+          burnished: 0.22,
+          matte: 0.34,
+        },
         relief: {
           depth: 0.006,
           height: surface => {
             const slip = band(surface, 0.034, 0.042)
             const leaves = band(surface, torus.from, torus.to)
-            const members = legible(surface, beadAndReel(repeatPhase(surface, 0.014, 0.038), slip.t), 0.005).mul(slip.inside).mul(0.0025)
-              .add(legible(surface, leafAndBerry(surface, leaves.t), 0.008).mul(leaves.inside).mul(0.005))
+            // Filter for the narrow reels and leaf ribs, which disappear into a pixel before the whole motif does.
+            const members = legible(surface, beadAndReel(repeatPhase(surface, 0.014, 0.038), slip.t), 0.002).mul(slip.inside).mul(0.002)
+              .add(legible(surface, leafAndBerry(surface, leaves.t), 0.003).mul(leaves.inside).mul(0.004))
             // The ornaments’ scrolls: ribs curling round their middles.
             const p = vec2(surface.along, surface.across)
             const curl = atan(p.y, p.x).mul(5).add(p.length().mul(160)).sin().mul(0.5).add(0.5)
