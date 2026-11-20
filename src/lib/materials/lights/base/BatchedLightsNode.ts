@@ -1,10 +1,11 @@
-import type {Light, NodeBuilder} from 'three/webgpu'
+import type {AnalyticLightNode, Light, LightingNode, NodeBuilder} from 'three/webgpu'
 
 import {Lighting, LightsNode, NodeUtils, PointLight} from 'three/webgpu'
 
 import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
 
 import PointLightsNode from './PointLightsNode.ts'
+import ShiningLightNode from './ShiningLightNode.ts'
 
 type Batch = 'point'
 
@@ -17,9 +18,27 @@ const batchOf = (light: Light): Batch | undefined => {
   }
   return light.constructor === PointLight ? 'point' : undefined
 }
+/** Whether a light node shades a point or spot light that casts a shadow, whose code costs the most per fragment and which may stay dark for long, like an idle slot of the shadow pool. */
+const isDimmable = (node: LightingNode): node is AnalyticLightNode<Light> => {
+  const {light} = node as Partial<AnalyticLightNode<Light & {
+    isPointLight?: boolean
+    isSpotLight?: boolean
+  }>>
+  return Boolean(light?.castShadow && (light.isPointLight || light.isSpotLight))
+}
+/** one wrapper per light node, so that every material shares its build */
+const shining = new WeakMap<AnalyticLightNode<Light>, ShiningLightNode>
+const shine = (node: AnalyticLightNode<Light>) => {
+  let wrapper = shining.get(node)
+  if (!wrapper) {
+    wrapper = new ShiningLightNode(node)
+    shining.set(node, wrapper)
+  }
+  return wrapper
+}
 
 /**
- * Lights materials like {@link LightsNode}, but shades shadowless point lights in one loop through {@link PointLightsNode}.
+ * Lights materials like {@link LightsNode}, but shades shadowless point lights in one loop through {@link PointLightsNode}, and skips the lighting and shadows of dark shadow-casting point and spot lights through {@link ShiningLightNode}.
  *
  * Batched lights also stay out of the cache key: the batches read their members every frame, so lights can move, mount and unmount without rebuilding any material, as long as their batch already exists.
  */
@@ -63,7 +82,9 @@ export default class BatchedLightsNode extends LightsNode {
   }
 
   override setupLightsNode(builder: NodeBuilder) {
-    return [...super.setupLightsNode(builder), ...this.batches.values()]
+    const nodes = super.setupLightsNode(builder)
+    // The dimmable lights come last, so what every light needs, like the view direction, is computed before their branches and reused inside: a value a branch computes first only lives inside it, and the code after it computes it again.
+    return [...nodes.filter(node => !isDimmable(node)), ...this.batches.values(), ...nodes.filter(isDimmable).map(shine)]
   }
 
   private *membersOf(batch: Batch) {
