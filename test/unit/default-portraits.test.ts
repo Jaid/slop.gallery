@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import defaultPortraits, {hangDefaultWorks, readPortraitSet} from '../../src/lib/gallery/defaultPortraits.ts'
+import defaultPortraits, {hangDefaultWorks, readPortraitCount, readPortraitSet} from '../../src/lib/gallery/defaultPortraits.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import sandbox from '../../src/worlds/sandbox/index.ts'
@@ -44,6 +44,31 @@ test('with fewer slots than works, as in the Sandbox, the seed draws which works
 })
 test('a work whose ratio has no slot at all is an error', () => {
   expect(() => hangDefaultWorks(slots.filter(slot => slot.ratio !== '1:1'), artworks, 1)).toThrow(/No 1:1 portrait slot/u)
+})
+test('?portraits caps the selection or repeats works in spare matching slots', () => {
+  const compatible = slots.filter(slot => artworks.some(work => work.ratio === slot.ratio))
+  for (const count of [0, 4, artworks.length + 1, compatible.length + 100]) {
+    const portraits = hangDefaultWorks(slots, artworks, 7, readPortraitCount(`?portraits=${count}`))
+    expect(portraits).toHaveLength(Math.min(count, compatible.length))
+    const sources = new Set(portraits.map(portrait => portrait.source))
+    const ids = new Set(portraits.map(portrait => portrait.id))
+    expect(sources.size).toBe(Math.min(count, artworks.length))
+    expect(ids.size).toBe(portraits.length)
+    const occupied = portraits.map(portrait => {
+      const slot = compatible.find(candidate => candidate.wallId === portrait.wallId && candidate.position.every((value, axis) => value === portrait.position[axis]))!
+      expect(slot.ratio).toBe(artworks.find(work => work.source === portrait.source)!.ratio)
+      return slot.id
+    })
+    const spots = new Set(occupied)
+    expect(spots.size).toBe(portraits.length)
+    expect(hangDefaultWorks(slots, artworks, 7, count)).toEqual(portraits)
+  }
+  expect(hangDefaultWorks([], [], 7, 100)).toEqual([])
+})
+test('only a nonnegative integer overrides the default portrait count', () => {
+  for (const search of ['', '?portraits', '?portraits=-1', '?portraits=2.5', '?portraits=false']) {
+    expect(readPortraitCount(search)).toBeUndefined()
+  }
 })
 test('?portrait_set is classic unless it is false', () => {
   for (const search of ['', '?portrait_set', '?portrait_set=classic', '?portrait_set=modern']) {

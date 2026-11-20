@@ -15,7 +15,7 @@ import {readDevelopmentMode} from './developmentMode.ts'
 import {readSeedOverride} from './environmentSeed.ts'
 import {readFade} from './fade.ts'
 import {readFrozenTime} from './frozenTime.ts'
-import {readPortraitSet} from './gallery/defaultPortraits.ts'
+import {readPortraitCount, readPortraitSet} from './gallery/defaultPortraits.ts'
 import {readShowFence} from './gallery/fenceDisplay.ts'
 import {readFlying} from './gallery/flyMode.ts'
 import {readDownload, readWebhook, readWebhookEndpoint} from './gallery/fusion/resultSharing.ts'
@@ -82,6 +82,7 @@ const readers: Record<string, Reader> = {
   near: readNear,
   pmrem: readPmrem,
   portrait_set: readPortraitSet,
+  portraits: readPortraitCount,
   ratio: readRatio,
   room: readRoom,
   room_announcements: readRoomAnnouncements,
