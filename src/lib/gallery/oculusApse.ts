@@ -12,7 +12,7 @@ type Point = readonly [x: number, z: number]
 const {oculus} = lowerGallery
 const [centerX, centerZ] = oculus.center
 const halfWidth = oculus.size[0] / 2
-/** where the side walls end and the apse begins, the line of the Oculus’ former north wall */
+/** where the side walls end and the apse begins, the north side of the Oculus’ rectangle */
 const northZ = centerZ - oculus.size[1] / 2
 /** how far the apse reaches north past the side walls’ ends, along its middle */
 const depth = 5

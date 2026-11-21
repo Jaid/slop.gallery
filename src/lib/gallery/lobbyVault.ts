@@ -93,7 +93,7 @@ export type VaultRib = {
 /** Every transverse rib, north to south: the wall arches at both ends and one over each pilaster. */
 export function vaultRibs(): Array<VaultRib> {
   const {bay, rib} = lobbyVault
-  // Centered on the room, on the 4 m grid of its floor tiles and the old ceiling’s beams.
+  // Centered on the room, on the 4 m grid of its floor tiles.
   const count = Math.floor((halfLength - rib.width) / bay)
   const inner = Array.from({length: count * 2 + 1}, (_, i) => (i - count) * bay)
   return [

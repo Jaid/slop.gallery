@@ -39,7 +39,7 @@ afterAll(() => {
 })
 test('the knight spur meets the golf passage at both jambs and every point between, with no ledge or slit', () => {
   expect(lodgeSpur.floorInlet).toBeDefined()
-  // This fails by 16 cm at either end with the old level mouth; checking only the middle hid the defect.
+  // From jamb to jamb, not only in the middle
   for (let across = -half; across <= half; across += 0.013) {
     const px = x + across
     expect(lodgeSpur.floorAt(px, z)).toBeCloseTo(bastionLink.floorAt(px, z)!, 9)

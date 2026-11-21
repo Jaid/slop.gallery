@@ -130,9 +130,9 @@ describe('the Bastion’s route round the Oculus', () => {
     }
     for (const [ramp, from, to] of [[run.ramp!, bastionMouth.floorY, platformY], [climb.ramp!, platformY, lodge.floorY]] as const) {
       expect([ramp.startY, ramp.endY]).toEqual([from, to])
-      // longer than the straight ramps were, of 8.2 m and 3.9 m
+      // longer than a straight ramp of 1 in 4
       expect(ramp.length).toBeGreaterThan(Math.abs(to - from) / Math.tan(14.3 * Math.PI / 180))
-      // all but level where it starts and where it ends, and halfway no steeper than 1 in 4, like the straight ramps were all along
+      // all but level where it starts and where it ends, and halfway no steeper than 1 in 4
       expect(Math.abs(slope(ramp.from + 0.02))).toBeLessThan(0.25 / 10)
       expect(Math.abs(slope(ramp.from + ramp.length - 0.02))).toBeLessThan(0.25 / 10)
       expect(Math.abs(to - from) * easedRampGradient(ramp.length / 2, ramp.length)).toBeCloseTo(0.25, 9)
@@ -321,7 +321,7 @@ describe('the Bastion’s route round the Oculus', () => {
     expect(east.baseboardProfile).toBeDefined()
     expect(north.baseboardProfile).toBeUndefined()
     expect(chamfer.baseboardProfile).toBeUndefined()
-    // never narrower than before, and widest in the corner behind the apse’s east shoulder
+    // never narrower than the passage, and widest in the corner behind the apse’s east shoulder
     const reaches = stations.map(station => bastionCurve.reach(station, 1))
     expect(Math.min(...reaches)).toBeGreaterThanOrEqual(bastionCurve.width / 2 - 1e-9)
     expect(Math.max(...reaches)).toBeGreaterThan(5.5)

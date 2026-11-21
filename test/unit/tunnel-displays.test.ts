@@ -460,7 +460,7 @@ describe('the east staff route bows away from the Exhibition', () => {
       for (const {polygon} of display.stairway.levels) {
         const [cx, cz] = polygonCentroid(polygon)
         expect(insidePolygon(polygon, cx, cz)).toBe(true)
-        // Every corner and every point just inside an edge must belong to its convex piece. Simply stretching the old pentagonal landing fails this.
+        // Every corner and every point just inside an edge must belong to its convex piece.
         for (const [i, [ax, az]] of polygon.entries()) {
           const [bx, bz] = polygon[(i + 1) % polygon.length]
           expect(insidePolygon(polygon, ax, az)).toBe(true)

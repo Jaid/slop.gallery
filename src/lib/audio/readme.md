@@ -32,7 +32,7 @@ The reusable `ego-player` package emits `onLand` and `onZoomTransition` but cont
 
 The pause menu of the Escape key freezes the world (see “Frozen world” in the rendering readme), and its sound with it: `SoundEngine` suspends its audio context while `worldClock` is frozen and resumes it as the world goes on, so every sound, bed and tail stops where it is and plays on from there, still in step with what the world shows, as everything schedules on the context’s own clock. `attachNarration` pauses the narrator meanwhile (`Narrator.pause()`), which holds recordings mid-word along with the silences around them and restarts native speech at the last word it reported. Sounds asked for during the pause, like an imported work’s arrival, play once the world goes on, and switching the audio in the menu takes effect at once then, without a fade. A context that was never let to sound stays as it is, and `SoundEngine.resume()` during a pause only takes effect afterward.
 
-That menu opens in silence, since `SFX-42` would only sound after it closed again; resuming plays `SFX-43` as before. The menu of a lost focus, like the one the Windows key or another tab brings up, leaves the world and all of its sound running and plays both.
+That menu opens in silence, since `SFX-42` would only sound after it closed again; resuming plays `SFX-43`. The menu of a lost focus, like the one the Windows key or another tab brings up, leaves the world and all of its sound running and plays both.
 
 ## Mood transformers and room acoustics
 
@@ -68,7 +68,7 @@ Every work hanging on its wall, rehung by the player or dropped onto it as an im
 
 Timings come from three places:
 
-- Generated narrations (`PortraitNarration`) go through `NarrationAligner` right after the TTS: OpenRouter’s `/audio/transcriptions` with word timestamps (`?stt_model`, `x-ai/grok-stt-2.0` by default, the successor of `x-ai/grok-stt-1.0`, which was the most exact in hive’s 2026-11-01 comparison of 29 systems and is no longer served by OpenRouter), mapped onto the text by `timingFromWords`. It runs inside the speech cache, so eager generation and replays get it for free; it gives up after 8 s, and a failed alignment plays the audio anyway.
+- Generated narrations (`PortraitNarration`) go through `NarrationAligner` right after the TTS: OpenRouter’s `/audio/transcriptions` with word timestamps (`?stt_model`, `x-ai/grok-stt-2.0` by default), mapped onto the text by `timingFromWords`. It runs inside the speech cache, so eager generation and replays get it for free; it gives up after 8 s, and a failed alignment plays the audio anyway.
 - Bundled narrations carry letter timings measured offline by Meta’s MMS forced aligner: `bun scripts/alignNarrations.ts` (needs ffmpeg and uv; `scripts/lib/mmsAlign.py` brings its own CPU-only Torch) writes `src/worlds/gallery/narrationTimings.json`. Rerun it when a bundled narration or its text changes; `test/unit/narration-timings.test.ts` notices stale entries.
 - Audio without a timing, including every generated narration under `?stt_model=false`, is paced by `estimateTiming` over its duration.
 

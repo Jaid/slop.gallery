@@ -283,7 +283,7 @@ test('portal boxes contain the entire opening, including the bulge of curved wal
   }
 })
 test('crossing the Forge–Bastion threshold keeps both rooms visible in either direction', () => {
-  // Sweep across the formerly missing strip, across the doorway and at crouching, standing and flying eye heights.
+  // Sweep across the strip between the rooms, across the doorway and at crouching, standing and flying eye heights.
   for (let step = 0; step <= 24; step++) {
     for (const z of [-36.5, -35, -33.5]) {
       for (const y of [0.6, 1.62, 2.2]) {

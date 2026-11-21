@@ -28,17 +28,17 @@ const lodge = {
 const westX = lodge.center[0] - lodge.size[0] / 2
 const eastX = lodge.center[0] + lodge.size[0] / 2
 const southZ = lodge.center[1] + lodge.size[1] / 2
-/** how far the bay reaches north past the old north wall’s line */
+/** how far the bay reaches north past the room’s rectangle */
 const bayDepth = 2.74
 /**
- * The bay that takes the place of the Lodge’s north wall, from the corner of its west wall to the one beside the tunnel’s doorway: half an octagon, with walls at 45° out of both corners and a back wall parallel to the old one, which the Corridor leaves through.
+ * The bay that takes the place of the Lodge’s north wall, from the corner of its west wall to the one beside the tunnel’s doorway: half an octagon, with walls at 45° out of both corners and a back wall parallel to the rectangle’s north side, which the Corridor leaves through.
  *
  * Its corners are where the planes of its walls meet, from west to east, so each wall faces into the room from one corner to the next.
  */
 export const lodgeBay = {
   depth: bayDepth,
   corners: [[westX, northZ], [westX + bayDepth, northZ - bayDepth], [eastX - bayDepth, northZ - bayDepth], [eastX, northZ]],
-  /** the box around the bay, from the old north wall’s line to the back wall */
+  /** the box around the bay, from the room’s rectangle to the back wall */
   bounds: {
     center: [lodge.center[0], northZ - bayDepth / 2],
     size: [lodge.size[0], bayDepth],
@@ -51,7 +51,7 @@ export const lodgeBay = {
 /** The Lodge’s floor plan along the planes of its walls, bay included, around from the south-west corner. It is convex. */
 export const lodgeOutline: ReadonlyArray<readonly [number, number]> = [[westX, southZ], ...lodgeBay.corners, [eastX, southZ]]
 
-/** The Lodge’s floor height inside its bay, north of the old north wall’s line and within the bay’s walls. */
+/** The Lodge’s floor height inside its bay, north of the room’s rectangle and within the bay’s walls. */
 export function lodgeBayFloor(x: number, z: number) {
   const depth = northZ - z
   return depth >= -1e-6 && depth <= bayDepth + 1e-6 && x >= westX + depth - 1e-6 && x <= eastX - depth + 1e-6 ? lodge.floorY : undefined
