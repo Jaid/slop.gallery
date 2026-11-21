@@ -75,7 +75,7 @@ const traceSpans = (requests: ReadonlyArray<RequestRecord>) => requests.filter(r
 const initial: GalleryState = {
   portraits: [{hung: true}],
   room: 'lobby',
-  whereabouts: ['lobby', 'lobby_north'],
+  whereabouts: ['lobby', 'lobby-north'],
   ready: false,
   locked: false,
   held: null,
@@ -178,7 +178,7 @@ test('gallery adapters record bounded state and lifecycle data without private g
   roomChangeDetails.current = (from, to) => ({'lights.enabled': `from ${from.join('+')} to ${to.join('+')}`})
   store.setState({
     room: 'sienna',
-    whereabouts: ['sienna', 'sienna_landing'],
+    whereabouts: ['sienna', 'sienna-landing'],
     ready: true,
   })
   roomChangeDetails.current = () => ({})
@@ -189,7 +189,7 @@ test('gallery adapters record bounded state and lifecycle data without private g
   await telemetry.flush()
   const records = requests.map(request => request.body).join('\n')
   expect(records).toContain('gallery.room.changed')
-  expect(records).toContain('from lobby+lobby_north to sienna+sienna_landing')
+  expect(records).toContain('from lobby+lobby-north to sienna+sienna-landing')
   expect(records).toContain('gallery.fusion.requested')
   expect(records).not.toContain('secret-key')
   expect(records).not.toContain('private artwork')

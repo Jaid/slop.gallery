@@ -12,6 +12,7 @@ import Room from '../base/Room.ts'
 import chunkBoxes from '../lib/chunkBoxes.ts'
 import footprint from '../lib/footprint.ts'
 import cameras from './cameras.ts'
+import fences from './fences.ts'
 import lamps from './lamps.ts'
 import map from './map.svg?raw'
 import spawns from './spawns.ts'
@@ -43,6 +44,7 @@ export default class Bastion extends Room {
       mood: 'bastion',
       frame: ['strapwork', 'oak'],
       cameras,
+      fences,
       spawns,
       lamps,
       skybox: 'sky',

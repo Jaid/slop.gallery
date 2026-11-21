@@ -364,7 +364,7 @@ test('every sight is a seat or a spot in a room of the gallery, seen from a fenc
     // A seat and the furniture it is come together.
     expect(Boolean(furniture)).toBe(Boolean(seat))
   }
-  expect(sights.map(({fence}) => fence)).toEqual(['knight_alley', 'corridor_window', 'salon', 'oculus', 'forge', 'bastion_gate'])
+  expect(sights.map(({fence}) => fence)).toEqual(['bastion-knight_alley', 'corridor-window', 'salon', 'oculus', 'forge', 'bastion-gate'])
   // Each piece of furniture is the seat of one sight at most, and only the Exhibition’s floor slopes under him.
   const bodies = sights.flatMap(({furniture}) => furniture?.body ?? [])
   expect(bodies).toEqual([...new Set(bodies)])
@@ -380,7 +380,7 @@ test('his armchair stands in front of the Lodge’s east window, its back to it,
   expect(Math.sin(armchair.yaw)).toBeLessThan(-0.7)
   // A player standing in the middle of the alley in front of the window looks through it, over its sill, at the crown of his hat and the middle of his head.
   const eye = [lodgeSpur.route.start[0], lodge.floorY + 1.6, lodgeEastWindow.z] as const
-  expect(slopGallery.geofences.getMatches([eye[0], eye[1] - 0.7, eye[2]])).toContain('knight_alley')
+  expect(slopGallery.geofences.getMatches([eye[0], eye[1] - 0.7, eye[2]])).toContain('bastion-knight_alley')
   for (const height of [seatHeight + SloperatorGeometry.height - 0.02, seatHeight + SloperatorGeometry.height - 0.22]) {
     const target = [x, lodge.floorY + height, z] as const
     const share = (lodgeEastWindow.x - eye[0]) / (target[0] - eye[0])
@@ -410,7 +410,7 @@ test('his other armchair stands in front of the Lodge’s west window, its back 
   // From anywhere along the hall abreast of the window, a player looks through its glass, over the far end of its niche’s sill, at the crown of his hat and the middle of his head.
   for (const eyeZ of [lodgeWindow.z - lodgeWindow.width / 2, lodgeWindow.z, lodgeWindow.z + lodgeWindow.width / 2]) {
     const eye = [corridor.center[0], lodge.floorY + 1.6, eyeZ] as const
-    expect(slopGallery.geofences.getMatches([eye[0], eye[1] - 0.7, eye[2]])).toEqual(['corridor', 'corridor_window'])
+    expect(slopGallery.geofences.getMatches([eye[0], eye[1] - 0.7, eye[2]])).toEqual(['corridor', 'corridor-window'])
     for (const height of [seatHeight + SloperatorGeometry.height - 0.02, seatHeight + SloperatorGeometry.height - 0.22]) {
       const target = [x, lodge.floorY + height, z] as const
       for (const planeX of [lodgeWindow.tunnelX, lodgeWindow.roomX]) {
@@ -508,7 +508,7 @@ test('in the Exhibition he stands on its sloping floor, looking through the east
   const platformY = oculusPlatform.position[1] + oculusPlatform.size[1] / 2
   const [eyeX, eyeZ] = apseOpeningPoint(window, 1.2)
   const eye: Vec3 = [eyeX, platformY + 1.6, eyeZ]
-  expect(slopGallery.geofences.getMatches([eye[0], eye[1] - 0.7, eye[2]])).toEqual(['bastion', 'bastion_gate'])
+  expect(slopGallery.geofences.getMatches([eye[0], eye[1] - 0.7, eye[2]])).toEqual(['bastion', 'bastion-gate'])
   const {tunnel} = lowerGallery
   for (const height of [figureBounds().max.y - 0.02, 1.5, 1.2]) {
     const target: Vec3 = [x, y + height, z]
@@ -544,7 +544,7 @@ test('in the Exhibition he stands on its sloping floor, looking through the east
 test('aiming at him changes nothing until the player leaves the sight’s fence, where he then leaves a Slop where he was and never returns', () => {
   startGeofences(places.link)
   probeGeofences(places.alley, still)
-  expect(useGeofences.getState().fences).toContain('knight_alley')
+  expect(useGeofences.getState().fences).toContain('bastion-knight_alley')
   place('lodge_east_armchair')
   // Leaving without having caught sight of him leaves no Slop, and forgets where he was placed.
   probeGeofences(places.link, still)

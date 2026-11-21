@@ -64,7 +64,7 @@ export default abstract class World<Kind extends Room = Room> {
   /** the id of the room visitors start in, at its default spawn */
   abstract readonly defaultRoom: Kind['id']
   readonly enterLabel: string
-  /** every fence of the world in world meters by its id, in the order they are checked: the rooms’ by room id, in the order of {@link rooms}, then the world’s other fences, which mark places where something happens, whatever room they lie in */
+  /** every fence of the world in world meters by its id, in the order they are checked: the rooms’ by room id, in the order of {@link rooms}, then the rooms’ other fences, which mark places in them where something happens, like their parts, by their global ids, room by room */
   readonly geofences: Geofences<string, Geofence>
   abstract readonly id: WorldId
   /** where the camera circles behind the first menu until the player first enters, there and then taking over the camera’s pose, or undefined for none, the default */
@@ -90,8 +90,7 @@ export default abstract class World<Kind extends Room = Room> {
   private roomFences: ReadonlyMap<string, ReadonlyArray<string>> | undefined = undefined
   private wallIndex: ReadonlyMap<string, Wall> | undefined = undefined
 
-  /** `fences` are the world’s fences beside its rooms’, by their ids in snake_case, in world meters; none by default. */
-  constructor({enterLabel, tagline, title, wallpaper}: WorldInfo, placements: ReadonlyArray<RoomPlacement<Kind>>, fences: Readonly<Record<string, Geofence>> = {}) {
+  constructor({enterLabel, tagline, title, wallpaper}: WorldInfo, placements: ReadonlyArray<RoomPlacement<Kind>>) {
     this.enterLabel = enterLabel
     this.tagline = tagline
     this.title = title
@@ -101,8 +100,9 @@ export default abstract class World<Kind extends Room = Room> {
     if (this.byId.size !== this.rooms.length) {
       throw new Error('Every room of a world needs an id of its own.')
     }
-    this.geofences = new Geofences<string, Geofence>([...this.rooms.map(room => [room.id, room.fence] as const), ...Object.entries(fences)])
-    if (this.geofences.size !== this.rooms.length + Object.keys(fences).length) {
+    const fences = this.rooms.flatMap(room => room.fences())
+    this.geofences = new Geofences<string, Geofence>([...this.rooms.map(room => [room.id, room.fence] as const), ...fences])
+    if (this.geofences.size !== this.rooms.length + fences.length) {
       throw new Error('Every fence of a world needs an id of its own, which is no room’s.')
     }
     this.walls = miterCorners(this.rooms.flatMap(room => room.walls()))

@@ -303,7 +303,7 @@ test('show_fence selects all, one or no fences and preserves the selection on er
     expect(tool.annotations?.readOnlyHint).toBe(false)
     expect(execute({})).toEqual({fence: true})
     expect(useFenceDisplay.getState().fence).toBe(true)
-    expect(execute({fence: 'lobby_north'})).toEqual({fence: 'lobby_north'})
+    expect(execute({fence: 'lobby-north'})).toEqual({fence: 'lobby-north'})
     expect(execute({fence: '{lobby,lodge*}'})).toEqual({fence: '{lobby,lodge*}'})
     for (const input of [{fence: 'unknown*'}, {fence: ''}, {fence: 7}, {unknown: true}]) {
       expect(() => execute(input)).toThrow()

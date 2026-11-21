@@ -12,6 +12,7 @@ import floorBox from '../lib/floorBox.ts'
 import footprint from '../lib/footprint.ts'
 import ambienceEmitters from './ambienceEmitters.ts'
 import cameras from './cameras.ts'
+import fences from './fences.ts'
 import lamps from './lamps.ts'
 import map from './map.svg?raw'
 import slots from './slots.ts'
@@ -43,6 +44,7 @@ export default class Lobby extends Room {
       frame: ['barbizon'],
       portraitArea: 30_000,
       cameras,
+      fences,
       spawns,
       ambience: ambienceEmitters,
       lamps,

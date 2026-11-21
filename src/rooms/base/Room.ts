@@ -67,6 +67,8 @@ export type RoomOptions = {
   ambience?: Record<string, RoomAmbience>
   /** the camera bookmarks by their id within the room, in snake_case */
   cameras?: Record<string, RoomCamera>
+  /** the room’s other fences by their id within the room, in snake_case, relative to the room’s origin: places in the room where something happens or something else is on, like its parts, which the player is in while one of them holds the player’s place */
+  fences?: Record<string, Geofence>
   /** the frame the works wear that hang in the room’s slots or arrive in the room, or several, of which every work draws its own, but the first in the default environment, the default frame if left out */
   frame?: FrameChoice
   /** the lamps by their id within the room, in snake_case, positioned relative to the room’s origin */
@@ -151,6 +153,8 @@ export default abstract class Room {
    * Worlds check the fences of their rooms in order and take the first one that matches, so a fence may overlap those of the rooms checked before it.
    */
   abstract readonly fence: Geofence
+  /** the room’s other fences by their id within the room, like its parts, relative to its origin */
+  readonly fences: ReadonlyMap<string, Geofence>
   /** the frame the works wear that hang in the room’s slots or arrive in the room, or several, of which every work draws its own, or undefined for the default frame */
   readonly frame: FrameChoice | undefined
   /** how high the ceiling of a room around a rectangular floor plan hangs over its floor, the walls stopping 30 cm short of it */
@@ -180,7 +184,7 @@ export default abstract class Room {
   readonly volumetricSun: number
   readonly walls: ReadonlyMap<string, RoomWall>
 
-  constructor({title, mood, lamps = {}, ambience = {}, cameras = {}, frame, map, upperMap, portraitArea = defaultPortraitArea, slots = {}, spawns = {}, walls = {}, skybox, sunlit = true, sunTight = false, volumetricSun = 1}: RoomOptions) {
+  constructor({title, mood, lamps = {}, ambience = {}, cameras = {}, fences = {}, frame, map, upperMap, portraitArea = defaultPortraitArea, slots = {}, spawns = {}, walls = {}, skybox, sunlit = true, sunTight = false, volumetricSun = 1}: RoomOptions) {
     this.title = title
     this.mood = mood
     this.frame = frame
@@ -194,6 +198,7 @@ export default abstract class Room {
     this.ambience = new Map(Object.entries(ambience))
     this.slots = new Map(Object.entries(slots))
     this.cameras = new Map(Object.entries(cameras))
+    this.fences = new Map(Object.entries(fences))
     this.spawns = new Map(Object.entries(spawns))
     this.walls = new Map(Object.entries(walls))
     this.skybox = skybox
@@ -217,7 +222,7 @@ export default abstract class Room {
     return this.volumetricSun > 0
   }
 
-  /** The world-wide id of a lamp, ambient sound, wall, slot or bookmark of the room: the room’s id and the id within the room, joined by a hyphen, or just the room’s id for the empty id of its default. */
+  /** The world-wide id of a lamp, ambient sound, fence, wall, slot or bookmark of the room: the room’s id and the id within the room, joined by a hyphen, or just the room’s id for the empty id of its default. */
   globalId(id: string) {
     return id ? `${this.id}-${id}` : this.id
   }

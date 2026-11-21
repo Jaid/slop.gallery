@@ -59,64 +59,64 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
   expect(boxes('lobby').map(box => createBox(box).constructor)).toEqual([SkyBox])
   expect(boxes('bastion').every(box => 'y' in box && box.y < box.y2)).toBe(true)
   // Its other fences: the Lobby’s parts from the slab up like the Lobby, the stairway over Moonfall’s ceiling and, beyond its hall, at every height, the parts of the Bastion in the Bastion’s own boxes around them, and the Corridor’s hall abreast of the Lodge’s window between heights
-  expect(dump.slice(slopGallery.rooms.length).map(({id}) => id)).toEqual(['lobby_north', 'lobby_middle', 'lobby_south', 'moonfall_stairs', 'knight_alley', 'bastion_cistern', 'bastion_gate', 'corridor_window'])
-  expect(boxes('lobby_north')).toEqual([{
+  expect(dump.slice(slopGallery.rooms.length).map(({id}) => id)).toEqual(['lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'corridor-window'])
+  expect(boxes('lobby-north')).toEqual([{
     x: -8,
     x2: 8,
     z: -32,
-    z2: -16,
+    z2: -20,
     floor: -0.2,
   }])
-  expect(boxes('lobby_middle')).toEqual([{
+  expect(boxes('lobby-middle')).toEqual([{
     x: -8,
     x2: 8,
-    z: -16,
-    z2: -10,
+    z: -20,
+    z2: -1.5,
     floor: -0.2,
   }])
-  expect(boxes('lobby_south')).toEqual([{
+  expect(boxes('lobby-south')).toEqual([{
     x: -8,
     x2: 8,
-    z: -10,
+    z: -1.5,
     z2: 8,
     floor: -0.2,
   }])
-  expect(boxes('moonfall_stairs').map(box => createBox(box).constructor)).toEqual([SkyBox, BeamBox])
-  expect(boxes('knight_alley')).toHaveLength(2)
-  expect(boxes('bastion_cistern')).toHaveLength(8)
-  for (const box of [...boxes('knight_alley'), ...boxes('bastion_cistern')]) {
+  expect(boxes('moonfall-stairs').map(box => createBox(box).constructor)).toEqual([SkyBox, BeamBox])
+  expect(boxes('bastion-knight_alley')).toHaveLength(2)
+  expect(boxes('bastion-cistern')).toHaveLength(8)
+  for (const box of [...boxes('bastion-knight_alley'), ...boxes('bastion-cistern')]) {
     expect(boxes('bastion')).toContainEqual(box)
   }
-  expect(boxes('bastion_gate').length).toBeGreaterThan(10)
-  expect(boxes('bastion_gate').every(box => 'y' in box && box.y < box.y2)).toBe(true)
-  expect(boxes('corridor_window')).toHaveLength(1)
-  expect(boxes('corridor_window').every(box => 'y' in box && box.y < box.y2)).toBe(true)
+  expect(boxes('bastion-gate').length).toBeGreaterThan(10)
+  expect(boxes('bastion-gate').every(box => 'y' in box && box.y < box.y2)).toBe(true)
+  expect(boxes('corridor-window')).toHaveLength(1)
+  expect(boxes('corridor-window').every(box => 'y' in box && box.y < box.y2)).toBe(true)
 })
 test('the fences at a position are all that hold it, the rooms’ first, by default the player’s place', () => {
   const [x, y, z] = slopGallery.spawn.position
   // in the Lobby’s north part, where visitors arrive
-  expect(getGeofences()).toEqual(['lobby', 'lobby_north'])
-  expect(getGeofences({})).toEqual(['lobby', 'lobby_north'])
-  expect(getGeofences(toPosition([x, y + 1, z]))).toEqual(['lobby', 'lobby_north'])
+  expect(getGeofences()).toEqual(['lobby', 'lobby-north'])
+  expect(getGeofences({})).toEqual(['lobby', 'lobby-north'])
+  expect(getGeofences(toPosition([x, y + 1, z]))).toEqual(['lobby', 'lobby-north'])
   // on the plane of the wall between the Lobby and the Vesper, which the fences of both end at, in the Lobby’s south part
-  expect(getGeofences(toPosition([-8, 1.5, 0]))).toEqual(['lobby', 'vesper', 'lobby_south'])
+  expect(getGeofences(toPosition([-8, 1.5, 0]))).toEqual(['lobby', 'vesper', 'lobby-south'])
   // on the lines between the Lobby’s parts, and beside its fountain between them
-  expect(getGeofences(toPosition([0, 1.5, -16]))).toEqual(['lobby', 'lobby_north', 'lobby_middle'])
-  expect(getGeofences(toPosition([3, 1.5, -12]))).toEqual(['lobby', 'lobby_middle'])
-  expect(getGeofences(toPosition([0, 1.5, -10]))).toEqual(['lobby', 'lobby_middle', 'lobby_south'])
+  expect(getGeofences(toPosition([0, 1.5, -20]))).toEqual(['lobby', 'lobby-north', 'lobby-middle'])
+  expect(getGeofences(toPosition([3, 1.5, -12]))).toEqual(['lobby', 'lobby-middle'])
+  expect(getGeofences(toPosition([0, 1.5, -1.5]))).toEqual(['lobby', 'lobby-middle', 'lobby-south'])
   // under the Lobby’s glazed floor
   expect(getGeofences(toPosition([0, -5, -27]))).toEqual(['oculus'])
   // in the knight’s alley, the Bastion’s blind branch beside the Lodge, which a fence of its own marks
-  expect(getGeofences(toPosition([-16.93, -4.1, -33]))).toEqual(['bastion', 'knight_alley'])
+  expect(getGeofences(toPosition([-16.93, -4.1, -33]))).toEqual(['bastion', 'bastion-knight_alley'])
   // in the Bastion’s cistern, and on the turn of the stairway down to Moonfall
-  expect(getGeofences(toPosition([-18.15, 1.8, -41]))).toEqual(['bastion', 'bastion_cistern'])
-  expect(getGeofences(toPosition([18.5, -3.1, 15]))).toEqual(['moonfall', 'moonfall_stairs'])
+  expect(getGeofences(toPosition([-18.15, 1.8, -41]))).toEqual(['bastion', 'bastion-cistern'])
+  expect(getGeofences(toPosition([18.5, -3.1, 15]))).toEqual(['moonfall', 'moonfall-stairs'])
   expect(getGeofences(toPosition([900, 900, 900]))).toEqual([])
   bodyPose.place = [14, 1.5, 0]
   expect(getGeofences()).toEqual(['banquet'])
   bodyPose.place = [900, 900, 900]
   expect(getGeofences()).toEqual([])
-  for (const position of [[x, y + 1, z], [-8, 1.5, 0], [-20, 0, -32], [0, -5, -27], [-16.93, -4.1, -33], [-18.15, 1.8, -41], [18.5, -3.1, 15], [0, 1.5, -16], [3, 1.5, -12], [0, 1.5, -10], [900, 900, 900]] satisfies Array<Vec3>) {
+  for (const position of [[x, y + 1, z], [-8, 1.5, 0], [-20, 0, -32], [0, -5, -27], [-16.93, -4.1, -33], [-18.15, 1.8, -41], [18.5, -3.1, 15], [0, 1.5, -20], [3, 1.5, -12], [0, 1.5, -1.5], [900, 900, 900]] satisfies Array<Vec3>) {
     expect(getGeofences(toPosition(position))).toEqual(slopGallery.geofences.getMatches(position))
   }
 })

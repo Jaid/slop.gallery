@@ -48,7 +48,7 @@ test('a lamp shines in its own room and in the fences that keep it', () => {
   expect(slopGallery.lampFences(lamp('exhibition-west_stairway_door')).toSorted()).toEqual(['exhibition', 'lobby', 'oculus'])
   // The lamp at the tunnel’s low north end, the one that casts shadows up through the Lobby’s glazed floor, only shines for the part of the Lobby around that floor.
   expect(lamp('exhibition-tunnel_north').shadow).toBe(true)
-  expect(slopGallery.lampFences(lamp('exhibition-tunnel_north')).toSorted()).toEqual(['exhibition', 'lobby_north', 'moonfall', 'oculus'])
+  expect(slopGallery.lampFences(lamp('exhibition-tunnel_north')).toSorted()).toEqual(['exhibition', 'lobby-north', 'moonfall', 'oculus'])
   // The lantern behind the apse’s gate lights the platform through the gate and both windows beside it.
   expect(slopGallery.lampFences(lamp('bastion-lantern_north')).toSorted()).toEqual(['bastion', 'lodge', 'oculus'])
   expect(slopGallery.lampFences(lamp('corridor-lantern_landing')).toSorted()).toEqual(['corridor', 'sienna'])

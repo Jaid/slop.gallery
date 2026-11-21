@@ -2,6 +2,7 @@ import type {CameraBookmark, PortraitSlot, SpawnBookmark} from '#src/lib/gallery
 import type {Wall} from '#src/lib/placement/wallGeometry.ts'
 import type {RoomAmbience} from '#src/rooms/base/Room.ts'
 import type {Lamp, Room, RoomSpawn} from '#src/rooms/index.ts'
+import type {Geofence} from 'geofency'
 import type {Vec3} from 'math'
 
 import {Vector3} from 'three/webgpu'
@@ -134,6 +135,11 @@ export default class PlacedRoom<Kind extends Room = Room> {
       id: this.room.globalId(id),
       position: this.toWorld(camera.position),
     })).toArray()
+  }
+
+  /** The room’s other fences, like its parts, by their global ids in world meters. */
+  fences(): Array<[string, Geofence]> {
+    return this.room.fences.entries().map(([id, fence]): [string, Geofence] => [this.room.globalId(id), fence.translate(this.origin)]).toArray()
   }
 
   /** The frame the work with the id `work` wears hanging in one of the room’s slots or arriving in the room in the game of `seed`, its own roll where the room has several, or undefined for the default frame. */

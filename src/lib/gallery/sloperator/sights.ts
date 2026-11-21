@@ -113,9 +113,9 @@ const [glassX, glassZ] = tunnelDiagonalPoint(2.5, -0.3)
  */
 const places = {
   /** In the Lodge’s armchair by its east window, leaning back, his back to the window: the knight’s alley of the Bastion sees his hat and the back of his head over the window’s sill. */
-  lodge_east_armchair: lodgeArmchair(0, 'knight_alley'),
+  lodge_east_armchair: lodgeArmchair(0, 'bastion-knight_alley'),
   /** In the Lodge’s armchair by its west window, leaning back, his back to the window: the Corridor’s long hall sees his hat and the back of his head over the deep sill of the window’s niche. */
-  lodge_west_armchair: lodgeArmchair(1, 'corridor_window'),
+  lodge_west_armchair: lodgeArmchair(1, 'corridor-window'),
   /** On the south end of the bench east of the Lobby’s fountain, facing the fountain like the bench: the Salon sees him from behind and from the side, from along its glass wall onto the Lobby, through its cast panes. */
   lobby_east_bench: lobbyBench(1, -1, 'salon'),
   /** In the middle of the bench north of the Lobby’s fountain, facing the fountain like the bench: the Oculus sees his back from its platform and its apse, far off and from below, up through the glazed floor between them. */
@@ -135,7 +135,7 @@ const places = {
   },
   /** Standing in the Exhibition, looking through the glass of its east display at the first exhibit in it: the Bastion behind the Oculus’ gate sees his back through the apse’s west window, beside the tower and over the platform’s edge, the length of the Oculus away down into the tunnel. */
   exhibition_glass: {
-    fence: 'bastion_gate',
+    fence: 'bastion-gate',
     position: [glassX, tunnelFloorHeight(glassX, glassZ)!, glassZ],
     room: 'exhibition',
     slope: {

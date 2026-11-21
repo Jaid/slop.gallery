@@ -13,6 +13,7 @@ import floorBox from '../lib/floorBox.ts'
 import footprint from '../lib/footprint.ts'
 import ambienceEmitters from './ambienceEmitters.ts'
 import cameras from './cameras.ts'
+import fences from './fences.ts'
 import lamps from './lamps.ts'
 import map from './map.svg?raw'
 import spawns from './spawns.ts'
@@ -53,6 +54,7 @@ export default class Moonfall extends Room {
       frame: ['regolith', 'meteorite', 'orbit'],
       portraitArea: 60_000,
       cameras,
+      fences,
       spawns,
       ambience: ambienceEmitters,
       lamps,
