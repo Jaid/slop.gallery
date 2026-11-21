@@ -20,4 +20,13 @@ export default {
     fov: 60,
     ratio: 16 / 9,
   },
+  crater: {
+    position: [9.996, 4.38, -4.697],
+    aim: {
+      yaw: 2.0069,
+      pitch: -0.6808,
+    },
+    fov: 80,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
