@@ -9,6 +9,7 @@ import {floorChunks} from '#src/lib/gallery/floorPolygons.ts'
 import Room from '../base/Room.ts'
 import chunkBoxes from '../lib/chunkBoxes.ts'
 import footprint from '../lib/footprint.ts'
+import cameras from './cameras.ts'
 import fences from './fences.ts'
 import lamps from './lamps.ts'
 import map from './map.svg?raw'
@@ -46,6 +47,7 @@ export default class Corridor extends Room {
       title: 'Corridor',
       mood: 'corridor',
       frame: ['casing'],
+      cameras,
       fences,
       lamps,
       skybox: null,
