@@ -20,6 +20,7 @@ import pauseMenu from '../pauseMenu.ts'
 import {graphicsTuningKey, toggleGraphicsTuning} from '../rendering/customGraphics.ts'
 import {bookmarkKey, teleportToNextBookmark} from './bookmarks.ts'
 import {flyMode, flyModeKey, toggleFlyMode} from './flyMode.ts'
+import {useIntro} from './intro.ts'
 import {useGallery} from './store.ts'
 
 const {spawn: playerSpawn} = world
@@ -75,8 +76,15 @@ export function notify(notice: string) {
   noticeTimer = setTimeout(() => useGallery.setState({notice: ''}), 6500)
 }
 
+/**
+ * Lets the player into the ready world, which asks for the pointer lock, so call it from a user gesture.
+ * From the pause menu that Escape or `?paused` opened over the intro, it only gives the intro’s menu back, behind which the camera circles on from where it stood.
+ */
 export function enterGallery() {
   if (!useGallery.getState().ready) {
+    return
+  }
+  if (useIntro.getState().orbit && pauseMenu.unpause()) {
     return
   }
   galleryEvents.dispatchEvent(new Event('cancel-view'))
@@ -85,7 +93,7 @@ export function enterGallery() {
 }
 
 /**
- * Turns the menu before the game into the Escape key’s pause menu, which freezes the ready world behind it. A camera still circling on the intro’s orbit hands its pose to the player’s body in the same menu change, before the frozen world is drawn again (see `IntroCamera`).
+ * Turns the menu before the game into the Escape key’s pause menu, which freezes the ready world behind it, a camera circling on the intro’s orbit included, until {@link enterGallery} resumes.
  * The menus of a game already left, the pause menu itself and a world that hasn’t loaded stay as they are.
  */
 export function pauseGallery() {

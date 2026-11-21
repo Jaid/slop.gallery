@@ -23,7 +23,8 @@ const rightKeys = new Set(['ArrowRight', 'KeyD'])
 /**
  * Circles the camera on the world’s intro orbit while the first menu shows, one turn a minute, which way the game’s seed decides, with every sound of the world heard from it.
  * It is V-inspection’s orbit, held at the intro’s height and distance and circling on its own, with its blur of the background beyond the subject: dragging with the left mouse button anywhere but on the menu’s buttons and text or holding A and D turns it, and a few seconds after the last turn, it circles on its own again.
- * Once the player enters, or Escape jumps straight to the pause menu, the player stands with its eyes right where the camera was, looking the same way, and falls from there while the blur clears, which ends the intro. Under that pause menu, the fall and the blur wait for Resume.
+ * Once the player enters, the player stands with its eyes right where the camera was, looking the same way, and falls from there while the blur clears, which ends the intro.
+ * Under the pause menu that Escape or `?paused` opens over the first menu, the camera stands still on its orbit with the frozen world, out of the player’s reach, and circles on once the player resumes.
  *
  * Mount it after the Player: the player’s own spawn releases the camera on mounting, and the player writes the camera before this does every frame.
  */
@@ -81,9 +82,12 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
       state.dragging = false
       state.keys.clear()
     }
+    /** whether the player can turn the camera: while it circles, and not under the pause menu, whose frozen world shows nothing of it */
+    const turnable = () => fading.current === null && !isPausing(pauseMenu.getSnapshot())
     const enter = () => {
-      const menu = pauseMenu.getSnapshot()
-      if (!menu.locked && !isPausing(menu) || fading.current !== null) {
+      // Whatever the menu turns into, the player lets go of the camera.
+      stop()
+      if (!pauseMenu.getSnapshot().locked || fading.current !== null) {
         return
       }
       // The teleport releases the camera and puts the player there at once, camera included, so the view never moves.
@@ -95,10 +99,9 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
         },
       }))
       fading.current = 1
-      stop()
     }
     const down = (event: PointerEvent) => {
-      if (event.button === 0 && fading.current === null && grabsScene(event.target)) {
+      if (event.button === 0 && turnable() && grabsScene(event.target)) {
         state.dragging = true
       }
     }
@@ -120,7 +123,7 @@ export default function IntroCamera({orbit}: {orbit: IntroOrbit}) {
       }
     }
     const keyDown = (event: KeyboardEvent) => {
-      if (fading.current === null && !event.ctrlKey && !event.metaKey && !event.altKey && !isTextInput(event.target) && (leftKeys.has(event.code) || rightKeys.has(event.code))) {
+      if (turnable() && !event.ctrlKey && !event.metaKey && !event.altKey && !isTextInput(event.target) && (leftKeys.has(event.code) || rightKeys.has(event.code))) {
         state.keys.add(event.code)
       }
     }
