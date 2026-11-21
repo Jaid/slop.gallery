@@ -5,7 +5,7 @@ import type {Camera, Object3D, Renderer, Scene} from 'three/webgpu'
 import {attribute, clamp, cross, dot, length, max, min, mix, modelWorldMatrix, positionWorld, select, uniform, varying, vec4} from 'three/tsl'
 import {Color, DoubleSide, FloatType, MeshBasicNodeMaterial, NearestFilter, RenderTarget, Vector3} from 'three/webgpu'
 
-import {collectMeshPath} from './meshPath.ts'
+import {collectMeshPattern} from './meshPath.ts'
 import {cornerNames, swapTriangleGeometry} from './triangleGeometry.ts'
 import {wireframeFloodAnchors} from './wireframeFlood.ts'
 
@@ -69,8 +69,8 @@ export default class FloodTriangles {
     this.highlightMaterial.dispose()
   }
 
-  /** Draws into the renderer’s current render target. The objects at the ends of the highlight paths are drawn again on top, marked, the way the wireframe draws their lines in a pass of their own. */
-  draw(renderer: Renderer, scene: Scene, camera: Camera, origin: Vec3, highlight: Array<string> = []) {
+  /** Draws into the renderer’s current render target. The objects the highlight pattern matches are drawn again on top, marked, the way the wireframe draws their lines in a pass of their own. */
+  draw(renderer: Renderer, scene: Scene, camera: Camera, origin: Vec3, highlight?: string) {
     this.origin.fromArray(origin)
     const hidden: Array<Object3D> = []
     scene.traverseVisible(object => {
@@ -83,7 +83,7 @@ export default class FloodTriangles {
     const {background, backgroundNode, overrideMaterial} = scene
     renderer.getClearColor(this.clearColor)
     const clearAlpha = renderer.getClearAlpha()
-    const highlighted = [...new Set(highlight.flatMap(path => collectMeshPath(scene, path)))]
+    const highlighted = highlight ? collectMeshPattern(scene, highlight) : []
     const layerMasks = highlighted.map(object => object.layers.mask)
     const cameraMask = camera.layers.mask
     const restoreGeometry = swapTriangleGeometry(scene)

@@ -1,7 +1,31 @@
 import type {Object3D} from 'three/webgpu'
 
-/** A mesh path with its slash-separated segments trimmed and empty ones dropped, or undefined when nothing is left. */
-export function normalizeMeshPath(value: unknown) {
+import {Minimatch} from 'minimatch'
+
+const isScene = (object: Object3D) => Boolean((object as Object3D & {isScene?: boolean}).isScene)
+/** the matcher of the last pattern, since the wireframe looks its highlight up every frame */
+let compiled: {
+  matcher: Minimatch
+  pattern: string
+} | undefined
+/** A minimatch pattern only has to match the end of a mesh path, so a lone name matches that object wherever it is. */
+const compile = (pattern: string) => {
+  if (compiled?.pattern !== pattern) {
+    compiled = {
+      matcher: new Minimatch(`**/${pattern}`, {
+        dot: true,
+        nocomment: true,
+        nonegate: true,
+      }),
+      pattern,
+    }
+  }
+  return compiled.matcher
+}
+const join = (path: string, name: string) => (path ? `${path}/${name}` : name)
+
+/** A mesh pattern without spaces around its slashes and without empty segments, or undefined when nothing is left. */
+export function normalizeMeshPattern(value: unknown) {
   if (typeof value !== 'string') {
     return
   }
@@ -11,27 +35,39 @@ export function normalizeMeshPath(value: unknown) {
   }
 }
 
-/** Whether an object’s name and the names of its nearest ancestors end in the path’s slash-separated segments. */
-export function matchesMeshPath(object: Object3D, path: string) {
-  let current: Object3D | null = object
-  for (const segment of path.split('/').toReversed()) {
-    if (current?.name !== segment) {
-      return false
+/** The names of the object and its named ancestors below the scene, joined by slashes, like the X dump’s `path` followed by its `mesh`: unnamed wrappers are left out. */
+export function meshPath(object: Object3D) {
+  let path = ''
+  for (let current: Object3D | null = object; current && !isScene(current); current = current.parent) {
+    if (current.name) {
+      path = path ? `${current.name}/${path}` : current.name
     }
-    current = current.parent
   }
-  return true
+  return path
 }
 
-/** Every object at the end of the mesh path, together with everything below it. */
-export function collectMeshPath(root: Object3D, path: string) {
+/** Whether a named object’s mesh path ends in a match of the minimatch pattern, like `alchemy-cannon`, `lobby-fountain/fountain-*` or `alchemy-machine/{alchemy-machine,alchemy-cannon}`. */
+export function matchesMeshPattern(object: Object3D, pattern: string) {
+  return Boolean(object.name) && compile(pattern).match(meshPath(object))
+}
+
+/** Every named object whose mesh path ends in a match of the minimatch pattern, together with everything below it. */
+export function collectMeshPattern(root: Object3D, pattern: string) {
+  const matcher = compile(pattern)
   const objects: Array<Object3D> = []
-  root.traverse(object => {
-    if (matchesMeshPath(object, path)) {
+  const visit = (object: Object3D, parentPath: string) => {
+    const named = Boolean(object.name) && !isScene(object)
+    const path = named ? join(parentPath, object.name) : parentPath
+    if (named && matcher.match(path)) {
       object.traverse(descendant => {
         objects.push(descendant)
       })
+      return
     }
-  })
+    for (const child of object.children) {
+      visit(child, path)
+    }
+  }
+  visit(root, root.parent ? meshPath(root.parent) : '')
   return objects
 }

@@ -126,8 +126,9 @@ describe('URL options', () => {
       expect(readRatio(search)).toBeUndefined()
     }
   })
-  test('?wireframe_highlight keeps a slash-separated mesh path', () => {
+  test('?wireframe_highlight keeps a minimatch pattern of mesh paths', () => {
     expect(readWireframeHighlight('?wireframe_highlight=lobby-fountain')).toBe('lobby-fountain')
+    expect(readWireframeHighlight('?wireframe_highlight=alchemy-machine/{alchemy-machine,alchemy-cannon}')).toBe('alchemy-machine/{alchemy-machine,alchemy-cannon}')
     expect(readWireframeHighlight('?wireframe_highlight=/lobby-fountain//fountain-falling-water/')).toBe('lobby-fountain/fountain-falling-water')
     for (const search of ['', '?wireframe_highlight=', '?wireframe_highlight=/']) {
       expect(readWireframeHighlight(search)).toBeUndefined()

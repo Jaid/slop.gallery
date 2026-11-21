@@ -21,8 +21,8 @@ export type WireframeFlood = {
   enabled: boolean
   /** seconds a flipped triangle glows, starting in its full line color the moment it flips and fading with a steep exponential ease-out, in triangle and combined mode; 0 turns the triangle glow off */
   glowDuration: number
-  /** mesh paths whose objects draw in blue while everything else draws in red; empty draws every line white */
-  highlight: Array<string>
+  /** minimatch pattern of the mesh paths whose objects, together with everything below them, draw in the highlight color while everything else draws in red (see `collectMeshPattern`); null draws every line in the regular color */
+  highlight: string | null
   /** line color of the highlighted objects, as #rgb or #rrggbb; null falls back to blue */
   highlightColor: string | null
   /** barycentric draws antialiased edges of line_width pixels as part of each face; lines draws 1 px hardware lines */
@@ -77,7 +77,7 @@ export const wireframeFlood: WireframeFlood = {
   color: null,
   direction: 'in',
   enabled: false,
-  highlight: [],
+  highlight: null,
   highlightColor: null,
   lineStyle: 'barycentric',
   lineWidth: 0.5,

@@ -23,7 +23,7 @@ import type {BoxInput} from 'geofency'
 import type {Rarity} from 'knot-materials/rarities.ts'
 import type VictoriaClient from 'victoria-browser-client'
 
-import {normalizeMeshPath, wireframeFloodAnchors, wireframeFloodDirections, wireframeFloodModes, wireframeFloodShapes, wireframeLineStyles} from 'capture-session'
+import {normalizeMeshPattern, wireframeFloodAnchors, wireframeFloodDirections, wireframeFloodModes, wireframeFloodShapes, wireframeLineStyles} from 'capture-session'
 import {maximumSeed} from 'make-seed'
 
 import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
@@ -1017,13 +1017,13 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             minimum: 0,
           },
           highlight: {
-            description: 'one mesh path or several, like “lobby-fountain” or “lobby-fountain/fountain-falling-water”; their objects and everything below them draw in the highlight color. An empty array highlights nothing',
+            description: 'minimatch pattern that only has to match the end of a mesh path, the names of an object and its named ancestors joined by slashes like the X dump’s path followed by its mesh, as in “lobby-fountain”, “lobby-fountain/fountain-*” or “alchemy-machine/{alchemy-machine,alchemy-cannon}”; the objects it matches and everything below them draw in the highlight color. null highlights nothing',
             anyOf: [
-              {type: 'string'},
               {
-                type: 'array',
-                items: {type: 'string'},
+                type: 'string',
+                minLength: 1,
               },
+              {type: 'null'},
             ],
           },
           color: {
@@ -1159,9 +1159,9 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (radius !== undefined && !(typeof radius === 'number' && Number.isFinite(radius) && radius >= 0)) {
           throw new TypeError('radius must be a finite number of at least 0.')
         }
-        const paths = highlight === undefined ? undefined : [highlight].flat().map(path => normalizeMeshPath(path))
-        if (paths?.includes(undefined)) {
-          throw new TypeError('highlight must be a mesh path or an array of them.')
+        const pattern = highlight === undefined || highlight === null ? highlight : normalizeMeshPattern(highlight)
+        if (pattern === undefined && highlight !== undefined) {
+          throw new TypeError('highlight must be a minimatch pattern of mesh paths or null.')
         }
         if (seamWidth !== undefined && seamWidth !== null && !(typeof seamWidth === 'number' && Number.isFinite(seamWidth) && seamWidth > 0)) {
           throw new TypeError('seam_width must be a finite number above 0 or null.')
@@ -1205,7 +1205,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           shape: shape as WireframeFlood['shape'] | undefined,
           position: position as WireframeFlood['position'] | undefined,
           radius,
-          highlight: paths as Array<string> | undefined,
+          highlight: pattern,
           color: color as string | null | undefined,
           highlightColor: highlightColor as string | null | undefined,
           background: background as string | null | undefined,

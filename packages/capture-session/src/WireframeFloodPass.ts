@@ -99,7 +99,7 @@ export default class WireframeFloodPass {
     const wire = mix(texture(this.floodTarget.texture, screenUV), texture(this.smoothFloodTarget.texture, screenUV), uniform(0).onRenderUpdate(() => Number(wireframeFlood.antialiasing)))
     // a glowing triangle lights up in its line color and fades into what it flipped to
     const lineColorValue = new Color
-    const lineColor = uniform(lineColorValue).onRenderUpdate(() => lineColorValue.set(wireframeFlood.color ?? (wireframeFlood.highlight.length > 0 ? '#ff1515' : '#fff')))
+    const lineColor = uniform(lineColorValue).onRenderUpdate(() => lineColorValue.set(wireframeFlood.color ?? (wireframeFlood.highlight ? '#ff1515' : '#fff')))
     const highlightLineColorValue = new Color
     const highlightLineColor = uniform(highlightLineColorValue).onRenderUpdate(() => highlightLineColorValue.set(wireframeFlood.highlightColor ?? '#2f7bff'))
     const triangleColor = mix(lineColor, highlightLineColor, triangle.g)
@@ -125,7 +125,7 @@ export default class WireframeFloodPass {
       return
     }
     this.sampleRadiusHistory()
-    wireframe.highlight = wireframeFlood.highlight
+    wireframe.highlight = wireframeFlood.highlight ?? undefined
     wireframe.color = wireframeFlood.color ?? undefined
     wireframe.highlightColor = wireframeFlood.highlightColor ?? undefined
     wireframe.background = wireframeFlood.background ?? undefined
@@ -148,7 +148,7 @@ export default class WireframeFloodPass {
         renderer.setRenderTarget(triangles.target)
         triangles.anchor = wireframeFlood.anchor
         triangles.shape = wireframeFlood.shape
-        triangles.draw(renderer, scene, camera, wireframeFlood.position, wireframeFlood.highlight)
+        triangles.draw(renderer, scene, camera, wireframeFlood.position, wireframeFlood.highlight ?? undefined)
       }
     } finally {
       renderer.setRenderTarget(previous)
