@@ -1,8 +1,9 @@
+import type {FloorPolygon} from '#src/lib/gallery/floorPolygons.ts'
 import type {GroundSurface, RoomSpawn} from '../base/Room.ts'
 
 import {Geofence} from 'geofency'
 
-import corridor, {corridorLanding, corridorPassage, corridorPaving, corridorStairs} from '#src/lib/gallery/corridor.ts'
+import corridor, {corridorBayPaving, corridorHallPaving, corridorLanding, corridorPassage, corridorStairs} from '#src/lib/gallery/corridor.ts'
 import {floorChunks} from '#src/lib/gallery/floorPolygons.ts'
 
 import Room from '../base/Room.ts'
@@ -17,8 +18,9 @@ import walls from './walls.ts'
 const origin = [corridor.center[0], corridor.floorY, corridor.center[1]] as const
 /** The air round the Lodge’s bay, down the diagonal flight and over its head is cut into chunks whose boxes reach at most this far past the walls, well short of the bay and the Sienna’s vestibule. */
 const slack = 0.35
-/** The passage from the Lodge’s threshold on, round the bay and down the long hall to the foot of the flight. */
-const passage = chunkBoxes(floorChunks(corridorPaving, corridorPassage.floorY, corridorPassage.height, slack), origin)
+const passageBoxes = (paving: ReadonlyArray<FloorPolygon>) => chunkBoxes(floorChunks(paving, corridorPassage.floorY, corridorPassage.height, slack), origin)
+const bay = passageBoxes(corridorBayPaving)
+const hall = passageBoxes(corridorHallPaving)
 /** The stair flight up the diagonal, from under its bottom treads to the headroom over its top ones. */
 const flight = chunkBoxes(corridorStairs.chunks(slack), origin)
 /** Of the landing at the top, only the flight’s head tread; the rest, laid with the Sienna’s boards, is the Sienna’s. */
@@ -26,10 +28,10 @@ const head = chunkBoxes(floorChunks([corridorStairs.headOutline()], corridorLand
 
 /** Laid out around the middle of its long hall, at the height of its floor. */
 export default class Corridor extends Room {
-  override readonly air = [...passage, ...flight, ...head]
+  override readonly air = [...bay, ...hall, ...flight, ...head]
   override readonly description = 'Timber, turns and the long way back to Sienna.'
-  // Each box of the passage’s, the flight’s and the head’s air at every height, as nothing lies above or below them; it comes after the Lodge and the Sienna, which own the thresholds at either end.
-  override readonly fence = new Geofence(this.air.map(box => footprint([box])))
+  // One span covers the long hall and both elbows. Keep the tighter footprints beside the Lodge and at the flight to Sienna.
+  override readonly fence = new Geofence([footprint(hall), ...[...bay, ...flight, ...head].map(box => footprint([box]))])
   override readonly height = corridor.height
   override readonly id = 'corridor'
   override readonly size = corridor.size

@@ -61,6 +61,8 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
     expect(boxes(part).map(box => createBox(box).constructor)).toEqual([SkyBox])
   }
   expect(boxes('bastion').every(box => 'y' in box && box.y < box.y2)).toBe(true)
+  expect(boxes('exhibition')).toHaveLength(3)
+  expect(boxes('corridor')).toHaveLength(52)
   // Its other fences: the Lobby’s parts from the slab up like the Lobby, the stairway over Moonfall’s ceiling and, beyond its hall, at every height, the parts of the Bastion in the Bastion’s own boxes around them, and the Corridor’s hall abreast of the Lodge’s window between heights
   expect(dump.slice(slopGallery.rooms.length).map(({id}) => id)).toEqual(['lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'corridor-window'])
   expect(boxes('lobby-north')).toEqual([{
@@ -85,7 +87,7 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
     floor: -0.2,
   }])
   expect(boxes('moonfall-stairs').map(box => createBox(box).constructor)).toEqual([SkyBox, BeamBox])
-  expect(boxes('bastion-knight_alley')).toHaveLength(2)
+  expect(boxes('bastion-knight_alley')).toHaveLength(1)
   expect(boxes('bastion-cistern')).toHaveLength(1)
   for (const box of [...boxes('bastion-knight_alley'), ...boxes('bastion-cistern')]) {
     expect(boxes('bastion')).toContainEqual(box)

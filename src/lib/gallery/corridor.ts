@@ -90,8 +90,12 @@ const jointRib = ribNear(passageRibs(corridorPassage, 0), corridorPassage.spans[
 export const corridorEndZ = backZ - (jointRib[0] + jointRib[1]) / 2
 /** The Lodge’s part of the doorway passage from the Corridor, laid with the Lodge’s planks to mark it. */
 export const lodgeThreshold = doorwayPassage(0, backZ - corridorEndZ)
+/** The long hall starts at the elbow after the diagonal along the Lodge’s bay and ends at the foot of the flight. */
+const hallStart = corridorPassage.floors.indexOf(corridorPassage.junctions[hallSpan - 1])
+export const corridorBayPaving = corridorPassage.floors.slice(0, hallStart).flatMap(floor => cutFloorOpening(floor, lodgeThreshold))
+export const corridorHallPaving = corridorPassage.floors.slice(hallStart)
 /** The Corridor’s board floor, without the Lodge’s threshold; collision still uses the full floors. */
-export const corridorPaving = corridorPassage.floors.flatMap(floor => cutFloorOpening(floor, lodgeThreshold))
+export const corridorPaving = [...corridorBayPaving, ...corridorHallPaving]
 /** The timber saddle where the Lodge’s planks meet the Corridor’s boards: across the doorway passage, under the rib over that joint and as deep as the rib. */
 export const lodgeThresholdSaddle = doorwayPassage(...jointRib)
 /**

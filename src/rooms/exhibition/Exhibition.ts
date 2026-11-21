@@ -16,6 +16,13 @@ import walls from './walls.ts'
 
 const {tunnel} = lowerGallery
 const [originX, originY, originZ] = tunnelCenter
+const northZ = tunnel.northZ - originZ
+const ceiling = groundFenceY - originY
+const displays = tunnelDisplays.map(({side, stairway}) => ({
+  side,
+  doorX: stairway.door[0] - originX,
+  air: stairway.air.map(air => floorBox(air.size, air.bottom - originY, air.top - air.bottom, [air.center[0] - originX, air.center[1] - originZ])),
+}))
 const segmentFloorRange = {
   north: [tunnel.northY, tunnel.northY + tunnel.height],
   diagonal: [tunnel.northY, tunnel.southY + tunnel.height],
@@ -35,20 +42,25 @@ export default class Exhibition extends Room {
       ))
     }),
     // The displays, with their stairways from the balcony.
-    ...tunnelDisplays.flatMap(({stairway}) => stairway.air.map(air => floorBox(air.size, air.bottom - originY, air.top - air.bottom, [air.center[0] - originX, air.center[1] - originZ]))),
+    ...displays.flatMap(display => display.air),
   ]
   override readonly description = 'Sealed behind glass. Lit like evidence.'
-  // Each chunk’s footprint up into the slab of the ground floor, padded slightly so diagonal strips share no 1-ULP gap.
-  override readonly fence = new Geofence(this.air.map(box => {
-    const {x, z, x2, z2} = footprint([box])
-    return {
-      x: x - 1e-4,
-      z: z - 1e-4,
-      x2: x2 + 1e-4,
-      z2: z2 + 1e-4,
-      ceiling: groundFenceY - originY,
-    }
-  }))
+  override readonly fence = new Geofence([
+    // The full width of the gallery and its displays between the Oculus and Moonfall.
+    {
+      ...footprint(this.air),
+      z: northZ,
+      z2: tunnel.southZ - originZ,
+      ceiling,
+    },
+    // North of that span, only the staff passages outside the two balcony doors belong to the Exhibition.
+    ...displays.map(({air, doorX, side}) => ({
+      ...footprint(air.filter(box => box.min.z < northZ)),
+      ...side === 'west' ? {x2: doorX} : {x: doorX},
+      z2: northZ,
+      ceiling,
+    })),
+  ])
   override readonly id = 'exhibition'
   override readonly spawn = spawns['']
 

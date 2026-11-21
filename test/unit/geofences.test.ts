@@ -90,12 +90,11 @@ test('the Sienna’s boards on the Corridor’s landing are the Sienna’s, the 
   }
 })
 test('the balcony’s middle stays the Oculus’, the staff stairways behind the doors at its ends are the Exhibition’s', () => {
-  const {door} = tunnelDisplays[0].stairway
-  const over = door[1] + 1.6
-  expect(slopGallery.roomAt([0, over, door[2]])?.id).toBe('oculus')
-  for (const side of [-1, 1]) {
-    expect(slopGallery.roomAt([side * (Math.abs(door[0]) - 0.5), over, door[2]])?.id).toBe('oculus')
-    expect(slopGallery.roomAt([side * (Math.abs(door[0]) + 0.5), over, door[2]])?.id).toBe('exhibition')
+  for (const {direction, stairway: {door: [x, floor, z]}} of tunnelDisplays) {
+    const y = floor + 1.6
+    expect(slopGallery.geofences.getMatches([0, y, z])).toEqual(['oculus'])
+    expect(slopGallery.geofences.getMatches([x - direction * 0.01, y, z])).toEqual(['oculus'])
+    expect(slopGallery.geofences.getMatches([x + direction * 0.01, y, z])).toEqual(['exhibition'])
   }
 })
 /** The sides of a fence’s box by their names, in the names’ order. */
@@ -187,12 +186,9 @@ test('the gallery’s bastion-knight_alley fences the Bastion’s blind branch b
       }
     }
   }
-  // Its boxes are the Bastion’s own around the branch, but for the rounding of the Bastion’s way from its origin and back, so the Bastion’s fence holds all of it.
-  expect(fence.boxes).toHaveLength(lodgeSpur.chunks(0.35).length)
-  for (const box of fence.boxes) {
-    const twins = bastion.boxes.filter(candidate => sides(candidate).every(([side, value], index) => side === sides(box)[index][0] && Math.abs(value - sides(box)[index][1]) < 1e-9))
-    expect(twins).toHaveLength(1)
-  }
+  // The Bastion uses the same single box for the ramp and the level alley beyond it.
+  expect(fence.boxes).toHaveLength(1)
+  expect(bastion.boxes).toContainEqual(fence.boxes[0])
   // It begins in the plane of the connecting tunnel’s wall, where the doorway into it is, and ends at its closing wall, behind which the run toward the Lodge passes.
   const [startX, startZ] = route.start
   const startY = route.at(0).y + 0.9
