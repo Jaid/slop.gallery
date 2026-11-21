@@ -19,11 +19,13 @@ export default class TextOverlays {
 
   constructor(private readonly camera: Camera, private readonly canvas: HTMLCanvasElement) {}
 
-  add({text, position}: TextOverlayInput) {
+  add({text, position, anchor = 5}: TextOverlayInput) {
     const label = document.createElement('div')
     const id = crypto.randomUUID()
     label.dataset.textOverlay = id
     label.className = css.label
+    // Translate by fractions of the label's own size: 7 is top left and 3 is bottom right.
+    label.style.translate = `${-50 * ((anchor - 1) % 3)}% ${-50 * Math.floor((9 - anchor) / 3)}%`
     label.textContent = text
     this.labels.add(label)
     document.body.append(label)
@@ -34,7 +36,6 @@ export default class TextOverlays {
     } else if (position) {
       label.style.left = `${position.x}px`
       label.style.top = `${position.y}px`
-      label.style.translate = 'none'
     }
     return {id}
   }

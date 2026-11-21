@@ -47,6 +47,7 @@ export type KnotDump = {
 }
 
 export type TextOverlayInput = {
+  anchor?: number
   position?: {
     x: number
     y: number
@@ -358,10 +359,17 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'add_text_overlay',
       title: 'Add a text label',
-      description: 'Add a fixed HTML plain-text label. Omit position to center it in the browser viewport. With {x, y}, place its top left at those CSS pixels from the viewport’s top left. With {x, y, z}, center it on that point in world meters, tracking the camera and canvas and hiding outside the camera view. Labels appear in browser screenshots but not download_frame. Returns the label ID.',
+      description: 'Pin a fixed HTML plain-text label to a point. Omit position for the viewport center, use {x, y} for CSS pixels from the viewport’s top left or {x, y, z} for world meters. World points track the camera and canvas and hide outside the camera view. Anchor selects which point on the label is pinned. Labels appear in browser screenshots but not download_frame. Returns the label ID.',
       inputSchema: {
         type: 'object',
         properties: {
+          anchor: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 9,
+            default: 5,
+            description: 'Numeric keypad layout: 7/8/9 across the top, 4/5/6 across the middle and 1/2/3 across the bottom. Default 5 (center).',
+          },
           text: {
             type: 'string',
             pattern: String.raw`\S`,
@@ -383,10 +391,13 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       annotations: {readOnlyHint: false},
       execute: (input: unknown, {signal}) => {
         signal.throwIfAborted()
-        if (!isRecord(input) || typeof input.text !== 'string' || !input.text.trim() || Object.keys(input).some(key => key !== 'text' && key !== 'position')) {
-          throw new TypeError('Expected nonblank text and an optional position.')
+        if (!isRecord(input) || typeof input.text !== 'string' || !input.text.trim() || Object.keys(input).some(key => key !== 'text' && key !== 'position' && key !== 'anchor')) {
+          throw new TypeError('Expected nonblank text with optional position and anchor.')
         }
-        const {position} = input
+        const {anchor, position} = input
+        if (anchor !== undefined && !(typeof anchor === 'number' && Number.isInteger(anchor) && anchor >= 1 && anchor <= 9)) {
+          throw new TypeError('anchor must be an integer from 1 to 9.')
+        }
         if (position !== undefined && !isCoordinates(position, 'x,y') && !isCoordinates(position, 'x,y,z')) {
           throw new TypeError('position must be {x, y} in viewport CSS pixels or {x, y, z} in world meters.')
         }

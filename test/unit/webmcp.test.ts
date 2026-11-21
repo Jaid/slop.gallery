@@ -373,6 +373,12 @@ test('text overlay calls reject ambiguous positions and invalid clears', () => {
     })).toThrow(TypeError)
   }
   expect(() => run('add_text_overlay', {text: ' '})).toThrow(TypeError)
+  for (const anchor of [0, 10, 4.5, '7', null]) {
+    expect(() => run('add_text_overlay', {
+      text: 'test',
+      anchor,
+    })).toThrow(TypeError)
+  }
   expect(() => run('clear_text_overlay', {id: 'some-drawing'})).toThrow(TypeError)
   controller.abort()
   expect(() => run('clear_text_overlay', {})).toThrow()

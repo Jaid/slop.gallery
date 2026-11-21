@@ -28,26 +28,28 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixe
     x: number
     y: number
     z?: number
-  }) => (await callWebmcpTool(page, 'add_text_overlay', {
+  }, anchor?: number) => (await callWebmcpTool(page, 'add_text_overlay', {
     text,
     position,
+    anchor,
   }) as {id: string}).id
   const fixed = await add({
     x: 30,
     y: 55,
-  })
+  }, 7)
   const centered = await add()
   const world = await add({
     x: 1,
     y: 3,
     z: -2,
-  })
+  }, 9)
   const read = (id: string) => page.evaluate(key => {
     const label = document.querySelector<HTMLElement>(`[data-text-overlay="${key}"]`)!
     const {left, top, width, height} = label.getBoundingClientRect()
     return {
       left,
       top,
+      right: left + width,
       cx: left + width / 2,
       cy: top + height / 2,
       hidden: label.hidden,
@@ -78,8 +80,8 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixe
     await waitForFrames(page, 3)
     const projected = await read(world)
     expect(projected.hidden).toBe(false)
-    expect(projected.cx).toBeCloseTo(bounds.left + fraction * bounds.width, 0)
-    expect(projected.cy).toBeCloseTo(bounds.top + 0.25 * bounds.height, 0)
+    expect(projected.right).toBeCloseTo(bounds.left + fraction * bounds.width, 0)
+    expect(projected.top).toBeCloseTo(bounds.top + 0.25 * bounds.height, 0)
   }
   await look(1, Math.PI)
   await waitForFrames(page, 3)
