@@ -31,4 +31,14 @@ export default {
     fov: 30,
     ratio: 16 / 9,
   },
+  // Far down the link, looking north through a long lens at its barred gate, with the Lodge beyond.
+  golf_gate: {
+    position: [-28.316, 3.917, 30.236],
+    aim: {
+      yaw: 0.0069,
+      pitch: -0.0768,
+    },
+    fov: 30,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
