@@ -47,6 +47,8 @@ const getCommonConfig = (context: ConfigEnv) => {
       robotsTxtPlugin(),
       sourceCodeMetadataPlugin(manifest, import.meta.dirname),
       socialPreviewPlugin(manifest, {cardImage: 'assets/wallpaper.jxl'}),
+      // Only the production build bakes Branch away, before the React Compiler lowers the JSX it looks for.
+      context.mode === 'production' && bakeBranchComponentPlugin(),
       reactPlugin({compiler: true}),
       mediaMixinsPlugin(),
     ],
@@ -123,7 +125,6 @@ const getProductionConfig = () => {
         // No region of the worlds is closed and static enough for it.
         staticRendering: false,
       }),
-      bakeBranchComponentPlugin(),
       {
         ...hoistPopularConstantsPlugin(),
         apply: 'build',

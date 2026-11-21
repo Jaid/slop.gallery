@@ -10,7 +10,7 @@ import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {defaultWorld, worldIds, worlds} from '../../src/worlds/index.ts'
 
-// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material, the Knots’ announcements and the AI SDK in chunks of their own that only load on demand, and the game’s chunks and assets named by their content.
+// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material, the Knots’ announcements and the AI SDK in chunks of their own that only load on demand, no Branch runtime left and the game’s chunks and assets named by their content.
 // Files are named by their content hash, so the chunks and assets are looked up in the output list the build writes next to it.
 const directory = 'dist'
 const root = join(import.meta.dir, '..', '..')
@@ -106,6 +106,10 @@ if (!chunks.some(chunk => chunk.modules.some(module => aiSdk.test(module)))) {
 }
 if (chunks.some(chunk => initial.has(chunk.fileName) && chunk.modules.some(module => aiSdk.test(module)))) {
   fail('The AI SDK loads with the page.')
+}
+// Every Branch is baked into a plain condition before the React Compiler lowers the JSX, so its runtime never ships.
+if (chunks.some(chunk => chunk.modules.some(module => module.includes('/node_modules/branch-component/')))) {
+  fail('The branch-component runtime is in the build, so a Branch was not baked away.')
 }
 if (chunks.some(chunk => /^data\d*$/u.test(chunk.name))) {
   fail('The Knots’ metadata is split into a chunk per entry.')

@@ -7,7 +7,7 @@ import template from '@babel/template'
 
 const branchModule = 'branch-component'
 const conditionNames = ['if', 'not', 'some', 'none', 'all'] as const
-const supportedNames = new Set([...conditionNames, 'then', 'else', 'children', 'className'])
+const supportedNames = new Set([...conditionNames, 'then', 'else', 'children', 'className', 'key'])
 const outputHelperTemplate = template.statement(`
   const %%helper%% = (%%output%%) =>
     typeof %%output%% === "function"
@@ -143,6 +143,11 @@ const buildFailureOutput = (attributes: BranchAttributes, state: PluginState): t
   const elseOutput = attributes.get('else')
   return elseOutput === undefined ? t.nullLiteral() : renderOutput(elseOutput, state)
 }
+const keyedFragment = (fragment: t.Identifier, key: t.Expression, expression: t.Expression): t.JSXElement => {
+  const name = () => t.jsxIdentifier(fragment.name)
+  const keyAttribute = t.jsxAttribute(t.jsxIdentifier('key'), t.jsxExpressionContainer(key))
+  return t.jsxElement(t.jsxOpeningElement(name(), [keyAttribute]), t.jsxClosingElement(name()), [t.jsxExpressionContainer(expression)])
+}
 const isBranchElement = (path: NodePath<t.JSXElement>, state: PluginState): boolean => {
   const name = path.node.openingElement.name
   if (!t.isJSXIdentifier(name)) {
@@ -164,10 +169,13 @@ const replaceBranch = (path: NodePath<t.JSXElement>, state: PluginState) => {
   const conditional = t.conditionalExpression(condition, buildOutput(path, attributes, state), buildFailureOutput(attributes, state))
   const className = attributes.get('className')
   const expression = className === undefined ? conditional : t.callExpression(t.cloneNode(getClassNameHelperId(state)), [className, conditional])
-  if (path.parentPath.isJSXElement() || path.parentPath.isJSXFragment()) {
-    path.replaceWith(t.jsxExpressionContainer(expression))
+  const key = attributes.get('key')
+  // A keyed Branch, like one of a list, becomes a keyed fragment, which React matches up just like the Branch element.
+  const output = key === undefined ? expression : keyedFragment(getNamedImport(state.file.path, 'react', 'Fragment'), key, expression)
+  if (key === undefined && (path.parentPath.isJSXElement() || path.parentPath.isJSXFragment())) {
+    path.replaceWith(t.jsxExpressionContainer(output))
   } else {
-    path.replaceWith(expression)
+    path.replaceWith(output)
   }
 }
 const removeUnusedBranchImports = (path: NodePath<t.Program>, state: PluginState) => {

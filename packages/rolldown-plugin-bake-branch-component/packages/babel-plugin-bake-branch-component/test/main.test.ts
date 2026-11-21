@@ -90,6 +90,17 @@ describe('Branch compilation', () => {
     expect(code).toContain('Branch => <Branch if={visible} />')
     expect(code).toContain('const view = visible ? <Thing /> : null')
   })
+  test('keeps the key of a Branch in a list on a fragment around its output', () => {
+    const code = compile(`
+      import Branch from 'branch-component'
+      const view = items.map(item => <Branch key={item.id} if={item.ready} else={<Pending />}><Thing /></Branch>)
+      const nested = <List><Branch key='only' if={ready}><Thing /></Branch></List>
+    `)
+    expect(code).not.toContain('branch-component')
+    expect(code.match(/from ["']react["']/g)).toHaveLength(1)
+    expect(code).toContain('item => <_Fragment key={item.id}>{item.ready ? <Thing /> : _renderBranchOutput(<Pending />)}</_Fragment>')
+    expect(code).toContain("<List><_Fragment key={'only'}>{ready ? <Thing /> : null}</_Fragment></List>")
+  })
   test('rejects spread attributes', () => {
     expect(() => compile(`
       import Branch from 'branch-component'
