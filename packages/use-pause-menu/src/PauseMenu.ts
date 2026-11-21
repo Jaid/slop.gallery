@@ -1,4 +1,4 @@
-import type {PauseMenuOptions, PauseMenuSnapshot, PauseReason} from './types.ts'
+import type {PauseMenuOptions, PauseMenuSnapshot, PauseMenuStage, PauseReason} from './types.ts'
 
 /** One page visit and one pointer-lock target, independent of React and any renderer. */
 export default class PauseMenu {
@@ -23,6 +23,8 @@ export default class PauseMenu {
       const locked = document.pointerLockElement === target
       let {stage} = this.snapshot
       if (locked) {
+        // Playing leaves the menus before the game behind for good.
+        this.covered = undefined
         if (!this.snapshot.locked && this.releasedTarget !== target) {
           this.reason = undefined
           this.releasedTarget = undefined
@@ -103,12 +105,16 @@ export default class PauseMenu {
     this.start()
     if (this.snapshot.locked) {
       this.release('pause')
-    } else {
-      this.publish({
-        locked: false,
-        stage: 'pause',
-      })
+      return
     }
+    const {stage} = this.snapshot
+    if (stage !== 'pause' && stage !== 'unfocus') {
+      this.covered = stage
+    }
+    this.publish({
+      locked: false,
+      stage: 'pause',
+    })
   }
   /** React 19 callback ref alternative to attach(). */
   ref = (target: HTMLElement | null) => {
@@ -141,6 +147,9 @@ export default class PauseMenu {
   /** Resolve saved-game availability after loading storage. Never replace a gameplay pause reason. */
   setGameData = (present: boolean) => {
     this.hasGameData = present
+    if (this.covered === 'return' || this.covered === 'reset') {
+      this.covered = present ? 'return' : 'reset'
+    }
     const {stage, locked} = this.snapshot
     if (!locked && (stage === 'return' || stage === 'reset')) {
       this.publish({
@@ -188,10 +197,26 @@ export default class PauseMenu {
       this.listeners.delete(listener)
     }
   }
+  /** Closes a pause stage that pause() opened over a menu before the game, which shows again as it was. Returns whether there was one to close: a pause that followed playing only ends with enter(). */
+  unpause = () => {
+    const stage = this.covered
+    if (stage === undefined) {
+      return false
+    }
+    this.covered = undefined
+    this.publish({
+      locked: false,
+      stage,
+    })
+    return true
+  }
   private connection: {
     disconnect: () => void
     target: HTMLElement
   } | undefined
+
+  /** the menu before the game that pause() opened the pause stage over, until playing or unpause() leaves the pause */
+  private covered: Exclude<PauseMenuStage, PauseReason> | undefined
 
   private hasGameData: boolean | undefined
 

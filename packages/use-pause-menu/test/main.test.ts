@@ -502,3 +502,59 @@ test('pause while playing waits for the real unlock and preserves the focus-loss
     })
   }
 })
+test.each(['first', 'return', 'reset'] as const)('unpause gives the %s menu back that pause opened over, without ever requesting pointer lock', initialStage => {
+  const menu = new PauseMenu({initialStage})
+  const target = new TestTarget
+  menu.attach(target.element)
+  const initial = menu.getSnapshot()
+  const stages: Array<string> = []
+  menu.subscribe(() => stages.push(menu.getSnapshot().stage))
+  expect(menu.unpause()).toBe(false)
+  menu.pause()
+  menu.pause()
+  expect(menu.unpause()).toBe(true)
+  expect(menu.getSnapshot()).toEqual(initial)
+  expect(menu.unpause()).toBe(false)
+  // It can be paused and given back again and again.
+  menu.pause()
+  expect(menu.unpause()).toBe(true)
+  expect(stages).toEqual(['pause', initialStage, 'pause', initialStage])
+  expect(target.requests).toEqual([])
+  expect(target.ownerDocument.exits).toBe(0)
+})
+test('unpause follows saved-game availability that arrived under the pause', () => {
+  const menu = new PauseMenu({initialStage: 'return'})
+  menu.pause()
+  menu.setGameData(false)
+  expect(menu.getSnapshot().stage).toBe('pause')
+  expect(menu.unpause()).toBe(true)
+  expect(menu.getSnapshot().stage).toBe('reset')
+  const first = new PauseMenu
+  first.pause()
+  first.setGameData(false)
+  expect(first.unpause()).toBe(true)
+  expect(first.getSnapshot().stage).toBe('first')
+})
+test('a pause that followed playing only ends with a real entry', () => {
+  const {menu, document, target} = setup()
+  // Entering from a pause over the first menu leaves that menu behind.
+  menu.pause()
+  document.change(target)
+  expect(menu.unpause()).toBe(false)
+  document.change(null)
+  const paused = menu.getSnapshot()
+  expect(paused).toEqual({
+    stage: 'pause',
+    locked: false,
+  })
+  menu.pause()
+  expect(menu.unpause()).toBe(false)
+  expect(menu.getSnapshot()).toBe(paused)
+  // Neither does a lost focus have a menu to give back.
+  document.change(target)
+  document.blur()
+  document.change(null)
+  menu.pause()
+  expect(menu.unpause()).toBe(false)
+  expect(menu.getSnapshot().stage).toBe('pause')
+})
