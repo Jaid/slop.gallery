@@ -13,7 +13,8 @@ import fenceEdges from './fenceEdges.ts'
 
 export default function GeofenceOutlines({visible}: {visible: boolean}) {
   const selection = useFenceDisplay(state => state.fence)
-  const shown = useMemo(() => selectFences(world.geofences, selection), [selection])
+  // A relational fence shows all the boxes it takes in, like the Lobby its parts’.
+  const shown = useMemo(() => selectFences(world.geofences, selection).map(([id]): [string, Geofence] => [id, world.geofences.resolve(id)!]), [selection])
   if (!shown.length) {
     return null
   }

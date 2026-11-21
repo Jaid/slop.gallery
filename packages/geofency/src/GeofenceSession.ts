@@ -1,4 +1,4 @@
-import type Geofences from './Geofences.ts'
+import type GeofenceCollection from './GeofenceCollection.ts'
 import type {Fence, Position} from './types.ts'
 
 import EventEmitter from 'eventemitter3'
@@ -31,9 +31,9 @@ export type GeofenceSessionOptions<Id = string> = {
 export default class GeofenceSession<Id = string, Value extends Fence = Fence> extends EventEmitter<GeofenceSessionEvents<Id>> {
   readonly announceEmpty: boolean
   protected currentMatch: Id | null
-  readonly geofences: Geofences<Id, Value>
+  readonly geofences: GeofenceCollection<Id, Value>
 
-  constructor(geofences: Geofences<Id, Value>, {announceEmpty = false, initialValue = null}: GeofenceSessionOptions<NoInfer<Id>> = {}) {
+  constructor(geofences: GeofenceCollection<Id, Value>, {announceEmpty = false, initialValue = null}: GeofenceSessionOptions<NoInfer<Id>> = {}) {
     super()
     this.geofences = geofences
     this.announceEmpty = announceEmpty

@@ -1,4 +1,4 @@
-import type Geofences from './Geofences.ts'
+import type GeofenceCollection from './GeofenceCollection.ts'
 import type {GeofenceSessionOptions} from './GeofenceSession.ts'
 import type {Fence, Position} from './types.ts'
 
@@ -24,7 +24,7 @@ const toMatches = <Id>(value: Id | ReadonlyArray<Id> | null): ReadonlySet<Id> =>
 export default class MultimatchGeofenceSession<Id = string, Value extends Fence = Fence> extends GeofenceSession<Id, Value> {
   private currentMatches: ReadonlySet<Id>
 
-  constructor(geofences: Geofences<Id, Value>, {initialValue = null, ...options}: MultimatchGeofenceSessionOptions<NoInfer<Id>> = {}) {
+  constructor(geofences: GeofenceCollection<Id, Value>, {initialValue = null, ...options}: MultimatchGeofenceSessionOptions<NoInfer<Id>> = {}) {
     const matches = toMatches(initialValue)
     super(geofences, {
       ...options,

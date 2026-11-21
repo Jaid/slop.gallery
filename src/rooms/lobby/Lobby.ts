@@ -1,15 +1,13 @@
 import type {GroundSurface} from '../base/Room.ts'
 import type {Vec3} from 'math'
 
-import {Geofence} from 'geofency'
+import {RelationalGeofence} from 'geofency'
 
-import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import lobby from '#src/lib/gallery/lobby.ts'
 import lobbyVault from '#src/lib/gallery/lobbyVault.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
-import footprint from '../lib/footprint.ts'
 import ambienceEmitters from './ambienceEmitters.ts'
 import cameras from './cameras.ts'
 import fences from './fences.ts'
@@ -27,11 +25,8 @@ export default class Lobby extends Room {
   // Up to the crown of the vault.
   override readonly air = floorBox(size, 0, lobbyVault.springY + lobbyVault.outerRadius)
   override readonly description = 'Nothing here is quite as it seems.'
-  // Everything over its floor plan from the slab up, the vault and the glazed floor over the Oculus included.
-  override readonly fence = new Geofence([{
-    ...footprint([this.air]),
-    floor: groundFenceY,
-  }])
+  // Its three parts, see fences.ts, which take in everything over its floor plan from the slab up, the vault and the glazed floor over the Oculus included.
+  override readonly fence = new RelationalGeofence(['lobby-north', 'lobby-middle', 'lobby-south'])
   override readonly height = 5.8
   override readonly id = 'lobby'
   override readonly size = size

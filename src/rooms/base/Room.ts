@@ -151,6 +151,7 @@ export default abstract class Room {
    * where a visitor counts as inside the room, as a geofence whose boxes may reach endlessly up or down: a room only needs to own its own footprint at its own level
    *
    * Worlds check the fences of their rooms in order and take the first one that matches, so a fence may overlap those of the rooms checked before it.
+   * A `RelationalGeofence` also takes in other fences of the world by their global ids, like the room’s own other {@link fences}, which may make up all of it.
    */
   abstract readonly fence: Geofence
   /** the room’s other fences by their id within the room, like its parts, relative to its origin */

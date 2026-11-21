@@ -3,7 +3,7 @@ import type World from '../../src/worlds/base/World.ts'
 
 import {afterEach, expect, test} from 'bun:test'
 
-import {BeamBox, createBox, SkyBox, VoidBox} from 'geofency'
+import {BeamBox, createBox, RelationalGeofence, SkyBox, VoidBox} from 'geofency'
 
 import {bodyPose} from '../../src/lib/gallery/actions.ts'
 import getGeofences from '../../src/lib/webmcp/getGeofences.ts'
@@ -21,14 +21,15 @@ const toPosition = ([x, y, z]: Vec3) => ({position: {
   y,
   z,
 }})
-test('the dump lists every fence of a world in its order with all of its boxes as plain data, a tenth of a millimeter exact', () => {
+test('the dump lists every fence of a world in its order with all of its own boxes as plain data, a tenth of a millimeter exact, and the relations of a relational one', () => {
   for (const world of worlds) {
     const dump = world.dumpGeofences()
     // Its rooms’ fences first, then its other ones
     expect(dump.map(({id}) => id)).toEqual(world.geofences.keys().toArray())
     expect(dump.slice(0, world.rooms.length).map(({id}) => id)).toEqual(world.rooms.map(({id}) => id))
-    for (const {id, boxes} of dump) {
+    for (const {id, boxes, relations} of dump) {
       const fence = world.geofences.get(id)!
+      expect(relations).toEqual(fence instanceof RelationalGeofence ? [...fence.relations] : undefined)
       expect(boxes).toHaveLength(fence.boxes.length)
       for (const [index, data] of boxes.entries()) {
         const box = fence.boxes[index]
@@ -47,16 +48,18 @@ test('the dump lists every fence of a world in its order with all of its boxes a
 test('the gallery’s dump tells its fences apart by how far their boxes reach', () => {
   const dump = slopGallery.dumpGeofences()
   const boxes = (id: string) => dump.find(fence => fence.id === id)!.boxes
-  expect(boxes('lobby')).toEqual([{
-    x: -8,
-    x2: 8,
-    z: -32,
-    z2: 8,
-    floor: -0.2,
-  }])
+  // The Lobby is its parts alone, and no other fence relates to any.
+  expect(dump.find(fence => fence.id === 'lobby')).toEqual({
+    id: 'lobby',
+    boxes: [],
+    relations: ['lobby-north', 'lobby-middle', 'lobby-south'],
+  })
+  expect(dump.filter(fence => fence.relations).map(({id}) => id)).toEqual(['lobby'])
   // under its floor plan up to its ceiling, and its stairway at every height
   expect(boxes('moonfall').map(box => createBox(box).constructor)).toEqual([VoidBox, BeamBox])
-  expect(boxes('lobby').map(box => createBox(box).constructor)).toEqual([SkyBox])
+  for (const part of ['lobby-north', 'lobby-middle', 'lobby-south']) {
+    expect(boxes(part).map(box => createBox(box).constructor)).toEqual([SkyBox])
+  }
   expect(boxes('bastion').every(box => 'y' in box && box.y < box.y2)).toBe(true)
   // Its other fences: the Lobby’s parts from the slab up like the Lobby, the stairway over Moonfall’s ceiling and, beyond its hall, at every height, the parts of the Bastion in the Bastion’s own boxes around them, and the Corridor’s hall abreast of the Lodge’s window between heights
   expect(dump.slice(slopGallery.rooms.length).map(({id}) => id)).toEqual(['lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'corridor-window'])

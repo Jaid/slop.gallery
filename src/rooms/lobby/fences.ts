@@ -9,7 +9,7 @@ const middleZ = (lobby.northZ + lobby.southZ) / 2
 const glassZ = lobby.opening.center[1] + lobby.opening.size[1] / 2 - middleZ
 /** the north edge of the arches into the Vesper and the Banquet, relative to the room’s middle */
 const sideDoorZ = lobby.sideDoorZ - lobby.sideDoorWidth / 2 - middleZ
-/** A part of the room from one line across it to another, relative to its middle, in a box like the room’s own: everything over that part of its floor plan from the slab up. */
+/** A part of the room from one line across it to another, relative to its middle: everything over that part of its floor plan from the slab up, as the room’s own fence is made of its parts. */
 function part(z: number, z2: number) {
   return new Geofence([{
     x: -lobby.width / 2,

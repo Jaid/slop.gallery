@@ -125,8 +125,8 @@ export const roomBoxes: ReadonlyArray<{
   box: new Box3(new Vector3(min.x, min.y - 1, min.z), new Vector3(max.x, max.y + 0.2, max.z)),
 })))
 
-/** the gallery’s fences that are no room’s, like the parts of its rooms */
-const otherFences = slopGallery.geofences.entries().filter(([id]) => !slopGallery.roomById(id)).toArray()
+/** the ids of the gallery’s fences that are no room’s, like the parts of its rooms */
+const otherFences = slopGallery.geofences.keys().filter(id => !slopGallery.roomById(id)).toArray()
 const point = new Vector3
 
 type Owned = {
@@ -202,7 +202,7 @@ export function roomsAt([x, y, z]: Vec3) {
  * Where a camera at the position is, as the ids of the fences that what stays on around it goes by, like a player’s whereabouts: the rooms it stands in, by default those {@link roomsAt} gives, then every fence that is no room’s holding the position, like a part of a room.
  */
 export function whereaboutsAt(position: Vec3, rooms: ReadonlyArray<RoomId> = roomsAt(position)): Array<string> {
-  return [...rooms, ...otherFences.filter(([, fence]) => fence.contains(position)).map(([id]) => id)]
+  return [...rooms, ...otherFences.filter(id => slopGallery.geofences.contains(id, position))]
 }
 
 /**

@@ -13,7 +13,7 @@ import type {ComponentType} from 'react'
 import type {Node} from 'three/webgpu'
 
 import {defaultEgoOptions} from 'ego-player/motor'
-import Geofences, {boxInputSchema} from 'geofency'
+import GeofenceCollection, {boxInputSchema, RelationalGeofence} from 'geofency'
 
 import miterCorners from '#src/lib/gallery/cornerMiters.ts'
 import {readRoom, readSpawn} from '#src/lib/gallery/spawn.ts'
@@ -65,7 +65,7 @@ export default abstract class World<Kind extends Room = Room> {
   abstract readonly defaultRoom: Kind['id']
   readonly enterLabel: string
   /** every fence of the world in world meters by its id, in the order they are checked: the rooms’ by room id, in the order of {@link rooms}, then the rooms’ other fences, which mark places in them where something happens, like their parts, by their global ids, room by room */
-  readonly geofences: Geofences<string, Geofence>
+  readonly geofences: GeofenceCollection<string, Geofence>
   abstract readonly id: WorldId
   /** where the camera circles behind the first menu until the player first enters, there and then taking over the camera’s pose, or undefined for none, the default */
   readonly introOrbit: IntroOrbit | undefined = undefined
@@ -101,7 +101,7 @@ export default abstract class World<Kind extends Room = Room> {
       throw new Error('Every room of a world needs an id of its own.')
     }
     const fences = this.rooms.flatMap(room => room.fences())
-    this.geofences = new Geofences<string, Geofence>([...this.rooms.map(room => [room.id, room.fence] as const), ...fences])
+    this.geofences = new GeofenceCollection<string, Geofence>([...this.rooms.map(room => [room.id, room.fence] as const), ...fences])
     if (this.geofences.size !== this.rooms.length + fences.length) {
       throw new Error('Every fence of a world needs an id of its own, which is no room’s.')
     }
@@ -170,11 +170,12 @@ export default abstract class World<Kind extends Room = Room> {
   /** Whether the position lies anywhere a player or an artwork may be. */
   abstract contains(position: Vec3): boolean
 
-  /** Every fence of the world in the order they are checked, the rooms’ first, each with its boxes as the plain data geofency builds them from, in world meters rounded to the tenth of a millimeter, for the `dump_geofences` WebMCP tool. */
+  /** Every fence of the world in the order they are checked, the rooms’ first, each with its own boxes as the plain data geofency builds them from, in world meters rounded to the tenth of a millimeter, and a relational one with the ids of the fences it takes in, for the `dump_geofences` WebMCP tool. */
   dumpGeofences(): Array<GeofenceDump> {
     return this.geofences.entries().map(([id, fence]) => ({
       id,
       boxes: fence.boxes.map(box => boxInputSchema.parse(Object.fromEntries(Object.entries(box).map(([key, value]) => [key, round(value as number)])))),
+      ...fence instanceof RelationalGeofence ? {relations: [...fence.relations]} : {},
     })).toArray()
   }
 
@@ -189,13 +190,17 @@ export default abstract class World<Kind extends Room = Room> {
   fencesIn(room: string): ReadonlyArray<string> {
     if (!this.roomFences) {
       const index = new Map(this.rooms.map(({id}): [string, Array<string>] => [id, [id]]))
-      for (const [id, fence] of this.geofences) {
+      const rooms = this.rooms.map(({id}) => ({
+        id,
+        fence: this.geofences.resolve(id)!,
+      }))
+      for (const id of this.geofences.keys()) {
         if (this.roomById(id)) {
           continue
         }
         // A room is only the player’s where no room checked before it holds the player’s place, so each room only gets what those before it leave of the fence.
-        let rest: Geofence | null = fence
-        for (const {fence: taken, id: owner} of this.rooms) {
+        let rest: Geofence | null = this.geofences.resolve(id)!
+        for (const {fence: taken, id: owner} of rooms) {
           if (!rest?.overlaps(taken)) {
             continue
           }
@@ -294,7 +299,7 @@ export default abstract class World<Kind extends Room = Room> {
 
   /** The first room whose fence holds the position, or undefined outside of every fence. */
   roomAt(position: Vec3) {
-    return this.rooms.find(room => room.fence.contains(position))
+    return this.rooms.find(room => this.geofences.contains(room.id, position))
   }
 
   /** The placed room with the id, or undefined for an id the world doesn’t know, like one from a URL. */

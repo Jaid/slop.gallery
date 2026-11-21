@@ -2,7 +2,7 @@ import type {BoxInput, Fence, GeofenceSessionOptions, MultimatchGeofenceSessionO
 
 import {describe, expect, test} from 'bun:test'
 
-import Geofences, {BeamBox, Box, boxInputSchema, ClosedBox, createBox, Geofence, GeofenceSession, MultimatchGeofenceSession, SkyBox, VoidBox} from '../src/main.ts'
+import GeofenceCollection, {BeamBox, Box, boxInputSchema, ClosedBox, createBox, Geofence, GeofenceSession, MultimatchGeofenceSession, RelationalGeofence, SkyBox, VoidBox} from '../src/main.ts'
 
 const beam = {
   x: 0,
@@ -17,7 +17,7 @@ const record = <Id>(session: GeofenceSession<Id>) => {
   session.on('change', (match, previous) => events.push(['change', match, previous]))
   return events
 }
-const createGeofences = () => new Geofences([
+const createCollection = () => new GeofenceCollection([
   ['room', new Geofence([{
     ...beam,
     y: 0,
@@ -28,8 +28,8 @@ const createGeofences = () => new Geofences([
     floor: 2,
   }])],
 ])
-const create = (options?: GeofenceSessionOptions) => new GeofenceSession(createGeofences(), options)
-const createMultimatch = (options?: MultimatchGeofenceSessionOptions) => new MultimatchGeofenceSession(createGeofences(), options)
+const create = (options?: GeofenceSessionOptions) => new GeofenceSession(createCollection(), options)
+const createMultimatch = (options?: MultimatchGeofenceSessionOptions) => new MultimatchGeofenceSession(createCollection(), options)
 describe('Box.contains', () => {
   const cases: Array<[string, BoxInput, Position, boolean]> = [
     ['beamBox inside', beam, [2, 0, 1], true],
@@ -699,8 +699,8 @@ describe('Geofence.subtract', () => {
     expect(other.boxes).toHaveLength(3)
   })
 })
-describe('Geofences', () => {
-  const geofences = new Geofences([
+describe('GeofenceCollection', () => {
+  const geofences = new GeofenceCollection([
     ['ground', new Geofence([{
       ...beam,
       y: 0,
@@ -728,7 +728,7 @@ describe('Geofences', () => {
   })
   test('getMatch returns null without a match', () => {
     expect(geofences.getMatch([100, 0, 100])).toBeNull()
-    const empty = new Geofences
+    const empty = new GeofenceCollection
     expect(empty.getMatch([0, 0, 0])).toBeNull()
   })
   test('getMatches returns every matching id in insertion order', () => {
@@ -737,12 +737,12 @@ describe('Geofences', () => {
     expect(geofences.getMatches([100, 0, 100])).toEqual([])
   })
   test('keeps literal ids', () => {
-    const typed = new Geofences<'a' | 'b'>([['a', new Geofence([beam])]])
+    const typed = new GeofenceCollection<'a' | 'b'>([['a', new Geofence([beam])]])
     const match: 'a' | 'b' | null = typed.getMatch([1, 0, 1])
     expect(match).toBe('a')
   })
   test('takes single boxes as fences', () => {
-    const boxes = new Geofences<string, Box>([
+    const boxes = new GeofenceCollection<string, Box>([
       ['low', new ClosedBox({
         ...beam,
         y: 0,
@@ -763,15 +763,216 @@ describe('Geofences', () => {
         return Math.hypot(x, y, z) <= this.radius
       }
     }
-    const fences = new Geofences<string, Fence>([
+    const fences = new GeofenceCollection<string, Fence>([
       ['sphere', new Sphere(1)],
       ['everywhere', {contains: () => true}],
     ])
     expect(fences.getMatch([0, 1, 0])).toBe('sphere')
     expect(fences.getMatch([0, 2, 0])).toBe('everywhere')
     expect(fences.getMatches([0, 0.5, 0])).toEqual(['sphere', 'everywhere'])
-    const spheres = new Geofences([['sphere', new Sphere(2)]])
+    const spheres = new GeofenceCollection([['sphere', new Sphere(2)]])
     expect(spheres.get('sphere')?.radius).toBe(2)
+  })
+})
+describe('RelationalGeofence', () => {
+  test('is a Geofence of its own boxes, which may be none, and keeps its relations apart, each once, in their order', () => {
+    const box = new BeamBox(beam)
+    const fence = new RelationalGeofence(['b', beam, 'a', box, 'b'])
+    expect(fence).toBeInstanceOf(Geofence)
+    expect(fence.boxes).toHaveLength(2)
+    expect(fence.boxes[1]).toBe(box)
+    expect([...fence.relations]).toEqual(['b', 'a'])
+    const relationsAlone = new RelationalGeofence(['a'])
+    const boxesAlone = new RelationalGeofence([beam])
+    expect(relationsAlone.boxes).toEqual([])
+    expect(boxesAlone.relations.size).toBe(0)
+  })
+  test('rejects neither boxes nor relations, and invalid boxes', () => {
+    expect(() => new RelationalGeofence([])).toThrow(RangeError)
+    expect(() => new RelationalGeofence([{
+      ...beam,
+      floor: 1,
+      ceiling: 2,
+    }])).toThrow()
+    expect(() => new Geofence([])).toThrow(RangeError)
+  })
+  test('on its own, contains what its own boxes contain', () => {
+    const fence = new RelationalGeofence(['elsewhere', beam])
+    expect(fence.contains([1, 0, 1])).toBe(true)
+    expect(fence.contains([10, 0, 10])).toBe(false)
+    const relationsAlone = new RelationalGeofence(['elsewhere'])
+    expect(relationsAlone.contains([1, 0, 1])).toBe(false)
+  })
+  test('translates its boxes and keeps its relations', () => {
+    const original = new RelationalGeofence(['a', beam])
+    const fence = original.translate([10, 0, 0])
+    expect(fence).toBeInstanceOf(RelationalGeofence)
+    expect([...fence.relations]).toEqual(['a'])
+    expect(fence.contains([11, 0, 1])).toBe(true)
+    expect(fence.contains([1, 0, 1])).toBe(false)
+  })
+})
+describe('GeofenceCollection, relational fences', () => {
+  /** a fence that counts how often it is asked */
+  class Counted {
+    asked = 0
+    constructor(private readonly fence: Fence) {}
+    contains(position: Position) {
+      this.asked++
+      return this.fence.contains(position)
+    }
+  }
+  const west = new Geofence([{
+    x: 0,
+    z: 0,
+    x2: 2,
+    z2: 2,
+  }])
+  const east = new Geofence([{
+    x: 2,
+    z: 0,
+    x2: 4,
+    z2: 2,
+  }])
+  const createRooms = () => new GeofenceCollection<string, Geofence>([
+    ['room', new RelationalGeofence(['west', 'east'])],
+    ['wing', new RelationalGeofence(['room', {
+      x: 4,
+      z: 0,
+      x2: 6,
+      z2: 2,
+    }])],
+    ['west', west],
+    ['east', east],
+  ])
+  test('match wherever their own boxes or any fence they relate to holds the position, through theirs, even before those', () => {
+    const fences = createRooms()
+    expect(fences.getMatch([1, 0, 1])).toBe('room')
+    expect(fences.getMatches([1, 0, 1])).toEqual(['room', 'wing', 'west'])
+    expect(fences.getMatches([3, 0, 1])).toEqual(['room', 'wing', 'east'])
+    expect(fences.getMatches([2, 0, 1])).toEqual(['room', 'wing', 'west', 'east'])
+    expect(fences.getMatches([5, 0, 1])).toEqual(['wing'])
+    expect(fences.getMatch([5, 0, 1])).toBe('wing')
+    expect(fences.getMatches([7, 0, 1])).toEqual([])
+    expect(fences.getMatch([7, 0, 1])).toBeNull()
+  })
+  test('contains tells about one fence the same way', () => {
+    const fences = createRooms()
+    expect(fences.contains('room', [3, 0, 1])).toBe(true)
+    expect(fences.contains('room', [5, 0, 1])).toBe(false)
+    expect(fences.contains('wing', [1, 0, 1])).toBe(true)
+    expect(fences.contains('west', [3, 0, 1])).toBe(false)
+    expect(fences.contains('nowhere', [1, 0, 1])).toBe(false)
+  })
+  test('ask every fence’s own boxes at most once per query, however many fences relate to it', () => {
+    const parts = Object.fromEntries(['a', 'b', 'c'].map(id => [id, new Counted(new Geofence([{
+      ...beam,
+      y: 0,
+      y2: 1,
+    }]))]))
+    const fences = new GeofenceCollection<string, Fence>([
+      ['all', new RelationalGeofence(['a', 'b', 'c'])],
+      ['some', new RelationalGeofence(['b', 'c'])],
+      ['all again', new RelationalGeofence(['all', 'some'])],
+      ...Object.entries(parts),
+    ])
+    // Nothing holds the position: every part is asked once.
+    expect(fences.getMatches([1, 5, 1])).toEqual([])
+    expect(Object.values(parts).map(part => part.asked)).toEqual([1, 1, 1])
+    // Everything does: the first fence finds the first part, and every other fence only asks what it still needs.
+    expect(fences.getMatches([1, 0.5, 1])).toEqual(['all', 'some', 'all again', 'a', 'b', 'c'])
+    expect(Object.values(parts).map(part => part.asked)).toEqual([2, 2, 2])
+    // The first match needs no more than the first part.
+    expect(fences.getMatch([1, 0.5, 1])).toBe('all')
+    expect(Object.values(parts).map(part => part.asked)).toEqual([3, 2, 2])
+  })
+  test('go round cycles of relations', () => {
+    const fences = new GeofenceCollection<string, Geofence>([
+      ['a', new RelationalGeofence(['b'])],
+      ['b', new RelationalGeofence(['c', 'a'])],
+      ['c', new RelationalGeofence(['a', beam])],
+    ])
+    expect(fences.getMatches([1, 0, 1])).toEqual(['a', 'b', 'c'])
+    expect(fences.getMatches([10, 0, 10])).toEqual([])
+    expect(fences.resolve('a')!.boxes).toHaveLength(1)
+  })
+  test('throw for a relation to a fence the collection lacks, whatever holds the position, until it has that fence', () => {
+    const fences = new GeofenceCollection<string, Geofence>([['a', new RelationalGeofence([beam, 'missing'])]])
+    expect(() => fences.getMatches([1, 0, 1])).toThrow('relates to “missing”')
+    expect(() => fences.getMatch([1, 0, 1])).toThrow(RangeError)
+    expect(() => fences.contains('a', [10, 0, 10])).toThrow(RangeError)
+    expect(() => fences.relationsOf('a')).toThrow(RangeError)
+    fences.set('missing', new Geofence([{
+      x: 10,
+      z: 10,
+      x2: 11,
+      z2: 11,
+    }]))
+    expect(fences.getMatches([10, 0, 10])).toEqual(['a', 'missing'])
+  })
+  test('follow every change of their fences', () => {
+    const fences = createRooms()
+    expect(fences.getMatches([1, 0, 1])).toEqual(['room', 'wing', 'west'])
+    fences.delete('west')
+    expect(() => fences.getMatches([1, 0, 1])).toThrow(RangeError)
+    fences.set('west', east)
+    expect(fences.getMatches([1, 0, 1])).toEqual([])
+    expect(fences.getMatches([3, 0, 1])).toEqual(['room', 'wing', 'east', 'west'])
+    fences.set('room', new RelationalGeofence(['east']))
+    expect(fences.getMatches([3, 0, 1])).toEqual(['room', 'wing', 'east', 'west'])
+    fences.clear()
+    expect(fences.getMatches([3, 0, 1])).toEqual([])
+    expect(fences.contains('room', [3, 0, 1])).toBe(false)
+  })
+  test('relationsOf lists what a fence relates to, none for a plain one or an unknown id', () => {
+    const fences = createRooms()
+    expect(fences.relationsOf('room')).toEqual(['west', 'east'])
+    expect(fences.relationsOf('wing')).toEqual(['room'])
+    expect(fences.relationsOf('west')).toEqual([])
+    expect(fences.relationsOf('nowhere')).toEqual([])
+  })
+  test('resolve into geofences of every box they take in, each once, and leave plain fences as they are', () => {
+    const fences = createRooms()
+    const room = fences.resolve('room')!
+    expect(room).not.toBeInstanceOf(RelationalGeofence)
+    expect(room.boxes).toEqual([...west.boxes, ...east.boxes])
+    expect(room.boxes[0]).toBe(west.boxes[0])
+    const wing = fences.resolve('wing')!
+    expect(wing.boxes).toHaveLength(3)
+    expect(wing.contains([5, 0, 1])).toBe(true)
+    expect(wing.contains([1, 0, 1])).toBe(true)
+    expect(fences.resolve('west')).toBe(west)
+    expect(fences.resolve('nowhere')).toBeUndefined()
+    const shared = new GeofenceCollection([
+      ['both', new RelationalGeofence(['west', 'again'])],
+      ['again', new RelationalGeofence(['west'])],
+      ['west', west],
+    ])
+    expect(shared.resolve('both')!.boxes).toEqual(west.boxes)
+    const spheres = new GeofenceCollection<string, Fence>([
+      ['ball', {contains: () => true}],
+      ['around', new RelationalGeofence(['ball'])],
+    ])
+    expect(spheres.getMatches([0, 0, 0])).toEqual(['ball', 'around'])
+    expect(() => spheres.resolve('around')).toThrow(TypeError)
+  })
+  test('drive sessions like any other fence', () => {
+    const session = new MultimatchGeofenceSession(createRooms())
+    const events = record(session)
+    session.update([1, 0, 1])
+    session.update([3, 0, 1])
+    session.update([5, 0, 1])
+    expect(events).toEqual([
+      ['enter', 'room'],
+      ['enter', 'wing'],
+      ['enter', 'west'],
+      ['change', 'room', null],
+      ['leave', 'west'],
+      ['enter', 'east'],
+      ['leave', 'room'],
+      ['leave', 'east'],
+      ['change', 'wing', 'room'],
+    ])
   })
 })
 describe('GeofenceSession', () => {
@@ -863,7 +1064,7 @@ describe('GeofenceSession, initialValue', () => {
     expect(session.match).toBeNull()
   })
   test('only takes known ids', () => {
-    const geofences = new Geofences([['a', new Geofence([beam])], ['b', new Geofence([beam])]] as const)
+    const geofences = new GeofenceCollection([['a', new Geofence([beam])], ['b', new Geofence([beam])]] as const)
     const session = new GeofenceSession(geofences, {initialValue: 'b'})
     expect(session.match).toBe('b')
     // @ts-expect-error TS2322 not an id of the geofences
@@ -972,7 +1173,7 @@ describe('MultimatchGeofenceSession, initialValue', () => {
     expect(events).toEqual([['leave', 'sky']])
   })
   test('only takes known ids', () => {
-    const geofences = new Geofences([['a', new Geofence([beam])], ['b', new Geofence([beam])]] as const)
+    const geofences = new GeofenceCollection([['a', new Geofence([beam])], ['b', new Geofence([beam])]] as const)
     const session = new MultimatchGeofenceSession(geofences, {initialValue: ['b', 'a']})
     expect([...session.matches]).toEqual(['b', 'a'])
     // @ts-expect-error TS2322 not an id of the geofences

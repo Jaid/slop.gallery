@@ -2,7 +2,7 @@ import type {Vec3} from '../../src/lib/gallery/types.ts'
 
 import {expect, test} from 'bun:test'
 
-import {Geofence} from 'geofency'
+import {Geofence, RelationalGeofence} from 'geofency'
 import {Box3} from 'three/webgpu'
 
 import {apseOpeningPoint, apseOpenings, bastionCurve, bastionLinkStripZ} from '../../src/lib/gallery/bastion.ts'
@@ -12,6 +12,7 @@ import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
 import {climbApproach} from '../../src/lib/gallery/climb.ts'
 import corridor, {corridorLanding, corridorLandingPaving, corridorStairs} from '../../src/lib/gallery/corridor.ts'
 import {insidePolygon, polygonBounds} from '../../src/lib/gallery/floorPolygons.ts'
+import {groundFenceY} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
@@ -221,8 +222,17 @@ test('the gallery’s bastion-knight_alley fences the Bastion’s blind branch b
 })
 /** The boxes of the gallery’s fence with the id as the plain data its dump gives, a tenth of a millimeter exact. */
 const dumped = (id: string) => slopGallery.dumpGeofences().find(fence => fence.id === id)!.boxes as Array<Record<string, number>>
-test('the gallery’s lobby-north, lobby-middle and lobby-south split the Lobby’s fence in three along the south edge of its glazed floor over the Oculus and the north edge of its arches into the Vesper and the Banquet', () => {
-  const [whole] = dumped('lobby')
+test('the gallery’s lobby-north, lobby-middle and lobby-south make up the Lobby’s fence, split in three along the south edge of its glazed floor over the Oculus and the north edge of its arches into the Vesper and the Banquet', () => {
+  // Everything over the Lobby’s floor plan from the slab up
+  const whole = {
+    x: -lobby.width / 2,
+    x2: lobby.width / 2,
+    z: lobby.northZ,
+    z2: lobby.southZ,
+    floor: groundFenceY,
+  }
+  expect(slopGallery.room('lobby').fence).toBeInstanceOf(RelationalGeofence)
+  expect(slopGallery.geofences.resolve('lobby')!.boxes).toEqual(['lobby-north', 'lobby-middle', 'lobby-south'].flatMap(part => slopGallery.geofences.get(part)!.boxes))
   const [{z2: glassZ}] = dumped('lobby-north')
   const [{z: archZ}] = dumped('lobby-south')
   expect(glassZ).toBe(lobby.opening.center[1] + lobby.opening.size[1] / 2)

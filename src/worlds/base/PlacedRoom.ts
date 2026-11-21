@@ -29,8 +29,8 @@ export type PlacedAmbience = RoomAmbience & {
  * A room as a world placed it: the same building block with its origin at a world position, handing out everything about the room in world meters and under global ids.
  */
 export default class PlacedRoom<Kind extends Room = Room> {
-  /** the room’s fence in world meters */
-  readonly fence: Kind['fence']
+  /** the room’s fence in world meters, which may take in other fences of the world, see {@link Room.fence} */
+  readonly fence: Geofence
 
   constructor(readonly room: Kind, readonly origin: Vec3) {
     this.fence = room.fence.translate(origin)

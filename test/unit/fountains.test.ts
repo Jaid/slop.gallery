@@ -40,7 +40,7 @@ describe('the Lobby’s fountain', () => {
   test('any fountain fits where the Lobby stands its own: under the vault’s spring, clear of the glass floor and with a walkway left to its benches', () => {
     const room = slopGallery.room('lobby')
     expect(lobbyFountainSpot[0]).toBe(0)
-    expect(room.room.fence.contains(room.toLocal(lobbyFountainSpot))).toBe(true)
+    expect(slopGallery.geofences.contains(room.id, lobbyFountainSpot)).toBe(true)
     for (const [, fountain] of entries) {
       expect(fountain.height).toBeLessThan(room.height)
       expect(lobbyFountainSpot[2] - fountain.radius).toBeGreaterThan(lobby.opening.center[1] + lobby.opening.size[1] / 2 + 1)

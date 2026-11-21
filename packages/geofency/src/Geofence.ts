@@ -5,11 +5,14 @@ import {createBox, subtractBox} from './box/index.ts'
 
 /** a space fenced by the union of one or more boxes */
 export default class Geofence implements Fence {
+  /** how many boxes of its own a fence of the class needs at least: one, as it fences nothing without; static, as the constructor reads it before the instance has fields */
+  protected static readonly minimumBoxes: number = 1
+
   readonly boxes: ReadonlyArray<Box>
 
-  /** Takes boxes or their plain data, see {@link createBox}. */
+  /** Takes boxes or their plain data, see {@link createBox}, at least {@link minimumBoxes} of them. */
   constructor(boxes: ReadonlyArray<Box | BoxInput>) {
-    if (!boxes.length) {
+    if (boxes.length < new.target.minimumBoxes) {
       throw new RangeError('A geofence needs at least one box.')
     }
     this.boxes = Object.freeze(boxes.map(box => createBox(box)))
