@@ -3,6 +3,7 @@ import type {FenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
 import type {SeedChange} from '#src/lib/gameSeed.ts'
 import type {Drawing} from '#src/lib/overlay/drawing.ts'
+import type {LayerOptions} from '#src/lib/overlay/layer.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
 import type {PortraitAddition, PortraitAdditionInput, PortraitTarget} from './addPortrait.ts'
 import type {WorldAnalysis} from './analyzeWorld.ts'
@@ -27,6 +28,7 @@ import {normalizeMeshPath, wireframeFloodAnchors, wireframeFloodDirections, wire
 import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import {isSeed, maximumSeed} from '#src/lib/environmentSeed.ts'
 import {drawingSchema, readDrawing} from '#src/lib/overlay/drawing.ts'
+import {isLayerId, layerIdSchema, layerSchema, readLayer} from '#src/lib/overlay/layer.ts'
 
 /** a fence of the world as the union of its boxes and the fences it takes in */
 export type GeofenceDump = {
@@ -49,9 +51,12 @@ export type WebmcpBridge = {
     drawing: Drawing
     id: string
   }
+  addLayer: (options: LayerOptions) => string
   addPortrait: (input: PortraitAdditionInput) => Promise<PortraitAddition>
   analyzeWorld: () => WorldAnalysis
   castMood: (input: MoodCastInput) => MoodCast
+  clearDrawings: () => number
+  clearLayer: (id: string) => number
   downloadFrame: (options: {
     format?: FrameFormat
     name?: string
@@ -273,9 +278,57 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       },
     },
     {
+      name: 'add_layer',
+      title: 'Create a drawing layer',
+      description: 'Create a page-local drawing layer and return its ID. Only id is required; it must not exist already. Defaults to white, priority 0, the live overlay line width and style, and the fence distance fade. Higher priority draws on top. Use the returned ID as drawing.layer in add_drawing.',
+      inputSchema: layerSchema,
+      annotations: {readOnlyHint: false},
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        return {id: getBridge().addLayer(readLayer(input))}
+      },
+    },
+    {
+      name: 'clear_layer',
+      title: 'Clear one drawing layer',
+      description: 'Remove every drawing on the named layer and return the number removed. Keeps its definition. Built-in layers are default, fences (blue) and touching-fences (red).',
+      inputSchema: {
+        type: 'object',
+        properties: {id: layerIdSchema},
+        required: ['id'],
+        additionalProperties: false,
+      },
+      annotations: {readOnlyHint: false},
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).length !== 1 || !isLayerId(input.id)) {
+          throw new TypeError('Expected {id} for one layer.')
+        }
+        return {removed: getBridge().clearLayer(input.id)}
+      },
+    },
+    {
+      name: 'clear_drawings',
+      title: 'Clear all overlay drawings',
+      description: 'Remove every drawing across all layers, including geofence outlines, and return the number removed. Layer IDs and settings remain available for new drawings.',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+        additionalProperties: false,
+      },
+      annotations: {readOnlyHint: false},
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).length) {
+          throw new TypeError('Expected an empty object to clear all drawings.')
+        }
+        return {removed: getBridge().clearDrawings()}
+      },
+    },
+    {
       name: 'add_drawing',
       title: 'Add a world-space drawing',
-      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter or circle in meters. The optional color is hex RGB; a circle is horizontal unless given a normal. Shown through walls independently of show_fence, including in captures. The drawing stays until this page reloads. Returns its ID and geometry.',
+      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter or circle in meters. Use drawing.layer to select an existing overlay layer (default: default). The optional hex RGB color overrides the layer’s; a circle is horizontal unless given a normal. Shown through walls independently of show_fence, including in captures. The drawing stays until cleared or the page reloads. Returns its ID and geometry.',
       inputSchema: {
         type: 'object',
         properties: {drawing: drawingSchema},

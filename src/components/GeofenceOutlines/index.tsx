@@ -10,6 +10,7 @@ import overlay from '#src/lib/overlay/index.ts'
 import world from '#src/worlds/current.ts'
 
 import fenceEdges from './fenceEdges.ts'
+import {fences, touching} from './fenceLayers.ts'
 
 export default function GeofenceOutlines() {
   const selection = useFenceDisplay(state => state.fence)
@@ -30,7 +31,10 @@ function Outline({fence, id}: {
     if (!edges.length) {
       return
     }
-    const item = overlay.addSegments(edges, {name: id})
+    const item = overlay.addSegments(edges, {
+      layer: fences,
+      name: id,
+    })
     drawing.current = item
     return () => {
       item.remove()
@@ -39,10 +43,7 @@ function Outline({fence, id}: {
   }, [far, fence, id])
   // Crossing a fence recolors its batch without reuploading the geometry. Occupied fences win on shared edges.
   useLayoutEffect(() => {
-    drawing.current?.setStyle({
-      color: inside ? 'red' : 'blue',
-      renderOrder: inside ? 11 : 10,
-    })
+    drawing.current?.setStyle({layer: inside ? touching : fences})
   }, [far, fence, id, inside])
   return null
 }

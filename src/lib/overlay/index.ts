@@ -4,4 +4,5 @@ import WorldOverlay from './WorldOverlay.ts'
 const overlay = new WorldOverlay
 
 export default overlay
+export type {DistanceFade, LayerOptions} from './layer.ts'
 export type {OverlayDrawing, OverlayStyle} from './WorldOverlay.ts'

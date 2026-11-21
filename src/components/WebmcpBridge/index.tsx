@@ -11,6 +11,7 @@ import useGraphicsMode, {useCinematicGraphics} from 'use-graphics-mode'
 import downloadFrame from '#src/lib/downloadFrame.ts'
 import {usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
+import overlay from '#src/lib/overlay/index.ts'
 import {captureWarmup, getRenderScale} from '#src/lib/rendering/captureWarmup.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
@@ -45,6 +46,9 @@ export default function WebmcpBridge() {
     const inspector = new AimInspector(scene, camera)
     const bridge = {
       addDrawing,
+      addLayer: overlay.addLayer.bind(overlay),
+      clearLayer: overlay.clearLayer.bind(overlay),
+      clearDrawings: overlay.clearDrawings.bind(overlay),
       addPortrait,
       analyzeWorld: () => analyzeWorld(scene, world.worldRooms(), room => world.fencesIn(room)),
       castMood,

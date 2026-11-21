@@ -1,7 +1,10 @@
 import type {Vec3} from 'math'
 
+import {hexColor, isLayerId, layerIdSchema} from './layer.ts'
+
 export type Drawing = {[K in keyof Shapes]: Shapes[K] & {
   color?: string
+  layer?: string
   type: K
 }}[keyof Shapes]
 type Shapes = {
@@ -38,7 +41,6 @@ const radius = {
   type: 'number',
   exclusiveMinimum: 0,
 }
-const colorPattern = /^#(?:[\da-f]{3}){1,2}$/iu
 const layouts = {
   box: {
     required: ['min', 'max'],
@@ -72,10 +74,11 @@ export const drawingSchema = {oneOf: Object.entries(layouts).map(([kind, {requir
       type: 'string',
       const: kind,
     },
+    layer: layerIdSchema,
     color: {
       type: 'string',
-      pattern: colorPattern.source,
-      description: 'Hex RGB color, default white',
+      pattern: hexColor.source,
+      description: 'Hex RGB override, otherwise the layer color',
     },
     ...Object.fromEntries([...required, ...optional].map(key => [key, key === 'radius' ? radius : vector])),
   },
@@ -91,10 +94,13 @@ export function readDrawing(value: unknown): Drawing {
   const fields = value as Record<string, unknown>
   const {required, optional} = layouts[value.type as keyof Shapes]
   const keys: Array<string> = [...required, ...optional]
-  if (Object.keys(fields).some(key => !['color', 'type', ...keys].includes(key)) || required.some(key => !Object.hasOwn(fields, key))) {
+  if (Object.keys(fields).some(key => !['color', 'layer', 'type', ...keys].includes(key)) || required.some(key => !Object.hasOwn(fields, key))) {
     throw new TypeError(`Unexpected or missing fields for drawing type ${value.type}`)
   }
-  if (fields.color !== undefined && !(typeof fields.color === 'string' && colorPattern.test(fields.color))) {
+  if (fields.layer !== undefined && !isLayerId(fields.layer)) {
+    throw new TypeError('drawing.layer must be a nonblank layer ID.')
+  }
+  if (fields.color !== undefined && !(typeof fields.color === 'string' && hexColor.test(fields.color))) {
     throw new TypeError('drawing.color must be a hex RGB color.')
   }
   for (const key of keys) {

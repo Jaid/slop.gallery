@@ -15,6 +15,7 @@ export default function addDrawing(drawing: Drawing) {
 function render(name: string, drawing: Drawing) {
   const style = {
     color: drawing.color,
+    layer: drawing.layer,
     name,
   }
   switch (drawing.type) {
