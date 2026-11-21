@@ -266,9 +266,6 @@
     "packages/roll-seed": {
       "name": "roll-seed",
       "version": "0.1.0",
-      "dependencies": {
-        "fated-random": "workspace:*",
-      },
     },
     "packages/rolldown-plugin-bake-branch-component": {
       "name": "rolldown-plugin-bake-branch-component",

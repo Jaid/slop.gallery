@@ -17,9 +17,6 @@
   "scripts": {
     "test": "bun test ./test"
   },
-  "dependencies": {
-    "fated-random": "workspace:*"
-  },
   "files": [
     "src",
     "readme.md",
