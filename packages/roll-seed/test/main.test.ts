@@ -23,6 +23,15 @@ test('integers wrap in the one-based range, even as decimal strings beyond safe 
     expect(rollSeed(input)).toBe(seed)
   }
 })
+test('every seed of the range stays what it is, as a number and as its plain decimal text', () => {
+  for (let seed = 1; seed <= maximumSeed; seed++) {
+    expect(rollSeed(seed)).toBe(seed)
+    expect(rollSeed(String(seed))).toBe(seed)
+  }
+  expect(rollSeed('042')).toBe(42)
+  expect(rollSeed('4.2e1')).not.toBe(42)
+  expect(rollSeed(' 42')).not.toBe(42)
+})
 test('integers keep their low 16 bits in two’s complement, as numbers and as decimal text of any length', () => {
   const integers = [0, -0, 1, -1, 65_535, 65_536, -65_536, 65_537, Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER, 2 ** 53 + 2, -(2 ** 60) - 2 ** 20, 1e20, -1e20, Number.MAX_VALUE, -Number.MAX_VALUE]
   for (const integer of integers) {
