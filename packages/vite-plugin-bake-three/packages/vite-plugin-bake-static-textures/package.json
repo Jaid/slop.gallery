@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "vite-plugin-bake-core": "workspace:*",
-    "@napi-rs/canvas": "1.1.1"
+    "@napi-rs/canvas": "1.2.0"
   },
   "peerDependencies": {
     "three": "^0.187.0",

@@ -20,7 +20,7 @@
   "dependencies": {
     "fs-extra": "11.4.1",
     "voice-sample-store": "workspace:*",
-    "@babel/parser": "8.1.2"
+    "@babel/parser": "8.1.3"
   },
   "peerDependencies": {
     "vite": "^8.4.0-beta.1"
