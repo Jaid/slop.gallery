@@ -1,0 +1,30 @@
+{
+  "name": "roll-seed",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Rolls a seed from 1 through 65 536 using Web Crypto or derives one from a number, text or bytes",
+  "funding": "https://github.com/sponsors/Jaid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaid/slop.gallery.git",
+    "directory": "packages/roll-seed"
+  },
+  "main": "src/main.ts",
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "scripts": {
+    "test": "bun test ./test"
+  },
+  "dependencies": {
+    "fated-random": "workspace:*"
+  },
+  "files": [
+    "src",
+    "readme.md",
+    "license.txt"
+  ],
+  "sideEffects": false,
+  "types": "./src/main.ts"
+}

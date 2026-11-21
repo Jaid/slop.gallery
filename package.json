@@ -79,6 +79,7 @@
     "react-dom": "19.3.1",
     "react-dropzone": "20.2.1",
     "read-permalink": "0.4.0",
+    "roll-seed": "workspace:*",
     "stringify-clank": "0.1.1",
     "telemethree": "workspace:*",
     "telemethree-ego": "workspace:*",
