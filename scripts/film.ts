@@ -21,6 +21,14 @@ import {StitchTimeline} from './lib/stitchTimeline.ts'
 const logLength = 400
 /** rows of the canvas without --width or --height */
 const filmHeight = 2160
+/** An .avif film is a preview to pass around: at preset 4, crf 45 takes 58% off crf 30 and still scores a VMAF of 94.5 on the Antiphon orbit at 720p, see https://av1bench.hive.lan */
+const avifDefaults = {
+  crf: 45,
+  height: 1080,
+  preset: 4,
+}
+/** The format the options write, from the extension of --output-file, .jxl without one. */
+const formatOf = (options: Pick<FilmValues, 'output-file'>) => frameFormat(options['output-file'] ?? 'film.jxl')
 /** Its neighbors are everything a camera in its start room can see, while the rest never loads. A flight into a room beyond them sees the void there, which --world_reach all fills. */
 const filmWorldReach = 'neighbors'
 const help = `Usage: bun scripts/film.ts [options]
@@ -41,17 +49,17 @@ ${galleryHelp(filmHeight, {
   --list                  print the target and seed of each clip before seam rotation and exit without recording
   --output-file <file>    the extension picks the format. Default: out/film/<world>-<timestamp>.jxl
                           .jxl  animated JPEG XL
-                          .avif  looping animated AVIF (AV1); --audio writes a separate .opus file
+                          .avif  looping animated AVIF (AV1), a preview at ${avifDefaults.height} rows, crf ${avifDefaults.crf} and preset ${avifDefaults.preset} unless told otherwise; --audio writes a separate .opus file
                           .webm, .mkv  AV1 video
                           .png  one PNG per frame, each written to the next free name after the given one (shot.png → shot_001.png, shot_002.png, …)
   --fps <number>          frames per second. Default: 60
   --duration <seconds>    recording time per clip, rounded to the nearest frame (at least one). Default: the recipe’s length. Shorter clips share one continuous flight across inputs; longer clips each play the recipe and hold its final camera pose for the remaining time
   --starting-frame <n>    frame that becomes the first frame of the output, wrapping once at the end. Count frames after applying --duration and any crossfades. Default: 1
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
-  --crf <number>          AV1 quality for .avif, .webm and .mkv, lower is better. Default: ${av1Crf}
+  --crf <number>          AV1 quality for .avif, .webm and .mkv, lower is better. Default: ${avifDefaults.crf} for .avif, otherwise ${av1Crf}
   --keyframe-interval <n> at most how many frames AV1 runs from one keyframe to the next; small ones, like 6, let players seek and scrub without decoding long stretches, for a larger file. Default: the encoder’s own, about 5 s
   --fast-decode <0–2>     how much AV1 compression to trade for a faster decoder: SVT-AV1’s fast-decode level, and from 1 on four tiles, which the decoder’s threads take on side by side. Default: 0
-  --preset <number>       SVT-AV1 preset, lower compresses better and encodes slower. Default: ${av1Preset}
+  --preset <number>       SVT-AV1 preset, lower compresses better and encodes slower. Default: ${avifDefaults.preset} for .avif, otherwise ${av1Preset}
   --settle <frames>       frames to render before recording, on the wall clock at the first keyframe, and at the same moment after a keyframe’s tools ran. Default: 2
   -h, --help              show this help
 
@@ -160,7 +168,10 @@ const prepareFilm = async (options: FilmValues, setup: GallerySetup) => {
   const recipeFile = options.recipe ?? join(import.meta.dir, 'recipes', 'spawn.json')
   const recipeText = recipeFile === '-' ? await Bun.stdin.text() : await fs.readFile(recipeFile, 'utf8')
   const recipe = parseRecipe(JSON.parse(recipeText))
-  const crf = options.crf === undefined ? av1Crf : parseNumbers(options.crf, 'crf', [1])[0]
+  const output = options['output-file'] === undefined ? join(filmRoot, `${setup.world}-${timestamp()}.jxl`) : resolve(options['output-file'])
+  const format = frameFormat(output)
+  const avif = format === 'avif'
+  const crf = options.crf === undefined ? (avif ? avifDefaults.crf : av1Crf) : parseNumbers(options.crf, 'crf', [1])[0]
   const jxlDistance = parseNumbers(options['jxl-distance'], 'jxl-distance', [1])[0]
   const keyframeInterval = options['keyframe-interval'] === undefined ? undefined : parseNumbers(options['keyframe-interval'], 'keyframe-interval', [1])[0]
   if (keyframeInterval !== undefined && !(Number.isSafeInteger(keyframeInterval) && keyframeInterval >= 1)) {
@@ -170,7 +181,7 @@ const prepareFilm = async (options: FilmValues, setup: GallerySetup) => {
   if (![0, 1, 2].includes(fastDecode)) {
     throw new Error('--fast-decode must be 0, 1 or 2.')
   }
-  const preset = options.preset === undefined ? av1Preset : parseNumbers(options.preset, 'preset', [1])[0]
+  const preset = options.preset === undefined ? (avif ? avifDefaults.preset : av1Preset) : parseNumbers(options.preset, 'preset', [1])[0]
   if (!(Number.isSafeInteger(preset) && preset >= -1 && preset <= 13)) {
     throw new Error('--preset must be a whole number from -1 to 13.')
   }
@@ -179,8 +190,6 @@ const prepareFilm = async (options: FilmValues, setup: GallerySetup) => {
     throw new Error('--fps must be positive.')
   }
   const settle = resolveSettle(options.settle)
-  const output = options['output-file'] === undefined ? join(filmRoot, `${setup.world}-${timestamp()}.jxl`) : resolve(options['output-file'])
-  const format = frameFormat(output)
   const {width, height} = setup.viewport
   validateFrameSize(format, width, height)
   const clock = new FilmRecipeClock(recipe, fps, options.duration === undefined ? undefined : Number(options.duration))
@@ -446,10 +455,11 @@ const main = async (overrides: FilmOptions) => {
     ...normalizeOptions<FilmValues>(overrides, filmOptions),
   }
   const inputs = await filmInputs(options)
+  const defaultHeight = formatOf(options) === 'avif' ? avifDefaults.height : filmHeight
   const first = await resolveGallerySetup({
     ...options,
     ...inputs[0],
-  }, filmHeight)
+  }, defaultHeight)
   const film = await prepareFilm(options, first)
   const {encoding, format} = film
   const {fps, height, output, width} = encoding
@@ -470,7 +480,7 @@ const main = async (overrides: FilmOptions) => {
       const setup = clip === 0 ? first : await resolveGallerySetup({
         ...options,
         ...input,
-      }, filmHeight)
+      }, defaultHeight)
       const take = film.clock.take(timeline.clipStart(clip), timeline.recipeStart)
       const recording = await captureFilm(film, setup, take, source => {
         if (size && (size.width !== source.width || size.height !== source.height)) {
