@@ -1,4 +1,5 @@
 import type {BufferAttribute, BufferGeometry, InstancedBufferGeometry, InstancedMesh, Light, Material, Mesh, Object3D, PointLight, SpotLight} from 'three/webgpu'
+import type {Arrayable} from 'type-fest'
 
 import {Box3, Matrix4, Vector3} from 'three/webgpu'
 
@@ -21,7 +22,7 @@ export type WorldMesh = {
   /** instances of an instanced mesh; left out where it is 1 */
   instances?: number
   /** material name or type, a list for several; left out where it is the plain MeshStandardNodeMaterial */
-  material?: Array<string> | string
+  material?: Arrayable<string>
   /** names of the mesh and its named ancestors, outermost first */
   path: string
   /** the other rooms holding at least 1% of the mesh’s bounding volume, most first; the mesh itself is listed in the region holding the most */
@@ -75,7 +76,6 @@ export type WorldAnalysis = {
     foreignLights: Array<ForeignLight>
   }>
 }
-type Arrayable<T> = Array<T> | T
 
 const globalLightTypes = new Set(['AmbientLight', 'DirectionalLight', 'HemisphereLight', 'LightProbe'])
 const round = (value: number) => Math.round(value * 1e4) / 1e4 + 0

@@ -21,7 +21,8 @@
   "dependencies": {
     "get-free": "0.2.0",
     "math": "0.1.0",
-    "media-encoding": "workspace:*"
+    "media-encoding": "workspace:*",
+    "type-fest": "6.0.3"
   },
   "peerDependencies": {
     "puppeteer-core": "^25.18.1",

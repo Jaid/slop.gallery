@@ -1,4 +1,5 @@
 import type {Camera, Renderer, Scene} from 'three/webgpu'
+import type {Arrayable} from 'type-fest'
 
 import {WireframeRenderPipeline} from 'capture-session'
 import {texture} from 'three/tsl'
@@ -11,7 +12,7 @@ export default class OverlayWireframePipeline extends WireframeRenderPipeline {
   wireframeTarget?: RenderTarget
   private outputPass?: RenderPipeline
   private readonly size = new Vector2
-  constructor(renderer: Renderer, scene: Scene, private readonly view: Camera, highlight: Array<string> | string = []) {
+  constructor(renderer: Renderer, scene: Scene, private readonly view: Camera, highlight: Arrayable<string> = []) {
     super(renderer, scene, view, highlight)
   }
   override dispose() {

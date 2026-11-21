@@ -1,4 +1,5 @@
 import type {Camera, Material, Mesh, Object3D, Renderer, Scene} from 'three/webgpu'
+import type {Arrayable} from 'type-fest'
 
 import {abs, attribute, fwidth, min, mix, normalView, uniform} from 'three/tsl'
 import {Color, DoubleSide, MeshBasicNodeMaterial, RenderPipeline} from 'three/webgpu'
@@ -62,7 +63,7 @@ export default class WireframeRenderPipeline extends RenderPipeline {
   private readonly lines: MeshBasicNodeMaterial
   private readonly scene: Scene
 
-  constructor(renderer: Renderer, scene: Scene, camera: Camera, highlight: Array<string> | string = []) {
+  constructor(renderer: Renderer, scene: Scene, camera: Camera, highlight: Arrayable<string> = []) {
     super(renderer)
     this.scene = scene
     this.camera = camera

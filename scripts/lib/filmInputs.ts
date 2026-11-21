@@ -1,3 +1,5 @@
+import type {Arrayable} from 'type-fest'
+
 import {join, resolve, sep} from 'node:path'
 
 import {globby, isDynamicPattern} from 'globby'
@@ -66,9 +68,9 @@ const expandTargets = async (patterns: Array<string>, cwd: string) => {
 
 /** One take per target × seed pair, or the usual single take against the dev server with seed 1. */
 export const filmInputs = async (options: {
-  seed?: Array<string> | string
+  seed?: Arrayable<string>
   'seed-range'?: string
-  target?: Array<string> | string
+  target?: Arrayable<string>
 }, cwd = process.cwd()) => {
   const builds = options.target === undefined ? [undefined] : await expandTargets([options.target].flat(), cwd)
   const numbers = expandSeeds([options.seed ?? '1'].flat(), options['seed-range'] ?? defaultSeedRange)

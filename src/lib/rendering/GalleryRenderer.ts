@@ -3,6 +3,7 @@ import type {StreamBudget} from './streamBudget.ts'
 import type {Drawable} from './worldBounds.ts'
 import type {WebgpuRendererOptions} from 'three-fiber-game'
 import type {Camera, Material, Scene} from 'three/webgpu'
+import type {Arrayable} from 'type-fest'
 
 import {WebgpuRenderer} from 'three-fiber-game'
 import {Object3D, Vector3} from 'three/webgpu'
@@ -381,7 +382,7 @@ export class GalleryRenderer extends WebgpuRenderer {
    */
   private admit(object: Object3D, camera: Camera, budget: number) {
     const built = this.builtMaterials.get(camera)
-    const materials = (object as Object3D & {material?: Array<Material> | Material}).material
+    const materials = (object as Object3D & {material?: Arrayable<Material>}).material
     const fresh = this.freshBuildCosts.get(camera) ?? initialFreshBuildCost
     // Shadow maps draw with materials of their own, so what the object’s material cost elsewhere tells nothing about them.
     const known = this.shadowCameras.has(camera) ? null : this.materialBuildCosts

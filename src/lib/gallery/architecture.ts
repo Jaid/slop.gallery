@@ -1,4 +1,5 @@
 import type {Wall, WallOpening} from '../placement/wallGeometry.ts'
+import type {Arrayable} from 'type-fest'
 
 import {ADDITION, Brush, Evaluator, SUBTRACTION} from 'three-bvh-csg'
 import {mergeVertices, toCreasedNormals} from 'three/addons/utils/BufferGeometryUtils.js'
@@ -76,7 +77,7 @@ export const openingShape = (hole: WallOpening, padding = 0, bottom = hole.botto
   shape.closePath()
   return shape
 }
-const extrude = (shape: Array<Shape> | Shape, depth: number, z: number, segments = curveSegments) => {
+const extrude = (shape: Arrayable<Shape>, depth: number, z: number, segments = curveSegments) => {
   const extrudedProfile = new ExtrudeGeometry(shape, {
     depth,
     bevelEnabled: false,

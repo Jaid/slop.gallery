@@ -1,5 +1,6 @@
 import type {Vec3} from '../src/lib/gallery/types.ts'
 import type {BufferGeometry, Material, Object3D, Raycaster, Scene, Sphere} from 'three/webgpu'
+import type {Arrayable} from 'type-fest'
 
 import {expect, test} from 'bun:test'
 import {join} from 'node:path'
@@ -79,7 +80,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('the sun reaches no point of a sun-tig
       isBatchedMesh?: boolean
       isInstancedMesh?: boolean
       isMesh?: boolean
-      material?: Array<Material> | Material
+      material?: Arrayable<Material>
     }
     type ShadowMaterial = Material & {
       alphaMap?: unknown
