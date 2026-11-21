@@ -97,7 +97,7 @@ export function removeSlot(id: string) {
     dragging: state.dragging === id ? null : state.dragging,
   }))
 }
-/** The slot that X would create where a placement ray meets a wall, shaped like the last edited one. */
+/** The new slot previewed where a placement ray meets a wall, shaped like the last edited one. */
 export function previewSlot(target: Placement): PortraitSlot {
   const {slots, template} = usePortraitSlots.getState()
   let index = 0

@@ -70,7 +70,7 @@ export default class JxlEncoder {
       }))
       .update(source)
       .digest()
-    // 48 bits, which keeps the names short and still never collide among a project’s images.
+    // The first 48 bits keep cache names short; collisions are unlikely at this scale.
     const output = join(this.folder, `${makeBase64(key).slice(0, 8)}.jxl`)
     let job = this.pending.get(output)
     if (!job) {
