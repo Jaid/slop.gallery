@@ -2,12 +2,12 @@ import type {RoomCamera} from '../base/Room.ts'
 
 export default {
   overview: {
-    position: [4.19, 3.628, 13.32],
+    position: [-13.818, 4.317, 9.831],
     aim: {
-      yaw: 0.1965,
-      pitch: -0.2528,
+      yaw: -1.1259,
+      pitch: -0.2956,
     },
-    fov: 80,
+    fov: 60,
     ratio: 16 / 9,
   },
   stairs: {
