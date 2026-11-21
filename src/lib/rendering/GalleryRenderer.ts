@@ -1,4 +1,5 @@
 import type {Projection} from './GalleryDrawingPipeline.ts'
+import type {StreamBudget} from './streamBudget.ts'
 import type {Drawable} from './worldBounds.ts'
 import type {WebgpuRendererOptions} from 'three-fiber-game'
 import type {Camera, Material, Scene} from 'three/webgpu'
@@ -115,9 +116,6 @@ export const updateChangedMatrices = (object: Object3D, parentChanged: boolean) 
 }
 // Milliseconds a warming frame may spend building the node graphs of objects drawn outside the camera frustum. Behind the loading screen, long frames matter less than getting through the scene: a frame’s own rendering adds up over many short ones.
 const warmupBuildBudget = 50
-// Milliseconds a streaming frame may spend building the node graphs of objects drawn for the first time in a pass, see readStreamBudget. Building happens synchronously, from a few milliseconds per object to over a hundred for the heaviest; a frame always admits at least one.
-const streamBudget = readStreamBudget()
-const streamedBuildBudget = streamBudget === false ? Number.POSITIVE_INFINITY : streamBudget
 /** the least a build is expected to cost, in milliseconds, so a frame never admits more than a budget’s worth of objects whose materials are built already */
 const minimumBuildCost = 0.1
 /** the build cost a camera’s passes are expected to have for a material they haven’t built yet, in milliseconds, until they built one */
@@ -190,6 +188,8 @@ export class GalleryRenderer extends WebgpuRenderer {
   private readonly shadowsAwaitingPipelines = new Map<Camera, number>
   /** the recent average of milliseconds spent building an object whose material a camera’s passes built already, which three mostly takes from its caches */
   private sharedBuildCost = 1
+  /** milliseconds a streaming frame may spend building the node graphs of objects drawn for the first time in a pass, or `false` for no limit, see {@link setStreamBudget}. Building happens synchronously, from a few milliseconds per object to over a hundred for the heaviest; a frame always admits at least one. */
+  private streamBudget: StreamBudget = readStreamBudget()
   private streamFound = false
   private streamIdle = 0
   private streaming = false
@@ -247,6 +247,11 @@ export class GalleryRenderer extends WebgpuRenderer {
   /** the number of render pipelines that are still compiling in the background */
   get pendingPipelines() {
     return this.compilingPipelines.size
+  }
+
+  /** {@link streamBudget} as what {@link withinBudget} compares with */
+  private get streamedBuildBudget() {
+    return this.streamBudget === false ? Number.POSITIVE_INFINITY : this.streamBudget
   }
 
   /** whether the last warming frame drew every object in the frame scene, so all that is left are pipelines compiling in the background */
@@ -332,6 +337,11 @@ export class GalleryRenderer extends WebgpuRenderer {
   /** Sets the scene the game renders every frame, together with its shadow and reflection passes. */
   setFrameScene(scene: Scene | null) {
     this.frameScene = scene
+  }
+
+  /** Sets how many milliseconds a streaming frame may spend building, or `false` for no limit, from the next frame on; `?stream_budget` by default. */
+  setStreamBudget(budget: StreamBudget) {
+    this.streamBudget = budget
   }
 
   /**
@@ -537,7 +547,7 @@ export class GalleryRenderer extends WebgpuRenderer {
       }
     }
     const build: Projection = (object, camera, groupOrder, renderList, clippingContext) => {
-      if (this.admit(object, camera, this.warming ? warmupBuildBudget : streamedBuildBudget)) {
+      if (this.admit(object, camera, this.warming ? warmupBuildBudget : this.streamedBuildBudget)) {
         drawNew(object, camera, groupOrder, renderList, clippingContext)
       } else if (this.warming) {
         // Warming budgets the extra draws outside the frustum, never what the camera already sees.
@@ -582,12 +592,12 @@ export class GalleryRenderer extends WebgpuRenderer {
       const priority = this.streamPriority?.(object) ?? true
       this.streamFound = true
       this.streamPriorityFound ||= priority
-      if (!(priority || this.streamRest) || !this.withinBudget(streamedBuildBudget)) {
+      if (!(priority || this.streamRest) || !this.withinBudget(this.streamedBuildBudget)) {
         gate(object, camera)
         for (const child of object.children) {
           drawing.project(child, camera, groupOrder, renderList, clippingContext)
         }
-      } else if (streamBudget === false) {
+      } else if (this.streamBudget === false) {
         // Everything eligible fits, so ranking it would only slow down unbudgeted captures.
         drawNew(object, camera, groupOrder, renderList, clippingContext)
       } else {
@@ -638,7 +648,7 @@ export class GalleryRenderer extends WebgpuRenderer {
     this.plannedBuildCost = 0
     this.buildTime = 0
     updateChangedMatrices(this.frameScene!, false)
-    if (this.warming || this.streaming && streamBudget !== false) {
+    if (this.warming || this.streaming) {
       camera.getWorldPosition(this.eye)
     }
   }

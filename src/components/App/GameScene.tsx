@@ -6,6 +6,7 @@ import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import AlbedoVision from '#component/AlbedoVision'
 import Postprocessing from '#component/Postprocessing'
+import StreamPace from '#component/StreamPace'
 import TelemetryBridge from '#component/TelemetryBridge'
 import WebgpuCaptureBridge from '#component/WebgpuCaptureBridge'
 import WireframeVision from '#component/WireframeVision'
@@ -26,6 +27,7 @@ export default function GameScene({children}: GameWrapperProps) {
   const settings = useMemo(() => getRenderPipelineSettings(profile, antiAliasing), [profile, antiAliasing])
   return <>
     <WorldFreeze />
+    <StreamPace />
     <WebgpuCaptureBridge />
     <TelemetryBridge />
     {children}

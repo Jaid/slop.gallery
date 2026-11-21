@@ -36,7 +36,7 @@ import {readPmrem} from './rendering/pmrem.ts'
 import {readRatio} from './rendering/ratio.ts'
 import {readScale, readWarmupScale} from './rendering/scale.ts'
 import {readShowWireframe} from './rendering/showWireframe.ts'
-import {readStreamBudget} from './rendering/streamBudget.ts'
+import {readFastStreamBudget, readStreamBudget} from './rendering/streamBudget.ts'
 import {readWireframeHighlight} from './rendering/wireframeHighlight.ts'
 import {readRoomAnnouncements} from './roomAnnouncements.ts'
 import {readDumpScreenshot} from './telemetry/dumpScreenshot.ts'
@@ -68,6 +68,7 @@ const readers: Record<string, Reader> = {
   edit_lamps: readEditLamps,
   edit_portrait_slots: readPortraitSlotEditing,
   fade: readFade,
+  fast_stream_budget: readFastStreamBudget,
   flying: readFlying,
   fountain: readFountain,
   fov: readFov,

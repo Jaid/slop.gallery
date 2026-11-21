@@ -6,6 +6,7 @@ import {AmbientLight, DirectionalLight, Group, HemisphereLight, PerspectiveCamer
 
 import OrbitInspection from '../../camera/OrbitInspection.ts'
 import worldClock from '../../worldClock.ts'
+import detachedCanvases from '../detachedCanvases.ts'
 import Studio from './base/Studio.ts'
 import {boxClearance, clearance, fitDistance, studioFov, subjectRadius} from './studioFraming.ts'
 
@@ -124,6 +125,8 @@ export default class StudioView extends Studio {
   /** what was last asked to be shown, on the stage or on its way there */
   private subject: Object3D | undefined
   private unfollowClock: (() => void) | undefined
+  /** tells `detachedCanvases` that the canvas no longer draws, see {@link start} */
+  private unholdCanvas: (() => void) | undefined
 
   constructor() {
     const lights = viewerLights()
@@ -261,12 +264,13 @@ export default class StudioView extends Studio {
     })
   }
 
-  /** Draws from now on, whenever the view changes and while the world’s clock runs. */
+  /** Draws from now on, whenever the view changes and while the world’s clock runs. Meanwhile, the world streams in what it still lacks under the pause menu as it does in play, so turning the object keeps up with the display. */
   start() {
     if (this.drawing || this.disposed) {
       return
     }
     this.drawing = true
+    this.unholdCanvas = detachedCanvases.hold()
     // An animated material goes on with the world.
     this.unfollowClock = worldClock.subscribe(() => this.requestFrame())
     this.requestFrame()
@@ -277,6 +281,8 @@ export default class StudioView extends Studio {
     this.drawing = false
     this.unfollowClock?.()
     this.unfollowClock = undefined
+    this.unholdCanvas?.()
+    this.unholdCanvas = undefined
     if (this.frame !== undefined) {
       cancelAnimationFrame(this.frame)
       this.frame = undefined
