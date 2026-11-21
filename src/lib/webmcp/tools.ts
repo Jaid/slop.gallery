@@ -241,7 +241,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'show_fence',
       title: 'Show geofence outlines',
-      description: 'Outline geofences whose IDs match a minimatch pattern, or show all fences. IDs are listed by dump_geofences. Outlines are blue, or red for every fence containing the player. Lines are visible through walls and open at unbounded ends. Changes the selection made by ?show_fence for this page and returns the new selection. A pattern matching no fences leaves the selection unchanged and reports an error.',
+      description: 'Outline geofences whose IDs match a minimatch pattern, or show all fences. IDs are listed by dump_geofences. Outlines are blue, or red for every fence containing the player. Lines show through walls and stay open at unbounded ends. They fade with weighted camera distance. The page’s line_style (barycentric or aliased) and line_width control the outlines. Changes the selection made by ?show_fence for this page and returns the new selection. A pattern matching no fences leaves the selection unchanged and reports an error.',
       inputSchema: {
         type: 'object',
         properties: {

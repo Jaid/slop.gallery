@@ -17,7 +17,7 @@ import {readSeedOverride} from './environmentSeed.ts'
 import {readFade} from './fade.ts'
 import {readFrozenTime} from './frozenTime.ts'
 import {readPortraitCount} from './gallery/defaultPortraits.ts'
-import {readShowFence} from './gallery/fenceDisplay.ts'
+import {readFenceTuning, readShowFence} from './gallery/fenceDisplay.ts'
 import {readFlying} from './gallery/flyMode.ts'
 import {readDownload, readWebhook, readWebhookEndpoint} from './gallery/fusion/resultSharing.ts'
 import {readWeather} from './gallery/lighting.ts'
@@ -81,6 +81,8 @@ const readers: Record<string, Reader> = {
   // A list, which compares by its ids, joined as the query gives them.
   item: input => readItems(input).join(','),
   knot_rotation: readKnotRotation,
+  line_style: input => readFenceTuning(input).lineStyle,
+  line_width: input => readFenceTuning(input).lineWidth,
   mood: readMood,
   moonfall_hue: readMoonfallHue,
   near: readNear,

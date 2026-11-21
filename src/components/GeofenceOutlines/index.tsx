@@ -1,8 +1,9 @@
 import type {Geofence} from 'geofency'
 
-import {createPortal, useThree} from '@react-three/fiber'
+import {createPortal, extend, useThree} from '@react-three/fiber'
 import {useLayoutEffect, useMemo, useState} from 'react'
-import {Scene} from 'three/webgpu'
+import {LineSegmentsGeometry} from 'three/addons/lines/LineSegmentsGeometry.js'
+import {DoubleSide, Scene} from 'three/webgpu'
 
 import {selectFences, useFenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import {useGeofence} from '#src/lib/gallery/geofences.ts'
@@ -10,6 +11,16 @@ import {registerGeofenceOverlay} from '#src/lib/rendering/geofenceOverlay.ts'
 import world from '#src/worlds/current.ts'
 
 import fenceEdges from './fenceEdges.ts'
+import {strokeOpacity, strokeVertex} from './wireframeStroke.ts'
+
+const StrokeGeometry = extend(class extends LineSegmentsGeometry {
+  constructor(positions: Float32Array) {
+    super()
+    this.setPositions(positions)
+    // Just the central quad, without cap triangles.
+    this.setDrawRange(6, 6)
+  }
+})
 
 export default function GeofenceOutlines({visible}: {visible: boolean}) {
   const selection = useFenceDisplay(state => state.fence)
@@ -40,9 +51,9 @@ function Outline({fence, id}: {
   const inside = useGeofence(id)
   const far = useThree(state => state.camera.far)
   const positions = useMemo(() => fenceEdges(fence, far), [fence, far])
-  // Draw occupied fences last so shared edges stay red.
-  return <lineSegments name={id} raycast={() => {}} renderOrder={inside ? 11 : 10}>
-    <bufferGeometry><bufferAttribute args={[positions, 3]} attach='attributes-position' /></bufferGeometry>
-    <lineBasicNodeMaterial color={inside ? 'red' : 'blue'} depthTest={false} depthWrite={false} toneMapped={false} transparent />
-  </lineSegments>
+  // Draw occupied fences over unoccupied ones where their edges coincide.
+  return <mesh name={id} raycast={() => {}} renderOrder={inside ? 11 : 10}>
+    <StrokeGeometry args={[positions]} attach='geometry' />
+    <meshBasicNodeMaterial color={inside ? 'red' : 'blue'} depthTest={false} depthWrite={false} forceSinglePass opacityNode={strokeOpacity} side={DoubleSide} toneMapped={false} transparent vertexNode={strokeVertex} />
+  </mesh>
 }

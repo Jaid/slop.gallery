@@ -1,10 +1,11 @@
 import type {Camera, Material, Mesh, Object3D, Renderer, Scene} from 'three/webgpu'
 
-import {abs, attribute, clamp, fwidth, min, mix, normalView, uniform} from 'three/tsl'
+import {abs, attribute, fwidth, min, mix, normalView, uniform} from 'three/tsl'
 import {Color, DoubleSide, MeshBasicNodeMaterial, RenderPipeline} from 'three/webgpu'
 
 import {collectMeshPath} from './meshPath.ts'
 import {barycentricName, swapTriangleGeometry} from './triangleGeometry.ts'
+import wireframeCoverage from './wireframeCoverage.ts'
 
 // a layer nothing else uses, for drawing the highlighted lines in a pass of their own
 const highlightLayer = 31
@@ -38,8 +39,8 @@ export default class WireframeRenderPipeline extends RenderPipeline {
   highlightColor: string | undefined
   /** barycentric draws antialiased edges of any width as part of the fill; lines draws 1 px hardware lines over the fill */
   lineStyle: 'barycentric' | 'lines' = 'barycentric'
-  /** pixels a barycentric edge is wide in total, shared between the two triangles along it */
-  lineWidth = 0.5
+  /** Width in render pixels, fixed or resolved for the current render target before drawing. Shared between the two triangles along the edge. */
+  lineWidth: ((renderer: Renderer) => number) | number = 0.5
   private readonly angleIndicator = uniform(0.05)
   private readonly background = new Color('#05070a')
   private readonly barycentricFill: MeshBasicNodeMaterial
@@ -80,7 +81,7 @@ export default class WireframeRenderPipeline extends RenderPipeline {
     this.highlightFill = fill(this.highlightLineColor)
     const barycentric = attribute<'vec3'>(barycentricName, 'vec3')
     const pixels = barycentric.div(fwidth(barycentric))
-    const coverage = clamp(this.halfLineWidth.add(0.5).sub(min(min(pixels.x, pixels.y), pixels.z)), 0, 1)
+    const coverage = wireframeCoverage(min(min(pixels.x, pixels.y), pixels.z), this.halfLineWidth)
     const barycentricFill = (lineColor: typeof this.lineColor) => new MeshBasicNodeMaterial({
       colorNode: mix(lineColor.mul(abs(normalView.z).mul(this.angleIndicator)), lineColor, coverage),
       fog: false,
@@ -123,7 +124,7 @@ export default class WireframeRenderPipeline extends RenderPipeline {
     this.lineColor.value.set(this.color ?? (this.highlight.length > 0 ? '#ff1515' : '#40ff40'))
     this.highlightLineColor.value.set(this.highlightColor ?? '#2f7bff')
     this.angleIndicator.value = this.angleIndicatorStrength / 100
-    this.halfLineWidth.value = this.lineWidth / 2
+    this.halfLineWidth.value = (typeof this.lineWidth === 'number' ? this.lineWidth : this.lineWidth(renderer)) / 2
     const barycentric = this.lineStyle === 'barycentric'
     const restoreGeometry = barycentric ? swapTriangleGeometry(scene) : undefined
     const restorePositionless = setAsidePositionless(scene)

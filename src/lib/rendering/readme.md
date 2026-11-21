@@ -22,7 +22,7 @@ Heavy graphics resolve with TRAA and fast graphics without antialiasing, unless 
 
 ## Wireframe
 
-`?show_wireframe` replaces the whole pipeline with the hidden-line `WireframeRenderPipeline` from `capture-session`. A bare `?show_wireframe` or `true` draws the classic 1 px hardware lines over a depth-writing fill, unsmoothed. A positive integer instead draws antialiased edges as part of the fill, that many hundredths of a pixel wide in total (`?show_wireframe=100` is 1 px, `50` matches `set_wireframe`’s default), from each fragment’s distance to its triangle’s edges.
+`?show_wireframe` replaces the whole pipeline with the hidden-line `WireframeRenderPipeline` from `capture-session`. A bare `?show_wireframe` or `true` draws the classic 1 px hardware lines over a depth-writing fill, unsmoothed. A positive integer instead draws antialiased edges as part of the fill, that many hundredths of a pixel wide at a 1080 px short edge (`?show_wireframe=100` is 1 px at 1920×1080 and 2 px at 3840×2160), from each fragment’s distance to its triangle’s edges.
 
 ## Albedo
 

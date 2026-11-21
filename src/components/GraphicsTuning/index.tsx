@@ -6,9 +6,12 @@ import {ACESFilmicToneMapping, AgXToneMapping, CineonToneMapping, LinearToneMapp
 import useGraphicsMode from 'use-graphics-mode'
 import {create} from 'zustand'
 
+import {initialFenceTuning, useFenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import {getDefaultCustomGraphics, useCustomGraphics, useGraphicsTuning} from '#src/lib/rendering/customGraphics.ts'
 import {cinematicMaxTextureSize, readCinematicGraphics} from '#src/lib/rendering/graphicsMode.ts'
 import {changeTunedGraphics, discardTuningBuffer, useTuningBuffer} from '#src/lib/rendering/tuningBuffer.ts'
+
+import FenceLineControls from './FenceLineControls.tsx'
 
 import css from './style.module.sass'
 
@@ -373,6 +376,7 @@ const ignoreRepeatedClick = (event: React.MouseEvent) => {
 /** The panel G shows with `?development`, a column left of the canvas: checkboxes switch passes, which rebuilds the pipeline, and sliders change its uniforms live. */
 export default function GraphicsTuning() {
   const isHeavy = useGraphicsMode()
+  const showFence = useFenceDisplay(state => Boolean(state.fence))
   useEffect(() => {
     // Holding Space over the panel shows the frame from before the latest tweak; it is caught before the focused control or the game sees it.
     const show = (event: KeyboardEvent) => {
@@ -407,8 +411,14 @@ export default function GraphicsTuning() {
       useTuningBuffer.setState({showing: false})
     }}
   >
-    <div className={css.heading}><h2>Render pipeline</h2><button type='button' onClick={() => set(initial, initialParked)}>Reset</button></div>
-    <p className={css.hint}>{isHeavy ? 'Pause to tune. The menu hides while the pointer is over the panel. Double-click a label to reset it. Hold Space to see the frame from before the latest change.' : 'Switch graphics on in the menu to tune the pipeline.'}</p>
+    <div className={css.heading}><h2>Render pipeline</h2><button
+      type='button' onClick={() => {
+        set(initial, initialParked)
+        changeTunedGraphics(() => useFenceDisplay.setState(initialFenceTuning))
+      }}
+    >Reset</button></div>
+    <p className={css.hint}>{isHeavy || showFence ? 'Pause to tune. The menu hides while the pointer is over the panel. Double-click a label to reset it. Hold Space to see the frame from before the latest change.' : 'Switch graphics on in the menu to tune the pipeline.'}</p>
+    <Branch if={showFence} then={FenceLineControls} />
     <Branch if={isHeavy}>{sections.map(section => <SectionBox key={section.title} section={section} />)}</Branch>
   </aside>
 }

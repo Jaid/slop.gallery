@@ -2,38 +2,41 @@ import type {Page} from 'puppeteer-core'
 
 import {expect, test} from 'bun:test'
 
-import {callWebmcpTool} from 'capture-session/script'
+import {callWebmcpTool, waitForLoadingItems} from 'capture-session/script'
 
 import {openHeadlessGallery, resolveGallerySetup, waitForFrames} from '../scripts/lib/headlessGallery.ts'
 
-/** Count display-red and display-blue pixels, not the colors assigned to the materials. */
-const outlinePixels = (page: Page) => page.evaluate(async () => {
-  const {pixels} = await globalThis.slopGallery!.capturePixels!()
-  let red = 0
-  let blue = 0
-  for (let i = 0; i < pixels.length; i += 4) {
-    if (pixels[i + 1] !== 0) {
-      continue
+/** Look north along the Lobby’s west floor edge, 2 m to the left and 1.82 m below the eye. At 90° vertical FOV the projection scale is half the frame height. */
+const edgeColors = (page: Page) => page.evaluate(async () => {
+  const {pixels, width, height} = await globalThis.slopGallery!.capturePixels!()
+  const sample = (depth: number, color: 'blue' | 'red') => {
+    const scale = height / (2 * depth)
+    const x = Math.round(width / 2 - 2 * scale)
+    const y = Math.round(height / 2 + 1.82 * scale)
+    // Pick up the line even if rasterization puts it in the neighboring column.
+    let strongest = -255
+    for (let column = x - 2; column <= x + 2; column++) {
+      const i = 4 * (y * width + column)
+      const redMinusBlue = pixels[i] - pixels[i + 2]
+      strongest = Math.max(strongest, color === 'red' ? redMinusBlue : -redMinusBlue)
     }
-    if (pixels[i] === 255 && pixels[i + 2] === 0) {
-      red++
-    } else if (pixels[i] === 0 && pixels[i + 2] === 255) {
-      blue++
-    }
+    return strongest
   }
   return {
-    red,
-    blue,
+    near: sample(6, 'red'),
+    nearBlue: sample(12, 'blue'),
+    farBlue: sample(24, 'blue'),
   }
 })
-test.skipIf(Bun.env.LIVE_TEST !== 'true')('occupied and unoccupied fences keep their display colors over a Heavy frame', async () => {
+test.skipIf(Bun.env.LIVE_TEST !== 'true')('the occupied fence shows red and the neighboring blue fence fades along its floor edge over a Heavy frame', async () => {
   const setup = await resolveGallerySetup({
     target: Bun.env.LIVE_TARGET || 'dist',
     seed: '0',
     graphics: 'heavy',
     room: 'lobby',
     world_reach: 'room',
-    show_fence: '{lobby,exhibition}',
+    show_fence: '{lobby-south,lobby-middle}',
+    line_width: '600', // about two render pixels at this size, so a sample includes the center of the antialiased stroke
     width: '800',
     height: '420',
     warmup_scale: 'false',
@@ -42,14 +45,20 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('occupied and unoccupied fences keep t
   await using gallery = await openHeadlessGallery(setup, {cacheDir: 'node_modules/.vite-geofence-colors'})
   const {page} = gallery
   await page.evaluate(() => globalThis.slopGallery!.fly!({
-    position: [-7.26, 1.62, -1],
-    rotation: [0.008, -0.69, 0],
+    position: [-6, 1.62, 6.5],
+    rotation: [0, 0, 0],
+    fov: 90,
   }))
   await waitForFrames(page, 8)
-  const shown = await outlinePixels(page)
+  await waitForLoadingItems(page)
+  await waitForFrames(page, 8)
+  const shown = await edgeColors(page)
   await callWebmcpTool(page, 'show_fence', {fence: false})
   await waitForFrames(page, 8)
-  const hidden = await outlinePixels(page)
-  expect(shown.red - hidden.red).toBeGreaterThan(100)
-  expect(shown.blue - hidden.blue).toBeGreaterThan(100)
+  const hidden = await edgeColors(page)
+  const nearBlue = shown.nearBlue - hidden.nearBlue
+  const farBlue = shown.farBlue - hidden.farBlue
+  expect(shown.near - hidden.near).toBeGreaterThan(100)
+  expect(nearBlue - farBlue).toBeGreaterThan(30)
+  expect(farBlue).toBeGreaterThan(25)
 }, 180_000)
