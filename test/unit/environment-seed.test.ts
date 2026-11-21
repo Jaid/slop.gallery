@@ -2,7 +2,6 @@ import {expect, spyOn, test} from 'bun:test'
 
 import {narratorCharacter, narratorTraits, narratorVoice, narratorVoices} from '../../src/lib/audio/narratorCharacter.ts'
 import {defaultSeed, effectiveSeed, environmentRandom, isDefaultSeed, isSeed, maximumSeed, parseSeed, readSeedOverride, rolledSeeds, rollSeed} from '../../src/lib/environmentSeed.ts'
-import {potPlacements, pottedPlantKind, pottedPlantKinds} from '../../src/lib/gallery/plantDecorations/placements.ts'
 import {orbs, promptOrbs} from '../../src/orbs/index.ts'
 
 test('?seed accepts unsigned 32-bit integers and ignores anything else', () => {
@@ -63,7 +62,7 @@ test('a new game rolls a seed from 1 to 9999, every one equally likely, and neve
   }
 })
 test('the environment’s rolls depend only on the seed and the ID, never on call order', () => {
-  const ids = potPlacements.map(placement => placement.id)
+  const ids = ['narrator-voice', 'narrator-character', 'vesper']
   const rollOf = (seed: number, id: string) => environmentRandom(seed).makeChild(id).roll()
   const forward = ids.map(id => rollOf(1, id))
   const backward = ids.toReversed().map(id => rollOf(1, id)).toReversed()
@@ -139,12 +138,4 @@ test('the seed picks every narrator voice, the same for the same seed', () => {
   expect(narratorVoice(1)).toBe(narratorVoice(1))
   const voices = new Set(Array.from({length: 200}, (_, seed) => narratorVoice(seed)))
   expect(voices).toEqual(new Set(narratorVoices))
-})
-test('every pot placement can grow every plant, and seed 1 stays put', () => {
-  for (const placement of potPlacements) {
-    const grown = new Set(Array.from({length: 500}, (_, seed) => pottedPlantKind(seed, placement.id)))
-    expect(grown).toEqual(new Set(pottedPlantKinds))
-  }
-  // Captures from snap.ts and film.ts default to seed 1; a change here changes every one of them.
-  expect(potPlacements.map(placement => pottedPlantKind(1, placement.id))).toEqual(['palm', 'calathea'])
 })

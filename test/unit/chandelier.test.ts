@@ -93,7 +93,7 @@ function simulate(mass: number, miss = false, fixture = chandelierPhysics, {cano
   }
 }
 describe('suspended Sienna chandelier', () => {
-  test('a thrown sculpture swings it, a heavier pot swings it farther and damping settles it', () => {
+  test('a thrown sculpture swings it, a heavier prop swings it farther and damping settles it', () => {
     const light = simulate(1.8)
     const heavy = simulate(5)
     expect(light).toBeGreaterThan(0.12)
@@ -103,7 +103,7 @@ describe('suspended Sienna chandelier', () => {
     const canopy = {
       peak: 0,
     }
-    // From so far under the ball, the pot swings it out farther, so it takes longer to settle.
+    // From so far under the ball, the heavier prop swings it out farther, so it takes longer to settle.
     const swing = simulate(5, false, chandelierPhysics, {
       canopy,
       rod: 3.7,

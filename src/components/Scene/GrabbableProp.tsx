@@ -173,7 +173,7 @@ export default function GrabbableProp(props: GrabbablePropProps) {
 }
 
 /** The prop while it is still in the world. */
-function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, children, collider, canGrab, blockedMessage, onAttachmentChange, recoverAsDynamic, remains, snapshotSubject, striker, withheld = false, ...props}: GrabbablePropProps) {
+function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, children, collider, canGrab, blockedMessage, recoverAsDynamic, remains, snapshotSubject, striker, withheld = false, ...props}: GrabbablePropProps) {
   const body = useRef<RapierRigidBody>(null)
   const group = useRef<Group>(null)
   /** whether a fusion holds the prop, from the start if it is withheld */
@@ -192,7 +192,6 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
   const callbacks = useRef({
     canGrab,
     blockedMessage,
-    onAttachmentChange,
     recoverAsDynamic,
     snapshotSubject,
   })
@@ -201,11 +200,10 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
     callbacks.current = {
       canGrab,
       blockedMessage,
-      onAttachmentChange,
       recoverAsDynamic,
       snapshotSubject,
     }
-  }, [canGrab, blockedMessage, onAttachmentChange, recoverAsDynamic, snapshotSubject])
+  }, [canGrab, blockedMessage, recoverAsDynamic, snapshotSubject])
   // Hidden before any frame is drawn, since its portal only shows it once it is registered.
   useLayoutEffect(() => {
     if (seized.current && group.current) {
@@ -222,7 +220,6 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
     }
     const carried = new GrabbableBody(body.current, world, {
       canGrab: () => callbacks.current.canGrab?.() ?? true,
-      onAttachmentChange: attached => callbacks.current.onAttachmentChange?.(attached),
       recoverAsDynamic: () => callbacks.current.recoverAsDynamic?.() ?? false,
     })
     controller.current = carried

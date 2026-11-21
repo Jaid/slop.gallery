@@ -2,7 +2,7 @@ import FatedRandom from 'fated-random'
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
-/** the largest seed of a game state, which `?seed` may ask for even though new games only roll {@link rolledSeeds}; environment randomization (which plant grows in which pot, for example) is never drawn from `Math.random()`, but rolled from the game state’s seed by {@link environmentRandom} */
+/** the largest seed of a game state, which `?seed` may ask for even though new games only roll {@link rolledSeeds}; environment randomization (which frame a work hangs in, for example) is never drawn from `Math.random()`, but rolled from the game state’s seed by {@link environmentRandom} */
 export const maximumSeed = 0xFF_FF_FF_FF
 
 /** An unsigned 32-bit integer, given as a number or as a string of decimal digits; anything else is `undefined`. */
@@ -64,7 +64,7 @@ export function effectiveSeed(stored: number, override = seedOverride) {
 }
 
 /**
- * The rolls of the environment of `seed`. Whatever is rolled for gets a child of its own by its fixed ID, like `environmentRandom(seed).makeChild(['potted-plant', id])`, so its roll only depends on the seed and that ID and never on when or in which order something asks for it.
+ * The rolls of the environment of `seed`. Whatever is rolled for gets a child of its own by its fixed ID, like `environmentRandom(seed).makeChild(['work-frame', work])`, so its roll only depends on the seed and that ID and never on when or in which order something asks for it.
  */
 export function environmentRandom(seed: number) {
   return new FatedRandom({

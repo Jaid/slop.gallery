@@ -106,7 +106,7 @@ Whatever has to happen once sound has rung out, like disconnecting an effect’s
 
 Run `bun test ./test/unit/sound-engine.test.ts ./test/unit/sound-effects.test.ts ./test/unit/player-audio.test.ts ./test/unit/transformers.test.ts ./test/unit/moods.test.ts ./test/unit/hearing.test.ts ./test/unit/impact-sounds.test.ts` and `bun run --cwd packages/ego-player test`.
 
-`test/browser/worldSounds.ts` renders every strike of every surface and frame sound at several speeds, a strike near and far, the arrivals, throws and drops of a leaf, an orb and a potted plant standing, sprinting and jumping, and a heavy landing through the transformer of every gallery room’s mood offline, and checks for sound, headroom (frame strikes saturate at 9 m/s to stay under it) and silent tails.
+`test/browser/worldSounds.ts` renders every strike of every surface and frame sound at several speeds, a strike near and far, the arrivals, throws and drops of a leaf, an orb and a pumpkin standing, sprinting and jumping, and a heavy landing through the transformer of every gallery room’s mood offline, and checks for sound, headroom (frame strikes saturate at 9 m/s to stay under it) and silent tails.
 
 `bun test/browser/run.ts fusionSound.ts` renders a fusion that succeeds after the image model took 6.5 s and one that fails after 1 s offline, driven by the portal’s own envelope every 50 ms, heard from 4 m away, and checks for silence, headroom and a silent tail; called with `{listen: true}`, it also returns both as WAVs.
 

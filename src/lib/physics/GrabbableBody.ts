@@ -13,7 +13,6 @@ import {beginBodyThrow, clearBodyThrow} from './ThrowState.ts'
 
 export type GrabbableBodyOptions = {
   canGrab?: () => boolean
-  onAttachmentChange?: (attached: boolean) => void
   recoverAsDynamic?: () => boolean
 }
 /** how a carried prop is let go of */
@@ -51,7 +50,6 @@ const vector = ([x, y, z]: Vec3): Vector => ({
 
 /**
  * The physics side of carrying a prop: while carried, its body is out of the simulation altogether, so nothing collides with it, not even the player, and whoever carries it shows it by its own object. Letting go puts it where it fits near the hand, passing through the player for a moment (see `PlayerGrace`).
- * Shared by sculptures, orbs and detachable foliage. A canceled pluck leaves a leaf attached where it was; a canceled re-grab leaves a loose leaf where it lay.
  */
 export default class GrabbableBody {
   readonly grace: PlayerGrace
@@ -68,7 +66,7 @@ export default class GrabbableBody {
     return this.carrying
   }
 
-  /** the prop’s mass in kg, by its colliders, also while they are disabled, like an attached leaf’s, which the body’s own mass leaves out */
+  /** the prop’s mass in kg, by its colliders, also while they are disabled, which the body’s own mass leaves out */
   get mass() {
     return this.colliders().reduce((sum, collider) => sum + collider.mass(), 0)
   }
@@ -81,7 +79,6 @@ export default class GrabbableBody {
     this.carrying = false
     this.body.setEnabled(true)
     this.body.wakeUp()
-    this.options.onAttachmentChange?.(this.body.isFixed())
   }
 
   /**
@@ -109,7 +106,6 @@ export default class GrabbableBody {
     this.carrying = true
     this.stop()
     this.body.setEnabled(false)
-    this.options.onAttachmentChange?.(false)
     return true
   }
 
@@ -117,7 +113,7 @@ export default class GrabbableBody {
     this.rememberHome()
     const position = this.body.translation()
     if (!this.carrying && this.home && position.y < currentWorld.placement.floorHeight([position.x, position.y, position.z]) - 4) {
-      // A leaf cannot reattach to an anchor that has itself been picked up or thrown.
+      // A Knot knocked out of its showcase comes back loose instead of floating in it again.
       const home = this.options.recoverAsDynamic?.() ? {
         ...this.home,
         type: RigidBodyType.Dynamic,
@@ -197,7 +193,6 @@ export default class GrabbableBody {
     }
     this.stop()
     this.body.wakeUp()
-    this.options.onAttachmentChange?.(pose.type === RigidBodyType.Fixed)
   }
 
   private stop() {

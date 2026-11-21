@@ -32,7 +32,7 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}:
   const listed = queryOptionNames.filter(key => !without.includes(key))
   return `  --target <dir>          use this static build (e.g. dist) instead of the dev server, which suits captures better: the dev server can reload the page while it captures
   --graphics <mode>       mirrors ?graphics (fast, heavy, cinematic, which is heavy with larger maps and more samples for non-realtime renders, or auto, which picks fast or heavy for the GPU). Default: heavy
-  --seed <number>         mirrors ?seed, the environment seed (0–${maximumSeed}) that decides random details like the potted plants. Default: 1
+  --seed <number>         mirrors ?seed, the environment seed (0–${maximumSeed}) that decides random details like the works’ frames. Default: 1
   --test <true|false>     mirrors ?test, which gives the page its fly and teleport hooks and leaves the intro out. Default: true; false opens the page as players get it, without those hooks
   --stream_budget <ms|false>
                           mirrors ?stream_budget, the milliseconds a frame after loading may spend building objects. Default: false, which builds everything in the first frame, so the scene is complete about three times sooner than at the players’ 8 and, in cinematic graphics, whose every streaming frame renders the whole view, three to six times sooner than at 100

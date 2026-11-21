@@ -23,7 +23,7 @@ const fullSpeed = 16
 export default function tossVoices({drive, effort, mass, rise, throwing, velocity}: Toss, variation = 0): Array<Voice> {
   const speed = Math.hypot(...velocity)
   const pace = clamp(speed / fullSpeed, 0, 1.5)
-  // How many octaves it weighs more than an orb, within reason: a leaf weighs nothing, a pot is a heavy pot.
+  // How many octaves it weighs more than an orb, within reason: a leaf weighs nothing, a Knot is heavy.
   const heft = mass > 0 ? clamp(Math.log2(mass / referenceMass), -4, 2) : 0
   const pitch = 2 ** (-heft / 3) * (1 + variation * 0.02)
   const strength = clamp(effort / throwSpeed, 0, 1.4)

@@ -11,7 +11,7 @@ const gravity = 9.81
 /** how far a throw at `velocity` flies over level ground from the height it left at, in meters */
 const range = ([x, y, z]: Vec3, height = 1.4) => Math.hypot(x, z) * (y + Math.sqrt(y ** 2 + 2 * gravity * height)) / gravity
 const forward: Vec3 = [0, 0, -1]
-const masses = [0.008, 0.025, 0.1, 0.35, 0.908, 1.25, referenceMass, 2.4, 3.2, 4.5, 5.4, 30]
+const masses = [0.008, 0.025, 0.1, 0.35, 0.908, 1.25, referenceMass, 2.4, 3.2, 4.5, 30]
 describe('throw strength by mass', () => {
   test('an orb leaves at the player’s throw speed and anything much lighter or heavier flies shorter', () => {
     expect(referenceMass).toBe(orbMass)
@@ -22,10 +22,9 @@ describe('throw strength by mass', () => {
       throwing: true,
     }).velocity))
     const orb = ranges[masses.indexOf(referenceMass)]
-    // a leaf, a pumpkin and a potted plant
+    // a leaf and a pumpkin
     expect(ranges[0]).toBeLessThan(orb * 0.4)
     expect(ranges[masses.indexOf(4.5)]).toBeLessThan(orb * 0.7)
-    expect(ranges[masses.indexOf(5.4)]).toBeLessThan(orb * 0.65)
     expect(ranges.at(-1)!).toBeLessThan(orb * 0.25)
     // Fastest somewhere among the light things, slowing down both ways from there.
     const fastest = ranges.indexOf(Math.max(...ranges))

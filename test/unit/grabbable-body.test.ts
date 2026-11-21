@@ -308,8 +308,7 @@ describe('shared grabbing regressions', () => {
   test('released fixed props come loose with all their colliders', () => {
     const body = world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(1, 2, 3))
     world.createCollider(RAPIER.ColliderDesc.cuboid(0.1, 0.1, 0.1).setEnabled(false), body)
-    const attached: Array<boolean> = []
-    const carried = new GrabbableBody(body, world, {onAttachmentChange: value => attached.push(value)})
+    const carried = new GrabbableBody(body, world)
     carried.grab()
     carried.cancel()
     expect(body.isFixed()).toBe(true)
@@ -318,7 +317,6 @@ describe('shared grabbing regressions', () => {
     carried.release([0, 1.4, 0], [0, 1.4, 1.45])
     expect(body.isDynamic()).toBe(true)
     expect(body.collider(0).isEnabled()).toBe(true)
-    expect(attached).toEqual([false, true, false])
   })
   test('each deliberate throw gets one stable attack identity until the prop is grabbed again', () => {
     const body = sculpture()
