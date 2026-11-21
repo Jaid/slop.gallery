@@ -7,7 +7,7 @@ import {Box3} from 'three/webgpu'
 
 import {apseOpeningPoint, apseOpenings, bastionCurve, bastionLinkStripZ} from '../../src/lib/gallery/bastion.ts'
 import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
-import {cistern, cisternChunks, cisternFloor} from '../../src/lib/gallery/cistern/cistern.ts'
+import {cistern, cisternFloor} from '../../src/lib/gallery/cistern/cistern.ts'
 import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
 import {climbApproach} from '../../src/lib/gallery/climb.ts'
 import corridor, {corridorLanding, corridorLandingPaving, corridorStairs} from '../../src/lib/gallery/corridor.ts'
@@ -345,12 +345,11 @@ test('the gallery’s bastion-cistern fences the Bastion’s cistern, within the
     }
   }
   expect(floors).toBeGreaterThan(500)
-  // Its boxes are the Bastion’s own around the cistern, but for the rounding of the Bastion’s way from its origin and back, so the Bastion’s fence holds all of it.
-  expect(fence.boxes).toHaveLength(cisternChunks().length)
-  for (const box of fence.boxes) {
-    const twins = bastion.boxes.filter(candidate => sides(candidate).every(([side, value], index) => side === sides(box)[index][0] && Math.abs(value - sides(box)[index][1]) < 1e-9))
-    expect(twins).toHaveLength(1)
-  }
+  // The Bastion uses the same single box for the cistern, up to rounding from the trip through its local coordinates.
+  expect(fence.boxes).toHaveLength(1)
+  const bounds = sides(fence.boxes[0])
+  const twins = bastion.boxes.filter(candidate => sides(candidate).every(([side, value], index) => side === bounds[index][0] && Math.abs(value - bounds[index][1]) < 1e-9))
+  expect(twins).toHaveLength(1)
   // It begins in the plane of its flat wall, which the window from the Forge’s vestibule leads through.
   const [windowX] = cisternWindow.center
   expect(slopGallery.geofences.getMatches([windowX, 1.6, wallZ + 0.3])).toEqual(['forge'])

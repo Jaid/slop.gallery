@@ -253,20 +253,11 @@ function polar(x: number, z: number) {
     out: Math.hypot(x - cx, z - cz),
   }
 }
-/** how many boxes the cistern’s air is cut into, in strips from west to east */
-const airStrips = 8
-/** Boxes round the cistern’s air, strips from west to east, each from its lowest floor to its crown and from the flat wall’s center line to the round wall’s, where the strip reaches furthest north. */
-export function cisternChunks() {
-  const [x, z] = cistern.center
-  return Array.from({length: airStrips}, (_, strip) => {
-    const [west, east] = [strip, strip + 1].map(edge => x - radius + radius * 2 * edge / airStrips)
-    const nearest = west < x && east > x ? 0 : Math.min(Math.abs(west - x), Math.abs(east - x))
-    return {
-      min: [west, cistern.floorRange[0], z - Math.sqrt(radius ** 2 - nearest ** 2)] as Vec3,
-      max: [east, cistern.crown, z] as Vec3,
-    }
-  })
-}
+/** The box enclosing the half-round cistern, from its lowest floor to its crown. */
+export const cisternAir = {
+  min: [cistern.center[0] - radius, cistern.floorRange[0], wallZ - radius],
+  max: [cistern.center[0] + radius, cistern.crown, wallZ],
+} as const
 
 /** how often the baseboard’s contact with the floor is sampled along a wall, at most this far apart */
 const contactStep = 0.25

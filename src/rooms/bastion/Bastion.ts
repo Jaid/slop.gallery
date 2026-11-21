@@ -5,7 +5,7 @@ import {Geofence} from 'geofency'
 
 import {bastionOrigin, bastionTransition} from '#src/lib/gallery/bastion.ts'
 import {bastionNetwork} from '#src/lib/gallery/bastionNetwork.ts'
-import {cisternChunks} from '#src/lib/gallery/cistern/cistern.ts'
+import {cisternAir} from '#src/lib/gallery/cistern/cistern.ts'
 import {climbApex, climbHairpin} from '#src/lib/gallery/climb.ts'
 
 import Room from '../base/Room.ts'
@@ -27,7 +27,7 @@ const slack = 0.35
  * Laid out around the middle of its curve, at the height of its floor there.
  */
 export default class Bastion extends Room {
-  override readonly air = chunkBoxes([...bastionNetwork.flatMap(passage => passage.chunks(slack)), ...cisternChunks()], bastionOrigin)
+  override readonly air = chunkBoxes([...bastionNetwork.flatMap(passage => passage.chunks(slack)), cisternAir], bastionOrigin)
   override readonly description = 'Cold stone. Long shadows. Light through iron bars.'
   // Height-bounded because the west wing passes under Forge and above Lodge, and the cistern over the Lodge and the curve. It also takes precedence over the Oculus’ apse box.
   override readonly fence = new Geofence(this.air.map(box => ({

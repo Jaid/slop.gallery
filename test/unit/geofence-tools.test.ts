@@ -86,7 +86,7 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
   }])
   expect(boxes('moonfall-stairs').map(box => createBox(box).constructor)).toEqual([SkyBox, BeamBox])
   expect(boxes('bastion-knight_alley')).toHaveLength(2)
-  expect(boxes('bastion-cistern')).toHaveLength(8)
+  expect(boxes('bastion-cistern')).toHaveLength(1)
   for (const box of [...boxes('bastion-knight_alley'), ...boxes('bastion-cistern')]) {
     expect(boxes('bastion')).toContainEqual(box)
   }
