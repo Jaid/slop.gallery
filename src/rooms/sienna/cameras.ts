@@ -19,4 +19,13 @@ export default {
     fov: 70,
     ratio: 16 / 9,
   },
+  chandelier: {
+    position: [0.175, 4.626, -2.142],
+    aim: {
+      yaw: 2.9892,
+      pitch: -0.1728,
+    },
+    fov: 80,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
