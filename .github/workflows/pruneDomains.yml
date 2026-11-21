@@ -45,6 +45,7 @@ jobs:
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
     - name: prune
+      shell: bash
       env:
         CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         GITHUB_TOKEN: ${{ github.token }}
