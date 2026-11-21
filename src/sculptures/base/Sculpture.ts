@@ -5,7 +5,7 @@ import type {Material} from 'three/webgpu'
 export type SculptureModelProps = {
   /** Total mass in kilograms, distributed across the model’s colliders. */
   mass: number
-  /** The socket’s own material. Use it for every visible mesh; the socket owns its lifetime. */
+  /** The socket’s own material. Stone models can share it; the socket owns its lifetime. */
   material: Material
 }
 

@@ -1,4 +1,4 @@
-import type {Mesh, Scene} from 'three/webgpu'
+import type {Material, Mesh, Scene} from 'three/webgpu'
 
 import {expect, test} from 'bun:test'
 
@@ -6,7 +6,7 @@ import {openHeadlessGallery, resolveGallerySetup} from '../scripts/lib/headlessG
 import {sculptures} from '../src/sculptures/index.ts'
 
 for (const id of Object.keys(sculptures)) {
-  test.skipIf(Bun.env.LIVE_TEST !== 'true')(`the mounted ${id} sculpture shares its socket’s material`, async () => {
+  test.skipIf(Bun.env.LIVE_TEST !== 'true')(`the mounted ${id} sculpture uses its intended finish and fits the triangle budget`, async () => {
     const setup = await resolveGallerySetup({
       target: Bun.env.LIVE_TARGET ?? 'dist',
       room: 'salon',
@@ -35,19 +35,42 @@ for (const id of Object.keys(sculptures)) {
         })
       }],
     })
-    const materials = await gallery.page.evaluate(() => {
+    const model = await gallery.page.evaluate(() => {
       const {sculptureTestScenes} = globalThis as typeof globalThis & {sculptureTestScenes?: Array<Scene>}
       const scene = sculptureTestScenes?.find(candidate => candidate.getObjectByName('salon-sculpture'))
       const socket = scene?.getObjectByName('sculpture socket') as Mesh | undefined
-      const matches: Array<boolean> = []
+      const meshes: Array<{
+        finish: string
+        name: string
+        sharesSocket: boolean
+        triangles: number
+      }> = []
       scene?.getObjectByName('salon-sculpture')?.traverseVisible(object => {
-        if ('isMesh' in object) {
-          matches.push(!!socket?.material && (object as Mesh).material === socket.material)
+        if ('isMesh' in object && object.isMesh) {
+          const {geometry, material, name} = object as Mesh
+          const finish = (material as Material).name
+          meshes.push({
+            name,
+            finish,
+            sharesSocket: !!socket?.material && material === socket.material,
+            triangles: (geometry.index?.count ?? geometry.getAttribute('position').count) / 3,
+          })
         }
       })
-      return matches
+      return {
+        socket: !!socket,
+        meshes,
+      }
     })
-    expect(materials.length).toBeGreaterThan(0)
-    expect(materials.every(Boolean)).toBe(true)
+    expect(model.socket).toBe(true)
+    expect(model.meshes.some(({name}) => name === `sculpture-${id}`)).toBe(true)
+    expect(model.meshes.reduce((sum, mesh) => sum + mesh.triangles, 0)).toBeLessThanOrEqual(32_768)
+    if (id === 'tung_tung_tung_sahur') {
+      expect(model.meshes).toHaveLength(1)
+      expect(model.meshes[0].finish).toBe('Sahur · oiled wood and enamel')
+      expect(model.meshes[0].sharesSocket).toBe(false)
+    } else {
+      expect(model.meshes.every(mesh => mesh.sharesSocket)).toBe(true)
+    }
   }, 120_000)
 }
