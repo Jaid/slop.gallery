@@ -63,7 +63,7 @@ export type WebmcpBridge = {
   }
   addLayer: (options: LayerOptions) => string
   addPortrait: (input: PortraitAdditionInput) => Promise<PortraitAddition>
-  addTextOverlay: (input: TextOverlayInput) => {id: string}
+  addTextOverlay: (input: TextOverlayInput) => {added: boolean}
   analyzeWorld: () => WorldAnalysis
   castMood: (input: MoodCastInput) => MoodCast
   clearDrawings: () => number
@@ -359,7 +359,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'add_text_overlay',
       title: 'Add a text label',
-      description: 'Pin a fixed HTML plain-text label to a point. Omit position for the viewport center, use {x, y} for CSS pixels from the viewport’s top left or {x, y, z} for world meters. World points track the camera and canvas and hide outside the camera view. Anchor selects which point on the label is pinned. Labels appear in browser screenshots but not download_frame. Returns the label ID.',
+      description: 'Place a plain-text HTML label at fixed viewport CSS pixels. Omit position for the viewport center, use {x, y} for pixels from the top left or {x, y, z} to project a world point once through the current camera and canvas. Returns {added: false} if the world point is outside the view. Anchor selects which point on the label meets the position. Labels appear in browser screenshots but not download_frame.',
       inputSchema: {
         type: 'object',
         properties: {

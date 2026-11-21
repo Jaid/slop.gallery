@@ -1,5 +1,6 @@
 import type {FrameFormat} from '#src/lib/downloadFrame.ts'
 import type {SeedInput} from '#src/lib/webmcp/changeSeed.ts'
+import type {TextOverlayInput} from '#src/lib/webmcp/tools.ts'
 
 import {useThree} from '@react-three/fiber'
 import {applyWireframeFlood} from 'capture-session'
@@ -31,7 +32,7 @@ import spawnPartyEffect from '#src/lib/webmcp/spawnPartyEffect.ts'
 import throwProp from '#src/lib/webmcp/throwProp.ts'
 import world from '#src/worlds/current.ts'
 
-import TextOverlays from './TextOverlays.ts'
+import {addTextOverlay, clearTextOverlay} from './textOverlay.ts'
 
 export default function WebmcpBridge() {
   const scene = useThree(s => s.scene)
@@ -46,11 +47,10 @@ export default function WebmcpBridge() {
   useEffect(() => {
     const controller = new AbortController
     const inspector = new AimInspector(scene, camera)
-    const labels = new TextOverlays(camera, renderer.domElement)
     const bridge = {
       addDrawing,
-      addTextOverlay: labels.add.bind(labels),
-      clearTextOverlay: labels.clear.bind(labels),
+      addTextOverlay: (input: TextOverlayInput) => addTextOverlay(input, camera, renderer.domElement),
+      clearTextOverlay,
       addLayer: overlay.addLayer.bind(overlay),
       clearLayer: overlay.clearLayer.bind(overlay),
       clearDrawings: overlay.clearDrawings.bind(overlay),
@@ -151,7 +151,6 @@ export default function WebmcpBridge() {
     return () => {
       controller.abort()
       unregister()
-      labels.clear()
     }
   }, [scene, camera, renderer])
   return null

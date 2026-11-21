@@ -51,9 +51,9 @@ All primitives accept `layer`, a `color` override, `name` and a within-layer `re
 | `add_drawing` | `{"drawing":{"type":"camera_facing_rectangle","center":[0,2,-4],"width":2,"height":1}}` | `{id, drawing}` |
 | `clear_layer` | `{"id":"bounds"}` | `{removed}` |
 | `clear_drawings` | `{}` | `{removed}` |
-| `add_text_overlay` | `{"text":"Lobby","position":{"x":16,"y":24},"anchor":1}` | `{id}` |
-| `add_text_overlay` | `{"text":"3.80 m","position":{"x":3.5149,"y":0.002,"z":-29.9},"anchor":7}` | `{id}` |
-| `add_text_overlay` | `{"text":"1.20 m","position":{"x":7.728,"y":0.6,"z":-27.6},"anchor":9}` | `{id}` |
+| `add_text_overlay` | `{"text":"Lobby","position":{"x":16,"y":24},"anchor":1}` | `{added}` |
+| `add_text_overlay` | `{"text":"3.80 m","position":{"x":3.5149,"y":0.002,"z":-29.9},"anchor":7}` | `{added}` |
+| `add_text_overlay` | `{"text":"1.20 m","position":{"x":7.728,"y":0.6,"z":-27.6},"anchor":9}` | `{added}` |
 | `clear_text_overlay` | `{}` | `{removed}` |
 
-Text overlays are fixed HTML elements. `position` is the point to pin the label to: the viewport center when omitted, viewport CSS pixels for `{x, y}` or world meters for `{x, y, z}`. A world point follows the camera through the canvas’s actual bounding rectangle, including letterboxing, and hides when it leaves the view. `anchor` chooses the point on the label in reading order: `1 2 3` across the top, `4 5 6` across the middle and `7 8 9` across the bottom. The default is `5` (center) in all position modes. Text is literal, ignores pointer input and appears in browser screenshots. `download_frame` and `snap.ts` capture only the canvas. `clear_text_overlay` clears all text labels independently of drawing layers.
+Text overlays are fixed HTML elements. `position` is the point to pin the label to: the viewport center when omitted, viewport CSS pixels for `{x, y}` or world meters for `{x, y, z}`. A world point is projected **once**, using the current camera and canvas rectangle, including letterboxing. If it is outside the view, the tool returns `{added: false}`. Once placed, the label stays at those screen coordinates. `anchor` chooses the point on the label in reading order: `1 2 3` across the top, `4 5 6` across the middle and `7 8 9` across the bottom. The default is `5` (center). Text is literal, ignores pointer input and appears in browser screenshots. `download_frame` and `snap.ts` capture only the canvas. `clear_text_overlay` removes the shared container; the next label creates it again.

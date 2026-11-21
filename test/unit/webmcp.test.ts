@@ -23,7 +23,7 @@ import slopGallery from '../../src/worlds/gallery/index.ts'
 type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<PortraitAdditionInput, 'target'>
 
 const bridge: WebmcpBridge = {
-  addTextOverlay: ({text}) => ({id: text}),
+  addTextOverlay: () => ({added: true}),
   clearTextOverlay: () => 2,
   addLayer: layer => layer.id,
   clearLayer: () => 1,

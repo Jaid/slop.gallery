@@ -4,7 +4,7 @@ import {callWebmcpTool} from 'capture-session/script'
 
 import {openHeadlessGallery, resolveGallerySetup, waitForFrames} from '../scripts/lib/headlessGallery.ts'
 
-test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixels from a moving world point in an offset canvas', async () => {
+test.skipIf(Bun.env.LIVE_TEST !== 'true')('text labels project once into a shared, disposable container', async () => {
   const setup = await resolveGallerySetup({
     target: Bun.env.LIVE_TARGET || 'dist',
     seed: '0',
@@ -28,23 +28,24 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixe
     x: number
     y: number
     z?: number
-  }, anchor?: number) => (await callWebmcpTool(page, 'add_text_overlay', {
+  }, anchor?: number) => callWebmcpTool(page, 'add_text_overlay', {
     text,
     position,
     anchor,
-  }) as {id: string}).id
-  const fixed = await add({
+  })
+  await add({
     x: 30,
     y: 55,
   }, 1)
-  const centered = await add()
-  const world = await add({
+  await add()
+  const world = {
     x: 1,
     y: 3,
     z: -2,
-  }, 9)
-  const read = (id: string) => page.evaluate(key => {
-    const label = document.querySelector<HTMLElement>(`[data-text-overlay="${key}"]`)!
+  }
+  expect(await add(world, 9)).toEqual({added: true})
+  const read = (index: number) => page.evaluate(i => {
+    const label = document.querySelectorAll<HTMLElement>('#gallery-text-overlay > div')[i]
     const {left, top, width, height} = label.getBoundingClientRect()
     return {
       left,
@@ -52,12 +53,10 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixe
       right: left + width,
       bottom: top + height,
       cx: left + width / 2,
-      cy: top + height / 2,
-      hidden: label.hidden,
       children: label.childElementCount,
       text: label.textContent,
     }
-  }, id)
+  }, index)
   const bounds = await page.evaluate(() => {
     const {left, top, width, height} = document.querySelector('canvas')!.getBoundingClientRect()
     return {
@@ -68,31 +67,24 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixe
     }
   })
   expect(bounds.left).toBeGreaterThan(0)
-  expect(await read(fixed)).toMatchObject({
+  expect(await read(0)).toMatchObject({
     left: 30,
     top: 55,
     text,
     children: 0,
   })
-  const defaultLabel = await read(centered)
+  const defaultLabel = await read(1)
   expect(defaultLabel.cx).toBeCloseTo(480, 0)
-  for (const [eye, fraction] of [[0, 0.75], [1, 0.5]]) {
-    await look(eye, 0)
-    await waitForFrames(page, 3)
-    const projected = await read(world)
-    expect(projected.hidden).toBe(false)
-    expect(projected.right).toBeCloseTo(bounds.left + fraction * bounds.width, 0)
-    expect(projected.bottom).toBeCloseTo(bounds.top + 0.25 * bounds.height, 0)
-  }
+  const projected = await read(2)
+  expect(projected.right).toBeCloseTo(bounds.left + 0.75 * bounds.width, 0)
+  expect(projected.bottom).toBeCloseTo(bounds.top + 0.25 * bounds.height, 0)
   await look(1, Math.PI)
   await waitForFrames(page, 3)
-  const turned = await read(world)
-  expect(turned.hidden).toBe(true)
-  expect(await read(fixed)).toMatchObject({
-    top: 55,
-    left: 30,
-  })
+  expect(await read(2)).toEqual(projected)
+  expect(await add(world)).toEqual({added: false})
   expect(await callWebmcpTool(page, 'clear_text_overlay', {})).toEqual({removed: 3})
-  expect(await page.evaluate(() => document.querySelectorAll('[data-text-overlay]').length)).toBe(0)
+  expect(await page.evaluate(() => !!document.querySelector('#gallery-text-overlay'))).toBe(false)
   expect(await callWebmcpTool(page, 'clear_text_overlay', {})).toEqual({removed: 0})
+  expect(await add()).toEqual({added: true})
+  expect(await read(0)).toEqual(defaultLabel)
 }, 180_000)
