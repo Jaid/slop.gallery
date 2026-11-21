@@ -51,4 +51,14 @@ export default {
     fov: 40,
     ratio: 16 / 9,
   },
+  // High over the cistern farther east, looking north and steeply down onto its floor.
+  water_pipe: {
+    position: [-13.173, 10.202, 4.285],
+    aim: {
+      yaw: 0.1289,
+      pitch: -0.9848,
+    },
+    fov: 50,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
