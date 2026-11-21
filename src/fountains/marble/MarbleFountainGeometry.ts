@@ -188,7 +188,6 @@ function basinRelief() {
 
 /** An octagonal carved basin holding a pedestal with two gadrooned bowls, gilt finial and nozzles, overflowing veils, jets and pools, merged by material. */
 export default class MarbleFountainGeometry {
-  static readonly profiles = profiles
   readonly gilt: BufferGeometry
   readonly pools: BufferGeometry
   readonly stone: BufferGeometry

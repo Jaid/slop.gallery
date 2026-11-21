@@ -360,15 +360,6 @@ export default class RoutedPassage {
     return this.hit(station, side).distance
   }
 
-  /** The middle between the two ribs around the point `along` meters down the route, where a lantern can hang from the bare vault. */
-  ribGap(along: number) {
-    const next = this.ribs.findIndex(rib => rib > along)
-    if (next < 1) {
-      throw new RangeError('A gap between ribs lies between the first and the last one.')
-    }
-    return (this.ribs[next - 1] + this.ribs[next]) / 2
-  }
-
   /** How far under the route’s floor at the station its paving lies `right` meters right of the centerline, where its crossfall makes it fall toward the middle: nowhere along the walls’ faces and behind them, deepest along the centerline. */
   sag(station: RouteStation, right: number) {
     if (!this.crossfall) {
