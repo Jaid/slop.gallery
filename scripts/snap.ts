@@ -23,7 +23,7 @@ type DownloadFrameResult = {
   width: number
 }
 
-const snapHeight = 1080
+const snapHeight = 2160
 /** the default environment, so photos of the same view match */
 const snapSeed = '0'
 /** cjxl effort for photos, which are lossless by default: a 2160p photo encodes in about a second, while the shared effort 10 takes minutes */

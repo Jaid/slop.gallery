@@ -19,6 +19,8 @@ import {StitchTimeline} from './lib/stitchTimeline.ts'
 
 /** how many characters of a tool’s result the log shows */
 const logLength = 400
+/** rows of the canvas without --width or --height */
+const filmHeight = 2160
 const help = `Usage: bun scripts/film.ts [options]
 
 Renders a flight of the player through a world and writes it as an animated AVIF or JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
@@ -28,7 +30,7 @@ With --audio on (true, or a volume from 1 to 100, like ?audio), the page’s sou
 
 Options:
   --recipe <file>         JSON camera recipe, or - to read it from stdin. Default: scripts/recipes/spawn.json, a two-second metronome sway at the gallery spawn
-${galleryHelp(undefined, {seed: defaultFilmSeed})}
+${galleryHelp(filmHeight, {seed: defaultFilmSeed})}
   --seed-range <min..max> inclusive search range for seed wildcards. Default: ${defaultSeedRange} (the default environment and all seeds a game rolls). Literal seeds and brace expansions are coerced like ?seed, independent of the search range
   --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). With three or more clips, at most half the length of one clip
   --list                  print the target and seed of each clip before seam rotation and exit without recording
@@ -438,7 +440,7 @@ const main = async (overrides: FilmOptions) => {
   const first = await resolveGallerySetup({
     ...options,
     ...inputs[0],
-  })
+  }, filmHeight)
   const film = await prepareFilm(options, first)
   const {encoding, format} = film
   const {fps, height, output, width} = encoding
@@ -459,7 +461,7 @@ const main = async (overrides: FilmOptions) => {
       const setup = clip === 0 ? first : await resolveGallerySetup({
         ...options,
         ...input,
-      })
+      }, filmHeight)
       const take = film.clock.take(timeline.clipStart(clip), timeline.recipeStart)
       const recording = await captureFilm(film, setup, take, source => {
         if (size && (size.width !== source.width || size.height !== source.height)) {
