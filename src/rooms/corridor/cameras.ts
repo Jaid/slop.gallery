@@ -10,4 +10,13 @@ export default {
     fov: 80,
     ratio: 16 / 9,
   },
+  stairs: {
+    position: [-1.783, 1.474, 26.227],
+    aim: {
+      yaw: -2.0531,
+      pitch: 0.1252,
+    },
+    fov: 60,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
