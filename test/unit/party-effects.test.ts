@@ -11,7 +11,7 @@ import {portalFrame, portalRadius} from '../../src/lib/gallery/fusion/portalFram
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import spawnThroughTool from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import worldClock from '../../src/lib/worldClock.ts'
-import {halloweenOrb, horrorOrb, impastoOrb, paintOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
+import {horrorOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/party_effects/blood/flights.ts'
@@ -111,11 +111,11 @@ describe('party effects', () => {
     show.dispose()
   })
   test('every themed orb names party effects of its own, of which it contributes the one its game rolled to its fusion, and every party effect goes by its id', () => {
-    expect(halloweenOrb.effect).toBe('bats')
-    expect(horrorOrb.effect).toEqual(['blood', 'eyes', 'tendrils'])
-    expect(spookOrb.effect).toBe('ghosts')
-    expect(paintOrb.effect).toBe('strokes')
-    expect(impastoOrb.effect).toBe('smears')
+    for (const orb of promptOrbs) {
+      for (const effect of choiceEffects(orb.effect)) {
+        expect(partyEffects[effect]).toBeDefined()
+      }
+    }
     expect(transparentOrb.effect).toBeUndefined()
     expect(transparentOrb.partyEffect(3)).toBeUndefined()
     for (const seed of [0, 3, 4, 977, 0xFF_FF_FF_FF]) {

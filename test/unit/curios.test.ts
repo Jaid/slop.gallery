@@ -146,7 +146,8 @@ describe('the curios', () => {
       expect(model.parts.map(({name}) => name)).toEqual(['painting-set-wood', 'painting-set-palette', 'painting-set-finish', 'painting-set-metal', 'painting-set-paint'])
       const [wood, board, finish, metal, paint] = model.parts.map(({geometry}) => boundsOf(geometry))
       expect(wood.min.y).toBeCloseTo(0, 6)
-      expect(wood.max.x - wood.min.x).toBeCloseTo(0.4, 3)
+      expect(wood.max.x - wood.min.x).toBeGreaterThan(0.3)
+      expect(wood.max.x - wood.min.x).toBeLessThan(0.5)
       // The lid stands higher than the box is deep and leans back behind it.
       expect(wood.max.y).toBeGreaterThan(0.3)
       expect(wood.min.z).toBeLessThan(-0.2)

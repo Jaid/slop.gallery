@@ -270,8 +270,11 @@ test('the east window surround is stone on the Bastion face and timber inside th
       expect(ray.intersectObject(mesh)[0]?.face?.materialIndex).toBe(0)
     }
     // No missing or duplicate triangles in the two material groups.
-    expect(window.lining.groups.map(group => [group.start, group.count, group.materialIndex])).toEqual([[0, 120, 0], [120, 24, 1]])
-    expect(window.lining.index!.count).toBe(144)
+    const [timber, masonry] = window.lining.groups
+    expect(window.lining.groups.map(group => group.materialIndex)).toEqual([0, 1])
+    expect(timber.start).toBe(0)
+    expect(masonry.start).toBe(timber.count)
+    expect(masonry.start + masonry.count).toBe(window.lining.index!.count)
   } finally {
     wood.dispose()
     stone.dispose()

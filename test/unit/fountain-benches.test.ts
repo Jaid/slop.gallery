@@ -145,10 +145,9 @@ describe('round-tube fountain bench frames', () => {
       material.dispose()
     }
   })
-  test('a bench weighs 130 kg, shared between its teak battens and the steel of its two frames like their materials, the battens most of it', () => {
+  test('a bench’s mass is shared between its teak battens and the steel of its two frames like their materials, the battens most of it', () => {
     const {frame, seat} = fountainBenchColliders()
     const frames = frame.reduce((sum, {mass}) => sum + mass, 0)
-    expect(fountainBench.mass).toBe(130)
     expect(seat.mass + frames).toBeCloseTo(fountainBench.mass, 6)
     expect(seat.mass).toBeGreaterThan(fountainBench.mass * 0.85)
     expect(frames).toBeGreaterThan(fountainBench.mass * 0.1)

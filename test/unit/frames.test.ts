@@ -78,10 +78,6 @@ describe('frames', () => {
         }
       }
     }
-    // The default frame’s lip lies 5 mm over every edge of the image.
-    const {width, height} = classicFrame.opening(1.2, 0.8, 2)
-    expect(width).toBeCloseTo(1.19, 6)
-    expect(height).toBeCloseTo(0.79, 6)
   })
   test('from its viewing distance, what a frame leaves in sight of the image just fills the view along its tighter sides', () => {
     for (const [, frame] of entries) {

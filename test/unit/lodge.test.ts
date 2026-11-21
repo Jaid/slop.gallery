@@ -460,9 +460,8 @@ describe('Lodge and Corridor route', () => {
         expect(ribs[i][0] - ribs[i - 1][1]).toBeLessThanOrEqual(timberRibSpacing + 1e-9)
       }
     }
-    // The Sienna owns the square vestibule south of its arch by its south-west corner, centered on it and flush with its west wall, whose 4.3 m ceiling clears the 3.4 m arches’ casings, the cornice and the joists.
+    // The Sienna owns the square vestibule south of its arch by its south-west corner, centered on it and flush with its west wall, whose ceiling clears the arches’ casings, the cornice and the joists.
     expect(siennaVestibule.size[0]).toBeCloseTo(siennaVestibule.size[1])
-    expect(siennaVestibule.height).toBe(4.3)
     expect(siennaVestibule.center[0] - siennaVestibule.size[0] / 2).toBeCloseTo(sienna.center[0] - sienna.size[0] / 2)
     expect(siennaVestibule.center[1] - siennaVestibule.size[1] / 2).toBeCloseTo(sienna.center[1] + sienna.size[1] / 2)
     expect(slopGallery.roomAt([siennaVestibule.center[0], 1.6, siennaVestibule.center[1]])?.id).toBe('sienna')

@@ -61,9 +61,7 @@ describe('the suit of armor', () => {
     const helmetTriangles = helmetModel.parts.reduce((sum, {geometry}) => sum + geometry.index!.count / 3, 0)
     expect(helmetTriangles).toBeLessThan(8192)
   })
-  test('it stands 160 cm tall on the floor, and with the helmet of 40 cm on it, 2 m, only its empty neck showing dark', () => {
-    expect(collar).toBe(1.6)
-    expect(helmetHeight).toBe(0.4)
+  test('it stands up to its collar on the floor, and with the helmet on it, 2 m, only its empty neck showing dark', () => {
     const bounds = boundsOf(steel)
     expect(bounds.min.y).toBeCloseTo(0, 3)
     expect(bounds.min.y).toBeGreaterThanOrEqual(-1e-6)

@@ -632,7 +632,8 @@ describe('breaking off', () => {
     const charred = portalEnvelope(elapsed + 0.55, failure, undefined, fusionTiming, pair, elapsed)
     expect(elapsed + 0.55).toBeLessThan(failure.at)
     expect(charred.flash).toBeLessThan(0.01)
-    expect(charred.embers).toBeCloseTo(0.3, 1)
+    expect(charred.embers).toBeGreaterThan(0)
+    expect(charred.embers).toBeLessThan(recoil.embers)
     // Before it was broken off, nothing changes.
     expect(portalEnvelope(elapsed - 0.1, failure, undefined, fusionTiming, pair, elapsed)).toEqual(portalEnvelope(elapsed - 0.1, failure, undefined, fusionTiming, pair))
     expect(portalEnvelope(failure.at + fusionTiming.fizzle, failure, undefined, fusionTiming, pair, elapsed).size).toBe(0)

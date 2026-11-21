@@ -21,9 +21,9 @@ test('four matching slatted benches surround the fountain under the middle chand
   const geometry = new SlattedBenchGeometry
   try {
     const seat = geometry.wood.boundingBox!
-    expect(seat.max.y).toBeCloseTo(0.5)
-    expect(seat.max.x - seat.min.x).toBeGreaterThan(2.7)
-    expect(seat.max.z - seat.min.z).toBeCloseTo(0.8)
+    expect(seat.max.y).toBeCloseTo(fountainBench.height)
+    expect(seat.max.x - seat.min.x).toBeCloseTo(fountainBench.width)
+    expect(seat.max.z - seat.min.z).toBeCloseTo(fountainBench.depth)
     expect(geometry.metal.boundingBox!.min.y).toBeCloseTo(0)
     for (const part of [geometry.wood, geometry.metal]) {
       for (const attribute of Object.values(part.attributes)) {

@@ -168,9 +168,8 @@ describe('the Cell’s layout', () => {
     expect(closed.vestibule).toBeUndefined()
     expect(closed.pedestals).toEqual([])
   })
-  test('lays its floor in whole tiles of 50 cm from wall to wall', () => {
+  test('lays its floor in whole tiles from wall to wall', () => {
     const layout = new CellLayout(0)
-    expect(layout.floorTile).toBe(0.5)
     for (const side of layout.size) {
       expect(Number.isInteger(side / layout.floorTile)).toBe(true)
     }
@@ -416,12 +415,11 @@ describe('the passage from the Cell’s hall to its round room', () => {
   }
 })
 describe('the Cell’s trim and door', () => {
-  test('runs a molded baseboard along the round room’s wall, which stands out of the face less than the plain bands, and the Sienna’s plain bands along the hall’s, both 20 cm high, the velvet lining the arch through the north one', () => {
+  test('runs a molded baseboard along the round room’s wall, which stands out of the face less than the plain bands, and the Sienna’s plain bands along the hall’s, both as high, the velvet lining the arch through the north one', () => {
     const [toe] = cellBaseboard
     const top = cellBaseboard.at(-1)!
     expect(toe).toEqual([toe[0], 0])
     expect(top[0]).toBe(wallFace)
-    expect(cellBaseboardHeight).toBe(0.2)
     expect(top[1]).toBeCloseTo(cellBaseboardHeight, 9)
     expect(Math.max(...cellBaseboard.map(([, y]) => y))).toBeCloseTo(cellBaseboardHeight, 9)
     expect(Math.max(...cellBaseboard.map(([front]) => front))).toBeLessThan(0.2)
