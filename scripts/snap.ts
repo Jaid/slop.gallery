@@ -11,7 +11,7 @@ import {isPlainObject} from 'es-toolkit'
 import {join, relative} from 'forward-slash-path'
 import fs from 'fs-extra'
 import getFree from 'get-free'
-import {jxlEffort, lossyJxlOptions} from 'media-encoding'
+import {lossyJxlOptions} from 'media-encoding'
 import {Packr} from 'msgpackr'
 
 import {anchorWorldReach, degrees, galleryHelp, galleryOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
@@ -26,6 +26,8 @@ type DownloadFrameResult = {
 const snapHeight = 1080
 /** the default environment, so photos of the same view match */
 const snapSeed = '0'
+/** cjxl effort for photos, which are lossless by default: a 2160p photo encodes in about a second, while the shared effort 10 takes minutes */
+const snapJxlEffort = '6'
 const help = `Usage: bun scripts/snap.ts [options]
 
 Takes a headless photo of a world and writes it to out/snap/<name>.jxl, next to out/snap/<name>.msgpack with the X dump of the same view.
@@ -45,7 +47,7 @@ ${galleryHelp(snapHeight, {
                           camera angle in degrees. Yaw 0 looks toward −z, positive pitch looks up. Default: the bookmark’s, or the player spawn
   --fov <degrees>         vertical field of view, exactly: it also mirrors ?fov, under which no mood widens the view. Default: the bookmark’s, or the game camera’s, which a mood of the room may widen like for any player, like the Corridor’s
   --jxl-distance <number> cjxl Butteraugli distance, 0 is lossless. Default: 0
-  --jxl-effort <1–10>     cjxl effort; lossless 2160p takes about a second at 6 and minutes at 10. Default: ${jxlEffort}
+  --jxl-effort <1–10>     cjxl effort; lossless 2160p takes about a second at 6 and minutes at 10. Default: ${snapJxlEffort}
   --settle <frames>       frames to render after flying there and again once everything has loaded. Default: 2, enough even with TRAA
   --wireframe <json>      input for the app’s set_wireframe WebMCP tool, sent after flying there, e.g. {"direction": "in", "position": [0, 0.5, -12], "radius": 6}
   --tools <json>          ordered WebMCP calls, e.g. [{"name":"spawn_sloperator","input":{"sight":"lobby_east_bench"}}]. Names may repeat. Calls run after loading, before the final settle; results go to stderr
@@ -67,7 +69,7 @@ const snapOptions = {
   },
   'jxl-effort': {
     type: 'string',
-    default: String(jxlEffort),
+    default: snapJxlEffort,
   },
   name: {type: 'string'},
   position: {type: 'string'},
