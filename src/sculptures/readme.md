@@ -2,7 +2,11 @@
 
 The Salon displays one sculpture on its permanent 3.2 m × 3.2 m stone socket. The environment seed picks from the ordered registry in `index.ts`, independently of the fountain or other exhibits. Seed 0 always shows the first entry: **Block**, an upright block of the same sawn stone as its socket.
 
-**Antiphon** (`?room=salon&sculpture=antiphon`) is a single loop of carved stone with seven twisting flutes and two hollow, scalloped bells. From the doorway its throats cross; orbit it with V to see the space between them. Use `?room=salon&sculpture=<id>` to preview either work regardless of the seed. An unknown ID falls back to the seeded pick.
+**Antiphon** (`?room=salon&sculpture=antiphon`) is a single loop of carved stone with seven twisting flutes and two hollow, scalloped bells. From the doorway its throats cross; orbit it with V to see the space between them.
+
+**Tung Tung Tung Sahur** (`?room=salon&sculpture=sahur`) is a carved-stone wooden log figure, wide-eyed and smiling gently, standing barefoot with a turned baseball bat resting at his right side.
+
+Use `?room=salon&sculpture=<id>` to preview any registered work regardless of the seed. An unknown ID falls back to the seeded pick.
 
 ## Contributing a sculpture
 
