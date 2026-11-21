@@ -73,6 +73,20 @@ const floorClearance = 0.01
 /** at how many moments of his move into his sight pose the box he takes up is taken round him */
 const motionSamples = 40
 const figureBoxes = new Map<SloperatorSeat | undefined, Box3>
+const initialBoxes = new Map<SloperatorSeat | undefined, Box3>
+
+/** The sight marker fits his initial seated or standing pose, including his cane. */
+export function initialFigureBounds(seat?: SloperatorSeat) {
+  let box = initialBoxes.get(seat)
+  if (!box) {
+    const figure = new SloperatorGeometry(seat)
+    box = boxOf(figure)
+    figure.dispose()
+    initialBoxes.set(seat, box)
+  }
+  return box
+}
+
 /**
  * The box round all of him from his neutral pose through his sight pose, in his frame, see {@link SloperatorGeometry}: on the `seat`, sitting, standing up in front of it and standing where he sits, as he would where it is gone; without one, standing, with his hands on his cane and behind his back.
  * What lies in it would stand in his way, see {@link inTheWay}.

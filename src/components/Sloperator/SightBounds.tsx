@@ -3,7 +3,7 @@ import type {SloperatorSight} from '#src/lib/gallery/sloperator/sights.ts'
 
 import {useLayoutEffect} from 'react'
 
-import {figureBounds} from '#src/lib/gallery/sloperator/placement.ts'
+import {initialFigureBounds} from '#src/lib/gallery/sloperator/placement.ts'
 import {inFrame} from '#src/lib/gallery/sloperator/sights.ts'
 import appendBoxEdges from '#src/lib/overlay/boxEdges.ts'
 import overlay from '#src/lib/overlay/index.ts'
@@ -20,7 +20,7 @@ export default function SightBounds({sight, placement}: {
 }) {
   useLayoutEffect(() => {
     const {position, yaw} = placement ?? sight
-    const {min, max} = figureBounds(placement?.pose === 'stand' ? undefined : sight.seat)
+    const {min, max} = initialFigureBounds(placement?.pose === 'stand' ? undefined : sight.seat)
     const edges: Array<number> = []
     appendBoxEdges(edges, min.toArray(), max.toArray())
     for (let i = 0; i < edges.length; i += 3) {
