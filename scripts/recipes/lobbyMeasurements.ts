@@ -4,14 +4,12 @@ import {join} from 'node:path'
 
 import snap from '../snap.ts'
 
-// Afna1d5u2TRepqF · 21 Nov 2026 12:00. The dump uses radians; snap takes yaw,pitch in degrees.
-const angle = [-0.8729, -0.8156].map(value => value * 180 / Math.PI).join(',')
 const addLayer = (id: string): ToolCall => ({
   name: 'add_layer',
   input: {
     id,
-    color: '#ff3636',
-    lineWidth: 340,
+    color: '#ff0000',
+    lineWidth: 300,
   },
 })
 const line = (layer: string, from: Array<number>, to: Array<number>): ToolCall => ({
@@ -37,7 +35,7 @@ const calls: Array<ToolCall> = [
   {
     name: 'add_text_overlay',
     input: {
-      text: '3.80 m',
+      text: '380 cm',
       anchor: 7,
       position: {
         x: 3.5149,
@@ -49,7 +47,7 @@ const calls: Array<ToolCall> = [
   {
     name: 'add_text_overlay',
     input: {
-      text: '1.20 m',
+      text: '120 cm',
       anchor: 9,
       position: {
         x: 7.728,
@@ -59,12 +57,11 @@ const calls: Array<ToolCall> = [
     },
   },
 ]
-const {output} = await snap({
+await snap({
   target: join(import.meta.dir, '../../dist'),
-  position: '3.799,2.619,-27.048',
-  angle,
+  position: '3.8,2.6,-27',
+  angle: '-50,-46.7',
   fov: '90',
-  height: '2160',
   seed: '0',
   paused: 'true',
   development: 'true',
@@ -72,7 +69,5 @@ const {output} = await snap({
   settle: '5',
   'jxl-distance': '0',
   'jxl-effort': '6',
-  name: 'lobby-measurements-1200',
   'text-overlays': true,
 }, calls)
-console.log(output)
