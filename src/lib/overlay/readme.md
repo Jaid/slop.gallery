@@ -31,6 +31,7 @@ Fences use `fences` (blue, priority 10) and `touching-fences` (red, priority 11)
 - `addLine(from, to, style?)`, `addTriangle(a, b, c, style?)` and `addBox(min, max, style?)` draw a segment, a triangle’s perimeter and an axis-aligned box’s edges.
 - `addPoint(position, options?)` draws a three-axis cross with an optional `radius` (default 0.1 m).
 - `addCircle(center, radius, options?)` draws a horizontal ring by default. Pass a plane `normal` or a segment count (default 64).
+- `addSphere(center, radius, options?)` marks a world-space center with a circular outline that stays round from every camera angle. Its radius is in meters, so it looks smaller from farther away. It accepts the same style and segment count as a circle.
 - `addSegments(positions, style?)` batches endpoint pairs from a `Float32Array` into one draw call. Treat the buffer as immutable.
 
 All primitives accept `layer`, a `color` override, `name` and a within-layer `renderOrder`. The returned handle supports `remove()` and `setStyle({layer, color, name, renderOrder})` with any subset of those fields. Moving an uncolored drawing adopts the destination layer’s color; an explicit color travels with the drawing.
@@ -40,6 +41,6 @@ All primitives accept `layer`, a `color` override, `name` and a within-layer `re
 | Tool | Example input | Result |
 | --- | --- | --- |
 | `add_layer` | `{"id":"bounds","color":"#80ff00","priority":20,"lineWidth":200,"fade":{"end":80}}` | `{id}` |
-| `add_drawing` | `{"drawing":{"type":"circle","layer":"bounds","center":[0,1.5,-3],"radius":0.75}}` | `{id, drawing}` |
+| `add_drawing` | `{"drawing":{"type":"sphere","layer":"bounds","center":[0,1.5,-3],"radius":0.75}}` | `{id, drawing}` |
 | `clear_layer` | `{"id":"bounds"}` | `{removed}` |
 | `clear_drawings` | `{}` | `{removed}` |

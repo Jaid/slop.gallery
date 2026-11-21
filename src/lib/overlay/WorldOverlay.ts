@@ -3,11 +3,12 @@ import type {Vec3} from 'math'
 import type {Camera, ColorRepresentation, Renderer} from 'three/webgpu'
 
 import {LineSegmentsGeometry} from 'three/addons/lines/LineSegmentsGeometry.js'
-import {ColorManagement, Mesh, NoToneMapping, Scene, Vector3} from 'three/webgpu'
+import {ColorManagement, Mesh, NoToneMapping, Scene} from 'three/webgpu'
 
 import appendBoxEdges from './boxEdges.ts'
 import {defaultLayer, readLayer} from './layer.ts'
 import OverlayLayer from './OverlayLayer.ts'
+import ringEdges from './ringEdges.ts'
 
 export type OverlayStyle = {
   color?: ColorRepresentation
@@ -49,23 +50,7 @@ export default class WorldOverlay {
     normal?: Point
     segments?: number
   } = {}) {
-    const n = new Vector3(...normal)
-    if (!(radius > 0 && Number.isFinite(radius) && Number.isInteger(segments) && segments >= 3 && n.lengthSq() > 0 && Number.isFinite(n.lengthSq()))) {
-      throw new RangeError('A circle needs a positive finite radius, a finite nonzero normal and at least three segments.')
-    }
-    n.normalize()
-    const u = Math.abs(n.x) < 0.9 ? new Vector3(1, 0, 0) : new Vector3(0, 0, 1)
-    u.cross(n).normalize()
-    const v = n.clone().cross(u)
-    const edges = new Float32Array(segments * 6)
-    const point = new Vector3
-    for (let i = 0; i < segments; i++) {
-      const angle = i * 2 * Math.PI / segments
-      point.set(...center).addScaledVector(u, radius * Math.cos(angle)).addScaledVector(v, radius * Math.sin(angle))
-      point.toArray(edges, i * 6)
-      point.toArray(edges, (i + segments - 1) % segments * 6 + 3)
-    }
-    return this.addSegments(edges, style)
+    return this.addSegments(ringEdges(center, radius, normal, segments), style)
   }
   addLayer(options: LayerOptions) {
     readLayer(options)
@@ -87,7 +72,72 @@ export default class WorldOverlay {
   }
 
   /** Add a batch in one draw call. Each six consecutive numbers are two endpoints in world meters. Treat the supplied buffer as immutable. */
-  addSegments(positions: Float32Array, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}): OverlayDrawing {
+  addSegments(positions: Float32Array, style?: OverlayStyle): OverlayDrawing {
+    return this.stroke(positions, style)
+  }
+  /** A world-sized ring parallel to the image plane of whichever camera draws it. */
+  addSphere(center: Point, radius: number, {segments = 64, ...style}: OverlayStyle & {segments?: number} = {}) {
+    return this.stroke(ringEdges([0, 0, 0], radius, [0, 0, 1], segments), style, center)
+  }
+  addTriangle(a: Point, b: Point, c: Point, style?: OverlayStyle) {
+    return this.addSegments(new Float32Array([...a, ...b, ...b, ...c, ...c, ...a]), style)
+  }
+
+  attach(camera: Camera, renderer: Renderer) {
+    this.renderers.set(camera, renderer)
+    return () => {
+      this.renderers.delete(camera)
+    }
+  }
+  clearDrawings() {
+    let count = 0
+    for (const layer of this.layers.values()) {
+      count += layer.empty()
+    }
+    if (count) {
+      this.changed()
+    }
+    return count
+  }
+  /** Clear drawings, keeping layer definitions for the next producer. */
+  clearLayer(id: string) {
+    const count = this.layer(id).empty()
+    if (count) {
+      this.changed()
+    }
+    return count
+  }
+  draw(camera: Camera) {
+    const renderer = this.renderers.get(camera)
+    if (!renderer || !this.hasDrawings()) {
+      return
+    }
+    const {autoClear, outputColorSpace, toneMapping} = renderer
+    try {
+      renderer.autoClear = false
+      renderer.outputColorSpace = ColorManagement.workingColorSpace
+      renderer.toneMapping = NoToneMapping
+      renderer.render(this.scene, camera)
+    } finally {
+      renderer.autoClear = autoClear
+      renderer.outputColorSpace = outputColorSpace
+      renderer.toneMapping = toneMapping
+    }
+  }
+  private changed() {
+    for (const listener of this.listeners) {
+      listener()
+    }
+  }
+
+  private layer(id: string) {
+    const layer = this.layers.get(id)
+    if (!layer) {
+      throw new Error(`Unknown overlay layer: ${id}`)
+    }
+    return layer
+  }
+  private stroke(positions: Float32Array, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}, billboardCenter?: Point): OverlayDrawing {
     if (!positions.length || positions.length % 6 !== 0) {
       throw new RangeError('Overlay segments need one or more pairs of xyz endpoints.')
     }
@@ -96,6 +146,14 @@ export default class WorldOverlay {
     geometry.setPositions(positions)
     geometry.setDrawRange(6, 6) // the central quad, without cap triangles
     const mesh = new Mesh(geometry, layer.materialFor(color))
+    if (billboardCenter) {
+      mesh.position.set(...billboardCenter)
+      mesh.onBeforeRender = (_renderer, _scene, camera) => {
+        // Parallel to the whole image, not aimed at the eye: even an off-center sphere stays round.
+        camera.getWorldQuaternion(mesh.quaternion)
+        mesh.updateMatrixWorld()
+      }
+    }
     mesh.name = name
     mesh.renderOrder = renderOrder
     layer.add(mesh)
@@ -139,63 +197,5 @@ export default class WorldOverlay {
         this.changed()
       },
     }
-  }
-
-  addTriangle(a: Point, b: Point, c: Point, style?: OverlayStyle) {
-    return this.addSegments(new Float32Array([...a, ...b, ...b, ...c, ...c, ...a]), style)
-  }
-  attach(camera: Camera, renderer: Renderer) {
-    this.renderers.set(camera, renderer)
-    return () => {
-      this.renderers.delete(camera)
-    }
-  }
-  clearDrawings() {
-    let count = 0
-    for (const layer of this.layers.values()) {
-      count += layer.empty()
-    }
-    if (count) {
-      this.changed()
-    }
-    return count
-  }
-  /** Clear drawings, keeping layer definitions for the next producer. */
-  clearLayer(id: string) {
-    const count = this.layer(id).empty()
-    if (count) {
-      this.changed()
-    }
-    return count
-  }
-  draw(camera: Camera) {
-    const renderer = this.renderers.get(camera)
-    if (!renderer || !this.hasDrawings()) {
-      return
-    }
-    const {autoClear, outputColorSpace, toneMapping} = renderer
-    try {
-      renderer.autoClear = false
-      renderer.outputColorSpace = ColorManagement.workingColorSpace
-      renderer.toneMapping = NoToneMapping
-      renderer.render(this.scene, camera)
-    } finally {
-      renderer.autoClear = autoClear
-      renderer.outputColorSpace = outputColorSpace
-      renderer.toneMapping = toneMapping
-    }
-  }
-
-  private changed() {
-    for (const listener of this.listeners) {
-      listener()
-    }
-  }
-  private layer(id: string) {
-    const layer = this.layers.get(id)
-    if (!layer) {
-      throw new Error(`Unknown overlay layer: ${id}`)
-    }
-    return layer
   }
 }

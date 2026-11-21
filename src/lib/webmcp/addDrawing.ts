@@ -29,6 +29,7 @@ function render(name: string, drawing: Drawing) {
       ...style,
       radius: drawing.radius,
     }) }
+    case 'sphere': { return overlay.addSphere(drawing.center, drawing.radius, style) }
     case 'triangle': { return overlay.addTriangle(drawing.a, drawing.b, drawing.c, style) }
   }
 }

@@ -25,6 +25,10 @@ type Shapes = {
     position: Vec3
     radius?: number
   }
+  sphere: {
+    center: Vec3
+    radius: number
+  }
   triangle: {
     a: Vec3
     b: Vec3
@@ -58,6 +62,10 @@ const layouts = {
     required: ['position'],
     optional: ['radius'],
   },
+  sphere: {
+    required: ['center', 'radius'],
+    optional: [],
+  },
   triangle: {
     required: ['a', 'b', 'c'],
     optional: [],
@@ -89,7 +97,7 @@ export const drawingSchema = {oneOf: Object.entries(layouts).map(([kind, {requir
 /** Validate the tool’s drawing before creating geometry. */
 export function readDrawing(value: unknown): Drawing {
   if (!value || typeof value !== 'object' || Array.isArray(value) || !('type' in value) || typeof value.type !== 'string' || !Object.hasOwn(layouts, value.type)) {
-    throw new TypeError('drawing.type must be box, circle, line, point or triangle.')
+    throw new TypeError('drawing.type must be box, circle, line, point, sphere or triangle.')
   }
   const fields = value as Record<string, unknown>
   const {required, optional} = layouts[value.type as keyof Shapes]

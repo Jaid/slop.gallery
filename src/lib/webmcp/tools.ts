@@ -328,7 +328,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'add_drawing',
       title: 'Add a world-space drawing',
-      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter or circle in meters. Use drawing.layer to select an existing overlay layer (default: default). The optional hex RGB color overrides the layer’s; a circle is horizontal unless given a normal. Shown through walls independently of show_fence, including in captures. The drawing stays until cleared or the page reloads. Returns its ID and geometry.',
+      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter, circle or sphere outline in meters. Use drawing.layer to select an existing overlay layer (default: default). The optional hex RGB color overrides the layer’s; a circle is horizontal unless given a normal. A sphere takes center and radius and its outline stays round from every view. Shown through walls independently of show_fence, including in captures. The drawing stays until cleared or the page reloads. Returns its ID and geometry.',
       inputSchema: {
         type: 'object',
         properties: {drawing: drawingSchema},

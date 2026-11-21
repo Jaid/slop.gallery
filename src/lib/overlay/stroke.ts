@@ -2,7 +2,7 @@ import type {LayerOptions} from './layer.ts'
 import type {Node} from 'three/webgpu'
 
 import {wireframeCoverage} from 'capture-session'
-import {attribute, cameraNear, cameraPosition, cameraProjectionMatrix, cameraViewMatrix, Fn, mix, positionGeometry, uniform, varying, varyingProperty, vec2, vec3, vec4, viewportSize} from 'three/tsl'
+import {attribute, cameraNear, cameraPosition, cameraProjectionMatrix, Fn, mix, modelViewMatrix, modelWorldMatrix, positionGeometry, uniform, varying, varyingProperty, vec2, vec3, vec4, viewportSize} from 'three/tsl'
 
 import viewportLineWidth from '#src/lib/rendering/viewportLineWidth.ts'
 
@@ -36,14 +36,14 @@ export default function createStroke({lineStyle, lineWidth, fade}: LayerOptions)
   const vertexNode = Fn(() => {
     const a = attribute<'vec3'>('instanceStart', 'vec3')
     const b = attribute<'vec3'>('instanceEnd', 'vec3')
-    const va = cameraViewMatrix.mul(vec4(a, 1))
-    const vb = cameraViewMatrix.mul(vec4(b, 1))
+    const va = modelViewMatrix.mul(vec4(a, 1))
+    const vb = modelViewMatrix.mul(vec4(b, 1))
     const ta = trim(va.z, vb.z)
     const tb = trim(vb.z, va.z)
     const ca = cameraProjectionMatrix.mul(mix(va, vb, ta))
     const cb = cameraProjectionMatrix.mul(mix(vb, va, tb))
     const atEnd = positionGeometry.y.greaterThan(0.5)
-    linePoint.assign(atEnd.select(mix(b, a, tb), mix(a, b, ta)))
+    linePoint.assign(modelWorldMatrix.mul(vec4(atEnd.select(mix(b, a, tb), mix(a, b, ta)), 1)).xyz)
     const clip = atEnd.select(cb, ca)
     const axis = cb.xy.div(cb.w.max(cameraNear)).sub(ca.xy.div(ca.w.max(cameraNear))).mul(viewportSize)
     const normal = vec2(axis.y.negate(), axis.x).div(axis.length().max(1e-7))
