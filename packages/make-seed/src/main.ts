@@ -6,8 +6,7 @@ export const maximumSeed = 65_536
 const minimumSeed = 1
 const offset = minimumSeed
 const isSeed = (value: number) => Number.isInteger(value) && value >= minimumSeed && value <= maximumSeed
-
-export const rollSeed = () => {
+const rollSeed = () => {
   const data = crypto.getRandomValues(new Uint16Array(1))
   const uint16 = data[0]
   return uint16 + offset
