@@ -31,14 +31,14 @@ export default class NarrationGenerator extends ExternalGenerator {
       throw new Error(`Narration unavailable (${response.status}): ${error.slice(0, 2000)}`)
     }
     const type = response.headers.get('content-type') ?? ''
-    if (!/^audio\/(?:l16|mp3|mpeg|ogg|pcm|wav|x-wav)(?:;|$)/i.test(type)) {
+    if (!/^audio\/(?:mp3|mpeg|ogg|pcm|wav|x-wav)(?:;|$)/i.test(type)) {
       throw new Error('The speech provider returned an unsupported audio format.')
     }
     const blob = await response.blob()
     if (!blob.size || blob.size > 25_000_000) {
       throw new Error('The speech provider returned invalid audio.')
     }
-    if (/audio\/(?:l16|pcm)/i.test(type)) {
+    if (/^audio\/pcm(?:;|$)/i.test(type)) {
       const rate = /(?:^|;)\s*rate=(\d+)/iu.exec(type)?.[1]
       const channels = /(?:^|;)\s*channels=(\d+)/iu.exec(type)?.[1]
       if (channels && Number(channels) !== 1) {

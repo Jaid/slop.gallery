@@ -41,6 +41,11 @@ test('stereo PCM cannot silently become a mono file at the wrong speed', async (
   const grokNarrator = new NarrationGenerator({key: 'test-key'}, 'x-ai/grok-voice-tts-1.0', 'iris')
   await expect(grokNarrator.generate('Hello.', {format: 'pcm'})).rejects.toThrow('Expected mono PCM')
 })
+test('big-endian L16 is refused rather than wrapped as the little-endian PCM OpenRouter sends', async () => {
+  fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(new Uint8Array([0, 1]), {headers: {'content-type': 'audio/L16;rate=24000;channels=1'}}))
+  const geminiNarrator = new NarrationGenerator({key: 'test-key'}, 'google/gemini-3.8-flash-tts', 'Algenib')
+  await expect(geminiNarrator.generate('GLM 5.3')).rejects.toThrow('unsupported audio format')
+})
 test('Gemini speech uses PCM and the central Slop Gallery app attribution', async () => {
   fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(new Uint8Array([0, 0, 1, 0]), {headers: {'content-type': 'audio/pcm'}}))
   const geminiNarrator = new NarrationGenerator({key: 'test-key'}, 'google/gemini-3.8-flash-tts', 'Algenib')
