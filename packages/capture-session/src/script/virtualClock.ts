@@ -27,11 +27,16 @@ export const installVirtualClock = (animationSeconds?: number) => {
   let now = 0
   let nextId = 1
   let pumping = false
-  let queue = new Map<number, FrameRequestCallback>
+  const queue = new Map<number, FrameRequestCallback>
   const flush = (timestamp: number) => {
-    const callbacks = queue
-    queue = new Map
-    for (const callback of callbacks.values()) {
+    // Only what was queued before this frame runs in it, and not what an earlier callback of it canceled.
+    const due = queue.keys().toArray()
+    for (const id of due) {
+      const callback = queue.get(id)
+      if (!callback) {
+        continue
+      }
+      queue.delete(id)
       try {
         callback(timestamp)
       } catch (error) {

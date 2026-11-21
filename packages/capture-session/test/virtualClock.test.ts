@@ -54,4 +54,19 @@ describe('virtual clock', () => {
     globalThis.virtualClock!.step(0)
     expect(performance.now()).toBe(moments.at(-1)!)
   })
+  test('runs what was queued before a frame in it, but not a callback an earlier one of it canceled, and what it queues on the next frame', () => {
+    const ran: Array<string> = []
+    let later = 0
+    globalThis.requestAnimationFrame(() => {
+      ran.push('first')
+      globalThis.cancelAnimationFrame(later)
+      globalThis.requestAnimationFrame(() => ran.push('next'))
+    })
+    later = globalThis.requestAnimationFrame(() => ran.push('canceled'))
+    globalThis.requestAnimationFrame(() => ran.push('last'))
+    globalThis.virtualClock!.step(1 / fps)
+    expect(ran).toEqual(['first', 'last'])
+    globalThis.virtualClock!.step(1 / fps)
+    expect(ran).toEqual(['first', 'last', 'next'])
+  })
 })
