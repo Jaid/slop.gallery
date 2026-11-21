@@ -1,14 +1,14 @@
 import type {RoomCamera} from '../base/Room.ts'
 
 export default {
-  // From the north-east corner, looking south-west across the worktables under the sawtooth lights toward the south wall.
+  // High by the west wall, south of the middle, looking east and down across the room.
   overview: {
-    position: [2.65, 1.6, -6.9],
+    position: [-5.856, 3.73, 3.957],
     aim: {
-      yaw: 2.9147,
-      pitch: 0.2269,
+      yaw: -1.2131,
+      pitch: -0.3176,
     },
-    fov: 73,
+    fov: 80,
     ratio: 16 / 9,
   },
   // From the middle of the vestibule, knee-high, looking south through the arch down the aisle to the alchemy machine.
