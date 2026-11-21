@@ -69,12 +69,12 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('layer priority wins over submission o
       lineWidth: 800,
       ...options,
     })
-    await callWebmcpTool(page, 'add_drawing', {drawing: {
+    await callWebmcpTool(page, 'add_drawing', {
       layer: options.id,
       type: 'line',
       from: [-90, 2, -115],
       to: [90, 2, -115],
-    }})
+    })
   }
   const top = await sample()
   expect(top.green).toBeGreaterThan(100)

@@ -23,12 +23,12 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('a sphere stays round from the front a
     color: '#00ff00',
     lineWidth: 600,
   })
-  await callWebmcpTool(page, 'add_drawing', {drawing: {
+  await callWebmcpTool(page, 'add_drawing', {
     type: 'sphere',
     layer: 'bounds',
     center: [0, 2, 0],
     radius: 0.5,
-  }})
+  })
   for (const pose of [[0, 5, 0, 5], [5, 3, Math.PI / 2, 5], [10, 3, Math.PI / 2, 10]]) {
     await page.evaluate(([x, z, yaw]) => globalThis.slopGallery!.fly!({
       position: [x, 2, z],

@@ -46,9 +46,9 @@ All primitives accept `layer`, a `color` override, `name` and a within-layer `re
 | Tool | Example input | Result |
 | --- | --- | --- |
 | `add_layer` | `{"id":"bounds","color":"#80ff00","priority":20,"lineWidth":200,"fade":{"end":80}}` | `{id}` |
-| `add_drawing` | `{"drawing":{"type":"sphere","layer":"bounds","center":[0,1.5,-3],"radius":0.75}}` | `{id, drawing}` |
-| `add_drawing` | `{"drawing":{"type":"viewport_rectangle","x":0.1,"y":0.1,"width":0.8,"height":0.8}}` | `{id, drawing}` |
-| `add_drawing` | `{"drawing":{"type":"camera_facing_rectangle","center":[0,2,-4],"width":2,"height":1}}` | `{id, drawing}` |
+| `add_drawing` | `{"type":"sphere","layer":"bounds","center":[0,1.5,-3],"radius":0.75}` | `{id, drawing}` |
+| `add_drawing` | `{"type":"viewport_rectangle","x":0.1,"y":0.1,"width":0.8,"height":0.8}` | `{id, drawing}` |
+| `add_drawing` | `{"type":"camera_facing_rectangle","center":[0,2,-4],"width":2,"height":1}` | `{id, drawing}` |
 | `clear_layer` | `{"id":"bounds"}` | `{removed}` |
 | `clear_drawings` | `{}` | `{removed}` |
 | `add_text_overlay` | `{"text":"Lobby","position":{"x":16,"y":24},"anchor":1}` | `{added}` |

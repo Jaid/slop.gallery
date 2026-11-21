@@ -14,12 +14,12 @@ const addLayer = (id: string): ToolCall => ({
 })
 const line = (layer: string, from: Array<number>, to: Array<number>): ToolCall => ({
   name: 'add_drawing',
-  input: {drawing: {
+  input: {
     type: 'line',
     layer,
     from,
     to,
-  }},
+  },
 })
 const floor = 'lobby-floor-trace'
 const sill = 'lobby-salon-sill-height'

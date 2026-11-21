@@ -28,26 +28,26 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('a viewport rectangle stays put while 
     },
     obstructedOpacityFactor: 0,
   })
-  await callWebmcpTool(page, 'add_drawing', {drawing: {
+  await callWebmcpTool(page, 'add_drawing', {
     type: 'viewport_rectangle',
     layer: 'hud',
     x: 0.1,
     y: 0.2,
     width: 0.2,
     height: 0.1,
-  }})
+  })
   await callWebmcpTool(page, 'add_layer', {
     id: 'world-bounds',
     color: '#00ff00',
     lineWidth: 800,
   })
-  await callWebmcpTool(page, 'add_drawing', {drawing: {
+  await callWebmcpTool(page, 'add_drawing', {
     type: 'camera_facing_rectangle',
     layer: 'world-bounds',
     center: [0, 2, 0],
     width: 2,
     height: 1,
-  }})
+  })
   for (const pose of [[0, 5, 0, 5], [10, 2, Math.PI / 2, 10]]) {
     await page.evaluate(([x, z, yaw]) => globalThis.slopGallery!.fly!({
       position: [x, 2, z],

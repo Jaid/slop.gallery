@@ -314,7 +314,7 @@ test('add_drawing validates the chosen shape before adding it to the overlay', (
     to: [3, 4, 5],
     color: '#00ffff',
   }
-  expect(tool.execute({drawing}, options)).toEqual({
+  expect(tool.execute(drawing, options)).toEqual({
     id: 'test',
     drawing,
   })
@@ -329,7 +329,7 @@ test('add_drawing validates the chosen shape before adding it to the overlay', (
     center: [0, 0, 0],
     radius: -1,
   }, {type: 'point'}]) {
-    expect(() => tool.execute({drawing: invalid}, options)).toThrow(TypeError)
+    expect(() => tool.execute(invalid, options)).toThrow(TypeError)
   }
 })
 test('WebMCP layer calls reject malformed inputs before creating or clearing layers', () => {

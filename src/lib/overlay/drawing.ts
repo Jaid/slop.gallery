@@ -116,10 +116,10 @@ export const drawingSchema = {oneOf: Object.entries(layouts).map(([kind, {requir
   additionalProperties: false,
 }))}
 
-/** Validate the tool’s drawing before creating geometry. */
+/** Validate the drawing add_drawing takes as its input before creating geometry. */
 export function readDrawing(value: unknown): Drawing {
   if (!value || typeof value !== 'object' || Array.isArray(value) || !('type' in value) || typeof value.type !== 'string' || !Object.hasOwn(layouts, value.type)) {
-    throw new TypeError(`Expected drawing.type to be one of: ${Object.keys(layouts).join(', ')}.`)
+    throw new TypeError(`Expected type to be one of: ${Object.keys(layouts).join(', ')}.`)
   }
   const fields = value as Record<string, unknown>
   const {required, optional} = layouts[value.type as keyof Shapes]
@@ -128,10 +128,10 @@ export function readDrawing(value: unknown): Drawing {
     throw new TypeError(`Unexpected or missing fields for drawing type ${value.type}`)
   }
   if (fields.layer !== undefined && !isLayerId(fields.layer)) {
-    throw new TypeError('drawing.layer must be a nonblank layer ID.')
+    throw new TypeError('layer must be a nonblank layer ID.')
   }
   if (fields.color !== undefined && !(typeof fields.color === 'string' && hexColor.test(fields.color))) {
-    throw new TypeError('drawing.color must be a hex RGB color.')
+    throw new TypeError('color must be a hex RGB color.')
   }
   for (const key of keys) {
     if (!Object.hasOwn(fields, key)) {
@@ -140,22 +140,22 @@ export function readDrawing(value: unknown): Drawing {
     const v = fields[key]
     if (lengths.has(key)) {
       if (!(typeof v === 'number' && Math.fround(v) > 0 && Number.isFinite(Math.fround(v)))) {
-        throw new TypeError(`drawing.${key} must be positive and finite.`)
+        throw new TypeError(`${key} must be positive and finite.`)
       }
     } else if (coordinates.has(key)) {
       if (!(typeof v === 'number' && Number.isFinite(Math.fround(v)))) {
-        throw new TypeError(`drawing.${key} must be finite.`)
+        throw new TypeError(`${key} must be finite.`)
       }
     } else if (!(Array.isArray(v) && v.length === 3 && v.every(n => typeof n === 'number' && Number.isFinite(Math.fround(n))))) {
-      throw new TypeError(`drawing.${key} must be a finite [x,y,z] vector.`)
+      throw new TypeError(`${key} must be a finite [x,y,z] vector.`)
     }
   }
   const drawing = value as Drawing
   if (drawing.type === 'circle' && drawing.normal?.every(n => n === 0)) {
-    throw new TypeError('drawing.normal must not be zero.')
+    throw new TypeError('normal must not be zero.')
   }
   if (drawing.type === 'box' && drawing.min.some((n, i) => n > drawing.max[i])) {
-    throw new TypeError('drawing.min must not exceed drawing.max on any axis.')
+    throw new TypeError('min must not exceed max on any axis.')
   }
   return drawing
 }
