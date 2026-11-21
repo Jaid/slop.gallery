@@ -28,4 +28,13 @@ export default {
     fov: 30,
     ratio: 16 / 9,
   },
+  orb: {
+    position: [0.112, 1.901, -2.369],
+    aim: {
+      yaw: -0.9536,
+      pitch: -0.3636,
+    },
+    fov: 30,
+    ratio: 1,
+  },
 } satisfies Record<string, RoomCamera>
