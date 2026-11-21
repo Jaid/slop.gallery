@@ -10,7 +10,7 @@ import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {defaultWorld, worldIds, worlds} from '../../src/worlds/index.ts'
 
-// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material and the Knots’ announcements in chunks of their own that only load on demand, and the game’s chunks and assets named by their content.
+// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material, the Knots’ announcements and the AI SDK in chunks of their own that only load on demand, and the game’s chunks and assets named by their content.
 // Files are named by their content hash, so the chunks and assets are looked up in the output list the build writes next to it.
 const directory = 'dist'
 const root = join(import.meta.dir, '..', '..')
@@ -98,6 +98,14 @@ for (const name of ['knot-catalog', 'knot-shaders']) {
   if (initial.has(chunkNamed(name).fileName)) {
     fail(`The ${name} chunk loads with the page instead of on demand.`)
   }
+}
+// The AI SDK only loads with the first flavor or fusion; narration speaks to OpenRouter over plain HTTP.
+const aiSdk = /\/node_modules\/(?:@openrouter\/ai-sdk-provider|ai)\//u
+if (!chunks.some(chunk => chunk.modules.some(module => aiSdk.test(module)))) {
+  fail('No chunk holds the AI SDK.')
+}
+if (chunks.some(chunk => initial.has(chunk.fileName) && chunk.modules.some(module => aiSdk.test(module)))) {
+  fail('The AI SDK loads with the page.')
 }
 if (chunks.some(chunk => /^data\d*$/u.test(chunk.name))) {
   fail('The Knots’ metadata is split into a chunk per entry.')

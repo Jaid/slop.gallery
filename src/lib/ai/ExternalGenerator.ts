@@ -1,29 +1,16 @@
 import type {OpenRouterAccess} from './openRouterAccess.ts'
 
-import {createOpenRouter} from '@openrouter/ai-sdk-provider'
-
 import {isProxied, openRouterOrigin} from './openRouterAccess.ts'
 
-/** fetch without the `Authorization` header, which the provider always sends, empty without a key, and which would keep a proxy from adding its own */
-const unauthenticatedFetch = ((input: RequestInfo | URL, init: RequestInit = {}) => {
-  const headers = new Headers(init.headers)
-  headers.delete('Authorization')
-  return fetch(input, {
-    ...init,
-    headers,
-  })
-}) as typeof fetch
-
+/** Talks to OpenRouter’s API over plain HTTP, with the key only for OpenRouter itself; see SdkGenerator for the AI SDK. */
 export default abstract class {
+  /** the base of the API, `/api/v1/` on the access’s origin */
+  protected readonly api: URL
+
   protected readonly headers: Record<string, string>
 
-  protected readonly provider: ReturnType<typeof createOpenRouter>
-
-  /** the base of the API, `/api/v1/` on the access’s origin */
-  private readonly api: URL
-
   /** the key requests authenticate with, none for a host other than OpenRouter, which adds its own */
-  private readonly key: string | undefined
+  protected readonly key: string | undefined
 
   constructor(access: OpenRouterAccess) {
     const headers = {
@@ -41,16 +28,6 @@ export default abstract class {
     }
     this.api = new URL('/api/v1/', access.origin ?? openRouterOrigin)
     this.key = isProxied(access) ? undefined : access.key
-    this.provider = createOpenRouter({
-      apiKey: this.key ?? '',
-      baseURL: this.api.href,
-      extraBody: {
-        temperature: 0,
-        seed: 1,
-      },
-      headers,
-      ...this.key === undefined ? {fetch: unauthenticatedFetch} : {},
-    })
   }
   /** Raw endpoints share the SDK’s app attribution, including offline generation scripts. */
   request(path: string, init: RequestInit = {}) {

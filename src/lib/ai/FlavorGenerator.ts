@@ -4,7 +4,7 @@ import type {FilePart} from 'ai'
 
 import {jsonSchema, Output, streamText} from 'ai'
 
-import ExternalGenerator from './ExternalGenerator.ts'
+import SdkGenerator from './SdkGenerator.ts'
 
 type GeneratedFlavor = {
   creator: string
@@ -48,7 +48,7 @@ const makeAttachment = async (image: Blob): Promise<FilePart> => {
     bitmap.close()
   }
 }
-export default class extends ExternalGenerator {
+export default class extends SdkGenerator {
   readonly model: Parameters<typeof streamText>[0]['model']
   readonly outputShape = Output.object({
     schema: jsonSchema<GeneratedFlavor>({

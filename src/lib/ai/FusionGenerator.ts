@@ -5,9 +5,9 @@ import type {AiTier} from './settings.ts'
 
 import {APICallError, generateImage, generateText} from 'ai'
 
-import ExternalGenerator from './ExternalGenerator.ts'
 import {requestedRatio} from './imageRatios.ts'
 import {modelImageType} from './modelImage.ts'
+import SdkGenerator from './SdkGenerator.ts'
 import {tieredModel} from './settings.ts'
 
 type EditOptions = {
@@ -32,7 +32,7 @@ const toBlob = (file: {
  * Makes fusion results through OpenRouter’s chat endpoint wherever the model takes it, and through its `/images` endpoint for models that only serve there, like GPT Image 2.5 Sunburst.
  * The same Nano Banana 2.1 fusion took a median 10.1 s through chat and 17.3 s through `/images`, with the same tokens and image (2026-11-03, 12 rounds each). Chat also takes the `ai_tier` routing variants, which `/images` answers with a 404.
  */
-export default class extends ExternalGenerator {
+export default class extends SdkGenerator {
   constructor(access: OpenRouterAccess, private readonly modelId: string, private readonly tier?: AiTier) {
     super(access)
   }
