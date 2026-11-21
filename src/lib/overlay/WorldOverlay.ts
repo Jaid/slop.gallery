@@ -29,6 +29,10 @@ export type OverlayDrawing = {
   setStyle: (style: OverlayStyle) => void
 }
 type Point = Readonly<Vec3>
+type LayerDefinition = {
+  group?: OverlayLayer
+  options: LayerOptions
+}
 
 const checkSphereRadius = (value: number) => {
   if (!(value > 0 && Number.isFinite(value))) {
@@ -62,7 +66,7 @@ export default class WorldOverlay {
     }
   }
   private depthRequested = false
-  private readonly layers = new Map<string, OverlayLayer>
+  private readonly layers = new Map<string, LayerDefinition>
   private readonly listeners = new Set<() => void>
   private readonly renderers = new WeakMap<Camera, Renderer>
   private readonly scene = new Scene
@@ -96,7 +100,7 @@ export default class WorldOverlay {
     if (this.layers.has(options.id)) {
       throw new Error(`Overlay layer already exists: ${options.id}`)
     }
-    this.layers.set(options.id, new OverlayLayer(options))
+    this.layers.set(options.id, {options})
     return options.id
   }
   addLine(from: Point, to: Point, style?: OverlayStyle) {
@@ -135,7 +139,7 @@ export default class WorldOverlay {
   }
   /** Transfer a producer's mesh, geometry and material to the overlay. Its own fill/color nodes are preserved, and layer visibility multiplies its opacity. */
   addSurface(layerId: string, mesh: OverlayMesh) {
-    const layer = this.layer(layerId)
+    const layer = this.layerForDrawing(layerId)
     const material = mesh.material
     material.opacityNode = layerOpacity((material.opacityNode as Node<'float'> | null) ?? materialOpacity, positionWorld, layer.options)
     material.depthTest = false
@@ -170,8 +174,8 @@ export default class WorldOverlay {
 
   clearDrawings() {
     let count = 0
-    for (const layer of this.layers.values()) {
-      count += layer.empty()
+    for (const {group} of this.layers.values()) {
+      count += group?.empty() ?? 0
     }
     if (count) {
       this.changed()
@@ -180,7 +184,7 @@ export default class WorldOverlay {
   }
   /** Clear drawings, keeping layer definitions for the next producer. */
   clearLayer(id: string) {
-    const count = this.layer(id).empty()
+    const count = this.layerDefinition(id).group?.empty() ?? 0
     if (count) {
       this.changed()
     }
@@ -216,12 +220,16 @@ export default class WorldOverlay {
     }
   }
 
-  private layer(id: string) {
+  private layerDefinition(id: string) {
     const layer = this.layers.get(id)
     if (!layer) {
       throw new Error(`Unknown overlay layer: ${id}`)
     }
     return layer
+  }
+  private layerForDrawing(id: string) {
+    const definition = this.layerDefinition(id)
+    return definition.group ??= new OverlayLayer(definition.options)
   }
   private place(layer: OverlayLayer, mesh: OverlayMesh) {
     layer.add(mesh)
@@ -233,7 +241,7 @@ export default class WorldOverlay {
     if (!positions.length || positions.length % 6 !== 0) {
       throw new RangeError('Overlay segments need one or more pairs of xyz endpoints.')
     }
-    let layer = this.layer(layerId)
+    let layer = this.layerForDrawing(layerId)
     const geometry = new LineSegmentsGeometry
     geometry.setPositions(positions)
     geometry.setDrawRange(6, 6) // the central quad, without cap triangles
@@ -251,7 +259,7 @@ export default class WorldOverlay {
         if (!mesh.parent) {
           return
         }
-        const next = style.layer === undefined ? layer : this.layer(style.layer)
+        const next = style.layer === undefined ? layer : this.layerForDrawing(style.layer)
         if (next !== layer) {
           layer.detach(mesh)
           layer = next

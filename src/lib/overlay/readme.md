@@ -12,7 +12,7 @@ ring.remove() // or clear the whole layer with overlay.clearLayer(layer)
 
 ## Layers
 
-`addLayer(options)` creates a layer and returns its ID. Only `id` is required. IDs must be nonblank and unique. Drawings without a `layer` use `default`; referencing an unknown ID is an error.
+`addLayer(options)` registers a layer and returns its ID. Only `id` is required. IDs must be nonblank and unique. Drawings without a `layer` use the pre-registered `default`; referencing an unknown ID is an error. Each layer’s Three.js group is created when the first drawing is added or moved to it.
 
 | Option | When omitted |
 | --- | --- |
