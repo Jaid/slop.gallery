@@ -2,18 +2,19 @@ import type {LayerOptions} from './layer.ts'
 import type {Node} from 'three/webgpu'
 
 import {wireframeCoverage} from 'capture-session'
-import {attribute, cameraNear, cameraPosition, cameraProjectionMatrix, Fn, mix, modelViewMatrix, modelWorldMatrix, positionGeometry, uniform, varying, varyingProperty, vec2, vec3, vec4, viewportSize} from 'three/tsl'
+import {attribute, cameraNear, cameraProjectionMatrix, Fn, mix, modelViewMatrix, modelWorldMatrix, positionGeometry, uniform, varying, varyingProperty, vec2, vec4, viewportSize} from 'three/tsl'
 
 import viewportLineWidth from '#src/lib/rendering/viewportLineWidth.ts'
 
-import {defaultFade} from './layer.ts'
+import layerOpacity from './layerOpacity.ts'
 import {useOverlayTuning} from './tuning.ts'
 
 /** Fraction to trim from the first endpoint to the camera’s near plane before projecting. */
 const trim = (z: Node<'float'>, otherZ: Node<'float'>) => z.add(cameraNear).max(0).div(z.sub(otherZ).max(1e-7)).min(1)
 
 /** Shared by all drawings on one layer. Omitted width and style keep following the live controls. */
-export default function createStroke({lineStyle, lineWidth, fade}: LayerOptions) {
+export default function createStroke(options: LayerOptions) {
+  const {lineStyle, lineWidth} = options
   const halfWidth = uniform(0.5).onRenderUpdate(({renderer}) => viewportLineWidth(renderer!, lineWidth ?? useOverlayTuning.getState().lineWidth) / 2)
   const antialiased = uniform(true).onRenderUpdate(() => (lineStyle ?? useOverlayTuning.getState().lineStyle) === 'barycentric')
   // fwidth sums the horizontal and vertical derivatives: a diagonal’s antialiasing support extends up to √2 times farther.
@@ -23,15 +24,7 @@ export default function createStroke({lineStyle, lineWidth, fade}: LayerOptions)
   // Absolute distance AFTER the derivative: differentiating abs(side) would give a seam down the center.
   const pixels = side.abs().div(side.fwidth().max(1e-7))
   const hardEdge = side.abs().mul(radius).lessThanEqual(halfWidth).select(1, 0)
-  // Fade per pixel: a long edge can be solid at one end and invisible at the other.
-  const {start, end, power, heightWeight} = {
-    ...defaultFade,
-    ...fade,
-  }
-  const distance = linePoint.sub(cameraPosition).mul(vec3(1, heightWeight, 1)).length()
-  const opacity = distance.smoothstep(start, end).oneMinus().pow(power)
   const coverage = antialiased.select(wireframeCoverage(pixels, halfWidth), hardEdge)
-  const opacityNode = fade === false ? coverage : opacity.mul(coverage)
   /** Give each existing edge a narrow screen-space quad. Derivative coverage works even where a box has no visible face, without shading its interior or drawing diagonal edges. */
   const vertexNode = Fn(() => {
     const a = attribute<'vec3'>('instanceStart', 'vec3')
@@ -51,7 +44,7 @@ export default function createStroke({lineStyle, lineWidth, fade}: LayerOptions)
     return vec4(clip.xy.add(offset), clip.zw)
   })()
   return {
-    opacityNode,
+    opacityNode: layerOpacity(coverage, linePoint, options),
     vertexNode,
   }
 }

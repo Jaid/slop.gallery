@@ -1,19 +1,20 @@
 import type {LayerOptions} from './layer.ts'
-import type {LineSegmentsGeometry} from 'three/addons/lines/LineSegmentsGeometry.js'
-import type {ColorRepresentation, Mesh} from 'three/webgpu'
+import type {BufferGeometry, ColorRepresentation, Mesh} from 'three/webgpu'
 
-import {DoubleSide, Group, MeshBasicNodeMaterial} from 'three/webgpu'
+import {DoubleSide, Group, InstancedMesh, MeshBasicNodeMaterial} from 'three/webgpu'
 
 import createStroke from './stroke.ts'
 
-type StrokeMesh = Mesh<LineSegmentsGeometry, MeshBasicNodeMaterial>
+export type OverlayMesh = Mesh<BufferGeometry, MeshBasicNodeMaterial>
 
 /** Three sorts a group's priority before its children's renderOrder. Only nonempty groups join the overlay scene. */
 export default class OverlayLayer extends Group {
-  declare children: Array<StrokeMesh>
+  declare children: Array<OverlayMesh>
   readonly material: MeshBasicNodeMaterial
-  constructor(options: LayerOptions) {
+  readonly needsDepth: boolean
+  constructor(readonly options: LayerOptions) {
     super()
+    this.needsDepth = (options.obstructedOpacityFactor ?? 1) < 1
     this.name = options.id
     this.renderOrder = options.priority ?? 0
     this.material = new MeshBasicNodeMaterial({
@@ -27,7 +28,7 @@ export default class OverlayLayer extends Group {
       transparent: true,
     })
   }
-  detach(mesh: StrokeMesh) {
+  detach(mesh: OverlayMesh) {
     mesh.removeFromParent()
     if (mesh.material !== this.material) {
       mesh.material.dispose()
@@ -41,8 +42,7 @@ export default class OverlayLayer extends Group {
     const count = this.children.length
     while (this.children.length) {
       const mesh = this.children[this.children.length - 1]
-      this.detach(mesh)
-      mesh.geometry.dispose()
+      this.release(mesh)
     }
     return count
   }
@@ -54,5 +54,12 @@ export default class OverlayLayer extends Group {
     const material = this.material.clone()
     material.color.set(color)
     return material
+  }
+  release(mesh: OverlayMesh) {
+    this.detach(mesh)
+    mesh.geometry.dispose()
+    if (mesh instanceof InstancedMesh) {
+      mesh.dispose()
+    }
   }
 }

@@ -1,8 +1,8 @@
 import {useStore, useThree} from '@react-three/fiber'
-import {WireframeRenderPipeline} from 'capture-session'
 import {useEffect, useState} from 'react'
 
 import {activateRenderPipeline, releaseRenderPipeline} from '#src/lib/rendering/activeRenderPipeline.ts'
+import OverlayWireframePipeline from '#src/lib/rendering/OverlayWireframePipeline.ts'
 import {showWireframe} from '#src/lib/rendering/showWireframe.ts'
 import viewportLineWidth from '#src/lib/rendering/viewportLineWidth.ts'
 import {readWireframeHighlight} from '#src/lib/rendering/wireframeHighlight.ts'
@@ -15,7 +15,7 @@ const WireframeVision = () => {
   const store = useStore()
   const [highlight] = useState(() => readWireframeHighlight())
   useEffect(() => {
-    const pipeline = new WireframeRenderPipeline(renderer, scene, camera, highlight)
+    const pipeline = new OverlayWireframePipeline(renderer, scene, camera, highlight)
     pipeline.angleIndicatorStrength = 1
     const width = showWireframe
     if (typeof width === 'number') {

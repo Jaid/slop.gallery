@@ -14,6 +14,7 @@ export type LayerOptions = {
   id: string
   lineStyle?: OverlayLineStyle
   lineWidth?: number
+  obstructedOpacityFactor?: number
   priority?: number
 }
 export const defaultLayer = 'default'
@@ -55,6 +56,13 @@ export const layerSchema = {
   type: 'object',
   properties: {
     id: layerIdSchema,
+    obstructedOpacityFactor: {
+      type: 'number',
+      minimum: 0,
+      maximum: 1,
+      default: 1,
+      description: 'Multiplier for stroke opacity only where a nearer world surface writes depth. 0 hides, 1 ignores obstructions.',
+    },
     priority: {
       type: 'number',
       default: 0,
@@ -94,6 +102,10 @@ const isRecord = (input: unknown): input is Record<string, unknown> => !!input &
 export function readLayer(input: unknown): LayerOptions {
   if (!isRecord(input) || !isLayerId(input.id) || Object.keys(input).some(key => !Object.hasOwn(layerSchema.properties, key))) {
     throw new TypeError('Expected layer options with a nonblank id.')
+  }
+  const {obstructedOpacityFactor} = input
+  if (obstructedOpacityFactor !== undefined && !(typeof obstructedOpacityFactor === 'number' && obstructedOpacityFactor >= 0 && obstructedOpacityFactor <= 1)) {
+    throw new RangeError('obstructedOpacityFactor must be a number from 0 to 1.')
   }
   const {color, priority, lineStyle, lineWidth, fade} = input
   if (color !== undefined && (typeof color !== 'string' || !hexColor.test(color))) {

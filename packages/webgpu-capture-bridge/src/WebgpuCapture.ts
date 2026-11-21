@@ -111,7 +111,7 @@ export default class WebgpuCapture implements CaptureFrameApi, Disposable {
         }
       }
       if (around) {
-        around(render, camera)
+        around(render, camera, pipeline)
       } else {
         render()
       }

@@ -17,9 +17,9 @@ const afterWarmup = <Capture extends () => Promise<unknown>>(capture: Capture) =
   return capture()
 }) as Capture
 /** A capture renders a frame of its own, which looks through the moods’ lens like the frames the player sees, so a capture of the player’s view shows it as wide as it is. */
-const throughMoodLens: CaptureRenderWrap = (render, camera) => moodLens.during(camera, () => {
+const throughMoodLens: CaptureRenderWrap = (render, camera, pipeline) => moodLens.during(camera, () => {
   render()
-  overlay.draw(camera)
+  overlay.draw(camera, pipeline)
 })
 // Only the gallery adapter knows about the app’s global diagnostics API.
 const WebgpuCaptureBridge = () => {

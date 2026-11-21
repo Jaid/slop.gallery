@@ -1,5 +1,4 @@
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
-import type {Group, Mesh, MeshBasicNodeMaterial} from 'three/webgpu'
 
 import {useFrame, useThree} from '@react-three/fiber'
 import {useEffect, useRef} from 'react'
@@ -7,7 +6,9 @@ import {Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
 import {aimedSlot, createSlot, cycleSlotRatio, cycleSlotSize, draggedSlot, flipSlotLabel, moveSlot, previewSlot, removeSlot, slotIssue, slotTarget, usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
-import {invalidSlotColor, slotBorder, slotColors, slotPanels} from '#src/lib/gallery/portraitSlotVisuals.ts'
+import {invalidSlotColor, slotColors} from '#src/lib/gallery/portraitSlotVisuals.ts'
+
+import useSlotPanels from '../PortraitSlots/useSlotPanels.ts'
 
 const ray = (camera: {
   getWorldDirection: (target: Vector3) => Vector3
@@ -20,9 +21,7 @@ const ray = (camera: {
 export default function PortraitSlotEditor() {
   const camera = useThree(state => state.camera)
   const preview = useRef<PortraitSlot>(null)
-  const group = useRef<Group>(null)
-  const fills = useRef<Array<Mesh | null>>([])
-  const edges = useRef<Array<Mesh | null>>([])
+  const panels = useSlotPanels(1, true)
   useFrame(() => {
     const {slots, aimed, dragging} = usePortraitSlots.getState()
     const [origin, direction] = ray(camera)
@@ -32,35 +31,11 @@ export default function PortraitSlotEditor() {
     }
     const target = id ? null : slotTarget(origin, direction)
     preview.current = target && (dragging ? draggedSlot(target) : previewSlot(target))
-    if (!group.current) {
-      return
-    }
-    group.current.visible = preview.current !== null
-    if (!preview.current) {
-      return
-    }
     const slot = preview.current
-    group.current.position.set(...slot.position)
-    group.current.rotation.set(0, slot.rotation, 0)
-    const color = slotIssue(slot, slots) ? invalidSlotColor : slotColors[slot.ratio]
-    for (const [index, [x, y, width, height]] of slotPanels(slot).entries()) {
-      const fill = fills.current[index]
-      fill?.position.set(x, y, 0)
-      fill?.scale.set(width, height, 1)
-      ;(fill?.material as MeshBasicNodeMaterial | undefined)?.color.set(color)
-      const sides = [
-        [x, y + (height - slotBorder) / 2, width, slotBorder],
-        [x, y - (height - slotBorder) / 2, width, slotBorder],
-        [x + (width - slotBorder) / 2, y, slotBorder, height],
-        [x - (width - slotBorder) / 2, y, slotBorder, height],
-      ]
-      for (const [side, [sideX, sideY, sideWidth, sideHeight]] of sides.entries()) {
-        const edge = edges.current[index * 4 + side]
-        edge?.position.set(sideX, sideY, 0.005)
-        edge?.scale.set(sideWidth, sideHeight, 1)
-        ;(edge?.material as MeshBasicNodeMaterial | undefined)?.color.set(color)
-      }
+    if (slot) {
+      panels.current?.setSlot(0, slot, slotIssue(slot, slots) ? invalidSlotColor : slotColors[slot.ratio])
     }
+    panels.current?.showSlots(slot ? 1 : 0)
   })
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
@@ -136,23 +111,5 @@ export default function PortraitSlotEditor() {
       cancel()
     }
   }, [camera])
-  // A ghost of the new or dragged slot: fainter fill, same outline, no raycast target.
-  return <group visible={false} ref={group}>
-    {[0, 1].map(index => <mesh
-      key={index} raycast={() => {}} renderOrder={2} ref={mesh => {
-        fills.current[index] = mesh
-      }}
-    >
-      <planeGeometry />
-      <meshBasicNodeMaterial depthWrite={false} opacity={0.18} toneMapped={false} transparent />
-    </mesh>)}
-    {Array.from({length: 8}, (_, index) => <mesh
-      key={index} raycast={() => {}} renderOrder={2} ref={mesh => {
-        edges.current[index] = mesh
-      }}
-    >
-      <planeGeometry />
-      <meshBasicNodeMaterial depthWrite={false} opacity={0.7} toneMapped={false} transparent />
-    </mesh>)}
-  </group>
+  return null
 }

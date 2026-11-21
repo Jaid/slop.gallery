@@ -11,7 +11,7 @@ export const activateRenderPipeline = (store: RootStore, pipeline: RenderPipelin
   store.setState({renderPipeline: pipeline} satisfies Partial<TSLRootState>)
   setRenderOverride(store, () => {
     pipeline.render()
-    overlay.draw(store.getState().camera)
+    overlay.draw(store.getState().camera, pipeline)
   })
 }
 

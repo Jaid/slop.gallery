@@ -1,12 +1,17 @@
 import type {LayerOptions} from './layer.ts'
+import type {OverlayDepthPipeline} from './obstruction.ts'
+import type {OverlayMesh} from './OverlayLayer.ts'
 import type {Vec3} from 'math'
-import type {Camera, ColorRepresentation, Renderer} from 'three/webgpu'
+import type {Camera, ColorRepresentation, Node, Renderer} from 'three/webgpu'
 
 import {LineSegmentsGeometry} from 'three/addons/lines/LineSegmentsGeometry.js'
-import {ColorManagement, Mesh, NoToneMapping, Scene} from 'three/webgpu'
+import {materialOpacity, positionWorld} from 'three/tsl'
+import {ColorManagement, DoubleSide, Mesh, NoToneMapping, Scene} from 'three/webgpu'
 
 import appendBoxEdges from './boxEdges.ts'
 import {defaultLayer, readLayer} from './layer.ts'
+import layerOpacity from './layerOpacity.ts'
+import {useFrameDepth} from './obstruction.ts'
 import OverlayLayer from './OverlayLayer.ts'
 import ringEdges from './ringEdges.ts'
 
@@ -33,6 +38,7 @@ export default class WorldOverlay {
       this.listeners.delete(listener)
     }
   }
+  private depthRequested = false
   private readonly layers = new Map<string, OverlayLayer>
   private readonly listeners = new Set<() => void>
   private readonly renderers = new WeakMap<Camera, Renderer>
@@ -70,25 +76,46 @@ export default class WorldOverlay {
     }
     return this.addSegments(new Float32Array([x - radius, y, z, x + radius, y, z, x, y - radius, z, x, y + radius, z, x, y, z - radius, x, y, z + radius]), style)
   }
-
   /** Add a batch in one draw call. Each six consecutive numbers are two endpoints in world meters. Treat the supplied buffer as immutable. */
   addSegments(positions: Float32Array, style?: OverlayStyle): OverlayDrawing {
     return this.stroke(positions, style)
   }
+
   /** A world-sized ring parallel to the image plane of whichever camera draws it. */
   addSphere(center: Point, radius: number, {segments = 64, ...style}: OverlayStyle & {segments?: number} = {}) {
     return this.stroke(ringEdges([0, 0, 0], radius, [0, 0, 1], segments), style, center)
   }
+  /** Transfer a producer's mesh, geometry and material to the overlay. Its own fill/color nodes are preserved, and layer visibility multiplies its opacity. */
+  addSurface(layerId: string, mesh: OverlayMesh) {
+    const layer = this.layer(layerId)
+    const material = mesh.material
+    material.opacityNode = layerOpacity((material.opacityNode as Node<'float'> | null) ?? materialOpacity, positionWorld, layer.options)
+    material.depthTest = false
+    material.depthWrite = false
+    material.toneMapped = false
+    material.transparent = true
+    material.side = DoubleSide
+    material.forceSinglePass = true
+    this.place(layer, mesh)
+    this.changed()
+    return () => {
+      if (!mesh.parent) {
+        return
+      }
+      layer.release(mesh)
+      this.changed()
+    }
+  }
   addTriangle(a: Point, b: Point, c: Point, style?: OverlayStyle) {
     return this.addSegments(new Float32Array([...a, ...b, ...b, ...c, ...c, ...a]), style)
   }
-
   attach(camera: Camera, renderer: Renderer) {
     this.renderers.set(camera, renderer)
     return () => {
       this.renderers.delete(camera)
     }
   }
+
   clearDrawings() {
     let count = 0
     for (const layer of this.layers.values()) {
@@ -107,10 +134,13 @@ export default class WorldOverlay {
     }
     return count
   }
-  draw(camera: Camera) {
+  draw(camera: Camera, pipeline?: OverlayDepthPipeline | null) {
     const renderer = this.renderers.get(camera)
     if (!renderer || !this.hasDrawings()) {
       return
+    }
+    if (this.depthRequested) {
+      useFrameDepth(pipeline, camera)
     }
     const {autoClear, outputColorSpace, toneMapping} = renderer
     try {
@@ -124,7 +154,11 @@ export default class WorldOverlay {
       renderer.toneMapping = toneMapping
     }
   }
+  needsDepth(camera: Camera) {
+    return this.depthRequested && this.renderers.has(camera)
+  }
   private changed() {
+    this.depthRequested = this.scene.children.some(layer => (layer as OverlayLayer).needsDepth)
     for (const listener of this.listeners) {
       listener()
     }
@@ -136,6 +170,12 @@ export default class WorldOverlay {
       throw new Error(`Unknown overlay layer: ${id}`)
     }
     return layer
+  }
+  private place(layer: OverlayLayer, mesh: OverlayMesh) {
+    layer.add(mesh)
+    if (!layer.parent) {
+      this.scene.add(layer)
+    }
   }
   private stroke(positions: Float32Array, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}, billboardCenter?: Point): OverlayDrawing {
     if (!positions.length || positions.length % 6 !== 0) {
@@ -156,10 +196,7 @@ export default class WorldOverlay {
     }
     mesh.name = name
     mesh.renderOrder = renderOrder
-    layer.add(mesh)
-    if (!layer.parent) {
-      this.scene.add(layer)
-    }
+    this.place(layer, mesh)
     this.changed()
     return {
       setStyle: style => {
@@ -172,10 +209,7 @@ export default class WorldOverlay {
           layer = next
           color = style.color ?? color
           mesh.material = layer.materialFor(color)
-          layer.add(mesh)
-          if (!layer.parent) {
-            this.scene.add(layer)
-          }
+          this.place(layer, mesh)
         } else if (style.color !== undefined) {
           color = style.color
           if (mesh.material === layer.material) {
@@ -192,8 +226,7 @@ export default class WorldOverlay {
         if (!mesh.parent) {
           return
         }
-        layer.detach(mesh)
-        geometry.dispose()
+        layer.release(mesh)
         this.changed()
       },
     }

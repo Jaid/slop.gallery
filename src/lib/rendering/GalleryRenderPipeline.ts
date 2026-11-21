@@ -19,6 +19,7 @@ import {moodScreens} from '#src/moods/index.ts'
 
 import {mountedRooms, pendingRooms} from '../gallery/roomLoading.ts'
 import {floorReflectionBlur, floorReflectionGrazing, floorReflectionLevel, floorReflectionRoughness, floorReflectionStrength, renderFloorReflection} from '../materials/FloorMaterial.ts'
+import overlay from '../overlay/index.ts'
 import ConditionalTexture from './ConditionalTexture.ts'
 import ConfigurableBloomNode from './ConfigurableBloomNode.ts'
 import {GalleryRenderer} from './GalleryRenderer.ts'
@@ -53,6 +54,7 @@ export type GalleryRenderPipelineOptions = {
 
 /** All depth-dependent work stays in the current frame; one antialiasing resolve (TRAA by default) antialiases the finished composite. */
 export default class GalleryRenderPipeline extends RenderPipeline {
+  readonly depthProjectionOffset?: Vector2
   readonly scenePass: ReturnType<typeof pass>
   /** every uniform the settings set, with the setting it came from, so a subclass can change them live */
   protected readonly uniforms: Array<[{value: number}, RenderPipelineUniform]> = []
@@ -90,6 +92,9 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       this.outputNode = drawMoodScreens(renderOutput(scenePass.getTextureNode('output')), moodScreens)
       return
     }
+    if (antiAliasing === 'traa') {
+      this.depthProjectionOffset = new Vector2
+    }
     const renderScene = scenePass.updateBefore.bind(scenePass)
     // The wireframe flood draws into targets of its own right after the scene pass, with the same camera, but only while it is enabled
     const flood = own(new WireframeFloodPass(renderer, scene as Scene, camera))
@@ -115,6 +120,10 @@ export default class GalleryRenderPipeline extends RenderPipeline {
         renderer.prepass(scene, camera, reflect)
       } else {
         reflect()
+      }
+      if (this.depthProjectionOffset && overlay.needsDepth(camera)) {
+        const e = camera.projectionMatrix.elements
+        this.depthProjectionOffset.set(e[8], e[9])
       }
       const result = renderScene(frame)
       flood.draw()

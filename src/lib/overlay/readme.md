@@ -1,6 +1,6 @@
 # World overlay
 
-The overlay draws world-space lines through walls, over both the finished canvas and captures. Drawings are page-local. They survive the caller disconnecting and disappear on reload. Hiding the scene UI hides the pass; an empty overlay draws nothing.
+The overlay draws world-space markings, over both the finished canvas and captures. Drawings are page-local. They survive the caller disconnecting and disappear on reload. Hiding the scene UI hides the pass; an empty overlay draws nothing.
 
 ```ts
 import overlay from '#src/lib/overlay/index.ts'
@@ -16,13 +16,14 @@ ring.remove() // or clear the whole layer with overlay.clearLayer(layer)
 
 | Option | When omitted |
 | --- | --- |
+| `obstructedOpacityFactor` | `1`. Multiply the existing stroke opacity by this factor (0–1) only behind a depth-writing world mesh. `0` hides the obstructed portion; `0.5` halves its opacity. Independent of layer priority. |
 | `priority` | `0`. Higher layers draw over lower ones, regardless of drawing order. |
 | `color` | White (`#ffffff`). Accepts `#rgb` or `#rrggbb`. |
 | `lineWidth` | Follows the live **G → World overlay** width, initially `?line_width` or `100`. Range 1–800; the width in pixels is `(lineWidth / 100) * Math.sqrt(viewWidth * viewHeight / (1920 * 1080))` using the active viewport’s physical pixel dimensions. |
 | `lineStyle` | Follows the live overlay style, initially `?line_style` or `barycentric`. Choose `aliased` for hard edges. |
 | `fade` | `{start: 16, end: 100, heightWeight: 5, power: 10}`. Each field is optional. Per pixel, scale the vertical camera offset by `heightWeight`, then fade between `start` and `end` meters with a reversed smoothstep raised to `power`. Pass `false` for no distance fade. |
 
-Fences use `fences` (blue, priority 10) and `touching-fences` (red, priority 11). Crossing a fence moves its drawing between layers without rebuilding its geometry.
+Fences use `fences` (blue, priority 10) and `touching-fences` (red, priority 11). Crossing a fence moves its drawing between layers without rebuilding its geometry. `?show_portrait_slots` uses `portrait-slots` with `obstructedOpacityFactor: 0.2`: both the frame and its placard keep 20% of their original fill and border opacity behind depth-writing meshes. The editor uses the same layer for its placement preview.
 
 `clearLayer(id)` removes the drawings currently on that layer. `clearDrawings()` clears all layers, including fences. Both return the number removed, release the drawings’ GPU resources and keep the layer definitions for reuse. A cleared handle is inert. Clearing fence drawings does not change the selection: toggle `show_fence` off and on to rebuild them.
 
