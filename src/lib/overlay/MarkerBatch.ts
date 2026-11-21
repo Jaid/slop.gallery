@@ -22,7 +22,8 @@ export default class MarkerBatch extends Mesh<InstancedBufferGeometry, MeshBasic
     const center = attribute<'vec4'>('centerRadius', 'vec4')
     const tint = attribute<'vec4'>('tintCross', 'vec4')
     const p = varying(positionGeometry.xy).mul(rim)
-    const distance = p.length()
+    // The sign of the radius carries the silhouette without an extra instance attribute.
+    const distance = center.w.lessThan(0).select(p.x.abs().max(p.y.abs()), p.length())
     const dot = coverage(distance, 1)
     // Perpendicular distance to the nearer diagonal, with a bar width of 0.22 dot radii.
     const diagonal = p.x.abs().sub(p.y.abs()).abs().mul(Math.SQRT1_2)
@@ -30,7 +31,7 @@ export default class MarkerBatch extends Mesh<InstancedBufferGeometry, MeshBasic
     // Composite the translucent black × over both the dot and its translucent rim on the same quad.
     const opacity = mix(0.75, 1, dot).mul(cross.oneMinus()).add(cross)
     const material = new MeshBasicNodeMaterial({
-      positionNode: center.xyz.add(cameraWorldMatrix.mul(vec4(positionGeometry.mul(center.w.mul(rim)), 0)).xyz),
+      positionNode: center.xyz.add(cameraWorldMatrix.mul(vec4(positionGeometry.mul(center.w.abs().mul(rim)), 0)).xyz),
       colorNode: tint.rgb.mul(dot).mul(cross.oneMinus()).div(opacity),
       opacityNode: coverage(distance, rim).mul(opacity),
     })
@@ -42,8 +43,8 @@ export default class MarkerBatch extends Mesh<InstancedBufferGeometry, MeshBasic
     geometry.setAttribute('centerRadius', this.centers)
     geometry.setAttribute('tintCross', this.colors)
   }
-  setMarker(index: number, position: Vector3, radius: number, color: Color, crossed: boolean) {
-    this.centers.setXYZW(index, position.x, position.y, position.z, radius)
+  setMarker(index: number, position: Vector3, radius: number, color: Color, crossed: boolean, shape: 'circle' | 'square' = 'circle') {
+    this.centers.setXYZW(index, position.x, position.y, position.z, shape === 'square' ? -radius : radius)
     this.colors.setXYZW(index, color.r, color.g, color.b, Number(crossed))
   }
   show(count: number) {

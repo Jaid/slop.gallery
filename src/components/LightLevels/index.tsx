@@ -10,6 +10,9 @@ export default function LightLevels() {
   useFrame(({camera}) => {
     applyLightLevels(scene)
     shadowPool.update(scene, camera)
-  }, {before: 'render'})
+  }, {
+    id: 'light-levels',
+    before: 'render',
+  })
   return null
 }

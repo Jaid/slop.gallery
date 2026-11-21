@@ -29,6 +29,12 @@ export type OverlayDrawing = {
 }
 type Point = Readonly<Vec3>
 
+const checkSphereRadius = (value: number) => {
+  if (!(value > 0 && Number.isFinite(value))) {
+    throw new RangeError('A sphere needs a positive finite radius.')
+  }
+}
+
 /** Retained world-space line drawings, shared between independent producers. Draw once over the finished canvas or capture, outside the world’s lighting, reflections and temporal resolve. */
 export default class WorldOverlay {
   hasDrawings = () => this.scene.children.length > 0
@@ -78,12 +84,31 @@ export default class WorldOverlay {
   }
   /** Add a batch in one draw call. Each six consecutive numbers are two endpoints in world meters. Treat the supplied buffer as immutable. */
   addSegments(positions: Float32Array, style?: OverlayStyle): OverlayDrawing {
-    return this.stroke(positions, style)
+    return this.stroke(positions, style).drawing
   }
 
   /** A world-sized ring parallel to the image plane of whichever camera draws it. */
   addSphere(center: Point, radius: number, {segments = 64, ...style}: OverlayStyle & {segments?: number} = {}) {
-    return this.stroke(ringEdges([0, 0, 0], radius, [0, 0, 1], segments), style, center)
+    checkSphereRadius(radius)
+    const {mesh, drawing} = this.stroke(ringEdges([0, 0, 0], 1, [0, 0, 1], segments), style)
+    const setBounds = (point: Point, size: number) => {
+      if (!mesh.parent) {
+        return
+      }
+      checkSphereRadius(size)
+      mesh.position.set(...point)
+      mesh.scale.setScalar(size)
+    }
+    setBounds(center, radius)
+    mesh.onBeforeRender = (_renderer, _scene, camera) => {
+      // Parallel to the whole image, not aimed at the eye: even an off-center sphere stays round.
+      camera.getWorldQuaternion(mesh.quaternion)
+      mesh.updateMatrixWorld()
+    }
+    return {
+      ...drawing,
+      setBounds,
+    }
   }
   /** Transfer a producer's mesh, geometry and material to the overlay. Its own fill/color nodes are preserved, and layer visibility multiplies its opacity. */
   addSurface(layerId: string, mesh: OverlayMesh) {
@@ -177,7 +202,7 @@ export default class WorldOverlay {
       this.scene.add(layer)
     }
   }
-  private stroke(positions: Float32Array, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}, billboardCenter?: Point): OverlayDrawing {
+  private stroke(positions: Float32Array, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}) {
     if (!positions.length || positions.length % 6 !== 0) {
       throw new RangeError('Overlay segments need one or more pairs of xyz endpoints.')
     }
@@ -186,19 +211,11 @@ export default class WorldOverlay {
     geometry.setPositions(positions)
     geometry.setDrawRange(6, 6) // the central quad, without cap triangles
     const mesh = new Mesh(geometry, layer.materialFor(color))
-    if (billboardCenter) {
-      mesh.position.set(...billboardCenter)
-      mesh.onBeforeRender = (_renderer, _scene, camera) => {
-        // Parallel to the whole image, not aimed at the eye: even an off-center sphere stays round.
-        camera.getWorldQuaternion(mesh.quaternion)
-        mesh.updateMatrixWorld()
-      }
-    }
     mesh.name = name
     mesh.renderOrder = renderOrder
     this.place(layer, mesh)
     this.changed()
-    return {
+    const drawing: OverlayDrawing = {
       setStyle: style => {
         if (!mesh.parent) {
           return
@@ -229,6 +246,10 @@ export default class WorldOverlay {
         layer.release(mesh)
         this.changed()
       },
+    }
+    return {
+      drawing,
+      mesh,
     }
   }
 }

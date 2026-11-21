@@ -1,13 +1,14 @@
 import type {Light} from 'three/webgpu'
 
 import {useFrame, useThree} from '@react-three/fiber'
-import {useEffect} from 'react'
+import {useEffect, useLayoutEffect, useState} from 'react'
 import {Color, Vector2, Vector3} from 'three/webgpu'
 
 import {isTextInput, notify} from '#src/lib/gallery.ts'
 import overlay from '#src/lib/overlay/index.ts'
 import useMarkerBatch, {markerRadius as radius} from '#src/lib/overlay/useMarkerBatch.ts'
 import {changeLightDecay, changeLightIntensity, changeLightRange, describeObject, isEditingLamps, isShadowSlot, lightActive, lightShadowOn, moveLight, resetLight, setLightOn, setLightShadow, useLightEdits} from '#src/lib/rendering/lightLevels.ts'
+import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
 
 type Positional = Light & {
   isPointLight?: boolean
@@ -119,6 +120,13 @@ export default function LightMarkers() {
   const scene = useThree(state => state.scene)
   const canvas = useThree(state => state.renderer.domElement)
   const markers = useMarkerBatch(layer, capacity)
+  const [ranges] = useState(() => new Map<Light, ReturnType<typeof overlay.addSphere>>)
+  useLayoutEffect(() => () => {
+    for (const sphere of ranges.values()) {
+      sphere.remove()
+    }
+    ranges.clear()
+  }, [ranges])
   useFrame(() => {
     found.length = 0
     scene.traverseVisible(object => {
@@ -144,9 +152,39 @@ export default function LightMarkers() {
       const isSelected = selected.has(light)
       const size = isSelected ? selectedRadius : (light === aimed ? aimedRadius : radius)
       markerPosition(light, position)
-      batch.setMarker(index, position, size, off.has(light) ? offColor : color.copy(light.color).multiplyScalar(light === aimed || isSelected ? 3 : 1.5), !lightActive.current(light))
+      batch.setMarker(index, position, size, off.has(light) ? offColor : color.copy(light.color).multiplyScalar(light === aimed || isSelected ? 3 : 1.5), !lightActive.current(light), light.castShadow || shadowPool.isLent(light) ? 'square' : 'circle')
     }
     batch.show(found.length)
+    for (const [light, sphere] of ranges) {
+      if (selected.has(light)) {
+        continue
+      }
+      sphere.remove()
+      ranges.delete(light)
+    }
+    for (const light of selected) {
+      const {distance} = light as Light & {distance?: number}
+      const sphere = ranges.get(light)
+      // Zero is an unlimited reach; directional and area lights have no spherical cutoff either.
+      if (distance === undefined || !(distance > 0 && Number.isFinite(distance))) {
+        sphere?.remove()
+        ranges.delete(light)
+        continue
+      }
+      const center = markerPosition(light, position).toArray()
+      if (sphere) {
+        sphere.setBounds(center, distance)
+      } else {
+        ranges.set(light, overlay.addSphere(center, distance, {
+          layer,
+          name: `${light.name}-range`,
+          renderOrder: -1,
+        }))
+      }
+    }
+  }, {
+    before: 'render',
+    after: 'light-levels',
   })
   useEffect(() => {
     if (!isEditingLamps) {
