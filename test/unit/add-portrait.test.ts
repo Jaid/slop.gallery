@@ -220,6 +220,29 @@ test('a world position takes the image loose, in the frame and at the area of th
     z: 900,
   }})).toThrow(/outside of the world/)
 })
+test('of two imports of one id at once, only the first to load its image adds a work', async () => {
+  const [x, y, z] = slopGallery.spawn.position
+  const target = {position: {
+    x,
+    y: y + 1.5,
+    z,
+  }}
+  const {length} = useGallery.getState().portraits
+  const results = await Promise.allSettled([addPortrait({
+    image,
+    target,
+    id: 'twin',
+  }), addPortrait({
+    image,
+    target,
+    id: 'twin',
+  })])
+  expect(results.map(result => result.status)).toEqual(['fulfilled', 'rejected'])
+  expect((results[1] as PromiseRejectedResult).reason).toBeInstanceOf(Error)
+  expect(String((results[1] as PromiseRejectedResult).reason)).toMatch(/already has the id/)
+  expect(useGallery.getState().portraits.filter(portrait => portrait.id === 'twin')).toHaveLength(1)
+  expect(useGallery.getState().portraits).toHaveLength(length + 1)
+})
 test('a work is named after the file of its image, which only a URL on a server has', async () => {
   const target = {position: {
     x: slopGallery.spawn.position[0],

@@ -181,9 +181,7 @@ export default async function addPortrait({canvasMaterial, frame: frameId, id, i
   if (canvasMaterial !== undefined && !isCanvasMaterialId(canvasMaterial)) {
     throw new Error(`There is no canvas material “${canvasMaterial}”. Canvas materials: ${canvasMaterialIds.join(', ')}.`)
   }
-  if (id !== undefined && useGallery.getState().portraits.some(candidate => candidate.id === id)) {
-    throw new Error(`A work already has the id “${id}”.`)
-  }
+  requireFreeId(id, useGallery.getState().portraits)
   const response = await fetch(image)
   if (!response.ok) {
     throw new Error(`The image could not be loaded (HTTP ${response.status}).`)
@@ -194,6 +192,8 @@ export default async function addPortrait({canvasMaterial, frame: frameId, id, i
   // It keeps its own aspect at the frame area, as an import keeps the area of the room it hangs in.
   const {width, height} = imageSize(pixelWidth, pixelHeight, size ?? destination.area)
   const {commit, portraits} = useGallery.getState()
+  // Again, as another import may have taken the id while this one loaded its image.
+  requireFreeId(id, portraits)
   const replaced = destination.replaces && portraits.find(destination.replaces)
   const placed = destination.place(width, height, portraits)
   if (!replaced && portraits.length >= maximumPortraits) {
@@ -232,5 +232,12 @@ export default async function addPortrait({canvasMaterial, frame: frameId, id, i
     width,
     height,
     size: Math.round(width * height * 10_000),
+  }
+}
+
+/** Throws unless no work of `portraits` has the id `id`, if any. */
+function requireFreeId(id: string | undefined, portraits: ReadonlyArray<Portrait>) {
+  if (id !== undefined && portraits.some(candidate => candidate.id === id)) {
+    throw new Error(`A work already has the id “${id}”.`)
   }
 }
