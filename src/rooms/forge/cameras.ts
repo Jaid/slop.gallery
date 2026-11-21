@@ -33,9 +33,9 @@ export default {
   },
   // From the middle of the room at eye height, looking due south through a long lens at the alchemy machine before the south wall.
   alchemy_table: {
-    position: [0.005, 1.501, 0.818],
+    position: [0, 1.5, 0.818],
     aim: {
-      yaw: 3.1397,
+      yaw: Math.PI,
       pitch: -0.0308,
     },
     fov: 30,

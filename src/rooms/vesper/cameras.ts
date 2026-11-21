@@ -20,7 +20,7 @@ export default {
     ratio: 16 / 9,
   },
   orbs: {
-    position: [-3.979, 2.845, -0.008],
+    position: [-3.979, 2.845, 0],
     aim: {
       yaw: -0.7443,
       pitch: -0.3808,

@@ -11,9 +11,9 @@ export default {
     ratio: 16 / 9,
   },
   fire: {
-    position: [-0.068, 1.306, 1.382],
+    position: [0, 1.306, 1.382],
     aim: {
-      yaw: 3.1409,
+      yaw: Math.PI,
       pitch: 0.0552,
     },
     fov: 80,

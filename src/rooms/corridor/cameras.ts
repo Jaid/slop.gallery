@@ -5,7 +5,7 @@ export default {
     position: [1.613, 1.363, -31.903],
     aim: {
       yaw: -2.5871,
-      pitch: -0.0116,
+      pitch: 0,
     },
     fov: 80,
     ratio: 16 / 9,
@@ -20,10 +20,10 @@ export default {
     ratio: 16 / 9,
   },
   tunnel: {
-    position: [0.083, 1.16, 28.024],
+    position: [0, 1.16, 28.024],
     aim: {
-      yaw: 0.0001,
-      pitch: 0.0192,
+      yaw: 0,
+      pitch: 0,
     },
     fov: 100,
     ratio: 16 / 9,

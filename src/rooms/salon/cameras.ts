@@ -11,10 +11,10 @@ export default {
     ratio: 16 / 9,
   },
   sculpture: {
-    position: [0.022, 1.693, 10.438],
+    position: [0, 1.693, 10.438],
     aim: {
-      yaw: -0.0003,
-      pitch: 0.0032,
+      yaw: 0,
+      pitch: 0,
     },
     fov: 30,
     ratio: 16 / 9,

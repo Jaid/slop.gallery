@@ -20,9 +20,9 @@ export default {
     ratio: 16 / 9,
   },
   apse: {
-    position: [-0.158, 8.998, -6.033],
+    position: [0, 9, -6.033],
     aim: {
-      yaw: -0.0091,
+      yaw: 0,
       pitch: -0.4188,
     },
     fov: 80,
