@@ -32,6 +32,8 @@ function setAsidePositionless(scene: Scene) {
 export default class WireframeRenderPipeline extends RenderPipeline {
   /** percent of the line color a face shows when facing the camera; edge-on faces are black */
   angleIndicatorStrength = 5
+  /** color behind the wireframe, where no surface is, as #rgb or #rrggbb; without one, the renderer’s clear color */
+  background: string | undefined
   /** line color of everything not highlighted; without one, red beside highlights and green otherwise */
   color: string | undefined
   /** mesh paths whose objects draw in the highlight color; empty draws every line in the regular color */
@@ -43,7 +45,7 @@ export default class WireframeRenderPipeline extends RenderPipeline {
   /** Width in render pixels, fixed or resolved for the current render target before drawing. Shared between the two triangles along the edge. */
   lineWidth: ((renderer: Renderer) => number) | number = 0.5
   private readonly angleIndicator = uniform(0.05)
-  private readonly background = new Color('#05070a')
+  private readonly backgroundColor = new Color
   private readonly barycentricFill: MeshBasicNodeMaterial
   private readonly barycentricHighlightFill: MeshBasicNodeMaterial
   private readonly camera: Camera
@@ -132,7 +134,9 @@ export default class WireframeRenderPipeline extends RenderPipeline {
     try {
       // A background node, like the gallery’s procedural sky, takes precedence over the plain background color.
       scene.backgroundNode = null
-      scene.background = this.background
+      scene.background = this.background === undefined ? null : this.backgroundColor.set(this.background)
+      // Without a background color, only autoClear clears to the renderer’s clear color.
+      renderer.autoClear = true
       scene.overrideMaterial = barycentric ? this.barycentricFill : this.fill
       renderer.render(scene, camera)
       // A null background keeps the later passes from clearing or painting a skybox over the fill.

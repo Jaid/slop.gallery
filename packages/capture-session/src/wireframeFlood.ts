@@ -7,6 +7,8 @@ export type WireframeFlood = {
   angleIndicatorStrength: number
   /** draws the wireframe with 4× MSAA for smooth lines */
   antialiasing: boolean
+  /** color behind the wireframe, where no surface is, as #rgb or #rrggbb; null leaves the renderer’s clear color */
+  background: string | null
   /** how the speed starts out, as a multiple of it: above 1 the flood shoots out and slows down to its speed, below 1 it builds up to it */
   burst: number
   /** seconds over which the burst eases into the regular speed, as the time constant of an exponential */
@@ -66,6 +68,7 @@ export type WireframeLineStyle = typeof wireframeLineStyles[number]
 
 /** The live flood every gallery pipeline renders, set through the `set_wireframe` WebMCP tool. The wireframe passes only run while it is enabled, and flooding in, with a radius above 0. */
 export const wireframeFlood: WireframeFlood = {
+  background: null,
   burst: 1,
   burstDuration: 0.5,
   anchor: 'nearest',

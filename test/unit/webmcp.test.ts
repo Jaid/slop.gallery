@@ -154,7 +154,7 @@ const bridge: WebmcpBridge = {
     previous: 7,
     seed,
   }),
-  setWireframe: ({enabled = false, direction = 'in', mode = 'triangle', anchor = 'nearest', shape = 'sphere', position = [0, 0, 0], radius = 0, highlight = [], color = null, highlightColor = null, seamWidth = null, glowDuration = 1, seamColor = null, seamIntensity = 0.9, angleIndicatorStrength = 5, speed = null, burst = 1, burstDuration = 0.5, antialiasing = false, lineStyle = 'barycentric', lineWidth = 0.5}) => ({
+  setWireframe: ({enabled = false, direction = 'in', mode = 'triangle', anchor = 'nearest', shape = 'sphere', position = [0, 0, 0], radius = 0, highlight = [], color = null, highlightColor = null, background = null, seamWidth = null, glowDuration = 1, seamColor = null, seamIntensity = 0.9, angleIndicatorStrength = 5, speed = null, burst = 1, burstDuration = 0.5, antialiasing = false, lineStyle = 'barycentric', lineWidth = 0.5}) => ({
     enabled,
     direction,
     mode,
@@ -165,6 +165,7 @@ const bridge: WebmcpBridge = {
     highlight,
     color,
     highlightColor,
+    background,
     seamWidth,
     glowDuration,
     seamColor,
@@ -459,6 +460,7 @@ test('set_wireframe validates its optional fields and sets them through the brid
     highlight: ' lobby-fountain / fountain-falling-water ',
     color: '#f00',
     highlight_color: '#2F7BFF',
+    background: '#123',
     mode: 'pixel',
     anchor: 'farthest',
     shape: 'circle',
@@ -484,6 +486,7 @@ test('set_wireframe validates its optional fields and sets them through the brid
     highlight: ['lobby-fountain/fountain-falling-water'],
     color: '#f00',
     highlight_color: '#2F7BFF',
+    background: '#123',
     seam_width: 0.3,
     glow_duration: 0.5,
     seam_color: '#fff',
@@ -509,6 +512,7 @@ test('set_wireframe validates its optional fields and sets them through the brid
     highlight: [],
     color: null,
     highlight_color: null,
+    background: null,
     seam_width: null,
     glow_duration: 1,
     seam_color: null,
@@ -521,7 +525,7 @@ test('set_wireframe validates its optional fields and sets them through the brid
     line_style: 'barycentric',
     line_width: 0.5,
   })
-  for (const input of [null, [], {unexpected: true}, {enabled: 1}, {position: [1, 2]}, {position: [1, 2, Number.NaN]}, {position: '0,0,0'}, {radius: -1}, {radius: '2'}, {radius: Number.POSITIVE_INFINITY}, {highlight: ''}, {highlight: [' / ']}, {highlight: 5}, {color: 'red'}, {color: '#12345'}, {highlight_color: 3}, {mode: 'edge'}, {anchor: 'middle'}, {shape: 'cube'}, {seam_width: 0}, {seam_width: '1'}, {seam_color: 'blue'}, {seam_intensity: -1}, {glow_duration: -0.1}, {glow_duration: Number.NaN}, {seam_intensity: null}, {angle_indicator_strength: 101}, {angle_indicator_strength: -1}, {angle_indicator_strength: '10'}, {speed: -1}, {speed: '8'}, {burst: -0.5}, {burst: null}, {burst_duration: 0}, {antialiasing: 1}, {line_style: 'dashed'}, {line_width: 0}, {direction: 'up'}, {direction: true}]) {
+  for (const input of [null, [], {unexpected: true}, {enabled: 1}, {position: [1, 2]}, {position: [1, 2, Number.NaN]}, {position: '0,0,0'}, {radius: -1}, {radius: '2'}, {radius: Number.POSITIVE_INFINITY}, {highlight: ''}, {highlight: [' / ']}, {highlight: 5}, {color: 'red'}, {color: '#12345'}, {highlight_color: 3}, {background: 'black'}, {background: '#12345'}, {mode: 'edge'}, {anchor: 'middle'}, {shape: 'cube'}, {seam_width: 0}, {seam_width: '1'}, {seam_color: 'blue'}, {seam_intensity: -1}, {glow_duration: -0.1}, {glow_duration: Number.NaN}, {seam_intensity: null}, {angle_indicator_strength: 101}, {angle_indicator_strength: -1}, {angle_indicator_strength: '10'}, {speed: -1}, {speed: '8'}, {burst: -0.5}, {burst: null}, {burst_duration: 0}, {antialiasing: 1}, {line_style: 'dashed'}, {line_width: 0}, {direction: 'up'}, {direction: true}]) {
     expect(() => execute(input)).toThrow(TypeError)
   }
   controller.abort()

@@ -146,7 +146,7 @@ const readPortraitTarget = (target: unknown): PortraitTarget => {
   }
   throw new TypeError('target must be exactly one of {slot}, the id of a portrait slot, {wall_id, position}, the id of a wall with {x, y} on it in meters, or {position}, {x, y, z} in world meters.')
 }
-const wireframeKeys = ['enabled', 'direction', 'mode', 'anchor', 'shape', 'position', 'radius', 'highlight', 'color', 'highlight_color', 'seam_width', 'glow_duration', 'seam_color', 'seam_intensity', 'angle_indicator_strength', 'speed', 'burst', 'burst_duration', 'antialiasing', 'line_style', 'line_width']
+const wireframeKeys = ['enabled', 'direction', 'mode', 'anchor', 'shape', 'position', 'radius', 'highlight', 'color', 'highlight_color', 'background', 'seam_width', 'glow_duration', 'seam_color', 'seam_intensity', 'angle_indicator_strength', 'speed', 'burst', 'burst_duration', 'antialiasing', 'line_style', 'line_width']
 
 export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<WebMCP.ModelContextTool> {
   const readTools: Array<WebMCP.ModelContextTool> = [
@@ -1046,6 +1046,16 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
               {type: 'null'},
             ],
           },
+          background: {
+            description: 'color behind the wireframe, where no surface is, as #rgb or #rrggbb. Fallback: the renderer’s clear color, black',
+            anyOf: [
+              {
+                type: 'string',
+                pattern: colorPattern.source,
+              },
+              {type: 'null'},
+            ],
+          },
           seam_width: {
             description: 'meters from the sphere’s border at which its seam glow falls to 1/e, in pixel and combined mode. Fallback: grows with the radius, 0.06 + 0.12 per meter',
             anyOf: [
@@ -1127,7 +1137,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).some(key => !wireframeKeys.includes(key))) {
           throw new TypeError(`This tool takes an object with optional ${wireframeKeys.join(', ')}.`)
         }
-        const {enabled, direction, mode, anchor, shape, position, radius, highlight, color, highlight_color: highlightColor, seam_width: seamWidth, glow_duration: glowDuration, seam_color: seamColor, seam_intensity: seamIntensity, angle_indicator_strength: angleIndicatorStrength, speed, burst, burst_duration: burstDuration, antialiasing, line_style: lineStyle, line_width: lineWidth} = input as Record<string, unknown>
+        const {enabled, direction, mode, anchor, shape, position, radius, highlight, color, highlight_color: highlightColor, background, seam_width: seamWidth, glow_duration: glowDuration, seam_color: seamColor, seam_intensity: seamIntensity, angle_indicator_strength: angleIndicatorStrength, speed, burst, burst_duration: burstDuration, antialiasing, line_style: lineStyle, line_width: lineWidth} = input as Record<string, unknown>
         if (enabled !== undefined && typeof enabled !== 'boolean') {
           throw new TypeError('enabled must be a boolean.')
         }
@@ -1182,7 +1192,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (angleIndicatorStrength !== undefined && !(typeof angleIndicatorStrength === 'number' && angleIndicatorStrength >= 0 && angleIndicatorStrength <= 100)) {
           throw new TypeError('angle_indicator_strength must be a percentage from 0 to 100.')
         }
-        for (const [key, value] of [['color', color], ['highlight_color', highlightColor], ['seam_color', seamColor]] as const) {
+        for (const [key, value] of [['color', color], ['highlight_color', highlightColor], ['background', background], ['seam_color', seamColor]] as const) {
           if (value !== undefined && value !== null && !(typeof value === 'string' && colorPattern.test(value))) {
             throw new TypeError(`${key} must be #rgb, #rrggbb or null.`)
           }
@@ -1198,6 +1208,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           highlight: paths as Array<string> | undefined,
           color: color as string | null | undefined,
           highlightColor: highlightColor as string | null | undefined,
+          background: background as string | null | undefined,
           seamWidth,
           glowDuration: glowDuration as number | undefined,
           seamColor: seamColor as string | null | undefined,
@@ -1221,6 +1232,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           highlight: flood.highlight,
           color: flood.color,
           highlight_color: flood.highlightColor,
+          background: flood.background,
           seam_width: flood.seamWidth,
           glow_duration: flood.glowDuration,
           seam_color: flood.seamColor,

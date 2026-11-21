@@ -128,6 +128,7 @@ export default class WireframeFloodPass {
     wireframe.highlight = wireframeFlood.highlight
     wireframe.color = wireframeFlood.color ?? undefined
     wireframe.highlightColor = wireframeFlood.highlightColor ?? undefined
+    wireframe.background = wireframeFlood.background ?? undefined
     wireframe.angleIndicatorStrength = wireframeFlood.angleIndicatorStrength
     wireframe.lineStyle = wireframeFlood.lineStyle
     wireframe.lineWidth = wireframeFlood.lineWidth

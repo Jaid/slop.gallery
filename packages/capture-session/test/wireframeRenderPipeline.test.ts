@@ -2,7 +2,7 @@ import type {Camera, MeshBasicNodeMaterial, Object3D, Renderer} from 'three/webg
 
 import {describe, expect, test} from 'bun:test'
 
-import {BoxGeometry, BufferGeometry, Mesh, PerspectiveCamera, Scene} from 'three/webgpu'
+import {BoxGeometry, BufferGeometry, Color, Mesh, PerspectiveCamera, Scene} from 'three/webgpu'
 
 import WireframeRenderPipeline from '../src/WireframeRenderPipeline.ts'
 
@@ -62,6 +62,25 @@ describe('WireframeRenderPipeline', () => {
     pipeline.draw()
     expect(passes).toEqual([['solid', 'child'], ['solid', 'child']])
     expect(placeholder.layers.mask).toBe(1)
+    pipeline.dispose()
+  })
+  test('clears the fill to the renderer’s clear color without a background, or else to the background', () => {
+    const {renderer} = recordingRenderer()
+    const {scene} = sceneWithPlaceholder()
+    const fills: Array<[string | null, boolean]> = []
+    const render = renderer.render.bind(renderer)
+    renderer.autoClear = false
+    renderer.render = (target: Scene, camera: Camera) => {
+      fills.push([target.background instanceof Color ? `#${target.background.getHexString()}` : null, renderer.autoClear])
+      render(target, camera)
+    }
+    const pipeline = new WireframeRenderPipeline(renderer, scene, new PerspectiveCamera)
+    pipeline.draw()
+    pipeline.background = '#123'
+    pipeline.draw()
+    expect(fills).toEqual([[null, true], ['#112233', true]])
+    expect(renderer.autoClear).toBe(false)
+    expect(scene.background).toBeNull()
     pipeline.dispose()
   })
   test('leaves highlighted meshes without positions out too', () => {
