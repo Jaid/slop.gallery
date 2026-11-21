@@ -21,11 +21,11 @@ import {StitchTimeline} from './lib/stitchTimeline.ts'
 const logLength = 400
 /** rows of the canvas without --width or --height */
 const filmHeight = 2160
-/** An .avif film is a preview to pass around: at preset 4, crf 45 takes 58% off crf 30 and still scores a VMAF of 94.5 on the Antiphon orbit at 720p, see https://av1bench.hive.lan */
+/** An .avif film is a preview to pass around: on the Antiphon orbit at 720p, crf 40 at preset 3 takes 47% off crf 30 at preset 5 for a VMAF of 96.1 instead of 97.0, and SVT-AV1 4 encodes it faster than film renders it, see https://av1bench.hive.lan */
 const avifDefaults = {
-  crf: 45,
-  height: 1080,
-  preset: 4,
+  crf: 40,
+  height: 720,
+  preset: 3,
 }
 /** The format the options write, from the extension of --output-file, .jxl without one. */
 const formatOf = (options: Pick<FilmValues, 'output-file'>) => frameFormat(options['output-file'] ?? 'film.jxl')
