@@ -292,7 +292,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'add_layer',
       title: 'Create a drawing layer',
-      description: 'Create a page-local drawing layer and return its ID. Only id is required; it must not exist already. Defaults to white, priority 0, the live overlay line width and style, and no distance fade. Higher priority draws on top. Use the returned ID as drawing.layer in add_drawing.',
+      description: 'Create a page-local drawing layer and return its ID. Only id is required; it must not exist already. Layers default to red, priority 0, the live overlay line width and style, and no distance fade. Higher priority draws on top. Use the returned ID as drawing.layer in add_drawing.',
       inputSchema: layerSchema,
       annotations: {readOnlyHint: false},
       execute: (input: unknown, {signal}) => {
@@ -340,7 +340,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'add_drawing',
       title: 'Add an overlay drawing',
-      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter, circle or sphere outline in meters. Use drawing.layer to select an existing overlay layer (default: default). The optional hex RGB color overrides the layer’s; a circle is horizontal unless given a normal. A sphere takes center and radius and its outline stays round from every view. A camera_facing_rectangle takes a world center and full width and height in meters. A viewport_rectangle takes x and y from the top left and width and height, all in fractions of the active viewport; it ignores world depth and distance fade. Independent of show_fence and included in captures. For world-space shapes the layer’s obstructedOpacityFactor scales the opacity of pixels behind depth-writing surfaces. The drawing stays until cleared or the page reloads. Returns its ID and geometry.',
+      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter, circle or sphere outline in meters. Omit drawing.layer to use default, or name a layer. A new name creates a layer with the global defaults (red, live width initially 200). The optional hex RGB color overrides the layer’s; a circle is horizontal unless given a normal. A sphere takes center and radius and its outline stays round from every view. A camera_facing_rectangle takes a world center and full width and height in meters. A viewport_rectangle takes x and y from the top left and width and height, all in fractions of the active viewport; it ignores world depth and distance fade. Independent of show_fence and included in captures. For world-space shapes the layer’s obstructedOpacityFactor scales the opacity of pixels behind depth-writing surfaces. The drawing stays until cleared or the page reloads. Returns its ID and geometry.',
       inputSchema: {
         type: 'object',
         properties: {drawing: drawingSchema},

@@ -8,7 +8,7 @@ export const overlayLineWidth = {
   min: 1,
   max: 800,
   step: 1,
-  default: 100,
+  default: 200,
 } as const
 const schema = optis({
   normalizations: {

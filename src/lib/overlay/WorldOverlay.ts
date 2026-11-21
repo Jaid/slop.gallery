@@ -184,7 +184,11 @@ export default class WorldOverlay {
   }
   /** Clear drawings, keeping layer definitions for the next producer. */
   clearLayer(id: string) {
-    const count = this.layerDefinition(id).group?.empty() ?? 0
+    const definition = this.layers.get(id)
+    if (!definition) {
+      throw new Error(`Unknown overlay layer: ${id}`)
+    }
+    const count = definition.group?.empty() ?? 0
     if (count) {
       this.changed()
     }
@@ -220,15 +224,8 @@ export default class WorldOverlay {
     }
   }
 
-  private layerDefinition(id: string) {
-    const layer = this.layers.get(id)
-    if (!layer) {
-      throw new Error(`Unknown overlay layer: ${id}`)
-    }
-    return layer
-  }
   private layerForDrawing(id: string) {
-    const definition = this.layerDefinition(id)
+    const definition = this.layers.getOrInsertComputed(id, key => ({options: readLayer({id: key})}))
     return definition.group ??= new OverlayLayer(definition.options)
   }
   private place(layer: OverlayLayer, mesh: OverlayMesh) {

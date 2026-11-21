@@ -4,6 +4,7 @@ import type {BufferGeometry, ColorRepresentation, Mesh} from 'three/webgpu'
 
 import {DoubleSide, Group, InstancedMesh, MeshBasicNodeMaterial} from 'three/webgpu'
 
+import {defaultLayerColor} from './layer.ts'
 import createStroke from './stroke.ts'
 
 export type OverlayMesh = Mesh<BufferGeometry, MeshBasicNodeMaterial>
@@ -50,7 +51,7 @@ export default class OverlayLayer extends Group {
     if (!material) {
       material = new MeshBasicNodeMaterial({
         ...createStroke(this.options, space),
-        color: this.options.color ?? '#ffffff',
+        color: this.options.color ?? defaultLayerColor,
         depthTest: false,
         depthWrite: false,
         forceSinglePass: true,

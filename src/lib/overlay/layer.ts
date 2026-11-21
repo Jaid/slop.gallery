@@ -18,6 +18,7 @@ export type LayerOptions = {
   priority?: number
 }
 export const defaultLayer = 'default'
+export const defaultLayerColor = '#ff0000'
 export const defaultFade: Readonly<DistanceFade> = {
   start: 16,
   end: 100,
@@ -71,13 +72,13 @@ export const layerSchema = {
     color: {
       type: 'string',
       pattern: hexColor.source,
-      default: '#ffffff',
+      default: defaultLayerColor,
     },
     lineWidth: {
       type: 'integer',
       minimum: overlayLineWidth.min,
       maximum: overlayLineWidth.max,
-      description: '100 is 1 px at 1920×1080. Width scales with the square root of the viewport area. Omit to follow the live overlay width.',
+      description: `Omit to follow the live overlay width (initial default: ${overlayLineWidth.default}). 100 is 1 px at 1920×1080. Width scales with the square root of the viewport area.`,
     },
     lineStyle: {
       type: 'string',

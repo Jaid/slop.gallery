@@ -12,14 +12,14 @@ ring.remove() // or clear the whole layer with overlay.clearLayer(layer)
 
 ## Layers
 
-`addLayer(options)` registers a layer and returns its ID. Only `id` is required. IDs must be nonblank and unique. Drawings without a `layer` use the pre-registered `default`; referencing an unknown ID is an error. Each layer’s Three.js group is created when the first drawing is added or moved to it.
+Drawings without a `layer` use `default`. Adding or moving a drawing to a new layer ID automatically registers that layer with the global defaults. To supply custom settings, call `addLayer(options)` before the first drawing. It returns the layer ID; IDs must be nonblank and unique. Each layer’s Three.js group is created when the first drawing is added or moved to it.
 
 | Option | When omitted |
 | --- | --- |
 | `obstructedOpacityFactor` | `1`. Multiply the existing stroke opacity by this factor (0–1) only behind a depth-writing world mesh. `0` hides the obstructed portion; `0.5` halves its opacity. Independent of layer priority. |
 | `priority` | `0`. Higher layers draw over lower ones, regardless of drawing order. |
-| `color` | White (`#ffffff`). Accepts `#rgb` or `#rrggbb`. |
-| `lineWidth` | Follows the live **G → World overlay** width, initially `?line_width` or `100`. Range 1–800; the width in pixels is `(lineWidth / 100) * Math.sqrt(viewWidth * viewHeight / (1920 * 1080))` using the active viewport’s physical pixel dimensions. |
+| `color` | Red (`#ff0000`). Accepts `#rgb` or `#rrggbb`. |
+| `lineWidth` | Follows the live **G → World overlay** width, initially `?line_width` or `200` (2 px at 1920×1080). Range 1–800; the width in pixels is `(lineWidth / 100) * Math.sqrt(viewWidth * viewHeight / (1920 * 1080))` using the active viewport’s physical pixel dimensions. |
 | `lineStyle` | Follows the live overlay style, initially `?line_style` or `barycentric`. Choose `aliased` for hard edges. |
 | `fade` | `false` (no distance fade). Pass an object to enable it; omitted fields use `{start: 16, end: 100, heightWeight: 5, power: 10}`. Per pixel, scale the vertical camera offset by `heightWeight`, then fade between `start` and `end` meters with a reversed smoothstep raised to `power`. Pass `false` for no distance fade. |
 
