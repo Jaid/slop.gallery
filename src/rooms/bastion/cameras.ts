@@ -41,4 +41,14 @@ export default {
     fov: 30,
     ratio: 16 / 9,
   },
+  // Just over the cistern’s channel, looking north-north-east along its water through a long lens.
+  water_drain: {
+    position: [-22.665, 6.466, 5.607],
+    aim: {
+      yaw: -0.3691,
+      pitch: -0.2268,
+    },
+    fov: 40,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
