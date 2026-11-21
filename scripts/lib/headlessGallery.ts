@@ -146,12 +146,14 @@ const serveStatic = (root: string) => Bun.serve({
 export const serveFile = (file: string) => {
   const name = `/${encodeURIComponent(basename(file))}`
   const headers = {'Access-Control-Allow-Origin': '*'}
+  // Bun serves JXL as application/octet-stream, which the page refuses as an image.
+  const type = /\.jxl$/iu.test(file) ? 'image/jxl' : undefined
   const server = Bun.serve({
     hostname: '127.0.0.1',
     port: 0,
     fetch(request) {
       const {pathname} = new URL(request.url)
-      return pathname === name ? new Response(Bun.file(file), {headers}) : new Response('Not found', {
+      return pathname === name ? new Response(Bun.file(file, {type}), {headers}) : new Response('Not found', {
         status: 404,
         headers,
       })

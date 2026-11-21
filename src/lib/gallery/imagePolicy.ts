@@ -1,6 +1,8 @@
 import type {Portrait} from './types.ts'
 
+/** the formats an image of a work may come in, by media type, with their file extensions, though an import keeps a WebP of its own, see importedImage */
 export const imageExtensions = {
+  'image/jxl': ['.jxl'],
   'image/png': ['.png'],
   'image/jpeg': ['.jpg', '.jpeg'],
   'image/webp': ['.webp'],
@@ -13,7 +15,7 @@ export const maximumCollectionImageBytes = 150_000_000
 
 export function validateImage(source: Blob) {
   if (!Object.hasOwn(imageExtensions, source.type) || source.size > maximumImageBytes) {
-    throw new Error('Choose PNG, JPEG, WebP, AVIF or GIF up to 25 mb.')
+    throw new Error('Choose JXL, PNG, JPEG, WebP, AVIF or GIF up to 25 mb.')
   }
 }
 

@@ -266,6 +266,23 @@ test('a work is named after the file of its image, which only a URL on a server 
     title: 'Told',
   })).toHaveProperty('title', 'Told')
 })
+test('a JXL is imported like any other image, but not a file served without an image type', async () => {
+  const served = (type: string) => {
+    globalThis.fetch = (async () => new Response(new Blob(['pixels'], {type}))) as unknown as typeof fetch
+  }
+  served('image/jxl')
+  const added = await addPortrait({
+    image: 'http://127.0.0.1:8080/night_watch-2.jxl',
+    target: {slot: slot.id},
+  })
+  expect(stored(added.id).source).toBeInstanceOf(Blob)
+  expect((stored(added.id).source as Blob).type).toBe('image/webp')
+  served('application/octet-stream')
+  await expect(addPortrait({
+    image: 'http://127.0.0.1:8080/night_watch-3.jxl',
+    target: {slot: slot.id},
+  })).rejects.toThrow('Choose JXL, PNG, JPEG, WebP, AVIF or GIF')
+})
 test('unknown frames and canvas materials, images that do not load and a full collection add nothing', async () => {
   const target = {position: {
     x: slopGallery.spawn.position[0],
