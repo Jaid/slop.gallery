@@ -33,7 +33,7 @@ export function createBox(input: Box | BoxInput): Box {
   return new BeamBox(input)
 }
 
-/** The parts of the box that lie outside of the other one, as boxes that share no space with each other: the box itself where the two share none, and none where the other one covers it. */
+/** The parts of the box that lie outside of the other one, as boxes that share no space with each other: the box itself where the two share none, and none where the other one covers it. Being closed, the parts keep the faces they share with the other one and with each other. */
 export function subtractBox(box: Box, other: Box): Array<Box> {
   if (!box.overlaps(other)) {
     return [box]

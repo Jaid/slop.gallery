@@ -651,6 +651,11 @@ describe('Geofence.subtract', () => {
     for (const position of samples) {
       expect(left.contains(position)).toBe(hall.contains(position) && !cut.contains(position))
     }
+    // Like boxes side by side, what is left and what was cut out both hold the faces between them.
+    for (const position of [[1, 1.5, 1], [2, 2, 1], [2, 1.5, 0.5]] satisfies Array<Position>) {
+      expect(cut.contains(position)).toBe(true)
+      expect(left.contains(position)).toBe(true)
+    }
     // Out of an endless column, an endless one is left under it too.
     const column = new Geofence([beam])
     expect(column.subtract(cut)!.boxes.map(box => box.constructor)).toEqual([BeamBox, BeamBox, BeamBox, BeamBox, VoidBox, SkyBox])

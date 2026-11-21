@@ -28,7 +28,7 @@ export default class Geofence implements Fence {
     return this.boxes.some(box => fence.boxes.some(other => box.overlaps(other)))
   }
 
-  /** A new geofence around whatever of this one lies outside of the other one, or null if the other one covers all of it. */
+  /** A new geofence around whatever of this one lies outside of the other one, or null if the other one covers all of it. Like every box, its boxes are closed, so it still holds the faces it shares with the other one, as fences side by side both hold the face between them. */
   subtract(fence: Geofence) {
     const boxes = fence.boxes.reduce<ReadonlyArray<Box>>((parts, taken) => parts.flatMap(part => subtractBox(part, taken)), this.boxes)
     return boxes.length ? new Geofence(boxes) : null
