@@ -70,14 +70,17 @@ const expandTargets = async (patterns: Array<string>, cwd: string) => {
   return [...builds]
 }
 
-/** One take per target × seed pair, or the usual single take against the dev server with seed 1. */
+/** the seed of a film without --seed: the default environment */
+export const defaultFilmSeed = '0'
+
+/** One take per target × seed pair, or the usual single take against the dev server with the default environment. */
 export const filmInputs = async (options: {
   seed?: Arrayable<string>
   'seed-range'?: string
   target?: Arrayable<string>
 }, cwd = process.cwd()) => {
   const builds = options.target === undefined ? [undefined] : await expandTargets([options.target].flat(), cwd)
-  const numbers = expandSeeds([options.seed ?? '1'].flat(), options['seed-range'] ?? defaultSeedRange)
+  const numbers = expandSeeds([options.seed ?? defaultFilmSeed].flat(), options['seed-range'] ?? defaultSeedRange)
   return builds.flatMap(target => numbers.map(seed => ({
     target,
     seed,

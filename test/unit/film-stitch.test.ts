@@ -29,7 +29,7 @@ test('two globby builds × two minimatch seeds play target first, skipping exclu
 })
 test('seed patterns use the requested range, while literal brace ranges can reach the full seed space', async () => {
   expect(await filmInputs({})).toEqual([{
-    seed: '1',
+    seed: '0',
     target: undefined,
   }])
   const inputs = await filmInputs({

@@ -12,7 +12,7 @@ import {av1Crf, av1Preset} from 'media-encoding'
 
 import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
-import {defaultSeedRange, describeInput, filmInputs} from './lib/filmInputs.ts'
+import {defaultFilmSeed, defaultSeedRange, describeInput, filmInputs} from './lib/filmInputs.ts'
 import {FilmRecipeClock} from './lib/filmRecipeClock.ts'
 import {anchorWorldReach, degrees, galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
 import {StitchTimeline} from './lib/stitchTimeline.ts'
@@ -28,7 +28,7 @@ With --audio on (true, or a volume from 1 to 100, like ?audio), the page’s sou
 
 Options:
   --recipe <file>         JSON camera recipe, or - to read it from stdin. Default: scripts/recipes/spawn.json, a two-second metronome sway at the gallery spawn
-${galleryHelp()}
+${galleryHelp(undefined, {seed: defaultFilmSeed})}
   --seed-range <min..max> inclusive search range for seed wildcards. Default: ${defaultSeedRange} (the default environment and all seeds a game rolls). Literal seeds and brace expansions are coerced like ?seed, independent of the search range
   --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). With three or more clips, at most half the length of one clip
   --list                  print the target and seed of each clip before seam rotation and exit without recording
