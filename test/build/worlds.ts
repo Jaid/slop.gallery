@@ -144,19 +144,6 @@ for (const chunk of chunks) {
     fail(`${chunk.facadeModule ?? chunk.name} imports the Knot material chunk of ${knotChunks.get(leaked)}.`)
   }
 }
-// The Salon’s showcased Knot loads its material once it mounts and its announcements once it first speaks.
-const salon = closure(chunkOf('src/rooms/salon/components/SalonRoom/index.tsx').fileName)
-if (salon.has(worldChunks.get('knottingham')!)) {
-  fail('The Salon loads the Knottingham world with it.')
-}
-const salonKnot = [...salon].find(other => knotChunks.has(other))
-if (salonKnot) {
-  fail(`The Salon loads the Knot material of ${knotChunks.get(salonKnot)} with it.`)
-}
-const salonSources = await Promise.all([...salon].map(read))
-if (salonSources.some(code => announcementPath.test(code))) {
-  fail('The Salon loads the Knots’ announcements with it.')
-}
 // Each room of the gallery and what fills the openings between two of them load only once a page with the room in its ?world_reach asks for them: neither the page, the gallery nor its scene hold any of their code, no room loads another and no fill loads a room.
 const fillModules = ['src/components/LobbyWindow/index.tsx', 'src/components/LodgeWindow/index.tsx', 'src/rooms/oculus/components/ApseGrilles/index.tsx']
 const chunkHolding = (module: string) => chunks.find(chunk => chunk.modules.includes(module)) ?? fail(`No chunk holds ${module}.`)

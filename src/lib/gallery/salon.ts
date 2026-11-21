@@ -101,9 +101,6 @@ export const salonSculptureSocket = {
   size: sculptureSocketSize,
 } as const
 
-/** where a sculpture pedestal stands on the floor, on the room’s axis, centered on the line of the glass wall’s north end */
-export const salonPedestal: Vec3 = [salon.center[0], 0, salonWindow.z - salonWindow.width / 2]
-
 /**
  * Wall-local u ranges a horizontal band of wall dressing can run along without crossing a walk-through opening or its trim.
  * The ends are pulled in by `inset`, so bands of neighboring walls meet at the corners instead of reaching through them.

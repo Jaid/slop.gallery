@@ -9,7 +9,7 @@ import {roomFloorPlan} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {salonWindow} from '../../src/lib/gallery/lobbyWindows.ts'
 import {portals, visibleRooms} from '../../src/lib/gallery/roomVisibility.ts'
-import {salonBench, salonCeiling, salonPedestal, salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
+import {salonBench, salonCeiling, salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '../../src/lib/gallery/salon.ts'
 import salonLantern, {domeSection, octagon, salonDomeEyeY, salonDomeSpringY, salonDrumOuterApothem, salonLanternBase, salonLanternTopY, salonWindowSpringY} from '../../src/lib/gallery/salonLantern.ts'
 import SalonLanternGeometry, {salonLanternCollision, salonSailLength, shellCourses} from '../../src/lib/gallery/SalonLanternGeometry.ts'
 import {middaySun} from '../../src/lib/gallery/sun.ts'
@@ -156,16 +156,6 @@ describe('the Salon', () => {
       geometry.dispose()
       material.dispose()
     }
-  })
-  test('the pedestal stands on the room’s axis at the glass wall’s north end, clear of the ottoman and the north wall', () => {
-    const [x, y, z] = salonPedestal
-    // the pedestal’s footprint, 1.16 m square
-    const half = 0.58
-    expect(salonPedestal).toEqual([room.center[0], room.floorY, salonWindow.z - salonWindow.width / 2])
-    expect(roomAt([x, 1.7, z])).toBe('salon')
-    expect(y).toBe(floorHeight([x, 1.7, z]))
-    expect(salonBench.position[2] - salonBench.depth / 2 - (z + half)).toBeGreaterThan(2.5)
-    expect(z - half - (room.center[1] - room.size[1] / 2)).toBeGreaterThan(2)
   })
   test('the lantern rises from the ceiling over the room’s middle, clear of the walls, and the room’s air reaches its finial', () => {
     const corners = octagon(salonDrumOuterApothem + 0.1)
