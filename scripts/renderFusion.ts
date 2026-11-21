@@ -5,6 +5,7 @@ import type World from '#src/worlds/base/World.ts'
 import type {WorldId} from '#src/worlds/index.ts'
 import type {CameraKey, CameraPath, Shot, Timeline} from './lib/fusionCamera.ts'
 import type {Closing, Emphasis, Landing, PartyClosing, PartyFraming, PartyView, ResultClosing, ResultSample} from './lib/fusionEmphasis.ts'
+import type {GalleryValues, LooseOptions} from './lib/headlessGallery.ts'
 
 import {tmpdir} from 'node:os'
 import {parseArgs} from 'node:util'
@@ -30,7 +31,7 @@ import {readWorld} from '#src/worlds/index.ts'
 import film from './film.ts'
 import {add, dot, ease, handheld, holdPoint, keyedShot, length, mix, mix3, normalize, parseCameraPath, radians, scale, shotAngles, sub, throughKeys} from './lib/fusionCamera.ts'
 import {emphases, emphasized, outermost, partyFraming, partyPush, partySwing, partyView, seenWithin, shotReach} from './lib/fusionEmphasis.ts'
-import {galleryHelp, galleryOptions, parseNumbers, repositoryRoot, resolveSettle, serveFile, timestamp} from './lib/headlessGallery.ts'
+import {galleryHelp, galleryOptions, normalizeOptions, parseNumbers, repositoryRoot, resolveSettle, serveFile, timestamp} from './lib/headlessGallery.ts'
 
 type PortalFrame = ReturnType<typeof portalIn>
 /** a key of the camera’s path round the portal: degrees round from straight out of the wall toward its tangent, meters out from the portal’s middle and above its floor, the field of view in degrees and the roll in degrees */
@@ -117,17 +118,14 @@ const renderFusionOptions = {
   },
   slot: {type: 'string'},
 } as const
-
+const renderFusionDefaults = parseArgs({
+  options: renderFusionOptions,
+  args: [],
+}).values
+/** The options of the default export: those of the command line, with numbers and booleans for its text options, like `width: 1080`. */
+export type RenderFusionOptions = LooseOptions<RenderFusionValues>
 /** the command line options without --help, as parsed strings */
-export type RenderFusionOptions = Partial<Record<string, boolean | string>> & {
-  emphasis: string
-  fps: string
-  graphics: string
-  ingredient: string
-  'jxl-distance': string
-  seed: string
-  settle: string
-}
+type RenderFusionValues = GalleryValues & typeof renderFusionDefaults
 
 /** The vector turned by the quaternion [x, y, z, w]. */
 const rotate = ([x, y, z]: Vec3, [qx, qy, qz, qw]: Quat): Vec3 => {
@@ -712,7 +710,7 @@ const dumpsIn = (calls: Awaited<ReturnType<typeof film>>['tools']) => calls.filt
   time: call.time,
   portraits: JSON.parse(call.result) as Array<PortraitDump>,
 }))
-const main = async (options: RenderFusionOptions) => {
+const main = async (options: RenderFusionValues) => {
   const text = (key: string) => {
     const value = options[key]
     return typeof value === 'string' ? value : undefined
@@ -882,7 +880,7 @@ const main = async (options: RenderFusionOptions) => {
         recipe,
         crf: '50',
         'output-file': join(workspace, 'probe.webm'),
-      } as Parameters<typeof film>[0])
+      })
       const landing = findLanding(dumpsIn(probe.tools), workIdIn(probe.tools))
       if (!landing) {
         throw new Error(`No result flipped out of the portal by ${probeEnd.toFixed(1)} s; the throw may have missed the work (${probe.tools.find(call => call.name === 'throw_prop')?.result}).`)
@@ -961,7 +959,13 @@ const main = async (options: RenderFusionOptions) => {
   }
 }
 
-export default main
+/** Films a fusion, see --help; options it leaves out take the command line’s defaults. */
+export default async function renderFusion(overrides: RenderFusionOptions = {}) {
+  return main({
+    ...renderFusionDefaults,
+    ...normalizeOptions<RenderFusionValues>(overrides, renderFusionOptions),
+  })
+}
 
 if (import.meta.main) {
   const {values} = parseArgs({

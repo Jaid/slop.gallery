@@ -188,13 +188,7 @@ test('a camera path given by hand replaces the film’s camera, the throw leavin
     const image = join(folder, 'pixel.png')
     await Bun.write(image, Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=='))
     const options: RenderFusionOptions = {
-      emphasis: 'neutral',
-      fps: '60',
-      graphics: 'cinematic',
       ingredient: 'horror',
-      'jxl-distance': '1',
-      seed: '1',
-      settle: '2',
       room: 'banquet',
       portrait: image,
       slot: 'banquet-east_1',
@@ -225,12 +219,7 @@ test('a fusion in the Sandbox’s Cell opens the Sandbox and keeps the camera wi
     await Bun.write(image, Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=='))
     const options: RenderFusionOptions = {
       emphasis: 'party',
-      fps: '60',
-      graphics: 'cinematic',
       ingredient: 'horror',
-      'jxl-distance': '1',
-      seed: '1',
-      settle: '2',
       room: 'cell',
       portrait: image,
       slot: 'cell-south_2',
@@ -258,12 +247,7 @@ test('every emphasis ends the same camera path, which holds where it stepped asi
     for (const emphasis of ['neutral', 'party']) {
       const options: RenderFusionOptions = {
         emphasis,
-        fps: '60',
-        graphics: 'cinematic',
         ingredient: 'horror',
-        'jxl-distance': '1',
-        seed: '1',
-        settle: '2',
         room: 'cell',
         'plan-file': join(folder, `${emphasis}.json`),
       }
