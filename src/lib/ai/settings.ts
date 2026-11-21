@@ -31,8 +31,8 @@ const defaults = {
   eager_audio: false,
   /** the origin serving OpenRouter’s API, like an OpenRouter proxy or another server speaking the same API; a bare host like `openrouter.nas.lan` means HTTPS */
   openrouter_host: openRouterOrigin,
-  /** the API key this page starts with instead of the one the player saved, or `false` to send every request without one and lock the key input, for a host that adds its own */
-  openrouter_key: undefined as false | string | undefined,
+  /** the API key this page starts with instead of the one the player saved, which only goes to OpenRouter itself, never to an `openrouter_host` of another origin */
+  openrouter_key: undefined as string | undefined,
 }
 const normalizeBoolean = (fallback: boolean) => (value: unknown) => {
   try {
@@ -67,10 +67,11 @@ const normalizeHost = (value: unknown) => {
   const url = URL.parse(/^[a-z][\d+\-.a-z]*:\/\//iu.test(host) ? host : `https://${host}`)
   return url && (url.protocol === 'https:' || url.protocol === 'http:') ? url.origin : openRouterOrigin
 }
-/** `false` for a `false` or `0` flag, a non-blank key as given, and `undefined` for anything else, which leaves the saved key */
-const normalizeKey = (value: unknown): false | string | undefined => {
+/** a non-blank key as given, and `undefined` for a flag or anything else, which leaves the saved key */
+const normalizeKey = (value: unknown): string | undefined => {
   try {
-    return parseBoolean(value) && undefined
+    parseBoolean(value)
+    return undefined
   } catch {
     return typeof value === 'string' && value.trim() ? value.trim() : undefined
   }

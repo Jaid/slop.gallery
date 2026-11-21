@@ -21,10 +21,10 @@ export default function useGalleryAI() {
     useGallery.setState({ai: params.ai})
   }, [params.ai])
   useEffect(() => {
+    // Another host than OpenRouter gets no key and adds its own.
     const director = new GalleryDirector(params, {
       origin: params.openrouter_host,
-      // `?openrouter_key=false` leaves the key to the host.
-      key: params.openrouter_key === false ? false : key,
+      key,
     })
     const imported = (event: Event) => void director.flavor((event as CustomEvent<Portrait>).detail).catch(() => notify('The label could not be prepared.'))
     const narrate = (event: Event) => {
@@ -57,7 +57,7 @@ export default function useGalleryAI() {
       galleryEvents.removeEventListener('item-fusion', fuseItem)
       director.dispose()
     }
-  }, [key, params.openrouter_host, params.openrouter_key, params.ai, params.ai_tier, params.text_model, params.text_model_effort, params.image_model, params.audio_model, params.stt_model, params.narrator_voice, params.narrator_character, params.eager_audio])
+  }, [key, params.openrouter_host, params.ai, params.ai_tier, params.text_model, params.text_model_effort, params.image_model, params.audio_model, params.stt_model, params.narrator_voice, params.narrator_character, params.eager_audio])
   return {
     /** whether the page allows AI at all; `false` for `?ai=false`, which also hides every AI option */
     available,

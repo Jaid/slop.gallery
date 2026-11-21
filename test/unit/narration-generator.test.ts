@@ -82,7 +82,7 @@ test('all raw endpoints enforce attribution and cannot leak a key to another hos
   expect(() => generator.request('https://example.com/api/steal')).toThrow()
   expect(fetchSpy).toHaveBeenCalledTimes(1)
 })
-test('another origin serves every endpoint, and a key never leaves it, not even for OpenRouter itself', async () => {
+test('another origin serves every endpoint and never gets the key, nor can requests go to OpenRouter itself', async () => {
   class Generator extends ExternalGenerator {}
   const generator = new Generator({
     key: 'test-key',
@@ -95,15 +95,15 @@ test('another origin serves every endpoint, and a key never leaves it, not even 
   })
   expect(fetchSpy.mock.calls[0][0]).toBe('https://openrouter.nas.lan/api/v1/audio/speech')
   const headers = new Headers(fetchSpy.mock.calls[0][1]!.headers)
-  expect(headers.get('Authorization')).toBe('Bearer test-key')
+  expect(headers.has('Authorization')).toBe(false)
   expect(() => generator.request('https://openrouter.ai/api/v1/audio/speech')).toThrow()
   expect(fetchSpy).toHaveBeenCalledTimes(1)
 })
-test('without a key, raw and SDK requests go out without any Authorization header, for a host that adds its own', async () => {
+test('raw and SDK requests to another host go out without any Authorization header, even with a key, as it adds its own', async () => {
   const access = {
-    key: false,
+    key: 'test-key',
     origin: 'https://openrouter.nas.lan',
-  } as const
+  }
   fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(new Response(new Int16Array(100), {headers: {'content-type': 'audio/pcm'}}))
   const narrationGenerator = new NarrationGenerator(access, 'google/gemini-3.8-flash-tts', 'Algenib')
   await narrationGenerator.generate('Hello.')

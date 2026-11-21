@@ -2,7 +2,7 @@ import type {OpenRouterAccess} from './openRouterAccess.ts'
 
 import {createOpenRouter} from '@openrouter/ai-sdk-provider'
 
-import {openRouterOrigin} from './openRouterAccess.ts'
+import {isProxied, openRouterOrigin} from './openRouterAccess.ts'
 
 /** fetch without the `Authorization` header, which the provider always sends, empty without a key, and which would keep a proxy from adding its own */
 const unauthenticatedFetch = ((input: RequestInfo | URL, init: RequestInit = {}) => {
@@ -22,7 +22,10 @@ export default abstract class {
   /** the base of the API, `/api/v1/` on the access’s origin */
   private readonly api: URL
 
-  constructor(private readonly access: OpenRouterAccess) {
+  /** the key requests authenticate with, none for a host other than OpenRouter, which adds its own */
+  private readonly key: string | undefined
+
+  constructor(access: OpenRouterAccess) {
     const headers = {
       'HTTP-Referer': 'https://slop.gallery',
       'X-OpenRouter-Title': 'Slop Gallery',
@@ -37,15 +40,16 @@ export default abstract class {
       })
     }
     this.api = new URL('/api/v1/', access.origin ?? openRouterOrigin)
+    this.key = isProxied(access) ? undefined : access.key
     this.provider = createOpenRouter({
-      apiKey: access.key || '',
+      apiKey: this.key ?? '',
       baseURL: this.api.href,
       extraBody: {
         temperature: 0,
         seed: 1,
       },
       headers,
-      ...access.key === false ? {fetch: unauthenticatedFetch} : {},
+      ...this.key === undefined ? {fetch: unauthenticatedFetch} : {},
     })
   }
   /** Raw endpoints share the SDK’s app attribution, including offline generation scripts. */
@@ -58,10 +62,10 @@ export default abstract class {
     for (const [name, value] of Object.entries(this.headers)) {
       headers.set(name, value)
     }
-    if (this.access.key === false) {
+    if (this.key === undefined) {
       headers.delete('Authorization')
     } else {
-      headers.set('Authorization', `Bearer ${this.access.key}`)
+      headers.set('Authorization', `Bearer ${this.key}`)
     }
     if (init.body && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json')

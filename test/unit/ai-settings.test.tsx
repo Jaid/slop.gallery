@@ -76,21 +76,16 @@ test('?openrouter_host names the origin serving OpenRouter’s API, a bare host 
     expect(readAiSettings(`?openrouter_host=${value}`).openrouter_host).toBe('https://openrouter.ai')
   }
 })
-test('?openrouter_key gives a key, false for none at all, and nothing otherwise', () => {
+test('?openrouter_key gives a key, and a flag or anything else none', () => {
   expect(readAiSettings('').openrouter_key).toBeUndefined()
   expect(readAiSettings('?openrouter_key=sk-or-v1-test').openrouter_key).toBe('sk-or-v1-test')
-  expect(readAiSettings('?openrouter_key=false').openrouter_key).toBe(false)
-  expect(readAiSettings('?openrouter_key=0').openrouter_key).toBe(false)
-  for (const value of ['', '%20', 'true', '1']) {
+  for (const value of ['', '%20', 'true', '1', 'false', '0']) {
     expect(readAiSettings(`?openrouter_key=${value}`).openrouter_key).toBeUndefined()
   }
 })
 test('a key from ?openrouter_key never shows in the query overrides that telemetry records', () => {
   expect(readQueryOverrides('http://localhost/?openrouter_key=sk-or-v1-test')).toEqual({openrouter_key: 'redacted'})
-  expect(readQueryOverrides('http://localhost/?openrouter_key=false&openrouter_host=openrouter.nas.lan')).toEqual({
-    openrouter_host: 'https://openrouter.nas.lan',
-    openrouter_key: false,
-  })
+  expect(readQueryOverrides('http://localhost/?openrouter_host=openrouter.nas.lan')).toEqual({openrouter_host: 'https://openrouter.nas.lan'})
 })
 test('?ai=false disables AI, while a missing parameter keeps it on', () => {
   expect(readAiSettings('?ai=false').ai).toBe(false)
@@ -135,8 +130,8 @@ test('the menu hides every AI option for ?ai=false', () => {
   expect(shown).toContain('data-testid="connection"')
   expect(shown).toContain('API key')
 })
-test('?openrouter_key=false locks the key input and connects through the host alone', () => {
-  const settings = readAiSettings('?openrouter_host=openrouter.nas.lan&openrouter_key=false')
+test('another host than OpenRouter locks the key input and connects alone', () => {
+  const settings = readAiSettings('?openrouter_host=openrouter.nas.lan')
   const html = renderToStaticMarkup(<OpenRouterConnection available params={settings} setParams={() => {}} />)
   expect(html).toMatch(/<input[^>]*\bid="settings-key"[^>]*\bdisabled=""/u)
   expect(html).toContain('placeholder="Added by openrouter.nas.lan"')

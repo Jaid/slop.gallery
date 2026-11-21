@@ -124,7 +124,7 @@ class TestDirector extends GalleryDirector {
   /** which results it posts, none unless a test asks for them */
   override webhook: FusionResults = false
   override webhookEndpoint: string | undefined = 'https://hooks.test/fusion'
-  constructor(settings: AiSettings, key: false | string, private timing = instant) {
+  constructor(settings: AiSettings, key: string, private timing = instant) {
     super(settings, {key})
   }
   protected override generate(recipe: FusionRecipe, signal: AbortSignal, aspect: number) {

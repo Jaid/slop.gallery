@@ -11,11 +11,11 @@ import css from './style.module.sass'
 export default function OpenRouterConnection({params, setParams}: ReturnType<typeof useGalleryAI>) {
   const apiKey = useGallery(s => s.apiKey)
   const [key, setKey] = useState(apiKey)
-  // `?openrouter_key=false` leaves the key to the host, like a proxy that adds its own.
-  const keyless = params.openrouter_key === false
+  // Another host than OpenRouter, like a proxy, never gets the key and adds its own.
+  const keyless = params.openrouter_host !== openRouterOrigin
   const connected = keyless || !!apiKey
   const origin = new URL(params.openrouter_host)
-  const host = params.openrouter_host === openRouterOrigin ? 'OpenRouter' : origin.host
+  const host = keyless ? origin.host : 'OpenRouter'
   return <section className={css.container} aria-labelledby='openrouter-title' data-testid='connection'>
     <h2 id='openrouter-title'>OpenRouter <span>{connected ? (params.ai ? 'Enabled' : 'Disabled') : 'Not connected'}</span></h2>
     <p>Optional AI for artwork titles, stories and fusions. Images and text are sent to {host} and may incur charges. No key is needed to explore.</p>

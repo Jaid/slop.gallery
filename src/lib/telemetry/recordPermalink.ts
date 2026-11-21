@@ -2,7 +2,7 @@ import type SlopGalleryTelemetry from './SlopGalleryTelemetry.ts'
 
 import readPermalink, {parseBoolean} from 'read-permalink'
 
-/** the query parameters whose values must never leave the page, unless they are just a flag like `?openrouter_key=false` */
+/** the query parameters whose values must never leave the page, unless they are just a flag like a bare `?openrouter_key` */
 const secretKeys: ReadonlySet<string> = new Set(['openrouter_key'])
 /** the query parameter read-permalink unpacks packed state from */
 const dataKey = 'data'
