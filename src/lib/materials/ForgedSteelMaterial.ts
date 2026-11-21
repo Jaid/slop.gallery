@@ -30,7 +30,7 @@ export default class ForgedSteelMaterial extends MeshStandardNodeMaterial {
     const hole = mask.x
     const polish = mask.y
     const position = positionLocal
-    // Broad, cloudy blotches with ragged edges, like the patina on the cleaver of a butcher who never oiled it
+    // broad, cloudy blotches with ragged edges, like the patina on the cleaver of a butcher who never oiled it
     const cloud = mx_fractal_noise_float(position.mul(26), 4, 2.1, 0.5).mul(0.5).add(0.5)
     const blotches = cloud.smoothstep(float(0.76).sub(patina * 0.32), float(0.9).sub(patina * 0.26)).mul(float(1).sub(polish)).toVar('steelBlotches')
     const freckles = mx_noise_float(position.mul(310)).smoothstep(0.55, 0.8).mul(float(1).sub(polish)).mul(patina)

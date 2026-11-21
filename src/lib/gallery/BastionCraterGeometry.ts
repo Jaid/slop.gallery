@@ -89,7 +89,7 @@ export default class BastionCraterGeometry {
     const flags = spans.map(([first, last]) => {
       const outer = Array.from({length: last - first + 1}, (_, index) => corners[(first + index) % count].clone())
       const inner = outer.map(corner => corner.clone().multiplyScalar(between(breakShares)))
-      // A crack apart from the flags to either side
+      // a crack apart from the flags to either side
       for (const side of [outer, inner]) {
         const [start, end] = [side[0], side.at(-1)!]
         const along = end.clone().sub(start).normalize().multiplyScalar(cracks / 2)

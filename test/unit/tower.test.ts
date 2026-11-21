@@ -17,7 +17,7 @@ import {addOculusRailings} from './helpers/oculusRailings.ts'
 await RAPIER.init()
 const geometry = new OculusGroundGeometry
 const collision = colliderGeometry(geometry)
-// The side walls the bridges lead to, with the doorways into the Bastion’s mouth at the east one’s end and the western climb’s at the west one’s
+// the side walls the bridges lead to, with the doorways into the Bastion’s mouth at the east one’s end and the western climb’s at the west one’s
 const bridgeWalls = walls.filter(wall => ['oculus-east', 'oculus-west'].includes(wall.id) || wall.id.startsWith('bastion-mouth_') || wall.id.startsWith('bastion-climb_mouth_')).map(wall => ({
   wall,
   geometry: createArchitectureGeometry(wall),
@@ -125,7 +125,7 @@ describe('cylindrical Oculus platform', () => {
         expect(towerFloorHeight(x, tower.z)!).toBeGreaterThanOrEqual(previous)
         previous = towerFloorHeight(x, tower.z)!
       }
-      // Level where it leaves the deck and where it flares out toward its wall, and nowhere steeper than 10°
+      // level where it leaves the deck and where it flares out toward its wall, and nowhere steeper than 10°
       expect(towerBridgeLift(tower.radius + 0.1, wallDistance)).toBe(0)
       expect(towerBridgeGradient(tower.radius + 0.1, wallDistance)).toBe(0)
       expect(towerBridgeGradient(wallDistance - 0.105 - towerBridge.flareRadius, wallDistance)).toBe(0)
@@ -168,7 +168,7 @@ describe('cylindrical Oculus platform', () => {
     try {
       for (const slope of oculusRamps) {
         for (const z of [slope.startZ - 0.01, -24, -29.99, -30.01]) {
-          // From under the bridges, which cross the side ramps at the tower
+          // from under the bridges, which cross the side ramps at the tower
           const slopeRay = new Raycaster(new Vector3(slope.x, ramp.endY - towerBridge.thickness - 0.1, z), new Vector3(0, -1, 0))
           const hits = slopeRay.intersectObject(mesh)
           expect(hits).toHaveLength(1)
@@ -349,7 +349,7 @@ describe('cylindrical Oculus platform', () => {
     expect(tower.floorY + tower.height + 1.8).toBeLessThan(-0.12)
     expect(floorHeight([tower.x, tower.floorY + tower.height + 1.6, tower.z])).toBe(-4.5)
     expect(floorHeight([tower.x, 1.6, tower.z])).toBe(0)
-    // Due south, between both bridges
+    // due south, between both bridges
     expect(towerFloorHeight(tower.x, tower.z + tower.radius + 0.01)).toBeUndefined()
     const underRampZ = (ramp.startZ + ramp.endZ) / 2
     expect(floorHeight([tower.x, -6.4, underRampZ])).toBe(rampFloorHeight(tower.x, underRampZ)!)

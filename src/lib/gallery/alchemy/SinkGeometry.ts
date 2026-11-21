@@ -26,7 +26,7 @@ export default class SinkGeometry {
   constructor() {
     const {curve, radius, sweep, throat, thickness} = alchemySink
     const under = -workbench.top
-    // The last one where the bowl meets the throat
+    // the last one where the bowl meets the throat
     const bowl = Array.from({length: curveSteps}, (_, index): FunnelPoint => {
       const angle = sweep * (index + 1) / curveSteps
       return [radius - curve * (1 - Math.cos(angle)), under - curve * Math.sin(angle)]

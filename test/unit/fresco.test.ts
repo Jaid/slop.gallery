@@ -64,7 +64,7 @@ describe('the Salon’s fresco', () => {
   })
 })
 describe('a round wall’s fresco', () => {
-  // The Forge’s vestibule with two arches alike, as wide as the one into the room, without the window into the Bastion’s cistern
+  // the Forge’s vestibule with two arches alike, as wide as the one into the room, without the window into the Bastion’s cistern
   const vestibule = wallById('forge-vestibule')
   const {width} = vestibule.holes!.find(hole => hole.name === 'forge')!
   const ring = {

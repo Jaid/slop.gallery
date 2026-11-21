@@ -26,7 +26,7 @@ export default class CisternWaterMaterial extends MeshStandardNodeMaterial {
     })
     this.name = inflow === undefined ? 'Cistern water' : 'Cistern channel water'
     const across = uv().x
-    // Faster in the middle than along the sides, where the stone holds it back
+    // faster in the middle than along the sides, where the stone holds it back
     const drift = time.mul(float(flow).mul(across.sub(0.5).abs().mul(-0.8).add(1)))
     const along = uv().y.sub(drift)
     const ripples = unit(mx_noise_float(vec3(across.mul(2.5), along.mul(7), time.mul(0.8)))).mul(0.6).add(unit(mx_noise_float(vec3(across.mul(6), along.mul(17), time.mul(1.4)))).mul(0.4))

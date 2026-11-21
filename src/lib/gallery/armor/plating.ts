@@ -218,7 +218,7 @@ export function plate(from: Joint, to: Joint, sections: ReadonlyArray<Section>, 
   side.crossVectors(ahead, down)
   const thetas = arc ? arcOf(arc[0], arc[1], columns) : columnsOf(columns)
   const [startRoll, endRoll] = rolls
-  // Its rows along the axis from its start to its end, squeezed between its rolls, and its rolls’ rows, each roll as wide at every angle round
+  // its rows along the axis from its start to its end, squeezed between its rolls, and its rolls’ rows, each roll as wide at every angle round
   const base = samples ?? sections.map(section => section.at)
   const rowsAt = (theta: number) => {
     const span = length * (extent?.(theta) ?? 1)
@@ -299,7 +299,7 @@ export function dome(center: Joint, up: Joint, front: Joint, {back, front: front
   }))
   let all = shares
   if (roll) {
-    // The rim’s roll over its last few millimeters, by the shortest reach
+    // the rim’s roll over its last few millimeters, by the shortest reach
     const span = Math.min(sideReach, frontReach, back) * 1.6
     all = [...shares.filter(row => row.share < 1 - roll * 3.2 / span - 1e-4), ...rollRows(roll, span).map(({u, bulge}) => ({
       share: u,

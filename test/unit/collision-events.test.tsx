@@ -17,7 +17,7 @@ test('a body that strikes another and bounces off within the steps of one frame 
       x: target.rigidBody!.translation().x,
     })
   }
-  // A ball flying at a wall at 10 m/s, which it reaches 0.12 s later, and bouncing straight back off it
+  // a ball flying at a wall at 10 m/s, which it reaches 0.12 s later, and bouncing straight back off it
   await using mounted = await mountPhysics(<>
     <RigidBody colliders={false} type='fixed' userData={{id: 'wall'}}>
       <CuboidCollider args={[0.05, 1, 1]} position={[1, 0, 0]} restitution={1} />
@@ -32,6 +32,6 @@ test('a body that strikes another and bounces off within the steps of one frame 
   }
   expect(entered).toHaveLength(1)
   expect(entered[0].other).toEqual({id: 'wall'})
-  // Told in the step it struck in, touching the wall’s face 0.95 m out, not where the frame left it, back where it started
+  // told in the step it struck in, touching the wall’s face 0.95 m out, not where the frame left it, back where it started
   expect(entered[0].x).toBeGreaterThan(0.95 - 0.14 - 10 / 60)
 })

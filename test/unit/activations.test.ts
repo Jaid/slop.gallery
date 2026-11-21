@@ -67,7 +67,7 @@ test('whatever any of the fences the player is in keeps on is on', () => {
   expect(enabledRooms(['lobby', 'lobby-middle'])).toEqual(lobbyRooms)
   expect(enabledRooms(['arena', 'attic', 'bastion-knight_alley'])).toEqual([])
   expect(enabledRooms([])).toEqual([])
-  // Each room once, whichever of the fences name it
+  // each room once, whichever of the fences name it
   expect(enabledRooms(['lobby', 'banquet'])).toEqual([...new Set<GalleryRoomId>([...lobbyRooms, ...activations.banquet.rooms])])
   // The parts of the Lobby add to what the Lobby keeps on.
   expect(enabledRooms(['lobby', 'lobby-north'])).toEqual(lobbyRooms)

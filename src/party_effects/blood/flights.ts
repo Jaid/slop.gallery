@@ -336,7 +336,7 @@ export function bloodExtent(drops: ReadonlyArray<BloodDrop>, floor: number, sinc
       return []
     }
     const path = moments(Math.min(flown, landing), landing, 8).map(seconds => bloodFlight(drop, seconds).offset)
-    // Its stain, as wide as `BloodSpray` spreads it by how fast it struck and stretched by how flat
+    // its stain, as wide as `BloodSpray` spreads it by how fast it struck and stretched by how flat
     const {velocity} = bloodFlight(drop, landing)
     const speed = Math.hypot(...velocity)
     const elongation = 1 / Math.max(Math.abs(velocity[1]) / Math.max(speed, 0.0001), 0.28)

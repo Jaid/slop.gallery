@@ -99,7 +99,7 @@ test('the Sloperator sits a meter tall in the armchair, between its arms, his fe
       expect(Object.keys(part.attributes).toSorted()).toEqual(['normal', 'position', 'uv'])
     }
     const box = boxOf(figure)
-    // From the seat cushion under him to the crown of his hat, which stands over everything else of him: a meter upright, a few millimeters less leaning back into the armchair
+    // from the seat cushion under him to the crown of his hat, which stands over everything else of him: a meter upright, a few millimeters less leaning back into the armchair
     expect(SloperatorGeometry.height).toBe(1)
     expect(box.max.y).toBeLessThan(seatHeight + SloperatorGeometry.height)
     expect(box.max.y).toBeGreaterThan(seatHeight + SloperatorGeometry.height - 0.01)
@@ -129,11 +129,11 @@ test('the Sloperator sits a meter tall in the armchair, between its arms, his fe
     // It rests on his left forearm, which lies along the roll a little in from its middle.
     expect(cane.max.x).toBeGreaterThan(armchair.seat.arms!.x - 0.085)
     expect(cane.max.x).toBeLessThan(armchair.seat.arms!.x)
-    // Over the rolls where his forearms lie on them, never in them
+    // over the rolls where his forearms lie on them, never in them
     expect(cane.min.y).toBeGreaterThan(armHeight + Math.sqrt(armRollRadius ** 2 - 0.085 ** 2))
     expect(cane.max.y).toBeLessThan(cane.min.y + 0.15)
     expect(cane.min.z).toBeGreaterThan(0.15)
-    // A figure only ever seen from afar
+    // a figure only ever seen from afar
     expect(triangleCount(figure.cane) + triangleCount(figure.cloth) + triangleCount(figure.skin) + triangleCount(figure.slime)).toBeLessThan(12_000)
   } finally {
     figure.dispose()
@@ -178,10 +178,10 @@ test('without a seat, he stands upright where he would sit, a head taller than s
   try {
     const box = boxOf(standing)
     expect(box.min.y).toBeCloseTo(0, 6)
-    // A tall gentleman of 1.8 m with his bowler on, from the floor to the crown of his hat
+    // a tall gentleman of 1.8 m with his bowler on, from the floor to the crown of his hat
     expect(box.max.y).toBeGreaterThan(1.85)
     expect(box.max.y).toBeLessThan(1.95)
-    // Narrow and shallow: his shoulders and his hands across, his back to the toes of his shoes along, all round where he would sit
+    // narrow and shallow: his shoulders and his hands across, his back to the toes of his shoes along, all round where he would sit
     expect(box.max.x - box.min.x).toBeLessThan(0.75)
     expect(box.max.z - box.min.z).toBeLessThan(0.5)
     expect(box.min.z).toBeLessThan(0)
@@ -238,7 +238,7 @@ test('his rig poses him the same again from where his limbs reach in a pose, whi
         const [was, wasTurned] = [new Vector3, new Quaternion]
         bone.matrixWorld.decompose(moved, turned, new Vector3)
         before[index].decompose(was, wasTurned, new Vector3)
-        // A few millimeters at most, where a knee sits a hair off the reach of his shin
+        // a few millimeters at most, where a knee sits a hair off the reach of his shin
         expect(moved.distanceTo(was)).toBeLessThan(0.003)
         expect(turned.angleTo(wasTurned)).toBeLessThan(0.01)
       }
@@ -400,7 +400,7 @@ test('his other armchair stands in front of the Lodge’s west window, its back 
   expect(west.indoors).toBe(true)
   expect(west.seat).toEqual(armchair.seat)
   expect(west.furniture.body).toBe('lodge-armchair-1')
-  // The east armchair mirrored across the Lodge’s middle: in front of the window in the west wall, inside the room, facing away from it
+  // the east armchair mirrored across the Lodge’s middle: in front of the window in the west wall, inside the room, facing away from it
   expect(x - lodge.center[0]).toBeCloseTo(lodge.center[0] - armchair.position[0], 6)
   expect(z).toBe(armchair.position[2])
   expect(west.yaw).toBe(-armchair.yaw)
@@ -430,7 +430,7 @@ test('on the Lobby’s east bench he faces the fountain from its south end, on i
   const bench = seated('lobby_east_bench')
   const north = seated('lobby_north_bench')
   const ottoman = seated('salon_ottoman')
-  // The bench east of the fountain, which he faces west to, south of its middle
+  // the bench east of the fountain, which he faces west to, south of its middle
   expect(bench.position[0]).toBeCloseTo(4 + SloperatorGeometry.lap - fountainBench.depth / 2, 6)
   expect(bench.position[1]).toBe(0)
   expect(bench.position[2]).toBeGreaterThan(lobbyFountainSpot[2])
@@ -439,14 +439,14 @@ test('on the Lobby’s east bench he faces the fountain from its south end, on i
   expect(bench.seat.height).toBe(fountainBench.height)
   // Where his knees are, the bench’s front edge lies under them.
   expect(bench.position[0] - SloperatorGeometry.lap).toBeCloseTo(4 - fountainBench.depth / 2, 6)
-  // The bench north of the fountain, which he faces south to, in its middle
+  // the bench north of the fountain, which he faces south to, in its middle
   expect(north.furniture.body).toBe('lobby-bench-north')
   expect(north.position[0]).toBeCloseTo(0, 6)
   expect(north.position[1]).toBe(0)
   expect(north.position[2] + SloperatorGeometry.lap).toBeCloseTo(-16 + fountainBench.depth / 2, 6)
   expect(Math.cos(north.yaw)).toBeCloseTo(1, 6)
   expect(north.seat.height).toBe(fountainBench.height)
-  // The ottoman on the Salon’s axis, which he faces north on
+  // the ottoman on the Salon’s axis, which he faces north on
   expect(ottoman.position[0]).toBe(salonBench.position[0])
   expect(ottoman.position[2] - SloperatorGeometry.lap).toBeCloseTo(salonBench.position[2] - salonBench.depth / 2, 6)
   expect(Math.cos(ottoman.yaw)).toBeCloseTo(-1, 6)
@@ -464,7 +464,7 @@ test('the Oculus sees his back on the Lobby’s north bench from the back of its
   /** the crown of his hat and the middle of his head */
   const [crown, head] = [fountainBench.height + SloperatorGeometry.height - 0.02, fountainBench.height + SloperatorGeometry.height - 0.22]
   for (const height of [crown, head]) {
-    // From where the apse begins, at the back of the platform, back into the apse
+    // from where the apse begins, at the back of the platform, back into the apse
     for (const eyeZ of [oculusApse.northZ, oculusApse.northZ - oculusApse.depth + 1]) {
       const eye: Vec3 = [x, platformY + 1.6, eyeZ]
       expect(slopGallery.geofences.getMatches(eye)).toContain('oculus')
@@ -515,7 +515,7 @@ test('in the Exhibition he stands on its sloping floor, looking through the east
     const target: Vec3 = [x, y + height, z]
     const at = (share: number) => eye.map((value, axis) => value + (target[axis] - value) * share) as Vec3
     const shareAtZ = (planeZ: number) => (planeZ - eye[2]) / (target[2] - eye[2])
-    // Through the window, between its jambs and over its sill, where it pierces the apse’s wall
+    // through the window, between its jambs and over its sill, where it pierces the apse’s wall
     const {center, radius} = oculusApse.arcs[window.arc]
     let share = 0
     while (Math.hypot(at(share)[0] - center[0], at(share)[2] - center[1]) > radius) {
@@ -526,9 +526,9 @@ test('in the Exhibition he stands on its sloping floor, looking through the east
     expect(Math.abs(Math.atan2(Math.sin(off), Math.cos(off))) * radius).toBeLessThan(window.width / 2)
     expect(wallY - platformY).toBeGreaterThan(window.bottom)
     expect(wallY - platformY).toBeLessThan(window.height)
-    // Over the edge of the platform
+    // over the edge of the platform
     expect(at(shareAtZ(oculusPlatform.position[2] + oculusPlatform.size[2] / 2))[1]).toBeGreaterThan(platformY)
-    // Past the tower and the foot of the ramp up to its deck, which reaches as wide as the tower
+    // past the tower and the foot of the ramp up to its deck, which reaches as wide as the tower
     for (let along = 0; along <= 1; along += 1e-3) {
       const [pointX, , pointZ] = at(along)
       expect(Math.hypot(pointX - oculusTower.x, pointZ - oculusTower.z)).toBeGreaterThan(oculusTower.radius + 0.25)
@@ -536,7 +536,7 @@ test('in the Exhibition he stands on its sloping floor, looking through the east
         expect(Math.abs(pointX - oculusTower.x)).toBeGreaterThan(towerRamp.width / 2 + towerRamp.baseCornerRadius)
       }
     }
-    // Into the tunnel between its jambs and under its top, where it leaves the Oculus’ south wall
+    // into the tunnel between its jambs and under its top, where it leaves the Oculus’ south wall
     const [mouthX, mouthY] = at(shareAtZ(tunnel.northZ))
     expect(Math.abs(mouthX - tunnel.northX)).toBeLessThan(tunnel.width / 2 - 0.2)
     expect(mouthY).toBeLessThan(tunnel.northY + tunnel.height)

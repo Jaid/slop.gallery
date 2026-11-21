@@ -128,12 +128,12 @@ describe('floor-following wall baseboards', () => {
       const material = new MeshBasicMaterial
       try {
         expect(geometry.trim[0].boundingBox!.min.y).toBeCloseTo(0, 6)
-        // Near the wall’s end, clear of the barred openings, 23 cm out of its center line where it bends round its curve
+        // near the wall’s end, clear of the barred openings, 23 cm out of its center line where it bends round its curve
         const u = 0.3 - wall.width / 2
         const radius = wall.curveRadius!
         const trimTopRay = new Raycaster(new Vector3((radius - 0.23) * Math.sin(u / radius), 1, radius - (radius - 0.23) * Math.cos(u / radius)), new Vector3(0, -1, 0))
         expect(trimTopRay.intersectObject(new Mesh(geometry.trim[0], material))[0].point.y).toBeCloseTo(defaultBaseboardHeight)
-        // Up to the ceiling, like the side walls
+        // up to the ceiling, like the side walls
         expect(wall.center[1] + geometry.surface.boundingBox!.max.y).toBeCloseTo(lowerGallery.oculus.ceiling.topY - lowerGallery.oculus.ceiling.thickness)
       } finally {
         geometry.dispose()

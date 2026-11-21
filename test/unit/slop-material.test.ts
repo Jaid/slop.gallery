@@ -48,7 +48,7 @@ test('the slime keeps its greens, which a Slop’s turn round the hue circle a l
       slop.dispose()
     }
   }
-  // Both ways round the circle, and seldom twice the same
+  // both ways round the circle, and seldom twice the same
   expect(Math.min(...shifts)).toBeLessThan(-slopHueSpread / 2)
   expect(Math.max(...shifts)).toBeGreaterThan(slopHueSpread / 2)
   const distinct = new Set(shifts.map(rolled => rolled.toFixed(3)))

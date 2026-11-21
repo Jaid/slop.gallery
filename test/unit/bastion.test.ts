@@ -57,7 +57,7 @@ describe('the Bastion’s route round the Oculus', () => {
     expect(route.end.point[1]).toBeCloseTo(bastionApproach.path[0][1], 9)
     expect(route.end.heading).toBeCloseTo(-Math.PI, 9)
     expect(bastionApproach.path.at(-1)).toEqual([lodge.center[0] + lodge.size[0] / 2, lodge.tunnelZ])
-    // From the east bridge’s end at the doorway down to the platform round the apse and up to the Lodge’s floor
+    // from the east bridge’s end at the doorway down to the platform round the apse and up to the Lodge’s floor
     expect(bastionMouth.floorY).toBeCloseTo(tower.floorY + tower.height + towerBridge.rise, 9)
     expect(route.y).toBe(bastionMouth.floorY)
     expect(route.height).toBe(bastionMouth.height)
@@ -130,9 +130,9 @@ describe('the Bastion’s route round the Oculus', () => {
     }
     for (const [ramp, from, to] of [[run.ramp!, bastionMouth.floorY, platformY], [climb.ramp!, platformY, lodge.floorY]] as const) {
       expect([ramp.startY, ramp.endY]).toEqual([from, to])
-      // Longer than the straight ramps were, of 8.2 m and 3.9 m
+      // longer than the straight ramps were, of 8.2 m and 3.9 m
       expect(ramp.length).toBeGreaterThan(Math.abs(to - from) / Math.tan(14.3 * Math.PI / 180))
-      // All but level where it starts and where it ends, and halfway no steeper than 1 in 4, like the straight ramps were all along
+      // all but level where it starts and where it ends, and halfway no steeper than 1 in 4, like the straight ramps were all along
       expect(Math.abs(slope(ramp.from + 0.02))).toBeLessThan(0.25 / 10)
       expect(Math.abs(slope(ramp.from + ramp.length - 0.02))).toBeLessThan(0.25 / 10)
       expect(Math.abs(to - from) * easedRampGradient(ramp.length / 2, ramp.length)).toBeCloseTo(0.25, 9)
@@ -168,7 +168,7 @@ describe('the Bastion’s route round the Oculus', () => {
       expect(insideApse(x, z, -0.105)).toBe(true)
       expect(roomAt([x, over, z])).toBe('oculus')
     }
-    // Inside the passage, close to its inner wall, where the boxes of both rooms overlap
+    // inside the passage, close to its inner wall, where the boxes of both rooms overlap
     const shoulder = oculusApse.arcs[2]
     for (const angle of [-0.2, -0.6, -1]) {
       const radius = shoulder.radius + 0.3 + 0.15
@@ -177,7 +177,7 @@ describe('the Bastion’s route round the Oculus', () => {
     }
   })
   test('its walls follow the route on its inside and along the run west: straight along the runs, curved round the turns, as long as the pieces at their sides, standing level with their baseboards on the floor along the ramps', () => {
-    // Every piece’s left wall in turn, but the outlines’ walls in place of the right ones of all but the landing and the run west, after the first left one, and of the left ones of the S bend and the landing
+    // every piece’s left wall in turn, but the outlines’ walls in place of the right ones of all but the landing and the run west, after the first left one, and of the left ones of the S bend and the landing
     const sides = [[0, -1, 0], [1, -1, 4], [2, -1, 5], [3, -1, 6], [4, -1, 7], [6, 1, 13], [7, -1, 14], [7, 1, 15]] as const
     expect(bastionCurve.walls).toHaveLength(16)
     for (const [pieceIndex, side, wallIndex] of sides) {
@@ -186,7 +186,7 @@ describe('the Bastion’s route round the Oculus', () => {
       expect(wall.id).toBe(`bastion-curve_wall_${wallIndex}`)
       expect(wall.sticky).toBe(false)
       expect(wall.slope).toBeUndefined()
-      // From the lower floor up to 30 cm under the higher crown
+      // from the lower floor up to 30 cm under the higher crown
       expect(wall.center[1]).toBe(Math.min(piece.startY, piece.endY))
       expect(wall.center[1] + wall.height + 0.3).toBeCloseTo(Math.max(piece.startY + piece.startHeight, piece.endY + piece.endHeight), 9)
       if (piece.kind === 'line') {
@@ -250,7 +250,7 @@ describe('the Bastion’s route round the Oculus', () => {
               const [left, right] = [-1, 1].map(side => passage.reach(station, side))
               const middle = (right - left) / 2
               const half = (left + right) / 2
-              // Up its crown and halfway down its sides, square to the arch from its middle
+              // up its crown and halfway down its sides, square to the arch from its middle
               for (const angle of [Math.PI / 2, Math.PI / 4, Math.PI * 3 / 4]) {
                 const lateral = middle + Math.cos(angle) * half * 0.5
                 const origin = new Vector3(x - Math.sin(heading) * lateral, y + height - half + Math.sin(angle) * half * 0.5, z + Math.cos(heading) * lateral)
@@ -286,7 +286,7 @@ describe('the Bastion’s route round the Oculus', () => {
     for (const [index, wall] of outer.entries()) {
       expect(wall.curveRadius).toBeUndefined()
       expect(wall.sticky).toBe(false)
-      // From one corner to the next
+      // from one corner to the next
       const ends = [-1, 1].map(side => wallPosition(wall, side * wall.width / 2, 0, 0)).map(([x, , z]) => [x, z])
       const corners = outline!.corners.slice(index, index + 2)
       for (const corner of corners) {
@@ -300,7 +300,7 @@ describe('the Bastion’s route round the Oculus', () => {
         expect(bastionCurve.floorAt(frontX, frontZ)).toBeDefined()
         expect(bastionCurve.floorAt(backX, backZ)).toBeUndefined()
       }
-      // From the lowest floor along it up to 30 cm under the highest crown, its baseboard on the floor wherever that changes
+      // from the lowest floor along it up to 30 cm under the highest crown, its baseboard on the floor wherever that changes
       const floors = Array.from({length: 41}, (_, step) => {
         const [x, , z] = wallPosition(wall, wall.width * (step / 40 - 0.5), 0, 0)
         return bastionCurve.stationAt(x, z)!
@@ -312,7 +312,7 @@ describe('the Bastion’s route round the Oculus', () => {
         expect(bastionCurve.floorAt(x, z)).toBeCloseTo(wall.center[1] + y, 6)
       }
     }
-    // On along the run north, from the mouth’s east wall, to the line the curve’s outer wall touched over the middle of the crown, where the gate opens
+    // on along the run north, from the mouth’s east wall, to the line the curve’s outer wall touched over the middle of the crown, where the gate opens
     const mouthEast = bastionMouth.walls.find(wall => wall.rotation === east.rotation && Math.abs(wall.center[0] - east.center[0]) < 1e-9)
     expect(mouthEast).toBeDefined()
     expect(north.center[2]).toBeCloseTo(bastionOrigin[2] - bastionCurve.width / 2, 9)
@@ -321,7 +321,7 @@ describe('the Bastion’s route round the Oculus', () => {
     expect(east.baseboardProfile).toBeDefined()
     expect(north.baseboardProfile).toBeUndefined()
     expect(chamfer.baseboardProfile).toBeUndefined()
-    // Never narrower than before, and widest in the corner behind the apse’s east shoulder
+    // never narrower than before, and widest in the corner behind the apse’s east shoulder
     const reaches = stations.map(station => bastionCurve.reach(station, 1))
     expect(Math.min(...reaches)).toBeGreaterThanOrEqual(bastionCurve.width / 2 - 1e-9)
     expect(Math.max(...reaches)).toBeGreaterThan(5.5)
@@ -360,7 +360,7 @@ describe('the Bastion’s route round the Oculus', () => {
     expect(widened.reach(run.at(5), 1)).toBe(1)
     expect(widened.floorAt(2, 2.5)).toBe(0)
     expect(widened.walls.map(wall => wall.curveRadius === undefined && wall.width)).toEqual([4, Math.hypot(2, 2), Math.hypot(2, 2), 2, 2])
-    // Ending off a joint, cutting into the passage or doubling back
+    // ending off a joint, cutting into the passage or doubling back
     expect(() => outlined([0, 1], [3, 1])).toThrow(RangeError)
     expect(() => outlined([0, 1], [2, 0.5], [4, 1])).toThrow(RangeError)
     expect(() => outlined([0, 1], [3, 3], [1, 4], [4, 1])).toThrow(RangeError)

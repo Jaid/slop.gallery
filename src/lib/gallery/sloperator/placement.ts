@@ -131,7 +131,7 @@ export function seatStrayed({furniture, position: [x, y, z]}: SloperatorSeatedSi
   /** how far it turned from where it stood, the short way round */
   const turned = Math.atan2(Math.sin(turnedFrom), Math.cos(turnedFrom))
   const lifted = translation.y - furniture.position[1]
-  // Where he sits in the furniture’s frame, which turned and moved along the floor with it
+  // where he sits in the furniture’s frame, which turned and moved along the floor with it
   const [originX, , originZ] = furniture.position
   const [dx, dz] = [x - originX, z - originZ]
   const cos = Math.cos(furniture.yaw)

@@ -168,7 +168,7 @@ describe('what a limited reach mounts', () => {
     expect(placementWithin(reach('')).walls).toBe(slopGallery.walls)
     const arch = slopGallery.wall('lobby-west')!
     const hole = arch.holes!.find(candidate => candidate.name === 'vesper')!
-    // From 3 m into the Lobby, straight through the arch into the Vesper, whose far wall only stops the ray while it is there
+    // from 3 m into the Lobby, straight through the arch into the Vesper, whose far wall only stops the ray while it is there
     const origin = wallPosition(arch, hole.u, arch.center[1] + 1.6, 3)
     const direction: Vec3 = [-Math.sin(arch.rotation), 0, -Math.cos(arch.rotation)]
     const everything = placementWithin(reach('')).findPlacement(origin, direction, 0.4, 0.4, [])

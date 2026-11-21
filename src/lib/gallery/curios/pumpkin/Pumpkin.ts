@@ -57,7 +57,7 @@ export default class Pumpkin extends Curio {
   readonly reach = 0.32
   readonly room = 'banquet'
   override readonly rotation: Vec3 = [0, 0.4, 0]
-  // A squat drum rounded off all round, as high as the tops of its ribs round the hollow, and the stem standing up out of it
+  // a squat drum rounded off all round, as high as the tops of its ribs round the hollow, and the stem standing up out of it
   readonly shapes: ReadonlyArray<CurioShape> = [{
     border: 0.08,
     height: 0.232,

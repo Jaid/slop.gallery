@@ -137,7 +137,7 @@ test('a room’s other fences come after the rooms’, under the room’s global
   expect(knottingham.geofences.keys().toArray()).toEqual(['arena'])
   expect(sandbox.geofences.keys().toArray()).toEqual(['cell'])
   expect(slopGallery.geofences.keys().toArray()).toEqual([...slopGallery.rooms.map(room => room.id), 'lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'corridor-window'])
-  // A fence reaching beyond the Cell and one far outside of it
+  // a fence reaching beyond the Cell and one far outside of it
   const corner = new Geofence([{
     x: 0,
     z: 0,
@@ -174,7 +174,7 @@ test('the gallery’s bastion-knight_alley fences the Bastion’s blind branch b
   const fence = slopGallery.geofences.get('bastion-knight_alley')!
   const bastion = slopGallery.room('bastion').fence
   const {route, width} = lodgeSpur
-  // Along the whole branch from wall to wall, wherever a body is, standing, crouching or jumping
+  // along the whole branch from wall to wall, wherever a body is, standing, crouching or jumping
   for (let along = 0.05; along < route.length; along += 0.1) {
     const {point: [x, z], heading, y} = route.at(along)
     for (const across of [-1, 0, 1]) {
@@ -201,7 +201,7 @@ test('the gallery’s bastion-knight_alley fences the Bastion’s blind branch b
   expect(fence.contains([endX, endY, endZ + 0.01])).toBe(true)
   expect(fence.contains([endX, endY, endZ - 0.01])).toBe(false)
   expect(slopGallery.geofences.getMatches([endX, endY, endZ - 1])).toEqual(['bastion'])
-  // Neither its walls’ far sides, nor the Lodge behind its side window, nor the Forge’s vestibule over its vault, nor the ground under it
+  // neither its walls’ far sides, nor the Lodge behind its side window, nor the Forge’s vestibule over its vault, nor the ground under it
   for (const side of [-1, 1]) {
     expect(fence.contains([endX + side * (width / 2 + 0.01), endY, endZ + 2])).toBe(false)
   }
@@ -219,7 +219,7 @@ test('the gallery’s bastion-knight_alley fences the Bastion’s blind branch b
 /** The boxes of the gallery’s fence with the id as the plain data its dump gives, a tenth of a millimeter exact. */
 const dumped = (id: string) => slopGallery.dumpGeofences().find(fence => fence.id === id)!.boxes as Array<Record<string, number>>
 test('the gallery’s lobby-north, lobby-middle and lobby-south make up the Lobby’s fence, split in three along the south edge of its glazed floor over the Oculus and the north edge of its arches into the Vesper and the Banquet', () => {
-  // Everything over the Lobby’s floor plan from the slab up
+  // everything over the Lobby’s floor plan from the slab up
   const whole = {
     x: -lobby.width / 2,
     x2: lobby.width / 2,
@@ -255,7 +255,7 @@ test('the gallery’s lobby-north, lobby-middle and lobby-south make up the Lobb
       expect(slopGallery.geofences.getMatches([side * lobby.width / 2, 0.9, z])).toEqual(['lobby', room, 'lobby-south'])
     }
   }
-  // From wall to wall and from the slab up without end, a part on either side of each line and both of them on it
+  // from wall to wall and from the slab up without end, a part on either side of each line and both of them on it
   for (const x of [-lobby.width / 2 + 0.01, 0, lobby.width / 2 - 0.01]) {
     for (const y of [0.05, 0.9, 1.75, 40]) {
       expect(slopGallery.geofences.getMatches([x, y, lobby.northZ + 0.01])).toEqual(['lobby', 'lobby-north'])
@@ -284,14 +284,14 @@ test('the gallery’s moonfall-stairs fences the stairway between the Antechambe
   const [hall, stairway] = slopGallery.room('moonfall').fence.boxes
   const eastX = lowerGallery.moonfall.center[0] + lowerGallery.moonfall.size[0] / 2
   let treads = 0
-  // In columns over and around the stairway’s footprint, off the planes the boxes end on
+  // in columns over and around the stairway’s footprint, off the planes the boxes end on
   for (let x = stairwayFootprint.x - 1.03; x < stairwayFootprint.x2 + 1.03; x += 0.31) {
     for (let z = stairwayFootprint.z - 1.03; z < stairwayFootprint.z2 + 1.03; z += 0.31) {
       for (const y of [-12, -7.1, -2.1, -1.9, 0.9, 9]) {
         const position: Vec3 = [x, y, z]
         expect(fence.contains(position)).toBe(stairway.contains(position) && !hall.contains(position))
       }
-      // Wherever a body is on its flights and its turn, standing, crouching or jumping
+      // wherever a body is on its flights and its turn, standing, crouching or jumping
       const floor = stairFloorHeight(x, z)
       if (floor === undefined) {
         continue
@@ -312,7 +312,7 @@ test('the gallery’s moonfall-stairs fences the stairway between the Antechambe
   const [footY, footZ] = [lowerGallery.floorY + 0.9, lowerGallery.moonfall.center[1]]
   expect(slopGallery.geofences.getMatches([eastX + 0.01, footY, footZ])).toEqual(['moonfall', 'moonfall-stairs'])
   expect(slopGallery.geofences.getMatches([eastX - 0.01, footY, footZ])).toEqual(['moonfall'])
-  // Not the hall under where the upper flight sets out
+  // not the hall under where the upper flight sets out
   expect(slopGallery.geofences.getMatches([topX + 1, footY, topZ])).toEqual(['moonfall'])
   // Moonfall’s visitors arrive on its lower flight, in the fence.
   const [x, y, z] = slopGallery.room('moonfall').spawn.position
@@ -324,7 +324,7 @@ test('the gallery’s bastion-cistern fences the Bastion’s cistern, within the
   const bastion = slopGallery.room('bastion').fence
   const [centerX, wallZ] = cistern.center
   let floors = 0
-  // Wherever a body is on its floor, standing, crouching or jumping
+  // wherever a body is on its floor, standing, crouching or jumping
   for (let x = centerX - cistern.radius - 0.53; x < centerX + cistern.radius + 0.53; x += 0.31) {
     for (let z = wallZ - cistern.radius - 0.53; z < wallZ; z += 0.31) {
       const floor = cisternFloor(x, z)
@@ -334,7 +334,7 @@ test('the gallery’s bastion-cistern fences the Bastion’s cistern, within the
       floors++
       for (const height of bodyHeights) {
         const position: Vec3 = [x, floor + height, z]
-        // The Bastion’s, and in its west the Lodge’s, whose fence reaches up through its roof
+        // the Bastion’s, and in its west the Lodge’s, whose fence reaches up through its roof
         expect(slopGallery.geofences.getMatches(position).filter(id => id !== 'lodge')).toEqual(['bastion', 'bastion-cistern'])
         expect(slopGallery.roomAt(position)?.id).toBe('bastion')
       }
@@ -350,7 +350,7 @@ test('the gallery’s bastion-cistern fences the Bastion’s cistern, within the
   const [windowX] = cisternWindow.center
   expect(slopGallery.geofences.getMatches([windowX, 1.6, wallZ + 0.3])).toEqual(['forge'])
   expect(slopGallery.geofences.getMatches([windowX, 1.6, wallZ - 0.3])).toEqual(['bastion', 'bastion-cistern'])
-  // Neither the Bastion’s approach in front of that wall, nor the Lodge under its floor, nor anything over its dome
+  // neither the Bastion’s approach in front of that wall, nor the Lodge under its floor, nor anything over its dome
   const {route} = climbApproach
   for (let along = 0.05; along < route.length; along += 0.1) {
     const {point: [x, z], y} = route.at(along)
@@ -370,7 +370,7 @@ test('the gallery’s bastion-gate fences the Bastion’s curve behind the gate 
   const [, gateZ] = apseOpeningPoint(gate)
   const {route, width} = bastionCurve
   let inside = 0
-  // Wherever a body is on the curve, standing, crouching or jumping: north of the gate in the fence, south of it not
+  // wherever a body is on the curve, standing, crouching or jumping: north of the gate in the fence, south of it not
   for (let along = 0.05; along < route.length; along += 0.1) {
     const {point: [x, z], heading, y} = route.at(along)
     for (const across of [-1, 0, 1]) {
@@ -397,13 +397,13 @@ test('the gallery’s bastion-gate fences the Bastion’s curve behind the gate 
       return x >= cx - 1e-9 && x2 <= cx2 + 1e-9 && y >= cy - 1e-9 && y2 <= cy2 + 1e-9 && z >= cz - 1e-9 && z2 <= cz2 + 1e-9
     })).toBe(true)
   }
-  // Behind the gate and both windows, where they look out over the platform
+  // behind the gate and both windows, where they look out over the platform
   const platformY = oculusPlatform.position[1] + oculusPlatform.size[1] / 2
   for (const opening of apseOpenings) {
     const [x, z] = apseOpeningPoint(opening, 1.2)
     expect(slopGallery.geofences.getMatches([x, platformY + 0.9, z])).toEqual(['bastion', 'bastion-gate'])
   }
-  // Neither the apse in front of the gate, nor the floor under the curve, nor anything over its vault
+  // neither the apse in front of the gate, nor the floor under the curve, nor anything over its vault
   const behindGateZ = gateZ - 2
   expect(slopGallery.geofences.getMatches([0, platformY + 0.9, gateZ + 1])).toEqual(['oculus'])
   expect(fence.contains([0, platformY - 1.5, behindGateZ])).toBe(false)
@@ -418,7 +418,7 @@ test('the gallery’s corridor-window fences the Corridor’s long hall abreast 
   const fence = slopGallery.geofences.get('corridor-window')!
   const reach = lodgeWindow.width / 2 + 1
   const westX = corridor.center[0] - corridor.size[0] / 2
-  // Wherever a body is in the hall from a meter north of the window to a meter south of it, standing, crouching or jumping
+  // wherever a body is in the hall from a meter north of the window to a meter south of it, standing, crouching or jumping
   for (let z = lodgeWindow.z - reach + 0.05; z < lodgeWindow.z + reach; z += 0.1) {
     for (let x = westX + 0.35; x < lodgeWindow.tunnelX - 0.3; x += 0.25) {
       for (const height of [0.05, 0.9, 1.75, 2.7]) {
@@ -426,11 +426,11 @@ test('the gallery’s corridor-window fences the Corridor’s long hall abreast 
       }
     }
   }
-  // Just beyond it along the hall, the Corridor’s alone
+  // just beyond it along the hall, the Corridor’s alone
   for (const side of [-1, 1]) {
     expect(slopGallery.geofences.getMatches([corridor.center[0], corridor.floorY + 0.9, lodgeWindow.z + side * (reach + 0.01)])).toEqual(['corridor'])
   }
-  // Not the window’s niche behind its glass, which is the Lodge’s, nor the ground under the hall, nor anything over its crown
+  // not the window’s niche behind its glass, which is the Lodge’s, nor the ground under the hall, nor anything over its crown
   expect(fence.contains([lodgeWindow.tunnelX + 0.05, lodgeWindow.bottom + 0.2, lodgeWindow.z])).toBe(false)
   expect(fence.contains([corridor.center[0], corridor.floorY - 1.5, lodgeWindow.z])).toBe(false)
   expect(fence.contains([corridor.center[0], corridor.floorY + corridor.height + 1, lodgeWindow.z])).toBe(false)

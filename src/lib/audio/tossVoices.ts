@@ -46,13 +46,13 @@ export default function tossVoices({drive, effort, mass, rise, throwing, velocit
     return voices
   }
   if (heft > 0) {
-    // The arm heaving something heavy
+    // the arm heaving something heavy
     voices.push(osc(92 * pitch, 0.13, 0.034 * heft / 2 * Math.min(strength, 1), {
       endFrequency: 58 * pitch,
       attack: 0.012,
     }))
   } else if (heft < -1) {
-    // Flicking something light off the fingers
+    // flicking something light off the fingers
     voices.push(noise(0.018, 0.018 * clamp((-heft - 1) / 3, 0, 1) * (0.5 + 0.5 * Math.min(strength, 1)), {
       type: 'bandpass',
       frequency: 2600 * pitch ** 0.5,

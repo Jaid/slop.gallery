@@ -68,7 +68,7 @@ describe('the Forge as mounted', () => {
     expect(bench).toBeDefined()
     const start = bench!.translation()
     let drift = 0
-    // Long frames like a graphics switch or a tab coming back from the background, which step up to 30 times at once, between short ones
+    // long frames like a graphics switch or a tab coming back from the background, which step up to 30 times at once, between short ones
     for (let frame = 0; frame < 40; frame++) {
       step([0.5, 0.004, 0.25, 1 / 60][frame % 4])
       const {x, y, z} = bench!.translation()

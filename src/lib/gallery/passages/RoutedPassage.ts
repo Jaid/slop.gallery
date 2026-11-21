@@ -472,7 +472,7 @@ export default class RoutedPassage {
   private fits(piece: RoutePiece, from: number, to: number, slack: number) {
     const {min, max} = this.chunk(piece, from, to)
     const corners = [[min[0], min[2]], [max[0], min[2]], [min[0], max[2]], [max[0], max[2]]] as const
-    // Each corner of the box, measured straight across from the route where it lies abreast of the stretch, or from the stretch’s nearer end
+    // each corner of the box, measured straight across from the route where it lies abreast of the stretch, or from the stretch’s nearer end
     for (const [x, z] of corners) {
       const {offset, right} = this.across(piece, x, z, (from + to) / 2)
       const station = PassageRoute.station(piece, clamp(offset, from, to))
@@ -539,7 +539,7 @@ export default class RoutedPassage {
     for (const [segment, [ax, az]] of corners.slice(0, -1).entries()) {
       const [ex, ez] = [corners[segment + 1][0] - ax, corners[segment + 1][1] - az]
       const length = Math.hypot(ex, ez)
-      // Solving station + distance · direction = corner + share · edge
+      // solving station + distance · direction = corner + share · edge
       const denominator = dx * ez - dz * ex
       if (Math.abs(denominator) > 1e-12) {
         const [qx, qz] = [ax - px, az - pz]
@@ -574,7 +574,7 @@ export default class RoutedPassage {
 
   /** The straight walls through the outline’s corners, standing level from their lowest floor, their baseboards following the floor wherever it changes along them. */
   private outlineWalls({corners, side, from, to}: PlacedOutline): Array<Omit<Wall, 'id'>> {
-    // Where the floor meets the walls, straight across from every station along the stretch
+    // where the floor meets the walls, straight across from every station along the stretch
     const contacts = this.floorStations(from, to).map(station => ({
       station,
       point: this.hit(station, side).point,
@@ -605,7 +605,7 @@ export default class RoutedPassage {
       const contact = touching.map(({station, point}): readonly [number, number] => [clamp(wallCoordinates(wall, [point[0], station.y, point[1]]), -length / 2, length / 2), station.y - foot]).toSorted((a, b) => a[0] - b[0])
       return {
         ...wall,
-        // Only where the floor bends along the wall, and at its ends
+        // only where the floor bends along the wall, and at its ends
         baseboardProfile: contact.filter(([, y], index) => index === 0 || index === contact.length - 1 || y !== contact[index - 1][1] || y !== contact[index + 1][1]),
       }
     })
@@ -678,7 +678,7 @@ export default class RoutedPassage {
     if (piece.startY === piece.endY && (!this.floorInlet || piece.from >= this.floorInlet.inlet.length) && (!this.floorOutlet || piece.from + piece.length <= this.floorOutlet.from)) {
       return wall
     }
-    // Where the floor meets the wall along its center line, at the piece’s ends and at every knot of its ramp in between, or of the shaped floor along the inlet or the outlet
+    // where the floor meets the wall along its center line, at the piece’s ends and at every knot of its ramp in between, or of the shaped floor along the inlet or the outlet
     const half = this.width / 2
     const outlet = this.floorOutlet !== undefined && piece.from + piece.length > this.floorOutlet.from
     const stations = this.floorInlet || outlet ? this.floorStations(piece.from, piece.from + piece.length) : [0, ...PassageRoute.knots(piece), piece.length].map(offset => PassageRoute.station(piece, offset))

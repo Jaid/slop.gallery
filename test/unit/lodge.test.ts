@@ -230,7 +230,7 @@ describe('Lodge and Corridor route', () => {
         })),
         ...[vaults[0].shell, vaults[0].ribs].map(geometry => new Mesh(geometry, material)),
       ]
-      // Through the Lodge’s doorway, at a person’s height and a little off the axis on both sides
+      // through the Lodge’s doorway, at a person’s height and a little off the axis on both sides
       for (const offset of [-1.45, 1.45]) {
         const z = lodge.tunnelZ + offset
         expect(bastionApproach.floorAt(-19.5, z)).toBe(lodge.floorY)
@@ -278,7 +278,7 @@ describe('Lodge and Corridor route', () => {
     const threshold = rectanglePolygon(lodgeThreshold)
     for (const passage of routePassages) {
       for (const floor of passage.floors) {
-        // Its middle, and halfway from there to each of its corners
+        // its middle, and halfway from there to each of its corners
         const [x, z] = polygonCentroid(floor)
         for (const [px, pz] of [[x, z], ...floor.map(([cx, cz]) => [(x + cx) / 2, (z + cz) / 2])]) {
           // The doorway passage from the Corridor is the Lodge’s up to its middle, but neither’s right there.
@@ -371,7 +371,7 @@ describe('Lodge and Corridor route', () => {
     try {
       for (let x = lodge.center[0] - 4.5; x <= lodge.center[0] + 4.5; x += 0.75) {
         for (let z = lodge.center[1] - 7.5; z <= lodge.center[1] + 3; z += 0.75) {
-          // Clear of the bay’s walls and the hearth
+          // clear of the bay’s walls and the hearth
           if (!insidePolygon(lodgeOutline, x - 0.3, z - 0.3) || !insidePolygon(lodgeOutline, x + 0.3, z - 0.3)) {
             continue
           }
@@ -538,11 +538,11 @@ describe('Lodge and Corridor route', () => {
   })
 })
 test('passages reject malformed paths instead of producing cracked geometry', () => {
-  // Nothing to run along, straight on or doubling back past a right angle, and a span too short for the elbows at its ends
+  // nothing to run along, straight on or doubling back past a right angle, and a span too short for the elbows at its ends
   for (const path of [[], [[0, 0]], [[0, 0], [0, 0]], [[0, 0], [Number.NaN, 1]], [[0, 0], [0, 3], [0, 6]], [[0, 0], [0, 5], [1, 0]], [[0, 0], [0, 5], [1, 5], [1, 10]]] as Array<Array<[number, number]>>) {
     expect(() => new Passage('bad', 'lodge', path, 0)).toThrow(RangeError)
   }
-  // Askew of x and z, turning by 45° and by a right angle
+  // askew of x and z, turning by 45° and by a right angle
   const askew = new Passage('askew', 'lodge', [[0, 0], [3, 3], [3, 8], [8, 8]], 0)
   expect(askew.walls).toHaveLength(6)
   expect(askew.junctions).toHaveLength(2)

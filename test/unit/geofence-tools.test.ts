@@ -24,7 +24,7 @@ const toPosition = ([x, y, z]: Vec3) => ({position: {
 test('the dump lists every fence of a world in its order with all of its own boxes as plain data, a tenth of a millimeter exact, and the relations of a relational one', () => {
   for (const world of worlds) {
     const dump = world.dumpGeofences()
-    // Its rooms’ fences first, then its other ones
+    // its rooms’ fences first, then its other ones
     expect(dump.map(({id}) => id)).toEqual(world.geofences.keys().toArray())
     expect(dump.slice(0, world.rooms.length).map(({id}) => id)).toEqual(world.rooms.map(({id}) => id))
     for (const {id, boxes, relations} of dump) {
@@ -63,7 +63,7 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
   expect(boxes('bastion').every(box => 'y' in box && box.y < box.y2)).toBe(true)
   expect(boxes('exhibition')).toHaveLength(3)
   expect(boxes('corridor')).toHaveLength(52)
-  // Its other fences: the Lobby’s parts from the slab up like the Lobby, the stairway over Moonfall’s ceiling and, beyond its hall, at every height, the parts of the Bastion in the Bastion’s own boxes around them, and the Corridor’s hall abreast of the Lodge’s window between heights
+  // its other fences: the Lobby’s parts from the slab up like the Lobby, the stairway over Moonfall’s ceiling and, beyond its hall, at every height, the parts of the Bastion in the Bastion’s own boxes around them, and the Corridor’s hall abreast of the Lodge’s window between heights
   expect(dump.slice(slopGallery.rooms.length).map(({id}) => id)).toEqual(['lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'corridor-window'])
   expect(boxes('lobby-north')).toEqual([{
     x: -8,

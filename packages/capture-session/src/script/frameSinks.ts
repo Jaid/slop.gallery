@@ -127,7 +127,7 @@ const withSidecar = (sink: ReturnType<typeof pipeSink>, {output}: FrameSinkOptio
 const encodeAv1 = (options: FrameSinkOptions, video: string) => {
   const {fastDecode = 0, keyframeInterval, preset = av1Preset} = options
   const gop = keyframeInterval === undefined ? [] : ['-g', String(keyframeInterval)]
-  // Two tile columns and two tile rows, log2 each
+  // two tile columns and two tile rows, log2 each
   const svtParams = fastDecode ? `${av1SvtParams}:fast-decode=${fastDecode}:tile-columns=1:tile-rows=1` : av1SvtParams
   return pipeSink([[Bun.spawn([...ffmpeg, ...rawInput(options), '-framerate', String(options.fps), '-i', '-', '-an', ...filters(options, webmColorFilter), '-c:v', 'libsvtav1', '-preset', String(preset), '-crf', String(options.crf), ...gop, '-svtav1-params', svtParams, '-pix_fmt', 'yuv420p', '-color_range', 'pc', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'iec61966-2-1', video], {
     stdin: 'pipe',

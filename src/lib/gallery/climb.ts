@@ -156,7 +156,7 @@ export const climbApproach = new RoutedPassage('climb_approach', 'bastion', appr
   openings: [{
     name: 'cistern',
     side: -1,
-    // Straight across from where the culvert’s middle lies, out from the turn’s center
+    // straight across from where the culvert’s middle lies, out from the turn’s center
     along: approachTurn * Math.atan2(turnCenterZ - climbCulvert.z, turnX - climbCulvert.x),
     width: climbCulvert.width,
     bottom: climbCulvert.bottom,

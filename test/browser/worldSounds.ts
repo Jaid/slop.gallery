@@ -124,7 +124,7 @@ export default async function verify() {
     dropped: await recipe('a work dropped into the room', arrivalVoices(false)),
     three: await recipe('three works dropped together', [0, 1, 2].flatMap(index => shiftVoices(arrivalVoices(false, index - 1), index * arrivalGap))),
   }
-  // Throws and drops of a leaf, an orb and a pumpkin, standing, sprinting and in a jump shot
+  // throws and drops of a leaf, an orb and a pumpkin, standing, sprinting and in a jump shot
   const tosses: Record<string, Measure> = {}
   for (const [thing, mass] of [['a leaf', 0.008], ['an orb', orbMass], ['a pumpkin', 4.5]] as const) {
     for (const [motion, carrier] of [['standing', [0, 0, 0]], ['sprinting', [0, 0, -9]], ['jumping', [0, 5.4, 0]]] as const) {
@@ -154,7 +154,7 @@ export default async function verify() {
       if (acoustic && mood?.transformer) {
         transformers.transform(mood, mood.transformer, 1)
       }
-      // Once the room’s mood has taken over
+      // once the room’s mood has taken over
       return output.context.suspend(0.5).then(() => {
         playVoices({
           context: output.context,

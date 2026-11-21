@@ -143,14 +143,14 @@ function cuirass(rivets: Array<Rivet>) {
     ring(collar + 0.03, round(0.075)),
     ring(collar + 0.026, round(0.081)),
     ring(collar + 0.014, round(0.086)),
-    // The yoke, a low dome under the gorget, down to a hair under its border
+    // the yoke, a low dome under the gorget, down to a hair under its border
     ...[0.66, 0.8, 0.91, 1].map(share => ring(collar - 0.0015 + 0.0215 * (1 - share ** 2), theta => round(share * gorgetBorderReach(theta))(theta))),
   ]
   const breast = [1.585, 1.568, 1.548, 1.524, 1.498, 1.47, 1.44, 1.41, 1.38, 1.35, 1.32, 1.29, 1.26, 1.23, 1.2, 1.177, 1.16]
   for (const y of breast) {
     rows.push(thetas.map(theta => steel(chest(y, theta))))
   }
-  // The lip at the waist, rolled out and turned back in under itself
+  // the lip at the waist, rolled out and turned back in under itself
   for (const [y, out] of [[1.151, 0.004], [1.146, 0.0062], [1.141, 0.0035], [1.141, -0.002]] as const) {
     rows.push(thetas.map(theta => steel(chest(y, theta, out), {polish: 0.4})))
   }
@@ -158,7 +158,7 @@ function cuirass(rivets: Array<Rivet>) {
     start: steel(new Vector3(0, collar - 0.09, 0), {hole: 1}),
     extra: steelMask,
   })
-  // The plackart, from its ogee point down to the waist, a few millimeters proud of the breast
+  // the plackart, from its ogee point down to the waist, a few millimeters proud of the breast
   const span = 74
   const bottom = 1.168
   const top = (theta: number) => 1.215 + 0.135 * (1 - Math.abs(theta) / span) ** 1.7
@@ -206,7 +206,7 @@ function fauld(rivets: Array<Rivet>) {
       rivets.push(rivet([lame.side * squared(sin, 2.2) + 0.002 * sin, at, lame.front * squared(cos, 2.2) + 0.002 * cos], [sin, 0.25, cos], 0.0045))
     }
   }
-  // The plain skirt under the fauld, between the legs, behind the tassets
+  // the plain skirt under the fauld, between the legs, behind the tassets
   parts.push(plate([0, 1.02, 0], [0, 0.85, 0], [
     {
       at: 0,
@@ -225,7 +225,7 @@ function fauld(rivets: Array<Rivet>) {
     finish: skirtSteel,
     samples: [0, 0.5, 1],
   }))
-  // The tassets, each a pair of lames curving round the front of a thigh with the fauld, tucked under its lowest hoop and parting from the middle downward like an A over the skirt, the lower lame under the upper, their lower edges rolled
+  // the tassets, each a pair of lames curving round the front of a thigh with the fauld, tucked under its lowest hoop and parting from the middle downward like an A over the skirt, the lower lame under the upper, their lower edges rolled
   const hem = waist.at + 0.006 - 2 * 0.05 - 0.064
   const tassetTop = hem + 0.028
   const tassetFoot = 0.818
@@ -257,7 +257,7 @@ function tasset(outside: number, from: number, to: number, index: number) {
   const bulges = [0, 0, ...rollRows(roll, span).map(({bulge}) => bulge)]
   const top = waist.at - 0.15 + 0.03
   const sheet = rows.map((u, row) => {
-    // Squeezed so the roll takes the last few millimeters
+    // squeezed so the roll takes the last few millimeters
     const y = from - span * Math.min(u, 1)
     const share = (top - y) / (top - 0.818)
     const inner = 1.2 + 9 * share
@@ -267,7 +267,7 @@ function tasset(outside: number, from: number, to: number, index: number) {
       return steel(tassetPoint(theta, y, index, bulges[row]), bulges[row] ? {polish: 0.4} : undefined)
     })
   })
-  // Seen from outside, the points of every row run to the right, from the outside of the right thigh and from the middle over the left one
+  // seen from outside, the points of every row run to the right, from the outside of the right thigh and from the middle over the left one
   return sheetGeometry(outside > 0 ? sheet : sheet.map(row => row.toReversed()))
 }
 /** One leg, `outside` 1 for the left and -1 for the right: the cuisse down the thigh, the poleyn over the knee with its lame above, the greave down the shin and the calf and the sabaton of lames over the foot, its toes turned a little out. */
@@ -311,7 +311,7 @@ function leg(outside: number, rivets: Array<Rivet>) {
       rolls: [0.0035, undefined],
       samples: [0, 0.18, 0.36, 0.54, 0.72, 0.88, 1],
     }),
-    // The lame between the cuisse and the poleyn
+    // the lame between the cuisse and the poleyn
     plate(mirror([0.108, 0.615, 0.022]), mirror([0.109, 0.565, 0.026]), [
       {
         at: 0,
@@ -397,7 +397,7 @@ function leg(outside: number, rivets: Array<Rivet>) {
     }),
   ]
   rivets.push(rivet(mirror([knee[0] + 0.1 * 0.068 * 0.97, knee[1] + 0.06 * 0.068 * 0.97, knee[2] + 0.068 * 0.99]), mirror([0.1, 0.06, 1]), 0.0065))
-  // The sabaton, from its heel to its pointed toe, its sole flat on the floor
+  // the sabaton, from its heel to its pointed toe, its sole flat on the floor
   const toeOut = 7 * degree
   const heel = -0.085
   const toe = 0.27
@@ -439,7 +439,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
   const capCrown: Joint = [0.56, 1, 0]
   const fingerLames = [0.46, 0.6, 0.74, 0.88, 1.02]
   const parts = [
-    // The cap over the shoulder, its rim rolled
+    // the cap over the shoulder, its rim rolled
     dome(mirror(capCenter), mirror(capCrown), [0, 0, 1], {
       side: 0.13,
       front: 0.14,
@@ -452,7 +452,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
       // flaring out toward its rim like a bell
       swell: share => 1 + 0.15 * share ** 3,
     }),
-    // Two lames lapping down the top of the arm from under it, each a little narrower than the one above
+    // two lames lapping down the top of the arm from under it, each a little narrower than the one above
     ...[[1.44, 1.385, 0.07, 0.074], [1.4, 1.35, 0.064, 0.07]].map(([from, to, top, bottom]) => plate(mirror([0.262, from, -0.012]), mirror([0.27, to, -0.016]), [
       {
         at: 0,
@@ -527,7 +527,7 @@ function arm(outside: number, rivets: Array<Rivet>) {
       columns: 18,
       samples: [0, 0.3, 0.65, 1],
     }),
-    // The gauntlet’s cuff, flaring open over the end of the vambrace like an hourglass
+    // the gauntlet’s cuff, flaring open over the end of the vambrace like an hourglass
     plate(mirror([0.31, 0.95, 0.02]), mirror([0.313, 0.868, 0.04]), [
       {
         at: 0,

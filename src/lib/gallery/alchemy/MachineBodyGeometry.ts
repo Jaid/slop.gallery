@@ -38,7 +38,7 @@ export default class MachineBodyGeometry {
         iron.push(place(new CylinderGeometry(0.035, 0.045, feet, 16), x * (width / 2 - 0.04), feet / 2, z * (depth / 2 - 0.04)))
       }
     }
-    // Rivets round both bands, on all four sides
+    // rivets round both bands, on all four sides
     for (const y of [feet + tall / 2, height - tall / 2]) {
       for (const [length, along, face] of [[width, 'x', depth / 2 + out], [depth, 'z', width / 2 + out]] as const) {
         const count = Math.floor(length / rivetPitch)
@@ -61,9 +61,9 @@ export default class MachineBodyGeometry {
     const outlet = new CylinderGeometry(pipe + 0.035, pipe + 0.035, 0.03, 48)
     const glass = new CircleGeometry(windowRadius + 0.004, 48)
     this.brass = mergeParts([
-      // The side collar at the end of the sloping intake
+      // the side collar at the end of the sloping intake
       place(inlet.rotateZ(-Math.PI / 2), width / 2 + 0.0175, machineBody.inletY, 0),
-      // The flange where the pipe leaves through the back
+      // the flange where the pipe leaves through the back
       place(outlet.rotateX(Math.PI / 2), 0, machineBody.outletY, depth / 2 + 0.015),
       place(bezel, 0, windowY, -depth / 2 - 0.004),
     ])

@@ -99,7 +99,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     const expected = slopGallery.reachOf(`http://localhost/?${setup.search}`)
     await using gallery = await openHeadlessGallery(setup, {
       cacheDir: 'node_modules/.vite-world-reach',
-      // Room for every file the page requests, beyond the 250 entries Chrome keeps by default
+      // room for every file the page requests, beyond the 250 entries Chrome keeps by default
       initScripts: [() => performance.setResourceTimingBufferSize(10_000)],
     })
     const {page} = gallery
@@ -169,7 +169,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
     const slots = await callWebmcpTool(page, 'dump_portrait_slots') as ReadonlyArray<PortraitSlot>
     const expectedSlots = slopGallery.portraitSlots().filter(slot => expected.covers(slopGallery.wall(slot.wallId)?.room))
     expect(slots.map(slot => slot.id), label).toEqual(expectedSlots.map(slot => slot.id))
-    // The pause menu’s collection, once every work in it shows its thumbnail
+    // the pause menu’s collection, once every work in it shows its thumbnail
     await page.waitForSelector('#enter-gallery:not([disabled])')
     await page.click('#enter-gallery')
     await page.waitForFunction(() => Boolean(document.pointerLockElement))

@@ -70,7 +70,7 @@ function shell(theta: number, phi: number): Vec3 {
   const [dx, dy, dz] = [Math.sin(p) * Math.sin(t), Math.cos(p), Math.sin(p) * Math.cos(t)]
   const depth = dz > 0 ? skull.front : skull.back
   const bare = 1 / Math.hypot(dx / skull.side, dy / skull.up, dz / depth)
-  // A tall, sharp comb along the crown, from the brow over to the nape
+  // a tall, sharp comb along the crown, from the brow over to the nape
   const lateral = bare * Math.abs(dx)
   const combRise = comb.height * Math.exp(-((lateral / comb.width) ** 2)) * smoothstep(0.05, 0.6, dy)
   const ahead = Math.cos(t) > 0 && Math.abs(theta) < visorSpan
@@ -82,7 +82,7 @@ function shell(theta: number, phi: number): Vec3 {
   } else if (ahead && phi >= ventail[0] && phi < ventail[1]) {
     raise = ventailRaise
   }
-  // The visor’s prow, creased sharply down its middle, from the sight down over the breaths to the chin
+  // the visor’s prow, creased sharply down its middle, from the sight down over the breaths to the chin
   const prow = Math.cos(t) > 0 ? prowReach * smoothstep(68, 96, phi) * (1 - smoothstep(118, 146, phi)) * Math.max(0, 1 - Math.abs(Math.sin(t)) / Math.sin(58 * degree)) ** 2.2 : 0
   const reach = bare + combRise + raise + prow
   return [middle[0] + dx * reach, middle[1] + dy * reach, middle[2] + dz * reach]
@@ -90,7 +90,7 @@ function shell(theta: number, phi: number): Vec3 {
 /** Where the gorget’s surface lies at `theta` degrees round from straight ahead, the share `t` of the way down from its top to its border. */
 function gorget(theta: number, t: number): Vec3 {
   const angle = theta * degree
-  // Pointed at the front, and a little at the back
+  // pointed at the front, and a little at the back
   const point = Math.max(0, 1 - Math.abs(Math.sin(angle)) / Math.sin(46 * degree)) ** 2 * (Math.cos(angle) > 0 ? 0.03 : 0.012)
   const [top, reach] = gorgetTop
   // flaring out like a bell, the upper lame lapping over the lower one, with a rolled border along its edge
@@ -135,7 +135,7 @@ export default class Helmet extends Curio {
   readonly position: Vec3 = [lodgeSpurArmor[0], lodgeSpurArmor[1] + suitOfArmor.collar + 0.001, lodgeSpurArmor[2]]
   readonly reach = 0.4
   readonly room = 'bastion'
-  // The bell of the gorget it stands on, as wide as its border, a little forward between the points at its front and its back, and the egg of the skull over it up to the top of its comb, as a box rounded off well, whose flat sides it comes to rest on lying on its side, where a round body would roll on in circles
+  // the bell of the gorget it stands on, as wide as its border, a little forward between the points at its front and its back, and the egg of the skull over it up to the top of its comb, as a box rounded off well, whose flat sides it comes to rest on lying on its side, where a round body would roll on in circles
   readonly shapes: ReadonlyArray<CurioShape> = [{
     border: 0.01,
     height: gorgetTop[0],
@@ -172,10 +172,10 @@ export default class Helmet extends Curio {
       position: gorget(theta, t),
       values: [0, 0.08],
     }))), {extra: steelMask})
-    // The sight either side of the bar, and the breaths
+    // the sight either side of the bar, and the breaths
     const sight = [1, -1].map(side => opening(Array.from({length: 9}, (_, index) => side * (sightSpan[0] + (sightSpan[1] - sightSpan[0]) * index / 8)).toSorted((a, b) => a - b), sightBand))
     const breathHoles = breaths.map(at => opening([at - breathWidth / 2, at + breathWidth / 2], [breathBand[0], (breathBand[0] + breathBand[1]) / 2, breathBand[1]]))
-    // The visor’s pivots on either side and a rivet above and below each, and a row round the gorget inside its border
+    // the visor’s pivots on either side and a rivet above and below each, and a row round the gorget inside its border
     const skullRivets = [-1, 1].flatMap(side => [68, 88, 108].map(phi => ({
       position: shell(side * (visorSpan + 3), phi),
       normal: outward(shell, side * (visorSpan + 3), phi, 0.5),

@@ -49,7 +49,7 @@ describe('the Sienna’s wainscot', () => {
     for (const id of ['sienna-north', 'sienna-south']) {
       const wall = siennaWalls.find(candidate => candidate.id === id)!
       const [hole] = wall.holes!
-      // Along the wall toward the corner the arch stands by
+      // along the wall toward the corner the arch stands by
       const toward = Math.sign(hole.u)
       const paneling = Math.max(...siennaWainscot(wall).map(u => toward * u + panelWidth / 2))
       const corner = wall.width / 2 - wallFace

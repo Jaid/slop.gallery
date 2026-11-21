@@ -102,7 +102,7 @@ describe('the Forge’s tables', () => {
   test('the workbench’s frame stands clear of the alchemy machine’s body between its legs', () => {
     const [width, height, depth] = machineBody.size
     const [x, z] = machineBody.center
-    // The body with its bands and rivets round it
+    // the body with its bands and rivets round it
     const body = {
       min: [x - width / 2 - 0.026, 0, z - depth / 2 - 0.026],
       max: [x + width / 2 + 0.026, height, z + depth / 2 + 0.026],

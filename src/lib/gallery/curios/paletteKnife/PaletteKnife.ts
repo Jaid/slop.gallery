@@ -152,9 +152,9 @@ export default class PaletteKnife extends Curio {
   readonly position = paletteKnifeSpot
   readonly reach = 0.28
   readonly room = 'forge'
-  // Handle toward the room, the blade toward the wall and a little south
+  // handle toward the room, the blade toward the wall and a little south
   override readonly rotation: Vec3 = [0, 2, 0]
-  // The handle with its ferrule, lying along z on its belly, the blade flat on the floor a little thicker than it is, and the paint on it, the steel eight times and the paint twice as heavy as the rosewood
+  // the handle with its ferrule, lying along z on its belly, the blade flat on the floor a little thicker than it is, and the paint on it, the steel eight times and the paint twice as heavy as the rosewood
   readonly shapes: ReadonlyArray<CurioShape> = [{
     kind: 'capsule',
     length: 0.115,

@@ -98,9 +98,9 @@ test('its paving falls 1 in 20 from both walls toward its middle, then blends in
 test('beside the Lodge, the tunnel takes up all the room between the Lodge and the mouth of the western climb', () => {
   const strip = route.pieces.filter(straight).find(piece => Math.abs(piece.heading - Math.PI) < 1e-9)!
   const station = route.at(strip.from + strip.length / 2)
-  // The back of its vault 1 cm short of the face of the Lodge’s south wall
+  // the back of its vault 1 cm short of the face of the Lodge’s south wall
   expect(across(station, 1, bastionLink.width / 2 + vaultShellThickness)[1]).toBeCloseTo(lodgeSouthZ - wallFace + 0.01, 9)
-  // The faces of its walls 1 cm in front of the back of the mouth’s vault, and the back of its own 1 cm short of the face of the mouth’s wall
+  // the faces of its walls 1 cm in front of the back of the mouth’s vault, and the back of its own 1 cm short of the face of the mouth’s wall
   expect(across(station, -1, bastionLink.width / 2 - wallFace)[1]).toBeCloseTo(mouthNorthZ - vaultShellThickness - 0.01, 9)
   expect(across(station, -1, bastionLink.width / 2 + vaultShellThickness)[1]).toBeCloseTo(mouthNorthZ + wallFace - 0.01, 9)
   // It runs that wide from past the Lodge’s east wall into the turn toward the mouth.

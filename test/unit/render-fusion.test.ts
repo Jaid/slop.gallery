@@ -138,7 +138,7 @@ test('a party lasts until the ingredient’s effect is over, at least until the 
   expect(bloodEffect.duration).toBeGreaterThan(1.6)
 })
 test('the camera looks down on a result lying face up from its bottom edge, so its image stands upright', () => {
-  // In the middle of the Banquet, far from its walls
+  // in the middle of the Banquet, far from its walls
   const view = resultView({
     position: [14, 0.05, -4],
     quaternion: faceUp,

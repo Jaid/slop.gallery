@@ -55,7 +55,7 @@ export default class FrescoWallMaterial extends MeshStandardNodeMaterial {
     const grain = mx_noise_float(washed.mul(45).add(vec3(0, 0, 8.8))).toVar('frescoGrain')
     const red = mix(color(palette.deep), color(palette.light), clouds.smoothstep(0.15, 0.9)).mul(grain.mul(0.03).mul(fineDetail).add(1))
     const black = mix(color(palette.black), color(palette.blackLight), clouds)
-    // The field between the socle’s fillet and the frieze, where the bands, stalks and frames are painted
+    // the field between the socle’s fillet and the frieze, where the bands, stalks and frames are painted
     const fieldBottom = socle + fillet
     const inField = y.greaterThan(fieldBottom).and(y.lessThan(frieze[0]))
     const isSocle = y.lessThan(socle)
@@ -66,7 +66,7 @@ export default class FrescoWallMaterial extends MeshStandardNodeMaterial {
       inBand = max(inBand, inside(from(at).abs().sub(band / 2)))
       stalks = max(stalks, line(from(at), stalk / 2))
     }
-    // A line along the socle’s top, along both edges of the frieze and round every panel
+    // a line along the socle’s top, along both edges of the frieze and round every panel
     const socleFillet = inside(y.sub(socle + fillet / 2).abs().sub(fillet / 2))
     const friezeFillets = max(line(y.sub(frieze[0] + 0.03), 0.004), line(y.sub(frieze[1] - 0.03), 0.004))
     let frames: Float = float(0)

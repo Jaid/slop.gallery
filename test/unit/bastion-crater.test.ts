@@ -35,7 +35,7 @@ test('the crater breaks through the landing’s paving on the link’s axis, its
   rubble.updateMatrixWorld()
   try {
     const down = (x: number, z: number) => new Raycaster(new Vector3(x, floorY + 1, z), new Vector3(0, -1, 0))
-    // Nothing but rubble inside its edge, the depth of its middle under the floor there
+    // nothing but rubble inside its edge, the depth of its middle under the floor there
     const middle = down(centerX, centerZ)
     expect(middle.intersectObject(paving)).toHaveLength(0)
     expect(middle.intersectObject(rubble)[0].point.y).toBeCloseTo(floorY - bastionCrater.depth, 2)
@@ -43,7 +43,7 @@ test('the crater breaks through the landing’s paving on the link’s axis, its
       const out = Math.hypot(x - centerX, z - centerZ)
       const [dx, dz] = [(x - centerX) / out, (z - centerZ) / out]
       expect(down(centerX + dx * (out - 0.05), centerZ + dz * (out - 0.05)).intersectObject(paving)).toHaveLength(0)
-      // Just outside it, the paving’s floor and its slab’s underside, as everywhere else
+      // just outside it, the paving’s floor and its slab’s underside, as everywhere else
       const outside = down(centerX + dx * (out + 0.05), centerZ + dz * (out + 0.05)).intersectObject(paving).map(hit => hit.point.y)
       expect(outside[0]).toBeCloseTo(floorY, 6)
       expect(outside.at(-1)).toBeCloseTo(floorY - pavingThickness, 6)
@@ -75,7 +75,7 @@ test('the rubble meets the broken edge at the paving’s underside, and the brok
   bastionCraterGeometry.flags.computeBoundingBox()
   expect(bastionCraterGeometry.flags.boundingBox!.max.y).toBeLessThan(0.03)
 })
-// North, west and east, over the level landing
+// north, west and east, over the level landing
 for (const heading of [0, Math.PI / 2, -Math.PI / 2]) {
   test(`a player who fell into the crater walks back out, heading ${heading.toFixed(2)}`, () => {
     const world = bastionWorld()

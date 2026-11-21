@@ -131,7 +131,7 @@ test('every lane eases out over the same distance along itself, round a turn as 
   }})
   for (const [right, seamY] of profile) {
     for (const share of [0.25, 0.5, 0.75]) {
-      // Back along the lane by its own length from the end
+      // back along the lane by its own length from the end
       let along = curved.length
       while (PassageFloorOutlet.laneDistance(curved, along, right) < reach * share) {
         along -= 0.0005

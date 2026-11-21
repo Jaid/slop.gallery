@@ -214,7 +214,7 @@ class ArchCutterGeometry extends BufferGeometry {
         radial: [along / tower.radius, -depth / tower.radius] as const,
       }
     })
-    // Where the sections begin, a little before the first fillet leaves the roof
+    // where the sections begin, a little before the first fillet leaves the roof
     const split = Math.max(...walls.map(({u}) => u)) + highRadius * (1 + Math.cos(tangentAngle)) + 0.05
     const lowChain = (x: number): Array<Vertex> => [
       {position: at(x, halfWidth + overshoot, -0.1)},

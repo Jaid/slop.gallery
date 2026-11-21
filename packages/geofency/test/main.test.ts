@@ -645,7 +645,7 @@ describe('Geofence.subtract', () => {
       y2: 2,
     }])
     const left = hall.subtract(cut)!
-    // West and east of it and north and south of it between them, from the floor up, the rest under it and the column over it
+    // west and east of it and north and south of it between them, from the floor up, the rest under it and the column over it
     expect(left.boxes.map(box => box.constructor)).toEqual([SkyBox, SkyBox, SkyBox, SkyBox, ClosedBox, SkyBox])
     expect(apart(left)).toBe(true)
     for (const position of samples) {

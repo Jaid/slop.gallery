@@ -153,10 +153,10 @@ export default class SloperatorRig {
       })
     }
     const {cane, neck, pelvis, root, spine} = this
-    // His coat, round his spine: broad over the shoulders, a little waisted, and closing round his neck
+    // his coat, round his spine: broad over the shoulders, a little waisted, and closing round his neck
     const coat = new LatheGeometry([[0, 0], [0.18, 0], [0.21, 0.05], [0.205, 0.2], [0.2, 0.32], [0.215, 0.46], [0.215, 0.52], [0.175, 0.585], [0.095, 0.62], [0.068, 0.64], [0, 0.64]].map(([radius, y]) => new Vector2(radius, y)), 28)
     part(spine, 'cloth', coat.scale(1, 1, 0.62))
-    // His head on his collar, the crown of his hat 0.4 m over it
+    // his head on his collar, the crown of his hat 0.4 m over it
     neck.position.set(0, collarY, 0)
     const hat = new BowlerGeometry
     const brim = 0.4 - hat.felt.boundingBox!.max.y * hatScale
@@ -164,14 +164,14 @@ export default class SloperatorRig {
     const face = head[2] + 0.105
     part(neck, 'cloth', place(hat.felt.scale(hatScale, hatScale, hatScale), 0, brim, head[2]))
     part(neck, 'cloth', place(hat.ribbon.scale(hatScale, hatScale, hatScale), 0, brim, head[2]))
-    // His hair, as dark as his coat, down the back of his head to his nape, which is all a window behind him shows of it
+    // his hair, as dark as his coat, down the back of his head to his nape, which is all a window behind him shows of it
     part(neck, 'cloth', ball([0.099, 0.104, 0.1], 0, head[1] + 0.02, head[2] - 0.032))
     part(neck, 'skin', limb([0, 0, 0], [0, head[1] - 0.07, head[2] - 0.01], 0.05))
     part(neck, 'skin', ball([0.092, 0.118, 0.105], ...head))
     for (const side of sides) {
       part(neck, 'skin', ball([0.012, 0.03, 0.02], side * 0.092, head[1] - 0.008, head[2] - 0.005, 8))
     }
-    // The slop in front of his face, all there is to see of it, with two drips running down from it
+    // the slop in front of his face, all there is to see of it, with two drips running down from it
     part(neck, 'slime', ball([0.064, 0.078, 0.04], 0, head[1] - 0.012, face))
     part(neck, 'slime', ball([0.015, 0.034, 0.016], -0.022, head[1] - 0.088, face + 0.004, 10))
     part(neck, 'slime', ball([0.011, 0.024, 0.012], 0.026, head[1] - 0.08, face + 0.002, 10))
@@ -186,7 +186,7 @@ export default class SloperatorRig {
       bone.position.set(0, -upperArm, 0)
       this.upperArms[side].add(bone)
       part(bone, 'cloth', limb([0, 0, 0], [0, -forearm, 0], sleeve))
-      // His hand, flat and long, a little under the line of his forearm
+      // his hand, flat and long, a little under the line of his forearm
       part(bone, 'skin', ball([0.044, 0.062, 0.028], 0, -forearm - hand, -0.014))
       return bone
     })
@@ -200,7 +200,7 @@ export default class SloperatorRig {
       const bone = new Bone
       bone.position.set(0, -thigh, 0)
       this.thighs[side].add(bone)
-      // Tucked a little under and in front of the end of his thigh, which reads as a bent knee
+      // tucked a little under and in front of the end of his thigh, which reads as a bent knee
       part(bone, 'cloth', limb([0, -0.025, 0.02], [0, -shin, 0], 0.06))
       return bone
     })

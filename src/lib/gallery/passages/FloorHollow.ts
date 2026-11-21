@@ -163,7 +163,7 @@ export default class FloorHollow {
   hollowAt(x: number, z: number) {
     const {center: [cx, cz], into: [ix, iz]} = this.outlet
     const {beyond, depth, reach} = this.shape
-    // How far out in front of the wall’s center line, and how far to the right of the opening’s middle
+    // how far out in front of the wall’s center line, and how far to the right of the opening’s middle
     const out = -((x - cx) * ix + (z - cz) * iz)
     const across = (x - cx) * this.right[0] + (z - cz) * this.right[1]
     return depth * bump(across / this.wide(across < 0 ? 0 : 1, out)) * bump((out + beyond) / reach)

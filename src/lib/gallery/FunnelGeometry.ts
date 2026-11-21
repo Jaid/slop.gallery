@@ -37,16 +37,16 @@ export default class FunnelGeometry {
     const outside = offsetOutline(inside, thickness)
     const [rimRadius, rimY] = inside[0]
     const parts: Array<BufferGeometry> = [
-      // Down the inside from the rim, so it faces up and in
+      // down the inside from the rim, so it faces up and in
       lathe(inside),
-      // Up the outside to the rim, so it faces out and down, from round the lower end of the throat
+      // up the outside to the rim, so it faces out and down, from round the lower end of the throat
       lathe([inside.at(-1)!, ...outside.toReversed()]),
     ]
     if (rim === 'rolled') {
       const bead = new TorusGeometry(rimRadius + thickness / 2, thickness * 1.2, 8, segments)
       parts.push(bead.rotateX(Math.PI / 2).translate(0, rimY, 0))
     } else {
-      // Over the top of the outside, out flat and back in under itself
+      // over the top of the outside, out flat and back in under itself
       parts.push(lathe([[rimRadius + rim, rimY - thickness], [rimRadius + rim, rimY], [rimRadius, rimY]]), lathe([outside[0], [rimRadius + rim, rimY - thickness]]))
     }
     this.metal = mergeParts(parts)

@@ -114,7 +114,7 @@ export default class CannonFx {
     }
     this.blast.uniforms.clock.value = since
     if (barrel) {
-      // Squashing as it gathers itself, then stretching as it goes off and wobbling back
+      // squashing as it gathers itself, then stretching as it goes off and wobbling back
       const wobble = fired ? (since > 3 ? 0 : Math.exp(-since * squash.damping) * Math.cos(since * squash.wobble * Math.PI * 2) * squash.stretch) : -squash.gather * gathering * gathering
       barrel.scale.set(1 - wobble / 2, 1 + wobble, 1 - wobble / 2)
       const kick = since < 0.04 ? since / 0.04 : Math.exp(-(since - 0.04) / recoil[1] * 4)

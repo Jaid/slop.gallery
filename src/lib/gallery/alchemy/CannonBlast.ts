@@ -40,7 +40,7 @@ const sparkColor = rgb('#ffb347')
 /** A direction within `spread` radians of the barrel’s axis, `around` radians round it. */
 function within(spread: number, around: number): Vec3 {
   const [ax, ay, az] = alchemyCannon.axis
-  // Square to the axis: across the barrel, level, and the one up from it
+  // square to the axis: across the barrel, level, and the one up from it
   const across: Vec3 = [1, 0, 0]
   const up: Vec3 = [ay * across[2] - az * across[1], az * across[0] - ax * across[2], ax * across[1] - ay * across[0]]
   const [along, out] = [Math.cos(spread), Math.sin(spread)]
@@ -110,7 +110,7 @@ export default class CannonBlast extends EffectSprites {
     const age = clock.sub(delay)
     const since = age.max(0)
     const progress = since.div(life).clamp(0, 1)
-    // Thrown out along its way and slowed by the air, the smoke drifting up and the sparks falling
+    // thrown out along its way and slowed by the air, the smoke drifting up and the sparks falling
     const travelled = motion.w.mul(float(1).sub(exp(drag.negate().mul(since)))).div(drag)
     const center = motion.xyz.mul(travelled).add(vec3(0, puff.mul(0.3).sub(spark.mul(4.9)).mul(since.mul(since)), 0))
     // The flash bursts out to its size at once, a puff billows up and shrinks away again toward its end.
@@ -124,12 +124,12 @@ export default class CannonBlast extends EffectSprites {
     const point = uv().sub(0.5).mul(2)
     const distance = point.length()
     const angle = atan(point.y, point.x)
-    // A star of eight spikes, a lumpy cloud and a round spark
+    // a star of eight spikes, a lumpy cloud and a round spark
     const star = float(0.5).add(sin(angle.mul(8).add(seed)).mul(0.5).add(0.5).pow(3).mul(0.48)).sub(distance)
     const cloud = float(0.8).add(sin(angle.mul(5).add(seed.mul(Math.PI * 2))).mul(0.08)).add(sin(angle.mul(9).add(seed.mul(11))).mul(0.04)).sub(distance)
     const dot = float(0.6).sub(distance)
     const inside = flash.mul(star).add(puff.mul(cloud)).add(spark.mul(dot))
-    // The puff lit from up and to one side, like a cartoon cloud
+    // the puff lit from up and to one side, like a cartoon cloud
     const lit = coverage(float(0.62).sub(point.sub(vec2(-0.16, 0.2)).length()))
     const smoke = mix(puffShade, puffLight, lit)
     material.colorNode = flashColor.mul(flash.mul(3)).add(smoke.mul(puff)).add(sparkColor.mul(spark.mul(4)))

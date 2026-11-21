@@ -776,7 +776,7 @@ test('a flying teleport goes anywhere upright, and a walking one lands where the
   world.createCollider(RAPIER.ColliderDesc.cuboid(1, 2, 1).setTranslation(4, 1, 0))
   tick(motor, {crouch: true}, 30)
   expect(motor.crouching).toBe(true)
-  // Before any step flew
+  // before any step flew
   expect(motor.teleport([4, 0.5, 0], [0, 0.04, 0], true)).toEqual([4, 0.5, 0])
   expect(motor.flying).toBe(true)
   expect(motor.crouching).toBe(false)
@@ -788,7 +788,7 @@ test('a flying teleport goes anywhere upright, and a walking one lands where the
   })
   tick(motor, {}, 10, true, true)
   expect(motor.body.translation().y).toBe(0.5)
-  // Still flying by default
+  // still flying by default
   motor.teleport([4, -3, 0])
   expect(motor.body.translation().y).toBe(-3)
   const before = motor.getState()

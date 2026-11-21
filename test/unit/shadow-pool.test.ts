@@ -167,7 +167,7 @@ test('a move between fences names the lamps it switches on and off', () => {
     })
     scene.add(stairLamp)
   }
-  // Lit in the Oculus and in a part of the Lodge alone
+  // lit in the Oculus and in a part of the Lodge alone
   const lantern = new PointLight
   lantern.name = 'gate-lantern'
   registerLamp(lantern, {

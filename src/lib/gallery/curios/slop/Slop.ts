@@ -70,10 +70,10 @@ export default class Slop extends Curio {
 
   createModel() {
     const rows = Array.from({length: down}, (_ignoredRow, row) => {
-      // From just off its top down to its rim on the seat
+      // from just off its top down to its rim on the seat
       const v = 0.04 + (Math.PI / 2 - 0.04) * row / (down - 1)
       const low = Math.sin(v) ** 2
-      // A mound that runs out into its foot instead of meeting the seat upright
+      // a mound that runs out into its foot instead of meeting the seat upright
       const y = height * Math.cos(v) ** 1.6
       const reach = radius * Math.sin(v) ** 0.8 + foot * Math.exp(-((y / 0.012) ** 2))
       return Array.from({length: around}, (_ignoredColumn, column): LatticePoint => {

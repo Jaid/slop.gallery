@@ -34,7 +34,7 @@ describe('the Forge', () => {
     expect(vesperRoom.size).toEqual(banquet.size)
     expect(vesperRoom.size).toEqual(vesper.size)
     expect([roomOrigins.vesper[0], roomOrigins.vesper[2]]).toEqual([...vesperRoom.center])
-    // Against the Lobby’s west extension, with the Vesper south of it
+    // against the Lobby’s west extension, with the Vesper south of it
     expect(room.center[0] + room.size[0] / 2).toBe(-lobby.width / 2)
     expect(room.center[1] + room.size[1] / 2).toBe(vesperRoom.center[1] - vesperRoom.size[1] / 2)
     const [x, z] = room.center
@@ -120,7 +120,7 @@ describe('the Forge’s vestibule', () => {
     expect(isRing(ring)).toBe(true)
     expect(isRing(north)).toBe(false)
     expect([ring.curveRadius, ring.height, ring.room, ring.sticky]).toEqual([radius, north.height, 'forge', false])
-    // All round its center at its radius, facing it
+    // all round its center at its radius, facing it
     for (let u = -ring.width / 2; u <= ring.width / 2; u += 0.5) {
       const [px, , pz] = wallPosition(ring, u, 0, 0)
       const [fx, , fz] = wallPosition(ring, u, 0, 1)
@@ -172,7 +172,7 @@ describe('the Forge’s vestibule', () => {
       expect(floorHeight([...position])).toBe(0)
       expect(insideGallery([...position])).toBe(true)
     }
-    // Under the west arch, outside the wall’s center line, out to where the approach ends, as wide as it
+    // under the west arch, outside the wall’s center line, out to where the approach ends, as wide as it
     for (const along of [radius - 0.01, radius]) {
       expect(forgeVestibuleFloor(x - along, z + westHalf - 0.01)).toBe(0)
       expect(forgeVestibuleFloor(x - along, z - westHalf + 0.01)).toBe(0)
@@ -240,13 +240,13 @@ describe('the Forge’s vestibule', () => {
           const [dx, dz] = [point.x - x, point.z - z]
           const along = dx * out[0] + dz * out[1]
           const across = dz * out[0] - dx * out[1]
-          // Never in front of the wall’s center line or past the plane, nor wider or higher than what it opens onto
+          // never in front of the wall’s center line or past the plane, nor wider or higher than what it opens onto
           expect(Math.hypot(dx, dz)).toBeGreaterThan(radius - 1e-6)
           expect(along).toBeLessThan(radius + 1e-6)
           expect(Math.abs(across)).toBeLessThan(archHalf + 1e-6)
           expect(point.y).toBeGreaterThanOrEqual(-1e-9)
           expect(point.y).toBeLessThan(climbArch.height + 1e-6)
-          // Facing into the opening: straight across it below where the head springs, toward the middle of the head above, and never along it
+          // facing into the opening: straight across it below where the head springs, toward the middle of the head above, and never along it
           const sideways = facing.z * out[0] - facing.x * out[1]
           const springY = climbArch.height - archHalf
           expect(sideways * -across + facing.y * (Math.min(point.y, springY) - point.y)).toBeGreaterThan(0)

@@ -144,7 +144,7 @@ describe('connected Oculus railings', () => {
         expect(anchor.ground[1]).toBe(ramp.endY)
       }
     }
-    // Out along the bridges, past their rails’ climb from the deck’s fence, and on the ramps
+    // out along the bridges, past their rails’ climb from the deck’s fence, and on the ramps
     const full = anchors.filter(({ground}) => Math.abs(ground[0] - tower.x) > tower.radius + 0.1 + bridgeRailRise)
     expect(full.length).toBeGreaterThan(40)
     for (const anchor of full) {
@@ -195,11 +195,11 @@ describe('connected Oculus railings', () => {
       }
       expect(world.castRay(new RAPIER.Ray(new Vector3(tower.x, ramp.endY + 0.4, ramp.endZ - 0.4), new Vector3(0, 0, 1)), 1.5, true)).toBeNull()
       expect(world.castRay(new RAPIER.Ray(new Vector3(tower.x, ramp.endY + 0.5, tower.z), new Vector3(0, 0, 1)), tower.radius + 0.5, true)).not.toBeNull()
-      // Along both bridges, from the middle of the deck to their walls, and across them from rail to rail
+      // along both bridges, from the middle of the deck to their walls, and across them from rail to rail
       for (const {wallDistance} of towerBridges) {
         for (const side of [-1, 1]) {
           expect(world.castRay(new RAPIER.Ray(new Vector3(tower.x, ramp.endY + 0.6, tower.z), new Vector3(side, 0, 0)), wallDistance - 0.1, true)).toBeNull()
-          // At the height of the handrail, which runs 12 cm in from the bridge’s edge
+          // at the height of the handrail, which runs 12 cm in from the bridge’s edge
           const x = tower.x + side * (tower.radius + 2)
           const across = world.castRay(new RAPIER.Ray(new Vector3(x, towerFloorHeight(x, tower.z)! + towerBridge.railHeight, tower.z), new Vector3(0, 0, 1)), 2, true)
           expect(across!.timeOfImpact).toBeGreaterThan(towerBridge.width / 2 - 0.12 - 0.05)

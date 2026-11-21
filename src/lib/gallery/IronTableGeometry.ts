@@ -57,12 +57,12 @@ export default class IronTableGeometry {
     const frameLength = length - overhang * 2
     const frameDepth = frameZ[1] - frameZ[0]
     const frameMiddle = (frameZ[0] + frameZ[1]) / 2
-    // The band along the front and the back, the full length of the frame, and across the ends between them
+    // the band along the front and the back, the full length of the frame, and across the ends between them
     const parts: Array<BufferGeometry> = Array.from(frameZ, (z, index) => bar([frameLength, apronDepth, apronThickness], 0, apronY, z + (index ? -1 : 1) * apronThickness / 2))
     for (const side of [-1, 1]) {
       parts.push(bar([apronThickness, apronDepth, frameDepth - apronThickness * 2], side * (frameLength / 2 - apronThickness / 2), apronY, frameMiddle))
     }
-    // A cross band at every pair of legs between the ends, carrying the slab in the middle
+    // a cross band at every pair of legs between the ends, carrying the slab in the middle
     for (const x of legs.slice(1, -1)) {
       parts.push(bar([apronThickness, apronDepth, frameDepth - apronThickness * 2], x, apronY, frameMiddle))
     }
@@ -74,10 +74,10 @@ export default class IronTableGeometry {
           bar([leg + 0.03, footPlate, leg + 0.03], x, footPlate / 2, z),
         )
       }
-      // The stretcher across the pair, between the legs’ inner faces
+      // the stretcher across the pair, between the legs’ inner faces
       parts.push(bar([stretcherSide, stretcherSide, legZ[1] - legZ[0] - leg], x, stretcherY, (legZ[0] + legZ[1]) / 2))
     }
-    // The stretchers along the front and the back, between the end legs’ inner faces
+    // the stretchers along the front and the back, between the end legs’ inner faces
     const reach = legs.at(-1)! - legs[0]
     for (const z of legZ) {
       parts.push(bar([reach - leg, stretcherSide, stretcherSide], (legs[0] + legs.at(-1)!) / 2, stretcherY, z))

@@ -272,7 +272,7 @@ function floorContact(wall: Omit<Wall, 'id'>, at: (u: number) => Point) {
 const flatWall: Omit<Wall, 'id'> = {
   room: 'bastion',
   center: [cistern.center[0], 0, wallZ],
-  // Facing north, into the cistern
+  // facing north, into the cistern
   rotation: Math.PI,
   width: radius * 2,
   height: cistern.crown,
@@ -283,7 +283,7 @@ const flatWall: Omit<Wall, 'id'> = {
 const roundWall: Omit<Wall, 'id'> = {
   room: 'bastion',
   center: [cistern.center[0], 0, wallZ - radius],
-  // Facing south, toward the middle of the flat wall, which it turns round
+  // facing south, toward the middle of the flat wall, which it turns round
   rotation: 0,
   width: Math.PI * radius,
   curveRadius: radius,

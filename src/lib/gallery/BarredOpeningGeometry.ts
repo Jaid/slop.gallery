@@ -125,12 +125,12 @@ export function openingReveal(wall: Pick<Wall, 'center' | 'curveRadius' | 'rotat
   const high = Math.max(openingTop(hole, hole.u), openingTop(back, back.u)) + margin
   const frame = [new Vector2(left, low), new Vector2(right, low), new Vector2(right, high), new Vector2(left, high)]
   const solid = new FacetedSolid
-  // Its faces at the wall’s center line and at the back, the frame round the opening and round its back
+  // its faces at the wall’s center line and at the back, the frame round the opening and round its back
   for (const [z, opening] of [[0, front], [-depth, rear]] as const) {
     const corners = [...frame, ...opening]
     solid.add(ShapeUtils.triangulateShape(frame, [opening]).map(([a, b, c]): Triangle => [a, b, c].map(index => [corners[index].x, corners[index].y, z] as const) as unknown as Triangle), new Vector3(0, 0, z ? -1 : 1))
   }
-  // The frame’s sides facing away from its middle, and the opening’s, lofted from its outline on the wall to its back, facing into it
+  // the frame’s sides facing away from its middle, and the opening’s, lofted from its outline on the wall to its back, facing into it
   const sides = [
     [frame.map(corner => [corner, corner] as const), centroid(frame), -1],
     [front.map((corner, i) => [corner, rear[i]] as const), centroid(front), 1],

@@ -86,7 +86,7 @@ describe('boolean architecture', () => {
               const opening = wall.holes!.find(candidate => insideOpening(candidate, u, y))
               const solid = Math.abs(u) <= wall.width / 2 && !opening
               for (const side of [-1, 1]) {
-                // Through the wall where it stands at u, which on a curved wall runs toward its curve’s center
+                // through the wall where it stands at u, which on a curved wall runs toward its curve’s center
                 const [x, z] = bent(wall, u, side)
                 const [toX, toZ] = bent(wall, u, -side)
                 const origin = new Vector3(x, y + (wall.slope ?? 0) * u, z)
@@ -207,7 +207,7 @@ describe('boolean architecture', () => {
                   continue
                 }
                 if (hole.profile === 'round') {
-                  // Across a round opening, as far as its circle reaches at that height
+                  // across a round opening, as far as its circle reaches at that height
                   const {radius, center} = openingCircle(hole)
                   expect(Math.abs(hits[0].distance - Math.sqrt(radius ** 2 - (y - center) ** 2))).toBeLessThan(0.002)
                   continue

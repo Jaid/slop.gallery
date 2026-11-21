@@ -89,7 +89,7 @@ test('Rapier still runs from the file', async () => {
     },
   })
   const {default: fall} = await import(pathToFileURL(join(folder, 'dist/fall.js')).href) as {default: () => Promise<number>}
-  // A second of free fall
+  // a second of free fall
   expect(await fall()).toBeCloseTo(-9.81 / 2, 0)
 }, 60_000)
 test.each(['rapier2d-simd-compat', 'rapier3d'])('only a compat module without the expected Wasm fails the build: %s', async flavor => {

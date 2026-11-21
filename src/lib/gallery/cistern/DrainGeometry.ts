@@ -42,7 +42,7 @@ export default class DrainGeometry {
       box([frame, iron, inner[1]], [x - width / 2 + frame / 2, top, z]),
       box([frame, iron, inner[1]], [x + width / 2 - frame / 2, top, z]),
       ...Array.from({length: count}, (_, index) => box([bar, iron, inner[1]], [x - inner[0] / 2 + inner[0] * (index + 1) / (count + 1), top, z])),
-      // Two flat bars across under them, carrying them
+      // two flat bars across under them, carrying them
       ...[-1, 1].map(side => box([inner[0], iron / 2, frame / 2], [x, -iron * 1.25, z + side * inner[1] / 4])),
     ])
     this.sump = box([width, bottom, depth], [x, -sumpDepth - bottom / 2, z])

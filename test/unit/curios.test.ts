@@ -174,7 +174,7 @@ describe('the curios', () => {
       const levels = finishPart.geometry.getAttribute('fillLevel')
       expect(levels.count).toBe(finishPart.geometry.getAttribute('position').count)
       const filled = [...new Set(levels.array)].filter(level => level < 1).toSorted((a, b) => a - b)
-      // One level for either bottle: the lying one’s within its depth, the tipped one’s higher
+      // one level for either bottle: the lying one’s within its depth, the tipped one’s higher
       expect(filled).toHaveLength(2)
       expect(filled[0]).toBeGreaterThan(0.008)
       expect(filled[0]).toBeLessThan(0.035)

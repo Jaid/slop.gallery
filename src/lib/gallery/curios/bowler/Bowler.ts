@@ -16,7 +16,7 @@ export default class Bowler extends Curio {
   readonly position: Vec3 = [machineBody.center[0], machineBody.size[1] + 0.002, machineBody.center[1] - 0.08]
   readonly reach = 0.4
   readonly room = 'forge'
-  // The brim it rests on, as wide as it is along the oval, and the rounded crown on it
+  // the brim it rests on, as wide as it is along the oval, and the rounded crown on it
   readonly shapes: ReadonlyArray<CurioShape> = [{
     border: 0.008,
     height: 0.022,

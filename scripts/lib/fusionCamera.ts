@@ -152,7 +152,7 @@ export function handheld(shot: Shot, time: number, timeline: Pick<Timeline, 'eme
     const upward = Math.tan(tremble * (0.6 * Math.sin(2 * Math.PI * 13 * since + 3 * at) + 0.4 * Math.sin(2 * Math.PI * 23 * since + at))) * distance
     target = add(target, add(scale(right, sideways), scale(up, upward)))
   }
-  // A slight sway, as if held by hand
+  // a slight sway, as if held by hand
   const sway = (frequency: number, phase: number) => 0.6 * Math.sin(2 * Math.PI * frequency * time + phase) + 0.4 * Math.sin(2 * Math.PI * frequency * 2.3 * time + phase * 1.7)
   position = add(position, scale([sway(0.21, 0.3), sway(0.17, 1.9), sway(0.26, 4.1)], 0.012))
   target = add(target, scale([sway(0.19, 2.2), sway(0.23, 0.7), sway(0.15, 5.3)], 0.008))
@@ -168,7 +168,7 @@ export function holdPoint({position, roll, target}: Shot): Vec3 {
   const look = normalize(sub(target, position))
   const right = normalize(cross(look, [0, 1, 0]))
   const up = cross(right, look)
-  // The camera’s up as rolled, like the game’s YXZ Euler turns it about the view
+  // the camera’s up as rolled, like the game’s YXZ Euler turns it about the view
   const tilted = add(scale(up, Math.cos(radians(roll))), scale(right, -Math.sin(radians(roll))))
   const tilt = radians(15)
   return add(add(position, scale(look, Math.cos(tilt) * 0.55)), scale(tilted, -Math.sin(tilt) * 0.55))

@@ -88,7 +88,7 @@ test('the trough under the hatch runs on down the middle of the tunnel through t
 })
 test('the spill steepens no lane by more than a gentle ramp on top of the tunnel’s own climb to the gate', () => {
   for (const right of [-1.7, -1.5, -1.2, -0.8, -0.4, 0, 0.4, 0.8, 1.2, 1.7]) {
-    // In steps of 10 cm along the lane itself, back from the gate past where the blend starts
+    // in steps of 10 cm along the lane itself, back from the gate past where the blend starts
     let previous: readonly [x: number, z: number, spill: number] | undefined
     for (let along = route.length; along > bastionLink.floorOutlet!.from - 1; along -= 0.002) {
       const station = route.at(along)

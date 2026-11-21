@@ -43,11 +43,11 @@ test('every curio and the Slop he leaves standing in the Exhibition rest on its 
     surface: 0,
     yaw: glass.yaw,
   }, slopRandom(1, glass.id))
-  // Up the ramp from the Slop toward Moonfall, a little under two meters apart, either side of its middle by turns, the hatchet laid on its side
+  // up the ramp from the Slop toward Moonfall, a little under two meters apart, either side of its middle by turns, the hatchet laid on its side
   const placed = [
     slop,
     onRamp(pumpkin, [-1.68, -9.08], 0.4),
-    // Lying on its cheeks
+    // lying on its cheeks
     onRamp(hatchet, [-3.6, -8.03], 1, [-Math.PI / 2, 0, 0], 0.023),
     onRamp(helmet, [-3.4, -5.85], 2),
     onRamp(paintingSet, [-5.32, -4.8], 0.6),

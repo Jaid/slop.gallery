@@ -118,7 +118,7 @@ export function wallDressingSpans(wall: Pick<Wall, 'holes' | 'width'>, padding: 
   return spans
 }
 
-/** The Banquet’s north wall, which the Salon’s south wall backs onto */
+/** the Banquet’s north wall, which the Salon’s south wall backs onto */
 export const salonSouthZ = salon.center[1] + salon.size[1] / 2
 
 export default salon

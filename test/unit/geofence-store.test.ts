@@ -215,7 +215,7 @@ test('a fence’s enter listener hears every crossing into it, a room’s or not
   startGeofences(places.alley)
   probeGeofences(places.alley, still)
   expect(crossings).toEqual([])
-  // Back out into the connecting tunnel and in again, all of it in the Bastion
+  // back out into the connecting tunnel and in again, all of it in the Bastion
   probeGeofences(places.link, [0, 0, 3])
   expect(fences()).toEqual(['bastion'])
   expect(crossings).toEqual([])

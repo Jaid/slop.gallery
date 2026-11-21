@@ -41,7 +41,7 @@ export default class PlankTableGeometry {
     const boardWidth = width / boards
     for (let course = 0; course < boards; course++) {
       const x = -width / 2 + boardWidth * (course + 0.5)
-      // Where along the course its planks butt against each other, from its north end on
+      // where along the course its planks butt against each other, from its north end on
       const joints: Array<number> = []
       let at = -length / 2 + plankLengths[0] * random()
       while (length / 2 - at > plankLengths[0]) {
@@ -56,7 +56,7 @@ export default class PlankTableGeometry {
     }
     const underTop = height - top
     const apronY = underTop - apronDepth / 2
-    // The aprons along both sides and across both ends, their faces where the top’s overhang ends
+    // the aprons along both sides and across both ends, their faces where the top’s overhang ends
     for (const side of [-1, 1]) {
       parts.push(
         piece([apronThickness, apronDepth, length - overhang * 2], alongZ, [side * (width / 2 - overhang - apronThickness / 2), apronY, 0]),

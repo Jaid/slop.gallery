@@ -121,7 +121,7 @@ export default class Hatchet extends Curio {
   readonly room = 'lodge'
   // Turn the head downward while leaving the blade facing the outside of the hearth.
   override readonly rotation: Vec3 = [Math.PI, 0, 0]
-  // The haft, the head’s thick cheeks round the eye and its thin blade flaring out toward the edge, the steel ten times as heavy as the ash
+  // the haft, the head’s thick cheeks round the eye and its thin blade flaring out toward the edge, the steel ten times as heavy as the ash
   readonly shapes: ReadonlyArray<CurioShape> = [{
     kind: 'capsule',
     length: 0.47,

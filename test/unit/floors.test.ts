@@ -182,7 +182,7 @@ describe('convex floor slabs', () => {
   })
   // The player’s capsule sank into a single hull over all of the Corridor’s long hall.
   test('cut long polygons across into hulls of a bounded reach that still cover them', () => {
-    // The Corridor’s long hall, an askew strip and a polygon small enough to stay whole
+    // the Corridor’s long hall, an askew strip and a polygon small enough to stay whole
     for (const polygon of [corridorPassage.floors.find(floor => polygonBounds(floor).size[1] > slabHullReach)!, [[0, 0], [40, 30], [37, 34], [-3, 4]], regular(8)] as const) {
       const hulls = slabHulls(polygon, -0.24, 0).map(footprint)
       const {size} = polygonBounds(polygon)

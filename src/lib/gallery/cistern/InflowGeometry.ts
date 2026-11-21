@@ -77,14 +77,14 @@ export default class InflowGeometry {
     const collar = along(new CylinderGeometry(radius + 0.045, radius + 0.055, 0.03, 28), normal)
     const seat = leaves.clone().addScaledVector(normal, 0.005)
     collar.translate(seat.x, seat.y, seat.z)
-    // The spout’s bore, open down at its mouth: its stone-dark inside facing in, the iron round it and the pipe’s end deep in it
+    // the spout’s bore, open down at its mouth: its stone-dark inside facing in, the iron round it and the pipe’s end deep in it
     const sleeve = inward(new CylinderGeometry(bore, bore, mouthDepth, 20, 1, true))
     sleeve.translate(mouth.x, mouth.y + mouthDepth / 2, mouth.z)
     const lip = new RingGeometry(bore, radius, 24)
     lip.rotateX(Math.PI / 2).translate(mouth.x, mouth.y, mouth.z)
     const end = new CircleGeometry(bore, 20)
     end.rotateX(Math.PI / 2).translate(mouth.x, mouth.y + mouthDepth, mouth.z)
-    // The hanger: a clamp round the pipe, and a rod from it straight up to a plate on the dome
+    // the hanger: a clamp round the pipe, and a rod from it straight up to a plate on the dome
     const held = leaves.clone().addScaledVector(run, hangerAt)
     const ring = new TorusGeometry(radius + 0.012, 0.012, 8, 28)
     const clamp = along(ring.rotateX(Math.PI / 2), run)

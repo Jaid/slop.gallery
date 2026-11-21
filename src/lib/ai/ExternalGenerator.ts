@@ -30,7 +30,7 @@ export default abstract class {
     }
     this.headers = headers
     if (globalThis.window !== globalThis) {
-      // These only work outside of a browser context because of CORS restrictions
+      // These only work outside of a browser context because of CORS restrictions.
       Object.assign(headers, {
         'X-OpenRouter-Cache': 'true',
         'X-OpenRouter-Cache-TTL': '86400',

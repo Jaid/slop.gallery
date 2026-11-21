@@ -27,7 +27,7 @@ const rotation = () => interleavedGradientNoise(screenCoordinate.xy).mul(Math.PI
  */
 function pointShadowSampler({bd3D, depthTexture, distance, shadow}: PointShadowFilterInputs, renderer: Renderer) {
   const spread = reference('radius', 'float', shadow).div(reference('mapSize', 'vec2', shadow).x).toConst()
-  // A tangent frame around the direction to offset the samples in
+  // a tangent frame around the direction to offset the samples in
   const absolute = abs(bd3D)
   const tangent = normalize(cross(bd3D, absolute.x.greaterThan(absolute.z).select(vec3(0, 1, 0), vec3(1, 0, 0)))).toConst()
   const bitangent = cross(bd3D, tangent).toConst()

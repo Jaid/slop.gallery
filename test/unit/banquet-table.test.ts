@@ -15,10 +15,10 @@ describe('the Banquet’s table', () => {
     for (const {position: [x]} of banquetLedSlots) {
       expect(x).toBe(banquet.center[0])
     }
-    // Room to walk round it on every side, and a doorway’s width clear of the walls
+    // room to walk round it on every side, and a doorway’s width clear of the walls
     expect(banquet.size[0] / 2 - banquetTable.width / 2).toBeGreaterThan(4)
     expect(banquet.size[1] / 2 - banquetTable.length / 2).toBeGreaterThan(4)
-    // Well clear of where visitors arrive in the room, which is in its frame like the table
+    // well clear of where visitors arrive in the room, which is in its frame like the table
     const [, , spawnZ] = banquetSpawns[''].position
     expect(Math.abs(spawnZ) - banquetTable.length / 2).toBeGreaterThan(1)
   })
@@ -51,7 +51,7 @@ describe('the Banquet’s table', () => {
       expect(leg.name).toBe('banquet-table-leg')
       expect(leg.center[1] - leg.size[1] / 2).toBeCloseTo(0, 9)
       expect(leg.center[1] + leg.size[1] / 2).toBeCloseTo(top.center[1] - top.size[1] / 2, 9)
-      // Inside the top’s outline, behind the aprons’ faces
+      // inside the top’s outline, behind the aprons’ faces
       expect(Math.abs(leg.center[0]) + leg.size[0] / 2).toBeLessThan(banquetTable.width / 2 - banquetTable.overhang)
       expect(Math.abs(leg.center[2]) + leg.size[2] / 2).toBeLessThan(banquetTable.length / 2 - banquetTable.overhang)
     }

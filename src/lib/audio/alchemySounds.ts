@@ -57,7 +57,7 @@ export function alchemyBrewVoices(duration: number, variation = 0): Array<Voice>
       endFrequency: 520,
     }, {attack: duration * 0.5}),
   ]
-  // Bubbles welling up, ever more often as it boils, at intervals of their own
+  // bubbles welling up, ever more often as it boils, at intervals of their own
   const gaps = [0.31, 0.23, 0.37, 0.17, 0.27, 0.13, 0.21, 0.11, 0.19, 0.09]
   let at = 0.25
   for (const [index, gap] of gaps.entries()) {

@@ -125,12 +125,12 @@ export default function AlchemyMachine() {
     const iron = new WroughtIronMaterial
     const benchIron = new WroughtIronMaterial(ironTableFinish)
     const bronze = new BronzeMaterial({environment: studioEnvironment})
-    // The swell running up the barrel as it gathers itself: wider round its axis where it is, but not out along the trunnions
+    // the swell running up the barrel as it gathers itself: wider round its axis where it is, but not out along the trunnions
     const {at, size} = fx.swell
     const around = positionLocal.xz.length()
     const swell = exp(positionLocal.y.sub(at).div(0.13).pow(2).negate()).mul(size).mul(smoothstep(0.34, 0.3, around)).add(1)
     bronze.positionNode = positionLocal.mul(vec3(swell, 1, swell))
-    // Smoky glass, lit from inside by the work going on behind it
+    // smoky glass, lit from inside by the work going on behind it
     const window = new MeshStandardNodeMaterial({
       color: '#1d130c',
       roughness: 0.15,

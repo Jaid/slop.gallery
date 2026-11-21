@@ -140,7 +140,7 @@ test('two balls striking each other count once, and only registered bodies count
 })
 test('a box dropped askew strikes with a corner first and lands flat at last, while the points it keeps touching stay quiet', () => {
   const {world, contacts, sampler, step} = physics()
-  // Lying on its back, but tipped over two of its sides, so one corner hangs lowest
+  // lying on its back, but tipped over two of its sides, so one corner hangs lowest
   const sideways = {
     x: 0,
     y: 0,

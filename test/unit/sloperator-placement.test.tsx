@@ -152,7 +152,7 @@ afterEach(async () => {
   for (const id of ['lobby_east_bench', 'salon_ottoman'] as const) {
     setDown(id)
   }
-  // Out of every fence first, so stepping places him nowhere
+  // out of every fence first, so stepping places him nowhere
   await act(async () => {
     useGeofences.setState(useGeofences.getInitialState(), true)
     useSloperator.setState(useSloperator.getInitialState(), true)
@@ -223,7 +223,7 @@ describe('where he turns up', () => {
       const {detection, placement} = place(id)
       expect(detection).toBe('moved')
       expect(placement.pose).toBe('sit')
-      // Where he sits in the seat’s frame, carried over to where the seat stands now
+      // where he sits in the seat’s frame, carried over to where the seat stands now
       const {furniture, position, yaw} = seated(id)
       const now = bodyOf(id).translation()
       const relative = new Vector3(position[0] - furniture.position[0], 0, position[2] - furniture.position[2])
@@ -234,7 +234,7 @@ describe('where he turns up', () => {
     }
   })
   test('with his seat gone farther, he stands where he would have sat, facing as he would have', () => {
-    // Out from under him toward his back, and off along the floor
+    // out from under him toward his back, and off along the floor
     setDown('lobby_east_bench', {offset: [0, 0, 1.6]})
     setDown('salon_ottoman', {
       offset: [3, 0, 0],
@@ -278,7 +278,7 @@ describe('where he turns up', () => {
     expect(place('salon_ottoman').placement.pose).toBe('stand')
   })
   test('his seat strayed too far to sit on it, yet still under him, keeps him away, since he would stand in it: it moved', () => {
-    // Along its length, half a meter past where he may follow it
+    // along its length, half a meter past where he may follow it
     setDown('lobby_east_bench', {offset: [0.5, 0, 0]})
     step(1.5)
     expect(seatOn(bench, {
@@ -296,12 +296,12 @@ describe('where he turns up', () => {
       result: 'failure',
     } as const
     for (const {id, position} of [bench, ottoman, armchair]) {
-      // A thing left on his seat where he sits
+      // a thing left on his seat where he sits
       const removeOnSeat = obstacle([position[0], position[1] + seated(id).seat.height, position[2]], [0.1, 0.1, 0.1])
       step(0.1)
       expect(spawn(id)).toEqual(blocked)
       removeOnSeat()
-      // A thing standing on the floor in front of his seat, where he would stand up once sighted
+      // a thing standing on the floor in front of his seat, where he would stand up once sighted
       const inFront = new Vector3(0, 0, SloperatorGeometry.lap + 0.2)
       inFront.applyAxisAngle(up, seated(id).yaw)
       const removeInFront = obstacle([position[0] + inFront.x, position[1], position[2] + inFront.z], [0.1, 0.4, 0.1])
@@ -313,7 +313,7 @@ describe('where he turns up', () => {
     }
     setDown('lobby_east_bench', {offset: [0, 0, 1.6]})
     step(1.5)
-    // Something lying flat on the floor right in front of where he would stand
+    // something lying flat on the floor right in front of where he would stand
     const box = figureBounds()
     const front = new Vector3(0, 0, box.max.z - 0.05)
     front.applyAxisAngle(up, bench.yaw)
@@ -340,7 +340,7 @@ describe('where he stands without a seat', () => {
       result: 'success',
     } as const
     expect(placeSloperator(mounted.physics, glass)).toEqual(standing)
-    // The Exhibition’s floor under him, sloping up toward Moonfall, its top through the point under him
+    // the Exhibition’s floor under him, sloping up toward Moonfall, its top through the point under him
     const {grade, yaw} = glass.slope!
     const normal = new Vector3(-grade * Math.sin(yaw), 1, -grade * Math.cos(yaw))
     normal.normalize()
@@ -358,7 +358,7 @@ describe('where he stands without a seat', () => {
       position: glass.position,
       yaw: glass.yaw,
     })).toHaveLength(1)
-    // Something lying on the floor right in front of him
+    // something lying on the floor right in front of him
     const front = new Vector3(0, 0, figureBounds().max.z - 0.05)
     front.applyAxisAngle(up, glass.yaw)
     const remove = obstacle([x + front.x, y + grade * (front.x * Math.sin(yaw) + front.z * Math.cos(yaw)) + floorRise(glass.yaw, glass.slope), z + front.z], [0.05, 0.05, 0.05])
@@ -403,7 +403,7 @@ describe('in the scene', () => {
       state: 'seated',
       yaw: placement!.yaw,
     })
-    // How far his seat strayed, which he followed
+    // how far his seat strayed, which he followed
     expect(dumped.seat!.turned).toBeCloseTo(-0.1, 3)
     expect(dumped.seat!.tilted).toBeLessThan(0.001)
     expect(dumped.seat!.moved).toBeGreaterThan(0.01)
@@ -438,7 +438,7 @@ describe('in the scene', () => {
     startGeofences(outside)
     await expect(spawnSloperator({sight: 'lobby_bench'})).rejects.toThrow('There is no sight "lobby_bench" in reach. Sights: lodge_east_armchair, lodge_west_armchair, lobby_east_bench, lobby_north_bench, salon_ottoman, exhibition_glass.')
     expect(() => triggerSloperatorSighting({sight: 'salon_ottoman'})).toThrow('The Sloperator is not at salon_ottoman but away; spawn_sloperator brings him there.')
-    // Placed as the physics stands, without a step, which a film’s stopped clock never takes, and resolving once React drew him, which the act lets it do
+    // placed as the physics stands, without a step, which a film’s stopped clock never takes, and resolving once React drew him, which the act lets it do
     let spawning: ReturnType<typeof spawnSloperator> | undefined
     await act(async () => {
       spawning = spawnSloperator({sight: 'salon_ottoman'})
@@ -495,7 +495,7 @@ describe('in the scene', () => {
   })
   test('without a sight, spawn_sloperator brings him to the sight of the fence the player is in and trigger_sloperator_sighting catches sight of him wherever he is drawn, and neither does anything where there is no such sight', async () => {
     startGeofences([0, 0.9, 0])
-    // In the Lobby, in none of his fences, with him drawn nowhere
+    // in the Lobby, in none of his fences, with him drawn nowhere
     expect(await spawnSloperator({})).toEqual([])
     expect(triggerSloperatorSighting({instant: true})).toEqual([])
     expect(useSloperator.getState()).toMatchObject({
@@ -503,7 +503,7 @@ describe('in the scene', () => {
       sighted: [],
       spawns: {},
     })
-    // In the Salon, the east bench’s fence, before the physics stepped
+    // in the Salon, the east bench’s fence, before the physics stepped
     const salon: Vec3 = [14, 0.9, -24]
     await act(async () => probeGeofences(salon, [0, 0, 0]))
     let spawning: ReturnType<typeof spawnSloperator> | undefined
@@ -581,7 +581,7 @@ describe('in the scene', () => {
     await frames(0.1)
     const cloth = clothAt('lobby_east_bench')!
     const seatedTop = cloth.geometry.boundingBox!.max.y
-    // In front of him by the fountain, looking at his head
+    // in front of him by the fountain, looking at his head
     const [x, , z] = bench.position
     const {camera} = view
     camera.position.set(x - 4, 1.6, z)

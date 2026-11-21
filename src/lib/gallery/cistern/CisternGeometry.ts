@@ -88,7 +88,7 @@ function strip(along: ReadonlyArray<number>, section: (along: number) => Section
   const rows = along.map(value => section(value).map(([lateral, y]) => place(value, lateral, y)))
   const columns = rows[0].length
   const positions = rows.flat(2)
-  // At the first station where the section’s first two points lie apart, as up the channel’s head they meet
+  // at the first station where the section’s first two points lie apart, as up the channel’s head they meet
   const normal = new Vector3
   for (const [index, row] of rows.slice(0, -1).entries()) {
     const [a, b, c] = [row[0], row[1], rows[index + 1][0]].map(point => new Vector3(...point))
@@ -247,7 +247,7 @@ export default class CisternGeometry {
       ...channelStrips(visibleAlongs(), bottomSegments[0]),
       ...masonry(1),
       ...masonry(-1),
-      // Where it enters the culvert, under the floor’s edge, and its lip
+      // where it enters the culvert, under the floor’s edge, and its lip
       cap(loop, culvertOutline(loop), false),
       cap(lipAlong, culvertOutline(lipAlong), true),
     ])
@@ -288,7 +288,7 @@ export default class CisternGeometry {
     for (let row = 0; row <= rows; row++) {
       const age = end * row / rows
       const fall = age / end
-      // A little wider as it falls, the water spreading
+      // a little wider as it falls, the water spreading
       const width = across * (1 + fall * 0.25)
       for (let column = 0; column <= columns; column++) {
         const lateral = -width + width * 2 * column / columns
@@ -343,7 +343,7 @@ export default class CisternGeometry {
       for (let column = 0; column < columns; column++) {
         const first = row * (columns + 1) + column
         const [right, below, diagonal] = [first + 1, first + columns + 1, first + columns + 2]
-        // Left to right across the flow and on down it, facing up
+        // left to right across the flow and on down it, facing up
         indices.push(first, right, below, right, diagonal, below)
       }
     }
@@ -372,7 +372,7 @@ export default class CisternGeometry {
     for (let row = 0; row <= rows; row++) {
       const age = end * row / rows
       const fall = age / end
-      // Narrower as it speeds up, which keeps as much water passing, then a little wider again as it takes in air and frays
+      // narrower as it speeds up, which keeps as much water passing, then a little wider again as it takes in air and frays
       const radius = spoutStream * Math.sqrt(spoutSpeed / (spoutSpeed + gravity * age)) * (1 + fall ** 2)
       const y = top - spoutSpeed * age - gravity * age ** 2 / 2
       for (let side = 0; side <= sides; side++) {
@@ -390,7 +390,7 @@ export default class CisternGeometry {
       for (let side = 0; side < sides; side++) {
         const first = row * (sides + 1) + side
         const [next, below, diagonal] = [first + 1, first + sides + 1, first + sides + 2]
-        // Round it, and on down, facing out
+        // round it, and on down, facing out
         indices.push(first, next, below, next, diagonal, below)
       }
     }

@@ -63,7 +63,7 @@ test('the Salon ottoman keeps its velvet’s colors by default, otherwise all of
   for (const key of Object.keys(salonVelvetColors) as Array<keyof typeof salonVelvetColors>) {
     expect(unturned[key]).toBe(hslHex(salonVelvetColors[key]))
   }
-  // From the upright pile swallowing the light up to the sheen
+  // from the upright pile swallowing the light up to the sheen
   const {crushed, deep, pile, sheen} = salonVelvetColors
   expect([deep, pile, crushed, sheen].map(([, , lightness]) => lightness)).toEqual([deep[2], pile[2], crushed[2], sheen[2]].toSorted((first, second) => first - second))
   const shifts = new Set<string>

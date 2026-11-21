@@ -125,7 +125,7 @@ export default class HalfDomeGeometry {
     for (let step = 0; step <= steps; step++) {
       const {point, normal} = this.at(azimuth, top * step / steps)
       const face = point.clone().addScaledVector(normal, -depth)
-      // In the shell, its face in the room: left back, left face, right face, right back
+      // in the shell, its face in the room: left back, left face, right face, right back
       for (const [base, side] of [[point, -1], [face, -1], [face, 1], [point, 1]] as const) {
         positions.push(...base.clone().addScaledVector(across, side * width / 2))
       }
@@ -141,7 +141,7 @@ export default class HalfDomeGeometry {
     const geometry = new BufferGeometry
     geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
     geometry.setIndex(indices)
-    // Flat faces, each its own, so the rib’s edges stay crisp
+    // flat faces, each its own, so the rib’s edges stay crisp
     const faceted = geometry.toNonIndexed()
     geometry.dispose()
     faceted.computeVertexNormals()

@@ -177,7 +177,7 @@ export function orbitKeys({emergence, strike, throwAt}: Timeline): Array<OrbitKe
     [strike + 8.5, 8, 2.7, 1.95, 46, 0],
     [emergence - 1.5, -30, 3.1, 1.6, 46, 0],
     [emergence, -20, 2.8, 1.5, 44, -2],
-    // Out of the way of the result, which flips up toward the room
+    // out of the way of the result, which flips up toward the room
     [emergence + 1.6, -25, 3.5, 1.9, 50, 0],
   ]
 }
@@ -574,7 +574,7 @@ const resolveWork = async (world: World, {portrait, room, slot: slotId}: {
   let slot: PortraitSlot | undefined
   if (slotId === undefined) {
     const taken = (candidate: PortraitSlot) => works.some(work => isSlotOf(candidate, work.position))
-    // A free one first, then the one with the most room round it
+    // a free one first, then the one with the most room round it
     const space = (candidate: PortraitSlot) => {
       const {depth, sides} = slotSpace(world, candidate)
       return depth + sides
@@ -800,7 +800,7 @@ const main = async (options: RenderFusionOptions) => {
   await using served = work.image?.file === undefined ? undefined : serveFile(work.image.file)
   const imageUrl = served?.url ?? work.image?.url
   tools.set(0, {
-    // Under the camera, out of view, until it is thrown
+    // under the camera, out of view, until it is thrown
     ...ingredient.orb ? {
       spawn_orb: {
         orb: ingredient.orb.id,
@@ -949,7 +949,7 @@ const main = async (options: RenderFusionOptions) => {
       ...Object.fromEntries(['crf', 'fast-decode', 'keyframe-interval', 'preset'].flatMap(key => (text(key) === undefined ? [] : [[key, text(key)]]))),
       'output-file': output,
     })
-    // How far from where the probe saw it the result came to rest in the film, which the camera planned for
+    // how far from where the probe saw it the result came to rest in the film, which the camera planned for
     const rested = closing?.kind === 'result' ? findLanding(dumpsIn(filmed.tools), workIdIn(filmed.tools)) : undefined
     return {
       ...filmed,

@@ -120,7 +120,7 @@ describe('round-tube fountain bench frames', () => {
       world.step()
       for (const x of centers) {
         for (const side of [-1, 1]) {
-          // A leg and the cross rail, which the colliders follow exactly but for the visible tube’s 24 sides, and its shoulder between them
+          // a leg and the cross rail, which the colliders follow exactly but for the visible tube’s 24 sides, and its shoulder between them
           const samples = [[new Vector3(x, 0.15, side * halfDepth), 0.0005], [new Vector3(x, topY, side * (halfDepth - bendRadius) / 2), 0.0005]] as Array<[Vector3, number]>
           for (const angle of [Math.PI / 8, Math.PI / 4, 3 * Math.PI / 8]) {
             samples.push([new Vector3(x, bendY + bendRadius * Math.sin(angle), side * (halfDepth - bendRadius + bendRadius * Math.cos(angle))), 0.006])

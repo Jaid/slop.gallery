@@ -42,7 +42,7 @@ function physics() {
 }
 test('a work dropped askew strikes with a corner first and lands flat at last, while the points it keeps touching stay quiet', () => {
   const {world, impacts, sampler, step} = physics()
-  // Lying on its back, but tipped over two of its sides, so one corner hangs lowest
+  // lying on its back, but tipped over two of its sides, so one corner hangs lowest
   const sideways = new Quaternion
   sideways.setFromAxisAngle(new Vector3(0, 0, 1), 0.3)
   const tipped = new Quaternion

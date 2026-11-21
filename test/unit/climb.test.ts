@@ -106,14 +106,14 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
       expect(before.route.end.heading).toBeCloseTo(after.route.heading, 9)
     }
     expect(route.end.heading).toBeCloseTo(-Math.PI / 2, 9)
-    // Round its turn and straight east at the vestibule’s middle, up to where the plane touching its wall there crosses the line
+    // round its turn and straight east at the vestibule’s middle, up to where the plane touching its wall there crosses the line
     const [turn, strip] = climbApproach.route.pieces
     expect([turn.kind, strip.kind]).toEqual(['arc', 'line'])
     expect(climbApproach.route.end.point[0]).toBeCloseTo(forgeVestibule.center[0] - forgeVestibule.radius, 9)
     expect(climbApproach.route.end.point[1]).toBeCloseTo(forgeVestibule.center[1], 9)
     expect(climbApproach.route.end.heading).toBeCloseTo(0, 9)
     expect(strip.kind === 'line' && strip.start[1]).toBeCloseTo(forgeVestibule.center[1], 9)
-    // From the west bridge’s end up to the Forge’s floor
+    // from the west bridge’s end up to the Forge’s floor
     expect(climbMouth.floorY).toBeCloseTo(tower.floorY + tower.height + towerBridge.rise, 9)
     expect(route.y).toBe(climbMouth.floorY)
     expect(route.height).toBe(climbMouth.height)
@@ -123,7 +123,7 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
     expect(climbRun.route.end.y).toBe(0)
     expect(climbRun.route.pieces.every(piece => piece.startHeight === 3.1 && piece.endHeight === 3.1)).toBe(true)
     expect(climbApproach.route.pieces.every(piece => piece.startY === 0 && piece.endY === 0 && piece.startHeight === 3.1 && piece.endHeight === 3.1)).toBe(true)
-    // As wide as the Bastion all the way to the vestibule
+    // as wide as the Bastion all the way to the vestibule
     expect([climbMouth.width, climbHairpin.width, climbRun.width, climbApproach.width]).toEqual([4, 4, 4, 4])
   })
   test('the hairpin eases up by the whole climb over its two legs and its turn, no steeper than 1 in 4', () => {
@@ -340,12 +340,12 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
     expect(climbMouthHollow.hollowAt(hatchX, mouthNorthZ)).toBeGreaterThan(0.1)
     expect(climbMouthHollow.hollowAt(hatchX, mouthNorthZ - 0.3)).toBeGreaterThan(climbMouthHollow.hollowAt(hatchX, mouthNorthZ))
     expect(climbMouthHollow.outletY).toBeLessThan(climbMouth.floorY - climbMouthHollow.sink(hatchX, mouthNorthZ))
-    // Sloping down toward the hatch from across the elbow, so whatever rolls in it ends up there
+    // sloping down toward the hatch from across the elbow, so whatever rolls in it ends up there
     for (const [x, z] of [[hatchX + 0.8, mouthNorthZ + 0.3], [hatchX + 1.5, mouthNorthZ + 1], [hatchX, mouthNorthZ + 2], [mouthWestX + 0.4, mouthNorthZ + 1.5]] as const) {
       expect(climbMouthHollow.sink(x, z)).toBeGreaterThan(0)
       expect(climbMouthHollow.sink(x + (hatchX - x) * 0.2, z + (mouthNorthZ - z) * 0.2)).toBeGreaterThan(climbMouthHollow.sink(x, z))
     }
-    // Level with the floor along the faces of its walls and where the elbow opens onto the straight run east
+    // level with the floor along the faces of its walls and where the elbow opens onto the straight run east
     for (let share = 0; share <= 1; share += 0.01) {
       expect(climbMouthHollow.sink(mouthWestX + wallFace, mouthNorthZ + share * 4.8)).toBeLessThan(1e-12)
       expect(climbMouthHollow.sink(elbowEastX - wallFace, mouthNorthZ + share * 4.8)).toBeLessThan(1e-12)
@@ -388,7 +388,7 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
     const oculusWest = wallById('oculus-west')
     const climb = oculusWest.holes!.find(hole => hole.name === 'bastion')!
     const bastion = wallById('oculus-east').holes!.find(hole => hole.name === 'bastion')!
-    // The Bastion’s doorway mirrored: the same opening, measured the other way along its wall
+    // the Bastion’s doorway mirrored: the same opening, measured the other way along its wall
     expect<typeof bastion>({
       ...climb,
       name: 'bastion',
@@ -443,7 +443,7 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
         for (const geometry of [ground, ...routeVaults.flatMap(vault => [vault.shell, vault.ribs]), mouthVault.shell, mouthVault.ribs, ...vestibuleParts]) {
           world.createCollider(RAPIER.ColliderDesc.trimesh(...colliderGeometry(geometry)))
         }
-        // The paving and the mouth’s sunken paving welded, as the game builds them, like the walls
+        // the paving and the mouth’s sunken paving welded, as the game builds them, like the walls
         for (const geometry of [...routeVaults.map(vault => vault.pavingCollision), sunkenPaving]) {
           const [vertices, indices] = colliderGeometry(geometry)
           world.createCollider(RAPIER.ColliderDesc.trimesh(vertices, indices, RAPIER.TriMeshFlags.FIX_INTERNAL_EDGES).setContactSkin(weldedSurfaceSkin))
@@ -464,7 +464,7 @@ describe('the Bastion’s way from the Oculus up to the Forge', () => {
           ...elbows,
           ...stations.filter((_, i) => i % 2 === 0).map(({point}) => point),
           ...[climbRun, climbApproach].flatMap(passage => along(passage).filter((_, i) => i % 2 === 0).map(({point}): readonly [number, number, boolean] => [...point, true])),
-          // Through the vestibule’s middle and out through the arch in the Forge’s north wall
+          // through the vestibule’s middle and out through the arch in the Forge’s north wall
           [forgeVestibule.center[0], forgeVestibule.center[1], true],
           [forge.center[0], forge.center[1] - 3],
         ]

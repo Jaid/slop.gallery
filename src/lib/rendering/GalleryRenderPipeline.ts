@@ -96,7 +96,7 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       this.depthProjectionOffset = new Vector2
     }
     const renderScene = scenePass.updateBefore.bind(scenePass)
-    // The wireframe flood draws into targets of its own right after the scene pass, with the same camera, but only while it is enabled
+    // The wireframe flood draws into targets of its own right after the scene pass, with the same camera, but only while it is enabled.
     const flood = own(new WireframeFloodPass(renderer, scene as Scene, camera))
     scenePass.updateBefore = frame => {
       // A fusion’s warp tells where it bends the view again while the scene pass draws it.

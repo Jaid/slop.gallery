@@ -196,7 +196,7 @@ function sweep(axis: 'x' | 'y' | 'z', rings: ReadonlyArray<Ring>, around: number
     } : {},
   })
   if (rings.some(ring => ring.fill !== undefined)) {
-    // In the lattice’s order: every ring’s points, then the middles of its first and its last
+    // in the lattice’s order: every ring’s points, then the middles of its first and its last
     const levels = [...rings.flatMap(ring => Array.from({length: around}, () => ring.fill ?? fillLevels.none)), (tip ?? rings[0]).fill ?? fillLevels.none, rings.at(-1)!.fill ?? fillLevels.none]
     geometry.setAttribute(fillLevels.name, new Float32BufferAttribute(levels, 1))
   }
@@ -228,7 +228,7 @@ function woodwork() {
     board([divider.thickness, dividerHeight, depth - wall * 2], alongZ, [divider.x, dividerY, 0], 8),
     board([divider.x - divider.thickness / 2 - left, dividerHeight, divider.thickness], alongX, [(left + divider.x - divider.thickness / 2) / 2, dividerY, divider.z], 9),
   ]
-  // The lid, built shut over the box and turned open round the hinge
+  // the lid, built shut over the box and turned open round the hinge
   const rim = lid.depth - lid.panel
   const shut = [
     board([width, lid.panel, depth], alongX, [0, height + lid.depth - lid.panel / 2, 0], 10),
@@ -396,7 +396,7 @@ function bottles() {
   // The flank touches the wall’s inner top edge, so its foot stands as far out from the wall as the slope reaches over the wall’s height.
   const footX = leftFace + (box.height - floor) * Math.tan(tipped)
   const leaning = translation(footX, floor, -0.088).multiply(turn('y', -0.08)).multiply(turn('z', tipped)).multiply(translation(flask.halfWidth, 0, 0))
-  // Its axis along x, its broad side down
+  // its axis along x, its broad side down
   const flat = new Matrix4
   flat.makeBasis(new Vector3(0, 0, 1), new Vector3(1, 0, 0), new Vector3(0, 1, 0))
   const lying = translation(-0.098, floor + flask.halfDepth, -0.1).multiply(turn('y', 0.12)).multiply(flat)
@@ -421,7 +421,7 @@ function brush(paint: Rgb | undefined, [x, z]: readonly [number, number], angle:
     round(0.006, 0.0034),
     ...[[0.04, 0.0036], [0.08, 0.0042], [0.105, thickest], [0.13, 0.0042], [0.15, 0.0037]].map(([at, radius]) => round(at, radius)),
   ], 10)
-  // Round where it grips the handle, flattening out to the bristles
+  // round where it grips the handle, flattening out to the bristles
   const [flatWidth, flatHeight] = [0.0058 * size, 0.0023 * size]
   const ferrule = (at: number, share: number): Ring => ({
     at,
@@ -545,7 +545,7 @@ function smear([from, to]: readonly [Rgb, Rgb], [x, z]: readonly [number, number
       const along = Math.sin(u) * length / 2 * Math.sin(t * Math.PI / 2) * ragged
       const across = Math.cos(u) * width / 2 * Math.sin(t * Math.PI / 2) * ragged
       const share = Math.min(1, Math.max(0, along / length + 0.5))
-      // Ridges left by the knife’s edge across the streak, and the lip where it lifted off
+      // ridges left by the knife’s edge across the streak, and the lip where it lifted off
       const ridges = 1 + 0.35 * Math.sin(along / length * 38 + seed)
       const lip = 1 + 1.6 * Math.exp(-(((share - 0.88) / 0.08) ** 2))
       return {
@@ -584,7 +584,7 @@ function lumpy(geometry: BufferGeometry, [x, z]: readonly [number, number], seed
 /** The paint on the palette, in its frame: dollops of every color in a row along its edge, from its broad left end round over its top toward the finger bay, and smears of white and of mixes worked across its middle. */
 function palettePaint() {
   const {blue, green, ochre, red, umber, white, yellow} = paints
-  // Where along the edge each dollop sits, by the angle round the palette’s middle, and how wide and tall it is
+  // where along the edge each dollop sits, by the angle round the palette’s middle, and how wide and tall it is
   const spots: ReadonlyArray<readonly [Rgb, number, number, number]> = [
     [white, 200, 0.016, 0.013],
     [yellow, 165, 0.012, 0.01],
@@ -597,7 +597,7 @@ function palettePaint() {
   // In the palette’s frame its top edge lies toward −z, so a place on the palette as seen goes in as [x, −y].
   const dollops = spots.map(([color, angle, radius, height], index) => {
     const [x, y] = paletteEdge(angle * degree)
-    // Two fingers’ breadth in from the edge toward the middle
+    // two fingers’ breadth in from the edge toward the middle
     const inward = 1 - 0.032 / Math.hypot(x, y)
     return dollop(color, [x * inward, -y * inward], radius, height, index + 1)
   })
@@ -633,7 +633,7 @@ export default class PaintingSet extends Curio {
   readonly reach = 0.38
   readonly room = 'forge'
   override readonly rotation: Vec3 = [0, 1.25, 0]
-  // The box, and the lid standing open over its back, both as solid as shut
+  // the box, and the lid standing open over its back, both as solid as shut
   readonly shapes: ReadonlyArray<CurioShape> = [{
     border: 0.004,
     kind: 'box',
@@ -650,16 +650,16 @@ export default class PaintingSet extends Curio {
 
   createModel() {
     const {blue, green, red, umber, yellow} = paints
-    // Each turned round its cap a little, fanning out toward the front; the green one put back askew, its crimp swung over toward the umber’s
+    // each turned round its cap a little, fanning out toward the front; the green one put back askew, its crimp swung over toward the umber’s
     const tubes = ([[yellow, -0.15, -0.05], [red, -0.105, -0.025], [blue, -0.06, 0], [green, -0.022, 0.2], [umber, 0.03, 0.05]] as const).flatMap(([paint, x, angle], index) => paintTube(paint, [x, -0.028 + index % 2 * 0.008], angle, 0.1 + 0.08 * (index % 3)))
-    // Built along x from their butts, turned to lie from the front toward the back, where the dividers and the box’s front leave their ends in view: a small one dipped in blue and a big clean one
+    // built along x from their butts, turned to lie from the front toward the back, where the dividers and the box’s front leave their ends in view: a small one dipped in blue and a big clean one
     const brushes = [brush(blue, [0.131, 0.12], Math.PI / 2 + 0.02), brush(undefined, [0.162, 0.118], Math.PI / 2 - 0.025, 2)]
     const knife = paletteKnife([0.096, 0.116], Math.PI / 2 - 0.03)
     return new CurioModel([
       {
         name: 'painting-set-wood',
         geometry: woodwork(),
-        // Stained walnut, so the pale palette stands out against it
+        // stained walnut, so the pale palette stands out against it
         material: new GrainedWoodMaterial({
           heartwood: ['#3e2213', '#5f3a22'],
           latewood: '#28150b',
@@ -668,7 +668,7 @@ export default class PaintingSet extends Curio {
       {
         name: 'painting-set-palette',
         geometry: paletteBoard(),
-        // Pale beech
+        // pale beech
         material: new GrainedWoodMaterial({
           heartwood: ['#d2ab7c', '#e8c9a0'],
           latewood: '#bb9064',

@@ -99,7 +99,7 @@ export default function Sloperator() {
         }
         await Promise.all(chosen.map(async ({id: sight}) => {
           await until(() => useSloperator.getState().spawns[sight] !== undefined, `The physics did not place the Sloperator at ${sight} within ${drawTimeout / 1000} s, holding still while rooms load.`)
-          // Drawn by the placement just taken down, not one from before it, where he was already
+          // drawn by the placement just taken down, not one from before it, where he was already
           await until(() => {
             const spawn = useSloperator.getState().spawns[sight]
             return spawn?.result === 'failure' || spawn !== undefined && figures.get(sight)?.placement === spawn.placement
@@ -176,7 +176,7 @@ function Figure({placement, sight}: {
   const sighted = useSloperator(state => state.sighted.some(sighting => sighting.sight === sight.id))
   const {pose} = placement
   const geometry = useDisposable(useMemo(() => new SloperatorGeometry(pose === 'stand' ? undefined : sight.seat), [pose, sight]))
-  // Polished walnut
+  // polished walnut
   const cane = useDisposable(useMemo(() => lit(new MeshStandardNodeMaterial({
     color: '#4a2a16',
     roughness: 0.35,
@@ -189,7 +189,7 @@ function Figure({placement, sight}: {
     color: '#b79d8c',
     roughness: 0.7,
   }), sight), [sight]))
-  // The same green as the Slop he leaves here
+  // the same green as the Slop he leaves here
   const slime = useDisposable(useMemo(() => lit(new SlopMaterial(slopRandom(environmentSeed, sight.id)), sight), [sight]))
   // Drawn anew where the player already caught sight of him, like in a scene built anew, he is in his sight pose already.
   useLayoutEffect(() => {

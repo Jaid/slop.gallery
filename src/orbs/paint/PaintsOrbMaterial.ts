@@ -54,7 +54,7 @@ function ribbonsAt(point: Node<'vec3'>) {
   const cell = vec2(across.floor(), along.floor())
   const offset = vec2(across.fract().sub(0.5).div(ribbonHalf[0]), along.fract().sub(0.5).div(ribbonHalf[1]))
   const empty = select(mx_cell_noise_float(vec3(cell, 3.5)).lessThan(0.25), float(emptyReach), float(0))
-  // Shrinking round its own middle rather than cut off, so a ribbon winding along the glass doesn’t come out shaved flat
+  // shrinking round its own middle rather than cut off, so a ribbon winding along the glass doesn’t come out shaved flat
   const thickness = smoothstep(0.97, 0.6, point.length()).max(0.05)
   return {
     cell,
@@ -91,7 +91,7 @@ export default class PaintsOrbMaterial extends OrbGlassMaterial {
       })
       const {reach, thickness} = ribbonsAt(ray.origin.add(ray.direction.mul(depth)))
       If(reach.lessThan(1), () => {
-        // How far back toward the last step the ray crossed into the ribbon, as if the field changed evenly in between, and out of a place of its own, where an empty place’s reach would put it too far forward
+        // how far back toward the last step the ray crossed into the ribbon, as if the field changed evenly in between, and out of a place of its own, where an empty place’s reach would put it too far forward
         const back = float(1).sub(reach).div(previous.min(cellReach).sub(reach).max(1e-4)).clamp(0, 1)
         depth.assign(depth.sub(back.mul(depth.sub(previousDepth))))
         hit.assign(1)

@@ -77,7 +77,7 @@ describe('oculus and connecting tunnel', () => {
     expect(position[2] - size[2] / 2).toBe(oculus.center[1] - oculus.size[1] / 2)
     expect(floorHeight([0, top + 1.6, south - 1])).toBe(top)
     expect(floorHeight([0, floorY + 1.6, south + 0.1])).toBe(floorY + oculusApproach.rise)
-    // In the apse, up to its round wall
+    // in the apse, up to its round wall
     for (const [x, z] of [[0, -39.8], [-6, -38.9], [7, -38.4], [8.8, -35.3]] as const) {
       expect(floorHeight([x, top + 1.6, z])).toBe(top)
       expect(insideGallery([x, top + 1.6, z])).toBe(true)

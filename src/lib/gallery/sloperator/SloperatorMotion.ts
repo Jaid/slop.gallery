@@ -75,7 +75,7 @@ function unflatten(values: ReadonlyArray<number>): SloperatorGoals {
     return vector
   }
   const [grip, pelvis, tip] = pointKeys.map(next)
-  // His right side first, as they run
+  // his right side first, as they run
   const [ankles, elbows, hands, knees] = sidedKeys.map(() => sided(next))
   return {
     ankles,
@@ -114,11 +114,11 @@ export default class SloperatorMotion {
    */
   private static armsBack(rig: SloperatorRig): ReadonlyArray<Key> {
     const neutral = rig.stand().goals()
-    // Out to his right, the cane still standing on its tip, clear of his coat to spin beside him, his left hand let go of it and out of the way of his thigh
+    // out to his right, the cane still standing on its tip, clear of his coat to spin beside him, his left hand let go of it and out of the way of his thigh
     const aside = sided(side => (side < 0 ? point(-0.31, 0.92, 0.22) : point(0.28, 0.93, 0.21)))
-    // Lifted a little, the cane level, held by its middle, his left arm hanging at his side
+    // lifted a little, the cane level, held by its middle, his left arm hanging at his side
     const lifted = sided(side => (side < 0 ? point(-0.32, 0.96, 0.06) : point(0.25, 0.8, 0.07)))
-    // Down at his right hip, the cane upright, his left hand on its way round
+    // down at his right hip, the cane upright, his left hand on its way round
     const atHip = sided(side => (side < 0 ? point(-0.26, 0.9, -0.07) : point(0.24, 0.84, -0.08)))
     const clasped = sided(side => (side < 0 ? point(-0.025, 0.845, -0.155) : point(0.035, 0.865, -0.17)))
     // His elbows bend back, close to his sides, never out like arms akimbo, and a little out once his hands meet behind him, as arms hang behind a back.
@@ -134,7 +134,7 @@ export default class SloperatorMotion {
           ...neutral,
           elbows: elbows(0.24, -0.25),
           hands: aside,
-          // His fist still on top of its handle, as his hands lay on it
+          // his fist still on top of its handle, as his hands lay on it
           ...held(aside[-1], point(-0.02, -1, 0.05), -handleUnderFist),
         },
       },
@@ -174,7 +174,7 @@ export default class SloperatorMotion {
   private static standUp(rig: SloperatorRig, seat: SloperatorSeat): ReadonlyArray<Key> {
     const standing = rig.stand().goals()
     const seated = rig.sit(seat).goals()
-    // Where he stands up, his ankles as far in front of where he sits as they are sitting, or past the seat’s edge
+    // where he stands up, his ankles as far in front of where he sits as they are sitting, or past the seat’s edge
     const ankleZ = Math.max(seated.ankles[1].z, lap + standUpClearance)
     const up = shifted(standing, point(0, 0, ankleZ - standing.ankles[1].z))
     // On his way up, his knees bend forward over his feet, as close together as standing: toward points well in front of his shins, which his hips moving forward over his knees never come near.
@@ -205,7 +205,7 @@ export default class SloperatorMotion {
       lean: -risingLean,
       pelvis: point(0, liftOff.pelvis.y + 0.55 * (up.pelvis.y - liftOff.pelvis.y), up.pelvis.z - 0.03),
     }
-    // Nearly up, bringing his cane round to stand in front of him, lifted clear of the floor or of his left leg
+    // nearly up, bringing his cane round to stand in front of him, lifted clear of the floor or of his left leg
     const share = 0.7
     const caneOnTheWay = seat.arms ? (() => {
       const fist = mix(seated.hands[-1], up.hands[-1], share)

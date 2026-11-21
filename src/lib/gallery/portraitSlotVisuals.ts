@@ -13,7 +13,7 @@ export const slotColors: Record<PortraitRatio, string> = {
 export const invalidSlotColor = '#ef4444'
 export const slotBorder = 0.04
 
-/** Rectangles of a slot in its own frame, as center x, center y, width and height: the frame first, then its name plate */
+/** rectangles of a slot in its own frame, as center x, center y, width and height: the frame first, then its name plate */
 export function slotPanels(slot: PortraitSlot) {
   const label = portraitLabelLayout(slot.width, slot.height, slot.labelAbove)
   return [

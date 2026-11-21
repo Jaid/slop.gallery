@@ -77,7 +77,7 @@ test('a listener hears an emitter in the first of the fences it is in that the e
     rooms: ['attic', 'cellar_stairs'],
   })
   expect(hearingFence(emitter, ['attic'])).toBe('attic')
-  // In a part of another room it carries into, though not in that room as a whole
+  // in a part of another room it carries into, though not in that room as a whole
   expect(hearingFence(emitter, ['cellar', 'cellar_stairs'])).toBe('cellar_stairs')
   expect(emitter.strengthAt([1, 2, 3], hearingFence(emitter, ['cellar', 'cellar_stairs']))).toBe(1)
   expect(hearingFence(emitter, ['cellar', 'cellar_vault'])).toBeUndefined()

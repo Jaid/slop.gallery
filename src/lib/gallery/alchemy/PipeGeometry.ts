@@ -34,7 +34,7 @@ export function pipeCenterline(corners: ReadonlyArray<Vec3>, bend: number) {
     }
     const reach = bend * Math.tan(turn / 2)
     const start = corner.clone().addScaledVector(incoming, -reach)
-    // From the bend’s start toward its middle, square to where the pipe runs in
+    // from the bend’s start toward its middle, square to where the pipe runs in
     const inward = outgoing.clone().addScaledVector(incoming, -incoming.dot(outgoing)).normalize()
     const center = start.clone().addScaledVector(inward, bend)
     const steps = Math.ceil(turn / bendStep)

@@ -22,7 +22,7 @@ const steel = suitOfArmorGeometry()
 const material = new MeshBasicMaterial({side: DoubleSide})
 const armor = new Mesh(steel, material)
 const helmetModel = helmet.createModel()
-// The helmet resting on the collar, in the armor’s frame
+// the helmet resting on the collar, in the armor’s frame
 const worn = helmetModel.parts.map(({geometry}) => new Mesh(geometry.clone().translate(0, collar, 0), material))
 const colliders = bastionColliders()
 afterAll(() => {

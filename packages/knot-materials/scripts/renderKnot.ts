@@ -28,7 +28,7 @@ export type RenderKnotOptions = {
   /** folder in out/render that receives the renders. Default: the knot ID */
   folder?: string
   onFile?: (filename: string) => void
-  /** Default: the knot alone on a transparent background in its own studio */
+  /** default: the knot alone on a transparent background in its own studio */
   scene?: KnotScene
 }
 
