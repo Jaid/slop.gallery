@@ -3,6 +3,7 @@ import type {CSSProperties} from 'react'
 import Branch from 'branch-component'
 import clsx from 'clsx'
 import {useEffect, useState} from 'react'
+import {useShallow} from 'zustand/react/shallow'
 
 import Dropzone from '#component/Dropzone'
 import GraphicsTuning from '#component/GraphicsTuning'
@@ -39,7 +40,12 @@ export default function App() {
   useSlopGalleryTelemetry(telemetry, useGallery, galleryEvents)
   const settings = useGalleryAI()
   useGalleryCommands()
-  const s = useGallery()
+  const s = useGallery(useShallow(({dragging, locked, notice, ready}) => ({
+    dragging,
+    locked,
+    notice,
+    ready,
+  })))
   const uiHidden = useHiddenUi(state => state.hidden)
   const tuning = useGraphicsTuning()
   const [renderFailed, setRenderFailed] = useState(false)

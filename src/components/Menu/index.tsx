@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import {useEffect, useRef} from 'react'
 import useGraphicsMode from 'use-graphics-mode'
 import usePauseMenu from 'use-pause-menu'
+import {useShallow} from 'zustand/react/shallow'
 
 import Icon from '#component/Icon'
 import MenuNarration from '#component/MenuNarration'
@@ -25,7 +26,10 @@ import world from '#src/worlds/current.ts'
 import css from './style.module.sass'
 
 export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
-  const s = useGallery()
+  const s = useGallery(useShallow(({ready, room}) => ({
+    ready,
+    room,
+  })))
   const {stage} = usePauseMenu(pauseMenu)
   const isHeavy = useGraphicsMode()
   const room = world.roomById(s.room) ?? world.room(world.defaultRoom)
@@ -33,7 +37,7 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
   const tagline = paused ? world.roomTagline(room) : world.tagline
   const spectatedId = usePortraitSpectation(state => state.id)
   // A work that left the world meanwhile, like one a fusion used up, gives the map back.
-  const spectated = paused ? s.portraits.find(portrait => portrait.id === spectatedId) : undefined
+  const spectated = useGallery(({portraits}) => (paused ? portraits.find(portrait => portrait.id === spectatedId) : undefined))
   const heading = useRef<HTMLHeadingElement>(null)
   // Until the player first enters, the menu leaves the intro in full view: the title above it, the buttons below.
   const intro = useIntro(state => state.orbit !== null) && (stage === 'first' || stage === 'return')

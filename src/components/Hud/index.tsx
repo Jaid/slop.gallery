@@ -1,6 +1,7 @@
 import Branch from 'branch-component'
 import {useSyncExternalStore} from 'react'
 import useNarrator, {narrationState, narrationStates} from 'use-narrator'
+import {useShallow} from 'zustand/react/shallow'
 
 import AimDot from '#component/AimDot'
 import ArtworkOverlay from '#component/ArtworkOverlay'
@@ -14,7 +15,10 @@ import {useGallery} from '#src/lib/gallery.ts'
 import {isAnnouncingRooms} from '#src/lib/roomAnnouncements.ts'
 
 export default function Hud() {
-  const s = useGallery()
+  const s = useGallery(useShallow(({dragging, locked}) => ({
+    dragging,
+    locked,
+  })))
   const snapshot = useNarrator(narrator)
   const narrations = narrationStates(snapshot)
   const foreground = narrationState(snapshot)
@@ -24,7 +28,7 @@ export default function Hud() {
     text: foreground.text,
   } : undefined
   const showCrosshair = useSyncExternalStore(crosshair.subscribe, crosshair.getSnapshot, crosshair.getSnapshot)
-  const artwork = s.held ? undefined : s.portraits.find(p => p.id === s.activeLabel && p.hung && !p.reserved)
+  const artwork = useGallery(({activeLabel, held, portraits}) => (held ? undefined : portraits.find(p => p.id === activeLabel && p.hung && !p.reserved)))
   return <Branch if={s.locked} not={s.dragging}>
     <Branch if={showCrosshair} then={AimDot} />
     <Branch if={subtitled}><NarrationSubtitles key={subtitled?.instanceId} narration={subtitled!} /></Branch>
