@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "description": "Explore a surreal 3D art gallery powered by WebGPU. Discover strange rooms, transform paintings, and experiment with AI-generated art.",
-  "homepage": "https://slop.gallery/",
+  "description": "fun AI generation playground wrapped in an interactive 3D world",
+  "homepage": "https://slop.gallery",
   "funding": "https://github.com/sponsors/Jaid",
   "license": "MIT",
   "repository": {
