@@ -280,6 +280,8 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
   }
 }
 /** Without these, headless Chrome on a machine without a GPU hands out a fallback adapter whose canvas can’t present, which loses the device on the first frame. ANGLE’s Vulkan backend additionally needs the surface extensions of a system Vulkan driver, without which the GPU process exits. */
+/** Lets the page read cross-origin responses without CORS headers, so tool calls like add_portrait can bring in images from any host. The private headless browser only ever opens the gallery. */
+export const crossOriginArgs = ['--disable-web-security']
 const swiftshaderArgs = ['--use-angle=vulkan', '--use-vulkan=swiftshader', '--enable-unsafe-swiftshader']
 /** Starts a private Vite dev server, or serves the static target, and resolves with the page URL. Dispose it to stop the server. */
 export const serveGallery = async (setup: GallerySetup, options: {
@@ -393,7 +395,7 @@ export const openHeadlessGallery = async (setup: GallerySetup, options: {
         deviceScaleFactor: 1,
       },
       // WebMCP lets scripts call the app’s own tools, see callWebmcpTool from capture-session/script. Chrome only keeps the last --enable-features.
-      args: ['--enable-unsafe-webgpu', `--enable-features=${setup.swiftshader ? 'WebMCP,Vulkan' : 'WebMCP'}`, ...setup.swiftshader ? swiftshaderArgs : []],
+      args: ['--enable-unsafe-webgpu', `--enable-features=${setup.swiftshader ? 'WebMCP,Vulkan' : 'WebMCP'}`, ...crossOriginArgs, ...setup.swiftshader ? swiftshaderArgs : []],
     })
     const page = await browser.newPage()
     watchPage(page)

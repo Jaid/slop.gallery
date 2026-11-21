@@ -14,7 +14,7 @@ import getFree from 'get-free'
 import {lossyJxlOptions} from 'media-encoding'
 import {Packr} from 'msgpackr'
 
-import {anchorWorldReach, degrees, galleryHelp, galleryOptions, normalizeOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
+import {anchorWorldReach, crossOriginArgs, degrees, galleryHelp, galleryOptions, normalizeOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
 
 type DownloadFrameResult = {
   dump: Record<string, unknown> | null
@@ -140,7 +140,7 @@ export default async function snap(overrides: SnapOptions, tools: ReadonlyArray<
   let screenDump: DownloadFrameResult['dump'] = null
   const capture = await capturePage(server.url, {
     browser: Bun.env.BROWSER,
-    args: ['--enable-unsafe-webgpu', '--enable-features=WebMCP'],
+    args: ['--enable-unsafe-webgpu', '--enable-features=WebMCP', ...crossOriginArgs],
     ...setup.viewport,
     body: false,
     capture: withLabels ? 'screenshot' : 'download',
