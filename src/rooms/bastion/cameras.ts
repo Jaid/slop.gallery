@@ -1,14 +1,14 @@
 import type {RoomCamera} from '../base/Room.ts'
 
 export default {
-  // Where the curve leaves the apse’s east shoulder, looking west along its crown past the barred gate toward the lanterns.
+  // High in the curve’s west end, looking south-east and down toward the apse.
   overview: {
-    position: [6.2, 1.7, -0.1],
+    position: [-8.597, 3.497, -1.037],
     aim: {
-      yaw: 1.66,
-      pitch: 0.07,
+      yaw: -2.5551,
+      pitch: -0.4176,
     },
-    fov: 75,
+    fov: 85,
     ratio: 16 / 9,
   },
   // In the mouth of the blind branch beside the Lodge, looking down it at the empty suit of armor at its end with the helmet on its shoulders.
