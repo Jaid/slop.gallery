@@ -31,6 +31,8 @@ import spawnPartyEffect from '#src/lib/webmcp/spawnPartyEffect.ts'
 import throwProp from '#src/lib/webmcp/throwProp.ts'
 import world from '#src/worlds/current.ts'
 
+import TextOverlays from './TextOverlays.ts'
+
 export default function WebmcpBridge() {
   const scene = useThree(s => s.scene)
   const camera = useThree(s => s.camera)
@@ -44,8 +46,11 @@ export default function WebmcpBridge() {
   useEffect(() => {
     const controller = new AbortController
     const inspector = new AimInspector(scene, camera)
+    const labels = new TextOverlays(camera, renderer.domElement)
     const bridge = {
       addDrawing,
+      addTextOverlay: labels.add.bind(labels),
+      clearTextOverlay: labels.clear.bind(labels),
       addLayer: overlay.addLayer.bind(overlay),
       clearLayer: overlay.clearLayer.bind(overlay),
       clearDrawings: overlay.clearDrawings.bind(overlay),
@@ -146,6 +151,7 @@ export default function WebmcpBridge() {
     return () => {
       controller.abort()
       unregister()
+      labels.clear()
     }
   }, [scene, camera, renderer])
   return null

@@ -46,6 +46,15 @@ export type KnotDump = {
   rarity: Rarity
 }
 
+export type TextOverlayInput = {
+  position?: {
+    x: number
+    y: number
+    z?: number
+  }
+  text: string
+}
+
 export type WebmcpBridge = {
   addDrawing: (drawing: Drawing) => {
     drawing: Drawing
@@ -53,10 +62,12 @@ export type WebmcpBridge = {
   }
   addLayer: (options: LayerOptions) => string
   addPortrait: (input: PortraitAdditionInput) => Promise<PortraitAddition>
+  addTextOverlay: (input: TextOverlayInput) => {id: string}
   analyzeWorld: () => WorldAnalysis
   castMood: (input: MoodCastInput) => MoodCast
   clearDrawings: () => number
   clearLayer: (id: string) => number
+  clearTextOverlay: () => number
   downloadFrame: (options: {
     format?: FrameFormat
     name?: string
@@ -342,6 +353,62 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           throw new TypeError('Expected an object with one drawing.')
         }
         return getBridge().addDrawing(readDrawing(input.drawing))
+      },
+    },
+    {
+      name: 'add_text_overlay',
+      title: 'Add a text label',
+      description: 'Add a fixed HTML plain-text label. Omit position to center it in the browser viewport. With {x, y}, place its top left at those CSS pixels from the viewport’s top left. With {x, y, z}, center it on that point in world meters, tracking the camera and canvas and hiding outside the camera view. Labels appear in browser screenshots but not download_frame. Returns the label ID.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          text: {
+            type: 'string',
+            pattern: String.raw`\S`,
+          },
+          position: {
+            type: 'object',
+            properties: {
+              x: {type: 'number'},
+              y: {type: 'number'},
+              z: {type: 'number'},
+            },
+            required: ['x', 'y'],
+            additionalProperties: false,
+          },
+        },
+        required: ['text'],
+        additionalProperties: false,
+      },
+      annotations: {readOnlyHint: false},
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || typeof input.text !== 'string' || !input.text.trim() || Object.keys(input).some(key => key !== 'text' && key !== 'position')) {
+          throw new TypeError('Expected nonblank text and an optional position.')
+        }
+        const {position} = input
+        if (position !== undefined && !isCoordinates(position, 'x,y') && !isCoordinates(position, 'x,y,z')) {
+          throw new TypeError('position must be {x, y} in viewport CSS pixels or {x, y, z} in world meters.')
+        }
+        return getBridge().addTextOverlay(input as TextOverlayInput)
+      },
+    },
+    {
+      name: 'clear_text_overlay',
+      title: 'Clear text labels',
+      description: 'Remove all labels added by add_text_overlay on this page and return the number removed. Leaves drawings and other HTML alone.',
+      inputSchema: {
+        type: 'object',
+        properties: {},
+        additionalProperties: false,
+      },
+      annotations: {readOnlyHint: false},
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).length) {
+          throw new TypeError('Expected an empty object to clear text labels.')
+        }
+        return {removed: getBridge().clearTextOverlay()}
       },
     },
     {

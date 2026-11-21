@@ -51,3 +51,8 @@ All primitives accept `layer`, a `color` override, `name` and a within-layer `re
 | `add_drawing` | `{"drawing":{"type":"camera_facing_rectangle","center":[0,2,-4],"width":2,"height":1}}` | `{id, drawing}` |
 | `clear_layer` | `{"id":"bounds"}` | `{removed}` |
 | `clear_drawings` | `{}` | `{removed}` |
+| `add_text_overlay` | `{"text":"Lobby","position":{"x":16,"y":24}}` | `{id}` |
+| `add_text_overlay` | `{"text":"3.80 m","position":{"x":3.5149,"y":0.002,"z":-29.9}}` | `{id}` |
+| `clear_text_overlay` | `{}` | `{removed}` |
+
+Text overlays are fixed HTML elements. Omit `position` to center a label in the browser viewport. `{x, y}` puts its top left at viewport CSS pixels. `{x, y, z}` centers it on a point in world meters: it follows the camera through the canvas’s actual bounding rectangle, including letterboxing, and hides when the point leaves the view. Text is literal, ignores pointer input and appears in browser screenshots. `download_frame` and `snap.ts` capture only the canvas. `clear_text_overlay` clears all text labels independently of drawing layers.

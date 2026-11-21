@@ -23,6 +23,8 @@ import slopGallery from '../../src/worlds/gallery/index.ts'
 type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<PortraitAdditionInput, 'target'>
 
 const bridge: WebmcpBridge = {
+  addTextOverlay: ({text}) => ({id: text}),
+  clearTextOverlay: () => 2,
   addLayer: layer => layer.id,
   clearLayer: () => 1,
   clearDrawings: () => 2,
@@ -230,7 +232,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_geofences', 'show_fence', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_geofences', 'show_fence', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'add_text_overlay', 'clear_text_overlay', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
   for (const tool of tools.slice(0, 9)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -348,6 +350,32 @@ test('WebMCP layer calls reject malformed inputs before creating or clearing lay
   for (const name of ['clear_drawings', 'clear_layer', 'add_layer']) {
     expect(() => run(name, name === 'clear_drawings' ? {} : {id: 'notes'})).toThrow()
   }
+})
+test('text overlay calls reject ambiguous positions and invalid clears', () => {
+  const tools = createWebmcpTools(() => bridge)
+  const controller = new AbortController
+  const run = (name: string, input: Record<string, unknown>) => tools.find(tool => tool.name === name)!.execute(input, {signal: controller.signal})
+  for (const position of [null, {x: 1}, {
+    x: 1,
+    y: Infinity,
+  }, {
+    x: 1,
+    y: 0,
+    z: null,
+  }, {
+    x: 0,
+    y: 0,
+    unit: 'm',
+  }]) {
+    expect(() => run('add_text_overlay', {
+      text: 'test',
+      position,
+    })).toThrow(TypeError)
+  }
+  expect(() => run('add_text_overlay', {text: ' '})).toThrow(TypeError)
+  expect(() => run('clear_text_overlay', {id: 'some-drawing'})).toThrow(TypeError)
+  controller.abort()
+  expect(() => run('clear_text_overlay', {})).toThrow()
 })
 test('show_fence selects all, one or no fences and preserves the selection on errors', () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'show_fence')!
