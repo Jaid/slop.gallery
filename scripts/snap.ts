@@ -7,6 +7,7 @@ import {parseArgs} from 'node:util'
 
 import capturePage from 'capture-page'
 import {endWarmup, executeWebmcpTool, setWireframe, waitForLoadingItems} from 'capture-session/script'
+import {isPlainObject} from 'es-toolkit'
 import {join, relative} from 'forward-slash-path'
 import fs from 'fs-extra'
 import getFree from 'get-free'
@@ -110,7 +111,7 @@ export default async function snap(overrides: SnapOptions, tools: ReadonlyArray<
     throw new Error('--jxl-effort must be a whole number from 1 to 10.')
   }
   const wireframe = options.wireframe === undefined ? undefined : JSON.parse(options.wireframe) as unknown
-  if (wireframe !== undefined && (typeof wireframe !== 'object' || wireframe === null || Array.isArray(wireframe))) {
+  if (wireframe !== undefined && !isPlainObject(wireframe)) {
     throw new Error('--wireframe needs a JSON object of set_wireframe input.')
   }
   await anchorWorldReach(setup, position)
