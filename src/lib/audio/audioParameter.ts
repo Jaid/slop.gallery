@@ -1,7 +1,7 @@
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
+import isFlagOn from '#src/lib/permalinkFlag.ts'
 
 /** `true` for full volume, an integer percentage for that volume, `false` for muted */
 export type AudioFlag = boolean | number
@@ -12,7 +12,7 @@ const audioSchema = optis({
   },
   normalizations: {
     audio(value: unknown): AudioFlag {
-      if (enabledValues.has(value)) {
+      if (isFlagOn(value)) {
         return true
       }
       const text = typeof value === 'number' ? String(value) : value

@@ -7,16 +7,17 @@ import {useEffect, useState} from 'react'
 import readPermalink from 'read-permalink'
 import {create} from 'zustand'
 
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 import {ambienceEmitters} from '../index.ts'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
 const flagsSchema = optis({
   defaults: {
     show_ambience_emitters: false,
   },
   normalizations: {
     show_ambience_emitters(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
   },
 })

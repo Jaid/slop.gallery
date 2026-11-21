@@ -1,14 +1,15 @@
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 const telemetrySchema = optis({
   defaults: {
     telemetry: false,
   },
   normalizations: {
     telemetry(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
   },
 })

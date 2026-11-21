@@ -5,6 +5,8 @@ import readPermalink from 'read-permalink'
 import {Color, Vector3} from 'three/webgpu'
 import {create} from 'zustand'
 
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 import {lampOf} from './lamps.ts'
 
 type Level = {
@@ -14,7 +16,6 @@ type Level = {
   written: number
 }
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
 const flagsSchema = optis({
   defaults: {
     edit_lamps: false,
@@ -22,10 +23,10 @@ const flagsSchema = optis({
   },
   normalizations: {
     edit_lamps(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
     show_lamps(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
   },
 })

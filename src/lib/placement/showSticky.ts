@@ -1,14 +1,15 @@
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 const showStickySchema = optis({
   defaults: {
     show_sticky: false,
   },
   normalizations: {
     show_sticky(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
   },
 })

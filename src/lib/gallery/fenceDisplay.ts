@@ -3,15 +3,16 @@ import optis from 'optis'
 import readPermalink from 'read-permalink'
 import {create} from 'zustand'
 
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 /** True for every fence, false for none or a minimatch pattern over fence IDs. */
 export type FenceDisplay = {fence: boolean | string}
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
 const schema = optis({
   defaults: {show_fence: false},
   normalizations: {
     show_fence(value: unknown): FenceDisplay['fence'] {
-      if (enabledValues.has(value)) {
+      if (isFlagOn(value)) {
         return true
       }
       return typeof value === 'string' && value !== 'false' ? value : false

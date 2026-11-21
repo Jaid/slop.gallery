@@ -1,7 +1,7 @@
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
+import isFlagOn from '#src/lib/permalinkFlag.ts'
 
 /** `true` for the classic 1 px hardware lines, a line width in hundredths of a pixel at 1920×1080 for antialiased edges, `false` for the regular look */
 export type ShowWireframeFlag = boolean | number
@@ -12,7 +12,7 @@ const showWireframeSchema = optis({
   },
   normalizations: {
     show_wireframe(value: unknown): ShowWireframeFlag {
-      if (enabledValues.has(value)) {
+      if (isFlagOn(value)) {
         return true
       }
       const text = typeof value === 'number' ? String(value) : value

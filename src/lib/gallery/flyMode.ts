@@ -1,16 +1,17 @@
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 import {readDevelopmentMode} from '../developmentMode.ts'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
 const flyingSchema = optis({
   defaults: {
     flying: false,
   },
   normalizations: {
     flying(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
   },
 })

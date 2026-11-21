@@ -1,6 +1,8 @@
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 /** how a fusion’s result was made: by an image model, locally without AI as a collage of several images or as a single image tinted in the glows standing in for instructions, or not at all, as nothing was contributed to change the hung portrait, like by a Transparent Orb */
 export type FusionMaking = 'ai' | 'collage' | 'tint' | 'unchanged'
 /** which results of fusions a flag like `?download` shares: none, the new images (`true`) or `all` of them */
@@ -14,12 +16,11 @@ export type FusionResultInfo = {
   making: FusionMaking
 }
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
 const normalizeResults = (value: unknown): FusionResults => {
   if (value === 'all') {
     return 'all'
   }
-  return enabledValues.has(value)
+  return isFlagOn(value)
 }
 /** the origin and path of an HTTP(S) URL or of a bare host, which means HTTPS, and `undefined` for anything else */
 const normalizeEndpoint = (value: unknown) => {

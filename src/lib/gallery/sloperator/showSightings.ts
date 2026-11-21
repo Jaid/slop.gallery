@@ -1,14 +1,15 @@
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 const showSloperatorSightingsSchema = optis({
   defaults: {
     show_sloperator_sightings: false,
   },
   normalizations: {
     show_sloperator_sightings(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
   },
 })

@@ -4,12 +4,12 @@ import optis from 'optis'
 import readPermalink from 'read-permalink'
 import {create} from 'zustand'
 
+import isFlagOn from '#src/lib/permalinkFlag.ts'
 import world from '#src/worlds/current.ts'
 
 import {asPortrait, slotArea, slotAreas, slotFrame} from '../placement/portraitSlots.ts'
 import {wallPosition} from '../placement/wallGeometry.ts'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
 const flagsSchema = optis({
   defaults: {
     edit_portrait_slots: false,
@@ -17,10 +17,10 @@ const flagsSchema = optis({
   },
   normalizations: {
     edit_portrait_slots(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
     show_portrait_slots(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
   },
 })

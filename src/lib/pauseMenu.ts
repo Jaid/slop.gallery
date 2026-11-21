@@ -4,16 +4,17 @@ import optis from 'optis'
 import readPermalink from 'read-permalink'
 import PauseMenu from 'use-pause-menu/core'
 
+import isFlagOn from '#src/lib/permalinkFlag.ts'
+
 import {isContinuing} from './gameSeed.ts'
 
-const enabledValues = new Set<unknown>([true, '', 'true'])
 const pausedSchema = optis({
   defaults: {
     paused: false,
   },
   normalizations: {
     paused(value: unknown) {
-      return enabledValues.has(value)
+      return isFlagOn(value)
     },
   },
 })
