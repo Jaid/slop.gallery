@@ -12,6 +12,11 @@ type Shapes = {
     max: Vec3
     min: Vec3
   }
+  camera_facing_rectangle: {
+    center: Vec3
+    height: number
+    width: number
+  }
   circle: {
     center: Vec3
     normal?: Vec3
@@ -34,6 +39,12 @@ type Shapes = {
     b: Vec3
     c: Vec3
   }
+  viewport_rectangle: {
+    height: number
+    width: number
+    x: number
+    y: number
+  }
 }
 const vector = {
   type: 'array',
@@ -41,11 +52,22 @@ const vector = {
   minItems: 3,
   maxItems: 3,
 }
-const radius = {
+const positiveLength = {
   type: 'number',
   exclusiveMinimum: 0,
 }
+const lengths = new Set(['radius', 'width', 'height'])
+const coordinates = new Set(['x', 'y'])
+const fieldSchema = (key: string) => (lengths.has(key) ? positiveLength : (coordinates.has(key) ? {type: 'number'} : vector))
 const layouts = {
+  camera_facing_rectangle: {
+    required: ['center', 'width', 'height'],
+    optional: [],
+  },
+  viewport_rectangle: {
+    required: ['x', 'y', 'width', 'height'],
+    optional: [],
+  },
   box: {
     required: ['min', 'max'],
     optional: [],
@@ -88,7 +110,7 @@ export const drawingSchema = {oneOf: Object.entries(layouts).map(([kind, {requir
       pattern: hexColor.source,
       description: 'Hex RGB override, otherwise the layer color',
     },
-    ...Object.fromEntries([...required, ...optional].map(key => [key, key === 'radius' ? radius : vector])),
+    ...Object.fromEntries([...required, ...optional].map(key => [key, fieldSchema(key)])),
   },
   required: ['type', ...required],
   additionalProperties: false,
@@ -97,7 +119,7 @@ export const drawingSchema = {oneOf: Object.entries(layouts).map(([kind, {requir
 /** Validate the tool’s drawing before creating geometry. */
 export function readDrawing(value: unknown): Drawing {
   if (!value || typeof value !== 'object' || Array.isArray(value) || !('type' in value) || typeof value.type !== 'string' || !Object.hasOwn(layouts, value.type)) {
-    throw new TypeError('drawing.type must be box, circle, line, point, sphere or triangle.')
+    throw new TypeError(`Expected drawing.type to be one of: ${Object.keys(layouts).join(', ')}.`)
   }
   const fields = value as Record<string, unknown>
   const {required, optional} = layouts[value.type as keyof Shapes]
@@ -116,9 +138,13 @@ export function readDrawing(value: unknown): Drawing {
       continue
     }
     const v = fields[key]
-    if (key === 'radius') {
+    if (lengths.has(key)) {
       if (!(typeof v === 'number' && Math.fround(v) > 0 && Number.isFinite(Math.fround(v)))) {
-        throw new TypeError('drawing.radius must be a positive finite distance.')
+        throw new TypeError(`drawing.${key} must be positive and finite.`)
+      }
+    } else if (coordinates.has(key)) {
+      if (!(typeof v === 'number' && Number.isFinite(Math.fround(v)))) {
+        throw new TypeError(`drawing.${key} must be finite.`)
       }
     } else if (!(Array.isArray(v) && v.length === 3 && v.every(n => typeof n === 'number' && Number.isFinite(Math.fround(n))))) {
       throw new TypeError(`drawing.${key} must be a finite [x,y,z] vector.`)

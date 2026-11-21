@@ -1,6 +1,7 @@
 import type {LayerOptions} from './layer.ts'
 import type {OverlayDepthPipeline} from './obstruction.ts'
 import type {OverlayMesh} from './OverlayLayer.ts'
+import type {StrokeSpace} from './stroke.ts'
 import type {Vec3} from 'math'
 import type {Camera, ColorRepresentation, Node, Renderer} from 'three/webgpu'
 
@@ -34,6 +35,22 @@ const checkSphereRadius = (value: number) => {
     throw new RangeError('A sphere needs a positive finite radius.')
   }
 }
+function faceCamera(mesh: OverlayMesh) {
+  mesh.onBeforeRender = (_renderer, _scene, camera) => {
+    // Parallel to the image plane, including when the drawing is off-center.
+    camera.getWorldQuaternion(mesh.quaternion)
+    mesh.updateMatrixWorld()
+  }
+}
+/** Four independent edges in the local XY plane, without a diagonal. */
+function rectangleEdges(x: number, y: number, width: number, height: number) {
+  const right = x + width
+  const end = y + height
+  if (!(Math.fround(width) > 0 && Math.fround(height) > 0 && [x, y, width, height, right, end].every(n => Number.isFinite(Math.fround(n))))) {
+    throw new RangeError('A rectangle needs finite coordinates and positive finite dimensions.')
+  }
+  return new Float32Array([x, y, 0, right, y, 0, right, y, 0, right, end, 0, right, end, 0, x, end, 0, x, end, 0, x, y, 0])
+}
 
 /** Retained world-space line drawings, shared between independent producers. Draw once over the finished canvas or capture, outside the world’s lighting, reflections and temporal resolve. */
 export default class WorldOverlay {
@@ -56,6 +73,16 @@ export default class WorldOverlay {
     const edges: Array<number> = []
     appendBoxEdges(edges, min, max)
     return this.addSegments(new Float32Array(edges), style)
+  }
+  /** World-sized outline centered at a world position, with width and height along the camera’s right and up axes. */
+  addCameraFacingRectangle(center: Point, width: number, height: number, style?: OverlayStyle) {
+    if (!center.every(n => Number.isFinite(Math.fround(n)))) {
+      throw new RangeError('A rectangle needs a finite world center.')
+    }
+    const {drawing, mesh} = this.stroke(rectangleEdges(-width / 2, -height / 2, width, height), style)
+    mesh.position.set(...center)
+    faceCamera(mesh)
+    return drawing
   }
   /** A ring in the plane perpendicular to `normal`, horizontal by default. */
   addCircle(center: Point, radius: number, {normal = [0, 1, 0], segments = 64, ...style}: OverlayStyle & {
@@ -100,11 +127,7 @@ export default class WorldOverlay {
       mesh.scale.setScalar(size)
     }
     setBounds(center, radius)
-    mesh.onBeforeRender = (_renderer, _scene, camera) => {
-      // Parallel to the whole image, not aimed at the eye: even an off-center sphere stays round.
-      camera.getWorldQuaternion(mesh.quaternion)
-      mesh.updateMatrixWorld()
-    }
+    faceCamera(mesh)
     return {
       ...drawing,
       setBounds,
@@ -133,6 +156,10 @@ export default class WorldOverlay {
   }
   addTriangle(a: Point, b: Point, c: Point, style?: OverlayStyle) {
     return this.addSegments(new Float32Array([...a, ...b, ...b, ...c, ...c, ...a]), style)
+  }
+  /** Fixed to the active viewport. x and y measure from the top left; all four values are viewport fractions. */
+  addViewportRectangle(x: number, y: number, width: number, height: number, style?: OverlayStyle) {
+    return this.stroke(rectangleEdges(x, y, width, height), style, 'viewport').drawing
   }
   attach(camera: Camera, renderer: Renderer) {
     this.renderers.set(camera, renderer)
@@ -202,7 +229,7 @@ export default class WorldOverlay {
       this.scene.add(layer)
     }
   }
-  private stroke(positions: Float32Array, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}) {
+  private stroke(positions: Float32Array, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}, space: StrokeSpace = 'world') {
     if (!positions.length || positions.length % 6 !== 0) {
       throw new RangeError('Overlay segments need one or more pairs of xyz endpoints.')
     }
@@ -210,7 +237,11 @@ export default class WorldOverlay {
     const geometry = new LineSegmentsGeometry
     geometry.setPositions(positions)
     geometry.setDrawRange(6, 6) // the central quad, without cap triangles
-    const mesh = new Mesh(geometry, layer.materialFor(color))
+    const mesh = new Mesh(geometry, layer.materialFor(color, space))
+    if (space === 'viewport') {
+      mesh.userData.viewportStroke = true
+      mesh.frustumCulled = false
+    }
     mesh.name = name
     mesh.renderOrder = renderOrder
     this.place(layer, mesh)
@@ -225,12 +256,12 @@ export default class WorldOverlay {
           layer.detach(mesh)
           layer = next
           color = style.color ?? color
-          mesh.material = layer.materialFor(color)
+          mesh.material = layer.materialFor(color, space)
           this.place(layer, mesh)
         } else if (style.color !== undefined) {
           color = style.color
-          if (mesh.material === layer.material) {
-            mesh.material = layer.materialFor(color)
+          if (layer.isShared(mesh.material)) {
+            mesh.material = layer.materialFor(color, space)
           } else {
             mesh.material.color.set(color)
           }

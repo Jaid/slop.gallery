@@ -327,8 +327,8 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     },
     {
       name: 'add_drawing',
-      title: 'Add a world-space drawing',
-      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter, circle or sphere outline in meters. Use drawing.layer to select an existing overlay layer (default: default). The optional hex RGB color overrides the layer’s; a circle is horizontal unless given a normal. A sphere takes center and radius and its outline stays round from every view. Independent of show_fence and included in captures. The layer’s obstructedOpacityFactor scales the opacity of pixels behind depth-writing surfaces. The drawing stays until cleared or the page reloads. Returns its ID and geometry.',
+      title: 'Add an overlay drawing',
+      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter, circle or sphere outline in meters. Use drawing.layer to select an existing overlay layer (default: default). The optional hex RGB color overrides the layer’s; a circle is horizontal unless given a normal. A sphere takes center and radius and its outline stays round from every view. A camera_facing_rectangle takes a world center and full width and height in meters. A viewport_rectangle takes x and y from the top left and width and height, all in fractions of the active viewport; it ignores world depth and distance fade. Independent of show_fence and included in captures. For world-space shapes the layer’s obstructedOpacityFactor scales the opacity of pixels behind depth-writing surfaces. The drawing stays until cleared or the page reloads. Returns its ID and geometry.',
       inputSchema: {
         type: 'object',
         properties: {drawing: drawingSchema},

@@ -1,6 +1,6 @@
 # World overlay
 
-The overlay draws world-space markings, over both the finished canvas and captures. Drawings are page-local. They survive the caller disconnecting and disappear on reload. Hiding the scene UI hides the pass; an empty overlay draws nothing.
+The overlay draws world-space and viewport markings over both the finished canvas and captures. Drawings are page-local. They survive the caller disconnecting and disappear on reload. Hiding the scene UI hides the pass; an empty overlay draws nothing.
 
 ```ts
 import overlay from '#src/lib/overlay/index.ts'
@@ -34,6 +34,8 @@ Both fence layers explicitly enable the distance fade. Fences use `fences` (blue
 - `addLine(from, to, style?)`, `addTriangle(a, b, c, style?)` and `addBox(min, max, style?)` draw a segment, a triangle’s perimeter and an axis-aligned box’s edges.
 - `addPoint(position, options?)` draws a three-axis cross with an optional `radius` (default 0.1 m).
 - `addCircle(center, radius, options?)` draws a horizontal ring by default. Pass a plane `normal` or a segment count (default 64).
+- `addViewportRectangle(x, y, width, height, style?)` outlines a rectangle fixed to the active viewport. Coordinates start at the top left, increase rightward and downward and are fractions of viewport width and height (also in captures). Edges outside the viewport are clipped. It follows layer order and stroke styling but ignores world depth and distance fade.
+- `addCameraFacingRectangle(center, width, height, style?)` outlines a world-space rectangle centered at `center`. Its full width and height are in meters, parallel to the image plane of the camera rendering it. It follows the layer’s distance and obstruction settings like other world drawings.
 - `addSphere(center, radius, options?)` marks a world-space center with a circular outline that stays round from every camera angle. Its radius is in meters, so it looks smaller from farther away. It accepts the same style and segment count as a circle. Its handle also supports `setBounds(center, radius)` to move or resize it without rebuilding the ring.
 - `addSegments(positions, style?)` batches endpoint pairs from a `Float32Array` into one draw call. Treat the buffer as immutable.
 
@@ -45,5 +47,7 @@ All primitives accept `layer`, a `color` override, `name` and a within-layer `re
 | --- | --- | --- |
 | `add_layer` | `{"id":"bounds","color":"#80ff00","priority":20,"lineWidth":200,"fade":{"end":80}}` | `{id}` |
 | `add_drawing` | `{"drawing":{"type":"sphere","layer":"bounds","center":[0,1.5,-3],"radius":0.75}}` | `{id, drawing}` |
+| `add_drawing` | `{"drawing":{"type":"viewport_rectangle","x":0.1,"y":0.1,"width":0.8,"height":0.8}}` | `{id, drawing}` |
+| `add_drawing` | `{"drawing":{"type":"camera_facing_rectangle","center":[0,2,-4],"width":2,"height":1}}` | `{id, drawing}` |
 | `clear_layer` | `{"id":"bounds"}` | `{removed}` |
 | `clear_drawings` | `{}` | `{removed}` |
