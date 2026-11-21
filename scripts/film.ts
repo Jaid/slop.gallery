@@ -1,6 +1,6 @@
 import type {CameraView} from '#src/lib/diagnostics.ts'
 import type {GallerySetup, GalleryValues, InitScript, LooseOptions} from './lib/headlessGallery.ts'
-import type {AudioTrack, FrameSink, Shot} from 'capture-session/script'
+import type {AudioTrack, FrameSink, Recipe, Shot} from 'capture-session/script'
 
 import {tmpdir} from 'node:os'
 import {parseArgs} from 'node:util'
@@ -163,11 +163,10 @@ type FilmValues = Omit<GalleryValues, 'seed' | 'target'> & Omit<ParsedOptions, '
 /** the command line options without --help, as parsed strings */
 type ParsedOptions = ReturnType<typeof parseArgs<{options: typeof filmOptions}>>['values']
 
-/** Reads the recipe once (including stdin) and resolves settings common to every take. */
-const prepareFilm = async (options: FilmValues, setup: GallerySetup) => {
-  const recipeFile = options.recipe ?? join(import.meta.dir, 'recipes', 'spawn.json')
-  const recipeText = recipeFile === '-' ? await Bun.stdin.text() : await fs.readFile(recipeFile, 'utf8')
-  const recipe = parseRecipe(JSON.parse(recipeText))
+/** Reads the recipe once (including stdin), unless it came as keyframes, and resolves settings common to every take. */
+const prepareFilm = async (options: FilmValues, setup: GallerySetup, keyframes?: Recipe) => {
+  const readRecipe = async (file = join(import.meta.dir, 'recipes', 'spawn.json')): Promise<unknown> => JSON.parse(file === '-' ? await Bun.stdin.text() : await fs.readFile(file, 'utf8'))
+  const recipe = parseRecipe(keyframes ?? await readRecipe(options.recipe))
   const output = options['output-file'] === undefined ? join(filmRoot, `${setup.world}-${timestamp()}.jxl`) : resolve(options['output-file'])
   const format = frameFormat(output)
   const avif = format === 'avif'
@@ -448,11 +447,14 @@ const filmDefaults = parseArgs({
   options: filmOptions,
   args: [],
 }).values
-/** Opens one encoder at the first take’s canvas size and keeps it for the entire movie. */
-const main = async (overrides: FilmOptions) => {
+/** Opens one encoder at the first take’s canvas size and keeps it for the entire movie. Its camera follows the keyframes of `recipe`, or else those of the file --recipe names. */
+const main = async (overrides: FilmOptions, recipe?: Recipe) => {
   const options: FilmValues = {
     ...filmDefaults,
     ...normalizeOptions<FilmValues>(overrides, filmOptions),
+  }
+  if (recipe && options.recipe !== undefined) {
+    throw new Error('Pass the keyframes either as the second argument or as the file --recipe names, not both.')
   }
   const inputs = await filmInputs(options)
   const defaultHeight = formatOf(options) === 'avif' ? avifDefaults.height : filmHeight
@@ -460,7 +462,7 @@ const main = async (overrides: FilmOptions) => {
     ...options,
     ...inputs[0],
   }, defaultHeight)
-  const film = await prepareFilm(options, first)
+  const film = await prepareFilm(options, first, recipe)
   const {encoding, format} = film
   const {fps, height, output, width} = encoding
   const [startingFrame] = parseNumbers(options['starting-frame'], 'starting-frame', [1])
