@@ -25,7 +25,7 @@ const help = `Usage: bun scripts/snap.ts [options]
 
 Takes a headless photo of a world and writes it to out/snap/<name>.jxl, next to out/snap/<name>.msgpack with the X dump of the same view.
 Starts a private Vite dev server (or serves --target) and a private headless browser through capture-page; never touches the visible browser.
-The photo is a fresh WebGPU render of the scene, so menus and other DOM overlays are not in it. Its camera is the player, flying: the room its eyes are in is the player’s.
+By default the photo is a fresh WebGPU render, without DOM overlays. Use --text-overlays to include HTML measurement labels. Its camera is the player, flying: the room its eyes are in is the player’s.
 
 Options:
 ${galleryHelp(snapHeight)}
@@ -38,7 +38,8 @@ ${galleryHelp(snapHeight)}
   --jxl-effort <1–10>     cjxl effort; lossless 2160p takes about a second at 6 and minutes at 10. Default: ${jxlEffort}
   --settle <frames>       frames to render after flying there and again once everything has loaded. Default: 2, enough even with TRAA
   --wireframe <json>      input for the app’s set_wireframe WebMCP tool, sent after flying there, e.g. {"direction": "in", "position": [0, 0.5, -12], "radius": 6}
-  --tools <json>          the app’s WebMCP tools to run once everything there has loaded, by name with their input, in order, like a film recipe’s tools, e.g. {"spawn_sloperator": {"sight": "lobby_east_bench"}}; what they bring loads and settles before the photo, and their results go to stderr
+  --tools <json>          ordered WebMCP calls, e.g. [{"name":"spawn_sloperator","input":{"sight":"lobby_east_bench"}}]. Names may repeat. Calls run after loading, before the final settle; results go to stderr
+  --text-overlays         photograph the canvas and its HTML text labels together at viewport resolution, hiding the rest of the page UI
   --name <name>           output file name without extension. Default: the next free number, starting at 1
   -h, --help              show this help
 
@@ -61,6 +62,7 @@ const snapOptions = {
   name: {type: 'string'},
   position: {type: 'string'},
   tools: {type: 'string'},
+  'text-overlays': {type: 'boolean'},
   wireframe: {type: 'string'},
   settle: {
     type: 'string',
@@ -104,10 +106,14 @@ const main = async (options: SnapOptions) => {
   if (wireframe !== undefined && (typeof wireframe !== 'object' || wireframe === null || Array.isArray(wireframe))) {
     throw new Error('--wireframe needs a JSON object of set_wireframe input.')
   }
-  const tools = options.tools === undefined ? {} : JSON.parse(options.tools) as unknown
+  const tools: unknown = options.tools === undefined ? [] : JSON.parse(options.tools)
   const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
-  if (!isObject(tools) || !Object.values(tools).every(isObject)) {
-    throw new Error('--tools needs a JSON object of WebMCP tool inputs by tool name.')
+  const isCall = (value: unknown): value is {
+    input: Record<string, unknown>
+    name: string
+  } => isObject(value) && typeof value.name === 'string' && value.name.trim().length > 0 && isObject(value.input)
+  if (!Array.isArray(tools) || !tools.every(isCall)) {
+    throw new Error('--tools needs a JSON array of {name, input} WebMCP calls.')
   }
   await anchorWorldReach(setup, position)
   await using server = await serveGallery(setup, {cacheDir: 'node_modules/.vite-snap'})
@@ -117,13 +123,14 @@ const main = async (options: SnapOptions) => {
     position: Vec3
     rotation: Vec3
   } | undefined
-  // The page renders and encodes the photo itself; download_frame hands it over as a browser download.
+  const withLabels = options['text-overlays']
+  let screenDump: DownloadFrameResult['dump'] = null
   const capture = await capturePage(server.url, {
     browser: Bun.env.BROWSER,
-    args: ['--enable-unsafe-webgpu'],
+    args: ['--enable-unsafe-webgpu', '--enable-features=WebMCP'],
     ...setup.viewport,
     body: false,
-    capture: 'download',
+    capture: withLabels ? 'screenshot' : 'download',
     // Loading only gives up once nothing finishes for a while; Knottingham’s Knot materials alone take minutes.
     timeout: 1_800_000,
     wait: 'domcontentloaded',
@@ -147,23 +154,32 @@ const main = async (options: SnapOptions) => {
         await waitForFrames(page, settle)
         await waitForLoadingItems(page)
       }
-      // On the scene as it loaded, like a film recipe’s tools, and whatever they bring loads and settles in turn
-      if (Object.keys(tools).length > 0) {
-        for (const [name, input] of Object.entries(tools)) {
-          console.error(`${name}: ${await executeWebmcpTool(page, name, input as Record<string, unknown>)}`)
+      // Repeated calls are meaningful: a measurement has several add_drawing calls, then a label.
+      if (tools.length > 0) {
+        for (const {name, input} of tools) {
+          console.error(`${name}: ${await executeWebmcpTool(page, name, input)}`)
         }
         await waitForFrames(page, settle)
         await waitForLoadingItems(page)
       }
       await waitForFrames(page, settle)
+      if (withLabels) {
+        // Keep the page layout (and thus the canvas rectangle used to project the labels).
+        await page.addStyleTag({content: 'body * { visibility: hidden !important } canvas, #gallery-text-overlay > div { visibility: visible !important }'})
+        screenDump = await page.evaluate(() => globalThis.slopGallery!.dump?.() ?? null)
+      }
     },
     // Dumps before rendering, like X: the frame shows the view the dump describes.
-    toolCalls: [{
+    toolCalls: withLabels ? [] : [{
       name: 'download_frame',
       input: {format: 'png'},
     }],
   })
-  const frame = capture.toolResults[0] as DownloadFrameResult
+  const frame = withLabels ? {
+    ...setup.viewport,
+    dump: screenDump,
+    nonBlackFraction: undefined,
+  } : capture.toolResults[0] as DownloadFrameResult
   if (frame.nonBlackFraction === 0) {
     throw new Error('The capture is completely black.')
   }
