@@ -21,8 +21,8 @@ export function parseStreamBudget(value: unknown): StreamBudget | undefined {
   }
 }
 
-/** what the world streams with under the pause menu, where no frame of it moves: the menu stays responsive while about four times as much is built per frame as in play */
-export const defaultFastStreamBudget = 30
+/** what the world streams with under the pause menu, where no frame of it moves: the rest of the scene is in about 40% sooner than at the players’ 8 with the menu still responsive, where 30 only gets there 20% sooner and `false` blocks the page for seconds */
+export const defaultFastStreamBudget = 50
 
 const schema = optis({
   normalizations: {
