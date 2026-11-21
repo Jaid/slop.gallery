@@ -13,7 +13,7 @@ export type WireframeFlood = {
   burst: number
   /** seconds over which the burst eases into the regular speed, as the time constant of an exponential */
   burstDuration: number
-  /** line color of everything not highlighted, as #rgb or #rrggbb; null falls back to red beside highlights and green otherwise */
+  /** line color of everything not highlighted, as #rgb or #rrggbb; null falls back to red beside highlights and white otherwise */
   color: string | null
   /** in turns everything the sphere reaches into wireframe; out starts from a frame that is all wireframe and turns everything the sphere reaches back into the scene */
   direction: WireframeFloodDirection
@@ -21,7 +21,7 @@ export type WireframeFlood = {
   enabled: boolean
   /** seconds a flipped triangle glows, starting in its full line color the moment it flips and fading with a steep exponential ease-out, in triangle and combined mode; 0 turns the triangle glow off */
   glowDuration: number
-  /** mesh paths whose objects draw in blue while everything else draws in red; empty draws every line green */
+  /** mesh paths whose objects draw in blue while everything else draws in red; empty draws every line white */
   highlight: Array<string>
   /** line color of the highlighted objects, as #rgb or #rrggbb; null falls back to blue */
   highlightColor: string | null
@@ -73,7 +73,7 @@ export const wireframeFlood: WireframeFlood = {
   burstDuration: 0.5,
   anchor: 'nearest',
   antialiasing: false,
-  angleIndicatorStrength: 5,
+  angleIndicatorStrength: 0,
   color: null,
   direction: 'in',
   enabled: false,

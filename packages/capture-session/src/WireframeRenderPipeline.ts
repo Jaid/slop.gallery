@@ -31,10 +31,10 @@ function setAsidePositionless(scene: Scene) {
 /** Hidden-line wireframe for eyeballing polygon density. The default barycentric line style draws each face’s edges as part of its fill, from each fragment’s distance to its triangle’s edges, antialiased and exactly at the surface’s depth, so only the triangles of visible surfaces show and edges never break up where surfaces nearly touch. The lines style instead lets a depth-writing fill pass occlude the edges of a following pass of 1 px hardware lines. All overrides inherit each material’s `positionNode`, so displaced surfaces keep their real shape, while meshes without positions sit out. With highlight paths, the objects at their ends are drawn in blue and everything else in red; paths and colors can change from frame to frame. Faces are shaded by their angle to the camera, from black when seen edge-on to a share of their line color when facing it. */
 export default class WireframeRenderPipeline extends RenderPipeline {
   /** percent of the line color a face shows when facing the camera; edge-on faces are black */
-  angleIndicatorStrength = 5
+  angleIndicatorStrength = 0
   /** color behind the wireframe, where no surface is, as #rgb or #rrggbb; without one, the renderer’s clear color */
   background: string | undefined
-  /** line color of everything not highlighted; without one, red beside highlights and green otherwise */
+  /** line color of everything not highlighted; without one, red beside highlights and white otherwise */
   color: string | undefined
   /** mesh paths whose objects draw in the highlight color; empty draws every line in the regular color */
   highlight: Array<string>
@@ -44,7 +44,7 @@ export default class WireframeRenderPipeline extends RenderPipeline {
   lineStyle: 'barycentric' | 'lines' = 'barycentric'
   /** Width in render pixels, fixed or resolved for the current render target before drawing. Shared between the two triangles along the edge. */
   lineWidth: ((renderer: Renderer) => number) | number = 0.5
-  private readonly angleIndicator = uniform(0.05)
+  private readonly angleIndicator = uniform(0)
   private readonly backgroundColor = new Color
   private readonly barycentricFill: MeshBasicNodeMaterial
   private readonly barycentricHighlightFill: MeshBasicNodeMaterial
@@ -124,7 +124,7 @@ export default class WireframeRenderPipeline extends RenderPipeline {
     const {camera, renderer, scene} = this
     const {autoClear} = renderer
     const {background, backgroundNode, overrideMaterial} = scene
-    this.lineColor.value.set(this.color ?? (this.highlight.length > 0 ? '#ff1515' : '#40ff40'))
+    this.lineColor.value.set(this.color ?? (this.highlight.length > 0 ? '#ff1515' : '#fff'))
     this.highlightLineColor.value.set(this.highlightColor ?? '#2f7bff')
     this.angleIndicator.value = this.angleIndicatorStrength / 100
     this.halfLineWidth.value = (typeof this.lineWidth === 'number' ? this.lineWidth : this.lineWidth(renderer)) / 2

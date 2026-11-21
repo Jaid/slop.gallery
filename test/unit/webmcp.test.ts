@@ -154,7 +154,7 @@ const bridge: WebmcpBridge = {
     previous: 7,
     seed,
   }),
-  setWireframe: ({enabled = false, direction = 'in', mode = 'triangle', anchor = 'nearest', shape = 'sphere', position = [0, 0, 0], radius = 0, highlight = [], color = null, highlightColor = null, background = null, seamWidth = null, glowDuration = 1, seamColor = null, seamIntensity = 0.9, angleIndicatorStrength = 5, speed = null, burst = 1, burstDuration = 0.5, antialiasing = false, lineStyle = 'barycentric', lineWidth = 0.5}) => ({
+  setWireframe: ({enabled = false, direction = 'in', mode = 'triangle', anchor = 'nearest', shape = 'sphere', position = [0, 0, 0], radius = 0, highlight = [], color = null, highlightColor = null, background = null, seamWidth = null, glowDuration = 1, seamColor = null, seamIntensity = 0.9, angleIndicatorStrength = 0, speed = null, burst = 1, burstDuration = 0.5, antialiasing = false, lineStyle = 'barycentric', lineWidth = 0.5}) => ({
     enabled,
     direction,
     mode,
@@ -517,7 +517,7 @@ test('set_wireframe validates its optional fields and sets them through the brid
     glow_duration: 1,
     seam_color: null,
     seam_intensity: 0.9,
-    angle_indicator_strength: 5,
+    angle_indicator_strength: 0,
     speed: null,
     burst: 1,
     burst_duration: 0.5,

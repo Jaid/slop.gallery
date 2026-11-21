@@ -1027,7 +1027,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             ],
           },
           color: {
-            description: 'line color of everything not highlighted, as #rgb or #rrggbb. Fallback: #ff1515 beside highlights, #40ff40 otherwise',
+            description: 'line color of everything not highlighted, as #rgb or #rrggbb. Fallback: #ff1515 beside highlights, #fff otherwise',
             anyOf: [
               {
                 type: 'string',
@@ -1122,7 +1122,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           },
           angle_indicator_strength: {
             type: 'number',
-            description: 'percent of its line color a wireframe face shows when facing the camera, 5 at first; edge-on faces are black',
+            description: 'percent of its line color a wireframe face shows when facing the camera, 0 at first, which leaves every face black; edge-on faces are always black',
             minimum: 0,
             maximum: 100,
           },
