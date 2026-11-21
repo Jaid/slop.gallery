@@ -36,7 +36,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixe
   const fixed = await add({
     x: 30,
     y: 55,
-  }, 7)
+  }, 1)
   const centered = await add()
   const world = await add({
     x: 1,
@@ -50,6 +50,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixe
       left,
       top,
       right: left + width,
+      bottom: top + height,
       cx: left + width / 2,
       cy: top + height / 2,
       hidden: label.hidden,
@@ -81,7 +82,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('HTML labels distinguish viewport pixe
     const projected = await read(world)
     expect(projected.hidden).toBe(false)
     expect(projected.right).toBeCloseTo(bounds.left + fraction * bounds.width, 0)
-    expect(projected.top).toBeCloseTo(bounds.top + 0.25 * bounds.height, 0)
+    expect(projected.bottom).toBeCloseTo(bounds.top + 0.25 * bounds.height, 0)
   }
   await look(1, Math.PI)
   await waitForFrames(page, 3)

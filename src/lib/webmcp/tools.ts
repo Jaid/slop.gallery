@@ -368,7 +368,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             minimum: 1,
             maximum: 9,
             default: 5,
-            description: 'Numeric keypad layout: 7/8/9 across the top, 4/5/6 across the middle and 1/2/3 across the bottom. Default 5 (center).',
+            description: 'Reading order: 1/2/3 across the top, 4/5/6 across the middle and 7/8/9 across the bottom. Default 5 (center).',
           },
           text: {
             type: 'string',

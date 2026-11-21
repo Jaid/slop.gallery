@@ -24,8 +24,9 @@ export default class TextOverlays {
     const id = crypto.randomUUID()
     label.dataset.textOverlay = id
     label.className = css.label
-    // Translate by fractions of the label's own size: 7 is top left and 3 is bottom right.
-    label.style.translate = `${-50 * ((anchor - 1) % 3)}% ${-50 * Math.floor((9 - anchor) / 3)}%`
+    // Number the label's attachment points in reading order, from top left to bottom right.
+    const index = anchor - 1
+    label.style.translate = `${-50 * (index % 3)}% ${-50 * Math.floor(index / 3)}%`
     label.textContent = text
     this.labels.add(label)
     document.body.append(label)
