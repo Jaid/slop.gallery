@@ -24,6 +24,8 @@ type DownloadFrameResult = {
 }
 
 const snapHeight = 1080
+/** the default environment, so photos of the same view match */
+const snapSeed = '0'
 const help = `Usage: bun scripts/snap.ts [options]
 
 Takes a headless photo of a world and writes it to out/snap/<name>.jxl, next to out/snap/<name>.msgpack with the X dump of the same view.
@@ -31,13 +33,18 @@ Starts a private Vite dev server (or serves --target) and a private headless bro
 By default the photo is a fresh WebGPU render, without DOM overlays. Use --text-overlays to include HTML measurement labels. Its camera is the player, flying: the room its eyes are in is the player’s.
 
 Options:
-${galleryHelp(snapHeight)}
+${galleryHelp(snapHeight, {
+  seed: snapSeed,
+  without: ['frozen_time'],
+})}
+  --frozen_time <seconds|false>
+                          mirrors ?frozen_time, the engine time every animation stands still at, so photos of the same view match; false lets them run. Default: the bookmark’s, or 0
   --bookmark <id>         camera bookmark of the world (its rooms’ cameras.ts, like lobby-overview) that supplies the defaults of --position, --angle, --fov, the width-to-height ratio and --frozen_time
   --position <x,y,z>      where the player flies to, its eyes’ position in meters. Default: the bookmark’s, or the player spawn
   --angle <yaw,pitch[,roll]>
                           camera angle in degrees. Yaw 0 looks toward −z, positive pitch looks up. Default: the bookmark’s, or the player spawn
   --fov <degrees>         vertical field of view, exactly: it also mirrors ?fov, under which no mood widens the view. Default: the bookmark’s, or the game camera’s, which a mood of the room may widen like for any player, like the Corridor’s
-  --jxl-distance <number> cjxl Butteraugli distance, 0 is lossless. Default: 1
+  --jxl-distance <number> cjxl Butteraugli distance, 0 is lossless. Default: 0
   --jxl-effort <1–10>     cjxl effort; lossless 2160p takes about a second at 6 and minutes at 10. Default: ${jxlEffort}
   --settle <frames>       frames to render after flying there and again once everything has loaded. Default: 2, enough even with TRAA
   --wireframe <json>      input for the app’s set_wireframe WebMCP tool, sent after flying there, e.g. {"direction": "in", "position": [0, 0.5, -12], "radius": 6}
@@ -56,7 +63,7 @@ const snapOptions = {
   bookmark: {type: 'string'},
   'jxl-distance': {
     type: 'string',
-    default: '1',
+    default: '0',
   },
   'jxl-effort': {
     type: 'string',
@@ -66,6 +73,10 @@ const snapOptions = {
   position: {type: 'string'},
   'text-overlays': {type: 'boolean'},
   wireframe: {type: 'string'},
+  seed: {
+    type: 'string',
+    default: snapSeed,
+  },
   settle: {
     type: 'string',
     default: '2',
@@ -94,9 +105,9 @@ export default async function snap(overrides: SnapOptions, tools: ReadonlyArray<
       throw new Error(`--bookmark must be one of the ${setup.world} camera bookmarks: ${cameraBookmarks.map(entry => entry.id).join(', ') || 'none'}.`)
     }
     setup.viewport = resolveSize(options, snapHeight, bookmark.ratio)
-    if (bookmark.frozenTime !== undefined && !setup.search.has('frozen_time')) {
-      setup.search.set('frozen_time', String(bookmark.frozenTime))
-    }
+  }
+  if (!setup.search.has('frozen_time')) {
+    setup.search.set('frozen_time', String(bookmark?.frozenTime ?? 0))
   }
   const position = options.position === undefined ? bookmark?.position : parseNumbers(options.position, 'position', [3]) as Vec3
   const angle = options.angle === undefined ? bookmark && [degrees(bookmark.aim.yaw), degrees(bookmark.aim.pitch)] : parseNumbers(options.angle, 'angle', [2, 3])
