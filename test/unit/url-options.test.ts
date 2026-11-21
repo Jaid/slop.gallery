@@ -6,6 +6,7 @@ import {readDevelopmentMode} from '../../src/lib/developmentMode.ts'
 import {readFade} from '../../src/lib/fade.ts'
 import {readFlying} from '../../src/lib/gallery/flyMode.ts'
 import {includesResult, readDownload, readWebhook, readWebhookEndpoint} from '../../src/lib/gallery/fusion/resultSharing.ts'
+import {readPaused} from '../../src/lib/pauseMenu.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {readAlbedo} from '../../src/lib/rendering/albedo.ts'
 import {getAntiAliasing, readAntiAliasing} from '../../src/lib/rendering/antiAliasing.ts'
@@ -77,6 +78,16 @@ describe('URL options', () => {
     for (const search of ['', '?flying', '?flying=true', '?development', '?development&flying=false', '?development=false&flying']) {
       expect(readFlying(search)).toBe(false)
     }
+  })
+  test('?paused is enabled by a bare or true flag only and shows among the query overrides', () => {
+    expect(readPaused('?paused')).toBe(true)
+    expect(readPaused('?paused=true')).toBe(true)
+    expect(readPaused('https://slop.gallery/?graphics=fast&paused&seed=1')).toBe(true)
+    for (const search of ['', 'https://slop.gallery/', '?paused=false', '?paused=1', '?paused=TRUE', '?pause']) {
+      expect(readPaused(search)).toBe(false)
+    }
+    expect(readQueryOverrides('http://localhost/?paused')).toEqual({paused: true})
+    expect(readQueryOverrides('http://localhost/?paused=false')).toBeUndefined()
   })
   test('?near, ?scale and ?warmup_scale accept finite positive numbers', () => {
     for (const [value, expected] of [['0.05', 0.05], ['1', 1], ['1.5', 1.5], ['1e-3', 0.001], ['1e1', 10]] as const) {

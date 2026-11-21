@@ -23,6 +23,7 @@ import {readWeather} from './gallery/lighting.ts'
 import {readMoonfallHue} from './gallery/moonfall/hueParameter.ts'
 import {readPortraitSlotEditing, readShowPortraitSlots} from './gallery/portraitSlotStore.ts'
 import {readRoom, readSpawn} from './gallery/spawn.ts'
+import {readPaused} from './pauseMenu.ts'
 import {readKnotRotation} from './physics/rotatingKnots.ts'
 import {readShowSticky} from './placement/showSticky.ts'
 import {readAlbedo} from './rendering/albedo.ts'
@@ -80,6 +81,7 @@ const readers: Record<string, Reader> = {
   mood: readMood,
   moonfall_hue: readMoonfallHue,
   near: readNear,
+  paused: readPaused,
   pmrem: readPmrem,
   portraits: readPortraitCount,
   ratio: readRatio,
