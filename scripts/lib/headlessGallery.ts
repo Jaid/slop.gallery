@@ -26,12 +26,14 @@ const queryOptionNames = [...new Set([...queryParameters.filter(key => !dedicate
 const defaultSeed = '1'
 const queryOptions: Record<string, {type: 'string'}> = Object.fromEntries(queryOptionNames.map(key => [key, {type: 'string'}]))
 /** Scripts pick their own default height, the ratio of width to height a missing side follows, 16:9 by default, and their default seed, and may leave out query options they set themselves. */
-export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, seed = defaultSeed, without = []}: {
+export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, seed = defaultSeed, without = [], worldReach = 'all'}: {
   ratio?: number
   /** the --seed the script takes without one */
   seed?: string
   /** query options the script sets itself, which the help leaves out */
   without?: ReadonlyArray<string>
+  /** the --world_reach the script takes without one */
+  worldReach?: string
 } = {}) => {
   const sides = ratio === 1 ? ['--height', '--width'] : (ratio === 16 / 9 ? ['--height × 16/9', '--width × 9/16'] : [`--height × ${ratio}`, `--width ÷ ${ratio}`])
   const listed = queryOptionNames.filter(key => !without.includes(key))
@@ -44,7 +46,7 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, seed = default
   --warmup_scale <scale|false>
                           mirrors ?warmup_scale, the renderer scale the page loads, compiles and streams everything in at until the script ends its warmup right before capturing, so those frames stay cheap and the full-size render targets don’t exist yet. Default: ${warmupRows} rows, ${warmupRows} divided by the height, unless the regular scale is smaller; false renders at the full size from the start
   --world_reach <room|neighbors|all>
-                          mirrors ?world_reach, how much of the world mounts: only the room the page starts in, that room and its neighbors, or every room. Default: all. snap.ts and film.ts reach out from the room their camera starts in, unless --room or --spawn names where to start; openings out of reach look into the void
+                          mirrors ?world_reach, how much of the world mounts: only the room the page starts in, that room and its neighbors, the rooms a player can see into from anywhere in it, or every room. Default: ${worldReach}. snap.ts and film.ts reach out from the room their camera starts in, unless --room or --spawn names where to start; openings out of reach look into the void
   --swiftshader           renders on Chrome’s software Vulkan instead of a GPU, for machines without one like CI runners, which also need a system Vulkan driver like Mesa’s (mesa-vulkan-drivers on Ubuntu); slow, but enough to load and analyze the scene
   --width <pixels>        render width. Default: ${sides[0]}, or ${Math.round(defaultHeight * ratio)}
   --height <pixels>       render height. Default: ${sides[1]}, or ${defaultHeight}

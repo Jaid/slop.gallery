@@ -24,6 +24,8 @@ type DownloadFrameResult = {
 }
 
 const snapHeight = 2160
+/** Its neighbors are everything a camera in a room can see, so photos look the same as with every room, while the rest never loads. Tool calls into rooms out of reach fail, which --world_reach all lets through. */
+const snapWorldReach = 'neighbors'
 /** the default environment, so photos of the same view match */
 const snapSeed = '0'
 /** cjxl effort for photos, which are lossless by default: a 2160p photo encodes in about a second, while the shared effort 10 takes minutes */
@@ -38,6 +40,7 @@ Options:
 ${galleryHelp(snapHeight, {
   seed: snapSeed,
   without: ['frozen_time'],
+  worldReach: snapWorldReach,
 })}
   --frozen_time <seconds|false>
                           mirrors ?frozen_time, the engine time every animation stands still at, so photos of the same view match; false lets them run. Default: the bookmark’s, or 0
@@ -82,6 +85,10 @@ const snapOptions = {
   settle: {
     type: 'string',
     default: '2',
+  },
+  world_reach: {
+    type: 'string',
+    default: snapWorldReach,
   },
 } as const
 const defaults = parseArgs({
