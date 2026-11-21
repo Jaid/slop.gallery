@@ -2,6 +2,7 @@ import {afterAll, describe, expect, test} from 'bun:test'
 
 import RAPIER from '@dimforge/rapier3d-compat'
 import EgoMotor, {defaultEgoOptions} from 'ego-player/motor'
+import {acceleratedRaycast, MeshBVH} from 'three-mesh-bvh'
 import {Mesh, MeshBasicMaterial, Quaternion, Raycaster, Vector3} from 'three/webgpu'
 
 import {colliderGeometry, createArchitectureGeometry} from '../../src/lib/gallery/architecture.ts'
@@ -46,6 +47,11 @@ describe('Lodge through-window', () => {
     const original = TimberGeometry.passage(corridorPassage)
     const before = [original.shell, original.ribs].map(geometry => new Mesh(geometry, material))
     const after = [timber.shell, timber.ribs].map(geometry => new Mesh(geometry, material))
+    // Without bounds trees, the thousands of rays below test every triangle of the passage and take seconds.
+    for (const mesh of [...before, ...after]) {
+      mesh.geometry.boundsTree ??= new MeshBVH(mesh.geometry)
+      mesh.raycast = acceleratedRaycast
+    }
     const world = new RAPIER.World({
       x: 0,
       y: 0,
