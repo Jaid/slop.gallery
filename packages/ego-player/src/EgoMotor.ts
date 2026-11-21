@@ -495,7 +495,7 @@ export default class EgoMotor {
       }
       pushed.add(body.handle)
       const bodyMass = body.mass()
-      // normal1 points out of the obstacle, towards the character.
+      // normal1 points out of the obstacle, toward the character.
       this.push.set(-collision.normal1.x, -collision.normal1.y, -collision.normal1.z)
       const velocity = body.velocityAtPoint(collision.witness1)
       const closingSpeed = this.movement.dot(this.push) / dt - this.push.x * velocity.x - this.push.y * velocity.y - this.push.z * velocity.z

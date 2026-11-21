@@ -2,7 +2,7 @@ import * as candidates from './candidates/index.ts'
 import * as entries from './entries/index.ts'
 import KnotCandidate, {indexKnots} from './KnotCandidate.ts'
 
-// Metadata only. Importing the catalogue never evaluates material constructors.
+// Metadata only. Importing the catalog never evaluates material constructors.
 export const knotCandidates = Object.values(candidates).map(data => new KnotCandidate(data, Object.values(entries).filter(entry => entry.candidateId === data.id)))
 export const knotsById = indexKnots(knotCandidates)
 export const knots = knotsById.values().toArray()
