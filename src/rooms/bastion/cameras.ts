@@ -61,4 +61,14 @@ export default {
     fov: 50,
     ratio: 16 / 9,
   },
+  // High in the cistern’s north end, looking south and down across its floor toward its flat wall, wide.
+  cistern: {
+    position: [-18.098, 9.373, -1.706],
+    aim: {
+      yaw: 3.1189,
+      pitch: -0.4888,
+    },
+    fov: 100,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
