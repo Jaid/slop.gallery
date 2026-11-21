@@ -52,7 +52,7 @@ All primitives accept `layer`, a `color` override, `name` and a within-layer `re
 | `clear_layer` | `{"id":"bounds"}` | `{removed}` |
 | `clear_drawings` | `{}` | `{removed}` |
 | `add_text_overlay` | `{"text":"Lobby","position":{"x":16,"y":24},"anchor":1}` | `{added}` |
-| `add_text_overlay` | `{"text":"3.80 m","position":{"x":3.5149,"y":0.002,"z":-29.9},"anchor":7}` | `{added}` |
+| `add_text_overlay` | `{"text":"3.80 m","position":{"x":3.5149,"y":0,"z":-29.9},"anchor":7}` | `{added}` |
 | `add_text_overlay` | `{"text":"1.20 m","position":{"x":7.728,"y":0.6,"z":-27.6},"anchor":9}` | `{added}` |
 | `clear_text_overlay` | `{}` | `{removed}` |
 

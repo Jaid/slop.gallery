@@ -26,9 +26,9 @@ const floor = 'lobby-floor-trace'
 const sill = 'lobby-salon-sill-height'
 const calls: Array<ToolCall> = [
   addLayer(floor),
-  line(floor, [3.5149, 0.002, -31.8], [3.5149, 0.002, -28]),
-  line(floor, [3.4649, 0.002, -31.8], [3.5649, 0.002, -31.8]),
-  line(floor, [3.4649, 0.002, -28], [3.5649, 0.002, -28]),
+  line(floor, [3.5149, 0, -31.8], [3.5149, 0, -28]),
+  line(floor, [3.4649, 0, -31.8], [3.5649, 0, -31.8]),
+  line(floor, [3.4649, 0, -28], [3.5649, 0, -28]),
   addLayer(sill),
   line(sill, [7.728, 0, -27.6], [7.728, 1.2, -27.6]),
   line(sill, [7.728, 0, -27.65], [7.728, 0, -27.55]),
@@ -40,7 +40,7 @@ const calls: Array<ToolCall> = [
       anchor: 7,
       position: {
         x: 3.5149,
-        y: 0.002,
+        y: 0,
         z: -29.9,
       },
     },
