@@ -71,7 +71,7 @@ export default {
     fov: 100,
     ratio: 16 / 9,
   },
-  // At the west end of the link, looking south-east and down through the climb’s mouth toward the Exhibition’s displays.
+  // Beside the link’s barred gate, looking south-east with the vaulted passage curving away on the left and the lantern-lit one behind the bars on the right.
   tunnels: {
     position: [-29.711, 3.645, 14.512],
     aim: {
