@@ -21,4 +21,14 @@ export default {
     fov: 60,
     ratio: 16 / 9,
   },
+  // Farther back in the same blind branch, looking north down it through a long lens past its barred window.
+  knight_alley: {
+    position: [-16.952, 2.202, 16.145],
+    aim: {
+      yaw: -0.0319,
+      pitch: -0.0228,
+    },
+    fov: 30,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
