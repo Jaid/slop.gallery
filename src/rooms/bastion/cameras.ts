@@ -71,4 +71,14 @@ export default {
     fov: 100,
     ratio: 16 / 9,
   },
+  // At the west end of the link, looking south-east and down through the climb’s mouth toward the Exhibition’s displays.
+  tunnels: {
+    position: [-29.711, 3.645, 14.512],
+    aim: {
+      yaw: -2.318,
+      pitch: -0.2336,
+    },
+    fov: 90,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
