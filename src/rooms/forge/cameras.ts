@@ -41,4 +41,14 @@ export default {
     fov: 30,
     ratio: 16 / 9,
   },
+  // Over the painter’s table by the west wall, looking west and steeply down at the Painting Set through a long lens.
+  item: {
+    position: [-2.359, 2.112, -3.9],
+    aim: {
+      yaw: 1.7352,
+      pitch: -0.6756,
+    },
+    fov: 30,
+    ratio: 1,
+  },
 } satisfies Record<string, RoomCamera>
