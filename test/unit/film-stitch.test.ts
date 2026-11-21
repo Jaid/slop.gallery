@@ -3,7 +3,7 @@ import {tmpdir} from 'node:os'
 import {basename, join} from 'node:path'
 
 import fs from 'fs-extra'
-import rollSeed from 'roll-seed'
+import makeSeed from 'make-seed'
 
 import {filmInputs} from '../../scripts/lib/filmInputs.ts'
 import {StitchTimeline} from '../../scripts/lib/stitchTimeline.ts'
@@ -36,7 +36,7 @@ test('seed patterns use the requested range, while literal brace ranges can reac
     seed: ['{4294967294..4294967295}', '20?', '[1]', 'Hanover'],
     'seed-range': '1..201',
   })
-  expect(inputs.map(input => input.seed)).toEqual(['65534', '65535', '200', '201', '1', String(rollSeed('Hanover'))])
+  expect(inputs.map(input => input.seed)).toEqual(['65534', '65535', '200', '201', '1', String(makeSeed('Hanover'))])
   await expect(filmInputs({seed: '999999?'})).rejects.toThrow('--seed')
 })
 test('the overlap shortens the movie once per cut and blends picture and audio at the same place, including a silent middle clip', async () => {

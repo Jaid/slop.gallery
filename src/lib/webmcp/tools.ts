@@ -24,7 +24,7 @@ import type {Rarity} from 'knot-materials/rarities.ts'
 import type VictoriaClient from 'victoria-browser-client'
 
 import {normalizeMeshPath, wireframeFloodAnchors, wireframeFloodDirections, wireframeFloodModes, wireframeFloodShapes, wireframeLineStyles} from 'capture-session'
-import {maximumSeed} from 'roll-seed'
+import {maximumSeed} from 'make-seed'
 
 import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import {isSeed} from '#src/lib/environmentSeed.ts'

@@ -7,7 +7,7 @@ export const maximumSeed = 65_536
 const isSeed = (value: number) => Number.isInteger(value) && value >= 1 && value <= maximumSeed
 
 /** Rolls uniformly from 1 through 65 536 without an input. A seed of that range, as a number or as its plain decimal text, stays what it is; other integers and decimal integer strings wrap into the range; other text, numbers and bytes are hashed into it. */
-export default function rollSeed(input?: ArrayBuffer | Uint8Array | number | string): number {
+export default function makeSeed(input?: ArrayBuffer | Uint8Array | number | string): number {
   if (input === undefined) {
     const data = crypto.getRandomValues(new Uint16Array(1))
     const uint16 = data[0]

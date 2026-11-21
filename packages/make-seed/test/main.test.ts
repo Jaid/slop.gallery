@@ -2,7 +2,7 @@ import {expect, spyOn, test} from 'bun:test'
 
 import murmur3 from '../src/lib/murmur3.ts'
 import toUint16 from '../src/lib/toUint16.ts'
-import rollSeed, {maximumSeed} from '../src/main.ts'
+import makeSeed, {maximumSeed} from '../src/main.ts'
 
 const textEncoder = new TextEncoder
 const encode = (text: string) => textEncoder.encode(text)
@@ -13,24 +13,24 @@ test('the lowest and highest random draws give the first and last seeds, includi
     bytes.fill(byte)
     return array
   })
-  expect(rollSeed()).toBe(1)
+  expect(makeSeed()).toBe(1)
   byte = 255
-  expect(rollSeed()).toBe(65_536)
+  expect(makeSeed()).toBe(65_536)
   expect(random).toHaveBeenCalledTimes(2)
 })
 test('integers wrap in the one-based range, even as decimal strings beyond safe integer precision', () => {
   for (const [input, seed] of [[1, 1], [65_536, 65_536], [65_537, 1], [0, 65_536], [-1, 65_535], ['+00042', 42], ['9007199254740993', 1], ['-9007199254740993', 65_535]] as const) {
-    expect(rollSeed(input)).toBe(seed)
+    expect(makeSeed(input)).toBe(seed)
   }
 })
 test('every seed of the range stays what it is, as a number and as its plain decimal text', () => {
   for (let seed = 1; seed <= maximumSeed; seed++) {
-    expect(rollSeed(seed)).toBe(seed)
-    expect(rollSeed(String(seed))).toBe(seed)
+    expect(makeSeed(seed)).toBe(seed)
+    expect(makeSeed(String(seed))).toBe(seed)
   }
-  expect(rollSeed('042')).toBe(42)
-  expect(rollSeed('4.2e1')).not.toBe(42)
-  expect(rollSeed(' 42')).not.toBe(42)
+  expect(makeSeed('042')).toBe(42)
+  expect(makeSeed('4.2e1')).not.toBe(42)
+  expect(makeSeed(' 42')).not.toBe(42)
 })
 test('integers keep their low 16 bits in two’s complement, as numbers and as decimal text of any length', () => {
   const integers = [0, -0, 1, -1, 65_535, 65_536, -65_536, 65_537, Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER, 2 ** 53 + 2, -(2 ** 60) - 2 ** 20, 1e20, -1e20, Number.MAX_VALUE, -Number.MAX_VALUE]
@@ -48,17 +48,17 @@ test('integers keep their low 16 bits in two’s complement, as numbers and as d
 test('text and byte views give repeatable seeds without drawing entropy', () => {
   using random = spyOn(crypto, 'getRandomValues')
   const bytes = Uint8Array.of(9, 1, 2, 3, 8)
-  const seed = rollSeed(bytes.subarray(1, 4))
-  expect(rollSeed(Uint8Array.of(1, 2, 3).buffer)).toBe(seed)
+  const seed = makeSeed(bytes.subarray(1, 4))
+  expect(makeSeed(Uint8Array.of(1, 2, 3).buffer)).toBe(seed)
   for (const input of ['Hanover', '🎨', '', new Uint8Array(0), 2.5, Infinity, Number.NaN]) {
-    const value = rollSeed(input)
+    const value = makeSeed(input)
     expect(value).toBeInteger()
     expect(value).toBeWithin(1, 65_537)
-    expect(rollSeed(input)).toBe(value)
+    expect(makeSeed(input)).toBe(value)
   }
-  expect(rollSeed('Hanover')).not.toBe(rollSeed('Salon'))
-  expect(rollSeed('abc')).not.toBe(rollSeed(encode('abc')))
-  expect(rollSeed(2.5)).toBe(rollSeed('2.5'))
+  expect(makeSeed('Hanover')).not.toBe(makeSeed('Salon'))
+  expect(makeSeed('abc')).not.toBe(makeSeed(encode('abc')))
+  expect(makeSeed(2.5)).toBe(makeSeed('2.5'))
   expect(random).not.toHaveBeenCalled()
 })
 test('the hash agrees with the reference MurmurHash3 x86 32-bit', () => {
@@ -82,7 +82,7 @@ test('hashed seeds spread evenly over the whole range', () => {
   const amount = 655_360
   const counts = new Uint32Array(maximumSeed)
   for (let i = 0; i < amount; i++) {
-    counts[rollSeed(`spot-${i}`) - 1]++
+    counts[makeSeed(`spot-${i}`) - 1]++
   }
   const expected = amount / maximumSeed
   const chiSquared = counts.reduce((sum, count) => sum + (count - expected) ** 2 / expected, 0)
@@ -90,12 +90,12 @@ test('hashed seeds spread evenly over the whole range', () => {
 })
 test('hashed seeds stay what they were, as saved worlds rely on them', () => {
   expect({
-    text: rollSeed('Hanover'),
-    empty: rollSeed(''),
-    bytes: rollSeed(Uint8Array.of(1, 2, 3)),
-    emptyBytes: rollSeed(new Uint8Array(0)),
-    fraction: rollSeed(2.5),
-    nan: rollSeed(Number.NaN),
+    text: makeSeed('Hanover'),
+    empty: makeSeed(''),
+    bytes: makeSeed(Uint8Array.of(1, 2, 3)),
+    emptyBytes: makeSeed(new Uint8Array(0)),
+    fraction: makeSeed(2.5),
+    nan: makeSeed(Number.NaN),
   }).toEqual({
     text: 45_352,
     empty: 19_203,
@@ -107,6 +107,6 @@ test('hashed seeds stay what they were, as saved worlds rely on them', () => {
 })
 test('anything but numbers, text and bytes is refused', () => {
   for (const input of [null, {}, [1, 2], Uint16Array.of(1), 1n]) {
-    expect(() => rollSeed(input as unknown as string)).toThrow(TypeError)
+    expect(() => makeSeed(input as unknown as string)).toThrow(TypeError)
   }
 })

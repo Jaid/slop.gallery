@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import rollSeed, {maximumSeed} from 'roll-seed'
+import makeSeed, {maximumSeed} from 'make-seed'
 
 import {narratorCharacter, narratorTraits, narratorVoice, narratorVoices} from '../../src/lib/audio/narratorCharacter.ts'
 import {defaultSeed, effectiveSeed, environmentRandom, isDefaultSeed, isSeed, parseSeed, readSeedOverride} from '../../src/lib/environmentSeed.ts'
@@ -11,7 +11,7 @@ test('?seed resolves supplied seeds into the game range and ignores a bare or ab
   expect(readSeedOverride('https://slop.gallery/?graphics=fast&seed=0')).toBe(0)
   expect(readSeedOverride(`?seed=${maximumSeed}`)).toBe(maximumSeed)
   for (const value of ['Hanover', '-1', '1564501177', '9007199254740993', String(maximumSeed + 1)]) {
-    expect(readSeedOverride(`?seed=${value}`)).toBe(rollSeed(value))
+    expect(readSeedOverride(`?seed=${value}`)).toBe(makeSeed(value))
   }
   expect(readSeedOverride('?seed')).toBeUndefined()
   expect(readSeedOverride('?seed=')).toBeUndefined()

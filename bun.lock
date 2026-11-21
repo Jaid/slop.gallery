@@ -26,6 +26,7 @@
         "flatten-string": "0.2.0",
         "geofency": "workspace:*",
         "knot-materials": "workspace:*",
+        "make-seed": "workspace:*",
         "math": "0.1.0",
         "media-encoding": "workspace:*",
         "minimatch": "11.0.9",
@@ -39,7 +40,6 @@
         "react-dom": "19.3.1",
         "react-dropzone": "20.2.1",
         "read-permalink": "0.4.0",
-        "roll-seed": "workspace:*",
         "stringify-clank": "0.1.1",
         "telemethree": "workspace:*",
         "telemethree-ego": "workspace:*",
@@ -229,6 +229,10 @@
         "three": "^0.187.0",
       },
     },
+    "packages/make-seed": {
+      "name": "make-seed",
+      "version": "0.1.0",
+    },
     "packages/media-encoding": {
       "name": "media-encoding",
       "version": "0.1.0",
@@ -262,10 +266,6 @@
         "react",
         "react-dom",
       ],
-    },
-    "packages/roll-seed": {
-      "name": "roll-seed",
-      "version": "0.1.0",
     },
     "packages/rolldown-plugin-bake-branch-component": {
       "name": "rolldown-plugin-bake-branch-component",
@@ -1593,6 +1593,8 @@
 
     "make-base64": ["make-base64@0.2.0", "", {}, "sha512-0drdftzh/TnMl1McivPJSPPUzUYvjIj91BgdlU4mVH7JZEhInuRjJB8ZWqSIMnA7MpTH1cS1okD82SsgVNCkAA=="],
 
+    "make-seed": ["make-seed@workspace:packages/make-seed"],
+
     "markdown-table": ["markdown-table@3.1.0", "", {}, "sha512-xpeSCdM+B+6P3ncfgaB7FoDbtJ30xAe6Z18TGT7AgXJsHqCElCICZovQqdRMm7kHgpTyYv36EupqewoFFSB8vw=="],
 
     "math": ["math@0.1.0", "", {}, "sha512-hq5KkLblFiR8OO8ZYqPK02mBqrXuxJ6hwvhL3ZM9OFkAR82/20n4H768SWl4yVVrufh8VijEm42D4V9N8hDa2g=="],
@@ -1872,8 +1874,6 @@
     "resolve-pkg-maps": ["resolve-pkg-maps@1.0.0", "", {}, "sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw=="],
 
     "reusify": ["reusify@1.1.0", "", {}, "sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw=="],
-
-    "roll-seed": ["roll-seed@workspace:packages/roll-seed"],
 
     "rolldown": ["rolldown@1.3.3", "", { "dependencies": { "@oxc-project/types": "=0.159.0", "@rolldown/pluginutils": "^1.0.0" }, "optionalDependencies": { "@rolldown/binding-android-arm-eabi": "1.3.3", "@rolldown/binding-android-arm64": "1.3.3", "@rolldown/binding-darwin-arm64": "1.3.3", "@rolldown/binding-darwin-x64": "1.3.3", "@rolldown/binding-freebsd-x64": "1.3.3", "@rolldown/binding-linux-arm-gnueabihf": "1.3.3", "@rolldown/binding-linux-arm64-gnu": "1.3.3", "@rolldown/binding-linux-arm64-musl": "1.3.3", "@rolldown/binding-linux-ppc64-gnu": "1.3.3", "@rolldown/binding-linux-s390x-gnu": "1.3.3", "@rolldown/binding-linux-x64-gnu": "1.3.3", "@rolldown/binding-linux-x64-musl": "1.3.3", "@rolldown/binding-openharmony-arm64": "1.3.3", "@rolldown/binding-wasm32-wasi": "1.3.3", "@rolldown/binding-win32-arm64-msvc": "1.3.3", "@rolldown/binding-win32-x64-msvc": "1.3.3" }, "bin": { "rolldown": "./bin/cli.mjs" } }, "sha512-ksB1g74e7haRy02OYm4lOQAlr6sK6hBpAY5R+YC30Gkv4L1COwF6M9umBAYAPxWpGow6Vr+IXtyDjH9fq7A+Zg=="],
 

@@ -3,9 +3,9 @@ import type {PauseMenuStage as MenuStage} from 'use-pause-menu/core'
 
 import {afterEach, beforeAll, beforeEach, describe, expect, spyOn, test} from 'bun:test'
 
+import {maximumSeed} from 'make-seed'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
-import {maximumSeed} from 'roll-seed'
 import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import Menu from '#component/Menu'

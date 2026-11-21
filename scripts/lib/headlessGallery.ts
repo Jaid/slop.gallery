@@ -5,9 +5,9 @@ import type {Browser, Page} from 'puppeteer-core'
 import {basename, join, resolve, sep} from 'node:path'
 
 import fs from 'fs-extra'
+import {maximumSeed} from 'make-seed'
 import {radiansToDegrees} from 'math'
 import puppeteer from 'puppeteer-core'
-import {maximumSeed} from 'roll-seed'
 import {createServer} from 'vite'
 
 import {coerceEnvironmentSeed} from '#src/lib/environmentSeed.ts'

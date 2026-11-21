@@ -3,8 +3,8 @@ import type {Arrayable} from 'type-fest'
 import {join, resolve, sep} from 'node:path'
 
 import {globby, isDynamicPattern} from 'globby'
+import {maximumSeed} from 'make-seed'
 import {Minimatch} from 'minimatch'
-import {maximumSeed} from 'roll-seed'
 
 import {coerceEnvironmentSeed, parseSeed} from '#src/lib/environmentSeed.ts'
 

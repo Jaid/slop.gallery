@@ -1,4 +1,4 @@
-import rollSeed from 'roll-seed'
+import makeSeed from 'make-seed'
 
 import {readStored, writeStored} from './browserStorage.ts'
 import {effectiveSeed, parseSeed} from './environmentSeed.ts'
@@ -9,7 +9,7 @@ const storedSeed = parseSeed(readStored('seed'))
 export const isContinuing = storedSeed !== undefined
 
 /** the environment seed of this game: the one an earlier visit stored, or a new one, stored right away */
-export const gameSeed = storedSeed ?? rollSeed()
+export const gameSeed = storedSeed ?? makeSeed()
 
 if (!isContinuing) {
   writeStored('seed', String(gameSeed))
@@ -35,7 +35,7 @@ export type SeedChange = {
 export function planSeedChange(seed: number | null): SeedChange {
   const url = new URL(location.href)
   if (url.searchParams.has('seed')) {
-    const next = seed ?? rollSeed()
+    const next = seed ?? makeSeed()
     url.searchParams.set('seed', String(next))
     return {
       via: 'url',

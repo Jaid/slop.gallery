@@ -1,9 +1,9 @@
 import FatedRandom from 'fated-random'
+import makeSeed, {maximumSeed} from 'make-seed'
 import optis from 'optis'
 import readPermalink from 'read-permalink'
-import rollSeed, {maximumSeed} from 'roll-seed'
 
-/** A canonical game seed: a roll of `roll-seed`, or 0 for the default environment. */
+/** A canonical game seed: made by `make-seed`, or 0 for the default environment. */
 export const isSeed = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= maximumSeed
 
 /** Reads a canonical game seed, as stored or used as a numeric range bound. */
@@ -15,7 +15,7 @@ export function parseSeed(value: unknown): number | undefined {
 /** A supplied seed may also name a world with text or a number outside the roll range. A missing or bare flag keeps the stored seed. */
 export function coerceEnvironmentSeed(value: unknown): number | undefined {
   if (typeof value === 'number' || typeof value === 'string' && value !== '') {
-    return parseSeed(value) ?? rollSeed(value)
+    return parseSeed(value) ?? makeSeed(value)
   }
 }
 
