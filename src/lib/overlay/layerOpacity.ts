@@ -7,7 +7,7 @@ import {defaultFade} from './layer.ts'
 import {obstructedOpacity} from './obstruction.ts'
 
 /** Layer-wide per-pixel visibility for strokes and filled surfaces. Default obstruction never samples world depth. */
-export default function layerOpacity(base: Node<'float'>, point: Node<'vec3'>, {fade, obstructedOpacityFactor = 1}: LayerOptions) {
+export default function layerOpacity(base: Node<'float'>, point: Node<'vec3'>, {fade = false, obstructedOpacityFactor = 1}: LayerOptions) {
   let opacity = base
   if (fade !== false) {
     const {start, end, power, heightWeight} = {

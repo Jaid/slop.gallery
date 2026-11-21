@@ -1,20 +1,14 @@
-import type AmbienceEmitter from 'ambience-emitter'
-import type {Group, Mesh, MeshBasicNodeMaterial} from 'three/webgpu'
-
 import {useFrame} from '@react-three/fiber'
-import {useRef} from 'react'
 import {Color, Vector3} from 'three/webgpu'
 
 import {hearingFence, useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {useGallery} from '#src/lib/gallery.ts'
+import overlay from '#src/lib/overlay/index.ts'
+import useMarkerBatch, {markerRadius} from '#src/lib/overlay/useMarkerBatch.ts'
 
-/** marker radius in meters, like the light markers */
-const radius = 0.12
-/** the dark rim around each ball, as a share of its radius */
-const rim = 1.45
-/** the width of each bar of the cross over a disabled emitter, as a share of its radius, like the light markers */
-const crossWidth = 0.22
-const barScale = [radius * rim * 2, radius * crossWidth, radius * crossWidth] as const
+const layer = overlay.addLayer({id: 'ambience-emitters'})
+const tint = new Color
+const position = new Vector3
 const full = new Color('#ffffff')
 const silent = new Color('#c8c8c8')
 const camera = new Vector3
@@ -35,37 +29,20 @@ export function strengthColor(strength: number, target: Color) {
  */
 export default function AmbienceEmitterMarkers() {
   const emitters = useAmbienceEmitters(state => state.emitters)
-  return <group name='ambience-emitter-markers'>
-    {emitters.map(emitter => <Marker key={emitter.id} emitter={emitter} />)}
-  </group>
-}
-
-function Marker({emitter}: {emitter: AmbienceEmitter}) {
-  const ball = useRef<Mesh<never, MeshBasicNodeMaterial>>(null)
-  const cross = useRef<Group>(null)
+  const markers = useMarkerBatch(layer, Math.ceil(emitters.length / 16) * 16)
   useFrame(state => {
-    const {x, y, z} = state.camera.getWorldPosition(camera)
+    const batch = markers.current
+    if (!batch?.parent) {
+      return
+    }
+    const listener = state.camera.getWorldPosition(camera).toArray()
     const {room, whereabouts} = useGallery.getState()
-    const fence = hearingFence(emitter, whereabouts)
-    strengthColor(emitter.strengthAt([x, y, z], fence ?? room), ball.current!.material.color)
-    // The cross lies in the view, like the light markers’.
-    cross.current!.visible = fence === undefined
-    state.camera.getWorldQuaternion(cross.current!.quaternion)
+    for (const [index, emitter] of emitters.entries()) {
+      const fence = hearingFence(emitter, whereabouts)
+      const strength = emitter.strengthAt(listener, fence ?? room)
+      batch.setMarker(index, position.fromArray(emitter.position), markerRadius, strengthColor(strength, tint), fence === undefined)
+    }
+    batch.show(emitters.length)
   })
-  return <group name={emitter.id} position={emitter.position}>
-    <mesh name='ambience-emitter-rim' raycast={() => {}} renderOrder={10} scale={radius * rim}>
-      <sphereGeometry args={[1, 12, 8]} />
-      <meshBasicNodeMaterial color='#000000' depthTest={false} depthWrite={false} opacity={0.75} transparent />
-    </mesh>
-    <mesh name='ambience-emitter' raycast={() => {}} renderOrder={11} scale={radius} ref={ball}>
-      <sphereGeometry args={[1, 12, 8]} />
-      <meshBasicNodeMaterial depthTest={false} depthWrite={false} toneMapped={false} />
-    </mesh>
-    <group name='ambience-emitter-cross' visible={false} ref={cross}>
-      {[Math.PI / 4, -Math.PI / 4].map(angle => <mesh key={angle} raycast={() => {}} renderOrder={12} rotation-z={angle} scale={barScale}>
-        <boxGeometry />
-        <meshBasicNodeMaterial color='#000000' depthTest={false} depthWrite={false} opacity={0.75} transparent />
-      </mesh>)}
-    </group>
-  </group>
+  return null
 }

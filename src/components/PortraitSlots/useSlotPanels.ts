@@ -7,7 +7,6 @@ import SlotPanels from './SlotPanels.ts'
 const layer = overlay.addLayer({
   id: 'portrait-slots',
   obstructedOpacityFactor: 0.2,
-  fade: false,
 })
 
 export default function useSlotPanels(capacity: number, ghost = false) {

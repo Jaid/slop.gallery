@@ -280,7 +280,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'add_layer',
       title: 'Create a drawing layer',
-      description: 'Create a page-local drawing layer and return its ID. Only id is required; it must not exist already. Defaults to white, priority 0, the live overlay line width and style, and the fence distance fade. Higher priority draws on top. Use the returned ID as drawing.layer in add_drawing.',
+      description: 'Create a page-local drawing layer and return its ID. Only id is required; it must not exist already. Defaults to white, priority 0, the live overlay line width and style, and no distance fade. Higher priority draws on top. Use the returned ID as drawing.layer in add_drawing.',
       inputSchema: layerSchema,
       annotations: {readOnlyHint: false},
       execute: (input: unknown, {signal}) => {
@@ -291,7 +291,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'clear_layer',
       title: 'Clear one drawing layer',
-      description: 'Remove every drawing on the named layer and return the number removed. Keeps its definition. Built-in layers are default, fences (blue) or touching-fences (red), and portrait-slots (frame and placard markers).',
+      description: 'Remove every drawing on the named layer and return the number removed. Keeps its definition. Built-in layers are default, fences (blue), touching-fences (red), portrait-slots, lamps and ambience-emitters. The gallery also has sloperator-sightings.',
       inputSchema: {
         type: 'object',
         properties: {id: layerIdSchema},

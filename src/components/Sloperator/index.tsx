@@ -14,6 +14,7 @@ import Slop from '#src/lib/gallery/curios/slop/Slop.ts'
 import {useGeofences} from '#src/lib/gallery/geofences.ts'
 import {usePhysicsHold} from '#src/lib/gallery/roomLoading.ts'
 import {furnitureBody, placeSloperator} from '#src/lib/gallery/sloperator/placement.ts'
+import {isShowingSloperatorSightings} from '#src/lib/gallery/sloperator/showSightings.ts'
 import {awaitsSpawn, dumpSightings, pinSight, placementAt, sightSloperator, spawnAtSight, useSightWatched, useSloperator} from '#src/lib/gallery/sloperator/sightings.ts'
 import sights, {slopRandom} from '#src/lib/gallery/sloperator/sights.ts'
 import SloperatorGeometry from '#src/lib/gallery/sloperator/SloperatorGeometry.ts'
@@ -27,6 +28,8 @@ import recordSloperatorSights from '#src/lib/telemetry/recordSloperatorSights.ts
 import recordSloperatorSpawns from '#src/lib/telemetry/recordSloperatorSpawns.ts'
 import {provideSloperator} from '#src/lib/webmcp/sloperator.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
+
+import SightBounds from './SightBounds.tsx'
 
 type Sight = typeof sights[number]
 /** him where he is drawn: the placement he is drawn by, and what the `trigger_sloperator_sighting` tool asks of him, catching sight of him from where the camera is, in his sight pose right away if `instant` */
@@ -134,6 +137,7 @@ function SloperatorSight({sight}: {sight: Sight}) {
   const slopped = useSloperator(state => state.slopped[sight.id])
   const slop = useMemo(() => slopped && new Slop(sight, slopped, slopRandom(environmentSeed, sight.id)), [sight, slopped])
   return <>
+    {isShowingSloperatorSightings && <SightBounds placement={placement ?? slopped} sight={sight} />}
     {/* His room owns him, so he shows and hides with it, see ownerRoom. */}
     {placement && <group userData={{room: sight.room}}><Figure placement={placement} sight={sight} /></group>}
     {slop && <Curio curio={slop} />}

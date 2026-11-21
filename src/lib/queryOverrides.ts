@@ -23,6 +23,7 @@ import {readDownload, readWebhook, readWebhookEndpoint} from './gallery/fusion/r
 import {readWeather} from './gallery/lighting.ts'
 import {readMoonfallHue} from './gallery/moonfall/hueParameter.ts'
 import {readPortraitSlotEditing, readShowPortraitSlots} from './gallery/portraitSlotStore.ts'
+import {readShowSloperatorSightings} from './gallery/sloperator/showSightings.ts'
 import {readRoom, readSpawn} from './gallery/spawn.ts'
 import {readOverlayTuning} from './overlay/tuning.ts'
 import {readPaused} from './pauseMenu.ts'
@@ -101,6 +102,7 @@ const readers: Record<string, Reader> = {
   show_fence: readShowFence,
   show_lamps: readShowLamps,
   show_portrait_slots: readShowPortraitSlots,
+  show_sloperator_sightings: readShowSloperatorSightings,
   show_sticky: readShowSticky,
   show_wireframe: readShowWireframe,
   spawn: readSpawn,

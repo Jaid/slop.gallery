@@ -45,7 +45,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('layer priority wins over submission o
       magenta,
     }
   })
-  // Submit the highest-priority visible layer first; give the last, yellow layer a cutoff short of the line.
+  // Beyond the fence fade’s 100 m cutoff, the base layer with no fade setting must still show. Only yellow explicitly asks to fade.
   for (const options of [{
     id: 'top',
     color: '#00ff00',
@@ -72,8 +72,8 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('layer priority wins over submission o
     await callWebmcpTool(page, 'add_drawing', {drawing: {
       layer: options.id,
       type: 'line',
-      from: [-3, 2, 1],
-      to: [3, 2, 1],
+      from: [-90, 2, -115],
+      to: [90, 2, -115],
     }})
   }
   const top = await sample()

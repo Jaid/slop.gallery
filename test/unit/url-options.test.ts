@@ -79,6 +79,12 @@ describe('URL options', () => {
       expect(readFlying(search)).toBe(false)
     }
   })
+  test('?show_sloperator_sightings opts in with a bare flag or true', () => {
+    for (const suffix of ['', '=true']) {
+      expect(readQueryOverrides(`http://localhost/?show_sloperator_sightings${suffix}`)).toEqual({show_sloperator_sightings: true})
+    }
+    expect(readQueryOverrides('http://localhost/?show_sloperator_sightings=false')).toBeUndefined()
+  })
   test('?paused is enabled by a bare or true flag only and shows among the query overrides', () => {
     expect(readPaused('?paused')).toBe(true)
     expect(readPaused('?paused=true')).toBe(true)
