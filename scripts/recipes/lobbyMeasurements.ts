@@ -9,7 +9,6 @@ const addLayer = (id: string): ToolCall => ({
   input: {
     id,
     color: '#ff3636',
-    lineStyle: 'barycentric',
     lineWidth: 340,
   },
 })
@@ -58,4 +57,4 @@ const calls: Array<ToolCall> = [
     },
   },
 ]
-await Bun.$`bun scripts/snap.ts --target dist --position=3.799,2.619,-27.048 --angle=${angle} --fov 90 --width 3840 --height 2160 --seed 0 --graphics heavy --paused true --development true --crosshair always --settle 5 --jxl-distance 0 --jxl-effort 6 --name lobby-measurements-1200 --text-overlays --tools ${JSON.stringify(calls)}`.cwd(join(import.meta.dir, '..', '..'))
+await Bun.$`bun scripts/snap.ts --target dist --position=3.799,2.619,-27.048 --angle=${angle} --fov 90 --height 2160 --seed 0 --paused true --development true --crosshair always --settle 5 --jxl-distance 0 --jxl-effort 6 --name lobby-measurements-1200 --text-overlays --tools ${JSON.stringify(calls)}`.cwd(join(import.meta.dir, '..', '..'))
