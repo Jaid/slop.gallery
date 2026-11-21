@@ -23,6 +23,10 @@ import slopGallery from '../../src/worlds/gallery/index.ts'
 type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<PortraitAdditionInput, 'target'>
 
 const bridge: WebmcpBridge = {
+  addDrawing: drawing => ({
+    id: 'test',
+    drawing,
+  }),
   showFence,
   addPortrait: ({canvasMaterial, id = 'work-1', frame, size = 30_000, target, title = 'xf14RxM8'}: PortraitAdditionInput) => Promise.resolve<EchoedAddition>({
     id,
@@ -223,7 +227,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_geofences', 'show_fence', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_geofences', 'show_fence', 'add_drawing', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
   for (const tool of tools.slice(0, 9)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -293,6 +297,34 @@ test('get_geofences is read-only, takes an optional position of x, y and z and a
   expect(queries).toHaveLength(2)
   controller.abort()
   expect(() => execute({})).toThrow()
+})
+test('add_drawing validates the chosen shape before adding it to the overlay', () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'add_drawing')!
+  const controller = new AbortController
+  const options = {signal: controller.signal}
+  const drawing = {
+    type: 'line',
+    from: [0, 1, 2],
+    to: [3, 4, 5],
+    color: '#00ffff',
+  }
+  expect(tool.execute({drawing}, options)).toEqual({
+    id: 'test',
+    drawing,
+  })
+  for (const invalid of [{
+    ...drawing,
+    to: [0, NaN, 0],
+  }, {
+    ...drawing,
+    radius: 1,
+  }, {
+    type: 'circle',
+    center: [0, 0, 0],
+    radius: -1,
+  }, {type: 'point'}]) {
+    expect(() => tool.execute({drawing: invalid}, options)).toThrow(TypeError)
+  }
 })
 test('show_fence selects all, one or no fences and preserves the selection on errors', () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'show_fence')!

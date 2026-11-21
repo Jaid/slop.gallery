@@ -3,10 +3,11 @@ import {useEffect, useLayoutEffect, useState} from 'react'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import {galleryEvents, useGallery} from '#src/lib/gallery.ts'
-import {useFenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import {useLighting} from '#src/lib/gallery/lighting.ts'
 import {useHiddenUi} from '#src/lib/hiddenUi.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
+import overlay from '#src/lib/overlay/index.ts'
+import {useOverlayTuning} from '#src/lib/overlay/tuning.ts'
 import {useCustomGraphics} from '#src/lib/rendering/customGraphics.ts'
 import FrozenFrames from '#src/lib/rendering/FrozenFrames.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
@@ -68,7 +69,8 @@ export default function WorldFreeze() {
         }
       }),
       useCustomGraphics.subscribe(refresh),
-      useFenceDisplay.subscribe(refresh),
+      overlay.subscribe(refresh),
+      useOverlayTuning.subscribe(refresh),
       useLighting.subscribe(refresh),
       useHiddenUi.subscribe(refresh),
     ]

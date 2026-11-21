@@ -22,6 +22,7 @@ import Skybox from '#component/Skybox'
 import SpawnedOrbs from '#component/SpawnedOrbs'
 import StickySurfaces from '#component/StickySurfaces'
 import WebmcpBridge from '#component/WebmcpBridge'
+import WorldOverlay from '#component/WorldOverlay'
 import {isShowingAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {useGallery} from '#src/lib/gallery.ts'
 import {useIntro} from '#src/lib/gallery/intro.ts'
@@ -56,7 +57,8 @@ export default function Scene() {
     <SpawnedOrbs />
     <PartyEffects />
     {/* Hidden with O, the markers keep working: editors still aim, drag and switch what they mark. */}
-    <GeofenceOutlines visible={!uiHidden} />
+    <WorldOverlay visible={!uiHidden} />
+    <GeofenceOutlines />
     <group name='scene-ui' visible={!uiHidden}>
       <Branch if={isShowingSticky} then={StickySurfaces} />
       <Branch if={isShowingPortraitSlots} then={PortraitSlots} />

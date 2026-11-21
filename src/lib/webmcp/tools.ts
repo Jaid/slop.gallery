@@ -2,6 +2,7 @@ import type {FrameDownload, FrameFormat} from '#src/lib/downloadFrame.ts'
 import type {FenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import type {PortraitSlot} from '#src/lib/gallery/types.ts'
 import type {SeedChange} from '#src/lib/gameSeed.ts'
+import type {Drawing} from '#src/lib/overlay/drawing.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
 import type {PortraitAddition, PortraitAdditionInput, PortraitTarget} from './addPortrait.ts'
 import type {WorldAnalysis} from './analyzeWorld.ts'
@@ -25,6 +26,7 @@ import {normalizeMeshPath, wireframeFloodAnchors, wireframeFloodDirections, wire
 
 import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import {isSeed, maximumSeed} from '#src/lib/environmentSeed.ts'
+import {drawingSchema, readDrawing} from '#src/lib/overlay/drawing.ts'
 
 /** a fence of the world as the union of its boxes and the fences it takes in */
 export type GeofenceDump = {
@@ -43,6 +45,10 @@ export type KnotDump = {
 }
 
 export type WebmcpBridge = {
+  addDrawing: (drawing: Drawing) => {
+    drawing: Drawing
+    id: string
+  }
   addPortrait: (input: PortraitAdditionInput) => Promise<PortraitAddition>
   analyzeWorld: () => WorldAnalysis
   castMood: (input: MoodCastInput) => MoodCast
@@ -264,6 +270,25 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           throw new TypeError('fence must be a nonempty minimatch pattern, true for all or false for none.')
         }
         return getBridge().showFence({fence})
+      },
+    },
+    {
+      name: 'add_drawing',
+      title: 'Add a world-space drawing',
+      description: 'Draw a world-space line, axis-aligned box outline, point marker, triangle perimeter or circle in meters. The optional color is hex RGB; a circle is horizontal unless given a normal. Shown through walls independently of show_fence, including in captures. The drawing stays until this page reloads. Returns its ID and geometry.',
+      inputSchema: {
+        type: 'object',
+        properties: {drawing: drawingSchema},
+        required: ['drawing'],
+        additionalProperties: false,
+      },
+      annotations: {readOnlyHint: false},
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).length !== 1 || !Object.hasOwn(input, 'drawing')) {
+          throw new TypeError('Expected an object with one drawing.')
+        }
+        return getBridge().addDrawing(readDrawing(input.drawing))
       },
     },
     {

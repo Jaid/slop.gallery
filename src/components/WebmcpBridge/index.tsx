@@ -14,6 +14,7 @@ import {loadingItems} from '#src/lib/loadingItems.ts'
 import {captureWarmup, getRenderScale} from '#src/lib/rendering/captureWarmup.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
+import addDrawing from '#src/lib/webmcp/addDrawing.ts'
 import addPortrait from '#src/lib/webmcp/addPortrait.ts'
 import analyzeWorld from '#src/lib/webmcp/analyzeWorld.ts'
 import castMood from '#src/lib/webmcp/castMood.ts'
@@ -43,6 +44,7 @@ export default function WebmcpBridge() {
     const controller = new AbortController
     const inspector = new AimInspector(scene, camera)
     const bridge = {
+      addDrawing,
       addPortrait,
       analyzeWorld: () => analyzeWorld(scene, world.worldRooms(), room => world.fencesIn(room)),
       castMood,

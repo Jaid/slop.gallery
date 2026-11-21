@@ -5,8 +5,8 @@ import '#src/lib/diagnostics.ts'
 import {useEffect} from 'react'
 import {useWebgpuCapture} from 'webgpu-capture-bridge/react'
 
+import overlay from '#src/lib/overlay/index.ts'
 import {captureWarmup} from '#src/lib/rendering/captureWarmup.ts'
-import {drawGeofenceOverlay} from '#src/lib/rendering/geofenceOverlay.ts'
 import {moodLens} from '#src/moods/lib/MoodLens.ts'
 
 /** Refuses to capture while the canvas still renders at the capture warmup’s reduced scale. */
@@ -19,7 +19,7 @@ const afterWarmup = <Capture extends () => Promise<unknown>>(capture: Capture) =
 /** A capture renders a frame of its own, which looks through the moods’ lens like the frames the player sees, so a capture of the player’s view shows it as wide as it is. */
 const throughMoodLens: CaptureRenderWrap = (render, camera) => moodLens.during(camera, () => {
   render()
-  drawGeofenceOverlay(camera)
+  overlay.draw(camera)
 })
 // Only the gallery adapter knows about the app’s global diagnostics API.
 const WebgpuCaptureBridge = () => {

@@ -17,13 +17,14 @@ import {readSeedOverride} from './environmentSeed.ts'
 import {readFade} from './fade.ts'
 import {readFrozenTime} from './frozenTime.ts'
 import {readPortraitCount} from './gallery/defaultPortraits.ts'
-import {readFenceTuning, readShowFence} from './gallery/fenceDisplay.ts'
+import {readShowFence} from './gallery/fenceDisplay.ts'
 import {readFlying} from './gallery/flyMode.ts'
 import {readDownload, readWebhook, readWebhookEndpoint} from './gallery/fusion/resultSharing.ts'
 import {readWeather} from './gallery/lighting.ts'
 import {readMoonfallHue} from './gallery/moonfall/hueParameter.ts'
 import {readPortraitSlotEditing, readShowPortraitSlots} from './gallery/portraitSlotStore.ts'
 import {readRoom, readSpawn} from './gallery/spawn.ts'
+import {readOverlayTuning} from './overlay/tuning.ts'
 import {readPaused} from './pauseMenu.ts'
 import {readKnotRotation} from './physics/rotatingKnots.ts'
 import {readShowSticky} from './placement/showSticky.ts'
@@ -81,8 +82,8 @@ const readers: Record<string, Reader> = {
   // A list, which compares by its ids, joined as the query gives them.
   item: input => readItems(input).join(','),
   knot_rotation: readKnotRotation,
-  line_style: input => readFenceTuning(input).lineStyle,
-  line_width: input => readFenceTuning(input).lineWidth,
+  line_style: input => readOverlayTuning(input).lineStyle,
+  line_width: input => readOverlayTuning(input).lineWidth,
   mood: readMood,
   moonfall_hue: readMoonfallHue,
   near: readNear,

@@ -3,14 +3,15 @@ import type {Node} from 'three/webgpu'
 import {wireframeCoverage} from 'capture-session'
 import {attribute, cameraNear, cameraPosition, cameraProjectionMatrix, cameraViewMatrix, Fn, mix, positionGeometry, uniform, varying, varyingProperty, vec2, vec3, vec4, viewportSize} from 'three/tsl'
 
-import {useFenceDisplay} from '#src/lib/gallery/fenceDisplay.ts'
 import viewportLineWidth from '#src/lib/rendering/viewportLineWidth.ts'
 
-const halfWidth = uniform(0.5).onRenderUpdate(({renderer}) => viewportLineWidth(renderer!, useFenceDisplay.getState().lineWidth) / 2)
-const antialiased = uniform(true).onRenderUpdate(() => useFenceDisplay.getState().lineStyle === 'barycentric')
+import {useOverlayTuning} from './tuning.ts'
+
+const halfWidth = uniform(0.5).onRenderUpdate(({renderer}) => viewportLineWidth(renderer!, useOverlayTuning.getState().lineWidth) / 2)
+const antialiased = uniform(true).onRenderUpdate(() => useOverlayTuning.getState().lineStyle === 'barycentric')
 // fwidth sums the horizontal and vertical derivatives: a diagonal’s antialiasing support extends up to √2 times farther.
 const radius = halfWidth.add(0.5).mul(Math.SQRT2)
-const linePoint = varyingProperty('vec3', 'fenceLinePoint')
+const linePoint = varyingProperty('vec3', 'overlayLinePoint')
 const side = varying(positionGeometry.x).setInterpolation('linear')
 // Absolute distance AFTER the derivative: differentiating abs(side) would give a seam down the center.
 const pixels = side.abs().div(side.fwidth().max(1e-7))
