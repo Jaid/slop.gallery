@@ -1,8 +1,10 @@
+import type {CanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {Artwork, Portrait, PortraitSlot} from './types.ts'
 
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 
+import readCanvasMaterialParameters from '#src/canvas_materials/lib/canvasMaterialParameters.ts'
 import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 import world from '#src/worlds/current.ts'
 
@@ -36,6 +38,7 @@ const portraitCount = readPortraitCount()
  */
 export function hangDefaultWorks(slots: ReadonlyArray<PortraitSlot>, artworks: ReadonlyArray<Artwork>, seed: number, count?: number): Array<Portrait> {
   const random = environmentRandom(seed)
+  const {canvas_material: canvasMaterial} = readCanvasMaterialParameters()
   // Every slot and every work rolls its own place in line, so adding one leaves the order of the others alone.
   const slotOrder = new Map(slots.map(slot => [slot, random.makeChild(['portrait-slot', slot.id]).roll()]))
   const workOrder = new Map(artworks.map(artwork => [artwork, random.makeChild(['default-work', artwork.id]).roll()]))
@@ -56,14 +59,14 @@ export function hangDefaultWorks(slots: ReadonlyArray<PortraitSlot>, artworks: R
   const portraits = selected.map(artwork => {
     const index = free.findIndex(slot => slot.ratio === artwork.ratio)
     const [slot] = free.splice(index, 1)
-    return hangWork(artwork, slot, seed)
+    return hangWork(artwork, slot, seed, canvasMaterial)
   })
   if (target > portraits.length) {
     const spare = free.filter(slot => worksByRatio.has(slot.ratio)).slice(0, target - portraits.length)
     for (const [ratio, matching] of Map.groupBy(spare, slot => slot.ratio)) {
       const copies = random.makeChild(['portrait-copies', ratio]).shuffle(worksByRatio.get(ratio)!, matching.length)
       for (const [index, slot] of matching.entries()) {
-        portraits.push(hangWork(copies[index], slot, seed, `copy-${slot.id}`))
+        portraits.push(hangWork(copies[index], slot, seed, canvasMaterial, `copy-${slot.id}`))
       }
     }
   }
@@ -78,9 +81,10 @@ export default function defaultPortraits(seed: number): Array<Portrait> {
   return hangDefaultWorks(world.portraitSlots(), world.artworks, seed, portraitCount)
 }
 
-function hangWork({ratio: _, ...artwork}: Artwork, slot: PortraitSlot, seed: number, id = artwork.id): Portrait {
+function hangWork({ratio: _, ...artwork}: Artwork, slot: PortraitSlot, seed: number, canvasMaterial: CanvasMaterialId | undefined, id = artwork.id): Portrait {
   return {
     ...artwork,
+    ...canvasMaterial ? {canvasMaterial} : {},
     id,
     position: [...slot.position],
     rotation: slot.rotation,

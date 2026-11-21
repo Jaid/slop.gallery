@@ -90,7 +90,7 @@ export default function CellTurntable({turntable}: {turntable: SandboxTurntable}
       <group position={[0, 0, -(frame.front + frameBack) / 2]}>
         <mesh castShadow geometry={geometry} material={frame.materials} name='cell-turntable-frame' receiveShadow />
         {/* Shadows draw back faces only, like a hung work’s, so the backing board blocks the lights in front and the image those behind. */}
-        <mesh castShadow geometry={plane} name='cell-turntable-image' position={[0, 0, frame.imageDepth]}><DynamicImageMaterial source={turntable.source} toneMapped={false} /></mesh>
+        <mesh castShadow geometry={plane} name='cell-turntable-image' position={[0, 0, frame.imageDepth]}><DynamicImageMaterial canvasMaterial={turntable.canvasMaterial} source={turntable.source} toneMapped={false} /></mesh>
       </group>
     </group>
   </group>

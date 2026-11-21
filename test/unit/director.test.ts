@@ -10,7 +10,8 @@ import {afterEach, beforeEach, expect, spyOn, test} from 'bun:test'
 
 import GalleryDirector from '../../src/lib/ai/GalleryDirector.ts'
 import {readAiSettings} from '../../src/lib/ai/settings.ts'
-import {arrivalFrame} from '../../src/lib/gallery/actions.ts'
+import {arrivalFrame, newPortrait} from '../../src/lib/gallery/actions.ts'
+import defaultPortraits from '../../src/lib/gallery/defaultPortraits.ts'
 import Fusion from '../../src/lib/gallery/fusion/Fusion.ts'
 import {portalFrame} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {nextTurn} from '../../src/lib/gallery/fusion/timing.ts'
@@ -182,6 +183,47 @@ test('fusion keeps both originals until success and commits one change', async (
   expect(useGallery.getState().portraits).toHaveLength(1)
   expect(useGallery.getState().portraits[0].source).toBe(fused)
   director.dispose()
+})
+test('native works, imports and fusion results take independent canvas material overrides', async () => {
+  const location = Object.getOwnPropertyDescriptor(globalThis, 'location')
+  const director = new TestDirector({
+    ...defaults,
+    ai: false,
+  }, '')
+  director.result.resolve(b)
+  try {
+    for (const [query, native, output] of [
+      ['canvas_material=linen', 'linen', undefined],
+      ['new_canvas_material=wax', undefined, 'wax'],
+      ['canvas_material=linen&new_canvas_material=wax', 'linen', 'wax'],
+      ['canvas_material=velvet&new_canvas_material', undefined, undefined],
+    ] as const) {
+      Object.defineProperty(globalThis, 'location', {
+        configurable: true,
+        value: new URL(`https://slop.gallery/?${query}`),
+      })
+      const works = defaultPortraits(7)
+      expect(works.every(work => work.canvasMaterial === native)).toBe(true)
+      const imported = newPortrait(b, 'Imported work', 1, 1)
+      expect(imported.canvasMaterial).toBe(output)
+      const hung = {
+        ...works[0],
+        source: a,
+      }
+      useGallery.getState().commit([hung, imported])
+      await director.fuse(hung.id, imported.id)
+      const [result] = useGallery.getState().portraits
+      expect(result.source).toBe(b)
+      expect(result.canvasMaterial).toBe(output)
+    }
+  } finally {
+    director.dispose()
+    if (location) {
+      Object.defineProperty(globalThis, 'location', location)
+    } else {
+      Reflect.deleteProperty(globalThis, 'location')
+    }
+  }
 })
 for (const partner of ['work', 'orb']) {
   test(`a fusion with a thrown ${partner} frames the result in its own shape at the area of the hung portrait’s frame`, async () => {

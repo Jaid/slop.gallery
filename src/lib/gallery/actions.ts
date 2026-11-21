@@ -6,6 +6,7 @@ import type {Voice} from 'procedural-audio'
 import composeId from 'compose-id'
 import {defaultEgoOptions} from 'ego-player/motor'
 
+import readCanvasMaterialParameters from '#src/canvas_materials/lib/canvasMaterialParameters.ts'
 import {moodSuppressionKey, toggleMoodSuppression} from '#src/moods/lib/moodSuppression.ts'
 import world from '#src/worlds/current.ts'
 
@@ -260,6 +261,7 @@ export function newPortrait(source: Blob, title: string, width: number, height: 
   const position: Vec3 = [p[0] + d[0] * 1.6, Math.max(world.placement.floorHeight([p[0] + d[0] * 1.6, p[1], p[2] + d[2] * 1.6]) + 0.8, p[1] + d[1] * 1.6), p[2] + d[2] * 1.6]
   const id = takeWorkId()
   const frame = arrivalFrame(position, p, id)
+  const {new_canvas_material: canvasMaterial} = readCanvasMaterialParameters()
   return {
     id,
     title,
@@ -272,6 +274,7 @@ export function newPortrait(source: Blob, title: string, width: number, height: 
     height,
     hung: false,
     imported: true,
+    ...canvasMaterial ? {canvasMaterial} : {},
     ...frame ? {frame} : {},
   }
 }

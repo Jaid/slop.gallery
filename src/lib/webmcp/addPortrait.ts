@@ -37,7 +37,7 @@ export type PortraitTarget = {
   wallId: string
 }
 export type PortraitAdditionInput = {
-  /** the id of the canvas material its image is on; by default none, so it shows flat */
+  /** the id of the canvas material its image is on unless the page forces ?new_canvas_material; by default none */
   canvasMaterial?: string
   /** the id of the frame it wears; by default its roll of the frames of the slot or of the room it arrives in */
   frame?: string
@@ -215,7 +215,7 @@ export default async function addPortrait({canvasMaterial, frame: frameId, id, i
     delete portrait.frame
   }
   if (canvasMaterial) {
-    portrait.canvasMaterial = canvasMaterial
+    portrait.canvasMaterial ??= canvasMaterial
   }
   commit([...portraits.filter(candidate => candidate !== replaced), portrait])
   return {
@@ -226,7 +226,7 @@ export default async function addPortrait({canvasMaterial, frame: frameId, id, i
     ...portrait.wallId === undefined ? {} : {wallId: portrait.wallId},
     ...replaced ? {replaced: replaced.id} : {},
     ...frame ? {frame} : {},
-    ...canvasMaterial ? {canvasMaterial} : {},
+    ...portrait.canvasMaterial ? {canvasMaterial: portrait.canvasMaterial} : {},
     position: portrait.position,
     rotation: portrait.rotation,
     width,

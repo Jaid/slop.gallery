@@ -7,6 +7,7 @@ import type {OpenRouterAccess} from './openRouterAccess.ts'
 import type {AiSettings} from './settings.ts'
 import type {Span} from 'victoria-browser-client'
 
+import readCanvasMaterialParameters from '#src/canvas_materials/lib/canvasMaterialParameters.ts'
 import {partyEffects} from '#src/party_effects/index.ts'
 import {currentWorldId} from '#src/worlds/index.ts'
 
@@ -406,6 +407,8 @@ export default class GalleryDirector {
     const released: Portrait = {
       ...a,
       ...fusion.launch(),
+      // The finish of an imported work can carry over; the native portrait override cannot.
+      canvasMaterial: readCanvasMaterialParameters().new_canvas_material ?? (a.imported ? a.canvasMaterial : undefined),
       frame: fusion.resultFrame,
       fusing: false,
       fusionJob: undefined,

@@ -1,3 +1,4 @@
+import type {CanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {PortraitSlot, Vec3} from '#src/lib/gallery/types.ts'
 import type {Orb} from '#src/orbs/index.ts'
 import type {SkyboxId} from '#src/rooms/index.ts'
@@ -5,6 +6,7 @@ import type {TurntableRequest} from './turntable.ts'
 
 import {lazy} from 'react'
 
+import readCanvasMaterialParameters from '#src/canvas_materials/lib/canvasMaterialParameters.ts'
 import {FloorPlanPlacementSpace} from '#src/lib/placement/FloorPlanPlacementSpace.ts'
 import {defaultPortraitArea, portraitRatios} from '#src/lib/placement/portraitSlots.ts'
 import {orbs} from '#src/orbs/index.ts'
@@ -34,6 +36,7 @@ export type SandboxTurntable = {
   area: number
   /** how many times as wide as high it is, or undefined for its image’s own aspect */
   aspect: number | undefined
+  canvasMaterial?: CanvasMaterialId
   /** the artwork’s id, or the image’s URL, which its roll of the Cell’s frames is drawn for */
   id: string
   /** the URL of its image */
@@ -62,9 +65,11 @@ function resolveItems(ids: ReadonlyArray<string>): ReadonlyArray<SandboxItem> {
 /** The turntable’s work: the artwork of the catalog with the requested id, the catalog’s first for none, or the image at the requested URL, or an error for anything else. */
 function resolveTurntable({area = defaultPortraitArea, artwork, aspect}: TurntableRequest): SandboxTurntable {
   const work = artwork ? artworks.find(entry => entry.id === artwork) : artworks[0]
+  const materials = readCanvasMaterialParameters()
   if (work) {
     return {
       area,
+      canvasMaterial: materials.canvas_material,
       aspect: aspect ?? portraitRatios[work.ratio],
       id: work.id,
       source: work.source,
@@ -76,6 +81,7 @@ function resolveTurntable({area = defaultPortraitArea, artwork, aspect}: Turntab
   return {
     area,
     aspect,
+    canvasMaterial: materials.new_canvas_material,
     id: artwork,
     source: artwork,
   }

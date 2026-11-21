@@ -1,4 +1,5 @@
 import {readShowAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
+import readCanvasMaterialParameters from '#src/canvas_materials/lib/canvasMaterialParameters.ts'
 import {readFountain} from '#src/fountains/lib/forcedFountain.ts'
 import {readFrame} from '#src/frames/lib/frameParameter.ts'
 import {readMood} from '#src/moods/lib/forcedMood.ts'
@@ -61,6 +62,7 @@ const readers: Record<string, Reader> = {
   albedo: readAlbedo,
   anti_aliasing: readAntiAliasing,
   audio: readAudio,
+  canvas_material: input => readCanvasMaterialParameters(input).canvas_material,
   crosshair: readCrosshair,
   development: readDevelopmentMode,
   download: readDownload,
@@ -82,6 +84,7 @@ const readers: Record<string, Reader> = {
   mood: readMood,
   moonfall_hue: readMoonfallHue,
   near: readNear,
+  new_canvas_material: input => readCanvasMaterialParameters(input).new_canvas_material,
   paused: readPaused,
   pmrem: readPmrem,
   portraits: readPortraitCount,

@@ -14,7 +14,7 @@ export type Narration = {
   timing?: NarrationTiming
 }
 export type Portrait = {
-  /** the surface its image is painted or printed on, which it keeps through fusions; the image shows flat if left out */
+  /** the surface its image is painted or printed on; the image shows flat if left out */
   canvasMaterial?: CanvasMaterialId
   creator: string
   description: string
