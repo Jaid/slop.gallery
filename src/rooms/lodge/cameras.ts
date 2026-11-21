@@ -19,4 +19,13 @@ export default {
     fov: 80,
     ratio: 16 / 9,
   },
+  gathering: {
+    position: [4.729, 2.754, -1.879],
+    aim: {
+      yaw: 2.2249,
+      pitch: -0.3328,
+    },
+    fov: 40,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>
