@@ -1,10 +1,8 @@
-import type {AcceptedPlugin} from 'postcss'
 import type {ConfigEnv, UserConfig, UserConfigFn} from 'vite'
 
 import reactPlugin from '@vitejs/plugin-react'
 import postcssAutoprefixer from 'autoprefixer'
 import cssnano from 'cssnano-preset-advanced'
-import postcssNormalize from 'postcss-normalize'
 import bakeBranchComponentPlugin from 'rolldown-plugin-bake-branch-component'
 import hoistPopularConstantsPlugin from 'rolldown-plugin-hoist-popular-constants'
 import thematicChunksPlugin from 'rolldown-plugin-thematic-chunks'
@@ -55,7 +53,6 @@ const getCommonConfig = (context: ConfigEnv) => {
     css: {
       postcss: {
         plugins: [
-          postcssNormalize() as unknown as AcceptedPlugin,
           postcssAutoprefixer,
         ],
       },
