@@ -69,7 +69,7 @@ export const layerSchema = {
       type: 'integer',
       minimum: overlayLineWidth.min,
       maximum: overlayLineWidth.max,
-      description: '100 is 1 px at a 1080 px short edge. Omit to follow the live overlay width.',
+      description: '100 is 1 px at 1920×1080. Width scales with the square root of the viewport area. Omit to follow the live overlay width.',
     },
     lineStyle: {
       type: 'string',

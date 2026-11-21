@@ -19,7 +19,7 @@ export default function OverlayLineControls() {
       <input id='tuning-overlay-width' max={overlayLineWidth.max} min={overlayLineWidth.min} step={overlayLineWidth.step} type='range' value={lineWidth} onChange={event => tune({lineWidth: event.currentTarget.valueAsNumber})} />
       <output htmlFor='tuning-overlay-width'>{lineWidth}</output>
     </label>
-    <p className={css.hint}>Layers inherit these settings unless they specify their own. Width 100 is 1 px at a 1080 px short edge.</p>
+    <p className={css.hint}>Layers inherit these settings unless they specify their own. Width 100 is 1 px at 1920×1080 and scales with the square root of the viewport area.</p>
     <input className={css.parameter} aria-label='Overlay outline URL parameters' readOnly value={`&line_style=${lineStyle}&line_width=${lineWidth}`} onFocus={event => event.currentTarget.select()} />
   </fieldset>
 }

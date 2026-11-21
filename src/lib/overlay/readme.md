@@ -18,7 +18,7 @@ ring.remove() // or clear the whole layer with overlay.clearLayer(layer)
 | --- | --- |
 | `priority` | `0`. Higher layers draw over lower ones, regardless of drawing order. |
 | `color` | White (`#ffffff`). Accepts `#rgb` or `#rrggbb`. |
-| `lineWidth` | Follows the live **G → World overlay** width, initially `?line_width` or `100`. Range 1–800; 100 is 1 px at a 1080 px viewport short edge. |
+| `lineWidth` | Follows the live **G → World overlay** width, initially `?line_width` or `100`. Range 1–800; the width in pixels is `(lineWidth / 100) * Math.sqrt(viewWidth * viewHeight / (1920 * 1080))` using the active viewport’s physical pixel dimensions. |
 | `lineStyle` | Follows the live overlay style, initially `?line_style` or `barycentric`. Choose `aliased` for hard edges. |
 | `fade` | `{start: 16, end: 100, heightWeight: 5, power: 10}`. Each field is optional. Per pixel, scale the vertical camera offset by `heightWeight`, then fade between `start` and `end` meters with a reversed smoothstep raised to `power`. Pass `false` for no distance fade. |
 
