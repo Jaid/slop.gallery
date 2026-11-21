@@ -49,7 +49,6 @@ const attributeNames = new Set(['distance', 'format', 'maximumLong', 'maximumPix
 const scriptPattern = /\.[cm]?[jt]sx?(?:\?|$)/u
 // Everything ImageMagick reads that an import of an image could name.
 const imagePattern = /\.(?:apng|avif|bmp|gif|heic|heif|jfif|jpe?g|jxl|png|psd|qoi|tga|tiff?|webp)$/iu
-const escapeRegExp = (text: string) => text.replaceAll(/[$()*+.?[\\\]^{|}]/gu, String.raw`\$&`)
 const cleanUrl = (url: string) => url.replace(/[#?].*$/su, '')
 const parseDistance = (value: string | undefined, fallback: number) => {
   const distance = value === undefined ? fallback : Number(value)
@@ -173,7 +172,7 @@ export default function jxlPlugin(options: JxlPluginOptions = {}): Plugin {
     },
     resolveId: {
       filter: {
-        id: new RegExp(`^${escapeRegExp(virtualJxlPrefix)}`, 'u'),
+        id: new RegExp(`^${RegExp.escape(virtualJxlPrefix)}`, 'u'),
       },
       handler(source) {
         return `\0${source}`
@@ -181,7 +180,7 @@ export default function jxlPlugin(options: JxlPluginOptions = {}): Plugin {
     },
     load: {
       filter: {
-        id: new RegExp(`^${escapeRegExp(resolvedVirtualJxlPrefix)}`, 'u'),
+        id: new RegExp(`^${RegExp.escape(resolvedVirtualJxlPrefix)}`, 'u'),
       },
       async handler(id) {
         const query = new URLSearchParams(id.slice(resolvedVirtualJxlPrefix.length))
