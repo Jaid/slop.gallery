@@ -1,5 +1,5 @@
 import type {CameraView} from '#src/lib/diagnostics.ts'
-import type {GallerySetup, InitScript} from './lib/headlessGallery.ts'
+import type {GallerySetup, GalleryValues, InitScript, LooseOptions} from './lib/headlessGallery.ts'
 import type {AudioTrack, FrameSink, Shot} from 'capture-session/script'
 
 import {tmpdir} from 'node:os'
@@ -14,7 +14,7 @@ import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
 import {defaultFilmSeed, defaultSeedRange, describeInput, filmInputs} from './lib/filmInputs.ts'
 import {FilmRecipeClock} from './lib/filmRecipeClock.ts'
-import {anchorWorldReach, degrees, galleryHelp, galleryOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
+import {anchorWorldReach, degrees, galleryHelp, galleryOptions, normalizeOptions, openHeadlessGallery, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, timestamp, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
 import {StitchTimeline} from './lib/stitchTimeline.ts'
 
 /** how many characters of a tool’s result the log shows */
@@ -138,12 +138,14 @@ const filmOptions = {
   },
 } as const
 
-export type FilmOptions = Omit<ParsedOptions, 'seed' | 'target'> & Parameters<typeof filmInputs>[0]
+export type FilmOptions = LooseOptions<FilmValues>
+/** the options as the command line gives them, the query options the gallery passes on included */
+type FilmValues = Omit<GalleryValues, 'seed' | 'target'> & Omit<ParsedOptions, 'seed' | 'target'> & Parameters<typeof filmInputs>[0]
 /** the command line options without --help, as parsed strings */
 type ParsedOptions = ReturnType<typeof parseArgs<{options: typeof filmOptions}>>['values']
 
 /** Reads the recipe once (including stdin) and resolves settings common to every take. */
-const prepareFilm = async (options: FilmOptions, setup: GallerySetup) => {
+const prepareFilm = async (options: FilmValues, setup: GallerySetup) => {
   const recipeFile = options.recipe ?? join(import.meta.dir, 'recipes', 'spawn.json')
   const recipeText = recipeFile === '-' ? await Bun.stdin.text() : await fs.readFile(recipeFile, 'utf8')
   const recipe = parseRecipe(JSON.parse(recipeText))
@@ -422,8 +424,16 @@ const captureFilm = async ({encoding: {audio: audible, fps, frameCount}, recipe,
     tools: results,
   }
 }
+const filmDefaults = parseArgs({
+  options: filmOptions,
+  args: [],
+}).values
 /** Opens one encoder at the first take’s canvas size and keeps it for the entire movie. */
-const main = async (options: FilmOptions) => {
+const main = async (overrides: FilmOptions) => {
+  const options: FilmValues = {
+    ...filmDefaults,
+    ...normalizeOptions<FilmValues>(overrides, filmOptions),
+  }
   const inputs = await filmInputs(options)
   const first = await resolveGallerySetup({
     ...options,

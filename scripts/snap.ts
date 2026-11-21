@@ -1,6 +1,6 @@
 import type {CameraView} from '#src/lib/diagnostics.ts'
 import type {CameraBookmark, Vec3} from '#src/lib/gallery/types.ts'
-import type {GalleryValues} from './lib/headlessGallery.ts'
+import type {GalleryValues, LooseOptions} from './lib/headlessGallery.ts'
 import type {ToolCall} from 'capture-page'
 
 import {parseArgs} from 'node:util'
@@ -14,7 +14,7 @@ import getFree from 'get-free'
 import {lossyJxlOptions} from 'media-encoding'
 import {Packr} from 'msgpackr'
 
-import {anchorWorldReach, degrees, galleryHelp, galleryOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
+import {anchorWorldReach, degrees, galleryHelp, galleryOptions, normalizeOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
 
 type DownloadFrameResult = {
   dump: Record<string, unknown> | null
@@ -88,12 +88,13 @@ const defaults = parseArgs({
   options: snapOptions,
   args: [],
 }).values
-export type SnapOptions = Partial<typeof defaults & GalleryValues>
+export type SnapOptions = LooseOptions<SnapValues>
+type SnapValues = typeof defaults & GalleryValues
 
 export default async function snap(overrides: SnapOptions, tools: ReadonlyArray<ToolCall> = []) {
   const options = {
     ...defaults,
-    ...overrides,
+    ...normalizeOptions<SnapValues>(overrides, snapOptions),
   }
   const setup = await resolveGallerySetup(options, snapHeight)
   warnAboutDevServer(setup)

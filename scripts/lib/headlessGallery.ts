@@ -70,7 +70,8 @@ export const galleryOptions = {
   width: {type: 'string'},
   height: {type: 'string'},
 } as const
-export type GalleryValues = Partial<Record<string, boolean | string>> & {
+// Lists are for the options a script repeats, like film.ts’ --seed and --target.
+export type GalleryValues = Partial<Record<string, ReadonlyArray<string> | boolean | string>> & {
   graphics: string
   height?: string
   seed: string
@@ -81,6 +82,21 @@ export type GalleryValues = Partial<Record<string, boolean | string>> & {
   warmup_scale?: string
   width?: string
   world_reach?: string
+}
+/** Options as a script’s default export takes them, all optional: an option the command line reads as text also takes a number or a boolean, like `fov: 70` for `--fov 70` or `paused: true` for `--paused true`, and in lists, like a repeated `--seed`. */
+export type LooseOptions<Values> = {
+  [Key in keyof Values]?: LooseValue<Values[Key]>
+}
+type LooseValue<Value> = Value extends boolean | undefined ? Value : Value extends ReadonlyArray<infer Item> ? ReadonlyArray<Item | boolean | number> : Value | boolean | number
+const optionText = (value: unknown) => (typeof value === 'number' || typeof value === 'boolean' ? String(value) : value)
+/** The options as the command line gives them: the numbers and booleans of options it reads as text turn into their text, in lists too, and undefined ones are left out, so they don’t override defaults spread before them. */
+export const normalizeOptions = <Values>(options: LooseOptions<Values>, spec: Partial<Record<string, {type: 'boolean' | 'string'}>>) => {
+  return Object.fromEntries(Object.entries(options).filter(([, value]) => value !== undefined).map(([key, value]) => {
+    if (spec[key]?.type === 'boolean') {
+      return [key, value]
+    }
+    return [key, Array.isArray(value) ? value.map(optionText) : optionText(value)]
+  })) as Partial<Values>
 }
 export type GallerySetup = Awaited<ReturnType<typeof resolveGallerySetup>>
 export const parseNumbers = (value: string, name: string, lengths: Array<number>) => {
