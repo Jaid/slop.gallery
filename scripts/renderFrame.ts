@@ -2,10 +2,10 @@ import type {CameraView, TurntablePose} from '#src/lib/diagnostics.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {GalleryValues} from './lib/headlessGallery.ts'
 
-import {dirname, join, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
 import {createFrameSink, endWarmup, frameFormat, installVirtualClock, validateFrameSize, waitForLoadingItems} from 'capture-session/script'
+import {dirname, join, relative, resolve} from 'forward-slash-path'
 import fs from 'fs-extra'
 import {av1Crf} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
@@ -366,7 +366,7 @@ if (import.meta.main) {
     }
     const {format, fps, frameCount, height, output, pose, width} = await main(positionals[0], values as RenderFrameOptions)
     const inRepository = relative(repositoryRoot, output)
-    const written = (inRepository.startsWith('..') ? output : inRepository).replaceAll('\\', '/')
+    const written = inRepository.startsWith('..') ? output : inRepository
     const [frameWidth, frameHeight] = pose.size.map(meters => Math.round(meters * 100))
     console.log(`Wrote ${format === 'png' ? `${frameCount} numbered PNGs for ${written}` : written} (${width}×${height}, ${frameCount} frames at ${fps} fps, ${(frameCount / fps).toFixed(2)} s, the frame ${frameWidth}×${frameHeight} cm outside)`)
   }

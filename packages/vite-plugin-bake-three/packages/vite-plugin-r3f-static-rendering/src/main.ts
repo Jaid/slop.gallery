@@ -4,13 +4,12 @@ import type {Plugin, ResolvedConfig} from 'vite'
 
 import {relative} from 'node:path'
 
-import {Inclusion, SourceGraph} from 'vite-plugin-bake-core'
+import {Inclusion, normalizeId, SourceGraph} from 'vite-plugin-bake-core'
 
 import {compileStaticRendering} from './compile.ts'
 import {constructorsFor} from './optimize.ts'
 import {resolveR3fStaticRenderingOptions} from './options.ts'
 
-const normalize = (id: string) => id.replaceAll('\\', '/')
 const matches = (filter: R3fStaticRenderingOptions['exclude'], id: string) => {
   if (!filter) {
     return false
@@ -36,14 +35,14 @@ export default function r3fStaticRendering(options: R3fStaticRenderingOptions = 
     enforce: 'pre',
     configResolved(value) {
       config = value
-      inclusion = new Inclusion(options.include, normalize(value.root))
+      inclusion = new Inclusion(options.include, normalizeId(value.root))
     },
     buildStart() {
       modules.clear()
       diagnostics.length = 0
       graph = new SourceGraph(async (source, importer) => {
         const result = await this.resolve(source, importer, {skipSelf: true})
-        return result && !result.external ? normalize(result.id) : undefined
+        return result && !result.external ? normalizeId(result.id) : undefined
       })
     },
     resolveId(id) {
@@ -63,7 +62,7 @@ export default function r3fStaticRendering(options: R3fStaticRenderingOptions = 
       if ((!resolved.staticInstancing || !resolved.staticInstancing.enabled) && (!resolved.renderBundles || !resolved.renderBundles.enabled)) {
         return
       }
-      const id = normalize(rawId)
+      const id = normalizeId(rawId)
       if (config.build.ssr || !/\.[jt]sx$/u.test(id) || id.includes('/node_modules/') || id.includes('\0')) {
         return
       }
@@ -74,7 +73,7 @@ export default function r3fStaticRendering(options: R3fStaticRenderingOptions = 
       const result = await compileStaticRendering(code, id, options, graph, select)
       diagnostics.push(...result.diagnostics.map(item => ({
         ...item,
-        file: normalize(relative(config.root, item.file)),
+        file: normalizeId(relative(config.root, item.file)),
       })))
       for (const dependency of result.dependencies) {
         this.addWatchFile(dependency)

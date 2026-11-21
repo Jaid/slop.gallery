@@ -1,5 +1,5 @@
 export type {Candidate as BakeCandidate} from './candidates.ts'
-export {Inclusion, scopePath} from './filters.ts'
+export {Inclusion, normalizeId, scopePath} from './filters.ts'
 export type {FileFilter, IncludeFilter, ScopeFilter, ScopeSelection} from './filters.ts'
 export {default} from './plugin.ts'
 export {default as Recipe} from './Recipe.ts'

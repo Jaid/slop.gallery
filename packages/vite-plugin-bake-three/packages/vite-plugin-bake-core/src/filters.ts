@@ -22,7 +22,8 @@ type CompiledFilter = {
   scope?: Minimatch
 }
 
-const normalize = (id: string) => id.replaceAll('\\', '/')
+/** a module ID or file path with forward slashes, as Vite and the filters compare them */
+export const normalizeId = (id: string) => id.replaceAll('\\', '/')
 const isAbsolute = (pattern: string) => pattern.startsWith('/') || /^[A-Za-z]:\//u.test(pattern)
 const compileGlob = (pattern: string) => {
   if (!pattern) {
@@ -63,17 +64,17 @@ export class Inclusion {
   readonly #root: string
 
   constructor(include: Arrayable<IncludeFilter> | undefined, root: string) {
-    this.#root = normalize(root).replace(/\/$/u, '')
+    this.#root = normalizeId(root).replace(/\/$/u, '')
     this.#filters = include === undefined ? undefined : (Array.isArray(include) ? include : [include]).map(compileFilter)
   }
 
   /** The scope test for the candidates of a file, or undefined when the pass leaves the file alone. */
   select(id: string): ScopeSelection | undefined {
-    const file = normalize(id)
+    const file = normalizeId(id)
     if (!this.#filters) {
       return file.startsWith(`${this.#root}/`) ? selectAll : undefined
     }
-    const path = normalize(relative(this.#root, file))
+    const path = normalizeId(relative(this.#root, file))
     const scopes: Array<Minimatch> = []
     for (const filter of this.#filters) {
       if (!filter.file(file, path)) {

@@ -3,11 +3,11 @@ import type {CameraBookmark, Vec3} from '#src/lib/gallery/types.ts'
 import type {GalleryValues} from './lib/headlessGallery.ts'
 import type {ToolCall} from 'capture-page'
 
-import {join, relative} from 'node:path'
 import {parseArgs} from 'node:util'
 
 import capturePage from 'capture-page'
 import {endWarmup, executeWebmcpTool, setWireframe, waitForLoadingItems} from 'capture-session/script'
+import {join, relative} from 'forward-slash-path'
 import fs from 'fs-extra'
 import getFree from 'get-free'
 import {jxlEffort, lossyJxlOptions} from 'knot-materials/scripts/lib/encodeJxl.ts'
@@ -250,7 +250,7 @@ if (import.meta.main) {
     }
     const {dump, height, output, source, view, width} = await snap(options, tools)
     const [pitch, yaw, roll] = view.rotation
-    console.log(`Wrote ${relative(repositoryRoot, output).replaceAll('\\', '/')} (${width}×${height}${source.width === width && source.height === height ? '' : `, downsampled from ${source.width}×${source.height}`})${dump ? ' and its .msgpack X dump' : ''}`)
+    console.log(`Wrote ${relative(repositoryRoot, output)} (${width}×${height}${source.width === width && source.height === height ? '' : `, downsampled from ${source.width}×${source.height}`})${dump ? ' and its .msgpack X dump' : ''}`)
     console.log(`--position ${view.position.map(value => Math.round(value * 1000) / 1000).join(',')} --angle ${[yaw, pitch, roll].map(degrees).join(',')} --fov ${view.fov}`)
   }
 }

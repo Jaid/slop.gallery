@@ -7,9 +7,9 @@ import type {CameraKey, CameraPath, Shot, Timeline} from './lib/fusionCamera.ts'
 import type {Closing, Emphasis, Landing, PartyClosing, PartyFraming, PartyView, ResultClosing, ResultSample} from './lib/fusionEmphasis.ts'
 
 import {tmpdir} from 'node:os'
-import {join, parse, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
+import {join, parse, relative, resolve} from 'forward-slash-path'
 import fs from 'fs-extra'
 import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 import {clamp} from 'math'
@@ -980,7 +980,7 @@ if (import.meta.main) {
     const result = await main(values)
     const shorten = (file: string) => {
       const inRepository = relative(repositoryRoot, file)
-      return (inRepository.startsWith('..') ? file : inRepository).replaceAll('\\', '/')
+      return inRepository.startsWith('..') ? file : inRepository
     }
     if (result.plan !== undefined) {
       const {plan, timeline} = result

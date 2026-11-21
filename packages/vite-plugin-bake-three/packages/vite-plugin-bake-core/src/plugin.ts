@@ -11,13 +11,12 @@ import MagicString from 'magic-string'
 import {withFilter} from 'vite'
 
 import {deferredDefinition, definitionCandidate} from './candidates.ts'
-import {Inclusion, scopePath} from './filters.ts'
+import {Inclusion, normalizeId, scopePath} from './filters.ts'
 import Recipe, {describeExpression} from './Recipe.ts'
 import SnapshotWriter from './SnapshotWriter.ts'
 import SourceGraph from './SourceGraph.ts'
 
 const sourceFile = /\.[cm]?[jt]sx?$/u
-const normalize = (id: string) => id.replaceAll('\\', '/')
 const matches = (filter: BakeOptions['exclude'], id: string) => {
   if (!filter) {
     return false
@@ -41,7 +40,7 @@ type Artifact = {
 export default function createBakePlugin(adapter: BakeAdapter, options: BakeOptions = {}): Plugin {
   const prefix = `virtual:bake-${adapter.name}:`
   const resolvedPrefix = `\0${prefix}`
-  const runtime = normalize(fileURLToPath(new URL('runtime.ts', import.meta.url)))
+  const runtime = normalizeId(fileURLToPath(new URL('runtime.ts', import.meta.url)))
   const artifacts = new Map<string, Artifact>
   const diagnostics: Array<BakeDiagnostic> = []
   let config: ResolvedConfig
@@ -57,14 +56,14 @@ export default function createBakePlugin(adapter: BakeAdapter, options: BakeOpti
     enforce: 'pre',
     configResolved(value) {
       config = value
-      inclusion = new Inclusion(options.include, normalize(value.root))
+      inclusion = new Inclusion(options.include, normalizeId(value.root))
     },
     buildStart() {
       artifacts.clear()
       diagnostics.length = 0
       graph = new SourceGraph(async (source, importer) => {
         const resolved = await this.resolve(source, importer, {skipSelf: true})
-        return resolved && !resolved.external ? normalize(resolved.id) : undefined
+        return resolved && !resolved.external ? normalizeId(resolved.id) : undefined
       })
     },
     resolveId(id) {
@@ -98,7 +97,7 @@ export default function createBakePlugin(adapter: BakeAdapter, options: BakeOpti
       return `${imports.join('\n')}\nexport default await loadSnapshot(import.meta.ROLLDOWN_FILE_URL_${artifact.reference},{${constructors.join(',')}},${artifact.compressed},{${codecs.join(',')}})\n`
     },
     async transform(code, rawId) {
-      const id = normalize(rawId)
+      const id = normalizeId(rawId)
       if (config.build.ssr || id === runtime) {
         return
       }
@@ -157,7 +156,7 @@ export default function createBakePlugin(adapter: BakeAdapter, options: BakeOpti
         }
         const recipe = new Recipe(graph, adapter, options.allowFreezingRandomness ?? false)
         const entry: BakeDiagnostic = {
-          file: normalize(relative(config.root, id)),
+          file: normalizeId(relative(config.root, id)),
           line: path.node.loc?.start.line ?? 0,
           expression: describeExpression(candidate.expression),
           scope,

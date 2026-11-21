@@ -3,10 +3,10 @@ import type {GallerySetup, InitScript} from './lib/headlessGallery.ts'
 import type {AudioTrack, FrameSink, Shot} from 'capture-session/script'
 
 import {tmpdir} from 'node:os'
-import {dirname, join, relative, resolve} from 'node:path'
 import {parseArgs} from 'node:util'
 
 import {audioSidecar, carriesAudio, createFrameSink, endWarmup, executeWebmcpTool, frameFormat, installVirtualAudio, installVirtualClock, parseRecipe, sampleRecipe, sampleWireframe, setWireframe, tweens, validateFrameSize, waitForLoadingItems} from 'capture-session/script'
+import {dirname, join, relative, resolve} from 'forward-slash-path'
 import fs from 'fs-extra'
 import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 
@@ -492,7 +492,7 @@ const main = async (options: FilmOptions) => {
     }
   }
 }
-const shorten = (file: string) => relative(repositoryRoot, file).replaceAll('\\', '/')
+const shorten = (file: string) => relative(repositoryRoot, file)
 const reportFilm = ({audio, format, fps, frameCount, height, output, width}: Awaited<ReturnType<typeof main>>) => {
   const written = shorten(output)
   let sound = ''
