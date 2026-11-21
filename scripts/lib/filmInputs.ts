@@ -4,10 +4,11 @@ import {join, resolve, sep} from 'node:path'
 
 import {globby, isDynamicPattern} from 'globby'
 import {Minimatch} from 'minimatch'
+import {maximumSeed} from 'roll-seed'
 
-import {maximumSeed, parseSeed, rolledSeeds} from '#src/lib/environmentSeed.ts'
+import {coerceEnvironmentSeed, parseSeed} from '#src/lib/environmentSeed.ts'
 
-export const defaultSeedRange = `0..${rolledSeeds.maximum}`
+export const defaultSeedRange = `0..${maximumSeed}`
 
 const expandSeeds = (patterns: Array<string>, range: string) => {
   const [min, max, ...rest] = range.split('..').map(parseSeed)
@@ -18,15 +19,18 @@ const expandSeeds = (patterns: Array<string>, range: string) => {
   for (const pattern of patterns) {
     const matches = new Set<number>
     const matcher = new Minimatch(pattern)
-    if (!matcher.negate) {
-      for (const part of matcher.globSet) {
-        const seed = parseSeed(part)
+    let searchRange = matcher.negate
+    for (const part of matcher.globSet) {
+      if (isDynamicPattern(part)) {
+        searchRange = true
+      } else if (!matcher.negate) {
+        const seed = coerceEnvironmentSeed(part)
         if (seed !== undefined) {
           matches.add(seed)
         }
       }
     }
-    if (matcher.negate || matcher.globSet.some(part => parseSeed(part) === undefined)) {
+    if (searchRange) {
       for (let candidate = min; candidate <= max; candidate++) {
         if (matcher.match(String(candidate))) {
           matches.add(candidate)

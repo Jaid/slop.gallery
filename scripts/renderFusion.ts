@@ -16,7 +16,7 @@ import {av1Crf, av1Preset} from 'media-encoding'
 
 import {portraitFrame} from '#src/frames/index.ts'
 import {inspectionFov} from '#src/lib/camera/OrbitInspection.ts'
-import {parseSeed} from '#src/lib/environmentSeed.ts'
+import {coerceEnvironmentSeed} from '#src/lib/environmentSeed.ts'
 import {hangDefaultWorks} from '#src/lib/gallery/defaultPortraits.ts'
 import {portalIn, satelliteSize} from '#src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
@@ -724,9 +724,9 @@ const main = async (options: RenderFusionOptions) => {
   const fps = positiveNumber(options.fps, 'fps')
   const ending = text('end')
   resolveSettle(options.settle)
-  const seed = parseSeed(options.seed)
+  const seed = coerceEnvironmentSeed(options.seed)
   if (seed === undefined) {
-    throw new Error(`--seed expects a whole number, got “${options.seed}”.`)
+    throw new Error('--seed expects a number or nonempty text.')
   }
   const ingredient = resolveIngredient(options.ingredient)
   /** what the fusion’s portal shows as the result flips out, which --emphasis party keeps in view */
@@ -840,7 +840,7 @@ const main = async (options: RenderFusionOptions) => {
   const shared = {
     ...Object.fromEntries(Object.entries(options).filter(([key]) => key in galleryOptions)),
     graphics: options.graphics,
-    seed: options.seed,
+    seed: String(seed),
     room: work.room,
     audio: text('audio') ?? 'true',
     fps: options.fps,

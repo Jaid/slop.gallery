@@ -24,9 +24,10 @@ import type {Rarity} from 'knot-materials/rarities.ts'
 import type VictoriaClient from 'victoria-browser-client'
 
 import {normalizeMeshPath, wireframeFloodAnchors, wireframeFloodDirections, wireframeFloodModes, wireframeFloodShapes, wireframeLineStyles} from 'capture-session'
+import {maximumSeed} from 'roll-seed'
 
 import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
-import {isSeed, maximumSeed} from '#src/lib/environmentSeed.ts'
+import {isSeed} from '#src/lib/environmentSeed.ts'
 import {drawingSchema, readDrawing} from '#src/lib/overlay/drawing.ts'
 import {isLayerId, layerIdSchema, layerSchema, readLayer} from '#src/lib/overlay/layer.ts'
 
@@ -787,7 +788,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'reroll_seed',
       title: 'Reroll seed',
-      description: 'Build the world anew from a newly rolled seed, like the menu’s Reroll seed button: on a page opened with ?seed, go to the same URL with a newly rolled ?seed in its place, which leaves the stored seed and its game alone, so the next page’s menu offers to continue it; otherwise forget the stored seed and reload, so the next page rolls one for a new game and greets with the first menu. Rolled seeds range from 1 to 9999. Returns how it goes (via url or storage), the seed this page is built from (previous), the seed of the next page, null where the next page rolls it itself, and with ?seed the URL it goes to. The page leaves right after answering, which ends this session and everything this page held that is not stored, like imported works, and the tools register anew once the next page has loaded.',
+      description: `Build the world anew from a newly rolled seed, like the menu’s Reroll seed button: on a page opened with ?seed, go to the same URL with a newly rolled ?seed in its place, which leaves the stored seed and its game alone, so the next page’s menu offers to continue it; otherwise forget the stored seed and reload, so the next page rolls one for a new game and greets with the first menu. Rolled seeds range from 1 to ${maximumSeed}. Returns how it goes (via url or storage), the seed this page is built from (previous), the seed of the next page, null where the next page rolls it itself, and with ?seed the URL it goes to. The page leaves right after answering, which ends this session and everything this page held that is not stored, like imported works, and the tools register anew once the next page has loaded.`,
       inputSchema: {
         type: 'object',
         properties: {},
@@ -813,7 +814,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         properties: {
           seed: {
             type: 'integer',
-            description: `the seed to build the next page from, from 0 to ${maximumSeed}, like the 1 to 9999 the game rolls`,
+            description: 'the seed to build the next page from, or 0 for the default environment',
             minimum: 0,
             maximum: maximumSeed,
           },

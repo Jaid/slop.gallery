@@ -809,15 +809,15 @@ test('reroll_seed takes an empty input object and rerolls through the bridge', a
   controller.abort()
   await expect(execute({})).rejects.toThrow()
 })
-test('set_seed takes an unsigned 32-bit integer and sets it through the bridge', async () => {
+test('set_seed accepts the default or a canonical rolled seed and sets it through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'set_seed')!
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
   expect(tool.annotations?.readOnlyHint).toBe(false)
-  for (const seed of [0, 42, 0xFF_FF_FF_FF]) {
+  for (const seed of [0, 42, 65_536]) {
     expect(await execute({seed})).toEqual(bridge.setSeed({seed}))
   }
-  for (const input of [null, [], {}, {seed: -1}, {seed: 1.5}, {seed: 2 ** 32}, {seed: '42'}, {seed: Number.NaN}, {seed: undefined}, {
+  for (const input of [null, [], {}, {seed: -1}, {seed: 1.5}, {seed: 65_537}, {seed: '42'}, {seed: Number.NaN}, {seed: undefined}, {
     seed: 1,
     reload: true,
   }]) {

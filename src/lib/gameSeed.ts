@@ -1,5 +1,7 @@
+import rollSeed from 'roll-seed'
+
 import {readStored, writeStored} from './browserStorage.ts'
-import {effectiveSeed, parseSeed, rollSeed} from './environmentSeed.ts'
+import {effectiveSeed, parseSeed} from './environmentSeed.ts'
 
 const storedSeed = parseSeed(readStored('seed'))
 

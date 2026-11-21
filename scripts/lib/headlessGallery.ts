@@ -7,9 +7,10 @@ import {basename, join, resolve, sep} from 'node:path'
 import fs from 'fs-extra'
 import {radiansToDegrees} from 'math'
 import puppeteer from 'puppeteer-core'
+import {maximumSeed} from 'roll-seed'
 import {createServer} from 'vite'
 
-import {maximumSeed, parseSeed} from '#src/lib/environmentSeed.ts'
+import {coerceEnvironmentSeed} from '#src/lib/environmentSeed.ts'
 import {queryParameters} from '#src/lib/queryOverrides.ts'
 import {parseStreamBudget} from '#src/lib/rendering/streamBudget.ts'
 import {readWorldReach, worldReachModes} from '#src/worlds/base/WorldReach.ts'
@@ -32,7 +33,7 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, without = []}:
   const listed = queryOptionNames.filter(key => !without.includes(key))
   return `  --target <dir>          use this static build (e.g. dist) instead of the dev server, which suits captures better: the dev server can reload the page while it captures
   --graphics <mode>       mirrors ?graphics (fast, heavy, cinematic, which is heavy with larger maps and more samples for non-realtime renders, or auto, which picks fast or heavy for the GPU). Default: heavy
-  --seed <number>         mirrors ?seed, the environment seed (0–${maximumSeed}) that decides random details like the works’ frames. Default: 1
+  --seed <value>          mirrors ?seed: 0 selects the default environment; other numbers and text resolve to a seed from 1 to ${maximumSeed}. Default: 1
   --test <true|false>     mirrors ?test, which gives the page its fly and teleport hooks and leaves the intro out. Default: true; false opens the page as players get it, without those hooks
   --stream_budget <ms|false>
                           mirrors ?stream_budget, the milliseconds a frame after loading may spend building objects. Default: false, which builds everything in the first frame, so the scene is complete about three times sooner than at the players’ 8 and, in cinematic graphics, whose every streaming frame renders the whole view, three to six times sooner than at 100
@@ -218,9 +219,9 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
     ai: 'false',
     test,
   })
-  const seed = parseSeed(values.seed)
+  const seed = coerceEnvironmentSeed(values.seed)
   if (seed === undefined) {
-    throw new Error(`--seed expects a whole number between 0 and ${maximumSeed}, got “${values.seed}”.`)
+    throw new Error('--seed expects a number or nonempty text.')
   }
   search.set('seed', String(seed))
   search.set('graphics', values.graphics)

@@ -5,12 +5,14 @@ import {afterEach, beforeAll, beforeEach, describe, expect, spyOn, test} from 'b
 
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
+import {maximumSeed} from 'roll-seed'
 import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import Menu from '#component/Menu'
 import Minimap from '#component/Minimap'
 
 import {readAiSettings} from '../../src/lib/ai/settings.ts'
+import {parseSeed} from '../../src/lib/environmentSeed.ts'
 import {cameraPose, setApiKey, toggleSound} from '../../src/lib/gallery/actions.ts'
 import {climbApex} from '../../src/lib/gallery/climb.ts'
 import {useIntro} from '../../src/lib/gallery/intro.ts'
@@ -195,7 +197,7 @@ describe('Reroll seed', () => {
     expect(url.origin + url.pathname + url.hash).toBe('https://slop.gallery/#knot')
     expect(url.searchParams.keys().toArray()).toEqual(['graphics', 'seed', 'audio'])
     expect(url.searchParams.get('graphics')).toBe('fast')
-    expect(url.searchParams.get('seed')).toMatch(/^[1-9]\d{0,3}$/u)
+    expect(parseSeed(url.searchParams.get('seed'))).toBeWithin(1, maximumSeed + 1)
     expect(values.get('slop-gallery-seed')).toBe('7')
   })
   test('the tools’ seed change answers first and leaves the page a task later: storing the seed without ?seed', async () => {
@@ -223,7 +225,7 @@ describe('Reroll seed', () => {
       seed: 42,
     })
     const rolled = changeSeed(null)
-    expect(rolled.seed).toBeWithin(1, 10_000)
+    expect(rolled.seed).toBeWithin(1, maximumSeed + 1)
     expect(rolled).toEqual({
       via: 'url',
       url: `https://slop.gallery/?seed=${rolled.seed}&graphics=fast`,

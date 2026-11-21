@@ -3,7 +3,7 @@ import type {SeedChange} from '#src/lib/gameSeed.ts'
 import {applySeedChange, planSeedChange} from '#src/lib/gameSeed.ts'
 
 export type SeedInput = {
-  /** the seed to build the next page from, an unsigned 32-bit integer */
+  /** a rolled seed, or 0 for the default environment */
   seed: number
 }
 

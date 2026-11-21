@@ -1,65 +1,36 @@
-import {expect, spyOn, test} from 'bun:test'
+import {expect, test} from 'bun:test'
+
+import rollSeed, {maximumSeed} from 'roll-seed'
 
 import {narratorCharacter, narratorTraits, narratorVoice, narratorVoices} from '../../src/lib/audio/narratorCharacter.ts'
-import {defaultSeed, effectiveSeed, environmentRandom, isDefaultSeed, isSeed, maximumSeed, parseSeed, readSeedOverride, rolledSeeds, rollSeed} from '../../src/lib/environmentSeed.ts'
+import {defaultSeed, effectiveSeed, environmentRandom, isDefaultSeed, isSeed, parseSeed, readSeedOverride} from '../../src/lib/environmentSeed.ts'
 import {orbs, promptOrbs} from '../../src/orbs/index.ts'
 
-test('?seed accepts unsigned 32-bit integers and ignores anything else', () => {
+test('?seed resolves supplied seeds into the game range and ignores a bare or absent flag', () => {
   expect(readSeedOverride('?seed=1')).toBe(1)
   expect(readSeedOverride('https://slop.gallery/?graphics=fast&seed=0')).toBe(0)
   expect(readSeedOverride(`?seed=${maximumSeed}`)).toBe(maximumSeed)
-  for (const value of ['', 'abc', '-1', '1.5', '1e3', String(maximumSeed + 1), ' 1']) {
-    expect(readSeedOverride(`?seed=${encodeURIComponent(value)}`)).toBeUndefined()
+  for (const value of ['Hanover', '-1', '1564501177', '9007199254740993', String(maximumSeed + 1)]) {
+    expect(readSeedOverride(`?seed=${value}`)).toBe(rollSeed(value))
   }
   expect(readSeedOverride('?seed')).toBeUndefined()
+  expect(readSeedOverride('?seed=')).toBeUndefined()
   expect(readSeedOverride('')).toBeUndefined()
   expect(parseSeed(7)).toBe(7)
+  expect(parseSeed('65537')).toBeUndefined()
   expect(isSeed(7)).toBe(true)
   expect(isSeed('7')).toBe(false)
   expect(isSeed(-1)).toBe(false)
 })
-test('an override wins over the stored seed, and rolls are random', () => {
+test('an override wins over the stored seed', () => {
   expect(effectiveSeed(9, 5)).toBe(5)
   expect(effectiveSeed(9, undefined)).toBe(9)
-  const rolled = Array.from({length: 8}, () => rollSeed())
-  expect(rolled.every(isSeed)).toBe(true)
-  const distinct = new Set(rolled)
-  expect(distinct.size).toBeGreaterThan(1)
 })
 test('only ?seed=0 asks for the default environment', () => {
   expect(defaultSeed).toBe(0)
   expect(isDefaultSeed(0)).toBe(true)
   expect(isDefaultSeed(1)).toBe(false)
   expect(isDefaultSeed(readSeedOverride('?seed=0')!)).toBe(true)
-})
-test('a new game rolls a seed from 1 to 9999, every one equally likely, and never the default one', () => {
-  expect(rolledSeeds).toEqual({
-    minimum: 1,
-    maximum: 9999,
-  })
-  for (let index = 0; index < 2000; index++) {
-    const seed = rollSeed()
-    expect(Number.isInteger(seed)).toBe(true)
-    expect(seed).toBeGreaterThanOrEqual(1)
-    expect(seed).toBeLessThanOrEqual(9999)
-    expect(isDefaultSeed(seed)).toBe(false)
-  }
-  const span = 9999
-  const limit = Math.floor(2 ** 32 / span) * span
-  // The lowest and highest draws map to both ends; the uneven rest at the very top is drawn again.
-  const draws = [0, span - 1, 2 ** 32 - 1, limit, limit - 1]
-  const random = spyOn(crypto, 'getRandomValues').mockImplementation(<T extends ArrayBufferView>(array: T) => {
-    (array as unknown as Uint32Array)[0] = draws.shift()!
-    return array
-  })
-  try {
-    expect(rollSeed()).toBe(1)
-    expect(rollSeed()).toBe(9999)
-    expect(rollSeed()).toBe(9999)
-    expect(draws).toEqual([])
-  } finally {
-    random.mockRestore()
-  }
 })
 test('the environment’s rolls depend only on the seed and the ID, never on call order', () => {
   const ids = ['narrator-voice', 'narrator-character', 'vesper']

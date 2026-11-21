@@ -77,8 +77,7 @@ export default class VelvetMaterial extends MeshPhysicalNodeMaterial {
     const u = coordinates.x.toVar('velvetU')
     const v = coordinates.y.toVar('velvetV')
     const footprint = max(u.fwidth(), v.fwidth()).toVar('velvetFootprint')
-    // Wrap before converting to a shader float: large game seeds overflow MaterialX noise’s signed lattice index. 2¹⁸ leaves the slices of all four-digit seeds unchanged and keeps the layer offsets distinct in f32.
-    const s = float((seed * 17.3 + 3.1) % 2 ** 18)
+    const s = float(seed * 17.3 + 3.1)
     // A noise of the given period (meters) is faded to its average before it spans fewer than about two and a half pixels, where it would turn into speckle.
     const resolved = (period: number) => visibleDetail(footprint, period / 1.5)
     // Relief comes from screen-space derivatives, which turn to per-pixel noise much sooner, so it fades out while its period still spans about six pixels.

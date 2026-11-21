@@ -1,29 +1,31 @@
 import FatedRandom from 'fated-random'
 import optis from 'optis'
 import readPermalink from 'read-permalink'
+import rollSeed, {maximumSeed} from 'roll-seed'
 
-/** the largest seed of a game state, which `?seed` may ask for even though new games only roll {@link rolledSeeds}; environment randomization (which frame a work hangs in, for example) is never drawn from `Math.random()`, but rolled from the game state’s seed by {@link environmentRandom} */
-export const maximumSeed = 0xFF_FF_FF_FF
+/** A canonical game seed: a roll of `roll-seed`, or 0 for the default environment. */
+export const isSeed = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= maximumSeed
 
-/** An unsigned 32-bit integer, given as a number or as a string of decimal digits; anything else is `undefined`. */
+/** Reads a canonical game seed, as stored or used as a numeric range bound. */
 export function parseSeed(value: unknown): number | undefined {
-  const text = typeof value === 'number' ? String(value) : value
-  if (typeof text !== 'string' || !/^\d{1,10}$/.test(text)) {
-    return
-  }
-  const seed = Number(text)
-  return seed <= maximumSeed ? seed : undefined
+  const seed = typeof value === 'string' && /^\d+$/u.test(value) ? Number(value) : value
+  return isSeed(seed) ? seed : undefined
 }
 
-export const isSeed = (value: unknown): value is number => typeof value === 'number' && parseSeed(value) === value
+/** A supplied seed may also name a world with text or a number outside the roll range. A missing or bare flag keeps the stored seed. */
+export function coerceEnvironmentSeed(value: unknown): number | undefined {
+  if (typeof value === 'number' || typeof value === 'string' && value !== '') {
+    return parseSeed(value) ?? rollSeed(value)
+  }
+}
 
 const seedSchema = optis({
   normalizations: {
-    seed: parseSeed,
+    seed: coerceEnvironmentSeed,
   },
 })
 
-/** Reads the `?seed` override; an invalid value counts as missing. */
+/** Reads the `?seed` override. */
 export function readSeedOverride(input: URL | string = typeof location === 'undefined' ? '' : location.href): number | undefined {
   return readPermalink(input, {schema: seedSchema}).seed
 }
@@ -37,25 +39,6 @@ export const defaultSeed = 0
 /** Whether `seed` asks for the default environment, which skips the rolls that have a default. */
 export function isDefaultSeed(seed: number) {
   return seed === defaultSeed
-}
-
-/** the seeds a new game state rolls from, both inclusive: short enough to read out, and never {@link defaultSeed}, which only `?seed=0` asks for */
-export const rolledSeeds = {
-  minimum: 1,
-  maximum: 9999,
-} as const
-
-/** A random seed for a new game state, any of {@link rolledSeeds} equally likely. */
-export function rollSeed() {
-  const {minimum, maximum} = rolledSeeds
-  const span = maximum - minimum + 1
-  // Draws from the top beyond the last whole span would favor the lower seeds, so they are drawn again.
-  const limit = Math.floor(2 ** 32 / span) * span
-  const values = new Uint32Array(1)
-  do {
-    crypto.getRandomValues(values)
-  } while (values[0] >= limit)
-  return minimum + values[0] % span
 }
 
 /** The seed the environment is built from: the `?seed` override wins over the seed stored in the game state. */
