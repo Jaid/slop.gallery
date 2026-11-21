@@ -11,7 +11,7 @@ import worldClock from '../worldClock.ts'
 import {arrivalFrame, bodyPose, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'
 import {holdPoint, requestHanging} from './hanging/hangings.ts'
 import {hangingAnimation} from './hanging/index.ts'
-import {maximumPortraits, validateImage} from './imagePolicy.ts'
+import {maximumPortraits, validateImport} from './imagePolicy.ts'
 import {useGallery} from './store.ts'
 
 /** how far out from where it would have hung an imported work that does not fit there flips off its wall, in meters: its back clear of the fronts of the works hung beside it, which it would fuse with on touching them */
@@ -67,15 +67,16 @@ export function centeredCrop(width: number, height: number, limit = 2) {
   return [(width - cropWidth) / 2, (height - cropHeight) / 2, cropWidth, cropHeight] as const
 }
 
-/** An image file, already validated, as an imported work keeps it: works wider than 2:1 or taller than 1:2 only their middle, at most 3072 px on its longer edge, on an opaque ground, with the size in pixels of the part it keeps. */
+/** An image file, already validated, as an imported work keeps it: works wider than 2:1 or taller than 1:2 only their middle, at most 3072 px on its longer edge, on an opaque ground, with the size in pixels of the part it keeps. An SVG is drawn at exactly 3072 px on its longer edge, whatever its own size. */
 export async function importedImage(file: Blob): Promise<SizedImage> {
-  const bitmap = await createImageBitmap(file)
+  const decoded = await decodeImage(file)
   try {
-    const crop = centeredCrop(bitmap.width, bitmap.height)
+    const crop = centeredCrop(decoded.width, decoded.height)
     const [, , width, height] = crop
     // Rejects images too large or too panoramic for a frame before encoding them.
     imageSize(width, height)
-    const scale = Math.min(1, 3072 / Math.max(width, height))
+    const fit = 3072 / Math.max(width, height)
+    const scale = decoded.vector ? fit : Math.min(1, fit)
     const canvas = new OffscreenCanvas(Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale)))
     const context = canvas.getContext('2d')
     if (!context) {
@@ -83,7 +84,7 @@ export async function importedImage(file: Blob): Promise<SizedImage> {
     }
     context.fillStyle = '#f2eee3'
     context.fillRect(0, 0, canvas.width, canvas.height)
-    context.drawImage(bitmap, ...crop, 0, 0, canvas.width, canvas.height)
+    context.drawImage(decoded.source, ...crop, 0, 0, canvas.width, canvas.height)
     return {
       image: await canvas.convertToBlob({
         type: 'image/webp',
@@ -93,7 +94,7 @@ export async function importedImage(file: Blob): Promise<SizedImage> {
       height,
     }
   } finally {
-    bitmap.close()
+    decoded.close()
   }
 }
 
@@ -217,6 +218,39 @@ export function atFeet(pose: {
   }
 }
 
+/** An image file decoded for drawing, with its size in pixels. An SVG, which createImageBitmap does not take, decodes into an image element instead, which draws it sharp at any size; in one, it runs no scripts and loads nothing. */
+async function decodeImage(file: Blob) {
+  if (file.type !== 'image/svg+xml') {
+    const bitmap = await createImageBitmap(file)
+    return {
+      source: bitmap as CanvasImageSource,
+      width: bitmap.width,
+      height: bitmap.height,
+      vector: false,
+      close: () => bitmap.close(),
+    }
+  }
+  const url = URL.createObjectURL(file)
+  const element = new Image
+  element.src = url
+  try {
+    await element.decode()
+  } catch (error) {
+    URL.revokeObjectURL(url)
+    throw error
+  }
+  if (!(element.naturalWidth && element.naturalHeight)) {
+    URL.revokeObjectURL(url)
+    throw new Error('This SVG has no size of its own. Give its root a width and a height.')
+  }
+  return {
+    source: element as CanvasImageSource,
+    width: element.naturalWidth,
+    height: element.naturalHeight,
+    vector: true,
+    close: () => URL.revokeObjectURL(url),
+  }
+}
 async function canvasImage(canvas: OffscreenCanvas): Promise<SizedImage> {
   return {
     image: await canvas.convertToBlob({
@@ -268,7 +302,7 @@ export default class ImageImporter {
       let drops = 0
       for (const file of files.slice(0, 12)) {
         try {
-          validateImage(file)
+          validateImport(file)
           if (useGallery.getState().portraits.length >= maximumPortraits) {
             throw new Error('The collection is full. Remove a work to make room.')
           }

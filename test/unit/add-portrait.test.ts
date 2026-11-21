@@ -281,7 +281,49 @@ test('a JXL is imported like any other image, but not a file served without an i
   await expect(addPortrait({
     image: 'http://127.0.0.1:8080/night_watch-3.jxl',
     target: {slot: slot.id},
-  })).rejects.toThrow('Choose JXL, PNG, JPEG, WebP, AVIF or GIF')
+  })).rejects.toThrow('Choose JXL, PNG, JPEG, WebP, AVIF, GIF or SVG')
+})
+test('an SVG is drawn sharp at 3072 px on its longer edge, whatever its own size, unless it has none', async () => {
+  const canvases: Array<[number, number]> = []
+  let natural = pixels
+  Object.assign(globalThis, {
+    fetch: async () => new Response(new Blob(['<svg/>'], {type: 'image/svg+xml'})),
+    Image: class {
+      src = ''
+      get naturalHeight() {
+        return natural.height
+      }
+      get naturalWidth() {
+        return natural.width
+      }
+      async decode() {}
+    },
+    OffscreenCanvas: class extends (globalThis.OffscreenCanvas as unknown as new () => object) {
+      constructor(width: number, height: number) {
+        super()
+        canvases.push([width, height])
+      }
+    },
+  })
+  try {
+    const added = await addPortrait({
+      image: 'http://127.0.0.1:8080/icon.svg',
+      target: {slot: slot.id},
+    })
+    expect(canvases).toEqual([[3072, 1536]])
+    expect(added.width / added.height).toBeCloseTo(2, 10)
+    expect((stored(added.id).source as Blob).type).toBe('image/webp')
+    natural = {
+      width: 0,
+      height: 0,
+    }
+    await expect(addPortrait({
+      image: 'http://127.0.0.1:8080/sizeless.svg',
+      target: {slot: slot.id},
+    })).rejects.toThrow('no size of its own')
+  } finally {
+    Reflect.deleteProperty(globalThis, 'Image')
+  }
 })
 test('unknown frames and canvas materials, images that do not load and a full collection add nothing', async () => {
   const target = {position: {

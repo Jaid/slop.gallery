@@ -7,7 +7,7 @@ import {useDropzone} from 'react-dropzone'
 
 import ArtworkDropOverlay from '#component/ArtworkDropOverlay'
 import {dragPose, galleryEvents, notify, useGallery} from '#src/lib/gallery.ts'
-import {imageExtensions, maximumImageBytes} from '#src/lib/gallery/imagePolicy.ts'
+import {importExtensions, maximumImageBytes} from '#src/lib/gallery/imagePolicy.ts'
 import worldClock from '#src/lib/worldClock.ts'
 
 import css from './style.module.sass'
@@ -37,7 +37,7 @@ export default function Dropzone({children}: PropsWithChildren) {
     noClick: true,
     noKeyboard: true,
     onDropAccepted: handleDrop,
-    accept: imageExtensions,
+    accept: importExtensions,
     maxSize: maximumImageBytes,
     onDragOver: event => {
       dragPose.x = event.clientX

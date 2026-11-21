@@ -8,7 +8,7 @@ import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
 import {arrivalFrame, newPortrait} from '#src/lib/gallery/actions.ts'
 import {imageSize, importedImage, importedTitle} from '#src/lib/gallery/ImageImporter.ts'
-import {maximumPortraits, validateImage} from '#src/lib/gallery/imagePolicy.ts'
+import {maximumPortraits, validateImport} from '#src/lib/gallery/imagePolicy.ts'
 import {usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
 import {useGallery} from '#src/lib/gallery/store.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
@@ -187,7 +187,7 @@ export default async function addPortrait({canvasMaterial, frame: frameId, id, i
     throw new Error(`The image could not be loaded (HTTP ${response.status}).`)
   }
   const file = await response.blob()
-  validateImage(file)
+  validateImport(file)
   const {image: source, width: pixelWidth, height: pixelHeight} = await importedImage(file)
   // It keeps its own aspect at the frame area, as an import keeps the area of the room it hangs in.
   const {width, height} = imageSize(pixelWidth, pixelHeight, size ?? destination.area)
