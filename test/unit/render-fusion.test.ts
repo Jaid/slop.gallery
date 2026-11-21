@@ -5,8 +5,8 @@ import type {PortraitDump} from '../../src/lib/webmcp/dumpPortraits.ts'
 
 import {expect, test} from 'bun:test'
 import {tmpdir} from 'node:os'
-import {join} from 'node:path'
 
+import {join} from 'forward-slash-path'
 import fs from 'fs-extra'
 
 import {keyedShot, throughKeys} from '../../scripts/lib/fusionCamera.ts'
