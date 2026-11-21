@@ -7,7 +7,7 @@ import {parseArgs} from 'node:util'
 import {createFrameSink, endWarmup, frameFormat, installVirtualClock, validateFrameSize, waitForLoadingItems} from 'capture-session/script'
 import {dirname, join, relative, resolve} from 'forward-slash-path'
 import fs from 'fs-extra'
-import {av1Crf} from 'knot-materials/scripts/lib/encodeAnimation.ts'
+import {av1Crf} from 'media-encoding'
 
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
 import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'

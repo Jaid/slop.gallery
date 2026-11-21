@@ -67,6 +67,7 @@
     "geofency": "workspace:*",
     "knot-materials": "workspace:*",
     "math": "0.1.0",
+    "media-encoding": "workspace:*",
     "minimatch": "11.0.9",
     "mount-root": "0.5.0",
     "okhsl": "0.1.0",

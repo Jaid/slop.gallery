@@ -10,7 +10,7 @@ import {endWarmup, executeWebmcpTool, setWireframe, waitForLoadingItems} from 'c
 import {join, relative} from 'forward-slash-path'
 import fs from 'fs-extra'
 import getFree from 'get-free'
-import {jxlEffort, lossyJxlOptions} from 'knot-materials/scripts/lib/encodeJxl.ts'
+import {jxlEffort, lossyJxlOptions} from 'media-encoding'
 import {Packr} from 'msgpackr'
 
 import {anchorWorldReach, degrees, galleryHelp, galleryOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'

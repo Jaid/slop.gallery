@@ -27,6 +27,7 @@
         "geofency": "workspace:*",
         "knot-materials": "workspace:*",
         "math": "0.1.0",
+        "media-encoding": "workspace:*",
         "minimatch": "11.0.9",
         "mount-root": "0.5.0",
         "okhsl": "0.1.0",
@@ -129,8 +130,8 @@
       "version": "0.1.0",
       "dependencies": {
         "get-free": "0.2.0",
-        "knot-materials": "workspace:*",
         "math": "0.1.0",
+        "media-encoding": "workspace:*",
       },
       "peerDependencies": {
         "puppeteer-core": "^25.18.1",
@@ -209,6 +210,7 @@
       "version": "0.1.0",
       "dependencies": {
         "math": "0.1.0",
+        "media-encoding": "workspace:*",
         "three-mesh-bvh": "0.9.18",
       },
       "devDependencies": {
@@ -223,6 +225,10 @@
       "peerDependencies": {
         "three": "^0.187.0",
       },
+    },
+    "packages/media-encoding": {
+      "name": "media-encoding",
+      "version": "0.1.0",
     },
     "packages/procedural-audio": {
       "name": "procedural-audio",
@@ -1611,6 +1617,8 @@
     "mdast-util-to-string": ["mdast-util-to-string@4.0.0", "", { "dependencies": { "@types/mdast": "^4.0.0" } }, "sha512-0H44vDimn51F0YwvxSJSm0eCDOJTRlmN0R1yBh4HLj9wiV1Dn0QoXGbvFAWj2hSItVTlCmBF1hqKlIyUBVFLPg=="],
 
     "mdn-data": ["mdn-data@2.37.2", "", {}, "sha512-rz9YOBGItdSbe7HcSArUbhiAv4SB/4DKRYg96CSFS2CcIYMbUvBtZlzA1NCbk2AdgbmYwMqwNblLpR441lLeiQ=="],
+
+    "media-encoding": ["media-encoding@workspace:packages/media-encoding"],
 
     "meow": ["meow@13.2.0", "", {}, "sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA=="],
 

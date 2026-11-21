@@ -11,8 +11,8 @@ import {parseArgs} from 'node:util'
 
 import {join, parse, relative, resolve} from 'forward-slash-path'
 import fs from 'fs-extra'
-import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
 import {clamp} from 'math'
+import {av1Crf, av1Preset} from 'media-encoding'
 
 import {portraitFrame} from '#src/frames/index.ts'
 import {inspectionFov} from '#src/lib/camera/OrbitInspection.ts'

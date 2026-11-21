@@ -1,0 +1,24 @@
+{
+  "name": "media-encoding",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The AV1 and JPEG XL encoder settings that films, snaps and Knot previews share",
+  "funding": "https://github.com/sponsors/Jaid",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaid/slop.gallery.git",
+    "directory": "packages/media-encoding"
+  },
+  "main": "src/main.ts",
+  "exports": {
+    ".": "./src/main.ts"
+  },
+  "files": [
+    "src",
+    "readme.md",
+    "license.txt"
+  ],
+  "sideEffects": false,
+  "types": "./src/main.ts"
+}

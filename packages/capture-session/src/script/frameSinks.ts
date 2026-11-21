@@ -2,8 +2,7 @@ import type {Subprocess} from 'bun'
 import {extname} from 'node:path'
 
 import getFree from 'get-free'
-import {av1Preset, av1SvtParams, webmColorFilter} from 'knot-materials/scripts/lib/encodeAnimation.ts'
-import {lossyJxlOptions} from 'knot-materials/scripts/lib/encodeJxl.ts'
+import {av1Preset, av1SvtParams, lossyJxlOptions, webmColorFilter} from 'media-encoding'
 
 export const frameFormats = ['jxl', 'avif', 'webm', 'mkv', 'png'] as const
 export type FrameFormat = typeof frameFormats[number]

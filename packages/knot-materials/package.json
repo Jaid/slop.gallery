@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "math": "0.1.0",
+    "media-encoding": "workspace:*",
     "three-mesh-bvh": "0.9.18"
   },
   "peerDependencies": {

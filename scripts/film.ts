@@ -8,7 +8,7 @@ import {parseArgs} from 'node:util'
 import {audioSidecar, carriesAudio, createFrameSink, endWarmup, executeWebmcpTool, frameFormat, installVirtualAudio, installVirtualClock, parseRecipe, sampleRecipe, sampleWireframe, setWireframe, tweens, validateFrameSize, waitForLoadingItems} from 'capture-session/script'
 import {dirname, join, relative, resolve} from 'forward-slash-path'
 import fs from 'fs-extra'
-import {av1Crf, av1Preset} from 'knot-materials/scripts/lib/encodeAnimation.ts'
+import {av1Crf, av1Preset} from 'media-encoding'
 
 import {readAudioOverride} from '#src/lib/audio/audioParameter.ts'
 
