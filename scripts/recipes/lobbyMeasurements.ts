@@ -2,6 +2,8 @@ import type {ToolCall} from 'capture-page'
 
 import {join} from 'node:path'
 
+import snap from '../snap.ts'
+
 // Afna1d5u2TRepqF · 21 Nov 2026 12:00. The dump uses radians; snap takes yaw,pitch in degrees.
 const angle = [-0.8729, -0.8156].map(value => value * 180 / Math.PI).join(',')
 const addLayer = (id: string): ToolCall => ({
@@ -57,4 +59,20 @@ const calls: Array<ToolCall> = [
     },
   },
 ]
-await Bun.$`bun scripts/snap.ts --target dist --position=3.799,2.619,-27.048 --angle=${angle} --fov 90 --height 2160 --seed 0 --paused true --development true --crosshair always --settle 5 --jxl-distance 0 --jxl-effort 6 --name lobby-measurements-1200 --text-overlays --tools ${JSON.stringify(calls)}`.cwd(join(import.meta.dir, '..', '..'))
+const {output} = await snap({
+  target: join(import.meta.dir, '../../dist'),
+  position: '3.799,2.619,-27.048',
+  angle,
+  fov: '90',
+  height: '2160',
+  seed: '0',
+  paused: 'true',
+  development: 'true',
+  crosshair: 'always',
+  settle: '5',
+  'jxl-distance': '0',
+  'jxl-effort': '6',
+  name: 'lobby-measurements-1200',
+  'text-overlays': true,
+}, calls)
+console.log(output)

@@ -1,5 +1,7 @@
 import type {CameraView} from '#src/lib/diagnostics.ts'
 import type {CameraBookmark, Vec3} from '#src/lib/gallery/types.ts'
+import type {GalleryValues} from './lib/headlessGallery.ts'
+import type {ToolCall} from 'capture-page'
 
 import {join, relative} from 'node:path'
 import {parseArgs} from 'node:util'
@@ -61,7 +63,6 @@ const snapOptions = {
   },
   name: {type: 'string'},
   position: {type: 'string'},
-  tools: {type: 'string'},
   'text-overlays': {type: 'boolean'},
   wireframe: {type: 'string'},
   settle: {
@@ -69,11 +70,17 @@ const snapOptions = {
     default: '2',
   },
 } as const
+const defaults = parseArgs({
+  options: snapOptions,
+  args: [],
+}).values
+export type SnapOptions = Partial<typeof defaults & GalleryValues>
 
-/** the command line options without --help, as parsed strings */
-export type SnapOptions = ReturnType<typeof parseArgs<{options: typeof snapOptions}>>['values']
-
-const main = async (options: SnapOptions) => {
+export default async function snap(overrides: SnapOptions, tools: ReadonlyArray<ToolCall> = []) {
+  const options = {
+    ...defaults,
+    ...overrides,
+  }
   const setup = await resolveGallerySetup(options, snapHeight)
   warnAboutDevServer(setup)
   const settle = resolveSettle(options.settle)
@@ -105,15 +112,6 @@ const main = async (options: SnapOptions) => {
   const wireframe = options.wireframe === undefined ? undefined : JSON.parse(options.wireframe) as unknown
   if (wireframe !== undefined && (typeof wireframe !== 'object' || wireframe === null || Array.isArray(wireframe))) {
     throw new Error('--wireframe needs a JSON object of set_wireframe input.')
-  }
-  const tools: unknown = options.tools === undefined ? [] : JSON.parse(options.tools)
-  const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
-  const isCall = (value: unknown): value is {
-    input: Record<string, unknown>
-    name: string
-  } => isObject(value) && typeof value.name === 'string' && value.name.trim().length > 0 && isObject(value.input)
-  if (!Array.isArray(tools) || !tools.every(isCall)) {
-    throw new Error('--tools needs a JSON array of {name, input} WebMCP calls.')
   }
   await anchorWorldReach(setup, position)
   await using server = await serveGallery(setup, {cacheDir: 'node_modules/.vite-snap'})
@@ -228,13 +226,12 @@ const main = async (options: SnapOptions) => {
   }
 }
 
-export default main
-
 if (import.meta.main) {
   const {values} = parseArgs({
     args: Bun.argv.slice(2),
     options: {
       ...snapOptions,
+      tools: {type: 'string'},
       help: {
         type: 'boolean',
         short: 'h',
@@ -244,7 +241,14 @@ if (import.meta.main) {
   if (values.help) {
     console.log(help)
   } else {
-    const {dump, height, output, source, view, width} = await main(values)
+    const {tools: json, ...options} = values
+    const tools: unknown = json === undefined ? [] : JSON.parse(json)
+    const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
+    const isCall = (value: unknown): value is ToolCall => isObject(value) && typeof value.name === 'string' && value.name.trim().length > 0 && isObject(value.input)
+    if (!Array.isArray(tools) || !tools.every(isCall)) {
+      throw new Error('--tools needs a JSON array of {name, input} WebMCP calls.')
+    }
+    const {dump, height, output, source, view, width} = await snap(options, tools)
     const [pitch, yaw, roll] = view.rotation
     console.log(`Wrote ${relative(repositoryRoot, output).replaceAll('\\', '/')} (${width}×${height}${source.width === width && source.height === height ? '' : `, downsampled from ${source.width}×${source.height}`})${dump ? ' and its .msgpack X dump' : ''}`)
     console.log(`--position ${view.position.map(value => Math.round(value * 1000) / 1000).join(',')} --angle ${[yaw, pitch, roll].map(degrees).join(',')} --fov ${view.fov}`)
