@@ -1,5 +1,3 @@
 installation: false
 tryInBrowser: false
-shields:
-  items:
-  - license
+shields: false
