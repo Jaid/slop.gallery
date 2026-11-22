@@ -8,7 +8,7 @@ import {choiceFrames} from '../../src/frames/lib/frameChoice.ts'
 import {impastoColor, impastoIndex, impastoOrder, impastoPaints} from '../../src/lib/materials/impastoPaints.ts'
 import {moods} from '../../src/moods/index.ts'
 import ImpastoOrbMaterial from '../../src/orbs/impasto/ImpastoOrbMaterial.ts'
-import {impastoPalette, impastoStrokes} from '../../src/orbs/impasto/strokes.ts'
+import {impastoBubbles, impastoPalette, impastoStrokes, strokeDistance} from '../../src/orbs/impasto/strokes.ts'
 import {impastoOrb, orbRadius, paintOrb, promptOrbs, randomOrbs, transparentOrb} from '../../src/orbs/index.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 
@@ -83,9 +83,9 @@ describe('Impasto Orb', () => {
       second.dispose()
     }
   })
-  test('keeps the padded box every stroke of its glass is marched in inside the glass, with orthonormal axes and paints of its palette', () => {
-    expect(impastoStrokes.length).toBeGreaterThan(12)
-    for (const {across, along, center, normal, pigment, radii} of impastoStrokes) {
+  test('keeps every curved stroke’s bounding box inside the glass, with orthonormal axes and paired paints of its palette', () => {
+    expect(impastoStrokes.length).toBeGreaterThanOrEqual(12)
+    for (const {across, along, boxMax, boxMin, folded, normal, pigment} of impastoStrokes) {
       for (const axis of [along, across, normal]) {
         expect(axis.length()).toBeCloseTo(1, 9)
       }
@@ -94,13 +94,81 @@ describe('Impasto Orb', () => {
       expect(across.dot(normal)).toBeCloseTo(0, 9)
       expect(pigment).toBeGreaterThanOrEqual(0)
       expect(pigment).toBeLessThan(impastoPalette.length)
-      for (const x of [-1.1, 1.1]) {
-        for (const y of [-1.1, 1.1]) {
-          for (const z of [-1.1, 1.1]) {
+      expect(folded).toBeGreaterThanOrEqual(0)
+      expect(folded).toBeLessThan(impastoPalette.length)
+      expect(folded).not.toBe(pigment)
+      expect(boxMin.x).toBeLessThan(boxMax.x)
+      expect(boxMin.y).toBeLessThan(boxMax.y)
+      expect(boxMin.z).toBeLessThan(boxMax.z)
+      for (const x of [boxMin.x, boxMax.x]) {
+        for (const y of [boxMin.y, boxMax.y]) {
+          for (const z of [boxMin.z, boxMax.z]) {
             const corner = new Vector3
-            corner.copy(center).addScaledVector(along, x * radii[0]).addScaledVector(across, y * radii[1]).addScaledVector(normal, z * radii[2])
+            corner.addScaledVector(along, x).addScaledVector(across, y).addScaledVector(normal, z)
             expect(corner.length()).toBeLessThan(0.95)
           }
+        }
+      }
+    }
+  })
+  test('keeps all sculpted strokes strictly separated with zero clipping and every trapped bubble clear of the paint and glass', () => {
+    const point = new Vector3
+    for (const [index, stroke] of impastoStrokes.entries()) {
+      let insideSamples = 0
+      for (let iu = -8; iu <= 8; iu++) {
+        const u = iu / 7
+        const theta = u * stroke.arc / stroke.shell
+        for (let iv = -4; iv <= 4; iv++) {
+          const v = iv / 3.5
+          const whip = Math.max(0, u - 0.15)
+          const hook = stroke.bend * (u * u * 0.7 - 0.18 + 0.85 * whip * whip * stroke.tilt)
+          const asymT = Math.max(0, Math.min(1, (u - 0.08) / 0.88))
+          const asym = stroke.width * 0.34 * stroke.tilt * asymT * asymT * (3 - 2 * asymT)
+          const arcAcross = v * stroke.width * 1.15 + hook + asym
+          const phiAcross = arcAcross / stroke.shell
+          for (let ih = -2; ih <= 5; ih++) {
+            const radius = stroke.shell + ih / 4 * (stroke.thick * 2.2 + stroke.lift)
+            if (radius <= 0.02) {
+              continue
+            }
+            const rxz = radius * Math.cos(phiAcross)
+            const lx = rxz * Math.sin(theta)
+            const ly = radius * Math.sin(phiAcross)
+            const lz = rxz * Math.cos(theta)
+            point.set(0, 0, 0).addScaledVector(stroke.along, lx).addScaledVector(stroke.across, ly).addScaledVector(stroke.normal, lz)
+            if (strokeDistance(point, stroke) > 0.002) {
+              continue
+            }
+            insideSamples++
+            // Keep every paint surface well inside the refracted silhouette (r * fillIor < 0.90) so a clean golden glass rim always frames the sculpture.
+            expect(point.length()).toBeLessThan(0.7)
+            expect(lx).toBeGreaterThanOrEqual(stroke.boxMin.x)
+            expect(lx).toBeLessThanOrEqual(stroke.boxMax.x)
+            expect(ly).toBeGreaterThanOrEqual(stroke.boxMin.y)
+            expect(ly).toBeLessThanOrEqual(stroke.boxMax.y)
+            expect(lz).toBeGreaterThanOrEqual(stroke.boxMin.z)
+            expect(lz).toBeLessThanOrEqual(stroke.boxMax.z)
+            for (const [otherIndex, other] of impastoStrokes.entries()) {
+              if (otherIndex !== index) {
+                expect(strokeDistance(point, other)).toBeGreaterThan(0.015)
+              }
+            }
+          }
+        }
+      }
+      expect(insideSamples).toBeGreaterThan(10)
+    }
+    expect(impastoBubbles.length).toBeGreaterThanOrEqual(50)
+    expect(impastoBubbles.filter(bubble => bubble.center.y > 0.2).length).toBeGreaterThan(10)
+    expect(impastoBubbles.filter(bubble => bubble.center.y < -0.2).length).toBeGreaterThan(10)
+    for (const [index, bubble] of impastoBubbles.entries()) {
+      expect(bubble.center.length() + bubble.radius).toBeLessThan(0.74)
+      for (const stroke of impastoStrokes) {
+        expect(strokeDistance(bubble.center, stroke)).toBeGreaterThan(bubble.radius + 0.007)
+      }
+      for (const [otherIndex, other] of impastoBubbles.entries()) {
+        if (otherIndex !== index) {
+          expect(bubble.center.distanceTo(other.center)).toBeGreaterThan(bubble.radius + other.radius)
         }
       }
     }
