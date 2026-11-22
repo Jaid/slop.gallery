@@ -37,7 +37,7 @@ const filmWorldReach = 'neighbors'
 const help = `Usage: bun scripts/film.ts [options]
 
 Renders a flight of the player through a world and writes it as an animated AVIF or JPEG XL, a video or a PNG sequence, with the game’s sound under --audio.
-Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser.
+Serves the build --target names, dist unless told otherwise, or starts a private Vite dev server with --target false, and a private headless browser; never touches the visible browser.
 The engine clock is virtual: every frame advances the scene by exactly 1/fps seconds, however long it takes to render. Shaders and timed animations like the Lodge firelight use the movie’s time across seeds, including during crossfades, unless --frozen_time holds them still. Each take still starts its own physics and sound. Artworks that come into view are decoded before their frame is captured, so nothing pops in.
 With --audio on (true, or a volume from 1 to 100, like ?audio), the page’s sound renders offline in step with the clock, at 48 kHz, so every sound starts on the frame that starts it, and the film carries it as Opus: WebM and Matroska inside, the other formats in an Opus file of the same name beside them. Sound the page plays through media elements or speech synthesis is not recorded.
 

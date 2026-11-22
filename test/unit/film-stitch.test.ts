@@ -29,8 +29,25 @@ test('two globby builds × minimatch seeds play target first, skipping exclusion
     await fs.remove(root)
   }
 })
+test('without a target a film loads dist, and false plays the dev server among build folders but not among patterns', async () => {
+  const root = await fs.mkdtemp(join(tmpdir(), 'film-default-target-'))
+  try {
+    for (const build of ['dist', 'v1']) {
+      await fs.outputFile(join(root, build, 'index.html'), '')
+    }
+    const fallback = await filmInputs({}, root)
+    expect(fallback.map(({target}) => target)).toEqual([join(root, 'dist')])
+    const mixed = await filmInputs({target: ['false', 'v1', 'false']}, root)
+    expect(mixed.map(({target}) => target)).toEqual([undefined, join(root, 'v1'), undefined])
+    await expect(filmInputs({target: ['false', 'v*']}, root)).rejects.toThrow('--target false')
+    await fs.remove(join(root, 'dist'))
+    await expect(filmInputs({}, root)).rejects.toThrow('“dist” has no index.html')
+  } finally {
+    await fs.remove(root)
+  }
+})
 test('seed patterns use the requested range, while literal brace ranges can reach the full seed space', async () => {
-  expect(await filmInputs({})).toEqual([{
+  expect(await filmInputs({target: 'false'})).toEqual([{
     seed: '0',
     target: undefined,
   }])

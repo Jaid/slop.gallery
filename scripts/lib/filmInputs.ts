@@ -8,6 +8,8 @@ import {Minimatch} from 'minimatch'
 
 import {coerceEnvironmentSeed, parseSeed} from '#src/lib/environmentSeed.ts'
 
+import {defaultTarget} from './headlessGallery.ts'
+
 export const defaultSeedRange = `0..${maximumSeed}`
 
 const expandSeeds = (patterns: Array<string>, range: string) => {
@@ -45,10 +47,17 @@ const expandSeeds = (patterns: Array<string>, range: string) => {
   }
   return seeds.map(String)
 }
-const expandTargets = async (patterns: Array<string>, cwd: string) => {
+/** The builds the patterns name, undefined for the dev server where one is false. */
+const expandTargets = async (patterns: Array<string>, cwd: string): Promise<Array<string | undefined>> => {
   // Explicit paths keep their CLI order, repeats included. Give globby the whole pattern list so its exclusions apply across arguments; it returns every match once.
   const paths = patterns.map(pattern => pattern.replaceAll(sep, '/'))
   const dynamic = isDynamicPattern(paths)
+  if (paths.includes('false')) {
+    if (dynamic) {
+      throw new Error('--target false plays the dev server among build folders, not among patterns, whose matches have no place in the order.')
+    }
+    return Promise.all(paths.map(path => (path === 'false' ? undefined : expandTargets([path], cwd).then(([build]) => build))))
+  }
   const matches = dynamic ? await globby(paths, {
     cwd,
     onlyDirectories: true,
@@ -72,13 +81,13 @@ const expandTargets = async (patterns: Array<string>, cwd: string) => {
 /** the seed of a film without --seed: the default environment */
 export const defaultFilmSeed = '0'
 
-/** One take per target × seed pair, or the usual single take against the dev server with the default environment. */
+/** One take per target × seed pair, by default a single take of the default build with the default environment; a target of false is the dev server. */
 export const filmInputs = async (options: {
   seed?: Arrayable<string>
   'seed-range'?: string
   target?: Arrayable<string>
 }, cwd = process.cwd()) => {
-  const builds = options.target === undefined ? [undefined] : await expandTargets([options.target].flat(), cwd)
+  const builds = await expandTargets([options.target ?? defaultTarget].flat(), cwd)
   const numbers = expandSeeds([options.seed ?? defaultFilmSeed].flat(), options['seed-range'] ?? defaultSeedRange)
   return builds.flatMap(target => numbers.map(seed => ({
     target,

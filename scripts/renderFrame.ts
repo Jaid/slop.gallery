@@ -22,7 +22,7 @@ const videoSize = 2160
 const help = `Usage: bun scripts/renderFrame.ts <frame-id> [options]
 
 Films a frame turning in the air, so it shows from every side, its back included: the Sandbox’s turntable (?turntable) floats a work in the frame in front of the Cell’s east wall, and the still camera films it turning round from the front, by default once in 12 s at 60 fps into a ${videoSize}×${videoSize} AV1 video that loops seamlessly.
-Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser. The engine clock is virtual: every frame turns the work by exactly its share of the turn, however long it takes to render.
+Serves the build --target names, dist unless told otherwise, or starts a private Vite dev server with --target false, and a private headless browser; never touches the visible browser. The engine clock is virtual: every frame turns the work by exactly its share of the turn, however long it takes to render.
 
 Frames: ${frameIds.join(', ')}
 

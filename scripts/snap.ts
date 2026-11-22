@@ -33,7 +33,7 @@ const snapJxlEffort = '6'
 const help = `Usage: bun scripts/snap.ts [options]
 
 Takes a headless photo of a world and writes it to out/snap/<name>.jxl, next to out/snap/<name>.msgpack with the X dump of the same view.
-Starts a private Vite dev server (or serves --target) and a private headless browser through capture-page; never touches the visible browser.
+Serves the build --target names, dist unless told otherwise, or starts a private Vite dev server with --target false, and a private headless browser through capture-page; never touches the visible browser.
 By default the photo is a fresh WebGPU render, without DOM overlays. Use --text-overlays to include HTML measurement labels. Its camera is the player, flying: the room its eyes are in is the player’s.
 
 Options:

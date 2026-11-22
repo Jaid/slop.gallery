@@ -55,7 +55,7 @@ const fusionWorldReach = 'room'
 const help = `Usage: bun scripts/renderFusion.ts [options]
 
 Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of a world, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and steps aside for the result, where it holds, unless --emphasis ends the film otherwise. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
-Starts a private Vite dev server (or serves --target) and a private headless browser; never touches the visible browser. The engine clock is virtual, see scripts/film.ts, which renders the film.
+Serves the build --target names, dist unless told otherwise, or starts a private Vite dev server with --target false, and a private headless browser; never touches the visible browser. The engine clock is virtual, see scripts/film.ts, which renders the film.
 With --emphasis result, a probe renders the fusion small first to learn where the result lands, which the camera of the film then plans for.
 
 Options:

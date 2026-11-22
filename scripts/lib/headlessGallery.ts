@@ -22,6 +22,8 @@ const dedicatedQueryOptionNames = new Set(['graphics', 'seed', 'stream_budget', 
 export const warmupRows = 360
 // These have dedicated options with validation and defaults. A world’s own parameters open it, like --shots opens Knottingham and --item the Sandbox.
 const queryOptionNames = [...new Set([...queryParameters.filter(key => !dedicatedQueryOptionNames.has(key)), ...Object.values(worldParameters).flat()])].toSorted()
+/** the build scripts load the game from unless --target names another, or false for the dev server */
+export const defaultTarget = 'dist'
 /** the --seed of scripts that pick none of their own */
 const defaultSeed = '1'
 const queryOptions: Record<string, {type: 'string'}> = Object.fromEntries(queryOptionNames.map(key => [key, {type: 'string'}]))
@@ -37,7 +39,7 @@ export const galleryHelp = (defaultHeight = 720, {ratio = 16 / 9, seed = default
 } = {}) => {
   const sides = ratio === 1 ? ['--height', '--width'] : (ratio === 16 / 9 ? ['--height × 16/9', '--width × 9/16'] : [`--height × ${ratio}`, `--width ÷ ${ratio}`])
   const listed = queryOptionNames.filter(key => !without.includes(key))
-  return `  --target <dir>          use this static build (e.g. dist) instead of the dev server, which suits captures better: the dev server can reload the page while it captures
+  return `  --target <dir|false>    the static build to load the game from, or false for a private Vite dev server, which can reload the page while it captures. Default: ${defaultTarget}
   --graphics <mode>       mirrors ?graphics (fast, heavy, cinematic, which is heavy with larger maps and more samples for non-realtime renders, or auto, which picks fast or heavy for the GPU). Default: heavy
   --seed <value>          mirrors ?seed: 0 selects the default environment; other numbers and text resolve to a seed from 1 to ${maximumSeed}. Default: ${seed}
   --test <true|false>     mirrors ?test, which gives the page its fly and teleport hooks and leaves the intro out. Default: true; false opens the page as players get it, without those hooks
@@ -68,7 +70,10 @@ export const galleryOptions = {
   test: {type: 'string'},
   warmup_scale: {type: 'string'},
   world_reach: {type: 'string'},
-  target: {type: 'string'},
+  target: {
+    type: 'string',
+    default: defaultTarget,
+  },
   width: {type: 'string'},
   height: {type: 'string'},
 } as const
@@ -224,14 +229,15 @@ export const anchorWorldReach = async (setup: GallerySetup, eye: Vec3 | undefine
 /** Warns on stderr when a capture runs against the dev server instead of a static build: Vite reloads the page whenever it optimizes newly found dependencies, as on a cold cache, and a reload after flying somewhere silently leaves the player at its spawn. */
 export const warnAboutDevServer = (setup: GallerySetup) => {
   if (setup.target === undefined) {
-    console.warn('Warning: capturing from the Vite dev server, which can reload the page mid-capture and put the player back at its spawn; captures should target a static build: bun run build, then --target dist.')
+    console.warn(`Warning: capturing from the Vite dev server, which can reload the page mid-capture and put the player back at its spawn; captures should load a static build: bun run build and leave out --target false, so ${defaultTarget} loads.`)
   }
 }
 /** Validates the shared gallery options before anything is started; a missing side of the viewport follows `ratio`, width divided by height. */
 export const resolveGallerySetup = async (values: GalleryValues, defaultHeight = 720, ratio = 16 / 9) => {
-  const target = values.target === undefined ? undefined : resolve(values.target)
+  const given = values.target ?? defaultTarget
+  const target = given === 'false' ? undefined : resolve(given)
   if (target !== undefined && !await fs.stat(join(target, 'index.html')).then(entry => entry.isFile(), () => false)) {
-    throw new Error(`--target ${values.target} has no index.html. Build it first, e.g. bun run build.`)
+    throw new Error(`--target ${given} has no index.html. Build it first, e.g. bun run build, or load the dev server with --target false.`)
   }
   const test = values.test ?? 'true'
   if (test !== 'true' && test !== 'false') {
