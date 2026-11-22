@@ -1,8 +1,10 @@
-import type {Camera, Light, Object3D} from 'three/webgpu'
+import type {SoftShadow} from './shadowFilterNodes.ts'
+import type {Camera, Light, LightShadow, Object3D} from 'three/webgpu'
 
 import {Frustum, Matrix4, PointLight, Sphere, Vector3} from 'three/webgpu'
 
 import {isShadowSlot, lightShadow, shadowSlotKey, useLightEdits} from './lightLevels.ts'
+import {softenShadow} from './shadowFilterNodes.ts'
 
 /** how many shadow-casting point lights the pool keeps; each one costs every lit pixel, in use or not */
 export const shadowSlotCount = 4
@@ -10,6 +12,8 @@ export const shadowSlotCount = 4
 const openReach = 30
 /** how much nearer than a light holding a slot another must come to take it over, in meters, so two lights about as near don’t trade it back and forth, rendering their shadow maps afresh each time */
 const holdMargin = 1
+/** `userData` key of what a light asking for a shadow wants it blurred by, a {@link SoftShadow}; without it, its slot blurs as every lamp’s */
+export const softShadowKey = 'softShadow'
 
 type Candidate = {
   distance: number
@@ -36,6 +40,8 @@ const currentPosition = (object: Object3D, target: Vector3) => {
 export function wantsShadow(light: Light) {
   return useLightEdits.getState().shadows.get(light) ?? Boolean(light.userData.shadow)
 }
+/** whether a light asks for its shadow to be blurred otherwise than every lamp’s, see {@link softShadowKey} */
+const wantsSoftShadow = (light: Light | null) => ((light?.userData[softShadowKey] as SoftShadow | undefined)?.blurAngle ?? 0) > 0
 
 /**
  * A fixed set of shadow-casting point lights lent to the shadowless point lights that ask for a shadow with `userData.shadow`.
@@ -43,6 +49,8 @@ export function wantsShadow(light: Light) {
  * Every shadow-casting light adds its own lighting and shadow code to every lit material, and switching `castShadow` rebuilds them all. The pool’s lights always exist and always cast,
  * so lending them out never rebuilds anything: a slot takes over its light’s place, color, reach and strength, and the batched loop skips the light while it is lent a slot.
  * The slots go to the nearest lights in view, a light holding one counting as a little nearer, so it keeps it until another comes clearly nearer, it goes dark or stops asking, or it is out of view while one in view needs it. Lights out of view never take a slot, and any left over go without.
+ *
+ * The first `softenable` slots can blur their shadows wider than every lamp’s, as a light’s {@link SoftShadow} under {@link softShadowKey} asks, which adds a wide blur to every lit material’s shader for each of them: lights asking for that take them, the others the rest first.
  */
 export class ShadowPool {
   /** called once whenever more lights in view ask for a shadow than there are slots, with all of them; not again until they fit */
@@ -50,15 +58,20 @@ export class ShadowPool {
   readonly slots: ReadonlyArray<PointLight>
   private readonly lent = new Map<PointLight, PointLight>
   private overflowing = false
+  private readonly softenable: number
   private readonly sources: Array<PointLight | null>
 
-  constructor(count: number) {
+  constructor(count: number, softenable = 1) {
+    this.softenable = softenable
     this.slots = Array.from({length: count}, (_, index) => {
       const slot = new PointLight('#ffffff', 0)
       slot.name = `shadow-slot-${index}`
       slot.castShadow = true
       slot.shadow.camera.near = 0.1
       slot.shadow.normalBias = 0.035
+      if (index < softenable) {
+        softenShadow(slot.shadow)
+      }
       slot.userData[shadowSlotKey] = true
       return slot
     })
@@ -74,6 +87,12 @@ export class ShadowPool {
   /** whether a light is lent a slot, so the slot shades it instead */
   isLent(light: Light) {
     return this.lent.has(light as PointLight)
+  }
+
+  /** whether a slot can blur its shadow otherwise than every lamp’s; only these need a softenable filter */
+  isSoftenable(slot: Light) {
+    const index = this.slots.indexOf(slot as PointLight)
+    return index !== -1 && index < this.softenable
   }
 
   /** Hands out the slots for this frame and copies each lent light onto its slot. Call it after the lights’ levels are applied, so slots copy their final strength. */
@@ -122,10 +141,23 @@ export class ShadowPool {
         this.sources[index] = null
       }
     }
-    for (const light of chosen) {
-      if (!this.sources.includes(light)) {
-        this.sources[this.sources.indexOf(null)] = light
+    // Newcomers asking for a softened shadow go first, into a softenable slot, the others into the rest first.
+    const newcomers = chosen.values().filter(light => !this.sources.includes(light)).toArray().toSorted((a, b) => Number(wantsSoftShadow(b)) - Number(wantsSoftShadow(a)))
+    const free = (softenable: boolean) => this.sources.findIndex((source, index) => source === null && index < this.softenable === softenable)
+    for (const light of newcomers) {
+      const index = free(wantsSoftShadow(light))
+      this.sources[index === -1 ? this.sources.indexOf(null) : index] = light
+    }
+    // A light asking for a softened shadow in a slot that can’t soften it, also one that only started asking, trades places with whatever holds a softenable slot without asking for that, both shadow maps rendering afresh once.
+    for (let softenable = 0; softenable < this.softenable; softenable++) {
+      if (wantsSoftShadow(this.sources[softenable])) {
+        continue
       }
+      const asking = this.sources.findIndex((source, index) => index >= this.softenable && wantsSoftShadow(source))
+      if (asking === -1) {
+        break
+      }
+      ;[this.sources[softenable], this.sources[asking]] = [this.sources[asking], this.sources[softenable]]
     }
     this.lent.clear()
     for (const [index, slot] of this.slots.entries()) {
@@ -141,6 +173,9 @@ export class ShadowPool {
       slot.distance = source.distance
       slot.decay = source.decay
       slot.shadow.intensity = lightShadow.current(source)
+      if (index < this.softenable) {
+        Object.assign<LightShadow, Partial<SoftShadow>>(slot.shadow, (source.userData[softShadowKey] as SoftShadow | undefined) ?? {blurAngle: 0})
+      }
       const far = source.distance || openReach
       if (slot.shadow.camera.far === far) {
         continue

@@ -1,10 +1,12 @@
+import type {SoftShadow} from '../../src/lib/rendering/shadowFilterNodes.ts'
+
 import {expect, test} from 'bun:test'
 
 import {Group, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
 import {registerLamp} from '../../src/lib/rendering/lamps.ts'
 import {lampSwitches, toggleLightShadow, useLightEdits} from '../../src/lib/rendering/lightLevels.ts'
-import {ShadowPool} from '../../src/lib/rendering/shadowPool.ts'
+import {ShadowPool, softShadowKey} from '../../src/lib/rendering/shadowPool.ts'
 
 /** a scene holding a pool of `count` slots, and a camera at the origin looking down -z */
 const setup = (count: number) => {
@@ -46,6 +48,72 @@ test('lights asking for a shadow borrow a slot that copies them, and others donâ
   expect(slot.distance).toBe(5)
   // The unused slot stays dark and belongs to no room, so its shadow map never updates.
   expect(world.pool.slots.filter(candidate => candidate.intensity === 0)).toHaveLength(1)
+})
+test('a light asking for a softened shadow takes the softenable slot, which the others leave free while they can', () => {
+  const world = setup(3)
+  const [softenable] = world.pool.slots
+  const plain = lamp(world.scene, -4, true)
+  update(world)
+  expect(world.pool.isSoftenable(softenable)).toBe(true)
+  expect(world.pool.slots.filter(slot => world.pool.isSoftenable(slot))).toEqual([softenable])
+  expect(softenable.intensity).toBe(0)
+  expect(world.pool.isLent(plain)).toBe(true)
+  const soft = lamp(world.scene, -6, true)
+  const request: SoftShadow = {
+    blurAngle: 0.05,
+    softSamples: 8,
+  }
+  soft.userData[softShadowKey] = request
+  update(world)
+  expect(softenable.position.z).toBe(-6)
+  expect(softenable.shadow).toMatchObject(request)
+  // Once it stops asking, its slot blurs like every lampâ€™s again.
+  request.blurAngle = 0
+  update(world)
+  expect(softenable.position.z).toBe(-6)
+  expect(softenable.shadow).toMatchObject({blurAngle: 0})
+  delete soft.userData[softShadowKey]
+  request.blurAngle = 0.05
+  Object.assign(softenable.shadow, request)
+  update(world)
+  expect(softenable.shadow).toMatchObject({blurAngle: 0})
+})
+test('a light asking for a softened shadow takes the softenable slot over from a light not asking for one, which moves into a free slot', () => {
+  const world = setup(2)
+  const [softenable, other] = world.pool.slots
+  // The nearer takes the other slot first, which leaves the second only the softenable one.
+  const nearer = lamp(world.scene, -4, true)
+  const farther = lamp(world.scene, -5, true)
+  update(world)
+  expect(other.position.z).toBe(-4)
+  expect(softenable.position.z).toBe(-5)
+  nearer.intensity = 0
+  update(world)
+  const soft = lamp(world.scene, -6, true)
+  soft.userData[softShadowKey] = {
+    blurAngle: 0.05,
+    softSamples: 8,
+  } satisfies SoftShadow
+  update(world)
+  expect(softenable.position.z).toBe(-6)
+  expect(other.position.z).toBe(-5)
+  expect(world.pool.isLent(farther)).toBe(true)
+  expect(softenable.shadow).toMatchObject({blurAngle: 0.05})
+})
+test('a light holding a slot that starts asking for a softened shadow moves into the softenable slot', () => {
+  const world = setup(2)
+  const [softenable, other] = world.pool.slots
+  const light = lamp(world.scene, -4, true)
+  update(world)
+  expect(other.position.z).toBe(-4)
+  expect(softenable.intensity).toBe(0)
+  light.userData[softShadowKey] = {
+    blurAngle: 0.05,
+    softSamples: 8,
+  } satisfies SoftShadow
+  update(world)
+  expect(softenable.position.z).toBe(-4)
+  expect(other.intensity).toBe(0)
 })
 test('a slot follows its light where it moved this frame, before the frame updates its matrices', () => {
   const world = setup(1)

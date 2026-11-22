@@ -289,6 +289,18 @@ const sections: Array<Section> = [
     ],
   },
   {
+    title: 'Fusion shadows',
+    toggle: {
+      fallback: 2,
+      key: 'fusionShadowBlur',
+      off: 0,
+    },
+    controls: [
+      range('fusionShadowBlur', 'Blur radius (°)', 0.25, 10, 0.25),
+      range('fusionShadowSamples', 'Shadow samples', 4, 64, 4),
+    ],
+  },
+  {
     title: 'Lighting',
     toggle: 'fill',
     controls: [
