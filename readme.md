@@ -24,7 +24,6 @@ This is the simplest way of taking a photo. It will capture the Three canvas and
 import snap from './scripts/snap.ts'
 
 await snap({
-  target: 'dist', // directory containing an index.html to load the game from
   bookmark: 'lobby-overview' // src/rooms/*/cameras.ts files contain presets for camera position, angle and field of view
 })
 ```
@@ -37,7 +36,6 @@ To showcase a scene in the best possible way with no respect to performance, you
 import snap from './scripts/snap.ts'
 
 await snap({
-  target: 'dist',
   bookmark: 'lodge-gathering',
   graphics: 'cinematic',
   scale: 2
@@ -52,7 +50,6 @@ This is useful to show off triangle density of different areas of the world. It 
 import snap from './scripts/snap.ts'
 
 await snap({
-  target: 'dist',
   position: '5.146,-3.788,-43.6',
   angle: '146,-0.66',
   fov: 70,
@@ -72,7 +69,6 @@ await snap({
 import snap from './scripts/snap.ts'
 
 await snap({
-  target: 'dist',
   position: '-12.665,1.766,-18.93',
   angle: '155,-9.37',
   fov: 80,
@@ -95,7 +91,6 @@ await snap({
 import snap from './scripts/snap.ts'
 
 await snap({
-  target: 'dist',
   room: 'cell',
   portraits: 1,
   position: '-5,1.85,0',
@@ -114,7 +109,6 @@ const call = new Proxy({}, {
 })
 
 await snap({
-  target: 'dist',
   room: 'cell',
   portraits: 0,
   position: '5,1.7,2',
@@ -160,7 +154,6 @@ await snap({
 import snap from './scripts/snap.ts'
 
 await snap({
-  target: 'dist',
   room: 'cell',
   position: '-3,2,-4',
   angle: '-155,-3',
@@ -180,7 +173,6 @@ const call = new Proxy({}, {
 })
 
 await snap({
-  target: 'dist',
   position: '3.8,2.6,-27',
   angle: '-50,-46',
   fov: 90,
@@ -206,7 +198,6 @@ This is the simplest way of filming. It flies the camera along the keyframes giv
 import film from './scripts/film.ts'
 
 await film({
-  target: 'dist',
   'output-file': 'out/film/fountain.avif'
 }, [
   {time: 4, orbit: {from: [0, 3.4, -6], focus: [0, 1.2, -12]}} // one full counterclockwise turn around the Lobby’s fountain in 4 seconds
@@ -223,7 +214,6 @@ const left = [10.55, 2, -20.34]
 const right = [17.55, 2, -20.34]
 
 await film({
-  target: 'dist',
   width: 1080,
   height: 1080,
   world_reach: 'room', // mount only the Salon, the camera never sees out of it
@@ -244,7 +234,6 @@ const left = [-27.15, -2.54, -38.83]
 const right = [-22.85, -2.54, -38.83]
 
 await film({
-  target: 'dist',
   seed: '{0..7}', // minimatch pattern
   room: 'lodge',
   duration: 1.5, // seconds per clip, here 8 × 1.5 = 12 seconds in total
@@ -308,7 +297,6 @@ Keyframes can run the app’s WebMCP tools at their time, here `add_portrait` a 
 import film from './scripts/film.ts'
 
 await film({
-  target: 'dist',
   room: 'cell',
   portraits: 0, // start with empty walls
   width: 720,
@@ -339,7 +327,6 @@ import renderFusion from './scripts/renderFusion.ts'
 
 // by default a Spook Orb thrown into the first work of the Banquet, in cinematic graphics with sound, 20 s as an AV1 WebM
 await renderFusion({
-  target: 'dist',
   width: 1080,
   height: 1080,
   scale: 2, // renders at 2160×2160 and downsamples each frame, for smoother edges
