@@ -75,10 +75,10 @@ await snap({
 import snap from './scripts/snap.ts'
 
 await snap({
-  room: 'cell',
+  room: 'studio', // the Sandbox’s Studio: four walls under a skylit ceiling, which load in a moment, the north-eastern corner at 0,0,0
   portraits: 1,
-  position: '-5,1.85,0',
-  angle: '90,0',
+  position: '-5,2,4',
+  angle: '0,-3',
   fov: 40
 })
 ```
@@ -93,36 +93,37 @@ const call = new Proxy({}, {
 })
 
 await snap({
-  room: 'cell',
+  room: 'studio',
   portraits: 0,
-  position: '5,1.7,2',
-  angle: '-11,-3',
-  fov: 42
+  position: '-4,2,7',
+  angle: '-13,-5',
+  fov: 40,
+  height: 4320
 }, [
   call.add_portrait({
     image: 'https://img.youtube.com/vi/MQeJYEN_lrg/maxresdefault.jpg',
-    target: {wall_id: 'cell-north', position: {x: 3.75, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 1, y: 2}},
     title: 'This DIY Datacenter is NUTS',
     frame: 'containment',
     canvas_material: 'rag'
   }),
   call.add_portrait({
     image: 'https://github.com/jaid/slop.gallery/raw/HEAD/assets/icon.svg',
-    target: {wall_id: 'cell-north', position: {x: 7.6, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 5, y: 2}},
     title: 'Slop Gallery',
     frame: 'maelstrom',
     canvas_material: 'linen'
   }),
   call.add_portrait({
     image: 'https://github.com/jaid.png',
-    target: {wall_id: 'cell-north', position: {x: 5.78, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 3, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
     canvas_material: 'karakami'
   }),
   call.add_portrait({
     image: 'https://gstatic.com/webp/gallery/3.webp',
-    target: {wall_id: 'cell-east', position: {x: -3.4, y: 2}},
+    target: {wall_id: 'studio-east', position: {x: -2.5, y: 2}},
     title: 'Winter walk',
     frame: 'twig',
     canvas_material: 'wax'
@@ -281,19 +282,19 @@ Keyframes can run the app’s WebMCP tools at their time, here `add_portrait` a 
 import film from './scripts/film.ts'
 
 await film({
-  room: 'cell',
+  room: 'studio',
   portraits: 0, // start with empty walls
   width: 720,
   height: 720,
   scale: 2, // render at twice the size and scale down, for smoother edges
-  duration: 3.5, // seconds, longer than the keyframes, which end at 1 s
-  crossfade: 0.5, // seconds the end fades back into the empty wall at the beginning, so the film loops
+  duration: 4, // seconds, longer than the keyframes, which end at 1 s
+  crossfade: 0.2, // seconds the end fades back into the empty wall at the beginning, so the film loops
   'output-file': 'out/film/hanging.avif'
 }, [
-  {time: 0, position: [7.88, 2.3, -1.14], yaw: 30, pitch: -7, fov: 42}, // 4.2 m off the wall, 30° to the right of facing it
+  {time: 0, position: [-1, 2, 2], yaw: 40, pitch: -5, fov: 55}, // 2 m off the wall and 2 m to the right of where the portrait hangs, at its height
   {time: 1, tools: {add_portrait: {
     image: 'https://github.com/jaid.png',
-    target: {wall_id: 'cell-north', position: {x: 5.78, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 3, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
     canvas_material: 'karakami',
