@@ -233,8 +233,18 @@ await film({
 ```TypeScript
 import film from './scripts/film.ts'
 
+const hatchetFile = 'src/lib/gallery/curios/hatchet/Hatchet.ts'
+const hatchet = await Bun.file(hatchetFile).text()
+await Bun.$`bun run build` // dist, with the hatchet as it is
+try {
+  await Bun.write(hatchetFile, hatchet.replaceAll('Geometry(),', 'Geometry().scale(2, 2, 2),')) // scales the hatchet’s head and haft 2×
+  await Bun.$`bun run build --outDir out/dist-big-hatchet`
+} finally {
+  await Bun.write(hatchetFile, hatchet)
+}
+
 await film({
-  target: ['dist', 'dist-big-hatchet'], // one clip per build, in this order; the second build has the hatchet’s geometry scaled 2×
+  target: ['dist', 'out/dist-big-hatchet'], // one clip per build, in this order
   seed: 1,
   room: 'lodge',
   duration: 2, // seconds per clip, as a single keyframe has no length of its own
