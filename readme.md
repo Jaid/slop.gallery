@@ -28,7 +28,7 @@ await snap('lobby-overview') // a camera bookmark: src/rooms/*/cameras.ts files 
 
 ##### cinematic render
 
-To showcase a scene in the best possible way with no respect to performance, you can snap an 7680×4320 canvas and save in 3840×2160 using high-quality downscaling (linear-light lanczos from ImageMagick).
+To showcase a scene in the best possible way with no respect to performance, you can snap a 7680×4320 canvas and save in 3840×2160 using high-quality downscaling (linear-light lanczos from ImageMagick).
 
 ```TypeScript
 import snap from './scripts/snap.ts'
