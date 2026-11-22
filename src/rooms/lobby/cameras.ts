@@ -28,7 +28,7 @@ export default {
     fov: 80,
     ratio: 16 / 9,
   },
-  fountain_view: {
+  fountain: {
     position: [-7.693, 2.4, -1.583],
     aim: {
       yaw: -1.7942,

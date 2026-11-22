@@ -7,7 +7,7 @@ export default {
     yaw: -0.9 * Math.PI,
     pitch: 0,
   },
-  fountain: {
+  center: {
     position: [-5.8, 0.04, 6.2],
     yaw: -0.74,
     pitch: 0.03,
