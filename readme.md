@@ -23,9 +23,7 @@ This is the simplest way of taking a photo. It will capture the Three canvas and
 ```TypeScript
 import snap from './scripts/snap.ts'
 
-await snap({
-  bookmark: 'lobby-overview' // src/rooms/*/cameras.ts files contain presets for camera position, angle and field of view
-})
+await snap('lobby-overview') // a camera bookmark: src/rooms/*/cameras.ts files contain presets for camera position, angle and field of view
 ```
 
 ##### cinematic render
