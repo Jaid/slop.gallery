@@ -5,23 +5,31 @@ import {join} from 'node:path'
 /** One frame-quantized timeline for picture and sound. Only neighboring takes can overlap. */
 export class StitchTimeline {
   audio?: AudioTrack
+  /** how many takes the movie stitches */
+  readonly clips: number
   readonly fadeFrames: number
   readonly frameCount: number
   /** Frames to move from the beginning of the stitched output to its end. */
   readonly offset: number
   /** Single takes start their camera and virtual clock at the requested recipe frame, as usual. Stitched takes run the whole recipe in order. */
   readonly recipeStart: number
+  readonly #starts: ReadonlyArray<number>
 
-  constructor(readonly clips: number, readonly clipFrames: number, readonly fps: number, fadeSeconds: number, startingFrame = 1) {
+  /** `clipFrames` gives the length of each take in frames, in playing order. */
+  constructor(readonly clipFrames: ReadonlyArray<number>, readonly fps: number, fadeSeconds: number, startingFrame = 1) {
     if (!Number.isFinite(fadeSeconds) || fadeSeconds < 0) {
       throw new Error('--crossfade expects a non-negative duration in seconds.')
     }
+    const clips = clipFrames.length
+    this.clips = clips
     this.fadeFrames = clips === 1 ? 0 : Math.round(fadeSeconds * fps)
-    const limit = clips > 2 ? Math.floor(clipFrames / 2) : clipFrames
+    // A clip has to hold the overlap into it and the one out of it.
+    const limit = Math.min(...clipFrames.map((frames, clip) => Math.floor(frames / (Number(clip > 0) + Number(clip < clips - 1) || 1))))
     if (this.fadeFrames > limit) {
       throw new Error(`--crossfade is too long: these clips have room for ${limit} frames of overlap (${limit / fps} s).`)
     }
-    this.frameCount = clips * clipFrames - (clips - 1) * this.fadeFrames
+    this.#starts = clipFrames.map((_, clip) => clipFrames.slice(0, clip).reduce((sum, frames) => sum + frames, 0) - clip * this.fadeFrames)
+    this.frameCount = this.#starts[clips - 1] + clipFrames[clips - 1]
     if (!Number.isSafeInteger(startingFrame) || startingFrame < 1 || startingFrame > this.frameCount) {
       throw new Error(`--starting-frame must be a whole number between 1 and ${this.frameCount}.`)
     }
@@ -31,7 +39,7 @@ export class StitchTimeline {
 
   /** First output frame of this take before rotating the seam; both sides of a crossfade cover the same output frames. */
   clipStart(clip: number) {
-    return clip * (this.clipFrames - this.fadeFrames)
+    return this.#starts[clip]
   }
 
   /** Place samples at absolute frame boundaries (no accumulated rounding at fractional fps). A missing track leaves silence. */
@@ -52,10 +60,11 @@ export class StitchTimeline {
       throw new Error('Audio format changed between takes.')
     }
     const firstFrame = this.clipStart(clip)
+    const clipFrames = this.clipFrames[clip]
     const start = at(firstFrame)
-    const end = at(firstFrame + this.clipFrames)
+    const end = at(firstFrame + clipFrames)
     const fadeIn = clip === 0 ? 0 : at(firstFrame + this.fadeFrames) - start
-    const fadeOut = clip === this.clips - 1 ? 0 : end - at(firstFrame + this.clipFrames - this.fadeFrames)
+    const fadeOut = clip === this.clips - 1 ? 0 : end - at(firstFrame + clipFrames - this.fadeFrames)
     const length = Math.min(end - start, samples.length / channels)
     const sampleFrames = output.samples.length / channels
     let destination = (start - at(this.offset) + sampleFrames) % sampleFrames
@@ -73,11 +82,11 @@ export class StitchTimeline {
   /** Captures every take once, starting with those needed from the seam onward. Only takes straddling the seam (two if it splits a crossfade) need their prefix saved for the wrap. */
   async stitch(capture: (clip: number, accept: FrameSink['write']) => Promise<void>, write: FrameSink['write'], scratch?: string) {
     const {clips, clipFrames, offset} = this
-    const prefix = (clip: number) => Math.min(clipFrames, Math.max(0, offset - this.clipStart(clip)))
+    const prefix = (clip: number) => Math.min(clipFrames[clip], Math.max(0, offset - this.clipStart(clip)))
     const saved = (clip: number, frame: number) => Bun.file(join(scratch!, `prefix-${clip}-${frame}`))
     for (let clip = 0; clip < clips; clip++) {
       const start = prefix(clip)
-      if (start === clipFrames) {
+      if (start === clipFrames[clip]) {
         continue
       }
       const accept = this.writer(clip, write, scratch, start)
@@ -94,7 +103,7 @@ export class StitchTimeline {
     for (let clip = 0; clip < clips && prefix(clip) > 0; clip++) {
       const length = prefix(clip)
       const accept = this.writer(clip, write, scratch)
-      if (length === clipFrames) {
+      if (length === clipFrames[clip]) {
         await capture(clip, accept)
       } else {
         for (let index = 0; index < length; index++) {
@@ -106,10 +115,11 @@ export class StitchTimeline {
 
   /** Spools the outgoing overlap to disk so even high-resolution fades need only two frames in memory. */
   private writer(clip: number, write: FrameSink['write'], scratch: string | undefined, firstFrame = 0): FrameSink['write'] {
-    const {clipFrames, clips, fadeFrames} = this
+    const {clips, fadeFrames} = this
     if (!fadeFrames) {
       return write
     }
+    const clipFrames = this.clipFrames[clip]
     let next = firstFrame
     return async pixels => {
       const frame = next++

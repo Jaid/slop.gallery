@@ -15,7 +15,8 @@ const expandSeeds = (patterns: Array<string>, range: string) => {
   if (min === undefined || max === undefined || max < min || rest.length) {
     throw new Error(`--seed-range expects min..max between 0 and ${maximumSeed}.`)
   }
-  const seeds = new Set<number>
+  // Each argument plays its matches once, sorted; an argument given again plays again.
+  const seeds: Array<number> = []
   for (const pattern of patterns) {
     const matches = new Set<number>
     const matcher = new Minimatch(pattern)
@@ -40,14 +41,12 @@ const expandSeeds = (patterns: Array<string>, range: string) => {
     if (!matches.size) {
       throw new Error(`--seed “${pattern}” matched no seeds (wildcards search ${range}).`)
     }
-    for (const seed of [...matches].toSorted((a, b) => a - b)) {
-      seeds.add(seed)
-    }
+    seeds.push(...[...matches].toSorted((a, b) => a - b))
   }
-  return [...seeds].map(String)
+  return seeds.map(String)
 }
 const expandTargets = async (patterns: Array<string>, cwd: string) => {
-  // Explicit paths keep their CLI order. Give globby the whole pattern list so its exclusions apply across arguments.
+  // Explicit paths keep their CLI order, repeats included. Give globby the whole pattern list so its exclusions apply across arguments; it returns every match once.
   const paths = patterns.map(pattern => pattern.replaceAll(sep, '/'))
   const dynamic = isDynamicPattern(paths)
   const matches = dynamic ? await globby(paths, {
@@ -55,19 +54,19 @@ const expandTargets = async (patterns: Array<string>, cwd: string) => {
     onlyDirectories: true,
     expandDirectories: false,
   }) : paths
-  const builds = new Set<string>
+  const builds: Array<string> = []
   for (const directory of dynamic ? matches.toSorted() : matches) {
     const target = resolve(cwd, directory)
     if (directory && await Bun.file(join(target, 'index.html')).exists()) {
-      builds.add(target)
+      builds.push(target)
     } else if (!dynamic) {
       throw new Error(`--target “${directory}” has no index.html.`)
     }
   }
-  if (!builds.size) {
+  if (!builds.length) {
     throw new Error(`--target matched no build folders containing index.html: ${patterns.join(', ')}.`)
   }
-  return [...builds]
+  return builds
 }
 
 /** the seed of a film without --seed: the default environment */

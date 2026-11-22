@@ -8,7 +8,7 @@ import makeSeed from 'make-seed'
 import {filmInputs} from '../../scripts/lib/filmInputs.ts'
 import {StitchTimeline} from '../../scripts/lib/stitchTimeline.ts'
 
-test('two globby builds × two minimatch seeds play target first, skipping exclusions, non-builds and duplicates', async () => {
+test('two globby builds × minimatch seeds play target first, skipping exclusions and non-builds, and arguments given again play again', async () => {
   const root = await fs.mkdtemp(join(tmpdir(), 'film-builds-'))
   try {
     for (const build of ['v2', 'v1', 'v3']) {
@@ -19,9 +19,11 @@ test('two globby builds × two minimatch seeds play target first, skipping exclu
       target: ['v*', '!v3'],
       seed: ['[12]', '2'],
     }, root)
-    expect(inputs.map(({target, seed}) => `${basename(target!)}/${seed}`)).toEqual(['v1/1', 'v1/2', 'v2/1', 'v2/2'])
-    const explicit = await filmInputs({target: ['v2', 'v1']}, root)
-    expect(explicit.map(({target}) => basename(target!))).toEqual(['v2', 'v1'])
+    expect(inputs.map(({target, seed}) => `${basename(target!)}/${seed}`)).toEqual(['v1/1', 'v1/2', 'v1/2', 'v2/1', 'v2/2', 'v2/2'])
+    const explicit = await filmInputs({target: ['v2', 'v1', 'v2']}, root)
+    expect(explicit.map(({target}) => basename(target!))).toEqual(['v2', 'v1', 'v2'])
+    const globbed = await filmInputs({target: ['v[12]', 'v1']}, root)
+    expect(globbed.map(({target}) => basename(target!))).toEqual(['v1', 'v2'])
     await expect(filmInputs({target: 'missing*'}, root)).rejects.toThrow('--target')
   } finally {
     await fs.remove(root)
@@ -42,7 +44,7 @@ test('seed patterns use the requested range, while literal brace ranges can reac
 test('the overlap shortens the movie once per cut and blends picture and audio at the same place, including a silent middle clip', async () => {
   const scratch = await fs.mkdtemp(join(tmpdir(), 'film-fade-test-'))
   try {
-    const timeline = new StitchTimeline(3, 4, 2, 1)
+    const timeline = new StitchTimeline([4, 4, 4], 2, 1)
     const frames: Array<number> = []
     await timeline.stitch(async (clip, write) => {
       for (const frame of [0, 1, 2, 3]) {
@@ -66,10 +68,13 @@ test('the overlap shortens the movie once per cut and blends picture and audio a
   }
 })
 test('hard cuts keep all frames and excessive overlaps fail before recording', () => {
-  const timeline = new StitchTimeline(4, 3, 30, 0)
+  const timeline = new StitchTimeline([3, 3, 3, 3], 30, 0)
   expect(timeline.frameCount).toBe(12)
-  expect(() => new StitchTimeline(3, 3, 30, 2 / 30)).toThrow('--crossfade')
-  expect(() => new StitchTimeline(2, 3, 30, -1)).toThrow('--crossfade')
+  expect(() => new StitchTimeline([3, 3, 3], 30, 2 / 30)).toThrow('--crossfade')
+  expect(() => new StitchTimeline([3, 3], 30, -1)).toThrow('--crossfade')
+  const uneven = new StitchTimeline([2, 8, 2], 30, 2 / 30)
+  expect(uneven.frameCount).toBe(8)
+  expect(() => new StitchTimeline([8, 3, 8], 30, 2 / 30)).toThrow('room for 1 frames')
 })
 test('every stitched starting frame is one rotation of the original picture and stereo mix, even inside overlaps', async () => {
   const scratch = await fs.mkdtemp(join(tmpdir(), 'film-seam-test-'))
@@ -77,7 +82,7 @@ test('every stitched starting frame is one rotation of the original picture and 
     const fps = 2.5
     const sampleRate = 8
     const render = async (clips: number, fadeFrames: number, startingFrame: number) => {
-      const timeline = new StitchTimeline(clips, 4, fps, fadeFrames / fps, startingFrame)
+      const timeline = new StitchTimeline(Array.from({length: clips}, () => 4), fps, fadeFrames / fps, startingFrame)
       const frames: Array<number> = []
       const takes: Array<number> = []
       await timeline.stitch(async (clip, write) => {
@@ -114,10 +119,45 @@ test('every stitched starting frame is one rotation of the original picture and 
   }
 })
 test('starting-frame is bounded by the final frame count, and a single take still begins at the requested recipe frame', () => {
-  const single = new StitchTimeline(1, 4, 2, 0, 4)
+  const single = new StitchTimeline([4], 2, 0, 4)
   expect(single.recipeStart).toBe(4)
   expect(single.offset).toBe(0)
   for (const invalid of [0, 1.5, 9]) {
-    expect(() => new StitchTimeline(3, 4, 2, 1, invalid)).toThrow('between 1 and 8')
+    expect(() => new StitchTimeline([4, 4, 4], 2, 1, invalid)).toThrow('between 1 and 8')
+  }
+})
+test('clips of their own lengths line up picture, audio and a rotated seam', async () => {
+  const scratch = await fs.mkdtemp(join(tmpdir(), 'film-uneven-test-'))
+  try {
+    const render = async (startingFrame: number) => {
+      const timeline = new StitchTimeline([2, 5, 3], 2, 0.5, startingFrame)
+      const frames: Array<number> = []
+      await timeline.stitch(async (clip, write) => {
+        for (let frame = 0; frame < timeline.clipFrames[clip]; frame++) {
+          await write(Uint8Array.of(clip * 40 + frame * 2))
+        }
+        timeline.mix(clip, {
+          channels: 1,
+          sampleRate: 2,
+          samples: Float32Array.from({length: timeline.clipFrames[clip]}, () => clip + 1),
+        })
+      }, async pixels => {
+        frames.push(pixels[0])
+      }, scratch)
+      return {
+        frames,
+        samples: [...timeline.audio!.samples],
+      }
+    }
+    const timeline = new StitchTimeline([2, 5, 3], 2, 0.5)
+    expect([0, 1, 2].map(clip => timeline.clipStart(clip))).toEqual([0, 1, 5])
+    const original = await render(1)
+    expect(original.frames).toEqual([0, 21, 42, 44, 46, 64, 82, 84])
+    expect(original.samples).toEqual([1, 1.5, 2, 2, 2, 2.5, 3, 3])
+    const shifted = await render(4)
+    expect(shifted.frames).toEqual([...original.frames.slice(3), ...original.frames.slice(0, 3)])
+    expect(shifted.samples).toEqual([...original.samples.slice(3), ...original.samples.slice(0, 3)])
+  } finally {
+    await fs.remove(scratch)
   }
 })

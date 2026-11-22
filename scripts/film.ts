@@ -1,6 +1,7 @@
 import type {CameraView} from '#src/lib/diagnostics.ts'
 import type {GallerySetup, GalleryValues, InitScript, LooseOptions} from './lib/headlessGallery.ts'
 import type {AudioTrack, FrameSink, Recipe, Shot} from 'capture-session/script'
+import type {Arrayable} from 'type-fest'
 
 import {tmpdir} from 'node:os'
 import {parseArgs} from 'node:util'
@@ -45,7 +46,7 @@ ${galleryHelp(filmHeight, {
   worldReach: filmWorldReach,
 })}
   --seed-range <min..max> inclusive search range for seed wildcards. Default: ${defaultSeedRange} (the default environment and all seeds a game rolls). Literal seeds and brace expansions are coerced like ?seed, independent of the search range
-  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). With three or more clips, at most half the length of one clip
+  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). At most as long as the first and the last clip and half as long as any clip between them
   --list                  print the target and seed of each clip before seam rotation and exit without recording
   --output-file <file>    the extension picks the format. Default: out/film/<world>-<timestamp>.jxl
                           .jxl  animated JPEG XL
@@ -53,7 +54,7 @@ ${galleryHelp(filmHeight, {
                           .webm, .mkv  AV1 video
                           .png  one PNG per frame, each written to the next free name after the given one (shot.png → shot_001.png, shot_002.png, …)
   --fps <number>          frames per second. Default: 60
-  --duration <seconds>    recording time per clip, rounded to the nearest frame (at least one). Default: the recipe’s length. Shorter clips share one continuous flight across inputs; longer clips each play the recipe and hold its final camera pose for the remaining time
+  --duration <seconds>    recording time per clip, rounded to the nearest frame (at least one); repeat it to give every clip a length of its own, in playing order. Default: the recipe’s length. Unless every clip is at least as long as the recipe, the clips share one continuous flight; otherwise each plays the recipe and holds its final camera pose for the remaining time
   --starting-frame <n>    frame that becomes the first frame of the output, wrapping once at the end. Count frames after applying --duration and any crossfades. Default: 1
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
   --crf <number>          AV1 quality for .avif, .webm and .mkv, lower is better. Default: ${avifDefaults.crf} for .avif, otherwise ${av1Crf}
@@ -67,9 +68,9 @@ To film the same recipe across builds or seeds, repeat --target and/or --seed, o
 
   bun scripts/film.ts --target 'builds/v[12]' --seed '[12]' --recipe scripts/recipes/fountain_dolly.json --crossfade 0.25 --output-file comparison.webm
 
-This plays v1/1, v1/2, v2/1, v2/2. --target accepts globby folder patterns, including exclusions like --target '!builds/old'; use forward slashes. Literal paths play in argument order, glob results in path order. --seed accepts minimatch patterns against decimal seeds, like '[12]' or '{10..13}'. Seed arguments play in order with each pattern’s matches sorted numerically. Overlapping matches play once.
+This plays v1/1, v1/2, v2/1, v2/2. --target accepts globby folder patterns, including exclusions like --target '!builds/old'; use forward slashes. Literal paths play in argument order, glob results in path order. --seed accepts minimatch patterns against decimal seeds, like '[12]' or '{10..13}'. Seed arguments play in order with each pattern’s matches sorted numerically. An argument given again plays again, so --target a --target b --target a cuts back to a.
 
-For one continuous flight through three seeds, use --seed '{1..3}' --duration 1 with a three-second recipe. The seeds show seconds 0–1, 1–2 and 2–3. A crossfade samples the same recipe time on both sides of its overlap. Recording stops with the last input; if the recipe ends first, the camera holds still while the scene and sound continue.
+For one continuous flight through three seeds, use --seed '{1..3}' --duration 1 with a three-second recipe. The seeds show seconds 0–1, 1–2 and 2–3; with --duration 0.5 --duration 1 --duration 1.5 instead, they show seconds 0–0.5, 0.5–1.5 and 1.5–3. A crossfade samples the same recipe time on both sides of its overlap. Recording stops with the last input; if the recipe ends first, the camera holds still while the scene and sound continue.
 
 A recipe is a JSON array of keyframes, ordered by time:
 
@@ -128,7 +129,10 @@ const filmOptions = {
   },
   'seed-range': {type: 'string'},
   crossfade: {type: 'string'},
-  duration: {type: 'string'},
+  duration: {
+    type: 'string',
+    multiple: true,
+  },
   crf: {type: 'string'},
   'fast-decode': {type: 'string'},
   fps: {
@@ -159,12 +163,15 @@ const filmOptions = {
 
 export type FilmOptions = LooseOptions<FilmValues>
 /** the options as the command line gives them, the query options the gallery passes on included */
-type FilmValues = Omit<GalleryValues, 'seed' | 'target'> & Omit<ParsedOptions, 'seed' | 'target'> & Parameters<typeof filmInputs>[0]
+type FilmValues = Omit<GalleryValues, 'duration' | 'seed' | 'target'> & Omit<ParsedOptions, 'duration' | 'seed' | 'target'> & Parameters<typeof filmInputs>[0] & {
+  /** the seconds of every clip, or one length for all of them */
+  duration?: Arrayable<string>
+}
 /** the command line options without --help, as parsed strings */
 type ParsedOptions = ReturnType<typeof parseArgs<{options: typeof filmOptions}>>['values']
 
-/** Reads the recipe once (including stdin), unless it came as keyframes, and resolves settings common to every take. */
-const prepareFilm = async (options: FilmValues, setup: GallerySetup, keyframes?: Recipe) => {
+/** Reads the recipe once (including stdin), unless it came as keyframes, and resolves settings common to every take of the movie’s `clips`. */
+const prepareFilm = async (options: FilmValues, setup: GallerySetup, clips: number, keyframes?: Recipe) => {
   const readRecipe = async (file = join(import.meta.dir, 'recipes', 'spawn.json')): Promise<unknown> => JSON.parse(file === '-' ? await Bun.stdin.text() : await fs.readFile(file, 'utf8'))
   const recipe = parseRecipe(keyframes ?? await readRecipe(options.recipe))
   const output = options['output-file'] === undefined ? join(filmRoot, `${setup.world}-${timestamp()}.jxl`) : resolve(options['output-file'])
@@ -191,7 +198,7 @@ const prepareFilm = async (options: FilmValues, setup: GallerySetup, keyframes?:
   const settle = resolveSettle(options.settle)
   const {width, height} = setup.viewport
   validateFrameSize(format, width, height)
-  const clock = new FilmRecipeClock(recipe, fps, options.duration === undefined ? undefined : Number(options.duration))
+  const clock = new FilmRecipeClock(recipe, fps, options.duration === undefined ? undefined : [options.duration].flat().map(Number), clips)
   return {
     clock,
     encoding: {
@@ -199,7 +206,6 @@ const prepareFilm = async (options: FilmValues, setup: GallerySetup, keyframes?:
       crf,
       fastDecode,
       fps,
-      frameCount: clock.clipFrames,
       height,
       jxlDistance,
       keyframeInterval,
@@ -217,7 +223,7 @@ type Film = Awaited<ReturnType<typeof prepareFilm>>
 type FrameWriter = (source: GallerySetup['viewport']) => FrameSink['write']
 
 /** Records one whole take on a fresh virtual clock. Its frames are delivered at the canvas size, before downsampling and encoding. */
-const captureFilm = async ({encoding: {audio: audible, fps, frameCount}, recipe, settle}: Film, setup: GallerySetup, {animationSecondsAt, secondsAt: frameSeconds, callsAt}: ReturnType<FilmRecipeClock['take']>, frames: FrameWriter) => {
+const captureFilm = async ({encoding: {audio: audible, fps}, recipe, settle}: Film, setup: GallerySetup, {animationSecondsAt, callsAt, frameCount, secondsAt: frameSeconds}: ReturnType<FilmRecipeClock['take']>, frames: FrameWriter) => {
   warnAboutDevServer(setup)
   // The first frame shows the clock 1/fps after it started, which is where the film’s sound begins.
   const leadIn = 1 / fps
@@ -462,14 +468,14 @@ const main = async (overrides: FilmOptions, recipe?: Recipe) => {
     ...options,
     ...inputs[0],
   }, defaultHeight)
-  const film = await prepareFilm(options, first, recipe)
+  const film = await prepareFilm(options, first, inputs.length, recipe)
   const {encoding, format} = film
   const {fps, height, output, width} = encoding
   const [startingFrame] = parseNumbers(options['starting-frame'], 'starting-frame', [1])
-  const timeline = new StitchTimeline(inputs.length, encoding.frameCount, fps, Number(options.crossfade ?? 0), startingFrame)
+  const timeline = new StitchTimeline(film.clock.clipFrames, fps, Number(options.crossfade ?? 0), startingFrame)
   const {frameCount} = timeline
   await fs.mkdir(dirname(output), {recursive: true})
-  const scratch = timeline.fadeFrames || timeline.offset % encoding.frameCount ? await fs.mkdtemp(join(tmpdir(), 'film-stitch-')) : undefined
+  const scratch = timeline.fadeFrames || timeline.offset ? await fs.mkdtemp(join(tmpdir(), 'film-stitch-')) : undefined
   let sink: FrameSink | undefined
   let size: GallerySetup['viewport'] | undefined
   const tools: Awaited<ReturnType<typeof captureFilm>>['tools'] = []
@@ -483,7 +489,7 @@ const main = async (overrides: FilmOptions, recipe?: Recipe) => {
         ...options,
         ...input,
       }, defaultHeight)
-      const take = film.clock.take(timeline.clipStart(clip), timeline.recipeStart)
+      const take = film.clock.take(clip, timeline.clipStart(clip), timeline.recipeStart)
       const recording = await captureFilm(film, setup, take, source => {
         if (size && (size.width !== source.width || size.height !== source.height)) {
           throw new Error(`Canvas size changed between takes: ${size.width}×${size.height} → ${source.width}×${source.height}.`)
