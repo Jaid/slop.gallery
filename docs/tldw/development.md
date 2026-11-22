@@ -206,6 +206,44 @@ await film({
 ])
 ```
 
+### seed cycling
+
+```TypeScript
+import film from './scripts/film.ts'
+
+const fire = [-25, -4.04, -30.8]
+const left = [-27.415, -3.4, -32.975]
+const right = [-22.585, -3.4, -32.975]
+
+await film({
+  target: 'dist',
+  seed: '{1..8}', // a minimatch pattern, here seeds 1 to 8, one clip each, stitched in this order
+  room: 'lodge',
+  duration: 1.85, // seconds per clip; shorter than the keyframes, so one continuous flight runs through all eight seeds while the fire burns on
+  crossfade: 0.4, // seconds each seed fades into the next, here 8 × 1.85 − 7 × 0.4 = 12 s in total
+  'output-file': 'out/film/lodge-fire-seeds.avif'
+}, [ // camera keyframes: an arc in front of the fireplace in 6 s, then back
+  {time: 6, orbit: {from: left, to: right, focus: fire}, tween: 'easeInOutSine', fov: 48},
+  {time: 12, orbit: {from: right, to: left, focus: fire}, tween: 'easeInOutSine'}
+])
+```
+
+### hatchet growth
+
+```TypeScript
+import film from './scripts/film.ts'
+
+await film({
+  target: ['dist', 'dist-big-hatchet'], // one clip per build, in this order; the second build has the hatchet’s geometry scaled 2×
+  seed: 1,
+  room: 'lodge',
+  duration: 2, // seconds per clip, as a single keyframe has no length of its own
+  'output-file': 'out/film/hatchet-growth.avif'
+}, [ // camera keyframes: a fixed view of the hatchet hanging at the fireplace
+  {time: 0, position: [-25.8, -3.66, -33.62], yaw: 180, pitch: -6, fov: 45}
+])
+```
+
 ### fusion film
 
 ```TypeScript
