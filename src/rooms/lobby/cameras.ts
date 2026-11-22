@@ -29,12 +29,12 @@ export default {
     ratio: 16 / 9,
   },
   fountain_view: {
-    position: [-7.937, 2.161, -8.653],
+    position: [-7.693, 2.4, -1.583],
     aim: {
-      yaw: -2.406,
-      pitch: 0.0224,
+      yaw: -1.7942,
+      pitch: -0.0196,
     },
-    fov: 30,
+    fov: 50,
     ratio: 1,
   },
 } satisfies Record<string, RoomCamera>
