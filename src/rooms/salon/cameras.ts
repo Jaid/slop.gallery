@@ -17,6 +17,6 @@ export default {
       pitch: 0,
     },
     fov: 30,
-    ratio: 16 / 9,
+    ratio: 1,
   },
 } satisfies Record<string, RoomCamera>
