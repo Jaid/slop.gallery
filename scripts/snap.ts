@@ -270,8 +270,7 @@ if (import.meta.main) {
   } else {
     const {tools: json, ...options} = values
     const tools: unknown = json === undefined ? [] : JSON.parse(json)
-    const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
-    const isCall = (value: unknown): value is ToolCall => isObject(value) && typeof value.name === 'string' && value.name.trim().length > 0 && isObject(value.input)
+    const isCall = (value: unknown): value is ToolCall => isPlainObject(value) && typeof value.name === 'string' && value.name.trim().length > 0 && isPlainObject(value.input)
     if (!Array.isArray(tools) || !tools.every(isCall)) {
       throw new Error('--tools needs a JSON array of {name, input} WebMCP calls.')
     }
