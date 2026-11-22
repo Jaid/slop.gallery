@@ -4,7 +4,7 @@ import PromptOrb from '../base/PromptOrb.ts'
 import ImpastoOrbMaterial from './ImpastoOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
-/** A sculpture of thick palette-knife strokes over an umber underpainting, slowly turning in clear glass. It has a work redone as a bold digital impasto artwork of its own content, every prompt asking for all of the traits it names, and an unseen palette knife slaps thick smears of paint into the air around the portal as the result flips out. */
+/** A double rosette of curled palette-knife strokes, slowly turning in clear glass. It has a work redone as a bold digital impasto artwork of its own content, every prompt asking for all of the traits it names, and an unseen palette knife slaps thick smears of paint into the air around the portal as the result flips out. */
 export default class ImpastoOrb extends PromptOrb {
   readonly adjectives = [
     // craft

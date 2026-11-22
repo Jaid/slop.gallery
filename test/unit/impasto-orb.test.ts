@@ -1,14 +1,12 @@
 import {describe, expect, test} from 'bun:test'
 
-import {Vector3} from 'three/webgpu'
-
 import {crustStrokes} from '../../src/frames/impasto/ImpastoFrame.ts'
 import {frames} from '../../src/frames/index.ts'
 import {choiceFrames} from '../../src/frames/lib/frameChoice.ts'
 import {impastoColor, impastoIndex, impastoOrder, impastoPaints} from '../../src/lib/materials/impastoPaints.ts'
 import {moods} from '../../src/moods/index.ts'
 import ImpastoOrbMaterial from '../../src/orbs/impasto/ImpastoOrbMaterial.ts'
-import {impastoPalette, impastoStrokes} from '../../src/orbs/impasto/strokes.ts'
+import {blade, whorls} from '../../src/orbs/impasto/strokes.ts'
 import {impastoOrb, orbRadius, paintOrb, promptOrbs, randomOrbs, transparentOrb} from '../../src/orbs/index.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 
@@ -83,26 +81,36 @@ describe('Impasto Orb', () => {
       second.dispose()
     }
   })
-  test('keeps the padded box every stroke of its glass is marched in inside the glass, with orthonormal axes and paints of its palette', () => {
-    expect(impastoStrokes.length).toBeGreaterThan(12)
-    for (const {across, along, center, normal, pigment, radii} of impastoStrokes) {
-      for (const axis of [along, across, normal]) {
-        expect(axis.length()).toBeCloseTo(1, 9)
+  test('keeps every whorl inside the glass and out of the others, all the way from heel to tip', () => {
+    const tiers = whorls.toSorted((a, b) => a.depth - b.depth)
+    for (const [i, tier] of tiers.entries()) {
+      const {count, depth, loft, root, slope, tip} = tier
+      expect(count).toBeInteger()
+      expect(count).toBeGreaterThan(2)
+      expect(loft).toBeGreaterThan(0)
+      expect(root).toBeGreaterThan(0)
+      expect(root).toBeLessThan(tip)
+      for (const r of [root, tip]) {
+        // Leave a visible rim even under the glass’s magnification.
+        expect(Math.hypot(r, Math.abs(depth + slope * r) + loft)).toBeLessThan(0.74)
       }
-      expect(along.dot(across)).toBeCloseTo(0, 9)
-      expect(along.dot(normal)).toBeCloseTo(0, 9)
-      expect(across.dot(normal)).toBeCloseTo(0, 9)
-      expect(pigment).toBeGreaterThanOrEqual(0)
-      expect(pigment).toBeLessThan(impastoPalette.length)
-      for (const x of [-1.1, 1.1]) {
-        for (const y of [-1.1, 1.1]) {
-          for (const z of [-1.1, 1.1]) {
-            const corner = new Vector3
-            corner.copy(center).addScaledVector(along, x * radii[0]).addScaledVector(across, y * radii[1]).addScaledVector(normal, z * radii[2])
-            expect(corner.length()).toBeLessThan(0.95)
+      for (const other of tiers.slice(0, i)) {
+        const from = Math.max(root, other.root)
+        const to = Math.min(tip, other.tip)
+        if (from <= to) {
+          // Clearance is linear in radius, so its minimum over their shared annulus is at one of these endpoints.
+          for (const r of [from, to]) {
+            expect(depth + r * slope - loft).toBeGreaterThan(other.depth + r * other.slope + other.loft)
           }
         }
       }
+    }
+  })
+  test('leaves an angular gutter even where a blade bows toward the next dab in its whorl', () => {
+    expect(blade.wander).toBeWithin(0, 1)
+    for (const halfWidth of [blade.heel + blade.variation, blade.heel - blade.variation - blade.taper]) {
+      expect(halfWidth).toBeGreaterThan(0)
+      expect(halfWidth + (1 - halfWidth) * blade.wander).toBeLessThan(1)
     }
   })
 })
