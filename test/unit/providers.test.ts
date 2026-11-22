@@ -161,7 +161,7 @@ test('the real image adapter asks a known model for the supported ratio closest 
     model: 'google/gemini-nano-banana-2.1',
     image_config: {aspect_ratio: '3:2'},
   })
-  expect(await request('openai/gpt-image-2.5-sunburst', 0.5)).toHaveProperty('image_config', {aspect_ratio: '9:16'})
+  expect(await request('openai/gpt-image-2.5-sunburst', 0.6)).toHaveProperty('image_config', {aspect_ratio: '9:16'})
   expect(await request('x-ai/grok-imagine-image-2.0', 0.5)).toHaveProperty('image_config', {aspect_ratio: '1:2'})
   expect(await request('test-image-model', 1.5)).not.toHaveProperty('image_config')
   expect(await request('google/gemini-nano-banana-2.1')).not.toHaveProperty('image_config')

@@ -30,10 +30,13 @@ test('a known model is asked for its supported ratio closest to the work', () =>
   expect(requestedRatio('google/gemini-nano-banana-2.1', 1)).toBe('1:1')
   expect(requestedRatio('google/gemini-nano-banana-2.1', 0.8)).toBe('4:5')
   expect(requestedRatio('google/gemini-nano-banana-2.1', 1.5)).toBe('3:2')
-  // Sunburst knows no 4:5 or 1:2.
-  expect(requestedRatio('openai/gpt-image-2.5-sunburst', 0.8)).toBe('3:4')
-  expect(requestedRatio('openai/gpt-image-2.5-sunburst', 0.5)).toBe('9:16')
+  expect(requestedRatio('openai/gpt-image-2.5-sunburst', 0.8)).toBe('4:5')
+  expect(requestedRatio('openai/gpt-image-2.5-sunburst', 0.5)).toBe('1:2')
+  expect(requestedRatio('openai/gpt-image-2.5-sunburst', 3)).toBe('3:1')
+  // Sunburst goes no wider than 3:1.
+  expect(requestedRatio('openai/gpt-image-2.5-sunburst', 4)).toBe('3:1')
   expect(requestedRatio('x-ai/grok-imagine-image-2.0', 2)).toBe('2:1')
+  expect(requestedRatio('x-ai/grok-imagine-image-2.0', 2.5)).toBe('5:2')
   expect(requestedRatio('x-ai/grok-imagine-image-2.0', 16 / 9)).toBe('16:9')
 })
 test('an unknown model or shape is asked for no ratio', () => {
