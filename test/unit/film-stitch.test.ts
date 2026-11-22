@@ -51,12 +51,17 @@ test('seed patterns use the requested range, while literal brace ranges can reac
     seed: '0',
     target: undefined,
   }])
+  // The dev server, so no build has to exist.
   const inputs = await filmInputs({
     seed: ['{4294967294..4294967295}', '20?', '[1]', 'Hanover'],
     'seed-range': '1..201',
+    target: 'false',
   })
   expect(inputs.map(input => input.seed)).toEqual(['65534', '65535', '200', '201', '1', String(makeSeed('Hanover'))])
-  await expect(filmInputs({seed: '999999?'})).rejects.toThrow('--seed')
+  await expect(filmInputs({
+    seed: '999999?',
+    target: 'false',
+  })).rejects.toThrow('--seed')
 })
 test('the overlap shortens the movie once per cut and blends picture and audio at the same place, including a silent middle clip', async () => {
   const scratch = await fs.mkdtemp(join(tmpdir(), 'film-fade-test-'))
