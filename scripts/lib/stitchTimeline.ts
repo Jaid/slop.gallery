@@ -13,19 +13,22 @@ export class StitchTimeline {
   readonly loops: boolean
   /** Frames to move from the beginning of the stitched output to its end. */
   readonly offset: number
-  /** Single takes start their camera and virtual clock at the requested recipe frame, as usual. Stitched takes run the whole recipe in order. */
+  /** Single takes start their camera and virtual clock at the requested recipe frame, as usual. Stitched takes, and a single one fading into itself, run the whole recipe in order. */
   readonly recipeStart: number
   readonly #starts: ReadonlyArray<number>
+  /** whether takes are laid out and mixed on the timeline, rather than one take written as it comes */
+  readonly #stitched: boolean
 
-  /** `clipFrames` gives the length of each take in frames, in playing order. With `loop`, the last take crossfades into the first too, so the movie is one overlap shorter, ends in that crossfade and starts where the first take plays alone. */
+  /** `clipFrames` gives the length of each take in frames, in playing order. With `loop`, the last take crossfades into the first too, a single one into its own beginning, so the movie is one overlap shorter, ends in that crossfade and starts where the first take plays alone. */
   constructor(readonly clipFrames: ReadonlyArray<number>, readonly fps: number, fadeSeconds: number, startingFrame = 1, {loop = false} = {}) {
     if (!Number.isFinite(fadeSeconds) || fadeSeconds < 0) {
       throw new Error('--crossfade expects a non-negative duration in seconds.')
     }
     const clips = clipFrames.length
     this.clips = clips
-    this.fadeFrames = clips === 1 ? 0 : Math.round(fadeSeconds * fps)
+    this.fadeFrames = clips === 1 && !loop ? 0 : Math.round(fadeSeconds * fps)
     this.loops = loop && this.fadeFrames > 0
+    this.#stitched = clips > 1 || this.loops
     // A clip has to hold the overlap into it and the one out of it.
     const limit = Math.min(...clipFrames.map((frames, clip) => Math.floor(frames / (this.loops ? 2 : Number(clip > 0) + Number(clip < clips - 1) || 1))))
     if (this.fadeFrames > limit) {
@@ -39,9 +42,9 @@ export class StitchTimeline {
     if (!Number.isSafeInteger(startingFrame) || startingFrame < 1 || startingFrame > lastStart) {
       throw new Error(`--starting-frame must be a whole number between 1 and ${lastStart}${this.loops ? ', before the crossfade that loops the last clip into the first' : ''}.`)
     }
-    this.recipeStart = clips === 1 ? startingFrame : 1
+    this.recipeStart = this.#stitched ? 1 : startingFrame
     // The first take’s fade in from the last one closes the loop at the end.
-    this.offset = clips === 1 ? 0 : startingFrame - 1 + (this.loops ? this.fadeFrames : 0)
+    this.offset = this.#stitched ? startingFrame - 1 + (this.loops ? this.fadeFrames : 0) : 0
   }
 
   /** First output frame of this take before rotating the seam; both sides of a crossfade cover the same output frames. */
@@ -51,7 +54,7 @@ export class StitchTimeline {
 
   /** Place samples at absolute frame boundaries (no accumulated rounding at fractional fps). A missing track leaves silence. */
   mix(clip: number, track: AudioTrack) {
-    if (this.clips === 1) {
+    if (!this.#stitched) {
       this.audio = track
       return
     }

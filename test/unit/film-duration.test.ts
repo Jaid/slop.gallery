@@ -82,8 +82,13 @@ test('duration requires positive finite seconds and can give a still recipe a re
   expect(() => new FilmRecipeClock(recipe, 24, [1, 2], 3)).toThrow('2 lengths for 3 clips')
   expect(() => new FilmRecipeClock(recipe, 24, [1, 0.5], 2, {crossfade: 0.6})).toThrow('at most as long as the shortest clip, 0.5 s')
   expect(() => new FilmRecipeClock(recipe, 24, [1], 2, {crossfade: -1})).toThrow('--crossfade')
-  const single = new FilmRecipeClock(recipe, 24, [1], 1, {crossfade: 5})
+  const single = new FilmRecipeClock(recipe, 24, [1], 1, {crossfade: 0.5})
   expect(single.clipFrames).toEqual([24])
+  const looping = new FilmRecipeClock(recipe, 24, [1], 1, {
+    crossfade: 0.5,
+    loop: true,
+  })
+  expect(looping.clipFrames).toEqual([36])
   const still = new FilmRecipeClock([{time: 0}], 24, [0.1])
   expect(still.clipFrames).toEqual([2])
 })

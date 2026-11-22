@@ -48,7 +48,7 @@ ${galleryHelp(filmHeight, {
   worldReach: filmWorldReach,
 })}
   --seed-range <min..max> inclusive search range for seed wildcards. Default: ${defaultSeedRange} (the default environment and all seeds a game rolls). Literal seeds and brace expansions are coerced like ?seed, independent of the search range
-  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). Each clip records that much longer to fade into the next, so the film still lasts as long as its clips together. In the looping .avif and .jxl, the last clip fades into the first as well: the film starts once the first clip plays alone and ends in that crossfade. At most as long as the shortest clip
+  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). Each clip records that much longer to fade into the next, so the film still lasts as long as its clips together. In the looping .avif and .jxl, the last clip fades into the first as well, a single clip into its own beginning: the film starts once the first clip plays alone and ends in that crossfade. At most as long as the shortest clip
   --list                  print the target and seed of each clip before seam rotation and exit without recording
   --output-file <file>    the extension picks the format. Default: out/film/<world>-<timestamp>.jxl
                           .jxl  animated JPEG XL
@@ -479,6 +479,9 @@ const main = async (overrides: FilmOptions, recipe?: Recipe) => {
   const [startingFrame] = parseNumbers(options['starting-frame'], 'starting-frame', [1])
   const timeline = new StitchTimeline(film.clock.clipFrames, fps, Number(options.crossfade ?? 0), startingFrame, {loop: loopingFormats.has(format)})
   const {frameCount} = timeline
+  if (Number(options.crossfade ?? 0) > 0 && !timeline.fadeFrames) {
+    console.warn(`Warning: --crossfade does nothing for a single clip in a .${format}, which plays once.`)
+  }
   await fs.mkdir(dirname(output), {recursive: true})
   const scratch = timeline.fadeFrames || timeline.offset ? await fs.mkdtemp(join(tmpdir(), 'film-stitch-')) : undefined
   let sink: FrameSink | undefined

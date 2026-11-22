@@ -36,7 +36,8 @@ export class FilmRecipeClock {
     if (!Number.isFinite(crossfade) || crossfade < 0) {
       throw new Error('--crossfade expects a non-negative duration in seconds.')
     }
-    const fadeFrames = clips === 1 ? 0 : Math.round(crossfade * fps)
+    // A single clip has nothing to fade into, unless the movie loops back into its beginning.
+    const fadeFrames = clips === 1 && !loop ? 0 : Math.round(crossfade * fps)
     const shortest = Math.min(...shares)
     if (fadeFrames > shortest) {
       throw new Error(`--crossfade is too long: it can last at most as long as the shortest clip, ${shortest / fps} s.`)

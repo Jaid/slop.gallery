@@ -108,6 +108,44 @@ test('a looping movie also fades the last clip into the first, starting where th
     await fs.remove(scratch)
   }
 })
+test('a single looping clip fades its end into its own beginning, picture and sound, and every starting frame before that fade rotates it', async () => {
+  const scratch = await fs.mkdtemp(join(tmpdir(), 'film-single-loop-test-'))
+  try {
+    const render = async (startingFrame: number) => {
+      const timeline = new StitchTimeline([6], 2, 1, startingFrame, {loop: true})
+      expect(timeline.recipeStart).toBe(1)
+      const frames: Array<number> = []
+      await timeline.stitch(async (_, write) => {
+        for (let frame = 0; frame < 6; frame++) {
+          await write(Uint8Array.of(frame))
+        }
+        timeline.mix(0, {
+          channels: 1,
+          sampleRate: 2,
+          samples: Float32Array.of(0, 1, 2, 3, 4, 5),
+        })
+      }, async pixels => {
+        frames.push(pixels[0])
+      }, scratch)
+      return {
+        frames,
+        samples: [...timeline.audio!.samples],
+      }
+    }
+    const original = await render(1)
+    expect(original.frames).toEqual([2, 3, 3, 2])
+    expect(original.samples).toEqual([2, 3, 3, 2])
+    const shifted = await render(2)
+    expect(shifted.frames).toEqual([3, 3, 2, 2])
+    expect(shifted.samples).toEqual([3, 3, 2, 2])
+    expect(() => new StitchTimeline([6], 2, 1, 3, {loop: true})).toThrow('between 1 and 2')
+    const once = new StitchTimeline([6], 2, 1)
+    expect(once.fadeFrames).toBe(0)
+    expect(once.frameCount).toBe(6)
+  } finally {
+    await fs.remove(scratch)
+  }
+})
 test('hard cuts keep all frames and excessive overlaps fail before recording', () => {
   const timeline = new StitchTimeline([3, 3, 3, 3], 30, 0)
   expect(timeline.frameCount).toBe(12)
