@@ -146,7 +146,8 @@ export default class DamaskWallpaperMaterial extends MeshStandardNodeMaterial {
     const tarnish = mx_noise_float(vec3(u.mul(6), v.mul(6), 11)).mul(0.5).add(0.5)
     const gold = color(colors.gold).mul(tarnish.mul(0.25).add(0.85))
     this.colorNode = mix(silk, gold, gilt)
-    this.metalnessNode = gilt.mul(0.55)
+    // Only slightly metallic, or cinematic’s screen-space reflections mirror the frames hung on it almost sharply.
+    this.metalnessNode = gilt.mul(0.1)
     this.roughnessNode = mix(weave.mul(0.1).add(0.78), tarnish.mul(0.12).add(0.34), gilt)
     // The gold leaf stands a fraction of a millimeter proud of the silk.
     this.normalNode = heightNormal(gilt.mul(0.00025).add(weave.mul(0.00002)).mul(visibleDetail(footprint, 0.004)))
