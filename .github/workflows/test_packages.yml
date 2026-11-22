@@ -4,7 +4,7 @@ on:
     branches: [main]
   pull_request:
 jobs:
-  # Every workspace package with a test script, at any depth, for a job of its own.
+  # Every workspace package with a test script, at any depth, for a job of its own, and whether its tests need the media tools.
   listPackages:
     runs-on: ubuntu-26.04
     permissions:
@@ -21,15 +21,21 @@ jobs:
       shell: bash
       run: |
         bun --eval "$(cat << 'EOF'
+        // The packages whose tests encode or read media with ffmpeg, cjxl or ImageMagick.
+        const mediaPackages = new Set(['knot-materials', 'vite-plugin-import-voice-sample', 'vite-plugin-jxl', 'voice-sample-store'])
         const {workspaces} = await Bun.file('package.json').json()
         const packages = []
         for (const pattern of workspaces) {
           for await (const manifest of new Bun.Glob(`${pattern}/package.json`).scan()) {
             const {name, scripts} = await Bun.file(manifest).json()
             if (scripts?.test) {
-              packages.push({name, folder: manifest.replace(/\/package\.json$/, '')})
+              packages.push({name, folder: manifest.replace(/\/package\.json$/, ''), media: mediaPackages.has(name)})
             }
           }
+        }
+        const unknown = [...mediaPackages].filter(name => !packages.some(item => item.name === name))
+        if (unknown.length) {
+          throw new Error(`No package with a test script is named ${unknown.join(', ')}.`)
         }
         console.log(`packages=${JSON.stringify(packages.toSorted((a, b) => a.name.localeCompare(b.name)))}`)
         EOF
@@ -49,8 +55,9 @@ jobs:
       uses: actions/checkout@v7.0.1
     - name: setupBun
       uses: oven-sh/setup-bun@v2.2.0
-    # Some packages encode media in their tests, like capture-session with ffmpeg and vite-plugin-jxl with cjxl and ImageMagick.
+    # Only for the packages that encode media in their tests, like voice-sample-store with ffmpeg and vite-plugin-jxl with cjxl and ImageMagick.
     - name: setupMediaTools
+      if: matrix.package.media
       uses: ./.github/actions/setupMediaTools
     - name: install
       run: bun install --frozen-lockfile
