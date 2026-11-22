@@ -45,9 +45,9 @@ export type CameraOrbit = {
   from: Vec3
   /** easing for eye height; defaults to the keyframe’s tween */
   heightTween?: Tween
-  /** world-space eye position at the end of the arc; defaults to from, which with turns circles back to it */
+  /** world-space eye position at the end of the arc; defaults to from, circling back to it */
   to?: Vec3
-  /** whole revolutions to add to the shortest arc, positive toward increasing yaw */
+  /** whole revolutions to add to the shortest arc, positive toward increasing yaw; defaults to 1 without to, else 0 */
   turns?: number
 }
 export type Keyframe = {
@@ -161,7 +161,8 @@ export const recipeDuration = (recipe: Recipe) => recipe.at(-1)!.time
 type OrbitPose = Pick<Shot, 'pitch' | 'position' | 'yaw'>
 const isOrbitProperty = (property: keyof Shot): property is keyof OrbitPose => property !== 'roll' && property !== 'fov'
 /** Interpolate in cylindrical coordinates around the focus. This keeps a level orbit level and a constant-radius orbit circular. */
-const sampleOrbit = ({from, to = from, focus, turns = 0}: CameraOrbit, t: number, heightT = t): OrbitPose => {
+const sampleOrbit = ({from, to, focus, turns = to ? 0 : 1}: CameraOrbit, t: number, heightT = t): OrbitPose => {
+  to ??= from
   const [x, y, z] = focus
   const start = Math.atan2(from[0] - x, from[2] - z)
   const difference = Math.atan2(to[0] - x, to[2] - z) - start

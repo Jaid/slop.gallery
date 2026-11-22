@@ -215,6 +215,36 @@ describe('orbit keyframes', () => {
     }
     expect(sampleRecipe(circling, 2, fallback).position[2]).toBeCloseTo(1)
   })
+  test('an orbit without to and turns circles once toward increasing yaw', () => {
+    const orbit = {
+      from: [-1, 1, -1] as [number, number, number],
+      focus: [0, 1, 0] as [number, number, number],
+    }
+    const circling = parseRecipe([{
+      time: 4,
+      orbit,
+    }])
+    const explicit = parseRecipe([{
+      time: 4,
+      orbit: {
+        ...orbit,
+        to: orbit.from,
+        turns: 1,
+      },
+    }])
+    for (const time of [0, 1, 2, 3, 4]) {
+      expect(sampleRecipe(circling, time, fallback)).toEqual(sampleRecipe(explicit, time, fallback))
+    }
+    expect(sampleRecipe(circling, 4, fallback).yaw - sampleRecipe(circling, 0, fallback).yaw).toBeCloseTo(360)
+    const still = parseRecipe([{
+      time: 4,
+      orbit: {
+        ...orbit,
+        turns: 0,
+      },
+    }])
+    expect(sampleRecipe(still, 2, fallback).position).toEqual(orbit.from)
+  })
   test('rejects incomplete, ambiguous and degenerate arcs at parse time', () => {
     const orbit = {
       from: [1, 0, 0],
