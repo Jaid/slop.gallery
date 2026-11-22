@@ -4,6 +4,8 @@ import type {FloorSize} from '../base/Room.ts'
 import {cellChandelierPivot} from '#src/lib/gallery/CellCeilingGeometry.ts'
 import {chandelierCanopyTop, chandelierPhysics} from '#src/lib/physics/chandelier.ts'
 
+import {chandelierLift} from '../lib/sandboxFinish.ts'
+
 /** a pedestal carrying one item */
 export type CellPedestal = {
   /** the middle of its foot, relative to the room’s origin */
@@ -34,8 +36,6 @@ const round = (value: number) => Math.round(value * 1e9) / 1e9 + 0
 const ridgeHeight = 9
 /** how steeply the hall’s ceiling rises from its north and south walls to the ridge */
 const roofPitch = Math.atan((ridgeHeight - height) / (size[1] / 2))
-/** how much higher the chandelier hangs than the Sienna’s from the ceiling it is made for, its candles about as high as the top of the hall’s walls */
-const chandelierLift = 0.2
 /** how far the vestibule’s wall stands back from the north wall’s center line, which leaves a passage between them, lined like the arch */
 const passage = 0.5
 /** the vestibule’s round a lone item */

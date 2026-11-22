@@ -7,13 +7,13 @@ import {Geofence} from 'geofency'
 
 import {cellLedY} from '#src/lib/gallery/CellCeilingGeometry.ts'
 import {insideRoundVestibule, roundVestibuleWall} from '#src/lib/gallery/roundVestibule.ts'
-import {chandelierLampY} from '#src/lib/physics/chandelier.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
 import footprint from '../lib/footprint.ts'
+import {chandelierLamp, sandboxBaseboardHeight} from '../lib/sandboxFinish.ts'
 import {planWall} from '../lib/walls.ts'
-import cellBaseboard, {cellBaseboardHeight} from './baseboard.ts'
+import cellBaseboard from './baseboard.ts'
 import cellMap from './map.ts'
 import slots from './slots.ts'
 
@@ -25,7 +25,7 @@ export const cellLed = {
   drop: 0.32,
 } as const
 
-/** The Sandbox’s one room: a sealed hall with the Arena’s marble underfoot, papered like the Sienna under a gabled ceiling glazed with roof lights, which let in the moon, and the Sienna’s chandelier, laid out around the middle of its floor. Beyond the arch through its north wall, a short passage leads on to a round room where its layout stands a pedestal for every item it holds, upholstered in the Arena’s velvet and lit by an LED panel in the middle of its ceiling, or a door closes the arch while it holds none. */
+/** The room the Sandbox opens with unless `?room` names the Studio: a sealed hall with the Arena’s marble underfoot, papered like the Sienna under a gabled ceiling glazed with roof lights, which let in the moon, and the Sienna’s chandelier, laid out around the middle of its floor. Beyond the arch through its north wall, a short passage leads on to a round room where its layout stands a pedestal for every item it holds, upholstered in the Arena’s velvet and lit by an LED panel in the middle of its ceiling, or a door closes the arch while it holds none. */
 export default class Cell extends Room {
   override readonly air: Array<Box3>
   override readonly description = 'Nothing in it yet.'
@@ -43,17 +43,10 @@ export default class Cell extends Room {
   }
 
   constructor(readonly layout: CellLayout) {
-    const {chandelierLift, height, northZ, passage, roundHeight, size, vestibule} = layout
+    const {height, northZ, passage, roundHeight, size, vestibule} = layout
     const lamps: Record<string, Lamp> = {
-      // The Sienna’s, below the swinging chandelier’s metalwork at rest, so the fixture can’t shadow its own source; it swings along with it.
-      chandelier: {
-        position: [0, chandelierLampY + chandelierLift, 0],
-        strength: 50,
-        tint: '#ffedc4',
-        range: 25,
-        decay: 1.5,
-        shadow: true,
-      },
+      // In the middle of the hall, swinging along with the chandelier.
+      chandelier: chandelierLamp([0, 0]),
     }
     if (vestibule) {
       const [x, z] = vestibule.center
@@ -73,7 +66,7 @@ export default class Cell extends Room {
       u: vestibule?.center[0] ?? 0,
     }
     // Four plain walls, which artworks may hang on, with the Sienna’s baseboard of two plain bands, as low as the round room’s.
-    const hall = {baseboardHeight: cellBaseboardHeight}
+    const hall = {baseboardHeight: sandboxBaseboardHeight}
     const walls: Record<string, RoomWall> = {
       north: planWall(size, 'north', height, {
         ...hall,
@@ -115,6 +108,16 @@ export default class Cell extends Room {
     ]
     // Its whole floor plan, the passage’s and the round room’s at every height, as they are all there is.
     this.fence = new Geofence(this.air.map(box => footprint([box])))
+  }
+
+  /** how high the air reaches at most, up to the ridge of the hall’s gabled ceiling */
+  get clearHeight() {
+    return this.layout.ridgeHeight
+  }
+
+  /** How high the ceiling hangs over the point of the floor plan, relative to the room’s origin: rising from the hall’s north and south walls to its ridge, and level over the passage and the round room. */
+  ceilingAt(x: number, z: number) {
+    return this.layout.ceilingAt(x, z)
   }
 
   /** Whether the position, relative to the room’s origin, lies on the floor of the room, of the passage through its north wall or of the round room beyond, at least `margin` meters from the walls’ center lines. */

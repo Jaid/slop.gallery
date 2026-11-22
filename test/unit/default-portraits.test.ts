@@ -3,7 +3,7 @@ import {expect, test} from 'bun:test'
 import defaultPortraits, {hangDefaultWorks, readPortraitCount} from '../../src/lib/gallery/defaultPortraits.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 const slots = slopGallery.portraitSlots()
 test('default works hang in distinct slots of their ratio, taking the slot’s size', () => {

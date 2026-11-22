@@ -19,16 +19,17 @@ import {chandelierCanopyTop, chandelierLampY, chandelierPhysics} from '../../src
 import {defaultPortraitArea, portraitRatios} from '../../src/lib/placement/portraitSlots.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {orbs, promptOrbs} from '../../src/orbs/index.ts'
-import cellBaseboard, {cellBaseboardHeight} from '../../src/rooms/cell/baseboard.ts'
+import cellBaseboard from '../../src/rooms/cell/baseboard.ts'
 import Cell, {cellLed} from '../../src/rooms/cell/Cell.ts'
 import CellLayout from '../../src/rooms/cell/CellLayout.ts'
 import cellMap from '../../src/rooms/cell/map.ts'
 import RoomMap from '../../src/rooms/lib/RoomMap.ts'
+import {sandboxBaseboardHeight} from '../../src/rooms/lib/sandboxFinish.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import {readWorld} from '../../src/worlds/index.ts'
+import CellSandbox from '../../src/worlds/sandbox/CellSandbox.ts'
 import {readItems} from '../../src/worlds/sandbox/items.ts'
-import {moonDirection} from '../../src/worlds/sandbox/night.ts'
-import Sandbox from '../../src/worlds/sandbox/Sandbox.ts'
+import {moonDirection} from '../../src/worlds/sandbox/moon.ts'
 import {readTurntable} from '../../src/worlds/sandbox/turntable.ts'
 
 await RAPIER.init()
@@ -51,19 +52,19 @@ describe('?item', () => {
     expect(readQueryOverrides('http://localhost/?item=prop-orb-spook,%20prop-orb-horror')).toEqual({item: 'prop-orb-spook,prop-orb-horror'})
   })
   test('puts every orb it names on a pedestal of its own, in their order, and refuses ids it doesn’t know', () => {
-    const sandbox = new Sandbox(['prop-orb-horror', 'prop-orb-spook'])
+    const sandbox = new CellSandbox(['prop-orb-horror', 'prop-orb-spook'])
     expect(sandbox.items.map(item => item.id)).toEqual(['prop-orb-horror', 'prop-orb-spook'])
     expect(sandbox.items.map(item => item.orb.propId)).toEqual(['prop-orb-horror', 'prop-orb-spook'])
     expect(sandbox.room('cell').room.layout.pedestals).toHaveLength(2)
-    expect(() => new Sandbox(['prop-orb-spook', 'prop-orb-pumpkin', 'prop-orb-pumpkin'])).toThrow('Unknown Sandbox item URL selection: prop-orb-pumpkin.')
+    expect(() => new CellSandbox(['prop-orb-spook', 'prop-orb-pumpkin', 'prop-orb-pumpkin'])).toThrow('Unknown Sandbox item URL selection: prop-orb-pumpkin.')
   })
   test('puts a repeated orb on a pedestal of its own each time, every one a prop with an id of its own', () => {
     const spook = orbs.find(orb => orb.id === 'spook')!
-    const sandbox = new Sandbox(readItems('?item=prop-orb-spook,prop-orb-horror,prop-orb-spook,prop-orb-spook'))
+    const sandbox = new CellSandbox(readItems('?item=prop-orb-spook,prop-orb-horror,prop-orb-spook,prop-orb-spook'))
     expect(sandbox.items.map(item => item.id)).toEqual(['prop-orb-spook', 'prop-orb-horror', 'prop-orb-spook-2', 'prop-orb-spook-3'])
     expect(sandbox.items.filter(item => item.orb === spook)).toHaveLength(3)
     expect(sandbox.room('cell').room.layout.pedestals).toHaveLength(4)
-    const triple = new Sandbox(readItems('?item=prop-orb-spook,prop-orb-spook,prop-orb-spook'))
+    const triple = new CellSandbox(readItems('?item=prop-orb-spook,prop-orb-spook,prop-orb-spook'))
     expect(triple.room('cell').room.layout.plan).toBe('rotunda')
     expect(triple.room('cell').room.layout.pedestals).toHaveLength(3)
   })
@@ -102,11 +103,11 @@ describe('?turntable', () => {
     })
   })
   test('floats the work in place of the east wall’s middle one, in its catalog ratio unless one is asked for, and refuses what is neither an artwork nor a URL', () => {
-    const plain = new Sandbox([])
+    const plain = new CellSandbox([])
     expect(plain.turntable).toBeUndefined()
     const slot = plain.turntableSlot()
     expect(plain.portraitSlots().map(entry => entry.id)).toContain(slot.id)
-    const sandbox = new Sandbox([], {
+    const sandbox = new CellSandbox([], {
       artwork: '',
       aspect: undefined,
       area: undefined,
@@ -119,7 +120,7 @@ describe('?turntable', () => {
     })
     expect(sandbox.portraitSlots().map(entry => entry.id)).not.toContain(slot.id)
     expect(sandbox.portraitSlots()).toHaveLength(plain.portraitSlots().length - 1)
-    const dog = new Sandbox([], {
+    const dog = new CellSandbox([], {
       artwork: 'dog',
       aspect: 1.5,
       area: 7500,
@@ -129,7 +130,7 @@ describe('?turntable', () => {
       aspect: 1.5,
       area: 7500,
     })
-    const image = new Sandbox([], {
+    const image = new CellSandbox([], {
       artwork: 'https://example.com/work.png',
       aspect: undefined,
       area: undefined,
@@ -140,7 +141,7 @@ describe('?turntable', () => {
       aspect: undefined,
       area: defaultPortraitArea,
     })
-    expect(() => new Sandbox([], {
+    expect(() => new CellSandbox([], {
       artwork: 'gooze',
       aspect: undefined,
       area: undefined,
@@ -189,7 +190,7 @@ describe('the Cell’s layout', () => {
     }])
   })
   test('lights the round room with an LED panel in the middle of its ceiling, and none while the door is shut', () => {
-    const closed = new Sandbox([])
+    const closed = new CellSandbox([])
     expect(closed.lamps().map(lamp => lamp.id)).toEqual(['cell-chandelier'])
     for (const count of [1, 2, 3, 6]) {
       const {layout, lamps} = new Cell(new CellLayout(count))
@@ -251,7 +252,7 @@ describe('the Cell’s layout', () => {
 describe('the passage from the Cell’s hall to its round room', () => {
   test('keeps every floor level in the hall’s plane, so all of them mirror in one, and stands the round wall on it higher than the hall’s', () => {
     for (const count of [1, 3]) {
-      const sandbox = new Sandbox(ids.slice(0, count))
+      const sandbox = new CellSandbox(ids.slice(0, count))
       const cell = sandbox.room('cell')
       const {layout} = cell.room
       const vestibule = layout.vestibule!
@@ -275,7 +276,7 @@ describe('the passage from the Cell’s hall to its round room', () => {
     }
   })
   test('lines the passage with the reveal of the round room’s arch, from its wall on to the north wall’s center line, where the north wall’s own reveal takes over, between the jambs of the arch through the north wall and up to its crown', () => {
-    const sandbox = new Sandbox(ids.slice(0, 1))
+    const sandbox = new CellSandbox(ids.slice(0, 1))
     const cell = sandbox.room('cell')
     const {layout} = cell.room
     const ring = sandbox.walls.find(wall => wall.id === 'cell-vestibule')!
@@ -316,7 +317,7 @@ describe('the passage from the Cell’s hall to its round room', () => {
   for (const sprint of [false, true]) {
     for (const returning of [false, true]) {
       test(`a player walks from the hall over the threshold board through the passage into the round room, sprint ${sprint}, returning ${returning}`, () => {
-        const sandbox = new Sandbox(ids.slice(0, 1))
+        const sandbox = new CellSandbox(ids.slice(0, 1))
         const {layout} = sandbox.room('cell').room
         const vestibule = layout.vestibule!
         const [width, depth] = layout.size
@@ -420,11 +421,11 @@ describe('the Cell’s trim and door', () => {
     const top = cellBaseboard.at(-1)!
     expect(toe).toEqual([toe[0], 0])
     expect(top[0]).toBe(wallFace)
-    expect(top[1]).toBeCloseTo(cellBaseboardHeight, 9)
-    expect(Math.max(...cellBaseboard.map(([, y]) => y))).toBeCloseTo(cellBaseboardHeight, 9)
+    expect(top[1]).toBeCloseTo(sandboxBaseboardHeight, 9)
+    expect(Math.max(...cellBaseboard.map(([, y]) => y))).toBeCloseTo(sandboxBaseboardHeight, 9)
     expect(Math.max(...cellBaseboard.map(([front]) => front))).toBeLessThan(0.2)
     for (const count of [0, 1, 3]) {
-      const sandbox = new Sandbox(ids.slice(0, count))
+      const sandbox = new CellSandbox(ids.slice(0, count))
       const round = sandbox.walls.filter(wall => wall.curveRadius)
       const hall = sandbox.walls.filter(wall => !wall.curveRadius)
       expect(round).toHaveLength(sandbox.room('cell').room.layout.vestibule ? 1 : 0)
@@ -438,7 +439,7 @@ describe('the Cell’s trim and door', () => {
         trim.computeBoundingBox()
         // The Sienna’s two plain bands, apart from the plinth blocks the casing of an opening stands on.
         if (!wall.holes?.length) {
-          expect(trim.boundingBox!.max.y).toBeCloseTo(cellBaseboardHeight, 6)
+          expect(trim.boundingBox!.max.y).toBeCloseTo(sandboxBaseboardHeight, 6)
           continue
         }
         // The arch’s reveal, all of it inside the opening and across from the wall’s faces, takes the second material.
@@ -462,7 +463,7 @@ describe('the Cell’s trim and door', () => {
       }
     }
     // A round wall’s reveals are told apart along its curve: all of them inside its door, facing across it rather than toward the center of its bend.
-    const lone = new Sandbox(ids.slice(0, 1))
+    const lone = new CellSandbox(ids.slice(0, 1))
     const ring = lone.walls.find(wall => wall.curveRadius)!
     const radius = ring.curveRadius!
     const lined = withOpeningReveals(architectureGeometry(ring).surface, ring)
@@ -483,7 +484,7 @@ describe('the Cell’s trim and door', () => {
     }
   })
   test('refuses baseboard sections that sink into the wall, run downward or end off its face', () => {
-    const sandbox = new Sandbox([])
+    const sandbox = new CellSandbox([])
     const [wall] = sandbox.walls
     const cut = (baseboardSection: ReadonlyArray<readonly [number, number]>) => () => architectureGeometry({
       ...wall,
@@ -494,7 +495,7 @@ describe('the Cell’s trim and door', () => {
     expect(cut([[0.15, 0], [0.12, 0.1]])).toThrow(RangeError)
   })
   test('fills the opening it closes, a little into the wall round it, without reaching out past its casing', () => {
-    const sandbox = new Sandbox([])
+    const sandbox = new CellSandbox([])
     const north = sandbox.walls.find(wall => wall.id === 'cell-north')!
     const hole = north.holes!.find(candidate => candidate.name === 'door')!
     const door = new CellDoorGeometry(hole)
@@ -534,7 +535,7 @@ describe('the Cell’s ceilings', () => {
     expect(layout.ceilingAt(0, 2) - layout.ceilingAt(0, 3)).toBeCloseTo(Math.tan(layout.roofPitch), 9)
     expect(layout.ceilingAt(...layout.vestibule!.center)).toBe(layout.roundHeight)
     // The hall’s air reaches up to the ridge, and a body fits under the slopes but not through them.
-    const sandbox = new Sandbox(ids.slice(0, 1))
+    const sandbox = new CellSandbox(ids.slice(0, 1))
     const cell = sandbox.room('cell')
     expect(cell.room.bounds.max.y).toBeCloseTo(layout.ridgeHeight, 9)
     expect(sandbox.contains(cell.toWorld([0, layout.ridgeHeight - 1, 0]))).toBe(true)
@@ -712,7 +713,7 @@ describe('the Cell’s ceilings', () => {
       // Low in the south-southwest, the moon lights the north-eastern walls more than the floor.
       expect(lit / samples).toBeGreaterThan(0.03)
       expect(lit / samples).toBeLessThan(0.6)
-      const sandbox = new Sandbox(ids.slice(0, 1))
+      const sandbox = new CellSandbox(ids.slice(0, 1))
       const cell = sandbox.room('cell')
       expect(cell.skybox).toBe('night')
       expect(sandbox.skybox('night')).not.toBeNull()

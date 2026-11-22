@@ -6,7 +6,7 @@ import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 
 import SandboxMinimap from '../../src/components/SandboxMinimap/index.tsx'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 const pose: MinimapPose = {
   position: [1, 1.6, -2],

@@ -1,6 +1,6 @@
-import Sandbox from './Sandbox.ts'
+import loadSandbox from './load.ts'
 
-/** the Sandbox world, created once */
-const sandbox = new Sandbox
+/** the Sandbox this page opens, with the room its URL chooses, see {@link loadSandbox} */
+const sandbox = await loadSandbox()
 
 export default sandbox

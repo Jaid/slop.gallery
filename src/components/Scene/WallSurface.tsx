@@ -31,7 +31,8 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
   decorations?: ComponentType<WallDecorationsProps>
   glass?: Material
   material?: Material
-  plaster: Texture
+  /** the plaster of a wall without a `surfaceMaterial` */
+  plaster?: Texture
   /** what lines the wall’s openings instead of `surfaceMaterial`, which it then needs */
   revealMaterial?: Material
   surfaceMaterial?: Material

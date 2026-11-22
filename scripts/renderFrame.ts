@@ -10,6 +10,7 @@ import fs from 'fs-extra'
 import {av1Crf} from 'media-encoding'
 
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
+import {readRoom} from '#src/lib/gallery/spawn.ts'
 import {defaultPortraitArea} from '#src/lib/placement/portraitSlots.ts'
 import artworks from '#src/worlds/gallery/artworks.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
@@ -198,8 +199,8 @@ const main = async (frame: string, options: RenderFrameOptions) => {
   }
   const setup = await resolveGallerySetup(values, videoSize, 1)
   warnAboutDevServer(setup)
-  if (setup.world !== 'sandbox') {
-    throw new Error('The turntable stands in the Sandbox, so --room may only name the Cell.')
+  if (setup.world !== 'sandbox' || readRoom(`?${setup.search}`) === 'studio') {
+    throw new Error('The turntable stands in the Sandbox’s Cell, so --room may only name the Cell.')
   }
   const {width, height} = setup.viewport
   validateFrameSize(format, width, height)

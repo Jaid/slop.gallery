@@ -1,13 +1,7 @@
 import {sunDirectionFromAngles} from '#src/lib/gallery/sun.ts'
 import nightSky from '#src/lib/materials/NightSky.ts'
 
-/** toward the moon over the Sandbox, in the south-southwest: it shines through the roof lights of the Cell’s south slope onto the floor and walls of its north-eastern corner, and through the round window of its west gable onto its north wall */
-export const moonDirection = sunDirectionFromAngles(212, 35)
-/** the moonlight’s color, which its shafts glow in too, and its strength */
-export const moonlight = {
-  color: '#a9bde6',
-  intensity: 7,
-} as const
+import {moonDirection} from './moon.ts'
 
 /** The Sandbox’s night sky, its moon where the moonlight comes from, a waxing gibbous lit by the sun deep under the north-northwestern horizon, and the Milky Way arching through the zenith from the south-southeast, where its core stands, to the north-northwest, across the roof lights of both slopes and 30° clear of the moon. */
 const sky = nightSky({

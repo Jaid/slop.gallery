@@ -24,7 +24,8 @@ import robotsTxtPlugin from '#src/lib/vite/robotsTxtPlugin.ts'
 import socialPreviewPlugin from '#src/lib/vite/socialPreviewPlugin.ts'
 import sourceCodeMetadataPlugin from '#src/lib/vite/sourceCodeMetadataPlugin.ts'
 import worldChunksPlugin from '#src/lib/vite/worldChunksPlugin.ts'
-import {defaultWorld, worldIds, worlds} from '#src/worlds/index.ts'
+import {defaultWorld, worlds} from '#src/worlds/index.ts'
+import worldModules from '#src/worlds/modules.ts'
 
 import manifest from './package.json' with {type: 'json'}
 
@@ -85,7 +86,7 @@ const getProductionConfig = () => {
     mergeIdents: false,
     zindex: false,
   }).plugins.filter(([, options]) => !(options && 'exclude' in options && options.exclude)).map(([createPlugin, options]) => createPlugin(options))
-  const worldChunks = worldChunksPlugin(Object.fromEntries(worldIds.map(id => [id, `src/worlds/${id}/index.ts`])))
+  const worldChunks = worldChunksPlugin(worldModules)
   // The game’s chunks and assets are named by their content, so browsers can keep them for good and a deploy can never leave them running stale chunks under the same name; see immutableHeadersPlugin. The build’s output list (outputListPlugin) tells which is which.
   const contentNames = {
     entryFileNames: '[hash:8].js',

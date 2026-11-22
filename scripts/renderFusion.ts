@@ -37,11 +37,11 @@ type PortalFrame = ReturnType<typeof portalIn>
 /** a key of the camera’s path round the portal: degrees round from straight out of the wall toward its tangent, meters out from the portal’s middle and above its floor, the field of view in degrees and the roll in degrees */
 type OrbitKey = [time: number, angle: number, radius: number, height: number, fov: number, roll: number]
 
-/** every world’s module, loaded only for the world whose room --room names */
-const worldModules: Record<WorldId, () => Promise<{default: World}>> = {
-  gallery: () => import('#src/worlds/gallery/index.ts'),
-  knottingham: () => import('#src/worlds/knottingham/index.ts'),
-  sandbox: () => import('#src/worlds/sandbox/index.ts'),
+/** every world as the page with the query opens it, loaded only for the world whose room --room names */
+const worldModules: Record<WorldId, (search: string) => Promise<World>> = {
+  gallery: () => import('#src/worlds/gallery/index.ts').then(module => module.default),
+  knottingham: () => import('#src/worlds/knottingham/index.ts').then(module => module.default),
+  sandbox: search => import('#src/worlds/sandbox/load.ts').then(module => module.default(search)),
 }
 const videoSize = 2160
 /** how long a film lasts unless its camera path, --emphasis party or --end says otherwise, in seconds */
@@ -739,9 +739,10 @@ const main = async (options: RenderFusionValues) => {
   /** what the fusion’s portal shows as the result flips out, which --emphasis party keeps in view */
   const rolled = ingredient.orb?.partyEffect(seed)
   const effect = rolled && partyEffects[rolled]
-  // The room opens its world, like the Sandbox for its Cell, the gallery for any other.
-  const worldId = readWorld(`?${new URLSearchParams({room: text('room') ?? ''})}`)
-  const {default: world} = await worldModules[worldId]()
+  // The room opens its world, like the Sandbox for its Cell or Studio, the gallery for any other.
+  const search = `?${new URLSearchParams({room: text('room') ?? ''})}`
+  const worldId = readWorld(search)
+  const world = await worldModules[worldId](search)
   const work = await resolveWork(world, {
     portrait: text('portrait'),
     room: text('room'),

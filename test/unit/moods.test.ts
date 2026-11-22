@@ -22,7 +22,7 @@ import {moodSuppression, toggleMoodSuppression} from '../../src/moods/lib/moodSu
 import {orbs} from '../../src/orbs/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 /** a loop that only records what it was told */
 class RecordingLoop {

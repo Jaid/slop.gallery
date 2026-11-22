@@ -14,7 +14,7 @@ import BrassMaterial from '#src/lib/materials/BrassMaterial.ts'
 import ClearGlassMaterial from '#src/lib/materials/ClearGlassMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
 import JoineryWoodMaterial from '#src/lib/materials/JoineryWoodMaterial.ts'
-import sandbox from '#src/worlds/sandbox/index.ts'
+import sandbox from '#src/worlds/sandbox/cell.ts'
 
 const cell = sandbox.room('cell')
 const {layout} = cell.room

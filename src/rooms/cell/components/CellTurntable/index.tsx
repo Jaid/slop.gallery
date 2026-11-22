@@ -1,6 +1,6 @@
 import type {TurntablePose} from '#src/lib/diagnostics.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
-import type {SandboxTurntable} from '#src/worlds/sandbox/Sandbox.ts'
+import type {SandboxTurntable} from '#src/worlds/sandbox/CellSandbox.ts'
 import type {Group} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
@@ -15,7 +15,7 @@ import {AnimationClock} from '#src/lib/frozenTime.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {frameSize} from '#src/lib/placement/portraitSlots.ts'
 import useArtworkTexture from '#src/lib/useArtworkTexture.ts'
-import sandbox from '#src/worlds/sandbox/index.ts'
+import sandbox from '#src/worlds/sandbox/cell.ts'
 
 /** seconds the work takes to turn round once */
 const turnSeconds = 12

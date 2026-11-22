@@ -2,10 +2,10 @@ import type {Wall} from '#src/lib/placement/wallGeometry.ts'
 
 import {wallFace} from '#src/lib/gallery/architectureDimensions.ts'
 
+import {sandboxBaseboardHeight} from '../lib/sandboxFinish.ts'
+
 type Point = readonly [front: number, y: number]
 
-/** how high the whole baseboard stands, as high as the hall’s */
-export const cellBaseboardHeight = 0.2
 /** how far the plinth’s face stands out of the wall’s, and how high it rises */
 const plinth = {
   front: 0.03,
@@ -42,11 +42,11 @@ const grooveFront = toe - groove.depth
 const beadTop = plinth.top + groove.height + beadRadius * 2
 const capFront = grooveFront - fillet.depth
 const capBottom = beadTop + fillet.height
-/** how high the cap’s ogee rises, from the fillet back into the wall’s face, where the whole baseboard ends {@link cellBaseboardHeight} high */
-const capHeight = cellBaseboardHeight - capBottom
+/** how high the cap’s ogee rises, from the fillet back into the wall’s face, where the whole baseboard ends as high as the hall’s, {@link sandboxBaseboardHeight} */
+const capHeight = sandboxBaseboardHeight - capBottom
 /**
  * The baseboard of the Cell’s round spaces in the Arena’s black lacquer, low and finely molded instead of the two tall plain bands: a slim plinth with its toe on the floor, a shadow line cut in over it, a round bead catching the light, a narrow fillet and an ogee cap curving back into the velvet.
- * It stands {@link cellBaseboardHeight} high and less than 4 cm out of the wall’s face.
+ * It stands {@link sandboxBaseboardHeight} high and less than 4 cm out of the wall’s face.
  */
 const cellBaseboard: NonNullable<Wall['baseboardSection']> = [
   [toe, 0],

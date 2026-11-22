@@ -13,8 +13,10 @@ import {normalizePath} from 'vite'
  * It holds nothing that imports the page’s waiting module, as long as the worlds never import it themselves. Everything else a world imports only loads with it or the other lazy chunks that share it, like always.
  *
  * Add {@link worldChunksPlugin.groups} to the output’s code splitting groups, ahead of any catch-all group of the page, like thematic chunks’ `main`.
+ *
+ * @param worlds every module the page waits for, by world: its own, and any it awaits itself, like the Sandbox’s rooms’, which a dynamic import loads behind the same wait
  */
-export default function worldChunksPlugin(worlds: Readonly<Record<string, string>>) {
+export default function worldChunksPlugin(worlds: Readonly<Record<string, ReadonlyArray<string>>>) {
   /** what the page and any of the worlds import statically, all the way down */
   let shared: ReadonlySet<string> = new Set
   let root = process.cwd()
@@ -54,16 +56,18 @@ export default function worldChunksPlugin(worlds: Readonly<Record<string, string
       }
       const initial = closure([...this.getModuleIds()].filter(id => this.getModuleInfo(id)?.isEntry))
       const imported = new Set<string>
-      for (const [name, file] of Object.entries(worlds)) {
-        const id = normalizePath(resolve(root, file))
-        if (!this.getModuleInfo(id)) {
-          this.error(`The world ${name} has no module at ${file}.`)
-        }
-        if (initial.has(id)) {
-          this.error(`The page imports the world ${name} statically, so it can’t load on demand.`)
-        }
-        for (const module of closure([id])) {
-          imported.add(module)
+      for (const [name, files] of Object.entries(worlds)) {
+        for (const file of files) {
+          const id = normalizePath(resolve(root, file))
+          if (!this.getModuleInfo(id)) {
+            this.error(`The world ${name} has no module at ${file}.`)
+          }
+          if (initial.has(id)) {
+            this.error(`The page imports the world ${name} statically, so it can’t load on demand.`)
+          }
+          for (const module of closure([id])) {
+            imported.add(module)
+          }
         }
       }
       shared = imported.intersection(initial)

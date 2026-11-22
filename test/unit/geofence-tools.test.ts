@@ -9,7 +9,7 @@ import {bodyPose} from '../../src/lib/gallery/actions.ts'
 import getGeofences from '../../src/lib/webmcp/getGeofences.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 const worlds: ReadonlyArray<World> = [slopGallery, knottingham, sandbox]
 const place = bodyPose.place

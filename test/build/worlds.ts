@@ -9,8 +9,9 @@ import {outputListFile} from '../../src/lib/vite/outputListPlugin.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {defaultWorld, worldIds, worlds} from '../../src/worlds/index.ts'
+import worldModules from '../../src/worlds/modules.ts'
 
-// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery, every Knot material, the Knots’ announcements and the AI SDK in chunks of their own that only load on demand, no Branch runtime left and the game’s chunks and assets named by their content.
+// Verifies the production build in dist (bun run build first): one page for every world, with each world, each room of the gallery and each of the Sandbox’s two, every Knot material, the Knots’ announcements and the AI SDK in chunks of their own that only load on demand, no Branch runtime left and the game’s chunks and assets named by their content.
 // Files are named by their content hash, so the chunks and assets are looked up in the output list the build writes next to it.
 const directory = 'dist'
 const root = join(import.meta.dir, '..', '..')
@@ -54,7 +55,8 @@ const assetOf = (file: string) => assets.find(asset => asset.originalFileNames.i
 for (const name of ['main', 'sub', 'react', 'three', 'rapier', 'vendor', 'world-base']) {
   chunkNamed(name)
 }
-const worldChunks = new Map(worldIds.map(id => [id, chunkOf(`src/worlds/${id}/index.ts`).fileName]))
+/** the chunks of the modules the page waits for, by world */
+const worldChunks = new Map(worldIds.map(id => [id, worldModules[id].map(module => chunkOf(module).fileName)]))
 for (const {id, source, narration} of artworks) {
   for (const file of [source, narration]) {
     if (typeof file === 'string' && !assetOf(file)) {
@@ -114,7 +116,7 @@ if (chunks.some(chunk => chunk.modules.some(module => module.includes('/node_mod
 if (chunks.some(chunk => /^data\d*$/u.test(chunk.name))) {
   fail('The Knots’ metadata is split into a chunk per entry.')
 }
-const worldOf = (chunk: string) => worldIds.find(id => worldChunks.get(id) === chunk)
+const worldOf = (chunk: string) => worldIds.find(id => worldChunks.get(id)!.includes(chunk))
 for (const chunk of initial) {
   if (knotChunks.has(chunk) || worldOf(chunk)) {
     fail(`${knotChunks.get(chunk) ?? worldOf(chunk)} loads with the page instead of on demand.`)
@@ -133,7 +135,7 @@ if (!everySource.some(code => announcementPath.test(code))) {
 if (announcementPath.test(initialCode)) {
   fail('The Knots’ announcements load with the page.')
 }
-for (const [id, worldChunk] of worldChunks) {
+for (const [id, worldChunk] of worldChunks.entries().flatMap(([world, own]) => own.map(chunk => [world, chunk] as const))) {
   const needed = closure(worldChunk)
   // The page waits for its world in the main chunk, so a world importing it would wait for itself.
   if (needed.has(main)) {
@@ -161,7 +163,7 @@ const fillModules = ['src/components/LobbyWindow/index.tsx', 'src/components/Lod
 const chunkHolding = (module: string) => chunks.find(chunk => chunk.modules.includes(module)) ?? fail(`No chunk holds ${module}.`)
 /** the chunks holding the code of each room’s components, but for those filling openings */
 const roomChunks = new Map(slopGallery.rooms.map(({id}) => [id, new Set(chunks.filter(chunk => chunk.modules.some(module => module.startsWith(`src/rooms/${id}/components/`) && !fillModules.includes(module))).map(chunk => chunk.fileName))]))
-const gallery = new Set([...initial, ...closure(worldChunks.get('gallery')!), ...closure(chunkOf('src/components/GalleryScene/index.tsx').fileName)])
+const gallery = new Set([...initial, ...worldChunks.get('gallery')!.flatMap(chunk => [...closure(chunk)]), ...closure(chunkOf('src/components/GalleryScene/index.tsx').fileName)])
 for (const [part, held] of [...roomChunks, ...fillModules.map(module => [module, new Set([chunkHolding(module).fileName])] as const)]) {
   if (held.size === 0) {
     fail(`No chunk holds the ${part} room.`)
@@ -173,6 +175,21 @@ for (const [part, held] of [...roomChunks, ...fillModules.map(module => [module,
   const room = roomChunks.entries().find(([id, other]) => id !== part && !other.isDisjointFrom(needed))?.[0]
   if (room) {
     fail(`${part} loads the ${room} room with it.`)
+  }
+}
+// The Sandbox holds the Cell or the Studio, and loads nothing of the other: neither its module nor its scene.
+const sandboxRooms = ['cell', 'studio'].map(id => {
+  const scene = chunkOf(`src/rooms/${id}/components/${id[0].toUpperCase()}${id.slice(1)}Room/index.tsx`).fileName
+  return {
+    id,
+    held: new Set(chunks.filter(chunk => chunk.modules.some(module => module.startsWith(`src/rooms/${id}/`))).map(chunk => chunk.fileName)),
+    needed: new Set([...closure(chunkOf(`src/worlds/sandbox/${id}.ts`).fileName), ...closure(scene)]),
+  }
+})
+for (const {id, needed} of sandboxRooms) {
+  const other = sandboxRooms.find(room => room.id !== id)!
+  if (!other.held.isDisjointFrom(needed)) {
+    fail(`The Sandbox with the ${id} loads the ${other.id} with it.`)
   }
 }
 console.log(`Verified the build: ${initial.size} chunks load with the page, ${knotChunks.size} Knot materials, ${worldIds.length} worlds and ${roomChunks.size} rooms load on demand, and ${files.length - named.length} of ${files.length} files are named by their content.`)

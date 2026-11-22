@@ -14,7 +14,7 @@ import {portalIn} from '../../src/lib/gallery/fusion/portalFrame.ts'
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 import {offsetPosition} from '../../src/party_effects/lib/partySite.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 /** the game’s camera as slopGallery.fly turns it for the shot, square */
 const cameraOf = (shot: Shot) => {

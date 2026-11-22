@@ -18,7 +18,7 @@ import {orbs} from '../../src/orbs/index.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 const entries = Object.entries(frames)
 /** every size a work can come in: each slot ratio at each slot area, and imported images at both of the crop’s limits and square at each slot area, which rooms take their portrait areas from */

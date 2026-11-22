@@ -9,7 +9,7 @@ import TransformerChain from '../../src/lib/audio/transformers/TransformerChain.
 import {moods} from '../../src/moods/index.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 import audioFixture from './audioFixture.ts'
 
 /** A chain on the fixture’s context, with the timers on its clock that release transformers rung out, which end when told to, and its links’ gains. */

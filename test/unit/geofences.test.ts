@@ -25,7 +25,7 @@ import World from '../../src/worlds/base/World.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {worlds} from '../../src/worlds/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 /** how far apart the sampled columns stand along x and z, in meters; they stand in the middles of the cells of this grid, off the planes fences and floors end on */
 const columnSpacing = 0.75

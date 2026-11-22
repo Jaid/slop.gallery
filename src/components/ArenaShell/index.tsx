@@ -58,20 +58,24 @@ const faintPolish: ArenaPolish = {
   grazingStrength: 0,
 }
 
-/** The Arena’s walls, trim and ceiling, which one or more shells and their annexes can share. */
-export function useArenaSurfaces(): ArenaSurfaces {
-  const {surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
-  const plaster = useDisposable(useMemo(() => surfaceTexture('plaster', surfaceAnisotropy), [surfaceAnisotropy]))
-  const velvet = useDisposable(useMemo(() => new VelvetWallMaterial, []))
-  // Baseboards and cornice in black semi-gloss paint under a clear lacquer, which draws a crisp line of light along every edge.
-  const trim = useDisposable(useMemo(() => new MeshPhysicalNodeMaterial({
+/** The Arena’s baseboards and cornices in black semi-gloss paint under a clear lacquer, which draws a crisp line of light along every edge. */
+export function createArenaTrim() {
+  return new MeshPhysicalNodeMaterial({
     clearcoat: 1,
     clearcoatRoughness: 0.12,
     color: '#141315',
     envMapIntensity: 0.6,
     metalness: 0,
     roughness: 0.42,
-  }), []))
+  })
+}
+
+/** The Arena’s walls, trim and ceiling, which one or more shells and their annexes can share. */
+export function useArenaSurfaces(): ArenaSurfaces {
+  const {surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
+  const plaster = useDisposable(useMemo(() => surfaceTexture('plaster', surfaceAnisotropy), [surfaceAnisotropy]))
+  const velvet = useDisposable(useMemo(() => new VelvetWallMaterial, []))
+  const trim = useDisposable(useMemo(createArenaTrim, []))
   const ceiling = useDisposable(useMemo(() => {
     const material = new MeshStandardNodeMaterial({
       envMapIntensity: 0.7,

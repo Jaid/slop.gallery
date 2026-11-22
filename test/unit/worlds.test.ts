@@ -5,6 +5,7 @@ import {describe, expect, test} from 'bun:test'
 import {readFileSync} from 'node:fs'
 import {dirname, resolve} from 'node:path'
 
+import {choiceFrames} from '../../src/frames/lib/frameChoice.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {knotGalleryBounds} from '../../src/lib/gallery/knotGallery.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
@@ -16,8 +17,12 @@ import slopGallery from '../../src/worlds/gallery/index.ts'
 import galleryWalls from '../../src/worlds/gallery/walls.ts'
 import {defaultWorld, readWorld, selectWorld, worldIds, worldParameters, worlds} from '../../src/worlds/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
-import Sandbox from '../../src/worlds/sandbox/Sandbox.ts'
+import worldModules from '../../src/worlds/modules.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
+import CellSandbox from '../../src/worlds/sandbox/CellSandbox.ts'
+import loadSandbox from '../../src/worlds/sandbox/load.ts'
+import studio from '../../src/worlds/sandbox/studio.ts'
+import StudioSandbox from '../../src/worlds/sandbox/StudioSandbox.ts'
 
 const root = resolve(import.meta.dir, '../..')
 /** how many of the items come in each ratio */
@@ -33,6 +38,7 @@ describe('world selection', () => {
   test('opens the world holding the room ?room names, even next to another world’s parameters', () => {
     expect(selectWorld('?room=arena')).toBe('knottingham')
     expect(selectWorld('?room=cell')).toBe('sandbox')
+    expect(selectWorld('?room=studio')).toBe('sandbox')
     expect(selectWorld('?room=lobby')).toBe('gallery')
     expect(selectWorld('?room=cell&candidate=grok')).toBe('sandbox')
     expect(selectWorld('?room=arena&item=prop-orb-spook')).toBe('knottingham')
@@ -40,7 +46,7 @@ describe('world selection', () => {
     expect(readWorld('https://slop.gallery/?room=cell&spawn=center')).toBe('sandbox')
   })
   test('opens every world by each of its rooms', () => {
-    for (const instance of [slopGallery, knottingham, sandbox]) {
+    for (const instance of [slopGallery, knottingham, sandbox, studio]) {
       for (const room of instance.rooms) {
         expect(selectWorld(`?room=${room.id}`)).toBe(instance.id)
       }
@@ -76,10 +82,17 @@ describe('world selection', () => {
   test('outside a page, the current world is the gallery', () => {
     expect(world).toBe(slopGallery)
   })
+  test('the Sandbox holds the Studio for ?room=studio and the Cell otherwise', async () => {
+    expect(await loadSandbox('http://localhost/?room=studio')).toBe(studio)
+    expect(await loadSandbox('http://localhost/?room=studio&item=prop-orb-spook')).toBe(studio)
+    for (const url of ['http://localhost/', 'http://localhost/?room=cell', 'http://localhost/?item=prop-orb-spook', 'http://localhost/?room=studios']) {
+      expect(await loadSandbox(url)).toBe(sandbox)
+    }
+  })
 })
 describe('worlds', () => {
   test('match their catalog entries', () => {
-    for (const instance of [slopGallery, knottingham, sandbox]) {
+    for (const instance of [slopGallery, knottingham, sandbox, studio]) {
       // Only the browser storage reads the storage key, from the catalog.
       const {storageKey: _, ...info} = worlds[instance.id]
       expect(instance).toMatchObject(info)
@@ -137,7 +150,7 @@ describe('worlds', () => {
     expect(sandbox.wallDistance([x, cell.height + 1, z], [1, 0, 0])).toBe(Infinity)
   })
   test('with a single item, the Cell’s north wall opens into a round vestibule, part of it and reached through the arch alone', () => {
-    const single = new Sandbox(['prop-orb-halloween'])
+    const single = new CellSandbox(['prop-orb-halloween'])
     const cell = single.room('cell')
     const vestibule = cell.room.layout.vestibule!
     expect(cell.room.layout.plan).toBe('single')
@@ -165,6 +178,91 @@ describe('worlds', () => {
     // Straight through the arch, across the vestibule to the far side of its wall.
     const [, , z] = single.spawn.position
     expect(single.wallDistance([vestibuleX, 1, z], [0, 0, -1])).toBeGreaterThan(z - vestibuleZ + vestibule.radius - wallFace)
+  })
+  test('the Sandbox’s Studio is a single room, a floor 12 × 8 m between four walls 10 m high under a ceiling, its north-eastern corner the world’s origin, which holds its spawn, lit by the Cell’s chandelier lamp alone and the moon through a skylight, all its works framed in the Cell’s frame', () => {
+    const plain = new StudioSandbox(0)
+    expect(plain.id).toBe('sandbox')
+    expect(plain.rooms.map(room => room.id)).toEqual(['studio'])
+    const room = plain.room('studio')
+    const cell = sandbox.room('cell')
+    const [width, depth] = room.size
+    expect(room.title).toBe('Studio')
+    expect(width - wallFace * 2).toBeCloseTo(12, 12)
+    expect(depth - wallFace * 2).toBeCloseTo(8, 12)
+    expect(room.height).toBe(10)
+    expect(room.room.frame).toBe(choiceFrames(cell.room.frame!)[0])
+    expect(plain.artworks).toBe(slopGallery.artworks)
+    expect(room.mood).toBeUndefined()
+    expect(room.skybox).toBeNull()
+    expect(plain.skybox('night')).toBeNull()
+    expect(room.volumetricSun).toBe(cell.volumetricSun)
+    expect(room.map!.frame).toEqual([-width / 2, -depth / 2, width, depth])
+    // Where floor and the north and east walls’ faces meet.
+    for (const value of room.toWorld(room.room.corner)) {
+      expect(value).toBeCloseTo(0, 12)
+    }
+    expect(room.center[0]).toBeCloseTo(-width / 2 + wallFace, 12)
+    expect(room.center[1]).toBeCloseTo(depth / 2 - wallFace, 12)
+    // The Cell’s lamp over the middle of the floor, 5 m up.
+    const [chandelier] = sandbox.lamps()
+    expect(plain.lamps()).toEqual([{
+      ...chandelier,
+      id: 'studio-chandelier',
+      room: 'studio',
+      position: room.toWorld([0, 5, 0]),
+    }])
+    // Where the Cell’s spawn is, looking into the corner.
+    expect(room.room.spawn.position).toEqual(cell.room.spawn.position)
+    const [x, , z] = plain.spawn.position
+    expect(Math.atan2(x, z)).toBeCloseTo(plain.spawn.yaw, 9)
+    expect(plain.roomAt(plain.spawn.position)).toBe(room)
+    expect(plain.contains(plain.spawn.position)).toBe(true)
+    expect(plain.floorHeight(plain.spawn.position)).toBe(0)
+    expect(plain.placement.contains(plain.placement.recoveryPosition)).toBe(true)
+    expect(plain.walls.map(wall => [wall.id, wall.width, wall.height, wall.holes?.map(hole => hole.name) ?? [], wall.cornice])).toEqual([
+      ['studio-north', width, room.height, [], false],
+      ['studio-east', depth, room.height, [], false],
+      ['studio-south', width, room.height, [], false],
+      ['studio-west', depth, room.height, [], false],
+    ])
+    const [north, east, south, west] = plain.walls
+    expect(north.center[2]).toBeCloseTo(-wallFace, 12)
+    expect(east.center[0]).toBeCloseTo(wallFace, 12)
+    expect(south.center[2]).toBeCloseTo(depth - wallFace, 12)
+    expect(west.center[0]).toBeCloseTo(-width + wallFace, 12)
+    // Every corner’s trim is mitered.
+    expect(plain.walls.map(wall => wall.miters)).toEqual(plain.walls.map(() => [1, 1]))
+    // A body fits up to the ceiling over all of the floor, and nowhere past the walls.
+    expect(plain.contains([-1, 1, 1])).toBe(true)
+    expect(plain.contains([-width + 1, 1, depth - 1])).toBe(true)
+    expect(plain.contains([-5, room.height - 0.5, 5])).toBe(true)
+    expect(plain.contains([-5, room.height + 0.5, 5])).toBe(false)
+    expect(plain.contains([-width - 0.5, 1, 5])).toBe(false)
+    expect(plain.contains([-5, 1, depth + 0.5])).toBe(false)
+    expect(plain.contains([1, 1, 5])).toBe(false)
+    expect(plain.contains([-5, -1, 5])).toBe(false)
+    // Rays meet the walls on every side, and nothing over them.
+    expect(plain.wallDistance([-5, 1, 3], [1, 0, 0])).toBeGreaterThan(5)
+    expect(plain.wallDistance([-5, 1, 3], [1, 0, 0])).toBeLessThan(5.4)
+    expect(plain.wallDistance([-5, 1, 3], [0, 0, -1])).toBeLessThan(3.4)
+    expect(plain.wallDistance([-5, 1, 3], [-1, 0, 0])).toBeLessThan(width - wallFace * 2 - 5 + 0.4)
+    expect(plain.wallDistance([-5, 1, 3], [0, 0, 1])).toBeLessThan(depth - wallFace * 2 - 3 + 0.4)
+    expect(plain.wallDistance([-5, room.height + 1, 5], [1, 0, 0])).toBe(Infinity)
+  })
+  test('the Studio has a portrait slot for each ratio of the default works, every one a valid hanging spot with the other filled', () => {
+    const slots = studio.portraitSlots()
+    expect(Object.keys(ratios(slots)).toSorted()).toEqual(Object.keys(ratios(studio.artworks)).toSorted())
+    expect(Object.values(ratios(slots))).toEqual(Object.keys(ratios(slots)).map(() => 1))
+    const occupied = slots.map(asPortrait)
+    for (const slot of slots) {
+      const wall = studio.placement.wall(slot.wallId)!
+      expect(slot.rotation).toBe(wall.rotation)
+      const hanging = wallPosition(wall, wallCoordinates(wall, slot.position), slot.position[1])
+      for (const [axis, value] of slot.position.entries()) {
+        expect(value).toBeCloseTo(hanging[axis], 6)
+      }
+      expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, slot.id, slot.labelAbove)).toBe('')
+    }
   })
   test('the Sandbox’s walls have portrait slots, at most one for every default work of each ratio, every one a valid hanging spot with all the others filled', () => {
     const slots = sandbox.portraitSlots()
@@ -201,7 +299,7 @@ describe('worlds', () => {
   })
   test('every spawn stands just above its floor, never inside it', () => {
     const misplaced: Array<string> = []
-    for (const instance of [slopGallery, knottingham, sandbox]) {
+    for (const instance of [slopGallery, knottingham, sandbox, studio]) {
       for (const room of instance.rooms) {
         for (const [id, {position}] of [[room.id, room.spawn] as const, ...room.spawns().map(bookmark => [bookmark.id, bookmark] as const)]) {
           const clearance = position[1] - instance.floorHeight(position)
@@ -279,16 +377,22 @@ const staticImports = (files: ReadonlyArray<string>) => {
   }
   return seen
 }
-const worldModules = ['src/worlds/gallery/index.ts', 'src/worlds/knottingham/index.ts', 'src/worlds/sandbox/index.ts']
+const worldFiles = Object.values(worldModules).flat()
 test('world modules never import the current world, which waits for them to load', () => {
-  const imported = staticImports(worldModules)
+  const imported = staticImports(worldFiles)
   expect(imported.has(resolve(root, 'src/worlds/current.ts'))).toBe(false)
   expect(imported.size).toBeGreaterThan(50)
 })
 test('the page never imports a world itself, which only loads once its URL chose it', () => {
   const imported = staticImports(['src/main.tsx'])
-  expect(worldModules.filter(file => imported.has(resolve(root, file)))).toEqual([])
+  expect(worldFiles.filter(file => imported.has(resolve(root, file)))).toEqual([])
   expect(imported.has(resolve(root, 'src/worlds/current.ts'))).toBe(true)
+})
+test('the Sandbox with the Studio loads nothing of the Cell, and the one with the Cell nothing of the Studio', () => {
+  const rooms = (files: ReadonlyArray<string>) => new Set(staticImports(files).values().flatMap(file => /[/\\]src[/\\]rooms[/\\](\w+)[/\\]/u.exec(file)?.slice(1) ?? []))
+  expect(rooms(['src/worlds/sandbox/studio.ts', 'src/rooms/studio/components/StudioRoom/index.tsx'])).toEqual(new Set(['base', 'lib', 'studio']))
+  expect(rooms(['src/worlds/sandbox/cell.ts', 'src/rooms/cell/components/CellRoom/index.tsx'])).not.toContain('studio')
+  expect(rooms(['src/worlds/sandbox/cell.ts'])).toContain('cell')
 })
 test('Knottingham’s Arena holds its lobby, spectation and exhibition, without gallery props', async () => {
   const result = await Bun.build({

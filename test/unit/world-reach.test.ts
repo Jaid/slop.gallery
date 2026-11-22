@@ -16,7 +16,7 @@ import activations from '../../src/worlds/gallery/activations.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import SlopGallery from '../../src/worlds/gallery/SlopGallery.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 const reach = (search: string) => slopGallery.reachOf(`http://localhost/${search}`)
 const allRooms = slopGallery.rooms.map(room => room.id)

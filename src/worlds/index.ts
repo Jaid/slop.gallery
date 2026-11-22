@@ -48,10 +48,10 @@ export const worldParameters = {
   sandbox: ['item', 'turntable'],
 } satisfies Record<typeof otherWorlds[number], ReadonlyArray<string>>
 
-/** the ids of the rooms of every world but the gallery, by that world, which open it when `?room` names one: Knottingham’s Arena and the Sandbox’s Cell */
+/** the ids of the rooms of every world but the gallery, by that world, which open it when `?room` names one: Knottingham’s Arena and the Sandbox’s Cell and Studio, of which the Sandbox holds only the one it opens with */
 const worldRooms = {
   knottingham: ['arena'],
-  sandbox: ['cell'],
+  sandbox: ['cell', 'studio'],
 } satisfies Record<typeof otherWorlds[number], ReadonlyArray<string>>
 
 /** A named room takes precedence over a world-specific parameter. */

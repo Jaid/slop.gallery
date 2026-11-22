@@ -7,7 +7,7 @@ import {introDirection, readIntro} from '../../src/lib/gallery/intro.ts'
 import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
-import sandbox from '../../src/worlds/sandbox/index.ts'
+import sandbox from '../../src/worlds/sandbox/cell.ts'
 
 const orbit = slopGallery.introOrbit
 const samples = Array.from({length: 360}, (_, second) => orbit.pose(second / 6))
