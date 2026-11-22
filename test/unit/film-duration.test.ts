@@ -31,8 +31,8 @@ const spawn = {
   roll: 0,
   fov: 60,
 }
-const shot = (clock: FilmRecipeClock, stitchedStart: number, startingFrame = 1, clip = 0) => {
-  const take = clock.take(clip, stitchedStart, startingFrame)
+const shot = (clock: FilmRecipeClock, stitchedStart: number, startingFrame = 1, clip = 0, cycle?: number) => {
+  const take = clock.take(clip, stitchedStart, startingFrame, cycle)
   return Array.from({length: take.frameCount}, (_, frame) => ({
     yaw: sampleRecipe(recipe, take.secondsAt(frame), spawn).yaw,
     tools: take.callsAt(frame)?.map(call => call.name),
@@ -59,6 +59,14 @@ test('short stitched takes continue the flight, with the same camera and tools o
   expect(takes[2].flatMap(frame => frame.tools ?? [])).toEqual(['last'])
   const full = new FilmRecipeClock(recipe, 2)
   expect(shot(full, 6)).toEqual(shot(full, 0))
+})
+test('in a looping movie the flight wraps round, so the last take fades into the first at the same moment', () => {
+  const clock = new FilmRecipeClock(recipe, 2, [2.5], 3)
+  const timeline = new StitchTimeline(clock.clipFrames, 2, 0.5, 1, {loop: true})
+  expect(timeline.frameCount).toBe(12)
+  const takes = [0, 1, 2].map(clip => shot(clock, timeline.clipStart(clip), 1, clip, timeline.frameCount))
+  expect(takes.map(frames => frames.map(frame => frame.yaw))).toEqual([[0, 10, 20, 30, 40], [40, 50, 60, 60, 60], [60, 60, 60, 60, 0]])
+  expect(takes[2].at(-1)).toEqual(takes[0][0])
 })
 test('duration requires positive finite seconds and can give a still recipe a recording length', () => {
   for (const invalid of [-1, 0, NaN, Infinity]) {

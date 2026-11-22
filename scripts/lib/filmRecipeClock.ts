@@ -40,11 +40,13 @@ export class FilmRecipeClock {
     })
   }
 
-  take(clip: number, stitchedStart: number, startingFrame: number) {
+  /** With `cycle`, the frames of a movie that loops, a continuous flight wraps round to its start there, so the last clip’s crossfade into the first shows the same moment on both sides. */
+  take(clip: number, stitchedStart: number, startingFrame: number, cycle?: number) {
     const frameCount = this.clipFrames[clip]
-    const start = this.#continueAcrossClips ? stitchedStart : 0
+    const continuous = this.#continueAcrossClips
+    const start = continuous ? stitchedStart : 0
     const localFrame = (index: number) => (index + startingFrame - 1) % frameCount
-    const recipeFrame = (index: number) => start + localFrame(index)
+    const recipeFrame = (index: number) => (cycle && continuous ? (start + localFrame(index)) % cycle : start + localFrame(index))
     return {
       frameCount,
       // World animations keep running even when each take repeats the camera recipe.

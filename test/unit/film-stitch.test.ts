@@ -67,6 +67,47 @@ test('the overlap shortens the movie once per cut and blends picture and audio a
     await fs.remove(scratch)
   }
 })
+test('a looping movie also fades the last clip into the first, starting where the first clip plays alone, and every starting frame before that fade rotates it', async () => {
+  const scratch = await fs.mkdtemp(join(tmpdir(), 'film-loop-test-'))
+  try {
+    const render = async (startingFrame: number) => {
+      const timeline = new StitchTimeline([6, 6, 6], 2, 1, startingFrame, {loop: true})
+      const frames: Array<number> = []
+      await timeline.stitch(async (clip, write) => {
+        for (let frame = 0; frame < 6; frame++) {
+          await write(Uint8Array.of(clip * 40 + frame))
+        }
+        timeline.mix(clip, {
+          channels: 1,
+          sampleRate: 2,
+          samples: Float32Array.from({length: 6}, () => clip + 1),
+        })
+      }, async pixels => {
+        frames.push(pixels[0])
+      }, scratch)
+      expect(frames.length).toBe(timeline.frameCount)
+      return {
+        frames,
+        samples: [...timeline.audio!.samples],
+      }
+    }
+    const original = await render(1)
+    expect(original.frames).toEqual([2, 3, 13, 32, 42, 43, 53, 72, 82, 83, 63, 22])
+    expect(original.samples).toEqual([1, 1, 1.25, 1.75, 2, 2, 2.25, 2.75, 3, 3, 2.5, 1.5])
+    for (let offset = 1; offset < 10; offset++) {
+      const shifted = await render(offset + 1)
+      expect(shifted.frames).toEqual([...original.frames.slice(offset), ...original.frames.slice(0, offset)])
+      expect(shifted.samples).toEqual([...original.samples.slice(offset), ...original.samples.slice(0, offset)])
+    }
+    expect(() => new StitchTimeline([6, 6, 6], 2, 1, 11, {loop: true})).toThrow('between 1 and 10')
+    expect(() => new StitchTimeline([4, 8, 4], 30, 3 / 30)).not.toThrow()
+    expect(() => new StitchTimeline([4, 8, 4], 30, 3 / 30, 1, {loop: true})).toThrow('room for 2 frames')
+    const hardCuts = new StitchTimeline([6, 6], 2, 0, 1, {loop: true})
+    expect(hardCuts.loops).toBe(false)
+  } finally {
+    await fs.remove(scratch)
+  }
+})
 test('hard cuts keep all frames and excessive overlaps fail before recording', () => {
   const timeline = new StitchTimeline([3, 3, 3, 3], 30, 0)
   expect(timeline.frameCount).toBe(12)

@@ -29,6 +29,8 @@ const avifDefaults = {
   preset: 3,
 }
 /** The format the options write, from the extension of --output-file, .jxl without one. */
+/** the formats that play over and over, where the last clip crossfades into the first */
+const loopingFormats = new Set(['avif', 'jxl'])
 const formatOf = (options: Pick<FilmValues, 'output-file'>) => frameFormat(options['output-file'] ?? 'film.jxl')
 /** Its neighbors are everything a camera in its start room can see, while the rest never loads. A flight into a room beyond them sees the void there, which --world_reach all fills. */
 const filmWorldReach = 'neighbors'
@@ -46,7 +48,7 @@ ${galleryHelp(filmHeight, {
   worldReach: filmWorldReach,
 })}
   --seed-range <min..max> inclusive search range for seed wildcards. Default: ${defaultSeedRange} (the default environment and all seeds a game rolls). Literal seeds and brace expansions are coerced like ?seed, independent of the search range
-  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). At most as long as the first and the last clip and half as long as any clip between them
+  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). In the looping .avif and .jxl, the last clip fades into the first as well: the film starts once the first clip plays alone, ends in that crossfade and is one crossfade shorter. At most half as long as any clip, or as long as the first and the last clip in the other formats
   --list                  print the target and seed of each clip before seam rotation and exit without recording
   --output-file <file>    the extension picks the format. Default: out/film/<world>-<timestamp>.jxl
                           .jxl  animated JPEG XL
@@ -472,7 +474,7 @@ const main = async (overrides: FilmOptions, recipe?: Recipe) => {
   const {encoding, format} = film
   const {fps, height, output, width} = encoding
   const [startingFrame] = parseNumbers(options['starting-frame'], 'starting-frame', [1])
-  const timeline = new StitchTimeline(film.clock.clipFrames, fps, Number(options.crossfade ?? 0), startingFrame)
+  const timeline = new StitchTimeline(film.clock.clipFrames, fps, Number(options.crossfade ?? 0), startingFrame, {loop: loopingFormats.has(format)})
   const {frameCount} = timeline
   await fs.mkdir(dirname(output), {recursive: true})
   const scratch = timeline.fadeFrames || timeline.offset ? await fs.mkdtemp(join(tmpdir(), 'film-stitch-')) : undefined
@@ -489,7 +491,7 @@ const main = async (overrides: FilmOptions, recipe?: Recipe) => {
         ...options,
         ...input,
       }, defaultHeight)
-      const take = film.clock.take(clip, timeline.clipStart(clip), timeline.recipeStart)
+      const take = film.clock.take(clip, timeline.clipStart(clip), timeline.recipeStart, timeline.loops ? frameCount : undefined)
       const recording = await captureFilm(film, setup, take, source => {
         if (size && (size.width !== source.width || size.height !== source.height)) {
           throw new Error(`Canvas size changed between takes: ${size.width}×${size.height} → ${source.width}×${source.height}.`)
