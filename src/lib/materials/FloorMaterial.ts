@@ -82,14 +82,11 @@ export function renderFloorReflection(pass: ReflectionPass) {
  *
  * With a blur radius, it averages Gaussian-weighted taps over a disk around the point instead. Each tap reads a mip with about two texels between neighboring taps, fine enough that its texels don’t show as blocks, and the disk turns by a noise that changes per pixel and frame, so the antialiasing’s history averages the gaps between the taps into a smooth blur.
  */
-function sampleMirror(reflection: Reflection, level: Node<'float'>, gaussianBlur: number) {
+function sampleMirror(reflection: Reflection, level: Node<'float'>, gaussianBlur: Node<'float'>) {
   const smooth = textureBicubicLevel(reflection, level)
-  if (!(gaussianBlur > 0)) {
-    return smooth
-  }
   return Fn(() => {
     const result = vec4(0).toVar('floorMirror')
-    const radius = floorReflectionBlur.mul(gaussianBlur / 1080).toVar('floorMirrorBlur')
+    const radius = floorReflectionBlur.mul(gaussianBlur).div(1080).toVar('floorMirrorBlur')
     If(radius.greaterThan(0), () => {
       const size = vec2(reflection.size(int(0)) as Node<'ivec2'>)
       const tapLevel = radius.mul(size.y).mul(1 / Math.sqrt(blurTaps)).max(1).log2().max(level)
@@ -245,6 +242,10 @@ export default class FloorMaterial extends MeshStandardNodeMaterial {
   /** 1 while the shared reflection mirrors this floor’s plane, 0 while it mirrors a floor at another height */
   readonly mirrored = uniform(1)
   readonly reflection: Reflection | null
+  /** the radius of the Gaussian blur over this floor’s mirror, in pixels of a 1080-row image, as made unless set anew; 0 leaves it unblurred */
+  readonly reflectionBlur = uniform(0)
+  /** factor on this floor’s reflectance, 1 as made */
+  readonly reflectionStrength = uniform(1)
   /** the plane of the shared reflection, to be laid at the floor’s surface facing up the local z axis */
   readonly reflectionTarget: Object3D | null
 
@@ -266,9 +267,10 @@ export default class FloorMaterial extends MeshStandardNodeMaterial {
     this.reflection = this.reflectionTarget ? acquireReflection(this) : null
     if (this.reflection && reflection) {
       const grazing = normalView.dot(positionViewDirection).abs().oneMinus().pow(5)
-      const reflectance = grazing.mul(reflection.grazingStrength).mul(floorReflectionGrazing).add(reflection.strength).mul(reflection.mask ?? float(1)).mul(floorReflectionStrength).mul(this.mirrored)
+      const reflectance = grazing.mul(reflection.grazingStrength).mul(floorReflectionGrazing).add(reflection.strength).mul(reflection.mask ?? float(1)).mul(floorReflectionStrength).mul(this.reflectionStrength).mul(this.mirrored)
       const loss = typeof reflection.loss === 'number' ? float(reflection.loss) : reflection.loss
-      const mirror = sampleMirror(this.reflection, loss.mul(floorReflectionLevel).add(reflectionLevelBias).max(0), reflection.gaussianBlur ?? 0)
+      this.reflectionBlur.value = reflection.gaussianBlur ?? 0
+      const mirror = sampleMirror(this.reflection, loss.mul(floorReflectionLevel).add(reflectionLevelBias).max(0), this.reflectionBlur)
       this.outputNode = vec4(mix(output.rgb, mirror.rgb, reflectance), output.a)
     }
   }
