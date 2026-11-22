@@ -27,7 +27,7 @@
     "preview": "bun run vite preview --host 127.0.0.1",
     "readme": "bun tldw",
     "test": "bun test --max-concurrency 1 ./test/unit",
-    "test:baking": "bun run --cwd packages/vite-plugin-bake-three test",
+    "test:baking": "bun run --cwd packages/vite-plugin-bake-three test:all",
     "test:capture-session": "bun run --cwd packages/capture-session test",
     "test:knot-materials": "bun run --cwd packages/knot-materials test",
     "test:live": "bun run build && LIVE_TEST=true bun test ./test/live.test.ts",

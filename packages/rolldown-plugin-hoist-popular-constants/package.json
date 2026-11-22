@@ -15,7 +15,8 @@
     ".": "./src/main.ts"
   },
   "scripts": {
-    "test": "bun test --max-concurrency 1 ./test ./packages/babel-plugin-hoist-popular-constants/test"
+    "test": "bun test --max-concurrency 1 ./test",
+    "test:all": "bun test --max-concurrency 1 ./test ./packages/babel-plugin-hoist-popular-constants/test"
   },
   "dependencies": {
     "babel-plugin-hoist-popular-constants": "workspace:*"

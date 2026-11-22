@@ -15,7 +15,8 @@
     "./r3f-static-rendering/runtime": "./src/r3fStaticRenderingRuntime.ts"
   },
   "scripts": {
-    "test": "bun test --max-concurrency 1 ./test && bun run --cwd packages/vite-plugin-bake-core test && bun run --cwd packages/vite-plugin-bake-three-geometry test && bun run --cwd packages/vite-plugin-bake-static-textures test && bun run --cwd packages/vite-plugin-r3f-static-rendering test",
+    "test": "bun test --max-concurrency 1 ./test",
+    "test:all": "bun run test && bun run --cwd packages/vite-plugin-bake-core test && bun run --cwd packages/vite-plugin-bake-three-geometry test && bun run --cwd packages/vite-plugin-bake-static-textures test && bun run --cwd packages/vite-plugin-r3f-static-rendering test",
     "test:browser": "bun packages/vite-plugin-r3f-static-rendering/test/browser/run.ts"
   },
   "dependencies": {

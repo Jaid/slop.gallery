@@ -15,7 +15,8 @@
     ".": "./src/main.ts"
   },
   "scripts": {
-    "test": "bun test --max-concurrency 1 ./test ./packages/babel-plugin-bake-branch-component/test"
+    "test": "bun test --max-concurrency 1 ./test",
+    "test:all": "bun test --max-concurrency 1 ./test ./packages/babel-plugin-bake-branch-component/test"
   },
   "dependencies": {
     "babel-plugin-bake-branch-component": "workspace:*"
