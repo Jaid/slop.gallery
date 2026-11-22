@@ -31,7 +31,7 @@ await snap({
 
 ##### cinematic render
 
-To showcase a scene in the best possible way with no respect to performance, you can snap an 8640×4320 canvas and save in 3840×2160 using high-quality downscaling (linear-light lanczos from ImageMagick).
+To showcase a scene in the best possible way with no respect to performance, you can snap an 7680×4320 canvas and save in 3840×2160 using high-quality downscaling (linear-light lanczos from ImageMagick).
 
 ```TypeScript
 import snap from './scripts/snap.ts'
@@ -91,8 +91,6 @@ await snap({
 
 ##### portrait
 
-`portraits: 1` hangs a single default work instead of the usual selection, drawn by the seed: with seed 0, the Cell hangs Mona Coo Lisa in the middle of its west wall, which this view faces straight on, with its placard.
-
 ```TypeScript
 import snap from './scripts/snap.ts'
 
@@ -107,8 +105,6 @@ await snap({
 ```
 
 ##### custom portraits
-
-`add_portrait` brings in an image from a URL, in JXL, PNG, JPEG, WebP, AVIF, GIF or SVG. With `portraits: 0`, the Cell starts empty, and these four hang around its north-east corner, each at a spot on a wall in its own aspect, at the room’s frame area, in the frame and on the canvas material each names: `x` runs along the wall from its middle, to the right as seen from the room, and `y` up from its foot. Instead, the target can be a portrait slot as `{slot}` or a world position as `{position: {x, y, z}}`, from which it falls.
 
 ```TypeScript
 import snap from './scripts/snap.ts'
@@ -133,7 +129,7 @@ await snap({
     canvas_material: 'rag'
   }),
   call.add_portrait({
-    image: 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/icon.svg',
+    image: 'https://github.com/jaid/slop.gallery/raw/HEAD/assets/icon.svg',
     target: {wall_id: 'cell-north', position: {x: 7.6, y: 2}},
     title: 'Slop Gallery',
     frame: 'maelstrom',
@@ -188,6 +184,7 @@ await snap({
   position: '3.8,2.6,-27',
   angle: '-50,-46',
   fov: 90,
+  portraits: 0,
   'text-overlays': true // Specifies to capture the page rather than the canvas because this is where the text overlays come from
 }, [
   call.add_drawing({type: 'line', from: [3.5149, 0, -31.8], to: [3.5149, 0, -28]}),
@@ -203,19 +200,36 @@ await snap({
 
 ##### simple film
 
+This is the simplest way of filming. It flies the camera along the keyframes given as the second argument and saves the film as a looping animated AVIF.
+
+```TypeScript
+import film from './scripts/film.ts'
+
+await film({
+  target: 'dist',
+  'output-file': 'out/film/fountain.avif'
+}, [
+  {time: 4, orbit: {from: [0, 3.4, -6], focus: [0, 1.2, -12]}} // one full counterclockwise turn around the Lobby’s fountain in 4 seconds
+])
+```
+
+##### sculpture film
+
 ```TypeScript
 import film from './scripts/film.ts'
 
 const sculpture = [14.05, 2.1, -26.4]
-const left = [9.246, 1.8, -24.41]
-const right = [18.854, 1.8, -24.41]
+const left = [10.55, 2, -20.34]
+const right = [17.55, 2, -20.34]
 
 await film({
   target: 'dist',
-  seed: 3, // Antiphon
-  'output-file': '~/sculpture.avif'
+  width: 1080,
+  height: 1080,
+  world_reach: 'room', // mount only the Salon, the camera never sees out of it
+  'output-file': 'temp/sculpture.avif'
 }, [
-  {time: 6, orbit: {from: left, to: right, focus: sculpture}, tween: 'easeInOutSine', fov: 55},
+  {time: 6, orbit: {from: left, to: right, focus: sculpture}, tween: 'easeInOutSine', fov: 38},
   {time: 12, orbit: {from: right, to: left, focus: sculpture}, tween: 'easeInOutSine'}
 ])
 ```
@@ -226,49 +240,99 @@ await film({
 import film from './scripts/film.ts'
 
 const fire = [-25, -4.04, -30.8]
-const left = [-27.415, -3.4, -32.975]
-const right = [-22.585, -3.4, -32.975]
+const left = [-27.15, -2.54, -38.83]
+const right = [-22.85, -2.54, -38.83]
 
 await film({
   target: 'dist',
-  seed: '{1..8}', // a minimatch pattern, here seeds 1 to 8, one clip each, stitched in this order
+  seed: '{0..7}', // minimatch pattern
   room: 'lodge',
-  duration: 1.85, // seconds per clip; shorter than the keyframes, so one continuous flight runs through all eight seeds while the fire burns on
-  crossfade: 0.4, // seconds each seed fades into the next, here 8 × 1.85 − 7 × 0.4 = 12 s in total
+  duration: 1.5, // seconds per clip, here 8 × 1.5 = 12 seconds in total
+  crossfade: 0.4, // seconds each seed fades into the next, the last one back into the first
   'output-file': 'out/film/lodge-fire-seeds.avif'
-}, [ // camera keyframes: an arc in front of the fireplace in 6 s, then back
-  {time: 6, orbit: {from: left, to: right, focus: fire}, tween: 'easeInOutSine', fov: 48},
+}, [
+  {time: 6, orbit: {from: left, to: right, focus: fire}, tween: 'easeInOutSine'},
   {time: 12, orbit: {from: right, to: left, focus: fire}, tween: 'easeInOutSine'}
 ])
 ```
 
-##### hatchet growth
+##### switching the build in one movie
+
+The target field can be an array of build folders. Each will be active for the specified clip duration and then continue filming keyframes defined in the recipe (the second `film()` argument). This is useful to have smooth camera motion through the world while showing off changes – in this example case a hatchet with its size doubled.
+
+```TypeScript
+import {Lang, parse} from '@ast-grep/napi'
+
+import film from './scripts/film.ts'
+
+await Bun.$`bun run build`
+await using worktree = {
+  folder: 'temp/worktree/hatchet',
+  async [Symbol.asyncDispose]() { // Removes the worktree once the script ends, also after an error
+    await Bun.$`git worktree remove --force ${this.folder}`
+  }
+}
+await Bun.$`git worktree add --detach ${worktree.folder}`
+const file = worktree.folder + '/src/lib/gallery/curios/hatchet/Hatchet.ts'
+const code = await Bun.file(file).text()
+const ast = parse(Lang.TypeScript, code).root()
+const geometries = ast.findAll({rule: {pattern: {context: '({geometry: $GEOMETRY})', selector: 'pair'}}}).map(pair => pair.getMatch('GEOMETRY')) // the geometries of the hatchet’s head and haft
+await Bun.write(file, ast.commitEdits(geometries.map(geometry => geometry.replace(`${geometry.text()}.scale(2, 2, 2)`)))) // scales both 2×
+await Bun.$`bun install && bun run build`.cwd(worktree.folder)
+
+const builds = ['dist', worktree.folder + '/dist']
+const wide = {yaw: 180, pitch: -6, fov: 45}
+const close = {yaw: 161.7, pitch: -9.5, fov: 32} // aimed at the hatchet
+
+await film({
+  target: [...builds, ...builds], // one clip per build in this order: dist, big, dist, big
+  room: 'lodge',
+  world_reach: 'room',
+  duration: [2, 3, 2, 3], // seconds of each clip, so the zoom in (4–5 seconds) and out (9–10 seconds) both happen with the big hatchet
+  scale: 2,
+  'output-file': 'out/film/large_hatchet.avif'
+}, [
+  {time: 0, position: [-25.8, -3.66, -33.62], ...wide},
+  {time: 4, ...wide},
+  {time: 5, ...close, tween: 'easeInOutSine'},
+  {time: 9, ...close},
+  {time: 10, ...wide, tween: 'easeInOutSine'}
+])
+```
+
+##### hanging a portrait
+
+Keyframes can run the app’s WebMCP tools at their time, here `add_portrait` a second in.
 
 ```TypeScript
 import film from './scripts/film.ts'
 
-const worktree = 'temp/hatchet_growth'
-await Bun.$`bun run build` // dist, with the hatchet as it is
-await Bun.$`git worktree add --detach ${worktree}` // a second checkout of the last commit, for a build with the hatchet twice the size
-const hatchetFile = `${worktree}/src/lib/gallery/curios/hatchet/Hatchet.ts`
-const hatchet = await Bun.file(hatchetFile).text()
-await Bun.write(hatchetFile, hatchet.replaceAll('Geometry(),', 'Geometry().scale(2, 2, 2),')) // scales the hatchet’s head and haft 2×
-await Bun.$`bun install && bun run build`.cwd(worktree)
-
 await film({
-  target: ['dist', `${worktree}/dist`], // one clip per build, in this order
-  seed: 1,
-  room: 'lodge',
-  duration: 2, // seconds per clip, as a single keyframe has no length of its own
-  'output-file': 'out/film/hatchet-growth.avif'
-}, [ // camera keyframes: a fixed view of the hatchet hanging at the fireplace
-  {time: 0, position: [-25.8, -3.66, -33.62], yaw: 180, pitch: -6, fov: 45}
+  target: 'dist',
+  room: 'cell',
+  portraits: 0, // start with empty walls
+  width: 720,
+  height: 720,
+  scale: 2, // render at twice the size and scale down, for smoother edges
+  duration: 3.5, // seconds, longer than the keyframes, which end at 1 s
+  crossfade: 0.5, // seconds the end fades back into the empty wall at the beginning, so the film loops
+  'output-file': 'out/film/hanging.avif'
+}, [
+  {time: 0, position: [7.88, 2.3, -1.14], yaw: 30, pitch: -7, fov: 42}, // 4.2 m off the wall, 30° to the right of facing it
+  {time: 1, tools: {add_portrait: {
+    image: 'https://github.com/jaid.png',
+    target: {wall_id: 'cell-north', position: {x: 5.78, y: 2}},
+    title: 'Jaid',
+    frame: 'kumiko',
+    canvas_material: 'karakami',
+    hanging_animation: true // fly onto the wall like a work the player hangs instead of appearing there
+  }}}
 ])
-
-await Bun.$`git worktree remove --force ${worktree}`
 ```
 
 ##### fusion film
+
+20 seconds AV1 + Opus to out/fusion/*.webm
 
 ```TypeScript
 import renderFusion from './scripts/renderFusion.ts'
