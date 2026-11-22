@@ -157,7 +157,7 @@ describe('orbit keyframes', () => {
     expect(halfway.position).toEqual([0, 2, 2])
     expect(halfway.yaw).toBe(0)
     expect(halfway.pitch).toBeCloseTo(-45)
-    expect(sampleRecipe(recipe, 4, fallback).position).toEqual(orbit.to)
+    expect(sampleRecipe(recipe, 4, fallback).position).toEqual(orbit.to!)
     expect(() => parseRecipe([{
       time: 4,
       orbit: {
@@ -192,6 +192,28 @@ describe('orbit keyframes', () => {
     expect(halfway.position[2]).toBeCloseTo(1)
     expect(halfway.yaw).toBeCloseTo(-315)
     expect(sampleRecipe(recipe, 7, fallback).position).toEqual([-1, 1, -1])
+  })
+  test('an orbit without to ends where it starts', () => {
+    const orbit: CameraOrbit = {
+      from: [-1, 1, -1],
+      focus: [0, 1, 0],
+      turns: -1,
+    }
+    const circling = parseRecipe([{
+      time: 4,
+      orbit,
+    }])
+    const explicit = parseRecipe([{
+      time: 4,
+      orbit: {
+        ...orbit,
+        to: orbit.from,
+      },
+    }])
+    for (const time of [0, 1, 2, 3, 4]) {
+      expect(sampleRecipe(circling, time, fallback)).toEqual(sampleRecipe(explicit, time, fallback))
+    }
+    expect(sampleRecipe(circling, 2, fallback).position[2]).toBeCloseTo(1)
   })
   test('rejects incomplete, ambiguous and degenerate arcs at parse time', () => {
     const orbit = {

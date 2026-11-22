@@ -45,8 +45,8 @@ export type CameraOrbit = {
   from: Vec3
   /** easing for eye height; defaults to the keyframe’s tween */
   heightTween?: Tween
-  /** world-space eye position at the end of the arc */
-  to: Vec3
+  /** world-space eye position at the end of the arc; defaults to from, which with turns circles back to it */
+  to?: Vec3
   /** whole revolutions to add to the shortest arc, positive toward increasing yaw */
   turns?: number
 }
@@ -110,8 +110,8 @@ export const parseRecipe = (input: unknown): Recipe => {
       throw new Error(`${at} needs position as [x, y, z] in meters.`)
     }
     if (orbit !== undefined) {
-      if (!isRecord(orbit) || !isVec3(orbit.from) || !isVec3(orbit.to) || !isVec3(orbit.focus)) {
-        throw new Error(`${at} needs orbit.from, orbit.to and orbit.focus as [x, y, z] in meters.`)
+      if (!isRecord(orbit) || !isVec3(orbit.from) || !isVec3(orbit.focus) || orbit.to !== undefined && !isVec3(orbit.to)) {
+        throw new Error(`${at} needs orbit.from and orbit.focus, and orbit.to if given, as [x, y, z] in meters.`)
       }
       for (const key of Object.keys(orbit)) {
         if (!['focus', 'from', 'heightTween', 'to', 'turns'].includes(key)) {
@@ -128,7 +128,7 @@ export const parseRecipe = (input: unknown): Recipe => {
         throw new Error(`${at}: an orbit ends after time 0 and supplies its own position, yaw and pitch.`)
       }
       const [x, , z] = orbit.focus
-      if ([orbit.from, orbit.to].some(eye => eye[0] === x && eye[2] === z)) {
+      if ([orbit.from, orbit.to ?? orbit.from].some(eye => eye[0] === x && eye[2] === z)) {
         throw new Error(`${at}: each orbit endpoint needs a nonzero horizontal distance from its focus.`)
       }
     }
@@ -161,7 +161,7 @@ export const recipeDuration = (recipe: Recipe) => recipe.at(-1)!.time
 type OrbitPose = Pick<Shot, 'pitch' | 'position' | 'yaw'>
 const isOrbitProperty = (property: keyof Shot): property is keyof OrbitPose => property !== 'roll' && property !== 'fov'
 /** Interpolate in cylindrical coordinates around the focus. This keeps a level orbit level and a constant-radius orbit circular. */
-const sampleOrbit = ({from, to, focus, turns = 0}: CameraOrbit, t: number, heightT = t): OrbitPose => {
+const sampleOrbit = ({from, to = from, focus, turns = 0}: CameraOrbit, t: number, heightT = t): OrbitPose => {
   const [x, y, z] = focus
   const start = Math.atan2(from[0] - x, from[2] - z)
   const difference = Math.atan2(to[0] - x, to[2] - z) - start
