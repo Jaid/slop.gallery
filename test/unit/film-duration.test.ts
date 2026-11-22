@@ -50,18 +50,24 @@ test('a short take trims camera motion and tool calls, and a longer take holds t
   expect(shot(long, 0, 7)).toEqual([...first.slice(6), ...first.slice(0, 6)])
 })
 test('short stitched takes continue the flight, with the same camera and tools on both sides of a crossfade', () => {
-  const clock = new FilmRecipeClock(recipe, 2, [2], 3)
+  const clock = new FilmRecipeClock(recipe, 2, [2], 3, {crossfade: 0.5})
+  expect(clock.clipFrames).toEqual([5, 5, 4])
   const timeline = new StitchTimeline(clock.clipFrames, 2, 0.5)
+  expect(timeline.frameCount).toBe(12)
   const takes = [0, 1, 2].map(clip => shot(clock, timeline.clipStart(clip), 1, clip))
-  expect(takes.map(frames => frames.map(frame => frame.yaw))).toEqual([[0, 10, 20, 30], [30, 40, 50, 60], [60, 60, 60, 60]])
+  expect(takes.map(frames => frames.map(frame => frame.yaw))).toEqual([[0, 10, 20, 30, 40], [40, 50, 60, 60, 60], [60, 60, 60, 60]])
   expect(takes[0].at(-1)).toEqual(takes[1][0])
   expect(takes[1].at(-1)).toEqual(takes[2][0])
-  expect(takes[2].flatMap(frame => frame.tools ?? [])).toEqual(['last'])
+  expect(takes.map(frames => frames.flatMap(frame => frame.tools ?? []))).toEqual([['first'], ['second', 'last'], []])
   const full = new FilmRecipeClock(recipe, 2)
   expect(shot(full, 6)).toEqual(shot(full, 0))
 })
 test('in a looping movie the flight wraps round, so the last take fades into the first at the same moment', () => {
-  const clock = new FilmRecipeClock(recipe, 2, [2.5], 3)
+  const clock = new FilmRecipeClock(recipe, 2, [2], 3, {
+    crossfade: 0.5,
+    loop: true,
+  })
+  expect(clock.clipFrames).toEqual([5, 5, 5])
   const timeline = new StitchTimeline(clock.clipFrames, 2, 0.5, 1, {loop: true})
   expect(timeline.frameCount).toBe(12)
   const takes = [0, 1, 2].map(clip => shot(clock, timeline.clipStart(clip), 1, clip, timeline.frameCount))
@@ -74,6 +80,10 @@ test('duration requires positive finite seconds and can give a still recipe a re
     expect(() => new FilmRecipeClock(recipe, 24, [1, invalid], 2)).toThrow('--duration')
   }
   expect(() => new FilmRecipeClock(recipe, 24, [1, 2], 3)).toThrow('2 lengths for 3 clips')
+  expect(() => new FilmRecipeClock(recipe, 24, [1, 0.5], 2, {crossfade: 0.6})).toThrow('at most as long as the shortest clip, 0.5 s')
+  expect(() => new FilmRecipeClock(recipe, 24, [1], 2, {crossfade: -1})).toThrow('--crossfade')
+  const single = new FilmRecipeClock(recipe, 24, [1], 1, {crossfade: 5})
+  expect(single.clipFrames).toEqual([24])
   const still = new FilmRecipeClock([{time: 0}], 24, [0.1])
   expect(still.clipFrames).toEqual([2])
 })

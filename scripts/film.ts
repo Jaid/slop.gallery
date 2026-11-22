@@ -48,7 +48,7 @@ ${galleryHelp(filmHeight, {
   worldReach: filmWorldReach,
 })}
   --seed-range <min..max> inclusive search range for seed wildcards. Default: ${defaultSeedRange} (the default environment and all seeds a game rolls). Literal seeds and brace expansions are coerced like ?seed, independent of the search range
-  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). In the looping .avif and .jxl, the last clip fades into the first as well: the film starts once the first clip plays alone, ends in that crossfade and is one crossfade shorter. At most half as long as any clip, or as long as the first and the last clip in the other formats
+  --crossfade <seconds>   crossfade picture and sound between clips, rounded to the nearest frame. Default: 0 (hard cuts). Each clip records that much longer to fade into the next, so the film still lasts as long as its clips together. In the looping .avif and .jxl, the last clip fades into the first as well: the film starts once the first clip plays alone and ends in that crossfade. At most as long as the shortest clip
   --list                  print the target and seed of each clip before seam rotation and exit without recording
   --output-file <file>    the extension picks the format. Default: out/film/<world>-<timestamp>.jxl
                           .jxl  animated JPEG XL
@@ -56,7 +56,7 @@ ${galleryHelp(filmHeight, {
                           .webm, .mkv  AV1 video
                           .png  one PNG per frame, each written to the next free name after the given one (shot.png → shot_001.png, shot_002.png, …)
   --fps <number>          frames per second. Default: 60
-  --duration <seconds>    recording time per clip, rounded to the nearest frame (at least one); repeat it to give every clip a length of its own, in playing order. Default: the recipe’s length. Unless every clip is at least as long as the recipe, the clips share one continuous flight; otherwise each plays the recipe and holds its final camera pose for the remaining time
+  --duration <seconds>    how long each clip shows in the film, rounded to the nearest frame (at least one), with --crossfade recorded on top of it; repeat it to give every clip a length of its own, in playing order. Default: the recipe’s length. Unless every clip is at least as long as the recipe, the clips share one continuous flight; otherwise each plays the recipe and holds its final camera pose for the remaining time
   --starting-frame <n>    frame that becomes the first frame of the output, wrapping once at the end. Count frames after applying --duration and any crossfades. Default: 1
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
   --crf <number>          AV1 quality for .avif, .webm and .mkv, lower is better. Default: ${avifDefaults.crf} for .avif, otherwise ${av1Crf}
@@ -200,7 +200,10 @@ const prepareFilm = async (options: FilmValues, setup: GallerySetup, clips: numb
   const settle = resolveSettle(options.settle)
   const {width, height} = setup.viewport
   validateFrameSize(format, width, height)
-  const clock = new FilmRecipeClock(recipe, fps, options.duration === undefined ? undefined : [options.duration].flat().map(Number), clips)
+  const clock = new FilmRecipeClock(recipe, fps, options.duration === undefined ? undefined : [options.duration].flat().map(Number), clips, {
+    crossfade: Number(options.crossfade ?? 0),
+    loop: loopingFormats.has(format),
+  })
   return {
     clock,
     encoding: {
