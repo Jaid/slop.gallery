@@ -8,7 +8,7 @@ import {create} from 'zustand'
 
 import overlay from '#src/lib/overlay/index.ts'
 import {initialOverlayTuning, useOverlayTuning} from '#src/lib/overlay/tuning.ts'
-import {getDefaultCustomGraphics, useCustomGraphics, useGraphicsTuning} from '#src/lib/rendering/customGraphics.ts'
+import {fovLimits, getDefaultCustomGraphics, useCustomGraphics, useGraphicsTuning} from '#src/lib/rendering/customGraphics.ts'
 import {cinematicMaxTextureSize, readCinematicGraphics} from '#src/lib/rendering/graphicsMode.ts'
 import {changeTunedGraphics, discardTuningBuffer, useTuningBuffer} from '#src/lib/rendering/tuningBuffer.ts'
 
@@ -97,7 +97,7 @@ const sections: Array<Section> = [
     title: 'View',
     controls: [
       select('renderScale', 'Scale', renderScales.some(([value]) => value === useCustomGraphics.getState().renderScale) ? renderScales : [...renderScales, ...scales([useCustomGraphics.getState().renderScale])]),
-      range('fov', 'Field of view', 30, 110, 1),
+      range('fov', 'Field of view', ...fovLimits, 1),
       select('toneMapping', 'Tone mapping', [[ACESFilmicToneMapping, 'ACES Filmic'], [AgXToneMapping, 'AgX'], [NeutralToneMapping, 'Neutral'], [ReinhardToneMapping, 'Reinhard'], [CineonToneMapping, 'Cineon'], [LinearToneMapping, 'Linear'], [NoToneMapping, 'None']]),
     ],
   },

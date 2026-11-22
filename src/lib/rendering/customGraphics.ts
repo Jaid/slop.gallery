@@ -1,6 +1,7 @@
 import type {LightingTuning} from '../gallery/lighting.ts'
 import type {RenderPipelineSettings} from './renderPipelineSettings.ts'
 
+import {clamp} from 'math'
 import {ACESFilmicToneMapping} from 'three/webgpu'
 import {create} from 'zustand'
 
@@ -16,6 +17,18 @@ export const graphicsTuningKey = 'KeyG'
 
 /** the game camera’s vertical field of view in degrees, before any zoom, unless `?fov` sets another, which moods and camera bookmarks then leave alone */
 export const defaultFov = 62
+
+/** the narrowest and widest field of view in degrees that the tuning panel and {@link stepFov} set */
+export const fovLimits = [30, 110] as const
+
+/** keys that widen and narrow the game camera’s field of view by {@link fovStep} with `?development`, see {@link stepFov} */
+export const fovKeys: Partial<Record<string, -1 | 1>> = {
+  NumpadAdd: 1,
+  NumpadSubtract: -1,
+}
+
+/** degrees {@link stepFov} widens or narrows the field of view by */
+export const fovStep = 5
 
 /** How the camera sees and the canvas resolves: values outside the render pipeline that the tuning panel changes too. */
 export type ViewTuning = {
@@ -66,6 +79,18 @@ export function toggleGraphicsTuning() {
     hovered: false,
     open: !state.open,
   }))
+}
+
+/**
+ * Widens the panel’s field of view by {@link fovStep} degrees, or narrows it for a `direction` of −1, within {@link fovLimits}, returning the new one.
+ * One beyond them, like a `?fov` of 20, only moves back toward them.
+ */
+export function stepFov(direction: -1 | 1) {
+  const {fov} = useCustomGraphics.getState()
+  const [narrowest, widest] = fovLimits
+  const stepped = clamp(fov + direction * fovStep, Math.min(fov, narrowest), Math.max(fov, widest))
+  useCustomGraphics.setState({fov: stepped})
+  return stepped
 }
 
 /** The values a tunable pipeline follows: the panel’s, whether it shows or not. */

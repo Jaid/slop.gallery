@@ -18,7 +18,7 @@ import {isDevelopmentMode} from '../developmentMode.ts'
 import {environmentSeed} from '../gameSeed.ts'
 import {hiddenUiKey, toggleHiddenUi} from '../hiddenUi.ts'
 import pauseMenu from '../pauseMenu.ts'
-import {graphicsTuningKey, toggleGraphicsTuning} from '../rendering/customGraphics.ts'
+import {fovKeys, graphicsTuningKey, stepFov, toggleGraphicsTuning} from '../rendering/customGraphics.ts'
 import {bookmarkKey, teleportToNextBookmark} from './bookmarks.ts'
 import {flyMode, flyModeKey, toggleFlyMode} from './flyMode.ts'
 import {useIntro} from './intro.ts'
@@ -337,6 +337,11 @@ export function handleGalleryKey(event: KeyboardEvent) {
   }
   if (event.code === roundingKey && isDevelopmentMode && s.locked) {
     roundView()
+  }
+  const fovDirection = fovKeys[event.code]
+  // A camera taken from the player, like V-viewing’s or the intro’s, would ease back to the field of view it found.
+  if (fovDirection && isDevelopmentMode && !cameraPose.focused) {
+    notify(`Field of view ${stepFov(fovDirection)}°.`)
   }
 }
 

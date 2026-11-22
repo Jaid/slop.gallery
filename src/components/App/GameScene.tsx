@@ -8,6 +8,7 @@ import AlbedoVision from '#component/AlbedoVision'
 import Postprocessing from '#component/Postprocessing'
 import StreamPace from '#component/StreamPace'
 import TelemetryBridge from '#component/TelemetryBridge'
+import TunedFov from '#component/TunedFov'
 import WebgpuCaptureBridge from '#component/WebgpuCaptureBridge'
 import WireframeVision from '#component/WireframeVision'
 import WorldFreeze from '#component/WorldFreeze'
@@ -30,6 +31,7 @@ export default function GameScene({children}: GameWrapperProps) {
     <StreamPace />
     <WebgpuCaptureBridge />
     <TelemetryBridge />
+    <Branch if={isDevelopmentMode} then={TunedFov} />
     {children}
     {/* ?show_wireframe and ?albedo replace the regular frame, the wireframe taking precedence. */}
     <Branch if={isShowingWireframe} then={WireframeVision} />

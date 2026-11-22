@@ -2,7 +2,6 @@ import type {RenderPipelineSettings} from '#src/lib/rendering/renderPipelineSett
 
 import {useStore, useThree} from '@react-three/fiber'
 import {useLayoutEffect} from 'react'
-import {PerspectiveCamera} from 'three/webgpu'
 import {useShallow} from 'zustand/react/shallow'
 
 import {getSunReach} from '#src/lib/gallery/sunReach.ts'
@@ -31,16 +30,8 @@ const Postprocessing = ({focus = false, heavy = true, settings, tunable = false}
   const panelStructure = useCustomGraphics(useShallow(getRenderPipelineStructure))
   // Compared by value, so a panel change only rebuilds the pipeline when it changes its passes.
   const structureKey = JSON.stringify(tunable ? panelStructure : getRenderPipelineStructure(settings))
-  // The tuning panel’s view. The camera’s zoom treats a new field of view as the one to zoom from and return to.
-  const fov = useCustomGraphics(state => state.fov)
+  // The tuning panel’s tone mapping. Its field of view reaches the camera through `TunedFov`, in every graphics mode.
   const toneMapping = useCustomGraphics(state => state.toneMapping)
-  useLayoutEffect(() => {
-    if (tunable && camera instanceof PerspectiveCamera && camera.fov !== fov) {
-      // eslint-disable-next-line react-hooks/immutability -- the panel owns the camera’s field of view while tuning.
-      camera.fov = fov
-      camera.updateProjectionMatrix()
-    }
-  }, [camera, fov, tunable])
   useLayoutEffect(() => {
     if (tunable) {
       // A render pipeline notices a new tone mapping and rebuilds its output by itself.
