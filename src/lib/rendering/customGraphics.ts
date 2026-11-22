@@ -16,7 +16,7 @@ import {readScale} from './scale.ts'
 export const graphicsTuningKey = 'KeyG'
 
 /** the game camera’s vertical field of view in degrees, before any zoom, unless `?fov` sets another, which moods and camera bookmarks then leave alone */
-export const defaultFov = 62
+export const defaultFov = 65
 
 /** the narrowest and widest field of view in degrees that the tuning panel and {@link stepFov} set */
 export const fovLimits = [30, 110] as const
