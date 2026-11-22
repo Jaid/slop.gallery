@@ -20,10 +20,10 @@ test('the pipeline keeps the panel’s values after hiding it', () => {
   expect(getTunedGraphics().vignette).toBe(0.5)
   useCustomGraphics.setState(defaults, true)
 })
-test('Numpad + and − widen and narrow the field of view by 5°, within the panel’s limits', () => {
+test('Numpad + and − narrow and widen the field of view by 5°, within the panel’s limits', () => {
   const defaults = getDefaultCustomGraphics()
-  expect(fovKeys.NumpadAdd).toBe(1)
-  expect(fovKeys.NumpadSubtract).toBe(-1)
+  expect(fovKeys.NumpadAdd).toBe(-1)
+  expect(fovKeys.NumpadSubtract).toBe(1)
   expect(defaults.fov).toBe(defaultFov)
   expect(stepFov(1)).toBe(defaultFov + 5)
   expect(getTunedGraphics().fov).toBe(defaultFov + 5)
@@ -39,10 +39,10 @@ test('Numpad + and − widen and narrow the field of view by 5°, within the pan
 })
 test('a field of view beyond the panel’s limits only steps back toward them', () => {
   const defaults = getDefaultCustomGraphics()
-  useCustomGraphics.setState({fov: 20})
-  expect(stepFov(-1)).toBe(20)
-  expect(stepFov(1)).toBe(25)
-  expect(stepFov(1)).toBe(30)
+  useCustomGraphics.setState({fov: 2})
+  expect(stepFov(-1)).toBe(2)
+  expect(stepFov(1)).toBe(7)
+  expect(stepFov(1)).toBe(12)
   useCustomGraphics.setState({fov: 150})
   expect(stepFov(1)).toBe(150)
   expect(stepFov(-1)).toBe(145)

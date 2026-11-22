@@ -19,12 +19,12 @@ export const graphicsTuningKey = 'KeyG'
 export const defaultFov = 65
 
 /** the narrowest and widest field of view in degrees that the tuning panel and {@link stepFov} set */
-export const fovLimits = [30, 110] as const
+export const fovLimits = [5, 120] as const
 
-/** keys that widen and narrow the game camera’s field of view by {@link fovStep} with `?development`, see {@link stepFov} */
+/** keys that narrow and widen the game camera’s field of view by {@link fovStep} with `?development`, see {@link stepFov}: plus magnifies like zooming in, minus shows more */
 export const fovKeys: Partial<Record<string, -1 | 1>> = {
-  NumpadAdd: 1,
-  NumpadSubtract: -1,
+  NumpadAdd: -1,
+  NumpadSubtract: 1,
 }
 
 /** degrees {@link stepFov} widens or narrows the field of view by */
@@ -83,7 +83,7 @@ export function toggleGraphicsTuning() {
 
 /**
  * Widens the panel’s field of view by {@link fovStep} degrees, or narrows it for a `direction` of −1, within {@link fovLimits}, returning the new one.
- * One beyond them, like a `?fov` of 20, only moves back toward them.
+ * One beyond them, like a `?fov` of 2, only moves back toward them.
  */
 export function stepFov(direction: -1 | 1) {
   const {fov} = useCustomGraphics.getState()
