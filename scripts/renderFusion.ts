@@ -50,6 +50,8 @@ const filmLength = 20
 const partyOutro = 1
 /** rows the probe renders, which only has to get the physics right */
 const probeSize = 360
+/** how much of the world a fusion film mounts by default: the work’s room alone, which loads in a fraction of the time of every room */
+const fusionWorldReach = 'room'
 const help = `Usage: bun scripts/renderFusion.ts [options]
 
 Films a fusion: an ingredient, like an orb, is thrown into a work hung in a room of a world, whose portal opens, swallows both and flips out the result, while the camera follows the ingredient a little as it flies, is knocked back by its strike, rushes in on the singularity, is knocked back again by its burst, cranes and sweeps round the portal as it brews, pushes in through the climax and steps aside for the result, where it holds, unless --emphasis ends the film otherwise. By default ${videoSize}×${videoSize} at 60 fps into an AV1 video with the game’s sound.
@@ -75,7 +77,10 @@ Options:
   --fast-decode <0–2>     how much of the AV1 compression to trade for a faster decoder, see scripts/film.ts. Default: 0
   --preset <number>       SVT-AV1 preset, lower compresses better and encodes slower. Default: ${av1Preset}
   --jxl-distance <number> cjxl Butteraugli distance for .jxl, 0 is lossless. Default: 1
-${galleryHelp(videoSize, {ratio: 1})}
+${galleryHelp(videoSize, {
+  ratio: 1,
+  worldReach: fusionWorldReach,
+})}
   -h, --help              show this help
 
 --graphics defaults to cinematic and --audio to true here.
@@ -115,6 +120,10 @@ const renderFusionOptions = {
   settle: {
     type: 'string',
     default: '2',
+  },
+  world_reach: {
+    type: 'string',
+    default: fusionWorldReach,
   },
   slot: {type: 'string'},
 } as const
