@@ -143,6 +143,7 @@
     "rolldown-plugin-thematic-chunks": "workspace:*",
     "sass-embedded": "1.108.2",
     "terser": "5.51.4",
+    "tinyhand": "0.2.0",
     "tldw": "9.9.0",
     "traverse-workspace": "0.2.0",
     "tsconfig-jaid-react": "16.0.0",

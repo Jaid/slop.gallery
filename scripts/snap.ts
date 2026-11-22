@@ -13,6 +13,7 @@ import fs from 'fs-extra'
 import getFree from 'get-free'
 import {lossyJxlOptions} from 'media-encoding'
 import {Packr} from 'msgpackr'
+import tinyhand from 'tinyhand'
 
 import {anchorWorldReach, crossOriginArgs, degrees, galleryHelp, galleryOptions, normalizeOptions, parseNumbers, radians, repositoryRoot, resolveGallerySetup, resolveSettle, resolveSize, serveGallery, waitForFrames, waitForGallery, warnAboutDevServer, watchPage} from './lib/headlessGallery.ts'
 
@@ -96,9 +97,13 @@ const defaults = parseArgs({
   args: [],
 }).values
 export type SnapOptions = LooseOptions<SnapValues>
+/** the options, or only the id of a camera bookmark to take the photo from */
+export type SnapInput = SnapOptions | string
 type SnapValues = typeof defaults & GalleryValues
 
-export default async function snap(overrides: SnapOptions, tools: ReadonlyArray<ToolCall> = []) {
+export default async function snap(given: SnapInput, tools: ReadonlyArray<ToolCall> = []) {
+  // A key would take options without a bookmark for one, so only text is the bookmark.
+  const overrides = tinyhand((value: SnapInput): SnapOptions => (typeof value === 'string' ? {bookmark: value} : value), given)
   const options = {
     ...defaults,
     ...normalizeOptions<SnapValues>(overrides, snapOptions),
