@@ -13,6 +13,7 @@ import {pack, unpack} from 'msgpackr'
 
 import {styleVoiceSampleText} from './emotion.ts'
 import {trimVoiceSample, voiceSampleTrimMinimumSilenceSeconds, voiceSampleTrimPaddingSeconds} from './trim.ts'
+import {decodeCanonicalWav, encodeCanonicalWav} from './wav.ts'
 
 const execFileAsync = promisify(execFile)
 const modelDefault = 'x-ai/grok-voice-tts-1.0'
@@ -170,6 +171,9 @@ const decodeEnvelope = (value: unknown, requestedSampleRate: number, input: stri
     throw new Error('OpenRouter voice synthesis returned an invalid timed PCM envelope.')
   }
   const pcm = decodeBase64(value.audio)
+  if (!pcm.byteLength || pcm.byteLength % 2) {
+    throw new Error('OpenRouter voice synthesis returned invalid 16-bit PCM.')
+  }
   const duration = value.duration
   const inferredRate = pcm.byteLength / 2 / duration
   const sampleRates = [...new Set([...commonSampleRates, requestedSampleRate])]
@@ -193,40 +197,6 @@ const decodeEnvelope = (value: unknown, requestedSampleRate: number, input: stri
     metadata,
     pcm,
   }
-}
-const wavFromPcm = (pcm: Uint8Array, sampleRate: number) => {
-  if (!pcm.byteLength || pcm.byteLength % 2 || pcm.byteLength > 0xFF_FF_FF_FF - 36) {
-    throw new Error('OpenRouter voice synthesis returned invalid 16-bit PCM.')
-  }
-  const wav = Buffer.alloc(44 + pcm.byteLength)
-  wav.write('RIFF', 0)
-  wav.writeUInt32LE(36 + pcm.byteLength, 4)
-  wav.write('WAVEfmt ', 8)
-  wav.writeUInt32LE(16, 16)
-  wav.writeUInt16LE(1, 20)
-  wav.writeUInt16LE(1, 22)
-  wav.writeUInt32LE(sampleRate, 24)
-  wav.writeUInt32LE(sampleRate * 2, 28)
-  wav.writeUInt16LE(2, 32)
-  wav.writeUInt16LE(16, 34)
-  wav.write('data', 36)
-  wav.writeUInt32LE(pcm.byteLength, 40)
-  wav.set(pcm, 44)
-  return wav
-}
-const pcmFromWav = (wav: Uint8Array) => {
-  if (wav.byteLength < 44) {
-    throw new Error('Stored WAV is truncated.')
-  }
-  const view = Buffer.from(wav.buffer, wav.byteOffset, wav.byteLength)
-  if (view.toString('ascii', 0, 4) !== 'RIFF' || view.toString('ascii', 8, 12) !== 'WAVE' || view.toString('ascii', 12, 16) !== 'fmt ' || view.readUInt32LE(16) !== 16 || view.readUInt16LE(20) !== 1 || view.readUInt16LE(22) !== 1 || view.readUInt16LE(34) !== 16 || view.toString('ascii', 36, 40) !== 'data') {
-    throw new Error('Stored WAV is not canonical mono 16-bit PCM.')
-  }
-  const dataSize = view.readUInt32LE(40)
-  if (dataSize === 0 || 44 + dataSize !== view.byteLength || dataSize % 2) {
-    throw new Error('Stored WAV has invalid PCM data.')
-  }
-  return Uint8Array.from(view.subarray(44))
 }
 
 export type VoiceSampleCacheOptions = {
@@ -382,7 +352,7 @@ export default class VoiceSampleCache {
         await execFileAsync(this.#ffmpegPath, [...argv, temporary])
       } else {
         const wav = new Uint8Array(await fs.readFile(rawPath))
-        await fs.writeFile(temporary, pcmFromWav(wav))
+        await fs.writeFile(temporary, decodeCanonicalWav(wav).pcm)
       }
       if (!await hasFile(temporary)) {
         throw new Error(`Voice sample conversion did not produce a valid .${format} file.`)
@@ -447,7 +417,7 @@ export default class VoiceSampleCache {
       throw new Error(`OpenRouter voice synthesis failed (HTTP ${response.status})${detail ? `: ${detail}` : ''}.`)
     }
     const {metadata, pcm} = decodeEnvelope(await response.json(), this.#sampleRate, input, request.voice, response.headers.get('x-generation-id') ?? undefined)
-    const wav = wavFromPcm(pcm, metadata.sampleRate)
+    const wav = encodeCanonicalWav(pcm, metadata.sampleRate)
     const rawPath = this.rawPath(key)
     const metadataPath = this.metadataPath(key)
     const token = `${process.pid}-${composeId()}`
