@@ -22,6 +22,7 @@ import {graphicsTuningKey, toggleGraphicsTuning} from '../rendering/customGraphi
 import {bookmarkKey, teleportToNextBookmark} from './bookmarks.ts'
 import {flyMode, flyModeKey, toggleFlyMode} from './flyMode.ts'
 import {useIntro} from './intro.ts'
+import {roundingKey, roundView} from './rounding.ts'
 import {useGallery} from './store.ts'
 
 const {spawn: playerSpawn} = world
@@ -333,6 +334,9 @@ export function handleGalleryKey(event: KeyboardEvent) {
   }
   if (event.code === bookmarkKey && isDevelopmentMode && s.locked) {
     teleportToNextBookmark(event.shiftKey)
+  }
+  if (event.code === roundingKey && isDevelopmentMode && s.locked) {
+    roundView()
   }
 }
 
