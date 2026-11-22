@@ -1,6 +1,6 @@
 export const av1Crf = 30
 export const av1Preset = 5
-export const av1SvtParams = 'lp=4:enable-variance-boost=1:film-grain=0:tune=0:input-depth=8'
+export const av1SvtParams = 'lp=6:enable-variance-boost=1:film-grain=0:tune=0:input-depth=8'
 
 // PNG readback already contains display-encoded sRGB. Convert those RGB bytes
 // with the BT.709 matrix into full-range YUV, without another transfer.
