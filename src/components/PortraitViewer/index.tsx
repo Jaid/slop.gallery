@@ -1,13 +1,15 @@
 import type {PortraitModelSubject} from '#src/lib/gallery/PortraitModel.ts'
 import type StudioView from '#src/lib/rendering/studio/StudioView.ts'
+import type {StagingOutcome} from './stagePortrait.ts'
 import type {KeyboardEvent} from 'react'
 
 import Branch from 'branch-component'
 import clsx from 'clsx'
 import {useEffect, useRef, useState} from 'react'
 
-import PortraitModel from '#src/lib/gallery/PortraitModel.ts'
 import holdStudioView from '#src/lib/rendering/studio/sharedStudioView.ts'
+
+import stagePortrait from './stagePortrait.ts'
 
 import css from './style.module.sass'
 
@@ -21,7 +23,7 @@ export type PortraitViewerProps = {
 }
 
 /** how showing the model of a work ended */
-type Outcome = PortraitModelSubject & {progress: 'failed' | 'ready'}
+type Outcome = PortraitModelSubject & {progress: StagingOutcome}
 
 /** how far a drag turns the model per pixel, in radians: about a full turn across the stage */
 const dragSpeed = 0.008
@@ -117,7 +119,6 @@ export default function PortraitViewer({className, faint = false, label, portrai
   }, [])
   // After the effect above, which brings the studio in.
   useEffect(() => {
-    const view = studio.current!
     const subject = {
       canvasMaterial,
       frame,
@@ -125,30 +126,10 @@ export default function PortraitViewer({className, faint = false, label, portrai
       source,
       width,
     }
-    const model = new PortraitModel(subject)
-    let current = true
-    const settle = (ended: Outcome['progress']) => {
-      if (current) {
-        setOutcome({
-          ...subject,
-          progress: ended,
-        })
-      }
-    }
-    const shown = model.loaded.then(() => view.show(model.object, model.size)).then(onStage => {
-      if (onStage) {
-        settle('ready')
-      }
-    }, (error: unknown) => {
-      console.warn('The model of a work could not be shown.', error)
-      settle('failed')
-    })
-    return () => {
-      current = false
-      view.hide(model.object)
-      // Whatever still compiles it has to finish first.
-      void shown.finally(() => model.dispose()).catch(() => {})
-    }
+    return stagePortrait(studio.current!, subject, ended => setOutcome({
+      ...subject,
+      progress: ended,
+    }))
   }, [canvasMaterial, frame, height, source, width])
   const handleKey = (event: KeyboardEvent) => {
     const act = keys[event.key] ?? orbitKeys[event.code]
