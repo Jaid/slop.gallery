@@ -233,18 +233,16 @@ await film({
 ```TypeScript
 import film from './scripts/film.ts'
 
-const hatchetFile = 'src/lib/gallery/curios/hatchet/Hatchet.ts'
-const hatchet = await Bun.file(hatchetFile).text()
+const worktree = 'temp/hatchet_growth'
 await Bun.$`bun run build` // dist, with the hatchet as it is
-try {
-  await Bun.write(hatchetFile, hatchet.replaceAll('Geometry(),', 'Geometry().scale(2, 2, 2),')) // scales the hatchet’s head and haft 2×
-  await Bun.$`bun run build --outDir out/dist-big-hatchet`
-} finally {
-  await Bun.write(hatchetFile, hatchet)
-}
+await Bun.$`git worktree add --detach ${worktree}` // a second checkout of the last commit, for a build with the hatchet twice the size
+const hatchetFile = `${worktree}/src/lib/gallery/curios/hatchet/Hatchet.ts`
+const hatchet = await Bun.file(hatchetFile).text()
+await Bun.write(hatchetFile, hatchet.replaceAll('Geometry(),', 'Geometry().scale(2, 2, 2),')) // scales the hatchet’s head and haft 2×
+await Bun.$`bun install && bun run build`.cwd(worktree)
 
 await film({
-  target: ['dist', 'out/dist-big-hatchet'], // one clip per build, in this order
+  target: ['dist', `${worktree}/dist`], // one clip per build, in this order
   seed: 1,
   room: 'lodge',
   duration: 2, // seconds per clip, as a single keyframe has no length of its own
@@ -252,6 +250,8 @@ await film({
 }, [ // camera keyframes: a fixed view of the hatchet hanging at the fireplace
   {time: 0, position: [-25.8, -3.66, -33.62], yaw: 180, pitch: -6, fov: 45}
 ])
+
+await Bun.$`git worktree remove --force ${worktree}`
 ```
 
 ### fusion film
