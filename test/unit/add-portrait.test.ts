@@ -2,6 +2,7 @@ import {afterEach, beforeEach, expect, test} from 'bun:test'
 
 import {canvasMaterialIds} from '../../src/canvas_materials/lib/canvasMaterialIds.ts'
 import {frameIds} from '../../src/frames/lib/frameParameter.ts'
+import {takeHanging} from '../../src/lib/gallery/hanging/hangings.ts'
 import {maximumPortraits} from '../../src/lib/gallery/imagePolicy.ts'
 import {usePortraitSlots} from '../../src/lib/gallery/portraitSlotStore.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
@@ -63,6 +64,24 @@ const image = 'http://127.0.0.1:8080/night_watch-2.png'
 const stored = (id: string) => useGallery.getState().portraits.find(portrait => portrait.id === id)!
 /** a plain flat wall works hang on, wide and high enough for anything the tests hang */
 const wall = slopGallery.placement.walls.find(candidate => candidate.sticky !== false && !candidate.holes?.length && !candidate.reservations?.length && !candidate.curveRadius && !candidate.slope && candidate.width > 6 && candidate.height > 3.5)!
+test('a hung work arrives on its wall like one the player hangs only when told to', async () => {
+  const quiet = await addPortrait({
+    image,
+    target: {slot: slot.id},
+    id: 'quiet',
+  })
+  expect(takeHanging(quiet.id, quiet.position, quiet.rotation)).toBeUndefined()
+  const arriving = await addPortrait({
+    image,
+    target: {slot: slot.id},
+    id: 'arriving',
+    hangingAnimation: true,
+  })
+  expect(takeHanging(arriving.id, arriving.position, arriving.rotation)).toMatchObject({
+    position: arriving.position,
+    rotation: arriving.rotation,
+  })
+})
 test('a slot takes the image in place of the work hanging there, at its own area and in its room’s frame unless told otherwise', async () => {
   const {portraits} = useGallery.getState()
   const [hanging] = portraits

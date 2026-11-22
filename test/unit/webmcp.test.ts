@@ -20,7 +20,7 @@ import createWebmcpTools from '../../src/lib/webmcp/tools.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 /** what the bridge got as the target, which the real one resolves to a slot or a wall */
-type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<PortraitAdditionInput, 'target'>
+type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<PortraitAdditionInput, 'hangingAnimation' | 'target'>
 
 const bridge: WebmcpBridge = {
   addTextOverlay: () => ({added: true}),
@@ -33,11 +33,12 @@ const bridge: WebmcpBridge = {
     drawing,
   }),
   showFence,
-  addPortrait: ({canvasMaterial, id = 'work-1', frame, size = 30_000, target, title = 'xf14RxM8'}: PortraitAdditionInput) => Promise.resolve<EchoedAddition>({
+  addPortrait: ({canvasMaterial, hangingAnimation, id = 'work-1', frame, size = 30_000, target, title = 'xf14RxM8'}: PortraitAdditionInput) => Promise.resolve<EchoedAddition>({
     id,
     title,
     hung: !('position' in target) || 'wallId' in target,
     target,
+    ...hangingAnimation === undefined ? {} : {hangingAnimation},
     ...frame === 'louis' ? {frame} : {},
     ...canvasMaterial === 'linen' ? {canvasMaterial} : {},
     position: [10.2, 3.13, 7.78],
@@ -896,6 +897,11 @@ test('add_portrait takes an image URL, exactly one kind of target and an optiona
     canvasMaterial: 'linen',
     size: 7500,
   })
+  expect(await execute({
+    image,
+    target: slot,
+    hanging_animation: true,
+  })).toHaveProperty('hangingAnimation', true)
   // Its schema offers every canvas material there is.
   expect(tool.inputSchema).toHaveProperty(['properties', 'canvas_material', 'enum'], [...canvasMaterialIds])
   const targets: Array<unknown> = [undefined, null, 'banquet-south_2', [], {}, {slot: ''}, {slot: 3}, {
@@ -965,6 +971,10 @@ test('add_portrait takes an image URL, exactly one kind of target and an optiona
     image,
     target: slot,
     size,
+  })), ...['true', 1, null].map(hangingAnimation => ({
+    image,
+    target: slot,
+    hanging_animation: hangingAnimation,
   })), {
     image,
     target: slot,

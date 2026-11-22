@@ -7,6 +7,7 @@ import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/c
 import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
 import {arrivalFrame, newPortrait} from '#src/lib/gallery/actions.ts'
+import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
 import {imageSize, importedImage, importedTitle} from '#src/lib/gallery/ImageImporter.ts'
 import {maximumPortraits, validateImport} from '#src/lib/gallery/imagePolicy.ts'
 import {usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
@@ -41,6 +42,8 @@ export type PortraitAdditionInput = {
   canvasMaterial?: string
   /** the id of the frame it wears; by default its roll of the frames of the slot or of the room it arrives in */
   frame?: string
+  /** whether a work that hangs arrives on its wall like one the player hangs, flying there from in front of the camera, instead of being there right away */
+  hangingAnimation?: boolean
   /** its id, unique in the collection; by default a new one */
   id?: string
   /** the URL of the image */
@@ -172,7 +175,7 @@ export function findPortraitDestination(target: PortraitTarget): PortraitDestina
 /**
  * Brings the image at the URL `image` into the world as an imported work: hung in a portrait slot in place of the work hanging there, if any, hung on a wall where it fits, or loose at a position; see the `add_portrait` tool.
  */
-export default async function addPortrait({canvasMaterial, frame: frameId, id, image, size, target, title}: PortraitAdditionInput): Promise<PortraitAddition> {
+export default async function addPortrait({canvasMaterial, frame: frameId, hangingAnimation = false, id, image, size, target, title}: PortraitAdditionInput): Promise<PortraitAddition> {
   const destination = findPortraitDestination(target)
   const chosen = frameId === undefined ? undefined : frameIds.find(candidate => candidate === frameId)
   if (frameId !== undefined && !chosen) {
@@ -218,6 +221,9 @@ export default async function addPortrait({canvasMaterial, frame: frameId, id, i
     portrait.canvasMaterial ??= canvasMaterial
   }
   commit([...portraits.filter(candidate => candidate !== replaced), portrait])
+  if (hangingAnimation && portrait.hung) {
+    requestHanging(portrait.id, portrait.position, portrait.rotation)
+  }
   return {
     id: portrait.id,
     title: portrait.title,

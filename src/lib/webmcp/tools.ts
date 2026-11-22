@@ -106,7 +106,7 @@ const colorPattern = /^#(?:[\da-f]{3}){1,2}$/iu
 const throwKeys = ['prop', 'portrait', 'target', 'velocity', 'from', 'speed']
 const spawnKeys = new Set(['orb', 'position', 'id'])
 const partyKeys = new Set(['effect', 'position', 'rotation', 'floor', 'delay'])
-const portraitKeys = new Set(['image', 'target', 'title', 'id', 'frame', 'canvas_material', 'size'])
+const portraitKeys = new Set(['image', 'target', 'title', 'id', 'frame', 'canvas_material', 'size', 'hanging_animation'])
 const workIdPattern = /^[\w-]{1,100}$/u
 const sightingKeys = new Set(['sight', 'instant'])
 const propIdPattern = /^prop-[\w-]{1,100}$/u
@@ -835,7 +835,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'add_portrait',
       title: 'Add portrait',
-      description: 'Bring an image into the world as an imported work: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect, right away without the hanging animation or the sound of an arrival. Its target is exactly one of a portrait slot, where it hangs in place of the work hanging there, if any, whatever its size; a spot on a wall, where it hangs if it fits, its placard below it or else above it; or a world position, where it enters the world loose, upright and facing +z, and falls like a work the player dropped. Unless told a frame and a size, it wears its id’s roll of the frames of the slot or of the room it arrives in, at the slot’s frame area or that room’s. Its image uses the page’s ?new_canvas_material if set, otherwise the canvas_material specified here. Without either it shows flat. Resolves once it is in the collection, while its image may still decode. Fails for an unknown slot, wall, frame or canvas material, whose errors say what there is, a slot, a wall or a position in a room this page’s ?world_reach leaves out, a position outside of the world, a spot on a wall it does not fit at, with the reason, an id a work already has, an image that does not load or is no JXL, PNG, JPEG, WebP, AVIF, GIF or SVG up to 25 mb, an SVG without a width and height of its own, and a full collection. Returns its id, its title, whether it hangs, the slot and the wall if any, the id of the work it replaced, the frame it wears unless the default one, its canvas material if it has one, where its frame’s middle is, its rotation, its frame width and height in meters and its frame area in cm². Slot ids are what dump_portrait_slots lists, which names their walls too. Does not move the player, change focus or simulate input.',
+      description: 'Bring an image into the world as an imported work: cropped to its middle if wider than 2:1 or taller than 1:2, in its own aspect, right away without the hanging animation or the sound of an arrival unless hanging_animation asks for them. Its target is exactly one of a portrait slot, where it hangs in place of the work hanging there, if any, whatever its size; a spot on a wall, where it hangs if it fits, its placard below it or else above it; or a world position, where it enters the world loose, upright and facing +z, and falls like a work the player dropped. Unless told a frame and a size, it wears its id’s roll of the frames of the slot or of the room it arrives in, at the slot’s frame area or that room’s. Its image uses the page’s ?new_canvas_material if set, otherwise the canvas_material specified here. Without either it shows flat. Resolves once it is in the collection, while its image may still decode. Fails for an unknown slot, wall, frame or canvas material, whose errors say what there is, a slot, a wall or a position in a room this page’s ?world_reach leaves out, a position outside of the world, a spot on a wall it does not fit at, with the reason, an id a work already has, an image that does not load or is no JXL, PNG, JPEG, WebP, AVIF, GIF or SVG up to 25 mb, an SVG without a width and height of its own, and a full collection. Returns its id, its title, whether it hangs, the slot and the wall if any, the id of the work it replaced, the frame it wears unless the default one, its canvas material if it has one, where its frame’s middle is, its rotation, its frame width and height in meters and its frame area in cm². Slot ids are what dump_portrait_slots lists, which names their walls too. Does not move the player, change focus or simulate input.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -926,6 +926,10 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             description: 'its frame area in cm², like 15000, which its own aspect divides into width and height. Default: the slot’s, or else that of the room the target lies in',
             exclusiveMinimum: 0,
           },
+          hanging_animation: {
+            type: 'boolean',
+            description: 'whether a work that hangs arrives on its wall like one the player hangs: it flies there from in front of the camera, slaps onto the wall with its sound and dust and jolts the works next to it, all over about two seconds. A loose work falls either way. Default: false, hanging there right away',
+          },
         },
         required: ['image', 'target'],
         additionalProperties: false,
@@ -936,9 +940,9 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       execute: (input: unknown, {signal}) => {
         signal.throwIfAborted()
         if (!isRecord(input) || Object.keys(input).some(key => !portraitKeys.has(key))) {
-          throw new TypeError('This tool takes an object with image, target and an optional title, id, frame, canvas_material and size.')
+          throw new TypeError('This tool takes an object with image, target and an optional title, id, frame, canvas_material, size and hanging_animation.')
         }
-        const {image, target, title, id, frame, canvas_material: canvasMaterial, size} = input
+        const {image, target, title, id, frame, canvas_material: canvasMaterial, size, hanging_animation: hangingAnimation} = input
         if (typeof image !== 'string' || !URL.canParse(image, typeof location === 'undefined' ? undefined : location.href)) {
           throw new TypeError('image must be the URL of an image.')
         }
@@ -957,6 +961,9 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (size !== undefined && !(typeof size === 'number' && Number.isFinite(size) && size > 0)) {
           throw new TypeError('size must be a finite number of cm² above 0.')
         }
+        if (hangingAnimation !== undefined && typeof hangingAnimation !== 'boolean') {
+          throw new TypeError('hanging_animation must be true or false.')
+        }
         return getBridge().addPortrait({
           image,
           target: readPortraitTarget(target),
@@ -965,6 +972,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           frame,
           canvasMaterial,
           size,
+          hangingAnimation,
         })
       },
     },
