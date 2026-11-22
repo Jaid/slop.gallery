@@ -1,5 +1,6 @@
 import {dirname, relative, resolve} from 'node:path'
 
+import fencen from 'fencen'
 import fs from 'fs-extra'
 import ts from 'typescript'
 
@@ -38,11 +39,9 @@ export default class PromptSources {
   }
 
   markdown(files: Iterable<string> = this.files.keys()) {
-    return Array.from(files, file => {
-      const source = this.files.get(file)!
-      const longestFence = Math.max(2, ...Array.from(source.matchAll(/`+/gu), match => match[0].length))
-      const fence = '`'.repeat(longestFence + 1)
-      return `### ${file}\n\n${fence}ts\n${source.trimEnd()}\n${fence}`
-    }).join('\n\n')
+    return Array.from(files, file => `### ${file}\n\n${fencen.block(this.files.get(file)!.trimEnd(), {
+      language: 'ts',
+      trim: false,
+    })}`).join('\n\n')
   }
 }

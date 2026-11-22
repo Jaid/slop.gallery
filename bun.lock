@@ -223,6 +223,7 @@
       "devDependencies": {
         "@types/fs-extra": "11.0.4",
         "@types/three": "0.187.0",
+        "fencen": "0.1.0",
         "fs-extra": "11.4.1",
         "puppeteer-core": "25.18.1",
         "three-fiber-game": "workspace:*",
