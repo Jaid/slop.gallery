@@ -243,7 +243,11 @@ describe('orbit keyframes', () => {
         turns: 0,
       },
     }])
-    expect(sampleRecipe(still, 2, fallback).position).toEqual(orbit.from)
+    // Halfway along an arc, the position comes out of trigonometry, whose last bit differs between platforms.
+    const halfway = sampleRecipe(still, 2, fallback).position
+    for (const [axis, value] of orbit.from.entries()) {
+      expect(halfway[axis]).toBeCloseTo(value)
+    }
   })
   test('rejects incomplete, ambiguous and degenerate arcs at parse time', () => {
     const orbit = {
