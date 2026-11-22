@@ -81,7 +81,7 @@ A recipe is a JSON array of keyframes, ordered by time:
 
   time      seconds since the start of the video. Required
   position  [x, y, z] position of the player’s eyes in meters; the player flies, so the room they are in is the player’s
-  orbit     {"from": [x,y,z], "to": [x,y,z], "focus": [x,y,z]}: fly from one eye position to the other while looking at the focus. The arc starts at the previous position, yaw, pitch or orbit keyframe (or 0) and ends at this keyframe’s time. The keyframe’s tween controls the shortest horizontal arc, radius and height. Set orbit.heightTween (e.g. "easeInQuad") to ease height independently. Optional integer turns adds whole revolutions in the positive or negative yaw direction. See scripts/recipes/lodge_fire_orbit.json
+  orbit     {"from": [x,y,z], "to": [x,y,z], "focus": [x,y,z]}: fly from one eye position to the other while looking at the focus. The arc starts at the previous position, yaw, pitch or orbit keyframe (or 0) and ends at this keyframe’s time. The keyframe’s tween controls the shortest horizontal arc, radius and height. Set orbit.heightTween (e.g. "easeInQuad") to ease height independently. Optional integer turns adds whole revolutions in the positive or negative yaw direction. See scripts/recipes/fountain_orbit.json
   yaw       degrees, 0 looks toward −z, positive turns left. Not wrapped, so 0 → 720 spins twice
   pitch     degrees, positive looks up
   roll      degrees, positive tilts the camera counterclockwise
