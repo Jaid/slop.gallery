@@ -12,6 +12,7 @@ import {bastionApproach, bastionDoorway, bastionMouth, bastionTransition} from '
 import {insideBastion} from '../../src/lib/gallery/bastionNetwork.ts'
 import {corridorEndZ, corridorLanding, corridorPassage, corridorRails, corridorRunner, corridorStairs, insideCorridor, lodgeThreshold, lodgeThresholdSaddle} from '../../src/lib/gallery/corridor.ts'
 import {insidePolygon, polygonCentroid, rectanglePolygon, slabHulls} from '../../src/lib/gallery/floorPolygons.ts'
+import {floorThickness} from '../../src/lib/gallery/floors.ts'
 import lodge, {insideLodgeWindow, lodgeBay, lodgeBayFloor, lodgeOutline, lodgeWindowRibCutouts} from '../../src/lib/gallery/lodge.ts'
 import lodgeInterior, {lodgeFurnitureColliders} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import LodgeWindowGeometry from '../../src/lib/gallery/LodgeWindowGeometry.ts'
@@ -101,10 +102,10 @@ function createWorld(fps: number) {
   for (const saddle of saddles) {
     world.createCollider(RAPIER.ColliderDesc.convexHull(saddle.getAttribute('position').array as Float32Array)!)
   }
-  box([sienna.center[0], -0.15, sienna.center[1]], [sienna.size[0], 0.3, sienna.size[1]])
+  box([sienna.center[0], -floorThickness / 2, sienna.center[1]], [sienna.size[0], floorThickness, sienna.size[1]])
   box([sienna.center[0], 5.9, sienna.center[1]], [sienna.size[0], 0.3, sienna.size[1]])
   box([vesper.center[0], -0.15, vesper.center[1]], [vesper.size[0], 0.3, vesper.size[1]])
-  box([siennaVestibule.center[0], -0.15, siennaVestibule.center[1]], [siennaVestibule.size[0], 0.3, siennaVestibule.size[1]])
+  box([siennaVestibule.center[0], -floorThickness / 2, siennaVestibule.center[1]], [siennaVestibule.size[0], floorThickness, siennaVestibule.size[1]])
   box([siennaVestibule.center[0], siennaVestibuleCeiling.y, siennaVestibule.center[1]], [siennaVestibule.size[0], siennaVestibuleCeiling.thickness, siennaVestibule.size[1]])
   // The Lodge’s furniture and hearth, as the room mounts them.
   for (const {position, yaw, size} of lodgeFurnitureColliders()) {

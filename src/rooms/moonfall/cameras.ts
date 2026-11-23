@@ -1,5 +1,7 @@
 import type {RoomCamera} from '../base/Room.ts'
 
+import {stairArrival} from './spawns.ts'
+
 export default {
   overview: {
     position: [-13.818, 4.317, 9.831],
@@ -12,7 +14,7 @@ export default {
   },
   stairs: {
     // On the lower flight’s centerline, looking due west, so its walls frame the view symmetrically.
-    position: [16.63, 3.1, 0],
+    position: [stairArrival[0], stairArrival[1] + 1.65, stairArrival[2]],
     aim: {
       yaw: Math.PI / 2,
       pitch: -0.35,

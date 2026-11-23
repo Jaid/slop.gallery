@@ -63,6 +63,8 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: ?world_reach moun
   const visits: ReadonlyArray<Visit> = [
     {mode: 'all'},
     {mode: 'room'},
+    // A Lobby start should not even load Moonfall’s chunk.
+    {mode: 'neighbors'},
     {
       mode: 'room',
       room: 'forge',

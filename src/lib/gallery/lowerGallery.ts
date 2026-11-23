@@ -1,10 +1,13 @@
 import type {FloorPolygon} from './floorPolygons.ts'
 import type {Vec3} from './types.ts'
 
+import {stairHalls} from './antechamber.ts'
 import {insidePolygon} from './floorPolygons.ts'
 import {floorThickness, subtractFloorOpening} from './floors.ts'
 import lobby from './lobby.ts'
 
+// The hall begins beyond the descending flight. Only the level tail of the Exhibition needs to extend to its north portal.
+const moonfallNorthZ = stairHalls.return.center[1] + stairHalls.return.size[1] / 2
 const moonfallFloorY = -8
 export const oculusDrop = 3
 const oculusNorthZ = lobby.opening.center[1] - 11
@@ -17,8 +20,8 @@ export const oculusTowerRadius = 2
 const lowerGallery = {
   floorY: moonfallFloorY,
   moonfall: {
-    // Keep the north tunnel fixed; expand west and south. The stairs arrive in the middle of the east wall.
-    center: [-8, 18.5],
+    // The north portal stays on the axis of the Exhibition.
+    center: [-8, moonfallNorthZ + 14],
     size: [28, 28],
   },
   oculus: {
@@ -34,7 +37,7 @@ const lowerGallery = {
     northX: lobby.opening.center[0],
     southX: -8,
     northZ: oculusSouthZ,
-    southZ: 4.5,
+    southZ: moonfallNorthZ,
     northBendZ: -13.5,
     southBendZ: 1.5,
     northY: moonfallFloorY - oculusDrop,
