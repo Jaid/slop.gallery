@@ -178,7 +178,7 @@ const getProductionConfig = () => {
           ...contentNames,
         },
         checks: {
-          pluginTimings: false,
+          bundlerTimings: false,
         },
       },
     },

@@ -13,10 +13,6 @@ const help = `Usage: bun scripts/alignNarrations.ts
 Times the bundled portrait narrations letter by letter for their subtitles, with Meta’s MMS forced aligner, and writes src/worlds/gallery/narrationTimings.json.
 Rerun it whenever a bundled narration or the title or description it reads changes; test/unit/narration-timings.test.ts notices stale entries.
 Needs ffmpeg and uv on PATH; scripts/lib/mmsAlign.py brings its own CPU-only Torch.`
-/**
- * Times the bundled portrait narrations letter by letter for their subtitles, with Meta’s MMS forced aligner (scripts/lib/mmsAlign.py, run through uv with its own CPU-only Torch), and writes src/worlds/gallery/narrationTimings.json: per artwork, the start and end of every character of the text it reads in one flat list, null for characters without a span. Word spans follow from them when the catalog loads.
- * Rerun it whenever a bundled narration or the title or description it reads changes; test/unit/narration-timings.test.ts notices stale entries.
- */
 const main = async () => {
   const output = path.join(root, 'src/worlds/gallery/narrationTimings.json')
   const folder = await fs.mkdtemp(path.join(tmpdir(), 'align-narrations-'))
