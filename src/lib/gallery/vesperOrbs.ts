@@ -9,9 +9,9 @@ import {vesperOrbPedestals} from './vesper.ts'
 export function vesperOrbs(seed: number) {
   const picked = isDefaultSeed(seed) ? vesperOrbPedestals.map((_, index) => randomOrbs[index % randomOrbs.length]) : environmentRandom(seed).makeChild(['vesper', 'orbs']).shuffle(randomOrbs, vesperOrbPedestals.length)
   return picked.map((orb, index) => {
-    const count = picked.slice(0, index + 1).filter(other => other === orb).length
+    const pass = Math.floor(index / randomOrbs.length) + 1
     return {
-      id: count === 1 ? orb.propId : `${orb.propId}-${count}`,
+      id: pass === 1 ? orb.propId : `${orb.propId}-${pass}`,
       orb,
     }
   })
