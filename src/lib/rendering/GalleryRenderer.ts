@@ -8,7 +8,6 @@ import type {Arrayable} from 'type-fest'
 import {WebgpuRenderer} from 'three-fiber-game'
 import {Object3D, Vector3} from 'three/webgpu'
 
-import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {startLoading, trackLoadingItems} from '#src/lib/loadingItems.ts'
 import {BatchedLighting} from '#src/lib/materials/lights/base/BatchedLightsNode.ts'
 import perceptualDistance from '#src/lib/perceptualDistance.ts'
@@ -31,11 +30,14 @@ type RenderObject = {
 }
 type PromiseSink = {push: (promise: Promise<void>) => void}
 /** WebGPUBackend parameters three doesn’t type, which it reads when it requests the device in `init` */
-type BackendInternals = {parameters: {
+type BackendInternals = {
   device?: GPUDevice
-  powerPreference?: GPUPowerPreference
-  requiredLimits: Record<string, number>
-}}
+  parameters: {
+    device?: GPUDevice
+    powerPreference?: GPUPowerPreference
+    requiredLimits: Record<string, number>
+  }
+}
 /** bytes per pixel of all render targets of a pass, which screen-space reflections exceed with a fifth half-float target; WebGPU guarantees 32 and desktop GPUs offer 64 or more */
 const wideColorAttachmentBytes = 64
 /** sampled textures per shader stage that cinematic asks for; its heaviest fragment shaders sample 18, above the 16 WebGPU guarantees */
@@ -211,7 +213,6 @@ export class GalleryRenderer extends WebgpuRenderer {
       ...options,
       requiredLimits: {
         ...readCinematicGraphics() ? {maxTextureDimension2D: cinematicMaxTextureSize} : {},
-        ...isDevelopmentMode || readCinematicGraphics() ? {maxColorAttachmentBytesPerSample: wideColorAttachmentBytes} : {},
       },
       alpha: false,
       antialias: false,
@@ -234,6 +235,12 @@ export class GalleryRenderer extends WebgpuRenderer {
         ...this.incompleteCameras.keys().map(camera => `shadow-map:${camera.uuid}`),
       ]
     })
+  }
+
+  /** whether the device holds a fifth half-float scene target, which screen-space reflections need; false before `init` and on adapters offering less than {@link wideColorAttachmentBytes} */
+  get hasWideColorAttachments() {
+    const {device} = this.backend as unknown as BackendInternals
+    return (device?.limits.maxColorAttachmentBytesPerSample ?? 0) >= wideColorAttachmentBytes
   }
 
   private get internals() {
@@ -270,7 +277,7 @@ export class GalleryRenderer extends WebgpuRenderer {
   }
 
   override init(): Promise<this> {
-    this.initialization ??= this.requestCinematicLimits().then(() => (telemetry ? telemetry.wrap('three.init', () => super.init()) : super.init())).then(renderer => {
+    this.initialization ??= this.requestLimits().then(() => (telemetry ? telemetry.wrap('three.init', () => super.init()) : super.init())).then(renderer => {
       this.compilePipelinesAsync()
       return renderer
     })
@@ -616,15 +623,19 @@ export class GalleryRenderer extends WebgpuRenderer {
     }
   }
 
-  /** Raises the sampled texture limit for cinematic to what the adapter offers, up to {@link cinematicSampledTextures}, so GPUs with fewer still get a device. */
-  private async requestCinematicLimits() {
+  /** Raises the color attachment limit for screen-space reflections, and for cinematic the sampled texture limit, to what the adapter offers, up to {@link wideColorAttachmentBytes} and {@link cinematicSampledTextures}, so GPUs with less still get a device. */
+  private async requestLimits() {
     const {parameters} = this.backend as unknown as BackendInternals
-    if (!readCinematicGraphics() || parameters.device !== undefined || typeof navigator === 'undefined' || !('gpu' in navigator)) {
+    if (parameters.device !== undefined || typeof navigator === 'undefined' || !('gpu' in navigator)) {
       return
     }
     // three requests the same GPU, so its device can get these limits.
     const adapter = await navigator.gpu.requestAdapter({powerPreference: parameters.powerPreference})
-    if (adapter) {
+    if (!adapter) {
+      return
+    }
+    parameters.requiredLimits.maxColorAttachmentBytesPerSample = Math.min(wideColorAttachmentBytes, adapter.limits.maxColorAttachmentBytesPerSample)
+    if (readCinematicGraphics()) {
       parameters.requiredLimits.maxSampledTexturesPerShaderStage = Math.min(cinematicSampledTextures, adapter.limits.maxSampledTexturesPerShaderStage)
     }
   }

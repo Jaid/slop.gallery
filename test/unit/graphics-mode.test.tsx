@@ -42,7 +42,7 @@ test('cinematic graphics read as heavy, and only cinematic reads as cinematic', 
   expect(readGraphicsProfile('?graphics=heavy')).toBe(getGraphicsProfile(true))
   expect(readGraphicsProfile()).toBe(getGraphicsProfile(false))
 })
-test('the cinematic profile raises intermediate resolutions, AO quality, shadow samples and lamp filter radius, texture filtering, curve tessellation, indirect light and metal reflections over Heavy and keeps the rest', () => {
+test('the cinematic profile raises intermediate resolutions, AO quality, shadow samples and lamp filter radius, texture filtering, curve tessellation and indirect light over Heavy and keeps the rest', () => {
   const cinematicProfile = getGraphicsProfile(true, true)
   const heavy: Record<string, unknown> = getGraphicsProfile(true)
   const cinematic: Record<string, unknown> = cinematicProfile
@@ -50,7 +50,7 @@ test('the cinematic profile raises intermediate resolutions, AO quality, shadow 
   for (const key of raised) {
     expect(cinematic[key] as number, key).toBeGreaterThan(heavy[key] as number)
   }
-  const switched = ['canvasTextureMipmaps', 'indirectLight', 'metalReflections']
+  const switched = ['canvasTextureMipmaps', 'indirectLight']
   for (const key of switched) {
     expect(heavy[key], key).toBe(false)
     expect(cinematic[key], key).toBe(true)
@@ -107,14 +107,14 @@ test('every profile shares the AO radius and strength, and Cinematic raises the 
     expect(cinematic[key], key).toBeGreaterThan(heavy[key])
   }
 })
-test('only Cinematic adds screen-space reflections on metallic surfaces to the floor reflections', () => {
+test('Heavy and Cinematic add screen-space reflections on metallic surfaces to the floor reflections', () => {
   expect(pipelines.fast).toMatchObject({
     mirrorReflections: false,
     screenSpaceReflections: false,
   })
   expect(pipelines.heavy).toMatchObject({
     mirrorReflections: true,
-    screenSpaceReflections: false,
+    screenSpaceReflections: true,
   })
   expect(pipelines.cinematic).toMatchObject({
     mirrorReflections: true,

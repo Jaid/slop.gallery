@@ -144,7 +144,7 @@ const heavyProfile: GraphicsProfile = {
   floorReflections: true,
   indirectLight: false,
   lampShadowRadius: 4,
-  metalReflections: false,
+  metalReflections: true,
   shadows: true,
   postprocessing: true,
   ambientOcclusionResolutionScale: 1,
@@ -158,7 +158,7 @@ const heavyProfile: GraphicsProfile = {
   volumetricLight: true,
   volumetricLightSteps: 64,
 }
-// Cinematic raises intermediate and shadow-map resolutions, AO quality, texture filtering, curve tessellation, indirect light and metal reflections for non-realtime rendering.
+// Cinematic raises intermediate and shadow-map resolutions, AO quality, texture filtering, curve tessellation and indirect light for non-realtime rendering.
 const cinematicProfile: GraphicsProfile = {
   ...heavyProfile,
   // Tight, strong halos at full resolution with a hard threshold: the fountain’s water and the flames glow, while sunlit stone no longer hazes over.
@@ -182,7 +182,6 @@ const cinematicProfile: GraphicsProfile = {
   },
   curveDetail: 2,
   indirectLight: true,
-  metalReflections: true,
   ambientOcclusionResolutionScale: 2,
   ambientOcclusionSamples: 64,
   ambientOcclusionThickness: 2,

@@ -62,7 +62,9 @@ export default class GalleryRenderPipeline extends RenderPipeline {
 
   constructor(renderer: Renderer, scene: Object3D, camera: Camera, {focus, heavy = true, settings, volumetricLightReach = () => 1, zoom = () => 0}: GalleryRenderPipelineOptions) {
     super(renderer)
-    const {antiAliasing, mirrorReflections, screenSpaceReflections} = settings
+    const {antiAliasing, mirrorReflections} = settings
+    // Its fifth scene target needs a color attachment limit above WebGPU’s guaranteed one, which a few adapters lack.
+    const screenSpaceReflections = settings.screenSpaceReflections && (!(renderer instanceof GalleryRenderer) || renderer.hasWideColorAttachments)
     const indirectLight = settings.screenSpaceIndirectLight || settings.voxelIndirectLight
     const own = <T extends {dispose: () => void}>(effect: T) => {
       this.effects.push(effect)
@@ -244,7 +246,7 @@ export default class GalleryRenderPipeline extends RenderPipeline {
         }
       })
       if (screenSpaceReflections && camera instanceof PerspectiveCamera) {
-        // Screen-space reflections on the metallic surfaces, like gilded frames and trims, blurred by their roughness, on top of the floors’ planar mirror. The non-stochastic pass weighs every hit by metalness, so dielectrics would only cost time; a dark metal writes its reflectance there instead through its own outputs (see `MaterialOutputsNode`), or it would mirror its surroundings as brightly as gold. Their fifth scene target needs the higher attachment limit that cinematic and `?development` request, and the normal goes in as the texture node despite the `vec3` typing, because the pass samples it at neighboring texels.
+        // Screen-space reflections on the metallic surfaces, like gilded frames and trims, blurred by their roughness, on top of the floors’ planar mirror. The non-stochastic pass weighs every hit by metalness, so dielectrics would only cost time; a dark metal writes its reflectance there instead through its own outputs (see `MaterialOutputsNode`), or it would mirror its surroundings as brightly as gold. The normal goes in as the texture node despite the `vec3` typing, because the pass samples it at neighboring texels.
         const metalRoughness = scenePass.getTextureNode('metalrough')
         const reflection = own(ssr(scenePass.getTextureNode('output'), depth, normal as unknown as Node<'vec3'>, {
           camera,
