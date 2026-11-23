@@ -376,6 +376,8 @@ export type InitScript = (() => void) | readonly [script: (...args: Array<never>
  * Never touches the visible browser. Dispose the result to stop everything again.
  */
 export const openHeadlessGallery = async (setup: GallerySetup, options: {
+  /** further Chrome flags, like --disable-frame-rate-limit for uncapped frames */
+  args?: ReadonlyArray<string>
   /** Vite cache directory, see serveGallery */
   cacheDir: string
   /** run in the page in order before any of its own scripts, like the virtual clock of capture-session/script */
@@ -403,7 +405,7 @@ export const openHeadlessGallery = async (setup: GallerySetup, options: {
         deviceScaleFactor: 1,
       },
       // WebMCP lets scripts call the app’s own tools, see callWebmcpTool from capture-session/script. Chrome only keeps the last --enable-features.
-      args: ['--enable-unsafe-webgpu', `--enable-features=${setup.swiftshader ? 'WebMCP,Vulkan' : 'WebMCP'}`, ...crossOriginArgs, ...setup.swiftshader ? swiftshaderArgs : []],
+      args: ['--enable-unsafe-webgpu', `--enable-features=${setup.swiftshader ? 'WebMCP,Vulkan' : 'WebMCP'}`, ...crossOriginArgs, ...setup.swiftshader ? swiftshaderArgs : [], ...options.args ?? []],
     })
     const page = await browser.newPage()
     watchPage(page)
