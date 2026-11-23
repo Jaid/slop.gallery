@@ -17,14 +17,14 @@ export type ReflectionPass = {
   target: RenderTarget
 }
 
-type FloorReflection = {
+export type FloorReflection = {
   /** radius of the Gaussian blur over the mirror, in pixels of a 1080-row image; 0 leaves it unblurred */
   gaussianBlur?: number
-  grazingStrength: number
+  grazingStrength: Node<'float'> | number
   /** mip level the mirror is read at, 0 being its full resolution and every step halving it */
   loss: Node<'float'> | number
   mask?: Node<'float'>
-  strength: number
+  strength: Node<'float'> | number
 }
 type Reflection = ReturnType<typeof reflector>
 
