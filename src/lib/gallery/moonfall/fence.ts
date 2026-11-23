@@ -5,13 +5,13 @@ import {defaultEgoOptions} from 'ego-player/motor'
 import {environmentRandom} from '../../environmentSeed.ts'
 import lowerGallery from '../lowerGallery.ts'
 import {ropeTop, stanchionHeight} from '../railings/stanchion.ts'
-import staircase from '../staircase.ts'
+import {moonfallStairs} from '../staircase.ts'
 import {moonfallCrater} from './config.ts'
 
 const room = lowerGallery.moonfall
 
 /** the direction from the crater’s middle toward the foot of the stairs from the Antechamber, as an angle from +x toward +z: the middle of a rope faces it, never a stanchion */
-export const fenceFacing = Math.atan2(staircase.returnZ - room.center[1], staircase.endX - room.center[0])
+export const fenceFacing = Math.atan2(moonfallStairs.end[2] - room.center[1], moonfallStairs.end[0] - room.center[0])
 
 /** the least height the fence blocks walkers up to, well over the player’s step, which would otherwise climb the ropes that hang lowest */
 export const fenceGuard = defaultEgoOptions.stepHeight + 0.1

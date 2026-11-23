@@ -1,5 +1,6 @@
 import type {GalleryRoomId} from '#src/worlds/gallery/index.ts'
 
+import {antechamberEastWing, antechamberHall, antechamberWestWing, antechamberWing, moonfallLandingSouth, moonfallPassage} from './antechamber.ts'
 import lobby from './lobby.ts'
 
 export type FloorRectangle = {
@@ -55,7 +56,8 @@ export function roomFloorPlan(room: FloorRoom) {
     size: lobby.opening.size,
   } : undefined
   const cut = (rectangle: FloorRectangle) => subtractFloorOpening(rectangle, opening)
-  const [width, depth] = room.size
+  const extras = room.id === 'antechamber' ? antechamberFloors(room) : []
+  const [width, depth] = room.id === 'antechamber' ? antechamberHall.size : room.size
   const seams: Array<FloorRectangle> = [
     ...Array.from({length: Math.floor(width / floorTile) + 1}, (_, i): FloorRectangle => ({
       center: [i * floorTile - width / 2, 0],
@@ -78,11 +80,22 @@ export function roomFloorPlan(room: FloorRoom) {
   ])
   return {
     glazing: opening,
-    slabs: cut({
-      center: [0, 0],
-      size: room.size,
-    }),
+    slabs: [{
+      center: [0, 0] as const,
+      size: [width, depth] as const,
+    }, ...extras].flatMap(cut),
     seams: seams.flatMap(cut),
     inlays: inlays.flatMap(cut),
   }
+}
+/** The Antechamber’s wings and the gallery stairway, as floor rectangles relative to the hall’s middle. */
+function antechamberFloors(room: FloorRoom): Array<FloorRectangle> {
+  const wing = (center: readonly [number, number]): FloorRectangle => ({
+    center: [center[0] - room.center[0], center[1] - room.center[1]],
+    size: antechamberWing.size,
+  })
+  return [wing(antechamberWestWing.center), wing(antechamberEastWing.center), {
+    center: [moonfallPassage.west + moonfallPassage.width / 2 - room.center[0], (moonfallPassage.north + moonfallLandingSouth) / 2 - room.center[1]],
+    size: [moonfallPassage.width, moonfallLandingSouth - moonfallPassage.north],
+  }]
 }

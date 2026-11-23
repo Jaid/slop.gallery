@@ -82,12 +82,10 @@ describe('rectangular floor openings', () => {
         continue
       }
       expect(roomFloorPlan(other).glazing).toBeUndefined()
-      expect(roomFloorPlan(other).slabs).toEqual([
-        {
-          center: [0, 0],
-          size: other.size,
-        },
-      ])
+      expect(roomFloorPlan(other).slabs[0]).toEqual({
+        center: [0, 0],
+        size: other.id === 'antechamber' ? [8, 8] : other.size,
+      })
     }
   })
   test('slabs leave a real cutout and flush glazing supports the opening and its seams', () => {

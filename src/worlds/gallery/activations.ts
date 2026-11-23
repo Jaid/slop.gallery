@@ -52,10 +52,7 @@ const activations = {
       exhibition: 'tunnel_north',
     },
   },
-  // Moonfall’s stairway shows through the doorway into the Antechamber and on through the one in the Antechamber’s east wall. From the west of the Lobby’s middle part, a sliver of it still does, which shows the void until the Antechamber hides the stairway.
-  'lobby-south': {
-    rooms: ['moonfall'],
-  },
+
   vesper: {
     rooms: ['lobby', 'bastion', 'sienna', 'banquet', 'antechamber', 'salon', 'forge', 'corridor', 'oculus'],
     reflectionGroup: 'ground',

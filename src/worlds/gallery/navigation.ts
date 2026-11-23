@@ -2,6 +2,7 @@ import type {Vec3} from '#src/lib/gallery/types.ts'
 import type PlacedRoom from '../base/PlacedRoom.ts'
 import type {GalleryRoom} from './SlopGallery.ts'
 
+import {antechamberAnnexFloor, antechamberWing} from '#src/lib/gallery/antechamber.ts'
 import {bastionFloors, insideBastion} from '#src/lib/gallery/bastionNetwork.ts'
 import {corridorLanding, corridorPassage, corridorStairFloor, insideCorridor} from '#src/lib/gallery/corridor.ts'
 import {forgeVestibule} from '#src/lib/gallery/forge.ts'
@@ -20,6 +21,7 @@ type Hall = PlacedRoom<GalleryRoom> & {size: NonNullable<GalleryRoom['size']>}
 
 /** how high the rooms’ vestibules beyond their floor plans reach: the Sienna’s under its lower ceiling, the Forge’s up to the hub of its hood */
 const annexCeilings: Partial<Record<Hall['id'], number>> = {
+  antechamber: antechamberWing.height,
   sienna: siennaVestibule.height,
   forge: forgeVestibule.crown,
 }
@@ -55,6 +57,7 @@ export default class GalleryNavigation {
       corridorLanding.floorAt(x, z),
       siennaVestibuleFloor(x, z),
       forgeVestibuleFloor(x, z),
+      antechamberAnnexFloor(x, z),
       platformFloorHeight(x, z),
       tunnelFloorHeight(x, z),
       lodgeWindowFloor(x, z),
@@ -78,6 +81,6 @@ export default class GalleryNavigation {
     const main = inPlan(room, x, z)
     // Up to the top of its box, the vault’s or the dome’s crown or the Forge’s ridges included, and beyond its floor plan up to its vestibule’s own ceiling where it has one.
     const ceiling = main ? room.air[0].max.y : annexCeilings[room.id] ?? room.air[0].max.y
-    return y >= ground - 1 && y <= ceiling + 0.2 && (main || room.id === 'lodge' && lodgeBayFloor(x, z) !== undefined || room.id === 'sienna' && siennaVestibuleFloor(x, z) !== undefined || room.id === 'forge' && forgeVestibuleFloor(x, z) !== undefined || room.id === 'oculus' && insideApse(x, z))
+    return y >= ground - 1 && y <= ceiling + 0.2 && (main || room.id === 'lodge' && lodgeBayFloor(x, z) !== undefined || room.id === 'sienna' && siennaVestibuleFloor(x, z) !== undefined || room.id === 'forge' && forgeVestibuleFloor(x, z) !== undefined || room.id === 'oculus' && insideApse(x, z) || room.id === 'antechamber' && antechamberAnnexFloor(x, z) !== undefined)
   }
 }

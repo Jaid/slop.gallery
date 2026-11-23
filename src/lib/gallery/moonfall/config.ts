@@ -16,7 +16,8 @@ export const moonfallCrater = {
 
 /** the ceiling slab relative to Moonfall’s floor */
 export const ceilingSlab = {
-  center: 5.78,
+  // The highest slab that stays clear of the upper floor, whose underside is at world y = −0.24.
+  center: 7.59,
   thickness: 0.18,
 } as const
 /** the face of the smoked mirror lining, 1 cm below the slab that still casts shadows during the reflection pass */

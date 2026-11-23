@@ -41,7 +41,7 @@ test('every Moonfall LED is backed by solid wall across its entire housing', () 
   }
 })
 test('the LEDs flanking each Moonfall opening keep the same distance from its casing’s side as from the casing’s top and the baseboard', () => {
-  for (const [wallName, holeName] of [['east', 'stairway'], ['north', 'exhibition']] as const) {
+  for (const [wallName, holeName] of [['north', 'exhibition']] as const) {
     const wall = moonfallWalls[wallName]
     const hole = wall.holes![holeName]
     const flanking = moonfallWallLeds.filter(led => led.wall === wallName)

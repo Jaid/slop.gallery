@@ -16,7 +16,7 @@ import {corridorLanding, corridorStairs} from '../../src/lib/gallery/corridor.ts
 import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import {isLowerPosition, minimapPortrait, minimapRooms, minimapViewBox, portraitMarkerMinimumThickness} from '../../src/lib/gallery/minimap.ts'
 import portraitObjects from '../../src/lib/gallery/portraitObjects.ts'
-import {stairFlights, stairTurn} from '../../src/lib/gallery/staircase.ts'
+import {moonfallStairs} from '../../src/lib/gallery/staircase.ts'
 import {minimapHeading} from '../../src/lib/minimapPlayer.ts'
 import samplePortraits from './fixtures/portraits.ts'
 
@@ -126,18 +126,11 @@ test('hanging portraits belong to their wall’s floor even when rooms overlap v
     wallId: 'lobby-north',
   }).lower).toBe(false)
 })
-test('Moonfall’s upper map follows the first flight to the middle of the curved landing', () => {
+test('Moonfall’s upper map follows the upper half of the flight from the Antechamber', () => {
   expect(minimapRooms.filter(room => room.id === 'moonfall').map(room => room.lower)).toEqual([true, false])
-  const [upper, lower] = stairFlights
-  for (const {position: [x, , z], top} of upper.blocks) {
-    expect(isLowerPosition('moonfall', eye([x, top, z]))).toBe(false)
+  for (const {position: [x, , z], top} of moonfallStairs.blocks) {
+    expect(isLowerPosition('moonfall', eye([x, top, z]))).toBe(top - lowerGallery.floorY < 4)
   }
-  const [x, y, z] = stairTurn.position
-  expect(isLowerPosition('moonfall', eye([x, y, z - 0.1]))).toBe(false)
-  expect(isLowerPosition('moonfall', eye([x, y, z + 0.1]))).toBe(true)
-  // The hall under the head of the stairs and the return flight belong to the lower map.
-  expect(isLowerPosition('moonfall', eye([upper.start[0], lowerGallery.floorY, upper.start[2]]))).toBe(true)
-  expect(isLowerPosition('moonfall', eye(lower.start))).toBe(true)
 })
 test('the Corridor stays on the lower map until the flight crosses the same west cut as the Bastion’s upper hairpin', () => {
   expect(minimapRooms.filter(room => room.id === 'corridor').map(room => room.lower)).toEqual([true, false])

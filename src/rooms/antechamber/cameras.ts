@@ -10,4 +10,22 @@ export default {
     fov: 100,
     ratio: 16 / 9,
   },
+  west_wing: {
+    position: [-7.6, 1.6, 0],
+    aim: {
+      yaw: Math.PI,
+      pitch: -0.1,
+    },
+    fov: 70,
+    ratio: 16 / 9,
+  },
+  gallery: {
+    position: [22, 6.2, 0],
+    aim: {
+      yaw: -Math.PI / 2,
+      pitch: 0.05,
+    },
+    fov: 70,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>

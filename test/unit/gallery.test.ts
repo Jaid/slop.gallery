@@ -168,7 +168,9 @@ describe('wall geometry', () => {
       expect(insideGallery([...position])).toBe(true)
     }
     // east of the Sienna, west of it, south of it beside the vestibule, under it and over it
-    for (const position of [[-6, 2, 18], [east + 0.01, 2, z], [14, 3, 14], [east - 1, 2, south + 0.01], [west - 0.01, 2, z], [x, -1.01, z], [x, 6.01, z], [Number.NaN, 2, z]] as const) {
+    // Under the Sienna is Moonfall, whose ceiling now reaches the floor above.
+    expect(roomAt([x, -0.5, z])).toBe('moonfall')
+    for (const position of [[-6, 2, 18], [east + 0.01, 2, z], [14, 3, 14], [east - 1, 2, south + 0.01], [west - 0.01, 2, z], [x, 6.01, z], [Number.NaN, 2, z]] as const) {
       expect(insideGallery([...position])).toBe(false)
     }
   })

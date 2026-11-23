@@ -8,15 +8,22 @@ import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import PlanarMirrorMaterial from '#src/lib/materials/PlanarMirrorMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
-type Props = {size: readonly [number, number]}
+type Slab = {
+  center: readonly [number, number]
+  size: readonly [number, number]
+}
+type Props = {
+  size: readonly [number, number]
+  slabs: ReadonlyArray<Slab>
+}
 
-export default function CeilingMirror({size}: Props) {
+export default function CeilingMirror({slabs}: Props) {
   const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  return <Branch if={mirrorReflections}><Lining size={size} /></Branch>
+  return <Branch if={mirrorReflections}><Lining slabs={slabs} /></Branch>
 }
 
 /** The slab behind the lining keeps casting its shadow while the mirror renders. The beams below it stay matte. */
-function Lining({size: [width, depth]}: Props) {
+function Lining({slabs}: {slabs: ReadonlyArray<Slab>}) {
   const material = useDisposable(useMemo(() => new PlanarMirrorMaterial(null, {
     color: moonfallTheme.ceiling,
     envMapIntensity: 0,
@@ -28,8 +35,10 @@ function Lining({size: [width, depth]}: Props) {
       loss: 0,
     },
   }), []))
-  return <mesh material={material} name='moonfall-ceiling-mirror' position-y={ceilingMirrorY} receiveShadow rotation-x={Math.PI / 2}>
-    <planeGeometry args={[width, depth]} />
+  return <group position-y={ceilingMirrorY} rotation-x={Math.PI / 2}>
+    {slabs.map(({center: [x, z], size: [width, depth]}) => <mesh key={`${x}:${z}`} material={material} name='moonfall-ceiling-mirror' position={[x, z, 0]} receiveShadow>
+      <planeGeometry args={[width, depth]} />
+    </mesh>)}
     <primitive object={material.reflectionTarget!} />
-  </mesh>
+  </group>
 }

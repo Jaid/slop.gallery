@@ -21,8 +21,8 @@ import SurfaceTextures from './SurfaceTextures.ts'
 const {reach} = slopGallery
 /** the walls of the rooms in reach, see `World.reach`, each cut the first time it mounts; the others aren’t there, and their openings look out into the void */
 const presentWalls = walls.filter(wall => reach.covers(wall.room))
-/** whether Moonfall, which owns the stairway down from the Antechamber, is in reach */
-const hasStairway = reach.covers('moonfall')
+/** whether either room that owns a stairway of the Antechamber is in reach */
+const hasStairway = reach.covers('moonfall') || reach.covers('antechamber')
 
 export default function Architecture() {
   const isHeavy = useGraphicsMode()
@@ -67,7 +67,7 @@ export default function Architecture() {
   return <>
     <GalleryLighting />
     {presentWalls.map(wall => <WallSurface key={wall.id} decorations={WallDecorations} glass={wall.holes?.some(hole => hole.glassThickness) ? glass.tunnel : undefined} material={shared.trim(wall)} plaster={textures.plaster} revealMaterial={shared.reveal(wall)} surfaceMaterial={shared.surface(wall)} wall={wall} />)}
-    <Branch if={hasStairway} then={GalleryStairs} />
+    <Branch if={hasStairway}><GalleryStairs gallery={reach.covers('antechamber')} moonfall={reach.covers('moonfall')} /></Branch>
     <World materials={materials} />
   </>
 }

@@ -30,7 +30,7 @@ export const openings: ReadonlyArray<Opening> = [
   },
   {
     rooms: ['antechamber', 'moonfall'],
-    holes: [['antechamber-east', 'stairway'], ['moonfall-east', 'stairway']],
+    holes: [['antechamber-landing_east', 'moonfall']],
   },
   {
     // The arch out of the Sienna’s vestibule onto the Corridor’s landing; the arch between the Sienna and its vestibule lies within the Sienna.

@@ -31,9 +31,9 @@ export default {
     range: 6,
     decay: 1,
   },
-  // Over the upper flight of the stairway up to the Antechamber.
+  // Over the upper flight of the stairway up to the Antechamber’s west wing.
   stairs: {
-    position: [24.55, 6.72, -4.98],
+    position: [2.5, 7.3, 11.5],
     strength: 30,
     tint: moonfallTheme.stairs,
     range: 15,

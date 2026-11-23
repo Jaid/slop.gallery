@@ -45,9 +45,13 @@ function flankingLeds(wall: LedWall, hole: string, [beforeId, afterId]: readonly
   const reach = width / 2 + wallOpeningTrim + padding + wallLedHousing.width / 2
   return [wallLed(beforeId, wall, u - reach, y), wallLed(afterId, wall, u + reach, y)]
 }
-/** A pair flanks each opening: the stair door in the east wall and the Exhibition’s tunnel in the north wall. */
+/** The east wall is solid. Its two housings keep the spacing they had beside the old doorway, one to either side of the wall’s middle. */
+const eastLedY = defaultBaseboardHeight + (3.6 + wallOpeningTrim - defaultBaseboardHeight - wallLedHousing.height) / 2 + wallLedHousing.height / 2
+const eastLedReach = 2.5 + wallOpeningTrim + (3.6 + wallOpeningTrim - defaultBaseboardHeight - wallLedHousing.height) / 2 + wallLedHousing.width / 2
+/** A pair flanks the Exhibition’s tunnel, and another stands on the solid east wall. */
 const moonfallWallLeds: ReadonlyArray<MoonfallWallLed> = [
-  ...flankingLeds('east', 'stairway', ['wall_east_north', 'wall_east_south']),
+  wallLed('wall_east_north', 'east', -eastLedReach, eastLedY),
+  wallLed('wall_east_south', 'east', eastLedReach, eastLedY),
   ...flankingLeds('north', 'exhibition', ['wall_north_west', 'wall_north_east']),
 ]
 

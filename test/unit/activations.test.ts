@@ -71,7 +71,7 @@ test('whatever any of the fences the player is in keeps on is on', () => {
   expect(enabledRooms(['lobby', 'banquet'])).toEqual([...new Set<GalleryRoomId>([...lobbyRooms, ...activations.banquet.rooms])])
   // The parts of the Lobby add to what the Lobby keeps on.
   expect(enabledRooms(['lobby', 'lobby-north'])).toEqual(lobbyRooms)
-  expect(enabledRooms(['lobby', 'lobby-middle', 'lobby-south'])).toEqual([...lobbyRooms, 'moonfall'])
+  expect(enabledRooms(['lobby', 'lobby-middle', 'lobby-south'])).toEqual(lobbyRooms)
   expect(enabledRooms(['antechamber', 'lobby-south'])).toEqual(activations.antechamber.rooms)
   // Only one group gets the shared reflection, including when two fences request different planes.
   expect(reflectionGroup(['lobby'])).toBe('ground')
@@ -87,7 +87,7 @@ test('whatever any of the fences the player is in keeps on is on', () => {
   expect(reflectionGroup(['arena'])).toBeUndefined()
   expect(reflectionGroup([])).toBeUndefined()
 })
-test('walking down the Lobby, the Exhibition’s north tunnel lamp only shines in its north part and Moonfall only stays enabled in its south part', () => {
+test('walking down the Lobby, the Exhibition’s north tunnel lamp only shines in its north part and Moonfall stays hidden', () => {
   const [x, y, z] = slopGallery.spawn.position
   startGeofences([x, y + 0.9, z])
   expect(whereabouts()).toEqual(['lobby', 'lobby-north'])
@@ -99,7 +99,7 @@ test('walking down the Lobby, the Exhibition’s north tunnel lamp only shines i
       const south = at >= southZ
       expect(whereabouts()).toEqual(['lobby', north ? 'lobby-north' : (south ? 'lobby-south' : 'lobby-middle')])
       expect(`${at.toFixed(2)}: tunnel lamp ${shines('exhibition-tunnel_north', whereabouts()) ? 'on' : 'off'}`).toBe(`${at.toFixed(2)}: tunnel lamp ${north ? 'on' : 'off'}`)
-      expect(`${at.toFixed(2)}: Moonfall ${enabledRooms(whereabouts()).includes('moonfall') ? 'enabled' : 'hidden'}`).toBe(`${at.toFixed(2)}: Moonfall ${south ? 'enabled' : 'hidden'}`)
+      expect(`${at.toFixed(2)}: Moonfall ${enabledRooms(whereabouts()).includes('moonfall') ? 'enabled' : 'hidden'}`).toBe(`${at.toFixed(2)}: Moonfall hidden`)
       // A camera at the player’s eyes is in the same fences, so what it draws goes by them too.
       expect(whereaboutsAt([across, 1.62, at])).toEqual([...whereabouts()])
       // What the whole Lobby keeps on stays on all the way: the lamps at the doors of the Exhibition’s staff stairways, and its own chandeliers.
@@ -118,13 +118,13 @@ test('walking down the Lobby, the Exhibition’s north tunnel lamp only shines i
   expect(shines('exhibition-tunnel_north', whereabouts())).toBe(true)
   probeGeofences([0, 0.9, southZ], still)
   expect(whereabouts()).toEqual(['lobby', 'lobby-middle', 'lobby-south'])
-  expect(enabledRooms(whereabouts())).toContain('moonfall')
+  expect(enabledRooms(whereabouts())).not.toContain('moonfall')
   // Where the lamp and Moonfall are at home, and wherever else keeps them on, nothing changed.
   for (const room of ['exhibition', 'moonfall', 'oculus']) {
     expect(shines('exhibition-tunnel_north', [room])).toBe(true)
   }
   expect(shines('exhibition-tunnel_north', ['vesper'])).toBe(false)
   for (const {id} of slopGallery.rooms) {
-    expect(`${id}: ${enabledRooms(slopGallery.fencesIn(id)).includes('moonfall')}`).toBe(`${id}: ${['antechamber', 'exhibition', 'lobby', 'oculus'].includes(id)}`)
+    expect(`${id}: ${enabledRooms(slopGallery.fencesIn(id)).includes('moonfall')}`).toBe(`${id}: ${['antechamber', 'exhibition', 'oculus'].includes(id)}`)
   }
 })

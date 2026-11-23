@@ -11,11 +11,11 @@ export default {
     ratio: 16 / 9,
   },
   stairs: {
-    // On the lower flight’s centerline, looking due west, so its walls frame the view symmetrically.
-    position: [16.63, 3.1, 0],
+    // On the flight from the Antechamber, looking west toward its top.
+    position: [2, 6, 11.5],
     aim: {
       yaw: Math.PI / 2,
-      pitch: -0.35,
+      pitch: -0.2,
     },
     fov: 60,
     ratio: 16 / 9,
