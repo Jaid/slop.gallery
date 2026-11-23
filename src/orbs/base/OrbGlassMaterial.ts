@@ -1,8 +1,10 @@
 import type {TransmittingEmission} from '#src/lib/rendering/AlbedoRenderPipeline.ts'
 import type {ColorRepresentation, Node} from 'three/webgpu'
 
-import {Break, cameraFar, cameraNear, cameraPosition, cameraProjectionMatrix, float, Fn, frameId, If, interleavedGradientNoise, Loop, modelViewMatrix, modelWorldMatrixInverse, normalView, perspectiveDepthToViewZ, positionGeometry, positionView, positionViewDirection, reflect, refract, screenCoordinate, screenUV, select, smoothstep, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
+import {Break, cameraFar, cameraNear, cameraPosition, cameraProjectionMatrix, float, Fn, frameId, If, interleavedGradientNoise, Loop, modelViewMatrix, modelWorldMatrixInverse, normalView, perspectiveDepthToViewZ, positionGeometry, positionView, positionViewDirection, refract, screenCoordinate, screenUV, select, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
+
+import MaterialOutputsNode from '#src/lib/rendering/MaterialOutputsNode.ts'
 
 /** A ray through the orb’s fill, in its own frame and in radii of the orb, so the fill is the unit ball whichever size the orb is. */
 export type OrbRay = {
@@ -59,7 +61,9 @@ export type OrbGlassOptions = {
 const glassIor = 1.5
 /** reflectance of the glass seen head-on */
 const reflectance = ((glassIor - 1) / (glassIor + 1)) ** 2
-/** what the glass reflects where the room behind the camera would be */
+/** roughness of the polished glass */
+const glassRoughness = 0.03
+/** what the glass reflects where the screen-space reflections find nothing, like the room behind the camera, or where there are none */
 const unseenRoom = vec3(0.035, 0.018, 0.016)
 /** Beyond this distance in meters between the orb and what lies behind it, the view through it stops bending further, so the room stays recognizable in it. */
 const maximumGap = 4
@@ -72,7 +76,7 @@ function project(point: Node<'vec3'>) {
 /**
  * A thin glass globe filled with a liquid that a subclass paints by marching the view through it.
  *
- * The fill bends the view like water in a snow globe, so the room behind the orb shows through wherever the fill is thin, upside down and squeezed into the ball, the surest sign of glass. The glass reflects the room around the orb, which the frame already holds, and the lamps, which the lighting adds.
+ * The fill bends the view like water in a snow globe, so the room behind the orb shows through wherever the fill is thin, upside down and squeezed into the ball, the surest sign of glass. The glass reflects the lamps, which the lighting adds, and the room around the orb, which the screen-space reflections add, weighted by the glass’s Fresnel reflectance.
  *
  * Everything seen through the glass arrives as emission, so the orb itself is opaque: it writes depth, normals and motion like any solid, which the ambient occlusion and the temporal antialiasing need. It is drawn among the transparent objects only so that the room is already in the frame when it does.
  */
@@ -90,7 +94,7 @@ export default abstract class OrbGlassMaterial extends MeshPhysicalNodeMaterial 
       // A black body leaves only the reflections; everything inside comes in as emission.
       color: '#000000',
       metalness: 0,
-      roughness: 0.03,
+      roughness: glassRoughness,
       ior: glassIor,
       specularIntensity: 1,
       transparent: true,
@@ -98,6 +102,12 @@ export default abstract class OrbGlassMaterial extends MeshPhysicalNodeMaterial 
     })
     this.name = name
     const fillTint = new Color(tint)
+    const fresnel = Fn(() => {
+      const cosine = normalView.dot(positionViewDirection).abs().clamp()
+      return float(reflectance).add(float(1 - reflectance).mul(cosine.oneMinus().pow(5)))
+    })
+    // The screen-space reflections weigh what they add by this instead of the metalness, which would turn the black glass into a black mirror.
+    this.mrtNode = new MaterialOutputsNode({metalrough: vec2(fresnel(), glassRoughness)})
     this.emissiveNode = Fn(() => {
       const eye = modelWorldMatrixInverse.mul(vec4(cameraPosition, 1)).xyz.div(radius).toVar('orbEye')
       const origin = positionGeometry.normalize().toVar('orbOrigin')
@@ -125,16 +135,9 @@ export default abstract class OrbGlassMaterial extends MeshPhysicalNodeMaterial 
       const backdrop = (viewportOpaqueMipTexture(viewportSafeUV(project(exitView.add(outgoingView.mul(gap)))), blur) as Node<'vec4'>).rgb
       // The fill scatters the brightest of it, like a lamp right behind the orb, into the glow around it, so the room seen through the orb never outshines what floats in it.
       const behind = backdrop.div(backdrop.r.max(backdrop.g).max(backdrop.b).mul(0.6).add(1))
-      // The glass mirrors what stands around the orb, which the frame holds wherever the mirrored view lands on the screen. Toward the camera, it would mirror the unseen room behind it.
-      const mirrored = reflect(positionView.normalize(), normalView)
-      const mirroredClip = cameraProjectionMatrix.mul(vec4(positionView.add(mirrored.mul(gap)), 1))
-      const mirroredUV = mirroredClip.xy.div(mirroredClip.w).mul(vec2(0.5, -0.5)).add(0.5)
-      const onScreen = mirroredUV.sub(0.5).abs().max(0.5).sub(0.5).length().mul(-20).add(1).clamp().mul(select(mirroredClip.w.greaterThan(0), float(1), float(0)))
-      const around = (viewportOpaqueMipTexture(viewportSafeUV(mirroredUV.clamp(0, 1)), float(1.5)) as Node<'vec4'>).rgb
-      const room = unseenRoom.add(around.sub(unseenRoom).mul(onScreen.mul(smoothstep(0, -0.35, mirrored.z))))
-      const cosine = normalView.dot(positionViewDirection).abs().clamp()
-      const fresnel = float(reflectance).add(float(1 - reflectance).mul(cosine.oneMinus().pow(5)))
-      return fill.radiance.add(behind.mul(vec3(fillTint.r, fillTint.g, fillTint.b)).mul(transmittance)).mul(fresnel.oneMinus()).add(room.mul(fresnel))
+      const reflectivity = fresnel().toVar('orbFresnel')
+      // The screen-space reflections add the room where their rays find it; the unseen room stays underneath for the rays that leave the screen or turn toward the camera.
+      return fill.radiance.add(behind.mul(vec3(fillTint.r, fillTint.g, fillTint.b)).mul(transmittance)).mul(reflectivity.oneMinus()).add(unseenRoom.mul(reflectivity))
     })()
   }
 
