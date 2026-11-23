@@ -24,9 +24,9 @@ describe('round stair landing', () => {
     }
     expect(stairTurn.point(0)[1]).toBeCloseTo(staircase.z)
     expect(stairTurn.point(Math.PI)[1]).toBeCloseTo(staircase.returnZ)
-    expect(stairTurn.point(0, stairTurn.innerRadius)[1] - stairTurn.point(0, stairTurn.outerRadius)[1]).toBeCloseTo(staircase.width)
-    expect(stairTurn.point(Math.PI, stairTurn.outerRadius)[1] - stairTurn.point(Math.PI, stairTurn.innerRadius)[1]).toBeCloseTo(staircase.lowerWidth)
-    expect(stairFloorHeight(staircase.turnX + staircase.width, staircase.z - staircase.width / 2)).toBeUndefined()
+    expect(stairTurn.direction * (stairTurn.point(0, stairTurn.innerRadius)[1] - stairTurn.point(0, stairTurn.outerRadius)[1])).toBeCloseTo(staircase.width)
+    expect(stairTurn.direction * (stairTurn.point(Math.PI, stairTurn.outerRadius)[1] - stairTurn.point(Math.PI, stairTurn.innerRadius)[1])).toBeCloseTo(staircase.lowerWidth)
+    expect(stairFloorHeight(staircase.turnX + staircase.width, staircase.z - stairTurn.direction * staircase.width / 2)).toBeUndefined()
     expect(stairFloorHeight(staircase.turnX + stairTurn.innerRadius / 2, stairTurn.innerCenterZ)).toBeUndefined()
     expect(stairTurn.contains(Number.NaN, 0)).toBe(false)
   })

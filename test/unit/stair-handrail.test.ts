@@ -76,7 +76,7 @@ describe('continuous stair handrails', () => {
           const tops = offsets.map(offset => {
             const angle = Math.max(offset, 0) / radius
             const x = stairTurn.center[0] + Math.min(offset, 0) + Math.sin(angle) * radius
-            const z = centerZ + (i === 0 ? -1 : 1) * Math.cos(angle) * radius
+            const z = centerZ + stairTurn.direction * (i === 0 ? -1 : 1) * Math.cos(angle) * radius
             const expected = stairTurn.top + 1 + flight.slope * Math.min(offset, 0) - flight.slope * stairHandrailEase(offset)
             const surfaces = [-0.017, 0.013].flatMap(across => [-1, 1].map(direction => {
               const origin = new Vector3(x, expected - direction, z + across)

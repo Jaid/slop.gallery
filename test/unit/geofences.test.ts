@@ -5,6 +5,7 @@ import {expect, test} from 'bun:test'
 import {Geofence, RelationalGeofence} from 'geofency'
 import {Box3} from 'three/webgpu'
 
+import {antechamberMoonfallDoor} from '../../src/lib/gallery/antechamber.ts'
 import {apseOpeningPoint, apseOpenings, bastionApproach, bastionCurve, bastionLinkStripZ} from '../../src/lib/gallery/bastion.ts'
 import {bastionLink, lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
 import {cistern, cisternFloor} from '../../src/lib/gallery/cistern/cistern.ts'
@@ -17,7 +18,7 @@ import lobby from '../../src/lib/gallery/lobby.ts'
 import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import lowerGallery, {oculusPlatform} from '../../src/lib/gallery/lowerGallery.ts'
-import {stairFloorHeight, stairwayFootprint} from '../../src/lib/gallery/staircase.ts'
+import {stairApproach, stairFloorHeight, stairwayFootprint} from '../../src/lib/gallery/staircase.ts'
 import tunnelDisplays from '../../src/lib/gallery/tunnelDisplays.ts'
 import Cell from '../../src/rooms/cell/Cell.ts'
 import CellLayout from '../../src/rooms/cell/CellLayout.ts'
@@ -283,17 +284,17 @@ test('the gallery’s lobby-north, lobby-middle and lobby-south make up the Lobb
 })
 test('the gallery’s moonfall-stairs fences the stairway between the Antechamber and Moonfall: whatever of Moonfall’s fence lies outside of its hall', () => {
   const fence = slopGallery.geofences.get('moonfall-stairs')!
-  const [hall, stairway] = slopGallery.room('moonfall').fence.boxes
+  const [hall, ...stairBoxes] = slopGallery.room('moonfall').fence.boxes
   const eastX = lowerGallery.moonfall.center[0] + lowerGallery.moonfall.size[0] / 2
   let treads = 0
-  // in columns over and around the stairway’s footprint, off the planes the boxes end on
-  for (let x = stairwayFootprint.x - 1.03; x < stairwayFootprint.x2 + 1.03; x += 0.31) {
-    for (let z = stairwayFootprint.z - 1.03; z < stairwayFootprint.z2 + 1.03; z += 0.31) {
-      for (const y of [-12, -7.1, -2.1, -1.9, 0.9, 9]) {
+  // in columns over and around both the curved approach and the descending stairway’s footprint, off the planes the boxes end on
+  for (let x = stairApproach.southRun.x - stairApproach.width / 2 - 0.53; x < stairwayFootprint.x2 + 1.03; x += 0.51) {
+    for (let z = antechamberMoonfallDoor.z - 0.53; z < stairwayFootprint.z2 + 1.03; z += 0.51) {
+      for (const y of [-12, -7.1, -0.5, -0.1, 0.9, 9]) {
         const position: Vec3 = [x, y, z]
-        expect(fence.contains(position)).toBe(stairway.contains(position) && !hall.contains(position))
+        expect(fence.contains(position)).toBe(stairBoxes.some(box => box.contains(position)) && !hall.contains(position))
       }
-      // wherever a body is on its flights and its turn, standing, crouching or jumping
+      // wherever a body is on the curved approach, flights and turn, standing, crouching or jumping
       const floor = stairFloorHeight(x, z)
       if (floor === undefined) {
         continue
@@ -307,15 +308,15 @@ test('the gallery’s moonfall-stairs fences the stairway between the Antechambe
     }
   }
   expect(treads).toBeGreaterThan(500)
-  // It begins in the plane of the Antechamber’s east wall, where the upper flight sets out, and ends in the plane of Moonfall’s east wall, where the lower flight arrives.
-  const [topX, topY, topZ] = [stairwayFootprint.x, 0.9, stairwayFootprint.z + 1.3]
-  expect(slopGallery.geofences.getMatches([topX - 0.01, topY, topZ])).toEqual(['antechamber'])
-  expect(slopGallery.geofences.getMatches([topX + 0.01, topY, topZ])).toEqual(['moonfall', 'moonfall-stairs'])
+  // It begins in the plane of the Antechamber west pavilion’s south wall, where the curved approach sets out, and ends in the plane of Moonfall’s east wall, where the lower flight arrives.
+  const [topX, topY, topZ] = [antechamberMoonfallDoor.x, 0.9, antechamberMoonfallDoor.z]
+  expect(slopGallery.geofences.getMatches([topX, topY, topZ - 0.01])).toEqual(['antechamber'])
+  expect(slopGallery.geofences.getMatches([topX, topY, topZ + 0.01])).toEqual(['moonfall', 'moonfall-stairs'])
   const [footY, footZ] = [lowerGallery.floorY + 0.9, lowerGallery.moonfall.center[1]]
   expect(slopGallery.geofences.getMatches([eastX + 0.01, footY, footZ])).toEqual(['moonfall', 'moonfall-stairs'])
   expect(slopGallery.geofences.getMatches([eastX - 0.01, footY, footZ])).toEqual(['moonfall'])
-  // not the hall under where the upper flight sets out
-  expect(slopGallery.geofences.getMatches([topX + 1, footY, topZ])).toEqual(['moonfall'])
+  // not the hall under the curved approach
+  expect(slopGallery.geofences.getMatches([topX, footY, topZ + 2])).toEqual(['moonfall'])
   // Moonfall’s visitors arrive on its lower flight, in the fence.
   const [x, y, z] = slopGallery.room('moonfall').spawn.position
   expect(stairFloorHeight(x, z)).toBeDefined()

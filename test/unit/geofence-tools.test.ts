@@ -55,8 +55,8 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
     relations: ['lobby-north', 'lobby-middle', 'lobby-south'],
   })
   expect(dump.filter(fence => fence.relations).map(({id}) => id)).toEqual(['lobby'])
-  // under its floor plan up to its ceiling, and its stairway at every height
-  expect(boxes('moonfall').map(box => createBox(box).constructor)).toEqual([VoidBox, BeamBox])
+  // under its floor plan up to its ceiling, its curved approach over its ceiling, and its descending stairway at every height
+  expect(boxes('moonfall').map(box => createBox(box).constructor)).toEqual([VoidBox, SkyBox, SkyBox, SkyBox, BeamBox])
   for (const part of ['lobby-north', 'lobby-middle', 'lobby-south']) {
     expect(boxes(part).map(box => createBox(box).constructor)).toEqual([SkyBox])
   }
@@ -86,7 +86,7 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
     z2: 8,
     floor: -0.2,
   }])
-  expect(boxes('moonfall-stairs').map(box => createBox(box).constructor)).toEqual([SkyBox, BeamBox])
+  expect(boxes('moonfall-stairs').map(box => createBox(box).constructor)).toEqual([SkyBox, SkyBox, SkyBox, BeamBox])
   expect(boxes('bastion-knight_alley')).toHaveLength(1)
   expect(boxes('bastion-cistern')).toHaveLength(1)
   for (const box of [...boxes('bastion-knight_alley'), ...boxes('bastion-cistern')]) {
@@ -115,13 +115,13 @@ test('the fences at a position are all that hold it, the rooms’ first, by defa
   expect(getGeofences(toPosition([-16.93, -4.1, -33]))).toEqual(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])
   // in the Bastion’s cistern, and on the turn of the stairway down to Moonfall
   expect(getGeofences(toPosition([-18.15, 1.8, -41]))).toEqual(['bastion', 'bastion-cistern'])
-  expect(getGeofences(toPosition([18.5, -3.1, 15]))).toEqual(['moonfall', 'moonfall-stairs'])
+  expect(getGeofences(toPosition([18.5, -3.1, 21.75]))).toEqual(['moonfall', 'moonfall-stairs'])
   expect(getGeofences(toPosition([900, 900, 900]))).toEqual([])
   bodyPose.place = [14, 1.5, 0]
   expect(getGeofences()).toEqual(['banquet'])
   bodyPose.place = [900, 900, 900]
   expect(getGeofences()).toEqual([])
-  for (const position of [[x, y + 1, z], [-8, 1.5, 0], [-20, 0, -32], [0, -5, -27], [-16.93, -4.1, -33], [-18.15, 1.8, -41], [18.5, -3.1, 15], [0, 1.5, -20], [3, 1.5, -12], [0, 1.5, -1.5], [900, 900, 900]] satisfies Array<Vec3>) {
+  for (const position of [[x, y + 1, z], [-8, 1.5, 0], [-20, 0, -32], [0, -5, -27], [-16.93, -4.1, -33], [-18.15, 1.8, -41], [18.5, -3.1, 21.75], [0, 1.5, -20], [3, 1.5, -12], [0, 1.5, -1.5], [900, 900, 900]] satisfies Array<Vec3>) {
     expect(getGeofences(toPosition(position))).toEqual(slopGallery.geofences.getMatches(position))
   }
 })

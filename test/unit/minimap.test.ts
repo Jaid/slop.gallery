@@ -126,18 +126,19 @@ test('hanging portraits belong to their wall’s floor even when rooms overlap v
     wallId: 'lobby-north',
   }).lower).toBe(false)
 })
-test('Moonfall’s upper map follows the first flight to the middle of the curved landing', () => {
+test('Moonfall’s upper map follows the curved approach, upper flight and U-turn landing', () => {
   expect(minimapRooms.filter(room => room.id === 'moonfall').map(room => room.lower)).toEqual([true, false])
   const [upper, lower] = stairFlights
   for (const {position: [x, , z], top} of upper.blocks) {
     expect(isLowerPosition('moonfall', eye([x, top, z]))).toBe(false)
   }
   const [x, y, z] = stairTurn.position
-  expect(isLowerPosition('moonfall', eye([x, y, z - 0.1]))).toBe(false)
-  expect(isLowerPosition('moonfall', eye([x, y, z + 0.1]))).toBe(true)
-  // The hall under the head of the stairs and the return flight belong to the lower map.
-  expect(isLowerPosition('moonfall', eye([upper.start[0], lowerGallery.floorY, upper.start[2]]))).toBe(true)
-  expect(isLowerPosition('moonfall', eye(lower.start))).toBe(true)
+  expect(isLowerPosition('moonfall', eye([x, y, z]))).toBe(false)
+  // The hall under the approach and every tread of the wide lower flight belong to the lower map.
+  expect(isLowerPosition('moonfall', eye([-8.5, lowerGallery.floorY, 18]))).toBe(true)
+  for (const {position: [lx, , lz], top} of lower.blocks) {
+    expect(isLowerPosition('moonfall', eye([lx, top, lz]))).toBe(true)
+  }
 })
 test('the Corridor stays on the lower map until the flight crosses the same west cut as the Bastion’s upper hairpin', () => {
   expect(minimapRooms.filter(room => room.id === 'corridor').map(room => room.lower)).toEqual([true, false])
