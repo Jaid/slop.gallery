@@ -2,6 +2,7 @@ import type {Vec3} from '#src/lib/gallery/types.ts'
 import type PlacedRoom from '../base/PlacedRoom.ts'
 import type {GalleryRoom} from './SlopGallery.ts'
 
+import {eastStair, stairHallFloor, stairHallHeight} from '#src/lib/gallery/antechamber.ts'
 import {bastionFloors, insideBastion} from '#src/lib/gallery/bastionNetwork.ts'
 import {corridorLanding, corridorPassage, corridorStairFloor, insideCorridor} from '#src/lib/gallery/corridor.ts'
 import {forgeVestibule} from '#src/lib/gallery/forge.ts'
@@ -41,7 +42,7 @@ export default class GalleryNavigation {
 
   /** Whether the position lies anywhere a player or an artwork may be. */
   contains(position: Vec3) {
-    return position.every(Number.isFinite) && (this.halls.some(room => this.hallContains(room, position)) || insideStairway(position) || tunnelContains(position) || insideTunnelDisplay(position) || insideLodgeWindow(position) || insideBastion(position))
+    return position.every(Number.isFinite) && (this.halls.some(room => this.hallContains(room, position)) || eastStair.contains(position) || insideStairway(position) || tunnelContains(position) || insideTunnelDisplay(position) || insideLodgeWindow(position) || insideBastion(position))
   }
 
   /**
@@ -50,6 +51,8 @@ export default class GalleryNavigation {
   floorHeight([x, y, z]: Vec3) {
     const floors = [
       ...this.halls.filter(room => inPlan(room, x, z)).map(room => groundOf(room, x, z)),
+      stairHallFloor(x, z),
+      eastStair.floorAt(x, z),
       ...bastionFloors(x, z),
       corridorPassage.floorAt(x, z),
       corridorLanding.floorAt(x, z),
@@ -74,6 +77,9 @@ export default class GalleryNavigation {
       return insideCorridor(position)
     }
     const [x, y, z] = position
+    if (room.id === 'antechamber' && stairHallFloor(x, z) !== undefined) {
+      return y >= -1 && y <= stairHallHeight + 0.2
+    }
     const ground = Math.min(room.floorY, groundOf(room, x, z))
     const main = inPlan(room, x, z)
     // Up to the top of its box, the vault’s or the dome’s crown or the Forge’s ridges included, and beyond its floor plan up to its vestibule’s own ceiling where it has one.

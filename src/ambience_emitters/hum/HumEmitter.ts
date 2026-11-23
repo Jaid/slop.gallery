@@ -43,7 +43,7 @@ export default class HumEmitter extends AmbienceEmitter {
       position,
       hearing: {
         near: 1.5,
-        // Moonfall’s is still faintly audible from the top of its stairway, about 27 m away.
+        // Moonfall’s hum carries up both flights of its stairway.
         far: 32,
       },
       gain: 0.3,

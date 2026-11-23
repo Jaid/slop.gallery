@@ -135,8 +135,8 @@ test('Moonfall’s upper map follows the first flight to the middle of the curve
   const [x, y, z] = stairTurn.position
   expect(isLowerPosition('moonfall', eye([x, y, z - 0.1]))).toBe(false)
   expect(isLowerPosition('moonfall', eye([x, y, z + 0.1]))).toBe(true)
-  // The hall under the head of the stairs and the return flight belong to the lower map.
-  expect(isLowerPosition('moonfall', eye([upper.start[0], lowerGallery.floorY, upper.start[2]]))).toBe(true)
+  // The hall and the return flight belong to the lower map.
+  expect(isLowerPosition('moonfall', eye([lowerGallery.moonfall.center[0], lowerGallery.floorY, lowerGallery.moonfall.center[1]]))).toBe(true)
   expect(isLowerPosition('moonfall', eye(lower.start))).toBe(true)
 })
 test('the Corridor stays on the lower map until the flight crosses the same west cut as the Bastion’s upper hairpin', () => {

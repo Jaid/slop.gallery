@@ -1,3 +1,6 @@
+import {floorThickness} from '../floors.ts'
+import lowerGallery from '../lowerGallery.ts'
+
 export const moonfallCrater = {
   radius: 9,
   depth: 3.6,
@@ -14,10 +17,15 @@ export const moonfallCrater = {
   terrainSpacing: 0.07,
 } as const
 
+// Flush with the underside of the ground-floor slabs in the Sienna and its vestibule overhead.
+const top = -floorThickness - lowerGallery.floorY
+const thickness = 0.18
 /** the ceiling slab relative to Moonfall’s floor */
 export const ceilingSlab = {
-  center: 5.78,
-  thickness: 0.18,
+  center: top - thickness / 2,
+  thickness,
 } as const
+/** Height at which the walls meet the middle of the slab. */
+export const moonfallHeight = ceilingSlab.center
 /** the face of the smoked mirror lining, 1 cm below the slab that still casts shadows during the reflection pass */
 export const ceilingMirrorY = ceilingSlab.center - ceilingSlab.thickness / 2 - 0.01

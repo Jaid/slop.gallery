@@ -50,8 +50,16 @@ export default class Exhibition extends Room {
     {
       ...footprint(this.air),
       z: northZ,
-      z2: tunnel.southZ - originZ,
+      z2: Math.max(...displays.flatMap(display => display.air.map(box => box.max.z))),
       ceiling,
+    },
+    // Only the level passage itself beyond the displays, not Moonfall’s stair running alongside.
+    {
+      x: tunnel.southX - tunnel.width / 2 - originX,
+      x2: tunnel.southX + tunnel.width / 2 - originX,
+      z: tunnel.southBendZ - originZ,
+      z2: tunnel.southZ - originZ,
+      ceiling: tunnel.southY + tunnel.height - originY,
     },
     // North of that span, only the staff passages outside the two balcony doors belong to the Exhibition.
     ...displays.map(({air, doorX, side}) => ({

@@ -104,6 +104,14 @@ bun test/browser/run.ts reencodeImage.ts --standalone
 
 This standalone fixture re-encodes a PNG of noise with a transparent stripe as a PNG and as a WebP of quality 1 and requires both to keep every pixel, as the export relies on Chromium encoding WebP of quality 1 without loss. It reports both sizes and needs no GPU, clipboard or page state.
 
+## Antechamber keyboard traversal
+
+```sh
+bun run build && LIVE_TEST=true bun test ./test/antechamber.live.test.ts
+```
+
+Walks from the lunar hall through both arches to the solar stair’s upper landing, back down and around the west return onto Moonfall’s upper flight. Checks the grounded player and actual tread heights in the mounted gallery. `LIVE_TARGET` can point to an existing build.
+
 ## Oculus keyboard traversal
 
 ```sh
@@ -128,7 +136,7 @@ This builds the gallery and starts it once in every room with `?room`, each in a
 BROWSER=/path/to/chromium bun run test:live:world-reach
 ```
 
-This builds the gallery and opens it with every `?world_reach`: `all`, `room` from the Lobby, the Forge, the Oculus and the Bastion, and `neighbors` from Moonfall and the Lodge. Through the `analyze_world` WebMCP tool it checks that no mesh or light of a room out of reach is in the scene, that every lamp of a room in reach and none of the others exists, that only the works hanging in rooms in reach mounted, that exactly the rooms in reach mounted (`snapshot().mountedRooms`) and only their chunks downloaded, even once the player flies into a room out of reach, that `dump_portrait_slots` and the pause menu’s collection list only the slots and works in reach and that only their images downloaded, that the player stands at the spawn reached out from and that the page logs no new warnings. The pause map must show only rooms in reach on the player’s floor, the collection’s works and the arrow at the player’s world coordinates. `LIVE_TARGET` reuses a build like for the Oculus test.
+This builds the gallery and opens it with every `?world_reach`: `all`, `room` from the Lobby, the Forge, the Oculus and the Bastion, and `neighbors` from the Lobby, Moonfall and the Lodge. Through the `analyze_world` WebMCP tool it checks that no mesh or light of a room out of reach is in the scene, that every lamp of a room in reach and none of the others exists, that only the works hanging in rooms in reach mounted, that exactly the rooms in reach mounted (`snapshot().mountedRooms`) and only their chunks downloaded, even once the player flies into a room out of reach, that `dump_portrait_slots` and the pause menu’s collection list only the slots and works in reach and that only their images downloaded, that the player stands at the spawn reached out from and that the page logs no new warnings. The pause map must show only rooms in reach on the player’s floor, the collection’s works and the arrow at the player’s world coordinates. `LIVE_TARGET` reuses a build like for the Oculus test.
 
 ## Sun-tight rooms
 
