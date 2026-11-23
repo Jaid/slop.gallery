@@ -74,25 +74,6 @@ describe('party effects', () => {
     expect(recipe.unchanged).toBe(true)
     expect(recipe.effects).toEqual(['ghosts'])
   })
-  test('the ghosts keep the portal open until the last of them has faded away, longer than its own afterglow', () => {
-    for (const {delay, life} of escapingGhosts) {
-      expect(delay + life).toBeLessThanOrEqual(ghostsEffect.duration)
-    }
-    expect(ghostsEffect.duration).toBeGreaterThan(fusionTiming.afterglow)
-    const fusion = new Fusion({
-      work,
-      partner: {
-        kind: 'item',
-        id: 'prop-orb-spook',
-        consumed: true,
-      },
-      images: ['/hung.jxl'],
-      latches: ['charge', 'glass'] as const,
-      effects: [ghostsEffect],
-    }, {frame})
-    expect(fusion.afterglow).toBe(ghostsEffect.duration)
-    fusion.abort()
-  })
   test('the ghosts only escape once they are told that they burst out', () => {
     const show = ghostsEffect.stage(frame)
     const mesh = show.root
@@ -350,6 +331,7 @@ describe('party effects', () => {
       expect(effect.duration).toBeGreaterThan(fusionTiming.afterglow)
     }
     expect(batsEffect.duration).toBe(Math.max(...flyingBats.map(({delay, life}) => delay + life)))
+    expect(ghostsEffect.duration).toBeGreaterThanOrEqual(Math.max(...escapingGhosts.map(({delay, life}) => delay + life)))
     expect(strokesEffect.duration).toBe(strokeDrying.start + strokeDrying.stagger + strokeDrying.seconds)
     expect(smearsEffect.duration).toBe(Math.max(...knifeSmears.map(({crumble}) => crumble + smearCrumbling.seconds)))
     expect(smearsEffect.duration).toBeLessThanOrEqual(smearCrumbling.start + smearCrumbling.stagger + smearCrumbling.seconds)

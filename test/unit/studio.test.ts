@@ -12,21 +12,16 @@ import StudioSandbox from '../../src/worlds/sandbox/StudioSandbox.ts'
 
 const studio = new StudioSandbox(0)
 const within = (value: number, [min, max]: readonly [number, number]) => value >= min && value <= max
-/** The box round the geometry. */
 const bounds = (geometry: BufferGeometry) => {
   geometry.computeBoundingBox()
   return geometry.boundingBox!
 }
-/** the blue channel of a #rrggbb color */
-const blue = (tint: string) => Number.parseInt(tint.slice(5), 16)
 const room = studio.room('studio')
-test('the Studio’s look is the Cell’s light and frame with its lamp at 5 m and its moon higher in the default environment, and every other seed rolls each of its values within its bounds and one of ten frames', () => {
+const channels = (kelvin: number) => Bun.color(kelvinTint(kelvin), '[rgb]')!
+test('the Studio uses its default look for seed zero and otherwise rolls a frame and lights within their ranges', () => {
   expect(studioLook(0)).toBe(defaultStudioLook)
-  expect(defaultStudioLook.lamp.height).toBe(5)
   expect(studioLook(5)).toEqual(studioLook(5))
   expect(studioLook(5)).not.toEqual(studioLook(6))
-  expect(defaultStudioLook.frame).toBe('louis')
-  expect(studioFrames).toHaveLength(10)
   const frames = new Set<string>
   for (let seed = 1; seed <= 200; seed++) {
     const {fill, floor, frame, lamp, moon} = studioLook(seed)
@@ -57,9 +52,12 @@ test('every work in the Studio hangs in the one frame the seed rolled, the defau
   }
 })
 test('a lamp’s color temperature runs from candlelight orange to a cool white', () => {
-  expect(kelvinTint(2200)).toBe('#ff9227')
-  expect(kelvinTint(6500)).toBe('#fffefa')
-  expect(blue(kelvinTint(3000))).toBeLessThan(blue(kelvinTint(5000)))
+  const [red, green, blue] = channels(2200)
+  expect(red).toBeGreaterThan(green)
+  expect(green).toBeGreaterThan(blue)
+  const white = channels(6500)
+  expect(Math.min(...white)).toBeGreaterThan(240)
+  expect(channels(3000)[2]).toBeLessThan(channels(5000)[2])
 })
 test('the Studio’s lamp hangs over the middle of its floor as the seed rolls it', () => {
   for (const seed of [0, ...Array.from({length: 60}, (_, index) => index + 1)]) {

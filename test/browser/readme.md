@@ -1,6 +1,6 @@
 # Passive WebGPU regression test
 
-With the development server running and the existing browser listening on port 9223:
+With the development server running and the existing browser listening on port 9222:
 
 ```sh
 bun test/browser/run.ts
@@ -9,14 +9,6 @@ bun test/browser/run.ts
 The runner attaches with `defaultViewport: null`. It does not navigate, focus, resize, send input, or attach elements to the page. The fixture renders to a detached canvas and verifies real WebGPU pixels, alpha, orientation, late material maps, StrictMode effect replay, and final canvas disposal. It uses the running Vite dependency generation to avoid loading a second React or Three instance. Fixture code is bundled into a data URL to avoid registering it for Vite HMR.
 
 Run after source edits and Vite dependency optimization settle. A page reload during the test destroys its execution context and requires a new run.
-
-For same-size WebGPU render-target recreation (Three #34301), which previously left cached render-pass descriptors pointing at destroyed GPU textures:
-
-```sh
-bun test/browser/run.ts webgpuRenderTargetRecreation.ts
-```
-
-Restart Vite first after changing a patched dependency so its optimized Three bundle includes the patch. The fixture renders to a detached RGBA16F target, forces `texture.needsUpdate` without changing target dimensions, renders again, and rejects any WebGPU validation error.
 
 For full-size nameplate atlas uploads, instanced UV row boundaries and late material invalidation:
 

@@ -127,9 +127,7 @@ Rapier 2.2 still declares Fiber 9 peers and imports bare `@react-three/fiber`, w
 
 ## Exports and checks
 
-- `Game` (also the default export), `normalizeControls` and `WebgpuRenderer`.
+- Default export: `Game`. Named exports: `normalizeControls` and `WebgpuRenderer`.
 - Types: `GameProps`, `GamePhysicsProps`, `GameRenderer`, `Controls`, `ControlBinding`, `GameWrapperProps`, `GameWrapper`, `GameWrappers` and `WebgpuRendererOptions`.
 
-Run `bun test` in this package. Tests cover composition, wrapper ordering and context injection, readonly controls, physics options, renderer defaults and native initialization failure. These are structural/server-rendered tests, not a GPU playtest. The test preload matches Vite’s ESM preference for Rapier and resolves its bare Fiber import to Fiber’s ESM entry. This avoids Bun’s CommonJS loading path attempting to require Three’s async module.
-
-The repository’s `bun run check:package` also packs the package and tests, typechecks and bundles it in an isolated consumer without workspace path aliases. That consumer uses the same explicit WebGPU dependency resolution as the app.
+Run `bun run --cwd packages/three-fiber-game test` from the repository root. The tests cover composition, wrapper ordering and context injection, readonly controls, physics options, renderer defaults and native initialization failure. The test preload loads Rapier’s ESM build as Vite does, so it shares Fiber and Three with the app.

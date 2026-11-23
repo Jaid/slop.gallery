@@ -20,7 +20,7 @@
   "scripts": {
     "build": "bun run vite build",
     "build:dev": "bun run vite build --mode development",
-    "check": "bun run typecheck && bun run lint && bun run test && bun run test:capture-session && bun run test:knot-materials && bun run test:rolldown-plugins && bun run build && bun run check:build",
+    "check": "bun run typecheck && bun run lint && bun run test && bun run test:packages && bun run build && bun run check:build",
     "check:build": "bun test/build/worlds.ts",
     "dev": "bun run vite --mode development",
     "lint": "bun --bun eslint . --max-warnings 0",
@@ -39,7 +39,7 @@
     "test:live:spectation": "bun run build && LIVE_TEST=true bun test ./test/spectation.live.test.ts",
     "test:live:sun-tight": "bun run build && LIVE_TEST=true bun test ./test/sun-tight.live.test.ts",
     "test:live:world-reach": "bun run build && LIVE_TEST=true bun test ./test/world-reach.live.test.ts",
-    "test:rolldown-plugins": "bun test --max-concurrency 1 ./packages/rolldown-plugin-thematic-chunks ./packages/rolldown-plugin-hoist-popular-constants ./packages/rolldown-plugin-bake-branch-component",
+    "test:packages": "bun run --sequential --workspaces --if-present test",
     "typecheck": "bun node_modules/typescript-native/bin/tsc --noEmit --noUnusedLocals --noUnusedParameters --pretty false",
     "vite": "bun --bun node_modules/vite/dist/node/cli.js --configLoader native"
   },
