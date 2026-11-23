@@ -111,6 +111,34 @@ describe('Impasto Orb', () => {
       }
     }
   })
+  test('clips every dollop’s march to a baked box round all of its paint, so none goes missing and nothing changes without baking again', () => {
+    // A fixed scatter through each box and a margin round it, where paint the box misses would lie.
+    let seed = 1
+    const random = () => (seed = seed * 1_664_525 + 1_013_904_223 >>> 0) / 2 ** 32
+    const point = new Vector3
+    const margin = 0.06
+    for (const stroke of impastoStrokes) {
+      let painted = 0
+      for (let sample = 0; sample < 40_000; sample++) {
+        const x = stroke.boxMin.x - margin + random() * (stroke.boxMax.x - stroke.boxMin.x + margin * 2)
+        const y = stroke.boxMin.y - margin + random() * (stroke.boxMax.y - stroke.boxMin.y + margin * 2)
+        const z = stroke.boxMin.z - margin + random() * (stroke.boxMax.z - stroke.boxMin.z + margin * 2)
+        point.set(0, 0, 0).addScaledVector(stroke.along, x).addScaledVector(stroke.across, y).addScaledVector(stroke.normal, z)
+        // As near as the march stops at.
+        if (strokeDistance(point, stroke) >= 0.002) {
+          continue
+        }
+        painted++
+        expect(x).toBeGreaterThanOrEqual(stroke.boxMin.x)
+        expect(x).toBeLessThanOrEqual(stroke.boxMax.x)
+        expect(y).toBeGreaterThanOrEqual(stroke.boxMin.y)
+        expect(y).toBeLessThanOrEqual(stroke.boxMax.y)
+        expect(z).toBeGreaterThanOrEqual(stroke.boxMin.z)
+        expect(z).toBeLessThanOrEqual(stroke.boxMax.z)
+      }
+      expect(painted).toBeGreaterThan(1000)
+    }
+  })
   test('keeps all sculpted strokes strictly separated with zero clipping and every trapped bubble clear of the paint and glass', () => {
     const point = new Vector3
     for (const [index, stroke] of impastoStrokes.entries()) {

@@ -1,5 +1,7 @@
 import {Vector3} from 'three/webgpu'
 
+import {bakedBubbles, bakedStrokeBoxes} from './baked.ts'
+
 export type ImpastoStroke = {
   across: Vector3
   along: Vector3
@@ -18,6 +20,9 @@ export type ImpastoStroke = {
   tilt: number
   width: number
 }
+
+/** the shape of a dollop, all {@link strokeDistance} needs, without the bounding box its march is clipped to */
+export type ImpastoStrokeShape = Omit<ImpastoStroke, 'boxMax' | 'boxMin'>
 
 export type ImpastoBubble = {
   center: Vector3
@@ -153,60 +158,13 @@ function strokeBasis(normal: Vector3, twist: number) {
     normal,
   }
 }
-/** Computes a tight oriented bounding box around the curved impasto mass in its own `(along, across, normal)` frame, padded so no crest or gradient probe ever clips the box. */
-function computeBounds(stroke: Omit<ImpastoStroke, 'boxMax' | 'boxMin'>) {
-  let minX = Infinity
-  let minY = Infinity
-  let minZ = Infinity
-  let maxX = -Infinity
-  let maxY = -Infinity
-  let maxZ = -Infinity
-  const probe = new Vector3
-  for (let iu = -14; iu <= 14; iu++) {
-    const u = iu / 11
-    const theta = u * stroke.arc / stroke.shell
-    const whip = Math.max(0, u - 0.15)
-    const hook = stroke.bend * (u * u * 0.7 - 0.18 + 0.85 * whip * whip * stroke.tilt)
-    const asym = stroke.width * 0.34 * stroke.tilt * smoothstep(0.08, 0.96, u)
-    for (let iv = -8; iv <= 8; iv++) {
-      const v = iv / 6
-      const arcAcross = v * stroke.width * 1.18 + hook + asym
-      const phiAcross = arcAcross / stroke.shell
-      for (let ih = -3; ih <= 7; ih++) {
-        const radius = stroke.shell + ih / 5 * (stroke.thick * 2.3 + stroke.lift)
-        if (radius <= 0.02) {
-          continue
-        }
-        const rxz = radius * Math.cos(phiAcross)
-        const lx = rxz * Math.sin(theta)
-        const ly = radius * Math.sin(phiAcross)
-        const lz = rxz * Math.cos(theta)
-        probe.set(0, 0, 0).addScaledVector(stroke.along, lx).addScaledVector(stroke.across, ly).addScaledVector(stroke.normal, lz)
-        if (strokeDistance(probe, stroke) > 0.005) {
-          continue
-        }
-        minX = Math.min(minX, lx)
-        maxX = Math.max(maxX, lx)
-        minY = Math.min(minY, ly)
-        maxY = Math.max(maxY, ly)
-        minZ = Math.min(minZ, lz)
-        maxZ = Math.max(maxZ, lz)
-      }
-    }
-  }
-  const pad = 0.022
-  return {
-    boxMax: new Vector3(maxX + pad, maxY + pad, maxZ + pad),
-    boxMin: new Vector3(minX - pad, minY - pad, minZ - pad),
-  }
-}
-const outerStrokes: Array<ImpastoStroke> = rawAntiprism.map((raw, index) => {
+const outerStrokes: Array<ImpastoStrokeShape> = rawAntiprism.map((raw, index) => {
   const normal = rotateDirection(raw, 0.38, 0.29, 0.18)
   const twist = 0.44 + Math.sin(index * 2.1 + 0.5) * 0.1
   const basis = strokeBasis(normal, twist)
   const pigment = outerPigments[index]
   const folded = foldedPairings[pigment][index % 2]
-  const base = {
+  return {
     ...basis,
     arc: 0.274 + Math.sin(index * 2.3) * 0.01,
     bend: (index % 2 === 0 ? 1 : -1) * (0.043 + 0.008 * Math.sin(index * 2.9)),
@@ -220,18 +178,14 @@ const outerStrokes: Array<ImpastoStroke> = rawAntiprism.map((raw, index) => {
     tilt: index % 2 === 0 ? 1 : -1,
     width: 0.173 + Math.cos(index * 1.9) * 0.008,
   }
-  return {
-    ...base,
-    ...computeBounds(base),
-  }
 })
-const innerStrokes: Array<ImpastoStroke> = rawTetrahedron.map((raw, index) => {
+const innerStrokes: Array<ImpastoStrokeShape> = rawTetrahedron.map((raw, index) => {
   const normal = rotateDirection(raw, 1.15, 0.55, 0.35)
   const twist = -0.35 + Math.sin(index * 1.9) * 0.12
   const basis = strokeBasis(normal, twist)
   const pigment = innerPigments[index]
   const folded = foldedPairings[pigment][index % 2]
-  const base = {
+  return {
     ...basis,
     arc: 0.198 + Math.sin(index * 2.4) * 0.008,
     bend: (index % 2 === 0 ? -1 : 1) * 0.03,
@@ -245,67 +199,27 @@ const innerStrokes: Array<ImpastoStroke> = rawTetrahedron.map((raw, index) => {
     tilt: index % 2 === 0 ? -1 : 1,
     width: 0.129 + Math.cos(index * 1.7) * 0.007,
   }
-  return {
-    ...base,
-    ...computeBounds(base),
-  }
 })
+
+/** The dollops’ shapes, outer first: what `scripts/bakeImpastoOrb.ts` bakes their bounding boxes and the bubbles from. */
+export const impastoStrokeShapes: ReadonlyArray<ImpastoStrokeShape> = [...outerStrokes, ...innerStrokes]
 
 /**
  * A two-layer sculpture of 12 thick, heavy-bodied impasto dollops suspended inside clear glass: 8 sweeping outer waves on a square antiprism over 4 lush inner swirls on a tetrahedron.
  * Ordered outer-first so front dollops shrink ray depth early. Every pair maintains strictly positive 3D clearance so strokes never clip into each other.
+ * Each one’s march is clipped to the box `baked.ts` holds for it, in its own `(along, across, normal)` frame.
  */
-export const impastoStrokes: ReadonlyArray<ImpastoStroke> = [...outerStrokes, ...innerStrokes]
+export const impastoStrokes: ReadonlyArray<ImpastoStroke> = impastoStrokeShapes.map((shape, index) => {
+  const [minX, minY, minZ, maxX, maxY, maxZ] = bakedStrokeBoxes[index]
+  return {
+    ...shape,
+    boxMax: new Vector3(maxX, maxY, maxZ),
+    boxMin: new Vector3(minX, minY, minZ),
+  }
+})
 
-/**
- * Effervescent multi-scale air bubbles distributed uniformly across the full 360° sphere (top, equator and bottom) in the glowing honey-amber oil channels around and between the impasto dollops.
- * Uses golden-ratio latitude scrambling so bubbles fill every hemisphere evenly rather than clustering near one pole.
- */
-export const impastoBubbles: ReadonlyArray<ImpastoBubble> = (() => {
-  const bubbles: Array<ImpastoBubble> = []
-  const tryAdd = (center: Vector3, radius: number, strokePad: number, bubblePad: number) => {
-    // Keep every bubble comfortably inside the refracted silhouette (r * fillIor < 0.95) so none ever touches or breaks the outer glass rim.
-    if (center.length() + radius >= 0.73) {
-      return false
-    }
-    const clearsStrokes = impastoStrokes.every(stroke => strokeDistance(center, stroke) > radius + strokePad)
-    if (!clearsStrokes) {
-      return false
-    }
-    const clearsBubbles = bubbles.every(other => other.center.distanceTo(center) > radius + other.radius + bubblePad)
-    if (!clearsBubbles) {
-      return false
-    }
-    bubbles.push({
-      center,
-      radius,
-    })
-    return true
-  }
-  // Pass 1: 32 prominent hero and medium bubbles evenly scrambled across all latitudes (top, middle, sides and bottom).
-  for (let index = 0; index < 420 && bubbles.length < 32; index++) {
-    const scrambledY = (index * 0.618034 % 1 * 2 - 1) * 0.94
-    const angle = index * Math.PI * (3 - Math.sqrt(5)) + 0.35
-    const radial = Math.sqrt(Math.max(0, 1 - scrambledY * scrambledY))
-    const tier = index % 4
-    const shell = tier === 0 ? 0.36 + index % 5 * 0.012 : (tier === 1 ? 0.54 + index % 6 * 0.026 : 0.64 + index % 5 * 0.016)
-    const radius = index % 3 === 0 ? 0.024 + index % 4 * 0.004 : 0.015 + index * 7 % 10 / 10 * 0.008
-    const center = new Vector3(radial * Math.cos(angle), scrambledY, radial * Math.sin(angle))
-    center.multiplyScalar(shell)
-    tryAdd(center, radius, 0.01, 0.01)
-  }
-  // Pass 2: 48 fizzy micro-bubbles clustered around the hero bubbles across all latitudes and hugging the luminous amber rim.
-  const heroCount = bubbles.length
-  for (let index = 0; index < 480 && bubbles.length < 80; index++) {
-    const host = bubbles[index % heroCount]
-    const yaw = index * 2.399963 + 0.8
-    const pitch = Math.sin(index * 1.73 + 0.5) * 1.1
-    const dist = host.radius + 0.012 + index % 5 * 0.012
-    const offset = new Vector3(Math.cos(pitch) * Math.cos(yaw), Math.sin(pitch), Math.cos(pitch) * Math.sin(yaw))
-    offset.multiplyScalar(dist)
-    const center = host.center.clone().add(offset)
-    const radius = 0.008 + index % 5 * 0.002
-    tryAdd(center, radius, 0.008, 0.005)
-  }
-  return bubbles
-})()
+/** Effervescent multi-scale air bubbles across the full 360° sphere in the glowing honey-amber oil around and between the impasto dollops, as `baked.ts` holds them. */
+export const impastoBubbles: ReadonlyArray<ImpastoBubble> = bakedBubbles.map(([x, y, z, radius]) => ({
+  center: new Vector3(x, y, z),
+  radius,
+}))
