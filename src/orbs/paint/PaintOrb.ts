@@ -1,5 +1,7 @@
 import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
+import {impastoPaints} from '#src/lib/materials/impastoPaints.ts'
+
 import PromptOrb from '../base/PromptOrb.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 import RosetteOrbMaterial from './RosetteOrbMaterial.ts'
@@ -37,7 +39,7 @@ export default class PaintOrb extends PromptOrb {
     ['serene', 'contemplative'],
   ]
   readonly change = 'restyle it while keeping the original subject intact. The output should be a beautiful high-quality artistic painting that is'
-  readonly color = '#3d5afe'
+  readonly color = impastoPaints.cobaltTeal
   override readonly conjunction = 'and'
   override readonly effect = 'strokes'
   readonly frame = ['canvas', 'brushes'] as const
