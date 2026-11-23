@@ -62,7 +62,7 @@ For the gallery’s point light shadow filters (heavy’s 4 and cinematic’s 16
 bun test/browser/run.ts pointShadowSeams.ts --standalone
 ```
 
-This standalone fixture lights a closed, double-sided room with a single shadow-casting point light, so every surface sees the light and the shadowed render must match the same render at shadow intensity 0. It compares the darkened fraction against three’s own filter. Before the filters compared each lookup against the depth of its own cube face (three’s r187 fix for point shadow seams), they darkened about three times as much of the room, along the seams between the cube’s faces. The wide 2° blur of a fusion portal’s shadows may darken up to 5%: its lookups compare against the fragment’s own surface, so only the corners shade each other (about 3%), while three’s filter as wide darkened 76% of the room.
+This standalone fixture lights a closed, double-sided room with a single shadow-casting point light, so every surface sees the light and the shadowed render must match the same render at shadow intensity 0. It compares the darkened fraction against three’s own filter. Before the filters compared each lookup against the depth of its own cube face (three’s r187 fix for point shadow seams), they darkened about three times as much of the room, along the seams between the cube’s faces. The wide 3° blur of a fusion portal’s shadows may darken up to 6%: its lookups compare against the fragment’s own surface, so only the corners shade each other (about 4.8%), while three’s filter 2° wide already darkened 76% of the room.
 
 For the studio that photographs thrown props for their fusion with a hung portrait:
 

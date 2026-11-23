@@ -2,6 +2,7 @@ import type {SoftShadow} from '../../src/lib/rendering/shadowFilterNodes.ts'
 
 import {BoxGeometry, DataUtils, DoubleSide, HalfFloatType, Mesh, MeshStandardNodeMaterial, PCFShadowMap, PerspectiveCamera, PointLight, RenderTarget, Scene, WebGPURenderer} from 'three/webgpu'
 
+import portalShadow from '../../src/lib/gallery/fusion/portalShadow.ts'
 import {getShadowProps, softenShadow} from '../../src/lib/rendering/shadowFilterNodes.ts'
 
 const size = 384
@@ -26,13 +27,11 @@ const variants: Array<{
     samples: 16,
   },
   {
-    // The room’s corners shade each other along the corner, about 3% of it. Three’s filter as wide, comparing against the fragment’s distance, darkened 76%, as every wall and the floor shaded themselves.
-    limit: 0.05,
+    // The room’s corners shade each other along the corner, about 5% of it at the portal’s 3° (3% at 2°). Three’s filter 2° wide, comparing against the fragment’s distance, darkened 76%, as every wall and the floor shaded themselves.
+    limit: 0.06,
     name: 'fusion',
     samples: 4,
-    soft: {
-      blurAngle: 2 * Math.PI / 180,
-    },
+    soft: portalShadow,
   },
 ]
 const views: Array<{

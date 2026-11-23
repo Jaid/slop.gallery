@@ -40,10 +40,6 @@ export type RenderPipelineSettings = {
   contactShadowThickness: number
   /** whether the output dithers by half an 8-bit step, so smooth, dark gradients don’t band */
   dither: boolean
-  /** the angular radius of the wide blur of a fusion portal’s shadows as seen from its light, in degrees, the same width everywhere; 0 blurs them like every lamp’s */
-  fusionShadowBlur: number
-  /** shadow map lookups per pixel of a fusion portal’s wide blur */
-  fusionShadowSamples: number
   /** how many texels each lamp’s shadow filter radius spans per unit of its own radius */
   lampShadowRadius: number
   /** shadow map lookups per pixel for every lamp */
@@ -146,8 +142,6 @@ export function getRenderPipelineSettings(profile: GraphicsProfile, antiAliasing
     contactShadowThickness: 0.01,
     ...profile.contactShadowTuning,
     dither: false,
-    fusionShadowBlur: 2,
-    fusionShadowSamples: 16,
     lampShadowRadius: profile.lampShadowRadius ?? profile.shadowMapScale,
     lampShadowSamples: profile.shadowSamples,
     mirrorReflectionBlur: 1,

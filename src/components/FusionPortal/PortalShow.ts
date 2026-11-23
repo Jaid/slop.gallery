@@ -3,7 +3,6 @@ import type {PortalEnvelope} from '#src/lib/gallery/fusion/envelope.ts'
 import type Fusion from '#src/lib/gallery/fusion/Fusion.ts'
 import type {PortalPalette} from '#src/lib/gallery/fusion/PortalCore.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
-import type {SoftShadow} from '#src/lib/rendering/shadowFilterNodes.ts'
 import type {PartyShow} from '#src/party_effects/index.ts'
 import type {Camera, Texture} from 'three/webgpu'
 
@@ -20,9 +19,9 @@ import {portalEnvelope} from '#src/lib/gallery/fusion/envelope.ts'
 import {impactStrength, orbRippleRadius} from '#src/lib/gallery/fusion/impact/strike.ts'
 import {decorateIntro, introTether, introTrail} from '#src/lib/gallery/fusion/intro.ts'
 import {introOrbitRate, orbitAngle} from '#src/lib/gallery/fusion/orbit.ts'
+import portalShadow from '#src/lib/gallery/fusion/portalShadow.ts'
 import PortalVisuals, {emberPalette, paletteOf} from '#src/lib/gallery/fusion/PortalVisuals.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
-import {getTunedGraphics} from '#src/lib/rendering/customGraphics.ts'
 import {resetImpact, screenImpact} from '#src/lib/rendering/screenImpact.ts'
 import {softShadowKey} from '#src/lib/rendering/shadowPool.ts'
 import {holdArtworkTexture} from '#src/lib/useArtworkTexture.ts'
@@ -44,14 +43,6 @@ const lightRange = 11
 const lightBoost = {
   factor: 3,
   upTo: 60,
-}
-/** Writes how wide the tuning panel says a portal’s light blurs its shadows into `request`. */
-const tuneSoftShadow = (request: Partial<SoftShadow>) => {
-  const {fusionShadowBlur, fusionShadowSamples} = getTunedGraphics()
-  return Object.assign(request, {
-    blurAngle: fusionShadowBlur * Math.PI / 180,
-    softSamples: fusionShadowSamples,
-  } satisfies SoftShadow)
 }
 const middle = new Vector3
 const seen = new Vector3
@@ -87,8 +78,6 @@ export default class PortalShow {
   private readonly satellites: Satellites
   /** which turn of the images the disc showed last, which tells a new image surfacing from the last one still sinking */
   private shown?: 'result' | number
-  /** how the light blurs the shadows it casts, as the tuning panel says */
-  private readonly softShadow = tuneSoftShadow({})
   private sound?: FusionSound
   private stage: Stage = 'brewing'
   /** the strike that opened it: where, how hard and whether its crack still has to sound */
@@ -115,7 +104,7 @@ export default class PortalShow {
     this.light.userData.untinted = true
     // The work and what was thrown into it sweep huge shadows over the walls and floor as they orbit, whirl and spiral in, as long as it is among the shadow pool’s nearest lights.
     this.light.userData.shadow = true
-    this.light.userData[softShadowKey] = this.softShadow
+    this.light.userData[softShadowKey] = portalShadow
     this.root.name = `fusion-${fusion.id}`
     this.effects = fusion.spec.effects.map(effect => effect.stage(fusion.frame))
     this.root.add(this.visuals.root, this.light, ...this.effects.map(effect => effect.root))
@@ -234,7 +223,6 @@ export default class PortalShow {
     this.light.intensity = envelope.light + (lightBoost.factor - 1) * Math.min(envelope.light, lightBoost.upTo)
     this.strike(elapsed)
     this.light.color.copy(this.paint.swirl).lerp(this.paint.rim, envelope.flash / 2)
-    tuneSoftShadow(this.softShadow)
     if (!this.sound && this.stage === 'brewing') {
       this.sound = this.listen()
     }

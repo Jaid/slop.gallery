@@ -46,7 +46,7 @@ const rusticFigure = {
  *
  * Returns the albedo, a roughness around `roughness`, the world-space shading normal (faces pointing up and down both read correctly), the joint coverage and a per-board random stream for finishes that vary by board.
  */
-export function plankBoards(layout: PlankLayout, roughness: Node<'float'> | number) {
+export function plankBoards(layout: PlankLayout, roughness: number) {
   const {axis, bevel, colors, figure: grainFigure = rusticFigure, knots, length: [shortest, longest], seam, seed, width} = layout
   const {meander: wander, rings: ringDensity} = grainFigure
   const alongAxis = axis === 'x' ? vec3(1, 0, 0) : vec3(0, 0, 1)
@@ -101,7 +101,7 @@ export function plankBoards(layout: PlankLayout, roughness: Node<'float'> | numb
   const normal: Node<'vec3'> = normalWorldGeometry.add(acrossAxis.mul(tiltV.mul(relief))).add(alongAxis.mul(tiltU.mul(relief))).normalize()
   return {
     color: mix(withKnot, color(colors.seam), joint),
-    roughness: (typeof roughness === 'number' ? float(roughness) : roughness).add(pores.mul(0.08)).sub(rings.mul(0.06)).add(joint.mul(0.1)).add(random(8).sub(0.5).mul(0.08)),
+    roughness: float(roughness).add(pores.mul(0.08)).sub(rings.mul(0.06)).add(joint.mul(0.1)).add(random(8).sub(0.5).mul(0.08)),
     normal,
     joint,
     random,

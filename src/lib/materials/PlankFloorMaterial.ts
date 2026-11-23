@@ -1,7 +1,7 @@
 import type {FloorReflection} from './FloorMaterial.ts'
 import type {PlankLayout} from './planks.ts'
 
-import {float, materialRoughness, mx_noise_float, normalWorldGeometry, positionWorld, vec3} from 'three/tsl'
+import {float, mx_noise_float, normalWorldGeometry, positionWorld, vec3} from 'three/tsl'
 
 import {visibleDetail, worldNormalToView} from './filters.ts'
 import FloorMaterial from './FloorMaterial.ts'
@@ -65,8 +65,7 @@ export default class PlankFloorMaterial extends FloorMaterial {
       throw new RangeError('Floor boards need a positive width and a shortest length no longer than the longest.')
     }
     const roughness = reflections ? finish.roughness.mirrored : finish.roughness.matte
-    // around the material’s own roughness, so setting it anew changes the boards without rebuilding them
-    const boards = plankBoards(layout, materialRoughness)
+    const boards = plankBoards(layout, roughness)
     super(null, {
       color: '#ffffff',
       envMapIntensity: finish.envMapIntensity,

@@ -1,5 +1,4 @@
 import type {LightingTuning} from '../gallery/lighting.ts'
-import type {LodgeFloorTuning} from '../gallery/lodgeFloorTuning.ts'
 import type {RenderPipelineSettings} from './renderPipelineSettings.ts'
 
 import {clamp} from 'math'
@@ -7,7 +6,6 @@ import {ACESFilmicToneMapping} from 'three/webgpu'
 import {create} from 'zustand'
 
 import {getLightingTuning, lightingPresets, useLighting} from '../gallery/lighting.ts'
-import {getLodgeFloorTuning} from '../gallery/lodgeFloorTuning.ts'
 import {getAntiAliasing} from './antiAliasing.ts'
 import {readFov} from './fov.ts'
 import {getGraphicsProfile, readCinematicGraphics} from './graphicsMode.ts'
@@ -42,8 +40,8 @@ export type ViewTuning = {
   toneMapping: number
 }
 
-/** everything the tuning panel changes: the render pipeline, the lighting of levels that follow it, the Lodge’s planks and the view */
-export type CustomGraphics = LightingTuning & LodgeFloorTuning & RenderPipelineSettings & ViewTuning
+/** everything the tuning panel changes: the render pipeline, the lighting of levels that follow it, and the view */
+export type CustomGraphics = LightingTuning & RenderPipelineSettings & ViewTuning
 
 /** The view a page starts with: the permalink’s field of view and scale and the tone mapping React Three Fiber sets up. */
 export function getViewTuning(): ViewTuning {
@@ -59,7 +57,6 @@ export function getDefaultCustomGraphics(): CustomGraphics {
   return {
     ...getRenderPipelineSettings(getGraphicsProfile(true, readCinematicGraphics()), getAntiAliasing(true)),
     ...getLightingTuning(lightingPresets[useLighting.getState().preset]),
-    ...getLodgeFloorTuning(),
     ...getViewTuning(),
   }
 }
