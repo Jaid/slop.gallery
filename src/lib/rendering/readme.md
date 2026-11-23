@@ -40,6 +40,8 @@ Each pixel feeds bloom at most luminance 4 by default (temporarily raised during
 
 The tuning panel exposes the bloom resolution scale, mip count and base Gaussian kernel radius. Three.js defaults to five blur levels with kernel radii [6, 10, 14, 18, 22]. `ConfigurableBloomNode` keeps the stock render targets and blur passes but specializes their count, composite and kernel radii (base + 4 per level). Those three controls rebuild the pipeline; the other bloom controls update uniforms live.
 
+Cinematic tunes bloom on top of heavy’s defaults (`bloomTuning` in `graphicsMode.ts`): full resolution, four levels from kernel radius 4, radius 0.1, strength 1 and a hard threshold (no knee), for tight, strong halos round flames and water instead of a haze over sunlit surfaces.
+
 ## Focus boundary invariant
 
 `KnotBokeh` first renders **full-resolution** background color multiplied by a binary background-coverage mask, with coverage in alpha. Both come from the same current-frame scene pass. Foreground RGB is zero before any bilinear filtering or downsampling.

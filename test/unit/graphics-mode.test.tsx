@@ -55,7 +55,7 @@ test('the cinematic profile raises intermediate resolutions, AO quality, shadow 
     expect(heavy[key], key).toBe(false)
     expect(cinematic[key], key).toBe(true)
   }
-  const added = ['ambientOcclusionThickness', 'contactShadowTuning', 'sunShadowMapSize', 'ssgi', 'voxelIndirectLightBounces']
+  const added = ['ambientOcclusionThickness', 'bloomTuning', 'contactShadowTuning', 'sunShadowMapSize', 'ssgi', 'voxelIndirectLightBounces']
   for (const key of added) {
     expect(heavy[key], key).toBeUndefined()
     expect(cinematic[key], key).toBeDefined()
@@ -129,10 +129,15 @@ test('Cinematic alone casts contact shadows, with its own tuning', () => {
   expect(cinematic).toMatchObject(profiles.cinematic.contactShadowTuning!)
   expect(settingsOf(cinematic, 'contactShadow')).not.toEqual(settingsOf(heavy, 'contactShadow'))
 })
-test('Fast leaves out bloom, which Heavy and Cinematic tune alike', () => {
-  expect(pipelines.fast.bloom).toBe(false)
-  expect(pipelines.heavy.bloom).toBe(true)
-  expect(settingsOf(pipelines.cinematic, 'bloom')).toEqual(settingsOf(pipelines.heavy, 'bloom'))
+test('Fast leaves out bloom, which Cinematic tunes on top of Heavy’s', () => {
+  const {fast, heavy, cinematic} = pipelines
+  expect(fast.bloom).toBe(false)
+  expect(heavy.bloom).toBe(true)
+  expect(cinematic.bloom).toBe(true)
+  const tuned = Object.keys(profiles.cinematic.bloomTuning!)
+  expect(cinematic).toMatchObject(profiles.cinematic.bloomTuning!)
+  expect(settingsOf(cinematic, 'bloom', ...tuned)).toEqual(settingsOf(heavy, 'bloom', ...tuned))
+  expect(settingsOf(cinematic, 'bloom')).not.toEqual(settingsOf(heavy, 'bloom'))
 })
 test('bloom blur quality controls rebuild the render pipeline', () => {
   const settings = pipelines.heavy

@@ -31,6 +31,8 @@ export type GraphicsProfile = {
   /** ambient occlusion samples per pixel */
   ambientOcclusionSamples: number
   ambientOcclusionThickness?: number
+  /** optional bloom overrides */
+  bloomTuning?: BloomTuning
   /** whether runtime canvas textures such as signs keep mipmaps, and with them anisotropic filtering, at the cost of building them */
   canvasTextureMipmaps: boolean
   /** backing pixels per logical texel for runtime canvas textures such as signs */
@@ -72,6 +74,8 @@ export type GraphicsProfile = {
   /** how often the voxel indirect light bounces once the tuning panel switches it on, once by default */
   voxelIndirectLightBounces?: number
 }
+
+type BloomTuning = Partial<Pick<RenderPipelineSettings, Exclude<Extract<RenderPipelineSetting, `bloom${string}`>, 'bloom'>>>
 
 type ContactShadowTuning = Partial<Pick<RenderPipelineSettings, Extract<RenderPipelineSetting, `contactShadow${string}`>>>
 
@@ -157,6 +161,15 @@ const heavyProfile: GraphicsProfile = {
 // Cinematic raises intermediate and shadow-map resolutions, AO quality, texture filtering, curve tessellation, indirect light and metal reflections for non-realtime rendering.
 const cinematicProfile: GraphicsProfile = {
   ...heavyProfile,
+  // Tight, strong halos at full resolution with a hard threshold: the fountain’s water and the flames glow, while sunlit stone no longer hazes over.
+  bloomTuning: {
+    bloomGaussianKernelSize: 4,
+    bloomMipCount: 4,
+    bloomRadius: 0.1,
+    bloomResolutionScale: 1,
+    bloomSmoothWidth: 0,
+    bloomStrength: 1,
+  },
   canvasTextureMipmaps: true,
   canvasTextureResolution: 2,
   // Faint but far-reaching: marching 40 cm toward the sun at 20% picks out the geometry, like an armor against its wall or the paints in the Painting Set.

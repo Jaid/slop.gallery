@@ -135,6 +135,7 @@ export function getRenderPipelineSettings(profile: GraphicsProfile, antiAliasing
     bloomSmoothWidth: 0.2,
     bloomStrength: 0.5,
     bloomThreshold: 2,
+    ...profile.bloomTuning,
     contactShadowDenoise: true,
     contactShadowDenoiseRadius: 5,
     contactShadowDistance: 0.1,
