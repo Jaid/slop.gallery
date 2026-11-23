@@ -3,6 +3,7 @@ import type {RoomWall} from '../base/Room.ts'
 import mainEntrance from '#src/lib/gallery/entrance.ts'
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import lobby from '#src/lib/gallery/lobby.ts'
+import {balconyDoor, lobbyBalcony} from '#src/lib/gallery/lobbyBalcony.ts'
 import {forgeWindow, lobbyWindowHole, salonWindow} from '#src/lib/gallery/lobbyWindows.ts'
 
 const height = 5.5
@@ -50,12 +51,31 @@ export default {
   east: wall(lobby.width / 2, 0, -Math.PI / 2, 16, {
     banquet: doorway(lobby.sideDoorZ),
   }),
-  south: wall(0, 8, Math.PI, 16, {
-    antechamber: {
+  south: {
+    ...wall(0, lobby.southZ, Math.PI, lobby.width, {
+      antechamber: {
+        u: 0,
+        width: lobby.antechamberDoorWidth,
+        height: 3.6,
+        profile: 'rectangle',
+      },
+      balcony: {
+        u: -balconyDoor.x,
+        width: balconyDoor.width,
+        bottom: balconyDoor.bottom,
+        height: balconyDoor.height,
+        rise: balconyDoor.rise,
+        profile: balconyDoor.profile,
+      },
+    }),
+    cornice: false,
+    height: lobbyBalcony.wallTop - 0.3,
+    reservations: [{
       u: 0,
-      width: lobby.antechamberDoorWidth,
-      height: 3.6,
+      bottom: lobbyBalcony.floorY - lobbyBalcony.slabDepth - 0.25,
+      height: lobbyBalcony.floorY + lobbyBalcony.guardHeight,
+      width: lobby.width,
       profile: 'rectangle',
-    },
-  }),
+    }],
+  },
 } satisfies Record<string, RoomWall>

@@ -87,10 +87,26 @@ describe('inside corners of room walls', () => {
       }
     }
     // Walls that run on in a straight line, or open into a doorway, keep square ends.
-    expect(mitered(walls, 'lobby-west')).toEqual([1, 0])
+    expect(mitered(walls, 'lobby-west')).toBeUndefined()
+    expect(wallById('lobby-west').baseboardMiters).toEqual([1, 0])
+    expect(wallById('lobby-south').baseboardMiters).toEqual([1, 1])
     expect(mitered(walls, 'lobby-extension_west')).toEqual([0, 1])
     for (const wall of knottingham.walls) {
       expect(wall.miters).toEqual([1, 1])
+    }
+  })
+  test('the Lobby’s taller south wall keeps a single baseboard at each corner', () => {
+    const south = wallById('lobby-south')
+    for (const side of ['lobby-west', 'lobby-east']) {
+      const wall = wallById(side)
+      const meshes = [...wallMeshes(south), ...wallMeshes(wall)]
+      const corner = facesMeet(south, wall)
+      for (const [a, b] of [[0.04, 0.09], [0.09, 0.04]]) {
+        const point = corner.clone().addScaledVector(inward(south), a).addScaledVector(inward(wall), b)
+        const hits = nearestHits(meshes, point.setY(1), new Vector3(0, -1, 0))
+        expect(hits).toHaveLength(1)
+        expect(hits[0].point.y).toBeCloseTo(defaultBaseboardHeight, 4)
+      }
     }
   })
   test('outside corners and mismatched trim keep square ends', () => {

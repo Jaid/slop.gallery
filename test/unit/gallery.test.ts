@@ -4,6 +4,7 @@ import {sep} from 'node:path'
 import {dropPortrait} from '../../src/lib/gallery/actions.ts'
 import {imageSize} from '../../src/lib/gallery/ImageImporter.ts'
 import {maximumPortraits} from '../../src/lib/gallery/imagePolicy.ts'
+import lowerGallery from '../../src/lib/gallery/lowerGallery.ts'
 import portraitLabel, {portraitLabelLayout} from '../../src/lib/gallery/portraitLabel.ts'
 import {siennaVestibule} from '../../src/lib/gallery/sienna.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
@@ -167,8 +168,10 @@ describe('wall geometry', () => {
     for (const position of [[x, 2, z], [-14, 2, 19.8], [0, 2, 14], [west, 0, south], [siennaVestibule.center[0], 2, siennaVestibule.center[1]]] as const) {
       expect(insideGallery([...position])).toBe(true)
     }
-    // east of the Sienna, west of it, south of it beside the vestibule, under it and over it
-    for (const position of [[-6, 2, 18], [east + 0.01, 2, z], [14, 3, 14], [east - 1, 2, south + 0.01], [west - 0.01, 2, z], [x, -1.01, z], [x, 6.01, z], [Number.NaN, 2, z]] as const) {
+    // The raised Moonfall ceiling now holds the volume just under the Sienna.
+    expect(roomAt([x, -1.01, z])).toBe('moonfall')
+    // Empty pockets beside the nearby rooms, outside the Sienna and beneath Moonfall’s floor.
+    for (const position of [[-9, 2, 18], [east + 0.01, 2, z], [14, 3, 16.7], [east - 1, 2, south + 0.01], [west - 0.01, 2, z], [x, lowerGallery.floorY - 1.01, z], [x, 6.01, z], [Number.NaN, 2, z]] as const) {
       expect(insideGallery([...position])).toBe(false)
     }
   })

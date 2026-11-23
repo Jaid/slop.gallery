@@ -6,6 +6,8 @@ import LobbyVault from '#component/LobbyVault'
 import LobbyFountain from '#src/rooms/lobby/components/LobbyFountain/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
+import Balcony from './Balcony.tsx'
+
 const room = slopGallery.room('lobby')
 
 /** The Lobby has no flat ceiling: its coffered vault rises above the walls, lit by its chandeliers and the sun. */
@@ -18,6 +20,7 @@ export default function LobbyRoom({cladding, glass, stone, wood}: Omit<Parameter
       <LobbyFloor glass={glass} room={room} stone={stone} wood={wood} />
       <LobbyVault cladding={cladding} />
     </group>
+    <Balcony cladding={cladding} stone={stone} />
     <LobbyFountain />
     <FountainBenches />
   </>

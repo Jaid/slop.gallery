@@ -1,5 +1,6 @@
 import type {Vec3} from './types.ts'
 
+import {antechamber} from './antechamber.ts'
 import {bastionOrigin} from './bastion.ts'
 import corridor from './corridor.ts'
 import forge from './forge.ts'
@@ -8,7 +9,6 @@ import lodge from './lodge.ts'
 import lowerGallery, {tunnelCenter} from './lowerGallery.ts'
 import salon, {salonSouthZ} from './salon.ts'
 import sienna from './sienna.ts'
-import staircase from './staircase.ts'
 
 const {moonfall, oculus} = lowerGallery
 /**
@@ -21,7 +21,7 @@ const roomOrigins = {
   vesper: [-14, 0, (salonSouthZ + 8) / 2],
   // From the Salon’s south wall to the Vesper’s south wall’s line.
   banquet: [14, 0, (salonSouthZ + 8) / 2],
-  antechamber: [0, 0, staircase.z],
+  antechamber: [antechamber.center[0], antechamber.floorY, antechamber.center[1]],
   sienna: [sienna.center[0], sienna.floorY, sienna.center[1]],
   salon: [salon.center[0], 0, salon.center[1]],
   forge: [forge.center[0], 0, forge.center[1]],

@@ -2,12 +2,13 @@ import type {RoomWall} from '../base/Room.ts'
 
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
+import {ceilingSlab} from '#src/lib/gallery/moonfall/config.ts'
 import staircase, {stairFlights, stairTurn} from '#src/lib/gallery/staircase.ts'
 
 import {localWalls, planWall} from '../lib/walls.ts'
 
 const {moonfall, tunnel} = lowerGallery
-const height = 5.5
+const height = ceilingSlab.center - 0.3
 
 export default {
   north: planWall(moonfall.size, 'north', height, {
@@ -20,7 +21,7 @@ export default {
       },
     },
   }),
-  // The stairway from the Antechamber arrives in the middle of the east wall.
+  // The stairway from the Antechamber arrives in the south half of the east wall.
   east: planWall(moonfall.size, 'east', height, {
     holes: {
       stairway: {

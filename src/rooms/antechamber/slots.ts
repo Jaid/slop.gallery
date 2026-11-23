@@ -12,7 +12,7 @@ export default {
     wallId: 'west',
     ratio: '1:1',
     area: 100_000,
-    position: [-3.78, 3, 0],
+    position: [-3.78, 3, 1.8],
     rotation: Math.PI / 2,
   },
 } satisfies Record<string, RoomPortraitSlot>

@@ -7,6 +7,7 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
+import {lobbyBalcony} from '#src/lib/gallery/lobbyBalcony.ts'
 import LobbyChandelierGeometry from '#src/lib/gallery/LobbyChandelierGeometry.ts'
 import lobbyVault, {lobbyChandeliers} from '#src/lib/gallery/lobbyVault.ts'
 import LobbyVaultGeometry, {lobbyVaultCollision} from '#src/lib/gallery/LobbyVaultGeometry.ts'
@@ -56,7 +57,10 @@ export default function LobbyVault({cladding}: {
   return <group name='lobby-vault'>
     <RigidBody colliders={false} type='fixed'>
       <MeshSurfaceCollider args={collision} />
-      {[[-1, lobbyVault.rose.lunetteThickness], [1, lobbyVault.southLunetteThickness]].map(([side, thickness]) => <CuboidCollider key={side} args={[lobbyVault.outerRadius, (lobbyVault.crownY + lobbyVault.shell + lobbyVault.coffer.depth - lobbyVault.springY) / 2, thickness / 2]} position={[0, (lobbyVault.crownY + lobbyVault.shell + lobbyVault.coffer.depth + lobbyVault.springY) / 2, side * (lobbyVault.halfLength + thickness / 2)]} />)}
+      {[[-1, lobbyVault.rose.lunetteThickness, lobbyVault.springY], [1, lobbyVault.southLunetteThickness, lobbyBalcony.wallTop]].map(([side, thickness, foot]) => {
+        const top = lobbyVault.springY + lobbyVault.outerRadius
+        return <CuboidCollider key={side} args={[lobbyVault.outerRadius, (top - foot) / 2, thickness / 2]} position={[0, (top + foot) / 2, side * (lobbyVault.halfLength + thickness / 2)]} />
+      })}
     </RigidBody>
     <mesh castShadow geometry={geometry.clad} material={cladding} name='lobby-vault-lunettes' receiveShadow />
     <mesh castShadow geometry={geometry.stone} material={stone} name='lobby-vault-stone' receiveShadow />

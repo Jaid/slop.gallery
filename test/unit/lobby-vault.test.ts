@@ -6,6 +6,7 @@ import {DoubleSide, Mesh, MeshBasicMaterial, Raycaster, Vector3} from 'three/web
 import {wallTop} from '../../src/lib/gallery/architecture.ts'
 import ArcSlabGeometry from '../../src/lib/gallery/ArcSlabGeometry.ts'
 import {getLightingTuning, lightingPresets} from '../../src/lib/gallery/lighting.ts'
+import {lobbyBalcony} from '../../src/lib/gallery/lobbyBalcony.ts'
 import LobbyChandelierGeometry, {lobbyChandelier, lobbyChandelierBottom} from '../../src/lib/gallery/LobbyChandelierGeometry.ts'
 import lobbyVault, {glazingStart, lobbyChandeliers, vaultBays, vaultCoffers, vaultHeight, vaultRibs} from '../../src/lib/gallery/lobbyVault.ts'
 import LobbyVaultGeometry, {lobbyVaultCollision, roseCenterY} from '../../src/lib/gallery/LobbyVaultGeometry.ts'
@@ -110,6 +111,11 @@ describe('the Lobby’s barrel vault', () => {
         // Rays that leave through the walls below the springing are the walls’ business.
         const springing = origin.clone().addScaledVector(direction, (lobbyVault.springY - origin.y) / direction.y)
         if (Math.abs(springing.x) > lobbyVault.radius || Math.abs(springing.z) > lobbyVault.halfLength) {
+          continue
+        }
+        // The raised south wall owns the band under the south lunette.
+        const southY = origin.y + (lobbyVault.halfLength - z) * direction.y / direction.z
+        if (direction.z > 0 && southY < lobbyBalcony.wallTop) {
           continue
         }
         const raycaster = new Raycaster(origin, direction)
@@ -232,7 +238,7 @@ describe('the sun and the sky', () => {
   test('the end walls stop below the lunettes, which carry their cladding on up to the vault', () => {
     for (const wall of walls) {
       if (wall.room === 'lobby') {
-        expect(wall.height + 0.3).toBeCloseTo(lobbyVault.springY, 9)
+        expect(wall.height + 0.3).toBeCloseTo(wall.id === 'lobby-south' ? lobbyBalcony.wallTop : lobbyVault.springY, 9)
       }
     }
   })

@@ -230,7 +230,7 @@ describe('boolean architecture', () => {
       }
     })
   }
-  const rakingWalls = walls.filter(wall => wall.slope && wall.trimStyle !== 'none')
+  const rakingWalls = walls.filter(wall => wall.slope && wall.trimStyle !== 'none' && wall.cornice !== false)
   test('there are raking cornices to check', () => {
     expect(rakingWalls.length).toBeGreaterThanOrEqual(4)
   })

@@ -34,15 +34,15 @@ export default {
   south_0: {
     wallId: 'south',
     ratio: '1:1',
-    area: 60_000,
-    position: [4.6, 2.7, 19.78],
+    area: 30_000,
+    position: [4.6, 2.35, 19.78],
     rotation: Math.PI,
   },
   south_1: {
     wallId: 'south',
     ratio: '1:1',
-    area: 60_000,
-    position: [-4.6, 2.7, 19.78],
+    area: 30_000,
+    position: [-4.6, 2.35, 19.78],
     rotation: Math.PI,
   },
   extension_east_0: {

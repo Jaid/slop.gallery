@@ -15,12 +15,12 @@ function wallEnds(wall: Wall): [Point, Point] {
 function inward(wall: Wall): Point {
   return [Math.sin(wall.rotation), Math.cos(wall.rotation)]
 }
-/** Walls whose trim bands can share a miter: level, straight and with the same profile at the same height. */
-function trimKey(wall: Wall) {
+/** Level, straight walls with the same baseboard profile and floor elevation. */
+function baseboardKey(wall: Wall) {
   if (wall.trimStyle === 'none' || wall.baseboardProfile || wall.slope || wall.curveRadius) {
     return
   }
-  return JSON.stringify([wall.center[1], wall.height, wall.trimStyle ?? 'classic', wall.cornice ?? true, wall.baseboardHeight ?? defaultBaseboardHeight, wall.baseboardCapHeight ?? baseboardCapHeight, wall.baseboardSection ?? null])
+  return JSON.stringify([wall.center[1], wall.trimStyle ?? 'classic', wall.baseboardHeight ?? defaultBaseboardHeight, wall.baseboardCapHeight ?? baseboardCapHeight, wall.baseboardSection ?? null])
 }
 const tolerance = 1e-6
 /**
@@ -33,7 +33,7 @@ const tolerance = 1e-6
 export default function miterCorners(walls: ReadonlyArray<Wall>): Array<Wall> {
   // Marks from an earlier pass are recomputed, not kept.
   return walls.map(({miters: _, baseboardMiters: _baseboardMiters, ...wall}, wallIndex) => {
-    const key = trimKey(wall)
+    const key = baseboardKey(wall)
     if (key === undefined) {
       return wall
     }
@@ -44,7 +44,7 @@ export default function miterCorners(walls: ReadonlyArray<Wall>): Array<Wall> {
       const length = Math.hypot(...along)
       const toward: Point = [along[0] / length, along[1] / length]
       for (const [otherIndex, other] of walls.entries()) {
-        if (otherIndex === wallIndex || trimKey(other) !== key) {
+        if (otherIndex === wallIndex || baseboardKey(other) !== key) {
           continue
         }
         const otherEnds = wallEnds(other)
@@ -64,7 +64,9 @@ export default function miterCorners(walls: ReadonlyArray<Wall>): Array<Wall> {
           const sin = Math.abs(toward[0] * otherToward[1] - toward[1] * otherToward[0])
           // Rounded, so a right angle comes out as exactly 1 and equal walls share one cut.
           const slant = Math.round((1 + cos) / sin * 1e9) / 1e9
-          return [slant, openedAt(other, shared === 0 ? -1 : 1) || openedAt(wall, index === 0 ? -1 : 1) ? 0 : slant]
+          // A taller wall, or one without its neighbor’s cornice, still shares the floor-level miter.
+          const matchingTop = (wall.cornice ?? true) === (other.cornice ?? true) && Math.abs(wall.height - other.height) < tolerance
+          return [matchingTop ? slant : 0, openedAt(other, shared === 0 ? -1 : 1) || openedAt(wall, index === 0 ? -1 : 1) ? 0 : slant]
         }
       }
       return [0, 0]

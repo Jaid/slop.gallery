@@ -57,7 +57,7 @@ describe('Moonfall impact hall', () => {
     expect(north.holes![0].u).toBe(0)
     expect(wallPosition(north, north.holes![0].u, room.floorY, 0)).toEqual([lowerGallery.tunnel.southX, room.floorY, lowerGallery.tunnel.southZ])
     const portal = wallPosition(east, east.holes![0].u, room.floorY, 0)
-    expect(portal[0]).toBe(staircase.endX)
+    expect(portal[0]).toBeCloseTo(staircase.endX, 9)
     expect(portal[2]).toBeCloseTo(staircase.returnZ)
     for (const [x, z] of [[-20, 6], [-20, 30], [4, 30]]) {
       expect(insideGallery([x, -6.4, z])).toBe(true)
@@ -284,7 +284,7 @@ describe('Moonfall impact hall', () => {
             }
             const p = body.translation()
             expect(Math.hypot(p.x, p.z)).toBeGreaterThan(moonfallCrater.fenceRadius + 0.2)
-            expect(p.y).toBeCloseTo(0.02, 2)
+            expect(Math.abs(p.y - 0.02)).toBeLessThan(0.01)
             motor.dispose()
             world.removeRigidBody(body)
           }

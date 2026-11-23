@@ -11,6 +11,7 @@ import {openings} from '#src/worlds/gallery/relations.ts'
 
 import lobby from './lobby.ts'
 import salonLantern, {salonDrumOuterApothem} from './salonLantern.ts'
+import {insideStairway} from './staircase.ts'
 import {vesperLanternLayout, vesperLanternRidgeY, vesperLanternSillY} from './vesperCeiling.ts'
 
 /** a rectangle on screen in normalized device coordinates: left, bottom, right, top */
@@ -133,10 +134,10 @@ type Owned = {
   room?: string
 }
 
-/** the room whose box contains the position; undefined in passages between rooms and where boxes overlap */
+/** the room holding the position, including Moonfall’s stairway; undefined where rooms overlap or none contains it */
 export function roomContaining([x, y, z]: Vec3) {
   point.set(x, y, z)
-  let result: RoomId | undefined
+  let result: RoomId | undefined = insideStairway([x, y, z]) ? 'moonfall' : undefined
   for (const {id, box} of roomBoxes) {
     if (!box.containsPoint(point)) {
       continue
@@ -182,6 +183,9 @@ export function roomsAt([x, y, z]: Vec3) {
     if (box.containsPoint(point)) {
       result.add(id)
     }
+  }
+  if (insideStairway([x, y, z])) {
+    result.add('moonfall')
   }
   if (!result.size) {
     for (const portal of portals) {

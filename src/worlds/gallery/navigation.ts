@@ -2,10 +2,12 @@ import type {Vec3} from '#src/lib/gallery/types.ts'
 import type PlacedRoom from '../base/PlacedRoom.ts'
 import type {GalleryRoom} from './SlopGallery.ts'
 
+import {antechamberFloor, insideAntechamber} from '#src/lib/gallery/antechamber.ts'
 import {bastionFloors, insideBastion} from '#src/lib/gallery/bastionNetwork.ts'
 import {corridorLanding, corridorPassage, corridorStairFloor, insideCorridor} from '#src/lib/gallery/corridor.ts'
 import {forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {forgeVestibuleFloor} from '#src/lib/gallery/forgeVestibule.ts'
+import {lobbyBalconyFloor} from '#src/lib/gallery/lobbyBalcony.ts'
 import {insideLodgeWindow, lodgeBayFloor, lodgeWindowFloor} from '#src/lib/gallery/lodge.ts'
 import {rampFloorHeight, tunnelContains, tunnelFloorHeight} from '#src/lib/gallery/lowerGallery.ts'
 import {craterTerrain} from '#src/lib/gallery/moonfall/CraterTerrain.ts'
@@ -50,6 +52,8 @@ export default class GalleryNavigation {
   floorHeight([x, y, z]: Vec3) {
     const floors = [
       ...this.halls.filter(room => inPlan(room, x, z)).map(room => groundOf(room, x, z)),
+      ...antechamberFloor(x, z),
+      lobbyBalconyFloor(x, z),
       ...bastionFloors(x, z),
       corridorPassage.floorAt(x, z),
       corridorLanding.floorAt(x, z),
@@ -70,6 +74,9 @@ export default class GalleryNavigation {
   }
 
   private hallContains(room: Hall, position: Vec3) {
+    if (room.id === 'antechamber') {
+      return insideAntechamber(position)
+    }
     if (room.id === 'corridor') {
       return insideCorridor(position)
     }

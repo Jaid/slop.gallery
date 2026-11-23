@@ -3,6 +3,7 @@ import {BufferGeometry, CylinderGeometry, ExtrudeGeometry, Float32BufferAttribut
 import {mergeParts} from '../geometry.ts'
 import {colliderGeometry} from './architecture.ts'
 import ArcSlabGeometry from './ArcSlabGeometry.ts'
+import {lobbyBalcony} from './lobbyBalcony.ts'
 import lobbyVault, {glazingStart, lobbyChandeliers, vaultBays, vaultCoffers, vaultRibs} from './lobbyVault.ts'
 import rosette from './rosette.ts'
 
@@ -274,8 +275,7 @@ export default class LobbyVaultGeometry {
       }
     }
     template.dispose()
-    // Lunettes close both ends above the walls. Only the north one is pierced by a rose window; the south one is only as thick as
-    // the wall it shares with the Antechamber, which rises behind it.
+    // The south lunette takes the same arc as the north, but starts above the raised wall with the balcony door.
     const roseY = roseCenterY
     for (const side of [-1, 1]) {
       const windowed = side < 0
@@ -288,8 +288,10 @@ export default class LobbyVaultGeometry {
         roseGlass: [] as Array<BufferGeometry>,
       }
       const lunette = new Shape
-      lunette.moveTo(-outerRadius, springY)
-      lunette.absarc(0, springY, outerRadius, Math.PI, 0, true)
+      const foot = windowed ? springY : lobbyBalcony.wallTop
+      const footAngle = Math.asin((foot - springY) / outerRadius)
+      lunette.absarc(0, springY, outerRadius, Math.PI - footAngle, footAngle, true)
+      lunette.closePath()
       if (windowed) {
         const opening = new Path
         opening.absarc(0, roseY, rose.radius, 0, Math.PI * 2, true)

@@ -10,6 +10,24 @@ export default {
     fov: 80,
     ratio: 16 / 9,
   },
+  loggia: {
+    position: [-6, 6, 9],
+    aim: {
+      yaw: -2.7053,
+      pitch: -0.0873,
+    },
+    fov: 64,
+    ratio: 16 / 9,
+  },
+  balcony: {
+    position: [6.4, 6, 19.5],
+    aim: {
+      yaw: 0.58,
+      pitch: -0.22,
+    },
+    fov: 80,
+    ratio: 16 / 9,
+  },
   floor: {
     position: [-6.13, 0.9, 19.29],
     aim: {

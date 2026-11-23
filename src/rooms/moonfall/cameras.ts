@@ -1,5 +1,10 @@
 import type {RoomCamera} from '../base/Room.ts'
 
+import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
+import staircase from '#src/lib/gallery/staircase.ts'
+
+const stairOffset = staircase.returnZ - lowerGallery.moonfall.center[1]
+
 export default {
   overview: {
     position: [-13.818, 4.317, 9.831],
@@ -12,7 +17,7 @@ export default {
   },
   stairs: {
     // On the lower flight’s centerline, looking due west, so its walls frame the view symmetrically.
-    position: [16.63, 3.1, 0],
+    position: [16.63, 3.1, stairOffset],
     aim: {
       yaw: Math.PI / 2,
       pitch: -0.35,

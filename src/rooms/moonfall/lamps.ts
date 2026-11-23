@@ -1,11 +1,14 @@
 import type {Lamp} from '../base/Room.ts'
 
+import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
 import moonfallWallLeds from '#src/lib/gallery/moonfall/fixtures.ts'
 import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import {moonfallSculpture, sculptureLampOffset} from '#src/lib/gallery/moonfall/sculpture.ts'
+import staircase, {stairTurn} from '#src/lib/gallery/staircase.ts'
 
 const [sculptureX, sculptureY, sculptureZ] = moonfallSculpture.center
 const [lampX, lampY, lampZ] = sculptureLampOffset
+const {center: [originX, originZ]} = lowerGallery.moonfall
 
 export default {
   // Each source sits 60 cm in front of the middle of its housing.
@@ -33,10 +36,17 @@ export default {
   },
   // Over the upper flight of the stairway up to the Antechamber.
   stairs: {
-    position: [24.55, 6.72, -4.98],
+    position: [staircase.startX + 3 - originX, 10.15, staircase.z - originZ],
     strength: 30,
     tint: moonfallTheme.stairs,
     range: 15,
+    decay: 1,
+  },
+  turn: {
+    position: [stairTurn.position[0] - originX, stairTurn.top - lowerGallery.floorY + 2.85, stairTurn.position[2] - originZ],
+    strength: 20,
+    tint: moonfallTheme.stairs,
+    range: 10,
     decay: 1,
   },
 } satisfies Record<string, Lamp>

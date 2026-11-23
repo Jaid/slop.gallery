@@ -4,9 +4,9 @@ import type {Vec3} from 'math'
 import {Geofence} from 'geofency'
 
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
-import {moonfallCrater} from '#src/lib/gallery/moonfall/config.ts'
+import {ceilingTop, moonfallCrater} from '#src/lib/gallery/moonfall/config.ts'
 import {craterTerrain} from '#src/lib/gallery/moonfall/CraterTerrain.ts'
-import {stairTurn, stairwayFootprint} from '#src/lib/gallery/staircase.ts'
+import {stairTurn} from '#src/lib/gallery/staircase.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -26,23 +26,17 @@ const bottom = craterTerrain.lowest()
 /** Laid out around the middle of its floor plan, at the height of its slate floor. */
 export default class Moonfall extends Room {
   // Reaches down to the deepest air in the crater.
-  override readonly air = floorBox(plan.size, bottom, 5.8 - bottom)
+  override readonly air = floorBox(plan.size, bottom, ceilingTop - bottom)
   override readonly description = 'Down the stairs. Out of the ordinary.'
   override readonly fence = new Geofence([
     // Everything under its floor plan, up to just over its ceiling.
     {
       ...footprint([this.air]),
-      ceiling: 6,
+      ceiling: ceilingTop,
     },
-    // The stairway up to the Antechamber, at every height.
-    {
-      x: stairwayFootprint.x - plan.center[0],
-      z: stairwayFootprint.z - plan.center[1],
-      x2: stairwayFootprint.x2 - plan.center[0],
-      z2: stairwayFootprint.z2 - plan.center[1],
-    },
+    ...fences.stairs.boxes,
   ])
-  override readonly height = 5.8
+  override readonly height = ceilingTop
   override readonly id = 'moonfall'
   override readonly size = plan.size
   override readonly spawn = spawns['']
