@@ -94,7 +94,7 @@ const strokeDistance = Fn(([p, shapeA, shapeB]: [Node<'vec3'>, Node<'vec4'>, Nod
 
 /**
  * A slowly turning two-layer sculpture of 12 thick, knife-sculpted heavy-body impasto dollops suspended in luminous golden-honey linseed oil with effervescent multi-scale air bubbles inside clear glass.
- * Eight bold outer dollops swirl around a square antiprism over four inner tetrahedral swirls with guaranteed 3D clearance so strokes never clip into each other. Constant physical-space bristle tracks, contrasted smooth knife scoops and rough craggy crests, radiant primary oil pigments with localized stretched marbling and 64 full-sphere bubbles bring the sculpture to life.
+ * Eight bold outer dollops swirl around a square antiprism over four inner tetrahedral swirls with guaranteed 3D clearance so strokes never clip into each other. Constant physical-space bristle tracks, contrasted smooth knife scoops and rough craggy crests, radiant primary oil pigments with localized stretched marbling and 80 full-sphere bubbles bring the sculpture to life.
  */
 export default class ImpastoOrbMaterial extends OrbGlassMaterial {
   constructor(options: OrbGlassOptions) {
