@@ -14,8 +14,8 @@ export default function WoodFloor({width, depth, texture, reflections}: {
   texture: Texture
   width: number
 }) {
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  const reflective = reflections ?? floorReflections
+  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const reflective = reflections ?? mirrorReflections
   const material = useDisposable(useMemo(() => new WoodFloorMaterial(texture, reflective), [reflective, texture]))
   const reflection = material.reflectionTarget
   return <mesh name='mona-ribbit-room-wood-floor' position={[0, 0.001, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>

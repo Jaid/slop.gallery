@@ -1,4 +1,4 @@
-import type FloorMaterial from '../../src/lib/materials/FloorMaterial.ts'
+import type PlanarMirrorMaterial from '../../src/lib/materials/PlanarMirrorMaterial.ts'
 
 import {expect, test} from 'bun:test'
 
@@ -17,7 +17,7 @@ import WoodFloorMaterial from '../../src/lib/materials/WoodFloorMaterial.ts'
 import {getGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
 
 /** every kind of floor, procedural but for the wood, which takes a texture */
-const floors: Array<[string, (reflections: boolean) => FloorMaterial]> = [
+const floors: Array<[string, (reflections: boolean) => PlanarMirrorMaterial]> = [
   ['plank', reflections => new PlankFloorMaterial(siennaFloorPlanks, reflections)],
   ['oiled plank', reflections => new PlankFloorMaterial(lodgeFloorPlanks, reflections, lodgeFloorOil)],
   ['checkered marble', reflections => new CheckeredMarbleFloorMaterial({
@@ -35,11 +35,6 @@ const floors: Array<[string, (reflections: boolean) => FloorMaterial]> = [
     size: [8, 8],
     field: venetianTerrazzo,
     reflections,
-  })],
-  ['slate', reflections => new SlateFloorMaterial({
-    craterRadius: 3,
-    reflections,
-    style: moonfallSlate(moonfallPalette(0)),
   })],
   ['end-grain', reflections => new EndGrainMaterial(reflections)],
 ]
@@ -74,10 +69,24 @@ for (const [kind, create] of floors) {
     expect(released).toBe(1)
   })
 }
+test('Moonfall’s honed slate keeps its mineral shading without sampling the ceiling mirror', () => {
+  const slate = new SlateFloorMaterial({
+    craterRadius: 3,
+    style: moonfallSlate(moonfallPalette(0)),
+  })
+  try {
+    expect(slate.outputNode).toBeNull()
+    expect(slate.colorNode).not.toBeNull()
+    expect(slate.roughnessNode).not.toBeNull()
+    expect(slate.metalnessNode).not.toBeNull()
+  } finally {
+    slate.dispose()
+  }
+})
 test('wood floors keep their texture in both modes, varnished in heavy and matte in fast', () => {
   const texture = new Texture
-  const heavy = new WoodFloorMaterial(texture, getGraphicsProfile(true).floorReflections)
-  const fast = new WoodFloorMaterial(texture, getGraphicsProfile(false).floorReflections)
+  const heavy = new WoodFloorMaterial(texture, getGraphicsProfile(true).mirrorReflections)
+  const fast = new WoodFloorMaterial(texture, getGraphicsProfile(false).mirrorReflections)
   try {
     expect(heavy.map).toBe(texture)
     expect(heavy.reflection!.reflector.bounces).toBe(false)

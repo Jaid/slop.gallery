@@ -1,6 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
-import FloorMaterial from './FloorMaterial.ts'
+import PlanarMirrorMaterial from './PlanarMirrorMaterial.ts'
 
 export type WoodFloorVarnish = {
   /** radius of the Gaussian blur over the mirror, in pixels of a 1080-row image */
@@ -9,7 +9,7 @@ export type WoodFloorVarnish = {
 }
 
 /** Satin-varnished wood in heavy mode, as glossy as `varnish` says; matte wood in fast mode. */
-export default class WoodFloorMaterial extends FloorMaterial {
+export default class WoodFloorMaterial extends PlanarMirrorMaterial {
   constructor(map: Texture, reflections = true, {gaussianBlur = 20, roughness = 0.2}: WoodFloorVarnish = {}) {
     super(map, {
       color: '#c5a585',

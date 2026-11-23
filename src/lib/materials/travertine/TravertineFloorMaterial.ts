@@ -3,7 +3,7 @@ import type {TravertineStyle} from './travertine.ts'
 import {color, float, hash, max, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 
 import {heightNormal, visibleDetail} from '../filters.ts'
-import FloorMaterial from '../FloorMaterial.ts'
+import PlanarMirrorMaterial from '../PlanarMirrorMaterial.ts'
 import {travertine, travertinePalette} from './travertine.ts'
 
 export type TravertineFloorOptions = {
@@ -34,7 +34,7 @@ const bedding = 0.2
  *
  * Every tile is cut from a different part of the block: its stone is offset far into the pattern and its bedding turned by a few degrees, so neighbors never continue each other’s veins. The polish mirrors the room in heavy mode; the pores stay matte, dark and recessed.
  */
-export default class TravertineFloorMaterial extends FloorMaterial {
+export default class TravertineFloorMaterial extends PlanarMirrorMaterial {
   constructor({origin, reflections = true, seed = 0, style = lobbyFloorTravertine, tile}: TravertineFloorOptions) {
     if (!(tile > 0)) {
       throw new RangeError('Travertine tiles need a positive size.')

@@ -50,16 +50,16 @@ export default function SalonRoom({glass, stone, wood}: {
   const socle = useDisposable(useMemo(() => new FauxMarbleMaterial(portoro), []))
   const fields = useDisposable(useMemo(() => new FauxMarbleMaterial(gialloAntico), []))
   const isHeavy = useGraphicsMode()
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   const terrazzo = useDisposable(useMemo(() => new TerrazzoFloorMaterial({
     center: room.center,
     size: room.size,
     field: venetianTerrazzo,
     border: blackTerrazzo,
     inset: salonTerrazzo.border,
-    reflections: floorReflections,
+    reflections: mirrorReflections,
     ...salonTerrazzo.polish,
-  }), [floorReflections]))
+  }), [mirrorReflections]))
   const floor = useMemo(() => ({
     slab: terrazzo,
     reflection: terrazzo.reflectionTarget ?? undefined,

@@ -4,8 +4,8 @@ import type lobbyFences from '#src/rooms/lobby/fences.ts'
 import type moonfallFences from '#src/rooms/moonfall/fences.ts'
 import type {GalleryRoomId as RoomId} from './SlopGallery.ts'
 
-/** the floor mirrors of the gallery: one for the floors of the ground level, one for the Lodge’s planks and one for the Moonfall’s slate */
-export type FloorMirror = 'base' | 'lodge' | 'moonfall'
+/** the gallery’s horizontal mirror planes: the ground floor, the Lodge’s planks and Moonfall’s ceiling */
+export type ReflectionGroup = 'ground' | 'lodge' | 'moonfall'
 /** the ids of other rooms’ objects by the room they belong to: per room, the id or ids within it */
 export type ForeignIds = Partial<Record<RoomId, ReadonlyArray<string> | string>>
 /** the id of a fence of the gallery: a room’s, which is the room’s id, or the global id of one of its other fences, like a part of a room */
@@ -14,8 +14,8 @@ export type FenceId = OtherFenceId<'bastion', typeof bastionFences> | OtherFence
 export type Activation = {
   /** other rooms’ ambient sounds that stay audible, because they carry into the fence */
   audibleAmbiences?: ForeignIds
-  /** the floor mirror to render, none if left out */
-  floorMirror?: FloorMirror
+  /** the group that gets the shared planar reflection; omit to leave the selection to the other fences */
+  reflectionGroup?: ReflectionGroup
   /** the other rooms whose models stay enabled: the rooms a player can see into from the fence through up to three openings; the frustum still culls them per frame */
   rooms?: ReadonlyArray<RoomId>
   /** other rooms’ lamps that stay on, because they reach into the fence or can be seen from it */
@@ -26,13 +26,13 @@ type OtherFenceId<Room extends RoomId, Fences> = `${Room}-${keyof Fences & strin
 
 /**
  * Per fence, a whitelist of neighbor objects. While the player is in a room, every other room’s models are hidden, its lamps are off and its ambient sounds are silent unless a fence the player is in lists them here: the room’s own, under the room’s id, or any other fence holding the player’s place, like a part of the room.
- * Whatever any of those fences lists is on, so a part of a room adds to what the room lists, and what only shows or shines in a part of a room is only on there. A fence that adds nothing, like the Lobby’s middle part, is left out.
+ * Rooms, lamps and sounds add up across fences. The planar reflection is exclusive: the last fence naming a group wins, so a part of a room can override the room. A fence that adds nothing, like the Lobby’s middle part, is left out.
  * A room’s own models, lamps and ambient sounds are always on inside it. Hiding a model only skips its draws, and switching a lamp off only dims it, so neither recompiles a shader.
  */
 const activations = {
   lobby: {
     rooms: ['vesper', 'banquet', 'antechamber', 'salon', 'forge', 'oculus', 'sienna', 'exhibition', 'bastion'],
-    floorMirror: 'base',
+    reflectionGroup: 'ground',
     visibleLamps: {
       banquet: [
         'led_north',
@@ -58,7 +58,7 @@ const activations = {
   },
   vesper: {
     rooms: ['lobby', 'bastion', 'sienna', 'banquet', 'antechamber', 'salon', 'forge', 'corridor', 'oculus'],
-    floorMirror: 'base',
+    reflectionGroup: 'ground',
     visibleLamps: {
       lobby: [
         'chandelier_north',
@@ -75,7 +75,7 @@ const activations = {
   },
   banquet: {
     rooms: ['lobby', 'salon', 'forge', 'vesper', 'antechamber', 'oculus'],
-    floorMirror: 'base',
+    reflectionGroup: 'ground',
     visibleLamps: {
       lobby: [
         'chandelier_middle',
@@ -85,7 +85,7 @@ const activations = {
   },
   antechamber: {
     rooms: ['lobby', 'moonfall', 'vesper', 'banquet', 'salon', 'forge', 'oculus'],
-    floorMirror: 'base',
+    reflectionGroup: 'ground',
     visibleLamps: {
       lobby: [
         'chandelier_north',
@@ -117,7 +117,7 @@ const activations = {
   },
   salon: {
     rooms: ['banquet', 'lobby', 'forge', 'vesper', 'antechamber', 'oculus', 'sienna', 'exhibition'],
-    floorMirror: 'base',
+    reflectionGroup: 'ground',
     visibleLamps: {
       banquet: [
         'led_north',
@@ -129,11 +129,11 @@ const activations = {
   forge: {
     // through its window, across the Lobby and through the Salon’s window, as the Salon sees across it the other way
     rooms: ['bastion', 'lobby', 'salon', 'vesper', 'banquet', 'antechamber', 'oculus', 'sienna', 'exhibition'],
-    floorMirror: 'base',
+    reflectionGroup: 'ground',
   },
   moonfall: {
     rooms: ['antechamber', 'exhibition', 'oculus'],
-    floorMirror: 'moonfall',
+    reflectionGroup: 'moonfall',
     visibleLamps: {
       exhibition: [
         'tunnel_north',
@@ -152,7 +152,7 @@ const activations = {
   },
   // The Lodge’s planks show through its doorway from the Corridor, and no other floor that mirrors does.
   'corridor-seeing_lodge_floor': {
-    floorMirror: 'lodge',
+    reflectionGroup: 'lodge',
   },
   oculus: {
     rooms: ['lobby', 'exhibition', 'bastion', 'salon', 'forge', 'moonfall', 'banquet'],
@@ -178,7 +178,7 @@ const activations = {
   },
   exhibition: {
     rooms: ['oculus', 'moonfall', 'lobby', 'bastion', 'salon', 'forge'],
-    floorMirror: 'moonfall',
+    reflectionGroup: 'moonfall',
     audibleAmbiences: {
       moonfall: 'orbital_sculpture',
     },
@@ -201,7 +201,7 @@ const activations = {
   },
   lodge: {
     rooms: ['bastion', 'corridor', 'oculus'],
-    floorMirror: 'lodge',
+    reflectionGroup: 'lodge',
     visibleLamps: {
       corridor: [
         'lantern_north',
@@ -219,7 +219,7 @@ const activations = {
   },
   // The Lodge’s planks show down the approach, through the Lodge’s east doorway, and through its east window, and no other floor that mirrors does.
   'bastion-seeing_lodge_floor': {
-    floorMirror: 'lodge',
+    reflectionGroup: 'lodge',
   },
 } satisfies Partial<Record<FenceId, Activation>> & Record<RoomId, Activation>
 /** the ids of the fences that keep something on */
@@ -234,11 +234,11 @@ export function enabledRooms(fences: Iterable<string>): Array<RoomId> {
   return [...new Set(Array.from(fences, fence => activation(fence)?.rooms ?? []).flat())]
 }
 
-/** The floor mirror to render while the player is in the fences with the ids: the one the last of them that names any names, so a part of a room decides over the room; none where none of them names one. */
-export function floorMirror(fences: Iterable<string>): FloorMirror | undefined {
-  let mirror: FloorMirror | undefined
+/** The last group requested by the player’s fences, or undefined to leave the mirror pass off. */
+export function reflectionGroup(fences: Iterable<string>): ReflectionGroup | undefined {
+  let mirror: ReflectionGroup | undefined
   for (const fence of fences) {
-    mirror = activation(fence)?.floorMirror ?? mirror
+    mirror = activation(fence)?.reflectionGroup ?? mirror
   }
   return mirror
 }

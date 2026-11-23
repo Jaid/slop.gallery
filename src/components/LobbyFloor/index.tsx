@@ -18,13 +18,13 @@ export default function LobbyFloor({room, ...props}: {
   stone: Texture
   wood: Texture
 }) {
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   const slab = useDisposable(useMemo(() => new TravertineFloorMaterial({
     // The seams are laid every tile from the room’s north-west corner.
     origin: [room.center[0] - room.size[0] / 2, room.center[1] - room.size[1] / 2],
     tile: floorTile,
-    reflections: floorReflections,
-  }), [floorReflections, room]))
+    reflections: mirrorReflections,
+  }), [mirrorReflections, room]))
   const inlay = useDisposable(useMemo(() => new PolishedBrassMaterial, []))
   const materials = useMemo(() => ({
     slab,

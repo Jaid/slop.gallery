@@ -44,19 +44,19 @@ export type RenderPipelineSettings = {
   lampShadowRadius: number
   /** shadow map lookups per pixel for every lamp */
   lampShadowSamples: number
-  /** factor on every reflective floor’s Gaussian blur radius */
+  /** factor on every reflective surface’s Gaussian blur radius */
   mirrorReflectionBlur: number
-  /** factor on every reflective floor’s extra reflectance at grazing angles */
+  /** factor on every reflective surface’s extra reflectance at grazing angles */
   mirrorReflectionGrazing: number
-  /** factor on every reflective floor’s loss, the mip level of the mirror it reads */
+  /** factor on every reflective surface’s loss, the mip level of the mirror it reads */
   mirrorReflectionLevel: number
-  /** factor on every reflective floor’s roughness */
+  /** factor on every reflective surface’s roughness */
   mirrorReflectionRoughness: number
-  /** whether the reflective floors mirror the room through their shared planar mirror */
+  /** whether surfaces in the selected plane mirror the room */
   mirrorReflections: boolean
-  /** factor on every reflective floor’s reflectance */
+  /** factor on every reflective surface’s reflectance */
   mirrorReflectionStrength: number
-  /** floor reflection pixels per output pixel along each axis */
+  /** planar reflection pixels per output pixel along each axis */
   reflectionResolutionScale: number
   screenSpaceIndirectLight: boolean
   screenSpaceIndirectLightAmbientOcclusion: number
@@ -149,7 +149,7 @@ export function getRenderPipelineSettings(profile: GraphicsProfile, antiAliasing
     mirrorReflectionGrazing: 1,
     mirrorReflectionRoughness: 1,
     mirrorReflectionStrength: 1,
-    mirrorReflections: profile.floorReflections,
+    mirrorReflections: profile.mirrorReflections,
     reflectionResolutionScale: profile.reflectionResolutionScale,
     screenSpaceIndirectLight: profile.indirectLight,
     screenSpaceIndirectLightAmbientOcclusion: 0,

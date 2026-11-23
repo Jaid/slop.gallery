@@ -1,10 +1,10 @@
-import type {FloorReflection} from './FloorMaterial.ts'
+import type {PlanarReflection} from './PlanarMirrorMaterial.ts'
 import type {PlankLayout} from './planks.ts'
 
 import {float, mx_noise_float, normalWorldGeometry, positionWorld, vec3} from 'three/tsl'
 
 import {visibleDetail, worldNormalToView} from './filters.ts'
-import FloorMaterial from './FloorMaterial.ts'
+import PlanarMirrorMaterial from './PlanarMirrorMaterial.ts'
 import {plankBoards} from './planks.ts'
 
 /** How the finish on the boards shades them and how much of the room it mirrors in heavy mode. */
@@ -12,7 +12,7 @@ export type PlankFinish = {
   /** the environment’s share of the lighting, by default all of it with the mirror and none without */
   envMapIntensity?: number
   /** the mirror in heavy mode, which the joints and every face but those looking up leave out */
-  reflection: Omit<FloorReflection, 'mask'>
+  reflection: Omit<PlanarReflection, 'mask'>
   /** the boards’ roughness with the mirror and without it, in fast mode */
   roughness: {
     matte: number
@@ -59,7 +59,7 @@ export const satinVarnish: PlankFinish = {
  *
  * The mirror is continuous across a board and only breaks at the joints, which stay matte. A faint, broad waviness in the finish bends the mirrored lamps the way a hand-laid floor does.
  */
-export default class PlankFloorMaterial extends FloorMaterial {
+export default class PlankFloorMaterial extends PlanarMirrorMaterial {
   constructor(readonly layout: PlankLayout = siennaFloorPlanks, reflections = true, readonly finish: PlankFinish = satinVarnish) {
     if (!(layout.width > 0) || !(layout.length[0] > 0) || !(layout.length[1] >= layout.length[0])) {
       throw new RangeError('Floor boards need a positive width and a shortest length no longer than the longest.')

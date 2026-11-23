@@ -3,7 +3,7 @@ import type {Node} from 'three/webgpu'
 import {color, float, hash, max, min, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 
 import {heightNormal, inside, visibleDetail} from './filters.ts'
-import FloorMaterial from './FloorMaterial.ts'
+import PlanarMirrorMaterial from './PlanarMirrorMaterial.ts'
 
 /** One mix of terrazzo: the color of the cement binder and the marble chips scattered through it, as sRGB hex strings. */
 export type TerrazzoMix = {
@@ -125,7 +125,7 @@ function chipColor({chips}: TerrazzoMix, pick: Float) {
  *
  * Every chip is an irregular shard with a color of its own. In heavy mode the polish mirrors the room softly, bent a little by the waviness of a ground floor. Chips smaller than a pixel fade to their average before they could shimmer.
  */
-export default class TerrazzoFloorMaterial extends FloorMaterial {
+export default class TerrazzoFloorMaterial extends PlanarMirrorMaterial {
   constructor(options: TerrazzoFloorOptions) {
     const {border, center, field, grazingStrength = 0.3, inset = 0, loss = 2.5, reflections = true, roughness, seed = 0, strength = 0.06} = options
     if (!('radius' in options ? options.radius > 0 : options.size[0] > 0 && options.size[1] > 0) || inset < 0) {

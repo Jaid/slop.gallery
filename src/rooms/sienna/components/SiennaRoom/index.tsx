@@ -29,7 +29,7 @@ export default function SiennaRoom({joinery}: {
     z: Material
   }
 }) {
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   // The planks blur a reflection to a faint smear, not worth a mirrored pass of the scene.
   const floor = useDisposable(useMemo(() => new PlankFloorMaterial(undefined, false), []))
   const ceiling = useDisposable(useMemo(() => new PlankMaterial(siennaCeilingPlanks), []))
@@ -42,7 +42,7 @@ export default function SiennaRoom({joinery}: {
       <RigidBody colliders={false} type='fixed'>
         <CuboidCollider args={[room.size[0] / 2, 0.15, room.size[1] / 2]} position={[0, -0.15, 0]} />
         <CuboidCollider args={[room.size[0] / 2, 0.15, room.size[1] / 2]} position={[0, 5.9, 0]} />
-        <Box color='#392517' envMapIntensity={floorReflections ? 1 : 0} name='sienna-floor-slab' position={[0, -0.12, 0]} size={[room.size[0], 0.24, room.size[1]]} />
+        <Box color='#392517' envMapIntensity={mirrorReflections ? 1 : 0} name='sienna-floor-slab' position={[0, -0.12, 0]} size={[room.size[0], 0.24, room.size[1]]} />
         <Box material={ceiling} name='sienna-ceiling' position={[0, 5.78, 0]} size={[room.size[0], 0.18, room.size[1]]} />
       </RigidBody>
       <mesh name='sienna-wood-floor' position={[0, 0.001, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
@@ -63,7 +63,7 @@ export default function SiennaRoom({joinery}: {
       <RigidBody colliders={false} type='fixed'>
         <CuboidCollider args={[vestibuleWidth / 2, 0.15, vestibuleDepth / 2]} position={[0, -0.15, 0]} />
         <CuboidCollider args={[vestibuleWidth / 2, siennaVestibuleCeiling.thickness / 2, vestibuleDepth / 2]} position={[0, siennaVestibuleCeiling.y, 0]} />
-        <Box color='#392517' envMapIntensity={floorReflections ? 1 : 0} name='sienna-vestibule-floor-slab' position={[0, -0.12, 0]} size={[vestibuleWidth, 0.24, vestibuleDepth]} />
+        <Box color='#392517' envMapIntensity={mirrorReflections ? 1 : 0} name='sienna-vestibule-floor-slab' position={[0, -0.12, 0]} size={[vestibuleWidth, 0.24, vestibuleDepth]} />
         <Box material={ceiling} name='sienna-vestibule-ceiling' position={[0, siennaVestibuleCeiling.y, 0]} size={[vestibuleWidth, siennaVestibuleCeiling.thickness, vestibuleDepth]} />
       </RigidBody>
       <mesh name='sienna-vestibule-wood-floor' position={[0, 0.001, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>

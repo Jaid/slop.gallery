@@ -41,16 +41,16 @@ export type GraphicsProfile = {
   contactShadowTuning?: ContactShadowTuning
   /** factor on the segment counts of round meshes that opt in, along each curved direction */
   curveDetail: number
-  floorReflections: boolean
   /** whether screen-space indirect light bounces the lit scene off the surfaces’ diffuse color */
   indirectLight: boolean
   /** filter radius for shadow-casting lamps, in shadow-map texels, so a larger `shadowMapScale` needs a proportionally larger radius for the same penumbra; independent of the Sun */
   lampShadowRadius?: number
-  /** whether screen-space reflections add to metallic surfaces like gilded frames and trims, on top of the floor reflections */
+  /** whether screen-space reflections add to metallic surfaces like gilded frames and trims, on top of the planar reflections */
   metalReflections: boolean
+  mirrorReflections: boolean
   noiseTextures: boolean
   postprocessing: boolean
-  /** floor reflection pixels per output pixel along each axis */
+  /** planar reflection pixels per output pixel along each axis */
   reflectionResolutionScale: number
   /** factor on every shadow map’s size along each axis */
   shadowMapScale: number
@@ -122,7 +122,7 @@ const fastProfile: GraphicsProfile = {
   canvasTextureResolution: 0.5,
   curveDetail: 1,
   noiseTextures: false,
-  floorReflections: false,
+  mirrorReflections: false,
   indirectLight: false,
   metalReflections: false,
   shadows: false,
@@ -141,7 +141,7 @@ const heavyProfile: GraphicsProfile = {
   canvasTextureResolution: 1,
   curveDetail: 1,
   noiseTextures: true,
-  floorReflections: true,
+  mirrorReflections: true,
   indirectLight: false,
   lampShadowRadius: 4,
   metalReflections: true,

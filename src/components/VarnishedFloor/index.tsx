@@ -64,7 +64,7 @@ export function FloorSlab({center: [x, z], material, name, size: [width, depth]}
 
 /** The Cell’s floor over a rectangular floor plan: the Vesper’s varnished wood, mirroring the room through a blur, on a dark slab with its collider. */
 export default function VarnishedFloor(props: FloorSlabProps) {
-  const {floorReflections, surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
-  const wood = useDisposable(useMemo(() => createVarnishedWood(surfaceAnisotropy, floorReflections), [floorReflections, surfaceAnisotropy]))
+  const {mirrorReflections, surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
+  const wood = useDisposable(useMemo(() => createVarnishedWood(surfaceAnisotropy, mirrorReflections), [mirrorReflections, surfaceAnisotropy]))
   return <FloorSlab {...props} material={wood.material} />
 }

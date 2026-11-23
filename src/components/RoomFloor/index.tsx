@@ -28,10 +28,10 @@ export default function RoomFloor({glass, materials, room, stone, wood}: {
   stone: Texture
   wood: Texture
 }) {
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   const plan = roomFloorPlan(room)
   const reflection = materials?.reflection
-  const envMapIntensity = floorReflections ? 1 : 0
+  const envMapIntensity = mirrorReflections ? 1 : 0
   const surfaces: Partial<Record<FloorRoom['id'], {
     color: string
     map?: Texture
@@ -49,7 +49,7 @@ export default function RoomFloor({glass, materials, room, stone, wood}: {
     <RigidBody colliders={false} type='fixed'>
       {plan.slabs.map(({center: [x, z], size: [width, depth]}, i) => <group key={i}>
         <CuboidCollider args={[width / 2, floorThickness / 2, depth / 2]} position={[x, -floorThickness / 2, z]} />
-        <Box name={`${room.id}-floor-slab`} position={[x, -floorThickness / 2, z]} size={[width, floorThickness, depth]} {...surface} envMapIntensity={envMapIntensity} material={materials?.slab} roughness={floorReflections ? 0.36 : 0.8} />
+        <Box name={`${room.id}-floor-slab`} position={[x, -floorThickness / 2, z]} size={[width, floorThickness, depth]} {...surface} envMapIntensity={envMapIntensity} material={materials?.slab} roughness={mirrorReflections ? 0.36 : 0.8} />
       </group>)}
       <Branch if={plan.glazing}><FloorGlass glass={glass} glazing={plan.glazing!} name={room.id} /></Branch>
     </RigidBody>

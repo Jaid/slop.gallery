@@ -8,9 +8,9 @@ import ShadowCache, {reachesFrustum, ShadowRefresher} from 'three-shadow-cache'
 import {Box3, Frustum, Matrix4, Vector3} from 'three/webgpu'
 
 import {useGallery} from '#src/lib/gallery.ts'
-import {ownerRoom, roomBoxes, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, whereaboutsAt} from '#src/lib/gallery/roomVisibility.ts'
+import {ownerRoom, roomContaining, roomsAt, screenRect, updatePickupRoom, visibleRegions, whereaboutsAt} from '#src/lib/gallery/roomVisibility.ts'
 import {sunTightSpaces} from '#src/lib/gallery/sun.ts'
-import {getFloorReflectionHeight} from '#src/lib/materials/FloorMaterial.ts'
+import {getReflectionHeight} from '#src/lib/materials/PlanarMirrorMaterial.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
 import {lightActive} from '#src/lib/rendering/lightLevels.ts'
 import {hasGeometry, worldBounds} from '#src/lib/rendering/worldBounds.ts'
@@ -37,11 +37,11 @@ const holdsLight = (object: Object3D) => {
   }
   return result
 }
-/** the box mirrored by a floor at the height, as the floor reflection shows it */
-const mirror = (box: Box3, floorY: number) => {
+/** the box as seen in a horizontal mirror at the given height */
+const mirror = (box: Box3, height: number) => {
   mirrored.copy(box)
-  mirrored.min.y = 2 * floorY - box.max.y
-  mirrored.max.y = 2 * floorY - box.min.y
+  mirrored.min.y = 2 * height - box.max.y
+  mirrored.max.y = 2 * height - box.min.y
   return mirrored
 }
 /** what the camera sees of each room through the openings, limited to the rooms it stands in and those the fences around it keep enabled, see `activations.ts` */
@@ -82,8 +82,7 @@ export default function RoomCulling() {
       const eye = camera.getWorldPosition(position).toArray()
       const from = roomsAt(eye)
       viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
-      // The floor reflection shows the rooms behind openings mirrored by the floors it mirrors, by default those of the room the camera is in.
-      const floorY = getFloorReflectionHeight() ?? roomBoxes.find(({id}) => id === from[0])?.floorY ?? 0
+      const mirrorY = getReflectionHeight()
       related.clear()
       for (const room of [...from, ...enabledRooms(whereaboutsAt(eye, from))]) {
         related.add(room)
@@ -113,7 +112,7 @@ export default function RoomCulling() {
           } else if (object.frustumCulled) {
             // Objects that skip frustum culling, like spray their shader moves, reach past their bounds, so they show wherever their room does.
             const world = worldBounds(object)
-            if (!inSight(rects, world) && !inSight(rects, mirror(world, floorY))) {
+            if (!inSight(rects, world) && (mirrorY === null || !inSight(rects, mirror(world, mirrorY)))) {
               hiddenFromView.add(object)
             }
           }

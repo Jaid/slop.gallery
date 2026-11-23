@@ -12,9 +12,9 @@ import {sunGeometry, sunlitPoints} from '#src/lib/gallery/sun.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import ArchitecturalPlasterMaterial from '#src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import ClearGlassMaterial from '#src/lib/materials/ClearGlassMaterial.ts'
-import FloorMaterial from '#src/lib/materials/FloorMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
 import JoineryWoodMaterial from '#src/lib/materials/JoineryWoodMaterial.ts'
+import PlanarMirrorMaterial from '#src/lib/materials/PlanarMirrorMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import {studioFloorId, studioFloors, studioWallId, studioWalls} from '#src/rooms/studio/finishes.ts'
 import {studioSkylightTrim} from '#src/rooms/studio/skylights.ts'
@@ -31,22 +31,22 @@ const [makeWalls, makeFloor] = await Promise.all([studioWalls[studioWallId(envir
 
 /** The Studio: a floor between four walls in the finishes the seed picked of some of the game’s rooms, the Cell’s by default, under a plaster ceiling, nothing else, lit as the seed rolls it by a faint fill from no visible source, the lamp of the Cell’s chandelier without the chandelier and the moon falling in through two round skylights, each glazed in nine panes. */
 export default function StudioRoom() {
-  const {floorReflections, surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections, surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
   const finish = useDisposable(useMemo(makeWalls, []))
   const floor = useDisposable(useMemo(() => {
     const made = makeFloor({
       anisotropy: surfaceAnisotropy,
       center: studio.center,
-      reflections: floorReflections,
+      reflections: mirrorReflections,
       size: studio.size,
     })
     // The seed’s mirror over the finish’s.
-    if (made.material instanceof FloorMaterial) {
+    if (made.material instanceof PlanarMirrorMaterial) {
       made.material.reflectionStrength.value = look.floor.strength
       made.material.reflectionBlur.value = look.floor.blur ?? made.material.reflectionBlur.value
     }
     return made
-  }, [floorReflections, surfaceAnisotropy]))
+  }, [mirrorReflections, surfaceAnisotropy]))
   return <group name='studio'>
     <ambientLight intensity={look.fill.ambient} />
     <hemisphereLight color='#e1edff' groundColor='#80705d' intensity={look.fill.hemisphere} />

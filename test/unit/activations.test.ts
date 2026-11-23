@@ -7,7 +7,7 @@ import {probeGeofences, startGeofences, useGeofences} from '../../src/lib/galler
 import lobby from '../../src/lib/gallery/lobby.ts'
 import {whereaboutsAt} from '../../src/lib/gallery/roomVisibility.ts'
 import {useGallery} from '../../src/lib/gallery/store.ts'
-import activations, {enabledRooms, floorMirror} from '../../src/worlds/gallery/activations.ts'
+import activations, {enabledRooms, reflectionGroup} from '../../src/worlds/gallery/activations.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 
@@ -73,18 +73,19 @@ test('whatever any of the fences the player is in keeps on is on', () => {
   expect(enabledRooms(['lobby', 'lobby-north'])).toEqual(lobbyRooms)
   expect(enabledRooms(['lobby', 'lobby-middle', 'lobby-south'])).toEqual([...lobbyRooms, 'moonfall'])
   expect(enabledRooms(['antechamber', 'lobby-south'])).toEqual(activations.antechamber.rooms)
-  // The floor mirror is the one the last of them names.
-  expect(floorMirror(['lobby'])).toBe('base')
-  expect(floorMirror(['lobby', 'lobby-south'])).toBe('base')
-  expect(floorMirror(['moonfall', 'moonfall-stairs'])).toBe('moonfall')
-  expect(floorMirror(['lobby', 'moonfall'])).toBe('moonfall')
-  expect(floorMirror(['moonfall', 'lobby'])).toBe('base')
+  // Only one group gets the shared reflection, including when two fences request different planes.
+  expect(reflectionGroup(['lobby'])).toBe('ground')
+  expect(reflectionGroup(['lobby', 'lobby-south'])).toBe('ground')
+  expect(reflectionGroup(['moonfall', 'moonfall-stairs'])).toBe('moonfall')
+  expect(reflectionGroup(['exhibition'])).toBe('moonfall')
+  expect(reflectionGroup(['lobby', 'moonfall'])).toBe('moonfall')
+  expect(reflectionGroup(['moonfall', 'lobby'])).toBe('ground')
   // A part of a room decides over the room, which names none.
-  expect(floorMirror(['bastion'])).toBeUndefined()
-  expect(floorMirror(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])).toBe('lodge')
-  expect(floorMirror(['sienna'])).toBeUndefined()
-  expect(floorMirror(['arena'])).toBeUndefined()
-  expect(floorMirror([])).toBeUndefined()
+  expect(reflectionGroup(['bastion'])).toBeUndefined()
+  expect(reflectionGroup(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])).toBe('lodge')
+  expect(reflectionGroup(['sienna'])).toBeUndefined()
+  expect(reflectionGroup(['arena'])).toBeUndefined()
+  expect(reflectionGroup([])).toBeUndefined()
 })
 test('walking down the Lobby, the Exhibition’s north tunnel lamp only shines in its north part and Moonfall only stays enabled in its south part', () => {
   const [x, y, z] = slopGallery.spawn.position

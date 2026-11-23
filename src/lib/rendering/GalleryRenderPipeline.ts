@@ -18,7 +18,7 @@ import {BlendMode, DirectionalLight, HalfFloatType, NoBlending, NormalBlending, 
 import {moodScreens} from '#src/moods/index.ts'
 
 import {mountedRooms, pendingRooms} from '../gallery/roomLoading.ts'
-import {floorReflectionBlur, floorReflectionGrazing, floorReflectionLevel, floorReflectionRoughness, floorReflectionStrength, renderFloorReflection} from '../materials/FloorMaterial.ts'
+import {mirrorReflectionBlur, mirrorReflectionGrazing, mirrorReflectionLevel, mirrorReflectionRoughness, mirrorReflectionStrength, renderPlanarReflection} from '../materials/PlanarMirrorMaterial.ts'
 import overlay from '../overlay/index.ts'
 import ConditionalTexture from './ConditionalTexture.ts'
 import ConfigurableBloomNode from './ConfigurableBloomNode.ts'
@@ -31,7 +31,7 @@ import {resetWarp, screenWarp, warpedScreenUV} from './screenWarp.ts'
 import tiltShift from './tiltShift.ts'
 import ZoomBlur from './ZoomBlur.ts'
 
-/** the most rows ambient occlusion, the screen-space indirect light and the floor reflection render at; at Cinematic’s 2× a 4320p snap would need 8640 rows of each and runs a 16 GB GPU out of memory, while 4320p at 1× already supersamples a 2160p image */
+/** the most rows ambient occlusion, the screen-space indirect light and the planar reflection render at; at Cinematic’s 2× a 4320p snap would need 8640 rows of each and runs a 16 GB GPU out of memory, while 4320p at 1× already supersamples a 2160p image */
 const maxEffectRows = 4320
 const drawingBufferSize = new Vector2
 const capResolutionScale = (renderer: Renderer, scale: number) => Math.min(scale, maxEffectRows / renderer.getDrawingBufferSize(drawingBufferSize).height)
@@ -44,7 +44,7 @@ export type GalleryRenderPipelineOptions = {
     distance: () => number
     proximity: () => number
   }
-  /** whether the passes past antialiasing run; without it the settings only pick the antialiasing and the floor reflections */
+  /** whether the passes past antialiasing run; without it the settings only pick the antialiasing and the planar reflections */
   heavy?: boolean
   settings: RenderPipelineSettings
   /** how much of the sun the air around the camera holds, which scales the sun shafts; 0 where the sun never reaches but its shadow map has no walls */
@@ -74,16 +74,16 @@ export default class GalleryRenderPipeline extends RenderPipeline {
       node.value = settings[key]
       this.uniforms.push([node, key])
     }
-    // The floor materials keep sampling their mirror, which turns dark once it is no longer rendered.
+    // The mirror materials keep sampling their reflection, which turns dark once it is no longer rendered.
     if (mirrorReflections) {
-      set(floorReflectionStrength, 'mirrorReflectionStrength')
-      set(floorReflectionGrazing, 'mirrorReflectionGrazing')
-      set(floorReflectionLevel, 'mirrorReflectionLevel')
-      set(floorReflectionBlur, 'mirrorReflectionBlur')
-      set(floorReflectionRoughness, 'mirrorReflectionRoughness')
+      set(mirrorReflectionStrength, 'mirrorReflectionStrength')
+      set(mirrorReflectionGrazing, 'mirrorReflectionGrazing')
+      set(mirrorReflectionLevel, 'mirrorReflectionLevel')
+      set(mirrorReflectionBlur, 'mirrorReflectionBlur')
+      set(mirrorReflectionRoughness, 'mirrorReflectionRoughness')
     } else {
-      floorReflectionStrength.value = 0
-      floorReflectionRoughness.value = 1
+      mirrorReflectionStrength.value = 0
+      mirrorReflectionRoughness.value = 1
     }
     // GTAO and TRAA require single-sampled scene depth.
     const scenePass = own(pass(scene, camera, {samples: 0}))
@@ -108,7 +108,7 @@ export default class GalleryRenderPipeline extends RenderPipeline {
         if (!mirrorReflections || renderer instanceof GalleryRenderer && renderer.isWarming) {
           return
         }
-        renderFloorReflection({
+        renderPlanarReflection({
           camera,
           mrt: scenePass.getMRT(),
           renderer,

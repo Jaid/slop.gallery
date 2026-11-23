@@ -5,7 +5,7 @@ import {Color} from 'three/webgpu'
 
 import DimmedSpecularLightingModel from '../DimmedSpecularLightingModel.ts'
 import {heightNormal, line, visibleDetail} from '../filters.ts'
-import FloorMaterial from '../FloorMaterial.ts'
+import PlanarMirrorMaterial from '../PlanarMirrorMaterial.ts'
 import {calacatta, marblePattern, portoro, shadeMarble} from './marble.ts'
 
 export type CheckeredMarbleFloorOptions = {
@@ -46,7 +46,7 @@ const arrisDepth = 0.0006
  *
  * Every tile is cut from another part of its block and turned at random, so neighbors never continue each other’s veins. Tiles are set with hairline grout and eased arrises. In heavy mode the polish mirrors the room, bent faintly by the waviness of hand-polished stone; the grout stays matte.
  */
-export default class CheckeredMarbleFloorMaterial extends FloorMaterial {
+export default class CheckeredMarbleFloorMaterial extends PlanarMirrorMaterial {
   readonly directSpecular: number
   constructor({dark = portoro, directSpecular = 1, drift = false, gaussianBlur = 0, grazingStrength = 0.6, light = calacatta, loss = 1.5, origin, reflections = true, roughness = 0.1, seed = 0, strength = 0.1, tile}: CheckeredMarbleFloorOptions) {
     if (!(tile > 0)) {

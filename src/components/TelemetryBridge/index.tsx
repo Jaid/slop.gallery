@@ -87,7 +87,7 @@ function Collectors() {
         'graphics.shadows': profile.shadows,
         'graphics.postprocessing': profile.postprocessing,
         'graphics.anti_aliasing': antiAliasing || 'none',
-        'graphics.floor_reflections': profile.floorReflections,
+        'graphics.mirror_reflections': profile.mirrorReflections,
         'graphics.noise_textures': profile.noiseTextures,
         'graphics.volumetric_light': profile.volumetricLight,
         'graphics.tuning': useGraphicsTuning.getState().open,

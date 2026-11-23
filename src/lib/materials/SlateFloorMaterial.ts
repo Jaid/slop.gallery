@@ -1,9 +1,9 @@
 import type {Node} from 'three/webgpu'
 
-import {atan, color, float, hash, max, min, mix, mx_noise_float, normalWorldGeometry, positionLocal, select, vec2, vec3} from 'three/tsl'
+import {atan, color, float, hash, materialRoughness, max, min, mix, mx_noise_float, positionLocal, select, vec2, vec3} from 'three/tsl'
+import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import {inside, line, visibleDetail} from './filters.ts'
-import FloorMaterial from './FloorMaterial.ts'
 
 /** The colors of a slate floor, as sRGB hex strings. */
 export type SlateStyle = {
@@ -24,18 +24,20 @@ const slab = [0.9, 0.6] as const
 const unit = (node: Float) => node.mul(0.5).add(0.5)
 
 /**
- * Polished slate laid around an impact, for the Moonfall: the floor is mapped in its own frame, the crater’s middle at its origin.
+ * Honed slate laid around Moonfall’s impact: the floor is mapped in its own frame, the crater’s middle at its origin.
  *
- * Large slabs in staggered courses in the colors of `style`, each split from a different part of the quarry, with the cleavage showing as faint, wavy bands across the polish. Hairline veins of white quartz run through some slabs and specks of pyrite glint gold. Out from the crater’s edge the impact has cracked the slabs in radial fractures that branch and peter out a few meters away; the cracks and the joints stay matte while the polish mirrors the room.
+ * Large slabs in staggered courses in the colors of `style`, each split from a different part of the quarry, with the cleavage showing as faint, wavy bands. Hairline veins of white quartz run through some slabs and specks of pyrite glint gold. Out from the crater’s edge the slabs split into radial fractures that branch and peter out a few meters away.
  */
-export default class SlateFloorMaterial extends FloorMaterial {
-  constructor({craterRadius, reflections = true, style}: {
+export default class SlateFloorMaterial extends MeshStandardNodeMaterial {
+  constructor({craterRadius, style}: {
     /** where the cracks start, in meters from the origin */
     craterRadius: number
-    /** whether the polish mirrors the room (heavy mode) */
-    reflections?: boolean
     style: SlateStyle
   }) {
+    super({
+      envMapIntensity: 0.08,
+      roughness: 0.85,
+    })
     const x = positionLocal.x.toVar('slateX')
     const z = positionLocal.z.toVar('slateZ')
     const footprint = max(x.fwidth(), z.fwidth()).toVar('slateFootprint')
@@ -76,20 +78,7 @@ export default class SlateFloorMaterial extends FloorMaterial {
     const strength = reach.oneMinus().pow(1.5).mul(select(radius.greaterThan(craterRadius), float(1), float(0)))
     const angular = atan(z, x)
     const cracks = max(inside(crackField.mul(radius).div(7).abs().sub(crackWidth.add(0.0006))), inside(branchField.mul(radius).div(15).abs().sub(crackWidth.mul(0.6).add(0.0004))).mul(reach.smoothstep(0.05, 0.3))).mul(strength).mul(detail).mul(unit(mx_noise_float(vec2(angular.mul(5), 1.7))).smoothstep(0.3, 0.6)).toVar('slateCracks')
-    const roughness = reflections ? 0.1 : 0.85
     const rough = max(joint, cracks)
-    super(null, {
-      color: '#ffffff',
-      envMapIntensity: 0.08,
-      roughness,
-      reflection: reflections ? {
-        strength: 0.05,
-        grazingStrength: 0,
-        loss: 0,
-        gaussianBlur: 10,
-        mask: rough.oneMinus().mul(normalWorldGeometry.y.step(0.5)),
-      } : undefined,
-    })
     let surface: Node<'vec3'> = tone.mul(bands.sub(0.5).mul(0.16).mul(detail).add(cloud.sub(0.5).mul(0.12)).add(1))
     surface = mix(surface, color('#8e8f8a'), veins.mul(0.55))
     surface = mix(surface, color('#b0913c'), pyrite.mul(0.6))
@@ -98,7 +87,7 @@ export default class SlateFloorMaterial extends FloorMaterial {
     surface = mix(surface, color(style.grout), joint.mul(0.85))
     surface = mix(surface, mix(color(style.gap), color(style.dust), crackDust), cracks.mul(0.9))
     this.colorNode = surface
-    this.roughnessNode = mix(float(roughness).add(bands.mul(0.04)).sub(pyrite.mul(0.05)), float(0.95), rough)
+    this.roughnessNode = mix(materialRoughness.add(bands.mul(0.04)).sub(pyrite.mul(0.05)), float(0.95), rough)
     this.metalnessNode = pyrite.mul(0.6)
   }
 }

@@ -115,16 +115,13 @@ export const portals: Array<Portal> = [
 ]
 
 /** the boxes of each room’s air, a room’s air can take several (like the Corridor’s strips round the Lodge’s bay, its hall and its stair flight up to the Sienna); they reach below the floor for its reflection */
-export const roomBoxes: ReadonlyArray<{
+const roomBoxes: ReadonlyArray<{
   box: Box3
-  floorY: number
   id: RoomId
-}> = slopGallery.rooms.flatMap(({id, air, floorY}) => air.map(({min, max}) => ({
+}> = slopGallery.rooms.flatMap(({id, air}) => air.map(({min, max}) => ({
   id,
-  floorY,
   box: new Box3(new Vector3(min.x, min.y - 1, min.z), new Vector3(max.x, max.y + 0.2, max.z)),
 })))
-
 /** the ids of the gallery’s fences that are no room’s, like the parts of its rooms */
 const otherFences = slopGallery.geofences.keys().filter(id => !slopGallery.roomById(id)).toArray()
 const point = new Vector3

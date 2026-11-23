@@ -3,14 +3,14 @@ import {color, float, hash, mix, mx_noise_float, normalWorldGeometry, positionWo
 import forge, {forgeGauge, forgeVestibule} from '#src/lib/gallery/forge.ts'
 
 import {heightNormal, insideBy, visibleDetail} from '../filters.ts'
-import FloorMaterial from '../FloorMaterial.ts'
+import PlanarMirrorMaterial from '../PlanarMirrorMaterial.ts'
 
 /**
  * Creosoted end-grain blocks like a machine shop floor: quieter and kinder to a dropped tool than stone. Brass gauge strips lead up the aisle; the circular threshold has a pair of rings inlaid in the same alloy.
  *
  * In heavy mode, the oil worn into the blocks mirrors the room faintly, a soft smear of the sunlit roof that clears toward grazing angles; the joints stay matte.
  */
-export default class EndGrainMaterial extends FloorMaterial {
+export default class EndGrainMaterial extends PlanarMirrorMaterial {
   constructor(reflections = true) {
     const p = positionWorld.xz.sub(vec2(...forge.center))
     const pixel = p.fwidth().x.max(p.fwidth().y)

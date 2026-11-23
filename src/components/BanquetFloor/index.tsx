@@ -17,15 +17,15 @@ export default function BanquetFloor(props: {
   stone: Texture
   wood: Texture
 }) {
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   const slab = useDisposable(useMemo(() => new CheckeredMarbleFloorMaterial({
     loss: 0,
     grazingStrength: 0.2,
     origin: banquetFloorOrigin,
     tile: banquetFloorTile,
-    reflections: floorReflections,
+    reflections: mirrorReflections,
     strength: 0.4,
-  }), [floorReflections]))
+  }), [mirrorReflections]))
   const materials = useMemo(() => ({
     slab,
     reflection: slab.reflectionTarget ?? undefined,

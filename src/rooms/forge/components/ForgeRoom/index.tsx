@@ -53,8 +53,8 @@ export default function ForgeRoom({materials, masonry}: {
 
 /** One floor’s end-grain paving, mirroring the room in heavy mode. The room and its vestibule take one each, so either one in view renders the mirror, as its target bounds only the floor it lies in. */
 function useEndGrain() {
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  return useDisposable(useMemo(() => new EndGrainMaterial(floorReflections), [floorReflections]))
+  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  return useDisposable(useMemo(() => new EndGrainMaterial(mirrorReflections), [mirrorReflections]))
 }
 /** The floor’s reflection target, laid at the surface of the floor whose body holds it, if the floor mirrors the room. */
 function Mirror({floor}: {floor: EndGrainMaterial}) {

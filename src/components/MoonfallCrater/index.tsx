@@ -1,8 +1,6 @@
 import {RigidBody} from '@react-three/rapier'
-import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
@@ -16,7 +14,6 @@ import CraterMaterial from '#src/lib/materials/CraterMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
 import SlateFloorMaterial from '#src/lib/materials/SlateFloorMaterial.ts'
 import VelvetRopeMaterial from '#src/lib/materials/VelvetRopeMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 export default function MoonfallCrater() {
   const geometry = useDisposable(useMemo(() => new CraterGeometry, []))
@@ -28,20 +25,15 @@ export default function MoonfallCrater() {
   const rock = useDisposable(useMemo(() => new CraterMaterial({rock: true}), []))
   const terrain = useDisposable(useMemo(() => new CraterMaterial({lava: moonfallTheme.lava}), []))
   const velvet = useDisposable(useMemo(() => new VelvetRopeMaterial(moonfallRope(environmentSeed)), []))
-  const {floorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  // Honed slate in fast mode; polished in heavy mode, where it mirrors the room around the crater.
+  // Honed slate keeps the fractures and pyrite visible under the ceiling mirror.
   const slate = useDisposable(useMemo(() => new SlateFloorMaterial({
     craterRadius: moonfallCrater.radius,
-    reflections: floorReflections,
     style: moonfallSlate(moonfallTheme),
-  }), [floorReflections]))
-  const reflection = slate.reflectionTarget
+  }), []))
   return <group name='moonfall-impact-crater'>
     <RigidBody colliders={false} type='fixed'>
       {collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}
-      <mesh castShadow geometry={geometry.floor} material={slate} name='moonfall-slate-floor' receiveShadow>
-        <Branch if={reflection}><group rotation={[-Math.PI / 2, 0, 0]}><primitive object={reflection!} /></group></Branch>
-      </mesh>
+      <mesh castShadow geometry={geometry.floor} material={slate} name='moonfall-slate-floor' receiveShadow />
       <mesh castShadow geometry={geometry.terrain} material={terrain} name='moonfall-crater-terrain' receiveShadow />
       <mesh castShadow geometry={geometry.rocks} material={rock} name='moonfall-impact-ejecta' receiveShadow />
       <mesh castShadow geometry={fence.posts} material={gold} name='moonfall-crater-stanchions' receiveShadow />

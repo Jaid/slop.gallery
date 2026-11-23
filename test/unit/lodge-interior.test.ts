@@ -16,7 +16,7 @@ import {IndoorLightsNode, reachesIndoors} from '../../src/lib/materials/lights/i
 import LodgeMaterials from '../../src/lib/materials/LodgeMaterials.ts'
 import PlankFloorMaterial from '../../src/lib/materials/PlankFloorMaterial.ts'
 import PlankMaterial from '../../src/lib/materials/PlankMaterial.ts'
-import {floorMirror} from '../../src/worlds/gallery/activations.ts'
+import {reflectionGroup} from '../../src/worlds/gallery/activations.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
 test('every Lodge material is lit only by indoor lights and builds its surface nodes', () => {
@@ -61,7 +61,7 @@ test('the Lodge’s oiled planks faintly mirror the room in heavy mode through f
     expect(Math.abs(floorY - plane)).toBeLessThan(0.01)
   }
   for (const fences of [['lodge'], ['corridor', 'corridor-seeing_lodge_floor'], ['bastion', 'bastion-seeing_lodge_floor']]) {
-    expect(floorMirror(fences)).toBe('lodge')
+    expect(reflectionGroup(fences)).toBe('lodge')
   }
 })
 test('the gallery’s sun stays outside while lamps, fire and fill lights reach indoors', () => {

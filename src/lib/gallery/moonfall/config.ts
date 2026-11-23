@@ -13,3 +13,11 @@ export const moonfallCrater = {
   /** spacing of the height field samples that may become terrain vertices */
   terrainSpacing: 0.07,
 } as const
+
+/** the ceiling slab relative to Moonfall’s floor */
+export const ceilingSlab = {
+  center: 5.78,
+  thickness: 0.18,
+} as const
+/** the face of the smoked mirror lining, 1 cm below the slab that still casts shadows during the reflection pass */
+export const ceilingMirrorY = ceilingSlab.center - ceilingSlab.thickness / 2 - 0.01

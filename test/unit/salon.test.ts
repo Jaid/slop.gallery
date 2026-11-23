@@ -17,6 +17,7 @@ import {triangleCount} from '../../src/lib/geometry.ts'
 import {shellAttributes} from '../../src/lib/materials/ShellInlayMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '../../src/lib/materials/TerrazzoFloorMaterial.ts'
 import {insideOpening, placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
+import {reflectionGroup} from '../../src/worlds/gallery/activations.ts'
 import walls, {floorHeight, insideGallery, roomAt, roomClearHeight, rooms} from './fixtures/gallery.ts'
 
 const room = rooms.find(candidate => candidate.id === 'salon')!
@@ -343,7 +344,7 @@ describe('the Salon', () => {
     try {
       expect(polished.reflection).not.toBeNull()
       expect(polished.reflectionTarget).not.toBeNull()
-      expect(polished.mirrored.value).toBe(1)
+      expect(reflectionGroup([room.id])).toBe('ground')
     } finally {
       polished.dispose()
     }

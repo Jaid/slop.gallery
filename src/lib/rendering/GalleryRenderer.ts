@@ -165,7 +165,7 @@ export class GalleryRenderer extends WebgpuRenderer {
   /** how the passes of the frame scene project objects, see {@link installProjection} */
   private frameProjection: Projection = this.drawing.standard
   private frameScene: Scene | null = null
-  /** per camera, the recent average of milliseconds spent building an object whose material its passes haven’t built yet; that varies by pass, since three may reuse what another pass built, as for most shadow maps, or build it again for the pass, as for the floor reflection */
+  /** per camera, the recent average of milliseconds spent building an object whose material its passes haven’t built yet; that varies by pass, since three may reuse what another pass built, as for most shadow maps, or build it again for the pass, as for the planar reflection */
   private readonly freshBuildCosts = new WeakMap<Camera, number>
   /** shadow cameras that left out objects not built yet this frame, with those objects */
   private gatedCameras = new Map<Camera, Set<Object3D>>
