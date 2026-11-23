@@ -16,7 +16,7 @@ import PlayerSession from '../../src/lib/gallery/PlayerSession.ts'
 import RopeRing from '../../src/lib/gallery/railings/RopeRing.ts'
 import {ropeTop, stanchionHeight} from '../../src/lib/gallery/railings/stanchion.ts'
 import StanchionRingGeometry from '../../src/lib/gallery/railings/StanchionRingGeometry.ts'
-import staircase from '../../src/lib/gallery/staircase.ts'
+import {stairFoot} from '../../src/lib/gallery/staircase.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import {weldedSurfaceSkin} from '../../src/lib/physics/weldedSurface.ts'
 import {wallPosition} from '../../src/lib/placement/wallGeometry.ts'
@@ -53,12 +53,16 @@ describe('Moonfall impact hall', () => {
   test('the square hall connects both of its doorways', () => {
     expect(room.size[0]).toBe(room.size[1])
     const north = walls.find(wall => wall.id === 'moonfall-north')!
-    const east = walls.find(wall => wall.id === 'moonfall-east')!
+    const south = walls.find(wall => wall.id === 'moonfall-south')!
     expect(north.holes![0].u).toBe(0)
     expect(wallPosition(north, north.holes![0].u, room.floorY, 0)).toEqual([lowerGallery.tunnel.southX, room.floorY, lowerGallery.tunnel.southZ])
-    const portal = wallPosition(east, east.holes![0].u, room.floorY, 0)
-    expect(portal[0]).toBe(staircase.endX)
-    expect(portal[2]).toBeCloseTo(staircase.returnZ)
+    // The stairs arrive through the south wall, in line with the Lobby and the Antechamber; the east and the west wall are blank.
+    const portal = wallPosition(south, south.holes![0].u, room.floorY, 0)
+    expect(portal[0]).toBeCloseTo(stairFoot[0])
+    expect(portal[2]).toBeCloseTo(stairFoot[1])
+    for (const id of ['moonfall-east', 'moonfall-west']) {
+      expect(walls.find(wall => wall.id === id)!.holes).toBeUndefined()
+    }
     for (const [x, z] of [[-20, 6], [-20, 30], [4, 30]]) {
       expect(insideGallery([x, -6.4, z])).toBe(true)
       expect(roomAt([x, -6.4, z])).toBe('moonfall')
@@ -209,7 +213,7 @@ describe('Moonfall impact hall', () => {
     expect(fencePosts(1234)).toBe(fencePosts(1234))
   })
   test('the middle of a rope, never a post, faces the stairs from the Antechamber', () => {
-    const stairs = new Vector3(staircase.endX - room.center[0], 0, staircase.returnZ - room.center[1])
+    const stairs = new Vector3(stairFoot[0] - room.center[0], 0, stairFoot[1] - room.center[1])
     stairs.normalize()
     expect(Math.cos(fenceFacing)).toBeCloseTo(stairs.x)
     expect(Math.sin(fenceFacing)).toBeCloseTo(stairs.z)

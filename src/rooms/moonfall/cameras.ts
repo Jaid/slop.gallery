@@ -11,10 +11,10 @@ export default {
     ratio: 16 / 9,
   },
   stairs: {
-    // On the lower flight’s centerline, looking due west, so its walls frame the view symmetrically.
-    position: [16.63, 3.1, 0],
+    // On the lower flight’s centerline, looking due north, so its walls frame the view symmetrically.
+    position: [8, 2.92, 17.5],
     aim: {
-      yaw: Math.PI / 2,
+      yaw: 0,
       pitch: -0.35,
     },
     fov: 60,

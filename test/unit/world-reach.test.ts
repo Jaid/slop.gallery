@@ -68,10 +68,11 @@ describe('?world_reach', () => {
       const neighbors = new Set<string>([room, ...slopGallery.fencesIn(room).flatMap(fence => kept[fence]?.rooms ?? [])])
       expect(within.rooms).toEqual(allRooms.filter(id => neighbors.has(id)))
     }
-    // Moonfall only shows from the Lobby’s south part, and still comes with the Lobby, wherever in it the page starts.
+    // Moonfall shows from nowhere in the Lobby, so it doesn’t come with it, but from the Antechamber’s west wing and gallery, so it comes with the Antechamber.
     expect(activations.lobby.rooms).not.toContain('moonfall' as never)
     expect(reach('?world_reach=neighbors').origin).toBe('lobby')
-    expect(reach('?world_reach=neighbors').covers('moonfall')).toBe(true)
+    expect(reach('?world_reach=neighbors').covers('moonfall')).toBe(false)
+    expect(reach('?world_reach=neighbors&room=antechamber').covers('moonfall')).toBe(true)
     expect(reach('?world_reach=neighbors').covers('corridor')).toBe(false)
   })
   test('reaches out from where ?spawn starts, a spawn bookmark or a camera bookmark, which wins over ?room', () => {

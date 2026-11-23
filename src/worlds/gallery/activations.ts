@@ -1,3 +1,4 @@
+import type antechamberFences from '#src/rooms/antechamber/fences.ts'
 import type bastionFences from '#src/rooms/bastion/fences.ts'
 import type corridorFences from '#src/rooms/corridor/fences.ts'
 import type lobbyFences from '#src/rooms/lobby/fences.ts'
@@ -9,7 +10,7 @@ export type ReflectionGroup = 'ground' | 'lodge' | 'moonfall'
 /** the ids of other rooms’ objects by the room they belong to: per room, the id or ids within it */
 export type ForeignIds = Partial<Record<RoomId, ReadonlyArray<string> | string>>
 /** the id of a fence of the gallery: a room’s, which is the room’s id, or the global id of one of its other fences, like a part of a room */
-export type FenceId = OtherFenceId<'bastion', typeof bastionFences> | OtherFenceId<'corridor', typeof corridorFences> | OtherFenceId<'lobby', typeof lobbyFences> | OtherFenceId<'moonfall', typeof moonfallFences> | RoomId
+export type FenceId = OtherFenceId<'antechamber', typeof antechamberFences> | OtherFenceId<'bastion', typeof bastionFences> | OtherFenceId<'corridor', typeof corridorFences> | OtherFenceId<'lobby', typeof lobbyFences> | OtherFenceId<'moonfall', typeof moonfallFences> | RoomId
 /** what stays on beyond the objects of the player’s own room while the player is in a fence */
 export type Activation = {
   /** other rooms’ ambient sounds that stay audible, because they carry into the fence */
@@ -52,10 +53,6 @@ const activations = {
       exhibition: 'tunnel_north',
     },
   },
-  // Moonfall’s stairway shows through the doorway into the Antechamber and on through the one in the Antechamber’s east wall. From the west of the Lobby’s middle part, a sliver of it still does, which shows the void until the Antechamber hides the stairway.
-  'lobby-south': {
-    rooms: ['moonfall'],
-  },
   vesper: {
     rooms: ['lobby', 'bastion', 'sienna', 'banquet', 'antechamber', 'salon', 'forge', 'corridor', 'oculus'],
     reflectionGroup: 'ground',
@@ -84,7 +81,7 @@ const activations = {
     },
   },
   antechamber: {
-    rooms: ['lobby', 'moonfall', 'vesper', 'banquet', 'salon', 'forge', 'oculus'],
+    rooms: ['lobby', 'vesper', 'banquet', 'salon', 'forge', 'oculus'],
     reflectionGroup: 'ground',
     visibleLamps: {
       lobby: [
@@ -97,6 +94,12 @@ const activations = {
         'led_middle',
         'led_south',
       ],
+    },
+  },
+  // Only from the west wing and down its gallery do the stairs to Moonfall show, round the gallery’s corner from the Lobby’s doorway, and the lamp over them.
+  'antechamber-west': {
+    rooms: ['moonfall'],
+    visibleLamps: {
       moonfall: 'stairs',
     },
   },
@@ -189,8 +192,8 @@ const activations = {
         'led_south',
       ],
       moonfall: [
-        'wall_east_north',
-        'wall_east_south',
+        'wall_south_east',
+        'wall_south_west',
         'wall_north_west',
         'wall_north_east',
         'planet_glow',

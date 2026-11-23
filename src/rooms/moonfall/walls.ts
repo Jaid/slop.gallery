@@ -2,12 +2,13 @@ import type {RoomWall} from '../base/Room.ts'
 
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
-import staircase, {stairFlights, stairTurn} from '#src/lib/gallery/staircase.ts'
+import {moonfallHeight} from '#src/lib/gallery/moonfall/config.ts'
+import staircase, {stairFlights, stairFoot, stairTurn} from '#src/lib/gallery/staircase.ts'
 
 import {localWalls, planWall} from '../lib/walls.ts'
 
 const {moonfall, tunnel} = lowerGallery
-const height = 5.5
+const height = moonfallHeight - 0.3
 
 export default {
   north: planWall(moonfall.size, 'north', height, {
@@ -20,18 +21,18 @@ export default {
       },
     },
   }),
-  // The stairway from the Antechamber arrives in the middle of the east wall.
-  east: planWall(moonfall.size, 'east', height, {
+  east: planWall(moonfall.size, 'east', height),
+  // The stairway from the Antechamber’s gallery arrives through the south wall, in line with the Lobby and the Antechamber; the wall runs west along its own x.
+  south: planWall(moonfall.size, 'south', height, {
     holes: {
       stairway: {
-        u: staircase.returnZ - moonfall.center[1],
+        u: moonfall.center[0] - stairFoot[0],
         width: staircase.lowerWidth,
         height: 3.6,
         profile: 'rectangle',
       },
     },
   }),
-  south: planWall(moonfall.size, 'south', height),
   west: planWall(moonfall.size, 'west', height),
   // The stairway’s walls, down both flights and around the turn between them.
   ...localWalls('moonfall', roomOrigins.moonfall, [...stairFlights.flatMap(flight => [-1, 1].map(side => flight.wall(side))), ...stairTurn.walls()]),

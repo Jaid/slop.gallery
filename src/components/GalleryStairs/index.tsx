@@ -60,8 +60,9 @@ export default function GalleryStairs() {
         </mesh>
       </group>)}
     </RigidBody>
-    {stairBlocks.filter(block => block.tread).map(({position, size, top, direction}, i) => <mesh key={i} position={[position[0] - direction * (size[0] / 2 - 0.035), top + 0.004, position[2]]}>
-      <boxGeometry args={[0.025, 0.008, size[2] - 0.45]} />
+    {/* A light strip along the back of every tread, at the foot of the riser up from it. */}
+    {stairBlocks.filter(block => block.tread).map(({axis = 0, position, size, top, direction}, i) => <mesh key={i} position={axis === 0 ? [position[0] - direction * (size[0] / 2 - 0.035), top + 0.004, position[2]] : [position[0], top + 0.004, position[2] - direction * (size[2] / 2 - 0.035)]}>
+      <boxGeometry args={axis === 0 ? [0.025, 0.008, size[2] - 0.45] : [size[0] - 0.45, 0.008, 0.025]} />
       <meshBasicNodeMaterial color={i % 3 === 0 ? '#d5ad73' : moonfallTheme.stepLight} toneMapped={false} />
     </mesh>)}
     {/* StaticBatch hides the originals before automatic colliders would see them, so the beams state their colliders. */}

@@ -132,9 +132,11 @@ test('Moonfall’s upper map follows the first flight to the middle of the curve
   for (const {position: [x, , z], top} of upper.blocks) {
     expect(isLowerPosition('moonfall', eye([x, top, z]))).toBe(false)
   }
+  // Across the apex of the turn, the half toward the upper flight shows on the upper map, the half toward the lower flight on the lower one.
   const [x, y, z] = stairTurn.position
-  expect(isLowerPosition('moonfall', eye([x, y, z - 0.1]))).toBe(false)
-  expect(isLowerPosition('moonfall', eye([x, y, z + 0.1]))).toBe(true)
+  const [acrossX, acrossZ] = stairTurn.across
+  expect(isLowerPosition('moonfall', eye([x + acrossX * 0.1, y, z + acrossZ * 0.1]))).toBe(false)
+  expect(isLowerPosition('moonfall', eye([x - acrossX * 0.1, y, z - acrossZ * 0.1]))).toBe(true)
   // The hall under the head of the stairs and the return flight belong to the lower map.
   expect(isLowerPosition('moonfall', eye([upper.start[0], lowerGallery.floorY, upper.start[2]]))).toBe(true)
   expect(isLowerPosition('moonfall', eye(lower.start))).toBe(true)

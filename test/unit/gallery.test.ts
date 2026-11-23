@@ -167,10 +167,12 @@ describe('wall geometry', () => {
     for (const position of [[x, 2, z], [-14, 2, 19.8], [0, 2, 14], [west, 0, south], [siennaVestibule.center[0], 2, siennaVestibule.center[1]]] as const) {
       expect(insideGallery([...position])).toBe(true)
     }
-    // east of the Sienna, west of it, south of it beside the vestibule, under it and over it
-    for (const position of [[-6, 2, 18], [east + 0.01, 2, z], [14, 3, 14], [east - 1, 2, south + 0.01], [west - 0.01, 2, z], [x, -1.01, z], [x, 6.01, z], [Number.NaN, 2, z]] as const) {
+    // east of the Sienna between it and the Antechamber’s gallery, east of it, west of it, south of it beside the vestibule, under its west edge beyond Moonfall’s hall and over it
+    for (const position of [[-4, 2, 18], [east + 0.01, 2, z], [14, 3, 14], [east - 1, 2, south + 0.01], [west - 0.01, 2, z], [west + 1, -1.01, z], [x, 6.01, z], [Number.NaN, 2, z]] as const) {
       expect(insideGallery([...position])).toBe(false)
     }
+    // Under its middle, Moonfall’s hall rises right up to the floor’s slab.
+    expect(roomAt([x, -1.01, z])).toBe('moonfall')
   })
   test('label clearance follows the physical sign footprint', () => {
     const wall = walls[0]

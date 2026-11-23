@@ -17,7 +17,7 @@ export const oculusTowerRadius = 2
 const lowerGallery = {
   floorY: moonfallFloorY,
   moonfall: {
-    // Keep the north tunnel fixed; expand west and south. The stairs arrive in the middle of the east wall.
+    // Keep the north tunnel fixed; expand west and south. The stairs from the Antechamber’s gallery arrive through the south wall, south of which they lie whole.
     center: [-8, 18.5],
     size: [28, 28],
   },

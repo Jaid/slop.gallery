@@ -1,3 +1,4 @@
+import type {Vec3} from '../types.ts'
 import type StairTurn from './StairTurn.ts'
 
 import {BufferGeometry, Float32BufferAttribute, Vector3} from 'three/webgpu'
@@ -13,21 +14,24 @@ export function stairHandrailEase(distance: number) {
   return (distance + stairHandrailBend) ** 2 / (4 * stairHandrailBend) - Math.max(distance, 0)
 }
 
-/** One closed rail across two grades and a level bend, with vertical profiles and eased grade changes. */
+/**
+ * One closed rail across two grades and a level bend, with vertical profiles and eased grade changes.
+ * It runs from `start`, the far end of the turn’s first flight, its {@link StairTurn.width} side, round the turn and back along its second flight to `end`, both short of the turn.
+ */
 export default class StairHandrailGeometry extends BufferGeometry {
-  constructor(turn: StairTurn, side: 'inner' | 'outer', start: readonly [number, number], end: readonly [number, number]) {
-    if (![...start, ...end].every(Number.isFinite) || start[0] >= turn.center[0] || end[0] >= turn.center[0]) {
+  constructor(turn: StairTurn, side: 'inner' | 'outer', start: Vec3, end: Vec3) {
+    if (![...start, ...end].every(Number.isFinite) || turn.local(start[0], start[2])[0] >= 0 || turn.local(end[0], end[2])[0] >= 0) {
       throw new RangeError('A stair handrail needs finite flight endpoints before the turn plane.')
     }
     super()
     const inner = side === 'inner'
     const radius = inner ? turn.innerRadius + 0.22 : turn.outerRadius - 0.22
-    const centerZ = inner ? turn.innerCenterZ : turn.outerCenterZ
+    const shift = inner ? turn.innerShift : turn.outerShift
     const half = 0.065 / 2
     const step = stairHandrailBend / 16
-    const entry = turn.center[0] - start[0]
+    const entry = -turn.local(start[0], start[2])[0]
     const arc = Math.PI * radius
-    const exit = turn.center[0] - end[0]
+    const exit = -turn.local(end[0], end[2])[0]
     const grades = [(turn.top - start[1]) / entry, 0, (end[1] - turn.top) / exit]
     const joins = [entry, entry + arc]
     // Rail height along the horizontal path: straight grades with both changes eased over the same distance on either side.
@@ -41,16 +45,21 @@ export default class StairHandrailGeometry extends BufferGeometry {
       ...Array.from({length: easeSteps}, (_, i) => entry + arc + (i + 1) * step),
       entry + arc + exit,
     ].filter(distance => distance >= 0 && distance <= entry + arc + exit)
+    // The rail is laid out in the turn’s own frame, along toward its apex and across toward its second flight, then turned into the museum’s.
+    const [ax, az] = turn.heading
+    const [cx, cz] = turn.across
+    const toMuseum = (along: number, across: number) => new Vector3(ax * along + cx * across, 0, az * along + cz * across)
     const stations = distances.map(distance => {
       const angle = Math.min(Math.max((distance - entry) / radius, 0), Math.PI)
       const along = distance < entry ? distance - entry : Math.max(distance - entry - arc, 0)
-      const normal = new Vector3(-Math.sin(angle), 0, Math.cos(angle))
-      const tangent = new Vector3(Math.cos(angle), 0, Math.sin(angle))
+      const normal = toMuseum(-Math.sin(angle), Math.cos(angle))
+      const tangent = toMuseum(Math.cos(angle), Math.sin(angle))
       const grade = (height(distance + 0.0001) - height(distance - 0.0001)) / 0.0002
       const up = new Vector3(0, 1, 0)
       up.addScaledVector(tangent, -grade).normalize()
+      const [x, z] = turn.place(Math.sin(angle) * radius + Math.cos(angle) * along, shift - Math.cos(angle) * radius + Math.sin(angle) * along)
       return {
-        point: new Vector3(turn.center[0] + Math.sin(angle) * radius + tangent.x * along, height(distance), centerZ - Math.cos(angle) * radius),
+        point: new Vector3(x, height(distance), z),
         normal,
         up,
         distance,
@@ -91,8 +100,8 @@ export default class StairHandrailGeometry extends BufferGeometry {
       }
       distance = nextDistance
     }
-    // Only the two room ends are capped; there are no internal faces at either landing join.
-    const capNormal = new Vector3(-1, 0, 0)
+    // Only the two room ends are capped, facing away from the turn; there are no internal faces at either landing join.
+    const capNormal = toMuseum(-1, 0)
     quad(rings[0].toReversed(), Array.from({length: 4}, () => capNormal), 0, half * 2)
     quad(rings.at(-1)!, Array.from({length: 4}, () => capNormal), 0, half * 2)
     this.setAttribute('position', new Float32BufferAttribute(positions, 3))

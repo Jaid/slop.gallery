@@ -8,6 +8,7 @@ import {useShallow} from 'zustand/react/shallow'
 
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {isTextInput, notify, useGallery} from '#src/lib/gallery.ts'
+import {antechamberPlans} from '#src/lib/gallery/antechamber.ts'
 import {createEnvironment, drawEnvironment} from '#src/lib/gallery/environment.ts'
 import {cycleLighting, lightingPresets, pickLightingTuning, tuneLighting, useLighting} from '#src/lib/gallery/lighting.ts'
 import lobbyVault from '#src/lib/gallery/lobbyVault.ts'
@@ -29,7 +30,6 @@ export const lightingCycleKey = 'KeyL'
 const lobby = slopGallery.room('lobby')
 /** Where light markers show the sun, which has no position of its own: 2 m above the crown of the Lobby’s vault. */
 const sunMarker = [lobby.center[0], lobbyVault.crownY + 2, lobby.center[1]] as const
-const antechamber = slopGallery.room('antechamber')
 /** every point the sun’s shadow map has to cover */
 const sunlit = sunlitPoints(slopGallery.rooms)
 /** the lighting the tuning panel opens with */
@@ -51,12 +51,12 @@ export default function GalleryLighting() {
   const sunLight = useRef<DirectionalLight>(null)
   const {samples: sunShadowSamples, ...sunShadow} = useSunShadow(sunShadowMapSize)
   const environment = useRef<CanvasTexture>(null)
-  // Only the Antechamber, under its stained-glass dome, takes the glass’ colors; the light is set up before its first frame, so its pipelines compile once. Materials that bounce the daylight follow each new sun.
+  // Only the Antechamber, under its stained-glass dome and oculi, takes the glass’ colors, over any of its floor plans; the light is set up before its first frame, so its pipelines compile once. Materials that bounce the daylight follow each new sun.
   useLayoutEffect(() => {
     const light = sunLight.current!
-    light.shadow.shadowNode = new StainedGlassShadowNode(light, position => position.y.greaterThan(antechamber.floorY - 0.05)
-      .and(position.x.sub(antechamber.center[0]).abs().lessThan(antechamber.size[0] / 2))
-      .and(position.z.sub(antechamber.center[1]).abs().lessThan(antechamber.size[1] / 2)))
+    light.shadow.shadowNode = new StainedGlassShadowNode(light, position => antechamberPlans.map(({center: [x, z], size: [width, depth]}) => position.x.sub(x).abs().lessThan(width / 2).and(position.z.sub(z).abs().lessThan(depth / 2)))
+      .reduce((within, plan) => within.or(plan))
+      .and(position.y.greaterThan(-0.05)))
     return shineDaylightFrom(light)
   }, [sunShadowSamples])
   // The environment is part of every lit material’s cache key. Set after the first frame, it would build all of them a second time; a preset only redraws its pixels.

@@ -1,3 +1,6 @@
+import {floorThickness} from '../floors.ts'
+import lowerGallery from '../lowerGallery.ts'
+
 export const moonfallCrater = {
   radius: 9,
   depth: 3.6,
@@ -14,10 +17,13 @@ export const moonfallCrater = {
   terrainSpacing: 0.07,
 } as const
 
-/** the ceiling slab relative to Moonfall’s floor */
+const slabThickness = 0.18
+/** how high the hall is over its floor, to the top of its walls: its ceiling slab’s top meets the underside of the ground floor’s slabs, as nothing of the stairs hangs over it any longer */
+export const moonfallHeight = -lowerGallery.floorY - floorThickness - slabThickness / 2 + 0.02
+/** the ceiling slab relative to Moonfall’s floor, 2 cm under the top of the walls, which run up into it */
 export const ceilingSlab = {
-  center: 5.78,
-  thickness: 0.18,
+  center: moonfallHeight - 0.02,
+  thickness: slabThickness,
 } as const
 /** the face of the smoked mirror lining, 1 cm below the slab that still casts shadows during the reflection pass */
 export const ceilingMirrorY = ceilingSlab.center - ceilingSlab.thickness / 2 - 0.01

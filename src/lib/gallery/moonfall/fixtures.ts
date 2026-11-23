@@ -15,7 +15,7 @@ export type MoonfallWallLed = {
   rotation: number
   wall: LedWall
 }
-type LedWall = 'east' | 'north'
+type LedWall = 'north' | 'south'
 
 /** the housing of every wall LED: its extent along the wall, up it and out of it */
 export const wallLedHousing = {
@@ -45,9 +45,9 @@ function flankingLeds(wall: LedWall, hole: string, [beforeId, afterId]: readonly
   const reach = width / 2 + wallOpeningTrim + padding + wallLedHousing.width / 2
   return [wallLed(beforeId, wall, u - reach, y), wallLed(afterId, wall, u + reach, y)]
 }
-/** A pair flanks each opening: the stair door in the east wall and the Exhibition’s tunnel in the north wall. */
+/** A pair flanks each opening: the stair door in the south wall and the Exhibition’s tunnel in the north wall. */
 const moonfallWallLeds: ReadonlyArray<MoonfallWallLed> = [
-  ...flankingLeds('east', 'stairway', ['wall_east_north', 'wall_east_south']),
+  ...flankingLeds('south', 'stairway', ['wall_south_east', 'wall_south_west']),
   ...flankingLeds('north', 'exhibition', ['wall_north_west', 'wall_north_east']),
 ]
 

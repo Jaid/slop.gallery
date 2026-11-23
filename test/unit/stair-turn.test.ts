@@ -12,6 +12,9 @@ import {wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometr
 import walls, {galleryPlacement, insideGallery, roomAt} from './fixtures/gallery.ts'
 
 await RAPIER.init()
+/** the point `along` toward the turn’s apex and `across` toward its second flight from its center, see {@link StairTurn.place} */
+const at = (along: number, across: number) => stairTurn.place(along, across)
+const [upper, lower] = stairFlights
 describe('round stair landing', () => {
   test('joins both flights tangentially at their full width without square corners', () => {
     for (const radius of [stairTurn.innerRadius, stairTurn.radius, stairTurn.outerRadius]) {
@@ -22,13 +25,56 @@ describe('round stair landing', () => {
         expect(roomAt([x, stairTurn.top + 1.6, z])).toBe('moonfall')
       }
     }
-    expect(stairTurn.point(0)[1]).toBeCloseTo(staircase.z)
-    expect(stairTurn.point(Math.PI)[1]).toBeCloseTo(staircase.returnZ)
-    expect(stairTurn.point(0, stairTurn.innerRadius)[1] - stairTurn.point(0, stairTurn.outerRadius)[1]).toBeCloseTo(staircase.width)
-    expect(stairTurn.point(Math.PI, stairTurn.outerRadius)[1] - stairTurn.point(Math.PI, stairTurn.innerRadius)[1]).toBeCloseTo(staircase.lowerWidth)
-    expect(stairFloorHeight(staircase.turnX + staircase.width, staircase.z - staircase.width / 2)).toBeUndefined()
-    expect(stairFloorHeight(staircase.turnX + stairTurn.innerRadius / 2, stairTurn.innerCenterZ)).toBeUndefined()
+    // It turns from the wider lower flight round the south to the upper one.
+    expect(stairTurn.heading).toEqual([0, 1])
+    expect(stairTurn.point(0)[0]).toBeCloseTo(staircase.lowerX)
+    expect(stairTurn.point(Math.PI)[0]).toBeCloseTo(staircase.upperX)
+    expect(stairTurn.point(0)[1]).toBeCloseTo(staircase.turnZ)
+    expect(Math.abs(stairTurn.point(0, stairTurn.innerRadius)[0] - stairTurn.point(0, stairTurn.outerRadius)[0])).toBeCloseTo(staircase.lowerWidth)
+    expect(Math.abs(stairTurn.point(Math.PI, stairTurn.outerRadius)[0] - stairTurn.point(Math.PI, stairTurn.innerRadius)[0])).toBeCloseTo(staircase.width)
+    // Its apex lies due south of its center, beyond both flights.
+    expect(stairTurn.position[0]).toBeCloseTo(stairTurn.center[0])
+    expect(stairTurn.position[2]).toBeCloseTo(staircase.turnZ + stairTurn.radius)
+    for (const [along, across] of [[-staircase.width, 0], [stairTurn.innerRadius / 2, stairTurn.innerShift]]) {
+      expect(stairFloorHeight(...at(along, across))).toBeUndefined()
+    }
     expect(stairTurn.contains(Number.NaN, 0)).toBe(false)
+    // Its frame round-trips.
+    const [x, z] = at(1.25, -0.5)
+    expect(stairTurn.local(x, z)[0]).toBeCloseTo(1.25)
+    expect(stairTurn.local(x, z)[1]).toBeCloseTo(-0.5)
+  })
+  test('turned, it lays out the same landing as heading east', () => {
+    const east = new StairTurn([0, 0], -4, 4, 5, 2.6)
+    const south = new StairTurn([0, 0], -4, 4, 5, 2.6, [0, 1])
+    const eastFloor = east.floorGeometry()
+    const southFloor = south.floorGeometry()
+    try {
+      const a = eastFloor.getAttribute('position')
+      const b = southFloor.getAttribute('position')
+      expect(b.count).toBe(a.count)
+      // A quarter turn clockwise seen from above: east becomes south, south becomes west.
+      for (let i = 0; i < a.count; i++) {
+        expect(b.getX(i)).toBeCloseTo(-a.getZ(i), 6)
+        expect(b.getY(i)).toBeCloseTo(a.getY(i), 6)
+        expect(b.getZ(i)).toBeCloseTo(a.getX(i), 6)
+      }
+      const southWalls = south.walls()
+      for (const [i, eastWall] of east.walls().entries()) {
+        const southWall = southWalls[i]
+        expect(southWall.center[0]).toBeCloseTo(-eastWall.center[2], 9)
+        expect(southWall.center[2]).toBeCloseTo(eastWall.center[0], 9)
+        expect(southWall.rotation - eastWall.rotation).toBeCloseTo(-Math.PI / 2, 9)
+      }
+      expect(south.contains(0, 3.5)).toBe(true)
+      expect(east.contains(3.5, 0)).toBe(true)
+      // North of a turn heading south lies the open side its flights leave from.
+      expect(south.contains(0, -3.5)).toBe(false)
+      expect(east.contains(-3.5, 0)).toBe(false)
+    } finally {
+      eastFloor.dispose()
+      southFloor.dispose()
+    }
   })
   test('visual and physical landing surfaces agree throughout the semicircle', () => {
     const geometry = stairTurn.floorGeometry()
@@ -53,7 +99,8 @@ describe('round stair landing', () => {
           expect(world.castRay(new RAPIER.Ray(origin, direction), 3, true)!.timeOfImpact).toBeCloseTo(2, 5)
         }
       }
-      const empty = new Vector3(staircase.turnX + 0.1, stairTurn.top + 2, stairTurn.innerCenterZ)
+      const [emptyX, emptyZ] = at(0.1, stairTurn.innerShift)
+      const empty = new Vector3(emptyX, stairTurn.top + 2, emptyZ)
       const gapRay = new Raycaster(empty, new Vector3(0, -1, 0))
       expect(gapRay.intersectObject(mesh)).toHaveLength(0)
       expect(world.castRay(new RAPIER.Ray(empty, new Vector3(0, -1, 0)), 3, true)).toBeNull()
@@ -81,6 +128,11 @@ describe('round stair landing', () => {
             const surface = new Vector3(...wallPosition(wall, u, y, wallFace))
             const direction = surface.clone().sub(origin).normalize()
             expect(wallCoordinates(wall, wallPosition(wall, u, y))).toBeCloseTo(u, 5)
+            // The face looks into the landing, between both walls.
+            const [along, across] = stairTurn.local(origin.x, origin.z)
+            const fromCenter = Math.hypot(along, across - (wall.id.endsWith('inner') ? stairTurn.innerShift : stairTurn.outerShift))
+            expect(fromCenter).toBeGreaterThan(stairTurn.innerRadius)
+            expect(fromCenter).toBeLessThan(stairTurn.outerRadius)
             const wallRay = new Raycaster(origin, direction)
             const hit = wallRay.intersectObject(mesh)[0]
             expect(hit.distance).toBeCloseTo(0.8 - wallFace, 2)
@@ -126,14 +178,16 @@ describe('round stair landing', () => {
           meshes.push(mesh)
         }
       }
-      for (const z of [
-        stairTurn.innerCenterZ - stairTurn.innerRadius - 0.16,
-        stairTurn.innerCenterZ + stairTurn.innerRadius + 0.16,
-        stairTurn.outerCenterZ - stairTurn.outerRadius + 0.16,
-        stairTurn.outerCenterZ + stairTurn.outerRadius - 0.16,
+      // Just inside each wall, at either flight, along toward the apex from the flights’ side.
+      for (const across of [
+        stairTurn.innerShift - stairTurn.innerRadius - 0.16,
+        stairTurn.innerShift + stairTurn.innerRadius + 0.16,
+        stairTurn.outerShift - stairTurn.outerRadius + 0.16,
+        stairTurn.outerShift + stairTurn.outerRadius - 0.16,
       ]) {
         for (const depth of [0.025, 0.1, 0.25]) {
-          const ray = new Raycaster(new Vector3(staircase.turnX - 1, stairTurn.top - depth, z), new Vector3(1, 0, 0), 0, 1.01)
+          const [x, z] = at(-1, across)
+          const ray = new Raycaster(new Vector3(x, stairTurn.top - depth, z), new Vector3(stairTurn.heading[0], 0, stairTurn.heading[1]), 0, 1.01)
           const hits = ray.intersectObjects(meshes, false)
           expect(hits).toHaveLength(1)
           expect(hits[0].object).toBe(meshes[0])
@@ -150,23 +204,23 @@ describe('round stair landing', () => {
   })
   test('the lower flight, ceiling, rails and room doorway all use the wider span', () => {
     expect(staircase.lowerWidth).toBeGreaterThan(staircase.width)
-    const doorway = walls.find(wall => wall.id === 'moonfall-east')!.holes!.find(hole => hole.width === staircase.lowerWidth)!
+    const doorway = walls.find(wall => wall.id === 'moonfall-south')!.holes!.find(hole => hole.name === 'stairway')!
     expect(doorway.width).toBe(staircase.lowerWidth)
-    const [upper, lower] = stairFlights
     expect(upper.width).toBe(staircase.width)
     expect(lower.width).toBe(staircase.lowerWidth)
-    expect(lower.start[2]).toBe(staircase.returnZ)
+    expect(lower.start[0]).toBe(staircase.lowerX)
     for (const block of lower.blocks) {
-      expect(block.size[2]).toBe(staircase.lowerWidth)
+      expect(block.size[0]).toBe(staircase.lowerWidth)
       for (const side of [-1, 1]) {
-        expect(stairFloorHeight(block.position[0], block.position[2] + side * (staircase.lowerWidth / 2 - 0.05))).toBe(block.top)
+        expect(stairFloorHeight(block.position[0] + side * (staircase.lowerWidth / 2 - 0.05), block.position[2])).toBe(block.top)
       }
     }
-    expect(stairRoofs[1].size[2]).toBe(staircase.lowerWidth)
+    expect(stairRoofs[1].size[0]).toBe(staircase.lowerWidth)
   })
   test('rejects collapsed bends and invalid dimensions', () => {
     expect(() => new StairTurn([0, 0], 0, 1, 2)).toThrow(RangeError)
     expect(() => new StairTurn([Infinity, 0], 0, 2, 1)).toThrow(RangeError)
+    expect(() => new StairTurn([0, 0], 0, 2, 1, 1, [0, 0])).toThrow(RangeError)
     expect(() => new CurvedBoxGeometry(3, 1, 2, 1)).toThrow(RangeError)
     expect(() => new CurvedBoxGeometry(3, 1, 1, Number.NaN)).toThrow(RangeError)
   })

@@ -2,6 +2,7 @@ import type {Vec3} from '#src/lib/gallery/types.ts'
 import type PlacedRoom from '../base/PlacedRoom.ts'
 import type {GalleryRoom} from './SlopGallery.ts'
 
+import {antechamberAnnexFloor, antechamberGallery, antechamberStairFloor, insideAntechamberStairs} from '#src/lib/gallery/antechamber.ts'
 import {bastionFloors, insideBastion} from '#src/lib/gallery/bastionNetwork.ts'
 import {corridorLanding, corridorPassage, corridorStairFloor, insideCorridor} from '#src/lib/gallery/corridor.ts'
 import {forgeVestibule} from '#src/lib/gallery/forge.ts'
@@ -18,10 +19,11 @@ import {displayFloorHeight, insideTunnelDisplay} from '#src/lib/gallery/tunnelDi
 
 type Hall = PlacedRoom<GalleryRoom> & {size: NonNullable<GalleryRoom['size']>}
 
-/** how high the rooms’ vestibules beyond their floor plans reach: the Sienna’s under its lower ceiling, the Forge’s up to the hub of its hood */
+/** how high the rooms’ vestibules beyond their floor plans reach: the Sienna’s under its lower ceiling, the Forge’s up to the hub of its hood, the Antechamber’s wings and gallery under theirs, all of one height */
 const annexCeilings: Partial<Record<Hall['id'], number>> = {
   sienna: siennaVestibule.height,
   forge: forgeVestibule.crown,
+  antechamber: antechamberGallery.height,
 }
 // Tunnel containment and floor height are provided by lowerGallery.
 const inPlan = ({center, size}: Hall, x: number, z: number) => Math.abs(x - center[0]) <= size[0] / 2 && Math.abs(z - center[1]) <= size[1] / 2
@@ -41,7 +43,7 @@ export default class GalleryNavigation {
 
   /** Whether the position lies anywhere a player or an artwork may be. */
   contains(position: Vec3) {
-    return position.every(Number.isFinite) && (this.halls.some(room => this.hallContains(room, position)) || insideStairway(position) || tunnelContains(position) || insideTunnelDisplay(position) || insideLodgeWindow(position) || insideBastion(position))
+    return position.every(Number.isFinite) && (this.halls.some(room => this.hallContains(room, position)) || insideStairway(position) || insideAntechamberStairs(position) || tunnelContains(position) || insideTunnelDisplay(position) || insideLodgeWindow(position) || insideBastion(position))
   }
 
   /**
@@ -54,6 +56,8 @@ export default class GalleryNavigation {
       corridorPassage.floorAt(x, z),
       corridorLanding.floorAt(x, z),
       siennaVestibuleFloor(x, z),
+      antechamberAnnexFloor(x, z),
+      antechamberStairFloor(x, z),
       forgeVestibuleFloor(x, z),
       platformFloorHeight(x, z),
       tunnelFloorHeight(x, z),
@@ -78,6 +82,6 @@ export default class GalleryNavigation {
     const main = inPlan(room, x, z)
     // Up to the top of its box, the vault’s or the dome’s crown or the Forge’s ridges included, and beyond its floor plan up to its vestibule’s own ceiling where it has one.
     const ceiling = main ? room.air[0].max.y : annexCeilings[room.id] ?? room.air[0].max.y
-    return y >= ground - 1 && y <= ceiling + 0.2 && (main || room.id === 'lodge' && lodgeBayFloor(x, z) !== undefined || room.id === 'sienna' && siennaVestibuleFloor(x, z) !== undefined || room.id === 'forge' && forgeVestibuleFloor(x, z) !== undefined || room.id === 'oculus' && insideApse(x, z))
+    return y >= ground - 1 && y <= ceiling + 0.2 && (main || room.id === 'lodge' && lodgeBayFloor(x, z) !== undefined || room.id === 'sienna' && siennaVestibuleFloor(x, z) !== undefined || room.id === 'antechamber' && antechamberAnnexFloor(x, z) !== undefined || room.id === 'forge' && forgeVestibuleFloor(x, z) !== undefined || room.id === 'oculus' && insideApse(x, z))
   }
 }

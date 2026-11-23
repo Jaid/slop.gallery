@@ -29,8 +29,9 @@ export const openings: ReadonlyArray<Opening> = [
     holes: [['banquet-north', 'salon']],
   },
   {
+    // The stairs from the south end of the Antechamber’s gallery round to Moonfall’s south wall.
     rooms: ['antechamber', 'moonfall'],
-    holes: [['antechamber-east', 'stairway'], ['moonfall-east', 'stairway']],
+    holes: [['antechamber-gallery_south', 'stairway'], ['moonfall-south', 'stairway']],
   },
   {
     // The arch out of the Sienna’s vestibule onto the Corridor’s landing; the arch between the Sienna and its vestibule lies within the Sienna.
