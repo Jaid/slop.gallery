@@ -20,6 +20,8 @@ export type FlowerStickerOptions = {
     /** the petals */
     petals: string
   }
+  /** up to how far from the camera a sticker shows its whole face, and from how far on none of it, in meters; no nearer than it starts waking */
+  faces?: readonly [shown: number, gone: number]
   /** height of the floor the rows are laid out from */
   floorY?: number
   /** diameter of a sticker to the tips of its border, in meters */
@@ -134,21 +136,26 @@ function petal(p: Vec2, [[x, y], direction, tipRadius, baseRadius]: Petal) {
 const point = ([x, y]: Point) => vec2(x, y)
 /** The curve on its way from `from` to `to`, at `progress` from 0 to 1. */
 const between = (from: Curve, to: Curve, progress: Float): CurveNodes => [mix(point(from[0]), point(to[0]), progress), mix(point(from[1]), point(to[1]), progress), mix(point(from[2]), point(to[2]), progress)]
-/** where a face looks and how awake it is */
+/** where a face looks, how awake it is and whether it is there at all */
 type Mood = {
   /** 0 open to 1 shut, while the eyes blink */
   blink: Float
   /** toward the camera, seen in the sticker’s own frame: the sine of how far off its front the camera is, either way */
   gaze: Vec2
+  /** 0 for no face to 1 for the whole of it */
+  presence: Float
   /** 0 dozing to 1 wide awake */
   wake: Float
 }
-/** Distance to the middle of the curves, each drawn as straight pieces, or only the middle `reach` of each, from 0 to 1. */
-function curves(p: Vec2, drawn: ReadonlyArray<CurveNodes>, reach?: Float) {
+/** the part of a curve that is drawn, from where to where along it, 0 being its start and 1 its end */
+type Span = readonly [from: Float, to: Float]
+/** Distance to the middle of the curves, each drawn as straight pieces, or only the part of each its span gives. */
+function curves(p: Vec2, drawn: ReadonlyArray<CurveNodes>, spans?: ReadonlyArray<Span>) {
   let nearest: Float | undefined
-  for (const [a, b, c] of drawn) {
+  for (const [index, [a, b, c]] of drawn.entries()) {
+    const span = spans?.[index]
     const along = (fraction: number) => {
-      const t = reach ? reach.mul(fraction - 0.5).add(0.5) : float(fraction)
+      const t = span ? span[1].sub(span[0]).mul(fraction).add(span[0]) : float(fraction)
       const s = t.oneMinus()
       return a.mul(s.mul(s)).add(b.mul(s.mul(t).mul(2))).add(c.mul(t.mul(t)))
     }
@@ -177,12 +184,17 @@ function stadium(p: Vec2, center: Vec2, half: Vec2) {
   return q.max(0).length().add(q.x.max(q.y).min(0)).sub(round)
 }
 /**
- * The face on the heart, waking as `wake` rises, one step after another, each a shape that could be drawn as it is: the eyes, closed in a smile, relax into straight lids, which open into round eyes; the w mouth draws up into a small cat mouth; brows grow out of dots, high up in surprise, and settle into a frown; last the cheeks blush. The open eyes look at the camera and blink.
+ * The face on the heart, waking as `wake` rises, one step after another, each a shape that could be drawn as it is. Before that, as `presence` rises, its strokes grow out of dots: each eye out of its tip, the mouth out of its middle. Then the eyes, closed in a smile, relax into straight lids, which open into round eyes; the w mouth draws up into a small cat mouth; brows grow out of dots, high up in surprise, and settle into a frown; last the cheeks blush. The open eyes look at the camera and blink.
  *
  * Returns the distances to its black strokes and to the glints in its eyes, and how much each cheek’s pink and its darker hatches cover.
  */
-function face(p: Vec2, {wake, gaze, blink}: Mood) {
+function face(p: Vec2, {wake, gaze, blink, presence}: Mood) {
   const {stroke, dozing, awake} = flowerSticker
+  // The strokes stretch out of dots, which first grow out of nothing, starting smaller than it, so none of them shows yet.
+  const stretching = presence.smoothstep(0.2, 1)
+  const swelling = presence.smoothstep(0, 0.3).mul(stroke + 0.01).sub(0.01)
+  const towardEnd: Span = [stretching.oneMinus(), float(1)]
+  const fromStart: Span = [float(0), stretching]
   const relaxing = wake.smoothstep(0, 0.25)
   const opening = wake.smoothstep(0.25, 0.55)
   const mouthing = wake.smoothstep(0.15, 0.7)
@@ -198,7 +210,7 @@ function face(p: Vec2, {wake, gaze, blink}: Mood) {
     const [x, y] = center
     const lidX = radiusX - stroke
     const [left, right] = dozing.eyes[index]
-    const lid = curves(p, [between(left, [[x - lidX, y], [x - lidX / 2, y], [x, y]], relaxing), between(right, [[x, y], [x + lidX / 2, y], [x + lidX, y]], relaxing)]).sub(stroke)
+    const lid = curves(p, [between(left, [[x - lidX, y], [x - lidX / 2, y], [x, y]], relaxing), between(right, [[x, y], [x + lidX / 2, y], [x + lidX, y]], relaxing)], [towardEnd, fromStart]).sub(swelling)
     // The eye looks toward the camera, its glints, a reflection, follow less.
     const open = stadium(p, point(center).add(look.mul(0.03)), vec2(radiusX, mix(float(stroke), float(radiusY), opening.mul(openness))))
     const eye = select(opening.greaterThan(0), open, lid)
@@ -215,8 +227,8 @@ function face(p: Vec2, {wake, gaze, blink}: Mood) {
     const [startLift, endLift] = index === 0 ? [outer, inner] : [inner, outer]
     const raised: Curve = [[start[0], start[1] + startLift], [control[0], control[1] + (startLift + endLift) / 2], [end[0], end[1] + endLift]]
     return between(raised, [start, control, end], frowning)
-  }), browing).sub(browing.smoothstep(0, 0.4).mul(stroke * 1.3 + 0.01).sub(0.01))
-  const mouth = curves(p, dozing.mouth.map((curve, index) => between(curve, awake.mouth[index], mouthing))).sub(stroke)
+  }), awake.brows.map(() => [browing.mul(-0.5).add(0.5), browing.mul(0.5).add(0.5)] as const)).sub(browing.smoothstep(0, 0.4).mul(stroke * 1.3 + 0.01).sub(0.01))
+  const mouth = curves(p, dozing.mouth.map((curve, index) => between(curve, awake.mouth[index], mouthing)), [towardEnd, fromStart]).sub(swelling)
   const [[blushX, blushY], blushRadius] = awake.blush
   const cheek = vec2(p.x.abs(), p.y)
   const blush = oval(cheek, vec2(blushX, blushY), point(blushRadius))
@@ -239,7 +251,7 @@ function face(p: Vec2, {wake, gaze, blink}: Mood) {
  *
  * The stickers lie on a triangular lattice: every other row is shifted by half the spacing, so each has six neighbors at the same distance, and each is turned a little its own way. Every pixel draws only the sticker nearest to it, which the size must leave room for. Vertical faces are mapped along the wall, whichever way it faces, and up from the floor.
  *
- * From afar, every flower dozes with its eyes closed in a smile. Coming within {@link FlowerStickerOptions.wake} of one wakes it, each a little sooner or later than its neighbors: it opens its eyes, follows the camera with them, blinks now and then at its own pace, raises its brows, frowns and blushes. Walking along a wall, the flowers wake round the camera and doze off behind it.
+ * Far away, the flowers have no faces. Coming within {@link FlowerStickerOptions.faces}, their faces draw themselves out of dots, dozing with their eyes closed in a smile. Coming within {@link FlowerStickerOptions.wake} of one wakes it, each a little sooner or later than its neighbors: it opens its eyes, follows the camera with them, blinks now and then at its own pace, raises its brows, frowns and blushes. Walking along a wall, the flowers wake round the camera and doze off behind it.
  *
  * The ground is a matte paper with a fine weave and a soft mottle; the stickers are a glossy vinyl a hair proud of it, petals in the paper’s own color round a white heart, in a black outline, die-cut with a white border round it. Drawn shapes are filtered over the pixel’s footprint, so lines thinner than a pixel fade to their share of it.
  */
@@ -251,12 +263,15 @@ export default class FlowerStickerWallpaperMaterial extends MeshStandardNodeMate
     heart: '#f7f4ee',
     line: '#1d1a19',
     petals: '#e3795a',
-  }, floorY = 0, size = 0.15, spacing = 0.2, tilt = 25, wake: [awake, dozing] = [1.2, 2.4]}: FlowerStickerOptions = {}) {
+  }, floorY = 0, size = 0.15, spacing = 0.2, tilt = 25, wake: [awake, dozing] = [0.6, 0.9], faces: [shown, gone] = [3, 3.5]}: FlowerStickerOptions = {}) {
     if (!(size > 0 && spacing >= size)) {
       throw new RangeError('Stickers need a positive size and a spacing at least as large.')
     }
     if (!(awake >= 0 && dozing > awake)) {
       throw new RangeError('Stickers wake nearer than they doze.')
+    }
+    if (!(shown >= dozing && gone > shown)) {
+      throw new RangeError('Faces show nearer than they are gone and no nearer than they wake.')
     }
     super({
       roughness: 0.85,
@@ -291,7 +306,9 @@ export default class FlowerStickerWallpaperMaterial extends MeshStandardNodeMate
     // How near the camera is to the middle of this sticker, each waking a little sooner or later than its neighbors, and where it is seen from.
     const toCamera = cameraPosition.sub(positionWorld.sub(tangent.mul(fromCenter.x)).sub(bitangent.mul(fromCenter.y))).toVar('flowerToCamera')
     const distance = toCamera.length()
-    const wake = distance.add(random(1).sub(0.5).mul(0.5)).sub(dozing).div(awake - dozing).clamp(0, 1).smoothstep(0, 1).toVar('flowerWake')
+    const nearness = distance.add(random(1).sub(0.5).mul(0.5)).toVar('flowerNearness')
+    const wake = nearness.sub(dozing).div(awake - dozing).clamp(0, 1).smoothstep(0, 1).toVar('flowerWake')
+    const presence = nearness.sub(gone).div(shown - gone).clamp(0, 1).smoothstep(0, 1)
     const gaze = toSticker(vec2(toCamera.dot(tangent), toCamera.dot(bitangent)).div(distance.max(0.01)))
     // A blink of about a fifth of a second, every 3 to 7 seconds.
     const period = random(2).mul(4).add(3)
@@ -310,6 +327,7 @@ export default class FlowerStickerWallpaperMaterial extends MeshStandardNodeMate
       wake,
       gaze,
       blink,
+      presence,
     })
     const ink = max(covers(shape.sub(line)).sub(fill), covers(features.ink).mul(heartFill)).toVar('flowerInk')
     // Paper: a fine weave across the wall and a broad, faint mottle, both round the ground’s own color.
