@@ -70,5 +70,4 @@ export type SlopGalleryTelemetryOptions = Omit<VictoriaClientOptions, 'endpoint'
   resource?: Attributes
   sampleIntervalMs?: number
   sessionId?: string
-  version?: string
 }

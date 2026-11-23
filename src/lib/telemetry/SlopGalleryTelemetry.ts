@@ -3,6 +3,7 @@ import type {Attributes, LogLevel, Span, SpanOptions} from 'victoria-browser-cli
 
 import VictoriaClient, {MemoryOutbox} from 'victoria-browser-client'
 
+import manifest from '#root/package.json' with {type: 'json'}
 import world from '#src/worlds/current.ts'
 
 /** More attributes for a `room.changed` event, by the player’s whereabouts before and after it, set by whoever knows what the move switches; the scene lists the lights it turns on and off. */
@@ -24,7 +25,6 @@ export default class SlopGalleryTelemetry extends VictoriaClient {
       resource = {},
       sampleIntervalMs = 5000,
       sessionId,
-      version = '0.1.0',
       ...clientOptions
     } = options
     super({
@@ -49,7 +49,7 @@ export default class SlopGalleryTelemetry extends VictoriaClient {
       },
       resource: {
         'service.namespace': 'web',
-        'service.version': version,
+        'service.version': manifest.version,
         world: world.id,
         'deployment.environment.name': environment,
         ...resource,
