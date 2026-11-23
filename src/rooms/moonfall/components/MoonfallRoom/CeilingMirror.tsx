@@ -22,7 +22,7 @@ function Lining({size: [width, depth]}: Props) {
     envMapIntensity: 0,
     roughness: 0.7,
     reflection: {
-      strength: 0.25,
+      strength: 0.2,
       grazingStrength: 0,
       gaussianBlur: 4,
       loss: 0,
