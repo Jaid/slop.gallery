@@ -8,7 +8,7 @@ import {choiceFrames} from '../../src/frames/lib/frameChoice.ts'
 import {impastoColor, impastoIndex, impastoOrder, impastoPaints} from '../../src/lib/materials/impastoPaints.ts'
 import {moods} from '../../src/moods/index.ts'
 import ImpastoOrbMaterial from '../../src/orbs/impasto/ImpastoOrbMaterial.ts'
-import {impastoPalette, impastoStrokes} from '../../src/orbs/impasto/strokes.ts'
+import {capSurelyCovers, impastoBall, impastoCandidates, impastoCourses, impastoStrokes, strokeMayCover, strokeSurelyCovers} from '../../src/orbs/impasto/strokes.ts'
 import {impastoOrb, orbRadius, paintOrb, promptOrbs, randomOrbs, transparentOrb} from '../../src/orbs/index.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 
@@ -83,26 +83,54 @@ describe('Impasto Orb', () => {
       second.dispose()
     }
   })
-  test('keeps the padded box every stroke of its glass is marched in inside the glass, with orthonormal axes and paints of its palette', () => {
-    expect(impastoStrokes.length).toBeGreaterThan(12)
-    for (const {across, along, center, normal, pigment, radii} of impastoStrokes) {
-      for (const axis of [along, across, normal]) {
+  test('lays the knife strokes of its glass in courses from the bottom up, each stroke on the ball with orthonormal axes and a paint of its own palette', () => {
+    expect(impastoStrokes.length).toBeGreaterThan(60)
+    expect(impastoCourses.map(course => course.start)).toEqual(impastoCourses.map((_, index) => impastoCourses.slice(0, index).reduce((sum, course) => sum + course.count, 0)))
+    for (const [index, {across, along, center, course, cell, layer, paint}] of impastoStrokes.entries()) {
+      for (const axis of [center, along, across]) {
         expect(axis.length()).toBeCloseTo(1, 9)
       }
       expect(along.dot(across)).toBeCloseTo(0, 9)
-      expect(along.dot(normal)).toBeCloseTo(0, 9)
-      expect(across.dot(normal)).toBeCloseTo(0, 9)
-      expect(pigment).toBeGreaterThanOrEqual(0)
-      expect(pigment).toBeLessThan(impastoPalette.length)
-      for (const x of [-1.1, 1.1]) {
-        for (const y of [-1.1, 1.1]) {
-          for (const z of [-1.1, 1.1]) {
-            const corner = new Vector3
-            corner.copy(center).addScaledVector(along, x * radii[0]).addScaledVector(across, y * radii[1]).addScaledVector(normal, z * radii[2])
-            expect(corner.length()).toBeLessThan(0.95)
-          }
+      expect(along.dot(center)).toBeCloseTo(0, 9)
+      expect(across.dot(center)).toBeCloseTo(0, 9)
+      expect(impastoOrder[paint]).toBeDefined()
+      // Each course lies over the one below, its strokes in an order of their own.
+      const {count, start} = impastoCourses[course]
+      expect(index).toBe(start + cell)
+      expect(layer).toBeGreaterThanOrEqual(start)
+      expect(layer).toBeLessThan(start + count)
+    }
+    const layers = new Set(impastoStrokes.map(stroke => stroke.layer))
+    expect(layers.size).toBe(impastoStrokes.length)
+  })
+  test('keeps the paint inside the glass, with clear glass around it', () => {
+    expect(impastoBall.core).toBeGreaterThan(0)
+    expect(impastoBall.core + impastoBall.relief).toBeLessThan(0.85)
+  })
+  // Points spread evenly over the ball by a Fibonacci lattice, the poles included.
+  const lattice = 40_000
+  const directions = Array.from({length: lattice}, (_, index) => {
+    const y = 1 - (index + 0.5) * 2 / lattice
+    const radial = Math.sqrt(1 - y * y)
+    const angle = index * Math.PI * (3 - Math.sqrt(5))
+    return new Vector3(radial * Math.cos(angle), y, radial * Math.sin(angle))
+  })
+  test('buries its core: every direction lies fully under a stroke or a pole’s dab, however far their torn edges stray in', () => {
+    const bare = directions.filter(direction => !capSurelyCovers(direction) && !impastoStrokes.some(stroke => strokeSurelyCovers(stroke, direction)))
+    expect(bare).toEqual([])
+  })
+  test('its shader looks at every stroke that may reach a direction, however far their torn edges stray out', () => {
+    for (const direction of directions) {
+      const candidates = impastoCandidates(direction)
+      for (const [index, stroke] of impastoStrokes.entries()) {
+        if (strokeMayCover(stroke, direction) && !candidates.has(index)) {
+          throw new Error(`The stroke ${index} reaches (${direction.x.toFixed(3)}, ${direction.y.toFixed(3)}, ${direction.z.toFixed(3)}) without the shader looking at it.`)
         }
       }
     }
+  })
+  test('sets strokes of the same paint side by side in a course rarely', () => {
+    const repeats = impastoCourses.reduce((sum, {count, start}) => sum + Array.from({length: count}, (_, cell) => impastoStrokes[start + cell].paint === impastoStrokes[start + (cell + 1) % count].paint).filter(Boolean).length, 0)
+    expect(repeats / impastoStrokes.length).toBeLessThan(0.15)
   })
 })
