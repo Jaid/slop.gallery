@@ -4,7 +4,7 @@ import {select} from 'three/tsl'
 
 import {rgb} from '#src/orbs/lib/fill.ts'
 
-/** the oil paints the Paint Orb holds, each from a tube of its own, which its ribbons curl in, its effects are laid in and the painters’ frames are daubed with */
+/** the oil paints of the Paint Orb’s effects, each from a tube of its own, which its brush strokes are laid in and the painters’ frames are daubed with */
 export const oilPaints = {
   cadmiumYellow: '#f2b705',
   vermilion: '#d8341e',

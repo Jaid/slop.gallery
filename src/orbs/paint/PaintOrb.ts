@@ -1,10 +1,10 @@
 import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
 import PromptOrb from '../base/PromptOrb.ts'
-import PaintsOrbMaterial from './PaintsOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
+import RosetteOrbMaterial from './RosetteOrbMaterial.ts'
 
-/** Ribbons of oil paint curling through linseed oil. It has a work painted anew as an artistic painting of its own subject, every prompt asking for all of the traits it names, and unseen brushes paint a flourish of oil strokes into the air around the portal as the result flips out. */
+/** A double rosette of curled palette-knife strokes, slowly turning in clear glass. It has a work painted anew as an artistic painting of its own subject, every prompt asking for all of the traits it names, and unseen brushes paint a flourish of oil strokes into the air around the portal as the result flips out. */
 export default class PaintOrb extends PromptOrb {
   readonly adjectives = [
     // craft
@@ -48,6 +48,6 @@ export default class PaintOrb extends PromptOrb {
   readonly title = 'Paint Orb'
 
   createMaterial(options: OrbGlassOptions) {
-    return new PaintsOrbMaterial(options)
+    return new RosetteOrbMaterial(options)
   }
 }

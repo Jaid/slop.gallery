@@ -57,7 +57,7 @@ const size = color('#efe4c8')
 
 /** One of the Paint Orb’s frames: marbling still floating on its bath, drops of oil paint spread into rings and combed into waves, drifting round the work and curling in slow currents between two gilt beads. */
 export default class MarbledFrame extends PortraitFrame {
-  override readonly description = 'A marbler’s bath laid round the work between two gilt beads: drops of cadmium yellow, vermilion, ultramarine, viridian and titanium white laid side by side on the size, each spread into rings by drop after drop of other paints, pale veins of size between them, then combed across the cushion into waves, all under a glossy skin. The marbling never sets: it drifts slowly round the work and curls in the currents of the bath, without a seam through the miters, the way the Paint Orb’s ribbons curl through its oil. Its back is closed by a dust cover of brown kraft paper, taped round with gummed tape, a gallery label pasted on it and the hanging wire across it.'
+  override readonly description = 'A marbler’s bath laid round the work between two gilt beads: drops of cadmium yellow, vermilion, ultramarine, viridian and titanium white laid side by side on the size, each spread into rings by drop after drop of other paints, pale veins of size between them, then combed across the cushion into waves, all under a glossy skin. The marbling never sets: it drifts slowly round the work and curls in the currents of the bath, without a seam through the miters. Its back is closed by a dust cover of brown kraft paper, taped round with gummed tape, a gallery label pasted on it and the hanging wire across it.'
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
