@@ -1,7 +1,7 @@
 import type {TransmittingEmission} from '#src/lib/rendering/AlbedoRenderPipeline.ts'
 import type {ColorRepresentation, Node} from 'three/webgpu'
 
-import {Break, cameraFar, cameraNear, cameraPosition, cameraProjectionMatrix, float, Fn, frameId, If, interleavedGradientNoise, Loop, modelViewMatrix, modelWorldMatrixInverse, normalView, perspectiveDepthToViewZ, positionGeometry, positionView, positionViewDirection, refract, screenCoordinate, screenUV, select, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
+import {Break, cameraFar, cameraNear, cameraPosition, cameraProjectionMatrix, float, Fn, frameId, If, interleavedGradientNoise, Loop, modelViewMatrix, modelWorldMatrixInverse, normalView, perspectiveDepthToViewZ, positionGeometry, positionView, positionViewDirection, refract, screenCoordinate, screenUV, select, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import MaterialOutputsNode from '#src/lib/rendering/MaterialOutputsNode.ts'
@@ -132,7 +132,11 @@ export default abstract class OrbGlassMaterial extends MeshPhysicalNodeMaterial 
       const gap = positionView.z.sub(backdropViewZ).clamp(radius * 2, maximumGap)
       // Light scattered by the fill blurs the view behind it.
       const blur = transmittance.oneMinus().mul(3).add(0.6)
-      const backdrop = (viewportOpaqueMipTexture(viewportSafeUV(project(exitView.add(outgoingView.mul(gap)))), blur) as Node<'vec4'>).rgb
+      // Only what stands in front of the whole orb can’t be seen through it; its own holder, which reaches up round it nearer than the glass at its top, can. What lies in front is replaced by what lies straight behind the glass.
+      const target = project(exitView.add(outgoingView.mul(gap))).toVar('orbBackdropUV')
+      const nearestViewZ = modelViewMatrix.mul(vec4(0, 0, 0, 1)).z.add(modelViewMatrix.mul(vec4(radius, 0, 0, 0)).xyz.length())
+      const inFront = perspectiveDepthToViewZ(viewportDepthTexture(target), cameraNear, cameraFar).greaterThan(nearestViewZ)
+      const backdrop = (viewportOpaqueMipTexture(select(inFront, screenUV, target), blur) as Node<'vec4'>).rgb
       // The fill scatters the brightest of it, like a lamp right behind the orb, into the glow around it, so the room seen through the orb never outshines what floats in it.
       const behind = backdrop.div(backdrop.r.max(backdrop.g).max(backdrop.b).mul(0.6).add(1))
       const reflectivity = fresnel().toVar('orbFresnel')
