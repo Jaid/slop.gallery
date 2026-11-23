@@ -17,7 +17,7 @@ import {trackLoadingItems} from '#src/lib/loadingItems.ts'
 import {knotMass} from '#src/lib/physics/knotPhysics.ts'
 import KnotRotation from '#src/lib/physics/KnotRotation.ts'
 import {readKnotRotation} from '#src/lib/physics/rotatingKnots.ts'
-import {standKnot} from '#src/lib/physics/standingKnot.ts'
+import scaleKnotHull from '#src/lib/physics/scaleKnotHull.ts'
 import {getPmremEnvironment} from '#src/lib/rendering/pmrem.ts'
 
 const propId = ({entry}: ShowcasedKnot) => `prop-knot-${entry.id}`
@@ -53,7 +53,7 @@ export default function KnotShowcase({knots}: {knots: ReadonlyArray<ShowcasedKno
   useEffect(() => trackLoadingItems(() => materials.pendingMaterials.map(material => `knot-material:${material}`)), [materials])
   const {resources} = materials
   // The collider vertices are scaled copies, which must keep their identity, or every render rebuilds the colliders.
-  const stances = useMemo(() => knots.map((knot, index) => standKnot(resources.items[index].colliderVertices, knot.height)), [knots, resources])
+  const hulls = useMemo(() => knots.map((knot, index) => scaleKnotHull(resources.items[index].colliderVertices, knot.height)), [knots, resources])
   useEffect(() => {
     const ids = knots.map(knot => {
       const id = propId(knot)
@@ -122,7 +122,7 @@ export default function KnotShowcase({knots}: {knots: ReadonlyArray<ShowcasedKno
       }
       const {entry, position: [x, y, z], rotation: yaw = 0} = knot
       const {geometry} = resources.items[index]
-      const {scale, vertices} = stances[index]
+      const {scale, vertices} = hulls[index]
       const {coreMaterial} = material
       const id = propId(knot)
       const skin = (entry.displacement ?? 0) * scale
