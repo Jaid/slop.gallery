@@ -1,7 +1,7 @@
 import type {GalleryValues, LooseOptions} from './lib/headlessGallery.ts'
-import type {BunPlugin} from 'bun'
 import type {Page} from 'puppeteer-core'
 
+import type {BunPlugin} from 'bun'
 import {parseArgs} from 'node:util'
 
 import {executeWebmcpTool, waitForLoadingItems} from 'capture-session/script'
