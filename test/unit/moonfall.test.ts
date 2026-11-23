@@ -17,11 +17,11 @@ import walls, {floorHeight, galleryPlacement, insideGallery, roomAt, rooms} from
 
 await RAPIER.init()
 const lower = rooms.find(candidate => candidate.id === 'moonfall')!
-const upper = rooms.find(candidate => candidate.id === 'sienna')!
-const landing = stairHalls.return
+const upper = rooms.find(candidate => candidate.id === 'antechamber')!
+const lunarHall = stairHalls.east
 describe('lower gallery', () => {
   test('stacked rooms, both stair flights and the U-turn landing resolve their own elevation', () => {
-    expect(stairFlights[1].end[0]).toBe(lower.center[0] + lower.size[0] / 2)
+    expect(stairFlights[1].start[2]).toBe(lower.center[1])
     for (const block of stairBlocks) {
       const position: Vec3 = [block.position[0], block.top + 1.6, block.position[2]]
       expect(stairFloorHeight(position[0], position[2])).toBeCloseTo(block.top)
@@ -29,20 +29,26 @@ describe('lower gallery', () => {
       expect(insideGallery(position)).toBe(true)
       expect(roomAt(position)).toBe('moonfall')
     }
-    // The Sienna’s vestibule stands over the north-west of Moonfall.
-    const [x, z] = [-20, 23]
-    expect(roomAt([x, upper.floorY + 1.6, z])).toBe('sienna')
+    // Moonfall reaches under the Antechamber.
+    const [x, z] = [upper.center[0], upper.center[1] - 0.5]
+    expect(roomAt([x, upper.floorY + 1.6, z])).toBe('antechamber')
     expect(roomAt([x, lower.floorY + 1.6, z])).toBe('moonfall')
     expect(floorHeight([x, upper.floorY + 1.6, z])).toBe(upper.floorY)
     expect(floorHeight([x, lower.floorY + 1.6, z])).toBe(lower.floorY)
     expect(floorHeight([x + 5, lower.floorY + 1.6, z])).toBe(lower.floorY)
     expect(insideGallery([x, lower.floorY - 0.95, z])).toBe(true)
     expect(insideGallery([x, lower.floorY - 1.01, z])).toBe(false)
-    expect(insideGallery([10.5, -1, 15])).toBe(false)
+    // between the flights, east of the lunar hall
+    expect(insideGallery([12, -1, 14.6])).toBe(false)
     expect(insideGallery([Number.NaN, -2, 15])).toBe(false)
+    // Visitors arrive on a tread of the lower flight, far enough down it that the capsule, 30 cm round, clears the riser up behind them.
+    const [spawnX, spawnY, spawnZ] = lower.spawn.position
+    const tread = stairFloorHeight(spawnX, spawnZ)!
+    expect(spawnY).toBeCloseTo(tread + 0.04, 9)
+    expect(stairFloorHeight(spawnX - stairFlights[1].heading[0] * 0.3, spawnZ)).toBe(tread)
     // The landing joins the two flights without another riser.
     expect(stairFloorHeight(stairTurn.position[0], stairTurn.position[2])).toBe(stairFlights[0].end[1])
-    expect(stairFloorHeight(8, 14.6)).toBeUndefined()
+    expect(stairFloorHeight(12, 14.6)).toBeUndefined()
   })
   test('wall rays and frame clearance respect lower-level elevations and portals', () => {
     const wall = walls.find(candidate => candidate.id === 'moonfall-south')!
@@ -50,13 +56,13 @@ describe('lower gallery', () => {
     expect(position[1]).toBeCloseTo(-5.5)
     expect(placementIssue(wall, position, 2, 2, [])).toBe('')
     expect(placementIssue(wall, wallPosition(wall, 2, lower.floorY + 1), 2, 2, [])).toBe('frame')
-    expect(galleryPlacement.findPlacement([-2, -5.5, 42.5], [0, 0, 1], 2, 2, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([-2, -5.5, 27], [0, 0, 1], 2, 2, [])).toMatchObject({
       wallId: wall.id,
       valid: true,
     })
     expect(galleryPlacement.findPlacement([4, -6.4, staircase.returnZ], [1, 0, 0], 1, 1, [])).toBeNull()
-    expect(galleryPlacement.findPlacement([4, -6.4, 29], [1, 0, 0], 1, 1, [])?.wallId).toBe('moonfall-east')
-    expect(galleryPlacement.findPlacement([3, -0.5, staircase.z], [0, 0, -1], 1, 1, [])).toMatchObject({
+    expect(galleryPlacement.findPlacement([4, -6.4, 11.5], [1, 0, 0], 1, 1, [])?.wallId).toBe('moonfall-east')
+    expect(galleryPlacement.findPlacement([12, 0.4, 11.5], [0, 0, -1], 1, 1, [])).toMatchObject({
       valid: false,
       reason: 'unsticky',
     })
@@ -125,7 +131,7 @@ describe('lower gallery', () => {
               z: 0,
             })
             world.timestep = 1 / fps
-            const geometries = walls.filter(wall => ['antechamber-return_east', 'moonfall-east'].includes(wall.id) || wall.id.startsWith('moonfall-stairs_')).map(wall => ({
+            const geometries = walls.filter(wall => ['antechamber-east_east', 'moonfall-east'].includes(wall.id) || wall.id.startsWith('moonfall-stairs_')).map(wall => ({
               wall,
               geometry: createArchitectureGeometry(wall),
             }))
@@ -149,10 +155,10 @@ describe('lower gallery', () => {
               beamRotation.setFromEuler(new Euler(...beam.rotation))
               world.createCollider(RAPIER.ColliderDesc.cuboid(beam.size[0] / 2, beam.size[1] / 2, beam.size[2] / 2).setTranslation(...beam.position).setRotation(beamRotation))
             }
-            world.createCollider(RAPIER.ColliderDesc.cuboid(landing.size[0] / 2, floorThickness / 2, landing.size[1] / 2).setTranslation(landing.center[0], -floorThickness / 2, landing.center[1]))
+            world.createCollider(RAPIER.ColliderDesc.cuboid(lunarHall.size[0] / 2, floorThickness / 2, lunarHall.size[1] / 2).setTranslation(lunarHall.center[0], -floorThickness / 2, lunarHall.center[1]))
             world.createCollider(RAPIER.ColliderDesc.cuboid(lower.size[0] / 2, 0.15, lower.size[1] / 2).setTranslation(lower.center[0], lower.floorY - 0.15, lower.center[1]))
             world.createCollider(RAPIER.ColliderDesc.cuboid(lower.size[0] / 2, ceilingSlab.thickness / 2, lower.size[1] / 2).setTranslation(lower.center[0], lower.floorY + ceilingSlab.center, lower.center[1]))
-            const path = [[staircase.startX - 1, staircase.z + offset], ...Array.from({length: 17}, (_, i) => stairTurn.point(i / 16 * Math.PI, stairTurn.radius - offset * (staircase.width + staircase.lowerWidth) / (2 * staircase.width))), [4.4, staircase.returnZ - offset * staircase.lowerWidth / staircase.width]]
+            const path = [[lunarHall.center[0], staircase.z + offset], ...Array.from({length: 17}, (_, i) => stairTurn.point(i / 16 * Math.PI, stairTurn.radius - offset * (staircase.width + staircase.lowerWidth) / (2 * staircase.width))), [4.4, staircase.returnZ - offset * staircase.lowerWidth / staircase.width]]
             if (ascending) {
               path.reverse()
             }

@@ -18,8 +18,8 @@ export type SunTightRoom = {
   readonly air: ReadonlyArray<Box3>
   /** the world height of the room’s floor */
   readonly floorY: number
-  /** `main` limits the guarantee to the first box (the hall, not its approaches). */
-  readonly sunTight: 'main' | boolean
+  /** whether the sun reaches none of its air above the floor */
+  readonly sunTight: boolean
 }
 
 /** How far the light’s shadow camera stands from the origin along its direction, well above the vault’s crown. */
@@ -63,7 +63,7 @@ export function sunTightSpaces(rooms: Iterable<SunTightRoom>): Array<Box3> {
     if (!room.sunTight) {
       continue
     }
-    for (const {min, max} of room.sunTight === 'main' ? room.air.slice(0, 1) : room.air) {
+    for (const {min, max} of room.air) {
       const space = new Box3(min.clone(), max.clone())
       space.min.x += sunTightClearance
       space.min.z += sunTightClearance

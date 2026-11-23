@@ -50,14 +50,14 @@ describe('shared grabbing regressions', () => {
     body.setTranslation({
       x: 0,
       y: -8.5,
-      z: 31,
+      z: 15,
     }, true)
     carried.recover()
     expect(body.translation().y).toBeCloseTo(-8.5)
     body.setTranslation({
       x: 0,
       y: -13,
-      z: 31,
+      z: 15,
     }, true)
     carried.recover()
     expect(body.translation()).toEqual({

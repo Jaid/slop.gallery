@@ -7,15 +7,14 @@ import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
 import {moonfallCrater, moonfallHeight} from '#src/lib/gallery/moonfall/config.ts'
 import {craterTerrain} from '#src/lib/gallery/moonfall/CraterTerrain.ts'
-import {stairAir, stairTurn} from '#src/lib/gallery/staircase.ts'
+import {stairTurn} from '#src/lib/gallery/staircase.ts'
 
 import Room from '../base/Room.ts'
-import chunkBoxes from '../lib/chunkBoxes.ts'
 import floorBox from '../lib/floorBox.ts'
 import footprint from '../lib/footprint.ts'
 import ambienceEmitters from './ambienceEmitters.ts'
 import cameras from './cameras.ts'
-import fences, {stairFootprints} from './fences.ts'
+import fences, {stairway} from './fences.ts'
 import lamps from './lamps.ts'
 import map from './map.svg?raw'
 import spawns from './spawns.ts'
@@ -28,19 +27,16 @@ const bottom = craterTerrain.lowest()
 /** Laid out around the middle of its floor plan, at the height of its slate floor. */
 export default class Moonfall extends Room {
   // Reaches down to the deepest air in the crater.
-  override readonly air = [
-    floorBox(plan.size, bottom, moonfallHeight - bottom),
-    ...chunkBoxes(stairAir, [plan.center[0], lowerGallery.floorY, plan.center[1]]),
-  ]
+  override readonly air = floorBox(plan.size, bottom, moonfallHeight - bottom)
   override readonly description = 'Down the stairs. Out of the ordinary.'
   override readonly fence = new Geofence([
-    // Everything under its floor plan, up to just over its ceiling.
+    // Everything under its floor plan, up to the ground floor’s fences in the slab over its ceiling.
     {
-      ...footprint([this.air[0]]),
+      ...footprint([this.air]),
       ceiling: groundFenceY - lowerGallery.floorY,
     },
-    // The stairway up to the Antechamber, at every height.
-    ...stairFootprints,
+    // The stairway up to the Antechamber’s lunar hall, east of the hall, at every height.
+    ...stairway,
   ])
   override readonly height = moonfallHeight
   override readonly id = 'moonfall'
@@ -60,11 +56,11 @@ export default class Moonfall extends Room {
       lamps,
       skybox: null,
       // The room lies under its own ceiling, so the sun never lights its air, and the turning meteorite never redraws the sun’s shadow map.
-      sunTight: 'main',
+      sunTight: true,
       volumetricSun: 0,
       walls,
       map,
-      // The upper flight and the near half of the landing, cut across the middle of the turn.
+      // The upper flight down from the Antechamber’s lunar hall and the near half of the landing, cut across the middle of the turn.
       upperMap: {
         from: stairTurn.top - lowerGallery.floorY,
         map: upperMap,

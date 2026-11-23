@@ -172,10 +172,11 @@ export default class StairFlight {
     ].filter(piece => piece.length)
   }
 
-  wall(side: number): Wall {
-    // A straight grade differs from discrete treads, especially beside a landing.
-    // Extend below every tread underside instead of leaving triangular daylight gaps.
-    const depth = Math.max(...this.blocks.map(block => this.start[1] + (this.along(block) - this.extent(block) / 2) * this.grade - block.top + stairThickness))
+  /**
+   * The wall along one side of the flight, `depth` meters under its grade all along.
+   * By default, it reaches under every tread’s underside: a straight grade differs from discrete treads, especially beside a landing, and a shallower wall would leave triangular daylight gaps under them.
+   */
+  wall(side: number, depth = Math.max(...this.blocks.map(block => this.start[1] + (this.along(block) - this.extent(block) / 2) * this.grade - block.top + stairThickness))): Wall {
     const [ax, az] = this.across
     const center: Vec3 = [(this.start[0] + this.end[0]) / 2 + ax * side * this.width / 2, (this.start[1] + this.end[1]) / 2 - depth, (this.start[2] + this.end[2]) / 2 + az * side * this.width / 2]
     // It faces back across the flight, against the side it stands on.

@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="3 -17.3 24.15 4.55" fill="#fff">
-  <!-- From the Antechamber’s west stair hall to the middle of the U-turn. Both landings are level. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 -7.8 13.1 4.55" fill="#fff">
+  <!-- From the east door of the Antechamber’s lunar hall to the middle of the U-turn. Both landings are level. -->
   <defs>
-    <linearGradient id="moonfall-upper-descent" gradientUnits="userSpaceOnUse" x1="3.8" y1="0" x2="22" y2="0">
+    <linearGradient id="moonfall-upper-descent" gradientUnits="userSpaceOnUse" x1="18.8" y1="0" x2="25.909" y2="0">
       <stop offset="0" stop-color="#fff"/>
       <stop offset="1" stop-color="#fff" stop-opacity="0.25"/>
     </linearGradient>
   </defs>
-  <path transform="translate(0 -9.5)" fill="url(#moonfall-upper-descent)" d="M 3 -7.5 H 22 A 4.85 4.85 0 0 1 26.813 -3.25 H 23.537 A 1.65 1.65 0 0 0 22 -5.5 H 3 Z"/>
+  <path fill="url(#moonfall-upper-descent)" d="M 18 -7.5 H 25.909 A 4.85 4.85 0 0 1 30.722 -3.25 H 27.446 A 1.65 1.65 0 0 0 25.909 -5.5 H 18 Z"/>
 </svg>

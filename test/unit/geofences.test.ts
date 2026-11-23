@@ -17,7 +17,7 @@ import lobby from '../../src/lib/gallery/lobby.ts'
 import {lobbyFountainSpot} from '../../src/lib/gallery/lobbyFountain.ts'
 import lodge, {lodgeEastWindow, lodgeWindow} from '../../src/lib/gallery/lodge.ts'
 import lowerGallery, {oculusPlatform} from '../../src/lib/gallery/lowerGallery.ts'
-import staircase, {stairAir, stairFloorHeight} from '../../src/lib/gallery/staircase.ts'
+import staircase, {stairFloorHeight, stairwayFootprint} from '../../src/lib/gallery/staircase.ts'
 import tunnelDisplays from '../../src/lib/gallery/tunnelDisplays.ts'
 import Cell from '../../src/rooms/cell/Cell.ts'
 import CellLayout from '../../src/rooms/cell/CellLayout.ts'
@@ -287,8 +287,8 @@ test('the gallery’s moonfall-stairs fences the stairway between the Antechambe
   const eastX = lowerGallery.moonfall.center[0] + lowerGallery.moonfall.size[0] / 2
   let treads = 0
   // in columns over and around the stairway’s footprint, off the planes the boxes end on
-  for (let x = staircase.startX - 1.03; x < Math.max(...stairAir.map(({max}) => max[0])) + 1.03; x += 0.31) {
-    for (let z = staircase.z - staircase.width / 2 - 1.03; z < staircase.returnZ + staircase.lowerWidth / 2 + 1.03; z += 0.31) {
+  for (let x = stairwayFootprint.x - 1.03; x < stairwayFootprint.x2 + 1.03; x += 0.31) {
+    for (let z = stairwayFootprint.z - 1.03; z < stairwayFootprint.z2 + 1.03; z += 0.31) {
       for (const y of [-12, -7.1, -2.1, -1.9, 0.9, 9]) {
         const position: Vec3 = [x, y, z]
         expect(fence.contains(position)).toBe(stairway.some(box => box.contains(position)) && !hall.contains(position))
@@ -307,15 +307,16 @@ test('the gallery’s moonfall-stairs fences the stairway between the Antechambe
     }
   }
   expect(treads).toBeGreaterThan(500)
-  // It begins in the plane of the return’s east wall, where the upper flight sets out, and ends in the plane of Moonfall’s east wall, where the lower flight arrives.
+  // It begins in the plane of the east wall of the Antechamber’s lunar hall, where the upper flight sets out, and ends in the plane of Moonfall’s east wall, where the lower flight arrives.
   const [topX, topY, topZ] = [staircase.startX, 0.9, staircase.z]
   expect(slopGallery.geofences.getMatches([topX - 0.01, topY, topZ])).toEqual(['antechamber'])
   expect(slopGallery.geofences.getMatches([topX + 0.01, topY, topZ])).toEqual(['moonfall', 'moonfall-stairs'])
-  const [footY, footZ] = [lowerGallery.floorY + 0.9, staircase.returnZ]
+  const [footY, footZ] = [lowerGallery.floorY + 0.9, lowerGallery.moonfall.center[1]]
   expect(slopGallery.geofences.getMatches([eastX + 0.01, footY, footZ])).toEqual(['moonfall', 'moonfall-stairs'])
   expect(slopGallery.geofences.getMatches([eastX - 0.01, footY, footZ])).toEqual(['moonfall'])
-  // No hall under the upper flight; the stair fence does not swallow the tunnel beside it.
-  expect(slopGallery.geofences.getMatches([lowerGallery.tunnel.southX, footY, topZ])).toEqual(['exhibition'])
+  // Nothing lies under the lunar hall, west of where the upper flight sets out, and Moonfall’s hall lies under the dome beyond.
+  expect(slopGallery.geofences.getMatches([topX - 2, footY, topZ])).toEqual([])
+  expect(slopGallery.geofences.getMatches([0, footY, topZ])).toEqual(['moonfall'])
   // Moonfall’s visitors arrive on its lower flight, in the fence.
   const [x, y, z] = slopGallery.room('moonfall').spawn.position
   expect(stairFloorHeight(x, z)).toBeDefined()

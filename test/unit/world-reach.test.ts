@@ -68,7 +68,7 @@ describe('?world_reach', () => {
       const neighbors = new Set<string>([room, ...slopGallery.fencesIn(room).flatMap(fence => kept[fence]?.rooms ?? [])])
       expect(within.rooms).toEqual(allRooms.filter(id => neighbors.has(id)))
     }
-    // The west return hides Moonfall, so none of it needs to load for a Lobby start.
+    // The lunar hall hides Moonfall’s stairway from the Lobby, so none of Moonfall needs to load for a Lobby start.
     expect(activations.lobby.rooms).not.toContain('moonfall' as never)
     expect(reach('?world_reach=neighbors').origin).toBe('lobby')
     expect(reach('?world_reach=neighbors').covers('moonfall')).toBe(false)

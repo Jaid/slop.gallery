@@ -4,11 +4,10 @@ import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
 import moonfallWallLeds from '#src/lib/gallery/moonfall/fixtures.ts'
 import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import {moonfallSculpture, sculptureLampOffset} from '#src/lib/gallery/moonfall/sculpture.ts'
-import {stairRoofs} from '#src/lib/gallery/staircase.ts'
+import staircase, {stairTurn} from '#src/lib/gallery/staircase.ts'
 
 const [sculptureX, sculptureY, sculptureZ] = moonfallSculpture.center
 const [lampX, lampY, lampZ] = sculptureLampOffset
-const [stairsX, stairsY, stairsZ] = stairRoofs[0].position
 
 export default {
   // Each source sits 60 cm in front of the middle of its housing.
@@ -34,9 +33,9 @@ export default {
     range: 6,
     decay: 1,
   },
-  // Over the upper flight of the stairway up to the Antechamber.
+  // In the turn of the stairway up to the Antechamber, where the upper flight comes down into it, 2.72 m over its landing.
   stairs: {
-    position: [stairsX - lowerGallery.moonfall.center[0], stairsY - lowerGallery.floorY - 0.42, stairsZ - lowerGallery.moonfall.center[1]],
+    position: [stairTurn.center[0] + 2.55 - lowerGallery.moonfall.center[0], stairTurn.top + 2.72 - lowerGallery.floorY, staircase.z + 1.52 - lowerGallery.moonfall.center[1]],
     strength: 30,
     tint: moonfallTheme.stairs,
     range: 15,

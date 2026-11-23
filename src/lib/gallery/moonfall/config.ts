@@ -17,7 +17,7 @@ export const moonfallCrater = {
   terrainSpacing: 0.07,
 } as const
 
-// Flush with the underside of the ground-floor slabs in the Sienna and its vestibule overhead.
+// Flush with the underside of the ground floor’s slabs overhead: under the Lobby’s south end, the Antechamber, the Sienna and its vestibule. Nothing of the stairs hangs under it.
 const top = -floorThickness - lowerGallery.floorY
 const thickness = 0.18
 /** the ceiling slab relative to Moonfall’s floor */

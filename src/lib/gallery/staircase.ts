@@ -1,46 +1,57 @@
 import type {StairBeam} from './stairs/StairFlight.ts'
 import type {Vec3} from './types.ts'
 
-import {moonfallThreshold} from './antechamber.ts'
+import {antechamberRiser, antechamberTread, stairHalls} from './antechamber.ts'
 import lowerGallery from './lowerGallery.ts'
 import StairFlight, {stairHeadroom} from './stairs/StairFlight.ts'
 import StairHandrailGeometry from './stairs/StairHandrailGeometry.ts'
 import StairTurn from './stairs/StairTurn.ts'
 
+const {moonfall} = lowerGallery
+const lunarHall = stairHalls.east
+/** where the upper flight sets out: the lunar hall’s east wall */
+const startX = lunarHall.center[0] + lunarHall.size[0] / 2
+const landing = 0.8
+/** how many of the stairs’ 44 risers the upper flight takes: it sets out 4 m east of where the lower one arrives, so with treads as deep as its own, the lower flight takes ten more and ends a short landing before the hall */
+const upperCount = 17
+/**
+ * The stairs from the Antechamber’s lunar hall down to Moonfall, wholly east of the hall, so nothing of them hangs under its ceiling.
+ * The upper flight leaves through the middle of the lunar hall’s east wall, in line with both arches of the dome, turns round a level landing and the lower flight returns west, arriving in the middle of Moonfall’s east wall.
+ */
 const staircase = {
-  startX: moonfallThreshold.x,
-  turnX: 14,
-  endX: lowerGallery.moonfall.center[0] + lowerGallery.moonfall.size[0] / 2,
-  // Behind the return at the south of the west stair hall.
-  z: moonfallThreshold.z,
-  // Room to flare from a narrow flight to the wider doorway as the landing turns.
-  returnZ: moonfallThreshold.z + 6.5,
+  startX,
+  turnX: startX + landing + upperCount * antechamberTread,
+  /** where the lower flight arrives: Moonfall’s east wall */
+  endX: moonfall.center[0] + moonfall.size[0] / 2,
+  /** the upper flight’s centerline, through the middle of the Antechamber */
+  z: lunarHall.center[1],
+  /** the lower flight’s centerline, through the middle of Moonfall */
+  returnZ: moonfall.center[1],
   width: 2.6,
   lowerWidth: 5,
   topY: 0,
   bottomY: lowerGallery.floorY,
-  landing: 0.8,
+  /** how high the landing turning the flights lies */
+  turnY: -upperCount * antechamberRiser,
+  landing,
+  upperCount,
   count: 44,
 } as const
-// Split the drop in proportion to the unequal runs. All 44 risers are the same height and both flights have nearly the same pitch.
-const upperRun = staircase.turnX - staircase.startX - staircase.landing
-const lowerRun = staircase.turnX - staircase.endX
-const upperSteps = Math.round(staircase.count * upperRun / (upperRun + lowerRun))
-const turnY = staircase.bottomY * upperSteps / staircase.count
+const lowerCount = staircase.count - staircase.upperCount
 export const stairFlights = [
-  new StairFlight('upper', [staircase.startX, staircase.topY, staircase.z], [staircase.turnX, turnY, staircase.z], staircase.width, upperSteps, staircase.landing),
-  new StairFlight('lower', [staircase.turnX, turnY, staircase.returnZ], [staircase.endX, staircase.bottomY, staircase.returnZ], staircase.lowerWidth, staircase.count - upperSteps),
+  new StairFlight('upper', [staircase.startX, staircase.topY, staircase.z], [staircase.turnX, staircase.turnY, staircase.z], staircase.width, staircase.upperCount, staircase.landing),
+  // Its treads as deep as the upper flight’s, ending a short landing before the hall.
+  new StairFlight('lower', [staircase.turnX, staircase.turnY, staircase.returnZ], [staircase.endX, staircase.bottomY, staircase.returnZ], staircase.lowerWidth, lowerCount, 0, staircase.turnX - staircase.endX - lowerCount * antechamberTread),
 ]
-export const stairTurn = new StairTurn([staircase.turnX, (staircase.z + staircase.returnZ) / 2], turnY, (staircase.returnZ - staircase.z) / 2, staircase.width, staircase.lowerWidth)
+export const stairTurn = new StairTurn([staircase.turnX, (staircase.z + staircase.returnZ) / 2], staircase.turnY, (staircase.returnZ - staircase.z) / 2, staircase.width, staircase.lowerWidth)
 export const stairBlocks = stairFlights.flatMap(flight => flight.blocks)
-/** World-space bounds of the two flights and the turn; the unoccupied space between them belongs to neither the stairway nor its fence. */
-export const stairAir = [
-  ...stairFlights.flatMap(flight => flight.chunks(0.1)),
-  {
-    min: [stairTurn.center[0], stairTurn.top, stairTurn.outerCenterZ - stairTurn.outerRadius],
-    max: [stairTurn.center[0] + stairTurn.outerRadius, stairTurn.top + stairHeadroom, stairTurn.outerCenterZ + stairTurn.outerRadius],
-  } as const,
-]
+/** the rectangle on the ground the stairway covers, from Moonfall’s east wall round the turn */
+export const stairwayFootprint = {
+  x: Math.min(...stairBlocks.map(block => block.position[0] - block.size[0] / 2)),
+  z: Math.min(...stairBlocks.map(block => block.position[2] - block.size[2] / 2)),
+  x2: stairTurn.center[0] + stairTurn.outerRadius,
+  z2: Math.max(...stairBlocks.map(block => block.position[2] + block.size[2] / 2)),
+}
 export const stairRoofs: Array<StairBeam> = stairFlights.map(flight => flight.beam(stairHeadroom, 0.18, flight.width))
 export function stairRailGeometry(side: 'inner' | 'outer') {
   const start = stairFlights[0].start

@@ -1,18 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 -12 37 38" fill="#fff">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 -12 37 23" fill="#fff">
   <defs>
     <linearGradient id="exhibition-descent-fall" gradientUnits="userSpaceOnUse" x1="-4" x2="4" y1="10.5" y2="-9">
       <stop offset="0" stop-color="#ffffff"/>
       <stop offset="1" stop-color="#aeaeae"/>
     </linearGradient>
     <mask id="exhibition-descent">
-      <rect x="-15" y="-12" width="37" height="38" fill="url(#exhibition-descent-fall)"/>
+      <rect x="-15" y="-12" width="37" height="23" fill="url(#exhibition-descent-fall)"/>
     </mask>
   </defs>
   <g mask="url(#exhibition-descent)">
     <!-- From the Oculus balcony doors to the cutouts in the south ends of the displays. -->
     <path d="M -5 -11.15 H -5.3 V -11.34 H -10.08 L -14.51 2.92 L -8.4 6.18 L -7.19 3.93 L -7.99 3.5 L -8.45 4.37 L -12.62 2.14 L -8.92 -9.77 H -5.3 V -9.95 H -5 Z"/>
     <path d="M 13 -11.15 H 13.3 V -11.34 H 17.25 L 21.48 9.99 H 2.44 L 0.27 9.06 L 1.46 6.83 L 2.25 7.25 L 1.8 8.1 L 2.29 8.41 H 19.57 L 15.95 -9.77 H 13.3 V -9.95 H 13 Z"/>
-    <path d="M 6.2 -9 L 6.2 -6.95 L -1.8 8.05 L -1.8 26 L -6.2 26 L -6.2 6.95 L 1.8 -8.05 L 1.8 -9 Z"/>
+    <path d="M 6.2 -9 L 6.2 -6.95 L -1.8 8.05 L -1.8 10.5 L -6.2 10.5 L -6.2 6.95 L 1.8 -8.05 L 1.8 -9 Z"/>
     <path d="M 0.69 -7.23 L -6.09 5.48 L -8.38 4.25 L -1.61 -8.45 Z"/>
     <path d="M 6.29 -5.84 L -0.25 6.43 L 2.04 7.65 L 8.58 -4.61 Z"/>
     <g fill="#d4d4d4">

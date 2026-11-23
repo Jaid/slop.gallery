@@ -94,10 +94,9 @@ export type RoomOptions = {
   /**
    * whether the room’s walls and ceiling keep the sun out of all of its air above the floor, so whatever moves in there can’t change any sunlit spot: then the sun’s shadow map doesn’t redraw for it, like for Moonfall’s turning meteorite; false by default
    *
-   * `main` limits this to the main hall (the first air box) when the boxes around its approaches extend beyond their roofs.
    * Its shell still has to stay in the sun’s map, which may also shade a neighbor, like Moonfall’s ceiling does the mouth of the Exhibition’s tunnel. `bun run test:live:sun-tight` checks that the sun reaches none of it.
    */
-  sunTight?: 'main' | boolean
+  sunTight?: boolean
   title: string
   /** the part of the room’s floor plan that climbs to the floor above, which the map shows there instead of on the room’s own floor */
   upperMap?: UpperMapOptions
@@ -179,7 +178,7 @@ export default abstract class Room {
   abstract readonly spawn: RoomSpawn
   readonly spawns: ReadonlyMap<string, RoomSpawn>
   readonly sunlit: boolean
-  readonly sunTight: NonNullable<RoomOptions['sunTight']>
+  readonly sunTight: boolean
   readonly title: string
   /** the part of the room’s floor plan the map shows on the floor above, if the room climbs there */
   readonly upperMap: UpperMap | undefined

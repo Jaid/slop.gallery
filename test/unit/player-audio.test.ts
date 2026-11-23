@@ -64,8 +64,8 @@ test('ground surface resolver maps visible floor materials to modifiers', () => 
   expect(groundSurface('vesper', [-14, 0, 0])).toBe('hollow')
   expect(groundSurface('sienna', [-18, 0, 14])).toBe('fabric')
   expect(groundSurface('sienna', [-14, 0, 14])).toBe('hollow')
-  expect(groundSurface('moonfall', [-8, -8, 34])).toBe('fabric')
-  expect(groundSurface('moonfall', [2, -8, 34])).toBe('generic')
+  expect(groundSurface('moonfall', [-8, -8, 18.5])).toBe('fabric')
+  expect(groundSurface('moonfall', [2, -8, 18.5])).toBe('generic')
   expect(groundSurface('bastion', bastionOrigin)).toBe('stone')
   const [planksX, planksZ] = bastionTransition.floor.center
   expect(groundSurface('bastion', [planksX, bastionApproach.floorY, planksZ])).toBe('hollow')

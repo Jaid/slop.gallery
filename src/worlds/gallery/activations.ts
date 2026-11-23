@@ -30,10 +30,12 @@ type OtherFenceId<Room extends RoomId, Fences> = `${Room}-${keyof Fences & strin
  * A room’s own models, lamps and ambient sounds are always on inside it. Hiding a model only skips its draws, and switching a lamp off only dims it, so neither recompiles a shader.
  */
 const activations = {
+  // Moonfall’s stairway stays out of sight: a line through the doorway into the Antechamber and the arch into its lunar hall runs too far askew to pass the doorway onto the stairs.
   lobby: {
     rooms: ['vesper', 'banquet', 'antechamber', 'salon', 'forge', 'oculus', 'sienna', 'exhibition', 'bastion'],
     reflectionGroup: 'ground',
     visibleLamps: {
+      // The lamps of the Antechamber’s halls light their walls, seen through the arches off its dome.
       antechamber: ['west', 'east'],
       banquet: [
         'led_north',
@@ -57,6 +59,8 @@ const activations = {
     rooms: ['lobby', 'bastion', 'sienna', 'banquet', 'antechamber', 'salon', 'forge', 'corridor', 'oculus'],
     reflectionGroup: 'ground',
     visibleLamps: {
+      // Across the Lobby, the lunar hall shows through the Antechamber’s doorway.
+      antechamber: ['west', 'east'],
       lobby: [
         'chandelier_north',
         'chandelier_middle',
@@ -74,6 +78,8 @@ const activations = {
     rooms: ['lobby', 'salon', 'forge', 'vesper', 'antechamber', 'oculus'],
     reflectionGroup: 'ground',
     visibleLamps: {
+      // Across the Lobby, the solar hall shows through the Antechamber’s doorway.
+      antechamber: ['west', 'east'],
       lobby: [
         'chandelier_middle',
         'chandelier_south',
@@ -132,7 +138,8 @@ const activations = {
     rooms: ['antechamber', 'exhibition', 'oculus'],
     reflectionGroup: 'moonfall',
     visibleLamps: {
-      antechamber: 'west',
+      // Up the stairs, both halls of the Antechamber lie in line with the doorway onto them.
+      antechamber: ['east', 'west'],
       exhibition: [
         'tunnel_north',
         'tunnel_middle',

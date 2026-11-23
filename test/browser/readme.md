@@ -102,7 +102,7 @@ This standalone fixture re-encodes a PNG of noise with a transparent stripe as a
 bun run build && LIVE_TEST=true bun test ./test/antechamber.live.test.ts
 ```
 
-Walks from the lunar hall through both arches to the solar stair’s upper landing, back down and around the west return onto Moonfall’s upper flight. Checks the grounded player and actual tread heights in the mounted gallery. `LIVE_TARGET` can point to an existing build.
+Walks from the solar hall up its flight to the landing, back down, through both arches of the dome into the lunar hall and onto Moonfall’s upper flight. Checks the grounded player and actual tread heights in the mounted gallery. `LIVE_TARGET` can point to an existing build.
 
 ## Oculus keyboard traversal
 

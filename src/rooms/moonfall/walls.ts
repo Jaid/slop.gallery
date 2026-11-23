@@ -21,7 +21,7 @@ export default {
       },
     },
   }),
-  // The stairway from the Antechamber arrives near the north end of the east wall.
+  // The stairway from the Antechamber arrives in the middle of the east wall.
   east: planWall(moonfall.size, 'east', height, {
     holes: {
       stairway: {

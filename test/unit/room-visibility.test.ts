@@ -71,9 +71,9 @@ test('the fences only keep rooms enabled that the rooms they lie in can reach th
   }
 })
 test('a room shows the rooms behind the openings in view', () => {
-  // From the Vesper through both side doors of the Lobby into the Banquet, and through the Lobby’s glass wall into the Salon, but not down the stairs.
+  // From the Vesper through both side doors of the Lobby into the Banquet, through the Lobby’s glass wall into the Salon and, as far as the outlines of the openings in view tell, through the Antechamber onto the stairway down to Moonfall, though the arch into the lunar hall hides it, but no further.
   const vesper = visibleRooms('vesper', view([-14, 1.6, 3], [14, 1.6, 3]))
-  expect(['banquet', 'salon', 'moonfall'].filter(room => vesper.has(room as never))).toEqual(['banquet', 'salon'])
+  expect(['banquet', 'salon', 'moonfall'].filter(room => vesper.has(room as never))).toEqual(['banquet', 'salon', 'moonfall'])
   expect(['exhibition', 'lodge', 'corridor'].filter(room => vesper.has(room as never))).toEqual([])
   // The Salon’s glass wall shows the Lobby extension, and the Lobby’s shows the Salon.
   expect(visibleRooms('salon', view([16, 1.6, -20], [0, 1.6, -20])).has('lobby')).toBe(true)
@@ -90,9 +90,9 @@ test('a room shows the rooms behind the openings in view', () => {
   expect(lobby.has('bastion')).toBe(false)
   expect(lobby.has('lodge')).toBe(false)
   expect(lobby.has('antechamber')).toBe(true)
-  // The old sightline out of the south part no longer reaches the stair portal.
+  // From where a camera once saw the stairway out of the Lobby’s south part, the outlines of the openings in view still line up, though the arch into the lunar hall hides the stairway’s doorway now. The Lobby no longer keeps Moonfall enabled, so it stays hidden there.
   const reported: Vec3 = [-2.321, 1.62, 5.655]
-  expect(visibleRegions(['lobby'], viewProjection(reported, [5.248, 0.815, 13.195])).has('moonfall')).toBe(false)
+  expect(visibleRegions(['lobby'], viewProjection(reported, [5.248, 0.815, 13.195])).has('moonfall')).toBe(true)
   expect(whereaboutsAt(reported)).toEqual(['lobby', 'lobby-south'])
   expect(enabledRooms(whereaboutsAt(reported))).not.toContain('moonfall')
 })
