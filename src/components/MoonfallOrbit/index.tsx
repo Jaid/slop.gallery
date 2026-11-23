@@ -9,6 +9,7 @@ import Orbitable from '#component/Orbitable'
 import {useAmbienceEmitter} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
 import {AnimationClock} from '#src/lib/frozenTime.ts'
 import armillaryBandGeometry from '#src/lib/gallery/moonfall/ArmillaryBandGeometry.ts'
+import {ceilingBeam} from '#src/lib/gallery/moonfall/config.ts'
 import meteoriteGeometry from '#src/lib/gallery/moonfall/MeteoriteGeometry.ts'
 import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import {moonfallSculpture, sculptureLampOffset} from '#src/lib/gallery/moonfall/sculpture.ts'
@@ -22,7 +23,7 @@ const room = slopGallery.room('moonfall')
 // Below the ceiling’s beams, so orbiting never rises out of the room.
 const sculptureOrbit = {
   radius: 1.85,
-  ceilingY: room.floorY + 5.3,
+  ceilingY: room.floorY + ceilingBeam.bottomY,
   // The dark room melts away around the glowing rings.
   blur: 2,
 }

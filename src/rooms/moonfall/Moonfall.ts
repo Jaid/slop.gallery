@@ -3,10 +3,11 @@ import type {Vec3} from 'math'
 
 import {Geofence} from 'geofency'
 
+import {groundFenceY} from '#src/lib/gallery/floors.ts'
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
-import {moonfallCrater} from '#src/lib/gallery/moonfall/config.ts'
+import {moonfallCrater, moonfallHeight} from '#src/lib/gallery/moonfall/config.ts'
 import {craterTerrain} from '#src/lib/gallery/moonfall/CraterTerrain.ts'
-import {stairTurn, stairwayFootprint} from '#src/lib/gallery/staircase.ts'
+import {approachFootprints, stairTurn, stairwayFootprint} from '#src/lib/gallery/staircase.ts'
 
 import Room from '../base/Room.ts'
 import floorBox from '../lib/floorBox.ts'
@@ -22,19 +23,28 @@ import walls from './walls.ts'
 
 const {moonfall: plan} = lowerGallery
 const bottom = craterTerrain.lowest()
+const groundFloor = groundFenceY - lowerGallery.floorY
 
 /** Laid out around the middle of its floor plan, at the height of its slate floor. */
 export default class Moonfall extends Room {
-  // Reaches down to the deepest air in the crater.
-  override readonly air = floorBox(plan.size, bottom, 5.8 - bottom)
+  // Reaches from the deepest air in the crater up to the underside of the raised ceiling slab.
+  override readonly air = floorBox(plan.size, bottom, moonfallHeight - bottom)
   override readonly description = 'Down the stairs. Out of the ordinary.'
   override readonly fence = new Geofence([
-    // Everything under its floor plan, up to just over its ceiling.
+    // Everything under its floor plan, up into the ground-floor slab above.
     {
       ...footprint([this.air]),
-      ceiling: 6,
+      ceiling: groundFloor,
     },
-    // The stairway up to the Antechamber, at every height.
+    // The curved level approach at ground level over Moonfall’s ceiling.
+    ...approachFootprints.map(({x, z, x2, z2}) => ({
+      x: x - plan.center[0],
+      z: z - plan.center[1],
+      x2: x2 - plan.center[0],
+      z2: z2 - plan.center[1],
+      floor: groundFloor,
+    })),
+    // Both descending flights and the U-turn landing east of Moonfall’s east wall, at every height.
     {
       x: stairwayFootprint.x - plan.center[0],
       z: stairwayFootprint.z - plan.center[1],
@@ -42,7 +52,7 @@ export default class Moonfall extends Room {
       z2: stairwayFootprint.z2 - plan.center[1],
     },
   ])
-  override readonly height = 5.8
+  override readonly height = moonfallHeight
   override readonly id = 'moonfall'
   override readonly size = plan.size
   override readonly spawn = spawns['']
@@ -64,7 +74,7 @@ export default class Moonfall extends Room {
       volumetricSun: 0,
       walls,
       map,
-      // The upper flight and the near half of the landing, cut across the middle of the turn.
+      // The curved ground-level approach, upper flight and U-turn landing down to the turn’s elevation.
       upperMap: {
         from: stairTurn.top - lowerGallery.floorY,
         map: upperMap,

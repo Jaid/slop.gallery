@@ -41,16 +41,18 @@ export default class StairHandrailGeometry extends BufferGeometry {
       ...Array.from({length: easeSteps}, (_, i) => entry + arc + (i + 1) * step),
       entry + arc + exit,
     ].filter(distance => distance >= 0 && distance <= entry + arc + exit)
+    const {direction} = turn
     const stations = distances.map(distance => {
       const angle = Math.min(Math.max((distance - entry) / radius, 0), Math.PI)
       const along = distance < entry ? distance - entry : Math.max(distance - entry - arc, 0)
-      const normal = new Vector3(-Math.sin(angle), 0, Math.cos(angle))
-      const tangent = new Vector3(Math.cos(angle), 0, Math.sin(angle))
+      // Right-hand side of the tangent in xz, keeping outward winding whether the turn swings south or north.
+      const normal = new Vector3(-direction * Math.sin(angle), 0, Math.cos(angle))
+      const tangent = new Vector3(Math.cos(angle), 0, direction * Math.sin(angle))
       const grade = (height(distance + 0.0001) - height(distance - 0.0001)) / 0.0002
       const up = new Vector3(0, 1, 0)
       up.addScaledVector(tangent, -grade).normalize()
       return {
-        point: new Vector3(turn.center[0] + Math.sin(angle) * radius + tangent.x * along, height(distance), centerZ - Math.cos(angle) * radius),
+        point: new Vector3(turn.center[0] + Math.sin(angle) * radius + tangent.x * along, height(distance), centerZ - direction * Math.cos(angle) * radius),
         normal,
         up,
         distance,

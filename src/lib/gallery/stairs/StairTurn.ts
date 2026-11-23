@@ -12,14 +12,15 @@ export default class StairTurn {
   readonly outerRadius: number
   readonly position: Vec3
 
-  constructor(readonly center: readonly [number, number], readonly top: number, readonly radius: number, readonly width: number, readonly exitWidth = width) {
+  /** `direction` is 1 when the turn swings south from its entry to its exit, or −1 when it swings north. */
+  constructor(readonly center: readonly [number, number], readonly top: number, readonly radius: number, readonly width: number, readonly exitWidth = width, readonly direction: -1 | 1 = 1) {
     if (![...center, top, radius, width, exitWidth].every(Number.isFinite) || Math.min(width, exitWidth) <= 0 || radius <= (width + exitWidth) / 4) {
       throw new RangeError('A stair turn needs a finite center and elevation, positive width and room for its inner wall.')
     }
     this.innerRadius = radius - (width + exitWidth) / 4
     this.outerRadius = radius + (width + exitWidth) / 4
-    this.innerCenterZ = center[1] + (width - exitWidth) / 4
-    this.outerCenterZ = center[1] - (width - exitWidth) / 4
+    this.innerCenterZ = center[1] + direction * (width - exitWidth) / 4
+    this.outerCenterZ = center[1] - direction * (width - exitWidth) / 4
     this.position = [center[0] + radius, top, center[1]]
   }
 
@@ -32,7 +33,7 @@ export default class StairTurn {
   }
 
   point(angle: number, radius = this.radius): [number, number] {
-    return [this.center[0] + Math.sin(angle) * radius, this.centerAt(radius) - Math.cos(angle) * radius]
+    return [this.center[0] + Math.sin(angle) * radius, this.centerAt(radius) - this.direction * Math.cos(angle) * radius]
   }
 
   roofGeometry() {

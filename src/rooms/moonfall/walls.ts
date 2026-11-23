@@ -2,12 +2,13 @@ import type {RoomWall} from '../base/Room.ts'
 
 import roomOrigins from '#src/lib/gallery/layout.ts'
 import lowerGallery from '#src/lib/gallery/lowerGallery.ts'
-import staircase, {stairFlights, stairTurn} from '#src/lib/gallery/staircase.ts'
+import {moonfallHeight} from '#src/lib/gallery/moonfall/config.ts'
+import staircase, {approachWalls, stairFlights, stairTurn} from '#src/lib/gallery/staircase.ts'
 
 import {localWalls, planWall} from '../lib/walls.ts'
 
 const {moonfall, tunnel} = lowerGallery
-const height = 5.5
+const height = moonfallHeight - 0.3
 
 export default {
   north: planWall(moonfall.size, 'north', height, {
@@ -33,6 +34,10 @@ export default {
   }),
   south: planWall(moonfall.size, 'south', height),
   west: planWall(moonfall.size, 'west', height),
-  // The stairway’s walls, down both flights and around the turn between them.
-  ...localWalls('moonfall', roomOrigins.moonfall, [...stairFlights.flatMap(flight => [-1, 1].map(side => flight.wall(side))), ...stairTurn.walls()]),
+  // The curved approach walls and the stairway’s walls, down both flights and around the turn between them.
+  ...localWalls('moonfall', roomOrigins.moonfall, [
+    ...approachWalls(),
+    ...stairFlights.flatMap(flight => [-1, 1].map(side => flight.wall(side))),
+    ...stairTurn.walls(),
+  ]),
 } satisfies Record<string, RoomWall>
