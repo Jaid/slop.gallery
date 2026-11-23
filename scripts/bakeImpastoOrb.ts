@@ -3,13 +3,11 @@ import type {ImpastoBubble, ImpastoStrokeShape} from '#src/orbs/impasto/strokes.
 import * as path from 'forward-slash-path'
 import {Vector3} from 'three/webgpu'
 
-import {impastoStrokeShapes, strokeDistance} from '#src/orbs/impasto/strokes.ts'
+import {impastoStrokeShapes, strokeDistance, strokeSurfaceDistance} from '#src/orbs/impasto/strokes.ts'
 
 const help = `Usage: bun scripts/bakeImpastoOrb.ts
 
 Bakes what the Impasto Orb’s glass would otherwise work out on every page load from its dollops in src/orbs/impasto/strokes.ts – each dollop’s bounding box and the air bubbles between them – and writes them to src/orbs/impasto/baked.ts. Run it again after changing the dollops.`
-/** how near to a dollop a point counts as its paint, as near as the march stops at */
-const surface = 0.002
 /** what each box reaches out past the paint found in it, in orb radii, so the march starts ahead of it */
 const pad = 0.008
 /** a dollop’s coordinates: `u` along its arc (−1 to 1 from heel to tip), `a` across it in its widths and `h` up from its shell in its reach of thickness and lift */
@@ -56,7 +54,7 @@ export function bakeStrokeBox(shape: ImpastoStrokeShape) {
   }
   const box = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]
   sweep(shape, found, fineSteps, (_u, _a, _h, local, point) => {
-    if (strokeDistance(point, shape) >= surface) {
+    if (strokeDistance(point, shape) >= strokeSurfaceDistance) {
       return
     }
     for (let axis = 0; axis < 3; axis++) {
@@ -131,7 +129,6 @@ function sweep(shape: ImpastoStrokeShape, range: Range, steps: typeof coarseStep
     }
   }
 }
-/** Resolves with the source of `baked.ts`. */
 const main = () => {
   const boxes = impastoStrokeShapes.map(bakeStrokeBox)
   const bubbles = bakeBubbles(impastoStrokeShapes).map(({center, radius}) => [...center, radius].map(value => Math.round(value * 1e5) / 1e5))

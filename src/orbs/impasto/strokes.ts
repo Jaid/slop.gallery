@@ -2,6 +2,11 @@ import {Vector3} from 'three/webgpu'
 
 import {bakedBubbles, bakedStrokeBoxes} from './baked.ts'
 
+/** radius outside which the shader skips the paint entirely, in orb radii */
+export const strokeBoundRadius = 0.76
+/** distance at which the raymarch counts a hit, also included when baking the stroke boxes */
+export const strokeSurfaceDistance = 0.002
+
 export type ImpastoStroke = {
   across: Vector3
   along: Vector3
@@ -10,7 +15,6 @@ export type ImpastoStroke = {
   boxMax: Vector3
   boxMin: Vector3
   folded: number
-  layer: 'inner' | 'outer'
   lift: number
   normal: Vector3
   pigment: number
@@ -169,7 +173,6 @@ const outerStrokes: Array<ImpastoStrokeShape> = rawAntiprism.map((raw, index) =>
     arc: 0.274 + Math.sin(index * 2.3) * 0.01,
     bend: (index % 2 === 0 ? 1 : -1) * (0.043 + 0.008 * Math.sin(index * 2.9)),
     folded,
-    layer: 'outer' as const,
     lift: 0.071 + 0.008 * Math.cos(index * 2.1),
     pigment,
     seed: index * 1.87 + 0.6,
@@ -190,7 +193,6 @@ const innerStrokes: Array<ImpastoStrokeShape> = rawTetrahedron.map((raw, index) 
     arc: 0.198 + Math.sin(index * 2.4) * 0.008,
     bend: (index % 2 === 0 ? -1 : 1) * 0.03,
     folded,
-    layer: 'inner' as const,
     lift: 0.05,
     pigment,
     seed: (index + 8) * 2.03 + 0.4,

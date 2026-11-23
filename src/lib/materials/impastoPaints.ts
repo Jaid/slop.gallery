@@ -2,7 +2,7 @@ import type {Node} from 'three/webgpu'
 
 import {swatch} from './oilPaints.ts'
 
-/** the heavy-bodied paints the Impasto Orb is sculpted from, which its knife smears are slapped on in and its frame is buried under: a dusk over the sea, warm lights against deep cool shadows */
+/** the palette shared by the Impasto frame, its knife smears and the Paint Orb’s rosette */
 export const impastoPaints = {
   naplesYellow: '#f1c75b',
   cadmiumOrange: '#e8641e',
@@ -13,10 +13,9 @@ export const impastoPaints = {
 } as const
 export type ImpastoPaint = keyof typeof impastoPaints
 
-/** the Impasto Orb’s paints in the order its smears and its frame name them by, as an index into this */
+/** pigment order in the frame and smear shaders */
 export const impastoOrder = ['naplesYellow', 'cadmiumOrange', 'alizarinCrimson', 'prussianBlue', 'cobaltTeal', 'titaniumWhite'] as const satisfies ReadonlyArray<ImpastoPaint>
 
-/** The index of `paint` in {@link impastoOrder}. */
 export function impastoIndex(paint: ImpastoPaint) {
   return impastoOrder.indexOf(paint)
 }

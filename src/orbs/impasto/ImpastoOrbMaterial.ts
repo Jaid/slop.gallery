@@ -6,7 +6,7 @@ import {array, atan, Break, exp, float, Fn, If, Loop, max, min, mix, smoothstep,
 import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
 import {rgb, spinAroundY} from '../lib/fill.ts'
 import {orbNoise} from '../lib/noise.ts'
-import {impastoBubbles, impastoPalette, impastoStrokes} from './strokes.ts'
+import {impastoBubbles, impastoPalette, impastoStrokes, strokeBoundRadius, strokeSurfaceDistance} from './strokes.ts'
 
 /** Distinct loop name keeps the inner raymarch index from shadowing the outer stroke loop index in TSL array lookups. */
 const march = {
@@ -121,10 +121,9 @@ export default class ImpastoOrbMaterial extends OrbGlassMaterial {
     const hitShapeA = vec4(0.57, 0.31, 0.2, 0.09).toVar('impastoHitShapeA')
     const hitShapeB = vec4(0, 0, 1, 0).toVar('impastoHitShapeB')
     const hitPigments = vec2(0, 0).toVar('impastoHitPigments')
-    // Coarse bounding sphere around the entire paint sculpture lets rim rays skip all stroke loops.
     const approach = origin.dot(direction).negate()
     const missSq = origin.add(direction.mul(approach)).lengthSq()
-    If(missSq.lessThan(0.76 ** 2), () => {
+    If(missSq.lessThan(strokeBoundRadius ** 2), () => {
       Loop(impastoStrokes.length, ({i}) => {
         const along = longs.element(i)
         const across = widths.element(i)
@@ -145,7 +144,7 @@ export default class ImpastoOrbMaterial extends OrbGlassMaterial {
           Loop(march, () => {
             const point = o.add(d.mul(depth)).toVar()
             const distance = strokeDistance(point, shapeA, shapeB).toVar()
-            If(distance.lessThan(0.002), () => {
+            If(distance.lessThan(strokeSurfaceDistance), () => {
               nearest.assign(depth)
               covered.assign(1)
               hitLocal.assign(point)
