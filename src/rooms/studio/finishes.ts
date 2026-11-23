@@ -90,6 +90,11 @@ export const studioWalls = {
     const [{default: VelvetWallMaterial}, {createArenaTrim}] = await Promise.all([import('#src/lib/materials/VelvetWallMaterial.ts'), import('#component/ArenaShell')])
     return () => wall(new VelvetWallMaterial, createArenaTrim())
   },
+  // Smiling daisy stickers on terracotta paper over the Cell’s walnut baseboard.
+  async flowers() {
+    const [{default: FlowerStickerWallpaperMaterial}, {default: JoineryWoodMaterial}] = await Promise.all([import('#src/lib/materials/FlowerStickerWallpaperMaterial.ts'), import('#src/lib/materials/JoineryWoodMaterial.ts')])
+    return () => wall(new FlowerStickerWallpaperMaterial, new JoineryWoodMaterial({grain: 'x'}))
+  },
 } satisfies Record<string, () => Promise<() => StudioWallFinish>>
 
 /**
