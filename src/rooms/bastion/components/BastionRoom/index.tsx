@@ -10,11 +10,10 @@ import TimberTransition from '#component/TimberTransition'
 import {bastionApproach, bastionCurve, bastionGateLantern, bastionMouth, bastionTransition} from '#src/lib/gallery/bastion.ts'
 import {bastionLink, bastionLinkGate, climbMouthHollow, lodgeSpur, lodgeSpurGrille} from '#src/lib/gallery/bastionNetwork.ts'
 import {climbApproach, climbApproachLantern, climbElbowLantern, climbHairpin, climbMouth, climbRun} from '#src/lib/gallery/climb.ts'
-import {lodgeFloorPlanks} from '#src/lib/gallery/lodge.ts'
 import lodgeTimber from '#src/lib/gallery/lodgeTimber.ts'
+import useLodgeFloor from '#src/lib/gallery/useLodgeFloor.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 import LodgeWoodMaterial from '#src/lib/materials/LodgeWoodMaterial.ts'
-import PlankMaterial from '#src/lib/materials/PlankMaterial.ts'
 import BastionArmor from '#src/rooms/bastion/components/BastionArmor/index.tsx'
 import BastionCistern from '#src/rooms/bastion/components/BastionCistern/index.tsx'
 import BastionCrater from '#src/rooms/bastion/components/BastionCrater/index.tsx'
@@ -31,8 +30,8 @@ export default function BastionRoom({material, wood}: {
 }) {
   const lining = useDisposable(useMemo(() => lightIndoors(new LodgeWoodMaterial), []))
   const timber = useDisposable(useMemo(() => lightIndoors(new MeshStandardNodeMaterial(lodgeTimber(wood))), [wood]))
-  // The Lodge’s plank floor, continued board for board into the timber transition.
-  const floor = useDisposable(useMemo(() => lightIndoors(new PlankMaterial(lodgeFloorPlanks)), []))
+  // The Lodge’s plank floor, continued board for board into the timber transition, its mirror too.
+  const floor = useLodgeFloor()
   return <group name='bastion-room'>
     <CoveredPassage hollow={climbMouthHollow} material={material} mounts={elbowMounts} passage={climbMouth} />
     <CoveredRoute material={material} passage={climbHairpin} />

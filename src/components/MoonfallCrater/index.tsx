@@ -1,7 +1,7 @@
 import {RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
-import {useEffect, useMemo} from 'react'
+import {useMemo} from 'react'
 import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -11,18 +11,12 @@ import CraterGeometry from '#src/lib/gallery/moonfall/CraterGeometry.ts'
 import {fencePosts, fenceShape} from '#src/lib/gallery/moonfall/fence.ts'
 import {moonfallRope, moonfallSlate, moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import StanchionRingGeometry from '#src/lib/gallery/railings/StanchionRingGeometry.ts'
-import {useGallery} from '#src/lib/gallery/store.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import CraterMaterial from '#src/lib/materials/CraterMaterial.ts'
-import {setFloorReflectionHeight} from '#src/lib/materials/FloorMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
 import SlateFloorMaterial from '#src/lib/materials/SlateFloorMaterial.ts'
 import VelvetRopeMaterial from '#src/lib/materials/VelvetRopeMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
-import {floorMirror} from '#src/worlds/gallery/activations.ts'
-import slopGallery from '#src/worlds/gallery/index.ts'
-
-const slateHeight = slopGallery.room('moonfall').floorY
 
 export default function MoonfallCrater() {
   const geometry = useDisposable(useMemo(() => new CraterGeometry, []))
@@ -42,12 +36,6 @@ export default function MoonfallCrater() {
     style: moonfallSlate(moonfallTheme),
   }), [floorReflections]))
   const reflection = slate.reflectionTarget
-  // The fences that see the slate rather than the upper floors mirror its plane.
-  const mirror = useGallery(state => floorMirror(state.whereabouts))
-  useEffect(() => {
-    setFloorReflectionHeight(mirror === 'moonfall' ? slateHeight : 0)
-  }, [mirror])
-  useEffect(() => () => setFloorReflectionHeight(null), [])
   return <group name='moonfall-impact-crater'>
     <RigidBody colliders={false} type='fixed'>
       {collision.map((args, i) => <MeshSurfaceCollider key={i} args={args} />)}

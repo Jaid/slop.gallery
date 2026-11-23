@@ -2,7 +2,7 @@ import type {PlankOptions} from './PlankMaterial.ts'
 
 import {Material, NodeMaterial} from 'three/webgpu'
 
-import lodge, {lodgeFloorPlanks} from '../gallery/lodge.ts'
+import lodge from '../gallery/lodge.ts'
 import lodgeInterior from '../gallery/lodgeInterior/layout.ts'
 import FieldstoneMaterial from './FieldstoneMaterial.ts'
 import LeatherMaterial from './LeatherMaterial.ts'
@@ -31,10 +31,9 @@ const ceilingPlanks: PlankOptions = {
     seam: '#120a05',
   },
 }
-/** Every surface of the Lodge interior, created once and disposed together. */
+/** Every surface of the Lodge interior but its floor, which mirrors the room by the graphics mode (see `useLodgeFloor`), created once and disposed together. */
 export default class LodgeMaterials {
   readonly ceiling = new PlankMaterial(ceilingPlanks)
-  readonly floor = new PlankMaterial(lodgeFloorPlanks)
   readonly iron = new WroughtIronMaterial
   readonly leather = new LeatherMaterial
   readonly logWall = new LogWallMaterial({floorY: lodge.floorY})

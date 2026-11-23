@@ -1,6 +1,7 @@
 import type LodgeMaterials from '#src/lib/materials/LodgeMaterials.ts'
 
 import {ConvexHullCollider, RigidBody} from '@react-three/rapier'
+import Branch from 'branch-component'
 import {Shape, Vector2} from 'three/webgpu'
 
 import LodgeCeiling from '#component/LodgeCeiling'
@@ -12,6 +13,7 @@ import Box from '#src/components/Scene/primitives.tsx'
 import {slabHulls} from '#src/lib/gallery/floorPolygons.ts'
 import lodge, {lodgeOutline} from '#src/lib/gallery/lodge.ts'
 import lodgeInterior from '#src/lib/gallery/lodgeInterior/layout.ts'
+import useLodgeFloor from '#src/lib/gallery/useLodgeFloor.ts'
 
 const {fireplace} = lodgeInterior
 /** Interior face of the room walls, measured from the room’s center. */
@@ -34,7 +36,7 @@ const floorHulls = slabHulls(plan, -floorSlab.depth, 0)
 const ceilingHulls = slabHulls(plan, lodge.height, lodge.height + ceilingSlab.depth)
 
 /**
- * The Lodge: log walls with chinking and a half-octagon bay to the north, a wide-plank oak floor, a smoke-darkened board ceiling on hewn beams and a fieldstone fireplace, furnished around the hearth.
+ * The Lodge: log walls with chinking and a half-octagon bay to the north, an oiled wide-plank oak floor that faintly mirrors the room in heavy mode, a smoke-darkened board ceiling on hewn beams and a fieldstone fireplace, furnished around the hearth.
  *
  * The walls themselves are drawn by `WallSurface` with `materials.logWall`; this adds everything inside them.
  */
@@ -47,7 +49,7 @@ export default function LodgeRoom({materials}: {materials: LodgeMaterials}) {
   return <group name='lodge-room' position={[lodge.center[0], lodge.floorY, lodge.center[1]]}>
     <RigidBody colliders={false} type='fixed'>
       {[...floorHulls, ...ceilingHulls].map((corners, i) => <ConvexHullCollider key={i} args={[corners]} />)}
-      <mesh castShadow material={materials.floor} name='lodge-floor' position={[0, -floorSlab.depth, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}><extrudeGeometry args={[planShape, floorSlab]} /></mesh>
+      <Floor />
       <mesh castShadow material={materials.ceiling} name='lodge-ceiling' position={[0, lodge.height, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}><extrudeGeometry args={[planShape, ceilingSlab]} /></mesh>
     </RigidBody>
     <LodgeCeiling material={materials.timber} />
@@ -67,4 +69,15 @@ export default function LodgeRoom({materials}: {materials: LodgeMaterials}) {
     <LodgeFurnishings materials={materials} />
     <LodgeHatchetHook material={materials.iron} />
   </group>
+}
+
+/** The slab under the room and its bay, in the room’s frame, with the planks’ mirror where they have one. */
+function Floor() {
+  const floor = useLodgeFloor()
+  const reflection = floor.reflectionTarget
+  return <mesh castShadow material={floor} name='lodge-floor' position={[0, -floorSlab.depth, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+    <extrudeGeometry args={[planShape, floorSlab]} />
+    {/* The slab is extruded up its z axis, which its top faces along. */}
+    <Branch if={reflection}><primitive object={reflection!} position-z={floorSlab.depth} /></Branch>
+  </mesh>
 }

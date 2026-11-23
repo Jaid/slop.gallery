@@ -64,7 +64,7 @@ test('the gallery’s dump tells its fences apart by how far their boxes reach',
   expect(boxes('exhibition')).toHaveLength(3)
   expect(boxes('corridor')).toHaveLength(52)
   // its other fences: the Lobby’s parts from the slab up like the Lobby, the stairway over Moonfall’s ceiling and, beyond its hall, at every height, the parts of the Bastion in the Bastion’s own boxes around them, and the Corridor’s hall abreast of the Lodge’s window between heights
-  expect(dump.slice(slopGallery.rooms.length).map(({id}) => id)).toEqual(['lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'corridor-window'])
+  expect(dump.slice(slopGallery.rooms.length).map(({id}) => id)).toEqual(['lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'bastion-seeing_lodge_floor', 'corridor-window', 'corridor-seeing_lodge_floor'])
   expect(boxes('lobby-north')).toEqual([{
     x: -8,
     x2: 8,
@@ -112,7 +112,7 @@ test('the fences at a position are all that hold it, the rooms’ first, by defa
   // under the Lobby’s glazed floor
   expect(getGeofences(toPosition([0, -5, -27]))).toEqual(['oculus'])
   // in the knight’s alley, the Bastion’s blind branch beside the Lodge, which a fence of its own marks
-  expect(getGeofences(toPosition([-16.93, -4.1, -33]))).toEqual(['bastion', 'bastion-knight_alley'])
+  expect(getGeofences(toPosition([-16.93, -4.1, -33]))).toEqual(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])
   // in the Bastion’s cistern, and on the turn of the stairway down to Moonfall
   expect(getGeofences(toPosition([-18.15, 1.8, -41]))).toEqual(['bastion', 'bastion-cistern'])
   expect(getGeofences(toPosition([18.5, -3.1, 15]))).toEqual(['moonfall', 'moonfall-stairs'])

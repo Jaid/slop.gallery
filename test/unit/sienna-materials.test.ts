@@ -1,7 +1,7 @@
 import {describe, expect, test} from 'bun:test'
 
 import {wallFace, wallOpeningTrim} from '../../src/lib/gallery/architectureDimensions.ts'
-import {lodgeFloorPlanks} from '../../src/lib/gallery/lodge.ts'
+import {lodgeFloorOil, lodgeFloorPlanks} from '../../src/lib/gallery/lodge.ts'
 import {siennaCeilingPlanks, siennaRugSize, siennaRugThickness} from '../../src/lib/gallery/sienna.ts'
 import {siennaWainscot} from '../../src/lib/gallery/siennaWainscot.ts'
 import DamaskWallpaperMaterial, {damaskCoverage} from '../../src/lib/materials/DamaskWallpaperMaterial.ts'
@@ -89,8 +89,7 @@ describe('the Sienna’s floor', () => {
     expect(siennaFloorPlanks.figure!.meander).toBeLessThan(9)
     expect(siennaFloorPlanks.knots).toBeLessThan(lodgeFloorPlanks.knots)
     expect('figure' in lodgeFloorPlanks).toBe(false)
-    for (const options of [lodgeFloorPlanks, siennaCeilingPlanks]) {
-      const material = new PlankMaterial(options)
+    for (const material of [new PlankFloorMaterial(lodgeFloorPlanks, false, lodgeFloorOil), new PlankMaterial(siennaCeilingPlanks)]) {
       try {
         expect(material.colorNode).not.toBeNull()
         expect(material.normalNode).not.toBeNull()

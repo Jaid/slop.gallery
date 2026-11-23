@@ -5,12 +5,12 @@ import {expect, test} from 'bun:test'
 import {Geofence, RelationalGeofence} from 'geofency'
 import {Box3} from 'three/webgpu'
 
-import {apseOpeningPoint, apseOpenings, bastionCurve, bastionLinkStripZ} from '../../src/lib/gallery/bastion.ts'
-import {lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
+import {apseOpeningPoint, apseOpenings, bastionApproach, bastionCurve, bastionLinkStripZ} from '../../src/lib/gallery/bastion.ts'
+import {bastionLink, lodgeSpur, lodgeSpurArmor, lodgeSpurEnd} from '../../src/lib/gallery/bastionNetwork.ts'
 import {cistern, cisternFloor} from '../../src/lib/gallery/cistern/cistern.ts'
 import {cisternWindow} from '../../src/lib/gallery/cistern/window.ts'
 import {climbApproach} from '../../src/lib/gallery/climb.ts'
-import corridor, {corridorLanding, corridorLandingPaving, corridorStairs} from '../../src/lib/gallery/corridor.ts'
+import corridor, {corridorBayPaving, corridorEndZ, corridorLanding, corridorLandingPaving, corridorStairs, lodgeThreshold} from '../../src/lib/gallery/corridor.ts'
 import {insidePolygon, polygonBounds} from '../../src/lib/gallery/floorPolygons.ts'
 import {groundFenceY} from '../../src/lib/gallery/floors.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
@@ -136,7 +136,7 @@ class FencedWorld extends World<Cell> {
 test('a room’s other fences come after the rooms’, under the room’s global ids, where the world places the room, and never stand in for a room', () => {
   expect(knottingham.geofences.keys().toArray()).toEqual(['arena'])
   expect(sandbox.geofences.keys().toArray()).toEqual(['cell'])
-  expect(slopGallery.geofences.keys().toArray()).toEqual([...slopGallery.rooms.map(room => room.id), 'lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'corridor-window'])
+  expect(slopGallery.geofences.keys().toArray()).toEqual([...slopGallery.rooms.map(room => room.id), 'lobby-north', 'lobby-middle', 'lobby-south', 'moonfall-stairs', 'bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'bastion-seeing_lodge_floor', 'corridor-window', 'corridor-seeing_lodge_floor'])
   // a fence reaching beyond the Cell and one far outside of it
   const corner = new Geofence([{
     x: 0,
@@ -181,7 +181,8 @@ test('the gallery’s bastion-knight_alley fences the Bastion’s blind branch b
       const side = across * (width / 2 - 0.4)
       for (const height of [0.05, 0.9, 1.75, 2.7]) {
         const position: Vec3 = [x - Math.sin(heading) * side, y + height, z + Math.cos(heading) * side]
-        expect(slopGallery.geofences.getMatches(position)).toEqual(['bastion', 'bastion-knight_alley'])
+        // The Lodge’s east window looks into it, so wherever the Bastion sees the Lodge’s planks takes it in too.
+        expect(slopGallery.geofences.getMatches(position)).toEqual(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])
         expect(slopGallery.roomAt(position)?.id).toBe('bastion')
       }
     }
@@ -200,7 +201,8 @@ test('the gallery’s bastion-knight_alley fences the Bastion’s blind branch b
   expect(endZ).toBe(lodgeSpurEnd.center[2])
   expect(fence.contains([endX, endY, endZ + 0.01])).toBe(true)
   expect(fence.contains([endX, endY, endZ - 0.01])).toBe(false)
-  expect(slopGallery.geofences.getMatches([endX, endY, endZ - 1])).toEqual(['bastion'])
+  // Behind it, the run looks down the approach to the Lodge.
+  expect(slopGallery.geofences.getMatches([endX, endY, endZ - 1])).toEqual(['bastion', 'bastion-seeing_lodge_floor'])
   // neither its walls’ far sides, nor the Lodge behind its side window, nor the Forge’s vestibule over its vault, nor the ground under it
   for (const side of [-1, 1]) {
     expect(fence.contains([endX + side * (width / 2 + 0.01), endY, endZ + 2])).toBe(false)
@@ -397,11 +399,11 @@ test('the gallery’s bastion-gate fences the Bastion’s curve behind the gate 
       return x >= cx - 1e-9 && x2 <= cx2 + 1e-9 && y >= cy - 1e-9 && y2 <= cy2 + 1e-9 && z >= cz - 1e-9 && z2 <= cz2 + 1e-9
     })).toBe(true)
   }
-  // behind the gate and both windows, where they look out over the platform
+  // behind the gate and both windows, where they look out over the platform, and down the curve to the Lodge too
   const platformY = oculusPlatform.position[1] + oculusPlatform.size[1] / 2
   for (const opening of apseOpenings) {
     const [x, z] = apseOpeningPoint(opening, 1.2)
-    expect(slopGallery.geofences.getMatches([x, platformY + 0.9, z])).toEqual(['bastion', 'bastion-gate'])
+    expect(slopGallery.geofences.getMatches([x, platformY + 0.9, z])).toEqual(['bastion', 'bastion-gate', 'bastion-seeing_lodge_floor'])
   }
   // neither the apse in front of the gate, nor the floor under the curve, nor anything over its vault
   const behindGateZ = gateZ - 2
@@ -447,5 +449,101 @@ test('the gallery’s corridor-window fences the Corridor’s long hall abreast 
   for (const room of slopGallery.rooms) {
     const [x, y, z] = room.spawn.position
     expect(fence.contains([x, y + 0.9, z])).toBe(false)
+  }
+})
+/** where a body standing on the floor at the height reaches above it: its feet, its middle, its eyes and its head in a jump */
+const body = (x: number, y: number, z: number) => [0.05, 0.9, 1.75, 2.7].map((height): Vec3 => [x, y + height, z])
+test('the gallery’s bastion-seeing_lodge_floor fences wherever the Bastion sees the Lodge’s planks, within the Bastion’s fence: down the approach and round the curve to the crown of the Oculus’ apse, the mouth of the link and the knight’s alley', () => {
+  const fence = slopGallery.geofences.get('bastion-seeing_lodge_floor')!
+  const bastion = slopGallery.room('bastion').fence
+  // the approach from the curve to the Lodge’s east doorway, from wall to wall
+  const [[fromX, approachZ], [toX]] = bastionApproach.path
+  for (let x = fromX + 0.05; x < toX; x += 0.1) {
+    for (const across of [-1, 0, 1]) {
+      for (const position of body(x, lodge.floorY, approachZ + across * (bastionApproach.width / 2 - 0.4))) {
+        expect(fence.contains(position)).toBe(true)
+        expect(slopGallery.roomAt(position)?.id).toBe('bastion')
+      }
+    }
+  }
+  // along the curve: in it down to the crown of the apse, well past the crown not
+  const {route} = bastionCurve
+  let curve = 0
+  for (let along = 0.05; along < route.length; along += 0.1) {
+    const {point: [x, z], y} = route.at(along)
+    if (Math.abs(x) < 5) {
+      continue
+    }
+    for (const position of body(x, y, z)) {
+      expect(`${x.toFixed(2)}, ${z.toFixed(2)}: ${fence.contains(position)}`).toBe(`${x.toFixed(2)}, ${z.toFixed(2)}: ${x < 0}`)
+      curve += Number(x < 0)
+    }
+  }
+  expect(curve).toBeGreaterThan(300)
+  // half a meter into the link, from its mouth in the curve’s south wall
+  const {route: link} = bastionLink
+  const {point: [linkX, linkZ], y: linkY} = [0.5, link.length - 0.5].map(along => link.at(along)).toSorted((a, b) => a.point[1] - b.point[1])[0]
+  for (const position of body(linkX, linkY, linkZ)) {
+    expect(fence.contains(position)).toBe(true)
+  }
+  // the knight’s alley, from its doorway to its closing wall
+  for (let along = 0.05; along < lodgeSpur.route.length; along += 0.1) {
+    const {point: [x, z], y} = lodgeSpur.route.at(along)
+    for (const position of body(x, y, z)) {
+      expect(fence.contains(position)).toBe(true)
+    }
+  }
+  // not the climb over the Lodge toward the Forge, whose floor mirrors the ground level’s plane, nor the Lodge itself
+  for (let along = 0.05; along < climbApproach.route.length; along += 0.5) {
+    const {point: [x, z], y} = climbApproach.route.at(along)
+    expect(fence.contains([x, y + 0.9, z])).toBe(false)
+  }
+  expect(fence.contains([lodge.center[0], lodge.floorY + 0.9, lodge.center[1]])).toBe(false)
+  // Its boxes are the Bastion’s own, so the Bastion’s fence holds all of it.
+  for (const box of fence.boxes) {
+    const [x, x2, y, y2, z, z2] = sides(box).map(([, value]) => value)
+    expect(bastion.boxes.some(candidate => {
+      const [cx, cx2, cy, cy2, cz, cz2] = sides(candidate).map(([, value]) => value)
+      return x >= cx - 1e-9 && x2 <= cx2 + 1e-9 && y >= cy - 1e-9 && y2 <= cy2 + 1e-9 && z >= cz - 1e-9 && z2 <= cz2 + 1e-9
+    })).toBe(true)
+  }
+})
+test('the gallery’s corridor-seeing_lodge_floor fences the Corridor round the Lodge’s bay, which looks back through the doorway into the bay, within the Corridor’s fence and up to the Lodge’s threshold', () => {
+  const fence = slopGallery.geofences.get('corridor-seeing_lodge_floor')!
+  let inside = 0
+  for (const polygon of corridorBayPaving) {
+    const {center: [centerX, centerZ], size: [width, depth]} = polygonBounds(polygon)
+    for (let x = centerX - width / 2 + 0.005; x < centerX + width / 2; x += 0.2) {
+      for (let z = centerZ - depth / 2 + 0.005; z < centerZ + depth / 2; z += 0.2) {
+        if (!insidePolygon(polygon, x, z)) {
+          continue
+        }
+        for (const height of [0.05, 0.9, 1.75, 2.7]) {
+          // The box round the Lodge’s bay takes in a corner of the diagonal, where the player is in the Lodge, whose planks the mirror shows anyway.
+          const position: Vec3 = [x, corridor.floorY + height, z]
+          expect(slopGallery.geofences.getMatches(position)).toEqual(slopGallery.room('lodge').fence.contains(position) ? ['lodge', 'corridor'] : ['corridor', 'corridor-seeing_lodge_floor'])
+          inside++
+        }
+      }
+    }
+  }
+  expect(inside).toBeGreaterThan(500)
+  // not the Lodge’s threshold beyond it, nor the hall down the Lodge’s west side, nor the ground under it or anything over its crown
+  const [thresholdX, thresholdZ] = lodgeThreshold.center
+  expect(slopGallery.geofences.getMatches([thresholdX, corridor.floorY + 0.9, thresholdZ])).toEqual(['lodge'])
+  expect(fence.contains([corridor.center[0], corridor.floorY + 0.9, corridor.center[1]])).toBe(false)
+  expect(fence.contains([thresholdX, corridor.floorY - 1.5, corridorEndZ - 1])).toBe(false)
+  expect(fence.contains([thresholdX, corridor.floorY + corridor.height + 1, corridorEndZ - 1])).toBe(false)
+  // The Corridor’s fence holds all of it.
+  const corridorFence = slopGallery.room('corridor').fence
+  for (const box of fence.boxes) {
+    const [x1, x2, y1, y2, z1, z2] = sides(box).map(([, value]) => value)
+    for (const x of [x1, x2]) {
+      for (const z of [z1, z2]) {
+        for (const y of [y1, y2]) {
+          expect(corridorFence.contains([x, y, z])).toBe(true)
+        }
+      }
+    }
   }
 })

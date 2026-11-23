@@ -5,14 +5,19 @@ import {afterAll, describe, expect, test} from 'bun:test'
 import {AmbientLight, DirectionalLight, DoubleSide, HemisphereLight, Material, Mesh, MeshBasicMaterial, PointLight, Raycaster, Vector3} from 'three/webgpu'
 
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
-import lodge, {lodgeBay, lodgeOutline} from '../../src/lib/gallery/lodge.ts'
+import {bastionApproach} from '../../src/lib/gallery/bastion.ts'
+import {corridorPassage} from '../../src/lib/gallery/corridor.ts'
+import lodge, {lodgeBay, lodgeFloorOil, lodgeFloorPlanks, lodgeOutline} from '../../src/lib/gallery/lodge.ts'
 import lodgeInterior, {lodgeFurnitureColliders} from '../../src/lib/gallery/lodgeInterior/layout.ts'
 import LodgeCeilingGeometry from '../../src/lib/gallery/lodgeInterior/LodgeCeilingGeometry.ts'
 import UpholsteredSeatGeometry from '../../src/lib/gallery/lodgeInterior/UpholsteredSeatGeometry.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
 import {IndoorLightsNode, reachesIndoors} from '../../src/lib/materials/lights/index.ts'
 import LodgeMaterials from '../../src/lib/materials/LodgeMaterials.ts'
+import PlankFloorMaterial from '../../src/lib/materials/PlankFloorMaterial.ts'
 import PlankMaterial from '../../src/lib/materials/PlankMaterial.ts'
+import {floorMirror} from '../../src/worlds/gallery/activations.ts'
+import slopGallery from '../../src/worlds/gallery/index.ts'
 
 test('every Lodge material is lit only by indoor lights and builds its surface nodes', () => {
   const materials = new LodgeMaterials
@@ -22,13 +27,41 @@ test('every Lodge material is lit only by indoor lights and builds its surface n
     const lightsNodes = new Set(all.map(material => (material as NodeMaterial).lightsNode))
     expect(lightsNodes.size).toBe(1)
     expect([...lightsNodes][0]).toBeInstanceOf(IndoorLightsNode)
-    for (const material of [materials.floor, materials.ceiling, materials.logWall, materials.stone, materials.timber, materials.leather, materials.rug, materials.iron]) {
+    for (const material of [materials.ceiling, materials.logWall, materials.stone, materials.timber, materials.leather, materials.rug, materials.iron]) {
       expect(material.colorNode).not.toBeNull()
       expect(material.normalNode).not.toBeNull()
     }
-    expect(materials.floor).toBeInstanceOf(PlankMaterial)
+    expect(materials.ceiling).toBeInstanceOf(PlankMaterial)
   } finally {
     materials.dispose()
+  }
+})
+test('the Lodge’s oiled planks faintly mirror the room in heavy mode through fully rough boards, keep their matte boards in fast mode, and every floor of them lies in the plane the gallery mirrors for the Lodge', () => {
+  const heavy = new PlankFloorMaterial(lodgeFloorPlanks, true, lodgeFloorOil)
+  const fast = new PlankFloorMaterial(lodgeFloorPlanks, false, lodgeFloorOil)
+  try {
+    expect(heavy.reflectionTarget).not.toBeNull()
+    expect(fast.reflection).toBeNull()
+    expect(fast.reflectionTarget).toBeNull()
+    expect(heavy.roughness).toBe(1)
+    expect(fast.roughness).toBe(0.62)
+    for (const material of [heavy, fast]) {
+      expect(material.envMapIntensity).toBe(0.25)
+    }
+    expect(lodgeFloorOil.reflection.strength).toBeLessThanOrEqual(0.1)
+    expect(heavy.reflectionBlur.value).toBeGreaterThan(0)
+  } finally {
+    heavy.dispose()
+    fast.dispose()
+  }
+  const plane = slopGallery.room('lodge').floorY
+  expect(plane).toBe(lodge.floorY)
+  // the room’s slab, the threshold in the Corridor’s doorway and the Bastion’s timber transition
+  for (const floorY of [lodge.floorY, corridorPassage.floorY, bastionApproach.floorY]) {
+    expect(Math.abs(floorY - plane)).toBeLessThan(0.01)
+  }
+  for (const fences of [['lodge'], ['corridor', 'corridor-seeing_lodge_floor'], ['bastion', 'bastion-seeing_lodge_floor']]) {
+    expect(floorMirror(fences)).toBe('lodge')
   }
 })
 test('the gallery’s sun stays outside while lamps, fire and fill lights reach indoors', () => {

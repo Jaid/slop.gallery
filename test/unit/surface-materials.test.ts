@@ -4,6 +4,7 @@ import {expect, test} from 'bun:test'
 
 import {PerspectiveCamera, Texture} from 'three/webgpu'
 
+import {lodgeFloorOil, lodgeFloorPlanks} from '../../src/lib/gallery/lodge.ts'
 import {moonfallPalette, moonfallSlate} from '../../src/lib/gallery/moonfall/palette.ts'
 import ArchitecturalPlasterMaterial from '../../src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import EndGrainMaterial from '../../src/lib/materials/forge/EndGrainMaterial.ts'
@@ -18,6 +19,7 @@ import {getGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
 /** every kind of floor, procedural but for the wood, which takes a texture */
 const floors: Array<[string, (reflections: boolean) => FloorMaterial]> = [
   ['plank', reflections => new PlankFloorMaterial(siennaFloorPlanks, reflections)],
+  ['oiled plank', reflections => new PlankFloorMaterial(lodgeFloorPlanks, reflections, lodgeFloorOil)],
   ['checkered marble', reflections => new CheckeredMarbleFloorMaterial({
     origin: [0, 0],
     tile: 1,

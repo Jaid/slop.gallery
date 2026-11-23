@@ -1,9 +1,10 @@
 import {Geofence} from 'geofency'
 import {Box3} from 'three/webgpu'
 
-import {apseOpeningPoint, apseOpenings, bastionCurve, bastionOrigin} from '#src/lib/gallery/bastion.ts'
-import {bastionNetwork, lodgeSpur} from '#src/lib/gallery/bastionNetwork.ts'
+import {apseOpeningPoint, apseOpenings, bastionApproach, bastionCurve, bastionOrigin} from '#src/lib/gallery/bastion.ts'
+import {bastionLink, bastionNetwork, lodgeSpur} from '#src/lib/gallery/bastionNetwork.ts'
 import {cisternAir} from '#src/lib/gallery/cistern/cistern.ts'
+import lodge from '#src/lib/gallery/lodge.ts'
 
 import chunkBoxes from '../lib/chunkBoxes.ts'
 import footprint from '../lib/footprint.ts'
@@ -16,16 +17,20 @@ const passages = chunkBoxes(bastionNetwork.filter(passage => passage !== lodgeSp
 const alley = chunkBoxes(lodgeSpur.chunks(slack), bastionOrigin)
 const cistern = chunkBoxes([cisternAir], bastionOrigin)
 export const bastionAir = [...passages, ...alley, ...cistern]
-
+/** the band the approach runs along toward the Lodge’s east doorway, from wall to wall and as far again past them as the passages’ air boxes reach, in the museum’s meters */
+const approachBand = [lodge.tunnelZ - bastionApproach.width / 2 - slack, lodge.tunnelZ + bastionApproach.width / 2 + slack] as const
+/** The approach and, of the curve and the link, every chunk beginning west of the crown of the Oculus’ apse and reaching into the band the approach runs along, which looks down it through the Lodge’s east doorway. */
+const lodgeView = chunkBoxes([...bastionApproach.chunks(slack), ...[bastionCurve, bastionLink].flatMap(passage => passage.chunks(slack)).filter(({min, max}) => min[0] < bastionOrigin[0] && max[2] > approachBand[0] && min[2] < approachBand[1])], bastionOrigin)
 /** From a meter under the floor to half a meter over the vault, keeping stacked passages apart. */
 const fenceBox = (box: Box3) => ({
   ...footprint([box]),
   y: box.min.y - 1,
   y2: box.max.y + 0.5,
 })
+const alleyBox = fenceBox(alley.reduce((bounds, box) => bounds.union(box), new Box3))
 const fences = {
   /** The knight’s alley: the blind branch beside the Lodge, where the empty suit of armor stands with the knight’s helmet on its shoulders, from its doorway in the connecting tunnel’s wall up its ramp, past the Lodge’s side window and on to its closing wall with the barred window. */
-  knight_alley: new Geofence([fenceBox(alley.reduce((bounds, box) => bounds.union(box), new Box3))]),
+  knight_alley: new Geofence([alleyBox]),
   /** The cistern behind the Forge’s vestibule, which the alchemy machine shoots its orbs into: from its flat wall with the window onto the vestibule to its round wall under the half dome. */
   cistern: new Geofence(cistern.map(fenceBox)),
   /** The curve behind the crown of the Oculus’ apse, where the barred gate and the windows beside it look out over the platform and down the Oculus: north of the gate, out to the curve’s outer walls, from the corner behind the apse’s east shoulder to the chamfer before the S bend, in the curve’s own boxes cut off along the gate. */
@@ -33,6 +38,8 @@ const fences = {
     min,
     max: [max[0], max[1], Math.min(max[2], gateZ)] as const,
   })), bastionOrigin).map(fenceBox)),
+  /** Wherever the Lodge’s planks show: the approach and the curve as far as it looks down the approach through the Lodge’s east doorway, from the planks of the timber transition round the bend to the crown of the Oculus’ apse, the mouth of the link and the knight’s alley, which looks in through the Lodge’s east window too. */
+  seeing_lodge_floor: new Geofence([...lodgeView.map(fenceBox), alleyBox]),
 } satisfies Record<string, Geofence>
 
 export const bastionFence = new Geofence([...passages.map(fenceBox), ...fences.knight_alley.boxes, ...fences.cistern.boxes])

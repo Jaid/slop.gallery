@@ -1,4 +1,5 @@
-import type {PlankOptions} from '../materials/PlankMaterial.ts'
+import type {PlankFinish} from '../materials/PlankFloorMaterial.ts'
+import type {PlankLayout} from '../materials/planks.ts'
 import type {FloorRectangle} from './floors.ts'
 import type {PassageCutout} from './passages/Passage.ts'
 import type {Vec3} from './types.ts'
@@ -125,15 +126,27 @@ export const lodgeFloorPlanks = {
   bevel: 0.004,
   seam: 0.0024,
   seed: 3,
-  roughness: 0.62,
-  envMapIntensity: 0.25,
   colors: {
     dark: '#5a3a22',
     light: '#8e6239',
     ring: '#3a2312',
     seam: '#1a0f08',
   },
-} as const satisfies PlankOptions
+} as const satisfies PlankLayout
+/** The oil rubbed into the Lodge’s boards: a faint, blurred mirror of the room, as strong at grazing angles as looking down, which leaves the lamps no highlights of their own on the fully rough boards. */
+export const lodgeFloorOil = {
+  envMapIntensity: 0.25,
+  roughness: {
+    mirrored: 1,
+    matte: 0.62,
+  },
+  reflection: {
+    strength: 0.1,
+    grazingStrength: 0,
+    loss: 0,
+    gaussianBlur: 8,
+  },
+} as const satisfies PlankFinish
 
 /** Whether the position lies in the window’s deep niche, on its sill up to its lintel. */
 export function insideLodgeWindow(position: Vec3) {

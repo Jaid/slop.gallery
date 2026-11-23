@@ -509,7 +509,7 @@ test('in the Exhibition he stands on its sloping floor, looking through the east
   const platformY = oculusPlatform.position[1] + oculusPlatform.size[1] / 2
   const [eyeX, eyeZ] = apseOpeningPoint(window, 1.2)
   const eye: Vec3 = [eyeX, platformY + 1.6, eyeZ]
-  expect(slopGallery.geofences.getMatches([eye[0], eye[1] - 0.7, eye[2]])).toEqual(['bastion', 'bastion-gate'])
+  expect(slopGallery.geofences.getMatches([eye[0], eye[1] - 0.7, eye[2]])).toEqual(['bastion', 'bastion-gate', 'bastion-seeing_lodge_floor'])
   const {tunnel} = lowerGallery
   for (const height of [figureBounds().max.y - 0.02, 1.5, 1.2]) {
     const target: Vec3 = [x, y + height, z]

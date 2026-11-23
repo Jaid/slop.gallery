@@ -4,8 +4,8 @@ import type lobbyFences from '#src/rooms/lobby/fences.ts'
 import type moonfallFences from '#src/rooms/moonfall/fences.ts'
 import type {GalleryRoomId as RoomId} from './SlopGallery.ts'
 
-/** the floor mirrors of the gallery: one for the floors of the ground level and one for the Moonfall’s slate */
-export type FloorMirror = 'base' | 'moonfall'
+/** the floor mirrors of the gallery: one for the floors of the ground level, one for the Lodge’s planks and one for the Moonfall’s slate */
+export type FloorMirror = 'base' | 'lodge' | 'moonfall'
 /** the ids of other rooms’ objects by the room they belong to: per room, the id or ids within it */
 export type ForeignIds = Partial<Record<RoomId, ReadonlyArray<string> | string>>
 /** the id of a fence of the gallery: a room’s, which is the room’s id, or the global id of one of its other fences, like a part of a room */
@@ -150,6 +150,10 @@ const activations = {
       lodge: 'fire',
     },
   },
+  // The Lodge’s planks show through its doorway from the Corridor, and no other floor that mirrors does.
+  'corridor-seeing_lodge_floor': {
+    floorMirror: 'lodge',
+  },
   oculus: {
     rooms: ['lobby', 'exhibition', 'bastion', 'salon', 'forge', 'moonfall', 'banquet'],
     visibleLamps: {
@@ -197,6 +201,7 @@ const activations = {
   },
   lodge: {
     rooms: ['bastion', 'corridor', 'oculus'],
+    floorMirror: 'lodge',
     visibleLamps: {
       corridor: [
         'lantern_north',
@@ -211,6 +216,10 @@ const activations = {
     visibleLamps: {
       lodge: 'fire',
     },
+  },
+  // The Lodge’s planks show down the approach, through the Lodge’s east doorway, and through its east window, and no other floor that mirrors does.
+  'bastion-seeing_lodge_floor': {
+    floorMirror: 'lodge',
   },
 } satisfies Partial<Record<FenceId, Activation>> & Record<RoomId, Activation>
 /** the ids of the fences that keep something on */

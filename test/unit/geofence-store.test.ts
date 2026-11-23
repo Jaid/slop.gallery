@@ -45,7 +45,7 @@ test('the player starts in the fences its place lies in without crossing any, in
   expect(fences()).toEqual(['bastion'])
   expect(room()).toBe('bastion')
   startGeofences(places.alley)
-  expect(fences()).toEqual(['bastion', 'bastion-knight_alley'])
+  expect(fences()).toEqual(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])
   expect(room()).toBe('bastion')
   startGeofences(places.wall)
   expect(fences()).toEqual(['lobby', 'vesper', 'lobby-south'])
@@ -111,7 +111,7 @@ test('the player’s room is the first room whose fence holds its place and stay
   expect(room()).toBe('bastion')
   // In a fence that is no room’s, the player stays in the room around it.
   probeGeofences(places.alley, still)
-  expect(fences()).toEqual(['bastion', 'bastion-knight_alley'])
+  expect(fences()).toEqual(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])
   expect(room()).toBe('bastion')
   probeGeofences(places.vestibule, still)
   expect(room()).toBe('forge')
@@ -174,8 +174,8 @@ test('the player’s whereabouts are its room and every fence that is no room’
   probeGeofences(places.nowhere, still)
   expect(whereabouts()).toEqual(['vesper'])
   probeGeofences(places.alley, still)
-  expect(whereabouts()).toEqual(['bastion', 'bastion-knight_alley'])
-  expect(heard).toEqual([['lobby', 'lobby-middle', 'lobby-south'], ['lobby', 'lobby-middle'], ['lobby', 'lobby-south'], ['vesper'], ['bastion', 'bastion-knight_alley']])
+  expect(whereabouts()).toEqual(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])
+  expect(heard).toEqual([['lobby', 'lobby-middle', 'lobby-south'], ['lobby', 'lobby-middle'], ['lobby', 'lobby-south'], ['vesper'], ['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor']])
   // A player starting outside of every fence starts in the world’s default room.
   startGeofences(places.nowhere)
   expect(whereabouts()).toEqual(['lobby'])
@@ -206,7 +206,7 @@ test('whoever hears of a crossing already finds the player in its room and its w
   const stop = useGeofences.subscribe(() => heard.push(`${room()} in ${whereabouts().join(', ')}`))
   probeGeofences(places.vestibule, still)
   probeGeofences(places.alley, still)
-  expect(heard).toEqual(['forge in forge', 'bastion in bastion, bastion-knight_alley'])
+  expect(heard).toEqual(['forge in forge', 'bastion in bastion, bastion-knight_alley, bastion-seeing_lodge_floor'])
   stop()
 })
 test('a fence’s enter listener hears every crossing into it, a room’s or not, but neither a start in it nor staying in it', () => {

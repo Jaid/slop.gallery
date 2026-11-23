@@ -6,11 +6,13 @@ import {ACESFilmicToneMapping, AgXToneMapping, CineonToneMapping, LinearToneMapp
 import useGraphicsMode from 'use-graphics-mode'
 import {create} from 'zustand'
 
+import {lodgeFloorOil} from '#src/lib/gallery/lodge.ts'
 import overlay from '#src/lib/overlay/index.ts'
 import {initialOverlayTuning, useOverlayTuning} from '#src/lib/overlay/tuning.ts'
 import {fovLimits, getDefaultCustomGraphics, useCustomGraphics, useGraphicsTuning} from '#src/lib/rendering/customGraphics.ts'
 import {cinematicMaxTextureSize, readCinematicGraphics} from '#src/lib/rendering/graphicsMode.ts'
 import {changeTunedGraphics, discardTuningBuffer, useTuningBuffer} from '#src/lib/rendering/tuningBuffer.ts'
+import world from '#src/worlds/current.ts'
 
 import OverlayLineControls from './OverlayLineControls.tsx'
 
@@ -91,6 +93,32 @@ const uncappedLuminance = 65_504
 const shadowMapSizes = [1024, 2048, 4096, 8192, ...readCinematicGraphics() ? [cinematicMaxTextureSize] : []]
 const scales = (values: Array<number>): Array<[number, string]> => values.map(value => [value, `${value * 100}%`])
 const lampShadowsCast = (settings: CustomGraphics) => settings.lampShadows > 0
+const lodgeFloorMirrored = (settings: CustomGraphics) => settings.mirrorReflections && settings.lodgeFloorReflection > 0
+/** The Lodge’s oiled planks, whose mirror only shows in the gallery. */
+const lodgeFloor: Section = {
+  title: 'Lodge floor',
+  controls: [
+    range('lodgeFloorReflection', 'Reflectance', 0, 0.3, 0.005),
+    {
+      ...range('lodgeFloorGrazing', 'Grazing', 0, 1, 0.05),
+      when: lodgeFloorMirrored,
+    },
+    {
+      ...range('lodgeFloorBlur', 'Gaussian blur (px)', 0.5, 30, 0.5),
+      off: {
+        fallback: lodgeFloorOil.reflection.gaussianBlur,
+        off: 0,
+      },
+      when: lodgeFloorMirrored,
+    },
+    {
+      ...range('lodgeFloorLoss', 'Loss (mip level)', 0, 6, 0.1),
+      when: lodgeFloorMirrored,
+    },
+    range('lodgeFloorRoughness', 'Roughness', 0, 1, 0.01),
+    percent('lodgeFloorEnvironment', 'Environment', 0, 1, 0.05),
+  ],
+}
 const renderScales = scales([0.25, 0.5, 0.75, 1, 1.25, 1.5, 2])
 const sections: Array<Section> = [
   {
@@ -134,6 +162,7 @@ const sections: Array<Section> = [
       percent('mirrorReflectionRoughness', 'Roughness', 0, 4, 0.05),
     ],
   },
+  ...world.id === 'gallery' ? [lodgeFloor] : [],
   {
     title: 'Screen-space reflections',
     toggle: 'screenSpaceReflections',

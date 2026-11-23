@@ -39,8 +39,8 @@ test('every room’s fence keeps something on, and so do only fences of the gall
 test('a player in a room may be in the room’s fence and in every other fence sharing space with it, but in no other room’s', () => {
   expect(slopGallery.fencesIn('lobby')).toEqual(['lobby', 'lobby-north', 'lobby-middle', 'lobby-south'])
   expect(slopGallery.fencesIn('moonfall')).toEqual(['moonfall', 'moonfall-stairs'])
-  expect(slopGallery.fencesIn('corridor')).toEqual(['corridor', 'corridor-window'])
-  for (const fence of ['bastion-knight_alley', 'bastion-cistern', 'bastion-gate']) {
+  expect(slopGallery.fencesIn('corridor')).toEqual(['corridor', 'corridor-window', 'corridor-seeing_lodge_floor'])
+  for (const fence of ['bastion-knight_alley', 'bastion-cistern', 'bastion-gate', 'bastion-seeing_lodge_floor']) {
     expect(slopGallery.fencesIn('bastion')).toContain(fence)
   }
   // The rooms beside the Lobby only share the planes of its walls with its parts, and of whatever the fences of the rooms under it share with them, the Lobby is the player’s room, which the world checks first.
@@ -79,6 +79,9 @@ test('whatever any of the fences the player is in keeps on is on', () => {
   expect(floorMirror(['moonfall', 'moonfall-stairs'])).toBe('moonfall')
   expect(floorMirror(['lobby', 'moonfall'])).toBe('moonfall')
   expect(floorMirror(['moonfall', 'lobby'])).toBe('base')
+  // A part of a room decides over the room, which names none.
+  expect(floorMirror(['bastion'])).toBeUndefined()
+  expect(floorMirror(['bastion', 'bastion-knight_alley', 'bastion-seeing_lodge_floor'])).toBe('lodge')
   expect(floorMirror(['sienna'])).toBeUndefined()
   expect(floorMirror(['arena'])).toBeUndefined()
   expect(floorMirror([])).toBeUndefined()
