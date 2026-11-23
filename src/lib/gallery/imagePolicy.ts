@@ -15,6 +15,7 @@ export const importExtensions = {
   'image/svg+xml': ['.svg'],
 }
 export const maximumPortraits = 120
+export const maximumArtworkEdge = 4096
 export const maximumImageBytes = 25_000_000
 export const maximumCollectionImageBytes = 150_000_000
 

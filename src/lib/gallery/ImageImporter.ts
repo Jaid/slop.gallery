@@ -11,7 +11,7 @@ import worldClock from '../worldClock.ts'
 import {arrivalFrame, bodyPose, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'
 import {holdPoint, requestHanging} from './hanging/hangings.ts'
 import {hangingAnimation} from './hanging/index.ts'
-import {maximumPortraits, validateImport} from './imagePolicy.ts'
+import {maximumArtworkEdge, maximumPortraits, validateImport} from './imagePolicy.ts'
 import {useGallery} from './store.ts'
 
 /** how far out from where it would have hung an imported work that does not fit there flips off its wall, in meters: its back clear of the fronts of the works hung beside it, which it would fuse with on touching them */
@@ -32,8 +32,8 @@ export type SizedImage = {
 
 /** The frame of an image in meters: its own aspect at an area of `area` cm². */
 export function imageSize(width: number, height: number, area = defaultPortraitArea) {
-  if (!(width > 0 && height > 0) || !Number.isFinite(width + height) || width * height > 64_000_000) {
-    throw new Error('Choose an image with at most 64 million pixels.')
+  if (!(width > 0 && height > 0) || !Number.isFinite(width + height)) {
+    throw new Error('Choose an image with valid dimensions.')
   }
   const ratio = width / height
   if (ratio < 1 / 12 || ratio > 12) {
@@ -67,15 +67,15 @@ export function centeredCrop(width: number, height: number, limit = 2) {
   return [(width - cropWidth) / 2, (height - cropHeight) / 2, cropWidth, cropHeight] as const
 }
 
-/** An image file, already validated, as an imported work keeps it: works wider than 2:1 or taller than 1:2 only their middle, at most 3072 px on its longer edge, on an opaque ground, with the size in pixels of the part it keeps. An SVG is drawn at exactly 3072 px on its longer edge, whatever its own size. */
+/** An image file, already validated, as an imported work keeps it: works wider than 2:1 or taller than 1:2 only their middle, at most 4096 px on its longer edge, on an opaque ground, with the size in pixels of the part it keeps. An SVG is drawn at exactly 4096 px on its longer edge, whatever its own size. */
 export async function importedImage(file: Blob): Promise<SizedImage> {
   const decoded = await decodeImage(file)
   try {
     const crop = centeredCrop(decoded.width, decoded.height)
     const [, , width, height] = crop
-    // Rejects images too large or too panoramic for a frame before encoding them.
+    // Validate cropped dimensions before encoding.
     imageSize(width, height)
-    const fit = 3072 / Math.max(width, height)
+    const fit = maximumArtworkEdge / Math.max(width, height)
     const scale = decoded.vector ? fit : Math.min(1, fit)
     const canvas = new OffscreenCanvas(Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale)))
     const context = canvas.getContext('2d')
@@ -108,7 +108,7 @@ export async function encodeGeneratedImage(source: Blob) {
   const bitmap = await createImageBitmap(source)
   try {
     imageSize(bitmap.width, bitmap.height)
-    const scale = Math.min(1, 3072 / Math.max(bitmap.width, bitmap.height))
+    const scale = Math.min(1, maximumArtworkEdge / Math.max(bitmap.width, bitmap.height))
     const canvas = new OffscreenCanvas(Math.max(1, Math.round(bitmap.width * scale)), Math.max(1, Math.round(bitmap.height * scale)))
     const context = canvas.getContext('2d')!
     context.fillStyle = '#eee8d7'

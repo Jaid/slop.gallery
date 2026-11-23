@@ -199,7 +199,11 @@ describe('image dimensions', () => {
     expect(size.width / size.height).toBeCloseTo(16 / 9, 9)
     expect(size.width * size.height).toBeCloseTo(6, 9)
   })
-  for (const dimensions of [[0, 100], [-1, 100], [Number.NaN, 100], [Infinity, 100], [9000, 9000], [1300, 100], [100, 1300]]) {
+  test('allows source images above 64 MP before downscaling', () => {
+    const size = imageSize(12_000, 8000)
+    expect(size.width / size.height).toBeCloseTo(1.5)
+  })
+  for (const dimensions of [[0, 100], [-1, 100], [Number.NaN, 100], [Infinity, 100], [1300, 100], [100, 1300]]) {
     test(`rejects ${dimensions.join('×')}`, () => {
       expect(() => imageSize(dimensions[0], dimensions[1])).toThrow()
     })

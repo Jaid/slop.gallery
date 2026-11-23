@@ -53,6 +53,23 @@ test('retries a temporary server failure and creates an owned external-image tex
   }
   expect(close).toHaveBeenCalledTimes(1)
 })
+test('downscales large decoded artwork to the 4096 px texture limit', async () => {
+  const bitmap = {
+    width: 6000,
+    height: 4000,
+    close,
+  }
+  Object.assign(globalThis, {createImageBitmap: mock(async () => bitmap)})
+  const texture = await loadArtworkTexture(new Blob(['image']))
+  try {
+    expect(texture.image.width).toBe(4096)
+    expect(texture.image.height).toBe(2731)
+    expect(draw).toHaveBeenCalledWith(bitmap, 0, 0, 4096, 2731)
+  } finally {
+    texture.dispose()
+  }
+  expect(close).toHaveBeenCalledTimes(1)
+})
 test('bounds failed URL retries and keeps the HTTP error actionable', async () => {
   const fetch = mock(async () => new Response('', {status: 404}))
   Object.assign(globalThis, {fetch})

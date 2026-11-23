@@ -302,7 +302,7 @@ test('a JXL is imported like any other image, but not a file served without an i
     target: {slot: slot.id},
   })).rejects.toThrow('Choose JXL, PNG, JPEG, WebP, AVIF, GIF or SVG')
 })
-test('an SVG is drawn sharp at 3072 px on its longer edge, whatever its own size, unless it has none', async () => {
+test('an SVG is drawn sharp at 4096 px on its longer edge, whatever its own size, unless it has none', async () => {
   const canvases: Array<[number, number]> = []
   let natural = pixels
   Object.assign(globalThis, {
@@ -329,7 +329,7 @@ test('an SVG is drawn sharp at 3072 px on its longer edge, whatever its own size
       image: 'http://127.0.0.1:8080/icon.svg',
       target: {slot: slot.id},
     })
-    expect(canvases).toEqual([[3072, 1536]])
+    expect(canvases).toEqual([[4096, 2048]])
     expect(added.width / added.height).toBeCloseTo(2, 10)
     expect((stored(added.id).source as Blob).type).toBe('image/webp')
     natural = {
@@ -343,6 +343,37 @@ test('an SVG is drawn sharp at 3072 px on its longer edge, whatever its own size
   } finally {
     Reflect.deleteProperty(globalThis, 'Image')
   }
+})
+test('imports photos above 64 MP, retaining a 4096 px longest edge', async () => {
+  const canvases: Array<[number, number]> = []
+  Object.assign(globalThis, {
+    createImageBitmap: async () => ({
+      width: 12_000,
+      height: 8000,
+      close() {},
+    }),
+    OffscreenCanvas: class {
+      constructor(width: number, height: number) {
+        canvases.push([width, height])
+      }
+      async convertToBlob() {
+        return new Blob(['normalized'], {type: 'image/webp'})
+      }
+      getContext() {
+        return {
+          fillStyle: '',
+          fillRect() {},
+          drawImage() {},
+        }
+      }
+    },
+  })
+  const added = await addPortrait({
+    image,
+    target: {slot: slot.id},
+  })
+  expect(canvases).toEqual([[4096, 2731]])
+  expect(stored(added.id).source).toBeInstanceOf(Blob)
 })
 test('unknown frames and canvas materials, images that do not load and a full collection add nothing', async () => {
   const target = {position: {

@@ -1,5 +1,7 @@
 import renderCanvasTexture from 'canvas-textures/three'
 
+import {maximumArtworkEdge} from './gallery/imagePolicy.ts'
+
 /** URL loads can fail while the dev server restarts; never permanently cache that failure. */
 export default async function loadArtworkTexture(source: Blob | string, retryDelay = 500) {
   const attempts = typeof source === 'string' ? 3 : 1
@@ -11,7 +13,7 @@ export default async function loadArtworkTexture(source: Blob | string, retryDel
       }
       const bitmap = await createImageBitmap(response ? await response.blob() : source as Blob)
       try {
-        const scale = Math.min(1, 3072 / Math.max(bitmap.width, bitmap.height))
+        const scale = Math.min(1, maximumArtworkEdge / Math.max(bitmap.width, bitmap.height))
         const width = Math.max(1, Math.round(bitmap.width * scale))
         const height = Math.max(1, Math.round(bitmap.height * scale))
         return renderCanvasTexture({
