@@ -10,4 +10,22 @@ export default {
     fov: 100,
     ratio: 16 / 9,
   },
+  west: {
+    position: [-2.2, 1.7, -2],
+    aim: {
+      yaw: Math.PI / 2,
+      pitch: 0.05,
+    },
+    fov: 75,
+    ratio: 16 / 9,
+  },
+  east: {
+    position: [6.8, 1.7, -1],
+    aim: {
+      yaw: -Math.PI / 2,
+      pitch: 0.14,
+    },
+    fov: 75,
+    ratio: 16 / 9,
+  },
 } satisfies Record<string, RoomCamera>

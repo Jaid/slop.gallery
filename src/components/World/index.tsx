@@ -27,6 +27,7 @@ export type WorldMaterials = {
   joinery: Parameters<typeof SiennaRoom>[0]['joinery']
   lobbyWall: NodeMaterial
   lodge: LodgeMaterials
+  marmorino: NodeMaterial
   oculus: NodeMaterial
   stone: Texture
   windowReveal: NodeMaterial
@@ -59,7 +60,7 @@ const roomLoaders: Record<RoomId, () => Promise<RoomPart>> = {
   },
   antechamber: async () => {
     const {default: Room} = await import('#src/rooms/antechamber/components/AntechamberRoom/index.tsx')
-    return ({glass, stone, wood}) => <Room glass={glass.lobby} stone={stone} wood={wood} />
+    return ({glass, marmorino, stone, wood}) => <Room glass={glass.lobby} marmorino={marmorino} stone={stone} wood={wood} />
   },
   sienna: async () => {
     const {default: Room} = await import('#src/rooms/sienna/components/SiennaRoom/index.tsx')

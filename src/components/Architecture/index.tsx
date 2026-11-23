@@ -51,6 +51,9 @@ export default function Architecture() {
     get lodge() {
       return shared.lodge
     },
+    get marmorino() {
+      return shared.marmorino
+    },
     get oculus() {
       return shared.oculus
     },
