@@ -55,7 +55,7 @@ test('the cinematic profile raises intermediate resolutions, AO quality, shadow 
     expect(heavy[key], key).toBe(false)
     expect(cinematic[key], key).toBe(true)
   }
-  const added = ['ambientOcclusionThickness', 'sunShadowMapSize', 'ssgi', 'voxelIndirectLightBounces']
+  const added = ['ambientOcclusionThickness', 'contactShadowTuning', 'sunShadowMapSize', 'ssgi', 'voxelIndirectLightBounces']
   for (const key of added) {
     expect(heavy[key], key).toBeUndefined()
     expect(cinematic[key], key).toBeDefined()
@@ -120,6 +120,14 @@ test('only Cinematic adds screen-space reflections on metallic surfaces to the f
     mirrorReflections: true,
     screenSpaceReflections: true,
   })
+})
+test('Cinematic alone casts contact shadows, with its own tuning', () => {
+  const {fast, heavy, cinematic} = pipelines
+  expect(fast.contactShadows).toBe(false)
+  expect(heavy.contactShadows).toBe(false)
+  expect(cinematic.contactShadows).toBe(true)
+  expect(cinematic).toMatchObject(profiles.cinematic.contactShadowTuning!)
+  expect(settingsOf(cinematic, 'contactShadow')).not.toEqual(settingsOf(heavy, 'contactShadow'))
 })
 test('Fast leaves out bloom, which Heavy and Cinematic tune alike', () => {
   expect(pipelines.fast.bloom).toBe(false)

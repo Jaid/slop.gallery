@@ -143,6 +143,7 @@ export function getRenderPipelineSettings(profile: GraphicsProfile, antiAliasing
     contactShadowResolutionScale: 1,
     contactShadows: false,
     contactShadowThickness: 0.01,
+    ...profile.contactShadowTuning,
     dither: false,
     fusionShadowBlur: 2,
     fusionShadowSamples: 16,

@@ -1,4 +1,4 @@
-import type {RenderPipelineSettings} from './renderPipelineSettings.ts'
+import type {RenderPipelineSetting, RenderPipelineSettings} from './renderPipelineSettings.ts'
 
 import optis from 'optis'
 import readPermalink from 'read-permalink'
@@ -35,6 +35,8 @@ export type GraphicsProfile = {
   canvasTextureMipmaps: boolean
   /** backing pixels per logical texel for runtime canvas textures such as signs */
   canvasTextureResolution: number
+  /** optional contact shadow overrides, which may switch them on */
+  contactShadowTuning?: ContactShadowTuning
   /** factor on the segment counts of round meshes that opt in, along each curved direction */
   curveDetail: number
   floorReflections: boolean
@@ -70,6 +72,8 @@ export type GraphicsProfile = {
   /** how often the voxel indirect light bounces once the tuning panel switches it on, once by default */
   voxelIndirectLightBounces?: number
 }
+
+type ContactShadowTuning = Partial<Pick<RenderPipelineSettings, Extract<RenderPipelineSetting, `contactShadow${string}`>>>
 
 type SsgiSettings = Pick<RenderPipelineSettings, | 'screenSpaceIndirectLightAmbientOcclusion'
   | 'screenSpaceIndirectLightBackfaceLighting'
@@ -155,6 +159,14 @@ const cinematicProfile: GraphicsProfile = {
   ...heavyProfile,
   canvasTextureMipmaps: true,
   canvasTextureResolution: 2,
+  // Faint but far-reaching: marching 40 cm toward the sun at 20% picks out the geometry, like an armor against its wall or the paints in the Painting Set.
+  contactShadowTuning: {
+    contactShadowDenoiseRadius: 16,
+    contactShadowDistance: 0.4,
+    contactShadowIntensity: 0.2,
+    contactShadowQuality: 2,
+    contactShadows: true,
+  },
   curveDetail: 2,
   indirectLight: true,
   metalReflections: true,
