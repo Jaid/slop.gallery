@@ -29,8 +29,13 @@ export const openings: ReadonlyArray<Opening> = [
     holes: [['banquet-north', 'salon']],
   },
   {
+    // Both ends of Moonfall’s curved approach and stairway, kept as separate portals so their boxes stay tight around their doorways instead of spanning the Antechamber.
     rooms: ['antechamber', 'moonfall'],
-    holes: [['antechamber-east', 'stairway'], ['moonfall-east', 'stairway']],
+    holes: [['antechamber-west_south', 'stairway']],
+  },
+  {
+    rooms: ['antechamber', 'moonfall'],
+    holes: [['moonfall-east', 'stairway']],
   },
   {
     // The arch out of the Sienna’s vestibule onto the Corridor’s landing; the arch between the Sienna and its vestibule lies within the Sienna.
