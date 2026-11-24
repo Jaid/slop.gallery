@@ -1,8 +1,6 @@
-# media creation
+# examples
 
-## examples
-
-### simple photo
+## simple photo
 
 This is the simplest way of taking a photo. It will capture the Three canvas and save it to out/snap/*.jxl where the stem is the first unoccupied integer, starting with 1.
 
@@ -12,7 +10,7 @@ import snap from './scripts/snap.ts'
 await snap('lobby-overview') // a camera bookmark: src/rooms/*/cameras.ts files contain presets for camera position, angle and field of view
 ```
 
-### cinematic render
+## cinematic render
 
 To showcase a scene in the best possible way with no respect to performance, you can snap a 7680×4320 canvas and save in 3840×2160 using high-quality downscaling (linear-light lanczos from ImageMagick).
 
@@ -26,7 +24,7 @@ await snap({
 })
 ```
 
-### wireframe
+## wireframe
 
 This is useful to show off triangle density of different areas of the world. It renders nothing but white polygon edges on a black background.
 
@@ -47,7 +45,7 @@ await snap({
 })
 ```
 
-### green wireframe with one specific mesh in red
+## green wireframe with one specific mesh in red
 
 ```TypeScript
 import snap from './scripts/snap.ts'
@@ -69,21 +67,21 @@ await snap({
 })
 ```
 
-### portrait
+## portrait
 
 ```TypeScript
 import snap from './scripts/snap.ts'
 
 await snap({
-  room: 'studio', // the Sandbox’s Studio: four walls under a skylit ceiling, which load in a moment, the north-eastern corner at 0,0,0
-  portraits: 1,
-  position: '-5,2,4',
+  room: 'studio', // the Sandbox’s Studio: four walls under a skylit ceiling, which load in a moment, the north-western corner at 0,0,0, the floor spreading toward +x and +z
+  portraits: 1, // a square work in the Studio’s one slot, 4 m east of the corner
+  position: '4,2,4',
   angle: '0,-3',
   fov: 40
 })
 ```
 
-### custom portraits
+## custom portraits
 
 ```TypeScript
 import snap from './scripts/snap.ts'
@@ -95,28 +93,28 @@ const call = new Proxy({}, {
 await snap({
   room: 'studio',
   portraits: 0,
-  position: '-4,2,7',
+  position: '3,2,7',
   angle: '-13,-5',
   fov: 40,
   height: 4320
 }, [
   call.add_portrait({
     image: 'https://img.youtube.com/vi/MQeJYEN_lrg/maxresdefault.jpg',
-    target: {wall_id: 'studio-north', position: {x: 1, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: -2, y: 2}},
     title: 'This DIY Datacenter is NUTS',
     frame: 'containment',
     canvas_material: 'rag'
   }),
   call.add_portrait({
     image: 'https://github.com/jaid/slop.gallery/raw/HEAD/assets/icon.svg',
-    target: {wall_id: 'studio-north', position: {x: 5, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 2, y: 2}},
     title: 'Slop Gallery',
     frame: 'maelstrom',
     canvas_material: 'linen'
   }),
   call.add_portrait({
     image: 'https://github.com/jaid.png',
-    target: {wall_id: 'studio-north', position: {x: 3, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 0, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
     canvas_material: 'karakami'
@@ -131,7 +129,7 @@ await snap({
 ])
 ```
 
-### portrait slots
+## portrait slots
 
 `show_portrait_slots` outlines every portrait slot, where works snap to when hung, with its frame and placard, colored by its aspect ratio. Behind a hung work, a slot keeps only a fifth of its opacity. `room: 'cell'` opens the Sandbox, the world of the Cell.
 
@@ -148,7 +146,7 @@ await snap({
 })
 ```
 
-### length measurement
+## length measurement
 
 ```TypeScript
 import snap from './scripts/snap.ts'
@@ -175,7 +173,7 @@ await snap({
 ])
 ```
 
-### simple film
+## simple film
 
 This is the simplest way of filming. It flies the camera along the keyframes given as the second argument and saves the film as a looping animated AVIF.
 
@@ -189,7 +187,7 @@ await film({
 ])
 ```
 
-### sculpture film
+## sculpture film
 
 ```TypeScript
 import film from './scripts/film.ts'
@@ -209,7 +207,7 @@ await film({
 ])
 ```
 
-### seed cycling
+## seed cycling
 
 ```TypeScript
 import film from './scripts/film.ts'
@@ -230,7 +228,7 @@ await film({
 ])
 ```
 
-### switching the build in one movie
+## switching the build in one movie
 
 The target field can be an array of build folders. Each will be active for the specified clip duration and then continue filming keyframes defined in the recipe (the second `film()` argument). This is useful to have smooth camera motion through the world while showing off changes – in this example case a hatchet with its size doubled.
 
@@ -274,7 +272,7 @@ await film({
 ])
 ```
 
-### hanging a portrait
+## hanging a portrait
 
 Keyframes can run the app’s WebMCP tools at their time, here `add_portrait` a second in.
 
@@ -291,10 +289,10 @@ await film({
   crossfade: 0.2, // seconds the end fades back into the empty wall at the beginning, so the film loops
   'output-file': 'out/film/hanging.avif'
 }, [
-  {time: 0, position: [-1, 2, 2], yaw: 40, pitch: -5, fov: 55}, // 2 m off the wall and 2 m to the right of where the portrait hangs, at its height
+  {time: 0, position: [6, 2, 2], yaw: 40, pitch: -5, fov: 55}, // 2 m off the wall and 2 m to the right of where the portrait hangs, at its height
   {time: 1, tools: {add_portrait: {
     image: 'https://github.com/jaid.png',
-    target: {wall_id: 'studio-north', position: {x: 3, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 0, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
     canvas_material: 'karakami',
@@ -303,7 +301,7 @@ await film({
 ])
 ```
 
-### fusion film
+## fusion film
 
 20 seconds AV1 + Opus to out/fusion/*.webm
 
