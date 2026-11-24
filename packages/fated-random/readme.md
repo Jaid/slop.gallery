@@ -47,8 +47,8 @@ Without `next()`, a roll returns the same result forever. The methods share thei
 | `rollBoolean(options?)` | `true` or `false`; `chance` (0–1, default 0.5) says how likely `true` is |
 | `chance(percentage = 50)` | `true` with the given percentage chance; `chance(12.5)` is `rollBoolean({chance: 0.125})` |
 | `bytes({size})` | a fresh `Uint8Array` of `size` bytes; a size of 0 gives an empty array and increasing the size keeps the original prefix |
-| `rollInteger(limit)` | an integer from 0 to `limit`, both included |
-| `rollInteger(from, to)` | an integer between `from` and `to`, both included, in either order |
+| `rollInteger(limit, options?)` | an integer between 0 and `limit`, both included |
+| `rollInteger(from, to, options?)` | an integer between `from` and `to`, both included, in either order |
 | `rollIntegerRadius(radius)` | an integer from −`radius` to `radius`, both included |
 | `rollRadius(radius)` | a float from −`radius` up to, but not including, `radius` |
 | `vary(base, delta)` | `base + rollRadius(delta)`; for example, `vary(10, 2)` varies 10 by up to 2 in either direction |
@@ -59,18 +59,19 @@ Without `next()`, a roll returns the same result forever. The methods share thei
 | `pick(items, amount = 1, options?)` | a random subset in input order; prepends whole copies of the input when `amount` exceeds its length |
 | `slice(items, amount = 1)` | neighboring entries from a uniformly chosen start, without wrapping; prepends whole copies just like `pick` |
 
-`easing` takes a function `(t: number) => number`. For example, `cubicIn` favors smaller values: half its results fall below 0.125 because it cubes the uniform roll. The curve’s output is returned without clamping.
+`easing` takes a function `(t: number) => number`. For example, `cubicIn` favors smaller values: half its results fall below 0.125 because it cubes the uniform roll. `roll` returns the curve’s output directly. `rollInteger` divides the unit interval into equal bins, one per integer in ascending order. Finite outputs at or below 0 select the lowest integer; outputs at or above 1 select the highest. Nonfinite outputs throw a `RangeError`.
 
 ```typescript
 import {easing} from 'math/time'
 
 random.roll({easing: easing.cubicIn}) // favors smaller values
 random.roll({easing: t => 1 - (1 - t) ** 2}) // favors larger values
+random.rollInteger(1, 8, {easing: easing.cubicIn}) // rolls 1 half the time
 ```
 
 The four collection methods return a new array even when `amount` is 1. An amount of 0 gives an empty array; a positive amount requires a nonempty input. Entries are selected by index: equal values at different positions are separate entries.
 
-Integers are rolled without modulo bias. `rollItem`, `sample`, `shuffle` and `pick` take `weights`, either a number per item or a function `(item, index) => number`. Each draw favors an entry in proportion to its weight among the entries still available. A weight of 0 excludes the entry; `shuffle` and `pick` require enough positive weights to complete a pass or the requested part of one.
+Without easing, integers are rolled without modulo bias. `rollItem`, `sample`, `shuffle` and `pick` take `weights`, either a number per item or a function `(item, index) => number`. Each draw favors an entry in proportion to its weight among the entries still available. A weight of 0 excludes the entry; `shuffle` and `pick` require enough positive weights to complete a pass or the requested part of one.
 
 ```typescript
 const rarity = random.makeChild('rarity').rollItem(['common', 'rare', 'epic'], {weights: [16, 4, 1]})

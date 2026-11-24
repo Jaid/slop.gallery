@@ -248,6 +248,28 @@ test('integers include both ends, in either order, every one as likely as the ot
   expect(() => random.rollInteger(Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)).toThrow(RangeError)
   expect(() => random.rollInteger(Number.NaN)).toThrow(RangeError)
 })
+test('integer easing uses the same float in both overloads and in either bound order', () => {
+  const options: RollOptions = {easing: easing.cubicIn}
+  const random = make()
+  for (let i = 0; i < 32; i++) {
+    const expected = Math.floor(random.roll(options) * 8) - 7
+    expect(random.rollInteger(-7, options)).toBe(expected)
+    expect(random.rollInteger(0, -7, options)).toBe(expected)
+    expect(random.rollInteger(-7, 0, options)).toBe(expected)
+    expect(random.rollInteger(-7, {})).toBe(random.rollInteger(-7))
+    random.next()
+  }
+})
+test('integer easing keeps endpoints and overshoots in range', () => {
+  const random = make()
+  for (const [value, expected] of [[-1, 10], [0, 10], [0.25, 11], [0.75, 13], [1, 13], [2, 13]]) {
+    expect(random.rollInteger(10, 13, {easing: () => value})).toBe(expected)
+  }
+  expect(random.rollInteger(Number.MAX_SAFE_INTEGER, {easing: () => 1})).toBe(Number.MAX_SAFE_INTEGER)
+  for (const value of [Number.NaN, Infinity, -Infinity]) {
+    expect(() => random.rollInteger(3, {easing: () => value})).toThrow(RangeError)
+  }
+})
 test('radiuses reach as far below zero as above it', () => {
   const random = make()
   const floats = acrossIndexes(10_000, rng => rng.rollRadius(2))

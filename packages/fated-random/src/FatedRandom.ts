@@ -25,7 +25,7 @@ export type RollItemOptions<Item> = {
   weights?: ((item: Item, index: number) => number) | ReadonlyArray<number>
 }
 export type RollOptions = {
-  /** maps the uniform roll in [0, 1) to the result; accepts curves such as `easing.cubicIn` from `math/time` */
+  /** reshapes the uniform roll in [0, 1) before it is returned or mapped to an integer; accepts curves such as `easing.cubicIn` from `math/time` */
   easing?: (t: number) => number
 }
 
@@ -119,16 +119,29 @@ export default class FatedRandom {
     return this.roll() < chance
   }
   /** An integer from 0 to `limit`, both included; a negative limit rolls from it up to 0. */
-  rollInteger(limit: number): number
+  rollInteger(limit: number, options?: RollOptions): number
   /** An integer between `from` and `to`, both included, in either order. */
-  rollInteger(from: number, to: number): number
-  rollInteger(from: number, to = 0) {
+  rollInteger(from: number, to: number, options?: RollOptions): number
+  rollInteger(from: number, to: RollOptions | number = 0, options?: RollOptions) {
+    if (typeof to !== 'number') {
+      options = to
+      to = 0
+    }
     const lowest = Math.min(from, to)
     const span = Math.max(from, to) - lowest
     if (!Number.isSafeInteger(from) || !Number.isSafeInteger(to) || !Number.isSafeInteger(span)) {
       throw new RangeError(`Cannot roll an integer between ${from} and ${to}: both have to be safe integers at most 2 ** 53 − 1 apart.`)
     }
-    return lowest + this.makeStream().below(span + 1)
+    const size = span + 1
+    const easing = options?.easing
+    if (!easing) {
+      return lowest + this.makeStream().below(size)
+    }
+    const eased = easing(this.roll())
+    if (!Number.isFinite(eased)) {
+      throw new RangeError(`An integer easing curve has to return a finite number, got ${eased}.`)
+    }
+    return lowest + Math.min(span, Math.max(0, Math.floor(eased * size)))
   }
 
   /** An integer from −`radius` to `radius`, both included. */
