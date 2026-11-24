@@ -50,6 +50,39 @@ const slowed = 1 - Math.exp(-placardRoll.spin.drag * placardRoll.spin.duration)
 /** the spin’s speed as it completes its last turn, which carries it on into the wobble */
 const leftover = swept * placardRoll.spin.drag * Math.exp(-placardRoll.spin.drag * placardRoll.spin.duration) / slowed
 
+/** a moment of a roll: seconds after it starts and how fast the placard turns then, in radians per second */
+export type PlacardMoment = {
+  speed: number
+  time: number
+}
+
+/** when a rolling placard slams back onto its wall as the fling ends, and when it lands on it again after the bounce, in seconds after the roll starts */
+export const placardLandings = {
+  slam: placardRoll.windup.duration + placardRoll.fling.time,
+  bounce: placardRoll.windup.duration + placardRoll.fling.time * (1 + placardRoll.fling.restitution),
+}
+
+/**
+ * Every quarter turn of a roll’s spin, the first time it passes each multiple of π/2, in order: the odd ones stand it edge-on to the viewer, the even ones turn its face to the wall or back, the last one being where it hangs as the spin ends.
+ * The tenth, where its face points to the wall for the last time, is when its new text goes on.
+ */
+export function placardQuarters(): Array<PlacardMoment> {
+  const {spin, windup} = placardRoll
+  const quarters: Array<PlacardMoment> = []
+  for (let quarter = 1; ; quarter++) {
+    // how much of what the spin slows down by it has used up once it reaches the quarter
+    const share = (quarter * Math.PI / 2 + windup.angle) / swept * slowed
+    if (share > slowed + 1e-9) {
+      return quarters
+    }
+    const flicked = -Math.log(1 - share) / spin.drag
+    quarters.push({
+      time: windup.duration + flicked,
+      speed: swept * spin.drag * Math.exp(-spin.drag * flicked) / slowed,
+    })
+  }
+}
+
 /** How far a placard turned by `angle` round its x axis must come off where it hangs, so none of it gets nearer than {@link placardRoll.margin} to its wall. */
 export function placardClearance(angle: number) {
   const reach = Math.abs(Math.sin(angle)) * portraitLabel.height / 2 + Math.abs(Math.cos(angle)) * portraitLabel.depth / 2
@@ -76,6 +109,7 @@ function flung(elapsed: number, {height, time, restitution}: typeof placardRoll.
 /**
  * A hung placard rolling round its long axis to show new text: it tips back to wind up, is flicked into {@link placardRoll.turns} quick turns that slow down as it is flung off its wall and falls back, slams onto it, wobbles past the last turn and settles where it hangs.
  * Half a turn before the end of its spin, its face points straight at the wall for the last time: then {@link turned} becomes true, which is when the new text goes on it, unseen.
+ * Its sound (`placardVoices`) follows the moments {@link placardQuarters} and {@link placardLandings} work out, so tuning the motion retimes it.
  */
 export default class PlacardRoll {
   /** how far it is turned round its x axis, in radians */

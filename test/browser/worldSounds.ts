@@ -7,6 +7,7 @@ import arrivalVoices, {arrivalGap} from '../../src/lib/audio/arrivalVoices.ts'
 import {frameImpactSounds, frameImpactVoices} from '../../src/lib/audio/frameImpacts.ts'
 import hangingVoices from '../../src/lib/audio/hangingVoices.ts'
 import {orbImpactVoices} from '../../src/lib/audio/orbImpacts.ts'
+import placardVoices from '../../src/lib/audio/placardVoices.ts'
 import {footstepVoices, impactFootstepStrength} from '../../src/lib/audio/playerSoundEffects.ts'
 import tossVoices from '../../src/lib/audio/tossVoices.ts'
 import TransformerChain from '../../src/lib/audio/transformers/TransformerChain.ts'
@@ -75,7 +76,7 @@ async function render(name: string, seconds: number, play: (output: {
 }
 const recipe = (name: string, voices: ReadonlyArray<Voice>) => render(name, length(voices) + 0.15, output => playVoices(output, voices, {seed: name}))
 
-/** Renders every strike, arrival and room of the world, through the transformers of its rooms’ moods, into silent offline buffers: no audible output, DOM, input, focus or viewport changes. */
+/** Renders every strike, arrival, placard roll and room of the world, through the transformers of its rooms’ moods, into silent offline buffers: no audible output, DOM, input, focus or viewport changes. */
 export default async function verify() {
   const strikes: Record<string, Measure> = {}
   for (const surface of ['generic', 'stone', 'hollow', 'fabric', 'glass', 'orb'] as const) {
@@ -123,6 +124,16 @@ export default async function verify() {
     })]),
     dropped: await recipe('a work dropped into the room', arrivalVoices(false)),
     three: await recipe('three works dropped together', [0, 1, 2].flatMap(index => shiftVoices(arrivalVoices(false, index - 1), index * arrivalGap))),
+  }
+  const placards = {
+    narrow: await recipe('a narrow placard rolling to its new text', placardVoices({
+      variation: -1,
+      width: 0.4,
+    })),
+    wide: await recipe('a wide placard rolling to its new text', placardVoices({
+      variation: 1,
+      width: 1.65,
+    })),
   }
   // throws and drops of a leaf, an orb and a pumpkin, standing, sprinting and in a jump shot
   const tosses: Record<string, Measure> = {}
@@ -178,6 +189,7 @@ export default async function verify() {
       far,
     },
     arrivals,
+    placards,
     tosses,
     rooms,
   }

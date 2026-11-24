@@ -4,8 +4,11 @@ import type {Group} from 'three/webgpu'
 import {useFrame} from '@react-three/fiber'
 import Branch from 'branch-component'
 import {useEffect, useEffectEvent, useRef, useState} from 'react'
+import {Vector3} from 'three/webgpu'
 
 import ElementText from '#component/ElementText'
+import placardVoices from '#src/lib/audio/placardVoices.ts'
+import {playSound} from '#src/lib/gallery.ts'
 import formatByline from '#src/lib/gallery/formatByline.ts'
 import PlacardRoll from '#src/lib/gallery/PlacardRoll.ts'
 import portraitLabel, {portraitLabelLayout} from '#src/lib/gallery/portraitLabel.ts'
@@ -47,10 +50,12 @@ const lettering = (title = '', byline = ''): Lettering => ({
   key: `${title}\n${byline}`,
 })
 const blank = lettering()
+/** how many cards have rolled, which tunes each roll’s sound a little apart */
+let rolls = 0
 
 /**
  * The placard of a work: its title over its creator and year on a painted card, or as a placement preview, the same on a tinted card. While its flavor text is being written, the card stays as it was, blank for a work that had none.
- * A hung card that gets new text later waits until it is rasterized, then rolls round its long axis, and the text goes on its face while that points to the wall.
+ * A hung card that gets new text later waits until it is rasterized, then rolls round its long axis, and the text goes on its face while that points to the wall, to the sound of `placardVoices` from where it hangs.
  */
 export default function PortraitLabel({width, height, title, creator, year, pending, preview, above}: PortraitLabelProps) {
   const layout = portraitLabelLayout(width, height, above)
@@ -86,6 +91,14 @@ function RollingCard({layout, written}: {
       roll.current = {
         lettering: incoming,
         motion: new PlacardRoll,
+      }
+      if (turning.current) {
+        const {x, y, z} = turning.current.getWorldPosition(new Vector3)
+        const index = rolls++
+        playSound(placardVoices({
+          variation: Math.sin(index * 2.39996),
+          width: layout.width,
+        }), `placard:${index}`, [x, y, z])
       }
     }
     const current = roll.current

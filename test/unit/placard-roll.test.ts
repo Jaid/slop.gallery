@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import PlacardRoll, {placardClearance, placardRoll} from '../../src/lib/gallery/PlacardRoll.ts'
+import PlacardRoll, {placardClearance, placardLandings, placardQuarters, placardRoll} from '../../src/lib/gallery/PlacardRoll.ts'
 
 const play = (delta: number) => {
   const roll = new PlacardRoll
@@ -63,4 +63,29 @@ test('no edge of a rolling placard reaches its wall', () => {
     expect(lift).toBeGreaterThanOrEqual(placardClearance(angle))
   }
   expect(Math.max(...frames.map(frame => placardClearance(frame.angle)))).toBeGreaterThan(0)
+})
+test('its quarter turns and landings are where the stepped roll passes them', () => {
+  const step = 1 / 4000
+  const {frames} = play(step)
+  const quarters = placardQuarters()
+  expect(quarters).toHaveLength(placardRoll.turns * 4)
+  for (const [index, quarter] of quarters.entries()) {
+    const mark = (index + 1) * Math.PI / 2
+    const frame = frames.findIndex(candidate => candidate.angle >= mark)
+    expect(Math.abs((frame + 1) * step - quarter.time)).toBeLessThan(2 * step)
+    const speed = (frames[frame].angle - frames[frame - 1].angle) / step
+    expect(quarter.speed).toBeCloseTo(speed, 0)
+  }
+  // The text goes on as its face points to the wall for the last time, at the tenth quarter turn.
+  const turned = frames.findIndex(frame => frame.turned)
+  expect(Math.abs((turned + 1) * step - quarters[9].time)).toBeLessThan(2 * step)
+  const lifts = frames.map(frame => frame.lift)
+  const lowest = (from: number, to: number) => {
+    const window = lifts.slice(Math.round(from / step), Math.round(to / step))
+    return (lifts.indexOf(Math.min(...window), Math.round(from / step)) + 1) * step
+  }
+  const {bounce, slam} = placardLandings
+  expect(slam).toBeLessThan(bounce)
+  expect(Math.abs(lowest(slam - 0.05, slam + 0.05) - slam)).toBeLessThan(0.005)
+  expect(Math.abs(lowest(bounce - 0.05, bounce + 0.05) - bounce)).toBeLessThan(0.005)
 })
