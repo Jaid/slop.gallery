@@ -286,6 +286,29 @@ test('radiuses reach as far below zero as above it', () => {
   expect(() => random.rollRadius(Infinity)).toThrow(RangeError)
   expect(() => random.rollIntegerRadius(0.5)).toThrow(RangeError)
 })
+test('radius easing favors the same distances on both sides of zero', () => {
+  const options = {easing: easing.cubicIn}
+  const offsets = acrossIndexes(4096, random => random.rollRadius(8, options))
+  for (const side of [offsets.filter(value => value < 0), offsets.filter(value => value > 0)]) {
+    expect(side.length / offsets.length).toBeCloseTo(0.5, 1)
+    // Cubing the distance puts half of each side within one eighth of the radius.
+    expect(side.filter(value => Math.abs(value) < 1).length / side.length).toBeCloseTo(0.5, 1)
+  }
+  const random = make()
+  expect(random.rollRadius(-8, options)).toBe(offsets[0])
+  expect(Math.abs(offsets[0])).toBe(random.roll(options) * 8)
+  expect(random.rollRadius(0, options)).toBe(0)
+  expect(random.rollRadius(8, {})).toBe(random.rollRadius(8))
+  expect(random.index).toBe(0)
+})
+test('radius easing stays between the center and the full radius', () => {
+  const random = make()
+  expect(random.rollRadius(8, {easing: () => -1})).toBe(0)
+  expect(Math.abs(random.rollRadius(8, {easing: () => 2}))).toBe(8)
+  for (const value of [Number.NaN, Infinity, -Infinity]) {
+    expect(() => random.rollRadius(8, {easing: () => value})).toThrow(RangeError)
+  }
+})
 test('variation centers the same radius roll on the given base', () => {
   const random = make()
   for (let i = 0; i < 64; i++) {
@@ -459,6 +482,7 @@ test('rolls stay what they were, as worlds built from a seed rely on them', () =
     sampled: random.sample(['ghost', 'halloween', 'painting'], 4),
     shuffled: random.shuffle(['apple', 'banana', 'cherry'], 2),
     radius: random.rollRadius(2),
+    easedRadius: random.rollRadius(2, {easing: easing.cubicIn}),
     integerRadius: random.rollIntegerRadius(2),
     next: random.next().roll(),
     bytes: rollOf({seed: new Uint8Array([1, 2, 3])}),
@@ -471,6 +495,7 @@ test('rolls stay what they were, as worlds built from a seed rely on them', () =
     sampled: ['painting', 'ghost', 'painting', 'halloween'],
     shuffled: ['cherry', 'apple'],
     radius: 1.1039184861614997,
+    easedRadius: 0.9345035254177151,
     integerRadius: 0,
     next: 0.8376834348612097,
     bytes: 0.7665823522526701,

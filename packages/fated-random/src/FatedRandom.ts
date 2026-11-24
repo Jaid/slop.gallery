@@ -25,7 +25,7 @@ export type RollItemOptions<Item> = {
   weights?: ((item: Item, index: number) => number) | ReadonlyArray<number>
 }
 export type RollOptions = {
-  /** reshapes the uniform roll in [0, 1) before it is returned or mapped to an integer; accepts curves such as `easing.cubicIn` from `math/time` */
+  /** reshapes the uniform roll in [0, 1); for a radius, shapes the distance from zero. Accepts curves such as `easing.cubicIn` from `math/time`. */
   easing?: (t: number) => number
 }
 
@@ -116,7 +116,7 @@ export default class FatedRandom {
     if (!(chance >= 0 && chance <= 1)) {
       throw new RangeError(`A chance has to lie between 0 and 1, got ${chance}.`)
     }
-    return this.roll() < chance
+    return this.makeStream().boolean(chance)
   }
   /** An integer from 0 to `limit`, both included; a negative limit rolls from it up to 0. */
   rollInteger(limit: number, options?: RollOptions): number
@@ -137,11 +137,8 @@ export default class FatedRandom {
     if (!easing) {
       return lowest + this.makeStream().below(size)
     }
-    const eased = easing(this.roll())
-    if (!Number.isFinite(eased)) {
-      throw new RangeError(`An integer easing curve has to return a finite number, got ${eased}.`)
-    }
-    return lowest + Math.min(span, Math.max(0, Math.floor(eased * size)))
+    const eased = this.makeStream().boundedFloat(easing)
+    return lowest + Math.min(span, Math.floor(eased * size))
   }
 
   /** An integer from −`radius` to `radius`, both included. */
@@ -156,12 +153,18 @@ export default class FatedRandom {
     return draw(this.makeStream())
   }
 
-  /** A float from −`radius` up to, but not including, `radius`. */
-  rollRadius(radius: number) {
+  /** A signed offset within `radius`. With easing, rolls the distance from zero and the direction independently. */
+  rollRadius(radius: number, options?: RollOptions) {
     if (!Number.isFinite(radius)) {
       throw new RangeError(`A radius has to be finite, got ${radius}.`)
     }
     const reach = Math.abs(radius)
+    const easing = options?.easing
+    if (easing) {
+      const stream = this.makeStream()
+      const distance = stream.boundedFloat(easing) * reach
+      return (stream.boolean() ? -distance : distance) + 0
+    }
     // Adding 0 turns the −0 of a radius of 0 into 0.
     return (this.roll() * 2 - 1) * reach + 0
   }

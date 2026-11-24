@@ -31,6 +31,20 @@ export default class RollStream {
     return drawn % size
   }
 
+  /** A fresh draw with the given probability of being true. */
+  boolean(chance = 0.5) {
+    return this.float() < chance
+  }
+
+  /** An eased draw clamped to [0, 1] for mapping to a bounded range. */
+  boundedFloat(easing: (t: number) => number) {
+    const eased = easing(this.float())
+    if (!Number.isFinite(eased)) {
+      throw new RangeError(`A bounded roll’s easing curve has to return a finite number, got ${eased}.`)
+    }
+    return Math.min(1, Math.max(0, eased))
+  }
+
   /** Draws four bytes per word, least significant byte first on every platform. */
   bytes(size: number) {
     const bytes = new Uint8Array(size)
