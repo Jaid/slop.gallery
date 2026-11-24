@@ -1,7 +1,7 @@
 import type {ThreeElements} from '@react-three/fiber'
 
 import Branch from 'branch-component'
-import {useMemo} from 'react'
+import {useEffect, useEffectEvent, useMemo} from 'react'
 import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import {fitted} from '#src/lib/fitLines.ts'
@@ -39,6 +39,8 @@ type ElementTextProps = Omit<ThreeElements['mesh'], 'children'> & {
   /** for text without a surface */
   materialProps?: Omit<ThreeElements['meshBasicNodeMaterial'], 'map'>
   maxWidth?: number
+  /** called once the text is rasterized, whether or not the mesh is visible */
+  onReady?: () => void
   /** the surface behind the text: its color fills the face and the text shades like it, opaque, so it reads as painted on the surface, which it is drawn onto with a depth bias, so it can lie right on it; without one, the text floats unlit and see-through */
   surface?: ElementTextSurface
   text: string
@@ -68,7 +70,7 @@ export function Face({background, color, fontFamily, fontSize, fontWeight, heigh
 }
 
 /** A line of text laid out as HTML, fitted into `width` × `height` meters; until it is rasterized, it is listed as the loading item `element-text:<text>` and hidden. */
-const ElementText = ({color = '#ffffff', fontFamily = 'sans-serif', fontSize = 0.7, fontWeight = 400, height, maxWidth = 0.9, materialProps, surface, text, width, ...meshProps}: ElementTextProps) => {
+const ElementText = ({color = '#ffffff', fontFamily = 'sans-serif', fontSize = 0.7, fontWeight = 400, height, maxWidth = 0.9, materialProps, onReady, surface, text, width, ...meshProps}: ElementTextProps) => {
   const {canvasTextureMipmaps: mipmaps} = useGraphicsModeValue(getGraphicsProfile)
   const background = surface?.color
   const texture = useLoadingElementTexture(`element-text:${text}`, useMemo(() => {
@@ -81,6 +83,12 @@ const ElementText = ({color = '#ffffff', fontFamily = 'sans-serif', fontSize = 0
       render: () => <Face background={background} color={color} fontFamily={fontFamily} fontSize={Math.max(12, Math.floor(textureHeight * fontSize))} fontWeight={fontWeight} height={textureHeight} maxWidth={maxWidth} text={text} width={textureWidth} />,
     }
   }, [background, color, fontFamily, fontSize, fontWeight, height, maxWidth, mipmaps, text, width]))
+  const ready = useEffectEvent(() => onReady?.())
+  useEffect(() => {
+    if (texture) {
+      ready()
+    }
+  }, [texture])
   return <mesh {...meshProps} visible={Boolean(texture) && meshProps.visible !== false}>
     <planeGeometry args={[width, height]} />
     <Branch if={surface} else={<meshBasicNodeMaterial key={texture?.uuid ?? 'pending'} {...materialProps} depthWrite={false} map={texture} toneMapped={false} transparent />}><meshStandardNodeMaterial key={texture?.uuid ?? 'pending'} map={texture} polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-1} roughness={surface?.roughness} /></Branch>
