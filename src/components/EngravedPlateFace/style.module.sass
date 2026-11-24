@@ -1,0 +1,46 @@
+@use '../../style/face'
+
+// the cut of a plate’s face as a mask, white where the graver cut; its size comes from engravedPlate.ts
+.face
+  position: relative
+  overflow: hidden
+  background: #000000
+  color: #ffffff
+  font-family: Georgia, serif
+
+// a 3 px rule round the face and a hairline inside it
+.outerRule
+  position: absolute
+  inset: 12px
+  border: 3px solid #ffffff
+
+.innerRule
+  position: absolute
+  inset: 20px
+  border: 1px solid #ffffff
+
+// Placed by the middle of its capitals, so the gap above the heading matches the one below the byline’s baseline.
+.line
+  @include face.line
+  position: absolute
+  right: 55px
+  left: 55px
+  translate: 0 calc(-50% - #{face.$middleRaise})
+  text-align: center
+
+.heading
+  top: 96px
+  font-size: 75px
+  letter-spacing: 0.12em
+  // balances the spacing after the last letter, which centering would count
+  text-indent: 0.12em
+  text-transform: uppercase
+
+.byline
+  top: 181px
+  font-style: italic
+  font-size: 42px
+
+// a heading without a byline, in the middle of the face
+.alone
+  top: 50%

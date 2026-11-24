@@ -1,6 +1,9 @@
 import StudioEnvironment from 'knot-materials/StudioEnvironment.ts'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
+/** polished brass’ reflectance */
+export const brassColor = '#bd924c'
+
 /**
  * Polished brass, wholly metal: without a diffuse color, the lamps’ yellow light cannot flatten it into ochre paint. All it shows is its reflection, of a softly lit studio like the gold’s instead of the gallery’s dim, olive-tinted environment, tinted by brass’ deeper, browner reflectance.
  */
@@ -9,7 +12,7 @@ export default class BrassMaterial extends MeshStandardNodeMaterial {
 
   constructor() {
     super({
-      color: '#bd924c',
+      color: brassColor,
       metalness: 1,
       roughness: 0.24,
       envMapIntensity: 0.45,

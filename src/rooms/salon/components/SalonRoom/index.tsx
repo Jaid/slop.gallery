@@ -8,15 +8,18 @@ import {positionWorld, vec3} from 'three/tsl'
 import {Color, MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
+import EngravedPlate from '#component/EngravedPlate'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import RoomFloor from '#component/RoomFloor'
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {wallFace, wallOpeningTrim} from '#src/lib/gallery/architecture.ts'
 import CrumbledStoneGeometry from '#src/lib/gallery/CrumbledStoneGeometry.ts'
+import formatByline from '#src/lib/gallery/formatByline.ts'
 import {salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wallDressingSpans} from '#src/lib/gallery/salon.ts'
 import salonLantern, {salonDomeSpringY, salonLanternBase} from '#src/lib/gallery/salonLantern.ts'
 import SalonLanternGeometry, {lanternPaneSize, salonLanternCollision, shellFilletLines} from '#src/lib/gallery/SalonLanternGeometry.ts'
+import {salonSculpture} from '#src/lib/gallery/salonSculpture.ts'
 import ArchitecturalPlasterMaterial from '#src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import CrownGlassMaterial from '#src/lib/materials/CrownGlassMaterial.ts'
 import FauxMarbleMaterial, {gialloAntico, portoro} from '#src/lib/materials/FauxMarbleMaterial.ts'
@@ -152,6 +155,7 @@ function WallDressing({fields, gilt, socle, wall}: {
     {rails.map(([start, end]) => <Box key={start} material={gilt} position={[(start + end) / 2, railBottom + railHeight / 2, wallFace + railDepth / 2]} size={[end - start, railHeight, railDepth]} />)}
   </StaticBatch>
 }
+/** The socket of sawn stone, the sculpture on it and, on its face toward the doorway, a brass plate naming the work, the model that made it and the year. */
 function SculptureSocket() {
   const {position, size} = salonSculptureSocket
   const [width, height, depth] = size
@@ -161,6 +165,7 @@ function SculptureSocket() {
     <RigidBody colliders={false} name='salon-sculpture-socket' position={position} type='fixed'>
       <CuboidCollider args={[width / 2, height / 2, depth / 2]} position={[0, height / 2, 0]} />
       <mesh castShadow geometry={geometry} material={stone} name='sculpture socket' position={[0, height / 2, 0]} receiveShadow />
+      <EngravedPlate byline={formatByline(salonSculpture.metadata.author.model.title, salonSculpture.year)} heading={salonSculpture.title} name='salon-sculpture-plate' position={[0, height / 2, depth / 2]} />
     </RigidBody>
     <SalonSculpture material={stone} />
   </>
