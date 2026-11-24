@@ -5,7 +5,7 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import {heightNormal, insideBy, visibleDetail} from './filters.ts'
 
-export type FlowerStickerOptions = {
+export type ClawdsOptions = {
   colors?: {
     /** the pink of the awake faces’ cheeks */
     blush: string
@@ -247,15 +247,15 @@ function face(p: Vec2, {wake, gaze, blink, presence}: Mood) {
 }
 
 /**
- * Smiling daisy stickers on terracotta paper, for papered walls, which wake up as the camera comes near.
+ * Clawds: smiling daisy stickers on terracotta paper, for papered walls, which wake up as the camera comes near. The wallpaper of the upstairs hall to come, and until it is built, of the landing the Antechamber’s flight up ends at.
  *
  * The stickers lie on a triangular lattice: every other row is shifted by half the spacing, so each has six neighbors at the same distance, and each is turned a little its own way. Every pixel draws only the sticker nearest to it, which the size must leave room for. Vertical faces are mapped along the wall, whichever way it faces, and up from the floor.
  *
- * Far away, the flowers have no faces. Coming within {@link FlowerStickerOptions.faces}, their faces draw themselves out of dots, dozing with their eyes closed in a smile. Coming within {@link FlowerStickerOptions.wake} of one wakes it, each a little sooner or later than its neighbors: it opens its eyes, follows the camera with them, blinks now and then at its own pace, raises its brows, frowns and blushes. Walking along a wall, the flowers wake round the camera and doze off behind it.
+ * Far away, the flowers have no faces. Coming within {@link ClawdsOptions.faces}, their faces draw themselves out of dots, dozing with their eyes closed in a smile. Coming within {@link ClawdsOptions.wake} of one wakes it, each a little sooner or later than its neighbors: it opens its eyes, follows the camera with them, blinks now and then at its own pace, raises its brows, frowns and blushes. Walking along a wall, the flowers wake round the camera and doze off behind it.
  *
  * The ground is a matte paper with a fine weave and a soft mottle; the stickers are a glossy vinyl a hair proud of it, petals in the paper’s own color round a white heart, in a black outline, die-cut with a white border round it. Drawn shapes are filtered over the pixel’s footprint, so lines thinner than a pixel fade to their share of it.
  */
-export default class FlowerStickerWallpaperMaterial extends MeshStandardNodeMaterial {
+export default class ClawdsWallpaperMaterial extends MeshStandardNodeMaterial {
   constructor({colors = {
     blush: '#f39aa7',
     border: '#f7f4ee',
@@ -263,7 +263,7 @@ export default class FlowerStickerWallpaperMaterial extends MeshStandardNodeMate
     heart: '#f7f4ee',
     line: '#1d1a19',
     petals: '#e3795a',
-  }, floorY = 0, size = 0.15, spacing = 0.2, tilt = 25, wake: [awake, dozing] = [0.6, 0.9], faces: [shown, gone] = [3, 3.5]}: FlowerStickerOptions = {}) {
+  }, floorY = 0, size = 0.15, spacing = 0.2, tilt = 25, wake: [awake, dozing] = [0.6, 0.9], faces: [shown, gone] = [3, 3.5]}: ClawdsOptions = {}) {
     if (!(size > 0 && spacing >= size)) {
       throw new RangeError('Stickers need a positive size and a spacing at least as large.')
     }

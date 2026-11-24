@@ -43,7 +43,7 @@ const floor = (material: StudioFloorFinish['material']): StudioFloorFinish => re
 const northWest = ({center: [x, z], size: [width, depth]}: StudioFloorOptions) => [x - width / 2, z - depth / 2] as const
 
 /**
- * The finishes of the Studio’s walls, each as some room of the game has them, by that room’s id: the Cell’s first, which the default environment keeps. Each loads its materials only once picked, and resolves to what makes them.
+ * The finishes of the Studio’s walls, each as some room of the game has them, by that room’s id, or by its own name for one whose room isn’t built yet: the Cell’s first, which the default environment keeps. Each loads its materials only once picked, and resolves to what makes them.
  */
 export const studioWalls = {
   // The Cell’s damask over its walnut baseboard.
@@ -90,10 +90,10 @@ export const studioWalls = {
     const [{default: VelvetWallMaterial}, {createArenaTrim}] = await Promise.all([import('#src/lib/materials/VelvetWallMaterial.ts'), import('#component/ArenaShell')])
     return () => wall(new VelvetWallMaterial, createArenaTrim())
   },
-  // Smiling daisy stickers on terracotta paper over the Cell’s walnut baseboard.
-  async flowers() {
-    const [{default: FlowerStickerWallpaperMaterial}, {default: JoineryWoodMaterial}] = await Promise.all([import('#src/lib/materials/FlowerStickerWallpaperMaterial.ts'), import('#src/lib/materials/JoineryWoodMaterial.ts')])
-    return () => wall(new FlowerStickerWallpaperMaterial, new JoineryWoodMaterial({grain: 'x'}))
+  // The upstairs hall’s Clawds, smiling daisy stickers on terracotta paper, over the Cell’s walnut baseboard.
+  async clawds() {
+    const [{default: ClawdsWallpaperMaterial}, {default: JoineryWoodMaterial}] = await Promise.all([import('#src/lib/materials/ClawdsWallpaperMaterial.ts'), import('#src/lib/materials/JoineryWoodMaterial.ts')])
+    return () => wall(new ClawdsWallpaperMaterial, new JoineryWoodMaterial({grain: 'x'}))
   },
 } satisfies Record<string, () => Promise<() => StudioWallFinish>>
 
