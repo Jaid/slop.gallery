@@ -310,7 +310,8 @@ test('set_world_tuning takes values by module and key, null among them, and asks
     to: 50,
   }]})
   execute({values: {view: {fov: null}}})
-  expect(inputs).toEqual([{values: {view: {fov: 50}}}, {values: {view: {fov: null}}}])
+  execute({values: {studio: {lightColor: {lightness: 100}}}})
+  expect(inputs).toEqual([{values: {view: {fov: 50}}}, {values: {view: {fov: null}}}, {values: {studio: {lightColor: {lightness: 100}}}}])
   for (const input of [null, {}, {values: null}, {values: {view: 50}}, {values: {view: [50]}}, {
     values: [],
     extra: true,
@@ -320,7 +321,7 @@ test('set_world_tuning takes values by module and key, null among them, and asks
   }]) {
     expect(() => execute(input)).toThrow(TypeError)
   }
-  expect(inputs).toHaveLength(2)
+  expect(inputs).toHaveLength(3)
 })
 test('get_geofences is read-only, takes an optional position of x, y and z and asks the bridge', () => {
   const queries: Array<GeofenceQuery> = []

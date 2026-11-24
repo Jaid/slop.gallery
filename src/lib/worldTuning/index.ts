@@ -10,5 +10,5 @@ const worldTuning = new WorldTuning([viewTuning, ...world.tuning, pipelineTuning
 
 export default worldTuning
 export type {TuningSource} from './base/TuningModule.ts'
-export type {TuningValue, TuningValues} from './controls.ts'
-export type {TuningChange, TuningChanges, TuningControlDump, TuningModuleDump} from './WorldTuning.ts'
+export type {ToldValue, TuningColor, TuningValue, TuningValues} from './controls.ts'
+export type {ToldChanges, TuningChange, TuningChanges, TuningControlDump, TuningModuleDump} from './WorldTuning.ts'

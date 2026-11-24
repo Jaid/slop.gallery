@@ -1,7 +1,10 @@
-import type {TuningControl, TuningGroup, TuningSwitch, TuningValue, TuningValues} from '../controls.ts'
+import type {ToldValue, TuningControl, TuningGroup, TuningSwitch, TuningValue, TuningValues} from '../controls.ts'
 import type {StoreApi, UseBoundStore} from 'zustand'
 
 import {create} from 'zustand'
+
+import {carriedValues} from '../carryOver.ts'
+import {readColor, tellColor} from '../color.ts'
 
 /** what changed a world tuning value: the panel, a key of the game, like Numpad + for the field of view, a WebMCP tool, or the code itself */
 export type TuningSource = 'code' | 'key' | 'panel' | 'webmcp'
@@ -18,7 +21,6 @@ export type TuningEntry<Values> = {
   switch?: TuningSwitch
 }
 
-const colorPattern = /^#[\da-f]{6}$/iu
 const describeValue = (value: TuningValue) => (typeof value === 'string' ? `“${value}”` : String(value))
 
 /**
@@ -31,7 +33,7 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
   /** what the panel says in place of the groups while {@link isShown} is false, if anything */
   readonly hint: string | undefined = undefined
   /** short and unique, which names the module’s values in the tools and the telemetry */
-  abstract readonly id: string
+  readonly id: string
   /** the values the page starts with */
   readonly initial: Values
   readonly store: UseBoundStore<StoreApi<Values>>
@@ -40,10 +42,18 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
   private initialParkedValues: Partial<Values> | undefined
   private parkedStore: UseBoundStore<StoreApi<Partial<Values>>> | undefined
 
-  /** @param store where the values live, a store of their own by default, for consumers that can’t import the module */
-  constructor(initial: Values, store: UseBoundStore<StoreApi<Values>> = create<Values>(() => initial)) {
+  /**
+   * Its values start from `initial`, but for those a reload the world tuning asked for carried over, see `carriedTuning`.
+   * @param store where the values live, a store of their own by default, for consumers that can’t import the module
+   */
+  constructor(id: string, initial: Values, store: UseBoundStore<StoreApi<Values>> = create<Values>(() => initial)) {
+    this.id = id
     this.initial = initial
     this.store = store
+    const carried = carriedValues(id, initial)
+    if (Object.keys(carried).length > 0) {
+      store.setState(carried)
+    }
   }
 
   /** every value the panel shows by its key, in the order it shows them */
@@ -102,6 +112,15 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
   changes(): Partial<Values> {
     const values = this.get()
     return this.partial(Object.entries(values).filter(([key, value]) => value !== this.initial[key]))
+  }
+
+  /** Where the panel shows the key’s value, or a TypeError listing the module’s values. */
+  entry(key: string): TuningEntry<Values> {
+    const entry = this.entries.get(key)
+    if (!entry) {
+      throw new TypeError(`${this.title} has no value “${key}”. Its values: ${this.entries.keys().toArray().join(', ')}.`)
+    }
+    return entry
   }
 
   get(): Values {
@@ -169,6 +188,11 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
     }
   }
 
+  /** The key’s value as the tools tell it and {@link validate} takes it back: a color as its OkHSL hue, saturation and lightness, anything else as it is. */
+  tell(key: string, value: TuningValue): ToldValue {
+    return this.entries.get(key)?.control?.kind === 'color' && typeof value === 'string' ? tellColor(value) : value
+  }
+
   /** {@link isShown} as React state. */
   useShown() {
     return true
@@ -179,13 +203,9 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
     return this.store(selector)
   }
 
-  /** The value as the key’s control takes it, or a TypeError saying what it takes. */
+  /** The value the tools give, as the key’s control takes it, like a color’s {@link TuningColor} as its #rrggbb, or a TypeError saying what it takes. */
   validate(key: string, value: unknown): TuningValue {
-    const entry = this.entries.get(key)
-    if (!entry) {
-      throw new TypeError(`${this.title} has no value “${key}”. Its values: ${this.entries.keys().toArray().join(', ')}.`)
-    }
-    const {control, switch: valueSwitch} = entry
+    const {control, switch: valueSwitch} = this.entry(key)
     if (valueSwitch && value === valueSwitch.off) {
       return valueSwitch.off
     }
@@ -210,10 +230,7 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
         return value
       }
       case 'color': {
-        if (typeof value !== 'string' || !colorPattern.test(value)) {
-          throw new TypeError(`${name} is a color as #rrggbb.`)
-        }
-        return value.toLowerCase()
+        return readColor(value, name)
       }
       case 'select': {
         const option = control.options.find(([candidate]) => candidate === value)

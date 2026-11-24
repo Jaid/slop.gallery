@@ -1,6 +1,16 @@
 /** a value of the world tuning: what a control shows and sets */
 export type TuningValue = boolean | number | string
 
+/** a color as the tools tell and take it, which a module holds as #rrggbb: its OkHSL hue in degrees, saturation and lightness in percent */
+export type TuningColor = {
+  hue: number
+  lightness: number
+  saturation: number
+}
+
+/** a value as the tools tell and take it, and the panel’s Copy button copies it: a color as its {@link TuningColor}, anything else as the module holds it */
+export type ToldValue = TuningColor | TuningValue
+
 /** every value of a tuning module by its key */
 export type TuningValues = Record<string, TuningValue>
 
@@ -32,7 +42,7 @@ export type TuningRange<Values> = ControlBase<Values> & {
 export type TuningOption = readonly [value: TuningValue, label: string]
 
 export type TuningControl<Values> = ControlBase<Values> & ({
-  /** a color as #rrggbb */
+  /** a color as #rrggbb, which the tools tell and take as its {@link TuningColor} */
   kind: 'color'
 } | {
   kind: 'select'

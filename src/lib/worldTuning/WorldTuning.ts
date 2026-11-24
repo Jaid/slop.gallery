@@ -1,16 +1,19 @@
 import type TuningModule from './base/TuningModule.ts'
 import type {TuningEntry, TuningSource} from './base/TuningModule.ts'
-import type {TuningValue, TuningValues} from './controls.ts'
+import type {ToldValue, TuningValue, TuningValues} from './controls.ts'
 
 /** values by their keys by the id of their module, like `{view: {fov: 50}}` */
 export type TuningChanges = Record<string, Record<string, TuningValue>>
 
-/** what a change did to one value */
+/** values by their keys by the id of their module as the tools tell and take them, like `{studio: {lightColor: {hue: 265, saturation: 53, lightness: 76}}}` */
+export type ToldChanges = Record<string, Record<string, ToldValue>>
+
+/** what a change did to one value, as the tools tell it */
 export type TuningChange = {
-  from: TuningValue
+  from: ToldValue
   key: string
   module: string
-  to: TuningValue
+  to: ToldValue
 }
 
 /** a value of the world tuning as the `get_world_tuning` WebMCP tool tells it */
@@ -22,7 +25,7 @@ export type TuningControlDump = {
   /** its group box */
   group: string
   /** the value the page started with, left out while it still has it */
-  initial?: TuningValue
+  initial?: ToldValue
   integer?: true
   key: string
   /** what kind of control it has: switch for a group’s heading that switches it to `on` or `off` */
@@ -46,7 +49,7 @@ export type TuningControlDump = {
   reloads?: true
   step?: number
   unit?: string
-  value: TuningValue
+  value: ToldValue
 }
 
 export type TuningModuleDump = {
@@ -77,8 +80,8 @@ function describeEntry<Values extends TuningValues>(module: TuningModule<Values>
     ...caption ? {caption} : {},
     label: control?.label ?? group.title,
     kind: control?.kind ?? (valueSwitch ? 'switch' : 'toggle'),
-    value,
-    ...value === initial ? {} : {initial},
+    value: module.tell(key, value),
+    ...value === initial ? {} : {initial: module.tell(key, initial)},
     ...applies ? {} : {applies: false},
     ...module.rebuilds(key) ? {rebuilds: true} : {},
     ...module.reloads(key) ? {reloads: true} : {},
@@ -160,8 +163,8 @@ export default class WorldTuning {
   }
 
   /**
-   * Sets values of any of the modules, null bringing back the one the page started with. Every value is checked first, so one the module doesn’t take sets none, with a TypeError saying what it takes.
-   * Returns every value that changed.
+   * Sets values of any of the modules as the tools give them, null bringing back the one the page started with. Every value is checked first, so one the module doesn’t take sets none, with a TypeError saying what it takes.
+   * Returns every value that changed, as the tools tell it.
    */
   set(changes: Readonly<Record<string, Readonly<Record<string, unknown>>>>, source: TuningSource = 'code'): Array<TuningChange> {
     const plans = Object.entries(changes).map(([id, values]) => {
@@ -171,7 +174,7 @@ export default class WorldTuning {
       }
       const resets = Object.keys(values).filter(key => values[key] === null)
       for (const key of resets) {
-        module.validate(key, module.initial[key])
+        module.entry(key)
       }
       const assigned = Object.fromEntries(Object.entries(values).filter(([, value]) => value !== null).map(([key, value]) => [key, module.validate(key, value)]))
       return {
@@ -195,8 +198,8 @@ export default class WorldTuning {
           changed.push({
             module: module.id,
             key,
-            from: before[key],
-            to: after[key],
+            from: module.tell(key, before[key]),
+            to: module.tell(key, after[key]),
           })
         }
       }
@@ -212,6 +215,14 @@ export default class WorldTuning {
         unsubscribe()
       }
     }
+  }
+
+  /** {@link changes} as the tools tell and take them, which the panel’s Copy button copies. */
+  toldChanges(): ToldChanges {
+    return Object.fromEntries(Object.entries(this.changes()).map(([id, values]) => {
+      const module = this.module(id)!
+      return [id, Object.fromEntries(Object.entries(values).map(([key, value]) => [key, module.tell(key, value)]))]
+    }))
   }
 
   /** Every module’s values by its id. */

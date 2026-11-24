@@ -210,7 +210,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'get_world_tuning',
       title: 'Inspect world tuning',
-      description: 'Return the world tuning: every value the panel G shows with ?development (or ?world_tuning from the start) lets the world be tuned by, live, by module: view (scale, field of view and tone mapping), the modules only the world has, like the gallery’s lighting (its sun, lamps and fill on top of its lighting preset), pipeline (the passes of the render pipeline of heavy graphics and the lookups of the shadows) and overlay (the lines of the world overlay). Each module has its id, title, whether the panel shows its controls right now (shown, the pipeline’s only in heavy graphics, otherwise with a hint) and its controls in the panel’s order, each with its key, group box, the caption of the part of the group it is in, label, kind (range, select, toggle, color as #rrggbb, or switch for a group’s heading that switches the value between on and off), value, the initial one the page started with where it differs, a range’s min, max, step, unit and whether it is an integer or a percentage of 1, a select’s options as {value, label}, on and off for a switch, off for the value a checkbox in front of the label switches it off to, applies false while its group is switched off or it does nothing with the other values, rebuilds for a value that builds something anew, like a pass of the pipeline, and reloads for one that reloads the page. Also tells whether the panel shows (open) and whether the page has ?development (development), without which no value takes effect. Read-only.',
+      description: 'Return the world tuning: every value the panel G shows with ?development (or ?world_tuning from the start) lets the world be tuned by, live, by module: view (scale, field of view and tone mapping), the modules only the world has, like the gallery’s lighting (its sun, lamps and fill on top of its lighting preset) and the Studio’s studio (its size, openings, moon or sun, two lamps, fill, finishes and frame), pipeline (the passes of the render pipeline of heavy graphics and the lookups of the shadows) and overlay (the lines of the world overlay). Each module has its id, title, whether the panel shows its controls right now (shown, the pipeline’s only in heavy graphics, otherwise with a hint) and its controls in the panel’s order, each with its key, group box, the caption of the part of the group it is in, label, kind (range, select, toggle, color as its OkHSL {hue, saturation, lightness} in whole degrees and percent, which the panel shows as a slider each, or switch for a group’s heading that switches the value between on and off), value, the initial one the page started with where it differs, a range’s min, max, step, unit and whether it is an integer or a percentage of 1, a select’s options as {value, label}, on and off for a switch, off for the value a checkbox in front of the label switches it off to, applies false while its group is switched off or it does nothing with the other values, rebuilds for a value that builds something anew, like a pass of the pipeline, and reloads for one that reloads the page. Also tells whether the panel shows (open) and whether the page has ?development (development), without which no value takes effect. Read-only.',
       read: () => getBridge().getWorldTuning(),
     },
   ].map(({read, ...tool}) => ({
@@ -792,7 +792,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'set_world_tuning',
       title: 'Set world tuning',
-      description: 'Set values of the world tuning like its panel does, by the module ids and keys get_world_tuning lists, like {values: {view: {fov: 50}, pipeline: {bloom: false, vignette: 0.3}}}, where null brings a value back to the one the page started with. Every value is checked against its control first, so one it does not take sets none, and the error says what it takes: a number within a range’s min and max, or its off value, one of a select’s option values, true or false for a toggle, #rrggbb for a color, or a switch’s on or off value. The values apply live and stay in effect whether the panel shows or not, as the panel shows them too; changing one that rebuilds something, like a pass of the render pipeline, compiles what it builds, which get_loading_items lists meanwhile, so render a few frames before capturing. The pipeline’s values only show in heavy graphics. The panel’s Copy button copies the values tuned so far in the very shape values takes. Each settled change logs a gallery.world_tuning.changed telemetry event. Fails for an unknown module or key, whose error lists what there is, and on a page without ?development, where no value takes effect. Returns every value that changed, with its module, key, from and to. Does not move the player, change focus or simulate input.',
+      description: 'Set values of the world tuning like its panel does, by the module ids and keys get_world_tuning lists, like {values: {view: {fov: 50}, pipeline: {bloom: false, vignette: 0.3}, studio: {lightColor: {hue: 265, saturation: 53, lightness: 76}}}}, where null brings a value back to the one the page started with. Every value is checked against its control first, so one it does not take sets none, and the error says what it takes: a number within a range’s min and max, or its off value, one of a select’s option values, true or false for a toggle, a color as its OkHSL {hue, saturation, lightness}, a hue from 0 to 360°, a saturation and a lightness from 0 to 100%, any left out at hue 0°, saturation 100% and lightness 50%, or a switch’s on or off value. The values apply live and stay in effect whether the panel shows or not, as the panel shows them too; changing one that rebuilds something, like a pass of the render pipeline, compiles what it builds, which get_loading_items lists meanwhile, so render a few frames before capturing. The pipeline’s values only show in heavy graphics. The panel’s Copy button copies the values tuned so far in the very shape values takes. Each settled change logs a gallery.world_tuning.changed telemetry event. A value marked reloads, like the Studio’s size, reloads the page right after answering, carrying every tuned value and the player’s pose over, and the tools register anew once the next page has loaded. Fails for an unknown module or key, whose error lists what there is, and on a page without ?development, where no value takes effect. Returns every value that changed, with its module, key, from and to, a color as its OkHSL. Does not move the player, change focus or simulate input.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -801,7 +801,36 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             description: 'the values to set by their keys by module id, null for the one the page started with',
             additionalProperties: {
               type: 'object',
-              additionalProperties: {type: ['boolean', 'number', 'string', 'null']},
+              additionalProperties: {
+                anyOf: [
+                  {type: ['boolean', 'number', 'string', 'null']},
+                  {
+                    type: 'object',
+                    description: 'a color as its OkHSL, any axis left out at hue 0°, saturation 100% and lightness 50%',
+                    properties: {
+                      hue: {
+                        type: 'number',
+                        description: 'degrees',
+                        minimum: 0,
+                        maximum: 360,
+                      },
+                      saturation: {
+                        type: 'number',
+                        description: 'percent',
+                        minimum: 0,
+                        maximum: 100,
+                      },
+                      lightness: {
+                        type: 'number',
+                        description: 'percent',
+                        minimum: 0,
+                        maximum: 100,
+                      },
+                    },
+                    additionalProperties: false,
+                  },
+                ],
+              },
             },
           },
         },
