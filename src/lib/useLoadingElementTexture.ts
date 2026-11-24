@@ -5,7 +5,6 @@ import rasterizeElements from 'rasterize-element'
 import renderElement from 'rasterize-element/react'
 import {useMemo} from 'react'
 
-import fitLines, {hasFittedLines} from './fitLines.ts'
 import useLoadingCanvasTexture from './useLoadingCanvasTexture.ts'
 
 /** A texture whose face is HTML: `render` gives a node of `width` × `height` CSS pixels, which the browser lays out with the page’s style sheets. */
@@ -17,7 +16,7 @@ export type ElementTextureRecipe<T = undefined> = Omit<ReactCanvasTextureRecipe<
   render: (inputs: T) => ReactNode
 }
 
-/** Rasterizes a face of React DOM and hands it over as a canvas, with lines marked by `fitted` shrunk to fit. */
+/** Rasterizes a face of React DOM and hands it over as a canvas. */
 export async function rasterizeFace(node: ReactNode, {width, height, resolution}: {
   height: number
   resolution?: number
@@ -30,7 +29,6 @@ export async function rasterizeFace(node: ReactNode, {width, height, resolution}
     resolution,
     signal,
     elements: [face.element],
-    arrange: hasFittedLines(face.element) ? () => fitLines(face.element) : undefined,
   })
 }
 

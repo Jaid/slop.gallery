@@ -4,7 +4,6 @@ import Branch from 'branch-component'
 import {unknown} from 'knot-materials/rarities.ts'
 
 import {knotDetailLine, labelAtlasColumns, labelBackground, labelHeight, labelWidth} from '#src/components/KnotLabels/layout.ts'
-import {fitted} from '#src/lib/fitLines.ts'
 
 import signAccentColor from '../signAccentColor.ts'
 
@@ -22,14 +21,14 @@ export default function KnotLabelFace({exhibit}: {exhibit: KnotLabel}) {
     }}
   >
     <div className={css.accent} style={{background: accent}} />
-    <div className={`${css.line} ${css.number}`} {...fitted}>{exhibit.label}</div>
-    <div className={`${css.line} ${css.title}`} style={{color: accent}} {...fitted}>{exhibit.title}</div>
+    <div className={`${css.line} ${css.number}`}>{exhibit.label}</div>
+    <div className={`${css.line} ${css.title}`} style={{color: accent}}>{exhibit.title}</div>
     <Branch if={exhibit.rarity !== unknown}><div className={`${css.line} ${css.rarity}`}>{Array.from({length: exhibit.rarity}, () => '★').join(' ')}</div></Branch>
     <div className={css.model}>
       {exhibit.candidate?.icon && <img className={css.icon} alt='' src={exhibit.candidate.icon} />}
-      <span className={css.modelTitle} {...fitted}>{exhibit.modelTitle}</span>
+      <span className={css.modelTitle}>{exhibit.modelTitle}</span>
     </div>
-    {detail && <div className={`${css.line} ${css.detail}`} {...fitted}>{detail}</div>}
+    {detail && <div className={`${css.line} ${css.detail}`}>{detail}</div>}
   </div>
 }
 

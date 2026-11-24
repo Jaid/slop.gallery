@@ -98,7 +98,7 @@ test('a billboard shows dynamic numbers, titles, accents, pictures in their own 
   }))
   expect(markup).toContain(`width:${layout.width}px;height:${layout.height}px;background:${knotPreviewBackground}`)
   for (const finish of bay.finishes) {
-    expect(markup).toContain(`style="color:${signAccentColor(finish.placeholder.color)}" data-fit="">${knotNumberLabel(finish.number)} · ${finish.title}<`)
+    expect(markup).toContain(`style="color:${signAccentColor(finish.placeholder.color)}">${knotNumberLabel(finish.number)} · ${finish.title}<`)
   }
   const pictures = markup.matchAll(/class="([^"]*)" style="width:([\d.]+)px;height:([\d.]+)px"/gu).filter(match => match[2] !== String(layout.tileWidth)).toArray()
   expect(pictures).toHaveLength(bay.finishes.length)

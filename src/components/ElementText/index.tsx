@@ -4,7 +4,6 @@ import Branch from 'branch-component'
 import {useEffect, useEffectEvent, useMemo} from 'react'
 import {useGraphicsModeValue} from 'use-graphics-mode'
 
-import {fitted} from '#src/lib/fitLines.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import useLoadingElementTexture from '#src/lib/useLoadingElementTexture.ts'
 
@@ -64,7 +63,7 @@ export function Face({background, color, fontFamily, fontSize, fontWeight, heigh
         fontFamily,
         fontSize,
         fontWeight,
-      }} {...fitted}
+      }}
     >{text}</div>
   </div>
 }

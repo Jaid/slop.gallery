@@ -11,6 +11,8 @@ import {knotDetailLine, labelAtlasColumns, labelBackground, labelHeight, labelTi
 import redrawPlates from '../../src/components/KnotLabels/redrawPlates.ts'
 import signAccentColor from '../../src/components/signAccentColor.ts'
 
+import css from '../../src/components/KnotLabelFace/style.module.sass'
+
 describe('Knot nameplates', () => {
   test('a complete face preserves text density and the atlas fits the current exhibition', () => {
     expect(labelWidth / labelHeight).toBeCloseTo(knotSign.width / knotSign.height)
@@ -19,19 +21,18 @@ describe('Knot nameplates', () => {
     expect(labelAtlasColumns * labelWidth).toBeLessThanOrEqual(8192)
     expect(Math.ceil(knotExhibition.length / labelAtlasColumns) * labelHeight).toBeLessThanOrEqual(8192)
   })
-  test('a face holds its number, title, stars, model with its mark and how it was made, with every line of text fitted', () => {
+  test('a face holds its number, title, stars, model with its mark and how it was made, ', () => {
     const exhibit = knotExhibition[0]
     const markup = renderToStaticMarkup(createElement(KnotLabelFace, {exhibit}))
     expect(markup).toContain(`width:${labelWidth}px;height:${labelHeight}px`)
     expect(markup).toContain(`background:${labelBackground}`)
     expect(markup).toContain(`style="background:${signAccentColor(exhibit.placeholder.color)}"`)
-    expect(markup).toContain(`style="color:${signAccentColor(exhibit.placeholder.color)}" data-fit="">${exhibit.title}<`)
+    expect(markup).toContain(`style="color:${signAccentColor(exhibit.placeholder.color)}">${exhibit.title}<`)
     for (const text of [exhibit.label, exhibit.title, exhibit.modelTitle, knotDetailLine(exhibit.harness, exhibit.author.model.effortLevel), Array.from({length: exhibit.rarity}, () => '★').join(' ')]) {
       expect(markup.split(`>${text}<`)).toHaveLength(2)
     }
     expect(markup.split('<img')).toHaveLength(2)
     expect(markup).toContain(`src="${exhibit.candidate.icon}"`)
-    expect(markup.split('data-fit')).toHaveLength(5)
     expect(markup.indexOf('<img')).toBeLessThan(markup.indexOf(`>${exhibit.modelTitle}<`))
   })
   test('a face without a mark or a way it was made leaves both out instead of leaving them empty', () => {
@@ -44,7 +45,7 @@ describe('Knot nameplates', () => {
       },
     }))
     expect(markup).not.toContain('<img')
-    expect(markup.split('data-fit')).toHaveLength(4)
+    expect(markup.split(css.detail)).toHaveLength(1)
   })
   test('formats harness and thinking effort with flattenString.list semantics', () => {
     const cases = [
@@ -71,7 +72,7 @@ describe('Knot nameplates', () => {
         },
       }))
       // An empty one leaves its line out.
-      expect(markup.split('data-fit')).toHaveLength(expected ? 5 : 4)
+      expect(markup.split(css.detail)).toHaveLength(expected ? 2 : 1)
       if (expected) {
         expect(markup).toContain(`>${expected}<`)
       }

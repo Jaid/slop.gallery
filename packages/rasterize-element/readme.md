@@ -49,7 +49,7 @@ The promise resolves once every element is painted with its web fonts and `<img>
 
 ## Adapting to the layout
 
-Some things need the layout before they can be decided, like shrinking a line until it fits. `arrange` runs once the elements are laid out and measurable, and they are painted anew after it, which takes another rendering update:
+Some things need the layout before they can be decided, like shrinking a line until it fits (which CSS `text-fit: shrink` does on its own in Chromium, without another rendering update). `arrange` runs once the elements are laid out and measurable, and they are painted anew after it, which takes another rendering update:
 
 ```ts
 const canvas = await rasterizeElements({

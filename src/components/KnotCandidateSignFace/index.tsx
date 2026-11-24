@@ -1,5 +1,3 @@
-import {fitted} from '#src/lib/fitLines.ts'
-
 import css from './style.module.sass'
 
 export const candidateSignBackground = '#10252b'
@@ -19,6 +17,6 @@ export default function KnotCandidateSignFace({title, icon}: {
   >
     <div className={css.border} />
     {icon && <img className={css.icon} alt='' src={icon} />}
-    <div className={icon ? `${css.title} ${css.withIcon}` : css.title} {...fitted}>{title}</div>
+    <div className={icon ? `${css.title} ${css.withIcon}` : css.title}>{title}</div>
   </div>
 }

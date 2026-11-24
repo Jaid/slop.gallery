@@ -3,8 +3,6 @@ import type {KnotBay} from 'knot-materials/exhibition.ts'
 import {knotNumberLabel} from 'knot-materials/exhibition.ts'
 import {knotPreviewIconMaximumHeight, knotPreviewIconMaximumWidth, knotPreviewTextureLayout} from 'knot-materials/KnotPreviewLayout.ts'
 
-import {fitted} from '#src/lib/fitLines.ts'
-
 import signAccentColor from '../signAccentColor.ts'
 
 import css from './style.module.sass'
@@ -42,7 +40,7 @@ export default function KnotPreviewFace({bay, images}: {
               }
             }}
           />
-          <div className={css.caption} style={{color: signAccentColor(finish.placeholder.color)}} {...fitted}>{knotNumberLabel(finish.number)} · {finish.title}</div>
+          <div className={css.caption} style={{color: signAccentColor(finish.placeholder.color)}}>{knotNumberLabel(finish.number)} · {finish.title}</div>
         </div>
       })}
     </div>)}

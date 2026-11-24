@@ -103,7 +103,7 @@ test('large physical signs have two ceiling mounts, bounded chain geometry and r
     geometry.dispose()
   }
 })
-test('printed faces use a compact raster with a fitted model name and its mark, without exhibit numbers', () => {
+test('printed faces use a compact raster with a model name and its mark, without exhibit numbers', () => {
   expect(candidateSignTextureSize).toEqual([1024, 246])
   expect(candidateSignTextureSize[0] * candidateSignTextureSize[1] * 4 * 12).toBeLessThan(12 * 1024 ** 2)
   for (const icon of ['/mark.svg', undefined]) {
@@ -114,7 +114,6 @@ test('printed faces use a compact raster with a fitted model name and its mark, 
     expect(markup).toContain(`width:${candidateSignTextureSize[0]}px;height:${candidateSignTextureSize[1]}px`)
     expect(markup).toContain(`background:${candidateSignBackground}`)
     expect(markup.split('>A very long model name<')).toHaveLength(2)
-    expect(markup.split('data-fit')).toHaveLength(2)
     expect(markup.includes('<img')).toBe(icon !== undefined)
     expect(markup).not.toContain('>#')
     if (icon) {
@@ -127,5 +126,5 @@ test('printed faces use a compact raster with a fitted model name and its mark, 
     icon: '/mark.svg',
   }))
   const alone = renderToStaticMarkup(createElement(KnotCandidateSignFace, {title: 'Name'}))
-  expect(/class="([^"]*)" data-fit/u.exec(withMark)![1]).not.toBe(/class="([^"]*)" data-fit/u.exec(alone)![1])
+  expect(/class="([^"]*)">Name</u.exec(withMark)![1]).not.toBe(/class="([^"]*)">Name</u.exec(alone)![1])
 })

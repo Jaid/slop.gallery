@@ -1,18 +1,21 @@
 import {expect, test} from 'bun:test'
+import {fileURLToPath} from 'node:url'
 
+import puppeteer from 'puppeteer-core'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
+import {preprocessCSS, resolveConfig} from 'vite'
 
 import {Face} from '#component/ElementText'
 
-const face = (fontFamily: string) => renderToStaticMarkup(createElement(Face, {
+const face = (fontFamily: string, text = 'Cornelius van Honk', fontSize = 54) => renderToStaticMarkup(createElement(Face, {
   color: '#696653',
   fontFamily,
-  fontSize: 54,
+  fontSize,
   fontWeight: 400,
   height: 85,
   maxWidth: 0.9,
-  text: 'Cornelius van Honk',
+  text,
   width: 1536,
 }))
 test('a line’s font family reaches CSS as it is, so generic families stay generic', () => {
@@ -21,9 +24,38 @@ test('a line’s font family reaches CSS as it is, so generic families stay gene
   expect(face('Georgia, serif')).toContain('font-family:Georgia, serif')
   expect(face('sans-serif')).not.toContain('&quot;')
 })
-test('a line is fitted into its share of the face', () => {
+test('a line is limited to its share of the face', () => {
   const markup = face('sans-serif')
   expect(markup).toContain('width:1536px;height:85px')
   expect(markup).toContain('max-width:90%')
-  expect(markup).toContain('data-fit="">Cornelius van Honk<')
+  expect(markup).toContain('>Cornelius van Honk<')
+})
+test.skipIf(!Bun.env.BROWSER)('a line too long for the face shrinks into its share, a short one keeps its size', async () => {
+  const file = fileURLToPath(new URL('../../src/components/ElementText/style.module.sass', import.meta.url))
+  const config = await resolveConfig({
+    configLoader: 'native',
+    logLevel: 'silent',
+  }, 'serve')
+  const {code} = await preprocessCSS(await Bun.file(file).text(), file, config)
+  await using browser = await puppeteer.launch({executablePath: Bun.env.BROWSER})
+  const page = await browser.newPage()
+  // Far wider than the face at this size, so the line once widened the face’s track and shrank into 90% of that instead.
+  await page.setContent(`<style>body{margin:0}${code}</style>${face('sans-serif', 'The Feline Overlord’s Morning Glare at Dawn', 120)}${face('sans-serif', 'Short')}`)
+  const lines = await page.$$eval('body > div', faces => faces.map(element => {
+    const range = document.createRange()
+    range.selectNodeContents(element.firstElementChild!)
+    const text = range.getBoundingClientRect()
+    const bounds = element.getBoundingClientRect()
+    return {
+      left: text.left - bounds.left,
+      right: bounds.right - text.right,
+      width: text.width,
+    }
+  }))
+  const [long, short] = lines
+  expect(long.width).toBeLessThanOrEqual(1536 * 0.9 + 1)
+  expect(long.width).toBeGreaterThan(1536 * 0.9 - 4)
+  expect(Math.abs(long.left - long.right)).toBeLessThan(1)
+  expect(short.width).toBeLessThan(1536 * 0.5)
+  expect(Math.abs(short.left - short.right)).toBeLessThan(1)
 })

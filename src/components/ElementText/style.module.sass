@@ -3,6 +3,8 @@
 // the face of one line of text; its size, colors and font come from index.tsx
 .face
   display: grid
+  // A track as wide as the face: an auto one widens to a longer line, its max-width along with it, so it would shrink to fit a box wider than the face.
+  grid-template-columns: 100%
   place-items: center
   overflow: hidden
 
