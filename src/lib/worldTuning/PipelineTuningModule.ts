@@ -186,11 +186,10 @@ export default class PipelineTuningModule extends TuningModule<RenderPipelineSet
   ]
 
   override readonly hint = 'Switch graphics on in the menu to tune the pipeline.'
-  override readonly id = 'pipeline'
   override readonly title = 'Render pipeline'
 
   constructor() {
-    super(getRenderPipelineSettings(getGraphicsProfile(true, readCinematicGraphics()), getAntiAliasing(true)))
+    super('pipeline', getRenderPipelineSettings(getGraphicsProfile(true, readCinematicGraphics()), getAntiAliasing(true)))
   }
 
   /** Only heavy graphics draw through a pipeline of passes. */

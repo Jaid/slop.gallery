@@ -3,6 +3,26 @@ import type {Vec3} from 'math'
 
 import {environmentRandom, isDefaultSeed} from '#src/lib/environmentSeed.ts'
 import {sunDirectionFromAngles} from '#src/lib/gallery/sun.ts'
+import {moonlight} from '#src/worlds/sandbox/moon.ts'
+
+import {chandelierRange} from '../lib/sandboxFinish.ts'
+import {studioPlan} from './plan.ts'
+import {onStep, studioSteps} from './steps.ts'
+
+/** a lamp hanging over the Studio’s floor, without a fixture */
+export type StudioLamp = {
+  /** how wide its shadow’s edges blur, as an angle seen from the lamp in degrees, or 0 to blur as every lamp’s do */
+  blur: number
+  decay: number
+  /** relative to the middle of the floor, in meters */
+  position: Vec3
+  /** how far it reaches, in meters, or 0 for no end */
+  range: number
+  /** in candela, 0 for a lamp that is off */
+  strength: number
+  /** as #rrggbb */
+  tint: string
+}
 
 /** how the Studio is lit and its works are framed, which every seed rolls anew but the default one */
 export type StudioLook = {
@@ -11,72 +31,116 @@ export type StudioLook = {
     ambient: number
     hemisphere: number
   }
-  /** the floor’s mirror: a factor on its finish’s reflectance, and the radius of its blur in pixels of a 1080-row image, or undefined for the finish’s own */
+  /** the floor’s mirror: a factor on its finish’s reflectance, the radius of its blur in pixels of a 1080-row image, or undefined for the finish’s own, and a factor on its finish’s loss, how coarse a mip of the mirror it reads */
   floor: {
     blur: number | undefined
+    loss: number
     strength: number
   }
   /** the frame every work in the room hangs in */
   frame: PortraitFrameId
-  /** the lamp of the Cell’s chandelier, which hangs over the middle of the floor without the chandelier */
-  lamp: {
-    decay: number
-    /** over the floor, in meters */
-    height: number
-    /** in candela */
-    strength: number
-    /** as #rrggbb */
-    tint: string
+  /** the primary lamp, the Cell’s chandelier’s without the chandelier, and a secondary one, which most other seeds leave off */
+  lamps: {
+    primary: StudioLamp
+    secondary: StudioLamp
   }
-  /** the moon falling in through the skylights: where it stands, in degrees clockwise from north and over the horizon, and how strongly it shines */
+  /** the moon falling in through the ceiling’s openings, on some seeds warm like the sun: where it stands, in degrees clockwise from north and over the horizon, its color as #rrggbb, how strongly it shines, how thickly the air shows its shafts, as the room’s volumetric sun, and how widely its shadow’s edges blur, as a factor on the graphics mode’s */
   moon: {
     azimuth: number
+    blur: number
+    color: string
     elevation: number
     intensity: number
+    shafts: number
   }
 }
 
 /** the frames a seed rolls one of for all of the Studio’s works, the Cell’s first */
 export const studioFrames = ['louis', 'classic', 'gilding', 'barbizon', 'deco', 'kumiko', 'whistler', 'oak', 'float', 'sevres'] as const satisfies ReadonlyArray<PortraitFrameId>
-/** The Studio’s look in the default environment: the Cell’s fill, lamp, moon and frame, its lamp hung higher, at 5 m, and its moon higher in the sky, so it falls through the skylights onto the floor and the lower walls, and every floor’s own mirror. */
+/** The Studio’s look in the default environment: the Cell’s lamp, moonlight and frame, the lamp dimmed, falling off with the square of the distance and hung 4 m over the middle of the floor, a faint rosy one low by the west wall, no fill, the moon high in the west-southwest, its shadow four times as soft as the graphics mode’s, in nearly clear air, and every floor’s mirror at half its own strength, read at full resolution and blurred 10 px wide. */
 export const defaultStudioLook: StudioLook = {
   frame: studioFrames[0],
   fill: {
-    ambient: 0.15,
-    hemisphere: 0.45,
+    ambient: 0,
+    hemisphere: 0,
   },
   floor: {
-    blur: undefined,
-    strength: 1,
+    blur: 10,
+    loss: 0,
+    strength: 0.5,
   },
-  lamp: {
-    decay: 1.5,
-    height: 5,
-    strength: 50,
-    tint: '#ffedc4',
+  lamps: {
+    primary: {
+      blur: 0,
+      decay: 2,
+      position: [0, 4, 0],
+      range: chandelierRange,
+      strength: 30,
+      tint: '#ffedc4',
+    },
+    // A tenth of the way east from the west wall, seven tenths of the way south from the north wall, an eighth of the way up.
+    secondary: {
+      blur: 1,
+      decay: 1.5,
+      position: [-3.2, 1, 1.6],
+      range: chandelierRange,
+      strength: 20,
+      tint: '#ffebf0',
+    },
   },
   moon: {
-    azimuth: 212,
-    elevation: 50,
-    intensity: 7,
+    azimuth: 249,
+    blur: 4,
+    color: moonlight.color,
+    elevation: 66,
+    intensity: 10,
+    shafts: 0.1,
   },
 }
-/** what other seeds roll their looks from, each value evenly between its bounds */
+/** what other seeds roll their looks from, each value evenly between its bounds; the fill and the lamps stay dim enough for the light through the ceiling to stand out even on pale finishes */
 export const studioLookRanges = {
-  ambient: [0.04, 0.3],
-  hemisphere: [0.1, 0.8],
+  ambient: [0.03, 0.18],
+  hemisphere: [0.08, 0.45],
   floorStrength: [0.4, 2],
   floorBlur: [0, 24],
-  lampDecay: [1, 2],
+  /** from as sharp as every lamp’s to soft, in degrees */
+  lampBlur: [0, 6],
+  lampDecay: [1.4, 2],
+  /** off the middle of the floor along x and along z, as a share of the room’s width and depth */
+  lampAside: [-0.2, 0.2],
+  /** no higher than 1.5 m under the ceiling */
   lampHeight: [3, 7],
-  lampStrength: [20, 90],
+  lampStrength: [15, 55],
+  /** where a secondary lamp hangs along x and along z, as a share of the room’s width and depth from its north-western corner */
+  secondaryLampShare: [0.15, 0.85],
+  /** how high a secondary lamp hangs, as a share of the room’s height, which leaves at least 1.5 m under the lowest ceiling */
+  secondaryLampHeight: [0.3, 0.7],
+  secondaryLampStrength: [10, 40],
   /** from candlelight to cool white */
   lampKelvin: [2200, 6500],
-  /** round the south-southwest and high enough that the moon falls through the skylights onto the floor and the lower walls */
-  moonAzimuth: [200, 228],
-  moonElevation: [40, 65],
-  moonIntensity: [3, 12],
+  /** from anywhere round the room */
+  moonAzimuth: [0, 360],
+  /** from half as soft as the graphics mode’s to four times as soft */
+  moonBlur: [0.5, 4],
+  /** high enough that the shafts fall steeply through the room */
+  moonElevation: [60, 85],
+  moonIntensity: [4, 16],
+  /** from clear air to dusty, which the openings spreading over the whole ceiling fill with light wherever one looks */
+  moonShafts: [0.1, 0.6],
+  /** a sun’s color temperature, from a low afternoon sun to midday */
+  sunKelvin: [3800, 5600],
+  sunIntensity: [7, 20],
+  /** a subtle seed’s moon or sun */
+  subtleIntensity: [1.5, 4],
 } as const satisfies Record<string, readonly [min: number, max: number]>
+/** a subtle seed’s air, nearly clear */
+export const studioSubtleShafts = 0.05
+/** how likely a seed lights the Studio with a warm sun instead of the moon */
+export const studioSunChance = 0.35
+/** how likely a seed’s moon or sun is subtle, faint on the floor and its shafts hardly showing in the air */
+export const studioSubtleChance = 0.2
+/** how likely a seed switches the secondary lamp on */
+export const studioSecondaryLampChance = 0.3
 
 const round = (value: number, digits: number) => Math.round(value * 10 ** digits) / 10 ** digits
 const hex = (channel: number) => Math.round(Math.min(255, Math.max(0, channel))).toString(16).padStart(2, '0')
@@ -90,36 +154,61 @@ export function kelvinTint(kelvin: number) {
   return `#${hex(red)}${hex(green)}${hex(blue)}`
 }
 
-/** The Studio’s look in the environment of `seed`: the default one’s for the default seed, otherwise every value rolled on its own within {@link studioLookRanges} and one of the {@link studioFrames}. */
+/**
+ * The Studio’s look in the environment of `seed`: the default one’s for the default seed, otherwise every value rolled on its own within {@link studioLookRanges} onto its {@link studioSteps}, and one of the {@link studioFrames}.
+ * Its lamps hang within the room the seed’s {@link studioPlan} gives, the secondary one lit on some seeds, see {@link studioSecondaryLampChance}, and some seeds light it subtly, see {@link studioSubtleChance}.
+ */
 export function studioLook(seed: number): StudioLook {
   if (isDefaultSeed(seed)) {
     return defaultStudioLook
   }
   const random = environmentRandom(seed).makeChild(['studio', 'look'])
-  const roll = (key: keyof typeof studioLookRanges, digits = 2) => {
-    const [min, max] = studioLookRanges[key]
-    return round(min + random.makeChild(key).roll() * (max - min), digits)
-  }
+  const between = (key: string, [min, max]: readonly [number, number], source = random) => min + source.makeChild(key).roll() * (max - min)
+  const roll = (key: keyof typeof studioLookRanges, step: number, source = random) => onStep(between(key, studioLookRanges[key], source), step)
+  const sun = random.makeChild('sun').rollBoolean({chance: studioSunChance})
+  const subtle = random.makeChild('subtle').rollBoolean({chance: studioSubtleChance})
+  const {clear: [width, depth], height} = studioPlan(seed)
+  /** how high the primary lamp hangs within the range, no higher than 1.5 m under the ceiling */
+  const lampHeight = (key: string, [lowest, highest]: readonly [number, number], source = random) => onStep(between(key, [lowest, Math.min(highest, height - 1.5)], source), studioSteps.lampPlace)
+  // The secondary lamp rolls from a source of its own, so the rest of the look rolls as it did without it.
+  const second = random.makeChild('secondaryLamp')
+  const share = (key: string, range: readonly [number, number]) => onStep(between(key, range, second), studioSteps.lampShare)
   return {
     frame: random.makeChild('frame').rollItem(studioFrames),
     fill: {
-      ambient: roll('ambient'),
-      hemisphere: roll('hemisphere'),
+      ambient: roll('ambient', studioSteps.fill),
+      hemisphere: roll('hemisphere', studioSteps.fill),
     },
     floor: {
-      blur: roll('floorBlur', 1),
-      strength: roll('floorStrength'),
+      blur: roll('floorBlur', studioSteps.mirrorBlur),
+      loss: 1,
+      strength: roll('floorStrength', studioSteps.mirror),
     },
-    lamp: {
-      decay: roll('lampDecay'),
-      height: roll('lampHeight'),
-      strength: roll('lampStrength', 0),
-      tint: kelvinTint(roll('lampKelvin', -1)),
+    lamps: {
+      primary: {
+        blur: roll('lampBlur', studioSteps.lampBlur),
+        decay: roll('lampDecay', studioSteps.lampDecay),
+        position: [onStep(between('lampAsideX', studioLookRanges.lampAside) * width, studioSteps.lampPlace), lampHeight('lampHeight', studioLookRanges.lampHeight), onStep(between('lampAsideZ', studioLookRanges.lampAside) * depth, studioSteps.lampPlace)],
+        range: chandelierRange,
+        strength: roll('lampStrength', studioSteps.lampStrength),
+        tint: kelvinTint(roll('lampKelvin', 10)),
+      },
+      secondary: {
+        blur: roll('lampBlur', studioSteps.lampBlur, second),
+        decay: roll('lampDecay', studioSteps.lampDecay, second),
+        position: [round((share('x', studioLookRanges.secondaryLampShare) - 0.5) * width, 4), round(share('height', studioLookRanges.secondaryLampHeight) * height, 4), round((share('z', studioLookRanges.secondaryLampShare) - 0.5) * depth, 4)],
+        range: chandelierRange,
+        strength: second.makeChild('lit').rollBoolean({chance: studioSecondaryLampChance}) ? roll('secondaryLampStrength', studioSteps.lampStrength, second) : 0,
+        tint: kelvinTint(roll('lampKelvin', 10, second)),
+      },
     },
     moon: {
-      azimuth: roll('moonAzimuth', 1),
-      elevation: roll('moonElevation', 1),
-      intensity: roll('moonIntensity', 1),
+      azimuth: roll('moonAzimuth', studioSteps.lightAngle) % 360,
+      blur: roll('moonBlur', studioSteps.lightBlur),
+      color: sun ? kelvinTint(roll('sunKelvin', 10)) : moonlight.color,
+      elevation: roll('moonElevation', studioSteps.lightAngle),
+      intensity: subtle ? roll('subtleIntensity', studioSteps.lightStrength) : (sun ? roll('sunIntensity', studioSteps.lightStrength) : roll('moonIntensity', studioSteps.lightStrength)),
+      shafts: subtle ? studioSubtleShafts : roll('moonShafts', studioSteps.lightShafts),
     },
   }
 }

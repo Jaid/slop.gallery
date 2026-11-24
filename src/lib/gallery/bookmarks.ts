@@ -2,6 +2,7 @@ import type {SpawnBookmark, Vec3} from './types.ts'
 
 import {Euler, Quaternion} from 'three/webgpu'
 
+import {carriedTuning} from '#src/lib/worldTuning/carryOver.ts'
 import world from '#src/worlds/current.ts'
 
 import {galleryEvents, notify} from './actions.ts'
@@ -14,11 +15,13 @@ export const bookmarkKey = 'KeyT'
 /** how close the player’s feet must be to a bookmark to count as standing in it, in meters */
 const bookmarkRadius = 1
 
-/** Move the player session to where the URL starts in the world, see `World.start`, which `?world_reach` also reaches out from: the `?spawn` bookmark, for a camera bookmark flying with its eyes at it, or else the default spawn of the `?room`. */
+/** Move the player session to where the URL starts in the world, see `World.start`, which `?world_reach` also reaches out from: the `?spawn` bookmark, for a camera bookmark flying with its eyes at it, or else the default spawn of the `?room`; after a reload the world tuning asked for, back where the player was. */
 export function applySpawnBookmark() {
   const {flying, pose, unknown} = world.start()
-  flyMode.active ||= flying
-  playerSession.restore(pose, flyMode.active)
+  // Unless the world shrank away from under the player, like a smaller room.
+  const carried = carriedTuning && world.contains(carriedTuning.pose.position) ? carriedTuning : undefined
+  flyMode.active ||= flying || (carried?.flying ?? false)
+  playerSession.restore(carried?.pose ?? pose, flyMode.active)
   if (unknown) {
     notify(`${world.title} has no ${unknown.parameter === 'spawn' ? 'bookmark' : 'room'} “${unknown.id}”.`)
   }

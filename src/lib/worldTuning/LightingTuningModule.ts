@@ -55,11 +55,10 @@ export default class LightingTuningModule extends TuningModule<LightingTuning> {
     }),
   ]
 
-  override readonly id = 'lighting'
   override readonly title = 'Lighting'
 
   constructor() {
-    super(getLightingTuning(lightingPresets[useLighting.getState().preset]))
+    super('lighting', getLightingTuning(lightingPresets[useLighting.getState().preset]))
   }
 }
 

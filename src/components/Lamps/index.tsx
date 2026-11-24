@@ -10,11 +10,12 @@ import {useShadowProps} from '#src/lib/rendering/shadowFilters.ts'
 import world from '#src/worlds/current.ts'
 
 type PlacedSpotLamp = Extract<PlacedLamp, {kind: 'spot'}>
+type PlacedPointLamp = Exclude<PlacedLamp, PlacedSpotLamp>
 
 // Lamps of rooms out of reach never exist, so they neither light nor compile into anything.
 const lamps = world.lamps().filter(lamp => world.reach.covers(lamp.room))
 const spots = lamps.filter((lamp): lamp is PlacedSpotLamp => lamp.kind === 'spot')
-const points = lamps.filter(lamp => lamp.kind !== 'spot')
+const points = lamps.filter((lamp): lamp is PlacedPointLamp => lamp.kind !== 'spot')
 /** Registers the lamp’s light by its global id while it is mounted, so that fixtures can find it and lighting knows where it shines. */
 const useRegistered = <Kind extends Light>(lamp: PlacedLamp) => {
   const light = useRef<Kind>(null)
@@ -42,11 +43,11 @@ const useShadow = (lamp: PlacedLamp) => {
   const isHeavy = useGraphicsMode()
   return lamp.shadow === 'heavy' ? isHeavy : lamp.shadow ?? false
 }
-/** Point lights that cast a shadow borrow a slot of the shadow pool with `userData.shadow`. */
-function PointLamp({lamp}: {lamp: PlacedLamp}) {
+/** Point lights that cast a shadow borrow a slot of the shadow pool with `userData.shadow`, blurred wider as `userData.softShadow` asks, the pool’s `softShadowKey`. */
+function PointLamp({lamp}: {lamp: PlacedPointLamp}) {
   const light = useRegistered<PointLight>(lamp)
   const shadow = useShadow(lamp)
-  return <pointLight color={lamp.tint ?? '#ffffff'} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} position={lamp.position} userData-shadow={shadow} ref={light} />
+  return <pointLight color={lamp.tint ?? '#ffffff'} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} position={lamp.position} userData-shadow={shadow} userData-softShadow={lamp.softShadow} ref={light} />
 }
 /** A spot light that casts a shadow takes a lights node of its own in every lit material. */
 function SpotLamp({lamp}: {lamp: PlacedSpotLamp}) {

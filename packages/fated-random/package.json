@@ -17,14 +17,14 @@
   "scripts": {
     "test": "bun test ./test"
   },
+  "devDependencies": {
+    "math": "0.1.0"
+  },
   "files": [
     "src",
     "readme.md",
     "license.txt"
   ],
   "sideEffects": false,
-  "devDependencies": {
-    "math": "0.1.0"
-  },
   "types": "./src/main.ts"
 }

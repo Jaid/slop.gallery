@@ -50,15 +50,16 @@ const wantsSoftShadow = (light: Light | null) => ((light?.userData[softShadowKey
  * so lending them out never rebuilds anything: a slot takes over its light’s place, color, reach and strength, and the batched loop skips the light while it is lent a slot.
  * The slots go to the nearest lights in view, a light holding one counting as a little nearer, so it keeps it until another comes clearly nearer, it goes dark or stops asking, or it is out of view while one in view needs it. Lights out of view never take a slot, and any left over go without.
  *
- * The first `softenable` slots can blur their shadows wider than every lamp’s, as a light’s {@link SoftShadow} under {@link softShadowKey} asks, which adds a wide blur to every lit material’s shader for each of them: lights asking for that take them, the others the rest first.
+ * The first {@link softenable} slots can blur their shadows wider than every lamp’s, as a light’s {@link SoftShadow} under {@link softShadowKey} asks, which adds a wide blur to every lit material’s shader for each of them: lights asking for that take them, the others the rest first.
  */
 export class ShadowPool {
   /** called once whenever more lights in view ask for a shadow than there are slots, with all of them; not again until they fit */
   onOverflow: ((lights: ReadonlyArray<PointLight>) => void) | undefined
   readonly slots: ReadonlyArray<PointLight>
+  /** how many of the first slots can blur their shadows wider than every lamp’s, which the scene mounting the slots sets before they render, as their filters depend on it */
+  softenable: number
   private readonly lent = new Map<PointLight, PointLight>
   private overflowing = false
-  private readonly softenable: number
   private readonly sources: Array<PointLight | null>
 
   constructor(count: number, softenable = 1) {
@@ -69,9 +70,8 @@ export class ShadowPool {
       slot.castShadow = true
       slot.shadow.camera.near = 0.1
       slot.shadow.normalBias = 0.035
-      if (index < softenable) {
-        softenShadow(slot.shadow)
-      }
+      // Only a softenable slot’s filter reads what it blurs by, but any slot may become one.
+      softenShadow(slot.shadow)
       slot.userData[shadowSlotKey] = true
       return slot
     })
@@ -87,12 +87,6 @@ export class ShadowPool {
   /** whether a light is lent a slot, so the slot shades it instead */
   isLent(light: Light) {
     return this.lent.has(light as PointLight)
-  }
-
-  /** whether a slot can blur its shadow otherwise than every lamp’s; only these need a softenable filter */
-  isSoftenable(slot: Light) {
-    const index = this.slots.indexOf(slot as PointLight)
-    return index !== -1 && index < this.softenable
   }
 
   /** Hands out the slots for this frame and copies each lent light onto its slot. Call it after the lights’ levels are applied, so slots copy their final strength. */

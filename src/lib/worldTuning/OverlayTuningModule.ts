@@ -23,11 +23,10 @@ export default class OverlayTuningModule extends TuningModule<OverlayTuning> {
     parameters: ({lineStyle, lineWidth}) => `&line_style=${lineStyle}&line_width=${lineWidth}`,
   })]
 
-  override readonly id = 'overlay'
   override readonly title = 'World overlay'
 
   constructor() {
-    super(initialOverlayTuning, useOverlayTuning)
+    super('overlay', initialOverlayTuning, useOverlayTuning)
   }
 
   override isShown() {

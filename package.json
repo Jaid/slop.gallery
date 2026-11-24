@@ -57,6 +57,7 @@
     "branch-component": "0.4.0",
     "canvas-textures": "workspace:*",
     "capture-session": "workspace:*",
+    "clipper2-ts": "2.0.1-19",
     "clsx": "2.1.1",
     "compose-id": "0.2.0",
     "deltable": "workspace:*",

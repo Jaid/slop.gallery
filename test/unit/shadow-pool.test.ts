@@ -54,8 +54,8 @@ test('a light asking for a softened shadow takes the softenable slot, which the 
   const [softenable] = world.pool.slots
   const plain = lamp(world.scene, -4, true)
   update(world)
-  expect(world.pool.isSoftenable(softenable)).toBe(true)
-  expect(world.pool.slots.filter(slot => world.pool.isSoftenable(slot))).toEqual([softenable])
+  // Only the first slot, unless the scene asks for more.
+  expect(world.pool.softenable).toBe(1)
   expect(softenable.intensity).toBe(0)
   expect(world.pool.isLent(plain)).toBe(true)
   const soft = lamp(world.scene, -6, true)
@@ -99,6 +99,24 @@ test('a light asking for a softened shadow takes the softenable slot over from a
   expect(other.position.z).toBe(-5)
   expect(world.pool.isLent(farther)).toBe(true)
   expect(softenable.shadow).toMatchObject({blurAngle: 0.05})
+})
+test('a pool with two softenable slots gives both to two lights asking for a softened shadow, though a plain one is nearer', () => {
+  const world = setup(3)
+  world.pool.softenable = 2
+  const [first, second, plainSlot] = world.pool.slots
+  const plain = lamp(world.scene, -3, true)
+  const soft = [lamp(world.scene, -5, true), lamp(world.scene, -6, true)]
+  for (const [index, light] of soft.entries()) {
+    light.userData[softShadowKey] = {
+      blurAngle: 0.05 * (index + 1),
+      softSamples: 8,
+    } satisfies SoftShadow
+  }
+  update(world)
+  expect([first, second].map(slot => slot.position.z).toSorted((a, b) => a - b)).toEqual([-6, -5])
+  expect(plainSlot.position.z).toBe(-3)
+  expect(world.pool.isLent(plain)).toBe(true)
+  expect(new Set([first, second].map(slot => (slot.shadow as typeof slot.shadow & SoftShadow).blurAngle))).toEqual(new Set([0.05, 0.1]))
 })
 test('a light holding a slot that starts asking for a softened shadow moves into the softenable slot', () => {
   const world = setup(2)

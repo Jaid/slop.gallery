@@ -2,6 +2,7 @@ import type {AmbienceEmitterId} from '#src/ambience_emitters/index.ts'
 import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {CameraBookmark, PortraitRatio, SpawnBookmark} from '#src/lib/gallery/types.ts'
 import type {Wall, WallOpening} from '#src/lib/placement/wallGeometry.ts'
+import type {SoftShadow} from '#src/lib/rendering/shadowFilterNodes.ts'
 import type {MoodId} from '#src/moods/index.ts'
 import type {Geofence} from 'geofency'
 import type {Vec3} from 'math'
@@ -34,6 +35,8 @@ export type RoomWall = Omit<Wall, 'baseboardMiters' | 'holes' | 'id' | 'miters' 
 export type FloorSize = readonly [width: number, depth: number]
 export type PointLamp = LampBase & {
   kind?: 'point'
+  /** how much wider than every lamp’s its shadow blurs, if it casts one, or left out to blur as theirs do; it takes the shadow pool’s softenable slot for that */
+  softShadow?: SoftShadow
 }
 export type SpotLamp = LampBase & {
   /** half the cone’s opening in radians */

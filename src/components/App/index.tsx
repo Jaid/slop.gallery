@@ -23,6 +23,7 @@ import useSlopGalleryTelemetry from '#src/lib/telemetry/useSlopGalleryTelemetry.
 import useGalleryAI from '#src/lib/useGalleryAI.ts'
 import useGalleryCommands from '#src/lib/useGalleryCommands.ts'
 import {useWorldTuningPanel} from '#src/lib/worldTuning/panel.ts'
+import reloadForWorldTuning from '#src/lib/worldTuning/reload.ts'
 import {currentWorldInfo} from '#src/worlds/index.ts'
 
 import GraphicsMode from './GraphicsMode.tsx'
@@ -48,6 +49,7 @@ export default function App() {
   })))
   const uiHidden = useHiddenUi(state => state.hidden)
   const tuning = useWorldTuningPanel()
+  useEffect(() => reloadForWorldTuning(), [])
   const [renderFailed, setRenderFailed] = useState(false)
   const loading = useLoadingScreen(state => state.shown)
   // lib.dom types navigator.gpu as always present, but browsers without WebGPU leave it undefined.
