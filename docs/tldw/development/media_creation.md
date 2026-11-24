@@ -45,7 +45,7 @@ await snap({
 })
 ```
 
-## green wireframe with one specific mesh in red
+## red wireframe with the alchemy machine in green
 
 ```TypeScript
 import snap from './scripts/snap.ts'
@@ -93,28 +93,28 @@ const call = new Proxy({}, {
 await snap({
   room: 'studio',
   portraits: 0,
-  position: '3,2,7',
+  position: '4,2,7',
   angle: '-13,-5',
   fov: 40,
   height: 4320
 }, [
   call.add_portrait({
     image: 'https://img.youtube.com/vi/MQeJYEN_lrg/maxresdefault.jpg',
-    target: {wall_id: 'studio-north', position: {x: -2, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: -1, y: 2}},
     title: 'This DIY Datacenter is NUTS',
     frame: 'containment',
     canvas_material: 'rag'
   }),
   call.add_portrait({
     image: 'https://github.com/jaid/slop.gallery/raw/HEAD/assets/icon.svg',
-    target: {wall_id: 'studio-north', position: {x: 2, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 3, y: 2}},
     title: 'Slop Gallery',
     frame: 'maelstrom',
     canvas_material: 'linen'
   }),
   call.add_portrait({
     image: 'https://github.com/jaid.png',
-    target: {wall_id: 'studio-north', position: {x: 0, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 1, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
     canvas_material: 'karakami'
