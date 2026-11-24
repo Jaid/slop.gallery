@@ -3,6 +3,10 @@ import {checkAmount, makeIndexDraw, makeItemDraw, withFullCopies} from './lib/it
 import RollStream from './lib/RollStream.ts'
 
 export type Arrayable<Value> = ReadonlyArray<Value> | Value
+export type BytesOptions = {
+  /** the number of bytes to draw */
+  size: number
+}
 /** names what is rolled for; a number counts as its decimal text, so `7` and `'7'` name the same */
 export type FatedId = number | string
 /** what all rolls of a game, a world or a session share; a number counts as its decimal text, bytes never equal any text */
@@ -58,6 +62,19 @@ export default class FatedRandom {
     return this.position
   }
 
+  /** A fresh array of `size` bytes. A larger draw continues the same byte sequence. */
+  bytes({size}: BytesOptions) {
+    if (!Number.isSafeInteger(size) || size < 0) {
+      throw new RangeError(`A byte count has to be a nonnegative safe integer, got ${size}.`)
+    }
+    return this.makeStream().bytes(size)
+  }
+
+  /** `true` with the given percentage chance, from 0 for never to 100 for always. */
+  chance(percentage = 50) {
+    return this.rollBoolean({chance: percentage / 100})
+  }
+
   /**
    * Another chain of the same seed with `id` after the IDs of this one, which rolls independently of this one and of every other chain. Several IDs at once make the same child as one child after the other.
    * It starts at index 0, whatever the index of this one, so a child only depends on its IDs, never on when it was made.
@@ -101,11 +118,11 @@ export default class FatedRandom {
   rollInteger(from: number, to: number): number
   rollInteger(from: number, to = 0) {
     const lowest = Math.min(from, to)
-    const size = Math.max(from, to) - lowest + 1
-    if (!Number.isSafeInteger(from) || !Number.isSafeInteger(to) || size > 2 ** 53) {
+    const span = Math.max(from, to) - lowest
+    if (!Number.isSafeInteger(from) || !Number.isSafeInteger(to) || !Number.isSafeInteger(span)) {
       throw new RangeError(`Cannot roll an integer between ${from} and ${to}: both have to be safe integers at most 2 ** 53 − 1 apart.`)
     }
-    return lowest + this.makeStream().below(size)
+    return lowest + this.makeStream().below(span + 1)
   }
 
   /** An integer from −`radius` to `radius`, both included. */
@@ -159,6 +176,22 @@ export default class FatedRandom {
       const start = this.rollInteger(items.length - take)
       return items.slice(start, start + take)
     })
+  }
+
+  /** Adds a float rolled within `delta` of zero to `base`. */
+  vary(base: number, delta: number) {
+    if (!Number.isFinite(base)) {
+      throw new RangeError(`A base has to be finite, got ${base}.`)
+    }
+    return base + this.rollRadius(delta)
+  }
+
+  /** An integer within `delta` of `base`, both ends included. */
+  varyInteger(base: number, delta: number) {
+    if (!Number.isSafeInteger(base) || !Number.isSafeInteger(delta)) {
+      throw new RangeError(`An integer base and delta have to be safe integers, got ${base} and ${delta}.`)
+    }
+    return this.rollInteger(base - delta, base + delta)
   }
 
   /** Every roll starts its own stream at the current index. */

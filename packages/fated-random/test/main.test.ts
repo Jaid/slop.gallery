@@ -184,6 +184,35 @@ test('booleans are as likely true as false, or as likely as their chance', () =>
   expect(() => random.rollBoolean({chance: 1.5})).toThrow(RangeError)
   expect(() => random.rollBoolean({chance: Number.NaN})).toThrow(RangeError)
 })
+test('chance reads percentages at the current index', () => {
+  const random = make()
+  for (let i = 0; i < 64; i++) {
+    expect(random.chance()).toBe(random.rollBoolean())
+    expect(random.chance(12.5)).toBe(random.roll() < 0.125)
+    random.next()
+  }
+  expect(random.chance(0)).toBe(false)
+  expect(random.chance(100)).toBe(true)
+  for (const percentage of [-1, 101, Number.NaN]) {
+    expect(() => random.chance(percentage)).toThrow(RangeError)
+  }
+})
+test('byte draws share a stable prefix at one index and return independent arrays', () => {
+  const random = make()
+  const expected = new Uint8Array([162, 22, 246, 203, 32, 150, 226, 160, 109])
+  for (let size = 0; size <= expected.length; size++) {
+    const bytes = random.bytes({size})
+    expect(bytes).toBeInstanceOf(Uint8Array)
+    expect(bytes).toEqual(expected.subarray(0, size))
+    bytes.fill(0)
+  }
+  expect(random.bytes({size: 9})).toEqual(expected)
+  expect(random.makeChild('other').bytes({size: 9})).not.toEqual(expected)
+  expect(random.next().bytes({size: 9})).not.toEqual(expected)
+  for (const size of [-1, 0.5, Infinity, Number.NaN]) {
+    expect(() => random.bytes({size})).toThrow(RangeError)
+  }
+})
 test('integers include both ends, in either order, every one as likely as the others', () => {
   const random = make()
   const upTo = tally(acrossIndexes(12_000, rng => rng.rollInteger(5)))
@@ -221,6 +250,19 @@ test('radiuses reach as far below zero as above it', () => {
   expect(random.rollIntegerRadius(0)).toBe(0)
   expect(() => random.rollRadius(Infinity)).toThrow(RangeError)
   expect(() => random.rollIntegerRadius(0.5)).toThrow(RangeError)
+})
+test('variation centers the same radius roll on the given base', () => {
+  const random = make()
+  for (let i = 0; i < 64; i++) {
+    expect(random.vary(0.5, -2)).toBe(0.5 + random.rollRadius(2))
+    expect(random.varyInteger(-3, -2)).toBe(-3 + random.rollIntegerRadius(2))
+    random.next()
+  }
+  expect(random.vary(0.5, 0)).toBe(0.5)
+  expect(random.varyInteger(-3, 0)).toBe(-3)
+  expect(() => random.varyInteger(1.5, 0.5)).toThrow(RangeError)
+  expect(() => random.varyInteger(Number.MAX_SAFE_INTEGER, 1)).toThrow(RangeError)
+  expect(() => random.varyInteger(0, 2 ** 52)).toThrow(RangeError)
 })
 test('an item is one of the items, each as likely as the others', () => {
   const random = make().makeChild(['vesper', 'orbs'])

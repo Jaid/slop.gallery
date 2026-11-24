@@ -45,10 +45,14 @@ Without `next()`, a roll returns the same result forever. The methods share thei
 | --- | --- |
 | `roll()` | a float from 0 up to, but not including, 1, with all 53 bits a float holds |
 | `rollBoolean(options?)` | `true` or `false`; `chance` (0–1, default 0.5) says how likely `true` is |
+| `chance(percentage = 50)` | `true` with the given percentage chance; `chance(12.5)` is `rollBoolean({chance: 0.125})` |
+| `bytes({size})` | a fresh `Uint8Array` of `size` bytes; a size of 0 gives an empty array and increasing the size keeps the original prefix |
 | `rollInteger(limit)` | an integer from 0 to `limit`, both included |
 | `rollInteger(from, to)` | an integer between `from` and `to`, both included, in either order |
 | `rollIntegerRadius(radius)` | an integer from −`radius` to `radius`, both included |
 | `rollRadius(radius)` | a float from −`radius` up to, but not including, `radius` |
+| `vary(base, delta)` | `base + rollRadius(delta)`; for example, `vary(10, 2)` varies 10 by up to 2 in either direction |
+| `varyInteger(base, delta)` | an integer within `delta` of `base`, both ends included; `varyInteger(10, 2)` rolls 8, 9, 10, 11 or 12 |
 | `rollItem(items, options?)` | one of the items, typed as the union of a literal array’s items |
 | `sample(items, amount = items.length, options?)` | independent draws with replacement; even a single entry can fill the whole result |
 | `shuffle(items, amount = items.length, options?)` | entries in random order without replacement; starts a fresh shuffle each time it exhausts the input |

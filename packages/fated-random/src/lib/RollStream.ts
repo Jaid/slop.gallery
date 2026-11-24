@@ -31,6 +31,20 @@ export default class RollStream {
     return drawn % size
   }
 
+  /** Draws four bytes per word, least significant byte first on every platform. */
+  bytes(size: number) {
+    const bytes = new Uint8Array(size)
+    let word = 0
+    for (let i = 0; i < size; i++) {
+      if (i % 4 === 0) {
+        word = this.word()
+      }
+      bytes[i] = word & 0xFF
+      word >>>= 8
+    }
+    return bytes
+  }
+
   /** A float from 0 up to, but not including, 1, with all 53 bits a float holds between them. */
   float() {
     return this.integer() / mantissa
