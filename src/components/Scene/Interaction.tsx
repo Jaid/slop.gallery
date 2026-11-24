@@ -55,7 +55,7 @@ export default function Interaction() {
   return <>
     <OrbitViewing />
     <group visible={false} ref={ghost}>
-      <Branch some={[artwork, dragging]} not={held?.startsWith('prop-')}><PlacementPreview key={artwork?.id ?? 'import'} creator={artwork?.creator} frame={portraitFrame(artwork ? artwork.frame : arriving)} height={artwork?.height ?? arrivingSide} pending={artwork?.pending} source={artwork?.source} title={artwork?.title} width={artwork?.width ?? arrivingSide} /></Branch>
+      <Branch some={[artwork, dragging]} not={held?.startsWith('prop-')}><PlacementPreview key={artwork?.id ?? 'import'} creator={artwork?.creator} frame={portraitFrame(artwork ? artwork.frame : arriving)} height={artwork?.height ?? arrivingSide} pending={artwork?.pending} source={artwork?.source} title={artwork?.title} width={artwork?.width ?? arrivingSide} year={artwork?.year} /></Branch>
     </group>
   </>
 }

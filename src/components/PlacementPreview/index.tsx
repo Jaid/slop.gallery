@@ -11,7 +11,7 @@ import useArtworkTexture from '#src/lib/useArtworkTexture.ts'
 
 import PreviewVisual, {previewColors, previewOpacity} from './PreviewVisual.ts'
 
-export default function PlacementPreview({width, height, frame, source, title, creator, pending}: {
+export default function PlacementPreview({width, height, frame, source, title, creator, year, pending}: {
   creator?: string
   /** the frame the work hangs in, whose image and front the preview lies just in front of */
   frame: PortraitFrame
@@ -20,6 +20,7 @@ export default function PlacementPreview({width, height, frame, source, title, c
   source?: Blob | string
   title?: string
   width: number
+  year?: number
 }) {
   const {texture} = useArtworkTexture(source)
   // A spot that would take the work shows green even out of reach, only faded.
@@ -46,7 +47,7 @@ export default function PlacementPreview({width, height, frame, source, title, c
       above={above} creator={creator} height={height} pending={pending} preview={{
         color: fits ? previewColors.valid : previewColors.invalid,
         opacity: previewOpacity(inReach),
-      }} title={title} width={width}
+      }} title={title} width={width} year={year}
     />
     <mesh position={[0, label.y, portraitLabel.depth / 2 + 0.018]}>
       <primitive attach='geometry' object={visual.labelBorder} />

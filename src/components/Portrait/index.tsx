@@ -143,7 +143,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
       </group>
       {/* The placard hides while the work orbits a fusion’s portal, and a work hangs without one until it has anything to show on it. */}
       <group ref={placard}>
-        <Branch if={p.hung && !p.fusing && hasPlacard(p)}><PortraitLabel above={p.labelAbove} creator={p.creator} height={h} pending={p.pending} title={p.title} width={w} /></Branch>
+        <Branch if={p.hung && !p.fusing && hasPlacard(p)}><PortraitLabel above={p.labelAbove} creator={p.creator} height={h} pending={p.pending} title={p.title} width={w} year={p.year} /></Branch>
       </group>
     </group>
   </RigidBody>

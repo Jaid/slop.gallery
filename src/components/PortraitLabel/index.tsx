@@ -6,6 +6,7 @@ import Branch from 'branch-component'
 import {useEffect, useEffectEvent, useRef, useState} from 'react'
 
 import ElementText from '#component/ElementText'
+import formatByline from '#src/lib/gallery/formatByline.ts'
 import PlacardRoll from '#src/lib/gallery/PlacardRoll.ts'
 import portraitLabel, {portraitLabelLayout} from '#src/lib/gallery/portraitLabel.ts'
 
@@ -30,6 +31,7 @@ type PortraitLabelProps = {
   preview?: Preview
   title?: string
   width: number
+  year?: number
 }
 /** what a card shows, either line possibly empty */
 type Lettering = {
@@ -39,20 +41,20 @@ type Lettering = {
   key: string
 }
 
-const lettering = (title = '', creator = ''): Lettering => ({
+const lettering = (title = '', byline = ''): Lettering => ({
   heading: title,
-  byline: creator,
-  key: `${title}\n${creator}`,
+  byline,
+  key: `${title}\n${byline}`,
 })
 const blank = lettering()
 
 /**
- * The placard of a work: its title and creator on a painted card, or as a placement preview, the same on a tinted card. While its flavor text is being written, the card stays as it was, blank for a work that had none.
+ * The placard of a work: its title over its creator and year on a painted card, or as a placement preview, the same on a tinted card. While its flavor text is being written, the card stays as it was, blank for a work that had none.
  * A hung card that gets new text later waits until it is rasterized, then rolls round its long axis, and the text goes on its face while that points to the wall.
  */
-export default function PortraitLabel({width, height, title, creator, pending, preview, above}: PortraitLabelProps) {
+export default function PortraitLabel({width, height, title, creator, year, pending, preview, above}: PortraitLabelProps) {
   const layout = portraitLabelLayout(width, height, above)
-  const written = pending ? undefined : lettering(title, creator)
+  const written = pending ? undefined : lettering(title, formatByline(creator, year))
   if (preview) {
     const shown = written ?? blank
     return <group position={[0, layout.y, 0.015]} userData={{portraitLabel: false}}>
