@@ -24,6 +24,10 @@ export type RollItemOptions<Item> = {
   /** how likely each item is compared with the others, by default all the same: a number per item in the order of the items, or a function that tells it; an item of weight 0 is never rolled */
   weights?: ((item: Item, index: number) => number) | ReadonlyArray<number>
 }
+export type RollOptions = {
+  /** maps the uniform roll in [0, 1) to the result; accepts curves such as `easing.cubicIn` from `math/time` */
+  easing?: (t: number) => number
+}
 
 const toArray = <Value>(value: Arrayable<Value>) => (Array.isArray(value) ? [...value as ReadonlyArray<Value>] : [value as Value])
 const isId = (value: unknown): value is FatedId => typeof value === 'number' || typeof value === 'string'
@@ -99,9 +103,11 @@ export default class FatedRandom {
     return withFullCopies(items, amount, take => draw(this.makeStream(), take).toSorted((a, b) => a - b).map(index => items[index]))
   }
 
-  /** A float from 0 up to, but not including, 1. */
-  roll() {
-    return this.makeStream().float()
+  /** A uniform float from 0 up to, but not including, 1, or the result of applying `easing` to that float. */
+  roll(options?: RollOptions) {
+    const value = this.makeStream().float()
+    const easing = options?.easing
+    return easing ? easing(value) : value
   }
 
   /** `true` or `false`, both as likely unless `chance` says otherwise. */

@@ -1,4 +1,8 @@
+import type {RollOptions} from '../src/main.ts'
+
 import {expect, test} from 'bun:test'
+
+import {easing} from 'math/time'
 
 import FatedRandom from '../src/main.ts'
 
@@ -64,6 +68,15 @@ test('a roll returns the same forever, whatever was rolled before and in which o
   random.makeChild('other').roll()
   expect(random.roll()).toBe(first)
   expect(make().roll()).toBe(first)
+})
+test('easing reshapes the uniform roll at the same index', () => {
+  const options: RollOptions = {easing: easing.cubicIn}
+  const uniform = acrossIndexes(16, random => random.roll())
+  expect(acrossIndexes(16, random => random.roll(options))).toEqual(uniform.map(easing.cubicIn))
+  const random = make()
+  expect(random.roll({easing: t => 1 + t})).toBe(1 + uniform[0])
+  expect(random.roll({})).toBe(uniform[0])
+  expect(random.index).toBe(0)
 })
 test('the seed, every ID and the index each decide a roll', () => {
   const rolls = new Set([

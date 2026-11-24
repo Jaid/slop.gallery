@@ -203,6 +203,9 @@
     "packages/fated-random": {
       "name": "fated-random",
       "version": "0.1.0",
+      "devDependencies": {
+        "math": "0.1.0",
+      },
     },
     "packages/geofency": {
       "name": "geofency",

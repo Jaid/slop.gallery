@@ -43,7 +43,7 @@ Without `next()`, a roll returns the same result forever. The methods share thei
 
 | Method | Returns |
 | --- | --- |
-| `roll()` | a float from 0 up to, but not including, 1, with all 53 bits a float holds |
+| `roll(options?)` | a uniform float from 0 up to, but not including, 1, with 53 bits of precision; with `easing`, returns the curve’s output for that same float |
 | `rollBoolean(options?)` | `true` or `false`; `chance` (0–1, default 0.5) says how likely `true` is |
 | `chance(percentage = 50)` | `true` with the given percentage chance; `chance(12.5)` is `rollBoolean({chance: 0.125})` |
 | `bytes({size})` | a fresh `Uint8Array` of `size` bytes; a size of 0 gives an empty array and increasing the size keeps the original prefix |
@@ -58,6 +58,15 @@ Without `next()`, a roll returns the same result forever. The methods share thei
 | `shuffle(items, amount = items.length, options?)` | entries in random order without replacement; starts a fresh shuffle each time it exhausts the input |
 | `pick(items, amount = 1, options?)` | a random subset in input order; prepends whole copies of the input when `amount` exceeds its length |
 | `slice(items, amount = 1)` | neighboring entries from a uniformly chosen start, without wrapping; prepends whole copies just like `pick` |
+
+`easing` takes a function `(t: number) => number`. For example, `cubicIn` favors smaller values: half its results fall below 0.125 because it cubes the uniform roll. The curve’s output is returned without clamping.
+
+```typescript
+import {easing} from 'math/time'
+
+random.roll({easing: easing.cubicIn}) // favors smaller values
+random.roll({easing: t => 1 - (1 - t) ** 2}) // favors larger values
+```
 
 The four collection methods return a new array even when `amount` is 1. An amount of 0 gives an empty array; a positive amount requires a nonempty input. Entries are selected by index: equal values at different positions are separate entries.
 
