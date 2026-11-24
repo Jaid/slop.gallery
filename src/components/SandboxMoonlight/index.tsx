@@ -10,11 +10,7 @@ import {moonlight} from '#src/worlds/sandbox/moon.ts'
  * The moon over the Sandbox, shining from where `geometry` puts it, which the render pipeline marches for its shafts in heavy graphics, the room’s shell shadowing all of it but what it lets the moon in on.
  * Without shadows, nothing would keep it off the rest of the room, so it only shines with them.
  */
-export default function SandboxMoonlight({blur = 1, color = moonlight.color, geometry, intensity = moonlight.intensity, mapSize = 2048}: {
-  /** a factor on how widely the graphics mode blurs the shadow’s edges, 1 by default */
-  blur?: number
-  /** as #rrggbb, the Cell’s moon’s by default */
-  color?: string
+export default function SandboxMoonlight({geometry, intensity = moonlight.intensity, mapSize = 2048}: {
   geometry: ReturnType<typeof sunGeometry>
   /** how strongly it shines, the Cell’s moon’s by default */
   intensity?: number
@@ -25,12 +21,8 @@ export default function SandboxMoonlight({blur = 1, color = moonlight.color, geo
   if (!profile.shadows) {
     return null
   }
-  const sun = getSunShadowSettings(profile, mapSize)
-  const settings = {
-    ...sun,
-    radius: sun.radius * blur,
-  }
+  const settings = getSunShadowSettings(profile, mapSize)
   const {bottom, far, left, near, normalBias, right, top} = geometry.shadow
   // A new filter needs a new shadow, so the light is built anew.
-  return <directionalLight key={settings.samples} castShadow color={color} intensity={intensity} name='moon' position={geometry.position} shadow-camera-bottom={bottom} shadow-camera-far={far} shadow-camera-left={left} shadow-camera-near={near} shadow-camera-right={right} shadow-camera-top={top} shadow-normalBias={normalBias} {...getShadowProps(settings)} />
+  return <directionalLight key={settings.samples} castShadow color={moonlight.color} intensity={intensity} name='moon' position={geometry.position} shadow-camera-bottom={bottom} shadow-camera-far={far} shadow-camera-left={left} shadow-camera-near={near} shadow-camera-right={right} shadow-camera-top={top} shadow-normalBias={normalBias} {...getShadowProps(settings)} />
 }

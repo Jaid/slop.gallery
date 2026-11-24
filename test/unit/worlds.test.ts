@@ -179,7 +179,7 @@ describe('worlds', () => {
     const [, , z] = single.spawn.position
     expect(single.wallDistance([vestibuleX, 1, z], [0, 0, -1])).toBeGreaterThan(z - vestibuleZ + vestibule.radius - wallFace)
   })
-  test('the Sandbox’s Studio is a single room, by default a floor 8 × 8 m between four walls 8 m high under a ceiling, its north-western corner the world’s origin, its floor spreading toward +x and +z, its spawn 3 m in from the west wall and 5 m from the north wall, looking at the works on it, lit by the Cell’s chandelier lamp alone, its secondary lamp off, and the moon through openings in its ceiling, in thicker shafts than the Cell’s, all its works framed in the Cell’s frame', () => {
+  test('the Sandbox’s Studio is a single room, a floor 12 × 8 m between four walls 10 m high under a ceiling, its north-eastern corner the world’s origin, which holds its spawn, lit by the Cell’s chandelier lamp alone and the moon through a skylight, all its works framed in the Cell’s frame', () => {
     const plain = new StudioSandbox(0)
     expect(plain.id).toBe('sandbox')
     expect(plain.rooms.map(room => room.id)).toEqual(['studio'])
@@ -187,43 +187,34 @@ describe('worlds', () => {
     const cell = sandbox.room('cell')
     const [width, depth] = room.size
     expect(room.title).toBe('Studio')
-    expect(width - wallFace * 2).toBeCloseTo(8, 12)
+    expect(width - wallFace * 2).toBeCloseTo(12, 12)
     expect(depth - wallFace * 2).toBeCloseTo(8, 12)
-    expect(room.height).toBe(8)
+    expect(room.height).toBe(10)
     expect(room.room.frame).toBe(choiceFrames(cell.room.frame!)[0])
     expect(plain.artworks).toBe(slopGallery.artworks)
     expect(room.mood).toBeUndefined()
     expect(room.skybox).toBeNull()
     expect(plain.skybox('night')).toBeNull()
-    expect(room.volumetricSun).toBeGreaterThan(cell.volumetricSun)
+    expect(room.volumetricSun).toBe(cell.volumetricSun)
     expect(room.map!.frame).toEqual([-width / 2, -depth / 2, width, depth])
-    // Where floor and the north and west walls’ faces meet.
+    // Where floor and the north and east walls’ faces meet.
     for (const value of room.toWorld(room.room.corner)) {
       expect(value).toBeCloseTo(0, 12)
     }
-    expect(room.center[0]).toBeCloseTo(width / 2 - wallFace, 12)
+    expect(room.center[0]).toBeCloseTo(-width / 2 + wallFace, 12)
     expect(room.center[1]).toBeCloseTo(depth / 2 - wallFace, 12)
-    // The Cell’s lamp, dimmed, over the middle of the floor, 4 m up, and a dark one over the north-western quarter of the floor, 3 m up.
+    // The Cell’s lamp over the middle of the floor, 5 m up.
     const [chandelier] = sandbox.lamps()
     expect(plain.lamps()).toEqual([{
       ...chandelier,
-      id: 'studio-primary-lamp',
+      id: 'studio-chandelier',
       room: 'studio',
-      position: room.toWorld([0, 4, 0]),
-      strength: 30,
-      decay: 2,
-    }, {
-      ...chandelier,
-      id: 'studio-secondary-lamp',
-      room: 'studio',
-      position: room.toWorld([-2, 3, -2]),
-      strength: 0,
-      decay: 2,
+      position: room.toWorld([0, 5, 0]),
     }])
-    // Looking north and a little down.
-    expect(plain.spawn.position).toEqual([3, 0.04, 5])
-    expect(plain.spawn.yaw).toBe(0)
-    expect(plain.spawn.pitch).toBeCloseTo(-8 * Math.PI / 180, 12)
+    // Where the Cell’s spawn is, looking into the corner.
+    expect(room.room.spawn.position).toEqual(cell.room.spawn.position)
+    const [x, , z] = plain.spawn.position
+    expect(Math.atan2(x, z)).toBeCloseTo(plain.spawn.yaw, 9)
     expect(plain.roomAt(plain.spawn.position)).toBe(room)
     expect(plain.contains(plain.spawn.position)).toBe(true)
     expect(plain.floorHeight(plain.spawn.position)).toBe(0)
@@ -236,43 +227,41 @@ describe('worlds', () => {
     ])
     const [north, east, south, west] = plain.walls
     expect(north.center[2]).toBeCloseTo(-wallFace, 12)
-    expect(east.center[0]).toBeCloseTo(width - wallFace, 12)
+    expect(east.center[0]).toBeCloseTo(wallFace, 12)
     expect(south.center[2]).toBeCloseTo(depth - wallFace, 12)
-    expect(west.center[0]).toBeCloseTo(-wallFace, 12)
+    expect(west.center[0]).toBeCloseTo(-width + wallFace, 12)
     // Every corner’s trim is mitered.
     expect(plain.walls.map(wall => wall.miters)).toEqual(plain.walls.map(() => [1, 1]))
     // A body fits up to the ceiling over all of the floor, and nowhere past the walls.
-    expect(plain.contains([1, 1, 1])).toBe(true)
-    expect(plain.contains([width - 1, 1, depth - 1])).toBe(true)
-    expect(plain.contains([5, room.height - 0.5, 5])).toBe(true)
-    expect(plain.contains([5, room.height + 0.5, 5])).toBe(false)
-    expect(plain.contains([width + 0.5, 1, 5])).toBe(false)
-    expect(plain.contains([5, 1, depth + 0.5])).toBe(false)
-    expect(plain.contains([-1, 1, 5])).toBe(false)
-    expect(plain.contains([5, -1, 5])).toBe(false)
+    expect(plain.contains([-1, 1, 1])).toBe(true)
+    expect(plain.contains([-width + 1, 1, depth - 1])).toBe(true)
+    expect(plain.contains([-5, room.height - 0.5, 5])).toBe(true)
+    expect(plain.contains([-5, room.height + 0.5, 5])).toBe(false)
+    expect(plain.contains([-width - 0.5, 1, 5])).toBe(false)
+    expect(plain.contains([-5, 1, depth + 0.5])).toBe(false)
+    expect(plain.contains([1, 1, 5])).toBe(false)
+    expect(plain.contains([-5, -1, 5])).toBe(false)
     // Rays meet the walls on every side, and nothing over them.
-    expect(plain.wallDistance([5, 1, 3], [-1, 0, 0])).toBeGreaterThan(5)
-    expect(plain.wallDistance([5, 1, 3], [-1, 0, 0])).toBeLessThan(5.4)
-    expect(plain.wallDistance([5, 1, 3], [0, 0, -1])).toBeLessThan(3.4)
-    expect(plain.wallDistance([5, 1, 3], [1, 0, 0])).toBeLessThan(width - wallFace * 2 - 5 + 0.4)
-    expect(plain.wallDistance([5, 1, 3], [0, 0, 1])).toBeLessThan(depth - wallFace * 2 - 3 + 0.4)
-    expect(plain.wallDistance([5, room.height + 1, 5], [-1, 0, 0])).toBe(Infinity)
+    expect(plain.wallDistance([-5, 1, 3], [1, 0, 0])).toBeGreaterThan(5)
+    expect(plain.wallDistance([-5, 1, 3], [1, 0, 0])).toBeLessThan(5.4)
+    expect(plain.wallDistance([-5, 1, 3], [0, 0, -1])).toBeLessThan(3.4)
+    expect(plain.wallDistance([-5, 1, 3], [-1, 0, 0])).toBeLessThan(width - wallFace * 2 - 5 + 0.4)
+    expect(plain.wallDistance([-5, 1, 3], [0, 0, 1])).toBeLessThan(depth - wallFace * 2 - 3 + 0.4)
+    expect(plain.wallDistance([-5, room.height + 1, 5], [1, 0, 0])).toBe(Infinity)
   })
-  test('the Studio has a portrait slot for each ratio of the default works, every one a valid hanging spot with the other filled, in rooms of every size', () => {
-    for (const sized of [studio, ...Array.from({length: 20}, (_, index) => new StudioSandbox(index + 1))]) {
-      const slots = sized.portraitSlots()
-      expect(Object.keys(ratios(slots)).toSorted()).toEqual(Object.keys(ratios(sized.artworks)).toSorted())
-      expect(Object.values(ratios(slots))).toEqual(Object.keys(ratios(slots)).map(() => 1))
-      const occupied = slots.map(asPortrait)
-      for (const slot of slots) {
-        const wall = sized.placement.wall(slot.wallId)!
-        expect(slot.rotation).toBe(wall.rotation)
-        const hanging = wallPosition(wall, wallCoordinates(wall, slot.position), slot.position[1])
-        for (const [axis, value] of slot.position.entries()) {
-          expect(value).toBeCloseTo(hanging[axis], 6)
-        }
-        expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, slot.id, slot.labelAbove)).toBe('')
+  test('the Studio has a portrait slot for each ratio of the default works, every one a valid hanging spot with the other filled', () => {
+    const slots = studio.portraitSlots()
+    expect(Object.keys(ratios(slots)).toSorted()).toEqual(Object.keys(ratios(studio.artworks)).toSorted())
+    expect(Object.values(ratios(slots))).toEqual(Object.keys(ratios(slots)).map(() => 1))
+    const occupied = slots.map(asPortrait)
+    for (const slot of slots) {
+      const wall = studio.placement.wall(slot.wallId)!
+      expect(slot.rotation).toBe(wall.rotation)
+      const hanging = wallPosition(wall, wallCoordinates(wall, slot.position), slot.position[1])
+      for (const [axis, value] of slot.position.entries()) {
+        expect(value).toBeCloseTo(hanging[axis], 6)
       }
+      expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, slot.id, slot.labelAbove)).toBe('')
     }
   })
   test('the Sandbox’s walls have portrait slots, at most one for every default work of each ratio, every one a valid hanging spot with all the others filled', () => {

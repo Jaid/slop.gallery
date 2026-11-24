@@ -75,9 +75,9 @@ await snap({
 import snap from './scripts/snap.ts'
 
 await snap({
-  room: 'studio', // the Sandbox’s Studio: four walls under a skylit ceiling, which load in a moment, the north-western corner at 0,0,0, the floor spreading toward +x and +z
+  room: 'studio', // the Sandbox’s Studio: four walls under a skylit ceiling, which load in a moment, the north-eastern corner at 0,0,0
   portraits: 1,
-  position: '5,2,4',
+  position: '-5,2,4',
   angle: '0,-3',
   fov: 40
 })
@@ -95,28 +95,28 @@ const call = new Proxy({}, {
 await snap({
   room: 'studio',
   portraits: 0,
-  position: '3,2,7',
+  position: '-4,2,7',
   angle: '-13,-5',
   fov: 40,
   height: 4320
 }, [
   call.add_portrait({
     image: 'https://img.youtube.com/vi/MQeJYEN_lrg/maxresdefault.jpg',
-    target: {wall_id: 'studio-north', position: {x: -2, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 1, y: 2}},
     title: 'This DIY Datacenter is NUTS',
     frame: 'containment',
     canvas_material: 'rag'
   }),
   call.add_portrait({
     image: 'https://github.com/jaid/slop.gallery/raw/HEAD/assets/icon.svg',
-    target: {wall_id: 'studio-north', position: {x: 2, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 5, y: 2}},
     title: 'Slop Gallery',
     frame: 'maelstrom',
     canvas_material: 'linen'
   }),
   call.add_portrait({
     image: 'https://github.com/jaid.png',
-    target: {wall_id: 'studio-north', position: {x: 0, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 3, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
     canvas_material: 'karakami'
@@ -291,10 +291,10 @@ await film({
   crossfade: 0.2, // seconds the end fades back into the empty wall at the beginning, so the film loops
   'output-file': 'out/film/hanging.avif'
 }, [
-  {time: 0, position: [6, 2, 2], yaw: 40, pitch: -5, fov: 55}, // 2 m off the wall and 2 m to the right of where the portrait hangs, at its height
+  {time: 0, position: [-1, 2, 2], yaw: 40, pitch: -5, fov: 55}, // 2 m off the wall and 2 m to the right of where the portrait hangs, at its height
   {time: 1, tools: {add_portrait: {
     image: 'https://github.com/jaid.png',
-    target: {wall_id: 'studio-north', position: {x: 0, y: 2}},
+    target: {wall_id: 'studio-north', position: {x: 3, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
     canvas_material: 'karakami',

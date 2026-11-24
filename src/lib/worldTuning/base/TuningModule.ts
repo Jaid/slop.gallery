@@ -3,8 +3,6 @@ import type {StoreApi, UseBoundStore} from 'zustand'
 
 import {create} from 'zustand'
 
-import {carriedValues} from '../carryOver.ts'
-
 /** what changed a world tuning value: the panel, a key of the game, like Numpad + for the field of view, a WebMCP tool, or the code itself */
 export type TuningSource = 'code' | 'key' | 'panel' | 'webmcp'
 
@@ -33,7 +31,7 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
   /** what the panel says in place of the groups while {@link isShown} is false, if anything */
   readonly hint: string | undefined = undefined
   /** short and unique, which names the module’s values in the tools and the telemetry */
-  readonly id: string
+  abstract readonly id: string
   /** the values the page starts with */
   readonly initial: Values
   readonly store: UseBoundStore<StoreApi<Values>>
@@ -42,18 +40,10 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
   private initialParkedValues: Partial<Values> | undefined
   private parkedStore: UseBoundStore<StoreApi<Partial<Values>>> | undefined
 
-  /**
-   * Its values start from `initial`, but for those a reload the world tuning asked for carried over, see `carriedTuning`.
-   * @param store where the values live, a store of their own by default, for consumers that can’t import the module
-   */
-  constructor(id: string, initial: Values, store: UseBoundStore<StoreApi<Values>> = create<Values>(() => initial)) {
-    this.id = id
+  /** @param store where the values live, a store of their own by default, for consumers that can’t import the module */
+  constructor(initial: Values, store: UseBoundStore<StoreApi<Values>> = create<Values>(() => initial)) {
     this.initial = initial
     this.store = store
-    const carried = carriedValues(id, initial)
-    if (Object.keys(carried).length > 0) {
-      store.setState(carried)
-    }
   }
 
   /** every value the panel shows by its key, in the order it shows them */

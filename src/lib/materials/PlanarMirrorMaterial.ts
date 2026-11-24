@@ -246,8 +246,6 @@ export default class PlanarMirrorMaterial extends MeshStandardNodeMaterial {
   readonly reflection: Reflection | null
   /** the radius of the Gaussian blur over this surface’s mirror, in pixels of a 1080-row image, as made unless set anew; 0 leaves it unblurred */
   readonly reflectionBlur = uniform(0)
-  /** factor on this surface’s loss, the mip level of the mirror it reads, 1 as made */
-  readonly reflectionLevel = uniform(1)
   /** factor on this surface’s reflectance, 1 as made */
   readonly reflectionStrength = uniform(1)
   /** place this target in the surface plane with local +z facing the viewer’s side */
@@ -274,7 +272,7 @@ export default class PlanarMirrorMaterial extends MeshStandardNodeMaterial {
       const reflectance = grazing.mul(reflection.grazingStrength).mul(mirrorReflectionGrazing).add(reflection.strength).mul(reflection.mask ?? float(1)).mul(mirrorReflectionStrength).mul(this.reflectionStrength).mul(this.mirrored)
       const loss = typeof reflection.loss === 'number' ? float(reflection.loss) : reflection.loss
       this.reflectionBlur.value = reflection.gaussianBlur ?? 0
-      const mirror = sampleMirror(this.reflection, loss.mul(mirrorReflectionLevel).mul(this.reflectionLevel).add(reflectionLevelBias).max(0), this.reflectionBlur)
+      const mirror = sampleMirror(this.reflection, loss.mul(mirrorReflectionLevel).add(reflectionLevelBias).max(0), this.reflectionBlur)
       this.outputNode = vec4(mix(output.rgb, mirror.rgb, reflectance), output.a)
     }
   }

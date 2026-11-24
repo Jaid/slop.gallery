@@ -3,7 +3,6 @@ import readCanvasMaterialParameters from '#src/canvas_materials/lib/canvasMateri
 import {readFountain} from '#src/fountains/lib/forcedFountain.ts'
 import {readFrame} from '#src/frames/lib/frameParameter.ts'
 import {readMood} from '#src/moods/lib/forcedMood.ts'
-import {readOpenings} from '#src/rooms/studio/openings/openingParameter.ts'
 import {readSculpture} from '#src/sculptures/lib/forcedSculpture.ts'
 import {readStone} from '#src/stones/lib/forcedStone.ts'
 import {readWorldReach} from '#src/worlds/base/WorldReach.ts'
@@ -92,7 +91,6 @@ const readers: Record<string, Reader> = {
   moonfall_hue: readMoonfallHue,
   near: readNear,
   new_canvas_material: input => readCanvasMaterialParameters(input).new_canvas_material,
-  openings: readOpenings,
   paused: readPaused,
   pmrem: readPmrem,
   portraits: readPortraitCount,

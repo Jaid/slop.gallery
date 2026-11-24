@@ -49,10 +49,11 @@ export default class ViewTuningModule extends TuningModule<ViewValues> {
     ],
   })]
 
+  override readonly id = 'view'
   override readonly title = 'View'
 
   constructor() {
-    super('view', {
+    super({
       fov: readFov() ?? defaultFov,
       renderScale: readScale() ?? 1,
       toneMapping: 'aces',
