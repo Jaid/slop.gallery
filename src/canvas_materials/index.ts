@@ -3,11 +3,15 @@ import type {CanvasMaterialId} from './lib/canvasMaterialIds.ts'
 
 import BarytaCanvasMaterial from './baryta/BarytaCanvasMaterial.ts'
 import ImpastoCanvasMaterial from './impasto/ImpastoCanvasMaterial.ts'
+import IsogiltCanvasMaterial from './isogilt/IsogiltCanvasMaterial.ts'
 import KarakamiCanvasMaterial from './karakami/KarakamiCanvasMaterial.ts'
 import LinenCanvasMaterial from './linen/LinenCanvasMaterial.ts'
 import MoireCanvasMaterial from './moire/MoireCanvasMaterial.ts'
 import NacreCanvasMaterial from './nacre/NacreCanvasMaterial.ts'
 import RagCanvasMaterial from './rag/RagCanvasMaterial.ts'
+import SatinStitchCanvasMaterial from './satin-stitch/SatinStitchCanvasMaterial.ts'
+import SilverplateCanvasMaterial from './silverplate/SilverplateCanvasMaterial.ts'
+import TrichromeCanvasMaterial from './trichrome/TrichromeCanvasMaterial.ts'
 import WaxCanvasMaterial from './wax/WaxCanvasMaterial.ts'
 
 /** every canvas material there is by its id */
@@ -20,6 +24,10 @@ export const canvasMaterials = {
   baryta: new BarytaCanvasMaterial,
   moire: new MoireCanvasMaterial,
   karakami: new KarakamiCanvasMaterial,
+  silverplate: new SilverplateCanvasMaterial,
+  trichrome: new TrichromeCanvasMaterial,
+  isogilt: new IsogiltCanvasMaterial,
+  'satin-stitch': new SatinStitchCanvasMaterial,
 } as const satisfies Record<CanvasMaterialId, CanvasMaterial>
 
 export type {CanvasMaterialId} from './lib/canvasMaterialIds.ts'

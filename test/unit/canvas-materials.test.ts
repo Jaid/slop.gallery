@@ -44,7 +44,7 @@ describe('canvas materials', () => {
   test('every id has a canvas material, named after its folder', () => {
     expect(Object.keys(canvasMaterials)).toEqual([...canvasMaterialIds])
     for (const [id, material] of entries) {
-      expect(material.constructor.name.toLowerCase()).toBe(`${id}canvasmaterial`)
+      expect(material.constructor.name.toLowerCase()).toBe(`${id.replaceAll('-', '')}canvasmaterial`)
       expect(material.title).toBeTruthy()
       expect(material.description).toBeTruthy()
       expect(material.strength).toBeGreaterThan(0)

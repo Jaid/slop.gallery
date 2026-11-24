@@ -13,12 +13,12 @@ const tau = 2 * Math.PI
 export default class LinenCanvasMaterial extends CanvasMaterial {
   override readonly description = 'Loom linen: paint sunk into a plain weave of warp and weft, with bare, unbleached threads showing through in its shadows.'
   /** how much of the bare threads shows, against what it was made with */
-  readonly fibers = 1
+  readonly fibers = 0.7
   /** how deep the weave is, against what it was made with */
-  readonly relief = 1
-  override readonly scale = 0.75
+  readonly relief = 2
+  override readonly scale = 0.5
   /** how strongly the threads catch grazing light */
-  readonly sheen = 0.22
+  readonly sheen = 0.1
   override readonly strength = 0.1
   override readonly title = 'Loom linen'
 
