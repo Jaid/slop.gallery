@@ -1,19 +1,20 @@
 import type {RoomPortraitSlot} from '../base/Room.ts'
+import type {StudioPlan} from './plan.ts'
 
-// One for each ratio of the catalog, side by side on the north wall, 5 m and 2.5 m from the north-eastern corner, centered on one line 2 m over the floor.
-export default {
-  north_0: {
-    wallId: 'north',
-    ratio: '3:2',
-    area: 15_000,
-    position: [1, 2, -3.885],
-    rotation: 0,
-  },
-  north_1: {
-    wallId: 'north',
-    ratio: '1:1',
-    area: 15_000,
-    position: [3.5, 2, -3.885],
-    rotation: 0,
-  },
-} satisfies Record<string, RoomPortraitSlot>
+/** how far a work’s face stands out from the wall’s face */
+const standOff = 0.115
+/** the ratio of the Studio’s one slot, which only the catalog’s works of it fill by default */
+export const studioSlotRatio = '1:1'
+
+/** The Studio’s one slot, a square on the north wall of a Studio over the clear floor `clear`, `along` meters east of the north-western corner, like right in front of the spawn, which every room size keeps in the same place, centered 2 m over the floor. */
+export default function studioSlots([width, depth]: StudioPlan['clear'], along: number) {
+  return {
+    north: {
+      wallId: 'north',
+      ratio: studioSlotRatio,
+      area: 15_000,
+      position: [-width / 2 + along, 2, -depth / 2 + standOff],
+      rotation: 0,
+    },
+  } satisfies Record<string, RoomPortraitSlot>
+}
