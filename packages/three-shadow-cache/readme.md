@@ -1,6 +1,6 @@
 # three-shadow-cache
 
-Three.js renders every shadow map every frame, even though most scenes mostly stand still. `ShadowCache` keeps each shadow map until something in its light’s reach changes: a shadow caster that moves, appears, disappears or gets another geometry, or the light itself moving.
+Three.js renders every shadow map every frame, even though most scenes mostly stand still. `ShadowCache` keeps each shadow map until something in its light’s reach changes: a shadow caster that moves, appears, disappears or gets another geometry, the light itself moving, or its shadow camera taking another projection.
 
 ```typescript
 import ShadowCache from 'three-shadow-cache'
@@ -21,7 +21,7 @@ It only touches `light.shadow.autoUpdate` and `light.shadow.needsUpdate`, so it 
 `update(scene)` walks the visible objects of the scene once per call and compares them with the call before:
 
 - a caster is any visible object with `castShadow` and a geometry. It changed when its world matrix moved by more than the `tolerance`, when its geometry was replaced, when an `InstancedMesh`’s `instanceMatrix` got a new version, and when it appeared or disappeared.
-- a light that casts shadows renders its map once when it is first seen, when it moved and when a change lies in its reach: within the range of a point light (its `distance`, or else its shadow camera’s far plane) or inside the shadow camera’s frustum of any other light.
+- a light that casts shadows renders its map once when it is first seen, when it moved, when its shadow camera’s projection matrix changed in the least, like after a new `distance` or frustum and `updateProjectionMatrix()`, and when a change lies in its reach: within the range of a point light (its `distance`, or else its shadow camera’s far plane) or inside the shadow camera’s frustum of any other light.
 
 Changes below the tolerance add up until they count, so a settling physics body that wobbles by fractions of a millimeter leaves the maps alone until it has really moved. Shadows that change without their casters moving, like those of skinned or vertex-animated meshes, are not noticed; set `light.shadow.needsUpdate = true` yourself for the lights they concern.
 

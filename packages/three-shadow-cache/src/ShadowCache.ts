@@ -47,6 +47,8 @@ type LightState = {
   dirty: boolean
   frame: number
   matrix: Matrix4
+  /** its shadow camera’s projection the map rendered with, which a new range or frustum changes */
+  projection: Matrix4
 }
 
 const lightPosition = new Vector3
@@ -67,7 +69,7 @@ const worldSphere = (caster: Caster, target: Sphere) => {
 }
 
 /**
- * Keeps shadow maps until something changes in their light’s reach: a shadow caster that moves, appears or disappears, or the light itself moving.
+ * Keeps shadow maps until something changes in their light’s reach: a shadow caster that moves, appears or disappears, the light itself moving, or its shadow camera taking another projection, like a lamp reaching less far.
  * Where almost everything stands still, most lights then render their shadow map once instead of every frame.
  * Directional lights are taken to shine from outside of whatever is hidden and to draw hidden casters too, so hiding or showing a caster leaves their shadow maps alone. A caster changing while hidden only changes shadows nobody sees, so it waits until anything hidden shows again or something in sight changes.
  * All other lights leave hidden casters out of their maps, so they only notice them getting hidden or shown.
@@ -233,12 +235,19 @@ export default class ShadowCache {
         dirty: false,
         frame,
         matrix: light.matrixWorld.clone(),
+        projection: light.shadow.camera.projectionMatrix.clone(),
       })
       return
     }
     state.frame = frame
     if (this.moved(state.matrix, light.matrixWorld)) {
       state.matrix.copy(light.matrixWorld)
+      state.dirty = true
+    }
+    // The depths the map holds only compare against those of the projection it rendered with, however little it changed.
+    const {projectionMatrix} = light.shadow.camera
+    if (!state.projection.equals(projectionMatrix)) {
+      state.projection.copy(projectionMatrix)
       state.dirty = true
     }
   }

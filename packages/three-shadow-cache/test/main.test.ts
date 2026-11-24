@@ -57,6 +57,32 @@ test('a shadow map renders once and then only when a caster in reach changes', (
   expect(step()).toBe(true)
   expect(step()).toBe(false)
 })
+test('a shadow map renders again once its camera takes another projection, like a lamp reaching less far, however little it changed', () => {
+  const {lamp, step} = setup()
+  step()
+  lamp.distance = 4.9
+  lamp.shadow.camera.far = 4.9
+  lamp.shadow.camera.updateProjectionMatrix()
+  expect(step()).toBe(true)
+  expect(step()).toBe(false)
+  const scene = new Scene
+  const sun = new DirectionalLight
+  sun.castShadow = true
+  scene.add(sun)
+  const cache = new ShadowCache
+  const sunStep = () => {
+    sun.shadow.needsUpdate = false
+    scene.updateMatrixWorld()
+    cache.update(scene)
+    return sun.shadow.needsUpdate
+  }
+  sunStep()
+  expect(sunStep()).toBe(false)
+  sun.shadow.camera.left -= 2
+  sun.shadow.camera.updateProjectionMatrix()
+  expect(sunStep()).toBe(true)
+  expect(sunStep()).toBe(false)
+})
 test('wobbling below a millimeter keeps the shadow map until it adds up', () => {
   const {near, step} = setup()
   step()
