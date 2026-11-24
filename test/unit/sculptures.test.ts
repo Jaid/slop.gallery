@@ -31,6 +31,16 @@ test('every sculpture has its own model and fits on the Salon socket under the c
   }
   expect(models.size).toBe(ids.length)
 })
+test('every sculpture names the model that made it and when, in seconds', () => {
+  for (const id of ids) {
+    const {metadata} = createSculpture(id)
+    expect(metadata.author.model.title.trim()).toBeTruthy()
+    expect(Number.isSafeInteger(metadata.createdAt)).toBe(true)
+    expect(metadata.createdAt).toBeGreaterThan(0)
+    expect(metadata.createdAt).toBeLessThanOrEqual(Math.floor(Date.now() / 1000))
+  }
+  expect(createSculpture('block').year).toBe(2026)
+})
 test('the Salon builds the seeded sculpture, with Block as the seed-zero default', () => {
   expect(ids[0]).toBe('block')
   expect(salonSculptureId(0, '')).toBe('block')
