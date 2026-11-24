@@ -2,7 +2,6 @@ import type {LightingTuning} from '#src/lib/gallery/lighting.ts'
 import type {TuningGroup} from './controls.ts'
 
 import {getLightingTuning, lightingPresets, useLighting} from '#src/lib/gallery/lighting.ts'
-import {currentWorldId} from '#src/worlds/index.ts'
 
 import TuningModule from './base/TuningModule.ts'
 import {tuningControls} from './controls.ts'
@@ -11,10 +10,9 @@ const {group, percent, range, select} = tuningControls<LightingTuning>()
 
 /**
  * The gallery’s lighting: its sun, its lamps and the fill, on top of the lighting preset, see `tuneLighting`. It starts from the preset the page starts with, and every value still at its start keeps following the preset, so cycling presets with L still changes it.
- * Only the gallery is lit by presets.
+ * Only the gallery is lit by presets, which brings it along. World modules import it, so it must never import the current world.
  */
 export default class LightingTuningModule extends TuningModule<LightingTuning> {
-  override readonly available = currentWorldId === 'gallery'
   override readonly groups: ReadonlyArray<TuningGroup<LightingTuning>> = [
     group({
       title: 'Sun',

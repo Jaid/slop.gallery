@@ -10,6 +10,7 @@ import roomOrigins from '#src/lib/gallery/layout.ts'
 import {lobbyFountain, lobbyFountainSpot} from '#src/lib/gallery/lobbyFountain.ts'
 import showcasedKnots from '#src/lib/gallery/showcasedKnots.ts'
 import {GalleryPlacementSpace} from '#src/lib/placement/GalleryPlacementSpace.ts'
+import {lightingTuning} from '#src/lib/worldTuning/LightingTuningModule.ts'
 import Antechamber from '#src/rooms/antechamber/Antechamber.ts'
 import Banquet from '#src/rooms/banquet/Banquet.ts'
 import Bastion from '#src/rooms/bastion/Bastion.ts'
@@ -77,6 +78,8 @@ export default class SlopGallery extends World<GalleryRoom> {
   override readonly narratesIntroduction = true
   override readonly placement: GalleryPlacementSpace
   override readonly Scene = scene
+  /** the sun, the lamps and the fill on top of the lighting preset */
+  override readonly tuning = [lightingTuning]
 
   private readonly navigation: GalleryNavigation
 

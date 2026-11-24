@@ -121,11 +121,11 @@ function describeEntry<Values extends TuningValues>(module: TuningModule<Values>
 
 /** Every module of the world tuning this page has, which the panel shows group by group and the WebMCP tools and the telemetry address by their ids. */
 export default class WorldTuning {
-  readonly modules: ReadonlyArray<TuningModule>
-
-  /** @param modules every module, of which the page keeps the {@link TuningModule.available} ones */
-  constructor(modules: ReadonlyArray<TuningModule>) {
-    this.modules = modules.filter(module => module.available)
+  constructor(readonly modules: ReadonlyArray<TuningModule>) {
+    const ids = new Set(modules.map(module => module.id))
+    if (ids.size !== modules.length) {
+      throw new Error('Every module of the world tuning needs an id of its own.')
+    }
   }
 
   /** The values that differ from the ones the page started with, by module, leaving out unchanged modules. */

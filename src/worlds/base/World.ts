@@ -5,6 +5,7 @@ import type {PlacementSpace} from '#src/lib/placement/base/PlacementSpace.ts'
 import type {Wall} from '#src/lib/placement/wallGeometry.ts'
 import type {WorldRoom} from '#src/lib/webmcp/analyzeWorld.ts'
 import type {GeofenceDump, KnotDump} from '#src/lib/webmcp/tools.ts'
+import type TuningModule from '#src/lib/worldTuning/base/TuningModule.ts'
 import type {GroundSurface, Room, SkyboxId} from '#src/rooms/index.ts'
 import type {WorldId, WorldInfo} from '../index.ts'
 import type {PlacedLamp} from './PlacedRoom.ts'
@@ -81,6 +82,8 @@ export default abstract class World<Kind extends Room = Room> {
   abstract readonly Scene: ComponentType
   readonly tagline: string
   readonly title: string
+  /** the modules of the world tuning only this world has, like the gallery’s lighting, which the panel shows after the view, none by default */
+  readonly tuning: ReadonlyArray<TuningModule> = []
   /** the URL of the image behind the loading spinner */
   readonly wallpaper: string
   /** every wall of every room in world meters, room by room, their trim mitered where two walls meet in an inside corner */

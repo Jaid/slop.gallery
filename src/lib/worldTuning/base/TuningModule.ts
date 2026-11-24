@@ -26,8 +26,6 @@ const describeValue = (value: TuningValue) => (typeof value === 'string' ? `“$
  * Its values stay in effect while the panel is hidden. They start from {@link initial}, the values the page starts with, which the panel resets to and marks every value that left.
  */
 export default abstract class TuningModule<Values extends TuningValues = TuningValues> {
-  /** whether this page has the module at all, like one tuning a room only some worlds have; the panel, the tools and the telemetry leave it out without */
-  readonly available: boolean = true
   /** the group boxes the panel shows the values in, in order */
   abstract readonly groups: ReadonlyArray<TuningGroup<Values>>
   /** what the panel says in place of the groups while {@link isShown} is false, if anything */

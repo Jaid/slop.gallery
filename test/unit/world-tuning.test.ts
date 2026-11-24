@@ -17,9 +17,9 @@ import {readWorldTuning} from '../../src/lib/worldTuning/worldTuningParameter.ts
 afterEach(() => {
   worldTuning.reset()
 })
-test('the gallery is tuned by its view, its lighting, its render pipeline and its overlay, in that order', () => {
+test('the gallery is tuned by the view, the lighting it brings along, the render pipeline and the overlay, in that order', () => {
   expect(worldTuning.modules.map(module => module.id)).toEqual(['view', 'lighting', 'pipeline', 'overlay'])
-  expect(lightingTuning.available).toBe(true)
+  expect(worldTuning.module('lighting')).toBe(lightingTuning)
 })
 test('the render pipeline starts from the pipeline of the page’s heavy graphics, the view from the default field of view', () => {
   expect(pipelineTuning.initial).toEqual(getRenderPipelineSettings(getGraphicsProfile(true), getAntiAliasing(true)))
