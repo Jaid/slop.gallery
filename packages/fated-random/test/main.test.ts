@@ -311,8 +311,10 @@ test('radius easing stays between the center and the full radius', () => {
 })
 test('variation centers the same radius roll on the given base', () => {
   const random = make()
+  const options: RollOptions = {easing: easing.cubicIn}
   for (let i = 0; i < 64; i++) {
     expect(random.vary(0.5, -2)).toBe(0.5 + random.rollRadius(2))
+    expect(random.vary(0.5, -2, options)).toBe(0.5 + random.rollRadius(2, options))
     expect(random.varyInteger(-3, -2)).toBe(-3 + random.rollIntegerRadius(2))
     random.next()
   }
@@ -321,6 +323,26 @@ test('variation centers the same radius roll on the given base', () => {
   expect(() => random.varyInteger(1.5, 0.5)).toThrow(RangeError)
   expect(() => random.varyInteger(Number.MAX_SAFE_INTEGER, 1)).toThrow(RangeError)
   expect(() => random.varyInteger(0, 2 ** 52)).toThrow(RangeError)
+})
+test('integer variation eases outward from the base on both sides', () => {
+  const random = make()
+  const edges = new Set<number>
+  for (let i = 0; i < 32; i++) {
+    expect(random.varyInteger(10, 2, {easing: () => 0})).toBe(10)
+    const edge = random.varyInteger(10, -2, {easing: () => 1})
+    edges.add(edge)
+    expect(random.varyInteger(10, 2, {easing: () => 0.5})).toBe((10 + edge) / 2)
+    random.next()
+  }
+  expect(edges).toEqual(new Set([8, 12]))
+  const options = {easing: easing.linear}
+  const rolls = tally(acrossIndexes(5000, rng => rng.varyInteger(10, 2, options)))
+  for (const value of [8, 9, 10, 11, 12]) {
+    expect(rolls.get(value)! / 5000).toBeCloseTo(0.2, 1)
+  }
+  expect(random.varyInteger(10, 0, options)).toBe(10)
+  expect(() => random.varyInteger(Number.MAX_SAFE_INTEGER, 1, options)).toThrow(RangeError)
+  expect(() => random.varyInteger(0, 2 ** 52, options)).toThrow(RangeError)
 })
 test('an item is one of the items, each as likely as the others', () => {
   const random = make().makeChild(['vesper', 'orbs'])

@@ -31,6 +31,13 @@ export type RollOptions = {
 
 const toArray = <Value>(value: Arrayable<Value>) => (Array.isArray(value) ? [...value as ReadonlyArray<Value>] : [value as Value])
 const isId = (value: unknown): value is FatedId => typeof value === 'number' || typeof value === 'string'
+const integerSpan = (from: number, to: number) => {
+  const span = Math.abs(to - from)
+  if (!Number.isSafeInteger(from) || !Number.isSafeInteger(to) || !Number.isSafeInteger(span)) {
+    throw new RangeError(`Cannot roll an integer between ${from} and ${to}: both have to be safe integers at most 2 ** 53 − 1 apart.`)
+  }
+  return span
+}
 
 /**
  * Random rolls that are decided in advance: every roll only depends on the seed, the chain of IDs and the index, never on when, how often or in which order something rolls.
@@ -128,10 +135,7 @@ export default class FatedRandom {
       to = 0
     }
     const lowest = Math.min(from, to)
-    const span = Math.max(from, to) - lowest
-    if (!Number.isSafeInteger(from) || !Number.isSafeInteger(to) || !Number.isSafeInteger(span)) {
-      throw new RangeError(`Cannot roll an integer between ${from} and ${to}: both have to be safe integers at most 2 ** 53 − 1 apart.`)
-    }
+    const span = integerSpan(from, to)
     const size = span + 1
     const easing = options?.easing
     if (!easing) {
@@ -201,19 +205,28 @@ export default class FatedRandom {
   }
 
   /** Adds a float rolled within `delta` of zero to `base`. */
-  vary(base: number, delta: number) {
+  vary(base: number, delta: number, options?: RollOptions) {
     if (!Number.isFinite(base)) {
       throw new RangeError(`A base has to be finite, got ${base}.`)
     }
-    return base + this.rollRadius(delta)
+    return base + this.rollRadius(delta, options)
   }
 
-  /** An integer within `delta` of `base`, both ends included. */
-  varyInteger(base: number, delta: number) {
+  /** An integer within `delta` of `base`, both ends included. Easing shapes the distance from `base`. */
+  varyInteger(base: number, delta: number, options?: RollOptions) {
     if (!Number.isSafeInteger(base) || !Number.isSafeInteger(delta)) {
       throw new RangeError(`An integer base and delta have to be safe integers, got ${base} and ${delta}.`)
     }
-    return this.rollInteger(base - delta, base + delta)
+    const from = base - delta
+    const to = base + delta
+    if (!options?.easing) {
+      return this.rollInteger(from, to)
+    }
+    const radius = integerSpan(from, to) / 2
+    // Half of the base’s bin lies on each side. The outermost bins each need a full unit too.
+    const offset = this.rollRadius(radius + 0.5, options)
+    const distance = Math.min(radius, Math.round(Math.abs(offset)))
+    return base + Math.sign(offset) * distance
   }
 
   /** Every roll starts its own stream at the current index. */

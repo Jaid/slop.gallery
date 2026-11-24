@@ -51,8 +51,8 @@ Without `next()`, a roll returns the same result forever. The methods share thei
 | `rollInteger(from, to, options?)` | an integer between `from` and `to`, both included, in either order |
 | `rollIntegerRadius(radius)` | an integer from −`radius` to `radius`, both included |
 | `rollRadius(radius, options?)` | a uniform float from −`abs(radius)` up to, but not including, `abs(radius)`; with easing, a signed distance shaped by the curve |
-| `vary(base, delta)` | `base + rollRadius(delta)`; for example, `vary(10, 2)` varies 10 by up to 2 in either direction |
-| `varyInteger(base, delta)` | an integer within `delta` of `base`, both ends included; `varyInteger(10, 2)` rolls 8, 9, 10, 11 or 12 |
+| `vary(base, delta, options?)` | `base + rollRadius(delta, options)`; easing shapes the distance from `base` in both directions |
+| `varyInteger(base, delta, options?)` | an integer within `delta` of `base`, both ends included; easing shapes the distance from `base`, with equal-width bins for the integers |
 | `rollItem(items, options?)` | one of the items, typed as the union of a literal array’s items |
 | `sample(items, amount = items.length, options?)` | independent draws with replacement; even a single entry can fill the whole result |
 | `shuffle(items, amount = items.length, options?)` | entries in random order without replacement; starts a fresh shuffle each time it exhausts the input |
@@ -68,6 +68,7 @@ random.roll({easing: easing.cubicIn}) // favors smaller values
 random.roll({easing: t => 1 - (1 - t) ** 2}) // favors larger values
 random.rollInteger(1, 8, {easing: easing.cubicIn}) // rolls 1 half the time
 random.rollRadius(8, {easing: easing.cubicIn}) // half the offsets are within 1 of zero
+random.varyInteger(10, 2, {easing: easing.cubicIn}) // rolls 8–12, favoring 10
 ```
 
 For `rollRadius`, the curve shapes only the distance from zero: 0 means the center and 1 means the full radius. Finite overshoots are clamped to that range; nonfinite outputs throw a `RangeError`. A second draw at the same index chooses the sign with equal odds, so `cubicOut` favors both outer edges equally.
