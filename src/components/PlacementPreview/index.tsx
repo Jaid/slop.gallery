@@ -1,6 +1,7 @@
 import type PortraitFrame from '#src/frames/base/PortraitFrame.ts'
 
 import {useFrame} from '@react-three/fiber'
+import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 
@@ -26,8 +27,9 @@ export default function PlacementPreview({width, height, frame, source, title, c
   // A spot that would take the work shows green even out of reach, only faded.
   const fits = useGallery(s => s.placement?.fits === true)
   const inReach = useGallery(s => s.placement?.inReach === true)
-  // The placard previews on the side it would hang, which flips when only the placard blocks a spot.
-  const above = useGallery(s => s.placement?.labelAbove === true)
+  // The placard previews on the side it would hang, which flips when only the placard blocks a spot, and not at all for a work that never gets one.
+  const placard = useGallery(s => s.placement?.placard ?? 'below')
+  const above = placard === 'above'
   const label = portraitLabelLayout(width, height, above)
   const visual = useDisposable(useMemo(() => new PreviewVisual(width, height, frame.reach, texture), [frame, height, texture, width]))
   useFrame((_, delta) => {
@@ -43,15 +45,17 @@ export default function PlacementPreview({width, height, frame, source, title, c
       <primitive attach='geometry' object={visual.border} />
       <primitive attach='material' object={visual.borderMaterial} />
     </mesh>
-    <PortraitLabel
-      above={above} creator={creator} height={height} pending={pending} preview={{
-        color: fits ? previewColors.valid : previewColors.invalid,
-        opacity: previewOpacity(inReach),
-      }} title={title} width={width} year={year}
-    />
-    <mesh position={[0, label.y, portraitLabel.depth / 2 + 0.018]}>
-      <primitive attach='geometry' object={visual.labelBorder} />
-      <primitive attach='material' object={visual.labelBorderMaterial} />
-    </mesh>
+    <Branch if={placard !== 'none'}>
+      <PortraitLabel
+        above={above} creator={creator} height={height} pending={pending} preview={{
+          color: fits ? previewColors.valid : previewColors.invalid,
+          opacity: previewOpacity(inReach),
+        }} title={title} width={width} year={year}
+      />
+      <mesh position={[0, label.y, portraitLabel.depth / 2 + 0.018]}>
+        <primitive attach='geometry' object={visual.labelBorder} />
+        <primitive attach='material' object={visual.labelBorderMaterial} />
+      </mesh>
+    </Branch>
   </>
 }

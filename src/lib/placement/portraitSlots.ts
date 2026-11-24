@@ -1,3 +1,4 @@
+import type {PlacardSide} from '../gallery/portraitLabel.ts'
 import type {Portrait, PortraitRatio, PortraitSlot} from '../gallery/types.ts'
 
 /** width per height of each slot ratio */
@@ -34,6 +35,11 @@ export function frameSize(aspect: number, area: number) {
 /** the frame area of a slot in cm² */
 export function slotArea({width, height}: Pick<PortraitSlot, 'height' | 'width'>) {
   return Math.round(width * height * 10_000)
+}
+
+/** Where the placard of a slot’s work goes, which a default work always has. */
+export function slotPlacard(slot: Pick<PortraitSlot, 'labelAbove'>): PlacardSide {
+  return slot.labelAbove ? 'above' : 'below'
 }
 
 /** A slot as a hung work, for clearance checks against works and other slots. */

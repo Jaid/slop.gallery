@@ -71,7 +71,7 @@ describe('Knottingham placement', () => {
     })
     const {origin, direction} = aimAt(wall, 0.4, 2.5)
     expect(knotPlacement.findPlacement(origin, direction, 1.2, 1.2, [hung])?.reason).toBe(placementIssues.neighbor)
-    expect(knotPlacement.findPlacement(origin, direction, 1.2, 1.2, [hung], hung.id)?.valid).toBe(true)
+    expect(knotPlacement.findPlacement(origin, direction, 1.2, 1.2, [hung], {ignoreId: hung.id})?.valid).toBe(true)
     const low = aimAt(wall, 0, 0.6)
     expect(knotPlacement.findPlacement(low.origin, low.direction, 1.2, 1.2, [])?.reason).toBe(placementIssues.frame)
     const corner = aimAt(wall, wall.width / 2 - 0.2, 2.5)

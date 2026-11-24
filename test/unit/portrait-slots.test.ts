@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'bun:test'
 
-import {asPortrait, portraitRatios, slotArea, slotAreas, slotFrame} from '../../src/lib/placement/portraitSlots.ts'
+import {asPortrait, portraitRatios, slotArea, slotAreas, slotFrame, slotPlacard} from '../../src/lib/placement/portraitSlots.ts'
 import {placementIssue} from '../../src/lib/placement/wallGeometry.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 import {galleryPlacement} from './fixtures/gallery.ts'
@@ -28,7 +28,10 @@ describe('portrait slots', () => {
   test('stay valid hanging spots with every other slot filled', () => {
     for (const slot of slots) {
       const wall = galleryPlacement.wall(slot.wallId)!
-      expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, slot.id, slot.labelAbove)).toBe('')
+      expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, {
+        ignoreId: slot.id,
+        placard: slotPlacard(slot),
+      })).toBe('')
       expect(galleryPlacement.contains(slot.position)).toBe(true)
     }
   })

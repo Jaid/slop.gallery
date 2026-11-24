@@ -10,7 +10,7 @@ import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {knotGalleryBounds} from '../../src/lib/gallery/knotGallery.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
 import PlayerSession from '../../src/lib/gallery/PlayerSession.ts'
-import {asPortrait} from '../../src/lib/placement/portraitSlots.ts'
+import {asPortrait, slotPlacard} from '../../src/lib/placement/portraitSlots.ts'
 import {placementIssue, wallCoordinates, wallPosition} from '../../src/lib/placement/wallGeometry.ts'
 import world from '../../src/worlds/current.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
@@ -261,7 +261,10 @@ describe('worlds', () => {
       for (const [axis, value] of slot.position.entries()) {
         expect(value).toBeCloseTo(hanging[axis], 6)
       }
-      expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, slot.id, slot.labelAbove)).toBe('')
+      expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, {
+        ignoreId: slot.id,
+        placard: slotPlacard(slot),
+      })).toBe('')
     }
   })
   test('the Sandbox’s walls have portrait slots, at most one for every default work of each ratio, every one a valid hanging spot with all the others filled', () => {
@@ -284,7 +287,10 @@ describe('worlds', () => {
       for (const [axis, value] of slot.position.entries()) {
         expect(value).toBeCloseTo(hanging[axis], 6)
       }
-      expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, slot.id, slot.labelAbove)).toBe('')
+      expect(placementIssue(wall, slot.position, slot.width, slot.height, occupied, {
+        ignoreId: slot.id,
+        placard: slotPlacard(slot),
+      })).toBe('')
       expect(sandbox.placement.contains(slot.position)).toBe(true)
     }
   })

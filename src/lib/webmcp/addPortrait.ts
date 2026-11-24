@@ -1,5 +1,6 @@
 import type {CanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
+import type {PlacardSide} from '#src/lib/gallery/portraitLabel.ts'
 import type {Portrait, PortraitSlot, Vec3} from '#src/lib/gallery/types.ts'
 import type {PlacementIssue} from '#src/lib/placement/wallGeometry.ts'
 
@@ -83,8 +84,8 @@ export type PortraitDestination = {
   area: number
   /** The frame a work with the id wears there unless told another, or undefined for the default frame. */
   frame: (work: string) => PortraitFrameId | undefined
-  /** Where a work with a frame of this size in meters goes there, among `portraits`, as what its portrait says about it; throws where it doesn’t fit. */
-  place: (width: number, height: number, portraits: ReadonlyArray<Portrait>) => Pick<Portrait, 'hung' | 'labelAbove' | 'position' | 'rotation' | 'wallId'>
+  /** Where the work, with its frame size in meters, goes there, among `portraits`, as what its portrait says about it; throws where it doesn’t fit. */
+  place: (work: Pick<Portrait, 'height' | 'title' | 'width'>, portraits: ReadonlyArray<Portrait>) => Pick<Portrait, 'hung' | 'labelAbove' | 'position' | 'rotation' | 'wallId'>
   /** Whether the work is the one a new work takes the place of there. */
   replaces?: (portrait: Portrait) => boolean
   slot?: string
@@ -137,19 +138,22 @@ export function findPortraitDestination(target: PortraitTarget): PortraitDestina
     return {
       area: world.portraitArea(wall.id, wall.room),
       frame: work => world.roomById(wall.room)?.frame(environmentSeed, work),
-      place(width, height, portraits) {
+      place(work, portraits) {
+        const {width, height} = work
         const position = wallPosition(wall, x, wall.center[1] + x * (wall.slope ?? 0) + y)
-        // The placard goes below the frame, or above it where only that fits, as for a work the player hangs.
-        const labelAbove = [false, true].find(above => !world.placement.placementIssue(wall, position, width, height, portraits, '', above))
-        if (labelAbove === undefined) {
-          throw new Error(`It does not fit there on the wall “${wall.id}”, ${wall.width.toFixed(2)} m wide and ${wall.height.toFixed(2)} m high: it would ${issues[world.placement.placementIssue(wall, position, width, height, portraits) as PlacementIssue]}.`)
+        // The placard goes below the frame, or above it where only that fits, as for a work the player hangs, unless it never gets one.
+        const sides: ReadonlyArray<PlacardSide> = world.placement.placardOf(work) === 'none' ? ['none'] : ['below', 'above']
+        const issue = (placard: PlacardSide) => world.placement.placementIssue(wall, position, width, height, portraits, {placard})
+        const placard = sides.find(side => !issue(side))
+        if (placard === undefined) {
+          throw new Error(`It does not fit there on the wall “${wall.id}”, ${wall.width.toFixed(2)} m wide and ${wall.height.toFixed(2)} m high: it would ${issues[issue(sides[0]) as PlacementIssue]}.`)
         }
         return {
           position,
           rotation: wall.rotation - (wall.curveRadius ? x / wall.curveRadius : 0),
           wallId: wall.id,
           hung: true,
-          ...labelAbove ? {labelAbove: true} : {},
+          ...placard === 'above' ? {labelAbove: true} : {},
         }
       },
     }
@@ -199,7 +203,11 @@ export default async function addPortrait({canvasMaterial, frame: frameId, hangi
   // Again, as another import may have taken the id while this one loaded its image.
   requireFreeId(id, portraits)
   const replaced = destination.replaces && portraits.find(destination.replaces)
-  const placed = destination.place(width, height, portraits)
+  const placed = destination.place({
+    width,
+    height,
+    title,
+  }, portraits)
   if (!replaced && portraits.length >= maximumPortraits) {
     throw new Error('The collection is full. Remove a work to make room.')
   }

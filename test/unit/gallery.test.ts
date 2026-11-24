@@ -1,3 +1,5 @@
+import type {Portrait} from '../../src/lib/gallery/types.ts'
+
 import {beforeEach, describe, expect, test} from 'bun:test'
 import {sep} from 'node:path'
 
@@ -60,7 +62,7 @@ describe('wall geometry', () => {
     }
     const p = samplePortraits[0]
     expect(placementIssue(wall, p.position, p.width, p.height, samplePortraits)).toBe('neighbor')
-    expect(placementIssue(wall, p.position, p.width, p.height, samplePortraits, p.id)).toBe('')
+    expect(placementIssue(wall, p.position, p.width, p.height, samplePortraits, {ignoreId: p.id})).toBe('')
   })
   test('keeps distant wall previews but never accepts them as placements', () => {
     for (const z of [-21.999, 5, 7.5]) {
@@ -178,6 +180,36 @@ describe('wall geometry', () => {
     const lowestCenter = 0.48 - layout.bottom + portraitLabel.clearance
     expect(placementIssue(wall, wallPosition(wall, 4, lowestCenter - 0.001), 2, 2, [])).toBe('frame')
     expect(placementIssue(wall, wallPosition(wall, 4, lowestCenter + 0.001), 2, 2, [])).toBe('')
+  })
+  test('a work that never gets a placard keeps no room for one, and neither do such works hanging around it', () => {
+    const wall = walls[0]
+    const lowestCenter = 0.48 + 1 + 0.16
+    expect(placementIssue(wall, wallPosition(wall, 4, lowestCenter - 0.001), 2, 2, [], {placard: 'none'})).toBe('frame')
+    expect(placementIssue(wall, wallPosition(wall, 4, lowestCenter + 0.001), 2, 2, [], {placard: 'none'})).toBe('')
+    // A 1 m work above, whose placard below would come within its clearance of the frame’s breathing space, while its frame keeps clear of it.
+    const above: Portrait = {
+      id: 'above',
+      source: '',
+      position: wallPosition(wall, 4, 4.06),
+      rotation: wall.rotation,
+      width: 1,
+      height: 1,
+      hung: true,
+      wallId: wall.id,
+    }
+    const position = wallPosition(wall, 4, 2)
+    expect(placementIssue(wall, position, 2, 2, [above], {placard: 'none'})).toBe('neighbor')
+    expect(placementIssue(wall, position, 2, 2, [above], {
+      placard: 'none',
+      placardsPossible: false,
+    })).toBe('')
+    expect(placementIssue(wall, position, 2, 2, [{
+      ...above,
+      title: 'Above',
+    }], {
+      placard: 'none',
+      placardsPossible: false,
+    })).toBe('neighbor')
   })
   test('room boundaries are shared by UI and interaction', () => {
     expect(roomAt([-14, 2, 0])).toBe('vesper')

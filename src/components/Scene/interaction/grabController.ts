@@ -137,7 +137,10 @@ export default function createGrabController(camera: RootState['camera'], placem
       }
       sound(thrown, position.toArray())
     } else {
-      const candidate = world.placement.findPlacement(camera.position.toArray(), camera.getWorldDirection(new Vector3).toArray(), portrait.width, portrait.height, state.portraits, portrait.id, portrait.labelAbove === true)
+      const candidate = world.placement.findPlacement(camera.position.toArray(), camera.getWorldDirection(new Vector3).toArray(), portrait.width, portrait.height, state.portraits, {
+        ignoreId: portrait.id,
+        placard: world.placement.placardOf(portrait),
+      })
       if (candidate?.valid) {
         state.commit(state.portraits.map(item => {
           return item.id === id ? {
@@ -145,7 +148,7 @@ export default function createGrabController(camera: RootState['camera'], placem
             position: candidate.position,
             rotation: candidate.rotation,
             wallId: candidate.wallId,
-            labelAbove: candidate.labelAbove === true ? true : undefined,
+            labelAbove: candidate.placard === 'above' ? true : undefined,
             hung: true,
             orientation: undefined,
             spin: undefined,

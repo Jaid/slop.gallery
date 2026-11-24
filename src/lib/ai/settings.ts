@@ -108,6 +108,9 @@ export function readAiSettings(input: URL | string = typeof location === 'undefi
   return readPermalink(input, {schema: aiSettingsSchema})
 }
 
+/** whether the page allows AI at all; `false` for `?ai=false`, which nothing on the page can switch back on, unlike the in-menu toggle */
+export const aiAvailable = readAiSettings().ai
+
 /** Applies a settings change; once the page is opened with `?ai=false`, nothing can switch AI back on. */
 export function patchAiSettings(current: AiSettings, patch: Partial<AiSettings>, available: boolean): AiSettings {
   const next = {

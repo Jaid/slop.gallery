@@ -1,4 +1,10 @@
+import type {Portrait} from './types.ts'
 import type {Object3D} from 'three/webgpu'
+
+import {hasPlacard} from './portraitFlavor.ts'
+
+/** where a work’s placard takes up room on its wall: below its frame, above it for a low hang, or nowhere for a work that never gets one */
+export type PlacardSide = 'above' | 'below' | 'none'
 
 // Shared by the hung label, its placement preview and wall clearance checks.
 const portraitLabel = {
@@ -20,6 +26,14 @@ export function portraitLabelLayout(width: number, height: number, above = false
     bottom: y - portraitLabel.height / 2,
     top: y + portraitLabel.height / 2,
   }
+}
+
+/** Where the placard of a work takes up room on its wall: on its side as long as it has one or `placardsPossible` says it may still get one, and nowhere once neither holds, like for a work nobody told anything about on a page with `?ai=false`. */
+export function placardSide(work: Pick<Portrait, 'creator' | 'labelAbove' | 'pending' | 'title'>, placardsPossible: boolean): PlacardSide {
+  if (!placardsPossible && !hasPlacard(work)) {
+    return 'none'
+  }
+  return work.labelAbove ? 'above' : 'below'
 }
 
 // Text and backing meshes share the label marker; the frame itself does not.

@@ -4,6 +4,7 @@ import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {Orb} from '#src/orbs/index.ts'
 import type {PlacementIssue} from '../placement/wallGeometry.ts'
 import type {ItemIngredient} from './fusion/FusionRecipe.ts'
+import type {PlacardSide} from './portraitLabel.ts'
 import type {Quat as MathQuat, Vec3 as MathVec3} from 'math'
 import type {NarrationTiming} from 'use-narrator/core'
 
@@ -99,8 +100,8 @@ export type Placement = {
   /** whether the spot itself takes the artwork, however far away it is */
   fits: boolean
   inReach: boolean
-  /** whether the placard goes above the frame, because below it would block the spot */
-  labelAbove?: boolean
+  /** where the placard goes: on the work’s own side unless only the other one leaves the spot free, or nowhere for a work that never gets one */
+  placard: PlacardSide
   position: MathVec3
   /** why the artwork cannot hang here, or an empty string if it can */
   reason: PlacementIssue | ''

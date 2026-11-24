@@ -107,12 +107,15 @@ export default function useInteractionFrame(camera: RootState['camera'], rendere
     const rayDirection = ray.current.ray.direction.toArray()
     let candidate: Placement | null
     if (portrait) {
-      candidate = world.placement.findPlacement(origin, rayDirection, portrait.width, portrait.height, s.portraits, portrait.id, portrait.labelAbove === true)
+      candidate = world.placement.findPlacement(origin, rayDirection, portrait.width, portrait.height, s.portraits, {
+        ignoreId: portrait.id,
+        placard: world.placement.placardOf(portrait),
+      })
     } else {
       candidate = importPreviewPlacement(origin, rayDirection, s.room, s.portraits)
     }
     placement.current = candidate
-    if (candidate?.valid !== s.placement?.valid || candidate?.fits !== s.placement?.fits || candidate?.inReach !== s.placement?.inReach || candidate?.reason !== s.placement?.reason || candidate?.wallId !== s.placement?.wallId || candidate?.labelAbove !== s.placement?.labelAbove || !candidate && s.placement) {
+    if (candidate?.valid !== s.placement?.valid || candidate?.fits !== s.placement?.fits || candidate?.inReach !== s.placement?.inReach || candidate?.reason !== s.placement?.reason || candidate?.wallId !== s.placement?.wallId || candidate?.placard !== s.placement?.placard || !candidate && s.placement) {
       useGallery.setState({placement: candidate})
     }
     ghost.current.visible = !!candidate

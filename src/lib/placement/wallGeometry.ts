@@ -1,6 +1,7 @@
+import type {PlacardSide} from '../gallery/portraitLabel.ts'
 import type {Portrait, Vec3} from '../gallery/types.ts'
 
-import portraitLabel, {portraitLabelLayout} from '../gallery/portraitLabel.ts'
+import portraitLabel, {placardSide, portraitLabelLayout} from '../gallery/portraitLabel.ts'
 
 /** how far away, in meters along the aim ray, an artwork can still be hung */
 export const placementReach = 10
@@ -27,6 +28,16 @@ export const placementIssues = {
 } as const
 
 export type PlacementIssue = typeof placementIssues[keyof typeof placementIssues]
+
+/** how a work is judged at a spot */
+export type PlacementOptions = {
+  /** the id of the work itself, which doesn’t stand in its own way while it is rehung */
+  ignoreId?: string
+  /** where its placard takes up room, below the frame by default */
+  placard?: PlacardSide
+  /** whether hung works without a placard may still get one, which keeps the room of theirs free, as by default; `false` where nothing ever writes one, see {@link placardSide} */
+  placardsPossible?: boolean
+}
 
 export type WallOpening = {
   bottom?: number
@@ -173,8 +184,8 @@ export function nearCutout(targetWall: Wall, cutout: WallOpening, u: number, hal
 }
 
 /** Why an artwork of this size, centered at `position`, would cover an opening or a reservation of its wall, or an empty string if it covers neither. */
-export function obstructionIssue(targetWall: Wall, position: Vec3, width: number, height: number, labelAbove = false) {
-  const {u, halfWidth, bottom, top} = footprint(targetWall, position, width, height, labelAbove)
+export function obstructionIssue(targetWall: Wall, position: Vec3, width: number, height: number, placard: PlacardSide = 'below') {
+  const {u, halfWidth, bottom, top} = footprint(targetWall, position, width, height, placard)
   const overlaps = (cutout: WallOpening) => nearCutout(targetWall, cutout, u, halfWidth, bottom, top)
   if (targetWall.holes?.some(overlaps)) {
     return placementIssues.doorway
@@ -187,19 +198,19 @@ export function obstructionIssue(targetWall: Wall, position: Vec3, width: number
 }
 
 /** Why an artwork of this size cannot hang centered at `position` on a wall, or an empty string if it can. */
-export function placementIssue(targetWall: Wall, position: Vec3, width: number, height: number, portraits: ReadonlyArray<Portrait>, ignoreId = '', labelAbove = false) {
+export function placementIssue(targetWall: Wall, position: Vec3, width: number, height: number, portraits: ReadonlyArray<Portrait>, {ignoreId = '', placard = 'below', placardsPossible = true}: PlacementOptions = {}) {
   if (targetWall.sticky === false) {
     return placementIssues.unsticky
   }
-  const {u, halfWidth, bottom, top} = footprint(targetWall, position, width, height, labelAbove)
+  const {u, halfWidth, bottom, top} = footprint(targetWall, position, width, height, placard)
   if (Math.abs(u) + halfWidth > targetWall.width / 2 - hangingMargins.side || bottom < targetWall.center[1] + hangingMargins.bottom || top > targetWall.center[1] + targetWall.height - hangingMargins.top) {
     return placementIssues.frame
   }
-  const obstruction = obstructionIssue(targetWall, position, width, height, labelAbove)
+  const obstruction = obstructionIssue(targetWall, position, width, height, placard)
   if (obstruction) {
     return obstruction
   }
-  if (portraits.some(p => p.id !== ignoreId && p.hung && p.wallId === targetWall.id && Math.abs(wallCoordinates(targetWall, p.position) - u) < halfWidth + p.width / 2 + 0.18 && overlapsVertically(p, bottom, top))) {
+  if (portraits.some(p => p.id !== ignoreId && p.hung && p.wallId === targetWall.id && Math.abs(wallCoordinates(targetWall, p.position) - u) < halfWidth + p.width / 2 + 0.18 && overlapsVertically(p, placardSide(p, placardsPossible), bottom, top))) {
     return placementIssues.neighbor
   }
   return ''
@@ -234,20 +245,20 @@ export function wallRayDistance(targetWall: Wall, origin: Vec3, direction: Vec3)
   return Infinity
 }
 
-/** Whether a footprint from `bottom` to `top` comes too close above or below a hung work, its placard included. */
-function overlapsVertically(p: Portrait, bottom: number, top: number) {
-  const label = portraitLabelLayout(p.width, p.height, p.labelAbove)
-  const lowest = p.position[1] + (p.labelAbove ? -p.height / 2 : label.bottom)
-  const highest = p.position[1] + (p.labelAbove ? label.top : p.height / 2)
-  return top > lowest - (p.labelAbove ? 0.23 : portraitLabel.neighborClearance) && bottom < highest + (p.labelAbove ? portraitLabel.neighborClearance : 0.23)
+/** Whether a footprint from `bottom` to `top` comes too close above or below a hung work, its placard on the side `placard` included. */
+function overlapsVertically(p: Portrait, placard: PlacardSide, bottom: number, top: number) {
+  const label = portraitLabelLayout(p.width, p.height, placard === 'above')
+  const lowest = p.position[1] + (placard === 'below' ? label.bottom : -p.height / 2)
+  const highest = p.position[1] + (placard === 'above' ? label.top : p.height / 2)
+  return top > lowest - (placard === 'below' ? portraitLabel.neighborClearance : 0.23) && bottom < highest + (placard === 'above' ? portraitLabel.neighborClearance : 0.23)
 }
-/** The space an artwork of this size, centered at `position`, takes up on a wall, including its frame, its label and a little breathing space. */
-function footprint(targetWall: Wall, position: Vec3, width: number, height: number, labelAbove = false) {
-  const label = portraitLabelLayout(width, height, labelAbove)
+/** The space an artwork of this size, centered at `position`, takes up on a wall, including its frame, its placard on the side `placard` and a little breathing space. */
+function footprint(targetWall: Wall, position: Vec3, width: number, height: number, placard: PlacardSide) {
+  const label = portraitLabelLayout(width, height, placard === 'above')
   return {
     u: wallCoordinates(targetWall, position),
-    halfWidth: Math.max(width / 2 + 0.16, label.width / 2),
-    bottom: labelAbove ? position[1] - height / 2 - 0.16 : position[1] + label.bottom - portraitLabel.clearance,
-    top: labelAbove ? position[1] + label.top + portraitLabel.clearance : position[1] + height / 2 + 0.16,
+    halfWidth: Math.max(width / 2 + 0.16, placard === 'none' ? 0 : label.width / 2),
+    bottom: placard === 'below' ? position[1] + label.bottom - portraitLabel.clearance : position[1] - height / 2 - 0.16,
+    top: placard === 'above' ? position[1] + label.top + portraitLabel.clearance : position[1] + height / 2 + 0.16,
   }
 }

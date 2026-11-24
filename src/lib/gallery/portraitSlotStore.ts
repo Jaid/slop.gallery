@@ -7,7 +7,7 @@ import {create} from 'zustand'
 import isFlagOn from '#src/lib/permalinkFlag.ts'
 import world from '#src/worlds/current.ts'
 
-import {asPortrait, slotArea, slotAreas, slotFrame} from '../placement/portraitSlots.ts'
+import {asPortrait, slotArea, slotAreas, slotFrame, slotPlacard} from '../placement/portraitSlots.ts'
 import {wallPosition} from '../placement/wallGeometry.ts'
 
 const flagsSchema = optis({
@@ -141,13 +141,17 @@ export function createSlot(slot: PortraitSlot) {
     aimed: slot.id,
   }))
 }
-/** Why a slot cannot hang where it is among the other slots, or an empty string if it can. */
+/** Why a slot cannot hang where it is among the other slots, or an empty string if it can, each with the placard of the default work it is for, whatever the page. */
 export function slotIssue(slot: PortraitSlot, slots: ReadonlyArray<PortraitSlot>) {
   const wall = world.placement.wall(slot.wallId)
   if (!wall) {
     return 'unknown wall'
   }
-  return world.placement.placementIssue(wall, slot.position, slot.width, slot.height, slots.map(asPortrait), slot.id, slot.labelAbove)
+  return world.placement.placementIssue(wall, slot.position, slot.width, slot.height, slots.map(asPortrait), {
+    ignoreId: slot.id,
+    placard: slotPlacard(slot),
+    placardsPossible: true,
+  })
 }
 /** The slot a ray from the eye first meets, frame or placard, unless a wall is in the way, or `null`. */
 export function aimedSlot(origin: Vec3, direction: Vec3, slots: ReadonlyArray<PortraitSlot>) {

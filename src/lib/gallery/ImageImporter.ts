@@ -53,7 +53,7 @@ export function importPreviewSide(wallId: string | undefined, room: string) {
 
 /** Where the square an image dragged in previews as would hang, aimed along `direction` from `origin` while the player is in the room with the id `room`: at the portrait area of the room owning the wall it is aimed at, which the ray hits whatever the size. */
 export function importPreviewPlacement(origin: Vec3, direction: Vec3, room: string, portraits: ReadonlyArray<Portrait>) {
-  const aim = (side: number) => world.placement.findPlacement(origin, direction, side, side, portraits)
+  const aim = (side: number) => world.placement.findPlacement(origin, direction, side, side, portraits, {placard: importPlacard()})
   const droppedSide = importPreviewSide(undefined, room)
   const placement = aim(droppedSide)
   const hungSide = placement && importPreviewSide(placement.wallId, room)
@@ -213,6 +213,10 @@ export function atFeet(pose: {
   }
 }
 
+/** Where the placard of an imported work takes up room, which nobody has told anything about yet. */
+function importPlacard() {
+  return world.placement.placardOf({})
+}
 /** An image file decoded for drawing, with its size in pixels. An SVG, which createImageBitmap does not take, decodes into an image element instead, which draws it sharp at any size; in one, it runs no scripts and loads nothing. */
 async function decodeImage(file: Blob) {
   if (file.type !== 'image/svg+xml') {
@@ -312,7 +316,7 @@ export default class ImageImporter {
           let size = dropped
           let place: Placement | null = null
           if (target) {
-            const aim = ({width, height}: typeof size) => world.placement.findPlacement(target.origin, target.direction, width, height, s.portraits)
+            const aim = ({width, height}: typeof size) => world.placement.findPlacement(target.origin, target.direction, width, height, s.portraits, {placard: importPlacard()})
             place = aim(size)
             // Aimed at a wall, it takes the portrait area of the room owning the wall, which the ray hits whatever the size.
             const hungArea = place && world.portraitArea(place.wallId, room)
@@ -335,7 +339,7 @@ export default class ImageImporter {
               position: place.position,
               rotation: place.rotation,
               wallId: place.wallId,
-              labelAbove: place.labelAbove === true ? true : undefined,
+              labelAbove: place.placard === 'above' ? true : undefined,
               hung: true,
             })
           } else if (flip) {
