@@ -194,9 +194,9 @@ await film({
 ```TypeScript
 import film from './scripts/film.ts'
 
-const sculpture = [14.05, 2.1, -26.4]
-const left = [10.55, 2, -20.34]
-const right = [17.55, 2, -20.34]
+const sculpture = [14, 2.1, -26.4]
+const left = [10.5, 2, -20.34]
+const right = [17.5, 2, -20.34]
 
 await film({
   width: 1080,

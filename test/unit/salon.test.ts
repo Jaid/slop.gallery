@@ -130,9 +130,10 @@ describe('the Salon', () => {
     expect(salonBench.seatHeight).toBeGreaterThan(0.4)
     expect(salonBench.seatHeight).toBeLessThan(0.55)
   })
-  test('the sculpture socket sits inside the glass wall’s north end and keeps a flat working face inside its chipped edges', () => {
+  test('the sculpture socket sits on the room axis inside the glass wall’s north end and keeps a flat working face inside its chipped edges', () => {
     const {position: [x, y, z], size} = salonSculptureSocket
     const [width, height, depth] = size
+    expect(x).toBe(room.center[0])
     expect([width, depth]).toEqual([salonBench.width, salonBench.width])
     expect(z - depth / 2).toBeCloseTo(salonWindow.z - salonWindow.width / 2, 9)
     expect(z + depth / 2).toBeLessThan(salonBench.position[2] - salonBench.depth / 2)

@@ -95,9 +95,9 @@ export const salonTerrazzo = {
 
 const sculptureSocketSize: Vec3 = [salonBench.width, 0.3, salonBench.width]
 
-/** A sculpture socket of sawn stone with its north edge flush with the glass wall’s north end. */
+/** A sculpture socket of sawn stone on the room axis, like the ottoman, which centers it on a seam of the floor’s slabs, with its north edge flush with the glass wall’s north end. */
 export const salonSculptureSocket = {
-  position: [14.05, 0, salonWindow.z - (salonWindow.width - sculptureSocketSize[2]) / 2] as Vec3,
+  position: [salon.center[0], 0, salonWindow.z - (salonWindow.width - sculptureSocketSize[2]) / 2] as Vec3,
   size: sculptureSocketSize,
 } as const
 
