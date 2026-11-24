@@ -1,10 +1,10 @@
 import {color, float, max, mix, mx_noise_float, positionGeometry, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
-import {heightNormal, visibleDetail} from './filters.ts'
+import {heightNormal, visibleDetail} from '#src/lib/materials/filters.ts'
 
 /** An unpolished carving blank: warm chalk-white stone, with open grain and the shallow sweeps of the quarry saw. */
-export default class SawnCarvingStoneMaterial extends MeshStandardNodeMaterial {
+export default class SawnStoneMaterial extends MeshStandardNodeMaterial {
   constructor() {
     super({roughness: 0.94})
     this.name = 'Sawn carving stone'

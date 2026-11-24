@@ -1,0 +1,9 @@
+# Stones
+
+A stone is a kind of carving stone, the material the Salon’s sculpture and its socket are cut from: `sawn` (a chalk-white carving blank with the sweeps of the quarry saw), `statuario` (the whitest Carrara marble, translucent and satin-rubbed), `porphyry` (imperial red porphyry strewn with pink feldspar, polished), `larvikite` (Norwegian monzonite whose feldspar flashes blue), `weser` (red, cross-bedded Weser sandstone, matte) and `verdantique` (verd antique, a polished breccia of green serpentine veined with calcite). Every stone lives in a folder of its own, `src/stones/<id>`, with its material class `<Id>StoneMaterial.ts` and whatever only it needs, like the larvikite’s `SchillerLightingModel.ts`; `lib` holds what several share, like the Voronoi cells (`cells.ts`) the crystals and fragments pack in. `index.ts` holds the class of each by its id, unbuilt, with `createStone(id)` to build one, and `lib/stoneIds.ts` lists the ids, so the URL parameter knows them without loading any shader.
+
+Every stone is mapped in the meters of its geometry (`positionGeometry`), so a pattern lies in the block itself and runs on unbroken round every edge, chip and carved turn, and it moves with the sculpture when that is knocked about. Whatever gets too small for the pixels fades to its average before it can crawl.
+
+The environment seed rolls the Salon’s stone (`salonStoneId` in `src/lib/gallery/salonStone.ts`) independently of its sculpture; the default seed cuts both from the first one, `sawn`, unless `?stone=<id>` names one (`lib/forcedStone.ts`), like `?room=salon&stone=larvikite&sculpture=antiphon`. The socket builds the material and hands the same instance to the sculpture.
+
+To add a stone, give it a folder with its class, add its id to the end of `stoneIds` and its class to `index.ts`; adding it anywhere else, or reordering them, changes which stone most seeds roll.

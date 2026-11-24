@@ -20,16 +20,17 @@ import {salonSculptureSocket, salonTerrazzo, salonWainscot, wainscotFields, wall
 import salonLantern, {salonDomeSpringY, salonLanternBase} from '#src/lib/gallery/salonLantern.ts'
 import SalonLanternGeometry, {lanternPaneSize, salonLanternCollision, shellFilletLines} from '#src/lib/gallery/SalonLanternGeometry.ts'
 import {salonSculpture} from '#src/lib/gallery/salonSculpture.ts'
+import {salonStone} from '#src/lib/gallery/salonStone.ts'
 import ArchitecturalPlasterMaterial from '#src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import CrownGlassMaterial from '#src/lib/materials/CrownGlassMaterial.ts'
 import FauxMarbleMaterial, {gialloAntico, portoro} from '#src/lib/materials/FauxMarbleMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
-import SawnCarvingStoneMaterial from '#src/lib/materials/SawnCarvingStoneMaterial.ts'
 import ShellInlayMaterial from '#src/lib/materials/ShellInlayMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '#src/lib/materials/TerrazzoFloorMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
 import {daylight} from '#src/lib/rendering/daylight.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {createStone} from '#src/stones/index.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 import SalonOttoman from '../SalonOttoman/index.tsx'
@@ -160,7 +161,7 @@ function SculptureSocket() {
   const {position, size} = salonSculptureSocket
   const [width, height, depth] = size
   const geometry = useDisposable(useMemo(() => new CrumbledStoneGeometry(size), [size]))
-  const stone = useDisposable(useMemo(() => new SawnCarvingStoneMaterial, []))
+  const stone = useDisposable(useMemo(() => createStone(salonStone), []))
   return <>
     <RigidBody colliders={false} name='salon-sculpture-socket' position={position} type='fixed'>
       <CuboidCollider args={[width / 2, height / 2, depth / 2]} position={[0, height / 2, 0]} />

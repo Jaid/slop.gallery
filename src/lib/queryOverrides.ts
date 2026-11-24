@@ -4,6 +4,7 @@ import {readFountain} from '#src/fountains/lib/forcedFountain.ts'
 import {readFrame} from '#src/frames/lib/frameParameter.ts'
 import {readMood} from '#src/moods/lib/forcedMood.ts'
 import {readSculpture} from '#src/sculptures/lib/forcedSculpture.ts'
+import {readStone} from '#src/stones/lib/forcedStone.ts'
 import {readWorldReach} from '#src/worlds/base/WorldReach.ts'
 import {readItems} from '#src/worlds/sandbox/items.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
@@ -106,6 +107,7 @@ const readers: Record<string, Reader> = {
   show_sticky: readShowSticky,
   show_wireframe: readShowWireframe,
   spawn: readSpawn,
+  stone: readStone,
   stream_budget: readStreamBudget,
   warmup_scale: readWarmupScale,
   weather: readWeather,
