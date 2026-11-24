@@ -5,7 +5,7 @@ import {create} from 'zustand'
 /** how long the panel’s values must rest before the next change starts a new tweak, which captures the frame before it, so a slider drag captures once */
 const tweakGap = 500
 
-/** The frame from before the latest tweak in the tuning panel, which holding Space over the panel shows in place of the live view. There is one at most, and hiding the panel drops it. */
+/** The frame from before the latest tweak in the world tuning panel, which holding Space over the panel shows in place of the live view. There is one at most, and hiding the panel drops it. */
 export const useTuningBuffer = create<{
   frame?: RgbaFrame
   showing: boolean
@@ -16,8 +16,8 @@ let capturing: Promise<void> | undefined
 /** counts discards, so a capture that finishes after one doesn’t bring the frame back */
 let generation = 0
 
-/** Applies a change to the panel’s values, first capturing the live frame if the change starts a new tweak. Changes that come in during the capture wait for it, in order. */
-export function changeTunedGraphics(apply: () => void) {
+/** Applies a change the panel makes to the world tuning, first capturing the live frame if the change starts a new tweak. Changes that come in during the capture wait for it, in order. */
+export function changeWorldTuning(apply: () => void) {
   const now = performance.now()
   const startsTweak = now - lastChange > tweakGap
   lastChange = now
@@ -56,6 +56,6 @@ async function captureTuningBuffer() {
     }
   } catch (error) {
     // Comparing is a convenience; the change goes through either way.
-    console.warn('Could not capture the frame before the graphics tweak.', error)
+    console.warn('Could not capture the frame before the world tuning tweak.', error)
   }
 }

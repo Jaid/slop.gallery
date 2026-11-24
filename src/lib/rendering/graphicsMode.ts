@@ -71,7 +71,7 @@ export type GraphicsProfile = {
   volumetricLight: boolean
   /** Number of raymarching samples for volumetric sunlight. */
   volumetricLightSteps: number
-  /** how often the voxel indirect light bounces once the tuning panel switches it on, once by default */
+  /** how often the voxel indirect light bounces once the world tuning switches it on, once by default */
   voxelIndirectLightBounces?: number
 }
 

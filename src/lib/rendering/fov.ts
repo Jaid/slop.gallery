@@ -1,6 +1,21 @@
 import optis from 'optis'
 import readPermalink, {parseNumber} from 'read-permalink'
 
+/** the game camera’s vertical field of view in degrees, before any zoom, unless `?fov` sets another, which moods and camera bookmarks then leave alone */
+export const defaultFov = 65
+
+/** the narrowest and widest field of view in degrees that the world tuning and {@link fovKeys} set */
+export const fovLimits = [5, 120] as const
+
+/** keys that narrow and widen the game camera’s field of view by {@link fovStep} with `?development`: plus magnifies like zooming in, minus shows more */
+export const fovKeys: Partial<Record<string, -1 | 1>> = {
+  NumpadAdd: -1,
+  NumpadSubtract: 1,
+}
+
+/** degrees {@link fovKeys} widen or narrow the field of view by */
+export const fovStep = 5
+
 const fovSchema = optis({
   normalizations: {
     fov(value: unknown) {

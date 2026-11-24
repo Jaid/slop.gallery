@@ -45,6 +45,7 @@ import {readWireframeHighlight} from './rendering/wireframeHighlight.ts'
 import {readRoomAnnouncements} from './roomAnnouncements.ts'
 import {readDumpScreenshot} from './telemetry/dumpScreenshot.ts'
 import {readTelemetry} from './telemetry/telemetryParameter.ts'
+import {readWorldTuning} from './worldTuning/worldTuningParameter.ts'
 
 type Reader = (input: string) => unknown
 
@@ -113,6 +114,7 @@ const readers: Record<string, Reader> = {
   weather: readWeather,
   wireframe_highlight: readWireframeHighlight,
   world_reach: readWorldReach,
+  world_tuning: readWorldTuning,
   telemetry: readTelemetry,
   turntable: input => readTurntable(input)?.artwork,
   turntable_area: input => readTurntable(input)?.area,

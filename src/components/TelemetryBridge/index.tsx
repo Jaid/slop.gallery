@@ -14,15 +14,15 @@ import {useGallery} from '#src/lib/gallery.ts'
 import {useGeofences} from '#src/lib/gallery/geofences.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
 import {getAntiAliasing} from '#src/lib/rendering/antiAliasing.ts'
-import {useGraphicsTuning} from '#src/lib/rendering/customGraphics.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import {describeObject, lampSwitches} from '#src/lib/rendering/lightLevels.ts'
 import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
-import {attachGraphicsTuningTelemetry} from '#src/lib/telemetry/graphicsTuningTelemetry.ts'
 import {playerTelemetry, telemetry} from '#src/lib/telemetry/index.ts'
 import recordGeofenceCrossings from '#src/lib/telemetry/recordGeofenceCrossings.ts'
 import {roomChangeDetails} from '#src/lib/telemetry/SlopGalleryTelemetry.ts'
+import {attachWorldTuningTelemetry} from '#src/lib/telemetry/worldTuningTelemetry.ts'
 import worldClock from '#src/lib/worldClock.ts'
+import {useWorldTuningPanel} from '#src/lib/worldTuning/panel.ts'
 import world from '#src/worlds/current.ts'
 
 function Collectors() {
@@ -70,7 +70,7 @@ function Collectors() {
     }
   }, [scene])
   useEffect(() => recordGeofenceCrossings(telemetry!, useGeofences, id => world.roomById(id)?.title), [])
-  useEffect(() => attachGraphicsTuningTelemetry(telemetry!, () => ({
+  useEffect(() => attachWorldTuningTelemetry(telemetry!, () => ({
     'graphics.profile': graphicsProfile,
     'canvas.width': canvas.width,
     'canvas.height': canvas.height,
@@ -90,7 +90,7 @@ function Collectors() {
         'graphics.mirror_reflections': profile.mirrorReflections,
         'graphics.noise_textures': profile.noiseTextures,
         'graphics.volumetric_light': profile.volumetricLight,
-        'graphics.tuning': useGraphicsTuning.getState().open,
+        'world_tuning.open': useWorldTuningPanel.getState().open,
       }
     },
     getTraceContext: () => telemetry!.getContext(),

@@ -6,7 +6,6 @@ import {useEffect, useState} from 'react'
 import {useShallow} from 'zustand/react/shallow'
 
 import Dropzone from '#component/Dropzone'
-import GraphicsTuning from '#component/GraphicsTuning'
 import Hud from '#component/Hud'
 import LoadingIndicator from '#component/LoadingIndicator'
 import Menu from '#component/Menu'
@@ -14,15 +13,16 @@ import RenderBoundary from '#component/RenderBoundary'
 import RenderError from '#component/RenderError'
 import Toast from '#component/Toast'
 import TuningBuffer from '#component/TuningBuffer'
+import WorldTuning from '#component/WorldTuning'
 import {galleryEvents, useGallery} from '#src/lib/gallery.ts'
 import {useHiddenUi} from '#src/lib/hiddenUi.ts'
 import {hideLoadingScreen, useLoadingScreen} from '#src/lib/loadingScreen.ts'
-import {useGraphicsTuning} from '#src/lib/rendering/customGraphics.ts'
 import {screenRatio} from '#src/lib/rendering/ratio.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import useSlopGalleryTelemetry from '#src/lib/telemetry/useSlopGalleryTelemetry.ts'
 import useGalleryAI from '#src/lib/useGalleryAI.ts'
 import useGalleryCommands from '#src/lib/useGalleryCommands.ts'
+import {useWorldTuningPanel} from '#src/lib/worldTuning/panel.ts'
 import {currentWorldInfo} from '#src/worlds/index.ts'
 
 import GraphicsMode from './GraphicsMode.tsx'
@@ -47,7 +47,7 @@ export default function App() {
     ready,
   })))
   const uiHidden = useHiddenUi(state => state.hidden)
-  const tuning = useGraphicsTuning()
+  const tuning = useWorldTuningPanel()
   const [renderFailed, setRenderFailed] = useState(false)
   const loading = useLoadingScreen(state => state.shown)
   // lib.dom types navigator.gpu as always present, but browsers without WebGPU leave it undefined.
@@ -63,7 +63,7 @@ export default function App() {
   }
   return <GraphicsMode><Dropzone><div className={css.layout}>
     {/* A column of its own left of the canvas and HUD, so the panel never covers the scene it tunes */}
-    <Branch if={tuning.open} then={GraphicsTuning} />
+    <Branch if={tuning.open} then={WorldTuning} />
     {/* ?ratio letterboxes the screen, so the canvas keeps that shape and the menu and HUD stay on it. */}
     <div className={clsx(css.stage, letterboxSize && css.letterbox)}>
       <div className={css.screen} style={letterboxSize}>
@@ -71,7 +71,7 @@ export default function App() {
           <RenderBoundary onFailure={() => setRenderFailed(true)}><World /></RenderBoundary>
           <Branch if={tuning.open} then={TuningBuffer} />
         </main>
-        {/* Hidden with O, the paused scene stays in full view, e.g. while tweaking values in an editor; O brings the menu back. Hovering the tuning panel hides it too. The loading screen stands in for it until the scene is ready. */}
+        {/* Hidden with O, the paused scene stays in full view, e.g. while tweaking values in an editor; O brings the menu back. Hovering the world tuning panel hides it too. The loading screen stands in for it until the scene is ready. */}
         <Branch none={[loading, s.locked, s.dragging, renderFailed, uiHidden, tuning.hovered]}><Menu {...settings} /></Branch>
         <Branch not={uiHidden} then={Hud} />
         {/* Count items that are still streaming once the initial loading screen gives way. */}

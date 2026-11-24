@@ -16,6 +16,7 @@ import type {SloperatorDump, SloperatorSightingDump, SloperatorSightingInput, Sl
 import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
 import type {PartyEffectSpawn, PartyEffectSpawnInput} from './spawnPartyEffect.ts'
 import type {PropThrow, PropThrowInput} from './throwProp.ts'
+import type {WorldTuningChange, WorldTuningDump, WorldTuningInput} from './worldTuning.ts'
 import type {WireframeFlood} from 'capture-session'
 import type {WarmupEnd} from 'capture-session/script'
 import type {AimSnapshot} from 'ego-player'
@@ -88,10 +89,12 @@ export type WebmcpBridge = {
     delivery: ReturnType<VictoriaClient['status']>
     sessionId: string
   } | null
+  getWorldTuning: () => WorldTuningDump
   rerollSeed: () => SeedChange
   setGraphicsQuality: (input: GraphicsQualityInput) => Promise<GraphicsQualityChange>
   setSeed: (input: SeedInput) => SeedChange
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
+  setWorldTuning: (input: WorldTuningInput) => WorldTuningChange
   showFence: (input: FenceDisplay) => FenceDisplay
   spawnOrb: (input: OrbSpawnInput) => Promise<OrbSpawn>
   spawnPartyEffect: (input: PartyEffectSpawnInput) => PartyEffectSpawn
@@ -203,6 +206,12 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       title: 'List loading items',
       description: 'List the IDs of everything still loading that would leave something out of the next frame, one per line, or an empty string once nothing is left. IDs start with their kind: artwork: (decoding), pipeline: (compiling in the background), warmup (the loading screen’s pipeline warmup), stream: (objects waiting to stream in), shadow-map: (shadow maps missing streamed objects), room: (gallery rooms downloading or waiting to mount), knot-material:, billboard-texture:, model-sign-texture:, knot-sign-texture (the Knots’ nameplates) and element-text: (lines of text laid out as HTML, like the portraits’ placards). Captures poll this until it is empty before rendering a frame. A new pose can bring new items. Read-only.',
       read: () => getBridge().getLoadingItems().join('\n'),
+    },
+    {
+      name: 'get_world_tuning',
+      title: 'Inspect world tuning',
+      description: 'Return the world tuning: every value the panel G shows with ?development (or ?world_tuning from the start) lets the world be tuned by, live, by module: view (scale, field of view and tone mapping), lighting (the gallery’s sun, lamps and fill on top of its lighting preset, only in the gallery), pipeline (the passes of the render pipeline of heavy graphics and the lookups of the shadows) and overlay (the lines of the world overlay). Each module has its id, title, whether the panel shows its controls right now (shown, the pipeline’s only in heavy graphics, otherwise with a hint) and its controls in the panel’s order, each with its key, group box, the caption of the part of the group it is in, label, kind (range, select, toggle, color as #rrggbb, or switch for a group’s heading that switches the value between on and off), value, the initial one the page started with where it differs, a range’s min, max, step, unit and whether it is an integer or a percentage of 1, a select’s options as {value, label}, on and off for a switch, off for the value a checkbox in front of the label switches it off to, applies false while its group is switched off or it does nothing with the other values, rebuilds for a value that builds something anew, like a pass of the pipeline, and reloads for one that reloads the page. Also tells whether the panel shows (open) and whether the page has ?development (development), without which no value takes effect. Read-only.',
+      read: () => getBridge().getWorldTuning(),
     },
   ].map(({read, ...tool}) => ({
     ...tool,
@@ -778,6 +787,40 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           throw new TypeError('quality must be the name of the graphics or null.')
         }
         return getBridge().setGraphicsQuality({quality})
+      },
+    },
+    {
+      name: 'set_world_tuning',
+      title: 'Set world tuning',
+      description: 'Set values of the world tuning like its panel does, by the module ids and keys get_world_tuning lists, like {values: {view: {fov: 50}, pipeline: {bloom: false, vignette: 0.3}}}, where null brings a value back to the one the page started with. Every value is checked against its control first, so one it does not take sets none, and the error says what it takes: a number within a range’s min and max, or its off value, one of a select’s option values, true or false for a toggle, #rrggbb for a color, or a switch’s on or off value. The values apply live and stay in effect whether the panel shows or not, as the panel shows them too; changing one that rebuilds something, like a pass of the render pipeline, compiles what it builds, which get_loading_items lists meanwhile, so render a few frames before capturing. The pipeline’s values only show in heavy graphics. The panel’s Copy button copies the values tuned so far in the very shape values takes. Each settled change logs a gallery.world_tuning.changed telemetry event. Fails for an unknown module or key, whose error lists what there is, and on a page without ?development, where no value takes effect. Returns every value that changed, with its module, key, from and to. Does not move the player, change focus or simulate input.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          values: {
+            type: 'object',
+            description: 'the values to set by their keys by module id, null for the one the page started with',
+            additionalProperties: {
+              type: 'object',
+              additionalProperties: {type: ['boolean', 'number', 'string', 'null']},
+            },
+          },
+        },
+        required: ['values'],
+        additionalProperties: false,
+      },
+      annotations: {
+        readOnlyHint: false,
+      },
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).join(',') !== 'values') {
+          throw new TypeError('This tool takes an object with values.')
+        }
+        const {values} = input
+        if (!isRecord(values) || !Object.values(values).every(isRecord)) {
+          throw new TypeError('values must be an object of values by key for each module id, like {view: {fov: 50}}.')
+        }
+        return getBridge().setWorldTuning({values: values as Record<string, Record<string, unknown>>})
       },
     },
     {

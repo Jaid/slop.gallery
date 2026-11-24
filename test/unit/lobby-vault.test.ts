@@ -186,7 +186,7 @@ describe('the Lobby’s chandeliers', () => {
   })
 })
 describe('the sun and the sky', () => {
-  test('the Noon preset shines the midday sun, and the tuning panel opens with its own angles and intensities', () => {
+  test('the Noon preset shines the midday sun, and the world tuning starts from its own angles and intensities', () => {
     const noon = lightingPresets.noon
     const tuning = getLightingTuning(noon)
     expect(noon.sun.direction).toEqual(middaySun)

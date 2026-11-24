@@ -178,11 +178,11 @@ export const lightingPresetIds = Object.keys(presets) as Array<LightingPresetId>
 /** which lamps glow: all of them, only the essential ones, leaving out the lights marked `optional`, or none */
 export type LampSet = 'all' | 'essential' | 'none'
 
-/** a preset as the tuning panel may have changed it */
+/** a preset as the world tuning may have changed it */
 export type GalleryLightingPreset = LightingPreset & {
-  /** all lamps unless the tuning panel says otherwise */
+  /** all lamps unless the world tuning says otherwise */
   lampSet?: LampSet
-  /** full lamp shadows unless the tuning panel says otherwise */
+  /** full lamp shadows unless the world tuning says otherwise */
   lampShadows?: number
 }
 
@@ -200,7 +200,7 @@ const weatherSchema = optis({
   },
 })
 
-/** The lighting values the tuning panel of `?development` changes. The sun’s azimuth runs clockwise from north (−z) and its elevation up from the horizon, both in degrees. */
+/** The lighting values the world tuning of `?development` changes. The sun’s azimuth runs clockwise from north (−z) and its elevation up from the horizon, both in degrees. */
 export type LightingTuning = {
   environmentIntensity: number
   /** whether the ambient fill, the hemisphere’s base light and the environment light the scene at all */
@@ -217,7 +217,7 @@ export type LightingTuning = {
   sunIntensity: number
 }
 
-/** A preset’s own values for the tuning panel. */
+/** A preset’s own values for the world tuning. */
 export function getLightingTuning(preset: LightingPreset): LightingTuning {
   const [x, y, z] = preset.sun.direction
   return {
@@ -234,23 +234,7 @@ export function getLightingTuning(preset: LightingPreset): LightingTuning {
   }
 }
 
-/** Picks the lighting values out of the tuning panel’s. */
-export function pickLightingTuning(tuning: LightingTuning): LightingTuning {
-  return {
-    environmentIntensity: tuning.environmentIntensity,
-    fill: tuning.fill,
-    hemisphereIntensity: tuning.hemisphereIntensity,
-    lamps: tuning.lamps,
-    lampSet: tuning.lampSet,
-    lampShadows: tuning.lampShadows,
-    sun: tuning.sun,
-    sunAzimuth: tuning.sunAzimuth,
-    sunElevation: tuning.sunElevation,
-    sunIntensity: tuning.sunIntensity,
-  }
-}
-
-/** Applies the tuning panel’s lighting to a preset. Every value still at `start`, the one the panel opened with, keeps following the preset, so cycling presets with L still changes it. */
+/** Applies the world tuning’s lighting to a preset. Every value still at `start`, the one the page started with, keeps following the preset, so cycling presets with L still changes it. */
 export function tuneLighting(preset: GalleryLightingPreset, tuning: LightingTuning, start: LightingTuning): GalleryLightingPreset {
   const own = getLightingTuning(preset)
   const pick = (key: 'environmentIntensity' | 'hemisphereIntensity' | 'lamps' | 'sunAzimuth' | 'sunElevation' | 'sunIntensity') => (tuning[key] === start[key] ? own[key] : tuning[key])

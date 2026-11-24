@@ -18,7 +18,9 @@ import {isDevelopmentMode} from '../developmentMode.ts'
 import {environmentSeed} from '../gameSeed.ts'
 import {hiddenUiKey, toggleHiddenUi} from '../hiddenUi.ts'
 import pauseMenu from '../pauseMenu.ts'
-import {fovKeys, graphicsTuningKey, stepFov, toggleGraphicsTuning} from '../rendering/customGraphics.ts'
+import {fovKeys} from '../rendering/fov.ts'
+import {toggleWorldTuning, worldTuningKey} from '../worldTuning/panel.ts'
+import {viewTuning} from '../worldTuning/ViewTuningModule.ts'
 import {bookmarkKey, teleportToNextBookmark} from './bookmarks.ts'
 import {flyMode, flyModeKey, toggleFlyMode} from './flyMode.ts'
 import {useIntro} from './intro.ts'
@@ -320,8 +322,8 @@ export function handleGalleryKey(event: KeyboardEvent) {
   if (event.code === hiddenUiKey && isDevelopmentMode) {
     toggleHiddenUi()
   }
-  if (event.code === graphicsTuningKey && isDevelopmentMode) {
-    toggleGraphicsTuning()
+  if (event.code === worldTuningKey && isDevelopmentMode) {
+    toggleWorldTuning()
   }
   if (event.code === moodSuppressionKey && isDevelopmentMode) {
     notify(toggleMoodSuppression() ? 'Moods suppressed. N lets them back.' : 'Moods are back.')
@@ -338,7 +340,7 @@ export function handleGalleryKey(event: KeyboardEvent) {
   const fovDirection = fovKeys[event.code]
   // A camera taken from the player, like V-viewing’s or the intro’s, would ease back to the field of view it found.
   if (fovDirection && isDevelopmentMode && !cameraPose.focused) {
-    notify(`Field of view ${stepFov(fovDirection)}°.`)
+    notify(`Field of view ${viewTuning.stepFov(fovDirection)}°.`)
   }
 }
 

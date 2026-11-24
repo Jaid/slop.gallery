@@ -30,6 +30,7 @@ import {dumpSloperator, spawnSloperator, triggerSloperatorSighting} from '#src/l
 import spawnOrb from '#src/lib/webmcp/spawnOrb.ts'
 import spawnPartyEffect from '#src/lib/webmcp/spawnPartyEffect.ts'
 import throwProp from '#src/lib/webmcp/throwProp.ts'
+import {dumpWorldTuning, setWorldTuning} from '#src/lib/webmcp/worldTuning.ts'
 import world from '#src/worlds/current.ts'
 
 import {addTextOverlay, clearTextOverlay} from './textOverlay.ts'
@@ -99,6 +100,7 @@ export default function WebmcpBridge() {
       getLoadingItems: loadingItems,
       getPortraits: dumpPortraits,
       getPortraitSlots: () => usePortraitSlots.getState().slots,
+      getWorldTuning: dumpWorldTuning,
       setGraphicsQuality: async (input: Parameters<typeof setGraphicsQuality>[0]) => {
         const change = setGraphicsQuality(input)
         // The scene commits on React’s own schedule, which takes no animation frame, so this also resolves under a stopped virtual clock.
@@ -114,6 +116,7 @@ export default function WebmcpBridge() {
       rerollSeed: () => changeSeed(null),
       setSeed: ({seed}: SeedInput) => changeSeed(seed),
       setWireframe: applyWireframeFlood,
+      setWorldTuning,
       showFence,
       spawnOrb,
       spawnPartyEffect,

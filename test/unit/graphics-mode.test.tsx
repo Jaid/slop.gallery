@@ -149,7 +149,7 @@ test('bloom blur quality controls rebuild the render pipeline', () => {
     }), key).not.toEqual(structure)
   }
 })
-test('no graphics mode traces voxel indirect light, which the tuning panel switches on with one bounce, or two in Cinematic', () => {
+test('no graphics mode traces voxel indirect light, which the world tuning switches on with one bounce, or two in Cinematic', () => {
   const {fast, heavy, cinematic} = pipelines
   for (const settings of [fast, heavy, cinematic]) {
     expect(settings.voxelIndirectLight).toBe(false)

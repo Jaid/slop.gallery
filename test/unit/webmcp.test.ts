@@ -8,6 +8,7 @@ import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
 import type {PartyEffectSpawnInput} from '../../src/lib/webmcp/spawnPartyEffect.ts'
 import type {PropThrowInput} from '../../src/lib/webmcp/throwProp.ts'
 import type {WebmcpBridge} from '../../src/lib/webmcp/tools.ts'
+import type {WorldTuningInput} from '../../src/lib/webmcp/worldTuning.ts'
 
 import {expect, test} from 'bun:test'
 
@@ -144,6 +145,32 @@ const bridge: WebmcpBridge = {
     rotation: 0,
   }],
   getTelemetry: () => null,
+  getWorldTuning: () => ({
+    development: true,
+    open: false,
+    modules: [{
+      id: 'view',
+      title: 'View',
+      shown: true,
+      controls: [{
+        key: 'fov',
+        group: 'View',
+        label: 'Field of view',
+        kind: 'range',
+        value: 65,
+        min: 5,
+        max: 120,
+        step: 1,
+        unit: '°',
+      }],
+    }],
+  }),
+  setWorldTuning: ({values}: WorldTuningInput) => ({changes: Object.entries(values).flatMap(([module, moduleValues]) => Object.entries(moduleValues).map(([key, to]) => ({
+    module,
+    key,
+    from: 65,
+    to: to as number,
+  })))}),
   rerollSeed: () => ({
     via: 'storage',
     previous: 7,
@@ -234,8 +261,8 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_geofences', 'show_fence', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'add_text_overlay', 'clear_text_overlay', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
-  for (const tool of tools.slice(0, 9)) {
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_world_tuning', 'get_geofences', 'show_fence', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'add_text_overlay', 'clear_text_overlay', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'set_world_tuning', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
+  for (const tool of tools.slice(0, 10)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
   }
@@ -260,8 +287,40 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   expect(tools[6].execute({}, {signal: controller.signal})).toEqual(current.dumpSloperator())
   expect(tools[7].execute({}, {signal: controller.signal})).toEqual(current.analyzeWorld())
   expect(tools[8].execute({}, {signal: controller.signal})).toBe('pipeline:lobby-floor/MeshStandardNodeMaterial\nwarmup')
+  expect(tools[9].execute({}, {signal: controller.signal})).toEqual(current.getWorldTuning())
   controller.abort()
   expect(() => tools[0].execute({}, {signal: controller.signal})).toThrow()
+})
+test('set_world_tuning takes values by module and key, null among them, and asks the bridge', () => {
+  const inputs: Array<WorldTuningInput> = []
+  const tool = createWebmcpTools(() => ({
+    ...bridge,
+    setWorldTuning(input) {
+      inputs.push(input)
+      return bridge.setWorldTuning(input)
+    },
+  })).find(({name}) => name === 'set_world_tuning')!
+  const controller = new AbortController
+  const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
+  expect(tool.annotations?.readOnlyHint).toBe(false)
+  expect(execute({values: {view: {fov: 50}}})).toEqual({changes: [{
+    module: 'view',
+    key: 'fov',
+    from: 65,
+    to: 50,
+  }]})
+  execute({values: {view: {fov: null}}})
+  expect(inputs).toEqual([{values: {view: {fov: 50}}}, {values: {view: {fov: null}}}])
+  for (const input of [null, {}, {values: null}, {values: {view: 50}}, {values: {view: [50]}}, {
+    values: [],
+    extra: true,
+  }, {
+    values: {view: {fov: 50}},
+    module: 'view',
+  }]) {
+    expect(() => execute(input)).toThrow(TypeError)
+  }
+  expect(inputs).toHaveLength(2)
 })
 test('get_geofences is read-only, takes an optional position of x, y and z and asks the bridge', () => {
   const queries: Array<GeofenceQuery> = []

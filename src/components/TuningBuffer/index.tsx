@@ -1,10 +1,10 @@
 import {useEffect, useRef} from 'react'
 
-import {useTuningBuffer} from '#src/lib/rendering/tuningBuffer.ts'
+import {useTuningBuffer} from '#src/lib/worldTuning/tuningBuffer.ts'
 
 import css from './style.module.sass'
 
-/** The frame from before the latest graphics tweak, over the live view while Space is held over the tuning panel. */
+/** The frame from before the latest world tuning tweak, over the live view while Space is held over the world tuning panel. */
 export default function TuningBuffer() {
   const frame = useTuningBuffer(state => state.frame)
   const showing = useTuningBuffer(state => state.showing)

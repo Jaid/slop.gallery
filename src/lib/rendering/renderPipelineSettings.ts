@@ -6,7 +6,7 @@ import world from '#src/worlds/current.ts'
 import {sunShadowMapSize} from '../gallery/sun.ts'
 import {getSunShadowSettings} from './graphicsMode.ts'
 
-/** Every value the render pipeline is built from. The graphics mode fills them in; the tuning panel of `?development` changes them. */
+/** Every value the render pipeline is built from. The graphics mode fills them in; the world tuning of `?development` changes them. */
 export type RenderPipelineSettings = {
   ambientOcclusion: boolean
   ambientOcclusionRadius: number
@@ -179,7 +179,7 @@ export function getRenderPipelineSettings(profile: GraphicsProfile, antiAliasing
     volumetricLightMaxDensity: 1,
     volumetricLightResolutionScale: 0.25,
     volumetricLightSteps: profile.volumetricLightSteps,
-    // Voxel cone tracing cost about 4 ms of GPU time per frame at 1080p and 11 ms at 2160p for faint light, so no world has it; the tuning panel of `?development` switches it on.
+    // Voxel cone tracing cost about 4 ms of GPU time per frame at 1080p and 11 ms at 2160p for faint light, so no world has it; the world tuning of `?development` switches it on.
     voxelIndirectLight: false,
     voxelIndirectLightBounces: profile.voxelIndirectLightBounces ?? 1,
     voxelIndirectLightConeAngle: 40,

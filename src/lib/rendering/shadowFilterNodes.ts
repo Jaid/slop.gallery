@@ -78,7 +78,7 @@ const pointShadowFilter = (count: number) => (inputs: PointShadowFilterInputs, b
   return average(Array.from({length: count}, (_, index) => sample(vogelDiskSample(int(index), int(count), phi))))
 }
 /**
- * Like {@link createPcfShadowFilter} and {@link pointShadowFilter}, but looping over `shadow.filterSamples` lookups, a uniform the tuning panel changes live: three builds a light’s shadow with its filter only once.
+ * Like {@link createPcfShadowFilter} and {@link pointShadowFilter}, but looping over `shadow.filterSamples` lookups, a uniform the world tuning changes live: three builds a light’s shadow with its filter only once.
  */
 const tunableShadowFilter = (isPoint: boolean) => (inputs: PointShadowFilterInputs & ShadowFilterInputs, builder: NodeBuilder) => {
   const {depthLayer, depthTexture, shadow} = inputs

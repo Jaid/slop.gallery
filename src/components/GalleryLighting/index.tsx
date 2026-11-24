@@ -9,10 +9,9 @@ import {useShallow} from 'zustand/react/shallow'
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
 import {isTextInput, notify, useGallery} from '#src/lib/gallery.ts'
 import {createEnvironment, drawEnvironment} from '#src/lib/gallery/environment.ts'
-import {cycleLighting, lightingPresets, pickLightingTuning, tuneLighting, useLighting} from '#src/lib/gallery/lighting.ts'
+import {cycleLighting, lightingPresets, tuneLighting, useLighting} from '#src/lib/gallery/lighting.ts'
 import lobbyVault from '#src/lib/gallery/lobbyVault.ts'
 import {sunGeometry, sunlitPoints, sunShadowMapSize} from '#src/lib/gallery/sun.ts'
-import {getDefaultCustomGraphics, useCustomGraphics} from '#src/lib/rendering/customGraphics.ts'
 import {shineDaylightFrom} from '#src/lib/rendering/daylight.ts'
 import {getGraphicsProfile, getSunShadowSettings} from '#src/lib/rendering/graphicsMode.ts'
 import {lampOf} from '#src/lib/rendering/lamps.ts'
@@ -20,6 +19,8 @@ import {isShadowSlot, lightActive, lightGain, lightShadow, useLightEdits} from '
 import {getShadowProps} from '#src/lib/rendering/shadowFilterNodes.ts'
 import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
 import StainedGlassShadowNode from '#src/lib/rendering/StainedGlassShadowNode.ts'
+import {lightingTuning} from '#src/lib/worldTuning/LightingTuningModule.ts'
+import {pipelineTuning} from '#src/lib/worldTuning/PipelineTuningModule.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 import {skyLook} from '#src/worlds/gallery/sky.ts'
 
@@ -32,8 +33,6 @@ const sunMarker = [lobby.center[0], lobbyVault.crownY + 2, lobby.center[1]] as c
 const antechamber = slopGallery.room('antechamber')
 /** every point the sun’s shadow map has to cover */
 const sunlit = sunlitPoints(slopGallery.rooms)
-/** the lighting the tuning panel opens with */
-const tuningStart = pickLightingTuning(getDefaultCustomGraphics())
 
 type Lamp = Light & {
   isPointLight?: boolean
@@ -105,7 +104,7 @@ export default function GalleryLighting() {
       light.shadow.needsUpdate = true
     }
   }, [shadow])
-  // Lamps glow by the preset’s gain, and the optional ones not at all with only the essential lamps, or every one with none. Their shadows fall as dark as the tuning panel says. The corridor’s lanterns already light a space of their own, without any of the daylight’s fill, and daylight is no lamp.
+  // Lamps glow by the preset’s gain, and the optional ones not at all with only the essential lamps, or every one with none. Their shadows fall as dark as the world tuning says. The corridor’s lanterns already light a space of their own, without any of the daylight’s fill, and daylight is no lamp.
   const {lamps, lampSet = 'all', lampShadows = 1} = preset
   useLayoutEffect(() => {
     const isLamp = (light: Light) => {
@@ -167,16 +166,16 @@ export default function GalleryLighting() {
   </>
 }
 
-/** With `?development`, the preset with the lighting the tuning panel changed, which stays after hiding the panel. */
+/** With `?development`, the preset with the lighting the world tuning changed, which stays after hiding its panel. */
 function useTunedLighting(preset: GalleryLightingPreset) {
-  const tuning = useCustomGraphics(useShallow(pickLightingTuning))
-  return useMemo(() => (isDevelopmentMode ? tuneLighting(preset, tuning, tuningStart) : preset), [preset, tuning])
+  const tuning = lightingTuning.useValues()
+  return useMemo(() => (isDevelopmentMode ? tuneLighting(preset, tuning, lightingTuning.initial) : preset), [preset, tuning])
 }
-/** The sun’s shadow props, which the tuning panel of `?development` changes in heavy graphics, together with its lookups per pixel. */
+/** The sun’s shadow props, which the world tuning of `?development` changes in heavy graphics, together with its lookups per pixel. */
 function useSunShadow(mapSize: number) {
   const isHeavy = useGraphicsMode()
   const profile = useGraphicsModeValue(getGraphicsProfile)
-  const tuned = useCustomGraphics(useShallow(state => ({
+  const tuned = pipelineTuning.useValues(useShallow(state => ({
     mapSize: state.sunShadowMapSize,
     radius: state.sunShadowRadius,
     samples: state.sunShadowSamples,
