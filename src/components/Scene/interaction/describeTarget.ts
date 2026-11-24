@@ -3,6 +3,7 @@ import type {HintContent, HintKey} from '#src/lib/interactionHint.ts'
 
 import {interactiveObjects} from '#src/lib/gallery/interactiveObjects.ts'
 import {orbitables} from '#src/lib/gallery/orbitables.ts'
+import {isTellable} from '#src/lib/gallery/portraitFlavor.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 
 import {propObjects} from '../GrabbableProp.tsx'
@@ -28,17 +29,18 @@ export function describeTarget(id: string | null, portraits: ReadonlyArray<Portr
   const interactive = interactiveObjects.get(id)
   const prop = propObjects.get(id)
   const title = titleOf(id, portrait)
-  if (!title) {
+  // A work goes by its title once it has one; anything else without a name has no hint.
+  if (!title && !portrait) {
     return null
   }
   const keys: Array<HintKey> = []
-  // E activates registered objects first and narrates portraits otherwise.
+  // E activates registered objects first and narrates portraits with a flavor text otherwise.
   if (interactive) {
     keys.push({
       controls: ['KeyE'],
       action: interactive.action ?? 'Use',
     })
-  } else if (portrait) {
+  } else if (portrait && isTellable(portrait)) {
     keys.push({
       controls: ['KeyE'],
       action: 'Listen',
@@ -58,7 +60,7 @@ export function describeTarget(id: string | null, portraits: ReadonlyArray<Portr
   }
   return {
     id,
-    title,
+    ...title ? {title} : {},
     keys,
   }
 }

@@ -161,19 +161,20 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: a work of the col
   expect(await page.$eval(spectation, element => element.getAttribute('data-interacted'))).toBe('false')
   const secret = await textOf(page, spectation)
   expect(secret).toContain('Untouched work')
-  expect(secret).not.toContain(untouched.title)
+  expect(secret).not.toContain(untouched.title!)
   expect(await textOf(page, '[data-testid="portrait-room"]')).not.toBe('')
   expect(await page.$eval(`${collection} [data-portrait="${untouched.id}"]`, element => element.getAttribute('aria-pressed'))).toBe('true')
   await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-testid="portrait-viewer"] canvas')!).opacity === '0.25')
   // A work the player listened to: everything the gallery tells about it, at full strength.
   await spectate(page, known!.id)
   const told = await textOf(page, spectation)
-  expect(told).toContain(known!.title)
+  expect(told).toContain(known!.title!)
   expect(told).toMatch(/creator/iu)
-  expect(told).toMatch(/year/iu)
+  // A default work has no year, which goes untold.
+  expect(told).not.toContain('Undated')
   expect(await textOf(page, '[data-testid="portrait-size"]')).toBe(`${Math.round(known!.width * 100)}\u{202F}cm × ${Math.round(known!.height * 100)}\u{202F}cm`)
   expect(await textOf(page, '[data-testid="portrait-room"]')).not.toBe('')
-  expect(await page.$eval(stage, element => element.getAttribute('aria-label'))).toContain(known!.title)
+  expect(await page.$eval(stage, element => element.getAttribute('aria-label'))).toContain(known!.title!)
   await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-testid="portrait-viewer"] canvas')!).opacity === '1')
   // Its canvas covers the whole screen, its drawing buffer in device pixels, lets the pointer through and shows a picture on the stage.
   const fit = await page.$eval(`${viewer} canvas`, element => {

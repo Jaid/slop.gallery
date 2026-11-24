@@ -13,7 +13,8 @@ export type HintContent = {
   /** stable target identity; content changes on the same target update in place without a new delay */
   id: string
   keys: ReadonlyArray<HintKey>
-  title: string
+  /** the object’s name, left out for one without, like a work before its flavor text names it */
+  title?: string
 }
 
 export type HintSnapshot = {

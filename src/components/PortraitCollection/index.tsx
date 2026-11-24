@@ -3,6 +3,7 @@ import type {Portrait} from '#src/lib/gallery.ts'
 import type {PortraitImageFormat} from '#src/lib/gallery/portraitExport.ts'
 
 import Branch from 'branch-component'
+import {upperFirst} from 'es-toolkit'
 import {useEffect, useMemo, useState, useSyncExternalStore} from 'react'
 
 import ContextMenu from '#component/ContextMenu'
@@ -13,6 +14,7 @@ import {copyPortrait, exportPortrait} from '#src/lib/gallery/portraitExport.ts'
 import {portraitPosition} from '#src/lib/gallery/portraitObjects.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import usePortraitsInReach from '#src/lib/gallery/usePortraitsInReach.ts'
+import workName from '#src/lib/gallery/workName.ts'
 import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import subscribeToFrames from '#src/lib/subscribeToFrames.ts'
 
@@ -20,16 +22,16 @@ import css from './style.module.sass'
 
 const readPosition = () => cameraPose.position
 /** What the menu and its messages call a work: by its title only once the player has interacted with it, like its tooltip. */
-const called = (portrait: Portrait) => (portrait.interacted ? `“${portrait.title}”` : 'The untouched work')
+const called = (portrait: Portrait) => (portrait.interacted ? upperFirst(workName(portrait)) : 'The untouched work')
 const save = (portrait: Portrait, format: PortraitImageFormat) => {
   void exportPortrait(portrait, format).catch((error: unknown) => {
-    console.warn(`“${portrait.title}” could not be exported.`, error)
+    console.warn(`${upperFirst(workName(portrait))} could not be exported.`, error)
     notify(`${called(portrait)} could not be exported.`)
   })
 }
 const copy = (portrait: Portrait) => {
   void copyPortrait(portrait).then(() => notify(`${called(portrait)} was copied to the clipboard.`), (error: unknown) => {
-    console.warn(`“${portrait.title}” could not be copied to the clipboard.`, error)
+    console.warn(`${upperFirst(workName(portrait))} could not be copied to the clipboard.`, error)
     notify(`${called(portrait)} could not be copied to the clipboard.`)
   })
 }

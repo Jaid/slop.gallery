@@ -8,7 +8,7 @@ import {pickFrame} from '#src/frames/lib/frameChoice.ts'
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
 import {arrivalFrame, newPortrait} from '#src/lib/gallery/actions.ts'
 import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
-import {imageSize, importedImage, importedTitle} from '#src/lib/gallery/ImageImporter.ts'
+import {imageSize, importedImage} from '#src/lib/gallery/ImageImporter.ts'
 import {maximumPortraits, validateImport} from '#src/lib/gallery/imagePolicy.ts'
 import {usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
 import {useGallery} from '#src/lib/gallery/store.ts'
@@ -51,7 +51,7 @@ export type PortraitAdditionInput = {
   /** its frame area in cm²; by default the slot’s or that of the room it arrives in */
   size?: number
   target: PortraitTarget
-  /** its title; by default the image’s file name, as an import names it, which a data or blob URL has none of */
+  /** its title; by default none, like a work the player brings in has until its flavor text is written */
   title?: string
 }
 export type PortraitAddition = {
@@ -70,7 +70,8 @@ export type PortraitAddition = {
   size: number
   /** the slot it hangs in, if it went into one */
   slot?: string
-  title: string
+  /** its title, if it was given one */
+  title?: string
   /** the wall it hangs on, if it hangs */
   wallId?: string
   width: number
@@ -202,15 +203,15 @@ export default async function addPortrait({canvasMaterial, frame: frameId, hangi
   if (!replaced && portraits.length >= maximumPortraits) {
     throw new Error('The collection is full. Remove a work to make room.')
   }
-  const {pathname, protocol} = new URL(image, typeof location === 'undefined' ? undefined : location.href)
-  // Only a file on a server has a name: a data URL’s path is its content, a blob URL’s a random id.
-  const fileName = protocol === 'data:' || protocol === 'blob:' ? '' : decodeURIComponent(pathname.split('/').at(-1)!)
-  const portrait = newPortrait(source, title ?? importedTitle(fileName), width, height, {
+  const portrait = newPortrait(source, width, height, {
     position: placed.position,
     direction: [0, 0, -1],
   })
   if (id !== undefined) {
     portrait.id = id
+  }
+  if (title !== undefined) {
+    portrait.title = title
   }
   const frame = chosen ?? destination.frame(portrait.id)
   Object.assign(portrait, placed, {frame})
@@ -226,7 +227,7 @@ export default async function addPortrait({canvasMaterial, frame: frameId, hangi
   }
   return {
     id: portrait.id,
-    title: portrait.title,
+    ...portrait.title === undefined ? {} : {title: portrait.title},
     hung: portrait.hung,
     ...destination.slot === undefined ? {} : {slot: destination.slot},
     ...portrait.wallId === undefined ? {} : {wallId: portrait.wallId},

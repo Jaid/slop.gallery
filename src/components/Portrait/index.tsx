@@ -16,6 +16,7 @@ import {portraitFrame} from '#src/frames/index.ts'
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
 import {requestFusion, useGallery} from '#src/lib/gallery.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
+import {hasPlacard} from '#src/lib/gallery/portraitFlavor.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import world from '#src/worlds/current.ts'
 
@@ -140,9 +141,9 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
         {/* Shadows draw back faces only, so the frame’s backing board blocks the lights in front of the work and the image those behind it, which a loose work can turn its back to. */}
         <mesh castShadow name='portrait-image' position={[0, 0, frame.imageDepth]}><planeGeometry args={[w, h]} /><DynamicImageMaterial canvasMaterial={p.canvasMaterial} opacity={held ? 0.3 : 1} source={p.source} toneMapped={false} transparent={held} /></mesh>
       </group>
-      {/* The placard hides while the work orbits a fusion’s portal. */}
+      {/* The placard hides while the work orbits a fusion’s portal, and a work hangs without one until it has anything to show on it. */}
       <group ref={placard}>
-        <Branch if={p.hung && !p.fusing}><PortraitLabel above={p.labelAbove} creator={p.creator} height={h} pending={p.pending} title={p.title} width={w} /></Branch>
+        <Branch if={p.hung && !p.fusing && hasPlacard(p)}><PortraitLabel above={p.labelAbove} creator={p.creator} height={h} pending={p.pending} title={p.title} width={w} /></Branch>
       </group>
     </group>
   </RigidBody>

@@ -19,10 +19,13 @@ const viewport = {
 const snapshot = (page: Page) => page.evaluate(() => globalThis.slopGallery!.snapshot!())
 /** one part of the page’s snapshot */
 const snapshotOf = <Key extends keyof GalleryDiagnostics>(page: Page, key: Key) => page.evaluate(name => globalThis.slopGallery!.snapshot!()[name], key) as Promise<GalleryDiagnostics[Key]>
-const portraitOf = (page: Page, match: {
-  id?: string
-  title?: string
-}) => page.evaluate(({id, title}) => globalThis.slopGallery!.snapshot!().portraits.find(portrait => portrait.id === id || portrait.title === title)!, match)
+const portraitOf = (page: Page, match: {id: string}) => page.evaluate(({id}) => globalThis.slopGallery!.snapshot!().portraits.find(portrait => portrait.id === id)!, match)
+/** Waits for a work that none of the works with the ids `known` is, which an import brought in, until its label is done, and resolves with it. */
+const arrivalOf = async (page: Page, known: ReadonlyArray<string>) => {
+  const arrived = (ids: ReadonlyArray<string>) => globalThis.slopGallery!.snapshot!().portraits.find(portrait => !ids.includes(portrait.id) && !portrait.pending)
+  await page.waitForFunction(arrived, {}, known)
+  return (await page.evaluate(arrived, known))!
+}
 const propOf = (page: Page, id: string) => page.evaluate(prop => globalThis.slopGallery!.snapshot!().props.find(candidate => candidate.id === prop)!, id)
 /** the rotation of the player’s view, yaw before pitch, that looks from `from` at `to` */
 const lookAt = (from: Vec3, to: Vec3) => {
@@ -172,7 +175,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     const placard = facingWall(wall.id, u, work.position[1] + portraitLabelLayout(work.width, work.height).y)
     await teleport(page, placard.eye, placard.target)
     await page.waitForFunction(id => globalThis.slopGallery!.snapshot!().activeLabel === id, {}, work.id)
-    expect(await page.$eval('[data-testid="artwork-overlay"]', element => element.textContent)).toContain(work.title)
+    expect(await page.$eval('[data-testid="artwork-overlay"]', element => element.textContent)).toContain(work.title!)
     const front = facingWall(wall.id, u, work.position[1])
     await teleport(page, front.eye, front.target)
     await page.waitForFunction(id => globalThis.slopGallery!.snapshot!().active === id && globalThis.slopGallery!.snapshot!().activeLabel === null, {}, work.id)
@@ -224,8 +227,9 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     await drag(page, 'dragover', image, 'dropped fixture')
     await page.waitForFunction(() => globalThis.slopGallery!.snapshot!().placement?.valid)
     await drag(page, 'drop', image, 'dropped fixture', -10)
-    await page.waitForFunction(() => globalThis.slopGallery!.snapshot!().portraits.some(portrait => portrait.title === 'dropped fixture' && !portrait.pending))
-    const dropped = await portraitOf(page, {title: 'dropped fixture'})
+    const dropped = await arrivalOf(page, rendered.portraits.map(portrait => portrait.id))
+    // Its file name names nothing: an import has no title until its flavor text is written, which nobody writes without AI.
+    expect(dropped.title).toBeUndefined()
     expect(dropped.hung).toBe(true)
     expect(dropped.wallId).toBe(wall.id)
     // The menu of a lost focus leaves the world running, so the fusion below plays out behind it.
@@ -233,7 +237,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     expect(await snapshotOf(page, 'frozen')).toBe(false)
     await paste(page, image, 'pasted fixture')
     await page.waitForFunction(count => globalThis.slopGallery!.snapshot!().portraits.length === count + 2, {}, baseline)
-    const pasted = await portraitOf(page, {title: 'pasted fixture'})
+    const pasted = await arrivalOf(page, [...rendered.portraits.map(portrait => portrait.id), dropped.id])
     expect(pasted.width / pasted.height).toBeCloseTo(2, 2)
     expect(pasted.hung).toBe(false)
     const fusing = await page.evaluate((first, second) => {
@@ -241,10 +245,10 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
       return globalThis.slopGallery!.snapshot!()
     }, dropped.id, pasted.id)
     expect(fusing.portraits.find(portrait => portrait.id === dropped.id)?.fusing).toBe(true)
-    // Without AI, the fusion lays out a collage of its own, which flips out of the portal as the hung work, using up the other one.
+    // Without AI, the fusion lays out a collage of its own, which flips out of the portal as the hung work, using up the other one, and has no title either.
     await page.waitForFunction((first, second) => {
       const {portraits} = globalThis.slopGallery!.snapshot!()
-      return !portraits.some(portrait => portrait.id === second) && portraits.some(portrait => portrait.id === first && portrait.title === 'An unexpected collaboration' && !portrait.fusing && !portrait.hung)
+      return !portraits.some(portrait => portrait.id === second) && portraits.some(portrait => portrait.id === first && portrait.title === undefined && !portrait.fusing && !portrait.hung)
     }, {timeout: 60_000}, dropped.id, pasted.id)
     expect(await snapshotOf(page, 'portraits')).toHaveLength(baseline + 1)
     // Only the seed survives a reload, so the imports are gone and every work is back where it began, while the visit continues the same game.
@@ -354,7 +358,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     await page.screenshot({path: 'out/live-test/live-failure.png'})
     console.log('Browser errors:', errors)
     const {portraits, props, ...state} = await snapshot(page)
-    console.log(JSON.stringify(state), JSON.stringify(portraits.filter(portrait => !portrait.hung || portrait.title.includes('fixture'))))
+    console.log(JSON.stringify(state), JSON.stringify(portraits.filter(portrait => !portrait.hung || portrait.title === undefined)))
     throw error
   }
 }, 600_000)

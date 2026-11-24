@@ -40,8 +40,8 @@ export type ItemIngredient = {
 /** an ingredient of a fusion: a portrait or an item */
 export type FusionIngredient = ItemIngredient & {
   kind: 'item' | 'portrait'
-  /** what it is called, like a portrait’s title or “Spook Orb” */
-  title: string
+  /** what it is called, like a portrait’s title or “Spook Orb”, left out for a portrait without a title */
+  title?: string
 }
 /** the prompt of an image model call: the images in a format image models take, and the text */
 export type ImagePrompt = {
@@ -60,7 +60,7 @@ export const fusionInstruction = 'Please merge the provided images into a single
 export function portraitIngredient({source, title}: Pick<Portrait, 'source' | 'title'>): FusionIngredient {
   return {
     kind: 'portrait',
-    title,
+    ...title === undefined ? {} : {title},
     contributions: [
       {
         kind: 'image',
@@ -129,15 +129,6 @@ export default class FusionRecipe {
   /** how the intro’s ember latches each ingredient on, in their order */
   get latches(): Array<IngredientLatch> {
     return this.ingredients.map(ingredient => ingredient.latch ?? 'charge')
-  }
-
-  /** how the description of a result made locally, without AI, tells how it was made */
-  get localDescription() {
-    const parts = this.imageCount > 1 ? ['A locally made cut-paper collage, joined with a little gold.'] : []
-    for (const {title} of this.tints) {
-      parts.push(`Tinted by hand in the ${title}’s glow.`)
-    }
-    return parts.join(' ')
   }
 
   /** what the portal shows of the ingredients right away, in their order: each one’s look, or its contributed images that are at hand already */

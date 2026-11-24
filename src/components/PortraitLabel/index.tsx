@@ -1,5 +1,7 @@
 import type {ElementTextSurface} from '#component/ElementText'
 
+import Branch from 'branch-component'
+
 import ElementText from '#component/ElementText'
 import portraitLabel, {portraitLabelLayout} from '#src/lib/gallery/portraitLabel.ts'
 
@@ -23,7 +25,8 @@ type PortraitLabelProps = {
   width: number
 }
 
-export default function PortraitLabel({width, height, title, creator = '', pending, preview, above}: PortraitLabelProps) {
+/** The placard of a work: its title and creator on a painted card, along with a note while its flavor text is being written, or as a placement preview, the same on a tinted card, which is blank for a work with nothing to show. */
+export default function PortraitLabel({width, height, title, creator, pending, preview, above}: PortraitLabelProps) {
   const layout = portraitLabelLayout(width, height, above)
   const textMaterial = preview ? {
     color: preview.color,
@@ -32,13 +35,15 @@ export default function PortraitLabel({width, height, title, creator = '', pendi
   } : undefined
   // The text lies on the card’s face; painted on it, it leaves no step that the ambient occlusion or the reflections would find.
   const face = portraitLabel.depth / 2 + 0.0002
+  const heading = title || (pending ? 'Finding the right words…' : '')
+  const byline = [creator, pending && 'writing…'].filter(Boolean).join(' · ')
   return <group position={[0, layout.y, preview ? 0.015 : 0]} userData={{portraitLabel: !preview}}>
     <mesh castShadow={!preview} name='portrait-label'>
       <boxGeometry args={[layout.width, portraitLabel.height, portraitLabel.depth]} />
       <LabelBoardMaterial preview={preview} />
     </mesh>
-    <ElementText color={preview ? '#ffffff' : '#3d4035'} fontFamily='Georgia' fontSize={0.63} height={0.135} materialProps={textMaterial} name='portrait-label-title' position={[0, 0.047, face]} surface={preview ? undefined : card} text={title || 'Finding the right words…'} width={layout.titleWidth} />
-    <ElementText color={preview ? '#ffffff' : '#696653'} fontSize={0.64} height={0.085} materialProps={textMaterial} name='portrait-label-creator' position={[0, -0.065, face]} surface={preview ? undefined : card} text={creator + (pending ? ' · writing…' : '')} width={layout.creatorWidth} />
+    <Branch if={heading}><ElementText color={preview ? '#ffffff' : '#3d4035'} fontFamily='Georgia' fontSize={0.63} height={0.135} materialProps={textMaterial} name='portrait-label-title' position={[0, 0.047, face]} surface={preview ? undefined : card} text={heading} width={layout.titleWidth} /></Branch>
+    <Branch if={byline}><ElementText color={preview ? '#ffffff' : '#696653'} fontSize={0.64} height={0.085} materialProps={textMaterial} name='portrait-label-creator' position={[0, -0.065, face]} surface={preview ? undefined : card} text={byline} width={layout.creatorWidth} /></Branch>
   </group>
 }
 

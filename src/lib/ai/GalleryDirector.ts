@@ -7,6 +7,8 @@ import type {OpenRouterAccess} from './openRouterAccess.ts'
 import type {AiSettings} from './settings.ts'
 import type {Span} from 'victoria-browser-client'
 
+import {omit, upperFirst} from 'es-toolkit'
+
 import readCanvasMaterialParameters from '#src/canvas_materials/lib/canvasMaterialParameters.ts'
 import {partyEffects} from '#src/party_effects/index.ts'
 import {currentWorldId} from '#src/worlds/index.ts'
@@ -20,6 +22,7 @@ import {downloadedResults, includesResult, postedResults, webhookEndpoint, webho
 import {encodeGeneratedImage, imageSize} from '../gallery/ImageImporter.ts'
 import {validateImage} from '../gallery/imagePolicy.ts'
 import {useGallery} from '../gallery/store.ts'
+import workName from '../gallery/workName.ts'
 import FusionTrace from '../telemetry/FusionTrace.ts'
 import {telemetry} from '../telemetry/index.ts'
 import {modelImageType, toWebp} from './modelImage.ts'
@@ -180,7 +183,6 @@ export default class GalleryDirector {
     try {
       await this.brew(a, fusion, recipe, current, {
         canceled: 'You canceled the fusion. Both originals are still here.',
-        description: `“${a.title}” met “${b.title}”. Neither had planned to share a frame.`,
         failure: 'The fusion did not finish. Both originals are still here. Check the image model or try again.',
         remove: second,
       })
@@ -254,16 +256,14 @@ export default class GalleryDirector {
       void look.then(image => fusion.addImage(image), () => {})
     }
     if (recipe.unchanged) {
-      notify(`The ${item.title} contributes nothing to fuse “${a.title}” with. It will come back as it went in.`)
+      notify(`The ${item.title} contributes nothing to fuse ${workName(a)} with. It will come back as it went in.`)
     } else {
-      notify(this.usingAi ? `The alchemy is underway. “${a.title}” stays safe until it succeeds.` : `A local ${recipe.handmade} is taking shape. No AI and no upload.`)
+      notify(this.usingAi ? `The alchemy is underway. ${upperFirst(workName(a))} stays safe until it succeeds.` : `A local ${recipe.handmade} is taking shape. No AI and no upload.`)
     }
-    const photographed = ingredient.contributions.some(contribution => contribution.kind === 'image')
     try {
       await this.brew(a, fusion, recipe, current, {
         canceled: 'You canceled the fusion. The original is still here.',
         consume: item.consumable ? item.id : undefined,
-        description: photographed ? `“${a.title}” was struck by ${item.title}. Neither had planned to share a frame.` : `“${a.title}” caught the ${item.title} and was never quite the same.`,
         failure: 'The fusion did not finish. The original is still here. Check the image model or try again.',
       })
     } finally {
@@ -330,18 +330,17 @@ export default class GalleryDirector {
 
   /**
    * Makes the result of `recipe` while `fusion` shows it and, if `current` still holds afterward, replaces the hung portrait `a` with it, dropping the portrait `remove` and using up the prop `consume`.
+   * A new image is a new work, which keeps nothing of what `a` was called or told and only tells the year it was made in until its flavor text is written.
    * Where the recipe leaves `a` unchanged, as nothing but its own image was contributed, no image model is asked: `a` itself comes back out of the portal as it went in.
    * The result flips out of the portal as a loose portrait once the fusion’s climax is over; a failure shows once the fusion fizzled out, like one the player broke off by jumping into its portal, which gives up on the image at once.
    * A new image’s frame takes its shape, whatever the model made of the shape it was asked for, at the area of `a`’s frame. The result wears the frame the fusion rolled as its portal opened.
    * As it flips out, the result is also saved as a download and posted to the webhook where `?download` and `?webhook` ask for results made the way it was.
    */
-  private async brew(a: Portrait, fusion: Fusion, recipe: FusionRecipe, current: () => boolean, {canceled, consume, description, failure, remove}: {
+  private async brew(a: Portrait, fusion: Fusion, recipe: FusionRecipe, current: () => boolean, {canceled, consume, failure, remove}: {
     /** the notice right as the player breaks the fusion off */
     canceled: string
     /** the id of a prop the success uses up */
     consume?: string
-    /** how the description of a new portrait tells how it came to be */
-    description: string
     failure: string
     remove?: string
   }) {
@@ -422,14 +421,10 @@ export default class GalleryDirector {
     const fusedAt = new Date
     // A new portrait, unless it is the hung portrait itself.
     const result: Portrait = fused ? {
-      ...released,
+      ...omit(released, ['creator', 'description', 'narration', 'title']),
       ...fused,
-      narration: undefined,
       imported: true,
-      title: 'An unexpected collaboration',
-      creator: 'You · accidental alchemist',
       year: fusedAt.getFullYear(),
-      description: `${description} ${this.usingAi ? 'An AI-assisted collaboration.' : recipe.localDescription}`.slice(0, 5000),
     } : released
     const state = useGallery.getState()
     // The result arrives seconds after the throw; whatever the player carries by then stays in hand.
@@ -451,10 +446,10 @@ export default class GalleryDirector {
     void this.shareResult(result.source, {
       making,
       date: fusedAt,
-      ingredients: recipe.ingredients.map(ingredient => ingredient.title),
+      ingredients: recipe.ingredients.map(ingredient => ingredient.title ?? ''),
     }).catch((error: unknown) => console.warn('The fusion result could not be shared.', error))
     if (!fused) {
-      notify(`“${a.title}” came back as it went in.`)
+      notify(`${upperFirst(workName(a))} came back as it went in.`)
       return
     }
     void this.flavor(result).catch(() => notify('The label could not be prepared.'))

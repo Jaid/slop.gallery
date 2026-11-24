@@ -204,7 +204,7 @@ test('native works, imports and fusion results take independent canvas material 
       })
       const works = defaultPortraits(7)
       expect(works.every(work => work.canvasMaterial === native)).toBe(true)
-      const imported = newPortrait(b, 'Imported work', 1, 1)
+      const imported = newPortrait(b, 1, 1)
       expect(imported.canvasMaterial).toBe(output)
       const hung = {
         ...works[0],
@@ -370,7 +370,12 @@ test('a thrown item fuses with the hung portrait and leaves the collection size 
     fusing: false,
     hung: false,
   })
-  expect(portraits[0].description).toContain('struck by the apple')
+  // A new work, which tells nothing of what the hung portrait was called or told until its flavor text is written, only the year it was made in.
+  for (const key of ['title', 'creator', 'description', 'narration'] as const) {
+    expect(portraits[0][key]).toBeUndefined()
+  }
+  const now = new Date
+  expect(portraits[0].year).toBe(now.getFullYear())
   expect(portraits[1].source).toBe(b)
   director.dispose()
 })
@@ -436,8 +441,8 @@ test('a thrown orb contributes its prompt instead of a photograph, and its porta
       fusing: false,
       hung: false,
     })
-    expect(portrait.description).toContain('caught the Test Orb')
-    expect(portrait.description).toContain('Tinted by hand in the Test Orb’s glow.')
+    expect(portrait.title).toBeUndefined()
+    expect(portrait.description).toBeUndefined()
   } finally {
     director.dispose()
   }

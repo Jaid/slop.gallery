@@ -11,7 +11,7 @@ export type FusionResults = 'all' | boolean
 export type FusionResultInfo = {
   /** when it flipped out of the portal */
   date: Date
-  /** the titles of the fusion’s ingredients, the hung portrait’s first */
+  /** the titles of the fusion’s ingredients, the hung portrait’s first, empty for a portrait without one */
   ingredients: ReadonlyArray<string>
   making: FusionMaking
 }
@@ -76,7 +76,7 @@ export function includesResult(making: FusionMaking, results: FusionResults) {
 }
 
 /**
- * The multipart form a webhook gets for a fusion’s result: the WebP as `file`, named `fileName`, how it was made as `making`, the world as `world`, when it flipped out as `fused_at` (ISO 8601) and one `ingredient` per ingredient, by title, the hung portrait’s first.
+ * The multipart form a webhook gets for a fusion’s result: the WebP as `file`, named `fileName`, how it was made as `making`, the world as `world`, when it flipped out as `fused_at` (ISO 8601) and one `ingredient` per ingredient, by title, empty for a portrait without one, the hung portrait’s first.
  * A form keeps the request simple in CORS terms, so it reaches endpoints without any CORS setup, though the page can only read their answer with it.
  */
 export function webhookForm(webp: Blob, fileName: string, world: string, {date, ingredients, making}: FusionResultInfo) {

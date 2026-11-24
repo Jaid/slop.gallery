@@ -280,6 +280,47 @@ describe('target descriptions', () => {
       },
     ])
   })
+  test('a portrait without a flavor text has nothing to listen to and no name, but can still be inspected and grabbed', () => {
+    const {creator, description, title, ...untold} = samplePortraits[0]
+    const portrait: Portrait = {
+      ...untold,
+      hung: true,
+      imported: true,
+    }
+    portraitObjects.set(portrait.id, {} as never)
+    expect(describeTarget(portrait.id, [portrait])).toEqual({
+      id: portrait.id,
+      keys: [
+        {
+          controls: ['KeyV'],
+          action: 'Inspect',
+        },
+        {
+          controls: ['MouseLeft'],
+          action: 'Grab',
+        },
+      ],
+    })
+    // While its flavor text is being written, the title shows before the description to listen to.
+    expect(describeTarget(portrait.id, [{
+      ...portrait,
+      pending: true,
+      title,
+    }])).toMatchObject({
+      title,
+      keys: [{action: 'Inspect'}, {action: 'Grab'}],
+    })
+    expect(describeTarget(portrait.id, [{
+      ...portrait,
+      pending: true,
+      title,
+      creator,
+      description,
+    }])?.keys[0]).toEqual({
+      controls: ['KeyE'],
+      action: 'Listen',
+    })
+  })
   test('a plain prop can only be grabbed', () => {
     propObjects.set('prop-apple', prop(true, 'The original forbidden download'))
     expect(describeTarget('prop-apple', [])).toEqual({
@@ -369,6 +410,27 @@ describe('hint view', () => {
     expect(html).toContain('aria-label="Left mouse button"')
     expect(html.match(/<svg/g)).toHaveLength(1)
     expect(html).toContain('Grab is not possible right now')
+  })
+  test('an object without a name shows only its controls, the first without a separator before it', () => {
+    const html = renderToStaticMarkup(createElement(InteractionHintView, {
+      content: {
+        id: 'untitled',
+        keys: [
+          {
+            controls: ['KeyV'],
+            action: 'Inspect',
+          },
+          {
+            controls: ['MouseLeft'],
+            action: 'Grab',
+          },
+        ],
+      },
+      visible: true,
+    }))
+    expect(html.match(/·/g)).toHaveLength(1)
+    expect(html.indexOf('·')).toBeGreaterThan(html.indexOf('Inspect'))
+    expect(html).toMatch(/^<div[^>]*><span[^>]*><kbd/u)
   })
   test('hidden hints stay in the DOM for the exit animation but are hidden from assistive tech', () => {
     const html = renderToStaticMarkup(createElement(InteractionHintView, {

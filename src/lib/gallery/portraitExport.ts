@@ -34,8 +34,8 @@ const graphemes = new Intl.Segmenter(undefined, {granularity: 'grapheme'})
 /** A name without the dots and spaces at its end, which Windows takes none of. */
 const withoutTrailingDots = (name: string) => name.replace(/[\s.]+$/u, '')
 
-/** The file name a work’s image is saved under: its title without anything file names may not contain, or “Untitled” if nothing is left of it, with the format as its extension. */
-export function portraitFileName({title}: Pick<Portrait, 'title'>, format: PortraitImageFormat) {
+/** The file name a work’s image is saved under: its title without anything file names may not contain, or “Untitled” if it has none or nothing is left of it, with the format as its extension. */
+export function portraitFileName({title = ''}: Pick<Portrait, 'title'>, format: PortraitImageFormat) {
   const name = withoutTrailingDots(Array.from(graphemes.segment(withoutTrailingDots(title.normalize('NFC').replaceAll(forbiddenCharacters, ' ').replaceAll(/\s+/gu, ' ').trim())), ({segment}) => segment).slice(0, maximumNameLength).join(''))
   return `${name || 'Untitled'}.${format}`
 }

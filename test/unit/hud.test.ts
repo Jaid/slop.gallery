@@ -90,8 +90,26 @@ describe('contextual HUD', () => {
     expect(html).toContain('<span>0</span>')
     expect(html).not.toContain('Undated')
   })
-  test('missing years are explicitly undated', () => {
-    expect(renderToStaticMarkup(createElement(ArtworkOverlay, {portrait: samplePortraits[0]}))).toContain('Undated')
+  test('a missing year is left out', () => {
+    const html = renderToStaticMarkup(createElement(ArtworkOverlay, {portrait: samplePortraits[0]}))
+    expect(html).toContain(`<span>${samplePortraits[0].creator}</span></p>`)
+    expect(html).not.toContain('Undated')
+    expect(html).not.toContain(' · ')
+  })
+  test('a work nobody told anything about has no overlay, and one being written about shows only what is written so far', () => {
+    const {creator, description, title, ...untold} = samplePortraits[0]
+    expect(renderToStaticMarkup(createElement(ArtworkOverlay, {portrait: untold}))).toBe('')
+    const html = renderToStaticMarkup(createElement(ArtworkOverlay, {
+      portrait: {
+        ...untold,
+        pending: true,
+        title,
+      },
+    }))
+    expect(html).toContain(`<h2>${title}</h2>`)
+    expect(html).not.toContain(creator)
+    expect(html).not.toContain(description)
+    expect(html).not.toContain('<p')
   })
   test('recorded and provider audio show the real five-band visualization', () => {
     const html = renderToStaticMarkup(createElement(NarrationIndicator, {

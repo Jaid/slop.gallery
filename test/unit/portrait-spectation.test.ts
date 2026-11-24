@@ -201,16 +201,32 @@ describe('a work up close', () => {
     expect(html.indexOf('data-testid="portrait-viewer"')).toBeLessThan(html.indexOf('id="menu-title"'))
     expect(html).toContain(`aria-label="“${goose.title}” in its frame"`)
   })
-  test('tells a missing year apart from year zero', () => {
+  test('leaves a missing year out, but not year zero', () => {
     const known = {
       ...goose,
       interacted: true,
     }
-    expect(renderSpectation(known)).toContain('<dt>Year</dt><dd>Undated</dd>')
+    expect(renderSpectation(known)).not.toContain('<dt>Year</dt>')
+    expect(renderSpectation(known)).not.toContain('Undated')
     expect(renderSpectation({
       ...known,
       year: 0,
     })).toContain('<dt>Year</dt><dd>0</dd>')
+  })
+  test('a work nobody told anything about, like an import without a flavor text, tells only its size and room under an empty heading that still names it', () => {
+    const {creator, description, title, ...untold} = goose
+    const html = renderSpectation({
+      ...untold,
+      interacted: true,
+      imported: true,
+    })
+    expect(html).toContain('<h1 id="menu-title" aria-label="Untitled work"></h1>')
+    expect(html).toContain('aria-label="The work in its frame"')
+    for (const value of [creator, description, title, 'Creator', 'Year', 'Undated']) {
+      expect(html).not.toContain(value)
+    }
+    expect(textOf(html, 'portrait-size')).not.toBe('')
+    expect(textOf(html, 'portrait-room')).toBe('Lobby')
   })
   test('a work the player hasn’t interacted with yet shows faint and keeps everything but its room to itself', () => {
     const known = renderSpectation({

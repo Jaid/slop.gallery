@@ -152,7 +152,6 @@ describe('fusion recipe', () => {
     expect(recipe.glow).toBe('#00ff00')
     expect(recipe.frame).toBe('tramp')
     expect(recipe.tints.map(tint => tint.title)).toEqual(['Test Orb'])
-    expect(recipe.localDescription).toBe('Tinted by hand in the Test Orb’s glow.')
   })
   // Any prompt orb, even one without a frame or an effect, which none of today’s lacks.
   for (const orb of promptOrbs as ReadonlyArray<PromptOrb>) {

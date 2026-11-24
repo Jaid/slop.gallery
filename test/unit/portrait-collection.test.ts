@@ -254,10 +254,24 @@ describe('portrait collection', () => {
     expect(tooltip()).toMatch(/^<div\b[^>]*\bpopover="hint"/u)
     expect(tooltip()).toContain(samplePortraits[0].description)
   })
-  test('a tooltip tells a missing year apart from year zero', () => {
-    expect(tooltip()).toContain('Undated')
-    expect(tooltip(0)).toContain('<span>0</span>')
-    expect(tooltip(0)).not.toContain('Undated')
+  test('a tooltip leaves a missing year out, but not year zero', () => {
+    expect(tooltip()).not.toContain('Undated')
+    expect(tooltip()).not.toContain(' · ')
+    expect(tooltip(0)).toContain(`<span>${samplePortraits[0].creator}</span><span aria-hidden="true"> · </span><span>0</span>`)
+  })
+  test('a known work nobody told anything about, like an import without a flavor text, has no tooltip', () => {
+    const {creator, description, title, ...untold} = samplePortraits[0]
+    const html = render([{
+      ...untold,
+      interacted: true,
+      imported: true,
+    }])
+    expect(itemOf(html, untold.id)).not.toContain('interestfor')
+    expect(html).not.toContain('data-testid="portrait-tooltip"')
+    for (const value of [creator, description, title]) {
+      expect(html).not.toContain(value)
+    }
+    expect(itemOf(html, untold.id)).toContain('aria-label="Untitled work"')
   })
   test('a world without works says so instead of showing an empty grid', () => {
     const html = render([])

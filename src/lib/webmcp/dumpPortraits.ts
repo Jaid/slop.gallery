@@ -19,7 +19,7 @@ export default function dumpPortraits(): Array<PortraitDump> {
     const rotation = body?.rotation()
     return {
       id: portrait.id,
-      title: portrait.title,
+      ...portrait.title === undefined ? {} : {title: portrait.title},
       hung: portrait.hung,
       ...portrait.wallId === undefined ? {} : {wallId: portrait.wallId},
       width: portrait.width,

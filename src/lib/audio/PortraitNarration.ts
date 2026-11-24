@@ -11,6 +11,7 @@ import NarrationGenerator from '../ai/NarrationGenerator.ts'
 import {hasAccess} from '../ai/openRouterAccess.ts'
 import {tieredModel} from '../ai/settings.ts'
 import {notify} from '../gallery/actions.ts'
+import {isTellable} from '../gallery/portraitFlavor.ts'
 import {useGallery} from '../gallery/store.ts'
 import {environmentSeed} from '../gameSeed.ts'
 import {intro} from './intro.ts'
@@ -107,9 +108,10 @@ export default class PortraitNarration {
     this.cache.dispose()
   }
 
+  /** Reads the story of the work with the id, or of the intro, as soon as its label is done; a work with nothing to read and no flavor text on its way is left unread. */
   enqueue(id: string): AudioHandle | undefined {
     const story = storyFor(id)
-    if (!story || !useGallery.getState().sound || this.lifetime.signal.aborted) {
+    if (!story || !useGallery.getState().sound || this.lifetime.signal.aborted || !isTellable(story) && !story.pending && !story.fusing) {
       return
     }
     const existing = this.requests.get(id)
@@ -121,6 +123,12 @@ export default class PortraitNarration {
     const handle = this.target.push(async signal => {
       const ready = await waitForStory(id, signal)
       signal.throwIfAborted()
+      // A flavor text that failed leaves nothing to read, which goes without a word, as the failure told already.
+      if (!isTellable(ready)) {
+        request.controller.abort('Nothing to read')
+        signal.throwIfAborted()
+        throw new Error('The artwork has nothing to read.')
+      }
       request.story = ready
       const text = transcriptFor(ready)
       return ready.narration ? {
@@ -156,7 +164,7 @@ export default class PortraitNarration {
   /** Waiting jobs observe label completion directly. This hook is only for optional eager generation. */
   ready(id: string) {
     const story = storyFor(id)
-    if (!story || !this.settings.eager_audio || !this.settings.ai || !hasAccess(this.access) || !useGallery.getState().sound || story.narration || story.pending || story.fusing || this.lifetime.signal.aborted) {
+    if (!story || !isTellable(story) || !this.settings.eager_audio || !this.settings.ai || !hasAccess(this.access) || !useGallery.getState().sound || story.narration || story.pending || story.fusing || this.lifetime.signal.aborted) {
       return
     }
     void this.cache.synthesize({

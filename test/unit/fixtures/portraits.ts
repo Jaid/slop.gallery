@@ -2,8 +2,8 @@ import type {Portrait} from '../../../src/lib/gallery/types.ts'
 
 import lobby from '../../../src/lib/gallery/lobby.ts'
 
-/** the default works as they hung before portrait slots, for tests that need a furnished gallery */
-const samplePortraits: Array<Portrait> = [
+/** the default works as they hung before portrait slots, for tests that need a furnished gallery, each with its title, creator and description */
+const samplePortraits: Array<Portrait & Required<Pick<Portrait, 'creator' | 'description' | 'title'>>> = [
   {
     id: 'goose',
     title: 'His Unbothered Majesty',

@@ -16,8 +16,10 @@ export type Narration = {
 export type Portrait = {
   /** the surface its image is painted or printed on; the image shows flat if left out */
   canvasMaterial?: CanvasMaterialId
-  creator: string
-  description: string
+  /** who made it, left out until anyone tells, like a work brought in until its flavor text is written */
+  creator?: string
+  /** what the gallery tells about it, its flavor text, left out until it is written */
+  description?: string
   flavorJob?: symbol
   /** the frame the work wears for good, the default frame if left out: a default work’s that of the room whose slot it was hung in, any other work’s that of the room it arrived in */
   frame?: PortraitFrameId
@@ -40,10 +42,12 @@ export type Portrait = {
   source: Blob | string
   /** the angular velocity a loose work takes off with, in radians per second around the world axes, along with `velocity` */
   spin?: MathVec3
-  title: string
+  /** its name, left out until it has one, like a work brought in until its flavor text is written */
+  title?: string
   velocity?: MathVec3
   wallId?: string
   width: number
+  /** when it was made, left out where nobody knows */
   year?: number
 }
 /** a grabbable object thrown into a hung portrait, which it then fuses with as an ingredient */
@@ -70,7 +74,7 @@ export type FusionRemains = {
 /** the aspect ratios of default works and their slots, as width:height */
 export type PortraitRatio = '1:1' | '2:3' | '3:2' | '9:16' | '16:9'
 /** a default work of the world, before it hangs in a portrait slot */
-export type Artwork = Pick<Portrait, 'creator' | 'description' | 'id' | 'narration' | 'title' | 'year'> & {
+export type Artwork = Pick<Portrait, 'id' | 'narration' | 'year'> & Required<Pick<Portrait, 'creator' | 'description' | 'title'>> & {
   ratio: PortraitRatio
   source: string
 }

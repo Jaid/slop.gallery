@@ -15,15 +15,15 @@ const controlNames: Record<HintControl, string> = {
   KeyV: 'V',
   MouseLeft: 'Left mouse button',
 }
-/** Name of the aimed object and the controls available on it, e.g. “Knotty Prince · E Listen · V Inspect”. */
+/** Name of the aimed object and the controls available on it, e.g. “Knotty Prince · E Listen · V Inspect”, or only the controls for an object without a name. */
 export function InteractionHintView({content, visible}: {
   content: HintContent
   visible: boolean
 }) {
   return <div className={css.container} aria-hidden={!visible} data-testid='interaction-hint' data-visible={visible}>
-    <span className={css.title}>{content.title}</span>
-    {content.keys.map(key => <Fragment key={key.action}>
-      <span className={css.separator} aria-hidden='true'>·</span>
+    <Branch if={content.title}><span className={css.title}>{content.title}</span></Branch>
+    {content.keys.map((key, position) => <Fragment key={key.action}>
+      <Branch if={content.title || position > 0}><span className={css.separator} aria-hidden='true'>·</span></Branch>
       <span className={clsx(css.action, key.blocked && css.blocked)} title={key.blocked ? `${key.action} is not possible right now` : undefined}>
         {key.controls.map((control, index) => <Fragment key={control}><Branch if={index > 0}><span className={css.or}>/</span></Branch><Control control={control} /></Fragment>)}
         <span className={css.verb}>{key.action}</span>

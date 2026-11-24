@@ -15,6 +15,7 @@ import {bodyPose, cameraPose, dropPortrait, flingPlayer, galleryEvents, markPort
 import {flyMode} from '#src/lib/gallery/flyMode.ts'
 import {activateInteractiveObject} from '#src/lib/gallery/interactiveObjects.ts'
 import {playerSession} from '#src/lib/gallery/PlayerSession.ts'
+import {isTellable} from '#src/lib/gallery/portraitFlavor.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import {playerCollisionGroups} from '#src/lib/physics/collisionGroups.ts'
 import PlayerGrace from '#src/lib/physics/PlayerGrace.ts'
@@ -44,7 +45,8 @@ const onInteract = () => {
   if (!active || held || activateInteractiveObject(active)) {
     return
   }
-  if (portraitObjects.has(active)) {
+  // A work without a flavor text has nothing to listen to.
+  if (portraitObjects.has(active) && useGallery.getState().portraits.some(portrait => portrait.id === active && isTellable(portrait))) {
     markPortraitInteracted(active)
     narrate(active)
   }

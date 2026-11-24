@@ -252,8 +252,8 @@ let upcomingId = composeId()
 /** The id the next new work gets, see {@link takeWorkId}. */
 export const upcomingWorkId = () => upcomingId
 
-/** A new work 1.6 m in front of the pose, facing it, in the frame of the room it arrives in. */
-export function newPortrait(source: Blob, title: string, width: number, height: number, pose: {
+/** A new work 1.6 m in front of the pose, facing it, in the frame of the room it arrives in, which nobody has told anything about yet: no title, creator, description or year until its flavor text is written. */
+export function newPortrait(source: Blob, width: number, height: number, pose: {
   direction: Vec3
   position: Vec3
 } = cameraPose): Portrait {
@@ -265,9 +265,6 @@ export function newPortrait(source: Blob, title: string, width: number, height: 
   const {new_canvas_material: canvasMaterial} = readCanvasMaterialParameters()
   return {
     id,
-    title,
-    creator: 'You · guest artist',
-    description: 'A new arrival. Every collection starts with a little curiosity.',
     source,
     position,
     rotation: Math.atan2(-d[0], -d[2]),

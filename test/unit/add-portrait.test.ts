@@ -90,7 +90,6 @@ test('a slot takes the image in place of the work hanging there, at its own area
     target: {slot: slot.id},
   })
   expect(added).toMatchObject({
-    title: 'night watch 2',
     hung: true,
     slot: slot.id,
     wallId: slot.wallId,
@@ -262,28 +261,27 @@ test('of two imports of one id at once, only the first to load its image adds a 
   expect(useGallery.getState().portraits.filter(portrait => portrait.id === 'twin')).toHaveLength(1)
   expect(useGallery.getState().portraits).toHaveLength(length + 1)
 })
-test('a work is named after the file of its image, which only a URL on a server has', async () => {
+test('a work has no title, whatever its image’s file is called, nor anything else told about it, unless told a title', async () => {
   const target = {position: {
     x: slopGallery.spawn.position[0],
     y: slopGallery.spawn.position[1] + 1.5,
     z: slopGallery.spawn.position[2],
   }}
-  for (const [url, title] of [
-    ['http://127.0.0.1:8080/works/The%20Night_Watch.final.png?width=640#top', 'The Night Watch.final'],
-    ['http://127.0.0.1:8080/', 'An untitled arrival'],
-    ['data:image/png;base64,iVBORw0KGgo/AAAANSUhEUgAAA+yAAAAB/CAYAAADc', 'An untitled arrival'],
-    ['blob:http://127.0.0.1:8080/1b671a64-40d5-491e-99b0-da01ff1f3341', 'An untitled arrival'],
-  ]) {
-    expect(await addPortrait({
-      image: url,
-      target,
-    })).toHaveProperty('title', title)
+  const untold = await addPortrait({
+    image: 'http://127.0.0.1:8080/works/The%20Night_Watch.final.png?width=640#top',
+    target,
+  })
+  expect(untold).not.toHaveProperty('title')
+  for (const key of ['title', 'creator', 'description', 'year'] as const) {
+    expect(stored(untold.id)[key]).toBeUndefined()
   }
-  expect(await addPortrait({
+  const told = await addPortrait({
     image: 'data:image/png;base64,iVBORw0KGgo/AAAANSUhEUgAAA+yAAAAB/CAYAAADc',
     target,
     title: 'Told',
-  })).toHaveProperty('title', 'Told')
+  })
+  expect(told).toHaveProperty('title', 'Told')
+  expect(stored(told.id).title).toBe('Told')
 })
 test('a JXL is imported like any other image, but not a file served without an image type', async () => {
   const served = (type: string) => {

@@ -1,8 +1,9 @@
-/** what the narrator reads for a work: its title as a sentence of its own, then its description */
+/** what the narrator reads for a work: its title as a sentence of its own, if it has one, then its description */
 export default function transcriptFor(story: {
   description: string
-  title: string
+  title?: string
 }) {
   const description = story.description.trim()
-  return `${story.title.replace(/[!.?]$/, '')}. ${description}${/[!.?]$/.test(description) ? '' : '.'}`
+  const sentence = `${description}${/[!.?]$/.test(description) ? '' : '.'}`
+  return story.title ? `${story.title.replace(/[!.?]$/, '')}. ${sentence}` : sentence
 }

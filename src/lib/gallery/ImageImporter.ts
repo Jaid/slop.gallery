@@ -98,11 +98,6 @@ export async function importedImage(file: Blob): Promise<SizedImage> {
   }
 }
 
-/** The title of a work imported from the file named `name`: its name without the extension, dashes and underscores as spaces. */
-export function importedTitle(name: string) {
-  return name.replace(/\.[^.]+$/, '').replaceAll(/[-_]/g, ' ').trim().slice(0, 150) || 'An untitled arrival'
-}
-
 /** A provider’s output as a work keeps it: in whatever shape it came, at most 3072 px on its longer edge, on an opaque ground. */
 export async function encodeGeneratedImage(source: Blob) {
   const bitmap = await createImageBitmap(source)
@@ -313,7 +308,6 @@ export default class ImageImporter {
           }
           // Dropped into the room, a work takes the portrait area of the player’s room.
           const dropped = imageSize(cropWidth, cropHeight, world.portraitArea(undefined, room))
-          const title = importedTitle(file.name)
           const s = useGallery.getState()
           let size = dropped
           let place: Placement | null = null
@@ -332,7 +326,7 @@ export default class ImageImporter {
           if (!place?.valid && !flip) {
             size = dropped
           }
-          const p = newPortrait(source, title, size.width, size.height, pose)
+          const p = newPortrait(source, size.width, size.height, pose)
           if (collecting) {
             p.interacted = true
           }

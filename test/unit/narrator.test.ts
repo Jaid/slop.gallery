@@ -176,6 +176,47 @@ test('a manual label edit releases pending narration without waiting for the old
   await flush()
   expect(spoken).toHaveLength(1)
 })
+/** Leaves the work with the id without anything told about it, like an import before its flavor text is written. */
+const untell = (id: string) => {
+  const state = useGallery.getState()
+  state.commit(state.portraits.map(p => {
+    if (p.id !== id) {
+      return p
+    }
+    const {creator, description, title, ...untold} = p
+    return untold
+  }))
+}
+test('a work without a flavor text has nothing to read, unless one is being written', async () => {
+  create()
+  untell('goose')
+  expect(producer.enqueue('goose')).toBeUndefined()
+  await flush()
+  expect(narrator.getSnapshot().idle).toBe(true)
+  // Written without a title, only the description is read.
+  useGallery.getState().update('goose', {pending: true})
+  const handle = producer.enqueue('goose')!
+  expect(handle).toBeDefined()
+  await flush()
+  useGallery.getState().update('goose', {
+    pending: false,
+    description: 'A story without a name',
+  })
+  await flush()
+  expect(spoken).toEqual(['A story without a name.'])
+})
+test('a flavor text that fails leaves the waiting narration nothing to read, which ends without a word', async () => {
+  create()
+  untell('goose')
+  useGallery.getState().update('goose', {pending: true})
+  const handle = producer.enqueue('goose')!
+  await flush()
+  useGallery.getState().update('goose', {pending: false})
+  const outcome = await handle.finished
+  expect(outcome.status).toBe('cancelled')
+  expect(spoken).toHaveLength(0)
+  expect(narrator.getSnapshot().idle).toBe(true)
+})
 test('editing a spoken portrait cancels its transport without interrupting unrelated narration', async () => {
   create()
   const first = producer.enqueue('goose')!

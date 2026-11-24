@@ -5,6 +5,7 @@ import clsx from 'clsx'
 import {useId} from 'react'
 
 import PortraitTooltip from '#component/PortraitTooltip'
+import {hasDetails} from '#src/lib/gallery/portraitFlavor.ts'
 import useArtworkThumbnail from '#src/lib/useArtworkThumbnail.ts'
 
 import css from './style.module.sass'
@@ -31,11 +32,11 @@ export default function PortraitCollectionItem({menuOpen = false, onMenu, onSpec
   const tooltipId = useId()
   const known = Boolean(p.interacted)
   const hasMenu = known || Boolean(p.imported)
-  // Up close, the menu tells the same beside it, where the tooltip of a work at the grid’s edge would cover it.
-  const hasTooltip = known && !spectated
+  // Up close, the menu tells the same beside it, where the tooltip of a work at the grid’s edge would cover it. A work nobody told anything about has nothing to tell.
+  const hasTooltip = known && !spectated && hasDetails(p)
   return <>
     <button
-      className={clsx(css.container, p.width < p.height ? css.tall : css.wide, known && css.known, (menuOpen || spectated) && css.chosen)} aria-expanded={hasMenu ? menuOpen : undefined} aria-haspopup={hasMenu ? 'menu' : undefined} aria-label={known ? p.title : 'Untouched work'} aria-pressed={spectated} data-interacted={known} data-portrait={p.id} interestfor={hasTooltip ? tooltipId : undefined} style={{aspectRatio: `${p.width} / ${p.height}`}} type='button' onClick={onSpectate} onContextMenu={event => {
+      className={clsx(css.container, p.width < p.height ? css.tall : css.wide, known && css.known, (menuOpen || spectated) && css.chosen)} aria-expanded={hasMenu ? menuOpen : undefined} aria-haspopup={hasMenu ? 'menu' : undefined} aria-label={known ? p.title ?? 'Untitled work' : 'Untouched work'} aria-pressed={spectated} data-interacted={known} data-portrait={p.id} interestfor={hasTooltip ? tooltipId : undefined} style={{aspectRatio: `${p.width} / ${p.height}`}} type='button' onClick={onSpectate} onContextMenu={event => {
         // Not even the browser’s own menu for a work without one, whose “Save image as…” would hand out its thumbnail.
         event.preventDefault()
         if (hasMenu) {
