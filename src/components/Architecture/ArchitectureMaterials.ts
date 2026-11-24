@@ -1,11 +1,13 @@
 import type {Wall} from '#src/lib/gallery.ts'
 import type {Material, NodeMaterial} from 'three/webgpu'
 
+import {antechamberLanding} from '#src/lib/gallery/antechamber.ts'
 import {siennaWainscotFields} from '#src/lib/gallery/siennaWainscot.ts'
 import ArchitecturalConcreteMaterial from '#src/lib/materials/ArchitecturalConcreteMaterial.ts'
 import BanquetMaterials from '#src/lib/materials/BanquetMaterials.ts'
 import MadeOnDemand from '#src/lib/materials/base/MadeOnDemand.ts'
 import CastleStoneMaterial from '#src/lib/materials/CastleStoneMaterial.ts'
+import ClawdsWallpaperMaterial from '#src/lib/materials/ClawdsWallpaperMaterial.ts'
 import DamaskWallpaperMaterial from '#src/lib/materials/DamaskWallpaperMaterial.ts'
 import ForgeMaterials from '#src/lib/materials/forge/ForgeMaterials.ts'
 import FrescoMaterials from '#src/lib/materials/FrescoMaterials.ts'
@@ -16,9 +18,13 @@ import LodgeWoodMaterial from '#src/lib/materials/LodgeWoodMaterial.ts'
 import MarmorinoMaterial from '#src/lib/materials/MarmorinoMaterial.ts'
 import {TravertineWallMaterial} from '#src/lib/materials/travertine/index.ts'
 import VesperWallMaterial from '#src/lib/materials/VesperWallMaterial.ts'
+import {upstairsHallWalls} from '#src/rooms/antechamber/walls.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const vesper = slopGallery.room('vesper')
+const antechamber = slopGallery.room('antechamber')
+/** the walls already papered with the upstairs hall’s Clawds, by their world-wide ids */
+const clawdsWalls = new Set(upstairsHallWalls.map(id => antechamber.room.globalId(id)))
 // Five courses of 1.1 m reach the cornice; slabs are twice as long as they are high.
 const lobbyCladding = {
   course: 1.1,
@@ -37,6 +43,11 @@ export default class ArchitectureMaterials extends MadeOnDemand {
   /** the castle stone of the Lodge, the Bastion with its western climb and the corridor, which run underground, beyond the reach of the sun */
   get castleStone(): NodeMaterial {
     return this.once('castleStone', () => lightIndoors(new CastleStoneMaterial))
+  }
+
+  /** Clawds, the upstairs hall’s daisy stickers, its rows laid out from the floor of the landing they paper until that hall is built */
+  get clawds(): NodeMaterial {
+    return this.once('clawds', () => new ClawdsWallpaperMaterial({floorY: antechamberLanding.floorY}))
   }
 
   /** the board lining of the corridor and its stairs, which see nothing but their own lanterns */
@@ -143,7 +154,7 @@ export default class ArchitectureMaterials extends MadeOnDemand {
         return this.damask
       }
       case 'antechamber': {
-        return this.marmorino
+        return clawdsWalls.has(wall.id) ? this.clawds : this.marmorino
       }
       case 'salon': {
         return this.salon.surface(wall)
@@ -181,6 +192,10 @@ export default class ArchitectureMaterials extends MadeOnDemand {
       }
       case 'sienna': {
         return this.joinery.x
+      }
+      case 'antechamber': {
+        // Clawds stands on the Cell’s walnut baseboard, as in the Studio.
+        return clawdsWalls.has(wall.id) ? this.joinery.x : undefined
       }
       case 'banquet': {
         return this.banquet.trim(wall)

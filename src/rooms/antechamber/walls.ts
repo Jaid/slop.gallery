@@ -57,6 +57,11 @@ const flightWall = (side: number): Wall => {
   }
 }
 
+/**
+ * The walls of the landing the flight up ends at, which the upstairs hall will lead on from: papered with that hall’s Clawds (`ClawdsWallpaperMaterial`) already, so its finish is chosen before it is built. The hall itself takes it over once it exists.
+ */
+export const upstairsHallWalls = ['landing_west', 'landing_east', 'landing_south'] as const
+
 export default {
   // The dome, an arch into either hall and the doorway from the Lobby.
   north: dome('north', {holes: {lobby: {
@@ -82,7 +87,7 @@ export default {
     ...doorway,
     width: staircase.width,
   }}}),
-  // Up the flight to the landing, whose south wall stays blank until a floor above is there to go on to.
+  // Up the flight to the landing, whose south wall stays blank until a floor above is there to go on to; its walls are papered with the Clawds of the upstairs hall to come, see `upstairsHallWalls`.
   ...localWalls('antechamber', [0, 0, antechamberZ], [-1, 1].map(flightWall)),
   landing_west: landing('west'),
   landing_east: landing('east'),

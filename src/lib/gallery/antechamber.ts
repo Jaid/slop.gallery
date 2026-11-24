@@ -62,7 +62,7 @@ export const antechamberStairBlocks: ReadonlyArray<StairBlock> = antechamberStai
 })
 /** how far the walls along the flight reach under its grade: down to the underside of the ground floor’s slab at its foot, and from there on still under every tread, each a riser lower than the grade at its back */
 export const antechamberStairWallDepth = floorThickness
-/** the square landing at the head of the flight, as wide as the flight, where it will turn on toward the floor above some day; until then, its far wall is blank */
+/** the square landing at the head of the flight, as wide as the flight, where it will turn on toward the floor above some day, into the upstairs hall; until then, its far wall is blank, and its walls wear that hall’s Clawds wallpaper already */
 export const antechamberLanding = {
   center: [riseX, riseHeadZ + antechamberStairs.width / 2],
   size: [antechamberStairs.width, antechamberStairs.width],
