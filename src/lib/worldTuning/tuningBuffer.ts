@@ -16,7 +16,7 @@ let capturing: Promise<void> | undefined
 /** counts discards, so a capture that finishes after one doesn’t bring the frame back */
 let generation = 0
 
-/** Applies a change the panel makes to the world tuning, first capturing the live frame if the change starts a new tweak. Changes that come in during the capture wait for it, in order. */
+/** Applies a change the panel makes to the world tuning, first capturing the live frame if the change starts a new tweak. Changes that come in during the capture wait for it, in order, so `apply` must not read the event that asked for it, which has ended by then. */
 export function changeWorldTuning(apply: () => void) {
   const now = performance.now()
   const startsTweak = now - lastChange > tweakGap

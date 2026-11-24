@@ -124,9 +124,10 @@ function ControlRow({control, disabled, module}: {
   const value = isOff ? parked ?? valueSwitch.fallback : current
   const changed = module.isChanged(key, {[key]: current}, {[key]: parked})
   const set = (next: TuningValue) => changeWorldTuning(() => module.set({[key]: next}, 'panel'))
+  const switchOn = (on: boolean) => changeWorldTuning(() => module.switch(valueSwitch!, on, 'panel'))
   const id = `tuning-${module.id}-${key}`
   const label = <span data-changed={changed || undefined} onClick={ignoreRepeatedClick} onDoubleClick={() => changeWorldTuning(() => module.reset([key], 'panel'))}>
-    <Branch if={control.off}><input aria-label={`${control.label} on`} checked={!isOff} disabled={disabled} type='checkbox' onChange={event => changeWorldTuning(() => module.switch(valueSwitch!, event.currentTarget.checked, 'panel'))} /></Branch>
+    <Branch if={control.off}><input aria-label={`${control.label} on`} checked={!isOff} disabled={disabled} type='checkbox' onChange={event => switchOn(event.currentTarget.checked)} /></Branch>
     {control.label}
   </span>
   const inactive = disabled || !applies || control.off !== undefined && isOff
