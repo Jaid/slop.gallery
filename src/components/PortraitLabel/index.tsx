@@ -50,6 +50,13 @@ const lettering = (title = '', byline = ''): Lettering => ({
   key: `${title}\n${byline}`,
 })
 const blank = lettering()
+/** The lettering of a work’s card, blank without a title or a creator, since a year alone tells nothing worth a placard. */
+const placardLettering = (title?: string, creator?: string, year?: number) => {
+  if (!title && !creator) {
+    return blank
+  }
+  return lettering(title, formatByline(creator, year))
+}
 /** how many cards have rolled, which tunes each roll’s sound a little apart */
 let rolls = 0
 
@@ -59,7 +66,7 @@ let rolls = 0
  */
 export default function PortraitLabel({width, height, title, creator, year, pending, preview, above}: PortraitLabelProps) {
   const layout = portraitLabelLayout(width, height, above)
-  const written = pending ? undefined : lettering(title, formatByline(creator, year))
+  const written = pending ? undefined : placardLettering(title, creator, year)
   if (preview) {
     const shown = written ?? blank
     return <group position={[0, layout.y, 0.015]} userData={{portraitLabel: false}}>
