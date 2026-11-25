@@ -9,6 +9,7 @@ import {join, relative} from 'forward-slash-path'
 import fs from 'fs-extra'
 import puppeteer from 'puppeteer-core'
 
+import {frameIntervals, uncappedFrameArgs} from './lib/benchmarkFrames.ts'
 import {galleryHelp, galleryOptions, normalizeOptions, openHeadlessGallery, repositoryRoot, resolveGallerySetup, waitForFrames, warnAboutDevServer} from './lib/headlessGallery.ts'
 
 const benchmarkHeight = 2160
@@ -266,26 +267,10 @@ const fly = (page: Page, eye: ReadonlyArray<number>, target: ReadonlyArray<numbe
     fov,
   })
 }
-/** the median of the uncapped frame intervals over `milliseconds` */
-const frameTime = (page: Page, milliseconds = 5000) => page.evaluate(async (duration: number) => {
-  const stamps: Array<number> = []
-  await new Promise<void>(resolve => {
-    const tick = (time: number) => {
-      stamps.push(time)
-      if (time - stamps[0] < duration) {
-        requestAnimationFrame(tick)
-      } else {
-        resolve()
-      }
-    }
-    requestAnimationFrame(tick)
-  })
-  const intervals = stamps.slice(1).map((time, index) => time - stamps[index]).toSorted((a, b) => a - b)
-  return intervals[Math.floor(intervals.length / 2)]
-}, milliseconds)
+const frameTime = async (page: Page) => median(await frameIntervals(page))
 /** uncapped frames, which a frame time needs */
 const benchmarkPage = {
-  args: ['--disable-gpu-vsync', '--disable-frame-rate-limit'],
+  args: uncappedFrameArgs,
   cacheDir: 'node_modules/.vite-benchmark-orb',
 }
 const isEmpty = (items: string) => !items || /^Operation succeeded\.?$/u.test(items)
