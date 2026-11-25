@@ -14,6 +14,7 @@ import {imageSize} from '../../src/lib/gallery/ImageImporter.ts'
 import portraitOrbit from '../../src/lib/gallery/portraitOrbit.ts'
 import {portraitRatios, slotAreas, slotFrame} from '../../src/lib/placement/portraitSlots.ts'
 import {hangingOffset} from '../../src/lib/placement/wallGeometry.ts'
+import {graphicsQualities, useGraphicsQuality} from '../../src/lib/rendering/graphicsQuality.ts'
 import MaterialOutputsNode from '../../src/lib/rendering/MaterialOutputsNode.ts'
 import {orbs} from '../../src/orbs/index.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
@@ -37,29 +38,17 @@ describe('frames', () => {
       expect(frame.constructor.name.toLowerCase()).toBe(`${id}frame`)
     }
   })
-  test('Louis swaps its mesh and gilding for Cinematic without changing how the work fits or is framed', () => {
-    const realtime = portraitFrame('louis', 'heavy')
-    const cinematic = portraitFrame('louis', 'cinematic')
-    expect(portraitFrame('louis', 'fast')).toBe(realtime)
-    expect(realtime.materials[0]).toHaveProperty('mrtNode', expect.any(MaterialOutputsNode))
-    expect(cinematic.materials[0]).toHaveProperty('mrtNode', null)
-    for (const id of frameIds) {
-      if (id !== 'louis') {
-        expect(portraitFrame(id, 'cinematic')).toBe(portraitFrame(id, 'heavy'))
-      }
-    }
-    const [width, height] = [1.6, 0.9]
-    const coarse = realtime.createGeometry(width, height)
-    const fine = cinematic.createGeometry(width, height)
+  test('Louis keeps the same frame and burnished-only reflections across graphics modes', () => {
+    const previous = useGraphicsQuality.getState().quality
     try {
-      expect(coarse.getAttribute('position').count).toBeLessThan(fine.getAttribute('position').count)
-      expect(fine.getAttribute('position').count / 3).toBeLessThanOrEqual(frameTriangleBudget)
-      expect(coarse.boundingBox!.equals(fine.boundingBox!)).toBe(true)
-      expect(realtime.mass(width, height)).toBe(cinematic.mass(width, height))
-      expect(realtime.opening(width, height, 0.5)).toEqual(cinematic.opening(width, height, 0.5))
+      for (const quality of graphicsQualities) {
+        useGraphicsQuality.setState({quality})
+        const frame = portraitFrame('louis')
+        expect(frame).toBe(frames.louis)
+        expect(frame.materials[0]).toHaveProperty('mrtNode', expect.any(MaterialOutputsNode))
+      }
     } finally {
-      coarse.dispose()
-      fine.dispose()
+      useGraphicsQuality.setState({quality: previous})
     }
   })
   for (const [id, frame] of entries) {

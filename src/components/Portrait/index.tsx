@@ -11,7 +11,7 @@ import {Quaternion, Vector3} from 'three/webgpu'
 import DynamicImageMaterial from '#component/DynamicImageMaterial'
 import PortraitLabel from '#component/PortraitLabel'
 import {frameBack} from '#src/frames/base/PortraitFrame.ts'
-import {usePortraitFrame} from '#src/frames/index.ts'
+import {portraitFrame} from '#src/frames/index.ts'
 import {impactSounds} from '#src/lib/audio/impactSounds.ts'
 import {requestFusion, useGallery} from '#src/lib/gallery.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
@@ -30,7 +30,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
   const held = useGallery(s => s.held === p.id)
   const w = p.width
   const h = p.height
-  const frame = usePortraitFrame(p.frame)
+  const frame = portraitFrame(p.frame)
   useHanging(p, frame, held, art, placard)
   useEffect(() => {
     if (body.current && group.current) {

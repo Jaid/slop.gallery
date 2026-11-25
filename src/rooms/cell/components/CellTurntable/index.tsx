@@ -10,7 +10,7 @@ import {PlaneGeometry} from 'three/webgpu'
 
 import DynamicImageMaterial from '#component/DynamicImageMaterial'
 import {frameBack} from '#src/frames/base/PortraitFrame.ts'
-import {usePortraitFrame} from '#src/frames/index.ts'
+import {portraitFrame} from '#src/frames/index.ts'
 import {AnimationClock} from '#src/lib/frozenTime.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {frameSize} from '#src/lib/placement/portraitSlots.ts'
@@ -43,7 +43,7 @@ export default function CellTurntable({turntable}: {turntable: SandboxTurntable}
   const imageAspect = image ? image.width / image.height : 1
   const aspect = turntable.aspect ?? imageAspect
   const {width, height} = frameSize(aspect, turntable.area)
-  const frame = usePortraitFrame(sandbox.frameAt(slot.position, environmentSeed, turntable.id))
+  const frame = portraitFrame(sandbox.frameAt(slot.position, environmentSeed, turntable.id))
   const geometry = useDisposable(useMemo(() => frame.createGeometry(width, height), [frame, width, height]))
   // How much of the image’s width and height the work shows.
   const shown = aspect / imageAspect

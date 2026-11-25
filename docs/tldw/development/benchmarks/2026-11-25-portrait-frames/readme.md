@@ -81,11 +81,11 @@ For the overview, use `--spawn studio-overview --fov 65`. Substitute the same fr
 
 ## Louis after tuning
 
-The table above measures the original Louis XIV shell. A follow-up compared that visible frame directly with its [new realtime version](../../../../../src/frames/readme.md): a 1058-triangle mesh instead of 1906, no gilt crackle and screen-space reflections only at roughness ≤ 0.25. Cinematic keeps the original.
+The table above measures the original Louis XIV shell. A follow-up compared that visible frame directly with the [tuned version](../../../../../src/frames/readme.md) now used in every graphics mode: a 1058-triangle mesh instead of 1906, no gilt crackle and screen-space reflections only at roughness ≤ 0.25.
 
 Both builds used the Studio from `21f2ae08` with its 16:9 *The Creation of Chick*. Each view ran in Heavy at 3840 × 2160, four alternating pairs per RX 9060 XT on two cards. The close-up used the same front-on camera as the survey; the overview used the current `studio-overview` bookmark at (5, 2, 4) m. Only the frame implementation differed within each pair.
 
-| View | Original median | Realtime median | Paired change |
+| View | Original median | Tuned median | Paired change |
 |---|---:|---:|---:|
 | Close-up | 30.93 ms | 26.85 ms | −4.15 ms (−13.3%) |
 | Studio overview | 27.45 ms | 26.15 ms | −1.30 ms (−4.7%) |

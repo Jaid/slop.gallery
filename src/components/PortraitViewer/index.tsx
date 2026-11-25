@@ -1,5 +1,4 @@
 import type {PortraitModelSubject} from '#src/lib/gallery/PortraitModel.ts'
-import type {Portrait} from '#src/lib/gallery/types.ts'
 import type StudioView from '#src/lib/rendering/studio/StudioView.ts'
 import type {StagingOutcome} from './stagePortrait.ts'
 import type {KeyboardEvent} from 'react'
@@ -8,7 +7,6 @@ import Branch from 'branch-component'
 import clsx from 'clsx'
 import {useEffect, useRef, useState} from 'react'
 
-import {usePortraitFrame} from '#src/frames/index.ts'
 import holdStudioView from '#src/lib/rendering/studio/sharedStudioView.ts'
 
 import stagePortrait from './stagePortrait.ts'
@@ -21,7 +19,7 @@ export type PortraitViewerProps = {
   faint?: boolean
   /** what the model is of, for assistive technology */
   label: string
-  portrait: Pick<Portrait, keyof PortraitModelSubject>
+  portrait: PortraitModelSubject
 }
 
 /** how showing the model of a work ended */
@@ -70,8 +68,7 @@ export default function PortraitViewer({className, faint = false, label, portrai
   const layer = useRef<HTMLDivElement>(null)
   const studio = useRef<StudioView>(undefined)
   const [outcome, setOutcome] = useState<Outcome>()
-  const {canvasMaterial, height, source, width} = portrait
-  const frame = usePortraitFrame(portrait.frame)
+  const {canvasMaterial, frame, height, source, width} = portrait
   // The model of another work is on its way until its own outcome is in.
   const progress = outcome !== undefined && outcome.canvasMaterial === canvasMaterial && outcome.frame === frame && outcome.height === height && outcome.source === source && outcome.width === width ? outcome.progress : 'loading'
   // The studio’s canvas lives on while this stage is not there, so it moves in and out.

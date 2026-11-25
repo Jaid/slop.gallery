@@ -11,24 +11,24 @@ import {relief} from '../lib/ornaments.ts'
 
 const imageDepth = -0.062
 /** an astragal at the sight edge, a tall ogee rising to a ribboned torus, and a deep cove falling away to the wall */
-const makeProfile = (detail: number) => FrameProfile.from([-0.005, imageDepth])
+const profile = FrameProfile.from([-0.005, imageDepth])
   .line(-0.005, -0.052)
-  .arc(0.009, -0.052, 0.5, {steps: 4 * detail})
+  .arc(0.009, -0.052, 0.5, {steps: 4})
   .line(0.012, -0.055)
   .line(0.016, -0.055)
-  .ogee(0.07, -0.012, {steps: 8 * detail})
+  .ogee(0.07, -0.012, {steps: 8})
   .line(0.074, -0.012)
-  .arc(0.1, -0.012, 0.5, {steps: 6 * detail})
-  .arc(0.14, -0.07, -0.25, {steps: 4 * detail})
+  .arc(0.1, -0.012, 0.5, {steps: 6})
+  .arc(0.14, -0.07, -0.25, {steps: 4})
   .line(0.14, frameBack)
   .line(-0.005, frameBack)
 /** how far out the shells sit on the miters, over the ogee’s shoulder */
 const shellReach = 0.08
 const shellRadius = 0.046
 /** A scallop shell fanning out over the miter of the top right corner, toward the outside, its edge scalloped into lobes. */
-function shellOutline(detail: number) {
+function shellOutline() {
   const lobes = 7
-  const count = 2 * detail * lobes + 1
+  const count = 2 * lobes + 1
   const points: Array<readonly [number, number]> = []
   for (let index = 0; index < count; index++) {
     const t = index / (count - 1)
@@ -44,38 +44,28 @@ function shellOutline(detail: number) {
 /** The Lobby’s: a carved Louis XIV frame in burnished water gilding, a scallop shell on every miter. */
 export default class LouisFrame extends PortraitFrame {
   override readonly description = 'A carved Louis XIV frame in burnished water gilding: bead and reel at the sight edge, a tall ogee of acanthus leaves, a ribboned torus and a deep cove to the wall, a ribbed scallop shell spreading over every miter.'
-  override readonly front: number
+  override readonly front = profile.front
   override readonly imageDepth = imageDepth
-  override readonly reach: number
+  override readonly reach = profile.reach
   override readonly tint = '#c79a4e'
   override readonly title = 'Louis XIV shell'
-  private readonly detail: number
-  private readonly profile: FrameProfile
-
-  constructor(private readonly cinematic = false) {
-    super()
-    this.detail = cinematic ? 2 : 1
-    this.profile = makeProfile(this.detail)
-    this.front = this.profile.front
-    this.reach = this.profile.reach
-  }
 
   override createGeometry(width: number, height: number) {
     const halfWidth = width / 2
     const halfHeight = height / 2
-    const shell = relief(shellOutline(this.detail), 0.018, {
+    const shell = relief(shellOutline(), 0.018, {
       bevel: 0.005,
       kind: 1,
     })
     return assembleFrame([
-      ...sweepProfile(this.profile, halfWidth, halfHeight),
+      ...sweepProfile(profile, halfWidth, halfHeight),
       [0, place(shell, corners(halfWidth, halfHeight, shellReach, -0.034))],
     ])
   }
 
   protected override createMaterials() {
     const gilt = new GiltMaterial({
-      crackle: this.cinematic,
+      crackle: false,
       wear: 0.25,
       grime: 0.6,
       relief: {
@@ -95,10 +85,8 @@ export default class LouisFrame extends PortraitFrame {
         },
       },
     })
-    if (!this.cinematic) {
-      // Only burnished gold traces a screen-space ray. Rougher leaf keeps its studio reflection and its metallic lighting.
-      gilt.mrtNode = new MaterialOutputsNode({metalrough: vec2(roughness.lessThanEqual(0.25).select(metalness, 0), roughness)})
-    }
+    // Only burnished gold traces a screen-space ray. Rougher leaf keeps its studio reflection and its metallic lighting.
+    gilt.mrtNode = new MaterialOutputsNode({metalrough: vec2(roughness.lessThanEqual(0.25).select(metalness, 0), roughness)})
     return [gilt]
   }
 }

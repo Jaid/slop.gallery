@@ -1,8 +1,6 @@
 import type PortraitFrame from './base/PortraitFrame.ts'
 import type {PortraitFrameId} from './lib/frameParameter.ts'
 
-import {useGraphicsQuality} from '#src/lib/rendering/graphicsQuality.ts'
-
 import AbyssFrame from './abyss/AbyssFrame.ts'
 import AcrylicFrame from './acrylic/AcrylicFrame.ts'
 import AdamFrame from './adam/AdamFrame.ts'
@@ -123,20 +121,11 @@ export const frames = {
   whistler: new WhistlerFrame,
 } as const satisfies Record<PortraitFrameId, PortraitFrame>
 
-const cinematicFrames = {
-  ...frames,
-  louis: new LouisFrame(true),
-}
 const forcedFrameId = readFrame()
 
-/** The frame a work wears at the session’s quality: `?frame` wins over its own id, with Classic as the default. */
-export function portraitFrame(id?: PortraitFrameId, quality = useGraphicsQuality.getState().quality): PortraitFrame {
-  return (quality === 'cinematic' ? cinematicFrames : frames)[forcedFrameId || id || 'classic']
-}
-
-/** Follows live quality switches only when the selected frame has a different mesh and materials there. */
-export function usePortraitFrame(id?: PortraitFrameId) {
-  return useGraphicsQuality(({quality}) => portraitFrame(id, quality))
+/** The frame a work wears: `?frame` wins over its own id, with Classic as the default. */
+export function portraitFrame(id?: PortraitFrameId): PortraitFrame {
+  return frames[forcedFrameId || id || 'classic']
 }
 
 export type {PortraitFrameId} from './lib/frameParameter.ts'
