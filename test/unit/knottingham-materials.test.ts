@@ -39,8 +39,7 @@ describe('Knottingham’s velvet walls', () => {
   test('the pile ranges from near-black where it stands to crimson where it is crushed', () => {
     expect(lightness(oxbloodVelvet.deep)).toBeLessThan(lightness(oxbloodVelvet.pile))
     expect(lightness(oxbloodVelvet.pile)).toBeLessThan(lightness(oxbloodVelvet.crushed))
-    for (const hex of Object.values(oxbloodVelvet)) {
-      const value = Number.parseInt(hex.slice(1), 16)
+    for (const value of Object.values(oxbloodVelvet)) {
       // Red dominates every tone.
       expect(value >> 16 & 255).toBeGreaterThan((value >> 8 & 255) * 3)
     }

@@ -1,10 +1,11 @@
 import type {Lamp, PointLamp} from '../base/Room.ts'
 
+import {integer} from 'okhsl'
+
 import {environmentRandom, isDefaultSeed} from '#src/lib/environmentSeed.ts'
 import lowerGallery, {tunnelCenter, tunnelDiagonalFloorY, tunnelDiagonalHeading, tunnelDiagonalPoint, tunnelSlope} from '#src/lib/gallery/lowerGallery.ts'
 import tunnelDisplays from '#src/lib/gallery/tunnelDisplays.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
-import {hslHex} from '#src/lib/seededHsl.ts'
 
 const {tunnel} = lowerGallery
 const [originX, originY, originZ] = tunnelCenter
@@ -45,8 +46,7 @@ export function tunnelHue(seed: number) {
 }
 /** The tints of the tunnel lamps, north to south: their hues a third of the circle apart round the middle one’s, each with its own saturation and lightness in OkHSL. */
 export function tunnelTints(middleHue: number) {
-  const shades = [[100, 86], [100, 56], [100, 62]] as const
-  return shades.map(([saturation, lightness], index) => hslHex([middleHue + (index - 1) * 120, saturation, lightness])) as [string, string, string]
+  return [integer(middleHue - 120, 100, 86), integer(middleHue, 100, 56), integer(middleHue + 120, 100, 62)] as const
 }
 const [northTint, middleTint, southTint] = tunnelTints(tunnelHue(environmentSeed))
 

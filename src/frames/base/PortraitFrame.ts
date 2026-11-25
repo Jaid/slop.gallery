@@ -1,6 +1,6 @@
 import type {FrameImpactSoundId} from '#src/lib/audio/frameImpacts.ts'
 import type {SectionPoint} from '../lib/FrameProfile.ts'
-import type {BufferGeometry, Material} from 'three/webgpu'
+import type {BufferGeometry, ColorRepresentation, Material} from 'three/webgpu'
 
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -34,7 +34,7 @@ export default abstract class PortraitFrame {
   /** how far the frame reaches out past the work’s edges, its mat included */
   abstract readonly reach: number
   /** the color the frame shows as, which its ghost takes while the player carries the work */
-  abstract readonly tint: string
+  abstract readonly tint: ColorRepresentation
   abstract readonly title: string
   #held: Material | undefined
   #materials: Array<Material> | undefined

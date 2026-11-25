@@ -132,8 +132,8 @@ type LampBase = {
   shadow?: 'heavy' | boolean
   /** luminous intensity in candela, 1 by default */
   strength?: number
-  /** light color as #rrggbb, white by default */
-  tint?: string
+  /** light color as CSS or packed sRGB, white by default */
+  tint?: number | string
 }
 type Arrayable<T> = ReadonlyArray<T> | T
 

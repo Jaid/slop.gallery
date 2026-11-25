@@ -13,7 +13,7 @@ import {heightNormal, inside, line, visibleDetail} from './filters.ts'
 export default class ArmillaryRingMaterial extends MeshStandardNodeMaterial {
   private readonly studio = new StudioEnvironment
 
-  constructor(radius: number, hue: string, phaseAt: () => number) {
+  constructor(radius: number, hue: number, phaseAt: () => number) {
     super({
       metalness: 1,
       roughness: 0.38,

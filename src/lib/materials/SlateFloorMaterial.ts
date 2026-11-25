@@ -5,16 +5,16 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import {inside, line, visibleDetail} from './filters.ts'
 
-/** The colors of a slate floor, as sRGB hex strings. */
+/** The colors of a slate floor, as packed sRGB. */
 export type SlateStyle = {
   /** the pale dust the fractures crushed the stone into along their edges */
-  dust: string
+  dust: number
   /** the dark gap of a fracture */
-  gap: string
+  gap: number
   /** the dark grout of the joints */
-  grout: string
+  grout: number
   /** the slabs, split from different parts of the quarry: most often the first, rarest the last */
-  slabs: readonly [string, string, string, string]
+  slabs: readonly [number, number, number, number]
 }
 
 type Float = Node<'float'>

@@ -3,9 +3,11 @@ import type {VelvetRopeStyle} from '../../materials/VelvetRopeMaterial.ts'
 import type {HslSpread} from '../../seededHsl.ts'
 import type {OkhslTuple} from 'okhsl'
 
+import {integer} from 'okhsl'
+
 import {environmentRandom, isDefaultSeed} from '../../environmentSeed.ts'
 import {environmentSeed} from '../../gameSeed.ts'
-import {hslHex, seededHsl} from '../../seededHsl.ts'
+import {seededHsl} from '../../seededHsl.ts'
 import {readMoonfallHue} from './hueParameter.ts'
 
 /** the OkHSL hue of Moonfall’s theme in the default environment, the teal of its planet glow */
@@ -57,13 +59,13 @@ export const moonfallColors = {
   frameTail: [187, 80, 87],
 } as const satisfies Record<string, OkhslTuple>
 
-/** Moonfall’s themed colors as sRGB hex strings, see {@link moonfallColors}. */
-export type MoonfallPalette = Record<keyof typeof moonfallColors, string>
+/** Moonfall’s themed colors as packed sRGB (0xRRGGBB), see {@link moonfallColors}. */
+export type MoonfallPalette = Record<keyof typeof moonfallColors, number>
 
 /** Moonfall’s themed colors turned round the hue circle together, so the planet glow takes `hue`, their saturation and lightness kept. */
 export function moonfallPalette(hue: number): MoonfallPalette {
   const turn = hue - defaultMoonfallHue
-  return Object.fromEntries(Object.entries(moonfallColors).map(([key, [h, saturation, lightness]]) => [key, hslHex([h + turn, saturation, lightness])])) as MoonfallPalette
+  return Object.fromEntries(Object.entries(moonfallColors).map(([key, [h, saturation, lightness]]) => [key, integer(h + turn, saturation, lightness)])) as MoonfallPalette
 }
 
 /** The slate floor of Moonfall’s {@link MoonfallPalette}. */

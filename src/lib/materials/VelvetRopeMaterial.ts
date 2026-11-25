@@ -3,14 +3,14 @@ import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {heightNormal} from './filters.ts'
 
-/** The colors of a velvet rope, as sRGB hex strings. */
+/** The colors of a velvet rope, as packed sRGB. */
 export type VelvetRopeStyle = {
   /** the pile deep between the strands */
-  deep: string
+  deep: number
   /** the pile on the strands’ crowns */
-  pile: string
+  pile: number
   /** the soft light the pile scatters */
-  sheen: string
+  sheen: number
 }
 
 /**

@@ -1,7 +1,7 @@
 import type Node from 'three/src/nodes/core/Node.js'
 import type NodeBuilder from 'three/src/nodes/core/NodeBuilder.js'
 import type NodeFrame from 'three/src/nodes/core/NodeFrame.js'
-import type {Camera, MRTNode, Renderer, Scene, Texture} from 'three/webgpu'
+import type {Camera, ColorRepresentation, MRTNode, Renderer, Scene, Texture} from 'three/webgpu'
 
 import {cos, float, Fn, frameId, If, int, interleavedGradientNoise, materialRoughness, mix, normalView, output, positionViewDirection, reflector, screenCoordinate, sin, textureBicubicLevel, uniform, vec2, vec4} from 'three/tsl'
 import {Box3, DepthTexture, Frustum, HalfFloatType, LinearMipMapLinearFilter, Matrix4, MeshStandardNodeMaterial, NodeUpdateType, Object3D, RenderTarget, Vector3, VelocityNode} from 'three/webgpu'
@@ -254,7 +254,7 @@ export default class PlanarMirrorMaterial extends MeshStandardNodeMaterial {
   readonly reflectionTarget: Object3D | null
 
   constructor(map: Texture | null, {color, envMapIntensity, roughness, reflection}: {
-    color: string
+    color: ColorRepresentation
     /** the environment’s share of the lighting, by default all of it on a reflective surface and none on a matte one */
     envMapIntensity?: number
     reflection?: PlanarReflection

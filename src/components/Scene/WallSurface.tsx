@@ -1,6 +1,6 @@
 import type {Wall} from '#src/lib/gallery.ts'
 import type {ComponentType} from 'react'
-import type {Material, Texture} from 'three/webgpu'
+import type {ColorRepresentation, Material, Texture} from 'three/webgpu'
 
 import {RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
@@ -16,7 +16,7 @@ import withOpeningReveals from '#src/lib/gallery/openingReveals.ts'
 export type WallDecorationsProps = {
   material?: Material
   /** the color the wall’s trim takes without a material of its own */
-  trim: string
+  trim: ColorRepresentation
   wall: Wall
 }
 
@@ -39,7 +39,7 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
   surfaceRoom?: Wall['room']
   wall: Wall
 }) {
-  const colors: Partial<Record<Wall['room'], string>> = {
+  const colors: Partial<Record<Wall['room'], ColorRepresentation>> = {
     moonfall: moonfallTheme.wall,
     oculus: '#4b5559',
     vesper: '#658578',
@@ -47,7 +47,7 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
     salon: '#8e2f24',
   }
   const color = colors[surfaceRoom] ?? '#eee7d7'
-  const trims: Partial<Record<Wall['room'], string>> = {
+  const trims: Partial<Record<Wall['room'], ColorRepresentation>> = {
     moonfall: moonfallTheme.trim,
     oculus: '#303d42',
     vesper: '#44655a',

@@ -1,5 +1,5 @@
 import type {HslSpread} from '../seededHsl.ts'
-import type {OkhslTuple} from 'okhsl'
+import type {Channels} from 'okhsl'
 import type StableRandom from 'stable-random'
 import type {Node} from 'three/webgpu'
 
@@ -9,30 +9,30 @@ import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 import {seededHsl} from '../seededHsl.ts'
 import {heightNormal, visibleDetail} from './filters.ts'
 
-/** The colors of a velvet, as sRGB hex strings. */
+/** The colors of a velvet, as packed sRGB. */
 export type VelvetStyle = {
   /** the crushed pile where it lies flat and catches the light */
-  crushed: string
+  crushed: number
   /** the pile standing upright, swallowing the light */
-  deep: string
+  deep: number
   /** the body of the fabric between the two */
-  pile: string
+  pile: number
   /** the soft glow the fibers scatter at grazing angles */
-  sheen: string
+  sheen: number
 }
 
 type Float = Node<'float'>
 
 /** Deep oxblood crushed velvet. */
 export const oxbloodVelvet: VelvetStyle = {
-  crushed: '#8e0a1d',
-  deep: '#1c0104',
-  pile: '#52040f',
-  sheen: '#d01a34',
+  crushed: 0x8E_0A_1D,
+  deep: 0x1C_01_04,
+  pile: 0x52_04_0F,
+  sheen: 0xD0_1A_34,
 }
 
 /** The colors of a velvet in OkHSL, see {@link VelvetStyle}. */
-export type VelvetColors = Record<keyof VelvetStyle, OkhslTuple>
+export type VelvetColors = Record<keyof VelvetStyle, Readonly<Channels>>
 
 /** The velvet of the OkHSL colors, all of them moved alike by `random`, up to `spread` either way, see {@link seededHsl}. */
 export function seededVelvet(colors: VelvetColors, random: StableRandom, spread: HslSpread): VelvetStyle {
@@ -47,15 +47,15 @@ export function seededVelvet(colors: VelvetColors, random: StableRandom, spread:
 const unit = (node: Float) => node.mul(0.5).add(0.5)
 const noise = (x: Float, y: Float, seed: Float) => mx_noise_float(vec3(x, y, seed))
 
-/** a velvet color: an sRGB hex string, or a color node, like a uniform that changes the color without building a new shader */
-export type VelvetTint = Node<'color'> | string
+/** a velvet color: packed sRGB or a color node, like a uniform that changes the color without building a new shader */
+export type VelvetTint = Node<'color'> | number
 
 export type VelvetOptions = {
   seed?: number
   style?: Record<keyof VelvetStyle, VelvetTint>
 }
 
-const tint = (value: VelvetTint) => (typeof value === 'string' ? color(value) : value)
+const tint = (value: VelvetTint) => (typeof value === 'number' ? color(value) : value)
 
 /**
  * Crushed velvet laid out in meters of cloth: across the nap in u, along it in v.

@@ -1,6 +1,6 @@
 import type TuningModule from '#src/lib/worldTuning/base/TuningModule.ts'
 import type {TuningControl, TuningGroup, TuningRange, TuningValue} from '#src/lib/worldTuning/controls.ts'
-import type {OkhslTuple} from 'okhsl'
+import type {Channels} from 'okhsl'
 import type {ReactNode} from 'react'
 
 import Branch from 'branch-component'
@@ -8,7 +8,7 @@ import {okhsl} from 'okhsl'
 import {useEffect, useState} from 'react'
 
 import {notify} from '#src/lib/gallery.ts'
-import {hslHex} from '#src/lib/seededHsl.ts'
+import {tuningHex} from '#src/lib/worldTuning/color.ts'
 import worldTuning from '#src/lib/worldTuning/index.ts'
 import {useWorldTuningPanel} from '#src/lib/worldTuning/panel.ts'
 import {changeWorldTuning, discardTuningBuffer, useTuningBuffer} from '#src/lib/worldTuning/tuningBuffer.ts'
@@ -184,20 +184,20 @@ const hslAxes = [
 /** how many colors a slider’s track runs through, every 30° round the hue and every 25% along the others */
 const trackStops = [13, 5, 5] as const
 /** The OkHSL color of #rrggbb, in whole degrees and percent. */
-const readHsl = (hex: string): OkhslTuple => {
+const readHsl = (hex: string): Channels => {
   const [hue, saturation, lightness] = okhsl.fromHex(hex)
   return [hue, saturation, lightness]
 }
 /** The color with the axis moved to the amount. */
-const withAxis = (hsl: OkhslTuple, axis: number, amount: number): OkhslTuple => {
-  const moved: [number, number, number] = [...hsl]
+const withAxis = (hsl: Channels, axis: number, amount: number): Channels => {
+  const moved: Channels = [...hsl]
   moved[axis] = amount
   return moved
 }
 /** The track of the slider of the axis: the colors it moves through, the color’s other axes kept. */
-const track = (hsl: OkhslTuple, axis: number) => {
+const track = (hsl: Channels, axis: number) => {
   const count = trackStops[axis]
-  const stops = Array.from({length: count}, (_, index) => hslHex(withAxis(hsl, axis, index / (count - 1) * hslAxes[axis].max)))
+  const stops = Array.from({length: count}, (_, index) => okhsl.css(withAxis(hsl, axis, index / (count - 1) * hslAxes[axis].max)))
   return `linear-gradient(to right, ${stops.join(', ')})`
 }
 /**
@@ -233,7 +233,7 @@ function ColorSliders({disabled, id, label, name, onChange, value}: {
   }
   const move = (axis: number, amount: number) => {
     const hsl = withAxis(color.hsl, axis, amount)
-    const hex = hslHex(hsl)
+    const hex = tuningHex(hsl)
     setColor({
       hsl,
       pending: [...color.pending, hex],

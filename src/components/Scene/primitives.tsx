@@ -1,11 +1,11 @@
 import type {Vec3} from '#src/lib/gallery.ts'
 import type {ThreeElements} from '@react-three/fiber'
-import type {Texture} from 'three/webgpu'
+import type {ColorRepresentation, Texture} from 'three/webgpu'
 
 import Branch from 'branch-component'
 
 export default function Box({size, color = '#dad2bf', map, material, metalness = 0, roughness = 0.7, envMapIntensity = 1, ...props}: Omit<ThreeElements['mesh'], 'children'> & {
-  color?: string
+  color?: ColorRepresentation
   envMapIntensity?: number
   map?: Texture
   metalness?: number
@@ -14,4 +14,3 @@ export default function Box({size, color = '#dad2bf', map, material, metalness =
 }) {
   return <mesh castShadow material={material} receiveShadow {...props}><boxGeometry args={size} /><Branch not={material}><meshStandardNodeMaterial color={color} envMapIntensity={envMapIntensity} map={map} metalness={metalness} roughness={roughness} /></Branch></mesh>
 }
-

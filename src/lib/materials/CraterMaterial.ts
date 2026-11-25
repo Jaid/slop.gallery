@@ -24,9 +24,9 @@ const regolith = {
  * The ejecta blocks are dark breccia: angular pale clasts set in a basaltic matrix pitted by gas bubbles, their upward faces dusted with regolith. Pebbles, grit and cracks fade to their average before they could shimmer.
  */
 export default class CraterMaterial extends MeshStandardNodeMaterial {
-  constructor({lava = '#ff5a1c', rock = false}: {
+  constructor({lava = 0xFF_5A_1C, rock = false}: {
     /** the color of the melt still glowing deep in the pond’s cracks */
-    lava?: string
+    lava?: number
     /** dresses the ejecta blocks instead of the terrain */
     rock?: boolean
   } = {}) {

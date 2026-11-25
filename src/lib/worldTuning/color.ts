@@ -1,8 +1,10 @@
 import type {TuningColor} from './controls.ts'
+import type {OkhslTuple} from 'okhsl'
 
 import {okhsl} from 'okhsl'
 
-import {hslHex} from '#src/lib/seededHsl.ts'
+/** The tuning store compares colors as strings, so even shorthand colors use all six hex digits. */
+export const tuningHex = (hsl: OkhslTuple) => `#${okhsl(hsl)}`
 
 /** the axes of a color as the tools tell and take it, each with its greatest amount and what it stands at where left out: hue 0°, saturation 100% and lightness 50% */
 const axes = [
@@ -35,5 +37,5 @@ export function readColor(value: unknown, name: string): string {
     }
     return amount
   })
-  return hslHex([hue, saturation, lightness])
+  return tuningHex([hue, saturation, lightness])
 }

@@ -1,8 +1,8 @@
 import type {OkhslTuple} from 'okhsl'
 
+import {integer} from 'okhsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
-import {hslHex} from '../seededHsl.ts'
 import {studioEnvironment} from './metal.ts'
 
 /** the slime’s green and the darker green it glows in, in OkHSL: hue in degrees, saturation and lightness in percent */
@@ -19,8 +19,8 @@ export default class SlimeMaterial extends MeshPhysicalNodeMaterial {
     super({
       clearcoat: 1,
       clearcoatRoughness: 0.08,
-      color: hslHex([hue + hueShift, saturation, lightness]),
-      emissive: hslHex([glowHue + hueShift, glowSaturation, glowLightness]),
+      color: integer(hue + hueShift, saturation, lightness),
+      emissive: integer(glowHue + hueShift, glowSaturation, glowLightness),
       emissiveIntensity: 0.4,
       envMap: studioEnvironment,
       envMapIntensity: 0.7,

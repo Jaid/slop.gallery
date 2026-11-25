@@ -5,17 +5,17 @@ import {heightNormal, visibleDetail} from '#src/lib/materials/filters.ts'
 
 import {frameSurface} from './frameAttributes.ts'
 
-/** a velvet’s colors, as sRGB hex: the pile where it stands, where it is crushed flat and the glow at grazing angles */
+/** a velvet’s colors, as packed sRGB: the pile where it stands, where it is crushed flat and the glow at grazing angles */
 export type FrameVelvet = {
-  crushed: string
-  pile: string
-  sheen: string
+  crushed: number
+  pile: number
+  sheen: number
 }
 
 export const oxblood: FrameVelvet = {
-  pile: '#4a040e',
-  crushed: '#86101f',
-  sheen: '#d4243c',
+  pile: 0x4A_04_0E,
+  crushed: 0x86_10_1F,
+  sheen: 0xD4_24_3C,
 }
 
 /**

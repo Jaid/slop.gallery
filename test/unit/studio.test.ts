@@ -10,7 +10,6 @@ import {expect, test} from 'bun:test'
 import StableRandom from 'stable-random'
 import {Vector3} from 'three/webgpu'
 
-import {hslHex} from '../../src/lib/seededHsl.ts'
 import StudioTuningModule from '../../src/lib/worldTuning/StudioTuningModule.ts'
 import WorldTuning from '../../src/lib/worldTuning/WorldTuning.ts'
 import ceilingGeometry from '../../src/rooms/studio/ceilingGeometry.ts'
@@ -770,8 +769,8 @@ test('the world tuning tells and takes the Studio’s colors as their OkHSL hue,
     saturation: 53,
     lightness: 76,
   })
-  expect(module.validate('primaryLampColor', {})).toBe(hslHex([0, 100, 50]))
-  expect(module.validate('primaryLampColor', {hue: 360})).toBe(hslHex([0, 100, 50]))
+  expect(module.validate('primaryLampColor', {})).toBe('#d70071')
+  expect(module.validate('primaryLampColor', {hue: 360})).toBe('#d70071')
   for (const value of ['#ffffff', {hue: 361}, {saturation: -1}, {lightness: '50'}, {
     hue: 0,
     alpha: 1,

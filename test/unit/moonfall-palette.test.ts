@@ -1,11 +1,12 @@
 import {expect, test} from 'bun:test'
 
-import {fromHex} from 'okhsl'
+import {integer} from 'okhsl'
 
 import {readMoonfallHue} from '../../src/lib/gallery/moonfall/hueParameter.ts'
 import {defaultMoonfallHue, moonfallColors, moonfallHue, moonfallPalette, moonfallRope, moonfallRopeColors, moonfallRopeRandom, moonfallRopeSpread, moonfallSlate} from '../../src/lib/gallery/moonfall/palette.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
-import {hslHex, rollHslShift} from '../../src/lib/seededHsl.ts'
+import {rollHslShift} from '../../src/lib/seededHsl.ts'
+import unpackOkhsl from './helpers/unpackOkhsl.ts'
 
 /** How far apart two hues lie round the circle, in degrees. */
 const hueGap = (a: number, b: number) => Math.abs(((a - b) % 360 + 540) % 360 - 180)
@@ -25,14 +26,14 @@ test('Moonfall’s theme is the planet glow’s teal by default, otherwise any w
 test('all of Moonfall’s themed colors turn together with its hue, keeping their saturation and lightness', () => {
   const unturned = moonfallPalette(defaultMoonfallHue)
   for (const key of keys) {
-    expect(unturned[key]).toBe(hslHex(moonfallColors[key]))
+    expect(unturned[key]).toBe(integer(moonfallColors[key]))
   }
   for (let hue = 0; hue < 360; hue += 23) {
     const palette = moonfallPalette(hue)
     const turn = hue - defaultMoonfallHue
     for (const key of keys) {
       const [ownHue, saturation, lightness] = moonfallColors[key]
-      const [turnedHue, turnedSaturation, turnedLightness] = fromHex(palette[key])
+      const [turnedHue, turnedSaturation, turnedLightness] = unpackOkhsl(palette[key])
       expect(Math.abs(turnedLightness - lightness)).toBeLessThanOrEqual(1)
       // Dark and pale colors are too coarse in 8 bits to tell their hue or saturation closely.
       if (!(saturation >= 40 && lightness >= 30)) {
@@ -54,7 +55,7 @@ test('the slate floor turns with the theme, its slabs, grout and fractures all f
 test('the rope keeps its garnet by default, otherwise all its colors move alike within the spread', () => {
   const unturned = moonfallRope(0)
   for (const key of Object.keys(moonfallRopeColors) as Array<keyof typeof moonfallRopeColors>) {
-    expect(unturned[key]).toBe(hslHex(moonfallRopeColors[key]))
+    expect(unturned[key]).toBe(integer(moonfallRopeColors[key]))
   }
   const shifts = new Set<string>
   for (let seed = 1; seed <= 20; seed++) {
@@ -64,7 +65,7 @@ test('the rope keeps its garnet by default, otherwise all its colors move alike 
     shifts.add(hueShift.toFixed(3))
     const rope = moonfallRope(seed)
     for (const key of ['pile', 'sheen'] as const) {
-      const [hue, , lightness] = fromHex(rope[key])
+      const [hue, , lightness] = unpackOkhsl(rope[key])
       expect(hueGap(hue, moonfallRopeColors[key][0] + hueShift)).toBeLessThanOrEqual(2)
       expect(Math.abs(lightness - moonfallRopeColors[key][2] - lightnessShift)).toBeLessThanOrEqual(1)
     }
