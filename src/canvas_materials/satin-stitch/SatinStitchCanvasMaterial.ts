@@ -14,9 +14,9 @@ const tau = 2 * Math.PI
 export default class SatinStitchCanvasMaterial extends CanvasMaterial {
   override readonly description = 'Satin stitch: embroidered silk follows the local edges of the picture, differently sewn patches taking turns in the light.'
   /** thread height against the authored stitch; at zero its color and luster alone show */
-  readonly loft: number = 0
-  readonly luster = 0.2
-  override readonly scale = 0.4
+  readonly loft = 0.8
+  readonly luster = 0.53
+  override readonly scale = 1.95
   override readonly strength = 0.9
   override readonly title = 'Satin stitch'
 
@@ -49,9 +49,7 @@ export default class SatinStitchCanvasMaterial extends CanvasMaterial {
     }
     const thread = relief.mul(fine(pitch / 5)).toVar('satinThread')
     material.colorNode = image.mul(thread.mul(0.2).add(0.92))
-    if (this.loft) {
-      material.normalNode = heightNormal(thread.mul(0.0018 * this.loft * this.scale))
-    }
+    material.normalNode = heightNormal(thread.mul(0.0018 * this.loft * this.scale))
     material.anisotropyNode = axis.mul(this.luster * 0.95)
     material.roughness = 0.77 - this.luster * 0.43
     material.sheenNode = image.mul(0.65).add(0.25).mul(this.luster)

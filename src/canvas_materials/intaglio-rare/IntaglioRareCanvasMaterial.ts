@@ -1,0 +1,45 @@
+import type {FoilSurface} from '../base/FoilCanvasMaterial.ts'
+import type {MeshPhysicalNodeMaterial, Node} from 'three/webgpu'
+
+import {float, mix, uv, vec2, vec3} from 'three/tsl'
+
+import {insideBy} from '#src/lib/materials/filters.ts'
+
+import FoilCanvasMaterial from '../base/FoilCanvasMaterial.ts'
+
+/** Three engraved plates: the grooves follow level sets of the individual color channels, catching the light across the local slope. */
+export default class IntaglioRareCanvasMaterial extends FoilCanvasMaterial {
+  readonly cut = 0.2
+  override readonly description = 'Intaglio rare: three foil cuts trace changes in red, green and blue, gathering around painted edges while even patches stay uncut.'
+  readonly resist = 0.8
+  override readonly scale = 0.4
+  override readonly strength = 0.6
+  override readonly title = 'Intaglio rare'
+
+  protected override coat(material: MeshPhysicalNodeMaterial, surface: FoilSurface) {
+    const {half, uvPerMeter} = surface
+    const span = this.scale * 0.013
+    const dx = vec2(uvPerMeter.x.mul(span), 0)
+    const dy = vec2(0, uvPerMeter.y.mul(span))
+    const sample = (at: Node<'vec2'>) => this.ink(surface, at, span)
+    const ink = sample(uv())
+    const gx = sample(uv().add(dx)).sub(sample(uv().sub(dx)))
+    const gy = sample(uv().add(dy)).sub(sample(uv().sub(dy)))
+    const plate = (channel: 'b' | 'g' | 'r', register: number, cast: Node<'vec3'>) => {
+      const phase = ink[channel].mul(7.5 / this.scale).add(register)
+      const footprint = phase.fwidth()
+      const band = insideBy(phase.fract().sub(0.5).abs().sub(this.cut * 0.16 + 0.035), footprint).mul(footprint.smoothstep(0.42, 0.87).oneMinus())
+      const gradient = vec2(gx[channel], gy[channel])
+      const slope = gradient.length()
+      const normal = gradient.div(slope.max(0.001))
+      const glint = half.xy.dot(normal).sub(register * 0.47).abs().smoothstep(0.02, 0.4).oneMinus()
+      const transfer = mix(float(1), ink[channel].smoothstep(0.1, 0.74), this.resist)
+      const mask = band.mul(slope.smoothstep(0.012, 0.12)).mul(transfer).mul(glint.mul(0.82).add(0.18))
+      return {
+        mask,
+        color: mix(cast, this.spectrum(normal.y.mul(0.19).add(register).add(half.x.mul(0.53))), glint.mul(0.56)),
+      }
+    }
+    this.print(material, surface, [plate('r', 0.04, vec3(1, 0.55, 0.31)), plate('g', 0.33, vec3(0.72, 1, 0.82)), plate('b', 0.64, vec3(0.43, 0.62, 1))], 1, 1.75)
+  }
+}
