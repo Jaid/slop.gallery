@@ -67,6 +67,23 @@ await snap({
 })
 ```
 
+## Rapier colliders
+
+The cyan outlines show where objects collide with the alchemy machine in the Forge. Edges behind its housing stay faintly visible, so you can see how the colliders fit the model.
+
+```TypeScript
+import snap from './scripts/snap.ts'
+
+await snap({
+  bookmark: 'forge-alchemy_table',
+  world_reach: 'room',
+  show_colliders: 'alchemy-machine', // true shows every enabled collider
+  line_width: 150 // 1.5 px at 1920×1080
+})
+```
+
+Open `?show_colliders=alchemy-machine` for the same selection in the gallery. In a film, the WebMCP keyframe `{time: 2, tools: {show_colliders: {object: false}}}` hides the outlines two seconds into the shot.
+
 ## portrait
 
 ```TypeScript
