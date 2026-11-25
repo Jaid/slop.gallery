@@ -7,7 +7,7 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 import {heightNormal, visibleDetail} from '#src/lib/materials/filters.ts'
 import {solidMarble} from '#src/lib/materials/marble/solidMarble.ts'
 
-import TranslucentLightingModel from './TranslucentLightingModel.ts'
+import TranslucentLightingModel from '../lib/TranslucentLightingModel.ts'
 
 const unit = (node: Node<'float'>) => node.mul(0.5).add(0.5)
 
