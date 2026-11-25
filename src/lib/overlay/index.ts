@@ -5,4 +5,5 @@ const overlay = new WorldOverlay
 
 export default overlay
 export type {DistanceFade, LayerOptions} from './layer.ts'
+export type {LiveSegments} from './LiveSegmentsGeometry.ts'
 export type {OverlayDrawing, OverlayStyle} from './WorldOverlay.ts'

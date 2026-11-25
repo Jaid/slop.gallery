@@ -29,6 +29,7 @@ import {readShowSloperatorSightings} from './gallery/sloperator/showSightings.ts
 import {readRoom, readSpawn} from './gallery/spawn.ts'
 import {readOverlayTuning} from './overlay/tuning.ts'
 import {readPaused} from './pauseMenu.ts'
+import {readShowColliders} from './physics/colliderDisplay.ts'
 import {readKnotRotation} from './physics/rotatingKnots.ts'
 import {readShowSticky} from './placement/showSticky.ts'
 import {readAlbedo} from './rendering/albedo.ts'
@@ -103,6 +104,7 @@ const readers: Record<string, Reader> = {
   sculpture: readSculpture,
   seed: readSeedOverride,
   show_ambience_emitters: readShowAmbienceEmitters,
+  show_colliders: readShowColliders,
   show_fence: readShowFence,
   show_lamps: readShowLamps,
   show_portrait_slots: readShowPortraitSlots,

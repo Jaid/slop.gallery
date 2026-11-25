@@ -29,6 +29,21 @@ Both fence layers explicitly enable the distance fade. Fences use `fences` (blue
 
 `clearLayer(id)` removes the drawings currently on that layer. `clearDrawings()` clears all layers, including fences. Both return the number removed, release the drawings’ GPU resources and keep the layer definitions for reuse. A cleared handle is inert. Clearing fence drawings does not change the selection: toggle `show_fence` off and on to rebuild them.
 
+## Rapier colliders
+
+Open `?show_colliders` to outline every enabled collider in the current physics world, or `?show_colliders=lobby-fountain` to inspect just the fountain. The `colliders` layer draws Rapier’s collision shapes in cyan at their live world poses, including sensors and colliders without visible geometry. Obstructed lines keep 25% opacity so shapes inside solid objects remain visible. The lines follow `line_width` and `line_style` and appear in captures. The overlay is off by default; it does not require `?development`.
+
+The `show_colliders` WebMCP tool changes the selection for the current page without reloading:
+
+| Input | Outlines |
+| --- | --- |
+| `{}` or `{"object":true}` | All enabled colliders |
+| `{"object":"prop-orb-*"}` | Every matching orb, including ones spawned later |
+| `{"object":"alchemy-machine/alchemy-workbench"}` | All shapes on the Forge’s workbench |
+| `{"object":false}` | None |
+
+The URL and tool accept the same minimatch patterns. Match an object name, the end of a slash-separated scene path from `get_aim` or a prop or portrait ID from `analyze_world`. Selecting a group includes its descendants; selecting a visual mesh inside a rigid body shows that body’s colliders. A named collider selects just its own shape. A pattern with no current matches stays active as objects enter or leave. Calling the tool again also restores outlines removed by `clear_layer` or `clear_drawings`.
+
 ## Drawing primitives
 
 - `addLine(from, to, style?)`, `addTriangle(a, b, c, style?)` and `addBox(min, max, style?)` draw a segment, a triangle’s perimeter and an axis-aligned box’s edges.
@@ -38,6 +53,7 @@ Both fence layers explicitly enable the distance fade. Fences use `fences` (blue
 - `addCameraFacingRectangle(center, width, height, style?)` outlines a world-space rectangle centered at `center`. Its full width and height are in meters, parallel to the image plane of the camera rendering it. It follows the layer’s distance and obstruction settings like other world drawings.
 - `addSphere(center, radius, options?)` marks a world-space center with a circular outline that stays round from every camera angle. Its radius is in meters, so it looks smaller from farther away. It accepts the same style and segment count as a circle. Its handle also supports `setBounds(center, radius)` to move or resize it without rebuilding the ring.
 - `addSegments(positions, style?)` batches endpoint pairs from a `Float32Array` into one draw call. Treat the buffer as immutable.
+- `addLiveSegments(source, style?)` calls `source.read()` at draw time, including for a paused capture. It takes blocks of endpoint pairs (`Float32Array`), all in one draw call; returning the same immutable block keeps it on the GPU. Hiding the overlay skips the read. Clearing the drawing also calls `source.dispose()` if supplied.
 
 All primitives accept `layer`, a `color` override, `name` and a within-layer `renderOrder`. The returned handle supports `remove()` and `setStyle({layer, color, name, renderOrder})` with any subset of those fields. Moving an uncolored drawing adopts the destination layer’s color; an explicit color travels with the drawing.
 

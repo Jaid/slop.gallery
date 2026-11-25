@@ -1,4 +1,5 @@
 import type {LayerOptions} from './layer.ts'
+import type {LiveSegments} from './LiveSegmentsGeometry.ts'
 import type {OverlayDepthPipeline} from './obstruction.ts'
 import type {OverlayMesh} from './OverlayLayer.ts'
 import type {StrokeSpace} from './stroke.ts'
@@ -12,6 +13,7 @@ import {ColorManagement, DoubleSide, Mesh, NoToneMapping, Scene} from 'three/web
 import appendBoxEdges from './boxEdges.ts'
 import {defaultLayer, readLayer} from './layer.ts'
 import layerOpacity from './layerOpacity.ts'
+import LiveSegmentsGeometry from './LiveSegmentsGeometry.ts'
 import {useFrameDepth} from './obstruction.ts'
 import OverlayLayer from './OverlayLayer.ts'
 import ringEdges from './ringEdges.ts'
@@ -105,6 +107,14 @@ export default class WorldOverlay {
   }
   addLine(from: Point, to: Point, style?: OverlayStyle) {
     return this.addSegments(new Float32Array([...from, ...to]), style)
+  }
+  /** One batch of world-space segments read just before drawing, including captures while paused. A cleared or hidden drawing never calls its producer. */
+  addLiveSegments(source: LiveSegments, style?: OverlayStyle) {
+    const geometry = new LiveSegmentsGeometry(source)
+    const {mesh, drawing} = this.stroke(geometry, style)
+    mesh.frustumCulled = false
+    mesh.onBeforeRender = () => geometry.update()
+    return drawing
   }
   /** Mark a place with three crossed lines extending `radius` meters along each world axis. */
   addPoint([x, y, z]: Point, {radius = 0.1, ...style}: OverlayStyle & {radius?: number} = {}) {
@@ -234,13 +244,18 @@ export default class WorldOverlay {
       this.scene.add(layer)
     }
   }
-  private stroke(positions: Float32Array, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}, space: StrokeSpace = 'world') {
-    if (!positions.length || positions.length % 6 !== 0) {
-      throw new RangeError('Overlay segments need one or more pairs of xyz endpoints.')
+  private stroke(positions: Float32Array | LiveSegmentsGeometry, {color, name = '', renderOrder = 0, layer: layerId = defaultLayer}: OverlayStyle = {}, space: StrokeSpace = 'world') {
+    let geometry: LineSegmentsGeometry
+    if (positions instanceof Float32Array) {
+      if (!positions.length || positions.length % 6 !== 0) {
+        throw new RangeError('Overlay segments need one or more pairs of xyz endpoints.')
+      }
+      geometry = new LineSegmentsGeometry
+      geometry.setPositions(positions)
+    } else {
+      geometry = positions
     }
     let layer = this.layerForDrawing(layerId)
-    const geometry = new LineSegmentsGeometry
-    geometry.setPositions(positions)
     geometry.setDrawRange(6, 6) // the central quad, without cap triangles
     const mesh = new Mesh(geometry, layer.materialFor(color, space))
     if (space === 'viewport') {

@@ -4,6 +4,7 @@ import {useEffect, useLayoutEffect, useRef} from 'react'
 
 import AmbienceEmitterMarkers from '#component/AmbienceEmitterMarkers'
 import AmbienceListener from '#component/AmbienceListener'
+import ColliderOutlines from '#component/ColliderOutlines'
 import FusionRemains from '#component/FusionRemains'
 import Fusions from '#component/Fusions'
 import GeofenceOutlines from '#component/GeofenceOutlines'
@@ -58,6 +59,7 @@ export default function Scene() {
     <PartyEffects />
     {/* Hidden with O, the markers keep working: editors still aim, drag and switch what they mark. */}
     <WorldOverlay visible={!uiHidden} />
+    <ColliderOutlines />
     <GeofenceOutlines />
     <group name='scene-ui' visible={!uiHidden}>
       <Branch if={isShowingSticky} then={StickySurfaces} />

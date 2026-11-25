@@ -4,6 +4,7 @@ import type {PortraitSlot} from '#src/lib/gallery/types.ts'
 import type {SeedChange} from '#src/lib/gameSeed.ts'
 import type {Drawing} from '#src/lib/overlay/drawing.ts'
 import type {LayerOptions} from '#src/lib/overlay/layer.ts'
+import type {ColliderDisplay} from '#src/lib/physics/colliderDisplay.ts'
 import type {PlayerDumpSnapshot} from '#src/lib/telemetry/recordPlayerDump.ts'
 import type {PortraitAddition, PortraitAdditionInput, PortraitTarget} from './addPortrait.ts'
 import type {WorldAnalysis} from './analyzeWorld.ts'
@@ -31,6 +32,7 @@ import {canvasMaterialIds, isCanvasMaterialId} from '#src/canvas_materials/lib/c
 import {isSeed} from '#src/lib/environmentSeed.ts'
 import {drawingSchema, readDrawing} from '#src/lib/overlay/drawing.ts'
 import {isLayerId, layerIdSchema, layerSchema, readLayer} from '#src/lib/overlay/layer.ts'
+import {colliderPattern} from '#src/lib/physics/colliderDisplay.ts'
 
 /** a fence of the world as the union of its boxes and the fences it takes in */
 export type GeofenceDump = {
@@ -95,6 +97,7 @@ export type WebmcpBridge = {
   setSeed: (input: SeedInput) => SeedChange
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
   setWorldTuning: (input: WorldTuningInput) => WorldTuningChange
+  showColliders: (input: ColliderDisplay) => ColliderDisplay
   showFence: (input: FenceDisplay) => FenceDisplay
   spawnOrb: (input: OrbSpawnInput) => Promise<OrbSpawn>
   spawnPartyEffect: (input: PartyEffectSpawnInput) => PartyEffectSpawn
@@ -300,6 +303,35 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       },
     },
     {
+      name: 'show_colliders',
+      title: 'Show Rapier colliders',
+      description: 'Outline the live Rapier collision shapes on the colliders overlay layer. Pass {} for all enabled colliders, an object pattern to isolate a collider, rigid body, group or mesh, or false to hide them. A visual mesh selects its owning body’s colliders. Patterns also match prop and portrait IDs from analyze_world. The selection follows moving objects and applies to later spawns, so a pattern with no current matches draws nothing. Changes the selection made by ?show_colliders for this page and returns it.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          object: {
+            type: ['boolean', 'string'],
+            minLength: 1,
+            description: 'true for all (the default), false for none or a minimatch pattern over object names and slash-separated paths, like lobby-fountain or prop-orb-*',
+          },
+        },
+        additionalProperties: false,
+      },
+      annotations: {readOnlyHint: false},
+      execute: (input: unknown, {signal}) => {
+        signal.throwIfAborted()
+        if (!isRecord(input) || Object.keys(input).some(key => key !== 'object')) {
+          throw new TypeError('This tool takes an object with an optional object selection.')
+        }
+        const {object = true} = input
+        const selection = typeof object === 'boolean' ? object : colliderPattern(object)
+        if (selection === undefined) {
+          throw new TypeError('object must be a nonempty mesh path pattern, true for all colliders or false for none.')
+        }
+        return getBridge().showColliders({object: selection})
+      },
+    },
+    {
       name: 'add_layer',
       title: 'Create a drawing layer',
       description: 'Create a page-local drawing layer and return its ID. Only id is required; it must not exist already. Layers default to red, priority 0, the live overlay line width and style, and no distance fade. Higher priority draws on top. Use the returned ID as layer in add_drawing.',
@@ -313,7 +345,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
     {
       name: 'clear_layer',
       title: 'Clear one drawing layer',
-      description: 'Remove every drawing on the named layer and return the number removed. Keeps its definition. Built-in layers are default, fences (blue), touching-fences (red), portrait-slots, lamps and ambience-emitters. The gallery also has sloperator-sightings.',
+      description: 'Remove every drawing on the named layer and return the number removed. Keeps its definition. Built-in layers are default, fences (blue), touching-fences (red), colliders, portrait-slots, lamps and ambience-emitters. The gallery also has sloperator-sightings.',
       inputSchema: {
         type: 'object',
         properties: {id: layerIdSchema},

@@ -14,6 +14,7 @@ import {expect, test} from 'bun:test'
 
 import {canvasMaterialIds} from '../../src/canvas_materials/lib/canvasMaterialIds.ts'
 import {useFenceDisplay} from '../../src/lib/gallery/fenceDisplay.ts'
+import {showColliders, useColliderDisplay} from '../../src/lib/physics/colliderDisplay.ts'
 import registerWebmcp from '../../src/lib/webmcp/register.ts'
 import showFence from '../../src/lib/webmcp/showFence.ts'
 import {dumpSloperator, provideSloperator, spawnSloperator, triggerSloperatorSighting} from '../../src/lib/webmcp/sloperator.ts'
@@ -33,6 +34,7 @@ const bridge: WebmcpBridge = {
     id: 'test',
     drawing,
   }),
+  showColliders,
   showFence,
   addPortrait: ({canvasMaterial, hangingAnimation, id = 'work-1', frame, size = 30_000, target, title = 'xf14RxM8'}: PortraitAdditionInput) => Promise.resolve<EchoedAddition>({
     id,
@@ -261,7 +263,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_world_tuning', 'get_geofences', 'show_fence', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'add_text_overlay', 'clear_text_overlay', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'set_world_tuning', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_world_tuning', 'get_geofences', 'show_fence', 'show_colliders', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'add_text_overlay', 'clear_text_overlay', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'set_world_tuning', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
   for (const tool of tools.slice(0, 10)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -466,6 +468,26 @@ test('show_fence selects all, one or no fences and preserves the selection on er
     expect(useFenceDisplay.getState().fence).toBe(false)
   } finally {
     useFenceDisplay.setState(original)
+  }
+})
+test('show_colliders can select future objects, show all or hide them without changing the selection on invalid or aborted calls', () => {
+  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'show_colliders')!
+  const controller = new AbortController
+  const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
+  const original = useColliderDisplay.getState()
+  try {
+    expect(tool.annotations?.readOnlyHint).toBe(false)
+    expect(execute({})).toEqual({object: true})
+    expect(execute({object: false})).toEqual({object: false})
+    expect(execute({object: ' /props/ prop-orb-* / '})).toEqual({object: 'props/prop-orb-*'})
+    for (const invalid of [null, [], {object: ''}, {object: '/'}, {object: null}, {object: 1}, {unknown: true}]) {
+      expect(() => execute(invalid)).toThrow(TypeError)
+    }
+    controller.abort()
+    expect(() => execute({})).toThrow()
+    expect(useColliderDisplay.getState()).toEqual({object: 'props/prop-orb-*'})
+  } finally {
+    useColliderDisplay.setState(original)
   }
 })
 test('download_frame validates its optional name and downloads through the bridge', async () => {

@@ -9,7 +9,7 @@ let compiled: {
   pattern: string
 } | undefined
 /** A minimatch pattern only has to match the end of a mesh path, so a lone name matches that object wherever it is. */
-const compile = (pattern: string) => {
+export const compileMeshPattern = (pattern: string) => {
   if (compiled?.pattern !== pattern) {
     compiled = {
       matcher: new Minimatch(`**/${pattern}`, {
@@ -48,12 +48,12 @@ export function meshPath(object: Object3D) {
 
 /** Whether a named object’s mesh path ends in a match of the minimatch pattern, like `alchemy-cannon`, `lobby-fountain/fountain-*` or `alchemy-machine/{alchemy-machine,alchemy-cannon}`. */
 export function matchesMeshPattern(object: Object3D, pattern: string) {
-  return Boolean(object.name) && compile(pattern).match(meshPath(object))
+  return Boolean(object.name) && compileMeshPattern(pattern).match(meshPath(object))
 }
 
 /** Every named object whose mesh path ends in a match of the minimatch pattern, together with everything below it. */
 export function collectMeshPattern(root: Object3D, pattern: string) {
-  const matcher = compile(pattern)
+  const matcher = compileMeshPattern(pattern)
   const objects: Array<Object3D> = []
   const visit = (object: Object3D, parentPath: string) => {
     const named = Boolean(object.name) && !isScene(object)

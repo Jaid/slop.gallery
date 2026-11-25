@@ -1,5 +1,8 @@
+import type {InterleavedBufferAttribute} from 'three/webgpu'
+
 import {expect, test} from 'bun:test'
 
+import LiveSegmentsGeometry from '../../src/lib/overlay/LiveSegmentsGeometry.ts'
 import WorldOverlay from '../../src/lib/overlay/WorldOverlay.ts'
 
 test('moving and clearing drawings respects ownership and invalidates old handles', () => {
@@ -31,4 +34,27 @@ test('drawing on a new layer registers it and subsequent drawings reuse it', () 
   expect(overlay.clearLayer('pins')).toBe(0)
   expect(overlay.clearLayer('measurements')).toBe(2)
   expect(() => overlay.clearLayer('unused')).toThrow('Unknown overlay layer')
+})
+test('live strokes move retained endpoint blocks when a preceding block changes size and release their producer only on removal', () => {
+  const a = new Float32Array([0, 0, 0, 1, 1, 1])
+  const b = new Float32Array([2, 2, 2, 3, 3, 3])
+  let blocks = [a]
+  let disposed = 0
+  const geometry = new LiveSegmentsGeometry({
+    read: () => blocks,
+    dispose: () => disposed++,
+  })
+  const drawn = () => {
+    geometry.update()
+    const {data} = geometry.getAttribute('instanceStart') as InterleavedBufferAttribute
+    return [...data.array.subarray(0, geometry.instanceCount * 6)]
+  }
+  expect(drawn()).toEqual([...a])
+  blocks = [a, b]
+  expect(drawn()).toEqual([...a, ...b])
+  blocks = [new Float32Array(0), b]
+  expect(drawn()).toEqual([...b])
+  expect(disposed).toBe(0)
+  geometry.dispose()
+  expect(disposed).toBe(1)
 })

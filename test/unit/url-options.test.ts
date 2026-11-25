@@ -7,6 +7,7 @@ import {readFade} from '../../src/lib/fade.ts'
 import {readFlying} from '../../src/lib/gallery/flyMode.ts'
 import {includesResult, readDownload, readWebhook, readWebhookEndpoint} from '../../src/lib/gallery/fusion/resultSharing.ts'
 import {readPaused} from '../../src/lib/pauseMenu.ts'
+import {readShowColliders} from '../../src/lib/physics/colliderDisplay.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {readAlbedo} from '../../src/lib/rendering/albedo.ts'
 import {getAntiAliasing, readAntiAliasing} from '../../src/lib/rendering/antiAliasing.ts'
@@ -78,6 +79,16 @@ describe('URL options', () => {
     for (const search of ['', '?flying', '?flying=true', '?development', '?development&flying=false', '?development=false&flying']) {
       expect(readFlying(search)).toBe(false)
     }
+  })
+  test('?show_colliders selects all colliders or normalizes a mesh path, including in query overrides', () => {
+    for (const suffix of ['', '=true']) {
+      expect(readShowColliders(`?show_colliders${suffix}`)).toBe(true)
+    }
+    for (const search of ['', '?show_colliders=false', '?show_colliders=/', `?show_colliders=${'a'.repeat(70_000)}`]) {
+      expect(readShowColliders(search)).toBe(false)
+    }
+    expect(readQueryOverrides('https://slop.gallery/?show_colliders=/alchemy-machine//alchemy-workbench/')).toEqual({show_colliders: 'alchemy-machine/alchemy-workbench'})
+    expect(readQueryOverrides('https://slop.gallery/?show_colliders=false')).toBeUndefined()
   })
   test('?show_sloperator_sightings opts in with a bare flag or true', () => {
     for (const suffix of ['', '=true']) {

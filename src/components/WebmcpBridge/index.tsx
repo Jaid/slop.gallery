@@ -13,6 +13,7 @@ import downloadFrame from '#src/lib/downloadFrame.ts'
 import {usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
 import overlay from '#src/lib/overlay/index.ts'
+import {showColliders} from '#src/lib/physics/colliderDisplay.ts'
 import {captureWarmup, getRenderScale} from '#src/lib/rendering/captureWarmup.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import {playerDumps, snapshotPlayerDump} from '#src/lib/telemetry/recordPlayerDump.ts'
@@ -117,6 +118,7 @@ export default function WebmcpBridge() {
       setSeed: ({seed}: SeedInput) => changeSeed(seed),
       setWireframe: applyWireframeFlood,
       setWorldTuning,
+      showColliders,
       showFence,
       spawnOrb,
       spawnPartyEffect,
