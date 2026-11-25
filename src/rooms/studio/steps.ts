@@ -10,7 +10,7 @@ export const studioSteps = {
   lightStrength: 0.1,
   lightShafts: 0.05,
   /** a factor on the graphics mode’s */
-  lightBlur: 0.5,
+  lightBlur: 1,
   /** in candela */
   lampStrength: 5,
   lampDecay: 0.05,

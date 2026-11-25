@@ -108,7 +108,7 @@ export default class StudioTuningModule extends TuningModule<StudioDesign> {
           fallback: 0.1,
           off: 0,
         }}),
-        range('lightBlur', 'Shadow blur', 0.5, 6, studioSteps.lightBlur, {unit: '×'}),
+        range('lightBlur', 'Shadow blur', 1, 8, studioSteps.lightBlur, {unit: '×'}),
         ...lampControls('primary', {
           strength: range('primaryLampStrength', 'Strength', 0, 120, studioSteps.lampStrength, {
             caption: 'Primary lamp',

@@ -16,7 +16,7 @@ import WorldTuning from '../../src/lib/worldTuning/WorldTuning.ts'
 import ceilingGeometry from '../../src/rooms/studio/ceilingGeometry.ts'
 import {designLook, designPlan, ownMirrorBlur, studioDesign} from '../../src/rooms/studio/design.ts'
 import {studioFloorId, studioFloors, studioWallId, studioWalls} from '../../src/rooms/studio/finishes.ts'
-import {defaultStudioLook, kelvinTint, moonDirectionOf, studioFrames, studioLook, studioLookRanges, studioSubtleShafts} from '../../src/rooms/studio/look.ts'
+import {defaultStudioLook, kelvinTint, moonDirectionOf, studioFrames, studioLook, studioLookIsSubtle, studioLookRanges, studioSubtleShafts} from '../../src/rooms/studio/look.ts'
 import {openingStyles, studioOpenings, studioOpeningStyle} from '../../src/rooms/studio/openings/index.ts'
 import {voronoiCells} from '../../src/rooms/studio/openings/lib/cells.ts'
 import {field, flanked, grid, medallion, row, staggered} from '../../src/rooms/studio/openings/lib/layouts.ts'
@@ -116,8 +116,9 @@ test('the Studio uses its default look for seed zero and otherwise rolls a frame
       const [red, , blue] = Bun.color(moon.color, '[rgb]')!
       expect(red).toBeGreaterThan(blue)
     }
-    if (moon.shafts === studioSubtleShafts) {
+    if (studioLookIsSubtle(seed)) {
       subtle++
+      expect(moon.shafts).toBe(studioSubtleShafts)
       expect(within(moon.intensity, studioLookRanges.subtleIntensity)).toBe(true)
     } else {
       expect(within(moon.shafts, studioLookRanges.moonShafts)).toBe(true)
