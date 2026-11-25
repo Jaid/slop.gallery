@@ -18,6 +18,7 @@ import mediaMixinsPlugin from 'vite-plugin-media-mixins'
 import rapierPlugin from 'vite-plugin-rapier'
 import titlePlugin from 'vite-plugin-title'
 
+import bakeOkhslPlugin from '#src/lib/vite/bakeOkhslPlugin.ts'
 import immutableHeadersPlugin from '#src/lib/vite/immutableHeadersPlugin.ts'
 import outputListPlugin from '#src/lib/vite/outputListPlugin.ts'
 import robotsTxtPlugin from '#src/lib/vite/robotsTxtPlugin.ts'
@@ -48,6 +49,7 @@ const getCommonConfig = (context: ConfigEnv) => {
       robotsTxtPlugin(),
       sourceCodeMetadataPlugin(manifest, import.meta.dirname),
       socialPreviewPlugin(manifest, {cardImage: 'assets/wallpaper.jxl'}),
+      context.mode === 'production' && bakeOkhslPlugin(),
       // Only the production build bakes Branch away, before the React Compiler lowers the JSX it looks for.
       context.mode === 'production' && bakeBranchComponentPlugin(),
       reactPlugin({compiler: true}),
