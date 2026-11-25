@@ -4,7 +4,7 @@ import type {Channels} from 'okhsl'
 import type {ReactNode} from 'react'
 
 import Branch from 'branch-component'
-import {okhsl} from 'okhsl'
+import hsl from 'okhsl'
 import {useEffect, useState} from 'react'
 
 import {notify} from '#src/lib/gallery.ts'
@@ -185,19 +185,19 @@ const hslAxes = [
 const trackStops = [13, 5, 5] as const
 /** The OkHSL color of #rrggbb, in whole degrees and percent. */
 const readHsl = (hex: string): Channels => {
-  const [hue, saturation, lightness] = okhsl.fromHex(hex)
+  const [hue, saturation, lightness] = hsl.fromHex(hex)
   return [hue, saturation, lightness]
 }
 /** The color with the axis moved to the amount. */
-const withAxis = (hsl: Channels, axis: number, amount: number): Channels => {
-  const moved: Channels = [...hsl]
+const withAxis = (channels: Channels, axis: number, amount: number): Channels => {
+  const moved: Channels = [...channels]
   moved[axis] = amount
   return moved
 }
 /** The track of the slider of the axis: the colors it moves through, the color’s other axes kept. */
-const track = (hsl: Channels, axis: number) => {
+const track = (channels: Channels, axis: number) => {
   const count = trackStops[axis]
-  const stops = Array.from({length: count}, (_, index) => okhsl.css(withAxis(hsl, axis, index / (count - 1) * hslAxes[axis].max)))
+  const stops = Array.from({length: count}, (_, index) => hsl.css(withAxis(channels, axis, index / (count - 1) * hslAxes[axis].max)))
   return `linear-gradient(to right, ${stops.join(', ')})`
 }
 /**
@@ -232,10 +232,10 @@ function ColorSliders({disabled, id, label, name, onChange, value}: {
     })
   }
   const move = (axis: number, amount: number) => {
-    const hsl = withAxis(color.hsl, axis, amount)
-    const hex = tuningHex(hsl)
+    const channels = withAxis(color.hsl, axis, amount)
+    const hex = tuningHex(channels)
     setColor({
-      hsl,
+      hsl: channels,
       pending: [...color.pending, hex],
       value: color.value,
     })

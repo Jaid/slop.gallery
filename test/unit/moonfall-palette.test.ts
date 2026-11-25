@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import {integer} from 'okhsl'
+import hsl from 'okhsl'
 
 import {readMoonfallHue} from '../../src/lib/gallery/moonfall/hueParameter.ts'
 import {defaultMoonfallHue, moonfallColors, moonfallHue, moonfallPalette, moonfallRope, moonfallRopeColors, moonfallRopeRandom, moonfallRopeSpread, moonfallSlate} from '../../src/lib/gallery/moonfall/palette.ts'
@@ -26,7 +26,7 @@ test('Moonfall’s theme is the planet glow’s teal by default, otherwise any w
 test('all of Moonfall’s themed colors turn together with its hue, keeping their saturation and lightness', () => {
   const unturned = moonfallPalette(defaultMoonfallHue)
   for (const key of keys) {
-    expect(unturned[key]).toBe(integer(moonfallColors[key]))
+    expect(unturned[key]).toBe(hsl.integer(moonfallColors[key]))
   }
   for (let hue = 0; hue < 360; hue += 23) {
     const palette = moonfallPalette(hue)
@@ -55,7 +55,7 @@ test('the slate floor turns with the theme, its slabs, grout and fractures all f
 test('the rope keeps its garnet by default, otherwise all its colors move alike within the spread', () => {
   const unturned = moonfallRope(0)
   for (const key of Object.keys(moonfallRopeColors) as Array<keyof typeof moonfallRopeColors>) {
-    expect(unturned[key]).toBe(integer(moonfallRopeColors[key]))
+    expect(unturned[key]).toBe(hsl.integer(moonfallRopeColors[key]))
   }
   const shifts = new Set<string>
   for (let seed = 1; seed <= 20; seed++) {

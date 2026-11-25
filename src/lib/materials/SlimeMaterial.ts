@@ -1,6 +1,6 @@
 import type {OkhslTuple} from 'okhsl'
 
-import {integer} from 'okhsl'
+import hsl from 'okhsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {studioEnvironment} from './metal.ts'
@@ -19,8 +19,8 @@ export default class SlimeMaterial extends MeshPhysicalNodeMaterial {
     super({
       clearcoat: 1,
       clearcoatRoughness: 0.08,
-      color: integer(hue + hueShift, saturation, lightness),
-      emissive: integer(glowHue + hueShift, glowSaturation, glowLightness),
+      color: hsl.integer(hue + hueShift, saturation, lightness),
+      emissive: hsl.integer(glowHue + hueShift, glowSaturation, glowLightness),
       emissiveIntensity: 0.4,
       envMap: studioEnvironment,
       envMapIntensity: 0.7,

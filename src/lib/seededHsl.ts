@@ -1,7 +1,7 @@
 import type {Channels} from 'okhsl'
 import type StableRandom from 'stable-random'
 
-import {integer} from 'okhsl'
+import hsl from 'okhsl'
 
 /** how far a color may stray from its own in OkHSL, either way: hue in degrees, saturation and lightness in percent; a missing axis stays put */
 export type HslSpread = {
@@ -26,7 +26,7 @@ export function rollHslShift(random: StableRandom, {hue = 0, lightness = 0, satu
 /** The OkHSL color as packed sRGB (0xRRGGBB), moved by `random` up to `spread` either way on each axis, see {@link rollHslShift}. */
 export function seededHsl([hue, saturation, lightness]: Readonly<Channels>, random: StableRandom, spread: HslSpread) {
   const [h, s, l] = rollHslShift(random, spread)
-  return integer(hue + h, saturation + s, lightness + l)
+  return hsl.integer(hue + h, saturation + s, lightness + l)
 }
 
 /** The OkHSL color as packed sRGB, its hue turned by `random` up to `spread` degrees either way, its saturation and lightness kept. */

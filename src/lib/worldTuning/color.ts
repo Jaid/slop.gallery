@@ -1,10 +1,10 @@
 import type {TuningColor} from './controls.ts'
 import type {OkhslTuple} from 'okhsl'
 
-import {okhsl} from 'okhsl'
+import hsl from 'okhsl'
 
 /** The tuning store compares colors as strings, so even shorthand colors use all six hex digits. */
-export const tuningHex = (hsl: OkhslTuple) => `#${okhsl(hsl)}`
+export const tuningHex = (channels: OkhslTuple) => `#${hsl(channels)}`
 
 /** the axes of a color as the tools tell and take it, each with its greatest amount and what it stands at where left out: hue 0°, saturation 100% and lightness 50% */
 const axes = [
@@ -15,7 +15,7 @@ const axes = [
 
 /** The color of #rrggbb as the tools tell it, in whole degrees and percent like the panel’s sliders, which give back the color itself or, as whole numbers don’t reach every #rrggbb, one close to it. */
 export function tellColor(hex: string): TuningColor {
-  const [hue, saturation, lightness] = okhsl.fromHex(hex)
+  const [hue, saturation, lightness] = hsl.fromHex(hex)
   return {
     hue,
     saturation,

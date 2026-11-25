@@ -1,6 +1,6 @@
 import {expect, test} from 'bun:test'
 
-import {fromHex, integer} from 'okhsl'
+import hsl from 'okhsl'
 import StableRandom from 'stable-random'
 
 import {salonVelvet, salonVelvetColors, salonVelvetRandom} from '../../src/lib/gallery/salonVelvet.ts'
@@ -18,7 +18,7 @@ test('a seeded hue only turns the hue, by the same roll every time and up to the
     expect(Math.abs(hueShift)).toBeLessThan(30)
     expect([saturationShift, lightnessShift]).toEqual([0, 0])
     expect(seededHue(color, random, 30)).toBe(seededHue(color, random, 30))
-    expect(seededHue(color, random, 30)).toBe(integer(color[0] + hueShift, color[1], color[2]))
+    expect(seededHue(color, random, 30)).toBe(hsl.integer(color[0] + hueShift, color[1], color[2]))
   }
 })
 test('saturation and lightness spread on rolls of their own, which leave the hue’s alone, and stay within 0–100', () => {
@@ -34,7 +34,7 @@ test('saturation and lightness spread on rolls of their own, which leave the hue
   expect(Math.abs(saturation)).toBeLessThan(10)
   expect(Math.abs(lightness)).toBeLessThan(10)
   expect(seededHsl([0, 140, -20], random, {})).toBe(0x00_00_00)
-  expect(seededHsl([30, 50, 50], random, {})).toBe(integer(30, 50, 50))
+  expect(seededHsl([30, 50, 50], random, {})).toBe(hsl.integer(30, 50, 50))
 })
 test('the tunnel lamps sit a third of the hue circle apart round a whole-degree middle hue, blue by default', () => {
   expect(tunnelHue(0)).toBe(defaultTunnelHue)
@@ -55,14 +55,14 @@ test('the tunnel lamps sit a third of the hue circle apart round a whole-degree 
   }
   // The default environment keeps its green, blue and red.
   const [green, blue, red] = tunnelTints(defaultTunnelHue).map(unpackOkhsl)
-  expect(hueGap(green[0], fromHex('#4dff6a')[0])).toBeLessThanOrEqual(1)
-  expect(hueGap(blue[0], fromHex('#4d7aff')[0])).toBeLessThanOrEqual(1)
-  expect(hueGap(red[0], fromHex('#ff4d4d')[0])).toBeLessThanOrEqual(1)
+  expect(hueGap(green[0], hsl.fromHex('#4dff6a')[0])).toBeLessThanOrEqual(1)
+  expect(hueGap(blue[0], hsl.fromHex('#4d7aff')[0])).toBeLessThanOrEqual(1)
+  expect(hueGap(red[0], hsl.fromHex('#ff4d4d')[0])).toBeLessThanOrEqual(1)
 })
 test('the Salon ottoman keeps its velvet’s colors by default, otherwise all of them turn alike', () => {
   const unturned = salonVelvet(0)
   for (const key of Object.keys(salonVelvetColors) as Array<keyof typeof salonVelvetColors>) {
-    expect(unturned[key]).toBe(integer(salonVelvetColors[key]))
+    expect(unturned[key]).toBe(hsl.integer(salonVelvetColors[key]))
   }
   // from the upright pile swallowing the light up to the sheen
   const {crushed, deep, pile, sheen} = salonVelvetColors

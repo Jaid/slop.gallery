@@ -3,7 +3,7 @@ import type {VelvetRopeStyle} from '../../materials/VelvetRopeMaterial.ts'
 import type {HslSpread} from '../../seededHsl.ts'
 import type {OkhslTuple} from 'okhsl'
 
-import {integer} from 'okhsl'
+import hsl from 'okhsl'
 
 import {environmentRandom, isDefaultSeed} from '../../environmentSeed.ts'
 import {environmentSeed} from '../../gameSeed.ts'
@@ -65,7 +65,7 @@ export type MoonfallPalette = Record<keyof typeof moonfallColors, number>
 /** Moonfall’s themed colors turned round the hue circle together, so the planet glow takes `hue`, their saturation and lightness kept. */
 export function moonfallPalette(hue: number): MoonfallPalette {
   const turn = hue - defaultMoonfallHue
-  return Object.fromEntries(Object.entries(moonfallColors).map(([key, [h, saturation, lightness]]) => [key, integer(h + turn, saturation, lightness)])) as MoonfallPalette
+  return Object.fromEntries(Object.entries(moonfallColors).map(([key, [h, saturation, lightness]]) => [key, hsl.integer(h + turn, saturation, lightness)])) as MoonfallPalette
 }
 
 /** The slate floor of Moonfall’s {@link MoonfallPalette}. */
