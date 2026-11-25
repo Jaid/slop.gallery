@@ -37,6 +37,8 @@ const texels = (width: number, height: number) => {
   relief.dispose()
   return [relief.image.width, relief.image.height]
 }
+/** whether a height is the bare ground’s, as closely as a half float holds it */
+const bare = (value: number) => Math.abs(value - ground) < 0.001
 /** the strokes on a 2 × 1 m work at this many texels per meter */
 const strokesAt = (density: number) => layKnifeStrokes({
   guide: guide(140, 70),
@@ -109,31 +111,35 @@ describe('canvas materials', () => {
     expect(field).toHaveLength(1600 * 800)
     expect(layKnifeStrokes(request)).toEqual(field)
     // The bare ground shows through only here and there.
-    expect(field.filter(value => value === ground).length / field.length).toBeLessThan(0.1)
+    const bareShare = field.filter(value => bare(value)).length / field.length
+    expect(bareShare).toBeGreaterThan(0)
+    expect(bareShare).toBeLessThan(0.1)
     expect(layKnifeStrokes({
       ...request,
       size: 2,
     })).not.toEqual(field)
   })
-  test('a relief is flat bare ground at first and takes the strokes once the worker has laid them, at 800 texels per meter for an ordinary print', async () => {
+  test('a relief is flat bare ground at first and takes the strokes once the workers have laid them, at 1600 texels per meter for an ordinary print', async () => {
     const {relief, ready} = knifeRelief(artwork(), size)
     const {data, width, height} = relief.image as {
-      data: Uint8Array
+      data: Uint16Array
       height: number
       width: number
     }
-    expect([width, height]).toEqual([1600, 800])
-    expect(data.every(value => value === ground)).toBe(true)
+    // The texture holds half floats by their bits.
+    const heights = new Float16Array(data.buffer)
+    expect([width, height]).toEqual([3200, 1600])
+    expect(heights.every(value => bare(value))).toBe(true)
     // Something still loading, which captures wait for.
     expect(loadingItems().some(item => item.startsWith('knife-strokes:'))).toBe(true)
     const version = relief.version
     await ready
     expect(relief.version).toBeGreaterThan(version)
-    expect(data).toEqual(layKnifeStrokes({
+    expect(heights).toEqual(layKnifeStrokes({
       guide: guide(140, 70),
       width,
       height,
-      density: 800,
+      density: 1600,
       size: 1,
     }))
   })
@@ -154,12 +160,12 @@ describe('canvas materials', () => {
       relief.dispose()
     }
   })
-  test('a larger work gets a relief of more texels at the same density, and fewer per meter past 2.5 m square, so the worker stays quick', () => {
-    expect(texels(1, 0.5)).toEqual([800, 400])
-    expect(texels(2.4, 1.2)).toEqual([1920, 960])
+  test('a larger work gets a relief of more texels at the same density, and fewer per meter past 3.3 m², so the workers stay quick', () => {
+    expect(texels(1, 0.5)).toEqual([1600, 800])
+    expect(texels(2.4, 1.2)).toEqual([3840, 1920])
     const [width, height] = texels(4, 2)
     expect(width / height).toBeCloseTo(2, 2)
-    expect(width * height).toBeLessThanOrEqual(2048 ** 2)
+    expect(width * height).toBeLessThanOrEqual(2 ** 23)
   })
   test('the strokes are as large in meters whatever the relief’s density', () => {
     const fine = strokesAt(800)
@@ -172,7 +178,27 @@ describe('canvas materials', () => {
         difference += Math.abs((at(0, 0) + at(1, 0) + at(0, 1) + at(1, 1)) / 4 - coarse[row * 800 + column])
       }
     }
-    // Strokes twice or half as large differ by about 17.
-    expect(difference / coarse.length).toBeLessThan(9)
+    // Strokes twice or half as large differ by about 0.065.
+    expect(difference / coarse.length).toBeLessThan(0.035)
+  })
+  test('workers laying a relief band by band lay the same strokes as one laying it whole', () => {
+    const request = {
+      guide: guide(140, 70),
+      width: 1600,
+      height: 800,
+      density: 800,
+      size: 1,
+    }
+    const whole = layKnifeStrokes(request)
+    const bands = [[0, 213], [213, 600], [600, 800]].map(rows => layKnifeStrokes({
+      ...request,
+      rows: rows as [number, number],
+    }))
+    expect(bands.map(band => band.length)).toEqual([213 * 1600, 387 * 1600, 200 * 1600])
+    const joined = new Float16Array(whole.length)
+    joined.set(bands[0])
+    joined.set(bands[1], 213 * 1600)
+    joined.set(bands[2], 600 * 1600)
+    expect(joined).toEqual(whole)
   })
 })

@@ -1,6 +1,6 @@
 import type {Node} from 'three/webgpu'
 
-import {cameraViewMatrix, clamp, faceDirection, float, modelViewMatrix, normalView, positionView, vec4} from 'three/tsl'
+import {cameraViewMatrix, clamp, faceDirection, float, modelViewMatrix, normalView, positionView, uv, vec2, vec4} from 'three/tsl'
 
 type Float = Node<'float'>
 
@@ -28,6 +28,18 @@ export const heightNormal = (height: Float) => {
   const determinant = sigmaX.dot(r1).mul(faceDirection)
   const gradient = determinant.sign().mul(height.dFdx().mul(r1).add(height.dFdy().mul(r2)))
   return determinant.abs().mul(normalView).sub(gradient).normalize()
+}
+
+/**
+ * The slope of a field read from a texture along U and V, per unit of UV, by central differences across a texel or, from afar, a pixel’s footprint.
+ *
+ * Unlike the screen-space derivatives {@link heightNormal} takes, which see the filtered field as flat within each texel and tilt every texel on its own, this changes smoothly within texels, so a close view of a texture’s relief shows no facets.
+ */
+export const textureSlope = (sample: (at: Node<'vec2'>) => Float, texel: Node<'vec2'>) => {
+  const step = uv().fwidth().max(texel)
+  const alongU = vec2(step.x, 0)
+  const alongV = vec2(0, step.y)
+  return vec2(sample(uv().add(alongU)).sub(sample(uv().sub(alongU))), sample(uv().add(alongV)).sub(sample(uv().sub(alongV)))).div(step.mul(2))
 }
 
 /** View-space normal of a flat surface facing +z in its own space, like an image plane, tilted by a procedural height whose slope along its own x and y, in meters per meter, is known exactly, so unlike {@link heightNormal} it needs no neighboring pixels and stays sharp on waves only a few pixels long. */

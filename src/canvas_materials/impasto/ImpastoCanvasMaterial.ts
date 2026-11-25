@@ -1,9 +1,9 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
-import {float, mix, texture} from 'three/tsl'
+import {float, luminance, mix, texture, vec2} from 'three/tsl'
 
-import {heightNormal} from '#src/lib/materials/filters.ts'
+import {slopeNormal, textureSlope} from '#src/lib/materials/filters.ts'
 
 import CanvasMaterial from '../base/CanvasMaterial.ts'
 import knifeRelief from './knifeRelief.ts'
@@ -20,13 +20,17 @@ export default class ImpastoCanvasMaterial extends CanvasMaterial {
   readonly strokeSize = 1
   override readonly title = 'Knife impasto'
 
-  protected override paint(material: MeshPhysicalNodeMaterial, {image, luminance, map, size}: CanvasSurface) {
-    // Flat until a worker has laid the strokes, a fraction of a second later.
+  protected override paint(material: MeshPhysicalNodeMaterial, {image, map, size, uvPerMeter}: CanvasSurface) {
+    // Flat until the workers have laid the strokes, a fraction of a second later.
     const {relief} = knifeRelief(map, size, this.strokeSize)
     material.addEventListener('dispose', () => relief.dispose())
     const load = texture(relief).r
+    // The paint stands 13 mm at its thickest and 2 mm more where the picture is light, sloped by the relief’s texels and the picture’s pixels.
+    const art = map.image as HTMLCanvasElement
+    const paintSlope = textureSlope(at => texture(relief, at).r, vec2(1 / relief.image.width, 1 / relief.image.height))
+    const toneSlope = textureSlope(at => luminance(texture(map, at).rgb), vec2(1 / art.width, 1 / art.height))
     material.colorNode = image.mul(load.mul(0.18).sub(0.1).mul(this.depth).add(1))
-    material.normalNode = heightNormal(load.mul(0.013).add(luminance.mul(0.002)).mul(this.depth))
+    material.normalNode = slopeNormal(paintSlope.mul(0.013).add(toneSlope.mul(0.002)).mul(uvPerMeter).mul(this.depth))
     material.roughnessNode = mix(float(0.71), float(0.19), load.mul(this.gloss))
     material.clearcoat = this.gloss * 0.22
     material.clearcoatRoughness = 0.43
