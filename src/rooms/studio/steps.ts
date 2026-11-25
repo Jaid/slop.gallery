@@ -8,7 +8,7 @@ export const studioSteps = {
   /** where the moon or sun stands, in degrees */
   lightAngle: 1,
   lightStrength: 0.1,
-  lightShafts: 0.05,
+  lightShafts: 0.01,
   /** a factor on the graphics mode’s */
   lightBlur: 1,
   /** in candela */
@@ -25,7 +25,7 @@ export const studioSteps = {
   fill: 0.01,
   mirror: 0.05,
   /** in pixels of a 1080-row image */
-  mirrorBlur: 0.5,
+  mirrorBlur: 1,
 } as const satisfies Record<string, number>
 
 /** The multiple of `step` nearest to the value; a step that divides 1 divides instead of multiplying, which keeps off float noise like 0.45000000000000007 for nine steps of 0.05. */

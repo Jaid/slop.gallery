@@ -16,7 +16,7 @@ import WorldTuning from '../../src/lib/worldTuning/WorldTuning.ts'
 import ceilingGeometry from '../../src/rooms/studio/ceilingGeometry.ts'
 import {designLook, designPlan, ownMirrorBlur, studioDesign} from '../../src/rooms/studio/design.ts'
 import {studioFloorId, studioFloors, studioWallId, studioWalls} from '../../src/rooms/studio/finishes.ts'
-import {defaultStudioLook, kelvinTint, moonDirectionOf, studioFrames, studioLook, studioLookIsSubtle, studioLookRanges, studioSubtleShafts} from '../../src/rooms/studio/look.ts'
+import {defaultStudioLook, kelvinTint, moonDirectionOf, studioFrames, studioLook, studioLookRanges, studioMirrorlessChance, studioShaftlessChance} from '../../src/rooms/studio/look.ts'
 import {openingStyles, studioOpenings, studioOpeningStyle} from '../../src/rooms/studio/openings/index.ts'
 import {voronoiCells} from '../../src/rooms/studio/openings/lib/cells.ts'
 import {field, flanked, grid, medallion, row, staggered} from '../../src/rooms/studio/openings/lib/layouts.ts'
@@ -66,13 +66,13 @@ test('the Studio is 8 × 8 m under a ceiling 8 m up in the default environment, 
   expect(widths.size).toBeGreaterThanOrEqual(studioPlanRanges.width[1] - studioPlanRanges.width[0])
   expect(studioPlan(5)).toEqual(studioPlan(5))
 })
-test('the Studio uses its default look for seed zero and otherwise rolls a frame and lights within their ranges, its lamps hung within its room, the secondary one on some seeds only, sometimes a warm sun and sometimes a subtle moon or sun, the others mostly shining faintly', () => {
+test('the Studio uses its default look for seed zero and otherwise rolls a frame and lights within their ranges, its lamps hung within its room, the secondary one on some seeds only, sometimes a warm sun, mostly shining faintly, and sometimes no shafts at all', () => {
   expect(studioLook(0)).toBe(defaultStudioLook)
   expect(studioLook(5)).toEqual(studioLook(5))
   expect(studioLook(5)).not.toEqual(studioLook(6))
   const frames = new Set<string>
-  let [suns, subtle, sharp, seconds] = [0, 0, 0, 0]
-  /** where in its range each moon or sun but the subtle ones shines, from 0 for the faintest to 1 for the brightest */
+  let [suns, sharp, seconds, shaftless, mirrorless] = [0, 0, 0, 0, 0]
+  /** where in its range each moon or sun shines, from 0 for the faintest to 1 for the brightest */
   const shines: Array<number> = []
   for (let seed = 1; seed <= 200; seed++) {
     const {fill, floor, frame, lamps: {primary: lamp, secondary}, moon} = studioLook(seed)
@@ -80,8 +80,10 @@ test('the Studio uses its default look for seed zero and otherwise rolls a frame
     frames.add(frame)
     expect(within(fill.ambient, studioLookRanges.ambient)).toBe(true)
     expect(within(fill.hemisphere, studioLookRanges.hemisphere)).toBe(true)
-    expect(within(floor.strength, studioLookRanges.floorStrength)).toBe(true)
+    mirrorless += Number(floor.strength === 0)
+    expect(floor.strength === 0 || within(floor.strength, studioLookRanges.floorStrength)).toBe(true)
     expect(within(floor.blur!, studioLookRanges.floorBlur)).toBe(true)
+    expect(Number.isInteger(floor.blur)).toBe(true)
     expect(floor.loss).toBe(1)
     expect(within(lamp.blur, studioLookRanges.lampBlur)).toBe(true)
     expect(within(lamp.decay, studioLookRanges.lampDecay)).toBe(true)
@@ -116,26 +118,26 @@ test('the Studio uses its default look for seed zero and otherwise rolls a frame
       const [red, , blue] = Bun.color(moon.color, '[rgb]')!
       expect(red).toBeGreaterThan(blue)
     }
-    if (studioLookIsSubtle(seed)) {
-      subtle++
-      expect(moon.shafts).toBe(studioSubtleShafts)
-      expect(within(moon.intensity, studioLookRanges.subtleIntensity)).toBe(true)
-    } else {
-      expect(within(moon.shafts, studioLookRanges.moonShafts)).toBe(true)
-      const [faintest, brightest] = moon.color === moonlight.color ? studioLookRanges.moonIntensity : studioLookRanges.sunIntensity
-      expect(within(moon.intensity, [faintest, brightest])).toBe(true)
-      shines.push((moon.intensity - faintest) / (brightest - faintest))
+    if (moon.shafts === 0) {
+      shaftless++
     }
+    expect(moon.shafts === 0 || within(moon.shafts, studioLookRanges.moonShafts)).toBe(true)
+    const [faintest, brightest] = moon.color === moonlight.color ? studioLookRanges.moonIntensity : studioLookRanges.sunIntensity
+    expect(within(moon.intensity, [faintest, brightest])).toBe(true)
+    shines.push((moon.intensity - faintest) / (brightest - faintest))
     sharp += Number(lamp.blur < 1)
   }
   expect(frames).toEqual(new Set(studioFrames))
   expect(suns).toBeGreaterThan(40)
   expect(suns).toBeLessThan(110)
-  expect(subtle).toBeGreaterThan(20)
-  expect(subtle).toBeLessThan(65)
   expect(sharp).toBeGreaterThan(10)
   expect(seconds).toBeGreaterThan(35)
   expect(seconds).toBeLessThan(90)
+  // No mirror on about one seed in ten, and clear air on about one in ten.
+  expect(mirrorless).toBeGreaterThan(200 * studioMirrorlessChance / 2)
+  expect(mirrorless).toBeLessThan(200 * studioMirrorlessChance * 2)
+  expect(shaftless).toBeGreaterThan(200 * studioShaftlessChance / 2)
+  expect(shaftless).toBeLessThan(200 * studioShaftlessChance * 2)
   // Mostly faint: half within the faintest eighth of the range and four in five in its fainter half, yet some bright ones.
   const share = (below: number) => shines.filter(shine => shine < below).length / shines.length
   expect(share(0.13)).toBeGreaterThan(0.38)

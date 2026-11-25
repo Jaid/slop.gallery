@@ -105,7 +105,7 @@ export const studioLookRanges = {
   ambient: [0.03, 0.18],
   hemisphere: [0.08, 0.45],
   floorStrength: [0.4, 2],
-  floorBlur: [0, 24],
+  floorBlur: [0, 16],
   /** from as sharp as every lamp’s to soft, in degrees */
   lampBlur: [0, 6],
   lampDecay: [1.4, 2],
@@ -129,33 +129,26 @@ export const studioLookRanges = {
   moonElevation: [60, 85],
   /** most of them near the faint end, see {@link studioShineEasing} */
   moonIntensity: [0.5, 4],
-  /** from clear air to dusty, which the openings spreading over the whole ceiling fill with light wherever one looks, most of them near the clear end, see {@link studioShineEasing} */
-  moonShafts: [0.05, 0.5],
+  /** from clear air to hazy, most of them near the clear end, see {@link studioShineEasing}, on the seeds that show shafts at all, see {@link studioShaftlessChance} */
+  moonShafts: [0.01, 0.2],
   /** a sun’s color temperature, from a low afternoon sun to midday */
   sunKelvin: [3800, 5600],
   /** most of them near the faint end, see {@link studioShineEasing} */
   sunIntensity: [0.8, 4],
-  /** a subtle seed’s moon or sun */
-  subtleIntensity: [0.3, 0.8],
 } as const satisfies Record<string, readonly [min: number, max: number]>
-/** a subtle seed’s air, nearly clear */
-export const studioSubtleShafts = 0.05
 /** how likely a seed lights the Studio with a warm sun instead of the moon */
 export const studioSunChance = 0.35
-/** how likely a seed’s moon or sun is subtle, faint on the floor and its shafts hardly showing in the air */
-export const studioSubtleChance = 0.2
-/** how a moon’s or sun’s strength and its shafts spread over their ranges, but a subtle one’s: to the fifth power, so half of them shine within the faintest 32nd of it and only one in eight past its middle */
+/** how likely a seed’s floor mirrors nothing at all */
+export const studioMirrorlessChance = 0.1
+/** how likely a seed shows no shafts at all, its air perfectly clear */
+export const studioShaftlessChance = 0.1
+/** how a moon’s or sun’s strength and its shafts spread over their ranges: to the fifth power, so half of them shine within the faintest 32nd of it and only one in eight past its middle */
 export const studioShineEasing = easing.quintIn
 /** how likely a seed switches the secondary lamp on */
 export const studioSecondaryLampChance = 0.3
 
 const round = (value: number, digits: number) => Math.round(value * 10 ** digits) / 10 ** digits
 const hex = (channel: number) => Math.round(Math.min(255, Math.max(0, channel))).toString(16).padStart(2, '0')
-
-/** Whether the environment of `seed` lights the Studio subtly, see {@link studioSubtleChance}, which the default one does not. */
-export function studioLookIsSubtle(seed: number) {
-  return !isDefaultSeed(seed) && environmentRandom(seed).makeChild(['studio', 'look']).makeChild('subtle').rollBoolean({chance: studioSubtleChance})
-}
 
 /** The color of a black body at the temperature in kelvin, as #rrggbb, after Tanner Helland’s fit to the CIE 1964 color matching functions, good from 1000 to 40 000 K. */
 export function kelvinTint(kelvin: number) {
@@ -168,7 +161,7 @@ export function kelvinTint(kelvin: number) {
 
 /**
  * The Studio’s look in the environment of `seed`: the default one’s for the default seed, otherwise every value rolled on its own within {@link studioLookRanges} onto its {@link studioSteps}, and one of the {@link studioFrames}.
- * Its lamps hang within the room the seed’s {@link studioPlan} gives, the secondary one lit on some seeds, see {@link studioSecondaryLampChance}, and some seeds light it subtly, see {@link studioSubtleChance}.
+ * Its lamps hang within the room the seed’s {@link studioPlan} gives, the secondary one lit on some seeds, see {@link studioSecondaryLampChance}, some show no shafts, see {@link studioShaftlessChance}, and some floors mirror nothing, see {@link studioMirrorlessChance}.
  */
 export function studioLook(seed: number): StudioLook {
   if (isDefaultSeed(seed)) {
@@ -179,7 +172,8 @@ export function studioLook(seed: number): StudioLook {
   const roll = (key: keyof typeof studioLookRanges, step: number, source = random, options?: RollOptions) => rollOnStep(source.makeChild(key), studioLookRanges[key], step, options)
   const shine = {easing: studioShineEasing}
   const sun = random.makeChild('sun').rollBoolean({chance: studioSunChance})
-  const subtle = studioLookIsSubtle(seed)
+  const shaftless = random.makeChild('shaftless').rollBoolean({chance: studioShaftlessChance})
+  const mirrorless = random.makeChild('mirrorless').rollBoolean({chance: studioMirrorlessChance})
   const {clear: [width, depth], height} = studioPlan(seed)
   /** how high the primary lamp hangs within the range, no higher than 1.5 m under the ceiling */
   const lampHeight = (key: string, [lowest, highest]: readonly [number, number]) => rollOnStep(random.makeChild(key), [lowest, Math.min(highest, height - 1.5)], studioSteps.lampPlace)
@@ -195,7 +189,7 @@ export function studioLook(seed: number): StudioLook {
     floor: {
       blur: roll('floorBlur', studioSteps.mirrorBlur),
       loss: 1,
-      strength: roll('floorStrength', studioSteps.mirror),
+      strength: mirrorless ? 0 : roll('floorStrength', studioSteps.mirror),
     },
     lamps: {
       primary: {
@@ -220,8 +214,8 @@ export function studioLook(seed: number): StudioLook {
       blur: roll('moonBlur', studioSteps.lightBlur),
       color: sun ? kelvinTint(roll('sunKelvin', 10)) : moonlight.color,
       elevation: roll('moonElevation', studioSteps.lightAngle),
-      intensity: subtle ? roll('subtleIntensity', studioSteps.lightStrength) : (sun ? roll('sunIntensity', studioSteps.lightStrength, random, shine) : roll('moonIntensity', studioSteps.lightStrength, random, shine)),
-      shafts: subtle ? studioSubtleShafts : roll('moonShafts', studioSteps.lightShafts, random, shine),
+      intensity: sun ? roll('sunIntensity', studioSteps.lightStrength, random, shine) : roll('moonIntensity', studioSteps.lightStrength, random, shine),
+      shafts: shaftless ? 0 : roll('moonShafts', studioSteps.lightShafts, random, shine),
     },
   }
 }

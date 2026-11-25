@@ -148,7 +148,8 @@ export default class StudioTuningModule extends TuningModule<StudioDesign> {
           fallback: 1,
           off: 0,
         }}),
-        range('mirrorBlur', 'Mirror blur', 0, 32, studioSteps.mirrorBlur, {
+        range('mirrorBlur', 'Mirror blur', 0, 16, studioSteps.mirrorBlur, {
+          integer: true,
           off: {
             fallback: 8,
             off: ownMirrorBlur,
