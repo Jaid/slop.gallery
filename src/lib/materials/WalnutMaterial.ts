@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import GrainedWoodMaterial from './GrainedWoodMaterial.ts'
 
 /**
@@ -8,8 +10,8 @@ import GrainedWoodMaterial from './GrainedWoodMaterial.ts'
 export default class WalnutMaterial extends GrainedWoodMaterial {
   constructor() {
     super({
-      heartwood: ['#2a1910', '#4f3220'],
-      latewood: '#1b0f09',
+      heartwood: [hsl.integer(49, 40, 13), hsl.integer(52, 46, 25)],
+      latewood: hsl.integer(47, 38, 8),
     })
   }
 }

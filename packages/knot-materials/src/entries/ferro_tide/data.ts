@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HdWJtzJ2GnPe32p; fixture: knot-material-shaders; result: success.
 export default {
   id: 'ferro_tide',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.12,
   flavorText: 'Iron that has forgotten it was ever a solid. It stands up toward whoever is nearest and lies back down the moment they leave.',
   placeholder: {
-    color: '#161b25',
+    color: hsl.integer(264, 24, 12),
     shading: 'liquid',
   },
 } as const satisfies KnotData

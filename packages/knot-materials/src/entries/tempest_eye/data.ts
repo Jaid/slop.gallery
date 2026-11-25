@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tempest_eye',
   candidateId: 'muse_spark',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The calm center watches its own storm turn without ever joining it.',
   placeholder: {
-    color: '#9a8aff',
+    color: hsl.integer(288, 100, 65),
     shading: 'smooth',
   },
 } as const satisfies KnotData

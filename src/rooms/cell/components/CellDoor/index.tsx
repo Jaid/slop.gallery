@@ -3,6 +3,7 @@ import type {Wall, WallOpening} from '#src/lib/placement/wallGeometry.ts'
 
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -24,7 +25,7 @@ export default function CellDoor({hole, surfaces, wall}: {
   const lacquer = useDisposable(useMemo(() => new MeshPhysicalNodeMaterial({
     clearcoat: 0.7,
     clearcoatRoughness: 0.38,
-    color: '#141315',
+    color: hsl.integer(308, 6, 9),
     envMapIntensity: 0.6,
     metalness: 0,
     roughness: 0.5,

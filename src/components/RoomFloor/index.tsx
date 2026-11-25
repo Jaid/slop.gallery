@@ -3,6 +3,7 @@ import type {Material, Object3D, Texture} from 'three/webgpu'
 
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
+import hsl from 'okhsl'
 import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import FloorGlass from '#component/FloorGlass'
@@ -33,17 +34,17 @@ export default function RoomFloor({glass, materials, room, stone, wood}: {
   const reflection = materials?.reflection
   const envMapIntensity = mirrorReflections ? 1 : 0
   const surfaces: Partial<Record<FloorRoom['id'], {
-    color: string
+    color: number
     map?: Texture
   }>> = {
     vesper: {
       map: wood,
-      color: '#c5a585',
+      color: hsl.integer(67, 34, 70),
     },
   }
   const surface = surfaces[room.id] ?? {
     map: stone,
-    color: '#f3eddf',
+    color: hsl.integer(88, 39, 94),
   }
   return <StaticBatch name={`${room.id}-floor`}>
     <RigidBody colliders={false} type='fixed'>
@@ -56,8 +57,8 @@ export default function RoomFloor({glass, materials, room, stone, wood}: {
     <Branch if={reflection}><group rotation={[-Math.PI / 2, 0, 0]}><primitive object={reflection!} /></group></Branch>
     <Branch if={room.id === 'vesper'}><WoodFloor depth={room.size[1]} texture={wood} width={room.size[0]} /></Branch>
     <Branch not={room.id === 'banquet'}>
-      {plan.seams.map(({center: [x, z], size: [width, depth]}, i) => <Box key={i} color='#a8a18f' envMapIntensity={envMapIntensity} name={`${room.id}-floor-seam`} position={[x, 0.008, z]} size={[width, 0.008, depth]} />)}
-      {plan.inlays.map(({center: [x, z], size: [width, depth]}, i) => <Box key={i} color='#9d8354' envMapIntensity={envMapIntensity} material={materials?.inlay} metalness={0.45} name={`${room.id}-floor-inlay`} position={[x, 0.015, z]} size={[width, 0.012, depth]} />)}
+      {plan.seams.map(({center: [x, z], size: [width, depth]}, i) => <Box key={i} color={hsl.integer(89, 15, 66)} envMapIntensity={envMapIntensity} name={`${room.id}-floor-seam`} position={[x, 0.008, z]} size={[width, 0.008, depth]} />)}
+      {plan.inlays.map(({center: [x, z], size: [width, depth]}, i) => <Box key={i} color={hsl.integer(82, 44, 56)} envMapIntensity={envMapIntensity} material={materials?.inlay} metalness={0.45} name={`${room.id}-floor-inlay`} position={[x, 0.015, z]} size={[width, 0.012, depth]} />)}
     </Branch>
   </StaticBatch>
 }

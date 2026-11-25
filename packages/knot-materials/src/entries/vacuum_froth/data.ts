@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'vacuum_froth',
   candidateId: 'claude_sonnet',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Small bright pockets trouble a space that ought to contain nothing at all.',
   placeholder: {
-    color: '#9df3ff',
+    color: hsl.integer(207, 100, 90),
     shading: 'smooth',
   },
 } as const satisfies KnotData

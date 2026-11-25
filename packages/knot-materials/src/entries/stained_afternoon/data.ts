@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'stained_afternoon',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A thousand small windows hold the afternoon and refuse to let it go.',
   displacement: 0.0026,
   placeholder: {
-    color: '#7b3652',
+    color: hsl.integer(357, 55, 35),
     shading: 'glass',
   },
 } as const satisfies KnotData

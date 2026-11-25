@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {inkFill} from '../../lib/atelier.ts'
@@ -38,11 +39,11 @@ export default class extends KnotMaterial {
       chips = chips.add(flake.mul(0.28)).clamp().toVar()
     }
     const stone = mx_noise_float(p.mul(9)).mul(0.5).add(0.5).toVar()
-    const milk = mix(color('#d6dcdf'), color('#f7e6d8'), stone)
+    const milk = mix(color(hsl.integer(229, 9, 87)), color(hsl.integer(62, 54, 92.4)), stone)
     const veins = mx_noise_float(p.mul(22).add(stone.mul(2))).toVar()
     const intimateFire = near.mul(0.16).add(0.84)
     this.colorNode = mix(milk, milk.mul(0.14).add(fire.mul(0.72)), chips.mul(3.5).clamp())
-    this.emissiveNode = fire.mul(0.82).mul(intimateFire).add(color('#b6cde0').mul(grazing.pow(4)).mul(0.045))
+    this.emissiveNode = fire.mul(0.82).mul(intimateFire).add(color(hsl.integer(243, 33, 81)).mul(grazing.pow(4)).mul(0.045))
     this.metalness = 0.13
     this.roughnessNode = float(0.245).add(veins.abs().mul(0.05)).sub(chips.mul(0.09))
     this.clearcoat = 1

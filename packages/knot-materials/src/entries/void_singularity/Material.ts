@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn, interleavedGradientNoise, Loop, mix, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, refract, screenCoordinate, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -28,9 +29,9 @@ const rIsco = 0.074
 const rOuter = 0.34
 /** Relativistic blackbody + Doppler shift palette: crimson-amber on the receding side, electric cyan-white on the approaching side. */
 function relativisticPlasma(heat: Node<'float'>, doppler: Node<'float'>) {
-  const redshifted = mix(color('#4a0602'), mix(color('#ff3805'), color('#ffbe42'), heat.smoothstep(0.2, 0.75)), heat.smoothstep(0.05, 0.88))
-  const blueshifted = mix(color('#122e8c'), mix(color('#18c8ff'), color('#ebfcff'), heat.smoothstep(0.2, 0.75)), heat.smoothstep(0.05, 0.88))
-  const coreHot = color('#fff8ed').mul(heat.smoothstep(0.78, 1.18).pow(1.6))
+  const redshifted = mix(color(hsl.integer(30, 97, 16)), mix(color(hsl.integer(33, 100, 59.3)), color(hsl.integer(79.6, 100, 81.5)), heat.smoothstep(0.2, 0.75)), heat.smoothstep(0.05, 0.88))
+  const blueshifted = mix(color(hsl.integer(265, 92, 25.5)), mix(color(hsl.integer(227, 100, 74.2)), color(hsl.integer(209, 100, 97.6)), heat.smoothstep(0.2, 0.75)), heat.smoothstep(0.05, 0.88))
+  const coreHot = color(hsl.integer(79, 100, 98)).mul(heat.smoothstep(0.78, 1.18).pow(1.6))
   return mix(redshifted, blueshifted, doppler.mul(0.5).add(0.5)).add(coreHot)
 }
 /** Kerr-Newman black hole system and relativistic accretion disks trapped inside the knot: curved geodesic ray-marching with gravitational lensing, photon rings and Doppler beaming. */
@@ -112,7 +113,7 @@ export default class extends KnotMaterial {
           const jetCone = r.mul(0.13).add(0.006)
           const jetProfile = diskR.div(jetCone).pow(2).negate().exp().mul(height.abs().smoothstep(0.03, 0.16))
           const jetPulse = height.abs().mul(38).sub(loopAngle.mul(3)).sin().mul(0.5).add(0.5)
-          const jetColor = mix(color('#6b42ff'), color('#4ff2ff'), jetPulse).mul(jetProfile).mul(2.4)
+          const jetColor = mix(color(hsl.integer(284, 100, 48)), color(hsl.integer(203, 100, 86.4)), jetPulse).mul(jetProfile).mul(2.4)
           const stepEmission = plasmaColor.mul(density).mul(beaming).mul(42).add(jetColor)
           radiance.addAssign(stepEmission.mul(transmittance).mul(stepSize))
           transmittance.mulAssign(density.mul(stepSize).mul(-16).exp())
@@ -122,19 +123,19 @@ export default class extends KnotMaterial {
 // Sharp Einstein photon ring where minimum ray impact parameter skims the photon sphere rPhoton.
       const photonSkim = minRadius.sub(rPhoton).abs()
       const photonRing = float(0.00018).div(photonSkim.pow(2).add(0.00016)).mul(minRadius.smoothstep(rShadow * 0.88, rShadow * 1.06))
-      const ringColor = mix(color('#ff8c3b'), color('#acf2ff'), dir.x.mul(0.5).add(0.5)).mul(photonRing).mul(1.05)
+      const ringColor = mix(color(hsl.integer(52, 99, 71)), color(hsl.integer(211, 100, 90.5)), dir.x.mul(0.5).add(0.5)).mul(photonRing).mul(1.05)
 // Gravitationally lensed background starfield deflected by the final exiting ray direction.
       const lensedStars = starfield(dir, 34, 0.86).add(starfield(dir.add(11.4), 84, 0.91).mul(intimate.mul(0.75).add(0.25)))
-      const deepVoid = mix(color('#020106'), color('#130728'), dir.y.mul(0.5).add(0.5))
+      const deepVoid = mix(color(hsl.integer(294, 62, 2)), color(hsl.integer(296, 73, 7.5)), dir.y.mul(0.5).add(0.5))
       return radiance.add(ringColor).add(lensedStars.mul(3).add(deepVoid).mul(transmittance))
     })
-    this.colorNode = color('#010103')
+    this.colorNode = color(hsl.integer(282, 42, 2))
     this.metalness = 0
     this.roughness = 0.03
     this.ior = 1.54
     this.clearcoat = 1
     this.clearcoatRoughness = 0.012
-    const hawkingRim = mix(color('#ff551c'), color('#22ccff'), view.x.mul(0.5).add(0.5)).mul(grazing.pow(3.2)).mul(0.38)
+    const hawkingRim = mix(color(hsl.integer(37, 100, 62.5)), color(hsl.integer(226, 100, 75)), view.x.mul(0.5).add(0.5)).mul(grazing.pow(3.2)).mul(0.38)
     this.emissiveNode = geodesicVolume().mul(facing.pow(0.28).mul(0.85).add(0.15)).add(hawkingRim)
   }
 }

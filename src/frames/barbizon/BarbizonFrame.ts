@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, clamp, color, float, max, mix, mx_noise_float, select, smoothstep, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -78,7 +79,7 @@ export default class BarbizonFrame extends PortraitFrame {
   override readonly front = profile.front + 0.012
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#c0924b'
+  override readonly tint = hsl.integer(76, 64, 64)
   override readonly title = 'Barbizon cartouche'
 
   override createGeometry(width: number, height: number) {
@@ -141,8 +142,8 @@ class LinenMaterial extends MeshPhysicalNodeMaterial {
     const weft = surface.across.mul(1400).sin().mul(0.5).add(0.5)
     const weave = max(warp, weft).mul(visibleDetail(footprint, 0.0012))
     const slub = mx_noise_float(vec3(surface.along.mul(60), surface.across.mul(400), surface.member)).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#b8a88a'), color('#d8cbb0'), slub.mul(0.6).add(weave.mul(0.15))).mul(surface.cavity.smoothstep(0, 0.8).mul(-0.3).add(1))
-    this.sheenNode = color('#e8dcc0').mul(0.3)
+    this.colorNode = mix(color(hsl.integer(83, 27, 69.5)), color(hsl.integer(85, 30, 82)), slub.mul(0.6).add(weave.mul(0.15))).mul(surface.cavity.smoothstep(0, 0.8).mul(-0.3).add(1))
+    this.sheenNode = color(hsl.integer(88, 40, 88)).mul(0.3)
     this.normalNode = heightNormal(weave.mul(0.00004).add(slub.mul(0.00003)))
   }
 }

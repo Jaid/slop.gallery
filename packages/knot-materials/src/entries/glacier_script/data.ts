@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'glacier_script',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Winter writes in planes of trapped air and blue light. The oldest sentences appear only when you move between them.',
   placeholder: {
-    color: '#70b0c9',
+    color: hsl.integer(225, 48, 68),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'gilded_fracture',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Broken once, and mended by someone who believed the cracks deserved gold.',
   placeholder: {
-    color: '#25725e',
+    color: hsl.integer(172, 78, 42),
     shading: 'stone',
   },
 } as const satisfies KnotData

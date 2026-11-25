@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fill, stroke} from '../../candidates/gpt_sol/lib/exhibition/coverage.ts'
@@ -36,18 +37,18 @@ export default class extends KnotMaterial {
     const vein = stroke(point.x, 0.012, foot).mul(leaf).toVar()
     const folded = point.x.abs().div(0.18).oneMinus().max(0).mul(leaf).toVar()
     const dew = beads(p.mul(76), 9.3)
-    const ground = mix(color('#10382b'), color('#45713a'), growth.mul(0.5).add(0.5))
-    const leafColor = mix(color('#285229'), color('#9fbb48'), random.y.mul(0.45).add(tuft.mul(0.55)))
+    const ground = mix(color(hsl.integer(168, 75, 21)), color(hsl.integer(140, 68, 42)), growth.mul(0.5).add(0.5))
+    const leafColor = mix(color(hsl.integer(144, 76, 30)), color(hsl.integer(122, 76, 71)), random.y.mul(0.45).add(tuft.mul(0.55)))
     const foliage = mix(ground, leafColor, leaf.mul(0.9)).mul(tuft.mul(0.5).add(0.65)).toVar()
-    const mineral = mix(color('#819272'), color('#c9c1a0'), tuft)
+    const mineral = mix(color(hsl.integer(131, 27, 58)), color(hsl.integer(96, 30, 78)), tuft)
     const green = mix(foliage, mineral, lichen.mul(0.8)).toVar()
-    this.colorNode = mix(green, color('#8fbfac'), dew.mask.mul(0.45)).mul(vein.mul(-0.16).add(1))
+    this.colorNode = mix(green, color(hsl.integer(168, 36, 73)), dew.mask.mul(0.45)).mul(vein.mul(-0.16).add(1))
     this.metalness = 0
     this.roughnessNode = mix(float(0.86).sub(leaf.mul(0.19)), float(0.065), dew.mask)
     this.normalNode = proceduralNormal(swelling.add(tuft.mul(0.0017)).add(folded.mul(0.00085)).add(dew.cap.mul(dew.mask).mul(0.0012)).sub(vein.mul(0.00008)), 0.65)
     this.clearcoatNode = dew.mask.mul(0.95).add(leaf.mul(0.06))
     this.clearcoatRoughnessNode = mix(float(0.4), float(0.025), dew.mask)
-    this.sheenNode = color('#c1d180').mul(0.23).mul(dew.mask.oneMinus())
+    this.sheenNode = color(hsl.integer(118, 60, 80)).mul(0.23).mul(dew.mask.oneMinus())
     this.sheenRoughness = 0.85
     this.aoNode = tuft.mul(0.35).add(0.65)
     // Fine tufts stay in fragment shading; only the well-sampled macro bed moves the original mesh.
@@ -55,8 +56,8 @@ export default class extends KnotMaterial {
     const pulsePhase = tube.x.mul(TAU * 3).sub(time.mul(0.58)).add(growth.mul(2))
     const pulse = pulsePhase.sin().mul(0.5).add(0.5).pow(12)
     const spores = random.x.smoothstep(0.9, 0.98).mul(leaf).mul(point.y.smoothstep(0.05, 0.25))
-    const phosphor = mix(color('#b2ff6e'), color('#ffbf76'), random.z)
+    const phosphor = mix(color(hsl.integer(132.5, 100, 90.7)), color(hsl.integer(68, 100, 82)), random.z)
     this.emissiveNode = phosphor.mul(spores).mul(pulse).mul(intimate.mul(0.8).add(0.045))
-      .add(color('#c7ead2').mul(dew.mask).mul(grazing.pow(4)).mul(near).mul(0.12))
+      .add(color(hsl.integer(155, 46, 89)).mul(dew.mask).mul(grazing.pow(4)).mul(near).mul(0.12))
   }
 }

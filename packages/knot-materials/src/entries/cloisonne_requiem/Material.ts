@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -45,13 +46,13 @@ export default class extends KnotMaterial {
     const wire = opticalLine(boundary, 0.014)
     const wireHalo = boundary.smoothstep(0.006, 0.075).oneMinus()
     const enamelDot = cell.bead.smoothstep(0.018, 0.072).oneMinus().mul(cell.identity.z.smoothstep(0.72, 0.95))
-    const night = mix(color('#102a58'), color('#075363'), cell.identity.y)
-    const ember = mix(color('#511a31'), color('#b77732'), cell.identity.z)
-    const ivory = color('#d1c3a5')
+    const night = mix(color(hsl.integer(261, 77, 19)), color(hsl.integer(217, 92, 32)), cell.identity.y)
+    const ember = mix(color(hsl.integer(357, 63, 21)), color(hsl.integer(64, 73, 56)), cell.identity.z)
+    const ivory = color(hsl.integer(86, 30, 79))
     let enamel = mix(night, ember, cell.identity.x.smoothstep(0.55, 0.8))
     enamel = mix(enamel, ivory, cell.identity.x.smoothstep(0.91, 0.99).mul(0.62))
-    enamel = enamel.mul(0.82).add(color('#09101b').mul(0.22))
-    const gold = mix(color('#9a5b16'), color('#ffe29a'), cell.identity.z.smoothstep(0.45, 0.95))
+    enamel = enamel.mul(0.82).add(color(hsl.integer(259, 38, 7.5)).mul(0.22))
+    const gold = mix(color(hsl.integer(62, 84, 46)), color(hsl.integer(89, 100, 91)), cell.identity.z.smoothstep(0.45, 0.95))
     const height = wire.mul(0.8).add(enamelDot.mul(0.18)).add(wireHalo.mul(0.06))
     const normal = proceduralNormal(height, 0.009)
     this.normalNode = normal
@@ -63,7 +64,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.045
     const eyeLight = glints(normal, 125)
     this.emissiveNode = gold.mul(wire).mul(eyeLight).mul(near.mul(0.18).add(0.07))
-      .add(color('#f7cf86').mul(enamelDot).mul(eyeLight).mul(0.08))
-      .add(color('#9cd7e1').mul(wireHalo).mul(grazing.pow(3)).mul(0.07))
+      .add(color(hsl.integer(81, 78, 85)).mul(enamelDot).mul(eyeLight).mul(0.08))
+      .add(color(hsl.integer(209, 49, 82)).mul(wireHalo).mul(grazing.pow(3)).mul(0.07))
   }
 }

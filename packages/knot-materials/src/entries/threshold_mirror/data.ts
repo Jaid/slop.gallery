@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'threshold_mirror',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The reflection looks less like this room than the entrance to another one.',
   placeholder: {
-    color: '#7ff5ff',
+    color: hsl.integer(202, 99, 89),
     shading: 'smooth',
   },
 } as const satisfies KnotData

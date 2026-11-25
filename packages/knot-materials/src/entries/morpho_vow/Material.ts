@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -80,9 +81,9 @@ export default class extends KnotMaterial {
       .add(scale.random2.x.mul(0.35))
       .add(patch.mul(0.55))
     const film = spectralColor(filmPhase)
-    let scaleColor = mix(color('#02082e'), color('#0047d6'), film.z)
-    scaleColor = mix(scaleColor, color('#00c8ff'), film.y.mul(0.5))
-    scaleColor = mix(scaleColor, color('#9b4dff'), film.x.mul(0.42).mul(grazing.mul(0.75).add(0.2)))
+    let scaleColor = mix(color(hsl.integer(266, 93, 7)), color(hsl.integer(262.5, 100, 38.6)), film.z)
+    scaleColor = mix(scaleColor, color(hsl.integer(226, 100, 74)), film.y.mul(0.5))
+    scaleColor = mix(scaleColor, color(hsl.integer(299, 100, 54.6)), film.x.mul(0.42).mul(grazing.mul(0.75).add(0.2)))
     scaleColor = scaleColor
       .mul(scale.ridge.mul(0.24).add(0.87))
       .mul(scale.along.oneMinus().mul(0.35).add(0.78))
@@ -93,7 +94,7 @@ export default class extends KnotMaterial {
       .mul(scale.resolved)
       .mul(scale.mask)
     const flutter = scale.height.add(travel.mul(0.00028).mul(scale.mask))
-    this.colorNode = mix(color('#05030a'), scaleColor, scale.mask)
+    this.colorNode = mix(color(hsl.integer(299, 44, 3.4)), scaleColor, scale.mask)
     this.metalnessNode = scale.mask.mul(0.06)
     this.roughnessNode = mix(
       float(0.94),
@@ -113,11 +114,11 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessMaximum = 470
     this.iridescenceNode = scale.mask.mul(0.92)
     this.sheen = 0.55
-    this.sheenColor.set('#315cff')
+    this.sheenColor.set(hsl.integer(266.3, 100, 48))
     this.sheenRoughness = 0.42
     this.emissiveNode = scaleColor
       .mul(grazing.pow(3).mul(0.5).add(sparkle.mul(1.35)))
-      .add(color('#dff8ff').mul(sparkle.mul(0.9)))
-      .add(color('#bffcff').mul(scale.tipLine.mul(scale.mask).mul(film.y).mul(grazing.mul(0.7).add(0.3)).mul(0.35)))
+      .add(color(hsl.integer(216, 100, 95.7)).mul(sparkle.mul(0.9)))
+      .add(color(hsl.integer(200, 100, 94.3)).mul(scale.tipLine.mul(scale.mask).mul(film.y).mul(grazing.mul(0.7).add(0.3)).mul(0.35)))
   }
 }

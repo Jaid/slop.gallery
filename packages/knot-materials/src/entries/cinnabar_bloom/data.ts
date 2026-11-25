@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HU72JSGdKyp7pBO; fixture: knot-material-shaders; result: success.
 export default {
   id: 'cinnabar_bloom',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.011,
   flavorText: 'A garden carved from a thousand coats of red lacquer. Each gilded petal holds its breath until you pass.',
   placeholder: {
-    color: '#b82312',
+    color: hsl.integer(30.6, 96, 43),
     shading: 'smooth',
   },
 } as const satisfies KnotData

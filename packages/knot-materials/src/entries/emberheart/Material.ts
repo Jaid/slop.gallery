@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import {fbm} from '../../candidates/glm/lib/fbm.ts'
@@ -35,23 +36,23 @@ export default class extends KnotMaterial {
     const deepCracks = opticalLine(deepField, 0.05).mul(near)
     const embers = starGlints(p.mul(120), view, 20).mul(cracksWide)
     const heat = pulse.mul(0.6).add(0.4).mul(near.mul(0.9).add(0.55))
-    this.colorNode = mix(color('#151009'), color('#33231a'), crust.mul(0.5).add(0.5)).add(color('#40130a').mul(cracksWide))
+    this.colorNode = mix(color(hsl.integer(76, 28, 8)), color(hsl.integer(50, 31, 17)), crust.mul(0.5).add(0.5)).add(color(hsl.integer(34, 78, 16)).mul(cracksWide))
     this.transmission = 0.42
     this.thickness = 0.55
     this.ior = 1.5
     this.dispersion = 0.12
-    this.attenuationColor.set('#2e0c02')
+    this.attenuationColor.set(hsl.integer(40, 87, 11))
     this.attenuationDistance = 0.5
     this.roughnessNode = cracks.mul(-0.3).add(0.52).max(0.18)
     this.clearcoat = 0.3
     this.clearcoatRoughness = 0.22
     this.envMapIntensity = 0.85
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(9)).mul(swell).add(crust.mul(0.35)), 0.00042)
-    this.emissiveNode = color('#c81601').mul(cracksWide).mul(0.55)
-      .add(color('#ff5e12').mul(cracks).mul(1.25))
-      .add(color('#ffd9a0').mul(deepCracks).mul(2.1))
+    this.emissiveNode = color(hsl.integer(30.6, 100, 45.5)).mul(cracksWide).mul(0.55)
+      .add(color(hsl.integer(40, 100, 63.5)).mul(cracks).mul(1.25))
+      .add(color(hsl.integer(78, 100, 89)).mul(deepCracks).mul(2.1))
       .mul(heat)
-      .add(color('#ffc07a').mul(embers).mul(heat).mul(0.9))
-      .add(color('#ff7a30').mul(rim).mul(pulse).mul(0.5))
+      .add(color(hsl.integer(68, 100, 82.6)).mul(embers).mul(heat).mul(0.9))
+      .add(color(hsl.integer(46, 100, 68)).mul(rim).mul(pulse).mul(0.5))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -45,8 +46,8 @@ export default class extends KnotMaterial {
     const filament = slow.mul(1.6).add(wisp.mul(0.3)).sin().abs().smoothstep(0.08, 0.8)
     const interference = slow.mul(3.2).add(wisp.mul(1.1)).add(facing.mul(2.8)).add(view.x.mul(0.4)).add(time.mul(0.006))
     const spectral = cosinePalette(interference, [0.52, 0.33, 0.16], [0.47, 0.44, 0.38], [1, 1, 1], [0.02, 0.27, 0.58])
-    const gold = mix(color('#4b2208'), color('#ffbf43'), filament.pow(0.55).mul(0.78).add(0.12))
-    const carbon = mix(color('#080b12'), color('#202a3c'), wisp.mul(0.5).add(0.5))
+    const gold = mix(color(hsl.integer(49, 79, 20)), color(hsl.integer(81, 100, 82)), filament.pow(0.55).mul(0.78).add(0.12))
+    const carbon = mix(color(hsl.integer(266, 26, 6)), color(hsl.integer(262, 32, 18)), wisp.mul(0.5).add(0.5))
     const threadColor = mix(carbon, gold, mix(float(0.72), float(0.18), fineA.overUnder))
     this.colorNode = mix(threadColor, spectral.mul(0.72), filament.mul(0.36).mul(facing.oneMinus().mul(0.65).add(0.35)))
     this.metalnessNode = mix(float(0.82), float(0.18), fineA.overUnder).mul(filament.mul(0.42).add(0.58))
@@ -58,6 +59,6 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = float(0.09).add(fineB.height.abs().mul(0.08))
     this.iridescenceNode = filament.mul(0.52).mul(rim.mul(0.58).add(0.25))
     this.iridescenceThicknessNode = facing.mul(510).add(slow.mul(260)).add(180)
-    this.emissiveNode = spectral.mul(filament.mul(0.24).mul(intimate.mul(0.42).add(0.2))).add(color('#fff0bf').mul(glints(normalViewGeometry, 120).mul(0.3).mul(near)))
+    this.emissiveNode = spectral.mul(filament.mul(0.24).mul(intimate.mul(0.42).add(0.2))).add(color(hsl.integer(94, 100, 95)).mul(glints(normalViewGeometry, 120).mul(0.3).mul(near)))
   }
 }

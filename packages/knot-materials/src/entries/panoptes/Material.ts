@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_sonnet/lib/ramp.ts'
@@ -81,8 +82,8 @@ export default class extends KnotMaterial {
     const limbal = rho.smoothstep(0.78, 1)
     const hueIndex = r3.z.mul(4).floor()
     const species = (amber: Node<'color'>, green: Node<'color'>, cyan: Node<'color'>, violet: Node<'color'>) => select(hueIndex.lessThan(0.5), amber, select(hueIndex.lessThan(1.5), green, select(hueIndex.lessThan(2.5), cyan, violet)))
-    const inner = species(color('#ffd23a'), color('#9bff7c'), color('#8fe9ff'), color('#e0a8ff'))
-    const outer = species(color('#a63600'), color('#0a6a3e'), color('#124fb0'), color('#4d1a9a'))
+    const inner = species(color(hsl.integer(91.3, 100, 85.9)), color(hsl.integer(139, 100, 89.5)), color(hsl.integer(215, 100, 86.7)), color(hsl.integer(313, 100, 78)))
+    const outer = species(color(hsl.integer(39, 100, 41)), color(hsl.integer(156, 98, 38)), color(hsl.integer(260, 93, 37)), color(hsl.integer(293, 89, 29)))
     const iris = mix(inner, outer, rho.pow(0.8)).mul(fibers.mul(0.75).add(fine.mul(0.5)).add(collarette).add(0.2))
       .mul(limbal.oneMinus().mul(0.85).add(0.15))
     const lit = ap.mul(irisMask).mul(pupil.oneMinus())
@@ -93,10 +94,10 @@ export default class extends KnotMaterial {
     const scales = voronoi(tube.mul(vec2(...scaleGrid)), scaleGrid, 4, 0.8)
     const scaleRandom = cellNoiseVec3(vec3(scales.cell, 6.6))
     const dome = scales.f2.sub(scales.f1).smoothstep(0, 0.45)
-    const skinTone = mix(color('#0d1a12'), color('#33280f'), scaleRandom.x.mul(0.7).add(scales.f1.mul(0.5)))
-    const tint = mix(color('#1f5c4a'), color('#5b3a86'), scaleRandom.y)
+    const skinTone = mix(color(hsl.integer(156, 41, 10)), color(hsl.integer(86, 58, 18)), scaleRandom.x.mul(0.7).add(scales.f1.mul(0.5)))
+    const tint = mix(color(hsl.integer(170, 75, 34)), color(hsl.integer(301, 61, 33.6)), scaleRandom.y)
     const skin = skinTone.add(tint.mul(dome.pow(3)).mul(0.5)).mul(lidShade.oneMinus().mul(0.75).add(0.25))
-    const sclera = mix(color('#080504'), color('#2a1210'), mx_noise_float(vec3(e.mul(5), 1)).mul(0.5).add(0.5))
+    const sclera = mix(color(hsl.integer(43, 18, 4)), color(hsl.integer(25, 48, 11)), mx_noise_float(vec3(e.mul(5), 1)).mul(0.5).add(0.5))
     // relief: brow, lid rim, recessed eyeball with a bulging cornea
     const browDistance = vec2(e.x.div(1.4), e.y.div(0.95)).length()
     const brow = browDistance.sub(1.1).pow2().mul(-9).exp().mul(0.007).mul(window)
@@ -110,7 +111,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = mix(float(0.3), float(0.02), ap)
     this.normalNode = proceduralNormal(height, 1)
     this.emissiveNode = iris.mul(lit).mul(eyeshine).mul(1.15)
-      .add(color('#ff8a3c').mul(seam).mul(0.35).mul(wake))
-      .add(color('#6fffd2').mul(rim).mul(0.04))
+      .add(color(hsl.integer(51, 100, 71)).mul(seam).mul(0.35).mul(wake))
+      .add(color(hsl.integer(170, 100, 89.4)).mul(rim).mul(0.04))
   }
 }

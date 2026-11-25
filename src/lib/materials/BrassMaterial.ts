@@ -1,8 +1,9 @@
 import StudioEnvironment from 'knot-materials/StudioEnvironment.ts'
+import hsl from 'okhsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 /** polished brass’ reflectance */
-export const brassColor = '#bd924c'
+export const brassColor = hsl.integer(78, 63, 64)
 
 /**
  * Polished brass, wholly metal: without a diffuse color, the lamps’ yellow light cannot flatten it into ochre paint. All it shows is its reflection, of a softly lit studio like the gold’s instead of the gallery’s dim, olive-tinted environment, tinted by brass’ deeper, browner reflectance.

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, tangentLocal, time, vec3} from 'three/tsl'
 
 import {below} from '../../candidates/claude_opus/lib/below.ts'
@@ -20,7 +21,7 @@ const marchSteps = 7
 const barbLengthOf = (growth: Node<'float'>, reach: Node<'float'>) => growth.oneMinus().max(0).pow(0.6).mul(0.42).mul(reach)
 /** Blackbody-like ramp for the ember: deep red embers, orange flame, a yellow-white heart. */
 function flameColor(heat: Node<'float'>) {
-  return mix(mix(rgb('#5a0800'), rgb('#ff4a0a'), heat.smoothstep(0, 0.45)), rgb('#ffd98a'), heat.smoothstep(0.45, 1))
+  return mix(mix(rgb(hsl.integer(32, 100, 20)), rgb(hsl.integer(35.8, 100, 61.1)), heat.smoothstep(0, 0.45)), rgb(hsl.integer(85, 100, 88.5)), heat.smoothstep(0.45, 1))
 }
 /** Black ice around a living ember. Stellar frost dendrites – six arms with 60° barbs – grow from scattered nuclei across the surface; the ember inside is ray-marched through the tube along the refracted line of sight. The frost is lit from within, glowing warm where the flame is near. A visitor's body heat melts a window: step close and the crystals recede toward their nuclei, a ring of condensation beads at the thaw line, and the flame shows through clear ice. Step away and it freezes over. */
 export default class extends KnotMaterial {
@@ -117,8 +118,8 @@ export default class extends KnotMaterial {
     }
 // Frost scatters: it veils the ember but glows with its light, strongest right above the flame.
     const frostVeil = frost.mul(0.92)
-    const frostColor = mix(rgb('#b9cde4'), rgb('#eef5ff'), dendrite)
-    const iceColor = mix(rgb('#010308'), rgb('#07121f'), grazing)
+    const frostColor = mix(rgb(hsl.integer(252, 37, 81)), rgb(hsl.integer(257, 100, 96)), dendrite)
+    const iceColor = mix(rgb(hsl.integer(257, 56, 3)), rgb(hsl.integer(253, 50, 8)), grazing)
     this.colorNode = mix(iceColor, frostColor, frost)
     this.metalness = 0
     this.roughnessNode = mix(float(0.04), float(0.75), frost)
@@ -130,9 +131,9 @@ export default class extends KnotMaterial {
     const sparkle = glints(crystalNormal, 300).mul(dendrite).mul(near.mul(0.7).add(0.3))
     this.emissiveNode = ember.mul(frostVeil.oneMinus()).mul(intimate.mul(0.5).add(0.8))
       .add(flameColor(float(0.4)).mul(emberLevel.mul(1.3).add(0.05)).mul(frost).mul(facing.mul(0.6).add(0.4)))
-      .add(rgb('#ffffff').mul(sparkle).mul(0.6))
-      .add(rgb('#ffb06a').mul(bead).mul(emberLevel.mul(0.8).add(0.1)))
+      .add(rgb(hsl.integer(0, 0, 100)).mul(sparkle).mul(0.6))
+      .add(rgb(hsl.integer(61, 100, 79)).mul(bead).mul(emberLevel.mul(0.8).add(0.1)))
       .add(flameColor(float(0.6)).mul(bubbles).mul(emberLevel.mul(0.9).add(0.08)).mul(frostVeil.oneMinus()))
-      .add(rgb('#6fb2ff').mul(grazing.pow(4)).mul(frost.oneMinus()).mul(0.08))
+      .add(rgb(hsl.integer(253, 100, 71)).mul(grazing.pow(4)).mul(frost.oneMinus()).mul(0.08))
   }
 }

@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_cell_noise_float, mx_noise_float, normalView, positionViewDirection, select, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -45,7 +46,7 @@ export default class DichroicFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#3b5f8a'
+  override readonly tint = hsl.integer(254, 49, 40)
   override readonly title = 'Dichroic glass'
 
   override createGeometry(width: number, height: number) {
@@ -110,8 +111,8 @@ class GlassEdgeMaterial extends MeshPhysicalNodeMaterial {
     })
     const surface = frameSurface()
     const drift = mx_noise_float(vec3(surface.along.mul(6), surface.member.mul(1.7), 3.1)).mul(0.5).add(0.5)
-    this.colorNode = color('#0c1418')
-    this.emissiveNode = mix(color('#ffc98a'), color('#9fdcff'), drift).mul(drift.mul(0.05).add(0.04))
+    this.colorNode = color(hsl.integer(230, 24, 9))
+    this.emissiveNode = mix(color(hsl.integer(71, 100, 85)), color(hsl.integer(235, 100, 84)), drift).mul(drift.mul(0.05).add(0.04))
   }
 }
 /** The back: a panel of brushed aluminum screwed on at its corners, a black anodized Z-clip across its top to hang it by, and the maker’s sticker with its barcode. */
@@ -132,9 +133,9 @@ class DichroicBackMaterial extends MeshPhysicalNodeMaterial {
     const sticker = inside(max(at.x.abs().sub(0.035), at.y.abs().sub(0.018)))
     const code = select(mx_cell_noise_float(vec3(at.x.div(0.0008).floor(), 4.2, 0)).greaterThan(0.5).and(at.x.abs().lessThan(0.029)).and(at.y.abs().lessThan(0.01)), float(1), float(0))
     const bars = mix(float(0.4), code, visibleDetail(footprint, 0.002))
-    const aluminum = mix(color('#7c8084'), color('#9a9ea2'), brushed)
-    const metal = mix(mix(aluminum, color('#1c1d1f'), clip), mix(color('#9a9ea2'), color('#3a3c3e'), screw.slot), screw.cover)
-    const labeled = mix(color('#f2f2ee'), color('#121212'), bars.mul(0.9))
+    const aluminum = mix(color(hsl.integer(248, 4, 53)), color(hsl.integer(248, 4, 65)), brushed)
+    const metal = mix(mix(aluminum, color(hsl.integer(264, 5, 13)), clip), mix(color(hsl.integer(248, 4, 65)), color(hsl.integer(248, 3, 26)), screw.slot), screw.cover)
+    const labeled = mix(color(hsl.integer(106, 15, 95)), color(hsl.integer(0, 0, 8.4)), bars.mul(0.9))
     this.colorNode = mix(metal, labeled, sticker)
     this.metalnessNode = sticker.oneMinus()
     this.roughnessNode = mix(mix(float(0.48).add(brushed.mul(0.08)), float(0.45), clip), float(0.6), sticker)

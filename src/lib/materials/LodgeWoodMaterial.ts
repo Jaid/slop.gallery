@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {bumpMap, color, float, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -22,7 +23,7 @@ export default class LodgeWoodMaterial extends MeshStandardNodeMaterial {
     const phase = across.mul(95).add(grain.mul(5))
     const rings = mix(phase.sin().mul(0.5).add(0.5), float(0.5), phase.fwidth().smoothstep(1, 3))
     const tone = mx_noise_float(across.div(0.25).floor().mul(4.7)).mul(0.16).add(0.8)
-    this.colorNode = mix(color('#211710'), mix(color('#624027'), color('#936841'), rings.mul(0.4).add(0.3)).mul(tone), seam)
+    this.colorNode = mix(color(hsl.integer(56, 28, 11)), mix(color(hsl.integer(56, 49, 31)), color(hsl.integer(62, 49, 48)), rings.mul(0.4).add(0.3)).mul(tone), seam)
     this.normalNode = bumpMap(seam.mul(0.5).add(rings.mul(0.1)), float(0.035))
   }
 }

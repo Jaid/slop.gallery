@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, Loop, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, struct, uv, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -38,7 +39,7 @@ const evaluateFlakes = Fn(([position, threshold]: [Node<'vec3'>, Node<'float'>])
     const shape = distance.smoothstep(0.24, outer).oneMinus()
     const mask = present.mul(shape).mul(visibility)
     const normal = normalViewGeometry.add(secondary.mul(2).sub(1).mul(0.45)).normalize()
-    const tint = mix(color('#f5c451'), color('#ffe9a8'), random.y)
+    const tint = mix(color(hsl.integer(86, 86, 82)), color(hsl.integer(92, 100, 92.7)), random.y)
     coverage.addAssign(mask)
     tintSum.addAssign(tint.mul(mask))
     sparkle.addAssign(tint.mul(glints(normal, 90)).mul(mask))
@@ -75,14 +76,14 @@ export default class extends KnotMaterial {
     const threadMask = thread.max(threadFine).clamp()
     const goldMask = flakeMask.max(threadMask).clamp()
     // Continuous gold threads must not inherit the surrounding cells' random flake tint.
-    const threadTint = mix(color('#f5c451'), color('#ffe9a8'), 0.5)
-    const lacquer = mix(color('#160204'), color('#7a1210'), grazing.pow(1.6).mul(0.85).add(mx_noise_float(p.mul(2)).mul(0.1)).clamp())
+    const threadTint = mix(color(hsl.integer(86, 86, 82)), color(hsl.integer(92, 100, 92.7)), 0.5)
+    const lacquer = mix(color(hsl.integer(15, 76, 5)), color(hsl.integer(28, 94, 28)), grazing.pow(1.6).mul(0.85).add(mx_noise_float(p.mul(2)).mul(0.1)).clamp())
     this.colorNode = mix(mix(lacquer, flakeTint, flakeMask), threadTint, threadMask)
     this.metalnessNode = goldMask.mul(0.95)
     this.roughnessNode = float(0.34).mix(0.22, goldMask)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.035
     this.normalNode = proceduralNormal(goldMask.mul(0.5).add(mx_noise_float(p.mul(14)).mul(0.15)), 0.0009)
-    this.emissiveNode = flakeSparkle.mul(1.4).mul(near.mul(0.6).add(0.5)).add(color('#ffd166').mul(thread.add(threadFine)).mul(glints(normalViewGeometry, 40)).mul(0.5)).add(color('#3a0a08').mul(rim).mul(0.15))
+    this.emissiveNode = flakeSparkle.mul(1.4).mul(near.mul(0.6).add(0.5)).add(color(hsl.integer(86, 100, 86)).mul(thread.add(threadFine)).mul(glints(normalViewGeometry, 40)).mul(0.5)).add(color(hsl.integer(27, 85, 13)).mul(rim).mul(0.15))
   }
 }

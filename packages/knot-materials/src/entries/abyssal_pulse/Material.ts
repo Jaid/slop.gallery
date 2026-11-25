@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, float, Fn, mix, modelWorldMatrixInverse, mx_fractal_noise_float, mx_noise_float, time, transformNormalToView, uv, varying, vec2, vec3, vec4} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../candidates/claude_fable/lib/cellNoiseVec3.ts'
@@ -77,7 +78,7 @@ export default class extends KnotMaterial {
         const idle = idleWave.add(organ.y.mul(0.15))
         const flicker = t.mul(organ.z.mul(3).add(2)).add(organ.z.mul(40)).sin().mul(0.15).add(0.85)
         const organFiring = rings.mul(proximity.mul(1.4).add(0.3)).add(idle).mul(flicker).clamp()
-        const organColor = mix(rgb('#38f0ff'), rgb('#a0ffd8'), organ.z)
+        const organColor = mix(rgb(hsl.integer(204, 99, 85)), rgb(hsl.integer(166, 100, 91.9)), organ.z)
         const halo = distance.div(radius).mul(-2.2).exp().mul(0.5)
           .mul(distance.smoothstep(0.6, 0.9).oneMinus()).mul(resolved)
         photophores = photophores.add(organColor.mul(disc.mul(dome.mul(0.6).add(0.4)).add(halo)).mul(gate).mul(organFiring))
@@ -90,7 +91,7 @@ export default class extends KnotMaterial {
     const cells = mx_fractal_noise_float(p.mul(14).add(vec3(0, t.mul(0.05), 0)), 3, 2.1, 0.5).mul(0.5).add(0.5)
     const expansion = proximity.mul(0.5).add(0.2).add(t.mul(0.9).sin().mul(0.05))
     const chromatophore = cells.smoothstep(expansion.oneMinus().mul(0.7), expansion.oneMinus().mul(0.7).add(0.25))
-    const skinColor = mix(rgb('#160b2a'), mix(rgb('#5a1a6e'), rgb('#c81e46'), proximity), chromatophore)
+    const skinColor = mix(rgb(hsl.integer(297, 65, 9)), mix(rgb(hsl.integer(317, 77, 27)), rgb(hsl.integer(16, 92, 47)), proximity), chromatophore)
 // Wet gel: slippery highlights, a translucent limb, and fine surface texture from the organs and skin cells.
     const skinGrain = mx_noise_float(p.mul(90)).mul(0.0003)
     const surfaceNormal = proceduralNormal(goosebumps.add(skinGrain).add(chromatophore.mul(0.0004)), 1, displacedNormal)
@@ -102,11 +103,11 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.08
     this.clearcoatNormalNode = displacedNormal
     this.sheen = 0.5
-    this.sheenColor.set('#3a6cff')
+    this.sheenColor.set(hsl.integer(265.5, 100, 52))
     this.sheenRoughness = 0.5
 // Light: subsurface cyan at the limb, the organs, a warm rush of blood in the skin up close, and wet reflections.
-    const subsurface = rgb('#1a7fa8').mul(grazing.pow(2.5)).mul(fresnel(facing, 0.02).oneMinus()).mul(0.35)
-    const blush = rgb('#ff3a5a').mul(chromatophore).mul(intimate).mul(t.mul(1.4).sin().mul(0.2).add(0.8)).mul(0.12)
+    const subsurface = rgb(hsl.integer(232, 86, 49)).mul(grazing.pow(2.5)).mul(fresnel(facing, 0.02).oneMinus()).mul(0.35)
+    const blush = rgb(hsl.integer(18, 99, 60)).mul(chromatophore).mul(intimate).mul(t.mul(1.4).sin().mul(0.2).add(0.8)).mul(0.12)
     const wet = environmentHighlight(environment, vec3(du.cross(dv).normalize()), 0.05).mul(fresnel(facing, 0.03)).mul(0.6)
     const {emissive, isolated} = debugLayer({
       photophores,

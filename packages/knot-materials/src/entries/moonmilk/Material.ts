@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeRay} from '../../lib/atelier.ts'
@@ -54,10 +55,10 @@ export default class extends BaseKnotMaterial {
     const topPhase = facing.mul(6.5).add(grazing.mul(2)).add(flow).add(p.z.mul(3)).add(p.x.mul(2)).add(top.random.y.mul(1.2))
     const topFilm = spectralColor(topPhase)
     const deepFilm = spectralColor(topPhase.add(2.2).add(grazing.mul(3)))
-    const pearl = color('#e8dfd0')
+    const pearl = color(hsl.integer(81, 28, 89))
     const topTablet = pearl.mul(top.random.x.mul(0.08).add(0.96)).mul(topFilm.mul(0.9).add(0.1))
-    const deepTablet = color('#b8a48c').mul(deep.random.x.mul(0.12).add(0.94)).mul(deepFilm.mul(0.85).add(0.15))
-    const mortar = color('#4a3222').mul(top.random.z.mul(0.15).add(0.92))
+    const deepTablet = color(hsl.integer(72, 24, 69)).mul(deep.random.x.mul(0.12).add(0.94)).mul(deepFilm.mul(0.85).add(0.15))
+    const mortar = color(hsl.integer(54, 39, 24)).mul(top.random.z.mul(0.15).add(0.92))
     const gap = top.face.oneMinus()
     this.colorNode = mix(mix(mortar, deepTablet, deep.face.mul(0.65).add(0.35)), topTablet, top.face)
     this.metalness = 0
@@ -73,6 +74,6 @@ export default class extends BaseKnotMaterial {
     const jitter = vec3(mx_noise_float(p.mul(30)), mx_noise_float(p.mul(30).add(9)), mx_noise_float(p.mul(30).add(17))).sub(0.5)
     const grainNormal = normalViewGeometry.add(jitter.mul(0.2)).normalize()
     const sparkle = glints(grainNormal, 140).mul(top.face).mul(near).mul(0.18)
-    this.emissiveNode = color('#ffedd8').mul(grazing.pow(4).mul(0.04)).add(topFilm.mul(sparkle.mul(0.5)))
+    this.emissiveNode = color(hsl.integer(72, 100, 94.8)).mul(grazing.pow(4).mul(0.04)).add(topFilm.mul(sparkle.mul(0.5)))
   }
 }

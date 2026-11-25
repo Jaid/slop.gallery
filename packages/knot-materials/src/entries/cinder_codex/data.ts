@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cinder_codex',
   candidateId: 'muse_spark',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'The last page of a burned library still glows between its lines.',
   placeholder: {
-    color: '#ff6a00',
+    color: hsl.integer(45, 100, 65),
     shading: 'stone',
   },
 } as const satisfies KnotData

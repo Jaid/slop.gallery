@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ciliary_rainbow',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Ciliary comb rows refract the black ocean into traveling rainbows, pulsing to an ancient rhythm.',
   placeholder: {
-    color: '#55bccc',
+    color: hsl.integer(209, 68, 70),
     shading: 'glass',
   },
 } as const satisfies KnotData

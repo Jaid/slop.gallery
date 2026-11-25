@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'zero_point_lather',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'At the edge of stillness, a fine froth refuses to settle into nothing.',
   placeholder: {
-    color: '#b18cff',
+    color: hsl.integer(297, 100, 68),
     shading: 'smooth',
   },
 } as const satisfies KnotData

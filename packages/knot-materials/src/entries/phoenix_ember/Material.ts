@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -28,16 +29,16 @@ export default class extends KnotMaterial {
     const coals = mx_noise_float(inner.mul(10).add(vec3(0, time.mul(0.04), 0))).mul(0.5).add(0.5)
     const breath = time.mul(0.6).sin().mul(0.5).add(0.5).pow(2)
     const feathers = opticalLine(mx_noise_float(deep.mul(19)), 0.024).mul(near)
-    this.colorNode = mix(color('#120807'), color('#3a1710'), char)
+    this.colorNode = mix(color(hsl.integer(27, 32, 6)), color(hsl.integer(33, 61, 15)), char)
     this.transmission = 0.25
     this.thickness = 0.45
     this.ior = 1.52
-    this.attenuationColor.set('#7a1a00')
+    this.attenuationColor.set(hsl.integer(35, 100, 29))
     this.attenuationDistance = 0.5
     this.roughnessNode = char.mul(0.25).add(0.3)
     this.clearcoat = 0.35
     this.clearcoatRoughness = 0.12
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(10)), 0.004)
-    this.emissiveNode = mix(color('#ff2e00'), color('#ffc24d'), coals).mul(cracks).mul(breath.mul(0.7).add(0.45)).add(color('#ff8a3c').mul(feathers).mul(breath.mul(0.6).add(0.3))).add(color('#ff5a1a').mul(grazing.pow(3)).mul(breath.mul(0.3).add(0.1)))
+    this.emissiveNode = mix(color(hsl.integer(32, 100, 58.5)), color(hsl.integer(80.4, 100, 82.4)), coals).mul(cracks).mul(breath.mul(0.7).add(0.45)).add(color(hsl.integer(51, 100, 71)).mul(feathers).mul(breath.mul(0.6).add(0.3))).add(color(hsl.integer(38, 100, 63)).mul(grazing.pow(3)).mul(breath.mul(0.3).add(0.1)))
   }
 }

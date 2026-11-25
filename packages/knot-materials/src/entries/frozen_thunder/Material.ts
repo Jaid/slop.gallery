@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, Fn, Loop, mix, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, vec2, vec3, vec4} from 'three/tsl'
 
 import {glitter} from '../../candidates/claude_sonnet/lib/glitter.ts'
@@ -35,10 +36,10 @@ const discharge = Fn(([q]: [Node<'vec3'>]) => {
   return vec4(trunk, branch, twig, arrival)
 })
 const ramp = {
-  core: rgb('#f4f0ff'),
-  hot: rgb('#9d7bff'),
-  cold: rgb('#2f5bff'),
-  deep: rgb('#0a1a6e'),
+  core: rgb(hsl.integer(298, 100, 96)),
+  hot: rgb(hsl.integer(292, 100, 62.3)),
+  cold: rgb(hsl.integer(266, 100, 48)),
+  deep: rgb(hsl.integer(266, 95, 18)),
 }
 /** A block of black glass with a Lichtenberg figure trapped inside. The figure is a real volume: the eye marches through the tube along a refracted ray, so branches at different depths slide against each other as you move and cross without ever sitting on the surface. A slow front of light travels outward through the branches, and finer twigs only ignite as you approach. */
 export default class extends KnotMaterial {
@@ -72,7 +73,7 @@ export default class extends KnotMaterial {
     const figure = march.xyz
     const haze = march.w
     const sparkle = glitter(p, 0.011, 90, 0.5).sparkle
-    this.colorNode = mix(rgb('#02030a'), rgb('#080c26'), grazing.pow(2))
+    this.colorNode = mix(rgb(hsl.integer(272, 50, 3)), rgb(hsl.integer(273, 68, 7)), grazing.pow(2))
     this.metalness = 0
     this.roughness = 0.03
     this.ior = 1.5

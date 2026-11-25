@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'lacuna_brass',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   createdAt: 1_789_816_097,
   flavorText: 'A brass music roll keeps its missing notes, waiting for an instrument that can play a circle.',
   placeholder: {
-    color: '#c79b50',
+    color: hsl.integer(79, 65, 67),
     shading: 'metal',
   },
 } as const satisfies KnotData

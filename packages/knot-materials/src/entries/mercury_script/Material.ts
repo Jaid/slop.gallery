@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -42,9 +43,9 @@ export default class extends KnotMaterial {
     const dot = screenFill(ink.sub(vec2(0.22, 0.28)).length().sub(0.055)).mul(id.y.smoothstep(0.6, 0.72))
     const glyph = stem.max(bowl).max(hook).max(flourish).max(dot).mul(glyphSupport)
     const lacquerGrain = mx_noise_float(p.mul(22)).mul(0.5).add(0.5)
-    const lacquer = mix(color('#07060b'), color('#1a140f'), lacquerGrain.mul(0.55).add(grazing.mul(0.1)))
-    const mercury = mix(color('#c5d0dc'), color('#ffffff'), facing.pow(0.4))
-    const warm = mix(mercury, color('#f4e0b8'), id.x.mul(0.4))
+    const lacquer = mix(color(hsl.integer(295, 24, 4)), color(hsl.integer(62, 20, 10)), lacquerGrain.mul(0.55).add(grazing.mul(0.1)))
+    const mercury = mix(color(hsl.integer(250, 20, 83)), color(hsl.integer(0, 0, 100)), facing.pow(0.4))
+    const warm = mix(mercury, color(hsl.integer(85, 63, 90)), id.x.mul(0.4))
     this.colorNode = mix(lacquer, warm, glyph)
     this.normalNode = proceduralNormal(glyph.mul(-0.012).add(lacquerGrain.mul(0.001)), 1.2)
     this.metalnessNode = mix(float(0.02), float(1), glyph)
@@ -57,6 +58,6 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = lacquerGrain.mul(260).add(60)
     const pulse = time.mul(0.45).add(id.z.mul(9)).add(along).sin().mul(0.5).add(0.5)
     const meniscus = screenRibbon(bowlRadius.sub(0.19), 0.022).mul(bowl)
-    this.emissiveNode = color('#f4f8ff').mul(glyph).mul(pulse).mul(near).mul(0.22).add(color('#ffffff').mul(meniscus).mul(facing).mul(0.45)).add(color('#d5e4f8').mul(flourish.add(hook)).mul(intimate).mul(0.16)).add(color('#9eb4cc').mul(dot).mul(0.3)).mul(glyphSupport)
+    this.emissiveNode = color(hsl.integer(262, 100, 97.4)).mul(glyph).mul(pulse).mul(near).mul(0.22).add(color(hsl.integer(0, 0, 100)).mul(meniscus).mul(facing).mul(0.45)).add(color(hsl.integer(256, 63, 90)).mul(flourish.add(hook)).mul(intimate).mul(0.16)).add(color(hsl.integer(251, 28, 72)).mul(dot).mul(0.3)).mul(glyphSupport)
   }
 }

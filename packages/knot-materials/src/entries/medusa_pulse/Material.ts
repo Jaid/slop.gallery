@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, select, time, transformNormalToView, uv, vec2} from 'three/tsl'
 
 import {knotFrame} from '../../candidates/claude_sonnet/lib/knotFrame.ts'
@@ -61,21 +62,21 @@ export default class extends KnotMaterial {
     const nuclei = organ(shallow, 0.16, 0.55).mul(near.mul(0.7).add(0.3))
     const gonads = organ(deep, 0.34, 0.5)
     const cilia = mx_noise_float(p.mul(540)).mul(0.5).add(0.5).pow(6).mul(intimate).mul(grazing.mul(0.6).add(0.4))
-    const membrane = color('#3c2f8a')
+    const membrane = color(hsl.integer(284, 75, 28))
     this.colorNode = membrane
     this.transmission = 0.7
     this.thickness = 0.32
     this.ior = 1.34
     this.dispersion = 0.12
-    this.attenuationColor.set('#5b2ee0')
+    this.attenuationColor.set(hsl.integer(284, 93, 40.5))
     this.attenuationDistance = 0.16
     this.roughnessNode = float(0.26).sub(canal.mul(0.08))
     this.clearcoat = 0.7
     this.clearcoatRoughness = 0.07
-    const pulseColor = mix(color('#ff3fa4'), color('#5ff2ff'), beat.mul(0.85).add(tube.x.mul(TAU).sin().mul(0.15)).clamp())
+    const pulseColor = mix(color(hsl.integer(354, 100, 63)), color(hsl.integer(203, 99.9, 87)), beat.mul(0.85).add(tube.x.mul(TAU).sin().mul(0.15)).clamp())
     const canalGlow = pulseColor.mul(canal.mul(heart.mul(2.4).add(0.16)))
-    const ringGlow = color('#7a63ff').mul(ring.mul(heart.mul(1.4).add(0.05)))
-    const bodyGlow = color('#6c4dff').mul(beat).mul(0.22).mul(grazing.mul(0.6).add(0.4))
-    this.emissiveNode = canalGlow.add(ringGlow).add(bodyGlow).add(color('#ffad4d').mul(nuclei).mul(0.95)).add(color('#ff5fc0').mul(gonads).mul(0.55)).add(color('#b8fbff').mul(cilia).mul(0.14)).add(color('#66e0ff').mul(grazing.pow(3)).mul(0.1))
+    const ringGlow = color(hsl.integer(284, 100, 54.5)).mul(ring.mul(heart.mul(1.4).add(0.05)))
+    const bodyGlow = color(hsl.integer(283, 100, 49.6)).mul(beat).mul(0.22).mul(grazing.mul(0.6).add(0.4))
+    this.emissiveNode = canalGlow.add(ringGlow).add(bodyGlow).add(color(hsl.integer(67, 100, 78)).mul(nuclei).mul(0.95)).add(color(hsl.integer(347, 100, 67.6)).mul(gonads).mul(0.55)).add(color(hsl.integer(201, 100, 93.5)).mul(cilia).mul(0.14)).add(color(hsl.integer(218, 99, 82)).mul(grazing.pow(3)).mul(0.1))
   }
 }

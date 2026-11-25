@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -29,13 +30,13 @@ export default class extends BaseKnotMaterial {
     const flecks = cellularPoints(p.mul(42), 0.08, 0.24, 0.15)
     const fleckMask = flecks.mul(fireMask).mul(near.mul(0.6).add(0.4))
     const parallax = facing.pow(0.8)
-    this.colorNode = color('#06070c')
+    this.colorNode = color(hsl.integer(274, 22, 4.6))
     this.metalness = 0.05
     this.roughness = 0.12
     this.transmission = 0.28
     this.thickness = 0.65
     this.ior = 1.45
-    this.attenuationColor.set('#0a0a1a')
+    this.attenuationColor.set(hsl.integer(282, 47, 6))
     this.attenuationDistance = 0.7
     this.iridescence = 1
     this.iridescenceIOR = 2.2
@@ -45,7 +46,7 @@ export default class extends BaseKnotMaterial {
     this.normalNode = proceduralNormal(fireField.mul(0.6).add(flecks.mul(0.3)), 0.0012)
     this.emissiveNode = opalTint.mul(fireMask).mul(parallax.mul(1.2).add(0.2)).mul(near.mul(0.6).add(0.5))
       .add(opalTint.mul(fleckMask).mul(2.2))
-      .add(color('#9aa8ff').mul(rim).mul(0.12))
+      .add(color(hsl.integer(276, 100, 71.6)).mul(rim).mul(0.12))
     this.envMapIntensity = 0.6
   }
 }

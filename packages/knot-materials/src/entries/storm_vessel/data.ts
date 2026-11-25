@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'storm_vessel',
   candidateId: 'glm',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A dark vessel keeps a little thunder moving beneath its polished skin.',
   placeholder: {
-    color: '#8a7bff',
+    color: hsl.integer(285, 100, 60.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, atan, attribute, color, exp, float, length, max, mix, mod, mx_noise_float, normalLocal, positionGeometry, sqrt, time, uv, vec3} from 'three/tsl'
 import {DoubleSide, FrontSide, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -46,7 +47,7 @@ function ripples(distance: Float, amplitude: number, wavelength: number, speed: 
 export default class MarbleFountainWaterMaterial extends MeshPhysicalNodeMaterial {
   constructor(falling = false, heavy = true) {
     super({
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       metalness: 0,
       roughness: falling ? 0.04 : 0.02,
       ior: 1.333,
@@ -54,7 +55,7 @@ export default class MarbleFountainWaterMaterial extends MeshPhysicalNodeMateria
       // Local thickness that the refracted view is shifted by; the pools’ real depth, and an exaggeration for the thin sheets so their ripples bend what is behind them.
       thickness: falling ? 0.07 : 0.3,
       // Clear water with a faint blue-green cast over its depth; the bowls are shallow, so most of the marble shows through.
-      attenuationColor: '#8ccfc3',
+      attenuationColor: hsl.integer(182, 47, 77),
       attenuationDistance: falling ? 0.8 : 1.4,
       transparent: falling || !heavy,
       opacity: 1,
@@ -85,7 +86,7 @@ export default class MarbleFountainWaterMaterial extends MeshPhysicalNodeMateria
       const foam = air.add(streaks.sub(0.5).mul(0.5)).add(lobe.mul(0.12)).clamp()
       // Slow, broad wobble so the curtain never reads as a rigid shell.
       const wobble = mx_noise_float(vec3(around.mul(0.8), emitted.mul(1.3)))
-      this.colorNode = mix(color('#d6efe9'), color('#ffffff'), foam)
+      this.colorNode = mix(color(hsl.integer(180, 40, 92)), color(hsl.integer(0, 0, 100)), foam)
       this.opacityNode = coverage.mul(mix(float(heavy ? 0.42 : 0.55), float(0.95), foam)).mul(streaks.mul(0.6).add(0.55)).clamp()
       // Only the aerated water scatters; the clear film shows what is behind it.
       this.transmissionNode = heavy ? float(1).sub(foam.mul(0.85)) : float(0)
@@ -130,7 +131,7 @@ export default class MarbleFountainWaterMaterial extends MeshPhysicalNodeMateria
     // Ring crests catch a little light even where the reflected room is uniform.
     const crest = height.div(0.004).clamp(-1, 1).mul(0.5).add(0.5).mul(exp(veilRing.min(fromArc).mul(-5))).mul(0.12)
     // In heavy mode the color only tints what shows through the water; in fast mode it stands in for the marble under it.
-    this.colorNode = mix(color(heavy ? '#f2f9f7' : '#5aa89d'), color('#f6fcfa'), foam.add(crest).clamp())
+    this.colorNode = mix(color(heavy ? hsl.integer(177, 34, 97) : hsl.integer(184, 54, 63)), color(hsl.integer(174, 46, 98.4)), foam.add(crest).clamp())
     // Clear water shows the marble through it; foam is opaque.
     this.transmissionNode = heavy ? float(1).sub(foam.mul(0.95)) : float(0)
     this.opacityNode = heavy ? float(1) : float(0.62).add(foam.mul(0.38))

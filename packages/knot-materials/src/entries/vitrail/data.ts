@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'vitrail',
   candidateId: 'mimo',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A cathedral window poured through a knot; its jeweled panes still burn with the last of the sunset.',
   displacement: 0.005,
   placeholder: {
-    color: '#7442a8',
+    color: hsl.integer(304, 68, 41),
     shading: 'glass',
   },
 } as const satisfies KnotData

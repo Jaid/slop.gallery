@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_noise_float, mx_worley_noise_vec3, time, uv, vec2, vec3} from 'three/tsl'
 
 import {coverage, periodicSurface, surfaceTile} from '../../candidates/gpt_sol/lib/gallerySurface.ts'
@@ -43,21 +44,21 @@ export default class extends KnotMaterial {
       const crystal = arm.max(rib.mul(0.72)).mul(extent).mul(seed.z.smoothstep(0.2, 0.55)).toVar()
       frost = frost.add(crystal.mul(0.7 - i * 0.09)).clamp().toVar()
       const shimmer = along.mul(84).sub(time.mul(0.8)).add(seed.x.mul(8)).cos().mul(0.5).add(0.5).pow(5)
-      iceLight = iceLight.add(mix(color('#b6f6fc'), color('#467dce'), i / 4).mul(crystal).mul(shimmer.mul(1.3).add(0.65)).mul(0.22 - i * 0.025)).toVar()
+      iceLight = iceLight.add(mix(color(hsl.integer(203, 87, 92)), color(hsl.integer(258, 71, 52.6)), i / 4).mul(crystal).mul(shimmer.mul(1.3).add(0.65)).mul(0.22 - i * 0.025)).toVar()
     }
     const cells = mx_worley_noise_vec3(p.mul(11), 0.8, 0).toVar()
     const boundary = cells.y.sub(cells.x)
     const cleavage = coverage(boundary, 0.025, boundary.fwidth()).toVar()
     const grain = mx_noise_float(periodicSurface(tube, 108, 15)).toVar()
-    const body = mix(color('#08557a'), color('#82bbc5'), cells.x.smoothstep(0.2, 0.7))
-    this.colorNode = mix(body, color('#ecf8f5'), frost.mul(0.78).add(cleavage.mul(0.38)).add(grazing.pow(3).mul(0.48)).clamp())
+    const body = mix(color(hsl.integer(237, 91, 34)), color(hsl.integer(210, 40, 72)), cells.x.smoothstep(0.2, 0.7))
+    this.colorNode = mix(body, color(hsl.integer(179, 42, 96.4)), frost.mul(0.78).add(cleavage.mul(0.38)).add(grazing.pow(3).mul(0.48)).clamp())
     this.metalness = 0
     this.ior = 1.31
     this.roughnessNode = float(0.15).add(frost.mul(0.27)).add(cleavage.mul(0.09)).add(grain.abs().mul(0.025))
     this.clearcoat = 0.85
     this.clearcoatRoughnessNode = float(0.055).add(frost.mul(0.17))
     this.normalNode = proceduralNormal(cells.x.mul(0.0018).add(grain.mul(0.0004)).add(cleavage.mul(0.00035)), 0.7)
-    this.emissiveNode = iceLight.mul(near.mul(0.2).add(0.8)).add(color('#88dce9').mul(cleavage).mul(intimate).mul(0.055))
+    this.emissiveNode = iceLight.mul(near.mul(0.2).add(0.8)).add(color(hsl.integer(208, 64, 82)).mul(cleavage).mul(intimate).mul(0.055))
     this.iridescenceNode = cleavage.mul(grazing).mul(0.3)
     this.iridescenceIOR = 1.31
     this.iridescenceThicknessNode = cells.x.mul(180).add(150)

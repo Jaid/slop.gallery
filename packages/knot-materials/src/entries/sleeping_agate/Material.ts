@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, normalView, select, time, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -15,10 +16,10 @@ const bandsPerUnit = 46
 const silica = (q: Node<'vec3'>) => q.mul(vec3(1, 1.3, 1)).length().add(mx_fractal_noise_float(q.mul(2.3), 3, 2, 0.5).mul(0.16))
 /** Four stops of agate, chosen per band by a random index in [0, 1). Linear light, with the stops looping seamlessly. */
 const agateTone = (h: Node<'float'>) => {
-  const ivory = color('#efe3cc')
-  const honey = color('#d69d56')
-  const rust = color('#9c4a2b')
-  const smoke = color('#6a5a55')
+  const ivory = color(hsl.integer(84, 44, 90.6))
+  const honey = color(hsl.integer(71, 66, 69))
+  const rust = color(hsl.integer(41, 71, 43))
+  const smoke = color(hsl.integer(38, 13, 40))
   return select(h.lessThan(0.25), mix(ivory, honey, h.mul(4)), select(h.lessThan(0.5), mix(honey, rust, h.sub(0.25).mul(4)), select(h.lessThan(0.75), mix(rust, smoke, h.sub(0.5).mul(4)), mix(smoke, ivory, h.sub(0.75).mul(4)))))
 }
 
@@ -41,7 +42,7 @@ export default class extends KnotMaterial {
     const fern = mx_fractal_noise_float(p.mul(9).add(silica(p).mul(2)), 4, 2.2, 0.5)
     const zone = mx_noise_float(p.mul(1.6)).smoothstep(0.1, 0.5)
     const dendrite = fern.abs().smoothstep(0, 0.035).oneMinus().mul(zone).mul(0.85)
-    const moss = mix(color('#2a1a10'), color('#2f3d22'), mx_noise_float(p.mul(5)).mul(0.5).add(0.5))
+    const moss = mix(color(hsl.integer(53, 40, 13)), color(hsl.integer(131, 46, 24)), mx_noise_float(p.mul(5)).mul(0.5).add(0.5))
 // Drusy quartz: small points whose specular flashes only when they face the room.
     const druse = cellularPoints(p.mul(64), 0.05, 0.2, 0.78)
     const sparkle = glints(normalView, 46).mul(druse)
@@ -55,6 +56,6 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = normal
 // Light seeps out of the deeper layers and warms toward the grazing edge.
     this.emissiveNode = deepTone.mul(grazing.mul(0.22).add(0.14))
-      .add(color('#fff0d4').mul(sparkle).mul(near.mul(0.9).add(0.1)).mul(1.5))
+      .add(color(hsl.integer(83, 100, 95.3)).mul(sparkle).mul(near.mul(0.9).add(0.1)).mul(1.5))
   }
 }

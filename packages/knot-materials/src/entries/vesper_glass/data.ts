@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'vesper_glass',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The last light of an absent cathedral lingers in these windows, turning slowly from garnet prayer to blue silence.',
   placeholder: {
-    color: '#6c526f',
+    color: hsl.integer(323, 29, 39),
     shading: 'glass',
   },
 } as const satisfies KnotData

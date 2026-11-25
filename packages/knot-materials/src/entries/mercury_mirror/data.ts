@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mercury_mirror',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Nothing is so still as a mirror, and nothing so restless as the hand that holds it.',
   placeholder: {
-    color: '#c9d1d8',
+    color: hsl.integer(244, 13, 83),
     shading: 'liquid',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ferrofluidic_resonance',
   candidateId: 'qwen_max',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'An unseen rhythm combs the liquid into trembling order.',
   placeholder: {
-    color: '#ff00aa',
+    color: hsl.integer(350, 100, 60.4),
     shading: 'liquid',
   },
 } as const satisfies KnotData

@@ -1,6 +1,7 @@
 import type {MarbleStyle} from '#src/lib/materials/marble/marble.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, positionGeometry} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -13,13 +14,13 @@ const unit = (node: Node<'float'>) => node.mul(0.5).add(0.5)
 
 /** Estremoz rosa: a pale shell pink clouded with salmon, veined in soft gray-green. */
 export const estremozRosa: MarbleStyle = {
-  base: '#e9cbbd',
-  cloud: '#d39887',
-  halo: '#c9a497',
+  base: hsl.integer(47, 41, 84),
+  cloud: hsl.integer(37, 44, 69),
+  halo: hsl.integer(40, 29, 71),
   haloStrength: 0.45,
-  thread: '#8f938a',
+  thread: hsl.integer(126, 7, 60),
   threadStrength: 0.5,
-  vein: '#7b8478',
+  vein: hsl.integer(138, 11, 54),
   veinWidth: 0.0018,
   web: 0,
 }
@@ -51,12 +52,12 @@ export default class EstremozStoneMaterial extends MeshStandardNodeMaterial {
     const glint = unit(mx_noise_float(p.mul(1800))).smoothstep(0.78, 0.9).mul(visibleDetail(footprint, 0.0007))
     const sugar = mix(float(0.5), unit(mx_noise_float(p.mul(600).add(5))), visibleDetail(footprint, 0.0018))
     const mottle = unit(mx_noise_float(p.mul(9).add(3)))
-    const stone = mix(marble.color, color('#c27c6c'), stream.mul(0.6)).mul(mottle.sub(0.5).mul(0.08).add(1))
+    const stone = mix(marble.color, color(hsl.integer(34, 46, 60)), stream.mul(0.6)).mul(mottle.sub(0.5).mul(0.08).add(1))
     this.colorNode = stone.mul(float(1).add(sugar.sub(0.5).mul(0.05)).add(glint.mul(0.05)))
     this.roughnessNode = float(0.24).add(unit(mx_noise_float(p.mul(3).add(7))).mul(0.06)).add(marble.vein.mul(0.05)).sub(glint.mul(0.14))
     this.normalNode = heightNormal(sugar.mul(0.000014).add(mx_noise_float(p.mul(36)).mul(0.00004)))
   }
   override setupLightingModel() {
-    return new TranslucentLightingModel(0.35, color('#ffc8b4'))
+    return new TranslucentLightingModel(0.35, color(hsl.integer(41, 100, 85.6)))
   }
 }

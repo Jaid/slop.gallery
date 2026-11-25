@@ -9,6 +9,7 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import {Quaternion, Vector3} from 'three/webgpu'
 
 import KnotCandidateSignFace, {candidateSignBackground, candidateSignTextureSize} from '#component/KnotCandidateSignFace'
+import {cssHex} from '#src/lib/color.ts'
 
 import {knotGalleryBounds} from '../../src/lib/gallery/knotGallery.ts'
 import {triangleCount} from '../../src/lib/geometry.ts'
@@ -112,7 +113,7 @@ test('printed faces use a compact raster with a model name and its mark, without
       icon,
     }))
     expect(markup).toContain(`width:${candidateSignTextureSize[0]}px;height:${candidateSignTextureSize[1]}px`)
-    expect(markup).toContain(`background:${candidateSignBackground}`)
+    expect(markup).toContain(`background:${cssHex(candidateSignBackground)}`)
     expect(markup.split('>A very long model name<')).toHaveLength(2)
     expect(markup.includes('<img')).toBe(icon !== undefined)
     expect(markup).not.toContain('>#')

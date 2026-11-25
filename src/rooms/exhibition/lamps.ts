@@ -51,7 +51,7 @@ export function tunnelTints(middleHue: number) {
 const [northTint, middleTint, southTint] = tunnelTints(tunnelHue(environmentSeed))
 
 /** the color of the staff stairways’ lamps */
-export const stairwayTint = '#a3d2cc'
+export const stairwayTint = hsl.integer(187, 36, 80)
 const stairways = Object.fromEntries(tunnelDisplays.flatMap(({side, stairway}) => Object.entries(stairway.lamps).map(([name, [x, y, z]]) => [`${side}_stairway_${name}`, {
   position: [x - originX, y - drop - originY, z - originZ],
   strength: 16,

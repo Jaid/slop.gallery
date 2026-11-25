@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2E09QDOVGvyWUoU; fixture: knot-material-shaders; result: success.
 export default {
   id: 'raku_celadon',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.011,
   flavorText: 'Thick jade celadon pools over charred stoneware, crazed with golden kintsugi seams. As you walk past, kiln iridescence blooms along the cracks.',
   placeholder: {
-    color: '#708077',
+    color: hsl.integer(161, 13, 52),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -21,14 +22,14 @@ export default class extends KnotMaterial {
 // ---------------------------------------------------------------
 // The gel body: clear, faintly blue, with a soft internal scatter.
 // ---------------------------------------------------------------
-    const gel = mix(color('#040d12'), color('#0f2c38'), mx_fractal_noise_float(p.mul(5), 3, 2.1, 0.5).mul(0.5).add(0.5))
+    const gel = mix(color(hsl.integer(230, 45, 6)), color(hsl.integer(228, 60, 17)), mx_fractal_noise_float(p.mul(5), 3, 2.1, 0.5).mul(0.5).add(0.5))
     this.colorNode = gel
     this.metalness = 0
     this.transmission = 0.22
     this.thickness = 0.7
     this.ior = 1.34
     this.dispersion = 0.25
-    this.attenuationColor.set('#2f8fbf')
+    this.attenuationColor.set(hsl.integer(235, 78, 55.5))
     this.attenuationDistance = 1.1
     this.roughness = 0.12
     this.clearcoat = 0.5
@@ -51,19 +52,19 @@ export default class extends KnotMaterial {
     const spotDistance = spots.fract().sub(spotId.mul(0.6).add(0.2)).length()
     const spot = spotDistance.smoothstep(0.06, 0.16).oneMinus()
     const spotPulse = time.mul(spotId.y.mul(2.4).add(0.6)).add(spotId.z.mul(30)).sin().mul(0.5).add(0.5)
-    const spotColor = mix(color('#38ffd0'), color('#b06bff'), spotId.x)
+    const spotColor = mix(color(hsl.integer(172, 100, 87.85)), color(hsl.integer(303, 100, 61.7)), spotId.x)
 // A row of photophores runs the length of the animal like a lit spine.
     const spine = tube.y.sub(0.5).abs().smoothstep(0.05, 0.22).oneMinus()
     const spineBead = tube.x.mul(46).fract().sub(0.5).abs().smoothstep(0.08, 0.3).oneMinus()
     const spinePulse = time.mul(1.1).sub(tube.x.mul(46)).sin().mul(0.5).add(0.5)
     const spineGlow = spine.mul(spineBead).mul(spinePulse.mul(0.7).add(0.3))
-    const gutColor = mix(color('#5ff2d8'), color('#9fe8ff'), gutField.mul(0.5).add(0.5))
+    const gutColor = mix(color(hsl.integer(179, 83, 85.4)), color(hsl.integer(220, 100, 87.2)), gutField.mul(0.5).add(0.5))
     this.emissiveNode = gutColor.mul(gut).mul(breath.mul(0.6).add(0.55)).mul(alarm.mul(0.7).add(0.4)).mul(1.1)
       .add(spotColor.mul(spot).mul(spotPulse.mul(0.85).add(0.15)).mul(alarm.mul(0.6).add(0.3)).mul(0.85))
-      .add(color('#2ad9c0').mul(net).mul(wave).mul(near).mul(0.45))
-      .add(color('#7dffe0').mul(spineGlow).mul(alarm.mul(0.6).add(0.4)).mul(0.9))
+      .add(color(hsl.integer(180, 91, 76)).mul(net).mul(wave).mul(near).mul(0.45))
+      .add(color(hsl.integer(176, 100, 90.4)).mul(spineGlow).mul(alarm.mul(0.6).add(0.4)).mul(0.9))
       .add(gutColor.mul(grazing.pow(2)).mul(intimate.mul(0.6).add(0.2)).mul(0.2))
-      .add(color('#8fd8ff').mul(grazing.pow(6)).mul(0.18))
+      .add(color(hsl.integer(233, 100, 82.3)).mul(grazing.pow(6)).mul(0.18))
     this.normalNode = proceduralNormal(mx_fractal_noise_float(p.mul(9), 3, 2, 0.5).mul(0.5).add(gut.mul(0.3)).add(net.mul(0.25)), 0.0007)
     this.clearcoatNormalNode = this.normalNode
   }

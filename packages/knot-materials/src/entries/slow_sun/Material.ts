@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, exp, float, Fn, max, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, positionViewDirection, sin, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/deepseek/lib/bumpNormal.ts'
@@ -14,11 +15,11 @@ import knotData from './data.ts'
 const granulePeriod = vec2(90, 11)
 const spotCentres = [vec2(1.25, 0.32), vec2(3.45, 0.6), vec2(5.72, 0.23)] as const
 function solarPalette(h: Node<'float'>) {
-  let c = mix(color('#1b0100'), color('#6b0700'), h.smoothstep(0, 0.18))
-  c = mix(c, color('#c92c00'), h.smoothstep(0.18, 0.42))
-  c = mix(c, color('#ff7600'), h.smoothstep(0.42, 0.64))
-  c = mix(c, color('#ffc24a'), h.smoothstep(0.64, 0.82))
-  c = mix(c, color('#fff5d2'), h.smoothstep(0.82, 1))
+  let c = mix(color(hsl.integer(32, 100, 5.4)), color(hsl.integer(31, 100, 23.7)), h.smoothstep(0, 0.18))
+  c = mix(c, color(hsl.integer(33.7, 100, 47)), h.smoothstep(0.18, 0.42))
+  c = mix(c, color(hsl.integer(49, 100, 67)), h.smoothstep(0.42, 0.64))
+  c = mix(c, color(hsl.integer(81, 100, 82.4)), h.smoothstep(0.64, 0.82))
+  c = mix(c, color(hsl.integer(94, 100, 96.4)), h.smoothstep(0.82, 1))
   return c
 }
 /** Convection, spots, faculae, a flare and the bright chromosphere, all boiling in object space. */
@@ -111,16 +112,16 @@ export default class extends KnotMaterial {
     const granulation = fields.lane.oneMinus().mul(0.38).add(0.62)
     const spotShade = fields.spotDark.mul(0.65).oneMinus().max(0.18)
     this.emissiveNode = hue.mul(limb).mul(boilShade).mul(granulation).mul(spotShade).mul(1.05)
-      .add(color('#fff6d8').mul(fields.flare.mul(2.2)))
-      .add(color('#ffd27a').mul(fields.flareRing.mul(0.9)))
-      .add(color('#ffb347').mul(fields.arcs.mul(0.55)))
-      .add(color('#fff0c0').mul(fields.arcs.mul(0.38)))
-      .add(color('#fff8e4').mul(fields.heat.smoothstep(0.88, 1.12).mul(0.45)))
-      .add(color('#fff4d8').mul(fields.flare.mul(0.9)))
-      .add(color('#fffbe8').mul(hotPoints))
-      .add(color('#ff6a12').mul(grazing.pow(4)).mul(0.9))
-      .add(color('#ffd9a0').mul(grazing.pow(10)).mul(0.38))
-      .add(color('#ff9a30').mul(grazing.pow(2).mul(near).mul(mx_noise_float(p.mul(22).add(vec3(0, 0, time.mul(0.2)))).mul(0.5).add(0.5)).mul(0.16)))
-      .add(color('#ffe9c0').mul(hot.mul(0.12)))
+      .add(color(hsl.integer(94, 100, 97)).mul(fields.flare.mul(2.2)))
+      .add(color(hsl.integer(83, 100, 86.6)).mul(fields.flareRing.mul(0.9)))
+      .add(color(hsl.integer(72, 100, 79.1)).mul(fields.arcs.mul(0.55)))
+      .add(color(hsl.integer(92, 100, 94.7)).mul(fields.arcs.mul(0.38)))
+      .add(color(hsl.integer(91, 100, 97.6)).mul(fields.heat.smoothstep(0.88, 1.12).mul(0.45)))
+      .add(color(hsl.integer(89, 100, 96.3)).mul(fields.flare.mul(0.9)))
+      .add(color(hsl.integer(97, 100, 98.4)).mul(hotPoints))
+      .add(color(hsl.integer(43.8, 100, 65.3)).mul(grazing.pow(4)).mul(0.9))
+      .add(color(hsl.integer(78, 100, 89)).mul(grazing.pow(10)).mul(0.38))
+      .add(color(hsl.integer(61, 100, 73.8)).mul(grazing.pow(2).mul(near).mul(mx_noise_float(p.mul(22).add(vec3(0, 0, time.mul(0.2)))).mul(0.5).add(0.5)).mul(0.16)))
+      .add(color(hsl.integer(83, 100, 93.2)).mul(hot.mul(0.12)))
   }
 }

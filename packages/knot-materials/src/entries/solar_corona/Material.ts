@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {voronoiCells} from '../../candidates/deepseek/lib/voronoiCells.ts'
@@ -35,8 +36,8 @@ export default class extends KnotMaterial {
 // Prominences fray the limb.
     const prominence = grazing.pow(3.5).mul(mx_noise_float(p.mul(11).add(vec3(time.mul(0.06), 0, 0))).mul(0.5).add(0.5))
 // Dark intergranular lanes give way to blinding white-hot cell centers.
-    const plasma = mix(color('#2a0500'), color('#ff7a10'), granule.pow(0.7))
-    const whiteHot = mix(plasma, color('#fff8dc'), granule.pow(3).mul(granuleFine.mul(0.35).add(0.65)))
+    const plasma = mix(color(hsl.integer(36, 100, 9)), color(hsl.integer(50, 100, 68)), granule.pow(0.7))
+    const whiteHot = mix(plasma, color(hsl.integer(95, 100, 97.3)), granule.pow(3).mul(granuleFine.mul(0.35).add(0.65)))
 // Limb darkening: the photosphere cools toward the silhouette.
     const limb = facing.mul(0.4).add(0.6)
     const hot = whiteHot.mul(spot.oneMinus().mul(0.94).add(0.06)).mul(limb)
@@ -48,7 +49,7 @@ export default class extends KnotMaterial {
     this.roughnessNode = float(0.92).sub(granule.mul(0.08)).clamp(0.8, 0.95)
     this.specularIntensity = 0.04
     this.normalNode = proceduralNormal(height, 1)
-    this.emissiveNode = hot.mul(1.35).add(color('#ffb347').mul(facula).mul(0.9)).add(color('#ff9a2e').mul(loops).mul(1.1)).add(color('#ff6a1a').mul(prominence).mul(1.2)).add(color('#ff3a08').mul(grazing.pow(2)).mul(0.2))
+    this.emissiveNode = hot.mul(1.35).add(color(hsl.integer(72, 100, 79.1)).mul(facula).mul(0.9)).add(color(hsl.integer(62, 100, 74)).mul(loops).mul(1.1)).add(color(hsl.integer(43, 100, 65.3)).mul(prominence).mul(1.2)).add(color(hsl.integer(33.1, 100, 59.5)).mul(grazing.pow(2)).mul(0.2))
     this.positionNode = positionGeometry.add(normalLocal.mul(height))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_vec3, normalViewGeometry, time, uv, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -40,16 +41,16 @@ export default class extends KnotMaterial {
     const neumann = ridgeLine(mx_noise_float(vec3(metric.x.mul(330), metric.y.mul(180), time.mul(0.01))), 0.01).mul(intimate.mul(0.55).add(0.05))
 // Peridot: yellow-green windows with internal fractures and a pale, glassy rim.
     const fracture = ridgeLine(mx_noise_float(vec3(metric.mul(55).add(rnd.xy.mul(12)), 2.3)), 0.007).mul(crystal)
-    const crystalDeep = mix(color('#081504'), color('#4e7a10'), rnd.y.mul(0.72).add(0.18))
-    const crystalLight = mix(crystalDeep, color('#79a51c'), rnd2.x.mul(0.5).add(facing.mul(0.14)))
+    const crystalDeep = mix(color(hsl.integer(137, 82, 8)), color(hsl.integer(131, 96, 45)), rnd.y.mul(0.72).add(0.18))
+    const crystalLight = mix(crystalDeep, color(hsl.integer(127, 93, 61)), rnd2.x.mul(0.5).add(facing.mul(0.14)))
     const crystalColor = mix(crystalDeep, crystalLight, crystal.mul(0.66).add(rnd2.x.mul(0.18))).mul(fracture.mul(0.3).oneMinus())
     const inclusion = mx_noise_float(vec3(metric.mul(155), 6.1)).mul(0.5).add(0.5).smoothstep(0.72, 0.9).mul(crystal)
 // Metal: cool iron, a dark etch, a bright polished lip around each stone.
-    const iron = mix(color('#485055'), color('#aab3b9'), mx_noise_float(vec3(metric.mul(6.2), 2.2)).mul(0.5).add(0.45))
+    const iron = mix(color(hsl.integer(235, 9, 34)), color(hsl.integer(237, 8, 72)), mx_noise_float(vec3(metric.mul(6.2), 2.2)).mul(0.5).add(0.45))
     const etchedIron = iron.mul(lamellae.mul(0.58).oneMinus()).mul(neumann.mul(0.18).oneMinus())
     const troilite = mx_noise_float(vec3(metric.mul(39), time.mul(0.03))).abs().smoothstep(0.72, 0.9).oneMinus()
-    const bronze = color('#9b6826').mul(troilite.mul(0.38))
-    const metalColor = mix(etchedIron, color('#d7dde0'), rim.mul(0.35)).add(bronze)
+    const bronze = color(hsl.integer(69, 74, 49)).mul(troilite.mul(0.38))
+    const metalColor = mix(etchedIron, color(hsl.integer(229, 9, 88)), rim.mul(0.35)).add(bronze)
     const surface = mix(metalColor, crystalColor, crystal)
     this.colorNode = surface
     this.metalnessNode = mix(float(1), float(0.02), crystal)
@@ -61,11 +62,11 @@ export default class extends KnotMaterial {
     const crystalHeight = crystal.mul(0.0011).add(fracture.mul(0.00022)).add(inclusion.mul(0.00015))
     this.normalNode = detailNormal(normalViewGeometry, metalHeight.add(crystalHeight), 1)
     this.aoNode = crystal.mul(0.12).add(crystal.oneMinus().mul(0.05)).add(0.83)
-    const greenRim = color('#a6e85a').mul(rim).mul(grazing.pow(2.1)).mul(0.32)
+    const greenRim = color(hsl.integer(130.5, 83, 84)).mul(rim).mul(grazing.pow(2.1)).mul(0.32)
     const innerLight = crystalColor.mul(crystal).mul(facing.mul(0.2).add(0.1))
     const scintilla = mx_noise_float(vec3(metric.mul(120), time.mul(0.6).add(3.2))).abs().smoothstep(0.68, 0.94).oneMinus().mul(crystal).mul(near.mul(0.7).add(0.15))
-    const starGlint = color('#e9ffd0').mul(scintilla).mul(0.65)
-    const metalGlint = color('#ffffff').mul(lamellae).mul(grazing.pow(3)).mul(0.08)
+    const starGlint = color(hsl.integer(128, 99, 96.7)).mul(scintilla).mul(0.65)
+    const metalGlint = color(hsl.integer(0, 0, 100)).mul(lamellae).mul(grazing.pow(3)).mul(0.08)
     this.emissiveNode = innerLight.add(greenRim).add(starGlint).add(metalGlint)
     this.envMapIntensity = 1.1
   }

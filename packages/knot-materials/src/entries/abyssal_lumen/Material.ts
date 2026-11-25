@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, hash, mix, mx_cell_noise_float, mx_noise_float, negateOnBackSide, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {spectralRamp} from '../../candidates/deepseek/lib/spectralRamp.ts'
@@ -61,7 +62,7 @@ export default class extends KnotMaterial {
     const heart = coreField.smoothstep(0.2, 0.95).mul(time.mul(0.62).sin().mul(0.22).add(0.78))
     const canal = filament(mx_noise_float(core.mul(11)).mul(0.7).add(core.y.mul(6)), 0.02)
     const skin = grazing.pow(3).mul(0.5).add(facing.pow(0.7).mul(0.25))
-    this.colorNode = mix(color('#030308'), color('#0b0f1e'), heart.mul(0.4).add(grazing.mul(0.3)))
+    this.colorNode = mix(color(hsl.integer(283, 38, 3)), color(hsl.integer(271, 42, 8)), heart.mul(0.4).add(grazing.mul(0.3)))
       .add(rainbow.mul(rows).mul(0.16)).add(wash.mul(halo).mul(0.05))
     this.metalness = 0
     this.roughnessNode = float(0.14).add(plates.mul(0.3)).add(cilia.mul(0.2)).add(heart.mul(0.1)).clamp(0.03, 1)
@@ -70,12 +71,12 @@ export default class extends KnotMaterial {
     this.normalNode = negateOnBackSide(bodyNormal)
     this.emissiveNode = rainbow.mul(rows).mul(crest).mul(0.8).mul(pulse)
       .add(wash.mul(halo).mul(0.14).mul(pulse))
-      .add(color('#ff4d7e').mul(heart).mul(0.42))
-      .add(color('#ff8ac0').mul(heart).mul(grazing).mul(0.16))
-      .add(color('#b48cff').mul(canal).mul(intimate.mul(0.5).add(0.12)).mul(0.42))
-      .add(color('#e6f0ff').mul(spark).mul(near.mul(0.6).add(0.4)).mul(1.25))
-      .add(color('#8fb8ff').mul(plates).mul(rows).mul(near).mul(0.3))
-      .add(color('#5a3cff').mul(skin).mul(0.1))
-      .add(color('#9f8cff').mul(cilia).mul(near).mul(0.08))
+      .add(color(hsl.integer(9, 100, 63)).mul(heart).mul(0.42))
+      .add(color(hsl.integer(352, 100, 74)).mul(heart).mul(grazing).mul(0.16))
+      .add(color(hsl.integer(298, 100, 68)).mul(canal).mul(intimate.mul(0.5).add(0.12)).mul(0.42))
+      .add(color(hsl.integer(258, 100, 94.4)).mul(spark).mul(near.mul(0.6).add(0.4)).mul(1.25))
+      .add(color(hsl.integer(261, 100, 74.5)).mul(plates).mul(rows).mul(near).mul(0.3))
+      .add(color(hsl.integer(279, 100, 45.6)).mul(skin).mul(0.1))
+      .add(color(hsl.integer(289, 100, 66)).mul(cilia).mul(near).mul(0.08))
   }
 }

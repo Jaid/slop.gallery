@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 77fsRvmePazcbTS; fixture: knot-material-shaders; result: success.
 export default {
   id: 'seraphim_glass',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Gothic rose windows of gold-ruby and cobalt glass hold a vaulted nave inside; step around the knot and colored sunbeams sweep the dark.',
   placeholder: {
-    color: '#6c4f49',
+    color: hsl.integer(32, 24, 37),
     shading: 'glass',
   },
 } as const satisfies KnotData

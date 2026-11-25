@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IgNMLTcxWnW8Pin; fixture: knot-material-shaders.
 export default {
   id: 'sleeping_wyrm',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.006,
   flavorText: 'It has coiled here since before the gallery was built, breathing slow embers. Step closer and it stirs; its scales rise to show the fire underneath.',
   placeholder: {
-    color: '#4a1606',
+    color: hsl.integer(37, 87, 18),
     shading: 'stone',
   },
 } as const satisfies KnotData

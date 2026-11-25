@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ActJg0bLJQHug14.
 export default {
   id: 'cloisonne_requiem',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Gold remembers every fracture; the enamel answers in midnight blue.',
   placeholder: {
-    color: '#102a58',
+    color: hsl.integer(261, 77, 19),
     shading: 'smooth',
   },
 } as const satisfies KnotData

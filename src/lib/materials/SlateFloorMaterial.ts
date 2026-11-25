@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, hash, materialRoughness, max, min, mix, mx_noise_float, positionLocal, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -80,8 +81,8 @@ export default class SlateFloorMaterial extends MeshStandardNodeMaterial {
     const cracks = max(inside(crackField.mul(radius).div(7).abs().sub(crackWidth.add(0.0006))), inside(branchField.mul(radius).div(15).abs().sub(crackWidth.mul(0.6).add(0.0004))).mul(reach.smoothstep(0.05, 0.3))).mul(strength).mul(detail).mul(unit(mx_noise_float(vec2(angular.mul(5), 1.7))).smoothstep(0.3, 0.6)).toVar('slateCracks')
     const rough = max(joint, cracks)
     let surface: Node<'vec3'> = tone.mul(bands.sub(0.5).mul(0.16).mul(detail).add(cloud.sub(0.5).mul(0.12)).add(1))
-    surface = mix(surface, color('#8e8f8a'), veins.mul(0.55))
-    surface = mix(surface, color('#b0913c'), pyrite.mul(0.6))
+    surface = mix(surface, color(hsl.integer(116, 4, 59)), veins.mul(0.55))
+    surface = mix(surface, color(hsl.integer(89, 71, 62)), pyrite.mul(0.6))
     // The fractures crushed the stone along their edges into pale dust around a dark gap; the joints are plain dark grout.
     const crackDust = cracks.mul(crackField.mul(radius).div(7).abs().div(crackWidth.add(0.0006)).clamp(0, 1))
     surface = mix(surface, color(style.grout), joint.mul(0.85))

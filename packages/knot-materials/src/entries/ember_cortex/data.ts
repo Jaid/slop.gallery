@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ember_cortex',
   candidateId: 'glm_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Old thoughts flare briefly through the branching folds of a coal.',
   placeholder: {
-    color: '#ff5a1f',
+    color: hsl.integer(37.7, 100, 63),
     shading: 'smooth',
   },
 } as const satisfies KnotData

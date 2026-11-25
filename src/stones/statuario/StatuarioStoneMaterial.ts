@@ -1,6 +1,7 @@
 import type {MarbleStyle} from '#src/lib/materials/marble/marble.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, positionGeometry} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -13,13 +14,13 @@ const unit = (node: Node<'float'>) => node.mul(0.5).add(0.5)
 
 /** Statuario: the whitest Carrara, barely clouded, with a few thin, soft gray veins. */
 export const statuario: MarbleStyle = {
-  base: '#f4f2ed',
-  cloud: '#dedad2',
-  halo: '#cdc8bf',
+  base: hsl.integer(89, 21, 95.5),
+  cloud: hsl.integer(85, 13, 87),
+  halo: hsl.integer(82, 11, 81),
   haloStrength: 0.4,
-  thread: '#a29e97',
+  thread: hsl.integer(82, 6, 65),
   threadStrength: 0.45,
-  vein: '#99958e',
+  vein: hsl.integer(82, 6, 62),
   veinWidth: 0.0015,
   web: 0,
 }
@@ -58,6 +59,6 @@ export default class StatuarioStoneMaterial extends MeshStandardNodeMaterial {
     this.normalNode = heightNormal(sugar.mul(0.000012).add(mx_noise_float(p.mul(38)).mul(0.00004)))
   }
   override setupLightingModel() {
-    return new TranslucentLightingModel(0.45, color('#ffdcc4'))
+    return new TranslucentLightingModel(0.45, color(hsl.integer(56, 100, 90.4)))
   }
 }

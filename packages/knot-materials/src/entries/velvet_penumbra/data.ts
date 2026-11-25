@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_penumbra',
   candidateId: 'claude_opus',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A darkness so soft it seems touchable, turning every glancing light into a private eclipse.',
   displacement: 0.002,
   placeholder: {
-    color: '#21132c',
+    color: hsl.integer(309, 50, 12),
     shading: 'fabric',
   },
 } as const satisfies KnotData

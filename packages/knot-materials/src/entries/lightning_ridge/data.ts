@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BdUi8mU2Rs29CX7; fixture: knot-material-shaders.
 export default {
   id: 'lightning_ridge',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Black opal from Lightning Ridge, where storms are said to have turned to stone. Its fire, a lattice of silica spheres, burns only for those who stand in the right place.',
   placeholder: {
-    color: '#101531',
+    color: hsl.integer(273, 58, 11),
     shading: 'glass',
   },
 } as const satisfies KnotData

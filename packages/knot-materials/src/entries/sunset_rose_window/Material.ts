@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, tangentLocal, time, vec2, vec3} from 'three/tsl'
 
 import {rgb} from '../../candidates/claude_opus/lib/rgb.ts'
@@ -27,7 +28,7 @@ const petals = 8
 const roundels = 16
 const borderPieces = 32
 /** Pot-metal glass: cobalt and ruby dominate as at Chartres, with emerald, gold, violet and pale silver-stain. */
-const palette = ['#0a24a8', '#a8061a', '#0c6a2e', '#d88a0a', '#521890', '#c9b98a', '#1446c0']
+const palette = [hsl.integer(265.3, 97.3, 27), hsl.integer(25, 99, 38), hsl.integer(149, 98.5, 38), hsl.integer(70, 97, 65), hsl.integer(299, 88, 28), hsl.integer(91, 41, 75), hsl.integer(263.5, 95, 36)]
 const choose = (index: Node<'float'>) => {
   let result = rgb(palette[0])
   for (let i = 1;i < palette.length;i++) {
@@ -117,7 +118,7 @@ export default class extends KnotMaterial {
     const joint = line(jointDistance, 0.0012)
     const blockId = cellNoiseVec3(vec3(blockPhase.floor().add(column.mod(rosesAlong).mul(31)), course.add(row.mod(rosesAround).mul(17)), 3.5))
     const grit = mx_fractal_noise_float(p.mul(60), 3, 2, 0.5)
-    const masonry = mix(rgb('#1f1b17'), rgb('#2e2922'), blockId.x).mul(grit.mul(0.25).add(0.9)).mul(joint.mul(0.6).oneMinus())
+    const masonry = mix(rgb(hsl.integer(67, 12, 12)), rgb(hsl.integer(76, 15, 18)), blockId.x).mul(grit.mul(0.25).add(0.9)).mul(joint.mul(0.6).oneMinus())
 // Came and mullions in the glass plane.
     const lead = line(glass.came, 0.0021).max(glass.mullions)
     const recess = glass.came.smoothstep(0.0021, 0.007).mul(0.4).add(0.6)
@@ -134,7 +135,7 @@ export default class extends KnotMaterial {
     const sunDistance = along.sub(sunAlong).add(0.5).fract().sub(0.5).mul(knotLength)
     const sun = sunDistance.div(0.8).pow2().negate().exp()
     const dusk = mx_noise_float(p.mul(1.3).add(vec3(0, 0, time.mul(0.03)))).mul(0.18).add(0.55)
-    const backlight = mix(rgb('#ffc98a'), rgb('#fff1dc'), sun).mul(sun.mul(1.5).add(dusk))
+    const backlight = mix(rgb(hsl.integer(71, 100, 85)), rgb(hsl.integer(79, 100, 96)), sun).mul(sun.mul(1.5).add(dusk))
 // Where the sun stands right behind a pane, the glass nearly burns white.
     const transmitted = mix(glass.color, glass.color.add(0.35).mul(1.6), sun.pow(3).mul(0.45)).mul(thickness.add(streaks)).mul(bubbles.mul(0.8).add(1)).mul(grisaille.mul(0.85).oneMinus()).mul(recess)
 // The deep opening shades the glass near its rim.
@@ -144,7 +145,7 @@ export default class extends KnotMaterial {
     const jambLight = glass.color.add(0.15).mul(backlight).mul(0.18).mul(facing.oneMinus().mul(0.6).add(0.4))
     const halation = glass.color.mul(backlight).mul(lead).mul(0.3)
     const stoneMask = seeGlass.oneMinus()
-    this.colorNode = mix(glass.color.mul(0.03).mul(lead.oneMinus()).add(rgb('#101012').mul(lead)), mix(masonry, rgb('#1a1714'), jamb), stoneMask)
+    this.colorNode = mix(glass.color.mul(0.03).mul(lead.oneMinus()).add(rgb(hsl.integer(286, 6, 8)).mul(lead)), mix(masonry, rgb(hsl.integer(67, 10, 11)), jamb), stoneMask)
     this.metalnessNode = lead.mul(seeGlass).mul(0.4)
     this.roughnessNode = mix(mix(float(0.1), float(0.7), lead), float(0.93), stoneMask)
 // Glass reflects only through a thin clearcoat, so its own reflection never veils the transmitted color.
@@ -156,6 +157,6 @@ export default class extends KnotMaterial {
 // Spill: each window washes the stone around it with its dominant color, fading within a hand's breadth.
     const spillColor = choose(roseSeed.x.mul(7).floor().add(5).mod(palette.length)).add(choose(roseSeed.x.mul(7).floor().mod(palette.length))).mul(0.5)
     const spill = surfaceRadius.sub(openingRadius).max(0).div(0.025).negate().exp().mul(stoneMask).mul(jamb.oneMinus())
-    this.emissiveNode = glassLight.mul(seeGlass).add(spillColor.add(0.1).mul(backlight).mul(spill).mul(0.22)).add(halation.mul(seeGlass)).add(jambLight.mul(jamb)).add(rgb('#ffb060').mul(sun).mul(frame).mul(0.05))
+    this.emissiveNode = glassLight.mul(seeGlass).add(spillColor.add(0.1).mul(backlight).mul(spill).mul(0.22)).add(halation.mul(seeGlass)).add(jambLight.mul(jamb)).add(rgb(hsl.integer(65, 100, 79)).mul(sun).mul(frame).mul(0.05))
   }
 }

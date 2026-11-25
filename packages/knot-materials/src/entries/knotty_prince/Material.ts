@@ -1,6 +1,7 @@
 import type {Triple} from '../../lib/Triple.ts'
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, cameraPosition, cameraViewMatrix, color, float, mix, modelWorldMatrixInverse, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, positionView, time, transformNormalToView, uv, vec2, vec3, vec4} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -645,26 +646,26 @@ export default class extends KnotMaterial {
     }
     const blush = cheek.mul(local.z.smoothstep(0, 0.08)).mul(here.inHead).mul(felted).mul(intimate.mul(0.75).add(0.25))
 // Color.
-    const lime = color('#a8ea00')
-    const limeShadow = color('#6cae00')
+    const lime = color(hsl.integer(127.5, 100, 84))
+    const limeShadow = color(hsl.integer(131.5, 100, 63))
     const greenFelt = mix(limeShadow, lime, wool.mottle.mul(0.5).add(0.62).clamp()).mul(wool.albedo)
-    const whiteFelt = color('#f4f4ec').mul(wool.albedo.sub(1).mul(0.5).add(1))
+    const whiteFelt = color(hsl.integer(107, 29, 96)).mul(wool.albedo.sub(1).mul(0.5).add(1))
     let base: Node<'vec3'> = greenFelt
     base = mix(base, lime.mul(1.08).mul(wool.albedo), here.toes.clamp().mul(0.35))
-    base = mix(base, color('#ff8f7a').mul(wool.albedo), blush.mul(0.42))
+    base = mix(base, color(hsl.integer(32, 100, 73)).mul(wool.albedo), blush.mul(0.42))
     base = mix(base, whiteFelt, eye.white.mul(openEye))
-    base = mix(base, color('#020203'), glossyPupil)
+    base = mix(base, color(hsl.integer(285, 15, 2)), glossyPupil)
     base = mix(base, greenFelt.mul(0.55), eye.lidEdge.mul(0.7))
     base = mix(base, base.mul(0.62), eye.rim.mul(openEye))
     base = mix(base, base.mul(0.72), seam.mul(0.35).add(stitches.mul(0.4)))
-    base = mix(base, color('#09090c'), bowCover)
-    base = mix(base, mix(color('#f3efe4'), color('#7d8796'), tag.ink).mul(tag.hem.mul(0.12).oneMinus()), tag.mask)
+    base = mix(base, color(hsl.integer(286, 11, 5)), bowCover)
+    base = mix(base, mix(color(hsl.integer(90, 33, 94.4)), color(hsl.integer(258, 13, 56)), tag.ink).mul(tag.hem.mul(0.12).oneMinus()), tag.mask)
     this.colorNode = base
 // Surface response: felt is matte with a velvet sheen, the pupils are glossy plastic and the bow is satin.
     this.metalness = 0
     this.roughnessNode = mix(mix(mix(float(0.92), float(0.07), glossyPupil), float(0.3).add(bowTie.fold.mul(0.1)), bowCover), float(0.38), tag.mask)
     this.specularIntensityNode = mix(mix(float(0.22), float(0.2), glossyPupil), float(0.8), bowCover)
-    this.sheenNode = mix(mix(color('#c6ff2e').mul(0.8), color('#ffffff').mul(0.6), eye.white.mul(openEye)), color('#fffaf0').mul(0.9), tag.mask).mul(glossyPupil.max(bowCover).oneMinus())
+    this.sheenNode = mix(mix(color(hsl.integer(124.9, 100, 91.6)).mul(0.8), color(hsl.integer(0, 0, 100)).mul(0.6), eye.white.mul(openEye)), color(hsl.integer(85, 100, 98.4)).mul(0.9), tag.mask).mul(glossyPupil.max(bowCover).oneMinus())
     this.sheenRoughnessNode = float(0.42)
     this.clearcoatNode = glossyPupil.mul(0.25).add(bowCover.mul(0.35))
     this.clearcoatRoughnessNode = mix(float(0.03), float(0.16), bowCover)
@@ -703,8 +704,8 @@ export default class extends KnotMaterial {
     const reflected = positionView.normalize().reflect(normal)
     const sparkle = reflected.dot(vec3(-0.35, 0.55, 0.76).normalize()).smoothstep(0.93, 0.985).add(reflected.dot(vec3(0.5, -0.2, 0.84).normalize()).smoothstep(0.985, 0.997).mul(0.4))
     const satin = reflected.dot(cameraViewMatrix.mul(vec4(0, 1, 0, 0)).xyz).smoothstep(0.3, 1).mul(bowCover).mul(0.03)
-    this.emissiveNode = color('#ffffff').mul(sparkle.mul(glossyPupil).mul(1.1)).add(color('#cfd8ff').mul(satin))
-      .add(color('#d5ff5a').mul(facing.oneMinus().pow(3).mul(felted).mul(0.06)))
+    this.emissiveNode = color(hsl.integer(0, 0, 100)).mul(sparkle.mul(glossyPupil).mul(1.1)).add(color(hsl.integer(275, 100, 87)).mul(satin))
+      .add(color(hsl.integer(122, 99, 93)).mul(facing.oneMinus().pow(3).mul(felted).mul(0.06)))
 // The alpha-cut fuzz is only an outer layer: the stuffed felt underneath must remain closed.
     const stuffedCoreMaterial = new MeshPhysicalNodeMaterial
     this.coreMaterial = stuffedCoreMaterial.copy(this)

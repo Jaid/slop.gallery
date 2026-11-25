@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'hadal_blossom',
   candidateId: 'muse_spark',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A flower opens where the ocean is deepest and no season ever changes.',
   placeholder: {
-    color: '#00f0ff',
+    color: hsl.integer(202, 100, 85),
     shading: 'fabric',
   },
   displacement: 0.02,

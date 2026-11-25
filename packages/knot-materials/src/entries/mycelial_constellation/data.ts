@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mycelial_constellation',
   candidateId: 'gpt_terra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Beneath a velvet forest floor, luminous hyphae trade starlight in slow pulses only the patient can see.',
   displacement: 0.007,
   placeholder: {
-    color: '#31553e',
+    color: hsl.integer(155, 49, 32),
     shading: 'stone',
   },
 } as const satisfies KnotData

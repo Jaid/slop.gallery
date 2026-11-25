@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'gallium_thaw',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Metal softens at the edge of a warmth it seems to recognize.',
   placeholder: {
-    color: '#d7e0ea',
+    color: hsl.integer(251, 25, 89),
     shading: 'liquid',
   },
 } as const satisfies KnotData

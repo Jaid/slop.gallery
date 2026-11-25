@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quantum_damascus',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Folded bands of metal seem to belong to more than one possible pattern.',
   placeholder: {
-    color: '#5c7cfa',
+    color: hsl.integer(269, 96, 57),
     shading: 'metal',
   },
 } as const satisfies KnotData

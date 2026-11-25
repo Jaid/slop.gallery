@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: K0nU326lufLQTl2; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'strata',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Two hundred million years of water, patient as a knife, laying down one red summer at a time.',
   placeholder: {
-    color: '#ff9a5a',
+    color: hsl.integer(51, 99, 74),
     shading: 'stone',
   },
 } as const satisfies KnotData

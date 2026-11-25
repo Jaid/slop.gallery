@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cerulean_hour',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'An ocean painted before dawn waits beneath the glaze. Gold gathers on its crests whenever someone stops to listen.',
   placeholder: {
-    color: '#31557a',
+    color: hsl.integer(250, 51, 35),
     shading: 'smooth',
   },
 } as const satisfies KnotData

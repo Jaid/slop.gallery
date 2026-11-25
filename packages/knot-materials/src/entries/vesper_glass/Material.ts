@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {approach, disk} from '../../candidates/gpt_astra/lib/exhibition/optics.ts'
@@ -37,7 +38,7 @@ export default class extends KnotMaterial {
     const lead = circle.max(smallCircle).max(spokes).max(ogive).max(border)
     const paneId = theta.add(Math.PI).div(TAU).mul(8).floor()
     const identity = cellNoiseVec3(vec3(q.floor().mod(modules), paneId.add(13)))
-    const pigment = pigments(identity.x, color('#8e103d'), color('#da632a'), color('#178b8d'), color('#253ba8'))
+    const pigment = pigments(identity.x, color(hsl.integer(8, 89, 33)), color(hsl.integer(43, 86, 58)), color(hsl.integer(197, 90, 51)), color(hsl.integer(268, 89, 32)))
     // The back-painted enamel lies behind the leadwork and shears independently under oblique views.
     const back = tube.sub(tubeRay().mul(0.022)).mul(modules)
     const backLocal = back.fract().sub(0.5)
@@ -45,8 +46,8 @@ export default class extends KnotMaterial {
     const ripples = mx_noise_float(p.mul(48)).mul(0.5).add(0.5)
     const glass = pigment.mul(rose.mul(0.27).add(ripples.mul(0.2)).add(0.56))
     const heart = disk(r, 0.104, aa)
-    const enamel = mix(glass, color('#f5b442'), heart)
-    this.colorNode = mix(enamel, color('#26282c'), lead)
+    const enamel = mix(glass, color(hsl.integer(78, 88, 78)), heart)
+    this.colorNode = mix(enamel, color(hsl.integer(264, 7, 17)), lead)
     this.metalnessNode = lead.mul(0.86)
     this.roughnessNode = mix(float(0.12), float(0.34), lead).add(ripples.mul(0.055))
     this.clearcoat = 1

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4eznRMVv3vZMHhr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'watered_silk',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'Two veils of silk, one just above the other. Neither holds a pattern of its own, yet between them tides of light ebb and flow with every step you take.',
   placeholder: {
-    color: '#78786c',
+    color: hsl.integer(107, 10, 50),
     shading: 'fabric',
   },
 } as const satisfies KnotData

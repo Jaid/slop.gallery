@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, Fn, mix, mx_cell_noise_float, mx_fractal_noise_float, normalLocal, positionGeometry, struct, tangentLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {wavelengthColor} from '../../candidates/space_bunny/lib/wavelength.ts'
@@ -132,7 +133,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.08
     this.ior = 1.52
     this.sheenNode = reamed.mul(0.25)
-    this.sheenColor.set('#cfd8e2')
+    this.sheenColor.set(hsl.integer(251, 20, 86))
     this.sheenRoughness = 0.5
     const relief = lead.mul(0.0022).sub(cameCore.mul(0.0006)).add(seeds.mul(0.0004)).add(crackLine.mul(0.0002))
     const bump = proceduralNormal(relief, 1.15)
@@ -148,9 +149,9 @@ export default class extends KnotMaterial {
     const sparkle = glints(bump, 140).mul(cameCore.mul(0.6).add(seeds.mul(0.4)))
     this.emissiveNode = glow.mul(0.2)
       .add(glow.mul(daylight).mul(0.42))
-      .add(color('#ffe9c0').mul(lead.mul(daylight).mul(0.12)))
-      .add(color('#ffffff').mul(sparkle.mul(0.18)))
-      .add(color('#9fc4ff').mul(rim.pow(2.4).mul(0.12)))
-      .add(color('#ffb46a').mul(grisaille.mul(daylight).mul(0.06).mul(grazing.mul(0.6).add(0.4))))
+      .add(color(hsl.integer(83, 100, 93.2)).mul(lead.mul(daylight).mul(0.12)))
+      .add(color(hsl.integer(0, 0, 100)).mul(sparkle.mul(0.18)))
+      .add(color(hsl.integer(260, 99, 78)).mul(rim.pow(2.4).mul(0.12)))
+      .add(color(hsl.integer(65, 100, 80)).mul(grisaille.mul(daylight).mul(0.06).mul(grazing.mul(0.6).add(0.4))))
   }
 }

@@ -4,6 +4,7 @@ import Branch from 'branch-component'
 import {unknown} from 'knot-materials/rarities.ts'
 
 import {knotDetailLine, labelAtlasColumns, labelBackground, labelHeight, labelWidth} from '#src/components/KnotLabels/layout.ts'
+import {cssHex} from '#src/lib/color.ts'
 
 import signAccentColor from '../signAccentColor.ts'
 
@@ -17,7 +18,7 @@ export default function KnotLabelFace({exhibit}: {exhibit: KnotLabel}) {
     className={css.plate} style={{
       width: labelWidth,
       height: labelHeight,
-      background: labelBackground,
+      background: cssHex(labelBackground),
     }}
   >
     <div className={css.accent} style={{background: accent}} />

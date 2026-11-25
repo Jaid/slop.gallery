@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_float, time, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -24,13 +25,13 @@ export default class extends BaseKnotMaterial {
     const veinMask = veinField.smoothstep(0.55, 0.82)
     const fineVein = opticalLine(worley2.sub(0.5), 0.04).mul(0.8)
     const membrane = mx_noise_float(p.mul(1.5)).mul(0.3).add(0.7)
-    const skinBase = mix(color('#e8e0c8'), color('#d8c6a8'), membrane)
-    const bloodTint = mix(color('#ff8a6a'), color('#ff2a4a'), heartbeat)
-    this.colorNode = mix(skinBase, color('#f2e6d0'), veinMask.mul(0.15).oneMinus())
+    const skinBase = mix(color(hsl.integer(92, 37, 89)), color(hsl.integer(81, 34, 81)), membrane)
+    const bloodTint = mix(color(hsl.integer(36, 100, 71.5)), color(hsl.integer(21, 100, 59)), heartbeat)
+    this.colorNode = mix(skinBase, color(hsl.integer(83, 48, 92)), veinMask.mul(0.15).oneMinus())
     this.transmission = 0.68
     this.thickness = 0.45
     this.ior = 1.38
-    this.attenuationColor.set('#ffe9c7')
+    this.attenuationColor.set(hsl.integer(79, 100, 93.4))
     this.attenuationDistance = 0.35
     this.roughnessNode = float(0.38).sub(veinMask.mul(0.15)).add(grazing.mul(0.12))
     this.metalness = 0
@@ -39,8 +40,8 @@ export default class extends BaseKnotMaterial {
     this.normalNode = liquidNormal(near.mul(0.3).add(0.2), 0.35)
       .add(proceduralNormal(veinMask.mul(0.7).add(fineVein.mul(0.5)), 0.001))
     this.emissiveNode = bloodTint.mul(veinMask).mul(pulse.mul(0.4).add(0.4)).mul(0.6)
-      .add(color('#ff9a5a').mul(fineVein).mul(heartbeat).mul(0.9))
-      .add(color('#aaffd0').mul(rim.pow(2).mul(0.12)))
+      .add(color(hsl.integer(51, 99, 74)).mul(fineVein).mul(heartbeat).mul(0.9))
+      .add(color(hsl.integer(159, 99, 92.2)).mul(rim.pow(2).mul(0.12)))
     this.envMapIntensity = 0.35
   }
 }

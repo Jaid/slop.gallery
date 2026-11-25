@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: H32IciRDAWJfwki; fixture: knot-material-shaders; result: success.
 export default {
   id: 'abyssal_lace',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Eight rows of living lace beat rainbows into the dark. Nothing here is lit from outside – the creature simply cannot help but shine.',
   placeholder: {
-    color: '#052a47',
+    color: hsl.integer(248, 83, 17),
     shading: 'glass',
   },
 } as const satisfies KnotData

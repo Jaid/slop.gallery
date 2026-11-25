@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, max, mix, modelWorldMatrix, modelWorldMatrixInverse, mx_fractal_noise_float, mx_noise_float, normalLocal, pmremTexture, positionGeometry, positionWorld, refract, transformDirection, vec3} from 'three/tsl'
 
 import {refractedParallax} from '../../candidates/space_bunny/lib/refractedParallax.ts'
@@ -83,13 +84,13 @@ export default class extends KnotMaterial {
     this.ior = iceIndex
     this.specularIntensityNode = rime.oneMinus().mul(0.6)
     this.sheenNode = rime.mul(0.55)
-    this.sheenColor.set('#dcefff')
+    this.sheenColor.set(hsl.integer(243, 100, 93.4))
     this.sheenRoughness = 0.55
     const relief = rime.mul(0.0016).add(fracture.mul(0.0007)).sub(ring.mul(0.0009))
     const bump = proceduralNormal(relief, 1)
     this.normalNode = bump
     this.positionNode = positionGeometry.add(normalLocal.mul(rimeNoise.mul(0.4).sub(0.1).mul(0.0035)))
     const glint = glints(bump, 150).mul(sparkle.mul(0.8).add(rime.mul(0.3))).mul(1.1)
-    this.emissiveNode = lit.mul(0.9).add(color('#ffffff').mul(glint.mul(0.4))).add(color('#3fa8c8').mul(rim.mul(0.1)))
+    this.emissiveNode = lit.mul(0.9).add(color(hsl.integer(0, 0, 100)).mul(glint.mul(0.4))).add(color(hsl.integer(222, 74, 63)).mul(rim.mul(0.1)))
   }
 }

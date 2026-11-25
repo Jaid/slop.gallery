@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, normalViewGeometry, uv, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/muse_wonder/lib/detailNormal.ts'
@@ -33,9 +34,9 @@ export default class extends KnotMaterial {
     const crackle = hairline(crackleField, 0.008).mul(near).mul(gold.oneMinus())
     const granule = mx_noise_float(p.mul(46)).mul(0.5).add(0.5)
     const tint = mx_noise_float(p.mul(2.1).add(vec3(7.7, 3.3, 1.9))).mul(0.5).add(0.5)
-    let porcelain = mix(color('#e6dbc4'), color('#bfcec0'), tint)
-    porcelain = mix(porcelain, color('#8b8d84'), cellularPoints(p.mul(34), 0.04, 0.16, 0.62).mul(intimate).mul(0.14))
-    const goldColor = mix(color('#8a5a12'), color('#f6c453'), granule.mul(near.mul(0.5).add(0.5)))
+    let porcelain = mix(color(hsl.integer(85, 35, 88)), color(hsl.integer(147, 19, 81)), tint)
+    porcelain = mix(porcelain, color(hsl.integer(117, 7, 58)), cellularPoints(p.mul(34), 0.04, 0.16, 0.62).mul(intimate).mul(0.14))
+    const goldColor = mix(color(hsl.integer(71, 86, 43)), color(hsl.integer(85, 86, 82)), granule.mul(near.mul(0.5).add(0.5)))
     let surface = mix(porcelain, goldColor, gold)
     surface = surface.mul(crackle.mul(-0.15).add(1))
     this.colorNode = surface
@@ -49,6 +50,6 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.04
     this.ior = 1.5
     this.aoNode = crackle.mul(-0.16).add(1)
-    this.emissiveNode = color('#ffca55').mul(gold).mul(glints(seamNormal, 90)).mul(0.18).add(color('#fff2cf').mul(gold).mul(grazing.pow(4)).mul(0.05))
+    this.emissiveNode = color(hsl.integer(84, 100, 84.2)).mul(gold).mul(glints(seamNormal, 90)).mul(0.18).add(color(hsl.integer(90, 100, 95.6)).mul(gold).mul(grazing.pow(4)).mul(0.05))
   }
 }

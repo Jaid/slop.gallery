@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 29lWdAQmWzVXPwF; fixture: knot-material-br11k.
 export default {
   id: 'aster_familiar',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Between the last stars, small nocturnal gods stitch themselves together, blink at their witnesses and quietly follow them home.',
   placeholder: {
-    color: '#132754',
+    color: hsl.integer(264, 72, 18),
     shading: 'fabric',
   },
 } as const satisfies KnotData

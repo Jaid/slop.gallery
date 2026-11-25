@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -42,14 +43,14 @@ export default class extends KnotMaterial {
     const frostNormal = proceduralNormal(frostHeight, 1.08)
     this.normalNode = frostNormal
     this.clearcoatNormalNode = frostNormal
-    const slate = color('#060b14')
-    const wetSlate = color('#122033')
-    const frostWhite = color('#eef7ff')
-    const glacier = color('#a9d8f2')
+    const slate = color(hsl.integer(260, 37, 6))
+    const wetSlate = color(hsl.integer(256, 46, 14))
+    const frostWhite = color(hsl.integer(244, 100, 97))
+    const glacier = color(hsl.integer(233, 62, 83))
     const stoneNoise = mx_noise_float(p.mul(9.5)).mul(0.5).add(0.5)
     let surface = mix(slate, wetSlate, stoneNoise)
     surface = mix(surface, mix(glacier, frostWhite, crystals.random.x.mul(0.45).add(0.35)), coverage)
-    surface = mix(surface, color('#ffffff'), microMask.mul(0.55))
+    surface = mix(surface, color(hsl.integer(0, 0, 100)), microMask.mul(0.55))
     this.colorNode = surface
     this.metalnessNode = coverage.mul(0.04)
     this.roughnessNode = mix(float(0.46), float(0.34), coverage).sub(crystalMask.mul(0.13)).clamp(0.18, 0.55)
@@ -59,15 +60,15 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.31
     this.iridescenceThicknessNode = facing.mul(170).add(120)
     this.sheen = 0.36
-    this.sheenColor.set('#cfeaff')
+    this.sheenColor.set(hsl.integer(241, 100, 91))
     this.sheenRoughness = 0.48
     this.aoNode = frost.mul(-0.1).add(1)
     const facetTwinkle = time.mul(crystals.random.y.mul(2.4).add(0.7)).add(crystals.random.z.mul(39)).sin().mul(0.5).add(0.5)
     const crystalGlint = glints(frostNormal, 290)
-    this.emissiveNode = color('#eaf7ff').mul(crystalMask).mul(crystalGlint).mul(facetTwinkle.mul(0.8).add(0.45)).mul(close.mul(1.2).add(0.35)).mul(2.4)
-      .add(color('#ffffff').mul(microMask).mul(glints(frostNormal, 340)).mul(intimate).mul(2))
-      .add(color('#79c7ff').mul(coverage).mul(rim).mul(0.14))
-      .add(color('#bfe9ff').mul(fineBranch).mul(intimate).mul(0.16))
-      .add(color('#162c49').mul(facing.oneMinus()).mul(0.1))
+    this.emissiveNode = color(hsl.integer(234, 100, 96.4)).mul(crystalMask).mul(crystalGlint).mul(facetTwinkle.mul(0.8).add(0.45)).mul(close.mul(1.2).add(0.35)).mul(2.4)
+      .add(color(hsl.integer(0, 0, 100)).mul(microMask).mul(glints(frostNormal, 340)).mul(intimate).mul(2))
+      .add(color(hsl.integer(241, 100, 77)).mul(coverage).mul(rim).mul(0.14))
+      .add(color(hsl.integer(230, 100, 90)).mul(fineBranch).mul(intimate).mul(0.16))
+      .add(color(hsl.integer(256, 57, 19)).mul(facing.oneMinus()).mul(0.1))
   }
 }

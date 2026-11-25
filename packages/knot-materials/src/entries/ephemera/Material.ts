@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -31,7 +32,7 @@ export default class extends KnotMaterial {
 // Where the film is thinnest it collapses into a Newton black film that reflects nothing.
     const blackFilm = thickness.smoothstep(70, 170).oneMinus()
     const sheen = film.pow(1.7).mul(1.25).clamp().mul(blackFilm.oneMinus())
-    this.colorNode = color('#060a12')
+    this.colorNode = color(hsl.integer(261, 33, 5.5))
 // A soap film is mostly air: it only becomes visible where it reflects.
     this.transparent = true
     this.opacityNode = float(0.25).add(sheen.mul(0.5)).add(grazing.pow(2).mul(0.4)).clamp()
@@ -40,7 +41,7 @@ export default class extends KnotMaterial {
     this.transmission = 0.9
     this.thickness = 0
     this.ior = filmIndex
-    this.attenuationColor.set('#a8e4ff')
+    this.attenuationColor.set(hsl.integer(227, 100, 87))
     this.attenuationDistance = 2.2
     this.iridescence = 1
     this.iridescenceIOR = filmIndex
@@ -50,6 +51,6 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(ripple.mul(0.3), 0.0003)
     this.clearcoatNormalNode = this.normalNode
     this.emissiveNode = sheen.mul(near.mul(0.25).add(0.6)).mul(1.6)
-      .add(color('#bfe9ff').mul(grazing.pow(3)).mul(0.2))
+      .add(color(hsl.integer(230, 100, 90)).mul(grazing.pow(3)).mul(0.2))
   }
 }

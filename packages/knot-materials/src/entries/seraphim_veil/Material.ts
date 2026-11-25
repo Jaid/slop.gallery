@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -45,17 +46,17 @@ export default class extends KnotMaterial {
     const flashB = view.dot(vec3(-0.78, 0.36, 0.51).normalize()).abs().pow(12)
     const pearlPhase = inner.y.mul(5).add(view.x.mul(6)).sub(view.z.mul(5))
     const pearl = spectralColor(pearlPhase)
-    this.colorNode = mix(color('#d9d0c1'), color('#fff4df'), facing.mul(0.62).add(0.2)).add(pearl.mul(grazing).mul(0.035))
+    this.colorNode = mix(color(hsl.integer(81, 20, 84)), color(hsl.integer(84, 100, 96.6)), facing.mul(0.62).add(0.2)).add(pearl.mul(grazing).mul(0.035))
     this.transmission = 0.34
     this.thickness = 0.24
     this.ior = 1.39
     this.roughnessNode = near.mul(-0.06).add(0.29)
     this.sheen = 1
-    this.sheenNode = mix(color('#d8e6ff'), color('#ffd6a8'), flashA.mul(0.65).add(flashB.mul(0.35)).clamp())
+    this.sheenNode = mix(color(hsl.integer(262, 100, 91)), color(hsl.integer(70, 100, 88.4)), flashA.mul(0.65).add(flashB.mul(0.35)).clamp())
     this.sheenRoughness = 0.31
     this.clearcoat = 0.38
     this.clearcoatRoughness = 0.11
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(46)).mul(near), 0.00022)
-    this.emissiveNode = color('#ffe5b1').mul(fibresA).mul(flashA.mul(1.6).add(0.22)).add(color('#bbd8ff').mul(fibresB).mul(flashB.mul(1.4).add(0.28))).add(color('#fffaf0').mul(hair).mul(1.2)).add(pearl.mul(rim).mul(0.075))
+    this.emissiveNode = color(hsl.integer(84, 100, 92)).mul(fibresA).mul(flashA.mul(1.6).add(0.22)).add(color(hsl.integer(256, 100, 85)).mul(fibresB).mul(flashB.mul(1.4).add(0.28))).add(color(hsl.integer(85, 100, 98.4)).mul(hair).mul(1.2)).add(pearl.mul(rim).mul(0.075))
   }
 }

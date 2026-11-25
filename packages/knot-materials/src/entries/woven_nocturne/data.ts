@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'woven_nocturne',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Indigo silk keeps being woven around the knot, and the shuttle leaves a golden thread of light behind it.',
   placeholder: {
-    color: '#241a45',
+    color: hsl.integer(291, 61, 15),
     shading: 'fabric',
   },
 } as const satisfies KnotData

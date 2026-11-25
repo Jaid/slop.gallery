@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, uv} from 'three/tsl'
 
 import {heartbeat} from '../../candidates/grok/lib/heartbeat.ts'
@@ -25,10 +26,10 @@ export default class extends BaseKnotMaterial {
     const micro = opticalLine(mx_noise_float(p.mul(40)).mul(6), 0.035).mul(intimate)
     const fissure = meridian.max(cracks).add(meridianFine.mul(0.75)).add(micro.mul(0.4)).clamp()
     const emberCore = fissure.pow(1.6).mul(wind)
-    const heat = mix(color('#3a0700'), mix(color('#ff3a00'), color('#ffe7a0'), emberCore.pow(2)), emberCore)
+    const heat = mix(color(hsl.integer(35, 100, 13)), mix(color(hsl.integer(33.6, 100, 59.5)), color(hsl.integer(91, 100, 92)), emberCore.pow(2)), emberCore)
     const scale = crust.smoothstep(-0.2, 0.55)
     this.envMapIntensity = 0.22
-    this.colorNode = mix(color('#070504'), mix(color('#2a1a12'), color('#120a08'), ash), scale)
+    this.colorNode = mix(color(hsl.integer(52, 14, 4)), mix(color(hsl.integer(47, 36, 13)), color(hsl.integer(35, 25, 6)), ash), scale)
     this.metalnessNode = fissure.mul(0.12)
     this.roughnessNode = scale.mul(0.35).add(0.48).sub(fissure.mul(0.28))
     this.clearcoat = 0.15
@@ -38,8 +39,8 @@ export default class extends BaseKnotMaterial {
       .mul(emberCore)
       .mul(1.8)
       .mul(near.mul(0.7).add(0.45))
-      .add(color('#ff8a3a').mul(grazing.pow(3)).mul(fissure).mul(0.25))
-      .add(color('#4a1208').mul(rim).mul(0.12))
-      .add(color('#fff4c8').mul(micro).mul(wind).mul(intimate).mul(0.8))
+      .add(color(hsl.integer(52, 99, 71)).mul(grazing.pow(3)).mul(fissure).mul(0.25))
+      .add(color(hsl.integer(32, 87, 17)).mul(rim).mul(0.12))
+      .add(color(hsl.integer(96, 100, 96)).mul(micro).mul(wind).mul(intimate).mul(0.8))
   }
 }

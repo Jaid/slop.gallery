@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'opal_fire',
   candidateId: 'claude_sonnet',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A small, restless flame changes color without consuming the stone around it.',
   placeholder: {
-    color: '#ffb6e6',
+    color: hsl.integer(340, 100, 83.5),
     shading: 'glass',
   },
 } as const satisfies KnotData

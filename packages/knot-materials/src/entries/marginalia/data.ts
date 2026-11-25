@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'marginalia',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A vanished hand keeps writing: the nib of light moves on, and the words it leaves behind wait to be read.',
   placeholder: {
-    color: '#a68d63',
+    color: hsl.integer(80, 39, 60),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1UqvleKScECZs6l.
 export default {
   id: 'nacre_revelation',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Layered mother-of-pearl turns the smallest turn of the eye into a quiet aurora.',
   placeholder: {
-    color: '#a9c4c7',
+    color: hsl.integer(205, 21, 77),
     shading: 'smooth',
   },
   displacement: 0.003,

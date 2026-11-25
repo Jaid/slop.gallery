@@ -1,9 +1,11 @@
 import type {Lamp} from '../base/Room.ts'
 
+import hsl from 'okhsl'
+
 const chandelier = (z: number) => ({
   position: [0, 6.6, z],
   strength: 7.2,
-  tint: '#ffd27a',
+  tint: hsl.integer(83, 100, 86.6),
   range: 15,
 }) satisfies Lamp
 

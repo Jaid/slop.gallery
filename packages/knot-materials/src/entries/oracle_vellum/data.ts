@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HU72JSGdKyp7pBO; fixture: knot-material-shaders; result: success.
 export default {
   id: 'oracle_vellum',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A manuscript without a language. Its ink remembers your shadow; its gold remembers a future you have not yet lived.',
   placeholder: {
-    color: '#eedeb9',
+    color: hsl.integer(87, 53, 89),
     shading: 'fabric',
   },
 } as const satisfies KnotData

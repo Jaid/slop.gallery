@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aureate_loom',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Someone taught gold to remember silk. Every thread keeps a different sunrise, and none will show it to you twice.',
   placeholder: {
-    color: '#643c47',
+    color: hsl.integer(2, 35, 32),
     shading: 'fabric',
   },
 } as const satisfies KnotData

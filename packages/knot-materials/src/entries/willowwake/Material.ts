@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, time, uv, vec2} from 'three/tsl'
 
 import {enamel, etch, filteredCos, ornamentCell, polarAngle, turn} from '../../candidates/gpt_sol/lib/ornamentAtlas.ts'
@@ -62,13 +63,13 @@ export default class extends KnotMaterial {
     const hairlineCells = mx_worley_noise_vec3(p.mul(49), 0.82, 0)
     const craze = etch(hairlineCells.y.sub(hairlineCells.x), 0.004)
       .mul(intimate.mul(0.6).add(0.15)).mul(repairSelector.oneMinus().mul(0.5).add(0.5))
-    const ivory = mix(color('#f0e7cf'), color('#c1d4cb'), pooling.mul(0.21))
-    const cobalt = mix(color('#123060'), color('#2c68aa'), pooling)
+    const ivory = mix(color(hsl.integer(90, 46, 91.7)), color(hsl.integer(166, 20, 83)), pooling.mul(0.21))
+    const cobalt = mix(color(hsl.integer(259, 76, 22)), color(hsl.integer(253, 73, 43)), pooling)
     const painting = mix(ivory, cobalt, garden.pigment)
     const ghostInk = phantom.pigment.sub(garden.pigment.mul(0.8)).max(0).mul(grazing.pow(2)).mul(0.12)
-    const glazed = mix(painting, color('#86c1cc'), ghostInk)
-    const aged = mix(glazed, color('#648a8c'), craze.mul(0.12))
-    const gold = mix(color('#a98033'), color('#e5c776'), porcelainGrain.mul(0.45).add(0.35))
+    const glazed = mix(painting, color(hsl.integer(210, 42, 74)), ghostInk)
+    const aged = mix(glazed, color(hsl.integer(200, 27, 54)), craze.mul(0.12))
+    const gold = mix(color(hsl.integer(80, 72, 56)), color(hsl.integer(90, 67, 81)), porcelainGrain.mul(0.45).add(0.35))
     this.colorNode = mix(aged.mul(porcelainGrain.mul(0.012).add(0.991)), gold, repair)
     this.metalnessNode = repair.mul(0.92)
     this.roughnessNode = float(0.21).add(pooling.mul(0.055)).add(craze.mul(0.06))
@@ -79,7 +80,7 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(pooling.mul(0.00028).add(porcelainGrain.mul(0.000018))
       .add(repair.mul(0.00035)).sub(craze.mul(0.00012)).add(garden.pigment.mul(0.000045)), 0.9)
     this.clearcoatNormalNode = proceduralNormal(pooling.mul(0.00028).sub(craze.mul(0.00005)), 0.7)
-    this.emissiveNode = color('#679dae').mul(ghostInk).mul(0.065)
-      .add(color('#e6cc91').mul(repair).mul(near).mul(0.012))
+    this.emissiveNode = color(hsl.integer(220, 40, 61)).mul(ghostInk).mul(0.065)
+      .add(color(hsl.integer(87, 58, 83)).mul(repair).mul(near).mul(0.012))
   }
 }

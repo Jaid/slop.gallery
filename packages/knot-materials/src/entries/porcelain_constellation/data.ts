@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'porcelain_constellation',
   candidateId: 'muse_spark',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Small stars gather beneath a glaze as pale as an unmarked map.',
   placeholder: {
-    color: '#ffd873',
+    color: hsl.integer(89, 100, 88),
     shading: 'stone',
   },
 } as const satisfies KnotData

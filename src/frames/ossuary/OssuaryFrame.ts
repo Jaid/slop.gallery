@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, cameraPosition, cameraProjectionMatrix, cameraViewMatrix, color, float, Fn, hash, max, mix, modelWorldMatrix, modelWorldMatrixInverse, mx_noise_float, normalLocal, positionGeometry, positionLocal, select, uv, vec2, vec3, vec4} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -52,10 +53,10 @@ function boneColor(p: Vec3, tone: Float, footprint: Float) {
   const pores = mx_noise_float(p.mul(700)).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.0015))
   const crackMask = mx_noise_float(p.mul(9).add(vec3(0, 4.1, 0))).smoothstep(0, 0.5)
   const cracks = float(1).sub(mx_noise_float(p.mul(110)).abs().smoothstep(0, 0.03)).mul(crackMask).mul(visibleDetail(footprint, 0.002))
-  const ivory = mix(color('#d8c89e'), color('#a68a54'), stain.mul(0.7).add(tone.mul(0.3)))
-  const aged = mix(ivory, color('#6a4a28'), stain.smoothstep(0.6, 0.95).mul(0.7))
+  const ivory = mix(color(hsl.integer(90, 41, 81)), color(hsl.integer(83, 49, 59)), stain.mul(0.7).add(tone.mul(0.3)))
+  const aged = mix(ivory, color(hsl.integer(66, 53, 35)), stain.smoothstep(0.6, 0.95).mul(0.7))
   return {
-    color: mix(aged.mul(mottle.mul(0.15).add(0.9)), color('#3a2a1a'), cracks.mul(0.8).max(pores.mul(0.25))),
+    color: mix(aged.mul(mottle.mul(0.15).add(0.9)), color(hsl.integer(66, 39, 20)), cracks.mul(0.8).max(pores.mul(0.25))),
     height: cracks.mul(-0.00012).sub(pores.mul(0.00003)),
   }
 }
@@ -103,7 +104,7 @@ export default class OssuaryFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#cbbd96'
+  override readonly tint = hsl.integer(91, 35, 77)
   override readonly title = 'Watching skulls'
 
   override createGeometry(width: number, height: number) {
@@ -171,13 +172,13 @@ class BoneMaterial extends MeshPhysicalNodeMaterial {
     const sinew = inner.sinew.max(outer.sinew)
     const tone = inner.id.mul(inner.cover).add(outer.id.mul(outer.cover))
     const {color: boneTone, height: grain} = boneColor(p, tone, footprint)
-    const ash = mix(color('#231c15'), color('#6a6052'), mx_noise_float(p.mul(400)).mul(0.5).add(0.5).mul(0.5).add(mx_noise_float(p.mul(30)).mul(0.25).add(0.25)).mul(surface.cavity.smoothstep(0.9, 0.2).mul(0.6).add(0.4)))
+    const ash = mix(color(hsl.integer(67, 21, 13)), color(hsl.integer(76, 16, 41)), mx_noise_float(p.mul(400)).mul(0.5).add(0.5).mul(0.5).add(mx_noise_float(p.mul(30)).mul(0.25).add(0.25)).mul(surface.cavity.smoothstep(0.9, 0.2).mul(0.6).add(0.4)))
     const fibers = mx_noise_float(vec3(p.x.add(p.y).mul(900), surface.across.mul(40), 0)).mul(0.5).add(0.5)
-    const tendon = mix(color('#3a1c0e'), color('#6a3a1c'), fibers)
+    const tendon = mix(color(hsl.integer(45, 60, 16)), color(hsl.integer(51, 65, 31)), fibers)
     const hollow = surface.cavity.smoothstep(0.1, 0.9)
     const edges = inner.edge.max(outer.edge).max(vertebra.smoothstep(gap.sub(0.15), gap.add(0.05)).mul(body)).max(lower.height.max(upper.height).smoothstep(0.6, 0).mul(phalanx))
     const fragments = mx_noise_float(p.mul(520)).smoothstep(0.6, 0.72).mul(visibleDetail(footprint, 0.0015))
-    this.colorNode = mix(mix(mix(ash, color('#9a8c70'), fragments.mul(0.6)), boneTone.mul(hollow.mul(-0.35).add(1)).mul(edges.mul(-0.45).add(1)), cover), tendon, sinew)
+    this.colorNode = mix(mix(mix(ash, color(hsl.integer(84, 25, 59)), fragments.mul(0.6)), boneTone.mul(hollow.mul(-0.35).add(1)).mul(edges.mul(-0.45).add(1)), cover), tendon, sinew)
     this.roughnessNode = mix(float(0.95), float(0.55), cover).sub(sinew.mul(0.15))
     this.normalNode = heightNormal(inner.height.add(outer.height).add(body.mul(0.0012)).add(rim.mul(0.0004)).add(lower.height.max(upper.height.add(0.4).mul(upper.cover)).mul(hand.inside).mul(0.0012)).add(grain.mul(cover)).add(sinew.mul(fibers.mul(0.0001))))
   }
@@ -273,11 +274,11 @@ class SkullMaterial extends MeshPhysicalNodeMaterial {
     const {color: boneTone, height: grain} = boneColor(p, seed, footprint)
     // Grime in the hollows, round the holes and toward the jaw.
     const grime = surface.cavity.smoothstep(-0.1, 0.6).max(orbitShape.smoothstep(1.6, 1).mul(0.7)).max(noseShape.smoothstep(1.7, 1).mul(0.7)).add(q.y.smoothstep(0.1, -0.5).mul(0.3)).add(mx_noise_float(vec3(q.mul(9), seed.mul(7))).mul(0.25)).clamp(0, 1)
-    const grimed = mix(boneTone, color('#46321c'), grime.mul(0.7))
-    const enamel = mix(color('#c8b27a'), color('#6a4a26'), row.smoothstep(0.5, 0).mul(0.7))
-    const dark = mix(color('#040302'), color('#3e2c1a'), deep.oneMinus().pow(2).mul(inOrbit))
-    const gaps = mix(color('#2a1c0e'), color('#0a0604'), bite.max(inOrbit).max(inNose))
-    this.colorNode = mix(mix(mix(grimed, enamel, inTooth), mix(gaps, dark, inOrbit), holes), color('#24180c'), sutures.max(crack).mul(0.75))
+    const grimed = mix(boneTone, color(hsl.integer(68, 46, 24)), grime.mul(0.7))
+    const enamel = mix(color(hsl.integer(89, 47, 73)), color(hsl.integer(68, 56, 35)), row.smoothstep(0.5, 0).mul(0.7))
+    const dark = mix(color(hsl.integer(73, 18, 3)), color(hsl.integer(65, 42, 21)), deep.oneMinus().pow(2).mul(inOrbit))
+    const gaps = mix(color(hsl.integer(65, 45, 14)), color(hsl.integer(55, 24, 4.4)), bite.max(inOrbit).max(inNose))
+    this.colorNode = mix(mix(mix(grimed, enamel, inTooth), mix(gaps, dark, inOrbit), holes), color(hsl.integer(65, 43, 12)), sutures.max(crack).mul(0.75))
     this.roughnessNode = mix(mix(float(0.62), float(0.45), inTooth), float(0.95), holes)
     this.normalNode = heightNormal(grain.mul(holes.oneMinus()).sub(span.mul(toothGap).mul(0.0004)).sub(sutures.mul(0.0001)).sub(crack.mul(0.00025)).add(inTooth.mul(between.mul(2).oneMinus().mul(0.0002))))
   }

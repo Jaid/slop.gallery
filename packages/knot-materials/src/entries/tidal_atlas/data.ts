@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tidal_atlas',
   candidateId: 'gpt_sol',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A whole weathered world has no edge here: tides circle its mountains and tiny cities answer the dusk.',
   displacement: 0.03,
   placeholder: {
-    color: '#36696a',
+    color: hsl.integer(197, 48, 41),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {studioSheen} from '../../candidates/gemini_argon/lib/environmentHighlight.ts'
@@ -95,19 +96,19 @@ export default class extends KnotMaterial {
     const lapisNoise = mx_fractal_noise_float(deepP.mul(11), 4, 2.1, 0.52).mul(0.5).add(0.5)
     const calciteVein = hairline(mx_noise_float(deepP.mul(8.5)).sub(0.18), 0.025).mul(0.35)
     const pyriteFlecks = cellularPoints(deepP.mul(95), 0.03, 0.16, 0.55).mul(near.mul(0.65).add(0.35))
-    const lapisBase = mix(color('#030924'), color('#0d2b8a'), lapisNoise)
-      .add(color('#4668b8').mul(calciteVein))
-      .add(color('#e8b848').mul(pyriteFlecks.mul(0.85)))
+    const lapisBase = mix(color(hsl.integer(266, 84, 6)), color(hsl.integer(265, 94, 24.4)), lapisNoise)
+      .add(color(hsl.integer(265, 66, 46)).mul(calciteVein))
+      .add(color(hsl.integer(85, 81, 77)).mul(pyriteFlecks.mul(0.85)))
 // Compose the layers from deep lapis planetarium -> mid copper armilla -> top brass astrolabe
     const topShadow = topBrassMask.smoothstep(0, 0.2).oneMinus().mul(0.45).oneMinus()
     const midVisible = copperMask.max(sunOrb).max(planetOrb).mul(topBrassMask.oneMinus())
     const totalMetalMask = topBrassMask.max(midVisible).max(moonOrb)
-    const brassColor = mix(color('#d9a13b'), color('#ffe08a'), degreeTicks.oneMinus().mul(0.45))
+    const brassColor = mix(color(hsl.integer(79, 80, 70)), color(hsl.integer(90, 100, 90)), degreeTicks.oneMinus().mul(0.45))
       .mul(degreeTicks.mul(0.42).oneMinus())
-    const copperColor = mix(color('#b85d38'), color('#f29c74'), midR.smoothstep(0.1, 0.35))
-    const silverMoonColor = color('#dce6f2')
-    const rubyMarsColor = color('#d9182e')
-    let midLayerColor: Node<'vec3'> = mix(copperColor, color('#ffcc4d'), sunOrb)
+    const copperColor = mix(color(hsl.integer(42, 70, 51)), color(hsl.integer(45, 76, 73)), midR.smoothstep(0.1, 0.35))
+    const silverMoonColor = color(hsl.integer(253, 38, 91))
+    const rubyMarsColor = color(hsl.integer(24, 97, 49.5))
+    let midLayerColor: Node<'vec3'> = mix(copperColor, color(hsl.integer(86.5, 100, 84.7)), sunOrb)
     midLayerColor = mix(midLayerColor, rubyMarsColor, planetOrb)
     let compositeAlbedo: Node<'vec3'> = mix(lapisBase.mul(topShadow), midLayerColor.mul(topShadow), midVisible)
     compositeAlbedo = mix(compositeAlbedo, brassColor, topBrassMask)
@@ -134,22 +135,22 @@ export default class extends KnotMaterial {
     const normal = proceduralNormal(relief, 1.15)
     this.normalNode = normal
 // Celestial emission: glowing golden constellations, navigating stars, tellurium sun, and studio brass highlights
-    const constellationGold = color('#ffd262')
-    const astrolabeCyan = color('#4ce4ff')
+    const constellationGold = color(hsl.integer(87, 100, 86.2))
+    const astrolabeCyan = color(hsl.integer(212, 100, 82.6))
     const starTwinkle = time.mul(3.1).add(constelVoro.random.x.mul(TAU)).sin().mul(0.28).add(0.82)
     const vaultEmission = constellationGold.mul(celestialCoordinateGrid.mul(0.38))
       .add(mix(astrolabeCyan, constellationGold, 0.45).mul(constelStick).mul(1.35))
-      .add(color('#fff4d4').mul(navStar).mul(starTwinkle).mul(2.4))
+      .add(color(hsl.integer(91, 100, 96.2)).mul(navStar).mul(starTwinkle).mul(2.4))
       .add(deepStarfield.mul(2.1))
-      .add(color('#ffd86b').mul(pyriteFlecks).mul(glints(normal, 180)).mul(0.95))
+      .add(color(hsl.integer(90, 100, 87.8)).mul(pyriteFlecks).mul(glints(normal, 180)).mul(0.95))
     const brassSheen = studioSheen(n).mul(topBrassMask).mul(0.32)
     const chamferEdge = outerBezel.min(meridianX).min(equatorY).smoothstep(0.028, 0.018).mul(topBrassMask)
     const chamferGlint = glints(normal, 220).mul(chamferEdge.add(midVisible.mul(0.4)))
     this.emissiveNode = vaultEmission.mul(totalMetalMask.oneMinus())
-      .add(color('#ffae24').mul(sunOrb).mul(topBrassMask.oneMinus()).mul(2.2))
+      .add(color(hsl.integer(74, 100, 78)).mul(sunOrb).mul(topBrassMask.oneMinus()).mul(2.2))
       .add(rubyMarsColor.mul(isRuby).mul(0.85))
       .add(brassColor.mul(brassSheen))
-      .add(color('#fff2cc').mul(chamferGlint).mul(0.65))
-      .add(color('#3b6eff').mul(rim.pow(2.5)).mul(totalMetalMask.oneMinus()).mul(0.45))
+      .add(color(hsl.integer(91, 100, 95.5)).mul(chamferGlint).mul(0.65))
+      .add(color(hsl.integer(265, 100, 52.5)).mul(rim.pow(2.5)).mul(totalMetalMask.oneMinus()).mul(0.45))
   }
 }

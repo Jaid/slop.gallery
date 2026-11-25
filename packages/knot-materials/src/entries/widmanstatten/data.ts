@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7mkaA7JC9cNnoS2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'widmanstatten',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A world’s core fell through the sky and cooled for four billion years. Acid opens its silver geometry, still counting the days of the early solar system.',
   placeholder: {
-    color: '#6a6d70',
+    color: hsl.integer(248, 3, 46),
     shading: 'metal',
   },
 } as const satisfies KnotData

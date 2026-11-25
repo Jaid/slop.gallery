@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'crimson_loom',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Someone wove the final minute of sunset into a royal cloth. The gold thread keeps trying to pull the evening back apart.',
   placeholder: {
-    color: '#6f2033',
+    color: hsl.integer(10, 71, 28),
     shading: 'fabric',
   },
 } as const satisfies KnotData

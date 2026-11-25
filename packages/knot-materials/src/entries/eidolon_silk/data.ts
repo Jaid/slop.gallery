@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'eidolon_silk',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A remembered touch moves across cloth that is barely there.',
   placeholder: {
-    color: '#c0c8ff',
+    color: hsl.integer(278, 100, 82),
     shading: 'fabric',
   },
 } as const satisfies KnotData

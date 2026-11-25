@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CyxjCrlY15yEfmL; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'gilded_midnight',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'What broke was mended in gold, and the mending became the most beautiful part of the night.',
   placeholder: {
-    color: '#0b0a12',
+    color: hsl.integer(290, 26, 6),
     shading: 'smooth',
   },
 } as const satisfies KnotData

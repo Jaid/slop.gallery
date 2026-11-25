@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'stained_requiem',
   candidateId: 'claude_sonnet',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Colored glass holds the last notes of a song after the room has fallen quiet.',
   placeholder: {
-    color: '#d24bd6',
+    color: hsl.integer(327, 85, 59),
     shading: 'smooth',
   },
 } as const satisfies KnotData

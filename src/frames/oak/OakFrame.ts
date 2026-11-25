@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {along, assembleFrame, corners, place, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -55,7 +57,7 @@ export default class OakFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#6b5a45'
+  override readonly tint = hsl.integer(73, 26, 40)
   override readonly title = 'Iron-bound oak'
 
   override createGeometry(width: number, height: number) {
@@ -86,16 +88,16 @@ export default class OakFrame extends PortraitFrame {
       new FrameWoodMaterial({
         timber: {
           ...oak,
-          light: '#7f7262',
-          dark: '#4e4235',
-          ring: '#2a221a',
+          light: hsl.integer(73, 17, 49),
+          dark: hsl.integer(69, 21, 29),
+          ring: hsl.integer(67, 21, 16),
           rings: 90,
           rays: 0.3,
           pores: 1,
         },
         roughness: 0.85,
         grime: 0.7,
-        stain: '#d8d2c8',
+        stain: hsl.integer(81, 14, 84),
       }),
       new FrameMetalMaterial({metal: blackIron}),
     ]

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: EC58pRKjMMMNqsv; fixture: knot-material-shaders; result: success.
 export default {
   id: 'midnight_jacquard',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Silk woven in darkness, its damask blooms only for light that arrives at a slant – and the gold remembers every glance.',
   placeholder: {
-    color: '#48394c',
+    color: hsl.integer(319, 24, 27),
     shading: 'fabric',
   },
 } as const satisfies KnotData

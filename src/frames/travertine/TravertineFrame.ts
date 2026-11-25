@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {assembleFrame, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -32,7 +34,7 @@ export default class TravertineFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#d3c4a6'
+  override readonly tint = hsl.integer(85, 31, 80)
   override readonly title = 'Travertine architrave'
 
   override createGeometry(width: number, height: number) {

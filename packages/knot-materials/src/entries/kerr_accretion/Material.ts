@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, cameraWorldMatrix, color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeMetric} from '../../candidates/gemini_argon/lib/tubeMetric.ts'
@@ -71,7 +72,7 @@ export default class extends KnotMaterial {
     const diskDensity = outerDisk.mul(0.52).add(midDisk.mul(0.38)).add(innerPhotonDisk.mul(0.45)).mul(grazing.pow(0.65).mul(0.85).add(0.15))
     const shiftedWavelength = float(575).div(dopplerFactor.pow(0.58)).sub(innerPhotonDisk.mul(55)).clamp(395, 705)
     const relativisticSpectrum = wavelengthColor(shiftedWavelength).mul(vec3(1.25, 1.05, 1.35))
-    const blackbodyCore = mix(color('#ff3d08'), color('#fff6e8'), diskDensity.mul(dopplerFactor.mul(0.55)).clamp())
+    const blackbodyCore = mix(color(hsl.integer(33.6, 100, 59.8)), color(hsl.integer(79, 100, 97.2)), diskDensity.mul(dopplerFactor.mul(0.55)).clamp())
     const plasmaTint = mix(relativisticSpectrum, blackbodyCore, 0.48).mul(dopplerFactor.pow(2.4))
 // Critical photon sphere ring at grazing angle (facing ~ 0.24) + secondary lensed ghost ring (facing ~ 0.11)
     const photonRingPrimary = filteredRibbon(facing.sub(0.23).add(mhdTurbulence.mul(0.035)), 0.028)
@@ -83,7 +84,7 @@ export default class extends KnotMaterial {
     const hawkingSparks = hairline(hawkingCell, 0.035).mul(intimate).mul(facing.pow(1.5))
 // Event horizon core absorption: facing surfaces collapse into a light-swallowing singularity
     const horizonMask = facing.smoothstep(0.18, 0.62)
-    const baseAlbedo = mix(color('#05030a'), color('#000000'), horizonMask)
+    const baseAlbedo = mix(color(hsl.integer(299, 44, 3.4)), color(hsl.integer(0, 0, 0)), horizonMask)
     this.colorNode = baseAlbedo
     this.metalness = 0.05
     this.roughnessNode = mix(float(0.03), float(0.22), diskDensity.clamp()).mul(horizonMask.oneMinus().mul(0.7).add(0.3))
@@ -94,11 +95,11 @@ export default class extends KnotMaterial {
     const heightField = fluxHeight.add(outerDisk.mul(0.0018)).sub(innerPhotonDisk.mul(0.0012)).add(photonRingPrimary.mul(0.0015))
     this.normalNode = proceduralNormal(heightField, 0.95)
 // Total relativistic radiance: lensed cosmos in the shadow + Doppler-beamed plasma + photon ring + Hawking sparks
-    const photonGold = mix(color('#ff9e3b'), color('#a8e6ff'), betaDotV.mul(0.5).add(0.5))
+    const photonGold = mix(color(hsl.integer(62, 100, 74.8)), color(hsl.integer(225, 100, 87.4)), betaDotV.mul(0.5).add(0.5))
     const emissive = lensedCosmos.mul(horizonMask.mul(0.75).add(0.25))
       .add(plasmaTint.mul(diskDensity).mul(1.95))
       .add(photonGold.mul(photonRingTotal).mul(dopplerFactor.pow(1.8)).mul(3.4))
-      .add(color('#7ce8ff').mul(hawkingSparks).mul(1.8))
+      .add(color(hsl.integer(213, 100, 85.5)).mul(hawkingSparks).mul(1.8))
       .add(relativisticSpectrum.mul(rim.pow(2.2)).mul(dopplerFactor.pow(2)).mul(0.75))
     this.emissiveNode = emissive
   }

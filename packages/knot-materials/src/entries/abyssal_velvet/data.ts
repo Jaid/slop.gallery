@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_velvet',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Midnight folds itself around a faint, saltwater glow.',
   placeholder: {
-    color: '#1f6f74',
+    color: hsl.integer(201, 78, 42),
     shading: 'fabric',
   },
 } as const satisfies KnotData

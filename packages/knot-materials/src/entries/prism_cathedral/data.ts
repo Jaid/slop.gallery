@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'prism_cathedral',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The windows have become the walls, and every wall is another window.',
   placeholder: {
-    color: '#4f7fe0',
+    color: hsl.integer(263, 79, 55),
     shading: 'glass',
   },
 } as const satisfies KnotData

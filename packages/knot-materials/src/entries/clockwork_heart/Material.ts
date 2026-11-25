@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_atan2, normalViewGeometry, time, uv, vec2} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -42,24 +43,24 @@ export default class extends BaseKnotMaterial {
     const gearC = brassGear(qNear, 0, 0.26, 10, rotC)
     const mechanism = gearA.max(gearB).max(gearC)
     const detail = gearA.add(gearB.mul(0.8)).add(gearC.mul(1.1)).clamp()
-    const brass = mix(color('#5d4715'), color('#ffd98c'), detail)
+    const brass = mix(color(hsl.integer(84, 75, 32)), color(hsl.integer(84, 100, 88.4)), detail)
     const coil = opticalLine(tube.x.mul(Math.PI * 2 * 24).add(tube.y.mul(Math.PI * 2)).sin(), 0.2)
     const pulse = time.mul(0.75).sin()
     const beat = pulse.mul(pulse).mul(0.45).add(0.7)
     const tickFlash = time.mul(3).fract().mul(-14).exp()
     const vis = facing.mul(0.55).add(0.45)
-    this.colorNode = mix(mix(color('#151009'), brass, mechanism.mul(0.85)), color('#d8a63e'), coil.mul(0.85))
+    this.colorNode = mix(mix(color(hsl.integer(76, 28, 8)), brass, mechanism.mul(0.85)), color(hsl.integer(82, 79, 71)), coil.mul(0.85))
     this.transmission = 0.9
     this.transmissionNode = mechanism.mul(-0.7).add(0.92).clamp()
     this.roughness = 0.06
     this.ior = 1.5
     this.thickness = 0.22
     this.dispersion = 0.2
-    this.attenuationColor.set('#3a2a12')
+    this.attenuationColor.set(hsl.integer(76, 55, 20))
     this.attenuationDistance = 0.6
     this.clearcoat = 1
     this.clearcoatRoughness = 0.03
     this.envMapIntensity = 1.2
-    this.emissiveNode = brass.mul(mechanism).mul(vis).mul(near.mul(0.8).add(0.35)).mul(beat).add(brass.mul(gearC).mul(tickFlash).mul(0.6)).add(color('#ffd98c').mul(coil).mul(0.35)).add(color('#ffe9c0').mul(glints(normalViewGeometry, 90)).mul(coil).mul(0.5))
+    this.emissiveNode = brass.mul(mechanism).mul(vis).mul(near.mul(0.8).add(0.35)).mul(beat).add(brass.mul(gearC).mul(tickFlash).mul(0.6)).add(color(hsl.integer(84, 100, 88.4)).mul(coil).mul(0.35)).add(color(hsl.integer(83, 100, 93.2)).mul(glints(normalViewGeometry, 90)).mul(coil).mul(0.5))
   }
 }

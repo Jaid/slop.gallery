@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mx_worley_noise_float, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -24,7 +25,7 @@ export default class extends BaseKnotMaterial {
     const spikeField = spikes.mul(toward.mul(0.9).add(0.25))
     const ripple = dist.mul(26).sub(time.mul(4)).sin().mul(dist.smoothstep(0.6, 2.4).oneMinus().mul(intimate)).mul(0.5)
     const field = spikeField.add(ripple)
-    this.colorNode = color('#040406')
+    this.colorNode = color(hsl.integer(285, 15, 3))
     this.metalness = 0.65
     this.roughnessNode = float(0.32).sub(spikeField.mul(0.2)).clamp()
     this.clearcoat = 1
@@ -34,7 +35,7 @@ export default class extends BaseKnotMaterial {
     this.iridescenceThicknessNode = spikeField.mul(420).add(view.x.mul(80)).add(120)
     this.normalNode = proceduralNormal(field, 0.016)
     this.emissiveNode = spectralColor(spikeField.mul(2.5).add(view.x.mul(1.5))).mul(spikeField.pow(3)).mul(0.3)
-      .add(color('#3a4a8f').mul(rim).mul(0.18))
-      .add(color('#8f9fff').mul(glints(normalViewGeometry, 50)).mul(spikeField).mul(0.5))
+      .add(color(hsl.integer(271, 61, 34)).mul(rim).mul(0.18))
+      .add(color(hsl.integer(275, 100, 69)).mul(glints(normalViewGeometry, 50)).mul(spikeField).mul(0.5))
   }
 }

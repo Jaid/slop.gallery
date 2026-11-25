@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'celestial_kintsugi',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Fractured eggshell porcelain mended with seams of pure liquid gold, turning fragile brokenness into sacred art.',
   placeholder: {
-    color: '#e7dfd2',
+    color: hsl.integer(80, 25, 89),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: LLxliOfHhDMdNvD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'living_ink',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.01,
   flavorText: 'A skin that thinks in color. Clouds of sepia and teal cross it like weather, and when you come close it raises tiny hills to listen.',
   placeholder: {
-    color: '#a58972',
+    color: hsl.integer(61, 26, 59),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5RXWnszENQQH6u3; fixture: knot-material-shaders; result: success.
 export default {
   id: 'restless_caldera',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.03,
   flavorText: 'A skin of black glass, cooled until it could hold. Underneath, the mountain never once agreed to stop.',
   placeholder: {
-    color: '#0f0a11',
+    color: hsl.integer(316, 25, 6),
     shading: 'stone',
   },
 } as const satisfies KnotData

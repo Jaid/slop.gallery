@@ -2,6 +2,7 @@ import type {ColliderDisplay} from '#src/lib/physics/colliderDisplay.ts'
 
 import {useThree} from '@react-three/fiber'
 import {useRapier} from '@react-three/rapier'
+import hsl from 'okhsl'
 import {useLayoutEffect} from 'react'
 
 import overlay from '#src/lib/overlay/index.ts'
@@ -11,7 +12,7 @@ import ColliderEdges from './ColliderEdges.ts'
 
 const layer = overlay.addLayer({
   id: 'colliders',
-  color: '#00ffff',
+  color: hsl.integer(194.8, 100, 88.9),
   obstructedOpacityFactor: 0.25,
 })
 

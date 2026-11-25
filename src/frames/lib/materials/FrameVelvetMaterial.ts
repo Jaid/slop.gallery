@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -13,9 +14,9 @@ export type FrameVelvet = {
 }
 
 export const oxblood: FrameVelvet = {
-  pile: 0x4A_04_0E,
-  crushed: 0x86_10_1F,
-  sheen: 0xD4_24_3C,
+  pile: hsl.integer(21, 94, 16),
+  crushed: hsl.integer(22, 94, 31),
+  sheen: hsl.integer(21, 93, 49.4),
 }
 
 /**

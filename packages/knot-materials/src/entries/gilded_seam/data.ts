@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'gilded_seam',
   candidateId: 'grok',
@@ -16,7 +18,7 @@ export default {
   displacement: 0.0045,
   flavorText: 'The bowl broke, and gold was asked to remember the shape. Step closer. The repair still keeps a little warmth from the kiln.',
   placeholder: {
-    color: '#7f9c93',
+    color: hsl.integer(174, 20, 61),
     shading: 'stone',
   },
 } as const satisfies KnotData

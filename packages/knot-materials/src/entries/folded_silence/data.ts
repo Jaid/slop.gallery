@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'folded_silence',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Every crease is a place where an unspoken thought has settled.',
   placeholder: {
-    color: '#e9dfc9',
+    color: hsl.integer(86, 36, 89),
     shading: 'smooth',
   },
   displacement: 0.048,

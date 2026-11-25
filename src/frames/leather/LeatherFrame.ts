@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {abs, clamp, color, float, max, mix, mx_noise_float, mx_worley_noise_float, vec2} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -48,7 +49,7 @@ export default class LeatherFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#5a1a12'
+  override readonly tint = hsl.integer(30, 81, 22)
   override readonly title = 'Tooled guadamecí'
 
   override createGeometry(width: number, height: number) {
@@ -100,8 +101,8 @@ class TooledLeatherMaterial extends MeshPhysicalNodeMaterial {
     const strap = clamp(max(max(ring, lozenge), max(corner, knot)), 0, 1).toVar('strap')
     const stipple = mx_worley_noise_float(p.mul(1100)).smoothstep(0, 0.3).oneMinus().mul(visibleDetail(footprint, 0.0015))
     const rubbed = mx_noise_float(p.mul(12)).mul(0.5).add(0.5)
-    const hide = mix(color('#5a1610'), color('#2c0907'), rubbed.mul(0.6)).mul(stipple.mul(-0.3).add(1))
-    const gold = color('#c99a48')
+    const hide = mix(color(hsl.integer(29, 85, 21.4)), color(hsl.integer(27, 76, 10)), rubbed.mul(0.6)).mul(stipple.mul(-0.3).add(1))
+    const gold = color(hsl.integer(79, 69, 67))
     this.colorNode = mix(hide, gold, strap)
     this.metalnessNode = strap.mul(0.85)
     this.roughnessNode = mix(float(0.62).add(stipple.mul(0.15)), float(0.32), strap)

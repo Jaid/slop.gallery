@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, cos, dot, float, mix, mx_noise_float, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -87,6 +88,6 @@ export default class extends KnotMaterial {
     const rainbow = vec3(spectrum).mul(vec3(1.15, 0.75, 1.35)).add(vec3(0.05, 0.18, 0.28))
     this.emissiveNode = rainbow.mul(picture.pow(2.5)).mul(resolved.mul(0.3).add(0.7)).mul(seat.mul(0.55).add(0.3)).mul(1.7)
       .add(vec3(0.72, 0.86, 1).mul(scratches).mul(intimate).mul(0.08))
-      .add(color('#7b4ae0').mul(wax.abs().pow(3)).mul(0.05))
+      .add(color(hsl.integer(293, 84, 48)).mul(wax.abs().pow(3)).mul(0.05))
   }
 }

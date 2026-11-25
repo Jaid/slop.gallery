@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CbMOkykhfBD7NuC; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'sleeping_agate',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A geode keeps its slow ledger: each band a season of silica, laid down so patiently that the stone still seems to breathe in its sleep.',
   placeholder: {
-    color: '#9082a3',
+    color: hsl.integer(304, 25, 57),
     shading: 'stone',
   },
 } as const satisfies KnotData

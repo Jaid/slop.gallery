@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IBraVE33noBp60D.
 export default {
   id: 'amber_aeons',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'In honey-colored time, the vanished sea keeps its spiral souls suspended just beneath the surface.',
   placeholder: {
-    color: '#e39235',
+    color: hsl.integer(65, 84, 68),
     shading: 'glass',
   },
 } as const satisfies KnotData

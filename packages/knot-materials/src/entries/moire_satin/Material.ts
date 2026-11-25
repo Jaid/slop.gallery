@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -55,9 +56,9 @@ export default class extends KnotMaterial {
     const interference = tube.x.mul(TAU * 17).add(tube.y.mul(4.8).sin().mul(0.55)).add(angle.mul(3.7)).add(breath.mul(0.18)).sin().mul(0.5).add(0.5)
     const moire = interference.pow(2.4).mul(0.78).add(0.12)
     const fiber = field.weave.mul(0.72).add(moire.mul(0.28))
-    const base = mix(color('#080b20'), color('#261044'), field.random.y.pow(1.7).mul(0.7).add(0.15))
-    const rose = mix(color('#b83268'), color('#ef9b87'), field.random.x)
-    const violet = mix(color('#5d3ca8'), color('#78d8d7'), angle)
+    const base = mix(color(hsl.integer(273, 59, 7)), color(hsl.integer(299, 74, 14)), field.random.y.pow(1.7).mul(0.7).add(0.15))
+    const rose = mix(color(hsl.integer(1, 77, 46)), color(hsl.integer(34, 71, 73)), field.random.x)
+    const violet = mix(color(hsl.integer(293, 73, 37)), color(hsl.integer(195, 63, 79)), angle)
     const threadColor = mix(rose, violet, interference.pow(1.5)).mul(0.78).add(0.16)
     const height = field.reliefWave.mul(0.022).add(field.reliefRandom.x.mul(0.006)).add(fiber.mul(0.012))
     this.positionNode = p.add(normalLocal.mul(height.mul(near.mul(0.45).add(0.55)).mul(0.0022)))
@@ -65,7 +66,7 @@ export default class extends KnotMaterial {
     this.metalnessNode = field.weave.mul(0.26).add(moire.mul(0.08))
     this.roughnessNode = float(0.27).sub(field.weave.mul(0.1)).add(grazing.mul(0.08)).clamp(0.12, 0.42)
     this.sheen = 0.82
-    this.sheenColor.set('#d6b7ff')
+    this.sheenColor.set(hsl.integer(304, 100, 80))
     this.sheenRoughness = 0.28
     this.anisotropy = 0.78
     this.anisotropyNode = vec2(0.82, 0.16).mul(field.weave.mul(0.5).add(0.5))
@@ -76,7 +77,7 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.34
     this.iridescenceThicknessNode = interference.mul(260).add(90).add(angle.mul(80))
     const sparkle = glints(normalViewGeometry, 95).mul(field.weave).mul(field.random.z.smoothstep(0.58, 0.8)).mul(near)
-    this.emissiveNode = color('#ffe1ff').mul(sparkle.mul(0.5)).add(color('#6ce7d3').mul(moire).mul(grazing).mul(intimate.mul(0.6).add(0.2)).mul(0.09))
+    this.emissiveNode = color(hsl.integer(325, 100, 93)).mul(sparkle.mul(0.5)).add(color(hsl.integer(181, 75, 83)).mul(moire).mul(grazing).mul(intimate.mul(0.6).add(0.2)).mul(0.09))
     this.aoNode = float(0.72).add(field.weave.mul(0.28))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_float, normalLocal, positionGeometry, tangentLocal, time, vec3} from 'three/tsl'
 
 import {rgb} from '../../candidates/claude_fable/lib/rgb.ts'
@@ -60,8 +61,8 @@ export default class extends KnotMaterial {
     const frostHeight = frost.mul(0.02).add(rime.mul(covered).mul(sugar).mul(0.004))
     const surfaceNormal = proceduralNormal(frostHeight, 1.2)
     this.normalNode = surfaceNormal
-    const glass = mix(rgb('#06111a'), rgb('#0c2231'), grazing.pow(2))
-    const frostColor = mix(rgb('#c6dbe6'), rgb('#f1f6fa'), rime)
+    const glass = mix(rgb(hsl.integer(243, 46, 8)), rgb(hsl.integer(241, 57, 14)), grazing.pow(2))
+    const frostColor = mix(rgb(hsl.integer(230, 31, 86)), rgb(hsl.integer(242, 38, 96.6)), rime)
     this.colorNode = mix(glass, frostColor, frost.pow(1.4).mul(0.92))
     this.metalness = 0
     this.roughnessNode = mix(float(0.05), float(0.55), frost).add(condensation.mul(0.5)).clamp(0.04, 0.95)
@@ -70,8 +71,8 @@ export default class extends KnotMaterial {
     this.sheenNode = frostColor.mul(frost.pow(2).mul(0.7).add(condensation.mul(0.35)))
     this.sheenRoughness = 0.55
     const sparkle = glints(surfaceNormal, 500).mul(crystals).mul(covered).mul(near.mul(1.3).add(0.3))
-    const interior = rgb('#0a2f44').mul(facing.pow(1.5)).mul(frost.oneMinus()).mul(0.08)
-    const fog = rgb('#cfe0ea').mul(condensation).mul(0.08)
-    this.emissiveNode = rgb('#ffffff').mul(sparkle).mul(0.8).add(interior).add(fog).add(rgb('#9fd0ff').mul(edge).mul(covered).mul(0.06))
+    const interior = rgb(hsl.integer(238, 74, 19)).mul(facing.pow(1.5)).mul(frost.oneMinus()).mul(0.08)
+    const fog = rgb(hsl.integer(233, 31, 88)).mul(condensation).mul(0.08)
+    this.emissiveNode = rgb(hsl.integer(0, 0, 100)).mul(sparkle).mul(0.8).add(interior).add(fog).add(rgb(hsl.integer(248, 100, 81.4)).mul(edge).mul(covered).mul(0.06))
   }
 }

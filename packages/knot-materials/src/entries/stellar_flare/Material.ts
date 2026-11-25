@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -32,9 +33,9 @@ export default class extends KnotMaterial {
     // Physical solar limb darkening: grazing viewing angles pass through cooler upper layers
     const limbDarkening = facing.mul(0.65).add(0.35)
     // Color gradient across the stellar surface
-    const hotCore = mix(color('#ffaa1c'), color('#fff8e6'), granuleTurbulence)
-    const photosphereBase = mix(color('#9a1800'), hotCore, intergranularLane.oneMinus())
-    const spotColor = mix(color('#4a0c00'), color('#120200'), umbra)
+    const hotCore = mix(color(hsl.integer(72.1, 100, 77)), color(hsl.integer(89, 100, 97.6)), granuleTurbulence)
+    const photosphereBase = mix(color(hsl.integer(32, 100, 35.5)), hotCore, intergranularLane.oneMinus())
+    const spotColor = mix(color(hsl.integer(35, 100, 17)), color(hsl.integer(40, 100, 4)), umbra)
     const surfaceColor = mix(photosphereBase, spotColor, sunspot)
     this.colorNode = surfaceColor
     this.metalness = 0
@@ -62,15 +63,15 @@ export default class extends KnotMaterial {
       .mul(near.mul(0.4).add(0.75))
       .mul(2.2)
     // Coronal plasma loop arches
-    const loopColor = mix(color('#ff8c00'), color('#ffffff'), activeFlare)
+    const loopColor = mix(color(hsl.integer(59, 100, 71)), color(hsl.integer(0, 0, 100)), activeFlare)
     const coronalEmission = loopColor
       .mul(coronalLoop.add(loopHalo))
       .mul(activeFlare.mul(1.8).add(0.7))
       .mul(3.6)
     // Fine chromospheric spicules
-    const spiculeEmission = color('#ff5500').mul(spicules).mul(2.4)
+    const spiculeEmission = color(hsl.integer(39, 100, 62.4)).mul(spicules).mul(2.4)
     // Glowing coronal corona around the limb
-    const coronalLimb = color('#ff9900').mul(rim.pow(1.8)).mul(1.5)
+    const coronalLimb = color(hsl.integer(65, 100, 73.4)).mul(rim.pow(1.8)).mul(1.5)
     this.emissiveNode = thermalEmission
       .add(coronalEmission)
       .add(spiculeEmission)

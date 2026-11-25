@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, exp, float, mix, mx_noise_float, normalGeometry, normalViewGeometry, select, tangentGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {panelSky, proceduralEnvironment} from '../../candidates/gemini_argon/lib/environment.ts'
@@ -208,8 +209,8 @@ export default class extends KnotMaterial {
 // 5. 24k Burnished Gold Cloison Wire (`F_0 = vec3(0.98, 0.78, 0.38)`):
 // Strictly coplanar lapidary-polished top facet with warm 24k gold reflectance.
     const goldBrush = mx_noise_float(p.mul(180)).mul(0.04).add(0.98)
-    const cloisonGold = mix(color('#d48b1e'), color('#ffe47a'), facing.mul(0.55).add(wireShoulder.mul(0.45))).mul(goldBrush)
-    const copperSparkColor = mix(color('#ff5908'), color('#ffd670'), aventurineTop.div(aventurineTotal.add(0.001)).clamp())
+    const cloisonGold = mix(color(hsl.integer(70, 90, 64.6)), color(hsl.integer(95, 100, 90.6)), facing.mul(0.55).add(wireShoulder.mul(0.45))).mul(goldBrush)
+    const copperSparkColor = mix(color(hsl.integer(39.4, 100, 62.9)), color(hsl.integer(87, 100, 87)), aventurineTop.div(aventurineTotal.add(0.001)).clamp())
     const enamelComposite = ginbariPoolColor
       .add(copperSparkColor.mul(aventurineTotal.mul(1.6)))
       .add(vec3(0.95, 0.98, 1).mul(fukikomiBubbles))
@@ -286,7 +287,7 @@ export default class extends KnotMaterial {
 // Internal Ginbari silver-foil flash through the Beer-Lambert glass pools + Dirac Murashiki aventurine copper sparks + warm 24k gold wire glint!
     const ginbariFlash = beerLambertTransmission.mul(foilDot.pow(5).mul(0.85).add(silverRelief.mul(0.28))).mul(wallShadow).mul(wireMask.oneMinus()).mul(near.mul(0.4).add(0.6))
     const aventurineGlow = copperSparkColor.mul(aventurineTotal.mul(1.05))
-    const wireGlint = color('#ffda66').mul(wireMask).mul(facing.pow(3).mul(0.35).add(grazing.pow(2).mul(0.25)))
+    const wireGlint = color(hsl.integer(91.6, 100, 88)).mul(wireMask).mul(facing.pow(3).mul(0.35).add(grazing.pow(2).mul(0.25)))
     this.emissiveNode = ginbariFlash.add(aventurineGlow).add(wireGlint)
   }
 }

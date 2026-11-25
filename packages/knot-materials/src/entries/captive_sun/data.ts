@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: D2pmfQp7iycRJKh; fixture: knot-material-shaders; result: success.
 export default {
   id: 'captive_sun',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.007,
   flavorText: 'A star persuaded into sculpture – still boiling in golden cells, cooling into spots, and tearing gold at the rim.',
   placeholder: {
-    color: '#ff9e18',
+    color: hsl.integer(66, 100, 74.5),
     shading: 'glass',
   },
 } as const satisfies KnotData

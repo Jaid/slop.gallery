@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -43,20 +44,20 @@ export default class extends KnotMaterial {
 // Surface colors
 // Deep mirror-polished urushi lacquer with oxblood red undertones
     const oxbloodUnder = mx_noise_float(p.mul(3.5)).mul(0.5).add(0.5)
-    const urushiBase = mix(color('#040203'), color('#1c0608'), oxbloodUnder.mul(0.25))
-    const craquelureTint = color('#2e1215')
+    const urushiBase = mix(color(hsl.integer(345, 25, 3)), color(hsl.integer(16, 60, 7)), oxbloodUnder.mul(0.25))
+    const craquelureTint = color(hsl.integer(15, 50, 12))
     const urushiSurface = mix(urushiBase, craquelureTint, fineCraquelure.mul(0.6))
 // Living gold thermal gradient
-    const cooledGold = color('#b8821f')
-    const moltenGold = color('#ffc233')
-    const whiteHotCore = color('#fff7e0')
+    const cooledGold = color(hsl.integer(77, 86, 59))
+    const moltenGold = color(hsl.integer(83.3, 100, 82.2))
+    const whiteHotCore = color(hsl.integer(91, 100, 97.2))
     const goldGradient = mix(cooledGold, moltenGold, flowPulse)
     const thermalBlend = incandescentHeat.clamp()
     const activeGold = mix(goldGradient, whiteHotCore, thermalBlend)
 // Composite surface color
     let compColor = urushiSurface
     compColor = mix(compColor, activeGold, majorVein)
-    compColor = mix(compColor, color('#ffd866'), makiDust.mul(0.8))
+    compColor = mix(compColor, color(hsl.integer(90.4, 100, 87.6)), makiDust.mul(0.8))
     this.colorNode = compColor
 // Physical properties
 // Metalness: mirror gold veins vs deep non-metallic urushi resin
@@ -79,10 +80,10 @@ export default class extends KnotMaterial {
     const sparkle = glints(normalViewGeometry, 120).mul(makiDust).mul(near)
 // Glowing incandescent heart emission
     this.emissiveNode = activeGold.mul(incandescentHeat).mul(majorVein).mul(2.2)
-      .add(color('#ffffff').mul(veinCore).mul(incandescentHeat.pow(2)).mul(1.8))
-      .add(color('#ffea9f').mul(sparkle).mul(3))
-      .add(color('#ff8520').mul(majorVein).mul(facing.pow(3)).mul(0.4))
-      .add(color('#7a1a24').mul(fineCraquelure).mul(intimate).mul(0.25))
-      .add(color('#ffaa30').mul(rim).mul(grazing.pow(4)).mul(0.2))
+      .add(color(hsl.integer(0, 0, 100)).mul(veinCore).mul(incandescentHeat.pow(2)).mul(1.8))
+      .add(color(hsl.integer(94, 100, 92.6)).mul(sparkle).mul(3))
+      .add(color(hsl.integer(53, 100, 69.8)).mul(majorVein).mul(facing.pow(3)).mul(0.4))
+      .add(color(hsl.integer(21, 84, 29)).mul(fineCraquelure).mul(intimate).mul(0.25))
+      .add(color(hsl.integer(70, 100, 77)).mul(rim).mul(grazing.pow(4)).mul(0.2))
   }
 }

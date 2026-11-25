@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -52,12 +53,12 @@ export default class extends KnotMaterial {
     const rainbow = spectralColor(phase)
     const rainbowDeep = spectralColor(phase.add(2.45))
     const sanctum = view.dot(vec3(-0.35, 0.88, 0.31).normalize()).abs().pow(12)
-    this.colorNode = mix(color('#dcecff'), color('#fff3d2'), facing.mul(0.36).add(0.25)).add(rainbow.mul(rim).mul(0.045))
+    this.colorNode = mix(color(hsl.integer(252, 100, 93)), color(hsl.integer(90, 100, 96)), facing.mul(0.36).add(0.25)).add(rainbow.mul(rim).mul(0.045))
     this.transmission = 0.9
     this.thickness = 0.56
     this.ior = 2.08
     this.dispersion = 0.68
-    this.attenuationColor.set('#dcecff')
+    this.attenuationColor.set(hsl.integer(252, 100, 93))
     this.attenuationDistance = 2.4
     this.roughness = 0.022
     this.clearcoat = 1
@@ -66,6 +67,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.28
     this.iridescenceThicknessNode = roseAField.abs().mul(210).add(160)
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(31)).mul(intimate), 0.00018)
-    this.emissiveNode = rainbow.mul(roseA).mul(near.mul(0.45).add(0.34)).add(rainbowDeep.mul(roseB).mul(0.72)).add(color('#fff0a8').mul(roseC).mul(1.3)).add(color('#fff7d8').mul(halo).mul(sanctum.mul(1.1).add(0.22))).add(color('#ffffff').mul(rim.pow(2)).mul(sanctum).mul(0.35))
+    this.emissiveNode = rainbow.mul(roseA).mul(near.mul(0.45).add(0.34)).add(rainbowDeep.mul(roseB).mul(0.72)).add(color(hsl.integer(97, 100, 94)).mul(roseC).mul(1.3)).add(color(hsl.integer(95, 100, 97)).mul(halo).mul(sanctum.mul(1.1).add(0.22))).add(color(hsl.integer(0, 0, 100)).mul(rim.pow(2)).mul(sanctum).mul(0.35))
   }
 }

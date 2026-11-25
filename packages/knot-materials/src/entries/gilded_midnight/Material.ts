@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, positionGeometry, time, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/claude_sonnet/lib/bumpNormal.ts'
@@ -48,9 +49,9 @@ export default class extends KnotMaterial {
     const pulse = pathA.sin().mul(0.5).add(0.5).pow(6)
     const slowBreath = time.mul(0.6).sin().mul(0.18).add(0.82)
     const heat = pulse.mul(0.85).add(0.15).mul(slowBreath)
-    const glaze = mix(color('#020204'), color('#0b0a12'), seamNoise.mul(0.6).add(grazing.pow(2).mul(0.5)))
-    const spotColor = mix(color('#48678a'), color('#c9d6e6'), spotRing)
-    const leaf = mix(color('#a9721c'), color('#ffd777'), facing.pow(0.5).mul(0.5).add(seamNoise.mul(0.5)))
+    const glaze = mix(color(hsl.integer(284, 27, 2)), color(hsl.integer(290, 26, 6)), seamNoise.mul(0.6).add(grazing.pow(2).mul(0.5)))
+    const spotColor = mix(color(hsl.integer(252, 39, 43)), color(hsl.integer(254, 30, 85)), spotRing)
+    const leaf = mix(color(hsl.integer(73, 84, 53)), color(hsl.integer(88, 100, 88)), facing.pow(0.5).mul(0.5).add(seamNoise.mul(0.5)))
     this.colorNode = mix(mix(glaze, spotColor, spot.mul(0.85)), leaf, gold)
     this.metalnessNode = gold.mul(0.98).add(spot.mul(0.55))
     this.roughnessNode = mix(mix(float(0.06), float(0.3), spot), float(0.24), gold).sub(intimate.mul(gold).mul(0.05))
@@ -68,8 +69,8 @@ export default class extends KnotMaterial {
     const flake = mx_noise_float(p.mul(160)).mul(0.5).add(0.5)
     const flakeNormal = normalViewGeometry.add(vec3(flake.sub(0.5), flake.mul(7.3).fract().sub(0.5), flake.mul(3.1).fract().sub(0.5)).mul(0.6)).normalize()
     const sparkle = glints(flakeNormal, 90).mul(gold).mul(near.mul(0.6).add(0.15))
-    this.emissiveNode = color('#ff9a2a').mul(gold).mul(heat).mul(intimate.mul(0.5).add(0.35)).mul(0.8)
-      .add(color('#ffe7a8').mul(sparkle).mul(0.3))
-      .add(color('#ffc45c').mul(gold.mul(grazing.pow(2))).mul(0.06))
+    this.emissiveNode = color(hsl.integer(62, 100, 73.8)).mul(gold).mul(heat).mul(intimate.mul(0.5).add(0.35)).mul(0.8)
+      .add(color(hsl.integer(89, 100, 92)).mul(sparkle).mul(0.3))
+      .add(color(hsl.integer(79, 100, 83)).mul(gold.mul(grazing.pow(2))).mul(0.06))
   }
 }

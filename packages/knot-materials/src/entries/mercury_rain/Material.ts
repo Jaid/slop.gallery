@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, float, Fn, Loop, mix, modelWorldMatrixInverse, negateOnBackSide, transformNormalToView, uv, varying, vec2, vec3, vec4} from 'three/tsl'
 
 import {loopPhase} from '../../candidates/claude_sonnet/lib/loopClock.ts'
@@ -128,14 +129,14 @@ export default class extends KnotMaterial {
 // The dark film: bronze at the edges of each pool where it is thin, indigo where it thickens.
     const filmPhase = height.mul(90).add(grazing.mul(1.6)).add(p.y.mul(2))
     const tarnish = vec3(filmPhase.cos(), filmPhase.add(2.1).cos(), filmPhase.add(4.2).cos()).mul(0.5).add(0.5)
-    const dross = mix(rgb('#0b0b10'), mix(rgb('#3a2a18'), rgb('#221a42'), tarnish.y), tarnish.x.mul(0.6).add(0.1)).mul(0.9)
-    this.colorNode = mix(dross, mix(rgb('#b9bfcc'), rgb('#dfe4ee'), pooled.mul(0.5)), mirror)
+    const dross = mix(rgb(hsl.integer(285, 17, 6)), mix(rgb(hsl.integer(69, 43, 20)), rgb(hsl.integer(289, 59, 15)), tarnish.y), tarnish.x.mul(0.6).add(0.1)).mul(0.9)
+    this.colorNode = mix(dross, mix(rgb(hsl.integer(266, 15, 77)), rgb(hsl.integer(265, 27, 90)), pooled.mul(0.5)), mirror)
     this.metalness = 1
     this.roughnessNode = mix(float(0.34), float(0.018), mirror)
     this.iridescence = 0.3
     this.iridescenceIOR = 1.6
     this.iridescenceThicknessMinimum = 180
     this.iridescenceThicknessMaximum = 460
-    this.emissiveNode = rgb('#ffffff').mul(mirror).mul(facing.pow(6)).mul(intimate).mul(0.05)
+    this.emissiveNode = rgb(hsl.integer(0, 0, 100)).mul(mirror).mul(facing.pow(6)).mul(intimate).mul(0.05)
   }
 }

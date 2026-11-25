@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ghostwood',
   candidateId: 'qwen_max',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'The grain remembers a tree that no longer casts a shadow.',
   placeholder: {
-    color: '#e6f2ff',
+    color: hsl.integer(250, 100, 95),
     shading: 'ghost',
   },
 } as const satisfies KnotData

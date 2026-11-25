@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aurora_cocoon',
   candidateId: 'glm_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A sleeping dawn waits inside its own luminous wrapping.',
   placeholder: {
-    color: '#39ffb0',
+    color: hsl.integer(161, 100, 87),
     shading: 'smooth',
   },
 } as const satisfies KnotData

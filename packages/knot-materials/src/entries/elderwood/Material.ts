@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, mix, mx_noise_float, mx_noise_vec3, normalViewGeometry, tangentLocal, vec2, vec3} from 'three/tsl'
 
 import {breath} from '../../candidates/gpt_sol/lib/exhibition/facetOptics.ts'
@@ -32,10 +33,10 @@ export default class extends KnotMaterial {
     const mineralField = mx_noise_float(p.mul(5.5).add(47)).mul(0.5).add(0.5)
     const mineral = mineralField.smoothstep(0.54, 0.67)
       .mul(latewood.mul(0.75).add(0.25)).mul(char.oneMinus()).toVar()
-    const wood = mix(color('#391b10'), color('#aa6738'), eras.mul(0.55).add(ring.mul(0.45)))
+    const wood = mix(color(hsl.integer(41, 56, 16)), color(hsl.integer(54, 64, 51)), eras.mul(0.55).add(ring.mul(0.45)))
       .mul(latewood.mul(-0.33).add(1)).mul(fiber.mul(0.12).add(0.96))
-    const darkWood = mix(wood, color('#171a16').mul(fiber.mul(0.1).add(0.9)), char.mul(0.9))
-    const jade = mix(color('#124535'), color('#70a177'), ring.mul(0.4).add(mineralField.mul(0.6)))
+    const darkWood = mix(wood, color(hsl.integer(138, 11, 11)).mul(fiber.mul(0.1).add(0.9)), char.mul(0.9))
+    const jade = mix(color(hsl.integer(168, 81, 25)), color(hsl.integer(148, 45, 61)), ring.mul(0.4).add(mineralField.mul(0.6)))
     const grainAxis = vec3(1, 0.12, 0.05).normalize()
     const radialPlane = tree.mul(vec3(0, 1, 1.6)).add(vec3(0, 0.05, 0))
     const chatoyantPlane = radialPlane.div(radialPlane.length().max(0.000001))
@@ -44,7 +45,7 @@ export default class extends KnotMaterial {
     const eye = stroke(eyeField, 0.095, eyeField.fwidth())
       .mul(char.oneMinus()).mul(near.mul(0.25).add(0.75)).toVar()
     this.colorNode = mix(darkWood, jade, mineral)
-      .add(color('#b0803f').mul(eye).mul(latewood.oneMinus()).mul(0.075))
+      .add(color(hsl.integer(73, 65, 58)).mul(eye).mul(latewood.oneMinus()).mul(0.075))
     this.metalnessNode = mineral.mul(0.25).add(0.065)
     this.roughnessNode = mix(float(0.34).add(latewood.mul(0.12)), float(0.62), char)
       .mix(0.24, mineral).sub(eye.mul(0.03)).clamp(0.21, 0.66)
@@ -60,8 +61,8 @@ export default class extends KnotMaterial {
     const grainFlow = vec2(grainAxis.dot(tangentLocal), grainAxis.dot(vec3(bitangentLocal as unknown as Node<'vec3'>)))
     this.anisotropyNode = grainFlow.mul(0.68).mul(char.oneMinus())
     const sapPulse = radius.mul(13).add(breath).sin().mul(0.5).add(0.5).pow(4)
-    this.emissiveNode = color('#8dbd84').mul(mineral).mul(sapPulse).mul(intimate.mul(0.065).add(0.02))
-      .add(color('#ce944d').mul(eye).mul(grazing.mul(0.35).add(0.1)).mul(0.1))
+    this.emissiveNode = color(hsl.integer(141, 50, 71)).mul(mineral).mul(sapPulse).mul(intimate.mul(0.065).add(0.02))
+      .add(color(hsl.integer(70, 67, 66)).mul(eye).mul(grazing.mul(0.35).add(0.1)).mul(0.1))
     this.aoNode = vessels.mul(-0.12).sub(char.mul(0.12)).add(1)
     this.userData = {
       collection: 'The Unwritten Atlas',

@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, color, float, max, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -9,11 +10,11 @@ import {arc, circle, ellipse, leaf, repeat, subtract, unite} from './sdf.ts'
 export type DamaskOptions = {
   colors?: {
     /** the gilded print */
-    gold: string
+    gold: number
     /** the silk ground */
-    ground: string
+    ground: number
     /** the shadowed folds of the ground’s weave */
-    shade: string
+    shade: number
   }
   /** height of the floor the repeat is laid out from */
   floorY?: number
@@ -27,9 +28,9 @@ type Float = Node<'float'>
 type Vec2 = Node<'vec2'>
 
 const crimson = {
-  ground: '#4c0910',
-  shade: '#2c0408',
-  gold: '#86602f',
+  ground: hsl.integer(22, 89, 17),
+  shade: hsl.integer(19, 85, 9.4),
+  gold: hsl.integer(71, 61, 44),
 }
 /** Share of the wall the gilding covers on average, for walls too far away to draw the motif. */
 export const damaskCoverage = 0.32

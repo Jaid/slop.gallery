@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IgNMLTcxWnW8Pin; fixture: knot-material-shaders.
 export default {
   id: 'golden_repair',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A celadon vessel crazed with iron wire and gold thread, broken once and mended with gold. Come close: the scars are the warmest part.',
   placeholder: {
-    color: '#5f9270',
+    color: hsl.integer(154, 46, 55),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -25,20 +26,20 @@ export default class extends BaseKnotMaterial {
     const shadeNormal = proceduralNormal(height, 1.1)
     this.normalNode = shadeNormal
     const shade = folds.mul(0.5).add(0.5)
-    const velvet = mix(color('#4a0812'), color('#c02038'), shade)
-    const petal = mix(velvet, color('#e04058'), grazing.mul(0.5))
-    this.colorNode = mix(petal, color('#f0d8cc').mul(0.55), dew.mask.mul(0.35))
+    const velvet = mix(color(hsl.integer(19, 88, 16.5)), color(hsl.integer(20, 92, 45)), shade)
+    const petal = mix(velvet, color(hsl.integer(17, 85, 55)), grazing.mul(0.5))
+    this.colorNode = mix(petal, color(hsl.integer(48, 44, 88)).mul(0.55), dew.mask.mul(0.35))
     this.metalness = 0
     this.roughnessNode = mix(float(0.94), float(0.04), dew.mask)
     this.aoNode = shade.mul(0.35).add(0.55)
 // Velvet nap steals the light and returns it only at grazing angles.
     this.sheen = 1
-    this.sheenColor.set('#ff4a62')
+    this.sheenColor.set(hsl.integer(18, 100, 62))
     this.sheenRoughness = 0.32
     this.clearcoatNode = dew.mask.mul(0.95).add(0.08)
     this.clearcoatRoughness = 0.05
     const dewGlint = glints(shadeNormal, 48).mul(dew.core).mul(near.mul(0.5).add(0.5))
     const napGlint = glints(shadeNormal, 160).mul(near.mul(intimate.mul(0.5).add(0.5))).mul(0.08)
-    this.emissiveNode = color('#ff2a42').mul(grazing.pow(3)).mul(intimate.mul(0.5).add(0.5)).mul(0.8).add(color('#ffd9c8').mul(dewGlint)).add(color('#ffb9a8').mul(napGlint))
+    this.emissiveNode = color(hsl.integer(23, 100, 58.8)).mul(grazing.pow(3)).mul(intimate.mul(0.5).add(0.5)).mul(0.8).add(color(hsl.integer(46, 100, 90)).mul(dewGlint)).add(color(hsl.integer(34, 100, 82)).mul(napGlint))
   }
 }

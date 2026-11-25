@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {angle, ring, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/fields.ts'
@@ -32,10 +33,10 @@ export default class extends KnotMaterial {
     const spectrum = vec3(order.add(0.1).cos(), order.add(2.15).cos(), order.add(4.2).cos()).mul(0.5).add(0.5).pow(2)
     const lobe = incident.add(normalLocal.dot(view).mul(0.4)).sin().abs().pow(1.5)
     const spectralStrength = lobe.mul(facing.mul(0.35).add(0.55))
-    const silver = mix(color('#13242e'), color('#728b96'), cut.mul(0.4).add(0.22))
+    const silver = mix(color(hsl.integer(236, 39, 15)), color(hsl.integer(226, 19, 56)), cut.mul(0.4).add(0.22))
     const chroma = spectrum.mul(vec3(0.72, 0.88, 1)).add(0.025)
     const engraving = frame.max(hub).max(spokes.mul(0.45))
-    this.colorNode = mix(mix(silver, chroma, spectralStrength), color('#aebcbd'), engraving)
+    this.colorNode = mix(mix(silver, chroma, spectralStrength), color(hsl.integer(202, 10, 75)), engraving)
     this.metalness = 0.92
     this.roughnessNode = float(0.27).add(cut.mul(0.065)).sub(engraving.mul(0.08))
     this.anisotropy = 0.8
@@ -47,6 +48,6 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = r.mul(240).add(180)
     this.normalNode = proceduralNormal(engraving.mul(0.00045).add(cut.mul(intimate).mul(0.00006)), 0.7)
     this.emissiveNode = chroma.mul(spectralStrength).mul(0.3).mul(engraving.mul(-0.75).add(1))
-      .add(color('#b3e8ef').mul(frame).mul(grazing.pow(3)).mul(0.09))
+      .add(color(hsl.integer(206, 58, 88)).mul(frame).mul(grazing.pow(3)).mul(0.09))
   }
 }

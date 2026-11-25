@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'magma_chrysalis',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A shell of cooling rock guards a bright metamorphosis within.',
   placeholder: {
-    color: '#fb923c',
+    color: hsl.integer(56, 95, 71.8),
     shading: 'liquid',
   },
 } as const satisfies KnotData

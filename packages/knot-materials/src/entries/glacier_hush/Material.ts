@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, normalViewGeometry, vec3} from 'three/tsl'
 
 import {lampFlash} from '../../candidates/space_bunny/lib/lampFlash.ts'
@@ -48,9 +49,9 @@ export default class extends KnotMaterial {
     const sparkle = microGlitter(inside, 0.016, 120, 0.5)
 // The cold light inside the ice turns slowly, the way light does under a thick sky.
     const glimmer = loopPhase.sin().mul(0.5).add(0.5).mul(loopPhase.mul(3).sin().mul(0.5).add(0.5))
-    const ice = mix(color('#6e9bb8'), color('#27567a'), cloud)
-    const crevasseBody = mix(ice, color('#071a2b'), crevasseDeep.mul(0.95))
-    this.colorNode = mix(mix(crevasseBody, color('#0d2a3d'), hairline.mul(0.7)), color('#e9f6ff'), bubble.mul(0.85).add(bubbleRim.mul(0.25)).add(frost.mul(0.75)).clamp())
+    const ice = mix(color(hsl.integer(237, 38, 61)), color(hsl.integer(244, 61, 35)), cloud)
+    const crevasseBody = mix(ice, color(hsl.integer(248, 63, 11)), crevasseDeep.mul(0.95))
+    this.colorNode = mix(mix(crevasseBody, color(hsl.integer(241, 65, 17)), hairline.mul(0.7)), color(hsl.integer(238, 100, 96)), bubble.mul(0.85).add(bubbleRim.mul(0.25)).add(frost.mul(0.75)).clamp())
     this.metalness = 0
     this.ior = 1.31
     this.roughnessNode = float(0.16).add(cloud.mul(0.08)).add(frost.mul(0.45)).add(bubble.mul(0.08)).clamp(0.05, 0.8)
@@ -59,11 +60,11 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(crevasse.mul(0.7).sub(crevasseDeep.mul(0.35)).add(hairline.mul(near).mul(0.4)).add(frost.mul(near).mul(0.6)).add(bubble.mul(0.3)).add(bubbleRim.mul(0.2)), 0.0055)
 // Light piped down the crack and scattered back out of the ice, plus the wet glint on the lip.
     const scatter = lampFlash(normalViewGeometry, 4).mul(0.5).add(0.5)
-    this.emissiveNode = color('#8fd4ff').mul(crevasseDeep.mul(0.4).mul(grazing.mul(0.5).add(0.5)))
-      .add(color('#dff4ff').mul(lip.max(0)).mul(0.45))
-      .add(color('#eaf9ff').mul(bubble.mul(intimate).mul(0.22)))
-      .add(color('#ffffff').mul(frost.mul(intimate).mul(0.3)))
-      .add(color('#9fe0ff').mul(sparkle.sparkle.mul(near).mul(0.4).mul(glimmer.mul(0.7).add(0.5))))
-      .add(color('#bfe8ff').mul(grazing.pow(3.6)).mul(scatter.mul(0.14)))
+    this.emissiveNode = color(hsl.integer(237, 100, 81.3)).mul(crevasseDeep.mul(0.4).mul(grazing.mul(0.5).add(0.5)))
+      .add(color(hsl.integer(230, 100, 95)).mul(lip.max(0)).mul(0.45))
+      .add(color(hsl.integer(224, 100, 97)).mul(bubble.mul(intimate).mul(0.22)))
+      .add(color(hsl.integer(0, 0, 100)).mul(frost.mul(intimate).mul(0.3)))
+      .add(color(hsl.integer(230, 100, 85)).mul(sparkle.sparkle.mul(near).mul(0.4).mul(glimmer.mul(0.7).add(0.5))))
+      .add(color(hsl.integer(233, 100, 89.4)).mul(grazing.pow(3.6)).mul(scatter.mul(0.14)))
   }
 }

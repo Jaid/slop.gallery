@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -33,12 +34,12 @@ export default class extends BaseKnotMaterial {
     const d = q.fract().sub(rnd.mul(0.5).add(0.25)).length()
     const fp = q.fwidth().length().max(0.002)
     const barnacle = d.smoothstep(0.16, fp.add(0.22).min(0.24)).oneMinus()
-    const barnacleTint = mix(color('#e8e2cc'), color('#9c8c70'), rnd2.y)
+    const barnacleTint = mix(color(hsl.integer(94, 35, 90)), color(hsl.integer(82, 25, 59)), rnd2.y)
     // Algae — fractal noise mottling the stone.
     const algae = mx_fractal_noise_float(p.mul(4.2), 3, 2, 0.55).mul(0.5).add(0.5)
     // Deep cold stone.
-    const stoneDeep = mix(color('#050f14'), color('#16323c'), algae)
-    const stoneShallow = mix(color('#1e4a54'), color('#3a6a72'), algae.mul(0.6))
+    const stoneDeep = mix(color(hsl.integer(229, 43, 7)), color(hsl.integer(224, 50, 20)), algae)
+    const stoneShallow = mix(color(hsl.integer(215, 58, 29)), color(hsl.integer(209, 45, 41)), algae.mul(0.6))
     const stone = mix(stoneDeep, stoneShallow, facing.pow(0.6))
     // Silt accumulation in crevices.
     const silt = mx_noise_float(p.mul(18)).mul(0.4).add(0.6)
@@ -54,9 +55,9 @@ export default class extends BaseKnotMaterial {
       .add(algae.mul(0.35))
       .add(mx_noise_float(p.mul(64)).mul(0.08)), 0.005)
     this.emissiveNode
-      = color('#37c4d6').mul(caustic).mul(grazing.mul(0.4).add(0.6)).mul(0.42)
-        .add(color('#5fe4ff').mul(shafts).mul(grazing.mul(0.5).add(0.3)).mul(0.16))
-        .add(color('#00ffd4').mul(motes).mul(intimate.mul(0.7).add(0.35)).mul(2.4))
-        .add(color('#1a8fa0').mul(rim).mul(0.08))
+      = color(hsl.integer(208, 84, 71.5)).mul(caustic).mul(grazing.mul(0.4).add(0.6)).mul(0.42)
+        .add(color(hsl.integer(214, 100, 83)).mul(shafts).mul(grazing.mul(0.5).add(0.3)).mul(0.16))
+        .add(color(hsl.integer(174, 100, 87.4)).mul(motes).mul(intimate.mul(0.7).add(0.35)).mul(2.4))
+        .add(color(hsl.integer(210, 88, 53)).mul(rim).mul(0.08))
   }
 }

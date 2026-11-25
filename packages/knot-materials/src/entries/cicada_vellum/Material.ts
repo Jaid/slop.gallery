@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -31,9 +32,9 @@ export default class extends KnotMaterial {
     const reliefPrincipalB = underSkin.dot(vec3(-0.38, 0.86, 0.34)).mul(11).sin().add(membraneNoise.sub(0.5).mul(0.32)).abs().smoothstep(0.14, 0.34).oneMinus().mul(0.72)
     const reliefVeins = reliefPrincipalA.max(reliefPrincipalB).max(reliefReticulum.mul(0.68))
     const cellDepth = reticulumField.abs().smoothstep(0.02, 0.2).mul(0.5).add(0.5)
-    const vellum = mix(color('#536b36'), color('#e1e8a8'), membraneNoise.mul(0.52).add(facing.mul(0.1)).clamp())
-    const copper = mix(color('#301306'), color('#b45720'), membraneNoise.mul(0.55).add(0.16).clamp())
-    const thinFilm = mix(color('#77b8a4'), color('#d6b87e'), view.dot(vec3(0.4, 0.25, 0.88).normalize()).mul(0.5).add(0.5))
+    const vellum = mix(color(hsl.integer(129, 58, 42)), color(hsl.integer(113, 63, 89.5)), membraneNoise.mul(0.52).add(facing.mul(0.1)).clamp())
+    const copper = mix(color(hsl.integer(45, 70, 13)), color(hsl.integer(47, 82, 49)), membraneNoise.mul(0.55).add(0.16).clamp())
+    const thinFilm = mix(color(hsl.integer(173, 46, 69)), color(hsl.integer(83, 52, 76)), view.dot(vec3(0.4, 0.25, 0.88).normalize()).mul(0.5).add(0.5))
     const membraneMask = veins.oneMinus()
     const height = veins.mul(0.78).sub(cellDepth.mul(membraneMask).mul(0.14)).add(pores.mul(0.12))
     this.positionNode = p.add(normalLocal.mul(reliefVeins.mul(0.008).sub(cellDepth.mul(reliefVeins.oneMinus()).mul(0.0007))))
@@ -44,12 +45,12 @@ export default class extends KnotMaterial {
     this.thickness = 0.18
     this.ior = 1.36
     this.dispersion = 0.018
-    this.attenuationColor.set('#96b874')
+    this.attenuationColor.set(hsl.integer(130, 53, 70))
     this.attenuationDistance = 1.9
     this.clearcoat = 0
     this.sheen = 0.55
-    this.sheenNode = color('#f5e9bd').mul(membraneMask.mul(0.6).add(veins.mul(0.08)))
-    this.sheenColor.set('#f5e9bd')
+    this.sheenNode = color(hsl.integer(95, 67, 92)).mul(membraneMask.mul(0.6).add(veins.mul(0.08)))
+    this.sheenColor.set(hsl.integer(95, 67, 92))
     this.sheenRoughness = 0.76
     this.iridescence = 0.32
     this.iridescenceIOR = 1.32
@@ -59,6 +60,6 @@ export default class extends KnotMaterial {
     this.normalNode = wingNormal
     this.clearcoatNormalNode = wingNormal
     const veinGlint = glints(wingNormal, 96).mul(veins).mul(near)
-    this.emissiveNode = color('#d8bc73').mul(veinGlint).mul(0.06).add(color('#a2d277').mul(membraneMask).mul(grazing.pow(2.8)).mul(near).mul(0.032)).add(thinFilm.mul(grazing.pow(3)).mul(pores).mul(intimate).mul(0.025))
+    this.emissiveNode = color(hsl.integer(89, 60, 77)).mul(veinGlint).mul(0.06).add(color(hsl.integer(132, 66, 78)).mul(membraneMask).mul(grazing.pow(2.8)).mul(near).mul(0.032)).add(thinFilm.mul(grazing.pow(3)).mul(pores).mul(intimate).mul(0.025))
   }
 }

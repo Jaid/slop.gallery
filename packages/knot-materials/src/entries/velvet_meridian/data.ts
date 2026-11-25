@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1UqvleKScECZs6l.
 export default {
   id: 'velvet_meridian',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Midnight silk folds around an invisible horizon, its woven threads catching a violet dawn.',
   placeholder: {
-    color: '#241338',
+    color: hsl.integer(302, 62, 13),
     shading: 'fabric',
   },
   displacement: 0.016,

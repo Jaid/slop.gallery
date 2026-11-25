@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nebula_reliquary',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A little cosmic weather turns inside a shrine too small for its sky.',
   placeholder: {
-    color: '#c47bff',
+    color: hsl.integer(308, 100, 67),
     shading: 'smooth',
   },
 } as const satisfies KnotData

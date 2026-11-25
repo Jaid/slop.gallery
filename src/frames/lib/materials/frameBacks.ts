@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, attribute, color, float, max, mix, mx_cell_noise_float, mx_noise_float, positionLocal, select, vec2, vec3} from 'three/tsl'
 
 import {inside, line, visibleDetail} from '#src/lib/materials/filters.ts'
@@ -46,7 +47,7 @@ export function hangingWire({footprint, opening, point}: BackSurface) {
   const metal = plate.max(ring).max(wire)
   return {
     cover: metal,
-    color: mix(mix(color('#8a8478'), color('#c8c2b4'), twist.mul(wire)), color('#4a4640'), screws.mul(plate)),
+    color: mix(mix(color(hsl.integer(85, 10, 55)), color(hsl.integer(88, 15, 79)), twist.mul(wire)), color(hsl.integer(78, 8, 30)), screws.mul(plate)),
     height: plate.mul(0.0008).add(ring.mul(0.0025)).add(wire.mul(0.0015)).sub(screws.mul(0.0003)),
   }
 }
@@ -74,10 +75,10 @@ export function galleryLabel({footprint, point}: BackSurface, center: Vec2, size
   const type = select(hasWord.and(withinLine), inside(inRow.sub(0.5).abs().sub(weight.mul(0.5)).mul(rowHeight)), float(0))
   const legibleType = mix(float(0.12), type, visibleDetail(footprint, 0.0015))
   const foxing = mx_cell_noise_float(vec3(local.mul(400), 7)).smoothstep(0.93, 1)
-  const paper: Vec3 = mix(color('#ece2c8'), color('#c8a878'), foxing.mul(0.6))
+  const paper: Vec3 = mix(color(hsl.integer(89, 43, 90)), color(hsl.integer(77, 44, 71)), foxing.mul(0.6))
   return {
     cover: card,
-    color: mix(mix(paper, color('#2a2420'), legibleType.mul(0.85)), color('#6a5a44'), border),
+    color: mix(mix(paper, color(hsl.integer(56, 12, 16)), legibleType.mul(0.85)), color(hsl.integer(75, 27, 39)), border),
     height: card.mul(0.0002),
   }
 }
@@ -113,7 +114,7 @@ export function screwHead({point}: BackSurface, center: Vec2, radius: number) {
 }
 
 /** A seal of sealing wax of `radius` pressed at `center`: a puddle with a ragged rim, a raised ring and a crest in its middle. Returns how much it covers the point, its color and its height. */
-export function waxSeal({footprint, point}: BackSurface, center: Vec2, radius: number, wax = '#8a1410') {
+export function waxSeal({footprint, point}: BackSurface, center: Vec2, radius: number, wax = hsl.integer(29, 95, 32)) {
   const local = point.sub(center)
   const angle = atan(local.y, local.x)
   const rim = mx_noise_float(vec3(angle.cos().mul(3), angle.sin().mul(3), 4.3)).mul(radius * 0.12)

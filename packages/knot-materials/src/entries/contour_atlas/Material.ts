@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, vec3} from 'three/tsl'
 
 import {hairline} from '../../lib/hairline.ts'
@@ -34,14 +35,14 @@ export default class extends KnotMaterial {
     const contours = hairline(phase.sin(), 0.065).mul(visibility)
     const index = hairline(phase.mul(0.25).sin(), 0.05)
       .mul(phase.mul(0.25).fwidth().smoothstep(0.5, 2.5).oneMinus())
-    const highlands = mix(color('#b7d4bb'), color('#f1edda'), elevation.smoothstep(0.43, 0.68))
-    const lowlands = mix(color('#c29a53'), color('#6bafaa'), elevation.smoothstep(0.3, 0.42))
+    const highlands = mix(color(hsl.integer(149, 33, 82)), color(hsl.integer(97, 42, 93.5)), elevation.smoothstep(0.43, 0.68))
+    const lowlands = mix(color(hsl.integer(80, 61, 66)), color(hsl.integer(190, 46, 66)), elevation.smoothstep(0.3, 0.42))
     const map = mix(lowlands, highlands, elevation.smoothstep(0.42, 0.49))
     const ink = contours.mul(0.52).max(index.mul(0.8))
     const grainPoint = p.mul(190)
     const grain = mx_noise_float(grainPoint)
       .mul(grainPoint.fwidth().length().smoothstep(0.3, 1.3).oneMinus())
-    this.colorNode = mix(map, color('#244b45'), ink).mul(grain.mul(0.035).add(1))
+    this.colorNode = mix(map, color(hsl.integer(183, 50, 29)), ink).mul(grain.mul(0.035).add(1))
     this.metalness = 0
     this.roughnessNode = float(0.79).add(grain.mul(0.025)).sub(ink.mul(0.1))
     this.specularIntensity = 0.32

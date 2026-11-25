@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 77fsRvmePazcbTS; fixture: knot-material-shaders; result: success.
 export default {
   id: 'cloisonne_lotus',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Filigree brass wires bent by hand contain pools of vitrified cobalt, turquoise and Imperial ruby glass over a foil-stamped guilloché core.',
   placeholder: {
-    color: '#79786c',
+    color: hsl.integer(103, 10, 50),
     shading: 'glass',
   },
 } as const satisfies KnotData

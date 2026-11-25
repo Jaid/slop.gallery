@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -28,9 +29,9 @@ export default class extends BaseKnotMaterial {
     this.normalNode = surface
     const glaze = mx_fractal_noise_float(p.mul(3), 3, 2, 0.5).mul(0.5).add(0.5)
     const heat = shard.smoothstep(0.02, 0.14).oneMinus()
-    const temper = mix(color('#0e1c28'), color('#3a2008'), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
-    const ceramic = mix(mix(color('#070605'), color('#1c1610'), glaze), temper, heat.mul(0.35))
-    const gold = mix(color('#b06a14'), color('#ffcf70'), mx_noise_float(p.mul(11)).mul(0.5).add(0.5))
+    const temper = mix(color(hsl.integer(246, 42, 12)), color(hsl.integer(60, 72, 17)), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
+    const ceramic = mix(mix(color(hsl.integer(70, 9, 4)), color(hsl.integer(67, 21, 10)), glaze), temper, heat.mul(0.35))
+    const gold = mix(color(hsl.integer(64, 88, 52)), color(hsl.integer(83, 100, 85.8)), mx_noise_float(p.mul(11)).mul(0.5).add(0.5))
     this.colorNode = mix(ceramic, gold, vein)
     this.metalnessNode = vein
     this.roughnessNode = mix(float(0.5), float(0.16), vein).sub(glaze.mul(0.06))
@@ -42,6 +43,6 @@ export default class extends BaseKnotMaterial {
     const flow = p.dot(vec3(0.6, 0.8, 0.35)).mul(2.2).sub(time.mul(1.1)).sin().mul(0.5).add(0.5)
     const pulse = flow.pow(4).mul(0.7).add(0.45)
     const spark = glints(surface, 70).mul(vein).mul(intimate)
-    this.emissiveNode = color('#ff4a06').mul(vein).mul(pulse).mul(intimate.mul(1.1).add(0.4)).add(color('#ff9a2a').mul(vein).mul(grazing.pow(2)).mul(0.45)).add(color('#ffd489').mul(spark).mul(0.35))
+    this.emissiveNode = color(hsl.integer(36, 100, 61.1)).mul(vein).mul(pulse).mul(intimate.mul(1.1).add(0.4)).add(color(hsl.integer(62, 100, 73.8)).mul(vein).mul(grazing.pow(2)).mul(0.45)).add(color(hsl.integer(80, 100, 87)).mul(spark).mul(0.35))
   }
 }

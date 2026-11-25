@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, normalLocal, time} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -22,7 +23,7 @@ export default class extends KnotMaterial {
     this.positionNode = p.add(normalLocal.mul(height.mul(0.0045)))
     this.normalNode = normal
     this.clearcoatNormalNode = normal
-    this.colorNode = color('#aebac5')
+    this.colorNode = color(hsl.integer(246, 14, 75))
     this.metalness = 1
     this.roughnessNode = float(0.018).add(near.mul(0.009))
     this.clearcoat = 1
@@ -31,7 +32,7 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.46
     this.iridescenceThicknessNode = facing.mul(95).add(180)
     const flash = glints(normal, 165)
-    this.emissiveNode = color('#f5f7ff').mul(flash).mul(grazing.pow(2)).mul(0.018)
-      .add(color('#5c83a6').mul(wave.abs().mul(0.008)))
+    this.emissiveNode = color(hsl.integer(275, 100, 97)).mul(flash).mul(grazing.pow(2)).mul(0.018)
+      .add(color(hsl.integer(246, 39, 53)).mul(wave.abs().mul(0.008)))
   }
 }

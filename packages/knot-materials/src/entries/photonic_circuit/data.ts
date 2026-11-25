@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4AEfQg7Qgj1dEVQ.
 export default {
   id: 'photonic_circuit',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Coherent light races through etched sapphire waveguides, dreaming in binary along pathways narrower than thought.',
   placeholder: {
-    color: '#283344',
+    color: hsl.integer(259, 28, 22),
     shading: 'metal',
   },
 } as const satisfies KnotData

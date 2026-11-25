@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'noble_fire',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A black stone keeps a thousand small fires, and lets you see only the ones you deserve.',
   placeholder: {
-    color: '#2b2429',
+    color: hsl.integer(336, 13, 17),
     shading: 'glass',
   },
 } as const satisfies KnotData

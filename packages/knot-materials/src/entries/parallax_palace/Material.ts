@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, time, uv} from 'three/tsl'
 
 import {band} from '../../candidates/gpt_sol/lib/galleryMarks.ts'
@@ -21,7 +22,7 @@ export default class extends KnotMaterial {
     const architecture = band(q.x.mul(6.283185307179586 * 8).add(q.y.mul(6.283185307179586 * 6)))
     const iridescent = spectralColor(picture.add(viewPhase).add(time.mul(0.14)))
     const aperture = bands.mul(0.76).add(shutter.mul(0.24)).mul(architecture.mul(0.78).add(0.22))
-    this.colorNode = mix(color('#080b21'), iridescent.mul(0.9), aperture)
+    this.colorNode = mix(color(hsl.integer(274, 61, 7)), iridescent.mul(0.9), aperture)
     this.metalness = 0.76
     this.roughnessNode = bands.mul(-0.1).add(0.23)
     this.clearcoat = 1

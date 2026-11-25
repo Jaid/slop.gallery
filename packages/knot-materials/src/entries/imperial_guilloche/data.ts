@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7EtWKdJKgEioEdL; fixture: knot-material-shaders.
 export default {
   id: 'imperial_guilloche',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Under a lake of raspberry glass, gold was turned on a rose engine by patient hands. The lines still catch fire, and somewhere inside a small clock is ticking.',
   placeholder: {
-    color: '#4a0612',
+    color: hsl.integer(18, 90, 16),
     shading: 'metal',
   },
 } as const satisfies KnotData

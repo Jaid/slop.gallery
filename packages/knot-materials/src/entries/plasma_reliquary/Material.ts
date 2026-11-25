@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_opus/lib/ramp.ts'
@@ -89,8 +90,8 @@ export default class extends KnotMaterial {
       const flicker = mx_noise_float(vec2(seed, time.mul(7))).mul(0.25).add(0.9)
       const splash = r.smoothstep(0.78, 1)
       const strength = alive.mul(within).mul(endOn).mul(flicker).mul(rnd.z.mul(0.5).add(0.75))
-      const tint = mix(color('#d93cff'), color('#5b4bff'), r.pow(1.5))
-      core = core.add(mix(color('#ffd8fb'), color('#c9c4ff'), r).mul(thread).mul(strength).mul(splash.mul(1.6).add(1)))
+      const tint = mix(color(hsl.integer(319, 100, 61.6)), color(hsl.integer(278, 100, 48)), r.pow(1.5))
+      core = core.add(mix(color(hsl.integer(330, 100, 91)), color(hsl.integer(288, 100, 82)), r).mul(thread).mul(strength).mul(splash.mul(1.6).add(1)))
       halo = halo.add(tint.mul(sheath).mul(strength))
 // Where a tendril touches the glass it pools into a small corona, seen on the near wall or through the tube.
       const spotS = path.add(fork.mul(0.65))
@@ -98,9 +99,9 @@ export default class extends KnotMaterial {
       const spotAxial = s.sub(surfaceDepth.sub(cosine).max(0).mul(radius).mul(section.obliquity)).sub(spotS)
       const front = cosine.smoothstep(-0.1, 0.2).mul(0.6).add(0.4)
       const spot = gauss(spotLateral.pow2().add(spotAxial.pow2()).sqrt(), mix(float(0.0055), float(0.009), closeness))
-      corona = corona.add(mix(color('#ff6fe6'), color('#fff0fd'), spot.pow(3)).mul(spot.add(gauss(spotLateral.pow2().add(spotAxial.pow2()).sqrt(), 0.028).mul(0.12))).mul(alive).mul(front))
+      corona = corona.add(mix(color(hsl.integer(335, 100, 71.5)), color(hsl.integer(330, 100, 96.6)), spot.pow(3)).mul(spot.add(gauss(spotLateral.pow2().add(spotAxial.pow2()).sqrt(), 0.028).mul(0.12))).mul(alive).mul(front))
 // A faint ghost marks where a dead tendril last touched the glass.
-      corona = corona.add(color('#5a1f8a').mul(gauss(wrapAngle(section.relative.sub(angle)).mul(radius), 0.05)).mul(gauss(s.sub(spotS), 0.05)).mul(life.smoothstep(0.7, 1)).mul(0.15))
+      corona = corona.add(color(hsl.integer(305, 81, 30)).mul(gauss(wrapAngle(section.relative.sub(angle)).mul(radius), 0.05)).mul(gauss(s.sub(spotS), 0.05)).mul(life.smoothstep(0.7, 1)).mul(0.15))
     }
 // The electrode: a white-hot wire with current beading along it.
     const wireDistance = lateral.abs().mul(radius)
@@ -111,7 +112,7 @@ export default class extends KnotMaterial {
 // Low-pressure gas glows faintly along the chord through the tube.
     const chord = lateral.pow2().oneMinus().max(0).sqrt()
     const gas = mx_noise_float(vec3(s.mul(9), section.relative.mul(1.4), time.mul(0.35))).mul(0.5).add(0.5)
-    this.colorNode = color('#030208')
+    this.colorNode = color(hsl.integer(293, 50, 3))
     this.metalness = 0
     this.roughness = 0.08
     this.specularIntensity = 0.8
@@ -121,9 +122,9 @@ export default class extends KnotMaterial {
     this.emissiveNode = core.mul(3.4).mul(intensity)
       .add(halo.mul(0.55).mul(intensity))
       .add(corona.mul(1.1).mul(intensity))
-      .add(color('#fff0ff').mul(wire).mul(2.6))
-      .add(color('#a548ff').mul(wireHalo).mul(0.22))
-      .add(color('#2a0b4a').mul(chord).mul(gas.mul(0.5).add(0.5)).mul(0.22))
-      .add(color('#7fd8ff').mul(grazing.pow(5)).mul(0.12))
+      .add(color(hsl.integer(326, 100, 96.6)).mul(wire).mul(2.6))
+      .add(color(hsl.integer(303, 100, 55.3)).mul(wireHalo).mul(0.22))
+      .add(color(hsl.integer(301, 83, 14)).mul(chord).mul(gas.mul(0.5).add(0.5)).mul(0.22))
+      .add(color(hsl.integer(229, 99, 81)).mul(grazing.pow(5)).mul(0.12))
   }
 }

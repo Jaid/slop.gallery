@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {coverage, segment, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/fields.ts'
@@ -45,16 +46,16 @@ export default class extends KnotMaterial {
     const nap = mx_noise_float(p.mul(160)).mul(0.5).add(0.5)
     const drift = tube.x.mul(Math.PI * 6).add(tube.y.mul(Math.PI * 2)).sub(time.mul(0.13)).sin().mul(0.5).add(0.5)
     const angleTint = view.y.mul(0.35).add(view.x.mul(0.25)).add(0.5).clamp()
-    const darkPile = mix(color('#160a20'), color('#491029'), drift.mul(0.6).add(nap.mul(0.16)))
-    const silk = mix(color('#8e304a'), color('#ac685d'), angleTint)
+    const darkPile = mix(color(hsl.integer(307, 55, 8)), color(hsl.integer(358, 72, 18)), drift.mul(0.6).add(nap.mul(0.16)))
+    const silk = mix(color(hsl.integer(7, 68, 37)), color(hsl.integer(30, 45, 52)), angleTint)
     let damask = mix(darkPile, silk, foliage.mul(0.82))
-    damask = mix(damask, color('#ae8254'), ogee.mul(0.48).max(veins.mul(0.35)))
+    damask = mix(damask, color(hsl.integer(67, 49, 58)), ogee.mul(0.48).max(veins.mul(0.35)))
     this.colorNode = damask.mul(weave.mul(0.18).add(0.82))
     this.specularIntensityNode = mix(float(0.12), float(0.85), foliage)
     this.roughnessNode = mix(float(0.95), float(0.36), foliage)
     this.metalness = 0
     this.sheen = 1
-    const pileColor = mix(color('#c57899'), color('#889ccd'), angleTint)
+    const pileColor = mix(color(hsl.integer(353, 48, 61)), color(hsl.integer(267, 44, 65)), angleTint)
     this.sheenNode = pileColor.mul(foliage.mul(-0.8).add(1))
     this.sheenRoughnessNode = mix(float(0.75), float(0.4), foliage)
     this.anisotropy = 0.8

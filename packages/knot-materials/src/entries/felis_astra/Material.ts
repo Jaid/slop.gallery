@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, positionGeometry, texture, time, uv, vec2, vec3} from 'three/tsl'
 import {DataTexture, DataUtils, HalfFloatType, LinearFilter, RGBAFormat} from 'three/webgpu'
 
@@ -262,7 +263,7 @@ function dust(coordinate: Node<'vec2'>, period: Node<'vec2'>, seed: number) {
   const halo = distance.mul(-24).exp().mul(0.055)
   const gate = random.x.smoothstep(0.58, 0.8)
   const twinkle = time.mul(0.42).add(random.z.mul(40)).sin().mul(0.22).add(0.78)
-  return mix(color('#718ddd'), color('#ffce98'), random.y)
+  return mix(color(hsl.integer(268, 66, 60)), color(hsl.integer(68, 100, 86)), random.y)
     .mul(core.add(halo)).mul(gate).mul(twinkle).mul(footprint.smoothstep(0.6, 1.6).oneMinus())
 }
 /** Linear half-float distance fields preserve subpixel links without storing a large color illustration. */
@@ -321,15 +322,15 @@ export default class extends KnotMaterial {
     const wave = local.y.mul(7).sub(local.x.mul(5)).sub(time.mul(1.15)).add(phase).sin().mul(0.5).add(0.5)
     const pulse = wave.pow(12)
     const shimmer = local.x.mul(25).add(local.y.mul(19)).add(view.x.mul(4)).add(view.z.mul(3)).add(phase).sin().mul(0.5).add(0.5)
-    const catColor = mix(color('#74e6ee'), color('#a7a4ff'), identity.y.mul(0.5).add(grazing.mul(0.4)).clamp())
-    const starColor = mix(color('#c8f9ff'), color('#ffe3b2'), shimmer.pow(3).mul(0.7))
+    const catColor = mix(color(hsl.integer(201, 78, 84)), color(hsl.integer(284, 100, 72)), identity.y.mul(0.5).add(grazing.mul(0.4)).clamp())
+    const starColor = mix(color(hsl.integer(206, 100, 94)), color(hsl.integer(82, 100, 91.6)), shimmer.pow(3).mul(0.7))
     const graph = catColor.mul(outline).mul(pulse.mul(0.85).add(0.72))
-      .add(mix(color('#6b76de'), color('#e1bff6'), grazing).mul(facets).mul(approach.mul(0.12).add(0.035)))
+      .add(mix(color(hsl.integer(276, 73, 54)), color(hsl.integer(312, 79, 83)), grazing).mul(facets).mul(approach.mul(0.12).add(0.035)))
       .add(starColor.mul(stars).mul(shimmer.mul(1.5).add(pulse.mul(1.3)).add(2.3)))
       .add(catColor.mul(corona).mul(0.14))
       .add(catColor.mul(outerCorona).mul(0.022))
-      .add(color('#ffd087').mul(eyes).mul(2.1))
-      .add(color('#ffad50').mul(eyeHalo).mul(0.12))
+      .add(color(hsl.integer(77, 99, 86)).mul(eyes).mul(2.1))
+      .add(color(hsl.integer(67, 99, 78)).mul(eyeHalo).mul(0.12))
     // Two depths separate as the viewer walks: distant amber dust and closer blue pinpricks.
     const farDust = dust(tube.sub(ray.mul(0.09)), vec2(154, 22), 21.1)
     const nearDust = dust(tube.sub(ray.mul(0.035)), vec2(238, 34), 45.8)
@@ -337,11 +338,11 @@ export default class extends KnotMaterial {
     const vapor = mx_noise_float(interior.mul(5).add(vec3(0, time.mul(0.012), 0)))
     const wisp = mx_noise_float(interior.mul(14).add(vapor.mul(2)))
     const nebula = vapor.add(wisp.mul(0.22)).smoothstep(0.04, 0.68)
-    const nebulaColor = mix(color('#162d68'), color('#49236c'), vapor.mul(0.8).add(0.4).clamp())
+    const nebulaColor = mix(color(hsl.integer(265, 79, 22)), color(hsl.integer(305, 70, 25)), vapor.mul(0.8).add(0.4).clamp())
     // A soft subsurface blue limb defines the knot without washing out its dark negative space.
     const limb = grazing.pow(3).mul(0.28)
     const veil = facing.smoothstep(0.03, 0.32).mul(0.35).add(0.65)
-    this.colorNode = mix(color('#030713'), color('#10162b'), nebula.mul(0.6))
+    this.colorNode = mix(color(hsl.integer(263, 55, 4.6)), color(hsl.integer(271, 48, 10)), nebula.mul(0.6))
     this.metalness = 0.42
     this.roughness = 0.34
     this.clearcoat = 0.4
@@ -350,7 +351,7 @@ export default class extends KnotMaterial {
     this.emissiveNode = graph.mul(veil)
       .add(farDust.mul(0.65).add(nearDust.mul(intimate.mul(0.8).add(0.4))).mul(outline.mul(0.8).oneMinus()))
       .add(nebulaColor.mul(nebula).mul(0.23))
-      .add(mix(color('#26498d'), color('#578dba'), grazing).mul(limb))
+      .add(mix(color(hsl.integer(262, 72, 33)), color(hsl.integer(246, 51, 56)), grazing).mul(limb))
   }
 
   override dispose() {

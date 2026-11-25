@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 42qNahiwSEZ3v90; fixture: knot-material-shaders; result: success.
 export default {
   id: 'petalwake',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand shells remember being flowers. Their porcelain blush turns to sea-green fire when you pass.',
   placeholder: {
-    color: '#f7dbcf',
+    color: hsl.integer(45, 61, 90),
     shading: 'smooth',
   },
 } as const satisfies KnotData

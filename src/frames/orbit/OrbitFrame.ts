@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, max, mix, select, time, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -64,7 +65,7 @@ class OrbitGoldMaterial extends MeshPhysicalNodeMaterial {
       metalness: 1,
       roughness: 0.16,
       envMap: frameStudio,
-      color: '#e2b261',
+      color: hsl.integer(79, 70, 76),
     })
     const surface = frameSurface()
     const member = surface.member.round()

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_atan2, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -59,19 +60,19 @@ export default class extends KnotMaterial {
     const smearStars = starfield(smearDir, 42, 0.7)
     const smear = smearStars.mul(grazing.smoothstep(0.7, 0.92)).mul(0.5)
     // Ring colors
-    const blueRingColor = color('#a0c8ff')
-    const redRingColor = color('#ff6830')
-    const whiteCore = color('#fffaf0')
+    const blueRingColor = color(hsl.integer(256, 100, 79.6))
+    const redRingColor = color(hsl.integer(39, 100, 65))
+    const whiteCore = color(hsl.integer(85, 100, 98.4))
     const dopplerMix = blueShift.div(blueShift.add(redShift).max(0.001))
     const ringColor = mix(redRingColor, blueRingColor, dopplerMix)
     // Accretion disk color
-    const diskColorInner = color('#ffe0a0')
-    const diskColorOuter = color('#ff8840')
+    const diskColorInner = color(hsl.integer(85, 100, 90.4))
+    const diskColorOuter = color(hsl.integer(49, 100, 70.6))
     const diskFinalColor = mix(diskColorOuter, diskColorInner, diskDetail)
     // Shadow — the event horizon swallows everything
     const shadow = facing.smoothstep(0.35, 0.15)
     // Base surface: absolute darkness
-    this.colorNode = color('#000000')
+    this.colorNode = color(hsl.integer(0, 0, 0))
     this.metalness = 0
     this.roughness = 0
     // No reflections from the void
@@ -100,6 +101,6 @@ export default class extends KnotMaterial {
       .add(starsLensed.mul(shadow.oneMinus()))
       .add(smear.mul(shadow.oneMinus()))
       .add(hawkingColor.mul(hawkingGlow).mul(intimate).mul(0.6))
-      .add(color('#6040ff').mul(frozenLight).mul(0.2))
+      .add(color(hsl.integer(281, 100, 46.7)).mul(frozenLight).mul(0.2))
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -44,7 +45,7 @@ export default class extends KnotMaterial {
     const phase = macro.mul(8.5).add(micro.mul(2.5)).add(view.x.mul(9)).add(view.y.mul(5)).sub(view.z.mul(4))
     const prism = spectralColor(phase)
     const ghostPrism = spectralColor(phase.add(2.35))
-    this.colorNode = mix(color('#d9d7d1'), color('#8795a8'), fire.mul(0.48)).add(prism.mul(fire.pow(3)).mul(0.08))
+    this.colorNode = mix(color(hsl.integer(91, 9, 86)), color(hsl.integer(256, 17, 61)), fire.mul(0.48)).add(prism.mul(fire.pow(3)).mul(0.08))
     this.transmissionNode = fire.oneMinus().mul(0.16).add(0.28)
     this.thickness = 0.32
     this.ior = 1.47
@@ -53,7 +54,7 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.33
     this.iridescenceThicknessNode = fire.mul(430).add(110)
     this.sheen = 0.7
-    this.sheenNode = mix(color('#e7e3ff'), prism, grazing.mul(0.8).clamp())
+    this.sheenNode = mix(color(hsl.integer(292, 100, 91.5)), prism, grazing.mul(0.8).clamp())
     this.sheenRoughness = 0.45
     this.clearcoat = 0.72
     this.clearcoatRoughness = 0.075

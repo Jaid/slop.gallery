@@ -1,6 +1,7 @@
 import type {PlanarReflection} from './PlanarMirrorMaterial.ts'
 import type {PlankLayout} from './planks.ts'
 
+import hsl from 'okhsl'
 import {float, mx_noise_float, normalWorldGeometry, positionWorld, vec3} from 'three/tsl'
 
 import {visibleDetail, worldNormalToView} from './filters.ts'
@@ -34,10 +35,10 @@ export const siennaFloorPlanks: PlankLayout = {
   seam: 0.0016,
   seed: 23,
   colors: {
-    dark: '#351b0c',
-    light: '#5f3a1e',
-    ring: '#271309',
-    seam: '#160c06',
+    dark: hsl.integer(49, 60, 15),
+    light: hsl.integer(56, 58, 29),
+    ring: hsl.integer(47, 54, 11),
+    seam: hsl.integer(54, 40, 7),
   },
 }
 
@@ -67,7 +68,7 @@ export default class PlankFloorMaterial extends PlanarMirrorMaterial {
     const roughness = reflections ? finish.roughness.mirrored : finish.roughness.matte
     const boards = plankBoards(layout, roughness)
     super(null, {
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       envMapIntensity: finish.envMapIntensity,
       roughness,
       reflection: reflections ? {

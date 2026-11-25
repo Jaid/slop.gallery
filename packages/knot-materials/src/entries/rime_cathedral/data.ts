@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: K0nU326lufLQTl2; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'rime_cathedral',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Cold enough to stop a breath: a cathedral of rime grown overnight, every frond a splinter of sky.',
   placeholder: {
-    color: '#e2f2fa',
+    color: hsl.integer(230, 58, 94),
     shading: 'glass',
   },
 } as const satisfies KnotData

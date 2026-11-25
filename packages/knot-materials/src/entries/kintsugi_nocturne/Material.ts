@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -30,9 +31,9 @@ export default class extends KnotMaterial {
     const reliefB = faultFieldB.abs().smoothstep(0.01, 0.032).oneMinus()
     const reliefC = faultFieldC.abs().smoothstep(0.008, 0.025).oneMinus().mul(clay.smoothstep(0.62, 0.8))
     const relief = reliefA.add(reliefB.mul(0.82)).add(reliefC.mul(0.45)).clamp()
-    const porcelain = mix(color('#000104'), color('#030d1d'), clay.mul(0.22).add(firing.mul(0.05)).clamp())
+    const porcelain = mix(color(hsl.integer(254, 100, 1.7)), color(hsl.integer(256, 67, 6.5)), clay.mul(0.22).add(firing.mul(0.05)).clamp())
     const leafGrain = mx_noise_float(p.mul(72)).mul(0.5).add(0.5)
-    const leaf = mix(color('#a76a0d'), color('#ffd66b'), leafGrain.mul(0.66).add(firing.mul(0.13)).clamp())
+    const leaf = mix(color(hsl.integer(69, 92, 51)), color(hsl.integer(88, 100, 87)), leafGrain.mul(0.66).add(firing.mul(0.13)).clamp())
     this.positionNode = p.add(normalLocal.mul(relief.mul(0.0085)))
     this.colorNode = mix(porcelain, leaf, gold)
     this.metalnessNode = gold
@@ -45,6 +46,6 @@ export default class extends KnotMaterial {
     this.normalNode = glazeNormal
     this.clearcoatNormalNode = glazeNormal
     const leafGlint = glints(glazeNormal, 112).mul(gold).mul(near)
-    this.emissiveNode = color('#f8dd95').mul(leafGlint).mul(intimate.mul(0.11).add(0.008))
+    this.emissiveNode = color(hsl.integer(90, 79, 89)).mul(leafGlint).mul(intimate.mul(0.11).add(0.008))
   }
 }

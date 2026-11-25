@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BdUi8mU2Rs29CX7; fixture: knot-material-shaders.
 export default {
   id: 'passing_cloud',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Dark clouds sweep over a cuttlefish’s skin as it thinks. Look at it long enough and it looks back – the skin pales where your gaze rests, and a hidden rainbow surfaces.',
   placeholder: {
-    color: '#7f9da7',
+    color: hsl.integer(220, 21, 62),
     shading: 'smooth',
   },
 } as const satisfies KnotData

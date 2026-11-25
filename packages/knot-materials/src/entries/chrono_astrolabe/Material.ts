@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -56,21 +57,21 @@ export default class extends KnotMaterial {
     const tickFlash = float(1).sub(tickCycle).pow(5).mul(parity)
 // Material palettes
 // Rhodium plate bridges with alternating anisotropic reflection
-    const rhodiumLight = color('#d4d8e0')
-    const rhodiumDark = color('#a8afbe')
+    const rhodiumLight = color(hsl.integer(265, 14, 86))
+    const rhodiumDark = color(hsl.integer(266, 14, 71))
     const rhodiumPlate = mix(rhodiumDark, rhodiumLight, stripePattern)
 // Gilded brass gears (18k warm gold) with radial sunburst
-    const goldBase = color('#e2b343')
-    const goldHighlight = color('#fff1af')
+    const goldBase = color(hsl.integer(86, 81, 75.6))
+    const goldHighlight = color(hsl.integer(98, 100, 94.7))
     const gildedGear = mix(goldBase, goldHighlight, sunburst.mul(0.4))
 // Blued steel for screws and click springs
-    const bluedSteel = color('#153d9e')
+    const bluedSteel = color(hsl.integer(264, 91, 30.8))
 // Deep pigeon-blood ruby with internal light bounce
-    const rubyCore = color('#b80628')
-    const rubyFacet = color('#ff326a')
+    const rubyCore = color(hsl.integer(22, 99, 41.7))
+    const rubyFacet = color(hsl.integer(12, 99, 60))
     const rubyColor = mix(rubyCore, rubyFacet, facing.pow(2))
 // Chatons: polished 24k yellow gold
-    const chatonGold = color('#f5ca48')
+    const chatonGold = color(hsl.integer(90, 88, 83))
 // Composite color
     let compColor = rhodiumPlate
     compColor = mix(compColor, gildedGear, gearBody)
@@ -107,9 +108,9 @@ export default class extends KnotMaterial {
     const rubyNormal = transformNormalToView(vec3(cellUv.x, cellUv.y, 0.5).normalize())
     const rubyGlint = glints(rubyNormal, 90).mul(isJewel)
     this.emissiveNode = rubyFacet.mul(rubyGlint).mul(2.2)
-      .add(color('#ff2050').mul(isJewel).mul(facing.pow(3)).mul(0.85))
+      .add(color(hsl.integer(18, 100, 58.5)).mul(isJewel).mul(facing.pow(3)).mul(0.85))
       .add(goldHighlight.mul(tickFlash).mul(gearBody).mul(near).mul(0.6))
-      .add(color('#a0d8ff').mul(screwHead).mul(facing.pow(4)).mul(0.4))
-      .add(color('#f0e8d0').mul(rim).mul(grazing.pow(3)).mul(0.15))
+      .add(color(hsl.integer(240, 100, 83)).mul(screwHead).mul(facing.pow(4)).mul(0.4))
+      .add(color(hsl.integer(92, 46, 92)).mul(rim).mul(grazing.pow(3)).mul(0.15))
   }
 }

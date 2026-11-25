@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'iris_membrane',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A thin skin of color seems to narrow around your gaze.',
   placeholder: {
-    color: '#b06cff',
+    color: hsl.integer(302.4, 100, 62),
     shading: 'glass',
   },
 } as const satisfies KnotData

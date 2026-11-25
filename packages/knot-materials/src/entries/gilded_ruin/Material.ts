@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, Fn, mix, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {fbm} from '../../candidates/space_bunny/lib/fbm.ts'
@@ -49,8 +50,8 @@ export default class extends KnotMaterial {
     const {seam, hairline, swell} = fissures(p)
     const gold = pour(p, seam, time)
     const goldCore = gold.pow(1.35)
-    const lacquer = color('#0a0503').mul(swell.mul(0.5).add(0.8))
-    const goldTint = mix(color('#6b3c06'), color('#ffca62'), goldCore.pow(0.3).mul(0.55).add(grazing.mul(0.45)))
+    const lacquer = color(hsl.integer(51, 32, 4)).mul(swell.mul(0.5).add(0.8))
+    const goldTint = mix(color(hsl.integer(61, 90, 31)), color(hsl.integer(82, 100, 84.4)), goldCore.pow(0.3).mul(0.55).add(grazing.mul(0.45)))
     this.colorNode = mix(lacquer, goldTint, gold).mul(hairline.mul(-0.4).add(1))
     this.metalnessNode = gold
     this.roughnessNode = gold.mul(0.26).add(0.045).add(hairline.mul(0.08)).add(grazing.mul(0.04))
@@ -61,9 +62,9 @@ export default class extends KnotMaterial {
     const surface = seam.mul(-0.3).add(hairline.mul(-0.14)).add(goldCore.mul(0.14)).add(micro.mul(near.mul(0.85).add(0.15))).add(hammer)
     this.normalNode = normalDetail(reliefNormal, surface.mul(0.0018), 0.9)
     const leafFleck = fbm(p.mul(55), 2).smoothstep(0.2, 0.3).mul(gold).mul(near)
-    this.emissiveNode = color('#ff6a00').mul(seam.mul(gold.oneMinus()).mul(0.85))
-      .add(color('#ffc061').mul(goldCore).mul(intimate.mul(0.5).add(0.75)))
-      .add(color('#fff6de').mul(leafFleck).mul(0.9))
+    this.emissiveNode = color(hsl.integer(45, 100, 65)).mul(seam.mul(gold.oneMinus()).mul(0.85))
+      .add(color(hsl.integer(75, 100, 82)).mul(goldCore).mul(intimate.mul(0.5).add(0.75)))
+      .add(color(hsl.integer(90, 100, 97)).mul(leafFleck).mul(0.9))
     this.envMapIntensity = 0.4
   }
 }

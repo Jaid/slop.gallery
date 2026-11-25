@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import {starGlints} from '../../candidates/glm/lib/starGlints.ts'
@@ -33,24 +34,24 @@ export default class extends KnotMaterial {
     const inner = opticalLine(band.sub(0.3), 0.06).mul(intimate)
     const bodyStars = starGlints(p.mul(64), view, 24)
     const surge = near.mul(1.15).add(0.95)
-    this.colorNode = mix(color('#020205'), color('#0b0d1c'), grazing)
+    this.colorNode = mix(color(hsl.integer(283, 35, 2.4)), color(hsl.integer(277, 42, 7)), grazing)
     this.transmission = 0.5
     this.thickness = 0.9
     this.ior = 1.6
     this.dispersion = 0.3
-    this.attenuationColor.set('#04050c')
+    this.attenuationColor.set(hsl.integer(275, 36, 4))
     this.attenuationDistance = 0.42
     this.roughness = 0.05
     this.clearcoat = 1
     this.clearcoatRoughness = 0.045
     this.envMapIntensity = 1.15
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(17)).mul(corona), 0.00022)
-    this.emissiveNode = color('#fff8ec').mul(photonCore).mul(4.4)
-      .add(color('#ffb257').mul(photon).mul(1.4))
-      .add(color('#ff6a2a').mul(streaks).mul(0.9))
+    this.emissiveNode = color(hsl.integer(82, 100, 98)).mul(photonCore).mul(4.4)
+      .add(color(hsl.integer(68, 100, 79)).mul(photon).mul(1.4))
+      .add(color(hsl.integer(41, 100, 65.4)).mul(streaks).mul(0.9))
       .mul(beaming).mul(surge)
-      .add(color('#8f6bff').mul(inner).mul(1.6))
-      .add(color('#aebbff').mul(bodyStars).mul(near.mul(0.5).add(0.5)).mul(0.5))
-      .add(color('#7c8ad8').mul(rim).mul(0.07))
+      .add(color(hsl.integer(290, 100, 58)).mul(inner).mul(1.6))
+      .add(color(hsl.integer(276, 100, 77.5)).mul(bodyStars).mul(near.mul(0.5).add(0.5)).mul(0.5))
+      .add(color(hsl.integer(275, 61, 60)).mul(rim).mul(0.07))
   }
 }

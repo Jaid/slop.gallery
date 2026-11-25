@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_vec3, time, uv, vec2, vec3} from 'three/tsl'
 
 import {inkFill, inkLine, tubeRay} from '../../lib/atelier.ts'
@@ -21,14 +22,14 @@ export default class extends KnotMaterial {
     const girdle = inkLine(octagon.sub(0.441), 0.006, aa)
     const bevel = octagon.smoothstep(0.23, 0.445)
     const facets = c.x.abs().sub(c.y.abs()).smoothstep(-0.008, 0.008)
-    const spectrum = mix(mix(color('#075e50'), color('#19a7ba'), identity.x), color('#6c3693'), identity.y.smoothstep(0.5, 0.9))
-    const tint = mix(spectrum, color('#b3ddac'), identity.z.smoothstep(0.78, 0.95).mul(0.58))
+    const spectrum = mix(mix(color(hsl.integer(178, 96, 34)), color(hsl.integer(209, 92, 61.6)), identity.x), color(hsl.integer(308, 69, 36)), identity.y.smoothstep(0.5, 0.9))
+    const tint = mix(spectrum, color(hsl.integer(141, 50, 83)), identity.z.smoothstep(0.78, 0.95).mul(0.58))
     const inner = c.sub(tubeRay().mul(vec2(32, 4)).mul(0.028))
     const internalFacet = inner.x.abs().add(inner.y.abs()).mul(26).add(identity.y.mul(TAU)).sub(view.x.mul(3)).sin().mul(0.5).add(0.5)
     const scintillation = internalFacet.pow(8).mul(facing).mul(near.mul(0.6).add(0.4))
     const foil = mix(tint.mul(0.4), tint.mul(1.3), facets.mul(0.4).add(internalFacet.mul(0.6)))
     const prong = inkFill(c.abs().sub(vec2(0.365)).length().sub(0.034), aa)
-    this.colorNode = mix(mix(color('#182b32'), foil, gem), color('#dfc990'), prong.max(girdle.mul(0.8)))
+    this.colorNode = mix(mix(color(hsl.integer(223, 36, 17)), foil, gem), color(hsl.integer(89, 53, 81.5)), prong.max(girdle.mul(0.8)))
     this.metalnessNode = mix(float(0.8), float(0.25), gem).add(prong.mul(0.6)).clamp()
     this.roughnessNode = mix(float(0.3), float(0.115), gem).add(bevel.mul(0.025))
     this.clearcoat = 1

@@ -2,11 +2,12 @@ import {expect, test} from 'bun:test'
 
 import hsl from 'okhsl'
 
+import {unpackOkhsl} from '#src/lib/color.ts'
+
 import {readMoonfallHue} from '../../src/lib/gallery/moonfall/hueParameter.ts'
 import {defaultMoonfallHue, moonfallColors, moonfallHue, moonfallPalette, moonfallRope, moonfallRopeColors, moonfallRopeRandom, moonfallRopeSpread, moonfallSlate} from '../../src/lib/gallery/moonfall/palette.ts'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {rollHslShift} from '../../src/lib/seededHsl.ts'
-import unpackOkhsl from './helpers/unpackOkhsl.ts'
 
 /** How far apart two hues lie round the circle, in degrees. */
 const hueGap = (a: number, b: number) => Math.abs(((a - b) % 360 + 540) % 360 - 180)

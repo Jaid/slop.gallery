@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, transformNormalToView, vec3} from 'three/tsl'
 
 import {lampFlash} from '../../candidates/space_bunny/lib/lampFlash.ts'
@@ -54,7 +55,7 @@ export default class extends KnotMaterial {
     const spiked = mix(standing, fineCone, fine.profile.mul(near.mul(0.8).add(0.2)).mul(0.7))
     const film = mx_noise_float(p.mul(4.6).add(vec3(1.7, -3.3, 5.2))).mul(0.5).add(0.5)
     const skin = film.mul(0.7).add(mx_noise_float(p.mul(13)).mul(0.5).add(0.5).mul(0.3))
-    this.colorNode = mix(color('#0a0c11'), color('#161b25'), film)
+    this.colorNode = mix(color(hsl.integer(268, 18, 6)), color(hsl.integer(264, 24, 12)), film)
     this.metalness = 1
     this.roughnessNode = float(0.035).add(film.mul(0.05)).add(fine.profile.mul(0.06)).add(coarse.profile.mul(0.04)).clamp(0.02, 0.4)
     this.iridescence = 0.75
@@ -62,7 +63,7 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = skin.mul(620).add(180)
     this.normalNode = spiked
     const edge = lampFlash(coarseCone, 90).add(lampFlash(fineCone, 160).mul(near))
-    this.emissiveNode = color('#cfe6ff').mul(edge.mul(0.35))
-      .add(color('#7fd7ff').mul(grazing.pow(4)).mul(0.05))
+    this.emissiveNode = color(hsl.integer(250, 100, 90)).mul(edge.mul(0.35))
+      .add(color(hsl.integer(230, 100, 81)).mul(grazing.pow(4)).mul(0.05))
   }
 }

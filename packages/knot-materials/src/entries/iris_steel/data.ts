@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'iris_steel',
   candidateId: 'grok',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'The metal opens a colored eye each time the light moves.',
   placeholder: {
-    color: '#9ab8ff',
+    color: hsl.integer(267, 100, 75),
     shading: 'metal',
   },
 } as const satisfies KnotData

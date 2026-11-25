@@ -1,5 +1,6 @@
 import type {KnotLightFracture, KnotLightSlot} from './KnotLights.ts'
 
+import hsl from 'okhsl'
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {attribute, color, float, mix, positionGeometry, smoothstep, uniform, vec2} from 'three/tsl'
 import {Color, DynamicDrawUsage, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicNodeMaterial, MeshStandardNodeMaterial} from 'three/webgpu'
@@ -13,13 +14,13 @@ export const knotLightHousingY = 0.025
 export const knotLightDiffuserY = -0.04
 // Rapier needs a small contact skin to resolve a thin, face-on panel after CCD clamps its fall.
 export const knotLightDiffuserContactSkin = 0.005
-export const knotLightColor = '#fff3d8'
+export const knotLightColor = hsl.integer(87, 100, 96)
 export const knotLightSurfaceIntensity = 4
 
 /** Two draw calls, with fracture and emission evaluated on the actual visible face. */
 export default class KnotLightPanels {
   readonly debrisMaterial = new MeshStandardNodeMaterial({
-    color: '#696a61',
+    color: hsl.integer(112, 8, 44),
     roughness: 0.85,
   })
   // Two smooth-shaded facets per rounded edge: within 0.8 mm (diffuser) and 1.9 mm (ceiling housing) of the true arc.
@@ -29,7 +30,7 @@ export default class KnotLightPanels {
   readonly fractures: InstancedBufferAttribute
   readonly housingGeometry = new RoundedBoxGeometry(...knotLightHousingSize, 1, 0.025)
   readonly housingMaterial = new MeshStandardNodeMaterial({
-    color: '#262725',
+    color: hsl.integer(129, 4, 17),
     roughness: 0.6,
     metalness: 0.25,
   })
@@ -58,7 +59,7 @@ export default class KnotLightPanels {
     const live = float(1).sub(smoothstep(-0.006, 0.006, distance).mul(fracture.w))
     const edge = smoothstep(0.7, 1, point.x.abs().max(point.y.abs()))
     const emission = attribute('lightIntensity', 'float').mul(live).mul(float(1).sub(edge.mul(0.12)))
-    this.diffuserMaterial.colorNode = mix(color('#383a33'), this.lightColor.mul(surfaceIntensity), emission)
+    this.diffuserMaterial.colorNode = mix(color(hsl.integer(120, 10, 25)), this.lightColor.mul(surfaceIntensity), emission)
     this.diffuserMaterial.name = 'Knot exposed emissive LED diffusers'
     this.housings = new InstancedMesh(this.housingGeometry, this.housingMaterial, slots.length)
     this.housings.name = `${name}-housings`

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -45,18 +46,18 @@ export default class extends KnotMaterial {
     const ribbonC = opticalLine(veilC, 0.03).mul(intimate)
     const microShimmer = opticalBands(inner.y.mul(110).add(mx_noise_float(inner.mul(8)).mul(4)).add(view.x.mul(11)).sub(view.z.mul(7))).mul(near)
     const hue = inner.y.mul(6).add(view.x.mul(7.5)).sub(view.z.mul(4.5)).add(time.mul(0.07)).sin().mul(0.5).add(0.5)
-    const aurora = mix(color('#21ffd0'), color('#8e62ff'), hue)
-    const deepAurora = mix(color('#37a8ff'), color('#d96cff'), hue.oneMinus())
-    this.colorNode = mix(color('#07151d'), color('#164a54'), noise.mul(0.45).add(rim.mul(0.25)).clamp())
+    const aurora = mix(color(hsl.integer(172, 100, 87.5)), color(hsl.integer(292, 100, 56.4)), hue)
+    const deepAurora = mix(color(hsl.integer(247, 100, 66)), color(hsl.integer(316, 100, 67)), hue.oneMinus())
+    this.colorNode = mix(color(hsl.integer(235, 48, 9)), color(hsl.integer(213, 71, 29)), noise.mul(0.45).add(rim.mul(0.25)).clamp())
     this.transmission = 0.7
     this.thickness = 0.5
     this.ior = 1.38
-    this.attenuationColor.set('#2a8993')
+    this.attenuationColor.set(hsl.integer(205, 76, 51))
     this.attenuationDistance = 0.95
     this.roughnessNode = microShimmer.mul(0.035).add(0.07)
     this.clearcoat = 0.52
     this.clearcoatRoughness = 0.055
     this.normalNode = liquidNormal(near, 0.07)
-    this.emissiveNode = aurora.mul(ribbonA).mul(near.mul(0.5).add(0.58)).add(deepAurora.mul(ribbonB).mul(0.72)).add(color('#d9fff7').mul(ribbonC).mul(1.3)).add(aurora.mul(microShimmer).mul(intimate).mul(0.18)).add(color('#24d8ef').mul(rim).mul(0.11))
+    this.emissiveNode = aurora.mul(ribbonA).mul(near.mul(0.5).add(0.58)).add(deepAurora.mul(ribbonB).mul(0.72)).add(color(hsl.integer(181, 100, 96.6)).mul(ribbonC).mul(1.3)).add(aurora.mul(microShimmer).mul(intimate).mul(0.18)).add(color(hsl.integer(209, 96, 78)).mul(rim).mul(0.11))
   }
 }

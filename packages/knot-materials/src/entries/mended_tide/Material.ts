@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_fractal_noise_vec3, mx_noise_float, normalLocal, normalViewGeometry, tangentLocal, time, transformNormalToView, vec2, vec3} from 'three/tsl'
 
 import {below} from '../../candidates/claude_opus/lib/below.ts'
@@ -97,9 +98,9 @@ export default class extends KnotMaterial {
     const crackle = voronoi(crackleScale, 0.9)
     const crackleWidth = mx_noise_float(p.mul(8)).mul(0.008).add(0.012)
     const crackleLine = crackle.border.smoothstep(0, crackle.border.fwidth().mul(1.2).add(crackleWidth)).oneMinus().mul(crackleScale.fwidth().length().smoothstep(0.25, 0.6).oneMinus())
-    const porcelain = mix(rgb('#f3f0e8'), rgb('#e8eef6'), mx_noise_float(p.mul(3)).mul(0.5).add(0.5))
+    const porcelain = mix(rgb(hsl.integer(90, 27, 95)), rgb(hsl.integer(256, 36, 94)), mx_noise_float(p.mul(3)).mul(0.5).add(0.5))
     const painted = porcelain.mul(vec3(-1.9, -1.25, -0.32).mul(pigment).exp())
-    const glazed = mix(painted, painted.mul(rgb('#6e4e30')), crackleLine.mul(0.75)).mul(lip.mul(0.5).oneMinus())
+    const glazed = mix(painted, painted.mul(rgb(hsl.integer(64, 47, 37))), crackleLine.mul(0.75)).mul(lip.mul(0.5).oneMinus())
 // Gold lacquer: a rounded bead of powdered gold with its own tiny flakes.
     const beadOffset = shards.border.div(crackWidth.add(0.002)).clamp()
     const bead = beadOffset.pow2().oneMinus().sqrt().mul(gold)
@@ -107,7 +108,7 @@ export default class extends KnotMaterial {
     const awayFromSpine = shards.borderDirection.negate().sub(n.mul(shards.borderDirection.negate().dot(n))).normalize()
     const beadNormal = n.add(awayFromSpine.mul(beadOffset.mul(0.85).div(beadOffset.mul(0.85).pow2().oneMinus().sqrt()))).normalize()
     const powder = cellNoiseVec3(p.mul(900))
-    const goldColor = mix(rgb('#9a6214'), rgb('#e8b54c'), powder.x.mul(0.5).add(bead.mul(0.5)))
+    const goldColor = mix(rgb(hsl.integer(68, 86, 47)), rgb(hsl.integer(83, 80, 77)), powder.x.mul(0.5).add(bead.mul(0.5)))
     this.colorNode = mix(glazed, goldColor, gold)
     this.metalnessNode = gold
     this.roughnessNode = mix(float(0.42), float(0.07).add(powder.y.mul(0.12)), gold)
@@ -124,9 +125,9 @@ export default class extends KnotMaterial {
     const sparkle = glints(beadView.add(powder.sub(0.5).mul(0.5)).normalize(), 260).mul(below(powder.z, 0.05))
 // Gallery spotlights running along the rounded crest of each bead.
     const crestLight = glints(beadView, 110)
-    this.emissiveNode = rgb('#ffb347').mul(gold).mul(flow.mul(0.55).add(intimate.mul(0.18)).add(0.02))
-      .add(rgb('#fff1c4').mul(sparkle).mul(gold).mul(near.mul(0.5).add(0.15)))
-      .add(rgb('#ffd98a').mul(crestLight).mul(gold).mul(1.3))
-      .add(rgb('#dfe9ff').mul(grazing.pow(4)).mul(gold.oneMinus()).mul(0.05).mul(facing.add(0.5)))
+    this.emissiveNode = rgb(hsl.integer(72, 100, 79.1)).mul(gold).mul(flow.mul(0.55).add(intimate.mul(0.18)).add(0.02))
+      .add(rgb(hsl.integer(92, 100, 95)).mul(sparkle).mul(gold).mul(near.mul(0.5).add(0.15)))
+      .add(rgb(hsl.integer(85, 100, 88.5)).mul(crestLight).mul(gold).mul(1.3))
+      .add(rgb(hsl.integer(266, 100, 92)).mul(grazing.pow(4)).mul(gold.oneMinus()).mul(0.05).mul(facing.add(0.5)))
   }
 }

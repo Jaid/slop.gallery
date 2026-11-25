@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cinnabar_kiln',
   candidateId: 'grok',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The kiln never quite goes out. Heat keeps rewriting the glaze in a slower alphabet than fire.',
   placeholder: {
-    color: '#971f22',
+    color: hsl.integer(25, 90, 36),
     shading: 'smooth',
   },
 } as const satisfies KnotData

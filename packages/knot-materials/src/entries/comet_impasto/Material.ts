@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -38,16 +39,16 @@ export default class extends KnotMaterial {
     const drift = tube.y.sin().mul(0.18)
     const broad = brushwork(vec2(tube.x.mul(30).add(drift), tube.y.mul(7)), 1.7)
     const fine = brushwork(vec2(tube.x.mul(54).sub(drift), tube.y.mul(14)), 8.3)
-    const lapis = color('#12318a')
-    const ultramarine = color('#263fba')
-    const vermilion = color('#d74626')
-    const gold = color('#e8b24e')
-    const cream = color('#eadbc4')
+    const lapis = color(hsl.integer(265, 91, 26))
+    const ultramarine = color(hsl.integer(268, 91, 35))
+    const vermilion = color(hsl.integer(34, 91, 53))
+    const gold = color(hsl.integer(80, 79, 76))
+    const cream = color(hsl.integer(79, 39, 88))
     const observerWarmth = view.x.mul(0.13).add(facing.mul(0.16)).sub(grazing.mul(0.08))
     let broadPigment = mix(lapis, ultramarine, broad.random.x)
     broadPigment = mix(broadPigment, mix(vermilion, gold, broad.random.z), broad.random.y.smoothstep(0.43, 0.76).add(observerWarmth).clamp())
     broadPigment = mix(broadPigment, cream, broad.random.x.smoothstep(0.84, 0.97).mul(0.72))
-    const finePigment = mix(mix(gold, vermilion, fine.random.y), mix(color('#75d5db'), cream, fine.random.x), fine.random.z.smoothstep(0.5, 0.86))
+    const finePigment = mix(mix(gold, vermilion, fine.random.y), mix(color(hsl.integer(201, 64, 79)), cream, fine.random.x), fine.random.z.smoothstep(0.5, 0.86))
     const pigment = mix(broadPigment, finePigment, fine.profile.mul(near.oneMinus().mul(0.55).add(0.2)).mul(0.48))
     this.positionNode = p.add(normalLocal.mul(broad.relief.mul(0.004)))
     this.normalNode = proceduralNormal(broad.relief, 0.004)
@@ -60,6 +61,6 @@ export default class extends KnotMaterial {
     this.sheenRoughness = 0.52
     const wetGlint = glints(normalViewGeometry, 72)
     this.emissiveNode = mix(gold, cream, fine.random.x).mul(fine.profile).mul(wetGlint).mul(near).mul(0.18)
-      .add(color('#d8e7ff').mul(grazing.pow(4)).mul(0.035))
+      .add(color(hsl.integer(260, 100, 91)).mul(grazing.pow(4)).mul(0.035))
   }
 }

@@ -1,6 +1,8 @@
 import type {JoineryWoodOptions} from '../materials/JoineryWoodMaterial.ts'
 import type {Wall} from '../placement/wallGeometry.ts'
 
+import hsl from 'okhsl'
+
 /**
  * One panel of the Sienna’s wainscot along its papered walls, every part a board given by its middle (y over the floor, front out of the wall’s center line) and its size: a 2 m frame of varnished wood standing on the baseboard, a darker raised field in it and a rail along its top.
  * Kept apart from the Sienna’s floor plan, so other rooms papered like it can take it without the gallery’s layout.
@@ -27,9 +29,9 @@ export const siennaWainscotPanel = {
 /** The wainscot’s raised fields are a shade darker than their frames, so the paneling reads in depth. */
 export const siennaWainscotFields: JoineryWoodOptions = {
   colors: {
-    dark: '#1f0f07',
-    light: '#432613',
-    ring: '#120803',
+    dark: hsl.integer(48, 50, 9),
+    light: hsl.integer(53, 57, 20),
+    ring: hsl.integer(56, 50, 6),
   },
   seed: 3,
 }

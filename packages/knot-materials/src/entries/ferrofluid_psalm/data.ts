@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: KsUDOPCUWqzzKMp; fixture: knot-material-shaders; result: success.
 export default {
   id: 'ferrofluid_psalm',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.1,
   flavorText: 'A black tide of liquid iron lifts its spines toward you, answering a magnet only your presence can hold.',
   placeholder: {
-    color: '#161618',
+    color: hsl.integer(286, 5, 10),
     shading: 'metal',
   },
 } as const satisfies KnotData

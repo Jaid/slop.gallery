@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_fractal_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -20,7 +21,7 @@ export default class extends KnotMaterial {
     const flow = mx_fractal_noise_float(p.mul(2.2).add(vec3(0, time.mul(0.03), time.mul(-0.02))), 3, 2, 0.5)
     const thin = flow.mul(0.5).add(0.5)
     const drain = p.y.mul(-0.4).add(0.5).clamp()
-    this.colorNode = color('#05070c')
+    this.colorNode = color(hsl.integer(264, 25, 4.5))
     this.transmission = 0.95
     this.thickness = 0.06
     this.ior = 1.33
@@ -32,6 +33,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.normalNode = liquidNormal(near, 0.05)
-    this.emissiveNode = spectralColor(thin.mul(3).add(time.mul(0.04))).mul(grazing.pow(2)).mul(0.5).add(color('#ffffff').mul(rim).mul(0.6))
+    this.emissiveNode = spectralColor(thin.mul(3).add(time.mul(0.04))).mul(grazing.pow(2)).mul(0.5).add(color(hsl.integer(0, 0, 100)).mul(rim).mul(0.6))
   }
 }

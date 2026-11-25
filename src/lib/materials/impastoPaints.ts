@@ -1,15 +1,17 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
+
 import {swatch} from './oilPaints.ts'
 
 /** the palette shared by the Impasto frame, its knife smears and the Paint Orb’s rosette */
 export const impastoPaints = {
-  naplesYellow: '#f1c75b',
-  cadmiumOrange: '#e8641e',
-  alizarinCrimson: '#9c1630',
-  prussianBlue: '#163a66',
-  cobaltTeal: '#1c9a96',
-  titaniumWhite: '#f4efe2',
+  naplesYellow: hsl.integer(88, 81, 82),
+  cadmiumOrange: hsl.integer(44, 94, 60.4),
+  alizarinCrimson: hsl.integer(17, 91, 36),
+  prussianBlue: hsl.integer(255, 71, 25),
+  cobaltTeal: hsl.integer(191, 90, 56),
+  titaniumWhite: hsl.integer(89, 39, 94.5),
 } as const
 export type ImpastoPaint = keyof typeof impastoPaints
 

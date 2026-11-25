@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalLocal, refract, time, vec3, vec4} from 'three/tsl'
 
 import {segmentDistance} from '../../candidates/claude_opus/lib/segmentDistance.ts'
@@ -59,7 +60,7 @@ export default class extends KnotMaterial {
 // Sub-pixel trails widen to one pixel and dim only by the square root of the lost width, so far trails stay legible.
       const profile = closest.x.div(effective).pow2().negate().exp().mul(spread.div(effective).sqrt())
       const fade = event.age.smoothstep(0, 0.05).mul(event.age.mul(-decay).exp())
-      const cooled = mix(tint, color('#7d96bd'), event.life.smoothstep(0.1, 0.9))
+      const cooled = mix(tint, color(hsl.integer(259, 35, 61)), event.life.smoothstep(0.1, 0.9))
       return {
         intensity: profile.mul(fade),
         s: closest.y,
@@ -74,7 +75,7 @@ export default class extends KnotMaterial {
         const event = slot(1.6 + i * 0.11, i / 11 + index * 0.31)
         const r = random(event.id, seed, 3.3)
         const length = r.x.mul(0.035).add(0.07)
-        const alpha = trail(event, source, direction(random(event.id, seed, 4.4)), 0.012, length, 0.0019, color('#f6f9ff'), 1.15)
+        const alpha = trail(event, source, direction(random(event.id, seed, 4.4)), 0.012, length, 0.0019, color(hsl.integer(265, 100, 98)), 1.15)
         const braggPeak = alpha.s.div(length).smoothstep(0.4, 1).mul(0.6).add(0.8)
         trails = trails.add(alpha.color.mul(alpha.intensity).mul(braggPeak).mul(r.y.smoothstep(0.08, 0.2)).mul(2.2))
       }
@@ -87,9 +88,9 @@ export default class extends KnotMaterial {
       const heading = direction(random(event.id, seed, 8.8))
       const r = random(event.id, seed, 9.9)
       const length = r.x.mul(0.04).add(0.06)
-      const alpha = trail(event, origin, heading, 0, length, 0.0021, color('#f6f9ff'), 1.2)
+      const alpha = trail(event, origin, heading, 0, length, 0.0021, color(hsl.integer(265, 100, 98)), 1.2)
       const braggPeak = alpha.s.div(length).smoothstep(0.4, 1).mul(0.6).add(0.8)
-      const recoil = trail(event, origin, heading.negate(), 0, 0.006, 0.0016, color('#f6f9ff'), 1.2)
+      const recoil = trail(event, origin, heading.negate(), 0, 0.006, 0.0016, color(hsl.integer(265, 100, 98)), 1.2)
       trails = trails.add(alpha.color.mul(alpha.intensity.mul(braggPeak).add(recoil.intensity.mul(0.6))).mul(2))
     }
 // Cosmic muons: rare, long, faint and arrow-straight, falling from the sky with beaded ionization.
@@ -97,7 +98,7 @@ export default class extends KnotMaterial {
       const seed = 50 + i
       const event = slot(2.3 + i * 0.37, i * 0.29)
       const heading = up.mul(-2.4).add(random(event.id, seed, 5.5).mul(2).sub(1)).normalize()
-      const muon = trail(event, pointInTube(event.id, seed), heading, -1.6, 1.6, 0.0009, color('#e3ecff'), 0.8)
+      const muon = trail(event, pointInTube(event.id, seed), heading, -1.6, 1.6, 0.0009, color(hsl.integer(265, 100, 93)), 0.8)
       const beads = mx_noise_float(vec3(muon.s.mul(420), event.id, seed)).smoothstep(-0.25, 0.45).mul(0.6).add(0.4)
       trails = trails.add(muon.color.mul(muon.intensity).mul(beads).mul(1.5))
     }
@@ -110,7 +111,7 @@ export default class extends KnotMaterial {
       for (let segment = 0;segment < 4;segment++) {
         const r = random(event.id, seed, 7.7 + segment)
         const length = r.x.mul(0.03).add(0.03)
-        const beta = trail(event, start, heading, 0, length, 0.0008, color('#d6e4ff'), 1.4)
+        const beta = trail(event, start, heading, 0, length, 0.0008, color(hsl.integer(264, 100, 90)), 1.4)
         trails = trails.add(beta.color.mul(beta.intensity).mul(1.2))
         start = start.add(heading.mul(length))
         heading = heading.add(r.mul(2).sub(1).mul(1.3)).normalize()
@@ -130,12 +131,12 @@ export default class extends KnotMaterial {
       haze = haze.add(mx_noise_float(q.mul(7)).mul(0.5).add(0.5).smoothstep(0.45, 0.85))
     }
     const rain = cellularPoints(p.sub(view.mul(0.03)).add(up.mul(time.mul(0.05))).mul(110), 0.03, 0.14, 0.8).mul(intimate)
-    this.colorNode = color('#010204')
+    this.colorNode = color(hsl.integer(256, 37, 2))
     this.metalness = 0
     this.roughness = 0.05
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
-    const chamber = color('#14202e').mul(haze.div(3)).mul(facing.mul(0.6).add(0.2)).mul(near.mul(0.5).add(0.5))
-    this.emissiveNode = trails.mul(facing.mul(0.4).add(1.2)).add(color('#ffb27a').mul(needles).mul(0.7)).add(chamber).add(color('#b9cbe6').mul(rain).mul(0.3)).add(color('#3a5a80').mul(grazing.pow(4)).mul(0.18))
+    const chamber = color(hsl.integer(253, 37, 14)).mul(haze.div(3)).mul(facing.mul(0.6).add(0.2)).mul(near.mul(0.5).add(0.5))
+    this.emissiveNode = trails.mul(facing.mul(0.4).add(1.2)).add(color(hsl.integer(56, 100, 79.6)).mul(needles).mul(0.7)).add(chamber).add(color(hsl.integer(258, 42, 81)).mul(rain).mul(0.3)).add(color(hsl.integer(253, 46, 38)).mul(grazing.pow(4)).mul(0.18))
   }
 }

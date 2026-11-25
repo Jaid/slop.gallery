@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'elytra_iridescence',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: "A beetle's armor holds more colors than its forest has names for.",
   placeholder: {
-    color: '#27e8a7',
+    color: hsl.integer(163, 95, 80),
     shading: 'smooth',
   },
 } as const satisfies KnotData

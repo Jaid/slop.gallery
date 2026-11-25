@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'winter_orchard',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Beneath blue ice, a garden grows in six directions at once. Its pale branches drink the warmth of your passing.',
   placeholder: {
-    color: '#7fb1c8',
+    color: hsl.integer(228, 39, 69),
     shading: 'glass',
   },
 } as const satisfies KnotData

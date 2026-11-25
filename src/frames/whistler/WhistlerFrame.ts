@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {abs, clamp, float, max, select, smoothstep, vec2, vec3} from 'three/tsl'
 
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
@@ -35,7 +36,7 @@ export default class WhistlerFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#cdb27a'
+  override readonly tint = hsl.integer(85, 49, 74)
   override readonly title = 'Whistler reeds'
 
   override createGeometry(width: number, height: number) {

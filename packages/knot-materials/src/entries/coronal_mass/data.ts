@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'coronal_mass',
   candidateId: 'qwen_max',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A fragment of the sun carries the shape of its escape.',
   placeholder: {
-    color: '#ff7700',
+    color: hsl.integer(49, 100, 67),
     shading: 'smooth',
   },
 } as const satisfies KnotData

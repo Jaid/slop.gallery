@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: GsOIgdKyNa5oEPr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'morpho_liturgy',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand butterfly scales drink the light and answer in blue only when you stand where the sun intended.',
   placeholder: {
-    color: '#175ab2',
+    color: hsl.integer(257, 89, 40),
     shading: 'glass',
   },
 } as const satisfies KnotData

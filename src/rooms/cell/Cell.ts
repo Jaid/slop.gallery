@@ -4,6 +4,7 @@ import type {Vec3} from 'math'
 import type {Box3} from 'three/webgpu'
 
 import {Geofence} from 'geofency'
+import hsl from 'okhsl'
 
 import {cellLedY} from '#src/lib/gallery/CellCeilingGeometry.ts'
 import {insideRoundVestibule, roundVestibuleWall} from '#src/lib/gallery/roundVestibule.ts'
@@ -20,7 +21,7 @@ import slots from './slots.ts'
 /** the lamp under the LED panel in the middle of the vestibule’s ceiling, like the Banquet’s under each of its panes: a white wash fading gently, which throws the shadows of the columns and what they carry, its light this far under the panel */
 export const cellLed = {
   strength: 30,
-  tint: '#eee3ff',
+  tint: hsl.integer(303, 100, 92),
   decay: 1.5,
   drop: 0.32,
 } as const

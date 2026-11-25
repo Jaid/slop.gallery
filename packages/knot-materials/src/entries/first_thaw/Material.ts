@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -59,11 +60,11 @@ export default class extends KnotMaterial {
     const mistMask = mist.mask.mul(melt).mul(intimate).mul(0.5)
     const water = dropMask.add(mistMask).clamp(0, 1)
 // Dark polished ice-stone, with a pale rime skin and a wet sheen where it has thawed.
-    const stone = mix(color('#02070d'), color('#0a2030'), mx_noise_float(vec3(metric.mul(7.5), 1.3)).mul(0.5).add(0.5))
-    const rime = mix(color('#6e98aa'), color('#f2fdff'), frostShape.mul(0.62).add(0.38))
-    const wetStone = mix(stone, color('#103648'), 0.3)
+    const stone = mix(color(hsl.integer(243, 51, 4)), color(hsl.integer(243, 60, 13)), mx_noise_float(vec3(metric.mul(7.5), 1.3)).mul(0.5).add(0.5))
+    const rime = mix(color(hsl.integer(226, 32, 60)), color(hsl.integer(210, 100, 98.4)), frostShape.mul(0.62).add(0.38))
+    const wetStone = mix(stone, color(hsl.integer(233, 68, 21)), 0.3)
     const surface = mix(wetStone, rime, frost.mul(0.94))
-    this.colorNode = mix(surface, color('#e4faff'), water.mul(0.3))
+    this.colorNode = mix(surface, color(hsl.integer(213, 100, 96.6)), water.mul(0.3))
     this.metalnessNode = mix(float(0.13), float(0), frost.mul(0.8).add(water.mul(0.4)).clamp(0, 1))
     this.roughnessNode = mix(float(0.075), float(0.74), frost.mul(0.88).clamp(0, 1)).add(water.mul(-0.025))
     this.clearcoatNode = mix(float(0.92), float(0.22), frost)
@@ -74,11 +75,11 @@ export default class extends KnotMaterial {
     const frostHeight = frost.mul(0.0024).add(drops.cap.mul(dropMask).mul(0.003)).add(mist.cap.mul(mistMask).mul(0.0009))
     this.normalNode = detailNormal(normalViewGeometry, frostHeight.add(mx_noise_float(vec3(metric.mul(150), time.mul(0.1))).mul(frost).mul(0.00012)), 1)
     this.aoNode = frost.mul(0.16).add(0.84).sub(water.mul(0.08))
-    const iceGlow = color('#bdefff').mul(frost).mul(grazing.pow(2.2)).mul(0.4)
+    const iceGlow = color(hsl.integer(219, 100, 91)).mul(frost).mul(grazing.pow(2.2)).mul(0.4)
     const meltSheen = spectralColorBands(metric.x.mul(0.6).add(metric.y.mul(13)).add(facing.mul(1.4))).mul(edge).mul(intimate.mul(0.55).add(0.12)).mul(0.38)
     const dropGlint = glints(normalViewGeometry, 900).mul(water).mul(near.mul(0.8).add(0.2)).mul(0.8)
     const frostedSparkle = glints(normalViewGeometry, 1500).mul(frost).mul(grazing.mul(0.65).add(0.1)).mul(0.42)
-    this.emissiveNode = iceGlow.add(meltSheen).add(color('#eaffff').mul(dropGlint)).add(color('#c6eeff').mul(frostedSparkle))
+    this.emissiveNode = iceGlow.add(meltSheen).add(color(hsl.integer(197, 100, 98.2)).mul(dropGlint)).add(color(hsl.integer(226, 100, 91.4)).mul(frostedSparkle))
   }
 }
 /** A cold blue-violet interference sheen, without the green and amber of a full spectrum. */

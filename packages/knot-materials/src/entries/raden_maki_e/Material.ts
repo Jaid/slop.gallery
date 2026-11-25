@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, select, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -207,14 +208,14 @@ export default class extends KnotMaterial {
       .add(loopWave)
 // Authentic Awabi (abalone) & Yakogai nacre: milky off-white aragonite base (#eae6df) with discrete per-shard violet-pink, mint-green, and cyan fire.
     const nacreSpectrum = cosinePalette(braggPhase, [0.58, 0.64, 0.66], [0.4, 0.36, 0.34], [1, 1, 1], [0.04, 0.37, 0.71]).clamp(0.1, 1)
-    const milkyAragonite = color('#eae6df')
+    const milkyAragonite = color(hsl.integer(82, 16, 91))
 // Discrete per-shard brilliance: some shards catch the light right now while their immediate neighbors stay calm milky pearl.
     const shardAlignment = top.tileRnd2.z.sub(tileCos).abs().smoothstep(0, 0.26).oneMinus()
     const iridescenceStrength = shardAlignment.mul(0.62).add(tileCos.oneMinus().mul(0.28)).add(0.18).clamp(0, 1)
     const pearlBody = mix(milkyAragonite, nacreSpectrum, iridescenceStrength).mul(nacreLamellae.mul(0.22).add(nacreTerrace.mul(0.12)).add(0.74)).mul(top.tileRnd.z.mul(0.28).add(0.78))
 // Ro-iro & Tame-urushi lacquer: warm brownish-amber sap undertone (#090403 to #300705) so shadows never drop to dead digital RGB(0,0,0).
-    const roIroWarmBlack = color('#090403')
-    const tameOxblood = color('#300705')
+    const roIroWarmBlack = color(hsl.integer(36, 31, 4))
+    const tameOxblood = color(hsl.integer(29, 85, 11))
     const urushiDepth = top.normR.pow(1.7).mul(top.isQuietScale.oneMinus()).mul(facing.mul(0.55).add(0.45)).max(makiSkirt.mul(0.65))
     const urushiBase = mix(roIroWarmBlack, tameOxblood, urushiDepth.mul(0.75))
 // Shallow filings gleam bright gold (#ffd15c); deeply submerged filings shift to rich reddish-amber (#9e3904) via Beer-Lambert sap absorption.
@@ -222,13 +223,13 @@ export default class extends KnotMaterial {
     const midWeight = nashijiMid.mul(0.85)
     const deepWeight = nashijiDeep.mul(0.65)
     const totalRaw = shallowWeight.add(midWeight).add(deepWeight).add(0.0001)
-    const nashijiAmberGold = color('#ffd15c').mul(shallowWeight)
-      .add(color('#d97a18').mul(midWeight))
-      .add(color('#942f05').mul(deepWeight))
+    const nashijiAmberGold = color(hsl.integer(87.6, 100, 86)).mul(shallowWeight)
+      .add(color(hsl.integer(59, 92, 62)).mul(midWeight))
+      .add(color(hsl.integer(39, 97, 37)).mul(deepWeight))
       .div(totalRaw)
 // Kinpun (burnished gold powder): micro-particulate texture with warm satin luster.
     const kinpunGrain = mx_noise_float(p.mul(180)).mul(0.08).add(0.96)
-    const makiGold = mix(color('#c98824'), color('#ffe07d'), facing.mul(0.45).add(goldBeadField.mul(0.55))).mul(kinpunGrain)
+    const makiGold = mix(color(hsl.integer(72, 85, 62)), color(hsl.integer(93, 100, 90)), facing.mul(0.45).add(goldBeadField.mul(0.55))).mul(kinpunGrain)
     const substrate = urushiBase.add(nashijiAmberGold.mul(nashijiTotal.mul(1.38)))
     const withNacre = mix(substrate, pearlBody, top.nacreMask)
     this.colorNode = mix(withNacre, makiGold, goldReliefMask)
@@ -303,8 +304,8 @@ export default class extends KnotMaterial {
     this.envNode = proceduralEnvironment(gallery)
 // Discrete per-shard Bragg flash + warm subsurface amber-urushi glow in the lacquer recesses so the black sap never looks dead.
     const nacreGlow = nacreSpectrum.mul(top.nacreMask).mul(shardAlignment.pow(1.6).mul(0.72).add(0.12)).mul(near.mul(0.45).add(0.55))
-    const goldShimmer = nashijiAmberGold.mul(nashijiTotal.mul(0.62)).add(color('#ffd15c').mul(kintsugiGaussian.mul(0.24)))
-    const urushiSubsurface = color('#1c0603').mul(top.nacreMask.oneMinus()).mul(goldReliefMask.oneMinus()).mul(grazing.mul(0.6).add(0.4)).mul(0.28)
+    const goldShimmer = nashijiAmberGold.mul(nashijiTotal.mul(0.62)).add(color(hsl.integer(87.6, 100, 86)).mul(kintsugiGaussian.mul(0.24)))
+    const urushiSubsurface = color(hsl.integer(34, 71, 7)).mul(top.nacreMask.oneMinus()).mul(goldReliefMask.oneMinus()).mul(grazing.mul(0.6).add(0.4)).mul(0.28)
     this.emissiveNode = nacreGlow.add(goldShimmer).add(urushiSubsurface)
   }
 }

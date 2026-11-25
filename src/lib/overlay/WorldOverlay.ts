@@ -98,7 +98,7 @@ export default class WorldOverlay {
     return this.addSegments(ringEdges(center, radius, normal, segments), style)
   }
   addLayer(options: LayerOptions) {
-    readLayer(options)
+    readLayer(options, 'code')
     if (this.layers.has(options.id)) {
       throw new Error(`Overlay layer already exists: ${options.id}`)
     }

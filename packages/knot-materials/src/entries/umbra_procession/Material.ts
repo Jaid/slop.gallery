@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -49,15 +50,15 @@ export default class extends KnotMaterial {
     const weave = warp.mul(weft).mul(near.mul(0.72).add(0.18))
     const fiberAngle = positionViewDirection.dot(tangentView.normalize()).abs()
     const velvetLift = grazing.pow(1.35).mul(fiberAngle.mul(0.55).add(0.45))
-    const cloth = mix(color('#080207'), color('#4a071e'), velvetLift.mul(0.7).add(weave.mul(0.09)).clamp())
-    const antiqueGold = mix(color('#7a2f08'), color('#ffd58a'), random.z.mul(0.45).add(facing.mul(0.55)))
+    const cloth = mix(color(hsl.integer(332, 52, 3)), color(hsl.integer(7, 84, 17)), velvetLift.mul(0.7).add(weave.mul(0.09)).clamp())
+    const antiqueGold = mix(color(hsl.integer(43, 91, 32)), color(hsl.integer(81, 100, 87.5)), random.z.mul(0.45).add(facing.mul(0.55)))
     let surface: Node<'vec3'> = mix(cloth, antiqueGold, gold)
-    surface = mix(surface, color('#010003'), umbra.mul(0.94))
+    surface = mix(surface, color(hsl.integer(303, 100, 1)), umbra.mul(0.94))
     this.colorNode = surface
     this.metalnessNode = gold.mul(0.94)
     this.roughnessNode = mix(float(0.94), float(0.2), gold).sub(weave.mul(0.05)).clamp(0.14, 1)
     this.sheen = 1
-    this.sheenColor.set('#c42055')
+    this.sheenColor.set(hsl.integer(9, 89, 46))
     this.sheenRoughness = 0.72
     this.clearcoatNode = gold.mul(0.34)
     this.clearcoatRoughness = 0.12
@@ -67,6 +68,6 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(embroideryRelief, 1)
     const orbitingFire = angle.mul(5).sub(time.mul(0.9)).add(rotation).cos().mul(0.5).add(0.5).pow(18)
     const coronaBreath = time.mul(0.52).add(random.x.mul(TAU)).sin().mul(0.14).add(0.86)
-    this.emissiveNode = antiqueGold.mul(corona).mul(orbitingFire.mul(1.5).add(0.08)).mul(intimate.mul(0.65).add(0.35)).add(color('#d31343').mul(haloRing).mul(grazing.pow(2)).mul(coronaBreath).mul(0.16))
+    this.emissiveNode = antiqueGold.mul(corona).mul(orbitingFire.mul(1.5).add(0.08)).mul(intimate.mul(0.65).add(0.35)).add(color(hsl.integer(17, 97, 48.4)).mul(haloRing).mul(grazing.pow(2)).mul(coronaBreath).mul(0.16))
   }
 }

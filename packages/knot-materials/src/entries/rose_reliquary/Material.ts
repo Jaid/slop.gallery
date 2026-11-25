@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_noise_float, struct, time, uv, vec2, vec3} from 'three/tsl'
 
 import {rgb} from '../../candidates/muse_wonder/lib/rgb.ts'
@@ -61,12 +62,12 @@ export default class extends KnotMaterial {
     const identity = cellNoiseVec3(vec3(panes.cell, 7.7))
     const hand = cellNoiseVec3(vec3(panes.cell, 93.1))
 // Jewel glass chosen pane by pane, then clouded by the hand that blew it.
-    let jewel = rgb('#9e1730')
-    jewel = mix(jewel, rgb('#d98a16'), identity.x.smoothstep(0.16, 0.2))
-    jewel = mix(jewel, rgb('#0f8a4d'), identity.x.smoothstep(0.34, 0.38))
-    jewel = mix(jewel, rgb('#0e7f8c'), identity.x.smoothstep(0.5, 0.54))
-    jewel = mix(jewel, rgb('#2456c8'), identity.x.smoothstep(0.66, 0.7))
-    jewel = mix(jewel, rgb('#6d2bb3'), identity.x.smoothstep(0.83, 0.87))
+    let jewel = rgb(hsl.integer(18, 91, 37))
+    jewel = mix(jewel, rgb(hsl.integer(68, 94, 65)), identity.x.smoothstep(0.16, 0.2))
+    jewel = mix(jewel, rgb(hsl.integer(154, 98.2, 49)), identity.x.smoothstep(0.34, 0.38))
+    jewel = mix(jewel, rgb(hsl.integer(208, 93, 47)), identity.x.smoothstep(0.5, 0.54))
+    jewel = mix(jewel, rgb(hsl.integer(263, 90, 41)), identity.x.smoothstep(0.66, 0.7))
+    jewel = mix(jewel, rgb(hsl.integer(301, 83, 37.5)), identity.x.smoothstep(0.83, 0.87))
     const cloud = mx_noise_float(p.mul(31).add(identity.mul(7))).mul(0.5).add(0.5)
     const seeded = mx_noise_float(p.mul(83).add(hand.mul(11))).mul(0.5).add(0.5)
     jewel = jewel.mul(cloud.mul(0.26).add(seeded.mul(0.12)).add(0.78).add(identity.y.mul(0.28)))
@@ -79,7 +80,7 @@ export default class extends KnotMaterial {
     const glassNormal = proceduralNormal(relief, 1)
     this.normalNode = glassNormal
     this.clearcoatNormalNode = glassNormal
-    const leadColor = color('#111118')
+    const leadColor = color(hsl.integer(285, 19, 8))
     this.colorNode = mix(jewel.mul(0.42), leadColor, lead)
     this.metalnessNode = lead.mul(0.86)
     this.roughnessNode = mix(float(0.14), float(0.38), lead).add(cloud.mul(0.035))
@@ -95,8 +96,8 @@ export default class extends KnotMaterial {
     const bubbles = cellularPoints(p.mul(54), 0.016, 0.12, 0.66).mul(intimate).mul(lead.oneMinus())
     const paneGlow = jewel.mul(innerLight).mul(facing.mul(0.78).add(0.3)).mul(grazing.oneMinus().mul(0.45).add(0.55)).mul(near.mul(0.55).add(0.78)).mul(lead.oneMinus())
     this.emissiveNode = paneGlow.mul(1.3)
-      .add(color('#fff6da').mul(bubbles).mul(0.9))
-      .add(color('#e8ecff').mul(lead).mul(glints(glassNormal, 210)).mul(close.mul(0.9).add(0.4)).mul(1.6))
+      .add(color(hsl.integer(93, 100, 97)).mul(bubbles).mul(0.9))
+      .add(color(hsl.integer(276, 100, 94)).mul(lead).mul(glints(glassNormal, 210)).mul(close.mul(0.9).add(0.4)).mul(1.6))
       .add(jewel.mul(lead.oneMinus()).mul(grazing.pow(3)).mul(0.08))
   }
 }

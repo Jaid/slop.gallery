@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, normalView, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -31,9 +32,9 @@ export default class extends KnotMaterial {
     const repaired = mx_noise_float(p.mul(2.2).add(vec3(4.1, 1.7, 9.3))).mul(0.5).add(0.5).smoothstep(0.42, 0.6)
     const gold = crack.mul(repaired)
     const cloud = mx_fractal_noise_float(p.mul(3.1), 4, 2, 0.5).mul(0.5).add(0.5)
-    const celadon = mix(color('#0b1310'), color('#1d2c25'), cloud.smoothstep(0.3, 0.75))
-    const glaze = mix(celadon, color('#010201'), groove)
-    const leaf = color('#d8a64a')
+    const celadon = mix(color(hsl.integer(170, 25, 8)), color(hsl.integer(164, 28, 17)), cloud.smoothstep(0.3, 0.75))
+    const glaze = mix(celadon, color(hsl.integer(145, 37, 2)), groove)
+    const leaf = color(hsl.integer(80, 74, 71))
     const sparkle = glints(normalView, 90)
     this.colorNode = mix(glaze, leaf, gold)
     this.metalnessNode = gold

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_noise_float, negateOnBackSide, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {resolved, ruled, wave} from '../../candidates/gpt_astra/lib/surface/coverage.ts'
@@ -46,9 +47,9 @@ export default class extends KnotMaterial {
     const thin = ruled(strata.mul(2.1), 0.085)
     const chalk = broad.smoothstep(0.48, 0.83)
     const iron = ruled(strata.mul(0.55).add(0.13), 0.045)
-    const ocher = mix(color('#b86d46'), color('#e7b979'), broad)
-    const stone = mix(ocher, color('#f3dfb7'), chalk)
-    const sediment = mix(mix(stone, color('#9c573b'), thin.mul(0.5)), color('#6f3e36'), iron.mul(0.52))
+    const ocher = mix(color(hsl.integer(47, 60, 55)), color(hsl.integer(75, 63, 78)), broad)
+    const stone = mix(ocher, color(hsl.integer(85, 61, 89.5)), chalk)
+    const sediment = mix(mix(stone, color(hsl.integer(42, 58, 46)), thin.mul(0.5)), color(hsl.integer(30, 45, 33)), iron.mul(0.52))
     const grainDomain = p.mul(230)
     const grains = cellNoiseVec3(grainDomain)
     const grainVisibility = resolved(grainDomain)
@@ -56,7 +57,7 @@ export default class extends KnotMaterial {
     this.colorNode = sediment.mul(grain.mul(0.07).add(0.97))
     this.metalness = 0.035
     this.roughnessNode = float(0.76).sub(chalk.mul(0.12)).sub(thin.mul(0.07))
-    this.sheenNode = color('#e7c299').mul(0.12)
+    this.sheenNode = color(hsl.integer(70, 53, 81)).mul(0.12)
     this.sheenRoughness = 0.8
     const ripples = wave(strata.mul(28).add(uv().x.mul(TAU * 8))).mul(intimate)
     // Preserve the displaced normal, then add only the submillimeter surface gradient.
@@ -70,6 +71,6 @@ export default class extends KnotMaterial {
     const mineralNormal = mineralVector.div(mineralVector.length().max(0.0001))
     const glitter = mineralNormal.dot(halfVector).clamp().pow(95).mul(grains.z.smoothstep(0.86, 0.97))
       .mul(grainVisibility).mul(near)
-    this.emissiveNode = color('#fff0ce').mul(glitter).mul(0.3)
+    this.emissiveNode = color(hsl.integer(87, 100, 95.2)).mul(glitter).mul(0.3)
   }
 }

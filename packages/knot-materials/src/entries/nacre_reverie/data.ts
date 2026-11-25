@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nacre_reverie',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The moon left its unfinished colors inside a shell. They drift between its silver pages, too softly to become a rainbow.',
   placeholder: {
-    color: '#c8b6bf',
+    color: hsl.integer(346, 16, 76),
     shading: 'glass',
   },
 } as const satisfies KnotData

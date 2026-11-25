@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ActJg0bLJQHug14.
 export default {
   id: 'singing_sands',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Golden grains hear the gallery approach and arrange themselves into vanished choirs.',
   placeholder: {
-    color: '#e6b85f',
+    color: hsl.integer(82, 73, 77.5),
     shading: 'stone',
   },
 } as const satisfies KnotData

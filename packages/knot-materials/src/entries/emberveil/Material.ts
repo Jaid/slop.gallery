@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_vec3, negateOnBackSide, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/muse_wonder/lib/detailNormal.ts'
@@ -44,15 +45,15 @@ export default class extends KnotMaterial {
     const churnFine = mx_noise_float(p.mul(9).sub(vec3(0, time.mul(0.03), 0))).mul(0.5).add(0.5)
     const surge = tube.x.mul(TAU * 2).sub(time.mul(0.6)).add(churn.mul(1.2)).cos().mul(0.5).add(0.5).pow(7)
     const coreTemp = churn.mul(0.3).add(surge.mul(0.38)).add(crack.mul(0.35)).add(0.1).clamp()
-    let ember = mix(color('#2a0300'), color('#c81e00'), coreTemp.smoothstep(0.05, 0.42))
-    ember = mix(ember, color('#ff7a1a'), coreTemp.smoothstep(0.42, 0.68))
-    ember = mix(ember, color('#ffc44d'), coreTemp.smoothstep(0.68, 0.86))
-    ember = mix(ember, color('#fff3c4'), coreTemp.smoothstep(0.86, 0.98).mul(0.75))
+    let ember = mix(color(hsl.integer(34, 100, 9)), color(hsl.integer(31.5, 100, 46)), coreTemp.smoothstep(0.05, 0.42))
+    ember = mix(ember, color(hsl.integer(49, 100, 67.9)), coreTemp.smoothstep(0.42, 0.68))
+    ember = mix(ember, color(hsl.integer(82, 100, 83)), coreTemp.smoothstep(0.68, 0.86))
+    ember = mix(ember, color(hsl.integer(95, 100, 95.5)), coreTemp.smoothstep(0.86, 0.98).mul(0.75))
     const ash = mx_noise_float(p.mul(7.5)).mul(0.5).add(0.5)
     const char = mx_noise_float(p.mul(23).add(vec3(4.4, 1.2, 8.8))).mul(0.5).add(0.5)
-    let crust = mix(color('#0a0808'), color('#2b211c'), ash)
-    crust = mix(crust, color('#574a3e'), char.mul(plate).mul(0.42))
-    crust = mix(crust, color('#0d0200'), crack.mul(0.75))
+    let crust = mix(color(hsl.integer(18, 7, 5)), color(hsl.integer(48, 19, 15)), ash)
+    crust = mix(crust, color(hsl.integer(65, 18, 33)), char.mul(plate).mul(0.42))
+    crust = mix(crust, color(hsl.integer(46, 100, 3.6)), crack.mul(0.75))
     this.colorNode = crust
     const microHeight = char.mul(0.12).add(churnFine.mul(near).mul(0.07)).add(mx_noise_float(p.mul(55)).mul(near).mul(0.06)).sub(fissure.mul(0.2))
     this.normalNode = detailNormal(displacedNormal, microHeight, 0.09)
@@ -63,6 +64,6 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.5
     this.aoNode = mix(float(0.48), float(1), plate)
     const glow = churn.mul(0.45).add(surge.mul(1.1)).add(0.55)
-    this.emissiveNode = ember.mul(crack.mul(glow).add(fissure.mul(glow.mul(0.5))).add(halo.mul(0.13))).mul(facing.mul(0.48).add(0.52)).add(color('#ff2a00').mul(grazing.pow(3)).mul(halo).mul(0.08))
+    this.emissiveNode = ember.mul(crack.mul(glow).add(fissure.mul(glow.mul(0.5))).add(halo.mul(0.13))).mul(facing.mul(0.48).add(0.52)).add(color(hsl.integer(31.6, 100, 58)).mul(grazing.pow(3)).mul(halo).mul(0.08))
   }
 }

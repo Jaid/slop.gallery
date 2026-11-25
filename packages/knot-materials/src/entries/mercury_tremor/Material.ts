@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, time, vec2, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -34,7 +35,7 @@ export default class extends BaseKnotMaterial {
     const height = swell.mul(0.032).add(beadHeight).add(micro.mul(intimate).mul(0.0015))
     this.positionNode = positionGeometry.add(normalLocal.mul(height))
     this.normalNode = proceduralNormal(height, 0.7).normalize()
-    this.colorNode = color('#b8bec4')
+    this.colorNode = color(hsl.integer(248, 8, 77))
     this.metalness = 1
     this.roughnessNode = float(0.025).add(drop.mask.mul(0.01)).add(micro.mul(near).mul(0.008))
     this.clearcoat = 0
@@ -46,6 +47,6 @@ export default class extends BaseKnotMaterial {
     const jitter = vec3(mx_noise_float(p.mul(40)), mx_noise_float(p.mul(40).add(9)), mx_noise_float(p.mul(40).add(17))).sub(0.5)
     const shake = float(1).add(time.mul(3.1).add(drop.random.z.mul(20)).sin().mul(intimate).mul(0.5))
     const dewFlash = glints(normalViewGeometry.add(jitter.mul(0.3)), 150).mul(drop.mask).mul(near).mul(shake)
-    this.emissiveNode = color('#cfe4ff').mul(grazing.pow(5).mul(0.05)).add(color('#ffffff').mul(dewFlash.mul(0.25)))
+    this.emissiveNode = color(hsl.integer(255, 100, 90)).mul(grazing.pow(5).mul(0.05)).add(color(hsl.integer(0, 0, 100)).mul(dewFlash.mul(0.25)))
   }
 }

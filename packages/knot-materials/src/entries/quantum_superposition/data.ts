@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quantum_superposition',
   candidateId: 'qwen_max',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'The object offers several versions of itself, none willing to become the only one.',
   placeholder: {
-    color: '#4facfe',
+    color: hsl.integer(248, 99, 68),
     shading: 'ghost',
   },
 } as const satisfies KnotData

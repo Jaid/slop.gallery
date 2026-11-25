@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, positionViewDirection, tangentView, time, uv, vec2} from 'three/tsl'
 
 import {fill, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/pattern.ts'
@@ -21,11 +22,11 @@ export default class extends KnotMaterial {
     const q = tube.sub(ray.mul(0.008)).mul(vec2(12, 2))
     const local = q.fract().sub(0.5)
     const fw = q.fwidth().length().max(0.0001)
-    const ivory = color('#e8debf')
-    const red = color('#ba3829')
-    const ink = color('#101e3e')
-    const jade = color('#237d7d')
-    const saffron = color('#d49e35')
+    const ivory = color(hsl.integer(92, 42, 88))
+    const red = color(hsl.integer(30, 87, 46))
+    const ink = color(hsl.integer(264, 63, 14))
+    const jade = color(hsl.integer(195, 79, 47))
+    const saffron = color(hsl.integer(80, 81, 69))
     const rA = local.sub(vec2(-0.15, 0.13)).length()
     const ringA = stroke(rA.sub(0.28), 0.085, fw)
     const discA = fill(local.sub(vec2(0.21, -0.21)).length().sub(0.135), fw)
@@ -52,7 +53,7 @@ export default class extends KnotMaterial {
     const frame = stroke(edge.x.sub(0.5), 0.008, surfaceQ.fwidth().x)
       .max(stroke(edge.y.sub(0.5), 0.008, surfaceQ.fwidth().y))
     const lens = wave(tube.x.mul(TAU * 768))
-    this.colorNode = mix(image, color('#ab9971'), frame)
+    this.colorNode = mix(image, color(hsl.integer(87, 34, 64)), frame)
     this.metalnessNode = frame.mul(0.8)
     this.roughnessNode = mix(float(0.25), float(0.28), frame)
     this.normalNode = proceduralNormal(lens.mul(intimate).mul(0.000055).add(frame.mul(0.0002)), 1)

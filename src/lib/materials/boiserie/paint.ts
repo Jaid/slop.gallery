@@ -1,29 +1,30 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, vec3} from 'three/tsl'
 
 import {visibleDetail} from '../filters.ts'
 
-/** Colors of a painted, gilded interior, as sRGB hex strings. */
+/** Colors of a painted, gilded interior, as packed sRGB. */
 export type BoiseriePalette = {
   /** the gilt of the moldings, beads and bands */
-  gilt: string
+  gilt: number
   /** the gilt’s worn, shadowed hollows */
-  giltShadow: string
+  giltShadow: number
   /** the wall paint */
-  paint: string
+  paint: number
   /** a deeper shade of the paint for the chair rail, baseboards and plinths */
-  paintDeep: string
+  paintDeep: number
 }
 
 type Float = Node<'float'>
 
 /** Slate-blue paint with antique gold, after the mockup of the Banquet. */
 export const slateBoiserie: BoiseriePalette = {
-  paint: '#3f5468',
-  paintDeep: '#2f3e4f',
-  gilt: '#e0b663',
-  giltShadow: '#9c7638',
+  paint: hsl.integer(248, 28, 35),
+  paintDeep: hsl.integer(252, 27, 26),
+  gilt: hsl.integer(83, 68, 76),
+  giltShadow: hsl.integer(78, 63, 53),
 }
 
 const unit = (node: Float) => node.mul(0.5).add(0.5)

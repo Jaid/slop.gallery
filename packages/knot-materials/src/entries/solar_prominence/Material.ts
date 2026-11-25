@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, mx_worley_noise_float, time, uv, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -37,9 +38,9 @@ export default class extends BaseKnotMaterial {
       .mul(grazing.pow(1.4))
     // Plasma temperature ladder.
     const hot = gran.mul(0.65).add(0.35)
-    const plasma = mix(color('#ff2400'), color('#ffcf6a'), hot)
-    const plasmaDeep = mix(color('#560000'), plasma, spotCore)
-    const penumbraCol = mix(plasma, color('#8a3a00'), penumbra.mul(0.7))
+    const plasma = mix(color(hsl.integer(31, 100, 57.9)), color(hsl.integer(85, 100, 86)), hot)
+    const plasmaDeep = mix(color(hsl.integer(29, 100, 18)), plasma, spotCore)
+    const penumbraCol = mix(plasma, color(hsl.integer(47, 100, 36)), penumbra.mul(0.7))
     // Limb darkening (edges cooler).
     const limb = facing.pow(0.55)
     this.colorNode = plasmaDeep.mul(limb.mul(0.55).add(0.55))
@@ -52,12 +53,12 @@ export default class extends BaseKnotMaterial {
     this.normalNode = proceduralNormal(gran.mul(0.35).sub(spotCore.mul(0.15)).add(loops.mul(0.35)), 0.003)
     this.emissiveNode
       = plasma.mul(hot.mul(0.9).add(0.35)).mul(limb)
-        .add(color('#ff7a10').mul(loops).mul(0.85))
-        .add(color('#ff9a2a').mul(loopsFine).mul(0.5))
-        .add(color('#fff4c8').mul(prominence).mul(2.6))
-        .add(color('#ff5500').mul(rim).mul(grazing).mul(1.2))
-        .add(color('#ffb066').mul(intimate).mul(0.12))
-        .add(color('#3a0a00').mul(spotCore).mul(0.4))
+        .add(color(hsl.integer(50, 100, 68)).mul(loops).mul(0.85))
+        .add(color(hsl.integer(62, 100, 73.8)).mul(loopsFine).mul(0.5))
+        .add(color(hsl.integer(96, 100, 96)).mul(prominence).mul(2.6))
+        .add(color(hsl.integer(39, 100, 62.4)).mul(rim).mul(grazing).mul(1.2))
+        .add(color(hsl.integer(63, 100, 79)).mul(intimate).mul(0.12))
+        .add(color(hsl.integer(37, 100, 13)).mul(spotCore).mul(0.4))
         .add(penumbraCol.mul(penumbra).mul(0.35))
   }
 }

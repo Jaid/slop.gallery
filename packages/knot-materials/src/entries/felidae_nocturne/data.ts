@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: DyugOIRGq3AJL3h; fixture: knot-material-br11k.
 export default {
   id: 'felidae_nocturne',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'An atlas of small, impossible hunters: each life is a handful of lights, held together by the dark between them.',
   placeholder: {
-    color: '#193459',
+    color: hsl.integer(257, 62, 22),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -31,8 +32,8 @@ export default class extends KnotMaterial {
     const fork = filament(mx_noise_float(p.mul(9).add(3)), 0.018)
     const ember = mx_noise_float(inner.mul(8).add(time.mul(0.06))).mul(0.5).add(0.5)
     const heat = seam.add(fork.mul(0.6)).mul(near.mul(0.55).add(0.45)).mul(ember.pow(2))
-    const molten = mix(color('#ff5a1f'), color('#ffe08a'), ember)
-    this.colorNode = mix(color('#06040a'), color('#1c0a04'), noise.mul(0.6))
+    const molten = mix(color(hsl.integer(37.7, 100, 63)), color(hsl.integer(90, 100, 90)), ember)
+    this.colorNode = mix(color(hsl.integer(302, 35, 4)), color(hsl.integer(43, 60, 7.5)), noise.mul(0.6))
     this.metalnessNode = seam.oneMinus().mul(0.15).add(0.15)
     this.roughnessNode = seam.mul(-0.4).add(0.55)
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(18)), 0.0018)

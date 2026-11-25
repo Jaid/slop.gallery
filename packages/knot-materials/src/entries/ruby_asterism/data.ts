@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ruby_asterism',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A ruby grown around needle-thin silk: turn it and a star of six rays wheels across the dome, leaving as you arrive.',
   placeholder: {
-    color: '#7d1220',
+    color: hsl.integer(21, 91, 29),
     shading: 'glass',
   },
 } as const satisfies KnotData

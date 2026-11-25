@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1o1ree11eGriGjv; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'chatoyant_dusk',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand golden fibers hold one thin line of sunset, and it walks along the stone wherever you do.',
   placeholder: {
-    color: '#b87415',
+    color: hsl.integer(68, 90, 56),
     shading: 'stone',
   },
 } as const satisfies KnotData

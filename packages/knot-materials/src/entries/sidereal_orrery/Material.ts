@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv, vec2, vec3} from 'three/tsl'
 
 import {polarAngle} from '../../candidates/gpt_astra/lib/surface/angle.ts'
@@ -57,16 +58,16 @@ export default class extends KnotMaterial {
     const axle = fill(radius.sub(0.024), aa)
     const engraving = ruled(radius.mul(220), 0.12).mul(bezel).mul(intimate)
     const goldMask = bezel.add(rim).add(chapter).add(hours).add(hand).add(axle).add(mechanism).add(orbit.mul(0.35)).clamp()
-    const enamel = mix(color('#101c25'), color('#28474b'), identity.z.mul(0.4).add(grazing.mul(0.26)))
-    const brass = mix(color('#755026'), color('#e2b974'), goldMask.mul(0.55).add(facing.mul(0.25)))
-    const body = mix(color('#29201e'), enamel, glass)
-    this.colorNode = mix(mix(body, brass.mul(engraving.mul(-0.15).add(1)), goldMask), color('#971f42'), planet)
+    const enamel = mix(color(hsl.integer(242, 34, 12)), color(hsl.integer(206, 38, 28)), identity.z.mul(0.4).add(grazing.mul(0.26)))
+    const brass = mix(color(hsl.integer(67, 61, 38)), color(hsl.integer(80, 63, 78)), goldMask.mul(0.55).add(facing.mul(0.25)))
+    const body = mix(color(hsl.integer(33, 15, 15)), enamel, glass)
+    this.colorNode = mix(mix(body, brass.mul(engraving.mul(-0.15).add(1)), goldMask), color(hsl.integer(9, 82, 36)), planet)
     this.metalnessNode = goldMask.mul(0.62).add(0.28).sub(planet.mul(0.5)).clamp()
     this.roughnessNode = float(0.3).sub(glass.mul(0.12)).add(engraving.mul(0.08))
     this.clearcoatNode = glass.mul(0.85).add(0.12)
     this.clearcoatRoughness = 0.06
     this.normalNode = proceduralNormal(bezel.mul(0.0012).add(rim.mul(0.00035)).add(mechanism.mul(0.0003)).add(engraving.mul(0.000035)), 1)
     const heartbeat = wave(time.mul(0.7).add(identity.x.mul(TAU)))
-    this.emissiveNode = color('#f26765').mul(planet).mul(heartbeat.mul(0.3).add(0.12)).mul(near.mul(0.5).add(0.5))
+    this.emissiveNode = color(hsl.integer(24, 86, 63.6)).mul(planet).mul(heartbeat.mul(0.3).add(0.12)).mul(near.mul(0.5).add(0.5))
   }
 }

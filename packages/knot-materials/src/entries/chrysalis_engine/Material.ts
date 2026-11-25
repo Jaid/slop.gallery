@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -52,7 +53,7 @@ export default class extends KnotMaterial {
     const shellColor = spectralColor(phase)
     const underColor = spectralColor(phase.add(2.1))
     const eyeFlash = view.dot(vec3(0.67, 0.21, -0.71).normalize()).abs().pow(10)
-    this.colorNode = mix(color('#052f31'), color('#17616a'), noise).add(shellColor.mul(grazing.mul(0.18).add(0.04)))
+    this.colorNode = mix(color(hsl.integer(200, 86, 18)), color(hsl.integer(207, 80, 37)), noise).add(shellColor.mul(grazing.mul(0.18).add(0.04)))
     this.metalness = 0.86
     this.roughnessNode = seams.mul(0.17).add(0.085)
     this.iridescenceNode = grazing.mul(0.72).add(0.22).clamp()
@@ -61,6 +62,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.94
     this.clearcoatRoughness = 0.034
     this.normalNode = proceduralNormal(cell, 0.0015)
-    this.emissiveNode = underColor.mul(underSeams).mul(near.mul(0.85).add(0.2)).add(color('#8fffea').mul(seams).mul(eyeFlash).mul(0.34)).add(shellColor.mul(rim).mul(0.095))
+    this.emissiveNode = underColor.mul(underSeams).mul(near.mul(0.85).add(0.2)).add(color(hsl.integer(180, 100, 91.5)).mul(seams).mul(eyeFlash).mul(0.34)).add(shellColor.mul(rim).mul(0.095))
   }
 }

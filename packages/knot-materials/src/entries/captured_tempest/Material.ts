@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, vec2, vec3} from 'three/tsl'
 
 import {filament} from '../../candidates/gpt_sol/lib/filament.ts'
@@ -117,7 +118,7 @@ export default class extends BaseKnotMaterial {
       const bolt = mainBolt
         .add(fineBolt)
         .clamp()
-      const tint = mix(color('#759dff'), color('#fff8dc'), cloud
+      const tint = mix(color(hsl.integer(266, 100, 66)), color(hsl.integer(95, 100, 97.3)), cloud
         .mul(0.35)
         .add(t * 0.65)
         .clamp())
@@ -133,7 +134,7 @@ export default class extends BaseKnotMaterial {
         .clamp(0.78, 1))
     }
     const clouds = cloudSum.div(steps)
-    this.colorNode = mix(color('#02050a'), color('#25384d'), clouds
+    this.colorNode = mix(color(hsl.integer(251, 43, 3.6)), color(hsl.integer(252, 38, 23)), clouds
       .mul(0.52)
       .add(rim.mul(0.16))
       .clamp())
@@ -144,7 +145,7 @@ export default class extends BaseKnotMaterial {
     this.thickness = 0.76
     this.ior = 1.46
     this.dispersion = 0.1
-    this.attenuationColor.set('#1b3151')
+    this.attenuationColor.set(hsl.integer(258, 55, 21))
     this.attenuationDistance = 0.72
     this.roughnessNode = clouds
       .mul(0.18)
@@ -163,7 +164,7 @@ export default class extends BaseKnotMaterial {
       .div(steps)
       .mul(8.5)
       .mul(charge)
-      .add(color('#46388e')
+      .add(color(hsl.integer(286, 69, 31))
         .mul(rim)
         .mul(0.09))
   }

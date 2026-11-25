@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, negateOnBackSide, normalViewGeometry, select, uv, vec2} from 'three/tsl'
 
 import {filteredWave} from '../../candidates/gpt_astra/lib/filteredWave.ts'
@@ -54,7 +55,7 @@ export default class extends BaseKnotMaterial {
       .add(0.82)
     const toolMarks = filteredWave(local.dot(faceDirection).mul(TAU * 9)).mul(near)
     this.envMapIntensity = 1.05
-    this.colorNode = mix(color('#0c1015'), color('#e13e29').mul(faceTint), inside)
+    this.colorNode = mix(color(hsl.integer(254, 19, 7)), color(hsl.integer(31, 92.6, 54)).mul(faceTint), inside)
     this.metalnessNode = inside.mul(0.05)
     this.ior = 1.58
     this.roughnessNode = float(0.17)

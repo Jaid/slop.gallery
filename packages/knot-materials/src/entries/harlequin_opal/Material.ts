@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, mx_worley_noise_float, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -19,14 +20,14 @@ export default class extends BaseKnotMaterial {
     this.transmission = 0.25
     this.thickness = 0.5
     this.ior = 1.45
-    this.attenuationColor.set('#ffe9f5')
+    this.attenuationColor.set(hsl.integer(344, 100, 95))
     this.attenuationDistance = 0.9
     this.roughness = 0.22
     this.metalness = 0
     this.clearcoat = 1
     this.clearcoatRoughness = 0.04
     this.sheen = 0.5
-    this.sheenColor.set('#ffffff')
+    this.sheenColor.set(hsl.integer(0, 0, 100))
     this.sheenRoughness = 0.45
     const {p, view, rim, near, intimate} = viewerFrame()
     const cellP = p.sub(view.mul(0.12)).mul(4.2)
@@ -42,10 +43,10 @@ export default class extends BaseKnotMaterial {
     const playColor = spectralColor(id.y.mul(6).add(view.x.mul(2)).add(view.y.mul(1.2)))
     const flash = patch.mul(present).mul(ignition)
     const pin = cellularPoints(p.sub(view.mul(0.06)).mul(70), 0.025, 0.16, 0.65).mul(intimate)
-    this.colorNode = mix(color('#efe9df'), color('#dfd5c6'), mx_noise_float(p.mul(5)).mul(0.5).add(0.5))
+    this.colorNode = mix(color(hsl.integer(81, 27, 92.5)), color(hsl.integer(78, 23, 86)), mx_noise_float(p.mul(5)).mul(0.5).add(0.5))
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(8)), 0.0006)
     this.emissiveNode = playColor.mul(flash).mul(1.7).mul(near.mul(0.5).add(0.6))
       .add(spectralColor(mx_noise_float(p.mul(7)).mul(9).add(2)).mul(pin).mul(1.6))
-      .add(color('#ffd9ec').mul(rim).mul(0.12))
+      .add(color(hsl.integer(346, 100, 91)).mul(rim).mul(0.12))
   }
 }

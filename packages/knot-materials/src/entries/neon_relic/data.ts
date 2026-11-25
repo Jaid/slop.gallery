@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: K0nU326lufLQTl2; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'neon_relic',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Cold cathode, warm glass: the gas remembers the current that made it, and the tube hums a note nobody can hear.',
   placeholder: {
-    color: '#ff1f6b',
+    color: hsl.integer(10, 100, 59),
     shading: 'glass',
   },
 } as const satisfies KnotData

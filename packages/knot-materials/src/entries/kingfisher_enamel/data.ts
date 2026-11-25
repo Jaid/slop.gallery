@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kingfisher_enamel',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A kingfisher left its colors in the furnace. Brass veins now cradle pools of turquoise, lapis and molten honey.',
   placeholder: {
-    color: '#1d8a8a',
+    color: hsl.integer(195, 87, 51),
     shading: 'smooth',
   },
 } as const satisfies KnotData

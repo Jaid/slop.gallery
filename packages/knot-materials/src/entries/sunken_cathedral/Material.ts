@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, normalViewGeometry, positionGeometry, positionViewDirection, time, vec2, vec3} from 'three/tsl'
 
 import {premiumDetail} from '../../candidates/gpt_astra/lib/premiumDetail.ts'
@@ -50,19 +51,19 @@ export default class extends KnotMaterial {
     const lanternField = vec2(q3.x.mul(9).fract().sub(0.5), q3.y.mul(7).fract().sub(0.63)).length()
     const lanterns = lanternField.smoothstep(0.026, 0.105).oneMinus().mul(intimate.mul(0.65).add(0.35))
     const waterLight = q2.y.mul(15).add(q2.x.mul(11)).add(time.mul(0.22)).sin().mul(0.5).add(0.5)
-    this.colorNode = mix(color('#102a3b'), color('#376176'), grazing.abs().pow(2).mul(0.45))
+    this.colorNode = mix(color(hsl.integer(240, 58, 17)), color(hsl.integer(232, 45, 39)), grazing.abs().pow(2).mul(0.45))
     this.transmission = 0.68
     this.thickness = 0.48
     this.ior = 1.57
     this.dispersion = 0.08
-    this.attenuationColor.set('#477f91')
+    this.attenuationColor.set(hsl.integer(221, 47, 50))
     this.attenuationDistance = 1.1
     this.roughness = 0.045
     this.clearcoat = 1
     this.clearcoatRoughness = 0.026
     this.normalNode = premiumNormal(mx_noise_float(p.mul(7)), 0.00014)
-    const architecture = color('#b1e5eb').mul(front).mul(0.33).add(color('#74c3d4').mul(middle).mul(occlusion1).mul(detail.mul(0.45).add(0.24))).add(color('#398aab').mul(back).mul(occlusion1).mul(occlusion2).mul(detail).mul(0.46)).add(color('#ddb879').mul(sanctuary).mul(intimate).mul(0.55)).add(color('#3b91a7').mul(transept).mul(detail).mul(0.19))
-    this.emissiveNode = architecture.mul(facing.mul(0.3).add(0.7)).mul(waterLight.mul(0.13).add(0.87)).add(color('#ffe1a0').mul(lanterns).mul(0.85))
+    const architecture = color(hsl.integer(205, 53, 87)).mul(front).mul(0.33).add(color(hsl.integer(213, 55, 73.5)).mul(middle).mul(occlusion1).mul(detail.mul(0.45).add(0.24))).add(color(hsl.integer(228, 67, 53)).mul(back).mul(occlusion1).mul(occlusion2).mul(detail).mul(0.46)).add(color(hsl.integer(80, 58, 77)).mul(sanctuary).mul(intimate).mul(0.55)).add(color(hsl.integer(218, 67, 55)).mul(transept).mul(detail).mul(0.19))
+    this.emissiveNode = architecture.mul(facing.mul(0.3).add(0.7)).mul(waterLight.mul(0.13).add(0.87)).add(color(hsl.integer(86, 100, 90.7)).mul(lanterns).mul(0.85))
     this.envMapIntensity = 0.8
   }
 }

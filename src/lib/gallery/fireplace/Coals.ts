@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {attribute, color, float, mix, mx_noise_float, positionGeometry, smoothstep, time, vec3} from 'three/tsl'
 import {IcosahedronGeometry, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshStandardNodeMaterial, Quaternion, Vector3} from 'three/webgpu'
 
@@ -99,7 +100,7 @@ export default class Coals extends InstancedMesh<IcosahedronGeometry, MeshStanda
     const cracks = smoothstep(0.3, 0.55, crust).oneMinus()
     const heat = coal.x.mul(breath.mul(0.5).add(0.5)).mul(cracks.mul(0.6).add(0.25))
     const ash = smoothstep(0.5, 0.85, crust).mul(coal.x.oneMinus().mul(0.6).add(0.25))
-    material.colorNode = mix(color('#0e0906'), color('#4b4641'), ash)
+    material.colorNode = mix(color(hsl.integer(57, 22, 6)), color(hsl.integer(68, 7, 31)), ash)
     material.emissiveNode = fireColor(heat).mul(2)
     super(geometry, material, coals.length)
     this.name = 'lodge-coals'

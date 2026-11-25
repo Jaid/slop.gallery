@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalViewGeometry, positionGeometry, time, uv, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -33,15 +34,15 @@ export default class extends KnotMaterial {
       .add(dome.mul(0.5))
     const trough = swell01.oneMinus()
     const vapour = trough.smoothstep(0.55, 0.95).mul(0.12).add(beadRing.mul(0.1))
-    const metal = mix(color('#454d59'), color('#f0f5fa'), swell01)
-    const amalgam = mix(metal, color('#8a6a30'), trough.smoothstep(0.6, 0.9).mul(0.5))
+    const metal = mix(color(hsl.integer(258, 14, 33)), color(hsl.integer(248, 41, 96)), swell01)
+    const amalgam = mix(metal, color(hsl.integer(80, 64, 47)), trough.smoothstep(0.6, 0.9).mul(0.5))
     this.colorNode = amalgam
     this.metalness = 1
     this.roughnessNode = float(0.045).add(trough.mul(0.05)).mix(float(0.02), bead.mask)
     this.aoNode = float(0.8).add(swell01.mul(0.2))
     this.normalNode = proceduralNormal(height, 0.004)
-    this.emissiveNode = color('#7df9ff').mul(vapour).mul(intimate.mul(0.5).add(0.6))
-      .add(color('#7df9ff').mul(rim.pow(3)).mul(0.18))
-      .add(color('#e8fbff').mul(glints(normalViewGeometry, 140)).mul(beadRing).mul(near.mul(0.7).add(0.3)).mul(0.7))
+    this.emissiveNode = color(hsl.integer(199, 99, 90)).mul(vapour).mul(intimate.mul(0.5).add(0.6))
+      .add(color(hsl.integer(199, 99, 90)).mul(rim.pow(3)).mul(0.18))
+      .add(color(hsl.integer(212, 100, 97)).mul(glints(normalViewGeometry, 140)).mul(beadRing).mul(near.mul(0.7).add(0.3)).mul(0.7))
   }
 }

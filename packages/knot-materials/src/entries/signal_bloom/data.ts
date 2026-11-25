@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'signal_bloom',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'An impossible flower broadcasts from the future. Move, and its petals remember a different arrangement.',
   placeholder: {
-    color: '#e56f61',
+    color: hsl.integer(29, 77, 63),
     shading: 'smooth',
   },
 } as const satisfies KnotData

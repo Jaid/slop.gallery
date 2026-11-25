@@ -7,6 +7,7 @@ import type {DirectionalLight, Material, PointLight} from 'three/webgpu'
 import {useFrame, useThree} from '@react-three/fiber'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
@@ -99,7 +100,7 @@ export default function StudioRoom() {
   }, [moon, scene])
   return <group name='studio'>
     <ambientLight intensity={look.fill.ambient} />
-    <hemisphereLight color='#e1edff' groundColor='#80705d' intensity={look.fill.hemisphere} />
+    <hemisphereLight color={hsl.integer(258, 100, 93)} groundColor={hsl.integer(72, 20, 48)} intensity={look.fill.hemisphere} />
     <SandboxMoonlight blur={look.moon.blur} color={look.moon.color} geometry={moon} intensity={look.moon.intensity} mapSize={4096} />
     {/* The lamps borrow its slots for their shadows, which only render again once something in their reach moves; both may blur theirs wider than every lamp’s. */}
     <ShadowPool softenable={2} />
@@ -156,7 +157,7 @@ function Ceiling({surface}: {
     slab: studioSlab,
   }), [openings, variant]))
   const plaster = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
-    baseColor: '#7a5a42',
+    baseColor: hsl.integer(58, 36, 42),
     heavy: isHeavy,
     roughness: 0.88,
   }), [isHeavy]))
@@ -166,7 +167,7 @@ function Ceiling({surface}: {
     return plane.rotateX(Math.PI / 2)
   }, [width, depth]))
   const black = useDisposable(useMemo(() => new MeshBasicNodeMaterial({
-    color: '#000000',
+    color: hsl.integer(0, 0, 0),
     name: 'studio-ceiling-backdrop',
   }), []))
   return <group name='studio-ceiling' position={studio.toWorld([0, 0, 0])}>

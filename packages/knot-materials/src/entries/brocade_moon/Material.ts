@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -60,9 +61,9 @@ export default class extends KnotMaterial {
     const resolved = footprint.smoothstep(1.4, 4.5).oneMinus()
     const weave = mix(float(0.5), warp.mul(weft).mul(0.72).add(warp.add(weft).mul(0.14)), resolved)
     const moon = front.random.x.mul(0.15).add(deep.random.y.mul(0.08)).add(facing.mul(0.12))
-    let silk = mix(color('#110b25'), color('#3b1b56'), moon)
-    silk = mix(silk, color('#756087'), grazing.pow(2).mul(0.34))
-    const gold = mix(color('#855016'), color('#ffe3a0'), front.random.z)
+    let silk = mix(color(hsl.integer(291, 60, 8)), color(hsl.integer(306, 69, 20)), moon)
+    silk = mix(silk, color(hsl.integer(309, 31, 45)), grazing.pow(2).mul(0.34))
+    const gold = mix(color(hsl.integer(63, 80, 40)), color(hsl.integer(87, 100, 91)), front.random.z)
     const height = zari.mul(0.38).add(weave.mul(near).mul(0.12))
     const normal = proceduralNormal(height, 0.0025)
     this.normalNode = normal
@@ -74,11 +75,11 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.32
     this.sheen = 0.95
     this.sheenRoughness = 0.3
-    this.sheenColor.set('#a89bdc')
+    this.sheenColor.set(hsl.integer(293, 54, 68))
     this.anisotropy = 0.6
     this.anisotropyRotation = 0
     const threadFlash = glints(normal, 92)
     this.emissiveNode = gold.mul(zari).mul(threadFlash).mul(near.mul(0.18).add(0.035))
-      .add(color('#bca6e5').mul(grazing.pow(4)).mul(0.045))
+      .add(color(hsl.integer(300, 58, 73)).mul(grazing.pow(4)).mul(0.045))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -103,8 +104,8 @@ export default class extends KnotMaterial {
     const starPulse = drift.add(dustRandom.z.mul(TAU)).sin().mul(0.18).add(0.82)
     const {p, facing, grazing, near, intimate} = viewerFrame()
     const nebula = mx_noise_float(p.mul(2.8).add(vec3(time.mul(0.008), 0, time.mul(-0.006)))).mul(0.5).add(0.5)
-    const base = mix(color('#02030a'), color('#111936'), nebula.pow(2))
-    const catBody = mix(color('#172b48'), color('#493358'), random.y).mul(cat.silhouette.mul(0.34).add(0.08))
+    const base = mix(color(hsl.integer(272, 50, 3)), color(hsl.integer(270, 58, 12)), nebula.pow(2))
+    const catBody = mix(color(hsl.integer(257, 55, 19)), color(hsl.integer(311, 42, 27)), random.y).mul(cat.silhouette.mul(0.34).add(0.08))
     this.colorNode = mix(base, catBody, cat.silhouette)
     this.metalnessNode = cat.silhouette.mul(-0.28).add(0.28)
     this.roughnessNode = float(0.36).sub(cat.silhouette.mul(0.13)).sub(cat.eye.mul(0.2)).add(dust.mul(0.08))
@@ -112,11 +113,11 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = float(0.2).sub(grazing.mul(0.09))
     this.iridescenceNode = cat.silhouette.mul(0.24).add(grazing.mul(0.1))
     this.iridescenceThicknessNode = facing.mul(240).add(180)
-    const lineColor = mix(color('#63dfff'), color('#ffb86b'), random.x)
+    const lineColor = mix(color(hsl.integer(217.6, 100, 82)), color(hsl.integer(67, 100, 80.7)), random.x)
     const breathe = drift.sin().mul(0.16).add(0.84)
     this.emissiveNode = lineColor.mul(cat.network.mul(0.7).add(cat.nodes.mul(1.6)).add(cat.dots.mul(1.25)).add(cat.eye.mul(3))).mul(breathe)
-      .add(mix(color('#b9ddff'), color('#ffc988'), dustRandom.z).mul(dust).mul(unresolved).mul(starPulse).mul(near.mul(0.7).add(0.3)))
-      .add(color('#4875bf').mul(cat.silhouette).mul(grazing.pow(2)).mul(0.08))
-      .add(color('#f4e7c7').mul(intimate.mul(0.025)))
+      .add(mix(color(hsl.integer(248, 100, 86)), color(hsl.integer(71, 100, 84.8)), dustRandom.z).mul(dust).mul(unresolved).mul(starPulse).mul(near.mul(0.7).add(0.3)))
+      .add(color(hsl.integer(259, 64, 50)).mul(cat.silhouette).mul(grazing.pow(2)).mul(0.08))
+      .add(color(hsl.integer(89, 59, 92)).mul(intimate.mul(0.025)))
   }
 }

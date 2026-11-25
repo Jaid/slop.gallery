@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, uv, vec2, vec3} from 'three/tsl'
 
 import {buriedUv} from '../../candidates/gpt_sol/lib/exhibition/buriedOptics.ts'
@@ -53,8 +54,8 @@ export default class extends KnotMaterial {
     const wash = mx_fractal_noise_float(p.mul(31).add(washDrift), 3, 2.2, 0.53).mul(0.5).add(0.5)
     const pigment = painting.ink.mul(wash.mul(0.22).add(0.78)).mul(intimate.mul(0.08).add(0.92))
     const fired = mx_noise_float(p.mul(5.2)).mul(0.5).add(0.5)
-    const ivory = mix(color('#cbd6ca'), color('#fff2d6'), fired.mul(0.6).add(0.4))
-    const cobalt = mix(color('#082255'), color('#1e5fa0'), wash)
+    const ivory = mix(color(hsl.integer(143, 17, 84)), color(hsl.integer(87, 100, 96)), fired.mul(0.6).add(0.4))
+    const cobalt = mix(color(hsl.integer(261, 89, 17)), color(hsl.integer(252, 79, 40)), wash)
     const colors = mix(ivory, cobalt, pigment)
 // Continuous 3D glaze fractures, so neither UV wrap creates a crackle seam.
     const crackQ = p.mul(35).add(mx_noise_float(p.mul(6)).mul(0.4))
@@ -71,7 +72,7 @@ export default class extends KnotMaterial {
       .max(stroke(segment(sealQ, vec2(-0.025, -0.03), vec2(-0.025, 0.026)), 0.006))
       .max(stroke(segment(sealQ, vec2(-0.025, 0), vec2(0.026, 0)), 0.006))
     const seal = border.max(monogram).mul(painting.random.x.smoothstep(0.74, 0.77))
-    this.colorNode = mix(mix(colors, color('#7c8176'), stain), color('#9f3528'), seal)
+    this.colorNode = mix(mix(colors, color(hsl.integer(127, 9, 53)), stain), color(hsl.integer(30, 81, 40)), seal)
     this.metalness = 0
     this.roughnessNode = float(0.21).add(cracks.mul(0.18)).add(pinholes.mul(0.3))
     this.ior = 1.51
@@ -82,6 +83,6 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(wheel.add(painting.leafHeight.mul(0.0002)).sub(cracks.mul(0.00042)).sub(pinholes.mul(0.0001)), 1)
     this.clearcoatNormalNode = proceduralNormal(wheel.add(mx_noise_float(p.mul(28)).mul(0.0001)), 1)
     const awakening = exhibitionPhase.add(p.y.mul(5)).sin().mul(0.15).add(0.85)
-    this.emissiveNode = color('#1c417c').mul(pigment).mul(grazing.pow(2)).mul(awakening).mul(near).mul(0.07)
+    this.emissiveNode = color(hsl.integer(259, 74, 29)).mul(pigment).mul(grazing.pow(2)).mul(awakening).mul(near).mul(0.07)
   }
 }

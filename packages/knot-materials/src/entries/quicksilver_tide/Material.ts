@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, normalLocal, select, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {panelSky, proceduralEnvironment} from '../../candidates/claude_sonnet/lib/environment.ts'
@@ -119,7 +120,7 @@ export default class extends KnotMaterial {
       }],
     })
     this.envNode = proceduralEnvironment(sky)
-    this.colorNode = color('#d5dae3')
+    this.colorNode = color(hsl.integer(262, 17, 87))
     this.metalness = 1
     this.roughnessNode = float(0.035).add(grazing.pow(3).mul(0.02))
     this.iridescence = 0.6

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalLocal, time} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -33,9 +34,9 @@ export default class extends KnotMaterial {
     const pulse = time.mul(pulseIdentity.z.mul(0.9).add(0.65)).add(pulseIdentity.x.mul(TAU)).sin().mul(0.34).add(0.66)
     const livingRoot = broadRoots.mul(pulse.mul(0.44).add(0.56)).add(fineRoots.mul(0.72))
     const fertile = caps.mul(pulse.mul(0.32).add(0.68))
-    const moss = mix(color('#07100b'), color('#2c4c2d'), soil.mul(0.45).add(grazing.mul(0.12)))
-    const capColor = mix(color('#537d43'), color('#d2a55c'), colony.random.x.mul(0.62).add(capRim.mul(0.2)))
-    const rootColor = mix(color('#7d8e4d'), color('#c8ba72'), pulseIdentity.y)
+    const moss = mix(color(hsl.integer(160, 37, 7)), color(hsl.integer(145, 58, 29)), soil.mul(0.45).add(grazing.mul(0.12)))
+    const capColor = mix(color(hsl.integer(138, 63, 47)), color(hsl.integer(78, 63, 71)), colony.random.x.mul(0.62).add(capRim.mul(0.2)))
+    const rootColor = mix(color(hsl.integer(121, 54, 56)), color(hsl.integer(99, 56, 75)), pulseIdentity.y)
     const relief = soil.mul(0.2).add(caps.mul(0.74)).add(broadRoots.mul(0.26)).add(fineRoots.mul(0.12))
     const rootedMoss = mix(moss, rootColor, livingRoot.mul(0.46))
     const mycelialSkin = mix(rootedMoss, capColor, fertile)
@@ -43,15 +44,15 @@ export default class extends KnotMaterial {
     this.metalness = 0
     this.roughnessNode = float(0.72).add(soil.mul(0.14)).sub(caps.mul(0.22)).clamp(0.34, 0.92)
     this.sheen = 0.36
-    this.sheenColor.set('#8aa362')
+    this.sheenColor.set(hsl.integer(126, 51, 63))
     this.sheenRoughness = 0.78
     this.clearcoatNode = caps.mul(0.2)
     this.clearcoatRoughness = 0.26
     this.normalNode = proceduralNormal(relief, 0.00145)
     this.positionNode = p.add(normalLocal.mul(colony.core.mul(capGate).mul(0.0052).add(soil.sub(0.5).mul(0.0013))))
     this.emissiveNode = rootColor.mul(livingRoot).mul(near.mul(0.16).add(0.035))
-      .add(color('#ffd681').mul(fertile).mul(intimate).mul(pulse).mul(0.19))
-      .add(color('#c8e7a8').mul(spores).mul(intimate).mul(0.18))
-      .add(color('#577a63').mul(rim).mul(grazing).mul(0.06))
+      .add(color(hsl.integer(84, 100, 87.5)).mul(fertile).mul(intimate).mul(pulse).mul(0.19))
+      .add(color(hsl.integer(129, 59, 87)).mul(spores).mul(intimate).mul(0.18))
+      .add(color(hsl.integer(155, 34, 47)).mul(rim).mul(grazing).mul(0.06))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {Break, color, float, Fn, If, Loop, mix, mx_noise_float, negateOnBackSide, normalLocal, time, transformNormalToView, vec3, vec4} from 'three/tsl'
 
 import {detail} from '../../candidates/gpt_astra/lib/exhibition/pattern.ts'
@@ -52,8 +53,8 @@ export default class extends KnotMaterial {
     const inward = depth.div(0.065).clamp()
     const fineQ = p.mul(230)
     const grain = mx_noise_float(fineQ).mul(detail(fineQ)).mul(intimate)
-    const ivory = mix(color('#e3dfcb'), color('#d0af92'), opening.smoothstep(0.35, 0.7).mul(0.5))
-    const glaze = mix(color('#65b7aa'), color('#123f48'), inward)
+    const ivory = mix(color(hsl.integer(98, 30, 89)), color(hsl.integer(63, 35, 74)), opening.smoothstep(0.35, 0.7).mul(0.5))
+    const glaze = mix(color(hsl.integer(183, 55, 68)), color(hsl.integer(214, 70, 24)), inward)
     this.colorNode = mix(ivory, glaze, wall).mul(grain.mul(0.06).add(1))
     const rawGradient = gradient(intersection.xyz).mul(gyroid(intersection.xyz).sign())
     // A stationary point at the traversal limit has no meaningful cavity normal.
@@ -67,6 +68,6 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = mix(float(0.32), float(0.09), wall)
     this.clearcoatNormalNode = this.normalNode
     this.aoNode = depth.mul(-21).exp().mul(0.8).add(0.2)
-    this.emissiveNode = color('#164b46').mul(inward).mul(0.035)
+    this.emissiveNode = color(hsl.integer(186, 73, 28)).mul(inward).mul(0.035)
   }
 }

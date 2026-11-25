@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, normalLocal, positionGeometry, vec3} from 'three/tsl'
 
 import {premiumBands} from '../../candidates/gpt_astra/lib/premiumBands.ts'
@@ -32,11 +33,11 @@ export default class extends KnotMaterial {
     const eye = eyeCoordinate.mul(eyeCoordinate).mul(-85).exp()
     const eyeHalo = eyeCoordinate.mul(eyeCoordinate).mul(-15).exp()
     const fibers = premiumBands(p.dot(vec3(490, 25, -160)).add(broadWarp.mul(9)))
-    const gold = mix(color('#39200b'), color('#bf7628'), layers.mul(0.55).add(fineLayers.mul(0.17)).add(0.12))
-    const redStone = mix(gold, color('#69251c'), jasper.mul(0.7))
-    const mineral = mix(redStone, color('#131c22'), hematite.mul(0.88))
+    const gold = mix(color(hsl.integer(58, 65, 17)), color(hsl.integer(63, 80, 57)), layers.mul(0.55).add(fineLayers.mul(0.17)).add(0.12))
+    const redStone = mix(gold, color(hsl.integer(30, 74, 27)), jasper.mul(0.7))
+    const mineral = mix(redStone, color(hsl.integer(238, 24, 12)), hematite.mul(0.88))
     const catEye = eye.mul(0.72).add(eyeHalo.mul(0.14)).mul(hematite.mul(0.85).oneMinus()).mul(fibers.mul(intimate).mul(0.2).add(0.8))
-    this.colorNode = mix(mineral, color('#f3ce78'), catEye.clamp())
+    this.colorNode = mix(mineral, color(hsl.integer(86, 77, 84)), catEye.clamp())
     this.metalnessNode = hematite.mul(0.63).add(0.08)
     this.roughnessNode = hematite.mul(0.06).add(fineLayers.mul(0.035)).add(0.17)
     this.anisotropy = 0.78
@@ -46,7 +47,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.045
     this.normalNode = premiumNormal(fineLayers.mul(0.13).add(fibers.mul(intimate).mul(0.06)).mul(detail), 0.00045)
     // A small subsurface-like contribution keeps the narrow eye readable.
-    this.emissiveNode = color('#d48a2a').mul(eye).mul(hematite.oneMinus()).mul(0.075)
+    this.emissiveNode = color(hsl.integer(68, 84, 64.4)).mul(eye).mul(hematite.oneMinus()).mul(0.075)
     this.envMapIntensity = 1.05
   }
 }

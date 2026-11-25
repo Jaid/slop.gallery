@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, negateOnBackSide, normalLocal, normalWorld, transformNormalToView, vec3} from 'three/tsl'
 
 import {voronoi3} from '../../candidates/deepseek/lib/voronoi.ts'
@@ -10,12 +11,12 @@ import knotData from './data.ts'
 
 /** Six cathedral glasses, selected per pane so neighbours never repeat a hue. */
 const jewel = (t: Node<'float'>) => {
-  const sapphire = color('#0a2a6b')
-  const ruby = color('#7d0f22')
-  const emerald = color('#0d5c3a')
-  const amber = color('#c07a12')
-  const amethyst = color('#3b1160')
-  const teal = color('#0b5a63')
+  const sapphire = color(hsl.integer(262, 91, 21))
+  const ruby = color(hsl.integer(19, 92, 29))
+  const emerald = color(hsl.integer(159, 96, 33))
+  const amber = color(hsl.integer(69, 92, 58))
+  const amethyst = color(hsl.integer(303, 83, 19))
+  const teal = color(hsl.integer(207, 90, 34))
   return mix(mix(mix(mix(mix(sapphire, ruby, t.step(0.17)), emerald, t.step(0.33)), amber, t.step(0.5)), amethyst, t.step(0.67)), teal, t.step(0.83))
 }
 /** Leaded glass wound into a knot. Each pane is a different glass, the came between them is soft metal, and a fixed cathedral sun outside the room decides which panes burn and which stay dark. Walking around the piece turns the same window into a different window. */
@@ -40,16 +41,16 @@ export default class extends KnotMaterial {
     const bubble = mx_fractal_noise_float(p.mul(62), 2, 2, 0.5).abs().sub(0.06)
     const bubbleLine = bubble.smoothstep(0, footprint.mul(2.4).add(0.01)).oneMinus().mul(near).mul(0.7)
     const glassColor = jewel(identity.x)
-    const paneTint = mix(glassColor, color('#f6f0dd'), identity2.y.mul(0.1))
+    const paneTint = mix(glassColor, color(hsl.integer(92, 52, 94.7)), identity2.y.mul(0.1))
 // One pane in twelve is a plain quarried roundel rather than a coloured light.
     const roundel = identity2.z.smoothstep(0.9, 0.94)
-    this.colorNode = mix(mix(color('#0b0d10'), paneTint.mul(0.9), roundel.oneMinus()), color('#0d1013'), pane.oneMinus())
+    this.colorNode = mix(mix(color(hsl.integer(258, 12, 6)), paneTint.mul(0.9), roundel.oneMinus()), color(hsl.integer(249, 12, 7)), pane.oneMinus())
     this.metalnessNode = pane.oneMinus().mul(0.25)
     this.roughnessNode = mix(mix(float(0.88), float(0.07), pane).add(bubbleLine.mul(0.1)), float(0.16), roundel)
     this.ior = 1.52
     this.transmissionNode = pane.mul(0.72).mul(roundel.oneMinus().mul(0.25).add(0.75))
     this.thicknessNode = pane.mul(0.3)
-    this.attenuationColor.set('#7c4a1e')
+    this.attenuationColor.set(hsl.integer(58, 70, 37))
     this.attenuationDistance = 0.9
     this.clearcoatNode = pane.mul(0.32)
     this.clearcoatRoughness = 0.1
@@ -68,9 +69,9 @@ export default class extends KnotMaterial {
     const glow = paneTint.mul(backlight).mul(pane).mul(near.mul(0.3).add(0.6)).mul(4.5)
 // Sunlight raking the lead bead, plus a cool bounce from the nave floor.
     this.emissiveNode = glow
-      .add(color('#e6dfc4').mul(bead).mul(pane.oneMinus()).mul(facing.pow(3)).mul(0.12))
-      .add(color('#dfe6f2').mul(pane.oneMinus()).mul(facing.pow(4)).mul(0.16))
-      .add(color('#cfd8ea').mul(grazing.pow(3)).mul(intimate.mul(0.5).add(0.2)).mul(0.08))
+      .add(color(hsl.integer(95, 38, 88.6)).mul(bead).mul(pane.oneMinus()).mul(facing.pow(3)).mul(0.12))
+      .add(color(hsl.integer(261, 36, 91)).mul(pane.oneMinus()).mul(facing.pow(4)).mul(0.16))
+      .add(color(hsl.integer(264, 35, 86)).mul(grazing.pow(3)).mul(intimate.mul(0.5).add(0.2)).mul(0.08))
       .add(paneTint.mul(bubbleLine).mul(backlight).mul(resolved).mul(0.6))
   }
 }

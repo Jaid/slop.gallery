@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, mix, positionViewDirection, tangentView, uv, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -22,12 +23,12 @@ export default class extends KnotMaterial {
     const tangent = tangentView.normalize()
     const bitangent = vec3(bitangentView as unknown as Node<'vec3'>).normalize()
     const aniso = tangent.dot(positionViewDirection).abs().pow(6).add(bitangent.dot(positionViewDirection).abs().pow(6)).mul(0.5)
-    const silkColor = mix(color('#0a0a1a'), color('#c0c8ff'), silkMask.mul(0.5).add(0.2))
+    const silkColor = mix(color(hsl.integer(282, 47, 6)), color(hsl.integer(278, 100, 82)), silkMask.mul(0.5).add(0.2))
     this.colorNode = silkColor
     this.transmission = 0.5
     this.thickness = 0.3
     this.ior = 1.4
-    this.attenuationColor.set('#3a2a5a')
+    this.attenuationColor.set(hsl.integer(297, 54, 23))
     this.attenuationDistance = 0.7
     this.roughnessNode = silkMask.mul(0.25).add(0.1)
     this.metalness = 0.1
@@ -37,6 +38,6 @@ export default class extends KnotMaterial {
     this.sheen = 1
     this.sheenRoughness = 0.25
     this.normalNode = liquidNormal(near, 0.06)
-    this.emissiveNode = color('#c0c8ff').mul(aniso).mul(near.mul(0.6).add(0.4)).add(color('#9d7dff').mul(silkMask).mul(0.4)).add(color('#ffffff').mul(rim).mul(0.15))
+    this.emissiveNode = color(hsl.integer(278, 100, 82)).mul(aniso).mul(near.mul(0.6).add(0.4)).add(color(hsl.integer(292, 100, 63)).mul(silkMask).mul(0.4)).add(color(hsl.integer(0, 0, 100)).mul(rim).mul(0.15))
   }
 }

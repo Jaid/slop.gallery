@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, uv, vec2} from 'three/tsl'
 
 import {resolved, ruled, stroke} from '../../candidates/gpt_astra/lib/surface/coverage.ts'
@@ -27,22 +28,22 @@ export default class extends KnotMaterial {
     const diagonal = stroke(q.x.abs().sub(q.y.abs()), 0.006, aa)
     const facet = q.x.abs().sub(q.y.abs()).smoothstep(aa.negate(), aa)
     const alternation = grid.x.floor().add(grid.y.floor()).mod(2)
-    const vermilion = mix(color('#a4222a'), color('#df5237'), facet.mul(0.45).add(alternation.mul(0.22)))
-    const lightPaper = mix(vermilion, color('#f48b65'), pyramid.mul(0.14).add(grazing.mul(0.1)))
+    const vermilion = mix(color(hsl.integer(24, 89, 39)), color(hsl.integer(33, 87, 56.4)), facet.mul(0.45).add(alternation.mul(0.22)))
+    const lightPaper = mix(vermilion, color(hsl.integer(40, 83, 70)), pyramid.mul(0.14).add(grazing.mul(0.1)))
     const paperEdge = valley.mul(0.72).add(diagonal.mul(0.22)).clamp()
     const fibers = mx_noise_float(p.mul(300)).mul(intimate)
     const laid = ruled(uv().x.mul(1500), 0.11).mul(resolved(uv().mul(vec2(1500, 1))))
-    this.colorNode = mix(lightPaper, color('#eed1ad'), paperEdge)
+    this.colorNode = mix(lightPaper, color(hsl.integer(73, 55, 85.6)), paperEdge)
       .mul(fibers.mul(0.075).add(laid.mul(0.026)).add(0.96))
     this.metalness = 0
     this.roughnessNode = float(0.72).sub(pyramid.mul(0.12)).add(paperEdge.mul(0.08))
-    this.sheenNode = color('#ef916f').mul(0.26)
+    this.sheenNode = color(hsl.integer(41, 76, 71)).mul(0.26)
     this.sheenRoughness = 0.72
     this.clearcoat = 0.035
     this.clearcoatRoughness = 0.65
     this.normalNode = proceduralNormal(height.add(fibers.mul(0.000025)).add(laid.mul(0.000018)), 0.95)
     this.aoNode = valley.mul(-0.22).add(0.98)
     // A small wrap-light term suggests the warm translucency of very thin paper, not a light source.
-    this.emissiveNode = color('#d7482b').mul(grazing.pow(3)).mul(near.mul(0.4).add(0.6)).mul(0.045)
+    this.emissiveNode = color(hsl.integer(33, 89, 53)).mul(grazing.pow(3)).mul(near.mul(0.4).add(0.6)).mul(0.045)
   }
 }

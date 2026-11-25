@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'seraphim_veil',
   candidateId: 'gpt_sol',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Pale radiance folds into something almost feathered at the edge of sight.',
   placeholder: {
-    color: '#ffe6bd',
+    color: hsl.integer(80, 100, 92.4),
     shading: 'glass',
   },
 } as const satisfies KnotData

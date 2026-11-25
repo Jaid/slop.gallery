@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IBraVE33noBp60D.
 export default {
   id: 'moth_atlas',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'An atlas of impossible moths unfolds its jeweled eyes, following your gaze through the gallery.',
   placeholder: {
-    color: '#286e67',
+    color: hsl.integer(186, 69, 41),
     shading: 'fabric',
   },
 } as const satisfies KnotData

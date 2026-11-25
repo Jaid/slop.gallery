@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {filteredBox} from '../../candidates/claude_opus/lib/filteredBox.ts'
@@ -178,21 +179,21 @@ export default class extends KnotMaterial {
 // Each candle flickers on its own; its identity wraps with the knot, so the seam candle is one flame.
     const candleIndex = wrap(s.mul(candles / knotLength).add(0.5).floor(), candles)
     const flicker = mx_noise_float(vec3(time.mul(3.1), candleIndex, 0)).mul(0.07).add(mx_noise_float(p.mul(2).add(vec3(time.mul(11), 0, 3))).mul(0.03)).add(1)
-    const candle = color('#ffc27a').mul(pool.pow2().mul(0.45).add(0.75)).mul(flicker)
+    const candle = color(hsl.integer(70, 100, 83)).mul(pool.pow2().mul(0.45).add(0.75)).mul(flicker)
 // The far wall reaches the eye only through the near paper: softened, dimmed and warmed.
     const through = mix(float(1), farWall.shade, facing.mul(0.6).add(0.15))
     const shade = nearWall.shade.mul(through).mul(rib.mul(0.85).oneMinus()).mul(ribHalo.mul(0.18).oneMinus())
 // Fins are thin enough to glow amber where the light shines through them.
-    const finGlow = color('#ff6a1a').mul(nearWall.finLight).mul(0.25)
+    const finGlow = color(hsl.integer(43, 100, 65.3)).mul(nearWall.finLight).mul(0.25)
     const glow = candle.mul(transmittance).mul(shade).add(finGlow.mul(transmittance))
-    this.colorNode = mix(color('#6e5d47'), color('#2e1d0e'), rib.mul(0.7))
+    this.colorNode = mix(color(hsl.integer(74, 27, 41)), color(hsl.integer(61, 49, 15)), rib.mul(0.7))
     this.metalness = 0
     this.roughnessNode = mix(float(0.88), float(0.5), rib)
-    this.sheenNode = color('#fff0d8').mul(0.18)
+    this.sheenNode = color(hsl.integer(80, 100, 95.4)).mul(0.18)
     this.sheenRoughness = 0.6
 // The paper sags a little between ribs and puckers along the fibers.
     const sag = ribCoord.fract().sub(0.5).mul(TAU).cos().mul(ribFootprint.smoothstep(0.15, 0.4).oneMinus()).mul(0.0007)
     this.normalNode = proceduralNormal(sag.add(fibers.mul(0.00012).mul(near)).add(cloud.mul(0.0002)), 1)
-    this.emissiveNode = glow.mul(0.62).add(color('#ffd9a0').mul(grazing.pow(5)).mul(0.08))
+    this.emissiveNode = glow.mul(0.62).add(color(hsl.integer(78, 100, 89)).mul(grazing.pow(5)).mul(0.08))
   }
 }

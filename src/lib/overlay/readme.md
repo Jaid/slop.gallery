@@ -3,9 +3,11 @@
 The overlay draws world-space and viewport markings over both the finished canvas and captures. Drawings are page-local. They survive the caller disconnecting and disappear on reload. Hiding the scene UI hides the pass; an empty overlay draws nothing.
 
 ```ts
+import hsl from 'okhsl'
+
 import overlay from '#src/lib/overlay/index.ts'
 
-const layer = overlay.addLayer({id: 'bounds', priority: 20, color: '#80ff00'})
+const layer = overlay.addLayer({id: 'bounds', priority: 20, color: hsl.integer(135.89, 100, 87.27)})
 const ring = overlay.addCircle([0, 1.5, -3], 0.75, {layer, normal: [0, 0, 1]})
 ring.remove() // or clear the whole layer with overlay.clearLayer(layer)
 ```
@@ -18,7 +20,7 @@ Drawings without a `layer` use `default`. Adding or moving a drawing to a new la
 | --- | --- |
 | `obstructedOpacityFactor` | `1`. Multiply the existing stroke opacity by this factor (0–1) only behind a depth-writing world mesh. `0` hides the obstructed portion; `0.5` halves its opacity. Independent of layer priority. |
 | `priority` | `0`. Higher layers draw over lower ones, regardless of drawing order. |
-| `color` | Red (`#ff0000`). Accepts `#rgb` or `#rrggbb`. |
+| `color` | Red. Use packed sRGB in code; WebMCP accepts `#rgb` or `#rrggbb`. |
 | `lineWidth` | Follows the live **G → World overlay** width, initially `?line_width` or `200` (2 px at 1920×1080). Range 1–800; the width in pixels is `(lineWidth / 100) * Math.sqrt(viewWidth * viewHeight / (1920 * 1080))` using the active viewport’s physical pixel dimensions. |
 | `lineStyle` | Follows the live overlay style, initially `?line_style` or `barycentric`. Choose `aliased` for hard edges. |
 | `fade` | `false` (no distance fade). Pass an object to enable it; omitted fields use `{start: 16, end: 100, heightWeight: 5, power: 10}`. Per pixel, scale the vertical camera offset by `heightWeight`, then fade between `start` and `end` meters with a reversed smoothstep raised to `power`. Pass `false` for no distance fade. |

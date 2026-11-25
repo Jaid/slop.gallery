@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, cos, float, Fn, mix, negateOnBackSide, sin, step, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {knotFrame} from '../../lib/knotFrame.ts'
@@ -77,10 +78,10 @@ export default class extends KnotMaterial {
     const refG = phaseG.cos().mul(0.48).add(0.52)
     const refB = phaseB.cos().mul(0.48).add(0.52)
     // Saturated interference colors: gold -> magenta -> royal blue -> emerald
-    const goldYellow = color('#ffc000')
-    const hotMagenta = color('#e6006e')
-    const royalBlue = color('#003bff')
-    const emeraldGreen = color('#00e668')
+    const goldYellow = color(hsl.integer(85, 100, 81.6))
+    const hotMagenta = color(hsl.integer(4, 100, 53))
+    const royalBlue = color(hsl.integer(264.06, 100, 41.4))
+    const emeraldGreen = color(hsl.integer(149.4, 100, 78))
     const thinFilm = mix(
       mix(goldYellow, hotMagenta, refR.smoothstep(0.35, 0.85)),
       mix(royalBlue, emeraldGreen, refB.smoothstep(0.35, 0.85)),
@@ -95,10 +96,10 @@ export default class extends KnotMaterial {
     // Stepped terraces inside the chasm
     const chasmSteps = cleavagePlane.mul(60).fract().smoothstep(0.1, 0.9)
     // Volumetric absorption & blackbody emission inside chasm (Beer-Lambert depth absorption)
-    const deepCrimson = color('#550200')
-    const moltenOrange = color('#ff3b00')
-    const radiantAmber = color('#ff9900')
-    const hotGold = color('#ffee77')
+    const deepCrimson = color(hsl.integer(30, 100, 18))
+    const moltenOrange = color(hsl.integer(34, 100, 59.5))
+    const radiantAmber = color(hsl.integer(65, 100, 73.4))
+    const hotGold = color(hsl.integer(101.3, 100, 93))
     const heatPulse = time.mul(0.8).add(p.x.mul(8)).sin().mul(0.15).add(0.85)
     const chasmTemp = chasmDepth.mul(heatPulse)
     const chasmGlow = mix(
@@ -108,8 +109,8 @@ export default class extends KnotMaterial {
     )
     // 100% metallic conductor: specular color is driven by thin-film reflection
     this.colorNode = mix(
-      mix(thinFilm, color('#09070c'), riserWall.mul(0.8)),
-      color('#150603'),
+      mix(thinFilm, color(hsl.integer(304, 21, 5)), riserWall.mul(0.8)),
+      color(hsl.integer(38, 58, 6)),
       chasmMask,
     )
     this.metalnessNode = mix(float(1), float(0.02), chasmMask)

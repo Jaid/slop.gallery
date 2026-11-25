@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'risograph_register',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   createdAt: 1_789_816_097,
   flavorText: 'Three imperfect impressions agree on a color none of their inks could make alone.',
   placeholder: {
-    color: '#dfbd83',
+    color: hsl.integer(80, 55, 78),
     shading: 'fabric',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: DZoyAbZAQlwnlPj; fixture: knot-material-shaders; result: success.
 export default {
   id: 'ironstone_opal',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'Black opal from the ironstone deep: dark as a closed eye until you move, then every patch ignites, each burning one color for one angle only.',
   placeholder: {
-    color: '#585252',
+    color: hsl.integer(17, 5, 36),
     shading: 'stone',
   },
 } as const satisfies KnotData

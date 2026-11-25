@@ -1,6 +1,7 @@
 import type {Vec3} from '../types.ts'
 
 import {mulberry32} from 'math/random'
+import hsl from 'okhsl'
 import {atan, attribute, exp, float, mix, positionGeometry, select, sin, smoothstep, step, uv, vec2, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
@@ -33,10 +34,10 @@ type Particle = {
   speed: number
 }
 
-const flashColor = rgb('#fff4b8')
-const puffLight = rgb('#f6f0e4')
-const puffShade = rgb('#b4a896')
-const sparkColor = rgb('#ffb347')
+const flashColor = rgb(hsl.integer(99, 100, 95.5))
+const puffLight = rgb(hsl.integer(85, 42, 95))
+const puffShade = rgb(hsl.integer(78, 17, 69))
+const sparkColor = rgb(hsl.integer(72, 100, 79.1))
 /** A direction within `spread` radians of the barrel’s axis, `around` radians round it. */
 function within(spread: number, around: number): Vec3 {
   const [ax, ay, az] = alchemyCannon.axis

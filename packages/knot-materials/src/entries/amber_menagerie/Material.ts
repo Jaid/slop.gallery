@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -51,10 +52,10 @@ export default class extends KnotMaterial {
       const gate = mx_cell_noise_float(cell.add(layerIdx * 100)).smoothstep(0.55, 0.6)
       const maskedInclusion = inclusion.mul(gate)
       // Different inclusion types have different colors
-      const pollenColor = color('#e8c844')
-      const insectColor = color('#2a1808')
-      const seedColor = color('#5a3a18')
-      const leafColor = color('#3a5a18')
+      const pollenColor = color(hsl.integer(95, 84, 81))
+      const insectColor = color(hsl.integer(61, 60, 13))
+      const seedColor = color(hsl.integer(65, 65, 28))
+      const leafColor = color(hsl.integer(132, 87, 34))
       const typeColor = mix(
         mix(pollenColor, insectColor, shapeType.smoothstep(0.3, 0.6)),
         mix(seedColor, leafColor, shapeType.smoothstep(0.7, 0.9)),
@@ -90,9 +91,9 @@ export default class extends KnotMaterial {
     const bubbleHighlight = bubbleDist.smoothstep(bubbleRadius.mul(0.35), bubbleRadius.mul(0.2))
       .mul(bubble)
     // Amber colors — warm honey gradient with depth variations
-    const amberLight = color('#e8a830')
-    const amberMid = color('#c47818')
-    const amberDeep = color('#8a4a0c')
+    const amberLight = color(hsl.integer(78, 88, 73.6))
+    const amberMid = color(hsl.integer(65, 89, 58))
+    const amberDeep = color(hsl.integer(57, 87, 40))
     const amberColor = mix(
       mix(amberLight, amberMid, amberNoise.mul(0.6)),
       amberDeep,
@@ -104,7 +105,7 @@ export default class extends KnotMaterial {
     this.transmission = 0.75
     this.thickness = 1.2
     this.ior = 1.546
-    this.attenuationColor.set('#d48820')
+    this.attenuationColor.set(hsl.integer(68, 89, 64))
     this.attenuationDistance = 0.8
     this.metalness = 0
     this.roughnessNode = float(0.06)
@@ -124,9 +125,9 @@ export default class extends KnotMaterial {
       .mul(0.5).add(0.5)
     const caustic = interiorLight.smoothstep(0.55, 0.85).mul(facing.pow(2))
     this.emissiveNode = inclusionEmission.mul(near.mul(0.5).add(0.3)).mul(0.4)
-      .add(color('#ffe8b0').mul(bubbleHighlight).mul(near).mul(0.6))
-      .add(color('#ffffff').mul(bubbleRim).mul(grazing.pow(2)).mul(0.3))
-      .add(color('#ffa830').mul(caustic).mul(intimate).mul(0.15))
-      .add(color('#e8c060').mul(grazing.pow(4)).mul(0.08))
+      .add(color(hsl.integer(88, 100, 92.5)).mul(bubbleHighlight).mul(near).mul(0.6))
+      .add(color(hsl.integer(0, 0, 100)).mul(bubbleRim).mul(grazing.pow(2)).mul(0.3))
+      .add(color(hsl.integer(69, 100, 76.7)).mul(caustic).mul(intimate).mul(0.15))
+      .add(color(hsl.integer(87, 75, 80)).mul(grazing.pow(4)).mul(0.08))
   }
 }

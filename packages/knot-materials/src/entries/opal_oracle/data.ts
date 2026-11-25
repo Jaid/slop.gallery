@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2tmj6W7XIniDLsB; fixture: knot-material-shaders; result: success.
 export default {
   id: 'opal_oracle',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A pale stone answers without words. Buried shards trade lilac, sea-green and apricot fire as you move, revealing a different omen to every gaze.',
   placeholder: {
-    color: '#d6dcdf',
+    color: hsl.integer(229, 9, 87),
     shading: 'glass',
   },
 } as const satisfies KnotData

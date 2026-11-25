@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionViewDirection, time, transformNormalToView, vec3} from 'three/tsl'
 
 import {environmentHighlight} from '../../candidates/claude_fable/lib/environmentHighlight.ts'
@@ -66,7 +67,7 @@ export default class extends KnotMaterial {
     const ripple = mx_noise_float(p.mul(9).add(vec3(0, 0, time.mul(0.02)))).mul(0.6).add(mx_noise_float(p.mul(27)).mul(0.25))
     const surfaceHeight = ripple.mul(0.0035).add(frostGrain.mul(frost).mul(0.0018))
     this.normalNode = proceduralNormal(surfaceHeight, 1)
-    const frostColor = rgb('#eef6ff').mul(frostGrain.mul(0.3).add(0.7))
+    const frostColor = rgb(hsl.integer(251, 100, 96.5)).mul(frostGrain.mul(0.3).add(0.7))
     this.colorNode = mix(bodyColor.mul(0.08), frostColor, frost.mul(0.9))
     this.metalness = 0
     this.ior = iceIndex
@@ -77,7 +78,7 @@ export default class extends KnotMaterial {
     const beat = time.mul(0.8).fract()
     const pulse = beat.mul(-5).exp().add(beat.sub(0.22).abs().mul(-9).exp().mul(0.5)).mul(0.6).add(0.15)
     const core = ray.cosRefracted.pow(2).mul(mx_noise_float(p.mul(3).add(vec3(0, time.mul(0.05), 0))).mul(0.5).add(0.5))
-    const heart = rgb('#ffb070').mul(pulse).mul(core).mul(intimate.mul(0.8).add(near.mul(0.08))).mul(frost.oneMinus()).mul(0.3)
+    const heart = rgb(hsl.integer(59, 100, 79)).mul(pulse).mul(core).mul(intimate.mul(0.8).add(near.mul(0.08))).mul(frost.oneMinus()).mul(0.3)
 // Interior light must pass the surface: the Fresnel transmittance dims it at the limb where reflection takes over.
     const transmit = fresnel(facing, 0.02).oneMinus()
     const highlight = environmentHighlight(environment, n, 0.04).mul(fresnel(facing, 0.02)).mul(0.6)

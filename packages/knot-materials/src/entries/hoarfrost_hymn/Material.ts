@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_fractal_noise_vec3, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {crackNetwork} from '../../candidates/deepseek/lib/crackNetwork.ts'
@@ -40,12 +41,12 @@ export default class extends KnotMaterial {
       .mul(age.mul(0.45).add(0.4)).clamp()
     const crizzle = mx_noise_float(p.mul(78).add(vec3(0, t.mul(0.02), 0))).mul(0.5).add(0.5)
     const needleSpark = mx_noise_float(p.mul(150).add(vec3(0, t.mul(0.05), 0))).mul(0.5).add(0.5)
-    const stone = mix(color('#08111c'), color('#16304a'), mx_fractal_noise_float(p.mul(6), 3, 2, 0.5).mul(0.5).add(0.5))
-    const ice = mix(color('#2073cc'), color('#bcdcff'), rime.mul(0.6).add(crizzle.mul(0.22)))
+    const stone = mix(color(hsl.integer(254, 42, 8)), color(hsl.integer(250, 57, 20)), mx_fractal_noise_float(p.mul(6), 3, 2, 0.5).mul(0.5).add(0.5))
+    const ice = mix(color(hsl.integer(254, 88, 48.4)), color(hsl.integer(251, 100, 86.3)), rime.mul(0.6).add(crizzle.mul(0.22)))
 // The amber heart only shows where the ice has not closed yet.
     const warm = grazing.pow(1.8).mul(rime.oneMinus().mul(0.5).add(0.22)).mul(near.mul(0.3).add(0.7))
     const relief = rime.mul(0.9).add(branch.coverage.mul(0.4)).add(twig.coverage.mul(0.25)).add(seed.mul(rosette).mul(0.22))
-    this.colorNode = mix(stone, ice, rime.mul(0.85).clamp()).add(color('#ff8a3c').mul(warm).mul(rime.oneMinus()).mul(0.45))
+    this.colorNode = mix(stone, ice, rime.mul(0.85).clamp()).add(color(hsl.integer(51, 100, 71)).mul(warm).mul(rime.oneMinus()).mul(0.45))
     const frostNormal: Node<'vec3'> = proceduralNormal(relief, float(0.0024).mul(branch.visibility.mul(0.5).add(0.55)))
     this.normalNode = frostNormal
     this.metalnessNode = rime.mul(-0.1).add(0.06)
@@ -55,10 +56,10 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.2
     const glint = glints(frostNormal, 170).mul(rime)
     const spark = glints(frostNormal, 420).mul(rime.pow(0.6)).mul(facing.pow(1.5))
-    this.emissiveNode = color('#5aa8ff').mul(rime.pow(2.2)).mul(0.26)
-      .add(color('#eaf6ff').mul(glint).mul(near.mul(0.35).add(0.03)))
-      .add(color('#ffb066').mul(warm.pow(2)).mul(intimate.mul(0.4).add(0.12)).mul(0.6))
-      .add(color('#eaf4ff').mul(spark).mul(near.mul(0.18).add(0.02)))
-      .add(color('#ffffff').mul(needleSpark.smoothstep(0.74, 0.8)).mul(rime).mul(near.mul(0.5).add(0.05)).mul(0.7))
+    this.emissiveNode = color(hsl.integer(253, 100, 67.4)).mul(rime.pow(2.2)).mul(0.26)
+      .add(color(hsl.integer(240, 100, 96)).mul(glint).mul(near.mul(0.35).add(0.03)))
+      .add(color(hsl.integer(63, 100, 79)).mul(warm.pow(2)).mul(intimate.mul(0.4).add(0.12)).mul(0.6))
+      .add(color(hsl.integer(250, 100, 96)).mul(spark).mul(near.mul(0.18).add(0.02)))
+      .add(color(hsl.integer(0, 0, 100)).mul(needleSpark.smoothstep(0.74, 0.8)).mul(rime).mul(near.mul(0.5).add(0.05)).mul(0.7))
   }
 }

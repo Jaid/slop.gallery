@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'basalt_forge',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The mountain has not quite finished making this stone.',
   placeholder: {
-    color: '#fdf6e3',
+    color: hsl.integer(90, 77, 97),
     shading: 'stone',
   },
 } as const satisfies KnotData

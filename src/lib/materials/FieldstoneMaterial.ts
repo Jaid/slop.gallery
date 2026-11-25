@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, exp, float, hash, max, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -96,10 +97,10 @@ export default class FieldstoneMaterial extends MeshStandardNodeMaterial {
     const darkFlecks = speckle.smoothstep(0.28, 0.18).mul(fine)
     const bandDirection = vec2(tiltAngle.cos(), tiltAngle.sin())
     const bands = local.dot(bandDirection).mul(38).add(grainAt(6, 2).mul(2.5)).sin().mul(0.5).add(0.5)
-    const granite = mix(color('#77746f'), color('#55534f'), shade).mul(darkFlecks.mul(-0.45).add(1)).add(vec3(flecks.mul(0.12)))
-    const sandstone = mix(mix(color('#8a6a47'), color('#654a31'), shade), mix(color('#9c7b57'), color('#73563a'), shade), bands.mul(detail))
-    const basalt = mix(color('#43413e'), color('#302e2c'), shade).mul(grainAt(40, 3).mul(0.06).add(1))
-    const quartzite = mix(color('#a39a89'), color('#857c6c'), shade).mul(grainAt(18, 4).mul(0.08).add(1))
+    const granite = mix(color(hsl.integer(81, 5, 49)), color(hsl.integer(85, 4, 36)), shade).mul(darkFlecks.mul(-0.45).add(1)).add(vec3(flecks.mul(0.12)))
+    const sandstone = mix(mix(color(hsl.integer(68, 41, 48)), color(hsl.integer(63, 40, 34)), shade), mix(color(hsl.integer(69, 39, 54)), color(hsl.integer(65, 40, 39)), shade), bands.mul(detail))
+    const basalt = mix(color(hsl.integer(78, 4, 28)), color(hsl.integer(68, 4, 20)), shade).mul(grainAt(40, 3).mul(0.06).add(1))
+    const quartzite = mix(color(hsl.integer(83, 15, 64)), color(hsl.integer(82, 15, 52)), shade).mul(grainAt(18, 4).mul(0.08).add(1))
     const tone = select(isGranite, granite, select(isSandstone, sandstone, select(isBasalt, basalt, quartzite)))
     // Broad split facets and a dome toward the middle, tilted per stone, so neighbors catch the light differently.
     const dome = border.sub(joint).div(0.05).clamp(0, 1)
@@ -113,8 +114,8 @@ export default class FieldstoneMaterial extends MeshStandardNodeMaterial {
     const sand = mx_noise_float(positionWorld.mul(160)).mul(0.5).add(0.5).mul(fine)
     // Lime mortar, darkening into the gap along each stone.
     const cavity = border.div(joint).clamp(0, 1)
-    const mortar = mix(color('#6a6357'), color('#7a7266'), sand).mul(cavity.mul(0.4).add(0.6)).mul(mx_noise_float(positionWorld.mul(9)).mul(0.08).add(0.95))
-    const average = color('#625b50')
+    const mortar = mix(color(hsl.integer(81, 12, 42)), color(hsl.integer(79, 12, 49)), sand).mul(cavity.mul(0.4).add(0.6)).mul(mx_noise_float(positionWorld.mul(9)).mul(0.08).add(0.95))
+    const average = color(hsl.integer(79, 12, 39))
     let surface: Node<'vec3'> = mix(mortar, faceTone, stone)
     surface = mix(average.mul(mineral.mul(0.12).add(0.94)), surface, detail)
     if (soot) {

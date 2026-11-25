@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'jade_crazing',
   candidateId: 'kimi',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Hairline paths cross a green glaze like rivers seen from far above.',
   placeholder: {
-    color: '#b7e3cd',
+    color: hsl.integer(163, 44, 86),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentGeometry, color, exp, Fn, mix, mx_fractal_noise_float, mx_noise_float, positionViewDirection, sin, tangentGeometry, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/deepseek/lib/bumpNormal.ts'
@@ -46,8 +47,8 @@ export default class extends KnotMaterial {
     const parallax = vec2(tangentView.div(7.177), bitangentView.div(0.8168)).mul(0.021)
     const tissue = mx_fractal_noise_float(p.mul(4).add(vec3(0, 0, time.mul(0.012))), 4, 2.02, 0.55).mul(0.5).add(0.5)
     const milk = mx_noise_float(p.mul(10.5).add(vec3(2.4, 8.2, 1.1))).mul(0.5).add(0.5)
-    const skin = mix(mix(color('#01030a'), color('#061427'), tissue.smoothstep(0.18, 0.8)), color('#9aa9c9'), milk.mul(0.06))
-    const flesh = mix(skin, color('#1c0d36'), milk.mul(0.16).mul(bell))
+    const skin = mix(mix(color(hsl.integer(261, 62, 3)), color(hsl.integer(256, 63, 9)), tissue.smoothstep(0.18, 0.8)), color(hsl.integer(265, 31, 69)), milk.mul(0.06))
+    const flesh = mix(skin, color(hsl.integer(296, 71, 11)), milk.mul(0.16).mul(bell))
     const canalCoord = tube.y.mul(10).add(tube.x.mul(10)).add(parallax.y.mul(9))
     const canal = sin(canalCoord.mul(TAU)).max(0).pow(12)
     const canalPulse = sin(time.mul(1.2).sub(tube.x.mul(TAU * 3))).max(0).pow(4)
@@ -70,21 +71,21 @@ export default class extends KnotMaterial {
     const pulse = sin(time.mul(1.3).sub(tube.x.mul(TAU * 2)).add(random.z.mul(TAU))).max(0).pow(8)
     const wave = sin(time.mul(0.31).sub(tube.x.mul(TAU * 1.5))).max(0).pow(10)
     const energy = pulse.mul(0.55).add(0.45).mul(wave.mul(0.5).add(0.5)).mul(active).mul(1.25)
-    const lampColor = mix(mix(color('#4dffdc'), color('#ff8fe6'), random.x.smoothstep(0.3, 0.62)), color('#8ba8ff'), random.y.smoothstep(0.55, 0.82))
+    const lampColor = mix(mix(color(hsl.integer(177, 100, 88.7)), color(hsl.integer(336, 99, 76)), random.x.smoothstep(0.3, 0.62)), color(hsl.integer(269, 99, 70)), random.y.smoothstep(0.55, 0.82))
     const warmAccent = random.y.smoothstep(0.86, 0.95)
-    const lamp = mix(mix(lampColor, color('#ffcf9d'), warmAccent.mul(0.7)), color('#ffffff'), core.mul(0.3))
+    const lamp = mix(mix(lampColor, color(hsl.integer(68, 100, 86.6)), warmAccent.mul(0.7)), color(hsl.integer(0, 0, 100)), core.mul(0.3))
     const socket = exp(lampDistance.sub(lampSize.mul(1.7)).pow2().mul(-1400)).mul(active)
     const organCoord = vec2(tube.x.mul(7.177), tube.y.mul(0.8168)).add(parallax.mul(vec2(7.177, 0.8168)))
     const organDistance = organCoord.sub(vec2(1.35, 0.3)).length().min(organCoord.sub(vec2(4.9, 0.62)).length())
     const organ = organDistance.smoothstep(0.05, 0.2).oneMinus().mul(0.7)
-    this.colorNode = mix(mix(flesh, mix(skin, color('#b9e0d6'), canal.mul(0.35).add(gut.mul(0.2))), bell.mul(0.55)), color('#070208'), socket.mul(0.6)).add(color('#54202b').mul(organ.mul(0.2)))
+    this.colorNode = mix(mix(flesh, mix(skin, color(hsl.integer(178, 38, 86)), canal.mul(0.35).add(gut.mul(0.2))), bell.mul(0.55)), color(hsl.integer(323, 52, 3)), socket.mul(0.6)).add(color(hsl.integer(9, 58, 22)).mul(organ.mul(0.2)))
     this.metalness = 0
     this.roughness = 0.14
     this.ior = 1.36
     this.clearcoat = 1
     this.clearcoatRoughness = 0.045
     this.sheen = 0.35
-    this.sheenNode = color('#4b62cf').mul(0.42)
+    this.sheenNode = color(hsl.integer(271, 77, 46.5)).mul(0.42)
     this.sheenRoughness = 0.34
 // The skin carries fine radial canals and the soft rim of every bell, but no hard shell.
     const rimHeight = edgeRim.mul(0.0009)
@@ -102,15 +103,15 @@ export default class extends KnotMaterial {
     const gutLight = gut.mul(swim.mul(0.5).add(0.5)).mul(0.5)
     const canalLight = canal.mul(canalPulse.mul(0.35).add(0.08)).mul(0.16)
     const rimLight = edgeRim.mul(swim.mul(0.6).add(0.4)).mul(bell.mul(0.4).add(0.6)).mul(0.3)
-    const bodyFlash = color('#42e6cf').mul(wave.mul(0.05)).mul(bell)
+    const bodyFlash = color(hsl.integer(181, 86, 81)).mul(wave.mul(0.05)).mul(bell)
     this.emissiveNode = lamp.mul(coreLight.add(haloLight))
-      .add(color('#ff9d74').mul(gutLight)).add(color('#ff7d8f').mul(organ.mul(0.16)))
-      .add(color('#67e8d6').mul(gut2.mul(0.12)))
-      .add(color('#7ff0e0').mul(canalLight))
-      .add(color('#b9fff1').mul(rimLight))
+      .add(color(hsl.integer(43, 99, 75)).mul(gutLight)).add(color(hsl.integer(13, 100, 70)).mul(organ.mul(0.16)))
+      .add(color(hsl.integer(183, 77, 83)).mul(gut2.mul(0.12)))
+      .add(color(hsl.integer(184, 75, 86)).mul(canalLight))
+      .add(color(hsl.integer(180, 99, 94)).mul(rimLight))
       .add(bodyFlash)
-      .add(color('#2fe8cd').mul(grazing.pow(3)).mul(0.24))
-      .add(color('#ff73b8').mul(grazing.pow(6)).mul(0.12))
-      .add(color('#7fa9c6').mul(facing.pow(5)).mul(0.03))
+      .add(color(hsl.integer(180, 91, 81)).mul(grazing.pow(3)).mul(0.24))
+      .add(color(hsl.integer(352, 100, 70)).mul(grazing.pow(6)).mul(0.12))
+      .add(color(hsl.integer(239, 37, 67)).mul(facing.pow(5)).mul(0.03))
   }
 }

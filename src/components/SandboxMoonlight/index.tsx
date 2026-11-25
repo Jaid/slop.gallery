@@ -13,8 +13,8 @@ import {moonlight} from '#src/worlds/sandbox/moon.ts'
 export default function SandboxMoonlight({blur = 1, color = moonlight.color, geometry, intensity = moonlight.intensity, mapSize = 2048}: {
   /** a factor on how widely the graphics mode blurs the shadow’s edges, 1 by default */
   blur?: number
-  /** as #rrggbb, the Cell’s moon’s by default */
-  color?: string
+  /** as packed sRGB, the Cell’s moon’s by default */
+  color?: number
   geometry: ReturnType<typeof sunGeometry>
   /** how strongly it shines, the Cell’s moon’s by default */
   intensity?: number

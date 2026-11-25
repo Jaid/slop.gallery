@@ -2,6 +2,7 @@ import type {SkyPalette} from '../materials/ProceduralSky.ts'
 import type {Vec3} from './types.ts'
 
 import {RADIANS_TO_DEGREES as degrees} from 'math'
+import hsl from 'okhsl'
 import optis from 'optis'
 import readPermalink from 'read-permalink'
 import {create} from 'zustand'
@@ -19,7 +20,7 @@ export type LightingPreset = {
   }
   /** the renderer’s tone mapping exposure */
   exposure: number
-  hemisphere: Light & {ground: string}
+  hemisphere: Light & {ground: number}
   /** multiplies every point and spot light, the rooms’ own lamps */
   lamps: number
   sky: SkyPalette
@@ -30,7 +31,7 @@ export type LightingPreset = {
 }
 
 type Light = {
-  color: string
+  color: number
   intensity: number
 }
 
@@ -39,16 +40,16 @@ const presets = {
     title: 'Noon',
     // Hardly any flat fill: the rooms are lit by their own lamps, so surfaces fall off into shade between them.
     ambient: {
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       intensity: 0,
     },
     hemisphere: {
-      color: '#ecf3ff',
-      ground: '#a29270',
+      color: hsl.integer(261, 100, 95.6),
+      ground: hsl.integer(86, 30, 61),
       intensity: 1,
     },
     sun: {
-      color: '#fff0d7',
+      color: hsl.integer(81, 100, 95.4),
       intensity: 2,
       direction: middaySun,
     },
@@ -64,16 +65,16 @@ const presets = {
   golden_hour: {
     title: 'Golden hour',
     ambient: {
-      color: '#ffe4c8',
+      color: hsl.integer(68, 100, 92.3),
       intensity: 0.12,
     },
     hemisphere: {
-      color: '#ffd9b0',
-      ground: '#6e5440',
+      color: hsl.integer(68, 99, 89),
+      ground: hsl.integer(59, 31, 38),
       intensity: 0.5,
     },
     sun: {
-      color: '#ffb36b',
+      color: hsl.integer(63, 100, 79.6),
       intensity: 2.8,
       direction: [-8, 2.8, 3],
     },
@@ -85,14 +86,14 @@ const presets = {
     sky: {
       brightness: 0.85,
       cloudCover: 0.35,
-      cloudLit: '#ffd2a0',
-      cloudShade: '#8a7280',
-      cloudWarm: '#ffb070',
-      glow: '#ffb070',
-      horizon: '#ffc58a',
-      sun: '#ffd08a',
+      cloudLit: hsl.integer(69, 100, 87.2),
+      cloudShade: hsl.integer(342, 18, 51),
+      cloudWarm: hsl.integer(59, 100, 79),
+      glow: hsl.integer(59, 100, 79),
+      horizon: hsl.integer(66, 100, 84),
+      sun: hsl.integer(77, 100, 86.5),
       sunRadiance: 30,
-      zenith: '#4a6fa8',
+      zenith: hsl.integer(259, 52, 47),
     },
     exposure: 1,
     lamps: 1.4,
@@ -100,16 +101,16 @@ const presets = {
   dusk: {
     title: 'Dusk',
     ambient: {
-      color: '#b8c0ff',
+      color: hsl.integer(279, 100, 79.5),
       intensity: 0.25,
     },
     hemisphere: {
-      color: '#6d7fc2',
-      ground: '#3a3040',
+      color: hsl.integer(272, 51, 55),
+      ground: hsl.integer(313, 23, 23),
       intensity: 0.6,
     },
     sun: {
-      color: '#ff8a5c',
+      color: hsl.integer(41, 99, 71),
       intensity: 0.5,
       direction: [-8, 0.9, 3],
     },
@@ -121,14 +122,14 @@ const presets = {
     sky: {
       brightness: 0.7,
       cloudCover: 0.3,
-      cloudLit: '#c2768a',
-      cloudShade: '#3a3456',
-      cloudWarm: '#ff8a5c',
-      glow: '#ff7a4a',
-      horizon: '#f08a5d',
-      sun: '#ff9a60',
+      cloudLit: hsl.integer(3, 46, 60),
+      cloudShade: hsl.integer(291, 38, 25),
+      cloudWarm: hsl.integer(41, 99, 71),
+      glow: hsl.integer(40, 99, 68),
+      horizon: hsl.integer(44, 80, 69),
+      sun: hsl.integer(49, 100, 74.3),
       sunRadiance: 12,
-      zenith: '#1d2a5c',
+      zenith: hsl.integer(270, 67, 20),
     },
     exposure: 1.1,
     lamps: 1.3,
@@ -136,16 +137,16 @@ const presets = {
   night: {
     title: 'Night',
     ambient: {
-      color: '#8da2d6',
+      color: hsl.integer(267, 49, 67),
       intensity: 0.08,
     },
     hemisphere: {
-      color: '#2a3a66',
-      ground: '#15120f',
+      color: hsl.integer(267, 52, 26),
+      ground: hsl.integer(67, 11, 9),
       intensity: 0.25,
     },
     sun: {
-      color: '#a8c4ff',
+      color: hsl.integer(265, 100, 79),
       intensity: 0.35,
       direction: [5, 7, -4],
     },
@@ -157,14 +158,14 @@ const presets = {
     sky: {
       brightness: 1,
       cloudCover: 0.25,
-      cloudLit: '#3a4560',
-      cloudShade: '#10131c',
-      cloudWarm: '#000000',
-      glow: '#6b85c0',
-      horizon: '#1a2440',
-      sun: '#dfe8ff',
+      cloudLit: hsl.integer(267, 31, 30),
+      cloudShade: hsl.integer(270, 24, 9),
+      cloudWarm: hsl.integer(0, 0, 0),
+      glow: hsl.integer(266, 49, 56),
+      horizon: hsl.integer(268, 48, 16),
+      sun: hsl.integer(269, 100, 92),
       sunRadiance: 6,
-      zenith: '#050a1a',
+      zenith: hsl.integer(267, 56, 6),
     },
     exposure: 1.15,
     lamps: 1.5,

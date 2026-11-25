@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, Fn as fn, Loop as loop, mix, mx_noise_float, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -66,7 +67,7 @@ export default class extends KnotMaterial {
     const pinColor = spectralColor(pinRnd.x.mul(12).add(pinAngle.mul(4)))
     // Volcanic obsidian host matrix with smoky swirls
     const smoke = mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5)
-    const hostTint = mix(color('#08060a'), color('#171020'), smoke.mul(0.35))
+    const hostTint = mix(color(hsl.integer(309, 20, 4.5)), color(hsl.integer(304, 39, 9)), smoke.mul(0.35))
     // Physical surface properties
     this.colorNode = hostTint
     this.metalness = 0
@@ -82,8 +83,8 @@ export default class extends KnotMaterial {
     const harlequinEmission = harlequinFire.mul(near.mul(0.4).add(0.7)).mul(3.4)
     const pinfireEmission = pinColor.mul(pinPoint).mul(pinFlash).mul(4.8)
     const glowTint = mx_noise_float(subSurfaceP.mul(2.5)).mul(0.5).add(0.5)
-    const deepGlow = mix(color('#e84118'), color('#00c8ff'), glowTint).mul(smoke.pow(2)).mul(intimate).mul(0.4)
-    const rimViolet = color('#6c5ce7').mul(rim.pow(3)).mul(0.3)
+    const deepGlow = mix(color(hsl.integer(34, 96.7, 56)), color(hsl.integer(226, 100, 74)), glowTint).mul(smoke.pow(2)).mul(intimate).mul(0.4)
+    const rimViolet = color(hsl.integer(283, 84, 50)).mul(rim.pow(3)).mul(0.3)
     this.emissiveNode = harlequinEmission
       .add(pinfireEmission)
       .add(deepGlow)

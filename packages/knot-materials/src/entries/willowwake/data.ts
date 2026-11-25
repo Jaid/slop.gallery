@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: FLhq233R9MU4dj1; fixture: knot-material-shaders; result: success.
 export default {
   id: 'willowwake',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Blue gardens sleep in bone-white porcelain. Come close: the painted leaves remember spring, and hairline gold mends the winter.',
   placeholder: {
-    color: '#f0e7cf',
+    color: hsl.integer(90, 46, 91.7),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,6 +1,10 @@
+import hsl from 'okhsl'
+
+import {cssHex} from '#src/lib/color.ts'
+
 import css from './style.module.sass'
 
-export const candidateSignBackground = '#10252b'
+export const candidateSignBackground = hsl.integer(218, 45, 15)
 export const candidateSignTextureSize = [1024, 246] as const
 
 /** The printed face of a model’s sign: its mark and its name, fitted, without exhibit numbers. */
@@ -12,7 +16,7 @@ export default function KnotCandidateSignFace({title, icon}: {
     className={css.face} style={{
       width: candidateSignTextureSize[0],
       height: candidateSignTextureSize[1],
-      background: candidateSignBackground,
+      background: cssHex(candidateSignBackground),
     }}
   >
     <div className={css.border} />

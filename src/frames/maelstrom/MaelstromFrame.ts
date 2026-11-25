@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, log, mix, mx_fractal_noise_float, mx_noise_float, normalView, positionViewDirection, time, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -48,9 +49,9 @@ const vortex = {
   spin: 1.2,
 }
 /** the portal’s colors: its deep middle, its swirl and its hot rim */
-const core = color('#02140b')
-const swirl = color('#3fd98a')
-const rim = color('#d4ffe8')
+const core = color(hsl.integer(161, 88, 7))
+const swirl = color(hsl.integer(156, 89, 75))
+const rim = color(hsl.integer(162, 100, 95.8))
 
 /** One of the Spook Orb’s frames, a maelstrom: portal fluid streaming round the work over deeper currents, drawn into a whirling portal on every corner. */
 export default class MaelstromFrame extends PortraitFrame {
@@ -58,7 +59,7 @@ export default class MaelstromFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#3fd98a'
+  override readonly tint = hsl.integer(156, 89, 75)
   override readonly title = 'Ectoplasm maelstrom'
 
   override createGeometry(width: number, height: number) {
@@ -100,7 +101,7 @@ class MaelstromMaterial extends MeshPhysicalNodeMaterial {
     for (const [index, {depth, speed, light}] of layers.entries()) {
       const at = current(depth, speed).add(warp.mul(index + 1)).mul(vec3(34, 34, 50)).add(vec3(index * 7.1, 0, time.mul(0.12)))
       const filament = float(1).sub(mx_noise_float(at).abs().mul(6)).max(0).pow(3)
-      deep = deep.add(mix(swirl, color('#147a6a'), index / (layers.length - 1)).mul(filament.mul(light)))
+      deep = deep.add(mix(swirl, color(hsl.integer(179, 92, 45)), index / (layers.length - 1)).mul(filament.mul(light)))
     }
     // The vortex on the nearest corner, turning one way on the top right and bottom left corners and the other way on the others.
     const corner = p.xy.sign()
@@ -127,7 +128,7 @@ class MaelstromMaterial extends MeshPhysicalNodeMaterial {
     const throb = time.mul(0.9).sin().mul(0.1).add(1)
     const bright: Float = pattern.smoothstep(0.35, 0.9).pow(1.5)
     const glow = mix(core, swirl, bright).mul(bright.mul(1.7).add(0.04)).add(rim.mul(bright.pow(4)).mul(0.7))
-    this.colorNode = mix(color('#010a05'), color('#0a3a22'), pattern.mul(0.5)).mul(hole.oneMinus())
+    this.colorNode = mix(color(hsl.integer(162, 84, 4.6)), color(hsl.integer(157, 92, 21)), pattern.mul(0.5)).mul(hole.oneMinus())
     this.emissiveNode = glow.add(deep.mul(pull.oneMinus()).mul(0.8)).add(swirl.mul(sheen.mul(0.35))).mul(throb).mul(hole.oneMinus()).add(rim.mul(ring.mul(2.6)))
     // The fluid dips into a funnel toward every eye, and its swirls ripple its surface.
     this.normalNode = heightNormal(pull.mul(pull).mul(-0.004).add(pattern.mul(0.0007)))

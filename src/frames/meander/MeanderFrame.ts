@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {clamp, float, min, vec2} from 'three/tsl'
 
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
@@ -72,7 +73,7 @@ export default class MeanderFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#8a6a40'
+  override readonly tint = hsl.integer(73, 48, 47)
   override readonly title = 'Bronze meander'
 
   override createGeometry(width: number, height: number) {
@@ -85,7 +86,7 @@ export default class MeanderFrame extends PortraitFrame {
         ...bronze,
         patina: {
           amount: 0.85,
-          color: '#3d8069',
+          color: hsl.integer(169, 61, 48),
         },
       },
       finish: surface => {

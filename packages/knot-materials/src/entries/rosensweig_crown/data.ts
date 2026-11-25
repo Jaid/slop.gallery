@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: H32IciRDAWJfwki; fixture: knot-material-shaders; result: success.
 export default {
   id: 'rosensweig_crown',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A pool of liquid night, bristling with obedient spikes. They rise toward whoever dares to bring a magnet near.',
   placeholder: {
-    color: '#14161d',
+    color: hsl.integer(273, 17, 10),
     shading: 'liquid',
   },
 } as const satisfies KnotData

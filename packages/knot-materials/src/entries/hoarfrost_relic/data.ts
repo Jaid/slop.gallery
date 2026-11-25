@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: KsUDOPCUWqzzKMp; fixture: knot-material-shaders; result: success.
 export default {
   id: 'hoarfrost_relic',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.012,
   flavorText: 'Night stone exhales winter; white branches creep over it, waiting for a nearer gaze to glitter.',
   placeholder: {
-    color: '#bfe5eb',
+    color: hsl.integer(208, 45, 88),
     shading: 'glass',
   },
 } as const satisfies KnotData

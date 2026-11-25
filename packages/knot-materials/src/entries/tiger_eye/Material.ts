@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, tangentLocal, time, uv, vec3} from 'three/tsl'
 
 import {chatoyance, studioLamps} from '../../candidates/mimo/lib/chatoyance.ts'
@@ -28,8 +29,8 @@ export default class extends BaseKnotMaterial {
     const bandField = p.dot(vec3(0.2, 1, 0.15)).mul(2.2).add(mx_noise_float(p.mul(2.4)).mul(1.6)).add(time.mul(0.03))
     const band = opticalBands(bandField.mul(TAU).add(0.4))
     const silk = fiberRidge.mul(0.22).add(0.78)
-    const quartz = mix(color('#241204'), color('#c07a20'), band.mul(silk))
-    const hematite = color('#150a03')
+    const quartz = mix(color(hsl.integer(59, 68, 10)), color(hsl.integer(67, 85, 58)), band.mul(silk))
+    const hematite = color(hsl.integer(60, 56, 6.5))
     this.colorNode = mix(hematite, quartz, band.pow(1.5).mul(0.9).add(0.1))
     this.metalness = 0
     this.roughnessNode = mix(float(0.36), float(0.15), fiberRidge.mul(fiberVisible))
@@ -39,6 +40,6 @@ export default class extends BaseKnotMaterial {
     this.anisotropy = 0.88
     this.anisotropyRotation = 0
     this.envMapIntensity = 0.85
-    this.emissiveNode = color('#ffeec2').mul(hot).mul(band.pow(1.3)).mul(2.2).add(color('#e89a30').mul(glow).mul(band).mul(0.35)).add(color('#fff6dd').mul(hot).mul(near.mul(0.6).add(intimate.mul(0.5)))).add(color('#c07a30').mul(grazing.pow(2.5)).mul(0.2))
+    this.emissiveNode = color(hsl.integer(89, 100, 94.3)).mul(hot).mul(band.pow(1.3)).mul(2.2).add(color(hsl.integer(69, 88, 71)).mul(glow).mul(band).mul(0.35)).add(color(hsl.integer(91, 100, 97)).mul(hot).mul(near.mul(0.6).add(intimate.mul(0.5)))).add(color(hsl.integer(63, 76, 58)).mul(grazing.pow(2.5)).mul(0.2))
   }
 }

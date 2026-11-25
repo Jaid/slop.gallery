@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_vec3, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -39,7 +40,7 @@ export default class extends KnotMaterial {
       const alongCrack = mx_noise_float(q.mul(0.7)).mul(0.5).add(0.5).mul(0.65).add(0.35)
       const facet = normalViewGeometry.add(cellNoiseVec3(q.floor()).sub(0.5).mul(0.7)).normalize()
       const flare = glints(facet, 90).mul(2.2).add(0.04)
-      const tint = mix(color('#ffffff'), color('#3fb9e8'), depth * 3.4)
+      const tint = mix(color(hsl.integer(0, 0, 100)), color(hsl.integer(228, 86, 70)), depth * 3.4)
       fractureGlow = fractureGlow.add(tint.mul(crack).mul(flare).mul(alongCrack).mul(1 - depth * 2.1))
     }
     // Air sealed mid-rise, in two planes so the bubbles stream past one another.
@@ -48,9 +49,9 @@ export default class extends KnotMaterial {
     const sparkleNormal = normalViewGeometry.add(cellNoiseVec3(p.mul(240).floor()).sub(0.5).mul(0.9)).normalize()
     const snowGlitter = glints(sparkleNormal, 260).mul(frost).mul(near.mul(0.7).add(0.3))
     const groan = time.mul(0.05).sin().mul(0.12).add(0.88)
-    const deepWell = mix(color('#04355a'), color('#02182c'), facing.pow(1.5).oneMinus().mul(0.4))
-    const body = mix(color('#598fb8'), deepWell, facing.pow(1.3).mul(0.97).add(0.02))
-    this.colorNode = mix(body, color('#eef7fa'), frost.mul(0.18)).mul(groove.mul(-0.06).add(1))
+    const deepWell = mix(color(hsl.integer(248, 89, 22)), color(hsl.integer(248, 83, 10)), facing.pow(1.5).oneMinus().mul(0.4))
+    const body = mix(color(hsl.integer(243, 49, 57)), deepWell, facing.pow(1.3).mul(0.97).add(0.02))
+    this.colorNode = mix(body, color(hsl.integer(220, 44, 96.5)), frost.mul(0.18)).mul(groove.mul(-0.06).add(1))
     this.metalness = 0
     this.specularIntensity = 1.2
     this.roughnessNode = mix(float(0.035), float(0.58), frost)
@@ -59,11 +60,11 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = normalViewGeometry
     this.aoNode = groove.mul(-0.12).add(1)
     this.emissiveNode = fractureGlow.mul(facing.pow(3).mul(0.85).add(0.05)).mul(frost.mul(-0.6).add(1)).mul(near.mul(0.35).add(0.8)).mul(groan)
-      .add(color('#2aa8dd').mul(groove).mul(facing.mul(0.7).add(0.25)).mul(0.1))
-      .add(color('#ffffff').mul(bubbles).mul(facing.mul(0.6).add(0.4)).mul(intimate.mul(0.9).add(0.25)))
-      .add(color('#eaf7ff').mul(snowGlitter).mul(0.9))
-      .add(color('#ffffff').mul(glints(normalViewGeometry, 300)).mul(0.3))
-      .add(color('#9fd8f2').mul(rim).mul(0.16))
-      .add(color('#0d5a78').mul(facing.pow(3)).mul(0.65))
+      .add(color(hsl.integer(232, 89, 64)).mul(groove).mul(facing.mul(0.7).add(0.25)).mul(0.1))
+      .add(color(hsl.integer(0, 0, 100)).mul(bubbles).mul(facing.mul(0.6).add(0.4)).mul(intimate.mul(0.9).add(0.25)))
+      .add(color(hsl.integer(234, 100, 96.4)).mul(snowGlitter).mul(0.9))
+      .add(color(hsl.integer(0, 0, 100)).mul(glints(normalViewGeometry, 300)).mul(0.3))
+      .add(color(hsl.integer(228, 66, 83)).mul(rim).mul(0.16))
+      .add(color(hsl.integer(231, 88, 35)).mul(facing.pow(3)).mul(0.65))
   }
 }

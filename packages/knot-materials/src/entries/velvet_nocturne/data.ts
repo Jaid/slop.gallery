@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_nocturne',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Face it and the cloth is almost black; walk past and the whole garment catches fire.',
   displacement: 0.032,
   placeholder: {
-    color: '#5e0a1c',
+    color: hsl.integer(16, 89, 21),
     shading: 'fabric',
   },
 } as const satisfies KnotData

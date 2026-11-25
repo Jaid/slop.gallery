@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'photon_weave',
   candidateId: 'glm_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Light threads itself through a fabric with no ordinary fibers.',
   placeholder: {
-    color: '#ffce54',
+    color: hsl.integer(87, 100, 85.2),
     shading: 'fabric',
   },
 } as const satisfies KnotData

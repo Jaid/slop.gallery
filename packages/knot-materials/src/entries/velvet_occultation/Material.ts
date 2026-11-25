@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv, vec2} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -70,9 +71,9 @@ export default class extends KnotMaterial {
     const dustGate = vec2(cell.x.mul(19.1), cell.y.mul(7.3)).sin().mul(9127.13).fract().smoothstep(0.73, 0.88)
     const pulse = time.mul(1.7).add(cell.x.mul(2.3)).add(cell.y.mul(4.1)).sin().mul(0.5).add(0.5)
     const hue = facing.mul(0.42).add(pulse.mul(0.08)).add(grazing.mul(0.12))
-    const thread = mix(color('#10143c'), color('#362060'), tube.y.mul(3).add(tube.x.mul(2)).sin().mul(0.5).add(0.5))
+    const thread = mix(color(hsl.integer(274, 73, 11.4)), color(hsl.integer(295, 69, 21)), tube.y.mul(3).add(tube.x.mul(2)).sin().mul(0.5).add(0.5))
     const catColor = cosinePalette(hue, [0.38, 0.52, 0.8], [0.48, 0.4, 0.32], [1, 1, 1], [0.02, 0.28, 0.58])
-    this.colorNode = mix(thread, catColor.mul(0.8), catMask.mul(0.62)).add(color('#16103d').mul(cat.eye).mul(0.25))
+    this.colorNode = mix(thread, catColor.mul(0.8), catMask.mul(0.62)).add(color(hsl.integer(283, 74, 11)).mul(cat.eye).mul(0.25))
     this.metalness = 0.35
     this.roughnessNode = float(0.19).add(catMask.mul(0.08)).add(grazing.mul(0.08))
     this.clearcoat = 0.65
@@ -80,6 +81,6 @@ export default class extends KnotMaterial {
     this.iridescence = 0.35
     this.iridescenceThicknessNode = facing.mul(280).add(180)
     this.normalNode = proceduralNormal(catMask.mul(0.004).add(cat.dots.mul(0.006)).add(cat.eye.mul(0.009)), 0.004)
-    this.emissiveNode = catColor.mul(catMask.mul(0.72).add(cat.dots.mul(2.35)).add(cat.stars.mul(0.18)).add(cat.eye.mul(1.3))).mul(near.mul(0.45).add(0.55)).add(color('#fff4d2').mul(cat.eye).mul(pulse.mul(0.35).add(0.65)).mul(near)).add(color('#7c8cff').mul(dust.mul(dustGate).mul(0.9).mul(intimate.mul(0.55).add(0.25)) as unknown as Node<'float'>))
+    this.emissiveNode = catColor.mul(catMask.mul(0.72).add(cat.dots.mul(2.35)).add(cat.stars.mul(0.18)).add(cat.eye.mul(1.3))).mul(near.mul(0.45).add(0.55)).add(color(hsl.integer(92, 100, 96.2)).mul(cat.eye).mul(pulse.mul(0.35).add(0.65)).mul(near)).add(color(hsl.integer(275, 100, 63)).mul(dust.mul(dustGate).mul(0.9).mul(intimate.mul(0.55).add(0.25)) as unknown as Node<'float'>))
   }
 }

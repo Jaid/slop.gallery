@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_vec3, mx_noise_float, normalLocal, refract, time, vec3} from 'three/tsl'
 
 import {proceduralNormal, viewerFrame} from '../../lib/index.ts'
@@ -38,24 +39,24 @@ export default class extends KnotMaterial {
       const fern = pinna.max(stem).mul(extent).mul(plane).mul(seed.z.smoothstep(0.25, 0.5))
       // Front-to-back compositing supplies real occlusion, not additive overlapping leaves.
       const opacity = fern.mul(0.84)
-      const fossil = mix(color('#1d0902'), color('#67300c'), float(depth)).mul(0.3)
+      const fossil = mix(color(hsl.integer(46, 75, 7)), color(hsl.integer(49, 82, 28)), float(depth)).mul(0.3)
       volume = volume.add(fossil.mul(opacity).mul(visibility))
       visibility = visibility.mul(opacity.oneMinus())
       const bubble = c.sub(seed.sub(0.5).mul(0.4)).length().sub(0.135).abs().smoothstep(0.009, 0.035).oneMinus().mul(seed.y.smoothstep(0.7, 0.9))
-      volume = volume.add(color('#ffc45a').mul(bubble).mul(visibility).mul(0.035))
+      volume = volume.add(color(hsl.integer(79.6, 100, 83)).mul(bubble).mul(visibility).mul(0.035))
     }
     const inner = p.add(ray.mul(chord.mul(0.7)))
     const flow = mx_noise_float(inner.mul(8).add(vec3(0, time.mul(0.035), 0))).mul(0.5).add(0.5)
-    const light = mix(color('#8e2602'), color('#ffb32b'), flow.mul(0.5).add(facing.mul(0.4)))
+    const light = mix(color(hsl.integer(36, 99, 34)), color(hsl.integer(76, 100, 79)), flow.mul(0.5).add(facing.mul(0.4)))
     const caustic = inner.y.mul(32).add(inner.x.mul(19)).add(flow.mul(9)).sin().smoothstep(0.8, 1)
-    const backlight = light.mul(facing.mul(0.8).add(0.45)).add(color('#ffe2a0').mul(caustic).mul(0.2))
+    const backlight = light.mul(facing.mul(0.8).add(0.45)).add(color(hsl.integer(87, 100, 91)).mul(caustic).mul(0.2))
     volume = volume.add(backlight.mul(visibility))
-    this.colorNode = color('#2a0d02')
+    this.colorNode = color(hsl.integer(44, 83, 10))
     this.roughness = 0.14
     this.ior = 1.54
     this.clearcoat = 0.8
     this.clearcoatRoughness = 0.09
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(22)).mul(0.0001), 1)
-    this.emissiveNode = volume.mul(near.mul(0.2).add(0.8)).add(color('#dd750b').mul(grazing.pow(4)).mul(0.08))
+    this.emissiveNode = volume.mul(near.mul(0.2).add(0.8)).add(color(hsl.integer(56, 97, 61.4)).mul(grazing.pow(4)).mul(0.08))
   }
 }

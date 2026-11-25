@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, hash, log, max, min, mix, mx_noise_float, normalGeometry, positionGeometry, select, sqrt, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -56,7 +57,7 @@ export default class LimestoneMaterial extends MeshStandardNodeMaterial {
     const grain = mix(float(0.5), unit(mx_noise_float(p.mul(260))), fine)
     // Fine bioclastic sand: specks of broken shell everywhere, a little darker or paler than the matrix.
     const debris = mix(float(0.5), unit(mx_noise_float(p.mul(140).add(11))), fine)
-    let stone: Node<'vec3'> = mix(color('#d8ccb4'), color('#b6b6ad'), clouds.mul(0.75))
+    let stone: Node<'vec3'> = mix(color(hsl.integer(85, 27, 82)), color(hsl.integer(107, 8, 74)), clouds.mul(0.75))
     stone = stone.mul(bedding.sub(0.5).mul(0.07).add(grain.sub(0.5).mul(0.08)).add(debris.sub(0.5).smoothstep(0.25, 0.4).mul(-0.06)).add(debris.sub(0.5).negate().smoothstep(0.25, 0.4).mul(0.04)).add(1))
     // Shell fragments: curved slivers, cut as crescents a centimeter or two across where a face passes through them.
     const shell = scatter(p, 0.05, 0.5, 1)
@@ -111,14 +112,14 @@ export default class LimestoneMaterial extends MeshStandardNodeMaterial {
     const stylolite = inside(seamOffset.abs().sub(0.0004)).mul(seamPresence).mul(small)
     // Calcite flecks glint in the honed face.
     const sparkle = unit(mx_noise_float(p.mul(900))).smoothstep(0.82, 0.9).mul(visibleDetail(footprint, 0.0015))
-    const ammoniteTone = mix(color('#c3b190'), color('#a6967a'), ribs.mul(0.6))
-    stone = mix(stone, color('#e6dfcf'), ossicle.mul(0.55))
-    stone = mix(stone, mix(color('#a29276'), color('#e2dac8'), shell.random(9)), shells.mul(0.7))
+    const ammoniteTone = mix(color(hsl.integer(83, 30, 73)), color(hsl.integer(82, 25, 63)), ribs.mul(0.6))
+    stone = mix(stone, color(hsl.integer(87, 27, 89)), ossicle.mul(0.55))
+    stone = mix(stone, mix(color(hsl.integer(82, 25, 61)), color(hsl.integer(87, 27, 87)), shell.random(9)), shells.mul(0.7))
     stone = mix(stone, ammoniteTone, inAmmonite.mul(0.85))
-    stone = mix(stone, color('#76694f'), suture.mul(inAmmonite).mul(0.7))
-    stone = mix(stone, mix(color('#8c6a46'), color('#b08a62'), fibers), belemniteBody.mul(0.75))
-    stone = mix(stone, color('#4d3b26'), canal.mul(0.6))
-    stone = mix(stone, color('#867d6f'), stylolite.mul(0.7))
+    stone = mix(stone, color(hsl.integer(84, 27, 45)), suture.mul(inAmmonite).mul(0.7))
+    stone = mix(stone, mix(color(hsl.integer(67, 43, 48)), color(hsl.integer(67, 41, 60)), fibers), belemniteBody.mul(0.75))
+    stone = mix(stone, color(hsl.integer(70, 38, 27)), canal.mul(0.6))
+    stone = mix(stone, color(hsl.integer(79, 13, 53)), stylolite.mul(0.7))
     this.colorNode = stone
     this.roughnessNode = float(0.72).add(grain.sub(0.5).mul(0.06)).sub(sparkle.mul(0.35)).sub(belemniteBody.mul(0.15)).add(stylolite.mul(0.1))
     // Fossils are harder than the matrix and stand a hair proud of the honed face; seams and sutures sit back.

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'sable_coronation',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A royal darkness, sewn with patient suns. The velvet keeps its fire for those who walk beside it.',
   placeholder: {
-    color: '#4b1023',
+    color: hsl.integer(6, 74, 18),
     shading: 'fabric',
   },
 } as const satisfies KnotData

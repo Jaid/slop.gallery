@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, cos, float, mix, sin, time, vec3} from 'three/tsl'
 
 import {fbm} from '../../candidates/space_bunny/lib/fbm.ts'
@@ -70,19 +71,19 @@ export default class extends KnotMaterial {
     const reveal = napReveal(motif, view.negate(), fbm(p.mul(0.9), 2), settle, turn).reveal
     const tips = fibreTips(p, near, time)
 // The dyed ground: deep crimson pile, and a gold weft that only shows where the pile has been crushed away.
-    const ground = mix(color('#24030d'), color('#78091f'), field.mul(0.5).add(0.5).abs().saturate())
-    const goldThread = mix(color('#b8801c'), color('#ffe8ae'), relief.mul(0.5).add(0.5))
+    const ground = mix(color(hsl.integer(5, 78, 8)), color(hsl.integer(19, 95, 27)), field.mul(0.5).add(0.5).abs().saturate())
+    const goldThread = mix(color(hsl.integer(76, 87, 58)), color(hsl.integer(89, 100, 92.6)), relief.mul(0.5).add(0.5))
     this.colorNode = mix(ground, goldThread, motif.mul(0.75)).mul(reveal.mul(0.45).add(0.62))
     this.metalnessNode = motif.mul(0.7)
     this.roughnessNode = float(0.9).sub(motif.mul(0.42))
     this.sheen = 1
-    this.sheenColor.set('#ff3f78')
+    this.sheenColor.set(hsl.integer(9, 100, 61.5))
     this.sheenRoughness = 0.3
     const pileHeight = warp.mul(0.5).add(weft.mul(0.5)).add(tips.tips.mul(0.3).mul(near)).add(motif.mul(0.5)).add(relief.mul(0.2).mul(near))
     this.normalNode = proceduralNormal(pileHeight, 0.0007)
 // Grazing angles are where pile velvet is most alive, and the crushed gold thread is the only sparkle.
-    this.emissiveNode = color('#ff4a7c').mul(grazing.pow(1.5)).mul(motif.oneMinus().mul(0.8).add(0.2)).mul(0.6)
-      .add(color('#ffe0b0').mul(tips.glint).mul(motif).mul(0.55))
-      .add(color('#9c1030').mul(intimate.mul(0.25).add(0.18)).mul(motif.oneMinus()).mul(reveal))
+    this.emissiveNode = color(hsl.integer(9, 100, 62.7)).mul(grazing.pow(1.5)).mul(motif.oneMinus().mul(0.8).add(0.2)).mul(0.6)
+      .add(color(hsl.integer(79, 100, 91)).mul(tips.glint).mul(motif).mul(0.55))
+      .add(color(hsl.integer(17, 94, 36)).mul(intimate.mul(0.25).add(0.18)).mul(motif.oneMinus()).mul(reveal))
   }
 }

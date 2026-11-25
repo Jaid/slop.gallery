@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4eznRMVv3vZMHhr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'murmuration',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'Ten thousand starlings ride the evening gold along the knot. Draw near and the flock startles open around you, then quietly closes behind.',
   placeholder: {
-    color: '#574245',
+    color: hsl.integer(9, 19, 31),
     shading: 'smooth',
   },
 } as const satisfies KnotData

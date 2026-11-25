@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 3gQGAbAm59HYY8k; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'velvet_dusk',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Plum-black pile lies combed in one direction, then turns its nap against your gaze, and the dusk brightens in a damask no one was meant to see.',
   placeholder: {
-    color: '#21132f',
+    color: hsl.integer(305, 53, 12),
     shading: 'fabric',
   },
 } as const satisfies KnotData

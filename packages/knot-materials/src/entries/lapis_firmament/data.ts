@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7EtWKdJKgEioEdL; fixture: knot-material-shaders.
 export default {
   id: 'lapis_firmament',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Painters ground this stone to make their skies. Uncut, it still keeps a sky of its own, where gold stars wake one by one as you come near.',
   placeholder: {
-    color: '#12248c',
+    color: hsl.integer(267, 95, 23.5),
     shading: 'stone',
   },
 } as const satisfies KnotData

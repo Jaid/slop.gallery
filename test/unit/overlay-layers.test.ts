@@ -7,7 +7,10 @@ import WorldOverlay from '../../src/lib/overlay/WorldOverlay.ts'
 
 test('moving and clearing drawings respects ownership and invalidates old handles', () => {
   const overlay = new WorldOverlay
-  const layer = overlay.addLayer({id: 'notes'})
+  const layer = overlay.addLayer({
+    id: 'notes',
+    color: 0,
+  })
   expect(overlay.hasDrawings()).toBe(false)
   expect(() => overlay.addLayer({id: layer})).toThrow('already exists')
   const implicit = overlay.addPoint([0, 0, 0])

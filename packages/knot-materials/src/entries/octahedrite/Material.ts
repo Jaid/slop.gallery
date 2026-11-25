@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, dot, float, max, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, vec2, vec3} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -39,10 +40,10 @@ export default class extends KnotMaterial {
     const relief = band.mul(0.3).add(etch.mul(0.12)).add(pits.mul(0.14)).add(scratch.mul(0.02))
 // Only a smooth, derivative-free term reaches the vertex stage; the figure itself is a normal map.
     this.positionNode = positionGeometry.add(normalLocal.mul(tarnish.sub(0.5).mul(knotData.displacement)))
-    const nickel = mix(color('#aab4c0'), color('#79828e'), tarnish.mul(0.45))
-    const iron = mix(color('#2e2822'), color('#171310'), tarnish.mul(0.6))
-    const oxide = color('#8a5228')
-    this.colorNode = mix(mix(iron, nickel, band).add(oxide.mul(etch.mul(pits.mul(0.6).add(0.4))).mul(0.22)), color('#cfd8e2'), scratch.mul(0.25))
+    const nickel = mix(color(hsl.integer(253, 13, 73)), color(hsl.integer(256, 11, 54)), tarnish.mul(0.45))
+    const iron = mix(color(hsl.integer(67, 14, 18)), color(hsl.integer(59, 13, 9)), tarnish.mul(0.6))
+    const oxide = color(hsl.integer(56, 66, 42))
+    this.colorNode = mix(mix(iron, nickel, band).add(oxide.mul(etch.mul(pits.mul(0.6).add(0.4))).mul(0.22)), color(hsl.integer(251, 20, 86)), scratch.mul(0.25))
     this.metalness = 1
     this.roughnessNode = etch.mul(0.3).add(pits.mul(0.1)).sub(lip.mul(0.08)).add(tarnish.mul(0.06)).add(0.12).clamp(0.09, 0.6)
     this.anisotropy = 0.45
@@ -51,7 +52,7 @@ export default class extends KnotMaterial {
     this.normalNode = surface
 // Nothing here glows: the whole performance is carried by the way iron answers the light.
     const glint = glints(surface, 180).mul(mx_noise_float(p.mul(320)).mul(0.5).add(0.5)).mul(intimate)
-    this.emissiveNode = color('#dfe9f5').mul(glint).mul(lip.oneMinus()).mul(0.55)
-      .add(color('#ffb46a').mul(lip).mul(grazing.pow(2.5)).mul(near.mul(0.3).add(0.15)).mul(0.1))
+    this.emissiveNode = color(hsl.integer(253, 44, 92)).mul(glint).mul(lip.oneMinus()).mul(0.55)
+      .add(color(hsl.integer(65, 100, 80)).mul(lip).mul(grazing.pow(2.5)).mul(near.mul(0.3).add(0.15)).mul(0.1))
   }
 }

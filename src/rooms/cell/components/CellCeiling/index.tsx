@@ -3,6 +3,7 @@ import type {Material} from 'three/webgpu'
 import {CuboidCollider, CylinderCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import useGraphicsMode from 'use-graphics-mode'
 
@@ -39,7 +40,7 @@ export default function CellCeiling({beams}: {
   }), [geometry])
   // A warm, tawny plaster between the beams and over the round room alike.
   const plaster = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
-    baseColor: '#7a5a42',
+    baseColor: hsl.integer(58, 36, 42),
     heavy: isHeavy,
     roughness: 0.88,
   }), [isHeavy]))

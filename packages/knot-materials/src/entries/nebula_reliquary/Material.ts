@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -37,7 +38,7 @@ export default class extends KnotMaterial {
     }
     // Compact inclusions at the original parallax depth, not luminous spatial cells.
     const embers = cellularPoints(p.sub(view.mul(0.12)).mul(60), 0.025, 0.16, 0.7).mul(intimate)
-    this.colorNode = color('#060309')
+    this.colorNode = color(hsl.integer(310, 41, 3.4))
     this.metalness = 0
     this.roughness = 0.02
     this.clearcoat = 1
@@ -45,6 +46,6 @@ export default class extends KnotMaterial {
     this.iridescence = 0.3
     this.iridescenceIOR = 1.5
     this.iridescenceThicknessNode = facing.mul(200).add(300)
-    this.emissiveNode = glow.div(steps).mul(3.5).mul(near.mul(0.5).add(0.7)).add(color('#fff1c8').mul(embers).mul(1.5)).add(color('#5a2a9a').mul(rim).mul(0.12))
+    this.emissiveNode = glow.div(steps).mul(3.5).mul(near.mul(0.5).add(0.7)).add(color(hsl.integer(91, 100, 95.2)).mul(embers).mul(1.5)).add(color(hsl.integer(298, 79, 32.5)).mul(rim).mul(0.12))
   }
 }

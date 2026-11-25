@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalLocal, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_sonnet/lib/ramp.ts'
@@ -16,7 +17,7 @@ const paneGrid: [number, number] = [36, 5]
 /** Six antique glass recipes picked by a unit-interval identity. */
 const recipe = (t: Node<'float'>) => {
   const i = t.mul(6)
-  return select(i.lessThan(1), color('#e0142f'), select(i.lessThan(2), color('#ffa012'), select(i.lessThan(3), color('#0bb85a'), select(i.lessThan(4), color('#1646f0'), select(i.lessThan(5), color('#9a2ee8'), color('#05bdb6')))))).rgb
+  return select(i.lessThan(1), color(hsl.integer(24, 98, 51)), select(i.lessThan(2), color(hsl.integer(67.4, 100, 74.9)), select(i.lessThan(3), color(hsl.integer(151, 99.4, 63)), select(i.lessThan(4), color(hsl.integer(264.8, 98, 41.7)), select(i.lessThan(5), color(hsl.integer(305, 92, 49)), color(hsl.integer(190, 99, 68))))))).rgb
 }
 
 /** Backlit stained glass: absorption deepens with the length of glass the light must cross, so color follows your angle. */
@@ -62,7 +63,7 @@ export default class extends KnotMaterial {
     const emission = glass.mul(lead.oneMinus()).mul(near.mul(0.25).add(0.85))
     // relief: pillowed panes, raised lead, subtle ripples that bend the reflections
     const height = pillow.mul(0.0035).add(lead.mul(0.0028)).add(ripple.mul(0.00035).mul(lead.oneMinus()))
-    this.colorNode = mix(transmitted.mul(0.035), color('#2a2b30'), lead)
+    this.colorNode = mix(transmitted.mul(0.035), color(hsl.integer(277, 8, 19)), lead)
     this.metalnessNode = lead.mul(0.85)
     this.roughnessNode = mix(float(0.05), float(0.5), lead)
     this.ior = 1.52

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, exp, float, Fn, max, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, positionViewDirection, sin, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/deepseek/lib/bumpNormal.ts'
@@ -16,11 +17,11 @@ const period = vec2(56, 7)
 /** Jewels are sampled as a discrete palette, not as a rainbow: each pane commits to one glass. */
 function jewelPalette(t: Node<'float'>) {
   const p = t.fract()
-  let c = mix(color('#0c247a'), color('#760f2a'), p.smoothstep(0, 0.2))
-  c = mix(c, color('#0a5834'), p.smoothstep(0.2, 0.4))
-  c = mix(c, color('#b0660e'), p.smoothstep(0.4, 0.6))
-  c = mix(c, color('#431776'), p.smoothstep(0.6, 0.8))
-  c = mix(c, color('#075764'), p.smoothstep(0.8, 1))
+  let c = mix(color(hsl.integer(266, 93.5, 21)), color(hsl.integer(13, 88, 27.3)), p.smoothstep(0, 0.2))
+  c = mix(c, color(hsl.integer(157, 97, 32)), p.smoothstep(0.2, 0.4))
+  c = mix(c, color(hsl.integer(62, 92, 51.4)), p.smoothstep(0.4, 0.6))
+  c = mix(c, color(hsl.integer(299, 84, 23)), p.smoothstep(0.6, 0.8))
+  c = mix(c, color(hsl.integer(213, 93, 33)), p.smoothstep(0.8, 1))
   return c
 }
 /** Hand-blown panes bow outward; the lead is added as a crisp shading relief in the fragment. */
@@ -74,10 +75,10 @@ export default class extends KnotMaterial {
     const goldMask = max(goldBorder, max(goldMedallion, goldDot)).mul(pane).mul(interior).clamp()
     const bubble = beads(p.mul(44), 3.7)
     const bubbles = bubble.mask.mul(pane).mul(near).mul(0.8)
-    const glassColor = mix(paneColorShaded, color('#0f0b06'), grisaille.mul(0.55)).mul(innerShadow.mul(-0.45).add(1))
-      .add(color('#d6e9ff').mul(bubbles.mul(0.18)))
-    const goldColor = mix(color('#9c5c08'), color('#ffe6a4'), glassShade)
-    const leadColor = mix(color('#030303'), color('#3a2f22'), junction.mul(0.55))
+    const glassColor = mix(paneColorShaded, color(hsl.integer(76, 27, 6)), grisaille.mul(0.55)).mul(innerShadow.mul(-0.45).add(1))
+      .add(color(hsl.integer(252, 100, 91.5)).mul(bubbles.mul(0.18)))
+    const goldColor = mix(color(hsl.integer(64, 94, 46)), color(hsl.integer(90, 100, 92)), glassShade)
+    const leadColor = mix(color(hsl.integer(0, 0, 3)), color(hsl.integer(71, 27, 21)), junction.mul(0.55))
     const body = mix(mix(glassColor, goldColor, goldMask), leadColor, lead)
     this.colorNode = body
     this.metalnessNode = max(goldMask.mul(0.95), lead.mul(0.4))
@@ -107,9 +108,9 @@ export default class extends KnotMaterial {
     const glow = paneColorShaded.mul(paneLight.add(procession)).mul(flicker).mul(pane).mul(goldMask.oneMinus()).mul(grisaille.oneMinus().mul(0.45).add(0.55)).mul(0.92)
     const paneEdgeGlow = paneColor.mul(edge.smoothstep(leadWidth, leadWidth.add(0.12)).oneMinus().mul(pane)).mul(0.14)
     const goldGlint = glints(surfaceNormal, 85).mul(goldMask).mul(near).mul(0.65)
-    this.emissiveNode = glow.add(paneEdgeGlow).add(color('#ffe9bb').mul(goldGlint))
-      .add(color('#fff3d2').mul(transmit.mul(cells.random.y.smoothstep(0.76, 0.9)).mul(pane).mul(0.16)))
+    this.emissiveNode = glow.add(paneEdgeGlow).add(color(hsl.integer(85, 100, 93)).mul(goldGlint))
+      .add(color(hsl.integer(90, 100, 96)).mul(transmit.mul(cells.random.y.smoothstep(0.76, 0.9)).mul(pane).mul(0.16)))
       .add(paneColor.mul(grazing.pow(4)).mul(0.2))
-      .add(color('#f1d7a0').mul(facing.pow(6)).mul(0.02))
+      .add(color(hsl.integer(86, 65, 87)).mul(facing.pow(6)).mul(0.02))
   }
 }

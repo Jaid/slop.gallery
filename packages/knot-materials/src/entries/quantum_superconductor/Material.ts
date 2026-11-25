@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -28,13 +29,13 @@ export default class extends KnotMaterial {
     const deep = p.sub(view.mul(0.2))
     const pinnedFilament = opticalLine(mx_noise_float(deep.mul(20)).sub(0.2), 0.03).mul(intimate)
     const quantumHalo = spectralColor(vortexDist.mul(6).add(view.x.mul(4)).add(1.8))
-    this.colorNode = mix(color('#121528'), color('#252b48'), facing.mul(0.4).add(0.1))
+    this.colorNode = mix(color(hsl.integer(276, 42, 10)), color(hsl.integer(274, 41, 20)), facing.mul(0.4).add(0.1))
     this.metalness = 0.94
     this.roughness = 0.07
     this.clearcoat = 0.85
     this.clearcoatRoughness = 0.025
     this.anisotropy = 0.95
     this.anisotropyRotation = 0.25
-    this.emissiveNode = color('#c084fc').mul(vortexCore).mul(near.mul(0.7).add(0.4)).mul(1.3).add(color('#38bdf8').mul(supercurrent).mul(vortexCore.oneMinus()).mul(near).mul(0.45)).add(quantumHalo.mul(pinnedFilament).mul(0.9)).add(color('#a78bfa').mul(rim.abs().pow(2)).mul(0.35))
+    this.emissiveNode = color(hsl.integer(306, 93, 68)).mul(vortexCore).mul(near.mul(0.7).add(0.4)).mul(1.3).add(color(hsl.integer(233, 93, 71)).mul(supercurrent).mul(vortexCore.oneMinus()).mul(near).mul(0.45)).add(quantumHalo.mul(pinnedFilament).mul(0.9)).add(color(hsl.integer(294, 87, 66)).mul(rim.abs().pow(2)).mul(0.35))
   }
 }

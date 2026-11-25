@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: AfC9LOF1p8reY9V; fixture: knot-material-shaders; result: success.
 export default {
   id: 'golden_heirloom',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Porcelain that broke and refused to hide it. Every scar is filled with gold, so the damage became the brightest part of the vessel.',
   placeholder: {
-    color: '#b7a797',
+    color: hsl.integer(67, 17, 69),
     shading: 'smooth',
   },
 } as const satisfies KnotData

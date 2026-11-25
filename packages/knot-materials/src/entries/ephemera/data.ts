@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ephemera',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A film of water one thousand atoms thick, holding every color of the sky for as long as it dares.',
   placeholder: {
-    color: '#8fcbe6',
+    color: hsl.integer(228, 56, 78),
     shading: 'glass',
   },
 } as const satisfies KnotData

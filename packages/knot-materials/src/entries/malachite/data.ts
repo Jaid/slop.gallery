@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'malachite',
   candidateId: 'gpt_astra',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Green bands circle an ancient secret, one mineral season at a time.',
   placeholder: {
-    color: '#51d4a0',
+    color: hsl.integer(164, 80, 75),
     shading: 'stone',
   },
 } as const satisfies KnotData

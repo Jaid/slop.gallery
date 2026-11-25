@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2tmj6W7XIniDLsB; fixture: knot-material-shaders; result: success.
 export default {
   id: 'amber_memorial',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Honey remembers what time forgets. Ferns and drifting seeds hang in a golden depth, shifting behind the glass as you circle their small eternity.',
   placeholder: {
-    color: '#e9a13b',
+    color: hsl.integer(71, 85, 72),
     shading: 'glass',
   },
 } as const satisfies KnotData

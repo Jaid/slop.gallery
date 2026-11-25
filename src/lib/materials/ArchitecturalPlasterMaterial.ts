@@ -6,7 +6,7 @@ import {Color, MeshStandardNodeMaterial} from 'three/webgpu'
 /** Restrained architectural plaster: large mottling plus fine surface grain in heavy mode. */
 export default class ArchitecturalPlasterMaterial extends MeshStandardNodeMaterial {
   constructor({baseColor, bounce, heavy, map, roughness}: {
-    baseColor: string
+    baseColor: number
     /** light the plaster gets from its surroundings beyond the scene’s lights, which it scatters back in its own color, like the daylight bounced into a lantern */
     bounce?: Node<'vec3'>
     heavy: boolean

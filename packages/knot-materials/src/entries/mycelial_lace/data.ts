@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mycelial_lace',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Beneath a quiet forest, a pale intelligence embroiders the dark. Each soft pulse carries a message too old for words.',
   placeholder: {
-    color: '#c1bca5',
+    color: hsl.integer(97, 21, 76),
     shading: 'stone',
   },
 } as const satisfies KnotData

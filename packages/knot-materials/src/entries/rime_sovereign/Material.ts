@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, int, mix, mx_fractal_noise_float, mx_worley_noise_vec3, mx_worley_noise_vec3_style, negateOnBackSide, normalLocal, time, transformNormalToView, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -44,9 +45,9 @@ export default class extends KnotMaterial {
       .add(fine.id.mul(2).sub(1).normalize().mul(cover.mul(near).mul(0.35)))
       .normalize()
     const star = starColor(coarse.id.x)
-    const abyss = color('#03101d')
-    const glacier = color('#1d6aa8')
-    const ice = color('#eef9ff')
+    const abyss = color(hsl.integer(247, 67, 7))
+    const glacier = color(hsl.integer(248, 81, 43))
+    const ice = color(hsl.integer(231, 100, 97))
     const frost = mix(mix(glacier, ice, coarse.id.y.smoothstep(0.1, 0.9)), star, 0.55)
     this.colorNode = mix(mix(abyss, frost, cover), ice, coarse.seam.mul(cover).mul(0.85))
     this.metalness = 0
@@ -60,6 +61,6 @@ export default class extends KnotMaterial {
     this.normalNode = negateOnBackSide(transformNormalToView(normal))
 // Sparkle takes the color of the star inside its facet.
     this.emissiveNode = star.mul(glints(transformNormalToView(normal), 160)).mul(cover).mul(1.2)
-      .add(color('#8fd3ff').mul(rim).mul(0.12))
+      .add(color(hsl.integer(238, 100, 81)).mul(rim).mul(0.12))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'heartwood_atlas',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A thousand summers are folded into this grain. Walk around it and the lost geography of a living tree catches fire without burning.',
   placeholder: {
-    color: '#a7653e',
+    color: hsl.integer(50, 59, 50),
     shading: 'smooth',
   },
 } as const satisfies KnotData

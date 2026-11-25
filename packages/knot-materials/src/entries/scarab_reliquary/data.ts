@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'scarab_reliquary',
   candidateId: 'glm',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: "A beetle's shifting colors have been kept like fragments of a lost crown.",
   placeholder: {
-    color: '#ffd76a',
+    color: hsl.integer(89, 100, 87.4),
     shading: 'smooth',
   },
 } as const satisfies KnotData

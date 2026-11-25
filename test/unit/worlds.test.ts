@@ -6,6 +6,8 @@ import {describe, expect, test} from 'bun:test'
 import {readFileSync} from 'node:fs'
 import {dirname, resolve} from 'node:path'
 
+import hsl from 'okhsl'
+
 import {choiceFrames} from '../../src/frames/lib/frameChoice.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {knotGalleryBounds} from '../../src/lib/gallery/knotGallery.ts'
@@ -224,7 +226,7 @@ describe('worlds', () => {
       position: secondary.position,
       strength: 5,
       decay: 1,
-      tint: '#4d5e7d',
+      tint: hsl.integer(262, 30, 40),
       softShadow: {
         blurAngle: Math.PI / 180,
         softSamples: 16,

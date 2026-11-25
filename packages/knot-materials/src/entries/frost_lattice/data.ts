@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'frost_lattice',
   candidateId: 'claude_sonnet',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Cold has given the air a delicate, repeating skeleton.',
   placeholder: {
-    color: '#cfe8ff',
+    color: hsl.integer(246, 100, 90.7),
     shading: 'glass',
   },
   displacement: 0.004,

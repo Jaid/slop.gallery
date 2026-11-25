@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'hadal_lantern',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A cold lamp glows for travelers who have never known the surface.',
   placeholder: {
-    color: '#4de3ff',
+    color: hsl.integer(213, 100, 82.3),
     shading: 'glass',
   },
 } as const satisfies KnotData

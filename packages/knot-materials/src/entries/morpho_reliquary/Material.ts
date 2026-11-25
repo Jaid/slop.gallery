@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_noise_float, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -72,21 +73,21 @@ export default class extends KnotMaterial {
     const opticalPath = facing.mul(4.8).add(azimuthShift).add(scaleTilt).add(scaleTile.id.y.mul(0.45))
     const morphoSpectrum = spectralColor(opticalPath)
 // Morpho rhetenor & Urania ripheus photonic palette: blazing emerald -> electric cobalt -> deep royal violet -> magenta.
-    const emeraldCyan = mix(color('#00ff95'), color('#00d0ff'), facing.smoothstep(0.45, 0.92))
-    const royalViolet = mix(color('#0f2bff'), color('#8c1aff'), grazing.smoothstep(0.2, 0.75))
-    const magentaEdge = color('#ff1f8e')
+    const emeraldCyan = mix(color(hsl.integer(155, 100, 85.8)), color(hsl.integer(222, 100, 76)), facing.smoothstep(0.45, 0.92))
+    const royalViolet = mix(color(hsl.integer(265, 100, 39.6)), color(hsl.integer(297, 100, 48)), grazing.smoothstep(0.2, 0.75))
+    const magentaEdge = color(hsl.integer(359, 100, 60.1))
     const structuralColor = mix(mix(emeraldCyan, royalViolet, grazing.smoothstep(0.15, 0.68)), magentaEdge, grazing.pow(2.6))
       .mul(mix(vec3(1), morphoSpectrum, 0.38))
 // Dark melanin-pigmented chitin ground beneath the scales + golden hemolymph veins.
-    const melaninGround = color('#08050d')
+    const melaninGround = color(hsl.integer(303, 37, 4))
     const scaleShade = scaleBody.mul(0.75).add(0.25).mul(ridgeGrating.mul(0.22).add(0.88))
-    const chitinVeinColor = mix(color('#120b07'), color('#d99a2b'), primaryVein.mul(0.65).add(secondaryVein.mul(0.35)))
+    const chitinVeinColor = mix(color(hsl.integer(53, 28, 6)), color(hsl.integer(77, 86, 69)), primaryVein.mul(0.65).add(secondaryVein.mul(0.35)))
 // Hydrophobic morning dew droplets sitting atop the micro-textured scales.
     const dew = beads(p.mul(38), 9.4)
     const dewMask = dew.mask.mul(veinMask.oneMinus())
     const dewSpark = glints(wingNormal, 95).mul(dewMask).mul(intimate.mul(0.7).add(0.3))
     const wingSurface = mix(melaninGround, structuralColor.mul(scaleShade), scaleBody.mul(scaleResolved).add(scaleResolved.oneMinus().mul(0.85)))
-    this.colorNode = mix(mix(wingSurface, chitinVeinColor, veinMask), color('#e8f8ff'), dewMask.mul(0.35))
+    this.colorNode = mix(mix(wingSurface, chitinVeinColor, veinMask), color(hsl.integer(226, 100, 96.4)), dewMask.mul(0.35))
     this.metalnessNode = mix(float(0.68), float(0.85), veinMask).mul(dewMask.oneMinus())
     this.roughnessNode = mix(
       float(0.18).sub(ridgeGrating.mul(0.06)).add(scaleTile.id.z.mul(0.06)),
@@ -96,7 +97,7 @@ export default class extends KnotMaterial {
     this.iridescenceNode = veinMask.oneMinus().mul(0.96).add(0.04)
     this.iridescenceIOR = 1.76
     this.iridescenceThicknessNode = facing.mul(310).add(scaleTilt.mul(180)).add(260)
-    this.sheenNode = mix(color('#00ffcc'), color('#b833ff'), grazing).mul(veinMask.oneMinus()).mul(0.75)
+    this.sheenNode = mix(color(hsl.integer(171, 100, 87)), color(hsl.integer(310, 100, 56)), grazing).mul(veinMask.oneMinus()).mul(0.75)
     this.sheenRoughness = 0.2
 // Strong anisotropic sheen aligned with the scale ridge lamellae.
     this.anisotropyNode = veinMask.oneMinus().mul(0.84)
@@ -111,12 +112,12 @@ export default class extends KnotMaterial {
     this.aoNode = mix(scaleBody.mul(0.35).add(0.65), float(0.9), veinMask)
 // Bioluminescent golden hemolymph pulse flowing along the wing veins + photonic scale scintillation.
     const pulse = metric.x.mul(2.4).sub(time.mul(Math.PI)).sin().mul(0.5).add(0.5).pow(2.8)
-    const veinPulse = mix(color('#ff7b00'), color('#ffe66b'), pulse).mul(veinMask).mul(pulse.mul(0.65).add(0.2))
+    const veinPulse = mix(color(hsl.integer(51, 100, 68)), color(hsl.integer(98, 100, 91)), pulse).mul(veinMask).mul(pulse.mul(0.65).add(0.2))
     const scaleSparkle = structuralColor.mul(scaleTile.id.x.smoothstep(0.65, 0.96)).mul(scaleResolved).mul(near.mul(0.6).add(0.35)).mul(0.52)
     const noiseShimmer = mx_noise_float(p.mul(32)).mul(0.5).add(0.5)
     this.emissiveNode = veinPulse
       .add(scaleSparkle.mul(noiseShimmer.mul(0.5).add(0.5)))
       .add(structuralColor.mul(grazing.pow(2.4)).mul(veinMask.oneMinus()).mul(0.36))
-      .add(color('#ffffff').mul(dewSpark).mul(1.1))
+      .add(color(hsl.integer(0, 0, 100)).mul(dewSpark).mul(1.1))
   }
 }

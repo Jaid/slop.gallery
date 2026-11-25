@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'opaline_aerogel',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A cloud has learned to hold its shape, but not to keep its colors still.',
   placeholder: {
-    color: '#78c6ff',
+    color: hsl.integer(242, 100, 76.5),
     shading: 'glass',
   },
 } as const satisfies KnotData

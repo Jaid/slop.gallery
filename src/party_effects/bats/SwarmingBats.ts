@@ -1,6 +1,7 @@
 import type {FlyingBat} from './flights.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {attribute, exp, float, max, mix, positionGeometry, select, sin, smoothstep, uv, vec2, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
@@ -17,11 +18,11 @@ const quad = {
 } as const
 /** seconds a bat takes to grow to its size once it is out */
 const growing = 0.3
-const silhouetteColor = rgb('#0b0510')
+const silhouetteColor = rgb(hsl.integer(310, 46, 5))
 /** the warm light catching its edges */
-const rimColor = rgb('#6b2f16')
-const glowColor = rgb('#ff7b1c')
-const eyeColor = rgb('#ffcf4a')
+const rimColor = rgb(hsl.integer(42, 74, 29))
+const glowColor = rgb(hsl.integer(49, 100, 68))
+const eyeColor = rgb(hsl.integer(88.4, 100, 85.3))
 /** the inside of an ellipse, positive within it, about in units of its smaller radius, optionally tilted by `angle` radians */
 function ellipse(point: Node<'vec2'>, center: readonly [number, number], radii: readonly [number, number], angle = 0) {
   const local = turn(point.sub(vec2(...center)), float(-angle))

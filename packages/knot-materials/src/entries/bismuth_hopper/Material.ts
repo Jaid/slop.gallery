@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, uv} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -34,11 +35,11 @@ export default class extends BaseKnotMaterial {
     const ox = mx_noise_float(p.mul(2.6)).mul(0.35).add(0.6)
     const oxFine = mx_fractal_noise_float(p.mul(9), 3, 2, 0.5).mul(0.3).add(0.7)
     // Chrome base and oxidised film.
-    const chrome = mix(color('#f0f4f8'), color('#7a8492'), tread.mul(0.55).add(0.25))
+    const chrome = mix(color(hsl.integer(248, 29, 96)), color(hsl.integer(257, 13, 55)), tread.mul(0.55).add(0.25))
     const oxidised = mix(chrome, rainbow, ox.mul(0.85).add(0.15))
     const oxidised2 = mix(oxidised, rainbowDeep, oxFine.mul(0.4))
     // Bevel highlight — pure chrome.
-    const bevelCol = color('#ffffff')
+    const bevelCol = color(hsl.integer(0, 0, 100))
     this.colorNode = mix(oxidised2, bevelCol, bevel.mul(0.7))
     this.metalnessNode = float(0.9).sub(bevel.mul(0.1)).sub(riser.mul(0.25))
     this.roughnessNode = float(0.07)
@@ -54,6 +55,6 @@ export default class extends BaseKnotMaterial {
     this.emissiveNode
       = rainbow.mul(bevel).mul(near.mul(0.4).add(0.08)).mul(0.55)
         .add(rainbowDeep.mul(riser).mul(near.mul(0.2).add(0.05)).mul(0.2))
-        .add(color('#88c8ff').mul(rim).mul(0.09))
+        .add(color(hsl.integer(245, 100, 78)).mul(rim).mul(0.09))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4eznRMVv3vZMHhr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'plasma_reliquary',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'A captive storm in a vessel of sealed glass. It has never been touched, yet every tendril strains toward the last warm thing to come near.',
   placeholder: {
-    color: '#514a5f',
+    color: hsl.integer(300, 21, 33),
     shading: 'glass',
   },
 } as const satisfies KnotData

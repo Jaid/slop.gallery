@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'hoarfrost_hymn',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Winter sings one note at a time, and the ice writes down what it hears.',
   placeholder: {
-    color: '#5aa8ff',
+    color: hsl.integer(253, 100, 67.4),
     shading: 'glass',
   },
 } as const satisfies KnotData

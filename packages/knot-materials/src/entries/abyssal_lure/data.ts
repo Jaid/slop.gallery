@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4ayQMqfdM3WbrB2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'abyssal_lure',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'Four thousand meters down, something soft and patient has learned to make its own light. It has noticed you. It is very glad you came.',
   placeholder: {
-    color: '#586a72',
+    color: hsl.integer(226, 16, 44),
     shading: 'smooth',
   },
 } as const satisfies KnotData

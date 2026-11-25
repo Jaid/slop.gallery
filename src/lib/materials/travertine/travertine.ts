@@ -1,21 +1,22 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, mx_worley_noise_float, vec2, vec3} from 'three/tsl'
 
 import {inside, visibleDetail} from '../filters.ts'
 
-/** Colors of one cut of travertine, as sRGB hex strings. */
+/** Colors of one cut of travertine, as packed sRGB. */
 export type TravertinePalette = {
   /** the cream body of the stone */
-  base: string
+  base: number
   /** cool gray streaks of limestone between the warm layers */
-  gray: string
+  gray: number
   /** chalky, nearly white clouds */
-  light: string
+  light: number
   /** the shadowed inside of an unfilled pore */
-  pore: string
+  pore: number
   /** the honey-colored bands that give vein-cut travertine its grain */
-  vein: string
+  vein: number
 }
 
 /** How a cut of travertine looks, independent of the surface it is laid on. */
@@ -32,11 +33,11 @@ export type TravertineStyle = {
 type Float = Node<'float'>
 
 export const travertinePalette: TravertinePalette = {
-  base: '#aa9675',
-  light: '#cec3a8',
-  vein: '#8b6c44',
-  gray: '#918a7a',
-  pore: '#62513a',
+  base: hsl.integer(80, 30, 63),
+  light: hsl.integer(88, 27, 79),
+  vein: hsl.integer(73, 45, 48),
+  gray: hsl.integer(87, 14, 58),
+  pore: hsl.integer(75, 31, 36),
 }
 
 const unit = (node: Float) => node.mul(0.5).add(0.5)

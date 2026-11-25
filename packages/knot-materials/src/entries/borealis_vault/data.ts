@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: DZoyAbZAQlwnlPj; fixture: knot-material-shaders; result: success.
 export default {
   id: 'borealis_vault',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'A polar night sealed in black ice. Green curtains fold and ripple through it, blushing crimson at their crowns, and turn to watch you as you circle.',
   placeholder: {
-    color: '#53605b',
+    color: hsl.integer(170, 11, 39),
     shading: 'glass',
   },
 } as const satisfies KnotData

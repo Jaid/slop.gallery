@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_noise_float, positionGeometry, vec3} from 'three/tsl'
 
 import {glitter} from '../../candidates/claude_sonnet/lib/glitter.ts'
@@ -46,10 +47,10 @@ export default class extends KnotMaterial {
     const relief = mix(shardWarp, bead.mul(0.0046).add(beadHair.mul(0.0024)).add(hammer), gold)
     this.normalNode = proceduralNormal(relief, 1)
     this.clearcoatNormalNode = proceduralNormal(shardWarp.mul(gold.oneMinus()), 1)
-    const ink = rgb('#03040a')
-    const glaze = mix(mix(ink, rgb('#0a1428'), shard.y), mix(rgb('#1a0610'), rgb('#04201d'), shard.z), shard.x.smoothstep(0.62, 0.8).mul(0.75))
-    const goldColor = rgb('#ffb238')
-    const bright = rgb('#ffe1a0')
+    const ink = rgb(hsl.integer(273, 38, 3.4))
+    const glaze = mix(mix(ink, rgb(hsl.integer(263, 55, 9)), shard.y), mix(rgb(hsl.integer(350, 56, 7)), rgb(hsl.integer(185, 80, 12)), shard.z), shard.x.smoothstep(0.62, 0.8).mul(0.75))
+    const goldColor = rgb(hsl.integer(74, 100, 78.9))
+    const bright = rgb(hsl.integer(86, 100, 90.7))
     this.colorNode = mix(glaze.mul(shard.z.mul(0.5).add(0.6)), mix(goldColor, bright, bead.mul(0.4)), gold)
     this.metalnessNode = gold
     this.roughnessNode = mix(float(0.06), mix(float(0.27), float(0.14), bead), gold)
@@ -64,10 +65,10 @@ export default class extends KnotMaterial {
     const slow = along.mul(-4.5).add(p.y.mul(6)).add(loopPhase.mul(2)).sin().mul(0.5).add(0.5)
     const heat = wave.mul(0.6).add(slow.mul(0.4)).mul(intimate.mul(0.5).add(0.5))
     const halo = shardWall.mul(-70).exp().mul(gold.oneMinus()).mul(0.75)
-    const ember = rgb('#ff7a1c')
+    const ember = rgb(hsl.integer(49, 100, 68))
     const sparkle = glitter(p, 0.0065, 140, 0.6).sparkle
     this.emissiveNode = ember.mul(gold.mul(heat.mul(0.55).add(0.06)).add(halo.mul(heat.mul(0.11).add(0.012))))
       .add(bright.mul(sparkle).mul(gold).mul(0.5))
-      .add(rgb('#ffa640').mul(grazing.pow(3)).mul(gold).mul(facing.add(0.4)).mul(0.03))
+      .add(rgb(hsl.integer(65, 100, 76.3)).mul(grazing.pow(3)).mul(gold).mul(facing.add(0.4)).mul(0.03))
   }
 }

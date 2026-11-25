@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -50,10 +51,10 @@ export default class extends BaseKnotMaterial {
     const ghost = layer1.mul(near.mul(0.75).add(0.1))
     const deepText = layer2.mul(intimate)
     const cut = layer0.mul(near.mul(0.5).add(0.2)).max(ghost.mul(0.85)).max(deepText)
-    const verdigris = mix(color('#1f4a3a'), color('#6ea48a'), facing).mul(cut).mul(intimate.mul(0.7).add(0.2))
-    const lacquer = mix(color('#4a0908'), color('#c4281c'), grazing.pow(1.5).mul(0.7).add(mx_noise_float(p.mul(2.2)).mul(0.08)).clamp())
-    const sealed = mix(color('#2a0706'), lacquer, facing.mul(0.35).add(0.45))
-    this.colorNode = mix(mix(sealed, color('#6a120e'), cut.mul(0.55)), verdigris, cut.mul(intimate).mul(0.65))
+    const verdigris = mix(color(hsl.integer(167, 62, 28)), color(hsl.integer(163, 42, 62)), facing).mul(cut).mul(intimate.mul(0.7).add(0.2))
+    const lacquer = mix(color(hsl.integer(27, 92, 16)), color(hsl.integer(29.5, 94, 46)), grazing.pow(1.5).mul(0.7).add(mx_noise_float(p.mul(2.2)).mul(0.08)).clamp())
+    const sealed = mix(color(hsl.integer(26, 79, 9.4)), lacquer, facing.mul(0.35).add(0.45))
+    this.colorNode = mix(mix(sealed, color(hsl.integer(28, 92, 24.4)), cut.mul(0.55)), verdigris, cut.mul(intimate).mul(0.65))
     this.metalnessNode = cut.mul(0.15)
     this.roughnessNode = float(0.22).mix(0.12, cut).add(grazing.mul(0.05))
     this.clearcoat = 1
@@ -62,10 +63,10 @@ export default class extends BaseKnotMaterial {
     this.iridescence = 0.12
     this.iridescenceIOR = 1.45
     this.iridescenceThicknessNode = facing.mul(80).add(160)
-    this.emissiveNode = color('#3a0a08')
+    this.emissiveNode = color(hsl.integer(27, 85, 13))
       .mul(rim)
       .mul(0.18)
-      .add(color('#ff6a3a').mul(cut).mul(intimate).mul(0.22))
+      .add(color(hsl.integer(38, 100, 65.6)).mul(cut).mul(intimate).mul(0.22))
       .add(verdigris.mul(0.35).mul(near))
   }
 }

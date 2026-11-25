@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {filteredBox} from '../../candidates/claude_opus/lib/filteredBox.ts'
@@ -104,19 +105,19 @@ export default class extends KnotMaterial {
     const room = p.sub(view.mul(0.35))
     const fireShape = room.y.mul(-2.2).add(0.3).add(mx_noise_float(room.mul(vec3(3, 1.6, 3)).add(vec3(0, time.mul(-0.6), 0))).mul(0.7))
     const flicker = mx_noise_float(vec3(time.mul(2.3), 0, 0)).mul(0.18).add(mx_noise_float(vec3(time.mul(7.1), 3, 0)).mul(0.08)).add(1)
-    const fire = mix(color('#2a0a02'), mix(color('#ff5a12'), color('#ffc46a'), fireShape.smoothstep(0.4, 1.1)), fireShape.smoothstep(-0.4, 0.5)).mul(flicker)
+    const fire = mix(color(hsl.integer(39, 86, 10)), mix(color(hsl.integer(39, 100, 63)), color(hsl.integer(76, 99, 83)), fireShape.smoothstep(0.4, 1.1)), fireShape.smoothstep(-0.4, 0.5)).mul(flicker)
     const glassView = facing.mul(0.75).add(0.25)
-    const interior = fire.mul(glassView).mul(0.55).add(color('#0b1830').mul(0.3))
+    const interior = fire.mul(glassView).mul(0.55).add(color(hsl.integer(262, 60, 11)).mul(0.3))
 // Ice carries a cold blue in its thick spines and scatters the firelight warmly where it is thin.
     const thick = frost.smoothstep(0.6, 1)
-    const iceColor = mix(color('#c9dcef'), color('#f4f9ff'), thick)
-    const albedo = mix(mix(color('#05080e'), iceColor, ice), color('#eef4fa'), fog)
+    const iceColor = mix(color(hsl.integer(248, 45, 87)), color(hsl.integer(252, 100, 98)), thick)
+    const albedo = mix(mix(color(hsl.integer(259, 29, 5)), iceColor, ice), color(hsl.integer(248, 45, 96)), fog)
     this.colorNode = albedo
     this.metalness = 0
     this.roughnessNode = mix(float(0.04), float(0.55).sub(thick.mul(0.2)), ice.max(fog))
     this.clearcoatNode = ice.max(fog).oneMinus()
     this.clearcoatRoughness = 0.01
-    this.sheenNode = color('#d8e8ff').mul(ice.mul(0.6))
+    this.sheenNode = color(hsl.integer(258, 99, 91)).mul(ice.mul(0.6))
     this.sheenRoughness = 0.35
 // Ice ferns stand proud of the glass; water beads bulge as lenses.
     const height = frost.mul(0.0007).add(rime.mul(0.00025)).add(drops.cap.mul(drops.mask).mul(meltZone).mul(0.0012))
@@ -130,6 +131,6 @@ export default class extends KnotMaterial {
     const transmitted = interior.mul(ice.mul(0.75).oneMinus()).mul(fog.oneMinus())
     const scattered = fire.mul(ice).mul(0.12).mul(glassView)
     const beadGlints = fire.mul(wet).mul(drops.cap.pow(4)).mul(0.9)
-    this.emissiveNode = transmitted.add(scattered).add(color('#ffffff').mul(sparkle.flash).mul(ice).mul(0.8)).add(beadGlints).add(color('#9fc4ff').mul(grazing.pow(4)).mul(ice).mul(0.12))
+    this.emissiveNode = transmitted.add(scattered).add(color(hsl.integer(0, 0, 100)).mul(sparkle.flash).mul(ice).mul(0.8)).add(beadGlints).add(color(hsl.integer(260, 99, 78)).mul(grazing.pow(4)).mul(ice).mul(0.12))
   }
 }

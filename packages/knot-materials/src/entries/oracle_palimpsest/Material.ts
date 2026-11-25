@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeRay} from '../../lib/atelier.ts'
@@ -65,11 +66,11 @@ export default class extends KnotMaterial {
     const petals = inkLine(initialAngle.mul(7).add(initialRandom.x.mul(TAU)).sin().mul(initialRadius), 0.017).mul(initialRadius.smoothstep(0.09, 0.31))
     const goldGate = initialRandom.z.smoothstep(0.76, 0.82)
     const gold = medallion.max(petals).mul(goldGate)
-    const parchment = mix(color('#59341f'), color('#c99c62'), paperCloud.mul(0.68).add(facing.mul(0.1))).mul(fiber.mul(0.08).add(0.95))
-    let surface: Node<'vec3'> = mix(parchment, color('#60402b'), ghostInk.mul(0.22))
-    surface = mix(surface, color('#020817'), hand.mul(0.94).max(glyphs.mul(0.96)))
-    surface = mix(surface, color('#8b172c'), microtext.mul(0.72))
-    const leafColor = mix(color('#986014'), color('#ffe09a'), initialRandom.y.mul(0.55).add(facing.mul(0.45)))
+    const parchment = mix(color(hsl.integer(49, 53, 27)), color(hsl.integer(73, 55, 68)), paperCloud.mul(0.68).add(facing.mul(0.1))).mul(fiber.mul(0.08).add(0.95))
+    let surface: Node<'vec3'> = mix(parchment, color(hsl.integer(54, 43, 31)), ghostInk.mul(0.22))
+    surface = mix(surface, color(hsl.integer(259, 69, 5)), hand.mul(0.94).max(glyphs.mul(0.96)))
+    surface = mix(surface, color(hsl.integer(18, 88, 33)), microtext.mul(0.72))
+    const leafColor = mix(color(hsl.integer(68, 86, 47)), color(hsl.integer(87, 100, 90.4)), initialRandom.y.mul(0.55).add(facing.mul(0.45)))
     surface = mix(surface, leafColor, gold)
     this.colorNode = surface
     this.metalnessNode = gold.mul(0.98)
@@ -77,12 +78,12 @@ export default class extends KnotMaterial {
     this.clearcoatNode = gold.mul(0.42).add(hand.mul(0.08))
     this.clearcoatRoughness = 0.1
     this.sheen = 0.22
-    this.sheenColor.set('#eac995')
+    this.sheenColor.set(hsl.integer(79, 59, 83))
     this.sheenRoughness = 0.88
     const relief = paperCloud.mul(0.001).add(fiber.mul(0.00028)).sub(hand.mul(0.0013)).sub(glyphs.mul(0.0008)).add(gold.mul(0.0042))
     this.normalNode = proceduralNormal(relief, 1)
     const spoken = tube.x.mul(TAU * 4).sub(time.mul(0.46)).add(tube.y.mul(TAU * 2)).sin().mul(0.5).add(0.5).pow(13)
     const leafSpark = glints(normalViewGeometry, 125).mul(gold).mul(near)
-    this.emissiveNode = color('#3159d8').mul(hand.max(glyphs)).mul(spoken).mul(0.32).add(color('#fff0bd').mul(leafSpark).mul(0.9)).add(color('#8b1f4f').mul(ghostInk).mul(grazing.pow(3)).mul(0.055))
+    this.emissiveNode = color(hsl.integer(266, 90, 44)).mul(hand.max(glyphs)).mul(spoken).mul(0.32).add(color(hsl.integer(94, 100, 94.8)).mul(leafSpark).mul(0.9)).add(color(hsl.integer(359, 78, 34)).mul(ghostInk).mul(grazing.pow(3)).mul(0.055))
   }
 }

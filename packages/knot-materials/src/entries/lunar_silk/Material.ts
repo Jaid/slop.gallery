@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, cross, float, mix, mx_noise_float, normalLocal, tangentLocal, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -43,8 +44,8 @@ export default class extends KnotMaterial {
     this.anisotropy = 0.95
     this.anisotropyNode = vec2(warpUp, warpUp.oneMinus())
 // The body of the cloth is indigo; the silver lives almost entirely in the sheen.
-    const warpColor = color('#f2f6ff')
-    const weftColor = color('#070c2c')
+    const warpColor = color(hsl.integer(267, 100, 97))
+    const weftColor = color(hsl.integer(271, 78, 8))
     const warpView = view.dot(tangentLocal).abs()
 // The published types describe the bitangent accessors as untyped math nodes.
     const weftView = view.dot(cross(normalLocal, tangentLocal)).abs()
@@ -54,14 +55,14 @@ export default class extends KnotMaterial {
     this.metalness = 0.04
     this.roughnessNode = float(0.22).add(slub.mul(0.05)).sub(striation.mul(0.04)).add(reliefFade.oneMinus().mul(0.12))
     this.sheen = 1
-    this.sheenColor.set('#e6ecff')
+    this.sheenColor.set(hsl.integer(272, 100, 93.5))
     this.sheenRoughnessNode = float(0.18).add(striation.mul(0.1))
     this.ior = 1.55
     this.clearcoat = 0.08
     this.clearcoatRoughness = 0.2
     this.aoNode = height.smoothstep(0.15, 0.95).mul(0.5).add(0.5)
     this.normalNode = proceduralNormal(height.mul(0.22).mul(reliefFade).add(striation.mul(0.03)), 0.0016)
-    this.emissiveNode = color('#7f96ff').mul(grazing.pow(3)).mul(0.14)
-      .add(color('#ffe9c4').mul(facing.pow(6)).mul(0.05))
+    this.emissiveNode = color(hsl.integer(273, 99, 65)).mul(grazing.pow(3)).mul(0.14)
+      .add(color(hsl.integer(81, 100, 93.3)).mul(facing.pow(6)).mul(0.05))
   }
 }

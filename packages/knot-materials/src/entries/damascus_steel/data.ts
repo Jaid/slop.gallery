@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 9YA8kP6cid9wkS5; fixture: knot-material-shaders.
 export default {
   id: 'damascus_steel',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A blade remembers every fold, carrying twilight through hammered steel.',
   placeholder: {
-    color: '#46545e',
+    color: hsl.integer(239, 16, 35),
     shading: 'metal',
   },
 } as const satisfies KnotData

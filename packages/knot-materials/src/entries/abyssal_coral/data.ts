@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 9YA8kP6cid9wkS5; fixture: knot-material-shaders.
 export default {
   id: 'abyssal_coral',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'In the midnight garden, small hearts answer the current with cold fire.',
   placeholder: {
-    color: '#0b303b',
+    color: hsl.integer(222, 72, 19),
     shading: 'stone',
   },
   displacement: 0.0023,

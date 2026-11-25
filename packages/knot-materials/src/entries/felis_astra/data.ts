@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7MpiHPKoZbL8ZDK; fixture: knot-material-br11k.
 export default {
   id: 'felis_astra',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The night has nine lives. Beneath a skin of blue obsidian, patient stars learn to purr – and follow you with eyes of gold.',
   placeholder: {
-    color: '#10162b',
+    color: hsl.integer(271, 48, 10),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraViewMatrix, color, float, mix, modelViewMatrix, mx_noise_float, normalViewGeometry, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -55,19 +56,19 @@ export default class extends KnotMaterial {
     const zoning = mx_noise_float(p.mul(5.5).add(vec3(2.2, 6.6, 4.4))).mul(0.5).add(0.5)
     const growth = p.dot(cAxis).mul(9).sin().mul(0.5).add(0.5)
     const interior = mx_noise_float(p.mul(3.1)).mul(0.5).add(0.5).smoothstep(0.42, 0.9)
-    const heart = color('#c8101f').mul(interior).mul(time.mul(0.21).sin().mul(0.18).add(0.92))
-    this.colorNode = mix(color('#3d0510'), color('#7d1220'), zoning.mul(0.55).add(growth.mul(0.25)))
-      .add(color('#180205').mul(silk.mul(0.35)))
+    const heart = color(hsl.integer(26, 98, 45.4)).mul(interior).mul(time.mul(0.21).sin().mul(0.18).add(0.92))
+    this.colorNode = mix(color(hsl.integer(16, 87, 13)), color(hsl.integer(21, 91, 29)), zoning.mul(0.55).add(growth.mul(0.25)))
+      .add(color(hsl.integer(12, 77, 5)).mul(silk.mul(0.35)))
     this.metalness = 0
     this.roughnessNode = float(0.055).add(silk.mul(near).mul(0.09)).add(growth.mul(0.02)).clamp(0.03, 1)
     this.clearcoat = 1
     this.clearcoatRoughnessNode = float(0.028).add(silk.mul(near).mul(0.03))
     this.ior = 1.77
     this.normalNode = shadedNormal
-    this.emissiveNode = mix(color('#ff9db8'), color('#fff2f6'), asterism).mul(asterism).mul(0.62)
+    this.emissiveNode = mix(color(hsl.integer(2, 100, 77)), color(hsl.integer(357, 100, 97)), asterism).mul(asterism).mul(0.62)
       .add(heart.mul(0.12))
-      .add(color('#ff5a72').mul(silkGlow).mul(0.07))
-      .add(color('#ff2b46').mul(grazing.pow(2.4)).mul(0.13))
-      .add(color('#ffd0dc').mul(asterism.mul(intimate)).mul(0.2))
+      .add(color(hsl.integer(16, 100, 64.3)).mul(silkGlow).mul(0.07))
+      .add(color(hsl.integer(22, 100, 59)).mul(grazing.pow(2.4)).mul(0.13))
+      .add(color(hsl.integer(1, 100, 88.5)).mul(asterism.mul(intimate)).mul(0.2))
   }
 }

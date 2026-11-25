@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {BoxGeometry, Euler, Group, Mesh, MeshBasicNodeMaterial, PerspectiveCamera, RenderTarget, Scene, SphereGeometry, WebGPURenderer} from 'three/webgpu'
 
 import gold from '../../src/lib/materials/gold.ts'
@@ -13,8 +14,8 @@ export default async function verifyStudioSnapshot() {
   const studio = new StudioSnapshotRenderer
   const sphere = new SphereGeometry(0.27, 32, 24)
   const stalk = new BoxGeometry(0.035, 0.18, 0.04)
-  const white = new MeshBasicNodeMaterial({color: '#ffffff'})
-  const charcoal = new MeshBasicNodeMaterial({color: '#262626'})
+  const white = new MeshBasicNodeMaterial({color: hsl.integer(0, 0, 100)})
+  const charcoal = new MeshBasicNodeMaterial({color: hsl.integer(0, 0, 16.6)})
   const timings: Record<string, number> = {}
   try {
     // A gold apple with a stalk, inside a moved and turned parent like a rigid body’s object.

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -26,12 +27,12 @@ export default class extends KnotMaterial {
     const rings = opticalLine(warpedRadius.mul(70).sin(), 0.085)
     const echo = opticalLine(deep.xz.length().add(deep.y.mul(0.2)).mul(95).sin(), 0.065)
     const disk = inner.y.add(inner.x.mul(0.45)).abs().smoothstep(0.04, 0.32).oneMinus()
-    const orbit = mix(color('#38bfe9'), color('#ffc076'), view.x.mul(0.6).add(0.5).clamp())
-    this.colorNode = mix(color('#03060e'), color('#192338'), rim)
+    const orbit = mix(color(hsl.integer(224, 89, 71)), color(hsl.integer(70, 100, 82.6)), view.x.mul(0.6).add(0.5).clamp())
+    this.colorNode = mix(color(hsl.integer(261, 44, 4)), color(hsl.integer(265, 40, 15)), rim)
     this.metalness = 0.82
     this.roughnessNode = near.mul(-0.025).add(0.13)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.045
-    this.emissiveNode = orbit.mul(rings).mul(disk.mul(0.85).add(0.12)).mul(near.mul(0.65).add(0.45)).add(color('#637bdb').mul(echo).mul(near).mul(disk.oneMinus()).mul(0.3)).add(color('#efba7c').mul(rim.pow(2)).mul(0.22))
+    this.emissiveNode = orbit.mul(rings).mul(disk.mul(0.85).add(0.12)).mul(near.mul(0.65).add(0.45)).add(color(hsl.integer(271, 72, 55)).mul(echo).mul(near).mul(disk.oneMinus()).mul(0.3)).add(color(hsl.integer(70, 69, 79)).mul(rim.pow(2)).mul(0.22))
   }
 }

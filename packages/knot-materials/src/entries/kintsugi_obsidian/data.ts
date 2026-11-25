@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kintsugi_obsidian',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Gold traces a careful apology across the broken black glass.',
   placeholder: {
-    color: '#ffd77a',
+    color: hsl.integer(87, 100, 87.8),
     shading: 'stone',
   },
 } as const satisfies KnotData

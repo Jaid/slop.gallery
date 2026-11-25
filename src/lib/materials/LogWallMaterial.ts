@@ -1,14 +1,15 @@
+import hsl from 'okhsl'
 import {color, float, hash, max, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, sqrt, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import {inside, line, visibleDetail, worldNormalToView} from './filters.ts'
 
 const palette = {
-  honey: '#94643a',
-  umber: '#5a3820',
-  ring: '#34200f',
-  chinking: '#a39579',
-  chinkingShadow: '#4a4035',
+  honey: hsl.integer(61, 55, 47),
+  umber: hsl.integer(55, 53, 28),
+  ring: hsl.integer(60, 53, 16),
+  chinking: hsl.integer(85, 24, 62),
+  chinkingShadow: hsl.integer(70, 18, 28),
 }
 
 /**

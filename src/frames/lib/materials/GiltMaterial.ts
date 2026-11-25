@@ -1,6 +1,7 @@
 import type {FrameSurface} from './frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {clamp, color, float, max, mix, mx_noise_float, mx_worley_noise_float, smoothstep, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -17,7 +18,7 @@ export type GiltRelief = {
 
 export type GiltOptions = {
   /** the red clay the leaf is laid on, which shows where it is rubbed through */
-  bole?: string
+  bole?: number
   /** whether tiny pits break up the leaf’s roughness and normal */
   crackle?: boolean
   /** how strongly the hollows mirror the studio, relative to the default */
@@ -50,7 +51,7 @@ const waterGold = [0.9, 0.55, 0.2] as const
  * It reads the frame’s attributes, so it only suits frame geometry. A {@link GiltRelief} carves ornament into it as shading alone, its hollows taking the grime like the moulding’s own.
  */
 export default class GiltMaterial extends MeshPhysicalNodeMaterial {
-  constructor({bole = '#7a2f1b', crackle: withCrackle = true, environmentIntensity = 1, overlay, roughness = {
+  constructor({bole = hsl.integer(36, 77, 32), crackle: withCrackle = true, environmentIntensity = 1, overlay, roughness = {
     burnished: 0.12,
     matte: 0.3,
   }, relief, grime = 0.5, wear = 0.25}: GiltOptions = {}) {

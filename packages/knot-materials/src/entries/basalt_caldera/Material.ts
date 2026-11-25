@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_noise_float, select, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -155,13 +156,13 @@ export default class extends KnotMaterial {
       .clamp(0.18, 1.12)
 // Planckian Blackbody Color Ramp:
 // Warm cherry-red wall contact & scoria grazed by lava bounce (#7a0900 -> #d92b00) -> Mid-channel orange (#ff5500 -> #ffa818) -> Center-axis white-hot core (#ffe855 -> #ffffff)
-    const planckianMagma = mix(color('#6e0700'), mix(color('#d92800'), mix(color('#ff5900'), mix(color('#ffb01c'), color('#fff8c4'), magmaTemp.smoothstep(0.68, 0.96)), magmaTemp.smoothstep(0.42, 0.72)), magmaTemp.smoothstep(0.2, 0.46)), magmaTemp.smoothstep(0.1, 0.26))
-      .add(color('#ffffff').mul(magmaTemp.smoothstep(0.84, 1.08).pow(1.6).mul(1.35)))
+    const planckianMagma = mix(color(hsl.integer(30.6, 100, 24.4)), mix(color(hsl.integer(32.4, 100, 50)), mix(color(hsl.integer(40, 100, 62.9)), mix(color(hsl.integer(75.3, 100, 78.2)), color(hsl.integer(101, 100, 96.7)), magmaTemp.smoothstep(0.68, 0.96)), magmaTemp.smoothstep(0.42, 0.72)), magmaTemp.smoothstep(0.2, 0.46)), magmaTemp.smoothstep(0.1, 0.26))
+      .add(color(hsl.integer(0, 0, 100)).mul(magmaTemp.smoothstep(0.84, 1.08).pow(1.6).mul(1.35)))
 // 3. Matte Stony Basalt Plateau & Cliff Rim Color:
-    const stonyBasalt = mix(color('#16181d'), color('#2e333d'), pahoehoeCords.mul(0.55).add(quantizedStep.mul(0.28)).add(basaltGrain.mul(0.17)))
+    const stonyBasalt = mix(color(hsl.integer(268, 12, 11)), color(hsl.integer(264, 15, 22)), pahoehoeCords.mul(0.55).add(quantizedStep.mul(0.28)).add(basaltGrain.mul(0.17)))
       .mul(vesiclePits.mul(-0.52).add(1))
     const dryStonyRim = dCanyon.sub(topRimRadius).abs().smoothstep(0.022, 0).mul(isMagmaFloor.oneMinus())
-    const plateauWithRim = mix(stonyBasalt, color('#383e4a'), dryStonyRim.mul(0.45))
+    const plateauWithRim = mix(stonyBasalt, color(hsl.integer(264, 16, 27)), dryStonyRim.mul(0.45))
 // 4. Inverse-Square Continuous Radiosity Tail (`1 / (1 + k * d^2)`) that does NOT clamp at `topRimRadius`, plus Inter-Loop Bounce Light:
     const distFromLavaEdge = dCanyon.sub(floorHalfWidth).max(0)
 // Inverse-square physical decay across the cliff wall and bleeding softly onto the surrounding basalt plateau!
@@ -169,7 +170,7 @@ export default class extends KnotMaterial {
     const localHotSpot = flowConvection.mul(0.35).add(0.8)
     const radiosityIntensity = inverseSquareRadiosity.mul(localHotSpot).mul(isMagmaFloor.oneMinus())
 // Smooth chromatic decay along the radiosity tail: bright volcanic orange near the lava edge -> deep crimson -> warm dark ember brown on the plateau
-    const radiosityColor = mix(color('#3d0400'), mix(color('#b51400'), color('#ff5e05'), inverseSquareRadiosity.smoothstep(0.35, 0.92)), inverseSquareRadiosity.smoothstep(0.05, 0.55))
+    const radiosityColor = mix(color(hsl.integer(32, 100, 13)), mix(color(hsl.integer(30.8, 100, 41)), color(hsl.integer(41, 100, 63.6)), inverseSquareRadiosity.smoothstep(0.35, 0.92)), inverseSquareRadiosity.smoothstep(0.05, 0.55))
     const litBasaltRock = plateauWithRim.add(radiosityColor.mul(radiosityIntensity).mul(0.75))
     this.colorNode = mix(litBasaltRock, planckianMagma, isMagmaFloor)
 // 5. Bone-Dry Matte Stony Roughness & Low Specular Reflectivity across ALL Basalt & Cliff Rims:
@@ -195,7 +196,7 @@ export default class extends KnotMaterial {
     const toFissureView = vec3(dCanyon.dFdx().negate(), dCanyon.dFdy().negate(), 0.002).normalize()
     const microSlopeCatch = surfaceNormal.dot(toFissureView).max(0).mul(0.75).add(0.25)
     const longTail = float(1).div(float(1).add(distFromLavaEdge.div(0.135).pow(2)))
-    const shoulderRadiosity = mix(color('#520500'), color('#ff5200'), longTail.smoothstep(0.12, 0.85)).mul(longTail).mul(microSlopeCatch).mul(isMagmaFloor.oneMinus())
+    const shoulderRadiosity = mix(color(hsl.integer(31, 100, 18)), color(hsl.integer(38, 100, 61.9)), longTail.smoothstep(0.12, 0.85)).mul(longTail).mul(microSlopeCatch).mul(isMagmaFloor.oneMinus())
 // 2. Analytical 3D Inter-Loop Diffuse + Rough-Specular Bounce Light:
     const crossingLights = [vec3(0.26, 0, 0), vec3(-0.13, 0.225, 0), vec3(-0.13, -0.225, 0), vec3(0, 0, 0.12)] as const
     let interStrandIrradiance: Node<'float'> = float(0)
@@ -254,7 +255,7 @@ export default class extends KnotMaterial {
 // Tier 3: Analytical 3D Inter-Strand Bounce Light (`interLoopBounce`) illuminating neighboring loops and crossings with warm volcanic orange-red light!
     const magmaEmission = planckianMagma.mul(isMagmaFloor).mul(float(0.65).add(magmaTemp.mul(1.65)))
     const continuousRadiosity = radiosityColor.mul(radiosityIntensity).add(shoulderRadiosity.mul(0.95)).mul(near.mul(0.35).add(0.75)).mul(1.2)
-    const interLoopBounce = mix(color('#8c1100'), color('#ff5900'), interStrandIrradiance.clamp(0, 1)).mul(interStrandIrradiance.mul(stonyBasalt.r.mul(3.5).add(0.45)).add(interStrandSpec.mul(0.65))).mul(isMagmaFloor.oneMinus()).mul(1.15)
+    const interLoopBounce = mix(color(hsl.integer(31.4, 100, 32)), color(hsl.integer(40, 100, 62.9)), interStrandIrradiance.clamp(0, 1)).mul(interStrandIrradiance.mul(stonyBasalt.r.mul(3.5).add(0.45)).add(interStrandSpec.mul(0.65))).mul(isMagmaFloor.oneMinus()).mul(1.15)
     this.emissiveNode = magmaEmission.add(continuousRadiosity).add(interLoopBounce)
   }
 }

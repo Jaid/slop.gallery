@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -31,15 +32,15 @@ export default class extends BaseKnotMaterial {
     const sweep = tube.x.mul(Math.PI * 4).sub(time.mul(0.9)).sin().mul(0.5).add(0.5).pow(5)
     const faceBoost = facing.pow(3).mul(0.8).add(0.35)
     const veins = filament(mx_fractal_noise_float(p.mul(12), 3, 2, 0.5), 0.02).mul(intimate)
-    this.colorNode = mix(mix(color('#14151c'), color('#232733'), stone), color('#7a5c2e'), glyph.mul(0.85))
+    this.colorNode = mix(mix(color(hsl.integer(279, 17, 10)), color(hsl.integer(270, 20, 17)), stone), color(hsl.integer(76, 58, 42)), glyph.mul(0.85))
     this.metalnessNode = glyph.mul(0.9)
     this.roughnessNode = float(0.9).sub(glyph.mul(0.55)).clamp()
     this.clearcoat = 0.1
     this.clearcoatRoughness = 0.6
     this.normalNode = proceduralNormal(glyph.mul(0.9).add(stone.mul(0.2)), 0.0016)
-    this.emissiveNode = color('#43ffd0').mul(glyph).mul(sweep.mul(1.2).add(0.25)).mul(faceBoost).mul(near.mul(0.6).add(0.45))
-      .add(color('#ffd98a').mul(glyph).mul(glints(normalViewGeometry, 70)).mul(0.6))
-      .add(color('#2bffd9').mul(veins).mul(0.5))
-      .add(color('#1b8f74').mul(rim).mul(0.25))
+    this.emissiveNode = color(hsl.integer(172, 99, 88)).mul(glyph).mul(sweep.mul(1.2).add(0.25)).mul(faceBoost).mul(near.mul(0.6).add(0.45))
+      .add(color(hsl.integer(85, 100, 88.5)).mul(glyph).mul(glints(normalViewGeometry, 70)).mul(0.6))
+      .add(color(hsl.integer(176, 99.9, 87.9)).mul(veins).mul(0.5))
+      .add(color(hsl.integer(172, 92, 52)).mul(rim).mul(0.25))
   }
 }

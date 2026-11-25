@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, bitangentView, color, float, mix, mx_noise_float, select, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {panelSky, proceduralEnvironment} from '../../candidates/gemini_argon/lib/environment.ts'
@@ -163,21 +164,21 @@ export default class extends KnotMaterial {
     const morphoSpectrum = cosinePalette(opticalPath, [0.14, 0.42, 0.88], [0.36, 0.46, 0.16], [1, 1, 0.85], [0.54, 0.16, 0]).clamp(0.02, 1)
     const morphoVane = morphoSpectrum.mul(kajiyaSheen.mul(0.74).add(0.36))
 // Ocellus ("Seraph's Eye") cabochon gem interior:
-    const abyssPupil = mix(color('#03010a'), color('#1b0648'), localCos.oneMinus().pow(1.8)).add(color('#70f8ff').mul(innerCaustic.pow(2).mul(0.95)))
+    const abyssPupil = mix(color(hsl.integer(295, 73, 2.5)), color(hsl.integer(287, 92, 11)), localCos.oneMinus().pow(1.8)).add(color(hsl.integer(200, 100, 89)).mul(innerCaustic.pow(2).mul(0.95)))
     const irisPhase = cosInternal.mul(1.65).add(irisR.mul(1.2)).add(irisFilaments.mul(0.14)).add(top.rnd.y.mul(0.25)).add(loopPhase)
     const emeraldIris = cosinePalette(irisPhase, [0.1, 0.68, 0.56], [0.26, 0.34, 0.38], [1, 1, 1], [0.36, 0.04, 0.64]).clamp(0.04, 1)
       .mul(irisFilaments.mul(0.35).add(0.8))
-      .add(color('#aeffea').mul(innerCaustic.mul(0.5)))
-    const copperAureole = mix(color('#a8420c'), color('#ffd670'), localCos.mul(0.55).add(barbSilk.mul(0.45)))
+      .add(color(hsl.integer(176, 99, 93.2)).mul(innerCaustic.mul(0.5)))
+    const copperAureole = mix(color(hsl.integer(43, 93, 43.5)), color(hsl.integer(87, 100, 87)), localCos.mul(0.55).add(barbSilk.mul(0.45)))
 // Bold sculpted 24k golden rachis (quill shaft) & raised limbal bezel ring framing the cabochon eye.
     const goldMask = top.quillMask.max(top.limbalRing.smoothstep(0.28, 0.7)).clamp()
     const quillSeamAO = top.quillDist.sub(1.05).abs().smoothstep(0, 0.28).mul(0.28).add(0.72)
     const quillNormalHighlight = float(1).sub(top.quillSigned.clamp(-1, 1).pow(2)).max(0).sqrt()
-    const filigreeGold = mix(color('#c9881e'), color('#ffe275'), quillNormalHighlight.mul(0.68).add(facing.mul(0.32)))
+    const filigreeGold = mix(color(hsl.integer(73, 88, 62)), color(hsl.integer(95, 100, 90.2)), quillNormalHighlight.mul(0.68).add(facing.mul(0.32)))
     const withAureole = mix(morphoVane, copperAureole, top.aureole)
     const withIris = mix(withAureole, emeraldIris, iris)
     const withPupil = mix(withIris, abyssPupil, pupil)
-    const vaneColor = withPupil.mul(deepCavityAO).mul(quillSeamAO).mul(barbSilk.mul(0.18).add(0.86)).add(color('#24c8ff').mul(top.rimLip).mul(0.2))
+    const vaneColor = withPupil.mul(deepCavityAO).mul(quillSeamAO).mul(barbSilk.mul(0.18).add(0.86)).add(color(hsl.integer(227, 99, 74.3)).mul(top.rimLip).mul(0.2))
     this.colorNode = mix(vaneColor, filigreeGold.mul(top.underLipDropShadow.mul(0.35).add(0.65)), goldMask)
 // Dry, fibrous structural reflection on the Morpho vanes, pure 24k metallic gold on the quills, and glossy refractive cabochon dome ONLY over the Seraph's Eye!
     const isCabochon = top.corneaMask
@@ -185,7 +186,7 @@ export default class extends KnotMaterial {
     const unresolvedRoughnessBoost = barbResolved.oneMinus().mul(0.12)
     this.roughnessNode = mix(mix(float(0.26).add(barbSilk.oneMinus().mul(0.06)).add(unresolvedRoughnessBoost), float(0.012), isCabochon), float(0.18), goldMask)
 // Strong velvety keratin sheen across the feather barbules.
-    this.sheenNode = mix(color('#7b24ff'), color('#00e5ff'), localCos).mul(isCabochon.oneMinus()).mul(goldMask.oneMinus()).mul(0.88)
+    this.sheenNode = mix(color(hsl.integer(291, 100, 46.5)), color(hsl.integer(209, 100, 82)), localCos).mul(isCabochon.oneMinus()).mul(goldMask.oneMinus()).mul(0.88)
     this.sheenRoughness = 0.28
 // Thin-film iridescence on the feather vanes and iris, completely disabled on the 24k golden quills.
     this.iridescenceNode = goldMask.oneMinus().mul(pupil.oneMinus().mul(0.75).add(0.2))
@@ -261,11 +262,11 @@ export default class extends KnotMaterial {
     this.envNode = proceduralEnvironment(sanctuary)
 // Structural Bragg diffraction flash + saturated sapphire/ultraviolet backscattering floor so unlit shadow loops never drop to dead muddy black!
     const featherFlash = top.rnd2.x.sub(localCos).abs().smoothstep(0, 0.22).oneMinus().mul(top.seamMask)
-    const vaneFire = mix(color('#00d8ff'), color('#4258ff'), localCos.oneMinus()).mul(featherFlash.pow(1.6)).mul(kajiyaSheen).mul(goldMask.oneMinus()).mul(isCabochon.oneMinus()).mul(deepCavityAO).mul(0.58)
-    const shadowBackscatter = mix(color('#13247a'), color('#3b1278'), top.tipProgress).mul(goldMask.oneMinus()).mul(pupil.oneMinus()).mul(deepCavityAO).mul(0.24)
+    const vaneFire = mix(color(hsl.integer(217, 100, 78)), color(hsl.integer(270, 100, 48.4)), localCos.oneMinus()).mul(featherFlash.pow(1.6)).mul(kajiyaSheen).mul(goldMask.oneMinus()).mul(isCabochon.oneMinus()).mul(deepCavityAO).mul(0.58)
+    const shadowBackscatter = mix(color(hsl.integer(268, 92, 21.4)), color(hsl.integer(294, 89, 22)), top.tipProgress).mul(goldMask.oneMinus()).mul(pupil.oneMinus()).mul(deepCavityAO).mul(0.24)
     const irisFire = emeraldIris.mul(iris.add(innerCaustic.mul(0.65))).mul(near.mul(0.45).add(0.45))
-    const quillGoldGlow = color('#ffc847').mul(goldMask).mul(quillNormalHighlight.mul(0.55).add(grazing.pow(1.8).mul(0.55))).mul(0.54)
-    const violetGrazing = mix(color('#6b24ff'), color('#00d4ff'), top.tipProgress).mul(grazing.pow(3)).mul(goldMask.oneMinus()).mul(deepCavityAO).mul(0.42)
+    const quillGoldGlow = color(hsl.integer(85, 100, 83.8)).mul(goldMask).mul(quillNormalHighlight.mul(0.55).add(grazing.pow(1.8).mul(0.55))).mul(0.54)
+    const violetGrazing = mix(color(hsl.integer(286, 100, 44.7)), color(hsl.integer(220, 100, 77)), top.tipProgress).mul(grazing.pow(3)).mul(goldMask.oneMinus()).mul(deepCavityAO).mul(0.42)
     this.emissiveNode = vaneFire.add(shadowBackscatter).add(irisFire).add(quillGoldGlow).add(violetGrazing)
   }
 }

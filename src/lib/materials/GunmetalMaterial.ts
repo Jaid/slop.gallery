@@ -1,4 +1,5 @@
 import StudioEnvironment from 'knot-materials/StudioEnvironment.ts'
+import hsl from 'okhsl'
 import {color, luminance, mix, mx_noise_float, positionLocal, vec2} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -23,7 +24,7 @@ export default class GunmetalMaterial extends MeshStandardNodeMaterial {
     this.envMap = this.studio
     const rubbed = mx_noise_float(positionLocal.mul(9)).mul(0.5).add(0.5).smoothstep(0.3, 0.85)
     const grain = mx_noise_float(positionLocal.mul(260))
-    const reflectance = mix(color('#1a1d22'), color('#3f444d'), rubbed.mul(0.7))
+    const reflectance = mix(color(hsl.integer(261, 12, 13)), color(hsl.integer(262, 11, 29)), rubbed.mul(0.7))
     this.colorNode = reflectance
     const roughness = rubbed.mul(-0.1).add(grain.mul(0.03)).add(0.44)
     this.roughnessNode = roughness

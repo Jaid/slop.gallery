@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, mx_rotate2d, positionGeometry, uv} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -17,7 +18,7 @@ export default class extends KnotMaterial {
     const weave = weaveA.mul(weaveB)
     const p = positionGeometry
     const grain = mx_noise_float(p.mul(20)).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#0d0d0f'), color('#3a3a3f'), weave.mul(grain))
+    this.colorNode = mix(color(hsl.integer(286, 6, 7)), color(hsl.integer(286, 6, 25)), weave.mul(grain))
     this.metalness = 0.9
     this.roughnessNode = weave.mul(0.15).add(0.2)
     this.clearcoat = 0.5

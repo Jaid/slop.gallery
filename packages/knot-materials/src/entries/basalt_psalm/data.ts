@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'basalt_psalm',
   candidateId: 'grok',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'The rock cooled while it was still singing. The hymn is the shape of that last heat.',
   displacement: 0.008,
   placeholder: {
-    color: '#66513c',
+    color: hsl.integer(66, 30, 37),
     shading: 'stone',
   },
 } as const satisfies KnotData

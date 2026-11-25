@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kintsugi_void',
   candidateId: 'kimi',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Bright seams hold together pieces of an otherwise unbroken darkness.',
   placeholder: {
-    color: '#ffd75e',
+    color: hsl.integer(90, 100, 87),
     shading: 'stone',
   },
 } as const satisfies KnotData

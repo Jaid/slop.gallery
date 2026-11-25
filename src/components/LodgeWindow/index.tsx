@@ -2,6 +2,7 @@ import type {Material} from 'three/webgpu'
 
 import {RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -13,7 +14,7 @@ import {lightIndoors} from '#src/lib/materials/lights/index.ts'
 
 /** The brass that stops the Lodge windows’ glass, between the Lodge and the passages around it, out of the sun’s reach. */
 const useBrass = () => useDisposable(useMemo(() => lightIndoors(new MeshStandardNodeMaterial({
-  color: '#ac8c58',
+  color: hsl.integer(79, 48, 60),
   metalness: 0.65,
   roughness: 0.4,
 })), []))

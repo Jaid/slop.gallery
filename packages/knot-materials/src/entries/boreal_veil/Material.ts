@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -34,12 +35,12 @@ export default class extends BaseKnotMaterial {
     const veils = [0, 1, 2].map(index => curtain(wander, float(index).mul(31).add(3)))
     const veil = veils[0].fade.mul(veils[0].ray).mul(0.4).add(veils[1].fade.mul(veils[1].ray).mul(0.7)).add(veils[2].fade.mul(veils[2].ray))
     const height = p.y.add(0.5).clamp(0, 1)
-    const emerald = color('#2bff8a')
-    const teal = color('#19c8c0')
-    const violet = color('#8b2fd6')
+    const emerald = color(hsl.integer(152, 99.9, 85.9))
+    const teal = color(hsl.integer(190, 94, 71))
+    const violet = color(hsl.integer(304, 88, 45.4))
     const hue = mix(mix(emerald, teal, height.mul(1.4).clamp()), violet, height.smoothstep(0.62, 0.98))
     const density = veil.mul(near.mul(0.45).add(0.55)).mul(grazing.mul(0.5).add(0.55))
-    this.colorNode = color('#020308')
+    this.colorNode = color(hsl.integer(270, 42, 3))
     this.metalness = 0
     this.roughnessNode = float(0.95).sub(density.mul(0.1))
     this.clearcoat = 0.05
@@ -48,6 +49,6 @@ export default class extends BaseKnotMaterial {
     this.normalNode = proceduralNormal(veil.mul(0.04), 0.08).normalize()
     const jitter = vec3(mx_noise_float(p.mul(55)), mx_noise_float(p.mul(55).add(9)), mx_noise_float(p.mul(55).add(17))).sub(0.5)
     const dust = glints(normalLocal.add(jitter.mul(0.15)), 110).mul(intimate).mul(0.1)
-    this.emissiveNode = hue.mul(density.mul(2.1)).add(hue.mul(grazing.pow(2).mul(veil).mul(0.6))).add(color('#c8ffe0').mul(dust))
+    this.emissiveNode = hue.mul(density.mul(2.1)).add(hue.mul(grazing.pow(2).mul(veil).mul(0.6))).add(color(hsl.integer(160, 99, 94.6)).mul(dust))
   }
 }

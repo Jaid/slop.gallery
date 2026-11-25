@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {bool, color, float, normalView, positionViewDirection} from 'three/tsl'
 import {MeshPhysicalNodeMaterial, PlaneGeometry} from 'three/webgpu'
 
@@ -37,7 +38,7 @@ export default class VitrineFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#202224'
+  override readonly tint = hsl.integer(248, 5, 15)
   override readonly title = 'Sealed vitrine'
 
   override createGeometry(width: number, height: number) {
@@ -60,7 +61,7 @@ export default class VitrineFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new FramePaintMaterial({
-        color: '#0b0b0b',
+        color: hsl.integer(0, 0, 6),
         roughness: 0.95,
         grime: 0,
       }),
@@ -81,13 +82,13 @@ class VitrineGlassMaterial extends MeshPhysicalNodeMaterial {
       envMapIntensity: 1.5,
       transparent: true,
       depthWrite: false,
-      color: '#0a0d0d',
+      color: hsl.integer(197, 9, 6),
     })
     const facing = normalView.dot(positionViewDirection.negate()).clamp(0, 1)
     // Schlick’s Fresnel for glass, so the pane all but disappears when seen straight on.
     const fresnel = float(0.04).add(float(0.96).mul(facing.oneMinus().pow(5)))
     this.opacityNode = fresnel.mul(0.75).add(0.03)
-    this.colorNode = color('#1c2224')
+    this.colorNode = color(hsl.integer(220, 11, 14))
     // The pane throws no shadow over the work behind it.
     this.maskShadowNode = bool(false)
   }

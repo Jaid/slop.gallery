@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2tmj6W7XIniDLsB; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sidereal_well',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A night with no horizon is sealed beneath black glass. Stars drift at different depths while a slow spiral gathers their light into an unspoken wish.',
   placeholder: {
-    color: '#101426',
+    color: hsl.integer(273, 42, 10),
     shading: 'glass',
   },
 } as const satisfies KnotData

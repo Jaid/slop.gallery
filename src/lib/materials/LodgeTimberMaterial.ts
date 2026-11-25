@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, normalGeometry, positionGeometry, select, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -9,9 +10,9 @@ import {heightNormal, visibleDetail} from './filters.ts'
  * The grain is solid and mapped in each mesh’s own frame along the horizontal axis that lies in the face, so it turns with rotated furniture: pieces built along x read along x, faces turned toward x read along z. Shallow adze facets ripple across the faces and flatten before they could shimmer.
  */
 export default class LodgeTimberMaterial extends MeshStandardNodeMaterial {
-  constructor({light = '#5a3920', dark = '#2e1b0f'}: {
-    dark?: string
-    light?: string
+  constructor({light = hsl.integer(57, 53, 28), dark = hsl.integer(52, 47, 14)}: {
+    dark?: number
+    light?: number
   } = {}) {
     super({
       roughness: 0.6,

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -53,12 +54,12 @@ export default class extends KnotMaterial {
     const drift = time.mul(0.075).add(feather.random.x.mul(TAU))
     const structuralPhase = feather.rotated.x.mul(5.2).add(feather.rotated.y.mul(3.1)).add(view.dot(vec3(0.4, 0.75, -0.52)).mul(2.5)).add(drift)
     const spectral = spectralColor(structuralPhase.mul(0.13).add(feather.random.y))
-    const blueGreen = mix(color('#062b36'), color('#0b6c77'), spectral.x.mul(0.48).add(0.16))
-    const blue = mix(color('#10254d'), color('#2949a0'), spectral.z.mul(0.42).add(0.12))
+    const blueGreen = mix(color(hsl.integer(222, 80, 17)), color(hsl.integer(207, 93, 41)), spectral.x.mul(0.48).add(0.16))
+    const blue = mix(color(hsl.integer(262, 72, 17)), color(hsl.integer(265, 79, 35)), spectral.z.mul(0.42).add(0.12))
     const body = mix(blueGreen, blue, spectral.y.mul(0.5).add(0.18)).mul(feather.scale.mul(0.18).add(0.78))
-    const ocellus = mix(color('#d88b27'), color('#36c6c2'), feather.random.y).mul(feather.eyeRing.mul(0.8).add(0.2))
-    const eyeColor = mix(ocellus, color('#080a19'), feather.pupil)
-    const shaftColor = mix(color('#e2b96e'), color('#77e3d0'), feather.random.x)
+    const ocellus = mix(color(hsl.integer(67, 86, 65)), color(hsl.integer(192, 83, 71)), feather.random.y).mul(feather.eyeRing.mul(0.8).add(0.2))
+    const eyeColor = mix(ocellus, color(hsl.integer(276, 47, 6)), feather.pupil)
+    const shaftColor = mix(color(hsl.integer(81, 65, 77)), color(hsl.integer(181, 69, 82)), feather.random.x)
     this.colorNode = mix(body, eyeColor, feather.eye).mul(feather.scale.mul(0.08).add(0.92))
     this.metalnessNode = float(0.34).add(feather.eye.mul(0.28)).add(feather.scale.mul(-0.12)).sub(feather.shaft.mul(0.18))
     this.roughnessNode = float(0.25).sub(feather.eye.mul(0.1)).sub(feather.barb.mul(0.07)).add(grazing.mul(0.04)).clamp(0.08, 0.46)
@@ -66,7 +67,7 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.29
     this.iridescenceThicknessNode = structuralPhase.mul(26).add(feather.eye.mul(110)).add(facing.mul(120)).add(240)
     this.sheen = 0.42
-    this.sheenColor.set('#a8f5ea')
+    this.sheenColor.set(hsl.integer(185, 73, 90.3))
     this.sheenRoughness = 0.18
     this.clearcoat = 0.8
     this.clearcoatRoughnessNode = float(0.075).add(feather.barb.mul(0.08))
@@ -78,8 +79,8 @@ export default class extends KnotMaterial {
     this.aoNode = float(1).sub(feather.eye.mul(0.1)).sub(feather.pupil.mul(0.12))
     const shimmer = structuralPhase.sin().mul(0.5).add(0.5).pow(7)
     this.emissiveNode = shaftColor.mul(feather.shaft.mul(0.22)).mul(near.mul(0.5).add(0.2))
-      .add(color('#72fff0').mul(feather.eyeRing).mul(shimmer).mul(near.mul(0.34).add(0.12)))
-      .add(color('#fff0b0').mul(feather.pupil).mul(0.03))
-      .add(color('#7d9cff').mul(glints(surfaceNormal, 110)).mul(feather.barb).mul(intimate.mul(0.08)))
+      .add(color(hsl.integer(186, 100, 90.5)).mul(feather.eyeRing).mul(shimmer).mul(near.mul(0.34).add(0.12)))
+      .add(color(hsl.integer(96, 100, 94.4)).mul(feather.pupil).mul(0.03))
+      .add(color(hsl.integer(269, 100, 67)).mul(glints(surfaceNormal, 110)).mul(feather.barb).mul(intimate.mul(0.08)))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_atan2, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -157,13 +158,13 @@ export default class extends KnotMaterial {
     const rubyPivotHole = aa(float(0.009).sub(dist))
     const rubyDome = float(1).sub(rubyNormR.pow(2)).sqrt().mul(rubyTable.mul(-0.25).add(1))
 // Authentic horological palettes (linear light)
-    const roseGold = mix(color('#cf7842'), color('#ffd6ab'), bezelChamfer.mul(0.65).add(satinBrush.mul(0.25)).add(0.2))
-    const champagneBrass = mix(color('#d8a23b'), color('#ffe8a3'), mainGearBevel)
-    const rhodiumSilver = mix(color('#7f8da3'), color('#e8f0fa'), guilloche.mul(0.65).add(0.25))
-    const bluedSteel = mix(color('#08225e'), color('#388bff'), facing.pow(1.4).mul(0.75).add(grazing.mul(0.25)))
-    const aventurineBase = mix(color('#020510'), color('#07132e'), dialR.smoothstep(0, 0.3))
-      .add(color('#f2a644').mul(zodiacGrid.mul(0.55)))
-      .add(color('#ffbf52').mul(flakeFlash.mul(near.mul(1.8).add(0.65))))
+    const roseGold = mix(color(hsl.integer(51, 71, 60)), color(hsl.integer(68, 100, 88.4)), bezelChamfer.mul(0.65).add(satinBrush.mul(0.25)).add(0.2))
+    const champagneBrass = mix(color(hsl.integer(79, 79, 70)), color(hsl.integer(92, 100, 92.4)), mainGearBevel)
+    const rhodiumSilver = mix(color(hsl.integer(259, 19, 58)), color(hsl.integer(254, 55, 94.4)), guilloche.mul(0.65).add(0.25))
+    const bluedSteel = mix(color(hsl.integer(263, 91, 17.5)), color(hsl.integer(258, 100, 59)), facing.pow(1.4).mul(0.75).add(grazing.mul(0.25)))
+    const aventurineBase = mix(color(hsl.integer(263, 60, 4)), color(hsl.integer(264, 71, 9)), dialR.smoothstep(0, 0.3))
+      .add(color(hsl.integer(70, 86, 75)).mul(zodiacGrid.mul(0.55)))
+      .add(color(hsl.integer(78, 100, 82)).mul(flakeFlash.mul(near.mul(1.8).add(0.65))))
 // Composite layers from bottom (deepest well) to top (bridge & ruby jewel)
     let col: Node<'vec3'> = aventurineBase
 // Ambient occlusion inside the tourbillon well wall
@@ -177,19 +178,19 @@ export default class extends KnotMaterial {
     col = mix(col, champagneBrass, mainGear)
 // Outer bridge deck: rhodium-plated Clous de Paris guilloche + 5N rose-gold bezel & meridian rails
     const outerDeck = mix(rhodiumSilver.mul(hobVGroove.mul(0.55).add(0.45)), roseGold, ringBezel.max(frameMask).max(innerLip))
-    const engravedDeck = mix(outerDeck, color('#170d06'), bezelTicks.mul(0.82))
+    const engravedDeck = mix(outerDeck, color(hsl.integer(57, 41, 7)), bezelTicks.mul(0.82))
     col = mix(engravedDeck, col, socketWell.mul(ringBezel.oneMinus()))
 // Tourbillon upper bridge bar, blued-steel Breguet hand, corner screws and central gold chaton
-    col = mix(col, mix(rhodiumSilver, color('#ffffff'), bridgeBevel.mul(0.65)), bridgeBar)
+    col = mix(col, mix(rhodiumSilver, color(hsl.integer(0, 0, 100)), bridgeBevel.mul(0.65)), bridgeBar)
     col = mix(col, bluedSteel, bluedHand.max(screwHead))
     col = mix(col, roseGold, screwRim)
-    col = mix(col, color('#05080f'), screwSlot)
+    col = mix(col, color(hsl.integer(262, 32, 5)), screwSlot)
     col = mix(col, mix(champagneBrass.add(chatonChamfer.mul(0.25)), bluedSteel, chatonScrews), chatonGold)
 // Deep pigeon-blood faceted synthetic corundum ruby + dark central pivot arbor
     const rubyCaustic = rubyFacet.sub(0.62).abs().smoothstep(0.18, 0).add(theta.mul(8).sin().abs().smoothstep(0.15, 0).mul(0.45)).mul(facing.pow(1.6))
-    const rubyColor = mix(color('#260108'), color('#e00730'), rubyDome.pow(1.4))
-      .add(color('#ff4d6d').mul(rubyCaustic.mul(0.9)))
-    col = mix(col, mix(rubyColor, color('#1a1216'), rubyPivotHole), rubyMask)
+    const rubyColor = mix(color(hsl.integer(13, 92, 8)), color(hsl.integer(23, 99.4, 50.6)), rubyDome.pow(1.4))
+      .add(color(hsl.integer(15, 100, 62.6)).mul(rubyCaustic.mul(0.9)))
+    col = mix(col, mix(rubyColor, color(hsl.integer(347, 19, 9)), rubyPivotHole), rubyMask)
     this.colorNode = col
 // Metalness: 1 on all metals, 0.04 on aventurine glass dial and synthetic ruby jewel
     const isMetal = socketWell.oneMinus()
@@ -278,13 +279,13 @@ export default class extends KnotMaterial {
     this.envNode = proceduralEnvironment(studio)
 // Ruby jewel internal caustic fire, escapement impulse and golden astrolabe rete glow on approach
     const escapementPulse = loopPhase.mul(6).add(rnd.x.mul(TAU)).sin().mul(0.5).add(0.5).pow(4)
-    const rubyFire = mix(color('#b80422'), color('#ff2e55'), rubyCaustic).mul(rubyMask).mul(rubyPivotHole.oneMinus()).mul(near.mul(0.75).add(0.3).add(escapementPulse.mul(0.55)))
-    const tickGlow = color('#ffae42').mul(bezelTicks).mul(intimate.mul(0.65).add(grazing.pow(2.2).mul(0.25)))
-    const dialLoom = color('#f5a638').mul(zodiacGrid).mul(socketWell).mul(mainGear.oneMinus()).mul(bridgeBar.oneMinus()).mul(near.mul(0.42).add(0.16))
+    const rubyFire = mix(color(hsl.integer(24, 99.3, 41.6)), color(hsl.integer(18, 99, 59)), rubyCaustic).mul(rubyMask).mul(rubyPivotHole.oneMinus()).mul(near.mul(0.75).add(0.3).add(escapementPulse.mul(0.55)))
+    const tickGlow = color(hsl.integer(70, 100, 78)).mul(bezelTicks).mul(intimate.mul(0.65).add(grazing.pow(2.2).mul(0.25)))
+    const dialLoom = color(hsl.integer(70, 91, 75)).mul(zodiacGrid).mul(socketWell).mul(mainGear.oneMinus()).mul(bridgeBar.oneMinus()).mul(near.mul(0.42).add(0.16))
     const specSpark = glints(surfaceNormal, 72).mul(bezelChamfer.max(mainGearBevel).max(bridgeBevel)).mul(0.2)
     this.emissiveNode = rubyFire
       .add(tickGlow.mul(0.5))
       .add(dialLoom.mul(0.45))
-      .add(color('#fff2d6').mul(specSpark))
+      .add(color(hsl.integer(87, 100, 96)).mul(specSpark))
   }
 }

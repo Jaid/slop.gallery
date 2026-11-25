@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionViewDirection, vec3} from 'three/tsl'
 
 import {premiumDetail} from '../../candidates/gpt_astra/lib/premiumDetail.ts'
@@ -41,15 +42,15 @@ export default class extends KnotMaterial {
     const crystalGrain = mx_noise_float(p.mul(95)).mul(0.5).add(0.5)
     const fractureFlash = view.dot(vec3(-0.36, 0.81, 0.46).normalize()).abs().pow(22)
     const fractureFlash2 = view.dot(vec3(0.84, 0.18, -0.51).normalize()).abs().pow(28)
-    const ice = mix(color('#b1deea'), color('#edfaff'), weather.mul(0.4).add(0.4))
-    const cloudyIce = mix(ice, color('#f2f8f7'), frost.mul(0.88))
-    this.colorNode = mix(cloudyIce, color('#477f99'), middleCracks.mul(detail).mul(0.16))
+    const ice = mix(color(hsl.integer(216, 48, 85)), color(hsl.integer(223, 100, 97.3)), weather.mul(0.4).add(0.4))
+    const cloudyIce = mix(ice, color(hsl.integer(185, 27, 97)), frost.mul(0.88))
+    this.colorNode = mix(cloudyIce, color(hsl.integer(230, 49, 50)), middleCracks.mul(detail).mul(0.16))
     this.transmission = 0.9
     this.transmissionNode = frost.mul(0.5).oneMinus().mul(0.92)
     this.thickness = 0.62
     this.ior = 1.31
     this.dispersion = 0.045
-    this.attenuationColor.set('#a2d6e5')
+    this.attenuationColor.set(hsl.integer(217, 48, 82))
     this.attenuationDistance = 1.4
     this.roughnessNode = frost.mul(0.32).add(surfaceCracks.mul(0.065)).add(0.048)
     this.clearcoat = 0.65
@@ -57,7 +58,7 @@ export default class extends KnotMaterial {
     const relief = surfaceCracks.mul(-0.5).add(crystalGrain.mul(frost).mul(intimate).mul(0.17))
     this.normalNode = premiumNormal(relief.mul(detail), 0.00065)
     this.clearcoatNormalNode = premiumNormal(mx_noise_float(p.mul(11)), 0.00012)
-    this.emissiveNode = color('#d4f8ff').mul(surfaceCracks).mul(fractureFlash.mul(0.8).add(0.07)).add(color('#8bc7e2').mul(middleCracks).mul(detail).mul(fractureFlash2.mul(0.5).add(0.13))).add(color('#438aaa').mul(deepCracks).mul(intimate).mul(0.19)).add(color('#cbefff').mul(grazing.pow(6)).mul(frost).mul(0.08))
+    this.emissiveNode = color(hsl.integer(210, 100, 95)).mul(surfaceCracks).mul(fractureFlash.mul(0.8).add(0.07)).add(color(hsl.integer(228, 54, 77)).mul(middleCracks).mul(detail).mul(fractureFlash2.mul(0.5).add(0.13))).add(color(hsl.integer(230, 60, 54)).mul(deepCracks).mul(intimate).mul(0.19)).add(color(hsl.integer(227, 100, 92)).mul(grazing.pow(6)).mul(frost).mul(0.08))
     this.envMapIntensity = 0.95
   }
 }

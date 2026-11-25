@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, uv, vec2, vec4} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -33,7 +34,7 @@ export default class extends BaseKnotMaterial {
     const weaveDepth = warpShadow.add(weftShadow).mul(weaveNoise)
     // ---- base silk colour ----
     // A translucent off-white silk that lets the backlight through.
-    const silkBase = color('#f6f3ec').mul(weaveNoise.mul(0.18).add(0.82))
+    const silkBase = color(hsl.integer(87, 30, 96)).mul(weaveNoise.mul(0.18).add(0.82))
     // ---- aurora backlight ----
     // Five layered curtains, each a cosine palette over its own slow
     // scrolling phase, anchored to a different vertical band so they
@@ -49,10 +50,10 @@ export default class extends BaseKnotMaterial {
     const shimmer = mx_fractal_noise_float(p.mul(6).add(vec2(time.mul(0.3), time.mul(-0.4))), 4, 2.1, 0.55)
       .mul(0.5).add(0.5)
     // The palette moves through green → teal → magenta → violet.
-    const auroraGreen = color('#0fff80')
-    const auroraTeal = color('#3accff')
-    const auroraMagenta = color('#ff3ec3')
-    const auroraViolet = color('#9052ff')
+    const auroraGreen = color(hsl.integer(151, 99.9, 85.5))
+    const auroraTeal = color(hsl.integer(226, 100, 76))
+    const auroraMagenta = color(hsl.integer(344, 100, 64.3))
+    const auroraViolet = color(hsl.integer(294, 100, 54))
     const auroraColour = (auroraGreen as unknown as Node<'vec3'>) as unknown as ReturnType<typeof mix>
     auroraColour
     const auroraMixed = mix(auroraGreen, auroraTeal, curtainMix)
@@ -67,12 +68,12 @@ export default class extends BaseKnotMaterial {
     this.metalness = 0
     this.roughness = 0.35
     this.sheen = 1
-    this.sheenColor.set('#fbf3ff')
+    this.sheenColor.set(hsl.integer(315, 100, 97))
     this.sheenRoughness = 0.22
     this.transmission = 0.4
     this.thickness = 0.16
     this.ior = 1.42
-    this.attenuationColor.set('#a8c6ff')
+    this.attenuationColor.set(hsl.integer(262, 100, 80))
     this.attenuationDistance = 0.35
     this.clearcoat = 0.25
     this.clearcoatRoughness = 0.18
@@ -88,7 +89,7 @@ export default class extends BaseKnotMaterial {
     const backlightEmissive = auroraMixed
       .mul(intimate.mul(1.8).add(0.6))
       .mul(near.mul(0.4).add(0.4))
-    const silkShimmer = (color('#ffffff') as unknown as Node<'vec3'>).mul(shimmer).mul(grazing.pow(3)).mul(near).mul(0.4)
+    const silkShimmer = (color(hsl.integer(0, 0, 100)) as unknown as Node<'vec3'>).mul(shimmer).mul(grazing.pow(3)).mul(near).mul(0.4)
     const rimGlow = mix(auroraMagenta, auroraTeal, facing).mul(grazing.pow(2.5)).mul(intimate).mul(0.35)
     this.emissiveNode = backlightEmissive.add(silkShimmer as unknown as ReturnType<typeof mix>).add(rimGlow)
     viewDir

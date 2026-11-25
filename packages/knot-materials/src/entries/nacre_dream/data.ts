@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 9YA8kP6cid9wkS5; fixture: knot-material-shaders.
 // Original identity: nacre_shell (Nacre Dream).
 export default {
@@ -17,7 +19,7 @@ export default {
   },
   flavorText: 'Pearl layers turn with the sea, keeping a little blue in every reflection.',
   placeholder: {
-    color: '#1b5361',
+    color: hsl.integer(218, 69, 32),
     shading: 'smooth',
   },
 } as const satisfies KnotData

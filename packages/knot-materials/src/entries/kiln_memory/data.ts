@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4cRctoZrXREvmK4; fixture: knot-material-shaders; result: success.
 export default {
   id: 'kiln_memory',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Cobalt gardens remember the hand that painted them. Beneath a thousand hairline fractures, the porcelain is still dreaming of rain.',
   placeholder: {
-    color: '#e6e5d0',
+    color: hsl.integer(105, 33, 90),
     shading: 'smooth',
   },
 } as const satisfies KnotData

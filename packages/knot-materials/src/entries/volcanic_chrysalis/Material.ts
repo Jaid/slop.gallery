@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_float, mx_worley_noise_vec3, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -28,8 +29,8 @@ export default class extends BaseKnotMaterial {
     const turbulence = mx_noise_float(flow).mul(0.5).add(mx_noise_float(flow.mul(2.6)).mul(0.25))
     const heat = fissureCore.mul(1.5).add(fissure.mul(0.55)).add(turbulence.mul(0.4)).clamp()
     // Blackbody radiation spectrum (cooling crimson -> bright amber -> thermonuclear white)
-    const magmaColor = mix(mix(color('#1a0200'), color('#d12300'), heat.smoothstep(0.08, 0.45)), mix(color('#ff9500'), color('#ffffff'), heat.smoothstep(0.65, 1.15)), heat.smoothstep(0.45, 0.85))
-    this.colorNode = mix(color('#080706'), color('#140d09'), mx_noise_float(p.mul(22)).mul(0.5).add(0.5))
+    const magmaColor = mix(mix(color(hsl.integer(35, 100, 5.5)), color(hsl.integer(32, 100, 48)), heat.smoothstep(0.08, 0.45)), mix(color(hsl.integer(63, 100, 72.7)), color(hsl.integer(0, 0, 100)), heat.smoothstep(0.65, 1.15)), heat.smoothstep(0.45, 0.85))
+    this.colorNode = mix(color(hsl.integer(70, 7, 5)), color(hsl.integer(51, 24, 7)), mx_noise_float(p.mul(22)).mul(0.5).add(0.5))
     this.metalness = 0.08
     this.roughnessNode = mix(float(0.92), float(0.18), fissure)
     this.normalNode = proceduralNormal(fissure.mul(1.8).add(mx_noise_float(p.mul(28)).mul(0.2)), 0.0035)
@@ -38,7 +39,7 @@ export default class extends BaseKnotMaterial {
     const emberDistance = mx_worley_noise_float(emberSample, 1, 0)
     const emberGate = mx_worley_noise_float(emberSample, 1, 1).smoothstep(0.965, 0.99)
     const emberCore = emberDistance.smoothstep(0.025, 0.12).oneMinus().mul(emberGate)
-    const embers = emberCore.mul(color('#ff4500')).mul(2.5)
+    const embers = emberCore.mul(color(hsl.integer(35.4, 100, 60.5))).mul(2.5)
     const magmaRadiance = magmaColor.mul(fissure).mul(heat.mul(4.5).add(1.2))
     this.emissiveNode = magmaRadiance.add(embers).mul(near.mul(0.6).add(0.5))
   }

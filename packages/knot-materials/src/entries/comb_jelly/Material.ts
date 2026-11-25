@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_fractal_noise_float, mx_noise_float, refract, time, uv, vec3} from 'three/tsl'
 
 import {gratingSpectrum} from '../../candidates/claude_opus/lib/diffraction.ts'
@@ -130,7 +131,7 @@ export default class extends KnotMaterial {
 // Gel undulation and raised combs for the wet surface highlights.
     const undulation = mx_noise_float(p.mul(14).add(vec3(time.mul(0.05), 0, 0))).mul(0.0009)
     this.normalNode = proceduralNormal(band.mul(0.0024).add(combGlow.mul(plateResolved).mul(0.0008)).add(undulation), 1)
-    this.colorNode = mix(color('#020812'), color('#0a2234'), band.mul(0.6))
+    this.colorNode = mix(color(hsl.integer(251, 60, 5)), color(hsl.integer(244, 63, 14)), band.mul(0.6))
     this.metalness = 0
     this.roughness = 0.32
     this.specularIntensity = 0.6
@@ -138,12 +139,12 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.035
     this.clearcoatNormalNode = proceduralNormal(undulation, 1)
     const scatter = chord.div(2 * knotTubeRadius).clamp()
-    const body = color('#06223f').mul(scatter.mul(0.16).add(0.025)).add(color('#3ab4ff').mul(grazing.pow(4)).mul(0.32))
-    const interior = color('#ff5c3d').mul(gut).mul(gutPulse).mul(facing.mul(0.5).add(0.25)).mul(0.16)
+    const body = color(hsl.integer(252, 78, 15)).mul(scatter.mul(0.16).add(0.025)).add(color(hsl.integer(241, 100, 69.4)).mul(grazing.pow(4)).mul(0.32))
+    const interior = color(hsl.integer(33, 100, 63.6)).mul(gut).mul(gutPulse).mul(facing.mul(0.5).add(0.25)).mul(0.16)
       .add(farRainbow.mul(behind.band).mul(0.22).mul(scatter))
-      .add(color('#bfe9ff').mul(snow))
-    const light = color('#22c6ff').mul(canal.mul(flash).mul(photocytes)).mul(startle).mul(1.6)
-      .add(color('#0b6f8f').mul(canal).mul(0.05))
+      .add(color(hsl.integer(230, 100, 90)).mul(snow))
+    const light = color(hsl.integer(228, 100, 74)).mul(canal.mul(flash).mul(photocytes)).mul(startle).mul(1.6)
+      .add(color(hsl.integer(227, 93, 43)).mul(canal).mul(0.05))
     this.emissiveNode = body.add(interior).add(light).add(comb.mul(near.mul(0.4).add(1.1)))
   }
 }

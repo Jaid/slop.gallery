@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, modelWorldMatrixInverse, positionGeometry, positionView, time, vec3, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -27,13 +28,13 @@ export default class extends KnotMaterial {
     const back = lattice(deep)
     const nodes = front.x.mul(front.y).add(front.y.mul(front.z)).add(front.z.mul(front.x))
     const pulse = inner.y.mul(14).sub(time.mul(1.5)).sin().mul(0.5).add(0.5).pow(8)
-    this.color.set('#183447')
+    this.color.set(hsl.integer(240, 53, 21))
     this.transmission = 0.72
     this.thickness = 0.4
     this.ior = 1.45
     this.roughness = 0.055
     this.clearcoat = 0.4
     this.clearcoatRoughness = 0.07
-    this.emissiveNode = color('#24e6e0').mul(front.x.max(front.y).max(front.z)).mul(near.mul(0.7).add(0.25)).add(color('#7047f2').mul(back.x.max(back.y).max(back.z)).mul(near).mul(0.55)).add(color('#e1fff0').mul(nodes).mul(pulse).mul(near.mul(1.2).add(0.2)))
+    this.emissiveNode = color(hsl.integer(191, 94.6, 81)).mul(front.x.max(front.y).max(front.z)).mul(near.mul(0.7).add(0.25)).add(color(hsl.integer(287, 92, 48)).mul(back.x.max(back.y).max(back.z)).mul(near).mul(0.55)).add(color(hsl.integer(164, 100, 97)).mul(nodes).mul(pulse).mul(near.mul(1.2).add(0.2)))
   }
 }

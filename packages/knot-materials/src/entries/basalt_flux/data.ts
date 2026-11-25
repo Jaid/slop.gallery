@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'basalt_flux',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Black stone yields, just enough to reveal the furnace underneath.',
   placeholder: {
-    color: '#ff3b08',
+    color: hsl.integer(33.3, 100, 59.6),
     shading: 'stone',
   },
   displacement: 0.015,

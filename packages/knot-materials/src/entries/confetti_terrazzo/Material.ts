@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, If, mix, mx_noise_float, positionGeometry, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -49,16 +50,16 @@ export default class extends KnotMaterial {
     const inset = field.z.mul(0.09).add(0.055)
     const chip = field.x.smoothstep(inset, inset.add(footprint.mul(0.65).max(0.012)))
       .mul(field.y.smoothstep(0.09, 0.14))
-    const pigment = mix(color('#b94632'), color('#2c7474'), field.y.step(0.4))
-    const aggregate = mix(pigment, color('#e1ae45'), field.y.step(0.66))
-    const stone = mix(aggregate, color('#293e55'), field.y.step(0.84))
-    const cement = color('#ecdec7')
+    const pigment = mix(color(hsl.integer(32, 79, 47.6)), color(hsl.integer(195, 67, 44)), field.y.step(0.4))
+    const aggregate = mix(pigment, color(hsl.integer(82, 79, 74)), field.y.step(0.66))
+    const stone = mix(aggregate, color(hsl.integer(251, 38, 26)), field.y.step(0.84))
+    const cement = color(hsl.integer(80, 41, 89))
     const specklePoint = positionGeometry.mul(230)
     const speckle = mx_noise_float(specklePoint)
       .mul(specklePoint.fwidth().length().smoothstep(0.3, 1.4).oneMinus())
     const surface = mix(cement, stone, chip)
     // Resolve distant aggregate to a warm material average, not unstable single-chip colors.
-    this.colorNode = mix(color('#ae9e83'), surface, detail).mul(speckle.mul(0.035).add(1))
+    this.colorNode = mix(color(hsl.integer(81, 24, 66)), surface, detail).mul(speckle.mul(0.035).add(1))
     this.metalness = 0
     this.roughnessNode = float(0.48).sub(chip.mul(detail).mul(0.15)).add(speckle.mul(0.025))
     this.clearcoat = 0.18

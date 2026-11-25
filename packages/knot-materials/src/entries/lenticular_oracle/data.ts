@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: H32IciRDAWJfwki; fixture: knot-material-shaders; result: success.
 export default {
   id: 'lenticular_oracle',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The picture is not on the surface – it lives in the angle. Walk around the oracle and it changes its mind.',
   placeholder: {
-    color: '#773994',
+    color: hsl.integer(314, 68, 38),
     shading: 'smooth',
   },
 } as const satisfies KnotData

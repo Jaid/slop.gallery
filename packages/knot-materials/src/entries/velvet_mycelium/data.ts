@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_mycelium',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A dark, soft garden sends luminous threads through its hidden undergrowth.',
   placeholder: {
-    color: '#d946ef',
+    color: hsl.integer(322, 93, 61.3),
     shading: 'fabric',
   },
 } as const satisfies KnotData

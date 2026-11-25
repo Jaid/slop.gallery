@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2b7SAOfgKTVu0qb; fixture: knot-material-shaders; result: success.
 export default {
   id: 'quicksilver_dew',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.012,
   flavorText: 'A tide of living mercury, forever arriving and never still; its mirror ripples toward every step you take.',
   placeholder: {
-    color: '#9da2a4',
+    color: hsl.integer(223, 4, 66),
     shading: 'liquid',
   },
 } as const satisfies KnotData

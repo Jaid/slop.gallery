@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'washi_lantern',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Warm light finds its way through the quiet grain of handmade paper.',
   placeholder: {
-    color: '#ffb36a',
+    color: hsl.integer(63, 100, 79.5),
     shading: 'fabric',
   },
 } as const satisfies KnotData

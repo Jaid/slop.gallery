@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {uvFootprint} from '../../candidates/deepseek/lib/uvFootprint.ts'
@@ -39,19 +40,19 @@ export default class extends KnotMaterial {
     const breath = tube.x.mul(Math.PI * 4).sub(t.mul(Math.PI)).sin().mul(0.5).add(0.5)
     const crossThread = view.dot(vec3(0, 0, 1)).abs().mul(0)
     const weaveShadow = select(warpOnTop, weftLocal.abs(), warpLocal.abs()).smoothstep(0.3, 0.5).oneMinus()
-    const crimson = mix(color('#3a030f'), color('#9c1229'), warpProfile.mul(0.45).add(0.3))
-    const gold = mix(color('#5c3c0b'), color('#d8a63c'), weftProfile.mul(0.45).add(0.35))
+    const crimson = mix(color(hsl.integer(15, 90, 12)), color(hsl.integer(20, 94, 36)), warpProfile.mul(0.45).add(0.3))
+    const gold = mix(color(hsl.integer(72, 83, 29)), color(hsl.integer(82, 80, 71)), weftProfile.mul(0.45).add(0.35))
     const thread = mix(crimson, gold, select(warpOnTop, float(0), float(1)))
     const twist = weft.add(warpLocal.mul(26)).add(t.mul(0.4)).sin().mul(0.5).add(0.5)
     const dust = mx_noise_float(vec3(tube.x.mul(220), tube.y.mul(46), 0)).mul(0.5).add(0.5)
-    this.colorNode = thread.mul(weaveShadow.mul(0.5).add(0.55)).mul(twist.mul(0.12).add(0.94)).mul(dust.mul(0.12).add(0.94)).add(color('#ffd9a8').mul(satin).mul(surfaceProfile).mul(0.22))
+    this.colorNode = thread.mul(weaveShadow.mul(0.5).add(0.55)).mul(twist.mul(0.12).add(0.94)).mul(dust.mul(0.12).add(0.94)).add(color(hsl.integer(74, 100, 89)).mul(satin).mul(surfaceProfile).mul(0.22))
     const relief = surfaceProfile.mul(0.9).add(satin.mul(surfaceProfile).mul(0.25)).sub(weaveShadow.mul(0.25)).add(twist.mul(near).mul(0.12)).add(breath.mul(0.12))
     this.normalNode = proceduralNormal(relief, float(0.0016).mul(threadResolved).mul(near.mul(0.35).add(0.65)))
     this.anisotropyNode = select(warpOnTop, vec2(0, 1), vec2(1, 0)).mul(twist.mul(0.3).add(0.7))
     this.anisotropy = 0.45
     this.metalnessNode = select(warpOnTop, float(0.02), float(0.25)).mul(satin.mul(0.5).add(0.5))
     this.roughnessNode = mix(float(0.34), float(0.2), satin).sub(surfaceProfile.mul(0.05)).add(dust.mul(0.04))
-    this.specularColorNode = mix(color('#ffd0d8'), color('#ffe8b8'), breath)
+    this.specularColorNode = mix(color(hsl.integer(7, 100, 88.4)), color(hsl.integer(86, 100, 93)), breath)
     this.clearcoat = 0.2
     this.clearcoatRoughness = 0.3
     this.sheen = 0.45
@@ -59,10 +60,10 @@ export default class extends KnotMaterial {
     this.aoNode = weaveShadow.mul(0.25).add(0.75)
     const glowThread = surfaceProfile.mul(twist.mul(0.4).add(0.6))
     const sheen = glowThread.mul(breath.mul(0.5).add(0.5)).mul(0.5).add(satin.mul(0.2))
-    this.emissiveNode = mix(color('#ff3a5a'), color('#ffd070'), breath).mul(sheen).mul(0.3)
-      .add(color('#ffe0b0').mul(twist.pow(3)).mul(surfaceProfile).mul(near).mul(0.2))
-      .add(color('#ff8a6a').mul(grazing.pow(2.4)).mul(0.22))
-      .add(color('#ffcf8a').mul(satin).mul(surfaceProfile).mul(intimate).mul(0.12))
-      .add(color('#ffd8a0').mul(crossThread))
+    this.emissiveNode = mix(color(hsl.integer(18, 99, 60)), color(hsl.integer(84, 100, 86)), breath).mul(sheen).mul(0.3)
+      .add(color(hsl.integer(79, 100, 91)).mul(twist.pow(3)).mul(surfaceProfile).mul(near).mul(0.2))
+      .add(color(hsl.integer(36, 100, 71.5)).mul(grazing.pow(2.4)).mul(0.22))
+      .add(color(hsl.integer(75, 100, 86)).mul(satin).mul(surfaceProfile).mul(intimate).mul(0.12))
+      .add(color(hsl.integer(76, 100, 88.6)).mul(crossThread))
   }
 }

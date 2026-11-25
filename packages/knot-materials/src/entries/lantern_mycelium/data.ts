@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7V0v37e8AD5LVut; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'lantern_mycelium',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.02,
   flavorText: 'Under the bark of a fallen century, something patient has been building lanterns out of patience and water.',
   placeholder: {
-    color: '#1e150e',
+    color: hsl.integer(59, 29, 10),
     shading: 'smooth',
   },
 } as const satisfies KnotData

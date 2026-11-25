@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {assembleFrame, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -29,7 +31,7 @@ export default class BurlFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#6b4425'
+  override readonly tint = hsl.integer(58, 56, 34)
   override readonly title = 'Burl walnut parlor'
 
   override createGeometry(width: number, height: number) {

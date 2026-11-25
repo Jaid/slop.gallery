@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../candidates/claude_fable/lib/cellNoiseVec3.ts'
@@ -62,14 +63,14 @@ export default class extends KnotMaterial {
     const fineStroke = mx_noise_float(under.mul(14).add(vec3(5, 3, 1))).abs().smoothstep(0.03, 0.012).mul(mx_noise_float(under.mul(2.9).add(4)).smoothstep(-0.2, 0.2))
     const moonAngle = under.y.atan(under.x)
     const moonRing = moonAngle.mul(3).add(under.z.mul(12)).sin().mul(0.5).add(0.5).pow(6).mul(wash.smoothstep(-0.2, 0.2))
-    const cobalt = rgb('#1c3a8a')
-    const paleCobalt = rgb('#6e8fd0')
+    const cobalt = rgb(hsl.integer(265, 85, 28))
+    const paleCobalt = rgb(hsl.integer(263, 56, 60))
     const pigment = washTone.add(stroke.mul(0.9)).add(fineStroke.mul(0.7)).add(moonRing.mul(0.4)).clamp()
-    const porcelain = rgb('#f4f0e8')
+    const porcelain = rgb(hsl.integer(85, 29, 95))
     const underglaze = mix(porcelain, mix(cobalt, paleCobalt, mx_noise_float(under.mul(9)).mul(0.5).add(0.5)), pigment)
 // The glaze tints the porcelain a faint celadon at the limb, where its path length grows.
-    const celadon = rgb('#bfe0d2').mul(grazing.pow(3)).mul(0.25)
-    const goldColor = rgb('#f2c45a').mul(goldGrain.mul(0.25).add(0.75))
+    const celadon = rgb(hsl.integer(168, 34, 86)).mul(grazing.pow(3)).mul(0.25)
+    const goldColor = rgb(hsl.integer(86, 82, 81.6)).mul(goldGrain.mul(0.25).add(0.75))
     this.colorNode = mix(underglaze.mul(0.66), goldColor, gold)
     this.metalnessNode = gold
     this.roughnessNode = mix(float(0.08).add(crack.mul(0.25)), float(0.28).sub(seamProfile.mul(0.12)), gold)
@@ -88,7 +89,7 @@ export default class extends KnotMaterial {
     const glazeHighlight = environmentHighlight(environment, n, 0.02).mul(fresnel(facing, 0.04)).mul(gold.oneMinus()).mul(0.7)
     const goldFlash = glints(surfaceNormal, 60).mul(goldColor).mul(gold).mul(0.6).add(environmentHighlight(environment, n, 0.12).mul(goldColor).mul(gold).mul(1.1))
     const shadowSide = n.y.smoothstep(0.2, -0.6)
-    const moonlight = rgb('#dfe9ff').mul(gold).mul(seamProfile).mul(shadowSide).mul(time.mul(0.5).sin().mul(0.15).add(0.85)).mul(near.mul(0.5).add(0.3)).mul(0.35)
+    const moonlight = rgb(hsl.integer(266, 100, 92)).mul(gold).mul(seamProfile).mul(shadowSide).mul(time.mul(0.5).sin().mul(0.15).add(0.85)).mul(near.mul(0.5).add(0.3)).mul(0.35)
     const {emissive, isolated} = debugLayer({
       gold,
       seamProfile,

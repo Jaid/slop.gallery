@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'scarab_chitin',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Carved like overlapping beetle armor, metallic emerald plates shift to molten bronze under the gallery light.',
   placeholder: {
-    color: '#347b52',
+    color: hsl.integer(156, 75, 45),
     shading: 'smooth',
   },
 } as const satisfies KnotData

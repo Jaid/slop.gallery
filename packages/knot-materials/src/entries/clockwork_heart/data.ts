@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'clockwork_heart',
   candidateId: 'glm',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Its patient mechanism measures neither hours nor distance, only longing.',
   placeholder: {
-    color: '#e0a93e',
+    color: hsl.integer(80, 81, 73),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kintsugi_confession',
   candidateId: 'minimax',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A bowl the world refused, mended with a colour it cannot refuse.',
   placeholder: {
-    color: '#89a89d',
+    color: hsl.integer(172, 22, 66),
     shading: 'smooth',
   },
 } as const satisfies KnotData

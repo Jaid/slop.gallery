@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4eznRMVv3vZMHhr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'banked_embers',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'Charcoal that remembers the fire. It sleeps beneath its own ash, but lean in close and it wakes, breathing heat back at you.',
   placeholder: {
-    color: '#402d27',
+    color: hsl.integer(38, 26, 22),
     shading: 'stone',
   },
 } as const satisfies KnotData

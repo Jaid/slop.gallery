@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, time, vec3} from 'three/tsl'
 
 import {stroke} from '../../candidates/gpt_sol/lib/exhibition/coverage.ts'
@@ -26,10 +27,10 @@ export default class extends KnotMaterial {
     const lace = filteredCos(finePhase).mul(0.5).add(0.5).toVar()
     const milk = broad.smoothstep(0.48, 0.78).toVar()
     const jade = softNoise(q.mul(0.63).add(6)).smoothstep(-0.03, 0.24).toVar()
-    const iron = mix(color('#70311c'), color('#dc8b38'), broad.mul(0.6).add(lace.mul(0.4)))
-    const malachite = mix(color('#124b43'), color('#72b69b'), broad.mul(0.7).add(lace.mul(0.3)))
+    const iron = mix(color(hsl.integer(39, 71, 30)), color(hsl.integer(63, 80, 66)), broad.mul(0.6).add(lace.mul(0.4)))
+    const malachite = mix(color(hsl.integer(182, 81, 28)), color(hsl.integer(167, 49, 68)), broad.mul(0.7).add(lace.mul(0.3)))
     const substrate = mix(iron, malachite, jade).toVar()
-    const ivory = mix(color('#ebc59a'), color('#fff1d5'), lace)
+    const ivory = mix(color(hsl.integer(70, 57, 82)), color(hsl.integer(85, 100, 95.6)), lace)
     const ribbon = mix(substrate, ivory, milk.mul(0.88)).toVar()
     const crack = stroke(cell.y.sub(cell.x).sub(0.021), 0.004, q.fwidth().length()).mul(0.45)
     // A second, offset optical stratum drifts against the milky bands as the viewer moves.
@@ -48,6 +49,6 @@ export default class extends KnotMaterial {
     this.ior = 1.54
     this.iridescenceNode = crystal.mul(0.33).mul(intimate)
     this.iridescenceThicknessNode = crystal.mul(170).add(320)
-    this.emissiveNode = substrate.mul(translucent).mul(near.mul(0.04).add(0.025)).add(color('#ffe6c2').mul(crystal).mul(grazing.pow(4)).mul(0.1))
+    this.emissiveNode = substrate.mul(translucent).mul(near.mul(0.04).add(0.025)).add(color(hsl.integer(77, 100, 92.6)).mul(crystal).mul(grazing.pow(4)).mul(0.1))
   }
 }

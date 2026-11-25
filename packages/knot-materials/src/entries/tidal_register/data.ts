@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tidal_register',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   createdAt: 1_789_816_097,
   flavorText: 'Small enamel shutters turn in patient succession, recording a tide that never reaches the shore.',
   placeholder: {
-    color: '#72baad',
+    color: hsl.integer(181, 49, 70),
     shading: 'metal',
   },
 } as const satisfies KnotData

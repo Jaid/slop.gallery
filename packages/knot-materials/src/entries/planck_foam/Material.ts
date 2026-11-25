@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_noise_float, mx_worley_noise_float, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -21,7 +22,7 @@ export default class extends KnotMaterial {
     const fluctuate = mx_noise_float(q.mul(0.25).add(time.mul(0.6))).mul(0.5).add(0.5)
     const foam = bubble.mul(fluctuate)
     const chroma = spectralColor(dist.mul(12).add(time.mul(0.4)).add(view.x.mul(1.5)))
-    this.colorNode = color('#01030a')
+    this.colorNode = color(hsl.integer(261, 62, 3))
     this.transmission = 0.96
     this.thickness = 0.3
     this.ior = 1.03
@@ -32,6 +33,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.1
     this.iridescenceThicknessNode = foam.mul(450).add(120)
     this.normalNode = proceduralNormal(foam, 0.0005)
-    this.emissiveNode = chroma.mul(foam).mul(near.mul(1.1).add(0.4)).add(color('#ffffff').mul(foam.pow(5)).mul(0.6))
+    this.emissiveNode = chroma.mul(foam).mul(near.mul(1.1).add(0.4)).add(color(hsl.integer(0, 0, 100)).mul(foam.pow(5)).mul(0.6))
   }
 }

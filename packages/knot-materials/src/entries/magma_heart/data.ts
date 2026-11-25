@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'magma_heart',
   candidateId: 'kimi',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Beneath the dark crust, the mountain keeps its own slow heartbeat.',
   placeholder: {
-    color: '#ff4d00',
+    color: hsl.integer(37, 100, 61.4),
     shading: 'liquid',
   },
 } as const satisfies KnotData

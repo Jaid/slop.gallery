@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: KKRUCJSg0WdighD; fixture: knot-material-shaders.
 export default {
   id: 'glacial_heart',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Ten thousand winters pressed into blue glass. Air that last touched the sky before any city was built still waits in its bubbles, and something warm keeps time deep inside.',
   placeholder: {
-    color: '#b9d8f0',
+    color: hsl.integer(241, 54, 84.6),
     shading: 'glass',
   },
 } as const satisfies KnotData

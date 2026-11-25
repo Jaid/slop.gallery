@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'frost_oracle',
   candidateId: 'gpt_terra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A moonlit frost keeps small weather systems and ancient sparks suspended in its translucent blue silence.',
   displacement: 0.002,
   placeholder: {
-    color: '#70bfd6',
+    color: hsl.integer(219, 57, 72),
     shading: 'glass',
   },
 } as const satisfies KnotData

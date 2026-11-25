@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5RXWnszENQQH6u3; fixture: knot-material-shaders; result: success.
 export default {
   id: 'velvet',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A hundred thousand cut pile fibres, each leaning the same way. Walk past and the cloth turns its colours over for you.',
   placeholder: {
-    color: '#78091f',
+    color: hsl.integer(19, 95, 27),
     shading: 'fabric',
   },
 } as const satisfies KnotData

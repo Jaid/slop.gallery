@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_ziggurat',
   candidateId: 'glm_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A miniature citadel rises from the orderly dreams of cooling metal.',
   placeholder: {
-    color: '#ff9af0',
+    color: hsl.integer(332, 100, 79),
     shading: 'metal',
   },
   displacement: 0.055,

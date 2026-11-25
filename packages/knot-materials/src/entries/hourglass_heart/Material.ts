@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -30,17 +31,17 @@ export default class extends KnotMaterial {
     const pool = floorLine.sub(inner.y).mul(6).clamp()
     const meniscus = opticalLine(inner.y.sub(floorLine), 0.045)
     const sparkle = view.dot(vec3(0.55, 0.8, 0.25).normalize()).abs().pow(9)
-    const sand = mix(color('#ffb45e'), color('#fff2cf'), grains)
-    this.color.set('#e6edf3')
+    const sand = mix(color(hsl.integer(68, 100, 79.7)), color(hsl.integer(90, 100, 95.6)), grains)
+    this.color.set(hsl.integer(244, 27, 93))
     this.transmission = 0.85
     this.thickness = 0.35
     this.ior = 1.52
     this.dispersion = 0.18
-    this.attenuationColor.set('#7a4a1e')
+    this.attenuationColor.set(hsl.integer(60, 70, 37))
     this.attenuationDistance = 0.85
     this.roughness = 0.045
     this.clearcoat = 0.65
     this.clearcoatRoughness = 0.04
-    this.emissiveNode = sand.mul(streams).mul(grains.mul(0.85).add(0.25)).mul(facing.mul(0.3).add(0.7)).mul(near.mul(0.55).add(0.3)).add(color('#c9661c').mul(pool).mul(near.mul(0.65).add(0.3)).mul(0.8)).add(color('#ffd9a0').mul(meniscus).mul(near).mul(0.9)).add(color('#fff6da').mul(streams).mul(sparkle).mul(near).mul(1.3))
+    this.emissiveNode = sand.mul(streams).mul(grains.mul(0.85).add(0.25)).mul(facing.mul(0.3).add(0.7)).mul(near.mul(0.55).add(0.3)).add(color(hsl.integer(51, 87, 55.5)).mul(pool).mul(near.mul(0.65).add(0.3)).mul(0.8)).add(color(hsl.integer(78, 100, 89)).mul(meniscus).mul(near).mul(0.9)).add(color(hsl.integer(93, 100, 97)).mul(streams).mul(sparkle).mul(near).mul(1.3))
   }
 }

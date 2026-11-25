@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {assembleFrame, corners, place, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -61,7 +63,7 @@ export default class DecoFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#0d0d10'
+  override readonly tint = hsl.integer(286, 10, 7)
   override readonly title = 'Art Deco ziggurat'
 
   override createGeometry(width: number, height: number) {
@@ -76,7 +78,7 @@ export default class DecoFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new FramePaintMaterial({
-        color: '#0c0c0e',
+        color: hsl.integer(286, 7, 6),
         roughness: 0.3,
         clearcoat: 1,
         grime: 0.1,

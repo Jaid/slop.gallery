@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {Vector3} from 'three/webgpu'
 
 import {bakedBubbles, bakedStrokeBoxes} from './baked.ts'
@@ -34,7 +35,7 @@ export type ImpastoBubble = {
 }
 
 /** Six richly saturated heavy-body oil pigments echoing the Impasto family’s palette, tuned for luminous glass refraction: cadmium yellow, cadmium scarlet, crimson lake, ultramarine blue, emerald green and bright titanium white. */
-export const impastoPalette = ['#ffcf1c', '#f03618', '#cc1632', '#1d54db', '#0aa06c', '#fffcf4'] as const
+export const impastoPalette = [hsl.integer(91.3, 100, 85.1), hsl.integer(32, 97.5, 56), hsl.integer(22, 97, 47), hsl.integer(264, 94, 42.3), hsl.integer(161, 98.7, 56), hsl.integer(90, 100, 99)] as const
 /** Harmonious wet-on-wet secondary accents that curl cleanly along one swept flank without muddying the dominant pigment. */
 const foldedPairings: ReadonlyArray<readonly [number, number]> = [
   [5, 1], // cadmiumYellow ← titaniumWhite / cadmiumScarlet

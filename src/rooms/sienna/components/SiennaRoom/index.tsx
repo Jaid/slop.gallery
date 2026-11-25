@@ -3,6 +3,7 @@ import type {Material} from 'three/webgpu'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {useGraphicsModeValue} from 'use-graphics-mode'
 
@@ -43,7 +44,7 @@ export default function SiennaRoom({joinery}: {
       <RigidBody colliders={false} type='fixed'>
         <CuboidCollider args={[room.size[0] / 2, floorThickness / 2, room.size[1] / 2]} position={[0, -floorThickness / 2, 0]} />
         <CuboidCollider args={[room.size[0] / 2, 0.15, room.size[1] / 2]} position={[0, 5.9, 0]} />
-        <Box color='#392517' envMapIntensity={mirrorReflections ? 1 : 0} name='sienna-floor-slab' position={[0, -floorThickness / 2, 0]} size={[room.size[0], floorThickness, room.size[1]]} />
+        <Box color={hsl.integer(56, 42, 18)} envMapIntensity={mirrorReflections ? 1 : 0} name='sienna-floor-slab' position={[0, -floorThickness / 2, 0]} size={[room.size[0], floorThickness, room.size[1]]} />
         <Box material={ceiling} name='sienna-ceiling' position={[0, 5.78, 0]} size={[room.size[0], 0.18, room.size[1]]} />
       </RigidBody>
       <mesh name='sienna-wood-floor' position={[0, 0.001, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
@@ -56,7 +57,7 @@ export default function SiennaRoom({joinery}: {
         <boxGeometry args={[siennaRugSize[0], siennaRugThickness, siennaRugSize[1]]} />
       </mesh>
       <mesh geometry={fringe} name='sienna-carpet-fringe' position={[0, 0.004, 0]} receiveShadow>
-        <meshStandardNodeMaterial color='#b9a888' roughness={0.92} />
+        <meshStandardNodeMaterial color={hsl.integer(84, 29, 70)} roughness={0.92} />
       </mesh>
       <Chandelier lamp='sienna-chandelier' />
     </group>
@@ -64,7 +65,7 @@ export default function SiennaRoom({joinery}: {
       <RigidBody colliders={false} type='fixed'>
         <CuboidCollider args={[vestibuleWidth / 2, floorThickness / 2, vestibuleDepth / 2]} position={[0, -floorThickness / 2, 0]} />
         <CuboidCollider args={[vestibuleWidth / 2, siennaVestibuleCeiling.thickness / 2, vestibuleDepth / 2]} position={[0, siennaVestibuleCeiling.y, 0]} />
-        <Box color='#392517' envMapIntensity={mirrorReflections ? 1 : 0} name='sienna-vestibule-floor-slab' position={[0, -floorThickness / 2, 0]} size={[vestibuleWidth, floorThickness, vestibuleDepth]} />
+        <Box color={hsl.integer(56, 42, 18)} envMapIntensity={mirrorReflections ? 1 : 0} name='sienna-vestibule-floor-slab' position={[0, -floorThickness / 2, 0]} size={[vestibuleWidth, floorThickness, vestibuleDepth]} />
         <Box material={ceiling} name='sienna-vestibule-ceiling' position={[0, siennaVestibuleCeiling.y, 0]} size={[vestibuleWidth, siennaVestibuleCeiling.thickness, vestibuleDepth]} />
       </RigidBody>
       <mesh name='sienna-vestibule-wood-floor' position={[0, 0.001, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>

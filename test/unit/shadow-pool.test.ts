@@ -2,6 +2,7 @@ import type {SoftShadow} from '../../src/lib/rendering/shadowFilterNodes.ts'
 
 import {expect, test} from 'bun:test'
 
+import hsl from 'okhsl'
 import {Group, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
 import {registerLamp} from '../../src/lib/rendering/lamps.ts'
@@ -22,7 +23,7 @@ const setup = (count: number) => {
   }
 }
 const lamp = (scene: Scene, z: number, shadow?: boolean) => {
-  const light = new PointLight('#ffffff', 10, 5)
+  const light = new PointLight(hsl.integer(0, 0, 100), 10, 5)
   light.position.set(0, 0, z)
   if (shadow !== undefined) {
     light.userData.shadow = shadow
@@ -137,7 +138,7 @@ test('a slot follows its light where it moved this frame, before the frame updat
   const world = setup(1)
   const swing = new Group
   world.scene.add(swing)
-  const light = new PointLight('#ffffff', 10, 5)
+  const light = new PointLight(hsl.integer(0, 0, 100), 10, 5)
   light.position.set(0, -0.5, 0)
   light.userData.shadow = true
   swing.add(light)

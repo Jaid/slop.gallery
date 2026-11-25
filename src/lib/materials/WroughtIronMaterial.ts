@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, positionGeometry} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -5,13 +6,13 @@ import {heightNormal} from './filters.ts'
 
 /** Blackened, hand-forged iron: dark satin metal with a faint rusty bloom and hammer dimples. */
 export default class WroughtIronMaterial extends MeshStandardNodeMaterial {
-  constructor({bloomColor = '#4a2d1c', metalness = 0.75, tone = '#24211f'}: {
+  constructor({bloomColor = hsl.integer(51, 48, 23), metalness = 0.75, tone = hsl.integer(56, 6, 15)}: {
     /** the color of the rusty bloom */
-    bloomColor?: string
+    bloomColor?: number
     /** how much of it is bare metal rather than the dark scale of its blackening, which takes the room’s light diffusely */
     metalness?: number
     /** the iron’s own color, its reflectance as a metal; a lighter one keeps thin pieces, like a table’s legs, from reading as flat black */
-    tone?: string
+    tone?: number
   } = {}) {
     super({
       metalness,

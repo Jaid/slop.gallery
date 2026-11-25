@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -34,7 +35,7 @@ export default class extends KnotMaterial {
     const light = tone(green.hue, 0.4).mul(green.edge.mul(1.4).add(green.body.mul(0.35)))
       .add(tone(violet.hue, 2.2).mul(violet.edge.mul(1.2).add(violet.body.mul(0.25))))
       .add(tone(rose.hue, 4.4).mul(rose.edge.mul(1.6).add(rose.body.mul(0.2))).mul(near.mul(0.6).add(0.4)))
-    this.colorNode = color('#04060a')
+    this.colorNode = color(hsl.integer(259, 25, 4))
     this.metalness = 0
     this.roughnessNode = float(0.45).add(grazing.mul(0.2))
     this.clearcoat = 0.25
@@ -46,8 +47,8 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.25
     this.iridescenceThicknessNode = float(180).add(facing.mul(200))
     this.emissiveNode = light.mul(1.5)
-      .add(color('#e9fff6').mul(green.edge).mul(0.4))
-      .add(color('#ffd0ea').mul(rose.edge).mul(near).mul(0.5))
-      .add(color('#bfffea').mul(grazing.pow(4)).mul(intimate).mul(0.25))
+      .add(color(hsl.integer(169, 100, 97.8)).mul(green.edge).mul(0.4))
+      .add(color(hsl.integer(344, 100, 89)).mul(rose.edge).mul(near).mul(0.5))
+      .add(color(hsl.integer(173, 99, 94.3)).mul(grazing.pow(4)).mul(intimate).mul(0.25))
   }
 }

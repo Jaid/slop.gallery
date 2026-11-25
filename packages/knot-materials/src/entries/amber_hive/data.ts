@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4ayQMqfdM3WbrB2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'amber_hive',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'The bees are gone, but the comb still holds a summer. Look down into the open cells and the honey keeps its depth; look along the light and it burns like a stained window.',
   placeholder: {
-    color: '#9f8668',
+    color: hsl.integer(72, 30, 58),
     shading: 'glass',
   },
 } as const satisfies KnotData

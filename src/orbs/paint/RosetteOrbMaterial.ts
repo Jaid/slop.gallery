@@ -1,6 +1,7 @@
 import type {OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {array, atan, Break, float, Fn, If, int, Loop, mix, select, time, vec2, vec3, vec4} from 'three/tsl'
 
 import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
@@ -92,7 +93,7 @@ export default class RosetteOrbMaterial extends OrbGlassMaterial {
   constructor(options: OrbGlassOptions) {
     super(options, {
       name: 'orb-rosette',
-      tint: '#fff6eb',
+      tint: hsl.integer(73, 100, 97.3),
     })
   }
 
@@ -154,7 +155,7 @@ export default class RosetteOrbMaterial extends OrbGlassMaterial {
       const fold = k.y.add(k.x.mul(2).add(k.w).sin().mul(0.23)).add(drag.mul(0.13))
       const load = fold.add(k.w.mul(0.29)).smoothstep(-0.05, 0.45).mul(0.64).add(track.sin().mul(0.5).add(0.5).pow(3).mul(0.22)).add(k.x.mul(0.08).add(0.08)).clamp()
       const filament = track.mul(2.76).add(drag.mul(3)).sin().smoothstep(0.72, 1).mul(fold.smoothstep(-0.3, 0.75)).mul(0.21)
-      const paint = mix(mix(bodies.element(layer), loads.element(layer), load), rgb('#fff2dc'), filament)
+      const paint = mix(mix(bodies.element(layer), loads.element(layer), load), rgb(hsl.integer(81, 100, 96)), filament)
       const light = inBloom(vec3(-0.35, 0.84, 0.52).normalize(), angle)
       const diffuse = n.dot(light).mul(0.6).add(0.66).clamp(0.24, 1.2)
       const gloss = n.dot(light.sub(dir).normalize()).max(0).pow(37).mul(0.23)

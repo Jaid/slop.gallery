@@ -4,6 +4,7 @@ import {useFrame} from '@react-three/fiber'
 import {RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo, useRef} from 'react'
 import useGraphicsMode from 'use-graphics-mode'
 
@@ -59,11 +60,11 @@ function GlowingEmbers() {
   return <>
     <RigidBody colliders='cuboid' type='fixed'>
       {logs.offsets.map(z => <mesh key={z} castShadow name='lodge-log' position={[0, logs.y, z]} rotation={logRotation}>
-        <cylinderGeometry args={[logs.radiusTop, logs.radiusBottom, logs.length, 12]} /><meshStandardNodeMaterial color='#352015' roughness={1} />
+        <cylinderGeometry args={[logs.radiusTop, logs.radiusBottom, logs.length, 12]} /><meshStandardNodeMaterial color={hsl.integer(48, 42, 16)} roughness={1} />
       </mesh>)}
     </RigidBody>
     <mesh name='lodge-embers' position={[0, embers.y, 0]} rotation={emberRotation}>
-      <planeGeometry args={embers.glowSize} /><meshStandardNodeMaterial color='#9b2609' emissive='#f85b12' emissiveIntensity={2} />
+      <planeGeometry args={embers.glowSize} /><meshStandardNodeMaterial color={hsl.integer(34, 96, 37)} emissive={hsl.integer(40, 98.2, 62)} emissiveIntensity={2} />
     </mesh>
   </>
 }

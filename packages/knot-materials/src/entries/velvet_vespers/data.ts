@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_vespers',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A twilight vestment woven for no earthly ceremony. Rose-gold damask rises from wine-dark velvet as the light turns.',
   placeholder: {
-    color: '#4a1730',
+    color: hsl.integer(353, 64, 19),
     shading: 'fabric',
   },
 } as const satisfies KnotData

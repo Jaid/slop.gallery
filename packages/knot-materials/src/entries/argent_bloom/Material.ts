@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, negateOnBackSide, normalLocal, time, transformNormalToView, vec2, vec3} from 'three/tsl'
 
 import {coverage, resolved} from '../../candidates/gpt_sol/lib/gallerySurface.ts'
@@ -35,15 +36,15 @@ export default class extends KnotMaterial {
     const ringVisibility = resolved(rings, 0.5, 2.8)
     const cut = coverage(rings.sin(), 0.075, rings.fwidth()).mul(ringVisibility).mul(intimate).toVar()
     const wave = C.sin().mul(D.sin()).mul(0.5).add(0.5).toVar()
-    const silver = mix(color('#8295a4'), color('#edf3f4'), wave.mul(0.5).add(0.2))
+    const silver = mix(color(hsl.integer(242, 17, 61)), color(hsl.integer(209, 20, 95)), wave.mul(0.5).add(0.2))
     const patina = mx_noise_float(p.mul(11)).smoothstep(0.2, 0.7).mul(0.18)
     const angular = view.dot(vec3(0.3, 0.7, -0.4)).mul(0.5).add(0.5)
-    this.colorNode = mix(silver, mix(color('#375565'), color('#a48865'), angular), patina).mul(cut.mul(0.22).oneMinus())
+    this.colorNode = mix(silver, mix(color(hsl.integer(232, 35, 34)), color(hsl.integer(73, 35, 59)), angular), patina).mul(cut.mul(0.22).oneMinus())
     this.metalness = 1
     this.roughnessNode = float(0.105).add(wave.mul(0.095)).add(cut.mul(0.1)).sub(grazing.mul(0.025))
     this.anisotropyNode = vec2(Math.cos(0.4), Math.sin(0.4)).mul(cut.mul(0.5).add(0.2))
     this.clearcoat = 0.5
     this.clearcoatRoughness = 0.08
-    this.emissiveNode = color('#a2c6d5').mul(grazing.pow(5)).mul(0.018)
+    this.emissiveNode = color(hsl.integer(225, 32, 77)).mul(grazing.pow(5)).mul(0.018)
   }
 }

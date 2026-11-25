@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -28,20 +29,20 @@ export default class extends KnotMaterial {
     const outer = swirlAt(0.02)
     const middle = swirlAt(0.11)
     const inner = swirlAt(0.2)
-    const amber = color('#ff9a2e')
-    const lagoon = color('#17b8a6')
+    const amber = color(hsl.integer(62, 100, 74))
+    const lagoon = color(hsl.integer(182, 95, 66))
     const glassTint = mix(
       mix(amber, lagoon, outer.band),
-      mix(lagoon, color('#ffe9b0'), inner.band),
+      mix(lagoon, color(hsl.integer(90, 100, 93)), inner.band),
       0.45,
     ).mul(1.12)
     const trapped = beads(p.mul(24), 5.1)
-    this.colorNode = mix(glassTint, color('#fff6de'), trapped.mask.mul(0.35))
+    this.colorNode = mix(glassTint, color(hsl.integer(90, 100, 97)), trapped.mask.mul(0.35))
     this.transmission = 0.84
     this.thickness = 0.7
     this.ior = 1.52
     this.dispersion = 0.4
-    this.attenuationColor.set('#5fc9b4')
+    this.attenuationColor.set(hsl.integer(179, 68, 73))
     this.attenuationDistance = 0.8
     this.metalness = 0
     this.roughnessNode = float(0.05).add(trapped.mask.mul(0.14)).add(grazing.mul(0.03))
@@ -54,6 +55,6 @@ export default class extends KnotMaterial {
     this.normalNode = glassNormal
     this.emissiveNode = mix(amber, lagoon, inner.band)
       .mul(grazing.pow(2.5).mul(0.18).add(0.09))
-      .add(color('#fff3d0').mul(glints(glassNormal, 130)).mul(trapped.mask).mul(near.mul(0.9).add(0.2)))
+      .add(color(hsl.integer(92, 100, 96)).mul(glints(glassNormal, 130)).mul(trapped.mask).mul(near.mul(0.9).add(0.2)))
   }
 }

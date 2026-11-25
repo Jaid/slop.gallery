@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {fractalNoise, ridgedNoise} from '../../candidates/grok/lib/fractalNoise.ts'
@@ -24,42 +25,42 @@ export default class extends KnotMaterial {
     const glazePool = clay.smoothstep(0.22, 0.7).oneMinus().mul(flow.mul(0.25).add(0.8))
     const body = palette(grain.mul(0.4).add(clay.mul(0.25)), [{
       at: 0,
-      hex: '#1a0c09',
+      rgb: hsl.integer(33, 39, 8),
     }, {
       at: 0.4,
-      hex: '#6a2c1c',
+      rgb: hsl.integer(36, 70, 28),
     }, {
       at: 1,
-      hex: '#c47a48',
+      rgb: hsl.integer(53, 64, 59),
     }])
     const glaze = palette(heat.mul(0.7).add(flow.mul(0.3)).add(view.y.mul(0.08)), [{
       at: 0,
-      hex: '#120605',
+      rgb: hsl.integer(27, 43, 5),
     }, {
       at: 0.22,
-      hex: '#7a1020',
+      rgb: hsl.integer(20, 91, 28),
     }, {
       at: 0.4,
-      hex: '#d01212',
+      rgb: hsl.integer(28.5, 98.4, 47),
     }, {
       at: 0.58,
-      hex: '#f25a12',
+      rgb: hsl.integer(40, 98, 60.7),
     }, {
       at: 0.76,
-      hex: '#f0a04a',
+      rgb: hsl.integer(65, 83, 73),
     }, {
       at: 0.9,
-      hex: '#7d1028',
+      rgb: hsl.integer(16, 90, 29),
     }, {
       at: 1,
-      hex: '#ffe6ae',
+      rgb: hsl.integer(86, 100, 92),
     }])
     const ash = palette(grain, [{
       at: 0,
-      hex: '#4e5c56',
+      rgb: hsl.integer(168, 13, 38),
     }, {
       at: 1,
-      hex: '#e6d7b0',
+      rgb: hsl.integer(89, 47, 86),
     }])
     const crawl = screenRibbon(fractalNoise(p.mul(7.5).add(vec3(2.2, 0.4, 1)), 3).sub(0.08), 0.03)
     const cells = p.mul(6.5)
@@ -76,13 +77,13 @@ export default class extends KnotMaterial {
     this.metalnessNode = glazePool.mul(heat).mul(0.28)
     this.clearcoatNode = glazePool.mul(0.95)
     this.clearcoatRoughnessNode = mix(float(0.24), float(0.04), heat).add(crawl.mul(0.1))
-    this.sheenNode = color('#e7b089').mul(grazing.pow(1.4).mul(0.45).mul(glazePool.oneMinus()))
+    this.sheenNode = color(hsl.integer(57, 58, 77)).mul(grazing.pow(1.4).mul(0.45).mul(glazePool.oneMinus()))
     this.sheenRoughness = 0.48
     this.iridescenceNode = oilspot.mul(0.85).add(heat.mul(glazePool).mul(grazing).mul(0.45))
     this.iridescenceIOR = 1.5
     this.iridescenceThicknessNode = heat.mul(420).add(80).add(flow.mul(180))
     const ember = heat.pow(2.2).mul(glazePool).mul(facing.mul(0.35).add(0.75))
     const copper = view.x.mul(0.5).add(0.5)
-    this.emissiveNode = mix(color('#ff3b12'), color('#ffb15a'), copper).mul(ember).mul(near.mul(0.75).add(0.28)).add(color('#ffd7ae').mul(cellEdge).mul(ember).mul(0.7)).add(color('#ffc56a').mul(oilspot).mul(facing).mul(intimate.add(0.35)).mul(0.28)).add(color('#6a1020').mul(crawl).mul(grazing).mul(0.12))
+    this.emissiveNode = mix(color(hsl.integer(32.6, 100, 59.6)), color(hsl.integer(67, 100, 79)), copper).mul(ember).mul(near.mul(0.75).add(0.28)).add(color(hsl.integer(68, 100, 89)).mul(cellEdge).mul(ember).mul(0.7)).add(color(hsl.integer(77, 100, 83.5)).mul(oilspot).mul(facing).mul(intimate.add(0.35)).mul(0.28)).add(color(hsl.integer(18, 87, 24.6)).mul(crawl).mul(grazing).mul(0.12))
   }
 }

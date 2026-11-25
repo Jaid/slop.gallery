@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -87,7 +88,7 @@ export default class extends KnotMaterial {
       .add(deep.stepId.mul(0.18))
       .add(thermalWave)
     const bismuthPalette = cosinePalette(oxideT, [0.52, 0.52, 0.52], [0.48, 0.48, 0.48], [1, 1, 1], [0, 0.33, 0.67]).clamp(0.04, 1)
-    const rawSilverBismuth = color('#eef4fa')
+    const rawSilverBismuth = color(hsl.integer(248, 45, 96))
 // Freshly cleaved terrace edges gleam silver-white; terrace flats carry full rainbow oxide interference.
     const baseMetal = mix(bismuthPalette, rawSilverBismuth, ledgeLine.mul(0.55))
     const shadowedPit = top.outerElevation.smoothstep(0.12, 0.85).mul(0.66).add(0.34)
@@ -155,6 +156,6 @@ export default class extends KnotMaterial {
 // Diffraction glints along the 90-degree crystal step corners and sub-terrace edges.
     const cornerGlint = ledgeLine.add(deepLedge.mul(0.55)).mul(grazing.mul(0.75).add(0.25))
     this.emissiveNode = bismuthPalette.mul(cornerGlint).mul(intimate.mul(0.45).add(0.4))
-      .add(color('#ffffff').mul(ledgeLine.pow(2)).mul(grazing.pow(2.5)).mul(0.32))
+      .add(color(hsl.integer(0, 0, 100)).mul(ledgeLine.pow(2)).mul(grazing.pow(2.5)).mul(0.32))
   }
 }

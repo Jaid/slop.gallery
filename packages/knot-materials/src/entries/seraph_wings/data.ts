@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7elL7dDIwnRWI8n; fixture: knot-material-shaders; result: crashed, knot rescued from the run container.
 export default {
   id: 'seraph_wings',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Six-winged plumage of metallic azure barbules and golden filigree quills. Walk around the knot and structural diffraction sweeps from sapphire to ultraviolet.',
   placeholder: {
-    color: '#375470',
+    color: hsl.integer(248, 40, 35),
     shading: 'metal',
   },
 } as const satisfies KnotData

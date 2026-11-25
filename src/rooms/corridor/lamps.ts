@@ -2,13 +2,15 @@ import type {PendantMount} from '#src/lib/gallery/pendants/CeilingProbe.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {Lamp} from '../base/Room.ts'
 
+import hsl from 'okhsl'
+
 import corridor, {corridorHallLanterns, corridorLandingLantern} from '#src/lib/gallery/corridor.ts'
 
 /** The source in room coordinates, `below` meters under the lantern body. */
 const underLantern = ({light: [x, y, z]}: PendantMount, below = 0.3): Vec3 => [x - corridor.center[0], y - below - corridor.floorY, z - corridor.center[1]]
 const [north, middle, south] = corridorHallLanterns
 const lantern = {
-  tint: '#ffb363',
+  tint: hsl.integer(66, 99, 79.5),
 } as const
 
 // The middle lantern reaches farthest down the long hall.

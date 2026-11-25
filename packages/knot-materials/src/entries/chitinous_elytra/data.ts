@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chitinous_elytra',
   candidateId: 'gemini_flash',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Corrugated jewel-beetle armor splits the daylight into iridescent sheens of peacock green and gold.',
   displacement: 0.007,
   placeholder: {
-    color: '#53753c',
+    color: hsl.integer(134, 61, 45),
     shading: 'smooth',
   },
 } as const satisfies KnotData

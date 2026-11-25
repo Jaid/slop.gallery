@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -23,12 +24,12 @@ export default class extends KnotMaterial {
     const hue = field.mul(0.9).add(view.x.mul(0.4)).add(view.y.mul(0.3)).add(time.mul(0.03))
     const auroraTint = cosinePalette(hue, [0.35, 0.5, 0.45], [0.35, 0.35, 0.3], [1, 1, 1], [0.1, 0.35, 0.65])
     const horizon = facing.pow(1.5).mul(0.7).add(grazing.pow(3).mul(0.9))
-    this.colorNode = mix(color('#02060a'), auroraTint.mul(0.35), auroraMask.mul(0.4))
+    this.colorNode = mix(color(hsl.integer(238, 44, 4)), auroraTint.mul(0.35), auroraMask.mul(0.4))
     this.metalness = 0.85
     this.roughnessNode = auroraMask.mul(0.2).add(0.28)
     this.clearcoat = 0.8
     this.clearcoatRoughness = 0.08
     this.normalNode = liquidNormal(near, 0.18)
-    this.emissiveNode = auroraTint.mul(auroraMask).mul(horizon).mul(near.mul(0.8).add(0.35)).add(color('#6affc9').mul(rim).mul(grazing).mul(0.35)).add(color('#8f7dff').mul(sheet).mul(intimate).mul(0.5))
+    this.emissiveNode = auroraTint.mul(auroraMask).mul(horizon).mul(near.mul(0.8).add(0.35)).add(color(hsl.integer(166, 100, 89)).mul(rim).mul(grazing).mul(0.35)).add(color(hsl.integer(287, 100, 61.4)).mul(sheet).mul(intimate).mul(0.5))
   }
 }

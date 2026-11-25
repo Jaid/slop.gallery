@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2E09QDOVGvyWUoU; fixture: knot-material-shaders; result: success.
 export default {
   id: 'seraphim_censers',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.012,
   flavorText: 'Pierced gilt bronze opens over a sanctuary of velvet and rubies. Circle the knot and Gothic rose windows reveal a heart of living embers.',
   placeholder: {
-    color: '#ba8c67',
+    color: hsl.integer(60, 43, 62),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'contour_atlas',
   candidateId: 'gpt_astra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'An uncharted coast folds back on itself; every ink line measures a place no traveler can reach.',
   displacement: 0.008,
   placeholder: {
-    color: '#91bda7',
+    color: hsl.integer(163, 34, 72),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: Am1BnNRHvHbHCa2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'abyssal_anemones',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.07,
   flavorText: 'Ten thousand patient mouths breathe in the dark, and a slow tide of light passes from lip to lip, asking each one to open.',
   placeholder: {
-    color: '#06192e',
+    color: hsl.integer(253, 69, 11),
     shading: 'glass',
   },
 } as const satisfies KnotData

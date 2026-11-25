@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2b7SAOfgKTVu0qb; fixture: knot-material-shaders; result: success.
 export default {
   id: 'cathedral_skin',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand jewel panes are leaded in gold upon one skin; lean close and each small window keeps its own weather.',
   placeholder: {
-    color: '#bea8b4',
+    color: hsl.integer(344, 18, 71),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -41,17 +42,17 @@ export default class extends KnotMaterial {
     const crossWeave = opticalBands(tube.y.mul(TAU * 74).sub(tube.x.mul(TAU * 5)).sub(warp.mul(4)))
     const nap = tangentView.normalize().dot(positionViewDirection).abs().clamp()
     const satin = nap.pow(1.35).mul(grazing.pow(0.8).mul(0.75).add(0.25))
-    const backdrop = mix(color('#020812'), color('#092635'), warpWeave.mul(0.14).add(crossWeave.mul(0.12).add(0.5)))
-    const dusk = mix(color('#050612'), color('#240b2d'), grazing.mul(0.34).add(warpWeave.mul(0.08)).clamp())
+    const backdrop = mix(color(hsl.integer(251, 60, 5)), color(hsl.integer(235, 68, 15)), warpWeave.mul(0.14).add(crossWeave.mul(0.12).add(0.5)))
+    const dusk = mix(color(hsl.integer(277, 48, 4.5)), color(hsl.integer(316, 67, 11)), grazing.mul(0.34).add(warpWeave.mul(0.08)).clamp())
     const silk = mix(backdrop, dusk, satin.mul(0.16).add(0.035))
-    const birdColor = mix(mix(color('#d15a20'), color('#ffd778'), identity.z.mul(0.8)), color('#63d7da'), identity.y.mul(0.32).add(grazing.mul(0.18)).clamp())
+    const birdColor = mix(mix(color(hsl.integer(43, 89, 55)), color(hsl.integer(88, 100, 88)), identity.z.mul(0.8)), color(hsl.integer(198, 71, 78)), identity.y.mul(0.32).add(grazing.mul(0.18)).clamp())
     const surface = mix(silk, birdColor, flock)
     const relief = flock.mul(0.0017).add(warpWeave.mul(near).mul(0.0002))
     this.colorNode = surface
     this.metalness = 0.12
     this.roughnessNode = float(0.39).sub(satin.mul(0.1)).add(crossWeave.mul(0.035)).clamp(0.18, 0.52)
     this.sheen = 0.68
-    this.sheenColor.set('#6a96a5')
+    this.sheenColor.set(hsl.integer(221, 33, 59))
     this.sheenRoughness = 0.3
     this.clearcoat = 0.34
     this.clearcoatRoughness = 0.085

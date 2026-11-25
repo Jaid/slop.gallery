@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -27,7 +28,7 @@ export default class extends KnotMaterial {
     const terraced = level.add(steps.fract().smoothstep(0.3, 0.7))
     // Eye height re-deals the rainbow: hue is keyed to terrace level plus view.
     const oxide = spectralColor(level.mul(0.9).add(view.y.mul(1.5)).add(view.x.mul(0.4)))
-    this.colorNode = mix(color('#221d29'), oxide, rims.mul(0.45).add(0.55))
+    this.colorNode = mix(color(hsl.integer(304, 23, 14)), oxide, rims.mul(0.45).add(0.55))
     this.metalness = 0.85
     this.roughnessNode = rims.oneMinus().mul(0.15).add(0.06)
     this.iridescence = 0.75
@@ -36,6 +37,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.7
     this.clearcoatRoughness = 0.05
     this.normalNode = proceduralNormal(terraced.add(mx_noise_float(p.mul(26)).mul(0.15)), 0.006)
-    this.emissiveNode = oxide.mul(rims).mul(near.mul(0.55).add(0.18)).mul(0.6).add(color('#9db4ff').mul(rim).mul(0.08))
+    this.emissiveNode = oxide.mul(rims).mul(near.mul(0.55).add(0.18)).mul(0.6).add(color(hsl.integer(271, 100, 74.5)).mul(rim).mul(0.08))
   }
 }

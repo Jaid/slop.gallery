@@ -1,5 +1,6 @@
 import type {Light, NodeFrame, Object3D} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {WebgpuRenderer} from 'three-fiber-game'
 import {ACESFilmicToneMapping, AmbientLight, DirectionalLight, Group, HemisphereLight, Scene} from 'three/webgpu'
 
@@ -13,9 +14,9 @@ const nodesKey = '_nodes' as const
 
 /** The lights of the Knot billboards: soft light from all round and a warm key from high behind, which rims whatever stands in it. */
 export function billboardLights(): Array<Light> {
-  const key = new DirectionalLight('#fff0d7', 2.3)
+  const key = new DirectionalLight(hsl.integer(81, 100, 95.4), 2.3)
   key.position.set(-3, 9, -16)
-  return [new AmbientLight('#ffffff', 0.45), new HemisphereLight('#e1edff', '#80705d', 1.3), key]
+  return [new AmbientLight(hsl.integer(0, 0, 100), 0.45), new HemisphereLight(hsl.integer(258, 100, 93), hsl.integer(72, 20, 48), 1.3), key]
 }
 
 /**

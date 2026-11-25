@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ActJg0bLJQHug14.
 export default {
   id: 'brocade_moon',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Moonlight is woven through midnight silk by invisible golden hands.',
   placeholder: {
-    color: '#3b1b56',
+    color: hsl.integer(306, 69, 20),
     shading: 'fabric',
   },
 } as const satisfies KnotData

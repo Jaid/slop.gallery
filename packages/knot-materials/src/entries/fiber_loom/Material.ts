@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -75,8 +76,8 @@ export default class extends KnotMaterial {
       [0.3, 0.2, 0],
     )
     // Glass fiber base color — translucent white/pale blue
-    const fiberBase = color('#c8d0d8')
-    const fiberDark = color('#404850')
+    const fiberBase = color(hsl.integer(248, 13, 83))
+    const fiberDark = color(hsl.integer(248, 12, 31))
     // Thread color modulated by cylindrical profile (brighter at center)
     const warpProfile = warpFraction.abs().div(threadRadius).clamp().oneMinus().pow(0.5)
     const weftProfile = weftFraction.abs().div(threadRadius).clamp().oneMinus().pow(0.5)
@@ -89,7 +90,7 @@ export default class extends KnotMaterial {
     this.transmission = 0.5
     this.thickness = 0.3
     this.ior = 1.52
-    this.attenuationColor.set('#a0b0c0')
+    this.attenuationColor.set(hsl.integer(248, 18, 71))
     this.attenuationDistance = 1.5
     this.metalness = 0
     this.roughnessNode = float(0.12)
@@ -124,8 +125,8 @@ export default class extends KnotMaterial {
     const rimLight = grazing.pow(3).mul(threadMask)
     this.emissiveNode = warpEmission.mul(1.5)
       .add(weftEmission.mul(1.5))
-      .add(color('#ffffff').mul(crossGlow).mul(2))
-      .add(color('#80ffff').mul(burst).mul(1.2))
-      .add(color('#a0b0ff').mul(rimLight).mul(0.15))
+      .add(color(hsl.integer(0, 0, 100)).mul(crossGlow).mul(2))
+      .add(color(hsl.integer(195, 100, 91.6)).mul(burst).mul(1.2))
+      .add(color(hsl.integer(275, 100, 74)).mul(rimLight).mul(0.15))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fill, stroke} from '../../candidates/gpt_astra/lib/exhibition/pattern.ts'
@@ -39,7 +40,7 @@ export default class extends KnotMaterial {
     const tube = uv()
     const ray = tubeRay()
     const honey = mx_noise_float(p.mul(5)).mul(0.5).add(0.5)
-    let interior: Node<'vec3'> = mix(color('#50220a'), color('#cb681c'), honey.mul(0.65).add(facing.mul(0.25)))
+    let interior: Node<'vec3'> = mix(color(hsl.integer(45, 78, 21)), color(hsl.integer(52, 88, 56)), honey.mul(0.65).add(facing.mul(0.25)))
     let relief: Node<'float'> = float(0)
     // Back-to-front compositing gives leaves real occlusion rather than additive ghosting.
     for (let layer = 3;layer >= 0;layer--) {
@@ -52,14 +53,14 @@ export default class extends KnotMaterial {
       const frond = fern(point, q.fwidth().length().max(0.0001), sway)
       const gate = rnd.z.smoothstep(0.23, 0.35)
       const mask = frond.mask.mul(gate).mul(0.83 - layer * 0.08)
-      const leafColor = mix(color('#36180b'), color('#9a4a11'), float(layer / 4)).add(color('#eeb34c').mul(frond.vein).mul(0.3))
+      const leafColor = mix(color(hsl.integer(43, 63, 15)), color(hsl.integer(50, 86, 42)), float(layer / 4)).add(color(hsl.integer(78, 82, 77)).mul(frond.vein).mul(0.3))
       interior = mix(interior, leafColor, mask)
       relief = relief.max(mask.mul(1 - layer * 0.2))
     }
     const inclusions = beads(p.sub(view.mul(0.055)).mul(72), 9)
     const bubbleRing = inclusions.cap.sub(0.45).abs().smoothstep(0.12, 0.25).oneMinus().mul(inclusions.mask)
-    interior = mix(interior, color('#4b260f'), inclusions.mask.mul(0.3).mul(intimate))
-    interior = interior.add(color('#ffd581').mul(bubbleRing).mul(intimate).mul(0.6))
+    interior = mix(interior, color(hsl.integer(50, 68, 21)), inclusions.mask.mul(0.3).mul(intimate))
+    interior = interior.add(color(hsl.integer(84, 100, 87.4)).mul(bubbleRing).mul(intimate).mul(0.6))
     const flow = mx_noise_float(p.mul(18).add(vec3(0, time.mul(0.015), 0)))
     this.colorNode = interior.mul(mix(float(0.58), float(1), facing))
     this.metalness = 0.04
@@ -69,8 +70,8 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.055
     this.clearcoatNormalNode = normalViewGeometry
     this.normalNode = proceduralNormal(flow, 0.00032)
-    this.specularColorNode = color('#fff0d5')
-    this.emissiveNode = interior.mul(facing.mul(0.23).add(0.035)).add(color('#ed8c26').mul(grazing.pow(4)).mul(0.065))
+    this.specularColorNode = color(hsl.integer(82, 100, 95.3))
+    this.emissiveNode = interior.mul(facing.mul(0.23).add(0.035)).add(color(hsl.integer(60, 92, 68)).mul(grazing.pow(4)).mul(0.065))
     this.aoNode = relief.mul(-0.12).add(1)
   }
 }

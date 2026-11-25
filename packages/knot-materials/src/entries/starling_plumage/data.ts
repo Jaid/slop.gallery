@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'starling_plumage',
   candidateId: 'gpt_terra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Thousands of dark barbs turn as one flock, gathering cobalt and green only at the instant the viewer finds their wind.',
   displacement: 0.009,
   placeholder: {
-    color: '#163a36',
+    color: hsl.integer(186, 59, 22),
     shading: 'fabric',
   },
 } as const satisfies KnotData

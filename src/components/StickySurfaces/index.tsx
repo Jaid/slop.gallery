@@ -2,6 +2,7 @@ import type {BufferGeometry} from 'three/webgpu'
 
 import {useFrame, useThree} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useEffect, useMemo, useRef, useState} from 'react'
 import {attribute, cameraPosition, dot, float, fract, length, modelWorldMatrixInverse, positionLocal, step, vec4} from 'three/tsl'
 import {MeshBasicNodeMaterial} from 'three/webgpu'
@@ -11,8 +12,8 @@ import WallObstructionScan from '#src/lib/placement/WallObstructionScan.ts'
 import {patchGeometry, reservationGeometry, stickySurfaceGeometry} from '#src/lib/placement/wallOverlayGeometry.ts'
 import world from '#src/worlds/current.ts'
 
-const stickyColor = '#38e08c'
-const reservedColor = '#ff2a2a'
+const stickyColor = hsl.integer(156, 92, 77)
+const reservedColor = hsl.integer(27.6, 100, 58.5)
 /** how many meters out of their wall the red overlays are drawn, toward the camera, so whatever stands out of their wall less far, like a chimney breast, can’t hide them, while furniture and walls further in front still do */
 const nudge = 1.4
 /** how many meters at most an overlay travels toward the camera, so one seen at a glancing angle doesn’t reach through the walls of other rooms in front of it */

@@ -2,6 +2,8 @@ import renderCanvasTexture from 'canvas-textures/three'
 import {attribute, texture, uv, vec2} from 'three/tsl'
 import {InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicNodeMaterial, OrthographicCamera, PlaneGeometry, RenderTarget, Scene, SRGBColorSpace, WebGPURenderer} from 'three/webgpu'
 
+import {cssHex} from '#src/lib/color.ts'
+
 import {labelAtlasColumns, labelBackground, labelHeight, labelTile, labelWidth} from '../../src/components/KnotLabels/layout.ts'
 
 /** Detached rendering only: full-size atlas, row boundaries, final tile and late shader invalidation. */
@@ -18,7 +20,7 @@ export default async function verifyKnotLabels() {
       // Faces are HTML now; the upload and the tile mapping only need each tile’s accent stripe on the face color.
       for (let index = 0; index < count; index++) {
         const {x, y} = labelTile(index)
-        context.fillStyle = labelBackground
+        context.fillStyle = cssHex(labelBackground)
         context.fillRect(x, y, labelWidth, labelHeight)
         context.fillStyle = accents[indices.indexOf(index)] ?? '#46d6ff'
         context.fillRect(x + 38, y + 41, 644, 8)

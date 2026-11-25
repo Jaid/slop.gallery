@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: FazbrK93jHSafY1; fixture: knot-material-br11k.
 export default {
   id: 'great_cat_emergence',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The old star charts never recorded the Great Cat. It only draws itself while someone is watching – and it is always watching back.',
   placeholder: {
-    color: '#0b1530',
+    color: hsl.integer(266, 63, 10),
     shading: 'smooth',
   },
 } as const satisfies KnotData

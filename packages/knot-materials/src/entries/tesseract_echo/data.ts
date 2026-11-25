@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tesseract_echo',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A shape from elsewhere leaves repeating traces as it passes through this room.',
   placeholder: {
-    color: '#a06bff',
+    color: hsl.integer(297, 100, 60),
     shading: 'ghost',
   },
 } as const satisfies KnotData

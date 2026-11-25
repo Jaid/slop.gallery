@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'birefringent_glacier',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A frozen passage splits the daylight into neighboring worlds.',
   placeholder: {
-    color: '#9ad8ff',
+    color: hsl.integer(237, 100, 83),
     shading: 'glass',
   },
 } as const satisfies KnotData

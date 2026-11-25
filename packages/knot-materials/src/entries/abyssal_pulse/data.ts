@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: KKRUCJSg0WdighD; fixture: knot-material-shaders.
 export default {
   id: 'abyssal_pulse',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.02,
   flavorText: 'Something from below the reach of sunlight, breathing in the dark. It notices you: rings of cold light run away from wherever you stand, and its skin blushes as you come near.',
   placeholder: {
-    color: '#160b2a',
+    color: hsl.integer(297, 65, 9),
     shading: 'glass',
   },
 } as const satisfies KnotData

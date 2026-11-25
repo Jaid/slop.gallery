@@ -1,5 +1,6 @@
 import {expect, test} from 'bun:test'
 
+import hsl from 'okhsl'
 import {Mesh, PerspectiveCamera, PlaneGeometry, RenderTarget, Scene, WebGPURenderer} from 'three/webgpu'
 
 import PlanarMirrorMaterial, {getReflectionHeight, renderPlanarReflection, setReflectionHeight} from '../../src/lib/materials/PlanarMirrorMaterial.ts'
@@ -10,7 +11,7 @@ test('switching planes draws at most one reflected view and only mixes it into t
   const geometry = new PlaneGeometry(3, 3)
   const surfaces = [0, 0.002, 3, -5].map((height, index) => {
     const material = new PlanarMirrorMaterial(null, {
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       roughness: 0.7,
       reflection: {
         strength: 0.25,

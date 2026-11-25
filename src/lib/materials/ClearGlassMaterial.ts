@@ -1,5 +1,6 @@
 import type {ColorRepresentation} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, normalView, positionViewDirection} from 'three/tsl'
 import {CustomBlending, MeshPhysicalNodeMaterial, OneFactor, OneMinusSrcAlphaFactor} from 'three/webgpu'
 
@@ -37,10 +38,10 @@ export function paneFresnelTransmittance(ior: number) {
  * and the backdrop is dimmed by the same Fresnel reflectance of both faces, so panes turn mirror-like at grazing angles exactly like real glass.
  */
 export default class ClearGlassMaterial extends MeshPhysicalNodeMaterial {
-  constructor({absorption, clearcoat = 0, envMapIntensity = 1, ior, iridescence = 0, iridescenceIOR = 1.3, iridescenceThicknessMaximum = 400, iridescenceThicknessMinimum = 100, name, specularColor = '#ffffff'}: ClearGlassOptions) {
+  constructor({absorption, clearcoat = 0, envMapIntensity = 1, ior, iridescence = 0, iridescenceIOR = 1.3, iridescenceThicknessMaximum = 400, iridescenceThicknessMinimum = 100, name, specularColor = hsl.integer(0, 0, 100)}: ClearGlassOptions) {
     super({
       // A black body leaves only reflections; everything else comes from the backdrop.
-      color: '#000000',
+      color: hsl.integer(0, 0, 0),
       metalness: 0,
       roughness: 0,
       ior,

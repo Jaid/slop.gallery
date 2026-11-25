@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, time, uv} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -36,8 +37,8 @@ export default class extends BaseKnotMaterial {
     const grain = grainDist.smoothstep(0.18, grainFoot.mul(0.7).add(0.28)).oneMinus().mul(grainSharp).add(grainSharp.oneMinus().mul(0.6))
     const stray = grainRnd.y.smoothstep(0.93, 0.95).mul(grain).mul(field.abs().smoothstep(0.05, 0.5)).mul(0.6)
     const sand = nodal.mul(grain.mul(0.7).add(0.3)).add(stray).clamp()
-    const plate = mix(color('#0d1330'), color('#1f2f6a'), mx_noise_float(p.mul(3)).mul(0.5).add(0.5).mul(0.35))
-    const sandColor = mix(color('#d9c9a5'), color('#fff5e0'), grainRnd.x)
+    const plate = mix(color(hsl.integer(271, 63, 10)), color(hsl.integer(269, 71, 23)), mx_noise_float(p.mul(3)).mul(0.5).add(0.5).mul(0.35))
+    const sandColor = mix(color(hsl.integer(87, 37, 81)), color(hsl.integer(86, 100, 96.8)), grainRnd.x)
     const vibration = time.mul(42).sin()
     this.colorNode = mix(plate, sandColor, sand)
     this.metalnessNode = sand.oneMinus().mul(0.7)
@@ -49,6 +50,6 @@ export default class extends BaseKnotMaterial {
     const grainNormal = normalViewGeometry.add(grainRnd.sub(0.5).mul(0.5)).normalize()
     const sparkle = glints(grainNormal, 120).mul(sand).mul(grain).mul(near).mul(0.35)
     const hum = field.abs().smoothstep(0.3, 1.6).mul(vibration.mul(0.5).add(0.5))
-    this.emissiveNode = color('#fff2d8').mul(sparkle).add(color('#2e4bd8').mul(hum).mul(intimate).mul(0.08))
+    this.emissiveNode = color(hsl.integer(85, 100, 96)).mul(sparkle).add(color(hsl.integer(268, 92.7, 41)).mul(hum).mul(intimate).mul(0.08))
   }
 }

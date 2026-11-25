@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'helios_plume',
   candidateId: 'kimi',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A golden plume bends beneath the weight of its own radiance.',
   placeholder: {
-    color: '#ff7a3c',
+    color: hsl.integer(43, 100, 68),
     shading: 'liquid',
   },
 } as const satisfies KnotData

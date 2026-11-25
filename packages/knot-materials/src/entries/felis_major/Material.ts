@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {jewel, segment, stroke, tile} from '../../candidates/gpt_sol/lib/ornament.ts'
@@ -62,15 +63,15 @@ export default class extends KnotMaterial {
     const dustCell = p.mul(65)
     const dustRnd = mx_cell_noise_float(dustCell.floor())
     const dust = dustCell.fract().sub(0.5).length().smoothstep(0.06, 0.16).oneMinus().mul(dustRnd.smoothstep(0.978, 0.99)).mul(near.mul(0.7).add(0.25))
-    const midnight = mix(color('#050b25'), color('#213858'), nebula.mul(0.6).add(grazing.mul(0.16)))
-    const catTint = mix(color('#8acaff'), color('#ffcbde'), identity)
-    this.colorNode = mix(midnight, color('#294d7a'), silhouette.mul(0.55))
+    const midnight = mix(color(hsl.integer(268, 74, 7)), color(hsl.integer(257, 51, 24)), nebula.mul(0.6).add(grazing.mul(0.16)))
+    const catTint = mix(color(hsl.integer(244, 100, 78.6)), color(hsl.integer(355, 100, 87.5)), identity)
+    this.colorNode = mix(midnight, color(hsl.integer(254, 59, 33)), silhouette.mul(0.55))
     this.metalness = 0.18
     this.roughnessNode = float(0.78).sub(silhouette.mul(0.32))
     this.clearcoat = 0.18
     this.clearcoatRoughness = 0.11
     this.sheenNode = float(0.12)
     this.sheenRoughness = 0.6
-    this.emissiveNode = catTint.mul(silhouette).mul(1.7).add(color('#ffe9a2').mul(eyes.mul(1.65).add(nose.mul(0.45))).mul(twinkle)).add(color('#789ddf').mul(dust).mul(0.9)).add(catTint.mul(grazing.pow(3)).mul(0.11)).add(color('#729ad9').mul(view.z.abs()).mul(nebula).mul(0.025))
+    this.emissiveNode = catTint.mul(silhouette).mul(1.7).add(color(hsl.integer(93, 100, 92.5)).mul(eyes.mul(1.65).add(nose.mul(0.45))).mul(twinkle)).add(color(hsl.integer(261, 61, 65)).mul(dust).mul(0.9)).add(catTint.mul(grazing.pow(3)).mul(0.11)).add(color(hsl.integer(259, 59, 63)).mul(view.z.abs()).mul(nebula).mul(0.025))
   }
 }

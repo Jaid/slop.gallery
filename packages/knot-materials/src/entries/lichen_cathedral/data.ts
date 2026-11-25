@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'lichen_cathedral',
   candidateId: 'muse_spark',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A patient green congregation grows across the stones of a forgotten sanctuary.',
   placeholder: {
-    color: '#2aff7a',
+    color: hsl.integer(149.6, 100, 85.7),
     shading: 'smooth',
   },
   displacement: 0.025,

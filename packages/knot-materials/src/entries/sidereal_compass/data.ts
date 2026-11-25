@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'sidereal_compass',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Its fine markings point toward stars rather than any earthly north.',
   placeholder: {
-    color: '#e6c27a',
+    color: hsl.integer(84, 64, 80),
     shading: 'smooth',
   },
 } as const satisfies KnotData

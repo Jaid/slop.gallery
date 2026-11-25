@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -25,14 +26,14 @@ export default class extends BaseKnotMaterial {
     const weave = warpLine.max(weftLine)
     const threadTint = spectralColor(tube.x.mul(8).add(time.mul(0.12)).add(tube.y.mul(2)))
     const threadTint2 = spectralColor(tube.x.mul(8).add(2.5).add(time.mul(0.12)))
-    const velvet = color('#06070a')
+    const velvet = color(hsl.integer(269, 15, 4.5))
     const reveal = weave.mul(near.mul(0.6).add(0.35)).mul(facing.oneMinus().pow(0.7).add(0.3))
     this.colorNode = mix(velvet, threadTint, reveal)
     this.roughnessNode = float(0.92).sub(weave.mul(0.55))
     this.metalnessNode = float(0)
     this.emissiveNode = threadTint.mul(warpLine).mul(near.mul(0.7).add(0.5)).mul(1.3)
       .add(threadTint2.mul(weftLine).mul(0.9))
-      .add(color('#ffffff').mul(rim.pow(3).mul(weave).mul(0.18)))
+      .add(color(hsl.integer(0, 0, 100)).mul(rim.pow(3).mul(weave).mul(0.18)))
     this.clearcoat = 0.15
     this.clearcoatRoughness = 0.6
     this.iridescence = 0.7

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'voltaic_lattice',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A fine framework passes blue sparks from one invisible charge to the next.',
   placeholder: {
-    color: '#2b4cff',
+    color: hsl.integer(267, 100, 45),
     shading: 'glass',
   },
 } as const satisfies KnotData

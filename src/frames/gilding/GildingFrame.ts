@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_cell_noise_float, mx_noise_float, select, smoothstep, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -51,7 +52,7 @@ export default class GildingFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#c9a46a'
+  override readonly tint = hsl.integer(78, 52, 70)
   override readonly title = 'Unfinished gilding'
 
   override createGeometry(width: number, height: number) {
@@ -85,11 +86,11 @@ export default class GildingFrame extends PortraitFrame {
   protected override createMaterials() {
     // The clamp’s cast iron is enameled in a toolmaker’s blue, chipped back to the iron on its edges.
     return [new GildingStagesMaterial, new FramePaintMaterial({
-      color: '#2c5a8c',
+      color: hsl.integer(252, 63, 38),
       roughness: 0.4,
       clearcoat: 0.3,
       wear: 0.5,
-      under: '#55585b',
+      under: hsl.integer(248, 4, 37),
       grime: 0.5,
     }), new GildingBackMaterial]
   }
@@ -127,12 +128,12 @@ class GildingStagesMaterial extends MeshPhysicalNodeMaterial {
     // Limewood, pale and close-grained, with the carver’s pencil: a setting-out line along the face and ticks across it.
     const grain = mx_noise_float(vec3(surface.along.mul(3), surface.reach.add(p.z.mul(0.6)).mul(300), surface.member)).mul(0.5).add(0.5)
     const pencil = line(surface.reach.sub(0.028), 0.00025).add(line(repeat(surface.along, 0.05), 0.0003).mul(band(surface, 0.012, 0.03).inside)).mul(visibleDetail(footprint, 0.002)).clamp(0, 1)
-    const wood = mix(mix(color('#9c7748'), color('#b8935f'), grain), color('#2e2b2a'), pencil.mul(0.85))
+    const wood = mix(mix(color(hsl.integer(72, 50, 53)), color(hsl.integer(75, 49, 63)), grain), color(hsl.integer(39, 4, 19)), pencil.mul(0.85))
     // Gesso, chalk white and dead flat, its brushstrokes running along the member.
     const strokes = mx_noise_float(vec3(surface.along.mul(14), surface.across.mul(420), surface.member.add(5))).mul(0.5).add(0.5)
-    const gesso = mix(color('#e6e1d4'), color('#f4f1e8'), strokes)
+    const gesso = mix(color(hsl.integer(89, 24, 90)), color(hsl.integer(92, 31, 95)), strokes)
     // Red bole on the crests, which get burnished, and yellow in the hollows, which stay matte.
-    const bole = mix(color('#86402c'), color('#b0843f'), hollow).mul(strokes.mul(0.1).add(0.92))
+    const bole = mix(color(hsl.integer(37, 64, 37)), color(hsl.integer(76, 65, 58)), hollow).mul(strokes.mul(0.1).add(0.92))
     // Leaf laid in squares of 8.5 cm, their overlaps brighter for the double leaf, and the odd holiday letting the bole through, more of them where the gilder has only just begun.
     const leafSize = 0.085
     const seams = max(line(repeat(surface.along.add(surface.member.mul(0.031)), leafSize), 0.0012), line(repeat(surface.across, leafSize), 0.0012)).mul(visibleDetail(footprint, 0.004))
@@ -179,7 +180,7 @@ class GildingBackMaterial extends MeshPhysicalNodeMaterial {
     const position = point.div(outer)
     const progress = float(2).sub(position.x).sub(position.y).div(4)
     const grain = mx_noise_float(vec3(point.x.mul(90), point.y.mul(4), 4.4)).mul(0.5).add(0.5)
-    const wood = mix(color('#9c7748'), color('#b8935f'), grain)
+    const wood = mix(color(hsl.integer(72, 50, 53)), color(hsl.integer(75, 49, 63)), grain)
     // Drips running in from the edge, one every 14 mm along it, of their own lengths, tapering.
     const along = select(inset.x.lessThan(inset.y), point.y, point.x)
     const length = mx_cell_noise_float(vec3(along.div(0.014).floor(), 1, 0)).pow(2).mul(0.06).add(0.006)
@@ -187,13 +188,13 @@ class GildingBackMaterial extends MeshPhysicalNodeMaterial {
     const drip = inside(max(across.sub(float(0.0035).mul(float(1).sub(edge.div(length)).max(0.25))), edge.sub(length))).max(inside(edge.sub(0.005)))
     const gessoed = select(progress.greaterThan(0.17), float(1), float(0))
     const boled = select(progress.greaterThan(0.35), float(1), float(0))
-    const run = mix(color('#ece7da'), color('#86402c'), boled)
+    const run = mix(color(hsl.integer(89, 28, 92)), color(hsl.integer(37, 64, 37)), boled)
     // The joiner’s pencil: a cross where each ring is to go, and a note under them.
     const ring = vec2(point.x.abs().sub(opening.x.mul(0.78)), point.y.sub(opening.y.mul(0.42)))
     const near = select(ring.length().lessThan(0.014), float(1), float(0))
     const cross = line(ring.x.add(ring.y).mul(Math.SQRT1_2), 0.0006).max(line(ring.x.sub(ring.y).mul(Math.SQRT1_2), 0.0006)).mul(near)
     const pencil = cross.max(scribble(surface, vec2(0, opening.y.mul(-0.3)), 0.26, 0.03, 3.1))
-    this.colorNode = mix(mix(wood, run, drip.mul(gessoed)), color('#3a3634'), pencil.mul(0.8))
+    this.colorNode = mix(mix(wood, run, drip.mul(gessoed)), color(hsl.integer(49, 5, 24)), pencil.mul(0.8))
     this.roughnessNode = mix(float(0.8), float(0.9), drip.mul(gessoed))
     this.normalNode = heightNormal(drip.mul(gessoed).mul(0.0004).add(grain.mul(0.00003)))
   }

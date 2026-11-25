@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -86,8 +87,8 @@ export default class extends KnotMaterial {
     const cloth = weave(tube)
     const loop = time.mul(Math.PI)
     const silkWarp = mx_noise_float(p.mul(2.6)).mul(0.5).add(0.5).clamp()
-    let silk = mix(color('#2a0716'), color('#671632'), silkWarp)
-    silk = mix(silk, color('#82203f'), cloth.slub.mul(0.2))
+    let silk = mix(color(hsl.integer(358, 69, 10)), color(hsl.integer(5, 77, 25)), silkWarp)
+    silk = mix(silk, color(hsl.integer(6, 76, 32)), cloth.slub.mul(0.2))
     const goldDust = cellularPoints(p.mul(24), 0.04, 0.16, 0.72).mul(intimate.mul(0.5).add(0.2))
     const goldMask = pattern.motif
       .mul(0.92)
@@ -99,8 +100,8 @@ export default class extends KnotMaterial {
       .add(pattern.edgeLeaf.mul(0.55))
       .add(goldDust.mul(0.35))
       .clamp()
-    let gold = mix(color('#6e2f05'), color('#e8aa4a'), pattern.threadBands)
-    gold = mix(gold, color('#ffe9a8'), facing.pow(2).mul(0.55)).mul(pattern.petalVein.mul(0.25).add(0.82))
+    let gold = mix(color(hsl.integer(48, 91, 29)), color(hsl.integer(75, 79, 74)), pattern.threadBands)
+    gold = mix(gold, color(hsl.integer(92, 100, 92.7)), facing.pow(2).mul(0.55)).mul(pattern.petalVein.mul(0.25).add(0.82))
     const jacquard = float(0.52).add(grazing.pow(1.35).mul(0.55))
     const shimmer = tube.x.mul(TAU * 2).sub(loop).sin().mul(0.5).add(0.5)
     const sparkle = glints(normalViewGeometry, 120)
@@ -121,13 +122,13 @@ export default class extends KnotMaterial {
     this.aoNode = float(0.76).add(goldMask.mul(0.24))
     this.anisotropy = 0.7
     this.anisotropyNode = mix(vec2(0.12, 0), vec2(0.82, 0), goldMask)
-    this.sheenNode = mix(color('#7d1e3e'), color('#126f68'), grazing.pow(2))
+    this.sheenNode = mix(color(hsl.integer(5, 76, 31)), color(hsl.integer(187, 91, 41)), grazing.pow(2))
       .mul(pattern.motif.mul(0.35).add(0.95))
       .mul(1.15)
     this.sheenRoughnessNode = mix(float(0.48), float(0.3), goldMask)
     this.clearcoat = 0.12
     this.clearcoatRoughness = 0.5
-    this.emissiveNode = color('#ffe9a8')
+    this.emissiveNode = color(hsl.integer(92, 100, 92.7))
       .mul(sparkle.mul(0.55))
       .add(gold.mul(grazing.pow(4)).mul(goldMask).mul(0.22))
   }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, normalLocal, time, uv, vec3} from 'three/tsl'
 
 import {filteredBox} from '../../candidates/claude_opus/lib/filteredBox.ts'
@@ -54,7 +55,7 @@ export default class extends KnotMaterial {
     const plateMask = filteredBox(plateCoord.fract().sub(0.5), 0.3, plateFootprint).mul(filteredBox(across, 0.115, rowFootprint))
     const spectrum = cteneSpectrum(view, along, n, stroke.mul(0.85))
     const shimmer = power.mul(3.4).add(0.22).mul(facing.mul(0.6).add(0.4))
-    const combs = spectrum.mul(plateMask).mul(shimmer).add(color('#9fd8ff').mul(plateMask).mul(0.04))
+    const combs = spectrum.mul(plateMask).mul(shimmer).add(color(hsl.integer(239, 100, 83.3)).mul(plateMask).mul(0.04))
 // Each row also leaves a faint diffuse halo of scattered rainbow in the gel around it.
     const halo = across.div(0.17).pow2().negate().exp().mul(power.mul(0.5).add(0.15))
     const combHalo = spectrum.mul(halo).mul(0.16)
@@ -67,25 +68,25 @@ export default class extends KnotMaterial {
     const pulseCoord = s.mul(3).sub(time.mul(0.32)).add(rowSeed.mul(3)).fract().sub(0.5)
     const pulse = pulseCoord.div(0.045).pow2().negate().exp()
     const startle = intimate.mul(1.4).add(near.mul(0.35)).add(0.12)
-    const lumen = mix(color('#1f7bff'), color('#38ffd0'), pulse)
+    const lumen = mix(color(hsl.integer(259, 100, 54.5)), color(hsl.integer(172, 100, 87.85)), pulse)
     const canals = lumen.mul(canal).mul(pulse.mul(2.4).add(0.18)).mul(startle)
 // Interior lobes of the gel, refracted deeper still, drift slowly like a body breathing.
     const lobeP = p.sub(view.mul(0.075))
     const breath = time.mul(0.6).sin().mul(0.04)
     const lobes = mx_fractal_noise_float(lobeP.mul(7.5).add(vec3(0, time.mul(0.05), breath)), 3, 2, 0.5).mul(0.5).add(0.5).smoothstep(0.45, 0.85)
-    const lobeTint = mix(color('#2a1460'), color('#0b3c7a'), lobeP.y.mul(3).sin().mul(0.5).add(0.5))
+    const lobeTint = mix(color(hsl.integer(289, 82, 18)), color(hsl.integer(257, 89, 27)), lobeP.y.mul(3).sin().mul(0.5).add(0.5))
     const interior = lobeTint.mul(lobes).mul(facing.mul(0.6).add(0.2)).mul(0.32)
 // Gel reads by its edges: the longer path through grazing glass glows pale cyan.
-    const edge = color('#5fb4ff').mul(grazing.pow(2.6)).mul(0.32).add(color('#d8f2ff').mul(grazing.pow(7)).mul(0.55))
+    const edge = color(hsl.integer(247, 100, 71)).mul(grazing.pow(2.6)).mul(0.32).add(color(hsl.integer(229, 100, 93.7)).mul(grazing.pow(7)).mul(0.55))
 // Marine snow suspended in and around the body.
     const snow = cellularPoints(p.sub(view.mul(0.04)).mul(46).add(vec3(0, time.mul(0.08), 0)), 0.02, 0.12, 0.86).mul(near.mul(0.6).add(0.2))
-    this.colorNode = color('#01040a')
+    this.colorNode = color(hsl.integer(252, 60, 3))
     this.metalness = 0
     this.roughness = 0.1
     this.clearcoat = 1
     this.clearcoatRoughness = 0.025
     this.normalNode = liquidNormal(intimate, 0.45)
-    const emission: Node<'vec3'> = combs.add(combHalo).add(canals).add(interior).add(edge).add(color('#cfe8ff').mul(snow).mul(0.5))
+    const emission: Node<'vec3'> = combs.add(combHalo).add(canals).add(interior).add(edge).add(color(hsl.integer(246, 100, 90.7)).mul(snow).mul(0.5))
     this.emissiveNode = emission
   }
 }

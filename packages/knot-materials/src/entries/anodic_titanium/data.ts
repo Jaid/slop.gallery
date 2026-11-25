@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'anodic_titanium',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A thin breath of color lies over metal that refuses to age.',
   placeholder: {
-    color: '#6f8fc9',
+    color: hsl.integer(262, 50, 59),
     shading: 'metal',
   },
 } as const satisfies KnotData

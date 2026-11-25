@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalView, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -32,10 +33,10 @@ export default class extends KnotMaterial {
     const thickness = mx_noise_float(p.mul(9.5)).mul(0.5).add(0.5)
     const gold = seam(crackCoarse, thickness.mul(0.022).add(0.014))
     const hairline = seam(crackFine, float(0.012)).mul(intimate.mul(0.75).add(0.25))
-    const glazeTone = mix(color('#5f8c7c'), color('#c9ddd1'), mx_fractal_noise_float(p.mul(3.2), 4, 2, 0.5).mul(0.5).add(0.5))
+    const glazeTone = mix(color(hsl.integer(170, 35, 54)), color(hsl.integer(160, 25, 86)), mx_fractal_noise_float(p.mul(3.2), 4, 2, 0.5).mul(0.5).add(0.5))
     const crevice = seam(crackCoarse, float(0.16)).mul(0.5).add(hairline.mul(0.35)).clamp()
-    const glaze = mix(glazeTone, color('#2c4a45'), crevice.mul(0.8))
-    const goldTone = mix(color('#a8741f'), color('#f5d78c'), mx_noise_float(p.mul(42)).mul(0.5).add(0.5))
+    const glaze = mix(glazeTone, color(hsl.integer(183, 36, 29)), crevice.mul(0.8))
+    const goldTone = mix(color(hsl.integer(74, 83, 53)), color(hsl.integer(89, 76, 87)), mx_noise_float(p.mul(42)).mul(0.5).add(0.5))
 // Maki-e flecks: sparse specks of gold powder that flash only at the angles where they face the room.
     const fleck = cellularPoints(p.mul(70), 0.03, 0.2, 0.74)
     const sparkle = glints(normalView, 70).mul(fleck)
@@ -52,6 +53,6 @@ export default class extends KnotMaterial {
 // Candlelight travels along the seams on a two-second loop, so the knot's lacquer seems to glow from within.
     const pulse = time.mul(Math.PI).sub(p.dot(vec3(2.2, 1.3, -1.7)).mul(1.4)).cos().mul(0.5).add(0.5).pow(10)
     this.emissiveNode = goldTone.mul(gold).mul(pulse.mul(0.35).add(sparkle.mul(near.mul(0.9).add(0.1)).mul(1.4)))
-      .add(color('#7fd0b5').mul(grazing.pow(3)).mul(0.1))
+      .add(color(hsl.integer(171, 56, 76)).mul(grazing.pow(3)).mul(0.1))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'phase_ghost',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The surface keeps arriving a fraction of a moment after its reflection.',
   placeholder: {
-    color: '#8cf5ff',
+    color: hsl.integer(203, 99, 89.6),
     shading: 'ghost',
   },
 } as const satisfies KnotData

@@ -1,6 +1,7 @@
 import type {Metal} from '../lib/materials/FrameMetalMaterial.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, hash, max, mix, mx_noise_float, positionLocal, select, time, uv, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -60,23 +61,23 @@ const cleaver = {
 }
 /** iron gone dark and greasy, rusting where it isn’t handled and crusted with old blood */
 const butcherIron: Metal = {
-  bright: '#5e5852',
-  dull: '#24201d',
+  bright: hsl.integer(68, 8, 38),
+  dull: hsl.integer(59, 9, 14),
   roughness: 0.5,
   patina: {
     amount: 0.75,
-    color: '#3a140c',
+    color: hsl.integer(34, 69, 15),
   },
   texture: 0.00002,
 }
 /** a cleaver’s carbon steel, gray and dull but for its edge */
 const cleaverSteel: Metal = {
-  bright: '#9a9ea2',
-  dull: '#3c3d3f',
+  bright: hsl.integer(248, 4, 65),
+  dull: hsl.integer(265, 3, 26),
   roughness: 0.32,
   patina: {
     amount: 0.5,
-    color: '#3a0a06',
+    color: hsl.integer(29, 87, 13),
   },
 }
 /** The S-hook’s wire as a line of points, its top curled over the rail round the origin and its shank `shank` meters long, ending in a curl up to its point. */
@@ -147,7 +148,7 @@ export default class ButcherFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#5a3424'
+  override readonly tint = hsl.integer(43, 48, 27)
   override readonly title = 'Butcher’s block'
 
   override createGeometry(width: number, height: number) {
@@ -210,7 +211,7 @@ export default class ButcherFrame extends PortraitFrame {
         timber: walnut,
         grime: 0.9,
         roughness: 0.6,
-        stain: '#6a4a3a',
+        stain: hsl.integer(48, 34, 35),
       }),
     ]
   }
@@ -244,10 +245,10 @@ class BlockMaterial extends MeshPhysicalNodeMaterial {
     const seam = line(pieceRun.fract().sub(0.5).abs().sub(0.5).mul(pieceLength), 0.00025).max(line(surface.reach.sub(face.from).div((face.to - face.from) / 3).fract().sub(0.5).abs().sub(0.5).mul((face.to - face.from) / 3), 0.00025)).mul(onFace.inside)
     const tone = hash(id.add(7))
     const pores = mx_noise_float(vec3(plane.mul(900), 1.3)).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.0012))
-    const endGrain = mix(mix(color('#946234'), color('#6a4020'), tone), color('#3a200e'), rings.mul(0.55)).mul(pores.mul(-0.12).add(1))
+    const endGrain = mix(mix(color(hsl.integer(62, 60, 47)), color(hsl.integer(56, 61, 32)), tone), color(hsl.integer(54, 60, 17)), rings.mul(0.55)).mul(pores.mul(-0.12).add(1))
     // The chamfer and the round show the long grain, running along the member.
-    const longGrain = mix(color('#7e4e28'), color('#4a2a12'), mx_noise_float(vec3(surface.along.mul(6), surface.across.mul(260), surface.member)).mul(0.5).add(0.5))
-    const timber = mix(longGrain, mix(endGrain, color('#2a180a'), seam.mul(0.35)), onFace.inside)
+    const longGrain = mix(color(hsl.integer(57, 61, 39)), color(hsl.integer(55, 63, 22)), mx_noise_float(vec3(surface.along.mul(6), surface.across.mul(260), surface.member)).mul(0.5).add(0.5))
+    const timber = mix(longGrain, mix(endGrain, color(hsl.integer(57, 54, 13)), seam.mul(0.35)), onFace.inside)
     // Knife cuts, mostly in two directions, as a butcher works, and the odd deep hatchet gash with splintered lips.
     const scored = cuts(plane, 0.012, 0.01, 0.35, 0, footprint).max(cuts(plane.add(0.004), 0.019, 0.016, 0.3, 9, footprint)).mul(onFace.inside)
     const gashLength = 0.04
@@ -283,9 +284,9 @@ class BlockMaterial extends MeshPhysicalNodeMaterial {
       drips = drips.max(select(float(index).lessThan(count), streak, float(0)))
     }
     drips = select(isTop, drips, float(0))
-    const stained = mix(mix(timber, mix(color('#4e1a10'), color('#5e160c'), wet), soaked.mul(0.8)), color('#3a0a08'), drips.mul(0.92))
+    const stained = mix(mix(timber, mix(color(hsl.integer(33, 75, 20)), color(hsl.integer(31, 89, 22)), wet), soaked.mul(0.8)), color(hsl.integer(27, 85, 13)), drips.mul(0.92))
     const cut = mix(stained, stained.mul(0.55), scored)
-    this.colorNode = mix(mix(cut, color('#a87a4c'), fresh.mul(0.6)), color('#0b0503'), chop)
+    this.colorNode = mix(mix(cut, color(hsl.integer(65, 51, 55)), fresh.mul(0.6)), color(hsl.integer(47, 35, 4)), chop)
     this.roughnessNode = mix(float(0.72), float(0.45), soaked.max(drips)).sub(wet.mul(0.15)).add(chop.mul(0.2))
     this.normalNode = heightNormal(scored.mul(-0.0002).sub(chop.mul(0.0018)).add(fresh.mul(0.0003)).sub(seam.mul(0.0001)).add(rings.mul(0.00003).mul(onFace.inside)).sub(pores.mul(0.00002)))
   }

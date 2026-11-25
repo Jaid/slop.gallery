@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4eznRMVv3vZMHhr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'comb_jelly',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'Eight ribbons of beating cilia break your torchlight into running rainbows. Come closer and it startles, lighting its own canals in pulses of cold blue fire.',
   placeholder: {
-    color: '#4e5363',
+    color: hsl.integer(272, 16, 36),
     shading: 'glass',
   },
 } as const satisfies KnotData

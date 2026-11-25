@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: KKRUCJSg0WdighD; fixture: knot-material-shaders.
 export default {
   id: 'pocket_nebula',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Someone folded a night sky into a loop of black glass. Lean closer and the stars drift apart; step back and they close ranks again, keeping their distances like real ones do.',
   placeholder: {
-    color: '#100b2c',
+    color: hsl.integer(285, 69, 8),
     shading: 'glass',
   },
 } as const satisfies KnotData

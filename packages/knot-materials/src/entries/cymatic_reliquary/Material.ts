@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, mix, mx_fractal_noise_float, negateOnBackSide, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -55,9 +56,9 @@ export default class extends KnotMaterial {
     const crazeFootprint = crazeBoundary.fwidth().max(0.0001)
     const craze = crazeBoundary.abs().smoothstep(0.025, float(0.025).add(crazeFootprint.mul(1.15))).oneMinus().mul(intimate)
     const angleBlue = view.dot(vec3(0.58, -0.24, 0.78)).mul(0.5).add(0.5)
-    const porcelain = mix(color('#e6e2d5'), color('#a9c6cb'), fineField.mul(0.16).add(warp.mul(0.04).add(0.45)))
-    const cobalt = mix(color('#123f82'), color('#315fa0'), angleBlue)
-    const nodeColor = mix(cobalt, color('#6eb4c1'), node.mul(0.18).oneMinus())
+    const porcelain = mix(color(hsl.integer(93, 23, 90)), color(hsl.integer(209, 23, 78)), fineField.mul(0.16).add(warp.mul(0.04).add(0.45)))
+    const cobalt = mix(color(hsl.integer(259, 86, 28.4)), color(hsl.integer(257, 66, 41)), angleBlue)
+    const nodeColor = mix(cobalt, color(hsl.integer(211, 48, 68)), node.mul(0.18).oneMinus())
     this.metalness = 0
     this.colorNode = mix(porcelain, nodeColor, node.mul(0.94).add(craze.mul(0.24)).clamp())
     this.clearcoat = 1
@@ -65,12 +66,12 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = proceduralNormal(antinode.mul(0.0007).add(node.mul(-0.00035)).add(craze.mul(-0.00018)).add(fineField.mul(0.00008)), 0.8)
     this.normalNode = negateOnBackSide(formNormal)
     this.sheen = 0.18
-    this.sheenColor.set('#d8f3ee')
+    this.sheenColor.set(hsl.integer(183, 48, 93.4))
     this.sheenRoughness = 0.34
     this.iridescence = 0.16
     this.iridescenceThicknessNode = angleBlue.mul(180).add(grazing.mul(90)).add(260)
-    this.emissiveNode = color('#2e78d0').mul(node).mul(0.075).mul(near.mul(0.5).add(0.5))
-      .add(color('#bdeef0').mul(craze).mul(grazing).mul(0.035))
-      .add(color('#fff7df').mul(antinode).mul(facing.pow(5)).mul(0.022))
+    this.emissiveNode = color(hsl.integer(255, 83, 50)).mul(node).mul(0.075).mul(near.mul(0.5).add(0.5))
+      .add(color(hsl.integer(200, 59, 90)).mul(craze).mul(grazing).mul(0.035))
+      .add(color(hsl.integer(92, 100, 97.2)).mul(antinode).mul(facing.pow(5)).mul(0.022))
   }
 }

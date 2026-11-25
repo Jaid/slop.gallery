@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'amber_reliquary',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Forty million years of sunlight, bottled. A fern, a midge, a held breath – all of it still waiting for the dawn.',
   placeholder: {
-    color: '#c27b2b',
+    color: hsl.integer(65, 79, 59),
     shading: 'glass',
   },
 } as const satisfies KnotData

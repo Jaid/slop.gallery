@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_hsvtorgb, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {voronoiCells} from '../../candidates/deepseek/lib/voronoiCells.ts'
@@ -41,7 +42,7 @@ export default class extends KnotMaterial {
 // Milky potch body: a translucent gel with a faint blue cast.
     const gel = mx_noise_float(p.mul(6)).mul(0.5).add(0.5)
     const grain = mx_noise_float(p.mul(90)).mul(0.5).add(0.5)
-    const body = mix(color('#55606e'), color('#8a8474'), gel.mul(0.6).add(grain.mul(0.25)))
+    const body = mix(color(hsl.integer(255, 15, 40)), color(hsl.integer(90, 14, 55)), gel.mul(0.6).add(grain.mul(0.25)))
 // Light that scatters sideways through the gel, so the fire sits in a soft bloom.
     const bloom = align.smoothstep(0.1, 0.75).mul(0.22).add(pinAlign.smoothstep(0.1, 0.9).mul(0.12).mul(intimate))
     const fire = fieldSpectral.mul(fieldFlash).add(pinSpectral.mul(pinFlash))
@@ -60,7 +61,7 @@ export default class extends KnotMaterial {
     const relief = gel.mul(0.4).add(grain.mul(0.3)).add(fields.edge.smoothstep(0, 0.02).oneMinus().mul(0.25))
     this.normalNode = proceduralNormal(relief, 0.0004)
     this.clearcoatNormalNode = this.normalNode
-    this.emissiveNode = fire.mul(2.2).mul(breath).add(fireBloom.mul(0.4)).add(color('#cfe4ff').mul(grazing.pow(4)).mul(0.02))
+    this.emissiveNode = fire.mul(2.2).mul(breath).add(fireBloom.mul(0.4)).add(color(hsl.integer(255, 100, 90)).mul(grazing.pow(4)).mul(0.02))
     this.aoNode = float(0.95)
     this.positionNode = positionGeometry.add(normalLocal.mul(fields.edge.smoothstep(0, 0.02).oneMinus().mul(-0.0004)))
   }

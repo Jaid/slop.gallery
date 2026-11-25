@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'foam_vespers',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   displacement: 0.017,
   flavorText: 'Every film is a small closed world that drains until it forgets color, then fills its lungs and begins the rainbow again.',
   placeholder: {
-    color: '#cfe8ff',
+    color: hsl.integer(246, 100, 90.7),
     shading: 'glass',
   },
 } as const satisfies KnotData

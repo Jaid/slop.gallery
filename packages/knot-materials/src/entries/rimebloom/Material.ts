@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn, max, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, positionViewDirection, sin, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/deepseek/lib/bumpNormal.ts'
@@ -78,9 +79,9 @@ export default class extends KnotMaterial {
     const bubble = beads(p.mul(36), 2.3)
     const bubbles = bubble.mask.mul(near).mul(0.75)
     const iceCloud = mx_fractal_noise_float(p.mul(2.8).add(vec3(5.1, 1.4, 9.2)), 4, 2.03, 0.58).mul(0.5).add(0.5)
-    const ice = mix(mix(color('#02081a'), color('#0c2a4e'), iceCloud.smoothstep(0.2, 0.82)), color('#241a5c'), iceCloud.smoothstep(0.55, 0.95).mul(0.4))
-    const iceLit = mix(ice, color('#71b8ff'), iceVein.mul(0.26).add(bubbles.mul(0.12)))
-    const frostColor = mix(color('#e8fbff'), color('#b3e2ef'), large.radius.mul(0.3).add(dust.mul(0.5)).smoothstep(0.1, 0.8))
+    const ice = mix(mix(color(hsl.integer(262, 75, 5)), color(hsl.integer(255, 75, 18)), iceCloud.smoothstep(0.2, 0.82)), color(hsl.integer(284, 78, 17)), iceCloud.smoothstep(0.55, 0.95).mul(0.4))
+    const iceLit = mix(ice, color(hsl.integer(249, 100, 73)), iceVein.mul(0.26).add(bubbles.mul(0.12)))
+    const frostColor = mix(color(hsl.integer(212, 100, 97)), color(hsl.integer(216, 55, 86.5)), large.radius.mul(0.3).add(dust.mul(0.5)).smoothstep(0.1, 0.8))
     const body = mix(iceLit, frostColor, frostAmount)
     this.colorNode = body
     this.metalnessNode = float(0.02)
@@ -103,14 +104,14 @@ export default class extends KnotMaterial {
     const facing = surfaceNormal.dot(positionViewDirection).abs().clamp()
     const twinkle = sin(time.mul(2.3).add(mx_cell_noise_float(p.mul(52)).mul(TAU))).mul(0.35).add(0.65)
     const sparkle = glints(surfaceNormal, 95).mul(frostAmount.add(dust.mul(0.3))).mul(near).mul(twinkle).mul(1.35)
-    const frostGlow = color('#d7f7ff').mul(frostAmount.mul(0.055)).mul(near.mul(0.4).add(0.6))
-    const coldRim = color('#6fe6ff').mul(grazing.pow(4)).mul(0.3)
-    const iceGlow = color('#2cc7d8').mul(iceVein.mul(0.12)).mul(near.mul(0.5).add(0.3))
-    this.emissiveNode = frostGlow.add(coldRim).add(iceGlow).add(color('#ffffff').mul(sparkle))
-      .add(color('#b9e9ff').mul(bubbles.mul(0.05)))
-      .add(color('#8cc9d8').mul(facing.pow(6)).mul(0.035))
-      .add(color('#48ffd9').mul(grazing.pow(3)).mul(0.07))
-      .add(color('#9a6bff').mul(grazing.pow(6)).mul(0.11))
-      .add(color('#c8f6ff').mul(frostAmount.mul(grazing.pow(2)).mul(0.1)))
+    const frostGlow = color(hsl.integer(214, 100, 95)).mul(frostAmount.mul(0.055)).mul(near.mul(0.4).add(0.6))
+    const coldRim = color(hsl.integer(214, 99, 84)).mul(grazing.pow(4)).mul(0.3)
+    const iceGlow = color(hsl.integer(206, 88, 72)).mul(iceVein.mul(0.12)).mul(near.mul(0.5).add(0.3))
+    this.emissiveNode = frostGlow.add(coldRim).add(iceGlow).add(color(hsl.integer(0, 0, 100)).mul(sparkle))
+      .add(color(hsl.integer(228, 100, 89)).mul(bubbles.mul(0.05)))
+      .add(color(hsl.integer(215, 47, 77)).mul(facing.pow(6)).mul(0.035))
+      .add(color(hsl.integer(176, 99, 88.4)).mul(grazing.pow(3)).mul(0.07))
+      .add(color(hsl.integer(294, 100, 59)).mul(grazing.pow(6)).mul(0.11))
+      .add(color(hsl.integer(211, 100, 93.5)).mul(frostAmount.mul(grazing.pow(2)).mul(0.1)))
   }
 }

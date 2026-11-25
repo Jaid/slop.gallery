@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_noise_float, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -101,23 +102,23 @@ export default class extends KnotMaterial {
     const bubbleDist = bubbleField.fract().sub(bubbleRnd.mul(0.5).add(0.25)).length()
     const kilnBubbles = bubbleDist.smoothstep(0.06, 0.16).oneMinus().mul(bubbleRnd.z.smoothstep(0.58, 0.86))
 // Historic Song-dynasty Ge-ware / Longquan "Fenqing" (misty powder blue-green / seafoam jade) palette over a warm stoneware body:
-    const warmPorcelainRidge = color('#d6e0db')
-    const fenqingSkyJade = color('#78a19c')
-    const deepPooledFenqing = color('#3a6662')
-    const ironOxideRim = color('#2e1e17')
+    const warmPorcelainRidge = color(hsl.integer(165, 14, 88))
+    const fenqingSkyJade = color(hsl.integer(187, 28, 63))
+    const deepPooledFenqing = color(hsl.integer(188, 42, 40))
+    const ironOxideRim = color(hsl.integer(45, 31, 15))
     const ridgeThinness = fluteGroove.smoothstep(0.76, 0.98)
 // Subtle per-shard glaze tone shift across the mended kintsugi break
     const shardTint = shardId.x.sub(0.5).mul(0.05)
     const baseGlaze = mix(mix(fenqingSkyJade, deepPooledFenqing, glazePooling.mul(0.66).add(shardTint).clamp()), warmPorcelainRidge, ridgeThinness.mul(0.55))
 // Composite delicate tea-amber Golden Thread FIRST, and bold charcoal-black Iron Wire ON TOP so Tie Xian unmistakably dominates!
-    const threadStained = mix(baseGlaze, color('#9c6628'), goldenThread.mul(0.62))
-    const ironStained = mix(threadStained, color('#080605'), ironWire.mul(0.96))
+    const threadStained = mix(baseGlaze, color(hsl.integer(66, 73, 49)), goldenThread.mul(0.62))
+    const ironStained = mix(threadStained, color(hsl.integer(52, 12, 4)), ironWire.mul(0.96))
     const glazedBody = mix(ironStained, ironOxideRim, ironFootLip.mul(0.72))
-      .add(color('#e2f5f2').mul(iceFacetFlash.add(kilnBubbles.mul(0.18))))
+      .add(color(hsl.integer(185, 45, 95)).mul(iceFacetFlash.add(kilnBubbles.mul(0.18))))
 // Authentic satin-burnished 24k kimpun gold powder over urushi lacquer
     const keshifunSparkle = cellNoiseVec3(p.mul(220).floor()).sub(0.5).normalize().dot(view).abs().pow(14).mul(near.mul(0.6).add(0.4))
-    const pure24kGold = mix(color('#cf861d'), color('#ffc85c'), seamCrown.mul(0.65).add(kimpunGrain.mul(0.35)))
-      .add(color('#fff3c4').mul(keshifunSparkle.mul(0.32)))
+    const pure24kGold = mix(color(hsl.integer(69, 89, 63)), color(hsl.integer(82, 100, 84)), seamCrown.mul(0.65).add(kimpunGrain.mul(0.35)))
+      .add(color(hsl.integer(95, 100, 95.5)).mul(keshifunSparkle.mul(0.32)))
     this.colorNode = mix(glazedBody, pure24kGold, goldMask)
 // Metalness: 1 on 24k gold kintsugi seams, 0 on dielectric porcelain glaze
     this.metalnessNode = goldMask
@@ -125,14 +126,14 @@ export default class extends KnotMaterial {
     this.transmissionNode = goldMask.oneMinus().mul(0.38)
     this.thicknessNode = mix(float(0.16), float(0.38), glazePooling).mul(goldMask.oneMinus())
     this.ior = 1.52
-    this.attenuationColor.set('#387c76')
+    this.attenuationColor.set(hsl.integer(188, 59, 47))
     this.attenuationDistance = 0.32
 // Unctuous "mutton-fat jade" luster on celadon (~0.095 roughness) and micro-granular satin-burnished 24k kimpun gold (~0.21 roughness)
     const goldRough = float(0.185).add(kimpunGrain.mul(0.065)).sub(seamCrown.mul(0.025))
     const glazeRough = float(0.095).add(ridgeThinness.mul(0.03)).add(ironWire.mul(0.045))
     this.roughnessNode = mix(glazeRough, goldRough, goldMask).clamp(0.06, 0.26)
     this.sheen = 0.35
-    this.sheenColor.set('#c2e8e4')
+    this.sheenColor.set(hsl.integer(189, 42, 88.7))
     this.sheenRoughness = 0.45
 // Smooth vitreous silica clearcoat strictly on the porcelain (0 on gold so the burnished gold powder sits proudly ABOVE the glaze!)
     this.clearcoatNode = goldMask.oneMinus().mul(0.88)
@@ -185,13 +186,13 @@ export default class extends KnotMaterial {
     this.envNode = proceduralEnvironment(gallerySky)
 // Deep internal porcelain translucency + subtle golden kiln-spirit luster along the mended kintsugi seams
     const emberWave = metric.x.mul(2.5).add(p.y.mul(3.5)).sub(loopPhase.mul(2)).sin().mul(0.5).add(0.5).pow(2.6)
-    const jadeSubsurface = mix(color('#1c4d4a'), color('#52a69f'), glazePooling).mul(facing.oneMinus().mul(0.55).add(0.35)).mul(goldMask.oneMinus()).mul(0.22)
-    const cleavageEmissive = color('#b8ebe6').mul(cleavageWallFlash).mul(goldMask.oneMinus()).mul(0.28)
-    const goldSeamLuster = color('#ffae38').mul(goldMask).mul(seamCrown).mul(near.mul(0.45).add(0.14)).mul(emberWave.mul(0.6).add(0.4))
+    const jadeSubsurface = mix(color(hsl.integer(190, 64, 29)), color(hsl.integer(188, 59, 62)), glazePooling).mul(facing.oneMinus().mul(0.55).add(0.35)).mul(goldMask.oneMinus()).mul(0.22)
+    const cleavageEmissive = color(hsl.integer(188, 52, 89)).mul(cleavageWallFlash).mul(goldMask.oneMinus()).mul(0.28)
+    const goldSeamLuster = color(hsl.integer(71.5, 100, 78)).mul(goldMask).mul(seamCrown).mul(near.mul(0.45).add(0.14)).mul(emberWave.mul(0.6).add(0.4))
     const goldSparkle = glints(surfaceNormal, 48).mul(goldMask).mul(intimate.mul(0.35).add(0.2))
     this.emissiveNode = jadeSubsurface
       .add(cleavageEmissive)
       .add(goldSeamLuster)
-      .add(color('#ffe89e').mul(goldSparkle).mul(0.3))
+      .add(color(hsl.integer(92, 100, 92)).mul(goldSparkle).mul(0.3))
   }
 }

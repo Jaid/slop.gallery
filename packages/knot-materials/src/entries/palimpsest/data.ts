@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4cRctoZrXREvmK4; fixture: knot-material-shaders; result: success.
 export default {
   id: 'palimpsest',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.0025,
   flavorText: 'The erased language lies just beneath the visible one. A passing eye turns old ink to gold, and the page remembers what its author forgot.',
   placeholder: {
-    color: '#f5dfae',
+    color: hsl.integer(87, 68, 89.5),
     shading: 'fabric',
   },
 } as const satisfies KnotData

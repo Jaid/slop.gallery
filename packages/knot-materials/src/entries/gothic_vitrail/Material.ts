@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -41,15 +42,15 @@ export default class extends KnotMaterial {
     const isGlass = float(1).sub(isCame)
 // Pot-metal medieval glass colors
 // Authentic Chartres cathedral cobalt blue
-    const chartresBlue = color('#0c32b8')
+    const chartresBlue = color(hsl.integer(264.7, 96, 31.3))
 // Sacred ruby red
-    const sacredRuby = color('#d20a2e')
+    const sacredRuby = color(hsl.integer(22.6, 99, 47.6))
 // Cathedral emerald green
-    const cathedralEmerald = color('#0ca252')
+    const cathedralEmerald = color(hsl.integer(152, 99, 56))
 // Stained glass amber gold
-    const stainedAmber = color('#f08a0e')
+    const stainedAmber = color(hsl.integer(61, 98, 68.4))
 // Royal amethyst purple
-    const royalAmethyst = color('#761ab8')
+    const royalAmethyst = color(hsl.integer(305, 91, 38))
 // Sector angle partitioning for outer ring petals
     const sectorFloat = theta.mul(4 / Math.PI).add(4)
     const sectorId = sectorFloat.floor().mod(4)
@@ -70,7 +71,7 @@ export default class extends KnotMaterial {
     const moteCoord = p.mul(40).add(vec3(time.mul(0.02), time.mul(0.05), time.mul(-0.015)))
     const dustMotes = mx_noise_float(moteCoord).smoothstep(0.72, 0.82).mul(isGlass).mul(near.mul(0.8).add(0.4))
 // Weathered dark oxidized lead came
-    const cameColor = color('#181a20')
+    const cameColor = color(hsl.integer(271, 14, 12))
     const cameRoughness = float(0.68)
     const cameMetalness = float(0.45)
     this.colorNode = mix(cameColor, glassColor, isGlass)
@@ -81,7 +82,7 @@ export default class extends KnotMaterial {
     this.thickness = 0.65
     this.ior = 1.52
     this.dispersion = 0.4
-    this.attenuationColor.set('#e8c078')
+    this.attenuationColor.set(hsl.integer(81, 66, 80))
     this.attenuationDistance = 1.8
 // Glass clearcoat
     this.clearcoat = 0.95
@@ -96,7 +97,7 @@ export default class extends KnotMaterial {
     const sacredGlow = glassColor.mul(divineSun).mul(isGlass)
     this.emissiveNode = sacredGlow.mul(2.2)
       .add(sacredGlow.mul(sacredGlow).mul(1.4))
-      .add(color('#ffeaad').mul(dustMotes).mul(2.8))
+      .add(color(hsl.integer(91, 100, 93)).mul(dustMotes).mul(2.8))
       .add(stainedAmber.mul(inInnerRing).mul(facing.pow(2)).mul(isGlass).mul(1.2))
       .add(glassColor.mul(rim).mul(grazing.pow(2)).mul(0.4))
       .add(sacredRuby.mul(intimate).mul(isGlass).mul(0.2))

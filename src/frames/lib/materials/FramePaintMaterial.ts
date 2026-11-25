@@ -1,6 +1,7 @@
 import type {FrameSurface} from './frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -22,14 +23,14 @@ export type PaintLayer = {
 export type FramePaintOptions = {
   /** a clear coat over the paint, 0 for none */
   clearcoat?: number
-  color: string
+  color: number
   /** how much dirt has settled in the hollows, 0 to 1 */
   grime?: number
   /** decoration painted, gilded or inlaid over the ground, the last on top */
   layers?: (surface: FrameSurface) => ReadonlyArray<PaintLayer>
   roughness?: number
   /** what shows where the paint is worn through on the ridges */
-  under?: string
+  under?: number
   /** how much of the ridges is worn through, 0 to 1 */
   wear?: number
 }
@@ -40,7 +41,7 @@ type Float = Node<'float'>
  * Painted or lacquered frames: a ground color worn through to what lies under it on the ridges and darkened in the hollows, with any number of painted, gilded or inlaid layers on top, which read the frame’s attributes like the gilding does.
  */
 export default class FramePaintMaterial extends MeshPhysicalNodeMaterial {
-  constructor({clearcoat = 0, color: ground, grime = 0.4, layers, roughness = 0.55, under = '#2a1d14', wear = 0}: FramePaintOptions) {
+  constructor({clearcoat = 0, color: ground, grime = 0.4, layers, roughness = 0.55, under = hsl.integer(56, 32, 14), wear = 0}: FramePaintOptions) {
     super({
       roughness,
       envMap: frameStudio,

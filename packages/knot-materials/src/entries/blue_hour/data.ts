@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'blue_hour',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Porcelain painted with the last blue of evening and sealed under a glaze of quiet glass.',
   placeholder: {
-    color: '#2040a0',
+    color: hsl.integer(266, 87, 32),
     shading: 'stone',
   },
 } as const satisfies KnotData

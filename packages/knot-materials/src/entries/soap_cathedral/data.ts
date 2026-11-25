@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'soap_cathedral',
   candidateId: 'grok',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A cathedral blown from one breath, thin enough that daylight has to choose a color to leave.',
   placeholder: {
-    color: '#96c6ce',
+    color: hsl.integer(209, 36, 76),
     shading: 'glass',
   },
 } as const satisfies KnotData

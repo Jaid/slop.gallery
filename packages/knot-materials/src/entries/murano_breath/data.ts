@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: Cp16WUQoUlMTqRD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'murano_breath',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The glassblower’s last breath still turns inside the glass, amber and lagoon, refusing ever to cool.',
   placeholder: {
-    color: '#868674',
+    color: hsl.integer(107, 14, 55),
     shading: 'glass',
   },
 } as const satisfies KnotData

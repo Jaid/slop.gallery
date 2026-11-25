@@ -1,6 +1,8 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {assembleFrame, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -35,7 +37,7 @@ export default class RippleFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#16110e'
+  override readonly tint = hsl.integer(53, 15, 8)
   override readonly title = 'Dutch ripple'
 
   override createGeometry(width: number, height: number) {

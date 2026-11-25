@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 77fsRvmePazcbTS; fixture: knot-material-shaders; result: success.
 export default {
   id: 'kerr_accretion',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.012,
   flavorText: 'Gravity ties itself in a relativistic knot: an incandescent Doppler disk of stolen starlight spirals around a core of absolute silence.',
   placeholder: {
-    color: '#674f4c',
+    color: hsl.integer(27, 20, 37),
     shading: 'smooth',
   },
 } as const satisfies KnotData

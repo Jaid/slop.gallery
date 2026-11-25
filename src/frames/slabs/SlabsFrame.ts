@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, exp, float, max, mix, mx_cell_noise_float, mx_noise_float, select, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -74,7 +75,7 @@ function knifeSlab(loopPoint: Vec2, cell: Float, wrapped: Float, vCenter: number
   const pick = (k: number) => paintColor(random(k).mul(paintOrder.length).floor())
   const streak = mx_noise_float(vec3(ahead.mul(16), aside.mul(120), seed.add(2.3))).add(aside.div(halfWidth).mul(0.42))
   const loaded = mix(pick(6), pick(7), streak.smoothstep(-0.14, 0.14))
-  const pigment = mix(loaded, select(random(8).lessThan(0.5), color('#f6efe0'), color('#c78226')), random(9).mul(0.22))
+  const pigment = mix(loaded, select(random(8).lessThan(0.5), color(hsl.integer(86, 47, 94.6)), color(hsl.integer(68, 83, 61))), random(9).mul(0.22))
   // Thick flat body, beveled sides, a sharp piled-up lip where the trowel lifted off and fine blade striations.
   const acrossNorm = aside.abs().div(widthEdge).clamp(0, 1)
   const alongNorm = ahead.div(lengthEdge).clamp(-1, 1)
@@ -99,7 +100,7 @@ export default class SlabsFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#c98838'
+  override readonly tint = hsl.integer(68, 75, 63)
   override readonly title = 'Knife slabs'
 
   override createGeometry(width: number, height: number) {
@@ -131,7 +132,7 @@ class SlabReliefMaterial extends MeshPhysicalNodeMaterial {
     const v = at.reach.sub(cushion.from)
     const round = aroundLoop(at.distance, at.perimeter, loop)
     const underNoise = mx_noise_float(vec3(round.mul(18), v.mul(90))).mul(0.5).add(0.5)
-    const walnut = mix(color('#3d2313'), color('#5b3820'), underNoise)
+    const walnut = mix(color(hsl.integer(51, 53, 18)), color(hsl.integer(54, 53, 28)), underNoise)
     let pigment: Vec3 = walnut
     let height: Float = underNoise.mul(0.0001)
     let painted: Float = float(0)
@@ -168,7 +169,7 @@ class SlabBackMaterial extends MeshPhysicalNodeMaterial {
     const surface = backSurface()
     const {footprint, opening, point} = surface
     const grain = mx_noise_float(vec3(point.x.mul(4), point.y.mul(220), 0.7)).mul(0.5).add(0.5)
-    const walnut = mix(color('#3e2616'), color('#5e3b22'), grain)
+    const walnut = mix(color(hsl.integer(54, 48, 19)), color(hsl.integer(55, 53, 29)), grain)
     const outer = opening.add(profile.reach)
     const inset = outer.sub(point.abs()).min(outer.sub(point.abs()).yx).x
     const spill = mx_noise_float(vec3(point.mul(45), 3.4)).mul(0.008).sub(inset).smoothstep(-0.003, 0.002)

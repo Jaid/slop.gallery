@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: AfC9LOF1p8reY9V; fixture: knot-material-shaders; result: success.
 export default {
   id: 'passing_clouds',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.008,
   flavorText: 'It thinks in color. Pigment cells breathe and bloom beneath wet skin, and the closer you lean, the brighter its warning burns.',
   placeholder: {
-    color: '#80c3a0',
+    color: hsl.integer(161, 50, 72),
     shading: 'liquid',
   },
 } as const satisfies KnotData

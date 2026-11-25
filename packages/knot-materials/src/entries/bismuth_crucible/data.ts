@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_crucible',
   candidateId: 'gemini_flash',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Oxidized terraces descend into geometric stairwells where molten rainbow metal freezes into eternal hopper crystals.',
   displacement: 0.053,
   placeholder: {
-    color: '#a078c2',
+    color: hsl.integer(308, 52, 58),
     shading: 'metal',
   },
 } as const satisfies KnotData

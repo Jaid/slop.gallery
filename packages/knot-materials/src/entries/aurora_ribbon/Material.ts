@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -29,12 +30,12 @@ export default class extends KnotMaterial {
     const veil = curtain.sin().mul(0.5).add(0.5).pow(2)
     const bands = spectralColor(curtain.add(view.x.mul(2.2)))
     const shimmer = opticalLine(mx_noise_float(deep.mul(16).add(warp)), 0.03)
-    this.colorNode = mix(color('#06202e'), color('#0b3a44'), veil)
+    this.colorNode = mix(color(hsl.integer(236, 71, 13)), color(hsl.integer(215, 79, 22)), veil)
     this.transmission = 0.5
     this.thickness = 0.44
     this.ior = 1.42
     this.dispersion = 0.3
-    this.attenuationColor.set('#0a5560')
+    this.attenuationColor.set(hsl.integer(211, 90, 32))
     this.attenuationDistance = 0.7
     this.roughness = 0.12
     this.clearcoat = 0.85
@@ -42,6 +43,6 @@ export default class extends KnotMaterial {
     this.iridescence = 0.9
     this.iridescenceIOR = 1.3
     this.normalNode = liquidNormal(near, 0.22)
-    this.emissiveNode = bands.mul(veil).mul(grazing.mul(0.7).add(0.3)).mul(near.mul(0.6).add(0.4)).add(color('#bdf7ff').mul(shimmer).mul(near).mul(0.5)).add(color('#3cf0b0').mul(rim).mul(0.18))
+    this.emissiveNode = bands.mul(veil).mul(grazing.mul(0.7).add(0.3)).mul(near.mul(0.6).add(0.4)).add(color(hsl.integer(207, 100, 93)).mul(shimmer).mul(near).mul(0.5)).add(color(hsl.integer(164, 91, 83)).mul(rim).mul(0.18))
   }
 }

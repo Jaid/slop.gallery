@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, uv, vec2, vec3} from 'three/tsl'
 
 import {loopTurn} from '../../candidates/deepseek/lib/loopClock.ts'
@@ -60,33 +61,33 @@ export default class extends KnotMaterial {
     const laid = paperGrain(p.mul(vec3(430, 17, 17)).add(3.3))
     const foxing = mx_noise_float(p.mul(vec3(2.6, 1, 1)).add(1.1)).mul(0.5).add(0.5)
     const attention = distance.smoothstep(1, 3.1).oneMinus()
-    const parchmentTone = mix(color('#5c4c32'), color('#a68d63'), yarn.mul(0.4).add(laid.mul(0.35)).add(0.25))
-    const parchment = mix(parchmentTone, color('#4e3a1e'), foxing.smoothstep(0.62, 0.9).mul(0.45))
+    const parchmentTone = mix(color(hsl.integer(79, 36, 34)), color(hsl.integer(80, 39, 60)), yarn.mul(0.4).add(laid.mul(0.35)).add(0.25))
+    const parchment = mix(parchmentTone, color(hsl.integer(74, 51, 27)), foxing.smoothstep(0.62, 0.9).mul(0.45))
     const lit = mix(parchment, parchment.mul(1.5), attention.mul(0.6).add(0.4))
     const tail = loopTurn.sub(page.x).fract()
     const ahead = page.x.sub(loopTurn).fract()
     const quill = ahead.mul(ahead).mul(-3200).exp()
     const wet = tail.mul(tail).mul(-60).exp()
     const written = tail.smoothstep(0.9, 0.995).oneMinus()
-    const inkTone = mix(color('#150f0b'), color('#75221a'), glyphId.smoothstep(0.72, 0.78))
-    const goldLeaf = mix(color('#8a611f'), color('#e8bd6c'), mx_noise_float(p.mul(vec3(11.5, 5.2, 5.2)).add(2.7)).mul(0.5).add(0.5))
+    const inkTone = mix(color(hsl.integer(55, 21, 8)), color(hsl.integer(29, 82, 29)), glyphId.smoothstep(0.72, 0.78))
+    const goldLeaf = mix(color(hsl.integer(75, 77, 45)), color(hsl.integer(82, 70, 79)), mx_noise_float(p.mul(vec3(11.5, 5.2, 5.2)).add(2.7)).mul(0.5).add(0.5))
     const body = mix(lit, inkTone, ink.mul(written).mul(0.94))
     // Illuminated borders are inset shapes, never whole-cell color or height steps.
     const panel = box.sub(0.5).abs().div(vec2(0.42, 0.4))
     const panelEdge = panel.x.max(panel.y)
     const border = panelEdge.smoothstep(0.76, 0.84).mul(panelEdge.smoothstep(0.92, 1).oneMinus())
     const carpetGold = carpet.mul(border).mul(resolved)
-    this.colorNode = mix(mix(mix(body, goldLeaf, initial.mul(0.9).add(carpetGold.mul(0.7)).min(1)), goldLeaf, rule.mul(margin).mul(0.45)), color('#4a3c26'), laid.mul(0.08))
+    this.colorNode = mix(mix(mix(body, goldLeaf, initial.mul(0.9).add(carpetGold.mul(0.7)).min(1)), goldLeaf, rule.mul(margin).mul(0.45)), color(hsl.integer(78, 37, 27)), laid.mul(0.08))
     this.roughnessNode = mix(float(0.78), float(0.32), initial.mul(0.8).add(rule.mul(0.6)).min(1)).sub(ink.mul(0.04)).sub(intimate.mul(0.05)).clamp(0.18, 0.85)
     this.metalnessNode = initial.mul(0.85).add(rule.mul(margin).mul(0.45)).add(carpetGold.mul(0.6)).clamp()
     this.sheen = 0.1
-    this.sheenColor.set('#cbb894')
+    this.sheenColor.set(hsl.integer(83, 34, 75.5))
     this.normalNode = proceduralNormal(ink.mul(0.05).add(initial.mul(0.05)).add(yarn.mul(0.02)).add(laid.mul(0.012)), 0.0005)
-    this.emissiveNode = color('#ffdca0').mul(quill.mul(1.2))
-      .add(color('#f7e6bd').mul(wet.mul(written)).mul(0.35))
-      .add(color('#f2e2c0').mul(ink.mul(attention.pow(1.6))).mul(0.3))
-      .add(color('#e6c68a').mul(initial.mul(attention.pow(1.2))).mul(0.34))
-      .add(color('#9c7a42').mul(grazing.pow(3)).mul(0.06))
-      .add(color('#3a2c1a').mul(near.mul(0.06)))
+    this.emissiveNode = color(hsl.integer(81, 100, 89.6)).mul(quill.mul(1.2))
+      .add(color(hsl.integer(88, 69, 91.7)).mul(wet.mul(written)).mul(0.35))
+      .add(color(hsl.integer(85, 56, 90)).mul(ink.mul(attention.pow(1.6))).mul(0.3))
+      .add(color(hsl.integer(82, 58, 81)).mul(initial.mul(attention.pow(1.2))).mul(0.34))
+      .add(color(hsl.integer(78, 56, 54)).mul(grazing.pow(3)).mul(0.06))
+      .add(color(hsl.integer(73, 40, 20)).mul(near.mul(0.06)))
   }
 }

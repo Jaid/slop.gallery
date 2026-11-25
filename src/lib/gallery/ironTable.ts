@@ -1,5 +1,7 @@
 import type {ColliderBox} from './plankTable.ts'
 
+import hsl from 'okhsl'
+
 /**
  * A workshop table of blackened iron under a slab of honed stone, built to stand against a wall: square legs on foot plates, tied together under the slab by a band of flat bar round its sides and ends and a cross band at every pair of legs between the ends, and low down by square stretchers along both sides and across every pair.
  * In its own frame it runs along x, its back toward +z, its origin on the floor under the slab’s middle; its `height` is the slab’s upper face over the floor, all in meters.
@@ -114,7 +116,7 @@ export function ironTableColliders({apron: [apronDepth, apronThickness], depth, 
 
 /** the blackened iron of every iron table’s frame, see `WroughtIronMaterial`: more scale than bare metal and a shade lighter than the alchemy machine’s chest, so its thin bars take the room’s light and keep their shape instead of reading as flat black */
 export const ironTableFinish = {
-  tone: '#4a4743',
-  bloomColor: '#5e3d29',
+  tone: hsl.integer(75, 5, 31),
+  bloomColor: hsl.integer(52, 44, 30),
   metalness: 0.35,
 } as const

@@ -7,6 +7,7 @@ import type {Vec3} from 'math'
 
 import {expect, test} from 'bun:test'
 
+import hsl from 'okhsl'
 import StableRandom from 'stable-random'
 import {Vector3} from 'three/webgpu'
 
@@ -93,7 +94,8 @@ test('the Studio uses its default look for seed zero and otherwise rolls a frame
     expect(Math.abs(z)).toBeLessThanOrEqual(depth * 0.2 + 0.005)
     expect(y).toBeGreaterThanOrEqual(studioLookRanges.lampHeight[0])
     expect(y).toBeLessThanOrEqual(Math.min(studioLookRanges.lampHeight[1], height - 1.5) + 0.05)
-    expect(lamp.tint).toMatch(/^#[\da-f]{6}$/u)
+    expect(lamp.tint).toBeInteger()
+    expect(lamp.tint).toBeWithin(0, 2 ** 24)
     // Anywhere but near the walls, and between 30% and 70% of the way up, which leaves 1.5 m under the ceiling at least.
     const [secondX, secondY, secondZ] = secondary.position
     const share = (meters: number, span: number) => Math.round((meters / span + 0.5) * 1e9) / 1e9
@@ -110,7 +112,8 @@ test('the Studio uses its default look for seed zero and otherwise rolls a frame
     expect(within(moon.azimuth, studioLookRanges.moonAzimuth)).toBe(true)
     expect(within(moon.blur, studioLookRanges.moonBlur)).toBe(true)
     expect(within(moon.elevation, studioLookRanges.moonElevation)).toBe(true)
-    expect(moon.color).toMatch(/^#[\da-f]{6}$/u)
+    expect(moon.color).toBeInteger()
+    expect(moon.color).toBeWithin(0, 2 ** 24)
     if (moon.color !== moonlight.color) {
       suns++
       // Warm: more red than blue.
@@ -480,7 +483,7 @@ test('the Studio’s design holds every value its seed rolls, its primary lamp p
     primaryLampZ: 4,
     primaryLampRange: 20,
     secondaryLampStrength: 5,
-    secondaryLampColor: '#4d5e7d',
+    secondaryLampColor: hsl.integer(262, 30, 40),
     secondaryLampDecay: 1,
     secondaryLampX: 0.1,
     secondaryLampHeight: 0.4,
@@ -581,7 +584,7 @@ test('the world tuning’s Studio has a control for every value of the design, w
     hue: 87,
     saturation: 100,
     lightness: 94,
-  })).toBe('#ffecc2')
+  })).toBe(hsl.integer(87, 100, 94))
   expect(tuning.validate('primaryLampBlur', 0)).toBe(0)
   expect(tuning.validate('secondaryLampStrength', 0)).toBe(0)
   expect(tuning.validate('mirrorBlur', ownMirrorBlur)).toBe(ownMirrorBlur)
@@ -608,7 +611,7 @@ test('every seed’s Studio design lies on the steps of its controls in the worl
           hue,
           saturation,
           lightness,
-        }), `seed ${seed}: ${key}`).toMatch(/^#[\da-f]{6}$/u)
+        }), `seed ${seed}: ${key}`).toBe(hsl.integer(hue, saturation, lightness))
         continue
       }
       expect(tuning.validate(key, value), `seed ${seed}: ${key}`).toBe(value)
@@ -747,10 +750,10 @@ test('the world tuning tells and takes the Studio’s colors as their OkHSL hue,
       lightness: 50,
     },
   }])
-  // The module holds them as #rrggbb, which a reload carries over.
+  // A reload carries over the exact packed sRGB values.
   expect(tuning.changes()).toEqual({studio: {
-    lightColor: '#ffffff',
-    secondaryLampColor: '#637e77',
+    lightColor: hsl.integer(0, 0, 100),
+    secondaryLampColor: hsl.integer(177, 20, 50),
   }})
   expect(tuning.toldChanges()).toEqual({studio: {
     lightColor: {
@@ -769,8 +772,8 @@ test('the world tuning tells and takes the Studio’s colors as their OkHSL hue,
     saturation: 53,
     lightness: 76,
   })
-  expect(module.validate('primaryLampColor', {})).toBe('#d70071')
-  expect(module.validate('primaryLampColor', {hue: 360})).toBe('#d70071')
+  expect(module.validate('primaryLampColor', {})).toBe(0xD7_00_71)
+  expect(module.validate('primaryLampColor', {hue: 360})).toBe(0xD7_00_71)
   for (const value of ['#ffffff', {hue: 361}, {saturation: -1}, {lightness: '50'}, {
     hue: 0,
     alpha: 1,

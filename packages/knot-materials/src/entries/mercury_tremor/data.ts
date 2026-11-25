@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mercury_tremor',
   candidateId: 'mimo',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A metal that never set. It trembles at your breath and keeps a perfect, upside-down portrait of the room.',
   displacement: 0.12,
   placeholder: {
-    color: '#b8bec4',
+    color: hsl.integer(248, 8, 77),
     shading: 'liquid',
   },
 } as const satisfies KnotData

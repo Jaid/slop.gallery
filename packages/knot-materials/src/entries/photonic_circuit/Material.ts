@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -48,9 +49,9 @@ export default class extends KnotMaterial {
     const iridPhase = grazing.mul(3.6).add(p.dot(vec3(2.5, 4.2, -1.8)).mul(0.6))
     const waferIrid = cosinePalette(iridPhase, [0.45, 0.5, 0.55], [0.4, 0.38, 0.45], [1.1, 1.1, 1.1], [0.05, 0.33, 0.67])
 // Silicon wafer substrate color vs gold electrical traces vs dark etched isolation channels
-    const siliconMirror = mix(color('#151a24'), color('#283344'), mx_cell_noise_float(vec3(dieGrid, 1.2)).mul(0.3))
-    const goldTrace = color('#e6b840')
-    const channelEtch = color('#080a10')
+    const siliconMirror = mix(color(hsl.integer(264, 24, 12)), color(hsl.integer(259, 28, 22)), mx_cell_noise_float(vec3(dieGrid, 1.2)).mul(0.3))
+    const goldTrace = color(hsl.integer(87, 83, 77))
+    const channelEtch = color(hsl.integer(269, 22, 6))
     let compColor = siliconMirror.add(waferIrid.mul(0.35))
     compColor = mix(compColor, channelEtch, isScribe)
     compColor = mix(compColor, goldTrace, isWaveguide.mul(0.65))
@@ -68,15 +69,15 @@ export default class extends KnotMaterial {
     const height = isWaveguide.mul(0.0016).sub(isScribe.mul(0.003)).add(isQubitDot.mul(0.002))
     this.normalNode = proceduralNormal(height, 0.88)
 // Radiant laser emissions from waveguides and quantum qubits
-    const laserCyan = color('#00f2ff')
-    const laserMagenta = color('#ff1894')
+    const laserCyan = color(hsl.integer(202, 100, 85))
+    const laserMagenta = color(hsl.integer(357, 100, 60.1))
     const parity = fineGridId.x.add(fineGridId.y).mod(2)
     const laserTint = mix(laserCyan, laserMagenta, parity)
-    const qubitGold = color('#ffd440')
+    const qubitGold = color(hsl.integer(92, 100, 86.4))
     this.emissiveNode = laserTint.mul(laserData).mul(2.8)
       .add(laserTint.mul(isWaveguide).mul(0.25))
       .add(qubitGold.mul(qubitActive).mul(near.mul(1.5).add(0.8)).mul(2.4))
-      .add(color('#ffffff').mul(laserData.pow(3)).mul(1.5))
+      .add(color(hsl.integer(0, 0, 100)).mul(laserData.pow(3)).mul(1.5))
       .add(laserCyan.mul(isQubitDot).mul(intimate).mul(0.4))
       .add(laserMagenta.mul(rim).mul(grazing.pow(3)).mul(0.2))
   }

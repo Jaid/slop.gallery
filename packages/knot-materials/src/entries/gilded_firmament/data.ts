@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: LLxliOfHhDMdNvD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'gilded_firmament',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Ten thousand gold leaves were laid by candlelight into a sky of lapis. Walk past, and every tile takes its turn holding the sun.',
   placeholder: {
-    color: '#7f6a88',
+    color: hsl.integer(316, 25, 48),
     shading: 'smooth',
   },
 } as const satisfies KnotData

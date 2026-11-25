@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionGeometry, uv} from 'three/tsl'
 
 import {filteredRibbon} from '../../lib/filteredRibbon.ts'
@@ -34,18 +35,18 @@ export default class extends KnotMaterial {
     const phase = tube.y.mul(TAU).sub(tube.x.mul(TAU * 3))
     const cord = filteredRibbon(phase.sin(), 0.14)
     const twist = opticalBands(phase.mul(9))
-    const bullion = mix(color('#8a6420'), color('#f0d070'), twist.mul(0.45).add(0.35))
+    const bullion = mix(color(hsl.integer(78, 77, 46)), color(hsl.integer(91, 77, 84)), twist.mul(0.45).add(0.35))
     const spark = glints(normalViewGeometry, twist.mul(60).add(70)).mul(cord).mul(near.mul(0.6).add(0.4))
     const relief = damask.mul(napEye).mul(0.5).add(fibre.mul(near).mul(0.35)).add(cord.mul(0.55)).add(twist.mul(cord).mul(0.25)).mul(intimate.add(near).clamp())
-    this.colorNode = mix(color('#160409'), bullion, cord)
+    this.colorNode = mix(color(hsl.integer(2, 59, 5.6)), bullion, cord)
     this.metalnessNode = cord
     this.roughnessNode = float(0.78).sub(damask.mul(napEye).mul(0.12)).mix(float(0.3), cord)
     this.aoNode = float(1).sub(crush.mul(0.12)).sub(damask.mul(napEye).mul(0.1))
-    this.sheenNode = color('#c01848').mul(damask.mul(0.7).add(0.8))
+    this.sheenNode = color(hsl.integer(13, 93, 45)).mul(damask.mul(0.7).add(0.8))
     this.sheenRoughnessNode = float(0.32)
     this.retroreflectivityNode = float(0.85)
     this.normalNode = proceduralNormal(relief, 0.0016)
-    this.emissiveNode = color('#ffd98a').mul(spark).mul(0.9)
-      .add(color('#ff5a80').mul(rim.pow(2.2)).mul(0.9))
+    this.emissiveNode = color(hsl.integer(85, 100, 88.5)).mul(spark).mul(0.9)
+      .add(color(hsl.integer(10, 100, 64.7)).mul(rim.pow(2.2)).mul(0.9))
   }
 }

@@ -1,6 +1,8 @@
 import type {PlankOptions} from '../materials/PlankMaterial.ts'
 import type {FloorRectangle} from './floors.ts'
 
+import hsl from 'okhsl'
+
 import {wallFace} from './architectureDimensions.ts'
 import {salonCeiling} from './salon.ts'
 import {siennaWainscotPanel} from './siennaWainscot.ts'
@@ -93,10 +95,10 @@ export const siennaCeilingPlanks: PlankOptions = {
   roughness: 0.7,
   envMapIntensity: 0.2,
   colors: {
-    dark: '#2a160c',
-    light: '#4a2c1a',
-    ring: '#1c0e06',
-    seam: '#0c0603',
+    dark: hsl.integer(47, 49, 12),
+    light: hsl.integer(51, 51, 23),
+    ring: hsl.integer(52, 49, 8),
+    seam: hsl.integer(57, 37, 4.6),
   },
 }
 

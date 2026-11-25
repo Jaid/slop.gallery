@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ActJg0bLJQHug14.
 export default {
   id: 'frozen_orbit',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The winter lattice grows at the edge of perception, where breath becomes crystal.',
   placeholder: {
-    color: '#b6ecff',
+    color: hsl.integer(221, 100, 90),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {ridge} from '../../candidates/claude_fable/lib/ridge.ts'
@@ -45,21 +46,21 @@ export default class extends BaseKnotMaterial {
       const core = trunk.pow(3).add(branch.pow(3).mul(0.6))
       const depthFade = 1 - i * 0.18
       lightning = lightning
-        .add(mix(color('#6d8dff'), color('#f6f9ff'), core).mul(shape).mul(energy).mul(depthFade))
-        .add(color('#8b57ff').mul(halo).mul(surge).mul(0.25 * depthFade))
+        .add(mix(color(hsl.integer(270, 100, 62)), color(hsl.integer(265, 100, 98)), core).mul(shape).mul(energy).mul(depthFade))
+        .add(color(hsl.integer(292, 100, 54)).mul(halo).mul(surge).mul(0.25 * depthFade))
     }
-    this.colorNode = color('#5a2a06')
+    this.colorNode = color(hsl.integer(51, 86, 25))
     this.transmission = 0.9
     this.thickness = 0.45
     this.ior = 1.49
     this.dispersion = 0.15
-    this.attenuationColor.set('#c2711a')
+    this.attenuationColor.set(hsl.integer(61, 87, 57))
     this.attenuationDistance = 0.7
     this.roughness = 0.02
     this.metalness = 0
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(11)).mul(0.2), 0.0006)
-    this.emissiveNode = lightning.mul(near.mul(0.6).add(0.45)).add(color('#ff9a2e').mul(grazing.pow(3)).mul(0.08))
+    this.emissiveNode = lightning.mul(near.mul(0.6).add(0.45)).add(color(hsl.integer(62, 100, 74)).mul(grazing.pow(3)).mul(0.08))
   }
 }

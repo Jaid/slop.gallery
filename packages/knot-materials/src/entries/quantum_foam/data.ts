@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quantum_foam',
   candidateId: 'deepseek',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A restless froth suggests that even empty space has a weather of its own.',
   placeholder: {
-    color: '#c0a7ff',
+    color: hsl.integer(296, 100, 75),
     shading: 'liquid',
   },
 } as const satisfies KnotData

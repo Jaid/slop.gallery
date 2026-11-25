@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, attribute, color, cos, float, floor, fract, hash, max, mix, normalView, positionViewDirection, select, sqrt, uv, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -18,9 +19,9 @@ export const shellAttributes = {
 } as const
 
 /** the deep crimson lacquer the shells are set in, a little bluer and darker than the cinnabar walls below */
-const lacquerColor = '#7a101a'
+const lacquerColor = hsl.integer(23, 93, 28)
 /** the nacre’s ground, a warm cream */
-const pearlColor = '#f1e8db'
+const pearlColor = hsl.integer(77, 35, 92.4)
 /** half the angle of a shell’s fan, from straight down to its outermost ribs */
 const fanAngle = 1.2
 /** how many ribs fan out across a shell */

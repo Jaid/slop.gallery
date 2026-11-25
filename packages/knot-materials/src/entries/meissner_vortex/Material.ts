@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {hexLattice} from '../../candidates/gemini_flash/lib/hexLattice.ts'
@@ -28,8 +29,8 @@ export default class extends KnotMaterial {
       .mul(radius.smoothstep(0.08, 0.45).oneMinus())
     // Substrate: dark crystalline cuprate ceramic with cleavage steps
     const ceramicNoise = mx_noise_float(p.mul(28)).mul(0.12).add(0.88)
-    const ceramicBase = mix(color('#06070d'), color('#121626'), ceramicNoise)
-    const currentStreamline = mix(color('#0a2e38'), color('#135a66'), phaseRings)
+    const ceramicBase = mix(color(hsl.integer(275, 25, 5)), color(hsl.integer(273, 37, 10)), ceramicNoise)
+    const currentStreamline = mix(color(hsl.integer(220, 72, 18)), color(hsl.integer(212, 82, 34)), phaseRings)
     this.colorNode = mix(ceramicBase, currentStreamline, core.mul(0.3).add(phaseRings.mul(0.4)))
     this.metalnessNode = float(0.82).sub(core.mul(0.5))
     this.roughnessNode = float(0.18).sub(core.mul(0.1)).add(hexFacet.mul(0.08))
@@ -40,19 +41,19 @@ export default class extends KnotMaterial {
     this.normalNode = vortexNormal
     // Superconducting emissions:
     // 1. Vortex core singularity: piercing electric cyan to ultraviolet
-    const coreEmission = mix(color('#00f0ff'), color('#a040ff'), core.pow(2))
+    const coreEmission = mix(color(hsl.integer(202, 100, 85)), color(hsl.integer(302, 99, 53.6)), core.pow(2))
       .mul(core)
       .mul(near.mul(0.5).add(0.7))
       .mul(2.8)
     // 2. Meissner shielding currents: pulsing quantum phase ripples
-    const ringEmission = color('#00ffcc')
+    const ringEmission = color(hsl.integer(171, 100, 87))
       .mul(phaseRings)
       .mul(near.mul(0.6).add(0.4))
       .mul(0.8)
     // 3. Lattice boundary luminescence
-    const latticeAura = color('#483090').mul(hexFacet).mul(0.35)
+    const latticeAura = color(hsl.integer(289, 74, 30)).mul(hexFacet).mul(0.35)
     // 4. Diamagnetic rim shielding
-    const diamagneticRim = color('#00bfff').mul(rim.pow(2.5)).mul(0.5)
+    const diamagneticRim = color(hsl.integer(231, 100, 71.6)).mul(rim.pow(2.5)).mul(0.5)
     this.emissiveNode = coreEmission
       .add(ringEmission)
       .add(latticeAura)

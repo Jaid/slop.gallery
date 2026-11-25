@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_regalia',
   candidateId: 'mimo',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Wine-dark pile drinks the light whole, then breathes it back as gold thread and a regal hush.',
   displacement: 0.005,
   placeholder: {
-    color: '#4d0b1b',
+    color: hsl.integer(13, 82, 18),
     shading: 'fabric',
   },
 } as const satisfies KnotData

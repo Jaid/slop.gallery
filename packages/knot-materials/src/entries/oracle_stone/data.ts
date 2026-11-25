@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'oracle_stone',
   candidateId: 'gpt_terra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Within charcoal stone, hidden crystal plates answer the eye with blue fire, cyan weather and impossible depth.',
   placeholder: {
-    color: '#0b3340',
+    color: hsl.integer(224, 74, 20),
     shading: 'stone',
   },
 } as const satisfies KnotData

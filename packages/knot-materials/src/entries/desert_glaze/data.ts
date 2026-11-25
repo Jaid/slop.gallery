@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'desert_glaze',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: "A day's heat has dried into the colors of a distant dune.",
   placeholder: {
-    color: '#2d5f7a',
+    color: hsl.integer(235, 57, 38),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, Fn, mix, modelWorldMatrixInverse, mx_fractal_noise_float, mx_noise_float, negateOnBackSide, normalLocal, time, transformNormalToView, uv, varying, vec2, vec3, vec4} from 'three/tsl'
 
 import {environmentHighlight, studioSheen} from '../../candidates/muse_wonder/lib/environmentHighlight.ts'
@@ -49,8 +50,8 @@ export default class extends KnotMaterial {
     const {spine} = magneticField(p)
     const cycle = time.mul(Math.PI)
     const ripple = mx_noise_float(p.mul(15).add(vec3(cycle.sin().mul(0.3), cycle.mul(2).sin().mul(0.22), 0))).mul(0.5).add(0.5)
-    const abyss = color('#03040a')
-    const wetIron = color('#111a2c')
+    const abyss = color(hsl.integer(273, 38, 3.4))
+    const wetIron = color(hsl.integer(263, 43, 12))
     this.colorNode = mix(abyss, wetIron, spine.mul(0.7).add(ripple.mul(0.22)).clamp())
     this.metalnessNode = spine.mul(0.24).add(0.2)
     this.roughnessNode = float(0.13).sub(spine.mul(0.075)).add(ripple.mul(0.028).mul(close.mul(0.7).add(0.3))).clamp(0.035, 0.18)
@@ -61,16 +62,16 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.46
     this.iridescenceThicknessNode = spine.mul(360).add(grazing.mul(190)).add(90)
     this.sheen = 0.24
-    this.sheenColor.set('#27324e')
+    this.sheenColor.set(hsl.integer(267, 39, 22))
     this.sheenRoughness = 0.42
     const glint = glints(displacedNormal, 150)
     const chrome = environmentHighlight(environment, normalLocal, 0.09)
     const oilPhase = spine.mul(2.2).add(grazing.mul(2.7)).add(cycle.sin().mul(0.35))
     this.emissiveNode = chrome.mul(spine.mul(0.55).add(0.32)).mul(1.15)
-      .add(color('#aebfff').mul(studioSheen(normalLocal)).mul(spine.mul(0.3).add(0.12)).mul(0.5))
-      .add(color('#dfeaff').mul(glint).mul(spine).mul(close.mul(0.9).add(0.35)).mul(1.7))
+      .add(color(hsl.integer(273, 100, 78)).mul(studioSheen(normalLocal)).mul(spine.mul(0.3).add(0.12)).mul(0.5))
+      .add(color(hsl.integer(264, 100, 92.4)).mul(glint).mul(spine).mul(close.mul(0.9).add(0.35)).mul(1.7))
       .add(spectralColor(oilPhase).mul(spine.mul(0.55).add(0.2)).mul(grazing.pow(2)).mul(0.24))
-      .add(color('#5f74ff').mul(spine).mul(intimate).mul(0.075))
-      .add(color('#0a1030').mul(facing.oneMinus().pow(3)).mul(0.22))
+      .add(color(hsl.integer(272, 100, 55.7)).mul(spine).mul(intimate).mul(0.075))
+      .add(color(hsl.integer(271, 72, 9)).mul(facing.oneMinus().pow(3)).mul(0.22))
   }
 }

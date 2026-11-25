@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'glacier_memory',
   candidateId: 'grok',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Old seasons stay stacked in the ice, each one a little bluer than the light that made it.',
   displacement: 0.003,
   placeholder: {
-    color: '#7cc2df',
+    color: hsl.integer(226, 56, 74),
     shading: 'glass',
   },
 } as const satisfies KnotData

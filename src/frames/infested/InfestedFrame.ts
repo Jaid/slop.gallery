@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, cameraPosition, color, float, hash, max, min, mix, modelWorldMatrixInverse, mx_noise_float, mx_worley_noise_float, mx_worley_noise_vec2, select, time, vec2, vec3, vec4} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -110,7 +111,7 @@ export default class InfestedFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#3b2a1c'
+  override readonly tint = hsl.integer(60, 36, 20)
   override readonly title = 'Infested'
 
   override createGeometry(width: number, height: number) {
@@ -146,10 +147,10 @@ class InfestedMaterial extends MeshPhysicalNodeMaterial {
     const frass = mx_noise_float(p.mul(1600)).smoothstep(0.35, 0.6).mul(mx_worley_noise_float(p.mul(140)).smoothstep(0.32, 0.14)).mul(bores.oneMinus()).mul(visibleDetail(footprint, 0.0012))
     const tunnels = line(mx_noise_float(p.mul(28).add(vec3(4.4, 0, 0))), 0.035).mul(mx_noise_float(p.mul(6)).smoothstep(0, 0.4)).mul(visibleDetail(footprint, 0.002))
     const damp = mx_noise_float(p.mul(8)).mul(0.5).add(0.5).add(surface.cavity.mul(0.3))
-    const sound = mix(color('#5a3c22'), color('#2e1e10'), grain.mul(0.6).add(damp.mul(0.4)))
-    const decayed = mix(color('#6e5034'), color('#3a2614'), mx_noise_float(p.mul(160)).mul(0.5).add(0.5))
+    const sound = mix(color(hsl.integer(61, 51, 29)), color(hsl.integer(61, 45, 15)), grain.mul(0.6).add(damp.mul(0.4)))
+    const decayed = mix(color(hsl.integer(64, 43, 37)), color(hsl.integer(62, 49, 19)), mx_noise_float(p.mul(160)).mul(0.5).add(0.5))
     const mycelium = mx_noise_float(p.mul(60).add(vec3(0, 9.1, 0))).smoothstep(0.45, 0.8).mul(rotten).mul(surface.cavity.smoothstep(-0.2, 0.6).mul(0.6).add(0.2))
-    const wood = mix(mix(mix(sound, decayed, rotten.mul(0.7)), color('#cfc4ae'), mycelium.mul(0.35)), color('#140c06'), blocks.mul(0.85).max(tunnels.mul(0.7)))
+    const wood = mix(mix(mix(sound, decayed, rotten.mul(0.7)), color(hsl.integer(85, 23, 79)), mycelium.mul(0.35)), color(hsl.integer(60, 36, 7)), blocks.mul(0.85).max(tunnels.mul(0.7)))
     // The cockroaches, each in its own stretch of the face.
     const stretch = surface.along.div(roaches.stretch).floor()
     const id = stretch.mul(37.1).add(surface.member.mul(11.3))
@@ -181,8 +182,8 @@ class InfestedMaterial extends MeshPhysicalNodeMaterial {
     const shown = select(there, size.greaterThan(0.05).select(float(1), float(0)), float(0))
     const hole = select(there, inside(plane.sub(home).length().sub(0.0042)), float(0))
     const holeRim = select(there, plane.sub(home).length().sub(0.0042).abs().smoothstep(0.0025, 0), float(0)).mul(hole.oneMinus())
-    const chitin = mix(mix(color('#3a1608'), color('#4a1e0a'), roach.shield), color('#8a5422'), roach.rim.mul(0.7))
-    const roachColor = mix(chitin, color('#140804'), roach.seam)
+    const chitin = mix(mix(color(hsl.integer(41, 73, 15)), color(hsl.integer(43, 77, 19)), roach.shield), color(hsl.integer(60, 71, 42)), roach.rim.mul(0.7))
+    const roachColor = mix(chitin, color(hsl.integer(45, 47, 6)), roach.seam)
     // The maggots, writhing in clusters in the hollow.
     const inHollow = band(surface, hollow.from, hollow.to)
     const cluster = mx_noise_float(vec3(surface.along.mul(14), surface.member, 0.7)).smoothstep(0.2, 0.45).mul(inHollow.inside)
@@ -194,12 +195,12 @@ class InfestedMaterial extends MeshPhysicalNodeMaterial {
     const maggotShape = vec2(maggotTurned.x.div(0.0029), maggotTurned.y.add(wriggle).div(0.0011)).length().sub(1).mul(0.0011)
     const maggot = inside(maggotShape).mul(cluster).mul(hash(maggotId.add(3)).lessThan(0.7).select(float(1), float(0)))
     const rings = maggotTurned.x.mul(2400).sin().mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.0006))
-    const maggotColor = mix(color('#dccca0'), color('#a8966c'), rings.mul(0.4))
+    const maggotColor = mix(color(hsl.integer(90, 44, 82)), color(hsl.integer(87, 36, 63)), rings.mul(0.4))
     const bugs = roach.cover.mul(shown)
     const legs = roach.limbs.mul(shown)
-    const ground = mix(mix(wood, color('#050302'), bores.max(hole).mul(0.9)), color('#b8a07a'), frass.mul(0.6))
+    const ground = mix(mix(wood, color(hsl.integer(55, 24, 3)), bores.max(hole).mul(0.9)), color(hsl.integer(79, 35, 67)), frass.mul(0.6))
     const shaded = mix(ground, ground.mul(0.45), roach.shadow.mul(shown).mul(0.8).max(holeRim.mul(0.4))).mul(cluster.mul(0.4).oneMinus())
-    this.colorNode = mix(mix(mix(shaded, maggotColor, maggot), color('#2a140a'), legs), roachColor, bugs)
+    this.colorNode = mix(mix(mix(shaded, maggotColor, maggot), color(hsl.integer(45, 55, 12)), legs), roachColor, bugs)
     // Chitin is glossy but dark; a full specular share would gray it over in the frames’ bright studio.
     this.specularIntensityNode = float(1).sub(bugs.mul(0.65))
     this.roughnessNode = mix(mix(float(0.85), float(0.35), maggot), float(0.26), bugs)

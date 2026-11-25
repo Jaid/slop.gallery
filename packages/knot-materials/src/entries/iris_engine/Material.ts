@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {enamel, etch, filteredCos, ornamentCell, polarAngle, polarTicks, repeatLine} from '../../candidates/gpt_sol/lib/ornamentAtlas.ts'
@@ -54,15 +55,15 @@ export default class extends KnotMaterial {
     const groovePhase = tube.x.mul(TAU * 1200).add(tube.y.mul(TAU * 132)).add(flute.mul(0.4))
     const microgrooves = filteredCos(groovePhase).mul(0.5).add(0.5)
     const brushed = mx_noise_float(p.mul(110)).mul(0.5).add(0.5)
-    const pearl = mix(color('#73899a'), color('#d7d8df'), ribbon.mul(0.4).add(facing.mul(0.25)).add(0.2))
+    const pearl = mix(color(hsl.integer(241, 20, 56)), color(hsl.integer(280, 11, 86)), ribbon.mul(0.4).add(facing.mul(0.25)).add(0.2))
     const tinted = pearl.mul(optics.mul(0.8).add(vec3(0.58, 0.65, 0.7))).add(optics.mul(0.18))
     const centralLens = enamel(r.sub(0.066))
-    const lensColor = mix(color('#112236'), color('#80c3c4'), facing.pow(4))
+    const lensColor = mix(color(hsl.integer(253, 50, 15)), color(hsl.integer(197, 46, 74)), facing.pow(4))
     const silver = mix(tinted, lensColor, centralLens)
-    const alloy = mix(silver, color('#273945'), structure.mul(0.7))
+    const alloy = mix(silver, color(hsl.integer(238, 29, 24)), structure.mul(0.7))
     const calibration = repeatLine(tube.x.mul(360), 0.06).mul(etch(q.y.abs().sub(0.458), 0.01)).mul(intimate)
     this.colorNode = alloy.mul(microgrooves.mul(0.025).add(0.98))
-      .add(color('#ccdfdc').mul(calibration).mul(0.12))
+      .add(color(hsl.integer(185, 21, 87)).mul(calibration).mul(0.12))
     this.metalnessNode = float(0.7).add(structure.mul(0.16)).sub(centralLens.mul(0.5))
     this.roughnessNode = float(0.24).add(structure.mul(0.05)).sub(sculpt.mul(0.07)).add(brushed.mul(0.015))
     this.clearcoat = 1
@@ -77,7 +78,7 @@ export default class extends KnotMaterial {
       .add(microgrooves.mul(0.000006)), 0.55)
     this.clearcoatNormalNode = proceduralNormal(ribbon.mul(0.0002), 0.65)
     this.emissiveNode = optics.mul(dial).mul(near.mul(0.04).add(0.06))
-      .add(color('#57cad2').mul(centerRing).mul(facing.pow(3)).mul(0.05))
-      .add(color('#6688bb').mul(grazing.pow(3)).mul(0.025))
+      .add(color(hsl.integer(202, 71, 74)).mul(centerRing).mul(facing.pow(3)).mul(0.05))
+      .add(color(hsl.integer(258, 45, 56)).mul(grazing.pow(3)).mul(0.025))
   }
 }

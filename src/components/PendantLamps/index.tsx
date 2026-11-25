@@ -8,8 +8,8 @@ import {PendantGeometry} from '#src/lib/gallery/pendants/index.ts'
 import LanternMetalMaterial from '#src/lib/materials/LanternMetalMaterial.ts'
 
 type Glow = {
-  color: string
-  emissive: string
+  color: number
+  emissive: number
   emissiveIntensity: number
 }
 

@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {atan, clamp, float, max, select, smoothstep, vec2, vec3} from 'three/tsl'
 
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
@@ -44,7 +45,7 @@ export default class AdamFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#9db1c4'
+  override readonly tint = hsl.integer(247, 22, 71)
   override readonly title = 'Adam jasperware'
 
   override createGeometry(width: number, height: number) {
@@ -71,7 +72,7 @@ export default class AdamFrame extends PortraitFrame {
         },
       }),
       new FramePaintMaterial({
-        color: '#eee9dc',
+        color: hsl.integer(89, 29, 92),
         roughness: 0.55,
         grime: 0.35,
         layers: surface => {
@@ -91,7 +92,7 @@ export default class AdamFrame extends PortraitFrame {
         },
       }),
       new FramePaintMaterial({
-        color: '#8aa3bb',
+        color: hsl.integer(247, 26, 66),
         roughness: 0.75,
         grime: 0.2,
         layers: surface => {

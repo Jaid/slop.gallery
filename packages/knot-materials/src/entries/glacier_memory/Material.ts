@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {fractalNoise, ridgedNoise} from '../../candidates/grok/lib/fractalNoise.ts'
@@ -21,25 +22,25 @@ export default class extends KnotMaterial {
     const season = strataPhase.mul(0.11).add(0.5)
     const ice = palette(season, [{
       at: 0,
-      hex: '#e9fbff',
+      rgb: hsl.integer(213, 100, 97),
     }, {
       at: 0.22,
-      hex: '#7ed0f2',
+      rgb: hsl.integer(226, 74, 79),
     }, {
       at: 0.48,
-      hex: '#1f6fbf',
+      rgb: hsl.integer(253, 86, 46),
     }, {
       at: 0.72,
-      hex: '#12345f',
+      rgb: hsl.integer(255, 73, 23),
     }, {
       at: 0.9,
-      hex: '#07111c',
+      rgb: hsl.integer(251, 45, 8),
     }, {
       at: 1,
-      hex: '#d8f6ff',
+      rgb: hsl.integer(218, 100, 94.7),
     }])
     const milk = ridgedNoise(p.mul(3.1).add(vec3(4, 0, 1))).smoothstep(0.42, 0.78)
-    const body = mix(ice, color('#f4fbff'), milk.mul(0.22))
+    const body = mix(ice, color(hsl.integer(232, 100, 98)), milk.mul(0.22))
     const steps = 5
     let inclusion: Node<'vec3'> = vec3(0)
     let bubbleMask: Node<'float'> = float(0)
@@ -56,7 +57,7 @@ export default class extends KnotMaterial {
       const shell = dist.smoothstep(radius.mul(0.95), radius.mul(0.55)).mul(dist.smoothstep(radius.mul(0.2), radius.mul(0.55)))
       const fade = 1 - index * 0.14
       bubbleMask = bubbleMask.max(disc.mul(intimate).mul(fade))
-      inclusion = inclusion.add(color('#f7fdff').mul(shell).mul(gate).mul(intimate).mul(fade * 0.7))
+      inclusion = inclusion.add(color(hsl.integer(220, 100, 99)).mul(shell).mul(gate).mul(intimate).mul(fade * 0.7))
     }
     const crackField = fractalNoise(p.mul(4.6).add(view.mul(0.7)), 4, 2.2, 0.48).sub(0.18)
     const crack = screenRibbon(crackField, 0.035).mul(grazing.mul(0.4).add(0.7))
@@ -64,13 +65,13 @@ export default class extends KnotMaterial {
     const band = strata.abs().smoothstep(0.55, 0.92)
     const height = strata.mul(0.004).add(milk.mul(0.003))
     this.positionNode = positionGeometry.add(normalLocal.mul(height.mul(0.3)))
-    this.colorNode = mix(body, color('#f7fdff'), bubbleMask.mul(0.7)).mul(silt.mul(0.06).add(0.96))
+    this.colorNode = mix(body, color(hsl.integer(220, 100, 99)), bubbleMask.mul(0.7)).mul(silt.mul(0.06).add(0.96))
     this.roughnessNode = float(0.035).add(milk.mul(0.08)).add(silt.mul(intimate).mul(0.04)).clamp(0.015, 0.16)
     this.metalness = 0
     this.ior = 1.31
     this.transmissionNode = float(0.82).sub(milk.mul(0.22)).sub(bubbleMask.mul(0.25)).clamp(0.42, 0.9)
     this.thicknessNode = float(0.28).add(facing.mul(0.18)).add(band.mul(0.08))
-    this.attenuationColorNode = mix(color('#b7ecff'), color('#0c2744'), band.mul(0.55).add(0.15))
+    this.attenuationColorNode = mix(color(hsl.integer(222, 100, 90)), color(hsl.integer(252, 70, 17)), band.mul(0.55).add(0.15))
     this.attenuationDistanceNode = float(0.42).add(near.mul(0.28))
     this.dispersionNode = float(0.35).add(grazing.mul(0.45)).add(band.mul(0.2))
     this.clearcoat = 1
@@ -83,6 +84,6 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = proceduralNormal(strata.mul(0.003), 0.55)
     const caustic = band.pow(2)
     const melt = time.mul(0.17).add(strataPhase.mul(0.25)).sin().mul(0.5).add(0.5)
-    this.emissiveNode = color('#8fdfff').mul(caustic).mul(facing).mul(0.16).add(color('#f4fbff').mul(crack).mul(grazing.pow(1.2)).mul(0.55)).add(inclusion.mul(1.4)).add(color('#dff6ff').mul(melt).mul(caustic).mul(near).mul(0.1))
+    this.emissiveNode = color(hsl.integer(226, 100, 84)).mul(caustic).mul(facing).mul(0.16).add(color(hsl.integer(232, 100, 98)).mul(crack).mul(grazing.pow(1.2)).mul(0.55)).add(inclusion.mul(1.4)).add(color(hsl.integer(224, 100, 95)).mul(melt).mul(caustic).mul(near).mul(0.1))
   }
 }

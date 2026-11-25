@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'solenoid',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Wind a mile of copper around a prayer and let the current sing.',
   displacement: 0.009,
   placeholder: {
-    color: '#a65b2a',
+    color: hsl.integer(51, 72, 48),
     shading: 'metal',
   },
 } as const satisfies KnotData

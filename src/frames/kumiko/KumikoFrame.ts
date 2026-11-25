@@ -1,5 +1,6 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 
+import hsl from 'okhsl'
 import {abs, float, max, min, select, smoothstep} from 'three/tsl'
 
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
@@ -59,7 +60,7 @@ export default class KumikoFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#d8c39a'
+  override readonly tint = hsl.integer(84, 41, 79.6)
   override readonly title = 'Kumiko asanoha'
 
   override createGeometry(width: number, height: number) {

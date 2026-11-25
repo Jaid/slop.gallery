@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, normalLocal, positionGeometry, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeInterior} from '../../candidates/claude_sonnet/lib/tubeInterior.ts'
@@ -60,14 +61,14 @@ export default class extends KnotMaterial {
     const swell = metric.x.mul(TAU * 5 / knotLength).sub(time.mul(1.3)).sin().mul(0.0035)
     this.positionNode = positionGeometry.add(normalLocal.mul(swell))
     this.normalNode = proceduralNormal(front.height.mul(0.0011), 0.9)
-    this.colorNode = color('#010a0e')
+    this.colorNode = color(hsl.integer(220, 74, 5))
     this.metalness = 0
     this.roughness = 0.05
     this.ior = 1.34
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.sheen = 0.22
-    this.sheenColor.set('#3fb8d8')
+    this.sheenColor.set(hsl.integer(219, 80, 69))
     this.sheenRoughness = 0.4
     const canals = front.band.mul(0.45).add(back.band.mul(0.2))
     const plankton = cellularPoints(p.mul(58).add(vec3(0, time.mul(0.35), time.mul(0.12))), 0.012, 0.1, 0.82)
@@ -75,8 +76,8 @@ export default class extends KnotMaterial {
 // The far wall is seen through the body: longer paths at glancing angles absorb more of it.
     const farWall = back.fire.mul(interior.thickness.mul(-4.5).exp().mul(2))
     this.emissiveNode = front.fire.mul(3.4).add(farWall)
-      .add(color('#0b6f8c').mul(canals).mul(0.22).mul(near.mul(0.5).add(0.5)))
-      .add(color('#9df0ff').mul(plankton).mul(twinkle).mul(intimate).mul(1.3))
-      .add(color('#137aa6').mul(grazing.pow(3)).mul(0.3))
+      .add(color(hsl.integer(225, 93, 43)).mul(canals).mul(0.22).mul(near.mul(0.5).add(0.5)))
+      .add(color(hsl.integer(211, 100, 89)).mul(plankton).mul(twinkle).mul(intimate).mul(1.3))
+      .add(color(hsl.integer(234, 90, 47)).mul(grazing.pow(3)).mul(0.3))
   }
 }

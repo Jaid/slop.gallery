@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: EC58pRKjMMMNqsv; fixture: knot-material-shaders; result: success.
 export default {
   id: 'abyssal_pearl',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand nacre tiles laid by patient tides, each one keeping a different pastel secret from the sun.',
   placeholder: {
-    color: '#a9a3a3',
+    color: hsl.integer(17, 4, 68),
     shading: 'smooth',
   },
 } as const satisfies KnotData

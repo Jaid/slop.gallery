@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {parallaxOffset, surfaceFrame, tubeSpace} from '../../candidates/claude_opus/lib/knotSpace.ts'
@@ -55,12 +56,12 @@ export default class extends KnotMaterial {
     const thickness = pooling.mul(0.012).add(0.006)
     const cosRefracted = view.dot(normal).clamp(0, 1).pow2().oneMinus().div(glazeIndex ** 2).oneMinus().sqrt()
     const transmittance = glazeAbsorption.mul(thickness).mul(2).div(cosRefracted.max(0.25)).negate().exp()
-    const porcelain = color('#d8d3c4')
+    const porcelain = color(hsl.integer(91, 18, 84))
     const celadon = transmittance.mul(porcelain).mul(iron.mul(0.82).oneMinus()).mul(wire.mul(0.45).oneMinus())
-    const tinted = mix(celadon, transmittance.add(0.3).mul(color('#7a5426')), wire.mul(0.36))
+    const tinted = mix(celadon, transmittance.add(0.3).mul(color(hsl.integer(69, 64, 40))), wire.mul(0.36))
 // Gold: maki-e powder on the chips, burnished lacquer on the seams.
     const powder = cellularPoints(p.mul(900), 0.02, 0.2, 0.4).mul(intimate)
-    const goldColor = mix(color('#ffcf6b'), color('#f0a93c'), mx_noise_float(p.mul(40)).mul(0.5).add(0.5))
+    const goldColor = mix(color(hsl.integer(84, 100, 85.7)), color(hsl.integer(73, 88, 75)), mx_noise_float(p.mul(40)).mul(0.5).add(0.5))
     this.colorNode = mix(tinted, goldColor, gold)
     this.metalnessNode = gold
     this.roughnessNode = mix(float(0.06), mix(float(0.22), float(0.38), chip).sub(powder.mul(0.15)), gold)
@@ -79,9 +80,9 @@ export default class extends KnotMaterial {
     const sparkle = glints(surfaceNormal, 180).mul(powder.add(seam.mul(0.25)))
 // Air bubbles caught in the glaze, for the close viewer.
     const bubbles = cellularPoints(p.add(parallaxOffset(view, normal, 0.003)).mul(220).add(4.4), 0.03, 0.11, 0.82).mul(intimate).mul(gold.oneMinus())
-    this.emissiveNode = color('#ffb43c').mul(gold).mul(tide).mul(0.3)
-      .add(color('#fff1c9').mul(sparkle).mul(0.25))
-      .add(color('#eaf7ef').mul(bubbles).mul(facing).mul(0.08))
-      .add(color('#0f2b1f').mul(grazing.pow(3)).mul(0.05).mul(gold.oneMinus()))
+    this.emissiveNode = color(hsl.integer(74, 100, 79.2)).mul(gold).mul(tide).mul(0.3)
+      .add(color(hsl.integer(91, 100, 95.3)).mul(sparkle).mul(0.25))
+      .add(color(hsl.integer(159, 44, 96)).mul(bubbles).mul(facing).mul(0.08))
+      .add(color(hsl.integer(163, 64, 16)).mul(grazing.pow(3)).mul(0.05).mul(gold.oneMinus()))
   }
 }

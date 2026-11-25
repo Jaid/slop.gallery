@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, refract, time, vec3} from 'three/tsl'
 
 import {knotLength, parallaxOffset, surfaceFrame, tubeCircumference, tubeRadius, tubeSpace} from '../../candidates/claude_opus/lib/knotSpace.ts'
@@ -88,7 +89,7 @@ export default class extends KnotMaterial {
 // Gelatinous body: a faint violet bloom where the gel is seen edge-on, mottled by slow internal currents.
     const current = mx_noise_float(p.mul(6).add(vec3(time.mul(0.05), 0, time.mul(-0.04)))).mul(0.5).add(0.5).clamp()
     const gelRim = grazing.pow(2.4).mul(current.mul(0.4).add(0.6))
-    this.colorNode = mix(color('#010204'), color('#040a12'), current).mul(row.oneMinus().mul(0.6).add(0.4))
+    this.colorNode = mix(color(hsl.integer(256, 37, 2)), color(hsl.integer(251, 43, 5)), current).mul(row.oneMinus().mul(0.6).add(0.4))
     this.metalness = 0
     this.roughness = 0.08
     this.clearcoat = 1
@@ -97,14 +98,14 @@ export default class extends KnotMaterial {
     this.ior = 1.34
     this.specularIntensity = 0.35
     this.sheen = 0.15
-    this.sheenColor.set('#7f9cff')
+    this.sheenColor.set(hsl.integer(270, 100, 67))
     this.sheenRoughness = 0.5
-    const glow = color('#3dffcf').mul(canal.mul(flash).mul(1.6).add(canal.mul(0.06)))
-      .add(color('#2f8dff').mul(core).mul(0.4))
-      .add(color('#c8f7ff').mul(motes).mul(0.5))
+    const glow = color(hsl.integer(171, 100, 87.9)).mul(canal.mul(flash).mul(1.6).add(canal.mul(0.06)))
+      .add(color(hsl.integer(256, 100, 59)).mul(core).mul(0.4))
+      .add(color(hsl.integer(209, 100, 93.7)).mul(motes).mul(0.5))
     this.emissiveNode = combLight.mul(near.mul(0.25).add(0.85))
       .add(glow.mul(facing.mul(0.5).add(0.5)))
-      .add(color('#6d5cff').mul(gelRim).mul(0.22))
-      .add(color('#1b3a7a').mul(current.pow(3)).mul(0.05))
+      .add(color(hsl.integer(281, 100, 52)).mul(gelRim).mul(0.22))
+      .add(color(hsl.integer(263, 77, 27)).mul(current.pow(3)).mul(0.05))
   }
 }

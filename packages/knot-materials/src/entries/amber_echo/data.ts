@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 9YA8kP6cid9wkS5; fixture: knot-material-shaders.
 export default {
   id: 'amber_echo',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A drop of ancient sunlight keeps a forest breathing beneath its skin.',
   placeholder: {
-    color: '#e18a20',
+    color: hsl.integer(64, 91, 66),
     shading: 'glass',
   },
 } as const satisfies KnotData

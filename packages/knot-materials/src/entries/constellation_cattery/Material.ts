@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -72,20 +73,20 @@ export default class extends KnotMaterial {
     const pulse = wake.mul(intimate.mul(0.55).add(0.2)).add(0.62)
     const milky = tube.y.sub(0.5).abs().smoothstep(0.42, 0.04).mul(mx_noise_float(vec3(tube.x.mul(18), tube.y.mul(8), time.mul(0.03))).mul(0.3).add(0.7))
     const parallax = view.y.mul(0.5).add(0.5)
-    const ink = mix(color('#03050c'), color('#120c1c'), milky.mul(0.45))
-    const starColor = mix(color('#ffd4ae'), color('#d5e7ff'), parallax)
-    const limb = mix(color('#a894ff'), color('#ffc6a4'), parallax)
+    const ink = mix(color(hsl.integer(266, 40, 4)), color(hsl.integer(300, 43, 7.5)), milky.mul(0.45))
+    const starColor = mix(color(hsl.integer(63, 100, 88)), color(hsl.integer(256, 100, 91)), parallax)
+    const limb = mix(color(hsl.integer(291, 100, 68.4)), color(hsl.integer(53, 100, 85)), parallax)
     this.colorNode = ink
     this.roughnessNode = float(0.86).sub(star.mul(0.3))
     this.metalnessNode = star.mul(0.15)
     this.clearcoatNode = float(0.08).add(near.mul(0.06))
     this.clearcoatRoughness = 0.3
-    this.emissiveNode = color('#3a4c7a').mul(milky).mul(0.06)
+    this.emissiveNode = color(hsl.integer(267, 47, 33)).mul(milky).mul(0.06)
       .add(starColor.mul(star).mul(pulse).mul(resolved.mul(0.65).add(0.35)).mul(5.5))
-      .add(color('#fff8ee').mul(core).mul(pulse).mul(3.2))
+      .add(color(hsl.integer(77, 100, 98)).mul(core).mul(pulse).mul(3.2))
       .add(limb.mul(thread).mul(alive).mul(1.35))
-      .add(color('#ffe6c4').mul(star).mul(wake).mul(intimate).mul(0.4))
-      .add(color('#8ea4d8').mul(grazing.pow(4)).mul(0.08))
-      .add(color('#000').mul(facing.mul(0)))
+      .add(color(hsl.integer(75, 100, 92.6)).mul(star).mul(wake).mul(intimate).mul(0.4))
+      .add(color(hsl.integer(266, 51, 68)).mul(grazing.pow(4)).mul(0.08))
+      .add(color(hsl.integer(0, 0, 0)).mul(facing.mul(0)))
   }
 }

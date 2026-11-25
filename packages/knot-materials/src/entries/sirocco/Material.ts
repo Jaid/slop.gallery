@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, uv, vec3} from 'three/tsl'
 
 import {displacementView} from '../../lib/displacementView.ts'
@@ -51,16 +52,16 @@ export default class extends KnotMaterial {
     const quartz = grainField.smoothstep(0.6, 0.98).mul(resolved)
     const mineral = grainField.mul(0.5).add(0.5).smoothstep(0.4, 0.04).mul(resolved)
     const shade = mx_fractal_noise_float(p.mul(7).add(vec3(8.3, 2.9, 4.1)), 3, 2.2, 0.5).mul(0.5).add(0.5)
-    let sand = mix(color('#3a2411'), color('#c1924f'), relief.pow(0.9))
-    sand = mix(sand, color('#f4dfb4'), crest.mul(0.7).mul(near.mul(0.4).add(0.6)))
-    sand = mix(sand, color('#2c1d0f'), mineral.mul(0.75))
-    sand = mix(sand, color('#fff0d2'), quartz.mul(0.85))
+    let sand = mix(color(hsl.integer(60, 54, 18)), color(hsl.integer(74, 62, 64)), relief.pow(0.9))
+    sand = mix(sand, color(hsl.integer(85, 64, 89.5)), crest.mul(0.7).mul(near.mul(0.4).add(0.6)))
+    sand = mix(sand, color(hsl.integer(63, 45, 14)), mineral.mul(0.75))
+    sand = mix(sand, color(hsl.integer(85, 100, 95.3)), quartz.mul(0.85))
     sand = mix(sand, sand.mul(shade.mul(0.3).add(0.85)), 1)
-    this.colorNode = mix(sand, color('#f6dcae'), salt.mul(0.5))
+    this.colorNode = mix(sand, color(hsl.integer(82, 69, 89)), salt.mul(0.5))
     this.metalness = 0
     this.roughnessNode = float(0.82).sub(quartz.mul(0.4)).sub(salt.mul(0.2)).add(mineral.mul(0.08)).clamp(0.22, 0.98)
     this.sheenNode = float(0.5).add(grazing.mul(0.5))
-    this.sheenColor.set('#ffd49a')
+    this.sheenColor.set(hsl.integer(75, 100, 87.7))
     this.sheenRoughnessNode = float(0.5).add(grazing.mul(0.25)).sub(quartz.mul(0.2))
     this.ior = 1.45
     this.specularIntensityNode = float(0.4).add(quartz.mul(0.55))
@@ -72,11 +73,11 @@ export default class extends KnotMaterial {
     const sparkle = glints(bump, 300).mul(quartz).mul(0.6)
 // Sand is a forward scatterer: face on it is a plain ochre wall, edge on it glows.
     const forward = facing.oneMinus().pow(2.2)
-    this.emissiveNode = color('#fff0cd').mul(sparkle.mul(0.55))
+    this.emissiveNode = color(hsl.integer(87, 100, 95)).mul(sparkle.mul(0.55))
       .add(sand.mul(forward.mul(0.2)))
-      .add(color('#ffe0ac').mul(lee.mul(salt.mul(0.35).add(0.06))))
-      .add(color('#cfe4f6').mul(rim.pow(2.4).mul(0.16)))
-      .add(color('#ffe9c0').mul(grazing.pow(3.4).mul(shimmer.abs().mul(0.2))))
-      .add(color('#7a4d22').mul(grazing.pow(3.5).mul(0.06)))
+      .add(color(hsl.integer(80, 100, 90.6)).mul(lee.mul(salt.mul(0.35).add(0.06))))
+      .add(color(hsl.integer(244, 57, 89)).mul(rim.pow(2.4).mul(0.16)))
+      .add(color(hsl.integer(83, 100, 93.2)).mul(grazing.pow(3.4).mul(shimmer.abs().mul(0.2))))
+      .add(color(hsl.integer(62, 66, 38)).mul(grazing.pow(3.5).mul(0.06)))
   }
 }

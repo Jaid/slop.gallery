@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: FLhq233R9MU4dj1; fixture: knot-material-shaders; result: success.
 export default {
   id: 'rose_cathedral',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Ruby, jade and amber hold a silent choir. The windows turn inward, and their impossible sun follows you through the nave.',
   placeholder: {
-    color: '#c52648',
+    color: hsl.integer(15, 88, 46.7),
     shading: 'glass',
   },
 } as const satisfies KnotData

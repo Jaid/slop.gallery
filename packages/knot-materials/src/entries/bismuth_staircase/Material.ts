@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -59,6 +60,6 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(facet.mul(0.05), 0.0022)
     this.clearcoatNormalNode = this.normalNode
     this.aoNode = riser.mul(-0.45).add(1)
-    this.emissiveNode = color('#8fd8ff').mul(riser).mul(grazing.pow(2)).mul(0.1)
+    this.emissiveNode = color(hsl.integer(233, 100, 82.3)).mul(riser).mul(grazing.pow(2)).mul(0.1)
   }
 }

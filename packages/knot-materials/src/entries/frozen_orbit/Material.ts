@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -60,7 +61,7 @@ export default class extends KnotMaterial {
     const frost = snow.crystal.add(snow.orbit.mul(0.28)).add(echo.crystal.mul(0.1))
     const nuclei = cellularPoints(p.mul(74), 0.025, 0.12, 0.78).mul(intimate)
     const normal = proceduralNormal(frost.add(nuclei.mul(0.2)), 0.0085)
-    this.colorNode = mix(color('#051321'), color('#b6ecff'), frost).add(color('#efffff').mul(nuclei).mul(0.3))
+    this.colorNode = mix(color(hsl.integer(249, 60, 8)), color(hsl.integer(221, 100, 90)), frost).add(color(hsl.integer(197, 100, 98.6)).mul(nuclei).mul(0.3))
     this.metalness = 0.12
     this.roughnessNode = float(0.06)
     this.normalNode = normal
@@ -69,6 +70,6 @@ export default class extends KnotMaterial {
     this.iridescence = 0.25
     this.iridescenceIOR = 1.31
     this.iridescenceThicknessNode = facing.mul(120).add(175)
-    this.emissiveNode = color('#b6ecff').mul(frost).mul(facing.mul(0.08).add(grazing.mul(0.04))).mul(near.mul(0.2).add(0.05))
+    this.emissiveNode = color(hsl.integer(221, 100, 90)).mul(frost).mul(facing.mul(0.08).add(grazing.mul(0.04))).mul(near.mul(0.2).add(0.05))
   }
 }

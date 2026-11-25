@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, uv, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/muse_wonder/lib/detailNormal.ts'
@@ -38,15 +39,15 @@ export default class extends KnotMaterial {
     const wave = sheenPhase.cos().mul(0.5).add(0.5)
     const flash = wave.pow(4)
     const hueMix = sheenPhase.mul(0.85).add(1.2).cos().mul(0.5).add(0.5)
-    let lit = mix(color('#0090ff'), color('#8a4dff'), hueMix)
-    lit = mix(lit, color('#3fffd8'), flash.mul(0.35))
-    const deep = mix(color('#0a0714'), color('#241631'), random.z)
+    let lit = mix(color(hsl.integer(252, 100, 59)), color(hsl.integer(293, 100, 52.6)), hueMix)
+    lit = mix(lit, color(hsl.integer(175, 100, 88.2)), flash.mul(0.35))
+    const deep = mix(color(hsl.integer(294, 44, 5)), color(hsl.integer(307, 49, 13)), random.z)
     const tipBand = pastTip.abs().smoothstep(0.02, 0.14).oneMinus().mul(inside)
     const baseShadow = along.smoothstep(0.02, 0.2).oneMinus()
     let scaleColor = mix(deep, lit, flash.mul(0.88).add(0.06).mul(along.mul(0.45).add(0.62)))
-    scaleColor = mix(scaleColor, color('#c8f2ff'), tipBand.mul(flash.mul(0.45).add(0.1)))
+    scaleColor = mix(scaleColor, color(hsl.integer(219, 100, 92.5)), tipBand.mul(flash.mul(0.45).add(0.1)))
     scaleColor = scaleColor.mul(baseShadow.mul(-0.5).add(1))
-    this.colorNode = mix(color('#03040a'), scaleColor, inside)
+    this.colorNode = mix(color(hsl.integer(273, 38, 3.4)), scaleColor, inside)
     this.metalnessNode = flash.mul(0.45).add(0.15).mul(inside)
     this.roughnessNode = mix(float(0.55), flash.mul(-0.22).add(0.38), inside)
     this.iridescenceNode = flash.mul(0.55).add(0.15).mul(inside)
@@ -56,6 +57,6 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = scaleNormal
     this.aoNode = inside.mul(baseShadow.mul(-0.42).add(1)).add(inside.oneMinus().mul(0.35))
     const sparkle = glints(scaleNormal, 140).mul(tipBand).mul(near.mul(0.5).add(0.5))
-    this.emissiveNode = lit.mul(flash).mul(inside).mul(grazing.mul(0.3).add(0.12)).mul(0.24).add(color('#cfefff').mul(sparkle).mul(0.5))
+    this.emissiveNode = lit.mul(flash).mul(inside).mul(grazing.mul(0.3).add(0.12)).mul(0.24).add(color(hsl.integer(229, 100, 92.3)).mul(sparkle).mul(0.5))
   }
 }

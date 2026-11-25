@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tide_nacre',
   candidateId: 'grok',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Pearl keeps the slow rhythm of a tide long after the water has withdrawn.',
   placeholder: {
-    color: '#7ef0d6',
+    color: hsl.integer(177, 75, 86),
     shading: 'glass',
   },
 } as const satisfies KnotData

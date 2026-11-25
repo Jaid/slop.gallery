@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, uv, vec2} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -23,17 +24,17 @@ export default class extends KnotMaterial {
     const parity = tile.x.add(tile.y).mod(2)
     const diagonal = local.x.add(mix(local.y, local.y.negate(), parity))
       .smoothstep(filter.negate(), filter)
-    const field = mix(color('#172f47'), color('#dc4933'), parity)
-    const flag = mix(field, color('#f3e5c7'), diagonal)
+    const field = mix(color(hsl.integer(250, 53, 20)), color(hsl.integer(31, 88, 54.6)), parity)
+    const flag = mix(field, color(hsl.integer(85, 55, 91)), diagonal)
     // A small circular countermark and two registration bars give each panel a face.
     const dot = local.sub(vec2(-0.2, 0.18)).length()
       .smoothstep(0.052, filter.add(0.052)).oneMinus()
     const bars = local.y.add(0.24).abs().smoothstep(0.018, filter.add(0.018)).oneMinus()
       .mul(local.x.abs().sub(0.2).abs().smoothstep(0.032, filter.add(0.032)).oneMinus())
-    const marked = mix(flag, field, dot).add(color('#e8c575').mul(bars).mul(0.25))
-    const brass = color('#a98448')
+    const marked = mix(flag, field, dot).add(color(hsl.integer(86, 68, 81)).mul(bars).mul(0.25))
+    const brass = color(hsl.integer(78, 57, 58))
     const panel = mix(brass, marked, enamel)
-    this.colorNode = mix(color('#12242c'), panel, rim)
+    this.colorNode = mix(color(hsl.integer(228, 40, 15)), panel, rim)
     this.metalnessNode = rim.sub(enamel).clamp().mul(0.8)
     this.roughnessNode = mix(float(0.5), float(0.24), enamel)
     this.clearcoatNode = enamel.mul(0.85)

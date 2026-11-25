@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'meteorite_memory',
   candidateId: 'gpt_astra',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Dark metal carries the scars of a journey longer than the sky.',
   placeholder: {
-    color: '#bdcad5',
+    color: hsl.integer(243, 18, 81),
     shading: 'smooth',
   },
 } as const satisfies KnotData

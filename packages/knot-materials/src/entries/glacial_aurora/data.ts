@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'glacial_aurora',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Northern light moves slowly through the memory of ancient ice.',
   placeholder: {
-    color: '#2dff9a',
+    color: hsl.integer(155.3, 100, 86.3),
     shading: 'glass',
   },
 } as const satisfies KnotData

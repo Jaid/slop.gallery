@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_fractal_noise_vec3, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -31,13 +32,13 @@ export default class extends KnotMaterial {
     const fineVein = hairline(fineBoundary, 0.008).mul(intimate.mul(0.5).add(0.03))
     const pool = mx_noise_float(p.mul(2.8)).mul(0.5).add(0.5)
     const shardTint = mx_noise_float(p.mul(8.5)).mul(0.5).add(0.5)
-    const porcelain = mix(color('#eef0ea'), color('#c9d8d0'), pool.mul(0.3)).mul(shardTint.mul(0.05).add(0.975))
-    const gold = color('#ffb700')
+    const porcelain = mix(color(hsl.integer(122, 18, 94)), color(hsl.integer(163, 18, 85)), pool.mul(0.3)).mul(shardTint.mul(0.05).add(0.975))
+    const gold = color(hsl.integer(80, 100, 79.6))
 // Razor-thin grooves: the glaze stays flat between cracks.
     const height = boundary.clamp(0, 0.05).mul(0.5).add(goldVein.mul(0.03)).sub(fineBoundary.clamp(0, 0.06).mul(0.15).mul(intimate))
     const normal = proceduralNormal(height, 0.25)
     this.normalNode = normal
-    this.colorNode = mix(mix(mix(porcelain, color('#2a2f33'), darkVein.mul(0.55)), gold, goldVein), gold.mul(0.85), fineVein.mul(0.5))
+    this.colorNode = mix(mix(mix(porcelain, color(hsl.integer(242, 9, 20)), darkVein.mul(0.55)), gold, goldVein), gold.mul(0.85), fineVein.mul(0.5))
     this.metalnessNode = goldVein.max(fineVein.mul(0.7))
     this.roughnessNode = mix(float(0.17).add(pool.mul(0.06)), float(0.18), goldVein.max(fineVein))
     this.clearcoat = 0.85

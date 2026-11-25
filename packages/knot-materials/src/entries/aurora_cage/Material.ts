@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -37,15 +38,15 @@ export default class extends BaseKnotMaterial {
     const curtainFade = tube.y.sub(0.5).abs().mul(-3.2).exp()
     // Colour ladder: green low, cyan mid, violet high.
     const height = tube.y
-    const auroraGreen = color('#00ff88')
-    const auroraCyan = color('#44ffee')
-    const auroraViolet = color('#c04dff')
+    const auroraGreen = color(hsl.integer(152.6, 100, 85.6))
+    const auroraCyan = color(hsl.integer(185, 100, 89))
+    const auroraViolet = color(hsl.integer(311, 100, 59.6))
     const auroraLow = mix(auroraGreen, auroraCyan, height.mul(2).clamp())
     const auroraHigh = mix(auroraCyan, auroraViolet, height.sub(0.5).mul(2).clamp())
     const auroraCol = mix(auroraLow, auroraHigh, height)
     // Dark ferrous cage.
-    const cageDeep = color('#03060e')
-    const cageMid = mix(cageDeep, color('#0a1430'), facing.mul(0.5).add(0.2))
+    const cageDeep = color(hsl.integer(261, 44, 4))
+    const cageMid = mix(cageDeep, color(hsl.integer(266, 66, 10)), facing.mul(0.5).add(0.2))
     const auroraStrength = curtain.mul(curtainFade)
       .mul(facing.oneMinus().mul(0.4).add(0.6))
     this.colorNode = cageMid
@@ -57,11 +58,11 @@ export default class extends BaseKnotMaterial {
     this.emissiveNode
       = auroraCol.mul(auroraStrength).mul(2.1)
         .add(auroraCol.mul(curtainFine).mul(curtainFade).mul(1.1))
-        .add(color('#88ffee').mul(fieldLines).mul(near.mul(0.5).add(0.25)))
-        .add(color('#88ffee').mul(fieldLinesFine).mul(0.5))
-        .add(color('#ffffff').mul(bead).mul(beadFlash)
+        .add(color(hsl.integer(183, 100, 91.3)).mul(fieldLines).mul(near.mul(0.5).add(0.25)))
+        .add(color(hsl.integer(183, 100, 91.3)).mul(fieldLinesFine).mul(0.5))
+        .add(color(hsl.integer(0, 0, 100)).mul(bead).mul(beadFlash)
           .mul(intimate.mul(0.8).add(0.4)).mul(3.2))
-        .add(color('#44ffcc').mul(rim).mul(0.35))
-        .add(color('#0a2440').mul(grazing).mul(0.2))
+        .add(color(hsl.integer(170, 100, 88)).mul(rim).mul(0.35))
+        .add(color(hsl.integer(253, 71, 15)).mul(grazing).mul(0.2))
   }
 }

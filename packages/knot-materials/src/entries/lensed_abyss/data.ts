@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'lensed_abyss',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Light arrives, is thanked for its service and is never seen again.',
   placeholder: {
-    color: '#161018',
+    color: hsl.integer(318, 24, 9),
     shading: 'smooth',
   },
 } as const satisfies KnotData

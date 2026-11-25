@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 /**
  * The brush strokes of the Impasto vignette, laid around the edges of the screen in the order the brush sets them down: the dark ground hatched across the corners and brushed along the edges first, then the earth tones over it and last a few bright accents on the inner rim, leaving the middle of the view clear.
  * None of them stays as it is: each dries into bristle streaks after a while and the brush comes back to lay it again over what is left of it, round after round, every stroke at a pace of its own, so the brushes never rest while the mood holds.
@@ -7,16 +9,16 @@
 /** the paints the vignette is laid in, display colors in sRGB; strokes name them by their index */
 export const vignettePaints = [
   // the dark ground: ultramarine deepened with umber, and the umber itself
-  '#2c3a6e',
-  '#573a26',
+  hsl.integer(270, 57, 27),
+  hsl.integer(55, 43, 28),
   // the earth tones and a cool gray blue, as the Atelier’s old grade had them
-  '#b98a4c',
-  '#2d6b5a',
-  '#5b6f9a',
+  hsl.integer(72, 60, 61),
+  hsl.integer(173, 65, 40),
+  hsl.integer(265, 37, 47),
   // the accents, from the Paint Orb’s own tubes
-  '#c8482a',
-  '#dfa93c',
-  '#ebe0c8',
+  hsl.integer(34, 86, 50.5),
+  hsl.integer(81, 82, 73),
+  hsl.integer(86, 39, 89),
 ] as const
 const paint = {
   ultramarine: 0,

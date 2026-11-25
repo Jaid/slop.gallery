@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionViewDirection, time, transformNormalToView, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../candidates/claude_fable/lib/cellNoiseVec3.ts'
@@ -63,9 +64,9 @@ export default class extends KnotMaterial {
     const fire = layerA.add(layerB.mul(depthTint).mul(0.8)).add(layerC.mul(depthTint.mul(depthTint)).mul(0.6))
 // The milky body: white opal with a blue opalescence at grazing angles and a warm transmitted tint at the limb.
     const body = mx_fractal_noise_float(p.mul(7), 3, 2, 0.5).mul(0.5).add(0.5)
-    const milk = mix(rgb('#f7f3ec'), rgb('#e3ecf6'), body)
-    const opalescence = rgb('#9cc3ff').mul(grazing.pow(2)).mul(0.2)
-    const warmth = rgb('#ffb680').mul(grazing.pow(6)).mul(0.4)
+    const milk = mix(rgb(hsl.integer(82, 33, 96)), rgb(hsl.integer(251, 42, 93)), body)
+    const opalescence = rgb(hsl.integer(259, 100, 78)).mul(grazing.pow(2)).mul(0.2)
+    const warmth = rgb(hsl.integer(57, 100, 80.6)).mul(grazing.pow(6)).mul(0.4)
     this.colorNode = milk.mul(0.17)
     this.metalness = 0
     this.ior = opalIndex
@@ -76,7 +77,7 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.7
     this.clearcoatRoughness = 0.06
     this.sheen = 0.3
-    this.sheenColor.set('#cfe0ff')
+    this.sheenColor.set(hsl.integer(263, 100, 89))
     this.sheenRoughness = 0.6
 // Fire passes the dome's Fresnel transmittance; the brightest flashes overshoot for the tone mapper to bloom.
     const transmit = fresnel(facing, 0.035).oneMinus()

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_garden',
   candidateId: 'gpt_terra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Impossible crystal terraces have climbed the knot overnight, growing a different rainbow on every edge.',
   placeholder: {
-    color: '#9883ad',
+    color: hsl.integer(307, 32, 59),
     shading: 'metal',
   },
 } as const satisfies KnotData

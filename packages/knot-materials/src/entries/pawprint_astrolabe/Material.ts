@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -96,13 +97,13 @@ export default class extends KnotMaterial {
     const grid = vec2(tube.x.mul(10).add(row.fract().mul(0.5)), row)
     const glyph = catGlyph(grid)
     const echo = catGlyph(grid.add(vec2(view.x.mul(0.026), view.y.mul(0.017))))
-    const cold = mix(color('#76e8ff'), color('#b58cff'), glyph.random.y)
-    const warm = mix(cold, color('#fff0b8'), glyph.random.x.smoothstep(0.67, 0.94))
+    const cold = mix(color(hsl.integer(213, 100, 85)), color(hsl.integer(299, 100, 68)), glyph.random.y)
+    const warm = mix(cold, color(hsl.integer(95, 100, 94.6)), glyph.random.x.smoothstep(0.67, 0.94))
     const height = glyph.lines.mul(0.32).add(glyph.beads).add(echo.lines.mul(0.06))
     const normal = proceduralNormal(height, 0.0075)
     const satelliteVisibility = intimate.mul(glyph.random.z.smoothstep(0.18, 0.78))
     const sparkle = glints(normal, 95)
-    this.colorNode = color('#02030a')
+    this.colorNode = color(hsl.integer(272, 50, 3))
     this.metalness = 0.28
     this.roughnessNode = float(0.14).add(near.mul(0.12))
     this.clearcoat = 1
@@ -112,9 +113,9 @@ export default class extends KnotMaterial {
     this.normalNode = normal
     this.clearcoatNormalNode = normal
     this.emissiveNode = warm.mul(glyph.beads.mul(3.4).add(glyph.lines.mul(0.8)))
-      .add(color('#d8eaff').mul(glyph.beads).mul(sparkle).mul(1.2))
+      .add(color(hsl.integer(252, 100, 92)).mul(glyph.beads).mul(sparkle).mul(1.2))
       .add(echo.beads.mul(echo.lines.mul(0.2).add(0.3)).mul(warm).mul(0.18))
       .add(warm.mul(glyph.satellites.mul(2.1).add(glyph.satelliteLines.mul(0.42))).mul(satelliteVisibility))
-      .add(color('#9b68ff').mul(facing.oneMinus().pow(4)).mul(0.045))
+      .add(color(hsl.integer(295, 100, 58.7)).mul(facing.oneMinus().pow(4)).mul(0.045))
   }
 }

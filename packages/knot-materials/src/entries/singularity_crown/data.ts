@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'singularity_crown',
   candidateId: 'glm',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Light bends around a dark sovereign that never needs to show its face.',
   placeholder: {
-    color: '#ffb257',
+    color: hsl.integer(68, 100, 79),
     shading: 'ghost',
   },
 } as const satisfies KnotData

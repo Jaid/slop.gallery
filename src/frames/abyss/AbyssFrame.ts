@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_float, normalView, positionViewDirection, time, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -46,31 +47,31 @@ const currents = [{
   speed: 0.028,
   fineness: 34,
   light: 0.75,
-  tint: '#8affc8',
+  tint: hsl.integer(162, 100, 90.3),
 }, {
   depth: 0.03,
   speed: -0.02,
   fineness: 27,
   light: 0.8,
-  tint: '#3fd98a',
+  tint: hsl.integer(156, 89, 75),
 }, {
   depth: 0.06,
   speed: 0.014,
   fineness: 21,
   light: 0.65,
-  tint: '#22b07a',
+  tint: hsl.integer(161, 94, 62),
 }, {
   depth: 0.1,
   speed: -0.009,
   fineness: 16,
   light: 0.55,
-  tint: '#178a86',
+  tint: hsl.integer(191, 91, 51),
 }, {
   depth: 0.17,
   speed: 0.005,
   fineness: 12,
   light: 0.5,
-  tint: '#3a3a9a',
+  tint: hsl.integer(277, 76, 32),
 }] as const
 /** the ripples running across the pool, out and in: their wavelengths in meters, how fast they run in meters a second, and how high they are */
 const ripples = [{
@@ -90,7 +91,7 @@ export default class AbyssFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#0a2a1e'
+  override readonly tint = hsl.integer(165, 76, 15)
   override readonly title = 'Ectoplasm abyss'
 
   override createGeometry(width: number, height: number) {
@@ -118,8 +119,8 @@ class ObsidianMaterial extends MeshPhysicalNodeMaterial {
     const shells = mx_noise_float(p.mul(140)).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.004))
     const toPool = surface.reach.sub(surfaceOf.from).abs().min(surface.reach.sub(surfaceOf.to).abs())
     const spill = toPool.div(-0.004).exp().mul(time.mul(0.9).sin().mul(0.15).add(0.85))
-    this.colorNode = mix(color('#040506'), color('#0c1012'), shells.mul(0.4))
-    this.emissiveNode = color('#2fbf74').mul(spill.mul(0.5))
+    this.colorNode = mix(color(hsl.integer(245, 10, 4)), color(hsl.integer(229, 13, 7)), shells.mul(0.4))
+    this.emissiveNode = color(hsl.integer(155, 93, 67)).mul(spill.mul(0.5))
     this.normalNode = heightNormal(shells.mul(0.00008))
   }
 }
@@ -166,8 +167,8 @@ class AbyssMaterial extends MeshPhysicalNodeMaterial {
     const facing = normalView.dot(positionViewDirection.negate()).abs().clamp(0, 1)
     const edges = here.reach.sub(surfaceOf.from).min(float(surfaceOf.to).sub(here.reach)).div(-0.0025).exp()
     const breath = time.mul(0.6).sin().mul(0.12).add(1)
-    this.colorNode = color('#010604')
-    this.emissiveNode = light.add(color('#03160d')).mul(facing.pow(0.5)).mul(breath).add(color('#8affc8').mul(edges.mul(0.8)))
+    this.colorNode = color(hsl.integer(171, 66, 3.5))
+    this.emissiveNode = light.add(color(hsl.integer(162, 82, 8))).mul(facing.pow(0.5)).mul(breath).add(color(hsl.integer(162, 100, 90.3)).mul(edges.mul(0.8)))
     this.normalNode = heightNormal(height.add(chop))
   }
 }

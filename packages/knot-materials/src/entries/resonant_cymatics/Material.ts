@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, tangentView, time, uv, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -29,8 +30,8 @@ export default class extends BaseKnotMaterial {
     // Obsidian ultrasonic micro-vibrations
     const vibrationRipples = chladni.mul(24).sin().mul(0.08)
     const obsidianNormal = proceduralNormal(vibrationRipples, 0.003)
-    const phosphorColor = mix(color('#38ef7d'), color('#00f2fe'), resonanceShift)
-    this.colorNode = color('#05070a')
+    const phosphorColor = mix(color(hsl.integer(151, 95, 81)), color(hsl.integer(202, 100, 85)), resonanceShift)
+    this.colorNode = color(hsl.integer(254, 19, 4))
     this.metalness = 0.12
     this.roughness = 0.035
     this.clearcoat = 1
@@ -40,8 +41,8 @@ export default class extends BaseKnotMaterial {
     this.anisotropy = 0.85
     this.anisotropyNode = tangentView.xy
     this.emissiveNode = phosphorColor.mul(dustParticles).mul(4.5).mul(intimate.mul(0.7).add(0.5))
-      .add(color('#11998e').mul(nodalBand).mul(0.7))
-      .add(color('#00ffea').mul(rim).mul(0.2))
+      .add(color(hsl.integer(186, 95, 55)).mul(nodalBand).mul(0.7))
+      .add(color(hsl.integer(184, 100, 88)).mul(rim).mul(0.2))
       .mul(near.mul(0.5).add(0.5))
   }
 }

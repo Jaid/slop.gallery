@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'magnetite_field',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Iron-dark grains reveal the contours of an invisible landscape.',
   placeholder: {
-    color: '#9dbbc2',
+    color: hsl.integer(214, 22, 73),
     shading: 'metal',
   },
   displacement: 0.046,

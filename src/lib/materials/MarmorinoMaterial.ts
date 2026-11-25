@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -17,9 +18,9 @@ const unit = (node: Float) => node.mul(0.5).add(0.5)
  * Mapped along whichever wall it covers, by world position. Specks and ridges fade to their average before they could shimmer.
  */
 export default class MarmorinoMaterial extends MeshPhysicalNodeMaterial {
-  constructor({tint = '#ded4b8'}: {
+  constructor({tint = hsl.integer(91, 33, 85)}: {
     /** the plaster’s tint */
-    tint?: string
+    tint?: number
   } = {}) {
     super({
       roughness: 0.4,
@@ -74,7 +75,7 @@ export default class MarmorinoMaterial extends MeshPhysicalNodeMaterial {
     const pits = unit(mx_noise_float(positionWorld.mul(420).add(9))).smoothstep(0.86, 0.93).mul(fine)
     const base = color(tint)
     let plaster: Node<'vec3'> = base.mul(tone.add(clouds.sub(0.5).mul(0.08)))
-    plaster = mix(plaster, color('#f4efe3'), dust.mul(0.5)).mul(pits.mul(-0.25).add(1)).mul(ridges.mul(-0.05).add(1))
+    plaster = mix(plaster, color(hsl.integer(88, 37, 94.5)), dust.mul(0.5)).mul(pits.mul(-0.25).add(1)).mul(ridges.mul(-0.05).add(1))
     this.colorNode = plaster
     const burnished = polish.clamp(0, 1)
     this.roughnessNode = float(0.55).sub(burnished.mul(0.35)).add(pits.mul(0.3)).sub(dust.mul(0.1))

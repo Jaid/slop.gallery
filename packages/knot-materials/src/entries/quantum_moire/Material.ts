@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -44,9 +45,9 @@ export default class extends KnotMaterial {
     const subGrating = opticalLine(abyss.dot(vec3(51, -16, 31)).add(view.z.mul(12)).sin(), 0.044).mul(intimate)
     const hueA = phaseA.mul(0.12).add(view.z.mul(5)).sin().mul(0.5).add(0.5)
     const hueB = phaseB.mul(0.11).sub(view.x.mul(4)).sin().mul(0.5).add(0.5)
-    const cyanMagenta = mix(color('#2af6ff'), color('#d84dff'), hueA)
-    const violetGold = mix(color('#745dff'), color('#ffc76a'), hueB)
-    this.colorNode = mix(color('#01040b'), color('#0b1830'), grazing.mul(0.72).add(noise.mul(0.12)).clamp())
+    const cyanMagenta = mix(color(hsl.integer(199, 99, 86.9)), color(hsl.integer(318, 100, 63)), hueA)
+    const violetGold = mix(color(hsl.integer(283, 100, 53)), color(hsl.integer(79, 100, 84)), hueB)
+    this.colorNode = mix(color(hsl.integer(254, 63, 3)), color(hsl.integer(262, 60, 11)), grazing.mul(0.72).add(noise.mul(0.12)).clamp())
     this.metalness = 0.76
     this.roughnessNode = gratingA.mul(0.055).add(0.09)
     this.iridescenceNode = grazing.mul(0.58).add(0.12)
@@ -55,6 +56,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 1
     this.clearcoatRoughness = 0.028
     this.normalNode = proceduralNormal(phaseA.sin(), 0.00075)
-    this.emissiveNode = cyanMagenta.mul(gratingA).mul(grazing.mul(0.55).add(0.18)).add(violetGold.mul(gratingB).mul(0.62)).add(color('#f2fbff').mul(ghost).mul(1.35)).add(cyanMagenta.mul(subGrating).mul(0.6))
+    this.emissiveNode = cyanMagenta.mul(gratingA).mul(grazing.mul(0.55).add(0.18)).add(violetGold.mul(gratingB).mul(0.62)).add(color(hsl.integer(226, 100, 98)).mul(ghost).mul(1.35)).add(cyanMagenta.mul(subGrating).mul(0.6))
   }
 }

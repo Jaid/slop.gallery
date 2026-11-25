@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BJsZFlj5mQPSiFo; fixture: knot-material-shaders.
 export default {
   id: 'mycelial_lumen',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A forest floor translated into light: roots wander beneath a skin of midnight glass.',
   placeholder: {
-    color: '#0d4c4c',
+    color: hsl.integer(195, 85, 29),
     shading: 'glass',
   },
   displacement: 0.00012,

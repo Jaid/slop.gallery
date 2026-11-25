@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, positionGeometry, positionViewDirection, uv, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -20,8 +21,8 @@ export default class extends KnotMaterial {
     // Quantised anodising zones with soft borders, like stepped bath voltages.
     const steps = voltage.mul(3)
     const zones = steps.floor().add(steps.fract().smoothstep(0.42, 0.58)).div(3)
-    const base = mix(color('#68707b'), color('#bcc5ce'), grain.mul(0.5).add(0.5))
-    this.colorNode = mix(base, color('#8ea6c6'), zones.mul(0.35))
+    const base = mix(color(hsl.integer(256, 11, 47)), color(hsl.integer(248, 13, 79)), grain.mul(0.5).add(0.5))
+    this.colorNode = mix(base, color(hsl.integer(256, 32, 67)), zones.mul(0.35))
     this.metalness = 1
     this.roughnessNode = grain.abs().mul(0.14).add(0.05)
     this.anisotropy = 0.85
@@ -32,6 +33,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.45
     this.clearcoatRoughness = 0.12
     this.normalNode = proceduralNormal(grain, 0.0006)
-    this.emissiveNode = color('#7fb0ff').mul(grazing.pow(4)).mul(0.22)
+    this.emissiveNode = color(hsl.integer(260, 100, 71.4)).mul(grazing.pow(4)).mul(0.22)
   }
 }

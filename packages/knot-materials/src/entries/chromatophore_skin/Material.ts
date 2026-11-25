@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, modelWorldMatrixInverse, mx_noise_float, normalLocal, positionGeometry, time, vec3, vec4} from 'three/tsl'
 
 import {filament} from '../../candidates/gpt_sol/lib/filament.ts'
@@ -107,18 +108,18 @@ export default class extends BaseKnotMaterial {
         .mul(0.5)
         .add(0.25))
       .clamp()
-    const baseSkin = mix(color('#17150f'), color('#91866b'), facing.mul(0.35)
+    const baseSkin = mix(color(hsl.integer(92, 18, 10)), color(hsl.integer(88, 24, 56)), facing.mul(0.35)
       .add(structuralNoise.mul(0.18))
       .clamp())
-    const warmCell = mix(color('#df8a17'), color('#6b2419'), rnd.x)
-    const cellColor = mix(warmCell, color('#101519'), rnd.y.pow(1.7).mul(0.38))
+    const warmCell = mix(color(hsl.integer(66, 94, 66)), color(hsl.integer(31, 77, 27)), rnd.x)
+    const cellColor = mix(warmCell, color(hsl.integer(242, 16, 9)), rnd.y.pow(1.7).mul(0.38))
     const body = mix(baseSkin, cellColor, disc)
-    const detailedBody = mix(body, mix(color('#e7d9b1'), color('#324945'), rnd2.z), fineDisc.mul(0.62))
+    const detailedBody = mix(body, mix(color(hsl.integer(91, 48, 87)), color(hsl.integer(183, 26, 29)), rnd2.z), fineDisc.mul(0.62))
     const angleColor = view
       .dot(vec3(0.72, -0.16, 0.67).normalize())
       .mul(0.5)
       .add(0.5)
-    const shimmerTint = mix(color('#16a997'), color('#5965d4'), angleColor)
+    const shimmerTint = mix(color(hsl.integer(181, 95, 61)), color(hsl.integer(275, 75, 48)), angleColor)
     this.colorNode = mix(detailedBody, shimmerTint, structural.mul(0.58))
     this.metalness = 0
     this.roughnessNode = float(0.42)
@@ -129,7 +130,7 @@ export default class extends BaseKnotMaterial {
     this.clearcoat = 0.75
     this.clearcoatRoughness = 0.11
     this.sheen = 0.2
-    this.sheenColor.set('#d6c49e')
+    this.sheenColor.set(hsl.integer(86, 38, 80))
     this.sheenRoughness = 0.5
     this.iridescence = 1
     this.iridescenceNode = structural
@@ -146,12 +147,12 @@ export default class extends BaseKnotMaterial {
     this.normalNode = skinNormal
     this.clearcoatNormalNode = skinNormal
     const waveFront = filament(wavePhase.sin(), 0.045)
-    this.emissiveNode = color('#3affcf')
+    this.emissiveNode = color(hsl.integer(172, 100, 87.9))
       .mul(waveFront)
       .mul(disc)
       .mul(near)
       .mul(0.5)
-      .add(color('#ffb341')
+      .add(color(hsl.integer(73, 100, 79))
         .mul(disc)
         .mul(activation)
         .mul(intimate)

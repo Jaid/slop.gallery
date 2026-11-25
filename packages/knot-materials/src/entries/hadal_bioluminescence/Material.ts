@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {
   color,
   float,
@@ -50,8 +51,8 @@ export default class extends KnotMaterial {
     // Neural action potential: rhythmic waves of bioluminescent excitation traveling the nerve net
     const neuralTime = time.mul(1.4)
     const neuralWave = tube.x.mul(TAU * 2.5).sub(neuralTime).sin().smoothstep(0.2, 0.95)
-    const neuralEmerald = color('#00ff88')
-    const deepCobalt = color('#0048ff')
+    const neuralEmerald = color(hsl.integer(152.6, 100, 85.6))
+    const deepCobalt = color(hsl.integer(263.5, 100, 43.6))
     const photophoreColor = mix(deepCobalt, neuralEmerald, neuralWave)
     // Photophore organ emission
     const photophoreFlash = photophoreColor
@@ -63,18 +64,18 @@ export default class extends KnotMaterial {
     const gutTurbulence = mx_noise_float(qInternal.mul(6).add(vec3(0, time.mul(0.08), 0)))
       .mul(0.5)
       .add(0.5)
-    const deepOrganGlow = color('#002288')
+    const deepOrganGlow = color(hsl.integer(263.5, 100, 22))
       .mul(gutTurbulence)
       .mul(near.mul(0.6).add(0.3))
     // 4. Velvet Ultra-Black Epidermal Skin
     // Ultra-low reflectivity protects against predator photophore reflection
-    const ultraBlackSkin = color('#020204')
-    const reflectorSilver = color('#7d9ea6')
+    const ultraBlackSkin = color(hsl.integer(284, 27, 2))
+    const reflectorSilver = color(hsl.integer(214, 23, 63))
     const epidermis = mix(ultraBlackSkin, reflectorSilver, reflectorRing.mul(0.85))
     // 5. Bioluminescent Micro-Pores (Sub-millimeter Photocytes)
     const poreCoord = p.mul(75).add(vec3(0, time.mul(0.12), 0))
     const porePoints = cellularPoints(poreCoord, 0.03, 0.18, 0.68)
-    const poreSparkle = color('#00ffee').mul(porePoints).mul(intimate.mul(0.8).add(0.4))
+    const poreSparkle = color(hsl.integer(187, 100, 88)).mul(porePoints).mul(intimate.mul(0.8).add(0.4))
     // Surface PBR properties: slimy aquatic gelatinous envelope
     this.colorNode = epidermis
     this.metalnessNode = reflectorRing.mul(0.8)
@@ -83,7 +84,7 @@ export default class extends KnotMaterial {
     this.transmission = 0.48
     this.thickness = 0.38
     this.ior = 1.34 // Hydrated biological tissue
-    this.attenuationColor.set('#031224')
+    this.attenuationColor.set(hsl.integer(252, 73, 8))
     this.attenuationDistance = 0.75
     // Glassy aquatic mucous clearcoat
     this.clearcoat = 1
@@ -94,6 +95,6 @@ export default class extends KnotMaterial {
       .add(photophoreFlash.mul(4.2))
       .add(deepOrganGlow.mul(1.5))
       .add(poreSparkle.mul(2.5))
-      .add(color('#0033aa').mul(grazing.pow(2.8)).mul(0.3))
+      .add(color(hsl.integer(263, 100, 29.5)).mul(grazing.pow(2.8)).mul(0.3))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2tmj6W7XIniDLsB; fixture: knot-material-shaders; result: success.
 export default {
   id: 'glacial_vigil',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Winter keeps a cathedral inside a single crystal. Feathered frost floats between blue planes; the light moves, but the ancient cold remains.',
   placeholder: {
-    color: '#82bbc5',
+    color: hsl.integer(210, 40, 72),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'gilded_mercury',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A metal that refuses to hold still. Every step you take rearranges the whole room inside its skin.',
   placeholder: {
-    color: '#a0a5a8',
+    color: hsl.integer(234, 4, 67),
     shading: 'liquid',
   },
 } as const satisfies KnotData

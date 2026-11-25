@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'moth_reliquary',
   candidateId: 'grok',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Dust from a moth that learned stained glass. It brightens only for whoever bothers to come close.',
   placeholder: {
-    color: '#ba7946',
+    color: hsl.integer(57, 61, 57),
     shading: 'fabric',
   },
 } as const satisfies KnotData

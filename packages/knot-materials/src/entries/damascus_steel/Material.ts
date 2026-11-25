@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -29,19 +30,19 @@ export default class extends KnotMaterial {
     const etched = fine.mul(fineResolved).mul(0.32).add(secondary.mul(0.68))
     const nickel = broad.pow(0.72)
     const oxideAngle = view.dot(vec3(0.69, 0.27, -0.67)).mul(0.5).add(0.5)
-    const oxide = mix(color('#071521'), color('#32152c'), oxideAngle).add(color('#0d3943').mul(grazing.pow(2.2).mul(0.12)))
-    const steel = mix(mix(color('#080b10'), color('#46545e'), nickel), oxide, secondary.mul(0.34))
+    const oxide = mix(color(hsl.integer(246, 53, 9)), color(hsl.integer(336, 53, 14)), oxideAngle).add(color(hsl.integer(216, 75, 22)).mul(grazing.pow(2.2).mul(0.12)))
+    const steel = mix(mix(color(hsl.integer(260, 20, 6)), color(hsl.integer(239, 16, 35)), nickel), oxide, secondary.mul(0.34))
     const seam = phase.mul(1.35).sin().abs().smoothstep(0.035, 0.16).oneMinus()
     const height = broad.mul(0.24).add(etched.mul(0.12)).add(seam.mul(-0.18))
     const steelNormal = proceduralNormal(height, 0.0045)
     const glint = glints(steelNormal, 86).mul(near).mul(0.1)
     const softReflection = glints(steelNormal, 20).mul(facing.mul(0.32).add(0.68)).mul(0.035)
-    this.colorNode = steel.add(color('#9eb5bf').mul(glint.add(softReflection)))
+    this.colorNode = steel.add(color(hsl.integer(226, 18, 72)).mul(glint.add(softReflection)))
     this.metalness = 1
     this.roughnessNode = float(0.3).add(oxideAngle.mul(0.12)).add(seam.mul(0.12)).add(grazing.mul(0.04)).clamp(0.22, 0.58)
     this.anisotropy = 0.92
     this.anisotropyRotation = Math.PI * 0.5
     this.normalNode = steelNormal
-    this.emissiveNode = color('#4c8795').mul(glint.mul(0.012)).add(color('#8a3f25').mul(seam.mul(grazing).mul(intimate).mul(0.008)))
+    this.emissiveNode = color(hsl.integer(215, 47, 52)).mul(glint.mul(0.012)).add(color(hsl.integer(39, 70, 38)).mul(seam.mul(grazing).mul(intimate).mul(0.008)))
   }
 }

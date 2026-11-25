@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'wraithlight',
   candidateId: 'deepseek',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A wandering glow lingers where a solid object ought to be.',
   placeholder: {
-    color: '#c8f0ff',
+    color: hsl.integer(223, 100, 92),
     shading: 'ghost',
   },
 } as const satisfies KnotData

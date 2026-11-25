@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, vec3} from 'three/tsl'
 
 import {cellGrain} from '../../candidates/gpt_sol/lib/cellGrain.ts'
@@ -22,8 +23,8 @@ export default class extends BaseKnotMaterial {
     const topVein = mx_noise_float(p.mul(8.5).add(topGesture.mul(1.7)))
       .mul(0.5)
       .add(0.5)
-    const ochreLayer = mix(color('#92714d'), color('#c2a26d'), topGesture)
-    const upperFresco = mix(ochreLayer, color('#63756e'), topVein
+    const ochreLayer = mix(color(hsl.integer(68, 41, 50)), color(hsl.integer(79, 47, 68)), topGesture)
+    const upperFresco = mix(ochreLayer, color(hsl.integer(170, 14, 47)), topVein
       .smoothstep(0.57, 0.82)
       .mul(0.48))
     const parallaxDepth = grazing
@@ -48,10 +49,10 @@ export default class extends BaseKnotMaterial {
       .cos()
       .mul(0.5)
       .add(0.5)
-    const underBase = mix(color('#163b8c'), color('#287367'), counter.pow(1.35))
-    const underPigment = mix(underBase, color('#a64e32'), gesture.pow(2).mul(0.68))
+    const underBase = mix(color(hsl.integer(263, 87, 29)), color(hsl.integer(181, 73, 43)), counter.pow(1.35))
+    const underPigment = mix(underBase, color(hsl.integer(38, 70, 45)), gesture.pow(2).mul(0.68))
     const drawing = filament(gesturePhase.sin(), 0.055).max(filament(counterPhase.cos(), 0.05))
-    const illuminatedUnderpainting = mix(underPigment, color('#d7bd74'), drawing.mul(0.55))
+    const illuminatedUnderpainting = mix(underPigment, color(hsl.integer(90, 59, 77)), drawing.mul(0.55))
     const crackGuide = mx_noise_float(p.mul(4.5).add(7.4))
     const crackField = mx_noise_float(p.mul(27)
       .add(crackGuide.mul(2.1))
@@ -73,13 +74,13 @@ export default class extends BaseKnotMaterial {
       .mul(0.84)
       .add(cracks.mul(0.35))
       .clamp()
-    const plaster = mix(color('#b7aa8e'), color('#e0d5b8'), topVein)
+    const plaster = mix(color(hsl.integer(86, 25, 70)), color(hsl.integer(90, 35, 85)), topVein)
     const chalk = erosion
       .smoothstep(0.9, 0.98)
       .mul(near.mul(0.4).add(0.25))
     const layered = mix(upperFresco, illuminatedUnderpainting, reveal)
     const withPlaster = mix(layered, plaster, chalk.mul(0.42))
-    this.colorNode = mix(withPlaster, color('#30271f'), cracks.mul(0.7))
+    this.colorNode = mix(withPlaster, color(hsl.integer(64, 20, 18)), cracks.mul(0.7))
     this.metalness = 0
     this.roughnessNode = float(0.76)
       .sub(reveal.mul(0.08))
@@ -97,7 +98,7 @@ export default class extends BaseKnotMaterial {
     const micaGlint = multiGlint(frescoNormal, 105)
     this.specularIntensityNode = float(0.28)
       .add(mica.mask.mul(0.7))
-    this.emissiveNode = color('#668aff')
+    this.emissiveNode = color(hsl.integer(268, 100, 61))
       .mul(mica.mask)
       .mul(micaGlint)
       .mul(intimate)

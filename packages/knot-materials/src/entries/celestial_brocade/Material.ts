@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, float, mix, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, positionViewDirection, tangentLocal, tangentView, uv, vec2, vec3} from 'three/tsl'
 
 import {loopPhase} from '../../candidates/claude_sonnet/lib/loopClock.ts'
@@ -143,28 +144,28 @@ export default class extends KnotMaterial {
       sequinShine = sequinShine.add(facet.dot(lamp.add(positionViewDirection).normalize()).clamp().pow(140))
     }
     const twinkle = loopPhase.add(starRandom.z.mul(TAU)).sin().mul(0.25).add(0.75)
-    const gold = rgb('#ffbe4d')
-    const paleGold = rgb('#ffe6a6')
-    const sequinColor = mix(mix(paleGold, rgb('#a8d2ff'), starTint.smoothstep(0.62, 0.72)), rgb('#ffb0d0'), starTint.smoothstep(0.9, 0.96))
+    const gold = rgb(hsl.integer(78, 100, 81.6))
+    const paleGold = rgb(hsl.integer(89, 100, 92))
+    const sequinColor = mix(mix(paleGold, rgb(hsl.integer(250, 100, 82.5)), starTint.smoothstep(0.62, 0.72)), rgb(hsl.integer(354, 100, 81.6)), starTint.smoothstep(0.9, 0.96))
     const metal = threadMask.max(starMask)
-    const velvetBlue = mix(rgb('#04061a'), rgb('#1a1450'), crush)
-    const damaskTone = mix(velvetBlue, mix(rgb('#0c1d4a'), rgb('#3b2a72'), crush), satin.mul(0.75))
+    const velvetBlue = mix(rgb(hsl.integer(273, 70, 5)), rgb(hsl.integer(280, 81, 14)), crush)
+    const damaskTone = mix(velvetBlue, mix(rgb(hsl.integer(265, 81, 14.5)), rgb(hsl.integer(290, 68, 25)), crush), satin.mul(0.75))
     const ground = mix(damaskTone, damaskTone.mul(1.5), satinRim.mul(satin))
     this.colorNode = mix(ground, mix(gold, sequinColor, starMask), metal)
     this.metalnessNode = metal
     this.roughnessNode = mix(mix(float(0.88), float(0.5), satin), mix(float(0.32), float(0.12), starMask), metal)
     this.sheen = 1
-    this.sheenNode = rgb('#6a7cff').mul(crush.mul(1.3).add(0.15)).mul(metal.oneMinus()).mul(satin.mul(0.6).oneMinus())
+    this.sheenNode = rgb(hsl.integer(274, 100, 58)).mul(crush.mul(1.3).add(0.15)).mul(metal.oneMinus()).mul(satin.mul(0.6).oneMinus())
     this.sheenRoughness = 0.42
     const dust = cellNoiseVec3(p.mul(70).floor().add(5.5))
     const dustLocal = p.mul(70).fract().sub(dust.mul(0.5).add(0.25)).length()
     const dustFootprint = p.mul(70).fwidth().length().max(0.001)
     const dustStar = dustLocal.smoothstep(0.05, 0.11).oneMinus().mul(dust.x.smoothstep(0.93, 0.96)).mul(dustFootprint.smoothstep(0.3, 1).oneMinus())
     const dustPulse = loopPhase.mul(2).add(dust.z.mul(TAU)).sin().mul(0.4).add(0.6)
-    this.emissiveNode = gold.mul(threadShiny).mul(1.5).add(rgb('#c9b6ff').mul(satinShiny).mul(0.16))
+    this.emissiveNode = gold.mul(threadShiny).mul(1.5).add(rgb(hsl.integer(296, 100, 79)).mul(satinShiny).mul(0.16))
       .add(sequinColor.mul(sequinShine).mul(starMask).mul(twinkle).mul(2.6))
       .add(sequinColor.mul(starMask).mul(intimate).mul(0.06))
-      .add(rgb('#dfe8ff').mul(dustStar).mul(dustPulse).mul(0.6).mul(metal.oneMinus()).mul(near.mul(0.6).add(0.4)))
-      .add(rgb('#2a2f8a').mul(grazing.pow(2)).mul(crush).mul(0.1).mul(facing.add(0.3)))
+      .add(rgb(hsl.integer(269, 100, 92)).mul(dustStar).mul(dustPulse).mul(0.6).mul(metal.oneMinus()).mul(near.mul(0.6).add(0.4)))
+      .add(rgb(hsl.integer(274, 82, 27)).mul(grazing.pow(2)).mul(crush).mul(0.1).mul(facing.add(0.3)))
   }
 }

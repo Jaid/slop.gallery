@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {parallaxOffset, surfaceFrame, tubeSpace} from '../../candidates/claude_opus/lib/knotSpace.ts'
@@ -63,9 +64,9 @@ export default class extends KnotMaterial {
     const rind = edgeDistance.smoothstep(0, 0.075).oneMinus().mul(fissure.oneMinus())
     const mottling = mx_fractal_noise_float(p.mul(14), 3, 2, 0.5).mul(0.5).add(0.5)
     const oxide = mx_noise_float(p.mul(2.4).add(41)).smoothstep(0.2, 0.6)
-    const basalt = mix(color('#0a0807'), color('#19120e'), mottling)
+    const basalt = mix(color(hsl.integer(51, 9, 5)), color(hsl.integer(51, 20, 9)), mottling)
     const sulfur = mx_noise_float(p.mul(37).add(9)).smoothstep(0.45, 0.7).mul(rind).mul(mx_noise_float(p.mul(3.7).add(77)).smoothstep(0.3, 0.55))
-    this.colorNode = mix(mix(mix(basalt, color('#2b1109'), oxide.mul(0.45)), color('#050404'), rind.mul(0.8)), color('#7a6420'), sulfur.mul(0.6)).mul(fissure.oneMinus())
+    this.colorNode = mix(mix(mix(basalt, color(hsl.integer(38, 60, 11)), oxide.mul(0.45)), color(hsl.integer(18, 7, 3)), rind.mul(0.8)), color(hsl.integer(90, 75, 43)), sulfur.mul(0.6)).mul(fissure.oneMinus())
     this.metalness = 0
     this.roughnessNode = mix(float(0.86).sub(mottling.mul(0.08)), float(0.16), rind).add(vesicles.mul(0.1)).clamp(0.1, 1)
 // Quenched glass flashes thin-film color, like Pele’s tears in the sun.
@@ -84,7 +85,7 @@ export default class extends KnotMaterial {
     const aura = grazing.pow(3).mul(widthField.mul(0.6).add(0.4)).mul(beat.mul(0.6).add(0.4))
     this.emissiveNode = incandescence.mul(facing.mul(0.25).add(0.75))
       .add(blackbody(float(1520)).mul(embers).mul(0.6))
-      .add(color('#fff1dc').mul(shards).mul(0.55))
-      .add(color('#ff4a12').mul(aura).mul(0.09))
+      .add(color(hsl.integer(79, 100, 96)).mul(shards).mul(0.55))
+      .add(color(hsl.integer(35, 100, 61)).mul(aura).mul(0.09))
   }
 }

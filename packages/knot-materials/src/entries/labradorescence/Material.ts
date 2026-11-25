@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, negateOnBackSide, normalLocal, normalViewGeometry, transformNormalToView, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -50,8 +51,8 @@ export default class extends KnotMaterial {
     const bands = opticalBands(stripePhase)
     const twin = bands.mul(2).sub(1).mul(1.5).max(-1).min(1)
     const ramp = (t: Node<'float'>) => mix(
-      mix(color('#1440c8'), color('#0fbfa8'), t.smoothstep(0.38, 0.64)),
-      mix(color('#d9b83a'), color('#ff9e2e'), t.smoothstep(0.86, 1)),
+      mix(color(hsl.integer(264.5, 94.5, 36)), color(hsl.integer(180, 97, 68)), t.smoothstep(0.38, 0.64)),
+      mix(color(hsl.integer(94, 82, 76)), color(hsl.integer(64, 100, 74.7)), t.smoothstep(0.86, 1)),
       t.smoothstep(0.64, 0.86),
     )
     const ignition = (lightDir: Node<'vec3'>, gateSeed: Node<'float'>, hueShift: number) => {
@@ -69,19 +70,19 @@ export default class extends KnotMaterial {
     const crown = ignition(vec3(0.2, 0.9, 0.3).normalize(), identity.y, -0.08)
     // Charcoal-blue stone, clouded and darkened along the grain seams.
     const cloud = fbm(p.mul(2.3)).mul(0.5).add(0.5)
-    const base = mix(mix(color('#0c1017'), color('#16202e'), identity.x), color('#101827'), cloud.mul(0.55))
+    const base = mix(mix(color(hsl.integer(262, 23, 8)), color(hsl.integer(257, 33, 14)), identity.x), color(hsl.integer(262, 38, 11)), cloud.mul(0.55))
     const fractCoord = cellCoord.fract()
     const toFace = fractCoord.min(fractCoord.oneMinus())
     const seamField = toFace.x.min(toFace.y).min(toFace.z)
     const seamAa = seamField.fwidth().min(0.035)
     const seam = seamField.smoothstep(seamAa.add(0.002), seamAa.add(0.02)).oneMinus()
     const fracture = filteredRibbon(cellularBoundary(inner.add(warp.mul(0.3)).mul(12.5)), 0.02).mul(near)
-    let stone = mix(base, color('#0a0d13'), seam.mul(0.16))
+    let stone = mix(base, color(hsl.integer(264, 21, 6.5)), seam.mul(0.16))
     stone = mix(stone, key.tint, key.flash.mul(0.92))
     stone = mix(stone, fill.tint, fill.flash.mul(0.6))
     stone = mix(stone, crown.tint, crown.flash.mul(0.45))
     // Fractures cut through the buried flash, never the other way around.
-    stone = mix(stone, color('#05070a'), fracture.mul(key.flash.mul(0.25).add(0.75)).mul(0.3))
+    stone = mix(stone, color(hsl.integer(254, 19, 4)), fracture.mul(key.flash.mul(0.25).add(0.75)).mul(0.3))
     this.colorNode = stone
     this.metalness = 0
     this.roughnessNode = mix(float(0.08), float(0.38), seam).sub(key.flash.mul(0.04)).max(0.04)
@@ -100,7 +101,7 @@ export default class extends KnotMaterial {
     this.emissiveNode = key.tint.mul(key.flash).mul(1.15)
       .add(fill.tint.mul(fill.flash).mul(0.7))
       .add(crown.tint.mul(crown.flash).mul(0.5))
-      .add(color('#cfe4ff').mul(sparkle).mul(facing).mul(1.1))
-      .add(color('#dceaff').mul(platelets).mul(1.6))
+      .add(color(hsl.integer(255, 100, 90)).mul(sparkle).mul(facing).mul(1.1))
+      .add(color(hsl.integer(258, 100, 92)).mul(platelets).mul(1.6))
   }
 }

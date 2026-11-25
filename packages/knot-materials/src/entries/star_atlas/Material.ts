@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -29,12 +30,12 @@ export default class extends KnotMaterial {
     const farStars = opticalLine(mx_noise_float(deep.mul(13).add(31)), 0.018)
     const constellations = filament(mx_noise_float(p.mul(3).add(mx_noise_vec3(p.mul(6)).mul(0.25))), 0.012)
     const meridian = opticalBands(p.y.mul(90).add(view.y.mul(8)))
-    this.colorNode = mix(color('#050916'), color('#0d1b3a'), noise)
+    this.colorNode = mix(color(hsl.integer(267, 49, 5.4)), color(hsl.integer(263, 66, 13)), noise)
     this.metalness = 0.15
     this.roughness = 0.09
     this.clearcoat = 1
     this.clearcoatRoughness = 0.035
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(30)).mul(near), 0.0004)
-    this.emissiveNode = color('#ffe9a8').mul(stars).mul(near.mul(0.8).add(0.25)).add(color('#9db8ff').mul(farStars).mul(near).mul(0.7)).add(color('#e8c268').mul(constellations).mul(grazing.mul(0.5).add(0.2))).add(color('#ffd75e').mul(meridian).mul(near).mul(0.12))
+    this.emissiveNode = color(hsl.integer(92, 100, 92.7)).mul(stars).mul(near.mul(0.8).add(0.25)).add(color(hsl.integer(268, 100, 75.5)).mul(farStars).mul(near).mul(0.7)).add(color(hsl.integer(87, 72, 80)).mul(constellations).mul(grazing.mul(0.5).add(0.2))).add(color(hsl.integer(90, 100, 87)).mul(meridian).mul(near).mul(0.12))
   }
 }

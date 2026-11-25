@@ -1,6 +1,7 @@
 import type {RoomSpawn} from '../base/Room.ts'
 
 import {Geofence} from 'geofency'
+import hsl from 'okhsl'
 
 import {antechamberLanding, antechamberSize, antechamberStairs, antechamberZ, stairHallHeight, stairHalls} from '#src/lib/gallery/antechamber.ts'
 import {antechamberDomeCrownY} from '#src/lib/gallery/antechamberDomeShape.ts'
@@ -52,7 +53,7 @@ export default class Antechamber extends Room {
       // A lamp under the lantern of either hall: moonlight in the lunar hall down to Moonfall, sunlight in the solar hall up toward the floor above.
       lamps: Object.fromEntries((['west', 'east'] as const).map(side => [side, {
         position: [stairHalls[side].center[0], stairHallHeight - 0.65, 0],
-        tint: side === 'east' ? '#cedce9' : '#ffdfac',
+        tint: side === 'east' ? hsl.integer(246, 30, 87) : hsl.integer(79, 100, 90.4),
         strength: 20,
         range: 9,
       }])),

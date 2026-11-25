@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {approach, disk, wave} from '../../candidates/gpt_astra/lib/exhibition/optics.ts'
@@ -31,12 +32,12 @@ export default class extends KnotMaterial {
     const crest = stroke(radius.sub(0.718), 0.009, aa)
     const innerGold = stroke(radius.sub(0.48), 0.003, aa).mul(fan)
     const gold = crest.max(innerGold.mul(0.75))
-    const porcelain = mix(color('#d9e4de'), color('#fff2d8'), wash.mul(0.6).add(0.3))
-    const cobalt = mix(color('#031338'), color('#134574'), wash.mul(0.6).add(granulation.mul(0.3)))
+    const porcelain = mix(color(hsl.integer(162, 18, 89)), color(hsl.integer(85, 100, 96)), wash.mul(0.6).add(0.3))
+    const cobalt = mix(color(hsl.integer(262, 90, 10)), color(hsl.integer(251, 78, 29)), wash.mul(0.6).add(granulation.mul(0.3)))
     const cracks = cellularBoundary(p.mul(115))
     const craze = cracks.smoothstep(0.007, 0.028).oneMinus().mul(near).mul(p.mul(115).fwidth().length().smoothstep(0.2, 1).oneMinus())
     const glaze = mix(porcelain, cobalt, brush.mul(granulation.mul(0.065).add(0.935)))
-    this.colorNode = mix(glaze.mul(craze.mul(-0.12).add(1)), color('#c69543'), gold)
+    this.colorNode = mix(glaze.mul(craze.mul(-0.12).add(1)), color(hsl.integer(78, 71, 65)), gold)
     this.metalnessNode = gold.mul(0.82)
     this.roughnessNode = mix(float(0.19), float(0.25), brush).sub(gold.mul(0.08)).add(granulation.mul(0.035))
     this.clearcoat = 1
@@ -47,6 +48,6 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = proceduralNormal(wash.mul(0.00065), 0.6)
     // A very faint, traveling reflection under the glaze; the hand-painted wave pattern stays still.
     const shimmer = tube.x.mul(TAU * 5).add(facing.mul(13)).sub(time.mul(0.35)).cos().smoothstep(0.8, 1)
-    this.emissiveNode = color('#2693cd').mul(shimmer).mul(brush).mul(grazing.mul(0.65).add(0.2)).mul(near).mul(0.22)
+    this.emissiveNode = color(hsl.integer(238, 86, 57)).mul(shimmer).mul(brush).mul(grazing.mul(0.65).add(0.2)).mul(near).mul(0.22)
   }
 }

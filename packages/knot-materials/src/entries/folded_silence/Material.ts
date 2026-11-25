@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, mix, mx_noise_float, negateOnBackSide, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/gpt_astra/lib/bumpNormal.ts'
@@ -56,9 +57,9 @@ export default class extends BaseKnotMaterial {
       .mul(V.cos().smoothstep(-0.5, 0.6))
     const score = line(U.cos(), 0.015)
     const valley = pleat.mul(-0.5).add(0.5)
-    const paper = color('#efe7d3')
+    const paper = color(hsl.integer(89, 41, 92))
       .mul(fibres.mul(0.025).add(0.97))
-    const ink = color('#bd3024')
+    const ink = color(hsl.integer(29, 90, 45.4))
       .mul(fibres.mul(0.045).add(0.96))
     this.colorNode = mix(paper, ink, inkFacet)
       .mul(score.mul(-0.1).add(1))

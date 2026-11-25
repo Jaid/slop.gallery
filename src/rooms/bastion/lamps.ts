@@ -1,5 +1,7 @@
 import type {Lamp} from '../base/Room.ts'
 
+import hsl from 'okhsl'
+
 import {bastionCurve, bastionGateLantern, bastionOrigin} from '#src/lib/gallery/bastion.ts'
 import {routeLight} from '#src/lib/gallery/pendants/mounts.ts'
 
@@ -14,7 +16,7 @@ export default {
   lantern_north: {
     position: [gateX - originX, gateY - 0.6 - originY, gateZ - originZ],
     strength: 35,
-    tint: '#ffcd8a',
+    tint: hsl.integer(74, 100, 85.7),
     range: 20,
     decay: 1.25,
     shadow: true,

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_float, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -54,12 +55,12 @@ export default class extends KnotMaterial {
     const sparkFlash = view.dot(sparkNormal).clamp().pow(36).mul(sparkRnd.x.smoothstep(0.84, 0.92)).mul(near).mul(sparkMask)
 // Dark smoky potch silica matrix
     const potchSwirl = mx_noise_float(p.mul(4.2)).mul(0.5).add(0.5)
-    const smokyPotch = mix(color('#080608'), color('#1a120e'), potchSwirl)
+    const smokyPotch = mix(color(hsl.integer(326, 13, 4)), color(hsl.integer(48, 22, 9)), potchSwirl)
 // Physical properties of Australian black fire opal
     this.transmission = 0.38
     this.thickness = 0.45
     this.ior = 1.45
-    this.attenuationColor.set('#241508')
+    this.attenuationColor.set(hsl.integer(61, 53, 11))
     this.attenuationDistance = 1.4
     this.colorNode = smokyPotch
     this.metalness = 0.04
@@ -76,9 +77,9 @@ export default class extends KnotMaterial {
 // Blazing play-of-color emission
     this.emissiveNode = domainColor.mul(domainFlash).mul(3.8)
       .add(deepColor.mul(deepFlash).mul(2.8))
-      .add(color('#ffffff').mul(sparkFlash).mul(4.5))
-      .add(color('#ffaa30').mul(domainFlash.pow(2)).mul(1.5))
-      .add(color('#150826').mul(rim).mul(0.25))
+      .add(color(hsl.integer(0, 0, 100)).mul(sparkFlash).mul(4.5))
+      .add(color(hsl.integer(70, 100, 77)).mul(domainFlash.pow(2)).mul(1.5))
+      .add(color(hsl.integer(300, 68, 8)).mul(rim).mul(0.25))
       .add(deepColor.mul(deepMask).mul(intimate).mul(0.12))
   }
 }

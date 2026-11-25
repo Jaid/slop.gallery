@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'stellar_flare',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Boiling convective granules and twisting magnetic loops bind thermonuclear fire to the winding path of the knot.',
   placeholder: {
-    color: '#ed6b19',
+    color: hsl.integer(46, 96, 62.3),
     shading: 'smooth',
   },
 } as const satisfies KnotData

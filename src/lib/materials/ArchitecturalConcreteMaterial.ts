@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, hash, max, min, mix, mx_noise_float, mx_worley_noise_vec2, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -91,7 +92,7 @@ export default class ArchitecturalConcreteMaterial extends MeshStandardNodeMater
     const veneer = mix(float(0.5), unit(mx_noise_float(vec3(u.mul(1.5), v.mul(25), 3.1))), fine)
     const ceilingTone = sheetTone.add(veneer.sub(0.5).mul(0.06)).sub(sheetSeam.mul(0.2))
     const tone = select(floor, floorTone, select(ceiling, ceilingTone, wallTone))
-    const base = select(floor, color('#4b4e4e'), color('#5c605f'))
+    const base = select(floor, color(hsl.integer(197, 3, 33)), color(hsl.integer(180, 3, 40)))
     let surface: Node<'vec3'> = base.mul(clouds.sub(0.5).mul(0.22).add(grain.sub(0.5).mul(0.1)).add(tone).add(1))
     // Holes fall into shadow toward their back.
     surface = surface.mul(tieHole.mul(tieCone.oneMinus().mul(0.55).add(0.25)).oneMinus())

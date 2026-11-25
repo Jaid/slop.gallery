@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 3gQGAbAm59HYY8k; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'nodal_choir',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Sand flees the sounding places and settles only on the silent lines, sketching a song the bronze keeps humming to itself.',
   placeholder: {
-    color: '#ab8650',
+    color: hsl.integer(76, 52, 59),
     shading: 'metal',
   },
 } as const satisfies KnotData

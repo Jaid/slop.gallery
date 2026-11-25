@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -34,14 +35,14 @@ export default class extends BaseKnotMaterial {
     const silicon = mx_fractal_noise_float(p.mul(26), 2, 2, 0.5).mul(0.5).add(0.5)
     const rowRnd = cellNoiseVec3(vec3(row, 7.7, 3.1)).x
     const pulse = tube.x.mul(Math.PI * 6).sub(time.mul(rowRnd.mul(3).add(1.5))).add(rowRnd.mul(6.28)).sin().mul(0.5).add(0.5).pow(24)
-    this.colorNode = mix(mix(color('#05070a'), color('#10141a'), silicon), color('#c9a24e'), traces)
+    this.colorNode = mix(mix(color(hsl.integer(254, 19, 4)), color(hsl.integer(258, 18, 9)), silicon), color(hsl.integer(84, 68, 69)), traces)
     this.metalnessNode = traces.mul(0.85).add(0.1)
     this.roughnessNode = float(0.5).add(silicon.mul(0.15)).sub(traces.mul(0.28)).clamp()
     this.anisotropy = 0.6
     this.normalNode = proceduralNormal(traces.mul(0.6), 0.0012)
-    this.emissiveNode = color('#7fe9ff').mul(pulse).mul(bus.add(pad)).mul(1.6).mul(near.mul(0.5).add(0.6))
-      .add(color('#ffd76a').mul(pad).mul(glints(normalViewGeometry, 80)).mul(0.9))
-      .add(color('#7fe9ff').mul(fineBus.add(fineJumper)).mul(intimate).mul(0.5))
-      .add(color('#20303f').mul(rim).mul(0.2))
+    this.emissiveNode = color(hsl.integer(212, 99, 86)).mul(pulse).mul(bus.add(pad)).mul(1.6).mul(near.mul(0.5).add(0.6))
+      .add(color(hsl.integer(89, 100, 87.4)).mul(pad).mul(glints(normalViewGeometry, 80)).mul(0.9))
+      .add(color(hsl.integer(212, 99, 86)).mul(fineBus.add(fineJumper)).mul(intimate).mul(0.5))
+      .add(color(hsl.integer(247, 33, 20)).mul(rim).mul(0.2))
   }
 }

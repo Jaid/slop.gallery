@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_supernova',
   candidateId: 'gpt_astra',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'An extravagant burst of color settles into the softness of a dark cloth.',
   placeholder: {
-    color: '#fc9a91',
+    color: hsl.integer(26, 92, 75),
     shading: 'fabric',
   },
 } as const satisfies KnotData

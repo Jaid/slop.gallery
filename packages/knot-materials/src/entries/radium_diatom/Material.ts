@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {refractedParallax} from '../../candidates/gemini_argon/lib/refractedParallax.ts'
@@ -102,8 +103,8 @@ export default class extends KnotMaterial {
     const gratingPhase = view.dot(vec3(1, 0.6, -0.4).normalize()).mul(9.5).add(r.mul(14)).add(grazing.mul(4.2))
     const photonicIridescence = spectralColor(gratingPhase).mul(grazing.pow(1.2).mul(0.75).add(0.25))
 // Hydrated opal-A biosilica glass albedo vs deep abyssal bioluminescent cavity
-    const opalSilica = mix(color('#03181e'), color('#0d7a72'), silicaSkeleton.mul(0.65)).add(photonicIridescence.mul(silicaSkeleton).mul(0.22))
-    const abyssalCavity = mix(color('#000205'), color('#010a14'), internalWeb)
+    const opalSilica = mix(color(hsl.integer(219, 74, 9)), color(hsl.integer(187, 95, 45)), silicaSkeleton.mul(0.65)).add(photonicIridescence.mul(silicaSkeleton).mul(0.22))
+    const abyssalCavity = mix(color(hsl.integer(242, 100, 2)), color(hsl.integer(243, 76, 5)), internalWeb)
     this.colorNode = mix(abyssalCavity, opalSilica, silicaSkeleton)
     this.metalnessNode = silicaSkeleton.mul(0.68)
     this.roughnessNode = mix(float(0.04), float(0.14).sub(nanoCribrum.pore.mul(intimate).mul(0.08)), silicaSkeleton)
@@ -122,10 +123,10 @@ export default class extends KnotMaterial {
     const normal = proceduralNormal(microRelief, 1.1)
     this.normalNode = normal
 // Bioluminescent luciferin emission: radium emerald, Cherenkov electric cyan, abyssal magenta-violet, and golden nucleolus sparks
-    const radiumEmerald = color('#00ff6a')
-    const cherenkovCyan = color('#00b4ff')
-    const abyssalViolet = color('#d91cff')
-    const nucleolusAmber = color('#ff5e08')
+    const radiumEmerald = color(hsl.integer(148, 100, 85))
+    const cherenkovCyan = color(hsl.integer(237, 100, 68.7))
+    const abyssalViolet = color(hsl.integer(319.5, 100, 59.6))
+    const nucleolusAmber = color(hsl.integer(40.7, 100, 63.5))
     const organelleTint = mix(mix(cherenkovCyan, radiumEmerald, organelle1.random.x), abyssalViolet, organelle1.random.y.smoothstep(0.45, 0.78))
     const cytoplasmGlow = organelleTint
       .mul(plastidCore1.mul(1.35).add(plastidCore2.mul(0.85)).add(internalWeb.mul(0.35)))
@@ -143,6 +144,6 @@ export default class extends KnotMaterial {
       .add(cherenkovCyan.mul(shockwave).mul(openPoreMask).mul(1.8))
       .add(photonicIridescence.mul(rim.pow(1.8)).mul(silicaSkeleton).mul(0.85))
       .add(radiumEmerald.mul(protoplasmicStream).mul(openPoreMask).mul(0.65))
-      .add(color('#e6ffff').mul(wetGlints))
+      .add(color(hsl.integer(196, 100, 98)).mul(wetGlints))
   }
 }

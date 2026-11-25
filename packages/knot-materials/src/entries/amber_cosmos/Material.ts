@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, Fn, Loop, mix, mx_noise_float, normalLocal, pmremTexture, positionGeometry, vec3, vec4} from 'three/tsl'
 
 import {toWorldDirection} from '../../candidates/claude_sonnet/lib/environmentHighlight.ts'
@@ -73,20 +74,20 @@ export default class extends KnotMaterial {
         const speck = dustGrain.mul(dust.x.smoothstep(0.985, 1)).mul(dust.y.add(loopPhase.add(dust.z.mul(TAU)).sin().mul(0.5).add(0.5)).mul(0.5))
 // A slow shaft of light that sweeps through the resin, once per loop.
         const beam = q.dot(sun).mul(TAU * 1.6).sub(loopTurn.mul(TAU)).cos().mul(0.5).add(0.5).pow(6)
-        const scatter = rgb('#ff9b2e').mul(density.mul(0.5).add(beam.mul(1.9))).add(rgb('#ffd8a0').mul(cloud).mul(1.3))
-        const bubbleLight = rgb('#ffe2b0').mul(big.x.mul(1.6).add(big.y.mul(4))).add(rgb('#fff4dc').mul(tiny.x.mul(1.3).add(tiny.y.mul(3))))
-        const inclusion = bubbleLight.add(rgb('#fff0c8').mul(speck).mul(4))
+        const scatter = rgb(hsl.integer(62, 100, 74)).mul(density.mul(0.5).add(beam.mul(1.9))).add(rgb(hsl.integer(76, 100, 88.6)).mul(cloud).mul(1.3))
+        const bubbleLight = rgb(hsl.integer(81, 100, 91.2)).mul(big.x.mul(1.6).add(big.y.mul(4))).add(rgb(hsl.integer(86, 100, 96.4)).mul(tiny.x.mul(1.3).add(tiny.y.mul(3))))
+        const inclusion = bubbleLight.add(rgb(hsl.integer(90, 100, 95)).mul(speck).mul(4))
         radiance.addAssign(transmittance.mul(scatter.mul(step).mul(0.62)))
         sparks.addAssign(transmittance.mul(inclusion.mul(0.16)))
         const clear = big.z.max(tiny.z).mul(0.7)
         transmittance.mulAssign(absorption.mul(density).mul(step).mul(float(1).sub(clear)).negate().exp())
       })
       const behind = pmremTexture(environment, toWorldDirection(direction), float(0.22)).rgb
-      return vec4(radiance.add(transmittance.mul(behind).mul(rgb('#ffd7a0')).mul(0.3)).mul(0.42).add(sparks), transmittance.y)
+      return vec4(radiance.add(transmittance.mul(behind).mul(rgb(hsl.integer(75, 100, 88.4))).mul(0.3)).mul(0.42).add(sparks), transmittance.y)
     })()
     const inner = interior.xyz
     const clarity = interior.w
-    this.colorNode = mix(rgb('#060200'), rgb('#1c0a00'), grazing)
+    this.colorNode = mix(rgb(hsl.integer(66, 100, 3)), rgb(hsl.integer(58, 100, 7)), grazing)
     this.metalness = 0
     this.roughness = 0.05
     this.ior = 1.55
@@ -97,6 +98,6 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessMinimum = 200
     this.iridescenceThicknessMaximum = 380
     this.emissiveNode = inner.mul(facing.mul(0.18).add(0.88)).mul(intimate.mul(0.15).add(1))
-      .add(rgb('#ff7a10').mul(grazing.pow(3)).mul(clarity.add(0.3)).mul(0.07))
+      .add(rgb(hsl.integer(50, 100, 68)).mul(grazing.pow(3)).mul(clarity.add(0.3)).mul(0.07))
   }
 }

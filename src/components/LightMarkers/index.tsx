@@ -1,6 +1,7 @@
 import type {Light} from 'three/webgpu'
 
 import {useFrame, useThree} from '@react-three/fiber'
+import hsl from 'okhsl'
 import {useEffect, useLayoutEffect, useState} from 'react'
 import {Color, Vector2, Vector3} from 'three/webgpu'
 
@@ -24,7 +25,7 @@ const aimedRadius = 0.2
 const selectedRadius = 0.26
 /** how far away a light can be aimed at */
 const reach = 40
-const offColor = new Color('#3a3a3a')
+const offColor = new Color(hsl.integer(0, 0, 25))
 const position = new Vector3
 const origin = new Vector3
 const direction = new Vector3

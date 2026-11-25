@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tesseract_matrix',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A lattice hints at corners that cannot all belong to the same space.',
   placeholder: {
-    color: '#00f5ff',
+    color: hsl.integer(200, 100, 86),
     shading: 'ghost',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, time, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/claude_sonnet/lib/bumpNormal.ts'
@@ -50,15 +51,15 @@ export default class extends KnotMaterial {
     const halo = plate.edge.smoothstep(0, 0.42).oneMinus().pow(2.2).mul(0.32).mul(plate.id.y.mul(0.6).add(0.4))
     const hairHalo = hair.edge.smoothstep(0, 0.2).oneMinus().pow(2).mul(0.16).mul(near.smoothstep(0.15, 0.6))
     const heat = crack.mul(melt).add(hairCrack.mul(melt.mul(0.85))).add(halo.mul(melt.mul(0.5).add(0.3))).add(hairHalo)
-    const crust = mix(color('#050505'), color('#1a1512'), grit.mul(0.8).add(plate.id.x.mul(0.2)))
-    const frost = color('#2a2c30').mul(grit.smoothstep(0.62, 0.85).mul(0.5))
+    const crust = mix(color(hsl.integer(0, 0, 3.7)), color(hsl.integer(53, 13, 10)), grit.mul(0.8).add(plate.id.x.mul(0.2)))
+    const frost = color(hsl.integer(264, 7, 19)).mul(grit.smoothstep(0.62, 0.85).mul(0.5))
     this.colorNode = crust.add(frost).mul(crack.add(hairCrack).oneMinus().clamp())
     this.metalness = 0.05
     this.roughnessNode = float(0.72).sub(grit.mul(0.15)).sub(crack.mul(0.3)).add(grazing.mul(0.1))
     this.clearcoatNode = crack.add(hairCrack).mul(0.8)
     this.clearcoatRoughness = 0.05
     this.sheen = 0.4
-    this.sheenColor.set('#5a1a08')
+    this.sheenColor.set(hsl.integer(36, 89, 22))
     this.sheenRoughness = 0.7
     const plateHeight = plate.edge.smoothstep(0, 0.32).mul(0.006).add(plate.id.z.mul(0.0015))
     const height = plateHeight.add(grit.mul(0.0011)).sub(crack.mul(0.0035)).sub(hairCrack.mul(0.0012))
@@ -71,8 +72,8 @@ export default class extends KnotMaterial {
     const sparks = cellularPoints(p.mul(70).add(rise), 0.02, 0.12, 0.9).mul(intimate)
     const spark = sparks.mul(time.mul(3).add(p.x.mul(90)).sin().mul(0.3).add(0.7))
     this.emissiveNode = blackbody(heat.mul(near.mul(0.2).add(0.6))).mul(0.55)
-      .add(color('#ff6a1c').mul(spark).mul(2.4))
-      .add(color('#ff3a08').mul(crack.mul(grazing.pow(2))).mul(0.4))
+      .add(color(hsl.integer(43, 100, 65.4)).mul(spark).mul(2.4))
+      .add(color(hsl.integer(33.1, 100, 59.5)).mul(crack.mul(grazing.pow(2))).mul(0.4))
       .add(blackbody(float(0.45)).mul(hairCrack).mul(facing).mul(0.2))
   }
 }

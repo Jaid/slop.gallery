@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, luminance, mix, mx_noise_float, normalGeometry, positionLocal, texture, vec2, vec3} from 'three/tsl'
 
 import engravedPlate from '../gallery/engravedPlate.ts'
@@ -24,7 +25,7 @@ export default class EngravedBrassMaterial extends BrassMaterial {
     const cut = texture(lettering, p.xy.div(vec2(width, height)).add(0.5)).r.mul(face).toVar('engravedCut')
     const footprint = p.x.fwidth().max(p.y.fwidth())
     const brushed = mx_noise_float(vec3(p.x.mul(20), p.y.div(streaks), p.z.mul(20))).mul(visibleDetail(footprint, streaks))
-    const reflectance = mix(color(brassColor), color('#16120d'), cut)
+    const reflectance = mix(color(brassColor), color(hsl.integer(73, 18, 9)), cut)
     const metalness = cut.oneMinus()
     // Satin rather than polished, so the floor it faces mirrors in it only as a soft glow behind the lettering.
     const roughness = mix(float(0.38).add(brushed.mul(0.06)), float(0.65), cut)

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -19,13 +20,13 @@ export default class extends KnotMaterial {
     // Fine/deep layers fade in continuously on approach; their positions stay fixed.
     const near = positionView.length().smoothstep(1.25, 5.5).oneMinus()
     // Ripples sleep at a distance and wake as you approach.
-    this.colorNode = mix(color('#e8edf3'), color('#c6d2de'), noise)
+    this.colorNode = mix(color(hsl.integer(253, 25, 93.5)), color(hsl.integer(248, 22, 84)), noise)
     this.metalness = 1
     this.roughness = 0.035
     this.clearcoat = 0.6
     this.clearcoatRoughness = 0.02
     this.normalNode = liquidNormal(near.mul(0.85).add(0.15), 0.38)
-    this.emissiveNode = color('#9fc9ff').mul(rim.pow(3)).mul(0.16)
+    this.emissiveNode = color(hsl.integer(254, 100, 80)).mul(rim.pow(3)).mul(0.16)
     this.envMapIntensity = 1.3
   }
 }

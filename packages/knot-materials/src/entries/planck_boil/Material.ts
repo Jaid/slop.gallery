@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -69,8 +70,8 @@ export default class extends KnotMaterial {
       [0, 0.33, 0.67],
     )
     // Deep space black for the base
-    const voidColor = color('#010108')
-    const foamSurface = color('#0a0a18')
+    const voidColor = color(hsl.integer(277, 76, 2))
+    const foamSurface = color(hsl.integer(282, 42, 6))
     // Wireframe luminosity
     const allWire = wireframe.add(fineWire.mul(0.6)).add(deepWire.mul(0.35)).clamp()
     this.colorNode = mix(voidColor, foamSurface, flickerMask.mul(0.3))
@@ -96,7 +97,7 @@ export default class extends KnotMaterial {
       [0.15, 0.45, 0.75],
     ).mul(deepWire)
     // Void glow — wormhole interiors
-    const voidGlow = color('#4a00ff').mul(voidMask).mul(intimate).mul(flickerMask)
+    const voidGlow = color(hsl.integer(277, 100, 40)).mul(voidMask).mul(intimate).mul(flickerMask)
     // Energy discharge at intersections
     const intersectionGlow = wireframe.mul(fineWire).mul(near)
     // Rim energy
@@ -105,7 +106,7 @@ export default class extends KnotMaterial {
       .add(fineGlow)
       .add(deepGlow.mul(0.6))
       .add(voidGlow.mul(0.8))
-      .add(color('#ffffff').mul(intersectionGlow).mul(0.5))
+      .add(color(hsl.integer(0, 0, 100)).mul(intersectionGlow).mul(0.5))
       .add(rimEnergy)
   }
 }

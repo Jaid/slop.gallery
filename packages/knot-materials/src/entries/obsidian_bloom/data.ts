@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'obsidian_bloom',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   displacement: 0.013,
   flavorText: 'A mirror of cooled night, split by the bloom of the fire still living underneath it.',
   placeholder: {
-    color: '#1c0802',
+    color: hsl.integer(44, 74, 7),
     shading: 'glass',
   },
 } as const satisfies KnotData

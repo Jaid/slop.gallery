@@ -31,7 +31,7 @@ export type IngredientLatch = 'charge' | 'glass'
 export type ItemIngredient = {
   contributions: ReadonlyArray<IngredientContribution>
   /** its glow, which tints the portal and, where the ingredient contributes instructions, stands in for them by tinting the result when it is made locally, without AI */
-  glow?: string
+  glow?: number
   /** how the intro’s ember latches it on, by default charging up */
   latch?: IngredientLatch
   /** what the portal shows of the ingredient instead of its images, like an orb’s illustration made in advance; never part of the result */
@@ -108,7 +108,7 @@ export default class FusionRecipe {
 
   /** the glow of the first ingredient with one, which tints the portal; the portal’s own colors without one */
   get glow() {
-    return this.ingredients.find(ingredient => ingredient.glow)?.glow
+    return this.ingredients.find(ingredient => ingredient.glow !== undefined)?.glow
   }
 
   /** how a result made locally, without AI, is made: a collage of several images, or a single image tinted by the glows standing in for the instructions */
@@ -143,7 +143,7 @@ export default class FusionRecipe {
 
   /** the ingredients whose glow stands in for their instructions when the result is made locally, without AI */
   get tints() {
-    return this.ingredients.filter((ingredient): ingredient is FusionIngredient & {glow: string} => Boolean(ingredient.glow) && ingredient.contributions.some(contribution => contribution.kind === 'instruction'))
+    return this.ingredients.filter((ingredient): ingredient is FusionIngredient & {glow: number} => ingredient.glow !== undefined && ingredient.contributions.some(contribution => contribution.kind === 'instruction'))
   }
 
   /** whether the hung portrait’s own image is all there is for an image model to work with, no other image and no instruction: then no model is asked, and the portrait comes back out of the portal as it went in, only framed anew */

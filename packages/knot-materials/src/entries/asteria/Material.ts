@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, mx_atan2, mx_noise_float, normalLocal, normalWorld, positionGeometry, positionWorld, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -63,8 +64,8 @@ export default class extends BaseKnotMaterial {
     const height = silk.raw.mul(intimate).mul(0.22).add(grit.core.mul(intimate).mul(0.3))
     this.positionNode = positionGeometry.add(normalLocal.mul(height.mul(0.0015)))
     this.normalNode = proceduralNormal(height, 0.25).add(normalLocal.mul(silk.band.sub(0.5).mul(intimate.mul(0.08)))).normalize()
-    const deep = color('#0a1f6e')
-    const violet = color('#2a1560')
+    const deep = color(hsl.integer(266, 94, 18.6))
+    const violet = color(hsl.integer(289, 82, 18))
     const body = mix(deep, violet, zoning).mul(float(0.75).add(silk.band.mul(0.2)))
     this.colorNode = body
     this.metalness = 0
@@ -77,7 +78,7 @@ export default class extends BaseKnotMaterial {
     const jitter = vec3(mx_noise_float(p.mul(95)), mx_noise_float(p.mul(95).add(9)), mx_noise_float(p.mul(95).add(17))).sub(0.5)
     const needleFlash = glints(normalLocal, 70).mul(silk.band).mul(near).mul(0.6).add(star.spot.mul(silk.band).mul(0.8))
     const gritFlash = glints(normalLocal.add(jitter.mul(0.25)), 130).mul(grit.mask).mul(intimate)
-    const fire = color('#eaf2ff').mul(star.rays.mul(3)).add(color('#ffffff').mul(star.core.mul(4)))
-    this.emissiveNode = fire.add(body.mul(grazing.pow(3).mul(0.2))).add(color('#9fc4ff').mul(needleFlash)).add(color('#ffffff').mul(gritFlash.mul(0.6)))
+    const fire = color(hsl.integer(260, 100, 95)).mul(star.rays.mul(3)).add(color(hsl.integer(0, 0, 100)).mul(star.core.mul(4)))
+    this.emissiveNode = fire.add(body.mul(grazing.pow(3).mul(0.2))).add(color(hsl.integer(260, 99, 78)).mul(needleFlash)).add(color(hsl.integer(0, 0, 100)).mul(gritFlash.mul(0.6)))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, uv} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -41,10 +42,10 @@ export default class extends BaseKnotMaterial {
     const height = swell.mul(0.012).add(organ.dome.mul(0.012))
     this.positionNode = positionGeometry.add(normalLocal.mul(swell.mul(0.01)))
     this.normalNode = liquidNormal(float(1), 0.55).add(proceduralNormal(height, 1)).normalize()
-    const skin = mix(color('#02060c'), color('#0a1c2c'), mx_noise_float(p.mul(8)).mul(0.5).add(0.5))
-    const nerveColor = mix(color('#2ae4ff'), color('#ff3ec8'), swell.pow(2))
+    const skin = mix(color(hsl.integer(248, 48, 4)), color(hsl.integer(247, 56, 12)), mx_noise_float(p.mul(8)).mul(0.5).add(0.5))
+    const nerveColor = mix(color(hsl.integer(210, 99, 81.9)), color(hsl.integer(342, 100, 64.7)), swell.pow(2))
     const organColor = cosinePalette(organ.hue, [0.15, 0.45, 0.55], [0.2, 0.45, 0.4], [1, 1, 1], [0, 0.25, 0.55])
-    const deepColor = color('#ff7a4a')
+    const deepColor = color(hsl.integer(40, 99, 68))
     this.colorNode = skin
     this.metalness = 0
     this.roughnessNode = mx_noise_float(p.mul(9)).mul(0.06).add(0.12)
@@ -54,12 +55,12 @@ export default class extends BaseKnotMaterial {
     this.thickness = 0.7
     this.ior = 1.34
     this.dispersion = 0.22
-    this.attenuationColor.set('#06303e')
+    this.attenuationColor.set(hsl.integer(226, 83, 19))
     this.attenuationDistance = 0.8
     this.iridescence = 0.35
     this.iridescenceIOR = 1.3
     this.iridescenceThicknessNode = mx_noise_float(p.mul(6)).mul(180).add(260)
     this.envMapIntensity = 0.45
-    this.emissiveNode = nerveColor.mul(pulse).mul(intimate.mul(0.5).add(0.8)).mul(2.4).add(organColor.mul(organ.core).mul(organ.blink).mul(near.mul(0.7).add(0.45)).mul(2)).add(deepColor.mul(deepOrgan.core.mul(0.5).add(deepOrgan.mask.mul(0.12))).mul(intimate.mul(0.8).add(0.3)).mul(0.55)).add(color('#4ae8ff').mul(grazing.pow(2.6)).mul(0.8))
+    this.emissiveNode = nerveColor.mul(pulse).mul(intimate.mul(0.5).add(0.8)).mul(2.4).add(organColor.mul(organ.core).mul(organ.blink).mul(near.mul(0.7).add(0.45)).mul(2)).add(deepColor.mul(deepOrgan.core.mul(0.5).add(deepOrgan.mask.mul(0.12))).mul(intimate.mul(0.8).add(0.3)).mul(0.55)).add(color(hsl.integer(209, 100, 83.7)).mul(grazing.pow(2.6)).mul(0.8))
   }
 }

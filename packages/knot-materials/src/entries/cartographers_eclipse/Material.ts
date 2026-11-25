@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, Fn as fn, Loop as loop, mix, modelWorldMatrixInverse, mx_noise_float, positionGeometry, positionView, time, vec2, vec3, vec4} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -57,8 +58,8 @@ export default class extends BaseKnotMaterial {
     // A very dark gunmetal blue with a faint brushed structure, so that
     // the gold lines and stars have something to read against.
     const brush = mx_noise_float(p.mul(38)).mul(0.5).add(0.5)
-    const sky = mix(color('#0a0c1a'), color('#1a1f38'), brush.mul(0.6))
-    const deep = color('#02030a')
+    const sky = mix(color(hsl.integer(276, 41, 7)), color(hsl.integer(274, 44, 14)), brush.mul(0.6))
+    const deep = color(hsl.integer(272, 50, 3))
     // ---- star field ----
     const starField = constellation(p.mul(13))
     const starEnergy = starField.x
@@ -74,15 +75,15 @@ export default class extends BaseKnotMaterial {
       .mul(mx_noise_float(p.add(viewDir.mul(-0.08)).add(drift.mul(0.6)).mul(2.7)).add(0.5))
     const haze = nearHaze.mul(0.5).add(0.5).mul(farHaze.mul(0.5).add(0.5))
     // ---- colour composition ----
-    const nebulaColour = mix(color('#1a1240'), color('#522670'), haze)
+    const nebulaColour = mix(color(hsl.integer(285, 72, 12)), color(hsl.integer(309, 69, 27)), haze)
     const baseColour = mix(deep, sky, distance.sub(1).mul(0.5).add(0.4).clamp()).add(nebulaColour.mul(near.mul(0.55).add(0.3).mul(0.55)))
     this.colorNode = baseColour
     this.metalness = 0.55
     this.roughness = 0.32
     this.normalNode = proceduralNormal(brush.mul(0.0004).add(haze.mul(0.0009)), 0.7)
     // ---- emissive ----
-    const starGlow = color('#ffe8c2').mul(starEnergy).mul(intimate.mul(2).add(0.5))
-    const linkGlow = color('#d8a445').mul(linkMask).mul(near.mul(0.5).add(0.4)).mul(4)
+    const starGlow = color(hsl.integer(80, 100, 93)).mul(starEnergy).mul(intimate.mul(2).add(0.5))
+    const linkGlow = color(hsl.integer(80, 76, 71)).mul(linkMask).mul(near.mul(0.5).add(0.4)).mul(4)
     const nebulaGlow = nebulaColour.mul(haze.mul(0.5).add(0.2)).mul(near.mul(0.4).add(0.25))
     this.emissiveNode = starGlow.add(linkGlow).add(nebulaGlow)
   }

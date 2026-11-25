@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {environmentHighlight, studioSheen} from '../../candidates/gemini_argon/lib/environmentHighlight.ts'
@@ -106,7 +107,7 @@ export default class extends KnotMaterial {
     const pitOcclusion = parTerrace.pow(1.4).mul(0.84).add(0.16)
     const riserShadow = isRiser.mul(0.42).oneMinus()
 // Base metallic reflectance of oxidized bismuth
-    const rawBismuthSilver = color('#c4b4be')
+    const rawBismuthSilver = color(hsl.integer(340, 15, 75))
     const metallicAlbedo = mix(bismuthOxideColor.mul(0.75), rawBismuthSilver, edgeHighlight.mul(0.42)).mul(pitOcclusion).mul(riserShadow)
     this.colorNode = metallicAlbedo
     this.metalness = 0.96
@@ -139,8 +140,8 @@ export default class extends KnotMaterial {
     const edgeGlints = glints(normal, 250).mul(edgeHighlight.mul(0.75).add(0.25))
     this.emissiveNode = bismuthOxideColor.mul(envFlash).mul(0.85)
       .add(bismuthOxideColor.mul(tentSheen).mul(pitOcclusion).mul(0.28))
-      .add(mix(bismuthOxideColor, color('#ffe8be'), 0.48).mul(edgeHighlight).mul(facing.mul(0.5).add(0.5)).mul(0.38))
+      .add(mix(bismuthOxideColor, color(hsl.integer(83, 100, 93)), 0.48).mul(edgeHighlight).mul(facing.mul(0.5).add(0.5)).mul(0.38))
       .add(harmonicFilm.mul(rim.pow(2.2)).mul(0.48))
-      .add(color('#fff8eb').mul(edgeGlints).mul(0.45))
+      .add(color(hsl.integer(83, 100, 97.8)).mul(edgeGlints).mul(0.45))
   }
 }

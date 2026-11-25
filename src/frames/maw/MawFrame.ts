@@ -1,6 +1,7 @@
 import type {Placement} from '../lib/frameGeometry.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, attribute, cameraPosition, color, float, Fn, hash, max, mix, modelWorldMatrixInverse, mx_noise_float, normalLocal, positionGeometry, positionLocal, select, time, uv, vec2, vec3, vec4} from 'three/tsl'
 import {BufferGeometry, Float32BufferAttribute, MeshPhysicalNodeMaterial, Vector3} from 'three/webgpu'
 
@@ -149,7 +150,7 @@ export default class MawFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#8a3436'
+  override readonly tint = hsl.integer(22, 67, 36)
   override readonly title = 'Maw'
 
   override createGeometry(width: number, height: number) {
@@ -192,7 +193,7 @@ class FleshMaterial extends MeshPhysicalNodeMaterial {
       clearcoat: 1,
       sheen: 0.3,
       sheenRoughness: 0.5,
-      sheenColor: '#c06070',
+      sheenColor: hsl.integer(11, 56, 54.4),
     })
     const surface = frameSurface()
     const p = surface.position
@@ -213,8 +214,8 @@ class FleshMaterial extends MeshPhysicalNodeMaterial {
     const soreCell = mx_noise_float(p.mul(80).add(vec3(0, 3.3, 0)))
     const sore = soreCell.smoothstep(0.66, 0.72).mul(skinShare.oneMinus())
     const soreRim = soreCell.smoothstep(0.52, 0.66).mul(sore.oneMinus()).mul(skinShare.oneMinus())
-    const gum = mix(mix(color('#7e2230'), color('#b4485a'), lumps.mul(0.5).add(0.5).mul(surface.cavity.smoothstep(0.4, -0.5).mul(0.6).add(0.4))), color('#4a0c22'), veins.mul(0.45))
-    const raw = mix(mix(gum, color('#5a0a16'), soreRim.mul(0.7)), color('#d0b870'), sore.mul(0.85))
+    const gum = mix(mix(color(hsl.integer(16, 76, 31)), color(hsl.integer(13, 66, 48)), lumps.mul(0.5).add(0.5).mul(surface.cavity.smoothstep(0.4, -0.5).mul(0.6).add(0.4))), color(hsl.integer(5, 78, 17)), veins.mul(0.45))
+    const raw = mix(mix(gum, color(hsl.integer(20, 90, 20)), soreRim.mul(0.7)), color(hsl.integer(92, 58, 75)), sore.mul(0.85))
     // Behind the gum, rows of smaller teeth pointing in, staggered, each its own size, some crooked, some gone.
     const rows = band(surface, ...regions.rows)
     const small = (from: number, to: number, period: number, shift: number) => {
@@ -246,17 +247,17 @@ class FleshMaterial extends MeshPhysicalNodeMaterial {
     // Wrinkles running across the lip, irregular, deeper toward its dry outer edge.
     const cracks = line(mx_noise_float(vec3(surface.along.mul(170), r.mul(18), surface.member.add(2.2))), 0.07).mul(lipShare.smoothstep(0.2, 0.8)).mul(skinShare.oneMinus()).mul(visibleDetail(footprint, 0.0015))
     const flakes = mx_noise_float(p.mul(700)).smoothstep(0.45, 0.7).mul(lipShare.smoothstep(0.5, 1)).mul(skinShare.oneMinus()).mul(visibleDetail(footprint, 0.001))
-    const lip = mix(mix(mix(color('#6e1622'), color('#a8404c'), lumps.mul(0.5).add(0.5).mul(surface.cavity.smoothstep(0.3, -0.6))), color('#9a5a5e'), lipShare.mul(0.5)), color('#d0a8a0'), flakes.mul(0.5))
+    const lip = mix(mix(mix(color(hsl.integer(19, 83, 26)), color(hsl.integer(16, 67, 44)), lumps.mul(0.5).add(0.5).mul(surface.cavity.smoothstep(0.3, -0.6))), color(hsl.integer(16, 42, 47)), lipShare.mul(0.5)), color(hsl.integer(31, 31, 73)), flakes.mul(0.5))
     // The skin, pale and mottled, blue round its veins, stubbled.
     const stubble = mx_noise_float(p.mul(1400)).smoothstep(0.6, 0.75).mul(visibleDetail(footprint, 0.0008))
     const mottle = mx_noise_float(p.mul(25)).mul(0.5).add(0.5)
     const skinVeins = line(mx_noise_float(p.mul(70).add(warp)), 0.02).mul(skinShare).mul(visibleDetail(footprint, 0.002)).mul(mx_noise_float(p.mul(12)).smoothstep(0, 0.5))
-    const skin = mix(mix(mix(color('#8e6e72'), color('#5e4a5a'), mottle.mul(0.8)), color('#4a3a58'), skinVeins.mul(0.3)), color('#2a2224'), stubble.mul(0.5))
-    const tissue = mix(mix(mix(lip, raw, inner), color('#24040a'), groove.mul(surface.cavity.smoothstep(0, 0.7)).mul(0.75)), skin, skinShare)
+    const skin = mix(mix(mix(color(hsl.integer(10, 21, 50)), color(hsl.integer(333, 21, 35)), mottle.mul(0.8)), color(hsl.integer(308, 33, 28)), skinVeins.mul(0.3)), color(hsl.integer(1, 12, 16)), stubble.mul(0.5))
+    const tissue = mix(mix(mix(lip, raw, inner), color(hsl.integer(12, 76, 8)), groove.mul(surface.cavity.smoothstep(0, 0.7)).mul(0.75)), skin, skinShare)
     const flushed = mix(tissue, tissue.mul(vec3(1.2, 0.75, 0.82)), flush.mul(0.4).mul(skinShare.oneMinus()))
-    const smallEnamel = mix(color('#b8a070'), color('#4a3418'), smallRoot.smoothstep(0.5, 1))
+    const smallEnamel = mix(color(hsl.integer(84, 42, 67)), color(hsl.integer(71, 56, 25)), smallRoot.smoothstep(0.5, 1))
     const wet = float(1).sub(lipShare.mul(0.75)).sub(skinShare).max(0)
-    this.colorNode = mix(mix(flushed, smallEnamel, smallTeeth), color('#2a0a10'), cracks.mul(0.7))
+    this.colorNode = mix(mix(flushed, smallEnamel, smallTeeth), color(hsl.integer(12, 63, 10)), cracks.mul(0.7))
     this.roughnessNode = mix(mix(float(0.4), float(0.65), lipShare), float(0.75), skinShare).add(stipple.mul(0.1))
     this.clearcoatNode = wet.mul(flush.mul(0.3).add(0.6))
     this.clearcoatRoughnessNode = mix(float(0.1), float(0.4), lumps.mul(0.5).add(0.5)).add(lipShare.mul(0.3))
@@ -289,12 +290,12 @@ class ToothMaterial extends MeshPhysicalNodeMaterial {
     const gold = seed.greaterThan(0.985)
     const decay = select(rotten, mx_noise_float(vec3(own.mul(400), seed.mul(9))).smoothstep(-0.2, 0.3), float(0))
     const crazing = line(mx_noise_float(vec3(own.x.mul(500), own.y.mul(140), seed.mul(5))), 0.04).mul(visibleDetail(footprint, 0.0008))
-    const shade = mix(color('#d2bf8c'), color('#a88a50'), seed.mul(1.6).fract())
-    const base = mix(mix(color('#5e4824'), shade, toward.smoothstep(0.08, 0.5)), color('#bcbab0'), toward.smoothstep(0.85, 1).mul(0.5))
+    const shade = mix(color(hsl.integer(90, 45, 78)), color(hsl.integer(83, 53, 59)), seed.mul(1.6).fract())
+    const base = mix(mix(color(hsl.integer(78, 54, 33)), shade, toward.smoothstep(0.08, 0.5)), color(hsl.integer(97, 9, 75)), toward.smoothstep(0.85, 1).mul(0.5))
     const tartar = toward.smoothstep(0.2, 0.05)
     const bloody = toward.smoothstep(0.24, 0.1).mul(0.6)
-    const stained = mix(mix(mix(base, color('#5e5a2a'), tartar.mul(0.6)), color('#6e0c0a'), bloody.mul(0.7)), color('#1a0e06'), decay)
-    this.colorNode = select(gold, mix(color('#d8aa48'), color('#7a5a1e'), tartar), mix(stained, stained.mul(0.7), crazing))
+    const stained = mix(mix(mix(base, color(hsl.integer(104, 57, 38)), tartar.mul(0.6)), color(hsl.integer(28, 96, 25)), bloody.mul(0.7)), color(hsl.integer(56, 46, 8)), decay)
+    this.colorNode = select(gold, mix(color(hsl.integer(83, 75, 72)), color(hsl.integer(80, 74, 41)), tartar), mix(stained, stained.mul(0.7), crazing))
     this.metalnessNode = select(gold, float(1), float(0))
     this.roughnessNode = select(gold, float(0.22), mix(float(0.3), float(0.8), decay.max(tartar.mul(0.6))))
     this.normalNode = heightNormal(decay.mul(-0.0004).sub(crazing.mul(0.00004)))

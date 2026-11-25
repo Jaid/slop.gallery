@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeCells} from '../../candidates/gemini_argon/lib/tubeMetric.ts'
@@ -98,7 +99,7 @@ export default class extends KnotMaterial {
     const nacreAngle = view.dot(vec3(0.65, 0.52, -0.55).normalize()).mul(125).add(grazing.mul(165))
     const nacreWavelength = float(500).add(nacreBands.mul(65)).add(waves.hash.mul(95)).sub(nacreAngle).clamp(405, 675)
     const abaloneSpectrum = wavelengthColor(nacreWavelength).mul(vec3(1.2, 1.1, 1.35))
-    const motherOfPearl = mix(color('#8fe8de'), abaloneSpectrum, 0.82).mul(nacreBands.mul(0.22).add(0.88))
+    const motherOfPearl = mix(color(hsl.integer(187, 65, 85)), abaloneSpectrum, 0.82).mul(nacreBands.mul(0.22).add(0.88))
 // Layer 2 (Mid-depth parallax): Autumn Momiji maple leaves in Taka-maki-e (raised vermilion & burnished gold) + Raden leaf inlays
     const leafGrid = vec2(22, 3)
     const leafCells = tubeCells(tube, 22, 3).sub(ray.mul(0.018))
@@ -111,7 +112,7 @@ export default class extends KnotMaterial {
     const leafPresent = leafRnd.x.smoothstep(0.2, 0.28)
     const leafMask = leaf.fill.mul(leafPresent)
     const leafIsNacre = leafRnd.y.greaterThan(0.58)
-    const vermilionLacquer = mix(color('#b51204'), color('#ff4214'), leaf.r.smoothstep(0.8, 0.1))
+    const vermilionLacquer = mix(color(hsl.integer(30, 99, 41)), color(hsl.integer(33.6, 100, 60.3)), leaf.r.smoothstep(0.8, 0.1))
     const leafBodyColor = select(leafIsNacre, motherOfPearl.mul(1.1), vermilionLacquer)
     const leafGoldTrim = leaf.border.max(leaf.veins).mul(leafPresent)
 // Layer 3 (Deep Nashiji lacquer parallax): 3 strata of suspended gold/silver dust flakes and drifting Toro pond lanterns
@@ -134,12 +135,12 @@ export default class extends KnotMaterial {
     const lanternGlow = lanternDist.smoothstep(0.32, 0.04).mul(lanternRnd.x.smoothstep(0.62, 0.78))
 // Composite the multi-layered urushi artwork from bottom to top
 // Only the dark Roiro-urushi pond background is dielectric; keeping its specularIntensity low stops diffuse light from washing out the black lacquer
-    const roiroBlack = mix(color('#010102'), color('#080302'), grazing.pow(2).mul(0.5))
-    const gold24k = color('#f5b938')
-    const paleGold = color('#ffe494')
+    const roiroBlack = mix(color(hsl.integer(284, 27, 2)), color(hsl.integer(38, 39, 3)), grazing.pow(2).mul(0.5))
+    const gold24k = color(hsl.integer(82, 91, 79))
+    const paleGold = color(hsl.integer(91, 100, 91))
     let lacquerCanvas: Node<'vec3'> = roiroBlack
       .add(gold24k.mul(nashijiTotal).mul(0.95))
-      .add(color('#ff7b1c').mul(lanternGlow).mul(0.45))
+      .add(color(hsl.integer(49, 100, 68)).mul(lanternGlow).mul(0.45))
 // Composite mid-depth Momiji leaves (shadowed by upper Seigaiha layer)
     const leafComposite = mix(leafBodyColor, paleGold, leafGoldTrim)
     lacquerCanvas = mix(lacquerCanvas, leafComposite, leafMask.mul(0.95))
@@ -183,9 +184,9 @@ export default class extends KnotMaterial {
     this.emissiveNode = radenShimmer.mul(0.95)
       .add(gold24k.mul(goldFeatureMask).mul(facing.mul(0.5).add(0.5)).mul(0.42))
       .add(vermilionGlow)
-      .add(color('#ffd875').mul(goldSparkle).mul(1.3))
-      .add(color('#ff6e14').mul(lanternGlow).mul(facing.mul(0.6).add(0.4)).mul(1.35))
-      .add(color('#ffdf80').mul(kintsugiCrack).mul(kintsugiPulse).mul(0.55))
+      .add(color(hsl.integer(89, 100, 88)).mul(goldSparkle).mul(1.3))
+      .add(color(hsl.integer(45, 100, 65.9)).mul(lanternGlow).mul(facing.mul(0.6).add(0.4)).mul(1.35))
+      .add(color(hsl.integer(91, 100, 89.6)).mul(kintsugiCrack).mul(kintsugiPulse).mul(0.55))
       .add(abaloneSpectrum.mul(rim.pow(2.4)).mul(0.42))
   }
 }

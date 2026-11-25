@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_noise_float, mx_worley_noise_float, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -18,12 +19,12 @@ export default class extends KnotMaterial {
     const veins = opticalLine(veinField.sub(0.27), 0.012).mul(intimate.mul(0.85).add(0.15))
     const filigree = veins.mul(rim.mul(1.2).add(0.2))
     this.envMapIntensity = 0.12
-    this.colorNode = color('#000000')
+    this.colorNode = color(hsl.integer(0, 0, 0))
     this.roughness = 0.98
     this.metalness = 0
     this.clearcoat = 0.15
     this.clearcoatRoughness = 0.9
     this.normalNode = proceduralNormal(fuzz, 0.0004)
-    this.emissiveNode = color('#ff2a5f').mul(filigree).mul(1.5).add(color('#5a00ff').mul(veins.mul(grazing.pow(3)).mul(0.7))).mul(near.mul(0.6).add(0.5))
+    this.emissiveNode = color(hsl.integer(14, 99, 59)).mul(filigree).mul(1.5).add(color(hsl.integer(282, 100, 41.3)).mul(veins.mul(grazing.pow(3)).mul(0.7))).mul(near.mul(0.6).add(0.5))
   }
 }

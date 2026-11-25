@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ferrofluid_oracle',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'The black pool raises its answer in a forest of shining spires.',
   placeholder: {
-    color: '#c5d0e0',
+    color: hsl.integer(258, 26, 83),
     shading: 'liquid',
   },
   displacement: 0.095,

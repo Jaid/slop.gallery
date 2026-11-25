@@ -2,6 +2,7 @@ import type {Placement} from '../lib/frameGeometry.ts'
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, clamp, color, float, max, min, mix, mx_noise_float, select, smoothstep, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -143,7 +144,7 @@ export default class CrateFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach + protector.thickness
-  override readonly tint = '#c9a06c'
+  override readonly tint = hsl.integer(73, 50, 69)
   override readonly title = 'Shipping crate'
 
   override createGeometry(width: number, height: number) {
@@ -189,7 +190,7 @@ export default class CrateFrame extends PortraitFrame {
       new FrameWoodMaterial({
         timber: pine,
         // Fresh, unfinished pine, paler than the varnished kind.
-        stain: '#ddd6cc',
+        stain: hsl.integer(77, 16, 86),
         roughness: 0.9,
         grime: 0.25,
         // Rough sawn: the arcs of the mill’s circular saw scored across every batten, and torn fibers.
@@ -201,7 +202,7 @@ export default class CrateFrame extends PortraitFrame {
         shade: surface => float(1).sub(stencil(surface).mul(0.9)),
       }),
       new FramePaintMaterial({
-        color: '#b08452',
+        color: hsl.integer(69, 51, 59),
         roughness: 0.9,
         grime: 0.2,
         layers: surface => {
@@ -233,7 +234,7 @@ class CrateBackMaterial extends MeshPhysicalNodeMaterial {
     const inset = outer.sub(point.abs())
     // Rotary-cut veneer: broad, wandering bands of figure.
     const figure = point.y.mul(90).add(mx_noise_float(vec3(point.mul(vec2(6, 14)), 1.7)).mul(7)).sin().mul(0.5).add(0.5)
-    const veneer = mix(color('#c8ad84'), color('#a88a60'), figure.pow(4).mul(0.6))
+    const veneer = mix(color(hsl.integer(78, 39, 72)), color(hsl.integer(75, 40, 59)), figure.pow(4).mul(0.6))
     // The screws, every 10 cm round the edge, 3.5 cm in.
     const onSide = inset.x.lessThan(inset.y)
     const at = select(onSide, vec2(point.x.sign().mul(outer.x.sub(0.035)), point.y.div(0.1).round().mul(0.1)), vec2(point.x.div(0.1).round().mul(0.1), point.y.sign().mul(outer.y.sub(0.035))))
@@ -243,7 +244,7 @@ class CrateBackMaterial extends MeshPhysicalNodeMaterial {
     const sprayed = smoothstep(0.0009, -0.0004, arrows)
     const waybill = galleryLabel(surface, vec2(outer.x.mul(-0.35), outer.y.mul(-0.45)), [0.16, 0.1], -0.02)
     const hanger = hangingWire(surface)
-    const board = mix(mix(veneer, color('#151412'), sprayed.mul(0.9)), mix(color('#8a8a86'), color('#2a2a28'), screw.slot), screw.cover)
+    const board = mix(mix(veneer, color(hsl.integer(85, 6, 9)), sprayed.mul(0.9)), mix(color(hsl.integer(107, 3, 57)), color(hsl.integer(107, 3, 18)), screw.slot), screw.cover)
     this.colorNode = mix(mix(board, waybill.color, waybill.cover), hanger.color, hanger.cover)
     this.metalnessNode = screw.cover.max(hanger.cover)
     this.roughnessNode = mix(float(0.85), float(0.4), screw.cover.max(hanger.cover))

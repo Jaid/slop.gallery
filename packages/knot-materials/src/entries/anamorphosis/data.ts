@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: MgSdUInR50wESrr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'anamorphosis',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Two pictures share one ribbed skin. Walk, and silver moons dissolve into an ember lattice; stand still, and neither will confess.',
   placeholder: {
-    color: '#9baeb4',
+    color: hsl.integer(219, 14, 70),
     shading: 'metal',
   },
 } as const satisfies KnotData

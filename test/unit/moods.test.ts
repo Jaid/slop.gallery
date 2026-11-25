@@ -6,6 +6,7 @@ import type {Node} from 'three/webgpu'
 
 import {afterEach, describe, expect, mock, test} from 'bun:test'
 
+import hsl from 'okhsl'
 import {AmbientLight, Color, HemisphereLight, PerspectiveCamera, PointLight, Scene} from 'three/webgpu'
 
 import {fusionTiming} from '../../src/lib/gallery/fusion/timing.ts'
@@ -60,18 +61,18 @@ class TestMood extends Mood {
   override readonly ambience
   override readonly fade?: MoodFade
   override readonly fill = {
-    color: '#808080',
+    color: hsl.integer(0, 0, 53.6),
     gain: 1,
   }
   override readonly fov?: number
   override readonly grade = {
-    shadow: '#000000',
-    midtone: '#ff0000',
-    highlight: '#ffffff',
+    shadow: hsl.integer(0, 0, 0),
+    midtone: hsl.integer(29.2, 100, 56.8),
+    highlight: hsl.integer(0, 0, 100),
     strength: 0.5,
   }
   override readonly lamps = {
-    color: '#ff0000',
+    color: hsl.integer(29.2, 100, 56.8),
     gain: 0.5,
   }
   readonly loops: Array<RecordingLoop> = []
@@ -126,7 +127,7 @@ describe('mood mixer', () => {
     expect(mixer.amountOf(mood)).toBe(1)
     // Linear colors: red at half gain for the lamps, middle gray for the fill.
     expect(mixer.tintOf(lamp).toArray()).toEqual([0.5, 0, 0])
-    const gray = new Color('#808080')
+    const gray = new Color(hsl.integer(0, 0, 53.6))
     for (const [index, channel] of mixer.tintOf(fill).toArray().entries()) {
       expect(channel).toBeCloseTo(gray.toArray()[index], 12)
     }
@@ -581,8 +582,8 @@ describe('light tint', () => {
   })
   test('tints every light color, the hemisphere’s ground too, and returns to what the owner set', () => {
     const scene = new Scene
-    const lamp = new PointLight('#ffffff', 2)
-    const sky = new HemisphereLight('#4080ff', '#806040', 1)
+    const lamp = new PointLight(hsl.integer(0, 0, 100), 2)
+    const sky = new HemisphereLight(hsl.integer(262, 100, 57), hsl.integer(66, 42, 44), 1)
     scene.add(lamp, sky)
     const skyColor = sky.color.clone()
     const ground = sky.groundColor.clone()
@@ -595,7 +596,7 @@ describe('light tint', () => {
     applyLightLevels(scene)
     expect(lamp.color.toArray()).toEqual([0.5, 1, 0])
     // A color the owner sets meanwhile is the new base.
-    lamp.color.set('#ff0000')
+    lamp.color.set(hsl.integer(29.2, 100, 56.8))
     applyLightLevels(scene)
     expect(lamp.color.toArray()).toEqual([0.5, 0, 0])
     lightTint.current = () => noTint
@@ -634,7 +635,8 @@ describe('moods', () => {
       expect(mood.grade.strength).toBeGreaterThan(0)
       expect(mood.grade.strength).toBeLessThanOrEqual(1)
       for (const color of [mood.grade.shadow, mood.grade.midtone, mood.grade.highlight, mood.lamps!.color, mood.fill!.color]) {
-        expect(color).toMatch(/^#[\da-f]{6}$/)
+        expect(color).toBeInteger()
+        expect(color).toBeWithin(0, 2 ** 24)
       }
     }
   })

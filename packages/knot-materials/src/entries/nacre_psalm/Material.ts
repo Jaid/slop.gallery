@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv} from 'three/tsl'
 
 import {tubeRay} from '../../lib/atelier.ts'
@@ -35,8 +36,8 @@ export default class extends KnotMaterial {
     // Fractional multiples of the lamella phases would reintroduce a UV seam.
     const interferencePhase = front.y.mul(TAU * 2).add(middle.y.mul(TAU)).add(front.x.mul(TAU).sin().mul(0.6)).add(mineral.mul(3.805)).add(rim.mul(2.4))
     const interference = spectralColor(interferencePhase)
-    const ivory = mix(color('#817d84'), color('#e4ddd0'), lamella.mul(0.72).add(mineral.mul(0.14)))
-    const coolPearl = mix(color('#71b1c4'), color('#e9a2a9'), middleLayers)
+    const ivory = mix(color(hsl.integer(311, 6, 53)), color(hsl.integer(83, 22, 88)), lamella.mul(0.72).add(mineral.mul(0.14)))
+    const coolPearl = mix(color(hsl.integer(219, 46, 68)), color(hsl.integer(13, 59, 75)), middleLayers)
     const pearlyBody = mix(ivory, coolPearl, middleLayers.mul(0.14).add(grazing.pow(1.25).mul(0.38)).clamp())
     const nacre = mix(pearlyBody, interference, grazing.pow(1.7).mul(0.58).add(broadLayers.mul(0.045)).add(closeGrain.mul(0.16)).clamp())
     const relief = broadLayers.mul(0.5).add(middleLayers.mul(0.23)).add(closeGrain.mul(0.12))
@@ -51,10 +52,10 @@ export default class extends KnotMaterial {
     this.transmissionNode = float(0.12).add(grazing.mul(0.14))
     this.thickness = 0.22
     this.ior = 1.48
-    this.attenuationColor.set('#d8dfce')
+    this.attenuationColor.set(hsl.integer(125, 24, 88))
     this.attenuationDistance = 2.4
     this.normalNode = proceduralNormal(relief, 0.00095)
-    this.emissiveNode = mix(color('#86c8d1'), color('#f4b8a4'), deepLayers).mul(rim).mul(near.mul(0.18).add(0.035))
-      .add(color('#fff1d3').mul(closeGrain).mul(intimate).mul(0.08))
+    this.emissiveNode = mix(color(hsl.integer(207, 47, 76)), color(hsl.integer(39, 70, 80.5)), deepLayers).mul(rim).mul(near.mul(0.18).add(0.035))
+      .add(color(hsl.integer(86, 100, 95.5)).mul(closeGrain).mul(intimate).mul(0.08))
   }
 }

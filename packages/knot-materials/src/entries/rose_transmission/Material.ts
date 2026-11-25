@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn, mix, mx_noise_float, negateOnBackSide, step, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -74,8 +75,8 @@ export default class extends KnotMaterial {
     const sector = theta.add(Math.PI).div(TAU / 12).floor().mod(12)
     const ring = step(0.165, radius).add(step(0.335, radius)).add(step(0.505, radius)).add(step(0.69, radius))
     const identity = cellNoiseVec3(vec3(sector.add(0.5), ring.add(0.5), cell.x.mul(0.17).add(9.2)))
-    const paneA = mix(color('#0b4f9e'), color('#8f164f'), identity.x)
-    const paneB = mix(color('#079b91'), color('#e69a18'), identity.y)
+    const paneA = mix(color(hsl.integer(256, 93, 35)), color(hsl.integer(359, 83, 34.5)), identity.x)
+    const paneB = mix(color(hsl.integer(187, 98, 56)), color(hsl.integer(73, 95, 70)), identity.y)
     const stainedGlass = mix(paneA, paneB, identity.z.smoothstep(0.24, 0.82))
     const parallaxP = p.sub(view.mul(0.055))
     const inclusions = mx_noise_float(parallaxP.mul(31).add(vec3(identity.x.mul(5), identity.y.mul(7), identity.z.mul(3)))).mul(0.5).add(0.5)
@@ -84,14 +85,14 @@ export default class extends KnotMaterial {
     const angle = view.dot(vec3(0.47, 0.31, -0.82)).mul(0.5).add(0.5)
     const backlight = angle.mul(0.055).add(0.07).add(near.mul(0.025))
     const breath = time.mul(0.16).add(identity.z.mul(TAU)).sin().mul(0.025).add(0.975)
-    this.colorNode = mix(stainedGlass, color('#171b22'), lead.mul(0.94)).mul(bubbles.mul(-0.1).add(1))
+    this.colorNode = mix(stainedGlass, color(hsl.integer(262, 17, 12)), lead.mul(0.94)).mul(bubbles.mul(-0.1).add(1))
     this.metalnessNode = lead.mul(0.72)
     this.roughnessNode = mix(float(0.095), float(0.31), lead).add(bubbles.mul(0.12)).add(inclusions.mul(0.025))
     this.transmissionNode = lead.oneMinus().mul(0.84)
     this.thicknessNode = lead.oneMinus().mul(0.3).add(0.08)
     this.ior = 1.52
     this.dispersion = 0.12
-    this.attenuationColor.set('#bfe9ef')
+    this.attenuationColor.set(hsl.integer(207, 52, 89))
     this.attenuationDistance = 1.1
     this.clearcoat = 0.35
     this.clearcoatRoughnessNode = float(0.08).add(lead.mul(0.16))
@@ -101,7 +102,7 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = angle.mul(180).add(radius.mul(120)).add(260)
     this.aoNode = float(1).sub(lead.mul(0.46))
     this.emissiveNode = stainedGlass.mul(lead.oneMinus()).mul(backlight).mul(breath)
-      .add(color('#fff4cf').mul(bubbles).mul(grazing).mul(0.035))
-      .add(color('#d7f5ff').mul(radius.smoothstep(0.69, 0.72)).mul(lead.oneMinus()).mul(0.025))
+      .add(color(hsl.integer(93, 100, 96)).mul(bubbles).mul(grazing).mul(0.035))
+      .add(color(hsl.integer(220, 100, 94.4)).mul(radius.smoothstep(0.69, 0.72)).mul(lead.oneMinus()).mul(0.025))
   }
 }

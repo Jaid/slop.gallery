@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {disk, ring, segment} from '../../candidates/gpt_sol/lib/galleryMarks.ts'
@@ -35,20 +36,20 @@ export default class extends KnotMaterial {
     const body = segment(q, [0, -0.25], [0, 0.25], 0.018, aa)
     const feelers = segment(q, [0, 0.19], [-0.07, 0.35], 0.002, aa).max(segment(q, [0, 0.19], [0.07, 0.35], 0.002, aa))
     const glow = mx_noise_float(vec3(uv().mul(vec2(8, 10)), time.mul(0.09))).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#021a18'), color('#174b39'), glow.mul(0.52))
-    this.colorNode = mix(this.colorNode, color('#679b58'), wings.mul(0.52))
+    this.colorNode = mix(color(hsl.integer(188, 86, 10)), color(hsl.integer(167, 77, 28)), glow.mul(0.52))
+    this.colorNode = mix(this.colorNode, color(hsl.integer(139, 63, 58)), wings.mul(0.52))
     this.metalness = 0.22
     this.roughnessNode = wings.mul(0.17).add(0.24)
     this.transmission = 0.19
     this.thickness = 0.28
-    this.attenuationColor.set('#258c64')
+    this.attenuationColor.set(hsl.integer(163, 89, 50))
     this.attenuationDistance = 0.45
     this.clearcoat = 0.8
     this.clearcoatRoughness = 0.09
     const waking = time.mul(0.8).add(random.y.mul(6.28)).sin().mul(0.35).add(0.65)
-    this.emissiveNode = color('#9bd869').mul(wings).mul(waking).mul(0.37)
-      .add(color('#ffe591').mul(markings).mul(waking).mul(1.3))
-      .add(color('#f6ca79').mul(body.add(feelers)).mul(0.85))
-      .add(color('#76f2a8').mul(grazing.pow(3)).mul(0.17)).mul(near.mul(0.26).add(0.8))
+    this.emissiveNode = color(hsl.integer(133, 75, 79)).mul(wings).mul(waking).mul(0.37)
+      .add(color(hsl.integer(92, 100, 91)).mul(markings).mul(waking).mul(1.3))
+      .add(color(hsl.integer(82, 79, 84)).mul(body.add(feelers)).mul(0.85))
+      .add(color(hsl.integer(155, 81, 85)).mul(grazing.pow(3)).mul(0.17)).mul(near.mul(0.26).add(0.8))
   }
 }

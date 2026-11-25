@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -63,24 +64,24 @@ export default class extends KnotMaterial {
       .mul(0.15)
     // Color temperature varies per firefly — warm yellow to cool green
     const ffTempPhase = ffRnd2.y
-    const warmFirefly = color('#ffe066')
-    const coolFirefly = color('#88ff44')
+    const warmFirefly = color(hsl.integer(95, 100, 89.5))
+    const coolFirefly = color(hsl.integer(136.7, 100, 87.9))
     const fireflyColor = mix(warmFirefly, coolFirefly, ffTempPhase)
     // Bark surface colors
-    const darkBark = color('#1a0f08')
-    const midBark = color('#2a1a0e')
-    const lightBark = color('#3d2816')
+    const darkBark = color(hsl.integer(54, 39, 8))
+    const midBark = color(hsl.integer(57, 45, 13))
+    const lightBark = color(hsl.integer(61, 48, 20))
     const barkColor = mix(darkBark, mix(midBark, lightBark, barkGrain), barkCoarse.mul(0.5))
     // Moss patches on the bark
     const mossField = mx_noise_float(p.mul(8).add(3.7)).mul(0.5).add(0.5)
     const moss = mossField.smoothstep(0.62, 0.78)
-    const mossColor = mix(color('#1a2810'), color('#0f1a08'), barkFine)
+    const mossColor = mix(color(hsl.integer(134, 61, 15)), color(hsl.integer(134, 63, 10)), barkFine)
     this.colorNode = mix(barkColor, mossColor, moss.mul(0.6))
     this.metalness = 0
     this.roughnessNode = float(0.85).sub(moss.mul(0.15)).clamp(0.6, 0.92)
     // Slight sheen for moss
     this.sheen = 0.15
-    this.sheenColor.set('#2a4a1a')
+    this.sheenColor.set(hsl.integer(137, 83, 28))
     this.sheenRoughness = 0.7
     // Bark normal texture
     const barkHeight = barkCoarse.mul(0.5).add(barkFine.mul(0.3)).add(barkGrain.mul(0.2))
@@ -99,7 +100,7 @@ export default class extends KnotMaterial {
     const ffGlint = ffBody.mul(ffActive).mul(grazing.pow(3)).mul(flash).mul(near)
     this.emissiveNode = primaryEmission
       .add(haloEmission)
-      .add(color('#44ff88').mul(mossGlow))
-      .add(color('#ffffff').mul(ffGlint).mul(2))
+      .add(color(hsl.integer(150.7, 100, 86.4)).mul(mossGlow))
+      .add(color(hsl.integer(0, 0, 100)).mul(ffGlint).mul(2))
   }
 }

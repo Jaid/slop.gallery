@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, normalViewGeometry, uv} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -42,10 +43,10 @@ export default class extends KnotMaterial {
     const speck = mx_fractal_noise_float(p.mul(58), 2, 2, 0.5).mul(0.5).add(0.5)
     const patina = mx_fractal_noise_float(p.mul(4.5), 3, 2, 0.5).mul(0.5).add(0.5)
     const brush = opticalBands(uv().x.mul(TAU * 420))
-    const lacquer = mix(color('#080a14'), color('#1a2236'), speck.mul(0.45).add(0.08))
-    const clay = mix(color('#2a231c'), color('#463522'), patina)
+    const lacquer = mix(color(hsl.integer(274, 34, 6)), color(hsl.integer(267, 37, 15)), speck.mul(0.45).add(0.08))
+    const clay = mix(color(hsl.integer(67, 18, 16)), color(hsl.integer(69, 37, 24)), patina)
     const body = mix(lacquer, clay, patina.pow(2.5).mul(0.35)).mul(brush.mul(0.05).add(0.975))
-    const goldTone = mix(color('#c98a16'), color('#fff6d2'), burnish.mul(0.8).add(0.12))
+    const goldTone = mix(color(hsl.integer(75, 92, 63)), color(hsl.integer(96, 100, 96.7)), burnish.mul(0.8).add(0.12))
     this.colorNode = mix(body, goldTone, gild)
 // The repair sits proud of the lacquer by a hair. The veins are far
 // too narrow for the vertex grid to carry them, so the ridge lives
@@ -66,13 +67,13 @@ export default class extends KnotMaterial {
     const dustNormal = normalViewGeometry.add(mx_noise_vec3(p.mul(320)).mul(0.7)).normalize()
     const dust = glints(dustNormal, 150).mul(gild).mul(near)
     const ember = mx_noise_float(p.mul(9)).mul(0.5).add(0.5).mul(intimate).mul(gild.pow(2))
-    const glow: Node<'vec3'> = color('#fff0c8')
+    const glow: Node<'vec3'> = color(hsl.integer(90, 100, 95))
       .mul(dust)
       .mul(1.6)
-      .add(color('#ff8f2e').mul(ember).mul(0.04))
-      .add(color('#d8b271').mul(grazing.pow(3)).mul(gild).mul(0.2))
-      .add(color('#ffd98a').mul(gild).mul(0.05))
-      .add(color('#ffd27a').mul(rim).mul(0.015))
+      .add(color(hsl.integer(56, 100, 71.8)).mul(ember).mul(0.04))
+      .add(color(hsl.integer(80, 58, 75)).mul(grazing.pow(3)).mul(gild).mul(0.2))
+      .add(color(hsl.integer(85, 100, 88.5)).mul(gild).mul(0.05))
+      .add(color(hsl.integer(83, 100, 86.6)).mul(rim).mul(0.015))
     this.emissiveNode = glow
   }
 }

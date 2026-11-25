@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fill, stroke} from '../../candidates/gpt_sol/lib/exhibition/coverage.ts'
@@ -22,7 +23,7 @@ export default class extends KnotMaterial {
     const count = vec2(44, 5)
     const domain = tube.mul(count)
     const foot = domain.fwidth().length().max(0.00001)
-    let pigment: Node<'vec3'> = color('#154746').mul(1)
+    let pigment: Node<'vec3'> = color(hsl.integer(193, 71, 27)).mul(1)
     let relief: Node<'float'> = float(0)
     let nacre: Node<'float'> = float(0)
     let ribs: Node<'float'> = float(0)
@@ -40,8 +41,8 @@ export default class extends KnotMaterial {
       const angle = mx_atan2(local.x, local.y.add(0.57)) as unknown as Node<'float'>
       const phase = angle.mul(64).add(radius.mul(9)).add(breathing.mul(0.23))
       const rib = filteredCos(phase).mul(0.5).add(0.5).mul(dome).mul(resolved(foot, 0.08, 0.8)).toVar()
-      const shell = mix(color('#f7dbcf'), color('#e8f3e5'), random.y)
-      const blush = mix(shell, color('#ad345b'), local.y.mul(-0.6).add(0.15).clamp().mul(random.x.mul(0.7).add(0.35)))
+      const shell = mix(color(hsl.integer(45, 61, 90)), color(hsl.integer(139, 41, 94.4)), random.y)
+      const blush = mix(shell, color(hsl.integer(5, 74, 44)), local.y.mul(-0.6).add(0.15).clamp().mul(random.x.mul(0.7).add(0.35)))
       const film = spectralColor(facing.mul(13).add(radius.mul(5.5)).add(random.x.mul(3)).add(breathing.mul(0.12))).toVar()
       const opal = mix(blush, film.mul(0.59).add(0.055), grazing.pow(1.35).mul(0.72).add(rib.mul(0.09))).toVar()
       pigment = mix(pigment, opal.mul(edge.mul(-0.16).add(1)), petal)
@@ -60,7 +61,7 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.38
     this.iridescenceThicknessNode = ribs.mul(90).add(nacre.mul(180)).add(280)
     this.sheen = 0.18
-    this.sheenColor.set('#ffe2d9')
+    this.sheenColor.set(hsl.integer(37, 100, 92))
     this.sheenRoughness = 0.4
     this.emissiveNode = pigment.mul(seam).mul(grazing.pow(3)).mul(0.07)
   }

@@ -1,5 +1,7 @@
 import type {PointLamp} from '../base/Room.ts'
 
+import hsl from 'okhsl'
+
 import {chandelierLampY} from '#src/lib/physics/chandelier.ts'
 
 /** how high the baseboards of the Sandbox’s rooms stand, the two plain walnut bands under the Cell’s damask and the Studio’s alike, and the molded one of the Cell’s round spaces too */
@@ -14,7 +16,7 @@ export function chandelierLamp([x, z]: readonly [x: number, z: number]): PointLa
   return {
     position: [x, chandelierLampY + chandelierLift, z],
     strength: 50,
-    tint: '#ffedc4',
+    tint: hsl.integer(87, 100, 94.2),
     range: chandelierRange,
     decay: 1.5,
     shadow: true,

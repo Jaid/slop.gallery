@@ -1,5 +1,6 @@
 import type {Metal} from '../lib/materials/FrameMetalMaterial.ts'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_cell_noise_float, mx_noise_float, select, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -67,12 +68,12 @@ const spill = {
 }
 /** old tacks, their heads gone dark and blue-black, rust bleeding round their rims */
 const tackSteel: Metal = {
-  bright: '#4a4a4c',
-  dull: '#1e1c1c',
+  bright: hsl.integer(286, 2, 32),
+  dull: hsl.integer(17, 3, 13),
   roughness: 0.5,
   patina: {
     amount: 0.6,
-    color: '#6a3a1e',
+    color: hsl.integer(49, 63, 31),
   },
   texture: 0.0002,
 }
@@ -84,7 +85,7 @@ export default class CanvasFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#c8b590'
+  override readonly tint = hsl.integer(84, 34, 74)
   override readonly title = 'Stretched canvas'
 
   override createGeometry(width: number, height: number) {
@@ -113,7 +114,7 @@ export default class CanvasFrame extends PortraitFrame {
       new CanvasMaterial,
       new FrameWoodMaterial({
         timber: oak,
-        stain: '#f2ebe0',
+        stain: hsl.integer(79, 33, 93),
         roughness: 0.6,
         grime: 0.2,
         shade: surface => surface.reach.smoothstep(floater.gap[0], floater.gap[1] + 0.0005).mul(0.4).add(0.6).mul(select(surface.reach.lessThan(floater.gap[1] - 0.0002), float(0.25), float(1))),
@@ -146,7 +147,7 @@ class CanvasMaterial extends MeshPhysicalNodeMaterial {
     const over = warp.mul(weft).mul(0.5).add(0.5)
     const slub = mx_noise_float(vec3(run.mul(60), down.mul(1400), 1.3)).mul(0.5).add(0.5)
     const weave = over.mul(slub.mul(0.6).add(0.4)).mul(visibleDetail(footprint, threads * 2))
-    const raw = mix(mix(color('#a88e64'), color('#c8b088'), slub), color('#8a7048'), weave.mul(0.35))
+    const raw = mix(mix(color(hsl.integer(79, 39, 60)), color(hsl.integer(80, 37, 73)), slub), color(hsl.integer(78, 43, 49)), weave.mul(0.35))
     // The ground, ragged where the brush ran out over the edge.
     const ragged = mx_noise_float(vec3(run.mul(70), 2.1, 0)).mul(0.5).add(0.5).mul(0.6).add(mx_noise_float(vec3(run.mul(300), 5.3, 0)).mul(0.15)).add(0.4)
     const ground = inside(down.sub(ragged.mul(spill.ground)))
@@ -164,14 +165,14 @@ class CanvasMaterial extends MeshPhysicalNodeMaterial {
     const painted = inside(down.sub(paintEdge)).max(drip)
     // Mostly the earths a painting is built on, broken here and there by the Paint Orb’s colors, all dragged along the edge.
     const field = (scale: number, seed: number) => mx_noise_float(vec3(run.mul(scale), down.mul(30), surface.member.mul(3.1).add(seed))).mul(0.5).add(0.5)
-    const earth = mix(color('#3a281a'), color('#a8803a'), field(7, 0.7).smoothstep(0.2, 0.8))
+    const earth = mix(color(hsl.integer(59, 38, 19)), color(hsl.integer(79, 67, 56)), field(7, 0.7).smoothstep(0.2, 0.8))
     const accented = mix(mix(mix(earth, paintColor(float(1)), field(13, 2.3).smoothstep(0.62, 0.8).mul(0.7)), paintColor(float(3)), field(11, 5.9).smoothstep(0.64, 0.82).mul(0.7)), paintColor(float(0)), field(17, 8.1).smoothstep(0.66, 0.84).mul(0.6))
-    const oil = mix(accented, color('#efe6d2'), field(23, 3.3).smoothstep(0.7, 0.85).mul(0.5)).mul(strokes.mul(0.3).add(0.85))
+    const oil = mix(accented, color(hsl.integer(87, 40, 91.5)), field(23, 3.3).smoothstep(0.7, 0.85).mul(0.5)).mul(strokes.mul(0.3).add(0.85))
     // The linen darkens toward the bottom of the gap, where little light reaches, and rust stains it round the tacks.
     const depthShade = down.smoothstep(0.02, 0.042).mul(0.55).oneMinus()
     const stain = mx_noise_float(vec3(run.mul(120), down.mul(120), 2.2)).mul(0.5).add(0.5).mul(line(down.sub(tack.depth), 0.004)).mul(0.5)
-    const linenColor = mix(raw, color('#6a3a1e'), stain).mul(depthShade)
-    const primed = mix(linenColor, mix(color('#ece6d8'), color('#d8d0bc'), weave), ground)
+    const linenColor = mix(raw, color(hsl.integer(49, 63, 31)), stain).mul(depthShade)
+    const primed = mix(linenColor, mix(color(hsl.integer(88, 29, 91)), color(hsl.integer(89, 24, 83.5)), weave), ground)
     this.colorNode = mix(primed, oil, painted)
     this.roughnessNode = mix(mix(float(0.88), float(0.7), ground), float(0.35), painted)
     this.clearcoatNode = painted.mul(0.3)
@@ -218,17 +219,17 @@ class StretcherBackMaterial extends MeshPhysicalNodeMaterial {
     // The linen, its weave, the stamp.
     const weave = point.x.div(0.0007).mul(Math.PI * 2).sin().mul(point.y.div(0.0007).mul(Math.PI * 2).sin()).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.0014))
     const slub = mx_noise_float(vec3(point.x.mul(50), point.y.mul(1300), 2.2)).mul(0.5).add(0.5)
-    const cloth = mix(mix(color('#8a7452'), color('#a68e68'), slub), color('#6e5a3c'), weave.mul(0.4))
+    const cloth = mix(mix(color(hsl.integer(78, 35, 50)), color(hsl.integer(79, 35, 60)), slub), color(hsl.integer(77, 37, 40)), weave.mul(0.4))
     const stampAt = point.sub(vec2(opening.x.mul(0.25), opening.y.mul(-0.35))).mul(vec2(1, 1.5))
     const ring = line(stampAt.length().sub(0.03), 0.0012).max(line(stampAt.length().sub(0.026), 0.0005))
     const letters = select(stampAt.length().lessThan(0.022), mx_cell_noise_float(vec3(stampAt.mul(vec2(220, 90)), 1)).greaterThan(0.45).select(float(1), float(0)).mul(inside(stampAt.y.abs().sub(0.008))), float(0))
     const ink = ring.max(letters.mul(visibleDetail(footprint, 0.0015).mul(0.6).add(0.4))).mul(mx_noise_float(vec3(stampAt.mul(200), 3.1)).mul(0.3).add(0.7))
-    const stamped = mix(cloth, color('#2a2a4a'), ink.mul(0.75))
+    const stamped = mix(cloth, color(hsl.integer(282, 42, 20)), ink.mul(0.75))
     const pineGrain = mx_noise_float(vec3(select(out.x.greaterThan(out.y), point.y.mul(3), point.x.mul(3)), select(out.x.greaterThan(out.y), point.x.mul(220), point.y.mul(220)), 4.4)).mul(0.5).add(0.5)
-    const pine = mix(color('#c8a070'), color('#e2c08e'), pineGrain)
-    const oakFloor = mix(color('#a08060'), color('#c0a07a'), mx_noise_float(vec3(point.mul(vec2(3, 180)), 6.6)).mul(0.5).add(0.5))
-    const timber = mix(mix(stamped, mix(pine, color('#7a5a38'), miter), onBar), mix(color('#b08a5c'), color('#5a4028'), keyGap), key)
-    const floor = mix(oakFloor, mix(color('#8a8a8a'), color('#3a3a3a'), slot), screw)
+    const pine = mix(color(hsl.integer(71, 47, 69)), color(hsl.integer(77, 53, 80)), pineGrain)
+    const oakFloor = mix(color(hsl.integer(66, 35, 56)), color(hsl.integer(71, 37, 68)), mx_noise_float(vec3(point.mul(vec2(3, 180)), 6.6)).mul(0.5).add(0.5))
+    const timber = mix(mix(stamped, mix(pine, color(hsl.integer(67, 46, 41)), miter), onBar), mix(color(hsl.integer(71, 46, 60)), color(hsl.integer(63, 43, 30)), keyGap), key)
+    const floor = mix(oakFloor, mix(color(hsl.integer(0, 0, 57.4)), color(hsl.integer(0, 0, 25)), slot), screw)
     const hanger = hangingWire(surface)
     this.colorNode = mix(mix(timber, floor, onFloor), hanger.color, hanger.cover)
     this.metalnessNode = screw.max(hanger.cover)

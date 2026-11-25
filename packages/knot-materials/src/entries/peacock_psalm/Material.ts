@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv, vec2, vec3} from 'three/tsl'
 
 import {inkFill, inkLine} from '../../lib/atelier.ts'
@@ -35,25 +36,25 @@ export default class extends KnotMaterial {
     const barbPhase = tube.x.mul(TAU * 150).add(tube.y.mul(TAU * 9).sin().mul(2.2))
     const barbs = hairline(barbPhase.sin(), 0.1).mul(intimate)
     const shift = spectralColor(radius.mul(9).add(identity.x.mul(3)).add(grazing.mul(5)))
-    const feather = mix(color('#04382b'), color('#0b4f6e'), grazing.pow(1.3))
-    const withEyes = mix(feather, color('#b5791f'), outerRing)
-    const withTeal = mix(withEyes, mix(color('#12b5a5'), shift, 0.45), tealRing)
-    const withHeart = mix(withTeal, mix(color('#1b2fa0'), shift, 0.5), heart)
-    this.colorNode = mix(withHeart, color('#0a1030'), pupil)
+    const feather = mix(color(hsl.integer(171, 95, 20)), color(hsl.integer(235, 87, 31)), grazing.pow(1.3))
+    const withEyes = mix(feather, color(hsl.integer(71, 84, 56)), outerRing)
+    const withTeal = mix(withEyes, mix(color(hsl.integer(184, 96, 65)), shift, 0.45), tealRing)
+    const withHeart = mix(withTeal, mix(color(hsl.integer(268, 93, 28.3)), shift, 0.5), heart)
+    this.colorNode = mix(withHeart, color(hsl.integer(271, 72, 9)), pupil)
     this.metalness = 0.18
     this.roughnessNode = float(0.4).sub(eye.mul(0.13)).add(barbs.mul(0.06)).clamp(0.2, 0.5)
     this.sheen = 0.85
-    this.sheenNode = mix(color('#14e0c0'), color('#7a5cff'), grazing)
+    this.sheenNode = mix(color(hsl.integer(177, 97, 78)), color(hsl.integer(286, 99, 53)), grazing)
     this.sheenRoughness = 0.42
     this.iridescence = 0.9
     this.iridescenceIOR = 1.32
     this.iridescenceThicknessNode = radius.mul(620).add(identity.y.mul(140)).add(140)
     this.normalNode = proceduralNormal(outerRing.mul(0.22).add(heart.mul(0.3)).add(barbs.mul(0.06)), 0.75)
     const procession = tube.x.mul(TAU * 4).sub(time.mul(Math.PI * 2)).sin().mul(0.5).add(0.5)
-    this.emissiveNode = mix(color('#2440ff'), color('#ffb340'), pupil)
+    this.emissiveNode = mix(color(hsl.integer(266.8, 100, 43)), color(hsl.integer(73, 100, 79)), pupil)
       .mul(heart)
       .mul(procession.pow(2).mul(0.6).add(0.4))
       .mul(near.mul(0.6).add(0.35))
-      .add(color('#19f2d8').mul(tealRing).mul(facing.pow(2)).mul(0.34))
+      .add(color(hsl.integer(181, 97.7, 84)).mul(tealRing).mul(facing.pow(2)).mul(0.34))
   }
 }

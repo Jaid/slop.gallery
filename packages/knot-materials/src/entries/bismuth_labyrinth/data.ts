@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_labyrinth',
   candidateId: 'claude_opus',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A hyper-geometric maze of oxidized metal, its terraces shifting in impossible iridescent hues.',
   displacement: 0.035,
   placeholder: {
-    color: '#a87bb6',
+    color: hsl.integer(318, 45, 59),
     shading: 'metal',
   },
 } as const satisfies KnotData

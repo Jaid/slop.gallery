@@ -404,7 +404,7 @@ test('WebMCP layer calls reject malformed inputs before creating or clearing lay
   expect(run('clear_drawings', {})).toEqual({removed: 2})
   expect(() => run('clear_drawings', {id: 'notes'})).toThrow()
   expect(() => run('clear_layer', {})).toThrow()
-  for (const options of [{id: ' '}, {lineWidth: 0}, {lineStyle: 'wide'}, {priority: Infinity}, {color: 'oops'}, {fade: {start: 100}}, {fade: {power: 0}}, {fade: {near: 1}}]) {
+  for (const options of [{id: ' '}, {lineWidth: 0}, {lineStyle: 'wide'}, {priority: Infinity}, {color: 'oops'}, {color: 0}, {fade: {start: 100}}, {fade: {power: 0}}, {fade: {near: 1}}]) {
     expect(() => run('add_layer', {
       id: 'notes',
       ...options,

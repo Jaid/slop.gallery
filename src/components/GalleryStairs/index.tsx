@@ -1,5 +1,6 @@
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -27,7 +28,7 @@ export default function GalleryStairs() {
       ...(['inner', 'outer'] as const).map(side => ({
         name: `handrail-${side}`,
         geometry: stairRailGeometry(side),
-        color: '#ac8c58',
+        color: hsl.integer(79, 48, 60),
         roughness: 0.45,
       })),
     ].map(part => ({
@@ -62,7 +63,7 @@ export default function GalleryStairs() {
     </RigidBody>
     {stairBlocks.filter(block => block.tread).map(({position, size, top, direction}, i) => <mesh key={i} position={[position[0] - direction * (size[0] / 2 - 0.035), top + 0.004, position[2]]}>
       <boxGeometry args={[0.025, 0.008, size[2] - 0.45]} />
-      <meshBasicNodeMaterial color={i % 3 === 0 ? '#d5ad73' : moonfallTheme.stepLight} toneMapped={false} />
+      <meshBasicNodeMaterial color={i % 3 === 0 ? hsl.integer(76, 54, 73) : moonfallTheme.stepLight} toneMapped={false} />
     </mesh>)}
     {/* StaticBatch hides the originals before automatic colliders would see them, so the beams state their colliders. */}
     <RigidBody colliders={false} type='fixed'>

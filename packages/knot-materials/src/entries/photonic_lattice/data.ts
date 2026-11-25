@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'photonic_lattice',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Coherent laser pulses race through microscopic sapphire waveguides, splitting into sharp diffraction fans upon inspection.',
   placeholder: {
-    color: '#315284',
+    color: hsl.integer(258, 56, 35),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cathedral_lightning',
   candidateId: 'muse_spark',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Thunder has left its illuminated handwriting in a crystal nave.',
   placeholder: {
-    color: '#7af0ff',
+    color: hsl.integer(206, 100, 87.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

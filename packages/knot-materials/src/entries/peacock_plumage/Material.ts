@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -52,22 +53,22 @@ export default class extends KnotMaterial {
     const featherNormal = proceduralNormal(eyeRelief.add(barbRelief), 0.95)
     this.normalNode = featherNormal
     this.clearcoatNormalNode = featherNormal
-    const darkPlumage = color('#03130c')
-    const emerald = color('#0a7a48')
-    const bronze = color('#9a6a24')
-    const copper = color('#b85f27')
-    const turquoise = color('#0fb9a8')
-    const sapphire = color('#173a9e')
-    const violet = color('#3b1470')
+    const darkPlumage = color(hsl.integer(165, 74, 7))
+    const emerald = color(hsl.integer(156, 98.4, 43))
+    const bronze = color(hsl.integer(72, 76, 49))
+    const copper = color(hsl.integer(50, 79, 52))
+    const turquoise = color(hsl.integer(183, 97, 66))
+    const sapphire = color(hsl.integer(265, 91, 30))
+    const violet = color(hsl.integer(296, 86, 21))
     let plumage = mix(darkPlumage, emerald, barb.mul(0.24).add(halo.mul(0.12)))
-    plumage = mix(plumage, color('#010604'), eyeBand(0.485).mul(halo.oneMinus()))
+    plumage = mix(plumage, color(hsl.integer(171, 66, 3.5)), eyeBand(0.485).mul(halo.oneMinus()))
     plumage = mix(plumage, bronze, halo.mul(emeraldRing.oneMinus()))
     plumage = mix(plumage, emerald.mul(1.25), emeraldRing.mul(copperRing.oneMinus()))
     plumage = mix(plumage, copper, copperRing.mul(turquoiseHeart.oneMinus()))
     const shiftedHeart = mix(turquoise, sapphire, viewPhase.mul(0.42))
     plumage = mix(plumage, shiftedHeart, turquoiseHeart.mul(sapphireHeart.oneMinus()))
     plumage = mix(plumage, mix(sapphire, violet, viewPhase), sapphireHeart.mul(violetCore.oneMinus()))
-    plumage = mix(plumage, color('#75f4ff'), violetCore.mul(0.8))
+    plumage = mix(plumage, color(hsl.integer(203, 100, 88.2)), violetCore.mul(0.8))
     this.colorNode = plumage
     const goldMask = halo.mul(emeraldRing.oneMinus()).add(copperRing.mul(turquoiseHeart.oneMinus()).mul(0.7))
     this.metalnessNode = goldMask.mul(0.45).add(turquoiseHeart.mul(0.08))
@@ -76,7 +77,7 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.28
     this.clearcoatRoughness = 0.24
     this.sheen = 1
-    this.sheenColor.set('#2fe8b4')
+    this.sheenColor.set(hsl.integer(168, 92, 80))
     this.sheenRoughnessNode = float(0.38).sub(turquoiseHeart.mul(0.12)).add(grazing.mul(0.14))
     this.iridescenceNode = turquoiseHeart.mul(0.34).add(grazing.mul(0.48)).clamp()
     this.iridescenceIOR = 1.38
@@ -84,8 +85,8 @@ export default class extends KnotMaterial {
     const sparkle = cellularPoints(p.mul(46), 0.018, 0.13, 0.62).mul(intimate)
     const heartPulse = breathe.mul(0.24).add(0.2)
     this.emissiveNode = turquoise.mul(turquoiseHeart.mul(sapphireHeart.oneMinus())).mul(heartPulse).mul(facing.mul(0.55).add(0.35)).mul(near.mul(0.7).add(0.55))
-      .add(color('#ffd98a').mul(goldMask).mul(glints(featherNormal, 170)).mul(near.mul(0.8).add(0.45)).mul(1.4))
+      .add(color(hsl.integer(85, 100, 88.5)).mul(goldMask).mul(glints(featherNormal, 170)).mul(near.mul(0.8).add(0.45)).mul(1.4))
       .add(spectralColor(viewPhase.mul(3).add(identity.x.mul(2))).mul(grazing.pow(2.4)).mul(0.13))
-      .add(color('#bffcff').mul(sparkle).mul(0.65))
+      .add(color(hsl.integer(200, 100, 94.3)).mul(sparkle).mul(0.65))
   }
 }

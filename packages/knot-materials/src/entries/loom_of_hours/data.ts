@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'loom_of_hours',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Every thread was dipped in a different hour of the day, and the loom wove them together.',
   placeholder: {
-    color: '#9c1229',
+    color: hsl.integer(20, 94, 36),
     shading: 'fabric',
   },
 } as const satisfies KnotData

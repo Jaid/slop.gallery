@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, interleavedGradientNoise, Loop, mix, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, refract, screenCoordinate, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -12,15 +13,15 @@ const steps = 32
 const suns = [{
   home: vec3(0.21, 0.06, 0.1),
   rate: 0.31,
-  tint: color('#ffd9a0'),
+  tint: color(hsl.integer(78, 100, 89)),
 }, {
   home: vec3(-0.27, -0.17, -0.07),
   rate: 0.23,
-  tint: color('#9fd8ff'),
+  tint: color(hsl.integer(239, 100, 83.3)),
 }, {
   home: vec3(0.03, 0.34, -0.14),
   rate: 0.37,
-  tint: color('#ffb3a0'),
+  tint: color(hsl.integer(35, 100, 81)),
 }]
 const sunPosition = (index: number) => {
   const sun = suns[index]
@@ -54,10 +55,10 @@ function nebula(x: Node<'vec3'>, detail: Node<'float'>) {
 /** Hubble-palette emission: violet haze, magenta or teal ionized gas, gold or cyan cores and white-hot filaments. */
 function emission(heat: Node<'float'>, tint: Node<'float'>) {
   const side = tint.smoothstep(0.4, 0.6)
-  const ion = mix(color('#ff3f9a'), color('#19e6c8'), side)
-  const haze = mix(color('#2b17a8'), ion, heat.smoothstep(0.2, 0.55))
-  const hot = mix(color('#ffb347'), color('#8ff5ff'), side)
-  return mix(mix(haze, hot, heat.smoothstep(0.55, 0.9)), color('#fff6e0'), heat.smoothstep(0.9, 1.2))
+  const ion = mix(color(hsl.integer(357, 100, 62.7)), color(hsl.integer(179, 96.4, 80)), side)
+  const haze = mix(color(hsl.integer(275, 97, 27)), ion, heat.smoothstep(0.2, 0.55))
+  const hot = mix(color(hsl.integer(72, 100, 79.1)), color(hsl.integer(203, 100, 90)), side)
+  return mix(mix(haze, hot, heat.smoothstep(0.55, 0.9)), color(hsl.integer(88, 100, 97)), heat.smoothstep(0.9, 1.2))
 }
 /** A glass tube filled with an emission nebula, marched for real: the clouds and suns sit at true depths. */
 export default class extends KnotMaterial {
@@ -88,7 +89,7 @@ export default class extends KnotMaterial {
         }
         const body = emission(field.heat.mul(light.mul(0.55).add(0.5).min(1.6)).min(1), field.tint)
         glow.addAssign(body.mul(field.gas).mul(light).mul(transmittance).mul(step).mul(70))
-        glow.addAssign(color('#4a1f10').mul(field.dust).mul(light).mul(transmittance).mul(step).mul(2.2))
+        glow.addAssign(color(hsl.integer(39, 69, 20)).mul(field.dust).mul(light).mul(transmittance).mul(step).mul(2.2))
         transmittance.mulAssign(field.dust.mul(2.6).add(field.gas.mul(0.75)).mul(step).mul(-12).exp())
       })
 // Suns themselves: a halo and a hard core wherever the ray passes close, dimmed by whatever lies in front.
@@ -102,17 +103,17 @@ export default class extends KnotMaterial {
         flares = flares.add(sun.tint.mul(halo.mul(0.55).add(core.mul(2.4))))
       }
       const far = starfield(direction, 34, 0.9).add(starfield(direction.add(7.3), 88, 0.95).mul(intimate.mul(0.7).add(0.3)))
-      const deep = mix(color('#030108'), color('#170a3a'), mx_noise_float(direction.mul(2.1)).mul(0.5).add(0.5))
+      const deep = mix(color(hsl.integer(300, 68, 2.4)), color(hsl.integer(288, 80, 10)), mx_noise_float(direction.mul(2.1)).mul(0.5).add(0.5))
       return glow.add(flares.mul(transmittance.sqrt())).add(far.mul(2.4).add(deep).mul(transmittance))
     })
     const glass = facing.pow(0.3).mul(0.85).add(0.15)
-    this.colorNode = color('#010104')
+    this.colorNode = color(hsl.integer(281, 53, 2))
     this.metalness = 0
     this.roughness = 0.04
     this.ior = 1.5
     this.clearcoat = 1
     this.clearcoatRoughness = 0.015
     this.emissiveNode = volume().mul(glass).mul(near.mul(0.35).add(0.85))
-      .add(color('#3a2cc0').mul(grazing.pow(4)).mul(0.25))
+      .add(color(hsl.integer(276, 93, 33.5)).mul(grazing.pow(4)).mul(0.25))
   }
 }

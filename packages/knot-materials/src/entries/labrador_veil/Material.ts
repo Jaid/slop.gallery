@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, time} from 'three/tsl'
 
 import {colorRamp} from '../../candidates/deepseek/lib/colorRamp.ts'
@@ -54,8 +55,8 @@ export default class extends KnotMaterial {
     const fineHalo = fineAlign.smoothstep(0.2, 0.9).mul(0.12).mul(intimate)
 // Squaring the identity biases the stone towards its signature peacock blue,
 // leaving the lime and gold flashes as rare events.
-    const coarseHue = colorRamp(coarse.secondary.x.pow(2), ['#0033ff', '#0077ff', '#00c2ff', '#00ffa8', '#ffcc00'])
-    const fineHue = colorRamp(fine.secondary.z.pow(2), ['#00d5ff', '#4dff9e', '#ffe066', '#ff5fd2', '#6a5cff'])
+    const coarseHue = colorRamp(coarse.secondary.x.pow(2), [hsl.integer(264.1, 100, 40.4), hsl.integer(258, 100, 53), hsl.integer(230, 100, 72), hsl.integer(160, 100, 86), hsl.integer(90, 100, 84)])
+    const fineHue = colorRamp(fine.secondary.z.pow(2), [hsl.integer(219, 100, 77.4), hsl.integer(155, 100, 87), hsl.integer(95, 100, 89.5), hsl.integer(340, 100, 68.4), hsl.integer(280, 100, 52)])
 // Some grains are simply richer than others.
     const coarsePower = coarse.secondary.y.smoothstep(0.1, 0.9).mul(0.7).add(0.3)
     const finePower = fine.secondary.y.smoothstep(0.2, 0.9).mul(0.5).add(0.25)
@@ -64,7 +65,7 @@ export default class extends KnotMaterial {
     const cloudy = mx_noise_float(p.mul(11)).mul(0.5).add(0.5)
     const speck = mx_noise_float(p.mul(150)).mul(0.5).add(0.5)
     const fleck = speck.smoothstep(0.72, 0.8)
-    const body = mix(color('#010208'), color('#080d15'), smoky.mul(0.5).add(cloudy.mul(0.3)).add(speck.mul(0.16))).mul(fleck.mul(0.4).oneMinus())
+    const body = mix(color(hsl.integer(268, 62, 2.5)), color(hsl.integer(259, 31, 6.5)), smoky.mul(0.5).add(cloudy.mul(0.3)).add(speck.mul(0.16))).mul(fleck.mul(0.4).oneMinus())
 // A slow shimmer keeps the stone from feeling like a still photograph.
     const shimmer = time.mul(0.35).add(coarse.secondary.z.mul(6.283)).sin().mul(0.06).add(0.94)
 // Twin lamellae: fine parallel sheets inside every grain. They settle to their
@@ -89,7 +90,7 @@ export default class extends KnotMaterial {
     const relief = smoky.mul(0.35).add(cloudy.mul(0.25)).add(speck.mul(0.2))
     this.normalNode = proceduralNormal(relief, 0.0003)
     this.clearcoatNormalNode = this.normalNode
-    this.emissiveNode = flash.mul(1.35).add(fineFlash.mul(0.7)).add(halo.mul(0.35)).add(color('#5f8dff').mul(grazing.pow(3)).mul(0.02))
+    this.emissiveNode = flash.mul(1.35).add(fineFlash.mul(0.7)).add(halo.mul(0.35)).add(color(hsl.integer(266, 100, 61)).mul(grazing.pow(3)).mul(0.02))
     this.aoNode = float(0.9)
     this.positionNode = positionGeometry.add(normalLocal.mul(coarse.wall.smoothstep(0.9, 1).mul(-0.0006)))
   }

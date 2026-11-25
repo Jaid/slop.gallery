@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_leviathan',
   candidateId: 'qwen_max',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'An ancient hide remembers the pressure of uncharted oceans.',
   placeholder: {
-    color: '#00ffcc',
+    color: hsl.integer(171, 100, 87),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, normalViewGeometry, time, uv, vec2} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -53,17 +54,17 @@ export default class extends KnotMaterial {
     const md2 = mc2.x.mul(1.02).abs().add(mc2.y.abs())
     const diamond = medallion(md2, float(0.16))
     const goldMask = rimA.add(ringB.mul(0.8)).add(heart.mul(0.9)).add(spoke.mul(0.35)).add(diamond.mul(0.75)).clamp()
-    const ground = mix(color('#120b2e'), color('#1c0f42'), mx_noise_float(p.mul(5)).mul(0.5).add(0.5).mul(0.5))
+    const ground = mix(color(hsl.integer(287, 71, 8.6)), color(hsl.integer(289, 77, 12)), mx_noise_float(p.mul(5)).mul(0.5).add(0.5).mul(0.5))
     // Damask light-play: inside a medallion the weave turns ninety degrees, so
     // motif and ground answer the same light in opposite voices.
     const weaveRot = mix(weftHeight, warpHeight, dominance)
     const weaveCloth = mix(weave, weaveRot, motif)
-    const silkMotif = mix(color('#2e1860'), color('#482a78'), petal.mul(0.5).add(weaveCloth.mul(0.25)))
-    const threadTint = mix(color('#33206e'), color('#5c2456'), checker)
+    const silkMotif = mix(color(hsl.integer(291, 78, 18.6)), color(hsl.integer(297, 69, 27)), petal.mul(0.5).add(weaveCloth.mul(0.25)))
+    const threadTint = mix(color(hsl.integer(288, 76, 22)), color(hsl.integer(332, 62, 27)), checker)
     const ghostDiamond = medallion(md2, float(0.55))
     let albedo = mix(ground, silkMotif, motif.mul(0.85).add(ghostDiamond.mul(0.13)))
     albedo = mix(albedo, threadTint, weaveFade.mul(0.1))
-    albedo = mix(albedo, color('#c8922a'), goldMask)
+    albedo = mix(albedo, color(hsl.integer(79, 83, 65)), goldMask)
     this.colorNode = albedo
     this.metalnessNode = goldMask.mul(0.95)
     this.specularIntensity = 0.6
@@ -74,14 +75,14 @@ export default class extends KnotMaterial {
     // The sheen travels: its hue is a slow function of viewing angle and position,
     // so a walk around the knot keeps re-dyeing the cloth.
     const sheenHue = spectralColor(grazing.mul(3.2).add(tube.x.mul(TAU * 2)).add(checker.mul(0.7)).add(time.mul(0.03)))
-    this.sheenNode = mix(color('#6a3ad0'), color('#ffb84a'), checkerF.mul(0.22).add(goldMask.mul(0.15))).mul(0.3).add(sheenHue.mul(0.18)).mul(motif.mul(0.4).add(0.85))
+    this.sheenNode = mix(color(hsl.integer(291, 85, 42)), color(hsl.integer(74, 100, 80)), checkerF.mul(0.22).add(goldMask.mul(0.15))).mul(0.3).add(sheenHue.mul(0.18)).mul(motif.mul(0.4).add(0.85))
     this.sheenRoughnessNode = mix(float(0.35), float(0.25), goldMask)
     this.anisotropy = 0.8
     this.anisotropyNode = mix(vec2(1, 0), vec2(0, 1), checkerF).mul(0.65).mul(goldMask.oneMinus())
     this.aoNode = motif.mul(0.08).add(0.9)
     const goldGlint = glints(normalViewGeometry, 170).mul(goldMask).mul(intimate.mul(0.8).add(near.mul(0.3)))
-    this.emissiveNode = color('#ffdf9a').mul(goldGlint).mul(0.55)
-      .add(color('#2a1650').mul(grazing.pow(2)).mul(near.mul(0.3).add(0.4)).mul(0.22))
+    this.emissiveNode = color(hsl.integer(85, 100, 90)).mul(goldGlint).mul(0.55)
+      .add(color(hsl.integer(294, 73, 16)).mul(grazing.pow(2)).mul(near.mul(0.3).add(0.4)).mul(0.22))
     this.envMapIntensity = 1.2
   }
 }

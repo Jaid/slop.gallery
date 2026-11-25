@@ -5,6 +5,7 @@ import type {Texture} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useLayoutEffect, useMemo, useRef} from 'react'
 
 import {canvasMaterials} from '#src/canvas_materials/index.ts'
@@ -22,7 +23,7 @@ export default function DynamicImageMaterial({canvasMaterial, size, source, ...p
     return <CanvasImageMaterial height={size.height} kind={canvasMaterial} texture={texture} width={size.width} />
   }
   // Switching between opaque and transparent needs a fresh material, so the transparency is part of the key.
-  return <meshBasicNodeMaterial key={`${texture?.uuid ?? 'loading'}-${String(props.transparent)}`} {...props} color={texture ? '#ffffff' : (failed ? artworkPlaceholders.failed : artworkPlaceholders.loading)} map={texture} />
+  return <meshBasicNodeMaterial key={`${texture?.uuid ?? 'loading'}-${String(props.transparent)}`} {...props} color={texture ? hsl.integer(0, 0, 100) : (failed ? artworkPlaceholders.failed : artworkPlaceholders.loading)} map={texture} />
 }
 
 /** The image on a material of its own of the canvas material, which goes with the image. */

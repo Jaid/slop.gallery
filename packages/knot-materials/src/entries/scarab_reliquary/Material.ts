@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, uv, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -26,7 +27,7 @@ export default class extends KnotMaterial {
     const threads = opticalBands(groove)
     const sheen = spectralColor(view.y.mul(1.25).add(uv().y.mul(9 * Math.PI * 2)).add(view.x.mul(0.7)))
     const goldDust = filament(mx_noise_float(p.mul(90)), 0.016)
-    this.colorNode = mix(color('#07231a'), sheen, threads.mul(0.4).add(0.15))
+    this.colorNode = mix(color(hsl.integer(169, 75, 13)), sheen, threads.mul(0.4).add(0.15))
     this.metalnessNode = goldDust.mul(0.18).add(0.72)
     this.roughnessNode = threads.mul(0.06).add(0.075)
     this.iridescence = 1
@@ -35,6 +36,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 1
     this.clearcoatRoughness = 0.03
     this.normalNode = proceduralNormal(groove.sin(), 0.00035)
-    this.emissiveNode = sheen.mul(threads).mul(rim).mul(near.mul(0.5).add(0.12)).mul(0.5).add(color('#ffd98a').mul(goldDust).mul(near).mul(0.85))
+    this.emissiveNode = sheen.mul(threads).mul(rim).mul(near.mul(0.5).add(0.12)).mul(0.5).add(color(hsl.integer(85, 100, 88.5)).mul(goldDust).mul(near).mul(0.85))
   }
 }

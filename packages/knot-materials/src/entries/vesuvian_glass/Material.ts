@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -28,17 +29,17 @@ export default class extends KnotMaterial {
     // Slow thermal tide; the vein network breathes instead of blinking.
     const breath = inner.y.mul(0.35).add(time.mul(0.15)).sin().mul(0.5).add(0.62)
     const heat = cracks.mul(1.3).add(deepCracks.mul(0.6)).mul(breath).mul(near.mul(0.75).add(0.4))
-    const magma = mix(mix(color('#4a0d02'), color('#ff7524'), heat.clamp()), color('#fff3c4'), heat.pow(5).clamp())
-    this.colorNode = mix(color('#050403'), color('#241812'), noise)
+    const magma = mix(mix(color(hsl.integer(34, 96, 17)), color(hsl.integer(45.7, 100, 67)), heat.clamp()), color(hsl.integer(95, 100, 95.5)), heat.pow(5).clamp())
+    this.colorNode = mix(color(hsl.integer(71, 13, 3)), color(hsl.integer(48, 28, 12)), noise)
     this.transmission = 0.3
     this.thickness = 0.5
     this.ior = 1.5
-    this.attenuationColor.set('#33110a')
+    this.attenuationColor.set(hsl.integer(33, 68, 13))
     this.attenuationDistance = 0.45
     this.roughnessNode = heat.clamp().mul(-0.03).add(0.075)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.04
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(16)), 0.0016)
-    this.emissiveNode = magma.mul(heat).mul(grazing.mul(0.25).add(0.85)).add(color('#ff4d26').mul(rim.pow(2)).mul(heat.mul(1.5).clamp()).mul(0.35))
+    this.emissiveNode = magma.mul(heat).mul(grazing.mul(0.25).add(0.85)).add(color(hsl.integer(33.6, 100, 61.5)).mul(rim.pow(2)).mul(heat.mul(1.5).clamp()).mul(0.35))
   }
 }

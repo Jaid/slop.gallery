@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'photinus_synchrony',
   candidateId: 'claude_opus',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A swarm of fireflies has chosen the knot as their midnight forest, pulsing toward a single breath.',
   displacement: 0.006,
   placeholder: {
-    color: '#35562f',
+    color: hsl.integer(141, 61, 33),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, positionGeometry, uv} from 'three/tsl'
 
 import {thinFilm} from '../../candidates/gemini_flash/lib/thinFilm.ts'
@@ -33,7 +34,7 @@ export default class extends KnotMaterial {
       .add(venation.mul(90))
     const structuralColor = thinFilm(cuticleThickness, facing, 1.58)
     // Base chitin matrix: deep melanin-infused bronze base beneath the iridescent epicuticle
-    const melaninBase = mix(color('#0a1008'), color('#1a260c'), venation)
+    const melaninBase = mix(color(hsl.integer(138, 35, 7)), color(hsl.integer(130, 66, 15)), venation)
     const bodyColor = mix(melaninBase, structuralColor, float(0.75).add(venation.mul(0.2)))
     this.colorNode = bodyColor
     this.metalnessNode = float(0.78).sub(venation.mul(0.2))
@@ -41,7 +42,7 @@ export default class extends KnotMaterial {
     this.clearcoat = 1
     this.clearcoatRoughness = 0.025
     this.sheen = 0.5
-    this.sheenColor.set('#ffd700')
+    this.sheenColor.set(hsl.integer(96, 100, 87))
     this.sheenRoughness = 0.35
     // Multi-layer iridescence parameters
     this.iridescence = 1
@@ -51,12 +52,12 @@ export default class extends KnotMaterial {
     const corrugationNormal = proceduralNormal(pleatHeight.add(venation.mul(0.003)), 0.85)
     this.normalNode = corrugationNormal
     // Subtle bio-fluorescence in the tracheal channels, visible under grazing rim light
-    const bioFluorescence = mix(color('#00ffa2'), color('#38b6ff'), venation)
+    const bioFluorescence = mix(color(hsl.integer(158, 100, 86)), color(hsl.integer(239, 99, 70)), venation)
       .mul(venation)
       .mul(rim.pow(2))
       .mul(near.mul(0.5).add(0.5))
       .mul(0.7)
-    const glancingGold = color('#e6b800').mul(grazing.pow(3)).mul(0.35)
+    const glancingGold = color(hsl.integer(91, 100, 77)).mul(grazing.pow(3)).mul(0.35)
     this.emissiveNode = bioFluorescence.add(glancingGold)
   }
 }

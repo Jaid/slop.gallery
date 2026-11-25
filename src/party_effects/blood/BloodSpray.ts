@@ -1,6 +1,7 @@
 import type {BloodDrop} from './flights.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, attribute, cameraPosition, cross, exp, float, max, mix, modelPosition, mx_noise_float, positionGeometry, positionWorld, select, sin, smoothstep, uv, vec2, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
@@ -24,15 +25,15 @@ const scallops = 15
 /** how big a speck of the mist looks, in meters, however fine it is */
 const mistSize = 0.014
 const colors = {
-  core: rgb('#5e0510'),
-  body: rgb('#860a16'),
-  thin: rgb('#ae121e'),
-  highlight: rgb('#fff1ee'),
-  mist: rgb('#7a0814'),
-  dried: rgb('#4e1610'),
-  driedRing: rgb('#2e0906'),
+  core: rgb(hsl.integer(23, 96, 21)),
+  body: rgb(hsl.integer(25, 97, 30)),
+  thin: rgb(hsl.integer(25, 97, 40)),
+  highlight: rgb(hsl.integer(32, 100, 96)),
+  mist: rgb(hsl.integer(24, 97, 27.5)),
+  dried: rgb(hsl.integer(29, 79, 19)),
+  driedRing: rgb(hsl.integer(29, 80, 10.5)),
   /** what the wet blood mirrors at grazing angles: the dim room */
-  sheen: rgb('#241c20'),
+  sheen: rgb(hsl.integer(347, 15, 13)),
 }
 /** where the light glinting on the blood hangs, from the origin: up, like a lamp, and a little toward the room */
 const lamp = [0, 1.1, 0.6] as const

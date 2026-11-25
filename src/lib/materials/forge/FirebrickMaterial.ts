@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {atan, color, float, hash, max, mix, mx_noise_float, positionLocal, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -46,12 +47,12 @@ export default class FirebrickMaterial extends MeshStandardNodeMaterial {
     const arris = edge.add(grain.mul(0.002))
     const brickFace = mix(float(1 - mortarShare), insideBy(float(brick.joint).sub(arris), pixel), visibleDetail(pixel, brick.joint * 6))
     const glazed = row.lessThan(dado.cap + 1)
-    const clay = mix(color('#ac7555').rgb, color('#e5c49b').rgb, flash)
-    const green = mix(color('#265654').rgb, color('#578176').rgb, shade.mul(0.68).add(flash.mul(0.32)))
-    const glaze = select(row.equal(dado.biscuit), color('#cd9b54').rgb, select(row.equal(dado.cap).or(row.equal(dado.band)), color('#274844').rgb, green))
+    const clay = mix(color(hsl.integer(51, 46, 55)).rgb, color(hsl.integer(73, 50, 81)).rgb, flash)
+    const green = mix(color(hsl.integer(192, 55, 33)).rgb, color(hsl.integer(176, 33, 50)).rgb, shade.mul(0.68).add(flash.mul(0.32)))
+    const glaze = select(row.equal(dado.biscuit), color(hsl.integer(74, 64, 68)).rgb, select(row.equal(dado.cap).or(row.equal(dado.band)), color(hsl.integer(186, 42, 28)).rgb, green))
     const shoulder = arris.smoothstep(0.002, 0.014)
     const fired = clay.mul(shoulder.mul(0.12).add(grain.mul(0.13)).add(0.86))
-    this.colorNode = mix(select(glazed, color('#455951').rgb, color('#958371').rgb), select(glazed, glaze, fired), brickFace)
+    this.colorNode = mix(select(glazed, color(hsl.integer(169, 20, 36)).rgb, color(hsl.integer(67, 19, 56)).rgb), select(glazed, glaze, fired), brickFace)
     this.roughnessNode = mix(float(0.94), select(glazed, float(0.2).add(shade.mul(0.12)), float(0.76).add(shade.mul(0.13))), brickFace)
     this.normalNode = heightNormal(shoulder.mul(0.0048).add(grain.mul(select(glazed, float(0.00008), float(0.00036)))).mul(visibleDetail(pixel, 0.045)))
   }

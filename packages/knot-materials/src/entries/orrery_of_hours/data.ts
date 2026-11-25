@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'orrery_of_hours',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   displacement: 0.009,
   flavorText: 'A brass movement with no dial to read: only wheels that keep counting something the room cannot name.',
   placeholder: {
-    color: '#c99a34',
+    color: hsl.integer(83, 79, 67),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, positionGeometry, uv, vec2} from 'three/tsl'
 import {DoubleSide} from 'three/webgpu'
 
@@ -39,8 +40,8 @@ export default class extends KnotMaterial {
     const rail = q.y.mul(Math.PI / 2).cos().smoothstep(0.94, 0.995)
     const brushPhase = positionGeometry.length().mul(1800)
     const brush = brushPhase.sin().mul(brushPhase.fwidth().smoothstep(0.5, 2).oneMinus())
-    const brass = color('#c79b50').mul(brush.mul(0.035).add(0.95))
-    this.colorNode = mix(mix(brass, color('#1b5358'), rail), color('#f6d493'), rim.mul(0.7))
+    const brass = color(hsl.integer(79, 65, 67)).mul(brush.mul(0.035).add(0.95))
+    this.colorNode = mix(mix(brass, color(hsl.integer(204, 69, 32)), rail), color(hsl.integer(83, 75, 86.5)), rim.mul(0.7))
     this.metalnessNode = mix(float(0.9), float(0.25), rail)
     this.roughnessNode = float(0.31).add(rail.mul(0.12)).sub(rim.mul(0.09))
     this.anisotropy = 0.45

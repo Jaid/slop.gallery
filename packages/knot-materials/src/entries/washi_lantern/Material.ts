@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {ridge} from '../../candidates/claude_fable/lib/ridge.ts'
@@ -46,16 +47,16 @@ export default class extends BaseKnotMaterial {
     const moth = du.mul(du).mul(1800).add(dv.mul(dv).mul(flap.mul(40).add(60))).negate().exp().mul(intimate.mul(0.6).add(0.4))
     const shade = ink.mul(0.9).add(blossom.mul(0.35)).add(moth.mul(0.7)).clamp().oneMinus()
     const lit = flame.mul(flicker).mul(transmittance).mul(facing.mul(0.45).add(0.55))
-    const flameColor = mix(color('#ff7a1c'), color('#ffd9a0'), flame.mul(flicker).clamp())
-    this.colorNode = mix(color('#f1e4cc'), color('#d8c7a6'), thickness).mul(ink.mul(0.55).oneMinus())
+    const flameColor = mix(color(hsl.integer(49, 100, 68)), color(hsl.integer(78, 100, 89)), flame.mul(flicker).clamp())
+    this.colorNode = mix(color(hsl.integer(83, 48, 91)), color(hsl.integer(84, 35, 81)), thickness).mul(ink.mul(0.55).oneMinus())
     this.roughnessNode = float(0.85).sub(pulp.mul(0.1))
     this.metalness = 0
     this.sheen = 1
-    this.sheenNode = color('#fff6e6').mul(0.5)
+    this.sheenNode = color(hsl.integer(82, 100, 97.2)).mul(0.5)
     this.sheenRoughnessNode = float(0.85)
     this.normalNode = proceduralNormal(thickness.mul(0.8).add(fibres.mul(0.4)), 0.0009)
     this.emissiveNode = flameColor.mul(lit).mul(shade).mul(1.6).mul(near.mul(0.25).add(0.85))
-      .add(color('#ff9fb6').mul(blossom).mul(lit))
-      .add(color('#ffb36a').mul(grazing.pow(2)).mul(flame).mul(flicker).mul(0.15))
+      .add(color(hsl.integer(4, 99, 77.3)).mul(blossom).mul(lit))
+      .add(color(hsl.integer(63, 100, 79.5)).mul(grazing.pow(2)).mul(flame).mul(flicker).mul(0.15))
   }
 }

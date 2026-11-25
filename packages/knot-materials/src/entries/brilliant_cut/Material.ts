@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, cos, float, modelWorldMatrix, normalLocal, normalWorld, reflect, refract, select, sin, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {panelSky, proceduralEnvironment, viewRayWorld} from '../../candidates/claude_sonnet/lib/environment.ts'
@@ -163,10 +164,10 @@ export default class extends KnotMaterial {
       const half = world.sub(viewRayWorld).normalize()
       scintillation = scintillation.add(normalWorld.dot(half).clamp().pow(420))
     }
-    this.colorNode = color('#000000')
+    this.colorNode = color(hsl.integer(0, 0, 0))
     this.metalness = 0
     this.roughness = 0.03
     this.ior = 1.55
-    this.emissiveNode = inside.mul(fresnel.oneMinus()).mul(vec3(0.97, 0.99, 1)).add(color('#fff4e0').mul(scintillation).mul(7))
+    this.emissiveNode = inside.mul(fresnel.oneMinus()).mul(vec3(0.97, 0.99, 1)).add(color(hsl.integer(83, 100, 96.6)).mul(scintillation).mul(7))
   }
 }

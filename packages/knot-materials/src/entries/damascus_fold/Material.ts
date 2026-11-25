@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, positionGeometry, positionViewDirection, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -19,7 +20,7 @@ export default class extends KnotMaterial {
     const bands = layers.sin().mul(0.5).add(0.5)
     const etch = bands.smoothstep(0.3, 0.7)
     const grain = mx_noise_float(p.mul(38)).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#22242b'), color('#d8d2c4'), etch).mul(grain.mul(0.12).add(0.94))
+    this.colorNode = mix(color(hsl.integer(273, 13, 16)), color(hsl.integer(88, 18, 84)), etch).mul(grain.mul(0.12).add(0.94))
     this.metalness = 1
     this.roughnessNode = etch.mul(-0.26).add(0.4).add(grain.mul(0.03)).sub(grazing.mul(0.05)).clamp(0.04, 0.6)
     this.anisotropy = 0.7
@@ -28,6 +29,6 @@ export default class extends KnotMaterial {
     this.iridescence = 0.18
     this.iridescenceIOR = 1.4
     this.iridescenceThicknessNode = etch.mul(260).add(180)
-    this.emissiveNode = color('#8899ff').mul(grazing.pow(5)).mul(0.12)
+    this.emissiveNode = color(hsl.integer(275, 100, 67)).mul(grazing.pow(5)).mul(0.12)
   }
 }

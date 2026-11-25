@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, cameraPosition, color, float, mix, modelWorldMatrixInverse, mx_noise_float, mx_worley_noise_float, normalViewGeometry, positionViewDirection, tangentView, vec3, vec4} from 'three/tsl'
 
 import {glitter} from '../../candidates/deepseek/lib/glitter.ts'
@@ -67,13 +68,13 @@ export default class extends KnotMaterial {
     const fineFlames = mix(float(1), fine.smoothstep(0.36, 0.64).mul(1.35).add(0.15), intimate.mul(0.7).add(0.3)).mul(loopOsc(1, latticeRnd.z.mul(TAU)).mul(0.4).add(0.8))
     const fire = mix(smooth.fire.mul(1.05), patched.fire, fineFlames.mul(resolved).min(1).mul(domainMask)).mul(fireMask).mul(facing.pow(0.45).add(0.25))
     const potch = mx_noise_float(p.mul(3.4).add(31)).mul(0.5).add(0.5)
-    const body = mix(color('#050409'), color('#2b2429'), potch.mul(bandTone.mul(0.55).add(0.2)))
+    const body = mix(color(hsl.integer(295, 31, 3.6)), color(hsl.integer(336, 13, 17)), potch.mul(bandTone.mul(0.55).add(0.2)))
     const spheres = glitter(p, 0.0065, 70, 0.8)
     const sphereCoord = p.div(0.0065)
     const sphereCenter = cellNoiseVec3(sphereCoord.floor()).mul(0.5).add(0.25)
     const sphereRadius = sphereCoord.fwidth().length().add(0.18).min(0.24)
     const sphereMask = sphereCoord.fract().sub(sphereCenter).length().smoothstep(0.06, sphereRadius).oneMinus()
-    this.colorNode = mix(body, color('#6a737f'), potch.smoothstep(0.78, 0.96).mul(0.4)).add(color('#141220').mul(bandTone.mul(0.3)))
+    this.colorNode = mix(body, color(hsl.integer(256, 12, 48)), potch.smoothstep(0.78, 0.96).mul(0.4)).add(color(hsl.integer(290, 33, 9)).mul(bandTone.mul(0.3)))
     this.metalness = 0
     this.roughnessNode = float(0.05).add(potch.smoothstep(0.7, 0.95).mul(0.12)).add(near.mul(-0.012)).clamp(0.03, 0.2)
     this.ior = 1.45
@@ -82,7 +83,7 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(120)).mul(0.02), 0.00035)
     this.clearcoatNormalNode = this.normalNode
     this.emissiveNode = fire.mul(2.1)
-      .add(color('#ffe3b0').mul(spheres.sparkle).mul(sphereMask).mul(intimate).mul(0.45))
-      .add(color('#3b2f4a').mul(patched.weight.min(1)).mul(domainMask).mul(resolved).mul(0.12))
+      .add(color(hsl.integer(82, 100, 91.4)).mul(spheres.sparkle).mul(sphereMask).mul(intimate).mul(0.45))
+      .add(color(hsl.integer(304, 34, 23)).mul(patched.weight.min(1)).mul(domainMask).mul(resolved).mul(0.12))
   }
 }

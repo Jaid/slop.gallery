@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ribbon_bonbon',
   candidateId: 'gpt_astra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Strawberry and mint follow six sugar flutes around a confection with no first bite.',
   displacement: 0.02,
   placeholder: {
-    color: '#e94069',
+    color: hsl.integer(11, 86, 57),
     shading: 'liquid',
   },
 } as const satisfies KnotData

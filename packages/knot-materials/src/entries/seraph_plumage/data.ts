@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'seraph_plumage',
   candidateId: 'gpt_sol',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'No bird wore these feathers; they molt from a sunrise and kindle as the witness circles them.',
   displacement: 0.007,
   placeholder: {
-    color: '#c96738',
+    color: hsl.integer(45, 74, 56),
     shading: 'fabric',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'plasma_weave',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Hot strands cross and part like threads in an electric loom.',
   placeholder: {
-    color: '#00e5ff',
+    color: hsl.integer(209, 100, 82),
     shading: 'fabric',
   },
 } as const satisfies KnotData

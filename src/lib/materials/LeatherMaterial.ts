@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, mx_worley_noise_float, positionGeometry} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -9,9 +10,9 @@ import {heightNormal, visibleDetail} from './filters.ts'
  * A pebbled grain and soft creases are mapped in the mesh’s own frame, so they travel with rotated furniture. Wax gathers in the hollows, while the high spots are rubbed lighter and glossier. The grain flattens before it could shimmer.
  */
 export default class LeatherMaterial extends MeshPhysicalNodeMaterial {
-  constructor({tint = '#6a3a1e', highlight = '#9a6136'}: {
-    highlight?: string
-    tint?: string
+  constructor({tint = hsl.integer(49, 63, 31), highlight = hsl.integer(56, 60, 47)}: {
+    highlight?: number
+    tint?: number
   } = {}) {
     super({
       roughness: 0.5,

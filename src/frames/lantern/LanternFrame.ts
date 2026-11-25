@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, min, mix, mx_noise_float, time, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -57,7 +58,7 @@ export default class LanternFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#e8741c'
+  override readonly tint = hsl.integer(51, 94, 63)
   override readonly title = 'Jack-o’-lantern'
 
   override createGeometry(width: number, height: number) {
@@ -77,13 +78,13 @@ class FleshMaterial extends MeshPhysicalNodeMaterial {
       envMap: frameStudio,
       envMapIntensity: 0.6,
       sheen: 0.4,
-      sheenColor: '#ffd28a',
+      sheenColor: hsl.integer(79, 100, 87),
     })
     const surface = frameSurface()
     const p = surface.position
     const footprint = max(p.x.fwidth(), p.y.fwidth()).max(p.z.fwidth())
     const fibers = mx_noise_float(vec3(surface.along.mul(30), surface.across.mul(700), surface.member)).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.002))
-    this.colorNode = mix(color('#e9a540'), color('#f8cf72'), fibers.mul(0.6).add(mx_noise_float(p.mul(60)).mul(0.2)))
+    this.colorNode = mix(color(hsl.integer(73, 83, 73)), color(hsl.integer(86, 83, 85)), fibers.mul(0.6).add(mx_noise_float(p.mul(60)).mul(0.2)))
     this.normalNode = heightNormal(fibers.mul(0.00005))
   }
 }
@@ -110,8 +111,8 @@ class RindMaterial extends MeshPhysicalNodeMaterial {
     const flush = mx_noise_float(p.mul(30)).mul(0.5).add(0.5)
     const freckles = mx_noise_float(p.mul(700)).smoothstep(0.55, 0.8).mul(visibleDetail(footprint, 0.002))
     const veining = mx_noise_float(vec3(surface.along.mul(3), surface.across.mul(90), surface.member)).mul(0.5).add(0.5)
-    const orange = mix(color('#9a3606'), color('#f08424'), lobe.mul(0.5).add(blotches.mul(0.45)).add(flush.mul(0.12)).sub(veining.mul(0.15)))
-    const skin = mix(mix(mix(orange, color('#3e1804'), crease.mul(0.85)), color('#f2b45a'), freckles.mul(0.45)), color('#8a7a42'), scars.mul(0.55))
+    const orange = mix(color(hsl.integer(40, 96, 39)), color(hsl.integer(55, 93, 67)), lobe.mul(0.5).add(blotches.mul(0.45)).add(flush.mul(0.12)).sub(veining.mul(0.15)))
+    const skin = mix(mix(mix(orange, color(hsl.integer(46, 83, 16)), crease.mul(0.85)), color(hsl.integer(74, 81, 78)), freckles.mul(0.45)), color(hsl.integer(94, 53, 51)), scars.mul(0.55))
     // The face on the nearest corner, and the candle behind it, which flickers on its own in every corner.
     const d = carving(fromCorner(surface, faceReach).div(faceSize)).mul(faceSize).toVar('rindCut')
     const corner = p.xy.sign()
@@ -122,8 +123,8 @@ class RindMaterial extends MeshPhysicalNodeMaterial {
     const halo = max(d, float(0)).div(-0.012).exp().mul(hole.oneMinus())
     // Deep inside, the lit far wall of the pumpkin, hottest in the middle of every cut.
     const depth = d.negate().smoothstep(0, 0.012)
-    const candle = mix(color('#ff5a00'), color('#ffbb3a'), depth)
-    this.colorNode = mix(mix(skin, color('#f3bb5c'), wall), vec3(0.03, 0.01, 0), hole)
+    const candle = mix(color(hsl.integer(40.1, 100, 63)), color(hsl.integer(79, 100, 80.8)), depth)
+    this.colorNode = mix(mix(skin, color(hsl.integer(79, 82, 80)), wall), vec3(0.03, 0.01, 0), hole)
     this.emissiveNode = candle.mul(hole.mul(depth.mul(0.7).add(0.3)).mul(10).add(halo.mul(0.9)).add(wall.mul(1.4))).mul(flame)
     this.roughnessNode = float(0.62).sub(lobe.mul(0.14)).add(crease.mul(0.1)).add(wall.mul(0.15)).add(scars.mul(0.2))
     this.normalNode = heightNormal(pebbles.mul(0.00003).add(freckles.mul(0.00002)).add(scars.mul(0.0001)).add(blotches.mul(0.0006)).sub(inside(d.sub(0.0015)).mul(0.0015)))

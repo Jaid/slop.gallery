@@ -6,6 +6,7 @@ import type {Group, NodeMaterial} from 'three/webgpu'
 import {useFrame, useThree} from '@react-three/fiber'
 import {useAfterPhysicsStep, useRapier} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {MeshStandardNodeMaterial, Vector3} from 'three/webgpu'
 
@@ -178,15 +179,15 @@ function Figure({placement, sight}: {
   const geometry = useDisposable(useMemo(() => new SloperatorGeometry(pose === 'stand' ? undefined : sight.seat), [pose, sight]))
   // polished walnut
   const cane = useDisposable(useMemo(() => lit(new MeshStandardNodeMaterial({
-    color: '#4a2a16',
+    color: hsl.integer(51, 57, 22),
     roughness: 0.35,
   }), sight), [sight]))
   const cloth = useDisposable(useMemo(() => lit(new MeshStandardNodeMaterial({
-    color: '#1d1c21',
+    color: hsl.integer(295, 10, 13),
     roughness: 0.92,
   }), sight), [sight]))
   const skin = useDisposable(useMemo(() => lit(new MeshStandardNodeMaterial({
-    color: '#b79d8c',
+    color: hsl.integer(55, 22, 67),
     roughness: 0.7,
   }), sight), [sight]))
   // the same green as the Slop he leaves here

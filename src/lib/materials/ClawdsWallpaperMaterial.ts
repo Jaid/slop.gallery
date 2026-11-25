@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, cameraPosition, color, float, max, mix, mx_cell_noise_float, mx_noise_float, normalWorldGeometry, positionWorld, select, time, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -8,17 +9,17 @@ import {heightNormal, insideBy, visibleDetail} from './filters.ts'
 export type ClawdsOptions = {
   colors?: {
     /** the pink of the awake faces’ cheeks */
-    blush: string
+    blush: number
     /** the white vinyl of the die-cut border */
-    border: string
+    border: number
     /** the paper ground */
-    ground: string
+    ground: number
     /** the flower’s heart, round its face, and the glints in its open eyes */
-    heart: string
+    heart: number
     /** the drawn lines and the face */
-    line: string
+    line: number
     /** the petals */
-    petals: string
+    petals: number
   }
   /** up to how far from the camera a sticker shows its whole face, and from how far on none of it, in meters; no nearer than it starts waking */
   faces?: readonly [shown: number, gone: number]
@@ -257,12 +258,12 @@ function face(p: Vec2, {wake, gaze, blink, presence}: Mood) {
  */
 export default class ClawdsWallpaperMaterial extends MeshStandardNodeMaterial {
   constructor({colors = {
-    blush: '#f39aa7',
-    border: '#f7f4ee',
-    ground: '#db6d4a',
-    heart: '#f7f4ee',
-    line: '#1d1a19',
-    petals: '#e3795a',
+    blush: hsl.integer(10, 73, 74),
+    border: hsl.integer(85, 30, 96),
+    ground: hsl.integer(38, 74, 60),
+    heart: hsl.integer(85, 30, 96),
+    line: hsl.integer(39, 6, 12),
+    petals: hsl.integer(37, 73, 64),
   }, floorY = 0, size = 0.15, spacing = 0.2, tilt = 25, wake: [awake, dozing] = [0.6, 0.9], faces: [shown, gone] = [3, 3.5]}: ClawdsOptions = {}) {
     if (!(size > 0 && spacing >= size)) {
       throw new RangeError('Stickers need a positive size and a spacing at least as large.')

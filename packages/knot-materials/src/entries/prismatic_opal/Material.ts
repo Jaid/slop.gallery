@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_worley_noise_vec3, time, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -43,12 +44,12 @@ export default class extends KnotMaterial {
     const broadFire = spectralColor(field.mul(1.4).add(facing.mul(1.9)).add(view.x.mul(0.28)))
     const cellFire = spectralColor(cellsA.center.mul(0.76).add(cellsB.center.mul(0.47)).add(field.mul(0.33)).add(facing.mul(2.2)).add(time.mul(0.004)))
     const fire = mix(broadFire, cellFire, cellsA.center.mul(0.6).add(cellsB.center.mul(0.24)))
-    const milk = mix(color('#b9c8d1'), color('#f2eee3'), field.mul(0.5).add(0.5)).mul(0.72)
+    const milk = mix(color(hsl.integer(234, 17, 80)), color(hsl.integer(90, 32, 94)), field.mul(0.5).add(0.5)).mul(0.72)
     const inclusion = flake(uv(), field, cellsC.edge.abs().mul(0.08).add(uv().fwidth().length().mul(7.2)))
     const darkInclusion = flake(uv().mul(vec2(1.17, 0.83)).add(3.1), field.negate(), uv().fwidth().length().mul(9.5))
     const inclusions = inclusion.flake.mul(0.48).add(darkInclusion.flake.mul(0.26)).mul(intimate.mul(0.6).add(0.4))
     const shell = mix(milk, fire.mul(0.9), cellsA.center.mul(0.68).add(cellsB.center.mul(0.3)).add(field.mul(0.1)))
-    this.colorNode = mix(shell, color('#fff7e5'), inclusions.mul(0.72))
+    this.colorNode = mix(shell, color(hsl.integer(87, 100, 97.4)), inclusions.mul(0.72))
     this.metalness = 0.12
     this.roughnessNode = float(0.11).add(cellsC.edge.abs().mul(0.12)).add(inclusions.mul(0.08))
     this.clearcoat = 1
@@ -57,6 +58,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.38
     this.iridescenceThicknessNode = facing.mul(560).add(cellsA.center.mul(320)).add(cellsB.center.mul(190)).add(220)
     this.normalNode = proceduralNormal(cellsA.center.mul(0.0012).add(cellsC.center.mul(0.00045)).add(field.mul(0.00035)), 0.0022)
-    this.emissiveNode = fire.mul(cellsA.center.mul(0.5).add(cellsB.center.mul(0.22)).mul(near.mul(0.3).add(0.7)).mul(0.48)).add(color('#fff6df').mul(inclusions.mul(0.46)).add(color('#bdefff').mul(rim.mul(0.11))))
+    this.emissiveNode = fire.mul(cellsA.center.mul(0.5).add(cellsB.center.mul(0.22)).mul(near.mul(0.3).add(0.7)).mul(0.48)).add(color(hsl.integer(89, 100, 97)).mul(inclusions.mul(0.46)).add(color(hsl.integer(219, 100, 91)).mul(rim.mul(0.11))))
   }
 }

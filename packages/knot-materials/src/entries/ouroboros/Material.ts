@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, transformNormalToView, vec2, vec3} from 'three/tsl'
 
 import {environmentContrast} from '../../candidates/claude_opus/lib/environmentLight.ts'
@@ -73,8 +74,8 @@ export default class extends KnotMaterial {
     const groove = edge.smoothstep(edgeFootprint.mul(0.5), edgeFootprint.mul(1.5).add(0.03)).oneMinus().mul(resolved)
     const overlap = t.smoothstep(0, 0.38).mul(0.55).add(0.45)
     const shade = mix(float(0.78), overlap.mul(groove.mul(0.7).oneMinus()), resolved)
-    const ink = mix(color('#0d0907'), color('#16100b'), identity.x)
-    const bronze = mix(color('#5b3a17'), color('#8a6a2a'), identity.y)
+    const ink = mix(color(hsl.integer(51, 16, 5.5)), color(hsl.integer(62, 23, 8)), identity.x)
+    const bronze = mix(color(hsl.integer(65, 66, 29)), color(hsl.integer(82, 70, 47)), identity.y)
     this.colorNode = mix(ink, bronze, chevron).mul(shade)
     this.metalness = 0
     this.roughnessNode = mix(float(0.24), float(0.16), keel.mul(resolved)).add(identity.y.mul(0.06))
@@ -100,6 +101,6 @@ export default class extends KnotMaterial {
 // A deep sheen at the limb, and a warm glint of the keel close up.
     this.emissiveNode = rainbow.mul(near.mul(0.3).add(0.85))
       .add(film.mul(grazing.pow(3)).mul(0.08).mul(shade))
-      .add(color('#b07a3a').mul(keel.mul(t).pow(3)).mul(intimate).mul(facing).mul(0.04).mul(resolved))
+      .add(color(hsl.integer(68, 67, 56)).mul(keel.mul(t).pow(3)).mul(intimate).mul(facing).mul(0.04).mul(resolved))
   }
 }

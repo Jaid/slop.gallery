@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time} from 'three/tsl'
 
 import {band} from '../../candidates/gpt_sol/lib/galleryMarks.ts'
@@ -23,9 +24,9 @@ export default class extends KnotMaterial {
     const interference = spectralColor(phase.mul(0.85).add(grazing.mul(7)))
     const nacre = band(phase).mul(0.75).add(band(phase.mul(1.73)).mul(0.25))
     const veins = band(phase.mul(3.1)).mul(near).mul(0.16)
-    const sea = mix(color('#127b85'), color('#ad62a0'), flow.mul(0.5).add(0.5))
+    const sea = mix(color(hsl.integer(205, 91, 46)), color(hsl.integer(334, 53, 54)), flow.mul(0.5).add(0.5))
     this.positionNode = positionGeometry.add(normalLocal.mul(shell.mul(0.017)))
-    this.colorNode = mix(color('#123c51'), sea, nacre.mul(0.8).add(0.1)).add(interference.mul(veins.mul(0.28)))
+    this.colorNode = mix(color(hsl.integer(234, 70, 24)), sea, nacre.mul(0.8).add(0.1)).add(interference.mul(veins.mul(0.28)))
     this.metalness = 0.22
     this.roughnessNode = nacre.mul(-0.09).add(0.2)
     this.clearcoat = 1
@@ -34,6 +35,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.34
     this.iridescenceThicknessNode = phase.sin().mul(135).add(flow.mul(65)).add(335)
     this.normalNode = proceduralNormal(flow.mul(0.007).add(curl.mul(0.0025)), 0.75)
-    this.emissiveNode = interference.mul(nacre.pow(3)).mul(grazing.pow(1.6).mul(0.85).add(near.mul(0.14))).add(color('#d9fff3').mul(veins).mul(0.08))
+    this.emissiveNode = interference.mul(nacre.pow(3)).mul(grazing.pow(1.6).mul(0.85).add(near.mul(0.14))).add(color(hsl.integer(174, 100, 96.5)).mul(veins).mul(0.08))
   }
 }

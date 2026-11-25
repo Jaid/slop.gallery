@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: Cp16WUQoUlMTqRD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'abyssal_lantern',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.016,
   flavorText: 'A gentle animal of glass drifts in the dark, carrying small violet suns along the seam of its one endless body.',
   placeholder: {
-    color: '#50848b',
+    color: hsl.integer(207, 40, 51),
     shading: 'glass',
   },
 } as const satisfies KnotData

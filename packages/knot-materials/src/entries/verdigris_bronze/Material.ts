@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, positionGeometry} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -13,9 +14,9 @@ export default class extends KnotMaterial {
     const p = positionGeometry
     const patina = mx_fractal_noise_float(p.mul(2.4), 4, 2, 0.55).mul(0.5).add(0.5)
     const speckle = mx_noise_float(p.mul(20)).mul(0.5).add(0.5)
-    const bronze = color('#8a5a32')
-    const green = color('#4c9a7a')
-    const deep = color('#1f4a3d')
+    const bronze = color(hsl.integer(59, 58, 43))
+    const green = color(hsl.integer(165, 63, 57))
+    const deep = color(hsl.integer(171, 61, 28))
     const base = mix(bronze, green, patina.smoothstep(0.35, 0.7))
     this.colorNode = mix(base, deep, patina.smoothstep(0.75, 0.95))
     this.metalness = 0.85

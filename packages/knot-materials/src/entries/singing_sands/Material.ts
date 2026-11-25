@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -32,8 +33,8 @@ export default class extends KnotMaterial {
     const normal = proceduralNormal(height, 0.011)
     this.normalNode = normal
     this.clearcoatNormalNode = normal
-    this.colorNode = mix(color('#5d3215'), color('#e6b85f'), dune.mul(0.8).add(grain.mul(0.13)))
-      .add(color('#fff0b2').mul(sparseGrains).mul(0.28))
+    this.colorNode = mix(color(hsl.integer(52, 68, 27)), color(hsl.integer(82, 73, 77.5)), dune.mul(0.8).add(grain.mul(0.13)))
+      .add(color(hsl.integer(96, 100, 94.5)).mul(sparseGrains).mul(0.28))
     this.metalness = 0.2
     this.roughnessNode = float(0.48).sub(dune.mul(0.12)).add(grain.mul(near).mul(0.06))
     this.clearcoat = 0.2
@@ -41,7 +42,7 @@ export default class extends KnotMaterial {
     this.sheen = 0.35
     this.sheenRoughness = 0.5
     const grainFlash = glints(normal, 170).mul(sparseGrains).mul(near)
-    this.emissiveNode = color('#fff0a0').mul(grainFlash).mul(0.8)
-      .add(color('#f7ce72').mul(dune).mul(facing.mul(0.12).add(grazing.mul(0.08))).mul(0.075))
+    this.emissiveNode = color(hsl.integer(99, 100, 94.1)).mul(grainFlash).mul(0.8)
+      .add(color(hsl.integer(86, 82, 84.7)).mul(dune).mul(facing.mul(0.12).add(grazing.mul(0.08))).mul(0.075))
   }
 }

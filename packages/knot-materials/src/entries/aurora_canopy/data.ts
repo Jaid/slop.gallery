@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aurora_canopy',
   candidateId: 'minimax',
@@ -15,7 +17,7 @@ export default {
   flavorText: 'A silk so thin that the northern lights pass straight through it, leaving colours like wet paint in a breeze.',
   displacement: 0.002,
   placeholder: {
-    color: '#2b8f7a',
+    color: hsl.integer(176, 82, 52),
     shading: 'fabric',
   },
 } as const satisfies KnotData

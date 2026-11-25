@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'schwarzschild_vault',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A dark chamber gathers every reflection and gives none of them a straight path out.',
   placeholder: {
-    color: '#38bdf8',
+    color: hsl.integer(233, 93, 71),
     shading: 'smooth',
   },
 } as const satisfies KnotData

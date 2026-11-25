@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, uv, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -66,12 +67,12 @@ export default class extends KnotMaterial {
     ).mul(0.5).add(0.5)
     const fineDetail = fineClouds.mul(intimate)
     // Color palette — Jupiter's signature bands
-    const ammoniaWhite = color('#f0e8d0')
-    const ammoniaOrange = color('#d49050')
-    const sulfurBrown = color('#8a5a30')
-    const deepOchre = color('#6a3818')
-    const stormRed = color('#c04028')
-    const paleBand = color('#e8d8b8')
+    const ammoniaWhite = color(hsl.integer(92, 46, 92))
+    const ammoniaOrange = color(hsl.integer(62, 67, 66))
+    const sulfurBrown = color(hsl.integer(60, 59, 43))
+    const deepOchre = color(hsl.integer(51, 70, 31))
+    const stormRed = color(hsl.integer(33, 86, 48))
+    const paleBand = color(hsl.integer(85, 44, 87))
     // Band coloring based on latitude
     const bandColorPhase = bandPhase.mul(0.5).cos().mul(0.5).add(0.5)
     const bandColor = mix(
@@ -85,7 +86,7 @@ export default class extends KnotMaterial {
     const vortexColor = mix(turbulenceColor, ammoniaWhite, vortexStrength.mul(0.4))
     // Great Red Spot coloring
     const finalColor = mix(vortexColor, stormRed, spot.mul(0.7).add(spotDetail.mul(0.2)))
-    this.colorNode = finalColor.add(color('#e8d0a0').mul(fineDetail).mul(0.08))
+    this.colorNode = finalColor.add(color(hsl.integer(84, 53, 84)).mul(fineDetail).mul(0.08))
     this.metalness = 0
     this.roughnessNode = float(0.65)
       .sub(vortexStrength.mul(0.15))
@@ -94,7 +95,7 @@ export default class extends KnotMaterial {
       .clamp(0.4, 0.75)
     // Subtle subsurface-like quality — gas is translucent
     this.sheen = 0.4
-    this.sheenColor.set('#e8c888')
+    this.sheenColor.set(hsl.integer(84, 62, 82))
     this.sheenRoughness = 0.55
     // Cloud layer normals
     const cloudHeight = turbulence.mul(0.3)
@@ -118,9 +119,9 @@ export default class extends KnotMaterial {
     const thermalGlow = thinCloud.mul(intimate).mul(0.08)
     // Rim glow — atmospheric limb brightening
     const limbGlow = grazing.pow(3).mul(0.12)
-    this.emissiveNode = color('#e8e0ff').mul(lightning).mul(3)
-      .add(color('#ff6830').mul(thermalGlow))
-      .add(color('#ffd8a0').mul(limbGlow))
-      .add(color('#ff4020').mul(spot).mul(spotDetail).mul(intimate).mul(0.12))
+    this.emissiveNode = color(hsl.integer(297, 100, 91)).mul(lightning).mul(3)
+      .add(color(hsl.integer(39, 100, 65)).mul(thermalGlow))
+      .add(color(hsl.integer(76, 100, 88.6)).mul(limbGlow))
+      .add(color(hsl.integer(32, 100, 60.2)).mul(spot).mul(spotDetail).mul(intimate).mul(0.12))
   }
 }

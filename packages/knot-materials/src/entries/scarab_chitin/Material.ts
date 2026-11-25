@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, time, uv, vec2} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -51,9 +52,9 @@ export default class extends KnotMaterial {
       .mul(poreFootprint.smoothstep(0.25, 0.85).oneMinus())
       .mul(near)
     // Base chitin and flexible inter-segmental membrane
-    const darkCuticle = color('#050a07')
+    const darkCuticle = color(hsl.integer(160, 28, 5))
     const armoredChitin = mix(darkCuticle, structuralColor, scaleProfile.mul(0.92))
-    const membraneColor = mix(color('#151a14'), color('#08120b'), intersegmentSeam)
+    const membraneColor = mix(color(hsl.integer(140, 18, 11)), color(hsl.integer(154, 41, 7)), intersegmentSeam)
     this.colorNode = mix(armoredChitin, membraneColor, intersegmentSeam.mul(0.85))
     this.metalnessNode = scaleProfile.mul(0.84).add(0.12)
     this.roughnessNode = mix(float(0.12), float(0.52), intersegmentSeam).add(poreMask.mul(0.12))
@@ -73,15 +74,15 @@ export default class extends KnotMaterial {
     const scaleGlints = glints(normalViewGeometry, 130).mul(scaleBevel).mul(near.mul(0.6).add(0.4))
     // Bioluminescent respiration in the flexible membranes between armor plates
     const breath = time.mul(1.6).sin().mul(0.5).add(0.5)
-    const membraneGlow = color('#00ffb4')
+    const membraneGlow = color(hsl.integer(163, 100, 86.5))
       .mul(intersegmentSeam)
       .mul(breath.mul(0.4).add(0.6))
       .mul(intimate)
       .mul(0.85)
     // Deep sapphire sheen at acute grazing angles
-    const grazingSapphire = color('#1435a8').mul(rim.pow(2.2)).mul(grazing).mul(0.45)
+    const grazingSapphire = color(hsl.integer(265, 93.7, 30)).mul(rim.pow(2.2)).mul(grazing).mul(0.45)
     this.emissiveNode = membraneGlow
-      .add(color('#d4ffea').mul(scaleGlints).mul(1.6))
+      .add(color(hsl.integer(164, 100, 95.8)).mul(scaleGlints).mul(1.6))
       .add(grazingSapphire)
   }
 }

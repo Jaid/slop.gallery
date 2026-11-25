@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, hash, max, min, mix, mx_noise_float, mx_worley_noise_float, normalView, positionViewDirection, time, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -64,7 +65,7 @@ export default class SeanceFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#1a2a22'
+  override readonly tint = hsl.integer(162, 32, 16)
   override readonly title = 'Séance'
 
   override createGeometry(width: number, height: number) {
@@ -136,9 +137,9 @@ class SigilMaterial extends MeshPhysicalNodeMaterial {
     const smolder = mx_noise_float(vec3(time.mul(2.3), id.mul(0.37), 0.5)).mul(0.15).add(0.3)
     const light = flare.mul(0.9).add(smolder)
     const cracks = mx_worley_noise_float(p.mul(260)).smoothstep(0.08, 0).mul(visibleDetail(footprint, 0.003))
-    const char = mix(color('#0b0807'), color('#231a14'), mx_noise_float(p.mul(120)).mul(0.5).add(0.5))
-    this.colorNode = mix(mix(char, color('#040302'), halo.mul(0.8)), color('#bfffdc'), stroke.mul(0.5))
-    this.emissiveNode = color('#3fd98a').mul(stroke.mul(light).mul(4).add(halo.mul(light).mul(0.6)).add(cracks.mul(0.25).mul(smolder)))
+    const char = mix(color(hsl.integer(42, 12, 5)), color(hsl.integer(55, 23, 12)), mx_noise_float(p.mul(120)).mul(0.5).add(0.5))
+    this.colorNode = mix(mix(char, color(hsl.integer(73, 18, 3)), halo.mul(0.8)), color(hsl.integer(160, 100, 94)), stroke.mul(0.5))
+    this.emissiveNode = color(hsl.integer(156, 89, 75)).mul(stroke.mul(light).mul(4).add(halo.mul(light).mul(0.6)).add(cracks.mul(0.25).mul(smolder)))
     this.normalNode = heightNormal(stroke.mul(-0.0004).add(mx_noise_float(p.mul(300)).mul(0.00004).mul(visibleDetail(footprint, 0.003))))
   }
 }
@@ -165,7 +166,7 @@ class CrystalMaterial extends MeshPhysicalNodeMaterial {
     const facing = normalView.dot(positionViewDirection.negate()).abs().clamp(0, 1)
     const rim = facing.oneMinus().pow(3)
     const breath = time.mul(0.8).sin().mul(0.2).add(1)
-    this.colorNode = mix(color('#030806'), color('#1f6a46'), swirl.mul(0.5))
-    this.emissiveNode = color('#3fd98a').mul(swirl.mul(2.4).mul(breath).add(rim.mul(0.5)))
+    this.colorNode = mix(color(hsl.integer(171, 37, 4)), color(hsl.integer(158, 87, 39)), swirl.mul(0.5))
+    this.emissiveNode = color(hsl.integer(156, 89, 75)).mul(swirl.mul(2.4).mul(breath).add(rim.mul(0.5)))
   }
 }

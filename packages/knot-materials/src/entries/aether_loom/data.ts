@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aether_loom',
   candidateId: 'muse_spark',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Unseen hands weave the space between one star and the next.',
   placeholder: {
-    color: '#c8f1ff',
+    color: hsl.integer(221, 99, 92),
     shading: 'fabric',
   },
 } as const satisfies KnotData

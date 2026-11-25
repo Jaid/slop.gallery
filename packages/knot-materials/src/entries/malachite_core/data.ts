@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'malachite_core',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A small green world keeps growing inward beneath its polished surface.',
   placeholder: {
-    color: '#1e7a52',
+    color: hsl.integer(160, 91, 44),
     shading: 'stone',
   },
 } as const satisfies KnotData

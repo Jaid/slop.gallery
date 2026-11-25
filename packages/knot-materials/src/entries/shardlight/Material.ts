@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_vec3, negateOnBackSide, normalLocal, positionGeometry, transformNormalToView, vec3} from 'three/tsl'
 
 import {voronoi3} from '../../candidates/deepseek/lib/voronoi.ts'
@@ -51,12 +52,12 @@ export default class extends KnotMaterial {
     const polish = identity2.z.smoothstep(0.74, 0.93)
     const dichroic = identity2.y.smoothstep(0.6, 0.85)
     const tint = vivid(spectralColor(identity2.x.mul(4.2).add(facing.mul(2.4)).add(grazing.mul(3.4))))
-    const metal = mix(color('#c8d5e6'), tint, dichroic)
+    const metal = mix(color(hsl.integer(255, 31, 85)), tint, dichroic)
 // Hairline fractures inside a shard only resolve up close.
     const crack = mx_fractal_noise_vec3(p.mul(34), 2, 2, 0.5).x.abs().sub(0.02)
     const crackLine = crack.smoothstep(0, footprint.mul(2.2).add(0.006)).oneMinus().mul(near).mul(polish.oneMinus())
-    const shardColor = mix(color('#090c11'), metal, polish).mul(crackLine.mul(-0.45).add(1))
-    this.colorNode = mix(color('#04060a'), shardColor, chamfer)
+    const shardColor = mix(color(hsl.integer(260, 19, 6)), metal, polish).mul(crackLine.mul(-0.45).add(1))
+    this.colorNode = mix(color(hsl.integer(259, 25, 4)), shardColor, chamfer)
     this.metalness = 1
     this.roughnessNode = mix(float(0.6), mix(float(0.2), float(0.03), polish), chamfer).add(resolved.oneMinus().mul(0.35))
     this.clearcoat = 0.35
@@ -66,6 +67,6 @@ export default class extends KnotMaterial {
     const liftProfile = cell.edge.smoothstep(0.007, 0.018)
     this.positionNode = positionGeometry.add(normalLocal.mul(liftProfile.mul(identity.z.mul(0.003).add(0.0018))))
     this.emissiveNode = tint.mul(dichroic).mul(chamfer).mul(grazing.pow(4)).mul(near.mul(0.5).add(0.06)).mul(0.6)
-      .add(color('#8ea6cc').mul(grazing.pow(3)).mul(facing.pow(3)).mul(0.05))
+      .add(color(hsl.integer(260, 37, 67)).mul(grazing.pow(3)).mul(facing.pow(3)).mul(0.05))
   }
 }

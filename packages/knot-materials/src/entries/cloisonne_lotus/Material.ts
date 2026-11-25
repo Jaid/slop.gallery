@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_cell_noise_float, mx_noise_float, normalLocal, normalViewGeometry, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {studioSheen} from '../../candidates/gemini_argon/lib/environmentHighlight.ts'
@@ -21,11 +22,11 @@ const medallionsAlong = 26
 const medallionsAround = 3
 /** Imperial Ming Jingtai Lan Cloisonné enamel palette in linear light. */
 function jingtaiEnamelColor(zone: Node<'float'>, variant: Node<'float'>) {
-  const turquoise = color('#0085a8') // Imperial Jingtai Turquoise
-  const lapisBlue = color('#051a82') // Ming Cobalt Lapis
-  const carmineRuby = color('#a80624') // Gold-ruby Rouge
-  const imperialYellow = color('#d98804') // Imperial Egg-Yolk Amber
-  const celadonJade = color('#056839') // Jadeite Emerald
+  const turquoise = color(hsl.integer(224, 100, 51)) // Imperial Jingtai Turquoise
+  const lapisBlue = color(hsl.integer(265, 97.3, 20)) // Ming Cobalt Lapis
+  const carmineRuby = color(hsl.integer(22, 98.6, 38)) // Gold-ruby Rouge
+  const imperialYellow = color(hsl.integer(68, 99, 64.6)) // Imperial Egg-Yolk Amber
+  const celadonJade = color(hsl.integer(154, 99, 37)) // Jadeite Emerald
   const innerPetal = mix(carmineRuby, imperialYellow, variant.smoothstep(0.35, 0.65))
   const outerPetal = mix(turquoise, celadonJade, variant.smoothstep(0.4, 0.75))
   const ruyiCloud = mix(lapisBlue, turquoise, variant.smoothstep(0.25, 0.6))
@@ -110,8 +111,8 @@ export default class extends KnotMaterial {
     const opticalDepth = meniscusProfile.mul(0.75).add(0.35).div(facing.max(0.35))
     const beerLambertTransmission = enamelVec.pow(opticalDepth.mul(1.15))
 // Combine gilded 24k brass cloison wires and translucent basse-taille enamel compartments
-    const wireGold = mix(color('#d99e32'), color('#ffe699'), wireDist.smoothstep(0.014, 0))
-    const foilTint = mix(color('#ffebb3'), color('#ffffff'), zone.mod(2))
+    const wireGold = mix(color(hsl.integer(78, 83, 69.5)), color(hsl.integer(93, 100, 92)), wireDist.smoothstep(0.014, 0))
+    const foilTint = mix(color(hsl.integer(91, 100, 93.4)), color(hsl.integer(0, 0, 100)), zone.mod(2))
     const enamelBody = beerLambertTransmission.mul(0.28)
       .add(beerLambertTransmission.mul(foilTint).mul(foilSheen).mul(0.42))
       .add(enamelVec.mul(guillocheWave.mul(0.18)))
@@ -143,12 +144,12 @@ export default class extends KnotMaterial {
       .mul(foilSheen.pow(1.5).mul(1.1).add(guillocheWave.mul(0.22)))
       .mul(facing.mul(0.65).add(0.35))
       .mul(wireShadow)
-    const craquelureGlow = mix(enamelVec, color('#fff4cc'), 0.5).mul(craquelureLine).mul(0.65)
+    const craquelureGlow = mix(enamelVec, color(hsl.integer(94, 100, 96)), 0.5).mul(craquelureLine).mul(0.65)
     const breathe = time.mul(1.6).add(cellRnd.z.mul(TAU)).sin().mul(0.12).add(0.92)
     this.emissiveNode = guillocheFire.mul(breathe).mul(cloisonWireMask.oneMinus()).mul(0.95)
       .add(craquelureGlow)
-      .add(color('#ffcf54').mul(spangleCore.mul(0.65).add(spangleSparkle.mul(1.4))))
-      .add(color('#fff6d6').mul(wireSparkle).mul(0.65))
+      .add(color(hsl.integer(87.3, 100, 85.4)).mul(spangleCore.mul(0.65).add(spangleSparkle.mul(1.4))))
+      .add(color(hsl.integer(94, 100, 96.7)).mul(wireSparkle).mul(0.65))
       .add(enamelVec.mul(rim.pow(2.4)).mul(cloisonWireMask.oneMinus()).mul(0.45))
   }
 }

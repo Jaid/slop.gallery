@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: FLhq233R9MU4dj1; fixture: knot-material-shaders; result: success.
 export default {
   id: 'winter_exhalation',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'An ocean exhales its last winter into crystal. Silver dendrites drift at different depths, each a small cathedral of cold.',
   placeholder: {
-    color: '#7dbdc8',
+    color: hsl.integer(209, 45, 72),
     shading: 'glass',
   },
 } as const satisfies KnotData

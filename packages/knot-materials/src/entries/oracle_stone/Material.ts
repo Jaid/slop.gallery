@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -41,9 +42,9 @@ export default class extends KnotMaterial {
     const southFire = southAlignment.mul(bodyVariation.oneMinus().smoothstep(0.62, 0.8)).mul(southSheet).mul(southStrata)
     const flash = eastFire.add(westFire).add(northFire).add(southFire).clamp()
     const fireMask = flash.pow(3.2)
-    const fireEnergy = color('#008eff').mul(eastFire).add(color('#16e2d0').mul(westFire)).add(color('#2f72ff').mul(northFire)).add(color('#00a8e8').mul(southFire))
+    const fireEnergy = color(hsl.integer(252, 100, 59)).mul(eastFire).add(color(hsl.integer(185, 96.7, 79)).mul(westFire)).add(color(hsl.integer(262.6, 100, 53)).mul(northFire)).add(color(hsl.integer(235, 100, 64)).mul(southFire))
     const fire = fireEnergy.div(flash.add(0.0001))
-    const matrix = mix(color('#020304'), color('#071013'), bodyVariation.mul(0.32).add(fracture.mul(0.12)).clamp())
+    const matrix = mix(color(hsl.integer(243, 18, 3)), color(hsl.integer(220, 32, 7)), bodyVariation.mul(0.32).add(fracture.mul(0.12)).clamp())
     const spark = cellularPoints(inner.mul(82), 0.022, 0.13, 0.84).mul(intimate).mul(flash)
     this.colorNode = mix(matrix, fire, fireMask.mul(0.96).add(spark.mul(0.1)).clamp())
     this.metalness = 0
@@ -56,6 +57,6 @@ export default class extends KnotMaterial {
     this.normalNode = mineralNormal
     this.clearcoatNormalNode = mineralNormal
     const sharpFlash = glints(mineralNormal, 120).mul(fireMask).mul(near)
-    this.emissiveNode = fireEnergy.mul(fireMask).mul(near.mul(0.9).add(0.28)).add(color('#d5ffff').mul(sharpFlash.add(spark.mul(0.2))).mul(0.075))
+    this.emissiveNode = fireEnergy.mul(fireMask).mul(near.mul(0.9).add(0.28)).add(color(hsl.integer(196, 100, 96.6)).mul(sharpFlash.add(spark.mul(0.2))).mul(0.075))
   }
 }

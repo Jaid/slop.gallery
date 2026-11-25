@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 3gQGAbAm59HYY8k; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'gilded_glaze',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Every hairline crack in this glaze was mended with liquid gold, so the old wounds now catch the light more than the whole vessel.',
   placeholder: {
-    color: '#234e47',
+    color: hsl.integer(182, 55, 30),
     shading: 'glass',
   },
 } as const satisfies KnotData

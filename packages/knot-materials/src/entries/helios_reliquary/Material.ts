@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -48,17 +49,17 @@ export default class extends KnotMaterial {
     const corona = opticalLine(mx_noise_float(deep.mul(21).add(warp.mul(1.6))), 0.021).mul(near)
     const filaments = opticalLine(mx_noise_float(abyss.mul(34).sub(drift.mul(2))), 0.017).mul(intimate)
     const sunGlint = view.dot(vec3(-0.52, 0.74, 0.42).normalize()).abs().pow(10)
-    this.colorNode = mix(color('#3a0602'), color('#df4b0c'), granulation).add(color('#ffb52c').mul(prominences).mul(0.22))
+    this.colorNode = mix(color(hsl.integer(31, 96, 12)), color(hsl.integer(38, 98, 55)), granulation).add(color(hsl.integer(77, 100, 79.4)).mul(prominences).mul(0.22))
     this.transmissionNode = near.mul(0.12).add(0.54)
     this.thickness = 0.44
     this.ior = 1.61
     this.dispersion = 0.3
-    this.attenuationColor.set('#e53a08')
+    this.attenuationColor.set(hsl.integer(34.3, 99, 54))
     this.attenuationDistance = 0.58
     this.roughnessNode = prominences.mul(0.035).add(0.055)
     this.clearcoat = 0.86
     this.clearcoatRoughness = 0.04
     this.normalNode = liquidNormal(near.mul(0.75).add(0.25), 0.09)
-    this.emissiveNode = color('#ff4a08').mul(prominences).mul(0.8).add(color('#ffd06a').mul(corona).mul(near.mul(1.1).add(0.32))).add(color('#fff4d5').mul(filaments).mul(1.45)).add(color('#ffb43c').mul(rim).mul(sunGlint.mul(0.9).add(0.12)))
+    this.emissiveNode = color(hsl.integer(36, 100, 61.1)).mul(prominences).mul(0.8).add(color(hsl.integer(85, 100, 86)).mul(corona).mul(near.mul(1.1).add(0.32))).add(color(hsl.integer(91, 100, 96.3)).mul(filaments).mul(1.45)).add(color(hsl.integer(74, 100, 79.2)).mul(rim).mul(sunGlint.mul(0.9).add(0.12)))
   }
 }

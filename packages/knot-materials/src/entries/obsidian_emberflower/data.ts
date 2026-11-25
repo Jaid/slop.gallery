@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'obsidian_emberflower',
   candidateId: 'deepseek',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A black flower opens along fractures left by an ancient fire.',
   placeholder: {
-    color: '#ff7a3c',
+    color: hsl.integer(43, 100, 68),
     shading: 'fabric',
   },
 } as const satisfies KnotData

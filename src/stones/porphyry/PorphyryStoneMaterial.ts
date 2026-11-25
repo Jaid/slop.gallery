@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_fractal_noise_float, mx_noise_float, positionGeometry, select, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -36,9 +37,9 @@ export default class PorphyryStoneMaterial extends MeshStandardNodeMaterial {
     const dust = mix(float(0.5), unit(mx_noise_float(p.mul(700).add(3))), visibleDetail(footprint, 1 / 700))
     // Inclusions of darker, finer rock the magma tore loose, rounded, rare and a hand or two across, with fewer crystals.
     const inclusion = unit(mx_noise_float(p.mul(2.6).add(19))).add(mx_noise_float(p.mul(11)).mul(0.04)).smoothstep(0.84, 0.88).mul(0.75)
-    let ground: Node<'vec3'> = mix(color('#68283d'), color('#83384c'), cloud)
+    let ground: Node<'vec3'> = mix(color(hsl.integer(2, 59, 28)), color(hsl.integer(6, 57, 36)), cloud)
     ground = ground.mul(float(1).add(mottle.sub(0.5).mul(0.1)).add(dust.sub(0.5).mul(0.16)))
-    ground = mix(ground, color('#442028'), inclusion)
+    ground = mix(ground, color(hsl.integer(7, 46, 19)), inclusion)
     // The crystals, in lattice units.
     const lattice = p.div(crystalSpacing)
     const cell = voronoiCell(lattice).toVar('porphyryCell')
@@ -58,10 +59,10 @@ export default class PorphyryStoneMaterial extends MeshStandardNodeMaterial {
     const feldspar = mix(float(crystalCover), covered.mul(select(isFeldspar, float(1), float(0))), sharp).mul(inclusion.oneMinus())
     const hornblende = covered.mul(select(isHornblende, float(1), float(0))).mul(sharp).mul(inclusion.oneMinus())
     // Plagioclase from near white to a rosy pink, clouded a little toward its middle.
-    const pink = mix(color('#dcc3bb'), color('#bd8580'), random.z.pow(1.5))
-    const tint = mix(mix(color('#dcc3bb'), color('#bd8580'), 0.4), pink, sharp)
+    const pink = mix(color(hsl.integer(39, 27, 81)), color(hsl.integer(25, 36, 62)), random.z.pow(1.5))
+    const tint = mix(mix(color(hsl.integer(39, 27, 81)), color(hsl.integer(25, 36, 62)), 0.4), pink, sharp)
     let stone = mix(ground, tint, feldspar.mul(0.85))
-    stone = mix(stone, color('#171213'), hornblende)
+    stone = mix(stone, color(hsl.integer(4, 11, 9)), hornblende)
     this.colorNode = stone
     // The feldspar polishes as hard as the groundmass; the inclusions take it a little less.
     this.roughnessNode = float(0.11).add(mottle.sub(0.5).mul(0.03)).add(inclusion.mul(0.04)).add(feldspar.mul(0.02))

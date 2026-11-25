@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalView, uv} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -26,8 +27,8 @@ export default class extends KnotMaterial {
 // where the studio lamps reflect into the stone. It is a moving band because it is a real highlight.
     const eye = glints(normalView, 26).add(glints(normalView, 7).mul(0.3))
     const silk = fibre.mul(0.35).add(0.65).mul(eye.mul(0.85).add(0.28))
-    const umber = mix(color('#0b0502'), color('#5e3409'), ribbon)
-    const gold = mix(color('#3a1f05'), color('#b57a1c'), fibre.mul(0.9).add(0.1))
+    const umber = mix(color(hsl.integer(59, 46, 4)), color(hsl.integer(61, 84, 28)), ribbon)
+    const gold = mix(color(hsl.integer(61, 79, 17)), color(hsl.integer(73, 86, 57)), fibre.mul(0.9).add(0.1))
     this.colorNode = mix(umber, gold, ribbon.mul(0.55).add(silk.mul(0.2)).add(eye.mul(0.5)).clamp(0, 1))
     this.metalness = 0
     this.roughnessNode = float(0.12).sub(eye.mul(0.06)).sub(fibre.mul(0.03)).add(grazing.mul(0.03)).clamp(0.025, 0.4)
@@ -39,9 +40,9 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.02
     this.normalNode = proceduralNormal(fibre.mul(0.00018).add(ribbon.mul(0.0004)), 0.35)
     const chatoyant = glints(normalView, 90).mul(fibre.mul(0.5).add(0.5))
-    this.emissiveNode = color('#ffcf7a').mul(chatoyant).mul(0.6)
-      .add(color('#ffeec2').mul(eye).mul(silk).mul(near.mul(0.4).add(0.25)).mul(0.3))
-      .add(color('#5a2c06').mul(ribbon.oneMinus()).mul(grazing.pow(2)).mul(0.07))
-      .add(color('#ffd898').mul(fibre).mul(intimate.mul(0.5).add(0.2)).mul(0.04))
+    this.emissiveNode = color(hsl.integer(81, 100, 86)).mul(chatoyant).mul(0.6)
+      .add(color(hsl.integer(89, 100, 94.3)).mul(eye).mul(silk).mul(near.mul(0.4).add(0.25)).mul(0.3))
+      .add(color(hsl.integer(54, 86, 25)).mul(ribbon.oneMinus()).mul(grazing.pow(2)).mul(0.07))
+      .add(color(hsl.integer(80, 99, 88.5)).mul(fibre).mul(intimate.mul(0.5).add(0.2)).mul(0.04))
   }
 }

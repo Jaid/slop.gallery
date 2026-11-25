@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_fractal_noise_float, mx_noise_float, vec3} from 'three/tsl'
 import {CylinderGeometry, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -50,7 +51,7 @@ export default class TwigFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = 0.12
-  override readonly tint = '#6b5a48'
+  override readonly tint = hsl.integer(68, 23, 40)
   override readonly title = 'Adirondack twig'
 
   override createGeometry(width: number, height: number) {
@@ -98,8 +99,8 @@ class BarkMaterial extends MeshPhysicalNodeMaterial {
     const furrows = mx_noise_float(vec3(round.cos().mul(3), round.sin().mul(3), along.mul(6))).abs().smoothstep(0, 0.35).oneMinus()
     const flakes = mx_fractal_noise_float(p.mul(160), 3).mul(0.5).add(0.5)
     const lichen = mx_noise_float(p.mul(20)).mul(0.5).add(0.5).smoothstep(0.68, 0.8)
-    const outer = mix(color('#5a4d40'), color('#7d6e5c'), flakes)
-    const barkColor = mix(mix(outer, color('#4a2a1a'), furrows.mul(0.7)), color('#8f9a6a'), lichen.mul(0.6))
+    const outer = mix(color(hsl.integer(67, 19, 34)), color(hsl.integer(72, 19, 48)), flakes)
+    const barkColor = mix(mix(outer, color(hsl.integer(47, 51, 22)), furrows.mul(0.7)), color(hsl.integer(119, 38, 61)), lichen.mul(0.6))
     this.colorNode = barkColor
     this.roughnessNode = float(0.92).sub(lichen.mul(0.1))
     this.normalNode = heightNormal(furrows.mul(-0.0012).add(flakes.mul(0.0004)).mul(visibleDetail(footprint, 0.004).mul(0.7).add(0.3)))
@@ -114,8 +115,8 @@ class BirchMaterial extends MeshPhysicalNodeMaterial {
     const lenticels = mx_noise_float(vec3(surface.along.mul(18), surface.reach.mul(260), surface.member)).mul(0.5).add(0.5).smoothstep(0.78, 0.86)
     const peeling = mx_fractal_noise_float(vec3(surface.along.mul(6), surface.reach.mul(30), surface.member.add(4)), 3).mul(0.5).add(0.5).smoothstep(0.66, 0.7)
     const chalk = mx_noise_float(p.mul(90)).mul(0.5).add(0.5)
-    const white = mix(color('#d9d4c6'), color('#efece2'), chalk)
-    this.colorNode = mix(mix(white, color('#2a2420'), lenticels), color('#b08a5e'), peeling)
+    const white = mix(color(hsl.integer(91, 18, 85)), color(hsl.integer(93, 26, 93)), chalk)
+    this.colorNode = mix(mix(white, color(hsl.integer(56, 12, 16)), lenticels), color(hsl.integer(70, 44, 60)), peeling)
     this.normalNode = heightNormal(peeling.mul(-0.0003).sub(lenticels.mul(0.0001)))
   }
 }

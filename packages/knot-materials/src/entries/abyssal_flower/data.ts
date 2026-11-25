@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_flower',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Something patient flowers beneath the reach of every lighthouse.',
   placeholder: {
-    color: '#00ffcc',
+    color: hsl.integer(171, 100, 87),
     shading: 'fabric',
   },
 } as const satisfies KnotData

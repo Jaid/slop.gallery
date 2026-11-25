@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 3gQGAbAm59HYY8k; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'noctiluca_tide',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Something sleeps in the dark sea-skin until a footstep wakes it, and a wave of cold green light runs outward from the place nearest you.',
   placeholder: {
-    color: '#032a32',
+    color: hsl.integer(215, 89, 16),
     shading: 'liquid',
   },
 } as const satisfies KnotData

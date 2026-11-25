@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, screenUV, time, vec2, vec3} from 'three/tsl'
 
 import {surfaceFrame, torusDomain, tubeSpace} from '../../candidates/claude_opus/lib/knotSpace.ts'
@@ -81,10 +82,10 @@ export default class extends KnotMaterial {
     const height = papillae.mul(0.0007).mul(signal.mul(0.7).add(0.3)).add(ridges.mul(0.00025)).add(shallow.coverage.mul(0.00005))
     this.normalNode = proceduralNormal(height, 1)
     this.sheen = 0.4
-    this.sheenColor.set('#9fb8c9')
+    this.sheenColor.set(hsl.integer(238, 24, 73))
     this.sheenRoughness = 0.4
 // The skin’s own sheen under the gaze: a cool shimmer, never a glow.
     const shimmer = exposed.mul(gaze).mul(facing.mul(0.6).add(0.4)).mul(sheet.mul(0.5).add(0.5)).mul(intimate.mul(0.6).add(0.4))
-    this.emissiveNode = color('#3bb7b0').mul(shimmer).mul(0.06).add(color('#4a2a1a').mul(grazing.pow(3)).mul(0.04))
+    this.emissiveNode = color(hsl.integer(190, 78, 66)).mul(shimmer).mul(0.06).add(color(hsl.integer(47, 51, 22)).mul(grazing.pow(3)).mul(0.04))
   }
 }

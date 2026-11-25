@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'raku_crackle',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Smoke has found every small opening left by the cooling glaze.',
   placeholder: {
-    color: '#0f6b6a',
+    color: hsl.integer(194, 91, 40),
     shading: 'stone',
   },
 } as const satisfies KnotData

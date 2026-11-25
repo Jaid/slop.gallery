@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {assembleFrame, place, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -29,7 +31,7 @@ export default class MissionFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = member.inner + member.width + member.horn
-  override readonly tint = '#7a5a34'
+  override readonly tint = hsl.integer(70, 50, 41)
   override readonly title = 'Through-tenon oak'
 
   override createGeometry(width: number, height: number) {
@@ -61,9 +63,9 @@ export default class MissionFrame extends PortraitFrame {
     return [new FrameWoodMaterial({
       timber: {
         ...oak,
-        light: '#9a7444',
-        dark: '#6b4c28',
-        ring: '#432c14',
+        light: hsl.integer(72, 52, 52),
+        dark: hsl.integer(69, 55, 36),
+        ring: hsl.integer(65, 57, 21),
         rays: 1,
       },
       roughness: 0.55,

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, time, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -16,7 +17,7 @@ export default class extends BaseKnotMaterial {
     const noiseField = mx_fractal_noise_float(p.mul(8).add(vec3(0, time.mul(0.3), 0)), 4, 2, 0.5)
     const spikeMask = noiseField.smoothstep(0.2, 0.6)
     const spikeNormal = proceduralNormal(noiseField, 0.15)
-    const baseColor = color('#050505')
+    const baseColor = color(hsl.integer(0, 0, 3.7))
     const tipColor = cosinePalette(noiseField.mul(2), [0.5, 0.5, 0.5], [0.5, 0.5, 0.5], [1, 1, 1], [0, 0.33, 0.67])
     this.colorNode = mix(baseColor, tipColor, spikeMask.mul(0.6))
     this.metalness = 1

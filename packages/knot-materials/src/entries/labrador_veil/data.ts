@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'labrador_veil',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A stone that keeps the northern lights asleep inside its cleavage planes.',
   displacement: 0.0006,
   placeholder: {
-    color: '#28445c',
+    color: hsl.integer(246, 44, 28),
     shading: 'stone',
   },
 } as const satisfies KnotData

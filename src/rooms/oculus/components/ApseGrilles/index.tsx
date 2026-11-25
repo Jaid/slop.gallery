@@ -3,6 +3,7 @@ import type {Material} from 'three/webgpu'
 
 import {RigidBody, TrimeshCollider} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -20,7 +21,7 @@ const apseWalls = ['oculus-northwest', 'oculus-north', 'oculus-northeast'] as co
 export default function ApseGrilles({stone}: {stone: Material}) {
   const {reveal, bars, collision} = useDisposable(useMemo(createGrilles, []))
   const iron = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#2a2724',
+    color: hsl.integer(68, 7, 17),
     metalness: 0.75,
     roughness: 0.5,
     envMapIntensity: 0.3,

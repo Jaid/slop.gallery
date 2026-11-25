@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 8EWpDkWx6nfkCqt; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'nocturnal_mending',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The bowl was broken on purpose. Lacquer and gold dust now trace every fracture, and on quiet nights the mended seams remember fire.',
   placeholder: {
-    color: '#0c1530',
+    color: hsl.integer(268, 62, 10),
     shading: 'smooth',
   },
 } as const satisfies KnotData

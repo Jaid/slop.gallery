@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4ayQMqfdM3WbrB2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'midnight_brocade',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'Silk woven for a court that no longer exists. Gold thread blooms through the weave, and the whole cloth changes its mind about color as you pass.',
   placeholder: {
-    color: '#5d5266',
+    color: hsl.integer(310, 19, 37),
     shading: 'fabric',
   },
 } as const satisfies KnotData

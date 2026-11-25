@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ferro_crown',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A black crown rises to meet an invisible command.',
   placeholder: {
-    color: '#1b2230',
+    color: hsl.integer(264, 28, 15),
     shading: 'metal',
   },
   displacement: 0.06,

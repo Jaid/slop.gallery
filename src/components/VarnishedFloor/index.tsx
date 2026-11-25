@@ -4,6 +4,7 @@ import type {Material, Object3D} from 'three/webgpu'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {PlaneGeometry} from 'three/webgpu'
@@ -54,7 +55,7 @@ export function FloorSlab({center: [x, z], material, name, size: [width, depth]}
       <CuboidCollider args={[width / 2, varnishedFloorSlab / 2, depth / 2]} position={[x, -varnishedFloorSlab / 2, z]} />
     </RigidBody>
     <mesh castShadow geometry={geometry.slab} name={`${name}-floor-slab`} position={[x, -varnishedFloorSlab / 2, z]} receiveShadow>
-      <meshStandardNodeMaterial color='#23201d' roughness={0.8} />
+      <meshStandardNodeMaterial color={hsl.integer(67, 8, 14)} roughness={0.8} />
     </mesh>
     <mesh geometry={geometry.plane} material={material} name={`${name}-floor`} position={[x, varnishedFloorY, z]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
       <Branch if={reflection}><primitive object={reflection!} /></Branch>

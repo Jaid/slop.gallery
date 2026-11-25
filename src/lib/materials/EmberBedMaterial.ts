@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, smoothstep, time, uv, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -31,7 +32,7 @@ export default class EmberBedMaterial extends MeshStandardNodeMaterial {
     // Beyond the ash, soot darkens the hearth and fades out raggedly.
     const ragged = rim.add(mx_noise_float(p.mul(7)).mul(0.05))
     const soot = smoothstep(0.72, 0.9, ragged)
-    this.colorNode = mix(mix(mix(color('#140d09'), color('#2a1c14'), lump), color('#57514b'), ash), color('#1d1916'), soot)
+    this.colorNode = mix(mix(mix(color(hsl.integer(51, 24, 7)), color(hsl.integer(51, 32, 14)), lump), color(hsl.integer(67, 8, 35)), ash), color(hsl.integer(59, 11, 11)), soot)
     this.emissiveNode = fireColor(heat).mul(2.2)
     this.opacityNode = smoothstep(0.78, 0.98, ragged).oneMinus().mul(soot.mul(-0.35).add(1))
   }

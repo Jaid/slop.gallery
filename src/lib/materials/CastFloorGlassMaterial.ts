@@ -1,6 +1,7 @@
 import type {TransmittingEmission} from '../rendering/AlbedoRenderPipeline.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalLocal, perspectiveDepthToViewZ, positionLocal, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, transformNormalToView, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -35,7 +36,7 @@ const maximumRefractionGap = 6
 /** Relative spread of the red and blue refraction, the glass’s dispersion. */
 const dispersion = 0.06
 /** Iron-green body color the light picks up per {@link attenuationDepth} meters inside the glass. */
-const attenuation = new Color('#7ecdc0')
+const attenuation = new Color(hsl.integer(183, 53, 76))
 const attenuationColor = vec3(attenuation.r, attenuation.g, attenuation.b)
 const attenuationDepth = 0.3
 
@@ -53,7 +54,7 @@ export default class CastFloorGlassMaterial extends MeshPhysicalNodeMaterial imp
   constructor({thickness, tileSize}: CastFloorGlassOptions) {
     super({
       // The body only reflects; everything seen through the glass comes from the refracted backdrop below.
-      color: '#000000',
+      color: hsl.integer(0, 0, 0),
       metalness: 0,
       roughness: 0.05,
       ior,
@@ -98,7 +99,7 @@ export default class CastFloorGlassMaterial extends MeshPhysicalNodeMaterial imp
     const antialias = max(fwidth(joint), 0.0005)
     const pane = smoothstep(float(jointHalfWidth).sub(antialias), float(jointHalfWidth).add(antialias), joint).mul(facing).add(float(1).sub(facing))
     // Joints are a dark silicone bead that neither transmits nor shines like the glass.
-    this.colorNode = mix(color('#121718'), color('#000000'), pane)
+    this.colorNode = mix(color(hsl.integer(211, 11, 10)), color(hsl.integer(0, 0, 0)), pane)
     this.roughnessNode = mix(float(0.6), float(0.05), pane)
     // A thin prism deviates the ray by (n − 1) times its facet tilt, and the ray keeps drifting across the whole gap to whatever lies beyond the glass.
     const backdropViewZ = perspectiveDepthToViewZ(viewportDepthTexture(screenUV), cameraNear, cameraFar)

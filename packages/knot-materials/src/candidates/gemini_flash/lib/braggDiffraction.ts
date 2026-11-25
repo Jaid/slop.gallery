@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float} from 'three/tsl'
 
 /**
@@ -17,7 +18,7 @@ export function braggDiffraction(
   const redGate = lambda.sub(0.65).abs().mul(-sharpness).exp()
   const greenGate = lambda.sub(0.53).abs().mul(-sharpness).exp()
   const blueGate = lambda.sub(0.44).abs().mul(-sharpness).exp()
-  return color('#ff1838').mul(redGate)
-    .add(color('#15f060').mul(greenGate))
-    .add(color('#2878ff').mul(blueGate))
+  return color(hsl.integer(23.5, 100, 57.8)).mul(redGate)
+    .add(color(hsl.integer(147.4, 99.2, 81)).mul(greenGate))
+    .add(color(hsl.integer(260.5, 100, 54)).mul(blueGate))
 }

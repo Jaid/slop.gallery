@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mercury_swell',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A metal that forgot how to be solid and now only remembers how to reflect.',
   displacement: 0.002,
   placeholder: {
-    color: '#aeb7c1',
+    color: hsl.integer(251, 12, 74),
     shading: 'metal',
   },
 } as const satisfies KnotData

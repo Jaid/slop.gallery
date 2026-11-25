@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -18,12 +19,12 @@ export default class extends KnotMaterial {
     const near = positionView.length().smoothstep(1.25, 5.5).oneMinus()
     const spikes = mx_noise_float(p.mul(20).add(view.mul(5))).mul(0.5).add(0.5).pow(3)
     const flow = liquidNormal(near, 0.8)
-    this.colorNode = color('#111111')
+    this.colorNode = color(hsl.integer(0, 0, 8))
     this.metalness = 1
     this.roughnessNode = spikes.mul(0.15).add(0.02)
     this.normalNode = flow
     this.clearcoat = 0.3
     this.clearcoatRoughness = 0.1
-    this.emissiveNode = color('#ffffff').mul(rim.pow(4)).mul(0.5)
+    this.emissiveNode = color(hsl.integer(0, 0, 100)).mul(rim.pow(4)).mul(0.5)
   }
 }

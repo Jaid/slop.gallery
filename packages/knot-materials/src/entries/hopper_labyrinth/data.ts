@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2E09QDOVGvyWUoU; fixture: knot-material-shaders; result: success.
 export default {
   id: 'hopper_labyrinth',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.017,
   flavorText: 'Hopper crystals grow in terraced labyrinths of liquid metal. Each step of the ziggurat traps a different thickness of oxide, blazing from gold to violet.',
   placeholder: {
-    color: '#63585f',
+    color: hsl.integer(339, 10, 39),
     shading: 'metal',
   },
 } as const satisfies KnotData

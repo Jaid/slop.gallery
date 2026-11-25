@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, uv, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -37,7 +38,7 @@ export default class extends BaseKnotMaterial {
     const spectrumB = cosinePalette(dispersionPhase.add(0.15).add(grazing.mul(0.4)), [0.5, 0.5, 0.5], [0.55, 0.55, 0.55], [1, 1, 1], [0.05, 0.38, 0.72])
     const chroma = spectrumA.add(spectrumB).mul(0.5)
     // Facet interior — cool glass, tinted by the dispersion.
-    const glassCore = color('#dfeeff')
+    const glassCore = color(hsl.integer(251, 100, 93.4))
     const glassTint = mix(glassCore, chroma, grazing.mul(0.7).add(0.28))
     // Random per-facet brightness.
     const facetBright = facetRnd2.y.mul(0.6).add(0.55)
@@ -51,7 +52,7 @@ export default class extends BaseKnotMaterial {
     this.thickness = 0.5
     this.ior = 1.72
     this.dispersion = 0.65
-    this.attenuationColor.set('#8fd6ff')
+    this.attenuationColor.set(hsl.integer(234, 100, 82))
     this.attenuationDistance = 0.85
     this.metalness = 0
     this.roughnessNode = float(0.045)
@@ -69,9 +70,9 @@ export default class extends BaseKnotMaterial {
     this.emissiveNode
       = chroma.mul(facetEdge).mul(near.mul(0.55).add(0.45)).mul(0.75)
         .add(chroma.mul(facetEdgeFine).mul(0.4))
-        .add(color('#ffffff').mul(innerGlow).mul(0.55))
+        .add(color(hsl.integer(0, 0, 100)).mul(innerGlow).mul(0.55))
         .add(spectrumA.mul(rim).mul(0.7))
         .add(spectrumB.mul(grazing.pow(3)).mul(0.35))
-        .add(color('#88c8ff').mul(facing.pow(6)).mul(0.15))
+        .add(color(hsl.integer(245, 100, 78)).mul(facing.pow(6)).mul(0.15))
   }
 }

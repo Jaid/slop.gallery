@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalView, positionViewDirection, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -25,7 +26,7 @@ export default class AcrylicFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#1d3236'
+  override readonly tint = hsl.integer(211, 33, 20)
   override readonly title = 'Edge-lit acrylic'
 
   override createGeometry(width: number, height: number) {
@@ -46,10 +47,10 @@ class AcrylicMaterial extends MeshPhysicalNodeMaterial {
       clearcoat: 1,
       clearcoatRoughness: 0.01,
       ior: 1.49,
-      color: '#0b1416',
+      color: hsl.integer(213, 25, 8),
     })
     const facing = normalView.dot(positionViewDirection.negate()).clamp(0, 1)
-    this.colorNode = mix(color('#0d2226'), color('#020506'), facing)
+    this.colorNode = mix(color(hsl.integer(211, 48, 13)), color(hsl.integer(215, 32, 3)), facing)
   }
 }
 /** Light trapped in the acrylic escaping through its beveled edges: a cool glow, brighter in drifting bands as if the light inside wandered. */
@@ -61,7 +62,7 @@ class EdgeLightMaterial extends MeshPhysicalNodeMaterial {
     })
     const surface = frameSurface()
     const drift = mx_noise_float(vec3(surface.along.mul(3), surface.member, 1.3)).mul(0.5).add(0.5)
-    this.colorNode = color('#0c1a1c')
-    this.emissiveNode = mix(color('#8fe6ff'), vec3(1), drift.mul(0.4)).mul(drift.mul(0.8).add(0.6)).mul(float(1.6))
+    this.colorNode = color(hsl.integer(207, 36, 10))
+    this.emissiveNode = mix(color(hsl.integer(218, 100, 86)), vec3(1), drift.mul(0.4)).mul(drift.mul(0.8).add(0.6)).mul(float(1.6))
   }
 }

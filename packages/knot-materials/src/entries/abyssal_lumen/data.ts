@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_lumen',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   displacement: 0.013,
   flavorText: 'No sun ever touched this body. It rows with light instead, and every stroke spills a small private rainbow.',
   placeholder: {
-    color: '#0b0f1e',
+    color: hsl.integer(271, 42, 8),
     shading: 'glass',
   },
 } as const satisfies KnotData

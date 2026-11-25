@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'frost_bloom',
   candidateId: 'glm',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Winter makes a brief garden on a surface it cannot keep.',
   placeholder: {
-    color: '#cfeaff',
+    color: hsl.integer(241, 100, 91),
     shading: 'fabric',
   },
 } as const satisfies KnotData

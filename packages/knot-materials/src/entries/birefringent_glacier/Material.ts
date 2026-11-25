@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -34,13 +35,13 @@ export default class extends BaseKnotMaterial {
       .smoothstep(0.09, 0)
       .mul(mx_noise_float(p.mul(8.5)).abs().smoothstep(0.28, 0.04))
     const frost = dendrite.mul(near.pow(1.35)).mul(intimate.mul(0.45).add(0.55))
-    const ice = mix(color('#0a1c28'), color('#d7eefc'), facing.mul(0.35).add(0.1))
-    this.colorNode = mix(mix(ice, biref, cracks.mul(0.45).add(0.2)), color('#eef6ff'), frost.mul(0.85))
+    const ice = mix(color(hsl.integer(240, 52, 12)), color(hsl.integer(234, 75, 92.6)), facing.mul(0.35).add(0.1))
+    this.colorNode = mix(mix(ice, biref, cracks.mul(0.45).add(0.2)), color(hsl.integer(251, 100, 96.5)), frost.mul(0.85))
     this.transmissionNode = frost.oneMinus().mul(0.55).add(0.4).mul(facing.mul(0.2).add(0.78))
     this.thickness = 0.7
     this.ior = 1.31
     this.dispersion = 0.5
-    this.attenuationColor.set('#7ec8e6')
+    this.attenuationColor.set(hsl.integer(226, 62, 76))
     this.attenuationDistance = 0.55
     this.roughnessNode = frost.mul(0.38).add(0.02)
     this.metalness = 0
@@ -54,9 +55,9 @@ export default class extends BaseKnotMaterial {
       .mul(cracks)
       .mul(near.mul(0.6).add(0.3))
       .mul(0.85)
-      .add(color('#cfefff').mul(bubbles).mul(intimate).mul(1.3))
-      .add(color('#8fd4ff').mul(caustic).mul(facing).mul(0.22))
-      .add(color('#f4fbff').mul(frost).mul(glints(normalViewGeometry, 80)).mul(0.6))
-      .add(color('#4a7a94').mul(rim).mul(0.12))
+      .add(color(hsl.integer(229, 100, 92.3)).mul(bubbles).mul(intimate).mul(1.3))
+      .add(color(hsl.integer(237, 100, 81.3)).mul(caustic).mul(facing).mul(0.22))
+      .add(color(hsl.integer(232, 100, 98)).mul(frost).mul(glints(normalViewGeometry, 80)).mul(0.6))
+      .add(color(hsl.integer(233, 44, 49)).mul(rim).mul(0.12))
   }
 }

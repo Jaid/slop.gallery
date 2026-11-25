@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, time, uv} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -21,7 +22,7 @@ export default class extends BaseKnotMaterial {
     this.thickness = 0.72
     this.ior = 1.34
     this.dispersion = 0.42
-    this.attenuationColor.set('#011627')
+    this.attenuationColor.set(hsl.integer(244, 88, 9))
     this.attenuationDistance = 0.35
     this.roughness = 0.02
     this.clearcoat = 1
@@ -41,11 +42,11 @@ export default class extends BaseKnotMaterial {
     const spores = cellNoiseVec3(sporeSample)
     // Per-spore brightness only contributes inside a compact, round inclusion.
     const sporeGlow = cellularPoints(sporeSample, 0.06, 0.24, 0.35).mul(spores.y).mul(intimate)
-    const colorCyan = color('#00ffd0')
-    const colorPink = color('#ff007f')
-    const colorIndigo = color('#7928ca')
+    const colorCyan = color(hsl.integer(173, 100, 87))
+    const colorPink = color(hsl.integer(3, 100, 58.7))
+    const colorIndigo = color(hsl.integer(300, 89, 41))
     const waveTint = mix(colorCyan, colorPink, nerveSpike1.add(nerveSpike2.mul(0.5)).clamp())
-    this.colorNode = color('#010a12')
+    this.colorNode = color(hsl.integer(237, 75, 5))
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(22)).mul(0.12), 0.0012)
     const organGlow = filaments.mul(colorCyan).mul(1.6).add(sporeGlow.mul(colorPink).mul(3.2))
     const waveGlow = waveTint.mul(nerveSpike1.mul(3.8).add(nerveSpike2.mul(2.4)))

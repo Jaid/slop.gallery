@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, normalLocal, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -36,8 +37,8 @@ export default class extends KnotMaterial {
     const gate = rnd2.x.smoothstep(0.88, 0.92).mul(intimate.mul(0.7).add(0.3))
     const twinkle = time.mul(rnd2.y.mul(3).add(1)).add(rnd2.z.mul(20)).sin().mul(0.4).add(0.7)
     const plankton = core.mul(gate).mul(twinkle)
-    const deep = color('#020610')
-    const flesh = color('#0a1e3a').mul(1).add(color('#1a0f3a').mul(skinCells))
+    const deep = color(hsl.integer(258, 58, 4))
+    const flesh = color(hsl.integer(257, 68, 13)).mul(1).add(color(hsl.integer(290, 72, 11)).mul(skinCells))
     this.colorNode = mix(deep.mul(1), flesh, facing.mul(0.7).add(0.3))
     this.metalness = 0.1
     this.roughnessNode = float(0.32).sub(veinsLarge.mul(0.15)).sub(facing.mul(0.1))
@@ -47,8 +48,8 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.4
     this.iridescenceThicknessNode = grazing.mul(400).add(180)
     this.normalNode = proceduralNormal(skinCells.mul(0.6).add(baseRaw.mul(0.8)), 0.002)
-    const veinTint = mix(color('#00f0ff'), color('#ff2fd6'), view.x.mul(0.5).add(0.5).add(baseRaw.mul(0.4)).clamp())
+    const veinTint = mix(color(hsl.integer(202, 100, 85)), color(hsl.integer(338, 100, 64.3)), view.x.mul(0.5).add(0.5).add(baseRaw.mul(0.4)).clamp())
     const veinGlow = veinsLarge.add(capillaries.mul(0.7)).mul(pulseWave.mul(0.6).add(0.4)).mul(heartbeat)
-    this.emissiveNode = veinTint.mul(veinGlow).mul(2.2).mul(near.mul(0.5).add(0.7)).add(color('#9ff6ff').mul(plankton).mul(2)).add(color('#00e5ff').mul(rim).mul(0.55).mul(heartbeat)).add(color('#ff2fd6').mul(grazing.pow(4)).mul(0.4))
+    this.emissiveNode = veinTint.mul(veinGlow).mul(2.2).mul(near.mul(0.5).add(0.7)).add(color(hsl.integer(204, 99, 90.8)).mul(plankton).mul(2)).add(color(hsl.integer(209, 100, 82)).mul(rim).mul(0.55).mul(heartbeat)).add(color(hsl.integer(338, 100, 64.3)).mul(grazing.pow(4)).mul(0.4))
   }
 }

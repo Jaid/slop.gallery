@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -33,22 +34,22 @@ export default class extends KnotMaterial {
 // A soft glow that fades with distance from each channel instead of outlining it.
     const glow = coarseField.abs().mul(4).oneMinus().max(0).pow(2.5).add(mediumField.abs().mul(6).oneMinus().max(0).pow(2.5).mul(gateCoarse).mul(0.6))
     const haze = mx_noise_float(p.mul(2.6)).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#03060a'), color('#e8f2ff'), discharge)
+    this.colorNode = mix(color(hsl.integer(248, 32, 4)), color(hsl.integer(255, 100, 95)), discharge)
     this.metalness = 0
     this.roughnessNode = float(0.03).add(discharge.mul(0.05))
     this.transmission = 0.6
     this.thickness = 0.45
     this.ior = 1.49
-    this.attenuationColor.set('#7fb4e8')
+    this.attenuationColor.set(hsl.integer(249, 64, 71))
     this.attenuationDistance = 1.6
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.normalNode = proceduralNormal(discharge.mul(0.3), 0.0005)
     this.clearcoatNormalNode = this.normalNode
-    this.emissiveNode = color('#ffffff').mul(core).mul(near.mul(0.3).add(0.7)).mul(22)
-      .add(color('#5aa0ff').mul(discharge).mul(near.mul(0.3).add(0.7)).mul(14))
-      .add(color('#2a5cb0').mul(glow).mul(near.mul(0.3).add(0.7)).mul(0.5))
-      .add(color('#3a6ea8').mul(haze).mul(0.05))
-      .add(color('#bcd8ff').mul(grazing.pow(3)).mul(0.1))
+    this.emissiveNode = color(hsl.integer(0, 0, 100)).mul(core).mul(near.mul(0.3).add(0.7)).mul(22)
+      .add(color(hsl.integer(257, 100, 65.5)).mul(discharge).mul(near.mul(0.3).add(0.7)).mul(14))
+      .add(color(hsl.integer(260, 78, 41)).mul(glow).mul(near.mul(0.3).add(0.7)).mul(0.5))
+      .add(color(hsl.integer(253, 62, 45.5)).mul(haze).mul(0.05))
+      .add(color(hsl.integer(257, 100, 85.4)).mul(grazing.pow(3)).mul(0.1))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_rose',
   candidateId: 'mimo',
@@ -16,7 +18,7 @@ export default {
   displacement: 0.022,
   flavorText: 'A rose that never wilts, wearing the last of the garden’s dew in the dark folds of its velvet.',
   placeholder: {
-    color: '#c02038',
+    color: hsl.integer(20, 92, 45),
     shading: 'fabric',
   },
 } as const satisfies KnotData

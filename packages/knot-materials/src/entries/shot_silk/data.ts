@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ImzJ438LsWTlcom; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'shot_silk',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Warp and weft were dyed to disagree, so the cloth answers every step you take with a different color.',
   placeholder: {
-    color: '#674979',
+    color: hsl.integer(312, 42, 37),
     shading: 'fabric',
   },
 } as const satisfies KnotData

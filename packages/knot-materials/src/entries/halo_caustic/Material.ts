@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, refractVector, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -23,7 +24,7 @@ export default class extends KnotMaterial {
     const cross = b.sin().abs().oneMinus().pow(10)
     const network = focus.add(vein.mul(0.55)).add(cross.mul(focus.add(0.2)).mul(0.4))
     const resolved = a.fwidth().max(b.fwidth()).smoothstep(2.2, 0.4)
-    const glow = mix(color('#7ec8ff'), color('#ffd27a'), bent.y.mul(0.5).add(0.5))
+    const glow = mix(color(hsl.integer(242, 100, 77.3)), color(hsl.integer(83, 100, 86.6)), bent.y.mul(0.5).add(0.5))
     this.colorNode = glow.mul(network.mul(0.6).add(0.15))
     this.metalness = 0
     this.roughness = 1
@@ -31,7 +32,7 @@ export default class extends KnotMaterial {
     this.thickness = 1.4
     this.ior = 1.55
     this.dispersionNode = float(1.1).add(intimate.mul(0.8))
-    this.attenuationColor.set('#8fd4ff')
+    this.attenuationColor.set(hsl.integer(237, 100, 81.3))
     this.attenuationDistance = 0.35
     this.clearcoat = 0
     this.iridescenceNode = grazing.mul(0.7)
@@ -39,8 +40,8 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = float(140).add(grazing.mul(380)).add(near.mul(80))
     this.normalNode = liquidNormal(float(0.2), 0.28)
     this.emissiveNode = glow.mul(network).mul(resolved).mul(0.8)
-      .add(color('#fff6dd').mul(focus.pow(2)).mul(resolved).mul(intimate).mul(1.1))
-      .add(color('#d7f1ff').mul(grazing.pow(3.5)).mul(0.55))
-      .add(color('#ffffff').mul(facing.pow(8)).mul(near).mul(0.35))
+      .add(color(hsl.integer(91, 100, 97)).mul(focus.pow(2)).mul(resolved).mul(intimate).mul(1.1))
+      .add(color(hsl.integer(231, 100, 93.4)).mul(grazing.pow(3.5)).mul(0.55))
+      .add(color(hsl.integer(0, 0, 100)).mul(facing.pow(8)).mul(near).mul(0.35))
   }
 }

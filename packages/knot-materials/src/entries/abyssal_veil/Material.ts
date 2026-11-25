@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, uv, vec3} from 'three/tsl'
 
 import {surfaceLine} from '../../candidates/deepseek/lib/surfaceLine.ts'
@@ -34,10 +35,10 @@ export default class extends KnotMaterial {
     const photophore = organBand.oneMinus().mul(tube.y.sub(0.62).abs().mul(-1).add(0.05).smoothstep(0, 0.04))
     const gel = mx_noise_float(p.mul(28).add(vec3(0, t.mul(0.03), 0))).mul(0.5).add(0.5)
     const bodySkin = mx_fractal_noise_float(p.mul(6), 3, 2, 0.5).mul(0.5).add(0.5)
-    const membrane = mix(color('#062a33'), color('#128a8c'), bodySkin.mul(0.5).add(0.3))
-    this.colorNode = mix(color('#06222b'), membrane, lappets.abs().smoothstep(0.2, 0.02).oneMinus())
-      .add(color('#0a4a52').mul(canals.coverage.mul(canals.energy)))
-      .add(color('#3fe0d0').mul(organ.mul(0.5)))
+    const membrane = mix(color(hsl.integer(218, 79, 16)), color(hsl.integer(197, 93, 51)), bodySkin.mul(0.5).add(0.3))
+    this.colorNode = mix(color(hsl.integer(223, 72, 13)), membrane, lappets.abs().smoothstep(0.2, 0.02).oneMinus())
+      .add(color(hsl.integer(208, 87, 28)).mul(canals.coverage.mul(canals.energy)))
+      .add(color(hsl.integer(185, 85, 79)).mul(organ.mul(0.5)))
     const relief = canals.coverage.mul(0.5).add(margin.coverage.mul(0.8)).add(bell.mul(0.4)).add(inner.mul(0.3))
     this.positionNode = p.sub(normalLocal.mul(bell.mul(0.008).mul(near.mul(0.4).add(0.6))))
     this.normalNode = proceduralNormal(relief, 0.0016)
@@ -48,16 +49,16 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = bodySkin.mul(320).add(180).add(bell.mul(120))
     this.clearcoat = 0.5
     this.clearcoatRoughness = 0.06
-    this.specularColorNode = mix(color('#9ff0ec'), color('#ffffff'), facing.mul(0.6))
+    this.specularColorNode = mix(color(hsl.integer(192, 70, 88.6)), color(hsl.integer(0, 0, 100)), facing.mul(0.6))
     this.aoNode = mix(float(0.7), float(1), organ.mul(0.4).add(canals.coverage))
 // Interior light: brighter where the gel is thin, brightest at the crest of a contraction.
     const interior = inner.mul(0.55).add(organField.mul(0.45)).mul(grazing.mul(0.5).add(0.6))
-    this.emissiveNode = color('#2ce8dc').mul(interior.pow(2.2)).mul(0.7)
-      .add(mix(color('#7ef4ff'), color('#e07cff'), organField.mul(1.4)).mul(organ).mul(1.35))
-      .add(color('#d8ffff').mul(photophore).mul(flash).mul(near.mul(0.7).add(0.35)).mul(1.6))
-      .add(color('#1fd0c4').mul(canals.coverage.mul(canals.energy)).mul(bell.mul(0.6).add(0.5)).mul(0.8))
-      .add(color('#8a5cff').mul(grazing.pow(2.2)).mul(0.85))
-      .add(color('#5ce0ff').mul(bell.pow(3)).mul(0.25))
-      .add(color('#a8f8ff').mul(intimate).mul(facing.pow(3)).mul(0.35))
+    this.emissiveNode = color(hsl.integer(188, 93, 82)).mul(interior.pow(2.2)).mul(0.7)
+      .add(mix(color(hsl.integer(203, 99, 88.7)), color(hsl.integer(318, 100, 70.5)), organField.mul(1.4)).mul(organ).mul(1.35))
+      .add(color(hsl.integer(196, 100, 96.8)).mul(photophore).mul(flash).mul(near.mul(0.7).add(0.35)).mul(1.6))
+      .add(color(hsl.integer(187, 93, 74)).mul(canals.coverage.mul(canals.energy)).mul(bell.mul(0.6).add(0.5)).mul(0.8))
+      .add(color(hsl.integer(291, 100, 55)).mul(grazing.pow(2.2)).mul(0.85))
+      .add(color(hsl.integer(216, 100, 82)).mul(bell.pow(3)).mul(0.25))
+      .add(color(hsl.integer(202, 99, 92)).mul(intimate).mul(facing.pow(3)).mul(0.35))
   }
 }

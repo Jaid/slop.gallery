@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mycelium_choir',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A thousand quiet filaments pass the same bright note from branch to branch.',
   placeholder: {
-    color: '#6dffb0',
+    color: hsl.integer(157, 100, 88.4),
     shading: 'fabric',
   },
 } as const satisfies KnotData

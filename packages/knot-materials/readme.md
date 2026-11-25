@@ -43,13 +43,15 @@ Every knot lives directly in `src/entries/<id>`. Candidate folders contain attri
 ```ts
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'benthic_beacon',
   candidateId: 'gpt_astra',
   title: 'Benthic Beacon',
   flavorText: 'One small beacon keeps watch at the bottom of the world.',
   placeholder: {
-    color: '#4de3ff',
+    color: hsl.integer(213, 100, 82.3),
     shading: 'glass',
   },
   author: {
@@ -90,7 +92,7 @@ Each `Material.ts` default-exports an anonymous class extending `KnotMaterial` f
 
 For vertex displacement, metadata must declare a conservative maximum distance in meters as `displacement`. Culling and collision geometry expand accordingly, and entries with equal bounds share geometry. The global `knotCurve` and `knotFrame` helpers match the exhibition's torus-knot centerline and tube frame.
 
-`placeholder` sums up how the knot looks: its exact `color` tints its nameplates, and prompt generation spreads its examples across the seven `shading` options, `smooth`, `ghost`, `metal`, `glass`, `stone`, `liquid` and `fabric`. The intended spelling is `smooth`.
+`placeholder` sums up how the knot looks. Its `color` tints the nameplates. Author it and the material’s palette with `hsl.integer(hue, saturation, lightness)`: hue in degrees, saturation and lightness in percent. The result is packed sRGB (`0xRRGGBB`), ready for Three.js materials and TSL’s `color()`. Prompt generation spreads its examples across the seven `shading` options: `smooth`, `ghost`, `metal`, `glass`, `stone`, `liquid` and `fabric`.
 
 Scenes take their knots’ materials from `DirectKnotMaterials`. It has no placeholders and no warmup of its own, since their renderer brings in new materials without stalling, like Slop Gallery’s streaming renderer: the shaders load once the scene subscribes, and its `getSnapshot()` (for `useSyncExternalStore`) lists each knot’s full material once it has arrived, so the scene only mounts a knot then, with its `coreMaterial` on a child mesh if it has one. It extends `KnotMaterials`, which owns the shared `KnotResources`, the environment and the on-demand loading. Full materials are built in every graphics mode, since Knottingham exists to review them.
 

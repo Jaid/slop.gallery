@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'damascus_tide',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Dark and bright metal flow together without ever truly mixing.',
   placeholder: {
-    color: '#c7d1dc',
+    color: hsl.integer(251, 19, 83),
     shading: 'liquid',
   },
 } as const satisfies KnotData

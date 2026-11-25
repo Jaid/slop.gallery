@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {coverage, periodicSurface, resolved, surfaceTile} from '../../candidates/gpt_sol/lib/gallerySurface.ts'
@@ -37,10 +38,10 @@ export default class extends KnotMaterial {
       .mul(r.smoothstep(0.06, 0.14)).mul(r.smoothstep(0.4, 0.43).oneMinus()).mul(intimate)
     const enamelNoise = mx_noise_float(periodicSurface(tube, 21, 3)).mul(0.5).add(0.5).toVar()
     const sheenSweep = tube.x.mul(TAU * 6).sub(tube.y.mul(TAU * 2)).add(time.mul(0.12)).sin().mul(0.5).add(0.5)
-    const wine = mix(color('#17040c'), color('#6d1026'), enamelNoise.mul(0.6).add(sheenSweep.mul(0.35)))
-    const brass = mix(color('#b47b30'), color('#f1d38a'), turning.mul(0.6).add(seed.y.mul(0.2)))
+    const wine = mix(color(hsl.integer(354, 61, 6)), color(hsl.integer(14, 86, 25)), enamelNoise.mul(0.6).add(sheenSweep.mul(0.35)))
+    const brass = mix(color(hsl.integer(70, 74, 57)), color(hsl.integer(88, 71, 85.5)), turning.mul(0.6).add(seed.y.mul(0.2)))
     this.colorNode = mix(wine.mul(turning.mul(0.13).add(0.87)), brass, wire)
-      .add(color('#ba6339').mul(radial).mul(0.075))
+      .add(color(hsl.integer(45, 69, 53)).mul(radial).mul(0.075))
     this.metalnessNode = wire.mul(0.95).add(radial.mul(0.2)).clamp()
     this.roughnessNode = mix(float(0.22), float(0.185), wire).add(turning.mul(0.045))
     this.anisotropyNode = vec2(theta.cos(), theta.sin()).mul(wire.mul(0.6).add(0.15))
@@ -50,7 +51,7 @@ export default class extends KnotMaterial {
     const height = wire.mul(0.0012).sub(radial.mul(0.00028)).add(turning.mul(0.00016).mul(intimate))
     this.normalNode = proceduralNormal(height, 0.75)
     this.clearcoatNormalNode = proceduralNormal(enamelNoise.mul(0.00025), 0.6)
-    this.emissiveNode = color('#962d27').mul(wire.oneMinus()).mul(sheenSweep).mul(near).mul(0.035)
+    this.emissiveNode = color(hsl.integer(27, 82, 37)).mul(wire.oneMinus()).mul(sheenSweep).mul(near).mul(0.035)
     this.iridescenceNode = grazing.pow(3).mul(wire.oneMinus()).mul(0.14)
     this.iridescenceThicknessNode = float(320)
   }

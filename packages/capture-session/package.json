@@ -23,6 +23,7 @@
     "math": "0.1.0",
     "media-encoding": "workspace:*",
     "minimatch": "11.0.9",
+    "okhsl": "0.2.0",
     "type-fest": "6.0.3"
   },
   "peerDependencies": {

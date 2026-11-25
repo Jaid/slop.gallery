@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3, wgslFn} from 'three/tsl'
 
 import {tubeRay} from '../../lib/atelier.ts'
@@ -264,7 +265,7 @@ export default class extends KnotMaterial {
     const cloud = mx_noise_float(cloudPosition.mul(1.7).add(warp)).mul(0.5).add(0.5)
     const veil = cloud.smoothstep(0.32, 0.82)
     const interference = p.y.mul(5).add(p.z.mul(3)).add(grazing.mul(3)).add(time.mul(0.07)).sin().mul(0.5).add(0.5)
-    const nebula = mix(color('#123783'), color('#673b9c'), interference)
+    const nebula = mix(color(hsl.integer(262, 89, 27)), color(hsl.integer(301, 69, 37)), interference)
     const aurora = mx_noise_float(cloudPosition.mul(vec3(0.6, 2.4, 1.1)).add(warp)).abs().smoothstep(0.06, 0.32).oneMinus().mul(veil)
     // A second, deeper star plane moves against the recognizable faces as the viewer walks around.
     const dustPosition = uv().sub(ray.mul(0.067)).mul(vec2(168, 24))
@@ -279,7 +280,7 @@ export default class extends KnotMaterial {
       .mul(dustRandom.z.smoothstep(0.74, 0.88))
       .mul(dustFootprint.smoothstep(0.15, 0.7).oneMinus())
     const dustTwinkle = time.mul(1.4).add(dustRandom.x.mul(30)).add(shimmer.mul(3)).sin().mul(0.3).add(0.7)
-    this.colorNode = mix(color('#01030b'), color('#0a1225'), veil.mul(0.3)).add(nebula.mul(0.008))
+    this.colorNode = mix(color(hsl.integer(262, 66, 3)), color(hsl.integer(265, 52, 9)), veil.mul(0.3)).add(nebula.mul(0.008))
     this.metalness = 0.78
     this.roughnessNode = mix(float(0.24), float(0.34), cloud)
     this.clearcoat = 0.2
@@ -290,8 +291,8 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = interference.mul(190).add(280)
     this.emissiveNode = constellation
       .add(nebula.mul(veil).mul(0.024))
-      .add(color('#32c6c0').mul(aurora).mul(0.025))
-      .add(mix(color('#8badff'), color('#ffda9a'), dustRandom.x).mul(dust).mul(dustTwinkle).mul(proximity).mul(2.3))
-      .add(mix(color('#3941ad'), color('#53cbca'), interference).mul(grazing.pow(4)).mul(0.15).mul(facing.smoothstep(0, 0.12)))
+      .add(color(hsl.integer(191, 85, 71)).mul(aurora).mul(0.025))
+      .add(mix(color(hsl.integer(266, 100, 72)), color(hsl.integer(81, 100, 89)), dustRandom.x).mul(dust).mul(dustTwinkle).mul(proximity).mul(2.3))
+      .add(mix(color(hsl.integer(274, 81, 35)), color(hsl.integer(194, 73, 74)), interference).mul(grazing.pow(4)).mul(0.15).mul(facing.smoothstep(0, 0.12)))
   }
 }

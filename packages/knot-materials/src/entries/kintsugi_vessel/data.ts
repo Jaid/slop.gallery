@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CbMOkykhfBD7NuC; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'kintsugi_vessel',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A celadon bowl broke, and was mended with gold lacquer. Every seam now burns brighter than the glaze that was lost.',
   placeholder: {
-    color: '#a8b8a0',
+    color: hsl.integer(135, 22, 72),
     shading: 'glass',
   },
 } as const satisfies KnotData

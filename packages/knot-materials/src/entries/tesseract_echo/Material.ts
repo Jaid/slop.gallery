@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_rotate2d, time, uv} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -24,7 +25,7 @@ export default class extends KnotMaterial {
     const depthGrid = opticalLine(rot2.x.mul(14).add(rot2.y.mul(14)).fract().sub(0.5), 0.045).mul(intimate)
     const wire = grid.max(depthGrid.mul(0.65))
     const chroma = spectralColor(rot.x.mul(5).add(rot.y.mul(4)).add(time.mul(0.25)))
-    this.colorNode = color('#03030c')
+    this.colorNode = color(hsl.integer(281, 53, 3))
     this.transmission = 0.88
     this.thickness = 0.55
     this.ior = 1.42
@@ -35,6 +36,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.normalNode = proceduralNormal(wire.mul(0.35), 0.0008)
-    this.emissiveNode = chroma.mul(wire).mul(1.9).mul(near.mul(0.7).add(0.5)).add(color('#ffffff').mul(wire.pow(3)).mul(0.35))
+    this.emissiveNode = chroma.mul(wire).mul(1.9).mul(near.mul(0.7).add(0.5)).add(color(hsl.integer(0, 0, 100)).mul(wire.pow(3)).mul(0.35))
   }
 }

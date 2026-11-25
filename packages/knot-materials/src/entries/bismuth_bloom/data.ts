@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_bloom',
   candidateId: 'minimax',
@@ -15,7 +17,7 @@ export default {
   flavorText: 'Molten bismuth forgets itself in stepped terraces of oxide colour, each landing a different temperature of rainbow.',
   displacement: 0.009,
   placeholder: {
-    color: '#b36fb8',
+    color: hsl.integer(325, 55, 58),
     shading: 'metal',
   },
 } as const satisfies KnotData

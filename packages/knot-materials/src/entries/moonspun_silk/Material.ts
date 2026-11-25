@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, tangentLocal, uv, vec2, vec3} from 'three/tsl'
 
 import {chatoyance, studioLamps} from '../../candidates/mimo/lib/chatoyance.ts'
@@ -50,14 +51,14 @@ export default class extends BaseKnotMaterial {
     const surface = proceduralNormal(height, 1.1)
     this.normalNode = surface
     const {glow, hot} = chatoyance(normalLocal, view, tangentLocal, studioLamps, 26)
-    const moon = mix(color('#383252'), color('#6e688c'), weave.ridge.mul(slub))
-    const shadow = color('#161028')
-    this.colorNode = mix(mix(shadow, moon, weave.ridge.mul(0.75).add(0.25)), color('#c89424'), gold)
+    const moon = mix(color(hsl.integer(292, 37, 24)), color(hsl.integer(292, 27, 46)), weave.ridge.mul(slub))
+    const shadow = color(hsl.integer(293, 52, 9))
+    this.colorNode = mix(mix(shadow, moon, weave.ridge.mul(0.75).add(0.25)), color(hsl.integer(81, 86, 65)), gold)
     this.metalnessNode = gold
     this.roughnessNode = mix(float(0.38), float(0.2), weave.ridge).sub(gold.mul(0.12))
 // The satin roll: a wide tide of luster that travels across the cloth with the viewer.
     this.sheen = 1
-    this.sheenColor.set('#8c7cc0')
+    this.sheenColor.set(hsl.integer(294, 47, 57))
     this.sheenRoughness = 0.3
     this.anisotropy = 0.85
     this.anisotropyRotation = 0
@@ -66,6 +67,6 @@ export default class extends BaseKnotMaterial {
     this.aoNode = weave.ridge.mul(0.3).add(0.62)
     this.envMapIntensity = 0.7
     const glint = glints(surface, 60).mul(gold)
-    this.emissiveNode = color('#d8d0ff').mul(hot).mul(weave.ridge).mul(0.45).add(color('#8a78d8').mul(glow).mul(0.12)).add(color('#ffe9b0').mul(glint).mul(0.7)).add(color('#fff6dd').mul(hot).mul(near.mul(intimate)).mul(0.3)).add(color('#a898e0').mul(grazing.pow(2.5)).mul(0.12))
+    this.emissiveNode = color(hsl.integer(293, 100, 86)).mul(hot).mul(weave.ridge).mul(0.45).add(color(hsl.integer(290, 65, 57)).mul(glow).mul(0.12)).add(color(hsl.integer(90, 100, 93)).mul(glint).mul(0.7)).add(color(hsl.integer(91, 100, 97)).mul(hot).mul(near.mul(intimate)).mul(0.3)).add(color(hsl.integer(294, 59, 68)).mul(grazing.pow(2.5)).mul(0.12))
   }
 }

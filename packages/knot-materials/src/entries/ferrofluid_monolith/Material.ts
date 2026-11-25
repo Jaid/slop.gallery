@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, time, uv} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -23,7 +24,7 @@ export default class extends BaseKnotMaterial {
     const spike = hexSum.max(0).pow(3.6).mul(magneticPulse)
     // Viscous liquid normal perturbation
     const spikeNormal = proceduralNormal(spike.mul(0.55), 0.012)
-    this.colorNode = color('#020304')
+    this.colorNode = color(hsl.integer(243, 18, 3))
     this.metalness = 0.2
     this.roughness = 0.025
     this.clearcoat = 1
@@ -35,8 +36,8 @@ export default class extends BaseKnotMaterial {
     this.iridescenceThicknessNode = spike.mul(440).add(220)
     // Magnetic excitation pulse along the spike ridges
     const ridgePulse = spike.smoothstep(0.4, 0.9)
-    this.emissiveNode = mix(color('#b300ff'), color('#00ffc4'), spike)
+    this.emissiveNode = mix(color(hsl.integer(310, 100, 53)), color(hsl.integer(168.3, 100, 87)), spike)
       .mul(ridgePulse).mul(1.8).mul(intimate.mul(0.6).add(0.5))
-      .add(color('#001824').mul(rim).mul(0.4))
+      .add(color(hsl.integer(231, 100, 10)).mul(rim).mul(0.4))
   }
 }

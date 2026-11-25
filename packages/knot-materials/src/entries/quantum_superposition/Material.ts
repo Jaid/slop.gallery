@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, time} from 'three/tsl'
 import {DoubleSide} from 'three/webgpu'
 
@@ -15,9 +16,9 @@ export default class extends BaseKnotMaterial {
     const cloudNoise = mx_fractal_noise_float(p.mul(4).add(time.mul(0.2)), 3, 2, 0.5).mul(0.5).add(0.5)
     const cloudDensity = cloudNoise.smoothstep(0.3, 0.7)
     const collapse = intimate
-    const cloudColor = mix(color('#4facfe'), color('#00f2fe'), cloudNoise)
+    const cloudColor = mix(color(hsl.integer(248, 99, 68)), color(hsl.integer(202, 100, 85)), cloudNoise)
     const cloudEmissive = cloudColor.mul(cloudDensity).mul(3)
-    const chromeColor = color('#ffffff')
+    const chromeColor = color(hsl.integer(0, 0, 100))
     this.colorNode = mix(cloudColor, chromeColor, collapse)
     this.metalnessNode = collapse
     this.roughnessNode = mix(1, 0, collapse)

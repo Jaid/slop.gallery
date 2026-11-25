@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: DZoyAbZAQlwnlPj; fixture: knot-material-shaders; result: success.
 export default {
   id: 'cloud_chamber',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'Every second, the universe passes through you unseen. Here, in a cold supersaturated mist, its passage finally leaves a trace.',
   placeholder: {
-    color: '#404144',
+    color: hsl.integer(271, 4, 28),
     shading: 'glass',
   },
 } as const satisfies KnotData

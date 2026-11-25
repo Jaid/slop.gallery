@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'parquet_cabinet',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   createdAt: 1_789_816_097,
   flavorText: 'Maple and rosewood trade places at every joint, guarding a room too small to enter.',
   placeholder: {
-    color: '#b97942',
+    color: hsl.integer(60, 63, 57),
     shading: 'smooth',
   },
 } as const satisfies KnotData

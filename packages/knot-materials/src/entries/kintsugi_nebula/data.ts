@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BJsZFlj5mQPSiFo; fixture: knot-material-shaders.
 export default {
   id: 'kintsugi_nebula',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The vessel broke open to the sky, and the golden wound became a constellation.',
   placeholder: {
-    color: '#15132d',
+    color: hsl.integer(285, 52, 10),
     shading: 'smooth',
   },
   displacement: 0.000032,

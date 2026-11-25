@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5RXWnszENQQH6u3; fixture: knot-material-shaders; result: success.
 export default {
   id: 'gilded_ruin',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.02,
   flavorText: 'A bowl broke, and a stranger poured gold into every wound until the ruin learned to shine. The seams are the whole story now.',
   placeholder: {
-    color: '#0a0503',
+    color: hsl.integer(51, 32, 4),
     shading: 'smooth',
   },
 } as const satisfies KnotData

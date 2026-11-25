@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {assembleFrame, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -28,7 +30,7 @@ export default class VelvetFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#b5853f'
+  override readonly tint = hsl.integer(74, 67, 59)
   override readonly title = 'Baroque velvet liner'
 
   override createGeometry(width: number, height: number) {

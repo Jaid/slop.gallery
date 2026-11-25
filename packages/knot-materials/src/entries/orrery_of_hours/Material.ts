@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, hash, mix, mx_noise_float, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -87,16 +88,16 @@ export default class extends KnotMaterial {
     const patina = mx_noise_float(p.mul(9).add(vec3(3.1, 7.7, 1.9))).mul(0.5).add(0.5).smoothstep(0.45, 0.72)
 // Sapphire bearings are seated in the hub of every second collar.
     const jewel = hub.smoothstep(0.45, 0.75).mul(hash(index.add(53.1)).smoothstep(0.5, 0.6)).mul(isGear.oneMinus())
-    const lumeGlow = mix(color('#b8ffd8'), color('#7fd4ff'), grazing)
-    const alloy = mix(mix(color('#2c3d7a'), color('#6c717b'), spin.smoothstep(0.2, 0.4)), color('#c99a34'), spin.smoothstep(0.38, 0.62))
+    const lumeGlow = mix(color(hsl.integer(160, 100, 93.3)), color(hsl.integer(232, 100, 80.4)), grazing)
+    const alloy = mix(mix(color(hsl.integer(269, 62, 29)), color(hsl.integer(264, 9, 48)), spin.smoothstep(0.2, 0.4)), color(hsl.integer(83, 79, 67)), spin.smoothstep(0.38, 0.62))
     const groove = tick.mul(0.8).add(longTick).add(guilloche.mul(0.7)).add(lathe.mul(0.3)).clamp(0, 1)
 // Oxidized shoulders between the wheels, where the raw iron of the frame shows.
     const gap = window.oneMinus().smoothstep(0.25, 0.85)
-    const metalColor = mix(mix(alloy, color('#4f6f58'), patina.mul(0.3).mul(isGear.oneMinus())), color('#15120f'), groove.mul(0.7)).add(color('#4a3a22').mul(dust).mul(0.25))
-    const bodyColor = mix(metalColor, color('#1d1a22'), gap.mul(0.85))
+    const metalColor = mix(mix(alloy, color(hsl.integer(153, 34, 43)), patina.mul(0.3).mul(isGear.oneMinus())), color(hsl.integer(67, 11, 9)), groove.mul(0.7)).add(color(hsl.integer(77, 42, 26)).mul(dust).mul(0.25))
+    const bodyColor = mix(metalColor, color(hsl.integer(302, 17, 12)), gap.mul(0.85))
 // Engine-turned friction polishes the tooth flanks; the roots stay rough and dark.
     const flank = tooth.sub(0.5).abs().mul(2).oneMinus().clamp().mul(isGear)
-    this.colorNode = mix(bodyColor, color('#0b0f16'), jewel.mul(0.7))
+    this.colorNode = mix(bodyColor, color(hsl.integer(261, 24, 7)), jewel.mul(0.7))
     this.metalnessNode = mix(float(0.94), float(0.5), groove.mul(0.3).add(patina.mul(0.25)).add(gap.mul(0.35))).sub(jewel.mul(0.45))
     this.roughnessNode = float(0.3).sub(flank.mul(0.18)).add(groove.mul(0.2)).add(bristle.mul(0.14)).add(dust.mul(0.18)).add(patina.mul(0.1)).add(gap.mul(0.22)).clamp(0.035, 1)
     this.anisotropy = 0.5
@@ -106,8 +107,8 @@ export default class extends KnotMaterial {
     const lume = tick.add(longTick.mul(1.6)).add(guilloche.mul(0.5))
     const sparkle = glints(reliefNormal, 150).mul(jewel).mul(near.mul(0.7).add(0.3))
     this.emissiveNode = lumeGlow.mul(lume).mul(near.mul(0.6).add(0.3)).mul(0.32)
-      .add(color('#2f6bff').mul(jewel).mul(intimate.mul(0.8).add(0.35)).mul(0.45))
-      .add(color('#eef4ff').mul(sparkle).mul(1.2))
-      .add(color('#6fe0b4').mul(bristle).mul(0.05))
+      .add(color(hsl.integer(264, 100, 51)).mul(jewel).mul(intimate.mul(0.8).add(0.35)).mul(0.45))
+      .add(color(hsl.integer(263, 100, 96)).mul(sparkle).mul(1.2))
+      .add(color(hsl.integer(166, 72, 80)).mul(bristle).mul(0.05))
   }
 }

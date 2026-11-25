@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, float, mix, mx_noise_float, normalViewGeometry, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 import {Color} from 'three/webgpu'
 
@@ -19,7 +20,7 @@ export default class extends KnotMaterial {
   constructor(environment: Texture) {
     super(environment, 0.85)
     this.name = knotData.id
-    this.sheenColor = new Color('#5f6dff')
+    this.sheenColor = new Color(hsl.integer(274, 100, 54))
     const tube = uv()
     const {facing, grazing, near, intimate} = viewerFrame()
     const t = time
@@ -59,16 +60,16 @@ export default class extends KnotMaterial {
     const veinShadow = veins.smoothstep(0, 0.55).oneMinus().mul(0.28).add(0.72)
     const inset = scale.mul(0.16).add(0.84)
     const wingMask = flash.mul(field).mul(veinShadow).mul(inset)
-    const marginDark = mix(color('#07060c'), color('#312a63'), grazing.pow(2).mul(0.9))
+    const marginDark = mix(color(hsl.integer(293, 27, 4.4)), color(hsl.integer(286, 60, 23)), grazing.pow(2).mul(0.9))
     const spotRadius = vec2(veins.mul(1.15), across.sub(0.63).mul(15)).length()
     const spots = spotRadius.smoothstep(float(0.34), float(0.34).add(feather.mul(4))).oneMinus().mul(margin).mul(scale)
-    const velvet = mix(color('#0c0705'), color('#241509'), mx_noise_float(vec3(uv().x.mul(130), uv().y.mul(34), 2.5)).mul(0.25).add(0.4))
+    const velvet = mix(color(hsl.integer(48, 23, 5)), color(hsl.integer(59, 50, 11)), mx_noise_float(vec3(uv().x.mul(130), uv().y.mul(34), 2.5)).mul(0.25).add(0.4))
     const bodyColor = velvet.mul(scale.mul(0.35).add(0.65)).mul(intimate.mul(0.12).add(0.88))
-    this.colorNode = color('#05040a').mul(body)
+    this.colorNode = color(hsl.integer(293, 34, 3.6)).mul(body)
       .add(bodyColor.mul(body))
       .add(wingColor.mul(wingMask))
       .add(marginDark.mul(margin))
-      .add(color('#fff6e2').mul(spots))
+      .add(color(hsl.integer(87, 100, 97)).mul(spots))
     const relief = scale.mul(bulge.mul(0.7).add(depth.mul(0.3))).add(veins.smoothstep(0.55, 0.2).mul(0.3)).add(veins.smoothstep(0.5, 0).mul(-0.35))
     const scaleNormal = normalViewGeometry.add(vec3(tangentView).mul(scaleTilt.mul(0.16))).add(vec3(bitangentView as unknown as Node<'vec3'>).mul(tiltSide.mul(0.16))).normalize()
     this.normalNode = detailNormal(scaleNormal, relief, 0.0013)
@@ -82,7 +83,7 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = scaleFacing.mul(220).add(160)
     const glint = glints(scaleNormal, 110).mul(scale).mul(field).mul(facing.pow(2))
     this.emissiveNode = wingColor.mul(wingMask).mul(1.25)
-      .add(color('#ffffff').mul(glint).mul(near.mul(0.25).add(0.06)))
+      .add(color(hsl.integer(0, 0, 100)).mul(glint).mul(near.mul(0.25).add(0.06)))
       .add(marginDark.mul(vec3(0.155, 0.107, 1)).mul(grazing.pow(3)).mul(0.3))
   }
 }

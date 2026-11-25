@@ -1,5 +1,6 @@
 import {CuboidCollider, CylinderCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {float, normalGeometry, positionGeometry} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
@@ -28,7 +29,7 @@ export default function SalonOttoman() {
     })
   }, [seatThickness]))
   const walnut = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#3a2214',
+    color: hsl.integer(50, 48, 18),
     roughness: 0.45,
   }), []))
   return <RigidBody colliders={false} friction={0.6} name='salon-ottoman' position={position} type='dynamic'>

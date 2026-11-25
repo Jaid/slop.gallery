@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: LLxliOfHhDMdNvD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'first_thaw',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A century of frost learns your warmth. Where you stand, the rime lets go, runs silver, and remembers the dark stone underneath.',
   placeholder: {
-    color: '#6d7680',
+    color: hsl.integer(251, 10, 49),
     shading: 'glass',
   },
 } as const satisfies KnotData

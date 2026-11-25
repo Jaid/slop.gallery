@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mod, mx_fractal_noise_float, mx_hsvtorgb, mx_noise_float, normalLocal, normalViewGeometry, uv, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -36,7 +37,7 @@ export default class extends KnotMaterial {
     const cos = view.dot(normalLocal.normalize()).abs()
     const hue = terrace.mul(2.6).add(cos.mul(0.8)).fract()
     const spectral = mx_hsvtorgb(vec3(hue, 0.85, 1))
-    const metal = mix(color('#7d757d'), color('#b8adb6'), mx_noise_float(p.mul(7)).mul(0.5).add(0.5))
+    const metal = mix(color(hsl.integer(326, 8, 50)), color(hsl.integer(332, 11, 72)), mx_noise_float(p.mul(7)).mul(0.5).add(0.5))
     this.colorNode = mix(metal, spectral, float(0.55).sub(riser.mul(0.2)))
     this.metalness = 1
     this.roughnessNode = mix(float(0.16), float(0.03), riser)
@@ -47,7 +48,7 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.35
     this.clearcoatRoughness = 0.06
     const sparkle = glints(normalViewGeometry, 160).mul(riser).mul(near)
-    this.emissiveNode = color('#ffe0f4').mul(sparkle).mul(0.5)
-      .add(color('#ffd6f2').mul(riser).mul(near).mul(0.06))
+    this.emissiveNode = color(hsl.integer(339, 100, 93)).mul(sparkle).mul(0.5)
+      .add(color(hsl.integer(338, 100, 90.6)).mul(riser).mul(near).mul(0.06))
   }
 }

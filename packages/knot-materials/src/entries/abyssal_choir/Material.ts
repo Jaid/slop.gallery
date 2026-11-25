@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, uv} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -17,19 +18,19 @@ export default class extends KnotMaterial {
     const {p, facing, grazing, near, intimate} = viewerFrame()
     const tube = uv()
     const mottle = mx_noise_float(p.mul(6)).mul(0.5).add(0.5)
-    const skin = mix(color('#03222b'), color('#0a4250'), mottle).add(color('#0a4a56').mul(mx_noise_float(p.mul(17)).mul(0.5).add(0.5)).mul(0.35))
+    const skin = mix(color(hsl.integer(221, 84, 13)), color(hsl.integer(220, 84, 25)), mottle).add(color(hsl.integer(214, 87, 28)).mul(mx_noise_float(p.mul(17)).mul(0.5).add(0.5)).mul(0.35))
     const lenses = beads(p.mul(15), 2.9)
     const sparks = beads(p.mul(36), 8.4)
     const procession = tube.x.mul(TAU * 3).sub(time.mul(Math.PI * 2))
     const pulse = procession.add(lenses.random.z.mul(TAU)).sin().mul(0.5).add(0.5).pow(2)
     const glowPulse = pulse.mul(0.75).add(0.3)
-    const lensColor = mix(color('#2fe8ff'), color('#7a5cff'), lenses.random.x)
+    const lensColor = mix(color(hsl.integer(208.2, 100, 83.1)), color(hsl.integer(286, 99, 53)), lenses.random.x)
     const sparkPulse = procession.mul(1.7).add(sparks.random.z.mul(TAU)).sin().mul(0.5).add(0.5).pow(2)
     const facingWeight = mix(float(0.3), float(1), facing)
     const choir = lensColor.mul(lenses.mask).mul(glowPulse).mul(facingWeight)
-    const constellation = mix(color('#67f7ff'), color('#b18cff'), sparks.random.x).mul(sparks.mask).mul(sparkPulse).mul(intimate)
+    const constellation = mix(color(hsl.integer(200, 100, 88.6)), color(hsl.integer(297, 100, 68)), sparks.random.x).mul(sparks.mask).mul(sparkPulse).mul(intimate)
     const breath = time.mul(Math.PI).sin().mul(0.5).add(0.5)
-    const gills = color('#0d7d8c').mul(grazing.pow(2)).mul(breath.mul(0.3).add(0.34))
+    const gills = color(hsl.integer(210, 94, 47)).mul(grazing.pow(2)).mul(breath.mul(0.3).add(0.34))
     this.positionNode = positionGeometry.add(normalLocal.mul(time.mul(Math.PI).add(tube.x.mul(TAU * 2)).sin().mul(0.0035)))
     this.colorNode = skin
     this.metalness = 0.05

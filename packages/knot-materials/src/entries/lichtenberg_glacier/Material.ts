@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -30,15 +31,15 @@ export default class extends BaseKnotMaterial {
     // A very dark midnight blue slab so the lightning reads as bright as
     // possible. Slight structural grain breaks up the surface.
     const surfaceNoise = mx_noise_float(p.mul(8)).mul(0.5).add(0.5)
-    const surfaceBase = color('#0a1230').mul(surfaceNoise.mul(0.3).add(0.7))
+    const surfaceBase = color(hsl.integer(269, 69, 9.5)).mul(surfaceNoise.mul(0.3).add(0.7))
     this.colorNode = surfaceBase
     this.transmission = 0
     this.roughness = 0.45
     this.clearcoat = 0.25
     this.clearcoatRoughness = 0.2
     // ---- emissive ----
-    const boltEmissive = color('#cce4ff').mul(forkMask).mul(near.mul(0.6).add(0.5)).mul(2.5)
-    const haloGlow = mix(color('#3a4d80'), color('#0a0e22'), facing).mul(grazing.pow(2)).mul(0.25)
+    const boltEmissive = color(hsl.integer(251, 100, 89.5)).mul(forkMask).mul(near.mul(0.6).add(0.5)).mul(2.5)
+    const haloGlow = mix(color(hsl.integer(267, 50, 34)), color(hsl.integer(273, 53, 7.6)), facing).mul(grazing.pow(2)).mul(0.25)
     this.emissiveNode = boltEmissive.add(haloGlow)
   }
 }

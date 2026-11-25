@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: AfC9LOF1p8reY9V; fixture: knot-material-shaders; result: success.
 export default {
   id: 'labradorescence',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A dark stone that keeps an aurora in its grains. Only when eye, light and lamellae agree does a grain ignite, then go black again.',
   placeholder: {
-    color: '#14222f',
+    color: hsl.integer(247, 38, 14),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, float, mix, mx_cell_noise_float, mx_noise_float, mx_worley_noise_float, normalViewGeometry, positionViewDirection, tangentView, vec3} from 'three/tsl'
 
 import {glitter} from '../../candidates/deepseek/lib/glitter.ts'
@@ -54,18 +55,18 @@ export default class extends KnotMaterial {
       const half = lamp.add(positionViewDirection).normalize()
       flash = flash.add(shard.dot(half).clamp().pow(150))
     }
-    const mirror = mix(color('#b3bed1'), color('#e4ebf7'), mix(float(0.5), rnd.y, shardMask).mul(0.55).add(0.25))
+    const mirror = mix(color(hsl.integer(261, 22, 77)), color(hsl.integer(261, 48, 93)), mix(float(0.5), rnd.y, shardMask).mul(0.55).add(0.25))
     const bead = seam.smoothstep(0.012, filter.add(0.038)).oneMinus()
     const relief = bead.mul(0.02).add(chasing.mul(goldMask).mul(0.012)).add(speck.resolved.mul(speckMask).mul(0.004))
-    this.colorNode = mix(mix(mirror, color('#ffc768'), goldMask), color('#0b1030'), gapMask.mul(goldMask.oneMinus().mul(0.8).add(goldMask.mul(0.55))))
+    this.colorNode = mix(mix(mirror, color(hsl.integer(79, 100, 84)), goldMask), color(hsl.integer(272, 70, 9)), gapMask.mul(goldMask.oneMinus().mul(0.8).add(goldMask.mul(0.55))))
     this.metalness = 1
     this.roughnessNode = mix(float(0.045), float(0.26), goldMask.mul(0.85)).add(chasing.mul(goldMask).mul(0.04)).add(sparkle.mul(0.02)).clamp(0.03, 0.4)
     this.normalNode = proceduralNormal(relief, 0.0006).add(tilt.mul(shardMask)).add(fineTilt).add(speck.lean.mul(speckMask).mul(0.12)).normalize()
     this.iridescence = 0.34
     this.iridescenceThicknessNode = mix(float(0.5), rnd.z, shardMask).mul(430).add(190)
-    this.emissiveNode = color('#ffe6b4').mul(flash.mul(1))
-      .add(color('#ffd08a').mul(goldMask.mul(chasing.mul(0.6).add(0.5)).mul(grazing.pow(2)).mul(0.42)))
-      .add(color('#dfe9ff').mul(sparkle).mul(intimate).mul(0.55))
-      .add(color('#8fb4ff').mul(grazing.pow(7)).mul(0.06))
+    this.emissiveNode = color(hsl.integer(84, 100, 92.2)).mul(flash.mul(1))
+      .add(color(hsl.integer(77, 100, 86.5)).mul(goldMask.mul(chasing.mul(0.6).add(0.5)).mul(grazing.pow(2)).mul(0.42)))
+      .add(color(hsl.integer(266, 100, 92)).mul(sparkle).mul(intimate).mul(0.55))
+      .add(color(hsl.integer(264, 100, 73.5)).mul(grazing.pow(7)).mul(0.06))
   }
 }

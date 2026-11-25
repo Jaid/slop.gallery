@@ -2,6 +2,7 @@ import type {OrbitSettings} from '../../camera/OrbitInspection.ts'
 import type {StudioSubjectSize} from './studioFraming.ts'
 import type {Object3D} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {AmbientLight, DirectionalLight, Group, HemisphereLight, PerspectiveCamera, Quaternion, Vector3} from 'three/webgpu'
 
 import OrbitInspection from '../../camera/OrbitInspection.ts'
@@ -27,7 +28,7 @@ export type StudioStageArea = {
 }
 
 /** a lamp of the view’s rig: where it shines from as the viewer sees it, x to the right, y up and z toward the viewer, with its color and intensity */
-type Lamp = readonly [color: string, intensity: number, x: number, y: number, z: number]
+type Lamp = readonly [color: number, intensity: number, x: number, y: number, z: number]
 
 /** all of the canvas */
 const wholeCanvas: StudioStageArea = {
@@ -43,18 +44,18 @@ const wholeCanvas: StudioStageArea = {
  */
 const lamps: ReadonlyArray<Lamp> = [
   // The key, warm, from the upper left: it rakes across whatever faces the viewer, so its relief throws shadows.
-  ['#fff0d7', 2.3, -8, 6, 3],
+  [hsl.integer(81, 100, 95.4), 2.3, -8, 6, 3],
   // Three faint lamps around the camera, for a sheen on what faces the viewer: far enough off the view’s axis that a pane of glass facing the viewer mirrors them outside of itself.
-  ['#ffffff', 0.4, -4, 3.5, 8],
-  ['#ffffff', 0.4, 4, 3.5, 8],
-  ['#ffffff', 0.3, 0, -4, 8],
+  [hsl.integer(0, 0, 100), 0.4, -4, 3.5, 8],
+  [hsl.integer(0, 0, 100), 0.4, 4, 3.5, 8],
+  [hsl.integer(0, 0, 100), 0.3, 0, -4, 8],
   // From the sides, cool from the right and low from the left, for faces turned a little away, where the key has no counterpart.
-  ['#e6eeff', 0.9, 8, 0, 3.5],
-  ['#fff4e4', 0.6, -8, -2, 3.5],
+  [hsl.integer(266, 100, 94), 0.9, 8, 0, 3.5],
+  [hsl.integer(77, 100, 96.7), 0.6, -8, -2, 3.5],
   // Kickers from behind, left, right and above: they graze the sides coming into view and draw the edges of something dark out of a dark backdrop.
-  ['#fff4e4', 1.3, -8, 1, -3],
-  ['#e6eeff', 1.4, 8, 3, -3],
-  ['#ffffff', 1, 0, 8, -4],
+  [hsl.integer(77, 100, 96.7), 1.3, -8, 1, -3],
+  [hsl.integer(266, 100, 94), 1.4, 8, 3, -3],
+  [hsl.integer(0, 0, 100), 1, 0, 8, -4],
 ]
 /** The lamps as a group to turn along with the camera. */
 function viewerLights() {
@@ -131,7 +132,7 @@ export default class StudioView extends Studio {
   constructor() {
     const lights = viewerLights()
     // Soft light from all round, the sky’s from above whichever way the viewer looks.
-    super([new AmbientLight('#ffffff', 0.12), new HemisphereLight('#e1edff', '#80705d', 0.4), lights])
+    super([new AmbientLight(hsl.integer(0, 0, 100), 0.12), new HemisphereLight(hsl.integer(258, 100, 93), hsl.integer(72, 20, 48), 0.4), lights])
     this.lights = lights
     this.canvas = this.renderer.domElement
   }

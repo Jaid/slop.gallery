@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1o1ree11eGriGjv; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'parallax_deep_field',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A window opened in the dark: with every step you take, whole galaxies slide past each other at different speeds.',
   placeholder: {
-    color: '#3b1c9c',
+    color: hsl.integer(283, 92, 27),
     shading: 'glass',
   },
 } as const satisfies KnotData

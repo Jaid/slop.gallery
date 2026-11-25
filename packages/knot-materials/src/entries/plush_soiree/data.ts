@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 8sVVxqasPWO5s9R; fixture: knot-material-dot; result: success.
 export default {
   id: 'plush_soiree',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.1,
   flavorText: 'Seven felted fellows in black bow ties share one endless pink body. Lean in and the wool parts into strands; they blink, glance about and keep their composure.',
   placeholder: {
-    color: '#eb86bb',
+    color: hsl.integer(348, 73, 70),
     shading: 'fabric',
   },
 } as const satisfies KnotData

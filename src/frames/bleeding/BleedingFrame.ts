@@ -1,5 +1,6 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 
+import hsl from 'okhsl'
 import {atan, color, float, max, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, time, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -79,7 +80,7 @@ export default class BleedingFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#6a4a1a'
+  override readonly tint = hsl.integer(74, 71, 35)
   override readonly title = 'Bleeding gilt'
 
   override createGeometry(width: number, height: number) {
@@ -125,16 +126,16 @@ class RotMaterial extends MeshPhysicalNodeMaterial {
     const edge = flaking.smoothstep(0.345, 0.36).mul(flaking.smoothstep(0.375, 0.36))
     const gold = lost.oneMinus().mul(damp.oneMinus())
     const grain = mx_noise_float(vec3(surface.along.mul(8), surface.across.mul(300), surface.member)).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.003))
-    const wood = mix(color('#160d08'), color('#34200f'), grain.mul(0.6))
-    const ground = mix(color('#b8a888'), color('#6e2c18'), mx_noise_float(p.mul(200)).smoothstep(-0.6, 0))
+    const wood = mix(color(hsl.integer(51, 32, 7)), color(hsl.integer(60, 53, 16)), grain.mul(0.6))
+    const ground = mix(color(hsl.integer(84, 28, 69)), color(hsl.integer(37, 75, 29)), mx_noise_float(p.mul(200)).smoothstep(-0.6, 0))
     const mold = mx_worley_noise_float(p.mul(90)).smoothstep(0.45, 0.1).mul(damp).mul(hollow.mul(0.7).add(0.3)).clamp(0, 1)
     const fuzz = mx_noise_float(p.mul(1100)).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.0015))
-    const gilt = mix(color('#d8a64c'), color('#5e4018'), hollow.mul(0.7).add(mx_noise_float(p.mul(60)).mul(0.15)))
+    const gilt = mix(color(hsl.integer(80, 73, 71.5)), color(hsl.integer(71, 68, 30)), hollow.mul(0.7).add(mx_noise_float(p.mul(60)).mul(0.15)))
     const gesso = edge.mul(gold.oneMinus()).mul(damp.oneMinus())
     const {cover, fresh} = bleeding(surface)
-    const bared = mix(mix(ground, wood, damp), color('#d8cdb2'), gesso.mul(0.6))
-    const decayed = mix(mix(bared, gilt, gold), mix(color('#7f8a5a'), color('#d8dcc0'), fuzz), mold)
-    const blood = mix(color('#3a0204'), color('#b0060c'), fresh.mul(0.75).add(0.25))
+    const bared = mix(mix(ground, wood, damp), color(hsl.integer(89, 31, 83)), gesso.mul(0.6))
+    const decayed = mix(mix(bared, gilt, gold), mix(color(hsl.integer(119, 40, 55)), color(hsl.integer(114, 32, 86)), fuzz), mold)
+    const blood = mix(color(hsl.integer(26, 97, 12)), color(hsl.integer(28, 99.2, 39.6)), fresh.mul(0.75).add(0.25))
     this.colorNode = mix(decayed, blood, cover)
     this.metalnessNode = gold.mul(cover.oneMinus()).mul(mold.oneMinus())
     this.roughnessNode = mix(mix(mix(mix(float(0.6), float(0.25), damp), float(0.28), gold), float(0.95), mold), mix(float(0.35), float(0.06), fresh), cover)

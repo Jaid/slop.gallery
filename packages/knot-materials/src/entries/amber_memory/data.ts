@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'amber_memory',
   candidateId: 'gpt_luna',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Sunset sleeps inside old amber: fern shadows, suspended pollen and one impossible summer kept forever.',
   displacement: 0.001,
   placeholder: {
-    color: '#c77a24',
+    color: hsl.integer(63, 83, 59),
     shading: 'glass',
   },
 } as const satisfies KnotData

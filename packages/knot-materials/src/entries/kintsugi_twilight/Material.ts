@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -24,19 +25,19 @@ export default class extends KnotMaterial {
     const hairField = cellularBoundary(p.mul(8.5).add(warp.mul(0.8)))
     const hair = hairField.abs().smoothstep(0.012, 0.032).oneMinus().mul(hairField.fwidth().smoothstep(0.12, 0.55).oneMinus()).mul(near)
     const glaze = mx_fractal_noise_float(p.mul(4.2), 3, 2.1, 0.5).mul(0.5).add(0.5)
-    const ink = mix(color('#05070c'), color('#24233b'), glaze.pow(1.8).mul(0.75))
-    const gold = mix(color('#7d3109'), color('#ffe0a0'), facing.mul(0.45).add(goldMask.mul(0.55)))
+    const ink = mix(color(hsl.integer(264, 25, 4.5)), color(hsl.integer(285, 37, 17)), glaze.pow(1.8).mul(0.75))
+    const gold = mix(color(hsl.integer(44, 91, 33)), color(hsl.integer(85, 100, 90.4)), facing.mul(0.45).add(goldMask.mul(0.55)))
     const heat = time.mul(0.34).add(p.x.mul(1.1)).sub(p.z.mul(0.7))
     const pulse = heat.sin().mul(0.5).add(0.5).pow(14).mul(goldMask).mul(intimate)
     const height = goldMask.mul(0.34).add(hair.mul(-0.035)).add(glaze.mul(0.018))
     const ceramicNormal = proceduralNormal(height, 0.003)
-    this.colorNode = mix(ink, gold, goldMask).add(color('#fff0bd').mul(pulse.mul(0.3)))
+    this.colorNode = mix(ink, gold, goldMask).add(color(hsl.integer(94, 100, 94.8)).mul(pulse.mul(0.3)))
     this.metalnessNode = goldMask.mul(0.96)
     this.roughnessNode = float(0.12).add(goldMask.mul(0.15)).add(hair.mul(0.06)).clamp(0.07, 0.32)
     this.clearcoat = 0.84
     this.clearcoatRoughness = 0.065
     this.normalNode = ceramicNormal
     this.clearcoatNormalNode = ceramicNormal
-    this.emissiveNode = color('#ffad36').mul(pulse.mul(0.26)).add(color('#fff6d2').mul(glints(ceramicNormal, 100).mul(goldMask).mul(near).mul(0.22)))
+    this.emissiveNode = color(hsl.integer(72, 100, 78)).mul(pulse.mul(0.26)).add(color(hsl.integer(96, 100, 96.7)).mul(glints(ceramicNormal, 100).mul(goldMask).mul(near).mul(0.22)))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quantum_superconductor',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A cold current follows its perfect circle without leaving a trace of heat.',
   placeholder: {
-    color: '#a78bfa',
+    color: hsl.integer(294, 87, 66),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4AEfQg7Qgj1dEVQ.
 export default {
   id: 'chrono_astrolabe',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Wheels of gilded brass and blued steel interlock in perpetual counterpoint, measuring moments that never pass.',
   placeholder: {
-    color: '#e2b343',
+    color: hsl.integer(86, 81, 75.6),
     shading: 'metal',
   },
 } as const satisfies KnotData

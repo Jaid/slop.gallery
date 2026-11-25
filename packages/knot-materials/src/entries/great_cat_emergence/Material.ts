@@ -1,6 +1,7 @@
 import type {Vec3 as Vector} from 'math'
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, bitangentView, cameraPosition, color, cos, exp, float, Fn, If, max, min, mix, modelWorldMatrixInverse, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, normalGeometry, normalViewGeometry, pmremTexture, positionGeometry, positionView, positionViewDirection, select, sin, smoothstep, tangentView, texture, time, uv, vec2, vec3, vec4} from 'three/tsl'
 import {Color, DataTexture, FloatType, LinearFilter, RedFormat, RepeatWrapping, RGFormat} from 'three/webgpu'
 
@@ -978,7 +979,7 @@ function dustLayer(point: Vec3, density: number, threshold: Float, seed: number)
   const core = smoothstep(starRadius, float(0), distance).pow(1.6)
   const gate = smoothstep(threshold, threshold.add(0.02), mx_cell_noise_float(cell.add(seed + 13.1)))
   const twinkle = sin(time.mul(random.y.mul(3).add(0.8)).add(random.z.mul(60))).mul(0.4).add(0.7)
-  const tint = mix(color('#ffc9a0'), color('#a9c8ff'), random.x)
+  const tint = mix(color(hsl.integer(58, 99, 85)), color(hsl.integer(262, 100, 80)), random.x)
   const resolved = footprint.smoothstep(0.5, 1.4).oneMinus()
   return tint.mul(core.mul(gate).mul(twinkle).mul(energy).mul(resolved))
 }
@@ -998,9 +999,9 @@ function deepSky(position: Vec3, view: Vec3, normal: Vec3) {
   const veil = mx_fractal_noise_float(nebulaPoint.mul(2.6), 3, 2.1, 0.55).mul(0.5).add(0.5)
   const filament = mx_fractal_noise_float(nebulaPoint.mul(7.5).add(veil.mul(1.4)), 2, 2.2, 0.5).mul(0.5).add(0.5)
   const hue = mx_noise_float(nebulaPoint.mul(1.3).add(vec3(3.1, -2.2, 0.7))).mul(0.5).add(0.5)
-  const nebulaTint = mix(mix(color('#22115e'), color('#6a1668'), smoothstep(0.35, 0.7, hue)), color('#0e5a6e'), smoothstep(0.55, 0.85, filament).mul(0.6))
+  const nebulaTint = mix(mix(color(hsl.integer(284, 87, 16)), color(hsl.integer(329, 79, 28.5)), smoothstep(0.35, 0.7, hue)), color(hsl.integer(221, 87, 35)), smoothstep(0.55, 0.85, filament).mul(0.6))
   const density = smoothstep(0.38, 0.85, veil).mul(filament.mul(0.8).add(0.4))
-  const galacticGlow = mix(color('#2a1f5a'), color('#8f7fc0'), band.pow(4).mul(0.5)).mul(band.pow(1.5).mul(0.13))
+  const galacticGlow = mix(color(hsl.integer(287, 69, 19)), color(hsl.integer(295, 46, 58)), band.pow(4).mul(0.5)).mul(band.pow(1.5).mul(0.13))
   const nebula = nebulaTint.mul(density.mul(0.32).add(0.05)).add(galacticGlow).mul(lanes.mul(0.9).oneMinus())
   const dustThreshold = (base: number) => band.mul(-0.3).add(base)
   const dust = dustLayer(below(0.02), 95, dustThreshold(0.74), 1.7)
@@ -1040,7 +1041,7 @@ let sharedChart: ReturnType<typeof createTubeChart> | undefined
 /** The chart only depends on the knot geometry, so every instance shares one. */
 const getChart = () => sharedChart ??= createTubeChart({rows})
 /** pick one of several colors by a uniform random value */
-function pick(value: Float, palette: Array<string>): Vec3 { // Hex colors are sRGB; Color converts them to the linear working space.
+function pick(value: Float, palette: Array<number>): Vec3 { // Packed colors are sRGB; Color converts them to the linear working space.
   const linear = palette.map(entry => {
     const {r, g, b} = new Color(entry)
     return vec3(r, g, b)
@@ -1104,11 +1105,11 @@ export default class extends KnotMaterial {
     const sky = deepSky(positionGeometry, viewLocal, normalGeometry.normalize())
     const meteor = meteors(cells.along, cells.columns, cells.row, cells.local)
 // --- palette ---
-    const threadTint = pick(seed2.x, ['#8fd8ff', '#8fd8ff', '#a6b8ff', '#c3a6ff', '#7ff0e0', '#ffd6a0'])
-    const threadCore = mix(threadTint, color('#f4fbff'), 0.55)
-    const eyeTint = pick(seed2.y, ['#ffb640', '#c8f25a', '#7fe8ff', '#ff8f4a', '#6ff0a8', '#ffd24a'])
-    const eyeDeep = eyeTint.mul(color('#5a3a14').mul(0.9).add(0.1))
-    const sparkTint = color('#fff3dc')
+    const threadTint = pick(seed2.x, [hsl.integer(233, 100, 82.3), hsl.integer(233, 100, 82.3), hsl.integer(273, 100, 76), hsl.integer(298, 100, 75), hsl.integer(184, 75, 86), hsl.integer(74, 100, 88)])
+    const threadCore = mix(threadTint, color(hsl.integer(232, 100, 98)), 0.55)
+    const eyeTint = pick(seed2.y, [hsl.integer(76, 100, 80), hsl.integer(123, 88, 89), hsl.integer(214, 100, 85.5), hsl.integer(50, 100, 72), hsl.integer(157, 81, 84), hsl.integer(90, 100, 86)])
+    const eyeDeep = eyeTint.mul(color(hsl.integer(67, 70, 28)).mul(0.9).add(0.1))
+    const sparkTint = color(hsl.integer(83, 100, 96))
 // --- emissive light ---
 // Seen through thick glass at the limb, the constellations dim.
     const limb = smoothstep(0.02, 0.4, facing).mul(0.6).add(0.4)
@@ -1116,23 +1117,23 @@ export default class extends KnotMaterial {
     const farBoost = smoothstep(2.4, 5, distance).mul(0.6).add(1)
     const threadLight = threadCore.mul(cat.threadCore.mul(1.15))
       .add(threadTint.mul(cat.threadGlow.mul(0.12).mul(farBoost)))
-      .add(color('#dff6ff').mul(cat.threadFlow.mul(3)))
-    const starGlow = mix(color('#fff1dc'), threadCore, 0.3).mul(cat.starLight.mul(1.7))
-    const whiskerGlow = color('#e8f2ff').mul(cat.whiskerLight.mul(0.9))
+      .add(color(hsl.integer(224, 100, 95)).mul(cat.threadFlow.mul(3)))
+    const starGlow = mix(color(hsl.integer(79, 100, 96)), threadCore, 0.3).mul(cat.starLight.mul(1.7))
+    const whiskerGlow = color(hsl.integer(255, 100, 95)).mul(cat.whiskerLight.mul(0.9))
     const sparks = sparkTint.mul(cat.threadSpark.mul(2.6).add(cat.starHeat.mul(2.2)))
 // Bright near the pupil, a darker limbal ring at the rim, fibers between.
     const irisLight = mix(eyeTint.mul(1.5), eyeDeep.mul(0.6), smoothstep(0.15, 1.05, cat.irisRadius))
       .mul(cat.fiberDetail.mul(0.32).add(0.9))
       .mul(cat.limbal.mul(0.72).oneMinus())
     const eyes = irisLight.mul(cat.eyeMask).mul(cat.pupil.oneMinus())
-      .add(color('#ffffff').mul(cat.catchlight.mul(1.8)))
+      .add(color(hsl.integer(0, 0, 100)).mul(cat.catchlight.mul(1.8)))
       .add(eyeTint.mul(cat.eyeRim.mul(0.35)))
-      .add(mix(eyeTint, color('#ffffff'), 0.3).mul(cat.eyeRingCore.mul(0.9)))
+      .add(mix(eyeTint, color(hsl.integer(0, 0, 100)), 0.3).mul(cat.eyeRingCore.mul(0.9)))
 // A bevelled nose leather: pale on the bridge, deep rose at the tip.
-    const nose = mix(color('#b8205a'), color('#ffa3c6'), cat.noseShade).mul(cat.noseMask.mul(1.6))
+    const nose = mix(color(hsl.integer(5, 85, 44)), color(hsl.integer(356, 100, 78.7)), cat.noseShade).mul(cat.noseMask.mul(1.6))
     const facetGlow = threadTint.mul(cat.facetMask.mul(cat.facetShade).mul(0.012))
     const shimmer = cat.facetMask.mul(cat.facetShade.mul(9).add(time.mul(1.7)).add(cells.local.y.mul(-14)).sin().mul(0.5).add(0.5).pow(12)).mul(0.08)
-    const meteorLight = color('#e6f4ff').mul(meteor.mul(3.2))
+    const meteorLight = color(hsl.integer(241, 100, 95.3)).mul(meteor.mul(3.2))
 // Far away the stardust would only glitter, so it recedes and leaves the cats to carry the view.
     const skyLight = sky.nebula.mul(0.5).add(sky.dust.mul(farness.mul(-0.75).add(1).mul(0.9))).mul(cat.facetMask.mul(0.45).oneMinus())
     const emissive = threadLight.add(starGlow).add(whiskerGlow).add(sparks).mul(presence).mul(cellEdge)
@@ -1144,10 +1145,10 @@ export default class extends KnotMaterial {
       .add(skyLight)
     this.emissiveNode = emissive
 // --- surface ---
-    const lacquer = mix(color('#020309'), color('#0a0b1c'), sky.density.mul(0.8))
+    const lacquer = mix(color(hsl.integer(271, 47, 3)), color(hsl.integer(279, 48, 6.6)), sky.density.mul(0.8))
     const facetBody = mix(lacquer, threadTint.mul(0.1), cat.facetShade.mul(0.35).add(0.25))
     let albedo: Vec3 = mix(lacquer, facetBody, cat.facetMask)
-    albedo = mix(albedo, color('#010102'), cat.eyeMask.mul(cat.pupil))
+    albedo = mix(albedo, color(hsl.integer(284, 27, 2)), cat.eyeMask.mul(cat.pupil))
     albedo = mix(albedo, eyeDeep.mul(0.3), cat.eyeMask.mul(cat.pupil.oneMinus()))
     this.colorNode = albedo
     this.metalnessNode = cat.facetMask.mul(0.55)

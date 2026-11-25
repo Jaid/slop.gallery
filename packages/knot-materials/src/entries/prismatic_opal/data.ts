@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2kVLNNiT7YsY7gP.
 export default {
   id: 'prismatic_opal',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A pale stone keeps a handful of captured skies, each one a different weather.',
   placeholder: {
-    color: '#b9c8d1',
+    color: hsl.integer(234, 17, 80),
     shading: 'glass',
   },
 } as const satisfies KnotData

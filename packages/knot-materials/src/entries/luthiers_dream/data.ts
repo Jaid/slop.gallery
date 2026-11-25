@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'luthiers_dream',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Warm grain keeps the shape of music before the first string is tightened.',
   placeholder: {
-    color: '#e6ad61',
+    color: hsl.integer(73, 71, 75),
     shading: 'smooth',
   },
 } as const satisfies KnotData

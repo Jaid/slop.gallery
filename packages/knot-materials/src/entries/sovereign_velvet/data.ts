@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: FLhq233R9MU4dj1; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sovereign_velvet',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A coronation robe without a sovereign. Garnet shadows breathe through the pile while old gold remembers the weight of light.',
   placeholder: {
-    color: '#6e1137',
+    color: hsl.integer(2, 81, 26),
     shading: 'fabric',
   },
 } as const satisfies KnotData

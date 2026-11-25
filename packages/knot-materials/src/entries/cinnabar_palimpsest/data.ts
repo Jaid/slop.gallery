@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cinnabar_palimpsest',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Older messages rise through the red surface of a forgotten inscription.',
   placeholder: {
-    color: '#e23b2a',
+    color: hsl.integer(30, 93, 54),
     shading: 'smooth',
   },
 } as const satisfies KnotData

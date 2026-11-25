@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_fractal_noise_float, mx_noise_float, positionWorld, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -7,24 +8,24 @@ export type FauxMarble = {
   /** how much of the ground the drifts cover, 0–1 */
   drifts: number
   /** the ground, clouded between these two */
-  ground: readonly [string, string]
+  ground: readonly [number, number]
   /** shifts the pattern, so two marbles on one wall don’t vein alike */
   seed: number
   /** the broad, brush-laid drifts and the fine veins drawn over them */
-  veins: readonly [string, string]
+  veins: readonly [number, number]
 }
 
 /** Nero portoro: black, with broad drifts of ochre gold and fine white veins. */
 export const portoro: FauxMarble = {
-  ground: ['#0e0f11', '#1b1b1d'],
-  veins: ['#a07a36', '#d4cab5'],
+  ground: [hsl.integer(264, 7, 7), hsl.integer(286, 4, 12)],
+  veins: [hsl.integer(80, 67, 54), hsl.integer(86, 24, 82)],
   drifts: 0.55,
   seed: 3,
 }
 /** Giallo antico: warm yellow clouded with ochre, veined in red-brown. */
 export const gialloAntico: FauxMarble = {
-  ground: ['#a8752f', '#c69a4f'],
-  veins: ['#7a3a1c', '#5e2414'],
+  ground: [hsl.integer(72, 72, 54), hsl.integer(79, 65, 67)],
+  veins: [hsl.integer(44, 72, 34), hsl.integer(36, 75, 24)],
   drifts: 0.35,
   seed: 11,
 }

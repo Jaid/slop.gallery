@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'marquetry_aurora',
   candidateId: 'gpt_terra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Walnut, maple and quiet brass are fitted into a nocturnal current, a hand-made dawn traveling through the grain.',
   displacement: 0.008,
   placeholder: {
-    color: '#7b4b2b',
+    color: hsl.integer(53, 57, 38),
     shading: 'smooth',
   },
 } as const satisfies KnotData

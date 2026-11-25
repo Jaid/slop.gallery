@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -26,14 +27,14 @@ export default class extends KnotMaterial {
     const fluxRings = opticalLine(field.sin(), 0.09)
     const lattice = opticalLine(mx_noise_float(deep.mul(28)), 0.02).mul(near)
     const levitate = time.mul(0.5).sin().mul(0.5).add(0.5)
-    const cold = mix(color('#7fd4ff'), color('#e8fbff'), facing.pow(2))
-    this.colorNode = mix(color('#0a1018'), color('#22384a'), fluxRings.mul(0.6))
+    const cold = mix(color(hsl.integer(232, 100, 80.4)), color(hsl.integer(212, 100, 97)), facing.pow(2))
+    this.colorNode = mix(color(hsl.integer(256, 30, 7.5)), color(hsl.integer(244, 40, 23)), fluxRings.mul(0.6))
     this.metalness = 0.9
     this.roughnessNode = near.mul(-0.02).add(0.09)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.03
     this.iridescence = 0.6
     this.iridescenceIOR = 1.28
-    this.emissiveNode = cold.mul(fluxRings).mul(levitate.mul(0.25).add(0.6)).mul(near.mul(0.5).add(0.4)).add(color('#bfeaff').mul(lattice).mul(0.9)).add(color('#5fb8ff').mul(rim.pow(2)).mul(0.35))
+    this.emissiveNode = cold.mul(fluxRings).mul(levitate.mul(0.25).add(0.6)).mul(near.mul(0.5).add(0.4)).add(color(hsl.integer(229, 100, 90)).mul(lattice).mul(0.9)).add(color(hsl.integer(244, 100, 72)).mul(rim.pow(2)).mul(0.35))
   }
 }

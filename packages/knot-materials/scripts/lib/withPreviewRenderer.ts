@@ -55,9 +55,14 @@ const runWithRenderer = async <Result>(page: Page, moduleURL: string, run: (rend
 /** Run a detached WebGPU renderer in a private Vite page and private Chrome instance. */
 export default async function withPreviewRenderer<Result>(run: (renderer: JSHandle<KnotPreviewRenderer>) => Promise<Result>) {
   const server = await createServer({
+    cacheDir: 'node_modules/.vite-knot-preview',
     configFile: false,
     logLevel: 'error',
-    optimizeDeps: {include: ['three', 'three/tsl', 'three/webgpu']},
+    // render.html loads the renderer dynamically. Scan it before the first frame, without scanning the gallery and its virtual voice imports.
+    optimizeDeps: {
+      entries: [rendererPath.slice(1)],
+      include: ['okhsl', 'three', 'three/tsl', 'three/webgpu'],
+    },
     root: repositoryRoot,
     server: {
       // This session owns long-lived browser handles. Source edits must not

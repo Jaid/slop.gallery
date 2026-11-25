@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'dragon_opal',
   candidateId: 'kimi',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A sleeping creature turns once beneath a shell of shifting fire.',
   placeholder: {
-    color: '#ff9df0',
+    color: hsl.integer(333, 100, 79),
     shading: 'glass',
   },
 } as const satisfies KnotData

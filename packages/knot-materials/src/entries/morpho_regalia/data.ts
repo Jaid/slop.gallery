@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'morpho_regalia',
   candidateId: 'glm',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Blue wings lend their splendor to a crown lighter than air.',
   placeholder: {
-    color: '#54d8ff',
+    color: hsl.integer(221, 100, 79.7),
     shading: 'smooth',
   },
 } as const satisfies KnotData

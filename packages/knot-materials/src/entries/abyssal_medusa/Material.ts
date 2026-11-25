@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalView, time, uv, vec3} from 'three/tsl'
 
 import {backlight} from '../../candidates/space_bunny/lib/backlight.ts'
@@ -31,7 +32,7 @@ export default class extends KnotMaterial {
 // Flesh: cold water, a little protein, and the light that made it through.
     const flesh = cellularPoints(p.mul(9), 0.05, 0.24)
     const scatter = backlight(normalView, 2.2, 0.5)
-    this.colorNode = mix(color('#05060f'), color('#150e33'), facing.pow(0.7)).mul(float(1).add(flesh.mul(0.4)))
+    this.colorNode = mix(color(hsl.integer(276, 39, 4.4)), color(hsl.integer(287, 69, 10)), facing.pow(0.7)).mul(float(1).add(flesh.mul(0.4)))
     this.metalness = 0
     this.roughnessNode = float(0.18).add(grazing.mul(0.12)).sub(net.mul(0.08)).clamp(0.06, 0.6)
     this.ior = 1.35
@@ -39,16 +40,16 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.12
     this.normalNode = proceduralNormal(flesh.mul(0.0016).add(radial.mul(0.0006)), 0.6)
     this.sheen = 0.5
-    this.sheenColor.set('#7fd8ff')
+    this.sheenColor.set(hsl.integer(229, 99, 81))
     this.sheenRoughness = 0.45
 // Plankton: what the net caught, each mote answering the wave as it passes.
     const mote = cellularPoints(p.add(vec3(time.mul(0.01), time.mul(0.02), 0)).mul(70), 0.01, 0.09, 0.62)
-    this.emissiveNode = color('#3fe0ff').mul(net).mul(1.7)
-      .add(color('#bff4ff').mul(lantern).mul(1.1))
-      .add(color('#3fa8ff').mul(mote).mul(wave.mul(2.4).add(0.5)).mul(0.55))
-      .add(color('#7a5cff').mul(scatter).mul(0.22))
-      .add(color('#9fd0ff').mul(radial).mul(wave).mul(0.18))
-      .add(color('#c8f0ff').mul(grazing.pow(2.6)).mul(0.08))
-      .add(color('#2a1c66').mul(near.oneMinus()).mul(0.02))
+    this.emissiveNode = color(hsl.integer(214, 99, 81)).mul(net).mul(1.7)
+      .add(color(hsl.integer(212, 100, 92.3)).mul(lantern).mul(1.1))
+      .add(color(hsl.integer(248, 100, 66.4)).mul(mote).mul(wave.mul(2.4).add(0.5)).mul(0.55))
+      .add(color(hsl.integer(286, 99, 53)).mul(scatter).mul(0.22))
+      .add(color(hsl.integer(248, 100, 81.4)).mul(radial).mul(wave).mul(0.18))
+      .add(color(hsl.integer(223, 100, 92)).mul(grazing.pow(2.6)).mul(0.08))
+      .add(color(hsl.integer(285, 79, 19.4)).mul(near.oneMinus()).mul(0.02))
   }
 }

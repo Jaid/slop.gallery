@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2kVLNNiT7YsY7gP.
 export default {
   id: 'cloisonne_cosmos',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Gold remembers every boundary; the blue beyond it keeps becoming.',
   placeholder: {
-    color: '#18456b',
+    color: hsl.integer(247, 70, 29),
     shading: 'smooth',
   },
 } as const satisfies KnotData

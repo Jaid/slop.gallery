@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv} from 'three/tsl'
 
 import {tubeCells} from '../../candidates/muse_wonder/lib/tubeMetric.ts'
@@ -39,9 +40,9 @@ export default class extends KnotMaterial {
     const visB = choice.smoothstep(0.42, 0.58)
     const visA = visB.oneMinus()
     const lineMask = moons.mul(visA).max(lattice.mul(visB))
-    const base = mix(color('#0d1a78'), color('#1c0702'), choice)
-    const lineColor = mix(color('#d7e6ff'), color('#ff6a00'), choice)
-    this.colorNode = mix(mix(base, color('#d7e6ff'), moons.mul(visA)), color('#ff6a00'), lattice.mul(visB))
+    const base = mix(color(hsl.integer(267, 96, 19)), color(hsl.integer(41, 75, 7)), choice)
+    const lineColor = mix(color(hsl.integer(261, 100, 91)), color(hsl.integer(45, 100, 65)), choice)
+    this.colorNode = mix(mix(base, color(hsl.integer(261, 100, 91)), moons.mul(visA)), color(hsl.integer(45, 100, 65)), lattice.mul(visB))
 // Where neither picture wins, the lenses shimmer with spectral moiré.
     const band = choice.sub(0.5).abs().mul(2).oneMinus().clamp()
     const shimmer = spectralColor(stripCoord.mul(TAU).add(ray.y.mul(7)).add(tube.x.mul(TAU * 8)).add(time.mul(0.6)))

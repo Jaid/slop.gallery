@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -22,8 +23,8 @@ export default class extends BaseKnotMaterial {
     const waveB = theta.mul(2).sub(phi.mul(6)).sin()
     const rosette = waveA.mul(waveB).abs().smoothstep(0.12, 0.7)
     // Dual-metal dial: 18K Rose Gold ribs and dark Ruthenium troughs
-    const roseGold = color('#e0a48a')
-    const ruthenium = color('#1c191e')
+    const roseGold = color(hsl.integer(44, 52, 73))
+    const ruthenium = color(hsl.integer(312, 12, 12))
     const dialSurface = mix(ruthenium, roseGold, rosette)
     // Radium-226 alpha ionization sparks (stochastic scintillation)
     const tick = time.mul(28).floor()
@@ -37,7 +38,7 @@ export default class extends BaseKnotMaterial {
     this.clearcoatRoughness = 0.03
     this.normalNode = proceduralNormal(rosette.mul(0.25), 0.004)
     // Radioactive phosphorescent emissions
-    const radiumPhosphor = color('#55ff77')
+    const radiumPhosphor = color(hsl.integer(147, 100, 86.5))
     this.emissiveNode = radiumPhosphor.mul(alphaSpark).mul(6)
       .add(radiumPhosphor.mul(vaporTrail).mul(intimate).mul(1.2))
       .add(roseGold.mul(rosette).mul(facing.pow(3)).mul(0.25))

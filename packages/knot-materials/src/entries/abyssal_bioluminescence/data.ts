@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_bioluminescence',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Tiny colonies carry their blue messages through a sea without a sunrise.',
   placeholder: {
-    color: '#00ffd0',
+    color: hsl.integer(173, 100, 87),
     shading: 'glass',
   },
 } as const satisfies KnotData

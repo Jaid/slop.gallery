@@ -4,15 +4,15 @@ import type {AmbienceLoop} from 'ambience-emitter'
 
 /** what a kind of light is multiplied by while a mood holds: a color, whose channels pass that share of the light, and a gain on top */
 export type MoodLight = {
-  color: string
+  color: number
   gain: number
 }
 
 /** a gradient map in display space: the frame’s luminance picks a color from `shadow` over `midtone` to `highlight`, which replaces `strength` of the frame’s own color */
 export type MoodGrade = {
-  highlight: string
-  midtone: string
-  shadow: string
+  highlight: number
+  midtone: number
+  shadow: number
   strength: number
 }
 
@@ -28,7 +28,7 @@ export type MoodAmbience = new () => AmbienceLoop
 /**
  * A spell over the whole world while something casts it, like a held prop that carries it, a fusion in progress or the room the listener is in, made of whatever it contributes, all fading in and out together: color filters (a gradient map over the finished frame and tints of the lights), a screen shader (drawn over the finished frame, like a vignette), an ambience (a loop sounding centered), a sound transformer (which every sound of the world passes through) and a wider or narrower view.
  * Moods stack: several may show at once, like a room’s and that of the orb held in it, the filters of each over those of the moods beneath, their screens over all filters in the same order, the transformers one after the other, their changes of the view added up.
- * Colors are sRGB hex.
+ * Colors are packed sRGB.
  */
 export default abstract class Mood {
   /** the loop that sounds while the mood holds, made anew each time it begins */

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, uv, vec2} from 'three/tsl'
 
 import {breath} from '../../candidates/gpt_sol/lib/exhibition/facetOptics.ts'
@@ -60,12 +61,12 @@ export default class extends ReliefKnotMaterial {
     const toolFootprint = fields.radius.fwidth().mul(360).add(aa.mul(12).div(fields.radius.max(0.04)))
     const tool = wave(turning, toolFootprint).mul(flower).mul(intimate).toVar()
     const pores = mx_noise_float(p.mul(240)).mul(p.mul(240).fwidth().length().smoothstep(0.4, 1.1).oneMinus())
-    const red = mix(color('#390907'), color('#b82312'), fields.dome.mul(0.75).add(facing.mul(0.15)).clamp())
-    const raised = mix(red, color('#e24723'), fields.petalGroove.oneMinus().mul(flower).mul(0.2))
+    const red = mix(color(hsl.integer(28, 86, 13)), color(hsl.integer(30.6, 96, 43)), fields.dome.mul(0.75).add(facing.mul(0.15)).clamp())
+    const raised = mix(red, color(hsl.integer(34, 93, 55)), fields.petalGroove.oneMinus().mul(flower).mul(0.2))
     const pigment = raised.mul(random.z.mul(0.09).add(0.93).mix(1, flower.oneMinus())).mul(tool.mul(0.045).add(0.96))
       .mul(petalVein.mul(-0.25).add(1))
     const leafGrain = mx_noise_float(p.mul(80)).mul(0.12).add(0.88)
-    this.colorNode = mix(pigment, color('#e7b862').mul(leafGrain), gold)
+    this.colorNode = mix(pigment, color(hsl.integer(81, 73, 78)).mul(leafGrain), gold)
     this.metalnessNode = gold.mul(0.86)
     this.roughnessNode = mix(float(0.3).add(fields.petalGroove.mul(0.12)), float(0.24), gold)
       .add(pores.mul(0.018)).clamp(0.2, 0.48)
@@ -77,7 +78,7 @@ export default class extends ReliefKnotMaterial {
     this.aoNode = fields.dome.mul(0.35).add(0.65)
     // A restrained red subsurface impression, never emissive gold or glowing cracks.
     const lacquerLight = tube.x.mul(TAU * 3).add(breath).sin().mul(0.06).add(0.94)
-    this.emissiveNode = color('#b71d0c').mul(flower).mul(grazing.pow(3)).mul(lacquerLight).mul(0.055)
+    this.emissiveNode = color(hsl.integer(30.5, 97.5, 42)).mul(flower).mul(grazing.pow(3)).mul(lacquerLight).mul(0.055)
     this.anisotropy = 0.22
     this.anisotropyNode = vec2(fields.angle.cos(), fields.angle.sin()).mul(gold.mul(0.22))
     this.userData = {

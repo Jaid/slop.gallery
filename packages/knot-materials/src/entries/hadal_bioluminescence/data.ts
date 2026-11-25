@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'hadal_bioluminescence',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Deep in the oceanic abyss, undulating ciliated combs disperse running rainbow light while living photophores whisper in the cold.',
   placeholder: {
-    color: '#184b5e',
+    color: hsl.integer(227, 69, 29),
     shading: 'glass',
   },
 } as const satisfies KnotData

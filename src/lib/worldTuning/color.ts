@@ -1,10 +1,8 @@
 import type {TuningColor} from './controls.ts'
-import type {OkhslTuple} from 'okhsl'
 
 import hsl from 'okhsl'
 
-/** The tuning store compares colors as strings, so even shorthand colors use all six hex digits. */
-export const tuningHex = (channels: OkhslTuple) => `#${hsl(channels)}`
+import {unpackOkhsl} from '../color.ts'
 
 /** the axes of a color as the tools tell and take it, each with its greatest amount and what it stands at where left out: hue 0°, saturation 100% and lightness 50% */
 const axes = [
@@ -13,9 +11,9 @@ const axes = [
   ['lightness', 100, 50],
 ] as const
 
-/** The color of #rrggbb as the tools tell it, in whole degrees and percent like the panel’s sliders, which give back the color itself or, as whole numbers don’t reach every #rrggbb, one close to it. */
-export function tellColor(hex: string): TuningColor {
-  const [hue, saturation, lightness] = hsl.fromHex(hex)
+/** The packed color as the tools tell it, in whole degrees and percent like the panel’s sliders. */
+export function tellColor(rgb: number): TuningColor {
+  const [hue, saturation, lightness] = unpackOkhsl(rgb)
   return {
     hue,
     saturation,
@@ -23,8 +21,8 @@ export function tellColor(hex: string): TuningColor {
   }
 }
 
-/** The #rrggbb of a color the tools give as {@link TuningColor}, any axis left out at its default, or a TypeError, naming the value `name`, saying what it takes. */
-export function readColor(value: unknown, name: string): string {
+/** The packed sRGB color the tools give as {@link TuningColor}, any axis left out at its default, or a TypeError naming the value `name`. */
+export function readColor(value: unknown, name: string): number {
   const takes = `${name} is a color as its OkHSL {hue, saturation, lightness}: a hue from 0 to 360°, a saturation and a lightness from 0 to 100%, any left out at 0°, 100% and 50%.`
   if (typeof value !== 'object' || value === null || Array.isArray(value) || Object.keys(value).some(key => !axes.some(([axis]) => axis === key))) {
     throw new TypeError(takes)
@@ -37,5 +35,5 @@ export function readColor(value: unknown, name: string): string {
     }
     return amount
   })
-  return tuningHex([hue, saturation, lightness])
+  return hsl.integer(hue, saturation, lightness)
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'pelagic_reply',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Four kilometres down, something notices the light and decides to answer.',
   placeholder: {
-    color: '#165c6f',
+    color: hsl.integer(220, 80, 36),
     shading: 'glass',
   },
 } as const satisfies KnotData

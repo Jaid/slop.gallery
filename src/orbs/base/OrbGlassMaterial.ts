@@ -1,6 +1,7 @@
 import type {TransmittingEmission} from '#src/lib/rendering/AlbedoRenderPipeline.ts'
 import type {ColorRepresentation, Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {Break, cameraFar, cameraNear, cameraPosition, cameraProjectionMatrix, float, Fn, frameId, If, interleavedGradientNoise, Loop, modelViewMatrix, modelWorldMatrixInverse, normalView, perspectiveDepthToViewZ, positionGeometry, positionView, positionViewDirection, refract, screenCoordinate, screenUV, select, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -83,7 +84,7 @@ function project(point: Node<'vec3'>) {
 export default abstract class OrbGlassMaterial extends MeshPhysicalNodeMaterial implements TransmittingEmission {
   readonly emissionIsTransmission = true
 
-  constructor({radius}: OrbGlassOptions, {fillIor = 1.33, name, tint = '#ffffff'}: {
+  constructor({radius}: OrbGlassOptions, {fillIor = 1.33, name, tint = hsl.integer(0, 0, 100)}: {
     /** refractive index of the fill, which decides how strongly the orb bends the room behind it */
     fillIor?: number
     name: string
@@ -92,7 +93,7 @@ export default abstract class OrbGlassMaterial extends MeshPhysicalNodeMaterial 
   }) {
     super({
       // A black body leaves only the reflections; everything inside comes in as emission.
-      color: '#000000',
+      color: hsl.integer(0, 0, 0),
       metalness: 0,
       roughness: glassRoughness,
       ior: glassIor,

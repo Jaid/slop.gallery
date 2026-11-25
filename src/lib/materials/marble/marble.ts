@@ -1,23 +1,24 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec2, vec2, vec3} from 'three/tsl'
 
 import {inside, line, visibleDetail} from '../filters.ts'
 
-/** How a cut of marble looks, independent of the surface it is laid on. Colors are sRGB hex strings, strengths 0–1. */
+/** How a cut of marble looks, independent of the surface it is laid on. Colors are packed sRGB, strengths 0–1. */
 export type MarbleStyle = {
   /** the body of the stone */
-  base: string
+  base: number
   /** the drifting clouds in the body, lighter or darker than the base */
-  cloud: string
+  cloud: number
   /** the soft, wide stain the main veins bleed into the body */
-  halo: string
+  halo: number
   haloStrength: number
   /** fine hairline cracks of the fracture web */
-  thread: string
+  thread: number
   threadStrength: number
   /** the long main veins */
-  vein: string
+  vein: number
   /** half-width of the main veins at their widest, in meters */
   veinWidth: number
   /** strength of the fracture webs between the main veins: the coarse one in `vein`, the fine hairlines in `thread` */
@@ -28,52 +29,52 @@ type Float = Node<'float'>
 
 /** White Calacatta: ivory with drifting gray clouds and a few soft gray veins. */
 export const calacatta: MarbleStyle = {
-  base: '#efebe3',
-  cloud: '#c2b9ab',
-  halo: '#bfb7aa',
+  base: hsl.integer(85, 23, 93),
+  cloud: hsl.integer(79, 14, 75),
+  halo: hsl.integer(80, 13, 75),
   haloStrength: 0.5,
-  thread: '#8f897f',
+  thread: hsl.integer(81, 9, 57),
   threadStrength: 0.6,
-  vein: '#6f6a63',
+  vein: hsl.integer(77, 7, 45),
   veinWidth: 0.0022,
   web: 0.85,
 }
 
 /** Black Portoro: near-black with a web of golden fracture veins and the odd white thread. */
 export const portoro: MarbleStyle = {
-  base: '#141416',
-  cloud: '#34312e',
-  halo: '#46361f',
+  base: hsl.integer(286, 5, 9),
+  cloud: hsl.integer(68, 6, 21),
+  halo: hsl.integer(76, 43, 25),
   haloStrength: 0.7,
-  thread: '#d8d2c8',
+  thread: hsl.integer(81, 14, 84),
   threadStrength: 0.55,
-  vein: '#cf9f55',
+  vein: hsl.integer(77, 65, 69),
   veinWidth: 0.003,
   web: 1,
 }
 
 /** Black Nero Marquina: near-black with a dense, brittle crackle of bone-white veins. */
 export const neroMarquina: MarbleStyle = {
-  base: '#0f0f11',
-  cloud: '#232327',
-  halo: '#3a3a3e',
+  base: hsl.integer(286, 6, 7),
+  cloud: hsl.integer(286, 7, 15),
+  halo: hsl.integer(286, 5, 25),
   haloStrength: 0.45,
-  thread: '#d4d1cb',
+  thread: hsl.integer(85, 8, 84),
   threadStrength: 1,
-  vein: '#efece6',
+  vein: hsl.integer(85, 18, 93.4),
   veinWidth: 0.003,
   web: 0.7,
 }
 
 /** Warm cream marble with soft, smoky umber veins that flow rather than crack. */
 export const cremaMarfil: MarbleStyle = {
-  base: '#e9e1d4',
-  cloud: '#bfae95',
-  halo: '#a39480',
+  base: hsl.integer(80, 26, 90),
+  cloud: hsl.integer(78, 24, 72),
+  halo: hsl.integer(75, 19, 62),
   haloStrength: 0.8,
-  thread: '#94897a',
+  thread: hsl.integer(76, 14, 58),
   threadStrength: 0.6,
-  vein: '#675d50',
+  vein: hsl.integer(74, 15, 40),
   veinWidth: 0.004,
   web: 0.8,
 }

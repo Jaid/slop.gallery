@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_noise_float, positionGeometry, uv, vec2, vec3} from 'three/tsl'
 
 import {glitter} from '../../candidates/deepseek/lib/glitter.ts'
@@ -61,14 +62,14 @@ export default class extends KnotMaterial {
     const fuzzCoverage = fuzzCoord.fract().sub(fuzzCenter).length().smoothstep(0.06, fuzzRadius).oneMinus()
     const fuzzMask = fuzz.sparkle.mul(fuzzCoverage).mul(intimate)
     const cloth = mx_noise_float(vec3(fabric.x.mul(34), fabric.y.mul(9), 0)).mul(0.5).add(0.5)
-    const silkGround = mix(color('#0f0a20'), color('#241a45'), cloth.mul(0.6).add(0.2))
+    const silkGround = mix(color(hsl.integer(291, 56, 7)), color(hsl.integer(291, 61, 15)), cloth.mul(0.6).add(0.2))
     const silkWeave = mix(silkGround, silkGround.mul(1.6), weftOnTop.mul(woven))
     const accent = cellRnd.z.smoothstep(0.34, 0.66)
-    const silk = mix(silkWeave, mix(color('#1f3479'), color('#8f2a20'), accent), heart.mul(0.85))
-    const gold = mix(color('#b8842f'), color('#f2cd81'), cellRnd.x.mul(0.45).add(fibreDetail.mul(0.3)))
-    this.colorNode = mix(silk, gold, brocade.mul(0.94)).add(color('#4a3a7a').mul(fibreDetail.mul(0.16)))
+    const silk = mix(silkWeave, mix(color(hsl.integer(267, 78, 25)), color(hsl.integer(29, 84, 35)), accent), heart.mul(0.85))
+    const gold = mix(color(hsl.integer(76, 77, 59)), color(hsl.integer(84, 73, 84)), cellRnd.x.mul(0.45).add(fibreDetail.mul(0.3)))
+    this.colorNode = mix(silk, gold, brocade.mul(0.94)).add(color(hsl.integer(293, 56, 31)).mul(fibreDetail.mul(0.16)))
     this.sheenNode = mix(float(0.14), float(0.45), brocade)
-    this.sheenColor.set('#b3a5ff')
+    this.sheenColor.set(hsl.integer(290, 100, 73))
     this.sheenRoughness = 0.28
     this.metalnessNode = brocade.mul(woven)
     this.roughnessNode = mix(float(0.55).sub(intimate.mul(0.08)), float(0.2), brocade).add(fibreDetail.mul(0.08)).clamp(0.12, 0.68)
@@ -82,8 +83,8 @@ export default class extends KnotMaterial {
     const approaching = fabric.x.sub(shuttle).fract()
     const shuttleGlow = wovenTail.mul(wovenTail).mul(-24).exp().mul(0.5).add(approaching.mul(approaching).mul(-2600).exp().mul(0.9))
     this.emissiveNode = gold.mul(brocade).mul(shuttleGlow).mul(near.mul(0.3).add(0.7))
-      .add(color('#d8c8ff').mul(fuzzMask).mul(0.3))
-      .add(color('#5b4bb0').mul(brocade.mul(grazing.pow(3)).mul(0.05)))
-      .add(color('#c7b6ff').mul(shuttleGlow).mul(mx_noise_float(vec3(fabric.x.mul(90), fabric.y.mul(24), 0))).mul(0.5).add(0.5).mul(0.05))
+      .add(color(hsl.integer(298, 100, 84)).mul(fuzzMask).mul(0.3))
+      .add(color(hsl.integer(286, 68, 40)).mul(brocade.mul(grazing.pow(3)).mul(0.05)))
+      .add(color(hsl.integer(295, 100, 79)).mul(shuttleGlow).mul(mx_noise_float(vec3(fabric.x.mul(90), fabric.y.mul(24), 0))).mul(0.5).add(0.5).mul(0.05))
   }
 }

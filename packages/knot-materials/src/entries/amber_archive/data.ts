@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'amber_archive',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A forest folded into a drop of honey. Its last fern still moves, although the wind that touched it has been extinct for ages.',
   placeholder: {
-    color: '#b96f24',
+    color: hsl.integer(61, 80, 55),
     shading: 'glass',
   },
 } as const satisfies KnotData

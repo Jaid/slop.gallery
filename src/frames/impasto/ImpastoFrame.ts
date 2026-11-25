@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, exp, float, max, mix, mx_cell_noise_float, mx_noise_float, select, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial, SphereGeometry} from 'three/webgpu'
 
@@ -195,7 +196,7 @@ export default class ImpastoFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#4b6f7c'
+  override readonly tint = hsl.integer(223, 32, 44)
   override readonly title = 'Impasto'
 
   override createGeometry(width: number, height: number) {
@@ -305,7 +306,7 @@ class PoplarBackMaterial extends MeshPhysicalNodeMaterial {
     const surface = backSurface()
     const {footprint, opening, point} = surface
     const grain = mx_noise_float(vec3(point.x.mul(2.5), point.y.mul(240), 3.3)).mul(0.5).add(0.5)
-    const poplar = mix(color('#c9b68e'), color('#ddd0ae'), grain)
+    const poplar = mix(color(hsl.integer(86, 36, 75)), color(hsl.integer(90, 38, 84)), grain)
     // The knife wiped off in short streaks near the edges, along the nearest one, each its own paint, thinning out into dry drags where the blade ran clean.
     const outer = opening.add(profile.reach)
     const inset = outer.sub(point.abs())
@@ -331,7 +332,7 @@ class PoplarBackMaterial extends MeshPhysicalNodeMaterial {
     // A title in charcoal across the upper part.
     const charcoal = scribble(surface, vec2(opening.x.mul(-0.25), opening.y.mul(0.62)), 0.3, 0.032, 4.2)
     const hanger = hangingWire(surface)
-    const marked = mix(mix(poplar, wipedPaint, wipe), color('#2a2622'), charcoal.mul(0.85))
+    const marked = mix(mix(poplar, wipedPaint, wipe), color(hsl.integer(67, 9, 17)), charcoal.mul(0.85))
     this.colorNode = mix(marked, hanger.color, hanger.cover)
     this.metalnessNode = hanger.cover
     this.roughnessNode = mix(mix(float(0.75), float(0.45), wipe), float(0.35), hanger.cover)

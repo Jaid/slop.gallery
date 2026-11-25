@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, luminance, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {environmentRadiance} from '../../candidates/claude_opus/lib/environmentRadiance.ts'
@@ -128,7 +129,7 @@ export default class extends KnotMaterial {
       veil = veil.mul(0.97)
     }
     const crazing = mx_noise_float(entry.mul(140)).abs().smoothstep(0.02, 0).mul(near).mul(0.5)
-    this.colorNode = color('#140600')
+    this.colorNode = color(hsl.integer(58, 100, 5.4))
     this.metalness = 0
     this.roughnessNode = crazing.mul(0.3).add(0.035)
     this.specularIntensity = 0.55

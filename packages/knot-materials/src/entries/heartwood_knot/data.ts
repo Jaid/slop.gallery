@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'heartwood_knot',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A century of slow rain, cut open and polished until the light walks along it.',
   placeholder: {
-    color: '#5e2a0f',
+    color: hsl.integer(45, 77, 25),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -44,11 +45,11 @@ export default class extends BaseKnotMaterial {
     const lane = mx_fractal_noise_float(p.sub(view.mul(0.5)).mul(5).add(vec3(3.7, 0, 0)), 3, 2, 0.5).mul(0.5).add(0.5).smoothstep(0.42, 0.72)
     const nebula = mix(rose, teal, nebulaMix).mul(lane.mul(0.7).add(0.3))
     const emberField = mx_noise_float(p.sub(view.mul(0.6)).mul(1.4).add(vec3(time.mul(0.01), 0, 0)))
-    const ember = color('#ff8a3a').mul(emberField.smoothstep(0.66, 0.95)).mul(0.5)
-    const meteor = meteorStreak(p, time).mul(color('#d8ecff')).mul(2.8)
+    const ember = color(hsl.integer(52, 99, 71)).mul(emberField.smoothstep(0.66, 0.95)).mul(0.5)
+    const meteor = meteorStreak(p, time).mul(color(hsl.integer(247, 100, 92.3))).mul(2.8)
 // Looking through more glass at grazing angles, the deep field burns brighter.
     const depthLight = grazing.pow(1.6).mul(0.9).add(0.35)
-    this.colorNode = mix(color('#020308'), color('#070d1a'), facing)
+    this.colorNode = mix(color(hsl.integer(270, 42, 3)), color(hsl.integer(263, 45, 7)), facing)
     this.metalness = 0
     this.roughnessNode = mx_noise_float(p.mul(3.2)).mul(0.07).add(0.12)
     this.clearcoat = 1
@@ -57,8 +58,8 @@ export default class extends BaseKnotMaterial {
     this.transmission = 0.22
     this.thickness = 0.5
     this.ior = 1.45
-    this.attenuationColor.set('#081226')
+    this.attenuationColor.set(hsl.integer(262, 58, 9))
     this.attenuationDistance = 1.6
-    this.emissiveNode = nebula.mul(depthLight).mul(1.3).add(farStars).add(midStars).add(closeStars).add(dust).add(ember.mul(depthLight)).add(meteor).add(color('#4a3a78').mul(grazing.pow(2.4)).mul(0.5))
+    this.emissiveNode = nebula.mul(depthLight).mul(1.3).add(farStars).add(midStars).add(closeStars).add(dust).add(ember.mul(depthLight)).add(meteor).add(color(hsl.integer(293, 55, 30)).mul(grazing.pow(2.4)).mul(0.5))
   }
 }

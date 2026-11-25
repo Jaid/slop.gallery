@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, positionGeometry, uv, vec2} from 'three/tsl'
 
 import {disk, ring, segment} from '../../candidates/gpt_sol/lib/galleryMarks.ts'
@@ -34,19 +35,19 @@ export default class extends KnotMaterial {
     const frost = mx_noise_float(positionGeometry.mul(19)).mul(0.5).add(0.5)
     const fine = mx_noise_float(positionGeometry.mul(78)).mul(0.5).add(0.5)
     const snow = frost.smoothstep(0.55, 0.84)
-    this.colorNode = mix(color('#103458'), color('#a6dfe7'), snow.mul(0.72).add(0.12))
-    this.colorNode = mix(this.colorNode, color('#e8fcf6'), crystal.mul(0.66).add(medallion.mul(0.3)).clamp())
+    this.colorNode = mix(color(hsl.integer(251, 73, 22)), color(hsl.integer(206, 52, 85)), snow.mul(0.72).add(0.12))
+    this.colorNode = mix(this.colorNode, color(hsl.integer(176, 69, 97)), crystal.mul(0.66).add(medallion.mul(0.3)).clamp())
     this.metalness = 0.04
     this.roughnessNode = snow.mul(0.32).add(0.075)
     this.transmission = 0.44
     this.thickness = 0.28
     this.ior = 1.31
-    this.attenuationColor.set('#65b9e1')
+    this.attenuationColor.set(hsl.integer(231, 67, 71))
     this.attenuationDistance = 0.62
     this.clearcoat = 0.74
     this.clearcoatRoughness = 0.05
     this.normalNode = proceduralNormal(snow.mul(0.004).add(fine.mul(0.0006)).add(crystal.mul(0.002)), 0.8)
-    this.emissiveNode = color('#7ec6ed').mul(crystal).mul(near.mul(0.19).add(0.075))
-      .add(color('#e0f9ff').mul(grazing.pow(3)).mul(0.21))
+    this.emissiveNode = color(hsl.integer(233, 69, 76)).mul(crystal).mul(near.mul(0.19).add(0.075))
+      .add(color(hsl.integer(214, 100, 96)).mul(grazing.pow(3)).mul(0.21))
   }
 }

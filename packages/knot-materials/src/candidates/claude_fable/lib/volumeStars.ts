@@ -1,24 +1,16 @@
 import type {Node} from 'three/webgpu'
 
-import {mix, time, vec3} from 'three/tsl'
+import hsl from 'okhsl'
+import {color, mix, time} from 'three/tsl'
 
 import {cellNoiseVec3} from './cellNoiseVec3.ts'
-
-const hexToLinear = (hex: string): [number, number, number] => {
-  const value = Number.parseInt(hex.slice(1), 16)
-  const channel = (shift: number) => {
-    const c = (value >> shift & 255) / 255
-    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-  }
-  return [channel(16), channel(8), channel(0)]
-}
 
 /**
  * Point lights in a volume, seen along a ray: a star lights the ray when the ray passes within `radius` of it,
  * measured perpendicular to the ray. Unlike slicing a 3D cell lattice with the surface, this keeps every star visible
  * from every angle while its apparent position shifts with depth – true parallax for interiors of glass.
  */
-export function volumeStars(position: Node<'vec3'>, direction: Node<'vec3'>, scale: number, threshold: number, warm = '#ffd9b0', cool = '#b8d4ff') {
+export function volumeStars(position: Node<'vec3'>, direction: Node<'vec3'>, scale: number, threshold: number, warm = hsl.integer(68, 99, 89), cool = hsl.integer(259, 100, 84)) {
   const q = position.mul(scale)
   const cell = q.floor()
   const random = cellNoiseVec3(cell)
@@ -34,7 +26,7 @@ export function volumeStars(position: Node<'vec3'>, direction: Node<'vec3'>, sca
   const halo = distance.div(radius).add(1).pow(-2.5).mul(random2.y.smoothstep(0.7, 0.95))
   const gate = random2.x.smoothstep(threshold, threshold + 0.01)
   const twinkle = time.mul(random2.y.mul(3).add(1)).add(random2.z.mul(30)).sin().mul(0.25).add(0.8)
-  const tint = mix(vec3(...hexToLinear(warm)), vec3(...hexToLinear(cool)), random2.z)
+  const tint = mix(color(warm), color(cool), random2.z)
   const magnitude = random.x.pow(3).mul(3).add(0.7)
   const resolved = footprint.smoothstep(0.3, 1.2).oneMinus()
   return tint.mul(core.add(halo.mul(0.35))).mul(gate).mul(twinkle).mul(magnitude).mul(resolved)

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -63,10 +64,10 @@ export default class extends KnotMaterial {
 // Urushi: dozens of hand-brushed layers, each with its own slow ripple.
     const brush = mx_fractal_noise_float(p.mul(6.5).add(vec3(3.7, 1.1, 8.2)), 3, 2.1, 0.55)
     const depth = mx_fractal_noise_float(p.mul(2.3).add(vec3(0.4, 5.6, 2.9)), 3, 2.2, 0.5).mul(0.5).add(0.5)
-    const lacquer = mix(color('#080507'), color('#1b0a0c'), depth.pow(1.4)).mul(brush.mul(0.06).add(0.97))
+    const lacquer = mix(color(hsl.integer(337, 18, 4)), color(hsl.integer(13, 43, 7.5)), depth.pow(1.4)).mul(brush.mul(0.06).add(0.97))
     const bubble = cellularPoints(p.mul(78), 0.02, 0.11, 0.62).mul(intimate)
-    const leaf = color('#d8a340').mul(mx_noise_float(p.mul(120).add(vec3(4, 5, 6))).mul(0.1).add(0.95))
-    const goldColor = mix(leaf, color('#ffe6a8'), goldCore.pow(1.6))
+    const leaf = color(hsl.integer(80, 78, 71)).mul(mx_noise_float(p.mul(120).add(vec3(4, 5, 6))).mul(0.1).add(0.95))
+    const goldColor = mix(leaf, color(hsl.integer(89, 100, 92)), goldCore.pow(1.6))
     this.colorNode = mix(lacquer, goldColor, gold)
     this.metalnessNode = gold.mul(0.95).add(0.03)
     this.roughnessNode = mix(float(0.2).add(brush.mul(0.05)), float(0.115).add(brush.mul(0.04)), gold).sub(bubble.mul(0.04))
@@ -74,7 +75,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = mix(float(0.06), float(0.18), bubble)
     this.ior = 1.52
     this.sheenNode = gold.oneMinus().mul(0.12)
-    this.sheenColor.set('#8a3a3a')
+    this.sheenColor.set(hsl.integer(22, 62, 37))
     this.sheenRoughness = 0.3
 // The gold sits proud of the lacquer, and the lacquer is not perfectly flat.
     const relief = gold.mul(0.0026).sub(brush.mul(0.00012)).add(bubble.mul(0.00035))
@@ -90,11 +91,11 @@ export default class extends KnotMaterial {
     const front = p.x.mul(0.8).add(p.y.mul(0.35)).add(p.z.mul(0.2)).sub(time.mul(0.21))
     const flare = front.mul(front).mul(-5).exp().pow(0.8)
     const glint = glints(bump, 160).mul(gold).mul(goldCore)
-    this.emissiveNode = color('#ffca74').mul(gold.mul(flare).mul(1.35))
-      .add(color('#ffe9bc').mul(glint.mul(0.5)))
-      .add(color('#ffb347').mul(goldCore.mul(flare).mul(0.35)))
-      .add(color('#3a0d12').mul(grazing.pow(2.2).mul(0.35)))
-      .add(color('#6b2a1e').mul(rim.pow(3).mul(0.22)))
+    this.emissiveNode = color(hsl.integer(79, 100, 85)).mul(gold.mul(flare).mul(1.35))
+      .add(color(hsl.integer(85, 100, 93)).mul(glint.mul(0.5)))
+      .add(color(hsl.integer(72, 100, 79.1)).mul(goldCore.mul(flare).mul(0.35)))
+      .add(color(hsl.integer(18, 72, 14)).mul(grazing.pow(2.2).mul(0.35)))
+      .add(color(hsl.integer(32, 70, 28)).mul(rim.pow(3).mul(0.22)))
       .add(gold.mul(flare.mul(0.02)))
   }
 }

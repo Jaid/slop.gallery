@@ -2,10 +2,11 @@ import {expect, test} from 'bun:test'
 
 import StableRandom from 'stable-random'
 
+import {unpackOkhsl} from '#src/lib/color.ts'
+
 import {slopRandom} from '../../src/lib/gallery/sloperator/sights.ts'
 import SlimeMaterial, {slimeColors} from '../../src/lib/materials/SlimeMaterial.ts'
 import SlopMaterial, {slopHueSpread} from '../../src/lib/materials/SlopMaterial.ts'
-import unpackOkhsl from './helpers/unpackOkhsl.ts'
 
 /** The material’s greens back in OkHSL, rounded to whole degrees and percent. */
 const greens = (material: SlimeMaterial) => [unpackOkhsl(material.color.getHex()), unpackOkhsl(material.emissive.getHex())] as const

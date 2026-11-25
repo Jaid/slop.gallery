@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2kVLNNiT7YsY7gP.
 export default {
   id: 'solar_loom',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Sunlight falls through a woven heaven and arrives as gold, indigo and thunder.',
   placeholder: {
-    color: '#bf873a',
+    color: hsl.integer(72, 72, 61),
     shading: 'fabric',
   },
 } as const satisfies KnotData

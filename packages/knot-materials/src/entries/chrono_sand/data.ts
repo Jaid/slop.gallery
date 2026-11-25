@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chrono_sand',
   candidateId: 'qwen_max',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Time slips through these grains without ever reaching the bottom.',
   placeholder: {
-    color: '#ffcc00',
+    color: hsl.integer(90, 100, 84),
     shading: 'smooth',
   },
 } as const satisfies KnotData

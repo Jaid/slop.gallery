@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, time, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -24,8 +25,8 @@ export default class extends KnotMaterial {
     const resolved = laminaFoot.smoothstep(0.55, 1.8).oneMinus()
     const anglePhase = view.dot(vec3(0.8, 0.25, -0.55)).mul(2.5).add(layer.mul(0.5)).add(time.mul(0.01))
     const interference = spectralColor(anglePhase)
-    const body = mix(color('#1b5361'), color('#713a59'), layer.mul(0.58))
-    const nacre = mix(body, interference, 0.5).add(color('#f1d6b5').mul(grazing.mul(0.12)))
+    const body = mix(color(hsl.integer(218, 69, 32)), color(hsl.integer(347, 48, 34)), layer.mul(0.58))
+    const nacre = mix(body, interference, 0.5).add(color(hsl.integer(72, 56, 87)).mul(grazing.mul(0.12)))
     const nacreHeight = layer.mul(0.16).add(lamina.mul(resolved).mul(0.05))
     const nacreNormal = proceduralNormal(nacreHeight, 0.002)
     const fire = glints(nacreNormal, 68).mul(near).mul(0.2)
@@ -40,6 +41,6 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = layer.mul(240).add(lamina.mul(90)).add(190)
     this.normalNode = nacreNormal
     this.clearcoatNormalNode = nacreNormal
-    this.emissiveNode = interference.mul(fire.mul(0.08)).add(color('#fff3d9').mul(grazing.pow(4).mul(0.03)))
+    this.emissiveNode = interference.mul(fire.mul(0.08)).add(color(hsl.integer(86, 100, 96)).mul(grazing.pow(4).mul(0.03)))
   }
 }

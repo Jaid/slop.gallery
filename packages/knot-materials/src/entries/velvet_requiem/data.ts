@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_requiem',
   candidateId: 'grok',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Pile this deep either drinks the light or gives it back, according to the way you face. Gold thread waits in the nap for a grazing eye.',
   placeholder: {
-    color: '#c0102c',
+    color: hsl.integer(22, 97.4, 44),
     shading: 'fabric',
   },
 } as const satisfies KnotData

@@ -1,15 +1,16 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, hash, max, min, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 
 import {heightNormal, inside, visibleDetail} from './filters.ts'
 import PlanarMirrorMaterial from './PlanarMirrorMaterial.ts'
 
-/** One mix of terrazzo: the color of the cement binder and the marble chips scattered through it, as sRGB hex strings. */
+/** One mix of terrazzo: the color of the cement binder and the marble chips scattered through it, as packed sRGB. */
 export type TerrazzoMix = {
-  binder: string
+  binder: number
   /** the chips’ colors, drawn evenly at random, so a color listed twice shows twice as often */
-  chips: ReadonlyArray<string>
+  chips: ReadonlyArray<number>
 }
 /** the room’s floor plan, which the border is measured from: the size of a rectangular one between its walls’ center lines, or the radius of a round one’s wall’s center line */
 export type TerrazzoPlan = {
@@ -42,14 +43,14 @@ type Float = Node<'float'>
 
 /** Warm Venetian terrazzo: an ivory binder with mostly Carrara white and cream chips, set off by rosso Verona, giallo, nero and verde Alpi. */
 export const venetianTerrazzo: TerrazzoMix = {
-  binder: '#d9cfbc',
-  chips: ['#f1ece2', '#e6dccb', '#f1ece2', '#ddd0b8', '#a8473a', '#c39a5a', '#26221f', '#6f7d6a', '#f1ece2', '#e6dccb'],
+  binder: hsl.integer(84, 23, 83),
+  chips: [hsl.integer(85, 29, 93.5), hsl.integer(81, 29, 88), hsl.integer(85, 29, 93.5), hsl.integer(83, 30, 84), hsl.integer(30, 69, 45), hsl.integer(77, 57, 66), hsl.integer(59, 9, 15), hsl.integer(137, 18, 50), hsl.integer(85, 29, 93.5), hsl.integer(81, 29, 88)],
 }
 
 /** Dark terrazzo for a border: a near-black binder with white, carnelian and ochre chips. */
 export const blackTerrazzo: TerrazzoMix = {
-  binder: '#26211f',
-  chips: ['#ece6da', '#9d3b2c', '#c99a4b', '#ece6da', '#565250', '#b8ad98'],
+  binder: hsl.integer(43, 9, 15),
+  chips: [hsl.integer(85, 26, 91), hsl.integer(31, 75, 41), hsl.integer(78, 68, 67), hsl.integer(85, 26, 91), hsl.integer(49, 4, 35), hsl.integer(84, 19, 71)],
 }
 
 /** The chips come in three sizes, each scattered over cells of its own size, in meters, one chip per cell; a cell may stay empty. */
@@ -169,7 +170,7 @@ export default class TerrazzoFloorMaterial extends PlanarMirrorMaterial {
     const top = normalWorldGeometry.y.step(0.5)
     const finish = reflections ? roughness ?? 0.2 : 0.4
     super(null, {
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       roughness: finish,
       reflection: reflections ? {
         strength,
@@ -181,7 +182,7 @@ export default class TerrazzoFloorMaterial extends PlanarMirrorMaterial {
     const stoneSurface = border ? mix(shade(field), shade(border), inBorder) : shade(field)
     // Strips only run through the field; the border is one pour.
     const inStrip = strip.mul(inBorder.oneMinus()).mul(top)
-    const surface = mix(stoneSurface, color('#c8a15c'), inStrip)
+    const surface = mix(stoneSurface, color(hsl.integer(81, 60, 69)), inStrip)
     const sawn = color(field.binder).mul(0.7)
     this.colorNode = mix(sawn, surface, top)
     // Ground flush, the chips polish a shade smoother than the binder.

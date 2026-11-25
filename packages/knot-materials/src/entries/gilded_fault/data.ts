@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: AGJuTzPywIFbk5N; fixture: knot-material-shaders; result: success.
 export default {
   id: 'gilded_fault',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.012,
   flavorText: 'The stone broke once. Someone poured the sun into the wound, let it cool, and called the scar a crown.',
   placeholder: {
-    color: '#3a332a',
+    color: hsl.integer(74, 16, 23),
     shading: 'stone',
   },
 } as const satisfies KnotData

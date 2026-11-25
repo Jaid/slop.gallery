@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BJsZFlj5mQPSiFo; fixture: knot-material-shaders.
 // Original identity: abyssal_nacre (Abyssal Nacre).
 export default {
@@ -17,7 +19,7 @@ export default {
   },
   flavorText: 'Pearl grows in the dark by keeping a little ocean inside every layer.',
   placeholder: {
-    color: '#123b52',
+    color: hsl.integer(237, 69, 24),
     shading: 'smooth',
   },
   displacement: 0.000045,

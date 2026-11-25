@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, hash, mix, modelWorldMatrix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec3, vec4} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -5,9 +6,9 @@ import {heightNormal, visibleDetail} from './filters.ts'
 
 export type JoineryWoodOptions = {
   colors?: {
-    dark: string
-    light: string
-    ring: string
+    dark: number
+    light: number
+    ring: number
   }
   /** the mesh’s local axis the fibers run along, such as a wall’s length or a beam’s span */
   grain?: 'x' | 'y' | 'z'
@@ -16,9 +17,9 @@ export type JoineryWoodOptions = {
 }
 
 const walnut = {
-  dark: '#2c170d',
-  light: '#5c3720',
-  ring: '#1a0d06',
+  dark: hsl.integer(46, 49, 13),
+  light: hsl.integer(52, 54, 28),
+  ring: hsl.integer(51, 46, 8),
 }
 const axes = {
   x: vec4(1, 0, 0, 0),

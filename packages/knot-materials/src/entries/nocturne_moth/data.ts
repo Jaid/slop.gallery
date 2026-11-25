@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nocturne_moth',
   candidateId: 'gpt_astra',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Dust-soft wings carry the quiet colors of a garden after sunset.',
   placeholder: {
-    color: '#58d6bc',
+    color: hsl.integer(177, 75, 76.5),
     shading: 'fabric',
   },
 } as const satisfies KnotData

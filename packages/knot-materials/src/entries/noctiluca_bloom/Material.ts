@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -30,16 +31,16 @@ export default class extends KnotMaterial {
     const breath = inner.y.mul(8).sub(time.mul(0.72)).sin().mul(0.2).add(0.8)
     const gather = bloomField.abs().smoothstep(0.05, 0.42)
     const wake = glance.mul(near)
-    this.colorNode = mix(color('#020814'), color('#04353d'), gather)
+    this.colorNode = mix(color(hsl.integer(255, 64, 5)), color(hsl.integer(212, 90, 20)), gather)
     this.transmission = 0.46
     this.thickness = 0.4
     this.ior = 1.48
-    this.attenuationColor.set('#046b6a')
+    this.attenuationColor.set(hsl.integer(194, 98, 40))
     this.attenuationDistance = 0.58
     this.roughness = 0.08
     this.clearcoat = 0.88
     this.clearcoatRoughness = 0.04
     this.normalNode = liquidNormal(near.mul(0.8).add(0.15), 0.14)
-    this.emissiveNode = mix(color('#00c2a8'), color('#b8ff7a'), gather).mul(cells).mul(breath).mul(near.mul(0.75).add(0.5)).add(color('#3dffd2').mul(colony).mul(intimate.mul(0.8).add(near.mul(0.35)))).add(color('#7affc8').mul(wake).mul(0.18)).add(color('#1458ff').mul(rim).mul(0.1))
+    this.emissiveNode = mix(color(hsl.integer(179, 100, 68)), color(hsl.integer(132, 99, 91.3)), gather).mul(cells).mul(breath).mul(near.mul(0.75).add(0.5)).add(color(hsl.integer(172.6, 100, 88)).mul(colony).mul(intimate.mul(0.8).add(near.mul(0.35)))).add(color(hsl.integer(164, 99, 89.5)).mul(wake).mul(0.18)).add(color(hsl.integer(263.4, 100, 47)).mul(rim).mul(0.1))
   }
 }

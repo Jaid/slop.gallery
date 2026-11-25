@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'pentimento_fresco',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'An earlier image returns through the painted surface, unwilling to be forgotten.',
   placeholder: {
-    color: '#5077e8',
+    color: hsl.integer(267, 86, 53.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

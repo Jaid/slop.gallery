@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, mx_worley_noise_vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -30,7 +31,7 @@ export default class CharredFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#1a1716'
+  override readonly tint = hsl.integer(39, 6, 11)
   override readonly title = 'Shou sugi ban'
 
   override createGeometry(width: number, height: number) {
@@ -40,12 +41,12 @@ export default class CharredFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new FrameMetalMaterial({metal: {
-        bright: '#d1885a',
-        dull: '#6e3a22',
+        bright: hsl.integer(52, 60, 64),
+        dull: hsl.integer(45, 61, 32),
         roughness: 0.3,
         patina: {
           amount: 0.4,
-          color: '#4f7f6a',
+          color: hsl.integer(165, 42, 48),
         },
       }}),
       new CharredWoodMaterial,
@@ -76,7 +77,7 @@ class CharredWoodMaterial extends MeshPhysicalNodeMaterial {
     const scale = edge.smoothstep(0.05, 0.6)
     const grain = surface.reach.add(p.z.mul(0.6)).mul(380).add(mx_noise_float(vec3(surface.along.mul(3), surface.reach.mul(40), surface.member)).mul(6)).sin().mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.003))
     const sheen = mx_noise_float(p.mul(30)).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#020101'), mix(color('#1a1817'), color('#3a3633'), sheen.mul(0.5).add(grain.mul(0.4))), scale.mul(cracks.oneMinus()))
+    this.colorNode = mix(color(hsl.integer(19, 23, 2)), mix(color(hsl.integer(49, 5, 11)), color(hsl.integer(59, 6, 24)), sheen.mul(0.5).add(grain.mul(0.4))), scale.mul(cracks.oneMinus()))
     this.roughnessNode = mix(float(0.9), float(0.45), sheen.mul(scale).mul(0.7)).add(cracks.mul(0.1))
     this.normalNode = heightNormal(scale.mul(0.0025).sub(cracks.mul(0.002)).add(grain.mul(0.0004)))
   }

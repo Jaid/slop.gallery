@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'folded_cathedral',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Someone folded a cathedral into a ribbon and forgot to take the light out.',
   placeholder: {
-    color: '#7d405f',
+    color: hsl.integer(350, 48, 37),
     shading: 'glass',
   },
 } as const satisfies KnotData

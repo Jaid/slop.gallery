@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, positionWorld, uv, vec2, vec3} from 'three/tsl'
 import {DoubleSide, MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -13,7 +14,7 @@ export default class ForgeMaterials extends MadeOnDemand {
   get brass() {
     return this.once('brass', () => new MeshStandardNodeMaterial({
       name: 'Drawn brass',
-      color: '#d4a965',
+      color: hsl.integer(78, 60, 72),
       metalness: 0.58,
       roughness: 0.35,
     }))
@@ -31,7 +32,7 @@ export default class ForgeMaterials extends MadeOnDemand {
       const metric = uv()
       const flute = metric.x.mul(2 * Math.PI / 0.14).cos().mul(visibleDetail(metric.x.fwidth(), 0.14))
       const bloom = mx_noise_float(metric.mul(vec2(7, 2)))
-      const zinc = mix(color('#8a9a96'), color('#b4c4bd'), bloom.mul(0.22).add(0.54)).mul(flute.mul(0.044).add(1))
+      const zinc = mix(color(hsl.integer(179, 11, 62)), color(hsl.integer(168, 14, 77)), bloom.mul(0.22).add(0.54)).mul(flute.mul(0.044).add(1))
       mat.colorNode = zinc
       mat.normalNode = heightNormal(flute.mul(0.006))
       mat.emissiveNode = zinc.mul(daylight).mul(0.055)
@@ -43,7 +44,7 @@ export default class ForgeMaterials extends MadeOnDemand {
   get frame() {
     return this.once('frame', () => new MeshStandardNodeMaterial({
       name: 'Petrol enamel on iron',
-      color: '#496b64',
+      color: hsl.integer(180, 30, 42),
       metalness: 0.26,
       roughness: 0.3,
       side: DoubleSide,

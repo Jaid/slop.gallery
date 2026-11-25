@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'frozen_fire',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'An opal dreams in patches of fire; every step you take rewrites the spectrum it has kept for a million years.',
   placeholder: {
-    color: '#565a68',
+    color: hsl.integer(273, 13, 39),
     shading: 'glass',
   },
 } as const satisfies KnotData

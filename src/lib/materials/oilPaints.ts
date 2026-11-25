@@ -1,16 +1,17 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {select} from 'three/tsl'
 
 import {rgb} from '#src/orbs/lib/fill.ts'
 
 /** the oil paints of the Paint Orb’s effects, each from a tube of its own, which its brush strokes are laid in and the painters’ frames are daubed with */
 export const oilPaints = {
-  cadmiumYellow: '#f2b705',
-  vermilion: '#d8341e',
-  titaniumWhite: '#f4efe2',
-  ultramarine: '#1f3aa8',
-  viridian: '#0f7a5c',
+  cadmiumYellow: hsl.integer(85, 99.4, 78),
+  vermilion: hsl.integer(31, 94.6, 51),
+  titaniumWhite: hsl.integer(89, 39, 94.5),
+  ultramarine: hsl.integer(267, 91, 31.6),
+  viridian: hsl.integer(168, 96, 44),
 } as const
 export type OilPaint = keyof typeof oilPaints
 
@@ -18,7 +19,7 @@ export type OilPaint = keyof typeof oilPaints
 export const paintOrder = ['cadmiumYellow', 'vermilion', 'titaniumWhite', 'ultramarine', 'viridian'] as const satisfies ReadonlyArray<OilPaint>
 
 /** The color at `index` of `colors`, an index picked on the GPU, like a paint by the number of its tube; indices below the first or past the last take the first or the last. */
-export function swatch(colors: ReadonlyArray<string>, index: Node<'float'>) {
+export function swatch(colors: ReadonlyArray<number>, index: Node<'float'>) {
   let color: Node<'vec3'> = rgb(colors[0])
   for (const [order, value] of colors.entries()) {
     if (order) {

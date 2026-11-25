@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {clamp, float, mx_fractal_noise_float, mx_worley_noise_float, vec3} from 'three/tsl'
 
 import {visibleDetail} from '#src/lib/materials/filters.ts'
@@ -46,7 +47,7 @@ export default class RegolithFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#a0a4a4'
+  override readonly tint = hsl.integer(197, 3, 67)
   override readonly title = 'Lunar regolith'
 
   override createGeometry(width: number, height: number) {

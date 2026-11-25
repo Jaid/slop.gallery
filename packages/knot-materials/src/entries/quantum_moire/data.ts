@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quantum_moire',
   candidateId: 'gpt_sol',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Two almost-identical worlds overlap and reveal a third pattern between them.',
   placeholder: {
-    color: '#6de9ff',
+    color: hsl.integer(211, 100, 85),
     shading: 'smooth',
   },
 } as const satisfies KnotData

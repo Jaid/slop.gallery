@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cherenkov_core',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Submerged fuel assemblies pulse with eerie violet-blue brilliance as particles travel faster than light in heavy water.',
   placeholder: {
-    color: '#194f8e',
+    color: hsl.integer(255, 80, 34),
     shading: 'glass',
   },
 } as const satisfies KnotData

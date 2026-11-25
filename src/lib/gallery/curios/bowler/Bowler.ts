@@ -1,6 +1,7 @@
 import type {Vec3} from '../../types.ts'
 import type {CurioShape} from '../base/Curio.ts'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, positionLocal} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -39,18 +40,18 @@ export default class Bowler extends Curio {
       envMapIntensity: 0.4,
       roughness: 0.94,
       sheen: 0.65,
-      sheenColor: '#686367',
+      sheenColor: hsl.integer(332, 5, 43),
       sheenRoughness: 0.85,
     })
     const nap = mx_noise_float(positionLocal.mul(480)).mul(0.5).add(0.5)
-    felt.colorNode = mix(color('#272528'), color('#464347'), nap)
+    felt.colorNode = mix(color(hsl.integer(315, 6, 16)), color(hsl.integer(318, 5, 29)), nap)
     const ribbon = new MeshPhysicalNodeMaterial({
-      color: '#171619',
+      color: hsl.integer(301, 7, 10),
       envMap: studioEnvironment,
       envMapIntensity: 0.5,
       roughness: 0.32,
       sheen: 0.8,
-      sheenColor: '#58545a',
+      sheenColor: hsl.integer(315, 6, 37),
       sheenRoughness: 0.48,
     })
     return new CurioModel([

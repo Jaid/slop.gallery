@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'gossamer',
   candidateId: 'mimo',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A knot of spider silk strung with dawn; every drop of dew holds a small, inverted morning.',
   displacement: 0.014,
   placeholder: {
-    color: '#d9d5c9',
+    color: hsl.integer(92, 16, 85),
     shading: 'fabric',
   },
 } as const satisfies KnotData

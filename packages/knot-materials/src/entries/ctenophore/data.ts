@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BdUi8mU2Rs29CX7; fixture: knot-material-shaders.
 export default {
   id: 'ctenophore',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Older than jellyfish, it rows through the dark on eight combs of beating cilia. Their light is borrowed and broken into rainbows – its own glow it keeps inside.',
   placeholder: {
-    color: '#0a184d',
+    color: hsl.integer(267, 88, 13.5),
     shading: 'glass',
   },
 } as const satisfies KnotData

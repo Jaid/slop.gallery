@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, If, int, Loop, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, vec3, vec4} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -112,7 +113,7 @@ export default class extends KnotMaterial {
 // Deep smoky potch with a whisper of milky common opal.
     const turbid = mx_noise_float(p.mul(3.4).add(11.3)).smoothstep(0.6, 0.95)
     const grain = mx_noise_float(p.mul(7.5)).mul(0.5).add(0.5)
-    const potch = mix(mix(color('#010103'), color('#07070d'), grain), color('#1a1726'), turbid.mul(0.14))
+    const potch = mix(mix(color(hsl.integer(282, 42, 2)), color(hsl.integer(284, 24, 5)), grain), color(hsl.integer(293, 31, 11)), turbid.mul(0.14))
 // Pinfire: round inclusions that ignite one at a time as the eye moves.
     const facet = mx_noise_vec3(p.mul(58)).normalize()
     const half = view.add(lamps[0]).normalize()
@@ -131,7 +132,7 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = this.normalNode
     this.emissiveNode = surface.fire.mul(flash).mul(near.mul(0.2).add(0.8)).mul(1.9)
       .add(depth.fire.mul(deepFlash).mul(near.mul(0.2).add(0.8)).mul(0.9))
-      .add(color('#ffffff').mul(sparkle).mul(near.mul(0.4).add(0.6)).mul(0.5))
-      .add(color('#1e1440').mul(grazing.pow(3)).mul(0.04))
+      .add(color(hsl.integer(0, 0, 100)).mul(sparkle).mul(near.mul(0.4).add(0.6)).mul(0.5))
+      .add(color(hsl.integer(289, 68, 13)).mul(grazing.pow(3)).mul(0.04))
   }
 }

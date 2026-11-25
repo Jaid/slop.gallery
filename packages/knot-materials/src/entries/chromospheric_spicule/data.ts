@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chromospheric_spicule',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Fine tongues of fire rise from the restless skin of a star.',
   placeholder: {
-    color: '#ff3b14',
+    color: hsl.integer(32.5, 100, 59.6),
     shading: 'smooth',
   },
 } as const satisfies KnotData

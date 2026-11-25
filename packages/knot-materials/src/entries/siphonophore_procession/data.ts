@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4AEfQg7Qgj1dEVQ; original ID: abyssal_siphonophore.
 export default {
   id: 'siphonophore_procession',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A colonial spirit of the deep ocean drifts through eternal black, waving prismatic comb plates and bioluminescent lures.',
   placeholder: {
-    color: '#124456',
+    color: hsl.integer(226, 74, 27),
     shading: 'glass',
   },
 } as const satisfies KnotData

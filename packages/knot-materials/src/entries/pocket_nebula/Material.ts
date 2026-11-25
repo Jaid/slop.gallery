@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mx_fractal_noise_float, mx_noise_float, normalLocal, time, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../candidates/claude_fable/lib/cosinePalette.ts'
@@ -42,7 +43,7 @@ export default class extends KnotMaterial {
 // The galactic core: a dense glow around the axis that only opens up when the eye looks straight in.
     const coreReach = ray.cosRefracted.pow(3)
     const coreNoise = mx_fractal_noise_float(ray.at(0.3).mul(5).add(vec3(0, drift.mul(2), 0)), 3, 2, 0.55).mul(0.5).add(0.5)
-    const core = rgb('#ffd7a8').mul(coreReach).mul(coreNoise.smoothstep(0.35, 0.9)).mul(0.035)
+    const core = rgb(hsl.integer(71, 100, 88.6)).mul(coreReach).mul(coreNoise.smoothstep(0.35, 0.9)).mul(0.035)
 // Black glass shell with a faint violet cast at the limb and the room's lamps in its polish.
     const transmit = fresnel(facing, 0.04).oneMinus()
     this.colorNode = vec3(0.004, 0.003, 0.008)
@@ -50,7 +51,7 @@ export default class extends KnotMaterial {
     this.ior = glassIndex
     this.roughness = 0.04
     const highlight = environmentHighlight(environment, n, 0.03).mul(fresnel(facing, 0.04)).mul(0.7)
-    const limb = rgb('#3a2a70').mul(grazing.pow(4)).mul(0.08)
+    const limb = rgb(hsl.integer(289, 67, 25)).mul(grazing.pow(4)).mul(0.08)
     const interior = stars.mul(near.mul(0.5).add(1.1)).add(nebula.mul(0.045)).add(core)
     this.emissiveNode = interior.mul(transmit).mul(intimate.mul(0.2).add(1)).add(highlight).add(limb)
     this.roughnessNode = float(0.04).add(grazing.mul(0.02))

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: K45USvVjintSE0u; fixture: knot-material-shaders; result: success.
 export default {
   id: 'seraphim_astrolabe',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.017,
   flavorText: 'Celestial brass rings and engine-turned guilloche turn around an abyssal aventurine dial. Step closer and its tourbillon escapements awaken with ruby fire.',
   placeholder: {
-    color: '#4b4140',
+    color: hsl.integer(25, 9, 29),
     shading: 'metal',
   },
 } as const satisfies KnotData

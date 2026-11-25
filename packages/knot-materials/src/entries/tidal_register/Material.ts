@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, tangentGeometry, tangentView, time, uv, vec2} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -30,12 +31,12 @@ export default class extends KnotMaterial {
     const ellipse = vec2(local.x, local.y.div(turn.abs().max(0.035))).length()
     const disc = circle(ellipse, 0.355).mul(recess).mul(turn.abs().smoothstep(0.015, 0.06))
     const front = turn.smoothstep(-0.08, 0.08)
-    const enamel = mix(color('#14766f'), color('#ebc660'), front)
+    const enamel = mix(color(hsl.integer(188, 90, 43)), color(hsl.integer(89, 77, 81)), front)
     const axle = local.y.abs().smoothstep(0.018, footprint.add(0.026)).oneMinus().mul(recess)
-    const metal = color('#aa8552')
-    const housing = mix(mix(color('#101f25'), color('#060f16'), recess), metal, bezel.add(axle).clamp())
+    const metal = color(hsl.integer(74, 50, 58))
+    const housing = mix(mix(color(hsl.integer(225, 36, 13)), color(hsl.integer(241, 40, 7)), recess), metal, bezel.add(axle).clamp())
     const surface = mix(housing, enamel, disc)
-    this.colorNode = mix(color('#566e58'), surface, resolved)
+    this.colorNode = mix(color(hsl.integer(147, 28, 44)), surface, resolved)
     this.metalnessNode = mix(float(0.25), bezel.add(axle).clamp().mul(disc.oneMinus()).mul(0.8), resolved)
     this.roughnessNode = mix(float(0.46), float(0.34).add(recess.mul(0.23)).sub(disc.mul(0.28)), resolved)
     this.clearcoatNode = disc.mul(0.42).mul(resolved)

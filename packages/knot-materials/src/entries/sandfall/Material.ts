@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, uv, vec3} from 'three/tsl'
 
 import {glitter} from '../../candidates/deepseek/lib/glitter.ts'
@@ -58,22 +59,22 @@ export default class extends KnotMaterial {
     const dust = sandGrains(loopDrift(p, 0.035), 0.0055, 45, 0.9)
     const garnet = grain.random
     const grainMask = grain.coverage
-    const pale = mix(color('#9c8253'), color('#c6ae7e'), crest)
-    const shadowed = mix(color('#302616'), color('#5c4a2b'), sloped)
+    const pale = mix(color(hsl.integer(82, 45, 56)), color(hsl.integer(84, 42, 72)), crest)
+    const shadowed = mix(color(hsl.integer(79, 38, 17)), color(hsl.integer(80, 45, 33)), sloped)
     const base = mix(shadowed, pale, sloped.mul(0.55).add(0.3))
-    const speckled = mix(base, mix(shadowed, color('#211c15'), garnet.y.smoothstep(0.72, 0.86)), grainMask.mul(0.35))
-    this.colorNode = mix(speckled, mix(color('#a4463a'), color('#6b5a44'), garnet.z), grainMask.mul(garnet.x.smoothstep(0.94, 0.975)).mul(0.55))
+    const speckled = mix(base, mix(shadowed, color(hsl.integer(76, 19, 13)), garnet.y.smoothstep(0.72, 0.86)), grainMask.mul(0.35))
+    this.colorNode = mix(speckled, mix(color(hsl.integer(29, 68, 44)), color(hsl.integer(74, 27, 40)), garnet.z), grainMask.mul(garnet.x.smoothstep(0.94, 0.975)).mul(0.55))
     this.roughnessNode = mix(float(0.72), float(0.42), grainMask).add(crest.mul(0.08)).sub(intimate.mul(0.06)).clamp(0.2, 0.82)
     this.metalness = 0
     this.normalNode = proceduralNormal(relief, 0.0026).add(grain.lean.mul(0.45)).add(grit.lean.mul(0.2)).normalize()
     this.sheen = 0.12
-    this.sheenColor.set('#e8d3a8')
+    this.sheenColor.set(hsl.integer(84, 51, 85))
     this.sheenRoughness = 0.42
-    this.emissiveNode = color('#ffe9bd').mul(grain.sparkle.mul(crest.mul(0.5).add(0.5)).mul(0.5))
-      .add(color('#fff4d8').mul(grit.sparkle).mul(intimate).mul(0.4))
-      .add(color('#f6e3b8').mul(dust.sparkle).mul(intimate.mul(0.8).add(0.2)).mul(0.45))
-      .add(color('#c8a468').mul(scouring.mul(crest.mul(0.3).add(0.2)).mul(0.25)))
-      .add(color('#6b4e2a').mul(grazing.pow(3)).mul(0.06))
-      .add(color('#8a6a3f').mul(distance.smoothstep(0.9, 3).oneMinus()).mul(0.04))
+    this.emissiveNode = color(hsl.integer(84, 100, 93)).mul(grain.sparkle.mul(crest.mul(0.5).add(0.5)).mul(0.5))
+      .add(color(hsl.integer(89, 100, 96.3)).mul(grit.sparkle).mul(intimate).mul(0.4))
+      .add(color(hsl.integer(87, 68, 91)).mul(dust.sparkle).mul(intimate.mul(0.8).add(0.2)).mul(0.45))
+      .add(color(hsl.integer(80, 53, 70)).mul(scouring.mul(crest.mul(0.3).add(0.2)).mul(0.25)))
+      .add(color(hsl.integer(71, 53, 36)).mul(grazing.pow(3)).mul(0.06))
+      .add(color(hsl.integer(73, 48, 47)).mul(distance.smoothstep(0.9, 3).oneMinus()).mul(0.04))
   }
 }

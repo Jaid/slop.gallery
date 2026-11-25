@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 0CPX47Y7FuE0PTN.
 export default {
   id: 'umbra_choir',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A procession of tiny eclipses rings the stone; only at the edge of sight does their buried corona begin to sing.',
   placeholder: {
-    color: '#323431',
+    color: hsl.integer(135, 5, 22),
     shading: 'stone',
   },
 } as const satisfies KnotData

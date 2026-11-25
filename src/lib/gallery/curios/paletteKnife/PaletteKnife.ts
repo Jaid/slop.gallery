@@ -3,6 +3,7 @@ import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {Color, ExtrudeGeometry, Shape} from 'three/webgpu'
 
 import BrassMaterial from '#src/lib/materials/BrassMaterial.ts'
@@ -19,7 +20,7 @@ import Curio, {CurioModel} from '../base/Curio.ts'
 import latticeGeometry from '../lattice.ts'
 
 type Rgb = readonly [number, number, number]
-const linear = (hex: string): Rgb => {
+const linear = (hex: number): Rgb => {
   const {r, g, b} = new Color(hex)
   return [r, g, b]
 }
@@ -181,8 +182,8 @@ export default class PaletteKnife extends Curio {
         name: 'palette-knife-wood',
         geometry: handleGeometry(),
         material: new GrainedWoodMaterial({
-          heartwood: ['#8a4b26', '#b86d3b'],
-          latewood: '#562912',
+          heartwood: [hsl.integer(49, 67, 40), hsl.integer(53, 67, 55)],
+          latewood: hsl.integer(46, 70, 24),
         }, {roughness: 0.4}),
       },
       {

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_noise_float, mx_worley_noise_vec3, normalViewGeometry, select, time, uv, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -18,12 +19,12 @@ const roseRadius = 0.335
 const ringStep = 0.073
 const sectors = 12
 const palette = (selector: Node<'float'>, ring: Node<'float'>, r: Node<'float'>) => {
-  const ruby = color('#a5102e')
-  const sapphire = color('#0a2a86')
-  const emerald = color('#086044')
-  const amber = color('#d79a2b')
-  const violet = color('#4b1a78')
-  const gold = color('#f7d88a')
+  const ruby = color(hsl.integer(19, 95, 38))
+  const sapphire = color(hsl.integer(264.3, 94, 23.8))
+  const emerald = color(hsl.integer(164, 97, 35))
+  const amber = color(hsl.integer(77, 85, 68))
+  const violet = color(hsl.integer(303, 81, 25))
+  const gold = color(hsl.integer(88, 78, 87))
   const outer = select(selector.lessThan(0.28), sapphire, select(selector.lessThan(0.54), emerald, select(selector.lessThan(0.74), violet, select(selector.lessThan(0.88), ruby, amber))))
   const middle = mix(sapphire, mix(emerald, ruby, ring), selector.mul(0.7))
   const base = mix(outer, middle, ring.smoothstep(0.25, 0.9))
@@ -66,17 +67,17 @@ export default class extends KnotMaterial {
     const ring = radius.div(roseRadius).clamp(0, 1)
     const glassColor = palette(selector, ring, radius)
     const accent = cellRandom.y.smoothstep(0.9, 0.98)
-    const glazed = mix(glassColor, color('#f4cf7c'), accent.mul(0.72))
+    const glazed = mix(glassColor, color(hsl.integer(87, 77, 85)), accent.mul(0.72))
 // A warm interior of rough stone, visible only through the glass.
     const core = new MeshPhysicalNodeMaterial
     core.name = `${knotData.id}_core`
-    core.colorNode = color('#120905')
-    core.emissiveNode = color('#ffb35e').mul(mx_noise_float(p.mul(7).add(vec3(0, 0, time.mul(0.11)))).mul(0.12).add(0.94)).mul(1.55)
+    core.colorNode = color(hsl.integer(50, 37, 6))
+    core.emissiveNode = color(hsl.integer(67, 100, 79.4)).mul(mx_noise_float(p.mul(7).add(vec3(0, 0, time.mul(0.11)))).mul(0.12).add(0.94)).mul(1.55)
     core.roughness = 1
     this.coreMaterial = core
     const grisaille = mx_noise_float(vec3(metric.mul(52), 6.2)).mul(0.5).add(0.5).mul(glass).mul(0.16)
     const bubbles = mx_noise_float(vec3(metric.mul(210), time.mul(0.05).add(9.1))).abs().smoothstep(0.04, 0.2).oneMinus().mul(glass).mul(intimate.mul(0.6).add(0.1))
-    const surfaceColor = mix(color('#17110b'), glazed.mul(grisaille.oneMinus()).mul(0.62), glass)
+    const surfaceColor = mix(color(hsl.integer(67, 25, 8)), glazed.mul(grisaille.oneMinus()).mul(0.62), glass)
     this.colorNode = surfaceColor
     this.metalnessNode = mix(float(0.82), accent.mul(0.78), glass)
     this.roughnessNode = mix(float(0.32), float(0.055).add(bubbles.mul(0.02)), glass)
@@ -97,9 +98,9 @@ export default class extends KnotMaterial {
     const candle = mx_noise_float(vec3(time.mul(0.55), 2.7, 1.4)).mul(0.5).add(0.5)
     const innerGlow = glazed.mul(glass).mul(candle.mul(0.5).add(0.35))
     const heart = ramp(radius, 0.08, 0.012).mul(innerRose)
-    const leadCatch = color('#ffe0a0').mul(lead).mul(grazing.pow(2)).mul(0.18)
+    const leadCatch = color(hsl.integer(85, 100, 90.4)).mul(lead).mul(grazing.pow(2)).mul(0.18)
     const glassSparkle = glints(normalViewGeometry, 1100).mul(glass).mul(accent.mul(0.6).add(0.2)).mul(0.28)
-    this.emissiveNode = innerGlow.add(glazed.mul(heart).mul(0.5)).add(leadCatch).add(color('#ffc26a').mul(bubbles).mul(0.35)).add(color('#fff5df').mul(glassSparkle))
+    this.emissiveNode = innerGlow.add(glazed.mul(heart).mul(0.5)).add(leadCatch).add(color(hsl.integer(75, 100, 83)).mul(bubbles).mul(0.35)).add(color(hsl.integer(86, 100, 96.7)).mul(glassSparkle))
     this.envMapIntensity = 0.85
   }
 }

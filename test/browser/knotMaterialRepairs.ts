@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {positionGeometry, vec3} from 'three/tsl'
 import {AmbientLight, DataUtils, DirectionalLight, HalfFloatType, HemisphereLight, Mesh, MeshBasicNodeMaterial, OrthographicCamera, PerspectiveCamera, PlaneGeometry, RenderTarget, Scene, WebGPURenderer} from 'three/webgpu'
 
@@ -27,9 +28,9 @@ export default async function verifyKnotMaterialRepairs() {
     renderer.setClearColor(0, 0)
     renderer.setRenderTarget(target)
     const scene = new Scene
-    const key = new DirectionalLight('#fff0d7', 2.3)
+    const key = new DirectionalLight(hsl.integer(81, 100, 95.4), 2.3)
     key.position.set(-3, 9, -16)
-    scene.add(new AmbientLight('#ffffff', 0.45), new HemisphereLight('#e1edff', '#80705d', 1.3), key)
+    scene.add(new AmbientLight(hsl.integer(0, 0, 100), 0.45), new HemisphereLight(hsl.integer(258, 100, 93), hsl.integer(72, 20, 48), 1.3), key)
     const camera = new PerspectiveCamera(40, 1, 0.05, 100)
     const read = async (viewCamera: OrthographicCamera | PerspectiveCamera, name: string, minimum: number) => {
       renderer.render(scene, viewCamera)

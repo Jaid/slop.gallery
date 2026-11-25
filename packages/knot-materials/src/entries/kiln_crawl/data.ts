@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kiln_crawl',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A glaze retreats across fired clay, leaving islands of deliberate imperfection.',
   placeholder: {
-    color: '#ff5a1f',
+    color: hsl.integer(37.7, 100, 63),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -24,8 +25,8 @@ export default class extends KnotMaterial {
     const loops = opticalBands(plasma.mul(12)).pow(2)
     const flares = filament(mx_noise_float(deep.mul(15).sub(time.mul(0.3))), 0.03)
     const coreHeat = facing.pow(4).mul(2.5)
-    this.colorNode = color('#000000')
-    this.emissiveNode = mix(color('#ff2200'), color('#ffffaa'), loops.mul(flares.add(0.2))).mul(coreHeat.add(0.8)).add(color('#ffffff').mul(rim.pow(6)).mul(4))
+    this.colorNode = color(hsl.integer(0, 0, 0))
+    this.emissiveNode = mix(color(hsl.integer(30.9, 100, 57.8)), color(hsl.integer(108, 100, 97.7)), loops.mul(flares.add(0.2))).mul(coreHeat.add(0.8)).add(color(hsl.integer(0, 0, 100)).mul(rim.pow(6)).mul(4))
     this.roughnessNode = loops.mul(0.4).add(0.3)
     this.normalNode = liquidNormal(near, 0.3)
   }

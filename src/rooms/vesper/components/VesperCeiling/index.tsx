@@ -1,5 +1,6 @@
 import {RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
@@ -23,19 +24,19 @@ export default function VesperCeiling({size}: {
   const geometry = useDisposable(useMemo(() => new VesperCeilingGeometry(size, curveDetail), [curveDetail, size]))
   // Pale celadon plaster, so the daylight from the lantern carries across the coves down to the green walls.
   const plaster = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
-    baseColor: '#b9c9b6',
+    baseColor: hsl.integer(141, 21, 79),
     heavy: isHeavy,
     roughness: 0.86,
   }), [isHeavy]))
   // Water gilt like the Lobby vault’s, which keeps a little body color instead of mirroring the shaded coves.
   const gilt = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#d3a554',
+    color: hsl.integer(80, 68, 71),
     metalness: 0.55,
     roughness: 0.34,
   }), []))
   // Painted bronze glazing bars, as on the Lobby vault and the Salon’s lantern.
   const bronze = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#5b4a35',
+    color: hsl.integer(72, 31, 33),
     metalness: 0.5,
     roughness: 0.5,
   }), []))
@@ -52,7 +53,7 @@ export default function VesperCeiling({size}: {
     <mesh castShadow geometry={geometry.plaster} material={plaster} name='vesper-ceiling-plaster' receiveShadow />
     <mesh castShadow geometry={geometry.gilt} material={gilt} name='vesper-ceiling-gilding' receiveShadow />
     <mesh castShadow geometry={geometry.bars} material={bronze} name='vesper-lantern-bars' />
-    <mesh castShadow geometry={geometry.bridge} name='vesper-lantern-bridge' receiveShadow><meshStandardNodeMaterial color='#405b51' metalness={0.58} roughness={0.4} /></mesh>
+    <mesh castShadow geometry={geometry.bridge} name='vesper-lantern-bridge' receiveShadow><meshStandardNodeMaterial color={hsl.integer(170, 28, 36)} metalness={0.58} roughness={0.4} /></mesh>
     {/* The glass lets the sun through: only the framing and the bridge cast shadows. */}
     <mesh castShadow={false} geometry={geometry.glass} material={glass} name='vesper-lantern-glass' />
   </group>

@@ -7,6 +7,7 @@ import type {PartyShow} from '#src/party_effects/index.ts'
 import type {Camera, Texture} from 'three/webgpu'
 
 import {clamp} from 'math'
+import hsl from 'okhsl'
 import {Color, Group, Mesh, PointLight, Vector3} from 'three/webgpu'
 
 import {portraitFrame} from '#src/frames/index.ts'
@@ -63,7 +64,7 @@ export default class PortalShow {
   /** whether the portal dealt the view a blow last frame */
   private impacting = false
   private last?: number
-  private readonly light = new PointLight('#ffffff', 0, lightRange, 2)
+  private readonly light = new PointLight(hsl.integer(0, 0, 100), 0, lightRange, 2)
   private readonly paint: PortalPalette = {
     core: new Color,
     rim: new Color,

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ferrofluid_monolith',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A dark monument remembers that it was once a flowing thing.',
   placeholder: {
-    color: '#c850c0',
+    color: hsl.integer(330, 76, 57),
     shading: 'liquid',
   },
 } as const satisfies KnotData

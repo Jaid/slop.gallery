@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'iridescent_scarab',
   candidateId: 'deepseek',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Jewel-bright armor turns a small insect into an entire treasury.',
   placeholder: {
-    color: '#c9a227',
+    color: hsl.integer(90, 86, 68),
     shading: 'smooth',
   },
 } as const satisfies KnotData

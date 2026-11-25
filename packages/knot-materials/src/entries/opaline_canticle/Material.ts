@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_float, time, vec3} from 'three/tsl'
 
 import {spectralRamp} from '../../candidates/deepseek/lib/spectralRamp.ts'
@@ -42,8 +43,8 @@ export default class extends KnotMaterial {
     const zone = mx_noise_float(p.mul(0.72).add(vec3(3.7, 9.1, 1.3))).mul(0.5).add(0.5)
     const blackOpal = zone.smoothstep(0.14, 0.42)
     const potch = zone.smoothstep(0.84, 1)
-    const milk = mix(color('#12100c'), color('#26221b'), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
-    const body = mix(mix(milk, color('#8a7f63'), potch.pow(3)), color('#020105'), blackOpal)
+    const milk = mix(color(hsl.integer(85, 14, 8)), color(hsl.integer(82, 16, 15)), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
+    const body = mix(mix(milk, color(hsl.integer(89, 25, 53)), potch.pow(3)), color(hsl.integer(297, 57, 2)), blackOpal)
 // Fractures inside the stone: dark conchoidal cracks that only resolve up close.
     const fracture = filament(mx_noise_float(p.mul(9.5)).mul(0.6).add(mx_noise_float(p.mul(23)).mul(0.22)), 0.012)
 // The flash of diffracted light leans toward grazing views, where light travels deepest into the stone.
@@ -59,6 +60,6 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(fracture.mul(near).mul(0.7).add(mx_noise_float(p.mul(46)).mul(near).mul(0.25)), 0.0009)
     this.emissiveNode = fire.mul(0.72)
       .add(milk.mul(grazing.pow(2.6)).mul(0.25))
-      .add(color('#c9d6ff').mul(fracture).mul(near).mul(0.05))
+      .add(color(hsl.integer(271, 100, 86)).mul(fracture).mul(near).mul(0.05))
   }
 }

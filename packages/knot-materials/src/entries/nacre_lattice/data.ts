@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nacre_lattice',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Pearl arranges its layers into a delicate cage for wandering light.',
   placeholder: {
-    color: '#d7e3e6',
+    color: hsl.integer(214, 18, 89),
     shading: 'glass',
   },
 } as const satisfies KnotData

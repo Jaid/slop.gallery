@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'stardust_relic',
   candidateId: 'glm',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Fine cosmic dust clings to an object older than its present constellation.',
   placeholder: {
-    color: '#bcd7ff',
+    color: hsl.integer(258, 100, 85),
     shading: 'smooth',
   },
 } as const satisfies KnotData

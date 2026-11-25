@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'polar_opal',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Winter light moves inside the stone as though the horizon were trapped there.',
   placeholder: {
-    color: '#ff7ad9',
+    color: hsl.integer(340, 100, 72.4),
     shading: 'glass',
   },
 } as const satisfies KnotData

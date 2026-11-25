@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'petrified_lightning',
   candidateId: 'qwen_max',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A thunderbolt has spent centuries learning the stillness of a mineral.',
   placeholder: {
-    color: '#aaddff',
+    color: hsl.integer(238, 99, 85),
     shading: 'stone',
   },
 } as const satisfies KnotData

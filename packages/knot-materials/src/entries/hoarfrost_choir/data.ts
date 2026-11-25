@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HU72JSGdKyp7pBO; fixture: knot-material-shaders; result: success.
 export default {
   id: 'hoarfrost_choir',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Sixfold voices grow across a frozen silence. Their breath is almost invisible, until the light catches every branch.',
   placeholder: {
-    color: '#afcfda',
+    color: hsl.integer(221, 30, 81),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
+import hsl from 'okhsl'
+
 import PromptOrb from '../base/PromptOrb.ts'
 import BatsOrbMaterial from './BatsOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
@@ -30,7 +32,7 @@ export default class HalloweenOrb extends PromptOrb {
     'witchy',
   ]
   readonly change = 'add casual Halloween decoration that makes it'
-  readonly color = '#ff7b1c'
+  readonly color = hsl.integer(49, 100, 68)
   override readonly effect = 'bats'
   readonly frame = ['lantern', 'ossuary'] as const
   readonly id = 'halloween'

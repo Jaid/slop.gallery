@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: NKvaWYy8hA4AWQ9.
 export default {
   id: 'abalone_chamber',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A tide left its nacre in thin rooms, each one a different weather.',
   placeholder: {
-    color: '#d9d8ca',
+    color: hsl.integer(103, 18, 86),
     shading: 'smooth',
   },
 } as const satisfies KnotData

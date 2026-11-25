@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, luminance, mix, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {environmentRadiance} from '../../candidates/claude_opus/lib/environmentRadiance.ts'
@@ -99,7 +100,7 @@ export default class extends KnotMaterial {
     const pulseShape = pulsePhase.oneMinus().pow(7).mul(pulsePhase.smoothstep(0, 0.06))
     const pulse = pulseShape.add(0.05)
     const glow = canal.mul(0.8).add(canalHalo.mul(0.35)).mul(pulse.mul(startle.mul(2.2).add(0.6)))
-    const bioluminescence = mix(color('#0a7dff'), color('#19ffc6'), pulseShape.pow(0.6)).mul(glow)
+    const bioluminescence = mix(color(hsl.integer(257.2, 100, 54.7)), color(hsl.integer(169, 100, 87.2)), pulseShape.pow(0.6)).mul(glow)
 // marine snow and plankton drifting at several depths inside the mesoglea
     const drift = vec3(time.mul(0.004), time.mul(-0.006), time.mul(0.003))
     let snow: Node<'float'> = float(0)
@@ -115,7 +116,7 @@ export default class extends KnotMaterial {
     const farRow = farWall.across.abs().smoothstep(0.05, 0.2).oneMinus()
     const farLight = wavelengthColor(farWall.stroke.mul(0.4).add(farWall.row.mul(0.137)).add(view.dot(frame.tangent).mul(1.3)).fract().mul(310).add(395))
       .mul(farWall.stroke.mul(0.8).add(0.2)).mul(farRow).mul(interior.chord.mul(-4).exp())
-    this.colorNode = mix(color('#000003'), color('#02030c'), mesoglea)
+    this.colorNode = mix(color(hsl.integer(264, 100, 1)), color(hsl.integer(272, 58, 3)), mesoglea)
     this.metalness = 0
     this.roughness = 0.1
     this.specularIntensity = 0.5
@@ -124,9 +125,9 @@ export default class extends KnotMaterial {
     this.emissiveNode = combLight.mul(1.6)
       .add(bioluminescence.mul(facing.mul(0.6).add(0.4)))
       .add(farLight.mul(0.3))
-      .add(color('#0b3cff').mul(interior.chord.mul(1.1)).mul(pulse.mul(0.5).add(0.2)).mul(startle.mul(0.6).add(0.4)).mul(0.25))
-      .add(color('#b9c8ff').mul(snow).mul(startle.mul(0.7).add(0.3)).mul(0.5))
-      .add(mix(color('#150a52'), color('#127f9c'), mesoglea).mul(edge).mul(0.45))
-      .add(color('#0b1a4a').mul(mesoglea).mul(0.06))
+      .add(color(hsl.integer(264.5, 100, 42)).mul(interior.chord.mul(1.1)).mul(pulse.mul(0.5).add(0.2)).mul(startle.mul(0.6).add(0.4)).mul(0.25))
+      .add(color(hsl.integer(273, 100, 81)).mul(snow).mul(startle.mul(0.7).add(0.3)).mul(0.5))
+      .add(mix(color(hsl.integer(278, 93, 12.5)), color(hsl.integer(222, 91, 48)), mesoglea).mul(edge).mul(0.45))
+      .add(color(hsl.integer(266, 85, 14)).mul(mesoglea).mul(0.06))
   }
 }

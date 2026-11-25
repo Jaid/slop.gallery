@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_hush',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Wine-dark pile that swallows the light head-on and burns at the edges when you pass. The damask answers only to the grazing eye.',
   placeholder: {
-    color: '#581326',
+    color: hsl.integer(9, 76, 21),
     shading: 'fabric',
   },
 } as const satisfies KnotData

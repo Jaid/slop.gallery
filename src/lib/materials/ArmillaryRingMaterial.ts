@@ -1,4 +1,5 @@
 import StudioEnvironment from 'knot-materials/StudioEnvironment.ts'
+import hsl from 'okhsl'
 import {atan, color, exp, float, max, mix, mx_noise_float, positionGeometry, uniform, vec2} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -41,7 +42,7 @@ export default class ArmillaryRingMaterial extends MeshStandardNodeMaterial {
     const shown = inlay.mul(visibleDetail(across.fwidth(), 0.0012).mul(0.7).add(0.3))
     const patina = mx_noise_float(p.mul(11)).mul(0.5).add(0.5)
     const glow = tail.add(0.9)
-    this.colorNode = mix(mix(color('#4a3a28'), color('#2c2b26'), patina), color(hue).mul(0.3), shown)
+    this.colorNode = mix(mix(color(hsl.integer(70, 33, 26)), color(hsl.integer(98, 9, 19)), patina), color(hue).mul(0.3), shown)
     this.roughnessNode = float(0.34).add(patina.mul(0.16)).add(shown.mul(0.3))
     this.emissiveNode = color(hue).mul(shown.mul(glow).mul(3.2).add(broad.oneMinus().mul(glow).mul(1.1)))
     this.normalNode = heightNormal(inlay.mul(-0.00025))

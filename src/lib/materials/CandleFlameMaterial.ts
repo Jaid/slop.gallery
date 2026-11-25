@@ -1,5 +1,6 @@
 import type {BufferGeometry} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {attribute, color, float, mix, mx_noise_float, normalView, positionGeometry, positionViewDirection, smoothstep, time, vec3} from 'three/tsl'
 import {AdditiveBlending, Float32BufferAttribute, MeshBasicNodeMaterial, SphereGeometry} from 'three/webgpu'
 
@@ -59,9 +60,9 @@ export default class CandleFlameMaterial extends MeshBasicNodeMaterial {
     const facing = normalView.dot(positionViewDirection.negate()).abs().clamp()
     const core = smoothstep(0.55, 0.15, up).mul(facing.pow(2))
     const blue = smoothstep(0.18, 0.02, up)
-    let tint = mix(color('#ff7a1e'), color('#ffc65a'), facing.smoothstep(0.1, 0.7))
-    tint = mix(tint, color('#fff3d6'), core)
-    tint = mix(tint, color('#5a7dff').mul(0.35), blue.mul(0.8))
+    let tint = mix(color(hsl.integer(48.5, 100, 67.9)), color(hsl.integer(81, 100, 83.5)), facing.smoothstep(0.1, 0.7))
+    tint = mix(tint, color(hsl.integer(88, 100, 96)), core)
+    tint = mix(tint, color(hsl.integer(269, 100, 57)).mul(0.35), blue.mul(0.8))
     const fade = facing.smoothstep(0, 0.45).mul(smoothstep(1, 0.75, up))
     this.colorNode = tint.mul(fade).mul(float(intensity).mul(flicker.mul(1.5).add(1)))
     this.opacityNode = float(1)

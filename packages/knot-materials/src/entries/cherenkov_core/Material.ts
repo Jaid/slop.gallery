@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {
   color,
   mix,
@@ -36,18 +37,18 @@ export default class extends KnotMaterial {
     const fuelPin = pinRadius.smoothstep(0.32, 0.26) // Cylindrical fuel rod pins
     const gridSpacer = fuelLocal.abs().x.max(fuelLocal.abs().y).smoothstep(0.44, 0.48) // Inconel grid spacer
     // Zircaloy-4 cladding metallic luster
-    const zircaloyBase = color('#6b7c82')
-    const gridSpacerColor = color('#485559')
+    const zircaloyBase = color(hsl.integer(221, 13, 51))
+    const gridSpacerColor = color(hsl.integer(218, 12, 35))
     const reactorStructure = mix(zircaloyBase, gridSpacerColor, gridSpacer)
     // Water channel between fuel pins (flow channel)
-    const waterPoolBase = color('#040b17')
+    const waterPoolBase = color(hsl.integer(257, 53, 6))
     const submergedInterior = mix(waterPoolBase, reactorStructure, fuelPin.add(gridSpacer))
     // 3. Frank-Tamm Cherenkov Radiation Physics:
     // Emission intensity scales as 1/lambda^3, peaking intensely in the near-UV and violet-blue (380-450 nm)
-    const uvViolet = color('#3e00ff')
-    const electricCobalt = color('#0048ff')
-    const cherenkovCyan = color('#00c8ff')
-    const promptCriticalWhite = color('#e6f5ff')
+    const uvViolet = color(hsl.integer(273.3, 100, 39))
+    const electricCobalt = color(hsl.integer(263.5, 100, 43.6))
+    const cherenkovCyan = color(hsl.integer(226, 100, 74))
+    const promptCriticalWhite = color(hsl.integer(237, 100, 95.6))
     // Cherenkov glow radiates primarily from the fuel pin surfaces into the coolant
     const pinBoundary = pinRadius.sub(0.28).abs().smoothstep(0.12, 0.01)
     // Prompt-critical shockwaves propagating along the reactor core
@@ -79,7 +80,7 @@ export default class extends KnotMaterial {
     this.thickness = 0.52
     this.ior = 1.333 // Pure heavy water
     this.dispersion = 0.1 // Chromatic aberration through water volume
-    this.attenuationColor.set('#0d3b66') // Selective red-absorption of pure heavy water
+    this.attenuationColor.set(hsl.integer(251, 80, 25)) // Selective red-absorption of pure heavy water
     this.attenuationDistance = 0.88
     this.roughness = 0.035
     // Glassy liquid surface clearcoat
@@ -89,7 +90,7 @@ export default class extends KnotMaterial {
     this.emissiveNode = cherenkovEmission
       .mul(3.6)
       .add(promptCriticalWhite.mul(shockwave.pow(2)).mul(2.2))
-      .add(color('#ffffff').mul(bubbleGlint).mul(2))
+      .add(color(hsl.integer(0, 0, 100)).mul(bubbleGlint).mul(2))
       .add(uvViolet.mul(grazing.pow(2.5)).mul(0.35))
       .add(cherenkovCyan.mul(fuelPin).mul(intimate).mul(1.2))
   }

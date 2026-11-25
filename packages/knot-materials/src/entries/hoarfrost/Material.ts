@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalLocal, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -55,17 +56,17 @@ export default class extends KnotMaterial {
     const frostHalo = fern.mul(0.52).add(web.mul(webResolved).mul(0.13)).clamp()
 // The lacquer is nearly black, with a cold blue bloom where the ice has begun to cloud it.
     const mottle = mx_fractal_noise_float(p.mul(2.6).add(19.4), 3, 2.02, 0.5).mul(0.5).add(0.5)
-    const lacquer = mix(color('#050b16'), mix(color('#0c1d36'), color('#1a1230'), mottle.mul(0.8)), mottle.mul(0.7).add(facing.mul(0.3)))
-    const frostColor = mix(mix(color('#8fc4ee'), color('#b8f0e0'), mottle.mul(0.5)), color('#ecf8ff'), frost.mul(0.55).add(mottle.mul(0.2)))
-    const frostShade = mix(color('#3c678c'), frostColor, facing.mul(0.4).add(0.55))
-    const ice = mix(frostShade, color('#ffffff'), frost.pow(2).mul(0.8))
+    const lacquer = mix(color(hsl.integer(259, 46, 6)), mix(color(hsl.integer(258, 61, 13)), color(hsl.integer(293, 56, 11)), mottle.mul(0.8)), mottle.mul(0.7).add(facing.mul(0.3)))
+    const frostColor = mix(mix(color(hsl.integer(242, 65, 77)), color(hsl.integer(175, 59, 90)), mottle.mul(0.5)), color(hsl.integer(233, 100, 97)), frost.mul(0.55).add(mottle.mul(0.2)))
+    const frostShade = mix(color(hsl.integer(246, 50, 42)), frostColor, facing.mul(0.4).add(0.55))
+    const ice = mix(frostShade, color(hsl.integer(0, 0, 100)), frost.pow(2).mul(0.8))
     this.colorNode = mix(lacquer, ice, frost.add(frostHalo.mul(0.34)).clamp().mul(near.mul(0.12).add(0.9)))
     this.metalness = 0
     this.roughnessNode = mix(float(0.055), float(0.28).sub(frost.mul(0.12)), frost)
     this.clearcoatNode = float(1).sub(frost.mul(0.32))
     this.clearcoatRoughnessNode = mix(float(0.025), float(0.16), frost)
     this.sheen = 0.5
-    this.sheenColor.set('#bfe4ff')
+    this.sheenColor.set(hsl.integer(240, 100, 88.5))
     this.sheenRoughness = 0.24
     this.iridescenceNode = frost.mul(0.22)
     this.iridescenceIOR = 1.31
@@ -74,11 +75,11 @@ export default class extends KnotMaterial {
     this.aoNode = float(1).sub(frost.mul(0.12))
     const moonGlint = environmentHighlight(environment, n, 0.03, {threshold: 1.4}).mul(frost).mul(near.mul(0.6).add(0.4))
     const sparkle = glints(baseNormal, 180).mul(frost.pow(1.5)).mul(needleResolved).mul(intimate.mul(0.9).add(0.1)).mul(1.2)
-    const sparkleTint = mix(color('#dff4ff'), color('#a9c8ff'), mottle)
+    const sparkleTint = mix(color(hsl.integer(230, 100, 95)), color(hsl.integer(262, 100, 80)), mottle)
     const moonSpot = view.negate().reflect(n).dot(vec3(0.35, 0.72, -0.6).normalize()).clamp().pow(760)
-    const moonFlare = color('#e8f6ff').mul(moonSpot).mul(frost.mul(0.7).add(frostHalo.mul(0.3))).mul(3.2)
+    const moonFlare = color(hsl.integer(236, 100, 96)).mul(moonSpot).mul(frost.mul(0.7).add(frostHalo.mul(0.3))).mul(3.2)
     const breathing = frost.mul(0.026).mul(time.mul(0.15).sin().mul(0.4).add(0.8))
-    this.emissiveNode = moonGlint.mul(1.1).add(sparkleTint.mul(sparkle).mul(1.5)).add(moonFlare).add(color('#7fb6e8').mul(frostHalo).mul(near.oneMinus().mul(0.12).add(0.28))).add(color('#bfe7ff').mul(frost.pow(0.7)).mul(0.07)).add(color('#c8e6ff').mul(grazing.pow(2.2)).mul(frost).mul(0.15)).add(color('#eaf7ff').mul(frost).mul(0.05)).add(breathing)
+    this.emissiveNode = moonGlint.mul(1.1).add(sparkleTint.mul(sparkle).mul(1.5)).add(moonFlare).add(color(hsl.integer(247, 64, 72)).mul(frostHalo).mul(near.oneMinus().mul(0.12).add(0.28))).add(color(hsl.integer(235, 100, 89)).mul(frost.pow(0.7)).mul(0.07)).add(color(hsl.integer(243, 100, 89.6)).mul(grazing.pow(2.2)).mul(frost).mul(0.15)).add(color(hsl.integer(234, 100, 96.4)).mul(frost).mul(0.05)).add(breathing)
     this.envNode = proceduralEnvironment(panelSky({
       zenith: [0.003, 0.01, 0.03],
       horizon: [0.02, 0.05, 0.1],

@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_fractal_noise_float, mx_noise_float, positionGeometry, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -34,8 +35,8 @@ export default class SoapstoneMaterial extends MeshStandardNodeMaterial {
     const hairlines = line(mx_noise_float(position.mul(vec3(3.1, 5, 4.2)).add(31)), 0.006).mul(detail).mul(0.55)
     // rubbed smooth in broad patches by use
     const rubbed = unit(mx_noise_float(position.mul(2.2).add(53))).smoothstep(0.55, 0.85)
-    const stone = mix(color('#232927'), color('#3b433f'), cloud).mul(mottle.sub(0.5).mul(0.1).add(1))
-    const veined = mix(stone, color('#7d8a83'), veins.mul(0.5).add(hairlines.mul(0.35)))
+    const stone = mix(color(hsl.integer(174, 10, 17)), color(hsl.integer(164, 9, 28)), cloud).mul(mottle.sub(0.5).mul(0.1).add(1))
+    const veined = mix(stone, color(hsl.integer(162, 10, 56)), veins.mul(0.5).add(hairlines.mul(0.35)))
     this.colorNode = mix(veined, veined.mul(0.86), rubbed)
     this.roughnessNode = float(0.62).add(veins.mul(0.1)).sub(rubbed.mul(0.2)).add(mottle.sub(0.5).mul(0.06))
     // the faint tooth of the hone

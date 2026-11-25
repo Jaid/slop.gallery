@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'caged_star',
   candidateId: 'glm',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Its vessel is small; the fire inside has never noticed.',
   placeholder: {
-    color: '#ffb347',
+    color: hsl.integer(72, 100, 79.1),
     shading: 'smooth',
   },
 } as const satisfies KnotData

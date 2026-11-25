@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalLocal, positionGeometry, tangentLocal, time, uv, vec3} from 'three/tsl'
 
 import {wavelengthColor} from '../../candidates/space_bunny/lib/wavelength.ts'
@@ -77,7 +78,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.05
     this.ior = 1.34
     this.sheenNode = float(0.45).add(grazing.mul(0.45))
-    this.sheenColor.set('#bfe6ff')
+    this.sheenColor.set(hsl.integer(236, 100, 89))
     this.sheenRoughness = 0.25
     this.specularIntensityNode = float(0.9)
     const bump = proceduralNormal(plate.mul(0.0006).add(jelly.mul(0.0005)), 1)
@@ -87,9 +88,9 @@ export default class extends KnotMaterial {
     this.positionNode = positionGeometry.add(normalLocal.mul(swell.mul(0.0012).add(rib.mul(0.0005))))
     const sparkle = glints(bump, 120).mul(plate).mul(near.mul(0.7).add(0.3))
     this.emissiveNode = spectrum.mul(shimmer.mul(0.85))
-      .add(color('#ffffff').mul(shimmer.pow(2.2).mul(0.45)))
-      .add(color('#7fe0ff').mul(wave.mul(0.12)))
-      .add(color('#ffffff').mul(sparkle.mul(0.2)))
+      .add(color(hsl.integer(0, 0, 100)).mul(shimmer.pow(2.2).mul(0.45)))
+      .add(color(hsl.integer(221, 100, 83.5)).mul(wave.mul(0.12)))
+      .add(color(hsl.integer(0, 0, 100)).mul(sparkle.mul(0.2)))
       .add(vec3(0.16, 0.4, 0.52).mul(grazing.pow(2.2).mul(0.2)))
       .add(vec3(0.45, 0.7, 0.8).mul(rim.mul(0.08).mul(nearRow.lean.mul(0.5).add(0.5))))
   }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, time, vec2, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -47,14 +48,14 @@ export default class extends KnotMaterial {
     const crackB = filteredRibbon(p.sub(view.mul(0.3)).dot(vec3(-0.4, 0.5, 0.8).normalize()).sub(-0.2), 0.01)
     const crack = crackA.add(crackB.mul(0.8)).clamp()
     const crackFlare = crack.mul(grazing.pow(2)).mul(1.4)
-    const body = mix(color('#3a1403'), color('#e8912a'), facing.mul(0.5).add(cloud.mul(0.3)).add(0.08).clamp())
-    const resin = mix(body, color('#ffc85a'), cloud.smoothstep(0.6, 0.95).mul(0.45))
+    const body = mix(color(hsl.integer(43, 86, 14)), color(hsl.integer(65, 90, 69)), facing.mul(0.5).add(cloud.mul(0.3)).add(0.08).clamp())
+    const resin = mix(body, color(hsl.integer(82.2, 100, 84)), cloud.smoothstep(0.6, 0.95).mul(0.45))
     const shade = inclusion.mul(0.95).add(midge.mul(0.85)).add(bubble.core.mul(0.3)).clamp()
     const sunBehind = normalLocal.dot(sunDir).negate().smoothstep(-0.2, 0.5)
     const through = sunBehind.mul(view.dot(sunDir).negate().smoothstep(0, 0.85))
     const fire = through.mul(1.9).add(0.3).mul(cloud.mul(0.5).add(0.6)).mul(intimate.mul(0.35).add(0.75))
     const relief = cloud.mul(0.2).sub(crack.mul(0.4)).sub(bubble.cap.mul(bubble.mask).mul(0.3)).add(dust.mul(0.25)).mul(intimate.add(near).clamp())
-    this.colorNode = mix(resin, mix(color('#3a1606'), color('#1c0c02'), midge), shade)
+    this.colorNode = mix(resin, mix(color(hsl.integer(43, 77, 15)), color(hsl.integer(57, 73, 8)), midge), shade)
     this.metalness = 0
     this.roughnessNode = float(0.1).add(bubbleRing.mul(0.08)).add(crack.mul(0.12))
     this.clearcoat = 1
@@ -62,10 +63,10 @@ export default class extends KnotMaterial {
     this.ior = 1.55
     this.aoNode = float(1).sub(shade.mul(0.35))
     this.normalNode = proceduralNormal(relief, 0.0018)
-    this.emissiveNode = color('#ff9a20').mul(fire).mul(shade.oneMinus().mul(0.85).add(0.15))
-      .add(color('#ffe9b0').mul(crackFlare))
-      .add(color('#ffb050').mul(rim.pow(2.5)).mul(0.85))
-      .add(color('#fff0c0').mul(bubbleRing).mul(near).mul(0.5))
-      .add(color('#ffd9a0').mul(glints(normalViewGeometry, 120)).mul(bubbleRing).mul(0.8))
+    this.emissiveNode = color(hsl.integer(64, 100, 74)).mul(fire).mul(shade.oneMinus().mul(0.85).add(0.15))
+      .add(color(hsl.integer(90, 100, 93)).mul(crackFlare))
+      .add(color(hsl.integer(68, 100, 78.6)).mul(rim.pow(2.5)).mul(0.85))
+      .add(color(hsl.integer(92, 100, 94.7)).mul(bubbleRing).mul(near).mul(0.5))
+      .add(color(hsl.integer(78, 100, 89)).mul(glints(normalViewGeometry, 120)).mul(bubbleRing).mul(0.8))
   }
 }

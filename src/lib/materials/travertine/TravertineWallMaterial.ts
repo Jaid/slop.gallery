@@ -1,6 +1,7 @@
 import type {TravertineStyle} from './travertine.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, float, hash, max, mix, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -10,11 +11,11 @@ import {travertine} from './travertine.ts'
 /** Honed, filled cross-cut travertine: lighter and calmer than the floor, with fewer and shallower pores. */
 export const lobbyWallTravertine: TravertineStyle = {
   palette: {
-    base: '#ddd0b8',
-    light: '#ebe3d3',
-    vein: '#cdb38a',
-    gray: '#c2bbad',
-    pore: '#8c7a5e',
+    base: hsl.integer(83, 30, 84),
+    light: hsl.integer(85, 31, 90.4),
+    vein: hsl.integer(79, 39, 74),
+    gray: hsl.integer(85, 14, 76),
+    pore: hsl.integer(79, 27, 52),
   },
   banding: 0.45,
   pores: 0.55,

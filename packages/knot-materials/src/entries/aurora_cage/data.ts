@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aurora_cage',
   candidateId: 'deepseek',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Northern light presses softly against the bars of its gilded prison.',
   placeholder: {
-    color: '#00ff88',
+    color: hsl.integer(152.6, 100, 85.6),
     shading: 'smooth',
   },
 } as const satisfies KnotData

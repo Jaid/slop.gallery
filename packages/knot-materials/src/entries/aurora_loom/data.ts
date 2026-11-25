@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 0gaFob3tIS0Bvlc; fixture: knot-material-shaders; result: success.
 export default {
   id: 'aurora_loom',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Night is woven here, not painted. Green curtains breathe along the threads while small stars keep time in the dark between them.',
   placeholder: {
-    color: '#47776b',
+    color: hsl.integer(176, 42, 46),
     shading: 'fabric',
   },
 } as const satisfies KnotData

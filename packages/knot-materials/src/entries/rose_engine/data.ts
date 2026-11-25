@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2tmj6W7XIniDLsB; fixture: knot-material-shaders; result: success.
 export default {
   id: 'rose_engine',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A rose cut by a machine that learned to dream. Brass petals turn over wine-dark enamel, their fine engraved vows visible only to a patient eye.',
   placeholder: {
-    color: '#6d1026',
+    color: hsl.integer(14, 86, 25),
     shading: 'metal',
   },
 } as const satisfies KnotData

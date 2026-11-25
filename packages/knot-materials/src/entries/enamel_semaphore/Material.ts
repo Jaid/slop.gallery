@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, positionGeometry, uv, vec2} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -19,10 +20,10 @@ export default class extends KnotMaterial {
     const diagonal = local.x.add(local.y).smoothstep(footprint.negate(), footprint)
     const cross = local.x.abs().min(local.y.abs()).sub(0.11).smoothstep(footprint.negate(), footprint).oneMinus()
     const chevron = local.x.abs().sub(local.y.abs()).smoothstep(footprint.negate(), footprint)
-    const navy = color('#122e46')
-    const ivory = color('#f5edd6')
-    const red = color('#ed4e30')
-    const saffron = color('#f5bc32')
+    const navy = color(hsl.integer(247, 61, 19))
+    const ivory = color(hsl.integer(91, 54, 94))
+    const red = color(hsl.integer(33, 92, 58))
+    const saffron = color(hsl.integer(84, 93, 80))
     const first = mix(mix(ivory, red, row), mix(red, ivory, row), diagonal)
     const second = mix(ivory, navy, cross)
     const third = mix(navy, saffron, chevron)
@@ -33,7 +34,7 @@ export default class extends KnotMaterial {
     const insetShadow = borderDistance.smoothstep(0.028, 0.075)
     const peel = mx_noise_float(positionGeometry.mul(95))
     const peelVisibility = positionGeometry.mul(95).fwidth().length().smoothstep(0.4, 2).oneMinus()
-    this.colorNode = mix(color('#c2b8a1'), flag.mul(insetShadow.mul(0.16).add(0.84)), enamel)
+    this.colorNode = mix(color(hsl.integer(87, 22, 75)), flag.mul(insetShadow.mul(0.16).add(0.84)), enamel)
     this.metalnessNode = enamel.oneMinus().mul(0.92)
     this.roughnessNode = mix(float(0.26), float(0.17), enamel).add(peel.mul(peelVisibility).mul(0.018))
     this.clearcoatNode = enamel.mul(0.92)

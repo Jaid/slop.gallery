@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, normalLocal, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -39,22 +40,22 @@ export default class extends KnotMaterial {
     const inner = float(0.43).sub(fw.mul(0.7)).min(0.47)
     const grout = edge.smoothstep(inner, inner.add(fw.add(0.02)))
     const choice = rnd.x.mul(3.999)
-    const tile = choice.lessThan(1).select(color('#e6d2ae'), choice.lessThan(2).select(color('#b56d45'), choice.lessThan(3).select(color('#5e9e98'), color('#c46b62'))))
+    const tile = choice.lessThan(1).select(color(hsl.integer(82, 45, 85)), choice.lessThan(2).select(color(hsl.integer(49, 60, 54)), choice.lessThan(3).select(color(hsl.integer(188, 45, 60)), color(hsl.integer(27, 55, 57)))))
     const tileColor = mix(tile.mul(0.72), tile, rnd.y.mul(0.35).add(0.62))
     const wet = mix(tileColor.mul(0.62), tileColor, facing.pow(0.5))
     const shaded = wet.mul(caustic.mul(0.85).add(0.28))
     const axis = rnd.sub(0.5)
     const align = axis.dot(view).div(axis.length().max(0.2)).smoothstep(0.28, 0.82)
     const glass = rnd.z.smoothstep(0.74, 0.86).mul(align).mul(grout.oneMinus())
-    const glassColor = mix(color('#7fd0ff'), color('#ffd18a'), rnd.y)
-    const fresco = mix(shaded, color('#14110e'), grout.mul(0.92))
+    const glassColor = mix(color(hsl.integer(236, 99, 79)), color(hsl.integer(78, 100, 86.7)), rnd.y)
+    const fresco = mix(shaded, color(hsl.integer(67, 12, 8)), grout.mul(0.92))
     this.colorNode = mix(fresco, glassColor, glass.mul(0.8)).mul(grazing.pow(1.25).mul(0.32).oneMinus())
     this.metalnessNode = glass.mul(0.25)
     this.roughnessNode = float(0.62).sub(glass.mul(0.36)).sub(caustic.mul(0.08)).clamp(0.12, 0.8)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.04
     this.ior = 1.38
-    const causticColor = mix(color('#7ee0d6'), color('#ffe7b0'), caustic.clamp(0, 1))
+    const causticColor = mix(color(hsl.integer(187, 65, 82)), color(hsl.integer(87, 100, 92.3)), caustic.clamp(0, 1))
     this.emissiveNode = causticColor.mul(caustic.pow(1.15)).mul(grout.oneMinus().mul(0.78).add(0.22)).mul(facing.pow(0.45)).mul(1.25)
       .add(glassColor.mul(glass).mul(0.85))
     const raised = edge.smoothstep(0.14, 0.46).oneMinus()

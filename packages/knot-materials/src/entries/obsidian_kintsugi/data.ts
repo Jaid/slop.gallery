@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'obsidian_kintsugi',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Fractured volcanic glass finds peace where molten seams of sacred gold mend every forgotten wound.',
   placeholder: {
-    color: '#181211',
+    color: hsl.integer(29, 14, 9),
     shading: 'glass',
   },
 } as const satisfies KnotData

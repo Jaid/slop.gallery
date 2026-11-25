@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nebula_glass',
   candidateId: 'qwen_max',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A cloud of distant stars drifts through a vessel of clear night.',
   placeholder: {
-    color: '#ff00aa',
+    color: hsl.integer(350, 100, 60.4),
     shading: 'glass',
   },
 } as const satisfies KnotData

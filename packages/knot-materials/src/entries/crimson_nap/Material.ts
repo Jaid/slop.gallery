@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_fractal_noise_float, mx_noise_float, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {lampFlash} from '../../candidates/space_bunny/lib/lampFlash.ts'
@@ -39,9 +40,9 @@ export default class extends KnotMaterial {
     const weave = uv().mul(vec2(38, 6))
     const motif = damaskMotif(weave)
     const lay = crush.mul(0.5).add(0.5)
-    const crimson = mix(color('#1a0206'), color('#6f0b17'), lay)
-    const weaveTone = mix(crimson, color('#a0202e'), motif.mul(0.55))
-    const deep = mix(weaveTone, color('#2b0409'), motif.oneMinus().mul(0.45))
+    const crimson = mix(color(hsl.integer(11, 78, 5.7)), color(hsl.integer(23, 94, 25)), lay)
+    const weaveTone = mix(crimson, color(hsl.integer(21, 88, 38)), motif.mul(0.55))
+    const deep = mix(weaveTone, color(hsl.integer(17, 83, 9)), motif.oneMinus().mul(0.45))
     this.colorNode = deep.mul(fibre.mul(near).mul(0.06).add(0.94))
     this.metalness = 0
     this.roughnessNode = float(0.88).add(lay.mul(0.06)).sub(motif.mul(0.12)).clamp(0.4, 1)
@@ -50,12 +51,12 @@ export default class extends KnotMaterial {
     this.anisotropyNode = vec2(napDir.dot(tangent), napDir.dot(bitangent)).mul(0.62)
     this.sheen = 1
     this.sheenNode = float(0.75).add(motif.mul(1.15)).add(grazing.mul(0.7))
-    this.sheenColor.set('#ffcdbb')
+    this.sheenColor.set(hsl.integer(41, 100, 87))
     this.sheenRoughnessNode = float(0.42).sub(motif.mul(0.22)).add(lay.mul(0.08)).clamp(0.1, 0.7)
     this.normalNode = proceduralNormal(fibre.mul(near).mul(0.6).add(motif.mul(0.45)).add(crush.mul(0.25)), 0.0016)
 // Loose fibres stand off the pile and catch the lamps before the cloth does.
     const stray = lampFlash(transformNormalToView(napDir).normalize(), 140)
-    this.emissiveNode = color('#ff8f74').mul(grazing.pow(5).mul(intimate.mul(0.5).add(0.5)).mul(0.05))
-      .add(color('#ffd7c4').mul(stray).mul(fibre.mul(near)).mul(motif.oneMinus()).mul(0.6))
+    this.emissiveNode = color(hsl.integer(35, 100, 72.7)).mul(grazing.pow(5).mul(intimate.mul(0.5).add(0.5)).mul(0.05))
+      .add(color(hsl.integer(46, 100, 89)).mul(stray).mul(fibre.mul(near)).mul(motif.oneMinus()).mul(0.6))
   }
 }

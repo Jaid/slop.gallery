@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4cRctoZrXREvmK4; fixture: knot-material-shaders; result: success.
 export default {
   id: 'afterimage',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Three impossible paintings occupy the same skin. Vermilion rivers, violet targets and a cream-colored labyrinth trade places as your shadow passes.',
   placeholder: {
-    color: '#fb4b28',
+    color: hsl.integer(33, 98, 60.6),
     shading: 'smooth',
   },
 } as const satisfies KnotData

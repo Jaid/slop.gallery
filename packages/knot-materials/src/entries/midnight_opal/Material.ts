@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, time} from 'three/tsl'
 
 import {bell} from '../../candidates/glm_flash/lib/bell.ts'
@@ -25,7 +26,7 @@ export default class extends KnotMaterial {
     const hue = cell.x.mul(6.283).add(facing.mul(2.6)).add(time.mul(0.06))
     const patchColor = spectralColor(hue).mul(0.7).add(0.3)
     const potch = mx_noise_float(p.mul(3.2)).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#04050b'), color('#0e1a28'), potch.mul(0.65).add(mx_noise_float(p.mul(12)).mul(0.2).add(0.2)).clamp())
+    this.colorNode = mix(color(hsl.integer(274, 32, 4)), color(hsl.integer(253, 42, 11)), potch.mul(0.65).add(mx_noise_float(p.mul(12)).mul(0.2).add(0.2)).clamp())
     this.metalness = 0
     this.roughness = 0.06
     this.clearcoat = 1
@@ -43,6 +44,6 @@ export default class extends KnotMaterial {
     const sparkTwinkle = time.mul(sr.y.mul(5).add(2)).add(sr.x.mul(25)).sin().mul(0.4).add(0.6)
     this.emissiveNode = patchColor.mul(mask).mul(gate).mul(near.mul(0.65).add(0.5)).mul(2.4)
       .add(spectralColor(cell.x.mul(6.283)).mul(mask).mul(near.oneMinus()).mul(0.3))
-      .add(color('#ffffff').mul(spark).mul(sparkTwinkle).mul(facing.mul(facing)).mul(intimate).mul(1.2))
+      .add(color(hsl.integer(0, 0, 100)).mul(spark).mul(sparkTwinkle).mul(facing.mul(facing)).mul(intimate).mul(1.2))
   }
 }

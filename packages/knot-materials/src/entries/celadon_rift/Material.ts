@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_fractal_noise_vec3, negateOnBackSide, normalLocal, positionGeometry, transformNormalToView, vec3} from 'three/tsl'
 
 import {voronoi3} from '../../candidates/deepseek/lib/voronoi.ts'
@@ -44,14 +45,14 @@ export default class extends KnotMaterial {
 // ------------------------------------------------------------------
 // Celadon glaze: pale, wet-looking, crazed with a fine crackle net.
 // ------------------------------------------------------------------
-    const glazeBase = mix(color('#1e332e'), color('#4f7a70'), mx_fractal_noise_float(p.mul(3.4), 3, 2.05, 0.5).mul(0.5).add(0.5))
+    const glazeBase = mix(color(hsl.integer(178, 34, 20)), color(hsl.integer(178, 36, 47)), mx_fractal_noise_float(p.mul(3.4), 3, 2.05, 0.5).mul(0.5).add(0.5))
     const glaze = glazeBase.mul(crazed.mul(-0.3).add(1))
 // ------------------------------------------------------------------
 // Gold: hammered leaf pressed into the crack, pooling in the deep runs.
 // ------------------------------------------------------------------
     const hammer = mx_fractal_noise_float(p.mul(44), 2, 2.1, 0.5).mul(0.5).add(0.5)
-    const gold = mix(color('#c98a1e'), color('#ffe9a0'), hammer.mul(0.7).add(0.3))
-    const goldTint = mix(gold, color('#e8b23c'), identity2.y.mul(0.4))
+    const gold = mix(color(hsl.integer(74, 88, 63)), color(hsl.integer(93, 100, 92.4)), hammer.mul(0.7).add(0.3))
+    const goldTint = mix(gold, color(hsl.integer(83, 85, 76)), identity2.y.mul(0.4))
     this.colorNode = mix(mix(glaze, goldTint, goldBand), glaze.mul(0.22), openCrack)
     this.metalnessNode = goldBand.mul(0.98).add(0.02)
     this.roughnessNode = mix(mix(float(0.3), float(0.2), goldBand), float(0.6), openCrack).add(crazed.mul(0.12))
@@ -62,7 +63,7 @@ export default class extends KnotMaterial {
     const liftProfile = cell.edge.smoothstep(0.012, 0.03)
     this.positionNode = positionGeometry.add(normalLocal.mul(liftProfile.mul(0.0035).sub(liftProfile.oneMinus().mul(0.0012))))
     this.emissiveNode = goldTint.mul(goldBand).mul(grazing.pow(2.2)).mul(intimate.mul(0.5).add(0.15)).mul(0.4)
-      .add(color('#fff3c8').mul(openCrack).mul(facing.pow(5)).mul(0.06))
+      .add(color(hsl.integer(94, 100, 95.6)).mul(openCrack).mul(facing.pow(5)).mul(0.06))
       .add(goldTint.mul(goldBand).mul(facing.pow(3)).mul(near).mul(0.1))
   }
 }

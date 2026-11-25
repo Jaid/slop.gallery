@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, mx_noise_float, mx_noise_vec3, normalLocal, normalViewGeometry, normalWorldGeometry, positionGeometry, positionWorld, time, uv, vec2, vec3} from 'three/tsl'
 
 import {filteredRibbon} from '../../lib/filteredRibbon.ts'
@@ -68,20 +69,20 @@ export default class extends KnotMaterial {
     const worn = mx_noise_float(clothCoordinate(u, v, 3.4, 2.1).add(9.3)).mul(0.5).add(0.5)
 // Head on the cloth is a tomb; the color only arrives as the pile tips
 // turn edge-on and scatter the light back out again.
-    const dye = mix(color('#240410'), color('#4a0a18'), worn.mul(0.6).add(0.1))
+    const dye = mix(color(hsl.integer(0, 74, 8)), color(hsl.integer(14, 83, 17)), worn.mul(0.6).add(0.1))
     const bloom = grazing.pow(1.05).add(crest.mul(0.07)).clamp()
-    const clothColor: Node<'vec3'> = mix(dye, mix(color('#8c0f24'), color('#e8445a'), crest.mul(0.4).add(0.1)), bloom)
+    const clothColor: Node<'vec3'> = mix(dye, mix(color(hsl.integer(20, 94, 32)), color(hsl.integer(18, 86, 57)), crest.mul(0.4).add(0.1)), bloom)
 // Gold thread follows the crest of the drape and only where the cloth
 // was embroidered at all, so the pattern reads as needlework.
     const ridgeField = filteredRibbon(drape.slopeU, 0.05)
     const threadGate = crest.pow(2).mul(mx_noise_float(clothCoordinate(u, v, 7, 3).add(21.7)).mul(0.5).add(0.5).smoothstep(0.45, 0.8))
     const thread = ridgeField.mul(threadGate)
     const threadTwist = mx_noise_float(clothCoordinate(u, v, 220, 20)).mul(0.5).add(0.5)
-    this.colorNode = mix(clothColor, mix(color('#b07a1e'), color('#fff2c4'), threadTwist), thread)
+    this.colorNode = mix(clothColor, mix(color(hsl.integer(75, 85, 56)), color(hsl.integer(94, 100, 95.3)), threadTwist), thread)
     this.metalnessNode = thread.mul(0.95)
     this.roughnessNode = mix(float(0.5).add(patina.mul(0.14)).sub(crest.mul(0.06)), float(0.32).add(threadTwist.mul(0.2)), thread)
     this.specularIntensityNode = float(0.3)
-    this.sheenNode = mix(color('#d8283c'), color('#ffccd0'), crest.mul(0.35).add(0.25))
+    this.sheenNode = mix(color(hsl.integer(22, 93, 50.6)), color(hsl.integer(13, 100, 87)), crest.mul(0.35).add(0.25))
     this.sheenRoughnessNode = float(0.7).add(wrinkle.value.abs().mul(0.12))
 // The nap leans around the tube, which is exactly the bitangent.
     this.anisotropyNode = vec2(0, mix(float(0.45), float(0.85), crest).mul(near.mul(0.3).add(0.7)))
@@ -95,7 +96,7 @@ export default class extends KnotMaterial {
     const half = keyLight.add(toEye).normalize()
     const lobe = normalWorldGeometry.dot(half).clamp()
     const sheenLobe = lobe.pow(7).mul(0.62).add(lobe.pow(2.2).mul(0.38)).mul(grazing.pow(1.35).mul(0.7).add(0.3))
-    const sheenTint = mix(color('#ff2440'), color('#fff2ee'), grazing.pow(2.2))
+    const sheenTint = mix(color(hsl.integer(22.6, 100, 58.4)), color(hsl.integer(38, 100, 96.5)), grazing.pow(2.2))
     const sheen = sheenTint.mul(sheenLobe).mul(2.3)
 // Lint and dust caught in the pile, visible only once the fibres resolve.
     const lintCoordinate = clothCoordinate(u, v, 900, 60)
@@ -103,9 +104,9 @@ export default class extends KnotMaterial {
     const lintNormal = normalViewGeometry.add(mx_noise_vec3(lintCoordinate).mul(0.8)).normalize()
     const lint = glints(lintNormal, 120).mul(lintVisibility).mul(near).mul(0.5)
     const glow: Node<'vec3'> = sheen
-      .add(color('#ffd7c2').mul(lint).mul(0.7))
-      .add(color('#e0182e').mul(bloom.pow(2)).mul(rim).mul(0.16))
-      .add(color('#ffcf8a').mul(thread).mul(grazing.pow(2)).mul(intimate.mul(0.4).add(0.12)))
+      .add(color(hsl.integer(49, 100, 89)).mul(lint).mul(0.7))
+      .add(color(hsl.integer(24, 97.6, 51)).mul(bloom.pow(2)).mul(rim).mul(0.16))
+      .add(color(hsl.integer(75, 100, 86)).mul(thread).mul(grazing.pow(2)).mul(intimate.mul(0.4).add(0.12)))
     this.emissiveNode = glow
   }
 }

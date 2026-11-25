@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {detail, fill, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/pattern.ts'
@@ -38,15 +39,15 @@ export default class extends KnotMaterial {
     const yarn = mix(warp, weft, over).mul(resolved).add(resolved.oneMinus().mul(0.72))
     const direction = mix(vec2(0.82, 0), vec2(0, 0.82), over.mul(resolved))
     const nap = tube.x.mul(TAU * 4).add(tube.y.mul(TAU * 2)).add(time.mul(0.19)).sin().mul(0.5).add(0.5)
-    const velvet = mix(color('#250918'), color('#89152d'), facing.pow(0.7).mul(0.65).add(nap.mul(0.2)))
-    const gold = mix(color('#977044'), color('#efd3a0'), grazing.mul(0.5).add(nap.mul(0.3)))
+    const velvet = mix(color(hsl.integer(350, 60, 9)), color(hsl.integer(16, 88, 32)), facing.pow(0.7).mul(0.65).add(nap.mul(0.2)))
+    const gold = mix(color(hsl.integer(69, 50, 51)), color(hsl.integer(82, 62, 86)), grazing.mul(0.5).add(nap.mul(0.3)))
     const fiberVariation = mx_noise_float(p.mul(100)).mul(0.05).add(0.95)
     this.colorNode = mix(velvet, gold, embroidery).mul(yarn.mul(0.25).add(0.75)).mul(fiberVariation)
     this.metalnessNode = embroidery.mul(0.55)
     this.roughnessNode = mix(float(0.62), float(0.3), embroidery)
     this.anisotropy = 0.82
     this.anisotropyNode = direction.mul(embroidery.mul(0.35).add(0.65))
-    this.sheenNode = mix(color('#b94165'), color('#fff0c7'), embroidery).mul(0.7)
+    this.sheenNode = mix(color(hsl.integer(5, 70, 48)), color(hsl.integer(90, 100, 95)), embroidery).mul(0.7)
     this.sheenRoughnessNode = mix(float(0.52), float(0.3), embroidery)
     this.normalNode = proceduralNormal(embroidery.mul(0.00095).add(yarn.mul(0.00022)).add(wave(tube.x.mul(TAU * 384)).mul(0.000025)), 1)
     this.aoNode = yarn.mul(0.22).add(0.78)

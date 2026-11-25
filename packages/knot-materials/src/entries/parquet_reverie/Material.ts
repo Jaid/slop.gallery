@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, uv, vec2} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -25,15 +26,15 @@ export default class extends KnotMaterial {
     // Filter before shading: subpixel growth lines converge to their average instead of sparkling.
     const grainVisibility = footprint.mul(12).smoothstep(0.18, 0.65).oneMinus()
     const grain = phase.sin().mul(phase.mul(0.37).sin().mul(0.25).add(0.75)).mul(grainVisibility)
-    const pale = mix(color('#dcb875'), color('#bd874e'), checker.mul(0.55))
-    const dark = mix(color('#814127'), color('#38221b'), checker)
+    const pale = mix(color(hsl.integer(82, 59, 77)), color(hsl.integer(66, 59, 61)), checker.mul(0.55))
+    const dark = mix(color(hsl.integer(42, 64, 37)), color(hsl.integer(38, 36, 17)), checker)
     const wood = mix(pale, dark, triangle).mul(grain.mul(0.16).add(0.91))
     const edge = local.min(local.oneMinus())
     const jointDistance = edge.x.min(edge.y).min(diagonal.abs().mul(Math.SQRT1_2))
     const joint = jointDistance.smoothstep(0.009, footprint.add(0.009)).oneMinus()
     const border = jointDistance.smoothstep(0.032, footprint.add(0.032)).oneMinus()
     const inlay = border.sub(joint).clamp()
-    this.colorNode = mix(mix(wood, color('#edd4a0'), inlay.mul(0.8)), color('#231b15'), joint)
+    this.colorNode = mix(mix(wood, color(hsl.integer(85, 60, 86)), inlay.mul(0.8)), color(hsl.integer(59, 21, 13)), joint)
     this.metalness = 0
     this.ior = 1.46
     this.specularIntensity = 0.65

@@ -2,6 +2,7 @@ import type {TransmittingEmission} from '../rendering/AlbedoRenderPipeline.ts'
 import type {ClearGlassOptions} from './ClearGlassMaterial.ts'
 import type {ColorRepresentation, Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraFar, cameraNear, cameraProjectionMatrix, cross, dFdx, dFdy, float, fwidth, max, min, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, perspectiveDepthToViewZ, positionView, screenUV, smoothstep, uv, vec2, vec3, vec4, viewportDepthTexture, viewportSafeUV, viewportTexture} from 'three/tsl'
 import {Color} from 'three/webgpu'
 
@@ -77,7 +78,7 @@ function surfaceGradientNormal(slope: Node<'vec2'>, point: Node<'vec2'>) {
 export default class CrownGlassMaterial extends ClearGlassMaterial implements TransmittingEmission {
   readonly emissionIsTransmission = true
 
-  constructor({bodyColor = '#ffffff', grime, grimeColor = '#2b2721', haze, hazeColor = '#c9d0c2', paneSize, smudges, waviness, ...options}: CrownGlassOptions) {
+  constructor({bodyColor = hsl.integer(0, 0, 100), grime, grimeColor = hsl.integer(78, 13, 17), haze, hazeColor = hsl.integer(129, 16, 82), paneSize, smudges, waviness, ...options}: CrownGlassOptions) {
     super(options)
     const point = uv().mul(vec2(...paneSize))
     // Detail finer than a pixel would only shimmer, so it fades to its average once a pixel spans a sixth of its scale.

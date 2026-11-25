@@ -1,6 +1,7 @@
 import type {FillLayer, OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, cross, float, mix, mx_fractal_noise_float, select, smoothstep, time, vec3} from 'three/tsl'
 
 import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
@@ -124,14 +125,14 @@ const bats = [{
   span: 0.19,
   beat: 13.5,
 }]
-const moonColor = color('#ffe3a1')
-const mariaColor = color('#c27a2e')
-const hazeColor = color('#ff7b1c')
-const duskColor = color('#3a0f3f')
-const glowColor = color('#ff9a3c')
-const batColor = rgb('#07030a')
+const moonColor = color(hsl.integer(87, 100, 91))
+const mariaColor = color(hsl.integer(63, 78, 58.5))
+const hazeColor = color(hsl.integer(49, 100, 68))
+const duskColor = color(hsl.integer(323, 73, 16))
+const glowColor = color(hsl.integer(60, 99, 74))
+const batColor = rgb(hsl.integer(313, 45, 3.6))
 /** what the moon glows through a wing’s membrane in */
-const membraneColor = rgb('#ff5a1a')
+const membraneColor = rgb(hsl.integer(38, 100, 63))
 /** where a bat is and how it is turned: forward, up and to its left */
 function batFrame({radius, height, rate, tilt, phase}: typeof bats[number]) {
   const angle = time.mul(rate).add(phase)
@@ -190,7 +191,7 @@ export default class BatsOrbMaterial extends OrbGlassMaterial {
   constructor(options: OrbGlassOptions) {
     super(options, {
       name: 'orb-bats',
-      tint: '#c0602a',
+      tint: hsl.integer(47, 79, 53),
     })
   }
 

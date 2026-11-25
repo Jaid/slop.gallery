@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {hairline} from '../../lib/hairline.ts'
@@ -10,8 +11,8 @@ import knotData from './data.ts'
 
 function ember(t: Node<'float'>) {
   const c = t.clamp()
-  const low = mix(color('#1a0300'), color('#ff4a00'), c.mul(2).clamp())
-  return mix(low, color('#fff0b8'), c.sub(0.5).mul(2).clamp().pow(1.4))
+  const low = mix(color(hsl.integer(39, 100, 6)), color(hsl.integer(36.4, 100, 61)), c.mul(2).clamp())
+  return mix(low, color(hsl.integer(95, 100, 94.6)), c.sub(0.5).mul(2).clamp().pow(1.4))
 }
 
 /** Folded, brushed damascus steel, still cooling from the forge. Temper colours bloom around fissures; embers deep in the cracks breathe faster and brighter the closer you come. */
@@ -34,9 +35,9 @@ export default class extends BaseKnotMaterial {
     const emberNoise = mx_noise_float(inner.mul(9).add(vec3(0, time.mul(-0.25), 0))).mul(0.5).add(0.5)
     const pulse = tube.x.mul(Math.PI * 2 * 5).sub(time.mul(1.1)).sin().mul(0.5).add(0.5).pow(3)
     const heat = fissure.mul(emberNoise.mul(0.6).add(0.4)).mul(pulse.mul(0.6).add(0.4)).mul(near.mul(0.75).add(0.25))
-    const steel = mix(color('#4c545e'), color('#cfd6de'), bright).mul(etch.mul(0.5).oneMinus())
-    const scorched = mix(steel, color('#1d1418'), temper.mul(0.55))
-    this.colorNode = mix(scorched, color('#2b0b03'), fissure)
+    const steel = mix(color(hsl.integer(254, 12, 36)), color(hsl.integer(252, 15, 85)), bright).mul(etch.mul(0.5).oneMinus())
+    const scorched = mix(steel, color(hsl.integer(350, 20, 10)), temper.mul(0.55))
+    this.colorNode = mix(scorched, color(hsl.integer(38, 82, 10)), fissure)
     this.metalnessNode = fissure.mul(0.6).oneMinus()
     this.roughnessNode = float(0.22).mix(0.42, bright.oneMinus()).add(temper.mul(0.15)).add(fissure.mul(0.3))
     this.anisotropy = 1
@@ -48,7 +49,7 @@ export default class extends BaseKnotMaterial {
     this.iridescenceThicknessNode = temper.mul(-260).add(620)
     this.normalNode = proceduralNormal(bright.mul(0.6).sub(fissure.mul(1.2)).add(mx_noise_float(p.mul(30)).mul(0.08)), 0.0012)
     this.emissiveNode = ember(heat.mul(1.3)).mul(heat).mul(3.2)
-      .add(color('#ff6a1a').mul(temper).mul(near).mul(pulse).mul(0.06))
-      .add(color('#ff8a3a').mul(grazing.pow(4)).mul(intimate).mul(0.04))
+      .add(color(hsl.integer(43, 100, 65.3)).mul(temper).mul(near).mul(pulse).mul(0.06))
+      .add(color(hsl.integer(52, 99, 71)).mul(grazing.pow(4)).mul(intimate).mul(0.04))
   }
 }

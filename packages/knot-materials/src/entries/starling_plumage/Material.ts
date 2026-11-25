@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, mix, normalLocal, tangentLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -38,15 +39,15 @@ export default class extends KnotMaterial {
     const barbAngle = identity.x.mul(TAU).add(point.x.mul(0.65)).add(time.mul(0.013))
     const barbDirection = tangent.mul(barbAngle.cos()).add(bitangent.mul(barbAngle.sin())).normalize()
     const turn = view.dot(barbDirection).abs().smoothstep(0.28, 0.78).pow(1.15)
-    const pigment = mix(color('#000102'), color('#02070a'), identity.z.mul(0.13).add(facing.mul(0.025)).clamp())
+    const pigment = mix(color(hsl.integer(234, 100, 1)), color(hsl.integer(226, 46, 4)), identity.z.mul(0.13).add(facing.mul(0.025)).clamp())
     const structural = shaft.mul(0.82).add(contour.mul(0.25)).add(barbs.mul(intimate).mul(0.43)).clamp()
-    const featherBody = mix(pigment, mix(color('#081517'), color('#192821'), identity.z), structural.mul(0.34))
-    const flashColor = mix(color('#0066a6'), color('#00a868'), identity.y)
+    const featherBody = mix(pigment, mix(color(hsl.integer(208, 39, 9)), color(hsl.integer(164, 31, 16)), identity.z), structural.mul(0.34))
+    const flashColor = mix(color(hsl.integer(246, 100, 42)), color(hsl.integer(158, 100, 59)), identity.y)
     const flash = turn.pow(1.75).mul(vane).mul(grazing.mul(0.12).add(0.88))
     const flockGlints = cellularPoints(p.mul(24), 0.035, 0.17, 0.68).mul(vane).mul(near.mul(0.6).add(0.4))
     const plumageFlash = flash.mul(barbs.mul(0.5).add(shaft.mul(0.14)).add(flockGlints.mul(0.56)).add(0.24).clamp())
     this.positionNode = p.add(normalLocal.mul(vaneRelief.mul(progress.oneMinus().mul(0.42).add(0.58)).mul(0.009)))
-    const rachisColor = mix(color('#0a211f'), color('#52643e'), identity.x)
+    const rachisColor = mix(color(hsl.integer(188, 56, 13)), color(hsl.integer(129, 42, 40)), identity.x)
     this.colorNode = mix(mix(featherBody, rachisColor, shaft.mul(0.38).add(barbs.mul(intimate).mul(0.11)).clamp()), flashColor, plumageFlash.mul(0.98))
     this.metalness = 0
     this.roughnessNode = float(0.61).sub(plumageFlash.mul(0.38)).sub(shaft.mul(0.09)).add(contour.mul(0.07)).clamp(0.13, 0.76)

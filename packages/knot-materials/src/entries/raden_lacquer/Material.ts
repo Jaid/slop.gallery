@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, normalView, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -45,7 +46,7 @@ export default class extends KnotMaterial {
     const hue = random.x.mul(0.8).add(band.mul(0.12)).add(facing.mul(0.9)).add(time.mul(0.015))
     const shell = cosinePalette(hue, [0.55, 0.55, 0.6], [0.35, 0.35, 0.34], [1, 1, 1], [0, 0.1, 0.2])
     const height = shellMask.mul(0.0007).add(random.z.mul(0.0002))
-    this.colorNode = mix(color('#050406'), shell, shellMask)
+    this.colorNode = mix(color(hsl.integer(309, 16, 3)), shell, shellMask)
     this.metalness = 0
     this.roughnessNode = mix(float(0.05), float(0.16), shellMask)
     this.clearcoat = 1

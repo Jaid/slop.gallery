@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'morpho_veil',
   candidateId: 'glm_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: "A butterfly's impossible blue passes across a nearly weightless surface.",
   placeholder: {
-    color: '#3f7dff',
+    color: hsl.integer(263, 100, 56),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {tubeRay} from '../../lib/atelier.ts'
@@ -37,12 +38,12 @@ export default class extends KnotMaterial {
     const leafGate = leaf.random.y.smoothstep(0.72, 0.83)
     const goldLeaf = leaf.core.mul(leafGate).mul(intimate)
     const current = frontRiver.mul(0.56).add(middleRiver.mul(0.31)).add(deepRiver.mul(0.13))
-    const lacquer = mix(color('#010204'), color('#0b1029'), fluidA.mul(0.24).add(grazing.mul(0.08)))
-    const ink = mix(color('#0c515d'), color('#b31831'), middleRiver.mul(0.56).add(fluidB.mul(0.14)))
-    const riverColor = mix(color('#082b60'), ink, frontRiver.mul(0.78).add(deepRiver.mul(0.1)))
+    const lacquer = mix(color(hsl.integer(256, 37, 2)), color(hsl.integer(272, 60, 8.6)), fluidA.mul(0.24).add(grazing.mul(0.08)))
+    const ink = mix(color(hsl.integer(213, 87, 31)), color(hsl.integer(20, 94, 41.5)), middleRiver.mul(0.56).add(fluidB.mul(0.14)))
+    const riverColor = mix(color(hsl.integer(259, 89, 20)), ink, frontRiver.mul(0.78).add(deepRiver.mul(0.1)))
     // Random leaf tint must not leak onto the continuous gold river edges.
     const goldVariation = mix(mx_noise_float(p.mul(19)).mul(0.5).add(0.5), leaf.random.x, goldLeaf)
-    const gold = mix(color('#a9570d'), color('#fff0ad'), goldVariation.mul(0.72).add(edge.mul(0.2)))
+    const gold = mix(color(hsl.integer(54, 91, 47)), color(hsl.integer(97, 100, 94.4)), goldVariation.mul(0.72).add(edge.mul(0.2)))
     const relief = current.mul(0.36).add(edge.mul(0.46)).add(fineEdge.mul(0.18)).add(goldLeaf.mul(0.28))
     const flowingLacquer = mix(lacquer, riverColor, current.mul(0.8))
     this.colorNode = mix(flowingLacquer, gold, edge.mul(0.64).add(goldLeaf).clamp())
@@ -52,7 +53,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.032
     this.normalNode = proceduralNormal(relief, 0.00115)
     this.emissiveNode = gold.mul(edge).mul(near.mul(0.1).add(0.012))
-      .add(color('#d77d3f').mul(goldLeaf).mul(intimate).mul(0.13))
-      .add(color('#476eaa').mul(rim).mul(grazing).mul(0.045))
+      .add(color(hsl.integer(53, 75, 62.4)).mul(goldLeaf).mul(intimate).mul(0.13))
+      .add(color(hsl.integer(259, 55, 46)).mul(rim).mul(grazing).mul(0.045))
   }
 }

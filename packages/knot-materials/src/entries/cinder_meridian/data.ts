@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cinder_meridian',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A hot seam marks the longitude of a world turning dark.',
   placeholder: {
-    color: '#ff6a1a',
+    color: hsl.integer(43, 100, 65.3),
     shading: 'stone',
   },
 } as const satisfies KnotData

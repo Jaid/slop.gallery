@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mnemonic_mercury',
   candidateId: 'muse_spark',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'This silver surface seems to remember a room that you have already left.',
   placeholder: {
-    color: '#e6f0f5',
+    color: hsl.integer(229, 33, 94),
     shading: 'liquid',
   },
 } as const satisfies KnotData

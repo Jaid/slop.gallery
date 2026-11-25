@@ -1,5 +1,8 @@
 import type {OverlayLineStyle} from './tuning.ts'
 
+import hsl from 'okhsl'
+
+import {cssHex} from '../color.ts'
 import {overlayLineWidth} from './tuning.ts'
 
 export type DistanceFade = {
@@ -9,7 +12,7 @@ export type DistanceFade = {
   start: number
 }
 export type LayerOptions = {
-  color?: string
+  color?: number | string
   fade?: Partial<DistanceFade> | false
   id: string
   lineStyle?: OverlayLineStyle
@@ -18,7 +21,7 @@ export type LayerOptions = {
   priority?: number
 }
 export const defaultLayer = 'default'
-export const defaultLayerColor = '#ff0000'
+export const defaultLayerColor = hsl.integer(29.2, 100, 56.8)
 export const defaultFade: Readonly<DistanceFade> = {
   start: 16,
   end: 100,
@@ -72,7 +75,7 @@ export const layerSchema = {
     color: {
       type: 'string',
       pattern: hexColor.source,
-      default: defaultLayerColor,
+      default: cssHex(defaultLayerColor),
     },
     lineWidth: {
       type: 'integer',
@@ -101,7 +104,7 @@ export const layerSchema = {
 export const isLayerId = (id: unknown): id is string => typeof id === 'string' && /\S/u.test(id)
 const isRecord = (input: unknown): input is Record<string, unknown> => !!input && typeof input === 'object' && !Array.isArray(input)
 
-export function readLayer(input: unknown): LayerOptions {
+export function readLayer(input: unknown, source: 'code' | 'webmcp' = 'webmcp'): LayerOptions {
   if (!isRecord(input) || !isLayerId(input.id) || Object.keys(input).some(key => !Object.hasOwn(layerSchema.properties, key))) {
     throw new TypeError('Expected layer options with a nonblank id.')
   }
@@ -110,8 +113,10 @@ export function readLayer(input: unknown): LayerOptions {
     throw new RangeError('obstructedOpacityFactor must be a number from 0 to 1.')
   }
   const {color, priority, lineStyle, lineWidth, fade} = input
-  if (color !== undefined && (typeof color !== 'string' || !hexColor.test(color))) {
-    throw new TypeError('Layer color must be hex RGB.')
+  if (color !== undefined && !(typeof color === 'string' && hexColor.test(color))) {
+    if (source !== 'code' || typeof color !== 'number' || !Number.isInteger(color) || color < 0 || color >= 2 ** 24) {
+      throw new TypeError(source === 'code' ? 'Layer color must be packed sRGB or hex RGB.' : 'Layer color must be hex RGB.')
+    }
   }
   if (priority !== undefined && !Number.isFinite(priority)) {
     throw new TypeError('Layer priority must be finite.')

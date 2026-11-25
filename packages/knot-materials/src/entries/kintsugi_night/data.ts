@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5WDU20J87Ktg4fx; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'kintsugi_night',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The bowl broke at midnight. Every wound was mended with lacquer and gold, and now the darkness glows exactly where it was hurt.',
   placeholder: {
-    color: '#0a1428',
+    color: hsl.integer(263, 55, 9),
     shading: 'smooth',
   },
 } as const satisfies KnotData

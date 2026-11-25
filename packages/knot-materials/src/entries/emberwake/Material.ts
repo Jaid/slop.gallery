@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, vec3} from 'three/tsl'
 
 import {loopOsc, loopPhase} from '../../candidates/deepseek/lib/loopClock.ts'
@@ -33,18 +34,18 @@ export default class extends KnotMaterial {
     const pores = mx_noise_float(p.mul(110)).mul(0.5).add(0.5)
     const shimmer = loopOsc(1, p.dot(vec3(3.1, 1.7, -2.3))).mul(0.5).add(0.62)
     const haze = mx_noise_float(p.mul(40)).mul(0.5).add(0.5).mul(shimmer).mul(halo).mul(intimate)
-    const rockTone = mix(color('#080705'), color('#1c1917'), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
-    const ash = mix(color('#201d19'), color('#332e28'), rubble)
-    const crust = mix(mix(rockTone, mix(rockTone, ash, 0.32), plate.mul(0.55).add(0.15)), color('#3a1505'), halo.mul(0.4))
-    this.colorNode = mix(crust, color('#5c2a0c'), molten.mul(0.55))
+    const rockTone = mix(color(hsl.integer(87, 13, 5)), color(hsl.integer(56, 7, 11)), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
+    const ash = mix(color(hsl.integer(75, 10, 13)), color(hsl.integer(72, 12, 20)), rubble)
+    const crust = mix(mix(rockTone, mix(rockTone, ash, 0.32), plate.mul(0.55).add(0.15)), color(hsl.integer(43, 80, 15)), halo.mul(0.4))
+    this.colorNode = mix(crust, color(hsl.integer(48, 79, 25)), molten.mul(0.55))
     this.roughnessNode = mix(float(0.5).sub(near.mul(0.12)), float(0.16), molten.mul(0.85)).add(rubble.mul(0.1)).sub(haze.mul(0.05)).clamp(0.08, 0.72)
     this.metalness = 0
     this.normalNode = proceduralNormal(plateHeight.mul(0.42).add(rubble.mul(0.03)).add(pores.mul(0.02)).add(haze.mul(0.05)), 0.0032)
-    this.emissiveNode = color('#fff4d4').mul(whiteHot.mul(flowBright).mul(facing.mul(0.45).add(0.55)).mul(2.1))
-      .add(color('#ff8a1e').mul(molten.mul(flowBright).mul(1.1)))
-      .add(color('#c2330a').mul(halo.mul(halo).mul(breath.mul(0.4).add(0.6)).mul(0.3)))
-      .add(color('#ffb457').mul(haze.mul(0.1)))
-      .add(color('#6e3a12').mul(grazing.pow(3)).mul(0.05))
-      .add(color('#3d1405').mul(distance.smoothstep(0.9, 3).oneMinus()).mul(0.05))
+    this.emissiveNode = color(hsl.integer(91, 100, 96.2)).mul(whiteHot.mul(flowBright).mul(facing.mul(0.45).add(0.55)).mul(2.1))
+      .add(color(hsl.integer(55.5, 100, 70.7)).mul(molten.mul(flowBright).mul(1.1)))
+      .add(color(hsl.integer(35, 97.6, 46.6)).mul(halo.mul(halo).mul(breath.mul(0.4).add(0.6)).mul(0.3)))
+      .add(color(hsl.integer(69, 100, 79.5)).mul(haze.mul(0.1)))
+      .add(color(hsl.integer(54, 77, 32)).mul(grazing.pow(3)).mul(0.05))
+      .add(color(hsl.integer(40, 82, 15)).mul(distance.smoothstep(0.9, 3).oneMinus()).mul(0.05))
   }
 }

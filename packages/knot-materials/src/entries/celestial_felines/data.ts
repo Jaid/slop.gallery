@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4AEfQg7Qgj1dEVQ.
 export default {
   id: 'celestial_felines',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Star-born felines prowl across the cosmic void, their forms traced in diamond light and woven into eternal constellations.',
   placeholder: {
-    color: '#080d22',
+    color: hsl.integer(271, 59, 7),
     shading: 'smooth',
   },
 } as const satisfies KnotData

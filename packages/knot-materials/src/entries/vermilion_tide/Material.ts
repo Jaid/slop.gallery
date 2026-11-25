@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fill, stroke} from '../../candidates/gpt_sol/lib/exhibition/coverage.ts'
@@ -52,19 +53,19 @@ export default class extends KnotMaterial {
     const finRays = filteredCos(tailY.div(tailX.max(0.045)).mul(39)).mul(0.5).add(0.5).mul(tail).mul(resolved(foot.mul(150), 0.5, 2.5)).toVar()
     const gildingDomain = p.mul(170)
     const gildingNoise = mx_noise_float(gildingDomain).mul(resolved(gildingDomain.fwidth().length(), 0.25, 1.3)).mul(0.5).add(0.5)
-    const gold = mix(color('#996021'), color('#f8df8c'), random.x.mul(0.25).add(gildingNoise.mul(0.25)).add(bodyPoint.y.mul(-2).add(0.3)).clamp()).toVar()
+    const gold = mix(color(hsl.integer(64, 77, 47)), color(hsl.integer(93, 82, 89)), random.x.mul(0.25).add(gildingNoise.mul(0.25)).add(bodyPoint.y.mul(-2).add(0.3)).clamp()).toVar()
     const pearlPatch = softNoise(vec3(point.mul(10), random.z.mul(17))).smoothstep(0.12, 0.45).mul(body).toVar()
-    const koi = mix(gold, color('#f4e5c2'), pearlPatch.mul(0.75)).mul(scales.mul(0.12).add(finRays.mul(0.08)).add(rim.mul(-0.14)).add(0.86)).toVar()
+    const koi = mix(gold, color(hsl.integer(87, 60, 91)), pearlPatch.mul(0.75)).mul(scales.mul(0.12).add(finRays.mul(0.08)).add(rim.mul(-0.14)).add(0.86)).toVar()
     const domain = closedDomain(tube, 6, 2)
     const current = tube.x.mul(TAU * 13).add(tube.y.mul(TAU * 2)).add(softNoise(domain).mul(2.7)).sub(time.mul(0.085))
     const wake = filteredCos(current).mul(0.5).add(0.5).pow(7).toVar()
     const undertone = softNoise(p.mul(5)).mul(0.5).add(0.5)
-    const lacquer = mix(color('#310515'), color('#a52030'), undertone.mul(0.65).add(wake.mul(0.18))).toVar()
+    const lacquer = mix(color(hsl.integer(3, 78, 11)), color(hsl.integer(21, 89, 39)), undertone.mul(0.65).add(wake.mul(0.18))).toVar()
     const leafDust = beads(p.mul(190), 24.1)
     const flecks = leafDust.mask.mul(leafDust.random.z.smoothstep(0.91, 0.97)).toVar()
     let painted = mix(lacquer, koi, fish)
-    painted = mix(painted, color('#30120b'), eye.max(gill.mul(0.58)).max(spine.mul(0.35)))
-    painted = painted.add(color('#ffedbd').mul(pupilGlint).mul(0.5)).add(gold.mul(flecks).mul(fish.oneMinus()).mul(0.6))
+    painted = mix(painted, color(hsl.integer(34, 62, 12)), eye.max(gill.mul(0.58)).max(spine.mul(0.35)))
+    painted = painted.add(color(hsl.integer(90, 100, 94)).mul(pupilGlint).mul(0.5)).add(gold.mul(flecks).mul(fish.oneMinus()).mul(0.6))
     this.colorNode = painted
     this.metalnessNode = fish.mul(pearlPatch.mul(-0.5).add(0.85)).add(flecks.mul(fish.oneMinus()).mul(0.75)).clamp()
     this.roughnessNode = mix(float(0.21), float(0.29).sub(scales.mul(0.055)), fish)

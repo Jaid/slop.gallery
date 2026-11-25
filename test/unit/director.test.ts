@@ -8,6 +8,8 @@ import type {Portrait, ThrownItem} from '../../src/lib/gallery/types.ts'
 
 import {afterEach, beforeEach, expect, spyOn, test} from 'bun:test'
 
+import hsl from 'okhsl'
+
 import GalleryDirector from '../../src/lib/ai/GalleryDirector.ts'
 import {readAiSettings} from '../../src/lib/ai/settings.ts'
 import {arrivalFrame, newPortrait} from '../../src/lib/gallery/actions.ts'
@@ -65,7 +67,7 @@ const testOrb: ThrownItem = {
         instruction: 'Make it spooky.',
       },
     ],
-    glow: '#8a3cff',
+    glow: hsl.integer(295, 100, 50.6),
     look: '/orbs/test.jxl',
   }),
 }
@@ -427,7 +429,7 @@ test('a thrown orb contributes its prompt instead of a photograph, and its porta
     expect(recipe.text(1)).toBe('Make it spooky.')
     // The orb’s illustration only surfaces in the portal, tinted in its glow, and never goes to the image model.
     expect(director.opened[0].spec).toMatchObject({
-      color: '#8a3cff',
+      color: hsl.integer(295, 100, 50.6),
       images: [a, '/orbs/test.jxl'],
       latches: ['charge', 'charge'],
     })

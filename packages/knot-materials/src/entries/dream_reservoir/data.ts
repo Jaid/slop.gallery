@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 42qNahiwSEZ3v90; fixture: knot-material-shaders; result: success.
 export default {
   id: 'dream_reservoir',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Little lakes keep the evening safe beneath their lenses. One step brings sunset; another, the moon and its silver wake.',
   placeholder: {
-    color: '#226579',
+    color: hsl.integer(221, 71, 39),
     shading: 'glass',
   },
 } as const satisfies KnotData

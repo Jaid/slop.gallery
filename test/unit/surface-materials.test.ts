@@ -2,6 +2,7 @@ import type PlanarMirrorMaterial from '../../src/lib/materials/PlanarMirrorMater
 
 import {expect, test} from 'bun:test'
 
+import hsl from 'okhsl'
 import {PerspectiveCamera, Texture} from 'three/webgpu'
 
 import {lodgeFloorOil, lodgeFloorPlanks} from '../../src/lib/gallery/lodge.ts'
@@ -130,13 +131,13 @@ test('wood floors can repeatedly switch without sharing disposed reflection reso
 test('architectural plaster adds procedural color, roughness and relief only in heavy', () => {
   const texture = new Texture
   const heavy = new ArchitecturalPlasterMaterial({
-    baseColor: '#658578',
+    baseColor: hsl.integer(168, 25, 52),
     map: texture,
     heavy: true,
     roughness: 0.9,
   })
   const fast = new ArchitecturalPlasterMaterial({
-    baseColor: '#658578',
+    baseColor: hsl.integer(168, 25, 52),
     map: texture,
     heavy: false,
     roughness: 0.9,

@@ -8,6 +8,7 @@ import {useFrame} from '@react-three/fiber'
 import {CuboidCollider, CylinderCollider} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
 import {knotSign, knotSignId, knotSignParts, knotSignRoundParts} from 'knot-materials/signs.ts'
+import hsl from 'okhsl'
 import {useEffect, useMemo, useRef} from 'react'
 import {attribute, texture, uv, vec2} from 'three/tsl'
 import {Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
@@ -46,7 +47,7 @@ export default function KnotLabels({signs, ratings, action = 'Listen', onActivat
   const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = useGraphicsModeValue(getGraphicsProfile)
   const atlasRows = Math.ceil(signs.length / labelAtlasColumns)
   // Only the flat fallback is owned here; the reflective steel is shared for the page lifetime.
-  const flatSupportMaterial = useDisposable(useMemo(() => new MeshBasicNodeMaterial({color: '#9ca6ad'}), []))
+  const flatSupportMaterial = useDisposable(useMemo(() => new MeshBasicNodeMaterial({color: hsl.integer(238, 9, 67)}), []))
   const supportMaterial = isHeavy ? metal : flatSupportMaterial
   const resources = useDisposable(useMemo(() => {
     const offsets = new Float32Array(signs.length * 2)

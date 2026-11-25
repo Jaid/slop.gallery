@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'oracle_palimpsest',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Erased prophecies rise through warm vellum in indigo breath, beneath an alphabet illuminated with gold.',
   placeholder: {
-    color: '#a67c4c',
+    color: hsl.integer(69, 51, 56),
     shading: 'fabric',
   },
 } as const satisfies KnotData

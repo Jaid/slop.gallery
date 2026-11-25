@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {angle, coverage, ring, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/fields.ts'
@@ -33,14 +34,14 @@ export default class extends KnotMaterial {
     const barbs = stroke(theta.mul(13).sin().mul(r), 0.0035, aa).mul(featherMask).mul(eyeOuter.oneMinus())
     const granules = mx_noise_float(p.mul(140)).mul(0.5).add(0.5)
     const directional = view.x.mul(0.3).add(view.y.mul(0.3)).add(grazing.mul(0.4)).add(0.3).clamp()
-    const turquoise = mix(color('#087978'), color('#20b6a5'), directional)
-    let enamel = mix(color('#062b42'), turquoise, featherMask)
-    enamel = mix(enamel, color('#d27722'), eyeOuter)
-    enamel = mix(enamel, color('#175d9d'), eyeInner)
-    enamel = mix(enamel, color('#071d37'), eyeCore)
+    const turquoise = mix(color(hsl.integer(194, 96, 45)), color(hsl.integer(183, 92, 65)), directional)
+    let enamel = mix(color(hsl.integer(242, 80, 17)), turquoise, featherMask)
+    enamel = mix(enamel, color(hsl.integer(58, 86, 60)), eyeOuter)
+    enamel = mix(enamel, color(hsl.integer(251, 83, 39)), eyeInner)
+    enamel = mix(enamel, color(hsl.integer(254, 72, 13)), eyeCore)
     enamel = enamel.mul(granules.mul(0.13).add(0.89))
     const metal = wire.max(barbs.mul(0.68))
-    this.colorNode = mix(enamel, color('#c7a24f'), metal)
+    this.colorNode = mix(enamel, color(hsl.integer(86, 68, 69)), metal)
     this.metalnessNode = mix(float(0.13), float(0.88), metal)
     this.roughnessNode = mix(float(0.2), float(0.29), metal)
     this.clearcoat = 1
@@ -52,6 +53,6 @@ export default class extends KnotMaterial {
     const dome = r.div(0.45).clamp().pow(2).oneMinus().mul(featherMask)
     this.normalNode = proceduralNormal(dome.mul(0.002).add(wire.mul(0.0013)).add(barbs.mul(0.0004)).add(granules.mul(intimate).mul(0.00008)), 0.7)
     const glimmer = wave(tube.x.mul(Math.PI * 12).sub(time.mul(0.22))).mul(0.5).add(0.5).pow(6)
-    this.emissiveNode = color('#f3ba54').mul(wire).mul(glimmer).mul(grazing).mul(0.13)
+    this.emissiveNode = color(hsl.integer(79, 83, 79)).mul(wire).mul(glimmer).mul(grazing).mul(0.13)
   }
 }

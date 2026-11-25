@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'thin_film_veil',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A film thinner than a breath turns ordinary light into a passing rainbow.',
   placeholder: {
-    color: '#c9a8ff',
+    color: hsl.integer(301, 100, 76),
     shading: 'glass',
   },
 } as const satisfies KnotData

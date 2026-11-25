@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'meissner_vortex',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Quantized magnetic flux threads a ceramic lattice, holding pure currents in frictionless stillness.',
   placeholder: {
-    color: '#14556a',
+    color: hsl.integer(225, 79, 33),
     shading: 'metal',
   },
 } as const satisfies KnotData

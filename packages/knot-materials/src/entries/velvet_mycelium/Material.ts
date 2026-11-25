@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, time, uv} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -16,12 +17,12 @@ export default class extends BaseKnotMaterial {
     this.name = knotData.id
     const {p, facing, grazing, near, intimate} = viewerFrame()
     const tube = uv()
-    this.colorNode = mix(color('#150319'), color('#2b0733'), grazing.mul(0.6))
+    this.colorNode = mix(color(hsl.integer(321, 73, 6)), color(hsl.integer(320, 78, 12)), grazing.mul(0.6))
     this.metalness = 0
     this.roughness = 0.68
     // Velvet micro-fiber sheen backscattering
     this.sheen = 1
-    this.sheenNode = mix(color('#ff66aa'), color('#ffd166'), grazing.pow(1.4))
+    this.sheenNode = mix(color(hsl.integer(356, 100, 67.6)), color(hsl.integer(86, 100, 86)), grazing.pow(1.4))
     this.sheenRoughness = 0.3
     // Branching mycorrhizal hyphae network
     const hyphaeNoise = mx_noise_float(p.mul(14)).mul(4.5).add(tube.x.mul(18)).add(tube.y.mul(6))
@@ -36,9 +37,9 @@ export default class extends BaseKnotMaterial {
     const sporePresent = sporeRnd.x.smoothstep(0.86, 0.91)
     const sporeDist = sporeGrid.fract().sub(0.5).length()
     const sporeDots = sporeDist.smoothstep(0.28, 0.05).mul(sporePresent).mul(intimate)
-    const hyphaeGlow = color('#00ffcc').mul(hyphaeMask).mul(nervePulse.mul(2.2).add(0.8))
-    const sporeGlow = color('#ffea79').mul(sporeDots).mul(3.5)
-    const subsurface = color('#7b2cbf').mul(facing.oneMinus().pow(2)).mul(0.35)
+    const hyphaeGlow = color(hsl.integer(171, 100, 87)).mul(hyphaeMask).mul(nervePulse.mul(2.2).add(0.8))
+    const sporeGlow = color(hsl.integer(99, 100, 92)).mul(sporeDots).mul(3.5)
+    const subsurface = color(hsl.integer(304, 85, 41)).mul(facing.oneMinus().pow(2)).mul(0.35)
     this.normalNode = proceduralNormal(hyphaeMask.mul(0.25).add(sporeDots.mul(0.3)), 0.0014)
     this.emissiveNode = hyphaeGlow.add(sporeGlow).add(subsurface).mul(near.mul(0.7).add(0.4))
   }

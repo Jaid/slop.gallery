@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ImzJ438LsWTlcom; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'rime_sovereign',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Overnight the cold writes a crown of facets, and each one holds a different star until the thaw.',
   placeholder: {
-    color: '#bedced',
+    color: hsl.integer(233, 46, 86),
     shading: 'glass',
   },
 } as const satisfies KnotData

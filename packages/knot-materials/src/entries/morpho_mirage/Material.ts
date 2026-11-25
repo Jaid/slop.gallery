@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, luminance, mix, time, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeCells} from '../../candidates/muse_wonder/lib/tubeMetric.ts'
@@ -29,16 +30,16 @@ export default class extends KnotMaterial {
 // Diffraction phase: steered by view and shared along the wing, jittered per scale.
     const wave = grazing.mul(2).add(view.z.mul(0.7)).add(tube.x.mul(1.7)).add(random.x.sub(0.5).mul(0.55)).add(random.y.mul(0.3)).add(shiver.mul(0.13)).mul(TAU).sin().mul(0.5).add(0.5)
     const flash = wave.pow(4)
-    let scaleColor = mix(color('#02106e'), color('#003ee0'), wave.smoothstep(0.05, 0.45))
-    scaleColor = mix(scaleColor, color('#00ccff'), wave.smoothstep(0.45, 0.75))
-    scaleColor = mix(scaleColor, color('#8b3dff'), wave.smoothstep(0.78, 0.98).mul(0.85))
+    let scaleColor = mix(color(hsl.integer(265, 98, 16)), color(hsl.integer(263.5, 100, 38)), wave.smoothstep(0.05, 0.45))
+    scaleColor = mix(scaleColor, color(hsl.integer(224, 100, 75)), wave.smoothstep(0.45, 0.75))
+    scaleColor = mix(scaleColor, color(hsl.integer(295, 100, 50.7)), wave.smoothstep(0.78, 0.98).mul(0.85))
     scaleColor = scaleColor.mul(local.x.mul(0.4).add(0.85)).mul(1.05)
 // Push chroma hard so studio highlights gleam blue instead of washing to silver.
     scaleColor = mix(vec3(luminance(scaleColor)), scaleColor, 1.7).max(0)
 // Grooves between scales, the shadow under each tip, and a bright tip arc.
     const groove = local.y.min(local.y.oneMinus()).smoothstep(0, 0.1)
     const tipArc = local.x.add(local.y.sub(0.5).pow(2).mul(0.6)).smoothstep(0.82, 0.9).mul(local.x.smoothstep(0.97, 1).oneMinus())
-    this.colorNode = scaleColor.mul(groove.mul(0.35).add(0.65)).mul(local.x.smoothstep(0.92, 1).mul(0.35).add(0.85)).add(color('#9adcff').mul(tipArc).mul(0.05))
+    this.colorNode = scaleColor.mul(groove.mul(0.35).add(0.65)).mul(local.x.smoothstep(0.92, 1).mul(0.35).add(0.85)).add(color(hsl.integer(232, 100, 84)).mul(tipArc).mul(0.05))
 // Near-metallic tinted reflection keeps the structural colour saturated in the highlights.
     this.metalnessNode = float(0.78)
     this.roughnessNode = mix(float(0.32), float(0.2), flash)

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, uv, vec2} from 'three/tsl'
 
 import {buriedUv, reflectedLight} from '../../candidates/gpt_sol/lib/exhibition/buriedOptics.ts'
@@ -64,12 +65,12 @@ export default class extends KnotMaterial {
     const mossQ = p.mul(160)
     const moss = mx_noise_float(mossQ).mul(resolved(mossQ)).mul(0.5).add(0.5)
     const humidity = mx_noise_float(p.mul(7)).mul(0.5).add(0.5)
-    const floor = mix(color('#041b14'), color('#1b4721'), moss.mul(0.6).add(humidity.mul(0.4)))
-    const oldLeaves = mix(color('#0b392b'), color('#398448'), lower.light)
+    const floor = mix(color(hsl.integer(171, 78, 10)), color(hsl.integer(146, 87, 26)), moss.mul(0.6).add(humidity.mul(0.4)))
+    const oldLeaves = mix(color(hsl.integer(168, 86, 21)), color(hsl.integer(148, 83, 48)), lower.light)
     let forest: Node<'vec3'> = mix(floor, oldLeaves, lower.foliage.mul(0.7))
-    const leafColor = mix(color('#126540'), color('#aed85b'), upper.light.mul(0.67).add(upper.random.y.mul(0.14)))
+    const leafColor = mix(color(hsl.integer(158, 95, 36)), color(hsl.integer(125, 77, 80)), upper.light.mul(0.67).add(upper.random.y.mul(0.14)))
     forest = mix(forest, leafColor, upper.foliage)
-    forest = mix(forest, color('#bfd67c'), upper.veins.mul(0.26))
+    forest = mix(forest, color(hsl.integer(121, 64, 81)), upper.veins.mul(0.26))
 // A few five-petal flowers, small enough to reward a close visit rather than cover the whole forest.
     const flowerP = upper.q.sub(vec2(0.22, 0.3))
     const flowerAngle = flowerP.y.atan(flowerP.x)
@@ -77,17 +78,17 @@ export default class extends KnotMaterial {
     const flower = fill(flowerR.sub(flowerAngle.mul(5).cos().mul(0.009).add(0.031)))
       .mul(upper.random.x.smoothstep(0.87, 0.9))
     const pollenHeart = fill(flowerR.sub(0.009)).mul(flower)
-    forest = mix(forest, color('#f4edd0'), flower)
-    forest = mix(forest, color('#dc9e23'), pollenHeart)
+    forest = mix(forest, color(hsl.integer(96, 57, 93.5)), flower)
+    forest = mix(forest, color(hsl.integer(78, 90, 70)), pollenHeart)
     const dewQ = p.mul(74).add(13.5)
     const dew = beads(dewQ, 149)
     const droplets = dew.mask.mul(humidity.smoothstep(0.4, 0.65)).mul(near)
-    this.colorNode = mix(forest, color('#6b9e78'), droplets.mul(0.18))
+    this.colorNode = mix(forest, color(hsl.integer(152, 45, 60)), droplets.mul(0.18))
     this.metalness = 0
     this.roughnessNode = float(0.75).sub(upper.foliage.mul(0.3)).sub(droplets.mul(0.4)).clamp(0.055, 0.8)
     this.clearcoatNode = upper.foliage.mul(0.28).max(droplets.mul(0.98))
     this.clearcoatRoughnessNode = mix(float(0.19), float(0.025), droplets)
-    this.sheenNode = color('#80ca6e').mul(upper.foliage).mul(0.16)
+    this.sheenNode = color(hsl.integer(140, 72, 73)).mul(upper.foliage).mul(0.16)
     this.sheenRoughness = 0.65
     this.ior = 1.36
     const relief = upper.raw.mul(0.0046).add(humidity.mul(0.0007))
@@ -100,7 +101,7 @@ export default class extends KnotMaterial {
     const pollen = stroke(pollenCells.local.sub(pollenCenter).length(), 0.027)
       .mul(pollenCells.random.x.smoothstep(0.96, 0.975)).mul(resolved(pollenCells.coordinate)).mul(intimate)
     const glints = reflectedLight(environment, normalLocal.normalize(), 0.035).mul(droplets).mul(dew.cap)
-    this.emissiveNode = color('#f6c857').mul(pollen).mul(0.7)
-      .add(glints.mul(0.13)).add(color('#83bf58').mul(upper.light).mul(upper.foliage).mul(facing.mul(0.7).add(grazing)).mul(0.035))
+    this.emissiveNode = color(hsl.integer(87, 86, 83)).mul(pollen).mul(0.7)
+      .add(glints.mul(0.13)).add(color(hsl.integer(134, 75, 70)).mul(upper.light).mul(upper.foliage).mul(facing.mul(0.7).add(grazing)).mul(0.035))
   }
 }

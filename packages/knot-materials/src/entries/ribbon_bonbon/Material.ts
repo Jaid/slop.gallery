@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, mix, negateOnBackSide, positionView, transformNormalToView, uv, varying, vec2} from 'three/tsl'
 
 import {knotFrame} from '../../lib/knotFrame.ts'
@@ -38,8 +39,8 @@ export default class extends KnotMaterial {
     const groove = phase.mul(6).cos().mul(-0.5).add(0.5)
     const footprint = phase.fwidth().mul(6).max(0.001)
     const piping = groove.smoothstep(float(0.82).sub(footprint), float(0.94).add(footprint))
-    const sugar = mix(color('#19ac9f'), color('#e94069'), pigment)
-    this.colorNode = mix(sugar, color('#fff0ce'), piping)
+    const sugar = mix(color(hsl.integer(185, 93, 62)), color(hsl.integer(11, 86, 57)), pigment)
+    this.colorNode = mix(sugar, color(hsl.integer(87, 100, 95.2)), piping)
     // Fine pulled-sugar striations resolve only at inspection distance.
     const near = positionView.length().smoothstep(1.1, 3.2).oneMinus()
     const striation = phase.mul(144).sin().mul(phase.fwidth().mul(144).smoothstep(0.4, 2).oneMinus()).mul(near)

@@ -1,6 +1,7 @@
 import type {SoftShadow} from './shadowFilterNodes.ts'
 import type {Camera, Light, LightShadow, Object3D} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {Frustum, Matrix4, PointLight, Sphere, Vector3} from 'three/webgpu'
 
 import {isShadowSlot, lightShadow, shadowSlotKey, useLightEdits} from './lightLevels.ts'
@@ -65,7 +66,7 @@ export class ShadowPool {
   constructor(count: number, softenable = 1) {
     this.softenable = softenable
     this.slots = Array.from({length: count}, (_, index) => {
-      const slot = new PointLight('#ffffff', 0)
+      const slot = new PointLight(hsl.integer(0, 0, 100), 0)
       slot.name = `shadow-slot-${index}`
       slot.castShadow = true
       slot.shadow.camera.near = 0.1

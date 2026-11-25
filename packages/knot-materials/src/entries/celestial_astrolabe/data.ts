@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'celestial_astrolabe',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Brass remembers the positions of stars that have already moved on.',
   placeholder: {
-    color: '#f3c14b',
+    color: hsl.integer(86, 86, 81),
     shading: 'metal',
   },
 } as const satisfies KnotData

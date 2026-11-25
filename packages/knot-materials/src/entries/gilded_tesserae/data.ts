@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 8EWpDkWx6nfkCqt; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'gilded_tesserae',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Seven thousand hand-set glass tiles, each tilted a hair differently, flicker like candle flames as you walk past the gold.',
   placeholder: {
-    color: '#c8a54a',
+    color: hsl.integer(88, 71, 69),
     shading: 'metal',
   },
 } as const satisfies KnotData

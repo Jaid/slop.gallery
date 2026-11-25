@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, exp, float, mx_noise_float, normalLocal, pmremTexture, positionWorld, refract, time, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -48,7 +49,7 @@ export default class extends KnotMaterial {
     const flicker = time.mul(Math.PI * 3).sin().mul(0.1).add(time.mul(Math.PI * 5).sin().mul(0.07)).add(0.85)
     const flameCore = missFlame.smoothstep(0.004, 0.03).oneMinus()
     const flameHalo = float(0.01).div(missFlame.pow2().add(0.01))
-    const flameLight = color('#ffb35c').mul(flameHalo.mul(0.5).add(flameCore.mul(2.5)))
+    const flameLight = color(hsl.integer(68, 99, 79.4)).mul(flameHalo.mul(0.5).add(flameCore.mul(2.5)))
     glow = glow.add(flameLight.mul(exp(absorption.mul(chord).mul(-0.5))).mul(flicker))
 // The insect: a dark body in the core, ringed by a shimmer of thin-film wing color.
     const insect = knotCurve(float(insectAngle))
@@ -60,7 +61,7 @@ export default class extends KnotMaterial {
     const transmittance = exp(absorption.mul(chord).mul(optical).negate()).mul(vec3(1).sub(vec3(body).mul(0.92)))
 // What lies behind the sap, seen along the view ray. Roughness 0.03 keeps the softboxes crisp.
     const behind = pmremTexture(environment, positionWorld.sub(cameraPosition).normalize(), float(0.03))
-    this.colorNode = color('#2c1204')
+    this.colorNode = color(hsl.integer(49, 74, 12))
     this.metalness = 0
     this.roughness = 0.035
     this.clearcoat = 1
@@ -69,6 +70,6 @@ export default class extends KnotMaterial {
     this.emissiveNode = behind.mul(transmittance).mul(0.85)
       .add(glow)
       .add(wingColor.mul(wings).mul(transmittance).mul(0.35))
-      .add(color('#ff9e4a').mul(rim).mul(0.12))
+      .add(color(hsl.integer(59, 100, 75)).mul(rim).mul(0.12))
   }
 }

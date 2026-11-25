@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, time, vec2} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -65,22 +66,22 @@ export default class extends BaseKnotMaterial {
     // A deep midnight base between the scales with a tiny amount of
     // structure so it doesn't look like plastic.
     const membraneRnd = mx_noise_float(p.mul(28)).mul(0.5).add(0.5)
-    const membraneColor = mix(color('#020310'), color('#0a1830'), membraneRnd)
+    const membraneColor = mix(color(hsl.integer(273, 70, 3.3)), color(hsl.integer(260, 62, 11)), membraneRnd)
     // ---- per-scale structural tint ----
     // A hand-built cosine palette that sweeps through the Morpho spectrum.
     const phase = thickness.mul(0.0035).add(view.x.mul(0.7).sub(view.z.mul(0.4)))
     const structuralR = phase.cos().mul(0.5).add(0.5)
     const structuralB = phase.add(4.189).cos().mul(0.5).add(0.5)
-    const deepBlue = color('#0628e6')
-    const cyan = color('#1ee9ff')
-    const magenta = color('#ff2aa8')
-    const violet = color('#7a2dff')
+    const deepBlue = color(hsl.integer(264.6, 98.6, 36))
+    const cyan = color(hsl.integer(207, 99, 83))
+    const magenta = color(hsl.integer(351, 100, 61.7))
+    const violet = color(hsl.integer(290, 100, 47))
     const baseTint = mix(deepBlue, cyan, structuralB).mul(structuralB.add(0.2))
     const rimTint = mix(magenta, violet, structuralR).mul(structuralR)
     const scaleTint = mix(baseTint, rimTint, rim.pow(1.1))
     // ---- assembly ----
     const body = mix(membraneColor, scaleTint, dome.mul(0.9).add(0.1))
-    const veinedBody = (mix as unknown as (a: any, b: any, t: any) => typeof body)(body, color('#02030a'), veins.clamp().mul(0.8))
+    const veinedBody = (mix as unknown as (a: any, b: any, t: any) => typeof body)(body, color(hsl.integer(272, 50, 3)), veins.clamp().mul(0.8))
     this.colorNode = veinedBody
     this.metalness = 0.65
     this.roughnessNode = dome.mul(0.32).add(veins.clamp().mul(0.4)).add(0.06)
@@ -96,10 +97,10 @@ export default class extends BaseKnotMaterial {
     const ridge = tangentCoord.mul(110).sin().abs().pow(8).mul(dome)
     this.normalNode = proceduralNormal(scaleHeight.add(membraneRnd.mul(0.0009)).add(ridge.mul(0.0008)), 0.8)
     // ---- glow ----
-    const veinGlow = color('#3a55ff').mul(veins.clamp()).mul(intimate).mul(0.7)
-    const crest = color('#dff6ff').mul(dome.smoothstep(0.55, 0.95)).mul(ridge).mul(intimate.mul(0.5).add(0.5)).mul(0.7)
-    const rimGlow = mix(color('#3a55ff'), color('#ff6dc4'), rim.pow(0.6)).mul(rim.pow(1.4)).mul(0.35)
-    const facingTint = mix(color('#2c3aa0'), color('#eef2ff'), facing).mul(facing).mul(0.15)
+    const veinGlow = color(hsl.integer(269, 100, 47.4)).mul(veins.clamp()).mul(intimate).mul(0.7)
+    const crest = color(hsl.integer(224, 100, 95)).mul(dome.smoothstep(0.55, 0.95)).mul(ridge).mul(intimate.mul(0.5).add(0.5)).mul(0.7)
+    const rimGlow = mix(color(hsl.integer(269, 100, 47.4)), color(hsl.integer(346, 100, 69.6)), rim.pow(0.6)).mul(rim.pow(1.4)).mul(0.35)
+    const facingTint = mix(color(hsl.integer(271, 85, 31)), color(hsl.integer(272, 100, 95.6)), facing).mul(facing).mul(0.15)
     this.emissiveNode = veinGlow.add(crest).add(rimGlow).add(facingTint)
     facing
   }

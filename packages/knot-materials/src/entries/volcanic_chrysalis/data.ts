@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'volcanic_chrysalis',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A cracked volcanic shell waits for the bright creature forming beneath it.',
   placeholder: {
-    color: '#ff4d17',
+    color: hsl.integer(35.5, 100, 61.5),
     shading: 'smooth',
   },
   displacement: 0.018,

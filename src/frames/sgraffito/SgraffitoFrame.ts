@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, clamp, float, max, select, vec2} from 'three/tsl'
 
 import {line} from '#src/lib/materials/filters.ts'
@@ -65,7 +66,7 @@ export default class SgraffitoFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#3f6b58'
+  override readonly tint = hsl.integer(165, 45, 41)
   override readonly title = 'Verdigris sgraffito'
 
   override createGeometry(width: number, height: number) {
@@ -85,10 +86,10 @@ export default class SgraffitoFrame extends PortraitFrame {
         },
       }),
       new FramePaintMaterial({
-        color: '#2f5a48',
+        color: hsl.integer(165, 52, 34),
         roughness: 0.7,
         wear: 0.25,
-        under: '#a77a3a',
+        under: hsl.integer(74, 65, 55),
         grime: 0.3,
         layers: surface => {
           const {t} = band(surface, frieze.from, frieze.to)

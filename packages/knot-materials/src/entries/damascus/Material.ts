@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, cos, float, mix, sin, time, vec3} from 'three/tsl'
 
 import {fbm} from '../../candidates/space_bunny/lib/fbm.ts'
@@ -60,11 +61,11 @@ export default class extends KnotMaterial {
     const line = coarse.edge.mul(0.55).add(fine.edge.mul(0.45))
 // High-carbon steel etches matte and dark; the bright low-carbon line between them stays a true mirror.
     const {belt} = polishing(p, time)
-    const etched = mix(color('#1e2126'), color('#0a0b0d'), pattern).mul(belt.mul(0.35).add(0.8))
-    const polished = mix(color('#d8e0ea'), color('#ffffff'), line).mul(belt.mul(0.5).add(0.8))
+    const etched = mix(color(hsl.integer(261, 11, 14)), color(hsl.integer(264, 8, 6)), pattern).mul(belt.mul(0.35).add(0.8))
+    const polished = mix(color(hsl.integer(254, 24, 89)), color(hsl.integer(0, 0, 100)), line).mul(belt.mul(0.5).add(0.8))
     const base = mix(etched, polished, line)
     const oxide = fbm(p.mul(4.2).add(vec3(twist.mul(0.5), 0, 0)))
-    const tempered = mix(base, base.mul(color('#ff9a52')), oxide.smoothstep(0.08, 0.26).mul(0.4))
+    const tempered = mix(base, base.mul(color(hsl.integer(53, 100, 74))), oxide.smoothstep(0.08, 0.26).mul(0.4))
     this.colorNode = tempered.mul(facing.oneMinus().mul(0.24).add(0.84))
     this.metalnessNode = mix(float(0.7), float(1), line)
     this.roughnessNode = mix(float(0.4), float(0.03), line).add(pattern.mul(0.06)).add(grazing.mul(0.03))
@@ -77,9 +78,9 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(relief, 0.0006)
 // The etched high-carbon layer scatters a little of the room back as a warm haze; nothing else glows.
     const haze = pattern.mul(0.5).add(line.mul(0.5))
-    this.emissiveNode = color('#8a4a1e').mul(haze).mul(grazing.mul(0.4).add(0.16))
-      .add(color('#f4f8ff').mul(line).mul(intimate.mul(0.3).add(0.3)))
-      .add(color('#ffd6a8').mul(belt).mul(line).mul(0.3))
+    this.emissiveNode = color(hsl.integer(52, 74, 40)).mul(haze).mul(grazing.mul(0.4).add(0.16))
+      .add(color(hsl.integer(262, 100, 97.4)).mul(line).mul(intimate.mul(0.3).add(0.3)))
+      .add(color(hsl.integer(70, 100, 88.4)).mul(belt).mul(line).mul(0.3))
     this.envMapIntensity = 1.4
   }
 }

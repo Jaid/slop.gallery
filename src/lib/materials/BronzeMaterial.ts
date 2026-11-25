@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, positionGeometry} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -17,7 +18,7 @@ export default class BronzeMaterial extends MeshStandardNodeMaterial {
     })
     const patina = mx_noise_float(positionGeometry.mul(7)).mul(0.5).add(0.5).smoothstep(0.35, 0.8)
     const grain = mx_noise_float(positionGeometry.mul(90)).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#c9a46a'), color('#86643a'), patina.mul(0.7)).mul(grain.mul(0.08).add(0.96))
+    this.colorNode = mix(color(hsl.integer(78, 52, 70)), color(hsl.integer(71, 51, 45)), patina.mul(0.7)).mul(grain.mul(0.08).add(0.96))
     this.roughnessNode = patina.mul(0.16).add(grain.mul(0.05)).add(0.26)
   }
 }

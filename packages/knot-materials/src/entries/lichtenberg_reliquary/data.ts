@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'lichtenberg_reliquary',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A branching flash rests inside its vessel like a saint of brief things.',
   placeholder: {
-    color: '#6d8dff',
+    color: hsl.integer(270, 100, 62),
     shading: 'smooth',
   },
 } as const satisfies KnotData

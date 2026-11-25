@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: MgSdUInR50wESrr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'morpho_mirage',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand butterfly wings share one knot. Their blue is not pigment but light, returned only to the eye that moves to earn it.',
   placeholder: {
-    color: '#0e4389',
+    color: hsl.integer(258, 89, 30),
     shading: 'glass',
   },
 } as const satisfies KnotData

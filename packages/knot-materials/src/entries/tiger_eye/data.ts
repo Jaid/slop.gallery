@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tiger_eye',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Silk turned to stone, and one band of light that will not be caught – it slips away as you circle the knot.',
   placeholder: {
-    color: '#c07a20',
+    color: hsl.integer(67, 85, 58),
     shading: 'stone',
   },
 } as const satisfies KnotData

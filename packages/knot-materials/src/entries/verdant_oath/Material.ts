@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fill, rotatePoint, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/pattern.ts'
@@ -39,9 +40,9 @@ export default class extends KnotMaterial {
       .mul(fill(local.y.add(0.3).abs().sub(0.13), fw))
     const goldMask = outline.max(veins.mul(0.65)).max(stem)
     const tide = tube.x.mul(TAU * 3).sub(time.mul(0.23)).add(angle.mul(0.3)).sin().mul(0.5).add(0.5)
-    const lacquer = mix(color('#190c18'), color('#491822'), mx_noise_float(p.mul(3)).mul(0.3).add(0.35))
-    const mineral = mix(color('#1b655d'), color('#8cac85'), facing.mul(0.5).add(tide.mul(0.25)).add(rnd.y.mul(0.15)))
-    const gold = mix(color('#9b672b'), color('#e9c681'), grazing.mul(0.3).add(tide.mul(0.35)).add(0.2))
+    const lacquer = mix(color(hsl.integer(330, 40, 8)), color(hsl.integer(11, 62, 19)), mx_noise_float(p.mul(3)).mul(0.3).add(0.35))
+    const mineral = mix(color(hsl.integer(185, 80, 38)), color(hsl.integer(140, 35, 66)), facing.mul(0.5).add(tide.mul(0.25)).add(rnd.y.mul(0.15)))
+    const gold = mix(color(hsl.integer(67, 70, 49)), color(hsl.integer(84, 65, 82)), grazing.mul(0.3).add(tide.mul(0.35)).add(0.2))
     const powder = beads(p.mul(240), 36)
     const dust = powder.mask.mul(powder.random.z.smoothstep(0.72, 0.9)).mul(intimate).mul(leaf.oneMinus())
     this.colorNode = mix(mix(lacquer, mineral, leaf), gold, goldMask.max(dust))

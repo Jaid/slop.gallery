@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, time, uv, vec2} from 'three/tsl'
 
 import {jewel, stroke, tile} from '../../candidates/gpt_sol/lib/ornament.ts'
@@ -32,13 +33,13 @@ export default class extends KnotMaterial {
     const hub = jewel(q, [0, 0], 0.045)
     const engravings = mainRim.add(innerRim).add(orbitA).add(orbitB).add(ticks.mul(0.5)).add(major).add(hub).clamp()
     const brushed = angle.mul(80).sin().mul(0.5).add(0.5)
-    this.colorNode = mix(mix(mix(color('#080e23'), color('#29405b'), brushed.mul(0.19).add(grazing.mul(0.24))), color('#bc8951'), engravings.mul(0.86)), color('#e6cfaa'), planetA.add(planetB).clamp())
+    this.colorNode = mix(mix(mix(color(hsl.integer(269, 58, 7.5)), color(hsl.integer(253, 42, 27)), brushed.mul(0.19).add(grazing.mul(0.24))), color(hsl.integer(67, 57, 61)), engravings.mul(0.86)), color(hsl.integer(80, 46, 84)), planetA.add(planetB).clamp())
     this.metalness = 0.91
     this.roughnessNode = float(0.22).sub(engravings.mul(0.08)).add(dial.oneMinus().mul(0.12))
     this.clearcoat = 0.78
     this.clearcoatRoughness = 0.056
     this.anisotropy = 0.43
     this.normalNode = proceduralNormal(engravings.mul(0.5).add(dial.mul(0.18)), 0.0012)
-    this.emissiveNode = color('#f3bd72').mul(planetA.mul(1.3).add(planetB).add(hub.mul(0.14))).add(color('#77d4ef').mul(orbitA.add(orbitB)).mul(near.mul(0.16).add(0.07))).add(color('#f5d09b').mul(mainRim).mul(grazing.pow(4)).mul(0.18))
+    this.emissiveNode = color(hsl.integer(74, 76, 80)).mul(planetA.mul(1.3).add(planetB).add(hub.mul(0.14))).add(color(hsl.integer(219, 73, 79)).mul(orbitA.add(orbitB)).mul(near.mul(0.16).add(0.07))).add(color(hsl.integer(77, 71, 86)).mul(mainRim).mul(grazing.pow(4)).mul(0.18))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, bitangentView, color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -171,12 +172,12 @@ export default class extends KnotMaterial {
     const distance = positionView.length()
     const intimate = distance.smoothstep(1.1, 3.2).oneMinus()
     const hiddenDust = cellularPoints(positionGeometry.mul(24), 0.015, 0.105, 0.88).mul(intimate.pow(2))
-    const cold = mix(color('#c3daed'), color('#c3b8ef'), identity)
-    const warm = color('#ffd6a4')
+    const cold = mix(color(hsl.integer(243, 44, 86)), color(hsl.integer(294, 64, 78)), identity)
+    const warm = color(hsl.integer(72, 100, 88.3))
     const starlight = vec3(mix(cold, warm, identity.smoothstep(0.32, 0.84)))
-    this.colorNode = vec3(mix(color('#030618'), color('#18244a'), cloud.mul(0.42).add(grazing.mul(0.26))))
-      .add(color('#2b2455').mul(nebula.smoothstep(0.57, 0.82)).mul(0.55))
-      .add(color('#9eabbd').mul(ring.add(innerRing)).mul(0.32))
+    this.colorNode = vec3(mix(color(hsl.integer(269, 70, 4.7)), color(hsl.integer(268, 60, 17)), cloud.mul(0.42).add(grazing.mul(0.26))))
+      .add(color(hsl.integer(287, 60, 19)).mul(nebula.smoothstep(0.57, 0.82)).mul(0.55))
+      .add(color(hsl.integer(257, 18, 69)).mul(ring.add(innerRing)).mul(0.32))
       .add(starlight.mul(silhouette).mul(0.22))
     this.metalness = 0.18
     this.roughnessNode = float(0.47).sub(grazing.mul(0.13)).sub(dot.mul(0.06)).add(cloud.mul(0.06))
@@ -187,11 +188,11 @@ export default class extends KnotMaterial {
     this.emissiveNode = starlight.mul(silhouette.mul(0.62).add(line.mul(0.37))).mul(chase.mul(0.35).add(0.65))
       .add(starlight.mul(dot).mul(glimmer).mul(1.85))
       .add(starlight.mul(glow).mul(intimate.mul(0.19).add(0.13)))
-      .add(color('#fff5e3').mul(glint).mul(0.7))
-      .add(color('#aabed8').mul(ring.add(innerRing)).mul(0.13))
-      .add(color('#80bbdf').mul(dust).mul(intimate.mul(0.6).add(0.12)))
-      .add(color('#eacaff').mul(hiddenDust).mul(0.5))
-      .add(color('#4b3ab1').mul(nebula.smoothstep(0.67, 0.9)).mul(0.07))
-      .add(color('#5378cb').mul(grazing.pow(3)).mul(0.15))
+      .add(color(hsl.integer(82, 100, 97)).mul(glint).mul(0.7))
+      .add(color(hsl.integer(255, 33, 76)).mul(ring.add(innerRing)).mul(0.13))
+      .add(color(hsl.integer(236, 55, 73)).mul(dust).mul(intimate.mul(0.6).add(0.12)))
+      .add(color(hsl.integer(311, 100, 86)).mul(hiddenDust).mul(0.5))
+      .add(color(hsl.integer(283, 79, 36)).mul(nebula.smoothstep(0.67, 0.9)).mul(0.07))
+      .add(color(hsl.integer(265, 67, 52)).mul(grazing.pow(3)).mul(0.15))
   }
 }

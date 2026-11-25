@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -22,14 +23,14 @@ export default class extends KnotMaterial {
     const photophores = seeds.smoothstep(0.42, 0.62)
     const phase = mx_noise_float(p.mul(2.3)).mul(6.283)
     const pulse = time.mul(0.55).add(phase).sin().mul(0.5).add(0.5)
-    this.colorNode = mix(color('#050a10'), color('#123038'), pile.mul(0.5).add(0.5))
+    this.colorNode = mix(color(hsl.integer(249, 33, 5)), color(hsl.integer(218, 56, 19)), pile.mul(0.5).add(0.5))
     this.metalness = 0
     this.roughnessNode = fuzz.mul(0.1).add(0.82)
     this.sheen = 1
     this.sheenRoughness = 0.35
-    this.sheenColor.set('#2fd8c8')
+    this.sheenColor.set(hsl.integer(185, 88, 76))
     this.specularIntensity = 0.2
     this.normalNode = proceduralNormal(pile.add(fuzz.mul(0.35)), 0.0026)
-    this.emissiveNode = color('#37f0d2').mul(photophores).mul(pulse.mul(0.75).add(0.25)).mul(near.mul(0.5).add(0.55)).mul(1.4).add(color('#1ba8c8').mul(grazing.pow(2)).mul(0.22))
+    this.emissiveNode = color(hsl.integer(178, 92, 84)).mul(photophores).mul(pulse.mul(0.75).add(0.25)).mul(near.mul(0.5).add(0.55)).mul(1.4).add(color(hsl.integer(219, 92, 62.5)).mul(grazing.pow(2)).mul(0.22))
   }
 }

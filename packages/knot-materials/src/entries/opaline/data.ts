@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'opaline',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A million silica spheres vote on which colour the light should be today.',
   placeholder: {
-    color: '#d6d3cf',
+    color: hsl.integer(75, 6, 85),
     shading: 'glass',
   },
 } as const satisfies KnotData

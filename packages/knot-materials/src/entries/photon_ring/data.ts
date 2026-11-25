@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'photon_ring',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The knot is a hole in the sky: everything behind it arrives bent, and the disk that feeds it blazes on the side sweeping toward you.',
   placeholder: {
-    color: '#1d1436',
+    color: hsl.integer(293, 59, 12),
     shading: 'ghost',
   },
 } as const satisfies KnotData

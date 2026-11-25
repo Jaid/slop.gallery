@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4AEfQg7Qgj1dEVQ.
 export default {
   id: 'gothic_vitrail',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Jeweled medieval glass bound in weathered lead catches the morning sun, transforming silent stone into an ocean of celestial fire.',
   placeholder: {
-    color: '#761ab8',
+    color: hsl.integer(305, 91, 38),
     shading: 'glass',
   },
 } as const satisfies KnotData

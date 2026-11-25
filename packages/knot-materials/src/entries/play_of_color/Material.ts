@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -39,8 +40,8 @@ export default class extends KnotMaterial {
     const pinfire = grain.mul(0.55).add(0.45).mul(near.mul(0.35).add(0.65))
     const incidence = grazing.mul(0.5).add(0.5)
     const play = ordered.mul(fire).mul(pinfire).mul(incidence).clamp()
-    const body = mix(color('#02040a'), color('#0b141d'), grain.mul(0.7).add(0.1))
-    const potch = mix(color('#77869a'), color('#3a4756'), grain)
+    const body = mix(color(hsl.integer(262, 45, 3.3)), color(hsl.integer(249, 35, 9)), grain.mul(0.7).add(0.1))
+    const potch = mix(color(hsl.integer(256, 18, 55)), color(hsl.integer(252, 21, 30)), grain)
     const stone = mix(body, potch, ordered.oneMinus().mul(grain.mul(0.35).add(0.2)))
     this.colorNode = mix(stone, spectrum.mul(1.5), play)
     this.metalness = 0
@@ -67,8 +68,8 @@ export default class extends KnotMaterial {
       .mul(play)
       .mul(intimate.mul(0.55).add(0.16))
       .mul(0.95)
-      .add(color('#cfe6ff').mul(flame).mul(play.mul(0.6).add(0.08)).mul(0.35))
-      .add(color('#8fc4ff').mul(rim).mul(near.mul(0.5).add(0.5)).mul(0.05))
+      .add(color(hsl.integer(250, 100, 90)).mul(flame).mul(play.mul(0.6).add(0.08)).mul(0.35))
+      .add(color(hsl.integer(252, 99, 77)).mul(rim).mul(near.mul(0.5).add(0.5)).mul(0.05))
       .add(spectrum.mul(shimmer).mul(near).mul(0.3))
       .add(spectrum.mul(sparkle).mul(play).mul(2.4))
     this.emissiveNode = contraLuz

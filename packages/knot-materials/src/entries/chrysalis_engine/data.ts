@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chrysalis_engine',
   candidateId: 'gpt_sol',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Something mechanical is dreaming of the wings it will grow.',
   placeholder: {
-    color: '#53efd0',
+    color: hsl.integer(177, 84, 84),
     shading: 'smooth',
   },
 } as const satisfies KnotData

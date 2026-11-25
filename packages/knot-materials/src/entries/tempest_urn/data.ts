@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tempest_urn',
   candidateId: 'glm_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A storm has been given a vessel, but not an ending.',
   placeholder: {
-    color: '#c9d4e8',
+    color: hsl.integer(263, 36, 85),
     shading: 'smooth',
   },
 } as const satisfies KnotData

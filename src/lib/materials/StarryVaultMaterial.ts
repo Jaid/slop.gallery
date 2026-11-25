@@ -1,6 +1,7 @@
 import type {Node} from 'three/webgpu'
 
 import {DEGREES_TO_RADIANS as degrees} from 'math'
+import hsl from 'okhsl'
 import {acos, asin, atan, color, float, max, min, mix, mx_noise_float, normalize, positionLocal, vec3} from 'three/tsl'
 import {DoubleSide, MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -54,7 +55,7 @@ export default class StarryVaultMaterial extends MeshStandardNodeMaterial {
     const gilt = max(max(windowBand, rule), max(springing, crown)).max(star.mul(clear).mul(elevation.mul(radius).smoothstep(0.14, 0.16)))
     const coats = mx_noise_float(positionLocal.mul(2.5)).mul(0.5).add(0.5)
     const brush = mx_noise_float(positionLocal.mul(vec3(18, 40, 18))).mul(0.5).add(0.5)
-    const blue = mix(color('#14215a'), color('#22388e'), coats.mul(0.7).add(brush.mul(0.15)))
+    const blue = mix(color(hsl.integer(269, 81, 17.4)), color(hsl.integer(268, 83, 29)), coats.mul(0.7).add(brush.mul(0.15)))
     this.colorNode = mix(blue, vec3(...goldReflectance).mul(0.85), gilt)
     this.metalnessNode = gilt
     this.roughnessNode = mix(float(0.82).add(brush.mul(0.1)), float(0.32), gilt)

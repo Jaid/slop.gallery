@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BJsZFlj5mQPSiFo; fixture: knot-material-shaders.
 export default {
   id: 'moonstone_dune',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Fine lunar dust drifts over a warm stone, catching blue fire between one breath and the next.',
   placeholder: {
-    color: '#d4c2a0',
+    color: hsl.integer(83, 35, 79),
     shading: 'stone',
   },
   displacement: 0.00011,

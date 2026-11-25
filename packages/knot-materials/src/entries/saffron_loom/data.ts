@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IBraVE33noBp60D.
 export default {
   id: 'saffron_loom',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Every thread crosses another life, weaving a midnight tapestry with fire caught in its seams.',
   placeholder: {
-    color: '#1b5070',
+    color: hsl.integer(239, 70, 32),
     shading: 'fabric',
   },
 } as const satisfies KnotData

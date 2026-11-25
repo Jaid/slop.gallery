@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nacre',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The shell keeps a rainbow it never earned – a thousand thin years of moonlight folded into one skin.',
   placeholder: {
-    color: '#d0c7cc',
+    color: hsl.integer(343, 10, 81),
     shading: 'glass',
   },
 } as const satisfies KnotData

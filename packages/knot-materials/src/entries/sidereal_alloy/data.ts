@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HU72JSGdKyp7pBO; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sidereal_alloy',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Iron cooled between the stars, slowly enough to learn their geometry. Every silver blade is a sentence older than Earth.',
   placeholder: {
-    color: '#657482',
+    color: hsl.integer(246, 16, 48),
     shading: 'metal',
   },
 } as const satisfies KnotData

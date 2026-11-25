@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, positionGeometry, positionViewDirection} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -21,9 +22,9 @@ export default class extends KnotMaterial {
     const banding = rings.mul(0.8).add(tight).clamp()
     const seam = opticalLine(rings.sub(0.5), 0.05).mul(0.6)
     const grit = mx_noise_float(p.mul(40)).mul(0.5).add(0.5)
-    const dark = mix(color('#04150d'), color('#0f5334'), banding.pow(2))
-    const bright = mix(dark, color('#7fd9a6'), banding.smoothstep(0.55, 0.98))
-    this.colorNode = mix(bright, color('#d7f2e2'), seam.mul(0.35)).mul(grit.mul(0.08).add(0.96))
+    const dark = mix(color(hsl.integer(163, 71, 8)), color(hsl.integer(158, 94, 30)), banding.pow(2))
+    const bright = mix(dark, color(hsl.integer(158, 65, 78.5)), banding.smoothstep(0.55, 0.98))
+    this.colorNode = mix(bright, color(hsl.integer(160, 49, 92.7)), seam.mul(0.35)).mul(grit.mul(0.08).add(0.96))
     this.metalness = 0
     this.roughnessNode = banding.oneMinus().mul(0.09).add(grit.mul(0.03)).add(0.05)
     this.ior = 1.66
@@ -31,6 +32,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.normalNode = proceduralNormal(banding.mul(0.5).add(grit.mul(0.15)), 0.0012)
-    this.emissiveNode = color('#2fe08f').mul(seam).mul(0.12).add(color('#a8ffd2').mul(grazing.pow(5)).mul(0.14))
+    this.emissiveNode = color(hsl.integer(157, 94, 77)).mul(seam).mul(0.12).add(color(hsl.integer(161, 100, 92.2)).mul(grazing.pow(5)).mul(0.14))
   }
 }

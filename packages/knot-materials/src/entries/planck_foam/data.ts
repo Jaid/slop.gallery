@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'planck_foam',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Tiny chambers gather at the edge of what can be measured.',
   placeholder: {
-    color: '#7a5cff',
+    color: hsl.integer(286, 99, 53),
     shading: 'liquid',
   },
 } as const satisfies KnotData

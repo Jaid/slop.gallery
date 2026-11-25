@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'gossamer_dew',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Small droplets make constellations along a nearly invisible thread.',
   placeholder: {
-    color: '#d7ecff',
+    color: hsl.integer(245, 100, 92),
     shading: 'fabric',
   },
 } as const satisfies KnotData

@@ -5,6 +5,7 @@ import {Color, DoubleSide, MeshBasicNodeMaterial, RenderPipeline} from 'three/we
 
 import {collectMeshPattern} from './meshPath.ts'
 import {barycentricName, swapTriangleGeometry} from './triangleGeometry.ts'
+import {wireframeColors} from './wireframeColors.ts'
 import wireframeCoverage from './wireframeCoverage.ts'
 
 // a layer nothing else uses, for drawing the highlighted lines in a pass of their own
@@ -123,8 +124,8 @@ export default class WireframeRenderPipeline extends RenderPipeline {
     const {camera, renderer, scene} = this
     const {autoClear} = renderer
     const {background, backgroundNode, overrideMaterial} = scene
-    this.lineColor.value.set(this.color ?? (this.highlight ? '#ff1515' : '#fff'))
-    this.highlightLineColor.value.set(this.highlightColor ?? '#2f7bff')
+    this.lineColor.value.set(this.color ?? (this.highlight ? wireframeColors.unhighlighted : wireframeColors.line))
+    this.highlightLineColor.value.set(this.highlightColor ?? wireframeColors.highlight)
     this.angleIndicator.value = this.angleIndicatorStrength / 100
     this.halfLineWidth.value = (typeof this.lineWidth === 'number' ? this.lineWidth : this.lineWidth(renderer)) / 2
     const barycentric = this.lineStyle === 'barycentric'

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, Fn, interleavedGradientNoise, Loop, mix, modelWorldMatrixInverse, mx_atan2, mx_cell_noise_float, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, refract, screenCoordinate, select, time, transformNormalToView, uv, vec2, vec3, vec4} from 'three/tsl'
 
 import {panelSky, proceduralEnvironment} from '../../candidates/gemini_argon/lib/environment.ts'
@@ -39,10 +40,10 @@ function pyriteGrains(position: Node<'vec3'>, cellSize: number) {
 }
 /** Blackbody solar plasma ramp from deep crimson-umbral red to blinding photosphere white-gold. */
 function solarBlackbody(heat: Node<'float'>) {
-  const deep = mix(color('#180301'), color('#8a1102'), heat.smoothstep(0, 0.32))
-  const mid = mix(deep, color('#ff5d08'), heat.smoothstep(0.24, 0.62))
-  const bright = mix(mid, color('#ffd25a'), heat.smoothstep(0.55, 0.88))
-  return mix(bright, color('#fffdf4'), heat.smoothstep(0.82, 1.18))
+  const deep = mix(color(hsl.integer(34, 86, 5.4)), color(hsl.integer(31, 99, 31.4)), heat.smoothstep(0, 0.32))
+  const mid = mix(deep, color(hsl.integer(40.4, 100, 63.4)), heat.smoothstep(0.24, 0.62))
+  const bright = mix(mid, color(hsl.integer(88, 100, 86)), heat.smoothstep(0.55, 0.88))
+  return mix(bright, color(hsl.integer(96, 100, 99.2)), heat.smoothstep(0.82, 1.18))
 }
 /** An ancient celestial astrolabe and Dyson-sphere reliquary forged from burnished orichalcum and deep cobalt-lapis enamel, caging a miniature boiling star. As the viewer approaches, the mechanical iris louvers slide open and lift to reveal the magnetic coronal loops inside. */
 export default class extends KnotMaterial {
@@ -119,11 +120,11 @@ export default class extends KnotMaterial {
     const recessedPanel = ringWave.smoothstep(shutterThreshold.add(0.16), shutterThreshold.add(0.28)).mul(ribStrut.oneMinus()).mul(helixAStrut.oneMinus()).mul(helixBStrut.oneMinus())
 // Pyrite gold flecks inside the cobalt-lapis enamel.
     const pyriteSpark = pyriteGrains(p, 1 / 95).mul(near)
-    const lapisColor = mix(color('#091b3a'), color('#163c73'), mx_noise_float(p.mul(24)).mul(0.5).add(0.5)).add(color('#ebd186').mul(pyriteSpark.mul(0.55)))
+    const lapisColor = mix(color(hsl.integer(261, 73, 12)), color(hsl.integer(258, 77, 26.5)), mx_noise_float(p.mul(24)).mul(0.5).add(0.5)).add(color(hsl.integer(91, 67, 84.3)).mul(pyriteSpark.mul(0.55)))
 // Brushed anisotropic gold with subtle warm copper-rose variation along the knot.
 // The 2 mm brush period fades out before it gets closer than ~6 px, so its relief never aliases into stripes along the tube.
     const brushWave = filteredCos(tube.y.mul(TAU * 420), 0.3, 1.05).mul(near)
-    const goldBase = mix(color('#c98e32'), color('#ffe094'), helixAStrut.max(bezelRim).mul(0.55).add(brushWave.mul(0.06)).add(0.25))
+    const goldBase = mix(color(hsl.integer(74, 79, 64)), color(hsl.integer(88, 100, 90.2)), helixAStrut.max(bezelRim).mul(0.55).add(brushWave.mul(0.06)).add(0.25))
     const armorColor = mix(goldBase, lapisColor, recessedPanel.mul(inlayPattern.oneMinus()))
 // Shutters lift outward at the edges of the apertures when the viewer approaches.
     const gazeAlignment = baseNormal.dot(view).smoothstep(-0.2, 0.85)
@@ -180,9 +181,9 @@ export default class extends KnotMaterial {
     })
 // Subsurface scattering and golden rim incandescence where the inner star backlights the shutter edges.
     const apertureEdgeGlow = ringWave.sub(shutterThreshold).abs().smoothstep(0, 0.16).oneMinus().mul(armorMask)
-    const edgeIncandescence = mix(color('#ff4500'), color('#ffd875'), apertureEdgeGlow.pow(2)).mul(apertureEdgeGlow).mul(proximity.mul(1.4).add(0.6))
+    const edgeIncandescence = mix(color(hsl.integer(35.4, 100, 60.5)), color(hsl.integer(89, 100, 88)), apertureEdgeGlow.pow(2)).mul(apertureEdgeGlow).mul(proximity.mul(1.4).add(0.6))
 // Celestial runes glowing softly in the engraved channels when the core flares.
-    const runeGlow = mix(color('#ff6a14'), color('#fff0b8'), proximity).mul(inlayPattern).mul(armorMask).mul(recessedPanel.oneMinus()).mul(proximity.mul(0.85).add(0.2))
+    const runeGlow = mix(color(hsl.integer(43.6, 100, 65.3)), color(hsl.integer(95, 100, 94.6)), proximity).mul(inlayPattern).mul(armorMask).mul(recessedPanel.oneMinus()).mul(proximity.mul(0.85).add(0.2))
 // Custom cathedral-observatory studio environment with warm golden key lights and deep sapphire counter-fill.
     const observatorySky = panelSky({
       zenith: [0.02, 0.03, 0.08],
@@ -233,7 +234,7 @@ export default class extends KnotMaterial {
       }],
     })
     this.envNode = proceduralEnvironment(observatorySky)
-    const windowSapphireTint = color('#080406')
+    const windowSapphireTint = color(hsl.integer(345, 25, 4))
     this.colorNode = mix(windowSapphireTint, armorColor, armorMask)
     this.metalnessNode = armorMask.mul(recessedPanel.mul(-0.78).add(0.96))
     this.roughnessNode = mix(float(0.025), mix(float(0.14), float(0.26), recessedPanel).sub(bezelRim.mul(0.07)).clamp(0.05, 0.35), armorMask)
@@ -244,11 +245,11 @@ export default class extends KnotMaterial {
     this.clearcoatNode = mix(float(1), recessedPanel.mul(0.75).add(0.15), armorMask)
     this.clearcoatRoughnessNode = mix(float(0.015), float(0.06), armorMask)
     const sparkle = glints(viewNormal, 180).mul(bezelRim.max(pyriteSpark)).mul(armorMask)
-    const coronalRim = color('#ff7b24').mul(grazing.pow(3.5)).mul(windowMask.mul(0.7).add(0.15)).mul(0.65)
+    const coronalRim = color(hsl.integer(48, 100, 68)).mul(grazing.pow(3.5)).mul(windowMask.mul(0.7).add(0.15)).mul(0.65)
     this.emissiveNode = solarVolume().mul(windowMask)
       .add(edgeIncandescence.mul(1.35))
       .add(runeGlow.mul(0.65))
-      .add(color('#fff4d2').mul(sparkle).mul(1.8))
+      .add(color(hsl.integer(92, 100, 96.2)).mul(sparkle).mul(1.8))
       .add(coronalRim)
   }
 }

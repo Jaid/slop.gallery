@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {Break, color, float, Fn, If, Loop, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, refract, step as stepFunction, time, vec3, vec4} from 'three/tsl'
 
 import {surfaceFrame, tubeChord} from '../../candidates/claude_opus/lib/knotSpace.ts'
@@ -36,11 +37,11 @@ function nebula(q: Node<'vec3'>, large: Node<'vec4'>) {
   const dust = dustField.smoothstep(0.08, 0.32)
 // Ionization fronts: the eroding faces of the pillars, lit by the young stars they shelter.
   const rim = dustField.sub(0.07).abs().smoothstep(0, 0.05).oneMinus().mul(cloud.add(0.3))
-  const hydrogen = color('#ff2457').mul(1.25)
-  const oxygen = color('#18d6c4')
-  const sulfur = color('#ff8a3a')
+  const hydrogen = color(hsl.integer(16, 100, 58.8)).mul(1.25)
+  const oxygen = color(hsl.integer(185, 95.5, 75))
+  const sulfur = color(hsl.integer(52, 99, 71))
   const tint = mix(mix(hydrogen, sulfur, ionization.smoothstep(0.62, 0.85).mul(0.55)), oxygen, ionization.smoothstep(0.3, 0.48).oneMinus())
-  const emission = tint.mul(gas.mul(dust.oneMinus())).mul(2.2).add(color('#ffd2a6').mul(rim).mul(1.6))
+  const emission = tint.mul(gas.mul(dust.oneMinus())).mul(2.2).add(color(hsl.integer(66, 100, 87.4)).mul(rim).mul(1.6))
   const extinction = dust.mul(70).add(gas.mul(3))
   return vec4(emission, extinction)
 }
@@ -73,7 +74,7 @@ const stars = Fn(([origin, direction, chord, start, end, entering, extinction, f
     const window = miss.div(starReach).pow2().oneMinus().max(0).pow2()
     const brightness = identity.x.smoothstep(richness, 1).pow(2.5).mul(14)
     const twinkle = time.mul(identity.y.mul(3).add(1.2)).add(identity.z.mul(50)).sin().mul(0.22).add(0.88)
-    const hue = mix(mix(color('#ffb877'), color('#fff5ea'), identity.y.smoothstep(0.2, 0.55)), color('#a9c8ff'), identity.z.smoothstep(0.55, 0.95))
+    const hue = mix(mix(color(hsl.integer(63, 100, 81)), color(hsl.integer(70, 100, 97)), identity.y.smoothstep(0.2, 0.55)), color(hsl.integer(262, 100, 80)), identity.z.smoothstep(0.55, 0.95))
     const core = miss.div(radius).pow2().negate().exp()
     const halo = miss.div(starReach * 0.45).pow2().negate().exp().mul(0.05)
     light.addAssign(hue.mul(core.add(halo).mul(window).mul(energy).mul(brightness).mul(twinkle).mul(inSegment).mul(inside).mul(transmittance)))
@@ -140,7 +141,7 @@ export default class extends KnotMaterial {
     const ignitionSeed = mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5)
     const ignitionPhase = mx_noise_float(p.mul(1.6).add(vec3(7.1, -2.3, 4.9))).mul(9)
     const ignition = time.mul(0.6).add(ignitionPhase).sin().mul(0.5).add(0.5).pow(6).mul(ignitionSeed.smoothstep(0.62, 0.8))
-    this.colorNode = color('#010103')
+    this.colorNode = color(hsl.integer(282, 42, 2))
     this.metalness = 0
     this.roughness = 0.03
     this.ior = glassIndex

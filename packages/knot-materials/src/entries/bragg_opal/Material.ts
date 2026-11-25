@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, mx_worley_noise_float, vec3} from 'three/tsl'
 
 import {braggDiffraction} from '../../candidates/gemini_flash/lib/braggDiffraction.ts'
@@ -18,7 +19,7 @@ export default class extends KnotMaterial {
     this.thickness = 0.82
     this.ior = 1.45
     this.dispersion = 0.35
-    this.attenuationColor.set('#0a1d26')
+    this.attenuationColor.set(hsl.integer(231, 52, 12))
     this.attenuationDistance = 1.2
     this.name = knotData.id
     const {p, view, grazing, rim, near, intimate} = viewerFrame()
@@ -53,8 +54,8 @@ export default class extends KnotMaterial {
     // A contained pinfire point keeps its own tint across crystal boundaries.
     const pinIdentity = cellNoiseVec3(pinCoord.floor())
     // Dark ironstone matrix host beneath milky translucent silica cap
-    const matrixColor = mix(color('#05070a'), color('#141c22'), mx_noise_float(p.mul(8)).mul(0.5).add(0.5))
-    const opalescentHaze = color('#80c8e8')
+    const matrixColor = mix(color(hsl.integer(254, 19, 4)), color(hsl.integer(241, 22, 12)), mx_noise_float(p.mul(8)).mul(0.5).add(0.5))
+    const opalescentHaze = color(hsl.integer(229, 63, 76))
     this.colorNode = mix(matrixColor, opalescentHaze, grazing.pow(2).mul(0.35))
     this.roughness = 0.025
     this.clearcoat = 1
@@ -69,10 +70,10 @@ export default class extends KnotMaterial {
       .mul(near.mul(0.5).add(0.7))
       .mul(2.5)
     // 2. Micro-pinfire sparkles: vibrant points of colored light
-    const pinfireColor = mix(color('#ff2060'), color('#00f0a0'), pinIdentity.y)
+    const pinfireColor = mix(color(hsl.integer(14, 100, 58.8)), color(hsl.integer(160, 100, 82)), pinIdentity.y)
     const pinfireGlow = pinfireColor.mul(pinfire).mul(intimate).mul(3)
     // 3. Rayleigh scattering rim opalescence
-    const rayleighRim = color('#7ec8f0').mul(rim.pow(2.2)).mul(0.3)
+    const rayleighRim = color(hsl.integer(233, 72, 76.7)).mul(rim.pow(2.2)).mul(0.3)
     this.emissiveNode = spectralFires
       .add(pinfireGlow)
       .add(rayleighRim)

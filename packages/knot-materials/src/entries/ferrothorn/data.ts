@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ferrothorn',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A polished wilderness of thorns follows the lines of an invisible field.',
   placeholder: {
-    color: '#98b8c4',
+    color: hsl.integer(223, 25, 72),
     shading: 'metal',
   },
   displacement: 0.048,

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: AGJuTzPywIFbk5N; fixture: knot-material-shaders; result: success.
 export default {
   id: 'opal_aria',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.014,
   flavorText: 'A black opal the size of a heartbeat. Every step around it transposes the stone into another key, and the light is the score.',
   placeholder: {
-    color: '#3b7b5e',
+    color: hsl.integer(162, 62, 46),
     shading: 'stone',
   },
 } as const satisfies KnotData

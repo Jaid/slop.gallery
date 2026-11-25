@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, negateOnBackSide, time, uv, vec2, vec3} from 'three/tsl'
 
 import {resolved, ruled, stroke, wave} from '../../candidates/gpt_astra/lib/surface/coverage.ts'
@@ -39,7 +40,7 @@ export default class extends KnotMaterial {
     const phase = blaze.add(uv().y.mul(TAU * 2)).add(time.mul(0.12).sin().mul(0.24))
     const spectrum = spectralColor(phase).pow(1.6)
     const order = wave(viewAcross.mul(16).sub(viewAlong.mul(9)).add(random.z.mul(3))).mul(0.48).add(0.35)
-    const silver = mix(color('#788d9b'), color('#e3e8eb'), facing.mul(0.7))
+    const silver = mix(color(hsl.integer(237, 18, 57)), color(hsl.integer(234, 12, 92)), facing.mul(0.7))
     const foil = mix(silver, spectrum, order.mul(bevel.mul(0.65).add(0.3)))
     // A hidden second image moves in the opposite direction: nested diamond seals.
     const lens = grid.add(vec2(viewAcross, viewAlong).mul(0.22)).fract().sub(0.5)
@@ -47,7 +48,7 @@ export default class extends KnotMaterial {
     const seal = ruled(diamond.mul(6).add(blaze.mul(0.08)), 0.07).mul(resolved(grid)).mul(0.3)
     const perimeter = stroke(edgeDistance.sub(0.032), 0.007, aa)
     const microprint = ruled(uv().x.mul(1800).add(uv().y.mul(240)), 0.11).mul(intimate)
-    this.colorNode = mix(foil.mul(seal.mul(-0.3).add(1)), color('#dce4df'), perimeter.mul(0.7))
+    this.colorNode = mix(foil.mul(seal.mul(-0.3).add(1)), color(hsl.integer(159, 14, 90)), perimeter.mul(0.7))
       .mul(microprint.mul(-0.055).add(1))
     this.metalness = 0.94
     this.roughnessNode = float(0.2).add(bevel.oneMinus().mul(0.15)).sub(near.mul(0.025))

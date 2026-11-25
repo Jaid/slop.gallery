@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_noise_float, normalLocal, positionGeometry, tangentLocal, transformNormalToView, vec2, vec3} from 'three/tsl'
 
 import {environmentHighlight} from '../../candidates/claude_fable/lib/environmentHighlight.ts'
@@ -96,21 +97,21 @@ export default class extends KnotMaterial {
     const reliefNormalView = transformNormalToView(reliefNormal)
     this.normalNode = reliefNormalView
 // Shot silk: midnight warp and wine weft read differently as the view grazes the threads.
-    const warpColor = rgb('#0d1a4d')
-    const weftColor = rgb('#5a1238')
+    const warpColor = rgb(hsl.integer(268, 85, 14))
+    const weftColor = rgb(hsl.integer(353, 75, 22))
     const shot = grazing.pow(1.6).mul(0.75).add(view.dot(aroundDirection).abs().mul(0.25))
     const silk = mix(warpColor, weftColor, shot).mul(wear.mul(0.3).add(0.85)).mul(thread.x.mul(0.1).add(0.95))
-    const goldColor = mix(rgb('#c98f2e'), rgb('#f2c860'), thread.y.mul(0.5).add(wear.mul(0.5)))
+    const goldColor = mix(rgb(hsl.integer(76, 81, 64)), rgb(hsl.integer(87, 81, 82.4)), thread.y.mul(0.5).add(wear.mul(0.5)))
     this.colorNode = mix(silk, goldColor, gold)
     this.metalnessNode = gold.mul(0.95)
     this.roughnessNode = mix(float(0.46), float(0.3), gold).add(binding.mul(0.15)).add(intimate.mul(wear).mul(0.08))
 // Anisotropy follows the threads: along the knot on silk, around it on the gold floats.
     this.anisotropyNode = mix(vec2(0.85, 0), vec2(0, 0.7), gold)
-    this.sheenNode = mix(rgb('#8aa0ff').mul(0.5), rgb('#ffe2a0').mul(0.2), gold)
+    this.sheenNode = mix(rgb(hsl.integer(273, 100, 68.4)).mul(0.5), rgb(hsl.integer(87, 100, 91)).mul(0.2), gold)
     this.sheenRoughness = 0.45
     const goldFlash = environmentHighlight(environment, reliefNormal, 0.3).mul(goldColor).mul(gold).mul(0.5)
     const sparkle = glints(reliefNormalView, 160).mul(gold).mul(thread.z.smoothstep(0.55, 0.95)).mul(near.mul(0.8).add(0.2))
-    const silkGlow = mix(rgb('#3a4fcf'), rgb('#b03a7a'), shot).mul(facing.oneMinus().pow(3)).mul(0.05)
-    this.emissiveNode = goldFlash.add(rgb('#fff1c4').mul(sparkle).mul(0.5)).add(silkGlow)
+    const silkGlow = mix(rgb(hsl.integer(270, 88, 41)), rgb(hsl.integer(351, 71, 46.3)), shot).mul(facing.oneMinus().pow(3)).mul(0.05)
+    this.emissiveNode = goldFlash.add(rgb(hsl.integer(92, 100, 95)).mul(sparkle).mul(0.5)).add(silkGlow)
   }
 }

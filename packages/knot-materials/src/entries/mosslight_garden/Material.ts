@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, time, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -35,17 +36,17 @@ export default class extends KnotMaterial {
     const dewMask = dew.mask.mul(near).mul(dew.random.x.smoothstep(0.62, 0.76))
     const sporePoint = p.sub(view.mul(0.09))
     const spores = cellularPoints(sporePoint.mul(78), 0.018, 0.13, 0.87).mul(intimate)
-    const darkMoss = mix(color('#06100b'), color('#14331b'), macro)
-    const moss = mix(darkMoss, color('#6d8b31'), tufts.pow(2).mul(0.68)).add(color('#224f37').mul(leafNoise.mul(grazing).mul(0.24)))
-    const wetMoss = mix(moss, color('#071712'), dewMask.mul(0.5))
-    const rootTint = mix(color('#0a5648'), color('#45f4bd'), fineRoots.mul(0.55).add(facing.mul(0.15)))
+    const darkMoss = mix(color(hsl.integer(163, 42, 7)), color(hsl.integer(149, 75, 19)), macro)
+    const moss = mix(darkMoss, color(hsl.integer(126, 77, 53)), tufts.pow(2).mul(0.68)).add(color(hsl.integer(158, 66, 29)).mul(leafNoise.mul(grazing).mul(0.24)))
+    const wetMoss = mix(moss, color(hsl.integer(171, 52, 9)), dewMask.mul(0.5))
+    const rootTint = mix(color(hsl.integer(176, 94, 32)), color(hsl.integer(167, 90, 84.5)), fineRoots.mul(0.55).add(facing.mul(0.15)))
     this.colorNode = mix(wetMoss, rootTint, roots.mul(0.42).add(fineRoots.mul(0.28)).clamp())
     this.metalness = 0
     this.roughnessNode = mix(float(0.92), float(0.035), dewMask).sub(roots.mul(0.16)).clamp(0.025, 1)
     this.clearcoatNode = dewMask.mul(0.96).add(roots.mul(0.12)).clamp()
     this.clearcoatRoughnessNode = mix(float(0.26), float(0.018), dewMask)
     this.sheen = 0.38
-    this.sheenColor.set('#7ba85a')
+    this.sheenColor.set(hsl.integer(133, 63, 63))
     this.sheenRoughness = 0.86
     this.normalNode = proceduralNormal(mossHeight.add(tufts.mul(0.0026)).add(dew.cap.mul(dewMask).mul(0.01)), 0.9)
     const wetNormal = normalViewGeometry.add(dew.random.sub(0.5).mul(dew.cap).mul(0.7)).normalize()
@@ -53,6 +54,6 @@ export default class extends KnotMaterial {
     const signalPhase = p.dot(vec3(8.3, -5.4, 6.7)).sub(time.mul(0.75)).add(macro.mul(5.2))
     const rootSignal = signalPhase.sin().mul(0.5).add(0.5).pow(12).mul(roots.max(fineRoots))
     const fireflyFlicker = time.mul(dew.random.y.mul(2.2).add(2.4)).add(dew.random.z.mul(24)).sin().mul(0.35).add(0.65)
-    this.emissiveNode = rootTint.mul(roots.max(fineRoots)).mul(0.055).add(rootTint.mul(rootSignal).mul(near.mul(0.65).add(0.35)).mul(1.05)).add(color('#f8efab').mul(spores).mul(fireflyFlicker).mul(1.8)).add(color('#ffffff').mul(dewSpark))
+    this.emissiveNode = rootTint.mul(roots.max(fineRoots)).mul(0.055).add(rootTint.mul(rootSignal).mul(near.mul(0.65).add(0.35)).mul(1.05)).add(color(hsl.integer(102, 83, 93.4)).mul(spores).mul(fireflyFlicker).mul(1.8)).add(color(hsl.integer(0, 0, 100)).mul(dewSpark))
   }
 }

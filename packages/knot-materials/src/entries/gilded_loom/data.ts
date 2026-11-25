@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: Am1BnNRHvHbHCa2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'gilded_loom',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Indigo velvet and antique gold, woven so finely that the pattern only finishes itself inside a moving eye.',
   placeholder: {
-    color: '#20204c',
+    color: hsl.integer(280, 61, 17),
     shading: 'fabric',
   },
 } as const satisfies KnotData

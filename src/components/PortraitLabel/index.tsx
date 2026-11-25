@@ -3,6 +3,7 @@ import type {Group} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
 import Branch from 'branch-component'
+import hsl from 'okhsl'
 import {useEffect, useEffectEvent, useRef, useState} from 'react'
 import {Vector3} from 'three/webgpu'
 
@@ -15,13 +16,13 @@ import portraitLabel, {portraitLabelLayout} from '#src/lib/gallery/portraitLabel
 
 /** the painted card, which the text is painted on too, opaque, so a fusion’s warp, which bends the opaque scene, takes it along with the card */
 const card: ElementTextSurface = {
-  color: '#eee8d7',
+  color: hsl.integer(91, 35, 92),
   roughness: 0.6,
 }
 
 type Layout = ReturnType<typeof portraitLabelLayout>
 type Preview = {
-  color: string
+  color: number
   opacity: number
 }
 type PortraitLabelProps = {

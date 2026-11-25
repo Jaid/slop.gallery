@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'verdigris_hull',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The metal keeps a tide mark from a voyage no map remembers.',
   placeholder: {
-    color: '#3fa89b',
+    color: hsl.integer(184, 73, 61),
     shading: 'smooth',
   },
 } as const satisfies KnotData

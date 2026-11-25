@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, normalViewGeometry, vec3} from 'three/tsl'
 
 import {lampFlash} from '../../candidates/space_bunny/lib/lampFlash.ts'
@@ -51,13 +52,13 @@ export default class extends KnotMaterial {
     const bevel = gold.sub(sunken)
 // Gold leaf is never one colour: pale at the banks, deep in the trough.
     const leafShimmer = mx_noise_float(loopDrift(p.mul(9.5), 0.1, 2).add(warp.mul(2))).mul(0.5).add(0.5)
-    const leaf = mix(color('#e0ae4d'), color('#9c6a12'), leafShimmer)
+    const leaf = mix(color(hsl.integer(81, 76, 74)), color(hsl.integer(74, 89, 49)), leafShimmer)
     const dust = microGlitter(p, 0.021, 90, 0.5).sparkle
     const dustGate = mx_noise_float(p.mul(7)).smoothstep(0.28, 0.42).mul(near)
-    const glaze = mix(color('#6f6759'), color('#968c78'), firing).mul(pores.mul(0.06).oneMinus().mul(0.1).add(0.9))
-    const clay = mix(color('#6d6152'), color('#443a30'), firing)
+    const glaze = mix(color(hsl.integer(82, 14, 44)), color(hsl.integer(85, 18, 59)), firing).mul(pores.mul(0.06).oneMinus().mul(0.1).add(0.9))
+    const clay = mix(color(hsl.integer(73, 17, 42)), color(hsl.integer(67, 18, 26)), firing)
     const body = mix(glaze, clay, chip.mul(0.85))
-    this.colorNode = mix(mix(body, color('#150f0b'), shadow.mul(0.92)), leaf, gold.mul(0.96))
+    this.colorNode = mix(mix(body, color(hsl.integer(55, 21, 8)), shadow.mul(0.92)), leaf, gold.mul(0.96))
     this.aoNode = shadow.mul(0.5).add(chip.mul(0.3)).oneMinus().clamp(0.4, 1)
     this.metalnessNode = gold.mul(0.9)
     this.roughnessNode = float(0.17).add(pores.mul(0.06)).add(chip.mul(0.55)).sub(gold.mul(0.08)).add(gold.mul(leafShimmer.mul(0.09))).sub(bevel.max(0).mul(0.1)).clamp(0.05, 0.85)
@@ -70,11 +71,11 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(relief, 0.006)
     const ember = loopPhase.mul(2).sin().mul(0.5).add(0.5).pow(2).mul(0.6).add(0.4)
     const glint = lampFlash(normalViewGeometry, 54)
-    this.emissiveNode = color('#ff9b34').mul(goldCore.mul(ember).mul(0.32))
+    this.emissiveNode = color(hsl.integer(61, 100, 74)).mul(goldCore.mul(ember).mul(0.32))
       .add(leaf.mul(bevel.max(0)).mul(0.22))
-      .add(color('#fff6df').mul(glint.mul(gold).mul(0.85)))
-      .add(color('#ffd98a').mul(dust).mul(dustGate).mul(intimate).mul(0.9))
-      .add(color('#bcd8ff').mul(craze.mul(0.05)))
-      .add(color('#ffe6bd').mul(grazing.pow(4)).mul(chip.oneMinus()).mul(0.07))
+      .add(color(hsl.integer(89, 100, 97)).mul(glint.mul(gold).mul(0.85)))
+      .add(color(hsl.integer(85, 100, 88.5)).mul(dust).mul(dustGate).mul(intimate).mul(0.9))
+      .add(color(hsl.integer(257, 100, 85.4)).mul(craze.mul(0.05)))
+      .add(color(hsl.integer(80, 100, 92.4)).mul(grazing.pow(4)).mul(chip.oneMinus()).mul(0.07))
   }
 }

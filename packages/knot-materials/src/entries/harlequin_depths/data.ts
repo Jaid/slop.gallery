@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1o1ree11eGriGjv; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'harlequin_depths',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Millions of silica spheres settle into ordered patches, and every patch answers a different angle with its own color.',
   placeholder: {
-    color: '#0b1f57',
+    color: hsl.integer(265, 88, 16),
     shading: 'glass',
   },
 } as const satisfies KnotData

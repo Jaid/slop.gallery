@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: KKRUCJSg0WdighD; fixture: knot-material-shaders.
 export default {
   id: 'thousand_folds',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Fold, weld, fold again. The smith never counts, yet every layer remembers its turn at the hammer. Acid revealed the story, fire wrote the colors, the edge recalls being warm.',
   placeholder: {
-    color: '#5a6068',
+    color: hsl.integer(256, 8, 41),
     shading: 'metal',
   },
 } as const satisfies KnotData

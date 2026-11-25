@@ -3,6 +3,7 @@ import type {Material, Texture} from 'three/webgpu'
 
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {positionWorld, vec3} from 'three/tsl'
 import {Color, MeshStandardNodeMaterial} from 'three/webgpu'
@@ -42,7 +43,7 @@ const salonWalls = slopGallery.walls.filter(wall => wall.room === 'salon')
  * The daylight the lantern bounces round, which the renderer leaves out: the sky’s through the windows, cool, the more the higher up inside the drum, and the sunlit floor’s, warm, onto the ceiling round it.
  * Without it, the ceiling, the drum and the dome would only get the fill’s olive ground light and turn khaki and dull.
  */
-const bounce = daylight.mul(vec3(...new Color('#dfe8ff')).mul(positionWorld.y.smoothstep(salonLanternBase, salonDomeSpringY).mul(0.05).add(0.05)).add(vec3(...new Color('#fff0e0')).mul(0.025)))
+const bounce = daylight.mul(vec3(...new Color(hsl.integer(269, 100, 92))).mul(positionWorld.y.smoothstep(salonLanternBase, salonDomeSpringY).mul(0.05).add(0.05)).add(vec3(...new Color(hsl.integer(69, 100, 95.7))).mul(0.025)))
 
 /** The Salon: walls frescoed in Pompeian red over a socle painted as marble and hung frame to frame, polished terrazzo underfoot and, overhead, a lantern after the Tribuna of the Uffizi. */
 export default function SalonRoom({glass, stone, wood}: {
@@ -85,7 +86,7 @@ function Lantern({heavy}: {heavy: boolean}) {
   const collision = useMemo(() => salonLanternCollision(room.size), [])
   // Lime stucco a shade toward pink rather than yellow, so the shade under the ceiling doesn’t turn khaki.
   const stucco = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
-    baseColor: '#f0e2d6',
+    baseColor: hsl.integer(63, 36, 91),
     bounce,
     heavy,
     roughness: 0.86,
@@ -98,7 +99,7 @@ function Lantern({heavy}: {heavy: boolean}) {
   }), [heavy]))
   // Patinated bronze glazing bars, as on the Vesper’s lantern.
   const bronze = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#5b4a35',
+    color: hsl.integer(72, 31, 33),
     metalness: 0.5,
     roughness: 0.5,
   }), []))
@@ -107,11 +108,11 @@ function Lantern({heavy}: {heavy: boolean}) {
     name: 'salon-window-glass-heavy',
     ior: 1.52,
     absorption: 0.04,
-    specularColor: '#fff4e2',
+    specularColor: hsl.integer(80, 100, 96.6),
     clearcoat: 0.3,
     envMapIntensity: 1.2,
     paneSize: [salonLantern.window.width, salonLantern.window.crown - salonLantern.window.sill],
-    bodyColor: '#f1f6ee',
+    bodyColor: hsl.integer(133, 34, 96),
     haze: 0.02,
     smudges: 0.035,
     grime: 0.3,

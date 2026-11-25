@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, Fn, Loop, mix, mx_noise_float, normalViewGeometry, time, vec2, vec3} from 'three/tsl'
 
 import {rgb} from '../../candidates/claude_fable/lib/rgb.ts'
@@ -19,22 +20,22 @@ const filaments = [{
   seed: 4.1,
   wanderRate: 1.1,
   breathRate: 1.7,
-  tint: rgb('#8a5cff'),
+  tint: rgb(hsl.integer(291, 100, 55)),
 }, {
   seed: 21.4,
   wanderRate: 1.47,
   breathRate: 1.93,
-  tint: rgb('#ff5ce0'),
+  tint: rgb(hsl.integer(336, 100, 68.8)),
 }, {
   seed: 38.7,
   wanderRate: 1.84,
   breathRate: 2.16,
-  tint: rgb('#5cc8ff'),
+  tint: rgb(hsl.integer(233, 100, 76)),
 }, {
   seed: 56,
   wanderRate: 2.21,
   breathRate: 2.39,
-  tint: rgb('#c09cff'),
+  tint: rgb(hsl.integer(300, 100, 72.5)),
 }]
 /** Where a filament sits in the cross-section at a place along the knot – a curve that dances on the viewer's side. */
 function filamentPoint(index: number, loop: Node<'vec2'>, cameraAngle: Node<'float'>, attraction: Node<'float'>) {
@@ -82,7 +83,7 @@ export default class extends KnotMaterial {
         const loop = loopAt(start.along.add(end.along).mul(0.5))
 // Central electrode: a dark rod wrapped in a violet corona, plus the faint glow of low-pressure gas.
         const corona = filamentSegment(from, to, 0.03)
-        glow.addAssign(rgb('#5a2cff').mul(corona).mul(0.5).add(rgb('#120838').mul(0.35)).mul(transmittance).mul(step))
+        glow.addAssign(rgb(hsl.integer(280, 100, 43.7)).mul(corona).mul(0.5).add(rgb(hsl.integer(284, 84, 9)).mul(0.35)).mul(transmittance).mul(step))
         for (const [index, filament_] of filaments.entries()) {
           const filament = filamentPoint(index, loop, interior.cameraAngle, attraction)
           const flicker = mx_noise_float(vec3(time.mul(23), filament_.seed, loop.x.mul(0.5))).mul(0.45).add(0.75)
@@ -90,7 +91,7 @@ export default class extends KnotMaterial {
           const presence = index < 3 ? alive : alive.mul(near)
           const core = filamentSegment(from.sub(filament.point), to.sub(filament.point), 0.0022)
           const halo = filamentSegment(from.sub(filament.point), to.sub(filament.point), 0.009)
-          const body = rgb('#eef6ff').mul(core.mul(3.5)).add(filament_.tint.mul(halo.mul(1.3)))
+          const body = rgb(hsl.integer(251, 100, 96.5)).mul(core.mul(3.5)).add(filament_.tint.mul(halo.mul(1.3)))
           glow.addAssign(body.mul(flicker).mul(presence).mul(transmittance).mul(step))
         }
         transmittance.mulAssign(radial.smoothstep(electrodeRadius * 0.7, electrodeRadius * 1.3).oneMinus().mul(step).mul(-80).exp())
@@ -104,17 +105,17 @@ export default class extends KnotMaterial {
 // 1 where the filament's angle lines up with this spot on the glass, 0 on the far side of the tube.
       const angular = filament.angle.div(TAU).fract().sub(0.5).abs().mul(2)
       const contact = filament.reach.smoothstep(0.8, 1).mul(angular.smoothstep(0.94, 0.997))
-      const bloom = filament_.tint.mul(0.5).add(rgb('#ffffff').mul(0.5)).mul(contact).mul(index < 3 ? float(1) : near)
+      const bloom = filament_.tint.mul(0.5).add(rgb(hsl.integer(0, 0, 100)).mul(0.5)).mul(contact).mul(index < 3 ? float(1) : near)
       touch = touch.add(bloom)
     }
     const glass = interior.facing.pow(0.35).mul(0.9).add(0.1)
-    const violetRim = rgb('#5a30ff').mul(grazing.pow(3)).mul(0.3)
-    this.colorNode = rgb('#060310')
+    const violetRim = rgb(hsl.integer(280, 100, 44)).mul(grazing.pow(3)).mul(0.3)
+    this.colorNode = rgb(hsl.integer(295, 60, 4))
     this.metalness = 0
     this.roughness = 0.03
     this.ior = 1.5
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
-    this.emissiveNode = volume().mul(glass).mul(mix(float(0.85), float(1.15), intimate)).add(touch.mul(2)).add(violetRim).add(rgb('#c8d8ff').mul(glints(normalViewGeometry, 220)).mul(0.12))
+    this.emissiveNode = volume().mul(glass).mul(mix(float(0.85), float(1.15), intimate)).add(touch.mul(2)).add(violetRim).add(rgb(hsl.integer(268, 100, 86)).mul(glints(normalViewGeometry, 220)).mul(0.12))
   }
 }

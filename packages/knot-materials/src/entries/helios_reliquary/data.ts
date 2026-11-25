@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'helios_reliquary',
   candidateId: 'gpt_sol',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A vessel of warm metal shelters a splinter of the noonday sun.',
   placeholder: {
-    color: '#ff9a3d',
+    color: hsl.integer(59, 100, 74),
     shading: 'smooth',
   },
 } as const satisfies KnotData

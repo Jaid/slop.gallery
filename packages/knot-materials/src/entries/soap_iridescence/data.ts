@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: NKvaWYy8hA4AWQ9.
 export default {
   id: 'soap_iridescence',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A breath caught in oil, turning every glance into another color.',
   placeholder: {
-    color: '#9fdfff',
+    color: hsl.integer(230, 100, 85),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -66,14 +67,14 @@ export default class extends KnotMaterial {
     }
     const fireMask = coverage.clamp()
     const fire = tintSum.div(coverage.max(0.000001))
-    const potch = mix(color('#07060b'), color('#3a3548'), facing.pow(0.7).mul(0.42).add(milk.mul(0.1)))
+    const potch = mix(color(hsl.integer(295, 24, 4)), color(hsl.integer(297, 23, 24)), facing.pow(0.7).mul(0.42).add(milk.mul(0.1)))
     this.colorNode = mix(potch, fire, fireMask.mul(0.92))
     this.metalness = 0
     this.roughnessNode = float(0.28).sub(fireMask.mul(0.14)).clamp(0.08, 0.4)
     this.clearcoat = 0.72
     this.clearcoatRoughness = 0.06
     this.ior = 1.45
-    this.sheenNode = color('#c9d7f2').mul(grazing.pow(1.6)).mul(fireMask.oneMinus()).mul(0.16)
+    this.sheenNode = color(hsl.integer(264, 56, 86)).mul(grazing.pow(1.6)).mul(fireMask.oneMinus()).mul(0.16)
     this.sheenRoughness = 0.5
     const pinScale = p.mul(40)
     const pinFade = pinScale.fwidth().length().smoothstep(0.16, 0.48).oneMinus()

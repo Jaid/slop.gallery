@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'caustic_chapel',
   candidateId: 'grok',
@@ -16,7 +18,7 @@ export default {
   displacement: 0.006,
   flavorText: 'A drowned floor of pale tile, where shallow water writes and erases its scripture. Nearer, the letters sharpen. Aside, the surface keeps them.',
   placeholder: {
-    color: '#5e9e98',
+    color: hsl.integer(188, 45, 60),
     shading: 'glass',
   },
 } as const satisfies KnotData

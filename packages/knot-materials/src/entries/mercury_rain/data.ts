@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5WDU20J87Ktg4fx; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'mercury_rain',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.06,
   flavorText: 'A spilled mirror could not decide whether to be a river or a thousand small moons. Watch them drift, touch and forget each other.',
   placeholder: {
-    color: '#b9bfcc',
+    color: hsl.integer(266, 15, 77),
     shading: 'liquid',
   },
 } as const satisfies KnotData

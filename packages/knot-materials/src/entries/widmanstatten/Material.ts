@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_vec3, mx_fractal_noise_float, mx_worley_noise_vec3, normalLocal, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -47,15 +48,15 @@ export default class extends KnotMaterial {
     const shadeB = mx_cell_noise_vec3(vec3(b.id, 8.1, -2.3)).x
     const shadeC = mx_cell_noise_vec3(vec3(c.id, -4.7, 5.9)).x
     const shadeD = mx_cell_noise_vec3(vec3(d.id, 1.9, 12.2)).x
-    const silverA = mix(color('#70777f'), color('#b9c1c9'), shadeA)
-    const silverB = mix(color('#5f666e'), color('#a4adb7'), shadeB)
-    const silverC = mix(color('#7b7873'), color('#c3b9aa'), shadeC)
-    const silverD = mix(color('#646c77'), color('#9aa6b3'), shadeD)
+    const silverA = mix(color(hsl.integer(252, 8, 50)), color(hsl.integer(248, 11, 78)), shadeA)
+    const silverB = mix(color(hsl.integer(252, 9, 43)), color(hsl.integer(251, 11, 70)), shadeB)
+    const silverC = mix(color(hsl.integer(81, 5, 51)), color(hsl.integer(78, 16, 76)), shadeC)
+    const silverD = mix(color(hsl.integer(256, 11, 45)), color(hsl.integer(251, 14, 67)), shadeD)
     const metalColor = a.plate.greaterThan(0.55).select(silverA, b.plate.greaterThan(0.55).select(silverB, c.plate.greaterThan(0.55).select(silverC, silverD)))
     const plateRough = a.plate.greaterThan(0.55).select(shadeA, b.plate.greaterThan(0.55).select(shadeB, c.plate.greaterThan(0.55).select(shadeC, shadeD)))
-    const border = color('#23262b').mul(0.45).add(color('#4a4f57').mul(0.55))
+    const border = color(hsl.integer(261, 10, 16)).mul(0.45).add(color(hsl.integer(260, 9, 34)).mul(0.55))
     const etchRim = etched.mul(etched.oneMinus()).mul(4).clamp()
-    const etchedMetal = mix(metalColor, border, etched.mul(0.84)).add(color('#dfe8f2').mul(etchRim).mul(0.16))
+    const etchedMetal = mix(metalColor, border, etched.mul(0.84)).add(color(hsl.integer(251, 34, 91.5)).mul(etchRim).mul(0.16))
 // Neumann lines: fine parallel deformation twins inside the kamacite, only legible up close.
     const neumannPhase = a.phase.mul(22)
     const neumann = neumannPhase.sin().abs().pow(9).mul(neumannPhase.fwidth().smoothstep(0.25, 0.8).oneMinus())
@@ -67,12 +68,12 @@ export default class extends KnotMaterial {
     const pitField = mx_worley_noise_vec3(p.mul(8.4).add(3.3), 1, 0)
     const pits = pitField.x.smoothstep(0.12, 0.48).oneMinus().mul(crust)
     const pitRims = pitField.x.smoothstep(0.48, 0.58).mul(pitField.x.smoothstep(0.68, 0.9).oneMinus()).mul(crust)
-    const crustColor = mix(color('#17130f'), color('#42342a'), mx_fractal_noise_float(p.mul(11).add(9.2), 2, 2.2, 0.5).mul(0.5).add(0.5))
+    const crustColor = mix(color(hsl.integer(67, 15, 9)), color(hsl.integer(57, 23, 24)), mx_fractal_noise_float(p.mul(11).add(9.2), 2, 2.2, 0.5).mul(0.5).add(0.5))
     const oxide = crustField.smoothstep(0.66, 0.72).mul(crustField.smoothstep(0.8, 0.9).oneMinus())
 // Troilite and schreibersite: rare, small, and almost black against the silver.
     const inclusions = mx_worley_noise_vec3(p.mul(26).add(7.7), 1, 0).x
     const inclusionMask = inclusions.smoothstep(0.045, 0.09).oneMinus().mul(mx_cell_noise_vec3(vec3(p.mul(26).floor())).y.smoothstep(0.45, 0.8)).mul(0.8)
-    const inclusionColor = mix(color('#241b13'), color('#6f4b2a'), mx_fractal_noise_float(p.mul(44), 2, 2.1, 0.5).mul(0.5).add(0.5))
+    const inclusionColor = mix(color(hsl.integer(63, 26, 13)), color(hsl.integer(62, 53, 36)), mx_fractal_noise_float(p.mul(44), 2, 2.1, 0.5).mul(0.5).add(0.5))
     let surfaceColor: Node<'vec3'> = mix(etchedDetail, crustColor, crust)
     surfaceColor = mix(surfaceColor, inclusionColor, inclusionMask.mul(crust.oneMinus()).mul(0.7))
     this.colorNode = surfaceColor
@@ -91,8 +92,8 @@ export default class extends KnotMaterial {
     const crisp = environmentHighlight(environment, n, 0.055)
     const edgeGlint = crisp.mul(etched.mul(0.45).add(neumann.mul(0.12))).mul(near.mul(0.65).add(0.35)).mul(time.mul(0.21).add(shadeA.mul(9)).sin().mul(0.06).add(0.94))
     const stripSpot = view.negate().reflect(n).dot(vec3(0.6, 0.55, 0.58).normalize()).clamp().pow(180)
-    const sheen = studioSheen(n).mul(kamacite.mul(crust.oneMinus())).mul(0.07).add(color('#dce6f2').mul(stripSpot).mul(etched.mul(0.5).add(0.2)).mul(0.12))
-    const frost = color('#a9c8ff').mul(grazing.pow(4)).mul(kamacite.mul(0.05)).mul(crust.oneMinus())
-    this.emissiveNode = edgeGlint.add(sheen).add(frost).add(color('#493a29').mul(pitRims).mul(0.08)).add(color('#7fa7d8').mul(crust.mul(crust.oneMinus()).mul(4)).mul(0.04))
+    const sheen = studioSheen(n).mul(kamacite.mul(crust.oneMinus())).mul(0.07).add(color(hsl.integer(253, 38, 91)).mul(stripSpot).mul(etched.mul(0.5).add(0.2)).mul(0.12))
+    const frost = color(hsl.integer(262, 100, 80)).mul(grazing.pow(4)).mul(kamacite.mul(0.05)).mul(crust.oneMinus())
+    this.emissiveNode = edgeGlint.add(sheen).add(frost).add(color(hsl.integer(70, 31, 26)).mul(pitRims).mul(0.08)).add(color(hsl.integer(254, 51, 67)).mul(crust.mul(crust.oneMinus()).mul(4)).mul(0.04))
   }
 }

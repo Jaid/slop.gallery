@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'heartwood_hymn',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The tree is gone; its years are not. Beneath the polish, a slow golden season travels through the grain.',
   placeholder: {
-    color: '#5b321f',
+    color: hsl.integer(45, 55, 27),
     shading: 'smooth',
   },
 } as const satisfies KnotData

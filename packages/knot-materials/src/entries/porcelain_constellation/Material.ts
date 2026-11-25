@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_float, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -33,9 +34,9 @@ export default class extends KnotMaterial {
     const starTw = time.mul(srnd2.y.mul(3).add(1)).add(srnd2.z.mul(30)).sin().mul(0.35).add(0.75)
     const stars = starCore.mul(starGate).mul(starTw).mul(sfoot.smoothstep(0.25, 1.1).oneMinus())
     const constellationVeil = mx_noise_float(p.mul(3)).mul(0.5).add(0.5)
-    const midnight = mix(color('#0a1230'), color('#1e2a5e'), constellationVeil)
-    const porcelain = color('#f6f1e6')
-    const gold = mix(color('#8a5a1a'), color('#ffd873'), srnd2.y)
+    const midnight = mix(color(hsl.integer(269, 69, 9.5)), color(hsl.integer(270, 66, 21)), constellationVeil)
+    const porcelain = color(hsl.integer(86, 40, 95))
+    const gold = mix(color(hsl.integer(69, 79, 43)), color(hsl.integer(89, 100, 88)), srnd2.y)
     this.colorNode = mix(mix(porcelain, midnight, stars.mul(reveal).mul(0.85)), gold, kintsugi.mul(0.95))
     this.metalnessNode = kintsugi.mul(0.95)
     this.roughnessNode = float(0.24).add(kintsugi.mul(-0.08)).add(stars.mul(reveal).mul(0.1))
@@ -46,6 +47,6 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = facing.mul(180).add(280)
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(32)).mul(0.12).add(kintsugi.mul(0.4)), 0.0007)
     const glintGold = glints(normalViewGeometry.normalize(), 60)
-    this.emissiveNode = color('#7fa8ff').mul(stars).mul(reveal).mul(1.6).add(gold.mul(kintsugi).mul(glintGold).mul(1.2).mul(reveal.mul(0.6).add(0.4))).add(color('#3a5aff').mul(rim).mul(reveal).mul(0.3)).add(color('#fff3d0').mul(kintsugi).mul(intimate).mul(0.35))
+    this.emissiveNode = color(hsl.integer(264, 100, 70)).mul(stars).mul(reveal).mul(1.6).add(gold.mul(kintsugi).mul(glintGold).mul(1.2).mul(reveal.mul(0.6).add(0.4))).add(color(hsl.integer(268, 100, 48.3)).mul(rim).mul(reveal).mul(0.3)).add(color(hsl.integer(92, 100, 96)).mul(kintsugi).mul(intimate).mul(0.35))
   }
 }

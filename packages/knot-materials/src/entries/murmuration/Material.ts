@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, mx_fractal_noise_float, mx_noise_float, normalWorld, positionWorld, time, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_opus/lib/ramp.ts'
@@ -36,17 +37,17 @@ type FlockLayer = {
 function skyDome(d: Node<'vec3'>) {
   const elevation = d.y.max(0)
   const toward = d.dot(sun).max(0)
-  const horizon = mix(color('#d8364f'), color('#ff8a2e'), toward.pow(2)).mul(0.75)
-  const middle = mix(color('#4a2a78'), color('#a8406a'), toward.pow(3)).mul(0.7)
-  const zenith = color('#0a1036')
+  const horizon = mix(color(hsl.integer(18, 87, 52)), color(hsl.integer(54, 100, 71)), toward.pow(2)).mul(0.75)
+  const middle = mix(color(hsl.integer(299, 69, 27)), color(hsl.integer(358, 65, 45)), toward.pow(3)).mul(0.7)
+  const zenith = color(hsl.integer(271, 79, 9.6))
   const air = mix(mix(horizon, middle, elevation.smoothstep(0, 0.18)), zenith, elevation.smoothstep(0.12, 0.7))
-  const glow = color('#ffa04a').mul(toward.pow(16).mul(0.6).add(toward.pow(90).mul(1.8)))
-  const disk = color('#fff4d6').mul(toward.smoothstep(0.9985, 0.9993).mul(14))
+  const glow = color(hsl.integer(59, 100, 75)).mul(toward.pow(16).mul(0.6).add(toward.pow(90).mul(1.8)))
+  const disk = color(hsl.integer(90, 100, 96.3)).mul(toward.smoothstep(0.9985, 0.9993).mul(14))
   const ceiling = d.xz.div(elevation.add(0.08))
   const cloudField = mx_fractal_noise_float(vec3(ceiling.x.mul(0.9).add(time.mul(0.04)), ceiling.y.mul(2.2), time.mul(0.03)), 4, 2.1, 0.55)
   const cloud = cloudField.smoothstep(0.02, 0.38).mul(elevation.smoothstep(0.015, 0.06)).mul(elevation.smoothstep(0.16, 0.34).oneMinus())
   const lining = cloudField.smoothstep(0.02, 0.12).sub(cloudField.smoothstep(0.12, 0.3)).max(0)
-  const cloudColor = mix(color('#2c1636'), color('#ff7a4a'), toward.pow(3).mul(0.8)).add(color('#ffd08a').mul(lining).mul(toward.pow(4)).mul(2.2))
+  const cloudColor = mix(color(hsl.integer(314, 55, 14)), color(hsl.integer(40, 99, 68)), toward.pow(3).mul(0.8)).add(color(hsl.integer(77, 100, 86.5)).mul(lining).mul(toward.pow(4)).mul(2.2))
   return mix(air, cloudColor, cloud.mul(0.85)).add(glow).add(disk.mul(cloud.oneMinus()))
 }
 /** A dusk sky over a calm sea that mirrors it, with a shimmering path of sun glitter. */
@@ -60,7 +61,7 @@ function duskSky(direction: Node<'vec3'>) {
   const sunPath = mirrored.dot(sun).max(0).pow(18)
   const glitter = glitterField.smoothstep(0.45, 0.75).mul(sunPath).mul(9).add(sunPath.mul(0.4))
   const fresnel = depth.oneMinus().pow(5).mul(0.5).add(0.12)
-  const sea = skyDome(mirrored).mul(fresnel).add(color('#ffbf73').mul(glitter)).add(color('#120a1c').mul(0.12))
+  const sea = skyDome(mirrored).mul(fresnel).add(color(hsl.integer(69, 99, 82)).mul(glitter)).add(color(hsl.integer(303, 49, 7)).mul(0.12))
   return mix(sea, skyDome(d), d.y.smoothstep(-0.012, 0.012))
 }
 /**
@@ -119,7 +120,7 @@ export default class extends KnotMaterial {
     }]
 // Thousands more birds too distant to resolve thicken the flock into a smoky body with dark folds.
     const distant = density.pow(1.15).mul(startle.oneMinus()).mul(0.9)
-    let composite: Node<'vec3'> = mix(skyColor, skyColor.mul(0.18).add(color('#0c0812').mul(0.5)), distant)
+    let composite: Node<'vec3'> = mix(skyColor, skyColor.mul(0.18).add(color(hsl.integer(303, 34, 6)).mul(0.5)), distant)
     for (const [index, layer] of layers.entries()) {
       const period = vec2(layer.along, layer.around)
       const cells = tubeCells(tube, layer.along, layer.around).sub(ray.mul(period).mul(layer.depth))
@@ -153,15 +154,15 @@ export default class extends KnotMaterial {
       const coverage = silhouette.mul(gate).clamp()
 // Aerial perspective: distant strata dissolve into the glow of the sky.
       const haze = [0.5, 0.28, 0][index]
-      const birdColor = mix(color('#06040b'), skyColor.mul(0.55), haze).add(color('#ff9a4a').mul(banking.mul(0.05)))
+      const birdColor = mix(color(hsl.integer(299, 38, 4)), skyColor.mul(0.55), haze).add(color(hsl.integer(56, 100, 74)).mul(banking.mul(0.05)))
       composite = mix(composite, birdColor, coverage.mul(1 - haze * 0.5))
     }
-    this.colorNode = color('#020104')
+    this.colorNode = color(hsl.integer(302, 50, 2))
     this.metalness = 0
     this.roughness = 0.35
     this.specularIntensity = 0.25
     this.clearcoat = 1
     this.clearcoatRoughness = 0.03
-    this.emissiveNode = composite.mul(facing.mul(0.25).add(0.8)).add(color('#ffb36b').mul(grazing.pow(4)).mul(0.08))
+    this.emissiveNode = composite.mul(facing.mul(0.25).add(0.8)).add(color(hsl.integer(63, 100, 79.6)).mul(grazing.pow(4)).mul(0.08))
   }
 }

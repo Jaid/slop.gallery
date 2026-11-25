@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {colorRamp} from '../../candidates/deepseek/lib/colorRamp.ts'
@@ -27,7 +28,7 @@ export default class extends KnotMaterial {
     const lead = panels.edge.smoothstep(leadWidth, leadWidth.add(leadAA.mul(2.5))).oneMinus()
     const glass = lead.oneMinus()
 // Six oxides, from cobalt blue to manganese violet.
-    const oxide = colorRamp(paneRandom.x, ['#0b2f9e', '#8e0f2c', '#0d7a3c', '#c99a1c', '#5a1a94', '#0b6f96'])
+    const oxide = colorRamp(paneRandom.x, [hsl.integer(264.4, 95, 27.5), hsl.integer(17, 93, 33), hsl.integer(151, 98.5, 43), hsl.integer(85, 90, 66), hsl.integer(302, 87, 30), hsl.integer(232, 93, 43)])
 // The panes are lit from behind: brightest when the eye looks along the light.
     const sun = vec3(0.42, 0.46, 0.78).normalize()
     const through = view.dot(sun).negate().clamp()
@@ -38,12 +39,12 @@ export default class extends KnotMaterial {
     const bubbles = bubbleField.smoothstep(0.78, 0.86).mul(glass).mul(intimate)
     const streak = mx_noise_float(q.mul(18)).mul(0.5).add(0.5)
 // The lead came is a soft dark metal, not a black line.
-    const leadColor = mix(color('#0e1013'), color('#26292f'), mx_noise_float(q.mul(40)).mul(0.5).add(0.5))
+    const leadColor = mix(color(hsl.integer(258, 10, 8)), color(hsl.integer(264, 11, 18)), mx_noise_float(q.mul(40)).mul(0.5).add(0.5))
 // The vertex stage cannot use derivatives, so the relief uses a fixed width.
     const leadRelief = panels.edge.smoothstep(leadWidth, leadWidth.add(0.004)).oneMinus()
     const bubblesRelief = bubbleField.smoothstep(0.78, 0.86).mul(leadRelief.oneMinus()).mul(intimate)
     const height = leadRelief.mul(0.0022).add(bubblesRelief.mul(0.0004))
-    this.colorNode = mix(leadColor, oxide.mul(0.05), glass).add(color('#ffffff').mul(bubbles).mul(0.25))
+    this.colorNode = mix(leadColor, oxide.mul(0.05), glass).add(color(hsl.integer(0, 0, 100)).mul(bubbles).mul(0.25))
     this.metalnessNode = lead.mul(0.35)
     this.roughnessNode = mix(float(0.5), float(0.42).add(streak.mul(0.06)), glass)
     this.specularIntensity = 0.25
@@ -54,7 +55,7 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = this.normalNode
 // A slow drift of the daylight keeps the window alive.
     const daylight = time.mul(0.18).sin().mul(0.08).add(0.92)
-    this.emissiveNode = glow.mul(glass).mul(daylight).mul(2.6).add(oxide.mul(bubbles).mul(0.6)).add(color('#ffe9c0').mul(lead).mul(grazing.pow(3)).mul(0.12))
+    this.emissiveNode = glow.mul(glass).mul(daylight).mul(2.6).add(oxide.mul(bubbles).mul(0.6)).add(color(hsl.integer(83, 100, 93.2)).mul(lead).mul(grazing.pow(3)).mul(0.12))
     this.aoNode = glass.mul(0.1).add(0.9)
     this.positionNode = positionGeometry.add(normalLocal.mul(height))
   }

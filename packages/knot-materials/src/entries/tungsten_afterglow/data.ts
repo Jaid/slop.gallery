@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tungsten_afterglow',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'The lamp is gone, but its fine metal heart has not finished glowing.',
   placeholder: {
-    color: '#ff6a22',
+    color: hsl.integer(42, 99, 65),
     shading: 'metal',
   },
 } as const satisfies KnotData

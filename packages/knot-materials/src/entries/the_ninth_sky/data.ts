@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5W8F3T3KQWmthBY; fixture: knot-material-br11k.
 export default {
   id: 'the_ninth_sky',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Eight lives fell to earth. The ninth stayed above, sewing little stars into ears and tails, and purring whenever someone came close.',
   placeholder: {
-    color: '#10334b',
+    color: hsl.integer(242, 68, 21),
     shading: 'metal',
   },
 } as const satisfies KnotData

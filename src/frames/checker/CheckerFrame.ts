@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {float, select} from 'three/tsl'
 
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
@@ -37,7 +38,7 @@ export default class CheckerFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#d9d7d1'
+  override readonly tint = hsl.integer(91, 9, 86)
   override readonly title = 'Marble checker'
 
   override createGeometry(width: number, height: number) {

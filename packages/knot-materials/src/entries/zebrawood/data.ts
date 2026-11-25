@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7mkaA7JC9cNnoS2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'zebrawood',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The tree kept every year inside itself. Cut across the grain, the knot confesses a century of weather in amber.',
   placeholder: {
-    color: '#a6825e',
+    color: hsl.integer(66, 39, 57),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'graphene_weave',
   candidateId: 'claude_sonnet',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A dark fabric finds its strength in the spaces between its bonds.',
   placeholder: {
-    color: '#2f2f2f',
+    color: hsl.integer(0, 0, 20.4),
     shading: 'fabric',
   },
 } as const satisfies KnotData

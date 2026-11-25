@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: FLhq233R9MU4dj1; fixture: knot-material-shaders; result: success.
 export default {
   id: 'iris_engine',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'An optical machine dreams in folded spectra. Its silver apertures open into colors that exist only where you are standing.',
   placeholder: {
-    color: '#73899a',
+    color: hsl.integer(241, 20, 56),
     shading: 'metal',
   },
 } as const satisfies KnotData

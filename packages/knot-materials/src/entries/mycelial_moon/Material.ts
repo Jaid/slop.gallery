@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -32,13 +33,13 @@ export default class extends KnotMaterial {
     const spores = cellularPoints(p.sub(view.mul(0.11)).mul(74), 0.018, 0.12, 0.84).mul(near.mul(0.92).add(0.08))
     const sporeHalo = cellularPoints(p.sub(view.mul(0.11)).mul(33), 0.035, 0.19, 0.78).mul(near.mul(0.78).add(0.22))
     const moss = mx_fractal_noise_float(p.mul(3.7), 4, 2.1, 0.54).mul(0.5).add(0.5)
-    const bark = mix(color('#06110d'), color('#1f3020'), moss.mul(0.72).add(grazing.mul(0.18)))
-    const umber = mix(color('#24140e'), color('#4d3c1e'), moss)
+    const bark = mix(color(hsl.integer(170, 43, 7)), color(hsl.integer(146, 40, 19)), moss.mul(0.72).add(grazing.mul(0.18)))
+    const umber = mix(color(hsl.integer(41, 38, 11)), color(hsl.integer(80, 52, 27)), moss)
     const substrate = mix(bark, umber, grazing.mul(0.22))
-    const moon = mix(color('#42e1b1'), color('#d3f5a3'), signal.mul(0.75).add(grazing.mul(0.25)).clamp())
+    const moon = mix(color(hsl.integer(168, 86, 79)), color(hsl.integer(127, 77, 91.4)), signal.mul(0.75).add(grazing.mul(0.25)).clamp())
     const liveNetwork = moon.mul(network).mul(signal.mul(0.75).add(0.25))
-    const sporeColor = mix(color('#7af3ce'), color('#ffe0a0'), spores.mul(0.5).add(grazing.mul(0.5)))
-    const surface = mix(substrate, liveNetwork.add(color('#123f35').mul(network)), network.mul(0.72).clamp())
+    const sporeColor = mix(color(hsl.integer(171, 78, 86.4)), color(hsl.integer(85, 100, 90.4)), spores.mul(0.5).add(grazing.mul(0.5)))
+    const surface = mix(substrate, liveNetwork.add(color(hsl.integer(176, 74, 23)).mul(network)), network.mul(0.72).clamp())
     const relief = network.mul(0.0015).add(sporeHalo.mul(0.0011))
     this.colorNode = mix(surface, sporeColor, spores.mul(0.82))
     this.metalness = 0.08
@@ -47,6 +48,6 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.1
     this.normalNode = proceduralNormal(relief.add(moss.mul(near).mul(0.0005)), 0.76)
     this.positionNode = p.add(normalLocal.mul(cordHeight.mul(0.00125)))
-    this.emissiveNode = liveNetwork.mul(near.mul(0.85).add(0.3)).mul(1.75).add(sporeColor.mul(spores).mul(intimate.mul(1.1).add(0.22)).mul(2.1)).add(color('#9affd9').mul(grazing.pow(4)).mul(0.16))
+    this.emissiveNode = liveNetwork.mul(near.mul(0.85).add(0.3)).mul(1.75).add(sporeColor.mul(spores).mul(intimate.mul(1.1).add(0.22)).mul(2.1)).add(color(hsl.integer(168, 100, 91.6)).mul(grazing.pow(4)).mul(0.16))
   }
 }

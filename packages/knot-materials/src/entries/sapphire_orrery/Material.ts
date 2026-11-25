@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {enamel, etch, ornamentCell, polarTicks, turn} from '../../candidates/gpt_sol/lib/ornamentAtlas.ts'
@@ -31,8 +32,8 @@ export default class extends KnotMaterial {
       .mul(enamel(float(0.425).sub(r)))
     const brass = rim.add(insideRim).add(ticks.mul(0.7)).add(cardinal).add(lozenge.mul(0.7)).clamp()
     const silk = mx_noise_float(p.mul(95)).mul(0.5).add(0.5)
-    const navy = mix(color('#030c22'), color('#123954'), mx_noise_float(p.mul(4)).mul(0.23).add(0.38))
-    const metal = mix(color('#8f5c22'), color('#e9bf73'), random.y.mul(0.4).add(silk.mul(0.2)).add(0.3))
+    const navy = mix(color(hsl.integer(261, 76, 7)), color(hsl.integer(243, 69, 23)), mx_noise_float(p.mul(4)).mul(0.23).add(0.38))
+    const metal = mix(color(hsl.integer(65, 73, 44)), color(hsl.integer(82, 68, 80)), random.y.mul(0.4).add(silk.mul(0.2)).add(0.3))
     let sky: Node<'vec3'> = vec3(0)
     // This is bounded tangent-space parallax, not camera-projected noise. The instrument stays on the object.
     for (const [i, depth] of [0.017, 0.049, 0.087].entries()) {
@@ -50,7 +51,7 @@ export default class extends KnotMaterial {
       const halo = planetDistance.mul(-70).exp().mul(0.2)
       const meridian = etch(local.x.mul(0.75).add(local.y.mul(0.4)), 0.0012)
         .mul(enamel(local.length().sub(0.28))).mul(0.3)
-      const tint = mix(color('#51acbf'), color('#ead3a0'), float(i / 2))
+      const tint = mix(color(hsl.integer(213, 63, 65)), color(hsl.integer(86, 56, 85)), float(i / 2))
       const breathing = time.mul(0.35).add(layer.random.x.mul(TAU)).sin().mul(0.08).add(0.92)
       sky = sky.add(tint.mul(orbit.mul(0.38).add(second).add(meridian).add(planet.mul(2.1)).add(halo))
         .mul(Math.exp(-depth * 4)).mul(breathing))
@@ -74,8 +75,8 @@ export default class extends KnotMaterial {
     this.anisotropy = 0.35
     this.anisotropyNode = vec2(0, 1).mul(brass).mul(0.35)
     this.emissiveNode = sky.mul(face).mul(facing.mul(0.4).add(0.6)).mul(near.mul(0.22).add(0.68))
-      .add(color('#bedce4').mul(star.add(starCross)).mul(face).mul(0.68))
-      .add(color('#59a0c5').mul(cartography))
-      .add(color('#20548a').mul(grazing.pow(3)).mul(0.035))
+      .add(color(hsl.integer(216, 33, 85)).mul(star.add(starCross)).mul(face).mul(0.68))
+      .add(color(hsl.integer(233, 57, 62)).mul(cartography))
+      .add(color(hsl.integer(252, 72, 35)).mul(grazing.pow(3)).mul(0.035))
   }
 }

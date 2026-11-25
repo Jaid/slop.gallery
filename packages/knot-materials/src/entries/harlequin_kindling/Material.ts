@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, float, mix, normalViewGeometry, positionViewDirection, tangentView, time, uv, vec3} from 'three/tsl'
 
 import {tubeCells} from '../../candidates/claude_sonnet/lib/tubeMetric.ts'
@@ -59,7 +60,7 @@ export default class extends KnotMaterial {
     const fireC = wavelengthColor(pinfire.wavelength).mul(pinfire.flash.pow(1.6)).mul(0.65).mul(sparkWindow)
     const fire = fireA.add(fireB).add(fireC)
 // Milky potch body: deep blue-black that glows faintly teal where the stone is thick toward the eye.
-    const body = mix(color('#010205'), color('#06161f'), facing.pow(2).mul(0.5))
+    const body = mix(color(hsl.integer(262, 45, 2)), color(hsl.integer(235, 56, 9)), facing.pow(2).mul(0.5))
     this.colorNode = body
     this.metalness = 0
     this.roughnessNode = float(0.16).sub(fire.length().mul(0.05)).max(0.08)
@@ -68,9 +69,9 @@ export default class extends KnotMaterial {
     this.clearcoat = 1
     this.clearcoatRoughness = 0.035
     this.sheen = 0.15
-    this.sheenColor.set('#7fb6ff')
+    this.sheenColor.set(hsl.integer(256, 100, 73))
     this.sheenRoughness = 0.35
     this.emissiveNode = fire.mul(facing.mul(0.45).add(0.75)).mul(1.7)
-      .add(color('#1b6a8a').mul(grazing.pow(3)).mul(near.mul(0.3).add(0.15)).mul(0.25))
+      .add(color(hsl.integer(230, 80, 41)).mul(grazing.pow(3)).mul(near.mul(0.3).add(0.15)).mul(0.25))
   }
 }

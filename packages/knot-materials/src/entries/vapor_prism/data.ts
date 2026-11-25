@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'vapor_prism',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A little drifting mist persuades daylight to reveal its hidden colors.',
   placeholder: {
-    color: '#eef2f7',
+    color: hsl.integer(254, 29, 95),
     shading: 'glass',
   },
 } as const satisfies KnotData

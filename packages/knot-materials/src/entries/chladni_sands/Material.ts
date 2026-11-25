@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, negateOnBackSide, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/gpt_astra/lib/bumpNormal.ts'
@@ -45,7 +46,7 @@ export default class extends BaseKnotMaterial {
     // Unresolved powder converges to an average coverage instead
     // of disappearing or turning into subpixel glitter.
     const coverage = sandMask.mul(mix(float(0.73), grainShape.mul(0.6).add(0.4), grainVisibility))
-    const sandTint = mix(color('#d5b67b'), color('#fff0cb'), random.z.mul(0.55).add(0.35))
+    const sandTint = mix(color(hsl.integer(83, 53, 76)), color(hsl.integer(89, 100, 95)), random.z.mul(0.55).add(0.35))
     const membraneWave = tube.x.mul(TAU * 8).sin()
       .mul(tube.y.mul(TAU * 2).sin())
       .mul(0.00005)
@@ -58,7 +59,7 @@ export default class extends BaseKnotMaterial {
     const quartz = random.z.smoothstep(0.96, 0.99)
       .mul(grainVisibility)
       .mul(coverage)
-    this.colorNode = mix(color('#082b4b'), sandTint, coverage)
+    this.colorNode = mix(color(hsl.integer(250, 79, 18)), sandTint, coverage)
     this.metalnessNode = coverage.oneMinus().mul(0.78)
     this.roughnessNode = mix(float(0.26), float(0.82), coverage).sub(quartz.mul(0.6))
     this.ior = 1.55

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, positionGeometry, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -53,15 +54,15 @@ export default class extends KnotMaterial {
     // Sinking lanes: ~5,100K deep amber-red (#801a00 to #b83c02)
     // Convective dome plateaus: ~5,900K rich solar gold (#f29618)
     // Upwelling crests: ~6,350K warm golden white (#ffeaa4)
-    const k5100 = color('#7d1700')
-    const k5600 = color('#c74805')
-    const k5900 = color('#f29618')
-    const k6350 = color('#ffeaa4')
+    const k5100 = color(hsl.integer(34, 100, 29))
+    const k5600 = color(hsl.integer(41, 98, 50))
+    const k5900 = color(hsl.integer(66, 96.7, 71))
+    const k6350 = color(hsl.integer(94, 100, 93))
     const laneThermal = mix(k5100, k5600, cellConvection.mul(0.35))
     const plateauThermal = mix(laneThermal, k5900, cellConvection.add(microTurbulence).clamp(0, 1))
     const thermalCore = mix(plateauThermal, k6350, cellConvection.pow(1.8).mul(supergranulation).mul(0.55))
     // Base color absorbs all external diffuse light
-    this.colorNode = color('#000000')
+    this.colorNode = color(hsl.integer(0, 0, 0))
     // Solar radiant emissions:
     // 1. Photospheric blackbody radiation
     const photosphericEmission = thermalCore
@@ -72,9 +73,9 @@ export default class extends KnotMaterial {
     const junctionVertex = laneMask.mul(d1.smoothstep(0.35, 0.65))
     const pointNoise = mx_noise_float(granuleCoord.mul(4)).smoothstep(0.55, 0.85)
     const magneticPoints = junctionVertex.mul(pointNoise)
-    const magneticGlow = color('#fffdf0').mul(magneticPoints).mul(near.mul(0.6).add(0.4)).mul(3.2)
+    const magneticGlow = color(hsl.integer(99, 100, 99)).mul(magneticPoints).mul(near.mul(0.6).add(0.4)).mul(3.2)
     // 3. Chromospheric corona: thin energetic H-alpha atmospheric fringe at the grazing limb
-    const chromosphericHalo = color('#ff3b00')
+    const chromosphericHalo = color(hsl.integer(34, 100, 59.5))
       .mul(rim.pow(2))
       .mul(1.2)
     // 4. Intimate micro-reconnection boiling revealed up close
@@ -82,7 +83,7 @@ export default class extends KnotMaterial {
       .smoothstep(0.6, 0.95)
       .mul(laneMask)
       .mul(intimate)
-    const spiculeGlow = color('#ffcc55').mul(spiculeChurn).mul(1.5)
+    const spiculeGlow = color(hsl.integer(86, 100, 85)).mul(spiculeChurn).mul(1.5)
     this.emissiveNode = photosphericEmission
       .add(magneticGlow)
       .add(chromosphericHalo)

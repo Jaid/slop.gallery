@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, time, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -49,16 +50,16 @@ export default class extends KnotMaterial {
         phaseRings = phaseRings.add(rings)
         fluxHop = fluxHop.add(slipStutter.mul(pinCore).mul(intimate))
         currentTangent = currentTangent.add(tangent.mul(current))
-        const coreTint = mix(color('#00f6ff'), color('#7b2cbf'), r.mul(2.8).clamp())
+        const coreTint = mix(color(hsl.integer(199, 100, 86.5)), color(hsl.integer(304, 85, 41)), r.mul(2.8).clamp())
         coreLight = coreLight.add(coreTint.mul(pinCore))
       }
     }
     // Ceramic cuprate background grain
     const cuprateGrain = mx_noise_float(p.mul(42)).mul(0.5).add(0.5)
-    const ceramicBase = mix(color('#0a0e14'), color('#1a2332'), cuprateGrain.mul(0.2))
+    const ceramicBase = mix(color(hsl.integer(258, 22, 7)), color(hsl.integer(260, 31, 15)), cuprateGrain.mul(0.2))
     // Total Meissner diamagnetic expulsion: metallic mirror luster at grazing angles
     const meissnerMirror = grazing.pow(1.8)
-    this.colorNode = mix(ceramicBase, color('#00d2ff'), core.mul(0.4))
+    this.colorNode = mix(ceramicBase, color(hsl.integer(220, 100, 77)), core.mul(0.4))
     this.metalnessNode = mix(float(0.15), float(0.96), meissnerMirror.max(supercurrent.mul(0.4)))
     this.roughnessNode = mix(float(0.36), float(0.04), meissnerMirror.max(core.mul(0.8)))
     // Anisotropic reflections swirling around each vortex core
@@ -72,9 +73,9 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(fluxIndent, 0.7)
     // Radiation: cyan vortex singularities + concentric phase rings + quantum avalanche sparks
     const coreEmission = coreLight.mul(near.mul(0.4).add(0.6)).mul(3.6)
-    const ringEmission = color('#00b4d8').mul(phaseRings).mul(1.2)
-    const sparkEmission = color('#ffffff').mul(fluxHop).mul(4.8)
-    const meissnerRim = color('#00e5ff').mul(rim.pow(3)).mul(0.35)
+    const ringEmission = color(hsl.integer(219, 100, 66.5)).mul(phaseRings).mul(1.2)
+    const sparkEmission = color(hsl.integer(0, 0, 100)).mul(fluxHop).mul(4.8)
+    const meissnerRim = color(hsl.integer(209, 100, 82)).mul(rim.pow(3)).mul(0.35)
     this.emissiveNode = coreEmission
       .add(ringEmission)
       .add(sparkEmission)

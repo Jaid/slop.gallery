@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, uv, vec2} from 'three/tsl'
 
 import {breath, tangentViewFrame} from '../../candidates/gpt_sol/lib/exhibition/facetOptics.ts'
@@ -62,14 +63,14 @@ export default class extends KnotMaterial {
     const pulp = mx_noise_float(pulpCoordinates).mul(resolved(pulpCoordinates))
     const fiberPhase = tube.x.mul(TAU * 780).add(torusNoise(tube, 10, 4, 13).mul(2))
     const fiber = wave(fiberPhase).mul(intimate).toVar()
-    const paper = mix(color('#a98b62'), color('#eedeb9'), aging.mul(0.55).add(0.4))
+    const paper = mix(color(hsl.integer(75, 39, 60)), color(hsl.integer(87, 53, 89)), aging.mul(0.55).add(0.4))
       .mul(stains.mul(0.14).add(0.83)).mul(pulp.mul(0.06).add(1))
-    const ink = mix(color('#1c2527'), color('#903b24'), rubric)
+    const ink = mix(color(hsl.integer(213, 16, 15)), color(hsl.integer(36, 75, 38)), rubric)
     const livingInk = tube.x.mul(TAU * 2).add(breath).sin().mul(0.025).add(0.975)
     const redMargin = fill(leaf, ornament.footprint).mul(textPanel.oneMinus()).mul(0.32)
-    let page = mix(mix(paper, color('#943627'), redMargin), ink, text.mul(livingInk))
-    page = mix(page, color('#616c6b'), ghost)
-    const foil = mix(color('#896026'), color('#eed393'), aging)
+    let page = mix(mix(paper, color(hsl.integer(31, 77, 38)), redMargin), ink, text.mul(livingInk))
+    page = mix(page, color(hsl.integer(190, 8, 45)), ghost)
+    const foil = mix(color(hsl.integer(73, 70, 45)), color(hsl.integer(87, 65, 85)), aging)
       .mul(mx_noise_float(p.mul(90)).mul(0.13).add(0.88))
     const abradedGold = gold.mul(aging.smoothstep(0.18, 0.38)).toVar()
     this.colorNode = mix(page, foil, abradedGold)
@@ -83,7 +84,7 @@ export default class extends KnotMaterial {
     this.clearcoatNode = abradedGold.mul(0.18).add(0.04)
     this.clearcoatRoughness = 0.42
     this.sheen = 0.23
-    this.sheenColor.set('#b3a084')
+    this.sheenColor.set(hsl.integer(77, 26, 67))
     this.sheenRoughness = 0.85
     this.specularIntensity = 0.45
     this.aoNode = aging.mul(0.12).add(0.88)

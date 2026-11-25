@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'solar_chronosphere',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Convective granules churn beneath coronal arches, burning with the fierce pulse of a newborn star.',
   placeholder: {
-    color: '#df5a12',
+    color: hsl.integer(43, 96, 57),
     shading: 'smooth',
   },
 } as const satisfies KnotData

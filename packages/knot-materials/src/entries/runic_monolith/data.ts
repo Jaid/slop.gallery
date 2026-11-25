@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'runic_monolith',
   candidateId: 'kimi',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Old marks glow on a stone whose language seems older than its maker.',
   placeholder: {
-    color: '#43ffd0',
+    color: hsl.integer(172, 99, 88),
     shading: 'smooth',
   },
 } as const satisfies KnotData

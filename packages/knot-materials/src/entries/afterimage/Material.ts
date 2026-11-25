@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, tangentGeometry, uv, vec2} from 'three/tsl'
 
 import {buriedUv} from '../../candidates/gpt_sol/lib/exhibition/buriedOptics.ts'
@@ -25,24 +26,24 @@ export default class extends KnotMaterial {
     const riverPhase = printUv.x.mul(TAU * 32).add(printUv.y.mul(TAU * 2).sin().mul(4.2)).add(breathing)
     const river = wave(riverPhase).smoothstep(0.34, 0.66)
     const keyLine = stroke(riverPhase.sin(), 0.065).mul(riverPhase.fwidth().smoothstep(0.6, 2.5).oneMinus())
-    let warm = mix(color('#fb4b28'), color('#ffce91'), river)
-    warm = mix(warm, color('#31131c'), keyLine.mul(0.8))
+    let warm = mix(color(hsl.integer(33, 98, 60.6)), color(hsl.integer(72, 100, 86)), river)
+    warm = mix(warm, color(hsl.integer(3, 50, 13)), keyLine.mul(0.8))
 // View B: offset concentric targets, with slightly squared contours like a screen-printed optical poster.
     const targetP = p.sub(vec2(0.035, -0.045))
     const targetR = targetP.pow2().pow2().x.add(targetP.pow2().pow2().y).max(1e-8).pow(0.25)
     const targetPhase = targetR.mul(61).add(breathing.mul(1.4))
     const target = wave(targetPhase).smoothstep(0.34, 0.66)
     const pupil = fill(targetR.sub(0.072))
-    let cool = mix(color('#2523ad'), color('#bca2ec'), target)
-    cool = mix(cool, color('#ffb13b'), pupil)
+    let cool = mix(color(hsl.integer(271, 96, 28.5)), color(hsl.integer(300, 67, 72)), target)
+    cool = mix(cool, color(hsl.integer(73, 100, 78.7)), pupil)
 // View C: nested offset diamonds and a broad cream/ink checker, interrupted by saffron diagonals.
     const diamond = p.x.add(p.y.mul(0.15)).abs().add(p.y.abs())
     const labyrinthPhase = diamond.mul(48)
     const labyrinth = wave(labyrinthPhase).smoothstep(0.38, 0.62)
     const checker = printUv.x.mul(32).floor().add(printUv.y.mul(4).floor()).mod(2)
-    let graphic = mix(color('#181a28'), color('#f6e7bc'), labyrinth.mul(0.78).add(checker.mul(0.22)))
+    let graphic = mix(color(hsl.integer(278, 29, 12)), color(hsl.integer(92, 68, 92)), labyrinth.mul(0.78).add(checker.mul(0.22)))
     const sash = stroke(p.x.sub(p.y).sub(0.04), 0.042)
-    graphic = mix(graphic, color('#eebc36'), sash.mul(0.85))
+    graphic = mix(graphic, color(hsl.integer(87, 89, 79)), sash.mul(0.85))
 // Local incidence selects distinct pictures. Refraction bounds the change at the silhouette.
     const n = normalLocal.normalize()
     const tangent = tangentGeometry.xyz.normalize()
@@ -59,7 +60,7 @@ export default class extends KnotMaterial {
     const register = stroke(registerP.length().sub(0.032), 0.004).max(stroke(registerP.x, 0.003).mul(fill(registerP.y.abs().sub(0.045))))
       .mul(fill(registerP.length().sub(0.055)))
     const markings = frame.max(register).mul(0.8)
-    this.colorNode = mix(art, color('#171c2a'), markings)
+    this.colorNode = mix(art, color(hsl.integer(269, 29, 13)), markings)
     this.metalness = 0
     this.ior = 1.49
     this.roughnessNode = float(0.23).sub(lens.mul(intimate).mul(0.05)).add(markings.mul(0.09))

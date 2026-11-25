@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, luminance, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, time, vec3} from 'three/tsl'
 
 import {environmentRadiance} from '../../candidates/claude_opus/lib/environmentRadiance.ts'
@@ -90,7 +91,7 @@ export default class extends KnotMaterial {
       .add(lower.light.mul(upperShare.oneMinus()).mul(richness.mul(0.6).add(0.4)).mul(vec3(0.55, 0.75, 0.95)))
       .add(pinfire.light.mul(near).mul(0.9))
     const potch = mx_fractal_noise_float(entry.mul(5), 3, 2, 0.5).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#000001'), color('#020409'), potch)
+    this.colorNode = mix(color(hsl.integer(264, 100, 0)), color(hsl.integer(260, 41, 3)), potch)
     this.metalness = 0
     this.roughness = 0.04
     this.specularIntensity = 0.55

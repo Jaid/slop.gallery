@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HdWJtzJ2GnPe32p; fixture: knot-material-shaders; result: success.
 export default {
   id: 'feldspar_veil',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Under a mirror polish the feldspar keeps a cold fire of its own, and it only shows itself to whoever moves.',
   placeholder: {
-    color: '#2c333d',
+    color: hsl.integer(257, 17, 22),
     shading: 'stone',
   },
 } as const satisfies KnotData

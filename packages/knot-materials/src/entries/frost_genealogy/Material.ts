@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, color, float, fract, max, min, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalWorld, positionGeometry, positionView, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -177,9 +178,9 @@ export default class extends KnotMaterial {
 // Only the smooth coverage reaches the vertex stage; crystal relief is a normal-map concern.
     this.positionNode = positionGeometry.add(normalLocal.mul(coverage.mul(knotData.displacement)))
     const sky = normalWorld.y.mul(0.5).add(0.5)
-    const glass = mix(color('#02040a'), color('#060c15'), sky.pow(1.3))
-    const rime = mix(color('#6d88a6'), color('#a9c2dc'), sky.mul(0.6).add(0.2))
-    this.colorNode = mix(mix(glass, color('#33465e'), film.mul(0.8)), mix(rime, color('#e2f0ff'), scattering.mul(0.85)), crystal.mul(0.95).mul(depth.mul(0.45).add(0.55)))
+    const glass = mix(color(hsl.integer(262, 45, 3.3)), color(hsl.integer(256, 38, 6)), sky.pow(1.3))
+    const rime = mix(color(hsl.integer(251, 29, 56)), color(hsl.integer(249, 36, 77)), sky.mul(0.6).add(0.2))
+    this.colorNode = mix(mix(glass, color(hsl.integer(254, 34, 30)), film.mul(0.8)), mix(rime, color(hsl.integer(250, 100, 94)), scattering.mul(0.85)), crystal.mul(0.95).mul(depth.mul(0.45).add(0.55)))
     this.metalness = 0
     this.roughnessNode = crystal.mul(0.4).mul(depth).add(film.mul(0.2)).add(haze.mul(0.2)).sub(scattering.mul(0.14)).sub(condensation.core.mul(0.05)).add(0.08).clamp(0.03, 0.82)
     this.clearcoat = 1
@@ -195,14 +196,14 @@ export default class extends KnotMaterial {
     const backlit = sky.pow(1.5).add(grazing.mul(0.3))
     const dust = mx_noise_float(p.mul(120))
     const sparkle = glints(iceNormal, 140).mul(dust.mul(0.5).add(0.5)).mul(intimate)
-    this.emissiveNode = mix(color('#2c5c8a'), color('#a8dcff'), crystal)
+    this.emissiveNode = mix(color(hsl.integer(250, 62, 38)), color(hsl.integer(238, 100, 85)), crystal)
       .mul(crystal.mul(0.16).mul(depth).add(scattering.mul(0.6)).add(haze.mul(0.35)))
       .mul(backlit.mul(0.6).add(0.4))
       .mul(coverage.mul(0.5).add(0.5))
       .mul(0.16)
-      .add(color('#eaf6ff').mul(sparkle).mul(crystal).mul(depth).mul(0.55))
-      .add(color('#bfe4ff').mul(condensation.core).mul(0.06))
-      .add(color('#7fc4ff').mul(scattering).mul(grazing.pow(2)).mul(near).mul(0.12))
+      .add(color(hsl.integer(240, 100, 96)).mul(sparkle).mul(crystal).mul(depth).mul(0.55))
+      .add(color(hsl.integer(240, 100, 88.5)).mul(condensation.core).mul(0.06))
+      .add(color(hsl.integer(246, 99, 76)).mul(scattering).mul(grazing.pow(2)).mul(near).mul(0.12))
       .add(min(front.mul(0.3), crystal).mul(0.08))
   }
 }

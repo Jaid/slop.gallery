@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'obsidian_shard',
   candidateId: 'claude_sonnet',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A splinter of volcanic night carries one hard edge of daylight.',
   placeholder: {
-    color: '#1a1a22',
+    color: hsl.integer(285, 17, 12),
     shading: 'stone',
   },
 } as const satisfies KnotData

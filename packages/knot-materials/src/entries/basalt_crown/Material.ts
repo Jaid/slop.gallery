@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {loopPhase} from '../../candidates/space_bunny/lib/loopClock.ts'
@@ -43,16 +44,16 @@ export default class extends KnotMaterial {
     const wave = travel.sin().mul(0.5).add(0.5).pow(1.6)
     const breath = loopPhase.mul(2).sin().mul(0.22).add(0.86)
     const heat = seam.mul(breath).mul(wave.mul(0.62).add(0.38))
-    const molten = mix(color('#8f1c05'), color('#ff7a14'), heat.pow(1.4))
-    const white = mix(color('#ff8b1e'), color('#ffe7ae'), core.mul(heat).pow(1.6))
+    const molten = mix(color(hsl.integer(33, 98, 33.5)), color(hsl.integer(49.4, 100, 67.8)), heat.pow(1.4))
+    const white = mix(color(hsl.integer(56, 100, 70.9)), color(hsl.integer(88, 100, 92.4)), core.mul(heat).pow(1.6))
 // Sparks ride the convection: half a lattice cell per second, so two seconds is one whole cell.
     const sparkField = cellularPoints(p.mul(46).add(vec3(0, time.mul(23), 0)), 0.02, 0.11, 0.74)
     const spark = sparkField.mul(seam.mul(0.6).add(0.4)).mul(near.mul(0.4).add(0.6))
     const soot = mx_fractal_noise_float(p.mul(2.2).add(vec3(9.1, -4.3, 1.7)), 4, 2.1, 0.55).mul(0.5).add(0.5)
-    const basalt = mix(color('#100d0c'), color('#3a3230'), cells.mul(0.55).add(soot.mul(0.45)))
-    const scoria = mix(basalt, color('#08070a'), vesicle.mul(0.55))
+    const basalt = mix(color(hsl.integer(39, 9, 7)), color(hsl.integer(34, 10, 23)), cells.mul(0.55).add(soot.mul(0.45)))
+    const scoria = mix(basalt, color(hsl.integer(302, 14, 5)), vesicle.mul(0.55))
 // The furnace lights its own lid from below.
-    this.colorNode = mix(mix(scoria, color('#07060a'), craze.mul(0.5)), molten.mul(0.6), seam.mul(0.55)).add(molten.mul(heat.mul(0.6)))
+    this.colorNode = mix(mix(scoria, color(hsl.integer(298, 19, 4)), craze.mul(0.5)), molten.mul(0.6), seam.mul(0.55)).add(molten.mul(heat.mul(0.6)))
     this.metalness = 0
     this.roughnessNode = float(0.82).sub(lift.mul(0.18)).sub(rope.mul(0.16)).add(vesicle.mul(0.08)).clamp(0.12, 1)
     this.ior = 1.48
@@ -65,8 +66,8 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(surface, 0.012)
     this.emissiveNode = molten.mul(heat.mul(2.6))
       .add(white.mul(core.mul(heat).mul(4.2)))
-      .add(color('#ff7a2a').mul(seam.mul(heat).mul(grazing.mul(0.8).add(0.35)).mul(1.1)))
-      .add(color('#fff0c0').mul(spark.mul(3.6)))
-      .add(color('#2a0c04').mul(grazing.mul(heat).mul(0.35)))
+      .add(color(hsl.integer(47, 100, 68)).mul(seam.mul(heat).mul(grazing.mul(0.8).add(0.35)).mul(1.1)))
+      .add(color(hsl.integer(92, 100, 94.7)).mul(spark.mul(3.6)))
+      .add(color(hsl.integer(38, 76, 10)).mul(grazing.mul(heat).mul(0.35)))
   }
 }

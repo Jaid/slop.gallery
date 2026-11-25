@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ActJg0bLJQHug14.
 export default {
   id: 'glasswing_atlas',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Transparent wings carry whole climates within every trembling pane.',
   placeholder: {
-    color: '#9bd4d8',
+    color: hsl.integer(202, 43, 80),
     shading: 'glass',
   },
 } as const satisfies KnotData

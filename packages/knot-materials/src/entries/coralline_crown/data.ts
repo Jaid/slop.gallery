@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'coralline_crown',
   candidateId: 'gpt_astra',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'The sea fashions a crown for a sovereign it has never seen.',
   placeholder: {
-    color: '#8ce6cf',
+    color: hsl.integer(176, 64, 84),
     shading: 'smooth',
   },
   displacement: 0.085,

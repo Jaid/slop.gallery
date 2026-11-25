@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'star_atlas',
   candidateId: 'kimi',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A map of distant lights rearranges its bearings as the viewer moves.',
   placeholder: {
-    color: '#ffe9a8',
+    color: hsl.integer(92, 100, 92.7),
     shading: 'smooth',
   },
 } as const satisfies KnotData

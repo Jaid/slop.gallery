@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {detail, fill, pulse, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/pattern.ts'
@@ -33,8 +34,8 @@ export default class extends KnotMaterial {
     const cap = local.x.mul(Math.PI).cos().max(0).mul(local.y.mul(Math.PI).cos().max(0))
     const flutter = pulse(tube.x.mul(TAU * 5).sub(tube.y.mul(TAU * 2)).sub(time.mul(0.65)))
     const optical = facing.mul(2.4).add(rnd.x.mul(0.4)).add(cap.mul(0.45)).add(flutter.mul(0.35))
-    const emerald = mix(color('#093f3a'), color('#4fb892'), optical.sin().mul(0.5).add(0.5))
-    const wing = mix(emerald, color('#30204f'), optical.add(1.4).sin().smoothstep(0.1, 0.95))
+    const emerald = mix(color(hsl.integer(186, 87, 23)), color(hsl.integer(167, 72, 66)), optical.sin().mul(0.5).add(0.5))
+    const wing = mix(emerald, color(hsl.integer(297, 59, 19)), optical.add(1.4).sin().smoothstep(0.1, 0.95))
       .mul(ribs.mul(fine).mul(0.1).add(0.84)).mul(separation.mul(-0.48).add(1))
     const motifRows = tube.y.mul(2)
     const motif = vec2(tube.x.mul(10).add(motifRows.floor().mod(2).mul(0.5)), motifRows).fract().sub(0.5)
@@ -45,10 +46,10 @@ export default class extends KnotMaterial {
     const lagoon = stroke(r.sub(0.45), 0.077, af)
     const innerGold = stroke(r.sub(0.275), 0.022, af)
     const pupil = fill(r.sub(0.24), af)
-    let pigment = mix(wing, color('#122429'), eye.mul(0.92))
-    pigment = mix(pigment, color('#bf9860'), outerGold.add(innerGold).clamp())
-    pigment = mix(pigment, mix(color('#126f7e'), color('#82d5c8'), grazing), lagoon)
-    pigment = mix(pigment, color('#090e1e'), pupil)
+    let pigment = mix(wing, color(hsl.integer(217, 38, 14)), eye.mul(0.92))
+    pigment = mix(pigment, color(hsl.integer(76, 52, 66)), outerGold.add(innerGold).clamp())
+    pigment = mix(pigment, mix(color(hsl.integer(212, 89, 42)), color(hsl.integer(183, 57, 79)), grazing), lagoon)
+    pigment = mix(pigment, color(hsl.integer(269, 47, 7)), pupil)
     pigment = pigment.mul(scallop.mul(-0.48).add(1)).mul(rnd.y.mul(0.16).add(0.9))
     this.colorNode = pigment
     this.metalness = 0.36
@@ -59,11 +60,11 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = rnd.x.mul(80).add(310).add(flutter.mul(50))
     this.anisotropy = 0.8
     this.anisotropyNode = vec2(local.x.mul(0.5), float(0.75))
-    this.sheenNode = mix(color('#1e5360'), color('#8687bb'), grazing).mul(0.65)
+    this.sheenNode = mix(color(hsl.integer(217, 65, 32)), color(hsl.integer(283, 39, 58)), grazing).mul(0.65)
     this.sheenRoughness = 0.42
     this.clearcoat = 0.12
     this.clearcoatRoughness = 0.32
     const glintNormal = normalViewGeometry.add(rnd.sub(0.5).mul(0.18)).normalize()
-    this.emissiveNode = color('#a0dfcd').mul(glints(glintNormal, 140)).mul(cap.pow(4)).mul(intimate).mul(0.09)
+    this.emissiveNode = color(hsl.integer(175, 50, 83)).mul(glints(glintNormal, 140)).mul(cap.pow(4)).mul(intimate).mul(0.09)
   }
 }

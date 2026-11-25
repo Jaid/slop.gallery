@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'rust_ceramic',
   candidateId: 'claude_sonnet',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A warm, iron-colored skin records the slow meeting of fire and clay.',
   placeholder: {
-    color: '#b5651d',
+    color: hsl.integer(57, 83, 52),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_fractal_noise_float, negateOnBackSide, normalLocal, positionView, positionViewDirection, select, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_sonnet/lib/ramp.ts'
@@ -14,14 +15,14 @@ import knotData from './data.ts'
 // 360 × 40 tesserae (about 2 cm each) grouped into 18 × 2 roundels of 20 × 20 tesserae.
 const tesserae: [number, number] = [360, 40]
 const roundelSize = 20
-const smalti = (hex: string) => color(hex).rgb
-const gold = smalti('#e3a62f')
-const paleGold = smalti('#ffd98a')
-const lapis = smalti('#0f2a8c')
-const ruby = smalti('#a3101e')
-const emerald = smalti('#0c7a45')
-const turquoise = smalti('#12a3a0')
-const pearl = smalti('#f1e8d4')
+const smalti = (hex: number) => color(hex).rgb
+const gold = smalti(hsl.integer(79, 87, 72.6))
+const paleGold = smalti(hsl.integer(85, 100, 88.5))
+const lapis = smalti(hsl.integer(266, 94, 24.5))
+const ruby = smalti(hsl.integer(25, 96.6, 37))
+const emerald = smalti(hsl.integer(155, 98, 43))
+const turquoise = smalti(hsl.integer(192, 95, 59))
+const pearl = smalti(hsl.integer(87, 43, 92))
 /** Colors of one roundel evaluated at the center of a tessera, so every tile is a single flat color. */
 const roundel = (center: Node<'vec2'>, luck: Node<'float'>) => {
   const pattern = center.div(roundelSize)
@@ -88,10 +89,10 @@ export default class extends KnotMaterial {
       const falloff = float(1.6).div(toCandle.dot(toCandle).max(0.2))
       return normal.dot(half).max(0).pow(380).mul(falloff)
     }
-    const candles = glint(candleA).mul(flameA).mul(color('#ffd9a0').rgb).add(glint(candleB).mul(flameB).mul(color('#ffb36b').rgb).mul(0.7))
+    const candles = glint(candleA).mul(flameA).mul(color(hsl.integer(78, 100, 89)).rgb).add(glint(candleB).mul(flameB).mul(color(hsl.integer(63, 100, 79.6)).rgb).mul(0.7))
     // age: soot in the crevices, a few lost tesserae showing the plaster bed
     const age = mx_fractal_noise_float(p.mul(14), 3, 2.1, 0.5).mul(0.5).add(0.5)
-    const plaster = mix(color('#2a241d').rgb, color('#5a4e3f').rgb, age)
+    const plaster = mix(color(hsl.integer(71, 17, 16)).rgb, color(hsl.integer(73, 20, 34)).rgb, age)
     const tile = mix(glassTone, goldTone, select(isGold, float(1), float(0))).mul(age.mul(0.25).add(0.8))
     const bed = grout.max(select(lost, float(1), float(0)))
     const near = ramp(objectDistance, 3.6, 1.2)

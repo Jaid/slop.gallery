@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'frost_monarch',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Primeval glacial ice cradles dendritic hoarfrost crystals and ancient diamond air bubbles frozen in perpetual stillness.',
   placeholder: {
-    color: '#8fc8df',
+    color: hsl.integer(225, 49, 77),
     shading: 'glass',
   },
 } as const satisfies KnotData

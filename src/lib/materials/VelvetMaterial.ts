@@ -3,6 +3,7 @@ import type {Channels} from 'okhsl'
 import type StableRandom from 'stable-random'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, normalViewGeometry, positionViewDirection, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -25,10 +26,10 @@ type Float = Node<'float'>
 
 /** Deep oxblood crushed velvet. */
 export const oxbloodVelvet: VelvetStyle = {
-  crushed: 0x8E_0A_1D,
-  deep: 0x1C_01_04,
-  pile: 0x52_04_0F,
-  sheen: 0xD0_1A_34,
+  crushed: hsl.integer(23, 97, 32),
+  deep: hsl.integer(16, 89, 6),
+  pile: hsl.integer(21, 96, 18),
+  sheen: hsl.integer(22, 96, 48),
 }
 
 /** The colors of a velvet in OkHSL, see {@link VelvetStyle}. */

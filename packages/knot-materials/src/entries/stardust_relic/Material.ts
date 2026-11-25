@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec3, vec4} from 'three/tsl'
 
 import {fbm} from '../../candidates/glm/lib/fbm.ts'
@@ -25,12 +26,12 @@ export default class extends KnotMaterial {
     const widman = opticalLine(matrix.sub(0.1), 0.07).mul(0.6)
     const glint = starGlints(p.mul(110), view)
     const rare = starGlints(p.mul(36).add(vec3(7.7, 4.1, 2.3)), view, 30)
-    const glintColor = mix(color('#e9f2ff'), color('#ffe4bd'), hash1(p.mul(110).add(vec3(3.3, 8.8, 1.1))).mul(0.5).add(0.5))
+    const glintColor = mix(color(hsl.integer(257, 100, 95)), color(hsl.integer(77, 100, 92)), hash1(p.mul(110).add(vec3(3.3, 8.8, 1.1))).mul(0.5).add(0.5))
     const inner = p.sub(view.mul(0.24))
     const nebula = fbm(inner.mul(3.6)).add(inner.y.mul(0.7))
     const nebulaMask = nebula.smoothstep(0.5, 1.15)
-    const nebulaColor = mix(color('#7a5cff'), color('#ff8fd0'), view.x.mul(0.5).add(0.5))
-    this.colorNode = mix(color('#17141c'), color('#2c2733'), speckle.mul(0.5).add(0.5)).add(color('#4d4360').mul(widman))
+    const nebulaColor = mix(color(hsl.integer(286, 99, 53)), color(hsl.integer(345, 100, 75.4)), view.x.mul(0.5).add(0.5))
+    this.colorNode = mix(color(hsl.integer(302, 20, 10)), color(hsl.integer(304, 19, 18)), speckle.mul(0.5).add(0.5)).add(color(hsl.integer(300, 29, 31)).mul(widman))
     this.metalnessNode = glint.mul(0.4).add(0.5)
     this.roughnessNode = speckle.mul(0.5).add(0.5).mul(0.17).add(0.35)
     this.clearcoat = 0.4
@@ -39,13 +40,13 @@ export default class extends KnotMaterial {
     this.thickness = 0.7
     this.ior = 1.52
     this.dispersion = 0.22
-    this.attenuationColor.set('#241a3a')
+    this.attenuationColor.set(hsl.integer(296, 51, 14.4))
     this.attenuationDistance = 0.9
     this.envMapIntensity = 1.15
     this.normalNode = proceduralNormal(speckle, 0.0009)
     this.emissiveNode = glintColor.mul(glint).mul(near.mul(0.9).add(0.55)).mul(1.7)
-      .add(color('#d4e4ff').mul(rare).mul(1.5))
+      .add(color(hsl.integer(261, 100, 90)).mul(rare).mul(1.5))
       .add(nebulaColor.mul(nebulaMask).mul(intimate).mul(0.55))
-      .add(color('#9fb4e8').mul(rim).mul(0.12))
+      .add(color(hsl.integer(267, 60, 74)).mul(rim).mul(0.12))
   }
 }

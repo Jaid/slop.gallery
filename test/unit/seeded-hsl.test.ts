@@ -3,10 +3,11 @@ import {expect, test} from 'bun:test'
 import hsl from 'okhsl'
 import StableRandom from 'stable-random'
 
+import {unpackOkhsl} from '#src/lib/color.ts'
+
 import {salonVelvet, salonVelvetColors, salonVelvetRandom} from '../../src/lib/gallery/salonVelvet.ts'
 import {rollHslShift, seededHsl, seededHue} from '../../src/lib/seededHsl.ts'
 import {defaultTunnelHue, tunnelHue, tunnelTints} from '../../src/rooms/exhibition/lamps.ts'
-import unpackOkhsl from './helpers/unpackOkhsl.ts'
 
 /** How far apart two hues lie round the circle, in degrees. */
 const hueGap = (a: number, b: number) => Math.abs(((a - b) % 360 + 540) % 360 - 180)

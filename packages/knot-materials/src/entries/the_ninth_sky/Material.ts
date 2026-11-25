@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, texture, time, uv, vec2, vec3} from 'three/tsl'
 import {ClampToEdgeWrapping, DataTexture, DataUtils, HalfFloatType, LinearFilter, NoColorSpace, RGBAFormat} from 'three/webgpu'
 
@@ -313,8 +314,8 @@ export default class extends KnotMaterial {
     const pulse = fields.b.mul(1.25).sub(time.mul(0.36)).add(identity.z).fract().sub(0.5).abs().smoothstep(0.035, 0.11).oneMinus()
     const attention = facing.pow(3).mul(near).mul(0.55).add(0.7)
     const viewTint = view.x.mul(0.45).add(view.z.mul(0.3)).add(grazing.mul(0.45)).add(0.3).clamp()
-    const ice = mix(color('#70cde5'), color('#aaa8ff'), viewTint.mul(0.7))
-    const starTint = mix(color('#c8edff'), color('#ffce84'), fields.a.smoothstep(0.52, 0.86))
+    const ice = mix(color(hsl.integer(216, 67, 77)), color(hsl.integer(284, 100, 73)), viewTint.mul(0.7))
+    const starTint = mix(color(hsl.integer(229, 100, 91.3)), color(hsl.integer(77, 100, 86)), fields.a.smoothstep(0.52, 0.86))
     const connections = ice.mul(lines).mul(pulse.mul(0.85).add(0.62)).mul(attention)
     const magnitude = fields.a.clamp().pow(2).mul(0.75).add(0.45)
     const pinpoints = starTint.mul(stars).mul(magnitude).mul(twinkle).mul(eyelight).mul(pulse.mul(0.6).add(1.75))
@@ -327,7 +328,7 @@ export default class extends KnotMaterial {
     const dust = dustD.smoothstep(0.025, dustFoot.mul(0.6).add(0.065)).oneMinus()
       .mul(dustId.z.smoothstep(0.69, 0.86)).mul(dustFoot.smoothstep(0.25, 1.1).oneMinus())
     const scintillation = time.mul(0.6).add(dustId.x.mul(24)).sin().mul(0.25).add(0.75)
-    const deepStars = mix(color('#478fc5'), color('#c4d9ff'), dustId.y).mul(dust).mul(scintillation).mul(intimate.mul(0.45).add(0.12))
+    const deepStars = mix(color(hsl.integer(243, 65, 57)), color(hsl.integer(262, 100, 86)), dustId.y).mul(dust).mul(scintillation).mul(intimate.mul(0.45).add(0.12))
     // Broken, fine orbital arcs frame the bestiary without enclosing it in rigid repeated badges.
     const orbitQ = vec2(q.x.mul(0.82), q.y)
     const orbitDistance = orbitQ.length().sub(0.465).abs()
@@ -337,11 +338,11 @@ export default class extends KnotMaterial {
     const threadDistance = threadPhase.sin().abs()
     const thread = threadDistance.smoothstep(0.008, threadDistance.fwidth().add(0.012)).oneMinus()
     const threadDashes = chartUV.x.mul(TAU * 180).sin().smoothstep(0.55, 0.8)
-    const orbitLight = color('#ac9b78').mul(orbit).mul(0.12)
-      .add(color('#5486b9').mul(thread).mul(threadDashes).mul(detail).mul(0.055))
+    const orbitLight = color(hsl.integer(85, 31, 65)).mul(orbit).mul(0.12)
+      .add(color(hsl.integer(250, 53, 54)).mul(thread).mul(threadDashes).mul(detail).mul(0.055))
     const cloud = mx_noise_float(p.sub(view.mul(0.08)).mul(6).add(vec3(0, time.mul(0.018), 0))).mul(0.5).add(0.5)
-    const body = mix(color('#041022'), color('#10334b'), cloud)
-    const velvet = mix(color('#154e76'), color('#49377e'), cloud.mul(0.65).add(viewTint.mul(0.35)))
+    const body = mix(color(hsl.integer(256, 66, 8)), color(hsl.integer(242, 68, 21)), cloud)
+    const velvet = mix(color(hsl.integer(244, 77, 32)), color(hsl.integer(292, 61, 30)), cloud.mul(0.65).add(viewTint.mul(0.35)))
     const buriedVeil = velvet.mul(cloud.pow(2)).mul(0.19)
     // Four-point optical wakes on the familiar’s two alpha stars; finite, footprint-filtered cores.
     const diffraction = (x: number) => {
@@ -362,9 +363,9 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.32
     this.iridescenceThicknessNode = cloud.mul(100).add(280)
     this.emissiveNode = connections.add(pinpoints).add(halation).add(deepStars).add(orbitLight).add(buriedVeil)
-      .add(color('#b7e5ff').mul(alphaWakes))
-      .add(mix(color('#123c67'), color('#413473'), viewTint).mul(grazing.pow(3)).mul(0.24))
-      .add(color('#062840').mul(cloud).mul(0.12))
+      .add(color(hsl.integer(233, 100, 88)).mul(alphaWakes))
+      .add(mix(color(hsl.integer(253, 76, 25)), color(hsl.integer(290, 58, 28)), viewTint).mul(grazing.pow(3)).mul(0.24))
+      .add(color(hsl.integer(244, 79, 16)).mul(cloud).mul(0.12))
   }
 
   override dispose() {

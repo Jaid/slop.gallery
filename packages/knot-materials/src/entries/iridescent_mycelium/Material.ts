@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, time, vec2, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -50,9 +51,9 @@ export default class extends KnotMaterial {
     const fruiting = networkB.chamber.mul(networkC.ridges).add(sporeB.nodes.mul(0.55))
     const hue = field.mul(0.55).add(facing.mul(0.32)).add(time.mul(0.008)).add(view.x.mul(0.1))
     const pigment = cosinePalette(hue, [0.08, 0.2, 0.26], [0.04, 0.2, 0.29], [1, 1, 1], [0.58, 0.44, 0.18])
-    const skin = mix(color('#07151a'), pigment.mul(0.75), membrane)
-    const glow = mix(color('#50ffd0'), color('#bb72ff'), field.mul(0.5).add(0.5)).add(color('#eaffcf').mul(fruiting.mul(0.7)))
-    this.colorNode = mix(skin, mix(color('#173b37'), pigment, 0.35), growth)
+    const skin = mix(color(hsl.integer(223, 46, 9)), pigment.mul(0.75), membrane)
+    const glow = mix(color(hsl.integer(171, 99, 88.3)), color(hsl.integer(306, 100, 64)), field.mul(0.5).add(0.5)).add(color(hsl.integer(127, 100, 96.8)).mul(fruiting.mul(0.7)))
+    this.colorNode = mix(skin, mix(color(hsl.integer(186, 57, 22)), pigment, 0.35), growth)
     this.roughnessNode = float(0.52).sub(networkA.chamber.mul(0.12)).add(mx_noise_float(p.mul(38)).mul(0.09))
     this.metalness = 0.08
     this.clearcoat = 0.28
@@ -61,6 +62,6 @@ export default class extends KnotMaterial {
     this.thickness = 0.32
     this.ior = 1.42
     this.normalNode = proceduralNormal(growth.mul(0.0022).add(networkC.ridges.mul(0.0007)), 0.0026)
-    this.emissiveNode = glow.mul(growth.mul(1.65).add(fruiting.mul(0.9)).add(sporeA.nodes.mul(0.32))).mul(near.mul(0.48).add(0.52)).add(color('#73ffe1').mul(grazing.mul(0.11)))
+    this.emissiveNode = glow.mul(growth.mul(1.65).add(fruiting.mul(0.9)).add(sporeA.nodes.mul(0.32))).mul(near.mul(0.48).add(0.52)).add(color(hsl.integer(177, 100, 90)).mul(grazing.mul(0.11)))
   }
 }

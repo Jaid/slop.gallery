@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {filteredCos} from '../../candidates/claude_opus/lib/filteredWeave.ts'
@@ -60,9 +61,9 @@ export default class extends KnotMaterial {
 // Shot silk: warp and weft are dyed differently, so the outer veil turns from crimson to gold as you walk around it.
     const across = view.dot(frame.along).abs()
     const shot = across.smoothstep(0.05, 0.7)
-    const outerColor = mix(color('#7a0f2f'), color('#e0a32e'), shot)
-    const innerColor = mix(color('#0d3a7a'), color('#36c2c9'), facing.pow(2)).mul(innerThreads.mul(0.35).add(0.82))
-    const liningColor = color('#07040b')
+    const outerColor = mix(color(hsl.integer(11, 88, 28.4)), color(hsl.integer(79, 87, 72)), shot)
+    const innerColor = mix(color(hsl.integer(259, 89, 26)), color(hsl.integer(200, 82, 70)), facing.pow(2)).mul(innerThreads.mul(0.35).add(0.82))
+    const liningColor = color(hsl.integer(306, 38, 4))
     const seen = mix(liningColor, innerColor, tide)
     const base = mix(seen, outerColor, sheer)
     this.colorNode = base.mul(1.15)
@@ -70,10 +71,10 @@ export default class extends KnotMaterial {
     this.roughness = 0.42
 // Silk fibers stretch their highlight across the threads.
     this.anisotropyNode = vec2(0.75, 0)
-    this.sheenNode = mix(color('#ffc76b'), color('#7fe9ff'), tide).mul(0.9)
+    this.sheenNode = mix(color(hsl.integer(79, 99, 84)), color(hsl.integer(212, 99, 86)), tide).mul(0.9)
     this.sheenRoughness = 0.32
     this.specularIntensity = 0.6
 // A whisper of light from within the beats keeps the tides legible in soft gallery light.
-    this.emissiveNode = innerColor.mul(tide.mul(sheer.oneMinus())).mul(0.22).add(color('#ffd9a0').mul(grazing.pow(3)).mul(0.04))
+    this.emissiveNode = innerColor.mul(tide.mul(sheer.oneMinus())).mul(0.22).add(color(hsl.integer(78, 100, 89)).mul(grazing.pow(3)).mul(0.04))
   }
 }

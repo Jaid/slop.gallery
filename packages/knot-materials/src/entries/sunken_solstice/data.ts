@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HU72JSGdKyp7pBO; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sunken_solstice',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The last light of a vanished summer, sealed around seeds that never reached the ground. Turn it, and the forest wakes.',
   placeholder: {
-    color: '#db690d',
+    color: hsl.integer(51, 96, 59),
     shading: 'glass',
   },
 } as const satisfies KnotData

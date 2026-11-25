@@ -5,6 +5,7 @@ import type {Material} from 'three/webgpu'
 
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -49,12 +50,12 @@ export default function DisplayStairway({stairway, material}: {
       return <group key={i} position={position} rotation={[0, yaw ?? 0, 0]}>
         <mesh position={localStrip}>
           <boxGeometry args={stripSize} />
-          <meshBasicNodeMaterial color='#62958e' toneMapped={false} />
+          <meshBasicNodeMaterial color={hsl.integer(185, 37, 57)} toneMapped={false} />
         </mesh>
       </group>
     })}
     {Object.entries(lamps).map(([name, position]) => <group key={name} position={position}>
-      <Box color='#242f32' position={[0, -0.04, 0]} size={[0.5, 0.1, 0.5]} />
+      <Box color={hsl.integer(216, 16, 19)} position={[0, -0.04, 0]} size={[0.5, 0.1, 0.5]} />
       <mesh position={[0, -0.091, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.16, 24]} /><meshBasicNodeMaterial color={stairwayTint} toneMapped={false} />
       </mesh>

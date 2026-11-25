@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -30,7 +31,7 @@ export default class extends KnotMaterial {
     const grain = mx_noise_float(p.mul(44)).mul(0.5).add(0.5)
     const pane = jewel.mul(bevelShade).mul(grain.mul(0.14).mul(near).add(0.93))
     const grout = filteredRibbon(edge.sub(0.045), 0.03)
-    const came = color('#8a6527')
+    const came = color(hsl.integer(77, 71, 46))
     const flicker = time.mul(Math.PI).add(random.z.mul(6.283)).sin().mul(0.07).add(0.93)
     const backlit = facing.pow(1.5).mul(0.6).add(0.34)
     this.colorNode = mix(pane, came, grout)
@@ -41,6 +42,6 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(edge.add(random.y.mul(0.15)), 0.0015)
     this.clearcoatNormalNode = this.normalNode
     this.aoNode = float(1).sub(grout.mul(0.4))
-    this.emissiveNode = pane.mul(backlit).mul(flicker).mul(0.55).add(color('#ffd98a').mul(glints(normalViewGeometry, 120)).mul(grout).mul(near).mul(0.5))
+    this.emissiveNode = pane.mul(backlit).mul(flicker).mul(0.55).add(color(hsl.integer(85, 100, 88.5)).mul(glints(normalViewGeometry, 120)).mul(grout).mul(near).mul(0.5))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7EtWKdJKgEioEdL; fixture: knot-material-shaders.
 export default {
   id: 'harlequin_fire',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Night-black silica holds a mosaic of sleeping fires; each one wakes only for the single angle it has been waiting for.',
   placeholder: {
-    color: '#050a1c',
+    color: hsl.integer(268, 60, 6),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ion_cathedral',
   candidateId: 'glm_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Charged light gathers beneath arches drawn by an unseen current.',
   placeholder: {
-    color: '#9d6bff',
+    color: hsl.integer(296, 100, 59.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

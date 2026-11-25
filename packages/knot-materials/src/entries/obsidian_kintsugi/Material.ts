@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, time} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -35,9 +36,9 @@ export default class extends KnotMaterial {
     const seamNormal = proceduralNormal(beadProfile, 0.95)
     this.normalNode = seamNormal
     // Pure black volcanic obsidian with zero diffuse reflection
-    const obsidianBlack = color('#000000')
+    const obsidianBlack = color(hsl.integer(0, 0, 0))
     // 24-karat gold leaf dusted lacquer
-    const goldColor = mix(color('#e59e1b'), color('#ffd454'), fineCrack.mul(0.5).add(0.5))
+    const goldColor = mix(color(hsl.integer(75, 94, 71)), color(hsl.integer(90, 100, 86.5)), fineCrack.mul(0.5).add(0.5))
     this.colorNode = mix(obsidianBlack, goldColor, goldMask)
     // Physical PBR: obsidian is pure dielectric glass, gold is pure metallic conductor
     this.metalnessNode = goldMask.mul(1)
@@ -50,13 +51,13 @@ export default class extends KnotMaterial {
     const goldFlakes = glints(seamNormal, 90).mul(goldMask).mul(near.mul(0.6).add(0.4))
     // Thermal living luminescence in the freshly cast molten gold core
     const thermalPulse = time.mul(0.85).sin().mul(0.15).add(0.85)
-    const moltenCore = mix(color('#ff5500'), color('#fff0aa'), fineCrack)
+    const moltenCore = mix(color(hsl.integer(39, 100, 62.4)), color(hsl.integer(97, 100, 94.2)), fineCrack)
       .mul(fineCrack)
       .mul(thermalPulse)
       .mul(intimate.mul(0.7).add(0.3))
       .mul(1.4)
-    const flakeSparkle = color('#fff5cc').mul(goldFlakes).mul(1.8)
-    const goldRimGleam = color('#ffc040').mul(rim.pow(3)).mul(goldMask).mul(0.6)
+    const flakeSparkle = color(hsl.integer(95, 100, 96)).mul(goldFlakes).mul(1.8)
+    const goldRimGleam = color(hsl.integer(81, 100, 81.9)).mul(rim.pow(3)).mul(goldMask).mul(0.6)
     this.emissiveNode = moltenCore
       .add(flakeSparkle)
       .add(goldRimGleam)

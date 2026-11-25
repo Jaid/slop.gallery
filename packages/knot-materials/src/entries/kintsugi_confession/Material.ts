@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec2} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -25,7 +26,7 @@ export default class extends BaseKnotMaterial {
     // A cool ivory celadon with subtle body noise. Deep enough that the gold
     // seams can read against it.
     const bodyNoise = mx_noise_float(p.mul(9)).mul(0.5).add(0.5)
-    const porcelainBase = color('#dee3d6').mul(bodyNoise.mul(0.18).add(0.82))
+    const porcelainBase = color(hsl.integer(124, 21, 89)).mul(bodyNoise.mul(0.18).add(0.82))
     const crackle = mx_noise_float(p.mul(34)).mul(0.5).add(0.5).smoothstep(0.45, 0.55)
     // ---- crack pattern ----
     // Voronoi cell boundaries give a network of branching seams.
@@ -41,20 +42,20 @@ export default class extends BaseKnotMaterial {
     this.metalness = 0
     this.roughnessNode = float(0.36).sub(crackle.mul(0.06)).add(goldSeam.mul(0.2))
     this.sheen = 0.5
-    this.sheenColor.set('#ffe9b2')
+    this.sheenColor.set(hsl.integer(89, 100, 93))
     this.sheenRoughness = 0.55
     this.clearcoat = 0.9
     this.clearcoatRoughness = 0.06
     this.transmission = 0.22
     this.thickness = 0.5
     this.ior = 1.5
-    this.attenuationColor.set('#1a3320')
+    this.attenuationColor.set(hsl.integer(150, 56, 19))
     this.attenuationDistance = 0.7
     this.normalNode = proceduralNormal(crackle.mul(0.001).add(goldSeam.mul(0.003)), 0.7)
     // ---- gold seams ----
-    const goldBase = color('#c89538')
-    const goldWarm = color('#f3c66e')
-    const goldCool = color('#a3741b')
+    const goldBase = color(hsl.integer(79, 77, 65))
+    const goldWarm = color(hsl.integer(82, 78, 82))
+    const goldCool = color(hsl.integer(78, 85, 53))
     const gradientX = crackField.dFdx()
     const gradientY = crackField.dFdy()
     const seamDir = vec2(gradientX, gradientY)
@@ -83,9 +84,9 @@ export default class extends BaseKnotMaterial {
     this.anisotropyNode = vec2(seamDirection.x.sub(0.5).mul(0.9), seamDirection.y.sub(0.5).mul(0.9)).mul(goldSeam)
     // ---- emissive inner glow ----
     const glow = float(0.3).add(goldSeam.mul(0.85)).add(intimate.mul(0.25))
-    const innerGlow = color('#fff0c0').mul(glow).mul(near.mul(0.55).add(0.45))
-    const seamGlow = color('#ffd47a').mul(goldSeam).mul(facing.pow(1.5)).mul(3.5)
-    const rimHaze = mix(color('#c8b894'), color('#fff0c0'), facing).mul(rim.pow(2)).mul(0.25)
+    const innerGlow = color(hsl.integer(92, 100, 94.7)).mul(glow).mul(near.mul(0.55).add(0.45))
+    const seamGlow = color(hsl.integer(84, 100, 87)).mul(goldSeam).mul(facing.pow(1.5)).mul(3.5)
+    const rimHaze = mix(color(hsl.integer(87, 33, 75)), color(hsl.integer(92, 100, 94.7)), facing).mul(rim.pow(2)).mul(0.25)
     this.emissiveNode = innerGlow.add(seamGlow).add(rimHaze)
   }
 }

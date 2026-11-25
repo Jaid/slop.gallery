@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CyxjCrlY15yEfmL; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'harlequin_sunrise',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Every patch of this black opal keeps a different sunrise, and gives it away only to the one who moves.',
   placeholder: {
-    color: '#141b2e',
+    color: hsl.integer(268, 40, 12),
     shading: 'glass',
   },
 } as const satisfies KnotData

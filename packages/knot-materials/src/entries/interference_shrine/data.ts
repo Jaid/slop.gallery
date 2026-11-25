@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'interference_shrine',
   candidateId: 'glm',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Crossing waves build a small sanctuary of impossible colors.',
   placeholder: {
-    color: '#5ac8ff',
+    color: hsl.integer(233, 100, 75.7),
     shading: 'smooth',
   },
 } as const satisfies KnotData

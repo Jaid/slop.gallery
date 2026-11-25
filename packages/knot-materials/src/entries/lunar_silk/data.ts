@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'lunar_silk',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Woven from the cold side of the moon, it changes color with every step you take around it.',
   displacement: 0.0004,
   placeholder: {
-    color: '#182654',
+    color: hsl.integer(268, 68, 18),
     shading: 'fabric',
   },
 } as const satisfies KnotData

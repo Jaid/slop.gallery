@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'morpho_chrysalis',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Wings folded into a knot, still holding the sky they were meant to cross.',
   placeholder: {
-    color: '#312a63',
+    color: hsl.integer(286, 60, 23),
     shading: 'smooth',
   },
 } as const satisfies KnotData

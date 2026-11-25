@@ -1,5 +1,7 @@
 import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
+import hsl from 'okhsl'
+
 import PromptOrb from '../base/PromptOrb.ts'
 import EyeOrbMaterial from './EyeOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
@@ -31,7 +33,7 @@ export default class HorrorOrb extends PromptOrb {
     ['gory', 'bloodstained', 'visceral'],
   ]
   readonly change = 'provide traits that make it'
-  readonly color = '#a8060f'
+  readonly color = hsl.integer(27.6, 99, 38)
   override readonly effect = ['blood', 'eyes', 'tendrils'] as const
   readonly frame = ['maw', 'flesh', 'bleeding', 'butcher', 'infested', 'coffin'] as const
   readonly id = 'horror'

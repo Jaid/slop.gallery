@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, float, mix, mx_noise_float, positionGeometry, select, time, uv, vec2, vec3} from 'three/tsl'
 
 import {rgb} from '../../candidates/claude_sonnet/lib/rgb.ts'
@@ -14,7 +15,7 @@ import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
 
 const rows = 6
-const palette = ['#1538c9', '#f6efe0', '#d3212d', '#f2b233', '#0f8a5f', '#e866a8', '#14b4c8', '#6a2fa8'].map(rgb)
+const palette = [hsl.integer(265.5, 95.7, 34.6), hsl.integer(86, 47, 94.6), hsl.integer(25, 95.4, 49), hsl.integer(79, 91, 77), hsl.integer(162, 97, 49), hsl.integer(351, 77, 64), hsl.integer(209, 95, 66), hsl.integer(302, 79, 36.6)].map(rgb)
 /** One of eight glass colors, chosen by a random number in [0, 1). */
 const pick = (u: Node<'float'>) => {
   let glass: Node<'vec3'> = palette[0]
@@ -84,24 +85,24 @@ export default class extends KnotMaterial {
       depth: 0.085,
       columns: 36,
       seed: 3.1,
-      tone: rgb('#0d4c63'),
+      tone: rgb(hsl.integer(228, 84, 30)),
       mist: 0.42,
     }, {
       depth: 0.045,
       columns: 40,
       seed: 11.7,
-      tone: rgb('#0b5a4c'),
+      tone: rgb(hsl.integer(177, 93, 33)),
       mist: 0.22,
     }, {
       depth: 0,
       columns: 44,
       seed: 27.4,
-      tone: rgb('#000000'),
+      tone: rgb(hsl.integer(0, 0, 0)),
       mist: 0,
     }]
     const mistScale = footprint.mul(14)
-    let surface: Node<'vec3'> = rgb('#02161c')
-    let glow: Node<'vec3'> = rgb('#000000')
+    let surface: Node<'vec3'> = rgb(hsl.integer(219, 80, 9))
+    let glow: Node<'vec3'> = rgb(hsl.integer(0, 0, 0))
     for (const layer of layers) {
       const slice = murrine(tube.sub(ray.mul(layer.depth)), layer.columns, layer.seed, mistScale)
       const tinted = mix(slice.color, layer.tone, layer.mist)
@@ -128,8 +129,8 @@ export default class extends KnotMaterial {
 // A lantern wave travels along the knot and lights the flowers one stretch at a time.
     const lantern = tubeMetric(tube).x.mul(TAU * 3 / knotLength).sub(time.mul(0.8)).sin().mul(0.5).add(0.5).pow(3)
     this.emissiveNode = glow.mul(lantern.mul(0.5).add(0.18)).mul(near.mul(0.3).add(0.85))
-      .add(rgb('#ffd98a').mul(flakes).mul(flash).mul(2.4).mul(intimate.mul(0.6).add(0.4)))
-      .add(rgb('#2a7d92').mul(grazing.pow(3)).mul(0.07))
-      .add(rgb('#ffffff').mul(facing.pow(24)).mul(0.03))
+      .add(rgb(hsl.integer(85, 100, 88.5)).mul(flakes).mul(flash).mul(2.4).mul(intimate.mul(0.6).add(0.4)))
+      .add(rgb(hsl.integer(218, 73, 48)).mul(grazing.pow(3)).mul(0.07))
+      .add(rgb(hsl.integer(0, 0, 100)).mul(facing.pow(24)).mul(0.03))
   }
 }

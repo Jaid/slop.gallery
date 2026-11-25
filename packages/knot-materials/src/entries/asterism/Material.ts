@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, refract, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -35,20 +36,20 @@ export default class extends KnotMaterial {
     const falloff = N.dot(H).smoothstep(-0.1, 0.55)
     const asterism = star.mul(falloff)
     const bodyNoise = mx_noise_float(p.mul(4.5)).mul(0.5).add(0.5)
-    const body = mix(mix(color('#071034'), color('#16307e'), bodyNoise), color('#2a55c0'), bodyNoise.mul(0.4))
-    this.colorNode = body.add(color('#7fa8ff').mul(asterism).mul(0.12))
+    const body = mix(mix(color(hsl.integer(268, 82, 9)), color(hsl.integer(265, 87, 25)), bodyNoise), color(hsl.integer(264, 86, 40.4)), bodyNoise.mul(0.4))
+    this.colorNode = body.add(color(hsl.integer(264, 100, 70)).mul(asterism).mul(0.12))
     this.metalness = 0
     this.roughnessNode = float(0.03)
     this.transmission = 0.5
     this.thickness = 0.7
     this.ior = corundum
-    this.attenuationColor.set('#0a1a5c')
+    this.attenuationColor.set(hsl.integer(266, 92, 16))
     this.attenuationDistance = 0.4
     this.clearcoat = 0.35
     this.clearcoatRoughness = 0.015
     this.normalNode = proceduralNormal(bodyNoise.mul(0.05), 0.0003)
     this.clearcoatNormalNode = this.normalNode
-    this.emissiveNode = color('#e2eeff').mul(asterism).mul(near.mul(0.25).add(0.75)).mul(2.4)
-      .add(color('#1d3a90').mul(grazing.pow(3)).mul(0.08))
+    this.emissiveNode = color(hsl.integer(257, 100, 93.6)).mul(asterism).mul(near.mul(0.25).add(0.75)).mul(2.4)
+      .add(color(hsl.integer(266, 86, 29)).mul(grazing.pow(3)).mul(0.08))
   }
 }

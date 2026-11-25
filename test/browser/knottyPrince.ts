@@ -1,5 +1,6 @@
 import type {NodeFrame} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {AmbientLight, HalfFloatType, HemisphereLight, PerspectiveCamera, RenderTarget, Scene, WebGPURenderer} from 'three/webgpu'
 
 import createKnotMesh from '../../packages/knot-materials/src/createKnotMesh.ts'
@@ -21,7 +22,7 @@ export default async function verifyKnottyPrince(samples = 4) {
   const target = new RenderTarget(512, 512, {type: HalfFloatType})
   target.samples = samples
   const scene = new Scene
-  scene.add(mesh, new AmbientLight('#ffffff', 0.45), new HemisphereLight('#e1edff', '#80705d', 1.3))
+  scene.add(mesh, new AmbientLight(hsl.integer(0, 0, 100), 0.45), new HemisphereLight(hsl.integer(258, 100, 93), hsl.integer(72, 20, 48), 1.3))
   const camera = new PerspectiveCamera(40, 1, 0.05, 100)
   const errors: Array<string> = []
   const results = []

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, time, uv, vec2} from 'three/tsl'
 
 import {inkFill, inkLine, tubeRay} from '../../lib/atelier.ts'
@@ -23,13 +24,13 @@ export default class extends KnotMaterial {
     const rings = opticalBands(r.mul(120).sub(turn.mul(3)))
     const iris = inkFill(r.sub(0.07), aa)
     const outer = inkLine(r.sub(0.405), 0.005, aa)
-    const printA = mix(color('#eee9d5'), color('#0b2031'), bloom.mul(rings.mul(0.7).add(0.3)))
-    const printB = mix(color('#fa533c'), color('#071b28'), bloom.oneMinus())
+    const printA = mix(color(hsl.integer(95, 39, 92)), color(hsl.integer(245, 59, 13)), bloom.mul(rings.mul(0.7).add(0.3)))
+    const printB = mix(color(hsl.integer(31, 97, 61.6)), color(hsl.integer(240, 61, 11)), bloom.oneMinus())
     // Lenticular channels select between two deliberately different plates as the eye moves.
     const selector = view.x.mul(5).add(view.z.mul(3)).add(uv().y.mul(TAU * 2)).sin().smoothstep(-0.08, 0.08)
     const graphic = mix(printA, printB, selector)
     const registration = inkLine(c.x.abs().add(c.y.abs()).sub(0.64), 0.006, aa)
-    const ink = mix(graphic, color('#d9ff87'), iris.max(outer).max(registration))
+    const ink = mix(graphic, color(hsl.integer(124, 100, 93.9)), iris.max(outer).max(registration))
     const lensPhase = uv().x.mul(TAU * 768)
     const lenses = opticalBands(lensPhase)
     this.colorNode = ink
@@ -40,6 +41,6 @@ export default class extends KnotMaterial {
     this.anisotropy = 0.5
     this.normalNode = proceduralNormal(lenses.mul(near).mul(0.000035), 1)
     const buried = q.sub(tubeRay().mul(vec2(12, 2)).mul(0.018)).fract().sub(0.5).length()
-    this.emissiveNode = color('#d9ff87').mul(inkLine(buried.sub(0.405), 0.003, aa)).mul(selector).mul(near).mul(0.2)
+    this.emissiveNode = color(hsl.integer(124, 100, 93.9)).mul(inkLine(buried.sub(0.405), 0.003, aa)).mul(selector).mul(near).mul(0.2)
   }
 }

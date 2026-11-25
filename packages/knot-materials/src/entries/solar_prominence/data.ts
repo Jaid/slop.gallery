@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'solar_prominence',
   candidateId: 'deepseek',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A loop of incandescent matter hangs above an unseen sun.',
   placeholder: {
-    color: '#ff7a1a',
+    color: hsl.integer(49, 100, 67.9),
     shading: 'liquid',
   },
 } as const satisfies KnotData

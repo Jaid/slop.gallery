@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 3gQGAbAm59HYY8k; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'lodestone_bloom',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A black iron tide rises into thorns the moment a magnet walks past, and every spike leans toward you as if you were the lodestone.',
   placeholder: {
-    color: '#11171a',
+    color: hsl.integer(230, 16, 10),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -5,6 +5,7 @@ import type {ColorRepresentation, Material, Texture} from 'three/webgpu'
 import {RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -41,20 +42,20 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
 }) {
   const colors: Partial<Record<Wall['room'], ColorRepresentation>> = {
     moonfall: moonfallTheme.wall,
-    oculus: '#4b5559',
-    vesper: '#658578',
-    antechamber: '#ded4b8',
-    salon: '#8e2f24',
+    oculus: hsl.integer(224, 9, 36),
+    vesper: hsl.integer(168, 25, 52),
+    antechamber: hsl.integer(91, 33, 85),
+    salon: hsl.integer(30, 80, 36),
   }
-  const color = colors[surfaceRoom] ?? '#eee7d7'
+  const color = colors[surfaceRoom] ?? hsl.integer(87, 34, 92)
   const trims: Partial<Record<Wall['room'], ColorRepresentation>> = {
     moonfall: moonfallTheme.trim,
-    oculus: '#303d42',
-    vesper: '#44655a',
+    oculus: hsl.integer(223, 17, 25),
+    vesper: hsl.integer(172, 32, 40),
     // ivory stucco, as the baseboards and cornices of Pompeii’s red rooms were
-    salon: '#e3d9c4',
+    salon: hsl.integer(86, 30, 87),
   }
-  const trim = trims[surfaceRoom] ?? '#ded5c1'
+  const trim = trims[surfaceRoom] ?? hsl.integer(87, 26, 85)
   const geometry = architectureGeometry(wall)
   const surface = useDisposable(useMemo(() => {
     let lined = revealMaterial ? withOpeningReveals(geometry.surface, wall) : undefined
@@ -82,7 +83,7 @@ export default function WallSurface({wall, plaster, glass, material, revealMater
       <mesh castShadow material={surfaceMaterials} name={`wall-${wall.id}`} receiveShadow userData={{wall}}><primitive attach='geometry' object={surface.geometry} /><Branch not={surfaceMaterials}><meshStandardNodeMaterial color={color} envMapIntensity={surfaceRoom === 'moonfall' ? 0.08 : 1} map={plaster} roughness={0.9} /></Branch></mesh>
       {geometry.trim.map((part, i) => <mesh key={i} castShadow material={material} name={`trim-${wall.id}`} receiveShadow><primitive attach='geometry' object={part} /><Branch not={material}><meshStandardNodeMaterial color={trim} roughness={0.6} /></Branch></mesh>)}
       {geometry.glazing.map((part, i) => <mesh key={i} geometry={part} material={glass} name={`glass-${wall.id}`}>
-        <Branch not={glass}><meshStandardNodeMaterial color='#b7d8d9' depthWrite={false} metalness={0.1} opacity={0.16} roughness={0.16} transparent /></Branch>
+        <Branch not={glass}><meshStandardNodeMaterial color={hsl.integer(199, 30, 83.5)} depthWrite={false} metalness={0.1} opacity={0.16} roughness={0.16} transparent /></Branch>
       </mesh>)}
     </RigidBody>
     {geometry.cornice.map((part, i) => <mesh key={i} castShadow geometry={part} material={material} name={`cornice-${wall.id}`} receiveShadow><Branch not={material}><meshStandardNodeMaterial color={trim} roughness={0.6} /></Branch></mesh>)}

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {
   color,
   float,
@@ -38,9 +39,9 @@ export default class extends KnotMaterial {
     const packetStreamB = tube.x.mul(130).add(time.mul(8.2)).sin().smoothstep(0.85, 0.99)
     const packetStreamC = tube.y.mul(45).sub(time.mul(5)).sin().smoothstep(0.8, 0.97)
     // Laser wavelengths: coherent ruby (650 nm), emerald (532 nm), and sapphire (450 nm)
-    const rubyLaser = color('#ff0048')
-    const emeraldLaser = color('#00ff88')
-    const sapphireLaser = color('#0088ff')
+    const rubyLaser = color(hsl.integer(19, 100, 57.4))
+    const emeraldLaser = color(hsl.integer(152.6, 100, 85.6))
+    const sapphireLaser = color(hsl.integer(254, 100, 57.3))
     const laserSignals = rubyLaser.mul(packetStreamA)
       .add(emeraldLaser.mul(packetStreamB))
       .add(sapphireLaser.mul(packetStreamC))
@@ -58,9 +59,9 @@ export default class extends KnotMaterial {
     const diffractionSheen = waferRainbow.mul(grazing.mul(0.7).add(0.3)).mul(dieTrench.oneMinus())
     // 5. Materials and Substrates
     // Polished silicon substrate (dark mirror-specular semiconductor)
-    const siliconSubstrate = color('#161922')
-    const trenchColor = color('#0a0c10')
-    const goldAlbedo = color('#ffd24d')
+    const siliconSubstrate = color(hsl.integer(270, 21, 11))
+    const trenchColor = color(hsl.integer(264, 15, 6))
+    const goldAlbedo = color(hsl.integer(89.7, 100, 86))
     const chipSurface = mix(
       mix(siliconSubstrate, trenchColor, dieTrench.mul(0.8)),
       goldAlbedo,
@@ -83,7 +84,7 @@ export default class extends KnotMaterial {
     this.ior = 1.46 // SiO2 glass
     // Microscopic quantum logic nodes (sub-micron optical gates)
     const logicNodes = cellularPoints(p.mul(90), 0.03, 0.16, 0.72)
-    const logicSparkle = color('#ffffff').mul(logicNodes).mul(intimate)
+    const logicSparkle = color(hsl.integer(0, 0, 100)).mul(logicNodes).mul(intimate)
     // Photonic emission: streaming laser packets, qubit rings, and circuit status
     this.emissiveNode = laserSignals
       .mul(near.mul(0.4).add(0.85))

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'liquid_mercury',
   candidateId: 'qwen_max',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A restless mirror gathers every passing light into its quicksilver skin.',
   placeholder: {
-    color: '#e0e0e0',
+    color: hsl.integer(0, 0, 89),
     shading: 'fabric',
   },
 } as const satisfies KnotData

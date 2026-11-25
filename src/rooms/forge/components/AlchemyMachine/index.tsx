@@ -6,6 +6,7 @@ import type {Group} from 'three/webgpu'
 import {useFrame} from '@react-three/fiber'
 import {CapsuleCollider, CuboidCollider, CylinderCollider, RigidBody, useAfterPhysicsStep, useRapier, useRevoluteJoint} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useEffect, useMemo, useRef, useState} from 'react'
 import {color, exp, positionLocal, smoothstep, vec3} from 'three/tsl'
 import {Euler, MeshStandardNodeMaterial, Quaternion, Vector3} from 'three/webgpu'
@@ -132,11 +133,11 @@ export default function AlchemyMachine() {
     bronze.positionNode = positionLocal.mul(vec3(swell, 1, swell))
     // smoky glass, lit from inside by the work going on behind it
     const window = new MeshStandardNodeMaterial({
-      color: '#1d130c',
+      color: hsl.integer(56, 32, 10),
       roughness: 0.15,
       metalness: 0,
     })
-    window.emissiveNode = color('#ff7a26').mul(works.glow)
+    window.emissiveNode = color(hsl.integer(47.5, 100, 68)).mul(works.glow)
     return {
       stone,
       brass,

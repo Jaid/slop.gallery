@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'magnetic_ink',
   candidateId: 'glm',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Black strokes rearrange themselves around a message no hand has written.',
   placeholder: {
-    color: '#8f7bff',
+    color: hsl.integer(287, 100, 61),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, vec3} from 'three/tsl'
 
 import {loopDrift, loopPhase} from '../../candidates/space_bunny/lib/loopClock.ts'
@@ -33,8 +34,8 @@ export default class extends KnotMaterial {
     const halo = filament(band.sub(0.5), 0.045).mul(near.mul(0.6).add(0.4))
 // Which ink floats here: sumi in the shallows, indigo in the deep, cinnabar where the brush lingered.
     const family = mx_noise_float(p.mul(1.05).add(vec3(6.1, -2.7, 0.4))).mul(0.5).add(0.5)
-    const wash = mix(color('#12161c'), color('#1b3f74'), family.smoothstep(0.4, 0.62))
-    const cinnabar = color('#c2402a')
+    const wash = mix(color(hsl.integer(258, 17, 10)), color(hsl.integer(258, 72, 28)), family.smoothstep(0.4, 0.62))
+    const cinnabar = color(hsl.integer(32, 86, 48))
     const pigment = mix(wash, cinnabar, family.smoothstep(0.62, 0.76)).mul(inkHeart.mul(0.32).oneMinus())
 // The sheet under all of it: long fibres, a few flecks of pulp, and the tooth of cold-press paper.
 // The ink was floated onto the sheet rather than pressed into it, so the fibre is sampled a fibre's
@@ -42,10 +43,10 @@ export default class extends KnotMaterial {
     const sheetPoint = p.sub(view.mul(0.022))
     const fibre = mx_noise_float(vec3(sheetPoint.dot(vec3(97, 11, 131)), sheetPoint.dot(vec3(-59, 141, 37)), sheetPoint.dot(vec3(23, 167, -71)))).mul(0.5).add(0.5)
     const pulp = mx_worley_noise_vec3(sheetPoint.mul(38), 1, 0).x.smoothstep(0.05, 0.14).oneMinus()
-    const sheet = mix(color('#e6dcc6'), color('#fbf6e8'), fibre.mul(0.6).add(0.3)).mul(pulp.mul(0.08).oneMinus().mul(0.12).add(0.88))
+    const sheet = mix(color(hsl.integer(86, 33, 88)), color(hsl.integer(91, 62, 97)), fibre.mul(0.6).add(0.3)).mul(pulp.mul(0.08).oneMinus().mul(0.12).add(0.88))
     const gold = microGlitter(p, 0.024, 110, 0.5)
     const flake = gold.sparkle.mul(mx_noise_float(p.mul(6.5)).smoothstep(0.24, 0.4)).mul(near.mul(0.7).add(0.3))
-    this.colorNode = mix(mix(sheet, pigment.mul(0.82), ink.mul(0.94)), mix(pigment, color('#f4ead2'), halo.mul(0.35)), halo.mul(0.5))
+    this.colorNode = mix(mix(sheet, pigment.mul(0.82), ink.mul(0.94)), mix(pigment, color(hsl.integer(88, 52, 93)), halo.mul(0.35)), halo.mul(0.5))
     this.metalnessNode = flake.mul(0.85)
     this.roughnessNode = mix(float(0.86), float(0.13), ink).sub(flake.mul(0.05)).clamp(0.05, 1)
     this.ior = 1.46
@@ -54,7 +55,7 @@ export default class extends KnotMaterial {
 // Ink pooled above the fibre: a shallow step, a bright meniscus, and the paper tooth underneath.
     const relief = ink.mul(0.35).add(halo.mul(0.12)).sub(pulp.mul(0.1)).sub(fibre.mul(near).mul(0.05))
     this.normalNode = proceduralNormal(relief, 0.0028)
-    this.emissiveNode = color('#fff0cf').mul(gold.sparkle.mul(flake).mul(intimate).mul(1.1))
-      .add(color('#8fb6ff').mul(halo.mul(ink.oneMinus()).mul(grazing.mul(0.6).add(0.4)).mul(0.09)))
+    this.emissiveNode = color(hsl.integer(86, 100, 95)).mul(gold.sparkle.mul(flake).mul(intimate).mul(1.1))
+      .add(color(hsl.integer(262, 100, 74)).mul(halo.mul(ink.oneMinus()).mul(grazing.mul(0.6).add(0.4)).mul(0.09)))
   }
 }

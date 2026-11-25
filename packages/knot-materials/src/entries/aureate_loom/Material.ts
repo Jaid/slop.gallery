@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {polarAngle} from '../../candidates/gpt_astra/lib/surface/angle.ts'
@@ -40,14 +41,14 @@ export default class extends KnotMaterial {
     const breath = tube.x.mul(TAU * 3).sub(time.mul(0.28)).sin().mul(0.5).add(0.5)
     const nap = V.dot(tangent).abs().oneMinus().pow(3)
     const shot = nap.mul(0.58).add(grazing.mul(0.28)).add(breath.mul(0.08)).clamp()
-    const plum = mix(color('#240d2c'), color('#94405e'), shot)
-    const damask = mix(plum, color('#bf6d59'), flower.mul(0.24).mul(shot.add(0.2)))
-    const bullion = mix(color('#a46122'), color('#f2d49b'), nap.mul(0.7).add(stitch.mul(0.3)))
+    const plum = mix(color(hsl.integer(317, 63, 11)), color(hsl.integer(0, 58, 41)), shot)
+    const damask = mix(plum, color(hsl.integer(35, 55, 56)), flower.mul(0.24).mul(shot.add(0.2)))
+    const bullion = mix(color(hsl.integer(59, 77, 49)), color(hsl.integer(83, 67, 86)), nap.mul(0.7).add(stitch.mul(0.3)))
     this.colorNode = mix(damask.mul(fiber.mul(threadDetail.mul(0.2)).add(0.83)), bullion, gold)
     this.metalnessNode = gold.mul(0.5).add(0.22)
     this.roughnessNode = float(0.4).sub(gold.mul(0.13)).sub(nap.mul(0.07))
     this.anisotropyNode = vec2(0.82, 0.08)
-    this.sheenNode = mix(color('#a84d82'), color('#f9c88c'), gold).mul(near.mul(0.18).add(0.36))
+    this.sheenNode = mix(color(hsl.integer(346, 59, 48)), color(hsl.integer(72, 79, 84)), gold).mul(near.mul(0.18).add(0.36))
     this.sheenRoughness = 0.34
     this.clearcoat = 0.16
     this.clearcoatRoughness = 0.32

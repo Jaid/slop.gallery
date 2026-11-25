@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -58,10 +59,10 @@ export default class extends KnotMaterial {
     const lathe = metric.y.div(0.13).mul(310).add(mx_noise_float(vec3(metric.mul(9), 3.7)).mul(2)).sin().mul(0.5).add(0.5)
     const latheResolved = footprint.mul(6).smoothstep(0.02, 0.11).oneMinus()
     const patina = patinaNoise.smoothstep(0.55, 0.9).mul(0.55)
-    const bronze = mix(color('#5d3d1f'), color('#c79a5f'), patinaNoise.mul(0.55).add(0.2))
-    const oxidized = mix(bronze, color('#2a4e47'), patina.mul(0.55))
+    const bronze = mix(color(hsl.integer(62, 57, 30)), color(hsl.integer(73, 55, 67)), patinaNoise.mul(0.55).add(0.2))
+    const oxidized = mix(bronze, color(hsl.integer(180, 44, 30)), patina.mul(0.55))
     const plateColor = oxidized.mul(lathe.mul(latheResolved).mul(0.12).add(0.9))
-    const sandColor = mix(color('#b9a57d'), color('#f7eccd'), grain)
+    const sandColor = mix(color(hsl.integer(84, 35, 69)), color(hsl.integer(91, 64, 93.5)), grain)
     const surface = mix(plateColor, sandColor, sand.mul(0.92))
     this.colorNode = surface
     this.metalnessNode = mix(float(0.88), float(0), sand)
@@ -76,9 +77,9 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.12
     this.aoNode = sand.mul(0.08).add(0.92)
     const grainGlint = glints(normalViewGeometry, 1500).mul(sand).mul(near.mul(0.7).add(0.3)).mul(0.65)
-    const sandGlow = color('#ffe5ad').mul(sand).mul(0.12).mul(near.mul(0.4).add(0.6))
-    const resonance = color('#ffd794').mul(ridge).mul(0.06).mul(intimate.mul(0.6).add(0.2)).mul(phase.mul(1.7).sin().mul(0.35).add(0.65))
-    const edgeGlow = color('#ffca7a').mul(grazing.pow(3)).mul(0.08)
-    this.emissiveNode = color('#fff1ca').mul(grainGlint).add(sandGlow).add(resonance).add(edgeGlow)
+    const sandGlow = color(hsl.integer(86, 100, 92)).mul(sand).mul(0.12).mul(near.mul(0.4).add(0.6))
+    const resonance = color(hsl.integer(79, 100, 88)).mul(ridge).mul(0.06).mul(intimate.mul(0.6).add(0.2)).mul(phase.mul(1.7).sin().mul(0.35).add(0.65))
+    const edgeGlow = color(hsl.integer(77, 100, 85)).mul(grazing.pow(3)).mul(0.08)
+    this.emissiveNode = color(hsl.integer(91, 100, 95.3)).mul(grainGlint).add(sandGlow).add(resonance).add(edgeGlow)
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, luminance, mix, mx_fractal_noise_float, mx_fractal_noise_vec3, mx_noise_float, normalLocal, normalViewGeometry, pmremTexture, positionWorld, time, vec3} from 'three/tsl'
 
 import {ambientRadiance, toWorldDirection} from '../../candidates/claude_opus/lib/environmentHighlight.ts'
@@ -87,7 +88,7 @@ export default class extends KnotMaterial {
     const pinfireResolved = p.mul(52).fwidth().length().smoothstep(0.3, 0.8).oneMinus()
 // Milky blue haze in the silica, deepest toward the silhouette where the path through the stone is longest.
     const haze = mx_noise_float(p.mul(4.2)).mul(0.5).add(0.5)
-    this.colorNode = mix(color('#010103'), color('#050a1c'), haze.mul(grazing.pow(1.5)))
+    this.colorNode = mix(color(hsl.integer(282, 42, 2)), color(hsl.integer(268, 60, 6)), haze.mul(grazing.pow(1.5)))
     this.metalness = 0
     this.roughness = 0.1
 // Only the polished clearcoat reflects; the stone beneath is a light trap.
@@ -101,6 +102,6 @@ export default class extends KnotMaterial {
     this.emissiveNode = top.flash.mul(topVisibility).mul(near.mul(0.5).add(1))
       .add(deep.flash.mul(topVisibility.mul(0.9).oneMinus()).mul(0.75).mul(facing.mul(0.6).add(0.4)))
       .add(pinfire.flash.mul(pinfire.brilliance.pow(2)).mul(pinfireResolved).mul(intimate.mul(1.4).add(0.4)))
-      .add(color('#0b1638').mul(haze).mul(grazing.pow(3)).mul(0.25))
+      .add(color(hsl.integer(267, 72, 11)).mul(haze).mul(grazing.pow(3)).mul(0.25))
   }
 }

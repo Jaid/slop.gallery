@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_vec3, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {angle, ring, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/fields.ts'
@@ -32,21 +33,21 @@ export default class extends KnotMaterial {
     const grain = wave(rings).mul(0.5).add(0.5)
     const fine = wave(rings.mul(3).add(theta.mul(7).sin())).mul(0.5).add(0.5)
     const shade = grain.pow(3).mul(0.3).add(fine.mul(0.06)).add(woodNoise.mul(0.22)).add(0.3).clamp()
-    const annual = mix(color('#200b08'), color('#894823'), shade)
-    const sapwood = mix(annual, color('#ae794a'), r.smoothstep(0.42, 0.64).mul(0.68))
+    const annual = mix(color(hsl.integer(30, 54, 8)), color(hsl.integer(48, 70, 39)), shade)
+    const sapwood = mix(annual, color(hsl.integer(61, 54, 56)), r.smoothstep(0.42, 0.64).mul(0.68))
     const diamond = c.x.abs().add(c.y.abs().mul(0.8))
     const inlay = stroke(diamond.sub(0.39), 0.009, aa)
     const binding = stroke(diamond.sub(0.412), 0.003, aa).max(stroke(diamond.sub(0.368), 0.003, aa))
     const miter = stroke(c.x.abs().max(c.y.abs()).sub(0.494), 0.006, aa)
     const pin = ring(c.length(), 0.047, 0.005, aa)
     const chatoyance = theta.mul(2).add(view.x.mul(4)).add(view.y.mul(2)).cos().mul(0.16).add(0.84)
-    const paleWood = mix(color('#704329'), color('#c6a475'), shade)
+    const paleWood = mix(color(hsl.integer(50, 54, 34)), color(hsl.integer(76, 45, 70)), shade)
     const lightInlay = diamond.smoothstep(0.35, 0.39).oneMinus().mul(seed.z.smoothstep(0.3, 0.55))
     let wood = mix(sapwood.mul(0.65), paleWood, lightInlay).mul(chatoyance)
-    wood = mix(wood, color('#2a1820'), miter.mul(0.7))
-    wood = mix(wood, mix(color('#237976'), color('#79b7a6'), grain), inlay)
+    wood = mix(wood, color(hsl.integer(352, 32, 13)), miter.mul(0.7))
+    wood = mix(wood, mix(color(hsl.integer(192, 78, 45)), color(hsl.integer(175, 43, 69)), grain), inlay)
     const brass = binding.max(pin)
-    this.colorNode = mix(wood, color('#c5a565'), brass)
+    this.colorNode = mix(wood, color(hsl.integer(84, 54, 69)), brass)
     this.metalnessNode = brass.mul(0.75)
     this.roughnessNode = mix(float(0.34).add(grain.mul(0.07)), float(0.24), brass)
     this.clearcoat = 0.7
@@ -56,6 +57,6 @@ export default class extends KnotMaterial {
     const pores = mx_noise_float(p.mul(vec3(300, 65, 190))).mul(0.5).add(0.5)
     this.normalNode = proceduralNormal(grain.mul(0.00018).add(fine.mul(intimate).mul(0.00004)).sub(miter.mul(0.001)).add(brass.mul(0.0003)).add(pores.mul(intimate).mul(0.00008)), 0.7)
     const sap = tube.x.mul(Math.PI * 6).sub(time.mul(0.2)).sin().mul(0.5).add(0.5).pow(10)
-    this.emissiveNode = color('#76cbb7').mul(inlay).mul(sap).mul(grazing.mul(0.2).add(intimate.mul(0.1)))
+    this.emissiveNode = color(hsl.integer(177, 57, 75)).mul(inlay).mul(sap).mul(grazing.mul(0.2).add(intimate.mul(0.1)))
   }
 }

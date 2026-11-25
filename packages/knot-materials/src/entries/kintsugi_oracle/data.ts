@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kintsugi_oracle',
   candidateId: 'gpt_luna',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A porcelain prophecy breaks open in gold, and every fracture learns the warmth of your gaze.',
   displacement: 0.002,
   placeholder: {
-    color: '#251814',
+    color: hsl.integer(38, 27, 12),
     shading: 'smooth',
   },
 } as const satisfies KnotData

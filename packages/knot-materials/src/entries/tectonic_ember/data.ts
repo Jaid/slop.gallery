@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 9YA8kP6cid9wkS5; fixture: knot-material-shaders.
 export default {
   id: 'tectonic_ember',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Beneath the quiet stone, a sleeping ember listens to your orbit.',
   placeholder: {
-    color: '#443833',
+    color: hsl.integer(44, 15, 25),
     shading: 'stone',
   },
 } as const satisfies KnotData

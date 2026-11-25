@@ -4,6 +4,7 @@ import {clamp, exp, exp2, float, max, mix, perspectiveDepthToViewZ, screenUV, st
 import {Color, DepthTexture, RenderTarget, Vector2, Vector3} from 'three/webgpu'
 
 import FloodTriangles from './FloodTriangles.ts'
+import {wireframeColors} from './wireframeColors.ts'
 import {advanceWireframeFlood, wireframeFlood} from './wireframeFlood.ts'
 import WireframeRenderPipeline from './WireframeRenderPipeline.ts'
 
@@ -79,7 +80,7 @@ export default class WireframeFloodPass {
     const out = uniform(0).onRenderUpdate(() => Number(wireframeFlood.direction === 'out'))
     const seamIntensity = uniform(0.9).onRenderUpdate(() => wireframeFlood.seamIntensity)
     const seamColorValue = new Color
-    const seamColor = uniform(seamColorValue).onRenderUpdate(() => seamColorValue.set(wireframeFlood.seamColor ?? '#a8d4ff'))
+    const seamColor = uniform(seamColorValue).onRenderUpdate(() => seamColorValue.set(wireframeFlood.seamColor ?? wireframeColors.seam))
     const sphereGlow = exp(pixelDistance.sub(radius).div(seamWidth).pow2().negate())
     // a triangle that flipped between two radius samples is that far into its glow, as a share of the glow duration
     const radii = glowRadii.map((_, index) => uniform(0).onRenderUpdate(() => glowRadii[index]))
@@ -99,9 +100,9 @@ export default class WireframeFloodPass {
     const wire = mix(texture(this.floodTarget.texture, screenUV), texture(this.smoothFloodTarget.texture, screenUV), uniform(0).onRenderUpdate(() => Number(wireframeFlood.antialiasing)))
     // a glowing triangle lights up in its line color and fades into what it flipped to
     const lineColorValue = new Color
-    const lineColor = uniform(lineColorValue).onRenderUpdate(() => lineColorValue.set(wireframeFlood.color ?? (wireframeFlood.highlight ? '#ff1515' : '#fff')))
+    const lineColor = uniform(lineColorValue).onRenderUpdate(() => lineColorValue.set(wireframeFlood.color ?? (wireframeFlood.highlight ? wireframeColors.unhighlighted : wireframeColors.line)))
     const highlightLineColorValue = new Color
-    const highlightLineColor = uniform(highlightLineColorValue).onRenderUpdate(() => highlightLineColorValue.set(wireframeFlood.highlightColor ?? '#2f7bff'))
+    const highlightLineColor = uniform(highlightLineColorValue).onRenderUpdate(() => highlightLineColorValue.set(wireframeFlood.highlightColor ?? wireframeColors.highlight))
     const triangleColor = mix(lineColor, highlightLineColor, triangle.g)
     // flooding in, the frame turns into wireframe; flooding out, the wireframe turns back into the frame
     const before = mix(frame.rgb, wire.rgb, out)

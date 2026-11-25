@@ -2,6 +2,7 @@ import type {Material} from 'three/webgpu'
 
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
@@ -30,20 +31,20 @@ export default function LobbyVault({cladding}: {
   const stone = useDisposable(useMemo(() => new LimestoneMaterial, []))
   // Cream coffer fields behind the white stone frames, gilt moldings and rosettes.
   const plaster = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
-    baseColor: '#ece7d9',
+    baseColor: hsl.integer(91, 30, 92),
     heavy: isHeavy,
     roughness: 0.86,
   }), [isHeavy]))
   // Painted bronze glazing bars, as on the Vesper’s and the Salon’s lanterns.
   const bars = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#5b4a35',
+    color: hsl.integer(72, 31, 33),
     metalness: 0.5,
     roughness: 0.5,
   }), []))
   // Water-gilt ornament: on the vault, polished metal would mirror the dark coffers around it and turn black, so the leaf keeps a
   // little body color and catches the room’s own light.
   const gilt = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#d3a554',
+    color: hsl.integer(80, 68, 71),
     metalness: 0.55,
     roughness: 0.34,
   }), []))
@@ -76,7 +77,7 @@ export default function LobbyVault({cladding}: {
 function LobbyChandeliers() {
   const geometry = useDisposable(useMemo(() => new LobbyChandelierGeometry(lobbyChandeliers.anchorY - lobbyChandeliers.y), []))
   const candles = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#efe2c4',
+    color: hsl.integer(87, 49, 90),
     roughness: 0.6,
   }), []))
   const flames = useDisposable(useMemo(() => new CandleFlameMaterial, []))

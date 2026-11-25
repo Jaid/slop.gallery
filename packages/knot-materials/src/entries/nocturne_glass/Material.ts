@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, Loop as loop, mix, mx_noise_float, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -75,8 +76,8 @@ export default class extends KnotMaterial {
     const far = bokeh(sheet, 5.6, 0)
     const nearer = bokeh(sheet.add(vec3(0.13, 0.07, 0.11)), 15, 3.3)
     const haze = mx_noise_float(sheet.mul(1.7)).mul(0.5).add(0.5)
-    const lamps = mix(color('#ff8f26'), color('#5cc4ff'), far.cold)
-    const nearLamps = mix(color('#ffd9a0'), color('#ff5fa8'), nearer.warm)
+    const lamps = mix(color(hsl.integer(57, 100, 71.7)), color(hsl.integer(236, 100, 75)), far.cold)
+    const nearLamps = mix(color(hsl.integer(78, 100, 89)), color(hsl.integer(355, 100, 66.6)), nearer.warm)
 // Drizzle speckle and dust on the dry parts, only visible close up.
     const drizzle = filament(mx_noise_float(p.mul(120)).mul(2), 0.08).mul(near)
     const dust = mx_noise_float(p.mul(46)).mul(0.5).add(0.5).mul(near)
@@ -84,7 +85,7 @@ export default class extends KnotMaterial {
     const glow = far.disc.mul(0.5).add(nearer.disc.mul(0.24))
     // Each layer carries only its own coverage-weighted tint.
     const glowColor = lamps.mul(far.disc).mul(0.5).add(nearLamps.mul(nearer.disc).mul(0.24))
-    this.colorNode = mix(color('#02040a'), color('#0a1220'), facing.oneMinus().mul(0.5))
+    this.colorNode = mix(color(hsl.integer(262, 45, 3.3)), color(hsl.integer(261, 44, 8)), facing.oneMinus().mul(0.5))
       .add(glowColor.mul(0.22))
       .add(glowColor.mul(fineMask).mul(0.08))
     this.metalness = 0
@@ -94,13 +95,13 @@ export default class extends KnotMaterial {
     this.ior = 1.5
     this.normalNode = detailNormal(normalViewGeometry, coarseHeight.mul(0.02).add(drizzle.mul(0.0008)).add(rivulet.mul(0.0012)), 0.6)
     this.emissiveNode = glowColor.mul(1)
-      .add(color('#ff9b3d').mul(haze).mul(0.05))
+      .add(color(hsl.integer(59, 100, 74)).mul(haze).mul(0.05))
       .add(nearLamps.mul(nearer.disc).mul(0.7).mul(near.mul(0.6).add(0.4)))
       .add(glowColor.mul(fineMask).mul(0.35))
-      .add(color('#cfe4ff').mul(rivulet).mul(glow.mul(0.6).add(0.1)).mul(0.35))
-      .add(color('#eaf2ff').mul(wet).mul(grazing.pow(2)).mul(0.05))
-      .add(color('#9fd0ff').mul(intimate).mul(mx_noise_float(p.mul(6).add(vec3(time.mul(0.1), 0, 0))).mul(0.5).add(0.5)).mul(0.04))
+      .add(color(hsl.integer(255, 100, 90)).mul(rivulet).mul(glow.mul(0.6).add(0.1)).mul(0.35))
+      .add(color(hsl.integer(260, 100, 95)).mul(wet).mul(grazing.pow(2)).mul(0.05))
+      .add(color(hsl.integer(248, 100, 81.4)).mul(intimate).mul(mx_noise_float(p.mul(6).add(vec3(time.mul(0.1), 0, 0))).mul(0.5).add(0.5)).mul(0.04))
 // Drizzle keeps the colour of the lamps it is standing in front of, instead of whitening them.
-      .add(mix(glowColor, color('#eaf2ff').mul(glow), 0.3).mul(drizzle).mul(0.35))
+      .add(mix(glowColor, color(hsl.integer(260, 100, 95)).mul(glow), 0.3).mul(drizzle).mul(0.35))
   }
 }

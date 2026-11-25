@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7mkaA7JC9cNnoS2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'polariscope',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Between crossed polarizers, every buried wound becomes a rainbow. Walk around it and the colors rearrange themselves like a confession.',
   placeholder: {
-    color: '#877b79',
+    color: hsl.integer(29, 8, 53),
     shading: 'glass',
   },
 } as const satisfies KnotData

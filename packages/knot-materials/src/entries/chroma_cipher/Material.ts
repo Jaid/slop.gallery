@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, float, mix, mx_atan2, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fill, stroke} from '../../candidates/gpt_sol/lib/exhibition/coverage.ts'
@@ -48,8 +49,8 @@ export default class extends KnotMaterial {
     const second = wavelength(nm.add(95)).mul(0.22)
     const diffracted = first.add(second).toVar()
     const brush = filteredCos(tube.y.mul(TAU * 1350).add(tube.x.mul(TAU * 29))).mul(intimate).toVar()
-    const foil = mix(color('#152b38'), diffracted.mul(0.67).add(0.055), grazing.mul(0.45).add(0.43)).toVar()
-    this.colorNode = mix(foil, color('#c0e0d9').mul(0.6).add(diffracted.mul(0.5)), etching.mul(0.8)).mul(brush.mul(0.035).add(0.97))
+    const foil = mix(color(hsl.integer(236, 46, 17)), diffracted.mul(0.67).add(0.055), grazing.mul(0.45).add(0.43)).toVar()
+    this.colorNode = mix(foil, color(hsl.integer(181, 32, 86)).mul(0.6).add(diffracted.mul(0.5)), etching.mul(0.8)).mul(brush.mul(0.035).add(0.97))
     this.metalness = 0.94
     this.roughnessNode = float(0.27).sub(etching.mul(0.08)).add(brush.mul(0.025))
     this.anisotropyNode = vec2(orientation.cos(), orientation.sin()).mul(0.63)

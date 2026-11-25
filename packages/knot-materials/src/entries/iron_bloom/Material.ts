@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_vec3, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -63,7 +64,7 @@ export default class extends KnotMaterial {
     const dv = displaced(uv().add(vec2(0, eps)), strength).sub(displaced(uv().sub(vec2(0, eps)), strength))
     const geometryNormal = varying(transformNormalToView(du.cross(dv).normalize())).normalize()
     this.positionNode = displaced(uv(), strength).add(knotFrame(uv()).normal.mul(camera.facing.pow(4).mul(0.0035)))
-    const tint = mix(color('#02030a'), color('#0a1024'), vertexField.primary.mul(0.7).add(vertexField.secondary.mul(0.3)))
+    const tint = mix(color(hsl.integer(272, 50, 3)), color(hsl.integer(269, 53, 8)), vertexField.primary.mul(0.7).add(vertexField.secondary.mul(0.3)))
     this.colorNode = tint
     this.metalness = 1
     this.roughnessNode = mix(float(0.115), float(0.028), vertexField.primary.mul(0.75).add(vertexField.secondary.mul(0.25))).add(mx_noise_float(vec3(metric.mul(110), time.mul(0.1))).mul(0.008))
@@ -81,8 +82,8 @@ export default class extends KnotMaterial {
     const troughGlow = spectralColor(filamentPhase.add(0.35)).mul(vec3(0.72, 0.52, 1.3)).mul(trough).mul(near.mul(0.5).add(0.25)).mul(0.055)
     const sparkle = glints(geometryNormal, 620).mul(tip.pow(2)).mul(near.mul(0.55).add(0.2)).mul(0.28)
     const keySheen = geometryNormal.dot(vec3(-0.38, 0.82, 0.42).normalize()).clamp().pow(5.5)
-    const liquidSheen = color('#cfe8ff').mul(keySheen).mul(0.24)
-    this.emissiveNode = troughGlow.add(rimGlow).add(color('#dff6ff').mul(sparkle)).add(liquidSheen)
+    const liquidSheen = color(hsl.integer(246, 100, 90.7)).mul(keySheen).mul(0.24)
+    this.emissiveNode = troughGlow.add(rimGlow).add(color(hsl.integer(224, 100, 95)).mul(sparkle)).add(liquidSheen)
     this.aoNode = vertexField.primary.mul(0.3).add(0.7)
     this.envMapIntensity = 1.45
   }

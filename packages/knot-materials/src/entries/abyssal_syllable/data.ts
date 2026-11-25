@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_syllable',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The ocean has hidden a last blue syllable inside this shell.',
   placeholder: {
-    color: '#19f7d2',
+    color: hsl.integer(176, 98, 85),
     shading: 'smooth',
   },
 } as const satisfies KnotData

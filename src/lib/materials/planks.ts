@@ -11,10 +11,10 @@ export type PlankLayout = {
   /** eased edge of every board, in meters */
   bevel: number
   colors: {
-    dark: string
-    light: string
-    ring: string
-    seam: string
+    dark: number
+    light: number
+    ring: number
+    seam: number
   }
   /** how the growth rings run: `meander` is how far they wander across a board, `rings` how many cross a meter; flat-sawn boards wander more than quarter-sawn ones. Defaults to rustic flat-sawn boards. */
   figure?: {

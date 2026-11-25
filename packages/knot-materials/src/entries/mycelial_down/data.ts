@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mycelial_down',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Soft fungal threads gather like a pale breath along the dark.',
   placeholder: {
-    color: '#9cf5c8',
+    color: hsl.integer(161, 74, 88.5),
     shading: 'fabric',
   },
 } as const satisfies KnotData

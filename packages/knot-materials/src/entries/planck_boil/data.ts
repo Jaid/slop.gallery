@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'planck_boil',
   candidateId: 'claude_opus',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'At the smallest distance, spacetime boils with borrowed energy. The knot is the margin between real and unreal.',
   displacement: 0.027,
   placeholder: {
-    color: '#4b6db9',
+    color: hsl.integer(265, 63, 47),
     shading: 'ghost',
   },
 } as const satisfies KnotData

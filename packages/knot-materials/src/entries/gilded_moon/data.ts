@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1o1ree11eGriGjv; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'gilded_moon',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'It shattered once, and was mended in gold. Now every wound is the brightest thing in the room.',
   placeholder: {
-    color: '#9d9584',
+    color: hsl.integer(86, 15, 62),
     shading: 'smooth',
   },
 } as const satisfies KnotData

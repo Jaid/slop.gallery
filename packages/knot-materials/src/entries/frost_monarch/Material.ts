@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {
   color,
   float,
@@ -49,16 +50,16 @@ export default class extends KnotMaterial {
     const bubbleMask = cellularPoints(bubbleCoord, 0.03, 0.17, 0.68)
     const diamondGlints = glints(normalViewGeometry, 85).mul(bubbleMask).mul(intimate)
     // 4. Glacial Ice Base Color
-    const clearGlacialIce = color('#e0f4fc')
-    const powderyHoarfrost = color('#ffffff')
-    const deepGlacialCyan = color('#00bfff')
+    const clearGlacialIce = color(hsl.integer(223, 71, 95))
+    const powderyHoarfrost = color(hsl.integer(0, 0, 100))
+    const deepGlacialCyan = color(hsl.integer(231, 100, 71.6))
     this.colorNode = mix(clearGlacialIce, powderyHoarfrost, hoarfrost)
     // PBR Optical Properties: Glacial Ice Ih
     this.transmission = 0.82
     this.thickness = 0.55
     this.ior = 1.31 // Natural water ice
     this.dispersion = 0.14 // Strong prismatic chromatic dispersion along silhouette
-    this.attenuationColor.set('#0b4f6c') // Deep glacial selective red absorption
+    this.attenuationColor.set(hsl.integer(233, 87, 31)) // Deep glacial selective red absorption
     this.attenuationDistance = 0.72
     // Roughness: glassy smooth ice (0.025) vs powdery crystalline hoarfrost (0.65)
     this.roughnessNode = mix(float(0.025), float(0.65), hoarfrost)
@@ -75,7 +76,7 @@ export default class extends KnotMaterial {
       .mul(0.32)
       .mul(near.mul(0.4).add(0.7))
       .add(powderyHoarfrost.mul(hoarfrost.pow(2)).mul(0.4))
-      .add(color('#ffffff').mul(diamondGlints).mul(2.5))
-      .add(color('#a8e6ff').mul(grazing.pow(2.2)).mul(0.4))
+      .add(color(hsl.integer(0, 0, 100)).mul(diamondGlints).mul(2.5))
+      .add(color(hsl.integer(225, 100, 87.4)).mul(grazing.pow(2.2)).mul(0.4))
   }
 }

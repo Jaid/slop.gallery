@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -40,14 +41,14 @@ export default class extends KnotMaterial {
     const porcelainNormal = proceduralNormal(relief, 1.05)
     this.normalNode = porcelainNormal
     this.clearcoatNormalNode = porcelainNormal
-    const ivory = color('#e2d0a8')
-    const celadon = color('#6daf9d')
-    const deepCeladon = color('#2f665c')
+    const ivory = color(hsl.integer(87, 45, 84))
+    const celadon = color(hsl.integer(175, 46, 66))
+    const deepCeladon = color(hsl.integer(180, 57, 39))
     let glaze = mix(ivory, celadon, pool.mul(0.78))
     glaze = mix(glaze, deepCeladon, pool.mul(poolNoise.smoothstep(0.62, 0.9)).mul(0.55))
     glaze = glaze.mul(kilnCloud.mul(0.22).add(0.82)).mul(speckle.oneMinus())
-    const antiqueGold = color('#7a4410')
-    const brightGold = color('#f2b63e')
+    const antiqueGold = color(hsl.integer(59, 82, 36))
+    const brightGold = color(hsl.integer(81, 88, 78))
     const gold = mix(antiqueGold, brightGold, veinCore)
     const goldMask = veinCore.max(crazing.mul(0.72))
     this.colorNode = mix(mix(glaze, antiqueGold.mul(0.72), veinHalo.mul(0.38)), gold, goldMask)
@@ -65,7 +66,7 @@ export default class extends KnotMaterial {
     const mirrorFlash = glints(porcelainNormal, 190)
     this.emissiveNode = brightGold.mul(veinCore).mul(mirrorFlash).mul(sweep).mul(near.mul(1.1).add(0.55)).mul(2.2)
       .add(antiqueGold.mul(crazing).mul(mirrorFlash).mul(0.7))
-      .add(color('#9fd3c4').mul(pool).mul(grazing.pow(3)).mul(0.045))
-      .add(color('#fff3d0').mul(veinCore).mul(facing.pow(6)).mul(0.05))
+      .add(color(hsl.integer(175, 40, 80)).mul(pool).mul(grazing.pow(3)).mul(0.045))
+      .add(color(hsl.integer(92, 100, 96)).mul(veinCore).mul(facing.pow(6)).mul(0.05))
   }
 }

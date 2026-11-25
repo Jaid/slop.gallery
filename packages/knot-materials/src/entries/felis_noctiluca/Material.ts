@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, time, uv, vec2, vec3, wgslFn} from 'three/tsl'
 
 import {inkLine, tubeRay} from '../../lib/atelier.ts'
@@ -295,10 +296,10 @@ export default class extends KnotMaterial {
       intimacy,
     }) as Node<'vec4'>).toVar()
     const viewColor = view.dot(vec3(0.6, 0.3, 0.74)).mul(0.5).add(0.5)
-    const silver = mix(color('#73e5ef'), color('#c4b8ff'), viewColor)
-    const amber = mix(color('#ff9e35'), color('#ffe6a3'), facing)
+    const silver = mix(color(hsl.integer(203, 78, 83.5)), color(hsl.integer(292, 100, 79)), viewColor)
+    const amber = mix(color(hsl.integer(63, 100, 74.7)), color(hsl.integer(90, 100, 91.9)), facing)
     const constellation = silver.mul(cat.x).mul(0.48)
-      .add(mix(silver, color('#f2fbff'), 0.8).mul(cat.y).mul(3.4))
+      .add(mix(silver, color(hsl.integer(226, 100, 98)), 0.8).mul(cat.y).mul(3.4))
       .add(silver.mul(cat.z).mul(0.55))
       .add(amber.mul(cat.w).mul(2.1))
     // The atlas is deeper than the cats: changing the viewing angle separates both strata.
@@ -322,8 +323,8 @@ export default class extends KnotMaterial {
       .add(dust(tube.sub(ray.mul(0.085)), vec2(228, 28), 72).mul(0.48))
     const grain = mx_noise_float(p.mul(85)).mul(0.5).add(0.5)
     const silk = mx_noise_float(p.mul(5).add(vec3(0, time.mul(0.015), 0))).mul(0.5).add(0.5)
-    const edgeTint = mix(color('#123c54'), color('#372754'), viewColor)
-    const enamel = mix(color('#030a1c'), color('#101c39'), silk)
+    const edgeTint = mix(color(hsl.integer(238, 70, 24)), color(hsl.integer(299, 54, 21)), viewColor)
+    const enamel = mix(color(hsl.integer(262, 69, 6)), color(hsl.integer(265, 59, 13)), silk)
     this.colorNode = mix(enamel, edgeTint, grazing.pow(2).mul(0.65))
     this.metalness = 0.78
     this.roughnessNode = float(0.38).add(grain.mul(0.045))
@@ -331,9 +332,9 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.32
     this.ior = 1.46
     this.emissiveNode = constellation.mul(facing.smoothstep(0.02, 0.3).mul(0.7).add(0.3))
-      .add(color('#d8ac66').mul(atlas).mul(0.15))
-      .add(color('#89c9ed').mul(stars).mul(1.1))
+      .add(color(hsl.integer(78, 62, 73)).mul(atlas).mul(0.15))
+      .add(color(hsl.integer(234, 65, 77.4)).mul(stars).mul(1.1))
       .add(edgeTint.mul(grazing.pow(3)).mul(0.35))
-      .add(color('#10234b').mul(silk).mul(0.2))
+      .add(color(hsl.integer(263, 71, 16)).mul(silk).mul(0.2))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, color, dot, float, max, mix, mx_noise_float, normalLocal, positionGeometry, sin, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -36,18 +37,18 @@ export default class extends KnotMaterial {
 // Four glasses from the same kiln, chosen per cube so the lozenges read as a design, not a shuffle.
     const choice = cellNoiseVec3(vec2(cell.x.mul(1.71), cell.y.mul(0.83)).add(5.1))
     const bias = choice.add(band.mul(0.1)).clamp(0, 1)
-    const lapis = color('#1b3f9e')
-    const emerald = color('#0d7a52')
-    const crimson = color('#8e1f33')
-    const ivory = color('#e6d8bc')
+    const lapis = color(hsl.integer(264, 89, 31.5))
+    const emerald = color(hsl.integer(161, 97, 44))
+    const crimson = color(hsl.integer(16, 83, 34))
+    const ivory = color(hsl.integer(85, 39, 87))
     const warp2 = pick(bias.y)
     const weft2 = pick(bias.x)
     const smalti = mix(mix(lapis, emerald, warp2), mix(crimson, ivory, warp2), weft2)
 // An icon only resolves for the worshipper: a second register appears from one side of the room.
     const revealed = dot(view, vec3(0.42, 0.34, 0.84).normalize()).smoothstep(0.42, 0.95)
-    const hiddenGlass = mix(mix(color('#3a1a5e'), color('#0e6a5e'), warp2), mix(color('#c9862a'), color('#e8c9b0'), warp2), weft2)
+    const hiddenGlass = mix(mix(color(hsl.integer(301, 74, 20)), color(hsl.integer(181, 93, 39)), warp2), mix(color(hsl.integer(70, 82, 62)), color(hsl.integer(61, 45, 83)), warp2), weft2)
     const glass = mix(smalti, hiddenGlass, revealed.mul(0.7))
-    const gold = color('#c8a044')
+    const gold = color(hsl.integer(85, 73, 68))
     const goldMask = band.fract().smoothstep(0.05, 0.13).oneMinus()
     const tileColour = mix(glass.mul(bias.z.mul(0.5).add(0.78)), gold.mul(choice.z.mul(0.24).add(0.88)), goldMask)
 // Each tessera is set by hand: a few degrees of tilt, a chamfered rim, a face standing slightly proud.
@@ -58,7 +59,7 @@ export default class extends KnotMaterial {
     const proud = face.mul(0.72).add(tilt.mul(tile).mul(0.55))
 // Gold leaf showing through the joints, laid over its bed of lime.
     this.positionNode = positionGeometry.add(normalLocal.mul(proud.mul(knotData.displacement)))
-    const bed = mix(color('#120f0a'), color('#2b2417'), mx_noise_float(p.mul(180)).mul(0.5).add(0.5))
+    const bed = mix(color(hsl.integer(80, 19, 7)), color(hsl.integer(83, 30, 16)), mx_noise_float(p.mul(180)).mul(0.5).add(0.5))
     this.colorNode = mix(bed, tileColour, tile)
     this.metalnessNode = goldMask.mul(tile).mul(0.95)
     this.roughnessNode = mix(float(0.24).add(identity.y.mul(0.14)), tile.mul(0.08).add(0.05), goldMask)
@@ -67,8 +68,8 @@ export default class extends KnotMaterial {
 // Every cube is a little mirror, and a thousand mirrors never all flash at once.
     const sparkle = glints(surface, 110).mul(identity.x.mul(0.5).add(0.5)).mul(intimate)
     const flicker = sin(time.mul(2.3).add(identity.y.mul(6.3))).mul(0.5).add(0.5)
-    this.emissiveNode = color('#ffe9b0').mul(sparkle).mul(tile).mul(0.35)
+    this.emissiveNode = color(hsl.integer(90, 100, 93)).mul(sparkle).mul(tile).mul(0.35)
       .add(gold.mul(tile.oneMinus()).mul(flicker).mul(near.mul(0.3).add(0.1)).mul(0.05))
-      .add(color('#bfe4ff').mul(revealed).mul(tile).mul(grazing.pow(3)).mul(0.05))
+      .add(color(hsl.integer(240, 100, 88.5)).mul(revealed).mul(tile).mul(grazing.pow(3)).mul(0.05))
   }
 }

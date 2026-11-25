@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, positionGeometry, positionView, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -24,7 +25,7 @@ export default class extends KnotMaterial {
     const echo = opticalLine(mx_noise_float(deep.mul(7)).mul(40).sin(), 0.055)
     const foil = spectralColor(topography.mul(7).add(view.x.mul(6)).add(view.y.mul(3)))
     const grooves = opticalBands(p.y.mul(160)).mul(near)
-    this.colorNode = mix(color('#19394b'), foil, contours.mul(0.35).add(0.25))
+    this.colorNode = mix(color(hsl.integer(236, 55, 23)), foil, contours.mul(0.35).add(0.25))
     this.metalness = 0.7
     this.roughnessNode = grooves.mul(0.045).add(0.17)
     this.iridescence = 1

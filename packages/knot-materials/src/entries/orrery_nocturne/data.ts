@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IBraVE33noBp60D.
 export default {
   id: 'orrery_nocturne',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Tiny planets turn beneath a clockwork midnight, measuring the hours of a sky that never existed.',
   placeholder: {
-    color: '#bc8951',
+    color: hsl.integer(67, 57, 61),
     shading: 'metal',
   },
 } as const satisfies KnotData

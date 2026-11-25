@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, tangentLocal, time, vec3} from 'three/tsl'
 
 import {below} from '../../candidates/claude_opus/lib/below.ts'
@@ -97,7 +98,7 @@ export default class extends KnotMaterial {
     const bloom = ring.mul(0.8).add(radius.div(0.05).negate().exp().mul(0.6)).mul(age.mul(-0.9).exp()).mul(active).mul(flashCells.border.smoothstep(0, 0.12))
     const noise = mx_noise_float(p.mul(22).add(time.mul(0.3))).mul(0.5).add(0.5)
 // The body is nearly black water; almost everything you see is light.
-    this.colorNode = rgb('#02040b')
+    this.colorNode = rgb(hsl.integer(264, 48, 3.4))
     this.metalness = 0
     this.roughness = 0.12
     this.clearcoat = 0.3
@@ -105,10 +106,10 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = normalViewGeometry
     this.normalNode = proceduralNormal(rowMask.mul(plate).mul(0.6).add(stroke.mul(rowMask).mul(0.2)).add(noise.mul(0.04)), 0.0016)
     this.emissiveNode = iridescence.mul(near.mul(0.4).add(0.8))
-      .add(rgb('#1f9fd6').mul(canalMask.mul(0.25).add(canalHalo.mul(0.05))).mul(facing.mul(0.5).add(0.5)))
-      .add(rgb('#9fffe8').mul(photocyteDot).mul(twinkle).mul(canalMask.mul(0.8).add(0.2)).mul(0.7))
-      .add(rgb('#b0123a').mul(gut).mul(0.6))
-      .add(mix(rgb('#12e0b0'), rgb('#2a7bff'), noise).mul(bloom).mul(canalMask.mul(0.5).add(0.5)).mul(1.4))
-      .add(rgb('#3aa8ff').mul(grazing.pow(3)).mul(0.35).add(rgb('#0a1a3a').mul(grazing.pow(2)).mul(0.06)))
+      .add(rgb(hsl.integer(234, 91, 61)).mul(canalMask.mul(0.25).add(canalHalo.mul(0.05))).mul(facing.mul(0.5).add(0.5)))
+      .add(rgb(hsl.integer(177, 100, 92.3)).mul(photocyteDot).mul(twinkle).mul(canalMask.mul(0.8).add(0.2)).mul(0.7))
+      .add(rgb(hsl.integer(16, 94, 41)).mul(gut).mul(0.6))
+      .add(mix(rgb(hsl.integer(170, 98, 78)), rgb(hsl.integer(260, 100, 55)), noise).mul(bloom).mul(canalMask.mul(0.5).add(0.5)).mul(1.4))
+      .add(rgb(hsl.integer(247, 99, 66)).mul(grazing.pow(3)).mul(0.35).add(rgb(hsl.integer(262, 71, 12)).mul(grazing.pow(2)).mul(0.06)))
   }
 }

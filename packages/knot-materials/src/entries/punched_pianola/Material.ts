@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, positionGeometry, uv, vec2} from 'three/tsl'
 import {DoubleSide} from 'three/webgpu'
 
@@ -27,11 +28,11 @@ export default class extends KnotMaterial {
     const rim = slotDistance.abs().smoothstep(0.025, footprint.add(0.065)).oneMinus().mul(active).mul(resolved)
     const roll = positionGeometry.mul(38)
     const patina = mx_noise_float(roll).mul(0.5).add(0.5)
-    const brass = mix(color('#805929'), color('#c9a964'), patina.mul(0.52).add(0.24))
+    const brass = mix(color(hsl.integer(69, 63, 42)), color(hsl.integer(85, 57, 71)), patina.mul(0.52).add(0.24))
     // Long brushed lines run with the feed direction, but average out below pixel resolution.
     const brushPhase = uv().y.mul(Math.PI * 2 * 640)
     const brushing = brushPhase.sin().mul(brushPhase.fwidth().smoothstep(0.6, 3).oneMinus())
-    this.colorNode = mix(brass, color('#f5df9e'), rim.mul(0.7))
+    this.colorNode = mix(brass, color(hsl.integer(91, 73, 89)), rim.mul(0.7))
     this.metalness = 0.88
     this.roughnessNode = float(0.34).sub(rim.mul(0.18)).add(brushing.mul(0.035))
     this.normalNode = proceduralNormal(rim.mul(0.0003).add(brushing.mul(0.000035)), 1)

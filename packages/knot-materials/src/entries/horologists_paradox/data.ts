@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'horologists_paradox',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Every gear agrees on the hour; none agree on which way time moves.',
   placeholder: {
-    color: '#d9b16b',
+    color: hsl.integer(81, 61, 75),
     shading: 'smooth',
   },
 } as const satisfies KnotData

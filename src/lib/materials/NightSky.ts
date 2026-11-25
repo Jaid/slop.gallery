@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {acos, atan, color, cos, cross, float, Fn, fwidth, hash, If, log, mix, mx_fractal_noise_float, mx_noise_float, normalWorldGeometry, pow, select, sign, sin, smoothstep, sqrt, time, uint, vec2, vec3} from 'three/tsl'
 import {Vector3} from 'three/webgpu'
 
@@ -66,19 +67,19 @@ const meteorChannels = [
   },
 ] as const
 const colors = {
-  zenith: color('#03081a'),
-  horizon: color('#0f1b34'),
-  airglow: color('#0b2018'),
-  moonlitSky: color('#1d3058'),
-  halo: color('#9fb2d6'),
-  glare: color('#e9e6dc'),
-  moon: color('#f6efe2'),
-  maria: color('#9c968d'),
-  bandCool: color('#a7b6dd'),
-  bandWarm: color('#e6cfa6'),
-  nebula: color('#d0607e'),
-  meteor: color('#dcecff'),
-  stars: [color('#9db4ff'), color('#dbe4ff'), color('#fff6ea'), color('#ffd9a8'), color('#ffb070')],
+  zenith: color(hsl.integer(265, 69, 5)),
+  horizon: color(hsl.integer(263, 56, 12)),
+  airglow: color(hsl.integer(166, 57, 12)),
+  moonlitSky: color(hsl.integer(264, 59, 21)),
+  halo: color(hsl.integer(263, 39, 72)),
+  glare: color(hsl.integer(93, 21, 91)),
+  moon: color(hsl.integer(83, 44, 94.6)),
+  maria: color(hsl.integer(78, 8, 62)),
+  bandCool: color(hsl.integer(269, 44, 74)),
+  bandWarm: color(hsl.integer(82, 49, 84)),
+  nebula: color(hsl.integer(5, 63, 57.5)),
+  meteor: color(hsl.integer(252, 100, 93)),
+  stars: [color(hsl.integer(271, 100, 74.5)), color(hsl.integer(271, 100, 91)), color(hsl.integer(75, 100, 97.3)), color(hsl.integer(74, 100, 89)), color(hsl.integer(59, 100, 79))],
 }
 /** The unit vector along `value`. */
 const vector = (value: Vector) => {
@@ -125,7 +126,7 @@ export default function nightSky({galacticCenter, galacticPole, moonDirection, s
     const moonlit = colors.moonlitSky.mul(facing.pow(3).mul(0.012).add(facing.pow(24).mul(0.02)))
       .add(colors.halo.mul(facing.pow(400).mul(0.09).add(facing.pow(60).mul(0.02))))
       .add(colors.glare.mul(facing.pow(4000).mul(0.6)))
-      .add(mix(color('#b06a5a'), color('#a9b8d8'), smoothstep(-0.01, 0.012, haloOffset)).mul(haloOffset.div(0.011).pow2().negate().exp().mul(0.0035)))
+      .add(mix(color(hsl.integer(34, 47, 53)), color(hsl.integer(265, 36, 75)), smoothstep(-0.01, 0.012, haloOffset)).mul(haloOffset.div(0.011).pow2().negate().exp().mul(0.0035)))
       .toVar('nightMoonlit')
     // The Milky Way: a band of light along the galactic equator, swelling round its core, in clouds broken by dark lanes of dust.
     const latitude = dir.dot(pole).toVar('nightLatitude')

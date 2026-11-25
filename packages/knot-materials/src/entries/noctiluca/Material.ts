@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, negateOnBackSide, normalLocal, transformNormalToView} from 'three/tsl'
 
 import {glitter} from '../../candidates/deepseek/lib/glitter.ts'
@@ -69,8 +70,8 @@ export default class extends KnotMaterial {
     const moteCenter = cellNoiseVec3(moteCoord.floor()).mul(0.5).add(0.25)
     const moteRadius = moteCoord.fwidth().length().add(0.18).min(0.24)
     const moteMask = moteCoord.fract().sub(moteCenter).length().smoothstep(0.06, moteRadius).oneMinus()
-    const body = mix(color('#02090e'), color('#061a24'), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
-    this.colorNode = mix(body, color('#0a2a38'), facing.mul(0.4))
+    const body = mix(color(hsl.integer(231, 55, 5)), color(hsl.integer(232, 62, 11)), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
+    this.colorNode = mix(body, color(hsl.integer(231, 69, 17)), facing.mul(0.4))
     this.roughnessNode = float(0.045).add(grazing.mul(0.035)).sub(intimate.mul(0.012)).clamp(0.025, 0.12)
     this.metalness = 0
     this.ior = 1.33
@@ -78,18 +79,18 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.025
     this.clearcoatNormalNode = this.normalNode
     this.sheen = 0.07
-    this.sheenColor.set('#9fe6ff')
+    this.sheenColor.set(hsl.integer(221, 100, 87))
     this.sheenRoughness = 0.32
-    const bloomCore = color('#f4ffff')
-    const aqua = color('#4ef0dc')
-    const electric = color('#2a86ff')
-    const deep = color('#0d3f7d')
-    const green = color('#8dffb0')
+    const bloomCore = color(hsl.integer(197, 100, 99))
+    const aqua = color(hsl.integer(183, 87, 84.6))
+    const electric = color(hsl.integer(257.3, 100, 57.4))
+    const deep = color(hsl.integer(257, 88, 28))
+    const green = color(hsl.integer(152, 100, 89.8))
     this.emissiveNode = bloomCore.mul(crestLine.mul(plankton).mul(wake).mul(1.8))
       .add(mix(aqua, green, patchGreen).mul(crest.mul(plankton).mul(wake).mul(0.44)))
       .add(aqua.mul(halo.mul(plankton).mul(contact.mul(0.4).add(0.12)).mul(0.17)))
       .add(electric.mul(rings.mul(contact.pow(2)).mul(plankton.mul(0.6).add(0.2)).mul(0.55)))
-      .add(color('#cdf3ff').mul(mote.sparkle).mul(moteMask).mul(intimate).mul(0.5))
+      .add(color(hsl.integer(219, 100, 93)).mul(mote.sparkle).mul(moteMask).mul(intimate).mul(0.5))
       .add(deep.mul(cloud.mul(cloud).mul(0.09)))
       .add(aqua.mul(grazing.pow(6)).mul(0.05))
   }

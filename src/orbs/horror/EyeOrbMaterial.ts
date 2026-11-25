@@ -1,6 +1,7 @@
 import type {OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, cross, float, mix, mx_noise_float, mx_noise_vec3, normalize, smoothstep, time, vec2, vec3} from 'three/tsl'
 
 import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
@@ -12,13 +13,13 @@ const steps = 40
 const eyeRadius = 0.43
 /** how far the iris and the pupil reach from the middle of the gaze, as the cosine of their angle */
 const irisEdge = Math.cos(0.5)
-const scleraColor = color('#e6d6b4')
-const veinColor = color('#9a0d12')
-const irisInner = color('#d9a21e')
-const irisOuter = color('#3f7a1f')
-const limbusColor = color('#120a04')
-const bloodColor = color('#a8060f')
-const clotColor = color('#260104')
+const scleraColor = color(hsl.integer(86, 43, 86))
+const veinColor = color(hsl.integer(27, 97.5, 35))
+const irisInner = color(hsl.integer(83, 91, 70))
+const irisOuter = color(hsl.integer(137, 94, 44))
+const limbusColor = color(hsl.integer(64, 44, 6))
+const bloodColor = color(hsl.integer(27.6, 99, 38))
+const clotColor = color(hsl.integer(21, 95, 7.6))
 /** where the blood in the liquid is at a point: its thick clouds, the thin tendrils curling off their edges and the warp that bends both, which the trail from the eye shares */
 function ink(point: Node<'vec3'>) {
   // The liquid turns slowly, faster toward the middle, so the smears wind into one another.
@@ -39,7 +40,7 @@ export default class EyeOrbMaterial extends OrbGlassMaterial {
   constructor(options: OrbGlassOptions) {
     super(options, {
       name: 'orb-eye',
-      tint: '#c08070',
+      tint: hsl.integer(35, 43, 61),
     })
   }
 

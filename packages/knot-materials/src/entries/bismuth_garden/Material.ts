@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -35,9 +36,9 @@ export default class extends KnotMaterial {
     const height = terraces.mul(0.58).add(bevel.mul(0.27)).add(fineTerraces.mul(0.14))
     const facetShift = squareOrientation.mul(0.7).add(random.y.mul(1.8)).add(view.dot(vec3(0.32, 0.71, -0.63)).mul(2.4)).add(time.mul(0.025))
     const mineral = spectralColor(terracePhase.mul(0.1).add(facetShift))
-    const violetShadow = mix(color('#130c23'), color('#27314a'), terraces.mul(0.6).add(outerFacet.mul(0.14)))
+    const violetShadow = mix(color(hsl.integer(295, 54, 8)), color(hsl.integer(267, 36, 22)), terraces.mul(0.6).add(outerFacet.mul(0.14)))
     const faceColor = mix(violetShadow, mineral, outerFacet.mul(0.66).add(terraces.mul(0.24)).clamp())
-    const brightEdges = mix(color('#b3ffcf'), color('#ffd36e'), random.z)
+    const brightEdges = mix(color(hsl.integer(156, 100, 92.7)), color(hsl.integer(86, 100, 86.6)), random.z)
     const sparkle = glints(normalViewGeometry, 145).mul(crystalDust.add(bevel.mul(grazing.pow(2.2)).mul(0.18)))
     this.colorNode = mix(faceColor, brightEdges, bevel.mul(grazing.pow(1.35)).mul(0.26))
     this.metalness = 1

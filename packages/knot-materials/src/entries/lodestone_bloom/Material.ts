@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mx_noise_float, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeFrame} from '../../candidates/claude_haiku/lib/knotFrame.ts'
@@ -47,14 +48,14 @@ export default class extends KnotMaterial {
 // Pooled ferrofluid: a faint, low-frequency swell beneath the spikes keeps the base from looking machined.
     const pool = mx_noise_float(surface.position.mul(38)).mul(0.0006)
     const relief = height.add(pool)
-    this.colorNode = color('#030305')
+    this.colorNode = color(hsl.integer(285, 19, 3))
     this.metalness = 0
     this.roughness = 0.16
     this.clearcoat = 1
     this.clearcoatRoughness = 0.05
-    this.sheenNode = color('#2b1f4a')
+    this.sheenNode = color(hsl.integer(294, 58, 17))
     this.sheenRoughnessNode = float(0.35)
     this.normalNode = proceduralNormal(relief, 1)
-    this.emissiveNode = color('#7fb8ff').mul(magnet).mul(height.div(0.034).smoothstep(0.35, 1).mul(0.12))
+    this.emissiveNode = color(hsl.integer(255, 100, 73)).mul(magnet).mul(height.div(0.034).smoothstep(0.35, 1).mul(0.12))
   }
 }

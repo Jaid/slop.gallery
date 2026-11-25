@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'lightless_border',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Beyond this dark border, even the light forgets its way home.',
   placeholder: {
-    color: '#ff8a3d',
+    color: hsl.integer(51, 100, 71),
     shading: 'ghost',
   },
 } as const satisfies KnotData

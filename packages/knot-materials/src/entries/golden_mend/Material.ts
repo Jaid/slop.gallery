@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_vec3, normalLocal, positionGeometry, time} from 'three/tsl'
 
 import {voronoiCells} from '../../candidates/deepseek/lib/voronoiCells.ts'
@@ -32,10 +33,10 @@ export default class extends KnotMaterial {
 // Porcelain body: warm, faintly translucent, with a whisper of kiln variation.
     const kiln = mx_noise_float(p.mul(4.5)).mul(0.5).add(0.5)
     const speck = mx_noise_float(p.mul(120)).mul(0.5).add(0.5)
-    const porcelain = mix(color('#e6d6b8'), color('#fdf6e6'), kiln.mul(0.6).add(speck.mul(0.25)))
+    const porcelain = mix(color(hsl.integer(83, 41, 86)), color(hsl.integer(87, 75, 97)), kiln.mul(0.6).add(speck.mul(0.25)))
 // Gold: warm, slightly granular, brighter where the lacquer pooled.
     const goldGrain = mx_noise_float(q.mul(70)).mul(0.5).add(0.5)
-    const gold = mix(color('#c8860f'), color('#ffe08a'), goldGrain.mul(0.55).add(goldMask.mul(0.3)))
+    const gold = mix(color(hsl.integer(74, 95, 62)), color(hsl.integer(90, 100, 90)), goldGrain.mul(0.55).add(goldMask.mul(0.3)))
 // The seam is proud of the glaze, so its flanks catch a thin bright edge.
     const seamEdge = goldMask.mul(goldMask.oneMinus()).mul(4)
 // A rounded bead of lacquer, highest along the middle of the break.
@@ -58,7 +59,7 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = this.normalNode
 // A breath of warmth in the deepest lacquer, as if the gold were still cooling.
     const ember = goldMask.mul(goldMask).mul(mx_noise_float(q.mul(24)).mul(0.5).add(0.5)).mul(time.mul(0.4).sin().mul(0.15).add(0.85))
-    this.emissiveNode = color('#ffd9a0').mul(grazing.pow(3)).mul(0.05).add(color('#ff9a2e').mul(ember).mul(intimate.mul(0.5).add(0.12)).mul(0.16)).add(color('#fff3d0').mul(seamEdge).mul(grazing.pow(2)).mul(0.25))
+    this.emissiveNode = color(hsl.integer(78, 100, 89)).mul(grazing.pow(3)).mul(0.05).add(color(hsl.integer(62, 100, 74)).mul(ember).mul(intimate.mul(0.5).add(0.12)).mul(0.16)).add(color(hsl.integer(92, 100, 96)).mul(seamEdge).mul(grazing.pow(2)).mul(0.25))
     this.aoNode = goldMask.mul(0.25).add(crazingMask.mul(0.2)).oneMinus().mul(0.35).add(0.65)
     this.positionNode = positionGeometry.add(normalLocal.mul(height))
   }

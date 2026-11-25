@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, float, max, min, mix, mx_noise_float, normalWorldGeometry, positionGeometry, select, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial, Color as ThreeColor} from 'three/webgpu'
 
@@ -9,16 +10,16 @@ import {circle, curveDistance, leaf, repeat, rosette, unite} from './sdf.ts'
 type Float = Node<'float'>
 type Color = Node<'vec3'>
 
-const color = (hex: string): Color => {
+const color = (hex: number): Color => {
   const {r, g, b} = new ThreeColor(hex)
   return vec3(r, g, b)
 }
 const palette = {
-  binding: '#480c0e',
-  red: '#5a0e15',
-  navy: '#191c30',
-  gold: '#9a7238',
-  cream: '#b09670',
+  binding: hsl.integer(24, 86, 16),
+  red: hsl.integer(22, 87, 21),
+  navy: hsl.integer(276, 38, 13),
+  gold: hsl.integer(74, 62, 51),
+  cream: hsl.integer(77, 35, 64),
 }
 /** Width of the border system from the edge to the field, in meters. */
 export const rugBorder = 0.6
@@ -50,9 +51,9 @@ export default class PersianRugMaterial extends MeshPhysicalNodeMaterial {
     const footprint = max(x.fwidth(), z.fwidth())
     // Small motifs fade to the ground before they could sparkle; strokes keep their average coverage instead.
     const fine = visibleDetail(footprint, 0.025)
-    const paint = (ink: Color | string) => (typeof ink === 'string' ? color(ink) : ink)
-    const draw = (base: Color, ink: Color | string, shape: Float, detail: Float | number = 1): Color => mix(base, paint(ink), inside(shape).mul(detail))
-    const stroke = (base: Color, ink: Color | string, distance: Float, halfWidth: number, opacity: Float | number = 1): Color => mix(base, paint(ink), line(distance, halfWidth).mul(opacity))
+    const paint = (ink: Color | number) => (typeof ink === 'number' ? color(ink) : ink)
+    const draw = (base: Color, ink: Color | number, shape: Float, detail: Float | number = 1): Color => mix(base, paint(ink), inside(shape).mul(detail))
+    const stroke = (base: Color, ink: Color | number, distance: Float, halfWidth: number, opacity: Float | number = 1): Color => mix(base, paint(ink), line(distance, halfWidth).mul(opacity))
     // Distance from the outer edge, and the coordinate running along the nearest edge.
     const edgeX = float(width / 2).sub(ax)
     const edgeZ = float(depth / 2).sub(az)

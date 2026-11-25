@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {inkFill, inkLine} from '../../lib/atelier.ts'
@@ -31,17 +32,17 @@ export default class extends KnotMaterial {
     const leaves = inkFill(leafShape, aa.mul(12)).mul(bloom.oneMinus())
     const pigment = mx_noise_float(p.mul(80)).mul(0.18).add(mx_noise_float(p.mul(18)).mul(0.25)).add(0.67).clamp()
     const wash = bloom.max(petalEdge).max(veins).max(vine).max(leaves).clamp()
-    const blue = mix(color('#061941'), color('#184189'), pigment)
-    const porcelain = mix(color('#ecebdf'), color('#faf8ed'), mx_noise_float(p.mul(3)).mul(0.2).add(0.6))
+    const blue = mix(color(hsl.integer(263, 86, 12)), color(hsl.integer(261, 83, 30)), pigment)
+    const porcelain = mix(color(hsl.integer(103, 26, 93)), color(hsl.integer(98, 54, 97.4)), mx_noise_float(p.mul(3)).mul(0.2).add(0.6))
     const rim = inkLine(r.sub(0.32), 0.006, aa).mul(local.y.abs().smoothstep(0.24, 0.31).oneMinus())
     const gold = eye.max(rim).max(inkLine(outline.sub(0.015), 0.005, aa))
     const brush = opticalBands(r.mul(460).add(theta.mul(6))).mul(bloom).mul(near)
-    this.colorNode = mix(mix(porcelain, blue, wash), color('#d9a33e'), gold)
+    this.colorNode = mix(mix(porcelain, blue, wash), color(hsl.integer(80, 79, 71)), gold)
     this.metalnessNode = gold.mul(0.92)
     this.roughnessNode = mix(float(0.24), float(0.29), gold).add(brush.mul(0.025))
     this.clearcoat = 0.75
     this.clearcoatRoughness = 0.12
     this.normalNode = proceduralNormal(wash.mul(0.00022).add(gold.mul(0.0008)).add(mx_noise_float(p.mul(110)).mul(near).mul(0.000035)), 1)
-    this.emissiveNode = color('#efb858').mul(gold).mul(view.x.mul(7).add(q.y.mul(TAU)).sub(time.mul(0.55)).sin().smoothstep(0.75, 1)).mul(grazing).mul(0.22)
+    this.emissiveNode = color(hsl.integer(79, 79, 78)).mul(gold).mul(view.x.mul(7).add(q.y.mul(TAU)).sub(time.mul(0.55)).sin().smoothstep(0.75, 1)).mul(grazing).mul(0.22)
   }
 }

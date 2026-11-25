@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chromatic_reef',
   candidateId: 'deepseek',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A reef of restless color grows beyond the charted spectrum.',
   placeholder: {
-    color: '#ff6ec7',
+    color: hsl.integer(345, 100, 70),
     shading: 'smooth',
   },
 } as const satisfies KnotData

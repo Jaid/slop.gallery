@@ -190,7 +190,7 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
 
   /** The key’s value as the tools tell it and {@link validate} takes it back: a color as its OkHSL hue, saturation and lightness, anything else as it is. */
   tell(key: string, value: TuningValue): ToldValue {
-    return this.entries.get(key)?.control?.kind === 'color' && typeof value === 'string' ? tellColor(value) : value
+    return this.entries.get(key)?.control?.kind === 'color' && typeof value === 'number' ? tellColor(value) : value
   }
 
   /** {@link isShown} as React state. */
@@ -203,7 +203,7 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
     return this.store(selector)
   }
 
-  /** The value the tools give, as the key’s control takes it, like a color’s {@link TuningColor} as its #rrggbb, or a TypeError saying what it takes. */
+  /** The value the tools give, as the key’s control takes it, like a {@link TuningColor} as packed sRGB, or a TypeError saying what it takes. */
   validate(key: string, value: unknown): TuningValue {
     const {control, switch: valueSwitch} = this.entry(key)
     if (valueSwitch && value === valueSwitch.off) {

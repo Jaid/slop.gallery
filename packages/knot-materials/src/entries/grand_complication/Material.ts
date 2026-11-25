@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, select, time, uv, vec2, vec4} from 'three/tsl'
 
 import {tubeCells} from '../../candidates/claude_sonnet/lib/tubeMetric.ts'
@@ -88,13 +89,13 @@ export default class extends KnotMaterial {
 // The layer below sits in the shadow of the wheels above it.
     const shadow = outline.smoothstep(0, 0.11).mul(0.7).add(0.3)
     const plateStripes = cells.x.mul(1.2).add(cells.y.mul(0.35)).add(ray.x.mul(0.6)).mul(TAU).sin().mul(0.5).add(0.5)
-    const rhodium = mix(color('#59616b'), color('#b7bfc8'), plateStripes.mul(resolved).add(resolved.oneMinus().mul(0.5)))
-    const steel = mix(color('#0f1c38'), color('#2a4575'), under.frame.z.smoothstep(0.2, 0.5))
+    const rhodium = mix(color(hsl.integer(254, 11, 41)), color(hsl.integer(251, 11, 77)), plateStripes.mul(resolved).add(resolved.oneMinus().mul(0.5)))
+    const steel = mix(color(hsl.integer(264, 59, 13)), color(hsl.integer(261, 57, 30)), under.frame.z.smoothstep(0.2, 0.5))
     const below = mix(rhodium, steel, underCover).mul(shadow)
-    const yellow = color('#e8b04a')
-    const rose = color('#d98b6c')
+    const yellow = color(hsl.integer(80, 80, 76))
+    const rose = color(hsl.integer(42, 58, 66))
     const gold = mix(yellow, rose, top.odd).mul(engraving.mul(0.22).oneMinus())
-    const ruby = color('#b8102c')
+    const ruby = color(hsl.integer(22, 97, 42))
     const face = mix(mix(gold, gold.mul(1.15), setting), ruby, jewel)
     this.colorNode = mix(below, face, solid)
     const brightness = float(1)
@@ -112,7 +113,7 @@ export default class extends KnotMaterial {
 // Edge chamfers catch the light, the rubies glow and the escapement flashes on every beat.
     const beat = time.mul(0.9).fract().smoothstep(0, 0.35).oneMinus().pow(2)
     const chamfer = outline.abs().smoothstep(0, 0.014).oneMinus().mul(solid.max(0.4)).mul(facing.mul(0.5).add(0.5))
-    this.emissiveNode = color('#fff0c4').mul(chamfer).mul(beat.mul(0.35).add(0.12)).mul(intimate.mul(0.5).add(0.5))
+    this.emissiveNode = color(hsl.integer(92, 100, 95)).mul(chamfer).mul(beat.mul(0.35).add(0.12)).mul(intimate.mul(0.5).add(0.5))
       .add(ruby.mul(jewel).mul(solid).mul(beat.mul(0.6).add(0.35)))
   }
 }

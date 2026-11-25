@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'asterism',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A six-rayed star sleeps inside the blue stone, and wakes only for the light that finds it.',
   placeholder: {
-    color: '#244b9b',
+    color: hsl.integer(263, 79, 34),
     shading: 'glass',
   },
 } as const satisfies KnotData

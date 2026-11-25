@@ -1,29 +1,30 @@
 import type {Node, UniformNode} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, max, mix, mx_fractal_noise_float, normalWorldGeometry, pow, smoothstep, time, uniform, vec2, vec3} from 'three/tsl'
 import {Color, Vector3} from 'three/webgpu'
 
-/** The colors and weather of the sky; colors are sRGB hex strings. */
+/** The colors and weather of the sky; colors are packed sRGB. */
 export type SkyPalette = {
   /** multiplies everything but the sun’s disc */
   brightness: number
   /** share of the sky covered by clouds, 0–1 */
   cloudCover: number
   /** thin cloud edges */
-  cloudLit: string
+  cloudLit: number
   /** thick cloud cores, seen from below */
-  cloudShade: string
+  cloudShade: number
   /** added to clouds on the sunward side of the sky */
-  cloudWarm: string
+  cloudWarm: number
   /** the aureole around the sun */
-  glow: string
-  horizon: string
+  glow: number
+  horizon: number
   /** the disc */
-  sun: string
+  sun: number
   /** linear radiance of the disc; above the bloom threshold of 1 it flares */
   sunRadiance: number
   /** straight up, and straight down as well */
-  zenith: string
+  zenith: number
 }
 
 export type ProceduralSkyOptions = Partial<SkyPalette> & {
@@ -46,14 +47,14 @@ const wind = [0.0016, -0.0011] as const
 export const daytimeSky: SkyPalette = {
   brightness: 0.82,
   cloudCover: 0.42,
-  cloudLit: '#f6f7f8',
-  cloudShade: '#a6aebb',
-  cloudWarm: '#fff3dc',
-  glow: '#fff1d2',
-  horizon: '#c4def5',
-  sun: '#fff6e4',
+  cloudLit: hsl.integer(248, 9, 97),
+  cloudShade: hsl.integer(260, 13, 71),
+  cloudWarm: hsl.integer(83, 100, 96),
+  glow: hsl.integer(87, 100, 95.5),
+  horizon: hsl.integer(245, 61, 87),
+  sun: hsl.integer(84, 100, 97),
   sunRadiance: 40,
-  zenith: '#2f7ae0',
+  zenith: hsl.integer(258, 88, 52),
 }
 
 const colorKeys = ['cloudLit', 'cloudShade', 'cloudWarm', 'glow', 'horizon', 'sun', 'zenith'] as const

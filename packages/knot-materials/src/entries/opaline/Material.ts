@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, negateOnBackSide, normalLocal, transformNormalToView, vec3} from 'three/tsl'
 
 import {voronoi3} from '../../candidates/deepseek/lib/voronoi.ts'
@@ -61,20 +62,20 @@ export default class extends KnotMaterial {
     const strength = fire.mul(domain).add(fineFire.mul(fineMask)).mul(resolved.mul(0.8).add(0.2)).clamp(0, 1)
     const fireColor = fire.mul(domain).add(fineFire.mul(fineMask)).div(strength.max(0.02)).clamp(0, 1)
 // A milky silica body, faintly translucent, so the fire sits inside the stone.
-    const body = mix(color('#3b382f'), color('#6b6459'), mx_fractal_noise_float(p.mul(7), 3, 2.1, 0.5).mul(0.5).add(0.5))
+    const body = mix(color(hsl.integer(92, 13, 24)), color(hsl.integer(79, 11, 43)), mx_fractal_noise_float(p.mul(7), 3, 2.1, 0.5).mul(0.5).add(0.5))
     this.colorNode = mix(body, fireColor.mul(strength.mul(0.5).add(0.5)), strength.mul(0.95))
     this.metalnessNode = strength.mul(0.45)
     this.roughnessNode = mix(float(0.3), float(0.05), strength)
     this.transmission = 0.08
     this.thickness = 0.3
     this.ior = 1.45
-    this.attenuationColor.set('#c9d4e6')
+    this.attenuationColor.set(hsl.integer(260, 32, 85))
     this.attenuationDistance = 1.2
     this.clearcoat = 0.22
     this.clearcoatRoughness = 0.05
     this.normalNode = negateOnBackSide(transformNormalToView(normalLocal.normalize().add(cell.offset.div(scale).mul(0.02))))
     this.emissiveNode = fireColor.mul(strength).mul(facing.pow(1.4)).mul(near.mul(0.35).add(0.4)).mul(0.28)
       .add(fireColor.mul(strength).mul(grazing.pow(2)).mul(intimate.mul(0.5).add(0.25)).mul(0.22))
-      .add(color('#ffe9c9').mul(grazing.pow(9)).mul(0.1))
+      .add(color(hsl.integer(77, 100, 93.4)).mul(grazing.pow(9)).mul(0.1))
   }
 }

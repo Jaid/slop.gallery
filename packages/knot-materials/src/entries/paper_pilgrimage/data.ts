@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'paper_pilgrimage',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Ten thousand quiet shores, cut from a single unwritten book. The tide turns one page at a time.',
   placeholder: {
-    color: '#d8b7a0',
+    color: hsl.integer(57, 35, 77),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -30,9 +31,9 @@ export default class extends KnotMaterial {
     const envelopeB = view.dot(k2).mul(f2 * depth * 0.5).cos().abs()
     const ink = familyA.smoothstep(0.25, 0.6).max(familyB.smoothstep(0.25, 0.6)).max(familyC.smoothstep(0.35, 0.7).mul(0.7))
     const gold = envelopeA.oneMinus().pow(4).max(envelopeB.oneMinus().pow(4))
-    const porcelain = color('#f3ead9')
-    const goldLeaf = color('#d4af37')
-    const base = mix(porcelain, color('#0b0b10'), ink.mul(0.92))
+    const porcelain = color(hsl.integer(83, 43, 93))
+    const goldLeaf = color(hsl.integer(91, 82, 73))
+    const base = mix(porcelain, color(hsl.integer(285, 17, 6)), ink.mul(0.92))
     this.colorNode = mix(base, goldLeaf, gold.mul(0.9))
     this.metalnessNode = gold.mul(0.9)
     this.roughnessNode = float(0.16).mix(0.3, ink).mix(0.12, gold)

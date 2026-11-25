@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, uv, vec2} from 'three/tsl'
 
 import {breath, facetGlints, tangentViewFrame} from '../../candidates/gpt_sol/lib/exhibition/facetOptics.ts'
@@ -54,9 +55,9 @@ export default class extends KnotMaterial {
     const buried = tiles(tube.sub(tubeRay().mul(0.012)), 19, 4, 27.1)
     const fracture = dendrite(buried.point.mul(vec2(1.7, 1)), buried.footprint.mul(1.7)).mask
       .mul(branches.oneMinus()).mul(0.18)
-    const deepIce = mix(color('#153449'), color('#466d82'), frostClimate)
-      .add(color('#afcfda').mul(fracture))
-    const chalk = mix(color('#91b9cd'), color('#e0e8e2'), branches.mul(0.65).add(powder.mul(0.35)).clamp())
+    const deepIce = mix(color(hsl.integer(241, 59, 21)), color(hsl.integer(233, 38, 44)), frostClimate)
+      .add(color(hsl.integer(221, 30, 81)).mul(fracture))
+    const chalk = mix(color(hsl.integer(230, 34, 73)), color(hsl.integer(154, 17, 91)), branches.mul(0.65).add(powder.mul(0.35)).clamp())
     this.colorNode = mix(deepIce, chalk, frost)
     this.metalnessNode = frost.mul(-0.11).add(0.14)
     this.roughnessNode = mix(float(0.12), float(0.65), frost).sub(branches.mul(0.12)).clamp(0.1, 0.7)
@@ -69,16 +70,16 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = normalViewGeometry
     this.ior = 1.31
     this.sheen = 0.3
-    this.sheenNode = color('#acccdb').mul(frost).mul(0.3)
+    this.sheenNode = color(hsl.integer(228, 32, 80)).mul(frost).mul(0.3)
     this.sheenRoughness = 0.65
     this.iridescenceNode = branches.mul(grazing.pow(2)).mul(0.22)
     this.iridescenceThicknessNode = cell.random.y.mul(110).add(180)
     const facet = N.add(T.mul(cell.random.x.sub(0.5)).mul(0.5)).add(B.mul(cell.random.y.sub(0.5)).mul(0.5)).normalize()
     const sparkle = facetGlints(facet, 210).mul(branches).mul(resolved(cell.q)).toVar()
-    const polarized = mix(color('#bcdcff'), color('#ffddbb'), T.dot(tangentViewFrame().V).mul(0.5).add(0.5))
+    const polarized = mix(color(hsl.integer(251, 100, 86.3)), color(hsl.integer(67, 100, 90.4)), T.dot(tangentViewFrame().V).mul(0.5).add(0.5))
     this.emissiveNode = polarized.mul(sparkle).mul(0.75)
-      .add(color('#69a9c5').mul(fracture).mul(near).mul(0.09))
-      .add(color('#d4edec').mul(branches).mul(intimate).mul(0.012))
+      .add(color(hsl.integer(228, 49, 65)).mul(fracture).mul(near).mul(0.09))
+      .add(color(hsl.integer(194, 38, 91.6)).mul(branches).mul(intimate).mul(0.012))
     this.aoNode = frost.mul(-0.08).add(1)
     this.userData = {
       collection: 'The Unwritten Atlas',

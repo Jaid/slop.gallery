@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aurora_satin',
   candidateId: 'claude_sonnet',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Cold light moves across a cloth too fine for human hands.',
   placeholder: {
-    color: '#8ff5d4',
+    color: hsl.integer(171, 75, 88),
     shading: 'fabric',
   },
 } as const satisfies KnotData

@@ -33,8 +33,8 @@ export type StudioDesign = {
   lightAzimuth: number
   /** how widely the shadow’s edges blur, as a factor on the graphics mode’s */
   lightBlur: number
-  /** the moon’s or the sun’s, as #rrggbb */
-  lightColor: string
+  /** the moon’s or the sun’s, as packed sRGB */
+  lightColor: number
   /** how high the moon or sun stands, in degrees over the horizon */
   lightElevation: number
   /** how thickly the air shows its shafts, the room’s volumetric sun */
@@ -51,8 +51,8 @@ export type StudioDesign = {
   openings: StudioOpeningsChoice
   /** how wide the primary lamp’s shadow’s edges blur, in degrees seen from it, or 0 to blur as every lamp’s do */
   primaryLampBlur: number
-  /** as #rrggbb */
-  primaryLampColor: string
+  /** as packed sRGB */
+  primaryLampColor: number
   primaryLampDecay: number
   /** over the floor, in meters */
   primaryLampHeight: number
@@ -66,8 +66,8 @@ export type StudioDesign = {
   primaryLampZ: number
   /** how wide the secondary lamp’s shadow’s edges blur, in degrees seen from it, or 0 to blur as every lamp’s do */
   secondaryLampBlur: number
-  /** as #rrggbb */
-  secondaryLampColor: string
+  /** as packed sRGB */
+  secondaryLampColor: number
   secondaryLampDecay: number
   /** over the floor, as a share of the room’s height */
   secondaryLampHeight: number

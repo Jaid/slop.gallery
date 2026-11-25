@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, uv, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -40,9 +41,9 @@ export default class extends KnotMaterial {
     const field = nacreField(p, tube)
     const incidence = view.dot(vec3(-0.36, 0.26, 0.9).normalize()).mul(0.5).add(0.5)
     const hue = incidence.mul(1.5).add(field.plate.mul(0.5)).add(field.layer.mul(0.22)).add(field.slow.mul(0.12))
-    const pearl = spectralColor(hue).mul(0.6).add(color('#e8f0d9').mul(0.32))
-    const deep = mix(color('#061a2b'), color('#123a4a'), field.layer.mul(0.42).add(0.18))
-    const plateTint = mix(color('#123b52'), pearl, field.plate.mul(0.66).add(0.18))
+    const pearl = spectralColor(hue).mul(0.6).add(color(hsl.integer(123, 45, 93.3)).mul(0.32))
+    const deep = mix(color(hsl.integer(247, 66, 11)), color(hsl.integer(228, 67, 23)), field.layer.mul(0.42).add(0.18))
+    const plateTint = mix(color(hsl.integer(237, 69, 24)), pearl, field.plate.mul(0.66).add(0.18))
     const height = field.growthLine.mul(0.018).add(field.hair.mul(0.006)).add(field.plate.mul(0.005))
     this.positionNode = p.add(normalLocal.mul(height.mul(near.mul(0.35).add(0.65)).mul(0.0015)))
     this.colorNode = mix(deep, plateTint, field.growthLine.mul(0.58).add(field.plate.mul(0.3)).add(field.hair.mul(0.12)))
@@ -56,7 +57,7 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = hue.mul(360).add(field.layer.mul(80)).add(130)
     this.normalNode = proceduralNormal(height.mul(1.8), 0.0011)
     const edgeFlash = field.growthLine.mul(grazing).mul(near)
-    this.emissiveNode = pearl.mul(edgeFlash.mul(0.18)).add(color('#b9fff0').mul(field.plate.mul(intimate).mul(grazing).mul(0.1)))
+    this.emissiveNode = pearl.mul(edgeFlash.mul(0.18)).add(color(hsl.integer(180, 99, 94)).mul(field.plate.mul(intimate).mul(grazing).mul(0.1)))
     this.aoNode = float(0.78).add(field.growthLine.mul(0.22))
   }
 }

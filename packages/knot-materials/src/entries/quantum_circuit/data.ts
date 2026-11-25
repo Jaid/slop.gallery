@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quantum_circuit',
   candidateId: 'kimi',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A tiny network follows several bright possibilities before choosing a path.',
   placeholder: {
-    color: '#ffd76a',
+    color: hsl.integer(89, 100, 87.4),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, max, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, tangentLocal, time, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -86,8 +87,8 @@ export default class extends KnotMaterial {
     const grain = mx_noise_float(p.mul(28)).mul(0.5).add(0.5).pow(1.5)
     const regionTint = mix(mix(vec3(0.055, 0.062, 0.082), vec3(0.05, 0.07, 0.062), isSram), vec3(0.075, 0.062, 0.048), isAnalog)
     const silicon = mix(vec3(0.012, 0.015, 0.022), regionTint, grain)
-    const alloy = mix(color('#5d5637'), color('#9c9776'), mx_noise_float(p.mul(90).add(vec3(2, 3, 4))).mul(0.5).add(0.5))
-    const metalColor = mix(alloy, color('#c2764a'), viaMetal)
+    const alloy = mix(color(hsl.integer(97, 36, 37)), color(hsl.integer(100, 27, 62)), mx_noise_float(p.mul(90).add(vec3(2, 3, 4))).mul(0.5).add(0.5))
+    const metalColor = mix(alloy, color(hsl.integer(50, 62, 58)), viaMetal)
     let surface = mix(silicon, metalColor, metal.mul(0.92))
     surface = mix(surface, vec3(0.008, 0.009, 0.012), gap.mul(0.85))
     this.colorNode = surface
@@ -100,7 +101,7 @@ export default class extends KnotMaterial {
     this.ior = 1.46
     this.specularIntensityNode = gap.oneMinus().mul(0.85).add(0.15)
     this.sheenNode = gap.mul(0.2)
-    this.sheenColor.set('#7f93b8')
+    this.sheenColor.set(hsl.integer(263, 32, 61))
     this.sheenRoughness = 0.4
     const relief = metal.mul(0.0005).sub(gap.mul(0.0022)).add(viaMetal.mul(0.0004))
     const bump = proceduralNormal(relief, 1.2)
@@ -112,12 +113,12 @@ export default class extends KnotMaterial {
     const needle = probe.mul(probe).mul(-46).exp()
     const glint = glints(bump, 190).mul(metal)
     const selfTest = cellNoiseVec3(p.mul(2.4).add(vec3(time.mul(0.11)))).x
-    this.emissiveNode = color('#ffe9bd').mul(metal.mul(needle).mul(0.5))
-      .add(color('#ffffff').mul(glint.mul(0.28)))
-      .add(color('#3d6fb5').mul(grazing.pow(2.6).mul(0.2)))
-      .add(color('#8fd8ff').mul(rim.mul(0.045)))
+    this.emissiveNode = color(hsl.integer(84, 100, 93)).mul(metal.mul(needle).mul(0.5))
+      .add(color(hsl.integer(0, 0, 100)).mul(glint.mul(0.28)))
+      .add(color(hsl.integer(257, 66, 47)).mul(grazing.pow(2.6).mul(0.2)))
+      .add(color(hsl.integer(233, 100, 82.3)).mul(rim.mul(0.045)))
       .add(silicon.mul(selfTest.mul(0.4).add(0.6)).mul(0.05).mul(vec3(0.43, 0.35, 0.16)))
       .add(metal.mul(needle.mul(0.03)))
-      .add(color('#8fb6e8').mul(intimate.mul(0.02)))
+      .add(color(hsl.integer(255, 61, 73)).mul(intimate.mul(0.02)))
   }
 }

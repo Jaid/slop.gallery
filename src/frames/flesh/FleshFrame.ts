@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, hash, max, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, select, time, vec2, vec3, vec4} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -62,10 +63,10 @@ function skin(surface: FrameSurface) {
   const veins = trunks.add(branches).mul(thin).mul(visibleDetail(footprint, 0.003)).clamp(0, 1)
   const pores = mx_noise_float(p.mul(900)).mul(visibleDetail(footprint, 0.0015))
   const hollow = surface.cavity.smoothstep(0, 0.8)
-  const pallid = mix(color('#94645a'), color('#bd8f7e'), mottle.mul(0.5).add(lumps.mul(0.3)))
-  const bruised = mix(mix(pallid, color('#4e2040'), bruises.mul(0.7)), color('#857a34'), yellowing.mul(bruises.oneMinus()).mul(0.5))
-  const inflamed = mix(bruised, color('#8a1c1a'), raw.mul(0.75).max(hollow.mul(0.85)))
-  const veined = mix(inflamed, mix(color('#3a2a5e'), color('#5e0410'), beat), veins.mul(beat.mul(0.2).add(0.5)))
+  const pallid = mix(color(hsl.integer(32, 34, 48)), color(hsl.integer(41, 33, 64)), mottle.mul(0.5).add(lumps.mul(0.3)))
+  const bruised = mix(mix(pallid, color(hsl.integer(341, 56, 22)), bruises.mul(0.7)), color(hsl.integer(100, 66, 51)), yellowing.mul(bruises.oneMinus()).mul(0.5))
+  const inflamed = mix(bruised, color(hsl.integer(27, 90, 33)), raw.mul(0.75).max(hollow.mul(0.85)))
+  const veined = mix(inflamed, mix(color(hsl.integer(295, 56, 23)), color(hsl.integer(23, 96, 21)), beat), veins.mul(beat.mul(0.2).add(0.5)))
   return {
     color: veined,
     veins,
@@ -83,7 +84,7 @@ export default class FleshFrame extends PortraitFrame {
   override readonly front = eyes.z + eyes.bulge * eyes.cornerRadius / eyes.radius
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#b88d84'
+  override readonly tint = hsl.integer(32, 29, 63)
   override readonly title = 'Watching flesh'
 
   override createGeometry(width: number, height: number) {
@@ -118,7 +119,7 @@ class FleshMaterial extends MeshPhysicalNodeMaterial {
       envMapIntensity: 0.7,
       sheen: 0.5,
       sheenRoughness: 0.4,
-      sheenColor: '#ffb0a0',
+      sheenColor: hsl.integer(32, 100, 80),
       clearcoat: 0.6,
       clearcoatRoughness: 0.18,
     })
@@ -129,8 +130,8 @@ class FleshMaterial extends MeshPhysicalNodeMaterial {
     const stitch = surface.reach.div(0.012).add(0.5).fract().sub(0.5).abs().mul(0.012)
     const thread = line(stitch, 0.0007).mul(surface.toCorner.smoothstep(0.0075, 0.005)).mul(surface.isOrnament.oneMinus())
     const raw = seam.max(surface.toCorner.smoothstep(0.004, 0).mul(0.4).mul(surface.isOrnament.oneMinus()))
-    this.colorNode = mix(mix(tone, color('#5a0a10'), raw), color('#120c0c'), thread)
-    this.emissiveNode = color('#ff1a1a').mul(veins.mul(beat).mul(0.12))
+    this.colorNode = mix(mix(tone, color(hsl.integer(24, 92, 20)), raw), color(hsl.integer(18, 16, 7)), thread)
+    this.emissiveNode = color(hsl.integer(28.4, 100, 57.6)).mul(veins.mul(beat).mul(0.12))
     this.roughnessNode = mix(float(0.42), float(0.14), wet.max(raw))
     this.normalNode = heightNormal(height.add(thread.mul(0.0006)).sub(seam.mul(0.0008)))
   }
@@ -177,15 +178,15 @@ class EyeMaterial extends MeshPhysicalNodeMaterial {
     const iris = inside(radial.sub(0.4).mul(radius))
     const pupil = inside(radial.sub(0.2).mul(radius))
     const fibers = mx_noise_float(vec3(irisAt.normalize().mul(6), radial.mul(4))).mul(0.5).add(0.5)
-    const irisColor = mix(color('#d9a21e'), color('#3f7a1f'), radial.smoothstep(0.1, 0.4)).mul(fibers.mul(0.7).add(0.5))
+    const irisColor = mix(color(hsl.integer(83, 91, 70)), color(hsl.integer(137, 94, 44)), radial.smoothstep(0.1, 0.4)).mul(fibers.mul(0.7).add(0.5))
     const veins = float(1).sub(mx_noise_float(vec3(q.mul(5), seed.mul(9))).abs().mul(9)).max(0).pow(2).mul(radial.smoothstep(0.45, 0.9)).mul(visibleDetail(footprint, 0.002))
-    const sclera = mix(mix(color('#e3d3a6'), color('#c0705a'), radial.smoothstep(0.5, 1.1)), color('#9a0d12'), veins)
+    const sclera = mix(mix(color(hsl.integer(91, 49, 85)), color(hsl.integer(36, 54, 57)), radial.smoothstep(0.5, 1.1)), color(hsl.integer(27, 97.5, 35)), veins)
     const ball = mix(mix(sclera, irisColor, iris), vec3(0.01), pupil)
     const {color: tone, height} = skin(surface)
     const lash = line(lid, 0.0007)
     // The lids are swollen and red round the eye.
     const rims = lid.smoothstep(0.004, 0).mul(open.oneMinus())
-    this.colorNode = mix(mix(mix(tone, color('#8e2424'), rims.mul(0.8)), ball, open), color('#2a0a0a'), lash.mul(0.8))
+    this.colorNode = mix(mix(mix(tone, color(hsl.integer(25, 85, 34)), rims.mul(0.8)), ball, open), color(hsl.integer(23, 68, 10)), lash.mul(0.8))
     this.emissiveNode = irisColor.mul(iris.mul(pupil.oneMinus()).mul(open).mul(0.25))
     this.roughnessNode = mix(float(0.5), float(0.06), open)
     this.normalNode = heightNormal(height.mul(open.oneMinus()).add(lid.min(0).mul(0.05).mul(open.oneMinus())))

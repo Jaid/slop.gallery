@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {array, Break, exp, float, If, Loop, max, mix, mx_noise_float, screenSize, screenUV, smoothstep, vec2, vec3, vec4} from 'three/tsl'
 import {Color, SRGBColorSpace} from 'three/webgpu'
 
@@ -34,12 +35,12 @@ const caps = 0.75
 const clear = 0.66
 /** how much of the frame shows through the thin glaze of umber the corners are toned with before the strokes go on, at most */
 const wash = {
-  color: '#2a1a12',
+  color: hsl.integer(47, 36, 13),
   strength: 0.42,
 }
 const rgb = new Color
 /** a color in display space, as the frame is after the output transform */
-const display = (hex: string) => {
+const display = (hex: number) => {
   const {r, g, b} = rgb.set(hex).getRGB({
     r: 0,
     g: 0,

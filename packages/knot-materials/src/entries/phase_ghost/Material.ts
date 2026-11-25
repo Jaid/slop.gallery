@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_cell_noise_float, positionWorld, screenUV, time, uv, vec3} from 'three/tsl'
 import {DoubleSide} from 'three/webgpu'
 
@@ -38,10 +39,10 @@ export default class extends KnotMaterial {
     const inner = p.sub(view.mul(0.09))
     const dataCell = mx_cell_noise_vec3(inner.mul(38).add(vec3(0, time.mul(1.5).floor(), 0)))
     const data = dataCell.x.smoothstep(0.72, 0.76).mul(dataCell.y).mul(intimate)
-    const ghost = mix(color('#1ec8ff'), color('#c6f6ff'), facing)
-    const chroma = mix(ghost, color('#ff4fd8'), glitch.mul(0.85))
+    const ghost = mix(color(hsl.integer(227, 99, 74.1)), color(hsl.integer(210, 100, 93.4)), facing)
+    const chroma = mix(ghost, color(hsl.integer(338, 100, 67)), glitch.mul(0.85))
     const body = grazing.pow(1.6).mul(0.55).add(scan.mul(0.12)).add(sweep.mul(0.5))
-    this.colorNode = color('#01080c')
+    this.colorNode = color(hsl.integer(224, 70, 4))
     this.roughness = 1
     this.metalness = 0
     this.emissiveNode = chroma.mul(wire.mul(1.6).add(body).add(data.mul(2.2))).mul(near.mul(0.6).add(0.5)).add(ghost.mul(glitch).mul(0.4))

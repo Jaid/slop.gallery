@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_float, normalLocal, tangentLocal, time, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -38,7 +39,7 @@ export default class extends BaseKnotMaterial {
     const flame = fire.mul(fire).mul(1.25)
     const facing = view.dot(patchNormal).clamp().pow(1.4)
     const milk = mx_noise_float(p.mul(3.5)).mul(0.5).add(0.5)
-    const potch = mix(color('#0f1118'), color('#565a68'), milk.pow(2.2))
+    const potch = mix(color(hsl.integer(272, 20, 8)), color(hsl.integer(273, 13, 39)), milk.pow(2.2))
     const pin = beads(q.mul(2.2), 3.3)
     const pinFire = spectralColor(pin.random.x.mul(TAU).add(view.dot(n).mul(2.2)).add(time.mul(0.05)))
 // A whisper of relief keeps the polish from reading as a decal.
@@ -52,6 +53,6 @@ export default class extends BaseKnotMaterial {
     this.iridescenceIOR = 1.4
     this.iridescenceThicknessNode = mix(float(0.5), grain.x, patchMask).mul(240).add(300)
     this.envMapIntensity = 0.85
-    this.emissiveNode = flame.mul(bands.mul(0.75).add(0.12)).mul(facing).mul(patchMask).mul(intimate.mul(0.55).add(0.8)).mul(1.35).add(pinFire.mul(pin.mask).mul(near).mul(1.4)).add(color('#aab8ff').mul(grazing.pow(3)).mul(0.2))
+    this.emissiveNode = flame.mul(bands.mul(0.75).add(0.12)).mul(facing).mul(patchMask).mul(intimate.mul(0.55).add(0.8)).mul(1.35).add(pinFire.mul(pin.mask).mul(near).mul(1.4)).add(color(hsl.integer(275, 100, 76.5)).mul(grazing.pow(3)).mul(0.2))
   }
 }

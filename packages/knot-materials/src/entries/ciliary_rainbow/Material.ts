@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, time, uv, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -19,7 +20,7 @@ export default class extends KnotMaterial {
     this.thickness = 0.9
     this.ior = 1.33
     this.dispersion = 0.42
-    this.attenuationColor.set('#0a4250')
+    this.attenuationColor.set(hsl.integer(220, 84, 25))
     this.attenuationDistance = 1.6
     this.name = knotData.id
     const tube = uv()
@@ -48,20 +49,20 @@ export default class extends KnotMaterial {
     // Cilia plate normal perturbations
     const combBump = proceduralNormal(combActive.mul(0.003).add(ciliaFringe.mul(0.0008)), 0.6)
     // Pale, crystal-clear gelatin volume albedo (ensures pristine water transmission without darkening)
-    this.colorNode = mix(color('#b5ecf5'), color('#dcf8ff'), mx_noise_float(p.mul(4)).mul(0.5).add(0.5))
+    this.colorNode = mix(color(hsl.integer(209, 67, 89.3)), color(hsl.integer(214, 100, 95.5)), mx_noise_float(p.mul(4)).mul(0.5).add(0.5))
     this.roughnessNode = float(0.02).add(combActive.mul(0.12))
     this.clearcoat = 1
     this.clearcoatRoughness = 0.015
     this.normalNode = combBump
     // Bioluminescent & diffraction emissions
     const diffractionGlow = rainbow.mul(combActive).mul(2.6)
-    const neuralGlow = mix(color('#00ffbb'), color('#2450ff'), neuralPhase.cos().mul(0.5).add(0.5))
+    const neuralGlow = mix(color(hsl.integer(165, 100, 86.7)), color(hsl.integer(265.7, 100, 45.6)), neuralPhase.cos().mul(0.5).add(0.5))
       .mul(neuralPulse)
       .mul(near.mul(0.6).add(0.4))
       .mul(1.1)
-    const sparkGlow = color('#d8ffff').mul(synapticSparks).mul(3.2)
-    const rimAura = color('#08a5bf').mul(rim.pow(2)).mul(0.5)
-    const fringeGlow = color('#f0ffff').mul(ciliaFringe).mul(1.5)
+    const sparkGlow = color(hsl.integer(196, 100, 96.8)).mul(synapticSparks).mul(3.2)
+    const rimAura = color(hsl.integer(214, 98, 61)).mul(rim.pow(2)).mul(0.5)
+    const fringeGlow = color(hsl.integer(197, 100, 98.7)).mul(ciliaFringe).mul(1.5)
     this.emissiveNode = diffractionGlow
       .add(neuralGlow)
       .add(sparkGlow)

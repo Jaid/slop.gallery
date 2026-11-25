@@ -1,6 +1,7 @@
 import type {ThreeElements} from '@react-three/fiber'
 
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshPhysicalNodeMaterial, MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -24,7 +25,7 @@ export default function LightSwitch({id, on, onToggle, title = 'Light switch', .
   title?: string
 }) {
   const pearl = useDisposable(useMemo(() => new MeshPhysicalNodeMaterial({
-    color: '#eee6d6',
+    color: hsl.integer(85, 35, 91.5),
     roughness: 0.2,
     iridescence: 0.7,
     iridescenceIOR: 1.45,
@@ -32,7 +33,7 @@ export default function LightSwitch({id, on, onToggle, title = 'Light switch', .
     iridescenceThicknessMaximum: 520,
   }), []))
   const ebony = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#16110d',
+    color: hsl.integer(61, 18, 8),
     roughness: 0.3,
   }), []))
   const press = () => {

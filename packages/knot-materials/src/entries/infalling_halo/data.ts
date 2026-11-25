@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'infalling_halo',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'The last thing light does before it gives up is bend into a perfect circle.',
   displacement: 0.0012,
   placeholder: {
-    color: '#1a1020',
+    color: hsl.integer(312, 40, 9),
     shading: 'smooth',
   },
 } as const satisfies KnotData

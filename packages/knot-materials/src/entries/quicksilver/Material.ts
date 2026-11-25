@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fieldMask} from '../../candidates/deepseek/lib/fieldMask.ts'
@@ -46,19 +47,19 @@ export default class extends KnotMaterial {
     const tarnishField = mx_fractal_noise_float(p.mul(4.2).add(vec3(t.mul(0.012), t.mul(0.008), t.mul(-0.01))), 3, 2, 0.5)
     const tarnish = fieldMask(tarnishField, float(0.14), 0.5)
     const film = mx_noise_float(p.mul(120).add(vec3(0, t.mul(0.02), 0))).mul(0.5).add(0.5)
-    const metal = mix(color('#58616b'), color('#e8f0f8'), bead.pow(0.55).mul(0.85).add(0.15))
-    const oxide = mix(color('#4a545e'), color('#7d8894'), film.mul(0.5).add(0.3))
+    const metal = mix(color(hsl.integer(251, 11, 41)), color(hsl.integer(248, 44, 94)), bead.pow(0.55).mul(0.85).add(0.15))
+    const oxide = mix(color(hsl.integer(248, 13, 35)), color(hsl.integer(251, 12, 56)), film.mul(0.5).add(0.3))
     this.colorNode = mix(metal, oxide, tarnish.coverage.mul(0.85))
     const crease = bead.mul(bead.oneMinus()).mul(4).mul(-1)
     const relief = bead.mul(beadResolved).add(crease.mul(0.25)).add(tarnish.coverage.mul(near).mul(film.mul(0.2).add(0.1)))
     this.normalNode = proceduralNormal(relief, float(0.018).mul(beadResolved.mul(0.8).add(0.2)))
     this.metalnessNode = float(0.98).sub(tarnish.coverage.mul(0.5))
     this.roughnessNode = mix(float(0.035), float(0.42), tarnish.coverage).add(film.mul(0.02).mul(near)).add(grazing.mul(0.01))
-    this.specularColorNode = mix(color('#ffffff'), color('#cfe0f0'), tarnish.coverage)
+    this.specularColorNode = mix(color(hsl.integer(0, 0, 100)), color(hsl.integer(246, 43, 88)), tarnish.coverage)
     this.anisotropy = 0.2
     this.clearcoat = 0.25
     this.clearcoatRoughness = 0.05
-    this.emissiveNode = color('#b8d8f0').mul(grazing.pow(4)).mul(0.06)
-      .add(color('#9fc8e8').mul(intimate).mul(0.03))
+    this.emissiveNode = color(hsl.integer(241, 55, 84.5)).mul(grazing.pow(4)).mul(0.06)
+      .add(color(hsl.integer(243, 53, 78)).mul(intimate).mul(0.03))
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, time} from 'three/tsl'
 import {DoubleSide} from 'three/webgpu'
 
@@ -26,8 +27,8 @@ export default class extends KnotMaterial {
     const collapse = cellularPoints(p.mul(26).add(view.mul(3)).add(time.mul(0.5)), 0.06, 0.24, 0.75)
     const voidNoise = mx_noise_float(p.mul(9).sub(time.mul(0.2)))
     const probability = interference.mul(0.6).add(collapse.mul(0.8)).add(voidNoise.mul(0.2)).clamp()
-    const quantum = mix(color('#1a0033'), color('#b18cff'), probability).add(color('#00f5ff').mul(collapse).mul(0.8))
-    this.colorNode = color('#05000a')
+    const quantum = mix(color(hsl.integer(301, 100, 8)), color(hsl.integer(297, 100, 68)), probability).add(color(hsl.integer(200, 100, 86)).mul(collapse).mul(0.8))
+    this.colorNode = color(hsl.integer(312, 100, 2.4))
     this.roughness = 0.05
     this.metalness = 0.2
     this.clearcoat = 1
@@ -35,7 +36,7 @@ export default class extends KnotMaterial {
     this.iridescence = 0.8
     this.iridescenceIOR = 1.6
     this.iridescenceThicknessNode = probability.mul(300).add(100)
-    this.emissiveNode = quantum.mul(probability).mul(near.mul(0.6).add(0.4)).add(color('#ff4fd8').mul(collapse).mul(intimate).mul(0.6)).add(color('#8cf5ff').mul(rim).mul(0.4))
+    this.emissiveNode = quantum.mul(probability).mul(near.mul(0.6).add(0.4)).add(color(hsl.integer(338, 100, 67)).mul(collapse).mul(intimate).mul(0.6)).add(color(hsl.integer(203, 99, 89.6)).mul(rim).mul(0.4))
     this.opacityNode = probability.mul(0.55).add(collapse.mul(0.3)).add(intimate.mul(0.15)).clamp()
   }
 }

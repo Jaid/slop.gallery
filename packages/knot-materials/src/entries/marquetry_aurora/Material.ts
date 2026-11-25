@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -35,12 +36,12 @@ export default class extends KnotMaterial {
     const walnutGrain = opticalBands(walnutPhase).mul(0.68).add(opticalBands(walnutPhase.mul(0.31).add(3.7)).mul(0.32))
     const mapleCoordinate = local.x.mul(15).add(local.y.mul(31)).add(identity.z.mul(7)).add(burl.mul(2.5))
     const mapleFigure = opticalBands(mapleCoordinate).mul(0.65).add(opticalBands(mapleCoordinate.mul(0.42).add(2.8)).mul(0.35))
-    const walnut = mix(color('#120300'), color('#7c2808'), walnutGrain.mul(0.62).add(burl.mul(0.13)).clamp())
-    const maple = mix(color('#6f2d0b'), color('#f4c576'), mapleFigure.mul(0.63).add(identity.z.mul(0.11)).clamp())
-    const brass = mix(color('#7a3605'), color('#ffd774'), walnutGrain.mul(0.38).add(grazing.mul(0.18)).clamp())
-    const aurora = mix(color('#1ecdb8'), color('#a56bdb'), view.y.mul(0.5).add(0.5))
+    const walnut = mix(color(hsl.integer(45, 100, 4.5)), color(hsl.integer(38, 93, 31)), walnutGrain.mul(0.62).add(burl.mul(0.13)).clamp())
+    const maple = mix(color(hsl.integer(44, 86, 29)), color(hsl.integer(79, 77, 82.3)), mapleFigure.mul(0.63).add(identity.z.mul(0.11)).clamp())
+    const brass = mix(color(hsl.integer(49, 93, 33)), color(hsl.integer(88, 100, 87.7)), walnutGrain.mul(0.38).add(grazing.mul(0.18)).clamp())
+    const aurora = mix(color(hsl.integer(182, 93.5, 72)), color(hsl.integer(306, 71, 58)), view.y.mul(0.5).add(0.5))
     const veneer = mix(walnut, maple, mapleInset)
-    const assembled = mix(veneer, color('#080504'), knifeJoint)
+    const assembled = mix(veneer, color(hsl.integer(43, 18, 4)), knifeJoint)
     const reliefFillet = diamondDistance.sub(0.415).abs().smoothstep(0.008, 0.048).oneMinus()
     const reliefKnife = diamondDistance.sub(0.462).abs().smoothstep(0.005, 0.024).oneMinus().mul(mapleInset.oneMinus())
     this.positionNode = p.add(normalLocal.mul(reliefFillet.mul(0.0075).add(mapleInset.mul(0.0008)).sub(reliefKnife.mul(0.0011))))
@@ -57,6 +58,6 @@ export default class extends KnotMaterial {
     this.normalNode = woodNormal
     this.clearcoatNormalNode = proceduralNormal(burl, 0.00013)
     const brassGlint = glints(woodNormal, 112).mul(brassMask).mul(near)
-    this.emissiveNode = color('#f4cf86').mul(brassGlint).mul(intimate.mul(0.12).add(0.01)).add(aurora.mul(pinstripe).mul(near.mul(0.1).add(0.018)))
+    this.emissiveNode = color(hsl.integer(84, 75, 85)).mul(brassGlint).mul(intimate.mul(0.12).add(0.01)).add(aurora.mul(pinstripe).mul(near.mul(0.1).add(0.018)))
   }
 }

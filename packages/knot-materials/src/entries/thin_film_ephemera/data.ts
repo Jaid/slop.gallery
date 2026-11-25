@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7V0v37e8AD5LVut; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'thin_film_ephemera',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A film two hundred nanometres thick, holding a whole sunset together until the smallest breath ends it.',
   placeholder: {
-    color: '#8fcbe6',
+    color: hsl.integer(228, 56, 78),
     shading: 'glass',
   },
 } as const satisfies KnotData

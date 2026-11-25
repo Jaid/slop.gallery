@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'neon_meridian',
   candidateId: 'glm',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A bright line divides the night into before and after.',
   placeholder: {
-    color: '#54ffd2',
+    color: hsl.integer(171, 100, 88.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5RXWnszENQQH6u3; fixture: knot-material-shaders; result: success.
 export default {
   id: 'soap_film',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Soap does not have a colour. It has a thickness, and the light it refuses to reflect is the colour you see.',
   placeholder: {
-    color: '#dfe6ff',
+    color: hsl.integer(273, 100, 91.5),
     shading: 'glass',
   },
 } as const satisfies KnotData

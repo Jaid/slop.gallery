@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {voronoiCells} from '../../candidates/deepseek/lib/voronoiCells.ts'
@@ -35,7 +36,7 @@ export default class extends KnotMaterial {
 // Damp bark beneath: dark, warm, with a faint sheen.
     const bark = mx_noise_float(p.mul(5)).mul(0.5).add(0.5)
     const barkFine = mx_noise_float(p.mul(60)).mul(0.5).add(0.5)
-    const substrate = mix(color('#0d0904'), color('#241a0e'), bark.mul(0.6).add(barkFine.mul(0.3)))
+    const substrate = mix(color(hsl.integer(79, 34, 5)), color(hsl.integer(71, 39, 12)), bark.mul(0.6).add(barkFine.mul(0.3)))
 // The signal: waves that travel outward from a few fixed sources.
     const sourceA = vec3(0.31, -0.22, 0.44)
     const sourceB = vec3(-0.38, 0.29, -0.18)
@@ -48,8 +49,8 @@ export default class extends KnotMaterial {
 // Fruiting bodies: compact points that glow hardest.
     const nodes = cellularPoints(p.mul(11), 0.03, 0.13, 0.55)
     const nodeGlow = nodes.mul(intimate.mul(0.6).add(0.4))
-    const threadColor = mix(color('#cfc4a6'), color('#f2ecd8'), mx_noise_float(q.mul(30)).mul(0.5).add(0.5))
-    const glowColor = mix(color('#2bffb0'), color('#9dffe0'), signal)
+    const threadColor = mix(color(hsl.integer(90, 29, 79)), color(hsl.integer(93, 44, 93)), mx_noise_float(q.mul(30)).mul(0.5).add(0.5))
+    const glowColor = mix(color(hsl.integer(161, 100, 86.77)), color(hsl.integer(172, 100, 92)), signal)
 // The vertex stage cannot use derivatives, so the relief uses a fixed width.
     const threadRelief = colony.edge.smoothstep(threadWidth, threadWidth.add(0.006)).oneMinus()
     const cordRelief = cords.edge.smoothstep(cordWidth, cordWidth.add(0.01)).oneMinus()
@@ -62,11 +63,11 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.12
     this.clearcoatRoughness = 0.2
     this.sheen = 0.3
-    this.sheenColor.set('#cfe8d8')
+    this.sheenColor.set(hsl.integer(158, 36, 89))
     this.sheenRoughness = 0.4
     this.normalNode = proceduralNormal(height.add(mx_noise_float(p.mul(70)).mul(0.5).add(0.5).mul(0.0004)), 1)
     this.clearcoatNormalNode = this.normalNode
-    this.emissiveNode = glowColor.mul(network).mul(pulse).mul(near.mul(0.5).add(0.55)).mul(2.2).add(glowColor.mul(nodeGlow).mul(1.1)).add(color('#7dffd0').mul(hyphaeMask).mul(pulse).mul(0.5)).add(color('#1f6b52').mul(grazing.pow(3)).mul(0.06))
+    this.emissiveNode = glowColor.mul(network).mul(pulse).mul(near.mul(0.5).add(0.55)).mul(2.2).add(glowColor.mul(nodeGlow).mul(1.1)).add(color(hsl.integer(167, 100, 89.9)).mul(hyphaeMask).mul(pulse).mul(0.5)).add(color(hsl.integer(167, 83, 39)).mul(grazing.pow(3)).mul(0.06))
     this.aoNode = network.mul(0.2).oneMinus().mul(0.3).add(0.7)
     this.positionNode = positionGeometry.add(normalLocal.mul(height))
   }

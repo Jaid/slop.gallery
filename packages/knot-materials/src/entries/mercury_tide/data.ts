@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mercury_tide',
   candidateId: 'claude_sonnet',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Silver rises and falls against a shoreline made entirely of reflections.',
   placeholder: {
-    color: '#d7dbe3',
+    color: hsl.integer(265, 15, 87),
     shading: 'liquid',
   },
 } as const satisfies KnotData

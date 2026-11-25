@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, time, vec3} from 'three/tsl'
 import {DoubleSide} from 'three/webgpu'
 
@@ -29,7 +30,7 @@ export default class extends KnotMaterial {
     this.transparent = true
     this.depthWrite = true
     this.side = DoubleSide
-    this.colorNode = color('#eef4ff')
+    this.colorNode = color(hsl.integer(263, 100, 96))
     this.metalness = 0
     this.roughness = 0.04
     this.clearcoat = 1
@@ -38,6 +39,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.33
     this.iridescenceThicknessNode = nanometers
     this.opacityNode = opacity
-    this.emissiveNode = color('#ffffff').mul(border.mul(0.02))
+    this.emissiveNode = color(hsl.integer(0, 0, 100)).mul(border.mul(0.02))
   }
 }

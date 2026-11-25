@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kairothic_frost',
   candidateId: 'muse_spark',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'These crystals wait for the right moment, not the next one.',
   placeholder: {
-    color: '#a8e6ff',
+    color: hsl.integer(225, 100, 87.4),
     shading: 'glass',
   },
   displacement: 0.018,

@@ -1,5 +1,6 @@
 import type {DustParticle} from './base/HangingAnimation.ts'
 
+import hsl from 'okhsl'
 import {attribute, cameraWorldMatrix, color, cos, exp, float, max, mix, mx_noise_float, positionGeometry, select, sin, smoothstep, uniform, uv, varying, vec2, vec3, vec4} from 'three/tsl'
 import {DynamicDrawUsage, InstancedInterleavedBuffer, InstancedMesh, InterleavedBufferAttribute, MeshStandardNodeMaterial, PlaneGeometry} from 'three/webgpu'
 
@@ -104,7 +105,7 @@ export default class WallDust extends InstancedMesh<PlaneGeometry, MeshStandardN
     // A puff is a soft, wispy cloud, densest in its middle, that fades out well inside its quad; it swells in quickly and thins away.
     const wisps = mx_noise_float(vec3(local.mul(1.2), seed.mul(37).add(flown.mul(0.25)))).mul(0.5).add(0.5)
     const puff = exp(radius.mul(radius).mul(-4.5)).mul(mix(0.45, 1.3, wisps)).mul(smoothstep(1, 0.8, radius)).mul(smoothstep(0, 0.05, progress)).mul(float(1).sub(progress.clamp(0, 1)).pow(1.4))
-    material.colorNode = color('#cfc7b7')
+    material.colorNode = color(hsl.integer(84, 17, 80))
     material.opacityNode = puff.mul(motion.w)
   }
 

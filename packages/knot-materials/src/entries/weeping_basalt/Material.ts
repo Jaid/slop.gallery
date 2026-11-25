@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, positionWorld, time, vec3} from 'three/tsl'
 
 import {cellGrain} from '../../candidates/gpt_sol/lib/cellGrain.ts'
@@ -77,11 +78,11 @@ export default class extends BaseKnotMaterial {
     const mineral = mx_noise_float(p.mul(4.1).add(vec3(3.7, -8.1, 5.4)))
       .abs()
       .smoothstep(0.45, 0.8)
-    const dryStone = mix(color('#07090a'), color('#333638'), stoneNoise)
-    const mineralStone = mix(dryStone, color('#625846'), mineral.mul(0.2))
-    const wetTint = mix(color('#05080a'), color('#18333b'), grazing.mul(0.62))
+    const dryStone = mix(color(hsl.integer(227, 9, 5)), color(hsl.integer(237, 4, 23)), stoneNoise)
+    const mineralStone = mix(dryStone, color(hsl.integer(82, 21, 38)), mineral.mul(0.2))
+    const wetTint = mix(color(hsl.integer(232, 18, 5)), color(hsl.integer(219, 46, 20)), grazing.mul(0.62))
     const wetStone = mix(mineralStone, wetTint, wet.mul(0.76))
-    this.colorNode = mix(wetStone, color('#010202'), pores.mask.mul(0.82))
+    this.colorNode = mix(wetStone, color(hsl.integer(196, 23, 2)), pores.mask.mul(0.82))
     this.metalness = 0.06
     this.roughnessNode = float(0.78)
       .mix(0.06, wet)
@@ -123,11 +124,11 @@ export default class extends BaseKnotMaterial {
     const mica = cellGrain(p, 95, 0.991)
     const rainGlint = multiGlint(basaltNormal, 48)
     const micaGlint = multiGlint(basaltNormal, 110)
-    this.emissiveNode = color('#b6eaff')
+    this.emissiveNode = color(hsl.integer(225, 99, 89))
       .mul(rainGlint)
       .mul(wet)
       .mul(near.mul(0.14).add(0.025))
-      .add(color('#ffd7a0')
+      .add(color(hsl.integer(75, 100, 88.4))
         .mul(mica.mask)
         .mul(micaGlint)
         .mul(intimate)

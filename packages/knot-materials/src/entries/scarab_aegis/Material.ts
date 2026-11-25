@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, normalViewGeometry, positionGeometry, positionView, positionViewDirection} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -22,7 +23,7 @@ export default class extends KnotMaterial {
     const intimate = positionView.length().smoothstep(0.8, 2.7).oneMinus()
     const braggPhase = grazing.pow(1.6).mul(4.5).add(0.4)
     const structuralColor = spectralColor(braggPhase)
-    const jewelColor = mix(mix(color('#10b981'), color('#fbbf24'), facing.abs().pow(2)), color('#7c3aed'), grazing.pow(1.8))
+    const jewelColor = mix(mix(color(hsl.integer(162, 98, 65)), color(hsl.integer(84, 96.6, 81)), facing.abs().pow(2)), color(hsl.integer(293, 92, 47)), grazing.pow(1.8))
     // Shape jewel plates from real boundaries, not constant values in cubic noise cells.
     const plateBoundary = cellularBoundary(p.mul(36))
     const cuticle = plateBoundary.smoothstep(0.02, 0.3)
@@ -36,7 +37,7 @@ export default class extends KnotMaterial {
     this.iridescence = 1
     this.iridescenceIOR = 1.82
     this.iridescenceThicknessNode = cuticle.mul(220).add(360)
-    this.colorNode = mix(color('#1a0f03'), jewelColor, cuticle.mul(0.4).add(0.6))
-    this.emissiveNode = structuralColor.mul(facetEdges).mul(near.mul(0.65).add(0.35)).mul(0.7).add(jewelColor.mul(rim.abs().pow(2)).mul(0.38)).add(color('#fde047').mul(facing.pow(8)).mul(near).mul(0.25))
+    this.colorNode = mix(color(hsl.integer(71, 66, 8)), jewelColor, cuticle.mul(0.4).add(0.6))
+    this.emissiveNode = structuralColor.mul(facetEdges).mul(near.mul(0.65).add(0.35)).mul(0.7).add(jewelColor.mul(rim.abs().pow(2)).mul(0.38)).add(color(hsl.integer(98.1, 97, 89)).mul(facing.pow(8)).mul(near).mul(0.25))
   }
 }

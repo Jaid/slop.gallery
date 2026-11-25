@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2kVLNNiT7YsY7gP.
 export default {
   id: 'iridescent_mycelium',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Under the skin of night, a forest of light learns the shape of your gaze.',
   placeholder: {
-    color: '#173b37',
+    color: hsl.integer(186, 57, 22),
     shading: 'smooth',
   },
 } as const satisfies KnotData

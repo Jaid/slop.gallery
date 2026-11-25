@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tiger_iron',
   candidateId: 'gpt_astra',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Warm bands of iron and gold hold the watchful patience of a sleeping animal.',
   placeholder: {
-    color: '#edaa47',
+    color: hsl.integer(74, 83, 75),
     shading: 'metal',
   },
 } as const satisfies KnotData

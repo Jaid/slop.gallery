@@ -3,6 +3,7 @@ import type {FloorRectangle} from './floors.ts'
 import type {KnotLightSlot} from 'knot-materials/KnotLights.ts'
 
 import {knotLightColor, knotLightHousingSize, knotLightHousingY} from 'knot-materials/KnotLightPanels.ts'
+import hsl from 'okhsl'
 
 import {wallFace, wallOpeningTrim} from './architectureDimensions.ts'
 import roomOrigins from './layout.ts'
@@ -31,21 +32,21 @@ export const banquetLedGrid = {
 export const banquetLightTemperatures = {
   white: {
     title: 'White light',
-    light: '#eee3ff',
+    light: hsl.integer(303, 100, 92),
     surface: knotLightColor,
-    button: '#f1eee6',
+    button: hsl.integer(90, 24, 94),
   },
   blue: {
     title: 'Blue light',
-    light: '#b4caff',
-    surface: '#a9c2ff',
-    button: '#2f5fc4',
+    light: hsl.integer(267, 100, 81.5),
+    surface: hsl.integer(267, 100, 79),
+    button: hsl.integer(263, 83, 43),
   },
   yellow: {
     title: 'Yellow light',
-    light: '#ffbd6b',
-    surface: '#ffbf5e',
-    button: '#e8b522',
+    light: hsl.integer(71, 100, 81.8),
+    surface: hsl.integer(76, 99, 82),
+    button: hsl.integer(87, 93, 76.5),
   },
 } as const
 

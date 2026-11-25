@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionGeometry, positionViewDirection, uv, vec2} from 'three/tsl'
 
 import {premiumDetail} from '../../candidates/gpt_astra/lib/premiumDetail.ts'
@@ -34,8 +35,8 @@ export default class extends KnotMaterial {
     const dots = premiumLine(dotCell.length().sub(0.105), 0.018).mul(panels.oneMinus()).mul(detail)
     const inlay = engine.mul(panels).mul(0.88).add(border).add(borderEcho.mul(0.7)).add(dots.mul(0.75)).clamp()
     const grain = mx_noise_float(p.mul(135)).mul(0.5).add(0.5)
-    const gold = mix(color('#815017'), color('#f4ce76'), grain.mul(0.18).add(facing.mul(0.2)).add(0.52))
-    this.colorNode = mix(color('#090c10'), gold, inlay)
+    const gold = mix(color(hsl.integer(65, 79, 39.5)), color(hsl.integer(86, 78, 84)), grain.mul(0.18).add(facing.mul(0.2)).add(0.52))
+    this.colorNode = mix(color(hsl.integer(255, 17, 6)), gold, inlay)
     this.metalnessNode = mix(float(0.22), float(0.98), inlay)
     this.roughnessNode = mix(float(0.115), grain.mul(0.055).add(0.2), inlay)
     this.anisotropy = 0.48
@@ -45,7 +46,7 @@ export default class extends KnotMaterial {
     const engraving = engine.mul(panels).mul(-0.65).sub(border.mul(0.4)).add(grain.mul(intimate).mul(0.025))
     this.normalNode = premiumNormal(engraving, 0.00048)
     // A restrained edge warmth, not a luminous replacement for metallic light.
-    this.emissiveNode = color('#d19434').mul(border).mul(grazing.pow(5)).mul(0.055)
+    this.emissiveNode = color(hsl.integer(74, 80, 66)).mul(border).mul(grazing.pow(5)).mul(0.055)
     this.envMapIntensity = 1.15
   }
 }

@@ -2,12 +2,15 @@ import type {KnotBay} from 'knot-materials/exhibition.ts'
 
 import {knotNumberLabel} from 'knot-materials/exhibition.ts'
 import {knotPreviewIconMaximumHeight, knotPreviewIconMaximumWidth, knotPreviewTextureLayout} from 'knot-materials/KnotPreviewLayout.ts'
+import hsl from 'okhsl'
+
+import {cssHex} from '#src/lib/color.ts'
 
 import signAccentColor from '../signAccentColor.ts'
 
 import css from './style.module.sass'
 
-export const knotPreviewBackground = '#17202b'
+export const knotPreviewBackground = hsl.integer(254, 28, 14)
 /** a caption’s font size as a share of its row’s height, before it is fitted */
 const captionSize = 0.13 * 0.72
 /** One complete candidate billboard: every finish’s rendered picture over its number and title, in rows. A finish without a picture gets a plain square. */
@@ -21,7 +24,7 @@ export default function KnotPreviewFace({bay, images}: {
     className={css.face} style={{
       width: layout.width,
       height: layout.height,
-      background: knotPreviewBackground,
+      background: cssHex(knotPreviewBackground),
       fontSize: Math.max(12, Math.floor(layout.rowHeight * captionSize)),
     }}
   >

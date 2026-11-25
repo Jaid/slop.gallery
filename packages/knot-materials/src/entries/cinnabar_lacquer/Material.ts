@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, uv} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -21,8 +22,8 @@ export default class extends KnotMaterial {
     const carved = ridge.pow(0.55)
     const chip = mx_noise_float(p.mul(3.2).add(view.mul(near.mul(1.8).add(0.5))))
     const shown = chip.smoothstep(0.22, 0.62).mul(chip.smoothstep(0.9, 0.7))
-    const lacquer = mix(color('#2a0504'), color('#9a100c'), carved)
-    const leaf = mix(color('#7a4a0c'), color('#ffe29a'), facing.pow(0.4))
+    const lacquer = mix(color(hsl.integer(27, 86, 9)), color(hsl.integer(29, 97, 35)), carved)
+    const leaf = mix(color(hsl.integer(66, 87, 37)), color(hsl.integer(89, 100, 91)), facing.pow(0.4))
     const height = carved.mul(0.1).sub(shown.mul(0.06))
     const normal = proceduralNormal(height, 1.2)
     const spark = glints(normal, 36)
@@ -32,10 +33,10 @@ export default class extends KnotMaterial {
     this.clearcoatNode = shown.oneMinus().mul(0.4)
     this.clearcoatRoughness = 0.05
     this.sheenNode = grazing.mul(shown.oneMinus()).mul(0.4)
-    this.sheenColor.set('#ffb199')
+    this.sheenColor.set(hsl.integer(38, 100, 80))
     this.sheenRoughness = 0.3
     this.normalNode = normal
     this.emissiveNode = leaf.mul(shown).mul(facing).mul(near.mul(0.35).add(0.4))
-      .add(color('#fff4cc').mul(spark).mul(shown).mul(0.9))
+      .add(color(hsl.integer(94, 100, 96)).mul(spark).mul(shown).mul(0.9))
   }
 }

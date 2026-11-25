@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, normalViewGeometry, positionGeometry, positionViewDirection, time} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -16,7 +17,7 @@ export default class extends KnotMaterial {
     const grazing = facing.oneMinus()
     const heat = mx_noise_float(p.mul(2).add(time.mul(0.02))).mul(0.5).add(0.5)
     const temper = spectralColor(heat.mul(3).add(time.mul(0.05)))
-    const base = mix(color('#1c1e22'), temper, 0.85)
+    const base = mix(color(hsl.integer(264, 9, 13)), temper, 0.85)
     this.colorNode = base
     this.metalness = 1
     this.roughness = 0.12

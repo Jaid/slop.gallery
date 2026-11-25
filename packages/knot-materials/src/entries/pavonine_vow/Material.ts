@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fill, ruled, stroke, wave} from '../../candidates/gpt_astra/lib/surface/coverage.ts'
@@ -50,11 +51,11 @@ export default class extends KnotMaterial {
     const iris = stroke(inner.eye.sub(0.15), 0.037, inner.aa)
     const pupil = fill(inner.eye.sub(0.085), inner.aa)
     const nap = V.dot(tangent).mul(0.5).add(0.5)
-    const enamel = mix(color('#064e50'), color('#17648a'), nap.mul(0.65).add(random.x.mul(0.3)))
-    const featherTint = mix(enamel, color('#6a8d3b'), wave(theta.mul(24).add(r.mul(14))).mul(0.3))
-    const jewel = mix(mix(color('#0f2759'), color('#61317c'), grazing.mul(0.8)), color('#169691'), iris)
-    const deepEye = mix(jewel, color('#080e27'), pupil)
-    const gold = mix(color('#836332'), color('#e5c478'), facing.mul(0.4).add(0.35))
+    const enamel = mix(color(hsl.integer(198, 93, 29)), color(hsl.integer(236, 82, 39.5)), nap.mul(0.65).add(random.x.mul(0.3)))
+    const featherTint = mix(enamel, color(hsl.integer(129, 72, 53)), wave(theta.mul(24).add(r.mul(14))).mul(0.3))
+    const jewel = mix(mix(color(hsl.integer(263, 81, 18)), color(hsl.integer(312, 65, 32)), grazing.mul(0.8)), color(hsl.integer(191, 93, 55)), iris)
+    const deepEye = mix(jewel, color(hsl.integer(270, 65, 8)), pupil)
+    const gold = mix(color(hsl.integer(76, 58, 45)), color(hsl.integer(87, 65, 80.5)), facing.mul(0.4).add(0.35))
     this.colorNode = mix(mix(featherTint, deepEye, eyeFill), gold, metal)
     this.metalnessNode = metal.mul(0.32).add(0.46)
     this.roughnessNode = float(0.28).sub(eyeFill.mul(0.11)).sub(metal.mul(0.06))
@@ -67,6 +68,6 @@ export default class extends KnotMaterial {
     const ribs = barbs.mul(intimate.mul(0.6).add(0.4)).mul(0.00024)
     this.normalNode = proceduralNormal(r.pow2().mul(-0.0008).add(metal.mul(0.0006)).add(ribs), 1)
     const procession = uv().x.mul(TAU * 2).add(uv().y.mul(TAU)).sub(time.mul(0.36)).sin().mul(0.5).add(0.5).pow(3)
-    this.emissiveNode = color('#4eb9aa').mul(iris).mul(eyeFill).mul(procession).mul(near).mul(0.1)
+    this.emissiveNode = color(hsl.integer(183, 70, 67)).mul(iris).mul(eyeFill).mul(procession).mul(near).mul(0.1)
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cicada_vellum',
   candidateId: 'gpt_terra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A shed wing becomes a luminous manuscript, its copper veins holding the last green warmth of a vanished summer.',
   displacement: 0.009,
   placeholder: {
-    color: '#9b6c3d',
+    color: hsl.integer(65, 56, 50),
     shading: 'glass',
   },
 } as const satisfies KnotData

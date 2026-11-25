@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'celadon_kintsugi',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'The break is not hidden but honored; where the porcelain failed, gold remembers the shape of the wound.',
   displacement: 0.007,
   placeholder: {
-    color: '#82927d',
+    color: hsl.integer(138, 19, 58),
     shading: 'stone',
   },
 } as const satisfies KnotData

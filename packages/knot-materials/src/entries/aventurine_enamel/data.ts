@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7elL7dDIwnRWI8n; fixture: knot-material-shaders; result: crashed, knot rescued from the run container.
 export default {
   id: 'aventurine_enamel',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Filigree gold cloisons cradle translucent pools of vitrified glass. Lean in and aventurine copper sparks dance above a sunken silver-leaf guilloché engine.',
   placeholder: {
-    color: '#545651',
+    color: hsl.integer(125, 5, 36),
     shading: 'glass',
   },
 } as const satisfies KnotData

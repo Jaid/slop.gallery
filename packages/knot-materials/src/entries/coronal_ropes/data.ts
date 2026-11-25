@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'coronal_ropes',
   candidateId: 'gemini_flash',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Thermonuclear convection boils across magnetic sunspots as coronal plasma ropes twist along the stellar horizon.',
   displacement: 0.008,
   placeholder: {
-    color: '#d65c20',
+    color: hsl.integer(43, 90, 56),
     shading: 'smooth',
   },
 } as const satisfies KnotData

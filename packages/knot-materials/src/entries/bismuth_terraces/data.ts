@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_terraces',
   candidateId: 'gpt_luna',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Rainbow stairways grow through a midnight crystal, each impossible terrace changing its color when you move.',
   displacement: 0.005,
   placeholder: {
-    color: '#7e6bb6',
+    color: hsl.integer(294, 51, 51),
     shading: 'metal',
   },
 } as const satisfies KnotData

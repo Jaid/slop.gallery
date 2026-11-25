@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: MDsU2CH3XEff3jd; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sirocco',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.006,
   flavorText: 'For ten thousand years the wind has been writing the same sentence over and over, and the desert has never once objected.',
   placeholder: {
-    color: '#c1924f',
+    color: hsl.integer(74, 62, 64),
     shading: 'stone',
   },
 } as const satisfies KnotData

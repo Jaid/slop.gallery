@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'glacial_memory',
   candidateId: 'gpt_astra',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Layers of blue keep winters that the world above has forgotten.',
   placeholder: {
-    color: '#b9efff',
+    color: hsl.integer(217, 100, 91),
     shading: 'glass',
   },
 } as const satisfies KnotData

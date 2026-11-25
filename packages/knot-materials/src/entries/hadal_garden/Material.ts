@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, positionGeometry, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -19,7 +20,7 @@ export default class extends KnotMaterial {
     const p = positionGeometry
     const {facing, rim, near, intimate} = viewerFrame()
     const marbling = mx_fractal_noise_float(p.mul(3.1), 4, 2.1, 0.55).mul(0.5).add(0.5)
-    const flesh = mix(color('#01030a'), color('#0f2038'), marbling.mul(0.8))
+    const flesh = mix(color(hsl.integer(261, 62, 3)), color(hsl.integer(257, 57, 14)), marbling.mul(0.8))
     const vein = filteredRibbon(cellularBoundary(p.mul(3.2)), 0.035)
     const veinFine = filteredRibbon(cellularBoundary(p.mul(8.5)), 0.016).mul(near)
     const arc = p.x.add(p.y.mul(0.6)).add(p.z.mul(0.8))
@@ -32,7 +33,7 @@ export default class extends KnotMaterial {
     const organHue = mx_cell_noise_float(organCell.floor().add(7.3))
     const organRate = organId.mul(2).add(1).floor()
     const breath = time.mul(Math.PI).mul(organRate).add(organId.mul(TAU)).sin().mul(0.5).add(0.5).pow(3)
-    const organColor = mix(mix(color('#3ef2ff'), color('#8f6bff'), organHue.smoothstep(0.5, 0.56)), color('#ff5fa8'), organHue.smoothstep(0.8, 0.86))
+    const organColor = mix(mix(color(hsl.integer(202, 99, 86)), color(hsl.integer(290, 100, 58)), organHue.smoothstep(0.5, 0.56)), color(hsl.integer(355, 100, 66.6)), organHue.smoothstep(0.8, 0.86))
     const organGlow = organ.mul(breath).mul(facing.pow(1.6)).mul(2.3)
     const papilla = cellularPoints(p.mul(26), 0.05, 0.2, 0.2)
     const relief = vein.mul(-0.35).add(veinFine.mul(-0.2)).add(papilla.mul(0.45)).add(marbling.mul(0.15)).mul(intimate.add(near).clamp())
@@ -41,13 +42,13 @@ export default class extends KnotMaterial {
     this.roughnessNode = marbling.mul(0.15).add(0.28)
     this.clearcoat = 0.8
     this.clearcoatRoughness = 0.07
-    this.sheenNode = color('#16324a').mul(0.5)
+    this.sheenNode = color(hsl.integer(247, 57, 21)).mul(0.5)
     this.sheenRoughnessNode = float(0.35)
     this.aoNode = marbling.mul(0.2).add(0.8)
     this.normalNode = proceduralNormal(relief, 0.0018)
-    this.emissiveNode = color('#39e8ff').mul(nerve).mul(near.mul(0.5).add(0.6)).mul(1.7)
+    this.emissiveNode = color(hsl.integer(209, 100, 83)).mul(nerve).mul(near.mul(0.5).add(0.6)).mul(1.7)
       .add(organColor.mul(organGlow))
-      .add(color('#1d8a9a').mul(rim.pow(2.2)).mul(1.8))
-      .add(vec3(marbling).mul(color('#0d3a52')).mul(intimate).mul(0.3))
+      .add(color(hsl.integer(210, 86, 52)).mul(rim.pow(2.2)).mul(1.8))
+      .add(vec3(marbling).mul(color(hsl.integer(237, 76, 23))).mul(intimate).mul(0.3))
   }
 }

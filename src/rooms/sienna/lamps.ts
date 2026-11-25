@@ -1,5 +1,7 @@
 import type {Lamp} from '../base/Room.ts'
 
+import hsl from 'okhsl'
+
 import {chandelierLampY} from '#src/lib/physics/chandelier.ts'
 
 export default {
@@ -7,7 +9,7 @@ export default {
   chandelier: {
     position: [0, chandelierLampY, 0],
     strength: 110,
-    tint: '#ffd36c',
+    tint: hsl.integer(86, 100, 86.5),
     range: 15,
     decay: 1.75,
     shadow: true,

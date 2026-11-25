@@ -3,6 +3,7 @@ import type {Placement, Portrait, Vec3} from './types.ts'
 import {shiftVoices} from 'procedural-audio'
 
 import {frameBack} from '#src/frames/base/PortraitFrame.ts'
+import {cssHex} from '#src/lib/color.ts'
 import world from '#src/worlds/current.ts'
 
 import arrivalVoices, {arrivalGap} from '../audio/arrivalVoices.ts'
@@ -168,7 +169,8 @@ export async function compositeImages(sources: ReadonlyArray<Blob | string>) {
 }
 
 /** The local stand-in for the instructions an ingredient contributes, like an orb’s prompt: the image washed in the ingredient’s glow and darkened toward its edges by it. */
-export async function tintImage(source: Blob | string, color: string) {
+export async function tintImage(source: Blob | string, tint: number) {
+  const color = cssHex(tint)
   const bitmap = await createImageBitmap(await loadBlob(source))
   try {
     const scale = Math.min(1, 2048 / Math.max(bitmap.width, bitmap.height))

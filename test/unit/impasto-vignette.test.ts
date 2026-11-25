@@ -31,7 +31,8 @@ describe('the Impasto vignette', () => {
       expect(stroke.dryness).toBeLessThan(0.5)
       for (const paint of [stroke.paint, stroke.second]) {
         expect(Number.isInteger(paint)).toBe(true)
-        expect(vignettePaints[paint]).toMatch(/^#[\da-f]{6}$/)
+        expect(vignettePaints[paint]).toBeInteger()
+        expect(vignettePaints[paint]).toBeWithin(0, 2 ** 24)
       }
     }
     // Two brushes are at work at once now and then, and none waits long for the one before.

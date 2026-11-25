@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, modelWorldMatrixInverse, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, uv, vec3, vec4} from 'three/tsl'
 
 import {filament} from '../../candidates/gpt_sol/lib/filament.ts'
@@ -114,8 +115,8 @@ export default class extends BaseKnotMaterial {
       .mul(0.16)
       .add(filteredNeedles.mul(0.58))
       .clamp()
-    const iron = mix(color('#020405'), color('#718087'), needleLight)
-    const temper = mix(color('#352219'), color('#17383e'), observer.mul(0.5).add(0.5))
+    const iron = mix(color(hsl.integer(224, 25, 3)), color(hsl.integer(228, 12, 52)), needleLight)
+    const temper = mix(color(hsl.integer(46, 35, 17)), color(hsl.integer(211, 53, 22)), observer.mul(0.5).add(0.5))
     this.colorNode = mix(iron, temper, domainWall
       .mul(0.17)
       .add(oxide.mul(0.28))
@@ -143,12 +144,12 @@ export default class extends BaseKnotMaterial {
       .add(0.5)
       .pow(24)
       .mul(barkhausenPhase.fwidth().smoothstep(0.55, 1.8).oneMinus())
-    this.emissiveNode = color('#8ee7ff')
+    this.emissiveNode = color(hsl.integer(217, 100, 86))
       .mul(domainWall)
       .mul(barkhausen)
       .mul(intimate)
       .mul(0.75)
-      .add(color('#e9ffff')
+      .add(color(hsl.integer(197, 100, 98))
         .mul(glint)
         .mul(filteredNeedles)
         .mul(near.mul(0.16).add(0.035)))

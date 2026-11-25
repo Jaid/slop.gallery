@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'obsidian_heartbeat',
   candidateId: 'muse_spark',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Warm light returns to the same dark fissures with every patient pulse.',
   placeholder: {
-    color: '#ff3d00',
+    color: hsl.integer(34, 100, 59.7),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, exp, float, Fn, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, positionViewDirection, sin, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/deepseek/lib/bumpNormal.ts'
@@ -59,15 +60,15 @@ export default class extends KnotMaterial {
     const vein = strata.abs().smoothstep(0, 0.13).oneMinus()
     const vein2 = secondary.abs().smoothstep(0, 0.075).oneMinus()
     const cloud = mx_noise_float(p.mul(5.1).add(vec3(1.1, 6.4, 3.3))).mul(0.5).add(0.5)
-    const marble = mix(mix(color('#15191a'), color('#5b6263'), cloud.pow(1.35).mul(0.9)), color('#d8d2c2'), vein.mul(0.62).add(vein2.mul(0.26)))
+    const marble = mix(mix(color(hsl.integer(214, 9, 11)), color(hsl.integer(207, 5, 41)), cloud.pow(1.35).mul(0.9)), color(hsl.integer(90, 20, 84)), vein.mul(0.62).add(vein2.mul(0.26)))
     const fleckField = mx_cell_noise_float(p.mul(118)).smoothstep(0.82, 0.92).mul(goldMask.oneMinus()).mul(near)
-    const dirty = mix(mix(marble, color('#c79a5a'), fleckField.mul(0.55)), color('#6b5a45'), mx_noise_float(p.mul(28)).mul(0.14))
+    const dirty = mix(mix(marble, color(hsl.integer(75, 58, 67)), fleckField.mul(0.55)), color(hsl.integer(73, 26, 40)), mx_noise_float(p.mul(28)).mul(0.14))
     const shadowRim = core.mul(goldMask.oneMinus()).mul(0.72)
-    const bodyColor = mix(dirty, color('#050708'), shadowRim).mul(hairline.oneMinus().mul(0.3).oneMinus())
+    const bodyColor = mix(dirty, color(hsl.integer(226, 12, 4)), shadowRim).mul(hairline.oneMinus().mul(0.3).oneMinus())
 // The gold is a real metal, grained by cooling and brightened where the core still remembers heat.
     const goldGrain = mx_noise_float(p.mul(64).add(vec3(2.2, 9.4, 0.8))).mul(0.5).add(0.5)
-    const goldBase = mix(color('#8a3c04'), color('#ffc23a'), goldGrain.smoothstep(0.16, 0.8))
-    const gold = mix(goldBase, color('#fff0b0'), core.pow(3).mul(0.6)).add(color('#ff8a12').mul(core.mul(goldMask).mul(0.22)))
+    const goldBase = mix(color(hsl.integer(48, 95, 37)), color(hsl.integer(82, 100, 82)), goldGrain.smoothstep(0.16, 0.8))
+    const gold = mix(goldBase, color(hsl.integer(96, 100, 94.4)), core.pow(3).mul(0.6)).add(color(hsl.integer(56.5, 100, 70.7)).mul(core.mul(goldMask).mul(0.22)))
     this.colorNode = mix(bodyColor, gold, goldMask)
     this.metalnessNode = goldMask.mul(0.96).max(fleckField.mul(0.7))
     this.roughnessNode = mix(float(0.27), float(0.14), goldMask).add(goldGrain.mul(0.035))
@@ -90,15 +91,15 @@ export default class extends KnotMaterial {
     const wave = sin(tube.x.mul(TAU * 2.6).sub(time.mul(0.42))).mul(0.5).add(0.5)
     const heat = wave.mul(0.62).add(0.2).add(mx_noise_float(p.mul(7.5).add(vec3(0, 0, time.mul(0.09)))).mul(0.14)).clamp()
     const hot = goldMask.mul(core.pow(2)).mul(heat)
-    const hotColor = mix(color('#ff5a08'), color('#fff2bc'), heat.mul(heat))
-    const bounce = color('#ff9b52').mul(exp(edge.sub(width).max(0).mul(-34)).mul(gate).mul(0.15)).mul(heat)
+    const hotColor = mix(color(hsl.integer(39.6, 100, 63)), color(hsl.integer(96, 100, 95.1)), heat.mul(heat))
+    const bounce = color(hsl.integer(55, 99, 74.4)).mul(exp(edge.sub(width).max(0).mul(-34)).mul(gate).mul(0.15)).mul(heat)
     const dust = mx_cell_noise_float(p.mul(132)).smoothstep(0.78, 0.92).mul(goldMask.mul(0.35).add(exp(edge.sub(width).max(0).mul(-18)).mul(gate).mul(0.35))).mul(near)
     const sparkle = glints(surfaceNormal, 80).mul(goldMask).mul(near).mul(0.55)
     this.emissiveNode = hotColor.mul(hot).mul(0.55)
       .add(bounce)
-      .add(color('#ffbf73').mul(dust).mul(0.55))
-      .add(color('#ffe7b8').mul(sparkle))
-      .add(color('#81421f').mul(grazing.pow(3)).mul(0.1))
-      .add(color('#7c6a58').mul(facing.pow(7)).mul(0.035))
+      .add(color(hsl.integer(69, 99, 82)).mul(dust).mul(0.55))
+      .add(color(hsl.integer(84, 100, 92.6)).mul(sparkle))
+      .add(color(hsl.integer(48, 71, 37)).mul(grazing.pow(3)).mul(0.1))
+      .add(color(hsl.integer(67, 21, 46)).mul(facing.pow(7)).mul(0.035))
   }
 }

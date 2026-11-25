@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, positionGeometry, vec2, vec3} from 'three/tsl'
 
 import {premiumBands} from '../../candidates/gpt_astra/lib/premiumBands.ts'
@@ -39,10 +40,10 @@ export default class extends KnotMaterial {
     this.anisotropyNode = vec2(orientation.cos(), orientation.sin()).mul(crystalB.mul(0.25).add(0.57))
     const silverFlash = view.dot(vec3(0.71, 0.25, -0.66).normalize()).abs().pow(16).mul(crystal.smoothstep(0.35, 0.8))
     const bronzeFlash = view.dot(vec3(-0.25, 0.91, 0.33).normalize()).abs().pow(18).mul(crystal.oneMinus().smoothstep(0.3, 0.75))
-    const alloy = mix(color('#343d46'), color('#a5aeb4'), crystal.mul(0.42).add(0.24))
-    const litAlloy = mix(alloy, color('#d9e7e9'), silverFlash.mul(0.72))
-    const tempered = mix(litAlloy, color('#a28660'), bronzeFlash.mul(0.4))
-    this.colorNode = mix(tempered, color('#151d23'), boundaries.mul(0.72))
+    const alloy = mix(color(hsl.integer(248, 15, 26)), color(hsl.integer(237, 8, 70)), crystal.mul(0.42).add(0.24))
+    const litAlloy = mix(alloy, color(hsl.integer(207, 22, 90.5)), silverFlash.mul(0.72))
+    const tempered = mix(litAlloy, color(hsl.integer(75, 37, 58)), bronzeFlash.mul(0.4))
+    this.colorNode = mix(tempered, color(hsl.integer(241, 21, 12)), boundaries.mul(0.72))
     this.metalness = 1
     this.roughnessNode = crystalB.mul(0.18).add(0.2).add(boundaries.mul(0.15))
     const brushing = premiumBands(p.dot(vec3(310, 94, -191)).add(mx_noise_float(p.mul(12)).mul(0.6))).mul(intimate)

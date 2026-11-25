@@ -3,6 +3,7 @@ import type {Vec3} from 'math'
 import type {RollOptions} from 'stable-random'
 
 import {easing} from 'math/time'
+import hsl from 'okhsl'
 
 import {environmentRandom, isDefaultSeed} from '#src/lib/environmentSeed.ts'
 import {sunDirectionFromAngles} from '#src/lib/gallery/sun.ts'
@@ -23,8 +24,8 @@ export type StudioLamp = {
   range: number
   /** in candela, 0 for a lamp that is off */
   strength: number
-  /** as #rrggbb */
-  tint: string
+  /** as packed sRGB */
+  tint: number
 }
 
 /** how the Studio is lit and its works are framed, which every seed rolls anew but the default one */
@@ -47,11 +48,11 @@ export type StudioLook = {
     primary: StudioLamp
     secondary: StudioLamp
   }
-  /** the moon falling in through the ceiling’s openings, on some seeds warm like the sun: where it stands, in degrees clockwise from north and over the horizon, its color as #rrggbb, how strongly it shines, how thickly the air shows its shafts, as the room’s volumetric sun, and how widely its shadow’s edges blur, as a factor on the graphics mode’s */
+  /** the moon falling in through the ceiling’s openings, on some seeds warm like the sun: where it stands, in degrees clockwise from north and over the horizon, its color as packed sRGB, how strongly it shines, how thickly the air shows its shafts, as the room’s volumetric sun, and how widely its shadow’s edges blur, as a factor on the graphics mode’s */
   moon: {
     azimuth: number
     blur: number
-    color: string
+    color: number
     elevation: number
     intensity: number
     shafts: number
@@ -79,7 +80,7 @@ export const defaultStudioLook: StudioLook = {
       position: [0, 4, 0],
       range: 20,
       strength: 30,
-      tint: '#ffedc4',
+      tint: hsl.integer(87, 100, 94.2),
     },
     // A tenth of the way east from the west wall, seven tenths of the way south from the north wall, two fifths of the way up.
     secondary: {
@@ -88,7 +89,7 @@ export const defaultStudioLook: StudioLook = {
       position: [-3.2, 3.2, 1.6],
       range: chandelierRange,
       strength: 5,
-      tint: '#4d5e7d',
+      tint: hsl.integer(262, 30, 40),
     },
   },
   moon: {
@@ -148,15 +149,15 @@ export const studioShineEasing = easing.quintIn
 export const studioSecondaryLampChance = 0.3
 
 const round = (value: number, digits: number) => Math.round(value * 10 ** digits) / 10 ** digits
-const hex = (channel: number) => Math.round(Math.min(255, Math.max(0, channel))).toString(16).padStart(2, '0')
+const byte = (channel: number) => Math.round(Math.min(255, Math.max(0, channel)))
 
-/** The color of a black body at the temperature in kelvin, as #rrggbb, after Tanner Helland’s fit to the CIE 1964 color matching functions, good from 1000 to 40 000 K. */
+/** The color of a black body at the temperature in kelvin, as packed sRGB, after Tanner Helland’s fit to the CIE 1964 color matching functions, good from 1000 to 40 000 K. */
 export function kelvinTint(kelvin: number) {
   const t = kelvin / 100
   const red = t <= 66 ? 255 : 329.698727446 * (t - 60) ** -0.1332047592
   const green = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * (t - 60) ** -0.0755148492
   const blue = t >= 66 ? 255 : (t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307)
-  return `#${hex(red)}${hex(green)}${hex(blue)}`
+  return byte(red) << 16 | byte(green) << 8 | byte(blue)
 }
 
 /**

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -20,17 +21,17 @@ export default class extends KnotMaterial {
     const lead = filteredRibbon(boundary, 0.05)
     const pane = lead.oneMinus()
     const identity = cellNoiseVec3(p.mul(6.5).floor())
-    const ruby = color('#a1122e')
-    const sapphire = color('#173f9e')
-    const amberGlass = color('#d98a16')
-    const emeraldGlass = color('#0d7a4a')
-    const violetGlass = color('#5d2a9e')
+    const ruby = color(hsl.integer(19, 94, 37))
+    const sapphire = color(hsl.integer(264, 90, 31))
+    const amberGlass = color(hsl.integer(68, 94, 65))
+    const emeraldGlass = color(hsl.integer(157, 98, 43))
+    const violetGlass = color(hsl.integer(298, 80, 33))
     let jewel = mix(ruby, sapphire, identity.x.smoothstep(0.2, 0.38))
     jewel = mix(jewel, amberGlass, identity.x.smoothstep(0.38, 0.56))
     jewel = mix(jewel, emeraldGlass, identity.x.smoothstep(0.56, 0.74))
     jewel = mix(jewel, violetGlass, identity.x.smoothstep(0.74, 0.9))
     const streaks = mx_noise_float(p.mul(48)).mul(0.5).add(0.5)
-    this.colorNode = mix(jewel.mul(streaks.mul(0.25).add(0.82)), color('#17181c'), lead)
+    this.colorNode = mix(jewel.mul(streaks.mul(0.25).add(0.82)), color(hsl.integer(275, 9, 11)), lead)
     this.transmission = 0.22
     this.thickness = 0.3
     this.ior = 1.52
@@ -46,6 +47,6 @@ export default class extends KnotMaterial {
       .mul(pane)
       .mul(candle)
       .mul(facing.mul(0.35).add(near.mul(0.45)).add(0.38))
-      .add(color('#cfd8ff').mul(lead).mul(facing.pow(3)).mul(0.06))
+      .add(color(hsl.integer(275, 100, 87)).mul(lead).mul(facing.pow(3)).mul(0.06))
   }
 }

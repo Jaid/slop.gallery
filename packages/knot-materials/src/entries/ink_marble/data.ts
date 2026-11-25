@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ink_marble',
   candidateId: 'claude_sonnet',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Dark ink wanders through pale stone as though the page were still wet.',
   placeholder: {
-    color: '#2b2b3d',
+    color: hsl.integer(284, 26, 19),
     shading: 'smooth',
   },
 } as const satisfies KnotData

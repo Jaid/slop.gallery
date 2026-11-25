@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, tangentLocal, time, transformNormalToView, vec2, vec3} from 'three/tsl'
 
 import {below} from '../../candidates/claude_opus/lib/below.ts'
@@ -101,8 +102,8 @@ export default class extends KnotMaterial {
     const cosRefracted = view.dot(n).clamp(0, 1).pow2().oneMinus().div(enamelIndex ** 2).oneMinus().sqrt()
     const enamelDepth = mx_noise_float(positionGeometry.mul(9)).mul(0.08).add(0.22)
     const enamel = enamelAbsorption.mul(enamelDepth).mul(2).div(cosRefracted.max(0.2)).negate().exp()
-    const gold = rgb('#ffbc48')
-    const whiteGold = rgb('#2a2c31')
+    const gold = rgb(hsl.integer(77, 100, 81))
+    const whiteGold = rgb(hsl.integer(268, 8, 19))
     const underEnamel = gold.mul(enamel)
 // Each panel's center is a small polished gold boss, hiding the sunburst's pole.
     const boss = radius.smoothstep(0.0045, 0.0055).oneMinus()
@@ -126,7 +127,7 @@ export default class extends KnotMaterial {
     const facetWindow = view.dot(facetRandom.mul(2).sub(1).normalize()).mul(9).add(facetRandom.z.mul(20)).fract().smoothstep(0.6, 0.85).mul(facetRandom.y.mul(0.6).add(0.4))
     const fire = glints(surfaceNormalView, 160).add(facetWindow.mul(1.4)).mul(diamond).mul(near.mul(1.2).add(0.5)).mul(below(facetRandom.z, 0.8))
 // Rose-cut stones read as a mosaic of black and blazing facets, with a little spectral fire.
-    const dispersion = mix(mix(rgb('#ffffff'), rgb('#9fd4ff'), facetRandom.x.smoothstep(0.6, 1)), rgb('#ffc8ec'), facetRandom.y.smoothstep(0.75, 1)).mul(fire)
+    const dispersion = mix(mix(rgb(hsl.integer(0, 0, 100)), rgb(hsl.integer(244, 100, 82)), facetRandom.x.smoothstep(0.6, 1)), rgb(hsl.integer(340, 99, 87)), facetRandom.y.smoothstep(0.75, 1)).mul(fire)
     const grooveGlint = glints(surfaceNormalView, 140).mul(band.max(diamond).oneMinus()).mul(grooveResolved)
     const shimmer = time.mul(0.6).add(panelSum.mul(TAU * 5 / (2 * trellisAlong))).add(panelDifference.mul(TAU / (2 * trellisAround))).sin().mul(0.2).add(0.8)
 // Crisp images of the room's lights: in the gold wire, in the engine-turned floor through the enamel, and split into
@@ -134,14 +135,14 @@ export default class extends KnotMaterial {
     const goldHighlight = environmentHighlight(environment, surfaceNormal, 0.07).mul(gold).mul(band.max(bezel).max(boss))
     const engineHighlight = environmentHighlight(environment, engineNormal, 0.05).mul(underEnamel).mul(metalMask.oneMinus()).mul(grooveResolved.mul(0.6).add(0.4))
     const diamondHighlight = vec3(environmentHighlight(environment, diamondNormal, 0.02, {offset: vec3(0.035, 0, 0)}).x, environmentHighlight(environment, diamondNormal, 0.02).y, environmentHighlight(environment, diamondNormal, 0.02, {offset: vec3(-0.035, 0, 0)}).z).mul(diamond)
-    this.emissiveNode = rgb('#ff3a5a').mul(enamel).mul(grooveGlint).mul(0.35).mul(shimmer)
+    this.emissiveNode = rgb(hsl.integer(18, 99, 60)).mul(enamel).mul(grooveGlint).mul(0.35).mul(shimmer)
       .add(goldHighlight.mul(0.9))
       .add(gold.mul(studioSheen(surfaceNormal)).mul(band.max(bezel).max(boss)).mul(0.5))
       .add(engineHighlight.mul(1.4).mul(shimmer))
       .add(diamondHighlight.mul(1.5))
       .add(dispersion.mul(2.4))
-      .add(rgb('#fff2cf').mul(milgrain).mul(glints(normalViewGeometry, 60)).mul(0.15))
-      .add(rgb('#4a0612').mul(grazing.pow(3)).mul(0.1).mul(facing.add(0.2)))
-      .add(rgb('#ffe7b0').mul(intimate).mul(diamond).mul(0.05))
+      .add(rgb(hsl.integer(90, 100, 95.6)).mul(milgrain).mul(glints(normalViewGeometry, 60)).mul(0.15))
+      .add(rgb(hsl.integer(18, 90, 16)).mul(grazing.pow(3)).mul(0.1).mul(facing.add(0.2)))
+      .add(rgb(hsl.integer(87, 100, 92.3)).mul(intimate).mul(diamond).mul(0.05))
   }
 }

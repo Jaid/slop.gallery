@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -37,16 +38,16 @@ export default class extends KnotMaterial {
     const grain = mx_noise_float(p.mul(150)).abs().pow(0.35).oneMinus()
     const nodes = opticalLine(note, 0.05).mul(grain.smoothstep(0.08, 0.5).mul(0.9).add(0.1))
     const sand = nodes.add(grain.mul(0.06)).clamp()
-    const brass = mix(color('#8a5c22'), color('#39422c'), patina.mul(0.55))
-    this.colorNode = mix(brass, color('#f2e7cc'), sand.mul(0.92)).mul(hammer.mul(0.14).add(0.88))
+    const brass = mix(color(hsl.integer(69, 73, 44)), color(hsl.integer(126, 32, 27)), patina.mul(0.55))
+    this.colorNode = mix(brass, color(hsl.integer(88, 52, 92)), sand.mul(0.92)).mul(hammer.mul(0.14).add(0.88))
     this.metalness = 1
     this.roughnessNode = float(0.17).add(burnish.mul(0.1)).add(patina.mul(0.4)).add(sand.mul(0.62)).sub(strike.mul(sand).mul(0.18))
     this.anisotropy = 0.55
 // The plate itself is dead flat, so all relief lives in the bronze: dimples, burnish and the sand.
     this.normalNode = proceduralNormal(hammer.mul(0.0009).add(burnish.mul(0.0003)).add(nodes.mul(0.0016)).add(note.mul(0.0004).mul(strike)), 0.8)
     const glint = glints(normalView, 170).mul(sand).mul(near.mul(0.55).add(0.45))
-    this.emissiveNode = color('#ffeec4').mul(glint).mul(0.5)
-      .add(color('#7fd8c0').mul(patina).mul(grazing.pow(2.5)).mul(near.mul(0.5).add(0.3)).mul(0.07))
-      .add(color('#ffcf88').mul(nodes).mul(strike).mul(intimate.mul(0.4).add(0.2)).mul(0.22))
+    this.emissiveNode = color(hsl.integer(89, 100, 94.5)).mul(glint).mul(0.5)
+      .add(color(hsl.integer(175, 60, 79)).mul(patina).mul(grazing.pow(2.5)).mul(near.mul(0.5).add(0.3)).mul(0.07))
+      .add(color(hsl.integer(76, 100, 86)).mul(nodes).mul(strike).mul(intimate.mul(0.4).add(0.2)).mul(0.22))
   }
 }

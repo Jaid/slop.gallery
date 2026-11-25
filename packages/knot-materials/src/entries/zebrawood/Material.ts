@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -43,14 +44,14 @@ export default class extends KnotMaterial {
     const burlShade = burl.mul(0.45)
     const mottle = mx_fractal_noise_float(p.mul(3.7).add(22.4), 3, 2.03, 0.5).mul(0.5).add(0.5)
     const heart = mx_fractal_noise_float(p.mul(1.25).add(vec3(-5.8, 7.2, 0.4)), 2, 2.01, 0.6).mul(0.5).add(0.5)
-    const latewood = mix(color('#120602'), color('#3f1708'), mottle)
-    const earlywood = mix(color('#6b2a0e'), color('#c98a3e'), mottle.mul(0.65).add(facing.mul(0.2)))
+    const latewood = mix(color(hsl.integer(49, 60, 5)), color(hsl.integer(40, 76, 16)), mottle)
+    const earlywood = mix(color(hsl.integer(41, 83, 28)), color(hsl.integer(68, 72, 63)), mottle.mul(0.65).add(facing.mul(0.2)))
     const amber = mix(earlywood, latewood, late.mul(0.88).add(burlShade).clamp())
-    const sapwood = mix(color('#8a5c34'), color('#d6b586'), mottle)
+    const sapwood = mix(color(hsl.integer(60, 56, 44)), color(hsl.integer(76, 47, 76)), mottle)
     const heartBlend = heart.smoothstep(0.12, 0.72).mul(0.7)
     const sapDistance = tube.y.sub(0.82).add(0.5).fract().sub(0.5).abs()
     const sapBand = sapDistance.smoothstep(0.03, 0.16).oneMinus().mul(mx_fractal_noise_float(p.mul(2.4).add(5.7), 2, 2.1, 0.5).mul(0.3).add(0.7))
-    const woodColor = mix(mix(amber, sapwood, heartBlend.mul(0.42)).mul(earlywood.mul(0.08).add(0.94)).mul(late.mul(0.32).oneMinus()), color('#d6b586'), sapBand.mul(0.34))
+    const woodColor = mix(mix(amber, sapwood, heartBlend.mul(0.42)).mul(earlywood.mul(0.08).add(0.94)).mul(late.mul(0.32).oneMinus()), color(hsl.integer(76, 47, 76)), sapBand.mul(0.34))
 // Pores and rays are a different order of magnitude: elongated openings along the grain and radial flecks across it.
     const poreField = mx_noise_float(tubeTorus(tube, 0.2, 2.6).mul(30).add(vec3(0, 0, 7.3))).mul(0.5).add(0.5)
     const pore = poreField.smoothstep(0.64, 0.71).mul(intimate.mul(0.92).add(0.08))
@@ -71,7 +72,7 @@ export default class extends KnotMaterial {
     this.anisotropy = 0.7
     this.anisotropyRotation = 0
     this.sheen = 0.26
-    this.sheenColor.set('#e7b46a')
+    this.sheenColor.set(hsl.integer(75, 69, 77))
     this.sheenRoughness = 0.36
     this.clearcoat = 0.24
     this.clearcoatRoughness = 0.16
@@ -79,8 +80,8 @@ export default class extends KnotMaterial {
     this.aoNode = float(1).sub(poreDark.mul(0.3))
     const oil = environmentHighlight(environment, n, 0.18)
     const fire = oil.mul(woodColor).mul(mix(float(0.08), float(0.34), mottle)).mul(near.mul(0.65).add(0.4))
-    const sheen = studioSheen(n).mul(color('#f0bd77')).mul(near.mul(0.06).add(0.07))
-    const rim = color('#c47b34').mul(grazing.pow(3)).mul(0.055)
+    const sheen = studioSheen(n).mul(color(hsl.integer(74, 72, 80))).mul(near.mul(0.06).add(0.07))
+    const rim = color(hsl.integer(61, 75, 59)).mul(grazing.pow(3)).mul(0.055)
     this.emissiveNode = fire.add(sheen).add(rim)
   }
 }

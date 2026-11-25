@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {atan, metalness, roughness, select, smoothstep, vec2} from 'three/tsl'
 
 import MaterialOutputsNode from '#src/lib/rendering/MaterialOutputsNode.ts'
@@ -47,7 +48,7 @@ export default class LouisFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#c79a4e'
+  override readonly tint = hsl.integer(79, 66, 67)
   override readonly title = 'Louis XIV shell'
 
   override createGeometry(width: number, height: number) {

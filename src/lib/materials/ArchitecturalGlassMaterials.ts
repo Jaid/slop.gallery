@@ -1,5 +1,6 @@
 import type {Material} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 import {floorGlassThickness} from '../gallery/floors.ts'
@@ -16,7 +17,7 @@ const floorGlassTileSize = salonWindow.tileSize
 /** the one pane of fast graphics for every glass but the tunnel displays’ */
 const createFastGlass = () => {
   const material = new MeshStandardNodeMaterial({
-    color: '#afd0d4',
+    color: hsl.integer(205, 28, 81),
     roughness: 0.24,
     metalness: 0,
     transparent: true,
@@ -30,7 +31,7 @@ const createFastGlass = () => {
 // The tunnel displays keep their original fast-mode pane.
 const createFastTunnelGlass = () => {
   const material = new MeshStandardNodeMaterial({
-    color: '#b7d8d9',
+    color: hsl.integer(199, 30, 83.5),
     roughness: 0.16,
     metalness: 0.1,
     transparent: true,
@@ -46,11 +47,11 @@ const createCabinGlass = () => lightIndoors(new CrownGlassMaterial({
   name: 'cabin-glass-heavy',
   ior: 1.52,
   absorption: 0.06,
-  specularColor: '#ffeacc',
+  specularColor: hsl.integer(77, 100, 93.8),
   clearcoat: 0.5,
   envMapIntensity: 1.6,
   paneSize: [lodgeWindow.width, lodgeWindow.top - lodgeWindow.bottom],
-  bodyColor: '#eef4ea',
+  bodyColor: hsl.integer(132, 34, 95),
   haze: 0.035,
   smudges: 0.065,
   grime: 0.5,

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'eclipse_marrow',
   candidateId: 'grok',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'The dark heart of an eclipse keeps a thin reserve of sunlight.',
   placeholder: {
-    color: '#ff8a5c',
+    color: hsl.integer(41, 99, 71),
     shading: 'smooth',
   },
 } as const satisfies KnotData

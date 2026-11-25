@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chladni_sands',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The sand changes its mind whenever the hidden note changes pitch.',
   placeholder: {
-    color: '#ead8aa',
+    color: hsl.integer(90, 54, 87),
     shading: 'smooth',
   },
 } as const satisfies KnotData

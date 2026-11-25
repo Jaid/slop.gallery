@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'wrought_nebula',
   candidateId: 'grok',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A smith has hammered a drifting cloud of stars into a luminous curve.',
   placeholder: {
-    color: '#e56bff',
+    color: hsl.integer(320, 100, 68.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

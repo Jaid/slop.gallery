@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'scarab_aegis',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Layered jewel armor guards a secret small enough to fit beneath a wing.',
   placeholder: {
-    color: '#10b981',
+    color: hsl.integer(162, 98, 65),
     shading: 'smooth',
   },
 } as const satisfies KnotData

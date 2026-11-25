@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn, If, int, Loop, mix, time, vec3} from 'three/tsl'
 
 import {knotArc, knotLength} from '../../candidates/claude_opus/lib/knotArc.ts'
@@ -121,14 +122,14 @@ export default class extends KnotMaterial {
     const axisGap = raySegmentDistance(entry, direction, frame.center.sub(frame.tangent.mul(0.4)), frame.center.add(frame.tangent.mul(0.4)))
     const wire = axisGap.div(0.0035).pow(2).negate().exp()
     const wireHalo = axisGap.div(0.02).pow(2).negate().exp()
-    const plasma = color('#fff2ff').mul(discharge.x.mul(1.1))
-      .add(mix(color('#ff4fd8'), color('#7a5cff'), discharge.y.smoothstep(0, 1)).mul(discharge.y.mul(0.45)))
-      .add(color('#ffd6ff').mul(wire.mul(1.2)))
-      .add(color('#d04dff').mul(wireHalo.mul(0.35)))
-    const bloom = color('#ffe0ff').mul(discharge.z.mul(1.3))
+    const plasma = color(hsl.integer(326, 100, 97)).mul(discharge.x.mul(1.1))
+      .add(mix(color(hsl.integer(338, 100, 67)), color(hsl.integer(286, 99, 53)), discharge.y.smoothstep(0, 1)).mul(discharge.y.mul(0.45)))
+      .add(color(hsl.integer(326, 100, 91)).mul(wire.mul(1.2)))
+      .add(color(hsl.integer(316, 100, 62)).mul(wireHalo.mul(0.35)))
+    const bloom = color(hsl.integer(326, 100, 93)).mul(discharge.z.mul(1.3))
 // the rarefied gas glows faintly where the tube is thick
-    const gas = color('#2a1060').mul(interior.chord.mul(1.2))
-    this.colorNode = color('#050209')
+    const gas = color(hsl.integer(290, 86, 17)).mul(interior.chord.mul(1.2))
+    this.colorNode = color(hsl.integer(307, 54, 3))
     this.metalness = 0
     this.roughness = 0.05
     this.specularIntensity = 0.5

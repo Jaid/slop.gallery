@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, vec3} from 'three/tsl'
 
 import {cellGrain} from '../../candidates/gpt_sol/lib/cellGrain.ts'
@@ -66,8 +67,8 @@ export default class extends BaseKnotMaterial {
       .mul(0.62)
       .add(angleTint.mul(0.18))
       .clamp()
-    const ice = mix(color('#5f9eac'), color('#e8fbff'), paleFactor)
-    this.colorNode = mix(ice, color('#f7ffff'), frost.mul(0.7)).mul(fractures.mul(0.08).add(0.82))
+    const ice = mix(color(hsl.integer(213, 45, 61)), color(hsl.integer(212, 100, 97)), paleFactor)
+    this.colorNode = mix(ice, color(hsl.integer(197, 100, 99.3)), frost.mul(0.7)).mul(fractures.mul(0.08).add(0.82))
     this.transmission = 1
     this.transmissionNode = float(0.94)
       .sub(fractures.mul(0.5))
@@ -76,7 +77,7 @@ export default class extends BaseKnotMaterial {
     this.thickness = 0.72
     this.ior = 1.31
     this.dispersion = 0.08
-    this.attenuationColor.set('#5ca7b8')
+    this.attenuationColor.set(hsl.integer(214, 53, 64))
     this.attenuationDistance = 0.65
     this.roughnessNode = float(0.035)
       .add(frost.mul(0.48))
@@ -91,15 +92,15 @@ export default class extends BaseKnotMaterial {
     this.clearcoatNormalNode = iceNormal
     this.clearcoatRoughnessNode = float(0.025)
       .add(frost.mul(0.3))
-    const fractureTint = mix(color('#63d8ff'), color('#ffffff'), angleTint)
+    const fractureTint = mix(color(hsl.integer(223, 99, 80)), color(hsl.integer(0, 0, 100)), angleTint)
     this.emissiveNode = fractureTint
       .mul(fractures)
       .mul(near.mul(0.75).add(0.18))
-      .add(color('#efffff')
+      .add(color(hsl.integer(197, 100, 98.6))
         .mul(bubbles.mask)
         .mul(intimate)
         .mul(0.85))
-      .add(color('#4e9eb1')
+      .add(color(hsl.integer(215, 58, 60))
         .mul(rim)
         .mul(0.035))
   }

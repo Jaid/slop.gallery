@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, modelViewMatrix, mx_atan2, mx_noise_float, negateOnBackSide, normalLocal, vec2, vec3, vec4} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/gpt_astra/lib/bumpNormal.ts'
@@ -60,16 +61,16 @@ export default class extends BaseKnotMaterial {
     const rays = rayPhase.cos()
       .smoothstep(0.9, 0.99)
       .mul(rayVisibility)
-    const timber = mix(color('#e8b878'), color('#623016'), latewood.mul(0.76).add(0.08))
+    const timber = mix(color(hsl.integer(74, 65, 78)), color(hsl.integer(46, 70, 27)), latewood.mul(0.76).add(0.08))
     const figuredTimber = timber
       .mul(chatoyance.mul(0.55).add(0.7))
       .mul(figure.mul(0.18).add(0.91))
       .mul(endGrain.mul(-0.18).add(1))
-    this.colorNode = mix(figuredTimber, color('#f4d79a'), rays.mul(0.24)).mul(vessels.mul(-0.3).add(1))
+    this.colorNode = mix(figuredTimber, color(hsl.integer(85, 71, 87)), rays.mul(0.24)).mul(vessels.mul(-0.3).add(1))
     this.metalness = 0
     this.ior = 1.47
     this.specularIntensity = 0.7
-    this.specularColorNode = color('#fff1cf')
+    this.specularColorNode = color(hsl.integer(88, 100, 95.4))
     this.roughnessNode = float(0.3)
       .add(endGrain.mul(0.08))
       .add(vessels.mul(0.1))

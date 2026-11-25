@@ -1,5 +1,7 @@
 import {afterEach, expect, spyOn, test} from 'bun:test'
 
+import hsl from 'okhsl'
+
 import FlavorGenerator from '../../src/lib/ai/FlavorGenerator.ts'
 import FusionGenerator from '../../src/lib/ai/FusionGenerator.ts'
 import * as modelImageModule from '../../src/lib/ai/modelImage.ts'
@@ -134,7 +136,7 @@ test('the real image adapter sends an orb’s prompt verbatim with the hung port
           instruction: 'Make it spooky.',
         },
       ],
-      glow: '#8a3cff',
+      glow: hsl.integer(295, 100, 50.6),
       look: '/orbs/test.jxl',
     }),
   ])

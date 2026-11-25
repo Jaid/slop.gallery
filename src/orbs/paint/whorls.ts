@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import {impastoPaints} from '#src/lib/materials/impastoPaints.ts'
 
 const {alizarinCrimson, cadmiumOrange, cobaltTeal, naplesYellow, prussianBlue, titaniumWhite} = impastoPaints
@@ -21,7 +23,7 @@ export const whorls = [
     loft: 0.097,
     turn: 1.24,
     phase: 0.1,
-    body: '#284960',
+    body: hsl.integer(241, 47, 30),
     load: cobaltTeal,
   },
   // Coral petals open around a saffron eye.
@@ -35,7 +37,7 @@ export const whorls = [
     turn: 0.9,
     phase: 0.39,
     body: alizarinCrimson,
-    load: '#ff936c',
+    load: hsl.integer(40, 100, 73),
   },
   {
     count: 7,
@@ -47,7 +49,7 @@ export const whorls = [
     turn: 1.08,
     phase: 0.15,
     body: cadmiumOrange,
-    load: '#ffd68b',
+    load: hsl.integer(82, 100, 87.8),
   },
   {
     count: 5,
@@ -72,7 +74,7 @@ export const whorls = [
     turn: -0.8,
     phase: 0.72,
     body: prussianBlue,
-    load: '#599ab0',
+    load: hsl.integer(222, 49, 59),
   },
   {
     count: 7,
@@ -84,7 +86,7 @@ export const whorls = [
     turn: -1.09,
     phase: 0.36,
     body: cobaltTeal,
-    load: '#b1e6cc',
+    load: hsl.integer(163, 50, 86),
   },
   {
     count: 5,
@@ -95,7 +97,7 @@ export const whorls = [
     loft: 0.065,
     turn: -1.32,
     phase: 0.62,
-    body: '#a3c687',
-    load: '#fff1af',
+    body: hsl.integer(132, 51, 75),
+    load: hsl.integer(98, 100, 94.7),
   },
 ] as const

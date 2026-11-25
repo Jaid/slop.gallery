@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {disk, ring, segment} from '../../candidates/gpt_sol/lib/galleryMarks.ts'
@@ -90,15 +91,15 @@ export default class extends KnotMaterial {
     const halo = ring(p.sub(vec2(0, -0.02)), 0.405, 0.0015, footprint).mul(0.25)
     const dust = mx_noise_float(vec3(uv().mul(vec2(34, 15)), time.mul(0.035))).mul(0.5).add(0.5)
     const reveal = near.mul(0.35).add(0.8)
-    this.colorNode = mix(color('#040c22'), color('#152947'), dust.mul(0.22))
+    this.colorNode = mix(color(hsl.integer(264, 71, 7)), color(hsl.integer(258, 57, 18)), dust.mul(0.22))
     this.metalness = 0.32
     this.roughness = 0.42
     this.clearcoat = 1
     this.clearcoatRoughness = 0.08
-    this.emissiveNode = color('#65a9e9').mul(threads).mul(1.2).add(color('#fbc58d').mul(threads).mul(1.1))
-      .add(color('#ffe7ba').mul(lights).mul(3.2))
-      .add(color('#a1e9ff').mul(eyelight).mul(1.4))
-      .add(color('#7694ff').mul(halo).mul(near.mul(0.5).add(0.4)))
-      .mul(reveal).add(color('#486bad').mul(grazing.pow(3)).mul(0.11))
+    this.emissiveNode = color(hsl.integer(248, 73, 67)).mul(threads).mul(1.2).add(color(hsl.integer(67, 83, 83.6)).mul(threads).mul(1.1))
+      .add(color(hsl.integer(83, 100, 92.6)).mul(lights).mul(3.2))
+      .add(color(hsl.integer(218, 100, 88)).mul(eyelight).mul(1.4))
+      .add(color(hsl.integer(270, 100, 64)).mul(halo).mul(near.mul(0.5).add(0.4)))
+      .mul(reveal).add(color(hsl.integer(262, 57, 46)).mul(grazing.pow(3)).mul(0.11))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nacre_psalm',
   candidateId: 'gpt_terra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A quiet hymn in calcium and light: each pearly layer changes its answer as the visitor moves.',
   placeholder: {
-    color: '#d2c7c7',
+    color: hsl.integer(17, 11, 81),
     shading: 'glass',
   },
 } as const satisfies KnotData

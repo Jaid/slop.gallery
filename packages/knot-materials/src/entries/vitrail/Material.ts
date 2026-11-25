@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -46,7 +47,7 @@ export default class extends BaseKnotMaterial {
     const panesField = panes(tile, 26, 6)
     const seed = beads(p.mul(160).add(55), 61)
     const names = panesField.random
-    const jewel = mix(mix(mix(color('#8f0f24'), color('#122e9e'), names.x.smoothstep(0.15, 0.35)), mix(color('#c47f0a'), color('#0d6b3a'), names.x.smoothstep(0.5, 0.7)), names.y.smoothstep(0.3, 0.7)), color('#5c1f9e'), names.z.smoothstep(0.55, 0.85))
+    const jewel = mix(mix(mix(color(hsl.integer(21, 94, 33)), color(hsl.integer(266, 94, 27.5)), names.x.smoothstep(0.15, 0.35)), mix(color(hsl.integer(71, 96, 60)), color(hsl.integer(154, 97.6, 38)), names.x.smoothstep(0.5, 0.7)), names.y.smoothstep(0.3, 0.7)), color(hsl.integer(299, 86, 32)), names.z.smoothstep(0.55, 0.85))
     const breath = mx_noise_float(p.mul(3).add(vec3(time.mul(0.06), float(0), float(0)))).mul(0.5).add(0.5)
     const flash = view.dot(vec3(0.3, 0.2, 0.93).normalize()).abs().pow(3)
     const height = panesField.glassCore.mul(0.7).sub(panesField.cameCore.mul(0.55)).add(seed.core.mul(intimate).mul(0.5))
@@ -54,7 +55,7 @@ export default class extends BaseKnotMaterial {
 // Per-pane facet tilt so highlights break across the quarries instead of sweeping the whole tube.
     const paneTilt = panesField.random.sub(0.5).mul(panesField.glass.mul(0.35))
     this.normalNode = proceduralNormal(height, 0.5).add(normalLocal.mul(panesField.came.mul(-0.25))).add(paneTilt).normalize()
-    this.colorNode = mix(jewel.mul(0.35), color('#23262b'), panesField.came.clamp(0, 1))
+    this.colorNode = mix(jewel.mul(0.35), color(hsl.integer(261, 10, 16)), panesField.came.clamp(0, 1))
     this.metalnessNode = panesField.came.mul(0.8)
     this.roughnessNode = float(0.12).add(panesField.came.mul(0.55)).add(seed.mask.mul(0.08))
     this.clearcoat = 0.85
@@ -65,6 +66,6 @@ export default class extends BaseKnotMaterial {
     const lamp = jewel.mul(breath.mul(0.6).add(0.5)).mul(panesField.glass)
     const streak = jewel.mul(flash.mul(panesField.glass).mul(1.1))
     const leadSpark = glints(normalLocal, 120).mul(panesField.came).mul(near).mul(0.5)
-    this.emissiveNode = lamp.mul(1.35).add(streak).add(color('#ffffff').mul(leadSpark)).add(jewel.mul(grazing.pow(2.5).mul(panesField.glass).mul(0.45)))
+    this.emissiveNode = lamp.mul(1.35).add(streak).add(color(hsl.integer(0, 0, 100)).mul(leadSpark)).add(jewel.mul(grazing.pow(2.5).mul(panesField.glass).mul(0.45)))
   }
 }

@@ -2,6 +2,7 @@ import type {FountainModelProps} from '#src/fountains/index.ts'
 
 import {RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode from 'use-graphics-mode'
@@ -18,7 +19,7 @@ import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 
 /** A water-gilt bronze like the ornament of the Lobby’s vault: polished enough to catch the room’s light, with enough body not to mirror the dark water. */
 const giltBronze = {
-  color: '#d3a554',
+  color: hsl.integer(80, 68, 71),
   metalness: 0.62,
   roughness: 0.28,
 } as const

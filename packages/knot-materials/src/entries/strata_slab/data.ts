@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'strata_slab',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Layer after layer, the stone remembers how slowly a landscape is made.',
   placeholder: {
-    color: '#cbb99c',
+    color: hsl.integer(80, 29, 76),
     shading: 'stone',
   },
 } as const satisfies KnotData

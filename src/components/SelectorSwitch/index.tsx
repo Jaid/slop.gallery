@@ -12,8 +12,8 @@ import {switchButtonY} from '#src/lib/gallery/lightSwitch.ts'
 
 /** one of the buttons of a {@link SelectorSwitch} */
 export type SelectorOption = {
-  /** the color of its enameled button as #rrggbb */
-  button: string
+  /** the color of its enameled button as packed sRGB */
+  button: number
   /** short name of the option, which the interaction hint offers as the next one */
   title: string
 }
@@ -47,7 +47,7 @@ export default function SelectorSwitch<Option extends string>({id, onChange, opt
 
 /** An enameled button of a {@link SelectorSwitch}, `y` above the plate’s middle. */
 function SelectorButton({color, pressed, y}: {
-  color: string
+  color: number
   pressed: boolean
   y: number
 }) {

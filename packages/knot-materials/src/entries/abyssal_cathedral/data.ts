@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_cathedral',
   candidateId: 'deepseek',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'The drowned nave still gathers light for a congregation of currents.',
   placeholder: {
-    color: '#3ac6d6',
+    color: hsl.integer(206, 83, 72),
     shading: 'smooth',
   },
 } as const satisfies KnotData

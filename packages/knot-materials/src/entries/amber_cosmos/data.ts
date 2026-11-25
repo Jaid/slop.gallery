@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5WDU20J87Ktg4fx; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'amber_cosmos',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Forty million years of sunlight went into this resin and never came out. Small worlds of air still turn inside it, waiting for you to look deeper.',
   placeholder: {
-    color: '#ff9b2e',
+    color: hsl.integer(62, 100, 74),
     shading: 'glass',
   },
 } as const satisfies KnotData

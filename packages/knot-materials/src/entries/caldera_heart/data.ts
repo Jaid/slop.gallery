@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BdUi8mU2Rs29CX7; fixture: knot-material-shaders.
 export default {
   id: 'caldera_heart',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Under a skin of cooling basalt the knot’s molten heart still beats. Each pulse races through the fissures, and the stone glows with what it cannot hold.',
   placeholder: {
-    color: '#ad3e17',
+    color: hsl.integer(38, 89, 44),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -64,7 +65,7 @@ export default class extends KnotMaterial {
       [0.05, 0.36, 0.67],
     )
     // Metallic crystal bulk (bright silvery-platinum bismuth beneath the oxide)
-    const metallicSubstrate = mix(color('#c5cad0'), color('#e8ecf0'), cellRnd.y.mul(0.2))
+    const metallicSubstrate = mix(color(hsl.integer(253, 9, 81)), color(hsl.integer(248, 16, 93)), cellRnd.y.mul(0.2))
     const crystalFace = mix(oxideColor, metallicSubstrate, stepFraction.pow(3).mul(0.25))
     // Physical metallic properties
     this.colorNode = crystalFace
@@ -83,7 +84,7 @@ export default class extends KnotMaterial {
     const cavityGlow = oxideColor.mul(stepFraction.oneMinus().pow(2)).mul(intimate).mul(0.5)
     const grazingLuster = oxideColor.mul(grazing.pow(2.2)).mul(rim).mul(0.45)
     this.emissiveNode = cavityGlow
-      .add(color('#ffffff').mul(edgeSparkle).mul(1.4))
+      .add(color(hsl.integer(0, 0, 100)).mul(edgeSparkle).mul(1.4))
       .add(grazingLuster)
   }
 }

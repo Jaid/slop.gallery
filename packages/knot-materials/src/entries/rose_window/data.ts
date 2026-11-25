@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: LLxliOfHhDMdNvD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'rose_window',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A rose of lead and jewel glass, lit by a sun that follows no one. Circle it, and the colors rearrange themselves into a new prayer.',
   placeholder: {
-    color: '#7e5a6f',
+    color: hsl.integer(343, 28, 44),
     shading: 'glass',
   },
 } as const satisfies KnotData

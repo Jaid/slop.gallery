@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: AGJuTzPywIFbk5N; fixture: knot-material-shaders; result: success.
 export default {
   id: 'vespers',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.007,
   flavorText: 'The last light of day was folded into lead and glass. It has not stopped singing since, and it will not, as long as someone walks past.',
   placeholder: {
-    color: '#766b6a',
+    color: hsl.integer(24, 8, 46),
     shading: 'glass',
   },
 } as const satisfies KnotData

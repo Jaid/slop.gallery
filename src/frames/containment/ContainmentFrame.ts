@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, mix, select, smoothstep, time, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -38,7 +39,7 @@ export default class ContainmentFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#1a1a1a'
+  override readonly tint = hsl.integer(0, 0, 11.5)
   override readonly title = 'Containment casing'
 
   override createGeometry(width: number, height: number) {
@@ -50,11 +51,11 @@ export default class ContainmentFrame extends PortraitFrame {
       new FrameMetalMaterial({metal: blackAnodized}),
       new ScanMaterial,
       new FramePaintMaterial({
-        color: '#e2b414',
+        color: hsl.integer(90, 96, 75.5),
         roughness: 0.5,
         clearcoat: 0.3,
         wear: 0.4,
-        under: '#2a2a2a',
+        under: hsl.integer(0, 0, 18.3),
         grime: 0.5,
         layers: surface => {
           // Chevrons pointing toward the middle of every member, black on yellow.
@@ -78,7 +79,7 @@ class ScanMaterial extends MeshPhysicalNodeMaterial {
     super({
       roughness: 0.3,
       envMap: frameStudio,
-      color: '#200404',
+      color: hsl.integer(25, 79, 7),
     })
     const surface = frameSurface()
     const around = surface.member.round().add(surface.along.div(surface.halfLength).mul(0.5).add(0.5)).div(4)
@@ -86,6 +87,6 @@ class ScanMaterial extends MeshPhysicalNodeMaterial {
     const behind = around.sub(scan).add(1).fract()
     const sweep = smoothstep(0.08, 0, behind.oneMinus().min(behind))
     const pulse = time.mul(1.7).sin().mul(0.2).add(0.8)
-    this.emissiveNode = mix(color('#ff2a1a').mul(pulse.mul(0.9)), vec3(1, 0.95, 0.9).mul(3), sweep)
+    this.emissiveNode = mix(color(hsl.integer(29.7, 100, 58.4)).mul(pulse.mul(0.9)), vec3(1, 0.95, 0.9).mul(3), sweep)
   }
 }

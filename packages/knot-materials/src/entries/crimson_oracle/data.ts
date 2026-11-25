@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'crimson_oracle',
   candidateId: 'gpt_sol',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A red ember offers a different omen from every angle.',
   placeholder: {
-    color: '#ff6f63',
+    color: hsl.integer(27, 100, 67),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 8EWpDkWx6nfkCqt; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'cradle_of_suns',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Inside the glass a cloud of dust is learning to burn. Step sideways and its newborn suns slide past one another.',
   placeholder: {
-    color: '#170a3a',
+    color: hsl.integer(288, 80, 10),
     shading: 'glass',
   },
 } as const satisfies KnotData

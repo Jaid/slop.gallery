@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, uv} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -38,11 +39,11 @@ export default class extends BaseKnotMaterial {
     const handDelta = handCoord.sub(handAngle).sin().abs()
     const handTrace = handDelta.smoothstep(0.012, 0.08).oneMinus()
     // Brass, patina, and wear layers.
-    const brassBase = color('#7a5a24')
-    const brassBright = color('#eacb7a')
-    const brassHighlight = color('#fff3c4')
-    const patina = color('#39584a')
-    const ironDark = color('#25201a')
+    const brassBase = color(hsl.integer(78, 68, 41))
+    const brassBright = color(hsl.integer(90, 70, 83))
+    const brassHighlight = color(hsl.integer(95, 100, 95.5))
+    const patina = color(hsl.integer(165, 35, 34))
+    const ironDark = color(hsl.integer(72, 15, 14))
     const wear = mx_noise_float(p.mul(14)).mul(0.5).add(0.5)
     const patinaField = mx_fractal_noise_float(p.mul(6), 3, 2, 0.55).mul(0.5).add(0.5)
     const brass = mix(brassBase, brassBright, wear.mul(0.55).add(facing.mul(0.35)))
@@ -67,10 +68,10 @@ export default class extends BaseKnotMaterial {
       .add(tickFine.mul(0.15))
       .add(ringFine.mul(0.15)), 0.0028)
     this.emissiveNode
-      = color('#ffcc44').mul(handTrace).mul(dilation).mul(1.9)
-        .add(color('#88ddff').mul(rim).mul(dilation.mul(0.5)))
-        .add(color('#ffae22').mul(tick).mul(near.mul(0.5).add(0.12)).mul(0.55))
-        .add(color('#ffd070').mul(tickFine).mul(intimate).mul(0.4))
-        .add(color('#3a2a10').mul(teethShadow).mul(0.4))
+      = color(hsl.integer(87, 100, 84.5)).mul(handTrace).mul(dilation).mul(1.9)
+        .add(color(hsl.integer(226, 100, 83)).mul(rim).mul(dilation.mul(0.5)))
+        .add(color(hsl.integer(74, 100, 77.9)).mul(tick).mul(near.mul(0.5).add(0.12)).mul(0.55))
+        .add(color(hsl.integer(84, 100, 86)).mul(tickFine).mul(intimate).mul(0.4))
+        .add(color(hsl.integer(77, 60, 20)).mul(teethShadow).mul(0.4))
   }
 }

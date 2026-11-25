@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, positionGeometry, uv, vec2} from 'three/tsl'
 
 import {thinFilm} from '../../candidates/gemini_flash/lib/thinFilm.ts'
@@ -39,7 +40,7 @@ export default class extends KnotMaterial {
     const oxideThickness = float(170).add(stepIndex.mul(52))
     const oxideInterference = thinFilm(oxideThickness, facing, 2.1)
     // Bismuth metallic substrate: lossy conductor with silvery-gray reflectance (R ~ 0.6)
-    const bismuthSubstrate = mix(color('#9aa0a6'), color('#d8d4cf'), stepIndex.div(stepCount))
+    const bismuthSubstrate = mix(color(hsl.integer(248, 6, 65)), color(hsl.integer(74, 8, 85)), stepIndex.div(stepCount))
     const bismuthMetal = bismuthSubstrate.mul(oxideInterference.mul(0.85).add(0.15))
     this.colorNode = bismuthMetal
     this.metalness = 1
@@ -60,11 +61,11 @@ export default class extends KnotMaterial {
     // Microscopic metallic glints along sharp crystal growth edges
     const crystalGlints = glints(steppedBump, 110).mul(riser).mul(near.mul(0.6).add(0.4))
     // Luminescent cavity gleam in the deepest sunken hopper hollows
-    const cavityGlow = color('#ff9900')
+    const cavityGlow = color(hsl.integer(65, 100, 73.4))
       .mul(stepIndex.smoothstep(1.5, 0).pow(2))
       .mul(intimate.mul(0.7).add(0.3))
       .mul(1.1)
-    const stepSparkle = color('#ffffff').mul(crystalGlints).mul(1.8)
+    const stepSparkle = color(hsl.integer(0, 0, 100)).mul(crystalGlints).mul(1.8)
     const rimIridescence = oxideInterference.mul(rim.pow(2.5)).mul(0.5)
     this.emissiveNode = cavityGlow
       .add(stepSparkle)

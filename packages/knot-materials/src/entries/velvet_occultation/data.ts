@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2kVLNNiT7YsY7gP.
 export default {
   id: 'velvet_occultation',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'On a midnight thread, cats assemble from starlight and refuse to be named.',
   placeholder: {
-    color: '#16103d',
+    color: hsl.integer(283, 74, 11),
     shading: 'smooth',
   },
 } as const satisfies KnotData

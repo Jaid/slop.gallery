@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: LLxliOfHhDMdNvD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'helios',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A fragment of the photosphere, still boiling after four billion years. Its granules rise and fall like breath, and at the edge of sight the chromosphere catches fire.',
   placeholder: {
-    color: '#ba572d',
+    color: hsl.integer(42, 77, 50.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

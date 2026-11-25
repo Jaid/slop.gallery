@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ImzJ438LsWTlcom; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'amber_candle',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A candle was kept burning for a century, sealed in sap that remembered every flicker and slowly turned to gold.',
   placeholder: {
-    color: '#d17c30',
+    color: hsl.integer(58, 80, 61),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, float, mix, mx_noise_float, positionViewDirection, tangentView, uv, vec3} from 'three/tsl'
 
 import {cellGrain} from '../../candidates/gpt_sol/lib/cellGrain.ts'
@@ -61,7 +62,7 @@ export default class extends BaseKnotMaterial {
     const weaveLight = weaveSignal
       .mul(0.5)
       .add(0.5)
-    const base = mix(color('#040205'), color('#220a2e'), brushed
+    const base = mix(color(hsl.integer(316, 36, 3)), color(hsl.integer(312, 70, 10)), brushed
       .mul(0.45)
       .add(grazing.mul(0.15))
       .clamp())
@@ -69,7 +70,7 @@ export default class extends BaseKnotMaterial {
       .dot(vec3(0.7, 0.19, -0.69).normalize())
       .mul(0.5)
       .add(0.5)
-    const pileTint = mix(color('#6635c7'), color('#c56c43'), angleKey)
+    const pileTint = mix(color(hsl.integer(292, 85, 40)), color(hsl.integer(44, 67, 56)), angleKey)
     this.colorNode = mix(base, pileTint, flash
       .mul(0.24)
       .add(weaveLight
@@ -109,7 +110,7 @@ export default class extends BaseKnotMaterial {
     this.normalNode = velvetNormal
     const lint = cellGrain(p, 145, 0.995)
     const lintGlint = multiGlint(velvetNormal, 115)
-    this.emissiveNode = mix(color('#d7c9ff'), color('#ffd5ae'), angleKey)
+    this.emissiveNode = mix(color(hsl.integer(297, 100, 84)), color(hsl.integer(64, 100, 88)), angleKey)
       .mul(lint.mask)
       .mul(lintGlint)
       .mul(intimate)

@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, materialReference, max, mix, mx_noise_float, mx_worley_noise_vec2, normalGeometry, positionGeometry, smoothstep, time, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial, NodeMaterialInstance} from 'three/webgpu'
 
@@ -44,17 +45,17 @@ class CharredLogMaterial extends MeshStandardNodeMaterial {
     const glow = crack.mul(0.55).add(depth.mul(0.45)).mul(exposure.pow(1.3)).mul(pulse.mul(0.8).add(0.4)).add(exposure.pow(4).mul(pulse).mul(0.12))
     const patches = mx_noise_float(p.mul(vec3(7, 2.5, 7)))
     const bark = smoothstep(0.55, 0.85, facing.add(patches.mul(0.5)).negate()).mul(smoothstep(-0.1, 0.3, downward.negate()))
-    const barkColor = mix(color('#3b2618'), color('#22160e'), mx_noise_float(p.mul(vec3(30, 3, 30))).mul(0.5).add(0.5))
-    const charColor = mix(color('#2b2622'), color('#070504'), crack)
+    const barkColor = mix(color(hsl.integer(54, 42, 19)), color(hsl.integer(55, 34, 11)), mx_noise_float(p.mul(vec3(30, 3, 30))).mul(0.5).add(0.5))
+    const charColor = mix(color(hsl.integer(61, 10, 17)), color(hsl.integer(52, 14, 4)), crack)
     // A crust of pale ash clumps over the cool top, unbroken over the checks and away from the bark.
     const ashMask = smoothstep(0.3, 0.65, mx_noise_float(p.mul(18)).mul(0.5).add(0.5)).mul(smoothstep(0, 0.8, n.x)).mul(crack.oneMinus()).mul(bark.oneMinus())
-    const ashColor = mix(color('#69685f'), color('#302b29'), mx_noise_float(p.mul(55)).mul(0.5).add(0.5))
+    const ashColor = mix(color(hsl.integer(102, 8, 44)), color(hsl.integer(43, 7, 19)), mx_noise_float(p.mul(55)).mul(0.5).add(0.5))
     const side = mix(mix(charColor, barkColor, bark), ashColor, ashMask.mul(0.55))
     // Sawn ends: growth rings around the pith, charred from the rim inward.
     const radiusNode = logValue('radius')
     const across = p.xz.length().div(radiusNode)
     const rings = across.mul(radiusNode.mul(220)).add(mx_noise_float(p.mul(9)).mul(2.5)).sin().mul(0.5).add(0.5)
-    const sawn = mix(mix(color('#4a3322'), color('#2f2015'), rings), color('#0b0806'), smoothstep(0.55, 0.9, across))
+    const sawn = mix(mix(color(hsl.integer(57, 39, 25)), color(hsl.integer(57, 36, 16)), rings), color(hsl.integer(60, 15, 5)), smoothstep(0.55, 0.9, across))
     const end = smoothstep(0.6, 0.85, n.y.abs())
     this.colorNode = mix(side, sawn, end)
     this.roughnessNode = mix(mix(float(0.86), float(0.97), max(crack, bark)), float(0.9), end)

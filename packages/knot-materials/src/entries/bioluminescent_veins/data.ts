@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bioluminescent_veins',
   candidateId: 'claude_sonnet',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A quiet pulse carries starlight through a body made of night.',
   placeholder: {
-    color: '#00ffc8',
+    color: hsl.integer(170, 100, 87),
     shading: 'liquid',
   },
 } as const satisfies KnotData

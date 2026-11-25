@@ -5,6 +5,7 @@ import type {Texture} from 'three/webgpu'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {Shape} from 'three/webgpu'
 import {useGraphicsModeValue} from 'use-graphics-mode'
@@ -16,12 +17,12 @@ import {floorThickness} from '#src/lib/gallery/floors.ts'
 import PlanarMirrorMaterial from '#src/lib/materials/PlanarMirrorMaterial.ts'
 import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
-const brass = '#b49356'
-const enamel = '#244653'
+const brass = hsl.integer(82, 54, 63)
+const enamel = hsl.integer(225, 46, 28)
 /** the moon’s figures, in the hue of the lunar hall’s lamp */
-const lunarSilver = '#c3d0dc'
-const stairStone = '#b8ab92'
-const stairCeiling = '#ded3b9'
+const lunarSilver = hsl.integer(246, 21, 83)
+const stairStone = hsl.integer(84, 22, 70)
+const stairCeiling = hsl.integer(88, 32, 85)
 const brassFinish = {
   color: brass,
   metalness: 0.62,
@@ -67,8 +68,8 @@ export default function StairHalls({stone}: {stone: Texture}) {
       <RigidBody colliders={false} type='fixed'>
         <CuboidCollider args={[w / 2, floorThickness / 2, d / 2]} position={[0, -floorThickness / 2, 0]} />
         <CuboidCollider args={[w / 2, 0.09, d / 2]} position={[0, stairHallHeight, 0]} />
-        <Box color='#e7dfca' map={stone} position={[0, -floorThickness / 2, 0]} size={[w, floorThickness, d]} />
-        <Box color='#e4dac6' position={[0, stairHallHeight, 0]} size={[w, 0.18, d]} />
+        <Box color={hsl.integer(90, 33, 89)} map={stone} position={[0, -floorThickness / 2, 0]} size={[w, floorThickness, d]} />
+        <Box color={hsl.integer(85, 30, 87)} position={[0, stairHallHeight, 0]} size={[w, 0.18, d]} />
       </RigidBody>
       <Lantern />
       <PavementBorder width={w} />
@@ -114,7 +115,7 @@ function Dial({lunar}: {lunar: boolean}) {
   </group>
 }
 /** A material for the figures in the middle of a dial: mirroring in heavy mode, which sets aside the metal of the brass ones, and as before otherwise. */
-function useFigureMaterial(color: string, roughness: number, metalness = 0) {
+function useFigureMaterial(color: number, roughness: number, metalness = 0) {
   const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   return useDisposable(useMemo(() => {
     const material = new PlanarMirrorMaterial(null, {
@@ -149,11 +150,11 @@ function Sun() {
 /** Concentric octagonal cornices surround a shallow opal lantern, a smaller echo of the oculus in the main dome. */
 function Lantern() {
   return <group position-y={stairHallHeight - 0.12}>
-    <mesh><cylinderGeometry args={[2.15, 2.05, 0.12, 8]} /><meshStandardNodeMaterial color='#d6c8a9' /></mesh>
+    <mesh><cylinderGeometry args={[2.15, 2.05, 0.12, 8]} /><meshStandardNodeMaterial color={hsl.integer(87, 33, 81)} /></mesh>
     <mesh position-y={-0.075}><cylinderGeometry args={[2.03, 1.99, 0.055, 8]} /><meshStandardNodeMaterial {...brassFinish} /></mesh>
     <mesh position-y={-0.105}><cylinderGeometry args={[1.94, 1.88, 0.06, 8]} /><meshStandardNodeMaterial color={enamel} /></mesh>
     <mesh position-y={-0.15}><cylinderGeometry args={[0.86, 0.81, 0.09, 32]} /><meshStandardNodeMaterial {...brassFinish} /></mesh>
-    <mesh position-y={-0.19} scale={[0.78, 0.14, 0.78]}><sphereGeometry args={[1, 32, 16]} /><meshStandardNodeMaterial color='#f9edcf' emissive='#ffe2aa' emissiveIntensity={1.3} roughness={0.3} /></mesh>
+    <mesh position-y={-0.19} scale={[0.78, 0.14, 0.78]}><sphereGeometry args={[1, 32, 16]} /><meshStandardNodeMaterial color={hsl.integer(89, 68, 94)} emissive={hsl.integer(83, 100, 91)} emissiveIntensity={1.3} roughness={0.3} /></mesh>
     {graduations.filter((_, i) => !(i % 4)).map(angle => <group key={angle} rotation-y={angle}><Box {...brassFinish} position={[0, -0.14, 1.28]} size={[0.025, 0.018, 0.89]} /></group>)}
   </group>
 }

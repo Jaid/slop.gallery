@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, max, smoothstep} from 'three/tsl'
 
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
@@ -78,7 +79,7 @@ export default class TrampFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#8a6a44'
+  override readonly tint = hsl.integer(71, 45, 48)
   override readonly title = 'Tramp art'
 
   override createGeometry(width: number, height: number) {
@@ -100,7 +101,7 @@ export default class TrampFrame extends PortraitFrame {
         },
         gloss: 0.2,
         roughness: 0.55,
-        stain: '#e0b380',
+        stain: hsl.integer(70, 55, 76),
         relief: notches,
       }),
     ]

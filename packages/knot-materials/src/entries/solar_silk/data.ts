@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'solar_silk',
   candidateId: 'glm',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Threads of afternoon light slide across a cloth woven for the sun.',
   placeholder: {
-    color: '#ffe6b0',
+    color: hsl.integer(85, 100, 92),
     shading: 'fabric',
   },
 } as const satisfies KnotData

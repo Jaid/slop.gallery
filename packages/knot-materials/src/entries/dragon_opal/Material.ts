@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -27,12 +28,12 @@ export default class extends KnotMaterial {
     const fire = spectralColor(cells.mul(9).add(view.x.mul(5)).add(view.y.mul(4)).add(facing.mul(3)))
     const scales = opticalLine(mx_noise_float(p.mul(18)), 0.03)
     const deepFire = opticalLine(mx_noise_float(deep.mul(21)), 0.026).mul(near)
-    this.colorNode = mix(color('#120a1e'), color('#241436'), patches)
+    this.colorNode = mix(color(hsl.integer(300, 52, 7)), color(hsl.integer(303, 58, 13)), patches)
     this.transmission = 0.6
     this.thickness = 0.4
     this.ior = 1.5
     this.dispersion = 0.5
-    this.attenuationColor.set('#2a1a4e')
+    this.attenuationColor.set(hsl.integer(294, 67, 17))
     this.attenuationDistance = 0.6
     this.roughness = 0.07
     this.clearcoat = 0.9
@@ -41,6 +42,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.4
     this.iridescenceThicknessNode = cells.mul(400).add(300)
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(20)), 0.002)
-    this.emissiveNode = fire.mul(patches).mul(scales.mul(0.7).add(0.35)).mul(near.mul(0.55).add(0.3)).add(color('#ff7ad9').mul(deepFire).mul(0.7))
+    this.emissiveNode = fire.mul(patches).mul(scales.mul(0.7).add(0.35)).mul(near.mul(0.55).add(0.3)).add(color(hsl.integer(340, 100, 72.4)).mul(deepFire).mul(0.7))
   }
 }

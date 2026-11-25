@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cryo_aerogel',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Cold light rests in a substance almost too slight to cast a shadow.',
   placeholder: {
-    color: '#67e8f9',
+    color: hsl.integer(208, 90, 84),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: NKvaWYy8hA4AWQ9.
 export default {
   id: 'aurora_veins',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Polar fire braided under black glass, answering the way you turn.',
   placeholder: {
-    color: '#103b36',
+    color: hsl.integer(184, 72, 22),
     shading: 'glass',
   },
 } as const satisfies KnotData

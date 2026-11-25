@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_cell_noise_vec3, mx_noise_float, positionGeometry, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -67,10 +68,10 @@ export default class WeserStoneMaterial extends MeshStandardNodeMaterial {
     const seam = line(meters(phase.mul(Math.PI * 2).sin()), 0.0012).mul(unit(mx_noise_float(p.mul(3).add(2))).smoothstep(0.3, 0.6))
     // Broad clouds of richer and paler red through the whole block.
     const cloud = unit(mx_noise_float(p.mul(1.6).add(bedRandom2.y))).mul(0.7).add(unit(mx_noise_float(p.mul(6))).mul(0.3))
-    let stone: Vec3 = mix(color('#77443a'), color('#93594a'), cloud.smoothstep(0.2, 0.8))
+    let stone: Vec3 = mix(color(hsl.integer(32, 45, 36)), color(hsl.integer(35, 44, 45)), cloud.smoothstep(0.2, 0.8))
     stone = stone.mul(iron.sub(0.5).mul(0.16).add(1)).mul(float(1).sub(laminaLine.mul(0.08)))
-    stone = mix(stone, color('#b89c84'), bleached.mul(0.4))
-    stone = mix(stone, color('#5b2d25'), seam.mul(0.7))
+    stone = mix(stone, color(hsl.integer(63, 27, 67)), bleached.mul(0.4))
+    stone = mix(stone, color(hsl.integer(31, 52, 26)), seam.mul(0.7))
     // Reduction spots: spheres where the iron was reduced away, a rim of it pushed out round them.
     const spot = scatter(p, 0.2, 0.3, 4)
     const spotRadius = spot.random.y.pow(2).mul(0.028).add(0.006)
@@ -78,14 +79,14 @@ export default class WeserStoneMaterial extends MeshStandardNodeMaterial {
     const spotPixel = footprint
     const inSpot = insideBy(spotDistance, spotPixel).mul(spot.present)
     const rim = insideBy(spotDistance.abs().sub(0.0012), spotPixel).mul(spot.present).mul(visibleDetail(footprint, 0.002))
-    stone = mix(stone, color('#bdb9a0'), inSpot.mul(0.8))
-    stone = mix(stone, color('#6e3426'), rim.mul(0.5))
+    stone = mix(stone, color(hsl.integer(100, 22, 75)), inSpot.mul(0.8))
+    stone = mix(stone, color(hsl.integer(35, 60, 31)), rim.mul(0.5))
     // Clay galls: flattened pellets of gray-green clay in the lowest part of a bed.
     const gall = scatter(p, 0.1, 0.45, 7)
     const gallRadii = vec3(0.022, 0.006, 0.016).mul(gall.random.y.mul(0.7).add(0.5))
     const gallDistance = gall.offset.div(gallRadii).length().sub(1).mul(gallRadii.y)
     const inGall = insideBy(gallDistance, footprint).mul(gall.present).mul(height.smoothstep(0.15, 0.3).oneMinus())
-    stone = mix(stone, mix(color('#6f6a5c'), color('#5a4a41'), gall.random.z), inGall.mul(0.9))
+    stone = mix(stone, mix(color(hsl.integer(91, 13, 45)), color(hsl.integer(51, 18, 33)), gall.random.z), inGall.mul(0.9))
     // The sand itself, and quartz grains glinting close up.
     const sand = mix(float(0.5), unit(mx_noise_float(p.mul(1100))), visibleDetail(footprint, 0.0006))
     const grit = mix(float(0.5), unit(mx_noise_float(p.mul(260).add(9))), visibleDetail(footprint, 0.002))

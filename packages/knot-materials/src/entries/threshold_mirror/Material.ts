@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, mx_fractal_noise_float, mx_noise_vec3, normalWorld, pmremTexture, positionWorld, time, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -32,8 +33,8 @@ export default class extends BaseKnotMaterial {
     const aperture = facing.add(veilNoise)
     const openness = aperture.smoothstep(threshold.sub(0.1), threshold.add(0.1))
     const edge = aperture.sub(threshold).div(0.035).pow(2).negate().exp()
-    const edgeColor = mix(color('#7ff5ff'), color('#ffffff'), intimate)
-    this.colorNode = color('#000000')
+    const edgeColor = mix(color(hsl.integer(202, 99, 89)), color(hsl.integer(0, 0, 100)), intimate)
+    this.colorNode = color(hsl.integer(0, 0, 0))
     this.metalness = 1
     this.roughness = 1
     this.emissiveNode = mix(mirror, window, openness).add(edgeColor.mul(edge).mul(near.mul(0.6).add(0.4)).mul(1.2))

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -50,14 +51,14 @@ export default class extends KnotMaterial {
     const eyeRing = eye.mul(eyeMiddle.oneMinus())
     const colorShift = view.dot(vec3(0.66, -0.31, 0.68).normalize()).mul(2.8).add(random.z.mul(4.5)).add(grazing.mul(2.2))
     const structuralColor = spectralColor(colorShift)
-    const ember = mix(color('#5a0611'), color('#f06414'), progress.pow(1.2))
-    const goldenTip = mix(ember, color('#ffd36a'), progress.smoothstep(0.72, 0.98).mul(0.75))
+    const ember = mix(color(hsl.integer(22, 95, 20)), color(hsl.integer(44, 97, 62)), progress.pow(1.2))
+    const goldenTip = mix(ember, color(hsl.integer(87, 100, 86.6)), progress.smoothstep(0.72, 0.98).mul(0.75))
     const featherColor = mix(goldenTip, structuralColor.mul(0.62).add(0.12), eyeRing.mul(0.9))
-    const eyeColor = mix(color('#07122b'), color('#28bfd1'), facing.mul(0.38).add(random.x.mul(0.2)))
-    let surface: Node<'vec3'> = mix(color('#17020a'), featherColor, feather)
+    const eyeColor = mix(color(hsl.integer(264, 68, 9)), color(hsl.integer(207, 88, 70)), facing.mul(0.38).add(random.x.mul(0.2)))
+    let surface: Node<'vec3'> = mix(color(hsl.integer(356, 74, 5)), featherColor, feather)
     surface = mix(surface, eyeColor, eyeMiddle)
-    surface = mix(surface, color('#08020a'), eyeCore)
-    surface = mix(surface, color('#ffe1a0'), shaft.mul(0.72).add(edge.mul(0.24)).clamp())
+    surface = mix(surface, color(hsl.integer(320, 58, 3.4)), eyeCore)
+    surface = mix(surface, color(hsl.integer(86, 100, 90.7)), shaft.mul(0.72).add(edge.mul(0.24)).clamp())
     surface = surface.mul(barbs.mul(0.11).add(0.94))
     this.colorNode = surface
     const gilding = shaft.mul(0.7).add(edge.mul(0.18)).add(progress.smoothstep(0.87, 1).mul(feather).mul(0.35)).clamp()
@@ -76,6 +77,6 @@ export default class extends KnotMaterial {
     const ignitionPhase = tube.x.mul(TAU * 3).sub(time.mul(0.68)).add(row.mul(0.9))
     const ignition = ignitionPhase.sin().mul(0.5).add(0.5).pow(12).mul(progress.smoothstep(0.68, 0.98)).mul(feather)
     const eyeAwake = time.mul(0.37).add(random.x.mul(TAU)).sin().mul(0.5).add(0.5).pow(7).mul(eyeCore).mul(intimate)
-    this.emissiveNode = mix(color('#ff2715'), color('#ffd36b'), progress).mul(ignition).mul(0.85).add(structuralColor.mul(eyeAwake).mul(0.5)).add(color('#ffb45d').mul(edge).mul(grazing.pow(3)).mul(0.1))
+    this.emissiveNode = mix(color(hsl.integer(30, 100, 58.2)), color(hsl.integer(86.6, 100, 86.6)), progress).mul(ignition).mul(0.85).add(structuralColor.mul(eyeAwake).mul(0.5)).add(color(hsl.integer(68, 100, 79.6)).mul(edge).mul(grazing.pow(3)).mul(0.1))
   }
 }

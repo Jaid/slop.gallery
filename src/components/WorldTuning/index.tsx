@@ -7,8 +7,8 @@ import Branch from 'branch-component'
 import hsl from 'okhsl'
 import {useEffect, useState} from 'react'
 
+import {cssHex, unpackOkhsl} from '#src/lib/color.ts'
 import {notify} from '#src/lib/gallery.ts'
-import {tuningHex} from '#src/lib/worldTuning/color.ts'
 import worldTuning from '#src/lib/worldTuning/index.ts'
 import {useWorldTuningPanel} from '#src/lib/worldTuning/panel.ts'
 import {changeWorldTuning, discardTuningBuffer, useTuningBuffer} from '#src/lib/worldTuning/tuningBuffer.ts'
@@ -147,7 +147,7 @@ function ControlRow({control, disabled, module}: {
       }
       case 'color': {
         // Named with its part of the group, as a group may hold several colors, like a light’s each.
-        return <ColorSliders id={id} disabled={inactive} label={label} name={entry?.caption ? `${entry.caption} ${control.label.toLowerCase()}` : control.label} value={value as string} onChange={set} />
+        return <ColorSliders id={id} disabled={inactive} label={label} name={entry?.caption ? `${entry.caption} ${control.label.toLowerCase()}` : control.label} value={value as number} onChange={set} />
       }
       case 'range': {
         return <label className={css.row}>
@@ -183,11 +183,6 @@ const hslAxes = [
 ] as const
 /** how many colors a slider’s track runs through, every 30° round the hue and every 25% along the others */
 const trackStops = [13, 5, 5] as const
-/** The OkHSL color of #rrggbb, in whole degrees and percent. */
-const readHsl = (hex: string): Channels => {
-  const [hue, saturation, lightness] = hsl.fromHex(hex)
-  return [hue, saturation, lightness]
-}
 /** The color with the axis moved to the amount. */
 const withAxis = (channels: Channels, axis: number, amount: number): Channels => {
   const moved: Channels = [...channels]
@@ -201,7 +196,7 @@ const track = (channels: Channels, axis: number) => {
   return `linear-gradient(to right, ${stops.join(', ')})`
 }
 /**
- * A color of the world tuning as three sliders, its OkHSL hue, saturation and lightness, each over a track of the colors it moves through, under a swatch of it with its #rrggbb, which is what it sets.
+ * A color of the world tuning as three sliders, its OkHSL hue, saturation and lightness, each over a track of the colors it moves through, under a swatch labeled with its #rrggbb.
  * The sliders keep what they were moved to as long as the value is one they set, which holds the hue of a gray, which #rrggbb has none of, and doesn’t round the other axes anew; any other value, like a reset or a tool’s, moves them to its own.
  */
 function ColorSliders({disabled, id, label, name, onChange, value}: {
@@ -210,19 +205,19 @@ function ColorSliders({disabled, id, label, name, onChange, value}: {
   label: ReactNode
   /** what the color is called, which its sliders are labeled by */
   name: string
-  onChange: (hex: string) => void
-  value: string
+  onChange: (rgb: number) => void
+  value: number
 }) {
   const [color, setColor] = useState(() => ({
-    hsl: readHsl(value),
+    hsl: unpackOkhsl(value),
     /** what the sliders set that has yet to arrive, in order, as a change of the panel waits for the frame before it */
-    pending: [] as ReadonlyArray<string>,
+    pending: [] as ReadonlyArray<number>,
     value,
   }))
   if (value !== color.value) {
     const arrived = color.pending.indexOf(value)
     setColor(arrived === -1 ? {
-      hsl: readHsl(value),
+      hsl: unpackOkhsl(value),
       pending: [],
       value,
     } : {
@@ -233,19 +228,20 @@ function ColorSliders({disabled, id, label, name, onChange, value}: {
   }
   const move = (axis: number, amount: number) => {
     const channels = withAxis(color.hsl, axis, amount)
-    const hex = tuningHex(channels)
+    const rgb = hsl.integer(channels)
     setColor({
       hsl: channels,
-      pending: [...color.pending, hex],
+      pending: [...color.pending, rgb],
       value: color.value,
     })
-    onChange(hex)
+    onChange(rgb)
   }
+  const hex = cssHex(value)
   return <div className={css.color} aria-label={name} role='group'>
     <div className={css.row}>
       {label}
-      <span className={css.swatch} style={{background: value}} />
-      <output htmlFor={hslAxes.map(axis => `${id}-${axis.label.toLowerCase()}`).join(' ')}>{value}</output>
+      <span className={css.swatch} style={{background: hex}} />
+      <output htmlFor={hslAxes.map(axis => `${id}-${axis.label.toLowerCase()}`).join(' ')}>{hex}</output>
     </div>
     {hslAxes.map(({label: axisLabel, max, unit}, axis) => {
       const axisId = `${id}-${axisLabel.toLowerCase()}`

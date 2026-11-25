@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'molten_core',
   candidateId: 'claude_sonnet',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A thin crust is all that separates the room from a small furnace.',
   placeholder: {
-    color: '#ff6a3d',
+    color: hsl.integer(37, 100, 65.6),
     shading: 'liquid',
   },
 } as const satisfies KnotData

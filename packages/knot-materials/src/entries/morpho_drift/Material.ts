@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, negateOnBackSide, normalViewGeometry, positionView, positionViewDirection, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -80,15 +81,15 @@ export default class extends KnotMaterial {
     // vision. The travel is set by the angle between eye and scale, nudged per
     // scale and swept across each scale from root to tip.
     const travel = grazing.mul(0.85).add(f.rnd.z.mul(0.25)).add(f.s.y.mul(0.18)).add(f.rnd2.y.mul(0.2)).clamp()
-    let scaleColor = mix(color('#050d3d'), color('#0826a0'), travel.smoothstep(0.05, 0.45))
-    scaleColor = mix(scaleColor, color('#0e8fe0'), travel.smoothstep(0.55, 0.85))
-    scaleColor = mix(scaleColor, color('#5c1eb8'), travel.smoothstep(0.8, 1))
+    let scaleColor = mix(color(hsl.integer(268, 93, 9)), color(hsl.integer(265, 97, 26)), travel.smoothstep(0.05, 0.45))
+    scaleColor = mix(scaleColor, color(hsl.integer(245, 97, 57)), travel.smoothstep(0.55, 0.85))
+    scaleColor = mix(scaleColor, color(hsl.integer(293, 91, 34.5)), travel.smoothstep(0.8, 1))
     const band = travel.mul(3.5).add(f.rnd.x.mul(3)).sin().mul(0.5).add(0.5)
     scaleColor = scaleColor.mul(band.mul(0.5).add(0.7)).mul(f.rnd2.x.mul(0.45).add(0.8))
     const edge = f.d.smoothstep(0.68, 0.98)
     const border = f.d.smoothstep(0.8, 0.95).mul(f.plate)
     const rootShade = f.s.x.smoothstep(0, 0.35).mul(0.65).add(0.35)
-    const albedo = mix(color('#02030a'), scaleColor, f.plate).mul(edge.mul(-0.85).add(1)).mul(border.mul(-0.85).add(1)).mul(rootShade).mul(grazing.mul(-0.55).add(1))
+    const albedo = mix(color(hsl.integer(272, 50, 3)), scaleColor, f.plate).mul(edge.mul(-0.85).add(1)).mul(border.mul(-0.85).add(1)).mul(rootShade).mul(grazing.mul(-0.55).add(1))
     this.colorNode = albedo
     // Partial metalness tints the reflection itself with the structural color,
     // so the brightest glints stay blue instead of washing to white ceramic.
@@ -101,6 +102,6 @@ export default class extends KnotMaterial {
     this.aoNode = mix(float(0.38), float(1), f.plate.mul(rootShade))
     const sparkle = glints(scaleNormal, 140).mul(intimate.mul(0.7).add(0.3)).mul(f.plate)
     this.emissiveNode = scaleColor.mul(f.plate).mul(band.mul(0.22).add(0.06)).mul(near.mul(0.4).add(0.75)).mul(grazing.mul(-0.5).add(1))
-      .add(color('#cfe6ff').mul(sparkle).mul(0.8))
+      .add(color(hsl.integer(250, 100, 90)).mul(sparkle).mul(0.8))
   }
 }

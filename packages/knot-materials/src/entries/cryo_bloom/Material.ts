@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, mx_noise_vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -23,13 +24,13 @@ export default class extends KnotMaterial {
     const facet = crystal.smoothstep(0.04, 0.24)
     const frostLine = opticalLine(frost.mul(20).sin(), 0.04)
     const crack = opticalLine(cellularBoundary(p.mul(9)), 0.03)
-    const ice = mix(color('#0b3a4a'), color('#bff7ff'), facet.mul(0.7).add(frostLine.mul(0.4)))
+    const ice = mix(color(hsl.integer(226, 79, 23)), color(hsl.integer(207, 100, 93)), facet.mul(0.7).add(frostLine.mul(0.4)))
     this.colorNode = ice
     this.transmission = 0.85
     this.thickness = 0.7
     this.ior = 1.31
     this.dispersion = 0.15
-    this.attenuationColor.set('#1b6f7a')
+    this.attenuationColor.set(hsl.integer(208, 81, 42))
     this.attenuationDistance = 0.8
     this.roughnessNode = facet.mul(0.18).add(0.04)
     this.metalness = 0
@@ -39,6 +40,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.3
     this.iridescenceThicknessNode = facing.mul(220).add(180)
     this.normalNode = proceduralNormal(facet.mul(0.7).add(frost.mul(0.2)), 0.002)
-    this.emissiveNode = mix(color('#9befff'), color('#ffffff'), facing).mul(frostLine.add(crack).mul(0.8)).mul(near.mul(0.6).add(0.2)).add(color('#58d9ff').mul(rim).mul(0.25)).add(color('#bbfff1').mul(facet.smoothstep(0.7, 0.9)).mul(intimate).mul(0.4))
+    this.emissiveNode = mix(color(hsl.integer(210, 100, 89)), color(hsl.integer(0, 0, 100)), facing).mul(frostLine.add(crack).mul(0.8)).mul(near.mul(0.6).add(0.2)).add(color(hsl.integer(221, 100, 80)).mul(rim).mul(0.25)).add(color(hsl.integer(181, 100, 94.3)).mul(facet.smoothstep(0.7, 0.9)).mul(intimate).mul(0.4))
   }
 }

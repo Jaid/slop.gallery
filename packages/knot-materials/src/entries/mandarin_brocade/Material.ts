@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, vec2} from 'three/tsl'
 
 import {tubeCoordinates} from '../../candidates/claude_haiku/lib/tubeCoordinates.ts'
@@ -49,15 +50,15 @@ export default class extends KnotMaterial {
     const weftSeen = weftPhase.fwidth().smoothstep(0.2, 0.5).oneMinus().mul(intimate.mul(0.6).add(0.4))
     const warpShade = float(1).sub(warpRidge.mul(0.5).add(0.5).oneMinus().mul(0.3).mul(warpSeen))
     const weftShade = float(1).sub(weftRidge.mul(0.5).add(0.5).oneMinus().mul(0.4).mul(weftSeen))
-    const gold = mix(color('#9b6a22'), color('#f2cf85'), warpShade)
-    const silk = mix(color('#1a2c63'), color('#2f4a8f'), weftShade)
-    const rose = color('#a8405a').mul(weftShade.mul(0.8).add(0.2))
+    const gold = mix(color(hsl.integer(72, 78, 49)), color(hsl.integer(86, 73, 85)), warpShade)
+    const silk = mix(color(hsl.integer(267, 73, 21)), color(hsl.integer(266, 66, 34)), weftShade)
+    const rose = color(hsl.integer(8, 66, 44)).mul(weftShade.mul(0.8).add(0.2))
     this.colorNode = mix(mix(silk, rose, roseMask), gold, goldMask)
     this.metalnessNode = goldMask
     this.roughnessNode = mix(float(0.55), float(0.2), goldMask).add(warpSeen.mul(goldMask).mul(0.04))
 // Warp floats are brushed along the tube, weft along the cross-section. The vector is (tangent, bitangent) strength.
     this.anisotropyNode = mix(vec2(0, 0.55), vec2(0.85, 0), goldMask)
-    this.sheenNode = color('#6f86d6').mul(grazing.pow(2).mul(0.6).add(0.12)).mul(goldMask.oneMinus())
+    this.sheenNode = color(hsl.integer(270, 63, 58)).mul(grazing.pow(2).mul(0.6).add(0.12)).mul(goldMask.oneMinus())
     this.sheenRoughnessNode = float(0.38)
     this.clearcoat = 0.2
     this.clearcoatRoughness = 0.15
@@ -65,8 +66,8 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(height, 1)
 // A bright current of light travels the length of the knot: one period around the loop, once per two seconds.
     const sweep = along.mul(TAU).sub(time.mul(Math.PI)).cos().mul(0.5).add(0.5).pow(8)
-    this.emissiveNode = color('#f2cf85').mul(goldMask).mul(sweep.mul(0.3).add(0.02))
-      .add(color('#a8405a').mul(roseMask).mul(0.04))
-      .add(color('#8aa6ff').mul(grazing.pow(3)).mul(0.03))
+    this.emissiveNode = color(hsl.integer(86, 73, 85)).mul(goldMask).mul(sweep.mul(0.3).add(0.02))
+      .add(color(hsl.integer(8, 66, 44)).mul(roseMask).mul(0.04))
+      .add(color(hsl.integer(270, 100, 70)).mul(grazing.pow(3)).mul(0.03))
   }
 }

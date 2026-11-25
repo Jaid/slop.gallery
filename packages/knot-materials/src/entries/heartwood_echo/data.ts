@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'heartwood_echo',
   candidateId: 'gpt_luna',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'The knot has grown a heart of old wood, where slow rings and living sap answer the rhythm of your orbit.',
   displacement: 0.002,
   placeholder: {
-    color: '#6a3f22',
+    color: hsl.integer(53, 59, 32),
     shading: 'smooth',
   },
 } as const satisfies KnotData

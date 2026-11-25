@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, time, uv, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -13,11 +14,11 @@ import knotData from './data.ts'
 
 /** The color of rock remembering, in order, that it was once a star. */
 function magmaColor(temperature: Node<'float'>) {
-  const cold = color('#160302')
-  const ember = mix(cold, color('#6e0e00'), temperature.smoothstep(0.06, 0.36))
-  const flame = mix(ember, color('#ff4400'), temperature.smoothstep(0.34, 0.64))
-  const gold = mix(flame, color('#ffab2e'), temperature.smoothstep(0.6, 0.86))
-  return mix(gold, color('#fff3cd'), temperature.smoothstep(0.84, 1))
+  const cold = color(hsl.integer(29, 76, 5))
+  const ember = mix(cold, color(hsl.integer(32, 100, 25)), temperature.smoothstep(0.06, 0.36))
+  const flame = mix(ember, color(hsl.integer(35.2, 100, 60.4)), temperature.smoothstep(0.34, 0.64))
+  const gold = mix(flame, color(hsl.integer(71, 100, 77.3)), temperature.smoothstep(0.6, 0.86))
+  return mix(gold, color(hsl.integer(93, 100, 95.9)), temperature.smoothstep(0.84, 1))
 }
 
 /** A cooling lava crust split into dark basalt plates. A second, hotter country glows in the seams below the crust: it parallaxes as you circle, breathes on a slow cycle, and sends a bright meridian of heat travelling around the knot. Lean in and the plates split again into finer, whiter cracks full of sparks. */
@@ -61,10 +62,10 @@ export default class extends KnotMaterial {
     // catch the studio as dark mirrors between the glowing seams.
     const ash = mx_fractal_noise_float(p.mul(7.5), 3, 2, 0.5).mul(0.5).add(0.5)
     const glassy = mx_noise_float(p.mul(3.4).add(vec3(11.2, 3.8, 7.4))).mul(0.5).add(0.5).smoothstep(0.58, 0.85)
-    const crust = mix(color('#050202'), color('#1d0f08'), ash)
-    const ashen = mix(crust, color('#574a3d'), ash.smoothstep(0.66, 0.96).mul(0.38))
+    const crust = mix(color(hsl.integer(19, 31, 3)), color(hsl.integer(48, 44, 9)), ash)
+    const ashen = mix(crust, color(hsl.integer(67, 19, 33)), ash.smoothstep(0.66, 0.96).mul(0.38))
     const baked = mix(ashen, magma.mul(0.32), crustGlow.mul(0.2))
-    this.colorNode = mix(baked, color('#030303'), glassy.mul(plateLift).mul(0.55))
+    this.colorNode = mix(baked, color(hsl.integer(0, 0, 3)), glassy.mul(plateLift).mul(0.55))
     this.metalness = 0.04
     this.roughnessNode = float(0.94).sub(glassy.mul(0.55)).sub(crustCore.mul(0.45)).sub(fineCrack.mul(0.2)).clamp(0.16, 0.95)
     this.clearcoatNode = glassy.mul(plateLift).mul(0.75)
@@ -79,8 +80,8 @@ export default class extends KnotMaterial {
     this.emissiveNode = magma
       .mul(crustCore.mul(2.7).add(crustGlow.mul(0.5)).add(deepGlow.mul(0.45)).add(midCrack.mul(0.95)).add(fineCrack.mul(1.5)))
       .mul(heat.mul(0.45).add(0.72))
-      .add(color('#ff6a22').mul(rim).mul(crustGlow).mul(0.5))
-      .add(color('#fff0c0').mul(sparks).mul(breath.mul(0.8).add(0.7)).mul(1.6))
-      .add(color('#ffd9a8').mul(glint).mul(0.3))
+      .add(color(hsl.integer(42, 99, 65)).mul(rim).mul(crustGlow).mul(0.5))
+      .add(color(hsl.integer(92, 100, 94.7)).mul(sparks).mul(breath.mul(0.8).add(0.7)).mul(1.6))
+      .add(color(hsl.integer(74, 100, 89)).mul(glint).mul(0.3))
   }
 }

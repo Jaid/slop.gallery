@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeRay} from '../../lib/atelier.ts'
@@ -27,8 +28,8 @@ export default class extends KnotMaterial {
     const brushFine = mx_noise_float(p.mul(23)).mul(0.5).add(0.5)
     // Warm ivory porcelain with celadon pooling in the quiet patches.
     const blush = mx_noise_float(p.mul(2.2)).mul(0.5).add(0.5)
-    let porcelain = mix(color('#e9e2d2'), color('#f8f4ea'), blush)
-    porcelain = mix(porcelain, color('#ccd6c9'), blush.smoothstep(0.58, 0.85).mul(0.45))
+    let porcelain = mix(color(hsl.integer(87, 29, 90)), color(hsl.integer(89, 43, 96)), blush)
+    porcelain = mix(porcelain, color(hsl.integer(138, 18, 84)), blush.smoothstep(0.58, 0.85).mul(0.45))
     // Cobalt band flowing along one flank of the tube, broken like dry brushwork and
     // edged by a hand-drawn double line. Soft wash patches settle between the motifs.
     // The paint layer is sampled a breath beneath the glaze, so it parallaxes under it.
@@ -57,7 +58,7 @@ export default class extends KnotMaterial {
     }
     const plum = petalDist.smoothstep(0.035, 0.065).oneMinus().add(motifDist.smoothstep(0.04, 0.075).oneMinus().mul(0.9)).clamp().mul(motifGate)
     const cobaltPaint = band.mul(0.92).max(bandLine).max(plum.mul(0.9)).max(wash.mul(0.12))
-    const cobaltColor = mix(color('#0a1c4a'), color('#1e46a8'), brushFine)
+    const cobaltColor = mix(color(hsl.integer(264, 84, 14)), color(hsl.integer(264, 88, 34)), brushFine)
     porcelain = mix(porcelain, cobaltColor, cobaltPaint.mul(brush.mul(0.2).add(0.85)))
     // The fracture network, warped by two noise octaves so no crack runs dead straight:
     // hand-varied gold veins, a dusting of gold around them, and dark-stained crackle in
@@ -70,8 +71,8 @@ export default class extends KnotMaterial {
     const goldDust = filteredRibbon(veinField, veinWidth.mul(2.2))
     const cluster = mx_noise_float(p.mul(1.8)).mul(0.5).add(0.5).smoothstep(0.45, 0.75)
     const crackle = filteredRibbon(cellularBoundary(warped.mul(12.5)), 0.011).mul(near).mul(cluster.mul(0.65).add(0.35))
-    const goldColor = mix(color('#9c6f16'), color('#f6cf5a'), brushFine)
-    let surface = mix(porcelain, color('#6a5a48'), crackle.mul(0.26))
+    const goldColor = mix(color(hsl.integer(78, 87, 50)), color(hsl.integer(91, 86, 84.5)), brushFine)
+    let surface = mix(porcelain, color(hsl.integer(70, 23, 40)), crackle.mul(0.26))
     surface = mix(surface, goldColor, goldDust.mul(0.1))
     surface = mix(surface, goldColor, goldMask)
     this.colorNode = surface
@@ -89,7 +90,7 @@ export default class extends KnotMaterial {
     // No fire in the gold — only the faintest warmth so shadowed veins keep their body,
     // plus a hard lamp glint that runs along the veins as the viewer moves.
     const veinGlint = glints(normalViewGeometry, 48).mul(goldMask)
-    this.emissiveNode = color('#ff9a1e').mul(goldMask).mul(facing).mul(0.035)
-      .add(color('#ffd98a').mul(veinGlint).mul(0.85))
+    this.emissiveNode = color(hsl.integer(64, 100, 74)).mul(goldMask).mul(facing).mul(0.035)
+      .add(color(hsl.integer(85, 100, 88.5)).mul(veinGlint).mul(0.85))
   }
 }

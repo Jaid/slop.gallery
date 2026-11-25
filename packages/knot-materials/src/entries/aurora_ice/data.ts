@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aurora_ice',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Polar night lies frozen in clear blue ice while curtains of impossible dawn drift far beneath its surface.',
   placeholder: {
-    color: '#288596',
+    color: hsl.integer(213, 77, 50),
     shading: 'glass',
   },
 } as const satisfies KnotData

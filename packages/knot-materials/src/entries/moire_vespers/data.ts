@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7V0v37e8AD5LVut; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'moire_vespers',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Two engravings so nearly alike that neither can be seen; only the silence between them makes a picture.',
   placeholder: {
-    color: '#7b4ae0',
+    color: hsl.integer(293, 84, 48),
     shading: 'metal',
   },
 } as const satisfies KnotData

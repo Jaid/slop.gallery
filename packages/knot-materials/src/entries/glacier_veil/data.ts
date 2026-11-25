@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'glacier_veil',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Glacier light remembers the sky. Curtains of a younger sun drift beneath the ice and slide whenever you do.',
   placeholder: {
-    color: '#317e86',
+    color: hsl.integer(205, 66, 48),
     shading: 'glass',
   },
 } as const satisfies KnotData

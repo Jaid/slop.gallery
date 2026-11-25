@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, cos, max, mix, mx_fractal_noise_float, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {beads} from '../../lib/beads.ts'
@@ -53,20 +54,20 @@ export default class extends KnotMaterial {
 // Only the smooth, derivative-free relief reaches the vertex stage; the web is a normal-map concern.
     const cushion = dome.mul(present).mul(pulse).mul(0.9).add(rot.mul(0.1))
     this.positionNode = positionGeometry.add(normalLocal.mul(cushion.mul(knotData.displacement)))
-    const bark = mix(color('#070609'), color('#1e150e'), fibre.mul(0.8).add(0.1))
-    const decay = mix(bark, color('#4a3823'), rot.mul(0.6))
+    const bark = mix(color(hsl.integer(302, 16, 4)), color(hsl.integer(59, 29, 10)), fibre.mul(0.8).add(0.1))
+    const decay = mix(bark, color(hsl.integer(70, 39, 26)), rot.mul(0.6))
 // A cap is dark on top and lit from beneath; only the gills carry the light out.
-    const flesh = mix(color('#160d05'), color('#3a2a16'), dome.pow(0.6).mul(0.5))
+    const flesh = mix(color(hsl.integer(65, 45, 7)), color(hsl.integer(71, 47, 20)), dome.pow(0.6).mul(0.5))
     this.colorNode = mix(decay, flesh, cap.mul(0.8)).sub(web.mul(0.08))
     this.metalness = 0
     this.roughnessNode = cap.mul(0.12).add(rot.mul(0.18)).add(fibre.mul(0.12)).add(0.62).clamp(0.35, 0.96)
     this.normalNode = proceduralNormal(web.mul(0.18).add(dome.mul(present).mul(0.5)).add(fibre.mul(0.06)).add(gills.mul(capProfile).mul(0.1)), 0.24)
-    const amber = color('#ffb35c')
-    const honey = color('#ffd9a0')
-    const deep = color('#8a4a12')
+    const amber = color(hsl.integer(68, 99, 79.4))
+    const honey = color(hsl.integer(78, 100, 89))
+    const deep = color(hsl.integer(56, 83, 40))
     this.emissiveNode = amber.mul(web.mul(0.85))
       .add(amber.mul(gillGlow.mul(present).mul(pulse).mul(2.4)))
-      .add(color('#8cf0c8').mul(gills.mul(gillGlow).mul(present).mul(pulse).mul(2)))
+      .add(color(hsl.integer(166, 72, 86.3)).mul(gills.mul(gillGlow).mul(present).mul(pulse).mul(2)))
       .add(deep.mul(rimGlow.mul(present).mul(pulse).mul(3.2)))
       .add(honey.mul(dome.mul(present).mul(pulse).mul(grazing.pow(2.4))).mul(1.3))
       .add(honey.mul(sporeGlow).mul(2.4))

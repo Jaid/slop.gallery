@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HU72JSGdKyp7pBO; fixture: knot-material-shaders; result: success.
 export default {
   id: 'elderwood',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Centuries curl beneath a polished wound. Mineral sap still travels the grain, carrying the green memory of a lost orchard.',
   placeholder: {
-    color: '#aa6738',
+    color: hsl.integer(54, 64, 51),
     shading: 'stone',
   },
 } as const satisfies KnotData

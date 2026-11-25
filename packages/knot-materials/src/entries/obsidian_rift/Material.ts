@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {hairline as opticalLine} from '../../lib/hairline.ts'
@@ -27,13 +28,13 @@ export default class extends BaseKnotMaterial {
     const breath = time.mul(0.4).sin().mul(0.15).add(0.85)
     const heat = near.mul(0.5).add(intimate.mul(0.6)).add(0.35).mul(breath)
     const chambers = mx_fractal_noise_float(p.mul(1.6), 2, 2, 0.5).smoothstep(0.3, 0.75)
-    const ember = mix(color('#ff6a13'), color('#ffe3ae'), core.add(crack.mul(0.35)).clamp())
-    this.colorNode = mix(color('#0b0806'), color('#33100a'), grazing.pow(2).mul(0.75))
+    const ember = mix(color(hsl.integer(43.7, 100, 65.3)), color(hsl.integer(83, 100, 91.4)), core.add(crack.mul(0.35)).clamp())
+    this.colorNode = mix(color(hsl.integer(60, 15, 5)), color(hsl.integer(32, 69, 13)), grazing.pow(2).mul(0.75))
     this.metalness = 0.15
     this.roughnessNode = crack.mul(0.3).add(chambers.mul(0.05)).add(0.05)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.04
     this.normalNode = proceduralNormal(crackField.abs().smoothstep(0, 0.22), 0.003)
-    this.emissiveNode = ember.mul(crack.mul(1.7).mul(vein).add(halo.mul(0.38)).add(micro.mul(0.9))).mul(heat).mul(facing.mul(0.35).add(0.75)).add(color('#7a1a05').mul(chambers).mul(grazing.pow(1.5)).mul(0.55)).add(color('#ff5722').mul(grazing.pow(4)).mul(0.2))
+    this.emissiveNode = ember.mul(crack.mul(1.7).mul(vein).add(halo.mul(0.38)).add(micro.mul(0.9))).mul(heat).mul(facing.mul(0.35).add(0.75)).add(color(hsl.integer(33, 96, 29)).mul(chambers).mul(grazing.pow(1.5)).mul(0.55)).add(color(hsl.integer(36.5, 100, 62.7)).mul(grazing.pow(4)).mul(0.2))
   }
 }

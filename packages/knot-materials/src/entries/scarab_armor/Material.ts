@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, time, uv, vec2} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -38,15 +39,15 @@ export default class extends KnotMaterial {
     const lamellaPhase = facing.mul(3.2).add(keel.mul(1.5)).add(grazing.mul(1.8))
     const structuralColor = cosinePalette(lamellaPhase, [0.32, 0.56, 0.48], [0.35, 0.44, 0.48], [1, 1, 1], [0.12, 0.42, 0.76])
 // Dark chitin base under-layer
-    const deepChitin = color('#0a0d0c')
+    const deepChitin = color(hsl.integer(174, 10, 6))
     const plateBase = mix(deepChitin, structuralColor, isPlate.mul(0.92))
 // Inter-scale flexible membrane with breathing bioluminescent heat vents
     const breath = time.mul(1.6).sin().mul(0.35).add(0.65)
     const ventGlow = seamMargin.mul(breath).mul(near.mul(0.7).add(0.4))
-    const ventColor = color('#ff3e14')
+    const ventColor = color(hsl.integer(33, 100, 60))
 // Micro-grooved diffraction grating striations
     const microGrooves = scaleUv.x.mul(72).sin().mul(0.5).add(0.5)
-    let compColor = mix(plateBase, color('#140b08'), seamMargin)
+    let compColor = mix(plateBase, color(hsl.integer(40, 29, 7)), seamMargin)
     compColor = mix(compColor, ventColor, ventGlow.mul(0.6))
     this.colorNode = compColor
 // Physical properties
@@ -65,8 +66,8 @@ export default class extends KnotMaterial {
 // Structural luminescence and intersegmental vent glow
     this.emissiveNode = structuralColor.mul(isPlate).mul(facing.pow(2)).mul(0.4)
       .add(ventColor.mul(ventGlow).mul(2.2))
-      .add(color('#ffffff').mul(scaleGlint).mul(2.5))
-      .add(color('#7518d4').mul(rim).mul(grazing.pow(3)).mul(0.5))
-      .add(color('#ff5520').mul(seamMargin).mul(intimate).mul(0.4))
+      .add(color(hsl.integer(0, 0, 100)).mul(scaleGlint).mul(2.5))
+      .add(color(hsl.integer(297, 96, 40.2)).mul(rim).mul(grazing.pow(3)).mul(0.5))
+      .add(color(hsl.integer(36, 100, 62.4)).mul(seamMargin).mul(intimate).mul(0.4))
   }
 }

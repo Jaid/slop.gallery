@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {panelSky, proceduralEnvironment} from '../../candidates/claude_sonnet/lib/environment.ts'
@@ -39,8 +40,8 @@ export default class extends KnotMaterial {
     const across = tube.y.mul(TAU * 90).add(mx_noise_float(p.mul(9)).mul(3))
     const fiberNoise = across.sin().mul(0.5).add(0.5).mul(0.55).add(tube.y.mul(TAU * 230).add(tube.x.mul(TAU * 9).add(tube.y.mul(TAU * 3)).sin().mul(3)).sin().mul(0.5).add(0.5).mul(0.45))
     const fibers = mix(float(0.62), fiberNoise, across.fwidth().smoothstep(0.9, 3).oneMinus())
-    const body = mix(mix(color('#0b0402'), color('#4a2309'), honey), color('#b87415'), gold.mul(0.92))
-    const albedo = mix(body, color('#31465c'), hawk.mul(0.75))
+    const body = mix(mix(color(hsl.integer(46, 46, 4)), color(hsl.integer(50, 77, 20)), honey), color(hsl.integer(68, 90, 56)), gold.mul(0.92))
+    const albedo = mix(body, color(hsl.integer(250, 34, 29)), hawk.mul(0.75))
     const brightness = gold.mul(0.65).add(honey.mul(0.25)).add(0.18).add(hawk.mul(0.2))
 // Chatoyance: every lamp contributes a band wherever the half vector is perpendicular to the fibers.
     const angle = time.mul(0.055)
@@ -105,6 +106,6 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.02
     this.anisotropy = 0.7
     this.anisotropyRotation = Math.PI / 2
-    this.emissiveNode = mix(color('#ff9a1f'), color('#fff0c8'), sharp.mul(0.6).clamp().pow(2)).mul(chatoyance).mul(2.1).add(color('#ffb23a').mul(sheenBand)).add(albedo.mul(brightness).mul(0.1)).add(color('#ffcf7a').mul(grazing.pow(3)).mul(0.05).mul(near.mul(0.5).add(0.5))).add(color('#3d7bff').mul(hawk).mul(facing.pow(3)).mul(0.14))
+    this.emissiveNode = mix(color(hsl.integer(64, 100, 74)), color(hsl.integer(90, 100, 95)), sharp.mul(0.6).clamp().pow(2)).mul(chatoyance).mul(2.1).add(color(hsl.integer(74, 100, 79)).mul(sheenBand)).add(albedo.mul(brightness).mul(0.1)).add(color(hsl.integer(81, 100, 86)).mul(grazing.pow(3)).mul(0.05).mul(near.mul(0.5).add(0.5))).add(color(hsl.integer(263, 100, 55.4)).mul(hawk).mul(facing.pow(3)).mul(0.14))
   }
 }

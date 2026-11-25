@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, hash, max, min, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -65,7 +66,7 @@ export default class CastleStoneMaterial extends MeshStandardNodeMaterial {
     const pick = random(4)
     const shade = random(5).sub(0.5).mul(0.12).add(1)
     const isSandstone = pick.greaterThanEqual(0.78).and(pick.lessThan(0.96))
-    const tone = select(pick.lessThan(0.5), color('#857d6d'), select(pick.lessThan(0.78), color('#7f7c74'), select(isSandstone, color('#877a6b'), color('#7b6857')))).mul(shade)
+    const tone = select(pick.lessThan(0.5), color(hsl.integer(85, 14, 53)), select(pick.lessThan(0.78), color(hsl.integer(90, 7, 52)), select(isSandstone, color(hsl.integer(71, 15, 52)), color(hsl.integer(64, 21, 46))))).mul(shade)
     // Bedding and mottling inside the stone, sandstone’s most marked; a weathering wash runs across the joints.
     const seed = random(6).mul(80)
     const bedding = mix(float(0.5), unit(mx_noise_float(vec3(lu.mul(1.5), lv.mul(26), seed))), fine)
@@ -93,7 +94,7 @@ export default class CastleStoneMaterial extends MeshStandardNodeMaterial {
     // Lime mortar: sandy and pale, shadowed under the block above where the joint runs level.
     const sand = mix(float(0.5), unit(mx_noise_float(positionWorld.mul(150))), fine)
     const underBlock = select(flat, float(0.75), select(lv.greaterThan(0), float(0.62), float(0.86)))
-    const mortar = mix(color('#77705f'), color('#878172'), sand).mul(underBlock)
+    const mortar = mix(color(hsl.integer(88, 16, 47)), color(hsl.integer(89, 13, 54)), sand).mul(underBlock)
     let surface: Node<'vec3'> = mix(mortar, body.mul(shoulder.mul(0.2).add(0.8)).mul(tooling.sub(0.5).mul(0.06).add(1)), stone)
     // Seepage: dark streaks running down from some of the joints, glossy while still damp.
     const wall = select(flat, float(0), float(1))

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HdWJtzJ2GnPe32p; fixture: knot-material-shaders; result: success.
 export default {
   id: 'basalt_crown',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.02,
   flavorText: 'The skin set first and the rock is still arguing underneath it; every plate here is a lid, and the light is underneath.',
   placeholder: {
-    color: '#3a3230',
+    color: hsl.integer(34, 10, 23),
     shading: 'stone',
   },
 } as const satisfies KnotData

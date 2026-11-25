@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {attribute, cross, float, min, mix, normalize, time, vec3} from 'three/tsl'
 import {IcosahedronGeometry, InstancedBufferAttribute, InstancedMesh, MeshBasicNodeMaterial} from 'three/webgpu'
 
@@ -145,7 +146,7 @@ export default class LimestoneFountainSpray extends InstancedMesh<IcosahedronGeo
     geometry.setAttribute('sprayMotion', new InstancedBufferAttribute(motions, 3))
     // Bright, unlit water droplets: lit shading would leave the ones in the fountain’s shadow as dark specks.
     const material = new MeshBasicNodeMaterial({
-      color: '#f2fffc',
+      color: hsl.integer(181, 100, 98.8),
       depthWrite: false,
       opacity: 0.9,
       transparent: true,

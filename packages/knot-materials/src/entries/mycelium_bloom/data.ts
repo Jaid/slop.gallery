@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mycelium_bloom',
   candidateId: 'deepseek',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'The hidden garden flowers wherever its threads find one another.',
   placeholder: {
-    color: '#44ffdd',
+    color: hsl.integer(177, 100, 88.5),
     shading: 'fabric',
   },
 } as const satisfies KnotData

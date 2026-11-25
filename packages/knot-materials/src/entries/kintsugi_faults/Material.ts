@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, normalLocal, positionGeometry, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -47,9 +48,9 @@ export default class extends BaseKnotMaterial {
     this.positionNode = positionGeometry.add(normalLocal.mul(seamLift.mul(0.006)))
     const glazeHeight = pooling.mul(0.3).add(leaf.mul(intimate).mul(0.12)).sub(goldWidth.mul(0.45)).add(crack.hairCore.mul(-0.2))
     this.normalNode = proceduralNormal(glazeHeight, 0.35).add(normalLocal.mul(goldWidth.mul(0.1))).normalize()
-    const jade = mix(color('#a9c4b2'), color('#e6ece3'), pooling.pow(2))
+    const jade = mix(color(hsl.integer(156, 25, 76)), color(hsl.integer(135, 23, 93)), pooling.pow(2))
     const porcelain = jade.mul(float(1).sub(crack.hair.mul(0.3)))
-    const gold = mix(color('#8a5a10'), color('#ffe08a'), leaf.mul(0.75).add(0.25))
+    const gold = mix(color(hsl.integer(71, 88, 43)), color(hsl.integer(90, 100, 90)), leaf.mul(0.75).add(0.25))
     this.colorNode = mix(porcelain, gold, goldWidth.clamp(0, 1))
     this.metalnessNode = goldWidth.mul(0.95)
     this.roughnessNode = float(0.14).add(crack.hair.mul(0.16)).sub(goldWidth.mul(0.02)).add(leaf.mul(intimate).mul(0.14).mul(goldWidth))
@@ -59,6 +60,6 @@ export default class extends BaseKnotMaterial {
     this.envMapIntensity = 1
     const goldGlint = glints(normalLocal, 90).mul(goldWidth).mul(near.mul(0.6).add(0.4))
     const leafGlint = glints(normalLocal.add(leaf.sub(0.5).mul(0.6)), 160).mul(goldWidth).mul(intimate).mul(leaf.smoothstep(0.7, 0.85))
-    this.emissiveNode = color('#ffd98a').mul(grazing.pow(3).mul(goldWidth).mul(0.1)).add(gold.mul(goldGlint.mul(0.6))).add(color('#fff3cc').mul(leafGlint))
+    this.emissiveNode = color(hsl.integer(85, 100, 88.5)).mul(grazing.pow(3).mul(goldWidth).mul(0.1)).add(gold.mul(goldGlint.mul(0.6))).add(color(hsl.integer(93, 100, 95.8)).mul(leafGlint))
   }
 }

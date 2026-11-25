@@ -2,6 +2,7 @@ import type {MarbleStyle} from '#src/lib/materials/marble/index.ts'
 import type {BowlLip, WaterSheet} from './config.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, float, length, max, min, mix, mx_noise_float, normalGeometry, positionGeometry, smoothstep, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -16,13 +17,13 @@ const below = (value: Float, edge: number, softness = 0.003) => float(1).sub(smo
 
 /** Arabescato: white with soft gray clouds and bold, feathered gray veins. */
 export const arabescato: MarbleStyle = {
-  base: '#f4f0ea',
-  cloud: '#bdb3a5',
-  halo: '#a39a8e',
+  base: hsl.integer(78, 25, 95),
+  cloud: hsl.integer(76, 14, 73),
+  halo: hsl.integer(75, 11, 64),
   haloStrength: 0.8,
-  thread: '#8a827a',
+  thread: hsl.integer(68, 8, 55),
   threadStrength: 0.5,
-  vein: '#4a4642',
+  vein: hsl.integer(68, 6, 30),
   veinWidth: 0.005,
   web: 0,
 }

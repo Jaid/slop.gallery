@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_hsvtorgb, mx_noise_float, mx_noise_vec3, normalViewGeometry, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -25,7 +26,7 @@ export default class extends KnotMaterial {
     const window = alignment.smoothstep(0.8, 0.97)
     const order = mx_noise_float(q.mul(14).add(vec3(5.5, 2.2, 8.8))).mul(0.5).add(0.5).smoothstep(0.28, 0.68)
     const flash = window.mul(order)
-    const potch = mix(color('#b8ad92'), color('#7d7259'), mx_noise_float(p.mul(6.2)).mul(0.5).add(0.5).mul(0.8).add(mx_noise_float(p.mul(23)).mul(0.5).add(0.5).mul(0.2)))
+    const potch = mix(color(hsl.integer(88, 24, 71)), color(hsl.integer(87, 24, 48)), mx_noise_float(p.mul(6.2)).mul(0.5).add(0.5).mul(0.8).add(mx_noise_float(p.mul(23)).mul(0.5).add(0.5).mul(0.2)))
     this.colorNode = mix(potch, spectral, flash)
     this.metalness = 0
     this.roughnessNode = float(0.08).sub(flash.mul(0.03))
@@ -41,8 +42,8 @@ export default class extends KnotMaterial {
     const pinfire = cellularPoints(q.mul(64), 0.02, 0.13, 0.84).mul(window).mul(intimate)
     const fire = glints(normalViewGeometry, 200).mul(order).mul(near)
     this.emissiveNode = spectral.mul(flash).mul(0.4)
-      .add(color('#fff8e8').mul(pinfire).mul(1.4))
-      .add(color('#fff6e2').mul(fire).mul(0.5))
-      .add(color('#ffe9c4').mul(grazing.pow(3)).mul(0.05))
+      .add(color(hsl.integer(87, 100, 97.7)).mul(pinfire).mul(1.4))
+      .add(color(hsl.integer(87, 100, 97)).mul(fire).mul(0.5))
+      .add(color(hsl.integer(81, 100, 93.3)).mul(grazing.pow(3)).mul(0.05))
   }
 }

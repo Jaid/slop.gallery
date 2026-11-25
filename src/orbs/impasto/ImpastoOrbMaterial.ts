@@ -1,6 +1,7 @@
 import type {OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {array, atan, Break, exp, float, Fn, If, Loop, max, min, mix, smoothstep, time, vec2, vec3, vec4} from 'three/tsl'
 
 import OrbGlassMaterial from '../base/OrbGlassMaterial.ts'
@@ -101,7 +102,7 @@ export default class ImpastoOrbMaterial extends OrbGlassMaterial {
     super(options, {
       fillIor: 1.28,
       name: 'orb-impasto',
-      tint: '#fbe298',
+      tint: hsl.integer(91, 85, 90.3),
     })
   }
 

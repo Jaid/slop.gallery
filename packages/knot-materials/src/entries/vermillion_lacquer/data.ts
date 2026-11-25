@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BJsZFlj5mQPSiFo; fixture: knot-material-shaders.
 export default {
   id: 'vermillion_lacquer',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The final coat of vermilion is still wet, and the gold leaf refuses to stay buried.',
   placeholder: {
-    color: '#e52b25',
+    color: hsl.integer(28, 95.6, 53),
     shading: 'smooth',
   },
   displacement: 0.000068,

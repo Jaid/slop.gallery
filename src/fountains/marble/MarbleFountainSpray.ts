@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {attribute, cameraWorldMatrix, color, float, min, mix, time, uv, vec3, vec4} from 'three/tsl'
 import {InstancedBufferAttribute, InstancedMesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
 
@@ -201,7 +202,7 @@ export default class MarbleFountainSpray extends InstancedMesh<PlaneGeometry, Me
     // A soft disc with a brighter top, as lit from the sky, and a glint off center.
     const disc = float(1).sub(distance).smoothstep(0, 0.6)
     const glint = float(1).sub(centered.sub(vec3(-0.25, 0.3, 0).xy).length().mul(3)).clamp()
-    material.colorNode = mix(color('#b9dcd6'), color('#ffffff'), centered.y.mul(0.5).add(0.5).mul(0.7).add(glint))
+    material.colorNode = mix(color(hsl.integer(184, 33, 85)), color(hsl.integer(0, 0, 100)), centered.y.mul(0.5).add(0.5).mul(0.7).add(glint))
     material.opacityNode = disc.mul(attribute<'float'>('sprayOpacity', 'float'))
     super(geometry, material, count)
     this.name = 'fountain-spray'

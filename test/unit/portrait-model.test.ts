@@ -102,7 +102,7 @@ describe('a work as an object apart from the world', () => {
     const {image} = meshes(model)
     expect(hold).toHaveBeenCalledWith(work.source)
     expect(image.material.map).toBeNull()
-    expect(image.material.color.getHexString()).toBe(artworkPlaceholders.loading.slice(1))
+    expect(image.material.color.getHex()).toBe(artworkPlaceholders.loading)
     loading.resolve(shared)
     await model.loaded
     const own = image.material.map!
@@ -111,7 +111,7 @@ describe('a work as an object apart from the world', () => {
     expect(own.source).toBe(shared.source)
     expect(own.flipY).toBe(true)
     expect(own.version).toBeGreaterThan(0)
-    expect(image.material.color.getHexString()).toBe('ffffff')
+    expect(image.material.color.getHex()).toBe(0xFF_FF_FF)
     // Disposing the model frees its own texture and geometries, never what the world shares.
     const disposed = {
       own: mock(() => {}),
@@ -174,7 +174,7 @@ describe('a work as an object apart from the world', () => {
     await model.loaded
     const {image} = meshes(model)
     expect(image.material.map).toBeNull()
-    expect(image.material.color.getHexString()).toBe(artworkPlaceholders.failed.slice(1))
+    expect(image.material.color.getHex()).toBe(artworkPlaceholders.failed)
     model.dispose()
   })
   test('a model disposed while its artwork still loads never takes a texture', async () => {

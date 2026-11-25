@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import Mood from '../base/Mood.ts'
 import SpookAmbience from './SpookAmbience.ts'
 
@@ -5,18 +7,18 @@ import SpookAmbience from './SpookAmbience.ts'
 export default class SpookMood extends Mood {
   override readonly ambience = SpookAmbience
   override readonly fill = {
-    color: '#a0ffcc',
+    color: hsl.integer(159, 100, 91.5),
     gain: 0.75,
   }
   override readonly grade = {
-    shadow: '#0a2a1e',
-    midtone: '#5aae88',
-    highlight: '#e4fff0',
+    shadow: hsl.integer(165, 76, 15),
+    midtone: hsl.integer(163, 63, 64),
+    highlight: hsl.integer(161, 100, 97.2),
     strength: 0.5,
   }
   readonly id = 'spook'
   override readonly lamps = {
-    color: '#c0ffd8',
+    color: hsl.integer(157, 100, 93.9),
     gain: 0.85,
   }
   readonly title = 'Haunting'

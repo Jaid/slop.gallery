@@ -1,4 +1,5 @@
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {CircleGeometry, DoubleSide, ExtrudeGeometry, Path, Quaternion, Shape, Vector3} from 'three/webgpu'
 
@@ -9,14 +10,14 @@ import StarryVaultMaterial from '#src/lib/materials/StarryVaultMaterial.ts'
 /** one palette per ring of windows, from the bottom up */
 const palettes = [
   {
-    border: '#2f9e5a',
-    center: '#ffb43c',
-    petals: ['#d8233a', '#2b4fd8'],
+    border: hsl.integer(152, 92, 56),
+    center: hsl.integer(74, 100, 79.2),
+    petals: [hsl.integer(22, 94, 50), hsl.integer(266.6, 93, 41.5)],
   },
   {
-    border: '#d8233a',
-    center: '#fff0b0',
-    petals: ['#2b4fd8', '#ffb43c'],
+    border: hsl.integer(22, 94, 50),
+    center: hsl.integer(96, 100, 94.4),
+    petals: [hsl.integer(266.6, 93, 41.5), hsl.integer(74, 100, 79.2)],
   },
 ] as const
 
@@ -74,13 +75,13 @@ export default function AntechamberDome({height, size}: {
     }
   }, [radius, size]))
   return <group name='antechamber-dome'>
-    <mesh castShadow geometry={geometry.slab} name='antechamber-ceiling' position={[0, height - 0.11, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}><meshStandardNodeMaterial color='#e1dccc' roughness={0.7} /></mesh>
+    <mesh castShadow geometry={geometry.slab} name='antechamber-ceiling' position={[0, height - 0.11, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}><meshStandardNodeMaterial color={hsl.integer(93, 24, 88)} roughness={0.7} /></mesh>
     {/* Seen from inside, the shell shows its back faces, which have to cast the sun’s shadow too. */}
     <mesh castShadow geometry={geometry.dome} material={vault} name='antechamber-dome-shell' position={[0, springY, 0]} receiveShadow />
     <group name='antechamber-dome-glass' position={[0, springY, 0]}>
       {geometry.panes.map(({center, material, quaternion, radius: paneRadius}, index) => <mesh key={index} castShadow geometry={geometry.pane} material={material} position={center} quaternion={quaternion} scale={paneRadius} />)}
     </group>
-    <mesh castShadow name='antechamber-dome-ring' position={[0, springY, 0]} receiveShadow rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[radius, 0.07, 12, 160]} /><meshStandardNodeMaterial color='#b8925a' metalness={0.8} roughness={0.35} /></mesh>
-    <mesh castShadow geometry={geometry.lattice} name='antechamber-oculus-lattice' position={[0, springY + antechamberLatticeY, 0]} receiveShadow><meshStandardNodeMaterial color='#b8925a' metalness={0.8} roughness={0.35} side={DoubleSide} /></mesh>
+    <mesh castShadow name='antechamber-dome-ring' position={[0, springY, 0]} receiveShadow rotation={[Math.PI / 2, 0, 0]}><torusGeometry args={[radius, 0.07, 12, 160]} /><meshStandardNodeMaterial color={hsl.integer(76, 52, 63)} metalness={0.8} roughness={0.35} /></mesh>
+    <mesh castShadow geometry={geometry.lattice} name='antechamber-oculus-lattice' position={[0, springY + antechamberLatticeY, 0]} receiveShadow><meshStandardNodeMaterial color={hsl.integer(76, 52, 63)} metalness={0.8} roughness={0.35} side={DoubleSide} /></mesh>
   </group>
 }

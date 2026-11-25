@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../candidates/claude_fable/lib/cellNoiseVec3.ts'
@@ -75,7 +76,7 @@ export default class extends KnotMaterial {
     const petalA = petals(petalLattice.lattice, petalLattice.period, 1, 0.5)
     const petalB = petals(petalLattice.lattice.add(vec2(0.5, 0.5)), petalLattice.period, 2, 0.4)
     const petalCover = petalA.body.max(petalB.body)
-    const petalTint = mix(rgb('#7a1830'), rgb('#b8552a'), petalA.tint.mul(petalA.body).add(petalB.tint.mul(petalB.body)).clamp())
+    const petalTint = mix(rgb(hsl.integer(12, 82, 29)), rgb(hsl.integer(42, 78, 50)), petalA.tint.mul(petalA.body).add(petalB.tint.mul(petalB.body)).clamp())
     const midrib = petalA.midrib.max(petalB.midrib)
 // Ensō: a single ink circle brushed onto the tube, with the brush running dry toward its end.
     const ensoCenter = vec2(0.5, 0.5)
@@ -90,21 +91,21 @@ export default class extends KnotMaterial {
 // Handmade paper is never even: clouds of pulp thicken and thin the sheet.
     const pulp = mx_fractal_noise_float(p.mul(5.5), 3, 2.1, 0.5).mul(0.5).add(0.5)
     const density = pulp.mul(0.4).add(fibers.mul(0.45)).add(rib.mul(0.7)).add(spine.mul(0.6)).add(petalCover.mul(0.72)).add(midrib.mul(0.2)).add(enso.mul(0.95))
-    const throughColor = mix(rgb('#ffb15c'), petalTint, petalCover.mul(0.8))
+    const throughColor = mix(rgb(hsl.integer(66, 100, 79)), petalTint, petalCover.mul(0.8))
     const light = throughColor.mul(transmission.add(ambientGlow)).mul(density.oneMinus().max(0.02))
 // Reflection: matte cream paper with a hint of the fibers, grayed by the ink and the petals where they lie near the surface.
-    const cream = rgb('#f3e9d6')
-    const surfaceColor = mix(mix(cream.mul(fibers.mul(0.15).add(0.85)), petalTint.mul(0.5).add(cream.mul(0.5)), petalCover.mul(0.35)), rgb('#1a1612'), enso.mul(0.9))
+    const cream = rgb(hsl.integer(84, 46, 92.6))
+    const surfaceColor = mix(mix(cream.mul(fibers.mul(0.15).add(0.85)), petalTint.mul(0.5).add(cream.mul(0.5)), petalCover.mul(0.35)), rgb(hsl.integer(67, 14, 10)), enso.mul(0.9))
     this.colorNode = surfaceColor.mul(0.4)
     this.metalness = 0
     this.roughnessNode = float(0.85).sub(enso.mul(0.15))
     this.sheen = 0.6
-    this.sheenColor.set('#fff4dc')
+    this.sheenColor.set(hsl.integer(86, 100, 96.4))
     this.sheenRoughness = 0.8
     const surfaceHeight = fibers.mul(0.0006).add(rib.mul(0.0015)).add(petalCover.mul(0.0008)).sub(enso.mul(0.0002))
     this.normalNode = proceduralNormal(surfaceHeight, 1)
 // The limb of a backlit lantern glows more than its face; add a soft warm rim that follows the flame.
-    const rim = rgb('#ffc98a').mul(grazing.pow(3)).mul(backlit.mul(0.6).add(0.15)).mul(float(0.1).div(flameDistance.add(0.15))).mul(flicker)
+    const rim = rgb(hsl.integer(71, 100, 85)).mul(grazing.pow(3)).mul(backlit.mul(0.6).add(0.15)).mul(float(0.1).div(flameDistance.add(0.15))).mul(flicker)
     const {emissive, isolated} = debugLayer({
       transmission,
       light,

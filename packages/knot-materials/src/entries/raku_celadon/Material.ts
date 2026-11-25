@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_fractal_noise_float, mx_noise_float, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -68,18 +69,18 @@ export default class extends KnotMaterial {
     const bubbleGlow = subsurfaceBubbles.mask.mul(glazeDepth.smoothstep(0.35, 0.85)).mul(intimate.mul(0.75).add(0.25))
     const goldDust = glitter(p, 0.0085, 75, 0.45)
 // Celadon Beer-Lambert absorption: luminous seafoam where thin, rich imperial jade-emerald in the pooled hollows.
-    const thinCeladon = color('#c4ffee')
-    const pooledJade = color('#128572')
-    const deepAbyssJade = color('#063d34')
+    const thinCeladon = color(hsl.integer(175, 100, 94.8))
+    const pooledJade = color(hsl.integer(178, 94, 48))
+    const deepAbyssJade = color(hsl.integer(178, 92, 22))
     const celadonBody = mix(thinCeladon, mix(pooledJade, deepAbyssJade, glazeDepth.pow(1.45)), glazeDepth.smoothstep(0.18, 0.92))
-    const smokedCrackleColor = color('#110d0a')
-    const glazedColor = mix(mix(celadonBody, color('#d8fff0'), subGlazeCrackle.mul(0.25).add(bubbleGlow.mul(0.35))), smokedCrackleColor, darkCrackle.mul(0.85))
+    const smokedCrackleColor = color(hsl.integer(59, 16, 7))
+    const glazedColor = mix(mix(celadonBody, color(hsl.integer(170, 100, 96.3)), subGlazeCrackle.mul(0.25).add(bubbleGlow.mul(0.35))), smokedCrackleColor, darkCrackle.mul(0.85))
 // Charred tenmoku iron stoneware on the unglazed ridges with oil-spot rainbow lustre near the glaze boundary.
     const lustreBorder = glazeDepth.smoothstep(0.14, 0.34).mul(glazeDepth.smoothstep(0.34, 0.56).oneMinus())
     const rakuSpectrum = spectralColor(facing.mul(5).add(clayNoise.mul(3.5)).add(metric.x.mul(2)))
-    const charredClay = mix(color('#1c120e'), color('#4d2c1e'), clayNoise.mul(0.5).add(0.5))
+    const charredClay = mix(color(hsl.integer(43, 26, 9)), color(hsl.integer(43, 48, 23)), clayNoise.mul(0.5).add(0.5))
     const clayWithLustre = mix(charredClay, rakuSpectrum.mul(0.65), lustreBorder.mul(0.75))
-    const goldBase = mix(color('#f2b738'), color('#ffe89e'), goldDust.sparkle.min(1).mul(0.45))
+    const goldBase = mix(color(hsl.integer(82, 89, 78)), color(hsl.integer(92, 100, 92)), goldDust.sparkle.min(1).mul(0.45))
     this.colorNode = mix(mix(glazedColor, clayWithLustre, rawClayMask), goldBase, kintsugiSeam)
     this.metalnessNode = mix(mix(lustreBorder.mul(0.65), float(0.12), rawClayMask), float(1), kintsugiSeam)
     this.roughnessNode = mix(mix(float(0.035).add(darkCrackle.mul(0.22)), float(0.76), rawClayMask), float(0.14).sub(goldDust.sparkle.mul(0.05)).clamp(0.06, 0.22), kintsugiSeam)
@@ -99,12 +100,12 @@ export default class extends KnotMaterial {
     this.aoNode = float(1).sub(darkCrackle.mul(0.45)).sub(rawClayMask.mul(0.18))
 // Residual kiln-ember pulse travelling along the golden kintsugi seams and raku reduction rainbow rim.
     const kilnPulse = metric.x.mul(2.5).sub(time.mul(Math.PI)).sin().mul(0.5).add(0.5).pow(3)
-    const kintsugiGlow = mix(color('#ff6a00'), color('#ffd966'), kilnPulse).mul(kintsugiSeam).mul(kilnPulse.mul(0.55).add(0.25))
+    const kintsugiGlow = mix(color(hsl.integer(45, 100, 65)), color(hsl.integer(91, 100, 87.9)), kilnPulse).mul(kintsugiSeam).mul(kilnPulse.mul(0.55).add(0.25))
     const reductionRim = rakuSpectrum.mul(lustreBorder).mul(grazing.pow(2.2)).mul(0.32)
-    const jadeSubsurface = color('#1be0b5').mul(glazeDepth.pow(2)).mul(grazing.pow(2.5)).mul(rawClayMask.oneMinus()).mul(0.24)
+    const jadeSubsurface = color(hsl.integer(172, 96, 78)).mul(glazeDepth.pow(2)).mul(grazing.pow(2.5)).mul(rawClayMask.oneMinus()).mul(0.24)
     this.emissiveNode = kintsugiGlow
       .add(reductionRim)
       .add(jadeSubsurface)
-      .add(color('#fff2b8').mul(goldDust.sparkle).mul(kintsugiSeam).mul(intimate).mul(0.55))
+      .add(color(hsl.integer(97, 100, 95)).mul(goldDust.sparkle).mul(kintsugiSeam).mul(intimate).mul(0.55))
   }
 }

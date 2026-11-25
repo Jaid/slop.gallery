@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, modelWorldMatrixInverse, mx_noise_float, positionLocal, select, transformNormalToView, vec2, vec3, vec4} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -43,7 +44,7 @@ export default class PerspectiveFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#22335c'
+  override readonly tint = hsl.integer(265, 55, 23)
   override readonly title = 'Trompe-l’œil perspective'
 
   override createGeometry(width: number, height: number) {
@@ -106,7 +107,7 @@ class PerspectiveMaterial extends MeshPhysicalNodeMaterial {
     const depth = float(1).sub(level.div(steps - 1)).toVar('perspectiveDepth')
     const along = surface.along.add(ray.x.mul(out.y).sub(ray.y.mul(out.x)).mul(nearest))
     const grain = mx_noise_float(vec3(along.mul(40), level.mul(3.1), surface.member)).mul(0.5).add(0.5)
-    const navy = mix(color('#22335c'), color('#151f3c'), grain.mul(0.4))
+    const navy = mix(color(hsl.integer(265, 55, 23)), color(hsl.integer(268, 53, 14)), grain.mul(0.4))
     const gold = vec3(0.9, 0.58, 0.22).mul(grain.mul(0.15).add(0.9))
     // Deeper steps lie in the shadow of the ones in front of them, and every corner where a riser meets the tread below it gathers shadow.
     const corner = select(riser.greaterThan(0.5), across.smoothstep(0, 0.5), across.oneMinus().smoothstep(0, 0.35))

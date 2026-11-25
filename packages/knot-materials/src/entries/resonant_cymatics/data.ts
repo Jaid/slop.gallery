@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'resonant_cymatics',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Dust gathers into changing figures under the persuasion of an unheard note.',
   placeholder: {
-    color: '#38ef7d',
+    color: hsl.integer(151, 95, 81),
     shading: 'smooth',
   },
 } as const satisfies KnotData

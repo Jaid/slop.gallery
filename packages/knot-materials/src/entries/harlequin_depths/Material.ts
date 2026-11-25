@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_hsvtorgb, time, uv, vec3} from 'three/tsl'
 
 import {knotFrame} from '../../candidates/claude_sonnet/lib/knotFrame.ts'
@@ -58,14 +59,14 @@ export default class extends KnotMaterial {
     const coverage = top.flash.mul(0.55)
     const glow = fire.mul(0.62).add(fireDeep.mul(0.3).mul(coverage.oneMinus()))
     const dome = top.domain.nearest.pow2().mul(-0.0075)
-    this.colorNode = mix(color('#03040b'), color('#0a1230'), top.domain.id.z.mul(0.5))
+    this.colorNode = mix(color(hsl.integer(273, 42, 3.5)), color(hsl.integer(269, 69, 9.5)), top.domain.id.z.mul(0.5))
     this.metalness = 0
     this.roughnessNode = float(0.16).add(top.domain.edge.smoothstep(0, 0.1).oneMinus().mul(0.25))
     this.ior = 1.45
     this.clearcoat = 1
     this.clearcoatRoughness = 0.025
     this.normalNode = proceduralNormal(dome, 1)
-    const milk = mix(color('#0b1f57'), color('#2b1a66'), top.domain.id.x)
+    const milk = mix(color(hsl.integer(265, 88, 16)), color(hsl.integer(286, 80, 19)), top.domain.id.x)
     this.emissiveNode = glow.add(milk.mul(grazing.pow(2.5)).mul(0.5)).add(milk.mul(intimate).mul(0.05))
   }
 }

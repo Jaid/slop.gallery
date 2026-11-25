@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, negateOnBackSide, time, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/gpt_astra/lib/bumpNormal.ts'
@@ -27,8 +28,8 @@ export default class extends BaseKnotMaterial {
       .add(pulse)
     const activation = heat.smoothstep(0.34, 0.78)
     const flushed = heat.smoothstep(0.67, 1.08)
-    const warmPigment = mix(color('#f1b1a4'), color('#d73558'), flushed)
-    const body = mix(color('#a5b3c0'), warmPigment, activation)
+    const warmPigment = mix(color(hsl.integer(32, 67, 79)), color(hsl.integer(14, 85, 52)), flushed)
+    const body = mix(color(hsl.integer(246, 15, 72)), warmPigment, activation)
     const under = p.sub(view.mul(grazing.mul(0.004).add(0.006)))
     const capillaryField = mx_noise_float(under.mul(24))
       .add(mx_noise_float(under.mul(51)).mul(0.32))
@@ -48,7 +49,7 @@ export default class extends BaseKnotMaterial {
       .pow(6)
       .mul(visibility(bumpQ.fwidth().length()))
       .mul(intimate)
-    this.colorNode = mix(body, color('#96314d'), capillaries).mul(pores.mul(poreVisibility).mul(-0.045).add(1))
+    this.colorNode = mix(body, color(hsl.integer(7, 69, 39)), capillaries).mul(pores.mul(poreVisibility).mul(-0.045).add(1))
     this.metalness = 0
     this.ior = 1.41
     this.specularIntensity = 0.55
@@ -62,7 +63,7 @@ export default class extends BaseKnotMaterial {
       .add(gooseflesh.mul(0.0008))))
     // A deliberately small wrap term suggests sub-surface
     // scattering without making the elastomer look luminous.
-    this.emissiveNode = color('#ffad86')
+    this.emissiveNode = color(hsl.integer(46, 100, 79))
       .mul(grazing.pow(3))
       .mul(activation.mul(0.015).add(0.025))
       .mul(near)

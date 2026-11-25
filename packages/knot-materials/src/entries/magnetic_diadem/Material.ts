@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, modelWorldMatrixInverse, normalLocal, select, time, transformNormalToView, uv, vec2, vec4} from 'three/tsl'
 
 import {panelSky, proceduralEnvironment} from '../../candidates/claude_sonnet/lib/environment.ts'
@@ -98,7 +99,7 @@ export default class extends KnotMaterial {
     })
     this.envNode = proceduralEnvironment(studio)
     const height = crown(tube).rise.div(reach)
-    this.colorNode = mix(color('#050506'), color('#16161c'), height.pow(2))
+    this.colorNode = mix(color(hsl.integer(286, 7, 4)), color(hsl.integer(285, 14, 10)), height.pow(2))
     this.metalness = 0.92
     this.roughnessNode = float(0.045).add(height.oneMinus().mul(0.03))
     this.iridescence = 0.35

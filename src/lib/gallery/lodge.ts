@@ -4,6 +4,8 @@ import type {FloorRectangle} from './floors.ts'
 import type {PassageCutout} from './passages/Passage.ts'
 import type {Vec3} from './types.ts'
 
+import hsl from 'okhsl'
+
 import lowerGallery from './lowerGallery.ts'
 import {towerBridge} from './oculusTower.ts'
 
@@ -127,10 +129,10 @@ export const lodgeFloorPlanks = {
   seam: 0.0024,
   seed: 3,
   colors: {
-    dark: '#5a3a22',
-    light: '#8e6239',
-    ring: '#3a2312',
-    seam: '#1a0f08',
+    dark: hsl.integer(57, 50, 29),
+    light: hsl.integer(63, 54, 46),
+    ring: hsl.integer(56, 52, 18),
+    seam: hsl.integer(54, 39, 8),
   },
 } as const satisfies PlankLayout
 /** The oil rubbed into the Lodge’s boards: a faint, blurred mirror of the room, as strong at grazing angles as looking down, which leaves the lamps no highlights of their own on the fully rough boards. */

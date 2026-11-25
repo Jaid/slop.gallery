@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_fractal_noise_vec3, mx_noise_float, normalLocal, normalViewGeometry, tangentLocal, time, transformNormalToView, vec3} from 'three/tsl'
 
 import {below} from '../../candidates/claude_opus/lib/below.ts'
@@ -13,7 +14,7 @@ import {TAU} from '../../lib/TAU.ts'
 import {viewerFrame} from '../../lib/viewerFrame.ts'
 import knotData from './data.ts'
 
-const pyrite = rgb('#e8c060')
+const pyrite = rgb(hsl.integer(87, 75, 80))
 /** Polished lapis lazuli. Lazurite's ultramarine is mottled into deeper and brighter domains and veiled by drifting calcite clouds; pyrite crystals are scattered through it in clusters, each a tiny cube with its own facet tilt, so every step flips which ones blaze gold. The finest pyrite dust is beyond sight from across the room – it wakes star by star as a visitor approaches, and twinkles slowly while they stay. */
 export default class extends KnotMaterial {
   constructor(environment: Texture) {
@@ -30,7 +31,7 @@ export default class extends KnotMaterial {
 // Fine mineral grain: individual lazurite and sodalite crystals, a few paler, most deep.
     const grainCoordinate = p.mul(240)
     const grain = mx_noise_float(grainCoordinate).mul(grainCoordinate.fwidth().length().smoothstep(0.4, 1).oneMinus()).mul(0.18).add(1)
-    const lazurite = mix(mix(rgb('#050a30'), rgb('#12248c'), domains.smoothstep(0.25, 0.85)), rgb('#1e1570'), violet.mul(0.45)).mul(grain)
+    const lazurite = mix(mix(rgb(hsl.integer(269, 89, 7.6)), rgb(hsl.integer(267, 95, 23.5)), domains.smoothstep(0.25, 0.85)), rgb(hsl.integer(276, 93, 18)), violet.mul(0.45)).mul(grain)
 // Calcite: soft white clouds and wispy veins, bluish where thin.
     const veinField = mx_fractal_noise_float(p.add(warp.mul(1.6)).mul(3.3), 3, 2, 0.5)
     const veinWidth = mx_noise_float(p.mul(7)).mul(0.03).add(0.045)
@@ -38,7 +39,7 @@ export default class extends KnotMaterial {
 // Crystalline margins: the cloud edge is broken by fine noise rather than airbrushed.
     const clouds = mx_fractal_noise_float(p.add(warp).mul(2.4).add(20), 3, 2, 0.5).mul(0.5).add(0.5).add(mx_fractal_noise_float(p.mul(55), 2, 2, 0.5).mul(0.05)).smoothstep(0.74, 0.8)
     const calcite = veins.mul(0.8).max(clouds.mul(0.7)).clamp()
-    const calciteColor = mix(rgb('#8f9bc6'), rgb('#d9dde6'), calcite)
+    const calciteColor = mix(rgb(hsl.integer(272, 37, 65)), rgb(hsl.integer(267, 18, 88)), calcite)
 // Pyrite: clusters of cubes, each with its own facet tilt.
 // Pyrite gathers in stringers along the calcite margins and in a few rich patches.
     const margin = calcite.mul(calcite.oneMinus()).mul(4)

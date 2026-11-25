@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_fractal_noise_float, mx_noise_float, select, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -26,12 +27,12 @@ function accretionDisk(origin: Node<'vec3'>, ray: Node<'vec3'>, toEye: Node<'vec
   const fine = mx_fractal_noise_float(swirl.mul(3.2).add(vec3(11.3, 0, 4.7)), 3, 2.2, 0.5).mul(0.5).add(0.5)
   const turbulence = coarse.mul(0.62).add(fine.mul(detail.mul(0.6).add(0.4)).mul(0.38))
   const temperature = radius.reciprocal().pow(0.72)
-  const hue = mix(color('#ff3606'), mix(color('#ffc271'), color('#d8ecff'), temperature.smoothstep(0.8, 1.7)), temperature.smoothstep(0.28, 1.05))
+  const hue = mix(color(hsl.integer(32.7, 100, 59.2)), mix(color(hsl.integer(73, 100, 83)), color(hsl.integer(247, 100, 92.3)), temperature.smoothstep(0.8, 1.7)), temperature.smoothstep(0.28, 1.05))
 // Relativistic beaming: the side of the disk sweeping toward the eye is far brighter and bluer.
   const orbit = vec3(hit.z, 0, hit.x.negate()).normalize()
   const beta = float(0.44).div(radius.sqrt().max(0.52))
   const doppler = float(1).add(beta.mul(orbit.dot(toEye))).max(0.16)
-  const tint = hue.add(color('#a6d8ff').mul(doppler.sub(1).max(0).mul(0.5)))
+  const tint = hue.add(color(hsl.integer(242, 100, 84)).mul(doppler.sub(1).max(0).mul(0.5)))
   const density = annulus.mul(front).mul(turbulence.mul(0.55).add(0.55))
   const halo = radius.smoothstep(0.24, 0.55).mul(radius.smoothstep(3.6, 0.9)).mul(front).mul(0.16)
   return {
@@ -62,29 +63,29 @@ export default class extends KnotMaterial {
     const stars = starfield(sky, 190, 0.86)
     // Fractal octaves can exceed [-1, 1]; bound the remap before fractional powers.
     const haze = mx_fractal_noise_float(sky.mul(4.2), 4, 2.1, 0.55).mul(0.5).add(0.5).clamp()
-    const hazeColor = mix(color('#33195e'), color('#8f6bff'), haze.pow(1.5))
+    const hazeColor = mix(color(hsl.integer(296, 76, 19)), color(hsl.integer(290, 100, 58)), haze.pow(1.5))
     const compression = float(0.35).div(b.max(0.08)).min(2.6)
 // The photon ring: light that orbited the singularity before leaving.
     const ring = facing.div(0.13).clamp(0, 1).oneMinus().pow(1.3)
     const ringGrain = mx_noise_float(sky.mul(9)).mul(0.5).add(0.5)
-    const photon = color('#eaf2ff').mul(ring).mul(ringGrain.mul(0.5).add(0.6)).mul(2.6)
+    const photon = color(hsl.integer(260, 100, 95)).mul(ring).mul(ringGrain.mul(0.5).add(0.6)).mul(2.6)
 // The mirror body itself: a black glass that only shows the studio.
-    const body = mix(color('#050309'), color('#1d1440'), mx_noise_float(p.mul(6)).mul(0.5).add(0.5))
+    const body = mix(color(hsl.integer(301, 41, 3)), color(hsl.integer(288, 68, 13)), mx_noise_float(p.mul(6)).mul(0.5).add(0.5))
 // Frame dragging: the mirror itself is slowly wound around the axis.
     const azimuth = mx_atan2(p.z, p.x.add(0.000001)) as unknown as Node<'float'>
     const drag = azimuth.add(p.y.mul(7)).add(time.mul(0.12)).sin().mul(0.5).add(0.5)
-    this.colorNode = mix(mix(body, color('#3a2478'), drag.mul(0.35)), color('#2b1c5e'), disk.density.mul(0.35).add(ring.mul(0.25)))
+    this.colorNode = mix(mix(body, color(hsl.integer(289, 76, 24)), drag.mul(0.35)), color(hsl.integer(288, 74, 19)), disk.density.mul(0.35).add(ring.mul(0.25)))
     this.metalness = 1
     this.roughnessNode = float(0.035).add(haze.mul(0.03)).add(disk.density.mul(0.04))
     this.clearcoat = 0.4
     this.clearcoatRoughness = 0.02
     const glow: Node<'vec3'> = disk.emission
       .add(disk.halo.mul(0.7))
-      .add(stars.mul(color('#9fc8ff')).mul(compression.mul(0.5).add(0.5)).mul(2.4))
+      .add(stars.mul(color(hsl.integer(256, 100, 79.4))).mul(compression.mul(0.5).add(0.5)).mul(2.4))
       .add(hazeColor.mul(haze.mul(0.5)).mul(compression.mul(0.45).add(0.3)))
       .add(photon)
-      .add(color('#7a5cff').mul(rim).mul(0.07))
-      .add(color('#dbe8ff').mul(ring).mul(near).mul(0.35))
+      .add(color(hsl.integer(286, 99, 53)).mul(rim).mul(0.07))
+      .add(color(hsl.integer(261, 100, 92)).mul(ring).mul(near).mul(0.35))
     this.emissiveNode = glow
   }
 }

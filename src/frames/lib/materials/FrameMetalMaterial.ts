@@ -1,6 +1,7 @@
 import type {FrameSurface} from './frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -11,14 +12,14 @@ import frameStudio from './frameStudio.ts'
 
 /** what a metal looks like */
 export type Metal = {
-  /** the reflectance of the bright metal, as sRGB hex */
-  bright: string
-  /** the darker, duller metal in the hollows and patches, as sRGB hex */
-  dull: string
+  /** the reflectance of the bright metal, as packed sRGB */
+  bright: number
+  /** the darker, duller metal in the hollows and patches, as packed sRGB */
+  dull: number
   /** a corrosion in the hollows, like verdigris or rust, which is no metal at all */
   patina?: {
     amount: number
-    color: string
+    color: number
   }
   roughness: number
   /** hammer dimples or casting grain, in meters of relief */
@@ -28,38 +29,38 @@ export type Metal = {
 type Float = Node<'float'>
 
 export const bronze: Metal = {
-  bright: '#c79a62',
-  dull: '#6e4c2c',
+  bright: hsl.integer(72, 54, 67),
+  dull: hsl.integer(63, 51, 36),
   roughness: 0.34,
   patina: {
     amount: 0.6,
-    color: '#3f7a64',
+    color: hsl.integer(167, 55, 46),
   },
   texture: 0.00003,
 }
 export const brass: Metal = {
-  bright: '#d8b46a',
-  dull: '#8a6a34',
+  bright: hsl.integer(84, 62, 75),
+  dull: hsl.integer(79, 60, 47),
   roughness: 0.25,
 }
 export const blackIron: Metal = {
-  bright: '#3a3836',
-  dull: '#171615',
+  bright: hsl.integer(68, 3, 24),
+  dull: hsl.integer(68, 3, 10),
   roughness: 0.55,
   patina: {
     amount: 0.35,
-    color: '#5c3018',
+    color: hsl.integer(47, 64, 26),
   },
   texture: 0.0003,
 }
 export const satinSteel: Metal = {
-  bright: '#b8bcc0',
-  dull: '#8a8e92',
+  bright: hsl.integer(248, 5, 76),
+  dull: hsl.integer(248, 4, 59),
   roughness: 0.28,
 }
 export const blackAnodized: Metal = {
-  bright: '#2a2b2e',
-  dull: '#1c1d1f',
+  bright: hsl.integer(271, 5, 19),
+  dull: hsl.integer(264, 5, 13),
   roughness: 0.4,
 }
 

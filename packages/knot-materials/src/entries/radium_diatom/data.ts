@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 77fsRvmePazcbTS; fixture: knot-material-shaders; result: success.
 export default {
   id: 'radium_diatom',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.014,
   flavorText: 'Microscopic glass cathedrals of the abyssal sea: radially symmetric silica frustules glow with Cherenkov blue and emerald bioluminescence.',
   placeholder: {
-    color: '#626b6c',
+    color: hsl.integer(205, 6, 44),
     shading: 'glass',
   },
 } as const satisfies KnotData

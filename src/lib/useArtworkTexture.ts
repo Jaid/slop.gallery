@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {useEffect, useState} from 'react'
 
 import loadArtworkTexture from './loadArtworkTexture.ts'
@@ -16,8 +17,8 @@ let blobs = 0
 export const pendingImages = () => pending
 /** what an artwork shows as in place of its image: while it loads and after it failed to */
 export const artworkPlaceholders = {
-  loading: '#ded6c5',
-  failed: '#a17969',
+  loading: hsl.integer(86, 24, 86),
+  failed: hsl.integer(43, 29, 55),
 } as const
 
 export default function useArtworkTexture(source: Blob | string | null | undefined) {

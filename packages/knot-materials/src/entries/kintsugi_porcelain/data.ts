@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: KsUDOPCUWqzzKMp; fixture: knot-material-shaders; result: success.
 export default {
   id: 'kintsugi_porcelain',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Ivory porcelain remembers every fracture, and each wound is taught to shine in gold.',
   placeholder: {
-    color: '#e0d8c8',
+    color: hsl.integer(85, 24, 86.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

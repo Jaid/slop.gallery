@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, select, time, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -53,7 +54,7 @@ const flow = {
   swirl: 0.55,
 }
 /** a ground of thin size the paints float on, showing in fine veins between them */
-const size = color('#efe4c8')
+const size = color(hsl.integer(90, 48, 91))
 
 /** One of the Paint Orb’s frames: marbling still floating on its bath, drops of oil paint spread into rings and combed into waves, drifting round the work and curling in slow currents between two gilt beads. */
 export default class MarbledFrame extends PortraitFrame {
@@ -61,7 +62,7 @@ export default class MarbledFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#c9a35a'
+  override readonly tint = hsl.integer(82, 61, 69)
   override readonly title = 'Marbling bath'
 
   override createGeometry(width: number, height: number) {
@@ -151,13 +152,13 @@ class DustCoverMaterial extends MeshPhysicalNodeMaterial {
     const fibers = mx_noise_float(vec3(point.mul(900), 1.3)).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.0008))
     const mottle = mx_noise_float(vec3(point.mul(18), 4.1)).mul(0.5).add(0.5)
     const creases = line(mx_noise_float(vec3(point.mul(vec2(3, 14)), 2.7)), 0.004).mul(mx_noise_float(vec3(point.mul(5), 8.1)).smoothstep(0.2, 0.6)).mul(visibleDetail(footprint, 0.002))
-    const kraft = mix(mix(color('#a87c4e'), color('#c49a68'), mottle), color('#7a5634'), creases.mul(0.5)).mul(fibers.mul(0.12).add(0.94))
-    const pine = mix(color('#b08050'), color('#d0a470'), mx_noise_float(vec3(point.x.mul(4), point.y.mul(200), 0.5)).mul(0.5).add(0.5))
+    const kraft = mix(mix(color(hsl.integer(67, 50, 56)), color(hsl.integer(71, 49, 67)), mottle), color(hsl.integer(63, 49, 40)), creases.mul(0.5)).mul(fibers.mul(0.12).add(0.94))
+    const pine = mix(color(hsl.integer(65, 52, 58)), color(hsl.integer(71, 51, 71)), mx_noise_float(vec3(point.x.mul(4), point.y.mul(200), 0.5)).mul(0.5).add(0.5))
     // The tape lies over the paper’s edge onto the rim, its inner edge torn.
     const torn = mx_noise_float(vec3(point.mul(300), 6.1)).mul(0.0015)
     const onPaper = inside(float(0.012).sub(inset))
     const tape = inside(float(0.006).sub(inset)).mul(inside(inset.sub(torn.add(0.034))))
-    const taped = mix(mix(pine, kraft, onPaper), color('#b88c58'), tape.mul(0.85))
+    const taped = mix(mix(pine, kraft, onPaper), color(hsl.integer(70, 52, 62)), tape.mul(0.85))
     const label = galleryLabel(surface, vec2(outer.x.mul(0.42), outer.y.mul(-0.5)), [0.1, 0.058])
     const hanger = hangingWire(surface)
     const labeled = mix(taped, label.color, label.cover)

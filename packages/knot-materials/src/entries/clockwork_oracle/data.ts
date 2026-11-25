@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'clockwork_oracle',
   candidateId: 'deepseek',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A machine of tiny certainties attempts to predict an impossible future.',
   placeholder: {
-    color: '#ffcc44',
+    color: hsl.integer(87, 100, 84.5),
     shading: 'metal',
   },
 } as const satisfies KnotData

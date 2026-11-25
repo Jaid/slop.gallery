@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_noise_float, uv, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -33,7 +34,7 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = float(80).add(bands.mul(460)).add(near.mul(90))
     this.clearcoat = 0
     this.sheenNode = grazing.mul(0.8)
-    this.sheenColor.set('#fff3e2')
+    this.sheenColor.set(hsl.integer(77, 100, 96.4))
     this.sheenRoughness = 0.35
     this.normalNode = proceduralNormal(height, 0.025)
     this.emissiveNode = nacre.mul(bands).mul(grazing).mul(0.4)

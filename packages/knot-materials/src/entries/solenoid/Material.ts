@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, float, mix, mx_fractal_noise_float, negateOnBackSide, normalLocal, positionGeometry, tangentView, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -43,9 +44,9 @@ export default class extends KnotMaterial {
     // Continuous oxidation avoids stamping grid-cell faces onto the copper.
     const oxidation = mx_fractal_noise_float(p.mul(30), 3, 2, 0.5).mul(0.5).add(0.5)
     const patinaMask = oxidation.smoothstep(0.55, 0.75).mul(profile.oneMinus().mul(0.65).add(0.35))
-    const copper = mix(color('#7a2c06'), color('#ffa848'), grain.mul(0.75).add(0.25))
-    const patina = mix(color('#1d4a3f'), color('#3f8f74'), grain)
-    const core = mix(color('#05080c'), color('#101a22'), grain.mul(0.6).add(0.2))
+    const copper = mix(color(hsl.integer(42, 93, 31)), color(hsl.integer(66, 99, 77)), grain.mul(0.75).add(0.25))
+    const patina = mix(color(hsl.integer(175, 63, 28)), color(hsl.integer(168, 67, 53)), grain)
+    const core = mix(color(hsl.integer(250, 23, 5)), color(hsl.integer(243, 30, 11)), grain.mul(0.6).add(0.2))
     const wireColor = mix(copper, patina, patinaMask.mul(0.7))
     this.colorNode = mix(core, wireColor, inside.smoothstep(0, 0.03))
     this.metalnessNode = inside.smoothstep(0, 0.03).mul(0.4).add(0.6)
@@ -65,9 +66,9 @@ export default class extends KnotMaterial {
     const pulse = mx_fractal_noise_float(vec3(travel.mul(0.16), tube.y.mul(4), time.mul(0.2)), 3, 2.1, 0.5).mul(0.5).add(0.5)
     const surge = pulse.smoothstep(0.5, 0.86).pow(1.4)
     const glowField = surge.mul(grazing.pow(0.6).mul(0.7).add(0.3))
-    this.emissiveNode = color('#5cf0ff').mul(glowField).mul(inside.oneMinus().smoothstep(0, 0.05)).mul(near.mul(0.5).add(0.5)).mul(1.5)
-      .add(color('#2fd8ff').mul(glowField).mul(inside.smoothstep(0.9, 0.99)).mul(0.5))
-      .add(color('#ffd9a0').mul(inside).mul(facing.pow(8)).mul(0.12))
-      .add(color('#0e4c5c').mul(glowField).mul(grazing.pow(2)).mul(intimate.mul(0.4).add(0.15)).mul(0.5))
+    this.emissiveNode = color(hsl.integer(205, 99, 86)).mul(glowField).mul(inside.oneMinus().smoothstep(0, 0.05)).mul(near.mul(0.5).add(0.5)).mul(1.5)
+      .add(color(hsl.integer(218, 99, 78.7)).mul(glowField).mul(inside.smoothstep(0.9, 0.99)).mul(0.5))
+      .add(color(hsl.integer(78, 100, 89)).mul(inside).mul(facing.pow(8)).mul(0.12))
+      .add(color(hsl.integer(220, 83, 29)).mul(glowField).mul(grazing.pow(2)).mul(intimate.mul(0.4).add(0.15)).mul(0.5))
   }
 }

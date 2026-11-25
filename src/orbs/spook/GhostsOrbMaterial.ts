@@ -2,6 +2,7 @@ import type {GhostExpression} from '#src/lib/materials/ghost.ts'
 import type {FillLayer, OrbGlassOptions, OrbRay} from '../base/OrbGlassMaterial.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, cross, float, mix, mx_noise_float, smoothstep, time, vec2, vec3} from 'three/tsl'
 
 import {ghostBlink, ghostColors, ghostShape} from '#src/lib/materials/ghost.ts'
@@ -46,15 +47,15 @@ const ghosts = [{
 const sheetColor = rgb(ghostColors.sheet)
 const glowColor = rgb(ghostColors.glow)
 const holeColor = rgb(ghostColors.hole)
-const mistColor = color('#3fd98a')
-const deepColor = color('#062417')
+const mistColor = color(hsl.integer(156, 89, 75))
+const deepColor = color(hsl.integer(161, 84, 13))
 
 /** Pale ghosts under sheets drifting through green ectoplasmic mist, wailing, their hollow faces always turned toward whoever looks in. They blink, each at its own pace, glance around, and gape startled when someone leans in close; now and then one fades nearly out of sight and flickers back. */
 export default class GhostsOrbMaterial extends OrbGlassMaterial {
   constructor(options: OrbGlassOptions) {
     super(options, {
       name: 'orb-ghosts',
-      tint: '#4fd08e',
+      tint: hsl.integer(158, 82, 73),
     })
   }
 

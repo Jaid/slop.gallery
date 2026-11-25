@@ -1,6 +1,7 @@
 import type {FrameSurface} from './frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {clamp, color, float, max, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, select, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -14,13 +15,13 @@ export type Stone = {
   /** layers of the bedding running along every member, as cut from banded stone, 0 to 1 */
   banding?: number
   /** the body of the stone */
-  base: string
+  base: number
   /** the second color the bedding and the clouds swing to */
-  cloud: string
+  cloud: number
   /** crisp crystals or flecks of another mineral, like the glints of regolith, and their color */
   flecks?: {
     amount: number
-    color: string
+    color: number
     size: number
   }
   /** pits and voids, like travertine’s or a weathered stone’s, 0 to 1 */
@@ -30,44 +31,44 @@ export type Stone = {
   /** the color of the veins, if any, and how many */
   veins?: {
     amount: number
-    color: string
+    color: number
   }
 }
 
 type Float = Node<'float'>
 
 export const travertine: Stone = {
-  base: '#ddd4c3',
-  cloud: '#c4b69c',
+  base: hsl.integer(83, 23, 85),
+  cloud: hsl.integer(83, 25, 75),
   banding: 0.3,
   pits: 1,
   polish: 0.35,
 }
 export const carrara: Stone = {
-  base: '#e8e6e1',
-  cloud: '#cfcfcc',
+  base: hsl.integer(89, 11, 91),
+  cloud: hsl.integer(106, 4, 83),
   veins: {
     amount: 0.7,
-    color: '#6e7277',
+    color: hsl.integer(254, 5, 48),
   },
   polish: 0.75,
 }
 export const neroMarquina: Stone = {
-  base: '#151516',
-  cloud: '#232325',
+  base: hsl.integer(286, 3, 10),
+  cloud: hsl.integer(286, 4, 15),
   veins: {
     amount: 0.55,
-    color: '#d8d6d0',
+    color: hsl.integer(91, 9, 86),
   },
   polish: 0.85,
 }
 export const regolith: Stone = {
-  base: '#8c8b86',
-  cloud: '#5b5a56',
+  base: hsl.integer(97, 4, 58),
+  cloud: hsl.integer(95, 4, 38),
   pits: 1,
   flecks: {
     amount: 0.5,
-    color: '#f0f2ee',
+    color: hsl.integer(129, 15, 95),
     size: 1400,
   },
   polish: 0,

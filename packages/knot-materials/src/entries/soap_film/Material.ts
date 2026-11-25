@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, vec3} from 'three/tsl'
 
 import {fbm} from '../../candidates/space_bunny/lib/fbm.ts'
@@ -42,7 +43,7 @@ export default class extends KnotMaterial {
     const border = fbm(p.mul(6.5).add(drift.mul(4)))
     const rim = ridgeBand(border, 0, 0.1)
     const iris = fbm(p.mul(26))
-    this.colorNode = mix(color('#08090c'), interference.mul(1.25), blackFilm.oneMinus().mul(0.94).add(0.06))
+    this.colorNode = mix(color(hsl.integer(270, 12, 5)), interference.mul(1.25), blackFilm.oneMinus().mul(0.94).add(0.06))
     this.metalness = 0
     this.roughnessNode = float(0.015).add(rim.mul(0.35)).add(iris.mul(0.02))
     this.clearcoat = 1
@@ -53,7 +54,7 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(ripple.mul(0.35).add(rim.mul(0.5)).add(iris.mul(0.05).mul(near)), 0.00035)
 // Only the thinnest rims and the true black film emit, and only when the studio can reach them at all.
     this.emissiveNode = interference.mul(rim.mul(0.55).add(grazing.mul(0.1))).mul(intimate.mul(0.4).add(0.2))
-      .add(color('#dfe6ff').mul(blackFilm).mul(grazing.pow(2)).mul(0.14))
+      .add(color(hsl.integer(273, 100, 91.5)).mul(blackFilm).mul(grazing.pow(2)).mul(0.14))
       .add(spectralColor(path.mul(2.3)).mul(rim).mul(0.2))
   }
 }

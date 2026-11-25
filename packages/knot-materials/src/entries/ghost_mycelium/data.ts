@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ghost_mycelium',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Subterranean threads breathe in the velvet dark, whispering in pulses of cold emerald foxfire as you draw near.',
   placeholder: {
-    color: '#5ba76f',
+    color: hsl.integer(151, 66, 61),
     shading: 'glass',
   },
 } as const satisfies KnotData

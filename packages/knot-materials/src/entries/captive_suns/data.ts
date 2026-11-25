@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IBraVE33noBp60D; original ID: velvet_eclipse.
 export default {
   id: 'captive_suns',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A procession of captive suns wears the darkness like velvet, their coronas breathing against the night.',
   placeholder: {
-    color: '#341020',
+    color: hsl.integer(355, 60, 13),
     shading: 'fabric',
   },
 } as const satisfies KnotData

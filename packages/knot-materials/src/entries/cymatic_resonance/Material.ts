@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, sin, time} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -22,8 +23,8 @@ export default class extends BaseKnotMaterial {
     const interference = wave1.add(wave2).add(wave3).div(3)
     const sandMask = float(1).sub(interference.abs().smoothstep(0, 0.05)).pow(2)
     const sandNormal = proceduralNormal(sandMask, 0.02)
-    const baseColor = mix(color('#2a1610'), color('#4a2a18'), mx_noise_float(p.mul(20)))
-    const sandColor = color('#d4af37')
+    const baseColor = mix(color(hsl.integer(37, 42, 12)), color(hsl.integer(49, 54, 22)), mx_noise_float(p.mul(20)))
+    const sandColor = color(hsl.integer(91, 82, 73))
     this.colorNode = mix(baseColor, sandColor, sandMask)
     this.metalnessNode = sandMask.mul(0.8)
     this.roughnessNode = mix(0.8, 0.3, sandMask)

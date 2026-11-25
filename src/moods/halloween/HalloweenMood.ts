@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import Mood from '../base/Mood.ts'
 import HalloweenAmbience from './HalloweenAmbience.ts'
 
@@ -5,18 +7,18 @@ import HalloweenAmbience from './HalloweenAmbience.ts'
 export default class HalloweenMood extends Mood {
   override readonly ambience = HalloweenAmbience
   override readonly fill = {
-    color: '#8a5cff',
+    color: hsl.integer(291, 100, 55),
     gain: 1,
   }
   override readonly grade = {
-    shadow: '#1c0838',
-    midtone: '#7a3a9a',
-    highlight: '#ffb050',
+    shadow: hsl.integer(297, 80, 10),
+    midtone: hsl.integer(313, 69, 39),
+    highlight: hsl.integer(68, 100, 78.6),
     strength: 0.5,
   }
   readonly id = 'halloween'
   override readonly lamps = {
-    color: '#ffa040',
+    color: hsl.integer(62, 99, 75),
     gain: 1,
   }
   readonly title = 'Halloween night'

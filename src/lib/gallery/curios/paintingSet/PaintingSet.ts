@@ -5,6 +5,7 @@ import type {LatticePoint} from '../lattice.ts'
 import type {BufferGeometry} from 'three/webgpu'
 
 import {DEGREES_TO_RADIANS as degree} from 'math'
+import hsl from 'okhsl'
 import {attribute, float, mix, positionGeometry, vec3} from 'three/tsl'
 import {Color, CylinderGeometry, ExtrudeGeometry, Float32BufferAttribute, Matrix4, MeshStandardNodeMaterial, Path, Shape, TorusGeometry, Vector3} from 'three/webgpu'
 
@@ -91,33 +92,33 @@ const lidMiddle = new Vector3(0, box.height + lid.depth / 2, 0)
 lidMiddle.applyMatrix4(opening)
 /** carries what is built on the palette, its face at y = 0 looking up and its top edge toward −z, into the open lid, its face looking out of it */
 const onPalette = opening.clone().multiply(translation(0, box.height + lid.depth - lid.panel - palette.thickness, 0)).multiply(turn('x', Math.PI))
-const linear = (hex: string): Rgb => {
+const linear = (hex: number): Rgb => {
   const {r, g, b} = new Color(hex)
   return [r, g, b]
 }
 const colors = {
-  tube: linear('#ebe8e1'),
-  cap: linear('#1d1c1b'),
-  label: linear('#f4f2ec'),
-  labelBand: linear('#3f8a4b'),
-  oil: linear('#c4b768'),
-  solvent: linear('#bfd19f'),
-  bottleCap: linear('#f1efe9'),
-  handle: linear('#6e3420'),
-  knifeHandle: linear('#7a1d17'),
-  bristles: linear('#e3d6b8'),
+  tube: linear(hsl.integer(87, 17, 92)),
+  cap: linear(hsl.integer(68, 3, 12)),
+  label: linear(hsl.integer(91, 23, 95.5)),
+  labelBand: linear(hsl.integer(147, 82, 50)),
+  oil: linear(hsl.integer(100, 60, 74)),
+  solvent: linear(hsl.integer(124, 44, 81)),
+  bottleCap: linear(hsl.integer(91, 19, 94)),
+  handle: linear(hsl.integer(40, 65, 31)),
+  knifeHandle: linear(hsl.integer(28, 88, 29)),
+  bristles: linear(hsl.integer(87, 38, 86)),
 }
 /** the color `share` of the way from one color to the other */
 const blend = ([r, g, b]: Rgb, [toR, toG, toB]: Rgb, share: number): Rgb => [r + (toR - r) * share, g + (toG - g) * share, b + (toB - b) * share]
 /** the paints, by their usual names */
 const paints = {
-  white: linear('#f3f0e6'),
-  ochre: linear('#c98f2a'),
-  yellow: linear('#f0bf12'),
-  red: linear('#c1221b'),
-  blue: linear('#22308e'),
-  green: linear('#12624d'),
-  umber: linear('#4d2b16'),
+  white: linear(hsl.integer(93, 31, 95)),
+  ochre: linear(hsl.integer(76, 83, 64)),
+  yellow: linear(hsl.integer(90, 98, 80)),
+  red: linear(hsl.integer(29, 95, 45)),
+  blue: linear(hsl.integer(270, 87, 27)),
+  green: linear(hsl.integer(170, 91, 36)),
+  umber: linear(hsl.integer(51, 59, 23)),
 }
 /** a ring of a {@link sweep}: where along the axis it lies, half its width and height across the axis and where its middle lies, by the axes across it in the order of `half`, how square it is, 2 being round, its color, and the level of the liquid behind it, if it is glass, see {@link fillLevels} */
 type Ring = {
@@ -614,7 +615,7 @@ function palettePaint() {
 function finishMaterial() {
   const material = new MeshStandardNodeMaterial({envMapIntensity: 0.6})
   const filled = inside(positionGeometry.y.sub(attribute<'float'>(fillLevels.name, 'float')))
-  material.colorNode = mix(vec3(...linear('#89958f')), attribute<'vec3'>('color', 'vec3'), filled)
+  material.colorNode = mix(vec3(...linear(hsl.integer(164, 9, 60))), attribute<'vec3'>('color', 'vec3'), filled)
   material.roughnessNode = mix(float(0.08), float(0.3), filled)
   return material
 }
@@ -661,8 +662,8 @@ export default class PaintingSet extends Curio {
         geometry: woodwork(),
         // stained walnut, so the pale palette stands out against it
         material: new GrainedWoodMaterial({
-          heartwood: ['#3e2213', '#5f3a22'],
-          latewood: '#28150b',
+          heartwood: [hsl.integer(48, 54, 18), hsl.integer(53, 53, 29)],
+          latewood: hsl.integer(48, 49, 12),
         }, {roughness: 0.45}),
       },
       {
@@ -670,8 +671,8 @@ export default class PaintingSet extends Curio {
         geometry: paletteBoard(),
         // pale beech
         material: new GrainedWoodMaterial({
-          heartwood: ['#d2ab7c', '#e8c9a0'],
-          latewood: '#bb9064',
+          heartwood: [hsl.integer(71, 47, 73), hsl.integer(74, 52, 83)],
+          latewood: hsl.integer(67, 46, 63),
         }, {roughness: 0.55}),
       },
       {

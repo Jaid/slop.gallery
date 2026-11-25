@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'vantablack_filigree',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Delicate lines of light cling to the edge of an almost complete darkness.',
   placeholder: {
-    color: '#ff2a5f',
+    color: hsl.integer(14, 99, 59),
     shading: 'smooth',
   },
 } as const satisfies KnotData

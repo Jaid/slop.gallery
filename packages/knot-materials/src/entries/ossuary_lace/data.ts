@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 42qNahiwSEZ3v90; fixture: knot-material-shaders; result: success.
 export default {
   id: 'ossuary_lace',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'An ivory reef, carved by a patient absence. Through its honeyed chambers, older and smaller worlds come into view.',
   placeholder: {
-    color: '#dbbd81',
+    color: hsl.integer(84, 54, 78),
     shading: 'stone',
   },
 } as const satisfies KnotData

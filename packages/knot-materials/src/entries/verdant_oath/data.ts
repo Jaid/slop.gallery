@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'verdant_oath',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'On a lacquer night, golden ginkgo leaves promise to remember the sun. Their veins brighten when a witness passes.',
   placeholder: {
-    color: '#365d49',
+    color: hsl.integer(161, 46, 36),
     shading: 'smooth',
   },
 } as const satisfies KnotData

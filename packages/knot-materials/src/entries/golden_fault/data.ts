@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IBraVE33noBp60D.
 export default {
   id: 'golden_fault',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The vessel remembers every fracture; a slow river of gold makes its broken history precious.',
   placeholder: {
-    color: '#c2d9d7',
+    color: hsl.integer(190, 23, 85),
     shading: 'smooth',
   },
 } as const satisfies KnotData

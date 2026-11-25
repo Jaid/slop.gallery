@@ -1,6 +1,7 @@
 import type {Material} from 'three/webgpu'
 
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -12,7 +13,7 @@ export default function LodgeHatchetHook({material}: {material: Material}) {
   const geometry = useDisposable(useMemo(() => createLodgeHatchetHookGeometry(), []))
   const leather = useDisposable(useMemo(() => createLodgeHatchetLeatherGeometry(), []))
   const leatherMaterial = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#442d1c',
+    color: hsl.integer(57, 43, 22),
     roughness: 0.9,
   }), []))
   return <group name='lodge-hatchet-hook' position={lodgeHatchetHook.position}>

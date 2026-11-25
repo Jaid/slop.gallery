@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'moonmilk',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Layers of shell remember the moon, and hand its borrowed light back to you in slow tides of pearl.',
   placeholder: {
-    color: '#e5d9c6',
+    color: hsl.integer(79, 31, 87),
     shading: 'smooth',
   },
 } as const satisfies KnotData

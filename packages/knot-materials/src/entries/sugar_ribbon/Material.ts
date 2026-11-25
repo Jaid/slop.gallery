@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, mix, mx_noise_float, negateOnBackSide, transformNormalToView, uv, varying, vec2} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -47,9 +48,9 @@ export default class extends KnotMaterial {
     const bubbleQ = p.sub(view.mul(0.012)).mul(65)
     const bubbleVisibility = bubbleQ.fwidth().length().smoothstep(0.3, 1.2).oneMinus().mul(intimate)
     const bubbles = cellularPoints(bubbleQ, 0.025, 0.15, 0.8).mul(bubbleVisibility)
-    const cream = color('#fff1ce')
-    const striped = mix(mix(cream, color('#ce174d'), raspberry), color('#239f91'), mint)
-    this.colorNode = mix(mix(color('#ee9cac'), striped, resolved), cream, frost.mul(0.36).add(bubbles.mul(0.15)))
+    const cream = color(hsl.integer(89, 100, 95.4))
+    const striped = mix(mix(cream, color(hsl.integer(13, 95, 48)), raspberry), color(hsl.integer(183, 88, 58)), mint)
+    this.colorNode = mix(mix(color(hsl.integer(7, 66, 74)), striped, resolved), cream, frost.mul(0.36).add(bubbles.mul(0.15)))
     this.positionNode = sugarPosition(tube)
     this.normalNode = negateOnBackSide(varying(transformNormalToView(sugarSurfaceNormal(tube))).normalize())
     this.metalness = 0

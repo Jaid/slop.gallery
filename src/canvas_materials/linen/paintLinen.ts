@@ -1,5 +1,6 @@
 import type {MeshPhysicalNodeMaterial, Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, vec2} from 'three/tsl'
 
 import {slopeNormal} from '#src/lib/materials/filters.ts'
@@ -72,8 +73,8 @@ export default function paintLinen(material: MeshPhysicalNodeMaterial, image: No
   const grain = slub.mul(slubKept).add(0.5)
   const grainSlope = vec2(slubs(position.add(vec2(grainStep, 0))), slubs(position.add(vec2(0, grainStep)))).sub(slub).mul(slubKept.div(grainStep))
   const bare = crests.mul(grain.mul(0.75).add(0.25))
-  material.colorNode = mix(image.mul(weave.sub(0.5).mul(0.33).sub(0.09).mul(relief).add(1)), color('#c1a686'), bare.mul(fibers).mul(0.19).min(1))
+  material.colorNode = mix(image.mul(weave.sub(0.5).mul(0.33).sub(0.09).mul(relief).add(1)), color(hsl.integer(72, 32, 70)), bare.mul(fibers).mul(0.19).min(1))
   material.normalNode = slopeNormal(weaveSlope.mul(0.00155).add(grainSlope.mul(0.0007)).mul(relief).div(scale))
   material.roughness = 0.93
-  material.sheenNode = color('#dcc9ac').mul(sheen)
+  material.sheenNode = color(hsl.integer(78, 35, 82)).mul(sheen)
 }

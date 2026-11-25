@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CyxjCrlY15yEfmL; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'winter_ferns',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Winter drew ferns across the glass in one long night, and your breath has begun to erase them.',
   placeholder: {
-    color: '#b9d8f4',
+    color: hsl.integer(245, 63, 85),
     shading: 'glass',
   },
 } as const satisfies KnotData

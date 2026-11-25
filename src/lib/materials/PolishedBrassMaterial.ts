@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, positionWorld} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -14,7 +15,7 @@ export default class PolishedBrassMaterial extends MeshStandardNodeMaterial {
       envMapIntensity: 1,
     })
     const dull = mx_noise_float(positionWorld.mul(1.7)).mul(0.5).add(0.5).smoothstep(0.4, 0.85)
-    this.colorNode = mix(color('#dcb565'), color('#b08d4e'), dull.mul(0.6))
+    this.colorNode = mix(color(hsl.integer(84, 66, 76)), color(hsl.integer(81, 57, 61)), dull.mul(0.6))
     this.roughnessNode = dull.mul(0.12).add(0.22)
   }
 }

@@ -1,5 +1,7 @@
 import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
+import hsl from 'okhsl'
+
 import PromptOrb from '../base/PromptOrb.ts'
 import GhostsOrbMaterial from './GhostsOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
@@ -26,7 +28,7 @@ export default class SpookOrb extends PromptOrb {
     'possessed',
   ]
   readonly change = 'add something supernatural that makes it'
-  readonly color = '#3fd98a'
+  readonly color = hsl.integer(156, 89, 75)
   override readonly effect = 'ghosts'
   readonly frame = ['abyss', 'maelstrom', 'rift', 'seance'] as const
   readonly id = 'spook'

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, bitangentLocal, color, mix, mx_noise_float, normalLocal, positionGeometry, texture, time, uv, vec2, vec3} from 'three/tsl'
 import {DataTexture, LinearFilter, LinearMipmapLinearFilter, RGBAFormat, UnsignedByteType} from 'three/webgpu'
 
@@ -173,16 +174,16 @@ export default class extends KnotMaterial {
     const slowTide = time.mul(0.52).sub(coordinates.x.mul(0.67)).add(coordinates.y.mul(2.1))
     const traveling = slowTide.sin().mul(0.5).add(0.5).pow(6)
     const scintillation = coordinates.x.mul(41).add(coordinates.y.mul(79)).add(time.mul(2.7)).sin().mul(0.23).add(0.79)
-    const cool = mix(color('#7edaff'), color('#cf9cfa'), figure.mul(0.63).add(glassGrain.mul(0.19)))
-    const silver = mix(cool, color('#f5eddb'), 0.32)
-    const stars = mix(color('#e5a76a'), color('#f4debc'), figure.mul(0.3).add(traveling.mul(0.4)))
+    const cool = mix(color(hsl.integer(226, 100, 82)), color(hsl.integer(308, 89, 74)), figure.mul(0.63).add(glassGrain.mul(0.19)))
+    const silver = mix(cool, color(hsl.integer(87, 48, 94)), 0.32)
+    const stars = mix(color(hsl.integer(65, 66, 74)), color(hsl.integer(79, 60, 89.5)), figure.mul(0.3).add(traveling.mul(0.4)))
     const line = ink.r.mul(0.34).add(ink.r.mul(traveling).mul(0.28))
     const dots = ink.g.mul(scintillation).mul(near.mul(0.24).add(1.25))
     const aura = ink.b.mul(0.31).mul(near.mul(0.4).add(0.75))
     const etching = ink.a.mul(intimate.mul(0.95).add(0.13))
     const reflectionGlow = reflection.g.mul(0.28).add(reflection.r.mul(0.1)).mul(rim.mul(0.7).add(0.13)).mul(distanceDetail)
-    const enamel = mix(color('#101c30'), color('#304967'), glassGrain.mul(0.38).add(rim.mul(0.36)))
-    this.colorNode = enamel.add(color('#193459').mul(ink.b).mul(0.14))
+    const enamel = mix(color(hsl.integer(260, 48, 12)), color(hsl.integer(254, 42, 31)), glassGrain.mul(0.38).add(rim.mul(0.36)))
+    this.colorNode = enamel.add(color(hsl.integer(257, 62, 22)).mul(ink.b).mul(0.14))
     this.metalness = 0.14
     this.roughnessNode = glassGrain.mul(0.08).add(0.32)
     this.clearcoat = 0.42
@@ -191,8 +192,8 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.33
     this.iridescenceThicknessNode = glassGrain.mul(110).add(facing.mul(130)).add(220)
     this.emissiveNode = silver.mul(line.mul(distanceDetail.mul(0.5).add(0.58)).add(aura)).add(stars.mul(dots).mul(1.15))
-      .add(color('#7bd9e6').mul(etching).mul(0.25))
-      .add(color('#7369f7').mul(reflectionGlow))
+      .add(color(hsl.integer(208, 66, 80)).mul(etching).mul(0.25))
+      .add(color(hsl.integer(282, 91, 54)).mul(reflectionGlow))
       .add(vec3(0.008, 0.015, 0.044).mul(rim.pow(2)))
   }
   override dispose() {

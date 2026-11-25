@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BdUi8mU2Rs29CX7; fixture: knot-material-shaders.
 export default {
   id: 'heartwood',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Carved from an old maple and sealed in amber. Its curl rolls like water under ice as you pass, and a vanished forest’s dappled light still drifts across the grain.',
   placeholder: {
-    color: '#ac7437',
+    color: hsl.integer(66, 67, 54),
     shading: 'smooth',
   },
 } as const satisfies KnotData

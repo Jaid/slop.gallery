@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -26,17 +27,17 @@ export default class extends KnotMaterial {
     const membrane = opticalLine(chamber, 0.038)
     const distantCells = opticalLine(mx_noise_float(deep.mul(19).sub(drift)), 0.028)
     const pulse = inner.y.mul(9).sub(time.mul(0.65)).sin().mul(0.22).add(0.78)
-    const glow = mix(color('#064fff'), color('#25ffd2'), chamber.mul(2).add(0.5).clamp())
-    this.colorNode = mix(color('#020c24'), color('#073d52'), chamber.abs().mul(2).clamp())
+    const glow = mix(color(hsl.integer(263.3, 100, 45)), color(hsl.integer(173, 99.9, 87.6)), chamber.mul(2).add(0.5).clamp())
+    this.colorNode = mix(color(hsl.integer(260, 84, 7)), color(hsl.integer(230, 86, 24)), chamber.abs().mul(2).clamp())
     this.transmission = 0.38
     this.thickness = 0.42
     this.ior = 1.5
-    this.attenuationColor.set('#087d9c')
+    this.attenuationColor.set(hsl.integer(223, 96, 48))
     this.attenuationDistance = 0.6
     this.roughness = 0.095
     this.clearcoat = 0.9
     this.clearcoatRoughness = 0.045
     this.normalNode = liquidNormal(near, 0.16)
-    this.emissiveNode = glow.mul(membrane).mul(pulse).mul(near.mul(0.7).add(0.55)).add(color('#3283ff').mul(distantCells).mul(near).mul(0.55)).add(color('#04bfb0').mul(rim).mul(0.14))
+    this.emissiveNode = glow.mul(membrane).mul(pulse).mul(near.mul(0.7).add(0.55)).add(color(hsl.integer(259, 100, 57)).mul(distantCells).mul(near).mul(0.55)).add(color(hsl.integer(185, 99, 68)).mul(rim).mul(0.14))
   }
 }

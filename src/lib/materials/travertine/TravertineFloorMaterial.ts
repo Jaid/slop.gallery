@@ -1,5 +1,6 @@
 import type {TravertineStyle} from './travertine.ts'
 
+import hsl from 'okhsl'
 import {color, float, hash, max, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, vec2, vec3} from 'three/tsl'
 
 import {heightNormal, visibleDetail} from '../filters.ts'
@@ -60,7 +61,7 @@ export default class TravertineFloorMaterial extends PlanarMirrorMaterial {
     })
     const roughness = reflections ? 0.1 : 0.55
     super(null, {
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       roughness,
       reflection: reflections ? {
         strength: 0.2,

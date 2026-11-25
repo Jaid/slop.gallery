@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, uv, vec3, vec4} from 'three/tsl'
 
 import {hash1} from '../../candidates/glm/lib/hash1.ts'
@@ -35,7 +36,7 @@ export default class extends KnotMaterial {
     const hue = laneIndex.mul(0.42).add(view.x.mul(0.5)).add(view.y.mul(0.25)).add(0.1)
     const traceColor = spectralColor(hue)
     const power = mx_noise_float(vec3(time.mul(2.2), 3.1, 7.7)).mul(0.12).add(0.94)
-    this.colorNode = color('#0a0e14')
+    this.colorNode = color(hsl.integer(258, 22, 7))
     this.metalness = 0.88
     this.roughnessNode = etch.mul(0.34).add(0.13)
     this.clearcoat = 0.55
@@ -43,9 +44,9 @@ export default class extends KnotMaterial {
     this.envMapIntensity = 1.2
     this.normalNode = proceduralNormal(etch.oneMinus(), 0.0013)
     this.emissiveNode = traceColor.mul(traces).mul(signal.mul(1.1).add(0.22)).mul(near.mul(0.75).add(0.35))
-      .add(color('#ffffff').mul(packet).mul(traces).mul(2.4))
-      .add(color('#ff7ad9').mul(rungs).mul(near).mul(0.9))
-      .add(color('#ff9de8').mul(chips).mul(0.5))
+      .add(color(hsl.integer(0, 0, 100)).mul(packet).mul(traces).mul(2.4))
+      .add(color(hsl.integer(340, 100, 72.4)).mul(rungs).mul(near).mul(0.9))
+      .add(color(hsl.integer(336, 100, 79)).mul(chips).mul(0.5))
       .add(traceColor.mul(rim).mul(0.3))
       .mul(power)
   }

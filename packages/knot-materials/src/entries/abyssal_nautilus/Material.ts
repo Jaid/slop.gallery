@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_noise_float, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -70,21 +71,21 @@ export default class extends KnotMaterial {
 // Bragg-stack thin-film optical path difference: shifts continuously with viewing angle and terrace contour.
     const opticalPath = facing.mul(5.2).add(ribArch.mul(2.3)).add(terraceField.mul(2.1)).add(view.y.mul(1.4)).add(time.mul(Math.PI * 0.5))
     const nacreSpectrum = spectralColor(opticalPath)
-    const roseGold = mix(color('#ff4fa3'), color('#ffb85c'), nacreSpectrum.x)
-    const peacockEmerald = mix(color('#08e8b8'), color('#3a7bff'), nacreSpectrum.z)
+    const roseGold = mix(color(hsl.integer(355, 100, 64.6)), color(hsl.integer(71, 100, 80.4)), nacreSpectrum.x)
+    const peacockEmerald = mix(color(hsl.integer(171, 99.2, 80)), color(hsl.integer(262.4, 100, 55)), nacreSpectrum.z)
     const nacreBody = mix(roseGold, peacockEmerald, grazing.smoothstep(0.08, 0.78))
-    const pearlBase = mix(color('#1d283a'), nacreBody, ribArch.mul(0.65).add(0.25))
+    const pearlBase = mix(color(hsl.integer(260, 34, 17)), nacreBody, ribArch.mul(0.65).add(0.25))
 // Chestnut-terracotta periostracum tiger stripes hug the outer rib crests while sutures expose pure mother-of-pearl.
     const flameNoise = mx_noise_float(vec3(metric.x.mul(7.5), metric.y.mul(11), 1.7))
     const flamePattern = tube.x.mul(TAU * 19).add(turns.mul(TAU * 3).sin().mul(2.1)).add(flameNoise.mul(2.4)).cos()
     const periostracumMask = ribArch.smoothstep(0.54, 0.86).mul(flamePattern.smoothstep(-0.1, 0.42)).mul(0.78)
-    const periostracumColor = mix(color('#260b05'), color('#9e3314'), striae.mul(0.6).add(ribArch.mul(0.4)))
+    const periostracumColor = mix(color(hsl.integer(36, 70, 9)), color(hsl.integer(36, 91, 39)), striae.mul(0.6).add(ribArch.mul(0.4)))
 // Fine saline dew beads on the shell exterior catch studio highlights at close inspection.
     const dew = beads(p.mul(36), 5.2)
     const dewHighlight = glints(shellNormal, 90).mul(dew.mask).mul(intimate)
     const baseAlbedo = mix(pearlBase, periostracumColor, periostracumMask)
-    const sutureDarkening = mix(color('#09131c'), baseAlbedo, sutureCrease.mul(0.8).add(0.2))
-    this.colorNode = mix(sutureDarkening, color('#bdf7ff'), terraceRings.mul(0.32).add(dew.mask.mul(0.18)))
+    const sutureDarkening = mix(color(hsl.integer(247, 39, 8)), baseAlbedo, sutureCrease.mul(0.8).add(0.2))
+    this.colorNode = mix(sutureDarkening, color(hsl.integer(207, 100, 93)), terraceRings.mul(0.32).add(dew.mask.mul(0.18)))
     this.metalnessNode = periostracumMask.oneMinus().mul(0.38)
     this.roughnessNode = mix(float(0.11), float(0.34), periostracumMask)
       .add(striae.oneMinus().mul(0.04))
@@ -94,7 +95,7 @@ export default class extends KnotMaterial {
     this.iridescenceNode = periostracumMask.oneMinus().mul(0.95).add(0.05)
     this.iridescenceIOR = 1.72
     this.iridescenceThicknessNode = facing.mul(290).add(ribArch.mul(165)).add(terraceField.mul(95)).add(230)
-    this.sheenNode = mix(color('#ff78c4'), color('#48ffd0'), grazing).mul(0.55)
+    this.sheenNode = mix(color(hsl.integer(347, 99, 71)), color(hsl.integer(172, 99, 88.1)), grazing).mul(0.55)
     this.sheenRoughness = 0.24
     this.anisotropyNode = periostracumMask.oneMinus().mul(0.64)
     this.anisotropyRotation = 0
@@ -106,11 +107,11 @@ export default class extends KnotMaterial {
 // Travelling abyssal bioluminescent pulse along the internal siphuncle and septal walls.
     const pulseWave = innerU.mul(TAU * 3).sub(time.mul(Math.PI)).sin().mul(0.5).add(0.5).pow(2.5)
     const chamberGlow = septumWall.mul(0.9).add(deepSeptum.mul(0.5)).add(siphuncle.mul(0.75))
-    const internalLight = mix(color('#00b8d4'), color('#38ffc2'), pulseWave).mul(chamberGlow).mul(periostracumMask.oneMinus()).mul(near.mul(0.65).add(0.35))
-    const nacreRim = mix(color('#ff4da6'), color('#29f2c8'), facing).mul(grazing.pow(2.4)).mul(0.42)
+    const internalLight = mix(color(hsl.integer(214, 100, 67)), color(hsl.integer(166, 100, 87.4)), pulseWave).mul(chamberGlow).mul(periostracumMask.oneMinus()).mul(near.mul(0.65).add(0.35))
+    const nacreRim = mix(color(hsl.integer(354, 100, 64.5)), color(hsl.integer(173, 95, 84)), facing).mul(grazing.pow(2.4)).mul(0.42)
     this.emissiveNode = internalLight.mul(0.85)
       .add(nacreRim)
       .add(nacreBody.mul(terraceRings).mul(0.35))
-      .add(color('#ffffff').mul(dewHighlight).mul(0.95))
+      .add(color(hsl.integer(0, 0, 100)).mul(dewHighlight).mul(0.95))
   }
 }

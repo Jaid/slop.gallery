@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'noble_opal',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A million silica spheres hold their breath, and the light answers in colors that were never there.',
   placeholder: {
-    color: '#c6b8d5',
+    color: hsl.integer(307, 31, 77),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'astral_loom',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Constellations unravel into threads, then find another pattern.',
   placeholder: {
-    color: '#f472b6',
+    color: hsl.integer(350, 85, 68),
     shading: 'fabric',
   },
 } as const satisfies KnotData

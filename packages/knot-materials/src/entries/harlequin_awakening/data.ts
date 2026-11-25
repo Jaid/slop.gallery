@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: H32IciRDAWJfwki; fixture: knot-material-shaders; result: success.
 export default {
   id: 'harlequin_awakening',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Fire sleeps in the stone. Turn your head and a thousand small suns wake, each answering to its own angle.',
   placeholder: {
-    color: '#0a1630',
+    color: hsl.integer(264, 64, 10.5),
     shading: 'glass',
   },
 } as const satisfies KnotData

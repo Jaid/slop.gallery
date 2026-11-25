@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4ayQMqfdM3WbrB2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'kintsugi',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'It was dropped once and mended with gold, the way the old masters did – not to hide the break but to honor it. The gold is still warm, and it still moves.',
   placeholder: {
-    color: '#646c64',
+    color: hsl.integer(145, 9, 45),
     shading: 'stone',
   },
 } as const satisfies KnotData

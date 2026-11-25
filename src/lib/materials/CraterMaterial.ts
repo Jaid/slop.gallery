@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, max, mix, mx_noise_float, mx_worley_noise_float, mx_worley_noise_vec2, normalWorldGeometry, positionLocal, time, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -10,10 +11,10 @@ type Float = Node<'float'>
 
 const unit = (node: Float) => node.mul(0.5).add(0.5)
 const regolith = {
-  dark: '#3d3b37',
-  body: '#57544e',
-  fresh: '#7d796f',
-  melt: '#161514',
+  dark: hsl.integer(85, 6, 26),
+  body: hsl.integer(85, 7, 36),
+  fresh: hsl.integer(89, 9, 51),
+  melt: hsl.integer(68, 3, 10),
 }
 
 /**
@@ -24,7 +25,7 @@ const regolith = {
  * The ejecta blocks are dark breccia: angular pale clasts set in a basaltic matrix pitted by gas bubbles, their upward faces dusted with regolith. Pebbles, grit and cracks fade to their average before they could shimmer.
  */
 export default class CraterMaterial extends MeshStandardNodeMaterial {
-  constructor({lava = 0xFF_5A_1C, rock = false}: {
+  constructor({lava = hsl.integer(38, 100, 63), rock = false}: {
     /** the color of the melt still glowing deep in the pond’s cracks */
     lava?: number
     /** dresses the ejecta blocks instead of the terrain */
@@ -56,9 +57,9 @@ export default class CraterMaterial extends MeshStandardNodeMaterial {
       const clastSize = unit(mx_noise_float(p.mul(3).add(8.8))).smoothstep(0.35, 0.8).mul(0.22)
       const clasts = inside(mx_worley_noise_float(warped).sub(clastSize).div(22)).mul(detail)
       const clastTone = unit(mx_noise_float(p.mul(9).add(2.1)))
-      const matrix = mix(color('#3b3a37'), color('#4d4a45'), unit(mx_noise_float(p.mul(7))))
+      const matrix = mix(color(hsl.integer(92, 4, 25)), color(hsl.integer(81, 6, 32)), unit(mx_noise_float(p.mul(7))))
       const vesicles = unit(mx_noise_float(p.mul(120))).smoothstep(0.72, 0.8).mul(fine)
-      let stone: Node<'vec3'> = mix(matrix, mix(color('#857f73'), color('#a49e90'), clastTone), clasts.mul(0.8))
+      let stone: Node<'vec3'> = mix(matrix, mix(color(hsl.integer(85, 11, 53)), color(hsl.integer(88, 12, 65)), clastTone), clasts.mul(0.8))
       stone = stone.mul(vesicles.mul(-0.5).add(1)).mul(grit.sub(0.5).mul(0.16).add(1))
       // Fine regolith settles on whatever faces up.
       const dusted = up.smoothstep(0.35, 0.85).mul(0.75)
@@ -92,7 +93,7 @@ export default class CraterMaterial extends MeshStandardNodeMaterial {
     surface = mix(surface, color(regolith.melt).mul(flowRipples.mul(0.15).add(0.93)), pond.mul(0.9))
     surface = surface.mul(cracks.mul(-0.7).add(1))
     // Pebbles in their own shades, a little paler than the dust they sit in.
-    surface = mix(surface, mix(color('#3b3935'), color('#6e6a62'), pebbleShade), pebble.mul(pond.oneMinus()))
+    surface = mix(surface, mix(color(hsl.integer(85, 6, 25)), color(hsl.integer(85, 8, 45)), pebbleShade), pebble.mul(pond.oneMinus()))
     this.colorNode = surface
     this.roughnessNode = mix(float(0.97).sub(grit.mul(0.04)), float(0.3).add(flowRipples.mul(0.12)), pond).add(cracks.mul(0.4)).min(1)
     // Deep in the cracks the melt is still cooling: a dull glow that swells and ebbs slowly, unevenly along every crack.

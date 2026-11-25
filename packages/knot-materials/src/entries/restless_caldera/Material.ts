@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {fbm} from '../../candidates/space_bunny/lib/fbm.ts'
@@ -34,11 +35,11 @@ function heatField(q: Node<'vec3'>, clock: Node<'float'>) {
 }
 /** Blackbody-ish ramp from dull red to white-hot, in linear light. */
 function incandescence(temperature: Node<'float'>) {
-  const dull = color('#3d0600')
-  const ember = color('#9c1c00')
-  const orange = color('#e85c08')
-  const gold = color('#ffab30')
-  const white = color('#fff0cc')
+  const dull = color(hsl.integer(33, 100, 13))
+  const ember = color(hsl.integer(33, 100, 36))
+  const orange = color(hsl.integer(43, 98.7, 59))
+  const gold = color(hsl.integer(70, 100, 77))
+  const white = color(hsl.integer(88, 100, 95))
   const a = mix(dull, ember, temperature.clamp(0, 0.3).div(0.3))
   const b = mix(a, orange, temperature.sub(0.3).clamp(0, 0.3).div(0.3))
   const c = mix(b, gold, temperature.sub(0.6).clamp(0, 0.22).div(0.22))
@@ -59,7 +60,7 @@ export default class extends KnotMaterial {
     const heat = openSeam.add(fracture.mul(0.5)).mul(convection.mul(0.9).add(1.15)).mul(pulse.mul(0.3).add(0.85)).clamp(0, 1)
     const temperature = heat.pow(1.6)
     const hot = incandescence(temperature)
-    const glass = mix(color('#020105'), color('#0f0a11'), plates.mul(1.4).clamp(0, 1))
+    const glass = mix(color(hsl.integer(297, 57, 2)), color(hsl.integer(316, 25, 6)), plates.mul(1.4).clamp(0, 1))
     this.colorNode = mix(glass, hot.mul(0.08), heat.pow(1.4).mul(0.5))
     this.metalness = 0
 // The crust is volcanic glass: a hard, tight specular, not a polished mirror.

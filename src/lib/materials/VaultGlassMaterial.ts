@@ -1,6 +1,7 @@
 import type {TransmittingEmission} from '../rendering/AlbedoRenderPipeline.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraFar, cameraNear, cameraProjectionMatrix, color, float, fwidth, hash, max, mix, mx_noise_float, normalView, perspectiveDepthToViewZ, positionView, positionViewDirection, pow, screenUV, smoothstep, sqrt, uv, vec2, vec3, vec4, viewportDepthTexture, viewportOpaqueMipTexture, viewportSafeUV} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -30,7 +31,7 @@ const jointHalfWidth = 0.0045
 const maximumRefractionGap = 2.6
 const dispersion = 0.032
 /** Pale aqua-celadon iron body tint, lighter than the thick walk-on floor slabs so the blue sky shines clearly through. */
-const attenuation = new Color('#b7e6df')
+const attenuation = new Color(hsl.integer(185, 45, 87))
 const attenuationColor = vec3(attenuation.r, attenuation.g, attenuation.b)
 const attenuationDepth = 0.28
 
@@ -50,7 +51,7 @@ export default class VaultGlassMaterial extends MeshPhysicalNodeMaterial impleme
     }
     if (!heavy) {
       super({
-        color: '#b8dce2',
+        color: hsl.integer(209, 36, 85),
         metalness: 0,
         roughness: 0.18,
         transparent: true,
@@ -62,12 +63,12 @@ export default class VaultGlassMaterial extends MeshPhysicalNodeMaterial impleme
       return
     }
     super({
-      color: '#000000',
+      color: hsl.integer(0, 0, 0),
       metalness: 0,
       roughness: 0.055,
       ior,
       specularIntensity: 1,
-      specularColor: '#fff6e4',
+      specularColor: hsl.integer(84, 100, 97),
       clearcoat: 0.35,
       clearcoatRoughness: 0.035,
       envMapIntensity: 1.1,
@@ -95,7 +96,7 @@ export default class VaultGlassMaterial extends MeshPhysicalNodeMaterial impleme
     const castNormal = heightNormal(totalHeight)
     this.normalNode = castNormal
     // Dark bronze-silicone joint bead between panes; amber-tinted border frame inside each pane’s perimeter.
-    this.colorNode = mix(color('#1c1914'), color('#000000'), pane)
+    this.colorNode = mix(color(hsl.integer(81, 14, 11)), color(hsl.integer(0, 0, 0)), pane)
     this.roughnessNode = mix(float(0.55), float(0.055), pane)
     // Refract the opaque sky dome behind the glass with subtle prismatic dispersion and beveled edge bending.
     const backdropViewZ = perspectiveDepthToViewZ(viewportDepthTexture(screenUV), cameraNear, cameraFar)
@@ -115,8 +116,8 @@ export default class VaultGlassMaterial extends MeshPhysicalNodeMaterial impleme
     const bodyTint = pow(attenuationColor, vec3(float(thickness).div(refractedCosine.mul(attenuationDepth))))
     // Pillowed bevel catch + soft interior specular/Fresnel sheen so every pane visibly reads as real cast conservatory glass.
     const bevelBand = smoothstep(0.004, 0.032, joint).mul(float(1).sub(smoothstep(0.032, 0.11, joint)))
-    const bevelGlow = color('#eaf6f2').mul(bevelBand.mul(0.095))
-    const surfaceSheen = mix(color('#fff7e8'), color('#d6ece8'), float(1).sub(cosine)).mul(fresnel.mul(0.32).add(0.025))
+    const bevelGlow = color(hsl.integer(174, 37, 96)).mul(bevelBand.mul(0.095))
+    const surfaceSheen = mix(color(hsl.integer(83, 100, 97.5)), color(hsl.integer(184, 33, 91)), float(1).sub(cosine)).mul(fresnel.mul(0.32).add(0.025))
     this.emissiveNode = transmitted.mul(bodyTint).mul(float(1).sub(fresnel.mul(0.75))).add(bevelGlow).add(surfaceSheen).mul(pane)
   }
 }

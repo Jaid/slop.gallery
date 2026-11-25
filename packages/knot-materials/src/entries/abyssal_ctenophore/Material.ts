@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_hsvtorgb, mx_noise_float, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -113,11 +114,11 @@ export default class extends KnotMaterial {
       const radialEnvelope = rowLocalY.abs().smoothstep(0.04, 0.42).oneMinus().mul(0.65).add(0.35)
       const pulseWave = qWarped.x.mul(6.5).add(qWarped.y.mul(5)).sub(loopPhase.mul(2)).add(index * 1.8).sin().mul(0.5).add(0.5)
       const excitability = pulseWave.pow(mix(float(4.2), float(1.9), near)).mul(near.mul(0.85).add(0.35))
-      const canalColor = mix(color('#0052ff'), color('#00ffbf'), pulseWave)
+      const canalColor = mix(color(hsl.integer(262.9, 100, 45.3)), color(hsl.integer(167, 100, 86.8)), pulseWave)
 // Suspended glowing photocyte organelles (beads) inside the gelatinous mesoglea
       const organelle = beads(qWarped.mul(15 + index * 5), index * 7.1 + 1.3)
       const organellePulse = loopPhase.mul(2).add(organelle.random.x.mul(TAU)).sin().mul(0.5).add(0.5).pow(3)
-      const organelleColor = mix(color('#00d8ff'), color('#1eff8e'), organelle.random.y)
+      const organelleColor = mix(color(hsl.integer(217, 100, 78)), color(hsl.integer(153.3, 100, 85.9)), organelle.random.y)
       const layerWeight = [0.38, 0.25, 0.16][index]
       internalGlow = internalGlow
         .add(canalColor.mul(canalSoft.mul(0.65).add(canalCore)).mul(radialEnvelope).mul(excitability.mul(1.35).add(0.2)).mul(layerWeight))
@@ -127,9 +128,9 @@ export default class extends KnotMaterial {
     const meridionalCore = rowLocalY.abs().smoothstep(0.025, float(0.068).add(fpY)).oneMinus()
     const meridionalHalo = rowLocalY.abs().smoothstep(0.04, 0.26).oneMinus().pow(2)
     const canalPulse = tube.x.mul(TAU * 3).sub(loopPhase.mul(2)).add(rowId.mul(0.9)).sin().mul(0.5).add(0.5).pow(2.4)
-    const meridionalGlow = mix(color('#0051ff'), color('#00ffaa'), canalPulse).mul(meridionalCore.add(meridionalHalo.mul(0.42))).mul(near.mul(0.65).add(0.35))
+    const meridionalGlow = mix(color(hsl.integer(263, 100, 45)), color(hsl.integer(160, 100, 86)), canalPulse).mul(meridionalCore.add(meridionalHalo.mul(0.42))).mul(near.mul(0.65).add(0.35))
 // Hydrated colloidal bathypelagic mesoglea body color + shingled iridescent comb rows
-    const gelBody = mix(color('#06203a'), color('#10466e'), rib.mul(0.55).add(grazing.mul(0.45)))
+    const gelBody = mix(color(hsl.integer(251, 76, 14)), color(hsl.integer(246, 79, 29)), rib.mul(0.55).add(grazing.mul(0.45)))
     const shadedRainbow = ciliaRainbow.add(shingleLip.mul(0.38)).mul(overlapShadow.mul(-0.84).add(1)).mul(cushionGroove.mul(-0.32).add(1))
     this.colorNode = mix(gelBody, shadedRainbow.mul(0.95), rowBand.mul(0.88))
     this.metalnessNode = rowBand.mul(0.56)
@@ -138,11 +139,11 @@ export default class extends KnotMaterial {
     this.thicknessNode = mix(float(0.92), float(0.44), rib)
     this.ior = 1.338
     this.dispersion = 0.18
-    this.attenuationColor.set('#075280')
+    this.attenuationColor.set(hsl.integer(244, 91, 33))
     this.attenuationDistance = 0.55
     this.roughnessNode = mix(float(0.175), float(0.085).sub(shingleLip.mul(0.04)), rowBand).clamp(0.04, 0.24)
     this.sheen = 0.72
-    this.sheenColor.set('#4ad2ff')
+    this.sheenColor.set(hsl.integer(224, 100, 77.8))
     this.sheenRoughness = 0.52
     this.clearcoatNode = rowBand.mul(0.65)
     this.clearcoatRoughness = 0.16
@@ -197,8 +198,8 @@ export default class extends KnotMaterial {
     this.envNode = proceduralEnvironment(abyssSky)
 // Emissive combination: overlapping shingled rainbow diffraction + meridional & radial canals + turbid Tyndall colloidal scatter
     const cteneFlash = shadedRainbow.mul(cteneMask).mul(strokeWave.pow(1.5).mul(1.25).add(0.45)).mul(intimate.mul(0.35).add(0.78))
-    const tyndallScatter = mix(color('#06385e'), color('#0d638c'), facing.oneMinus().pow(1.4)).mul(0.38).mul(rowBand.oneMinus())
-    const membraneRim = mix(color('#00d8ff'), color('#1effb8'), view.y.mul(0.5).add(0.5)).mul(grazing.pow(2.2)).mul(0.36)
+    const tyndallScatter = mix(color(hsl.integer(248, 87, 23)), color(hsl.integer(237, 89, 39)), facing.oneMinus().pow(1.4)).mul(0.38).mul(rowBand.oneMinus())
+    const membraneRim = mix(color(hsl.integer(217, 100, 78)), color(hsl.integer(164, 100, 86.84)), view.y.mul(0.5).add(0.5)).mul(grazing.pow(2.2)).mul(0.36)
     this.emissiveNode = cteneFlash
       .add(meridionalGlow.mul(0.68))
       .add(internalGlow)

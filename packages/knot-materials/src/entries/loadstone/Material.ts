@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, tangentLocal, time, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -73,9 +74,9 @@ export default class extends KnotMaterial {
     const bump = proceduralNormal(relief, 1.1)
     this.normalNode = bump
     const glint = glints(bump, 220).mul(tip.mul(0.8).add(field.mul(0.25)))
-    this.emissiveNode = color('#ffffff').mul(glint.mul(0.55))
-      .add(color('#4a7bd0').mul(tip.mul(field).mul(0.16)))
-      .add(color('#2b3f6b').mul(rim.pow(2.2).mul(0.22)))
-      .add(color('#7f9ad8').mul(ring.mul(grazing).mul(0.05)))
+    this.emissiveNode = color(hsl.integer(0, 0, 100)).mul(glint.mul(0.55))
+      .add(color(hsl.integer(261, 71, 52)).mul(tip.mul(field).mul(0.16)))
+      .add(color(hsl.integer(264, 52, 28)).mul(rim.pow(2.2).mul(0.22)))
+      .add(color(hsl.integer(266, 56, 64)).mul(ring.mul(grazing).mul(0.05)))
   }
 }

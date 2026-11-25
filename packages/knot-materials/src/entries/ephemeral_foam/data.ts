@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ephemeral_foam',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Each fragile chamber is a small promise the next moment may erase.',
   placeholder: {
-    color: '#a3eadd',
+    color: hsl.integer(182, 59, 87),
     shading: 'liquid',
   },
 } as const satisfies KnotData

@@ -3,6 +3,8 @@ import type PromptOrb from '../../src/orbs/base/PromptOrb.ts'
 
 import {describe, expect, test} from 'bun:test'
 
+import hsl from 'okhsl'
+
 import {pickFrame} from '../../src/frames/lib/frameChoice.ts'
 import FusionRecipe, {fusionInstruction, itemIngredient, maximumIngredients, minimumIngredients, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
 import {promptOrbs, transparentOrb} from '../../src/orbs/index.ts'
@@ -52,7 +54,7 @@ describe('fusion recipe', () => {
           kind: 'frame',
           frame: 'classic',
         }),
-        glow: '#ff0000',
+        glow: hsl.integer(29.2, 100, 56.8),
         look: '/look.jxl',
       },
     ])
@@ -131,7 +133,7 @@ describe('fusion recipe', () => {
       hung,
       {
         ...item('plain glow'),
-        glow: '#00ff00',
+        glow: hsl.integer(142.5, 100, 84.4),
       },
       {
         ...item('Test Orb', {
@@ -139,9 +141,9 @@ describe('fusion recipe', () => {
           frame: 'tramp',
         }, {
           kind: 'instruction',
-          instruction: 'Make it red.',
+          instruction: 'Make it black.',
         }),
-        glow: '#ff0000',
+        glow: hsl.integer(0, 0, 0),
       },
       item('frame', {
         kind: 'frame',
@@ -149,7 +151,9 @@ describe('fusion recipe', () => {
       }),
     ]
     const recipe = new FusionRecipe(ingredients)
-    expect(recipe.glow).toBe('#00ff00')
+    expect(recipe.glow).toBe(ingredients[1].glow)
+    const black = new FusionRecipe([hung, ingredients[2]])
+    expect(black.glow).toBe(0)
     expect(recipe.frame).toBe('tramp')
     expect(recipe.tints.map(tint => tint.title)).toEqual(['Test Orb'])
   })

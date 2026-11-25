@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'singularity_halo',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A forgotten singularity bent into a knot; its photon ring is the last light that refused to fall.',
   placeholder: {
-    color: '#1b1230',
+    color: hsl.integer(295, 56, 11),
     shading: 'smooth',
   },
 } as const satisfies KnotData

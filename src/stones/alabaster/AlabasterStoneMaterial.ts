@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, positionGeometry, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -36,15 +37,15 @@ export default class AlabasterStoneMaterial extends MeshStandardNodeMaterial {
     // Thin veins of clay, long and broken.
     const vein = line(meters(mx_noise_float(warped.mul(vec3(1.4, 0.8, 1.1)).add(13)).add(mx_noise_float(p.mul(14)).mul(0.03))), 0.0006).mul(unit(mx_noise_float(p.mul(1.2).add(31))).smoothstep(0.55, 0.8))
     const grain = mix(float(0.5), unit(mx_noise_float(p.mul(700))), visibleDetail(footprint, 0.0015))
-    let stone: Node<'vec3'> = mix(color('#f2ede3'), color('#dfcfb2'), cloud.smoothstep(0.3, 0.8))
-    stone = mix(stone, color('#cba673'), honey.mul(0.65))
-    stone = mix(stone, color('#8c6540'), vein.mul(0.75))
+    let stone: Node<'vec3'> = mix(color(hsl.integer(85, 30, 94)), color(hsl.integer(82, 36, 84)), cloud.smoothstep(0.3, 0.8))
+    stone = mix(stone, color(hsl.integer(75, 48, 71)), honey.mul(0.65))
+    stone = mix(stone, color(hsl.integer(64, 47, 47)), vein.mul(0.75))
     this.colorNode = stone.mul(grain.sub(0.5).mul(0.03).add(1))
     // Wax lies thicker in the clearer layers.
     this.roughnessNode = float(0.3).sub(honey.mul(0.08)).add(cloud.sub(0.5).mul(0.06)).add(vein.mul(0.1))
     this.normalNode = heightNormal(grain.mul(0.00001).add(mx_noise_float(p.mul(25)).mul(0.00004)).sub(vein.mul(0.00002)))
   }
   override setupLightingModel() {
-    return new TranslucentLightingModel(0.85, color('#ffcf9c'))
+    return new TranslucentLightingModel(0.85, color(hsl.integer(68, 100, 86.5)))
   }
 }

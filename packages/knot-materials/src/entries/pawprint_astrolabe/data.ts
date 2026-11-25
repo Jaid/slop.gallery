@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ActJg0bLJQHug14.
 export default {
   id: 'pawprint_astrolabe',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Dot by dot, sleeping cats map a kingdom no telescope can reach.',
   placeholder: {
-    color: '#12182a',
+    color: hsl.integer(269, 40, 11),
     shading: 'smooth',
   },
 } as const satisfies KnotData

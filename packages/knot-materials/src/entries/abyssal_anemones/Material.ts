@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, modelWorldMatrixInverse, mx_atan2, mx_noise_float, negateOnBackSide, positionGeometry, positionView, time, transformNormalToView, uv, varying, vec2, vec3, vec4} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -102,35 +103,35 @@ export default class extends KnotMaterial {
     const idle = time.mul(f.rnd2.y.mul(1.6).add(0.7)).add(f.rnd.x.mul(TAU)).sin().mul(0.22).add(0.78)
     const mottling = mx_noise_float(p.mul(6)).mul(0.5).add(0.5)
     const coralline = mx_noise_float(p.mul(3.5).add(7.7)).mul(0.5).add(0.5).smoothstep(0.45, 0.75)
-    const tissue = mix(mix(color('#120722'), color('#33125e'), mottling.mul(0.85)), color('#4a2438'), coralline.mul(0.55))
+    const tissue = mix(mix(color(hsl.integer(299, 67, 7)), color(hsl.integer(297, 82, 18)), mottling.mul(0.85)), color(hsl.integer(349, 46, 22)), coralline.mul(0.55))
     // Violet column rising through magenta into a living teal crown; the valleys
     // between tentacles fall into shadow so each finger stands apart.
     const valleyShade = f.tentacles.mul(0.35).add(0.65)
-    let body = mix(mix(color('#2a0a4e'), color('#96297e'), f.dome.pow(1.6)), color('#17c898'), f.dome.pow(2.2)).mul(mix(float(1), valleyShade, f.ring.add(f.innerRing).clamp())).mul(wave.mul(0.55).add(0.45))
-    body = mix(body, color('#8affdc'), f.ring.mul(f.tentacles).mul(0.45))
+    let body = mix(mix(color(hsl.integer(299, 86, 14)), color(hsl.integer(338, 75, 40)), f.dome.pow(1.6)), color(hsl.integer(167, 97, 70)), f.dome.pow(2.2)).mul(mix(float(1), valleyShade, f.ring.add(f.innerRing).clamp())).mul(wave.mul(0.55).add(0.45))
+    body = mix(body, color(hsl.integer(172, 99, 90.8)), f.ring.mul(f.tentacles).mul(0.45))
     const disc = f.t.smoothstep(0.1, 0.3).oneMinus().mul(f.gate)
     const softHalo = f.t.smoothstep(0.85, 1.35).oneMinus().mul(f.gate)
     // The bright crown lives only on the disc's top; the cushion's outer wall
     // stays dark reef flesh, so each polyp reads as emerging from the tissue.
     const crownMask = mask.mul(f.t.smoothstep(0.55, 0.85).oneMinus().mul(0.65).add(0.35))
-    let albedo = mix(tissue, color('#2a1650'), softHalo.mul(0.55))
+    let albedo = mix(tissue, color(hsl.integer(294, 73, 16)), softHalo.mul(0.55))
     albedo = mix(albedo, body, crownMask)
-    albedo = mix(albedo, color('#e08a1e'), disc.mul(0.85))
-    albedo = mix(albedo, color('#6e3405'), f.t.smoothstep(0.02, 0.13).oneMinus().mul(f.gate).mul(0.8))
+    albedo = mix(albedo, color(hsl.integer(65, 92, 66)), disc.mul(0.85))
+    albedo = mix(albedo, color(hsl.integer(52, 91, 30)), f.t.smoothstep(0.02, 0.13).oneMinus().mul(f.gate).mul(0.8))
     this.colorNode = albedo
     this.metalness = 0
     this.roughnessNode = mix(float(0.62), float(0.28), mask)
     this.clearcoat = 0.5
     this.clearcoatRoughness = 0.35
-    this.sheenNode = color('#5a2a8a').mul(0.22)
+    this.sheenNode = color(hsl.integer(303, 75, 31)).mul(0.22)
     this.sheenRoughness = 0.65
     this.aoNode = mix(float(0.42), float(1), f.dome.mul(f.gate).mul(0.8).add(mask.mul(0.2))).mul(disc.mul(-0.35).add(1))
     const crown = f.ring.mul(f.tentacles).mul(0.9).add(f.innerRing.mul(f.tentacles).mul(0.4)).add(f.dome.pow(3).mul(0.5)).mul(f.gate)
-    this.emissiveNode = color('#1fe8a8').mul(crown).mul(idle).mul(wave.mul(2.8).add(0.15)).mul(near.mul(0.4).add(0.9))
-      .add(color('#ffb347').mul(disc).mul(wave.mul(1.1).add(0.5)).mul(idle))
-      .add(color('#2fe8b0').mul(rim).mul(crown).mul(0.5))
-      .add(color('#46ffd8').mul(crown).mul(intimate).mul(0.35))
-      .add(color('#0f8f6a').mul(crown).mul(0.3))
-      .add(color('#1c0b38').mul(mottling).mul(facing.mul(0.4).add(0.6)))
+    this.emissiveNode = color(hsl.integer(164, 96.3, 80)).mul(crown).mul(idle).mul(wave.mul(2.8).add(0.15)).mul(near.mul(0.4).add(0.9))
+      .add(color(hsl.integer(72, 100, 79.1)).mul(disc).mul(wave.mul(1.1).add(0.5)).mul(idle))
+      .add(color(hsl.integer(167, 92, 80)).mul(rim).mul(crown).mul(0.5))
+      .add(color(hsl.integer(175, 100, 88.4)).mul(crown).mul(intimate).mul(0.35))
+      .add(color(hsl.integer(166, 97, 51)).mul(crown).mul(0.3))
+      .add(color(hsl.integer(296, 76, 10.5)).mul(mottling).mul(facing.mul(0.4).add(0.6)))
   }
 }

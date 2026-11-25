@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -40,8 +41,8 @@ export default class extends KnotMaterial {
       const polarPhase = foldPhase.mul(0.37).add(q.z.mul(0.28)).add(time.mul(0.045))
       const emerald = polarPhase.cos().mul(0.5).add(0.5).pow(3)
       const violet = polarPhase.mul(0.73).add(1.9).sin().mul(0.5).add(0.5).pow(5)
-      const layerColor = [color('#18ffb8'), color('#326dff'), color('#df32ff')][index % 3]
-      const tint = cosinePalette(foldPhase.mul(0.095).add(depth * 0.31).add(time.mul(0.009)), [0.18, 0.48, 0.48], [0.18, 0.4, 0.46], [1, 1, 1], [0.47, 0.08, 0.76]).mul(0.34).add(layerColor.mul(0.72)).add(color('#23ffd0').mul(emerald).mul(0.28)).add(color('#df43ff').mul(violet).mul(0.46))
+      const layerColor = [color(hsl.integer(164, 100, 86.78)), color(hsl.integer(264, 100, 52)), color(hsl.integer(320.5, 100, 61.7))][index % 3]
+      const tint = cosinePalette(foldPhase.mul(0.095).add(depth * 0.31).add(time.mul(0.009)), [0.18, 0.48, 0.48], [0.18, 0.4, 0.46], [1, 1, 1], [0.47, 0.08, 0.76]).mul(0.34).add(layerColor.mul(0.72)).add(color(hsl.integer(173, 100, 87.6)).mul(emerald).mul(0.28)).add(color(hsl.integer(320, 100, 63)).mul(violet).mul(0.46))
       const centerLight = 1 - Math.abs(depth - 0.5) * 1.35
       aurora = aurora.add(tint.mul(density).mul(transmittance).mul(centerLight))
       transmittance = transmittance.mul(density.mul(0.22).oneMinus().clamp())
@@ -52,15 +53,15 @@ export default class extends KnotMaterial {
     const frost = coarseIce.mul(0.5).add(0.5).smoothstep(0.72, 0.91).mul(rift.mul(0.65).add(0.2))
     const bubblePoint = p.sub(view.mul(0.11))
     const bubbles = cellularPoints(bubblePoint.mul(48), 0.018, 0.13, 0.82).mul(intimate)
-    const iceBase = mix(color('#071927'), color('#4b8ea0'), facing.mul(0.18).add(frost.mul(0.36)))
-    this.colorNode = mix(iceBase, color('#d8f7f7'), rift.mul(0.42).add(bubbles.mul(0.7)).clamp())
+    const iceBase = mix(color(hsl.integer(245, 59, 10)), color(hsl.integer(217, 52, 55)), facing.mul(0.18).add(frost.mul(0.36)))
+    this.colorNode = mix(iceBase, color(hsl.integer(197, 64, 94.6)), rift.mul(0.42).add(bubbles.mul(0.7)).clamp())
     this.metalness = 0
     this.roughnessNode = float(0.035).add(frost.mul(0.34)).add(rift.mul(0.13))
     this.transmission = 0.86
     this.thickness = 0.62
     this.ior = 1.31
     this.dispersion = 0.17
-    this.attenuationColor.set('#3d9cb0')
+    this.attenuationColor.set(hsl.integer(214, 70, 59))
     this.attenuationDistance = 1.35
     this.clearcoat = 1
     this.clearcoatRoughness = 0.018
@@ -69,6 +70,6 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(coarseIce.mul(0.12).sub(rift.mul(0.75)).add(frost.mul(0.32)), 0.0022)
     const crystalSpark = glints(normalViewGeometry, 170).mul(frost.add(rift.mul(0.6))).mul(near).mul(0.7)
     const bubbleSpark = glints(normalViewGeometry.add(vec3(0.17, -0.12, 0.09)).normalize(), 110).mul(bubbles)
-    this.emissiveNode = aurora.div(steps).mul(4.3).mul(facing.mul(0.32).add(0.88)).add(color('#d9ffff').mul(rift).mul(grazing.pow(2)).mul(0.22)).add(color('#ffffff').mul(crystalSpark.add(bubbleSpark))).add(color('#426dff').mul(grazing.pow(4)).mul(0.08))
+    this.emissiveNode = aurora.div(steps).mul(4.3).mul(facing.mul(0.32).add(0.88)).add(color(hsl.integer(196, 100, 96.9)).mul(rift).mul(grazing.pow(2)).mul(0.22)).add(color(hsl.integer(0, 0, 100)).mul(crystalSpark.add(bubbleSpark))).add(color(hsl.integer(267, 100, 52.5)).mul(grazing.pow(4)).mul(0.08))
   }
 }

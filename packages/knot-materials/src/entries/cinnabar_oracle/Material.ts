@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -26,19 +27,19 @@ export default class extends KnotMaterial {
     const crystals = filament(mx_noise_float(p.mul(7).add(mx_noise_vec3(p.mul(14)).mul(0.4))), 0.02)
     const buried = filament(mx_noise_float(deep.mul(21)), 0.018)
     const ember = inner.y.mul(11).sub(time.mul(0.55)).sin().mul(0.22).add(0.78)
-    const heat = mix(color('#4a0608'), color('#ff2a14'), lacquer.pow(1.35))
-    this.colorNode = mix(heat, color('#ffd27a'), crystals.mul(0.85))
+    const heat = mix(color(hsl.integer(26, 94, 16)), color(hsl.integer(30.3, 100, 58.4)), lacquer.pow(1.35))
+    this.colorNode = mix(heat, color(hsl.integer(83, 100, 86.6)), crystals.mul(0.85))
     this.metalnessNode = crystals.mul(0.55)
     this.transmissionNode = crystals.oneMinus().mul(0.42)
     this.thickness = 0.38
     this.ior = 1.64
     this.dispersion = 0.18
-    this.attenuationColor.set('#8a120c')
+    this.attenuationColor.set(hsl.integer(29, 96, 31.6))
     this.attenuationDistance = 0.48
     this.roughnessNode = crystals.oneMinus().mul(0.12).add(0.045)
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(18)).add(crystals.mul(0.4)), 0.0032)
     this.clearcoat = 0.95
     this.clearcoatRoughness = 0.035
-    this.emissiveNode = color('#ff5a1f').mul(crystals).mul(ember).mul(near.mul(0.7).add(0.28)).add(color('#ffb14a').mul(buried).mul(intimate).mul(0.9)).add(color('#ff6b3d').mul(rim).mul(0.22))
+    this.emissiveNode = color(hsl.integer(37.7, 100, 63)).mul(crystals).mul(ember).mul(near.mul(0.7).add(0.28)).add(color(hsl.integer(71, 100, 79)).mul(buried).mul(intimate).mul(0.9)).add(color(hsl.integer(37, 100, 65.7)).mul(rim).mul(0.22))
   }
 }

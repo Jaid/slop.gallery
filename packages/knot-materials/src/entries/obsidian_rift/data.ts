@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'obsidian_rift',
   candidateId: 'glm',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A narrow opening in black glass reveals that the fire never truly left.',
   placeholder: {
-    color: '#ff5a1f',
+    color: hsl.integer(37.7, 100, 63),
     shading: 'stone',
   },
 } as const satisfies KnotData

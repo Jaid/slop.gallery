@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CyxjCrlY15yEfmL; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'marbled_dusk',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Pigment floats on still water until a comb drags a whole evening through it, and the paper keeps the current.',
   placeholder: {
-    color: '#6d0f4a',
+    color: hsl.integer(348, 81, 27),
     shading: 'smooth',
   },
 } as const satisfies KnotData

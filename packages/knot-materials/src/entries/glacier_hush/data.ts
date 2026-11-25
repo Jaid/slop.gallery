@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HdWJtzJ2GnPe32p; fixture: knot-material-shaders; result: success.
 export default {
   id: 'glacier_hush',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Ten thousand winters of snowfall pressed into one slow afternoon, and the air from that afternoon is still trapped inside it.',
   placeholder: {
-    color: '#6e9bb8',
+    color: hsl.integer(237, 38, 61),
     shading: 'glass',
   },
 } as const satisfies KnotData

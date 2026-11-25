@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {blackbodyColor} from '../../candidates/claude_opus/lib/blackbody.ts'
@@ -78,13 +79,13 @@ export default class extends KnotMaterial {
     const grainResolved = footprint.smoothstep(0.02, 0.08).oneMinus()
     const height = dome.mul(0.006).sub(fissure.mul(0.0012)).add(grain.mul(0.0006).mul(grainResolved)).add(ash.mul(0.0008))
     this.normalNode = proceduralNormal(height, 1)
-    const charcoal = mix(color('#060505'), color('#16110f'), crackle.random.y.mul(0.6).add(grain.mul(0.4)).clamp())
-    const ashColor = mix(color('#3a3633'), color('#6e6862'), mx_noise_float(p.mul(60)).mul(0.5).add(0.5))
-    this.colorNode = mix(mix(charcoal, ashColor, ash.mul(0.75)), color('#1a0400'), crack)
+    const charcoal = mix(color(hsl.integer(18, 6, 4)), color(hsl.integer(43, 13, 8)), crackle.random.y.mul(0.6).add(grain.mul(0.4)).clamp())
+    const ashColor = mix(color(hsl.integer(59, 6, 24)), color(hsl.integer(68, 7, 45)), mx_noise_float(p.mul(60)).mul(0.5).add(0.5))
+    this.colorNode = mix(mix(charcoal, ashColor, ash.mul(0.75)), color(hsl.integer(42, 100, 6)), crack)
     this.metalnessNode = mix(float(0.25), float(0), ash.max(crack))
     this.roughnessNode = mix(float(0.42), float(0.95), ash).add(grain.mul(0.08))
 // Charcoal has a silky, silvery luster that skims across the grain.
-    this.sheenNode = color('#3b4250').mul(ash.oneMinus()).mul(crack.oneMinus())
+    this.sheenNode = color(hsl.integer(264, 17, 28)).mul(ash.oneMinus()).mul(crack.oneMinus())
     this.sheenRoughness = 0.45
 // Faint heat shimmer over the hottest coals.
     const shimmer = mx_noise_float(p.mul(30).add(vec3(0, time.mul(-1.4), 0))).mul(0.06).mul(heat.smoothstep(0.6, 1)).add(1)

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'golden_mend',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'What was broken is not hidden; it is gilded until the wound outshines the whole.',
   displacement: 0.009,
   placeholder: {
-    color: '#d4cdbd',
+    color: hsl.integer(87, 19, 82.5),
     shading: 'smooth',
   },
 } as const satisfies KnotData

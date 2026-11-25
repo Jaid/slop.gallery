@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_cell_noise_float, normalViewGeometry, time, uv, vec3} from 'three/tsl'
 import {DoubleSide} from 'three/webgpu'
 
@@ -21,9 +22,9 @@ export default class extends BaseKnotMaterial {
       .smoothstep(0.9, 0.975)
       .mul(melt)
     const wetting = opticalLine(uv().y.sub(0.5), 0.07).mul(melt).mul(intimate)
-    const solid = mix(color('#6e7378'), color('#9aa0a6'), grazing.mul(0.45).add(0.2))
-    const liquid = mix(color('#c5ced8'), color('#eef3f7'), facing)
-    this.colorNode = mix(solid, mix(liquid, color('#f4f7fa'), beads.max(drips)), melt)
+    const solid = mix(color(hsl.integer(248, 5, 48)), color(hsl.integer(248, 6, 65)), grazing.mul(0.45).add(0.2))
+    const liquid = mix(color(hsl.integer(251, 16, 82)), color(hsl.integer(242, 28, 95.5)), facing)
+    this.colorNode = mix(solid, mix(liquid, color(hsl.integer(248, 29, 97)), beads.max(drips)), melt)
     this.metalnessNode = melt.mul(0.22).add(0.76)
     this.roughnessNode = melt.oneMinus().mul(0.48).add(0.018).add(beads.mul(-0.01))
     this.clearcoat = 1
@@ -37,9 +38,9 @@ export default class extends BaseKnotMaterial {
       .mul(glints(normalViewGeometry, 95))
       .mul(melt)
       .mul(0.55)
-      .add(color('#dfe7ee').mul(beads).mul(glints(normalViewGeometry, 140)).mul(1.4))
-      .add(color('#b7c2cc').mul(drips.add(wetting)).mul(0.28))
-      .add(color('#2a3036').mul(rim).mul(melt.oneMinus().mul(0.2)))
+      .add(color(hsl.integer(244, 24, 91)).mul(beads).mul(glints(normalViewGeometry, 140)).mul(1.4))
+      .add(color(hsl.integer(245, 14, 78)).mul(drips.add(wetting)).mul(0.28))
+      .add(color(hsl.integer(248, 12, 20)).mul(rim).mul(melt.oneMinus().mul(0.2)))
     this.side = DoubleSide
   }
 }

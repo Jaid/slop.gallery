@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'midnight_prophecy',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Moon-dark porcelain remembers every wound in rivers of gold, and whispers through them when you draw near.',
   placeholder: {
-    color: '#272438',
+    color: hsl.integer(291, 31, 17),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: HU72JSGdKyp7pBO; fixture: knot-material-shaders; result: success.
 export default {
   id: 'rootlight',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.006,
   flavorText: 'Beneath the world, a patient choir trades tiny suns through roots of ivory. Nothing here is alone.',
   placeholder: {
-    color: '#826d48',
+    color: hsl.integer(81, 39, 47),
     shading: 'fabric',
   },
 } as const satisfies KnotData

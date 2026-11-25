@@ -1,28 +1,29 @@
 import type StairRunner from '../gallery/stairs/StairRunner.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraViewMatrix, clamp, exp, float, max, mix, mx_noise_float, mx_noise_vec3, normalWorldGeometry, positionWorld, select, sqrt, vec2, vec3, vec4} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 type Float = Node<'float'>
 
-const tone = (hex: string): Node<'vec3'> => {
+const tone = (hex: number): Node<'vec3'> => {
   const {r, g, b} = new Color(hex)
   return vec3(r, g, b)
 }
 const palette = {
-  binding: tone('#b0823c'),
-  navy: tone('#121a33'),
-  borderGround: tone('#1a2646'),
-  gold: tone('#c99c4e'),
-  cream: tone('#e6cf98'),
-  crimson: tone('#7c111b'),
-  wine: tone('#470911'),
-  oakLight: tone('#a06c3c'),
-  oakDark: tone('#6a4022'),
-  oakRing: tone('#43260f'),
-  brass: tone('#d1aa5f'),
-  brassPatina: tone('#7d5c2c'),
+  binding: tone(hsl.integer(75, 67, 58)),
+  navy: tone(hsl.integer(269, 51, 12)),
+  borderGround: tone(hsl.integer(267, 52, 17)),
+  gold: tone(hsl.integer(79, 66, 67)),
+  cream: tone(hsl.integer(88, 56, 84)),
+  crimson: tone(hsl.integer(23, 93, 28.5)),
+  wine: tone(hsl.integer(20, 86, 16)),
+  oakLight: tone(hsl.integer(62, 59, 51)),
+  oakDark: tone(hsl.integer(54, 58, 32)),
+  oakRing: tone(hsl.integer(57, 64, 20)),
+  brass: tone(hsl.integer(82, 63, 72)),
+  brassPatina: tone(hsl.integer(75, 60, 42)),
 }
 /** Pixel-filtered coverage of the region where the signed distance `d` (meters) is negative. */
 const inside = (d: Float) => clamp(float(0.5).sub(d.div(d.fwidth().max(0.00001))), 0, 1)

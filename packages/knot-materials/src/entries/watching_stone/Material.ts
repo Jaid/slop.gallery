@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, luminance, mix, mx_noise_float, normalLocal, normalViewGeometry, pmremTexture, tangentLocal, time, vec3} from 'three/tsl'
 
 import {ambientRadiance, toWorldDirection} from '../../candidates/claude_opus/lib/environmentHighlight.ts'
@@ -44,11 +45,11 @@ const veinsAround = 15
 /** Each vein changes mineral along its length in this many segments. */
 const veinSegments = 11
 type Mineral = {
-  base: string
-  deep: string
+  base: number
+  deep: number
   metal: number
   sheen: number
-  silk: string
+  silk: number
 }
 /** Folded vein layering with an analytic gradient in tube space: bands are the veins, fibers grow straight across them. */
 function veins(along: Node<'float'>, around: Node<'float'>, octaves = folds.length) {
@@ -73,33 +74,33 @@ function veins(along: Node<'float'>, around: Node<'float'>, octaves = folds.leng
 }
 // Golden and honey tiger's eye dominate; umber, red tiger's eye and rare hematite seams interleave like tiger iron.
 const minerals: Array<[number, Mineral]> = [[0.42, {
-  base: '#94520c',
-  deep: '#5a2a05',
-  silk: '#ffae2e',
+  base: hsl.integer(59, 90, 43),
+  deep: hsl.integer(52, 87, 25),
+  silk: hsl.integer(73, 100, 78),
   sheen: 1,
   metal: 0,
 }], [0.64, {
-  base: '#c07a14',
-  deep: '#6e3a08',
-  silk: '#ffc94f',
+  base: hsl.integer(68, 91, 58),
+  deep: hsl.integer(58, 88, 32),
+  silk: hsl.integer(84.4, 100, 84),
   sheen: 1,
   metal: 0,
 }], [0.84, {
-  base: '#5a2a08',
-  deep: '#2e1204',
-  silk: '#f09a38',
+  base: hsl.integer(51, 83, 25),
+  deep: hsl.integer(47, 76, 12),
+  silk: hsl.integer(65, 89, 72),
   sheen: 0.9,
   metal: 0,
 }], [0.95, {
-  base: '#7a2c0c',
-  deep: '#3a1204',
-  silk: '#ff9446',
+  base: hsl.integer(40, 89, 31),
+  deep: hsl.integer(40, 84, 14),
+  silk: hsl.integer(54, 100, 73),
   sheen: 0.7,
   metal: 0,
 }], [1, {
-  base: '#4a4c52',
-  deep: '#26272c',
-  silk: '#e2e8f0',
+  base: hsl.integer(271, 6, 33),
+  deep: hsl.integer(277, 8, 17),
+  silk: hsl.integer(256, 26, 92),
   sheen: 0,
   metal: 1,
 }]]
@@ -186,7 +187,7 @@ export default class extends KnotMaterial {
     const breath = time.mul(0.35).add(vein.mul(TAU * 4 / veinsAround)).sin().mul(0.1).add(0.9)
     const silkiness = sheenStrength.mul(striation.mul(0.45).add(0.85))
 // The fibers themselves are dim; most of the gold is light they return.
-    this.colorNode = mix(base.mul(0.4), rgb('#5a5e66'), hematite)
+    this.colorNode = mix(base.mul(0.4), rgb(hsl.integer(264, 8, 40)), hematite)
     this.metalnessNode = hematite
     this.roughnessNode = mix(float(0.5), float(0.16), hematite).sub(striation.mul(0.04))
     this.clearcoat = 1

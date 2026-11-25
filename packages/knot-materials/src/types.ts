@@ -8,7 +8,7 @@ export type {Vec3} from 'math'
 
 export type PlaceholderShading = 'fabric' | 'ghost' | 'glass' | 'liquid' | 'metal' | 'smooth' | 'stone'
 export type KnotPlaceholder = {
-  color: string
+  color: number
   shading: PlaceholderShading
 }
 

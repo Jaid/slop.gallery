@@ -2,6 +2,7 @@ import type {Group, Mesh, Object3D} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo, useRef} from 'react'
 import {useGraphicsModeValue} from 'use-graphics-mode'
 
@@ -34,7 +35,7 @@ const rings = [0, 1, 2].map(i => ({
   nod: 0.06 + i * 0.02,
   revolution: [0.95, 0.62, 0.41][i],
   // The middle one is gold, the others in Moonfall’s theme.
-  hue: i === 1 ? 0xD5_AD_73 : moonfallTheme.ring,
+  hue: i === 1 ? hsl.integer(76, 54, 73) : moonfallTheme.ring,
 }))
 const {center, coreRadius} = moonfallSculpture
 /** how fast the meteorite spins round its own vertical and, slower, tumbles over round the horizontal, in radians per second */
@@ -111,7 +112,7 @@ export default function MoonfallOrbit() {
           position={[ring.radius, 0, 0]} ref={mesh => {
             beads.current[i] = mesh
           }}
-        ><sphereGeometry args={[0.065, 16 * curveDetail, 12 * curveDetail]} /><meshBasicNodeMaterial color='#e4e7d5' toneMapped={false} /></mesh>
+        ><sphereGeometry args={[0.065, 16 * curveDetail, 12 * curveDetail]} /><meshBasicNodeMaterial color={hsl.integer(115, 30, 91)} toneMapped={false} /></mesh>
       </group>
     </group>)}
   </Orbitable>

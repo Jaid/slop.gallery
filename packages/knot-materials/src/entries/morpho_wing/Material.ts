@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, transformNormalToView, vec2} from 'three/tsl'
 
 import {lampFlash} from '../../candidates/space_bunny/lib/lampFlash.ts'
@@ -45,16 +46,16 @@ export default class extends KnotMaterial {
     const flashFine = lampFlash(transformNormalToView(rotateAround(grating, bitangent, ribs.mul(0.35))).normalize(), 70).mul(present).mul(ribs)
 // Thickness decides which end of the interference the wing lands on.
     const thickness = mx_fractal_noise_float(p.mul(2.6), 3, 2.1, 0.55).mul(0.5).add(0.5)
-    const royal = color('#1b3cff')
-    const azure = color('#18a9ff')
-    const violet = color('#7b46ff')
-    const jade = color('#25f0b4')
+    const royal = color(hsl.integer(266, 100, 42))
+    const azure = color(hsl.integer(243, 99.9, 66))
+    const violet = color(hsl.integer(289, 100, 50))
+    const jade = color(hsl.integer(166, 95.7, 82.5))
     const interference = mix(royal, azure, thickness.smoothstep(0.34, 0.56))
     const hueShift = mix(interference, violet, thickness.smoothstep(0.56, 0.76))
     const structural = mix(hueShift, jade, thickness.smoothstep(0.82, 0.95))
-    const chitin = mix(color('#0a0b12'), color('#2b2436'), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
-    const ground = mix(chitin, color('#f0e6d2'), identity.z.smoothstep(0.1, 0.2).oneMinus().mul(veinRibs.mul(0.5)).mul(0.25))
-    this.colorNode = mix(ground, mix(color('#05060b'), structural.mul(0.62), present), tray.smoothstep(0.02, 0.1))
+    const chitin = mix(color(hsl.integer(278, 23, 6)), color(hsl.integer(302, 28, 17)), mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5))
+    const ground = mix(chitin, color(hsl.integer(85, 42, 91.6)), identity.z.smoothstep(0.1, 0.2).oneMinus().mul(veinRibs.mul(0.5)).mul(0.25))
+    this.colorNode = mix(ground, mix(color(hsl.integer(273, 25, 4)), structural.mul(0.62), present), tray.smoothstep(0.02, 0.1))
     this.metalness = 0
     this.roughnessNode = float(0.24).add(tray.smoothstep(0.1, 0.3).mul(0.2)).sub(present.mul(0.06)).clamp(0.1, 0.6)
     this.ior = 1.55
@@ -65,7 +66,7 @@ export default class extends KnotMaterial {
     const dust = mx_noise_float(p.mul(180)).mul(0.5).add(0.5).mul(near)
     this.emissiveNode = structural.mul(flash.mul(2.7))
       .add(structural.mul(flashFine).mul(0.9))
-      .add(color('#cfe6ff').mul(grazing.pow(3.5)).mul(0.09))
-      .add(color('#ffe9c8').mul(dust.mul(present.oneMinus())).mul(intimate).mul(0.12))
+      .add(color(hsl.integer(250, 100, 90)).mul(grazing.pow(3.5)).mul(0.09))
+      .add(color(hsl.integer(78, 100, 93.4)).mul(dust.mul(present.oneMinus())).mul(intimate).mul(0.12))
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -31,8 +32,8 @@ export default class extends KnotMaterial {
     const spores = opticalLine(mx_noise_float(deep.mul(30).add(time.mul(0.15))).mul(0.6).add(0.4), 0.03)
     const hue = polyp.mul(0.6).add(view.x.mul(0.9)).add(view.y.mul(0.5)).add(0.2)
     const reef = spectralColor(hue)
-    const coral = mix(color('#2c1140'), color('#ff5ec7'), polyp.pow(1.4))
-    this.colorNode = mix(color('#180521'), coral, polyp.mul(0.55).add(0.2))
+    const coral = mix(color(hsl.integer(308, 70, 14)), color(hsl.integer(344, 100, 68)), polyp.pow(1.4))
+    this.colorNode = mix(color(hsl.integer(314, 72, 7)), coral, polyp.mul(0.55).add(0.2))
     this.metalness = 0.32
     this.roughnessNode = polyp.mul(0.22).add(0.14)
     this.iridescence = 0.9
@@ -40,6 +41,6 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = polyp.mul(240).add(260)
     this.clearcoat = 0.85
     this.clearcoatRoughness = 0.06
-    this.emissiveNode = reef.mul(spores).mul(near.mul(0.85).add(0.3)).add(color('#ff5ec7').mul(polypFine).mul(near.mul(0.75).add(0.15))).add(color('#8a4dff').mul(polyp.pow(3)).mul(0.25)).add(spectralColor(view.x.mul(1.6).add(0.4)).mul(rim).mul(0.22))
+    this.emissiveNode = reef.mul(spores).mul(near.mul(0.85).add(0.3)).add(color(hsl.integer(344, 100, 68)).mul(polypFine).mul(near.mul(0.75).add(0.15))).add(color(hsl.integer(293, 100, 52.6)).mul(polyp.pow(3)).mul(0.25)).add(spectralColor(view.x.mul(1.6).add(0.4)).mul(rim).mul(0.22))
   }
 }

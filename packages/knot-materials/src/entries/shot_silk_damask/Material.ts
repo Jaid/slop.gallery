@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, positionGeometry, positionViewDirection, select, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeCells} from '../../candidates/claude_sonnet/lib/tubeMetric.ts'
@@ -48,9 +49,9 @@ export default class extends KnotMaterial {
     const weftRound = float(1).sub(lengthwise.mul(lengthwise)).max(0).sqrt()
     const round = mix(weftRound, warpRound, warpUp)
     const fibers = cellNoiseVec3(vec3(index, 1.3)).x.mul(0.22).add(0.89)
-    const crimson = color('#7d0716')
-    const teal = color('#04606b')
-    const gold = color('#f2b84a')
+    const crimson = color(hsl.integer(24, 97, 28))
+    const teal = color(hsl.integer(209, 97, 36))
+    const gold = color(hsl.integer(80, 85, 78.6))
     const weft = mix(teal, gold, faceMotif)
 // Shot silk: warp threads run along the knot and weft threads around it. Looking across the tube the warp faces the
 // eye; looking down its length the weft takes over. The tube keeps turning, so stretches of cloth flip color one after
@@ -72,7 +73,7 @@ export default class extends KnotMaterial {
     this.anisotropyNode = vec2(float(1).sub(motif), motif).mul(0.9)
     this.aoNode = mix(float(1), round.mul(0.45).add(0.55), resolved)
     this.sheen = 0.45
-    this.sheenColor.set('#ffd98a')
+    this.sheenColor.set(hsl.integer(85, 100, 88.5))
     this.sheenRoughness = 0.42
     this.specularIntensity = 0.85
 // Warp highlights hug the silk while the gold answers the eye at close range.

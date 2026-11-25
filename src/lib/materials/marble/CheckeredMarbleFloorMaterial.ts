@@ -1,5 +1,6 @@
 import type {MarbleStyle} from './marble.ts'
 
+import hsl from 'okhsl'
 import {float, hash, max, mix, mx_noise_float, normalWorldGeometry, positionWorld, vec2, vec3} from 'three/tsl'
 import {Color} from 'three/webgpu'
 
@@ -84,7 +85,7 @@ export default class CheckeredMarbleFloorMaterial extends PlanarMirrorMaterial {
     const top = normalWorldGeometry.y.step(0.5)
     const finish = reflections ? roughness : 0.3
     super(null, {
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       roughness: finish,
       reflection: reflections ? {
         strength,
@@ -102,7 +103,7 @@ export default class CheckeredMarbleFloorMaterial extends PlanarMirrorMaterial {
     // The eased arris catches a sliver of shadow along every joint.
     const arrisShade = mix(float(1), edge.smoothstep(0, 0.005).mul(0.35).add(0.65), visibleDetail(footprint, 0.01))
     const sawn = new Color(dark.base)
-    const groutColor = new Color('#2b2724')
+    const groutColor = new Color(hsl.integer(59, 8, 17))
     this.colorNode = mix(mix(vec3(sawn.r, sawn.g, sawn.b), stone.mul(arrisShade).toVec3(), top), vec3(groutColor.r, groutColor.g, groutColor.b), grout.mul(top))
     this.roughnessNode = mix(float(finish).add(vein.mul(0.05)), float(0.8), grout)
     // The arrises are eased toward the joint, and hand-polished stone is never quite flat: both bend the mirrored lights.

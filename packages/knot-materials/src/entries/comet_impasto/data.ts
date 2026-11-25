@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: ActJg0bLJQHug14.
 export default {
   id: 'comet_impasto',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A storm of pigment keeps its memories in every raised brushstroke.',
   placeholder: {
-    color: '#263fba',
+    color: hsl.integer(268, 91, 35),
     shading: 'smooth',
   },
   displacement: 0.005,

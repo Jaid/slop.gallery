@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, float, mix, mx_noise_float, normalViewGeometry, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {palette} from '../../candidates/grok/lib/palette.ts'
@@ -49,15 +50,15 @@ export default class extends KnotMaterial {
     film = film.div(cover.max(0.001))
     const pearl = palette(facing.mul(0.65).add(0.1), [{
       at: 0,
-      hex: '#fff6ec',
+      rgb: hsl.integer(71, 100, 97.4),
     }, {
       at: 0.45,
-      hex: '#e4d0be',
+      rgb: hsl.integer(64, 33, 85),
     }, {
       at: 1,
-      hex: '#8d7384',
+      rgb: hsl.integer(339, 20, 52),
     }])
-    const lip = mix(color('#fffaf3'), color('#f0c8ba'), tube.y.mul(TAU * 3).sin().mul(0.5).add(0.5))
+    const lip = mix(color(hsl.integer(77, 100, 98.5)), color(hsl.integer(40, 55, 84)), tube.y.mul(TAU * 3).sin().mul(0.5).add(0.5))
     const colorBody = mix(pearl, film, float(0.72).add(grazing.mul(0.25)))
     const lined = mix(colorBody, lip, growth.mul(intimate.mul(0.55).add(0.18)))
     const organic = mx_noise_float(p.mul(16)).mul(0.5).add(0.5)
@@ -72,12 +73,12 @@ export default class extends KnotMaterial {
     this.iridescence = 1
     this.iridescenceIORNode = float(1.18).add(grazing.mul(0.28))
     this.iridescenceThicknessNode = tube.x.mul(TAU * 2).add(tube.y.mul(TAU)).add(view.y.mul(0.7)).sin().mul(510).add(690)
-    this.sheenNode = color('#fff6ee').mul(grazing.pow(1.7).mul(0.4))
+    this.sheenNode = color(hsl.integer(64, 100, 97.4)).mul(grazing.pow(1.7).mul(0.4))
     this.sheenRoughness = 0.36
     this.ior = 1.56
     this.transmissionNode = grazing.pow(1.6).mul(0.22)
     this.thickness = 0.09
     const tide = time.mul(0.22).add(p.dot(vec3(1.4, 0.3, -0.8))).sin().mul(0.5).add(0.5)
-    this.emissiveNode = film.mul(grazing.pow(1.15)).mul(0.32).add(film.mul(facing).mul(0.05)).add(color('#fff8f2').mul(growth).mul(facing).mul(tide).mul(0.08))
+    this.emissiveNode = film.mul(grazing.pow(1.15)).mul(0.32).add(film.mul(facing).mul(0.05)).add(color(hsl.integer(63, 100, 98)).mul(growth).mul(facing).mul(tide).mul(0.08))
   }
 }

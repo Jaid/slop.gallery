@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'boreal_veil',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Curtains of polar light drift through the knot, as if the night itself were combed into silk.',
   placeholder: {
-    color: '#1c8f78',
+    color: hsl.integer(175, 91, 52),
     shading: 'ghost',
   },
 } as const satisfies KnotData

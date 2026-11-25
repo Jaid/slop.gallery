@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -29,22 +30,22 @@ export default class extends KnotMaterial {
     const pulse = time.mul(1.25).add(p.dot(vec3(1.7, 2.3, -1.1))).sin().mul(0.5).add(0.5).pow(5)
     // Fractal octaves are summed, not normalized; keep fractional powers and color mixing in range.
     const chalk = coralField.mul(0.5).add(0.5).clamp().pow(1.45)
-    const shell = mix(color('#0b303b'), color('#66b9ad'), chalk)
-    const body = mix(color('#03111c'), shell, branches.mul(0.76).add(0.12)).add(color('#0c202a').mul(rim.mul(0.5)))
+    const shell = mix(color(hsl.integer(222, 72, 19)), color(hsl.integer(183, 56, 69)), chalk)
+    const body = mix(color(hsl.integer(242, 67, 7)), shell, branches.mul(0.76).add(0.12)).add(color(hsl.integer(232, 51, 13)).mul(rim.mul(0.5)))
     const height = branches.mul(0.16).add(pores.mul(-0.05)).add(rim.mul(0.09)).add(cup.mul(-0.035))
     const coralNormal = proceduralNormal(height, 0.004)
     const coralGlint = glints(coralNormal, 48).mul(light)
-    const movingLight = color('#25efd0').mul(light.mul(pulse.mul(0.52).add(0.28)))
-    this.colorNode = body.add(movingLight.mul(0.86)).add(color('#1a7187').mul(grazing.mul(0.24)))
+    const movingLight = color(hsl.integer(178, 95, 83)).mul(light.mul(pulse.mul(0.52).add(0.28)))
+    this.colorNode = body.add(movingLight.mul(0.86)).add(color(hsl.integer(219, 82, 43)).mul(grazing.mul(0.24)))
     this.metalness = 0.01
     this.roughnessNode = float(0.76).sub(branches.mul(0.16)).add(pores.mul(0.1)).add(rim.mul(0.06)).clamp(0.48, 0.9)
     this.clearcoat = 0.08
     this.clearcoatRoughness = 0.32
     this.sheen = 0.2
-    this.sheenColor.set('#65c9bc')
+    this.sheenColor.set(hsl.integer(185, 64, 73))
     this.sheenRoughness = 0.6
     this.normalNode = coralNormal
     this.positionNode = positionGeometry.add(normalLocal.mul(rim.mul(0.0022).add(cup.mul(-0.0008))))
-    this.emissiveNode = movingLight.mul(0.7).add(color('#b7fff0').mul(coralGlint.mul(0.12)))
+    this.emissiveNode = movingLight.mul(0.7).add(color(hsl.integer(180, 100, 94)).mul(coralGlint.mul(0.12)))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, mix, negateOnBackSide, normalLocal, select, tangentLocal, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeCells} from '../../candidates/claude_sonnet/lib/tubeMetric.ts'
@@ -16,8 +17,8 @@ const gold = color(1, 0.77, 0.32)
 /** Medallion rings from the outside in: outer radius in tiles, tint per lattice and whether the ring is colored glass rather than gold leaf. */
 const rings = [{
   radius: 4.9,
-  blue: color('#0e2a8c'),
-  green: color('#075a3b'),
+  blue: color(hsl.integer(265, 94, 24.5)),
+  green: color(hsl.integer(161, 97, 32)),
   glass: 1,
 }, {
   radius: 4,
@@ -26,13 +27,13 @@ const rings = [{
   glass: 0,
 }, {
   radius: 3.2,
-  blue: color('#efe6d2'),
-  green: color('#efe6d2'),
+  blue: color(hsl.integer(87, 40, 91.5)),
+  green: color(hsl.integer(87, 40, 91.5)),
   glass: 1,
 }, {
   radius: 2.4,
-  blue: color('#1d4fd6'),
-  green: color('#0f9a64'),
+  blue: color(hsl.integer(264, 94, 41)),
+  green: color(hsl.integer(159, 98, 54)),
   glass: 1,
 }, {
   radius: 1.5,
@@ -41,8 +42,8 @@ const rings = [{
   glass: 0,
 }, {
   radius: 0.7,
-  blue: color('#b32a1a'),
-  green: color('#b32a1a'),
+  blue: color(hsl.integer(31, 93, 43)),
+  green: color(hsl.integer(31, 93, 43)),
   glass: 1,
 }]
 /** Hand-set smalti: gold leaf under glass, a few colored glass medallions, dark grout and a candle that follows the eye. */
@@ -102,7 +103,7 @@ export default class extends KnotMaterial {
     const viewNormal = negateOnBackSide(transformNormalToView(tileNormal))
     this.normalNode = viewNormal
     this.clearcoatNormalNode = viewNormal
-    this.colorNode = mix(color('#120d09'), leaf, tile)
+    this.colorNode = mix(color(hsl.integer(61, 21, 7)), leaf, tile)
     this.metalnessNode = tile.mul(glass.oneMinus())
     this.roughnessNode = mix(float(0.92), mix(float(0.25), float(0.1), glass), tile)
     this.clearcoatNode = tile.mul(glass.mul(-0.55).add(0.55))

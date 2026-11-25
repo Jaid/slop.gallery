@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, uv, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -28,9 +29,9 @@ export default class extends BaseKnotMaterial {
     const script = opticalLine(tube.x.mul(36).add(tube.y.mul(8)).add(mx_noise_float(p.mul(3)).mul(2)).fract().sub(0.5), 0.03).mul(intimate)
     const inlay = seal.max(script)
     const lacquerNoise = mx_noise_float(p.mul(3.2)).mul(0.08)
-    const lacquer = mix(color('#140204'), color('#9a120d'), grazing.pow(1.7).mul(0.75).add(lacquerNoise).clamp())
-    const vermillion = mix(color('#6a0706'), color('#e23a22'), facing.mul(0.4).add(0.35))
-    const gold = mix(color('#8a5a18'), color('#ffe3a0'), glints(normalViewGeometry, 64).add(grazing.mul(0.3)))
+    const lacquer = mix(color(hsl.integer(13, 73, 4.7)), color(hsl.integer(29, 97, 35)), grazing.pow(1.7).mul(0.75).add(lacquerNoise).clamp())
+    const vermillion = mix(color(hsl.integer(29, 97, 23.5)), color(hsl.integer(31, 94.5, 54)), facing.mul(0.4).add(0.35))
+    const gold = mix(color(hsl.integer(70, 81, 43)), color(hsl.integer(87, 100, 91)), glints(normalViewGeometry, 64).add(grazing.mul(0.3)))
     this.colorNode = mix(mix(lacquer, vermillion, stamp.mul(0.55).add(0.2)), gold, inlay)
     this.metalnessNode = inlay.mul(0.92)
     this.roughnessNode = float(0.38).mix(0.16, inlay)
@@ -42,8 +43,8 @@ export default class extends BaseKnotMaterial {
       .mul(glints(normalViewGeometry, 50))
       .mul(0.85)
       .mul(near.mul(0.55).add(0.4))
-      .add(color('#ff5a32').mul(stamp.oneMinus()).mul(grazing).mul(0.04))
-      .add(color('#3a0504').mul(rim).mul(0.14))
-      .add(color('#ffd27a').mul(script).mul(intimate).mul(0.35))
+      .add(color(hsl.integer(35, 99, 63)).mul(stamp.oneMinus()).mul(grazing).mul(0.04))
+      .add(color(hsl.integer(27, 93, 12)).mul(rim).mul(0.14))
+      .add(color(hsl.integer(83, 100, 86.6)).mul(script).mul(intimate).mul(0.35))
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -38,19 +39,19 @@ export default class extends KnotMaterial {
     const headGlint = headA.min(headB)
     const activity = rnd.z.smoothstep(0.25, 0.3)
     const pulseCol = spectralColor(rnd.x.mul(6.283).add(time.mul(0.12)))
-    const base = mix(color('#0b0a12'), color('#15121f'), mx_noise_float(p.mul(6)).mul(0.5).add(0.5))
-    this.colorNode = mix(mix(base, base.add(pulseCol.mul(0.06)), warpLine), color('#07060c'), weftLine.mul(0.6))
+    const base = mix(color(hsl.integer(290, 26, 6)), color(hsl.integer(294, 31, 9)), mx_noise_float(p.mul(6)).mul(0.5).add(0.5))
+    this.colorNode = mix(mix(base, base.add(pulseCol.mul(0.06)), warpLine), color(hsl.integer(293, 27, 4.4)), weftLine.mul(0.6))
     this.metalness = 0.25
     this.roughnessNode = float(0.42).mix(0.3, warpLine)
     this.anisotropy = 0.65
     this.sheen = 0.5
-    this.sheenColor.set('#8892ff')
+    this.sheenColor.set(hsl.integer(278, 100, 65))
     this.sheenRoughness = 0.42
     this.clearcoat = 0.12
     this.clearcoatRoughness = 0.3
     this.normalNode = proceduralNormal(weaveH, 0.002)
     this.emissiveNode = pulseCol.mul(comet).mul(warpLine).mul(activity).mul(near.mul(0.5).add(0.6)).mul(2.4)
-      .add(color('#ffffff').mul(headGlint).mul(warpLine).mul(activity).mul(1.4))
+      .add(color(hsl.integer(0, 0, 100)).mul(headGlint).mul(warpLine).mul(activity).mul(1.4))
       .add(pulseCol.mul(warpLine).mul(0.05))
       .add(pulseCol.mul(warpLine).mul(far).mul(0.12))
   }

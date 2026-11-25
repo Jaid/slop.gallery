@@ -27,7 +27,7 @@ describe('The Banquet’s checkered marble floor', () => {
   })
   test('the cuts are a light Calacatta and a dark Portoro with golden veins', () => {
     expect(lightness(calacatta.base)).toBeGreaterThan(lightness(portoro.base))
-    const [r, g, b] = [1, 3, 5].map(index => Number.parseInt(portoro.vein.slice(index, index + 2), 16))
+    const [r, g, b] = Bun.color(portoro.vein, '[rgb]')!
     expect(r).toBeGreaterThan(g)
     expect(g).toBeGreaterThan(b)
   })

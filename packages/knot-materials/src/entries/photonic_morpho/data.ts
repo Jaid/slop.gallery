@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'photonic_morpho',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: "Minute ridges persuade daylight to become the blue of a butterfly's wing.",
   placeholder: {
-    color: '#0055ff',
+    color: hsl.integer(262.6, 100, 46),
     shading: 'smooth',
   },
 } as const satisfies KnotData

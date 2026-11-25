@@ -6,6 +6,7 @@ import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 
 import KnotLabelFace, {KnotLabelFaces} from '#component/KnotLabelFace'
+import {cssHex} from '#src/lib/color.ts'
 
 import {knotDetailLine, labelAtlasColumns, labelBackground, labelHeight, labelTile, labelWidth} from '../../src/components/KnotLabels/layout.ts'
 import redrawPlates from '../../src/components/KnotLabels/redrawPlates.ts'
@@ -25,7 +26,7 @@ describe('Knot nameplates', () => {
     const exhibit = knotExhibition[0]
     const markup = renderToStaticMarkup(createElement(KnotLabelFace, {exhibit}))
     expect(markup).toContain(`width:${labelWidth}px;height:${labelHeight}px`)
-    expect(markup).toContain(`background:${labelBackground}`)
+    expect(markup).toContain(`background:${cssHex(labelBackground)}`)
     expect(markup).toContain(`style="background:${signAccentColor(exhibit.placeholder.color)}"`)
     expect(markup).toContain(`style="color:${signAccentColor(exhibit.placeholder.color)}">${exhibit.title}<`)
     for (const text of [exhibit.label, exhibit.title, exhibit.modelTitle, knotDetailLine(exhibit.harness, exhibit.author.model.effortLevel), Array.from({length: exhibit.rarity}, () => '★').join(' ')]) {

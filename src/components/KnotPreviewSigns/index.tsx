@@ -6,6 +6,7 @@ import {knotBays} from 'knot-materials/exhibition.ts'
 import {knotBillboardPhysics} from 'knot-materials/knotBillboardPhysics.ts'
 import {knotPreviewMountY, knotPreviewPanelOffsetY, knotPreviewTextureLayout} from 'knot-materials/KnotPreviewLayout.ts'
 import loadKnotMaterial from 'knot-materials/materials.ts'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshBasicNodeMaterial} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
@@ -49,7 +50,7 @@ function KnotPreviewSign({bay, renderer, x}: {
     render: (images: ReadonlyMap<string, HTMLCanvasElement>) => <KnotPreviewFace bay={bay} images={images} />,
   }), [bay, layout.height, layout.width, mipmaps, renderer, resolution]))
   const face = useDisposable(useMemo(() => new MeshBasicNodeMaterial({
-    color: texture ? '#ffffff' : knotPreviewBackground,
+    color: texture ? hsl.integer(0, 0, 100) : knotPreviewBackground,
     map: texture,
     toneMapped: false,
   }), [texture]))

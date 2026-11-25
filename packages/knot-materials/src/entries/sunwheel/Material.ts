@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, exp, float, Fn, max, mix, mx_noise_float, mx_noise_vec3, positionViewDirection, sin, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/deepseek/lib/bumpNormal.ts'
@@ -81,10 +82,10 @@ export default class extends KnotMaterial {
     const goldMask = fields.pattern.smoothstep(float(0.12).sub(aa), float(0.66).add(aa)).mul(0.8).add(fields.goldRing.mul(0.9)).max(fields.ribSharp.mul(0.85)).clamp()
     const enamelMask = goldMask.oneMinus()
     const patina = mx_noise_float(fields.q.mul(0.65).add(vec3(1.3, 6.4, 8.8))).mul(0.5).add(0.5)
-    const goldBase = mix(color('#371402'), color('#d08b20'), fields.pattern.mul(0.5).add(0.5).add(patina.mul(0.1)).clamp())
-    const gold = mix(goldBase, color('#ffe6a8'), fields.pattern.smoothstep(0.86, 1).mul(0.26))
-    const enamel = mix(mix(color('#01040e'), color('#0c3078'), fields.pattern.mul(0.5).add(0.5)), color('#1a0f42'), patina.mul(0.4))
-    const ruby = mix(color('#35000d'), color('#ff3455'), fields.jewel.pow(2).mul(0.85))
+    const goldBase = mix(color(hsl.integer(47, 88, 14)), color(hsl.integer(72, 88, 64)), fields.pattern.mul(0.5).add(0.5).add(patina.mul(0.1)).clamp())
+    const gold = mix(goldBase, color(hsl.integer(89, 100, 92)), fields.pattern.smoothstep(0.86, 1).mul(0.26))
+    const enamel = mix(mix(color(hsl.integer(260, 70, 3.4)), color(hsl.integer(262, 91, 24)), fields.pattern.mul(0.5).add(0.5)), color(hsl.integer(286, 78, 12)), patina.mul(0.4))
+    const ruby = mix(color(hsl.integer(13, 100, 11)), color(hsl.integer(19, 100, 59.8)), fields.jewel.pow(2).mul(0.85))
     const body = mix(mix(enamel, gold, goldMask), ruby, fields.jewel)
     this.colorNode = body
     this.metalnessNode = goldMask.mul(fields.jewel.oneMinus())
@@ -103,10 +104,10 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = bump
     const facing = surfaceNormal.dot(positionViewDirection).abs().clamp()
     const beat = sin(time.mul(1.1)).max(0).pow(6).mul(0.55).add(0.45)
-    const rubyGlow = color('#ff2f4f').mul(fields.jewel.mul(beat).mul(0.28))
+    const rubyGlow = color(hsl.integer(20, 100, 59.3)).mul(fields.jewel.mul(beat).mul(0.28))
     const goldGlint = glints(surfaceNormal, 75).mul(goldMask).mul(near.mul(0.35).add(0.15)).mul(0.42)
-    const enamelRim = color('#4c63ff').mul(grazing.pow(3)).mul(0.16)
-    this.emissiveNode = rubyGlow.add(color('#ffecc0').mul(goldGlint)).add(enamelRim)
-      .add(color('#867034').mul(facing.pow(6)).mul(0.025))
+    const enamelRim = color(hsl.integer(271, 100, 51)).mul(grazing.pow(3)).mul(0.16)
+    this.emissiveNode = rubyGlow.add(color(hsl.integer(88, 100, 94)).mul(goldGlint)).add(enamelRim)
+      .add(color(hsl.integer(89, 62, 48)).mul(facing.pow(6)).mul(0.025))
   }
 }

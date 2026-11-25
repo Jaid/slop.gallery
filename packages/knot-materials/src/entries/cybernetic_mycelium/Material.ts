@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_vec3, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {refractedParallax} from '../../candidates/gemini_argon/lib/refractedParallax.ts'
@@ -64,12 +65,12 @@ export default class extends KnotMaterial {
     const fluidNormal = liquidNormal(near.mul(1.5).add(0.45), 0.95)
 // Chitinous biopolymer iridescence on the fungal cords vs dark mirror chrome on the liquid substrate
     const bioIridescence = cosinePalette(grazing.mul(2.2).add(primaryVoro.random.z), [0.35, 0.48, 0.42], [0.32, 0.42, 0.38], [1, 1, 1], [0.15, 0.45, 0.72])
-    const hyphaeAlbedo = mix(color('#051412'), color('#164a3e'), primaryCord.mul(0.7).add(secondaryHyphae.mul(0.3)))
+    const hyphaeAlbedo = mix(color(hsl.integer(185, 54, 8)), color(hsl.integer(175, 75, 28)), primaryCord.mul(0.7).add(secondaryHyphae.mul(0.3)))
       .add(bioIridescence.mul(0.15))
-    const ganglionAlbedo = mix(color('#260a30'), color('#8a1c9e'), primaryVoro.random.y)
-    const mercuryAlbedo = mix(color('#080b12'), color('#2c3a4f'), grazing.pow(1.4))
+    const ganglionAlbedo = mix(color(hsl.integer(316, 71, 11)), color(hsl.integer(321, 85, 39)), primaryVoro.random.y)
+    const mercuryAlbedo = mix(color(hsl.integer(266, 26, 6)), color(hsl.integer(258, 31, 25)), grazing.pow(1.4))
 // Spherical guttation droplets tinted in golden amber or electric magenta-cyan
-    const dropletTint = mix(color('#ff8c12'), color('#ff1ead'), dewBeads.random.x)
+    const dropletTint = mix(color(hsl.integer(57.4, 100, 71)), color(hsl.integer(349, 100, 61.4)), dewBeads.random.x)
     let surfaceColor: Node<'vec3'> = mix(mercuryAlbedo, hyphaeAlbedo, primaryCord.max(secondaryHyphae.mul(0.72)))
     surfaceColor = mix(surfaceColor, ganglionAlbedo, ganglionSoma.mul(0.88))
     surfaceColor = mix(surfaceColor, dropletTint.mul(0.45), dewBeads.mask)
@@ -81,7 +82,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = mix(float(0.01), float(0.055), primaryCord.mul(dewBeads.mask.oneMinus()))
 // Velvet-like micro-spores on the fungal hyphae at grazing angles
     this.sheen = 0.28
-    this.sheenColor.set('#5effc8')
+    this.sheenColor.set(hsl.integer(167, 100, 88.5))
     this.sheenRoughness = 0.45
     this.iridescenceNode = totalTissueMask.mul(0.78)
     this.iridescenceIOR = 1.42
@@ -96,10 +97,10 @@ export default class extends KnotMaterial {
     const combinedNormal = mix(fluidNormal, tissueNormal, totalTissueMask.mul(0.84).add(0.16)).normalize()
     this.normalNode = combinedNormal
 // Bioluminescent synaptic firing, glowing soma ganglia, subsurface capillary webs, and caustics inside the dew beads
-    const foxfireGreen = color('#12ff68')
-    const synapseCyan = color('#00d8ff')
-    const somaMagenta = color('#ff14a8')
-    const amberFire = color('#ff9814')
+    const foxfireGreen = color(hsl.integer(147.7, 100, 85.18))
+    const synapseCyan = color(hsl.integer(217, 100, 78))
+    const somaMagenta = color(hsl.integer(350.5, 100, 60.8))
+    const amberFire = color(hsl.integer(63, 100, 73.3))
     const cordColor = mix(foxfireGreen, synapseCyan, primaryVoro.random.z)
     const subCordColor = mix(somaMagenta, amberFire, secondaryVoro.random.x)
     const somaHeartbeat = time.mul(3.2).add(primaryVoro.random.z.mul(TAU)).sin().mul(0.35).add(0.75)
@@ -118,6 +119,6 @@ export default class extends KnotMaterial {
       .add(somaMagenta.mul(globalCascade).mul(totalTissueMask).mul(1.8))
       .add(dropletTint.mul(beadCaustic).mul(2.8))
       .add(foxfireGreen.mul(rim.pow(2.4)).mul(0.42))
-      .add(color('#e8fff8').mul(wetSparkle).mul(0.65))
+      .add(color(hsl.integer(176, 100, 97.8)).mul(wetSparkle).mul(0.65))
   }
 }

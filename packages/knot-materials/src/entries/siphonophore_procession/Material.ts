@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -44,9 +45,9 @@ export default class extends KnotMaterial {
     this.thickness = 0.92
     this.ior = 1.34
     this.dispersion = 0.55
-    this.attenuationColor.set('#0df0e0')
+    this.attenuationColor.set(hsl.integer(186, 99, 84))
     this.attenuationDistance = 1.6
-    this.colorNode = mix(color('#081f28'), color('#124456'), jellyWarp.mul(0.5).add(0.5))
+    this.colorNode = mix(color(hsl.integer(227, 61, 12)), color(hsl.integer(226, 74, 27)), jellyWarp.mul(0.5).add(0.5))
     this.metalness = 0.05
     this.roughnessNode = float(0.12).sub(combBand.mul(0.06)).add(tentacles.mul(0.04))
 // Watery high gloss clearcoat
@@ -59,15 +60,15 @@ export default class extends KnotMaterial {
     const relief = combBand.mul(0.0035).add(tentacles.mul(0.0015)).add(jellyWarp.mul(0.001))
     this.normalNode = proceduralNormal(relief, 0.85)
 // Deep ocean bioluminescent emission
-    const luciferinTeal = color('#1dfcb0')
-    const photophoreViolet = color('#802bf0')
+    const luciferinTeal = color(hsl.integer(162, 98.4, 86))
+    const photophoreViolet = color(hsl.integer(295, 94, 46))
     const organColor = mix(luciferinTeal, photophoreViolet, organUv.x.mul(0.5).add(0.5))
-    const tentacleCyan = color('#48e8ff')
+    const tentacleCyan = color(hsl.integer(209, 100, 83.6))
     this.emissiveNode = activeComb.mul(2.6)
       .add(organColor.mul(organPulse).mul(3.2))
       .add(tentacleCyan.mul(tentacles).mul(1.5))
       .add(luciferinTeal.mul(facing.pow(2)).mul(isOrgan).mul(1.2))
-      .add(color('#08f0ff').mul(rim).mul(grazing.pow(2)).mul(0.45))
-      .add(color('#2050ff').mul(intimate).mul(0.15))
+      .add(color(hsl.integer(202.92, 100, 84.9)).mul(rim).mul(grazing.pow(2)).mul(0.45))
+      .add(color(hsl.integer(265.2, 100, 45.5)).mul(intimate).mul(0.15))
   }
 }

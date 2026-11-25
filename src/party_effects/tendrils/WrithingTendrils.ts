@@ -1,6 +1,7 @@
 import type {LashingTendril} from './flights.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {attribute, cameraPosition, cross, exp, float, mix, modelPosition, mx_noise_float, positionGeometry, select, sin, smoothstep, uv, vec2, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
@@ -17,12 +18,12 @@ const margin = 1.2
 /** how far apart the suckers along its underside are, in meters */
 const suckerSpacing = 0.045
 const fleshColors = {
-  dark: rgb('#3e070d'),
-  light: rgb('#9a2f35'),
-  tip: rgb('#22050a'),
-  vein: rgb('#2a0a26'),
-  sucker: rgb('#d88a86'),
-  shine: rgb('#fff2f0'),
+  dark: rgb(hsl.integer(21, 86, 14)),
+  light: rgb(hsl.integer(21, 77, 38.5)),
+  tip: rgb(hsl.integer(12, 71, 8)),
+  vein: rgb(hsl.integer(333, 66, 11)),
+  sucker: rgb(hsl.integer(23, 53, 67)),
+  shine: rgb(hsl.integer(28, 100, 96.6)),
 }
 /** eases from 0 to 1 as `progress` goes from 0 to 1, overshooting a little before it settles */
 function overshoot(progress: Node<'float'>) {

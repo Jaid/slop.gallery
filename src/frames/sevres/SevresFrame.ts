@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, clamp, color, float, max, min, mix, mx_noise_float, mx_worley_noise_vec2, select, smoothstep, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -125,7 +126,7 @@ export default class SevresFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#5fb4c2'
+  override readonly tint = hsl.integer(209, 58, 68)
   override readonly title = 'Sèvres bleu céleste'
 
   override createGeometry(width: number, height: number) {
@@ -156,7 +157,7 @@ export default class SevresFrame extends PortraitFrame {
         },
       }),
       new FramePaintMaterial({
-        color: '#4fb0c0',
+        color: hsl.integer(210, 66, 66),
         roughness: 0.28,
         clearcoat: 1,
         grime: 0.12,
@@ -211,7 +212,7 @@ class SevresBackMaterial extends MeshPhysicalNodeMaterial {
     const surface = backSurface()
     const {footprint, opening, point} = surface
     const grit = mx_noise_float(vec3(point.mul(900), 3.3)).mul(0.5).add(0.5).mul(visibleDetail(footprint, 0.0012))
-    const biscuit = mix(color('#e6e2d8'), color('#f3f0e8'), mx_noise_float(vec3(point.mul(8), 1.1)).mul(0.5).add(0.5))
+    const biscuit = mix(color(hsl.integer(89, 19, 90)), color(hsl.integer(90, 27, 95)), mx_noise_float(vec3(point.mul(8), 1.1)).mul(0.5).add(0.5))
     // Two Ls back to back, each a stroke curving round, crossing above and below a date letter, an A, between them.
     const at = point.sub(vec2(0, opening.y.mul(-0.35)))
     const radius = 0.034
@@ -222,7 +223,7 @@ class SevresBackMaterial extends MeshPhysicalNodeMaterial {
     const painter = inside(at.sub(vec2(0.06, -0.026)).length().sub(0.003)).max(inside(at.sub(vec2(0.07, -0.026)).length().sub(0.003))).max(inside(at.sub(vec2(0.065, -0.017)).length().sub(0.003)))
     const mark = left.max(right).max(legs).max(bar).max(painter).clamp(0, 1)
     const hanger = hangingWire(surface)
-    this.colorNode = mix(mix(biscuit.mul(grit.mul(0.06).add(0.97)), color('#2c4c9c'), mark.mul(0.9)), hanger.color, hanger.cover)
+    this.colorNode = mix(mix(biscuit.mul(grit.mul(0.06).add(0.97)), color(hsl.integer(265, 74, 35)), mark.mul(0.9)), hanger.color, hanger.cover)
     this.metalnessNode = hanger.cover
     this.roughnessNode = mix(mix(float(0.78), float(0.5), mark), float(0.35), hanger.cover)
     this.normalNode = heightNormal(grit.mul(0.00003).add(hanger.height))

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cryogenic_kintsugi',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Golden seams persuade the broken ice to remain a single story.',
   placeholder: {
-    color: '#00f0ff',
+    color: hsl.integer(202, 100, 85),
     shading: 'glass',
   },
 } as const satisfies KnotData

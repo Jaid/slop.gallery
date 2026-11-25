@@ -2,6 +2,7 @@ import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Metal} from '../lib/materials/FrameMetalMaterial.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, hash, max, mix, mx_noise_float, select, time, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -70,12 +71,12 @@ const frenzy = {
 }
 /** brass gone brown and dull in the damp, green in its hollows */
 const tarnishedBrass: Metal = {
-  bright: '#7e6634',
-  dull: '#3a2c16',
+  bright: hsl.integer(84, 56, 45),
+  dull: hsl.integer(78, 48, 20),
   roughness: 0.55,
   patina: {
     amount: 0.85,
-    color: '#3e5a40',
+    color: hsl.integer(146, 40, 35),
   },
   texture: 0.00002,
 }
@@ -146,7 +147,7 @@ export default class CoffinFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#6a4c32'
+  override readonly tint = hsl.integer(61, 42, 36)
   override readonly title = 'Buried alive'
 
   override createGeometry(width: number, height: number) {
@@ -203,7 +204,7 @@ class LidMaterial extends MeshPhysicalNodeMaterial {
       clearcoat: 0.1,
       clearcoatRoughness: 0.5,
       sheenRoughness: 0.35,
-      sheenColor: '#f4ead2',
+      sheenColor: hsl.integer(88, 52, 93),
     })
     const surface = frameSurface()
     const p = surface.position
@@ -224,13 +225,13 @@ class LidMaterial extends MeshPhysicalNodeMaterial {
     const mildew = mx_noise_float(p.mul(900)).smoothstep(0.5, 0.7).mul(mx_noise_float(p.mul(20).add(3)).smoothstep(0.1, 0.5)).mul(visibleDetail(footprint, 0.001))
     // Grimier toward the lid’s edge and in the creases.
     const aged = surface.reach.smoothstep(0.02, satin.to).mul(0.3).add(pillow.oneMinus().mul(0.5))
-    const cloth = mix(mix(color('#d8caa6'), color('#a8946a'), aged.add(stains.smoothstep(0.5, 0.7).mul(0.3))), color('#6a4a2a'), stains.smoothstep(0.66, 0.8).mul(0.6).add(tide.mul(0.4)))
-    const lining = mix(mix(cloth, color('#2e3424'), mildew.mul(0.6)), color('#c8bc9c'), buttons.mul(0.7))
+    const cloth = mix(mix(color(hsl.integer(89, 37, 81.5)), color(hsl.integer(85, 37, 62)), aged.add(stains.smoothstep(0.5, 0.7).mul(0.3))), color(hsl.integer(65, 51, 35)), stains.smoothstep(0.66, 0.8).mul(0.6).add(tide.mul(0.4)))
+    const lining = mix(mix(cloth, color(hsl.integer(125, 27, 21)), mildew.mul(0.6)), color(hsl.integer(90, 29, 76)), buttons.mul(0.7))
     // The boards: pine, grain running along the members, dark with age and damp.
     const grain = mx_noise_float(vec3(surface.along.mul(5), surface.across.mul(300), surface.member)).mul(0.5).add(0.5)
     const lines = line(grain.mul(10).fract().sub(0.5), 0.12).mul(visibleDetail(footprint, 0.0012))
     const damp = mx_noise_float(p.mul(9).add(vec3(0, 2.1, 0))).mul(0.5).add(0.5).smoothstep(0.45, 0.8)
-    const pine = mix(mix(mix(color('#6a4c30'), color('#4a3220'), grain), color('#2a1a0e'), lines.mul(0.5)), color('#24180e'), damp.mul(0.5))
+    const pine = mix(mix(mix(color(hsl.integer(63, 44, 36)), color(hsl.integer(57, 42, 24)), grain), color(hsl.integer(57, 45, 13)), lines.mul(0.5)), color(hsl.integer(61, 37, 12)), damp.mul(0.5))
     // The clawing, in this cell along the member and the ones on either side, which may reach into it.
     const cell = surface.along.div(clawCell).floor()
     const claws = [-1, 0, 1].map(shift => clawing(surface, plane, cell.add(shift), footprint))
@@ -244,13 +245,13 @@ class LidMaterial extends MeshPhysicalNodeMaterial {
     const stuffing = mx_noise_float(vec3(plane.mul(700), 6.3)).smoothstep(0, 0.5).mul(visibleDetail(footprint, 0.0008))
     const threads = line(mx_noise_float(vec3(plane.mul(vec2(900, 300)), 5.1)), 0.05).mul(torn).mul(visibleDetail(footprint, 0.0008))
     const gouge = depth.mul(onBoards)
-    const wood = mix(mix(color('#8a6a48'), color('#d0b080'), fresh), color('#5a0c0a'), fresh.mul(0.5))
+    const wood = mix(mix(color(hsl.integer(68, 40, 48)), color(hsl.integer(78, 45, 74)), fresh), color(hsl.integer(28, 93, 20)), fresh.mul(0.5))
     const blood = fresh.mul(depth).mul(mx_noise_float(vec3(plane.mul(300), 7.7)).smoothstep(-0.2, 0.4))
     // Old blood soaked into the satin round its tears.
     const soaked = depth.mul(onSatin).mul(mx_noise_float(vec3(plane.mul(120), 3.1)).mul(0.5).add(0.5)).smoothstep(0, 0.3).mul(0.5)
-    const scored = mix(mix(mix(lining, color('#5a2a1a'), soaked), mix(mix(color('#1e1610'), color('#b8ac90'), stuffing.mul(0.6)), color('#d8ccb0'), threads), torn), mix(pine, wood, gouge), onBoards)
-    const bled = mix(scored, color('#4a0606'), blood.mul(0.8).add(depth.mul(onSatin).mul(fresh).mul(0.5)).min(1))
-    this.colorNode = mix(bled, color('#d8b8a0'), nails)
+    const scored = mix(mix(mix(lining, color(hsl.integer(39, 63, 25)), soaked), mix(mix(color(hsl.integer(58, 24, 11)), color(hsl.integer(88, 25, 71)), stuffing.mul(0.6)), color(hsl.integer(88, 31, 82)), threads), torn), mix(pine, wood, gouge), onBoards)
+    const bled = mix(scored, color(hsl.integer(27, 95, 16)), blood.mul(0.8).add(depth.mul(onSatin).mul(fresh).mul(0.5)).min(1))
+    this.colorNode = mix(bled, color(hsl.integer(59, 35, 77)), nails)
     this.roughnessNode = mix(mix(float(0.42), float(0.85), mildew.max(torn)), mix(float(0.8), float(0.55), damp), onBoards).sub(blood.mul(0.3))
     this.sheenNode = onSatin.mul(torn.oneMinus()).mul(0.9)
     this.normalNode = heightNormal(pillow.mul(0.0025).mul(onSatin).sub(buttons.mul(0.0008)).sub(torn.mul(0.0012)).sub(gouge.mul(0.0006)).sub(lines.mul(0.00004).mul(onBoards)).add(nails.mul(0.0003)).add(threads.mul(0.0002)))

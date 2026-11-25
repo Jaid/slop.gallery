@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, modelWorldMatrixInverse, mx_noise_float, normalLocal, normalView, positionGeometry, time, uv, vec2, vec3, vec4} from 'three/tsl'
 
 import {tubeCoordinates} from '../../candidates/claude_haiku/lib/tubeCoordinates.ts'
@@ -61,8 +62,8 @@ export default class extends KnotMaterial {
     const resolved = resolution.smoothstep(0.35, 0.7).oneMinus()
     const grain = mix(present.mul(0.28), coverage.mul(present), resolved)
     const streak = mx_noise_float(positionGeometry.mul(40)).mul(0.5).add(0.5)
-    const plateTone = mix(color('#0d0906'), color('#2a1d12'), streak)
-    const sandTone = mix(color('#b08a4c'), color('#f6e2ae'), rnd.x)
+    const plateTone = mix(color(hsl.integer(63, 21, 5.5)), color(hsl.integer(61, 36, 14)), streak)
+    const sandTone = mix(color(hsl.integer(78, 58, 60)), color(hsl.integer(89, 70, 90)), rnd.x)
     this.colorNode = mix(plateTone, sandTone, grain)
     this.metalnessNode = float(0.8).mul(grain.oneMinus())
     this.roughnessNode = mix(float(0.42), float(0.6), grain)
@@ -74,7 +75,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.2
 // Cold resonance at the antinodes, breathing with the bow; sand grains flash white-gold as they turn toward you.
     const sparkle = glints(normalView, 64).mul(grain)
-    this.emissiveNode = color('#58d6ff').mul(antinode).mul(excitation().mul(0.25).add(0.05))
-      .add(color('#fff1d0').mul(sparkle).mul(near.mul(0.7).add(0.2)).mul(0.8))
+    this.emissiveNode = color(hsl.integer(224, 100, 79)).mul(antinode).mul(excitation().mul(0.25).add(0.05))
+      .add(color(hsl.integer(88, 100, 95.5)).mul(sparkle).mul(near.mul(0.7).add(0.2)).mul(0.8))
   }
 }

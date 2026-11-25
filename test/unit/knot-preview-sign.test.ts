@@ -10,6 +10,7 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import {preprocessCSS, resolveConfig} from 'vite'
 
 import KnotPreviewFace, {knotPreviewBackground} from '#component/KnotPreviewFace'
+import {cssHex} from '#src/lib/color.ts'
 
 import signAccentColor from '../../src/components/signAccentColor.ts'
 
@@ -96,7 +97,7 @@ test('a billboard shows dynamic numbers, titles, accents, pictures in their own 
     bay,
     images: new Map([[bay.finishes[0].id, picture]]),
   }))
-  expect(markup).toContain(`width:${layout.width}px;height:${layout.height}px;background:${knotPreviewBackground}`)
+  expect(markup).toContain(`width:${layout.width}px;height:${layout.height}px;background:${cssHex(knotPreviewBackground)}`)
   for (const finish of bay.finishes) {
     expect(markup).toContain(`style="color:${signAccentColor(finish.placeholder.color)}">${knotNumberLabel(finish.number)} · ${finish.title}<`)
   }

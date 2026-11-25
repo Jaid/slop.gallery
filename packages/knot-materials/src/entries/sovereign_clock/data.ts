@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4cRctoZrXREvmK4; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sovereign_clock',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A kingdom of brass turns beneath ruby bearings. Its patient machinery measures not the hours, but the moments you choose to stay.',
   placeholder: {
-    color: '#bc9451',
+    color: hsl.integer(79, 60, 64),
     shading: 'metal',
   },
 } as const satisfies KnotData

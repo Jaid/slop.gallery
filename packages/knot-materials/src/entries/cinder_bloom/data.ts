@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cinder_bloom',
   candidateId: 'gpt_terra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Cooling obsidian remembers the instant it flowered, holding embers beneath a skin of ash and glaze.',
   displacement: 0.004,
   placeholder: {
-    color: '#51251c',
+    color: hsl.integer(33, 57, 22),
     shading: 'stone',
   },
 } as const satisfies KnotData

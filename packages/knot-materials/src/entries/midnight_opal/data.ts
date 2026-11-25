@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'midnight_opal',
   candidateId: 'glm_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A few late colors remain awake inside a stone made of midnight.',
   placeholder: {
-    color: '#4dffc3',
+    color: hsl.integer(166, 100, 87.9),
     shading: 'glass',
   },
 } as const satisfies KnotData

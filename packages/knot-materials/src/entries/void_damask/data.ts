@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'void_damask',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Celestial threads weave across the dark, where moiré ripples shimmer like tides in an unseen sea.',
   placeholder: {
-    color: '#121827',
+    color: hsl.integer(267, 35, 11),
     shading: 'fabric',
   },
 } as const satisfies KnotData

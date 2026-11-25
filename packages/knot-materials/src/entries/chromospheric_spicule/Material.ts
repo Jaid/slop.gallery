@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, mx_noise_vec3, positionViewDirection, tangentView, time, uv, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -26,13 +27,13 @@ export default class extends BaseKnotMaterial {
     const tangentFlow = tangentView.dot(positionViewDirection).clamp(-1, 1)
     const blueshift = tangentFlow.smoothstep(0, 0.8)
     const redshift = tangentFlow.negate().smoothstep(0, 0.8)
-    const hAlphaRed = color('#ff1e00')
+    const hAlphaRed = color(hsl.integer(30.5, 100, 57.6))
     // 656.3 nm Hydrogen-Alpha
-    const heliumYellow = color('#ffd000')
-    const coronalCyan = color('#00e5ff')
+    const heliumYellow = color(hsl.integer(92, 100, 85))
+    const coronalCyan = color(hsl.integer(209, 100, 82))
     // 10-million K EUV iron emission
     const plasmaTint = mix(mix(heliumYellow, hAlphaRed, redshift), coronalCyan, blueshift)
-    this.colorNode = color('#050201')
+    this.colorNode = color(hsl.integer(49, 43, 3))
     this.metalness = 0.1
     this.roughness = 0.85
     this.clearcoat = 0.3

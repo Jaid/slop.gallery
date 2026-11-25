@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'moonspun_silk',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Cloth woven from moth-wing and moonlight; the luster rolls across it like a slow silver tide.',
   placeholder: {
-    color: '#6e688c',
+    color: hsl.integer(292, 27, 46),
     shading: 'fabric',
   },
 } as const satisfies KnotData

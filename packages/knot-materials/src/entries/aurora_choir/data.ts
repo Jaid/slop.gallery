@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aurora_choir',
   candidateId: 'gpt_sol',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Every ribbon sings a different color into the polar silence.',
   placeholder: {
-    color: '#61ffd3',
+    color: hsl.integer(171.3, 100, 89),
     shading: 'smooth',
   },
 } as const satisfies KnotData

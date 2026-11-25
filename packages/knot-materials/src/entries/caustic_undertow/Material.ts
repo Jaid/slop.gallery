@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_vec3, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -23,8 +24,8 @@ export default class extends KnotMaterial {
     const ridgeB = netB.y.sub(netB.x).smoothstep(0, width.mul(1.2)).oneMinus()
     const light = ridgeA.mul(ridgeB).mul(1.5).add(ridgeA.max(ridgeB).pow(3).mul(0.5))
     const water = mx_noise_float(p.mul(2.3).add(vec3(0, t.mul(0.05), 0))).mul(0.5).add(0.5)
-    const sunlight = mix(color('#ffe0a0'), color('#7af2ff'), water)
-    this.colorNode = mix(color('#031416'), color('#0a3c40'), water)
+    const sunlight = mix(color(hsl.integer(85, 100, 90.4)), color(hsl.integer(204, 99, 88)), water)
+    this.colorNode = mix(color(hsl.integer(205, 68, 8)), color(hsl.integer(203, 82, 23)), water)
     this.metalness = 0
     this.roughness = 0.28
     this.clearcoat = 0.6

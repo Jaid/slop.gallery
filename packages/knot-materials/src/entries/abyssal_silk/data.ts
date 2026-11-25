@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2kVLNNiT7YsY7gP.
 export default {
   id: 'abyssal_silk',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The ocean kept one ribbon of night, and the moon keeps changing its hem.',
   placeholder: {
-    color: '#4b1e62',
+    color: hsl.integer(312, 71, 24),
     shading: 'fabric',
   },
 } as const satisfies KnotData

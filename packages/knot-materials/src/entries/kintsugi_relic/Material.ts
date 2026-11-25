@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_noise_vec3, negateOnBackSide, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -48,9 +49,9 @@ export default class extends KnotMaterial {
     const bead = float(1).sub(normalizedDist.pow(2)).max(0).sqrt()
     // 3. Authentic Longquan Imperial Celadon Porcelain
     // Signature jade-green / seafoam hue with depth beneath glassy silica glaze
-    const jadeCeladon = color('#7faea2')
-    const deepCeladon = color('#58897d')
-    const teaStainedPatina = color('#6b5c47')
+    const jadeCeladon = color(hsl.integer(177, 33, 67))
+    const deepCeladon = color(hsl.integer(177, 38, 53))
+    const teaStainedPatina = color(hsl.integer(76, 25, 40))
     // Double-layer "ice crackle" crazing occurring beneath the glaze
     const crackleDist1 = cellularBoundary(p.mul(18).add(warp.mul(0.35)))
     const crackle1 = crackleDist1.smoothstep(0.003, 0.015).oneMinus()
@@ -64,9 +65,9 @@ export default class extends KnotMaterial {
       iceCrackle.mul(near.mul(0.5).add(0.4)),
     )
     // 4. Pure 24-Karat Gold Urushi Lacquer (Maki-e Gold Powder)
-    const richGold = color('#e5a93b')
-    const specularGold = color('#ffcf66')
-    const burnishedGold = color('#c48925')
+    const richGold = color(hsl.integer(79, 84, 74))
+    const specularGold = color(hsl.integer(85, 100, 85.7))
+    const burnishedGold = color(hsl.integer(75, 84, 62))
     // Gold dust micro-flakes suspended in the resin
     const goldFlakes = cellularPoints(p.mul(80), 0.03, 0.18, 0.65).mul(seamMask)
     const goldAlbedo = mix(
@@ -97,13 +98,13 @@ export default class extends KnotMaterial {
     // 5. Ancient Celestial Core Warmth: Divine starlight sealed within the mended fracture
     const emberPulse = time.mul(0.7).add(p.x.mul(5)).sin().mul(0.15).add(0.85)
     const internalCore = bead.pow(4).mul(seamMask)
-    const amberCrimson = mix(color('#ff3300'), color('#ff9900'), internalCore)
+    const amberCrimson = mix(color(hsl.integer(32.7, 100, 59)), color(hsl.integer(65, 100, 73.4)), internalCore)
     // Subsurface ember radiation from the deep fracture root
     this.emissiveNode = amberCrimson
       .mul(internalCore)
       .mul(emberPulse)
       .mul(near.mul(0.5).add(0.7))
       .mul(1.6)
-      .add(color('#ffffff').mul(goldGlints).mul(intimate))
+      .add(color(hsl.integer(0, 0, 100)).mul(goldGlints).mul(intimate))
   }
 }

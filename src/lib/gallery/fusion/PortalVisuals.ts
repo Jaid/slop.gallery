@@ -1,6 +1,7 @@
 import type {Vec3} from '../types.ts'
 import type {PortalPalette} from './PortalCore.ts'
 
+import hsl from 'okhsl'
 import {Color, Group} from 'three/webgpu'
 
 import GatheringMotes from './GatheringMotes.ts'
@@ -13,20 +14,20 @@ import Tether from './Tether.ts'
 
 /** the portal’s own colors: a deep indigo heart, an electric blue swirl and a golden rim */
 export const portalPalette = {
-  core: '#14062e',
-  swirl: '#3fc4ff',
-  rim: '#ffd98a',
+  core: hsl.integer(294, 80, 8),
+  swirl: hsl.integer(232, 100, 73.8),
+  rim: hsl.integer(85, 100, 88.5),
 }
 /** what a fizzling portal dies down to */
 export const emberPalette = {
-  core: '#140300',
-  swirl: '#ff5418',
-  rim: '#ffab66',
+  core: hsl.integer(43, 100, 5),
+  swirl: hsl.integer(37, 100, 62.3),
+  rim: hsl.integer(59, 100, 78),
 }
 
 /** The palette of a portal tinted in `color`, like an orb’s glow: a darker heart, a brighter swirl and a rim close to white; the portal’s own without one. */
-export function paletteOf(color?: string): PortalPalette {
-  if (!color) {
+export function paletteOf(color?: number): PortalPalette {
+  if (color === undefined) {
     return {
       core: new Color(portalPalette.core),
       swirl: new Color(portalPalette.swirl),
@@ -37,7 +38,7 @@ export function paletteOf(color?: string): PortalPalette {
   return {
     core: tint.clone().multiplyScalar(0.1),
     swirl: tint.clone().offsetHSL(0, 0.1, 0.12),
-    rim: tint.clone().lerp(new Color('#ffffff'), 0.62),
+    rim: tint.clone().lerp(new Color(hsl.integer(0, 0, 100)), 0.62),
   }
 }
 

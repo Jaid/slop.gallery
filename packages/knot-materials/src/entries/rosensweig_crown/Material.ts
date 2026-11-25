@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, negateOnBackSide, normalLocal, select, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_sonnet/lib/ramp.ts'
@@ -82,7 +83,7 @@ export default class extends KnotMaterial {
     // oily interference film in the valleys, a dark mirror on the crests
     const valley = profile.mul(rise).oneMinus()
     const filmShift = facing.oneMinus().mul(0.8).add(valley.mul(0.5))
-    this.colorNode = mix(color('#14161d'), color('#3a3e4c'), profile.mul(rise))
+    this.colorNode = mix(color(hsl.integer(273, 17, 10)), color(hsl.integer(273, 17, 27)), profile.mul(rise))
     this.metalness = 1
     this.roughnessNode = filteredRoughness(float(0.045).add(resolved.oneMinus().mul(0.2)).add(valley.mul(0.02)), bent)
     this.clearcoat = 0.6
@@ -92,7 +93,7 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = filmShift.mul(260).add(180)
     this.normalNode = bent
     this.clearcoatNormalNode = bent
-    this.emissiveNode = color('#2b3d7a').mul(rim.pow(2)).mul(0.05)
-      .add(color('#6a5cff').mul(profile.mul(rise)).mul(pull).mul(0.012))
+    this.emissiveNode = color(hsl.integer(269, 64, 28)).mul(rim.pow(2)).mul(0.05)
+      .add(color(hsl.integer(280, 100, 52)).mul(profile.mul(rise)).mul(pull).mul(0.012))
   }
 }

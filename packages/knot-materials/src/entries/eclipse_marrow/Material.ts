@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -30,9 +31,9 @@ export default class extends KnotMaterial {
     const corona = opticalLine(radius.add(pulse).mul(64).sin(), 0.07)
     const innerRing = opticalLine(deep.xz.length().add(deep.y.mul(0.18)).mul(88).sin(), 0.055)
     const umbra = radius.smoothstep(0.08, 0.38).oneMinus()
-    const bone = mix(color('#c9b7a2'), color('#6d6258'), noise.mul(grazing.mul(0.5).add(0.35)))
-    const fire = mix(color('#ff6a2a'), color('#ffe08a'), facing.mul(orbit).clamp())
-    this.colorNode = mix(color('#07040a'), bone, rim.mul(0.85).add(0.08))
+    const bone = mix(color(hsl.integer(72, 23, 75)), color(hsl.integer(65, 12, 43)), noise.mul(grazing.mul(0.5).add(0.35)))
+    const fire = mix(color(hsl.integer(41, 100, 65.4)), color(hsl.integer(90, 100, 90)), facing.mul(orbit).clamp())
+    this.colorNode = mix(color(hsl.integer(310, 35, 4)), bone, rim.mul(0.85).add(0.08))
     this.metalnessNode = umbra.mul(0.35).add(0.12)
     this.roughnessNode = umbra.oneMinus().mul(0.28).add(near.mul(-0.03)).add(0.14)
     this.transmissionNode = umbra.mul(0.22)
@@ -42,8 +43,8 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.07
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(16)).mul(0.5).add(corona.mul(0.3)), 0.0018)
     this.sheen = 0.55
-    this.sheenNode = mix(color('#3a2018'), color('#ffd0a0'), glance)
+    this.sheenNode = mix(color(hsl.integer(38, 43, 17)), color(hsl.integer(67, 100, 87)), glance)
     this.sheenRoughness = 0.3
-    this.emissiveNode = fire.mul(corona).mul(umbra.mul(0.25).add(0.55)).mul(near.mul(0.6).add(0.4)).add(color('#ff9a4a').mul(innerRing).mul(intimate).mul(umbra.oneMinus()).mul(0.45)).add(color('#ffd2a0').mul(rim.pow(2.4)).mul(0.28))
+    this.emissiveNode = fire.mul(corona).mul(umbra.mul(0.25).add(0.55)).mul(near.mul(0.6).add(0.4)).add(color(hsl.integer(56, 100, 74)).mul(innerRing).mul(intimate).mul(umbra.oneMinus()).mul(0.45)).add(color(hsl.integer(69, 100, 87.2)).mul(rim.pow(2.4)).mul(0.28))
   }
 }

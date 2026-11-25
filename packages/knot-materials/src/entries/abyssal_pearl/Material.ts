@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, uv, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -40,10 +41,10 @@ export default class extends KnotMaterial {
     const bands = opticalBands(bandPhase)
     const bandDelta = bands.sub(0.5).mul(intimate.mul(0.85).add(0.3))
     const mottle = mx_noise_float(p.mul(3.1)).mul(0.5).add(0.5)
-    const tileTint = mix(mix(color('#f3e7d3'), color('#eda9c4'), rnd.x), color('#9fd8c3'), rnd.y.mul(0.6))
+    const tileTint = mix(mix(color(hsl.integer(81, 47, 92)), color(hsl.integer(354, 64, 77.5)), rnd.x), color(hsl.integer(170, 45, 81)), rnd.y.mul(0.6))
     const pastel = mix(tileTint, spectralColor(rnd.x.mul(6.28).add(rnd2.z.mul(3))), 0.28)
     const tileColor = pastel.mul(bandDelta.add(0.82)).mul(mottle.mul(0.12).add(0.9))
-    this.colorNode = mix(tileColor, color('#332619'), groove.mul(0.95))
+    this.colorNode = mix(tileColor, color(hsl.integer(66, 33, 18)), groove.mul(0.95))
     this.metalness = 0
     this.roughnessNode = float(0.42).add(groove.mul(0.3)).sub(bandDelta.mul(0.3)).clamp(0.12, 0.8)
     this.clearcoat = 1
@@ -52,11 +53,11 @@ export default class extends KnotMaterial {
     this.iridescenceNode = float(0.92).sub(groove.mul(0.7))
     this.iridescenceIOR = 1.32
     this.iridescenceThicknessNode = rnd.x.mul(360).add(230).add(bands.mul(110)).add(rnd2.y.mul(60))
-    this.sheenNode = color('#ffe6f2').mul(0.7)
+    this.sheenNode = color(hsl.integer(347, 100, 94)).mul(0.7)
     this.sheenRoughness = 0.4
     this.normalNode = proceduralNormal(dome.mul(1.1).add(bands.mul(0.1)).sub(groove.mul(1)), float(0.0026).mul(intimate.mul(0.6).add(0.7)))
     const rimSpectrum = spectralColor(rnd.x.mul(6.28).add(grazing.mul(5)).add(rnd2.z.mul(2)))
     this.emissiveNode = rimSpectrum.mul(grazing.pow(3)).mul(0.38)
-      .add(color('#fff6ec').mul(dome).mul(rnd2.x.smoothstep(0.72, 0.95)).mul(near).mul(0.12))
+      .add(color(hsl.integer(71, 100, 97.4)).mul(dome).mul(rnd2.x.smoothstep(0.72, 0.95)).mul(near).mul(0.12))
   }
 }

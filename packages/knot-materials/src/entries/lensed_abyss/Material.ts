@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, negateOnBackSide, normalLocal, positionViewDirection, tangentView, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -23,7 +24,7 @@ export default class extends KnotMaterial {
     const lensed = surface.add(drag.mul(0.5)).add(swirl.mul(0.7)).normalize()
     this.normalNode = negateOnBackSide(transformNormalToView(lensed))
     this.clearcoatNormalNode = this.normalNode
-    this.colorNode = color('#010102')
+    this.colorNode = color(hsl.integer(284, 27, 2))
     this.metalness = 1
     this.roughnessNode = float(0.02)
 // ------------------------------------------------------------------
@@ -46,18 +47,18 @@ export default class extends KnotMaterial {
     const approach = doppler.pow(2.4).mul(2.6).add(0.06)
     const recede = doppler.oneMinus().pow(2.4).mul(0.6)
 // Blackbody ramp: void, ember, incandescent, then an ionised blue-white shock front.
-    const ember = mix(color('#2a0400'), color('#ff3800'), plasma.smoothstep(0.42, 0.74))
-    const flame = mix(ember, color('#ffb347'), plasma.smoothstep(0.66, 0.86))
-    const shock = mix(flame, color('#bcd8ff'), plasma.smoothstep(0.86, 0.98))
+    const ember = mix(color(hsl.integer(35, 100, 9)), color(hsl.integer(33.3, 100, 59)), plasma.smoothstep(0.42, 0.74))
+    const flame = mix(ember, color(hsl.integer(72, 100, 79.1)), plasma.smoothstep(0.66, 0.86))
+    const shock = mix(flame, color(hsl.integer(257, 100, 85.4)), plasma.smoothstep(0.86, 0.98))
     const hot = plasma.smoothstep(0.56, 0.9)
 // The plasma clings to the limb, leaving the shadow of the horizon itself bare.
     const limb = grazing.pow(0.5).mul(0.95).add(0.05)
 // The photon ring is a caustic, not a rim: an almost sub-pixel spike of unclipped white.
     const ring = grazing.smoothstep(0.985, 0.9995).mul(14)
     this.emissiveNode = shock.mul(hot).mul(approach).mul(limb).mul(near.mul(0.5).add(0.55)).mul(3.4)
-      .add(color('#ff2200').mul(plasma.smoothstep(0.5, 0.92)).mul(recede).mul(limb).mul(1.2))
-      .add(color('#fff8ee').mul(ring))
-      .add(color('#ff7a2e').mul(grazing.pow(8)).mul(0.5))
-      .add(color('#ffb066').mul(hot).mul(grazing.mul(0.7)).mul(intimate.mul(0.6).add(0.4)).mul(0.5))
+      .add(color(hsl.integer(30.9, 100, 57.8)).mul(plasma.smoothstep(0.5, 0.92)).mul(recede).mul(limb).mul(1.2))
+      .add(color(hsl.integer(77, 100, 98)).mul(ring))
+      .add(color(hsl.integer(46, 100, 68)).mul(grazing.pow(8)).mul(0.5))
+      .add(color(hsl.integer(63, 100, 79)).mul(hot).mul(grazing.mul(0.7)).mul(intimate.mul(0.6).add(0.4)).mul(0.5))
   }
 }

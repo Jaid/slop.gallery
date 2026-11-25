@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -25,9 +26,9 @@ export default class extends BaseKnotMaterial {
     const fluxMask = flux1.max(flux2)
     // Relativistic quantum flux packets surging down the channels
     const packet = tube.x.mul(36).sub(time.mul(3.5)).sin().mul(0.5).add(0.5).pow(6)
-    const fluxColor = mix(color('#00f0ff'), color('#8a2be2'), packet)
-    const darkSteel = color('#0f1114')
-    const brightSteel = color('#dce4ed')
+    const fluxColor = mix(color(hsl.integer(202, 100, 85)), color(hsl.integer(301, 92, 46)), packet)
+    const darkSteel = color(hsl.integer(258, 10, 8))
+    const brightSteel = color(hsl.integer(251, 25, 90))
     const baseSteel = mix(darkSteel, brightSteel, damascusBands)
     this.colorNode = baseSteel
     this.metalnessNode = mix(float(0.92), float(0.98), damascusBands)
@@ -38,6 +39,6 @@ export default class extends BaseKnotMaterial {
     this.clearcoatRoughness = 0.05
     this.normalNode = proceduralNormal(damascusBands.mul(0.32).add(fluxMask.mul(0.4)), 0.0016)
     const fluxRadiance = fluxColor.mul(fluxMask).mul(packet.mul(3.2).add(1.3))
-    this.emissiveNode = fluxRadiance.mul(near.mul(0.6).add(0.5)).add(color('#0077ff').mul(damascusBands).mul(rim).mul(0.08))
+    this.emissiveNode = fluxRadiance.mul(near.mul(0.6).add(0.5)).add(color(hsl.integer(258, 100, 53)).mul(damascusBands).mul(rim).mul(0.08))
   }
 }

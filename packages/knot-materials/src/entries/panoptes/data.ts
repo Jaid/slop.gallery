@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: H32IciRDAWJfwki; fixture: knot-material-shaders; result: success.
 export default {
   id: 'panoptes',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A hundred lidded watchers drift open as you draw near, and every one of them has already decided where you stand.',
   placeholder: {
-    color: '#1f5c4a',
+    color: hsl.integer(170, 75, 34),
     shading: 'smooth',
   },
 } as const satisfies KnotData

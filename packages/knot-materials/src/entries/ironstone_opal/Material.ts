@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, modelWorldMatrixInverse, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, time, vec3, vec4} from 'three/tsl'
 
 import {voronoi} from '../../candidates/claude_opus/lib/voronoi3dStruct.ts'
@@ -62,12 +63,12 @@ export default class extends KnotMaterial {
     const strata = mx_fractal_noise_float(p.mul(vec3(2.4, 3.4, 2.9)).add(warp.mul(3)), 4, 2.1, 0.55)
     const ironstone = strata.sub(0.2).abs().smoothstep(0.06, 0.035).max(strata.smoothstep(0.5, 0.56))
     const matrixGrain = mx_noise_float(p.mul(90)).mul(0.5).add(0.5)
-    const matrixColor = mix(color('#2a170b'), color('#6b4122'), matrixGrain.mul(strata.add(0.5).clamp()))
+    const matrixColor = mix(color(hsl.integer(52, 52, 12)), color(hsl.integer(55, 59, 33)), matrixGrain.mul(strata.add(0.5).clamp()))
 // A breath of movement: the fire drifts very slightly, like light moving through the stone.
     const shimmer = time.mul(0.7).add(p.x.mul(9)).sin().mul(0.06).add(1)
     const fire = front.mul(1.15).add(back.mul(veil).mul(0.75)).add(pinfire.mul(1.4)).mul(shimmer).mul(near.mul(0.2).add(0.9))
     const opal = ironstone.oneMinus()
-    this.colorNode = mix(color('#020307'), matrixColor, ironstone)
+    this.colorNode = mix(color(hsl.integer(268, 37, 3)), matrixColor, ironstone)
     this.metalness = 0
     this.roughnessNode = mix(float(0.05), float(0.55).sub(matrixGrain.mul(0.15)), ironstone)
     this.clearcoatNode = opal
@@ -77,7 +78,7 @@ export default class extends KnotMaterial {
     const relief = opal.mul(0.0012).add(matrixGrain.mul(ironstone).mul(0.0004))
     this.normalNode = proceduralNormal(relief, 1)
 // A faint cold sheen from deep in the potch at grazing angles, the body color of a true black opal.
-    const potchGlow = color('#0a1a3a').mul(grazing.pow(3)).mul(0.6)
+    const potchGlow = color(hsl.integer(262, 71, 12)).mul(grazing.pow(3)).mul(0.6)
     this.emissiveNode = fire.mul(opal).mul(facing.mul(0.35).add(0.65)).add(potchGlow.mul(opal))
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {ruled, stroke, wave} from '../../candidates/gpt_astra/lib/surface/coverage.ts'
@@ -22,9 +23,9 @@ export default class extends KnotMaterial {
     const sea = terrain.smoothstep(-0.09, 0.12)
     const depth = terrain.smoothstep(0.03, 0.46)
     const contours = ruled(terrain.mul(19), 0.06)
-    const white = mix(color('#e5dfca'), color('#fff9ed'), mx_noise_float(p.mul(22)).mul(0.1).add(0.72))
-    const blue = mix(color('#34668c'), color('#071b55'), depth)
-    const pigment = mix(blue, color('#93b9cc'), contours.mul(0.55))
+    const white = mix(color(hsl.integer(94, 32, 89)), color(hsl.integer(85, 100, 98)), mx_noise_float(p.mul(22)).mul(0.1).add(0.72))
+    const blue = mix(color(hsl.integer(244, 56, 41)), color(hsl.integer(265, 91, 15)), depth)
+    const pigment = mix(blue, color(hsl.integer(230, 32, 73)), contours.mul(0.55))
     const coastline = stroke(terrain.add(0.035), 0.008)
     // The gold chart is fixed to the surface; its pigment has a different parallax depth.
     const chart = uv().mul(vec2(36, 6))
@@ -33,8 +34,8 @@ export default class extends KnotMaterial {
     const compass = stroke(registration.sub(0.115), 0.008, chart.fwidth().length())
     const gold = coastline.mul(0.65).add(meridians).add(compass.mul(intimate).mul(0.6)).clamp()
     const crack = stroke(cellularBoundary(p.mul(34)), 0.017).mul(0.19)
-    const glaze = mix(mix(white, pigment, sea), color('#8d9a9a'), crack)
-    const leaf = mix(color('#ac7836'), color('#ebc57b'), grazing.mul(0.5).add(0.35))
+    const glaze = mix(mix(white, pigment, sea), color(hsl.integer(197, 8, 62)), crack)
+    const leaf = mix(color(hsl.integer(70, 68, 55)), color(hsl.integer(83, 67, 81)), grazing.mul(0.5).add(0.35))
     this.colorNode = mix(glaze, leaf, gold)
     this.metalnessNode = gold.mul(0.76)
     this.roughnessNode = float(0.24).sub(sea.mul(0.065)).add(crack.mul(0.1))
@@ -44,6 +45,6 @@ export default class extends KnotMaterial {
     const orangePeel = mx_noise_float(p.mul(145)).mul(0.000045).mul(intimate.mul(0.7).add(0.3))
     this.normalNode = proceduralNormal(orangePeel.add(gold.mul(0.00014)).sub(crack.mul(0.00011)), 1)
     const glimmer = wave(terrain.mul(36).sub(time.mul(0.4)))
-    this.emissiveNode = color('#83baca').mul(contours).mul(sea).mul(glimmer).mul(near).mul(0.022)
+    this.emissiveNode = color(hsl.integer(218, 40, 72)).mul(contours).mul(sea).mul(glimmer).mul(near).mul(0.022)
   }
 }

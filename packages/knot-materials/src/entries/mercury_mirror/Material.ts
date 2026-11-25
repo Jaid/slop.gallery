@@ -1,6 +1,7 @@
 import type {Triple} from '../../lib/Triple.ts'
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, negateOnBackSide, normalLocal, time, transformNormalToView, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -69,8 +70,8 @@ export default class extends KnotMaterial {
     this.normalNode = negateOnBackSide(transformNormalToView(normal.sub(tangentGradient.mul(1.1)).normalize()))
     const slope = gradient.length()
     const film = mx_noise_float(p.mul(3.3).add(vec3(7.1, 2.9, 5.5))).mul(0.5).add(0.5).smoothstep(0.62, 0.92)
-    const silver = mix(color('#8f9aa6'), color('#ccd8e4'), mx_noise_float(p.mul(4.1)).mul(0.5).add(0.5))
-    this.colorNode = mix(silver, color('#5c6672'), film.mul(0.35))
+    const silver = mix(color(hsl.integer(250, 12, 63)), color(hsl.integer(248, 24, 86)), mx_noise_float(p.mul(4.1)).mul(0.5).add(0.5))
+    this.colorNode = mix(silver, color(hsl.integer(253, 13, 43)), film.mul(0.35))
     this.metalness = 1
     this.roughnessNode = float(0.025).add(slope.mul(0.012)).add(grazing.mul(0.008))
     this.iridescence = 0.4
@@ -78,7 +79,7 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = height.mul(60_000).add(280).clamp(180, 620)
     this.clearcoat = 0.2
     this.clearcoatRoughness = 0.015
-    this.emissiveNode = color('#a8dcff').mul(slope.mul(9)).mul(near.mul(0.35).add(0.04)).mul(0.3)
-      .add(color('#e8f6ff').mul(grazing.pow(4)).mul(0.05))
+    this.emissiveNode = color(hsl.integer(238, 100, 85)).mul(slope.mul(9)).mul(near.mul(0.35).add(0.04)).mul(0.3)
+      .add(color(hsl.integer(236, 100, 96)).mul(grazing.pow(4)).mul(0.05))
   }
 }

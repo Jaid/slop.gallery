@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: KsUDOPCUWqzzKMp; fixture: knot-material-shaders; result: success.
 export default {
   id: 'peacock_plumage',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A hundred emerald eyes open along the feather, each one watching the light that watches you.',
   placeholder: {
-    color: '#0b3a55',
+    color: hsl.integer(240, 79, 23),
     shading: 'fabric',
   },
 } as const satisfies KnotData

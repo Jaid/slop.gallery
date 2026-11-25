@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, hash, mix, select, time, vec2} from 'three/tsl'
 
 /** what a ghost’s face does: how far its eyes are shut, where they glance in its own units and how startled it is, 0–1 */
@@ -11,9 +12,9 @@ export type GhostExpression = {
 
 /** the colors of a ghost: its pale sheet, the glow it gives off and its hollow eyes and mouth */
 export const ghostColors = {
-  sheet: '#e6fff2',
-  glow: '#6dffb0',
-  hole: '#020806',
+  sheet: hsl.integer(163, 100, 97.5),
+  glow: hsl.integer(157, 100, 88.4),
+  hole: hsl.integer(175, 51, 4),
 }
 /** seconds a ghost’s eyes take to close and open again */
 const blinkLength = 0.22

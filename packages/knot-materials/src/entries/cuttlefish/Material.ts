@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_opus/lib/ramp.ts'
@@ -112,11 +113,11 @@ export default class extends KnotMaterial {
 // Beneath the pigment: chalk-white leucophore patches and iridophores that flash blue-green at an angle.
     const leucophore = mx_fractal_noise_float(p.mul(5.5).add(11.3), 2, 2, 0.5).smoothstep(0.08, 0.24)
     const iridescence = spectralColor(facing.mul(5.2).add(mx_noise_float(p.mul(14)).mul(1.2)).add(3.4)).mul(grazing.mul(0.6).add(0.2))
-    const skin = mix(color('#9c8a76'), color('#efe8dc'), leucophore)
+    const skin = mix(color(hsl.integer(70, 20, 59)), color(hsl.integer(81, 30, 92)), leucophore)
     const underlayer = skin.mul(0.7).add(iridescence.mul(mix(float(0.45), float(0.12), leucophore)))
-    const withYellow = mix(underlayer, color('#d9a21c'), yellow.coverage.mul(0.85))
-    const withRed = mix(withYellow, color('#9c3412'), red.coverage.mul(0.9))
-    const pigment = mix(withRed, color('#1c0d07'), dark.coverage.mul(0.95))
+    const withYellow = mix(underlayer, color(hsl.integer(83, 92, 70)), yellow.coverage.mul(0.85))
+    const withRed = mix(withYellow, color(hsl.integer(37, 91, 39)), red.coverage.mul(0.9))
+    const pigment = mix(withRed, color(hsl.integer(43, 46, 8)), dark.coverage.mul(0.95))
 // Papillae: small cones of skin that rise when the animal is roused.
     const papillaCells = tubeCells(tube, 150, 20)
     const papillaId = wrapCell(papillaCells.floor(), vec2(150, 20))
@@ -130,9 +131,9 @@ export default class extends KnotMaterial {
     this.roughnessNode = mix(float(0.48), float(0.34), dark.coverage)
     this.clearcoat = 0.7
     this.clearcoatRoughness = 0.12
-    this.sheenNode = color('#2a6a7a').mul(dark.coverage.oneMinus())
+    this.sheenNode = color(hsl.integer(217, 64, 41)).mul(dark.coverage.oneMinus())
     this.sheenRoughness = 0.5
 // The iridophores carry a faint light of their own; the leucophores glow chalky in shade.
-    this.emissiveNode = iridescence.mul(dark.coverage.oneMinus()).mul(yellow.coverage.oneMinus()).mul(0.12).add(color('#efe6d6').mul(leucophore).mul(dark.coverage.oneMinus()).mul(0.04))
+    this.emissiveNode = iridescence.mul(dark.coverage.oneMinus()).mul(yellow.coverage.oneMinus()).mul(0.12).add(color(hsl.integer(83, 37, 92)).mul(leucophore).mul(dark.coverage.oneMinus()).mul(0.04))
   }
 }

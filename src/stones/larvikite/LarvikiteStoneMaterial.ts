@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, positionGeometry, select, transformNormalToView, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -48,20 +49,20 @@ export default class LarvikiteStoneMaterial extends MeshStandardNodeMaterial {
     // Perthite: fine stripes along the layers, a millimeter or so apart.
     const stripes = mix(float(0.5), unit(lattice.dot(lamella).mul(Math.PI * 2 * 22).add(random.z.mul(9)).sin()), visibleDetail(footprint, crystalSpacing / 22))
     // Crystals from smoky to dark gray, a little browner or bluer, clouded within and zoned paler toward the rim.
-    const body = mix(color('#363940'), color('#6a6e77'), random.x).mul(mix(vec3(1.04, 1, 0.95), vec3(0.96, 1, 1.05), random.z))
+    const body = mix(color(hsl.integer(267, 10, 25)), color(hsl.integer(267, 8, 46)), random.x).mul(mix(vec3(1.04, 1, 0.95), vec3(0.96, 1, 1.05), random.z))
     const cloud = unit(mx_fractal_noise_float(lattice.mul(1.8).add(random.mul(40)), 3, 2.2, 0.5))
     const zoning = cell.w.smoothstep(0.03, 0.3)
     const crystal = body.mul(cloud.mul(0.5).add(0.75)).mul(mix(float(1.12), float(0.95), zoning)).mul(stripes.sub(0.5).mul(0.08).add(1))
     // The seams: black pyroxene and magnetite, with bronze flakes of biotite.
     const biotite = unit(mx_noise_float(p.mul(400).add(13))).smoothstep(0.75, 0.85).mul(visibleDetail(footprint, 0.002))
-    const seamColor = mix(color('#121315'), color('#4a3a28'), biotite.mul(0.6))
+    const seamColor = mix(color(hsl.integer(264, 6, 9)), color(hsl.integer(70, 33, 26)), biotite.mul(0.6))
     this.colorNode = mix(crystal, seamColor, seam)
     this.roughnessNode = float(0.09).add(seam.mul(0.06)).add(biotite.mul(seam).mul(0.1))
     this.normalNode = heightNormal(seam.mul(-0.00002).add(mx_noise_float(p.mul(30)).mul(0.00003)))
     // A quarter of the crystals hardly flash; the rest from steel-blue to silver, the odd one green.
     const hue = random.z
-    const blue = mix(color('#2f6dff'), color('#a9c0f2'), hue.smoothstep(0.35, 0.85))
-    const tint = select(hue.greaterThan(0.93), color('#3fd6b0'), blue)
+    const blue = mix(color(hsl.integer(263.5, 100, 52)), color(hsl.integer(265, 72, 78)), hue.smoothstep(0.35, 0.85))
+    const tint = select(hue.greaterThan(0.93), color(hsl.integer(172, 84, 75)), blue)
     const strength = random.y.smoothstep(0.1, 0.3).mul(stripes.mul(0.6).add(0.4))
     this.lamella = transformNormalToView(lamella)
     this.schiller = tint.mul(strength).mul(seam.oneMinus()).mul(1.6)

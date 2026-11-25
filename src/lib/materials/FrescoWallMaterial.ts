@@ -1,6 +1,7 @@
 import type {FrescoLayout} from '../gallery/fresco.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, max, mix, mx_noise_float, normalLocal, positionLocal, select, vec2, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -10,11 +11,11 @@ import {heightNormal, inside, line, visibleDetail} from './filters.ts'
 type Float = Node<'float'>
 
 const palette = {
-  deep: '#7a2217',
-  light: '#a63a29',
-  black: '#1a1615',
-  blackLight: '#2b2422',
-  ochre: '#d4a44c',
+  deep: hsl.integer(30, 86, 30),
+  light: hsl.integer(31, 81, 42),
+  black: hsl.integer(34, 8, 10),
+  blackLight: hsl.integer(36, 11, 16),
+  ochre: hsl.integer(80, 72, 70.5),
 }
 
 /**

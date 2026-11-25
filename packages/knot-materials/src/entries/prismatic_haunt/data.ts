@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'prismatic_haunt',
   candidateId: 'deepseek',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'An absent figure leaves only its colors moving through the glass.',
   placeholder: {
-    color: '#c8e8ff',
+    color: hsl.integer(239, 100, 90),
     shading: 'ghost',
   },
 } as const satisfies KnotData

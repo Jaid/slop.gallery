@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_fractal_noise_float, mx_noise_float, select, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -32,7 +33,7 @@ export default class MeteoriteFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#7d8084'
+  override readonly tint = hsl.integer(255, 4, 53)
   override readonly title = 'Meteoric iron'
 
   override createGeometry(width: number, height: number) {
@@ -83,8 +84,8 @@ class MeteoriteMaterial extends MeshPhysicalNodeMaterial {
     const ribbon = ribbons.mul(visible)
     const crust = surface.reach.smoothstep(0.097, 0.104)
     const crustGrain = mx_noise_float(position.mul(180)).mul(0.5).add(0.5)
-    const iron = mix(color('#3a3c3e'), color('#c9ccce'), mix(brightness, float(1), ribbon.mul(0.7)))
-    this.colorNode = mix(iron, color('#1a1714').mul(crustGrain.mul(0.4).add(0.8)), crust)
+    const iron = mix(color(hsl.integer(248, 3, 26)), color(hsl.integer(237, 4, 82)), mix(brightness, float(1), ribbon.mul(0.7)))
+    this.colorNode = mix(iron, color(hsl.integer(67, 10, 11)).mul(crustGrain.mul(0.4).add(0.8)), crust)
     this.roughnessNode = mix(mix(roughness, float(0.08), ribbon), float(0.85), crust)
     this.metalnessNode = float(1).sub(crust.mul(0.8))
     this.normalNode = heightNormal(ribbon.mul(0.00002).add(crustGrain.mul(crust).mul(0.0005)))

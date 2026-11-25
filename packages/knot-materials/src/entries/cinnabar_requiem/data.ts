@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: K0nU326lufLQTl2; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'cinnabar_requiem',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Thirty coats of lacquer, each one left to cure for a week, until the wood underneath stopped existing.',
   placeholder: {
-    color: '#e02a08',
+    color: hsl.integer(32, 99, 52),
     shading: 'smooth',
   },
 } as const satisfies KnotData

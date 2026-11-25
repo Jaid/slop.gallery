@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_sonnet/lib/ramp.ts'
@@ -59,7 +60,7 @@ export default class extends KnotMaterial {
     const pin = lattice(fine.cell, fine.toPoint, 77, view, 22, 4.6)
     const pinMask = fine.f2.sub(fine.f1).smoothstep(0.02, 0.2).mul(ramp(fine.f1, 0.55, 0.15))
     const potch = mx_fractal_noise_float(p.mul(5.5).add(vec3(0, 0, time.mul(0.02))), 3, 2.1, 0.5).mul(0.5).add(0.5)
-    const body = mix(color('#02040a'), color('#0a1630'), potch.smoothstep(0.25, 0.85)).mul(mosaic.mul(0.5).add(0.5))
+    const body = mix(color(hsl.integer(262, 45, 3.3)), color(hsl.integer(264, 64, 10.5)), potch.smoothstep(0.25, 0.85)).mul(mosaic.mul(0.5).add(0.5))
     // a slow tide of inner light crosses the stone, lifting the fire of whichever domains it passes
     const tide = tube.x.mul(TAU * 2).add(tube.y.mul(TAU)).sub(time.mul(0.55)).sin().mul(0.5).add(0.5).pow(2)
     const fire = primary.tint.mul(primary.amount).mul(1.4)
@@ -68,7 +69,7 @@ export default class extends KnotMaterial {
     const glow = primary.tint.mul(0.06).add(secondary.tint.mul(0.03))
     // the pin-fire flecks only wake as you lean in: from afar the stone is broad patches, up close it fills with sparks
     const sparks = pin.tint.mul(pin.amount).mul(pinMask).mul(near.mul(near).mul(1.9).add(near.mul(0.9)).add(0.12))
-    const milk = color('#2b4a9a').mul(rim.pow(1.5)).mul(0.12)
+    const milk = color(hsl.integer(266, 74, 34)).mul(rim.pow(1.5)).mul(0.12)
     this.colorNode = body
     this.metalness = 0
     this.roughness = 0.1

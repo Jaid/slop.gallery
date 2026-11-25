@@ -1,14 +1,15 @@
 import type {Texture} from 'three/webgpu'
 
 import {clamp} from 'math'
+import hsl from 'okhsl'
 import {float, Fn, fwidth, luminance, max, mix, sin, smoothstep, texture, uniform, uv, vec2} from 'three/tsl'
 import {BufferGeometry, Color, Float32BufferAttribute, MeshBasicNodeMaterial} from 'three/webgpu'
 
 import portraitLabel, {portraitLabelLayout} from '#src/lib/gallery/portraitLabel.ts'
 
 export const previewColors = {
-  valid: '#36ff72',
-  invalid: '#ff3b45',
+  valid: hsl.integer(148, 100, 85.7),
+  invalid: hsl.integer(24, 100, 60),
 }
 export const previewOpacity = (inReach: boolean) => (inReach ? 1 : 0.18)
 

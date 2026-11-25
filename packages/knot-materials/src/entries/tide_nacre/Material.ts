@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -33,7 +34,7 @@ export default class extends KnotMaterial {
     const walk = spectralColor(chambers.mul(6.4).add(view.x.mul(5.2)).add(view.y.mul(3.1)).add(time.mul(0.11)))
     const foil = spectralColor(chambers.mul(6.4).add(2.0944).add(orbit.mul(2)))
     const grooves = opticalBands(p.y.mul(148).add(p.x.mul(22))).mul(near)
-    this.colorNode = mix(mix(color('#14343f'), color('#d8fff4'), chambers.mul(0.45)), walk, ridges.mul(0.55).add(0.2))
+    this.colorNode = mix(mix(color(hsl.integer(223, 57, 21)), color(hsl.integer(176, 100, 96.4)), chambers.mul(0.45)), walk, ridges.mul(0.55).add(0.2))
     this.metalness = 0.38
     this.roughnessNode = grooves.mul(0.05).add(ridges.mul(0.04)).add(0.11)
     this.iridescence = 1
@@ -43,8 +44,8 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.04
     this.normalNode = liquidNormal(near.mul(0.65).add(0.2), 0.11)
     this.sheen = 0.85
-    this.sheenNode = mix(color('#9af7e4'), foil, glance)
+    this.sheenNode = mix(color(hsl.integer(180, 78, 90)), foil, glance)
     this.sheenRoughness = 0.22
-    this.emissiveNode = walk.mul(ridges).mul(near.mul(0.6).add(0.22)).add(foil.mul(echo).mul(intimate).mul(0.4)).add(color('#c4fff6').mul(rim).mul(0.12))
+    this.emissiveNode = walk.mul(ridges).mul(near.mul(0.6).add(0.22)).add(foil.mul(echo).mul(intimate).mul(0.4)).add(color(hsl.integer(185, 100, 95)).mul(rim).mul(0.12))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7V0v37e8AD5LVut; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'tesserae',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.01,
   flavorText: 'A thousand years of patience, cut into glass and laid in gold; the icon only faces the worshipper.',
   placeholder: {
-    color: '#1b3f9e',
+    color: hsl.integer(264, 89, 31.5),
     shading: 'glass',
   },
 } as const satisfies KnotData

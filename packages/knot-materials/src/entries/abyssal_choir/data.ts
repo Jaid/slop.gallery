@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2b7SAOfgKTVu0qb; fixture: knot-material-shaders; result: success.
 export default {
   id: 'abyssal_choir',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.006,
   flavorText: 'Photophores kindle in slow procession along a deep-sea skin, singing light into the dark as you draw near.',
   placeholder: {
-    color: '#244c59',
+    color: hsl.integer(222, 51, 30),
     shading: 'smooth',
   },
 } as const satisfies KnotData

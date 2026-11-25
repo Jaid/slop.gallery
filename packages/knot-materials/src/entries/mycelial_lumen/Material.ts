@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -42,8 +43,8 @@ export default class extends KnotMaterial {
     const field = rootField(tube)
     const pulse = time.mul(1.8).add(tube.x.mul(TAU).sin()).sin().mul(0.5).add(0.5)
     const direction = view.dot(vec3(0.5, -0.1, 0.85).normalize()).mul(0.5).add(0.5)
-    const rootColor = mix(color('#63e89a'), color('#b9ffcf'), direction).mul(field.spore.mul(0.8).add(0.25))
-    const membrane = mix(color('#061b18'), color('#0d4c4c'), field.broad.mul(0.36).add(0.2))
+    const rootColor = mix(color(hsl.integer(155, 82, 81)), color(hsl.integer(154, 100, 93)), direction).mul(field.spore.mul(0.8).add(0.25))
+    const membrane = mix(color(hsl.integer(183, 63, 10)), color(hsl.integer(195, 85, 29)), field.broad.mul(0.36).add(0.2))
     const height = field.roots.mul(0.035).add(field.fine.mul(0.012)).add(field.spore.mul(0.018))
     this.positionNode = p.add(normalLocal.mul(height.mul(near.mul(0.55).add(0.45)).mul(0.0018)))
     this.colorNode = mix(membrane, rootColor, field.roots.mul(0.82).add(field.fine.mul(0.18)))
@@ -55,7 +56,7 @@ export default class extends KnotMaterial {
     this.transmission = 0.08
     this.ior = 1.37
     const glimmer = field.roots.mul(field.spore).mul(pulse).mul(grazing.mul(0.6).add(0.4)).mul(intimate.mul(0.6).add(0.4))
-    this.emissiveNode = rootColor.mul(glimmer.mul(1.35)).add(color('#d8ffe7').mul(field.fine.mul(near).mul(0.32)))
+    this.emissiveNode = rootColor.mul(glimmer.mul(1.35)).add(color(hsl.integer(158, 100, 96)).mul(field.fine.mul(near).mul(0.32)))
     this.aoNode = float(0.7).add(field.roots.mul(0.3))
   }
 }

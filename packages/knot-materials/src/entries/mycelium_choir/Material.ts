@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, positionView, time, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -35,28 +36,28 @@ export default class extends BaseKnotMaterial {
     // Worley distances can exceed one; a negative pow base poisons transmission with NaNs.
     const fruit = mx_worley_noise_float(inner.mul(8.5)).oneMinus().clamp().pow(5).mul(intimate)
     const spores = cellularPoints(p.sub(view.mul(0.14)).mul(54), 0.025, 0.15, 0.7).mul(intimate)
-    const rind = mix(color('#1c1712'), color('#5a4a38'), bark.mul(0.5).add(0.5))
-    const pale = mix(color('#c4b49a'), color('#7a6a52'), grazing)
-    this.colorNode = mix(mix(rind, pale, facing.mul(0.25)), color('#2a241c'), hyphae.mul(0.55))
+    const rind = mix(color(hsl.integer(67, 17, 11)), color(hsl.integer(70, 27, 33)), bark.mul(0.5).add(0.5))
+    const pale = mix(color(hsl.integer(80, 25, 74)), color(hsl.integer(78, 26, 46)), grazing)
+    this.colorNode = mix(mix(rind, pale, facing.mul(0.25)), color(hsl.integer(75, 19, 16)), hyphae.mul(0.55))
     this.metalness = 0
     this.roughnessNode = bark.mul(0.18).add(hyphae.mul(-0.12)).add(0.42)
     this.clearcoat = 0.12
     this.clearcoatRoughness = 0.5
     this.sheen = 0.9
-    this.sheenColor.set('#8fbf90')
+    this.sheenColor.set(hsl.integer(145, 46, 72))
     this.sheenRoughness = 0.48
     this.transmissionNode = fruit.mul(0.35).add(spores.mul(0.15))
     this.thickness = 0.25
     this.ior = 1.4
-    this.attenuationColor.set('#1a3d28')
+    this.attenuationColor.set(hsl.integer(155, 65, 23))
     this.attenuationDistance = 0.35
     this.normalNode = proceduralNormal(bark.mul(0.5).add(hyphae.mul(0.35)), 0.0026)
-    this.emissiveNode = mix(color('#146b3a'), color('#9dffc2'), facing)
+    this.emissiveNode = mix(color(hsl.integer(153, 96, 38)), color(hsl.integer(156, 100, 91)), facing)
       .mul(choir)
       .mul(1.45)
       .mul(near.mul(0.5).add(0.55))
-      .add(color('#eaffd2').mul(nodes).mul(pulse).mul(1.8))
-      .add(color('#d4ff8a').mul(spores).mul(2.1))
-      .add(color('#3a5a28').mul(rim).mul(0.1))
+      .add(color(hsl.integer(127, 100, 97)).mul(nodes).mul(pulse).mul(1.8))
+      .add(color(hsl.integer(126, 100, 93.5)).mul(spores).mul(2.1))
+      .add(color(hsl.integer(135, 70, 34)).mul(rim).mul(0.1))
   }
 }

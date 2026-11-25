@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2E09QDOVGvyWUoU; fixture: knot-material-shaders; result: success.
 export default {
   id: 'void_singularity',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A relativistic accretion disk spirals into a dark event horizon. Orbit the knot and gravitational lensing bends starlight from Doppler blue to redshift crimson.',
   placeholder: {
-    color: '#70727b',
+    color: hsl.integer(276, 7, 48),
     shading: 'smooth',
   },
 } as const satisfies KnotData

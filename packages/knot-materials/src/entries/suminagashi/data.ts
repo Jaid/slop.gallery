@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'suminagashi',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Ink was dropped on still water, and the water was asked to remember it.',
   placeholder: {
-    color: '#d8d3c8',
+    color: hsl.integer(86, 15, 85),
     shading: 'smooth',
   },
 } as const satisfies KnotData

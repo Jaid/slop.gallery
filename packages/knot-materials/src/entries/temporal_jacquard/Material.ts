@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, positionView, tangentView, uv, vec2} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -24,8 +25,8 @@ export default class extends BaseKnotMaterial {
     const moirePhase = u.mul(0.3).add(positionView.x.mul(80)).add(facing.mul(30))
     const moireFringes = opticalBands(moirePhase).mul(near)
     // Orthogonal anisotropic reflection between woven yarns
-    const goldYarn = color('#fcd477')
-    const silverSilk = color('#d2e3f5')
+    const goldYarn = color(hsl.integer(87, 89, 86.7))
+    const silverSilk = color(hsl.integer(250, 54, 89))
     const brocadeColor = warpMask.select(goldYarn, silverSilk)
     this.colorNode = brocadeColor
     this.metalnessNode = warpMask.select(float(0.94), float(0.82))
@@ -33,13 +34,13 @@ export default class extends BaseKnotMaterial {
     // Heavy jacquard silk sheen
     this.sheen = 1
     this.sheenRoughnessNode = float(0.32)
-    this.sheenNode = color('#fff1d4')
+    this.sheenNode = color(hsl.integer(85, 100, 95.5))
     // Woven thread relief normal
     this.normalNode = proceduralNormal(threadCurve.mul(0.35), 0.005)
     // Warp yarn anisotropic direction
     this.anisotropy = 0.9
     this.anisotropyNode = vec2(warpMask.select(tangentView.x, tangentView.y.negate()), warpMask.select(tangentView.y, tangentView.x))
-    this.emissiveNode = mix(color('#ffe299'), color('#8bb7ff'), moireFringes)
+    this.emissiveNode = mix(color(hsl.integer(89, 100, 90.8)), color(hsl.integer(260, 100, 74)), moireFringes)
       .mul(moireFringes).mul(0.45).mul(intimate.mul(0.6).add(0.4))
       .add(goldYarn.mul(grazing.pow(3)).mul(0.2))
   }

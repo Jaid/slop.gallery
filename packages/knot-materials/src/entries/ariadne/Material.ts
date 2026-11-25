@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, max, mix, mx_noise_float, positionViewDirection, select, sin, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/deepseek/lib/bumpNormal.ts'
@@ -70,27 +71,27 @@ export default class extends KnotMaterial {
     const {p, grazing, near} = viewerFrame()
     const silkA = fiberFamily(tube, 1)
     const silkB = fiberFamily(tube, -1)
-    const baseTint = mix(color('#05070f'), color('#1c3158'), mx_noise_float(p.mul(2.7).add(vec3(2.1, 6.4, 1.3))).mul(0.5).add(0.5).smoothstep(0.2, 0.8))
-    const gap = mix(color('#02040a'), baseTint, 0.58)
+    const baseTint = mix(color(hsl.integer(270, 35, 4.6)), color(hsl.integer(262, 59, 22)), mx_noise_float(p.mul(2.7).add(vec3(2.1, 6.4, 1.3))).mul(0.5).add(0.5).smoothstep(0.2, 0.8))
+    const gap = mix(color(hsl.integer(262, 45, 3.3)), baseTint, 0.58)
 // A black silk sleeve with a few gold, silver and iridescent blue threads in the weave.
     const bandA = silkA.band
     const goldA = silkA.random.x.smoothstep(0.74, 0.88).max(bandA.mul(0.9))
     const silverA = silkA.random.y.smoothstep(0.54, 0.72)
-    const tintA = mix(color('#0a1122'), color('#28437a'), silkA.random.z.smoothstep(0.1, 0.9))
-    const colorA = mix(mix(tintA, color('#f3cd84'), goldA), color('#ffe3a0'), silkA.band.mul(0.55)).add(color('#d5e1ea').mul(silverA.mul(0.32)))
+    const tintA = mix(color(hsl.integer(266, 48, 8)), color(hsl.integer(263, 63, 30)), silkA.random.z.smoothstep(0.1, 0.9))
+    const colorA = mix(mix(tintA, color(hsl.integer(82, 73, 84)), goldA), color(hsl.integer(87, 100, 91)), silkA.band.mul(0.55)).add(color(hsl.integer(240, 26, 89)).mul(silverA.mul(0.32)))
     const goldB = silkB.random.x.smoothstep(0.84, 0.93)
     const silverB = silkB.random.y.smoothstep(0.5, 0.7)
-    const tintB = mix(color('#070d1b'), color('#37264d'), silkB.random.z.smoothstep(0.1, 0.9))
-    const colorB = mix(mix(tintB, color('#c99a5e'), goldB.mul(0.8)), color('#e6eeff'), silkB.band.mul(0.4)).add(color('#a8c8ca').mul(silverB.mul(0.22)))
+    const tintB = mix(color(hsl.integer(265, 47, 7)), color(hsl.integer(303, 49, 21)), silkB.random.z.smoothstep(0.1, 0.9))
+    const colorB = mix(mix(tintB, color(hsl.integer(72, 57, 67)), goldB.mul(0.8)), color(hsl.integer(266, 100, 94)), silkB.band.mul(0.4)).add(color(hsl.integer(201, 25, 78)).mul(silverB.mul(0.22)))
     const body = mix(mix(gap, colorA, silkA.detail), colorB, silkB.detail.mul(0.86))
     const macroBand = silkA.band.mul(0.5).add(silkB.band.mul(0.18))
-    this.colorNode = mix(body, color('#d8a747'), macroBand)
+    this.colorNode = mix(body, color(hsl.integer(82, 76, 72)), macroBand)
     const metal = max(max(goldA.mul(silkA.detail), goldB.mul(silkB.detail).mul(0.8)), max(silkA.band.mul(silkA.detail).mul(0.95), silkA.band.mul(0.5)))
     this.metalnessNode = metal
     this.roughnessNode = mix(float(0.34), float(0.14), metal).add(silkA.random.z.mul(0.06))
     this.ior = 1.52
     this.sheen = 0.65
-    this.sheenNode = color('#6576e8').mul(0.7)
+    this.sheenNode = color(hsl.integer(274, 81, 55)).mul(0.7)
     this.sheenRoughness = 0.36
     this.iridescenceNode = float(0.18)
     this.iridescenceIOR = 1.38
@@ -117,18 +118,18 @@ export default class extends KnotMaterial {
     const activeB = silkB.random.y.smoothstep(0.3, 0.55).max(silkB.band.mul(0.8))
     const pulseA = packetA.mul(activeA).mul(silkA.detail)
     const pulseB = packetB.mul(activeB).mul(silkB.detail)
-    const pulseColorA = mix(color('#ffcf87'), color('#8feaff'), silkA.random.z)
+    const pulseColorA = mix(color(hsl.integer(77, 99, 86)), color(hsl.integer(214, 100, 87)), silkA.random.z)
     const threadPulse = sin(tube.x.mul(TAU * 4).sub(time.mul(1.35)).add(silkA.random.z.mul(TAU))).max(0).pow(14)
-    const pulseColorB = mix(color('#8cefff'), color('#d29aff'), silkB.random.z)
+    const pulseColorB = mix(color(hsl.integer(209, 100, 88)), color(hsl.integer(309, 100, 74)), silkB.random.z)
     const haloA = silkA.stripe.smoothstep(0.46, 0.02).oneMinus().mul(pulseA).mul(0.28)
     const haloB = silkB.stripe.smoothstep(0.46, 0.02).oneMinus().mul(pulseB).mul(0.28)
-    const slowWave = sin(tube.x.mul(TAU * 2).sub(time.mul(0.42))).max(0).pow(6).mul(0.32).mul(body.add(color('#203764')).mul(0.55))
+    const slowWave = sin(tube.x.mul(TAU * 2).sub(time.mul(0.42))).max(0).pow(6).mul(0.32).mul(body.add(color(hsl.integer(263, 61, 24))).mul(0.55))
     const sparkle = glints(surfaceNormal, 90).mul(metal).mul(near).mul(0.9)
     this.emissiveNode = pulseColorA.mul(pulseA.add(haloA)).add(pulseColorB.mul(pulseB.add(haloB))).mul(near.mul(0.55).add(0.45)).mul(3)
-      .add(color('#ffd57d').mul(silkA.band.mul(silkA.detail).mul(threadPulse)).mul(1.5))
+      .add(color(hsl.integer(84, 100, 87.2)).mul(silkA.band.mul(silkA.detail).mul(threadPulse)).mul(1.5))
       .add(slowWave)
-      .add(color('#12224a').mul(facing.pow(4)).mul(0.14))
-      .add(color('#fff1d0').mul(sparkle))
-      .add(color('#3b5f9e').mul(grazing.pow(3)).mul(0.08))
+      .add(color(hsl.integer(265, 69, 16)).mul(facing.pow(4)).mul(0.14))
+      .add(color(hsl.integer(88, 100, 95.5)).mul(sparkle))
+      .add(color(hsl.integer(261, 59, 41)).mul(grazing.pow(3)).mul(0.08))
   }
 }

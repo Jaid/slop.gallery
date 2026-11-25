@@ -36,7 +36,7 @@ export default class SlotPanels extends InstancedMesh<PlaneGeometry, MeshBasicNo
     geometry.setAttribute('panelMetrics', this.metrics)
     geometry.setAttribute('panelTint', this.tints)
   }
-  setSlot(index: number, slot: PortraitSlot, color: string, aimed = false) {
+  setSlot(index: number, slot: PortraitSlot, color: number, aimed = false) {
     this.frame.compose(this.center.fromArray(slot.position), this.turn.setFromEuler(this.angles.set(0, slot.rotation, 0)), this.unit)
     this.tint.set(color)
     let i = index * 2

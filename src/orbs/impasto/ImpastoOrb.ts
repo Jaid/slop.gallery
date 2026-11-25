@@ -1,5 +1,7 @@
 import type {OrbGlassOptions} from '../base/OrbGlassMaterial.ts'
 
+import hsl from 'okhsl'
+
 import PromptOrb from '../base/PromptOrb.ts'
 import ImpastoOrbMaterial from './ImpastoOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
@@ -21,7 +23,7 @@ export default class ImpastoOrb extends PromptOrb {
     ['expressive', 'gestural'],
   ]
   readonly change = 'change it to a high-quality digital impasto artwork while keeping the original content intact. The artwork should be'
-  readonly color = '#ed9364'
+  readonly color = hsl.integer(48, 76, 71)
   override readonly conjunction = 'and'
   override readonly effect = 'smears'
   readonly frame = ['impasto'] as const

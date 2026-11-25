@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: Cp16WUQoUlMTqRD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'porcelain_moon',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.005,
   flavorText: 'It broke along moonlit seams and was answered in gold, so every fracture now remembers how to shine.',
   placeholder: {
-    color: '#c7c1b8',
+    color: hsl.integer(78, 10, 78),
     shading: 'smooth',
   },
 } as const satisfies KnotData

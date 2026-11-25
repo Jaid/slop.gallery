@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'celadon_rift',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'It was broken, and rather than hide the fact it was given rivers of gold.',
   displacement: 0.004,
   placeholder: {
-    color: '#78977e',
+    color: hsl.integer(151, 28, 59),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionGeometry, time, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/claude_sonnet/lib/bumpNormal.ts'
@@ -54,7 +55,7 @@ export default class extends KnotMaterial {
     const spectrum = sparkA.add(sparkB.mul(0.85)).mul(gaze.mul(0.7).add(0.3))
   // Faint milky potch banding under the fire.
     const potch = mx_noise_float(p.mul(9)).mul(0.5).add(0.5)
-    const body = mix(color('#05060c'), color('#141b2e'), potch.mul(0.6).add(grazing.pow(2).mul(0.4)))
+    const body = mix(color(hsl.integer(275, 28, 4)), color(hsl.integer(268, 40, 12)), potch.mul(0.6).add(grazing.pow(2).mul(0.4)))
     this.colorNode = body.mul(seamA.mul(0.5).add(0.5))
     this.metalness = 0
     this.roughnessNode = float(0.16).add(seamA.oneMinus().mul(0.14)).sub(fireA.mul(0.06))
@@ -69,6 +70,6 @@ export default class extends KnotMaterial {
     this.normalNode = bumpNormal(normalViewGeometry.normalize(), dome)
     const pulse = time.mul(0.5).add(A.id.x.mul(30)).sin().mul(0.12).add(0.88)
     const wake = intimate.mul(0.35).add(0.65)
-    this.emissiveNode = spectrum.mul(pulse).mul(wake).mul(0.62).add(color('#3a2a8a').mul(grazing.pow(3)).mul(0.05))
+    this.emissiveNode = spectrum.mul(pulse).mul(wake).mul(0.62).add(color(hsl.integer(284, 79, 27)).mul(grazing.pow(3)).mul(0.05))
   }
 }

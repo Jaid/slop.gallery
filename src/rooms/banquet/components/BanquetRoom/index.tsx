@@ -2,6 +2,7 @@ import type {CeilingLedColor} from '#component/CeilingLeds'
 
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import {mapValues} from 'es-toolkit'
+import hsl from 'okhsl'
 import {useState} from 'react'
 import {Color} from 'three/webgpu'
 
@@ -33,15 +34,15 @@ const initialTemperature = lightRandom.makeChild('temperature').rollItem(Object.
 /** Rec. 709 luminance of a linear color */
 const luminance = ({r, g, b}: Color) => 0.2126 * r + 0.7152 * g + 0.0722 * b
 /** The color scaled to the luminance of the reference, so a warmer or cooler light shines as bright as the white one. */
-const balanced = (value: string, reference: string) => {
+const balanced = (value: number, reference: number) => {
   const result = new Color(value)
   return result.multiplyScalar(luminance(new Color(reference)) / luminance(result))
 }
 const {white} = banquetLightTemperatures
 /** the long farmhouse table’s lacquered chestnut-brown pine */
 const tableWood = {
-  heartwood: ['#3c1b0c', '#70391a'],
-  latewood: '#2b140a',
+  heartwood: [hsl.integer(44, 66, 16), hsl.integer(48, 70, 32)],
+  latewood: hsl.integer(44, 56, 12),
 } as const
 const temperatures = mapValues(banquetLightTemperatures, ({light, surface}): CeilingLedColor => ({
   light: balanced(light, white.light),
@@ -55,7 +56,7 @@ export default function BanquetRoom({glass, stone, wood}: Omit<Parameters<typeof
       <RigidBody colliders={false} type='fixed'>
         <CuboidCollider args={[width / 2, 0.15, depth / 2]} position={[0, room.height + 0.1, 0]} />
       </RigidBody>
-      <Box color='#e1dccc' position={[0, room.height - 0.02, 0]} size={[width, 0.18, depth]} />
+      <Box color={hsl.integer(93, 24, 88)} position={[0, room.height - 0.02, 0]} size={[width, 0.18, depth]} />
       <BanquetFloor glass={glass} room={room} stone={stone} wood={wood} />
       <PlankTable colors={tableWood} name='banquet-table' roughness={0.4} seed={2117} table={banquetTable} />
     </group>

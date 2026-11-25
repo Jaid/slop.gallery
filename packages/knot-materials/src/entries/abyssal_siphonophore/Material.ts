@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, normalViewGeometry, time, uv, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -43,7 +44,7 @@ export default class extends KnotMaterial {
       const organNoise = mx_noise_float(q.mul(9).add(organDrift))
       const fineNoise = mx_noise_float(q.mul(22).sub(organDrift.mul(1.6)))
       const density = organNoise.add(fineNoise.mul(0.35)).smoothstep(0.3, 0.7)
-      const organTint = mix(color('#00f2ff'), color('#7928ca'), float(depth).mul(0.7).add(organNoise.mul(0.3)).clamp())
+      const organTint = mix(color(hsl.integer(202, 100, 85)), color(hsl.integer(300, 89, 41)), float(depth).mul(0.7).add(organNoise.mul(0.3)).clamp())
       internalGlow = internalGlow.add(organTint.mul(density).mul(absorption).mul(0.7 + (1 - Math.abs(depth - 0.5) * 2) * 0.8))
       absorption = absorption.mul(density.mul(0.45).oneMinus().clamp())
     }
@@ -52,18 +53,18 @@ export default class extends KnotMaterial {
     // Defensive bioluminescent waves rushing along the knot on close encounter
     const defensePhase = tube.x.mul(TAU * 3).sub(time.mul(2.2)).sin()
     const defenseWave = defensePhase.smoothstep(0.72, 0.98)
-    const defenseTint = mix(color('#00ffbb'), color('#9b51e0'), tube.x.mul(TAU).sin().mul(0.5).add(0.5))
+    const defenseTint = mix(color(hsl.integer(165, 100, 86.7)), color(hsl.integer(304, 81, 52.6)), tube.x.mul(TAU).sin().mul(0.5).add(0.5))
     // Cilia glints and micro-shimmer
     const ciliaNormal = normalViewGeometry.add(diffraction.sub(0.5).mul(0.4)).normalize()
     const ciliaSparkle = glints(ciliaNormal, 90).mul(inRow).mul(beating).mul(near.mul(0.7).add(0.3))
     // Translucent marine body
-    const bodyTint = mix(color('#061824'), color('#0e3649'), grazing.mul(0.6))
+    const bodyTint = mix(color(hsl.integer(240, 61, 10)), color(hsl.integer(234, 71, 21)), grazing.mul(0.6))
     this.colorNode = bodyTint
     this.transmission = 0.93
     this.thickness = 0.78
     this.ior = 1.334
     this.dispersion = 0.35
-    this.attenuationColor.set('#0b3446')
+    this.attenuationColor.set(hsl.integer(231, 76, 21))
     this.attenuationDistance = 1.3
     this.roughness = 0.038
     this.clearcoat = 1
@@ -79,13 +80,13 @@ export default class extends KnotMaterial {
     const combEmission = diffraction.mul(inRow).mul(beating.mul(0.75).add(0.25)).mul(2.4)
     const photophoreEmission = internalGlow.div(steps).mul(3.2).mul(near.mul(0.5).add(0.6))
     const defenseEmission = defenseTint.mul(defenseWave).mul(intimate).mul(2.8)
-    const vesicleEmission = color('#a8f0ff').mul(vesicles).mul(2)
-    const rimGlow = color('#0099ff').mul(rim.pow(3)).mul(0.35)
+    const vesicleEmission = color(hsl.integer(212, 100, 90)).mul(vesicles).mul(2)
+    const rimGlow = color(hsl.integer(248.8, 100, 61.5)).mul(rim.pow(3)).mul(0.35)
     this.emissiveNode = combEmission
       .add(photophoreEmission)
       .add(defenseEmission)
       .add(vesicleEmission)
-      .add(ciliaSparkle.mul(color('#d0ffff')).mul(1.5))
+      .add(ciliaSparkle.mul(color(hsl.integer(197, 99, 96))).mul(1.5))
       .add(rimGlow)
   }
 }

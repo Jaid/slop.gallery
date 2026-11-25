@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraViewMatrix, color, float, Fn, mix, mx_noise_float, normalWorld, time, transformNormalToView, uv, varying, vec2, vec3, vec4} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -51,21 +52,21 @@ export default class extends KnotMaterial {
     const through = normalWorld.dot(keyLight).negate().clamp().pow(1.3)
 // The valleys of a fold sit in their own shade, which is most of what folded paper looks like.
     const valley = folds.mul(0.5).add(0.5)
-    const paper = mix(color('#3f3a2e'), color('#23211a'), crease.mul(0.34)).add(color('#5f5849').mul(speck).mul(0.16)).mul(valley.mul(0.6).add(0.42))
-    const sheet = mix(mix(paper, color('#1c2a52'), inkWash), color('#080d28'), inkDeep)
-    this.colorNode = sheet.add(color('#a8442f').mul(seals))
+    const paper = mix(color(hsl.integer(88, 18, 25)), color(hsl.integer(94, 15, 14)), crease.mul(0.34)).add(color(hsl.integer(86, 17, 38)).mul(speck).mul(0.16)).mul(valley.mul(0.6).add(0.42))
+    const sheet = mix(mix(paper, color(hsl.integer(267, 59, 19)), inkWash), color(hsl.integer(271, 68, 8)), inkDeep)
+    this.colorNode = sheet.add(color(hsl.integer(34, 75, 44)).mul(seals))
     this.metalness = 0
     this.roughnessNode = float(0.72).add(fibre.mul(0.14)).add(inkDeep.mul(0.06)).sub(crease.mul(0.05)).clamp(0.2, 1)
     this.sheen = 0.42
     this.sheenRoughness = 0.62
-    this.sheenColor.set('#fff0d2')
+    this.sheenColor.set(hsl.integer(85, 100, 95.3))
     this.clearcoatNode = crease.mul(grazing).mul(0.12)
     this.clearcoatRoughness = 0.3
     this.normalNode = detailNormal(pleatNormal, fibre.mul(0.0006).add(speck.mul(0.0004)), 0.4)
 // Light that crossed the sheet carries the paper’s own colour, so the ink stays dark inside the haze.
     this.emissiveNode = sheet.mul(through).mul(near.mul(0.4).add(0.6)).mul(1.9)
       .add(sheet.mul(through).mul(crease).mul(0.5))
-      .add(color('#fff6e2').mul(fibre).mul(0.05))
-      .add(color('#ff9f76').mul(intimate).mul(through).mul(0.06))
+      .add(color(hsl.integer(87, 100, 97)).mul(fibre).mul(0.05))
+      .add(color(hsl.integer(44, 100, 76)).mul(intimate).mul(through).mul(0.06))
   }
 }

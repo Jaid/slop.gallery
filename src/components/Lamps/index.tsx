@@ -1,6 +1,7 @@
 import type {PlacedLamp} from '#src/worlds/base/PlacedRoom.ts'
 import type {Light, PointLight, SpotLight} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {useLayoutEffect, useRef, useState} from 'react'
 import {Object3D} from 'three/webgpu'
 import useGraphicsMode from 'use-graphics-mode'
@@ -47,7 +48,7 @@ const useShadow = (lamp: PlacedLamp) => {
 function PointLamp({lamp}: {lamp: PlacedPointLamp}) {
   const light = useRegistered<PointLight>(lamp)
   const shadow = useShadow(lamp)
-  return <pointLight color={lamp.tint ?? '#ffffff'} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} position={lamp.position} userData-shadow={shadow} userData-softShadow={lamp.softShadow} ref={light} />
+  return <pointLight color={lamp.tint ?? hsl.integer(0, 0, 100)} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} position={lamp.position} userData-shadow={shadow} userData-softShadow={lamp.softShadow} ref={light} />
 }
 /** A spot light that casts a shadow takes a lights node of its own in every lit material. */
 function SpotLamp({lamp}: {lamp: PlacedSpotLamp}) {
@@ -61,6 +62,6 @@ function SpotLamp({lamp}: {lamp: PlacedSpotLamp}) {
   const shadow = useShadowProps(2048)
   return <>
     <primitive object={target} />
-    <spotLight angle={lamp.angle} castShadow={castsShadow} color={lamp.tint ?? '#ffffff'} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} penumbra={lamp.penumbra ?? 0} position={lamp.position} shadow-bias={-0.0001} shadow-normalBias={0.025} target={target} ref={light} {...castsShadow ? shadow : {}} />
+    <spotLight angle={lamp.angle} castShadow={castsShadow} color={lamp.tint ?? hsl.integer(0, 0, 100)} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} penumbra={lamp.penumbra ?? 0} position={lamp.position} shadow-bias={-0.0001} shadow-normalBias={0.025} target={target} ref={light} {...castsShadow ? shadow : {}} />
   </>
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, vec3} from 'three/tsl'
 
 import {fbm} from '../../candidates/space_bunny/lib/fbm.ts'
@@ -46,9 +47,9 @@ export default class extends KnotMaterial {
     const luster2 = spectralColor(film.mul(1.31).add(0.29))
 // The organic matrix behind the platelets: warm, dark, and mottled where the mantle tissue was uneven.
     const mottle = fbm(deep.mul(2.4)).mul(0.5).add(0.5)
-    const body = mix(color('#080605'), color('#241a13'), mottle)
+    const body = mix(color(hsl.integer(52, 12, 4)), color(hsl.integer(56, 26, 12)), mottle)
     const platelet = mix(body, luster.mul(0.7).add(luster2.mul(0.2)), 0.44)
-    this.colorNode = mix(platelet, color('#020201'), crack.mul(0.85))
+    this.colorNode = mix(platelet, color(hsl.integer(108, 27, 2)), crack.mul(0.85))
     this.metalness = 0
     this.roughnessNode = mix(float(0.05), float(0.26), crack).add(grazing.mul(0.06))
     this.clearcoat = 1
@@ -60,7 +61,7 @@ export default class extends KnotMaterial {
 // Only the seams between platelets and the grazing edge really emit; everything else is reflected.
     this.emissiveNode = luster.mul(crack.mul(0.45).add(grazing.mul(0.14))).mul(intimate.mul(0.22).add(0.08))
       .add(luster2.mul(grazing.pow(3)).mul(0.4))
-      .add(color('#fff2dc').mul(crack).mul(0.1))
+      .add(color(hsl.integer(81, 100, 96)).mul(crack).mul(0.1))
     this.envMapIntensity = 0.75
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, uv, vec2} from 'three/tsl'
 
 import {buriedUv} from '../../candidates/gpt_sol/lib/exhibition/buriedOptics.ts'
@@ -56,13 +57,13 @@ export default class extends KnotMaterial {
     const topQ = tiles(buriedUv(tube, view, 0.009, 1.13), [20, 3], 41, false).local
     const top = gear(topQ, rotation, 0.292, 18)
     const brushed = wave(tube.y.mul(TAU * 480).add(tube.x.mul(TAU * 24).sin().mul(0.9)))
-    const plate = mix(color('#734824'), color('#bc9451'), brushed.mul(0.2).add(0.6))
-    let inside: Node<'vec3'> = color('#161b1d').mul(1)
-    inside = mix(inside, mix(color('#4b594c'), color('#adb39b'), back.bevel.mul(0.65).add(0.3)), back.body)
-    inside = mix(inside, mix(color('#88642e'), color('#e8c781'), top.bevel.mul(0.5).add(0.48)), top.body)
-    inside = mix(inside, color('#62401b'), top.engraving.mul(0.7))
+    const plate = mix(color(hsl.integer(59, 61, 36)), color(hsl.integer(79, 60, 64)), brushed.mul(0.2).add(0.6))
+    let inside: Node<'vec3'> = color(hsl.integer(224, 11, 12)).mul(1)
+    inside = mix(inside, mix(color(hsl.integer(147, 18, 36)), color(hsl.integer(119, 20, 72)), back.bevel.mul(0.65).add(0.3)), back.body)
+    inside = mix(inside, mix(color(hsl.integer(75, 63, 45)), color(hsl.integer(86, 64, 82)), top.bevel.mul(0.5).add(0.48)), top.body)
+    inside = mix(inside, color(hsl.integer(66, 65, 31)), top.engraving.mul(0.7))
     const bearing = fill(top.r.sub(0.042)).mul(port)
-    const gem = mix(color('#330713'), color('#d72347'), top.r.div(0.046).oneMinus().clamp().mul(facing.mul(0.6).add(0.4)))
+    const gem = mix(color(hsl.integer(9, 76, 11.5)), color(hsl.integer(17, 93, 50)), top.r.div(0.046).oneMinus().clamp().mul(facing.mul(0.6).add(0.4)))
     inside = mix(inside, gem, bearing)
 // Four flush screws per plate; diagonal slots rotate with their individual identities, not the wheels.
     let screws: Node<'float'> = float(0)
@@ -76,8 +77,8 @@ export default class extends KnotMaterial {
       }
     }
     let surface: Node<'vec3'> = mix(plate, inside, port)
-    surface = mix(surface, color('#e2dfc4'), lip.mul(0.7).max(screws))
-    surface = mix(surface, color('#322d25'), ticks.max(slots).mul(0.85))
+    surface = mix(surface, color(hsl.integer(101, 35, 88)), lip.mul(0.7).max(screws))
+    surface = mix(surface, color(hsl.integer(80, 15, 20)), ticks.max(slots).mul(0.85))
     this.colorNode = surface
     this.metalnessNode = mix(float(0.97), float(0.05), bearing).sub(port.mul(top.body.max(back.body).oneMinus()).mul(0.6)).clamp()
     this.roughnessNode = float(0.29).sub(top.bevel.mul(port).mul(0.14)).sub(bearing.mul(0.23)).add(slots.mul(0.3)).clamp(0.055, 0.6)
@@ -90,6 +91,6 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(relief.add(brushed.mul(intimate).mul(0.000025)), 1)
     this.aoNode = port.mul(top.body.oneMinus()).mul(0.43).oneMinus()
     const jewelReturn = top.angle.mul(3).cos().abs().pow(12).mul(near).mul(bearing)
-    this.emissiveNode = color('#e53654').mul(jewelReturn).mul(0.1).add(inside.mul(port).mul(0.055))
+    this.emissiveNode = color(hsl.integer(17, 90, 55)).mul(jewelReturn).mul(0.1).add(inside.mul(port).mul(0.055))
   }
 }

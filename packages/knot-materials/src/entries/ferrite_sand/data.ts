@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ferrite_sand',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Dark grains lean together as though listening for a distant magnet.',
   placeholder: {
-    color: '#29d9ff',
+    color: hsl.integer(217, 99, 78.9),
     shading: 'metal',
   },
 } as const satisfies KnotData

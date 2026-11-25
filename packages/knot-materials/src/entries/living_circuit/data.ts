@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'living_circuit',
   candidateId: 'gpt_astra',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A pulse runs through pathways that seem to have grown rather than been drawn.',
   placeholder: {
-    color: '#55f4dc',
+    color: hsl.integer(181, 87, 86),
     shading: 'glass',
   },
 } as const satisfies KnotData

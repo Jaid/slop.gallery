@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, mix, mx_fractal_noise_float, negateOnBackSide, positionView, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {knotFrame} from '../../lib/knotFrame.ts'
@@ -69,12 +70,12 @@ export default class extends KnotMaterial {
     const moireB = tube.x.mul(TAU * 10).add(tube.y.mul(TAU * 2)).add(viewPhase.mul(2.5704)).add(drift.mul(2.9988)).add(time.mul(0.037485)).add(0.7).sin().mul(0.5).add(0.5).pow(7)
     const moire = moireA.mul(moireB).mul(moirePhase.fwidth().smoothstep(0.5, 1.8).oneMinus())
     const angleTint = spectralColor(tube.x.mul(TAU).add(tube.y.mul(TAU).sin().mul(0.22)).add(drift.mul(0.308)).add(time.mul(0.00385)).add(viewPhase.mul(0.634)))
-    const ink = mix(color('#080617'), color('#241338'), drift.mul(0.5).add(0.5))
+    const ink = mix(color(hsl.integer(287, 56, 5)), color(hsl.integer(302, 62, 13)), drift.mul(0.5).add(0.5))
     this.colorNode = mix(ink, angleTint.mul(0.38), grazing.pow(1.7).mul(0.58)).mul(weave.mul(0.22).add(0.88))
     this.metalnessNode = weave.mul(0.08)
     this.roughnessNode = float(0.52).sub(weave.mul(0.21)).sub(grazing.mul(0.1)).add(mix(float(0.5), fiber, fiberResolved).mul(0.08)).clamp(0.19, 0.64)
     this.sheen = 1
-    this.sheenColor.set('#a88cff')
+    this.sheenColor.set(hsl.integer(293, 100, 67))
     this.sheenRoughnessNode = float(0.26).add(grazing.mul(0.22)).sub(weave.mul(0.08))
     this.anisotropy = 0.82
     this.anisotropyRotation = 0
@@ -83,8 +84,8 @@ export default class extends KnotMaterial {
     this.iridescenceNode = grazing.mul(0.28).add(moire.mul(0.16))
     this.iridescenceThicknessNode = viewPhase.mul(210).add(moire.mul(130)).add(220)
     this.normalNode = detailNormal(displacedNormal, weave.mul(0.00075).add(fiber.mul(0.00022).mul(fiberResolved)), 0.85)
-    this.emissiveNode = mix(color('#6142bb'), color('#2ebbc5'), viewPhase).mul(moire).mul(grazing.mul(0.7).add(0.18)).mul(0.28)
-      .add(color('#e5c8ff').mul(weave).mul(weave.pow(2)).mul(grazing).mul(near.mul(0.26).add(0.05)))
-      .add(color('#8a70ff').mul(intimate.mul(0.018)))
+    this.emissiveNode = mix(color(hsl.integer(290, 76, 40)), color(hsl.integer(202, 85, 68)), viewPhase).mul(moire).mul(grazing.mul(0.7).add(0.18)).mul(0.28)
+      .add(color(hsl.integer(308, 100, 85)).mul(weave).mul(weave.pow(2)).mul(grazing).mul(near.mul(0.26).add(0.05)))
+      .add(color(hsl.integer(288, 100, 58.4)).mul(intimate.mul(0.018)))
   }
 }

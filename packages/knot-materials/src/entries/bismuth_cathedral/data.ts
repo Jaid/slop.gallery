@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_cathedral',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'The metal grew in steps, and each step caught a different color of the same white light.',
   displacement: 0.015,
   placeholder: {
-    color: '#a77bc4',
+    color: hsl.integer(311, 52, 60),
     shading: 'metal',
   },
 } as const satisfies KnotData

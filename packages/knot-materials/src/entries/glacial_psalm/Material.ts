@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, uv, vec2} from 'three/tsl'
 
 import {buriedUv, reflectedLight} from '../../candidates/gpt_sol/lib/exhibition/buriedOptics.ts'
@@ -49,14 +50,14 @@ export default class extends KnotMaterial {
     const deep = crystal(buriedUv(tube, view, 0.056, 1.31), [24, 4], 67)
     const cloudy = mx_noise_float(p.mul(9)).mul(0.5).add(0.5)
     const snow = surface.frost.mul(0.95).add(deep.frost.mul(0.3)).clamp()
-    const blueIce = mix(color('#153f57'), color('#6393a9'), cloudy.mul(0.7).add(grazing.mul(0.2)))
-    this.colorNode = mix(blueIce, color('#edf5f0'), snow.mul(0.86))
+    const blueIce = mix(color(hsl.integer(237, 67, 25)), color(hsl.integer(228, 38, 58)), cloudy.mul(0.7).add(grazing.mul(0.2)))
+    this.colorNode = mix(blueIce, color(hsl.integer(159, 29, 96)), snow.mul(0.86))
     this.metalness = 0
     this.ior = 1.31
     this.roughnessNode = mix(float(0.075), float(0.57), surface.frost)
     this.clearcoatNode = surface.frost.mul(0.7).oneMinus().mul(0.9)
     this.clearcoatRoughness = 0.035
-    this.sheenNode = color('#d0e1f4').mul(surface.frost).mul(0.22)
+    this.sheenNode = color(hsl.integer(251, 53, 89)).mul(surface.frost).mul(0.22)
     this.sheenRoughness = 0.72
     const bubblesQ = p.sub(normalLocal.mul(0.016)).sub(view.mul(0.023)).mul(90)
     const bubbles = beads(bubblesQ, 17)
@@ -73,9 +74,9 @@ export default class extends KnotMaterial {
     const facet = normal.add(tilt).normalize()
     const sparkle = reflectedLight(environment, facet, 0.045).mul(resolved(microQ)).mul(surface.frost).mul(near)
     const breath = exhibitionPhase.add(p.z.mul(8)).sin().mul(0.08).add(0.92)
-    this.emissiveNode = color('#d6edff').mul(deep.core).mul(facing).mul(0.24).mul(breath)
-      .add(color('#eefaff').mul(surface.core).mul(0.16))
-      .add(color('#97bdcb').mul(bubbles.mask).mul(intimate).mul(0.18))
+    this.emissiveNode = color(hsl.integer(241, 100, 92.4)).mul(deep.core).mul(facing).mul(0.24).mul(breath)
+      .add(color(hsl.integer(224, 100, 97.4)).mul(surface.core).mul(0.16))
+      .add(color(hsl.integer(222, 30, 74)).mul(bubbles.mask).mul(intimate).mul(0.18))
       .add(sparkle.mul(0.13))
   }
 }

@@ -5,6 +5,7 @@ import type {Material, Texture} from 'three/webgpu'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {color, mix, texture} from 'three/tsl'
@@ -63,7 +64,7 @@ export function createArenaTrim() {
   return new MeshPhysicalNodeMaterial({
     clearcoat: 1,
     clearcoatRoughness: 0.12,
-    color: '#141315',
+    color: hsl.integer(308, 6, 9),
     envMapIntensity: 0.6,
     metalness: 0,
     roughness: 0.42,
@@ -82,7 +83,7 @@ export function useArenaSurfaces(): ArenaSurfaces {
       metalness: 0,
       roughness: 0.9,
     })
-    const finish = mix(texture(plaster).rgb, color('#381b1d'), 0.82)
+    const finish = mix(texture(plaster).rgb, color(hsl.integer(16, 43, 16)), 0.82)
     material.colorNode = finish
     material.emissiveNode = finish.mul(0.18)
     return material
@@ -137,7 +138,7 @@ export function ArenaFloor({center, origin, polish, size, tile}: {
       <CuboidCollider args={[width / 2, 0.12, depth / 2]} position={[x, -0.12, z]} />
     </RigidBody>
     <mesh castShadow geometry={slab} name='arena-floor-slab' position={[x, -0.12, z]} receiveShadow>
-      <meshStandardNodeMaterial color='#23201d' roughness={0.8} />
+      <meshStandardNodeMaterial color={hsl.integer(67, 8, 14)} roughness={0.8} />
     </mesh>
     <mesh material={marble} name='arena-marble-floor' position={[x, 0.001, z]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[width, depth]} />

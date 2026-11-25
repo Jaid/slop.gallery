@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'river_of_gold',
   candidateId: 'mimo',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Shattered on purpose, mended with gold. The seam is not a scar but a river of light through the dark clay.',
   placeholder: {
-    color: '#1c1610',
+    color: hsl.integer(67, 21, 10),
     shading: 'stone',
   },
 } as const satisfies KnotData

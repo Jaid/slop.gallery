@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'lenticular_mirage',
   candidateId: 'gpt_astra',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A step to either side reveals the image that the last angle concealed.',
   placeholder: {
-    color: '#a2f4f1',
+    color: hsl.integer(193, 77, 90),
     shading: 'smooth',
   },
 } as const satisfies KnotData

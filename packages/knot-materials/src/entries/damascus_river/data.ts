@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'damascus_river',
   candidateId: 'grok',
@@ -16,7 +18,7 @@ export default {
   displacement: 0.007,
   flavorText: 'Folded a thousand times, the steel remembers every river that quenched it. Turn the blade, and the water wakes along the grain.',
   placeholder: {
-    color: '#8eadd4',
+    color: hsl.integer(254, 42, 70),
     shading: 'metal',
   },
 } as const satisfies KnotData

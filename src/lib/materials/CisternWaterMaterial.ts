@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, exp, float, mix, mx_noise_float, time, uv, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -19,7 +20,7 @@ const flow = 0.45
 export default class CisternWaterMaterial extends MeshStandardNodeMaterial {
   constructor(inflow?: number) {
     super({
-      color: '#28302b',
+      color: hsl.integer(158, 13, 20),
       roughness: 0.06,
       metalness: 0,
       envMapIntensity: 0.5,
@@ -32,7 +33,7 @@ export default class CisternWaterMaterial extends MeshStandardNodeMaterial {
     const ripples = unit(mx_noise_float(vec3(across.mul(2.5), along.mul(7), time.mul(0.8)))).mul(0.6).add(unit(mx_noise_float(vec3(across.mul(6), along.mul(17), time.mul(1.4)))).mul(0.4))
     const scum = unit(mx_noise_float(vec3(across.mul(3.5), along.mul(2.2), 4.7))).smoothstep(0.62, 0.85).toVar('cisternScum')
     if (inflow === undefined) {
-      this.colorNode = mix(color('#232b27'), color('#6f7a70'), scum.mul(0.45))
+      this.colorNode = mix(color(hsl.integer(164, 14, 18)), color(hsl.integer(148, 11, 50)), scum.mul(0.45))
       this.roughnessNode = scum.mul(0.5).add(0.05)
       this.normalNode = heightNormal(ripples.mul(0.002))
       return
@@ -42,7 +43,7 @@ export default class CisternWaterMaterial extends MeshStandardNodeMaterial {
     const stir = exp(below.max(0).mul(-2.2)).mul(exp(below.min(0).mul(9))).toVar('cisternStir')
     const churn = unit(mx_noise_float(vec3(across.mul(9), along.mul(11), time.mul(2.6)))).smoothstep(0.35, 0.8)
     const foam = stir.mul(churn).mul(0.9).toVar('cisternFoam')
-    this.colorNode = mix(mix(color('#232b27'), color('#6f7a70'), scum.mul(0.45)), color('#c5ccc4'), foam)
+    this.colorNode = mix(mix(color(hsl.integer(164, 14, 18)), color(hsl.integer(148, 11, 50)), scum.mul(0.45)), color(hsl.integer(142, 10, 81)), foam)
     this.roughnessNode = scum.mul(0.5).add(0.05).add(foam.mul(0.45))
     this.normalNode = heightNormal(ripples.mul(stir.mul(0.006).add(0.002)))
   }

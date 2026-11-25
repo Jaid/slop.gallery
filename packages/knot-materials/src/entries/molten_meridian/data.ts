@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 0gaFob3tIS0Bvlc; fixture: knot-material-shaders; result: success.
 export default {
   id: 'molten_meridian',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.014,
   flavorText: 'A slow fire remembers every fracture. Lean close: the black crust breathes, splits and shows the bright country moving underneath.',
   placeholder: {
-    color: '#543021',
+    color: hsl.integer(43, 48, 25),
     shading: 'stone',
   },
 } as const satisfies KnotData

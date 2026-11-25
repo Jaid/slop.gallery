@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, interleavedGradientNoise, mix, modelWorldMatrixInverse, mx_noise_float, normalLocal, refract, screenCoordinate, time, vec3, vec4} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -21,7 +22,7 @@ function auroraSpectrum(height: Node<'float'>) {
   const hem = height.smoothstep(0, 0.12).mul(height.smoothstep(0.12, 0.3).oneMinus())
   const green = height.smoothstep(0.02, 0.18).mul(height.smoothstep(0.45, 0.85).oneMinus())
   const crown = height.smoothstep(0.45, 0.78).mul(height.smoothstep(0.82, 0.97).oneMinus())
-  return color('#6a4dff').mul(hem).mul(0.9).add(color('#4dff8a').mul(green).mul(1.15)).add(color('#ff3355').mul(crown).mul(0.55))
+  return color(hsl.integer(282, 100, 49.3)).mul(hem).mul(0.9).add(color(hsl.integer(150.5, 100, 86.6)).mul(green).mul(1.15)).add(color(hsl.integer(19, 100, 59.8)).mul(crown).mul(0.55))
 }
 /** Black ice holding a polar sky: aurora curtains hang along a magnetic field inside the glass and ripple in a solar wind, folding over each other as you walk around them. */
 export default class extends KnotMaterial {
@@ -65,13 +66,13 @@ export default class extends KnotMaterial {
     const stars = starfield(ray, 32, 0.88).add(starfield(ray.add(7.7), 71, 0.92).mul(intimate.mul(0.7).add(0.3)))
 // Air-bubbles and fine fractures frozen into the ice, seen up close.
     const bubbles = cellularPoints(p.sub(view.mul(0.025)).mul(120), 0.05, 0.18, 0.82).mul(intimate)
-    const sky = mix(color('#01030a'), color('#061430'), ray.dot(up).mul(0.5).add(0.5))
-    this.colorNode = color('#020408')
+    const sky = mix(color(hsl.integer(261, 62, 3)), color(hsl.integer(262, 74, 10)), ray.dot(up).mul(0.5).add(0.5))
+    this.colorNode = color(hsl.integer(256, 37, 3))
     this.metalness = 0
     this.roughness = 0.04
     this.clearcoat = 1
     this.clearcoatRoughness = 0.008
     this.normalNode = liquidNormal(near.mul(0.6), 0.3)
-    this.emissiveNode = glow.mul(facing.mul(0.35).add(0.75)).add(stars.mul(1.6)).add(sky.mul(facing)).add(color('#cfe6ff').mul(bubbles).mul(0.35)).add(color('#2f8f80').mul(grazing.pow(4)).mul(0.2))
+    this.emissiveNode = glow.mul(facing.mul(0.35).add(0.75)).add(stars.mul(1.6)).add(sky.mul(facing)).add(color(hsl.integer(250, 100, 90)).mul(bubbles).mul(0.35)).add(color(hsl.integer(181, 77, 52)).mul(grazing.pow(4)).mul(0.2))
   }
 }

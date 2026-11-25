@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_geode',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Square staircases descend into iridescent metallic terraces, carved by the patient geometry of crystal growth.',
   placeholder: {
-    color: '#9b78c6',
+    color: hsl.integer(304, 54, 58),
     shading: 'metal',
   },
 } as const satisfies KnotData

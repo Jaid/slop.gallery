@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, uv} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -25,9 +26,9 @@ export default class extends BaseKnotMaterial {
     // Verdigris oxidation in low recesses
     const patinaFractal = mx_fractal_noise_float(p.mul(4.8), 3, 2, 0.5)
     const patinaMask = patinaFractal.mul(0.65).add(grazing.mul(0.25)).smoothstep(0.35, 0.85)
-    const patinaColor = mix(color('#154238'), color('#2ec49c'), mx_noise_float(p.mul(11)).mul(0.5).add(0.5))
+    const patinaColor = mix(color(hsl.integer(176, 71, 25)), color(hsl.integer(170, 89, 69)), mx_noise_float(p.mul(11)).mul(0.5).add(0.5))
     // Gilded Ormolu Brass base with viewing angle warmth
-    const brass = mix(color('#8b5f1f'), color('#ffe17d'), facing.mul(0.4).add(0.6))
+    const brass = mix(color(hsl.integer(73, 77, 45)), color(hsl.integer(93, 100, 90)), facing.mul(0.4).add(0.6))
     const baseColor = mix(brass, patinaColor, patinaMask.mul(0.85))
     // Star cluster coordinates embedded within the dials
     const stars = cellularPoints(p.mul(38), 0.035, 0.2)
@@ -41,8 +42,8 @@ export default class extends BaseKnotMaterial {
     this.clearcoatRoughness = 0.08
     const engravedNormal = degreeRings.add(degreeFine).add(meridianLines).add(reticle).mul(0.35).sub(patinaMask.mul(0.25))
     this.normalNode = proceduralNormal(engravedNormal, 0.0018)
-    const celestialGlow = color('#ffe699').mul(stars.mul(2.2).add(constellationWeb.mul(0.6)))
+    const celestialGlow = color(hsl.integer(93, 100, 92)).mul(stars.mul(2.2).add(constellationWeb.mul(0.6)))
     const starlight = spectralColor(p.y.mul(6).add(time.mul(0.3))).mul(degreeFine).mul(0.8)
-    this.emissiveNode = celestialGlow.add(starlight).mul(near.mul(0.7).add(0.4)).add(color('#10e7b2').mul(patinaMask).mul(rim).mul(0.15))
+    this.emissiveNode = celestialGlow.add(starlight).mul(near.mul(0.7).add(0.4)).add(color(hsl.integer(168, 98.4, 80)).mul(patinaMask).mul(rim).mul(0.15))
   }
 }

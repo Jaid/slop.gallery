@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalLocal, saturation, time, transformNormalToView, uv, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -54,13 +55,13 @@ export default class extends KnotMaterial {
     const order = retardance.div(550)
     const footprint = order.fwidth().max(0.0001)
     const resolved = footprint.smoothstep(0.2, 0.85).oneMinus()
-    const pearl = mix(color('#504b42'), color('#3c4354'), tectonic.mul(0.5).add(0.5))
+    const pearl = mix(color(hsl.integer(82, 11, 32)), color(hsl.integer(267, 20, 29)), tectonic.mul(0.5).add(0.5))
     const distanceMix = near.mul(0.35).add(0.6)
     const fringeColor = mix(pearl, fringe, resolved.mul(distanceMix))
     const fringeEnergy = resolved.mul(near.mul(0.25).add(0.7)).add(0.05)
 // The resin itself stays nearly black: the color is light that has survived the second polarizer.
     const mottle = mx_fractal_noise_float(p.mul(2.9).add(19.1), 3, 2.03, 0.5).mul(0.5).add(0.5)
-    const resin = mix(color('#03050a'), mix(color('#0a111d'), color('#160b2a'), grazing.mul(0.7)), mottle.mul(0.65).add(facing.mul(0.35)))
+    const resin = mix(color(hsl.integer(261, 33, 4)), mix(color(hsl.integer(261, 39, 8)), color(hsl.integer(297, 65, 9)), grazing.mul(0.7)), mottle.mul(0.65).add(facing.mul(0.35)))
 // Fine frozen cracks radiate from the load points, almost invisible until the visitor is close.
     const crackWarp = mx_fractal_noise_float(p.mul(6.2).add(31.4), 2, 2.1, 0.5)
     const crackPhase = p.dot(vec3(28, 17, 23)).add(crackWarp.mul(9)).sin().abs()
@@ -70,7 +71,7 @@ export default class extends KnotMaterial {
     const fracPhase = p.dot(vec3(37, 19, 29)).add(crackWarp.mul(13)).sin().abs()
     const fracLine = fracPhase.smoothstep(0, 0.032).oneMinus().mul(fracPhase.fwidth().smoothstep(0.2, 1.2).oneMinus()).mul(intimate).mul(0.3)
     const microFracture = microCracks.add(fracLine).clamp()
-    this.colorNode = resin.mul(microFracture.mul(0.55).oneMinus()).add(color('#9fb8d8').mul(fracLine).mul(0.12))
+    this.colorNode = resin.mul(microFracture.mul(0.55).oneMinus()).add(color(hsl.integer(255, 38, 74)).mul(fracLine).mul(0.12))
     this.metalness = 0
     this.roughnessNode = float(0.035).add(microFracture.mul(0.24)).clamp(0.02, 0.3)
     this.clearcoat = 1
@@ -83,10 +84,10 @@ export default class extends KnotMaterial {
     this.normalNode = detailNormal(baseNormal, microFracture.mul(0.00016).add(tectonic.mul(0.00008)), 0.65)
     const glassGlint = environmentHighlight(environment, n, 0.025, {threshold: 1.35})
     const fractureSpot = view.negate().reflect(n).dot(vec3(0.25, 0.86, 0.45).normalize()).clamp().pow(420)
-    const fractureFlare = color('#eaf3ff').mul(fractureSpot).mul(microFracture).mul(0.55)
-    const stressHalo = color('#5b46ff').mul(stress.smoothstep(120, 700)).mul(0.035).mul(near.mul(0.4).add(0.6))
+    const fractureFlare = color(hsl.integer(256, 100, 95.4)).mul(fractureSpot).mul(microFracture).mul(0.55)
+    const stressHalo = color(hsl.integer(279, 100, 47)).mul(stress.smoothstep(120, 700)).mul(0.035).mul(near.mul(0.4).add(0.6))
     const pearlGlow = pearl.mul(fringeEnergy).mul(0.035)
-    this.emissiveNode = fringeColor.mul(fringeEnergy).mul(0.36).add(stressHalo).add(pearlGlow).add(glassGlint.mul(0.05)).add(color('#9fb8e8').mul(grazing.pow(4)).mul(0.05)).add(color('#dceaff').mul(fracLine).mul(0.28)).add(fractureFlare)
+    this.emissiveNode = fringeColor.mul(fringeEnergy).mul(0.36).add(stressHalo).add(pearlGlow).add(glassGlint.mul(0.05)).add(color(hsl.integer(263, 59, 75)).mul(grazing.pow(4)).mul(0.05)).add(color(hsl.integer(258, 100, 92)).mul(fracLine).mul(0.28)).add(fractureFlare)
   }
   override dispose() {
     this.lut.dispose()

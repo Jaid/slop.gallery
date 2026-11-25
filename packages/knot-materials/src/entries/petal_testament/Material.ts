@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {detail, fill, stroke, wave} from '../../candidates/gpt_astra/lib/exhibition/pattern.ts'
@@ -35,15 +36,15 @@ export default class extends KnotMaterial {
       .mul(layerAA.smoothstep(0.18, 0.75).oneMinus()).mul(bloom)
     const turn = wave(tiers.mul(TAU)).mul(0.5).add(0.5)
     const pinkness = contour.clamp().mul(0.72).add(rnd.z.mul(0.2)).add(lobes.mul(0.08))
-    const paper = mix(color('#f1e2c7'), color('#ca5d70'), pinkness)
-    const underside = mix(color('#633b43'), color('#b66768'), contour.clamp())
+    const paper = mix(color(hsl.integer(82, 50, 90.4)), color(hsl.integer(11, 62, 55.6)), pinkness)
+    const underside = mix(color(hsl.integer(7, 36, 31)), color(hsl.integer(20, 48, 54)), contour.clamp())
     const fiberQ = p.mul(vec3(300, 120, 300))
     const fiber = mx_noise_float(fiberQ).mul(detail(fiberQ)).mul(intimate)
-    let surface = mix(color('#dbcbb4'), paper.mul(turn.mul(0.17).add(0.82)), bloom)
+    let surface = mix(color(hsl.integer(77, 29, 82)), paper.mul(turn.mul(0.17).add(0.82)), bloom)
     surface = mix(surface, underside, edge.mul(0.72))
     const rim = stroke(r.sub(radius), 0.004, fw)
     const gilding = rim.mul(rnd.x.smoothstep(0.4, 0.8))
-    surface = mix(surface, color('#bb8b51'), gilding)
+    surface = mix(surface, color(hsl.integer(70, 57, 62)), gilding)
     this.colorNode = surface.mul(fiber.mul(0.09).add(1))
     this.metalnessNode = gilding.mul(0.65)
     this.roughnessNode = mix(float(0.88), float(0.38), gilding)
@@ -52,7 +53,7 @@ export default class extends KnotMaterial {
     // The low-frequency, derivative-free displacement is independent of the paper’s fine cuts.
     const breathing = tube.x.mul(TAU * 8).add(tube.y.mul(TAU * 2)).sub(time.mul(0.36)).sin()
     this.positionNode = positionGeometry.add(normalLocal.mul(breathing.mul(0.0018)))
-    this.sheenNode = color('#efc9b6').mul(0.3)
+    this.sheenNode = color(hsl.integer(48, 54, 84)).mul(0.3)
     this.sheenRoughness = 0.8
     this.aoNode = edge.mul(-0.22).add(1)
     this.emissiveNode = paper.mul(grazing.pow(3)).mul(bloom).mul(0.045)

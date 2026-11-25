@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, hash, mix, mx_fractal_noise_float, mx_noise_float, normalView, positionViewDirection, time, uv, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -88,7 +89,7 @@ export default class RiftFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#3fd98a'
+  override readonly tint = hsl.integer(156, 89, 75)
   override readonly title = 'Ectoplasm rift'
 
   override createGeometry(width: number, height: number) {
@@ -183,8 +184,8 @@ class SeepMaterial extends MeshPhysicalNodeMaterial {
     const throb = time.mul(0.9).sin().mul(0.1).add(1)
     const smoky = smoke.smoothstep(0.3, 0.85)
     const light = smoky.mul(0.2).add(strands.mul(0.3)).add(fresh.mul(2.2)).add(sheen.mul(0.4)).add(film.mul(1.2)).add(drop.mul(0.9)).add(trickle.mul(0.25)).add(0.04)
-    this.colorNode = mix(color('#010d07'), color('#0c4a2c'), smoky.mul(0.4).add(fresh.mul(0.4)))
-    this.emissiveNode = mix(color('#2fbf74'), color('#d4ffe8'), fresh.mul(0.35).max(strands.mul(0.4)).max(film.mul(0.6))).mul(light.mul(throb)).add(color('#e8fff2').mul(burst.mul(3)))
+    this.colorNode = mix(color(hsl.integer(165, 88, 5)), color(hsl.integer(157, 94, 27)), smoky.mul(0.4).add(fresh.mul(0.4)))
+    this.emissiveNode = mix(color(hsl.integer(155, 93, 67)), color(hsl.integer(162, 100, 95.8)), fresh.mul(0.35).max(strands.mul(0.4)).max(film.mul(0.6))).mul(light.mul(throb)).add(color(hsl.integer(161, 100, 97.6)).mul(burst.mul(3)))
     this.normalNode = heightNormal(smoke.mul(0.0006).add(waves.mul(0.00025)).add(dome.mul(0.6)).add(mx_noise_float(p.mul(26)).mul(0.0015)))
   }
 }
@@ -212,9 +213,9 @@ class TearMaterial extends MeshPhysicalNodeMaterial {
     const far = aroundOpening(below(beyond).xy, surface.opening)
     const churn = mx_fractal_noise_float(vec3(aroundLoop(far.distance.sub(time.mul(0.08)), far.perimeter, loop).mul(40), far.reach.mul(60).add(time.mul(0.6))), 3).mul(0.5).add(0.5)
     const flicker = mx_noise_float(vec3(ring.mul(4), time.mul(6))).mul(0.25).add(1)
-    const blaze = mix(color('#2fbf74'), color('#f2fff8'), churn.smoothstep(0.55, 0.9)).mul(churn.smoothstep(0.2, 0.6).mul(0.7).add(0.3))
+    const blaze = mix(color(hsl.integer(155, 93, 67)), color(hsl.integer(163, 100, 98.7)), churn.smoothstep(0.55, 0.9)).mul(churn.smoothstep(0.2, 0.6).mul(0.7).add(0.3))
     const lips = here.reach.sub(riftMiddle).abs().div(half).clamp(0, 1)
-    this.colorNode = mix(color('#0a3a22'), color('#020d07'), open.oneMinus())
-    this.emissiveNode = blaze.mul(churn.mul(5).add(1.2).mul(flicker).mul(open)).add(color('#b4ffd8').mul(seam.mul(1.6).mul(flicker))).add(color('#2fbf74').mul(lips.mul(0.5).mul(open.oneMinus())))
+    this.colorNode = mix(color(hsl.integer(157, 92, 21)), color(hsl.integer(162, 73, 5.5)), open.oneMinus())
+    this.emissiveNode = blaze.mul(churn.mul(5).add(1.2).mul(flicker).mul(open)).add(color(hsl.integer(161, 100, 93)).mul(seam.mul(1.6).mul(flicker))).add(color(hsl.integer(155, 93, 67)).mul(lips.mul(0.5).mul(open.oneMinus())))
   }
 }

@@ -2,6 +2,7 @@ import type {KnotEntry} from '../../src/types.ts'
 import type {RenderFrame} from './renderSettings.ts'
 import type {Mesh, MeshPhysicalNodeMaterial, NodeFrame} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {WebgpuRenderer} from 'three-fiber-game'
 import {ACESFilmicToneMapping, AmbientLight, DirectionalLight, HalfFloatType, HemisphereLight, PerspectiveCamera, RenderTarget, Scene} from 'three/webgpu'
 
@@ -50,9 +51,9 @@ export default class KnotPreviewRenderer {
   constructor() {
     this.renderer.toneMapping = ACESFilmicToneMapping
     this.renderer.setClearColor(0, 0)
-    const key = new DirectionalLight('#fff0d7', 2.3)
+    const key = new DirectionalLight(hsl.integer(81, 100, 95.4), 2.3)
     key.position.set(-3, 9, -16)
-    this.scene.add(new AmbientLight('#ffffff', 0.45), new HemisphereLight('#e1edff', '#80705d', 1.3), key)
+    this.scene.add(new AmbientLight(hsl.integer(0, 0, 100), 0.45), new HemisphereLight(hsl.integer(258, 100, 93), hsl.integer(72, 20, 48), 1.3), key)
   }
 
   private get device() {

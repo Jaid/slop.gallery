@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'birefringent_crystal',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Each ray enters alone and leaves with a second story.',
   placeholder: {
-    color: '#8ee3ff',
+    color: hsl.integer(221, 100, 85),
     shading: 'glass',
   },
 } as const satisfies KnotData

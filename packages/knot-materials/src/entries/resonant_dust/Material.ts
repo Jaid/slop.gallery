@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, normalLocal, time, transformNormalToView, uv} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_sonnet/lib/ramp.ts'
@@ -48,11 +49,11 @@ export default class extends KnotMaterial {
     const grain = cellNoiseVec3(grainSpace)
     const fiber = mx_noise_float(p.mul(5)).mul(0.5).add(0.5)
     const grainTone = mix(0.5, grain.x, resolved)
-    const sandColor = mix(color('#8a6f45'), color('#fbf0d2'), heap.pow(0.55).mul(0.5).add(grainTone.mul(0.5)))
+    const sandColor = mix(color(hsl.integer(78, 45, 49)), color(hsl.integer(90, 74, 95)), heap.pow(0.55).mul(0.5).add(grainTone.mul(0.5)))
     // heat tint: oxide thickness follows the vibration amplitude, so the plate reads as a contour map of its own motion
     const oxide = amplitude.mul(0.5).add(facing.oneMinus().mul(0.6)).add(fiber.mul(0.08)).add(level.mul(0.045))
     const tint = cosinePalette(oxide, [0.5, 0.5, 0.52], [0.5, 0.45, 0.5], [1, 1, 1], [0, 0.31, 0.66])
-    const plate = mix(color('#14100c'), tint.mul(0.62), amplitude.smoothstep(0.02, 0.5).mul(0.85).add(0.15)).mul(shadow.mul(-0.7).add(1))
+    const plate = mix(color(hsl.integer(67, 17, 8)), tint.mul(0.62), amplitude.smoothstep(0.02, 0.5).mul(0.85).add(0.15)).mul(shadow.mul(-0.7).add(1))
     // mica flecks: each grain tilts its own facet, so flashes travel across the sand as the viewer moves
     const facet = grain.mul(2).sub(1).mul(0.9).add(normalLocal).normalize()
     const twinkle = time.mul(grain.x.mul(2.5).add(0.8)).add(grain.y.mul(40)).sin().mul(0.35).add(0.65)
@@ -67,7 +68,7 @@ export default class extends KnotMaterial {
     this.anisotropyRotation = 0
     this.normalNode = proceduralNormal(height, 1)
     this.emissiveNode = tint.mul(amplitude.smoothstep(0.05, 0.8)).mul(ring.mul(0.5).add(0.5)).mul(0.07).mul(sand.oneMinus())
-      .add(color('#ffcf8a').mul(heap).mul(ring.mul(0.5).add(0.5)).mul(0.03))
-      .add(color('#fff3d6').mul(flecks).mul(1.8))
+      .add(color(hsl.integer(75, 100, 86)).mul(heap).mul(ring.mul(0.5).add(0.5)).mul(0.03))
+      .add(color(hsl.integer(88, 100, 96)).mul(flecks).mul(1.8))
   }
 }

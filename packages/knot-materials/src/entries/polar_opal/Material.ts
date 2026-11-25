@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, normalViewGeometry, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -33,12 +34,12 @@ export default class extends BaseKnotMaterial {
     const hueC = harlequin.mul(3.5).add(view.z.mul(2)).add(potch.mul(2))
     const playA = spectralColor(hueA)
     const playB = cosinePalette(hueB, [0.55, 0.42, 0.5], [0.45, 0.38, 0.42], [1, 1.1, 0.9], [0, 0.33, 0.67])
-    const playC = mix(color('#7cffd4'), color('#ff6ad4'), hueC.sin().mul(0.5).add(0.5))
+    const playC = mix(color(hsl.integer(169, 100, 90)), color(hsl.integer(340, 100, 70)), hueC.sin().mul(0.5).add(0.5))
     const fire = playA.mul(0.55).add(playB.mul(0.35)).add(playC.mul(0.25)).mul(fireMask)
     const contra = fireMask.oneMinus().mul(grazing.pow(1.4))
     const pinfire = flash.smoothstep(0.55, 0.8).mul(intimate).mul(fireMask)
     this.envMapIntensity = 0.55
-    this.colorNode = mix(color('#0b0a0e'), mix(color('#1a1520'), fire, 0.72), fireMask.mul(0.85).add(0.08))
+    this.colorNode = mix(color(hsl.integer(297, 14, 6)), mix(color(hsl.integer(305, 25, 11)), fire, 0.72), fireMask.mul(0.85).add(0.08))
     this.metalnessNode = fireMask.mul(0.35).add(0.12)
     this.roughnessNode = float(0.18).sub(fireMask.mul(0.07)).sub(pinfire.mul(0.05)).max(0.05)
     this.clearcoat = 1
@@ -52,7 +53,7 @@ export default class extends BaseKnotMaterial {
       .mul(near.mul(0.45).add(0.6))
       .add(playB.mul(pinfire).mul(1.4))
       .add(playA.mul(contra).mul(0.18))
-      .add(color('#1a1030').mul(rim).mul(0.1))
+      .add(color(hsl.integer(295, 60, 10.5)).mul(rim).mul(0.1))
       .add(fire.mul(glints(normalViewGeometry, 80)).mul(0.22))
   }
 }

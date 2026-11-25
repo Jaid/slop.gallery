@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'porcelain_atlas',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Cobalt seas migrate beneath a porcelain sky. The gold meridians remain, mapping countries that have not yet dreamed of land.',
   placeholder: {
-    color: '#bbcad5',
+    color: hsl.integer(239, 19, 80),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_vec3, mx_worley_noise_float, normalLocal, normalViewGeometry, refract, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -108,7 +109,7 @@ export default class extends KnotMaterial {
     // 5. Quartz micro-crystallites that glint under gallery lamps
     const quartzSparkle = glints(normalViewGeometry, 85).mul(0.4).mul(intimate)
     // Ultra-deep N1 body tone: pitch-black obsidian/potch matrix
-    this.colorNode = color('#010103')
+    this.colorNode = color(hsl.integer(282, 42, 2))
     this.metalness = 0
     this.roughness = 0.04
     // Flawless, mirror-smooth polished cabochon clearcoat
@@ -122,7 +123,7 @@ export default class extends KnotMaterial {
       .mul(near.mul(0.4).add(0.9))
       .mul(5.5)
       .add(pinFire.mul(3.2))
-      .add(color('#ffffff').mul(quartzSparkle))
-      .add(color('#050814').mul(grazing.pow(3)).mul(0.15))
+      .add(color(hsl.integer(0, 0, 100)).mul(quartzSparkle))
+      .add(color(hsl.integer(269, 46, 5)).mul(grazing.pow(3)).mul(0.15))
   }
 }

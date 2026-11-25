@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, vec2, vec3} from 'three/tsl'
 
 import {debugLayer} from '../../candidates/claude_fable/lib/debugLayer.ts'
@@ -41,8 +42,8 @@ export default class extends KnotMaterial {
 // Tempering colors: an oxide film whose thickness grows along the knot, with a hand-held torch's unevenness.
     const heat = along.mul(Math.PI * 2).sin().mul(0.5).add(0.5).mul(0.7).add(mx_noise_float(p.mul(2.3)).mul(0.3))
     const oxideThickness = heat.mul(330).add(120)
-    const brightSteel = rgb('#e6eaf0')
-    const darkSteel = rgb('#111316')
+    const brightSteel = rgb(hsl.integer(258, 21, 93))
+    const darkSteel = rgb(hsl.integer(258, 9, 9))
     this.colorNode = mix(darkSteel, brightSteel, brightMix)
     this.metalness = 1
     this.roughnessNode = mix(float(0.6), float(0.1).add(grain.mul(0.05)), brightMix).add(grazing.mul(0.03))
@@ -55,7 +56,7 @@ export default class extends KnotMaterial {
     const sheen = studioSheen(n).mul(brightSteel).mul(brightMix).mul(0.2)
 // The forge's memory: at close range, the etched grooves warm to a deep ember that breathes slowly.
     const breath = time.mul(0.45).add(along.mul(Math.PI * 4)).sin().mul(0.5).add(0.5)
-    const ember = rgb('#ff4a12').mul(brightMix.oneMinus()).mul(intimate).mul(breath.mul(0.6).add(0.2)).mul(facing).mul(0.08)
+    const ember = rgb(hsl.integer(35, 100, 61)).mul(brightMix.oneMinus()).mul(intimate).mul(breath.mul(0.6).add(0.2)).mul(facing).mul(0.08)
     const glint = glints(surfaceNormal, 90).mul(brightMix).mul(brightSteel).mul(0.12).mul(near.mul(0.5).add(0.5))
     const {emissive, isolated} = debugLayer({
       bright,

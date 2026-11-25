@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nacreous_bloom',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Pale pearl opens like a flower beneath a changeable sky.',
   placeholder: {
-    color: '#ffb7e8',
+    color: hsl.integer(339, 100, 84),
     shading: 'fabric',
   },
 } as const satisfies KnotData

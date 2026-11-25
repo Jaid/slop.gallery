@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_noise_float, normalViewGeometry, normalWorld, reflectVector, time} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -25,7 +26,7 @@ export default class extends KnotMaterial {
     const caustic = opticalLine(mx_noise_float(p.mul(12).add(view.mul(1.5))).mul(9).sin(), 0.07)
     const glintSharp = glints(normalViewGeometry.normalize(), 120)
     const glintSoft = glints(normalViewGeometry.normalize(), 24)
-    this.colorNode = color('#f4fbff')
+    this.colorNode = color(hsl.integer(232, 100, 98))
     this.metalness = 0
     this.roughness = 0
     this.transmission = 1
@@ -38,6 +39,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.8
     this.iridescenceThicknessNode = facing.mul(250).add(150)
     this.normalNode = proceduralNormal(facet.mul(0.15), 0.0006)
-    this.emissiveNode = fire.mul(caustic).mul(grazing.pow(2).mul(1.2).add(0.15)).mul(1.6).add(fire.mul(glintSharp).mul(2.8)).add(color('#ffffff').mul(glintSoft).mul(0.5)).add(sparkle.mul(0.9).mul(near.mul(0.5).add(0.7))).add(color('#aee6ff').mul(rim).mul(0.18))
+    this.emissiveNode = fire.mul(caustic).mul(grazing.pow(2).mul(1.2).add(0.15)).mul(1.6).add(fire.mul(glintSharp).mul(2.8)).add(color(hsl.integer(0, 0, 100)).mul(glintSoft).mul(0.5)).add(sparkle.mul(0.9).mul(near.mul(0.5).add(0.7))).add(color(hsl.integer(227, 100, 87.8)).mul(rim).mul(0.18))
   }
 }

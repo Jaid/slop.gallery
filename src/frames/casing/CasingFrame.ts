@@ -1,5 +1,6 @@
 import type {Timber} from '../lib/materials/FrameWoodMaterial.ts'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, select, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -59,9 +60,9 @@ const cornerBlock = {
 const rosetteHeight = 0.0095
 /** a varnished chestnut, honey brown and open in the grain */
 const chestnut: Timber = {
-  light: '#b07a42',
-  dark: '#7e5129',
-  ring: '#4f3017',
+  light: hsl.integer(65, 61, 56),
+  dark: hsl.integer(60, 61, 39),
+  ring: hsl.integer(58, 59, 24),
   rings: 95,
   pores: 0.75,
 }
@@ -73,7 +74,7 @@ export default class CasingFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = Math.max(profile.reach, cornerBlock.size / 2 + (profile.reach - 0.005) / 2)
-  override readonly tint = '#8a5a30'
+  override readonly tint = hsl.integer(60, 59, 43)
   override readonly title = 'Bull’s-eye casing'
 
   override createGeometry(width: number, height: number) {
@@ -114,13 +115,13 @@ class CasingBackMaterial extends MeshPhysicalNodeMaterial {
     const surface = backSurface()
     const {opening, point} = surface
     const grain = mx_noise_float(vec3(point.x.mul(3), point.y.mul(180), 5.5)).mul(0.5).add(0.5)
-    const wood = mix(color('#7e5129'), color('#b07a42'), grain)
+    const wood = mix(color(hsl.integer(60, 61, 39)), color(hsl.integer(65, 61, 56)), grain)
     const strokes = mx_noise_float(vec3(point.x.mul(260), point.y.mul(6), 2.4)).mul(0.5).add(0.5)
     const thin = strokes.smoothstep(0.62, 0.85)
-    const primer = mix(color('#4a1c12'), color('#62271a'), strokes)
+    const primer = mix(color(hsl.integer(34, 69, 19)), color(hsl.integer(34, 70, 26)), strokes)
     const note = scribble(surface, vec2(opening.x.mul(-0.2), opening.y.mul(-0.25)), 0.2, 0.035, 2.2)
     const hanger = hangingWire(surface)
-    this.colorNode = mix(mix(mix(primer, wood, thin.mul(0.6)), color('#d8d0c0'), note.mul(0.7)), hanger.color, hanger.cover)
+    this.colorNode = mix(mix(mix(primer, wood, thin.mul(0.6)), color(hsl.integer(85, 21, 84)), note.mul(0.7)), hanger.color, hanger.cover)
     this.metalnessNode = hanger.cover
     this.roughnessNode = mix(float(0.7), float(0.35), hanger.cover)
     this.normalNode = heightNormal(strokes.mul(0.00006).add(grain.mul(0.00003)).add(hanger.height))

@@ -3,9 +3,9 @@ import {MeshStandardNodeMaterial} from 'three/webgpu'
 
 export type GrainedWoodColors = {
   /** the heartwood’s darker and lighter figure */
-  heartwood: readonly [dark: string, light: string]
+  heartwood: readonly [dark: number, light: number]
   /** the thin latewood lines of the growth rings */
-  latewood: string
+  latewood: number
 }
 
 /**

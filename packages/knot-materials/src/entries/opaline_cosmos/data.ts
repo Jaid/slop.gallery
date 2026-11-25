@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'opaline_cosmos',
   candidateId: 'gpt_sol',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Whole constellations seem to drift beneath this pale, milky sky.',
   placeholder: {
-    color: '#c6b6ff',
+    color: hsl.integer(294, 100, 78.5),
     shading: 'glass',
   },
 } as const satisfies KnotData

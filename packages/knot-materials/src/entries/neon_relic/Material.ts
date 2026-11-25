@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalView, smoothstep, time, uv, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -30,12 +31,12 @@ export default class extends KnotMaterial {
     const striation = mx_noise_float(grain.add(vec3(0, 0, time.mul(0.4)))).mul(0.35).add(0.82)
     const buzz = time.mul(9.3).sin().mul(0.05).add(time.mul(2.1).sin().mul(0.07)).add(1).mul(striation)
 // Two rare gases, mixed along the tube, and a seam of old sodium where the tube was repaired.
-    const gas = mix(color('#ff1f6b'), color('#25d8ff'), smoothstep(0.3, 0.76, tube.x))
+    const gas = mix(color(hsl.integer(10, 100, 59)), color(hsl.integer(217, 100, 79)), smoothstep(0.3, 0.76, tube.x))
     const seamDistance = tube.x.min(tube.x.oneMinus())
     const sodium = seamDistance.smoothstep(0, 0.09).oneMinus()
-    const light = mix(gas, color('#ffa32a'), sodium.clamp(0, 1))
+    const light = mix(gas, color(hsl.integer(67, 100, 75.6)), sodium.clamp(0, 1))
 // The wall: polished by fire, black to a millimetre, with a cold edge where the light leaves it.
-    this.colorNode = color('#050508')
+    this.colorNode = color(hsl.integer(285, 18, 4))
     this.metalness = 0
     this.roughnessNode = float(0.03).add(grazing.mul(0.05)).add(mx_noise_float(grain.mul(1.5).add(3.1)).abs().mul(0.02))
     this.ior = 1.52
@@ -44,9 +45,9 @@ export default class extends KnotMaterial {
     this.emissiveNode = light.mul(column.mul(7.5).add(0.02)).mul(buzz).mul(mix(float(1), float(0.34), facing.oneMinus().pow(1.5)))
       .add(light.mul(filament).mul(5).mul(buzz))
       .add(light.mul(cathode.add(anode.mul(0.7))).mul(1.1).mul(buzz))
-      .add(light.mul(color('#ffe8f4')).mul(glints(normalView, 80)).mul(0.08))
-      .add(color('#8fe8ff').mul(grazing.pow(3.5)).mul(0.04))
+      .add(light.mul(color(hsl.integer(345, 100, 94.5))).mul(glints(normalView, 80)).mul(0.08))
+      .add(color(hsl.integer(217, 99, 86)).mul(grazing.pow(3.5)).mul(0.04))
       .add(light.mul(0.03).mul(near.mul(0.5).add(0.5)))
-      .add(color('#ffffff').mul(intimate.mul(0.004)))
+      .add(color(hsl.integer(0, 0, 100)).mul(intimate.mul(0.004)))
   }
 }

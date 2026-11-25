@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kintsugi_dawn',
   candidateId: 'glm',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The first light enters through the places that once broke.',
   placeholder: {
-    color: '#f2c14e',
+    color: hsl.integer(86, 85, 81),
     shading: 'stone',
   },
 } as const satisfies KnotData

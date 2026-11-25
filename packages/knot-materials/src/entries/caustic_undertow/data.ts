@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 3gQGAbAm59HYY8k; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'caustic_undertow',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Sunlight braided by moving water is written across the drowned knot, and the net tightens into sharp light whenever you lean closer.',
   placeholder: {
-    color: '#18718b',
+    color: hsl.integer(223, 84, 43),
     shading: 'glass',
   },
 } as const satisfies KnotData

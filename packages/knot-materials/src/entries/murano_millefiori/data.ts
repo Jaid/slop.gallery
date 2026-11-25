@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2E09QDOVGvyWUoU; fixture: knot-material-shaders; result: success.
 export default {
   id: 'murano_millefiori',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Bundled glass canes bloom into starry rosettes suspended at three depths. Copper aventurine flecks catch the light like sunken sparks of gold.',
   placeholder: {
-    color: '#a39ea3',
+    color: hsl.integer(326, 5, 66),
     shading: 'glass',
   },
 } as const satisfies KnotData

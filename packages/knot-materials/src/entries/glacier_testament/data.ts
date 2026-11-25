@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: Am1BnNRHvHbHCa2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'glacier_testament',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.01,
   flavorText: 'Ancient snow remembers every winter as a bright fracture sealed in blue glass — lean close and listen for the trapped bubbles.',
   placeholder: {
-    color: '#8ab5d6',
+    color: hsl.integer(242, 43, 71),
     shading: 'glass',
   },
 } as const satisfies KnotData

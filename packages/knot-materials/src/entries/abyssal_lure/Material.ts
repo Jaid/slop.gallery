@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_noise_float, positionGeometry, time, vec2, vec3} from 'three/tsl'
 
 import {rgb} from '../../candidates/claude_fable/lib/rgb.ts'
@@ -59,7 +60,7 @@ export default class extends KnotMaterial {
     const wave = time.mul(0.9).sub(along.mul(TAU * 3)).add(lights.random.x.mul(TAU)).sin().mul(0.5).add(0.5).pow(3)
     const slowFade = time.mul(0.23).add(lights.random2.x.mul(TAU)).sin().mul(0.5).add(0.5)
     const pulse = wave.mul(0.7).add(slowFade.mul(0.3)).mul(lights.random2.y.smoothstep(0.05, 0.35))
-    const lightColor = mix(mix(rgb('#38e8ff'), rgb('#9a6bff'), lights.random.z.smoothstep(0.55, 0.75)), rgb('#b8ffe6'), lights.random2.z.smoothstep(0.8, 1))
+    const lightColor = mix(mix(rgb(hsl.integer(209, 100, 83)), rgb(hsl.integer(294, 100, 59)), lights.random.z.smoothstep(0.55, 0.75)), rgb(hsl.integer(171, 100, 93.7)), lights.random2.z.smoothstep(0.8, 1))
     const glow = lights.lens.mul(pulse.mul(0.8).add(0.15).add(attention.mul(1.2)))
     const halo = float(1).div(lights.distance.div(lights.radius.mul(2.5)).pow2().add(1)).mul(pulse).mul(0.18)
 // Luminous vessels: a faint vascular web, resolved only up close.
@@ -81,27 +82,27 @@ export default class extends KnotMaterial {
     const lensRelief = proceduralNormal(lights.dome.mul(lights.radius).mul(0.8), 1)
     const surfaceNormal = mix(wobble, lensRelief, lights.lens.smoothstep(0, 0.3)).normalize()
     this.normalNode = surfaceNormal
-    this.colorNode = mix(rgb('#07111f'), rgb('#03070d'), gut.mul(0.9)).add(lightColor.mul(lights.lens).mul(0.1))
+    this.colorNode = mix(rgb(hsl.integer(256, 50, 8)), rgb(hsl.integer(250, 40, 4)), gut.mul(0.9)).add(lightColor.mul(lights.lens).mul(0.1))
     this.metalness = 0
     this.roughnessNode = mix(float(0.12), float(0.05), lights.lens).add(mx_noise_float(p.mul(40)).mul(0.03))
     this.ior = 1.38
     this.transmission = 0.42
     this.thickness = 0.26
-    this.attenuationColor.set('#0b2b3a')
+    this.attenuationColor.set(hsl.integer(232, 68, 17))
     this.attenuationDistance = 0.35
     this.clearcoat = 1
     this.clearcoatRoughness = 0.04
     this.sheen = 0.25
-    this.sheenColor.set('#1d6f7a')
+    this.sheenColor.set(hsl.integer(208, 79, 42))
     this.sheenRoughness = 0.7
 // Subsurface glow: light scatters through the gel from the photophores and the deep.
-    const scatter = rgb('#0c4a5c').mul(grazing.pow(2.5)).mul(0.25).add(rgb('#0a3340').mul(facing.oneMinus()).mul(0.04))
+    const scatter = rgb(hsl.integer(223, 85, 29)).mul(grazing.pow(2.5)).mul(0.25).add(rgb(hsl.integer(224, 76, 20)).mul(facing.oneMinus()).mul(0.04))
     this.emissiveNode = lightColor.mul(glow.add(halo)).mul(2.6)
-      .add(rgb('#1fd3b0').mul(vessels.add(capillaries)).mul(vesselPulse).mul(0.25))
-      .add(rgb('#ff6a3a').mul(lure).mul(0.6))
-      .add(rgb('#ff9a4a').mul(lureSpan).mul(glints(surfaceNormal, 40)).mul(0.3))
-      .add(rgb('#2c9a8c').mul(gutGlow).mul(0.12))
+      .add(rgb(hsl.integer(175, 94, 74)).mul(vessels.add(capillaries)).mul(vesselPulse).mul(0.25))
+      .add(rgb(hsl.integer(38, 100, 65.6)).mul(lure).mul(0.6))
+      .add(rgb(hsl.integer(56, 100, 74)).mul(lureSpan).mul(glints(surfaceNormal, 40)).mul(0.3))
+      .add(rgb(hsl.integer(183, 82, 56)).mul(gutGlow).mul(0.12))
       .add(scatter)
-      .add(rgb('#dffaff').mul(glints(surfaceNormal, 300)).mul(lights.lens.smoothstep(0.2, 0.6)).mul(0.6))
+      .add(rgb(hsl.integer(210, 100, 96)).mul(glints(surfaceNormal, 300)).mul(lights.lens.smoothstep(0.2, 0.6)).mul(0.6))
   }
 }

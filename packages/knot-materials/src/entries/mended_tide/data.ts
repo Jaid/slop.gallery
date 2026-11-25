@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7EtWKdJKgEioEdL; fixture: knot-material-shaders.
 export default {
   id: 'mended_tide',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The painted sea broke once and was mended with gold. Its waves still roll on, and they now pass through the scars.',
   placeholder: {
-    color: '#dfe9ff',
+    color: hsl.integer(266, 100, 92),
     shading: 'smooth',
   },
 } as const satisfies KnotData

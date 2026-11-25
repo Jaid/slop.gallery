@@ -1,21 +1,22 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, max, min, mix, mx_noise_float, normalWorldGeometry, select, uv, vec3} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {inside, visibleDetail, worldNormalToView} from './filters.ts'
 
-const tone = (hex: string): Node<'vec3'> => {
+const tone = (hex: number): Node<'vec3'> => {
   const {r, g, b} = new Color(hex)
   return vec3(r, g, b)
 }
 const palette = {
-  charcoal: tone('#231d1a'),
-  cream: tone('#d8c7a0'),
-  ochre: tone('#b07a2a'),
-  rust: tone('#8a2c1a'),
-  madder: tone('#5c1912'),
-  slate: tone('#3c5059'),
+  charcoal: tone(hsl.integer(48, 12, 13)),
+  cream: tone(hsl.integer(88, 39, 81)),
+  ochre: tone(hsl.integer(73, 77, 56)),
+  rust: tone(hsl.integer(33, 85, 34.4)),
+  madder: tone(hsl.integer(29, 82, 22)),
+  slate: tone(hsl.integer(227, 22, 33)),
 }
 
 /**

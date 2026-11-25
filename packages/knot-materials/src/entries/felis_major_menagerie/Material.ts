@@ -1,6 +1,7 @@
 import type {Vec3 as Vector} from 'math'
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {array, color, float, Fn, If, int, Loop, max, mix, modelWorldMatrixInverse, mx_atan2, mx_fractal_noise_float, mx_noise_float, negateOnBackSide, normalViewGeometry, positionView, positionViewDirection, select, step, struct, time, transformNormalToView, uniformArray, uv, varying, vec2, vec3, vec4} from 'three/tsl'
 import {Vector4} from 'three/webgpu'
 
@@ -14,52 +15,52 @@ import knotData from './data.ts'
 
 /** Each constellation belongs to a breed: precious-metal threads and stars, a deep facet tint, a faint blush and the only saturated color – the eyes. */
 type Breed = {
-  blush: string
-  fill: string
-  iris: string
-  line: string
-  star: string
+  blush: number
+  fill: number
+  iris: number
+  line: number
+  star: number
 }
 const breeds: Array<Breed> = [
   // gold threads, jade eyes
   {
-    line: '#ffd49a',
-    star: '#fff4e0',
-    fill: '#4a3280',
-    blush: '#ff9a8a',
-    iris: '#6dffae',
+    line: hsl.integer(75, 100, 87.7),
+    star: hsl.integer(83, 100, 96.6),
+    fill: hsl.integer(294, 65, 30),
+    blush: hsl.integer(30, 100, 75),
+    iris: hsl.integer(156, 100, 88.4),
   },
   // silver threads, amber eyes
   {
-    line: '#bcd4ff',
-    star: '#f2f7ff',
-    fill: '#1f3a80',
-    blush: '#d8a0ff',
-    iris: '#ffbe3d',
+    line: hsl.integer(262, 100, 84.5),
+    star: hsl.integer(260, 100, 97),
+    fill: hsl.integer(265, 77, 28),
+    blush: hsl.integer(310, 100, 76),
+    iris: hsl.integer(80, 100, 81.4),
   },
   // rose-gold threads, sapphire eyes
   {
-    line: '#ffbfae',
-    star: '#fff0ec',
-    fill: '#5a2462',
-    blush: '#ff8fb0',
-    iris: '#5fd0ff',
+    line: hsl.integer(35, 100, 83.5),
+    star: hsl.integer(35, 100, 96),
+    fill: hsl.integer(322, 66, 27),
+    blush: hsl.integer(2, 100, 74),
+    iris: hsl.integer(228, 100, 78),
   },
   // platinum threads, copper eyes
   {
-    line: '#b4f0ff',
-    star: '#effcff',
-    fill: '#0f4254',
-    blush: '#ffd08a',
-    iris: '#ff8f3d',
+    line: hsl.integer(215, 100, 90.6),
+    star: hsl.integer(213, 100, 98),
+    fill: hsl.integer(226, 77, 26),
+    blush: hsl.integer(77, 100, 86.5),
+    iris: hsl.integer(54, 99, 72),
   },
   // lilac threads, chartreuse eyes
   {
-    line: '#dcc8ff',
-    star: '#f6f0ff',
-    fill: '#35206a',
-    blush: '#ff9ad6',
-    iris: '#d2ff4f',
+    line: hsl.integer(301, 100, 84.6),
+    star: hsl.integer(304, 100, 96),
+    fill: hsl.integer(291, 74, 22),
+    blush: hsl.integer(344, 100, 77.6),
+    iris: hsl.integer(122.9, 100, 92.7),
   },
 ]
 /** The low-poly cat head every constellation is built from, in cat units: x spans about ±1, y points from the chin (−0.6) to the ear tips (+0.98) and z is a relief height used for facet normals and for the head turning toward the viewer. Only the right half is authored; everything with x > 0 is mirrored. Faces are triangles and quads – quads keep their diagonal invisible, so the wireframe really reads as a mix of both. */
@@ -1416,7 +1417,7 @@ function starLayer(p: Node<'vec3'>, view: Node<'vec3'>, depth: number, frequency
   const core = distance.div(radius).pow2().mul(-3).exp()
   const gate = identity.x.smoothstep(threshold, threshold + 0.004)
   const twinkle = time.mul(identity.y.mul(3).add(1.2)).add(identity.z.mul(40)).sin().mul(0.3).add(0.75)
-  const tint = mix(color('#ffd7a8'), color('#a9c8ff'), identity.z)
+  const tint = mix(color(hsl.integer(71, 100, 88.6)), color(hsl.integer(262, 100, 80)), identity.z)
   return tint.mul(core.mul(gate).mul(twinkle).mul(energy).mul(identity.y.mul(0.7).add(0.3)))
 }
 /** Deep lacquered night: a slow nebula and two parallax star layers suspended inside the tube. */
@@ -1427,7 +1428,7 @@ function nightSky(p: Node<'vec3'>, view: Node<'vec3'>) {
   const cloud = mx_fractal_noise_float(nebulaPoint.mul(2.4).add(warp), 3, 2.1, 0.5).mul(0.5).add(0.5).toVar()
   const filament = mx_fractal_noise_float(nebulaPoint.mul(5.2).sub(warp), 2, 2.2, 0.55).mul(0.5).add(0.5).toVar()
   const hue = mx_noise_float(nebulaPoint.mul(0.9).add(3.1)).mul(0.5).add(0.5)
-  const nebulaTint = mix(mix(color('#2a0f5c'), color('#0b3f5a'), hue.smoothstep(0.3, 0.7)), color('#5a1245'), filament.smoothstep(0.62, 0.85).mul(0.6))
+  const nebulaTint = mix(mix(color(hsl.integer(291, 86, 16.4)), color(hsl.integer(237, 81, 25)), hue.smoothstep(0.3, 0.7)), color(hsl.integer(342, 76, 23)), filament.smoothstep(0.62, 0.85).mul(0.6))
   const density = cloud.smoothstep(0.38, 0.82).mul(filament.mul(0.6).add(0.4)).toVar()
   // Outside the figures only the brightest filaments survive, so the lacquer stays black.
   const nebula = nebulaTint.mul(density.smoothstep(0.35, 0.95).mul(filament.smoothstep(0.5, 0.8)).mul(0.07).add(0.002))
@@ -1620,30 +1621,30 @@ export default class extends KnotMaterial {
     const fillLight = palette.fill.mul(cat.facetShade).mul(sky.density.mul(0.14).add(0.035).add(far.mul(0.4)).add(cat.flash.mul(0.9))).mul(cat.fillOn)
     const blushLight = palette.blush.mul(cat.blush).mul(cat.fillOn).mul(sky.density.mul(0.2).add(0.12))
     const eyeLight = closeness.mul(0.8).add(1.1).add(far.mul(1.2))
-    const irisLight = mix(palette.iris, color('#fff4d0'), cat.irisCore.mul(0.45)).mul(cat.iris.mul(1.3).add(cat.irisCore.mul(1.6))).mul(cat.limbus.mul(0.6).oneMinus()).mul(cat.pupils.mul(0.95).oneMinus()).mul(eyeLight)
+    const irisLight = mix(palette.iris, color(hsl.integer(93, 100, 96)), cat.irisCore.mul(0.45)).mul(cat.iris.mul(1.3).add(cat.irisCore.mul(1.6))).mul(cat.limbus.mul(0.6).oneMinus()).mul(cat.pupils.mul(0.95).oneMinus()).mul(eyeLight)
     const eyeBeacon = cat.eyeGlow.mul(far.mul(0.4).add(0.12)).mul(cat.fillOn.mul(0.5).add(0.5))
     // Each figure pools a little of its own light on the lacquer around it.
     const aura = catPoint.sub(vec2(0, 0.2)).length().div(1.15).pow2().negate().exp().mul(0.04).mul(cat.fillOn)
     const figure = palette.line.mul(lineLight)
-      .add(mix(palette.line, color('#ffffff'), 0.55).mul(cat.purr.mul(1.8)))
+      .add(mix(palette.line, color(hsl.integer(0, 0, 100)), 0.55).mul(cat.purr.mul(1.8)))
       .add(palette.star.mul(cat.stars.mul(4.5).add(cat.halos.mul(0.12))))
-      .add(color('#ffffff').mul(cat.pens.mul(3.5)))
+      .add(color(hsl.integer(0, 0, 100)).mul(cat.pens.mul(3.5)))
       .add(fillLight.add(blushLight).mul(cat.head))
       .add(irisLight)
       .add(palette.iris.mul(eyeBeacon))
-      .add(color('#ffffff').mul(cat.catchlights.mul(3)))
+      .add(color(hsl.integer(0, 0, 100)).mul(cat.catchlights.mul(3)))
       .add(palette.star.mul(cat.whiskers.mul(1.6)))
       .add(palette.star.mul(cat.facetGlint.mul(0.5)))
       .add(palette.fill.mul(aura))
     const galaxy = sky.galaxy.mul(mix(vec3(1), palette.star, 0.5)).mul(shownFill).mul(far.oneMinus())
-    const gold = color('#ffc76b').mul(flakes(p, frame.outward, 170, 0.12).mul(shownFill.oneMinus()).mul(3))
+    const gold = color(hsl.integer(79, 99, 84)).mul(flakes(p, frame.outward, 170, 0.12).mul(shownFill.oneMinus()).mul(3))
     // Pinpoint stars and flakes turn to glitter noise from afar, so they bow out and leave the figures to speak.
     const pinpoints = far.mul(0.75).oneMinus()
     const skyLight = sky.nebula.mul(head.mul(0.5).oneMinus()).add(sky.stars.mul(shownFill.oneMinus()).add(galaxy).add(gold).mul(pinpoints))
     // Figures wrapping over the silhouette compress into bright smears; let them recede there.
     const grazingCalm = facing.smoothstep(0.06, 0.4).mul(0.55).add(0.45)
     // A thin cool atmosphere along the silhouette separates the black knot from the dark room.
-    const atmosphere = color('#2b4c9c').mul(grazing.pow(5).mul(0.2))
+    const atmosphere = color(hsl.integer(265, 75, 35)).mul(grazing.pow(5).mul(0.2))
     // --- threads of stardust tie every cat’s ears to its neighbors’, knotted at a shared point on the cell border
     // The knot is a fixed point on the tube, so its place in cat units uses the stretch at the knot itself, not at the fragment.
     const knotPoint = (side: -1 | 1) => {
@@ -1658,13 +1659,13 @@ export default class extends KnotMaterial {
     const rightCoverage = rightThread.coverage.mul(rightThread.h.smoothstep(0.06, 0.22))
     const knotStars = catPoint.sub(leftKnot).length().min(catPoint.sub(rightKnot).length()).div(footprint.mul(1.2).max(0.022)).pow2().negate().exp()
     const threads = leftCoverage.max(rightCoverage).mul(cat.grown.mul(1.2).clamp()).add(knotStars.mul(0.8)).mul(far.oneMinus().mul(0.7).add(0.3))
-    const threadLight = color('#ffe0b0').mul(threads.mul(0.9)).mul(grazingCalm)
+    const threadLight = color(hsl.integer(79, 100, 91)).mul(threads.mul(0.9)).mul(grazingCalm)
     const tubeFootprint = vec2(tube.x.mul(knotLength), tube.y.mul(TAU * tubeRadius)).fwidth().length().mul(0.7)
     const meteor = meteors.light(tube, knotLength, TAU * tubeRadius, tubeFootprint)
-    const meteorLight = color('#fff1d0').mul(meteor.head.mul(5)).add(mix(color('#7fc6ff'), color('#ffe6b8'), meteor.tail).mul(meteor.tail.mul(2.2)))
+    const meteorLight = color(hsl.integer(88, 100, 95.5)).mul(meteor.head.mul(5)).add(mix(color(hsl.integer(244, 100, 77)), color(hsl.integer(83, 100, 92.4)), meteor.tail).mul(meteor.tail.mul(2.2)))
     this.emissiveNode = skyLight.add(atmosphere).add(threadLight).add(meteorLight).add(figure.mul(window).mul(grazingCalm))
     // --- surface: black lacquer sky, faceted glass inside the cats
-    this.colorNode = mix(color('#05060d'), palette.fill.mul(0.045), shownFill)
+    this.colorNode = mix(color(hsl.integer(275, 32, 4)), palette.fill.mul(0.045), shownFill)
     this.metalnessNode = shownFill.mul(0.2)
     this.roughnessNode = mix(float(0.6), float(0.22), shownFill)
     // Black lacquer: the crisp clearcoat supplies the reflection, the pigment layer beneath barely any.

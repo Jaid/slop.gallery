@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_noise_float, normalLocal, positionGeometry, tangentLocal, time, vec2, vec3} from 'three/tsl'
 
 import {rgb} from '../../candidates/claude_fable/lib/rgb.ts'
@@ -102,21 +103,21 @@ export default class extends KnotMaterial {
 // Light passing through the sheet: candle glow, dimmed by pulp, blocked by bamboo and by ink.
     const shade = frame.mul(0.8).oneMinus().mul(ink.mul(0.9).oneMinus()).mul(vermilion.mul(0.5).oneMinus())
     const transmitted = illumination.add(flameImage.mul(2.5)).mul(shade).mul(thickness.mul(-1.6).exp())
-    const warm = mix(rgb('#ff7a1e'), rgb('#ffd27a'), transmitted.smoothstep(0, 1.2))
-    const paper = mix(rgb('#9a8c74'), rgb('#bfb29a'), fiber.mul(0.6))
-    let surface = mix(paper, rgb('#1a1612'), ink.mul(0.92))
-    surface = mix(surface, rgb('#c8321c'), vermilion)
-    surface = mix(surface, rgb('#4a3722'), frame.mul(facing.mul(0.5).add(0.3)))
+    const warm = mix(rgb(hsl.integer(48.5, 100, 67.9)), rgb(hsl.integer(83, 100, 86.6)), transmitted.smoothstep(0, 1.2))
+    const paper = mix(rgb(hsl.integer(81, 22, 59)), rgb(hsl.integer(83, 22, 73)), fiber.mul(0.6))
+    let surface = mix(paper, rgb(hsl.integer(67, 14, 10)), ink.mul(0.92))
+    surface = mix(surface, rgb(hsl.integer(32, 94, 48)), vermilion)
+    surface = mix(surface, rgb(hsl.integer(68, 40, 25)), frame.mul(facing.mul(0.5).add(0.3)))
     this.colorNode = surface
     this.metalness = 0
     this.roughnessNode = float(0.85).sub(ink.mul(0.2))
     this.sheen = 0.55
-    this.sheenColor.set('#fff4dc')
+    this.sheenColor.set(hsl.integer(86, 100, 96.4))
     this.sheenRoughness = 0.8
     this.normalNode = proceduralNormal(fiber.mul(0.003).add(pulp.mul(0.004)).add(frame.mul(-0.004)), 0.9)
 // The sheet glows with what passes through it; at grazing angles the fibers catch the room instead.
-    const grazingFibers = rgb('#fff1d6').mul(fiber).mul(grazing.pow(3)).mul(0.06)
-    const ambientGlow = rgb('#ffb04a').mul(0.02).mul(flame)
+    const grazingFibers = rgb(hsl.integer(84, 100, 95.6)).mul(fiber).mul(grazing.pow(3)).mul(0.06)
+    const ambientGlow = rgb(hsl.integer(70, 100, 78.6)).mul(0.02).mul(flame)
     this.emissiveNode = warm.mul(transmitted).mul(4).add(ambientGlow).add(grazingFibers)
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalLocal, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -31,16 +32,16 @@ export default class extends KnotMaterial {
     const innerEdge = innerLocal.x.abs().max(innerLocal.y.abs()).max(innerLocal.z.abs())
     const innerFilter = innerCoordinate.fwidth().length().mul(1.25)
     const innerPane = innerEdge.smoothstep(0.4, innerFilter.add(0.45).min(0.49)).oneMinus().mul(near.mul(0.74).add(0.26))
-    const outerBlue = mix(color('#053f9b'), color('#00b8d4'), outerIdentity.x)
-    const outerRose = mix(color('#8b0a58'), color('#ed306c'), outerIdentity.y)
-    const outerGold = mix(color('#9b3c05'), color('#ffc950'), outerIdentity.z)
+    const outerBlue = mix(color(hsl.integer(260.5, 97, 31)), color(hsl.integer(214, 100, 67)), outerIdentity.x)
+    const outerRose = mix(color(hsl.integer(351, 90, 33)), color(hsl.integer(9, 91, 56.4)), outerIdentity.y)
+    const outerGold = mix(color(hsl.integer(43, 96, 40)), color(hsl.integer(84, 100, 84)), outerIdentity.z)
     const outerTint = mix(mix(outerBlue, outerRose, outerIdentity.z), outerGold, outerIdentity.x.smoothstep(0.7, 0.86))
-    const innerIndigo = mix(color('#2f0b83'), color('#a21caf'), innerIdentity.x)
-    const innerCyan = mix(color('#006f85'), color('#20d4c2'), innerIdentity.y)
+    const innerIndigo = mix(color(hsl.integer(283, 96, 21)), color(hsl.integer(324, 88, 44)), innerIdentity.x)
+    const innerCyan = mix(color(hsl.integer(218, 100, 42)), color(hsl.integer(184, 93, 75)), innerIdentity.y)
     const innerTint = mix(innerIndigo, innerCyan, innerIdentity.z)
     const lead = outerPane.oneMinus()
     const leadRaw = outerPaneRaw.oneMinus()
-    const blackGlass = mix(color('#000001'), color('#050716'), grazing.mul(0.1))
+    const blackGlass = mix(color(hsl.integer(264, 100, 0)), color(hsl.integer(274, 54, 5)), grazing.mul(0.1))
     const paneColor = mix(outerTint, innerTint, innerPane.mul(0.44))
     this.positionNode = p.add(normalLocal.mul(leadRaw.mul(0.009).sub(outerPaneRaw.mul(0.0018))))
     this.colorNode = mix(blackGlass, paneColor, outerPane.mul(0.94))
@@ -59,6 +60,6 @@ export default class extends KnotMaterial {
     const gleam = glints(glassNormal, 112).mul(outerPane.add(lead.mul(0.25))).mul(near)
     // Each tint is supported only by its own pane, including in the emissive layer.
     const paneGlow = paneColor.mul(outerPane.mul(0.82)).add(innerTint.mul(innerPane.mul(0.18)))
-    this.emissiveNode = paneGlow.mul(near.mul(0.72).add(0.26)).add(color('#f7efff').mul(gleam).mul(intimate.mul(0.08).add(0.012)))
+    this.emissiveNode = paneGlow.mul(near.mul(0.72).add(0.26)).add(color(hsl.integer(308, 100, 96)).mul(gleam).mul(intimate.mul(0.08).add(0.012)))
   }
 }

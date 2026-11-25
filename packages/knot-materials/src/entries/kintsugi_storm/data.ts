@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kintsugi_storm',
   candidateId: 'grok',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Lightning finds every old fracture and stitches it briefly with gold.',
   placeholder: {
-    color: '#ffd56a',
+    color: hsl.integer(88, 100, 87),
     shading: 'stone',
   },
 } as const satisfies KnotData

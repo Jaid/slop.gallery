@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1UqvleKScECZs6l.
 export default {
   id: 'peacock_moon',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand feathered eyes open as the metal moon turns, each revealing another constellation.',
   placeholder: {
-    color: '#0b6c77',
+    color: hsl.integer(207, 93, 41),
     shading: 'metal',
   },
   displacement: 0.008,

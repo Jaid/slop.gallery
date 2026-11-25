@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, transformNormalToView, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -71,10 +72,10 @@ export default class extends KnotMaterial {
 // A faint oxide skin, thickest in the troughs where the metal has been exposed.
     const oxide = mx_noise_float(p.mul(7)).mul(0.5).add(0.5)
     const film = height.mul(0.5).add(0.5).mul(oxide).mul(intimate.mul(0.6).add(0.4))
-    this.colorNode = mix(color('#c2c7ce'), color('#e6e9ee'), oxide.mul(0.5).add(0.5))
+    this.colorNode = mix(color(hsl.integer(257, 9, 80)), color(hsl.integer(261, 16, 92)), oxide.mul(0.5).add(0.5))
     this.metalness = 1
     this.roughnessNode = float(0.022).add(film.mul(0.03)).add(grazing.mul(0.008)).clamp(0.015, 0.06)
-    this.emissiveNode = color('#9fc4ff').mul(grazing.pow(4)).mul(0.02)
+    this.emissiveNode = color(hsl.integer(260, 99, 78)).mul(grazing.pow(4)).mul(0.02)
     this.positionNode = positionGeometry.add(normalLocal.mul(height.mul(0.0012)))
   }
 }

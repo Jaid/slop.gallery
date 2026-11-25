@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: NKvaWYy8hA4AWQ9.
 export default {
   id: 'halo_caustic',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Light enters, loses the way, and comes back as a ring that follows you.',
   placeholder: {
-    color: '#7ec8ff',
+    color: hsl.integer(242, 100, 77.3),
     shading: 'glass',
   },
 } as const satisfies KnotData

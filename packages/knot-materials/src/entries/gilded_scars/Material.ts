@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, time, vec2} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -29,9 +30,9 @@ export default class extends KnotMaterial {
       .add(filteredRibbon(micro, 0.055).mul(near).mul(0.25))
     const flicker = time.mul(Math.PI * 3).sin().mul(0.13).add(time.mul(Math.PI * 5).sin().mul(0.07)).add(0.92)
     const pool = mx_noise_float(p.mul(2.2)).mul(0.5).add(0.5)
-    const glaze = mix(color('#6f9484'), color('#c2d4c4'), pool.mul(0.5).add(0.15))
+    const glaze = mix(color(hsl.integer(167, 29, 58)), color(hsl.integer(149, 23, 83)), pool.mul(0.5).add(0.15))
     const burnish = glints(normalViewGeometry, 80).mul(0.32).add(0.5).clamp()
-    const gold = mix(color('#7a4a0c'), color('#f6e094'), burnish)
+    const gold = mix(color(hsl.integer(66, 87, 37)), color(hsl.integer(93, 78, 89)), burnish)
     const relief = goldMask.mul(0.55)
       .sub(seam.mul(0.3))
       .sub(crazing.mul(0.35))
@@ -45,8 +46,8 @@ export default class extends KnotMaterial {
     this.anisotropyNode = vec2(0.55, 0).mul(goldMask)
     this.aoNode = float(1).sub(crazing.mul(0.25))
     this.normalNode = proceduralNormal(relief, 0.002)
-    this.emissiveNode = color('#ff9a3c').mul(halo).mul(flicker).mul(intimate.mul(0.5).add(0.45))
-      .add(color('#ffe6c0').mul(rim.pow(3)).mul(0.55))
-      .add(color('#ffe9a0').mul(glints(normalViewGeometry, 150)).mul(goldMask).mul(near).mul(0.55))
+    this.emissiveNode = color(hsl.integer(60, 99, 74)).mul(halo).mul(flicker).mul(intimate.mul(0.5).add(0.45))
+      .add(color(hsl.integer(78, 100, 92.5)).mul(rim.pow(3)).mul(0.55))
+      .add(color(hsl.integer(93, 100, 92.4)).mul(glints(normalViewGeometry, 150)).mul(goldMask).mul(near).mul(0.55))
   }
 }

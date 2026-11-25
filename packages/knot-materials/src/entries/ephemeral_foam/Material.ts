@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, mix, mx_noise_float, negateOnBackSide, positionWorld, select, time, uv, vec2, vec3, vec4} from 'three/tsl'
 
 import {viewerFrame} from '../../candidates/gpt_astra/lib/viewerFrame.ts'
@@ -84,7 +85,7 @@ export default class extends BaseKnotMaterial {
       .add(210)
       .clamp(80, 1100)
     this.envMapIntensity = 1.2
-    this.colorNode = mix(color('#d5ebe4'), color('#ffffff'), border.mul(0.65).add(backBorder.mul(0.25)))
+    this.colorNode = mix(color(hsl.integer(175, 33, 91)), color(hsl.integer(0, 0, 100)), border.mul(0.65).add(backBorder.mul(0.25)))
     this.metalness = 0
     this.roughnessNode = float(0.035)
       .add(border.mul(0.11))
@@ -103,7 +104,7 @@ export default class extends BaseKnotMaterial {
     this.transmission = 0.92
     this.transmissionNode = border.mul(-0.46).add(0.94)
     this.thicknessNode = interior.mul(0.028).add(0.006)
-    this.attenuationColor.set('#e3fff5')
+    this.attenuationColor.set(hsl.integer(172, 100, 97.3))
     this.attenuationDistance = 1.3
     this.normalNode = negateOnBackSide(foamNormal)
     this.aoNode = border.mul(-0.12).add(1)

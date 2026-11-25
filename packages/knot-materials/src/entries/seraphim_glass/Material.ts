@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, positionViewDirection, time, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeCells} from '../../candidates/gemini_argon/lib/tubeMetric.ts'
@@ -17,11 +18,11 @@ const baysAlong = 28
 const baysAround = 3
 /** Chartres-inspired liturgical stained-glass palette in linear light. */
 function cathedralGlassTint(id: Node<'float'>) {
-  const c0 = color('#0528a8') // Deep Chartres cobalt
-  const c1 = color('#c4061f') // Gold-ruby crimson
-  const c2 = color('#e88a00') // Silver-stain liturgical amber
-  const c3 = color('#047a38') // Viridian emerald
-  const c4 = color('#58088f') // Imperial amethyst
+  const c0 = color(hsl.integer(264.4, 97, 27.4)) // Deep Chartres cobalt
+  const c1 = color(hsl.integer(25, 99.3, 44)) // Gold-ruby crimson
+  const c2 = color(hsl.integer(64, 100, 67)) // Silver-stain liturgical amber
+  const c3 = color(hsl.integer(150, 99.6, 43)) // Viridian emerald
+  const c4 = color(hsl.integer(304, 96, 28)) // Imperial amethyst
   const t1 = id.smoothstep(0.12, 0.28)
   const t2 = id.smoothstep(0.34, 0.5)
   const t3 = id.smoothstep(0.56, 0.72)
@@ -84,7 +85,7 @@ export default class extends KnotMaterial {
     const bubbleCell = cellNoiseVec3(bubbleCoord.floor())
     const bubbleDist = bubbleCoord.fract().sub(bubbleCell.mul(0.5).add(0.25)).length()
     const seedBubble = bubbleDist.smoothstep(0.09, 0.04).mul(bubbleCell.z.smoothstep(0.65, 0.75)).mul(intimate)
-    const paneColor = mix(glassBaseColor.mul(reamySwirl.add(0.95)), color('#ffcf48'), filigreeMask.mul(0.65))
+    const paneColor = mix(glassBaseColor.mul(reamySwirl.add(0.95)), color(hsl.integer(88, 100, 85)), filigreeMask.mul(0.65))
 // Deep interior parallax: look through the stained-glass window into the Gothic vaulted nave
     const ray = tubeRay().mul(grid)
     const sunDir = vec3(0.42, 0.76, 0.49).normalize()
@@ -112,21 +113,21 @@ export default class extends KnotMaterial {
       const moteRnd = cellNoiseVec3(moteCoord.floor())
       const moteDist = moteCoord.fract().sub(moteRnd.mul(0.5).add(0.25)).length()
       const dustMote = moteDist.smoothstep(0.11, 0.03).mul(moteRnd.x.smoothstep(0.76, 0.85)).mul(near.mul(0.7).add(0.3))
-      return projectedGlassColor.mul(deepWindow).mul(incense.mul(0.75).add(0.45)).add(color('#ffeac2').mul(dustMote.mul(2.2))).add(color('#1c1824').mul(vaultArch)).mul(weight)
+      return projectedGlassColor.mul(deepWindow).mul(incense.mul(0.75).add(0.45)).add(color(hsl.integer(83, 100, 93.4)).mul(dustMote.mul(2.2))).add(color(hsl.integer(300, 25, 12)).mul(vaultArch)).mul(weight)
     }
     const sanctuaryVolume = sampleSanctuary(0.022, 0.5)
       .add(sampleSanctuary(0.048, 0.34))
       .add(sampleSanctuary(0.078, 0.22))
 // Warm flickering sanctuary candleglow deep in the nave core
     const flicker = time.mul(3.4).add(cellRandom.y.mul(TAU)).sin().mul(0.12).add(time.mul(7.9).add(cellRandom.z.mul(TAU)).sin().mul(0.06)).add(0.88)
-    const naveCandles = color('#ff9b3d').mul(r.smoothstep(0.42, 0.04)).mul(flicker).mul(0.28)
+    const naveCandles = color(hsl.integer(59, 100, 74)).mul(r.smoothstep(0.42, 0.04)).mul(flicker).mul(0.28)
 // Forward Mie scattering when looking toward the cathedral sunbeams
     const forwardBeam = positionViewDirection.negate().dot(animatedSun).mul(0.5).add(0.5).pow(3.2).mul(0.85).add(0.45)
 // Combine patinated lead/gilded bronze armature and stained-glass panes
 // Keeping diffuse albedo of glass near-black ensures directional light doesn't wash out the rich jewel-toned transmission
-    const leadAlbedo = mix(color('#15171e'), color('#423624'), stoneMask.mul(0.72))
+    const leadAlbedo = mix(color(hsl.integer(273, 17, 10)), color(hsl.integer(77, 32, 24)), stoneMask.mul(0.72))
     const solderJoint = bossRing.abs().min(innerRosette.abs()).min(outerWheel.abs()).smoothstep(0.028, 0.004).mul(leadMask)
-    const metalCoat = mix(leadAlbedo, color('#9c8253'), solderJoint.mul(0.65))
+    const metalCoat = mix(leadAlbedo, color(hsl.integer(82, 45, 56)), solderJoint.mul(0.65))
     const glassSurface = paneColor.mul(0.18).add(sanctuaryVolume.mul(0.14))
     this.colorNode = mix(glassSurface, metalCoat, armatureMask)
     this.metalnessNode = armatureMask.mul(0.9).add(filigreeMask.mul(0.45)).clamp()
@@ -147,12 +148,12 @@ export default class extends KnotMaterial {
 // Backlit stained-glass radiance, internal volumetric God-rays, and specular surface glints
     const glassSparkle = glints(normal, 210).mul(armatureMask.oneMinus()).mul(0.38)
     const transmittedGlow = paneColor.mul(sanctuaryVolume.mul(1.25).add(naveCandles).add(paneColor.mul(0.32))).mul(forwardBeam).mul(facing.mul(0.65).add(0.35)).mul(2.15)
-    const bubbleHighlight = color('#ffe7b8').mul(seedBubble).mul(1.1)
-    const goldRim = mix(paneColor, color('#ffb838'), 0.45).mul(grazing.pow(2.6)).mul(armatureMask.oneMinus()).mul(0.5)
+    const bubbleHighlight = color(hsl.integer(84, 100, 92.6)).mul(seedBubble).mul(1.1)
+    const goldRim = mix(paneColor, color(hsl.integer(77, 100, 80)), 0.45).mul(grazing.pow(2.6)).mul(armatureMask.oneMinus()).mul(0.5)
     this.emissiveNode = transmittedGlow
       .add(paneColor.mul(sanctuaryVolume).mul(0.85))
       .add(bubbleHighlight)
-      .add(color('#fff6e5').mul(glassSparkle))
+      .add(color(hsl.integer(83, 100, 97)).mul(glassSparkle))
       .add(goldRim)
       .mul(armatureMask.oneMinus())
   }

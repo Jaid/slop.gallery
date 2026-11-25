@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cartographers_eclipse',
   candidateId: 'minimax',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A pocket universe folded into bronze: the whole sky at the moment you stopped looking up.',
   placeholder: {
-    color: '#111827',
+    color: hsl.integer(265, 37, 11),
     shading: 'metal',
   },
 } as const satisfies KnotData

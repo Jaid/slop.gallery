@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, vec2, vec3} from 'three/tsl'
 
 import {breath} from '../../candidates/gpt_sol/lib/exhibition/facetOptics.ts'
@@ -32,14 +33,14 @@ export default class extends ReliefKnotMaterial {
     const sacs = spores.mask.mul(habitat.smoothstep(0.34, 0.7)).mul(near.mul(0.35).add(0.65)).toVar()
     const fineCoordinates = p.mul(190)
     const felt = mx_noise_float(fineCoordinates).mul(resolved(fineCoordinates)).toVar()
-    const moss = mix(color('#172420'), color('#4c4831'), habitat)
+    const moss = mix(color(hsl.integer(174, 26, 14)), color(hsl.integer(99, 30, 31)), habitat)
       .mul(felt.mul(0.1).add(0.95))
-    const ivory = mix(color('#826d48'), color('#d3c8a0'), rootCore.mul(0.65).add(habitat.mul(0.35)))
+    const ivory = mix(color(hsl.integer(81, 39, 47)), color(hsl.integer(94, 37, 80)), rootCore.mul(0.65).add(habitat.mul(0.35)))
     let tissue = mix(moss, ivory, roots.mul(0.9))
-    tissue = mix(tissue, color('#bdad82'), hyphae.mul(0.65))
-    tissue = mix(tissue, mix(color('#8b4d39'), color('#edd2a7'), spores.random.x), sacs)
+    tissue = mix(tissue, color(hsl.integer(90, 37, 71)), hyphae.mul(0.65))
+    tissue = mix(tissue, mix(color(hsl.integer(39, 53, 41)), color(hsl.integer(79, 56, 85.5)), spores.random.x), sacs)
     const pumping = p.dot(vec3(7, -4, 11)).add(breath).sin().mul(0.5).add(0.5).pow(5).toVar()
-    const sap = mix(color('#cf812c'), color('#fff0b2'), pumping)
+    const sap = mix(color(hsl.integer(63, 82, 62)), color(hsl.integer(96, 100, 94.5)), pumping)
     this.colorNode = tissue
     this.metalness = 0.04
     this.roughnessNode = mix(float(0.87).add(felt.mul(0.025)), float(0.48), roots)
@@ -52,12 +53,12 @@ export default class extends ReliefKnotMaterial {
     this.clearcoatNode = sacs.mul(0.5).add(roots.mul(0.1))
     this.clearcoatRoughnessNode = sacs.mul(-0.15).add(0.32)
     this.sheen = 0.4
-    this.sheenNode = color('#80835b').mul(roots.oneMinus()).mul(0.4)
+    this.sheenNode = color(hsl.integer(112, 34, 53)).mul(roots.oneMinus()).mul(0.4)
     this.sheenRoughness = 0.8
     this.specularIntensity = 0.55
     this.emissiveNode = sap.mul(sacs).mul(pumping.mul(1.1).add(0.08))
-      .add(color('#c68835').mul(rootCore).mul(pumping).mul(0.16))
-      .add(color('#bdbb83').mul(hyphae).mul(grazing.pow(3)).mul(intimate).mul(0.035))
+      .add(color(hsl.integer(70, 76, 62)).mul(rootCore).mul(pumping).mul(0.16))
+      .add(color(hsl.integer(106, 44, 74)).mul(hyphae).mul(grazing.pow(3)).mul(intimate).mul(0.035))
       .mul(facing.mul(0.45).add(0.55))
     this.aoNode = roots.mul(0.2).add(sacs.mul(0.07)).add(0.73).clamp()
     this.anisotropy = 0.15

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4AEfQg7Qgj1dEVQ.
 export default {
   id: 'living_kintsugi',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Ancient black lacquer cradles fractures that refuse to stay silent, mended with living gold that pulses like a beating heart.',
   placeholder: {
-    color: '#2e1215',
+    color: hsl.integer(15, 50, 12),
     shading: 'smooth',
   },
 } as const satisfies KnotData

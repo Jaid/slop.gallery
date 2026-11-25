@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tesseract_projection',
   candidateId: 'qwen_max',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'An impossible solid casts a succession of almost-familiar shadows.',
   placeholder: {
-    color: '#00ffcc',
+    color: hsl.integer(171, 100, 87),
     shading: 'ghost',
   },
 } as const satisfies KnotData

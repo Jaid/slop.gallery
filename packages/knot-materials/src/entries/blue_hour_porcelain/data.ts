@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 0CPX47Y7FuE0PTN.
 export default {
   id: 'blue_hour_porcelain',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Cobalt monsoons travel through a porcelain sky, leaving hand-painted clouds and rain in their wake.',
   placeholder: {
-    color: '#dad8c8',
+    color: hsl.integer(101, 21, 86),
     shading: 'smooth',
   },
 } as const satisfies KnotData

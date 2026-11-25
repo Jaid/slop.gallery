@@ -2,6 +2,8 @@ import type {KnotCandidateData, KnotData} from '../src/types.ts'
 
 import {describe, expect, test} from 'bun:test'
 
+import hsl from 'okhsl'
+
 import {knotAnnouncementPaths, knotModelSlug} from '../src/announcements.ts'
 import {enumerateKnotBays, formatKnotLabels, selectKnotBays} from '../src/exhibition.ts'
 import KnotCandidate, {indexKnots} from '../src/KnotCandidate.ts'
@@ -18,7 +20,7 @@ const item = (id: string, createdAt = 1_789_000_000): KnotData => ({
   createdAt,
   candidateId: 'claude_fable',
   placeholder: {
-    color: '#ffffff',
+    color: hsl.integer(0, 0, 100),
     shading: 'smooth',
   },
   flavorText: 'A quiet relic of an impossible place.',

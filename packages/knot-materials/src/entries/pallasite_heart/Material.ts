@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, positionGeometry, vec2} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -31,10 +32,10 @@ export default class extends KnotMaterial {
     const lamellaB = float(1).sub(lineB.smoothstep(0.04, 0.12)).mul(lamellaFootprint.smoothstep(0.7, 2.1).oneMinus())
     const lamellaC = float(1).sub(lineC.smoothstep(0.032, 0.1)).mul(lamellaFootprint.smoothstep(0.7, 2.1).oneMinus())
     const lamella = lamellaA.max(lamellaB).max(lamellaC).mul(crystal)
-    const iron = color('#737b7e').mul(crystalGate.mul(0.12).add(0.88))
-    const olivine = mix(color('#36552a'), color('#c58b3c'), broadWarp.add(0.5))
+    const iron = color(hsl.integer(222, 6, 51)).mul(crystalGate.mul(0.12).add(0.88))
+    const olivine = mix(color(hsl.integer(138, 64, 32)), color(hsl.integer(72, 73, 63)), broadWarp.add(0.5))
     const crystalColor = olivine.mul(lamella.mul(-0.24).add(1)).mul(crystalShape.mul(0.16).add(0.84))
-    const oxide = color('#5c3424').mul(seam.mul(0.5).add(broadWarp.mul(0.22).add(0.04)))
+    const oxide = color(hsl.integer(43, 50, 28)).mul(seam.mul(0.5).add(broadWarp.mul(0.22).add(0.04)))
     let body = mix(iron, crystalColor, crystal)
     body = mix(body, oxide, seam.mul(0.38))
     this.colorNode = body
@@ -48,8 +49,8 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(relief.mul(3), 0.55)
     this.clearcoatNormalNode = this.normalNode
     this.aoNode = float(1).sub(seam.mul(0.48)).sub(crystal.mul(0.08))
-    this.emissiveNode = color('#e6f7ff').mul(lamella).mul(near.mul(0.32).add(0.1)).add(color('#d59b55').mul(crystal).mul(0.045))
-      .add(color('#d59b55').mul(crystal).mul(grazing.pow(2)).mul(intimate.mul(0.045)))
-      .add(color('#9ec8ce').mul(seam).mul(0.012))
+    this.emissiveNode = color(hsl.integer(228, 100, 96)).mul(lamella).mul(near.mul(0.32).add(0.1)).add(color(hsl.integer(70, 66, 69)).mul(crystal).mul(0.045))
+      .add(color(hsl.integer(70, 66, 69)).mul(crystal).mul(grazing.pow(2)).mul(intimate.mul(0.045)))
+      .add(color(hsl.integer(207, 32, 77)).mul(seam).mul(0.012))
   }
 }

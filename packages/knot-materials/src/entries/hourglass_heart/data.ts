@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'hourglass_heart',
   candidateId: 'glm',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A patient pulse turns falling moments into something almost solid.',
   placeholder: {
-    color: '#ffb45e',
+    color: hsl.integer(68, 100, 79.7),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7EtWKdJKgEioEdL; fixture: knot-material-shaders.
 export default {
   id: 'abyssal_chorus',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Eight rows of tiny oars row light through the dark water. Come too close and the whole creature startles into a cold blue song.',
   placeholder: {
-    color: '#0a1a3a',
+    color: hsl.integer(262, 71, 12),
     shading: 'glass',
   },
 } as const satisfies KnotData

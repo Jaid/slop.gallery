@@ -6,6 +6,7 @@ import useDisposable from 'disposable-lifetime/react'
 import {knotLayout} from 'knot-materials/exhibition.ts'
 import {candidateSignSuspensionCenter, candidateSignSuspensionHeight, knotCandidateSign} from 'knot-materials/knotCandidateSign.ts'
 import KnotCandidateSignGeometry from 'knot-materials/KnotCandidateSignGeometry.ts'
+import hsl from 'okhsl'
 import {useMemo, useRef} from 'react'
 import {MeshBasicNodeMaterial, MeshStandardNodeMaterial} from 'three/webgpu'
 import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
@@ -24,10 +25,10 @@ export default function KnotCandidateSign({bay}: {bay: KnotBay}) {
   const isHeavy = useGraphicsMode()
   const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = useGraphicsModeValue(getGraphicsProfile)
   const metal = useDisposable(useMemo(() => (isHeavy ? new MeshStandardNodeMaterial({
-    color: '#ac9270',
+    color: hsl.integer(74, 33, 62),
     metalness: 0.85,
     roughness: 0.3,
-  }) : new MeshBasicNodeMaterial({color: '#ac9270'})), [isHeavy]))
+  }) : new MeshBasicNodeMaterial({color: hsl.integer(74, 33, 62)})), [isHeavy]))
   const geometry = useDisposable(useMemo(() => new KnotCandidateSignGeometry, []))
   const {candidate} = bay
   const texture = useLoadingElementTexture(`model-sign-texture:${candidate.id}`, useMemo(() => ({
@@ -40,7 +41,7 @@ export default function KnotCandidateSign({bay}: {bay: KnotBay}) {
   }), [candidate, mipmaps, resolution]))
   const face = useDisposable(useMemo(() => new MeshBasicNodeMaterial({
     map: texture,
-    color: texture ? '#ffffff' : candidateSignBackground,
+    color: texture ? hsl.integer(0, 0, 100) : candidateSignBackground,
     toneMapped: false,
   }), [texture]))
   const [width, height, depth] = knotCandidateSign.size

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, Fn, max, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, positionGeometry, tangentLocal, time, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -144,9 +145,9 @@ export default class extends KnotMaterial {
     const frost = presence.mul(crust.mul(0.72).add(grain.mul(0.28).mul(near))).add(stars.mul(0.85)).add(solid.mul(0.45)).clamp(0, 1)
     const ironNoise = mx_fractal_noise_float(p.mul(11).add(vec3(2.2, 7.1, 1.4)), 3, 2.05, 0.5)
     const pit = ironNoise.mul(0.5).add(0.5)
-    const cold = color('#eaf3fb')
-    const ice = mix(color('#a8c2d6'), cold, stars.mul(0.6).add(solid.mul(0.4)).clamp(0, 1))
-    const iron = mix(color('#12171d'), color('#3d4753'), pit.pow(1.5))
+    const cold = color(hsl.integer(245, 58, 95))
+    const ice = mix(color(hsl.integer(241, 30, 77)), cold, stars.mul(0.6).add(solid.mul(0.4)).clamp(0, 1))
+    const iron = mix(color(hsl.integer(253, 19, 10)), color(hsl.integer(253, 17, 30)), pit.pow(1.5))
     this.colorNode = mix(iron, ice, frost)
     this.metalnessNode = frost.oneMinus().mul(0.72).add(0.04)
     this.roughnessNode = float(0.5).sub(solid.mul(0.42)).sub(frost.mul(0.1)).add(ironNoise.mul(0.05)).sub(near.mul(0.04)).clamp(0.035, 0.75)
@@ -154,7 +155,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = mix(float(0.34), float(0.05), solid)
     this.ior = 1.31
     this.sheenNode = stars.mul(0.4).mul(near)
-    this.sheenColor.set('#cfe4ff')
+    this.sheenColor.set(hsl.integer(255, 100, 90))
     this.sheenRoughness = 0.35
 // The crust that carries the crystals is smooth and derivative-free, so the silhouette can be
 // displaced in the vertex stage; the crystals themselves live entirely in the surface shading.
@@ -168,10 +169,10 @@ export default class extends KnotMaterial {
     const sparkFoot = p.mul(260).fwidth().length()
     const sparkBody = sparkField.smoothstep(0.7, 0.97).mul(sparkFoot.smoothstep(0.3, 1).oneMinus())
     const glint = glints(bump, 110).mul(stars).mul(solid.mul(0.6).add(0.4)).mul(sparkBody.add(0.2))
-    this.emissiveNode = color('#bfe2ff').mul(glint.mul(0.4))
-      .add(color('#ffffff').mul(glint.pow(4)).mul(1.2))
-      .add(color('#5f92c8').mul(frost.pow(2.5).mul(0.14)))
-      .add(color('#dff0ff').mul(rim.mul(stars.mul(0.8).add(0.2)).mul(0.1)))
-      .add(color('#33517a').mul(grazing.pow(3).mul(0.05)))
+    this.emissiveNode = color(hsl.integer(243, 100, 88)).mul(glint.mul(0.4))
+      .add(color(hsl.integer(0, 0, 100)).mul(glint.pow(4)).mul(1.2))
+      .add(color(hsl.integer(251, 54, 59)).mul(frost.pow(2.5).mul(0.14)))
+      .add(color(hsl.integer(245, 100, 94)).mul(rim.mul(stars.mul(0.8).add(0.2)).mul(0.1)))
+      .add(color(hsl.integer(257, 49, 34)).mul(grazing.pow(3).mul(0.05)))
   }
 }

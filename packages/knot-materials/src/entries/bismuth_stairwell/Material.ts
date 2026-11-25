@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, normalViewGeometry, time, vec2} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/claude_sonnet/lib/bumpNormal.ts'
@@ -41,7 +42,7 @@ export default class extends KnotMaterial {
     const filmPhase = level.mul(0.115).add(grain.id.z.mul(0.9)).add(sway).add(q.fract().mul(0.05)).add(time.mul(0.018))
     const oxide = spectralColor(filmPhase)
     const oxideBoost = oxide.mul(oxide).mul(1.5).add(oxide.mul(0.1))
-    const silver = color('#5d5865')
+    const silver = color(hsl.integer(303, 12, 39))
     const tint = mix(silver, oxideBoost, wall.oneMinus().mul(0.78).mul(seam.mul(0.4).add(0.6)))
     this.colorNode = tint.mul(wall.mul(0.6).oneMinus()).mul(seam.mul(0.55).add(0.45))
     this.metalness = 1
@@ -56,6 +57,6 @@ export default class extends KnotMaterial {
     const climb = level.mul(0.55).sub(time.mul(grain.id.x.mul(0.5).add(0.6))).add(grain.id.y.mul(6.28)).sin().mul(0.5).add(0.5).pow(6).mul(wall.oneMinus()).mul(seam)
     this.emissiveNode = oxideBoost.mul(climb.mul(0.09).add(0.02))
       .add(oxideBoost.mul(wall.oneMinus()).mul(grazing.pow(2).mul(0.16).add(intimate.mul(0.035)).add(facing.mul(0.02)))
-        .add(color('#fff2ff').mul(glitter)))
+        .add(color(hsl.integer(326, 100, 97)).mul(glitter)))
   }
 }

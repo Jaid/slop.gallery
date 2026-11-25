@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'solar_flare',
   candidateId: 'deepseek',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A bright lash of stellar fire curls back toward the place that made it.',
   placeholder: {
-    color: '#ffd166',
+    color: hsl.integer(86, 100, 86),
     shading: 'liquid',
   },
 } as const satisfies KnotData

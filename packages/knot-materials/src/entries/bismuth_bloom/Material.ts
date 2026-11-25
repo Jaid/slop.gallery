@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, modelWorldMatrixInverse, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec2, vec4} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -53,7 +54,7 @@ export default class extends BaseKnotMaterial {
     // ---- substrate ----
     // The metal beneath the oxide film is dark bismuth-lead.
     const substrateNoise = mx_noise_float(p.mul(11)).mul(0.5).add(0.5)
-    const substrateColor = color('#1a1410').mul(substrateNoise.mul(0.5).add(0.5))
+    const substrateColor = color(hsl.integer(56, 18, 10)).mul(substrateNoise.mul(0.5).add(0.5))
     // ---- per-terrace tints ----
     // Each terrace gets a distinct iridescence thickness: warm terraces
     // (low and broad) have the thinnest film and so the highest order
@@ -76,12 +77,12 @@ export default class extends BaseKnotMaterial {
     this.normalNode = proceduralNormal(stepRelief.mul(180).add(substrateNoise.mul(0.0005)), 0.7)
     // ---- edge glow ----
     const stepRim = ringCentreDist.smoothstep(0.5, 0.45)
-    const rimGlow = mix(color('#ffaa55'), color('#9be8ff'), terraceT).mul(stepRim).mul(rim).mul(0.9)
-    const facingGlow = mix(color('#ff5c8a'), color('#a78bff'), time.mul(0.2).add(terraceT).fract())
+    const rimGlow = mix(color(hsl.integer(63, 100, 77.4)), color(hsl.integer(219, 100, 87)), terraceT).mul(stepRim).mul(rim).mul(0.9)
+    const facingGlow = mix(color(hsl.integer(7, 99, 65)), color(hsl.integer(293, 100, 66.5)), time.mul(0.2).add(terraceT).fract())
       .mul(facing.pow(2.5))
       .mul(near)
       .mul(0.25)
-    const coreGlow = mix(color('#ffeec7'), color('#7be0ff'), terraceT).mul(grazing.pow(4)).mul(intimate).mul(0.4)
+    const coreGlow = mix(color(hsl.integer(87, 100, 94.5)), color(hsl.integer(221, 99, 83)), terraceT).mul(grazing.pow(4)).mul(intimate).mul(0.4)
     this.emissiveNode = rimGlow.add(facingGlow).add(coreGlow)
   }
 }

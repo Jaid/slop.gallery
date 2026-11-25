@@ -3,6 +3,7 @@ import type {Texture} from 'three/webgpu'
 import {createRoot as createFiberRoot, extend, unmountComponentAtNode} from '@react-three/fiber'
 import renderCanvasTexture from 'canvas-textures/three'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {StrictMode, useEffect, useMemo} from 'react'
 import {createRoot} from 'react-dom/client'
 import {Color, Mesh, MeshBasicNodeMaterial, OrthographicCamera, PlaneGeometry, RenderTarget, SRGBColorSpace, WebGPURenderer} from 'three/webgpu'
@@ -85,7 +86,7 @@ export default async function verifyCanvasTextures() {
     }
     const store = root.render(<Plane texture={null} />)
     const scene = store.getState().scene
-    scene.background = new Color('#0000ff')
+    scene.background = new Color(hsl.integer(264.06, 100, 36.6))
     await until(() => scene.children.some(child => child instanceof Mesh))
     renderer.setRenderTarget(target)
     renderer.render(scene, camera)

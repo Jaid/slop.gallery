@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_noise_float, normalViewGeometry, time, uv, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -29,9 +30,9 @@ export default class extends BaseKnotMaterial {
     const braid = wakeA.mul(0.9).add(wakeB.mul(0.75)).add(wakeC.mul(0.55)).clamp()
     const scintilla = cellularPoints(p.mul(48).add(vec3(0, time.mul(2.4), 0)), 0.03, 0.18, 0.65).mul(intimate)
     const doppler = magnetic.dot(vec3(p.x, 0, p.z).normalize()).mul(0.5).add(0.5)
-    const plasma = mix(color('#3a6cff'), mix(color('#79fff2'), color('#f0b8ff'), doppler), braid)
+    const plasma = mix(color(hsl.integer(265.5, 100, 52)), mix(color(hsl.integer(187, 100, 90.8)), color(hsl.integer(319, 100, 83)), doppler), braid)
     const corona = grazing.pow(2.2).mul(near.mul(0.4).add(0.5))
-    this.colorNode = color('#02040a')
+    this.colorNode = color(hsl.integer(262, 45, 3.3))
     this.metalness = 0.15
     this.roughness = 0.22
     this.clearcoat = 0.7
@@ -44,9 +45,9 @@ export default class extends BaseKnotMaterial {
       .mul(braid)
       .mul(1.65)
       .mul(near.mul(0.65).add(0.5))
-      .add(color('#e8ffff').mul(scintilla).mul(2.4))
-      .add(mix(color('#1b4dff'), color('#9bfff4'), doppler).mul(corona).mul(0.28))
-      .add(color('#6a2aff').mul(rim).mul(0.12))
-      .add(color('#ffffff').mul(wakeC).mul(glints(normalViewGeometry, 70)).mul(0.35))
+      .add(color(hsl.integer(197, 100, 98)).mul(scintilla).mul(2.4))
+      .add(mix(color(hsl.integer(265, 100, 45)), color(hsl.integer(187, 100, 92.5)), doppler).mul(corona).mul(0.28))
+      .add(color(hsl.integer(285, 100, 45)).mul(rim).mul(0.12))
+      .add(color(hsl.integer(0, 0, 100)).mul(wakeC).mul(glints(normalViewGeometry, 70)).mul(0.35))
   }
 }

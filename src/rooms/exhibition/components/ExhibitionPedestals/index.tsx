@@ -3,6 +3,7 @@ import type {Material} from 'three/webgpu'
 
 import {RigidBody} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -16,11 +17,11 @@ type PedestalMaterials = Record<'cap' | 'reveal' | 'stone', Material>
 /** The Exhibition’s six half-round pedestals against their displays’ back walls, each with the lower sidecar for a nameplate merged into its north flank, waiting for their exhibits. */
 export default function ExhibitionPedestals({material}: {material: Material}) {
   const reveal = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#1f2628',
+    color: hsl.integer(217, 12, 16),
     roughness: 0.85,
   }), []))
   const cap = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#788586',
+    color: hsl.integer(202, 9, 54),
     metalness: 0.65,
     roughness: 0.35,
   }), []))

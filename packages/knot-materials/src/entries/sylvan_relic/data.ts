@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: Cp16WUQoUlMTqRD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sylvan_relic',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.03,
   flavorText: 'Stone forgot the temple it was, and the forest, patient as weather, grew a softer monument over it.',
   placeholder: {
-    color: '#63714d',
+    color: hsl.integer(126, 35, 45),
     shading: 'stone',
   },
 } as const satisfies KnotData

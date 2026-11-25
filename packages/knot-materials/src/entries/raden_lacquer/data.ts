@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 3gQGAbAm59HYY8k; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'raden_lacquer',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Black urushi holds a field of abalone waves, each scallop cut from shell that drifts from jade to rose as you walk past the lacquer.',
   placeholder: {
-    color: '#0a0c14',
+    color: hsl.integer(273, 26, 6),
     shading: 'glass',
   },
 } as const satisfies KnotData

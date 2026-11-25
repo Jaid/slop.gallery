@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 42qNahiwSEZ3v90; fixture: knot-material-shaders; result: success.
 export default {
   id: 'chroma_cipher',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A secret engraved in light, legible only while moving. Every departure opens a different spectrum.',
   placeholder: {
-    color: '#152b38',
+    color: hsl.integer(236, 46, 17),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 0CPX47Y7FuE0PTN.
 export default {
   id: 'parallax_palace',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand optical shutters conceal another geometry. Walk around it and the architecture turns to shifting stained light.',
   placeholder: {
-    color: '#342858',
+    color: hsl.integer(293, 55, 22),
     shading: 'metal',
   },
 } as const satisfies KnotData

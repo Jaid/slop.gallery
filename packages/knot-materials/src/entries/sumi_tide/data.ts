@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'sumi_tide',
   candidateId: 'claude_opus',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'The brush has vanished, yet its final gesture continues to wander through the paper.',
   displacement: 0.003,
   placeholder: {
-    color: '#d0c8b8',
+    color: hsl.integer(85, 18, 81),
     shading: 'smooth',
   },
 } as const satisfies KnotData

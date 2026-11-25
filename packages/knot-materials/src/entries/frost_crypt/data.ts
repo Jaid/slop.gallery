@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'frost_crypt',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Pale crystals seal a chamber whose inhabitants are only echoes.',
   placeholder: {
-    color: '#eaf6ff',
+    color: hsl.integer(240, 100, 96),
     shading: 'glass',
   },
 } as const satisfies KnotData

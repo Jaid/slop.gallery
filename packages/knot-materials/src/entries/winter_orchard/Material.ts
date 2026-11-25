@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_vec3, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {angle, coverage, rotatePoint, segment} from '../../candidates/gpt_astra/lib/exhibition/fields.ts'
@@ -48,8 +49,8 @@ export default class extends KnotMaterial {
     frost = frost.mul(weather.smoothstep(-0.22, 0.17))
     const frozen = rime.mul(0.83).max(frost)
     const facets = mx_noise_float(p.mul(160)).mul(0.5).add(0.5)
-    const core = mix(color('#04212e'), color('#176273'), facing.mul(0.7).add(trapped.mul(0.18)))
-    const crystalColor = mix(color('#7ab8c3'), color('#e9fbef'), frost)
+    const core = mix(color(hsl.integer(231, 79, 13)), color(hsl.integer(217, 81, 38)), facing.mul(0.7).add(trapped.mul(0.18)))
+    const crystalColor = mix(color(hsl.integer(210, 43, 70)), color(hsl.integer(157, 65, 96.7)), frost)
     this.colorNode = mix(core, crystalColor, frozen.mul(0.87).add(needles.mul(0.1)).clamp())
     this.metalness = 0.12
     this.roughnessNode = float(0.12).add(frozen.mul(0.67))
@@ -59,8 +60,8 @@ export default class extends KnotMaterial {
     this.ior = 1.31
     this.normalNode = proceduralNormal(trapped.mul(0.001).add(frost.mul(0.0014)).add(facets.mul(frozen).mul(0.0006)), 0.7)
     const scintillation = time.mul(0.35).add(p.y.mul(15)).sin().mul(0.08).add(0.92)
-    this.emissiveNode = color('#78dbe1').mul(needles).mul(0.2).mul(scintillation)
-      .add(color('#dcfff2').mul(frost).mul(grazing.pow(2)).mul(intimate.mul(0.2).add(0.12)))
-      .add(color('#2094a1').mul(facing).mul(0.09))
+    this.emissiveNode = color(hsl.integer(201, 67, 81)).mul(needles).mul(0.2).mul(scintillation)
+      .add(color(hsl.integer(171, 100, 96.7)).mul(frost).mul(grazing.pow(2)).mul(intimate.mul(0.2).add(0.12)))
+      .add(color(hsl.integer(207, 86, 55)).mul(facing).mul(0.09))
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_noise_vec3, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -29,13 +30,13 @@ export default class extends KnotMaterial {
     const hairline = opticalLine(mx_noise_float(p.mul(19).add(warp.mul(0.4))), 0.01)
     const branches = opticalLine(mx_noise_float(deep.mul(24)), 0.02).mul(fault.abs().smoothstep(0.025, 0.2).oneMinus())
     const charge = inner.dot(vec3(0.4, 1, 0.25)).mul(6.5).sub(time.mul(0.9)).sin().mul(0.16).add(0.84)
-    const porcelain = mix(color('#e8dcc8'), color('#8f8680'), noise.mul(0.55))
-    this.colorNode = mix(porcelain, color('#c9a24a'), seams.mul(0.85).add(hairline.mul(0.35)))
+    const porcelain = mix(color(hsl.integer(81, 34, 88)), color(hsl.integer(56, 7, 57)), noise.mul(0.55))
+    this.colorNode = mix(porcelain, color(hsl.integer(85, 70, 69)), seams.mul(0.85).add(hairline.mul(0.35)))
     this.metalnessNode = seams.mul(0.92)
     this.roughnessNode = seams.oneMinus().mul(0.16).add(0.045)
     this.normalNode = proceduralNormal(fault.abs().mul(-1).add(mx_noise_float(p.mul(30)).mul(0.15)), 0.0028)
     this.clearcoat = 0.82
     this.clearcoatRoughness = 0.05
-    this.emissiveNode = mix(color('#ffb000'), color('#fff4c8'), facing).mul(seams.mul(1.35).add(hairline.mul(0.45)).add(branches.mul(near).mul(0.65))).mul(charge).add(color('#ffe7a0').mul(intimate).mul(seams).mul(0.55)).add(color('#8a5a12').mul(rim).mul(0.08))
+    this.emissiveNode = mix(color(hsl.integer(76, 100, 78)), color(hsl.integer(96, 100, 96)), facing).mul(seams.mul(1.35).add(hairline.mul(0.45)).add(branches.mul(near).mul(0.65))).mul(charge).add(color(hsl.integer(91, 100, 92)).mul(intimate).mul(seams).mul(0.55)).add(color(hsl.integer(71, 86, 43)).mul(rim).mul(0.08))
   }
 }

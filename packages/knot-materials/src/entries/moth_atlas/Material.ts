@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {segment, stroke, tile} from '../../candidates/gpt_sol/lib/ornament.ts'
@@ -31,7 +32,7 @@ export default class extends KnotMaterial {
     const pattern = x.mul(27).add(q.y.mul(14)).add(time.mul(0.16)).sin().mul(0.5).add(0.5)
     const silk = mx_noise_float(p.mul(23)).mul(0.5).add(0.5)
     const eyeShift = view.x.mul(1.4).add(time.mul(0.25)).sin().mul(0.5).add(0.5)
-    this.colorNode = mix(mix(mix(mix(color('#122326'), mix(color('#286e67'), color('#e27449'), pattern.mul(0.52).add(q.y.mul(0.45).add(0.24)).clamp()), wing), color('#e7c56b'), rim.mul(0.62).add(iris).add(veins.mul(0.21)).clamp()), color('#15162f'), ocellus.mul(0.78).add(body).clamp()), color('#c4eee0'), pupil)
+    this.colorNode = mix(mix(mix(mix(color(hsl.integer(210, 36, 14)), mix(color(hsl.integer(186, 69, 41)), color(hsl.integer(41, 77, 62.6)), pattern.mul(0.52).add(q.y.mul(0.45).add(0.24)).clamp()), wing), color(hsl.integer(89, 72, 81)), rim.mul(0.62).add(iris).add(veins.mul(0.21)).clamp()), color(hsl.integer(280, 49, 11)), ocellus.mul(0.78).add(body).clamp()), color(hsl.integer(173, 50, 90)), pupil)
     this.metalnessNode = iris.mul(0.9).add(rim.mul(0.48)).add(0.12)
     this.roughnessNode = float(0.71).add(silk.mul(0.08)).sub(iris.mul(0.36))
     this.sheenNode = float(0.3)
@@ -39,6 +40,6 @@ export default class extends KnotMaterial {
     this.iridescenceNode = iris.mul(0.85).add(grazing.mul(0.33))
     this.iridescenceThicknessNode = float(130).add(eyeShift.mul(230))
     this.normalNode = proceduralNormal(wing.mul(0.24).add(veins.mul(0.3)).add(silk.mul(0.13)), 0.0014)
-    this.emissiveNode = color('#66d9c0').mul(pupil).mul(eyeShift.mul(0.4).add(0.48)).add(color('#fbd39b').mul(rim.add(antennae)).mul(0.14)).add(color('#f3a384').mul(iris).mul(near).mul(0.17))
+    this.emissiveNode = color(hsl.integer(177, 71, 78)).mul(pupil).mul(eyeShift.mul(0.4).add(0.48)).add(color(hsl.integer(76, 81, 87)).mul(rim.add(antennae)).mul(0.14)).add(color(hsl.integer(42, 75, 75)).mul(iris).mul(near).mul(0.17))
   }
 }

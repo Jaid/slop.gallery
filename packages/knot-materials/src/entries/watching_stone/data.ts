@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7EtWKdJKgEioEdL; fixture: knot-material-shaders.
 export default {
   id: 'watching_stone',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Gold silk sleeps in the quartz until someone passes. Then a slow bright eye opens along the stone and follows them out of the room.',
   placeholder: {
-    color: '#94520c',
+    color: hsl.integer(59, 90, 43),
     shading: 'stone',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mx_fractal_noise_float, mx_noise_float, normalView, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -36,7 +37,7 @@ export default class extends KnotMaterial {
       .mul(lamination.mul(0.16).add(0.86))
       .mul(crossBed.mul(0.12).add(0.92))
       .mul(grit.mul(0.1).add(0.95))
-      .add(color('#ffd9a8').mul(polish).mul(0.06))
+      .add(color(hsl.integer(74, 100, 89)).mul(polish).mul(0.06))
     this.metalness = 0
     this.roughnessNode = float(0.74).sub(polish.mul(0.36)).add(grit.mul(0.12)).sub(crossBed.mul(0.06)).clamp(0.12, 0.9)
     this.ior = 1.54
@@ -44,9 +45,9 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = float(0.1).add(grit.mul(0.2))
     this.normalNode = proceduralNormal(lamination.mul(0.0009).add(crossBed.mul(0.0006)).add(grit.mul(0.00012)), 0.55)
     const glint = glints(normalView, 120).mul(polish).mul(near.mul(0.5).add(0.5))
-    this.emissiveNode = color('#ffd2a0').mul(glint).mul(0.35)
-      .add(color('#ff9a5a').mul(bed.smoothstep(0.94, 1)).mul(grazing.pow(2.4)).mul(0.12))
-      .add(color('#3a1408').mul(bed.smoothstep(0.06, 0)).mul(facing.oneMinus()).mul(0.1))
-      .add(color('#ffbe86').mul(intimate.mul(0.012)))
+    this.emissiveNode = color(hsl.integer(69, 100, 87.2)).mul(glint).mul(0.35)
+      .add(color(hsl.integer(51, 99, 74)).mul(bed.smoothstep(0.94, 1)).mul(grazing.pow(2.4)).mul(0.12))
+      .add(color(hsl.integer(38, 74, 15)).mul(bed.smoothstep(0.06, 0)).mul(facing.oneMinus()).mul(0.1))
+      .add(color(hsl.integer(62, 100, 82.5)).mul(intimate.mul(0.012)))
   }
 }

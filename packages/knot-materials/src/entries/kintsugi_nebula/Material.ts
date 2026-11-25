@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, normalLocal, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -34,8 +35,8 @@ export default class extends KnotMaterial {
     const nebula = mx_fractal_noise_float(p.mul(2.5).add(vec3(0, time.mul(0.018), 0)), 4, 2.1, 0.56).mul(0.5).add(0.5)
     const starField = nebula.mul(nebula).mul(nebula)
     const angle = view.dot(vec3(-0.52, 0.18, 0.83).normalize()).mul(0.5).add(0.5)
-    const lacquer = mix(color('#06070e'), color('#15132d'), nebula.mul(0.5))
-    const gold = mix(color('#8a4d12'), color('#ffda78'), angle).mul(field.main.mul(0.5).add(0.5))
+    const lacquer = mix(color(hsl.integer(276, 29, 5)), color(hsl.integer(285, 52, 10)), nebula.mul(0.5))
+    const gold = mix(color(hsl.integer(58, 83, 40)), color(hsl.integer(89, 100, 88.3)), angle).mul(field.main.mul(0.5).add(0.5))
     const height = field.main.mul(-0.022).add(field.hair.mul(0.008)).add(field.broadGlow.mul(0.004))
     this.positionNode = p.add(normalLocal.mul(height.mul(near.mul(0.5).add(0.5)).mul(0.0014)))
     this.colorNode = mix(lacquer, gold, field.main.mul(0.88).add(field.hair.mul(0.2)))
@@ -47,7 +48,7 @@ export default class extends KnotMaterial {
     this.iridescenceNode = nebula.mul(0.2).add(field.broadGlow.mul(0.24))
     this.iridescenceThicknessNode = nebula.mul(240).add(100)
     const flash = glints(normalViewGeometry, 130).mul(field.hair).mul(near)
-    this.emissiveNode = color('#ffd98a').mul(field.main.mul(grazing).mul(0.65).add(flash.mul(0.4))).add(color('#5964ff').mul(starField.mul(grazing).mul(intimate).mul(0.22)))
+    this.emissiveNode = color(hsl.integer(85, 100, 88.5)).mul(field.main.mul(grazing).mul(0.65).add(flash.mul(0.4))).add(color(hsl.integer(274, 100, 52)).mul(starField.mul(grazing).mul(intimate).mul(0.22)))
     this.aoNode = float(0.74).add(field.main.mul(0.26))
   }
 }

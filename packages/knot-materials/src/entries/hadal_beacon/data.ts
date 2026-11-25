@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: MgSdUInR50wESrr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'hadal_beacon',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.006,
   flavorText: 'Below the last sunlight, a patient animal wears its stars inside translucent skin, and each light answers the next in a slow, travelling pulse.',
   placeholder: {
-    color: '#02233b',
+    color: hsl.integer(245, 88, 14),
     shading: 'glass',
   },
 } as const satisfies KnotData

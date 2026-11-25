@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, uv, vec2, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -27,14 +28,14 @@ export default class extends KnotMaterial {
     const warpGlint = warp.pow(14).mul(resolved)
     const weftGlint = weft.pow(14).mul(resolved)
     const direction = view.dot(vec3(0.58, 0.37, -0.73)).mul(0.5).add(0.5)
-    const indigo = mix(color('#07091b'), color('#253a86'), direction)
-    const silver = mix(color('#64728f'), color('#e7f4ff'), facing.mul(0.48).add(warpGlint.mul(0.32)))
+    const indigo = mix(color(hsl.integer(275, 55, 6)), color(hsl.integer(268, 77, 28)), direction)
+    const silver = mix(color(hsl.integer(265, 25, 48)), color(hsl.integer(243, 100, 95.4)), facing.mul(0.48).add(warpGlint.mul(0.32)))
     const weaveColor = mix(indigo, silver, threads.mul(0.7))
     const height = crossing.mul(0.1).add(warp.mul(weft).mul(0.03)).add(filament.mul(resolved).mul(0.02))
     const satinNormal = proceduralNormal(height, 0.0028)
     const broadGlint = glints(satinNormal, 20).mul(near).mul(0.1)
     const fiberGlint = glints(satinNormal, 84).mul(warpGlint.add(weftGlint)).mul(near).mul(0.26)
-    this.colorNode = weaveColor.add(color('#d8f4ff').mul(fiberGlint)).add(color('#7868dc').mul(broadGlint.mul(grazing)))
+    this.colorNode = weaveColor.add(color(hsl.integer(224, 100, 94)).mul(fiberGlint)).add(color(hsl.integer(286, 73, 52)).mul(broadGlint.mul(grazing)))
     this.metalnessNode = float(0.34).add(warpGlint.mul(0.32)).add(weftGlint.mul(0.24))
     this.roughnessNode = float(0.32).sub(filament.mul(0.1)).add(grazing.mul(0.035)).clamp(0.14, 0.52)
     this.anisotropy = 0.72
@@ -42,9 +43,9 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.36
     this.clearcoatRoughness = 0.14
     this.sheen = 0.58
-    this.sheenColor.set('#6879d8')
+    this.sheenColor.set(hsl.integer(274, 69, 54))
     this.sheenRoughness = 0.36
     this.normalNode = satinNormal
-    this.emissiveNode = color('#b9dcff').mul(fiberGlint.mul(0.1)).add(color('#8b76ff').mul(broadGlint.mul(intimate).mul(0.065)))
+    this.emissiveNode = color(hsl.integer(249, 100, 86)).mul(fiberGlint.mul(0.1)).add(color(hsl.integer(287, 100, 59.6)).mul(broadGlint.mul(intimate).mul(0.065)))
   }
 }

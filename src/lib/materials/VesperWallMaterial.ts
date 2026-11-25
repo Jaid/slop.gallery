@@ -1,6 +1,7 @@
 import type {Node} from 'three/webgpu'
 
 import StudioEnvironment from 'knot-materials/StudioEnvironment.ts'
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_noise_float, normalWorldGeometry, positionWorld, select, sqrt, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -30,10 +31,10 @@ export const vesperFans = {
 }
 
 const palette = {
-  deep: '#40604f',
-  light: '#5e8474',
-  glaze: '#e2c78e',
-  glazeShadow: '#a98b52',
+  deep: hsl.integer(161, 35, 37),
+  light: hsl.integer(167, 31, 51),
+  glaze: hsl.integer(85, 54, 81),
+  glazeShadow: hsl.integer(83, 52, 60),
 }
 
 /**

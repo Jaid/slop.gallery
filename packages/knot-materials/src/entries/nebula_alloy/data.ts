@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nebula_alloy',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A foundry beyond the stars has folded colored dust into this metal.',
   placeholder: {
-    color: '#1c1e22',
+    color: hsl.integer(264, 9, 13),
     shading: 'metal',
   },
 } as const satisfies KnotData

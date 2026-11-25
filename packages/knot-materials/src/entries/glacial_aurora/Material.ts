@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {ridge} from '../../candidates/claude_fable/lib/ridge.ts'
@@ -31,7 +32,7 @@ export default class extends BaseKnotMaterial {
       const curtain = curtainNoise.abs().smoothstep(0.02, 0.35).oneMinus()
       const rays = q.x.mul(28).add(q.z.mul(17)).add(mx_noise_float(q.mul(3).add(i)).mul(6)).add(time.mul(0.4)).sin().mul(0.5).add(0.5).pow(3)
       const altitude = q.y.mul(2.2).add(0.5).add(mx_noise_float(q.mul(1.5)).mul(0.3))
-      const tint = mix(color('#2dff9a'), color('#c05bff'), altitude.clamp())
+      const tint = mix(color(hsl.integer(155.3, 100, 86.3)), color(hsl.integer(310, 99, 61)), altitude.clamp())
       aurora = aurora.add(tint.mul(curtain).mul(rays.mul(0.6).add(0.4)).mul(1 - i * 0.18))
     }
     const bq = p.sub(view.mul(0.045)).mul(64)
@@ -39,12 +40,12 @@ export default class extends BaseKnotMaterial {
     const bdist = bq.fract().sub(brnd.mul(0.6).add(0.2)).length()
     const bfoot = bq.fwidth().length().max(0.001)
     const bubbles = bdist.smoothstep(0.05, bfoot.mul(0.8).add(0.09)).oneMinus().mul(brnd.z.smoothstep(0.82, 0.86)).mul(bfoot.smoothstep(0.3, 1.1).oneMinus())
-    this.colorNode = mix(color('#0f2733'), color('#e9f6ff'), frost)
+    this.colorNode = mix(color(hsl.integer(232, 54, 16)), color(hsl.integer(238, 100, 96)), frost)
     this.transmissionNode = frost.mul(-0.85).add(0.9).clamp()
     this.thickness = 0.5
     this.ior = 1.31
     this.dispersion = 0.1
-    this.attenuationColor.set('#6fc3de')
+    this.attenuationColor.set(hsl.integer(221, 62, 74))
     this.attenuationDistance = 0.8
     this.roughnessNode = float(0.03).mix(0.6, frost).sub(meltLine.mul(0.03)).clamp()
     this.metalness = 0
@@ -54,9 +55,9 @@ export default class extends BaseKnotMaterial {
     const frostGlint = glints(normalViewGeometry.add(mx_noise_vec3(p.mul(80)).mul(0.25)).normalize(), 80).mul(frost).mul(dendrite.mul(0.5).add(0.5))
     const auroraVisible = aurora.mul(frost.mul(0.75).oneMinus()).mul(near.mul(0.5).add(0.5))
     this.emissiveNode = auroraVisible.mul(0.9)
-      .add(color('#e9fbff').mul(frostGlint).mul(0.35))
-      .add(color('#8ee6ff').mul(bubbles).mul(near).mul(0.5))
-      .add(color('#3ac9ff').mul(rim).mul(0.1))
-      .add(color('#ffffff').mul(meltLine).mul(intimate).mul(0.08))
+      .add(color(hsl.integer(213, 100, 97)).mul(frostGlint).mul(0.35))
+      .add(color(hsl.integer(217, 99, 86)).mul(bubbles).mul(near).mul(0.5))
+      .add(color(hsl.integer(228, 99, 75)).mul(rim).mul(0.1))
+      .add(color(hsl.integer(0, 0, 100)).mul(meltLine).mul(intimate).mul(0.08))
   }
 }

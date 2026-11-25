@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cyber_kintsugi',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A fractured circuit heals itself with a seam of electric gold.',
   placeholder: {
-    color: '#fbbf24',
+    color: hsl.integer(84, 96.6, 81),
     shading: 'stone',
   },
 } as const satisfies KnotData

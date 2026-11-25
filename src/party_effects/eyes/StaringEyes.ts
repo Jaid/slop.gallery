@@ -1,6 +1,7 @@
 import type {StaringEye} from './flights.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, attribute, exp, float, hash, max, mix, mx_noise_float, positionGeometry, select, sin, smoothstep, uv, vec2, vec3} from 'three/tsl'
 import {PlaneGeometry} from 'three/webgpu'
 
@@ -19,16 +20,16 @@ const quad = {
 /** how far its iris reaches from its middle, in its own units */
 const irisRadius = 0.34
 const colors = {
-  sclera: rgb('#cdb98e'),
-  vein: rgb('#8a0a10'),
-  irisInner: rgb('#d9a21e'),
-  irisOuter: rgb('#3f7a1f'),
-  limbus: rgb('#120a04'),
-  skin: rgb('#3e1212'),
-  fold: rgb('#7a2a26'),
-  lid: rgb('#0e0303'),
-  blood: rgb('#5e0007'),
-  shine: rgb('#ffffff'),
+  sclera: rgb(hsl.integer(86, 39, 76)),
+  vein: rgb(hsl.integer(27, 97.5, 31)),
+  irisInner: rgb(hsl.integer(83, 91, 70)),
+  irisOuter: rgb(hsl.integer(137, 94, 44)),
+  limbus: rgb(hsl.integer(64, 44, 6)),
+  skin: rgb(hsl.integer(23, 69, 15)),
+  fold: rgb(hsl.integer(26, 73, 31)),
+  lid: rgb(hsl.integer(22, 54, 4)),
+  blood: rgb(hsl.integer(26, 100, 20)),
+  shine: rgb(hsl.integer(0, 0, 100)),
 }
 /** how far the lids of an eye with the given openness, 0–1, stand apart at `x`, in its own units: the upper lid’s height and the lower one’s */
 function lids(x: Node<'float'>, openness: Node<'float'>) {

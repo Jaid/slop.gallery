@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'temporal_jacquard',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A woven pattern lets yesterday show through the threads of tomorrow.',
   placeholder: {
-    color: '#e2b868',
+    color: hsl.integer(82, 68, 77),
     shading: 'fabric',
   },
 } as const satisfies KnotData

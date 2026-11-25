@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'prism_cascade',
   candidateId: 'deepseek',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Daylight falls through a series of colors it did not know it contained.',
   placeholder: {
-    color: '#ffb0e0',
+    color: hsl.integer(343, 100, 82),
     shading: 'glass',
   },
 } as const satisfies KnotData

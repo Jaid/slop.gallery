@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4eznRMVv3vZMHhr; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sunlit_shallows',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'A hand’s depth of clear water over rippled sand, and noon light braiding itself into gold on the bottom. Kneel, and the surface turns from window to mirror.',
   placeholder: {
-    color: '#7a8275',
+    color: hsl.integer(133, 12, 53),
     shading: 'liquid',
   },
 } as const satisfies KnotData

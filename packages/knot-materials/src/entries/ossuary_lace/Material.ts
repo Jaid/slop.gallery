@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, time, vec3} from 'three/tsl'
 
 import {resolved, softNoise} from '../../candidates/gpt_sol/lib/exhibition/fields.ts'
@@ -29,15 +30,15 @@ export default class extends KnotMaterial {
     const innerPoint = surface.sub(view.mul(0.092)).add(0.19)
     const middle = web(middlePoint, 19, 0.11).toVar()
     const inner = web(innerPoint, 27, 0.075).toVar()
-    const shadow = color('#170c07').mul(1)
-    const copper = mix(color('#563017'), color('#b58240'), softNoise(innerPoint.mul(8)).mul(0.5).add(0.5))
+    const shadow = color(hsl.integer(47, 37, 7)).mul(1)
+    const copper = mix(color(hsl.integer(52, 63, 25)), color(hsl.integer(71, 65, 59)), softNoise(innerPoint.mul(8)).mul(0.5).add(0.5))
     const innerColor = mix(shadow, copper, inner.mul(0.8))
-    const middleBone = mix(color('#986c3c'), color('#dbbd81'), middle)
+    const middleBone = mix(color(hsl.integer(67, 56, 50)), color(hsl.integer(84, 54, 78)), middle)
     const inside = mix(innerColor, middleBone, middle.mul(0.85))
     const age = softNoise(p.mul(7)).mul(0.5).add(0.5).toVar()
     const poresDomain = p.mul(150)
     const pores = mx_worley_noise_vec3(poresDomain, 1, 0).x.smoothstep(0.04, 0.17).oneMinus().mul(resolved(poresDomain.fwidth().length(), 0.25)).toVar()
-    const ivory = mix(color('#c6a578'), color('#fff5da'), age.mul(0.55).add(0.35)).mul(pores.mul(-0.21).add(1)).toVar()
+    const ivory = mix(color(hsl.integer(75, 43, 70)), color(hsl.integer(90, 100, 96.6)), age.mul(0.55).add(0.35)).mul(pores.mul(-0.21).add(1)).toVar()
     const edge = outer.smoothstep(0.05, 0.5).sub(outer.smoothstep(0.7, 1)).clamp().toVar()
     this.colorNode = mix(inside, ivory, outer).mul(edge.mul(-0.13).add(1))
     this.metalnessNode = outer.oneMinus().mul(inner).mul(0.45)
@@ -46,8 +47,8 @@ export default class extends KnotMaterial {
     this.clearcoatNode = outer.mul(0.14)
     this.clearcoatRoughness = 0.36
     this.aoNode = mix(float(0.3), float(1), outer).add(middle.mul(outer.oneMinus()).mul(0.18)).clamp()
-    this.emissiveNode = color('#df9544').mul(inner).mul(middle.oneMinus()).mul(outer.oneMinus()).mul(near.mul(0.08).add(0.025)).mul(breathing.add(0.96))
-    this.sheenNode = color('#fff2d1').mul(outer).mul(grazing).mul(0.12)
+    this.emissiveNode = color(hsl.integer(66, 78, 69)).mul(inner).mul(middle.oneMinus()).mul(outer.oneMinus()).mul(near.mul(0.08).add(0.025)).mul(breathing.add(0.96))
+    this.sheenNode = color(hsl.integer(89, 100, 95.7)).mul(outer).mul(grazing).mul(0.12)
     this.sheenRoughness = 0.65
   }
 }

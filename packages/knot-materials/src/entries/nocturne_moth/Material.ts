@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, normalViewGeometry, positionViewDirection, uv, vec2, vec3} from 'three/tsl'
 
 import {premiumBands} from '../../candidates/gpt_astra/lib/premiumBands.ts'
@@ -41,11 +42,11 @@ export default class extends KnotMaterial {
     const structuralPhase = facing.mul(9).add(direction.mul(3.4)).add(u.mul(2).sin().mul(0.65)).add(v.mul(2).cos().mul(0.4))
     const jadeShift = structuralPhase.sin().mul(0.5).add(0.5)
     const bronzeShift = structuralPhase.add(1.8).cos().mul(0.5).add(0.5).pow(3)
-    const petrol = mix(color('#081929'), color('#166b70'), jadeShift)
-    const wing = mix(petrol, color('#9d783d'), bronzeShift.mul(0.75))
-    const patterned = mix(wing, color('#080f19'), eyespot.mul(0.82))
+    const petrol = mix(color(hsl.integer(249, 58, 11)), color(hsl.integer(201, 85, 40)), jadeShift)
+    const wing = mix(petrol, color(hsl.integer(77, 60, 53)), bronzeShift.mul(0.75))
+    const patterned = mix(wing, color(hsl.integer(257, 38, 7)), eyespot.mul(0.82))
     const scaleLight = dome.mul(scalesResolved).mul(0.12).add(ribs.mul(0.055)).add(0.83)
-    this.colorNode = patterned.mul(scaleLight).add(color('#69b9a0').mul(eyespotRing).mul(0.12)).mul(scaleEdge.mul(0.34).oneMinus())
+    this.colorNode = patterned.mul(scaleLight).add(color(hsl.integer(172, 56, 68)).mul(eyespotRing).mul(0.12)).mul(scaleEdge.mul(0.34).oneMinus())
     this.metalness = 0.48
     this.roughnessNode = scaleEdge.mul(0.09).add(eyespot.mul(0.08)).add(ribs.mul(0.035)).add(0.235)
     this.anisotropy = 0.72
@@ -54,12 +55,12 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.38
     this.iridescenceThicknessNode = u.mul(2).sin().mul(38).add(v.mul(4).cos().mul(26)).add(dome.mul(scalesResolved).mul(24)).add(355)
     this.sheen = 0.35
-    this.sheenColor.set('#55b8c6')
+    this.sheenColor.set(hsl.integer(208, 65, 68.5))
     this.sheenRoughness = 0.52
     this.clearcoat = 0.2
     this.clearcoatRoughness = 0.2
     this.normalNode = premiumNormal(dome.mul(scalesResolved).mul(0.7).sub(scaleEdge.mul(0.27)).add(ribs.mul(0.035)), 0.00038)
-    this.emissiveNode = color('#267d77').mul(eyespotRing).mul(grazing.pow(3)).mul(0.07)
+    this.emissiveNode = color(hsl.integer(188, 77, 46)).mul(eyespotRing).mul(grazing.pow(3)).mul(0.07)
     this.envMapIntensity = 1.05
   }
 }

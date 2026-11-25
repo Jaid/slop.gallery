@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'celestial_rose',
   candidateId: 'gpt_sol',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Petals of distant light turn toward an unseen dawn.',
   placeholder: {
-    color: '#fff0b5',
+    color: hsl.integer(96, 100, 94.6),
     shading: 'smooth',
   },
 } as const satisfies KnotData

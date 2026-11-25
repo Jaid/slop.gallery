@@ -1,6 +1,7 @@
 import type {SloperatorPlacement} from '#src/lib/gallery/sloperator/placement.ts'
 import type {SloperatorSight} from '#src/lib/gallery/sloperator/sights.ts'
 
+import hsl from 'okhsl'
 import {useLayoutEffect} from 'react'
 
 import {initialFigureBounds} from '#src/lib/gallery/sloperator/placement.ts'
@@ -10,7 +11,7 @@ import overlay from '#src/lib/overlay/index.ts'
 
 const layer = overlay.addLayer({
   id: 'sloperator-sightings',
-  color: '#80ff00',
+  color: hsl.integer(135.89, 100, 87.27),
 })
 
 /** Use the authored seat or standing spot even when the player has not entered its viewing fence yet. */

@@ -2,6 +2,7 @@ import type {Placement} from '../lib/frameGeometry.ts'
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_cell_noise_float, mx_noise_float, select, time, vec2, vec3} from 'three/tsl'
 import {LatheGeometry, MeshPhysicalNodeMaterial, Vector2} from 'three/webgpu'
 
@@ -137,7 +138,7 @@ function smear(surface: FrameSurface, index: Float, footprint: Float, layer: Sme
   const streak = mx_noise_float(vec3(ahead.mul(12), aside.add(swirl).mul(130), noiseSeed.add(own).add(3))).add(aside.div(halfWidth).mul(0.45))
   const mixed = mix(paint(10), paint(11), streak.smoothstep(-0.12, 0.12))
   // Dragged through a little white or a little of the earth already on the palette, the old smears muddied much more.
-  const tinted = mix(mixed, select(random(12, own).lessThan(0.5), color('#f4efe2'), color('#5a3a22')), random(13, own).mul(0.3).add(layer.muddied))
+  const tinted = mix(mixed, select(random(12, own).lessThan(0.5), color(hsl.integer(89, 39, 94.5)), color(hsl.integer(57, 50, 29))), random(13, own).mul(0.3).add(layer.muddied))
   // How long ago the knife passed here: wet right behind it, drying over the next seconds, and long dry on the smears it never comes back to.
   const scrapedAt = round.mul(knife.period).add(slot).add(share.mul(knife.stroke))
   const age = select(scraped, time.sub(scrapedAt), time.sub(scrapedAt).add(knife.period))
@@ -165,7 +166,7 @@ export default class PaletteFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#7a5034'
+  override readonly tint = hsl.integer(54, 48, 39)
   override readonly title = 'Palette'
 
   override createGeometry(width: number, height: number) {
@@ -208,7 +209,7 @@ class PaletteMaterial extends MeshPhysicalNodeMaterial {
     // The wood: walnut, oiled, its grain running along the members.
     const grain = mx_noise_float(vec3(surface.along.mul(4), surface.reach.mul(240), surface.member)).mul(0.5).add(0.5)
     const lines = grain.mul(9).fract().smoothstep(0.75, 0.95).mul(visibleDetail(footprint, 0.0015))
-    const wood = mix(mix(color('#6a4126'), color('#8a5a34'), grain), color('#3a2214'), lines.mul(0.5))
+    const wood = mix(mix(color(hsl.integer(53, 54, 33)), color(hsl.integer(58, 56, 43)), grain), color(hsl.integer(50, 48, 18)), lines.mul(0.5))
     // The smears, in this stretch and the ones on either side, which may reach into it, those further along lying on top, the newer layer over the old one; they thin out toward the lip and the outer edge.
     const onFace = surface.reach.smoothstep(face.from + 0.004, face.from + 0.01).mul(surface.reach.smoothstep(face.to + 0.004, face.to - 0.008))
     let surfaceColor: Vec3 = wood
@@ -251,7 +252,7 @@ class PaletteBackMaterial extends MeshPhysicalNodeMaterial {
     const surface = backSurface()
     const {footprint, opening, point} = surface
     const grain = mx_noise_float(vec3(point.x.mul(3), point.y.mul(3), 0.4)).add(mx_noise_float(vec3(point.x.mul(240), point.y.mul(4), 1.9)).mul(0.6)).mul(0.5).add(0.5)
-    const wood = mix(color('#5a3820'), color('#7e5230'), grain)
+    const wood = mix(color(hsl.integer(55, 53, 28)), color(hsl.integer(57, 54, 40)), grain)
     // How far in from the outer edge, along the nearest edge.
     const outer = opening.add(profile.reach)
     const inset = outer.sub(point.abs())

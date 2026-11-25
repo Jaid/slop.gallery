@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'rosefire_mosaic',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A rose window without a wall gathers a wandering flame and breaks it into jewel-colored hymns.',
   placeholder: {
-    color: '#ac5862',
+    color: hsl.integer(14, 52, 49),
     shading: 'glass',
   },
 } as const satisfies KnotData

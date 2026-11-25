@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -31,7 +32,7 @@ export default class extends KnotMaterial {
     const froth = mx_noise_float(deep.mul(72).sub(time.mul(0.85))).mul(0.5).add(0.5)
     const flicker = opticalLine(froth.mul(2).sub(1), 0.06)
     const phase = inner.x.add(inner.y).add(inner.z).add(view.x.mul(2.5)).add(view.y.mul(1.5)).add(time.mul(0.18)).mul(0.5)
-    this.colorNode = mix(color('#160b38'), color('#5f43d6'), foam.mul(0.65))
+    this.colorNode = mix(color(hsl.integer(288, 78, 10)), color(hsl.integer(284, 85, 42.6)), foam.mul(0.65))
     this.metalnessNode = foam.mul(0.65)
     this.roughnessNode = foam.mul(0.16).add(0.05)
     this.iridescence = 1
@@ -39,6 +40,6 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = foam.mul(420).add(180)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.035
-    this.emissiveNode = spectralColor(phase).mul(bubble).mul(near.mul(0.7).add(0.15)).add(color('#c0a7ff').mul(flicker).mul(near).mul(0.65)).add(color('#8866ff').mul(rim).mul(0.28))
+    this.emissiveNode = spectralColor(phase).mul(bubble).mul(near.mul(0.7).add(0.15)).add(color(hsl.integer(296, 100, 75)).mul(flicker).mul(near).mul(0.65)).add(color(hsl.integer(289, 100, 56.4)).mul(rim).mul(0.28))
   }
 }

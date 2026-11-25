@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, mx_fractal_noise_float, mx_noise_float, normalView, normalWorld, normalWorldGeometry, positionGeometry, positionWorld, reflect, refract, vec3} from 'three/tsl'
 
 import {airBubbles} from '../../candidates/space_bunny/lib/airBubbles.ts'
@@ -43,8 +44,8 @@ export default class extends KnotMaterial {
     const air = airBubbles(positionGeometry.sub(view.mul(0.05)), 12, 3.7)
     const deepAir = airBubbles(positionGeometry.sub(view.mul(0.14)), 5, 11.9)
     const bent = iceRay(1.31)
-    this.colorNode = mix(color('#e2f2fa'), color('#1b5b84'), facing.pow(0.7)).mul(depth.mul(0.45).add(0.62))
-      .add(color('#f4fbff').mul(rime).mul(0.85))
+    this.colorNode = mix(color(hsl.integer(230, 58, 94)), color(hsl.integer(241, 76, 37)), facing.pow(0.7)).mul(depth.mul(0.45).add(0.62))
+      .add(color(hsl.integer(232, 100, 98)).mul(rime).mul(0.85))
     this.metalness = 0
     this.roughnessNode = float(0.045).add(rime.mul(0.5)).add(fracture.mul(0.15)).sub(needles.mul(0.02))
     this.ior = 1.31
@@ -52,11 +53,11 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = float(0.012).add(needles.mul(0.05))
     this.normalNode = proceduralNormal(rime.mul(0.0016).add(needles.mul(rime).mul(0.0004)).add(fracture.mul(0.0008)), 0.5)
     const sparkle = glints(normalView, 150).mul(rime).mul(near.mul(0.5).add(0.5))
-    this.emissiveNode = color('#e8f7ff').mul(scatter).mul(mix(float(0.45), float(1.1), grazing)).mul(1.5)
-      .add(studioRadiance(bent.ray).mul(depth).mul(color('#c6e6ff')).mul(0.8))
-      .add(color('#9fd6f5').mul(air.rim.mul(0.5).add(deepAir.rim.mul(0.8))).mul(0.2))
-      .add(color('#ffffff').mul(fracture).mul(grazing.mul(0.5).add(0.5)).mul(0.35))
-      .add(color('#ffffff').mul(sparkle).mul(0.4))
-      .add(color('#5fb0e6').mul(grazing.pow(3)).mul(intimate.mul(0.5).add(0.2)).mul(0.05))
+    this.emissiveNode = color(hsl.integer(231, 100, 96)).mul(scatter).mul(mix(float(0.45), float(1.1), grazing)).mul(1.5)
+      .add(studioRadiance(bent.ray).mul(depth).mul(color(hsl.integer(242, 100, 89.5))).mul(0.8))
+      .add(color(hsl.integer(234, 70, 82)).mul(air.rim.mul(0.5).add(deepAir.rim.mul(0.8))).mul(0.2))
+      .add(color(hsl.integer(0, 0, 100)).mul(fracture).mul(grazing.mul(0.5).add(0.5)).mul(0.35))
+      .add(color(hsl.integer(0, 0, 100)).mul(sparkle).mul(0.4))
+      .add(color(hsl.integer(240, 72, 68)).mul(grazing.pow(3)).mul(intimate.mul(0.5).add(0.2)).mul(0.05))
   }
 }

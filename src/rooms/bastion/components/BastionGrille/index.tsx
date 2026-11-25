@@ -2,6 +2,7 @@ import type {Wall, WallOpening} from '#src/lib/placement/wallGeometry.ts'
 
 import {RigidBody, TrimeshCollider} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -22,7 +23,7 @@ export default function BastionGrille({grille, name}: {
   const collision = useMemo(() => colliderGeometry(bars), [bars])
   // The apse’s wrought iron.
   const iron = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
-    color: '#2a2724',
+    color: hsl.integer(68, 7, 17),
     metalness: 0.75,
     roughness: 0.5,
     envMapIntensity: 0.3,

@@ -10,10 +10,10 @@ const lead = 0.022
 const petals = 12
 
 export type StainedGlassPalette = {
-  border: string
-  center: string
+  border: number
+  center: number
   /** the petals alternate between these two */
-  petals: readonly [string, string]
+  petals: readonly [number, number]
 }
 
 /**
@@ -25,7 +25,7 @@ export default class StainedGlassMaterial extends MeshBasicNodeMaterial {
   constructor({border, center, petals: [first, second]}: StainedGlassPalette) {
     super({side: DoubleSide})
     this.name = 'stained-glass'
-    const color = (hex: string) => vec3(...new Color(hex))
+    const color = (hex: number) => vec3(...new Color(hex))
     const point = uv().mul(2).sub(1)
     const distance = point.length()
     const angle = atan(point.y, point.x)

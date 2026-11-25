@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv, vec2} from 'three/tsl'
 
 import {approach, disk, wave} from '../../candidates/gpt_astra/lib/exhibition/optics.ts'
@@ -33,19 +34,19 @@ export default class extends KnotMaterial {
     const weave = warp.mul(weft).mul(0.5).add(0.5)
     // Two dye baths trade places across the nap. Slow motion is an optical breath, not sliding cloth.
     const shift = facing.mul(2.4).add(tube.y.mul(TAU * 2).sin().mul(0.4)).add(time.mul(0.18).sin().mul(0.12)).smoothstep(0.4, 2)
-    const silk = mix(color('#09182f'), color('#146c70'), shift)
-    const motif = mix(color('#26576b'), color('#73aa99'), grazing.mul(0.6).add(barbs.mul(0.3)))
+    const silk = mix(color(hsl.integer(259, 62, 11)), color(hsl.integer(200, 87, 40)), shift)
+    const motif = mix(color(hsl.integer(228, 58, 34)), color(hsl.integer(173, 39, 64)), grazing.mul(0.6).add(barbs.mul(0.3)))
     const eyeRadius = vec2(x.mul(2.7), y.sub(0.24)).length()
     const eye = stroke(eyeRadius.sub(0.19), 0.017, aa.mul(2.7)).mul(feather)
     const eyeCore = disk(eyeRadius, 0.105, aa.mul(2.7)).mul(feather)
     const gold = edge.add(spine.mul(0.8)).add(eye).clamp()
-    this.colorNode = mix(mix(mix(silk, motif, feather.mul(0.87)), color('#101a3c'), eyeCore), color('#d8a45c'), gold).mul(weave.mul(0.14).add(0.86))
+    this.colorNode = mix(mix(mix(silk, motif, feather.mul(0.87)), color(hsl.integer(268, 65, 13)), eyeCore), color(hsl.integer(74, 65, 71)), gold).mul(weave.mul(0.14).add(0.86))
     this.metalnessNode = mix(float(0.12), float(0.74), gold)
     this.roughnessNode = mix(float(0.42), float(0.28), gold).sub(barbs.mul(0.06))
     this.anisotropy = 0.85
     this.anisotropyNode = mix(vec2(0.87, 0.08), vec2(0.15, 0.83), feather)
     this.sheen = 1
-    this.sheenNode = mix(color('#257a9a'), color('#c2ae81'), feather).mul(0.65)
+    this.sheenNode = mix(color(hsl.integer(228, 77, 47)), color(hsl.integer(87, 39, 72)), feather).mul(0.65)
     this.sheenRoughness = 0.36
     const relief = warp.mul(0.000065).add(weft.mul(0.000065)).mul(near).add(edge.mul(0.00035)).add(barbs.mul(0.00012))
     this.normalNode = proceduralNormal(relief, 0.65)

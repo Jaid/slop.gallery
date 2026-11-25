@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quicksilver_echo',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The silver answers every movement with a reflection that seems almost remembered.',
   placeholder: {
-    color: '#e6efff',
+    color: hsl.integer(262, 100, 94),
     shading: 'liquid',
   },
 } as const satisfies KnotData

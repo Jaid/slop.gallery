@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, If, Loop, mix, mx_noise_float, time, uv, varying, vec3} from 'three/tsl'
 
 import {knotCurve, knotLength} from '../../candidates/claude_haiku/lib/knotCurve.ts'
@@ -63,9 +64,9 @@ export default class extends KnotMaterial {
     const pulse = front(clock.fract()).add(front(clock.add(0.5).fract()).mul(0.7))
     const plankton = cellularPoints(p.mul(34), 0.1)
     const shimmer = mx_noise_float(p.mul(3.1).add(vec3(0, 0, time.mul(0.1)))).mul(0.5).add(0.5)
-    const glow = mix(color('#2ff5d6'), color('#2a7bff'), shimmer)
+    const glow = mix(color(hsl.integer(179, 94.6, 85)), color(hsl.integer(260, 100, 55)), shimmer)
     const intensity = near.mul(0.9).add(0.25)
-    this.colorNode = color('#02070b')
+    this.colorNode = color(hsl.integer(233, 47, 4))
     this.metalness = 0
     this.roughness = 0.12
     this.clearcoat = 1

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_atan2, mx_noise_float, mx_noise_vec3, mx_worley_noise_vec3, negateOnBackSide, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {knotFrame} from '../../lib/knotFrame.ts'
@@ -102,7 +103,7 @@ export default class extends KnotMaterial {
     const hAlphaAmber = vec3(1, 0.52, 0.04)
     const prominenceColor = mix(hAlphaRed, hAlphaAmber, loopArc.pow(2))
     // Set colorNode to deep black so external studio key lights do not wash out internal plasma radiance
-    this.colorNode = color('#030101')
+    this.colorNode = color(hsl.integer(20, 37, 2))
     this.metalness = 0
     this.roughness = 1
     this.clearcoat = 0

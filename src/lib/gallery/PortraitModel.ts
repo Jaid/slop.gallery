@@ -2,6 +2,7 @@ import type {StudioSubjectSize} from '../rendering/studio/studioFraming.ts'
 import type {Portrait} from './types.ts'
 import type {Material, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {Box3, Group, Mesh, MeshBasicNodeMaterial, PlaneGeometry, Vector3} from 'three/webgpu'
 
 import {canvasMaterials} from '#src/canvas_materials/index.ts'
@@ -84,7 +85,7 @@ export default class PortraitModel {
         return
       }
       placeholder.map = this.texture
-      placeholder.color.set('#ffffff')
+      placeholder.color.set(hsl.integer(0, 0, 100))
       placeholder.needsUpdate = true
     }, () => {
       placeholder.color.set(artworkPlaceholders.failed)

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, normalViewGeometry, reflect, time, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -19,7 +20,7 @@ export default class extends BaseKnotMaterial {
     this.thickness = 0.68
     this.ior = 1.658
     this.dispersion = 0.84
-    this.attenuationColor.set('#e2f4ff')
+    this.attenuationColor.set(hsl.integer(234, 100, 95))
     this.attenuationDistance = 0.75
     this.roughness = 0.015
     this.clearcoat = 1
@@ -37,9 +38,9 @@ export default class extends BaseKnotMaterial {
     const prismAxis = vec3(0.707, 0.707, 0)
     const alignment = reflectionDir.dot(prismAxis).abs().pow(9)
     const spectralFlash = spectralColor(alignment.mul(12).add(time.mul(0.12))).mul(alignment)
-    this.colorNode = color('#f7fbff')
+    this.colorNode = color(hsl.integer(248, 100, 98.4))
     this.normalNode = proceduralNormal(cleavage1.add(cleavage2).mul(0.04), 0.0006)
     const cleavageGlow = newtonRainbow.mul(cleavage1.add(cleavage2)).mul(1.7)
-    this.emissiveNode = cleavageGlow.add(spectralFlash.mul(1.8)).mul(near.mul(0.6).add(0.4)).add(color('#99e6ff').mul(rim).mul(0.12))
+    this.emissiveNode = cleavageGlow.add(spectralFlash.mul(1.8)).mul(near.mul(0.6).add(0.4)).add(color(hsl.integer(220, 100, 86.5)).mul(rim).mul(0.12))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mycelial_lantern',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A web of living filaments shares one gentle light among many paths.',
   placeholder: {
-    color: '#c4ff68',
+    color: hsl.integer(127.7, 100, 91.9),
     shading: 'fabric',
   },
 } as const satisfies KnotData

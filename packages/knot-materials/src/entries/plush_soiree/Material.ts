@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, Fn, mix, modelWorldMatrixInverse, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, positionLocal, positionView, positionViewDirection, select, time, transformNormalToView, uv, vec2, vec3, vec4, vertexStage} from 'three/tsl'
 import {Vector3} from 'three/webgpu'
 
@@ -374,18 +375,18 @@ export default class extends KnotMaterial {
     const feltHeight = fine.height.mul(0.0006).add(coarse.height.mul(0.0012))
     const felt = eye.oneMinus()
 // Colors are linear albedo; the wool brightens at grazing angles because light scatters through loose fibers.
-    const pink = mix(color('#ff1a7a'), color('#ff6fae'), grazing.pow(1.6).mul(0.5))
-    const pinkFelt = pink.mul(fuzz).add(color('#ffd0e4').mul(flyaway).mul(0.6))
-    const blackFelt = mix(color('#0b090c'), color('#2d282e'), grazing.pow(1.6).mul(0.6)).mul(fuzz.mul(0.9).add(0.2)).add(color('#5a525c').mul(flyaway).mul(0.35))
+    const pink = mix(color(hsl.integer(5, 99, 59)), color(hsl.integer(355, 100, 69)), grazing.pow(1.6).mul(0.5))
+    const pinkFelt = pink.mul(fuzz).add(color(hsl.integer(351, 100, 89)).mul(flyaway).mul(0.6))
+    const blackFelt = mix(color(hsl.integer(315, 12, 5.5)), color(hsl.integer(321, 11, 18)), grazing.pow(1.6).mul(0.6)).mul(fuzz.mul(0.9).add(0.2)).add(color(hsl.integer(319, 11, 36)).mul(flyaway).mul(0.35))
     const surfaceColor = mix(pinkFelt, blackFelt, bow)
-    this.colorNode = mix(surfaceColor, color('#030204'), eye)
+    this.colorNode = mix(surfaceColor, color(hsl.integer(310, 27, 3)), eye)
     this.metalness = 0
 // Bead eyes are glossy black plastic.
     this.roughnessNode = mix(mix(float(0.92), float(0.96), bow), float(0.22), eye)
     this.specularIntensityNode = mix(float(0.22), float(0.7), eye)
     this.ior = 1.5
 // Sheen is the fuzz: bright at grazing incidence, dyed with the wool.
-    this.sheenNode = mix(color('#ffb9d6').mul(flyaway.mul(0.45).add(0.75)), color('#3a3238').mul(0.6), bow).mul(felt)
+    this.sheenNode = mix(color(hsl.integer(353, 100, 83.6)).mul(flyaway.mul(0.45).add(0.75)), color(hsl.integer(335, 12, 23)).mul(0.6), bow).mul(felt)
     this.sheenRoughnessNode = float(0.78)
     const beadNormal = proceduralNormal(beadHeight, 1)
     const relief = feltHeight.mul(felt).add(beadHeight).add(ringHeight).add(bowHeight)
@@ -404,6 +405,6 @@ export default class extends KnotMaterial {
     const sparkle = catchlight(vec3(-0.32, 0.55, 0.77).normalize(), 900).mul(1.2).add(catchlight(vec3(0.45, 0.3, 0.84).normalize(), 60).mul(0.08))
 // From across the room the point highlight is smaller than a pixel; a steady glint keeps the beads glossy.
     const glint = beadNormal.dot(viewDirection).clamp().pow(5).mul(near.oneMinus()).mul(0.12)
-    this.emissiveNode = color('#fff6ee').mul(sparkle.mul(intimate.mul(0.5).add(0.5)).add(glint)).mul(eye)
+    this.emissiveNode = color(hsl.integer(64, 100, 97.4)).mul(sparkle.mul(intimate.mul(0.5).add(0.5)).add(glint)).mul(eye)
   }
 }

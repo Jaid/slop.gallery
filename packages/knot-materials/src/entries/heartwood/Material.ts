@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, time, vec2, vec3} from 'three/tsl'
 
 import {parallaxOffset, surfaceFrame} from '../../candidates/claude_opus/lib/knotSpace.ts'
@@ -76,10 +77,10 @@ export default class extends KnotMaterial {
 // Amber lacquer: the path through it lengthens as the eye slants, deepening the honey into cognac.
     const cosine = view.dot(normal).clamp(0.08, 1)
     const amber = amberAbsorption.mul(lacquerThickness * 2).div(cosine).negate().exp()
-    const earlywood = color('#e2b46c')
-    const late = color('#9a5c26')
+    const earlywood = color(hsl.integer(78, 65, 76))
+    const late = color(hsl.integer(58, 72, 46))
     const wood = mix(earlywood, late, latewood.mul(0.55)).mul(pores.mul(0.35).oneMinus()).mul(eye.mul(0.25).oneMinus())
-    const flame = color('#ffd48c')
+    const flame = color(hsl.integer(79, 99, 87))
     this.colorNode = amber.mul(wood).mul(0.5)
     this.metalness = 0
     this.roughnessNode = float(0.5).add(pores.mul(0.2))
@@ -90,10 +91,10 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = proceduralNormal(peel, 1)
     this.normalNode = proceduralNormal(pores.mul(-0.00012).add(latewood.mul(0.00004)).add(peel), 1)
     this.sheen = 0.3
-    this.sheenColor.set('#ffb35c')
+    this.sheenColor.set(hsl.integer(68, 99, 79.4))
     this.sheenRoughness = 0.45
     this.emissiveNode = amber.mul(flame).mul(chatoyance).mul(wood.mul(0.9).add(0.25)).mul(near.mul(0.3).add(1.25))
-      .add(amber.mul(color('#ff9a3c')).mul(grazing.pow(3)).mul(0.05))
-      .add(color('#fff0d0').mul(eye.mul(chatoyance)).mul(intimate).mul(facing).mul(0.1))
+      .add(amber.mul(color(hsl.integer(60, 99, 74))).mul(grazing.pow(3)).mul(0.05))
+      .add(color(hsl.integer(85, 100, 95)).mul(eye.mul(chatoyance)).mul(intimate).mul(facing).mul(0.1))
   }
 }

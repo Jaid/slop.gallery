@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, uv, vec2} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -50,7 +51,7 @@ export default class extends BaseKnotMaterial {
     // ---- between-rings metal ----
     // The dark iron-blue base of the mail between rings.
     const baseRnd = mx_noise_float(p.mul(7)).mul(0.5).add(0.5)
-    const baseMetal = mix(color('#1a2038'), color('#2c3358'), baseRnd)
+    const baseMetal = mix(color(hsl.integer(272, 42, 15)), color(hsl.integer(274, 45, 23)), baseRnd)
     // ---- per-ring anisotropic streak ----
     const tangentDir = vec2(sinA.negate(), cosA)
     // Project the view direction onto the ring's perpendicular direction
@@ -80,16 +81,16 @@ export default class extends BaseKnotMaterial {
     this.clearcoatRoughness = 0.1
     this.normalNode = proceduralNormal(ringMask.mul(0.005).add(hole.mul(0.003)).add(baseRnd.mul(0.0006)), 0.7)
     // ---- emissive ----
-    const ringEmissive = color('#e6f0ff').mul(ringGlow).mul(near.mul(0.5).add(0.4)).mul(2.8)
-    const seamShadow = color('#04060c').mul(hole.mul(0.8))
-    const haloGlow = mix(color('#aac6ff'), color('#fff0c0'), facing)
+    const ringEmissive = color(hsl.integer(258, 100, 94.4)).mul(ringGlow).mul(near.mul(0.5).add(0.4)).mul(2.8)
+    const seamShadow = color(hsl.integer(265, 32, 4)).mul(hole.mul(0.8))
+    const haloGlow = mix(color(hsl.integer(264, 100, 80)), color(hsl.integer(92, 100, 94.7)), facing)
       .mul(grazing.pow(2))
       .mul(intimate)
       .mul(0.22)
     this.emissiveNode = ringEmissive.add(haloGlow)
     this.colorNode = (mix as unknown as (a: any, b: any, t: any) => typeof baseMetal)(
       this.colorNode,
-      color('#0a0d18'),
+      color(hsl.integer(272, 34, 7)),
       seamShadow,
     )
   }

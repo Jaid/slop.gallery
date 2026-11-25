@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'hoarfrost_lattice',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Winter assembles a pale architecture too delicate for the dawn.',
   placeholder: {
-    color: '#c5e7ff',
+    color: hsl.integer(238, 100, 90),
     shading: 'glass',
   },
 } as const satisfies KnotData

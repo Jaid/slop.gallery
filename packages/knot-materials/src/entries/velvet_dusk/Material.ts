@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {tubeFrame} from '../../candidates/claude_haiku/lib/knotFrame.ts'
@@ -32,10 +33,10 @@ export default class extends KnotMaterial {
     const light = mix(pile, crushedLight, motif.mul(0.85))
     const fibers = mx_noise_float(positionGeometry.mul(140))
     const cloud = mx_noise_float(p.mul(1.7)).mul(0.5).add(0.5)
-    this.colorNode = mix(mix(color('#0a0a1f'), color('#1b0717'), cloud), color('#5b1d3d'), light.mul(0.75))
+    this.colorNode = mix(mix(color(hsl.integer(280, 57, 6.6)), color(hsl.integer(335, 57, 7.4)), cloud), color(hsl.integer(352, 65, 24)), light.mul(0.75))
     this.metalness = 0
     this.roughness = 0.75
-    this.sheenNode = mix(color('#8a5cc4'), color('#f1c58d'), grazing)
+    this.sheenNode = mix(color(hsl.integer(302, 65, 50)), color(hsl.integer(73, 68, 82.4)), grazing)
     this.sheenRoughnessNode = float(0.32)
     this.normalNode = transformNormalToView(normalLocal.normalize().add(frame.along.mul(fibers.mul(0.15))).normalize())
   }

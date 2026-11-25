@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, uv} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -31,7 +32,7 @@ export default class extends BaseKnotMaterial {
     const pitD = pitQ.fract().sub(pitRnd.mul(0.5).add(0.25)).length()
     const pitFp = pitQ.fwidth().length().max(0.002)
     const pit = pitD.smoothstep(0.12, pitFp.add(0.2)).oneMinus()
-    const pitColor = mix(color('#f0c85a'), color('#5c3a08'), pitRnd.y)
+    const pitColor = mix(color(hsl.integer(89, 81, 82)), color(hsl.integer(70, 86, 29)), pitRnd.y)
     // Structural colour — view-locked hue sweep.
     const viewHue = facing.mul(0.72)
       .add(tube.x.mul(0.55))
@@ -39,8 +40,8 @@ export default class extends BaseKnotMaterial {
       .add(mx_noise_float(p.mul(1.8)).mul(0.08))
     const irid = cosinePalette(viewHue, [0.42, 0.48, 0.38], [0.42, 0.42, 0.5], [1, 1, 1], [0.12, 0.32, 0.62])
     // Deep emerald body, amber flank, gold crease.
-    const emerald = mix(color('#0a2a12'), color('#1f6a30'), facing.mul(0.4).add(0.3))
-    const goldFlank = color('#c9a227')
+    const emerald = mix(color(hsl.integer(149, 90, 15)), color(hsl.integer(148, 94, 38)), facing.mul(0.4).add(0.3))
+    const goldFlank = color(hsl.integer(90, 86, 68))
     const gildedEdge = grazing.pow(2.4)
     const body = mix(emerald, goldFlank, gildedEdge.mul(0.85))
     const withIrid = mix(body, irid.mul(1.05), facing.pow(0.7).mul(0.55).add(0.25))
@@ -62,8 +63,8 @@ export default class extends BaseKnotMaterial {
       .add(segment.mul(0.5))
       .add(segmentFine.mul(0.25)), 0.0035)
     this.emissiveNode
-      = color('#ffe680').mul(gildedEdge.pow(1.6)).mul(near.mul(0.55).add(0.08)).mul(0.55)
-        .add(color('#c9ffa1').mul(ridgeHighlight).mul(intimate).mul(0.12))
-        .add(color('#f0c850').mul(rim).mul(0.08))
+      = color(hsl.integer(96, 100, 91.2)).mul(gildedEdge.pow(1.6)).mul(near.mul(0.55).add(0.08)).mul(0.55)
+        .add(color(hsl.integer(133, 99, 93)).mul(ridgeHighlight).mul(intimate).mul(0.12))
+        .add(color(hsl.integer(90, 84, 82)).mul(rim).mul(0.08))
   }
 }

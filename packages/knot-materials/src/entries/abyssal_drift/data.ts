@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_drift',
   candidateId: 'kimi',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A slow procession of cold lanterns follows a tide no shore can feel.',
   placeholder: {
-    color: '#46a0ff',
+    color: hsl.integer(252, 100, 65),
     shading: 'smooth',
   },
 } as const satisfies KnotData

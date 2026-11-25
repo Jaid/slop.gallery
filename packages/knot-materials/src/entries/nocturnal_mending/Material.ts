@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, mix, mx_noise_float, negateOnBackSide, normalLocal, tangentLocal, time, transformNormalToView, uv, vec3} from 'three/tsl'
 
 import {knotLength, tubeCells, tubeMetric} from '../../candidates/claude_sonnet/lib/tubeMetric.ts'
@@ -50,13 +51,13 @@ export default class extends KnotMaterial {
     this.normalNode = mix(facetView, bump, 0.6).normalize()
     this.clearcoatNormalNode = facetView
 // Tenmoku glaze: ink-black with indigo depth, iron-brown where it thins and scattered silver oil spots.
-    const inkA = color('#05060b')
-    const inkB = color('#0c1530')
-    const inkC = color('#190b09')
+    const inkA = color(hsl.integer(273, 25, 4))
+    const inkB = color(hsl.integer(268, 62, 10))
+    const inkC = color(hsl.integer(29, 38, 7))
     const plate = mix(mix(inkA, inkB, plates.random.y.smoothstep(0.2, 0.9)), inkC, plates.random.x.smoothstep(0.75, 1))
-    const glaze = mix(plate, color('#4a2412'), rim.pow(2).mul(0.85))
+    const glaze = mix(plate, color(hsl.integer(45, 64, 21)), rim.pow(2).mul(0.85))
     const spots = cellularPoints(p.mul(84), 0.02, 0.13, 0.72).mul(gold.oneMinus())
-    const ceramic = mix(glaze, color('#9fb4c8'), spots.mul(0.6))
+    const ceramic = mix(glaze, color(hsl.integer(247, 24, 72)), spots.mul(0.6))
     const goldTone = mix(color(1, 0.68, 0.2), color(1, 0.83, 0.46), grain.smoothstep(0.3, 0.9))
     this.colorNode = mix(ceramic, goldTone, gold)
     this.metalnessNode = gold.max(spots.mul(0.5))
@@ -75,9 +76,9 @@ export default class extends KnotMaterial {
     const fleckPulse = time.mul(plates.random.x.mul(2.4).add(1.2)).add(plates.random.y.mul(TAU)).sin().mul(0.5).add(0.5)
     const dust = cellularPoints(p.mul(310), 0.015, 0.14, 0.55).mul(main.max(fine).add(rim.mul(0.25)).clamp()).mul(fleckPulse.pow(3)).mul(intimate)
     const glint = facet.dot(view).clamp(0, 1).pow(70).mul(gold).mul(near.mul(0.5).add(0.5))
-    this.emissiveNode = color('#ff8a1e').mul(heat).mul(facing.mul(0.4).add(0.6)).mul(2.4)
-      .add(color('#fff2c0').mul(dust).mul(1.8))
-      .add(color('#ffd98a').mul(glint).mul(0.6))
-      .add(color('#3d2a8f').mul(float(1).sub(facing).pow(4)).mul(plates.edge.smoothstep(0.3, 0.9)).mul(0.05))
+    this.emissiveNode = color(hsl.integer(55.5, 100, 70.7)).mul(heat).mul(facing.mul(0.4).add(0.6)).mul(2.4)
+      .add(color(hsl.integer(95, 100, 95.2)).mul(dust).mul(1.8))
+      .add(color(hsl.integer(85, 100, 88.5)).mul(glint).mul(0.6))
+      .add(color(hsl.integer(284, 80, 28)).mul(float(1).sub(facing).pow(4)).mul(plates.edge.smoothstep(0.3, 0.9)).mul(0.05))
   }
 }

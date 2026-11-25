@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, mx_fractal_noise_float, mx_noise_float, normalView, normalWorld, positionGeometry, positionWorld, reflect, refract, time, vec3} from 'three/tsl'
 
 import {airBubbles} from '../../candidates/space_bunny/lib/airBubbles.ts'
@@ -59,17 +60,17 @@ export default class extends KnotMaterial {
     const breath = time.mul(0.38).add(p.x.mul(1.1)).add(p.z.mul(0.7)).sin().mul(0.5).add(0.5)
     const through = backlight(normalView, 5, 0.32).mul(breath.mul(0.16).add(0.92))
     const cloudGlow = mix(float(0.8), float(1.12), milk)
-    this.colorNode = color('#240d02').mul(float(1).add(milk.mul(0.5)))
+    this.colorNode = color(hsl.integer(49, 79, 9)).mul(float(1).add(milk.mul(0.5)))
     this.metalness = 0
     this.roughnessNode = float(0.03).add(scratches.mul(0.24)).clamp(0.01, 0.4)
     this.ior = 1.55
     this.clearcoat = 0.42
     this.clearcoatRoughnessNode = float(0.015).add(scratches.mul(0.08))
     this.emissiveNode = spectrum.mul(body).mul(cloudGlow).mul(4.2)
-      .add(color('#ff7a12').mul(through).mul(body).mul(1.6))
-      .add(color('#ffd9a8').mul(bubbleRing).mul(0.09))
-      .add(color('#fff0d6').mul(bubbleGlint).mul(0.05))
-      .add(color('#2a1204').mul(bubbles).mul(facing.mul(0.7).add(0.2)))
-      .add(color('#ffd9a0').mul(scratches).mul(grazing.pow(2.4)).mul(0.22))
+      .add(color(hsl.integer(50, 100, 68)).mul(through).mul(body).mul(1.6))
+      .add(color(hsl.integer(74, 100, 89)).mul(bubbleRing).mul(0.09))
+      .add(color(hsl.integer(82, 100, 95.4)).mul(bubbleGlint).mul(0.05))
+      .add(color(hsl.integer(51, 73, 11)).mul(bubbles).mul(facing.mul(0.7).add(0.2)))
+      .add(color(hsl.integer(78, 100, 89)).mul(scratches).mul(grazing.pow(2.4)).mul(0.22))
   }
 }

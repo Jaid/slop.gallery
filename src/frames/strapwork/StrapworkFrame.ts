@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {along, assembleFrame, corners, place, sweepProfile} from '../lib/frameGeometry.ts'
 import FrameProfile from '../lib/FrameProfile.ts'
@@ -40,7 +42,7 @@ export default class StrapworkFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#2a2826'
+  override readonly tint = hsl.integer(68, 4, 18)
   override readonly title = 'Riveted strapwork'
 
   override createGeometry(width: number, height: number) {

@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, max, mix, mx_cell_noise_float, mx_noise_float, select, vec2, vec3} from 'three/tsl'
 import {LatheGeometry, MeshPhysicalNodeMaterial, Vector2} from 'three/webgpu'
 
@@ -106,7 +107,7 @@ export default class BrushesFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#6e4c2e'
+  override readonly tint = hsl.integer(61, 48, 36)
   override readonly title = 'Brushes'
 
   override createGeometry(width: number, height: number) {
@@ -167,14 +168,14 @@ class TrayMaterial extends MeshPhysicalNodeMaterial {
     const footprint = max(p.x.fwidth(), p.y.fwidth()).max(p.z.fwidth()).toVar('trayFootprint')
     const grain = mx_noise_float(vec3(surface.along.mul(3), surface.reach.mul(300).add(p.z.mul(200)), surface.member)).mul(0.5).add(0.5)
     const flecks = mx_noise_float(vec3(surface.along.mul(60), surface.reach.mul(900), surface.member)).smoothstep(0.55, 0.8).mul(visibleDetail(footprint, 0.0015))
-    const oak = mix(mix(color('#4e3420'), color('#6e4c2e'), grain), color('#2e1e12'), flecks.mul(0.4))
+    const oak = mix(mix(color(hsl.integer(58, 45, 25)), color(hsl.integer(61, 48, 36)), grain), color(hsl.integer(57, 40, 15)), flecks.mul(0.4))
     // On the floor, spatters of paint and smears wiped off the brushes, each in a paint of its own.
     const onFloor = surface.reach.smoothstep(floor.from, floor.from + 0.004).mul(surface.reach.smoothstep(floor.to, floor.to - 0.004)).mul(surface.isOrnament.oneMinus())
     const spatters = mx_noise_float(p.mul(140)).smoothstep(0.62, 0.7)
     const smears = mx_noise_float(vec3(surface.along.mul(24), surface.reach.mul(90), surface.member.add(5))).smoothstep(0.5, 0.62)
     const paintAt = mx_noise_float(p.mul(18).add(vec3(2.1, 0, 0))).mul(0.5).add(0.5).mul(paintOrder.length).floor()
     const paint = spatters.max(smears).mul(onFloor)
-    this.colorNode = mix(oak, mix(paintColor(paintAt), color('#6a5038'), smears.mul(0.3)), paint)
+    this.colorNode = mix(oak, mix(paintColor(paintAt), color(hsl.integer(64, 36, 37)), smears.mul(0.3)), paint)
     this.roughnessNode = mix(float(0.55), float(0.35), paint)
     this.normalNode = heightNormal(paint.mul(0.00015).sub(flecks.mul(0.00002)))
   }
@@ -203,7 +204,7 @@ class BrushMaterial extends MeshPhysicalNodeMaterial {
     const isFerrule = t.greaterThanEqual(parts.handle).and(t.lessThan(parts.ferrule))
     const isBristles = t.greaterThanEqual(parts.ferrule)
     // The handle’s lacquer, or bare wood.
-    const lacquers = ['#8a1a14', '#141414', '#1f4a35', '#1d3a7a', '#c9a46a'].map(rgb)
+    const lacquers = [hsl.integer(29, 93, 32.3), hsl.integer(0, 0, 9), hsl.integer(160, 66, 28), hsl.integer(263, 76, 27), hsl.integer(78, 52, 70)].map(rgb)
     const which = random(0).mul(lacquers.length).floor()
     let lacquer: Vec3 = lacquers[0]
     for (const [order, value] of lacquers.entries()) {
@@ -213,24 +214,24 @@ class BrushMaterial extends MeshPhysicalNodeMaterial {
     }
     const bare = which.greaterThan(lacquers.length - 1.5)
     const grain = mx_noise_float(vec3(round.cos().mul(0.6), round.sin().mul(0.6), t.mul(120).add(seed))).mul(0.5).add(0.5)
-    const handle = select(bare, mix(color('#a8814e'), color('#d2ad78'), grain), lacquer)
+    const handle = select(bare, mix(color(hsl.integer(73, 51, 57)), color(hsl.integer(76, 50, 73)), grain), lacquer)
     // Chewed and chipped at the end of some handles, the bare wood showing through the lacquer.
     const chipped = random(1).lessThan(0.4).and(bare.not())
     const chips = select(chipped, mx_noise_float(vec3(round.cos(), round.sin(), t.mul(90).add(seed))).smoothstep(0.35, 0.5).mul(t.smoothstep(0.12, 0.02)), float(0))
     // The ferrule, nickel or brass, its crimp a dark ring.
     const brass = random(2).lessThan(0.35)
-    const metal = select(brass, color('#c9a55a'), color('#b4b6b8'))
+    const metal = select(brass, color(hsl.integer(84, 62, 70)), color(hsl.integer(248, 2, 74)))
     const crimp = line(t.sub(parts.handle + 0.3 / (outline.length - 1)), 0.012).mul(visibleDetail(footprint, 0.001))
     // The bristles, hog or sable, the paint they are loaded with reaching up from the tip and into the ferrule, a little worked into its edge.
     const sable = random(3).lessThan(0.3)
-    const hair = select(sable, color('#5a2e16'), color('#d8c49a'))
+    const hair = select(sable, color(hsl.integer(48, 66, 26)), color(hsl.integer(85, 41, 80)))
     const strands = mx_noise_float(vec3(round.mul(8), t.mul(30), seed)).mul(0.5).add(0.5)
     const paint = paintColor(random(4).mul(paintOrder.length).floor())
     const loaded = t.smoothstep(parts.ferrule + 0.03, random(5).mul(0.04).add(parts.ferrule + 0.1)).max(mx_noise_float(vec3(round.mul(3), t.mul(40), seed.add(6))).smoothstep(0.3, 0.6).mul(t.smoothstep(parts.ferrule - 0.04, parts.ferrule + 0.02)))
     // Smudges of the same paint on the ferrule and the handle where fingers held it.
     const smudges = mx_noise_float(vec3(round.cos().mul(2), round.sin().mul(2), t.mul(25).add(seed.add(7)))).smoothstep(0.45, 0.6).mul(t.smoothstep(parts.handle - 0.2, parts.handle)).mul(isBristles.not().select(float(1), float(0)))
     const bristles = mix(mix(hair, hair.mul(0.7), strands), paint, loaded)
-    const handleColor = mix(mix(handle, color('#c9a46a'), chips), paint, smudges)
+    const handleColor = mix(mix(handle, color(hsl.integer(78, 52, 70)), chips), paint, smudges)
     const ferruleColor = mix(mix(metal, metal.mul(0.4), crimp), paint, smudges)
     this.colorNode = select(isHandle, handleColor, select(isFerrule, ferruleColor, bristles))
     this.metalnessNode = select(isFerrule, smudges.oneMinus(), float(0))
@@ -252,7 +253,7 @@ class TrayBackMaterial extends MeshPhysicalNodeMaterial {
     const surface = backSurface()
     const {footprint, opening, point} = surface
     const grain = mx_noise_float(vec3(point.x.mul(260), point.y.mul(3), 2.1)).mul(0.5).add(0.5)
-    const oak = mix(color('#6a4a2e'), color('#8a6440'), grain)
+    const oak = mix(color(hsl.integer(61, 46, 35)), color(hsl.integer(64, 46, 46)), grain)
     // The brand: an oval ring round a crossed pair of brushes, burnt in, singed brown round its strokes.
     const at = point.sub(vec2(0, opening.y.mul(-0.4))).mul(vec2(0.7, 1.2))
     const ring = at.length().sub(0.034).abs()
@@ -260,13 +261,13 @@ class TrayBackMaterial extends MeshPhysicalNodeMaterial {
     const crossed = handles.x.min(handles.y).max(at.length().sub(0.026))
     const burnt = inside(ring.sub(0.0012)).max(inside(crossed.sub(0.0016)))
     const singe = ring.min(crossed).div(-0.003).exp().mul(0.6)
-    const branded = mix(mix(oak, color('#3a2414'), singe), color('#140c06'), burnt)
+    const branded = mix(mix(oak, color(hsl.integer(56, 48, 18)), singe), color(hsl.integer(60, 36, 7)), burnt)
     // Dark rings left by jars of turpentine set down on it.
     const jarCell = point.div(0.16).floor()
     const random = (k: number) => mx_cell_noise_float(vec3(jarCell, k))
     const jarAt = jarCell.add(vec2(random(0), random(1)).mul(0.6).add(0.2)).mul(0.16)
     const jarRing = select(random(2).lessThan(0.25), insideBy(point.sub(jarAt).length().sub(random(3).mul(0.01).add(0.03)).abs().sub(0.0018), footprint), float(0)).mul(visibleDetail(footprint, 0.002))
-    const stained = mix(branded, color('#4a3420'), jarRing.mul(0.6))
+    const stained = mix(branded, color(hsl.integer(63, 43, 25)), jarRing.mul(0.6))
     const hanger = hangingWire(surface)
     this.colorNode = mix(stained, hanger.color, hanger.cover)
     this.metalnessNode = hanger.cover

@@ -1,5 +1,6 @@
 import type {PlankOptions} from './PlankMaterial.ts'
 
+import hsl from 'okhsl'
 import {Material, NodeMaterial} from 'three/webgpu'
 
 import lodge from '../gallery/lodge.ts'
@@ -25,10 +26,10 @@ const ceilingPlanks: PlankOptions = {
   roughness: 0.8,
   envMapIntensity: 0.1,
   colors: {
-    dark: '#3d281a',
-    light: '#6a4a2f',
-    ring: '#2a190e',
-    seam: '#120a05',
+    dark: hsl.integer(54, 41, 20),
+    light: hsl.integer(60, 45, 35),
+    ring: hsl.integer(53, 44, 13),
+    seam: hsl.integer(58, 37, 6),
   },
 }
 /** Every surface of the Lodge interior but its floor, which mirrors the room by the graphics mode (see `useLodgeFloor`), created once and disposed together. */

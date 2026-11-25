@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: BJsZFlj5mQPSiFo; fixture: knot-material-shaders.
 export default {
   id: 'tourmaline_nebula',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A dark tourmaline crystal contains a weather system from a planet that has no name.',
   placeholder: {
-    color: '#20134b',
+    color: hsl.integer(287, 76, 14),
     shading: 'glass',
   },
   displacement: 0.000032,

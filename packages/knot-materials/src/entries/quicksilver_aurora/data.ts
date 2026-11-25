@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quicksilver_aurora',
   candidateId: 'muse_spark',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Northern light slips across mercury like a sky poured into a bowl.',
   placeholder: {
-    color: '#7df9ff',
+    color: hsl.integer(199, 99, 90),
     shading: 'liquid',
   },
 } as const satisfies KnotData

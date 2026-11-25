@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: K45USvVjintSE0u; fixture: knot-material-shaders; result: success.
 export default {
   id: 'basalt_caldera',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.014,
   flavorText: 'Hexagonal basalt columns and quenched obsidian glass fracture over a river of white-hot pahoehoe magma. Draw near and the bellows of the earth roar.',
   placeholder: {
-    color: '#8f442b',
+    color: hsl.integer(39, 67, 40),
     shading: 'stone',
   },
 } as const satisfies KnotData

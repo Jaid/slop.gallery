@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: EC58pRKjMMMNqsv; fixture: knot-material-shaders; result: success.
 export default {
   id: 'pyre_heart',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Charred stone split by living fire; the cracks breathe, brighten at your approach and cool behind your back.',
   placeholder: {
-    color: '#5b4336',
+    color: hsl.integer(50, 28, 31),
     shading: 'stone',
   },
 } as const satisfies KnotData

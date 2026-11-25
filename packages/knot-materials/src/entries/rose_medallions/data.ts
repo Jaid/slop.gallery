@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IgNMLTcxWnW8Pin; fixture: knot-material-shaders.
 export default {
   id: 'rose_medallions',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Medallions of ruby and cobalt, leaded by hands long gone, wait for a sun that circles the nave. Walk slowly – every pane is lit by what stands behind it.',
   placeholder: {
-    color: '#7c2430',
+    color: hsl.integer(17, 74, 31),
     shading: 'glass',
   },
 } as const satisfies KnotData

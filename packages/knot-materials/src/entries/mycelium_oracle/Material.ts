@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -36,8 +37,8 @@ export default class extends KnotMaterial {
     const sgate = srnd2.x.smoothstep(0.86, 0.9)
     const stw = time.mul(srnd2.y.mul(4).add(1)).add(srnd2.z.mul(25)).sin().mul(0.35).add(0.75)
     const spores = score.mul(sgate).mul(stw).mul(intimate.mul(0.7).add(near.mul(0.3))).mul(sfoot.smoothstep(0.25, 1).oneMinus())
-    const barkCol = mix(color('#0c0805'), color('#2e1c0e'), bark)
-    const goldHint = color('#8a6a2a')
+    const barkCol = mix(color(hsl.integer(65, 23, 5)), color(hsl.integer(58, 49, 14)), bark)
+    const goldHint = color(hsl.integer(82, 70, 47))
     this.colorNode = mix(barkCol, goldHint, network.mul(0.35))
     this.metalnessNode = network.mul(0.2)
     this.roughnessNode = float(0.88).sub(network.mul(0.45)).sub(barkFine.mul(0.1))
@@ -45,6 +46,6 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.4
     this.normalNode = proceduralNormal(bark.mul(0.8).add(barkFine.mul(0.25)), 0.003)
     const oracleTint = cosinePalette(bark.mul(1.2).add(time.mul(0.03)).add(view.x.mul(0.2)), [0.55, 0.68, 0.25], [0.45, 0.35, 0.15], [1, 1, 1], [0.1, 0.35, 0.6])
-    this.emissiveNode = oracleTint.mul(network).mul(energy).mul(2.4).mul(facing.mul(0.5).add(0.5)).add(color('#d8ff8a').mul(spores).mul(2.2)).add(oracleTint.mul(rim).mul(0.28))
+    this.emissiveNode = oracleTint.mul(network).mul(energy).mul(2.4).mul(facing.mul(0.5).add(0.5)).add(color(hsl.integer(124, 100, 94)).mul(spores).mul(2.2)).add(oracleTint.mul(rim).mul(0.28))
   }
 }

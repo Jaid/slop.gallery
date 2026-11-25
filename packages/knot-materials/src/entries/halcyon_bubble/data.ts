@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CyxjCrlY15yEfmL; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'halcyon_bubble',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A held breath, thinner than a thought, paints the whole sky in slow rivers of borrowed color.',
   placeholder: {
-    color: '#7ac9ff',
+    color: hsl.integer(240, 100, 77.4),
     shading: 'glass',
   },
 } as const satisfies KnotData

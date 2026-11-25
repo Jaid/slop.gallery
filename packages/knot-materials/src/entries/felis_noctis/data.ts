@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: AywadB8L9RF1tw9; fixture: knot-material-br11k.
 export default {
   id: 'felis_noctis',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'They drew the sky into the shape of every cat they ever loved. Watch closely: the stars are still purring.',
   placeholder: {
-    color: '#18244a',
+    color: hsl.integer(268, 60, 17),
     shading: 'smooth',
   },
 } as const satisfies KnotData

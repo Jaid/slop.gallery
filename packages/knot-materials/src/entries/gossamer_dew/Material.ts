@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, uv, vec3} from 'three/tsl'
 import {DoubleSide} from 'three/webgpu'
 
@@ -28,7 +29,7 @@ export default class extends BaseKnotMaterial {
     const dew = cellularPoints(p.mul(42).add(vec3(17.3, 41.9, 8.2)), 0.08, 0.24, 0.3).mul(near.mul(0.55).add(0.45))
     const film = spectralColor(p.x.mul(1.7).add(p.y.mul(1.1)).add(grazing.mul(2.6)))
     const weave = silk.mul(0.72).add(dew.mul(0.48)).clamp()
-    this.colorNode = mix(color('#263746'), film, weave.mul(0.65).add(0.12))
+    this.colorNode = mix(color(hsl.integer(246, 31, 23)), film, weave.mul(0.65).add(0.12))
     this.metalnessNode = dew.mul(0.18)
     this.roughnessNode = float(0.3).sub(silk.mul(0.18)).sub(dew.mul(0.12)).max(0.035)
     this.ior = 1.38
@@ -39,7 +40,7 @@ export default class extends BaseKnotMaterial {
     this.iridescenceThicknessNode = grazing.mul(180).add(240)
     this.normalNode = proceduralNormal(silk.mul(0.45).add(dew.mul(0.8)), 0.0025)
     this.emissiveNode = film.mul(silk).mul(0.18).mul(near.mul(0.55).add(0.35))
-      .add(color('#fff6e8').mul(dew).mul(glints(normalViewGeometry, 110)).mul(1.8))
-      .add(color('#b8d4ff').mul(rim).mul(0.1))
+      .add(color(hsl.integer(79, 100, 97.2)).mul(dew).mul(glints(normalViewGeometry, 110)).mul(1.8))
+      .add(color(hsl.integer(259, 100, 84)).mul(rim).mul(0.1))
   }
 }

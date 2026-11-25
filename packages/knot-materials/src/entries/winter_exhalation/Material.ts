@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {enamel, etch, filteredCos, ornamentCell, polarAngle, turn} from '../../candidates/gpt_sol/lib/ornamentAtlas.ts'
@@ -67,16 +68,16 @@ export default class extends KnotMaterial {
     const bubbles = bubbleRing.mul(bubbleGate)
     const bubbleShadow = bubbleCap.mul(bubbleGate)
     const grain = mx_noise_float(p.mul(100)).mul(0.5).add(0.5)
-    const body = mix(color('#11647c'), color('#7dbdc8'), ripple.mul(0.45).add(grazing.mul(0.35)))
-    const icy = mix(body, color('#d5e7e3'), frostVeil)
+    const body = mix(color(hsl.integer(223, 87, 39)), color(hsl.integer(209, 45, 72)), ripple.mul(0.45).add(grazing.mul(0.35)))
+    const icy = mix(body, color(hsl.integer(181, 25, 90)), frostVeil)
     this.colorNode = icy.mul(bubbleShadow.mul(-0.14).add(1))
-      .add(color('#e1f1ea').mul(shallow).mul(0.19))
+      .add(color(hsl.integer(168, 34, 93.5)).mul(shallow).mul(0.19))
     this.metalness = 0
     this.ior = 1.31
     this.transmission = 0.72
     this.transmissionNode = float(0.72).sub(frostVeil.mul(0.43)).sub(shallow.mul(0.17)).clamp(0.2, 0.72)
     this.thickness = 0.24
-    this.attenuationColor.set('#67c2d8')
+    this.attenuationColor.set(hsl.integer(215, 63, 73))
     this.attenuationDistance = 0.48
     this.dispersion = 0.018
     this.roughnessNode = float(0.12).add(frostVeil.mul(0.31)).add(shallow.mul(0.05))
@@ -85,11 +86,11 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(ripple.mul(0.0007).add(shallow.mul(0.00016))
       .add(grain.mul(frostVeil).mul(0.000065)), 0.7)
     this.clearcoatNormalNode = proceduralNormal(ripple.mul(0.0007), 0.65)
-    const frostLight = color('#80c0de').mul(deep).mul(0.37)
-      .add(color('#b9dfef').mul(middle).mul(0.55))
-      .add(color('#effff6').mul(shallow).mul(0.74))
+    const frostLight = color(hsl.integer(229, 54, 74)).mul(deep).mul(0.37)
+      .add(color(hsl.integer(225, 52, 86)).mul(middle).mul(0.55))
+      .add(color(hsl.integer(161, 100, 98.3)).mul(shallow).mul(0.74))
     this.emissiveNode = frostLight.mul(facing.mul(0.4).add(0.6)).mul(near.mul(0.18).add(0.82))
-      .add(color('#2babc6').mul(caustic.pow(3)).mul(0.13).mul(frostVeil.oneMinus()))
-      .add(color('#c7f0ee').mul(bubbles).mul(0.32))
+      .add(color(hsl.integer(215, 84, 64)).mul(caustic.pow(3)).mul(0.13).mul(frostVeil.oneMinus()))
+      .add(color(hsl.integer(193, 55, 91.4)).mul(bubbles).mul(0.32))
   }
 }

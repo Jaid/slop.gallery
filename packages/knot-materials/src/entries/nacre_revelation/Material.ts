@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_fractal_noise_float, mx_noise_float, negateOnBackSide, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {knotFrame} from '../../lib/knotFrame.ts'
@@ -41,14 +42,14 @@ export default class extends KnotMaterial {
     const deepBand = deepGrowth.sin().mul(0.5).add(0.5)
     const platelets = mx_noise_float(deepP.mul(31).add(vec3(1.3, 7.1, 3.8))).mul(0.5).add(0.5)
     const interference = spectralColor(growth.mul(0.12).add(deepGrowth.mul(0.065)).add(view.dot(vec3(0.42, 0.71, -0.56)).mul(0.46)))
-    const pearl = mix(color('#a9c4c7'), color('#f5e8d4'), growthBand.mul(0.52).add(0.22))
+    const pearl = mix(color(hsl.integer(205, 21, 77)), color(hsl.integer(79, 52, 92.6)), growthBand.mul(0.52).add(0.22))
     this.metalness = 0.08
     this.colorNode = mix(pearl, interference.mul(0.68), grazing.mul(0.42).add(deepBand.mul(0.2)).add(0.2))
     this.iridescence = 1
     this.iridescenceIOR = 1.31
     this.iridescenceThicknessNode = growth.mul(30).add(deepGrowth.mul(20)).add(view.dot(vec3(-0.4, 0.2, 0.89)).mul(110)).add(280)
     this.sheen = 0.32
-    this.sheenColor.set('#ffe6ef')
+    this.sheenColor.set(hsl.integer(354, 100, 94))
     this.sheenRoughness = 0.22
     this.anisotropy = 0.28
     this.anisotropyRotation = Math.PI / 2
@@ -60,7 +61,7 @@ export default class extends KnotMaterial {
     const microDetail = micro.mul(microFootprint.smoothstep(0.18, 0.62).oneMinus())
     this.clearcoatNormalNode = proceduralNormal(growthBand.mul(0.0006).add(platelets.mul(0.00035)).add(microDetail.mul(0.00012)).add(relief), 0.85)
     this.emissiveNode = interference.mul(grazing.pow(2.2)).mul(0.075)
-      .add(color('#fff0d9').mul(platelets).mul(facing.pow(4)).mul(near.mul(0.35).add(0.08)))
-      .add(color('#bdeeff').mul(growthBand).mul(intimate.mul(0.025)))
+      .add(color(hsl.integer(79, 100, 95.5)).mul(platelets).mul(facing.pow(4)).mul(near.mul(0.35).add(0.08)))
+      .add(color(hsl.integer(221, 100, 90.7)).mul(growthBand).mul(intimate.mul(0.025)))
   }
 }

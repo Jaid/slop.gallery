@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, mx_worley_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec3, vec4} from 'three/tsl'
 
 import {hash1} from '../../candidates/glm/lib/hash1.ts'
@@ -29,7 +30,7 @@ export default class extends KnotMaterial {
     const flash = view.dot(scaleDir).clamp().pow(9)
     const hue = scaleRand.mul(0.22).add(view.x.mul(0.5)).add(view.y.mul(0.3)).add(p.y.mul(0.35)).add(0.55)
     const structural = spectralColor(hue)
-    this.colorNode = mix(color('#040a12'), structural.mul(0.95), dome.mul(0.85))
+    this.colorNode = mix(color(hsl.integer(251, 43, 5)), structural.mul(0.95), dome.mul(0.85))
     this.metalness = 0.78
     this.roughnessNode = dome.oneMinus().mul(0.24).add(0.1)
     this.iridescence = 1
@@ -41,8 +42,8 @@ export default class extends KnotMaterial {
     this.envMapIntensity = 1.1
     this.normalNode = proceduralNormal(dome.add(mx_noise_float(p.mul(72)).mul(dome).mul(0.25)), 0.0021)
     this.emissiveNode = structural.mul(dome.pow(2)).mul(near.mul(0.4).add(0.12))
-      .add(color('#cfefff').mul(flash).mul(dome).mul(0.55))
+      .add(color(hsl.integer(229, 100, 92.3)).mul(flash).mul(dome).mul(0.55))
       .add(structural.mul(seam).mul(intimate).mul(0.5))
-      .add(color('#61e8ff').mul(rim).mul(0.28))
+      .add(color(hsl.integer(211, 99, 84)).mul(rim).mul(0.28))
   }
 }

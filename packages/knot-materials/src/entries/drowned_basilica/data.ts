@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'drowned_basilica',
   candidateId: 'deepseek',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Water passes through the arches where bells once held the air.',
   placeholder: {
-    color: '#4fd2ff',
+    color: hsl.integer(224, 99, 78),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,6 +1,7 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {mx_noise_float} from 'three/tsl'
 
 import {heightNormal} from '#src/lib/materials/filters.ts'
@@ -26,7 +27,7 @@ export default class BarytaCanvasMaterial extends CanvasMaterial {
     // Silver shows in the dark ink, where the print holds most of it.
     material.metalnessNode = luminance.sqrt().oneMinus().mul(this.glint * 0.13).min(1)
     material.sheen = this.glint * 0.34
-    material.sheenColor.set('#e2e9ed')
+    material.sheenColor.set(hsl.integer(232, 17, 92))
     material.sheenRoughness = 0.52
     material.clearcoat = 0.28
     material.clearcoatRoughness = 0.38

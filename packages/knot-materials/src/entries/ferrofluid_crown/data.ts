@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'ferrofluid_crown',
   candidateId: 'kimi',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'Liquid points gather into a coronation that never quite becomes solid.',
   placeholder: {
-    color: '#6f7dff',
+    color: hsl.integer(275, 100, 59),
     shading: 'liquid',
   },
 } as const satisfies KnotData

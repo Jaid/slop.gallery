@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'turquoise_heartwood',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A forest folds its years into polished chambers. Turquoise rivers thread the grain, carrying a slow song back to the roots.',
   placeholder: {
-    color: '#5a3f27',
+    color: hsl.integer(62, 45, 30),
     shading: 'smooth',
   },
 } as const satisfies KnotData

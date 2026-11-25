@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'black_opal',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Trapped inside dark ironstone, microscopic silica spheres ignite into blinding flashes of spectral fire as you turn.',
   placeholder: {
-    color: '#161c24',
+    color: hsl.integer(256, 21, 12),
     shading: 'glass',
   },
 } as const satisfies KnotData

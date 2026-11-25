@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, positionGeometry, positionView, time, vec4} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -19,14 +20,14 @@ export default class extends KnotMaterial {
     const arteries = filament(mx_noise_float(inner.mul(14).add(time.mul(0.1))), 0.015)
     const deepVeins = filament(mx_noise_float(deep.mul(25)), 0.02)
     const pulse = time.mul(1.2).sin().mul(0.3).add(0.7)
-    this.colorNode = color('#050508')
+    this.colorNode = color(hsl.integer(285, 18, 4))
     this.roughness = 0.05
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.transmission = 0.1
     this.thickness = 0.5
     this.ior = 1.8
-    this.emissiveNode = mix(color('#00e5ff'), color('#ff00aa'), mx_noise_float(p.mul(4))).mul(arteries).mul(pulse).mul(near.mul(1.5).add(0.5)).add(color('#0088ff').mul(deepVeins).mul(near).mul(0.6))
+    this.emissiveNode = mix(color(hsl.integer(209, 100, 82)), color(hsl.integer(350, 100, 60.4)), mx_noise_float(p.mul(4))).mul(arteries).mul(pulse).mul(near.mul(1.5).add(0.5)).add(color(hsl.integer(254, 100, 57.3)).mul(deepVeins).mul(near).mul(0.6))
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(20)), 0.002)
   }
 }

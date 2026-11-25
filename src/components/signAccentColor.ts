@@ -6,7 +6,7 @@ const lightnessMinimum = 0.7
 const lightnessMaximum = 0.85
 
 /** Preserve the exhibit hue while keeping sign accents readable against the dark plaques. */
-export default function signAccentColor(value: string) {
+export default function signAccentColor(value: number) {
   const hsl = {
     h: 0,
     s: 0,

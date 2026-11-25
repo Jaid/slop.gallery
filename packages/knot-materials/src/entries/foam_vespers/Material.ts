@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, mix, mx_noise_float, mx_worley_noise_float, mx_worley_noise_vec3, normalViewGeometry, positionViewDirection, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -71,9 +72,9 @@ export default class extends KnotMaterial {
     const ripple = filament(mx_noise_float(vec3(tube.x.mul(70), tube.y.mul(50), wall.mul(-9))).mul(1.5), 0.07)
     const froth = mx_noise_float(vec3(tube.x.mul(300), tube.y.mul(170), 0)).mul(0.5).add(0.5).smoothstep(0.58, 0.86)
     const sparkle = froth.mul(filament(mx_noise_float(vec3(tube.x.mul(520), tube.y.mul(310), 0)).mul(2), 0.12))
-    this.colorNode = mix(color('#040608'), color('#0e161c'), blackFilm).mul(crown.pow(2).mul(-0.6).add(1))
+    this.colorNode = mix(color(hsl.integer(243, 18, 4)), color(hsl.integer(241, 26, 9)), blackFilm).mul(crown.pow(2).mul(-0.6).add(1))
       .add(rainbow.mul(0.02))
-      .add(color('#dfe8ee').mul(crease).mul(0.03))
+      .add(color(hsl.integer(237, 23, 91)).mul(crease).mul(0.03))
       .add(rainbow.mul(ripple).mul(0.012))
     this.metalness = 0
     this.roughnessNode = float(0.035).add(contrast(ripple).mul(0.1)).add(froth.mul(0.18)).add(crown.pow(3).mul(0.45)).clamp(0.02, 1)
@@ -83,8 +84,8 @@ export default class extends KnotMaterial {
     this.normalNode = detailNormal(reliefNormal, ripple.mul(0.0007).add(froth.mul(0.0005)), 0.35)
     this.emissiveNode = rainbow.mul(0.1)
       .add(rainbow.mul(ripple).mul(0.06))
-      .add(color('#e8f2f8').mul(crease).mul(0.03))
-      .add(color('#cfe8ff').mul(sparkle).mul(0.12))
+      .add(color(hsl.integer(234, 43, 95)).mul(crease).mul(0.03))
+      .add(color(hsl.integer(246, 100, 90.7)).mul(sparkle).mul(0.12))
       .add(rainbow.mul(froth).mul(0.08))
   }
 }

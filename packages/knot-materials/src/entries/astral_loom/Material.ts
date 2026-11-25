@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -28,16 +29,16 @@ export default class extends KnotMaterial {
     const starlightNodes = opticalLine(gridA.abs().add(gridB.abs()).sub(0.15), 0.035).mul(near)
     const hyperAxis = innerA.dot(vec3(16, -20, 26)).add(time.mul(0.12))
     const celestialColor = spectralColor(hyperAxis.mul(0.8).add(view.x.mul(3)))
-    this.colorNode = mix(color('#0a0314'), color('#240e3c'), rim.mul(0.5))
+    this.colorNode = mix(color(hsl.integer(303, 67, 4.4)), color(hsl.integer(302, 73, 12)), rim.mul(0.5))
     this.transmission = 0.88
     this.thickness = 0.62
     this.ior = 1.82
     this.dispersion = 0.58
-    this.attenuationColor.set('#160628')
+    this.attenuationColor.set(hsl.integer(302, 74, 8))
     this.attenuationDistance = 0.9
     this.roughness = 0.024
     this.clearcoat = 1
     this.clearcoatRoughness = 0.018
-    this.emissiveNode = celestialColor.mul(threadA).mul(near.mul(0.5).add(0.3)).add(spectralColor(hyperAxis.add(2.5)).mul(threadB).mul(0.7)).add(color('#ffffff').mul(starlightNodes).mul(1.4)).add(color('#f472b6').mul(moireBeat).mul(near).mul(0.4)).add(celestialColor.mul(rim.abs().pow(2)).mul(0.32))
+    this.emissiveNode = celestialColor.mul(threadA).mul(near.mul(0.5).add(0.3)).add(spectralColor(hyperAxis.add(2.5)).mul(threadB).mul(0.7)).add(color(hsl.integer(0, 0, 100)).mul(starlightNodes).mul(1.4)).add(color(hsl.integer(350, 85, 68)).mul(moireBeat).mul(near).mul(0.4)).add(celestialColor.mul(rim.abs().pow(2)).mul(0.32))
   }
 }

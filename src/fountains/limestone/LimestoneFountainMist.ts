@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {attribute, color, float, length, mix, mx_noise_float, smoothstep, time, uniform, vec3} from 'three/tsl'
 import {DoubleSide, InstancedBufferAttribute, InstancedMesh, MeshBasicNodeMaterial, PlaneGeometry, Vector3} from 'three/webgpu'
 
@@ -108,7 +109,7 @@ export default class LimestoneFountainMist extends InstancedMesh<PlaneGeometry, 
     geometry.setAttribute('mistMotion', new InstancedBufferAttribute(motions, 4))
     geometry.setAttribute('mistOpacity', new InstancedBufferAttribute(opacities, 1))
     const material = new MeshBasicNodeMaterial({
-      color: '#f4fffd',
+      color: hsl.integer(184, 100, 99),
       depthWrite: false,
       side: DoubleSide,
       transparent: true,
@@ -137,7 +138,7 @@ export default class LimestoneFountainMist extends InstancedMesh<PlaneGeometry, 
     const wisps = mx_noise_float(vec3(source.x.mul(2.6), source.y.mul(2.6), time.mul(0.12))).mul(0.35).add(0.65)
     const life = progress.mul(float(1).sub(progress)).mul(4)
     material.opacityNode = radial.mul(wisps).mul(life).mul(attribute<'float'>('mistOpacity', 'float'))
-    material.colorNode = mix(color('#dff7f2'), color('#ffffff'), wisps)
+    material.colorNode = mix(color(hsl.integer(182, 54, 95)), color(hsl.integer(0, 0, 100)), wisps)
   }
 
   override dispose() {

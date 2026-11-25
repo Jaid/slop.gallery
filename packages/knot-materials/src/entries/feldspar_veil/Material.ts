@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_vec3, normalLocal, transformNormalToView, vec3} from 'three/tsl'
 
 import {lampFlash} from '../../candidates/space_bunny/lib/lampFlash.ts'
@@ -44,16 +45,16 @@ export default class extends KnotMaterial {
     const flash = lampFlash(lamellaView, 16).mul(zone)
     const fine = rotateAround(lamella, axis, mx_noise_float(under.mul(8.5)).mul(1.1))
     const fineFlash = lampFlash(transformNormalToView(fine).normalize(), 34).mul(near).mul(zone)
-    const peacock = color('#12d9c6')
-    const cobalt = color('#2f6bff')
-    const amethyst = color('#8b3ce0')
-    const bronze = color('#ffb63c')
+    const peacock = color(hsl.integer(184, 97, 76))
+    const cobalt = color(hsl.integer(264, 100, 51))
+    const amethyst = color(hsl.integer(301, 87, 48))
+    const bronze = color(hsl.integer(75.6, 100, 79.7))
     const interference = mix(peacock, cobalt, thickness.smoothstep(0.22, 0.56))
     const violet = mix(interference, amethyst, thickness.smoothstep(0.5, 0.72))
     const fire = mix(violet, bronze, thickness.smoothstep(0.68, 0.94))
     const mica = microGlitter(p, 0.026, 150, 0.45)
-    const stone = mix(color('#0d1015'), color('#2c333d'), grain.mul(0.5).add(0.5))
-    const ground = mix(mix(stone, color('#525d6b'), fleck.mul(0.6)), color('#0a0c10'), needles.mul(0.7)).mul(seam.mul(0.35).oneMinus().mul(0.4).add(0.6))
+    const stone = mix(color(hsl.integer(261, 17, 8)), color(hsl.integer(257, 17, 22)), grain.mul(0.5).add(0.5))
+    const ground = mix(mix(stone, color(hsl.integer(255, 16, 39)), fleck.mul(0.6)), color(hsl.integer(264, 15, 6)), needles.mul(0.7)).mul(seam.mul(0.35).oneMinus().mul(0.4).add(0.6))
     this.colorNode = ground
     this.metalness = 0
     this.ior = 1.56
@@ -64,7 +65,7 @@ export default class extends KnotMaterial {
     this.emissiveNode = fire.mul(flash.mul(2.6))
       .add(fire.mul(fineFlash).mul(intimate.mul(0.7).add(0.3)).mul(0.7))
       .add(peacock.mul(grazing.pow(3.4)).mul(0.1))
-      .add(color('#fff3df').mul(mica.sparkle).mul(intimate).mul(0.9))
-      .add(color('#123a4a').mul(fleck.mul(0.6)).mul(0.06))
+      .add(color(hsl.integer(81, 100, 96.3)).mul(mica.sparkle).mul(intimate).mul(0.9))
+      .add(color(hsl.integer(228, 67, 23)).mul(fleck.mul(0.6)).mul(0.06))
   }
 }

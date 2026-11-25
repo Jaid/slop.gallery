@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalWorld, positionWorld, refract, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {knotFrame} from '../../candidates/claude_opus/lib/knotFrameSurface.ts'
@@ -101,18 +102,18 @@ export default class extends KnotMaterial {
     const pebbleCell = floor3.mul(55)
     const pebbleRandom = cellNoiseVec3(pebbleCell.floor())
     const pebble = pebbleCell.fract().sub(pebbleRandom.mul(0.5).add(0.25)).length().smoothstep(0.06, pebbleRandom.z.mul(0.12).add(0.1)).oneMinus().mul(pebbleRandom.x.smoothstep(0.78, 0.82))
-    const pebbleColor = mix(color('#5b4a3a'), color('#e8e2d4'), pebbleRandom.y)
+    const pebbleColor = mix(color(hsl.integer(65, 25, 33)), color(hsl.integer(88, 26, 90)), pebbleRandom.y)
     const patches = mx_fractal_noise_float(floor3.mul(9), 3, 2, 0.5).mul(0.5).add(0.5)
-    const sand = mix(color('#d9bf8f'), color('#fbf1da'), patches).mul(ripple.sub(0.5).mul(0.3).mul(rippleResolved).add(1)).mul(grain.mul(0.18).mul(grainResolved).add(0.91))
+    const sand = mix(color(hsl.integer(83, 47, 79)), color(hsl.integer(87, 70, 95.3)), patches).mul(ripple.sub(0.5).mul(0.3).mul(rippleResolved).add(1)).mul(grain.mul(0.18).mul(grainResolved).add(0.91))
 // Dark weed beds and stones gather in the deeper channels.
     const weedField = mx_fractal_noise_float(floor3.mul(18).add(vec3(0, time.mul(0.05), 0)), 3, 2, 0.5)
     const weed = weedField.smoothstep(0.15, 0.32).mul(depth.smoothstep(0.035, 0.055))
-    const weedColor = mix(color('#1f2a10'), color('#4a5a1c'), weedField.mul(0.5).add(0.5))
+    const weedColor = mix(color(hsl.integer(128, 60, 16)), color(hsl.integer(122, 76, 35)), weedField.mul(0.5).add(0.5))
     const bottom = mix(mix(sand, weedColor, weed), pebbleColor, pebble)
 // Light that reaches the bottom and comes back: absorption along both legs, red first.
     const path = depth.mul(descent.reciprocal().add(1))
     const transmittance = path.mul(vec3(6.5, 1.7, 1.05)).negate().exp()
-    const inscatter = transmittance.oneMinus().mul(color('#1aa6b8')).mul(0.4)
+    const inscatter = transmittance.oneMinus().mul(color(hsl.integer(209, 91, 61))).mul(0.4)
 // Ripple crests catch the focused light; troughs lie in their shadow.
     const crestLight = ripple.mul(0.5).mul(rippleResolved).add(0.75)
     const sunlit = bottom.mul(light.pow(1.25)).mul(crestLight).mul(sunAngle)
@@ -135,9 +136,9 @@ export default class extends KnotMaterial {
     this.clearcoat = 1
     this.clearcoatRoughness = 0.015
     this.clearcoatNormalNode = transformNormalToView(waterNormal.sub(fineSlope.mul(0.5)).normalize())
-    this.emissiveNode = sunlit.mul(transmittance).mul(color('#fff1d2')).mul(0.62)
+    this.emissiveNode = sunlit.mul(transmittance).mul(color(hsl.integer(87, 100, 95.5))).mul(0.62)
       .add(inscatter.mul(light.y.mul(0.5)).mul(0.6))
-      .add(color('#fff6dc').mul(mote).mul(light.y.mul(0.3).add(0.4)))
-      .add(color('#fff8e8').mul(glitter).mul(facing.oneMinus().mul(0.6).add(0.4)).mul(skyward.mul(0.5).add(0.5)))
+      .add(color(hsl.integer(91, 100, 97)).mul(mote).mul(light.y.mul(0.3).add(0.4)))
+      .add(color(hsl.integer(87, 100, 97.7)).mul(glitter).mul(facing.oneMinus().mul(0.6).add(0.4)).mul(skyward.mul(0.5).add(0.5)))
   }
 }

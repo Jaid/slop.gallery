@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chladni_resonance',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Silent music teaches pale grains where to gather.',
   placeholder: {
-    color: '#e8d8b2',
+    color: hsl.integer(88, 48, 87),
     shading: 'smooth',
   },
   displacement: 0.006,

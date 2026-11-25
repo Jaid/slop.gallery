@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_noise_float, mx_worley_noise_float, normalLocal, normalViewGeometry, positionGeometry, positionViewDirection, time} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -19,7 +20,7 @@ export default class extends KnotMaterial {
     const spikes = cells.pow(3).mul(breathe)
     const ripple = mx_noise_float(p.mul(14)).mul(0.5).add(0.5)
     this.positionNode = p.add(normalLocal.mul(spikes.mul(0.042)))
-    this.colorNode = color('#090b10')
+    this.colorNode = color(hsl.integer(268, 18, 6))
     this.metalness = 1
     this.roughnessNode = spikes.oneMinus().mul(0.09).add(ripple.mul(0.025)).add(0.03)
     this.clearcoat = 1
@@ -28,6 +29,6 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.42
     this.iridescenceThicknessNode = spikes.mul(420).add(ripple.mul(60)).add(160)
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(20)), 0.0008)
-    this.emissiveNode = color('#3e6bff').mul(grazing.pow(3)).mul(0.3).add(color('#9dbcff').mul(spikes.pow(2)).mul(0.22))
+    this.emissiveNode = color(hsl.integer(266, 100, 52)).mul(grazing.pow(3)).mul(0.3).add(color(hsl.integer(265, 100, 76.4)).mul(spikes.pow(2)).mul(0.22))
   }
 }

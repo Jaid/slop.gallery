@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'harlequin_opal',
   candidateId: 'kimi',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A hidden carnival changes its masks with every passing glance.',
   placeholder: {
-    color: '#ffb3ec',
+    color: hsl.integer(336, 100, 83),
     shading: 'glass',
   },
 } as const satisfies KnotData

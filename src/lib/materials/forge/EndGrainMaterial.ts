@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {color, float, hash, mix, mx_noise_float, normalWorldGeometry, positionWorld, vec2} from 'three/tsl'
 
 import forge, {forgeGauge, forgeVestibule} from '#src/lib/gallery/forge.ts'
@@ -20,7 +21,7 @@ export default class EndGrainMaterial extends PlanarMirrorMaterial {
     const edge = float(0.155).sub(cell.x.abs()).min(float(0.105).sub(cell.y.abs()))
     const joint = insideBy(edge.sub(0.002), pixel)
     super(null, {
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       envMapIntensity: 0.65,
       roughness: 0.58,
       reflection: reflections ? {
@@ -37,7 +38,7 @@ export default class EndGrainMaterial extends PlanarMirrorMaterial {
     const radius = cell.add(eccentric).mul(vec2(0.87, 1.22)).length()
     const saw = mx_noise_float(p.mul(32)).mul(visibleDetail(pixel, 0.035))
     const ring = radius.mul(tone.mul(95).add(385)).add(saw.mul(0.9)).sin().smoothstep(0.18, 0.98).mul(visibleDetail(pixel, 0.024))
-    const wood = mix(color('#836047'), color('#be9262'), tone.mul(0.78).add(0.1)).mul(ring.mul(-0.19).add(saw.mul(0.048)).add(1))
+    const wood = mix(color(hsl.integer(57, 37, 44)), color(hsl.integer(68, 48, 64)), tone.mul(0.78).add(0.1)).mul(ring.mul(-0.19).add(saw.mul(0.048)).add(1))
     // Tick every decimeter, with longer half-meter and meter divisions. Nothing is raised above the orb’s rolling surface.
     const rule = p.x.abs().sub(forgeGauge.offset)
     const stripe = (distance: typeof rule, half: number) => insideBy(distance.abs().sub(half), pixel).mul(float(2 * half).div(pixel.max(0.00001)).min(1))
@@ -46,7 +47,7 @@ export default class EndGrainMaterial extends PlanarMirrorMaterial {
     const inHall = insideBy(p.y.abs().sub(forge.size[1] / 2 - forgeGauge.inset), pixel)
     const radial = positionWorld.xz.sub(vec2(...forgeVestibule.center)).length()
     const brass = tracks.mul(inHall).max(stripe(radial.sub(1.78), 0.018)).max(stripe(radial.sub(1.89), 0.008))
-    this.colorNode = mix(mix(wood, color('#504437'), joint), color('#d2a55d'), brass)
+    this.colorNode = mix(mix(wood, color(hsl.integer(69, 20, 30)), joint), color(hsl.integer(78, 63, 71)), brass)
     this.metalnessNode = brass.mul(0.58)
     this.roughnessNode = mix(tone.mul(0.12).add(0.52).add(joint.mul(0.22)), float(0.34), brass)
     this.normalNode = heightNormal(edge.smoothstep(0.001, 0.008).mul(0.0015).sub(ring.mul(0.00009)).mul(brass.oneMinus()).mul(visibleDetail(pixel, 0.035)))

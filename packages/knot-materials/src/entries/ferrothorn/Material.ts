@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn as fn, mix, mx_noise_float, negateOnBackSide, time, transformNormalToView, uv, varying, vec2} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/gpt_astra/lib/bumpNormal.ts'
@@ -65,7 +66,7 @@ export default class extends BaseKnotMaterial {
         .mul(microVisibility)
         .mul(0.000025))
     this.envMapIntensity = 1.3
-    this.colorNode = mix(color('#111d23'), color('#8ba4ad'), tip.pow(0.6).mul(near.mul(0.5).add(0.28)))
+    this.colorNode = mix(color(hsl.integer(231, 30, 12)), color(hsl.integer(222, 18, 65)), tip.pow(0.6).mul(near.mul(0.5).add(0.28)))
     this.metalness = 0.92
     this.roughnessNode = float(0.145)
       .add(tip.mul(0.035))

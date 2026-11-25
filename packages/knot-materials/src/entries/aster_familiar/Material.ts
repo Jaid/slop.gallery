@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -189,24 +190,24 @@ export default class extends KnotMaterial {
     const fabric = mx_noise_float(positionGeometry.mul(8)).mul(0.5).add(0.5)
     const nebula = mx_noise_float(positionGeometry.mul(3.2).add(vec3(2, 0, 8))).mul(0.5).add(0.5)
     const woven = fabric.mul(0.25).add(nebula.mul(0.45)).add(grazing.mul(0.12))
-    const midnight = mix(color('#010315'), color('#132754'), woven)
+    const midnight = mix(color(hsl.integer(267, 88, 3.5)), color(hsl.integer(264, 72, 18)), woven)
     const violet = nebula.smoothstep(0.48, 0.77).mul(0.42)
-    const background = mix(midnight, color('#38265d'), violet)
-    const indigo = mix(color('#2456ab'), color('#a978c7'), random.y)
-    const pearl = mix(color('#9df5ff'), color('#ffd6a6'), random.z)
+    const background = mix(midnight, color(hsl.integer(296, 60, 22)), violet)
+    const indigo = mix(color(hsl.integer(260, 82, 38.5)), color(hsl.integer(312, 55, 60)), random.y)
+    const pearl = mix(color(hsl.integer(205, 100, 90.4)), color(hsl.integer(71, 100, 88.3)), random.z)
     const pulse = life.mul(2.2).sin().mul(0.25).add(0.75)
     const eyes = starCore.mul(0.72).add(starRay.mul(near).mul(0.2))
     const glow = filament.mul(0.16).add(stardust.mul(0.35)).add(procession.mul(0.65)).add(starHalo.mul(0.22)).add(eyes.mul(1.9))
     this.colorNode = mix(background, indigo, filament.mul(0.22))
       .add(pearl.mul(starCore).mul(0.55))
-      .add(color('#dbb870').mul(eyeRims).mul(0.23))
+      .add(color(hsl.integer(84, 61, 76)).mul(eyeRims).mul(0.23))
     this.emissiveNode = indigo.mul(filament.mul(0.2).add(stardust.mul(0.4)))
-      .add(color('#54d8e7').mul(procession).mul(0.5))
+      .add(color(hsl.integer(205, 81, 79)).mul(procession).mul(0.5))
       .add(pearl.mul(glow).mul(pulse.mul(0.3).add(0.7)))
-      .add(color('#b7ecff').mul(starRay).mul(near).mul(0.27))
-      .add(color('#ffd376').mul(eyeRims.mul(0.45).add(irises.mul(0.9))).mul(near.mul(0.5).add(0.5)))
-      .add(color('#76eeec').mul(whiskers).mul(near.mul(0.15).add(0.06)))
-      .add(color('#b1abff').mul(motes).mul(near.mul(0.09).add(0.02)))
+      .add(color(hsl.integer(222, 100, 90)).mul(starRay).mul(near).mul(0.27))
+      .add(color(hsl.integer(85, 100, 86.8)).mul(eyeRims.mul(0.45).add(irises.mul(0.9))).mul(near.mul(0.5).add(0.5)))
+      .add(color(hsl.integer(194, 80, 86)).mul(whiskers).mul(near.mul(0.15).add(0.06)))
+      .add(color(hsl.integer(287, 100, 74)).mul(motes).mul(near.mul(0.09).add(0.02)))
     this.metalness = 0.13
     this.roughnessNode = float(0.77).sub(filament.mul(0.31)).sub(starCore.mul(0.2))
     this.clearcoat = 0.23

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, time, uv, vec3} from 'three/tsl'
 
 import {environmentRadiance} from '../../candidates/claude_opus/lib/environmentRadiance.ts'
@@ -67,17 +68,17 @@ export default class extends KnotMaterial {
 // glaze pooled in slow runs: thicker glaze is deeper and greener
     const pooling = mx_fractal_noise_float(surface.mul(vec3(2.2, 2.2, 3.1)), 3, 2, 0.5).mul(0.35).add(inside.mul(0.9)).sub(0.05)
     const shardTone = breaks.shard.x.sub(0.5).mul(0.06)
-    const glaze = mix(color('#5f9270'), color('#1f5236'), pooling.pow(1.2).add(shardTone).clamp()).mul(mx_noise_float(surface.mul(90)).mul(0.03).add(1))
-    const crazed = mix(mix(glaze, color('#a07a2e'), thread.mul(0.6)), color('#15110d'), iron.mul(0.9))
-    const craquelure = mix(crazed, color('#2a2016'), hairline)
-    const lacquer = mix(color('#b8862b'), color('#f2cf73'), mx_noise_float(surface.mul(160)).mul(0.5).add(0.5).mul(0.5).add(breaks.shard.y.mul(0.2)))
+    const glaze = mix(color(hsl.integer(154, 46, 55)), color(hsl.integer(157, 76, 30)), pooling.pow(1.2).add(shardTone).clamp()).mul(mx_noise_float(surface.mul(90)).mul(0.03).add(1))
+    const crazed = mix(mix(glaze, color(hsl.integer(82, 73, 54)), thread.mul(0.6)), color(hsl.integer(67, 16, 8)), iron.mul(0.9))
+    const craquelure = mix(crazed, color(hsl.integer(66, 29, 15)), hairline)
+    const lacquer = mix(color(hsl.integer(78, 80, 60)), color(hsl.integer(89, 77, 84)), mx_noise_float(surface.mul(160)).mul(0.5).add(0.5).mul(0.5).add(breaks.shard.y.mul(0.2)))
 // raw urushi shows as a dark lip where the gold powder thinned out
     const lip = coverage(breaks.gold.sub(0.0007), pixel).mul(gold.oneMinus())
 // the glaze pools and darkens against the raised seam
     const seamPool = breaks.gold.div(0.006).clamp().oneMinus().mul(gold.oneMinus())
 // makie: gold powder sparkles in the lacquer
     const powder = cellularPoints(surface.mul(700), 0.03, 0.16, 0.55).mul(pixel.mul(700).smoothstep(0.3, 0.8).oneMinus())
-    this.colorNode = mix(mix(craquelure.mul(seamPool.mul(-0.45).add(1)), color('#2b1609'), lip), lacquer.mul(powder.mul(0.35).add(0.85)), gold)
+    this.colorNode = mix(mix(craquelure.mul(seamPool.mul(-0.45).add(1)), color(hsl.integer(51, 57, 12)), lip), lacquer.mul(powder.mul(0.35).add(0.85)), gold)
     this.metalnessNode = gold
     this.roughnessNode = mix(float(0.16).add(pooling.mul(0.05)).add(iron.mul(0.2)), mx_noise_float(surface.mul(220)).mul(0.08).add(0.24).sub(powder.mul(0.12)), gold)
     this.clearcoatNode = gold.oneMinus().mul(0.6)
@@ -97,7 +98,7 @@ export default class extends KnotMaterial {
     const glazeGlow = environmentRadiance(environment, interior.direction, 0.6).mul(vec3(0.08, 0.3, 0.15)).mul(pooling.mul(0.08).add(0.05))
 // the living scar: light flows slowly along the gold, and warms toward an approaching visitor
     const flow = mx_noise_float(surface.mul(3.1).add(vec3(time.mul(0.11), time.mul(-0.07), time.mul(0.05)))).mul(2.4).add(surface.dot(vec3(1.3, -0.7, 0.9)).mul(9)).sub(time.mul(0.9)).sin().mul(0.5).add(0.5).pow(4)
-    const warmth = color('#ff9a3c').mul(flow.mul(0.8).add(0.12)).mul(intimate.mul(0.75).add(0.1)).mul(gold).mul(grazing.oneMinus().mul(0.5).add(0.5))
-    this.emissiveNode = warmth.add(color('#eef8f0').mul(bubbles).mul(0.25)).add(glazeGlow.mul(gold.oneMinus()))
+    const warmth = color(hsl.integer(60, 99, 74)).mul(flow.mul(0.8).add(0.12)).mul(intimate.mul(0.75).add(0.1)).mul(gold).mul(grazing.oneMinus().mul(0.5).add(0.5))
+    this.emissiveNode = warmth.add(color(hsl.integer(152, 44, 96.4)).mul(bubbles).mul(0.25)).add(glazeGlow.mul(gold.oneMinus()))
   }
 }

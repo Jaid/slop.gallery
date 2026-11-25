@@ -1,6 +1,7 @@
 import type {Node} from 'three/webgpu'
 
 import StudioEnvironment from 'knot-materials/StudioEnvironment.ts'
+import hsl from 'okhsl'
 import {color, float, luminance, max, mix, mx_noise_float, mx_worley_noise_float, mx_worley_noise_vec2, positionGeometry, select, vec2, vec3} from 'three/tsl'
 import {Color, MeshPhysicalNodeMaterial, Vector3} from 'three/webgpu'
 
@@ -10,7 +11,7 @@ import {heightNormal, visibleDetail} from './filters.ts'
 
 type Float = Node<'float'>
 
-const rgb = (hex: string) => vec3(...new Color(hex))
+const rgb = (hex: number) => vec3(...new Color(hex))
 const hash = (a: Float, b: number) => a.mul(127.1).add(b * 311.7).sin().mul(43_758.5453).fract()
 /** how far apart the kamacite bars of one direction lie on the etched face, in meters */
 const spacing = 0.026
@@ -43,8 +44,8 @@ export default class MeteoriteMaterial extends MeshPhysicalNodeMaterial {
     const flow = mx_noise_float(p.mul(vec3(40, 90, 40))).mul(0.5).add(0.5)
     const rust = pit.smoothstep(0.7, 1).mul(mx_noise_float(p.mul(9)).mul(0.5).add(0.5).smoothstep(0.45, 0.85))
     const rubbed = pit.smoothstep(0.25, 0.02).mul(mx_noise_float(p.mul(6).add(3)).mul(0.5).add(0.5).smoothstep(0.35, 0.75))
-    const crust = mix(mix(color('#17130f'), color('#2a221c'), flow), color('#4a2a17'), rust.mul(0.7))
-    const crustColor = mix(crust, color('#4c4a47'), rubbed.mul(0.75))
+    const crust = mix(mix(color(hsl.integer(67, 15, 9)), color(hsl.integer(59, 18, 16)), flow), color(hsl.integer(50, 55, 22)), rust.mul(0.7))
+    const crustColor = mix(crust, color(hsl.integer(78, 4, 32)), rubbed.mul(0.75))
     // The glassy crust is barely metallic; only the rubbed ridges show bare iron.
     const crustMetal = float(0.12).add(rubbed.mul(0.75)).sub(rust.mul(0.1))
     const crustRough = float(0.62).sub(rubbed.mul(0.3)).add(rust.mul(0.25))
@@ -55,11 +56,11 @@ export default class MeteoriteMaterial extends MeshPhysicalNodeMaterial {
     u.cross(normal).normalize()
     const v = normal.clone().cross(u)
     const grain = mx_worley_noise_float(p.mul(3.2)).mul(5).floor()
-    let tone: Node<'vec3'> = mix(rgb('#2f3134'), rgb('#45474b'), mx_noise_float(p.mul(400)).mul(0.5).add(0.5))
+    let tone: Node<'vec3'> = mix(rgb(hsl.integer(258, 5, 21)), rgb(hsl.integer(264, 5, 31)), mx_noise_float(p.mul(400)).mul(0.5).add(0.5))
     let rough: Float = float(0.6)
     let edge: Float = float(0)
     let best: Float = float(-1)
-    const tones = ['#a2a5aa', '#6c6f74', '#8a8d92']
+    const tones = [hsl.integer(260, 4, 68), hsl.integer(261, 5, 47), hsl.integer(260, 4, 59)]
     const roughs = [0.2, 0.42, 0.3]
     for (let i = 0; i < 3; i++) {
       const angle = 0.3 + i * Math.PI / 3
@@ -79,7 +80,7 @@ export default class MeteoriteMaterial extends MeshPhysicalNodeMaterial {
     }
     // Too fine to resolve, the bars fade to their average sheen instead of shimmering.
     const detail = visibleDetail(footprint, spacing)
-    const etched = mix(rgb('#7f8287'), mix(tone, rgb('#d0d2d4'), edge.mul(0.55)), detail)
+    const etched = mix(rgb(hsl.integer(261, 4, 54)), mix(tone, rgb(hsl.integer(248, 3, 84)), edge.mul(0.55)), detail)
     const etchRough = mix(float(0.32), rough.sub(edge.mul(0.1)), detail)
     const reflectance = select(onCut, etched, crustColor)
     const metalness = select(onCut, float(1), crustMetal)

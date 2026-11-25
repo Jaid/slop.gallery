@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1o1ree11eGriGjv; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'brilliant_cut',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.011,
   flavorText: 'Light enters as one white thought and leaves as a hundred colors, argued by eight polished faces.',
   placeholder: {
-    color: '#eef4ff',
+    color: hsl.integer(263, 100, 96),
     shading: 'glass',
   },
 } as const satisfies KnotData

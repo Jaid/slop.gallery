@@ -2,6 +2,7 @@ import type {Vec3} from '../../types.ts'
 import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
 
+import hsl from 'okhsl'
 import {BufferGeometry, Float32BufferAttribute} from 'three/webgpu'
 
 import ForgedSteelMaterial from '#src/lib/materials/ForgedSteelMaterial.ts'
@@ -154,8 +155,8 @@ export default class Hatchet extends Curio {
         name: 'hatchet-haft',
         geometry: haftGeometry(),
         material: new GrainedWoodMaterial({
-          heartwood: ['#69472a', '#a67b4d'],
-          latewood: '#422b1a',
+          heartwood: [hsl.integer(60, 50, 34), hsl.integer(67, 50, 55)],
+          latewood: hsl.integer(57, 45, 21),
         }, {roughness: 0.57}),
       },
     ])

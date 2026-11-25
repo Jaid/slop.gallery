@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'moire_sanctum',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Layered screens turn the smallest movement into a hidden ceremony.',
   placeholder: {
-    color: '#d4af37',
+    color: hsl.integer(91, 82, 73),
     shading: 'smooth',
   },
 } as const satisfies KnotData

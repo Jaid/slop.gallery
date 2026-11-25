@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'tidal_treasury',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The ocean hides its finest colors between layers of pearl, opening each small door only to a moving eye.',
   placeholder: {
-    color: '#4f8c93',
+    color: hsl.integer(205, 46, 54),
     shading: 'glass',
   },
 } as const satisfies KnotData

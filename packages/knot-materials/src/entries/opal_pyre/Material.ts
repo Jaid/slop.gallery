@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -19,9 +20,9 @@ export default class extends BaseKnotMaterial {
     // A black opal host with subtle milky veining. The base is a deep
     // cobalt-indigo; the veining is brighter silica.
     const hostRnd = mx_noise_float(p.mul(2.8)).mul(0.5).add(0.5)
-    const host = mix(color('#04061a'), color('#161a3d'), hostRnd.mul(0.6))
+    const host = mix(color(hsl.integer(273, 70, 5)), color(hsl.integer(275, 60, 13)), hostRnd.mul(0.6))
     const milkyVein = mx_noise_float(p.mul(11)).smoothstep(0.62, 0.78).mul(hostRnd.pow(2))
-    const hostWithVeins = mix(host, color('#3b4070'), milkyVein.mul(0.5))
+    const hostWithVeins = mix(host, color(hsl.integer(277, 47, 30)), milkyVein.mul(0.5))
     // ---- dendrite inclusions ----
     // Black MnO2 dendrites: a fractal noise thresholded at the high end
     // gives a feathery branching pattern.
@@ -44,16 +45,16 @@ export default class extends BaseKnotMaterial {
     const patchThickness = mix(280, 720, patchRnd)
     const thickness = patchThickness.add(grazing.mul(180)).add(rim.mul(120))
     // ---- assembly ----
-    this.colorNode = mix(hostWithVeins, color('#020210'), dendrite)
+    this.colorNode = mix(hostWithVeins, color(hsl.integer(277, 78, 3)), dendrite)
     this.metalness = 0.05
     this.roughnessNode = float(0.14).add(milkyVein.mul(0.18))
     this.sheen = 0.35
-    this.sheenColor.set('#c0a8ff')
+    this.sheenColor.set(hsl.integer(296, 100, 75))
     this.sheenRoughness = 0.4
     this.transmission = 0.2
     this.thickness = 0.45
     this.ior = 1.46
-    this.attenuationColor.set('#0a0820')
+    this.attenuationColor.set(hsl.integer(283, 64, 6))
     this.attenuationDistance = 0.6
     this.iridescence = 1
     this.iridescenceIOR = 1.32
@@ -64,14 +65,14 @@ export default class extends BaseKnotMaterial {
     // accent. They cross-fade through the cosine palette as the fire
     // phase advances. From intimate range the glow inside brightens until
     // the opal looks lit from within.
-    const innerFire = color('#ffba50').mul(rWave.pow(2))
-      .add(color('#9bff80').mul(gWave.pow(2)))
-      .add(color('#7e7dff').mul(bWave.pow(2)))
+    const innerFire = color(hsl.integer(75, 100, 80.8)).mul(rWave.pow(2))
+      .add(color(hsl.integer(139, 100, 89.6)).mul(gWave.pow(2)))
+      .add(color(hsl.integer(280, 100, 60)).mul(bWave.pow(2)))
     const innerGlow = innerFire
       .mul(patchMask.mul(0.85).add(0.15))
       .mul(near.mul(0.6).add(0.4))
       .mul(intimate.mul(2).add(0.6))
-    const haloGlow = mix(color('#b9a8ff'), color('#f5d8a8'), facing)
+    const haloGlow = mix(color(hsl.integer(292, 100, 74)), color(hsl.integer(81, 69, 88)), facing)
       .mul(rim)
       .mul(near.mul(0.4).add(0.3))
       .mul(0.25)

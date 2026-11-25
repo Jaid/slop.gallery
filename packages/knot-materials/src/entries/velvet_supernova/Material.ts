@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -24,12 +25,12 @@ export default class extends KnotMaterial {
     const nebula = dust.smoothstep(0.38, 0.76)
     const starlight = opticalLine(mx_noise_float(deep.mul(36)), 0.024).mul(opticalLine(mx_noise_float(deep.mul(39).add(7)), 0.03)).mul(near)
     const flash = view.dot(vec3(0.62, 0.35, 0.7).normalize()).abs().pow(5)
-    this.colorNode = mix(color('#190927'), color('#642246'), nebula)
+    this.colorNode = mix(color(hsl.integer(306, 66, 8.5)), color(hsl.integer(350, 64, 27)), nebula)
     this.roughnessNode = near.mul(0.1).add(0.62)
     this.sheen = 1
-    this.sheenNode = mix(color('#6840c4'), color('#ffd1a2'), flash)
+    this.sheenNode = mix(color(hsl.integer(292, 79, 41.5)), color(hsl.integer(67, 100, 87)), flash)
     this.sheenRoughness = 0.38
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(42)).mul(near), 0.00025)
-    this.emissiveNode = mix(color('#682773'), color('#f78a46'), flash).mul(nebula).mul(grazing.mul(0.35).add(0.15)).add(color('#ffe0ba').mul(starlight).mul(flash.mul(1.8).add(0.3)))
+    this.emissiveNode = mix(color(hsl.integer(322, 70, 31)), color(hsl.integer(51, 90, 70)), flash).mul(nebula).mul(grazing.mul(0.35).add(0.15)).add(color(hsl.integer(73, 100, 91)).mul(starlight).mul(flash.mul(1.8).add(0.3)))
   }
 }

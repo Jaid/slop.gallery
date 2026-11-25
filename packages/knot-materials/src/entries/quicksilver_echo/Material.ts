@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mx_noise_float, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -21,10 +22,10 @@ export default class extends KnotMaterial {
     const envelope = facing.pow(1.5).mul(0.7).add(0.3).mul(wake)
     const height = ringsA.mul(0.7).add(ringsB.mul(0.5)).mul(envelope).add(idle.mul(0.5))
     const crest = height.smoothstep(0.7, 1.1)
-    this.colorNode = color('#f1f5ff')
+    this.colorNode = color(hsl.integer(268, 100, 96.5))
     this.metalness = 1
     this.roughnessNode = height.abs().mul(0.02).add(0.02)
     this.normalNode = proceduralNormal(height, 0.0035)
-    this.emissiveNode = color('#bcd6ff').mul(crest).mul(wake).mul(0.3).add(color('#ffffff').mul(facing.pow(40)).mul(wake).mul(0.45))
+    this.emissiveNode = color(hsl.integer(259, 100, 85)).mul(crest).mul(wake).mul(0.3).add(color(hsl.integer(0, 0, 100)).mul(facing.pow(40)).mul(wake).mul(0.45))
   }
 }

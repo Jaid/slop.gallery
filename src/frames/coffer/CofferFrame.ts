@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {atan, float, select, smoothstep, vec2} from 'three/tsl'
 
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
@@ -45,7 +46,7 @@ export default class CofferFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'hardwood'
   override readonly reach = profile.reach
-  override readonly tint = '#3a2414'
+  override readonly tint = hsl.integer(56, 48, 18)
   override readonly title = 'Walnut coffer'
 
   override createGeometry(width: number, height: number) {

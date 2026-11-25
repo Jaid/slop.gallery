@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {inkLine} from '../../lib/atelier.ts'
@@ -26,10 +27,10 @@ export default class extends KnotMaterial {
     const phase = shell.mul(5).add(view.x.mul(4)).add(view.y.mul(3)).add(mineral.mul(2))
     const green = phase.sin().smoothstep(-0.35, 0.5)
     const pink = phase.add(2.1).sin().smoothstep(-0.4, 0.6)
-    const interference = mix(mix(color('#00ae93'), color('#62278a'), pink), color('#d19c35'), green.mul(0.85))
-    const pearl = mix(color('#031919'), interference, grazing.mul(0.3).add(0.5))
+    const interference = mix(mix(color(hsl.integer(176, 100, 62)), color(hsl.integer(308, 76, 32)), pink), color(hsl.integer(80, 80, 68)), green.mul(0.85))
+    const pearl = mix(color(hsl.integer(195, 76, 9)), interference, grazing.mul(0.3).add(0.5))
     const shadow = edge.mul(0.92).add(shell.smoothstep(0.7, 1).mul(0.12)).clamp()
-    this.colorNode = mix(pearl.mul(ribs.mul(0.07).add(0.93)), color('#07181c'), shadow)
+    this.colorNode = mix(pearl.mul(ribs.mul(0.07).add(0.93)), color(hsl.integer(215, 51, 10)), shadow)
     this.metalnessNode = float(0.35).add(grazing.mul(0.12))
     this.roughnessNode = float(0.23).add(edge.mul(0.12)).sub(lip.mul(0.07))
     this.clearcoat = 0.65

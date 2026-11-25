@@ -1,6 +1,7 @@
 import type {FrameSurface} from '../lib/materials/frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, select, smoothstep, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -84,7 +85,7 @@ export default class AuricularFrame extends PortraitFrame {
   override readonly front = Math.max(profile.front, cartoucheBack + cartoucheDepth)
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#b88a3e'
+  override readonly tint = hsl.integer(77, 69, 61)
   override readonly title = 'Auricular gilt'
 
   override createGeometry(width: number, height: number) {
@@ -129,7 +130,7 @@ class AuricularBackMaterial extends MeshPhysicalNodeMaterial {
     const plank = point.x.div(0.15).floor()
     const grain = mx_noise_float(vec3(point.x.mul(30).add(plank.mul(5)), point.y.mul(2.5), 7.1)).mul(0.5).add(0.5)
     const joint = line(repeat(point.x, 0.15), 0.001)
-    const pine = mix(color('#2e1e12'), color('#4a3220'), grain).mul(joint.mul(-0.7).add(1))
+    const pine = mix(color(hsl.integer(57, 40, 15)), color(hsl.integer(57, 42, 24)), grain).mul(joint.mul(-0.7).add(1))
     // Worm holes, one at a random spot in some of the 5 mm cells, thick in patches.
     const cell = point.div(0.005).floor()
     const hole = point.sub(cell.add(vec2(mx_cell_noise_float(vec3(cell, 1)), mx_cell_noise_float(vec3(cell, 2))).mul(0.6).add(0.2)).mul(0.005)).length()
@@ -140,7 +141,7 @@ class AuricularBackMaterial extends MeshPhysicalNodeMaterial {
     const torn = mx_noise_float(vec3(point.mul(60), 2.2)).mul(0.5).add(0.5).smoothstep(0.32, 0.36)
     const chalk = scribble(surface, vec2(0, outer.y.mul(-0.05)), 0.22, 0.05, 8.9)
     const hanger = hangingWire(surface)
-    const marked = mix(mix(mix(pine.mul(holes.mul(-0.9).add(1)), color('#d8d2c4'), chalk.mul(0.7)), label.color.mul(0.7), label.cover.mul(torn)), seal.color, seal.cover)
+    const marked = mix(mix(mix(pine.mul(holes.mul(-0.9).add(1)), color(hsl.integer(88, 18, 84)), chalk.mul(0.7)), label.color.mul(0.7), label.cover.mul(torn)), seal.color, seal.cover)
     this.colorNode = mix(marked, hanger.color, hanger.cover)
     this.metalnessNode = hanger.cover
     this.roughnessNode = mix(mix(float(0.82), float(0.3), seal.cover), float(0.4), hanger.cover)

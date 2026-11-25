@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -70,8 +71,8 @@ export default class extends KnotMaterial {
     const oxideMask = terraceField.smoothstep(0.15, 0.55)
     // Bismuth base metal color
     const metalBase = mix(
-      color('#7a7268'),
-      color('#d8d0c4'),
+      color(hsl.integer(74, 10, 49)),
+      color(hsl.integer(78, 17, 84)),
       stepEdge.mul(0.5).add(fineEdge.mul(0.3)),
     )
     // Color: blend metal base with iridescent oxide

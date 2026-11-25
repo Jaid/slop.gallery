@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, Fn, mx_noise_float, negateOnBackSide, normalViewGeometry, positionGeometry, time, transformNormalToView, uv, varying, vec2} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -64,6 +65,6 @@ export default class extends BaseKnotMaterial {
     this.iridescence = 0.5
     this.iridescenceIOR = 1.4
     this.iridescenceThicknessNode = level.mul(280).add(220)
-    this.emissiveNode = spectralColor(hue.add(2.4)).mul(lip.mul(0.85).add(riser.pow(2).mul(0.12))).mul(near.mul(0.55).add(0.45)).add(oxide.mul(glints(normalViewGeometry, 130)).mul(near).mul(0.3)).add(color('#6a5bff').mul(grazing.pow(3)).mul(0.25))
+    this.emissiveNode = spectralColor(hue.add(2.4)).mul(lip.mul(0.85).add(riser.pow(2).mul(0.12))).mul(near.mul(0.55).add(0.45)).add(oxide.mul(glints(normalViewGeometry, 130)).mul(near).mul(0.3)).add(color(hsl.integer(280, 100, 51.6)).mul(grazing.pow(3)).mul(0.25))
   }
 }

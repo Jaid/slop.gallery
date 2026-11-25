@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, negateOnBackSide, positionView, positionViewDirection, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -65,7 +66,7 @@ export default class extends KnotMaterial {
     const hue = fields.stair.mul(3.4).add(fields.rnd.z.mul(5)).add(facing.mul(2.2)).add(time.mul(0.04))
     const oxide = spectralColor(hue).mul(0.62).add(0.3)
     const inCrystal = fields.border.oneMinus()
-    const crystalColor = mix(color('#181225'), oxide.mul(fields.edge.oneMinus().mul(0.25).add(0.75)), inCrystal)
+    const crystalColor = mix(color(hsl.integer(297, 41, 10)), oxide.mul(fields.edge.oneMinus().mul(0.25).add(0.75)), inCrystal)
     this.colorNode = crystalColor
     this.metalness = 0.88
     this.roughnessNode = float(0.2).mix(0.55, fields.border)
@@ -74,7 +75,7 @@ export default class extends KnotMaterial {
     this.iridescence = 0.3
     this.iridescenceThicknessNode = facing.mul(300).add(150)
     this.emissiveNode = oxide.mul(fields.edge).mul(0.35).mul(near.mul(0.6).add(0.4))
-      .add(color('#ffffff').mul(fields.edge).mul(facing.pow(3)).mul(0.5))
+      .add(color(hsl.integer(0, 0, 100)).mul(fields.edge).mul(facing.pow(3)).mul(0.5))
       .add(spectralColor(hue.add(2)).mul(inCrystal).mul(near.oneMinus()).mul(0.12))
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, mx_worley_noise_vec3, normalLocal} from 'three/tsl'
 
 import {filteredRibbon} from '../../lib/filteredRibbon.ts'
@@ -35,12 +36,12 @@ export default class extends KnotMaterial {
 // Celadon glaze, warm where it is thick and cool where it pooled thin.
     const glazeNoise = mx_noise_float(p.mul(4.2)).mul(0.5).add(0.5)
     const glazeFine = mx_noise_float(p.mul(19)).mul(0.5).add(0.5)
-    const celadon = mix(mix(color('#4e6f60'), color('#93b09c'), glazeNoise), color('#c3cfb6'), glazeFine.mul(0.3))
-    const chipped = mix(celadon, color('#3f4a3e'), halo.mul(0.5))
+    const celadon = mix(mix(color(hsl.integer(165, 31, 43)), color(hsl.integer(155, 25, 69)), glazeNoise), color(hsl.integer(128, 26, 81)), glazeFine.mul(0.3))
+    const chipped = mix(celadon, color(hsl.integer(143, 18, 30)), halo.mul(0.5))
 // Raw urushi lacquer bleeds out from under the gold leaf.
-    const body = mix(chipped, color('#2a1a12'), fringe.mul(0.75)).mul(crazing.mul(-0.22).add(1))
+    const body = mix(chipped, color(hsl.integer(47, 36, 13)), fringe.mul(0.75)).mul(crazing.mul(-0.22).add(1))
 // Gold leaf: warm, slightly uneven, and polished to a hard mirror.
-    const goldTint = mix(color('#c07a12'), color('#ffd97a'), mx_noise_float(p.mul(15)).mul(0.5).add(0.5))
+    const goldTint = mix(color(hsl.integer(69, 92, 58)), color(hsl.integer(88, 100, 88.1)), mx_noise_float(p.mul(15)).mul(0.5).add(0.5))
     const goldBrush = mx_noise_float(p.mul(90)).mul(0.5).add(0.5)
     this.positionNode = p.add(normalLocal.mul(veinShape.mul(0.0052)))
     this.colorNode = mix(body, goldTint.mul(goldBrush.mul(0.18).add(0.9)), gold)
@@ -51,7 +52,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughnessNode = mix(float(0.09), float(0.03), gold)
     this.normalNode = proceduralNormal(veinShape.mul(0.55).add(crazing.mul(0.35)), 0.0011)
     this.clearcoatNormalNode = this.normalNode
-    this.emissiveNode = color('#ffcf7a').mul(gold).mul(grazing.pow(2.5)).mul(near.mul(0.3).add(0.5)).mul(0.22)
-      .add(color('#ffb347').mul(vein).mul(intimate).mul(0.05))
+    this.emissiveNode = color(hsl.integer(81, 100, 86)).mul(gold).mul(grazing.pow(2.5)).mul(near.mul(0.3).add(0.5)).mul(0.22)
+      .add(color(hsl.integer(72, 100, 79.1)).mul(vein).mul(intimate).mul(0.05))
   }
 }

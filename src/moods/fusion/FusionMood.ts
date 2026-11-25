@@ -1,3 +1,5 @@
+import hsl from 'okhsl'
+
 import {fusionTiming} from '#src/lib/gallery/fusion/timing.ts'
 
 import Mood from '../base/Mood.ts'
@@ -12,18 +14,18 @@ export default class FusionMood extends Mood {
     out: 1.5,
   }
   override readonly fill = {
-    color: '#d0dcff',
+    color: hsl.integer(270, 100, 88),
     gain: 0.5,
   }
   override readonly grade = {
-    shadow: '#08101e',
-    midtone: '#42598a',
-    highlight: '#e6efff',
+    shadow: hsl.integer(261, 46, 8),
+    midtone: hsl.integer(264, 46, 39),
+    highlight: hsl.integer(262, 100, 94),
     strength: 0.18,
   }
   readonly id = 'fusion'
   override readonly lamps = {
-    color: '#ffffff',
+    color: hsl.integer(0, 0, 100),
     gain: 1,
   }
   readonly title = 'Fusion'

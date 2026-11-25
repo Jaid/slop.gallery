@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'glacial_cipher',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The glacier has written its secrets in fractures too cold to speak.',
   placeholder: {
-    color: '#a4efff',
+    color: hsl.integer(212, 100, 89.4),
     shading: 'glass',
   },
 } as const satisfies KnotData

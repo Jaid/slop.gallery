@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -53,18 +54,18 @@ export default class extends KnotMaterial {
     // sleeping areas have weather rather than flat white.
     const milkNoise = mx_fractal_noise_float(p.mul(3.8), 3, 2, 0.5).mul(0.5).add(0.5)
     const milkCool = mx_noise_float(p.mul(2.2).add(vec3(5.4, 9.2, 1.8))).mul(0.5).add(0.5)
-    const milk = mix(color('#eadfc9'), color('#d9cbae'), milkNoise)
-    const coolMilk = mix(milk, color('#b7cdc6'), milkCool.mul(0.5))
-    const blushed = mix(coolMilk, color('#dcbcb0'), milkNoise.smoothstep(0.68, 0.95).mul(0.45))
+    const milk = mix(color(hsl.integer(85, 37, 89)), color(hsl.integer(85, 32, 82)), milkNoise)
+    const coolMilk = mix(milk, color(hsl.integer(175, 19, 80)), milkCool.mul(0.5))
+    const blushed = mix(coolMilk, color(hsl.integer(42, 32, 79)), milkNoise.smoothstep(0.68, 0.95).mul(0.45))
     const seamShadow = harlequin.seam.mul(0.5).add(pinfire.seam.mul(intimate).mul(0.35)).clamp()
-    const body = mix(blushed, color('#b9beb4'), seamShadow.mul(0.5))
+    const body = mix(blushed, color(hsl.integer(129, 10, 76)), seamShadow.mul(0.5))
     this.colorNode = mix(body, fireColor, fireIntensity.mul(0.68))
     this.metalness = 0
     this.roughnessNode = float(0.19).sub(fireIntensity.mul(0.06)).clamp(0.1, 0.24)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.07
     this.sheen = 0.55
-    this.sheenColor.set('#fff4e2')
+    this.sheenColor.set(hsl.integer(80, 100, 96.6))
     this.sheenRoughness = 0.5
     this.iridescence = 0.85
     this.iridescenceNode = fireIntensity.mul(0.75).add(0.2).clamp()
@@ -79,7 +80,7 @@ export default class extends KnotMaterial {
     const sparkle = glints(opalNormal, 170).mul(intimate)
     this.emissiveNode = fireColor
       .mul(float(1.15).add(near.mul(0.65)))
-      .add(color('#fff6e6').mul(sparkle).mul(0.35))
-      .add(color('#ffe9c4').mul(harlequin.flare).mul(harlequin.flare).mul(0.35))
+      .add(color(hsl.integer(82, 100, 97.2)).mul(sparkle).mul(0.35))
+      .add(color(hsl.integer(81, 100, 93.3)).mul(harlequin.flare).mul(harlequin.flare).mul(0.35))
   }
 }

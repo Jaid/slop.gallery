@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'makie_lacquer',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Gold dust settles into deep lacquer like stars into a still night.',
   placeholder: {
-    color: '#f5c451',
+    color: hsl.integer(86, 86, 82),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IBraVE33noBp60D.
 export default {
   id: 'hoarfrost_canticle',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The cold writes sixfold hymns in glass; each crystal opens another verse as you draw near.',
   placeholder: {
-    color: '#b7dce1',
+    color: hsl.integer(206, 36, 85),
     shading: 'glass',
   },
 } as const satisfies KnotData

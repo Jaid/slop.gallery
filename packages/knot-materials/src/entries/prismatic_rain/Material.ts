@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -56,10 +57,10 @@ export default class extends KnotMaterial {
     const film = mx_noise_float(p.mul(7.5).add(vec3(time.mul(0.006), time.mul(-0.01), 0))).mul(0.5).add(0.5)
     const prismPhase = p.dot(vec3(2.4, -3.1, 4.8)).mul(5.5).add(grazing.mul(4.2)).add(time.mul(0.035))
     const prismColor = spectralColor(prismPhase)
-    const glass = mix(color('#020914'), color('#0b3448'), facing.mul(0.42).add(grazing.mul(0.24)).add(film.mul(0.14)).clamp())
-    const dropletColor = mix(prismColor, color('#f4ffff'), beadMask.mul(0.64).add(grazing.mul(0.36)).clamp())
-    const rainbow = mix(glass, mix(dropletColor, rainAverage.add(color('#102a42')), 0.35), drops.mul(0.92).clamp())
-    const rimColor = mix(color('#25d7d5'), color('#f36ed7'), grazing.mul(0.76).add(film.mul(0.24)))
+    const glass = mix(color(hsl.integer(251, 63, 5)), color(hsl.integer(235, 76, 21)), facing.mul(0.42).add(grazing.mul(0.24)).add(film.mul(0.14)).clamp())
+    const dropletColor = mix(prismColor, color(hsl.integer(197, 100, 99)), beadMask.mul(0.64).add(grazing.mul(0.36)).clamp())
+    const rainbow = mix(glass, mix(dropletColor, rainAverage.add(color(hsl.integer(248, 62, 18))), 0.35), drops.mul(0.92).clamp())
+    const rimColor = mix(color(hsl.integer(194, 92, 76.5)), color(hsl.integer(336, 91, 69)), grazing.mul(0.76).add(film.mul(0.24)))
     const surface = mix(rainbow, rimColor, grazing.pow(2.8).mul(0.38))
     const relief = drops.mul(0.0021).add(film.mul(near).mul(0.00022))
     this.colorNode = surface
@@ -69,7 +70,7 @@ export default class extends KnotMaterial {
     this.thickness = 0.72
     this.ior = 1.46
     this.dispersion = 0.56
-    this.attenuationColor.set('#a6dbe5')
+    this.attenuationColor.set(hsl.integer(211, 47, 83))
     this.attenuationDistance = 1.8
     this.clearcoat = 1
     this.clearcoatRoughness = 0.018
@@ -78,6 +79,6 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = grazing.mul(270).add(310)
     this.positionNode = p.add(normalLocal.mul(dropBodyRaw.mul(0.0011)))
     this.normalNode = proceduralNormal(relief, 0.54)
-    this.emissiveNode = prismColor.mul(drops).mul(near.mul(0.32).add(0.12)).mul(1.45).add(rainAverage.mul(grazing.pow(2).mul(0.22).add(near.mul(0.04))).mul(2.1)).add(color('#f5ffff').mul(beadMask).mul(intimate.mul(0.22).add(0.04)))
+    this.emissiveNode = prismColor.mul(drops).mul(near.mul(0.32).add(0.12)).mul(1.45).add(rainAverage.mul(grazing.pow(2).mul(0.22).add(near.mul(0.04))).mul(2.1)).add(color(hsl.integer(197, 99, 99)).mul(beadMask).mul(intimate.mul(0.22).add(0.04)))
   }
 }

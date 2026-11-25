@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5RXWnszENQQH6u3; fixture: knot-material-shaders; result: success.
 export default {
   id: 'cymatics',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A violin bow dragged across a steel plate throws the sand into the shape of the note. Every frequency is a different animal.',
   placeholder: {
-    color: '#0d1014',
+    color: hsl.integer(256, 14, 8),
     shading: 'metal',
   },
 } as const satisfies KnotData

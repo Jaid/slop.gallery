@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'radiometric_guilloche',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Fine engraved loops shelter a faint green glow that outlasts the lamps.',
   placeholder: {
-    color: '#ffd27d',
+    color: hsl.integer(82, 100, 86.6),
     shading: 'smooth',
   },
 } as const satisfies KnotData

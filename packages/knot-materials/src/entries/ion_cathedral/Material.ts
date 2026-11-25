@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mx_cell_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -18,7 +19,7 @@ export default class extends KnotMaterial {
         scale: 2.1,
         drift: [0.31, -0.17, 0.23],
         branch: 5.3,
-        tint: '#7a3dff',
+        tint: hsl.integer(289.2, 100, 49),
         rate: 2.3,
         phase: 3.1,
       },
@@ -26,7 +27,7 @@ export default class extends KnotMaterial {
         scale: 3.4,
         drift: [-0.21, 0.4, 0.12],
         branch: 8.1,
-        tint: '#35d5ff',
+        tint: hsl.integer(220.6, 100, 78),
         rate: 3.1,
         phase: 7.7,
       },
@@ -34,7 +35,7 @@ export default class extends KnotMaterial {
         scale: 1.5,
         drift: [0.12, -0.3, -0.35],
         branch: 4.1,
-        tint: '#cfe0ff',
+        tint: hsl.integer(263, 100, 89),
         rate: 1.7,
         phase: 12.9,
       },
@@ -61,16 +62,16 @@ export default class extends KnotMaterial {
     const arcs = arcMask.mul(attract)
     const master = mx_cell_noise_float(vec3(time.mul(0.9).floor().add(0.5), 1.1, 4.4)).smoothstep(0.92, 0.95)
     const hazeField = mx_noise_float(p.mul(1.4).add(vec3(time.mul(0.08), 0, 0))).mul(0.5).add(0.5)
-    this.colorNode = color('#050508')
+    this.colorNode = color(hsl.integer(285, 18, 4))
     this.metalness = 0.55
     this.roughness = 0.05
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.emissiveNode = arcEmissive.mul(attract).mul(near.mul(0.45).add(0.55))
-      .add(color('#f4f7ff').mul(arcs.mul(arcs).mul(arcs)).mul(1.6))
-      .add(color('#5a3fae').mul(haloSum).mul(0.22))
-      .add(color('#241a55').mul(hazeField).mul(0.16))
-      .add(color('#eef2ff').mul(arcs).mul(master).mul(2.2))
-      .add(color('#b9a8ff').mul(rim).mul(master).mul(0.5))
+      .add(color(hsl.integer(270, 100, 97)).mul(arcs.mul(arcs).mul(arcs)).mul(1.6))
+      .add(color(hsl.integer(289, 73, 38)).mul(haloSum).mul(0.22))
+      .add(color(hsl.integer(285, 73, 17)).mul(hazeField).mul(0.16))
+      .add(color(hsl.integer(272, 100, 95.6)).mul(arcs).mul(master).mul(2.2))
+      .add(color(hsl.integer(292, 100, 74)).mul(rim).mul(master).mul(0.5))
   }
 }

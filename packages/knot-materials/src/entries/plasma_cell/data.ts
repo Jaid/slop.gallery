@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'plasma_cell',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A charged glow presses against the walls of its fragile chamber.',
   placeholder: {
-    color: '#dff6ff',
+    color: hsl.integer(224, 100, 95),
     shading: 'liquid',
   },
 } as const satisfies KnotData

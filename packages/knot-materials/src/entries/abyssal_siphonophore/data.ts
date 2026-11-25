@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_siphonophore',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Drifting through the midnight trench, a glass colony pulses with traveling ribbons of living rainbow light.',
   placeholder: {
-    color: '#0b6f78',
+    color: hsl.integer(205, 94, 42),
     shading: 'glass',
   },
 } as const satisfies KnotData

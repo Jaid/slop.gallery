@@ -25,6 +25,7 @@
   "dependencies": {
     "math": "0.1.0",
     "media-encoding": "workspace:*",
+    "okhsl": "0.2.0",
     "three-mesh-bvh": "0.9.18"
   },
   "peerDependencies": {

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentView, color, float, mix, mx_noise_float, positionViewDirection, tangentView, time, uv, vec2, vec3} from 'three/tsl'
 
 import {enamel, etch, filteredCos, ornamentCell, polarAngle, turn} from '../../candidates/gpt_sol/lib/ornamentAtlas.ts'
@@ -45,16 +46,16 @@ export default class extends KnotMaterial {
     const lay = along.mul(theta.cos()).add(across.mul(theta.sin())).mul(0.5).add(0.5)
     const pressure = tube.x.mul(TAU * 3).sub(time.mul(0.28)).add(tube.y.mul(TAU)).sin().mul(0.5).add(0.5)
     const reverse = lay.smoothstep(0.2, 0.8).mul(grazing.mul(0.6).add(0.4))
-    const velvet = mix(color('#300718'), color('#6e1137'), facing.mul(0.6).add(pressure.mul(0.16)))
-    const pileColor = mix(velvet, color('#301f59'), reverse.mul(0.72))
-    const cutPile = mix(pileColor, pileColor.mul(1.65).add(color('#3c0a23').mul(0.1)), jacquard)
-    const spunGold = mix(color('#714425'), color('#dcb474'), lay.mul(0.4).add(thread.mul(0.3)).add(random.y.mul(0.08)).add(0.2))
+    const velvet = mix(color(hsl.integer(359, 73, 11)), color(hsl.integer(2, 81, 26)), facing.mul(0.6).add(pressure.mul(0.16)))
+    const pileColor = mix(velvet, color(hsl.integer(293, 67, 19.4)), reverse.mul(0.72))
+    const cutPile = mix(pileColor, pileColor.mul(1.65).add(color(hsl.integer(354, 74, 14)).mul(0.1)), jacquard)
+    const spunGold = mix(color(hsl.integer(53, 58, 34)), color(hsl.integer(79, 58, 76)), lay.mul(0.4).add(thread.mul(0.3)).add(random.y.mul(0.08)).add(0.2))
     this.colorNode = mix(cutPile.mul(thread.mul(0.08).add(0.94)), spunGold, goldMask)
     this.metalnessNode = goldMask.mul(0.78)
     this.roughnessNode = mix(float(0.86).sub(jacquard.mul(0.17)), float(0.38), goldMask)
       .sub(pressure.mul(0.03)).clamp(0.31, 0.9)
     this.sheen = 1
-    this.sheenNode = mix(color('#cf315f'), color('#7463b2'), reverse).mul(goldMask.mul(-0.7).add(0.85))
+    this.sheenNode = mix(color(hsl.integer(9, 84, 50)), color(hsl.integer(292, 53, 48)), reverse).mul(goldMask.mul(-0.7).add(0.85))
     this.sheenRoughnessNode = mix(float(0.55), float(0.32), jacquard)
     this.anisotropy = 0.65
     this.anisotropyNode = vec2(theta.cos(), theta.sin()).mul(goldMask.mul(0.25).add(0.4))
@@ -63,7 +64,7 @@ export default class extends KnotMaterial {
     const relief = jacquard.mul(0.0006).add(goldMask.mul(0.00085)).add(napHeight)
     this.normalNode = proceduralNormal(relief.add(roughNap.mul(0.000025)), 0.55)
     // The very faint warm underlight avoids crushing burgundy fibers in a dim gallery.
-    this.emissiveNode = color('#5a1030').mul(grazing.pow(2)).mul(0.012)
-      .add(color('#e8b980').mul(goldMask).mul(pressure.pow(5)).mul(near).mul(0.014))
+    this.emissiveNode = color(hsl.integer(360, 77, 22)).mul(grazing.pow(2)).mul(0.012)
+      .add(color(hsl.integer(71, 61, 78)).mul(goldMask).mul(pressure.pow(5)).mul(near).mul(0.014))
   }
 }

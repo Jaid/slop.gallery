@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1UqvleKScECZs6l.
 export default {
   id: 'heartwood_vespers',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'The old tree keeps its final light within rings cut long before the gallery existed.',
   placeholder: {
-    color: '#542014',
+    color: hsl.integer(34, 71, 22),
     shading: 'smooth',
   },
 } as const satisfies KnotData

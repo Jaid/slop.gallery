@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -37,12 +38,12 @@ export default class extends KnotMaterial {
     const field = fleckField(tube)
     const flow = p.dot(vec3(1.3, 2.1, -0.7)).add(time.mul(0.06)).add(mx_noise_float(p.mul(2.2)).mul(1.8))
     const brushed = flow.sin().mul(0.5).add(0.5)
-    const red = mix(color('#3b0309'), color('#e52b25'), brushed.pow(1.8).mul(0.76).add(0.16))
-    const gold = mix(color('#8d4b11'), color('#ffd47a'), field.random.y)
+    const red = mix(color(hsl.integer(21, 94, 12.4)), color(hsl.integer(28, 95.6, 53)), brushed.pow(1.8).mul(0.76).add(0.16))
+    const gold = mix(color(hsl.integer(55, 84, 40)), color(hsl.integer(84, 100, 87)), field.random.y)
     const leaf = field.foil.mul(field.random.z.smoothstep(0.4, 0.7))
     const height = field.fleck.mul(0.012).add(field.foil.mul(0.025)).add(brushed.mul(0.002))
     this.positionNode = p.add(normalLocal.mul(height.mul(near.mul(0.4).add(0.6)).mul(0.0017)))
-    this.colorNode = mix(red, gold, leaf.mul(0.8)).add(color('#ff7950').mul(brushed).mul(grazing).mul(0.08))
+    this.colorNode = mix(red, gold, leaf.mul(0.8)).add(color(hsl.integer(37, 100, 68)).mul(brushed).mul(grazing).mul(0.08))
     this.metalnessNode = leaf.mul(0.9).add(field.fleck.mul(0.55))
     this.roughnessNode = float(0.1).add(field.foil.mul(0.12)).add(field.fleck.mul(0.17)).sub(grazing.mul(0.025)).clamp(0.045, 0.36)
     this.clearcoat = 1
@@ -51,7 +52,7 @@ export default class extends KnotMaterial {
     this.iridescenceNode = field.fleck.mul(0.18).add(grazing.mul(0.08))
     this.iridescenceThicknessNode = field.random.x.mul(300).add(80)
     const sparkle = glints(normalViewGeometry, 150).mul(field.fleck).mul(near)
-    this.emissiveNode = color('#fff0bb').mul(sparkle.mul(0.65)).add(color('#ff3b1e').mul(brushed).mul(grazing).mul(intimate).mul(0.12))
+    this.emissiveNode = color(hsl.integer(94, 100, 94.7)).mul(sparkle.mul(0.65)).add(color(hsl.integer(31.4, 100, 59.7)).mul(brushed).mul(grazing).mul(intimate).mul(0.12))
     this.aoNode = float(0.78).add(field.foil.mul(0.22))
   }
 }

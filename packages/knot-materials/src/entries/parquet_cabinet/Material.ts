@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, uv, vec2} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -34,11 +35,11 @@ export default class extends KnotMaterial {
     const poreQ = p.mul(180)
     const poreVisibility = poreQ.fwidth().length().smoothstep(0.35, 1.2).oneMinus().mul(near)
     const pores = mx_noise_float(poreQ).smoothstep(0.32, 0.65).mul(poreVisibility).mul(resolved)
-    const maple = mix(color('#d5a264'), color('#f1cc8e'), grain.mul(0.65))
-    const rosewood = mix(color('#54281f'), color('#ad6540'), grain.mul(0.72).add(0.12))
+    const maple = mix(color(hsl.integer(71, 60, 71)), color(hsl.integer(80, 69, 84)), grain.mul(0.65))
+    const rosewood = mix(color(hsl.integer(33, 55, 24)), color(hsl.integer(47, 60, 51)), grain.mul(0.72).add(0.12))
     const wood = mix(maple, rosewood, side).mul(pores.mul(-0.16).add(1))
-    const joint = mix(color('#2e211a'), color('#e5cd9c'), stringing)
-    this.colorNode = mix(color('#aa7548'), mix(joint, wood, veneer), resolved)
+    const joint = mix(color(hsl.integer(50, 26, 16)), color(hsl.integer(85, 52, 83)), stringing)
+    this.colorNode = mix(color(hsl.integer(60, 54, 54)), mix(joint, wood, veneer), resolved)
     this.metalness = 0
     this.ior = 1.46
     this.specularIntensity = 0.6

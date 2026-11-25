@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -35,21 +36,21 @@ export default class extends KnotMaterial {
     const crescent = moonRing.mul(occludingDisc.oneMinus()).mul(moonRandom.x.smoothstep(0.36, 0.45))
     const dust = starfield(p, 17, 0.91).mul(intimate).mul(grazing.mul(0.45).add(0.55))
     const velvetLift = grazing.pow(1.45).mul(nap.mul(0.45).add(0.55)).mul(napDirection.mul(0.52).add(0.48))
-    const base = mix(color('#020207'), color('#16061d'), grain.mul(0.28).add(velvetLift.mul(0.65)))
-    const crescentTint = mix(color('#ff542f'), color('#ffd18b'), moonRandom.y)
+    const base = mix(color(hsl.integer(282, 48, 2.5)), color(hsl.integer(315, 64, 7)), grain.mul(0.28).add(velvetLift.mul(0.65)))
+    const crescentTint = mix(color(hsl.integer(34, 100, 62.5)), color(hsl.integer(77, 100, 86.6)), moonRandom.y)
     const livingCrescent = crescent.mul(time.mul(0.42).add(moonRandom.z.mul(6.28318)).sin().mul(0.14).add(0.86))
     const fiberHeight = nap.sub(0.5).mul(grazing.mul(0.7).add(0.3)).add(grain.sub(0.5).mul(0.12))
-    this.colorNode = mix(base, color('#5d174f'), velvetLift.mul(0.36))
+    this.colorNode = mix(base, color(hsl.integer(337, 73, 25)), velvetLift.mul(0.36))
     this.metalness = 0
     this.roughnessNode = float(0.91).sub(velvetLift.mul(0.22)).sub(crescent.mul(0.1)).clamp(0.55, 0.95)
     this.sheen = 1
-    this.sheenColor.set('#b73e8e')
+    this.sheenColor.set(hsl.integer(344, 72, 49))
     this.sheenRoughness = 0.74
     this.clearcoatNode = crescent.mul(0.22)
     this.clearcoatRoughness = 0.32
     this.normalNode = proceduralNormal(fiberHeight, 0.00048)
     this.emissiveNode = crescentTint.mul(livingCrescent).mul(near.mul(0.6).add(0.22)).mul(0.78)
       .add(dust.mul(0.8))
-      .add(color('#39124d').mul(grazing.pow(3)).mul(0.16))
+      .add(color(hsl.integer(312, 76, 17)).mul(grazing.pow(3)).mul(0.16))
   }
 }

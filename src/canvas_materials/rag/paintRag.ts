@@ -1,5 +1,6 @@
 import type {MeshPhysicalNodeMaterial, Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, vec2} from 'three/tsl'
 
 import {slopeNormal} from '#src/lib/materials/filters.ts'
@@ -53,7 +54,7 @@ export default function paintRag(material: MeshPhysicalNodeMaterial, image: Node
   const fleckAt = mix(float(fleckMiddle[0]), float(fleckMiddle[1]), sharp)
   const fleckSpread = mix(float(fleckHalfWidth), narrowest, sharp)
   const crests = middle.mul(detail).smoothstep(fleckAt.sub(fleckSpread), fleckAt.add(fleckSpread))
-  material.colorNode = mix(image.mul(pressed.mul(0.12).sub(0.02).mul(tooth).add(1)), color('#ddd3be'), crests.mul(flecks).mul(0.063).min(1))
+  material.colorNode = mix(image.mul(pressed.mul(0.12).sub(0.02).mul(tooth).add(1)), color(hsl.integer(86, 27, 85)), crests.mul(flecks).mul(0.063).min(1))
   material.normalNode = slopeNormal(slope)
   material.roughness = 0.98
 }

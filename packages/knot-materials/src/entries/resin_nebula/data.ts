@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: EC58pRKjMMMNqsv; fixture: knot-material-shaders; result: success.
 export default {
   id: 'resin_nebula',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A nebula folded into clear resin; lean closer and its star clouds drift past one another, refusing to sit still.',
   placeholder: {
-    color: '#595678',
+    color: hsl.integer(288, 29, 39),
     shading: 'glass',
   },
 } as const satisfies KnotData

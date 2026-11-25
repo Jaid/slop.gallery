@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, exp, float, Fn, mix, mx_cell_noise_float, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, positionViewDirection, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/deepseek/lib/bumpNormal.ts'
@@ -37,8 +38,8 @@ export default class extends KnotMaterial {
     const milled = mx_fractal_noise_float(p.mul(4.1), 4, 2.02, 0.56).mul(0.5).add(0.5)
     const milk = mx_noise_float(p.mul(12.5).add(vec3(4.2, 1.1, 7.7))).mul(0.5).add(0.5)
 // The potch stays nearly black so every photon of fire reads as pure spectral color.
-    const potch = mix(color('#010407'), color('#071c1e'), milled.smoothstep(0.24, 0.78))
-    const cloudy = mix(potch, color('#93aba2'), milk.mul(0.055))
+    const potch = mix(color(hsl.integer(237, 53, 3)), color(hsl.integer(204, 58, 11)), milled.smoothstep(0.24, 0.78))
+    const cloudy = mix(potch, color(hsl.integer(171, 17, 67)), milk.mul(0.055))
 // Each domain is a tiny diffraction grating: its own axis, spacing and flash threshold.
     const axis = cells.random.mul(2).sub(1).normalize()
     const bragg = axis.dot(view)
@@ -69,12 +70,12 @@ export default class extends KnotMaterial {
     this.normalNode = bump
     this.clearcoatNormalNode = bump
     const facing = surfaceNormal.dot(positionViewDirection).abs().clamp()
-    const scatter = color('#2d7c7e').mul(grazing.pow(3)).mul(0.24)
+    const scatter = color(hsl.integer(198, 69, 47)).mul(grazing.pow(3)).mul(0.24)
     const pinfireMask = mx_cell_noise_float(p.mul(92)).smoothstep(0.74, 0.88).mul(near)
     const pinfire = glints(surfaceNormal, 110).mul(pinfireMask).mul(1.2)
     this.emissiveNode = play.mul(playMask).mul(0.12)
       .add(scatter)
       .add(vec3(1, 0.88, 0.68).mul(pinfire))
-      .add(color('#123a3b').mul(facing.pow(5)).mul(0.1))
+      .add(color(hsl.integer(197, 66, 22)).mul(facing.pow(5)).mul(0.1))
   }
 }

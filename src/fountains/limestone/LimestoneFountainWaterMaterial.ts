@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {abs, attribute, cameraPosition, cameraViewMatrix, color, dot, exp, float, mix, mx_noise_float, normalize, normalView, positionGeometry, positionViewDirection, positionWorld, sin, smoothstep, time, transformNormalToView, vec3} from 'three/tsl'
 import {DoubleSide, MeshPhysicalNodeMaterial} from 'three/webgpu'
 
@@ -24,7 +25,7 @@ export default class LimestoneFountainWaterMaterial extends MeshPhysicalNodeMate
     super({
       clearcoat: falling ? 0.3 : 0.85,
       clearcoatRoughness: 0.05,
-      color: '#ffffff',
+      color: hsl.integer(0, 0, 100),
       depthWrite: false,
       envMap: environment ?? null,
       envMapIntensity: heavy ? 1.3 : 0.65,
@@ -63,9 +64,9 @@ export default class LimestoneFountainWaterMaterial extends MeshPhysicalNodeMate
       const sheet = whole.mul(tongues.mul(0.35).add(0.75)).mul(streaks.mul(0.25).add(0.85)).mul(ending).clamp()
       // Air torn into the water makes white water: the sheet turns opaque white where it is aerated and stays clear where it is not.
       const foam = air.mul(streaks.mul(0.4).add(0.75)).add(glancing.mul(0.4)).add(fall.pow(3).mul(0.15)).clamp()
-      const sheen = mix(color('#8dcfdd'), color('#f8feff'), glancing)
-      const sheetColor = mix(mix(color('#9ddbd2'), color('#ffffff'), foam), sheen, glancing.mul(0.4))
-      const tubeColor = mix(color('#a5ded6'), color('#f4fffd'), air.mul(0.5).add(streaks.mul(0.3)).add(0.2))
+      const sheen = mix(color(hsl.integer(212, 51, 79)), color(hsl.integer(209, 100, 99)), glancing)
+      const sheetColor = mix(mix(color(hsl.integer(185, 47, 82)), color(hsl.integer(0, 0, 100)), foam), sheen, glancing.mul(0.4))
+      const tubeColor = mix(color(hsl.integer(185, 46, 83.6)), color(hsl.integer(184, 100, 99)), air.mul(0.5).add(streaks.mul(0.3)).add(0.2))
       this.colorNode = mix(sheetColor, tubeColor, dense)
       this.opacityNode = mix(sheet.mul(mix(0.42, 0.96, foam)), float(0.48).add(glancing.mul(0.35)), dense).clamp(0, 1)
       this.roughnessNode = mix(fall.mul(0.12).add(0.04), float(0.03), dense)
@@ -115,9 +116,9 @@ export default class LimestoneFountainWaterMaterial extends MeshPhysicalNodeMate
       // Light from the bright vault: slopes that face it catch the sky, the ones turned away fall into the water’s own shade.
       const skyDirection = normalize(vec3(0.3, 1, 0.22))
       const skyLight = dot(worldNormal, skyDirection).clamp(0, 1)
-      const water = mix(color('#12463f'), color('#79cfc0'), crest.mul(1.1).add(0.14)).mul(mix(float(0.24), float(1.85), skyLight))
-      const reflectedSky = mix(color('#3f95b0'), color('#f4feff'), dot(reflected, skyDirection).max(0).pow(3))
-      this.colorNode = mix(mix(water, color('#f4fffc'), foam.mul(foam)), reflectedSky, fresnel.mul(1.3).add(0.1).min(0.94))
+      const water = mix(color(hsl.integer(182, 77, 26)), color(hsl.integer(182, 57, 76)), crest.mul(1.1).add(0.14)).mul(mix(float(0.24), float(1.85), skyLight))
+      const reflectedSky = mix(color(hsl.integer(222, 66, 57)), color(hsl.integer(204, 100, 98.8)), dot(reflected, skyDirection).max(0).pow(3))
+      this.colorNode = mix(mix(water, color(hsl.integer(178, 100, 99)), foam.mul(foam)), reflectedSky, fresnel.mul(1.3).add(0.1).min(0.94))
       this.opacityNode = foam.mul(0.15).add(fresnel.mul(0.1)).add(0.8).clamp(0.5, 0.99)
       this.normalNode = rippled
       this.positionNode = positionGeometry.add(vec3(0, height, 0))

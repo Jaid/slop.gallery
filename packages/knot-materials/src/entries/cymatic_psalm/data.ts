@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: LLxliOfHhDMdNvD; fixture: knot-material-shaders; result: success.
 export default {
   id: 'cymatic_psalm',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A bronze bell that never rings aloud. Its standing waves comb the dust into scripture, and the verse changes whenever no one is counting.',
   placeholder: {
-    color: '#8f7656',
+    color: hsl.integer(73, 34, 51),
     shading: 'metal',
   },
 } as const satisfies KnotData

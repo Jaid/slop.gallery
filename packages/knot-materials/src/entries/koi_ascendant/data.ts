@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2tmj6W7XIniDLsB; fixture: knot-material-shaders; result: success.
 export default {
   id: 'koi_ascendant',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Golden koi swim an endless river of lacquer. Vermilion fins breathe against the black; tiny scales carry the daylight you bring to their water.',
   placeholder: {
-    color: '#082d27',
+    color: hsl.integer(180, 79, 17),
     shading: 'smooth',
   },
 } as const satisfies KnotData

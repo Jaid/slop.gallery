@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -34,8 +35,8 @@ export default class extends KnotMaterial {
     const edge = lip.add(diagonal.mul(0.62)).clamp()
     const filmPhase = terraceLevel.mul(9).add(identity.z.mul(3.7)).add(grazing.mul(2.8)).add(time.mul(0.025))
     const spectrum = spectralColor(filmPhase)
-    const midnight = mix(color('#080513'), color('#29103c'), terrace.mul(0.62).add(fineNoise.mul(0.09)))
-    const oxide = mix(color('#65105e'), spectrum, terrace.mul(0.35).add(edge.mul(0.8)).clamp())
+    const midnight = mix(color(hsl.integer(293, 52, 4.6)), color(hsl.integer(307, 69, 13)), terrace.mul(0.62).add(fineNoise.mul(0.09)))
+    const oxide = mix(color(hsl.integer(332, 81, 26)), spectrum, terrace.mul(0.35).add(edge.mul(0.8)).clamp())
     const surface = mix(midnight, oxide, terrace.mul(0.5).add(edge.mul(0.65)).clamp())
     const relief = terrace.mul(0.0012).add(edge.mul(0.0012)).add(fineNoise.mul(near).mul(0.0003))
     this.colorNode = surface
@@ -49,6 +50,6 @@ export default class extends KnotMaterial {
     this.anisotropy = 0.38
     this.positionNode = p.add(normalLocal.mul(terraceLevel.mul(0.0034).add(lip.mul(0.0008))))
     this.normalNode = proceduralNormal(relief, 0.68)
-    this.emissiveNode = spectrum.mul(edge).mul(grazing.pow(2.4).mul(0.12).add(near.mul(0.018))).add(color('#ffb5f4').mul(lip).mul(intimate).mul(0.06))
+    this.emissiveNode = spectrum.mul(edge).mul(grazing.pow(2.4).mul(0.12).add(near.mul(0.018))).add(color(hsl.integer(332, 100, 84)).mul(lip).mul(intimate).mul(0.06))
   }
 }

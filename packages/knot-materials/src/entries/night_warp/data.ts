@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'night_warp',
   candidateId: 'grok',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Night is the warp. Everything colored is only a thread that refused to stay in the dark.',
   placeholder: {
-    color: '#154c58',
+    color: hsl.integer(215, 74, 29),
     shading: 'fabric',
   },
 } as const satisfies KnotData

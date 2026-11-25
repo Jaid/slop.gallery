@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionViewDirection, time, uv, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -39,24 +40,24 @@ export default class extends KnotMaterial {
 // Bronze chamber: brushed, lightly oxidised, and holding the colour of the plasma.
     const brush = mx_noise_float(vec3(p.x.mul(180), p.y.mul(9), p.z.mul(180))).mul(0.5).add(0.5)
     const oxide = mx_noise_float(p.mul(7).add(vec3(4.4, 2.2, 8.8))).mul(0.5).add(0.5).smoothstep(0.5, 0.8)
-    const shell = mix(color('#2f2a22'), color('#4a4034'), oxide).add(color('#6b6252').mul(brush).mul(near).mul(0.12))
+    const shell = mix(color(hsl.integer(80, 16, 19)), color(hsl.integer(72, 19, 28)), oxide).add(color(hsl.integer(82, 17, 42)).mul(brush).mul(near).mul(0.12))
     const coreGlow = primaryHelix.core.mul(primaryHelix.wave)
     const haloGlow = primaryHelix.halo.mul(0.55).add(secondaryHelix.halo.mul(0.3))
     const fineStrands = strandHelix.core.mul(near).mul(0.5)
     const islands = primaryHelix.halo.mul(secondaryHelix.halo).mul(2.2)
-    this.colorNode = shell.add(color('#0d3a2c').mul(haloGlow).mul(0.03)).add(color('#123a33').mul(fineStrands).mul(0.05))
+    this.colorNode = shell.add(color(hsl.integer(168, 83, 21)).mul(haloGlow).mul(0.03)).add(color(hsl.integer(180, 68, 22)).mul(fineStrands).mul(0.05))
     this.metalnessNode = mix(float(0.94), float(0.6), oxide.mul(0.5))
     this.roughnessNode = float(0.24).add(brush.mul(near).mul(0.1)).add(oxide.mul(0.14)).clamp(0.05, 1)
     this.anisotropy = 0.4
     this.normalNode = detailNormal(normalViewGeometry, brush.mul(near).mul(0.0004), 0.3)
     this.clearcoatNode = grazing.pow(2.2).mul(0.5).add(0.1)
     this.clearcoatRoughness = 0.12
-    this.emissiveNode = color('#eafff2').mul(coreGlow).mul(0.62).mul(surge).mul(bunching)
-      .add(color('#19ffa0').mul(haloGlow).mul(0.26).mul(flutter).mul(surge))
-      .add(color('#6effe0').mul(secondaryHelix.core).mul(secondaryHelix.wave).mul(0.4))
-      .add(color('#b8fff0').mul(fineStrands).mul(0.22).mul(flutter))
-      .add(color('#5affc8').mul(islands).mul(intimate.mul(0.5).add(0.35)).mul(0.16))
-      .add(color('#12d68a').mul(grazing.pow(6)).mul(0.1))
+    this.emissiveNode = color(hsl.integer(159, 100, 97.8)).mul(coreGlow).mul(0.62).mul(surge).mul(bunching)
+      .add(color(hsl.integer(157.3, 99, 86)).mul(haloGlow).mul(0.26).mul(flutter).mul(surge))
+      .add(color(hsl.integer(177, 100, 89.8)).mul(secondaryHelix.core).mul(secondaryHelix.wave).mul(0.4))
+      .add(color(hsl.integer(180, 100, 94)).mul(fineStrands).mul(0.22).mul(flutter))
+      .add(color(hsl.integer(167, 100, 88.4)).mul(islands).mul(intimate.mul(0.5).add(0.35)).mul(0.16))
+      .add(color(hsl.integer(158, 98.5, 74)).mul(grazing.pow(6)).mul(0.1))
       .add(shell.mul(haloGlow).mul(0.1))
   }
 }

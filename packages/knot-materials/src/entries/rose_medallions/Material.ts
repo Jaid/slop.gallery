@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {environmentRadiance} from '../../candidates/claude_opus/lib/environmentRadiance.ts'
@@ -122,9 +123,9 @@ export default class extends KnotMaterial {
     })
     const surface = layout.arc.mul(vec2(knotLength, knotCircumference))
     const patina = mx_noise_float(vec3(surface.mul(60), 0)).mul(0.5).add(0.5)
-    const lead = mix(mix(color('#1b1c1e'), color('#3a3d40'), patina), color('#161514'), ironCover.mul(0.6))
+    const lead = mix(mix(color(hsl.integer(264, 5, 12)), color(hsl.integer(248, 5, 26)), patina), color(hsl.integer(68, 3, 10)), ironCover.mul(0.6))
     this.normalNode = relief.viewNormal
-    this.colorNode = mix(mix(transmittance.mul(0.015), color('#2a1a10'), paintCover.mul(0.6)), lead, leadCover)
+    this.colorNode = mix(mix(transmittance.mul(0.015), color(hsl.integer(53, 40, 13)), paintCover.mul(0.6)), lead, leadCover)
     this.metalnessNode = leadCover.mul(ironCover.mul(-0.3).add(0.6))
     this.roughnessNode = mix(float(0.07).add(paintCover.mul(0.3)), patina.mul(0.25).add(0.45).add(ironCover.mul(0.2)), leadCover)
     this.specularIntensity = 0.6

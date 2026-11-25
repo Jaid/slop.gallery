@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionGeometry, time, vec2, vec3} from 'three/tsl'
 import {Color} from 'three/webgpu'
 
@@ -35,35 +36,35 @@ export default class extends KnotMaterial {
     const rings = [
       {
         edge: 0.085,
-        color: '#03051a',
+        color: hsl.integer(271, 77, 4.6),
       },
       {
         edge: 0.14,
-        color: '#1338c9',
+        color: hsl.integer(265, 95.8, 34.6),
       },
       {
         edge: 0.195,
-        color: '#0aa39c',
+        color: hsl.integer(189, 97.4, 59),
       },
       {
         edge: 0.235,
-        color: '#2a8a2f',
+        color: hsl.integer(144, 96, 49),
       },
       {
         edge: 0.285,
-        color: '#d7a92c',
+        color: hsl.integer(87, 86, 72),
       },
       {
         edge: 0.345,
-        color: '#0f6f47',
+        color: hsl.integer(159, 96, 40),
       },
       {
         edge: 0.42,
-        color: '#0b3a2e',
+        color: hsl.integer(172, 85, 21),
       },
     ]
   // `color()` yields a 'color'-typed node; plain vec3 keeps the accumulator type stable.
-    const rgb = (hex: string) => {
+    const rgb = (hex: number) => {
       const c = new Color(hex)
       return vec3(c.r, c.g, c.b)
     }
@@ -76,7 +77,7 @@ export default class extends KnotMaterial {
       eye = mix(eye, rgb(ring.color), rr.smoothstep(prev.edge, prev.edge + 0.03))
     }
     const eyeMask = rr.smoothstep(0.34, 0.5).oneMinus()
-    const ground = mix(color('#0a2a1d'), color('#4c3a0f'), mx_noise_float(p.mul(11)).mul(0.5).add(0.5))
+    const ground = mix(color(hsl.integer(163, 77, 15)), color(hsl.integer(85, 76, 26)), mx_noise_float(p.mul(11)).mul(0.5).add(0.5))
   // Hair-fine barbs run diagonally; they modulate brightness and become the anisotropic sheen.
     const barbPhase = cells.grid.x.mul(19).add(cells.grid.y.mul(31)).add(draft.mul(90)).add(time.mul(0.35))
     const barbFootprint = barbPhase.fwidth()
@@ -89,14 +90,14 @@ export default class extends KnotMaterial {
     this.anisotropy = 0.85
     this.anisotropyRotation = Math.PI * 0.5
     this.sheen = 0.25
-    this.sheenColor.set('#7cf0c8')
+    this.sheenColor.set(hsl.integer(169, 76, 85.6))
     this.sheenRoughness = 0.35
     this.iridescence = 0.3
     this.iridescenceIOR = 1.7
     this.iridescenceThicknessNode = rr.mul(520).add(170)
     const height = barbs.mul(0.0006).add(fluff.mul(0.0002))
     this.normalNode = bumpNormal(normalViewGeometry.normalize(), height)
-    this.emissiveNode = mix(color('#0a5bff'), color('#12f0b0'), rr.smoothstep(0.1, 0.24)).mul(glow).mul(intimate.mul(0.2).add(0.1)).mul(facing.mul(0.6).add(0.4))
-      .add(color('#7bffd6').mul(grazing.pow(3)).mul(eyeMask.mul(0.05)))
+    this.emissiveNode = mix(color(hsl.integer(262.6, 100, 47)), color(hsl.integer(165, 98.5, 82)), rr.smoothstep(0.1, 0.24)).mul(glow).mul(intimate.mul(0.2).add(0.1)).mul(facing.mul(0.6).add(0.4))
+      .add(color(hsl.integer(170, 100, 90)).mul(grazing.pow(3)).mul(eyeMask.mul(0.05)))
   }
 }

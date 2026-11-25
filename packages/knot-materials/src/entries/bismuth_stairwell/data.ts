@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CyxjCrlY15yEfmL; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'bismuth_stairwell',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Crystals grew inward, stair by stair, and every step remembers the color of the air it met.',
   placeholder: {
-    color: '#5d5865',
+    color: hsl.integer(303, 12, 39),
     shading: 'metal',
   },
 } as const satisfies KnotData

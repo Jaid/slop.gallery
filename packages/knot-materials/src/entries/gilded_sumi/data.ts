@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'gilded_sumi',
   candidateId: 'gpt_terra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Black lacquer carries a river of gold leaf, its calligraphic current gathering where the light comes to rest.',
   placeholder: {
-    color: '#786332',
+    color: hsl.integer(87, 56, 43),
     shading: 'smooth',
   },
 } as const satisfies KnotData

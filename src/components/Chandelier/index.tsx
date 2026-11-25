@@ -5,6 +5,7 @@ import {useFrame} from '@react-three/fiber'
 import {BallCollider, ConvexHullCollider, CylinderCollider, RigidBody, useSphericalJoint} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo, useRef} from 'react'
 
 import ChandelierGeometry from '#src/lib/gallery/ChandelierGeometry.ts'
@@ -52,7 +53,7 @@ export default function Chandelier({lamp: lampId, rod = 0}: {
       {geometry.ringColliders.map((vertices, i) => <ConvexHullCollider key={`ring-${i}`} args={[vertices]} mass={chandelierPhysics.ringMass} restitution={0.15} />)}
       {geometry.knops.map(({radius, y}) => <BallCollider key={y} args={[radius]} mass={chandelierPhysics.knopMass} position={[0, y, 0]} />)}
       <mesh castShadow geometry={geometry.brass} name='chandelier-brass'><primitive attach='material' object={brass} /></mesh>
-      <mesh castShadow geometry={geometry.candles} name='chandelier-candles'><meshStandardNodeMaterial color='#e7c991' roughness={0.65} /></mesh>
+      <mesh castShadow geometry={geometry.candles} name='chandelier-candles'><meshStandardNodeMaterial color={hsl.integer(83, 57, 82)} roughness={0.65} /></mesh>
       <mesh geometry={geometry.flames} material={flame} name='chandelier-flames' renderOrder={1} />
       <mesh geometry={geometry.pendant} name='chandelier-pendant'><primitive attach='material' object={brass} /></mesh>
       {/* The lamp hangs below the metalwork, so the fixture cannot shadow its own source. */}

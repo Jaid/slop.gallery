@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_atan2, mx_noise_float, positionGeometry, time, uv, vec2} from 'three/tsl'
 
 import {stroke, tile} from '../../candidates/gpt_sol/lib/ornament.ts'
@@ -31,7 +32,7 @@ export default class extends KnotMaterial {
     const frost = crystal.add(branches).add(core).add(ring).add(fracture.mul(near)).clamp()
     const grain = mx_noise_float(positionGeometry.mul(35)).mul(0.5).add(0.5)
     const traveling = angle.mul(6).sub(time.mul(0.58)).cos().mul(0.5).add(0.5).pow(6)
-    this.colorNode = mix(color('#19364a'), color('#b7dce1'), grain.mul(0.35).add(frost.mul(0.6)))
+    this.colorNode = mix(color(hsl.integer(241, 53, 22)), color(hsl.integer(206, 36, 85)), grain.mul(0.35).add(frost.mul(0.6)))
     this.metalness = 0.17
     this.roughnessNode = float(0.34).add(grain.mul(0.22)).sub(frost.mul(0.21))
     this.clearcoat = 0.95
@@ -40,6 +41,6 @@ export default class extends KnotMaterial {
     this.iridescenceNode = grazing.mul(0.48)
     this.iridescenceThicknessNode = float(180).add(grain.mul(100))
     this.normalNode = proceduralNormal(grain.mul(0.19).add(frost.mul(0.65)), 0.0014)
-    this.emissiveNode = color('#bdedff').mul(frost).mul(0.23).add(color('#ffffff').mul(crystal.add(branches)).mul(traveling).mul(0.56)).add(color('#86ddff').mul(grazing.pow(3)).mul(0.21))
+    this.emissiveNode = color(hsl.integer(223, 100, 90.5)).mul(frost).mul(0.23).add(color(hsl.integer(0, 0, 100)).mul(crystal.add(branches)).mul(traveling).mul(0.56)).add(color(hsl.integer(225, 100, 83)).mul(grazing.pow(3)).mul(0.21))
   }
 }

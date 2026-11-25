@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, float, Fn, modelWorldMatrixInverse, mx_noise_float, positionViewDirection, time, transformNormalToView, uv, vec2, vec3, vec4} from 'three/tsl'
 
 import {knotFrame} from '../../candidates/claude_opus/lib/knotFrameSurface.ts'
@@ -82,7 +83,7 @@ export default class extends KnotMaterial {
     const height = here.w
 // Oil film thickness thins toward each tip, so tips flash violet-green while the valleys stay neutral.
     const film = mx_noise_float(here.xyz.mul(30)).mul(60).add(height.mul(-180)).add(420)
-    this.colorNode = color('#80858f')
+    this.colorNode = color(hsl.integer(264, 9, 55))
     this.metalness = 1
     this.roughness = 0.08
     this.clearcoat = 1
@@ -97,6 +98,6 @@ export default class extends KnotMaterial {
     const horizon = reflected.y.sub(-0.05).div(0.09).pow2().negate().exp()
     const facing = normal.dot(positionViewDirection).clamp()
     const fresnel = facing.oneMinus().pow(3).mul(0.75).add(0.25)
-    this.emissiveNode = color('#5b8fff').mul(overhead).mul(0.55).add(color('#ff8a3a').mul(horizon).mul(0.35)).mul(fresnel)
+    this.emissiveNode = color(hsl.integer(264, 100, 61.5)).mul(overhead).mul(0.55).add(color(hsl.integer(52, 99, 71)).mul(horizon).mul(0.35)).mul(fresnel)
   }
 }

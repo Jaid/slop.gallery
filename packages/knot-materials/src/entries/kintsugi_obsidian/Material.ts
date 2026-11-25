@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, mx_worley_noise_vec2, normalViewGeometry, time, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -30,8 +31,8 @@ export default class extends BaseKnotMaterial {
     const smoke = mx_fractal_noise_float(inner.mul(3), 3, 2, 0.5).mul(0.5).add(0.5)
     const flowPhase = mx_noise_float(p.mul(1.8)).mul(7).add(p.y.mul(5)).sub(time.mul(0.8))
     const flow = flowPhase.sin().mul(0.5).add(0.5).pow(8)
-    const goldBase = mix(color('#b8771f'), color('#ffd77a'), seamCore)
-    const obsidian = mix(color('#050408'), color('#1b1a26'), smoke.mul(grazing).mul(0.6))
+    const goldBase = mix(color(hsl.integer(68, 84, 56)), color(hsl.integer(87, 100, 87.8)), seamCore)
+    const obsidian = mix(color(hsl.integer(298, 26, 3.6)), color(hsl.integer(288, 24, 12)), smoke.mul(grazing).mul(0.6))
     this.colorNode = mix(obsidian, goldBase, seam)
     this.metalnessNode = seam
     this.roughnessNode = float(0.04).mix(0.3, seam).add(hairlineCrack.mul(0.2))
@@ -43,10 +44,10 @@ export default class extends BaseKnotMaterial {
     this.iridescenceThicknessNode = smoke.mul(300).add(250)
     this.normalNode = proceduralNormal(seam.add(seamCore.mul(0.5)).sub(hairlineCrack.mul(0.6)).add(mx_noise_float(p.mul(40)).mul(0.03)), 0.0016)
     const seamGlint = glints(normalViewGeometry.add(mx_noise_vec3(p.mul(60)).mul(0.08)).normalize(), 50)
-    this.emissiveNode = color('#ffb347').mul(seam).mul(flow).mul(near.mul(0.7).add(0.3)).mul(1.4)
+    this.emissiveNode = color(hsl.integer(72, 100, 79.1)).mul(seam).mul(flow).mul(near.mul(0.7).add(0.3)).mul(1.4)
       .add(goldBase.mul(seam).mul(seamGlint).mul(0.4))
-      .add(color('#c8d4ea').mul(planes).mul(0.35))
-      .add(color('#ffffff').mul(hairlineCrack).mul(glints(normalViewGeometry, 30)).mul(0.25))
-      .add(color('#4a2a10').mul(rim).mul(0.1))
+      .add(color(hsl.integer(262, 39, 85)).mul(planes).mul(0.35))
+      .add(color(hsl.integer(0, 0, 100)).mul(hairlineCrack).mul(glints(normalViewGeometry, 30)).mul(0.25))
+      .add(color(hsl.integer(57, 67, 22)).mul(rim).mul(0.1))
   }
 }

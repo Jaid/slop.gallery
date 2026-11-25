@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'fathom_hymn',
   candidateId: 'glm',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'A chorus too deep to hear leaves its harmonies in living light.',
   placeholder: {
-    color: '#38d6ff',
+    color: hsl.integer(221, 100, 78),
     shading: 'smooth',
   },
 } as const satisfies KnotData

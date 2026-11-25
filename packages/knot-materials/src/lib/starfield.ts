@@ -1,5 +1,6 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, time} from 'three/tsl'
 
 import {cellNoiseVec3} from './cellNoiseVec3.ts'
@@ -16,7 +17,7 @@ export function starfield(direction: Node<'vec3'>, scale: number, threshold: num
   const core = dist.smoothstep(0, radius).oneMinus()
   const gate = rnd2.x.smoothstep(threshold, threshold + 0.01)
   const twinkle = time.mul(rnd2.y.mul(4).add(1.5)).add(rnd2.z.mul(30)).sin().mul(0.35).add(0.75)
-  const tint = mix(color('#ffd9b0'), color('#b8d4ff'), rnd2.z)
+  const tint = mix(color(hsl.integer(68, 99, 89)), color(hsl.integer(259, 100, 84)), rnd2.z)
   const energy = footprint.smoothstep(0.3, 1.2).oneMinus()
   return tint.mul(core.abs().pow(2)).mul(gate).mul(twinkle).mul(energy)
 }

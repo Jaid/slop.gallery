@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -30,7 +31,7 @@ export default class extends KnotMaterial {
     const {p, view, facing, grazing, near, intimate} = viewerFrame()
     const tube = uv()
     const milk = mx_noise_float(p.mul(3.1)).mul(0.5).add(0.5)
-    const body = mix(color('#e9e2d2'), color('#d7e4e2'), milk).add(color('#f7f1e3').mul(mx_noise_float(p.mul(11)).mul(0.5).add(0.5).mul(0.12)))
+    const body = mix(color(hsl.integer(87, 29, 90)), color(hsl.integer(186, 18, 89)), milk).add(color(hsl.integer(87, 48, 95)).mul(mx_noise_float(p.mul(11)).mul(0.5).add(0.5).mul(0.12)))
     const lamp = vec3(0.42, 0.78, 0.49).normalize()
     const halfDir = view.add(lamp).normalize()
     const breath = time.mul(Math.PI).sin().mul(0.12)

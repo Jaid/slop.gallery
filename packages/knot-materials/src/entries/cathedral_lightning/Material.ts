@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -26,21 +27,21 @@ export default class extends BaseKnotMaterial {
     const branches = filament(stormField2.sub(0.1), 0.018).mul(0.7)
     const lightningMask = trunk.max(branches).mul(strikeChance)
     const flash = tickFract.oneMinus().pow(3).mul(strikeChance).add(strikeChance.mul(0.15))
-    this.colorNode = color('#eaf4ff')
+    this.colorNode = color(hsl.integer(250, 100, 96))
     this.transmission = 0.96
     this.thickness = 0.75
     this.ior = 1.54
     this.dispersion = 0.12
-    this.attenuationColor.set('#d0e8ff')
+    this.attenuationColor.set(hsl.integer(247, 100, 91))
     this.attenuationDistance = 0.9
     this.roughness = 0.015
     this.metalness = 0
     this.clearcoat = 1
     this.clearcoatRoughness = 0.02
     this.normalNode = proceduralNormal(stormField.mul(0.2), 0.0008)
-    this.emissiveNode = mix(color('#5af2ff'), color('#b56dff'), stormField2.mul(0.5).add(0.5)).mul(lightningMask).mul(flash).mul(6)
-      .add(color('#ffffff').mul(lightningMask).mul(flash).mul(2.5).mul(near.mul(0.5).add(0.5)))
-      .add(color('#7aa8ff').mul(rim.pow(5).mul(0.2)))
+    this.emissiveNode = mix(color(hsl.integer(203, 100, 86.8)), color(hsl.integer(304, 100, 62.6)), stormField2.mul(0.5).add(0.5)).mul(lightningMask).mul(flash).mul(6)
+      .add(color(hsl.integer(0, 0, 100)).mul(lightningMask).mul(flash).mul(2.5).mul(near.mul(0.5).add(0.5)))
+      .add(color(hsl.integer(263, 100, 69)).mul(rim.pow(5).mul(0.2)))
     this.envMapIntensity = 0.7
   }
 }

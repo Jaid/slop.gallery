@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {float, mx_noise_float, vec3} from 'three/tsl'
 
 import {visibleDetail} from '#src/lib/materials/filters.ts'
@@ -30,7 +31,7 @@ export default class ImpressionistFrame extends PortraitFrame {
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
-  override readonly tint = '#ece7dc'
+  override readonly tint = hsl.integer(86, 25, 92)
   override readonly title = 'Impressionist white'
 
   override createGeometry(width: number, height: number) {
@@ -41,11 +42,11 @@ export default class ImpressionistFrame extends PortraitFrame {
     return [
       new GiltMaterial({wear: 0.15}),
       new FramePaintMaterial({
-        color: '#ece6d8',
+        color: hsl.integer(88, 29, 91),
         roughness: 0.8,
         grime: 0.5,
         wear: 0.2,
-        under: '#9c8b70',
+        under: hsl.integer(79, 25, 59),
         layers: surface => {
           const p = surface.position
           const footprint = p.x.fwidth().max(p.y.fwidth()).max(p.z.fwidth())

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -25,9 +26,9 @@ export default class extends KnotMaterial {
     const viewWash = grazing.pow(2.5).mul(0.25)
     const inkDensity = inkThreshold.add(viewWash).clamp()
     // Paper color
-    const paper = mix(color('#f5edd4'), color('#e8dfc8'), fiberCoarse)
+    const paper = mix(color(hsl.integer(92, 56, 93.7)), color(hsl.integer(89, 36, 89)), fiberCoarse)
     // Ink color — warm charcoal with slight variation
-    const ink = mix(color('#1a1612'), color('#0f1118'), inkCombined.mul(0.5).add(0.5).clamp())
+    const ink = mix(color(hsl.integer(67, 14, 10)), color(hsl.integer(272, 20, 8)), inkCombined.mul(0.5).add(0.5).clamp())
     this.colorNode = mix(paper, ink, inkDensity)
     // Paper matte; ink slightly glossier when "wet"
     const wetness = inkDensity.mul(near.mul(0.4).add(0.3))
@@ -37,7 +38,7 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.15
     this.clearcoatRoughness = 0.3
     this.sheen = 0.35
-    this.sheenColor.set('#e8d8b8')
+    this.sheenColor.set(hsl.integer(85, 44, 87))
     this.sheenRoughness = 0.65
     // Normal — paper fiber plus ink pooling
     this.normalNode = proceduralNormal(
@@ -54,7 +55,7 @@ export default class extends KnotMaterial {
     const innerP = p.sub(view.mul(0.15))
     const innerField = mx_noise_float(innerP.mul(5).add(drift.mul(2))).mul(0.5).add(0.5)
     const innerGlow = innerField.smoothstep(0.55, 0.85).mul(inkDensity.oneMinus()).mul(intimate)
-    this.emissiveNode = color('#d4a85a').mul(wetGlint).mul(0.15)
-      .add(color('#e8c88a').mul(innerGlow).mul(0.06))
+    this.emissiveNode = color(hsl.integer(80, 66, 72)).mul(wetGlint).mul(0.15)
+      .add(color(hsl.integer(83, 61, 82)).mul(innerGlow).mul(0.06))
   }
 }

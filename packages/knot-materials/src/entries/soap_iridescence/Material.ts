@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalView, positionViewDirection, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -23,7 +24,7 @@ export default class extends KnotMaterial {
     const second = vec3(order.mul(1.8).add(1), order.mul(1.8).add(3), order.mul(1.8).add(5)).cos().mul(0.5).add(0.5)
     const film = mix(fringe, second, intimate.mul(0.6).add(grazing.mul(0.3)))
     const black = thick.smoothstep(0.28, 0.06)
-    const filmColor = mix(film, color('#05060a'), black.mul(0.72))
+    const filmColor = mix(film, color(hsl.integer(271, 21, 4)), black.mul(0.72))
     this.colorNode = filmColor
     this.metalness = 0
     this.roughness = 1
@@ -31,7 +32,7 @@ export default class extends KnotMaterial {
     this.thicknessNode = float(0.2).add(thick.mul(0.5))
     this.ior = 1.4
     this.dispersionNode = float(1.3).add(near.mul(0.5))
-    this.attenuationColor.set('#9fdfff')
+    this.attenuationColor.set(hsl.integer(230, 100, 85))
     this.attenuationDistance = 0.45
     this.iridescence = 1
     this.iridescenceIOR = 1.2
@@ -39,7 +40,7 @@ export default class extends KnotMaterial {
     this.clearcoat = 0
     this.normalNode = liquidNormal(float(0.35), 0.4)
     this.emissiveNode = filmColor.mul(grazing.mul(0.4).add(0.25))
-      .add(color('#ffffff').mul(grazing.pow(5)).mul(0.7))
+      .add(color(hsl.integer(0, 0, 100)).mul(grazing.pow(5)).mul(0.7))
       .add(film.mul(facing).mul(0.12))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'prism_orchard',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Jewels ripen in an impossible orchard, trading emerald mornings for violet evenings as you pass.',
   placeholder: {
-    color: '#2a8b78',
+    color: hsl.integer(177, 81, 51),
     shading: 'glass',
   },
 } as const satisfies KnotData

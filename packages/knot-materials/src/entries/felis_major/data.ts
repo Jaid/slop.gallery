@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IBraVE33noBp60D.
 export default {
   id: 'felis_major',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Beyond the last known stars, whole constellations of cats wake and trace their stories in light.',
   placeholder: {
-    color: '#213858',
+    color: hsl.integer(257, 51, 24),
     shading: 'smooth',
   },
 } as const satisfies KnotData

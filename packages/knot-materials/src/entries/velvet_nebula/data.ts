@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: NKvaWYy8hA4AWQ9.
 export default {
   id: 'velvet_nebula',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Cloth so dark it keeps a galaxy, and gives it back only at a slant.',
   placeholder: {
-    color: '#21122b',
+    color: hsl.integer(310, 51, 11),
     shading: 'fabric',
   },
 } as const satisfies KnotData

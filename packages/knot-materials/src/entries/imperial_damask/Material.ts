@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, luminance, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {environmentRadiance} from '../../candidates/claude_opus/lib/environmentRadiance.ts'
@@ -90,10 +91,10 @@ export default class extends KnotMaterial {
     const rest = knotFrame(tube)
     this.positionNode = rest.position.add(rest.normal.mul(draught(tube)))
     this.normalNode = tubeRelief(draught).viewNormal
-    const crimson = color('#4c0712')
-    const crimsonLight = color('#8e0f24')
-    const gold = color('#5a3a0c')
-    const goldLight = color('#e9c46a')
+    const crimson = color(hsl.integer(19, 90, 17))
+    const crimsonLight = color(hsl.integer(20, 94, 32.6))
+    const gold = color(hsl.integer(71, 81, 28))
+    const goldLight = color(hsl.integer(87, 73, 81))
 // every thread was dyed a touch differently; identities wrap with the thread counts
     const warpSlub = cellNoiseVec3(vec3(crossing.y.mod(threads[1]), 3.3, 0)).x
     const weftSlub = cellNoiseVec3(vec3(crossing.x.mod(threads[0]), 7.1, 0)).x
@@ -106,7 +107,7 @@ export default class extends KnotMaterial {
     this.metalness = 0
     this.roughnessNode = mix(float(0.5), float(0.44), onTop)
     this.specularIntensity = 0.12
-    this.specularColorNode = mix(mix(gold, goldLight, 0.5), mix(crimsonLight, color('#ff9aa8'), 0.4), onTop)
+    this.specularColorNode = mix(mix(gold, goldLight, 0.5), mix(crimsonLight, color(hsl.integer(11, 100, 76)), 0.4), onTop)
 // each float scatters light across its own axis
     this.anisotropyNode = mix(vec2(0.85, 0), vec2(0, 0.85), onTop)
 // fibre sheen: each thread mirrors the gallery along a cone around its own axis
@@ -122,8 +123,8 @@ export default class extends KnotMaterial {
     }
     const warpSheen = fibreSheen(rest.tangent)
     const weftSheen = fibreSheen(rest.normal.cross(rest.tangent).normalize())
-    const sheenLight = mix(goldLight.mul(weftSheen), color('#d11a33').mul(warpSheen).mul(1.3), onTop)
-    const grazingSheen = mix(color('#ffd98a'), color('#ff6070'), onTop).mul(grazing.pow(3)).mul(0.12)
+    const sheenLight = mix(goldLight.mul(weftSheen), color(hsl.integer(22, 96, 48)).mul(warpSheen).mul(1.3), onTop)
+    const grazingSheen = mix(color(hsl.integer(85, 100, 88.5)), color(hsl.integer(18, 100, 65)), onTop).mul(grazing.pow(3)).mul(0.12)
     this.emissiveNode = sheenLight.mul(0.7).add(grazingSheen)
   }
 }

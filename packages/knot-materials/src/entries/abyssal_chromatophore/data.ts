@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_chromatophore',
   candidateId: 'claude_fable',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The dark blushes when it notices you looking back.',
   placeholder: {
-    color: '#2fe8ff',
+    color: hsl.integer(208.2, 100, 83.1),
     shading: 'smooth',
   },
 } as const satisfies KnotData

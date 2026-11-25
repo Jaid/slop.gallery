@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: MDsU2CH3XEff3jd; fixture: knot-material-shaders; result: success.
 export default {
   id: 'rimewake',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.01,
   flavorText: 'Cold found the iron first and has been writing on it all night, in a script that melts the moment you look away.',
   placeholder: {
-    color: '#a8c2d6',
+    color: hsl.integer(241, 30, 77),
     shading: 'metal',
   },
 } as const satisfies KnotData

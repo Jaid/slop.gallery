@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, time, vec3} from 'three/tsl'
 
 import {cellularBoundary} from '../../lib/cellularBoundary.ts'
@@ -25,10 +26,10 @@ function granulation(position: Node<'vec3'>, drift: Node<'vec3'>) {
 /** Blackbody ramp from cooling lane to white-hot granule heart. */
 function blackbody(temperature: Node<'float'>) {
   const t = temperature.clamp()
-  let shade = mix(color('#400500'), color('#8f1d00'), t.smoothstep(0.05, 0.38))
-  shade = mix(shade, color('#ff5a00'), t.smoothstep(0.34, 0.62))
-  shade = mix(shade, color('#ffa62b'), t.smoothstep(0.58, 0.8))
-  shade = mix(shade, color('#fff3b0'), t.smoothstep(0.78, 0.97))
+  let shade = mix(color(hsl.integer(33, 100, 14)), color(hsl.integer(34, 100, 33.5)), t.smoothstep(0.05, 0.38))
+  shade = mix(shade, color(hsl.integer(40.1, 100, 63)), t.smoothstep(0.34, 0.62))
+  shade = mix(shade, color(hsl.integer(68, 100, 76)), t.smoothstep(0.58, 0.8))
+  shade = mix(shade, color(hsl.integer(99, 100, 95)), t.smoothstep(0.78, 0.97))
   return shade
 }
 
@@ -69,12 +70,12 @@ export default class extends KnotMaterial {
       .add(normalLocal.mul(gran.granule.mul(0.0038).sub(spot.mul(0.0012))))
     const height = gran.granule.mul(0.0042).add(gran.fine.mul(0.0011).mul(fineDetail)).sub(spot.mul(0.0016))
     let body = blackbody(temperature)
-    body = mix(body, color('#180100'), spot.mul(0.45))
-    body = mix(body, color('#7d0d00'), grazing.mul(0.42)).mul(facing.pow(0.55).mul(0.62).add(0.48))
+    body = mix(body, color(hsl.integer(33, 100, 5)), spot.mul(0.45))
+    body = mix(body, color(hsl.integer(31, 100, 28)), grazing.mul(0.42)).mul(facing.pow(0.55).mul(0.62).add(0.48))
     const streak = mx_noise_float(p.mul(6.5).add(drift.mul(0.8))).mul(0.5).add(0.5).clamp()
     const flare = loop.mul(2).add(p.y.mul(5)).sin().mul(0.5).add(0.5)
     const rim = grazing.pow(3)
-    const corona = color('#ffb03a').mul(rim.mul(streak.mul(1.4).add(0.7)).mul(flare.mul(0.5).add(0.8)).mul(2.4))
+    const corona = color(hsl.integer(72.3, 100, 78.4)).mul(rim.mul(streak.mul(1.4).add(0.7)).mul(flare.mul(0.5).add(0.8)).mul(2.4))
     const prominenceField = mx_noise_float(p.mul(3.4).add(vec3(3.1, 8.4, 1.7)).sub(drift.mul(0.5)))
     const prominence = filament(prominenceField, 0.018).mul(grazing.pow(2))
     this.colorNode = body
@@ -84,7 +85,7 @@ export default class extends KnotMaterial {
     const fire = body.mul(temperature.mul(1.35).add(0.38)).mul(gran.granule.mul(0.38).add(0.72))
     this.emissiveNode = fire
       .add(corona)
-      .add(color('#ff4a2e').mul(prominence.mul(2.2)))
-      .add(color('#ffd98a').mul(temperature.pow(6).mul(1.1)))
+      .add(color(hsl.integer(31.7, 100, 61.3)).mul(prominence.mul(2.2)))
+      .add(color(hsl.integer(85, 100, 88.5)).mul(temperature.pow(6).mul(1.1)))
   }
 }

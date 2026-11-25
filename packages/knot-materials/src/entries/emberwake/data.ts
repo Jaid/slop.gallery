@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'emberwake',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The stone is only a lid. Underneath it, something still remembers being molten and lifts the light to its seams.',
   placeholder: {
-    color: '#201d19',
+    color: hsl.integer(75, 10, 13),
     shading: 'stone',
   },
 } as const satisfies KnotData

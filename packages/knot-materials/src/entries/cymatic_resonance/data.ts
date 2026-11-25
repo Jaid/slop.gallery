@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cymatic_resonance',
   candidateId: 'qwen_max',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'An inaudible chord draws its signature across the surface.',
   placeholder: {
-    color: '#d4af37',
+    color: hsl.integer(91, 82, 73),
     shading: 'smooth',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, mx_fractal_noise_float, mx_noise_float, negateOnBackSide, positionViewDirection, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {crackNetwork} from '../../candidates/deepseek/lib/crackNetwork.ts'
@@ -42,13 +43,13 @@ export default class extends KnotMaterial {
     const molten = melt.mul(0.62).add(scum.mul(0.18)).add(0.3)
     const vein = fissure.coverage.mul(fissure.energy.pow(0.7)).mul(heat).mul(pulse)
     const veinTemperature = vein.mul(molten).clamp()
-    const veinColor = mix(color('#d02a00'), color('#ffbe63'), veinTemperature.mul(0.85))
+    const veinColor = mix(color(hsl.integer(33, 100, 48.5)), color(hsl.integer(74, 100, 82)), veinTemperature.mul(0.85))
 // Amber bleed: heat climbing through the glass, tight against the fissures and richer at grazing.
     const bleed = plates.edge.negate().div(0.06).exp().pow(1.6).mul(heat).mul(pulse).mul(mx_noise_float(p.mul(5.5)).mul(0.45).add(0.75)).clamp()
     const halo = plates.edge.negate().div(0.22).exp().mul(heat).mul(pulse).clamp()
-    const crust = mix(color('#03050a'), color('#0c111c'), mx_fractal_noise_float(p.mul(9), 3, 2, 0.5).mul(0.5).add(0.5))
-    const crustMix = mix(crust, mix(color('#1c0802'), color('#8c3d0b'), bleed.mul(0.6).add(halo.mul(0.25))), bleed.mul(0.35).add(halo.mul(0.2)).clamp())
-    this.colorNode = mix(crustMix, mix(color('#2b0c03'), veinColor, molten), fissure.coverage.mul(heat).clamp())
+    const crust = mix(color(hsl.integer(261, 33, 4)), color(hsl.integer(265, 33, 8)), mx_fractal_noise_float(p.mul(9), 3, 2, 0.5).mul(0.5).add(0.5))
+    const crustMix = mix(crust, mix(color(hsl.integer(44, 74, 7)), color(hsl.integer(46, 90, 37)), bleed.mul(0.6).add(halo.mul(0.25))), bleed.mul(0.35).add(halo.mul(0.2)).clamp())
+    this.colorNode = mix(crustMix, mix(color(hsl.integer(40, 81, 10)), veinColor, molten), fissure.coverage.mul(heat).clamp())
     const striae = mx_noise_float(p.mul(58).add(vec3(0, t.mul(0.03), 0))).abs()
     const relief = dome.mul(0.55)
       .add(fissure.coverage.mul(heat.mul(0.45).add(0.55)).mul(-1.15))
@@ -62,18 +63,18 @@ export default class extends KnotMaterial {
     this.roughnessNode = mix(float(0.09), float(0.7), fissure.coverage.mul(heat).max(crazing.coverage.mul(crazingMask).mul(0.6))).add(mx_noise_float(p.mul(7)).mul(0.04))
     this.aoNode = fissure.coverage.mul(heat).mul(-0.72).add(1)
     this.clearcoat = 0.35
-    this.specularColorNode = mix(color('#3a2c22'), color('#ffffff'), grazing.mul(0.6))
+    this.specularColorNode = mix(color(hsl.integer(57, 26, 20)), color(hsl.integer(0, 0, 100)), grazing.mul(0.6))
     this.specularIntensityNode = mix(float(0.65), float(1), grazing.mul(0.8))
     this.clearcoatRoughness = 0.05
     const whiteHot = veinTemperature.pow(2.4).mul(4.5)
     const crazingGlow = crazing.coverage.mul(crazing.energy).mul(crazingMask).mul(0.45)
     const warmProfile = crustNormal.dot(positionViewDirection).abs().clamp().pow(3).oneMinus()
     this.emissiveNode = veinColor.mul(vein).mul(3.4)
-      .add(color('#fff2d4').mul(whiteHot))
-      .add(color('#ff4a08').mul(crazingGlow))
-      .add(color('#ff6a1c').mul(bleed.pow(2.2)).mul(0.7))
-      .add(color('#ff5a10').mul(halo.pow(1.8)).mul(0.3))
-      .add(color('#ff9040').mul(fissure.coverage.mul(heat)).mul(0.2))
-      .add(color('#ff8a3a').mul(warmProfile).mul(heat).mul(intimate).mul(0.05))
+      .add(color(hsl.integer(87, 100, 95.7)).mul(whiteHot))
+      .add(color(hsl.integer(36, 100, 61.1)).mul(crazingGlow))
+      .add(color(hsl.integer(43, 100, 65.4)).mul(bleed.pow(2.2)).mul(0.7))
+      .add(color(hsl.integer(39, 100, 63)).mul(halo.pow(1.8)).mul(0.3))
+      .add(color(hsl.integer(53, 100, 72)).mul(fissure.coverage.mul(heat)).mul(0.2))
+      .add(color(hsl.integer(52, 99, 71)).mul(warmProfile).mul(heat).mul(intimate).mul(0.05))
   }
 }

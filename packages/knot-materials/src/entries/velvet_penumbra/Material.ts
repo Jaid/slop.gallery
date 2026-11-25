@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -32,14 +33,14 @@ export default class extends KnotMaterial {
     const napAlignment = flowA.mul(0.5).add(0.5).mul(grazing)
     // Base color: ultra-dark, barely distinguishable from black
     const baseColor = mix(
-      color('#020204'),
-      color('#0a0a0e'),
+      color(hsl.integer(284, 27, 2)),
+      color(hsl.integer(285, 14, 6)),
       fiberCluster.mul(0.3).add(napCatchLight.mul(0.15)),
     )
     // Halo colors
-    const silverColor = color('#c8c8d6')
-    const crimsonColor = color('#8a1530')
-    const goldColor = color('#a88a44')
+    const silverColor = color(hsl.integer(286, 17, 81))
+    const crimsonColor = color(hsl.integer(15, 88, 32))
+    const goldColor = color(hsl.integer(86, 62, 59))
     const haloIntensity = silverBand.mul(0.35).add(crimsonBand.mul(0.25)).add(napAlignment.mul(0.05))
     const haloColor = mix(
       silverColor,
@@ -52,7 +53,7 @@ export default class extends KnotMaterial {
     this.metalness = 0
     // Strong sheen — this is the primary visual driver of the velvet look
     this.sheen = 1
-    this.sheenColor.set('#c8c8d6')
+    this.sheenColor.set(hsl.integer(286, 17, 81))
     this.sheenRoughness = 0.28
     // Subtle normal perturbation from the fiber nap
     this.normalNode = proceduralNormal(napHeight, 0.0006)
@@ -68,8 +69,8 @@ export default class extends KnotMaterial {
     // Edge glow
     const eclipseGlow = grazing.pow(4).mul(facing.smoothstep(0, 0.15))
     this.emissiveNode = silverColor.mul(silverGlow).mul(0.6)
-      .add(color('#ff1a40').mul(crimsonGlow).mul(0.45))
+      .add(color(hsl.integer(22, 100, 58)).mul(crimsonGlow).mul(0.45))
       .add(goldColor.mul(eclipseGlow).mul(0.2))
-      .add(color('#ff3060').mul(wavePulse).mul(0.3))
+      .add(color(hsl.integer(15, 100, 59.7)).mul(wavePulse).mul(0.3))
   }
 }

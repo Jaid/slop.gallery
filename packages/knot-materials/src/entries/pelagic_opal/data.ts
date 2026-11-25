@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 0CPX47Y7FuE0PTN.
 export default {
   id: 'pelagic_opal',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'An ocean folds itself inside each pearl; walk past and the buried tides change from arctic blue to tropical fire.',
   placeholder: {
-    color: '#127b85',
+    color: hsl.integer(205, 91, 46),
     shading: 'glass',
   },
   displacement: 0.002,

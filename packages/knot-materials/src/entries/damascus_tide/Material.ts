@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -23,8 +24,8 @@ export default class extends KnotMaterial {
     const watering = fold.mul(3.1).add(warp.mul(4)).sin().mul(0.5).add(0.5)
     const brush = mx_noise_float(vec3(tube.x.mul(26), tube.y.mul(320), 2.5))
     const angle = bright.sub(0.5).mul(1.1).add(watering.sub(0.5).mul(0.4))
-    const steel = mix(color('#20252d'), color('#d6dde6'), bright)
-    this.colorNode = mix(steel, color('#8d959f'), watering.mul(0.35).mul(bright.oneMinus()))
+    const steel = mix(color(hsl.integer(260, 16, 16)), color(hsl.integer(255, 19, 88)), bright)
+    this.colorNode = mix(steel, color(hsl.integer(254, 9, 61)), watering.mul(0.35).mul(bright.oneMinus()))
     this.metalness = 1
     this.roughnessNode = float(0.36).mix(0.09, bright).add(brush.mul(0.05).mul(intimate)).add(seam.mul(0.18))
     this.anisotropy = 1
@@ -36,6 +37,6 @@ export default class extends KnotMaterial {
     this.clearcoat = 0.25
     this.clearcoatRoughness = 0.12
     this.normalNode = proceduralNormal(bright.mul(0.7).add(seam.mul(0.5)), 0.002)
-    this.emissiveNode = color('#ff7a1a').mul(seam).mul(intimate.abs().pow(2)).mul(0.22)
+    this.emissiveNode = color(hsl.integer(49, 100, 67.9)).mul(seam).mul(intimate.abs().pow(2)).mul(0.22)
   }
 }

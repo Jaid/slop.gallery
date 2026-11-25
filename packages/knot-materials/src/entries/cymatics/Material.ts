@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv, vec3} from 'three/tsl'
 
 import {fbm} from '../../candidates/space_bunny/lib/fbm.ts'
@@ -52,8 +53,8 @@ export default class extends KnotMaterial {
     const grains = grainField.smoothstep(0.14, 0.24).mul(sand).mul(near)
 // The plate is blued steel, warmed slightly where the bow has been dragging.
     const heat = fbm(tube.x.mul(0.6).add(vec3(time.mul(0.02), 0, 0)), 2)
-    const steel = mix(color('#0d1014'), color('#1d232c'), heat.mul(0.5).add(0.5))
-    const sandColor = mix(color('#8a7040'), color('#ffeeca'), grainField.mul(0.5).add(0.5))
+    const steel = mix(color(hsl.integer(256, 14, 8)), color(hsl.integer(258, 19, 15)), heat.mul(0.5).add(0.5))
+    const sandColor = mix(color(hsl.integer(82, 50, 49)), color(hsl.integer(86, 100, 94.6)), grainField.mul(0.5).add(0.5))
     const coverage = sand.mul(0.96).add(grains.mul(0.5)).clamp(0, 1)
     this.colorNode = mix(steel, sandColor, coverage).mul(haze.mul(0.24).add(0.86))
     this.metalnessNode = sand.oneMinus().mul(0.92).add(grains.mul(0.4))
@@ -68,8 +69,8 @@ export default class extends KnotMaterial {
 // The plate rings: a faint standing shimmer in the antinodes, brightest when you are close enough to hear it.
     const antinode = haze.oneMinus()
     const ring = antinode.mul(antinode).mul(intimate.mul(0.6).add(0.4))
-    this.emissiveNode = color('#c8a86a').mul(ring).mul(0.22)
-      .add(color('#fff2cc').mul(grains).mul(0.45))
-      .add(color('#6b4a20').mul(sand).mul(0.06))
+    this.emissiveNode = color(hsl.integer(83, 53, 70)).mul(ring).mul(0.22)
+      .add(color(hsl.integer(91, 100, 95.5)).mul(grains).mul(0.45))
+      .add(color(hsl.integer(70, 64, 35)).mul(sand).mul(0.06))
   }
 }

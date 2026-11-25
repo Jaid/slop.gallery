@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, uv, vec2} from 'three/tsl'
 
 import {exhibitionPhase} from '../../candidates/gpt_sol/lib/exhibition/clock.ts'
@@ -34,12 +35,12 @@ export default class extends KnotMaterial {
     const napDirection = tube.x.mul(TAU * 3).sin().mul(0.5).add(exhibitionPhase.sin().mul(0.09))
     const napAngle = view.x.mul(napDirection.cos()).add(view.z.mul(napDirection.sin())).abs()
     const velvetLift = grazing.pow(1.7).mul(napAngle.mul(0.4).add(0.6))
-    const ground = mix(color('#17040d'), color('#59102c'), velvetLift)
-    const brocade = mix(color('#85501c'), color('#e7b963'), stitch.mul(0.7).add(random.z.mul(0.3)))
+    const ground = mix(color(hsl.integer(351, 61, 6)), color(hsl.integer(3, 78, 21)), velvetLift)
+    const brocade = mix(color(hsl.integer(61, 75, 40)), color(hsl.integer(81, 72, 78)), stitch.mul(0.7).add(random.z.mul(0.3)))
     this.colorNode = mix(ground, brocade, thread)
     this.metalnessNode = thread.mul(0.87)
     this.roughnessNode = mix(float(0.94), float(0.28), thread).sub(stitch.mul(thread).mul(0.045))
-    this.sheenNode = mix(color('#a33b63').mul(0.55), color('#ffe0ab').mul(0.08), thread)
+    this.sheenNode = mix(color(hsl.integer(0, 67, 43)).mul(0.55), color(hsl.integer(81, 100, 90.7)).mul(0.08), thread)
     this.sheenRoughnessNode = mix(float(0.8), float(0.38), thread)
     this.anisotropyNode = vec2(napDirection.cos(), napDirection.sin()).mul(thread.mul(0.73))
     this.specularIntensityNode = mix(float(0.32), float(1), thread)
@@ -53,6 +54,6 @@ export default class extends KnotMaterial {
     this.aoNode = thread.mul(0.12).oneMinus()
 // A quiet warm return in the finest couched thread; the pile itself never emits light.
     const breath = exhibitionPhase.add(tube.x.mul(TAU * 2)).sin().mul(0.15).add(0.85)
-    this.emissiveNode = color('#edbb6c').mul(thread).mul(stitch).mul(velvetLift).mul(near).mul(breath).mul(0.065)
+    this.emissiveNode = color(hsl.integer(78, 72, 79)).mul(thread).mul(stitch).mul(velvetLift).mul(near).mul(breath).mul(0.065)
   }
 }

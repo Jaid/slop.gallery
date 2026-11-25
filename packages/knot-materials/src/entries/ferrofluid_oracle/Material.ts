@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_worley_noise_float, normalLocal, positionGeometry, time} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -32,8 +33,8 @@ export default class extends BaseKnotMaterial {
     const tip = height.smoothstep(0.018, 0.072)
     const valley = height.oneMinus()
     const meniscus = opticalLine(cells.sub(0.18), 0.03).mul(align)
-    const oil = mix(color('#050506'), color('#16141a'), valley.mul(grazing).mul(0.35))
-    const silver = mix(color('#9aa6b5'), color('#e7eef6'), tip.pow(2))
+    const oil = mix(color(hsl.integer(286, 7, 4)), color(hsl.integer(300, 15, 10)), valley.mul(grazing).mul(0.35))
+    const silver = mix(color(hsl.integer(254, 15, 68)), color(hsl.integer(252, 37, 94)), tip.pow(2))
     this.colorNode = mix(oil, silver, tip.mul(0.85).add(meniscus.mul(0.4)))
     this.metalnessNode = tip.mul(0.28).add(0.72)
     this.roughnessNode = valley.mul(0.32).add(0.028)
@@ -45,7 +46,7 @@ export default class extends BaseKnotMaterial {
       .mul(tip)
       .mul(1.55)
       .mul(near.mul(0.5).add(0.5))
-      .add(color('#2a3340').mul(meniscus).mul(0.25))
-      .add(color('#0a0b0e').mul(rim).mul(0.2))
+      .add(color(hsl.integer(258, 22, 22)).mul(meniscus).mul(0.25))
+      .add(color(hsl.integer(271, 11, 6)).mul(rim).mul(0.2))
   }
 }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bragg_opal',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Amorphous silica spheres trap wandering beams, igniting sudden fires of emerald, ruby and violet.',
   placeholder: {
-    color: '#254b5c',
+    color: hsl.integer(229, 50, 30),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, mx_worley_noise_vec3, normalLocal, time, uv, vec3} from 'three/tsl'
 
 import {cellularPoints} from '../../lib/cellularPoints.ts'
@@ -28,7 +29,7 @@ export default class extends KnotMaterial {
     const heat = detail.mul(plage.mul(0.4).add(0.6))
     const mu = facing.pow(0.55)
     const warmth = heat.smoothstep(0.06, 0.58)
-    const tint = mix(color('#a11c0c'), color('#fff7e8'), warmth.mul(mu.mul(0.42).add(0.58)))
+    const tint = mix(color(hsl.integer(31, 96.6, 37.4)), color(hsl.integer(83, 100, 97.5)), warmth.mul(mu.mul(0.42).add(0.58)))
     const intensity = warmth.mul(1.65).add(0.18).mul(mu.mul(0.58).add(0.24))
     const tube = uv()
     const crownCenter = time.mul(0.07).fract()
@@ -43,9 +44,9 @@ export default class extends KnotMaterial {
     const spark = points.mul(lane).mul(twinkle.pow(2)).mul(pointFade).mul(proximity.mul(0.75).add(0.2))
     this.colorNode = tint.mul(0.08)
     this.emissiveNode = tint.mul(intensity)
-      .add(color('#fffaf0').mul(spark).mul(1.6))
-      .add(color('#fff3e6').mul(band).mul(grazing.mul(0.7).add(0.25)).mul(0.7))
-      .add(color('#ff4e14').mul(arch).mul(crown.smoothstep(0.12, 0.85)).mul(grazing).mul(0.35))
+      .add(color(hsl.integer(85, 100, 98.4)).mul(spark).mul(1.6))
+      .add(color(hsl.integer(70, 100, 96.5)).mul(band).mul(grazing.mul(0.7).add(0.25)).mul(0.7))
+      .add(color(hsl.integer(36, 100, 61.6)).mul(arch).mul(crown.smoothstep(0.12, 0.85)).mul(grazing).mul(0.35))
     this.metalness = 0
     this.roughness = 0.62
     this.normalNode = proceduralNormal(heat, 0.02)

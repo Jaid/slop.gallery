@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'velvet_eclipse',
   candidateId: 'gpt_terra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A blackened field of pile drinks the room’s light, then returns it in slow bruised constellations as you pass.',
   placeholder: {
-    color: '#2a0b28',
+    color: hsl.integer(330, 65, 11),
     shading: 'fabric',
   },
 } as const satisfies KnotData

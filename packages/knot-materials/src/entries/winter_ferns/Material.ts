@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionGeometry, time, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/claude_sonnet/lib/bumpNormal.ts'
@@ -36,8 +37,8 @@ export default class extends KnotMaterial {
     const density = cover.mul(0.5).add(grazing.pow(1.3).mul(0.7)).add(0.15).sub(breath).clamp()
     const frostMask = fronds.mul(density.smoothstep(0.2, 0.7)).max(density.smoothstep(0.55, 1).mul(0.75)).clamp()
     const hoar = cellNoiseVec3(p.mul(140)).mul(0.5)
-    const glass = mix(color('#020610'), color('#08162c'), cover.mul(0.6))
-    const ice = mix(color('#b9d8f4'), color('#f2fbff'), frostMask.mul(facing.mul(0.5).add(0.5)))
+    const glass = mix(color(hsl.integer(258, 58, 4)), color(hsl.integer(259, 63, 10)), cover.mul(0.6))
+    const ice = mix(color(hsl.integer(245, 63, 85)), color(hsl.integer(226, 100, 98)), frostMask.mul(facing.mul(0.5).add(0.5)))
     this.colorNode = mix(glass, ice, frostMask.mul(0.92))
     this.metalness = 0
     this.roughnessNode = mix(float(0.03), float(0.58), frostMask)
@@ -45,7 +46,7 @@ export default class extends KnotMaterial {
     this.clearcoatRoughness = 0.025
     this.ior = 1.31
     this.sheen = 0.5
-    this.sheenColor.set('#cfe8ff')
+    this.sheenColor.set(hsl.integer(246, 100, 90.7))
     this.sheenRoughness = 0.4
     this.iridescenceNode = frostMask.mul(0.25)
     this.iridescenceThicknessNode = cover.mul(220).add(180)
@@ -57,8 +58,8 @@ export default class extends KnotMaterial {
     const twinkle = time.mul(0.9).add(hoar.x.mul(40)).sin().mul(0.25).add(0.75)
     const flashes = glints(facet, 220).mul(frostMask).mul(near.mul(0.7).add(0.3)).mul(twinkle)
     const cold = mx_noise_float(p.mul(30).add(vec3(0, 0, time.mul(0.25)))).mul(0.5).add(0.5).mul(time.mul(0.5).add(fronds.mul(6)).sin().mul(0.3).add(0.7))
-    this.emissiveNode = color('#dff2ff').mul(flashes).mul(0.55)
-      .add(color('#5a8dff').mul(fronds.mul(grazing.pow(2))).mul(cold).mul(0.12))
-      .add(color('#8fc4ff').mul(frostMask).mul(intimate).mul(0.02))
+    this.emissiveNode = color(hsl.integer(238, 99, 94)).mul(flashes).mul(0.55)
+      .add(color(hsl.integer(264, 100, 61)).mul(fronds.mul(grazing.pow(2))).mul(cold).mul(0.12))
+      .add(color(hsl.integer(252, 99, 77)).mul(frostMask).mul(intimate).mul(0.02))
   }
 }

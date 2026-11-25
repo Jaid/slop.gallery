@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'filament_lattice',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Fine strands hold an intricate agreement between light and empty space.',
   placeholder: {
-    color: '#ffae3b',
+    color: hsl.integer(71, 100, 78),
     shading: 'glass',
   },
 } as const satisfies KnotData

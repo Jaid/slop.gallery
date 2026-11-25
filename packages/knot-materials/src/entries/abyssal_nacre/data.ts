@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'abyssal_nacre',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'Pearl gathers in layers where even moonlight cannot settle.',
   placeholder: {
-    color: '#7de8d0',
+    color: hsl.integer(177, 71, 84),
     shading: 'glass',
   },
 } as const satisfies KnotData

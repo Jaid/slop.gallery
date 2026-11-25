@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {mx_noise_float, vec3} from 'three/tsl'
 
 import {visibleDetail} from '#src/lib/materials/filters.ts'
@@ -32,7 +33,7 @@ export default class FloatFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#9aa0a5'
+  override readonly tint = hsl.integer(243, 6, 65.4)
   override readonly title = 'Steel float'
 
   override createGeometry(width: number, height: number) {
@@ -42,7 +43,7 @@ export default class FloatFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new FramePaintMaterial({
-        color: '#0a0b0c',
+        color: hsl.integer(248, 5, 6),
         roughness: 0.9,
         grime: 0,
       }),

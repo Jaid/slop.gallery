@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_fractal_noise_vec3, mx_noise_float, refract, time, vec3} from 'three/tsl'
 
 import {environmentContrast} from '../../candidates/claude_opus/lib/environmentLight.ts'
@@ -69,9 +70,9 @@ export default class extends KnotMaterial {
     const fire = shallow.fire.add(deep.fire.mul(0.55)).mul(vein.oneMinus())
 // Potch: the black body color, with a faint blue haze of scattered fire.
     const haze = mx_fractal_noise_float(p.mul(9), 2, 2, 0.5).mul(0.5).add(0.5)
-    const potch = mix(color('#030407'), color('#0a0d18'), haze)
+    const potch = mix(color(hsl.integer(267, 24, 3)), color(hsl.integer(272, 34, 7)), haze)
     const sand = mx_noise_float(p.mul(160)).mul(0.5).add(0.5)
-    const ironstone = mix(color('#3b2213'), color('#6b4423'), sand.mul(0.7).add(mx_noise_float(p.mul(12)).mul(0.3)))
+    const ironstone = mix(color(hsl.integer(51, 51, 18)), color(hsl.integer(60, 59, 34)), sand.mul(0.7).add(mx_noise_float(p.mul(12)).mul(0.3)))
     this.colorNode = mix(potch, ironstone, vein)
     this.metalness = 0
     this.roughnessNode = mix(float(0.05), float(0.7), vein)
@@ -86,7 +87,7 @@ export default class extends KnotMaterial {
 // Opal fire fades a little at grazing angles, where the surface mirror takes over.
     const fresnel = facing.oneMinus().pow(5).mul(0.96).add(0.04)
     this.emissiveNode = fire.mul(fresnel.oneMinus()).mul(near.mul(0.2).add(0.9)).mul(1.4)
-      .add(color('#1a2a6a').mul(haze).mul(grazing.pow(2)).mul(0.05).mul(vein.oneMinus()))
-      .add(color('#d9b38a').mul(ironstoneGlint).mul(intimate).mul(0.25))
+      .add(color(hsl.integer(269, 79, 21)).mul(haze).mul(grazing.pow(2)).mul(0.05).mul(vein.oneMinus()))
+      .add(color(hsl.integer(69, 46, 76)).mul(ironstoneGlint).mul(intimate).mul(0.25))
   }
 }

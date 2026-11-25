@@ -1,6 +1,7 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {mx_noise_float, vec2} from 'three/tsl'
 
 import {heightNormal} from '#src/lib/materials/filters.ts'
@@ -32,7 +33,7 @@ export default class MoireCanvasMaterial extends CanvasMaterial {
     material.normalNode = heightNormal(rib.mul(fine(1 / 620)).mul(0.00018).add(pressed.mul(0.0006)))
     material.roughnessNode = pressed.mul(0.08).add(0.36)
     material.sheen = this.sheen
-    material.sheenColor.set('#f3eee6')
+    material.sheenColor.set(hsl.integer(80, 28, 94))
     material.sheenRoughness = 0.3
   }
 }

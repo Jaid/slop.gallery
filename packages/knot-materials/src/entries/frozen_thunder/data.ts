@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5WDU20J87Ktg4fx; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'frozen_thunder',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Lightning struck once, and the glass kept the shape of it. Look closer and something inside is still running along the branches.',
   placeholder: {
-    color: '#080c26',
+    color: hsl.integer(273, 68, 7),
     shading: 'glass',
   },
 } as const satisfies KnotData

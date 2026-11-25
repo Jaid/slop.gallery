@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, cos, float, mix, sin, time, vec3} from 'three/tsl'
 
 import {fbm} from '../../candidates/space_bunny/lib/fbm.ts'
@@ -53,26 +54,26 @@ export default class extends KnotMaterial {
 // The barb rakes are what catch the studio: they brighten along the feather and vanish across it.
     const raked = barb.mul(hooklet).add(0.15)
 // Nightjar plumage: bark-brown, silver-grey and buff, with the barring running across the vane.
-    const dark = mix(color('#0a0806'), color('#2a2018'), mottle.mul(0.5).add(0.5))
-    const silver = mix(color('#6f6a5e'), color('#cfc6b2'), drift.mul(0.5).add(0.5))
-    const buff = mix(color('#3a2c1c'), color('#8a6c40'), mottle.mul(0.5).add(0.5))
+    const dark = mix(color(hsl.integer(71, 13, 5)), color(hsl.integer(60, 24, 15)), mottle.mul(0.5).add(0.5))
+    const silver = mix(color(hsl.integer(88, 11, 45)), color(hsl.integer(87, 21, 80)), drift.mul(0.5).add(0.5))
+    const buff = mix(color(hsl.integer(70, 36, 20)), color(hsl.integer(76, 49, 48)), mottle.mul(0.5).add(0.5))
     const barred = mix(dark, silver, bars.mul(0.9))
     const ground = mix(barred, buff, mottle.smoothstep(0.05, 0.28).mul(0.55))
-    const quill = mix(color('#2a2018'), color('#c2b08a'), groove.mul(0.4).add(0.5))
+    const quill = mix(color(hsl.integer(60, 24, 15)), color(hsl.integer(85, 33, 72)), groove.mul(0.4).add(0.5))
     this.colorNode = mix(ground, quill, shaft.mul(0.9)).mul(raked.mul(0.65).add(0.42))
     this.metalness = 0
     this.roughnessNode = float(0.72).sub(raked.mul(0.48)).add(shaft.mul(-0.12))
     this.sheen = 0.9
-    this.sheenColor.set('#f0e4c8')
+    this.sheenColor.set(hsl.integer(88, 49, 91))
     this.sheenRoughness = 0.38
     this.clearcoat = 0.25
     this.clearcoatRoughnessNode = float(0.25).add(grazing.mul(0.1))
     const relief = barb.mul(-0.6).add(hooklet.mul(0.2)).add(shaft.mul(0.5)).add(fbm(p.mul(200), 2).mul(0.12).mul(near))
     this.normalNode = proceduralNormal(relief, 0.0009)
 // Keratin has a faint structural sheen that only shows where the barbs face the light head-on.
-    this.emissiveNode = color('#d8c49a').mul(raked).mul(grazing.mul(0.55).add(0.15)).mul(0.55)
-      .add(color('#fff4dc').mul(shaft).mul(intimate.mul(0.35).add(0.3)).mul(0.55))
-      .add(color('#140f0a').mul(bars.oneMinus()).mul(intimate.mul(0.2).add(0.1)))
-      .add(color('#c8b48c').mul(draught.smoothstep(0.1, 0.3)).mul(barb).mul(0.12))
+    this.emissiveNode = color(hsl.integer(85, 41, 80)).mul(raked).mul(grazing.mul(0.55).add(0.15)).mul(0.55)
+      .add(color(hsl.integer(86, 100, 96.4)).mul(shaft).mul(intimate.mul(0.35).add(0.3)).mul(0.55))
+      .add(color(hsl.integer(67, 22, 8)).mul(bars.oneMinus()).mul(intimate.mul(0.2).add(0.1)))
+      .add(color(hsl.integer(84, 36, 74)).mul(draught.smoothstep(0.1, 0.3)).mul(barb).mul(0.12))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_worley_noise_vec3, normalViewGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/deepseek/lib/detailNormal.ts'
@@ -61,17 +62,17 @@ export default class extends KnotMaterial {
     const leafNoise = mx_noise_float(vec3(metric.mul(38), 7.1)).mul(0.5).add(0.5)
     const crackleField = mx_noise_float(vec3(metric.mul(85), time.mul(0.02).add(2.7)))
     const crackle = crackleField.abs().smoothstep(0.012, 0.05).oneMinus().mul(resolved)
-    const goldTint = mix(color('#d98b24'), color('#ffe27a'), rnd2.y)
+    const goldTint = mix(color(hsl.integer(67, 88, 65)), color(hsl.integer(94, 100, 90.2)), rnd2.y)
     const gold = goldTint.mul(leafNoise.add(crackle.mul(0.25)).mul(0.35).add(0.78)).mul(rnd2.z.mul(0.42).add(0.76))
-    const lapis = mix(color('#102d86'), color('#3c6bd8'), rnd2.y.mul(0.5).add(0.32))
-    const emerald = mix(color('#07513f'), color('#29a97a'), rnd2.z)
-    const ruby = mix(color('#650b24'), color('#d02a4c'), rnd2.y)
+    const lapis = mix(color(hsl.integer(265, 92, 24.5)), color(hsl.integer(264, 84, 48.4)), rnd2.y.mul(0.5).add(0.32))
+    const emerald = mix(color(hsl.integer(171, 96, 30)), color(hsl.integer(163, 91, 60)), rnd2.z)
+    const ruby = mix(color(hsl.integer(12, 88, 23)), color(hsl.integer(16, 89, 49)), rnd2.y)
     const glass = mix(lapis, mix(emerald, ruby, glassPick.smoothstep(0.4, 0.7)), glassPick).mul(rnd2.z.mul(0.25).add(0.9))
     const tileColor = mix(glass, gold, goldMask)
     const bubbleCells = mx_worley_noise_vec3(vec3(metric.mul(180), 6.3), 1, 0)
     const bubbles = ramp(bubbleCells.x, 0.06, 0).mul(tile).mul(goldMask.oneMinus()).mul(resolved)
-    const grout = color('#3a2a1c')
-    const surface = mix(mix(grout, tileColor, tile), color('#dff4ff'), bubbles.mul(0.13))
+    const grout = color(hsl.integer(62, 35, 20))
+    const surface = mix(mix(grout, tileColor, tile), color(hsl.integer(230, 100, 95)), bubbles.mul(0.13))
     const tileTilt = local.x.mul(rnd.x.sub(0.5)).add(local.y.mul(rnd.y.sub(0.5))).mul(0.012)
     const tileHeight = tile.mul(0.0025).add(tileTilt.mul(tile)).add(bevel.mul(0.0008)).sub(tileDist.mul(0.0012)).add(crackle.mul(goldMask).mul(0.00008)).add(bubbles.mul(0.00006))
     const tileNormal = detailNormal(normalViewGeometry, tileHeight, 1)
@@ -89,7 +90,7 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = facing.mul(160).add(260)
     this.clearcoat = 0.38
     this.clearcoatRoughness = 0.08
-    this.emissiveNode = color('#fff2c7').mul(glint).mul(0.8).add(goldGlow).add(color('#dff2ff').mul(bubbles).mul(0.12)).add(color('#ffd885').mul(grazing.pow(3)).mul(0.07))
+    this.emissiveNode = color(hsl.integer(93, 100, 95.4)).mul(glint).mul(0.8).add(goldGlow).add(color(hsl.integer(238, 99, 94)).mul(bubbles).mul(0.12)).add(color(hsl.integer(85, 100, 88)).mul(grazing.pow(3)).mul(0.07))
     this.envMapIntensity = 1.35
   }
 }

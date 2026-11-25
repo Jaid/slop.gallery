@@ -1,4 +1,5 @@
 import {useFrame} from '@react-three/fiber'
+import hsl from 'okhsl'
 import {Color, Vector3} from 'three/webgpu'
 
 import {hearingFence, useAmbienceEmitters} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
@@ -9,8 +10,8 @@ import useMarkerBatch, {markerRadius} from '#src/lib/overlay/useMarkerBatch.ts'
 const layer = overlay.addLayer({id: 'ambience-emitters'})
 const tint = new Color
 const position = new Vector3
-const full = new Color('#ffffff')
-const silent = new Color('#c8c8c8')
+const full = new Color(hsl.integer(0, 0, 100))
+const silent = new Color(hsl.integer(0, 0, 80.5))
 const camera = new Vector3
 
 /** White at full strength, light gray when silent, and between them a heat gradient from blue (1%) to red (99%). */

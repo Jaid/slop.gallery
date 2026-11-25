@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'mycelial_bloom',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Beneath the bark a pale intelligence is mapping the dark, one thread at a time.',
   displacement: 0.012,
   placeholder: {
-    color: '#4e5d38',
+    color: hsl.integer(127, 43, 37),
     shading: 'stone',
   },
 } as const satisfies KnotData

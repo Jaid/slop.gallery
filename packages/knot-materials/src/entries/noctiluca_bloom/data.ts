@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'noctiluca_bloom',
   candidateId: 'grok',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Tiny lights wake whenever the dark water begins to move.',
   placeholder: {
-    color: '#5dffb0',
+    color: hsl.integer(158, 100, 87.8),
     shading: 'smooth',
   },
 } as const satisfies KnotData

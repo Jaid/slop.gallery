@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1UqvleKScECZs6l.
 export default {
   id: 'pawlight_atlas',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Tiny stars gather into purring silhouettes, mapping a kingdom that exists only after dark.',
   placeholder: {
-    color: '#111936',
+    color: hsl.integer(270, 58, 12),
     shading: 'smooth',
   },
 } as const satisfies KnotData

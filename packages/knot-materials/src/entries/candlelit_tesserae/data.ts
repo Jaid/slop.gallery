@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: H32IciRDAWJfwki; fixture: knot-material-shaders; result: success.
 export default {
   id: 'candlelit_tesserae',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Ten thousand glass petals, each tilted by a mason’s thumb. Carry a candle past them and the whole vault remembers how to burn.',
   placeholder: {
-    color: '#e3a62f',
+    color: hsl.integer(79, 87, 72.6),
     shading: 'metal',
   },
 } as const satisfies KnotData

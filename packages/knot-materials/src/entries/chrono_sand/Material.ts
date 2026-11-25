@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, time, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -21,15 +22,15 @@ export default class extends KnotMaterial {
     const dunes = mx_noise_float(inner.mul(6).add(flow))
     const suspended = mx_noise_float(deep.mul(40).add(time.mul(0.5))).pow(8)
     const sparkle = suspended.mul(near).mul(3)
-    this.colorNode = mix(color('#3a1c00'), color('#ffaa00'), dunes.mul(0.5).add(0.5))
+    this.colorNode = mix(color(hsl.integer(60, 100, 16)), color(hsl.integer(74, 100, 77)), dunes.mul(0.5).add(0.5))
     this.transmission = 0.85
     this.thickness = 0.6
     this.ior = 1.45
-    this.attenuationColor.set('#884400')
+    this.attenuationColor.set(hsl.integer(55, 100, 38))
     this.attenuationDistance = 0.4
     this.roughnessNode = dunes.mul(0.1).add(0.05)
     this.clearcoat = 0.5
-    this.emissiveNode = color('#ffcc00').mul(sparkle).add(color('#ff8800').mul(grazing).mul(0.3))
+    this.emissiveNode = color(hsl.integer(90, 100, 84)).mul(sparkle).add(color(hsl.integer(56, 100, 70)).mul(grazing).mul(0.3))
     this.normalNode = proceduralNormal(dunes, 0.005)
   }
 }

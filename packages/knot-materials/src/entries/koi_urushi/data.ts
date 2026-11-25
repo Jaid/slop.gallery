@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 77fsRvmePazcbTS; fixture: knot-material-shaders; result: success.
 export default {
   id: 'koi_urushi',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Midnight urushi lacquer holds an autumn koi pond: gold maki-e waves and mother-of-pearl raden shells shimmer above drifting lanterns.',
   placeholder: {
-    color: '#827460',
+    color: hsl.integer(77, 20, 50),
     shading: 'smooth',
   },
 } as const satisfies KnotData

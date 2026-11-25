@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_noise_float, mx_worley_noise_vec3, time, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/deepseek/lib/ramp.ts'
@@ -76,21 +77,21 @@ export default class extends KnotMaterial {
     const brightPoints = ramp(pointField.x, 0.055, 0.004).pow(2)
       .mul(large.lane.pow(2)).mul(near.mul(0.8).add(0.2))
 // Color is blackbody-like: wine-dark lanes, orange-white granule faces, blue-white points.
-    const heatColor = mix(color('#1c0200'), color('#8f1b00'), heat.smoothstep(0.02, 0.38))
-    const hotColor = mix(heatColor, color('#ff6400'), heat.smoothstep(0.28, 0.74))
-    const whiteColor = mix(hotColor, color('#ffe5ad'), heat.smoothstep(0.84, 1.06))
+    const heatColor = mix(color(hsl.integer(35, 100, 6)), color(hsl.integer(33, 100, 33.3)), heat.smoothstep(0.02, 0.38))
+    const hotColor = mix(heatColor, color(hsl.integer(43, 100, 64.4)), heat.smoothstep(0.28, 0.74))
+    const whiteColor = mix(hotColor, color(hsl.integer(86, 100, 92)), heat.smoothstep(0.84, 1.06))
     const colored = whiteColor.mul(heat.mul(0.62).add(0.24))
-    const spotColor = mix(color('#070000'), color('#5d0900'), penumbraGlow).mul(0.32)
+    const spotColor = mix(color(hsl.integer(29, 100, 2)), color(hsl.integer(32, 100, 21)), penumbraGlow).mul(0.32)
     const sun = mix(colored, spotColor, spotMask.mul(0.94))
-      .add(color('#ff4b00').mul(penumbraGlow).mul(0.55))
-      .add(color('#dcecff').mul(brightPoints).mul(2.8))
+      .add(color(hsl.integer(36.6, 100, 61)).mul(penumbraGlow).mul(0.55))
+      .add(color(hsl.integer(252, 100, 93)).mul(brightPoints).mul(2.8))
 // At the limb we see higher, cooler layers: the continuum dims while the
 // chromosphere and its spicules rise into a thin red-gold fire.
     const limb = facing.pow(0.38)
     const chromosphere = grazing.pow(3.1).mul(mx_noise_float(vec3(metric.mul(42), time.mul(0.2))).mul(0.45).add(0.72))
     const spicules = metric.y.div(0.13).mul(38).add(mx_noise_float(vec3(metric.mul(60), time.mul(0.17))).mul(7)).sin().mul(0.5).add(0.5).pow(3.2).mul(grazing.pow(2.2))
-    const radiance = sun.mul(limb.mul(0.78).add(0.22)).add(color('#ff2500').mul(chromosphere).mul(0.62)).add(color('#ffb070').mul(spicules).mul(intimate.mul(0.5).add(0.28)))
-    this.colorNode = color('#070100')
+    const radiance = sun.mul(limb.mul(0.78).add(0.22)).add(color(hsl.integer(31.1, 100, 58)).mul(chromosphere).mul(0.62)).add(color(hsl.integer(59, 100, 79)).mul(spicules).mul(intimate.mul(0.5).add(0.28)))
+    this.colorNode = color(hsl.integer(45, 100, 2.5))
     this.roughness = 0.62
     this.metalness = 0
     this.emissiveNode = radiance.mul(0.9)

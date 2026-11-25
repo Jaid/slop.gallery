@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_float, mx_noise_float, positionGeometry, time, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -34,12 +35,12 @@ export default class extends KnotMaterial {
     const local = grid.fract().sub(0.5)
     const speck = local.length().smoothstep(0.2, 0.32).oneMinus().mul(grainRandom.smoothstep(0.35, 0.6))
     const sand = nodal.mul(speck)
-    const plate = mix(color('#2a2119'), color('#4a3a2a'), mx_noise_float(positionGeometry.mul(25)).mul(0.5).add(0.5))
-    this.colorNode = mix(plate, color('#e8d6ab'), sand)
+    const plate = mix(color(hsl.integer(63, 23, 15)), color(hsl.integer(66, 30, 26)), mx_noise_float(positionGeometry.mul(25)).mul(0.5).add(0.5))
+    this.colorNode = mix(plate, color(hsl.integer(88, 51, 86)), sand)
     this.metalnessNode = mix(float(0.85), float(0), sand)
     this.roughnessNode = mix(float(0.32), float(0.8), sand)
     const height = wave.mul(0.0035).add(sand.mul(0.0007))
     this.normalNode = proceduralNormal(height, 1)
-    this.emissiveNode = color('#ffb066').mul(wave.abs().mul(0.6).clamp().pow(4)).mul(near.mul(0.08))
+    this.emissiveNode = color(hsl.integer(63, 100, 79)).mul(wave.abs().mul(0.6).clamp().pow(4)).mul(near.mul(0.08))
   }
 }

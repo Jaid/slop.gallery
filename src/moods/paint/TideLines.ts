@@ -1,11 +1,12 @@
 import type {Node} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {array, float, If, Loop, min, mix, mx_noise_float, screenSize, screenUV, smoothstep, vec2, vec3, vec4} from 'three/tsl'
 
 import MoodScreen from '../base/MoodScreen.ts'
 
 /** Display-space pigments, since the frame beneath the brush has already been tone mapped. */
-const palette = [0x32_79_87, 0x81_9E_C5, 0xDB_89_7C, 0xD1_9B_45, 0x59_77_99, 0x83_BC_B0]
+const palette = [hsl.integer(213, 63, 46), hsl.integer(256, 37, 64), hsl.integer(30, 58, 67), hsl.integer(76, 73, 68), hsl.integer(252, 35, 49), hsl.integer(180, 40, 71)]
 const paints = array(palette.map(hex => vec3(hex >> 16, hex >> 8 & 255, hex & 255).div(255)))
 /** Each pass of the wet mop: center from the corner, half-length and belly in short screen sides, then the brush angle in radians. Dilute underwashes first, smaller drops of concentrated color last. */
 const strokes = [

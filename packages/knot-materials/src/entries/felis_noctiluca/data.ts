@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 6DDBpP8yOciMaq1; fixture: knot-material-br11k.
 export default {
   id: 'felis_noctiluca',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'After the last astronomer sleeps, the constellations uncurl their tails. Come closer – each small sun remembers how to purr.',
   placeholder: {
-    color: '#101c39',
+    color: hsl.integer(265, 59, 13),
     shading: 'metal',
   },
 } as const satisfies KnotData

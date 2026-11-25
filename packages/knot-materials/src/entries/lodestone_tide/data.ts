@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: DZoyAbZAQlwnlPj; fixture: knot-material-shaders; result: success.
 export default {
   id: 'lodestone_tide',
@@ -15,7 +17,7 @@ export default {
   displacement: 0.05,
   flavorText: 'A skin of liquid iron lies calm and waits for a magnet. Walk closer and it rises into a crown of black thorns. You are the magnet.',
   placeholder: {
-    color: '#56585d',
+    color: hsl.integer(268, 5, 38),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv, vec2, vec3} from 'three/tsl'
 
 import {fill, stroke} from '../../candidates/gpt_sol/lib/exhibition/coverage.ts'
@@ -29,16 +30,16 @@ export default class extends KnotMaterial {
     const rocking = time.mul(0.27).add(random.z.mul(6.28)).sin().mul(0.035)
     const slopeSize = random.x.mul(0.15).add(0.15).add(rocking)
     const slope = vec2(local.x.sign().mul(sector), local.y.sign().mul(sector.oneMinus())).mul(slopeSize).mul(bevel.mul(-2.7).add(1)).mul(tile).toVar()
-    const ruby = mix(color('#72203f'), color('#db5676'), random.y)
-    const jade = mix(color('#0e766f'), color('#6ed7a2'), random.y)
-    const amber = mix(color('#935019'), color('#f3c360'), random.y)
-    const lapis = mix(color('#282d77'), color('#6f7eda'), random.y)
+    const ruby = mix(color(hsl.integer(1, 71, 29)), color(hsl.integer(8, 72, 57.5)), random.y)
+    const jade = mix(color(hsl.integer(187, 94, 43)), color(hsl.integer(160, 71, 77)), random.y)
+    const amber = mix(color(hsl.integer(55, 80, 42)), color(hsl.integer(83, 81, 81.5)), random.y)
+    const lapis = mix(color(hsl.integer(275, 75, 24)), color(hsl.integer(275, 68, 56)), random.y)
     const cool = mix(jade, lapis, random.x.smoothstep(0.2, 0.45))
     const warm = mix(amber, ruby, random.x.smoothstep(0.72, 0.95))
     const gem = mix(cool, warm, random.x.smoothstep(0.46, 0.58)).toVar()
     const cutLine = stroke(local.x.abs().sub(local.y.abs()), 0.007, foot)
     const inset = stroke(local.x.abs().add(local.y.abs()).sub(0.43), 0.009, foot)
-    const gold = color('#b99a56')
+    const gold = color(hsl.integer(85, 58, 65))
     const spectralFlash = wavelength(facing.mul(210).add(random.z.mul(115)).add(395)).mul(grazing.pow(1.7)).toVar()
     const jewel = gem.mul(bevel.mul(-0.28).add(1)).add(spectralFlash.mul(0.12))
     this.colorNode = mix(gold, jewel, tile).mul(cutLine.mul(-0.12).add(1)).add(gold.mul(inset).mul(0.14))

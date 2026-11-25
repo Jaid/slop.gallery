@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 2kVLNNiT7YsY7gP.
 export default {
   id: 'tectonic_dawn',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Before the first light, the planet opens a seam and lets the hidden sun escape.',
   placeholder: {
-    color: '#172a3a',
+    color: hsl.integer(245, 43, 17),
     shading: 'stone',
   },
 } as const satisfies KnotData

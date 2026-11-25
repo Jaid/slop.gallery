@@ -3,7 +3,7 @@ import type {Node} from 'three/webgpu'
 import {color, mix} from 'three/tsl'
 
 /** Piecewise-linear gradient through an ordered list of sRGB stops, evaluated in linear light. */
-export function colorRamp(t: Node<'float'>, stops: ReadonlyArray<string>) {
+export function colorRamp(t: Node<'float'>, stops: ReadonlyArray<number>) {
   if (stops.length < 2) {
     throw new RangeError('A color ramp needs at least two stops.')
   }

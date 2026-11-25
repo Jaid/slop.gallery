@@ -1,5 +1,6 @@
 import type {SoftShadow} from '../../src/lib/rendering/shadowFilterNodes.ts'
 
+import hsl from 'okhsl'
 import {BoxGeometry, DataUtils, DoubleSide, HalfFloatType, Mesh, MeshStandardNodeMaterial, PCFShadowMap, PerspectiveCamera, PointLight, RenderTarget, Scene, WebGPURenderer} from 'three/webgpu'
 
 import portalShadow from '../../src/lib/gallery/fusion/portalShadow.ts'
@@ -73,7 +74,7 @@ export default async function verifyPointShadowSeams() {
     for (const {limit, name, samples, soft} of variants) {
       const scene = new Scene
       const material = new MeshStandardNodeMaterial({
-        color: '#bbbbbb',
+        color: hsl.integer(0, 0, 75.8),
         roughness: 1,
         side: DoubleSide,
       })
@@ -81,7 +82,7 @@ export default async function verifyPointShadowSeams() {
       room.castShadow = true
       room.receiveShadow = true
       // The gallery’s shadow slots: a near plane of 0.1, a normal bias of 3.5 cm and no depth bias.
-      const light = new PointLight('#ffffff', 30, 12, 2)
+      const light = new PointLight(hsl.integer(0, 0, 100), 30, 12, 2)
       light.position.set(0.7, 0.4, -0.3)
       light.castShadow = true
       light.shadow.camera.near = 0.1

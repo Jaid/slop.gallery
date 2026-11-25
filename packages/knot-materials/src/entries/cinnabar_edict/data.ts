@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'cinnabar_edict',
   candidateId: 'grok',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A vermilion seal preserves an order whose kingdom has vanished.',
   placeholder: {
-    color: '#e31c13',
+    color: hsl.integer(29, 98, 51.6),
     shading: 'smooth',
   },
 } as const satisfies KnotData

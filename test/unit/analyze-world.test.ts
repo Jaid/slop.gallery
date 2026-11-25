@@ -2,6 +2,7 @@ import type {WorldRoom} from '../../src/lib/webmcp/analyzeWorld.ts'
 
 import {expect, test} from 'bun:test'
 
+import hsl from 'okhsl'
 import {AmbientLight, BoxGeometry, DirectionalLight, Group, InstancedMesh, Matrix4, Mesh, MeshBasicNodeMaterial, MeshStandardNodeMaterial, PointLight, Scene, SpotLight} from 'three/webgpu'
 
 import worldTables from '../../scripts/lib/worldTables.ts'
@@ -84,7 +85,7 @@ test('meshes land in the room holding most of their volume and spill into the ot
   outside.position.set(30, 1, 0)
   const hidden = new Mesh(new BoxGeometry, material)
   hidden.visible = false
-  const lamp = new PointLight('#ff8000', 3, 6, 2)
+  const lamp = new PointLight(hsl.integer(53, 100, 68.8), 3, 6, 2)
   // Above the ceiling, like a skylight’s lamp.
   lamp.position.set(10, 30, 0)
   scene.add(group, wall, instanced, crater, outside, hidden, lamp, new AmbientLight)

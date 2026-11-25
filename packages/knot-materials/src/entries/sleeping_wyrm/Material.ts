@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {pixelFootprint} from '../../candidates/claude_opus/lib/footprint.ts'
@@ -100,21 +101,21 @@ export default class extends KnotMaterial {
     const flicker = mx_noise_float(vec3(layout.arc.mul(60), tube.y.mul(8), time.mul(1.3))).mul(0.25).add(0.85)
       .mul(mx_noise_float(vec3(layout.arc.mul(260), tube.y.mul(40), time.mul(0.35))).mul(0.6).add(0.75))
     const heat = ember.mul(inhale.mul(0.7).add(0.3)).mul(flicker).mul(stir.mul(1.4).add(0.45))
-    const fire = mix(mix(color('#4a0602'), color('#ff3c06'), heat.smoothstep(0.04, 0.5)), color('#ffc860'), heat.smoothstep(0.7, 1.4)).mul(heat.mul(1.6))
+    const fire = mix(mix(color(hsl.integer(30, 97, 16)), color(hsl.integer(33.6, 100, 59.7)), heat.smoothstep(0.04, 0.5)), color(hsl.integer(81, 100, 84)), heat.smoothstep(0.7, 1.4)).mul(heat.mul(1.6))
 // thin rims glow faintly where the fire shows through the plates
     const rim = layout.distance.sub(radius).negate().div(0.06).negate().exp().mul(layout.local.x.negate().smoothstep(0, radius))
-    const glowThrough = color('#ff5a14').mul(rim.mul(inhale.mul(0.5).add(0.2)).mul(stir.mul(0.4).add(0.08)))
+    const glowThrough = color(hsl.integer(38.8, 100, 63)).mul(rim.mul(inhale.mul(0.5).add(0.2)).mul(stir.mul(0.4).add(0.08)))
 // oil-dark iridescence: a thin film whose hue slides with the viewing angle
     const facing = relief.objectNormal.dot(view).abs()
     const film = spectralColor(facing.mul(4.2).add(identity.x.mul(2)).add(layout.local.x.mul(1.5)))
-    const plate = mix(color('#1a120c'), color('#2e1f10'), identity.y)
-    const bronze = mix(color('#6e4a24'), color('#a0743e'), identity.z)
+    const plate = mix(color(hsl.integer(58, 27, 9)), color(hsl.integer(65, 46, 15)), identity.y)
+    const bronze = mix(color(hsl.integer(65, 60, 35)), color(hsl.integer(70, 59, 53)), identity.z)
     const edgeWear = layout.local.x.negate().div(radius).smoothstep(0.55, 1).mul(0.8)
 // concentric growth lines, like the rings of a horn
     const growth = layout.distance.mul(46).add(identity.x.mul(TAU)).sin().mul(0.5).add(0.5).mul(pixel.div(scalePitch / 40).smoothstep(0.5, 1.2).oneMinus())
     this.colorNode = mix(mix(plate, bronze, edgeWear).mul(growth.mul(0.25).add(0.85)), film.mul(0.3), float(0.08).mul(edgeWear.oneMinus()))
     this.metalness = 0.85
     this.roughnessNode = mix(identity.x.mul(0.12).add(0.24), float(0.48), edgeWear).add(ember.mul(0.5)).add(mx_noise_float(rest.position.mul(180)).mul(0.05))
-    this.emissiveNode = fire.mul(ember.step(0.02)).add(glowThrough).add(color('#ff7a2a').mul(grazing.pow(4)).mul(inhale).mul(0.04))
+    this.emissiveNode = fire.mul(ember.step(0.02)).add(glowThrough).add(color(hsl.integer(47, 100, 68)).mul(grazing.pow(4)).mul(inhale).mul(0.04))
   }
 }

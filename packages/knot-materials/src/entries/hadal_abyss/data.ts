@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'hadal_abyss',
   candidateId: 'gemini_flash',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Pressure and darkness have polished this relic beyond the reach of waves.',
   placeholder: {
-    color: '#00f5d4',
+    color: hsl.integer(178, 100, 85),
     shading: 'smooth',
   },
 } as const satisfies KnotData

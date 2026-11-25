@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {abs, clamp, float, max, min, select, smoothstep, vec3} from 'three/tsl'
 
 import {line} from '#src/lib/materials/filters.ts'
@@ -32,7 +33,7 @@ export default class EvidenceFrame extends PortraitFrame {
   override readonly imageDepth = imageDepth
   override readonly impactSound = 'heavy'
   override readonly reach = profile.reach
-  override readonly tint = '#151617'
+  override readonly tint = hsl.integer(248, 3, 10)
   override readonly title = 'Forensic scale'
 
   override createGeometry(width: number, height: number) {
@@ -42,7 +43,7 @@ export default class EvidenceFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new FramePaintMaterial({
-        color: '#111214',
+        color: hsl.integer(264, 6, 8),
         roughness: 0.8,
         grime: 0,
         layers: surface => {

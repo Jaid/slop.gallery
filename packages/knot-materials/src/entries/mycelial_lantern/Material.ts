@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import {cellGrain} from '../../candidates/gpt_sol/lib/cellGrain.ts'
@@ -58,8 +59,8 @@ export default class extends BaseKnotMaterial {
       .mul(0.5)
       .add(0.5)
     const age = skinNoise.smoothstep(0.58, 0.86)
-    const body = mix(color('#bdb295'), color('#252319'), age)
-    this.colorNode = mix(body, color('#46542a'), network.mul(0.2))
+    const body = mix(color(hsl.integer(90, 26, 73)), color(hsl.integer(98, 22, 15)), age)
+    this.colorNode = mix(body, color(hsl.integer(124, 54, 33)), network.mul(0.2))
     this.transmission = 0.35
     this.transmissionNode = facing
       .mul(0.16)
@@ -68,7 +69,7 @@ export default class extends BaseKnotMaterial {
       .clamp(0.08, 0.36)
     this.thickness = 0.42
     this.ior = 1.39
-    this.attenuationColor.set('#758c36')
+    this.attenuationColor.set(hsl.integer(123, 72, 54))
     this.attenuationDistance = 0.58
     this.roughnessNode = float(0.46)
       .add(age.mul(0.22))
@@ -77,14 +78,14 @@ export default class extends BaseKnotMaterial {
     this.clearcoat = 0.08
     this.clearcoatRoughness = 0.4
     this.sheen = 0.18
-    this.sheenColor.set('#ddd3ac')
+    this.sheenColor.set(hsl.integer(95, 41, 84))
     this.sheenRoughness = 0.72
     this.normalNode = proceduralNormal(skinNoise
       .mul(0.16)
       .add(shallow.mul(0.28)), 0.0018)
     const spores = cellGrain(p.sub(view.mul(0.11)), 72, 0.988)
-    const primaryTint = mix(color('#8dff36'), color('#fff1a0'), pulse)
-    const sporeTint = mix(color('#b1ff67'), color('#fff7c8'), spores.rnd.z)
+    const primaryTint = mix(color(hsl.integer(135.3, 100, 88.1)), color(hsl.integer(100, 100, 94.4)), pulse)
+    const sporeTint = mix(color(hsl.integer(132, 100, 90.6)), color(hsl.integer(99, 100, 96.5)), spores.rnd.z)
     this.emissiveNode = primaryTint
       .mul(network)
       .mul(pulse.mul(0.8).add(0.28))
@@ -93,7 +94,7 @@ export default class extends BaseKnotMaterial {
         .mul(spores.mask)
         .mul(intimate)
         .mul(1.15))
-      .add(color('#6e9d38')
+      .add(color(hsl.integer(131, 81, 58))
         .mul(rim)
         .mul(0.055))
   }

@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'sugar_ribbon',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   createdAt: 1_789_816_097,
   flavorText: 'A confectioner pulled one last ribbon of raspberry and mint, then forgot where its ends should meet.',
   placeholder: {
-    color: '#ef7591',
+    color: hsl.integer(7, 76, 66),
     shading: 'liquid',
   },
   displacement: 0.01,

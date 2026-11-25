@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, mix, mx_fractal_noise_float, mx_noise_float, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -29,9 +30,9 @@ export default class extends KnotMaterial {
     const halo = radius.pow2().mul(-1.3).exp()
     const galaxy = arms.mul(halo).mul(dust.smoothstep(0.22, 0.8)).toVar()
     const core = radius.pow2().mul(-30).exp()
-    const galaxyTint = mix(color('#4f62b1'), color('#ffdca3'), radius.smoothstep(0.2, 1.4).oneMinus())
+    const galaxyTint = mix(color(hsl.integer(271, 60, 44)), color(hsl.integer(79, 100, 89.5)), radius.smoothstep(0.2, 1.4).oneMinus())
     const cloud = mx_noise_float(deep.mul(6).add(vec3(time.mul(0.02), 0, 0))).mul(0.5).add(0.5)
-    const night = mix(color('#02040d'), color('#101426'), cloud.mul(0.6))
+    const night = mix(color(hsl.integer(266, 55, 3.4)), color(hsl.integer(273, 42, 10)), cloud.mul(0.6))
     this.colorNode = night
     this.metalness = 0.18
     this.roughnessNode = float(0.14).add(cloud.mul(0.035))
@@ -41,9 +42,9 @@ export default class extends KnotMaterial {
     this.specularIntensity = 0.55
     this.emissiveNode = stars.mul(near.mul(0.25).add(0.85))
       .add(galaxyTint.mul(galaxy).mul(0.56))
-      .add(color('#fff2cf').mul(core).mul(0.8))
-      .add(color('#344471').mul(halo).mul(dust).mul(0.065))
-      .add(color('#5f83be').mul(grazing.pow(5)).mul(0.075))
+      .add(color(hsl.integer(90, 100, 95.6)).mul(core).mul(0.8))
+      .add(color(hsl.integer(268, 48, 30)).mul(halo).mul(dust).mul(0.065))
+      .add(color(hsl.integer(260, 51, 55)).mul(grazing.pow(5)).mul(0.075))
     this.iridescenceNode = grazing.pow(3).mul(0.4)
     this.iridescenceIOR = 1.28
     this.iridescenceThicknessNode = dust.mul(160).add(190)

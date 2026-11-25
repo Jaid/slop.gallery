@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 4AEfQg7Qgj1dEVQ; original ID: scarab_chitin.
 export default {
   id: 'scarab_armor',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Interlocking plates of tempered chitin deflect the light with microscopic grooves, shimmering between emerald and royal amethyst.',
   placeholder: {
-    color: '#27735c',
+    color: hsl.integer(169, 77, 42),
     shading: 'metal',
   },
 } as const satisfies KnotData

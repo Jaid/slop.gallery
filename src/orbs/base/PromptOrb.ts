@@ -18,7 +18,7 @@ export default abstract class PromptOrb extends Orb {
   /** what the image model is asked to do to the image, leading into the adjectives */
   abstract readonly change: string
   /** the orb’s glow, which tints the portal of the fusion and, made locally without AI, the image in place of its prompt */
-  abstract readonly color: string
+  abstract readonly color: number
   /** the word that joins the last of the adjectives a prompt names to the others: `or` leaves the image model free to pick among them, `and` asks for all of them */
   readonly conjunction: string = 'or'
   abstract override readonly mood: MoodId

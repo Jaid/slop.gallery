@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, mix, mx_atan2, normalLocal, tangentLocal, time, uv, vec2, vec3} from 'three/tsl'
 
 import {approach, disk, wave} from '../../candidates/gpt_astra/lib/exhibition/optics.ts'
@@ -43,7 +44,7 @@ export default class extends KnotMaterial {
     const secondOrder = vec3(path.mul(0.5)).sub(wavelengths).div(0.048).pow2().negate().exp().mul(0.32)
     const spectral = firstOrder.add(secondOrder)
     const groove = engraving.mul(0.7).add(0.22)
-    const silver = mix(color('#243448'), color('#b4c6ca'), engraving.mul(0.62).add(0.2))
+    const silver = mix(color(hsl.integer(254, 35, 22)), color(hsl.integer(213, 15, 78)), engraving.mul(0.62).add(0.2))
     this.colorNode = mix(silver, spectral.mul(1.05).add(0.025), groove.mul(0.73)).mul(micro.mul(-0.25).add(1))
     this.metalness = 0.92
     this.roughnessNode = mix(float(0.31), float(0.2), engraving)

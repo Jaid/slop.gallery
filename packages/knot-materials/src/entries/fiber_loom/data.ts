@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'fiber_loom',
   candidateId: 'claude_opus',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Woven from threads of frozen light, each fiber carries a pulse that has forgotten where it began.',
   placeholder: {
-    color: '#42577d',
+    color: hsl.integer(262, 39, 37),
     shading: 'fabric',
   },
 } as const satisfies KnotData

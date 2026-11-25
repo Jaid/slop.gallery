@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {bitangentLocal, color, float, fwidth, mix, mx_cell_noise_float, negateOnBackSide, normalLocal, select, tangentLocal, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {knotArcLength} from '../../candidates/claude_haiku/lib/knotArcLength.ts'
@@ -43,8 +44,8 @@ export default class extends KnotMaterial {
       .sub(tangentLocal.normalize().mul(tiltA))
       .sub(bitangent.mul(tiltB))
       .normalize()
-    const warp = color('#00b7a0')
-    const weft = color('#e0286f')
+    const warp = color(hsl.integer(179, 100, 65))
+    const weft = color(hsl.integer(5, 90, 53.4))
     const base = mix(weft, warp, warpTop)
     const opposite = mix(warp, weft, warpTop)
 // Each thread has its own dye lot: a warp is identified by its place around the tube, a weft by its place along the knot.

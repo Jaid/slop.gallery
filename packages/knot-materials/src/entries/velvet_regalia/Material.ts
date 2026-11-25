@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalLocal, normalViewGeometry, positionGeometry, uv, vec2, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -54,14 +55,14 @@ export default class extends BaseKnotMaterial {
     this.positionNode = positionGeometry.add(normalLocal.mul(pileHeight.mul(0.005)))
     const surfaceHeight = filteredPile.mul(0.04).add(filteredNap.mul(intimate).mul(0.12)).add(cord.body.mul(1.2)).sub(cord.dent.mul(0.55))
     this.normalNode = proceduralNormal(surfaceHeight.mul(0.005), 1)
-    const wine = color('#120105')
-    const crest = color('#3d0715')
+    const wine = color(hsl.integer(3, 78, 4))
+    const crest = color(hsl.integer(11, 81, 14))
     const body = mix(wine, crest, fold.mul(0.7).add(filteredPile.mul(0.08)).clamp())
-    const gold = mix(color('#c08414'), color('#ffe9a0'), cord.luster)
+    const gold = mix(color(hsl.integer(76, 92, 60)), color(hsl.integer(93, 100, 92.4)), cord.luster)
     this.colorNode = mix(body, gold, cord.body.clamp(0, 1))
     this.metalnessNode = cord.body.mul(0.55)
     this.roughnessNode = float(0.92).add(filteredNap.mul(0.06)).sub(cord.body.mul(0.6))
-    this.sheenNode = color('#9c1638').mul(cord.body.oneMinus().clamp())
+    this.sheenNode = color(hsl.integer(14, 90, 36.5)).mul(cord.body.oneMinus().clamp())
     this.sheenRoughness = 0.5
     this.retroreflectivityNode = cord.body.oneMinus().clamp().mul(0.9)
     this.anisotropyNode = cord.along.mul(cord.body.mul(0.85))
@@ -71,6 +72,6 @@ export default class extends BaseKnotMaterial {
     const jitter = vec3(mx_noise_float(p.mul(210)), mx_noise_float(p.mul(210).add(9)), mx_noise_float(p.mul(210).add(17))).sub(0.5)
     const napGlint = glints(normalViewGeometry.add(jitter.mul(0.1)).normalize(), 90).mul(napVisibility).mul(near).mul(0.08)
     const cordGlint = glints(normalViewGeometry, cord.luster.mul(110).add(60)).mul(cord.body).mul(2)
-    this.emissiveNode = color('#1a0208').mul(grazing.pow(3).mul(0.16)).add(gold.mul(cord.body).mul(0.5)).add(gold.mul(cordGlint.mul(0.9))).add(color('#ff6a88').mul(napGlint))
+    this.emissiveNode = color(hsl.integer(5, 76, 6)).mul(grazing.pow(3).mul(0.16)).add(gold.mul(cord.body).mul(0.5)).add(gold.mul(cordGlint.mul(0.9))).add(color(hsl.integer(11, 100, 67)).mul(napGlint))
   }
 }

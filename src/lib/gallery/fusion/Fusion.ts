@@ -29,7 +29,7 @@ export type FusionImpact = {
 }
 export type FusionSpec = {
   /** the swirl’s color, like an orb’s glow; the portal’s own otherwise */
-  color?: string
+  color?: number
   /** the party effects the portal shows besides its own choreography as the result flips out, as the ingredients contributed them */
   effects: ReadonlyArray<PartyEffect>
   /** the images the portal shows of the ingredients in turn, the hung portrait’s first; more can surface later, like a prop’s photograph; an ingredient with nothing to show, like the Transparent Orb, shows nothing */

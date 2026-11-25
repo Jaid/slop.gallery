@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'weeping_basalt',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Dark stone lets a little of its buried heat escape in glowing tears.',
   placeholder: {
-    color: '#86cbd8',
+    color: hsl.integer(211, 50, 77),
     shading: 'stone',
   },
 } as const satisfies KnotData

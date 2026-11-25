@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'amber_requiem',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A golden tomb where one summer keeps its smallest citizens, perfectly still, forever.',
   placeholder: {
-    color: '#b86b17',
+    color: hsl.integer(61, 87, 54),
     shading: 'glass',
   },
 } as const satisfies KnotData

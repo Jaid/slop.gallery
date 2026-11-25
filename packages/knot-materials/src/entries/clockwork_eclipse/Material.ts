@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, time, uv, vec3} from 'three/tsl'
 
 import {glints} from '../../lib/glints.ts'
@@ -25,8 +26,8 @@ export default class extends KnotMaterial {
     const eclipse = view.dot(vec3(0.15, 0.1, 1).normalize()).mul(0.5).add(0.5)
     const lit = eclipse.smoothstep(0.12, 0.7)
     const limb = eclipse.sub(0.42).abs().div(0.035).smoothstep(1, 0)
-    const brass = mix(color('#24140c'), color('#e2a45c'), gear.mul(0.75).add(facing.mul(0.2)))
-    const body = mix(color('#07080c'), brass.mul(0.45), lit.mul(0.7))
+    const brass = mix(color(hsl.integer(47, 42, 11)), color(hsl.integer(69, 70, 72.5)), gear.mul(0.75).add(facing.mul(0.2)))
+    const body = mix(color(hsl.integer(273, 17, 5)), brass.mul(0.45), lit.mul(0.7))
     const height = gear.mul(0.08).add(pinion.mul(0.02))
     const normal = proceduralNormal(height, 1)
     const spark = glints(normal, 55)
@@ -36,9 +37,9 @@ export default class extends KnotMaterial {
     this.anisotropyNode = resolved.mul(0.7)
     this.anisotropyRotation = Math.PI * 0.5
     this.normalNode = normal
-    this.emissiveNode = color('#ffc98a').mul(limb).mul(intimate.mul(0.5).add(0.8)).mul(1.8)
-      .add(color('#fff1d4').mul(spark).mul(lit).mul(gear.add(0.2)).mul(0.35))
-      .add(color('#ffd7a4').mul(pinion).mul(lit).mul(0.8))
-      .add(color('#120c08').mul(grazing).mul(lit.oneMinus()).mul(0.02))
+    this.emissiveNode = color(hsl.integer(71, 100, 85)).mul(limb).mul(intimate.mul(0.5).add(0.8)).mul(1.8)
+      .add(color(hsl.integer(85, 100, 95.5)).mul(spark).mul(lit).mul(gear.add(0.2)).mul(0.35))
+      .add(color(hsl.integer(73, 100, 88.5)).mul(pinion).mul(lit).mul(0.8))
+      .add(color(hsl.integer(56, 24, 7)).mul(grazing).mul(lit.oneMinus()).mul(0.02))
   }
 }

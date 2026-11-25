@@ -4,6 +4,7 @@ import type {Material} from 'three/webgpu'
 import {CuboidCollider, RigidBody, TrimeshCollider} from '@react-three/rapier'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
+import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {ExtrudeGeometry, Shape} from 'three/webgpu'
 
@@ -102,7 +103,7 @@ export default function CellRoom() {
   const joinery = useDisposable(useMemo(() => new JoineryWoodMaterial({grain: 'x'}), []))
   return <group name='cell'>
     <ambientLight intensity={0.15} />
-    <hemisphereLight color='#e1edff' groundColor='#80705d' intensity={0.45} />
+    <hemisphereLight color={hsl.integer(258, 100, 93)} groundColor={hsl.integer(72, 20, 48)} intensity={0.45} />
     {/* Through the roof lights, the roof and walls shadowing the rest of the room. */}
     <SandboxMoonlight geometry={moon} />
     {/* Each chandelier’s lamp borrows one of its slots for its shadow, which only renders again once something in its reach moves. */}

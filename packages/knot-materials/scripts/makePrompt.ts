@@ -103,7 +103,7 @@ Each metadata module must be a default object with \`as const satisfies KnotData
 
 - A globally unique snake_case \`id\`, an evocative \`title\`, and a distinct one- or two-sentence \`flavorText\`.
 - \`candidateId: ${author ? `'${author.data.id}'` : "'<candidate ID supplied by the caller>'"}\`, plus accurate \`author.model\` provenance and \`harness\`. Never invent model versions or effort levels; ask the inference caller to fill unknown provenance.
-- \`placeholder: {color: '#rrggbb', shading: 'smooth' | 'ghost' | 'metal' | 'glass' | 'stone' | 'liquid' | 'fabric'}\`. Choose one shading literal appropriate for that entry.
+- \`placeholder: {color: hsl.integer(hue, saturation, lightness), shading: 'smooth' | 'ghost' | 'metal' | 'glass' | 'stone' | 'liquid' | 'fabric'}\`. Use \`import hsl from 'okhsl'\` for packed sRGB colors in metadata and materials. Hue is in degrees, saturation and lightness in percent. Choose one shading literal appropriate for that entry.
 - A conservative positive \`displacement\` bound in meters whenever vertices move; omit it for undisplaced materials.
 
 Do not add \`accent\`, \`highlighted\`, \`sourceId\`, plate numbers, or a per-entry rarity field. Supply separate export additions for \`src/entries/index.ts\` and additions to \`src/rarities.ts\` using \`unknown\` for new entries; rarity is curated centrally afterward. Existing rarity constants are unknown=0 (no stars), common=1, rare=2, prime=3, ethereal=4, special=5 (never exhibited automatically).

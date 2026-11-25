@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, vec2, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -49,23 +50,23 @@ export default class extends KnotMaterial {
     const insect = insectBody.max(head).max(legs.mul(0.75)).mul(id.x.smoothstep(0.97, 0.985))
 // Plant dust and grit suspended in the resin.
     const dust = cellularPoints(inner.mul(70), 0.02, 0.1, 0.72).mul(0.5)
-    const amberBase = mix(color('#8f3c00'), color('#d98a14'), flow.mul(0.5).add(0.5))
-    const body = mix(amberBase, color('#3a1c06'), insect.mul(0.9))
-    this.colorNode = mix(body, color('#e8a83c'), cloud.mul(0.06))
+    const amberBase = mix(color(hsl.integer(47, 100, 38)), color(hsl.integer(68, 94, 65)), flow.mul(0.5).add(0.5))
+    const body = mix(amberBase, color(hsl.integer(54, 76, 16)), insect.mul(0.9))
+    this.colorNode = mix(body, color(hsl.integer(77, 84, 74)), cloud.mul(0.06))
     this.metalness = 0
     this.roughnessNode = float(0.04).add(cloud.mul(0.03)).add(insect.mul(0.1))
     this.transmission = 0.95
     this.thickness = 0.5
     this.ior = 1.55
-    this.attenuationColor.set('#c25c00')
+    this.attenuationColor.set(hsl.integer(51, 100, 52.4))
     this.attenuationDistance = 0.5
     this.clearcoat = 0.7
     this.clearcoatRoughness = 0.03
     this.normalNode = proceduralNormal(flow.mul(0.12).add(bubbles.mul(0.2)), 0.0006)
     this.clearcoatNormalNode = this.normalNode
-    this.emissiveNode = color('#ff8c10').mul(flow.mul(0.5).add(0.5)).mul(0.35)
-      .add(color('#ffd9a0').mul(bubbles).mul(near.mul(0.3).add(0.7)).mul(0.5))
-      .add(color('#ffb347').mul(dust).mul(0.35))
-      .add(color('#ffc860').mul(grazing.pow(1.6)).mul(1.3))
+    this.emissiveNode = color(hsl.integer(57.5, 100, 71)).mul(flow.mul(0.5).add(0.5)).mul(0.35)
+      .add(color(hsl.integer(78, 100, 89)).mul(bubbles).mul(near.mul(0.3).add(0.7)).mul(0.5))
+      .add(color(hsl.integer(72, 100, 79.1)).mul(dust).mul(0.35))
+      .add(color(hsl.integer(81, 100, 84)).mul(grazing.pow(1.6)).mul(1.3))
   }
 }

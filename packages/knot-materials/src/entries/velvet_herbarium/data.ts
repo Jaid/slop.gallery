@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 0CPX47Y7FuE0PTN.
 export default {
   id: 'velvet_herbarium',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A garden embroidered in dusk-gold thread sleeps beneath wine-dark velvet, until the light brushes its leaves awake.',
   placeholder: {
-    color: '#542034',
+    color: hsl.integer(358, 58, 23),
     shading: 'fabric',
   },
 } as const satisfies KnotData

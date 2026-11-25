@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7mkaA7JC9cNnoS2; fixture: knot-material-shaders; result: success.
 export default {
   id: 'sumi',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A mountain range, a red sun and the breath that put them there. The paper still holds the weight of the brush.',
   placeholder: {
-    color: '#888077',
+    color: hsl.integer(71, 9, 54),
     shading: 'smooth',
   },
 } as const satisfies KnotData

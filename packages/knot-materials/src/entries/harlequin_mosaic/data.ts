@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 5WDU20J87Ktg4fx; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'harlequin_mosaic',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Ten million years of silica rain settled into a lattice of tiny spheres. Turn it slowly and each mosaic tile lights, one hue at a time.',
   placeholder: {
-    color: '#192646',
+    color: hsl.integer(266, 53, 17),
     shading: 'glass',
   },
 } as const satisfies KnotData

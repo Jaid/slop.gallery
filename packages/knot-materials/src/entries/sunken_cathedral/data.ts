@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'sunken_cathedral',
   candidateId: 'gpt_astra',
@@ -14,7 +16,7 @@ export default {
   },
   flavorText: 'An underwater cathedral gathers daylight where its roof once met the sky.',
   placeholder: {
-    color: '#8cdeef',
+    color: hsl.integer(212, 68, 83),
     shading: 'smooth',
   },
 } as const satisfies KnotData

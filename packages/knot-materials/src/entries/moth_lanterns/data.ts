@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 0CPX47Y7FuE0PTN.
 export default {
   id: 'moth_lanterns',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'At twilight, luminous wings beat soundlessly under translucent green skin, carrying fireflies toward the center of the knot.',
   placeholder: {
-    color: '#174b39',
+    color: hsl.integer(167, 77, 28),
     shading: 'glass',
   },
 } as const satisfies KnotData

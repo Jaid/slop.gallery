@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {cosinePalette} from '../../lib/cosinePalette.ts'
@@ -325,10 +326,10 @@ export default class extends KnotMaterial {
 // Distant micro-starfield
     const microStars = starfield(p, 55, 0.965).mul(0.5)
 // Color synthesis
-    const deepSpaceVoid = mix(color('#020308'), color('#080d22'), nebulaNoise.mul(0.5).add(0.5))
-    const constellationColor = mix(color('#8fc5ff'), color('#d8ecff'), starDots)
-    const eyeTint = mix(color('#32ffb0'), color('#ffdf52'), facing)
-    const whiskerColor = color('#b8d8ff')
+    const deepSpaceVoid = mix(color(hsl.integer(270, 42, 3)), color(hsl.integer(271, 59, 7)), nebulaNoise.mul(0.5).add(0.5))
+    const constellationColor = mix(color(hsl.integer(250, 100, 78)), color(hsl.integer(247, 100, 92.3)), starDots)
+    const eyeTint = mix(color(hsl.integer(161, 100, 86.9)), color(hsl.integer(96, 100, 89)), facing)
+    const whiskerColor = color(hsl.integer(254, 100, 85))
     this.colorNode = deepSpaceVoid.add(nebulaTint.mul(nebulaGlow))
     this.metalness = 0.1
     this.roughness = 0.18
@@ -342,12 +343,12 @@ export default class extends KnotMaterial {
     this.normalNode = proceduralNormal(relief, 0.8)
 // Radiant emissive synthesis
     this.emissiveNode = constellationColor.mul(constellationLines).mul(1.4)
-      .add(color('#ffffff').mul(starDots).mul(2.4))
-      .add(color('#d0eaff').mul(starSpikes).mul(1.8))
+      .add(color(hsl.integer(0, 0, 100)).mul(starDots).mul(2.4))
+      .add(color(hsl.integer(242, 100, 91)).mul(starSpikes).mul(1.8))
       .add(eyeTint.mul(catEyes).mul(3.5))
       .add(whiskerColor.mul(whiskerCore).mul(1.2))
       .add(nebulaTint.mul(nebulaGlow).mul(near.mul(0.5).add(0.6)))
       .add(microStars.mul(near.mul(0.6).add(0.5)))
-      .add(color('#4060ff').mul(rim).mul(0.25))
+      .add(color(hsl.integer(268.5, 100, 50)).mul(rim).mul(0.25))
   }
 }

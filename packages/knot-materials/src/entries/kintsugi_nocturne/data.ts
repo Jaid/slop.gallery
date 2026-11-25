@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'kintsugi_nocturne',
   candidateId: 'gpt_terra',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'Midnight porcelain has broken, been cherished and returned whole; every quiet fracture keeps a seam of captured sunlight.',
   displacement: 0.009,
   placeholder: {
-    color: '#1a1110',
+    color: hsl.integer(26, 21, 9),
     shading: 'smooth',
   },
 } as const satisfies KnotData

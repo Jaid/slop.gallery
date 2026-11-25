@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'nocturne_opal',
   candidateId: 'muse_spark',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: "A low, colored melody moves through the stone's midnight chambers.",
   placeholder: {
-    color: '#8a6cff',
+    color: hsl.integer(288, 100, 57.6),
     shading: 'glass',
   },
 } as const satisfies KnotData

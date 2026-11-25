@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, negateOnBackSide, normalLocal, time, transformNormalToView, uv, vec2, vec3} from 'three/tsl'
 
 import {ramp} from '../../candidates/claude_sonnet/lib/ramp.ts'
@@ -70,7 +71,7 @@ export default class extends KnotMaterial {
     const deepAcross = rowCoord.sub(shiftAcross).fract().sub(0.5)
     const canalLine = deepAcross.mul(deepAcross).mul(-150).exp()
     const canalBeads = tube.x.sub(shiftAlong).mul(plates / 8).mul(TAU).sub(time.mul(3)).cos().mul(0.5).add(0.5).pow(2).mul(0.7).add(0.3)
-    const canals = color('#b94dff').rgb.mul(canalLine).mul(canalBeads).mul(pulse.mul(1.8).add(0.55)).mul(facing.mul(0.6).add(0.4))
+    const canals = color(hsl.integer(309, 100, 58.5)).rgb.mul(canalLine).mul(canalBeads).mul(pulse.mul(1.8).add(0.55)).mul(facing.mul(0.6).add(0.4))
     // bioluminescent sparks: dormant cells wake as the viewer approaches
     const spots = tube.mul(vec2(...sparkGrid))
     const spotCell = wrapCell(spots.floor(), vec2(...sparkGrid))
@@ -83,14 +84,14 @@ export default class extends KnotMaterial {
     const awake = ramp(sparkRandom.z, threshold.add(0.06), threshold)
     const burst = age.mul(-3.2).exp().mul(ramp(age, 0, 0.04))
     const bead = ramp(spotLocal.sub(sparkRandom.xy.sub(0.5).mul(0.35)).length(), 0.26, 0).pow(2)
-    const sparkTint = mix(color('#21ffd0').rgb, color('#3d7bff').rgb, sparkRandom2.x)
+    const sparkTint = mix(color(hsl.integer(172, 100, 87.5)).rgb, color(hsl.integer(263, 100, 55.4)).rgb, sparkRandom2.x)
     const sparks = sparkTint.mul(bead).mul(burst.add(pulse.mul(0.6))).mul(awake)
     // gel: ink-blue body with a slow internal variation, a cold rim glow and a thin-film sheen
     const gel = mx_fractal_noise_float(p.mul(3.4).add(vec3(0, 0, time.mul(0.03))), 3, 2.1, 0.5).mul(0.5).add(0.5)
     const breathe = tube.x.mul(TAU * 3).sub(time.mul(0.9)).sin().mul(0.5).add(0.5)
-    const body = mix(color('#010612'), color('#052a47'), gel.smoothstep(0.25, 0.85)).rgb
-    const glow = color('#0a66d0').rgb.mul(rim).mul(breathe.mul(0.12).add(0.2))
-      .add(color('#4d2bd6').rgb.mul(rim.pow(2)).mul(0.25))
+    const body = mix(color(hsl.integer(256, 74, 4)), color(hsl.integer(248, 83, 17)), gel.smoothstep(0.25, 0.85)).rgb
+    const glow = color(hsl.integer(257, 97, 45)).rgb.mul(rim).mul(breathe.mul(0.12).add(0.2))
+      .add(color(hsl.integer(280, 94, 37.6)).rgb.mul(rim.pow(2)).mul(0.25))
     // plates tilt the shading normal in a sawtooth with the beat; unresolved plates fall back to the smooth gel
     const slope = inPlate.sub(0.5).mul(1.1).add(beat.mul(0.55))
     const tilt = basis.along.mul(slope).add(basis.around.mul(across.mul(2.4))).mul(band).mul(resolved).mul(0.6)
@@ -110,6 +111,6 @@ export default class extends KnotMaterial {
       .add(canals)
       .add(sparks.mul(2.6))
       .add(glow)
-      .add(color('#7fd8ff').rgb.mul(pulse).mul(rim).mul(0.5))
+      .add(color(hsl.integer(229, 99, 81)).rgb.mul(pulse).mul(rim).mul(0.5))
   }
 }

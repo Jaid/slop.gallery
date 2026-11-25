@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'aurora_ribbon',
   candidateId: 'kimi',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'A strip of northern sky slips loose from the horizon.',
   placeholder: {
-    color: '#7dffd0',
+    color: hsl.integer(167, 100, 89.9),
     shading: 'smooth',
   },
 } as const satisfies KnotData

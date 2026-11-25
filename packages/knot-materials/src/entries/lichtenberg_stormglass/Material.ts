@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, mx_noise_vec3, time, vec3} from 'three/tsl'
 
 import BaseKnotMaterial from '../../lib/KnotMaterial.ts'
@@ -37,26 +38,26 @@ export default class extends BaseKnotMaterial {
     const live = surge.mul(flicker.mul(0.55).add(0.45)).add(crawl)
     const glassFog = mx_fractal_noise_float(inner.mul(3.1), 3, 2, 0.5).mul(0.5).add(0.5)
     const burns = bolt.trunk.max(bolt.branch.mul(0.7)).max(echo.trunk.mul(0.45))
-    const silica = mix(color('#0b1016'), color('#1c2a38'), glassFog.mul(grazing).mul(0.6).add(0.2))
-    this.colorNode = mix(silica, color('#07080a'), burns.mul(0.55))
+    const silica = mix(color(hsl.integer(254, 23, 7)), color(hsl.integer(249, 33, 18)), glassFog.mul(grazing).mul(0.6).add(0.2))
+    this.colorNode = mix(silica, color(hsl.integer(262, 10, 5)), burns.mul(0.55))
     this.transmissionNode = burns.oneMinus().mul(facing.mul(0.35).add(0.55)).mul(near.mul(-0.15).add(0.92))
     this.thickness = 0.55
     this.ior = 1.48
     this.dispersion = 0.42
-    this.attenuationColor.set('#1a3355')
+    this.attenuationColor.set(hsl.integer(257, 58, 22))
     this.attenuationDistance = 0.45
     this.roughnessNode = burns.mul(0.22).add(0.04)
     this.metalnessNode = burns.mul(0.25)
     this.clearcoat = 1
     this.clearcoatRoughness = 0.03
     this.normalNode = proceduralNormal(bolt.field.mul(0.4).add(glassFog.mul(0.2)), 0.0024)
-    this.emissiveNode = color('#eaf4ff')
+    this.emissiveNode = color(hsl.integer(250, 100, 96))
       .mul(bolt.trunk)
       .mul(live.add(0.1))
       .mul(1.8)
-      .add(color('#7aa7ff').mul(bolt.branch).mul(live.add(0.08)).mul(1.35))
-      .add(color('#b388ff').mul(bolt.hair).mul(near.mul(0.8).add(intimate)))
-      .add(color('#9ecbff').mul(echo.trunk).mul(live).mul(0.55))
-      .add(color('#3a5080').mul(rim).mul(0.12))
+      .add(color(hsl.integer(263, 100, 69)).mul(bolt.branch).mul(live.add(0.08)).mul(1.35))
+      .add(color(hsl.integer(299, 100, 67)).mul(bolt.hair).mul(near.mul(0.8).add(intimate)))
+      .add(color(hsl.integer(252, 100, 80)).mul(echo.trunk).mul(live).mul(0.55))
+      .add(color(hsl.integer(265, 48, 35)).mul(rim).mul(0.12))
   }
 }

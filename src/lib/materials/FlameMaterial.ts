@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {attribute, cameraFar, cameraNear, cameraPosition, color, float, max, mix, modelWorldMatrixInverse, mx_noise_float, perspectiveDepthToViewZ, positionView, screenUV, smoothstep, time, uv, vec2, vec3, vec4, viewportDepthTexture} from 'three/tsl'
 import {AdditiveBlending, MeshBasicNodeMaterial} from 'three/webgpu'
 
@@ -68,7 +69,7 @@ export default class FlameMaterial extends MeshBasicNodeMaterial {
     const heat = density.smoothstep(0.02, 0.65).mul(v.mul(-0.5).add(0.95)).mul(fade)
     // Where the gas first meets air at the root, it burns blue before the soot glows.
     const root = smoothstep(0.16, 0.02, v).mul(density.smoothstep(0.1, 0.5)).mul(fade)
-    this.colorNode = mix(fireColor(heat).mul(brightness).mul(flare.mul(0.5).add(0.5)), color('#3d63ff').mul(0.55), root.mul(0.6))
+    this.colorNode = mix(fireColor(heat).mul(brightness).mul(flare.mul(0.5).add(0.5)), color(hsl.integer(268, 100, 50)).mul(0.55), root.mul(0.6))
     this.opacityNode = float(1)
     // Ambient occlusion and temporal antialiasing read the normal and velocity targets, which every fragment overwrites without blending. Keep the empty rest of each quad out of them.
     this.maskNode = heat.greaterThan(1 / 256)

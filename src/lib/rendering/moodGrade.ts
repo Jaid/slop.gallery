@@ -25,7 +25,7 @@ const rgb = {
   g: 0,
   b: 0,
 }
-const paint = (target: {value: Vector3}, hex: string) => {
+const paint = (target: {value: Vector3}, hex: number) => {
   color.set(hex).getRGB(rgb, SRGBColorSpace)
   target.value.set(rgb.r, rgb.g, rgb.b)
 }

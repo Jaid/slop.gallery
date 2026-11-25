@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'auric_joinery',
   candidateId: 'deepseek',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The break was never hidden – it was filled with gold, and the bowl became worth more than before.',
   placeholder: {
-    color: '#6f6046',
+    color: hsl.integer(81, 29, 42),
     shading: 'stone',
   },
 } as const satisfies KnotData

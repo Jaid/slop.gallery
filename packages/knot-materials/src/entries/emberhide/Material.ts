@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {float, mix, mx_noise_float, normalLocal, positionGeometry, tangentLocal, time, transformNormalToView, vec2, vec3} from 'three/tsl'
 
 import {rgb} from '../../candidates/claude_fable/lib/rgb.ts'
@@ -56,14 +57,14 @@ export default class extends KnotMaterial {
     const lift = breath.mul(0.14).add(0.06)
     const gap = inside.smoothstep(float(0.98).sub(lift), float(1.01).sub(lift.mul(0.35)))
     const underglow = gap.mul(breath.mul(0.7).add(0.3)).mul(breathNoise.mul(0.6).add(0.4))
-    const ember = mix(rgb('#ff3a00'), rgb('#ffb347'), breath)
+    const ember = mix(rgb(hsl.integer(33.6, 100, 59.5)), rgb(hsl.integer(72, 100, 79.1)), breath)
 // Pigment: deep green-black hide, bronze keels, pale worn edges, each scale a touch different.
-    const hide = mix(rgb('#0b1a12'), rgb('#17301d'), identity.x)
-    const bronze = rgb('#8a5a22')
-    const worn = rgb('#4e6b55')
+    const hide = mix(rgb(hsl.integer(159, 47, 10)), rgb(hsl.integer(150, 59, 18)), identity.x)
+    const bronze = rgb(hsl.integer(67, 72, 43))
+    const worn = rgb(hsl.integer(152, 32, 42))
     let pigment = mix(hide, worn, inside.smoothstep(0.55, 0.95).mul(identity2.x.smoothstep(0.3, 0.9)).mul(0.6))
     pigment = mix(pigment, bronze, keel.mul(0.7))
-    pigment = mix(pigment, rgb('#030503'), rim.max(gap).mul(0.85))
+    pigment = mix(pigment, rgb(hsl.integer(145, 27, 3)), rim.max(gap).mul(0.85))
 // Seen at grazing angles, more of the underside is exposed and the fire shows through the rows.
     const exposure = grazing.pow(1.5).mul(0.7).add(0.3)
     this.colorNode = pigment
@@ -76,10 +77,10 @@ export default class extends KnotMaterial {
     this.iridescenceIOR = 1.35
     this.iridescenceThicknessNode = identity.z.mul(260).add(260).add(dome.mul(120))
     this.sheen = 0.35
-    this.sheenColor.set('#3fa06a')
+    this.sheenColor.set(hsl.integer(156, 81, 57))
     this.sheenRoughness = 0.6
     const sparkle = glints(scaleNormalView, 180).mul(keel.add(ridges.mul(0.4))).mul(0.5)
     const warmth = view.dot(n).clamp().pow(3).mul(intimate).mul(breath).mul(0.08)
-    this.emissiveNode = ember.mul(underglow).mul(exposure).mul(2.6).add(rgb('#ffd9a0').mul(sparkle)).add(rgb('#ff5a1e').mul(warmth)).add(rgb('#1e5a35').mul(facing.oneMinus().pow(4)).mul(0.05))
+    this.emissiveNode = ember.mul(underglow).mul(exposure).mul(2.6).add(rgb(hsl.integer(78, 100, 89)).mul(sparkle)).add(rgb(hsl.integer(38, 100, 63.1)).mul(warmth)).add(rgb(hsl.integer(153, 86, 33)).mul(facing.oneMinus().pow(4)).mul(0.05))
   }
 }

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, Fn, mix, negateOnBackSide, positionViewDirection, time, transformNormalToView, uv, varying, vec2} from 'three/tsl'
 
 import {approach} from '../../candidates/gpt_astra/lib/exhibition/optics.ts'
@@ -52,7 +53,7 @@ export default class extends KnotMaterial {
     const facing = surface.normal.dot(positionViewDirection).abs().clamp()
     const rim = facing.oneMinus()
     const oil = rim.pow(3).mul(ridge).mul(0.64)
-    this.colorNode = mix(mix(color('#222e3b'), color('#99a8ab'), ridge.mul(0.65).add(modulation.mul(0.12))), color('#a98c53'), oil)
+    this.colorNode = mix(mix(color(hsl.integer(251, 27, 19)), color(hsl.integer(211, 10, 67.5)), ridge.mul(0.65).add(modulation.mul(0.12))), color(hsl.integer(83, 52, 60)), oil)
     this.metalness = 1
     this.roughnessNode = mix(float(0.2), float(0.095), ridge).add(near.oneMinus().mul(0.025))
     this.clearcoat = 1
@@ -62,6 +63,6 @@ export default class extends KnotMaterial {
     this.iridescence = 0.28
     this.iridescenceNode = oil.mul(0.45)
     this.iridescenceThicknessNode = modulation.mul(90).add(260)
-    this.emissiveNode = color('#487da4').mul(rim.pow(5)).mul(0.026)
+    this.emissiveNode = color(hsl.integer(242, 51, 50)).mul(rim.pow(5)).mul(0.026)
   }
 }

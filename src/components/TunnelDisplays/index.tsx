@@ -1,6 +1,7 @@
 import type {Material} from 'three/webgpu'
 
 import {RigidBody} from '@react-three/rapier'
+import hsl from 'okhsl'
 
 import DisplayStairway from '#component/DisplayStairway'
 import SlopedBox from '#component/SlopedBox'
@@ -26,7 +27,7 @@ export default function TunnelDisplays({material}: {material: Material}) {
       const [x, z] = tunnelDiagonalPoint(s)
       return <group key={s} name='tunnel-ceiling-light' position={[x, tunnelDiagonalFloorY(s) + lowerGallery.tunnel.height, z]} rotation={[0, tunnelDiagonalYaw, 0]}>
         <group rotation={[-Math.atan(tunnelSlope), 0, 0]}>
-          <Box color='#242f32' position={[0, -0.04, 0]} size={[0.5, 0.1, 0.5]} />
+          <Box color={hsl.integer(216, 16, 19)} position={[0, -0.04, 0]} size={[0.5, 0.1, 0.5]} />
           <mesh position={[0, -0.091, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <circleGeometry args={[0.16, 24]} /><meshBasicNodeMaterial color={tunnelLightColors[i]} toneMapped={false} />
           </mesh>

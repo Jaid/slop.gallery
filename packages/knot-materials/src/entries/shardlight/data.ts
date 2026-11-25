@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'shardlight',
   candidateId: 'deepseek',
@@ -16,7 +18,7 @@ export default {
   flavorText: 'A thousand mirrors agree to disagree about where the light comes from.',
   displacement: 0.005,
   placeholder: {
-    color: '#586676',
+    color: hsl.integer(252, 18, 43),
     shading: 'metal',
   },
 } as const satisfies KnotData

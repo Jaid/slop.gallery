@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 7EtWKdJKgEioEdL; fixture: knot-material-shaders.
 export default {
   id: 'sunset_rose_window',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Somewhere inside the knot the sun is setting, and a whole cathedral of colored glass is catching the last of its light.',
   placeholder: {
-    color: '#7d243f',
+    color: hsl.integer(7, 71, 32),
     shading: 'glass',
   },
 } as const satisfies KnotData

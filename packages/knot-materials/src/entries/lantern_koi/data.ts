@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: DZoyAbZAQlwnlPj; fixture: knot-material-shaders; result: success.
 export default {
   id: 'lantern_koi',
@@ -14,7 +16,7 @@ export default {
   }},
   flavorText: 'A paper lantern on a summer night. Inside, the candle has company: koi circling unhurried, their shadows sharp only where they brush the paper.',
   placeholder: {
-    color: '#a27b4e',
+    color: hsl.integer(69, 48, 55),
     shading: 'fabric',
   },
 } as const satisfies KnotData

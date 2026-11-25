@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chromatophore_skin',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Patterns surface and retreat like thoughts beneath a living hide.',
   placeholder: {
-    color: '#28dfc1',
+    color: hsl.integer(178, 92, 78),
     shading: 'smooth',
   },
   displacement: 0.014,

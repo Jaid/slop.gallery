@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, cos, float, mix, mx_fractal_noise_float, normalLocal, normalViewGeometry, positionGeometry, positionViewDirection, positionWorld, sin, time, uv, vec2, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -106,9 +107,9 @@ export default class extends KnotMaterial {
     const sand = heap.mul(0.9).add(stray.mul(0.3)).clamp(0, 1)
     const relief = band.mul(0.75).add(grain.mul(0.07).mul(intimate))
     this.positionNode = positionGeometry.add(normalLocal.mul(relief.mul(knotData.displacement)))
-    const brass = mix(color('#9c7c3c'), color('#5c4520'), tarnish.mul(0.6))
-    const polished = mix(brass, color('#3c2c11'), grazing.mul(0.4).mul(tarnish))
-    const quartz = mix(color('#efe1c2'), color('#cdae7c'), grain.mul(0.5).add(0.25))
+    const brass = mix(color(hsl.integer(83, 62, 54)), color(hsl.integer(77, 58, 32)), tarnish.mul(0.6))
+    const polished = mix(brass, color(hsl.integer(78, 60, 20)), grazing.mul(0.4).mul(tarnish))
+    const quartz = mix(color(hsl.integer(87, 50, 90)), color(hsl.integer(79, 46, 73)), grain.mul(0.5).add(0.25))
     this.colorNode = mix(polished, quartz, sand.mul(0.94))
     this.metalnessNode = sand.oneMinus()
     this.roughnessNode = sand.mul(0.62).add(tarnish.mul(0.16)).add(grain.mul(0.05).mul(intimate)).add(0.26).clamp(0.2, 0.95)
@@ -122,7 +123,7 @@ export default class extends KnotMaterial {
     }
     const sparkle = glint.mul(grain.mul(0.5).add(0.5)).mul(intimate)
     this.normalNode = proceduralNormal(relief, 0.2)
-    this.emissiveNode = color('#fff2d2').mul(sparkle).mul(sand).mul(1.2)
-      .add(color('#ffcf7a').mul(standing.abs().oneMinus().pow(8)).mul(grazing.pow(2)).mul(near.mul(0.3).add(0.12)).mul(0.35))
+    this.emissiveNode = color(hsl.integer(89, 100, 95.8)).mul(sparkle).mul(sand).mul(1.2)
+      .add(color(hsl.integer(81, 100, 86)).mul(standing.abs().oneMinus().pow(8)).mul(grazing.pow(2)).mul(near.mul(0.3).add(0.12)).mul(0.35))
   }
 }

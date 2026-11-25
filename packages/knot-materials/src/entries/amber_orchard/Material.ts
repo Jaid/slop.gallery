@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_cell_noise_vec3, mx_noise_float, time, uv, vec2, vec3} from 'three/tsl'
 
 import {coverage, fern, ring, rotatePoint} from '../../candidates/gpt_astra/lib/exhibition/fields.ts'
@@ -18,7 +19,7 @@ export default class extends KnotMaterial {
     const ray = tubeRay()
     const resin = mx_noise_float(p.mul(9)).mul(0.5).add(0.5)
     const transmissionLight = facing.pow(0.6).mul(0.62).add(resin.mul(0.22))
-    let body: Node<'vec3'> = mix(color('#220806'), color('#c47b0d'), transmissionLight)
+    let body: Node<'vec3'> = mix(color(hsl.integer(28, 67, 8)), color(hsl.integer(68, 95, 59)), transmissionLight)
     let fossil: Node<'float'> = float(0)
     // Back-to-front compositing gives leaves proper ordering rather than additive ghosts.
     for (let i = 2; i >= 0; i--) {
@@ -29,8 +30,8 @@ export default class extends KnotMaterial {
       const seed = mx_cell_noise_vec3(vec3(cell, 13 + i * 7))
       const local = rotatePoint(q.fract().sub(0.5).mul(vec2(1.35, 1)), seed.x.sub(0.5).mul(1.7))
       const specimen = fern(local.mul(seed.z.mul(0.7).add(0.85)), aa).mul(seed.y.smoothstep(0.45, 0.56))
-      const tint = mix(color('#060603'), color('#201105'), seed.z)
-      const mineralFilm = mix(tint, color('#49301a'), float(i * 0.12))
+      const tint = mix(color(hsl.integer(108, 27, 4)), color(hsl.integer(59, 60, 9)), seed.z)
+      const mineralFilm = mix(tint, color(hsl.integer(61, 51, 23)), float(i * 0.12))
       body = mix(body, mineralFilm, specimen.mul(0.98 - i * 0.09))
       fossil = fossil.max(specimen.mul(1 - i * 0.2))
     }
@@ -45,8 +46,8 @@ export default class extends KnotMaterial {
     const bubble = coverage(br.sub(0.075), baa).mul(bubbleGate)
     const bubbleRim = ring(br, 0.076, 0.008, baa).mul(bubbleGate)
     const crescent = coverage(bc.sub(vec2(-0.023, 0.022)).length().sub(0.03), baa).mul(bubbleGate)
-    body = mix(body, color('#5e2f0a'), bubble.mul(0.42))
-    body = mix(body, color('#ffce6a'), bubbleRim.mul(0.65).add(crescent.mul(0.75)).clamp())
+    body = mix(body, color(hsl.integer(53, 81, 26)), bubble.mul(0.42))
+    body = mix(body, color(hsl.integer(83, 100, 85.4)), bubbleRim.mul(0.65).add(crescent.mul(0.75)).clamp())
     // Depth-integrated resin clouds are independent of the surface UVs and shift with the eye.
     let sediment: Node<'float'> = float(0)
     let cloud: Node<'float'> = float(0)
@@ -66,8 +67,8 @@ export default class extends KnotMaterial {
     }
     const absorption = vec3(2, 6, 13).mul(chord).negate().exp()
     body = body.mul(absorption.mul(0.55).add(0.45))
-    body = mix(body, color('#a84913'), cloud.mul(0.2))
-    body = body.add(color('#ffe4a4').mul(sediment).mul(intimate))
+    body = mix(body, color(hsl.integer(45, 88, 45)), cloud.mul(0.2))
+    body = body.add(color(hsl.integer(88, 100, 91.5)).mul(sediment).mul(intimate))
     this.colorNode = body.mul(0.16)
     this.metalness = 0
     this.roughness = 0.08
@@ -77,8 +78,8 @@ export default class extends KnotMaterial {
     const lantern = view.dot(vec3(-0.45, 0.6, 0.66)).mul(0.3).add(0.65)
     const breath = time.mul(0.3).sin().mul(0.035).add(0.965)
     this.emissiveNode = body.mul(lantern).mul(breath).mul(facing.mul(0.85).add(0.46))
-      .add(color('#ffab28').mul(grazing.pow(3)).mul(0.18))
-      .add(color('#ffe0a0').mul(crescent).mul(intimate).mul(0.12))
+      .add(color(hsl.integer(71, 100, 77)).mul(grazing.pow(3)).mul(0.18))
+      .add(color(hsl.integer(85, 100, 90.4)).mul(crescent).mul(intimate).mul(0.12))
     this.aoNode = fossil.mul(-0.15).add(1)
   }
 }

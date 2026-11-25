@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'willow_testament',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Blue gardens climb a porcelain moon. Every golden vein remembers the hand that painted it.',
   placeholder: {
-    color: '#dfe6e8',
+    color: hsl.integer(217, 13, 91),
     shading: 'smooth',
   },
 } as const satisfies KnotData

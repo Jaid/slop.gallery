@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, time, uv, vec2} from 'three/tsl'
 
 import {filament} from '../../lib/filament.ts'
@@ -36,21 +37,21 @@ export default class extends KnotMaterial {
     const goldMask = motifEdge.add(motifInner.mul(0.7)).add(goldThread.mul(0.85)).clamp(0, 1)
 // A slow lustre travels the length of the cloth once per exhibition loop.
     const travelling = tube.x.mul(Math.PI * 8).sub(time.mul(Math.PI * 2)).sin().mul(0.5).add(0.5).pow(3)
-    const silk = mix(color('#100a2c'), color('#2a124e'), threadShade.mul(0.6).add(motif.mul(0.25)))
-    const silkBurgundy = mix(silk, color('#4a1738'), motif.mul(0.65))
-    this.colorNode = mix(silkBurgundy, color('#e8b45a'), goldMask)
+    const silk = mix(color(hsl.integer(286, 71, 8)), color(hsl.integer(296, 77, 15)), threadShade.mul(0.6).add(motif.mul(0.25)))
+    const silkBurgundy = mix(silk, color(hsl.integer(344, 65, 20)), motif.mul(0.65))
+    this.colorNode = mix(silkBurgundy, color(hsl.integer(79, 75, 77)), goldMask)
     this.metalnessNode = goldMask.mul(0.95)
     this.roughnessNode = mix(float(0.6), float(0.26), goldMask).add(weaveHeight.mul(-0.07))
 // The sheen carries the pattern: flipped threads fuzz differently inside the motif.
-    this.sheenNode = mix(color('#2c1e6e'), color('#c09aff'), motif).mul(1.1)
+    this.sheenNode = mix(color(hsl.integer(284, 80, 21)), color(hsl.integer(300, 100, 72)), motif).mul(1.1)
     this.sheenRoughnessNode = mix(float(0.48), float(0.2), motif)
     this.anisotropyNode = vec2(topness.oneMinus(), topness).mul(0.7)
     const detail = intimate.mul(0.7).add(0.55)
     const weaveNormal = proceduralNormal(weaveHeight.mul(0.85).add(motif.mul(0.22)), float(0.0021).mul(detail))
     this.normalNode = weaveNormal
     const sparkle = glints(weaveNormal, 72)
-    this.emissiveNode = color('#7a5cff').mul(motif).mul(grazing.pow(2)).mul(0.32)
-      .add(color('#ffd98a').mul(goldMask).mul(sparkle).mul(near.mul(1.2).add(0.25)))
-      .add(color('#5a3cff').mul(travelling).mul(grazing).mul(motif.mul(0.5).add(0.12)).mul(0.22))
+    this.emissiveNode = color(hsl.integer(286, 99, 53)).mul(motif).mul(grazing.pow(2)).mul(0.32)
+      .add(color(hsl.integer(85, 100, 88.5)).mul(goldMask).mul(sparkle).mul(near.mul(1.2).add(0.25)))
+      .add(color(hsl.integer(279, 100, 45.6)).mul(travelling).mul(grazing).mul(motif.mul(0.5).add(0.12)).mul(0.22))
   }
 }

@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {cameraPosition, color, mix, modelWorldMatrixInverse, mx_noise_float, normalViewGeometry, positionGeometry, positionView, positionViewDirection, vec3, vec4} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -45,17 +46,17 @@ export default class extends KnotMaterial {
     const deepGlyph = opticalLine(deepQ.x.cos().add(deepQ.z.sin()).add(deepQ.y.mul(1.3).sin().mul(0.6)), 0.044).mul(near)
     const blood = mx_noise_float(depth.mul(7)).mul(0.5).add(0.5)
     const revelation = view.dot(vec3(0.41, 0.79, -0.45).normalize()).abs().pow(9)
-    this.colorNode = mix(color('#190105'), color('#7d0816'), blood).add(color('#d32b24').mul(halo).mul(0.12))
+    this.colorNode = mix(color(hsl.integer(11, 85, 5)), color(hsl.integer(24, 97, 28)), blood).add(color(hsl.integer(28, 94, 49.4)).mul(halo).mul(0.12))
     this.transmission = 0.5
     this.thickness = 0.48
     this.ior = 1.7
     this.dispersion = 0.2
-    this.attenuationColor.set('#850414')
+    this.attenuationColor.set(hsl.integer(25, 99, 30))
     this.attenuationDistance = 0.5
     this.roughnessNode = sigils.mul(0.04).add(0.065)
     this.clearcoat = 0.93
     this.clearcoatRoughness = 0.035
     this.normalNode = proceduralNormal(mx_noise_float(p.mul(13)), 0.0012)
-    this.emissiveNode = color('#ffb038').mul(sigils).mul(near.mul(0.55).add(0.46)).add(color('#ffecb0').mul(deepGlyph).mul(revelation.mul(1.4).add(0.35))).add(color('#e21a32').mul(halo).mul(grazing.mul(0.8).add(0.18))).add(color('#ffdad0').mul(rim).mul(revelation).mul(0.5))
+    this.emissiveNode = color(hsl.integer(72.6, 100, 78.4)).mul(sigils).mul(near.mul(0.55).add(0.46)).add(color(hsl.integer(93, 100, 93.6)).mul(deepGlyph).mul(revelation.mul(1.4).add(0.35))).add(color(hsl.integer(24, 97.3, 52)).mul(halo).mul(grazing.mul(0.8).add(0.18))).add(color(hsl.integer(35, 100, 90)).mul(rim).mul(revelation).mul(0.5))
   }
 }

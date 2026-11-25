@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn, mix, mx_noise_float, select, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -100,11 +101,11 @@ export default class extends KnotMaterial {
     const inOuterLotus = inkFill(cloison.outerPetal, footprint).mul(inInnerLotus.oneMinus()).mul(inStamen.oneMinus())
     const inCornerScroll = inkFill(cloison.cornerScroll, footprint)
 // Imperial Ming/Qing cloisonné vitreous enamel palette with Beer-Lambert depth darkening near the wires.
-    const cobaltBlue = mix(color('#061a5e'), color('#1654cc'), meniscusDepth)
-    const imperialTurquoise = mix(color('#064f5c'), color('#14c9d6'), meniscusDepth)
-    const rubyEnamel = mix(color('#4a0418'), color('#d41545'), meniscusDepth)
-    const celadonJade = mix(color('#083d2b'), color('#1ed488'), meniscusDepth)
-    const imperialAmber = mix(color('#6b3204'), color('#ffaa1c'), meniscusDepth)
+    const cobaltBlue = mix(color(hsl.integer(265, 93, 16)), color(hsl.integer(262, 95, 40.6)), meniscusDepth)
+    const imperialTurquoise = mix(color(hsl.integer(214, 93, 30)), color(hsl.integer(204, 96, 72)), meniscusDepth)
+    const rubyEnamel = mix(color(hsl.integer(12, 91, 16)), color(hsl.integer(16.6, 96, 49)), meniscusDepth)
+    const celadonJade = mix(color(hsl.integer(165, 92, 22)), color(hsl.integer(158, 96.7, 73)), meniscusDepth)
+    const imperialAmber = mix(color(hsl.integer(52, 92, 29)), color(hsl.integer(72.1, 100, 77)), meniscusDepth)
     const outerHue = select(cloison.id.x.greaterThan(0.5), imperialTurquoise, celadonJade)
     const innerHue = select(cloison.id.y.greaterThan(0.45), rubyEnamel, imperialAmber)
     let enamelColor: Node<'vec3'> = cobaltBlue
@@ -116,7 +117,7 @@ export default class extends KnotMaterial {
     const foilRadiance = ginbariFoil.mul(0.55).add(0.65)
     const aventurineSpark = aventurineFlecks(p, 0.009, 80, 0.5)
     const enamelWithFoil = enamelColor.mul(foilRadiance).add(enamelColor.mul(ginbariFoil.pow(3)).mul(0.45))
-    const gildedWireColor = mix(color('#d99b26'), color('#fff0a8'), cloison.wireDist.div(0.025).clamp().oneMinus())
+    const gildedWireColor = mix(color(hsl.integer(78, 88, 69)), color(hsl.integer(97, 100, 94)), cloison.wireDist.div(0.025).clamp().oneMinus())
     this.colorNode = mix(enamelWithFoil, gildedWireColor, wireMask)
     this.metalnessNode = mix(float(0.28).add(ginbariFoil.mul(0.35)), float(1), wireMask)
     this.roughnessNode = mix(float(0.03).add(meniscusDepth.oneMinus().mul(0.04)), float(0.14), wireMask)
@@ -134,8 +135,8 @@ export default class extends KnotMaterial {
 // Luminous internal reflection off the curved ginbari silver foil + золотой glint on the brass cloisons.
     const loopPulse = cells.x.div(lotusAlong).mul(TAU * 2).sub(time.mul(Math.PI)).sin().mul(0.5).add(0.5)
     const basseTailleGlow = enamelColor.mul(ginbariFoil.pow(2.2)).mul(wireMask.oneMinus()).mul(near.mul(0.5).add(0.5)).mul(0.55)
-    const wireGlint = color('#ffe694').mul(wireMask).mul(grazing.pow(2).mul(0.6).add(loopPulse.mul(0.25))).mul(0.42)
-    const sparkGlow = color('#ffd97d').mul(aventurineSpark.sparkle).mul(wireMask.oneMinus()).mul(intimate).mul(0.65)
+    const wireGlint = color(hsl.integer(93, 100, 91.6)).mul(wireMask).mul(grazing.pow(2).mul(0.6).add(loopPulse.mul(0.25))).mul(0.42)
+    const sparkGlow = color(hsl.integer(87, 100, 88)).mul(aventurineSpark.sparkle).mul(wireMask.oneMinus()).mul(intimate).mul(0.65)
     const noiseShimmer = mx_noise_float(p.mul(24)).mul(0.04)
     this.emissiveNode = basseTailleGlow.add(wireGlint).add(sparkGlow).add(enamelColor.mul(noiseShimmer))
   }

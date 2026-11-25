@@ -1,3 +1,4 @@
+import hsl from 'okhsl'
 import {atan, color, float, max, mix, mx_fractal_noise_float, mx_noise_float, positionLocal, vec3} from 'three/tsl'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
 
@@ -23,9 +24,9 @@ export default class PumpkinRindMaterial extends MeshStandardNodeMaterial {
     const mottle = mx_fractal_noise_float(p.mul(9), 3, 2, 0.5).mul(0.5).add(0.5)
     const footprint = max(p.x.fwidth(), p.y.fwidth())
     const pores = mx_noise_float(p.mul(260)).smoothstep(0.62, 0.85).mul(visibleDetail(footprint, 0.004))
-    const orange = mix(color('#c8520e'), color('#ef7d1f'), mottle.mul(0.6).add(swell.mul(0.4)))
-    const deep = mix(orange, color('#7a3a0c'), groove.mul(0.75))
-    this.colorNode = mix(deep, color('#f6b46a'), pores.mul(0.5))
+    const orange = mix(color(hsl.integer(44, 95, 52)), color(hsl.integer(53, 95, 66)), mottle.mul(0.6).add(swell.mul(0.4)))
+    const deep = mix(orange, color(hsl.integer(50, 85, 34)), groove.mul(0.75))
+    this.colorNode = mix(deep, color(hsl.integer(68, 81, 78.6)), pores.mul(0.5))
     this.roughnessNode = float(0.4).add(groove.mul(0.18)).add(mottle.mul(0.08))
     // faint stretch lines along the ribs, from stem to blossom end
     const streaks = mx_noise_float(vec3(angle.mul(60), p.y.mul(4), 1.7)).mul(visibleDetail(footprint, 0.01))

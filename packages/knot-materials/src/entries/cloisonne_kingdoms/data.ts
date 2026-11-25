@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 9YA8kP6cid9wkS5; fixture: knot-material-shaders.
 // Original identity: cloisonne (Cloisonné).
 export default {
@@ -17,7 +19,7 @@ export default {
   },
   flavorText: 'Tiny kingdoms of color are held in gold, bright as stained sunrise.',
   placeholder: {
-    color: '#087f83',
+    color: hsl.integer(199, 96, 47),
     shading: 'smooth',
   },
 } as const satisfies KnotData

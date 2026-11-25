@@ -8,7 +8,7 @@ import ShadowCache, {reachesFrustum, ShadowRefresher} from '../src/main.ts'
 
 const setup = () => {
   const scene = new Scene
-  const lamp = new PointLight('#fff', 1, 5)
+  const lamp = new PointLight(undefined, 1, 5)
   lamp.castShadow = true
   lamp.position.set(0, 3, 0)
   const near = new Mesh(new BoxGeometry)
@@ -95,7 +95,7 @@ test('wobbling below a millimeter keeps the shadow map until it adds up', () => 
 })
 test('the tolerance decides how far a caster may move unnoticed', () => {
   const scene = new Scene
-  const lamp = new PointLight('#fff', 1, 5)
+  const lamp = new PointLight(undefined, 1, 5)
   lamp.castShadow = true
   const caster = new Mesh(new BoxGeometry)
   caster.castShadow = true
@@ -269,7 +269,7 @@ test('casters changing wholly inside a space a light can’t reach leave its map
   const sun = new DirectionalLight
   sun.castShadow = true
   sun.position.set(0, 10, 0)
-  const lamp = new PointLight('#fff', 1, 20)
+  const lamp = new PointLight(undefined, 1, 20)
   lamp.castShadow = true
   // A cellar the sun can’t reach, 8 m wide, and a caster turning in its middle.
   const cellar = new Box3(new Vector3(-4, -4, -4), new Vector3(4, 0, 4))
@@ -345,23 +345,23 @@ test('a light reaches the view where its range meets the camera’s frustum, whe
   const frustum = new Frustum
   const viewProjection = new Matrix4
   const view = () => frustum.setFromProjectionMatrix(viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse), camera.coordinateSystem)
-  const below = new PointLight('#fff', 1, 10)
+  const below = new PointLight(undefined, 1, 10)
   below.position.set(0, -7, -6)
   below.updateMatrixWorld()
   expect(reachesFrustum(below, view())).toBe(true)
-  const short = new PointLight('#fff', 1, 3)
+  const short = new PointLight(undefined, 1, 3)
   short.position.copy(below.position)
   short.updateMatrixWorld()
   expect(reachesFrustum(short, view())).toBe(false)
   // Without a range, the shadow camera’s far plane bounds the reach.
-  const open = new PointLight('#fff', 1, 0)
+  const open = new PointLight(undefined, 1, 0)
   open.position.copy(below.position)
   open.shadow.camera.far = 3
   open.updateMatrixWorld()
   expect(reachesFrustum(open, view())).toBe(false)
   open.shadow.camera.far = 10
   expect(reachesFrustum(open, view())).toBe(true)
-  const spot = new SpotLight('#fff', 1, 10)
+  const spot = new SpotLight(undefined, 1, 10)
   spot.position.copy(below.position)
   spot.updateMatrixWorld()
   expect(reachesFrustum(spot, view())).toBe(true)
@@ -379,7 +379,7 @@ test('dispose restores updates every frame', () => {
   expect(lamp.shadow.autoUpdate).toBe(true)
 })
 test('incomplete shadow maps render again one per frame, each in turn, and start over once all had theirs', () => {
-  const lamps = [0, 1, 2].map(() => new PointLight('#fff', 1, 5))
+  const lamps = [0, 1, 2].map(() => new PointLight(undefined, 1, 5))
   const incomplete = new Set<Camera>([lamps[0].shadow.camera, lamps[2].shadow.camera])
   const refresher = new ShadowRefresher
   /** which lamps the refresher lets render this frame */

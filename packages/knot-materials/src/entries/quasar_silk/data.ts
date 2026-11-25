@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'quasar_silk',
   candidateId: 'gpt_terra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'An impossible loom draws galaxies through midnight thread, rewarding every change of angle with a new current.',
   placeholder: {
-    color: '#273578',
+    color: hsl.integer(271, 70, 26),
     shading: 'fabric',
   },
 } as const satisfies KnotData

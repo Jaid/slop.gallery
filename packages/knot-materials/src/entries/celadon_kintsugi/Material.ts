@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, mx_noise_vec3, normalLocal, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -70,8 +71,8 @@ export default class extends KnotMaterial {
     const hairline = seamCoverage(crazing, 0.05).mul(near)
     const relief = crack.mul(0.006).add(hairline.mul(0.0006)).negate()
     const porcelainNoise = mx_noise_float(p.mul(5.5)).mul(0.5).add(0.5)
-    const porcelain = mix(color('#a8c4b0'), color('#5f8a72'), porcelainNoise.mul(0.9))
-    const goldColor = mix(color('#d99a1e'), color('#ffe680'), gold.mul(0.4).add(0.4))
+    const porcelain = mix(color(hsl.integer(154, 26, 76)), color(hsl.integer(159, 37, 53)), porcelainNoise.mul(0.9))
+    const goldColor = mix(color(hsl.integer(78, 91, 69)), color(hsl.integer(96, 100, 91.2)), gold.mul(0.4).add(0.4))
     this.colorNode = mix(porcelain, goldColor, gold)
     this.metalnessNode = gold
     this.roughnessNode = mix(float(0.26).add(mx_noise_float(p.mul(31)).mul(0.05)), float(0.025), gold)
@@ -82,7 +83,7 @@ export default class extends KnotMaterial {
     this.clearcoatNormalNode = reliefNormal
 // The glaze pools and darkens inside the fracture, so the gold reads as recessed.
     this.aoNode = crack.mul(gold.oneMinus()).mul(0.5).oneMinus()
-    this.emissiveNode = color('#ff8c1a').mul(gold).mul(intimate.mul(0.55).add(0.04)).mul(0.5)
-      .add(color('#ffe9c8').mul(grazing.pow(3)).mul(0.05))
+    this.emissiveNode = color(hsl.integer(57, 100, 71.1)).mul(gold).mul(intimate.mul(0.55).add(0.04)).mul(0.5)
+      .add(color(hsl.integer(78, 100, 93.4)).mul(grazing.pow(3)).mul(0.05))
   }
 }

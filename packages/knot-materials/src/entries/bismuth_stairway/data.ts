@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'bismuth_stairway',
   candidateId: 'glm',
@@ -12,7 +14,7 @@ export default {
   },
   flavorText: 'Iridescent steps climb toward a landing that never arrives.',
   placeholder: {
-    color: '#ff9de6',
+    color: hsl.integer(337, 100, 79),
     shading: 'metal',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_rotate2d, time, uv, vec3} from 'three/tsl'
 
 import {cellNoiseVec3} from '../../lib/cellNoiseVec3.ts'
@@ -24,14 +25,14 @@ export default class extends KnotMaterial {
     const constellationLines = opticalLine(rot.y.mul(14).add(rot.x.mul(28)).sin(), 0.025)
     const engraved = star.max(constellationLines.mul(0.35))
     const goldMask = engraved.mul(intimate.mul(0.5).add(0.5))
-    const baseColor = mix(color('#081826'), color('#122b45'), rot.y.sin().mul(0.5).add(0.5))
-    this.colorNode = mix(baseColor, color('#e6c27a'), goldMask)
+    const baseColor = mix(color(hsl.integer(247, 55, 10)), color(hsl.integer(251, 60, 18)), rot.y.sin().mul(0.5).add(0.5))
+    this.colorNode = mix(baseColor, color(hsl.integer(84, 64, 80)), goldMask)
     this.metalness = 0.35
     this.metalnessNode = goldMask.mul(0.65)
     this.roughness = 0.4
     this.clearcoat = 0.35
     this.clearcoatRoughness = 0.25
     this.normalNode = proceduralNormal(engraved.mul(0.5), 0.0011)
-    this.emissiveNode = color('#fff2c4').mul(star).mul(near.mul(0.8).add(0.4)).add(color('#88aaff').mul(constellationLines).mul(0.25))
+    this.emissiveNode = color(hsl.integer(94, 100, 95.3)).mul(star).mul(near.mul(0.8).add(0.4)).add(color(hsl.integer(266, 100, 71)).mul(constellationLines).mul(0.25))
   }
 }

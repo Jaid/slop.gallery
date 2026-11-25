@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, mix, mx_fractal_noise_float, mx_noise_float, mx_worley_noise_float, time, vec3} from 'three/tsl'
 
 import KnotMaterial from '../../lib/KnotMaterial.ts'
@@ -15,8 +16,8 @@ export default class extends KnotMaterial {
     const {p, grazing, intimate} = viewerFrame()
     const oxidation = mx_fractal_noise_float(p.mul(3.2).add(vec3(0, time.mul(0.06), 0)), 3, 2, 0.5).mul(0.5).add(0.5)
     const heat = oxidation.smoothstep(0.52, 0.82)
-    const temper = mix(color('#26323f'), color('#ff7a1a'), heat)
-    const temper2 = mix(temper, color('#7a5cff'), heat.pow(3))
+    const temper = mix(color(hsl.integer(251, 25, 21)), color(hsl.integer(49, 100, 67.9)), heat)
+    const temper2 = mix(temper, color(hsl.integer(286, 99, 53)), heat.pow(3))
     const cracks = opticalLine(mx_worley_noise_float(p.mul(5.5)).sub(0.32), 0.014).mul(intimate.mul(0.7).add(0.3))
     this.envMapIntensity = 1.5
     this.colorNode = temper2
@@ -28,6 +29,6 @@ export default class extends KnotMaterial {
     this.iridescence = 0.25
     this.iridescenceIOR = 1.35
     this.iridescenceThicknessNode = oxidation.mul(380).add(120)
-    this.emissiveNode = color('#ff3300').mul(cracks).mul(heat).mul(2.2).add(color('#3388ff').mul(grazing.pow(4)).mul(0.5))
+    this.emissiveNode = color(hsl.integer(32.7, 100, 59)).mul(cracks).mul(heat).mul(2.2).add(color(hsl.integer(258, 100, 58)).mul(grazing.pow(4)).mul(0.5))
   }
 }

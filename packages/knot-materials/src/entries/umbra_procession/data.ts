@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'umbra_procession',
   candidateId: 'gpt_sol',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'A procession of black suns crosses royal velvet, each corona sewn from threads that remember the light.',
   placeholder: {
-    color: '#430d24',
+    color: hsl.integer(359, 73, 16),
     shading: 'fabric',
   },
 } as const satisfies KnotData

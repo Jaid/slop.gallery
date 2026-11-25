@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1UqvleKScECZs6l.
 export default {
   id: 'cymatic_reliquary',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Porcelain remembers every note, holding blue harmonics in its skin like winter rivers.',
   placeholder: {
-    color: '#a9c6cb',
+    color: hsl.integer(209, 23, 78),
     shading: 'smooth',
   },
   displacement: 0.01,

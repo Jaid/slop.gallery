@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 1UqvleKScECZs6l.
 export default {
   id: 'pallasite_heart',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Across ancient iron, olivine crystals preserve the slow geometry of a meteor’s descent.',
   placeholder: {
-    color: '#737b7e',
+    color: hsl.integer(222, 6, 51),
     shading: 'metal',
   },
 } as const satisfies KnotData

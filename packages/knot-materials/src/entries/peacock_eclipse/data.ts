@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CyxjCrlY15yEfmL; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'peacock_eclipse',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'A thousand barbs hold no pigment, only geometry – and every eye that opens is looking back at you.',
   placeholder: {
-    color: '#0f6f47',
+    color: hsl.integer(159, 96, 40),
     shading: 'fabric',
   },
 } as const satisfies KnotData

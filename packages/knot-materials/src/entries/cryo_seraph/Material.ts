@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn, mix, mx_noise_float, time, transformNormalToView, uv, varying, vec2, vec3} from 'three/tsl'
 
 import {detailNormal} from '../../candidates/gemini_argon/lib/detailNormal.ts'
@@ -90,13 +91,13 @@ export default class extends KnotMaterial {
     const deepP = p.sub(view.mul(0.14))
     const auroraWave = deepP.x.mul(11).add(deepP.z.mul(9)).add(mx_noise_float(deepP.mul(4.5).add(vec3(loopAngle.cos().mul(0.45), 0, loopAngle.sin().mul(0.45)))).mul(2.8))
     const auroraCurtain = opticalLine(auroraWave.sin(), 0.18).mul(deepP.y.mul(6).add(loopAngle).cos().mul(0.4).add(0.6))
-    const auroraColor = mix(color('#00ff9d'), mix(color('#00d9ff'), color('#b833ff'), deepP.y.mul(1.8).add(0.5).clamp()), auroraWave.cos().mul(0.5).add(0.5))
+    const auroraColor = mix(color(hsl.integer(157, 100, 86)), mix(color(hsl.integer(216, 100, 78.6)), color(hsl.integer(310, 100, 56)), deepP.y.mul(1.8).add(0.5).clamp()), auroraWave.cos().mul(0.5).add(0.5))
 // Diamond-dust micro-crystal facets that ignite under the gallery's studio lamps.
     const diamondDust = diamondDustGrains(p, 0.011, 85, 0.6)
 // Deep glacier blue Beer-Lambert absorption in the clear windows, snow-white crystalline frost on the dendrites.
-    const abyssalIce = mix(color('#021329'), color('#0b4f82'), facing.mul(0.65).add(0.35))
-    const fractureIce = mix(abyssalIce, color('#8cebff'), crackShallow.mul(0.75).add(crackMid.mul(0.45)).add(crackDeep.mul(0.25)).add(internalBubbles.mul(0.6)).clamp(0, 1))
-    const snowWhite = mix(color('#d8f0ff'), color('#ffffff'), frost.branchWave)
+    const abyssalIce = mix(color(hsl.integer(254, 82, 9)), color(hsl.integer(247, 88, 33)), facing.mul(0.65).add(0.35))
+    const fractureIce = mix(abyssalIce, color(hsl.integer(213, 100, 87)), crackShallow.mul(0.75).add(crackMid.mul(0.45)).add(crackDeep.mul(0.25)).add(internalBubbles.mul(0.6)).clamp(0, 1))
+    const snowWhite = mix(color(hsl.integer(236, 100, 93)), color(hsl.integer(0, 0, 100)), frost.branchWave)
     this.colorNode = mix(fractureIce, snowWhite, frostCoverage.max(subFrost.crystal.mul(0.28)))
     this.metalnessNode = frostCoverage.mul(0.08)
     this.roughnessNode = mix(float(0.025), float(0.42), frostCoverage)
@@ -105,7 +106,7 @@ export default class extends KnotMaterial {
     this.ior = 1.31
     this.clearcoatNode = frostCoverage.oneMinus().mul(0.85).add(0.15)
     this.clearcoatRoughnessNode = mix(float(0.012), float(0.16), frostCoverage)
-    this.sheenNode = color('#bce8ff').mul(frostCoverage).mul(0.85)
+    this.sheenNode = color(hsl.integer(231, 100, 89)).mul(frostCoverage).mul(0.85)
     this.sheenRoughness = 0.25
     this.iridescenceNode = crackShallow.add(frostCoverage.mul(0.35)).clamp(0, 1).mul(0.55)
     this.iridescenceIOR = 1.35
@@ -114,10 +115,10 @@ export default class extends KnotMaterial {
     const fineRelief = frost.crystal.mul(0.0035).sub(crackShallow.mul(0.0012)).add(diamondDust.resolved.mul(0.0003))
     this.normalNode = detailNormal(glacierNormal, fineRelief, 0.92)
 // Sub-glacial auroral ribbon, backlit Tyndall ice scatter, and diamond-dust frost sparkles.
-    const tyndallScatter = color('#12b8ff').mul(crackMid.add(crackDeep).add(internalBubbles)).mul(0.55)
+    const tyndallScatter = color(hsl.integer(236, 100, 69.7)).mul(crackMid.add(crackDeep).add(internalBubbles)).mul(0.55)
     const auroraGlow = auroraColor.mul(auroraCurtain).mul(frostCoverage.oneMinus().mul(0.7).add(0.3)).mul(1.35)
-    const frostSparkle = color('#e8f9ff').mul(diamondDust.sparkle).mul(frostCoverage.max(0.25)).mul(intimate.mul(0.65).add(0.35))
-    const coldRim = color('#5cd6ff').mul(grazing.pow(3)).mul(0.34)
+    const frostSparkle = color(hsl.integer(221, 100, 96.7)).mul(diamondDust.sparkle).mul(frostCoverage.max(0.25)).mul(intimate.mul(0.65).add(0.35))
+    const coldRim = color(hsl.integer(224, 99, 79)).mul(grazing.pow(3)).mul(0.34)
     this.emissiveNode = auroraGlow
       .add(tyndallScatter)
       .add(frostSparkle.mul(0.9))

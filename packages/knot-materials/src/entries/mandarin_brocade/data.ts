@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: CbMOkykhfBD7NuC; fixture: knot-material-shaders; result: mixed.
 export default {
   id: 'mandarin_brocade',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Gold floats over midnight silk in a seigaiha wave pattern, and a single current of light runs the full length of the weave.',
   placeholder: {
-    color: '#0b1428',
+    color: hsl.integer(264, 53, 9.4),
     shading: 'fabric',
   },
 } as const satisfies KnotData

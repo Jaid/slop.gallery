@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_fractal_noise_float, mx_noise_float, normalViewGeometry, positionGeometry, time, vec3} from 'three/tsl'
 
 import {bumpNormal} from '../../candidates/claude_sonnet/lib/bumpNormal.ts'
@@ -35,7 +36,7 @@ export default class extends KnotMaterial {
     const thin = thickness.smoothstep(0.05, 0.32).oneMinus()
     const gaze = grazing.pow(1.5).mul(0.7).add(0.16)
     const reflected = rainbow.mul(thin.oneMinus()).mul(gaze)
-    this.colorNode = color('#03060a')
+    this.colorNode = color(hsl.integer(248, 32, 4))
     this.metalness = 0
     this.roughness = 0.02
     this.transmission = 0.94
@@ -47,12 +48,12 @@ export default class extends KnotMaterial {
     this.iridescenceThicknessNode = thickness.mul(700).add(120)
     this.clearcoat = 1
     this.clearcoatRoughness = 0
-    this.attenuationColor.set('#ffffff')
+    this.attenuationColor.set(hsl.integer(0, 0, 100))
     this.attenuationDistance = 4
     this.normalNode = bumpNormal(normalViewGeometry.normalize(), swirl.mul(0.0025).add(eddies.mul(0.0006)))
     const twinkle = mx_noise_float(p.mul(30).add(vec3(0, 0, time.mul(0.8)))).mul(0.5).add(0.5).pow(6)
     this.emissiveNode = reflected.mul(intimate.mul(0.25).add(0.75)).mul(1.15)
-      .add(mix(color('#7ac9ff'), color('#ff9ad8'), swirl).mul(twinkle).mul(grazing).mul(0.25).mul(near))
-      .add(float(0).add(color('#dff6ff').mul(grazing.pow(6)).mul(0.25)))
+      .add(mix(color(hsl.integer(240, 100, 77.4)), color(hsl.integer(343, 100, 78)), swirl).mul(twinkle).mul(grazing).mul(0.25).mul(near))
+      .add(float(0).add(color(hsl.integer(224, 100, 95)).mul(grazing.pow(6)).mul(0.25)))
   }
 }

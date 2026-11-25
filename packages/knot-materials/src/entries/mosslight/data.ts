@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: 42qNahiwSEZ3v90; fixture: knot-material-shaders; result: success.
 export default {
   id: 'mosslight',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.008,
   flavorText: 'The forest has folded its smallest dawn into this green relic. Come close; the sleeping spores will answer.',
   placeholder: {
-    color: '#45713a',
+    color: hsl.integer(140, 68, 42),
     shading: 'fabric',
   },
 } as const satisfies KnotData

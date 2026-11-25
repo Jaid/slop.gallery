@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'liquid_chrome',
   candidateId: 'hy',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'The room pours across a silver surface that refuses to stay still.',
   placeholder: {
-    color: '#ff7a1a',
+    color: hsl.integer(49, 100, 67.9),
     shading: 'liquid',
   },
 } as const satisfies KnotData

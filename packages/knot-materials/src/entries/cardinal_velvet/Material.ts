@@ -1,5 +1,6 @@
 import type {Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalViewGeometry, positionGeometry, positionViewDirection, uv, vec3} from 'three/tsl'
 
 import {premiumBands} from '../../candidates/gpt_astra/lib/premiumBands.ts'
@@ -30,7 +31,7 @@ export default class extends KnotMaterial {
     const damaskField = u.mul(12).sin().mul(v.mul(6).sin()).add(u.mul(6).add(v.mul(3)).cos().mul(0.22))
     const damask = damaskField.smoothstep(0.05, 0.62)
     const napTurn = view.dot(vec3(0.25, 0.92, -0.3).normalize()).mul(0.5).add(0.5)
-    const pileColor = mix(color('#23030e'), color('#8d1232'), sweptNap.mul(0.23).add(nap.mul(0.18)).add(damask.mul(napTurn).mul(0.34)).add(0.1))
+    const pileColor = mix(color(hsl.integer(2, 77, 7.6)), color(hsl.integer(14, 90, 33)), sweptNap.mul(0.23).add(nap.mul(0.18)).add(damask.mul(napTurn).mul(0.34)).add(0.1))
     const embroideryPhase = v.mul(4).add(u.mul(8).sin().mul(0.34))
     const cord = premiumLine(embroideryPhase.sin(), 0.045)
     const stitches = premiumBands(u.mul(220).add(v.mul(12)))
@@ -38,11 +39,11 @@ export default class extends KnotMaterial {
     const warp = premiumBands(u.mul(420))
     const weft = premiumBands(v.mul(144))
     const weave = warp.mul(weft).mul(intimate)
-    this.colorNode = mix(pileColor, color('#bb8744'), couching.mul(0.85))
+    this.colorNode = mix(pileColor, color(hsl.integer(71, 65, 61)), couching.mul(0.85))
     this.metalnessNode = couching.mul(0.78)
     this.roughnessNode = mix(nap.mul(0.08).add(0.79), float(0.3), couching)
     this.sheen = 1
-    this.sheenNode = mix(color('#b92e53'), color('#ff91a4'), grazing.mul(0.65).add(nap.mul(0.18))).mul(couching.oneMinus()).mul(0.88)
+    this.sheenNode = mix(color(hsl.integer(10, 81, 45.2)), color(hsl.integer(10, 100, 74)), grazing.mul(0.65).add(nap.mul(0.18))).mul(couching.oneMinus()).mul(0.88)
     this.sheenRoughnessNode = damask.mul(0.17).add(0.48)
     this.anisotropy = 0.62
     this.anisotropyRotation = Math.PI * 0.5

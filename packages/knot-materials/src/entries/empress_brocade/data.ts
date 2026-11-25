@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: D2pmfQp7iycRJKh; fixture: knot-material-shaders; result: success.
 export default {
   id: 'empress_brocade',
@@ -16,7 +18,7 @@ export default {
   },
   flavorText: 'Plum silk remembers every angle of the court: gold damask hides from a direct gaze and blazes caught in passing.',
   placeholder: {
-    color: '#472341',
+    color: hsl.integer(334, 50, 22),
     shading: 'fabric',
   },
 } as const satisfies KnotData

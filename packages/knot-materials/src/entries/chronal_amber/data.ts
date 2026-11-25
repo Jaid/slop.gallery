@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chronal_amber',
   candidateId: 'qwen_max',
@@ -13,7 +15,7 @@ export default {
   },
   flavorText: 'A single instant thickens into honey and refuses to pass.',
   placeholder: {
-    color: '#ff8c00',
+    color: hsl.integer(59, 100, 71),
     shading: 'glass',
   },
 } as const satisfies KnotData

@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {atan, color, float, Fn as fn, Loop as loop, mix, mx_noise_float, vec3} from 'three/tsl'
 
 import {glitter} from '../../candidates/deepseek/lib/glitter.ts'
@@ -69,8 +70,8 @@ export default class extends KnotMaterial {
     const dust = crystals.y
     const needles = crystals.z
     const drifts = mx_noise_float(loopDrift(p.mul(2.2), 0.5))
-    const depth = mix(color('#03070b'), color('#08131f'), drifts.mul(0.5).add(0.5))
-    const crystalColor = mix(color('#9dbcd6'), color('#f4faff'), needles.mul(0.6))
+    const depth = mix(color(hsl.integer(240, 35, 4)), color(hsl.integer(252, 47, 8)), drifts.mul(0.5).add(0.5))
+    const crystalColor = mix(color(hsl.integer(244, 35, 74)), color(hsl.integer(243, 100, 98)), needles.mul(0.6))
     const frostHeight = frost.mul(0.5).add(dust.mul(0.28)).add(needles.mul(0.3)).add(mx_noise_float(p.mul(38)).mul(0.05))
     const ice = frostGlitter(p, 0.021, 64, 0.6)
     const snow = frostGlitter(loopDrift(p, 0.05), 0.041, 26, 0.85)
@@ -83,11 +84,11 @@ export default class extends KnotMaterial {
     this.iridescence = 0.2
     this.iridescenceThicknessNode = mx_noise_float(p.mul(14)).mul(0.5).add(0.5).mul(380).add(260)
     this.normalNode = proceduralNormal(frostHeight, 0.0011).add(ice.lean.mul(0.55)).add(snow.lean.mul(0.12)).normalize()
-    this.emissiveNode = color('#7fb6f5').mul(frost.mul(needles.mul(0.4).add(0.14)).mul(0.18))
-      .add(color('#dceeff').mul(grazing.pow(3.2)).mul(frost.mul(0.22).add(dust.mul(0.35)).add(0.05)).mul(0.45))
-      .add(color('#fff0d2').mul(snow.sparkle).mul(0.36))
-      .add(color('#cfe6ff').mul(ice.sparkle).mul(intimate).mul(0.6))
-      .add(color('#2f5c85').mul(distance.smoothstep(0.9, 2.8).oneMinus()).mul(frost.mul(0.7).add(0.3)).mul(0.06))
-      .add(color('#cfe4ff').mul(breath.pow(3)).mul(0.05))
+    this.emissiveNode = color(hsl.integer(253, 80, 72)).mul(frost.mul(needles.mul(0.4).add(0.14)).mul(0.18))
+      .add(color(hsl.integer(247, 100, 93)).mul(grazing.pow(3.2)).mul(frost.mul(0.22).add(dust.mul(0.35)).add(0.05)).mul(0.45))
+      .add(color(hsl.integer(85, 100, 95.3)).mul(snow.sparkle).mul(0.36))
+      .add(color(hsl.integer(250, 100, 90)).mul(ice.sparkle).mul(intimate).mul(0.6))
+      .add(color(hsl.integer(248, 57, 38)).mul(distance.smoothstep(0.9, 2.8).oneMinus()).mul(frost.mul(0.7).add(0.3)).mul(0.06))
+      .add(color(hsl.integer(255, 100, 90)).mul(breath.pow(3)).mul(0.05))
   }
 }

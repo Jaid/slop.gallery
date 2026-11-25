@@ -1,5 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
+import hsl from 'okhsl'
 import {color, float, mix, mx_noise_float, normalLocal, positionGeometry, time, vec3} from 'three/tsl'
 
 import {fractalNoise, ridgedNoise} from '../../candidates/grok/lib/fractalNoise.ts'
@@ -25,32 +26,32 @@ export default class extends KnotMaterial {
     const pits = fractalNoise(p.mul(11), 3).smoothstep(0.68, 0.9)
     const stone = palette(strata.mul(0.75).add(0.12), [{
       at: 0,
-      hex: '#1a140f',
+      rgb: hsl.integer(62, 20, 10),
     }, {
       at: 0.3,
-      hex: '#4a4036',
+      rgb: hsl.integer(67, 17, 28),
     }, {
       at: 0.58,
-      hex: '#7d6a52',
+      rgb: hsl.integer(73, 27, 46),
     }, {
       at: 0.82,
-      hex: '#c4a27a',
+      rgb: hsl.integer(71, 40, 69),
     }, {
       at: 1,
-      hex: '#6f8f9a',
+      rgb: hsl.integer(221, 24, 57),
     }])
     const lichen = palette(mx_noise_float(p.mul(6)).mul(0.5).add(0.5), [{
       at: 0,
-      hex: '#243024',
+      rgb: hsl.integer(145, 27, 19),
     }, {
       at: 1,
-      hex: '#9aaf55',
+      rgb: hsl.integer(120, 65, 67),
     }])
     const damp = facing.smoothstep(0.15, 0.85)
     const body = mix(stone, lichen, pits.mul(intimate).mul(0.4))
     const olivinePhase = mx_noise_float(p.mul(14).add(view.mul(4)))
     const olivine = olivinePhase.smoothstep(0.74, 0.86).mul(grazing.pow(1.1)).mul(intimate.mul(0.65).add(0.35))
-    this.colorNode = mix(mix(body, color('#c6ff4a'), olivine.mul(0.85)), color('#07080b'), joint.mul(0.82))
+    this.colorNode = mix(mix(body, color(hsl.integer(125.6, 100, 91.8)), olivine.mul(0.85)), color(hsl.integer(269, 13, 5)), joint.mul(0.82))
     const height = joint.mul(-0.012).add(strata.mul(0.008)).sub(pits.mul(0.004))
     this.positionNode = positionGeometry.add(normalLocal.mul(height.mul(0.45)))
     this.normalNode = proceduralNormal(height.add(olivine.mul(0.004)), 1.8)
@@ -58,7 +59,7 @@ export default class extends KnotMaterial {
     this.metalnessNode = olivine.mul(0.22)
     this.clearcoatNode = damp.mul(0.22).add(olivine.mul(0.35))
     this.clearcoatRoughnessNode = float(0.45).sub(olivine.mul(0.3))
-    this.sheenNode = color('#d7c4a6').mul(grazing.pow(1.7).mul(0.22))
+    this.sheenNode = color(hsl.integer(79, 33, 80)).mul(grazing.pow(1.7).mul(0.22))
     this.sheenRoughness = 0.62
     const steps = 4
     let hymn: Node<'vec3'> = vec3(0)
@@ -68,19 +69,19 @@ export default class extends KnotMaterial {
       const travel = time.mul(0.35).add(q.dot(vec3(0.3, 2.1, -0.4))).add(index * 1.7).sin().mul(0.5).add(0.5)
       const heat = palette(travel, [{
         at: 0,
-        hex: '#2a0906',
+        rgb: hsl.integer(29, 75, 10),
       }, {
         at: 0.4,
-        hex: '#e23a10',
+        rgb: hsl.integer(34, 98, 54),
       }, {
         at: 0.75,
-        hex: '#ffb15a',
+        rgb: hsl.integer(67, 100, 79),
       }, {
         at: 1,
-        hex: '#fff1d2',
+        rgb: hsl.integer(87, 100, 95.5),
       }])
       hymn = hymn.add(heat.mul(vein).mul(travel.pow(1.6)).mul(1 - index * 0.16))
     }
-    this.emissiveNode = hymn.mul(near.mul(0.9).add(0.55)).mul(1.15).add(color('#eaff9a').mul(olivine).mul(facing).mul(0.4)).add(color('#ff7844').mul(column).mul(intimate.add(0.35)).mul(0.16))
+    this.emissiveNode = hymn.mul(near.mul(0.9).add(0.55)).mul(1.15).add(color(hsl.integer(118, 100, 95.7)).mul(olivine).mul(facing).mul(0.4)).add(color(hsl.integer(41, 100, 68)).mul(column).mul(intimate.add(0.35)).mul(0.16))
   }
 }

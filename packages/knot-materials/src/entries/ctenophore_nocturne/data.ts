@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 // Mage run: IgNMLTcxWnW8Pin; fixture: knot-material-shaders.
 export default {
   id: 'ctenophore_nocturne',
@@ -17,7 +19,7 @@ export default {
   displacement: 0.006,
   flavorText: 'Eight rows of beating combs pour rainbows down a body of living glass. Lean closer and the abyss answers in blue.',
   placeholder: {
-    color: '#0b1a4a',
+    color: hsl.integer(266, 85, 14),
     shading: 'glass',
   },
 } as const satisfies KnotData

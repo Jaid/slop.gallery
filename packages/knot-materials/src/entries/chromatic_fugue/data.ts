@@ -1,5 +1,7 @@
 import type {KnotData} from '../../types.ts'
 
+import hsl from 'okhsl'
+
 export default {
   id: 'chromatic_fugue',
   candidateId: 'gpt_astra',
@@ -15,7 +17,7 @@ export default {
   },
   flavorText: 'Three paintings share one impossible surface. Walk around it and the lenses conduct an argument between vermilion, jade and midnight.',
   placeholder: {
-    color: '#8b3e5a',
+    color: hsl.integer(359, 56, 39),
     shading: 'glass',
   },
 } as const satisfies KnotData
