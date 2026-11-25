@@ -1,10 +1,9 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
 import type {MeshPhysicalNodeMaterial, Node} from 'three/webgpu'
 
-import {modelWorldMatrixInverse, positionLocal, texture, uniform, uv, vec2, vec3} from 'three/tsl'
-import {Vector3, Vector4} from 'three/webgpu'
+import {texture, uv, vec2, vec3} from 'three/tsl'
 
-import foilKeyLight from '../lib/foilKeyLight.ts'
+import foilAngles from '../lib/foilAngles.ts'
 import CanvasMaterial from './CanvasMaterial.ts'
 
 /** The key and viewer’s half-vector in print space, and how directly the key shines on its face. */
@@ -29,19 +28,9 @@ export default abstract class FoilCanvasMaterial extends CanvasMaterial {
   }
 
   protected override paint(material: MeshPhysicalNodeMaterial, surface: CanvasSurface) {
-    const center = new Vector3
-    const source = new Vector4(0, 0, 0, 0)
-    const key = uniform(source).onObjectUpdate(({renderer, scene, object}) => foilKeyLight(renderer!.lighting.getNode(scene!).getLights(), center.setFromMatrixPosition(object!.matrixWorld), source))
-    const toward = modelWorldMatrixInverse.mul(key).xyz.sub(positionLocal.mul(key.w)).toVar()
-    const length = toward.length()
-    const light = toward.div(length.max(1e-6))
-    const sum = light.add(surface.view)
-    const half = sum.div(sum.length().max(1e-6)).toVar('foilHalf')
-    const facing = length.greaterThan(0).select(light.z.smoothstep(-0.04, 0.38), 0).toVar('foilFacing')
     this.coat(material, {
       ...surface,
-      half,
-      facing,
+      ...foilAngles(surface.view),
     })
   }
 

@@ -5,8 +5,7 @@ import type {Group} from 'three/webgpu'
 import {useFrame} from '@react-three/fiber'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
-import useDisposable from 'disposable-lifetime/react'
-import {useEffect, useMemo, useRef} from 'react'
+import {useEffect, useRef} from 'react'
 import {Quaternion, Vector3} from 'three/webgpu'
 
 import DynamicImageMaterial from '#component/DynamicImageMaterial'
@@ -20,6 +19,7 @@ import {hasPlacard} from '#src/lib/gallery/portraitFlavor.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import world from '#src/worlds/current.ts'
 
+import FramedImage from './FramedImage.tsx'
 import useHanging from './useHanging.ts'
 
 export default function Portrait({portrait: p}: {portrait: PortraitData}) {
@@ -31,7 +31,6 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
   const w = p.width
   const h = p.height
   const frame = portraitFrame(p.frame)
-  const geometry = useDisposable(useMemo(() => frame.createGeometry(w, h), [frame, w, h]))
   useHanging(p, frame, held, art, placard)
   useEffect(() => {
     if (body.current && group.current) {
@@ -137,9 +136,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
       {/* The frame and its image, which move on their own while the work arrives on its wall. */}
       <group ref={art}>
         {/* Only a held work fades; hung ones stay opaque so the floor glass, which refracts opaque surfaces only, shows them in the room below. */}
-        <mesh castShadow geometry={geometry} material={held ? frame.heldMaterial : frame.materials} name='portrait-frame' receiveShadow />
-        {/* Shadows draw back faces only, so the frame’s backing board blocks the lights in front of the work and the image those behind it, which a loose work can turn its back to. */}
-        <mesh castShadow name='portrait-image' position={[0, 0, frame.imageDepth]}><planeGeometry args={[w, h]} /><DynamicImageMaterial canvasMaterial={p.canvasMaterial} opacity={held ? 0.3 : 1} source={p.source} toneMapped={false} transparent={held} /></mesh>
+        <FramedImage frame={frame} height={h} held={held} width={w}><DynamicImageMaterial canvasMaterial={p.canvasMaterial} opacity={held ? 0.3 : 1} source={p.source} toneMapped={false} transparent={held} /></FramedImage>
       </group>
       {/* The placard hides while the work orbits a fusion’s portal, and a work hangs without one until it has anything to show on it. */}
       <group ref={placard}>
