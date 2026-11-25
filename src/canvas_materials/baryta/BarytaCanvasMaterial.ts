@@ -13,8 +13,9 @@ export default class BarytaCanvasMaterial extends CanvasMaterial {
   /** how strongly the silver glints, against what it was made with */
   readonly glint = 1
   /** how deep the satin’s pebbling is, against what it was made with */
-  readonly pebble = 0.5
-  override readonly strength = 0.2
+  readonly pebble = 1
+  override readonly scale = 0.5
+  override readonly strength = 0.5
   override readonly title = 'Satin baryta'
   protected override readonly weight = 0.55
 
