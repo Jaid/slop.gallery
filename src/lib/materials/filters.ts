@@ -1,6 +1,6 @@
 import type {Node} from 'three/webgpu'
 
-import {cameraViewMatrix, clamp, faceDirection, float, normalView, positionView, vec4} from 'three/tsl'
+import {cameraViewMatrix, clamp, faceDirection, float, modelViewMatrix, normalView, positionView, vec4} from 'three/tsl'
 
 type Float = Node<'float'>
 
@@ -28,4 +28,11 @@ export const heightNormal = (height: Float) => {
   const determinant = sigmaX.dot(r1).mul(faceDirection)
   const gradient = determinant.sign().mul(height.dFdx().mul(r1).add(height.dFdy().mul(r2)))
   return determinant.abs().mul(normalView).sub(gradient).normalize()
+}
+
+/** View-space normal of a flat surface facing +z in its own space, like an image plane, tilted by a procedural height whose slope along its own x and y, in meters per meter, is known exactly, so unlike {@link heightNormal} it needs no neighboring pixels and stays sharp on waves only a few pixels long. */
+export const slopeNormal = (slope: Node<'vec2'>) => {
+  const alongX = modelViewMatrix.mul(vec4(1, 0, 0, 0)).xyz.normalize()
+  const alongY = modelViewMatrix.mul(vec4(0, 1, 0, 0)).xyz.normalize()
+  return normalView.sub(alongX.mul(slope.x)).sub(alongY.mul(slope.y)).normalize()
 }
