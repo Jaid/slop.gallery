@@ -17,7 +17,7 @@ export default class NacreCanvasMaterial extends CanvasMaterial {
   override readonly scale = 0.5
   /** how much of the shell shows through the ink, against what it was made with */
   readonly shell = 1
-  override readonly strength = 0.01
+  override readonly strength = 0.1
   override readonly title = 'Abalone ground'
 
   protected override paint(material: MeshPhysicalNodeMaterial, {image, luminance, position, view}: CanvasSurface) {
