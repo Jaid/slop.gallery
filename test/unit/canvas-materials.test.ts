@@ -17,11 +17,33 @@ const image = Object.assign(new EventTarget, {
   height: 64,
 }) as unknown as HTMLCanvasElement
 const artwork = () => new Texture(image)
+/** how large the image is on its work, in meters, as large as an ordinary print */
+const size = {
+  width: 2,
+  height: 1,
+}
 /** A picture shrunk for the strokes to turn by: dark on the left, light on the right, so its contours run up and down. */
 const guide = (width: number, height: number) => ({
   width,
   height,
   data: Uint8ClampedArray.from({length: width * height * 4}, (_, index) => (index % 4 === 3 ? 255 : Math.floor(index / 4 % width / width * 255))),
+})
+/** the texels of the relief the knife lays on a work of this size */
+const texels = (width: number, height: number) => {
+  const {relief} = knifeRelief(artwork(), {
+    width,
+    height,
+  })
+  relief.dispose()
+  return [relief.image.width, relief.image.height]
+}
+/** the strokes on a 2 × 1 m work at this many texels per meter */
+const strokesAt = (density: number) => layKnifeStrokes({
+  guide: guide(140, 70),
+  width: 2 * density,
+  height: density,
+  density,
+  size: 1,
 })
 const previousDocument = globalThis.document
 // The relief shrinks the image on a 2D canvas.
@@ -58,16 +80,16 @@ describe('canvas materials', () => {
   test('each makes a material of its own for every image, which mixes its finish over the flat image', () => {
     for (const [, kind] of entries) {
       const map = artwork()
-      const material = kind.createMaterial(map)
+      const material = kind.createMaterial(map, size)
       expect(material).toBeInstanceOf(MeshPhysicalNodeMaterial)
       expect(material.outputNode).not.toBeNull()
-      expect(kind.createMaterial(map)).not.toBe(material)
+      expect(kind.createMaterial(map, size)).not.toBe(material)
     }
   })
   test('the impasto’s strokes go along with its material', () => {
     const disposing = spyOn(DataTexture.prototype, 'dispose')
     try {
-      const material = canvasMaterials.impasto.createMaterial(artwork())
+      const material = canvasMaterials.impasto.createMaterial(artwork(), size)
       expect(disposing).not.toHaveBeenCalled()
       material.dispose()
       expect(disposing).toHaveBeenCalledTimes(1)
@@ -77,13 +99,14 @@ describe('canvas materials', () => {
   })
   test('the knife lays the same strokes on the same picture every time, all over it, and larger strokes otherwise', () => {
     const request = {
-      guide: guide(160, 80),
-      width: 1792,
-      height: 896,
+      guide: guide(140, 70),
+      width: 1600,
+      height: 800,
+      density: 800,
       size: 1,
     }
     const field = layKnifeStrokes(request)
-    expect(field).toHaveLength(1792 * 896)
+    expect(field).toHaveLength(1600 * 800)
     expect(layKnifeStrokes(request)).toEqual(field)
     // The bare ground shows through only here and there.
     expect(field.filter(value => value === ground).length / field.length).toBeLessThan(0.1)
@@ -92,14 +115,14 @@ describe('canvas materials', () => {
       size: 2,
     })).not.toEqual(field)
   })
-  test('a relief is flat bare ground at first and takes the strokes once the worker has laid them, at 896 rows for an ordinary print', async () => {
-    const {relief, ready} = knifeRelief(artwork())
+  test('a relief is flat bare ground at first and takes the strokes once the worker has laid them, at 800 texels per meter for an ordinary print', async () => {
+    const {relief, ready} = knifeRelief(artwork(), size)
     const {data, width, height} = relief.image as {
       data: Uint8Array
       height: number
       width: number
     }
-    expect([width, height]).toEqual([1792, 896])
+    expect([width, height]).toEqual([1600, 800])
     expect(data.every(value => value === ground)).toBe(true)
     // Something still loading, which captures wait for.
     expect(loadingItems().some(item => item.startsWith('knife-strokes:'))).toBe(true)
@@ -107,17 +130,21 @@ describe('canvas materials', () => {
     await ready
     expect(relief.version).toBeGreaterThan(version)
     expect(data).toEqual(layKnifeStrokes({
-      guide: guide(160, 80),
+      guide: guide(140, 70),
       width,
       height,
+      density: 800,
       size: 1,
     }))
   })
-  test.each([[4096, 1, 4096, 1], [1, 4096, 1, 896]])('a %i × %i strip gets a drawable, bounded relief', async (w, h, expectedWidth, expectedHeight) => {
+  test.each([[4096, 1, 78, 0.019, 4096, 1], [1, 4096, 0.019, 78, 1, 4096]])('a %i × %i strip %f × %f m large gets a drawable, bounded relief', async (w, h, meterWidth, meterHeight, expectedWidth, expectedHeight) => {
     const {relief, ready} = knifeRelief(new Texture({
       width: w,
       height: h,
-    } as HTMLCanvasElement))
+    } as HTMLCanvasElement), {
+      width: meterWidth,
+      height: meterHeight,
+    })
     try {
       expect([relief.image.width, relief.image.height]).toEqual([expectedWidth, expectedHeight])
       const version = relief.version
@@ -126,5 +153,26 @@ describe('canvas materials', () => {
     } finally {
       relief.dispose()
     }
+  })
+  test('a larger work gets a relief of more texels at the same density, and fewer per meter past 2.5 m square, so the worker stays quick', () => {
+    expect(texels(1, 0.5)).toEqual([800, 400])
+    expect(texels(2.4, 1.2)).toEqual([1920, 960])
+    const [width, height] = texels(4, 2)
+    expect(width / height).toBeCloseTo(2, 2)
+    expect(width * height).toBeLessThanOrEqual(2048 ** 2)
+  })
+  test('the strokes are as large in meters whatever the relief’s density', () => {
+    const fine = strokesAt(800)
+    const coarse = strokesAt(400)
+    // Shrunk to the coarse relief’s texels, the fine relief shows the same paint.
+    let difference = 0
+    for (let row = 0; row < 400; row++) {
+      for (let column = 0; column < 800; column++) {
+        const at = (x: number, y: number) => fine[(2 * row + y) * 1600 + 2 * column + x]
+        difference += Math.abs((at(0, 0) + at(1, 0) + at(0, 1) + at(1, 1)) / 4 - coarse[row * 800 + column])
+      }
+    }
+    // Strokes twice or half as large differ by about 17.
+    expect(difference / coarse.length).toBeLessThan(9)
   })
 })

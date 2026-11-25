@@ -7,6 +7,11 @@ import {insideBy} from '#src/lib/materials/filters.ts'
 
 import FoilCanvasMaterial from '../base/FoilCanvasMaterial.ts'
 
+/** how many meters half a groove is wide at scale 1 for each unit of its width setting, as it was tuned where the plates climb 7.8 per meter, typical of the pictures */
+const cutScale = 0.0171
+/** how much of the space between two cuts a groove takes at most, where they crowd too closely for its full width */
+const crowded = 0.2
+
 /** Three engraved plates: the grooves follow level sets of the individual color channels, catching the light across the local slope. */
 export default class IntaglioRareCanvasMaterial extends FoilCanvasMaterial {
   readonly cut = 0.2
@@ -28,9 +33,11 @@ export default class IntaglioRareCanvasMaterial extends FoilCanvasMaterial {
     const plate = (channel: 'b' | 'g' | 'r', register: number, cast: Node<'vec3'>) => {
       const phase = ink[channel].mul(7.5 / this.scale).add(register)
       const footprint = phase.fwidth()
-      const band = insideBy(phase.fract().sub(0.5).abs().sub(this.cut * 0.16 + 0.035), footprint).mul(footprint.smoothstep(0.42, 0.87).oneMinus())
       const gradient = vec2(gx[channel], gy[channel])
       const slope = gradient.length()
+      // A groove is as wide in meters wherever it runs, in steps of phase as far as the plate climbs across that width.
+      const halfWidth = slope.mul((this.cut * 0.16 + 0.035) * cutScale * 7.5 / (2 * span)).min(crowded)
+      const band = insideBy(phase.fract().sub(0.5).abs().sub(halfWidth), footprint).mul(footprint.smoothstep(0.42, 0.87).oneMinus())
       const normal = gradient.div(slope.max(0.001))
       const glint = half.xy.dot(normal).sub(register * 0.47).abs().smoothstep(0.02, 0.4).oneMinus()
       const transfer = mix(float(1), ink[channel].smoothstep(0.1, 0.74), this.resist)

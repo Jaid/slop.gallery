@@ -45,16 +45,17 @@ export default function CellTurntable({turntable}: {turntable: SandboxTurntable}
   const {width, height} = frameSize(aspect, turntable.area)
   const frame = usePortraitFrame(sandbox.frameAt(slot.position, environmentSeed, turntable.id))
   const geometry = useDisposable(useMemo(() => frame.createGeometry(width, height), [frame, width, height]))
+  // How much of the image’s width and height the work shows.
+  const shown = aspect / imageAspect
+  const [u, v] = shown < 1 ? [shown, 1] : [1, 1 / shown]
   const plane = useDisposable(useMemo(() => {
     const surface = new PlaneGeometry(width, height)
-    const shown = aspect / imageAspect
-    const [u, v] = shown < 1 ? [shown, 1] : [1, 1 / shown]
     const uv = surface.getAttribute('uv')
     for (let index = 0; index < uv.count; index++) {
       uv.setXY(index, 0.5 + (uv.getX(index) - 0.5) * u, 0.5 + (uv.getY(index) - 0.5) * v)
     }
     return surface
-  }, [aspect, imageAspect, width, height]))
+  }, [u, v, width, height]))
   const pose = useMemo((): TurntablePose => {
     const size: Vec3 = [width + frame.reach * 2, height + frame.reach * 2, frame.depth]
     // Far enough out for its corners to turn clear of the wall, and high enough for its bottom to clear the floor.
@@ -90,7 +91,12 @@ export default function CellTurntable({turntable}: {turntable: SandboxTurntable}
       <group position={[0, 0, -(frame.front + frameBack) / 2]}>
         <mesh castShadow geometry={geometry} material={frame.materials} name='cell-turntable-frame' receiveShadow />
         {/* Shadows draw back faces only, like a hung work’s, so the backing board blocks the lights in front and the image those behind. */}
-        <mesh castShadow geometry={plane} name='cell-turntable-image' position={[0, 0, frame.imageDepth]}><DynamicImageMaterial canvasMaterial={turntable.canvasMaterial} source={turntable.source} toneMapped={false} /></mesh>
+        <mesh castShadow geometry={plane} name='cell-turntable-image' position={[0, 0, frame.imageDepth]}><DynamicImageMaterial
+          canvasMaterial={turntable.canvasMaterial} size={{
+            width: width / u,
+            height: height / v,
+          }} source={turntable.source} toneMapped={false}
+        /></mesh>
       </group>
     </group>
   </group>

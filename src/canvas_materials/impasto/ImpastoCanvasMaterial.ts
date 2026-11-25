@@ -20,9 +20,9 @@ export default class ImpastoCanvasMaterial extends CanvasMaterial {
   readonly strokeSize = 1
   override readonly title = 'Knife impasto'
 
-  protected override paint(material: MeshPhysicalNodeMaterial, {image, luminance, map}: CanvasSurface) {
+  protected override paint(material: MeshPhysicalNodeMaterial, {image, luminance, map, size}: CanvasSurface) {
     // Flat until a worker has laid the strokes, a fraction of a second later.
-    const {relief} = knifeRelief(map, this.strokeSize)
+    const {relief} = knifeRelief(map, size, this.strokeSize)
     material.addEventListener('dispose', () => relief.dispose())
     const load = texture(relief).r
     material.colorNode = image.mul(load.mul(0.18).sub(0.1).mul(this.depth).add(1))

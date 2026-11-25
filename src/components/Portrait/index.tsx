@@ -136,7 +136,12 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
       {/* The frame and its image, which move on their own while the work arrives on its wall. */}
       <group ref={art}>
         {/* Only a held work fades; hung ones stay opaque so the floor glass, which refracts opaque surfaces only, shows them in the room below. */}
-        <FramedImage frame={frame} height={h} held={held} width={w}><DynamicImageMaterial canvasMaterial={p.canvasMaterial} opacity={held ? 0.3 : 1} source={p.source} toneMapped={false} transparent={held} /></FramedImage>
+        <FramedImage frame={frame} height={h} held={held} width={w}><DynamicImageMaterial
+          canvasMaterial={p.canvasMaterial} opacity={held ? 0.3 : 1} size={{
+            width: w,
+            height: h,
+          }} source={p.source} toneMapped={false} transparent={held}
+        /></FramedImage>
       </group>
       {/* The placard hides while the work orbits a fusion’s portal, and a work hangs without one until it has anything to show on it. */}
       <group ref={placard}>

@@ -1,7 +1,7 @@
 import type {FoilSurface} from '../base/FoilCanvasMaterial.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
-import {float, luminance, mix, texture, uv, vec2, vec3} from 'three/tsl'
+import {luminance, mix, texture, uv, vec2, vec3} from 'three/tsl'
 
 import FoilCanvasMaterial from '../base/FoilCanvasMaterial.ts'
 
@@ -19,7 +19,9 @@ export default class GhostRareCanvasMaterial extends FoilCanvasMaterial {
     const reveal = delta.abs().div(this.window * 0.47 + 0.08).smoothstep(0.06, 1).oneMinus().mul(facing)
     const hidden = reveal.oneMinus().mul(this.veil)
     const offset = half.xy.mul(0.012).add(vec2(0.0008, 0.0004)).mul(this.relief).mul(uvPerMeter)
-    const shoulder = (sign: number) => luminance(texture(map, uv().add(offset.mul(sign)).clamp()).bias(float(1)).rgb).sqrt()
+    // Over a patch 2 mm wide, or two pixels from afar.
+    const area = uvPerMeter.mul(0.002).max(uv().fwidth().mul(2))
+    const shoulder = (sign: number) => luminance(texture(map, uv().add(offset.mul(sign)).clamp()).grad(vec2(area.x, 0), vec2(0, area.y)).rgb).sqrt()
     const edge = shoulder(1).sub(shoulder(-1)).mul(2.25).clamp(-1, 1)
     const pearl = vec3(0.64, 0.71, 0.79).mul(tone.sqrt().mul(0.38).add(0.47))
     const rim = vec3(0.06, 0.48, 0.95).mul(edge.max(0)).add(vec3(0.95, 0.22, 0.44).mul(edge.negate().max(0)))

@@ -81,7 +81,10 @@ export default class PortraitModel {
       this.texture.needsUpdate = true
       if (canvasMaterial) {
         placeholder.dispose()
-        this.image.material = canvasMaterials[canvasMaterial].createMaterial(this.texture)
+        this.image.material = canvasMaterials[canvasMaterial].createMaterial(this.texture, {
+          width,
+          height,
+        })
         return
       }
       placeholder.map = this.texture

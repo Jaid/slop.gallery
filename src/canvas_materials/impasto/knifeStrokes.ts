@@ -1,5 +1,7 @@
 /** what the knife lays its strokes by */
 export type KnifeStrokesRequest = {
+  /** how many texels of the relief lie along a meter of the work */
+  density: number
   /** the picture shrunk to a few dozen pixels a side, as RGBA, which only holds its broad shapes for the strokes to turn by */
   guide: {
     data: Uint8ClampedArray
@@ -16,18 +18,21 @@ export type KnifeStrokesRequest = {
 
 /** how high the bare ground under the paint lies, 0 to 255 */
 export const ground = 80
-/** how many rows of texels an ordinary print takes */
-export const reliefRows = 896
-/** how many strokes cover a square of `reliefRows` texels a side at stroke size 1 */
-const squareStrokes = 6700
+/** how many texels of relief lie along a meter of the work, the density the strokes were made at; their sizes below are in its texels */
+export const reliefDensity = 800
+/** how many strokes cover a square meter at stroke size 1 */
+const strokesPerSquareMeter = 5340
 
 /**
  * The height of the paint a palette knife lays on a picture, 0 to 255 per texel, its first row the picture’s bottom: overlapping ribbons of paint, each turned along the picture’s contour where it lies, bristled across and with a raised lip along one edge, thicker where the picture is light. The same picture always gets the same strokes.
  *
- * The stroke count falls with the square of `size`, so larger strokes cover the picture just as densely.
+ * The strokes have the same size in meters on every work, whatever its size and the relief’s density. Their count falls with the square of `size`, so larger strokes cover the picture just as densely.
  */
-export default function layKnifeStrokes({guide, height, size, width}: KnifeStrokesRequest) {
-  const area = width * height / reliefRows ** 2
+export default function layKnifeStrokes({density, guide, height, size, width}: KnifeStrokesRequest) {
+  // How many of the relief’s texels one texel of the density the strokes were made at spans.
+  const unit = density / reliefDensity
+  const scale = size * unit
+  const squareMeters = width * height / density ** 2
   const luma = (x: number, y: number) => {
     const column = Math.max(0, Math.min(guide.width - 1, Math.floor(x * guide.width / width)))
     const row = Math.max(0, Math.min(guide.height - 1, Math.floor(y * guide.height / height)))
@@ -37,19 +42,20 @@ export default function layKnifeStrokes({guide, height, size, width}: KnifeStrok
   const random = sequence(0x30_93_BA)
   const field = new Uint8Array(width * height)
   field.fill(ground)
-  const margin = 24 * size
-  for (let stroke = 0; stroke < squareStrokes * area / size ** 2; stroke++) {
+  const margin = 24 * scale
+  const reach = 9 * unit
+  for (let stroke = 0; stroke < strokesPerSquareMeter * squareMeters / size ** 2; stroke++) {
     const x = random() * (width + 2 * margin) - margin
     const y = random() * (height + 2 * margin) - margin
-    const dx = luma(x + 9, y) - luma(x - 9, y)
-    const dy = luma(x, y + 9) - luma(x, y - 9)
+    const dx = luma(x + reach, y) - luma(x - reach, y)
+    const dy = luma(x, y + reach) - luma(x, y - reach)
     // Along the contour where the picture has one, else in a slow sway.
-    const direction = dx * dx + dy * dy > 0.0018 ? Math.atan2(dy, dx) + Math.PI / 2 : 0.45 + 0.8 * Math.sin(x * 0.011 + Math.cos(y * 0.016))
+    const direction = dx * dx + dy * dy > 0.0018 ? Math.atan2(dy, dx) + Math.PI / 2 : 0.45 + 0.8 * Math.sin(x / unit * 0.011 + Math.cos(y / unit * 0.016))
     const angle = direction + (random() - 0.5) * 0.84
     const cos = Math.cos(angle)
     const sin = Math.sin(angle)
-    const long = (8 + random() * 23) * size
-    const wide = (2.7 + random() * 5.3) * size
+    const long = (8 + random() * 23) * scale
+    const wide = (2.7 + random() * 5.3) * scale
     const bend = (random() - 0.5) * 0.8
     const phase = random() * 2 * Math.PI
     const load = 0.45 + 0.4 * luma(x, y) + 0.15 * random()
