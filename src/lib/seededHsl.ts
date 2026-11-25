@@ -1,5 +1,5 @@
-import type FatedRandom from 'fated-random'
 import type {OkhslTuple} from 'okhsl'
+import type StableRandom from 'stable-random'
 
 import {clamp} from 'math'
 import {okhsl} from 'okhsl'
@@ -19,9 +19,9 @@ export function hslHex([hue, saturation, lightness]: OkhslTuple) {
 /**
  * How far `random` moves a color on each axis, each up to its `spread` either way.
  *
- * The hue is rolled by `random` itself, saturation and lightness by children of their own, so the hue a seed rolls doesn’t depend on whether the other axes spread at all. A {@link FatedRandom} rolls the same every time it is asked, so colors shifted by the same `random` and `spread` all move alike.
+ * The hue is rolled by `random` itself, saturation and lightness by children of their own, so the hue a seed rolls doesn’t depend on whether the other axes spread at all. A {@link StableRandom} rolls the same every time it is asked, so colors shifted by the same `random` and `spread` all move alike.
  */
-export function rollHslShift(random: FatedRandom, {hue = 0, lightness = 0, saturation = 0}: HslSpread): OkhslTuple {
+export function rollHslShift(random: StableRandom, {hue = 0, lightness = 0, saturation = 0}: HslSpread): OkhslTuple {
   return [
     hue ? random.rollRadius(hue) : 0,
     saturation ? random.makeChild('saturation').rollRadius(saturation) : 0,
@@ -30,12 +30,12 @@ export function rollHslShift(random: FatedRandom, {hue = 0, lightness = 0, satur
 }
 
 /** The OkHSL color as sRGB hex, moved by `random` up to `spread` either way on each axis, see {@link rollHslShift}. */
-export function seededHsl(color: OkhslTuple, random: FatedRandom, spread: HslSpread) {
+export function seededHsl(color: OkhslTuple, random: StableRandom, spread: HslSpread) {
   const shift = rollHslShift(random, spread)
   return hslHex([color[0] + shift[0], color[1] + shift[1], color[2] + shift[2]])
 }
 
 /** The OkHSL color as sRGB hex, its hue turned by `random` up to `spread` degrees either way, its saturation and lightness kept. */
-export function seededHue(color: OkhslTuple, random: FatedRandom, spread: number) {
+export function seededHue(color: OkhslTuple, random: StableRandom, spread: number) {
   return seededHsl(color, random, {hue: spread})
 }

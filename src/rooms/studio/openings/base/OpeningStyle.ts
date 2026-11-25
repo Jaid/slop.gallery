@@ -1,6 +1,6 @@
 import type {Polygons} from '../lib/polygons.ts'
-import type {Arrayable, FatedId} from 'fated-random'
-import type FatedRandom from 'fated-random'
+import type {Arrayable, StableId} from 'stable-random'
+import type StableRandom from 'stable-random'
 
 /** how far openings may reach from their middle along the ceiling’s x and y, the room’s x and z, in meters */
 export type Spread = {
@@ -8,11 +8,11 @@ export type Spread = {
   y: number
 }
 /** names a roll among the others of a pattern */
-type RollKey = Arrayable<FatedId>
+type RollKey = Arrayable<StableId>
 
 /** The rolls of one pattern, each named by its own key, so adding a roll never changes the others. */
 export class Rolls {
-  constructor(readonly random: FatedRandom) {}
+  constructor(readonly random: StableRandom) {}
 
   /** A number from `min` up to `max`. */
   between(key: RollKey, min: number, max: number) {

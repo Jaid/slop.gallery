@@ -1,6 +1,6 @@
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
-import type {RollOptions} from 'fated-random'
 import type {Vec3} from 'math'
+import type {RollOptions} from 'stable-random'
 
 import {easing} from 'math/time'
 

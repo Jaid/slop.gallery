@@ -1,5 +1,5 @@
-import type FatedRandom from 'fated-random'
-import type {RollOptions} from 'fated-random'
+import type StableRandom from 'stable-random'
+import type {RollOptions} from 'stable-random'
 
 /** the steps the Studio’s values go by, both in what other seeds roll and on the world tuning’s sliders, so the sliders reach every value a seed rolls */
 export const studioSteps = {
@@ -36,6 +36,6 @@ export function onStep(value: number, step: number) {
 }
 
 /** A multiple of `step` from `min` to `max`, both included, as `random` rolls it, every one of them as likely as the others unless `easing` favors some; bounds off the steps round to the nearest step within them. */
-export function rollOnStep(random: FatedRandom, [min, max]: readonly [min: number, max: number], step: number, options?: RollOptions) {
+export function rollOnStep(random: StableRandom, [min, max]: readonly [min: number, max: number], step: number, options?: RollOptions) {
   return onStep(random.rollInteger(Math.ceil(onStep(min / step, 1e-9)), Math.floor(onStep(max / step, 1e-9)), options) * step, step)
 }

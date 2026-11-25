@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 
-import FatedRandom from 'fated-random'
 import {fromHex} from 'okhsl'
+import StableRandom from 'stable-random'
 
 import {slopRandom} from '../../src/lib/gallery/sloperator/sights.ts'
 import SlimeMaterial, {slimeColors} from '../../src/lib/materials/SlimeMaterial.ts'
@@ -31,7 +31,7 @@ test('the slime keeps its greens, which a Slop’s turn round the hue circle a l
   }
   const shifts: Array<number> = []
   for (let seed = 1; seed <= 40; seed++) {
-    const random = new FatedRandom({seed})
+    const random = new StableRandom({seed})
     const slop = new SlopMaterial(random)
     try {
       expect(slop).toBeInstanceOf(SlimeMaterial)

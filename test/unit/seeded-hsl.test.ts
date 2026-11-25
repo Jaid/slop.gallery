@@ -1,7 +1,7 @@
 import {expect, test} from 'bun:test'
 
-import FatedRandom from 'fated-random'
 import {fromHex} from 'okhsl'
+import StableRandom from 'stable-random'
 
 import {salonVelvet, salonVelvetColors, salonVelvetRandom} from '../../src/lib/gallery/salonVelvet.ts'
 import {hslHex, rollHslShift, seededHsl, seededHue} from '../../src/lib/seededHsl.ts'
@@ -12,7 +12,7 @@ const hueGap = (a: number, b: number) => Math.abs(((a - b) % 360 + 540) % 360 - 
 test('a seeded hue only turns the hue, by the same roll every time and up to the spread', () => {
   const color = [200, 80, 60] as const
   for (let seed = 1; seed <= 30; seed++) {
-    const random = new FatedRandom({seed})
+    const random = new StableRandom({seed})
     const [hueShift, saturationShift, lightnessShift] = rollHslShift(random, {hue: 30})
     expect(Math.abs(hueShift)).toBeLessThan(30)
     expect([saturationShift, lightnessShift]).toEqual([0, 0])
@@ -21,7 +21,7 @@ test('a seeded hue only turns the hue, by the same roll every time and up to the
   }
 })
 test('saturation and lightness spread on rolls of their own, which leave the hue’s alone, and stay within 0–100', () => {
-  const random = new FatedRandom({seed: 5})
+  const random = new StableRandom({seed: 5})
   const [hueAlone] = rollHslShift(random, {hue: 20})
   const [hue, saturation, lightness] = rollHslShift(random, {
     hue: 20,

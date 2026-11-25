@@ -4,7 +4,7 @@ import type {SloperatorSight} from '../../sloperator/sights.ts'
 import type {Vec3} from '../../types.ts'
 import type {CurioShape} from '../base/Curio.ts'
 import type {LatticePoint} from '../lattice.ts'
-import type FatedRandom from 'fated-random'
+import type StableRandom from 'stable-random'
 
 import {Euler, Quaternion, Vector3} from 'three/webgpu'
 
@@ -49,7 +49,7 @@ export default class Slop extends Curio {
   override readonly type: 'dynamic' | 'fixed'
 
   /** `sight` is the sight he was at, `placement` how he was there, which it lies on top of what he was on, and `random` rolls its green, see {@link SlopMaterial}. Where he stood on the sight’s sloping floor, it lies along it, its foot flat on it, rather than reaching into it. */
-  constructor({id, room, slope}: Pick<SloperatorSight, 'id' | 'room' | 'slope'>, {fixed, pose, position: [x, y, z], surface, yaw}: SloperatorPlacement, private readonly random: FatedRandom) {
+  constructor({id, room, slope}: Pick<SloperatorSight, 'id' | 'room' | 'slope'>, {fixed, pose, position: [x, y, z], surface, yaw}: SloperatorPlacement, private readonly random: StableRandom) {
     super()
     this.id = `slop-${id}`
     this.position = [x, y + surface, z]

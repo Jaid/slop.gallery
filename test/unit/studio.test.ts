@@ -7,7 +7,7 @@ import type {Vec3} from 'math'
 
 import {expect, test} from 'bun:test'
 
-import FatedRandom from 'fated-random'
+import StableRandom from 'stable-random'
 import {Vector3} from 'three/webgpu'
 
 import {hslHex} from '../../src/lib/seededHsl.ts'
@@ -645,7 +645,7 @@ test('the Studio’s secondary lamp switches off and on again by its strength’
 test('a stepped roll lands on every step of its range as often as on any other, its ends too', () => {
   const counts = new Map<number, number>
   for (let index = 0; index < 4000; index++) {
-    const value = rollOnStep(new FatedRandom({id: ['steps', index]}), [0.5, 2], 0.5)
+    const value = rollOnStep(new StableRandom({id: ['steps', index]}), [0.5, 2], 0.5)
     counts.set(value, (counts.get(value) ?? 0) + 1)
   }
   expect(counts.keys().toArray().toSorted((a, b) => a - b)).toEqual([0.5, 1, 1.5, 2])
@@ -653,7 +653,7 @@ test('a stepped roll lands on every step of its range as often as on any other, 
     expect(count).toBeGreaterThan(850)
     expect(count).toBeLessThan(1150)
   }
-  expect(rollOnStep(new FatedRandom({id: 'shares'}), [0.15, 0.85], 0.005) * 200 % 1).toBe(0)
+  expect(rollOnStep(new StableRandom({id: 'shares'}), [0.15, 0.85], 0.005) * 200 % 1).toBe(0)
 })
 test('the world tuning’s Studio switches the openings off for a plain ceiling, and the shafts, the fill lights and the mirror off to 0', () => {
   const tuning = new StudioTuningModule(studioDesign(0, ''))

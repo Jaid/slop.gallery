@@ -1,6 +1,6 @@
 import type {HslSpread} from '../seededHsl.ts'
-import type FatedRandom from 'fated-random'
 import type {OkhslTuple} from 'okhsl'
+import type StableRandom from 'stable-random'
 import type {Node} from 'three/webgpu'
 
 import {color, float, max, mix, mx_noise_float, normalViewGeometry, positionViewDirection, vec3} from 'three/tsl'
@@ -35,7 +35,7 @@ export const oxbloodVelvet: VelvetStyle = {
 export type VelvetColors = Record<keyof VelvetStyle, OkhslTuple>
 
 /** The velvet of the OkHSL colors, all of them moved alike by `random`, up to `spread` either way, see {@link seededHsl}. */
-export function seededVelvet(colors: VelvetColors, random: FatedRandom, spread: HslSpread): VelvetStyle {
+export function seededVelvet(colors: VelvetColors, random: StableRandom, spread: HslSpread): VelvetStyle {
   return {
     crushed: seededHsl(colors.crushed, random, spread),
     deep: seededHsl(colors.deep, random, spread),

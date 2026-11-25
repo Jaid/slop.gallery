@@ -1,7 +1,7 @@
-import FatedRandom from 'fated-random'
 import makeSeed, {maximumSeed} from 'make-seed'
 import optis from 'optis'
 import readPermalink from 'read-permalink'
+import StableRandom from 'stable-random'
 
 /** A canonical game seed: made by `make-seed`, or 0 for the default environment. */
 export const isSeed = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= maximumSeed
@@ -50,7 +50,7 @@ export function effectiveSeed(stored: number, override = seedOverride) {
  * The rolls of the environment of `seed`. Whatever is rolled for gets a child of its own by its fixed ID, like `environmentRandom(seed).makeChild(['work-frame', work])`, so its roll only depends on the seed and that ID and never on when or in which order something asks for it.
  */
 export function environmentRandom(seed: number) {
-  return new FatedRandom({
+  return new StableRandom({
     id: 'slop-gallery',
     seed,
   })
