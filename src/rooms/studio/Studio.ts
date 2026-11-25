@@ -24,18 +24,18 @@ import studioSlots from './slots.ts'
 
 /** how far the Studio’s one work hangs east of the north-western corner of the floor, in meters */
 const slotAlong = 4
-/** Where the player arrives, relative to the north-western corner of the floor: 6 m in from the west wall and 4 m from the north wall, turned 21° west of north toward the work and looking a little down, as the {@link overview} does, but standing. */
+/** Where the player arrives, relative to the north-western corner of the floor: 5 m in from the west wall and 4 m from the north wall, turned 15° west of north toward the work and looking 15° down, as the {@link overview} does, but standing. */
 const arrival = {
-  position: [6, 0.04, 4],
-  yaw: 21 * Math.PI / 180,
-  pitch: -7 * Math.PI / 180,
+  position: [5, 0.04, 4],
+  yaw: 15 * Math.PI / 180,
+  pitch: -15 * Math.PI / 180,
 } as const satisfies RoomSpawn
-/** The view the seeds of the Studio compare in, which every room size frames alike, as it only shows the north and west walls, their corner and the work between: its eyes 6 m in from the west wall, 4 m from the north wall and 2 m over the floor, relative to the north-western corner of the floor, turned 21° west of north toward the work and looking a little down. */
+/** The view the seeds of the Studio compare in, which every room size frames alike, as it only shows the north and west walls, their corner and the work between: its eyes 5 m in from the west wall, 4 m from the north wall and 2 m over the floor, relative to the north-western corner of the floor, turned 15° west of north toward the work and looking 15° down. */
 const overview = {
-  position: [6, 2, 4],
+  position: [5, 2, 4],
   aim: {
-    yaw: 21 * Math.PI / 180,
-    pitch: -7 * Math.PI / 180,
+    yaw: 15 * Math.PI / 180,
+    pitch: -15 * Math.PI / 180,
   },
   fov: 65,
   ratio: 16 / 9,

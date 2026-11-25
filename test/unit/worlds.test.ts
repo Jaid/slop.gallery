@@ -180,7 +180,7 @@ describe('worlds', () => {
     const [, , z] = single.spawn.position
     expect(single.wallDistance([vestibuleX, 1, z], [0, 0, -1])).toBeGreaterThan(z - vestibuleZ + vestibule.radius - wallFace)
   })
-  test('the Sandbox’s Studio is a single room, by default a floor 8 × 8 m between four walls 8 m high under a ceiling, its north-western corner the world’s origin, its floor spreading toward +x and +z, its spawn 6 m in from the west wall and 4 m from the north wall, looking at its one work, the chicken, lit by the Cell’s chandelier lamp, a faint, cool one by the west wall and a faint moon through openings in its ceiling, in shafts that hardly show, all its works framed in the Cell’s frame', () => {
+  test('the Sandbox’s Studio is a single room, by default a floor 8 × 8 m between four walls 8 m high under a ceiling, its north-western corner the world’s origin, its floor spreading toward +x and +z, its spawn 5 m in from the west wall and 4 m from the north wall, looking at its one work, the chicken, lit by the Cell’s chandelier lamp, a faint, cool one by the west wall and a faint moon through openings in its ceiling, in shafts that hardly show, all its works framed in the Cell’s frame', () => {
     const plain = new StudioSandbox(0)
     expect(plain.id).toBe('sandbox')
     expect(plain.rooms.map(room => room.id)).toEqual(['studio'])
@@ -232,9 +232,9 @@ describe('worlds', () => {
     }
     expect(secondary).toEqual(expected)
     // Looking north and a little down.
-    expect(plain.spawn.position).toEqual([6, 0.04, 4])
-    expect(plain.spawn.yaw).toBeCloseTo(21 * Math.PI / 180, 12)
-    expect(plain.spawn.pitch).toBeCloseTo(-7 * Math.PI / 180, 12)
+    expect(plain.spawn.position).toEqual([5, 0.04, 4])
+    expect(plain.spawn.yaw).toBeCloseTo(15 * Math.PI / 180, 12)
+    expect(plain.spawn.pitch).toBeCloseTo(-15 * Math.PI / 180, 12)
     expect(plain.roomAt(plain.spawn.position)).toBe(room)
     expect(plain.contains(plain.spawn.position)).toBe(true)
     expect(plain.floorHeight(plain.spawn.position)).toBe(0)
