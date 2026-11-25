@@ -16,7 +16,9 @@ export type KnifeStrokesRequest = {
 
 /** how high the bare ground under the paint lies, 0 to 255 */
 export const ground = 80
-/** how many strokes cover a square image at stroke size 1 */
+/** how many rows of texels an ordinary print takes */
+export const reliefRows = 896
+/** how many strokes cover a square of `reliefRows` texels a side at stroke size 1 */
 const squareStrokes = 6700
 
 /**
@@ -25,7 +27,7 @@ const squareStrokes = 6700
  * The stroke count falls with the square of `size`, so larger strokes cover the picture just as densely.
  */
 export default function layKnifeStrokes({guide, height, size, width}: KnifeStrokesRequest) {
-  const aspect = width / height
+  const area = width * height / reliefRows ** 2
   const luma = (x: number, y: number) => {
     const column = Math.max(0, Math.min(guide.width - 1, Math.floor(x * guide.width / width)))
     const row = Math.max(0, Math.min(guide.height - 1, Math.floor(y * guide.height / height)))
@@ -36,7 +38,7 @@ export default function layKnifeStrokes({guide, height, size, width}: KnifeStrok
   const field = new Uint8Array(width * height)
   field.fill(ground)
   const margin = 24 * size
-  for (let stroke = 0; stroke < squareStrokes * aspect / size ** 2; stroke++) {
+  for (let stroke = 0; stroke < squareStrokes * area / size ** 2; stroke++) {
     const x = random() * (width + 2 * margin) - margin
     const y = random() * (height + 2 * margin) - margin
     const dx = luma(x + 9, y) - luma(x - 9, y)

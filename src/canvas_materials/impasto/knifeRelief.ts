@@ -2,12 +2,11 @@ import type {Texture} from 'three/webgpu'
 
 import {DataTexture, LinearFilter, LinearMipmapLinearFilter, RedFormat, UnsignedByteType} from 'three/webgpu'
 
+import {maximumArtworkEdge} from '#src/lib/gallery/imagePolicy.ts'
 import {trackLoadingPromise} from '#src/lib/loadingItems.ts'
 
-import {ground} from './knifeStrokes.ts'
+import {ground, reliefRows} from './knifeStrokes.ts'
 
-/** how many rows of texels the relief has, whatever the image’s size */
-const rows = 896
 /** how many pixels the picture is shrunk to along its height for the strokes to turn by */
 const guideRows = 80
 /** the strokes asked of the worker, by the id of their request */
@@ -23,11 +22,13 @@ export default function knifeRelief(map: Texture, size = 1) {
   // The artworks’ textures hold their decoded images as canvases.
   const image = map.image as HTMLCanvasElement
   const aspect = image.width / image.height
-  const height = rows
-  const width = Math.round(rows * aspect)
+  // A panoramic print must not ask for a texture wider than the artwork limit, nor a tall strip for a zero-width guide.
+  const rows = Math.min(reliefRows, maximumArtworkEdge / aspect)
+  const height = Math.max(1, Math.round(rows))
+  const width = Math.max(1, Math.round(rows * aspect))
   const shrunk = document.createElement('canvas')
-  shrunk.height = guideRows
-  shrunk.width = Math.round(guideRows * aspect)
+  shrunk.height = Math.max(1, Math.round(rows * guideRows / reliefRows))
+  shrunk.width = Math.max(1, Math.round(rows * aspect * guideRows / reliefRows))
   const context = shrunk.getContext('2d', {willReadFrequently: true})!
   context.drawImage(image, 0, 0, shrunk.width, shrunk.height)
   const guide = context.getImageData(0, 0, shrunk.width, shrunk.height)

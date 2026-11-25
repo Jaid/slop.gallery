@@ -92,7 +92,7 @@ describe('canvas materials', () => {
       size: 2,
     })).not.toEqual(field)
   })
-  test('a relief is flat bare ground at first and takes the strokes once the worker has laid them, at 896 rows whatever the image’s size', async () => {
+  test('a relief is flat bare ground at first and takes the strokes once the worker has laid them, at 896 rows for an ordinary print', async () => {
     const {relief, ready} = knifeRelief(artwork())
     const {data, width, height} = relief.image as {
       data: Uint8Array
@@ -112,5 +112,19 @@ describe('canvas materials', () => {
       height,
       size: 1,
     }))
+  })
+  test.each([[4096, 1, 4096, 1], [1, 4096, 1, 896]])('a %i × %i strip gets a drawable, bounded relief', async (w, h, expectedWidth, expectedHeight) => {
+    const {relief, ready} = knifeRelief(new Texture({
+      width: w,
+      height: h,
+    } as HTMLCanvasElement))
+    try {
+      expect([relief.image.width, relief.image.height]).toEqual([expectedWidth, expectedHeight])
+      const version = relief.version
+      await ready
+      expect(relief.version).toBeGreaterThan(version)
+    } finally {
+      relief.dispose()
+    }
   })
 })
