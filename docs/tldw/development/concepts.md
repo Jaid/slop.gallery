@@ -48,7 +48,7 @@ await snap({
 }, [
   call.add_portrait({
     image: 'https://pbs.twimg.com/media/HWO9FDjaIAAfhDz?format=jpg&name=orig',
-    target: {wall_id: 'studio-north', position: {x: 0, y: 2}}, // from the wall’s middle, right in front of the spawn
+    target: {wall_id: 'studio-north', position: {x: 0, y: 2}}, // from the wall’s middle, where the Studio’s own work hangs
     frame: 'kumiko',
     canvas_material: 'karakami'
   }),

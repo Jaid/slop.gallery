@@ -1,24 +1,19 @@
-import type {Artwork} from '#src/lib/gallery/types.ts'
-
 import {lazy} from 'react'
 
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {studioTuning} from '#src/lib/worldTuning/StudioTuningModule.ts'
 import {studioDesign} from '#src/rooms/studio/design.ts'
-import {studioSlotRatio} from '#src/rooms/studio/slots.ts'
 import Studio from '#src/rooms/studio/Studio.ts'
-import artworks from '#src/worlds/gallery/artworks.ts'
 
 import Sandbox from './base/Sandbox.ts'
+import studioArtworks from './studioArtworks.ts'
 
-/** whether the work fits the Studio’s one slot */
-const fitsSlot = (artwork: Artwork) => artwork.ratio === studioSlotRatio
 const scene = lazy(() => import('#src/rooms/studio/components/StudioRoom/index.tsx'))
 
 /** The Sandbox as `?room=studio` opens it: the Studio instead of the Cell, four bare walls to snap and film things in, which load in a moment, the corner of the north and west ones at the world’s origin, so the floor spreads from there toward +x and +z. */
 export default class StudioSandbox extends Sandbox<Studio> {
-  /** the catalog’s works that fit the Studio’s one slot, of which the seed hangs one */
-  override readonly artworks = artworks.filter(fitsSlot)
+  /** the Studio’s own works, which fit its one slot, of which the seed hangs one */
+  override readonly artworks = studioArtworks
   override readonly defaultRoom = 'studio'
   override readonly Scene = scene
   /** everything the Studio is built and lit from */

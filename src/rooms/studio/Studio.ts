@@ -22,18 +22,20 @@ import studioMap from './map.ts'
 import {studioOpenings} from './openings/index.ts'
 import studioSlots from './slots.ts'
 
-/** Where the player arrives, relative to the north-western corner of the floor: 4 m in from the west wall and 5 m from the north wall, looking north at the work right ahead and a little down, like the {@link overview} but 2 m nearer and standing. */
+/** how far the Studio’s one work hangs east of the north-western corner of the floor, in meters */
+const slotAlong = 4
+/** Where the player arrives, relative to the north-western corner of the floor: 6 m in from the west wall and 4 m from the north wall, turned 21° west of north toward the work and looking a little down, as the {@link overview} does, but standing. */
 const arrival = {
-  position: [4, 0.04, 5],
-  yaw: 0,
-  pitch: -8 * Math.PI / 180,
+  position: [6, 0.04, 4],
+  yaw: 21 * Math.PI / 180,
+  pitch: -7 * Math.PI / 180,
 } as const satisfies RoomSpawn
-/** The view the seeds of the Studio compare in, which every room size frames alike, as it only shows the north and west walls, their corner and the works between: its eyes 4 m in from the west wall, 7 m from the north wall and 2 m over the floor, relative to the north-western corner of the floor, looking north and a little down. */
+/** The view the seeds of the Studio compare in, which every room size frames alike, as it only shows the north and west walls, their corner and the work between: its eyes 6 m in from the west wall, 4 m from the north wall and 2 m over the floor, relative to the north-western corner of the floor, turned 21° west of north toward the work and looking a little down. */
 const overview = {
-  position: [4, 2, 7],
+  position: [6, 2, 4],
   aim: {
-    yaw: 0,
-    pitch: -8 * Math.PI / 180,
+    yaw: 21 * Math.PI / 180,
+    pitch: -7 * Math.PI / 180,
   },
   fov: 65,
   ratio: 16 / 9,
@@ -116,8 +118,7 @@ export default class Studio extends Room {
       // One for all works, as the seed rolls it.
       frame: look.frame,
       map: studioMap(size),
-      // Right in front of the spawn.
-      slots: studioSlots(plan.clear, arrival.position[0]),
+      slots: studioSlots(plan.clear, slotAlong),
       // Both always there, so switching the secondary one on in the world tuning only brightens it.
       lamps: {
         [studioLampIds.primary]: studioLamp(look.lamps.primary),

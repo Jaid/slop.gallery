@@ -91,7 +91,7 @@ import snap from './scripts/snap.ts'
 
 await snap({
   room: 'studio', // the Sandbox’s Studio: four walls under a skylit ceiling, which load in a moment, the north-western corner at 0,0,0, the floor spreading toward +x and +z
-  portraits: 1, // a square work in the Studio’s one slot, 4 m east of the corner
+  portraits: 1, // a 16:9 work in the Studio’s one slot, 4 m east of the corner
   position: '4,2,4',
   angle: '0,-3',
   fov: 40

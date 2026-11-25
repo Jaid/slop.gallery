@@ -186,25 +186,27 @@ test('the Studio’s lamps hang where the seed rolls them, their shadows blurred
     }
   }
 })
-test('the Studio’s one square work hangs on its north wall right in front of the spawn, 4 m from its north-western corner, and its overview looks at it from 4 m in from the west wall and 7 m from the north wall, in the same place of the world whatever its size', () => {
+test('the Studio’s one 16:9 work hangs on its north wall 4 m from its north-western corner, and its spawn and overview look at it from 6 m in from the west wall and 4 m from the north wall, in the same place of the world whatever its size', () => {
   for (const seed of [0, 3, 17, 42, 99]) {
     const sandbox = seed ? new StudioSandbox(seed) : studio
     const slots = sandbox.portraitSlots()
-    expect(slots.map(slot => [slot.wallId, slot.ratio])).toEqual([['studio-north', '1:1']])
+    expect(slots.map(slot => [slot.wallId, slot.ratio])).toEqual([['studio-north', '16:9']])
     expect(slots.map(slot => rounded(slot.position))).toEqual([[4, 2, 0.115]])
-    expect(slots[0].position[0]).toBe(sandbox.spawn.position[0])
-    // Only the catalog’s square works, one of which hangs there.
-    expect(sandbox.artworks.length).toBeGreaterThan(1)
-    expect(sandbox.artworks.every(artwork => artwork.ratio === '1:1')).toBe(true)
+    expect(rounded(sandbox.spawn.position)).toEqual([6, 0.04, 4])
+    expect(sandbox.spawn.yaw).toBeCloseTo(21 * Math.PI / 180, 12)
+    expect(sandbox.spawn.pitch).toBeCloseTo(-7 * Math.PI / 180, 12)
+    // Only the Studio’s own works, all of its slot’s ratio, one of which hangs there.
+    expect(sandbox.artworks.map(artwork => artwork.id)).toEqual(['chicken'])
+    expect(sandbox.artworks.every(artwork => artwork.ratio === '16:9')).toBe(true)
     const [overview, ...others] = sandbox.cameraBookmarks()
     expect(others).toEqual([])
     expect(overview).toMatchObject({
       id: 'studio-overview',
-      aim: {yaw: 0},
       fov: 65,
     })
-    expect(rounded(overview.position)).toEqual([4, 2, 7])
-    expect(overview.aim.pitch).toBeCloseTo(-8 * Math.PI / 180, 12)
+    expect(rounded(overview.position)).toEqual([6, 2, 4])
+    expect(overview.aim.yaw).toBeCloseTo(21 * Math.PI / 180, 12)
+    expect(overview.aim.pitch).toBeCloseTo(-7 * Math.PI / 180, 12)
   }
 })
 test('every kind of openings is listed by its id, the default seed’s ceiling cut with coffers, and seeds roll every kind', () => {
