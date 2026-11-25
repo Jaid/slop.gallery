@@ -6,6 +6,7 @@ import {expect, test} from 'bun:test'
 
 import {defaultEgoOptions} from 'ego-player'
 import fs from 'fs-extra'
+import {maximumSeed} from 'make-seed'
 
 import {openHeadlessGallery, resolveGallerySetup, waitForGallery} from '../scripts/lib/headlessGallery.ts'
 import {portraitLabelLayout} from '../src/lib/gallery/portraitLabel.ts'
@@ -154,6 +155,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
       return values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length
     }, screenshot.toBase64())
     expect(variance).toBeGreaterThan(100)
+    await page.waitForFunction(() => globalThis.slopGallery!.player?.grounded === true, {timeout: 120_000})
     const rendered = await snapshot(page)
     expect(rendered.webGPU).toBe(true)
     expect(rendered.room).toBe(slopGallery.defaultRoom)
@@ -161,10 +163,14 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     expect(baseline).toBeGreaterThan(0)
     // W walks the way the view looks.
     await page.keyboard.down('w')
-    await Bun.sleep(350)
-    await page.keyboard.up('w')
-    const walked = await snapshot(page)
-    expect(Math.hypot(walked.camera[0] - rendered.camera[0], walked.camera[2] - rendered.camera[2])).toBeGreaterThan(0.3)
+    try {
+      await page.waitForFunction(([x, , z]) => {
+        const {camera} = globalThis.slopGallery!.snapshot!()
+        return Math.hypot(camera[0] - x, camera[2] - z) > 0.3
+      }, {}, rendered.camera)
+    } finally {
+      await page.keyboard.up('w')
+    }
     // The mouse buttons only act on the canvas under the pointer.
     await page.mouse.move(viewport.width / 2, viewport.height / 2)
     // A work hanging where the game starts: its placard names it, the work itself can be picked up and hung elsewhere.
@@ -267,10 +273,11 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     await approach(page, prop.id)
     const propState = () => propOf(page, prop.id)
     await page.mouse.down({button: 'left'})
-    await page.waitForFunction(id => globalThis.slopGallery!.snapshot!().held === id, {}, prop.id)
-    const carried = await propState()
-    expect(carried.collidersEnabled.length).toBeGreaterThan(0)
-    expect(carried.collidersEnabled.every(enabled => !enabled)).toBe(true)
+    await page.waitForFunction(id => {
+      const state = globalThis.slopGallery!.snapshot!()
+      const colliders = state.props.find(candidate => candidate.id === id)?.collidersEnabled
+      return state.held === id && colliders?.length && colliders.every(enabled => !enabled)
+    }, {}, prop.id)
     // Drop on the clear floor in front of the painting. An orb dropped where it was picked up can keep rolling off furniture.
     await teleport(page, front.eye, front.target)
     await page.waitForFunction((id, eye) => {
@@ -336,7 +343,9 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     await Promise.all([page.waitForNavigation({waitUntil: 'domcontentloaded'}), page.click('xpath/.//button[normalize-space(.)="Reroll seed"]')])
     await waitForGallery(page)
     const urlAfterReroll = URL.parse(page.url())!
-    expect(urlAfterReroll.searchParams.get('seed')).toMatch(/^[1-9]\d{0,3}$/u)
+    const rerolled = await snapshotOf(page, 'seed')
+    expect(rerolled).toBeWithin(1, maximumSeed + 1)
+    expect(urlAfterReroll.searchParams.get('seed')).toBe(String(rerolled))
     for (const url of [urlBeforeReroll, urlAfterReroll]) {
       url.searchParams.set('seed', '')
     }
