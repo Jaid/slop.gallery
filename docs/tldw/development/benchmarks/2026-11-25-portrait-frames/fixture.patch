@@ -1,0 +1,39 @@
+diff --git a/src/components/Portrait/index.tsx b/src/components/Portrait/index.tsx
+index 943e50b..4170d87 100644
+--- a/src/components/Portrait/index.tsx
++++ b/src/components/Portrait/index.tsx
+@@ -22,6 +22,8 @@ import world from '#src/worlds/current.ts'
+
+ import useHanging from './useHanging.ts'
+
++const hideBenchmarkFrame = new URLSearchParams(globalThis.location?.search).has('bench_hide_frame')
++
+ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
+   const body = useRef<RapierRigidBody>(null)
+   const group = useRef<Group>(null)
+@@ -137,7 +139,7 @@ export default function Portrait({portrait: p}: {portrait: PortraitData}) {
+       {/* The frame and its image, which move on their own while the work arrives on its wall. */}
+       <group ref={art}>
+         {/* Only a held work fades; hung ones stay opaque so the floor glass, which refracts opaque surfaces only, shows them in the room below. */}
+-        <mesh castShadow geometry={geometry} material={held ? frame.heldMaterial : frame.materials} name='portrait-frame' receiveShadow />
++        {hideBenchmarkFrame ? null : <mesh castShadow geometry={geometry} material={held ? frame.heldMaterial : frame.materials} name='portrait-frame' receiveShadow />}
+         {/* Shadows draw back faces only, so the frame’s backing board blocks the lights in front of the work and the image those behind it, which a loose work can turn its back to. */}
+         <mesh castShadow name='portrait-image' position={[0, 0, frame.imageDepth]}><planeGeometry args={[w, h]} /><DynamicImageMaterial canvasMaterial={p.canvasMaterial} opacity={held ? 0.3 : 1} source={p.source} toneMapped={false} transparent={held} /></mesh>
+       </group>
+diff --git a/src/rooms/studio/Studio.ts b/src/rooms/studio/Studio.ts
+index d5d0a52..1437f94 100644
+--- a/src/rooms/studio/Studio.ts
++++ b/src/rooms/studio/Studio.ts
+@@ -108,6 +108,12 @@ export default class Studio extends Room {
+     super({
+       title: 'Studio',
+       cameras: {
++        bench: {
++          position: [corner[0] + 4, 2, corner[2] + 2.6],
++          aim: {yaw: 0, pitch: 0},
++          fov: 40,
++          ratio: 16 / 9,
++        },
+         overview: {
+           ...overview,
+           position: [corner[0] + overview.position[0], overview.position[1], corner[2] + overview.position[2]],
