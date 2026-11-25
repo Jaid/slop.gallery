@@ -177,12 +177,13 @@ for (const [part, held] of [...roomChunks, ...fillModules.map(module => [module,
     fail(`${part} loads the ${room} room with it.`)
   }
 }
-// The Sandbox holds the Cell or the Studio, and loads nothing of the other: neither its module nor its scene.
+// Neither Sandbox room loads the other’s scene or room logic. The page reads the Studio’s ?openings parameter for query diagnostics in every world.
+const sharedOpeningParameter = 'src/rooms/studio/openings/openingParameter.ts'
 const sandboxRooms = ['cell', 'studio'].map(id => {
   const scene = chunkOf(`src/rooms/${id}/components/${id[0].toUpperCase()}${id.slice(1)}Room/index.tsx`).fileName
   return {
     id,
-    held: new Set(chunks.filter(chunk => chunk.modules.some(module => module.startsWith(`src/rooms/${id}/`))).map(chunk => chunk.fileName)),
+    held: new Set(chunks.filter(chunk => chunk.modules.some(module => module !== sharedOpeningParameter && module.startsWith(`src/rooms/${id}/`))).map(chunk => chunk.fileName)),
     needed: new Set([...closure(chunkOf(`src/worlds/sandbox/${id}.ts`).fileName), ...closure(scene)]),
   }
 })
