@@ -9,6 +9,7 @@ import arrivalVoices, {arrivalGap} from '../audio/arrivalVoices.ts'
 import {defaultPortraitArea} from '../placement/portraitSlots.ts'
 import worldClock from '../worldClock.ts'
 import {arrivalFrame, bodyPose, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'
+import decodeImage from './decodeImage.ts'
 import {holdPoint, requestHanging} from './hanging/hangings.ts'
 import {hangingAnimation} from './hanging/index.ts'
 import {maximumArtworkEdge, maximumPortraits, validateImport} from './imagePolicy.ts'
@@ -216,39 +217,6 @@ export function atFeet(pose: {
 /** Where the placard of an imported work takes up room, which nobody has told anything about yet. */
 function importPlacard() {
   return world.placement.placardOf({})
-}
-/** An image file decoded for drawing, with its size in pixels. An SVG, which createImageBitmap does not take, decodes into an image element instead, which draws it sharp at any size; in one, it runs no scripts and loads nothing. */
-async function decodeImage(file: Blob) {
-  if (file.type !== 'image/svg+xml') {
-    const bitmap = await createImageBitmap(file)
-    return {
-      source: bitmap as CanvasImageSource,
-      width: bitmap.width,
-      height: bitmap.height,
-      vector: false,
-      close: () => bitmap.close(),
-    }
-  }
-  const url = URL.createObjectURL(file)
-  const element = new Image
-  element.src = url
-  try {
-    await element.decode()
-  } catch (error) {
-    URL.revokeObjectURL(url)
-    throw error
-  }
-  if (!(element.naturalWidth && element.naturalHeight)) {
-    URL.revokeObjectURL(url)
-    throw new Error('This SVG has no size of its own. Give its root a width and a height.')
-  }
-  return {
-    source: element as CanvasImageSource,
-    width: element.naturalWidth,
-    height: element.naturalHeight,
-    vector: true,
-    close: () => URL.revokeObjectURL(url),
-  }
 }
 async function canvasImage(canvas: OffscreenCanvas): Promise<SizedImage> {
   return {
