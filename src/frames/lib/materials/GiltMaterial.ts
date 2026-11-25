@@ -18,6 +18,8 @@ export type GiltRelief = {
 export type GiltOptions = {
   /** the red clay the leaf is laid on, which shows where it is rubbed through */
   bole?: string
+  /** whether tiny pits break up the leaf’s roughness and normal */
+  crackle?: boolean
   /** how strongly the hollows mirror the studio, relative to the default */
   environmentIntensity?: number
   /** how much dirt has settled in the hollows, 0 to 1 */
@@ -48,7 +50,7 @@ const waterGold = [0.9, 0.55, 0.2] as const
  * It reads the frame’s attributes, so it only suits frame geometry. A {@link GiltRelief} carves ornament into it as shading alone, its hollows taking the grime like the moulding’s own.
  */
 export default class GiltMaterial extends MeshPhysicalNodeMaterial {
-  constructor({bole = '#7a2f1b', environmentIntensity = 1, overlay, roughness = {
+  constructor({bole = '#7a2f1b', crackle: withCrackle = true, environmentIntensity = 1, overlay, roughness = {
     burnished: 0.12,
     matte: 0.3,
   }, relief, grime = 0.5, wear = 0.25}: GiltOptions = {}) {
@@ -78,7 +80,7 @@ export default class GiltMaterial extends MeshPhysicalNodeMaterial {
     const paintMask = painted?.mask ?? float(0)
     this.colorNode = mix(mix(dirty, clay, rubbed), painted?.color ?? vec3(0), paintMask)
     this.metalnessNode = float(1).sub(rubbed.mul(0.92)).mul(float(1).sub(paintMask))
-    const crackle = mx_worley_noise_float(p.mul(160)).smoothstep(0, 0.08).oneMinus().mul(visibleDetail(footprint, 0.006))
+    const crackle = withCrackle ? mx_worley_noise_float(p.mul(160)).smoothstep(0, 0.08).oneMinus().mul(visibleDetail(footprint, 0.006)) : float(0)
     this.roughnessNode = mix(mix(float(roughness.matte), float(roughness.burnished), ridge).add(hollow.mul(grime * 0.25)).add(rubbed.mul(0.35)).add(crackle.mul(0.08)), float(0.55), paintMask)
     const grain = speckle.mul(0.00002).sub(crackle.mul(0.00003))
     this.normalNode = heightNormal(carved.add(grain).add(smoothstep(0, 1, rubbed).mul(-0.00008)))

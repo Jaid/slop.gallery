@@ -1,3 +1,4 @@
+import type PortraitFrame from '#src/frames/base/PortraitFrame.ts'
 import type {StudioSubjectSize} from '../rendering/studio/studioFraming.ts'
 import type {Portrait} from './types.ts'
 import type {Material, Texture} from 'three/webgpu'
@@ -10,7 +11,10 @@ import {portraitFrame} from '#src/frames/index.ts'
 import {artworkPlaceholders, holdArtworkTexture} from '../useArtworkTexture.ts'
 
 /** what of a work its model shows */
-export type PortraitModelSubject = Pick<Portrait, 'canvasMaterial' | 'frame' | 'height' | 'source' | 'width'>
+export type PortraitModelSubject = Pick<Portrait, 'canvasMaterial' | 'height' | 'source' | 'width'> & {
+  /** The work’s frame id, or the frame already selected for the quality of a live view. */
+  frame?: Portrait['frame'] | PortraitFrame
+}
 /** what loads an artwork’s texture and keeps it until released, like {@link holdArtworkTexture} */
 export type ArtworkHolder = (source: Portrait['source']) => {
   release: () => void
@@ -38,8 +42,8 @@ export default class PortraitModel {
   /**
    * @param hold loads the artwork’s texture, from the textures the artworks share by default
    */
-  constructor({canvasMaterial, frame: frameId, height, source, width}: PortraitModelSubject, hold: ArtworkHolder = holdArtworkTexture) {
-    const frame = portraitFrame(frameId)
+  constructor({canvasMaterial, frame: selected, height, source, width}: PortraitModelSubject, hold: ArtworkHolder = holdArtworkTexture) {
+    const frame = typeof selected === 'object' ? selected : portraitFrame(selected)
     this.moulding = new Mesh(frame.createGeometry(width, height), frame.materials)
     this.moulding.name = 'portrait-frame'
     // Unlit, like in the world, where the image shows as it is whatever light falls on its frame.

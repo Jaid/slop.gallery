@@ -8,4 +8,6 @@ Rooms and fusion ingredients name their frames in `frame`. In the default enviro
 
 Every frame stays within 2048 triangles at every size and reaches at most 15 cm out past its work, its back 9.5 cm behind the work’s middle, which the tests check for each.
 
+Louis XIV shell has two versions. Fast and Heavy use 1058 triangles and omit the fine gilt crackle. In Heavy only gold with roughness ≤ 0.25 contributes to screen-space reflections; rougher leaf still reflects the frame’s studio environment. Cinematic uses the full 1906-triangle moulding and shells, crackle and unrestricted metallic reflections. Both versions have the same dimensions. `usePortraitFrame` follows live quality switches; `portraitFrame` resolves the current version outside React.
+
 To add a frame, give it a folder with its class `<Id>Frame.ts`, add its id to `frameIds` and the frame to `index.ts`. Name it in a room’s or an ingredient’s `frame` to include it in that sampler.
