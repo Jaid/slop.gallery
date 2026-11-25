@@ -10,7 +10,7 @@ import {frameIds} from '#src/frames/lib/frameParameter.ts'
 import {arrivalFrame, newPortrait} from '#src/lib/gallery/actions.ts'
 import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
 import {imageSize, importedImage} from '#src/lib/gallery/ImageImporter.ts'
-import {maximumPortraits, validateImport} from '#src/lib/gallery/imagePolicy.ts'
+import {maximumPortraits} from '#src/lib/gallery/imagePolicy.ts'
 import {usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
 import {useGallery} from '#src/lib/gallery/store.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
@@ -47,7 +47,7 @@ export type PortraitAdditionInput = {
   hangingAnimation?: boolean
   /** its id, unique in the collection; by default a new one */
   id?: string
-  /** the URL of the image */
+  /** the URL of the image or video supplying its first frame */
   image: string
   /** its frame area in cm²; by default the slot’s or that of the room it arrives in */
   size?: number
@@ -178,7 +178,7 @@ export function findPortraitDestination(target: PortraitTarget): PortraitDestina
 }
 
 /**
- * Brings the image at the URL `image` into the world as an imported work: hung in a portrait slot in place of the work hanging there, if any, hung on a wall where it fits, or loose at a position; see the `add_portrait` tool.
+ * Brings an image or the first frame of a video at the URL `image` into the world as an imported work: hung in a portrait slot in place of the work hanging there, if any, hung on a wall where it fits, or loose at a position; see the `add_portrait` tool.
  */
 export default async function addPortrait({canvasMaterial, frame: frameId, hangingAnimation = false, id, image, size, target, title}: PortraitAdditionInput): Promise<PortraitAddition> {
   const destination = findPortraitDestination(target)
@@ -190,13 +190,7 @@ export default async function addPortrait({canvasMaterial, frame: frameId, hangi
     throw new Error(`There is no canvas material “${canvasMaterial}”. Canvas materials: ${canvasMaterialIds.join(', ')}.`)
   }
   requireFreeId(id, useGallery.getState().portraits)
-  const response = await fetch(image)
-  if (!response.ok) {
-    throw new Error(`The image could not be loaded (HTTP ${response.status}).`)
-  }
-  const file = await response.blob()
-  validateImport(file)
-  const {image: source, width: pixelWidth, height: pixelHeight} = await importedImage(file)
+  const {image: source, width: pixelWidth, height: pixelHeight} = await importedImage(image)
   // It keeps its own aspect at the frame area, as an import keeps the area of the room it hangs in.
   const {width, height} = imageSize(pixelWidth, pixelHeight, size ?? destination.area)
   const {commit, portraits} = useGallery.getState()

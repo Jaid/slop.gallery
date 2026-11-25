@@ -9,11 +9,14 @@ export const imageExtensions = {
   'image/avif': ['.avif'],
   'image/gif': ['.gif'],
 }
-/** the formats an image may be imported in: those of a work and SVG, which an import draws into its WebP */
-export const importExtensions = {
+/** the formats a still image may be imported in: those of a work and SVG, which an import draws into its WebP */
+const importImageExtensions = {
   ...imageExtensions,
   'image/svg+xml': ['.svg'],
 }
+/** A file picker hint only: local videos can have an empty or generic MIME type. The browser’s decoder decides whether they have a frame. */
+export const importAccept = [...Object.entries(importImageExtensions).flatMap(([type, extensions]) => [type, ...extensions]), 'video/*'].join(',')
+export const maximumImportFiles = 12
 export const maximumPortraits = 120
 export const maximumArtworkEdge = 4096
 export const maximumImageBytes = 25_000_000
@@ -25,9 +28,10 @@ export function validateImage(source: Blob) {
   }
 }
 
-export function validateImport(file: Blob) {
-  if (!Object.hasOwn(importExtensions, file.type) || file.size > maximumImageBytes) {
-    throw new Error('Choose JXL, PNG, JPEG, WebP, AVIF, GIF or SVG up to 25 mb.')
+/** A video contributes only a frame, so the image byte limit applies to the resulting still, not the length of the recording. */
+export function validateImportImage(file: Blob) {
+  if (!Object.hasOwn(importImageExtensions, file.type) || file.size > maximumImageBytes) {
+    throw new Error('Choose JXL, PNG, JPEG, WebP, AVIF, GIF or SVG up to 25 mb, or a video your browser can play.')
   }
 }
 

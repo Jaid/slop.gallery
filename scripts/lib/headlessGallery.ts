@@ -170,7 +170,7 @@ const serveStatic = (root: string) => Bun.serve({
     return isFile ? new Response(Bun.file(file)) : new Response('Not found', {status: 404})
   },
 })
-/** Serves the image file under its own name to the page, which only loads images over HTTP. Dispose it to stop serving. */
+/** Serves a local image or video under its own name so the page can import it over HTTP. Dispose it to stop serving. */
 export const serveFile = (file: string) => {
   const name = `/${encodeURIComponent(basename(file))}`
   const headers = {'Access-Control-Allow-Origin': '*'}

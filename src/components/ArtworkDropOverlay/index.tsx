@@ -1,5 +1,7 @@
 import clsx from 'clsx'
 
+import {maximumImportFiles} from '#src/lib/gallery/imagePolicy.ts'
+
 import css from './style.module.sass'
 
 const messages = {
@@ -17,12 +19,12 @@ const messages = {
   },
   rejected: {
     title: 'Not quite a canvas.',
-    description: 'Choose a supported image under 25 mb.',
+    description: `Only the first ${maximumImportFiles} files will be imported.`,
   },
 }
 
 export default function ArtworkDropOverlay({collecting, rejected, valid}: {
-  /** whether the image goes into the collection, dragged in under the pause menu, instead of aiming into the scene */
+  /** whether the work goes into the collection, dragged in under the pause menu, instead of aiming into the scene */
   collecting: boolean
   rejected: boolean
   valid: boolean
@@ -38,6 +40,6 @@ export default function ArtworkDropOverlay({collecting, rejected, valid}: {
   return <div className={clsx(css.container, rejected && css.rejected)} data-testid='drop-overlay'>
     <div className={css.card}><span className={css.eyebrow}>A NEW ARRIVAL</span><h2>{message.title}</h2>
       <p>{message.description}</p>
-      <small>JXL · PNG · JPEG · WEBP · AVIF · GIF / UP TO 12 AT ONCE</small></div>
+      <small>JXL · PNG · JPEG · WEBP · AVIF · GIF · SVG / VIDEOS USE THEIR FIRST FRAME / UP TO {maximumImportFiles} AT ONCE</small></div>
   </div>
 }

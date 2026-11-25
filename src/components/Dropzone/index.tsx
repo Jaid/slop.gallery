@@ -7,14 +7,14 @@ import {useDropzone} from 'react-dropzone'
 
 import ArtworkDropOverlay from '#component/ArtworkDropOverlay'
 import {dragPose, galleryEvents, notify, useGallery} from '#src/lib/gallery.ts'
-import {importExtensions, maximumImageBytes} from '#src/lib/gallery/imagePolicy.ts'
+import {importAccept, maximumImportFiles} from '#src/lib/gallery/imagePolicy.ts'
 import worldClock from '#src/lib/worldClock.ts'
 
 import css from './style.module.sass'
 
 export default function Dropzone({children}: PropsWithChildren) {
   const placement = useGallery(s => s.placement)
-  // Under the pause menu, an image dragged in goes into the collection instead of aiming into the frozen scene, which stays as it is.
+  // Under the pause menu, a file dragged in goes into the collection instead of aiming into the frozen scene, which stays as it is.
   const frozen = useSyncExternalStore(worldClock.subscribe, worldClock.getSnapshot)
   const handleDrop = (files: Array<File>, event: DropEvent) => {
     if (event.type === 'drop') {
@@ -29,16 +29,16 @@ export default function Dropzone({children}: PropsWithChildren) {
     } else {
       const importFiles = useGallery.getState().importFiles
       if (importFiles) {
-        void importFiles(files).catch(() => notify('The images could not be imported.'))
+        void importFiles(files).catch(() => notify('The files could not be imported.'))
       }
     }
   }
   const {getRootProps, getInputProps, isDragActive, isDragReject} = useDropzone({
     noClick: true,
     noKeyboard: true,
+    noPaste: true, // The document handles pastes once, including those outside the dropzone.
     onDropAccepted: handleDrop,
-    accept: importExtensions,
-    maxSize: maximumImageBytes,
+    maxFiles: maximumImportFiles,
     onDragOver: event => {
       dragPose.x = event.clientX
       dragPose.y = event.clientY
@@ -56,7 +56,7 @@ export default function Dropzone({children}: PropsWithChildren) {
     }
   }, [aiming])
   return <div {...getRootProps({className: css.container})}>
-    <input {...getInputProps()} aria-label='Import artworks' data-artwork-input />
+    <input {...getInputProps({accept: importAccept})} aria-label='Import artworks' data-artwork-input />
     {children}
     <Branch if={isDragActive}><ArtworkDropOverlay collecting={frozen} rejected={isDragReject} valid={Boolean(placement?.valid)} /></Branch>
   </div>

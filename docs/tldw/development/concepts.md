@@ -8,6 +8,8 @@ Each world defines one or multiple rooms that are then glued together to a cohes
 
 main world and the only one meant to be played in
 
+Drop or paste an image or video to turn it into a portrait. For videos, the gallery keeps the first frame your browser can decode and frames it just like an imported image. Dropping files while paused adds them to the collection.
+
 # for developers, agents and scripts
 
 ## Sandbox

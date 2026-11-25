@@ -62,7 +62,7 @@ Options:
   --ingredient <orb|prop> what is thrown: a kind of orb, which enters the world just for the throw, or the id of a prop already in the world, like prop-pumpkin. Default: spook
                           ${orbs.map(orb => orb.id).join(', ')}
   --portrait <id|file|url>
-                          the work it is thrown into: a default work by its id, which hangs where the seed hangs it, or an image file or URL, which hangs in a portrait slot of --room as an imported work. Default: the first work hung in --room
+                          the work it is thrown into: a default work by its id, which hangs where the seed hangs it, or a file or URL whose image or first video frame hangs in a portrait slot of --room as an imported work. Default: the first work hung in --room
   --room <id>             the room of the work, which the page opens in, and with it its world, like the Sandbox for its Cell, which loads much faster than the gallery; for a default work, where it hangs. Default: banquet
   --slot <id>             the portrait slot an image hangs in, in place of what hangs there. Default: a free slot of --room with the most room in front and to its sides
   --emphasis <kind>       how the film ends, taking over from the camera’s path, its own or that of --camera, as the result flips out: neutral leaves the path as it is; party keeps everything the ingredient’s effect reaches, like the Halloween Orb’s bats or the Horror Orb’s blood, in view from just far enough, drifting round it a little, and ends the film a second after the effect is over; result follows the result down and cranes up over it lying on the floor until the last frame looks straight at its image, upright, which fills the view to the sight edge of its frame, as when viewing a hung portrait with V. Default: neutral
@@ -554,7 +554,7 @@ const resolveWork = async (world: World, {portrait, room, slot: slotId}: {
   const catalog = portrait === undefined || world.artworks.some(artwork => artwork.id === portrait)
   if (catalog) {
     if (slotId !== undefined) {
-      throw new Error('--slot is for an image; a default work hangs where the seed hangs it.')
+      throw new Error('--slot is for an imported work; a default work hangs where the seed hangs it.')
     }
     const inRoom = room ?? 'banquet'
     const work = portrait === undefined ? works.find(candidate => slotRoom(world, slots.find(slot => isSlotOf(slot, candidate.position))!) === inRoom) : works.find(candidate => candidate.id === portrait)
@@ -575,7 +575,7 @@ const resolveWork = async (world: World, {portrait, room, slot: slotId}: {
   const file = resolve(portrait)
   const isFile = await fs.stat(file).then(entry => entry.isFile(), () => false)
   if (!isFile && !URL.canParse(portrait)) {
-    throw new Error(`--portrait must be a default work (${world.artworks.map(artwork => artwork.id).join(', ')}), an image file or an image URL, got “${portrait}”.`)
+    throw new Error(`--portrait must be a default work (${world.artworks.map(artwork => artwork.id).join(', ')}) or an image or video file or URL, got “${portrait}”.`)
   }
   const inRoom = room ?? 'banquet'
   let slot: PortraitSlot | undefined

@@ -283,7 +283,7 @@ test('a work has no title, whatever its image’s file is called, nor anything e
   expect(told).toHaveProperty('title', 'Told')
   expect(stored(told.id).title).toBe('Told')
 })
-test('a JXL is imported like any other image, but not a file served without an image type', async () => {
+test('a JXL is imported like any other supported image, but an unsupported image type is rejected', async () => {
   const served = (type: string) => {
     globalThis.fetch = (async () => new Response(new Blob(['pixels'], {type}))) as unknown as typeof fetch
   }
@@ -294,9 +294,9 @@ test('a JXL is imported like any other image, but not a file served without an i
   })
   expect(stored(added.id).source).toBeInstanceOf(Blob)
   expect((stored(added.id).source as Blob).type).toBe('image/webp')
-  served('application/octet-stream')
+  served('image/tiff')
   await expect(addPortrait({
-    image: 'http://127.0.0.1:8080/night_watch-3.jxl',
+    image: 'http://127.0.0.1:8080/night_watch-3.tiff',
     target: {slot: slot.id},
   })).rejects.toThrow('Choose JXL, PNG, JPEG, WebP, AVIF, GIF or SVG')
 })

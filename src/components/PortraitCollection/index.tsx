@@ -81,7 +81,7 @@ export default function PortraitCollection() {
   useEffect(() => artworkThumbnails.retain(portraits.map(portrait => portrait.source)), [portraits])
   const chosen = menu ? portraits.find(portrait => portrait.id === menu.id) : undefined
   return <section className={css.container} aria-label='Portrait collection' data-testid='portrait-collection'>
-    <Branch if={portraits.length} else={<p className={css.empty}>No works here yet. Drop an image anywhere to bring one in.</p>}>
+    <Branch if={portraits.length} else={<p className={css.empty}>No works here yet. Drop an image or video anywhere to bring one in.</p>}>
       <ul className={css.grid}>
         {nearest.map(({portrait}) => <li key={portrait.id} className={css.cell}>
           <PortraitCollectionItem

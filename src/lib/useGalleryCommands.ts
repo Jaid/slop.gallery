@@ -13,16 +13,16 @@ export default function useGalleryCommands() {
         x: number
         y: number
       }>).detail
-      void importDroppedFiles(files, x, y).catch(() => notify('The images could not be imported.'))
+      void importDroppedFiles(files, x, y).catch(() => notify('The files could not be imported.'))
     }
     const paste = (event: ClipboardEvent) => {
       if (isTextInput(event.target)) {
         return
       }
-      const files = [...event.clipboardData?.files ?? []].filter(file => file.type.startsWith('image/'))
+      const files = [...event.clipboardData?.files ?? []]
       if (files.length) {
         event.preventDefault()
-        void importer.import(files).catch(() => notify('The images could not be imported.'))
+        void importer.import(files).catch(() => notify('The files could not be imported.'))
       }
     }
     document.addEventListener('paste', paste)

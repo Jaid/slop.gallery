@@ -9,10 +9,10 @@ import arrivalVoices, {arrivalGap} from '../audio/arrivalVoices.ts'
 import {defaultPortraitArea} from '../placement/portraitSlots.ts'
 import worldClock from '../worldClock.ts'
 import {arrivalFrame, bodyPose, cameraPose, loadBlob, newPortrait, notify, playSound, wallRebound} from './actions.ts'
-import decodeImage from './decodeImage.ts'
+import decodeImport from './decodeImport.ts'
 import {holdPoint, requestHanging} from './hanging/hangings.ts'
 import {hangingAnimation} from './hanging/index.ts'
-import {maximumArtworkEdge, maximumPortraits, validateImport} from './imagePolicy.ts'
+import {maximumArtworkEdge, maximumImportFiles, maximumPortraits} from './imagePolicy.ts'
 import {useGallery} from './store.ts'
 
 /** how far out from where it would have hung an imported work that does not fit there flips off its wall, in meters: its back clear of the fronts of the works hung beside it, which it would fuse with on touching them */
@@ -68,9 +68,9 @@ export function centeredCrop(width: number, height: number, limit = 2) {
   return [(width - cropWidth) / 2, (height - cropHeight) / 2, cropWidth, cropHeight] as const
 }
 
-/** An image file, already validated, as an imported work keeps it: works wider than 2:1 or taller than 1:2 only their middle, at most 4096 px on its longer edge, on an opaque ground, with the size in pixels of the part it keeps. An SVG is drawn at exactly 4096 px on its longer edge, whatever its own size. */
-export async function importedImage(file: Blob): Promise<SizedImage> {
-  const decoded = await decodeImage(file)
+/** An image or a video’s first frame as an imported work keeps it: works wider than 2:1 or taller than 1:2 only their middle, at most 4096 px on its longer edge, on an opaque ground, with the size in pixels of the part it keeps. An SVG is drawn at exactly 4096 px on its longer edge, whatever its own size. */
+export async function importedImage(source: Blob | string): Promise<SizedImage> {
+  const decoded = await decodeImport(source)
   try {
     const crop = centeredCrop(decoded.width, decoded.height)
     const [, , width, height] = crop
@@ -242,7 +242,7 @@ export default class ImageImporter {
     this.disposed = true
   }
 
-  /** Brings in up to 12 images, each hung where `aimed` if it fits there, flipped off that wall if only the square previewing it fit, or else standing at the player’s feet (see {@link atFeet}). Under the pause menu, they go straight into the collection: aiming at nothing in the frozen scene, they wait at the player’s feet, already known to the player, who brought them in. */
+  /** Brings in up to 12 works, each hung where `aimed` if it fits there, flipped off that wall if only the square previewing it fit, or else standing at the player’s feet (see {@link atFeet}). Under the pause menu, they go straight into the collection: aiming at nothing in the frozen scene, they wait at the player’s feet, already known to the player, who brought them in. */
   import(files: Array<File>, aimed?: {
     direction: Vec3
     origin: Vec3
@@ -267,9 +267,8 @@ export default class ImageImporter {
       }
       let flips = 0
       let drops = 0
-      for (const file of files.slice(0, 12)) {
+      for (const file of files.slice(0, maximumImportFiles)) {
         try {
-          validateImport(file)
           if (useGallery.getState().portraits.length >= maximumPortraits) {
             throw new Error('The collection is full. Remove a work to make room.')
           }
@@ -335,7 +334,7 @@ export default class ImageImporter {
           this.arrive(p.hung)
           this.onImport(p)
         } catch (error) {
-          notify(Error.isError(error) ? `${file.name}: ${error.message}` : 'That image could not be imported.')
+          notify(Error.isError(error) ? `${file.name}: ${error.message}` : 'That file could not be imported.')
         }
       }
     })
