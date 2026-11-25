@@ -1,6 +1,8 @@
 import type {StoneId} from './lib/stoneIds.ts'
 import type {Material} from 'three/webgpu'
 
+import AlabasterStoneMaterial from './alabaster/AlabasterStoneMaterial.ts'
+import EstremozStoneMaterial from './estremoz/EstremozStoneMaterial.ts'
 import LarvikiteStoneMaterial from './larvikite/LarvikiteStoneMaterial.ts'
 import PorphyryStoneMaterial from './porphyry/PorphyryStoneMaterial.ts'
 import SawnStoneMaterial from './sawn/SawnStoneMaterial.ts'
@@ -16,6 +18,8 @@ export const stones = {
   larvikite: LarvikiteStoneMaterial,
   weser: WeserStoneMaterial,
   verdantique: VerdantiqueStoneMaterial,
+  alabaster: AlabasterStoneMaterial,
+  estremoz: EstremozStoneMaterial,
 } as const satisfies Record<StoneId, new () => Material>
 
 /** Builds the material of a stone, a new one for every call. */
