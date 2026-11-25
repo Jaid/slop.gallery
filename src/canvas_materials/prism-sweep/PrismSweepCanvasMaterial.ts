@@ -9,9 +9,10 @@ import FoilCanvasMaterial from '../base/FoilCanvasMaterial.ts'
 export default class PrismSweepCanvasMaterial extends FoilCanvasMaterial {
   override readonly description = 'Prism sweep: red, green and blue expose their own diffraction gratings, so different parts of the print flash at different angles.'
   readonly dispersion = 0.9
-  override readonly strength = 0.2
+  override readonly scale = 2
+  override readonly strength = 0.5
   override readonly title = 'Prism sweep'
-  readonly width = 0.7
+  readonly width = 0.5
 
   protected override coat(material: MeshPhysicalNodeMaterial, surface: FoilSurface) {
     const {half, position} = surface
