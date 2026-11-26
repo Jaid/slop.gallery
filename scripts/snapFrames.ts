@@ -1,3 +1,4 @@
+import {frames} from '#src/frames/index.ts'
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
 
 import snap from './snap.ts'
@@ -7,7 +8,9 @@ export default function snapFrames() {
   const columns = 4
   const rows = Math.ceil(frameIds.length / columns)
   const rowHeight = 10.8 / rows
-  const size = (rowHeight - 0.4) ** 2 * 10_000 // square image area in cm² after leaving clearance between frames
+  const imageSide = rowHeight - 0.4 // meters, leaving clearance between frames
+  const size = imageSide ** 2 * 10_000 // square image area in cm²
+  const labelGap = 0.03 // meters below the frame’s outer edge
   const roomWidth = 8
   const roomHeight = 12
   const tools = frameIds.flatMap((frame, index) => {
@@ -31,11 +34,12 @@ export default function snapFrames() {
     }, {
       name: 'add_text_overlay',
       input: {
+        anchor: 2,
         text: frame,
         position: {
           x: roomWidth / 2 + x,
-          y: y - rowHeight / 2,
-          z: 0.1,
+          y: y - imageSide / 2 - frames[frame].reach - labelGap,
+          z: 0.05, // project near the outer rim, 5 cm in front of the north wall
         },
       },
     }]
