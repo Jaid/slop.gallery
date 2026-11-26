@@ -9,6 +9,7 @@ import CellMood from './cell/CellMood.ts'
 import CorridorMood from './corridor/CorridorMood.ts'
 import ExhibitionMood from './exhibition/ExhibitionMood.ts'
 import ForgeMood from './forge/ForgeMood.ts'
+import FrostMood from './frost/FrostMood.ts'
 import FusionMood from './fusion/FusionMood.ts'
 import HalloweenMood from './halloween/HalloweenMood.ts'
 import HorrorMood from './horror/HorrorMood.ts'
@@ -33,6 +34,7 @@ export const moods = {
   corridor: new CorridorMood,
   exhibition: new ExhibitionMood,
   forge: new ForgeMood,
+  frost: new FrostMood,
   fusion: new FusionMood,
   halloween: new HalloweenMood,
   horror: new HorrorMood,
