@@ -148,52 +148,10 @@ await snap({
 
 ## wall of all frames
 
-This photographs every frame on the north wall of the seed 0 Studio in four columns. Each shows the same square avatar, with its frame ID just below it. Run the snippet from the repository root after `bun run build`.
+[`snapFrames.ts`](../../../scripts/snapFrames.ts) photographs every frame on the north wall of the seed 0 Studio in four columns, with the square avatar in each frame and its ID below it. Run it from the repository root after `bun run build`. The photo is saved in `out/snap/`.
 
-```TypeScript
-import snap from './scripts/snap.ts'
-import {frameIds} from './src/frames/lib/frameParameter.ts'
-
-const columns = 4
-const rows = Math.ceil(frameIds.length / columns)
-const rowHeight = 10.8 / rows
-const size = (rowHeight - 0.4) ** 2 * 10_000 // square image area in cm² after leaving clearance between frames
-
-await snap({
-  room: 'studio',
-  seed: 0,
-  portraits: 0,
-  room_width: 8,
-  room_depth: 16,
-  room_height: 12,
-  position: '4,6,14', // world coordinates, facing the middle of the north wall
-  angle: '0,0',
-  fov: 45,
-  width: 1350,
-  height: 4320,
-  'text-overlays': true
-}, frameIds.flatMap((frame, index) => {
-  const x = (index % columns - (columns - 1) / 2) * 0.9 // meters from the wall’s middle
-  const y = 6 + ((rows - 1) / 2 - Math.floor(index / columns)) * rowHeight
-  return [
-    {
-      name: 'add_portrait',
-      input: {
-        frame,
-        size,
-        image: 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/avatar.webp',
-        target: {wall_id: 'studio-north', position: {x, y}}
-      }
-    },
-    {
-      name: 'add_text_overlay',
-      input: {
-        text: frame,
-        position: {x: 4 + x, y: y - rowHeight / 2, z: 0.1} // labels use world coordinates
-      }
-    }
-  ]
-}))
+```sh
+bun scripts/snapFrames.ts
 ```
 
 ## portrait slots
