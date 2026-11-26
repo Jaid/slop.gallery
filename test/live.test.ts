@@ -316,11 +316,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     expect(Math.hypot(...thrown.visualPosition.map((value, axis) => value - beforeThrow[axis]))).toBeGreaterThan(0.2)
     expect(Math.hypot(thrown.position.x - hanging.position.x, thrown.position.y - hanging.position.y, thrown.position.z - hanging.position.z)).toBeGreaterThan(0.1)
     await pause(page)
-    // The graphics switch takes effect at once, and both captures of a frame keep its size and show the scene.
-    const graphicsLabel = await page.$eval('[aria-label="Heavy graphics"] small', element => element.textContent)
-    await page.click('[aria-label="Heavy graphics"]')
-    await page.waitForFunction(before => document.querySelector('[aria-label="Heavy graphics"] small')?.textContent !== before, {}, graphicsLabel)
-    await page.screenshot({path: 'out/live-test/production-fast.png'})
+    // Both captures of the frozen scene keep its size.
     const captures = await page.evaluate(async () => {
       const [a, b] = await Promise.all([globalThis.slopGallery!.captureFrame!(), globalThis.slopGallery!.captureFrame!()])
       return [a.width, b.width, a.nonBlackFraction]
@@ -335,9 +331,16 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     })
     await page.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth)
     await page.screenshot({path: 'out/live-test/production-narrow.png'})
-    // With ?seed, Reroll seed rolls a new one into the URL and leaves the stored game alone, so the menu still offers to continue it.
-    await page.reload({waitUntil: 'domcontentloaded'})
+    // With ?graphics, changing the preset opens another page rather than rebuilding the frozen scene in place.
+    await Promise.all([page.waitForNavigation({waitUntil: 'domcontentloaded'}), page.click('[aria-label="Heavy graphics"]')])
     await waitForGallery(page)
+    const fastUrl = new URL(page.url())
+    expect(fastUrl.searchParams.get('graphics')).toBe('fast')
+    expect(await page.evaluate(() => localStorage.getItem('slop-gallery-graphics'))).toBeNull()
+    await page.waitForSelector('[aria-label="Heavy graphics"]')
+    expect(await page.$eval('[aria-label="Heavy graphics"] small', element => element.textContent)).toBe('Fast')
+    await page.screenshot({path: 'out/live-test/production-fast.png'})
+    // With ?seed, Reroll seed rolls a new one into the URL and leaves the stored game alone, so the menu still offers to continue it.
     await page.waitForSelector('xpath/.//button[normalize-space(.)="Reroll seed"]')
     const urlBeforeReroll = URL.parse(page.url())!
     await Promise.all([page.waitForNavigation({waitUntil: 'domcontentloaded'}), page.click('xpath/.//button[normalize-space(.)="Reroll seed"]')])

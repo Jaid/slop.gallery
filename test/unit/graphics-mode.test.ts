@@ -2,49 +2,12 @@ import type {RenderPipelineSettings} from '../../src/lib/rendering/renderPipelin
 
 import {expect, test} from 'bun:test'
 
-import {renderToStaticMarkup} from 'react-dom/server'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
-
-import GraphicsMode from '../../src/components/App/GraphicsMode.tsx'
-import {fitCanvasTextureResolution, getGraphicsProfile, getSunShadowSettings, readCinematicGraphics, readGraphicsMode, readGraphicsModeName, readGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
+import {fitCanvasTextureResolution, getSunShadowSettings, graphicsProfiles as profiles} from '../../src/lib/rendering/graphicsMode.ts'
 import {getRenderPipelineSettings, getRenderPipelineStructure} from '../../src/lib/rendering/renderPipelineSettings.ts'
 
-function ReadProfile() {
-  const isHeavy: boolean = useGraphicsMode()
-  const profile = useGraphicsModeValue(getGraphicsProfile)
-  return <span>{String(isHeavy)}:{JSON.stringify(profile)}</span>
-}
-test('graphics URL names round-trip through boolean state and default to fast', () => {
-  expect(readGraphicsMode()).toBe(false)
-  for (const isHeavy of [true, false]) {
-    const name = useGraphicsMode.getName(isHeavy)
-    expect(readGraphicsMode(`?graphics=${name}`)).toBe(isHeavy)
-  }
-  for (const value of ['', 'lite', 'full', 'Auto', 'high', 'quality', 'performance', 'QUALITY', 'true', 'false', 'Cinematic']) {
-    expect(readGraphicsMode(`?graphics=${value}`)).toBe(false)
-    expect(readCinematicGraphics(`?graphics=${value}`)).toBe(false)
-    expect(readGraphicsModeName(`?graphics=${value}`)).toBe('fast')
-  }
-})
-test('auto graphics read as what the page picked for its GPU, which is fast without WebGPU, and never as cinematic', () => {
-  expect(readGraphicsModeName('?graphics=auto')).toBe('auto')
-  expect(readGraphicsMode('?graphics=auto')).toBe(false)
-  expect(readCinematicGraphics('?graphics=auto')).toBe(false)
-  expect(readGraphicsProfile('?graphics=auto')).toBe(getGraphicsProfile(false))
-})
-test('cinematic graphics read as heavy, and only cinematic reads as cinematic', () => {
-  expect(readGraphicsModeName('?graphics=cinematic')).toBe('cinematic')
-  expect(readGraphicsMode('?graphics=cinematic')).toBe(true)
-  expect(readCinematicGraphics('?graphics=cinematic')).toBe(true)
-  expect(readCinematicGraphics('?graphics=heavy')).toBe(false)
-  expect(readCinematicGraphics()).toBe(false)
-  expect(readGraphicsProfile('?graphics=cinematic')).toBe(getGraphicsProfile(true, true))
-  expect(readGraphicsProfile('?graphics=heavy')).toBe(getGraphicsProfile(true))
-  expect(readGraphicsProfile()).toBe(getGraphicsProfile(false))
-})
 test('the cinematic profile raises intermediate resolutions, AO quality, shadow samples and lamp filter radius, texture filtering, curve tessellation and indirect light over Heavy and keeps the rest', () => {
-  const cinematicProfile = getGraphicsProfile(true, true)
-  const heavy: Record<string, unknown> = getGraphicsProfile(true)
+  const cinematicProfile = profiles.cinematic
+  const heavy: Record<string, unknown> = profiles.heavy
   const cinematic: Record<string, unknown> = cinematicProfile
   const raised = ['canvasTextureResolution', 'curveDetail', 'ambientOcclusionResolutionScale', 'ambientOcclusionSamples', 'reflectionResolutionScale', 'shadowMapScale', 'lampShadowRadius', 'shadowSamples', 'sunShadowRadius', 'sunShadowSamples', 'surfaceAnisotropy', 'volumetricLightSteps']
   for (const key of raised) {
@@ -65,21 +28,7 @@ test('the cinematic profile raises intermediate resolutions, AO quality, shadow 
       expect(cinematic[key], key).toEqual(value)
     }
   }
-  expect(getGraphicsProfile(true, true)).toBe(cinematicProfile)
-  expect(getGraphicsProfile(false, true)).toBe(getGraphicsProfile(false))
 })
-test('the provider exposes the fast profile during SSR, and every profile keeps its identity', () => {
-  const html = renderToStaticMarkup(<GraphicsMode><ReadProfile /></GraphicsMode>)
-  expect(html).toBe(renderToStaticMarkup(<span>false:{JSON.stringify(getGraphicsProfile(false))}</span>))
-  expect(getGraphicsProfile(false).postprocessing).toBe(false)
-  expect(getGraphicsProfile(true)).toBe(getGraphicsProfile(true))
-  expect(getGraphicsProfile(false)).toBe(getGraphicsProfile(false))
-})
-const profiles = {
-  fast: getGraphicsProfile(false),
-  heavy: getGraphicsProfile(true),
-  cinematic: getGraphicsProfile(true, true),
-}
 const pipelines = {
   fast: getRenderPipelineSettings(profiles.fast, false),
   heavy: getRenderPipelineSettings(profiles.heavy, 'traa'),

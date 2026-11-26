@@ -14,7 +14,7 @@ For example, `?room=studio&room_width=16&room_depth=10&room_height=7` opens a St
 
 ## A new module
 
-1. Subclass `TuningModule` with the type of its values, a `title` and its `groups` from `tuningControls`, and hand `super()` its id and initial values. Override `isShown()` and `useShown()` with a `hint` for one that only applies at times, and `rebuilds()` for values that build something anew.
+1. Subclass `TuningModule` with the type of its values, a `title` and its `groups` from `tuningControls`, and hand `super()` its id and initial values. Override `isShown()` with a `hint` for one that does not apply on every page (also `useShown()` if its visibility can change during play), and `rebuilds()` for values that build something anew.
 2. Export one instance from its file, so consumers import it alone.
 3. Add it to the list in `index.ts`, in the order the panel shows it, or, for a module only some worlds have, to their `tuning`; world modules import it then, so it must never import `#src/worlds/current.ts`.
 4. Read its values where they apply, only with `?development`.

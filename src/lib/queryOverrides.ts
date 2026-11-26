@@ -36,7 +36,7 @@ import {readShowSticky} from './placement/showSticky.ts'
 import {readAlbedo} from './rendering/albedo.ts'
 import {readAntiAliasing} from './rendering/antiAliasing.ts'
 import {readFov} from './rendering/fov.ts'
-import {readGraphicsModeName} from './rendering/graphicsMode.ts'
+import {readGraphicsOverride} from './rendering/graphicsPreference.ts'
 import {readEditLamps, readShowLamps} from './rendering/lightLevels.ts'
 import {readNear} from './rendering/near.ts'
 import {readPmrem} from './rendering/pmrem.ts'
@@ -83,7 +83,7 @@ const readers: Record<string, Reader> = {
   fov: readFov,
   frame: readFrame,
   frozen_time: readFrozenTime,
-  graphics: readGraphicsModeName,
+  graphics: readGraphicsOverride,
   intro_narration: readIntroNarration,
   // A list, which compares by its ids, joined as the query gives them.
   item: input => readItems(input).join(','),

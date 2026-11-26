@@ -12,19 +12,20 @@ import hsl from 'okhsl'
 import {useEffect, useMemo, useRef} from 'react'
 import {attribute, texture, uv, vec2} from 'three/tsl'
 import {Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import InteractiveObject from '#component/InteractiveObject'
 import KnotLabelFace, {KnotLabelFaces} from '#component/KnotLabelFace'
 import GrabbableProp, {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import metal from '#src/lib/materials/metal.ts'
 import InstancedPropVisuals from '#src/lib/physics/InstancedPropVisuals.ts'
-import {fitCanvasTextureResolution, getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {fitCanvasTextureResolution, graphicsProfile, isHeavy} from '#src/lib/rendering/graphicsMode.ts'
 import useLoadingElementTexture, {rasterizeFace} from '#src/lib/useLoadingElementTexture.ts'
 
 import {labelAtlasColumns, labelBackground, labelHeight, labelWidth} from './layout.ts'
 import redrawPlates from './redrawPlates.ts'
 import createSupportGeometry from './supportGeometry.ts'
+
+const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = graphicsProfile
 
 /** a nameplate on its stand: `position` is its plaque’s center, `knotSign.elevation` over the floor its stand rests on, and `rotation` turns it around the vertical */
 export type KnotSignPlacement = {
@@ -43,8 +44,6 @@ export default function KnotLabels({signs, ratings, action = 'Listen', onActivat
   ratings?: ReadonlyMap<string, Rarity>
   signs: ReadonlyArray<KnotSignPlacement>
 }) {
-  const isHeavy = useGraphicsMode()
-  const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = useGraphicsModeValue(getGraphicsProfile)
   const atlasRows = Math.ceil(signs.length / labelAtlasColumns)
   // Only the flat fallback is owned here; the reflective steel is shared for the page lifetime.
   const flatSupportMaterial = useDisposable(useMemo(() => new MeshBasicNodeMaterial({color: hsl.integer(238, 9, 67)}), []))
@@ -133,7 +132,7 @@ export default function KnotLabels({signs, ratings, action = 'Listen', onActivat
     name: 'Knot nameplate atlas',
     mipmaps,
     render: () => <KnotLabelFaces exhibits={signs.map(sign => sign.entry)} />,
-  }), [atlasResolution, atlasRows, mipmaps, signs]))
+  }), [atlasResolution, atlasRows, signs]))
   useEffect(() => {
     resources.setAtlas(atlas)
   }, [resources, atlas])

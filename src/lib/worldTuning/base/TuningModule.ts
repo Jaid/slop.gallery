@@ -195,7 +195,7 @@ export default abstract class TuningModule<Values extends TuningValues = TuningV
 
   /** {@link isShown} as React state. */
   useShown() {
-    return true
+    return this.isShown()
   }
 
   /** The values, or what the selector picks from them, as React state. */

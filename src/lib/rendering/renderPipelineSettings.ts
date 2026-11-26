@@ -4,7 +4,8 @@ import type {GraphicsProfile} from './graphicsMode.ts'
 import world from '#src/worlds/current.ts'
 
 import {sunShadowMapSize} from '../gallery/sun.ts'
-import {getSunShadowSettings} from './graphicsMode.ts'
+import {getAntiAliasing} from './antiAliasing.ts'
+import {getSunShadowSettings, graphicsProfile, isHeavy} from './graphicsMode.ts'
 
 /** Every value the render pipeline is built from. The graphics mode fills them in; the world tuning of `?development` changes them. */
 export type RenderPipelineSettings = {
@@ -193,3 +194,6 @@ export function getRenderPipelineSettings(profile: GraphicsProfile, antiAliasing
 export function getRenderPipelineStructure(settings: RenderPipelineSettings): RenderPipelineStructure {
   return Object.fromEntries(renderPipelineStructure.map(key => [key, settings[key]])) as RenderPipelineStructure
 }
+
+/** Pipeline defaults for this page, before any development tuning. */
+export const renderPipelineSettings = getRenderPipelineSettings(graphicsProfile, getAntiAliasing(isHeavy))

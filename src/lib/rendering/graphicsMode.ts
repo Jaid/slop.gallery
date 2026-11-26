@@ -1,31 +1,17 @@
+import type {GraphicsQuality} from './graphicsPreference.ts'
 import type {RenderPipelineSetting, RenderPipelineSettings} from './renderPipelineSettings.ts'
 
-import optis from 'optis'
-import readPermalink from 'read-permalink'
-import useGraphicsMode from 'use-graphics-mode'
-
+import {isShowingAlbedo} from './albedo.ts'
 import {isHeavyCapable, readHeavyCapabilityHints} from './autoGraphics.ts'
+import {readGraphicsOverride, readStoredGraphics} from './graphicsPreference.ts'
 
-/** a `?graphics` name: a graphics mode or `auto`, which picks fast or heavy for the GPU */
-type GraphicsModeName = ReturnType<typeof useGraphicsMode.getName> | 'auto'
+export const graphicsOverride = readGraphicsOverride()
+const requested = graphicsOverride ?? readStoredGraphics()
+/** The preset for the lifetime of this page. Only Auto waits for the GPU before any scene or renderer reads it. */
+export const graphicsQuality: GraphicsQuality = requested === 'auto' ? (isHeavyCapable(await readHeavyCapabilityHints()) ? 'heavy' : 'fast') : requested
+export const isHeavy = graphicsQuality !== 'fast'
 
-const graphicsModeNames: Array<GraphicsModeName> = [useGraphicsMode.getName(false), useGraphicsMode.getName(true), useGraphicsMode.getName(true, true), 'auto']
-const normalizeGraphicsMode = (value: unknown): GraphicsModeName => {
-  if (value === true) {
-    return useGraphicsMode.getName(true)
-  }
-  return graphicsModeNames.find(name => name === value) ?? useGraphicsMode.getName(false)
-}
-const graphicsModeSchema = optis({
-  defaults: {
-    graphics: useGraphicsMode.getName(false),
-  },
-  normalizations: {
-    graphics: normalizeGraphicsMode,
-  },
-})
-
-export type GraphicsProfile = {
+export type GraphicsProfile = Readonly<{
   /** ambient occlusion pixels per output pixel along each axis */
   ambientOcclusionResolutionScale: number
   /** ambient occlusion samples per pixel */
@@ -73,7 +59,7 @@ export type GraphicsProfile = {
   volumetricLightSteps: number
   /** how often the voxel indirect light bounces once the world tuning switches it on, once by default */
   voxelIndirectLightBounces?: number
-}
+}>
 
 type BloomTuning = Partial<Pick<RenderPipelineSettings, Exclude<Extract<RenderPipelineSetting, `bloom${string}`>, 'bloom'>>>
 
@@ -89,33 +75,6 @@ type SsgiSettings = Pick<RenderPipelineSettings, | 'screenSpaceIndirectLightAmbi
   | 'screenSpaceIndirectLightSteps'
   | 'screenSpaceIndirectLightTemporalFiltering'
   | 'screenSpaceIndirectLightThickness'>
-
-/** Read the `?graphics` name: fast, heavy, cinematic or auto. Anything else is fast. */
-export function readGraphicsModeName(input: URL | string = typeof location === 'undefined' ? '' : location.href) {
-  return readPermalink(input, {schema: graphicsModeSchema}).graphics
-}
-
-// Only `?graphics=auto` waits for the adapter, before anything reads the graphics mode.
-const isAutoHeavy = readGraphicsModeName() === 'auto' && isHeavyCapable(await readHeavyCapabilityHints())
-
-/** Read whether `?graphics` asks for heavy graphics, which cinematic graphics are too. `auto` reads as what it picked for this page’s GPU. */
-export function readGraphicsMode(input?: URL | string) {
-  const name = readGraphicsModeName(input)
-  if (name === 'auto') {
-    return isAutoHeavy
-  }
-  return name !== useGraphicsMode.getName(false)
-}
-
-/** Read whether `?graphics` asks for cinematic graphics: heavy, but budgeted for non-realtime rendering. */
-export function readCinematicGraphics(input?: URL | string) {
-  return readGraphicsModeName(input) === useGraphicsMode.getName(true, true)
-}
-
-/** Read the profile `?graphics` asks for, for code outside React. It ignores later menu changes, so prefer `useGraphicsModeValue(getGraphicsProfile)` where a component can rebuild. */
-export function readGraphicsProfile(input?: URL | string) {
-  return getGraphicsProfile(readGraphicsMode(input), readCinematicGraphics(input))
-}
 
 const fastProfile: GraphicsProfile = {
   canvasTextureMipmaps: false,
@@ -219,13 +178,16 @@ export function fitCanvasTextureResolution(resolution: number, width: number, he
   return Math.min(resolution, maxTextureSize / Math.max(width, height))
 }
 
-/** Select a stable gallery-specific budget without exposing enum keys to consumers. */
-export function getGraphicsProfile(isHeavy: boolean, isCinematic = false) {
-  if (!isHeavy) {
-    return fastProfile
-  }
-  return isCinematic ? cinematicProfile : heavyProfile
-}
+export const graphicsProfiles = {
+  fast: fastProfile,
+  heavy: heavyProfile,
+  cinematic: cinematicProfile,
+} as const
+
+/** The budget shared by the renderer, rooms, materials and telemetry. It never follows the menu’s next-load preference. */
+export const graphicsProfile = graphicsProfiles[graphicsQuality]
+/** A page that draws no shadow maps needs neither the point-light slots nor their per-frame bookkeeping. */
+export const renderShadows = graphicsProfile.shadows && !isShowingAlbedo
 
 /** Resolve the sun’s independent shadow-map dimensions, PCF width and sample budget. */
 export function getSunShadowSettings(profile: GraphicsProfile, baseMapSize: number) {

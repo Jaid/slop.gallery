@@ -5,7 +5,6 @@ import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
-import useGraphicsMode from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import Orbitable from '#component/Orbitable'
@@ -16,6 +15,7 @@ import LimestoneFountainStoneMaterial from '#src/fountains/limestone/LimestoneFo
 import LimestoneFountainWaterMaterial from '#src/fountains/limestone/LimestoneFountainWaterMaterial.ts'
 import waterEnvironment from '#src/fountains/limestone/sharedWaterEnvironment.ts'
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
+import {isHeavy} from '#src/lib/rendering/graphicsMode.ts'
 
 /** A water-gilt bronze like the ornament of the Lobby’s vault: polished enough to catch the room’s light, with enough body not to mirror the dark water. */
 const giltBronze = {
@@ -26,15 +26,14 @@ const giltBronze = {
 
 /** The limestone fountain’s model: its carved stone with its collider, its gilt nozzles, finial and inlay, its pools, its falling water, its spray and its mist. */
 export default function LimestoneFountainModel({id, position}: FountainModelProps) {
-  const isHeavy = useGraphicsMode()
   const geometry = useDisposable(useMemo(() => new LimestoneFountainGeometry, []))
   const collision = useMemo(() => colliderGeometry(geometry.stone), [geometry])
   const stone = useDisposable(useMemo(() => new LimestoneFountainStoneMaterial, []))
   const gilt = useDisposable(useMemo(() => new MeshStandardNodeMaterial(giltBronze), []))
   const spray = useDisposable(useMemo(() => new LimestoneFountainSpray, []))
   const mist = useDisposable(useMemo(() => new LimestoneFountainMist, []))
-  const pool = useDisposable(useMemo(() => new LimestoneFountainWaterMaterial(false, isHeavy, {environment: waterEnvironment}), [isHeavy]))
-  const falling = useDisposable(useMemo(() => new LimestoneFountainWaterMaterial(true, isHeavy, {environment: waterEnvironment}), [isHeavy]))
+  const pool = useDisposable(useMemo(() => new LimestoneFountainWaterMaterial(false, isHeavy, {environment: waterEnvironment}), []))
+  const falling = useDisposable(useMemo(() => new LimestoneFountainWaterMaterial(true, isHeavy, {environment: waterEnvironment}), []))
   // Framed around the crown of the jet and the basin’s reach, circling at a bench’s distance at most.
   return <Orbitable
     id={id} center={[0, 2.5, 0]} name={id} orbit={{

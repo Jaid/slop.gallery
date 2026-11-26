@@ -1,8 +1,6 @@
 import type {sunGeometry} from '#src/lib/gallery/sun.ts'
 
-import {useGraphicsModeValue} from 'use-graphics-mode'
-
-import {getGraphicsProfile, getSunShadowSettings} from '#src/lib/rendering/graphicsMode.ts'
+import {getSunShadowSettings, graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import {getShadowProps} from '#src/lib/rendering/shadowFilterNodes.ts'
 import {moonlight} from '#src/worlds/sandbox/moon.ts'
 
@@ -21,11 +19,10 @@ export default function SandboxMoonlight({blur = 1, color = moonlight.color, geo
   /** texels along each axis of its shadow map in heavy graphics, as many as a centimeter each across the Cell takes by default */
   mapSize?: number
 }) {
-  const profile = useGraphicsModeValue(getGraphicsProfile)
-  if (!profile.shadows) {
+  if (!graphicsProfile.shadows) {
     return null
   }
-  const sun = getSunShadowSettings(profile, mapSize)
+  const sun = getSunShadowSettings(graphicsProfile, mapSize)
   const settings = {
     ...sun,
     radius: sun.radius * blur,

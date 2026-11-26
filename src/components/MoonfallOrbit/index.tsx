@@ -4,7 +4,6 @@ import {useFrame} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo, useRef} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import Orbitable from '#component/Orbitable'
 import {useAmbienceEmitter} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
@@ -15,10 +14,11 @@ import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import {moonfallSculpture, sculptureLampOffset} from '#src/lib/gallery/moonfall/sculpture.ts'
 import ArmillaryRingMaterial from '#src/lib/materials/ArmillaryRingMaterial.ts'
 import MeteoriteMaterial from '#src/lib/materials/MeteoriteMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import {useLamp} from '#src/lib/rendering/lamps.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
+const {curveDetail} = graphicsProfile
 const room = slopGallery.room('moonfall')
 // Below the ceiling’s beams, so orbiting never rises out of the room.
 const sculptureOrbit = {
@@ -51,7 +51,6 @@ export default function MoonfallOrbit() {
   const turns = useRef<Array<Group | null>>([])
   const beads = useRef<Array<Mesh | null>>([])
   const clock = useMemo(() => new AnimationClock(0.05), [])
-  const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
   useAmbienceEmitter(slopGallery.ambience('moonfall', 'orbital_sculpture'))
   const materials = useDisposable(useMemo(() => {
     const list = rings.map(ring => new ArmillaryRingMaterial(ring.radius, ring.hue, () => clock.time * ring.revolution / (Math.PI * 2) % 1))
@@ -74,9 +73,9 @@ export default function MoonfallOrbit() {
         }
       },
     }
-  }, [curveDetail]))
+  }, []))
   // About 4500 triangles at the base detail; the thumbprints are shaded, not modeled.
-  const core = useDisposable(useMemo(() => meteoriteGeometry(coreRadius, 14 * curveDetail), [curveDetail]))
+  const core = useDisposable(useMemo(() => meteoriteGeometry(coreRadius, 14 * curveDetail), []))
   const iron = useDisposable(useMemo(() => new MeteoriteMaterial(coreRadius), []))
   useFrame((_, delta) => {
     const t = clock.advance(delta)

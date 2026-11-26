@@ -5,6 +5,7 @@ import {Suspense, use, useState} from 'react'
 
 import Icon from '#component/Icon'
 import {judgeHeavyCapability, readHeavyCapabilityHints} from '#src/lib/rendering/autoGraphics.ts'
+import {graphicsOverride} from '#src/lib/rendering/graphicsMode.ts'
 
 import css from './style.module.sass'
 
@@ -29,6 +30,7 @@ export default function GraphicsHints({id}: {id: string}) {
       }
     }}
   >
+    <p id={`${id}-behavior`}>{graphicsOverride === undefined ? 'Changes apply on the next reload.' : 'Changing the preset opens a new URL.'}</p>
     <p className={css.title}>Auto graphics</p>
     <Branch if={opened}><Suspense fallback={<p className={css.pending}>Asking the GPU…</p>}><Checks /></Suspense></Branch>
   </div>

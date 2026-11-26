@@ -138,6 +138,14 @@ BROWSER=/path/to/chromium bun run test:live:sun-tight
 
 This builds the gallery, opens it in the first room with `sunTight` and casts rays toward the sun of every lighting preset from points 75 cm apart throughout the sun-tight spaces (`sunTightSpaces` in `src/lib/gallery/sun.ts`). The shadow cache lets whatever changes wholly inside them leave the sun’s map alone, which only holds while the room’s shell stops every ray, so the rays only count the casters that stay in the map: neither those wholly inside, nor cutout, see-through or shader-moved ones. They cull faces as three’s shadow pass draws them. Every ray has to hit one. A failure lists where the sun gets in, like through a new opening in a ceiling: close it, or drop the room’s `sunTight`. `LIVE_TARGET` reuses a build like for the Oculus test.
 
+## Next-load graphics preset
+
+```sh
+BROWSER=/path/to/chromium bun run test:live:graphics-quality
+```
+
+In the paused Cell, the menu selection survives closing and reopening the menu, but the shadow-casting moon does not appear until the page reloads in Heavy. The test also changes an explicit `?graphics` override, checks the resulting scene and verifies that the URL keeps its other parameters and fragment without overwriting the saved preset.
+
 ## Intro → frozen pause
 
 ```sh

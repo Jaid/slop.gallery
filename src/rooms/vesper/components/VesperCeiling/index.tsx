@@ -3,14 +3,15 @@ import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import vesperCeiling from '#src/lib/gallery/vesperCeiling.ts'
 import VesperCeilingGeometry, {vesperCeilingCollision} from '#src/lib/gallery/VesperCeilingGeometry.ts'
 import ArchitecturalPlasterMaterial from '#src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, isHeavy} from '#src/lib/rendering/graphicsMode.ts'
+
+const {curveDetail} = graphicsProfile
 
 /**
  * A pierced bridge divides the Vesper’s coved ceiling into two glazed lanterns. They light the room from the sky instead of lamps.
@@ -19,15 +20,13 @@ import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 export default function VesperCeiling({size}: {
   size: readonly [number, number]
 }) {
-  const isHeavy = useGraphicsMode()
-  const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
-  const geometry = useDisposable(useMemo(() => new VesperCeilingGeometry(size, curveDetail), [curveDetail, size]))
+  const geometry = useDisposable(useMemo(() => new VesperCeilingGeometry(size, curveDetail), [size]))
   // Pale celadon plaster, so the daylight from the lantern carries across the coves down to the green walls.
   const plaster = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
     baseColor: hsl.integer(141, 21, 79),
     heavy: isHeavy,
     roughness: 0.86,
-  }), [isHeavy]))
+  }), []))
   // Water gilt like the Lobby vault’s, which keeps a little body color instead of mirroring the shaded coves.
   const gilt = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: hsl.integer(80, 68, 71),
@@ -44,7 +43,7 @@ export default function VesperCeiling({size}: {
   const glass = useDisposable(useMemo(() => new VaultGlassMaterial({
     heavy: isHeavy,
     paneSize: [vesperCeiling.lantern.pane, vesperCeiling.lantern.pane],
-  }), [isHeavy]))
+  }), []))
   const collision = useMemo(() => vesperCeilingCollision(size), [size])
   return <group name='vesper-ceiling'>
     <RigidBody colliders={false} type='fixed'>

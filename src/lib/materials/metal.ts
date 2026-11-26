@@ -9,7 +9,7 @@ export const studioEnvironment = new StudioEnvironment
  *
  * The softly lit studio gives silver metal a readable light/dark reflection even in the dim Oculus, without inheriting the gallery environment’s olive cast. It is deliberately not a reflection of nearby artwork or people. No extra scene render is needed.
  *
- * Both the material and its environment live for the page lifetime, like the shared gold. Consumers borrow them; they must not dispose them on unmount or a graphics-mode change.
+ * Both the material and its environment live for the page lifetime, like the shared gold. Consumers borrow them; they must not dispose them on unmount.
  */
 const metal = new BrushedMetalMaterial({environment: studioEnvironment})
 

@@ -50,7 +50,7 @@ Place the provider above both the settings UI and the scene. Three Fiber bridges
 
 Selectors run during rendering and must be pure. Select existing values or resource factories, then instantiate selected factories inside lifecycle-aware hooks. Dispose owned GPU resources on replacement or unmount. Renderer constructor-only options cannot be made reactive by this package; keep them stable or implement an explicit renderer transition.
 
-URL parsing, persistence, defaults, labels, frame budgets and material art direction belong to the consumer. Slop Gallery serializes `?graphics=fast`, `?graphics=heavy` or `?graphics=cinematic` through `getName`. `?graphics=auto` picks heavy before the first render if the WebGPU adapter reports a Lovelace, Blackwell or RDNA 4 architecture and `navigator.deviceMemory` is at least 8, unless `navigator.cpuPerformance` puts the CPU in tier 1 or 2, and fast otherwise. Without `?graphics`, it defaults to fast and disables procedural dirt/pot noise and ground reflections in that mode. Cinematic is heavy with doubled shadow map sizes, reflection, ambient occlusion and sign texture resolution; the menu toggles between fast and heavy, and switching back to heavy returns to cinematic. The renderer draws one pixel per physical display pixel in both modes, independent of browser zoom; `?scale=N` multiplies that by any finite positive value.
+URL parsing, persistence, defaults, labels, frame budgets and material art direction belong to the consumer.
 
 ## Development
 

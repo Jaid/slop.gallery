@@ -15,7 +15,7 @@ import SlateFloorMaterial from '../../src/lib/materials/SlateFloorMaterial.ts'
 import TerrazzoFloorMaterial, {venetianTerrazzo} from '../../src/lib/materials/TerrazzoFloorMaterial.ts'
 import {TravertineFloorMaterial} from '../../src/lib/materials/travertine/index.ts'
 import WoodFloorMaterial from '../../src/lib/materials/WoodFloorMaterial.ts'
-import {getGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
+import {graphicsProfiles} from '../../src/lib/rendering/graphicsMode.ts'
 
 /** every kind of floor, procedural but for the wood, which takes a texture */
 const floors: Array<[string, (reflections: boolean) => PlanarMirrorMaterial]> = [
@@ -86,8 +86,8 @@ test('Moonfall’s honed slate keeps its mineral shading without sampling the ce
 })
 test('wood floors keep their texture in both modes, varnished in heavy and matte in fast', () => {
   const texture = new Texture
-  const heavy = new WoodFloorMaterial(texture, getGraphicsProfile(true).mirrorReflections)
-  const fast = new WoodFloorMaterial(texture, getGraphicsProfile(false).mirrorReflections)
+  const heavy = new WoodFloorMaterial(texture, graphicsProfiles.heavy.mirrorReflections)
+  const fast = new WoodFloorMaterial(texture, graphicsProfiles.fast.mirrorReflections)
   try {
     expect(heavy.map).toBe(texture)
     expect(heavy.reflection!.reflector.bounces).toBe(false)

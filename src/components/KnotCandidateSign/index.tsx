@@ -9,26 +9,25 @@ import KnotCandidateSignGeometry from 'knot-materials/KnotCandidateSignGeometry.
 import hsl from 'okhsl'
 import {useMemo, useRef} from 'react'
 import {MeshBasicNodeMaterial, MeshStandardNodeMaterial} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import InteractiveObject from '#component/InteractiveObject'
 import KnotCandidateSignFace, {candidateSignBackground, candidateSignTextureSize} from '#component/KnotCandidateSignFace'
 import {narrate} from '#src/lib/gallery/actions.ts'
 import {knotGalleryBounds} from '#src/lib/gallery/knotGallery.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, isHeavy} from '#src/lib/rendering/graphicsMode.ts'
 import useLoadingElementTexture from '#src/lib/useLoadingElementTexture.ts'
+
+const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = graphicsProfile
 
 export default function KnotCandidateSign({bay}: {bay: KnotBay}) {
   const anchor = useRef<RapierRigidBody>(null!)
   const sign = useRef<RapierRigidBody>(null!)
   useRevoluteJoint(anchor, sign, [[0, 0, 0], knotCandidateSign.anchor, knotCandidateSign.axis, knotCandidateSign.limits])
-  const isHeavy = useGraphicsMode()
-  const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = useGraphicsModeValue(getGraphicsProfile)
   const metal = useDisposable(useMemo(() => (isHeavy ? new MeshStandardNodeMaterial({
     color: hsl.integer(74, 33, 62),
     metalness: 0.85,
     roughness: 0.3,
-  }) : new MeshBasicNodeMaterial({color: hsl.integer(74, 33, 62)})), [isHeavy]))
+  }) : new MeshBasicNodeMaterial({color: hsl.integer(74, 33, 62)})), []))
   const geometry = useDisposable(useMemo(() => new KnotCandidateSignGeometry, []))
   const {candidate} = bay
   const texture = useLoadingElementTexture(`model-sign-texture:${candidate.id}`, useMemo(() => ({
@@ -38,7 +37,7 @@ export default function KnotCandidateSign({bay}: {bay: KnotBay}) {
     name: `Candidate sign: ${candidate.title}`,
     mipmaps,
     render: () => <KnotCandidateSignFace icon={candidate.icon} title={candidate.title} />,
-  }), [candidate, mipmaps, resolution]))
+  }), [candidate]))
   const face = useDisposable(useMemo(() => new MeshBasicNodeMaterial({
     map: texture,
     color: texture ? hsl.integer(0, 0, 100) : candidateSignBackground,

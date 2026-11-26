@@ -10,7 +10,6 @@ import {ConvexHullCollider, RigidBody, TrimeshCollider} from '@react-three/rapie
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import FloorSlab from '#component/FloorSlab'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -21,8 +20,9 @@ import {slabHulls} from '#src/lib/gallery/floorPolygons.ts'
 import TimberGeometry from '#src/lib/gallery/passages/TimberGeometry.ts'
 import VaultGeometry from '#src/lib/gallery/passages/VaultGeometry.ts'
 import {passageLantern, passageLanternGlow} from '#src/lib/gallery/pendants/passageLantern.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
+const {curveDetail} = graphicsProfile
 /** how thick the slabs under a passage’s floor and over its ceiling are */
 const slabDepth = 0.24
 const unlit: ReadonlyArray<PendantMount> = []
@@ -44,13 +44,12 @@ export default function CoveredPassage({passage, material, mounts = unlit, pavin
 }) {
   const geometry = useDisposable(useMemo(() => (timber ? TimberGeometry.passage(passage, ribCutouts) : new VaultGeometry(passage, transition?.length)), [passage, ribCutouts, timber, transition]))
   // Graphics with more curve detail draw a finer stone vault, which neither collides nor carries the lanterns, so every graphics mode collides alike.
-  const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
   const vault = useDisposable(useMemo(() => (!timber && curveDetail > 1 ? new VaultGeometry(passage, transition?.length, curveDetail) : {
     shell: geometry.shell,
     ribs: geometry.ribs,
     // The base detail’s belong to the passage’s geometry.
     dispose() {},
-  }), [curveDetail, geometry, passage, timber, transition]))
+  }), [geometry, passage, timber, transition]))
   // The hollow takes its footprint out of the floors.
   const floors = hollow ? passage.floors.flatMap(floor => hollow.cut(floor)) : passage.floors
   const paving = pavingOverride ?? transition?.stoneFloors ?? floors
