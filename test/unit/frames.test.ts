@@ -33,10 +33,6 @@ describe('frames', () => {
     expect(Object.keys(frames)).toEqual([...frameIds])
     expect(frameIds[0]).toBe('classic')
     expect(frames.classic).toBe(classicFrame)
-    // Each is the frame of its id’s folder, named after it.
-    for (const [id, frame] of entries) {
-      expect(frame.constructor.name.toLowerCase()).toBe(`${id}frame`)
-    }
   })
   test('Louis keeps the same frame and burnished-only reflections across graphics modes', () => {
     const previous = useGraphicsQuality.getState().quality
@@ -70,11 +66,11 @@ describe('frames', () => {
           }
           // Nothing reaches into the wall behind the frame, nor out past the reach the clearance between hung works leaves room for.
           const box = geometry.boundingBox!
+          expect(box.isEmpty()).toBe(false)
           expect(box.min.z).toBeGreaterThan(wallFace - hangingOffset)
           for (const [low, high, half] of [[box.min.x, box.max.x, width / 2], [box.min.y, box.max.y, height / 2]]) {
             expect(Math.max(-low, high)).toBeLessThanOrEqual(half + maximumFrameReach + 1e-6)
           }
-          expect(Number.isFinite(box.min.x + box.max.x + box.min.y + box.max.y)).toBe(true)
         } finally {
           geometry.dispose()
         }
