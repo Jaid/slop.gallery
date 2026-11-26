@@ -11,6 +11,7 @@ import hsl from 'okhsl'
 import StableRandom from 'stable-random'
 import {Vector3} from 'three/webgpu'
 
+import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import StudioTuningModule from '../../src/lib/worldTuning/StudioTuningModule.ts'
 import WorldTuning from '../../src/lib/worldTuning/WorldTuning.ts'
 import ceilingGeometry from '../../src/rooms/studio/ceilingGeometry.ts'
@@ -26,6 +27,7 @@ import {openingStyleIds, readOpenings} from '../../src/rooms/studio/openings/ope
 import {ceilingShift, defaultStudioPlan, openingSpread, studioPlan, studioPlanRanges, studioRim, studioSlab} from '../../src/rooms/studio/plan.ts'
 import {rollOnStep} from '../../src/rooms/studio/steps.ts'
 import {moonlight} from '../../src/worlds/sandbox/moon.ts'
+import {readRoomSize} from '../../src/worlds/sandbox/roomSize.ts'
 import StudioSandbox from '../../src/worlds/sandbox/StudioSandbox.ts'
 
 const studio = new StudioSandbox(0)
@@ -65,6 +67,42 @@ test('the Studio is 8 × 8 m under a ceiling 8 m up in the default environment, 
   // Every whole meter of the range turns up.
   expect(widths.size).toBeGreaterThanOrEqual(studioPlanRanges.width[1] - studioPlanRanges.width[0])
   expect(studioPlan(5)).toEqual(studioPlan(5))
+})
+test('Studio size parameters replace only the requested dimensions of the seeded design', () => {
+  for (const seed of [0, 17]) {
+    const seeded = studioDesign(seed)
+    for (const [query, overrides] of [
+      ['?room_width=20&room_depth=6&room_height=12', {
+        width: 20,
+        depth: 6,
+        height: 12,
+      }],
+      ['?room_width=6&room_height=13', {width: 6}],
+      ['?room_depth=20&room_height=6', {
+        depth: 20,
+        height: 6,
+      }],
+      ['?room_width=5&room_depth=8.5&room_height=bad', {}],
+      ['?room_width&room_depth=&room_height=Infinity', {}],
+    ] as const) {
+      const design = studioDesign(seed, '', readRoomSize(query))
+      expect(design).toEqual({
+        ...seeded,
+        ...overrides,
+      })
+    }
+  }
+  const url = 'http://localhost/?room=studio&room_width=18&room_depth=7&room_height=bad'
+  expect(readQueryOverrides(url)).toEqual({
+    room: 'studio',
+    room_width: 18,
+    room_depth: 7,
+  })
+  const sandbox = new StudioSandbox(0, studioDesign(0, '', readRoomSize(url)))
+  expect(sandbox.room('studio').room.plan).toEqual({
+    clear: [18, 7],
+    height: 8,
+  })
 })
 test('the Studio uses its default look for seed zero and otherwise rolls a frame and lights within their ranges, its lamps hung within its room, the secondary one on some seeds only, sometimes a warm sun, mostly shining faintly, and sometimes no shafts at all', () => {
   expect(studioLook(0)).toBe(defaultStudioLook)

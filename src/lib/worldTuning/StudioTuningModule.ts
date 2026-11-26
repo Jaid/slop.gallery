@@ -9,6 +9,7 @@ import {studioFloorIds, studioFloors, studioWallIds, studioWalls} from '#src/roo
 import {defaultOpeningStyle} from '#src/rooms/studio/openings/index.ts'
 import {noOpenings, openingStyleIds} from '#src/rooms/studio/openings/openingParameter.ts'
 import {studioSteps} from '#src/rooms/studio/steps.ts'
+import {roomSizeLimits} from '#src/worlds/sandbox/roomSize.ts'
 
 import TuningModule from './base/TuningModule.ts'
 import {tuningControls} from './controls.ts'
@@ -67,18 +68,18 @@ export default class StudioTuningModule extends TuningModule<StudioDesign> {
     this.groups = [group({
       title: 'Studio',
       controls: [
-        range('width', 'Width', 6, 20, studioSteps.size, {
+        range('width', 'Width', ...roomSizeLimits.width, studioSteps.size, {
           caption: 'Room',
           integer: true,
           reloads: true,
           unit: ' m',
         }),
-        range('depth', 'Depth', 6, 20, studioSteps.size, {
+        range('depth', 'Depth', ...roomSizeLimits.depth, studioSteps.size, {
           integer: true,
           reloads: true,
           unit: ' m',
         }),
-        range('height', 'Height', 6, 12, studioSteps.size, {
+        range('height', 'Height', ...roomSizeLimits.height, studioSteps.size, {
           integer: true,
           reloads: true,
           unit: ' m',

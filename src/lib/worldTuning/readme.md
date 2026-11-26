@@ -10,6 +10,8 @@ Values that change how the world shows, live, with `?development`: the panel G s
 
 Modules: `view` (scale, field of view, tone mapping), `lighting` (the gallery’s sun, lamps and fill on top of its lighting preset, which the gallery brings along), `studio` (everything the Sandbox’s Studio is built and lit from, its `StudioDesign`, which the Sandbox brings along where it holds the Studio: its size and frame reload the page, the rest applies live; its sliders go by the steps of `src/rooms/studio/steps.ts`, which seeds roll by too), `pipeline` (the render pipeline of heavy graphics and the shadows’ lookups, shown in heavy graphics only) and `overlay` (the world overlay’s lines, shown while something is drawn, its store shared with `overlay/tuning.ts`).
 
+For example, `?room=studio&room_width=16&room_depth=10&room_height=7` opens a Studio with a 16 × 10 m clear floor and a 7 m ceiling. Each dimension is optional and works without `?development`. Width and depth accept whole meters from 6 to 20 and height from 6 to 12; omitted or invalid values keep that dimension’s seeded size.
+
 ## A new module
 
 1. Subclass `TuningModule` with the type of its values, a `title` and its `groups` from `tuningControls`, and hand `super()` its id and initial values. Override `isShown()` and `useShown()` with a `hint` for one that only applies at times, and `rebuilds()` for values that build something anew.

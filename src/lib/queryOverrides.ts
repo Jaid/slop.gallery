@@ -8,6 +8,7 @@ import {readSculpture} from '#src/sculptures/lib/forcedSculpture.ts'
 import {readStone} from '#src/stones/lib/forcedStone.ts'
 import {readWorldReach} from '#src/worlds/base/WorldReach.ts'
 import {readItems} from '#src/worlds/sandbox/items.ts'
+import {readRoomSize} from '#src/worlds/sandbox/roomSize.ts'
 import {readTurntable} from '#src/worlds/sandbox/turntable.ts'
 
 import {readAiSettings} from './ai/settings.ts'
@@ -100,6 +101,9 @@ const readers: Record<string, Reader> = {
   ratio: readRatio,
   room: readRoom,
   room_announcements: readRoomAnnouncements,
+  room_depth: input => readRoomSize(input).depth,
+  room_height: input => readRoomSize(input).height,
+  room_width: input => readRoomSize(input).width,
   scale: readScale,
   sculpture: readSculpture,
   seed: readSeedOverride,

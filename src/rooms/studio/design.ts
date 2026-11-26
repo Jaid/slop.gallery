@@ -5,6 +5,8 @@ import type {StudioOpeningsChoice} from './openings/openingParameter.ts'
 import type {StudioPlan} from './plan.ts'
 import type {Vec3} from 'math'
 
+import {readRoomSize} from '#src/worlds/sandbox/roomSize.ts'
+
 import {studioFloorId, studioWallId} from './finishes.ts'
 import {studioLook} from './look.ts'
 import {studioOpeningStyle} from './openings/index.ts'
@@ -90,6 +92,7 @@ export type StudioDesign = {
 /** the {@link StudioDesign.mirrorBlur} that keeps the floor finish’s own blur */
 export const ownMirrorBlur = -1
 
+const roomSize = readRoomSize()
 const round = (value: number) => Math.round(value * 100) / 100
 const share = (value: number) => onStep(value, studioSteps.lampShare)
 /** The lamp of the design, the primary or the secondary one, at the point, relative to the middle of the floor. */
@@ -102,14 +105,14 @@ const lampOf = (design: StudioDesign, lamp: 'primary' | 'secondary', position: V
   tint: design[`${lamp}LampColor`],
 })
 
-/** The Studio’s design in the environment of `seed`: its {@link studioPlan}, its {@link studioLook}, its finishes and the kind of openings it rolls, or `?openings` forces, cut by its own chain of rolls. */
-export function studioDesign(seed: number, forced = forcedOpenings): StudioDesign {
+/** The Studio’s seeded design, with `?room_width`, `?room_depth` and `?room_height` overriding its size and `?openings` its kind of ceiling openings. */
+export function studioDesign(seed: number, forced = forcedOpenings, size = roomSize): StudioDesign {
   const {clear: [width, depth], height} = studioPlan(seed)
   const {fill, floor, frame, lamps: {primary, secondary}, moon} = studioLook(seed)
   return {
-    width,
-    depth,
-    height,
+    width: size.width ?? width,
+    depth: size.depth ?? depth,
+    height: size.height ?? height,
     openings: studioOpeningStyle(seed, forced),
     variant: 0,
     lightColor: moon.color,
