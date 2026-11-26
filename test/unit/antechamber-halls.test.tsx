@@ -4,7 +4,6 @@ import {afterAll, beforeAll, describe, expect, test} from 'bun:test'
 
 import {Ray} from '@dimforge/rapier3d-compat'
 import {Texture} from 'three/webgpu'
-import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import {antechamberLanding, antechamberLandingSlab, antechamberStairs, stairHallHeight, stairHalls} from '../../src/lib/gallery/antechamber.ts'
 import StairHalls from '../../src/rooms/antechamber/components/AntechamberRoom/StairHalls.tsx'
@@ -13,9 +12,7 @@ import {mountPhysics} from './helpers/inertPhysics.tsx'
 const stone = new Texture
 let mounted: Awaited<ReturnType<typeof mountPhysics>>
 beforeAll(async () => {
-  mounted = await mountPhysics(<GraphicsModeProvider isHeavy onChange={() => {}}>
-    <StairHalls stone={stone} />
-  </GraphicsModeProvider>)
+  mounted = await mountPhysics(<StairHalls stone={stone} />)
   mounted.physics.step(1 / 60)
 })
 afterAll(async () => {

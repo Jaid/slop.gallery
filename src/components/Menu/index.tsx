@@ -4,7 +4,6 @@ import type {PauseMenuStage} from 'use-pause-menu'
 import Branch from 'branch-component'
 import clsx from 'clsx'
 import {useEffect, useRef} from 'react'
-import useGraphicsMode from 'use-graphics-mode'
 import usePauseMenu from 'use-pause-menu'
 import {useShallow} from 'zustand/react/shallow'
 
@@ -21,6 +20,7 @@ import {useIntro} from '#src/lib/gallery/intro.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import {rerollSeed} from '#src/lib/gameSeed.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
+import {isHeavyGraphics} from '#src/lib/rendering/graphicsMode.ts'
 import world from '#src/worlds/current.ts'
 
 import css from './style.module.sass'
@@ -31,7 +31,6 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
     room,
   })))
   const {stage} = usePauseMenu(pauseMenu)
-  const isHeavy = useGraphicsMode()
   const room = world.roomById(s.room) ?? world.room(world.defaultRoom)
   const paused = stage === 'pause'
   const tagline = paused ? world.roomTagline(room) : world.tagline
@@ -46,7 +45,7 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
     heading.current?.focus({preventScroll: true})
   }, [paused])
   if (intro) {
-    return <section className={clsx(css.container, css.intro, isHeavy && css.heavy)} aria-labelledby='menu-title' data-stage={stage} data-testid='menu-overlay'>
+    return <section className={clsx(css.container, css.intro, isHeavyGraphics && css.heavy)} aria-labelledby='menu-title' data-stage={stage} data-testid='menu-overlay'>
       <header className={css.header}>
         <img className={css.logo} alt='' height={128} src={icon} width={128} />
         <h1 id='menu-title' tabIndex={-1} ref={heading}>{world.title}</h1>

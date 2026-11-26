@@ -1,18 +1,16 @@
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import {ceilingMirrorY} from '#src/lib/gallery/moonfall/config.ts'
 import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import PlanarMirrorMaterial from '#src/lib/materials/PlanarMirrorMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 type Props = {size: readonly [number, number]}
 
 export default function CeilingMirror({size}: Props) {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  return <Branch if={mirrorReflections}><Lining size={size} /></Branch>
+  return <Branch if={graphicsProfile.mirrorReflections}><Lining size={size} /></Branch>
 }
 
 /** The slab behind the lining keeps casting its shadow while the mirror renders. The beams below it stay matte. */

@@ -12,6 +12,7 @@ import {ownerRoom, roomContaining, roomsAt, screenRect, updatePickupRoom, visibl
 import {sunTightSpaces} from '#src/lib/gallery/sun.ts'
 import {getReflectionHeight} from '#src/lib/materials/PlanarMirrorMaterial.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
+import {graphicsProfile, shadowsEnabled} from '#src/lib/rendering/graphicsMode.ts'
 import {lightActive} from '#src/lib/rendering/lightLevels.ts'
 import {hasGeometry, worldBounds} from '#src/lib/rendering/worldBounds.ts'
 import {enabledRooms} from '#src/worlds/gallery/activations.ts'
@@ -72,8 +73,8 @@ export default function RoomCulling() {
       return
     }
     const {hidden, hiddenFromView, shadowCameras, unculledCameras} = galleryRenderer
-    const shadows = new ShadowCache
-    const refresher = new ShadowRefresher
+    const shadows = shadowsEnabled ? new ShadowCache : null
+    const refresher = shadowsEnabled ? new ShadowRefresher : null
     const related = new Set<RoomId>
     const cull = (camera: Camera) => {
       hidden.clear()
@@ -82,7 +83,7 @@ export default function RoomCulling() {
       const eye = camera.getWorldPosition(position).toArray()
       const from = roomsAt(eye)
       viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
-      const mirrorY = getReflectionHeight()
+      const mirrorY = graphicsProfile.mirrorReflections ? getReflectionHeight() : null
       related.clear()
       for (const room of [...from, ...enabledRooms(whereaboutsAt(eye, from))]) {
         related.add(room)
@@ -95,14 +96,16 @@ export default function RoomCulling() {
       const visit = (object: Object3D, parentRoom: RoomId | undefined) => {
         updatePickupRoom(object)
         const room = ownerRoom(object, parentRoom)
-        const light = object as Light & {shadow?: LightShadow}
-        if (light.isLight && light.shadow) {
-          shadowCameras.add(light.shadow.camera)
-          // Behind the loading screen, the sun would otherwise build every hidden room.
-          if ((light as DirectionalLight).isDirectionalLight && ready) {
-            unculledCameras.add(light.shadow.camera)
+        if (refresher) {
+          const light = object as Light & {shadow?: LightShadow}
+          if (light.isLight && light.shadow) {
+            shadowCameras.add(light.shadow.camera)
+            // Behind the loading screen, the sun would otherwise build every hidden room.
+            if ((light as DirectionalLight).isDirectionalLight && ready) {
+              unculledCameras.add(light.shadow.camera)
+            }
+            refresher.visit(light as Light & {shadow: LightShadow}, shadowCamera => galleryRenderer.shadowIncomplete(shadowCamera))
           }
-          refresher.visit(light as Light & {shadow: LightShadow}, shadowCamera => galleryRenderer.shadowIncomplete(shadowCamera))
         }
         if (regions && room && !from.includes(room) && hasGeometry(object) && !holdsLight(object)) {
           // Behind the loading screen, only the camera’s rooms get built; the rooms seen through their openings stream in first afterward.
@@ -122,20 +125,22 @@ export default function RoomCulling() {
         }
       }
       visit(scene, undefined)
-      refresher.endFrame()
-      frustum.setFromProjectionMatrix(viewProjection, camera.coordinateSystem, camera.reversedDepth)
-      shadows.update(scene, {
-        hidden,
-        unreached,
-        active(light) {
-          if (!lightActive.current(light)) {
-            return false
-          }
-          const lightRoom = regions && roomContaining(position.setFromMatrixPosition(light.matrixWorld).toArray())
-          // A lamp in a room out of sight that shines into view, like the Exhibition’s north tunnel lamp up through the Lobby’s floor, needs its shadows as much as one in sight: a stale map lets its light through whatever stood in its way.
-          return !lightRoom || regions.has(lightRoom) || reachesFrustum(light, frustum)
-        },
-      })
+      if (shadows && refresher) {
+        refresher.endFrame()
+        frustum.setFromProjectionMatrix(viewProjection, camera.coordinateSystem, camera.reversedDepth)
+        shadows.update(scene, {
+          hidden,
+          unreached,
+          active(light) {
+            if (!lightActive.current(light)) {
+              return false
+            }
+            const lightRoom = regions && roomContaining(position.setFromMatrixPosition(light.matrixWorld).toArray())
+            // A lamp in a room out of sight that shines into view, like the Exhibition’s north tunnel lamp up through the Lobby’s floor, needs its shadows as much as one in sight: a stale map lets its light through whatever stood in its way.
+            return !lightRoom || regions.has(lightRoom) || reachesFrustum(light, frustum)
+          },
+        })
+      }
     }
     galleryRenderer.setCuller(cull)
     // Objects of no room never get culled, so they count as nearby.
@@ -146,7 +151,7 @@ export default function RoomCulling() {
     return () => {
       galleryRenderer.setCuller(null)
       galleryRenderer.setStreamPriority(null)
-      shadows.dispose()
+      shadows?.dispose()
     }
   }, [galleryRenderer, ready, scene])
   return null

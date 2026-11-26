@@ -92,7 +92,6 @@
     "three-mesh-bvh": "0.10.0",
     "three-shadow-cache": "workspace:*",
     "use-audio-queue": "workspace:*",
-    "use-graphics-mode": "workspace:*",
     "use-narrator": "workspace:*",
     "use-pause-menu": "workspace:*",
     "victoria-browser-client": "0.4.0",

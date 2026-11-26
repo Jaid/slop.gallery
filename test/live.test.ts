@@ -316,10 +316,20 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     expect(Math.hypot(...thrown.visualPosition.map((value, axis) => value - beforeThrow[axis]))).toBeGreaterThan(0.2)
     expect(Math.hypot(thrown.position.x - hanging.position.x, thrown.position.y - hanging.position.y, thrown.position.z - hanging.position.z)).toBeGreaterThan(0.1)
     await pause(page)
-    // The graphics switch takes effect at once, and both captures of a frame keep its size and show the scene.
-    const graphicsLabel = await page.$eval('[aria-label="Heavy graphics"] small', element => element.textContent)
-    await page.click('[aria-label="Heavy graphics"]')
-    await page.waitForFunction(before => document.querySelector('[aria-label="Heavy graphics"] small')?.textContent !== before, {}, graphicsLabel)
+    // The pause menu fits a narrow window without scrolling sideways.
+    await page.setViewport({
+      width: 760,
+      height: 900,
+    })
+    await page.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth)
+    await page.screenshot({path: 'out/live-test/production-narrow.png'})
+    await page.setViewport(viewport)
+    // With ?graphics in the URL, clicking the Graphics button navigates to the new ?graphics URL; both captures of a frame keep its size and show the scene.
+    expect(await page.$eval('[aria-label="Heavy graphics"] small', element => element.textContent)).toBe('Heavy')
+    await Promise.all([page.waitForNavigation({waitUntil: 'domcontentloaded'}), page.click('[aria-label="Heavy graphics"]')])
+    await waitForGallery(page)
+    expect(URL.parse(page.url())!.searchParams.get('graphics')).toBe('fast')
+    expect(await page.$eval('[aria-label="Heavy graphics"] small', element => element.textContent)).toBe('Fast')
     await page.screenshot({path: 'out/live-test/production-fast.png'})
     const captures = await page.evaluate(async () => {
       const [a, b] = await Promise.all([globalThis.slopGallery!.captureFrame!(), globalThis.slopGallery!.captureFrame!()])
@@ -328,13 +338,6 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     expect(captures[0]).toBe(viewport.width)
     expect(captures[1]).toBe(viewport.width)
     expect(captures[2]).toBeGreaterThan(0.9)
-    // The pause menu fits a narrow window without scrolling sideways.
-    await page.setViewport({
-      width: 760,
-      height: 900,
-    })
-    await page.waitForFunction(() => document.documentElement.scrollWidth <= innerWidth)
-    await page.screenshot({path: 'out/live-test/production-narrow.png'})
     // With ?seed, Reroll seed rolls a new one into the URL and leaves the stored game alone, so the menu still offers to continue it.
     await page.reload({waitUntil: 'domcontentloaded'})
     await waitForGallery(page)

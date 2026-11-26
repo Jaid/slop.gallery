@@ -8,10 +8,9 @@ import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {PlaneGeometry} from 'three/webgpu'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import createVarnishedWood from '#src/lib/materials/varnishedWood.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /** a floor over a rectangular floor plan */
 export type FloorSlabProps = {
@@ -65,7 +64,6 @@ export function FloorSlab({center: [x, z], material, name, size: [width, depth]}
 
 /** The Cell’s floor over a rectangular floor plan: the Vesper’s varnished wood, mirroring the room through a blur, on a dark slab with its collider. */
 export default function VarnishedFloor(props: FloorSlabProps) {
-  const {mirrorReflections, surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
-  const wood = useDisposable(useMemo(() => createVarnishedWood(surfaceAnisotropy, mirrorReflections), [mirrorReflections, surfaceAnisotropy]))
+  const wood = useDisposable(useMemo(() => createVarnishedWood(graphicsProfile.surfaceAnisotropy, graphicsProfile.mirrorReflections), []))
   return <FloorSlab {...props} material={wood.material} />
 }

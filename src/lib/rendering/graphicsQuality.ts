@@ -1,27 +1,61 @@
-import useGraphicsMode from 'use-graphics-mode'
+import type {GraphicsQuality} from './graphicsMode.ts'
+
 import {create} from 'zustand'
 
-import {readCinematicGraphics, readGraphicsMode} from './graphicsMode.ts'
+import {writeStored} from '#src/lib/browserStorage.ts'
 
-/** a graphics mode by its name, as `?graphics` takes it */
-export type GraphicsQuality = ReturnType<typeof useGraphicsMode.getName>
+import {graphicsQuality, readGraphicsOverride} from './graphicsMode.ts'
 
-export const graphicsQualities: ReadonlyArray<GraphicsQuality> = [useGraphicsMode.getName(false), useGraphicsMode.getName(true), useGraphicsMode.getName(true, true)]
+export type {GraphicsQuality} from './graphicsMode.ts'
+export {graphicsQualities} from './graphicsMode.ts'
 
-/** the graphics the page started with: what `?graphics` asks for, `auto` as what it picked for this page’s GPU, or fast without it */
-export const initialGraphicsQuality: GraphicsQuality = useGraphicsMode.getName(readGraphicsMode(), readCinematicGraphics())
+/** the graphics quality shown by the menu button: starts as this session’s quality, and updates when toggled without a `?graphics` URL override so the next reload picks it up */
+export const useSelectedGraphics = create<{quality: GraphicsQuality}>(() => ({quality: graphicsQuality}))
 
-/** the graphics of this session, which the menu and the `set_graphics_quality` WebMCP tool change and `GraphicsMode` hands to every component */
-export const useGraphicsQuality = create<{quality: GraphicsQuality}>(() => ({quality: initialGraphicsQuality}))
+/** how the menu’s Graphics button carries out a toggle */
+export type GraphicsChange = {
+  /** the preset shown before the toggle */
+  previous: GraphicsQuality
+  /** the preset chosen for the next load */
+  quality: GraphicsQuality
+} & ({
+  /** the URL the page goes to */
+  url: string
+  /** `url`: the page overrides graphics via URL parameter, so it navigates to the new `?graphics` URL without touching browser storage; `storage`: browser storage is updated for the next reload and the current session stays untouched */
+  via: 'url'
+} | {via: 'storage'})
 
-/**
- * Whether the page can show the graphics: cinematic ones only where it started with them, as only then its renderer asked the GPU for the limits they need.
- */
-export function supportsGraphicsQuality(quality: GraphicsQuality, initial = initialGraphicsQuality) {
-  return quality !== useGraphicsMode.getName(true, true) || initial === quality
+/** Plans toggling graphics between fast and heavy without changing storage or navigating yet. */
+export function planGraphicsToggle(current = useSelectedGraphics.getState().quality, href = location.href): GraphicsChange {
+  const quality: GraphicsQuality = current === 'fast' ? 'heavy' : 'fast'
+  if (readGraphicsOverride(href) !== undefined) {
+    const url = new URL(href)
+    url.searchParams.set('graphics', quality)
+    return {
+      via: 'url',
+      url: url.href,
+      previous: current,
+      quality,
+    }
+  }
+  return {
+    via: 'storage',
+    previous: current,
+    quality,
+  }
 }
 
-/** The graphics the menu’s switch between fast and heavy means: the page’s own kind of heavy, cinematic where it started with that. */
-export function toggledGraphicsQuality(isHeavy: boolean, initial = initialGraphicsQuality): GraphicsQuality {
-  return useGraphicsMode.getName(isHeavy, initial === useGraphicsMode.getName(true, true))
+/** Carries out a planned graphics change: navigates for URL overrides, or updates localStorage and the menu label for the next reload. */
+export function applyGraphicsChange(change: GraphicsChange) {
+  if (change.via === 'url') {
+    location.assign(change.url)
+    return
+  }
+  writeStored('graphics', change.quality)
+  useSelectedGraphics.setState({quality: change.quality})
+}
+
+/** Handles clicking the menu’s Graphics button. */
+export function toggleGraphicsQuality() {
+  applyGraphicsChange(planGraphicsToggle())
 }

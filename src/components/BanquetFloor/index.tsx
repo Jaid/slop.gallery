@@ -3,12 +3,11 @@ import type {Material, Texture} from 'three/webgpu'
 
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import RoomFloor from '#component/RoomFloor'
 import {banquetFloorOrigin, banquetFloorTile} from '#src/lib/gallery/banquet.ts'
 import {CheckeredMarbleFloorMaterial} from '#src/lib/materials/marble/index.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 /** The Banquet’s floor: polished Calacatta and Portoro marble in a checkerboard, mirroring the room in heavy mode. */
 export default function BanquetFloor(props: {
@@ -17,15 +16,14 @@ export default function BanquetFloor(props: {
   stone: Texture
   wood: Texture
 }) {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   const slab = useDisposable(useMemo(() => new CheckeredMarbleFloorMaterial({
     loss: 0,
     grazingStrength: 0.2,
     origin: banquetFloorOrigin,
     tile: banquetFloorTile,
-    reflections: mirrorReflections,
+    reflections: graphicsProfile.mirrorReflections,
     strength: 0.4,
-  }), [mirrorReflections]))
+  }), []))
   const materials = useMemo(() => ({
     slab,
     reflection: slab.reflectionTarget ?? undefined,

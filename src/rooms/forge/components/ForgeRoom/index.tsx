@@ -6,7 +6,6 @@ import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {ExtrudeGeometry} from 'three/webgpu'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import IronTable from '#component/IronTable'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -19,20 +18,22 @@ import {forgeRoundVestibule, vestibuleArches} from '#src/lib/gallery/forgeVestib
 import roundRevealGeometry from '#src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/roundVestibule.ts'
 import EndGrainMaterial from '#src/lib/materials/forge/EndGrainMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import AlchemyMachine from '#src/rooms/forge/components/AlchemyMachine/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const room = slopGallery.room('forge')
 const vestibuleWall = slopGallery.walls.find(wall => wall.id === 'forge-vestibule')!
 /** The Forge: two rows of soapstone tables flank the measuring aisle from the north vestibule to the alchemy workbench under the south wall’s cannon, beneath the sawtooth roof. */
-export default function ForgeRoom({materials, masonry}: {
+export default function ForgeRoom({materials, masonry, reflections = graphicsProfile.mirrorReflections}: {
   /** the Bastion’s stone, which lines the vestibule’s arch onto its approach */
   masonry: Material
   materials: ForgeMaterials
+  /** whether the floors mirror the room, defaulting to this session’s graphics profile */
+  reflections?: boolean
 }) {
   const [width, depth] = room.size
-  const floor = useEndGrain()
+  const floor = useEndGrain(reflections)
   return <group name='forge'>
     <group position={[room.center[0], 0, room.center[1]]}>
       <RigidBody colliders={false} type='fixed'>
@@ -43,7 +44,7 @@ export default function ForgeRoom({materials, masonry}: {
       </RigidBody>
       <Roof kind='sawtooth' materials={materials} />
     </group>
-    <Vestibule masonry={masonry} materials={materials} />
+    <Vestibule masonry={masonry} materials={materials} reflections={reflections} />
     <AlchemyMachine />
     {forgeRowTables.map(({center: [x, z], name, seed, turn}) => <group key={name} position={[x, 0, z]} rotation-y={turn}>
       <IronTable name={name} seed={seed} table={forgeTable} />
@@ -52,9 +53,8 @@ export default function ForgeRoom({materials, masonry}: {
 }
 
 /** One floor’s end-grain paving, mirroring the room in heavy mode. The room and its vestibule take one each, so either one in view renders the mirror, as its target bounds only the floor it lies in. */
-function useEndGrain() {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  return useDisposable(useMemo(() => new EndGrainMaterial(mirrorReflections), [mirrorReflections]))
+function useEndGrain(reflections: boolean) {
+  return useDisposable(useMemo(() => new EndGrainMaterial(reflections), [reflections]))
 }
 /** The floor’s reflection target, laid at the surface of the floor whose body holds it, if the floor mirrors the room. */
 function Mirror({floor}: {floor: EndGrainMaterial}) {
@@ -75,12 +75,13 @@ function Roof({kind, materials}: {
  * The round vestibule north of the room: its floor, out under its arches, its hood, and the reveals that line its arches out to the planes touching its wall there:
  * enameled iron through to the room’s north wall, and the Bastion’s stone on from the end of its approach.
  */
-function Vestibule({materials, masonry}: {
+function Vestibule({materials, masonry, reflections}: {
   masonry: Material
   materials: ForgeMaterials
+  reflections: boolean
 }) {
   const {center} = forgeVestibule
-  const floor = useEndGrain()
+  const floor = useEndGrain(reflections)
   const parts = useDisposable(useMemo(() => {
     const slab = new ExtrudeGeometry(roundVestibuleFloorShape(forgeRoundVestibule), {
       depth: floorThickness,

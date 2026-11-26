@@ -14,7 +14,6 @@ import {imageSize} from '../../src/lib/gallery/ImageImporter.ts'
 import portraitOrbit from '../../src/lib/gallery/portraitOrbit.ts'
 import {portraitRatios, slotAreas, slotFrame} from '../../src/lib/placement/portraitSlots.ts'
 import {hangingOffset} from '../../src/lib/placement/wallGeometry.ts'
-import {graphicsQualities, useGraphicsQuality} from '../../src/lib/rendering/graphicsQuality.ts'
 import MaterialOutputsNode from '../../src/lib/rendering/MaterialOutputsNode.ts'
 import {orbs} from '../../src/orbs/index.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
@@ -34,18 +33,10 @@ describe('frames', () => {
     expect(frameIds[0]).toBe('classic')
     expect(frames.classic).toBe(classicFrame)
   })
-  test('Louis keeps the same frame and burnished-only reflections across graphics modes', () => {
-    const previous = useGraphicsQuality.getState().quality
-    try {
-      for (const quality of graphicsQualities) {
-        useGraphicsQuality.setState({quality})
-        const frame = portraitFrame('louis')
-        expect(frame).toBe(frames.louis)
-        expect(frame.materials[0]).toHaveProperty('mrtNode', expect.any(MaterialOutputsNode))
-      }
-    } finally {
-      useGraphicsQuality.setState({quality: previous})
-    }
+  test('Louis keeps its frame and burnished-only reflections', () => {
+    const frame = portraitFrame('louis')
+    expect(frame).toBe(frames.louis)
+    expect(frame.materials[0]).toHaveProperty('mrtNode', expect.any(MaterialOutputsNode))
   })
   for (const [id, frame] of entries) {
     test(`${id} stays within its budget and envelope at every size`, () => {

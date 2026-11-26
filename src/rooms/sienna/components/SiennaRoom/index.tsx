@@ -5,7 +5,6 @@ import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import Chandelier from '#component/Chandelier'
 import SiennaWainscot from '#component/SiennaWainscot'
@@ -16,7 +15,7 @@ import rugFringeGeometry from '#src/lib/gallery/sienna/RugFringeGeometry.ts'
 import PersianRugMaterial from '#src/lib/materials/PersianRugMaterial.ts'
 import PlankFloorMaterial from '#src/lib/materials/PlankFloorMaterial.ts'
 import PlankMaterial from '#src/lib/materials/PlankMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const room = slopGallery.room('sienna')
@@ -31,7 +30,7 @@ export default function SiennaRoom({joinery}: {
     z: Material
   }
 }) {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = graphicsProfile
   // The planks blur a reflection to a faint smear, not worth a mirrored pass of the scene.
   const floor = useDisposable(useMemo(() => new PlankFloorMaterial(undefined, false), []))
   const ceiling = useDisposable(useMemo(() => new PlankMaterial(siennaCeilingPlanks), []))

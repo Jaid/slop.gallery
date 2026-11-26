@@ -25,7 +25,7 @@ export const settling = 500
 export const patience = 20_000
 
 /**
- * Stops the frames of a world for as long as its clock is frozen, and draws the frozen moment again whenever {@link refresh} tells that it would show differently now, like on a resized canvas, in another graphics mode or with a new work hung in it.
+ * Stops the frames of a world for as long as its clock is frozen, and draws the frozen moment again whenever {@link refresh} tells that it would show differently now, like on a resized canvas, with other values of the world tuning or with a new work hung in it.
  * Those frames show the same moment: no time passes in them, so nothing in the world moves, while everything that isn’t a matter of time, like loading, building and aiming, goes on.
  */
 export default class FrozenFrames {

@@ -26,7 +26,6 @@ import {useWorldTuningPanel} from '#src/lib/worldTuning/panel.ts'
 import reloadForWorldTuning from '#src/lib/worldTuning/reload.ts'
 import {currentWorldInfo} from '#src/worlds/index.ts'
 
-import GraphicsMode from './GraphicsMode.tsx'
 import World from './World.tsx'
 
 import css from './style.module.sass'
@@ -63,7 +62,7 @@ export default function App() {
   if (!gpu) {
     return <RenderError><h2>WebGPU is unavailable.</h2><p>{currentWorldInfo.title} requires native WebGPU. Open it in current Chrome or Edge with hardware acceleration enabled, using HTTPS or localhost.</p></RenderError>
   }
-  return <GraphicsMode><Dropzone><div className={css.layout}>
+  return <Dropzone><div className={css.layout}>
     {/* A column of its own left of the canvas and HUD, so the panel never covers the scene it tunes */}
     <Branch if={tuning.open} then={WorldTuning} />
     {/* ?ratio letterboxes the screen, so the canvas keeps that shape and the menu and HUD stay on it. */}
@@ -81,5 +80,5 @@ export default function App() {
         <Branch if={s.notice} not={uiHidden}><Toast>{s.notice}</Toast></Branch>
       </div>
     </div>
-  </div></Dropzone></GraphicsMode>
+  </div></Dropzone>
 }

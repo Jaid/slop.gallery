@@ -3,7 +3,6 @@ import type {CanvasTexture, DirectionalLight, Light, Renderer, Scene} from 'thre
 
 import {useThree} from '@react-three/fiber'
 import {useEffect, useLayoutEffect, useMemo, useRef} from 'react'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 import {useShallow} from 'zustand/react/shallow'
 
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
@@ -13,7 +12,7 @@ import {cycleLighting, lightingPresets, tuneLighting, useLighting} from '#src/li
 import lobbyVault from '#src/lib/gallery/lobbyVault.ts'
 import {sunGeometry, sunlitPoints, sunShadowMapSize} from '#src/lib/gallery/sun.ts'
 import {shineDaylightFrom} from '#src/lib/rendering/daylight.ts'
-import {getGraphicsProfile, getSunShadowSettings} from '#src/lib/rendering/graphicsMode.ts'
+import {getSunShadowSettings, graphicsProfile, isHeavyGraphics, shadowsEnabled} from '#src/lib/rendering/graphicsMode.ts'
 import {lampOf} from '#src/lib/rendering/lamps.ts'
 import {isShadowSlot, lightActive, lightGain, lightShadow, useLightEdits} from '#src/lib/rendering/lightLevels.ts'
 import {getShadowProps} from '#src/lib/rendering/shadowFilterNodes.ts'
@@ -39,6 +38,27 @@ type Lamp = Light & {
   isSpotLight?: boolean
 }
 
+function useTunedSunShadow() {
+  const tuned = pipelineTuning.useValues(useShallow(state => ({
+    mapSize: state.sunShadowMapSize,
+    radius: state.sunShadowRadius,
+    samples: state.sunShadowSamples,
+  })))
+  return {
+    ...getShadowProps(tuned),
+    samples: tuned.samples,
+  }
+}
+function staticSunShadow(mapSize: number) {
+  const sunShadow = getSunShadowSettings(graphicsProfile, mapSize)
+  return {
+    ...getShadowProps(sunShadow),
+    samples: sunShadow.samples,
+  }
+}
+/** The sun’s shadow props, which the world tuning of `?development` changes in heavy graphics, together with its lookups per pixel. */
+const useSunShadow = isDevelopmentMode && isHeavyGraphics && shadowsEnabled ? useTunedSunShadow : staticSunShadow
+
 /**
  * The gallery’s lighting: sun, the sky’s colors, ambient fill, reflection environment and the strength of the rooms’ lamps, all following the current {@link useLighting} preset. Which rooms show the sky is up to their skyboxes.
  * Switching presets only changes colors, intensities, uniforms and the environment’s pixels, never which lights exist, so no material recompiles.
@@ -53,9 +73,11 @@ export default function GalleryLighting() {
   // Only the Antechamber, under its stained-glass dome, takes the glass’ colors; the light is set up before its first frame, so its pipelines compile once. Materials that bounce the daylight follow each new sun.
   useLayoutEffect(() => {
     const light = sunLight.current!
-    light.shadow.shadowNode = new StainedGlassShadowNode(light, position => position.y.greaterThan(antechamber.floorY - 0.05)
-      .and(position.x.sub(antechamber.center[0]).abs().lessThan(antechamber.size[0] / 2))
-      .and(position.z.sub(antechamber.center[1]).abs().lessThan(antechamber.size[1] / 2)))
+    if (shadowsEnabled) {
+      light.shadow.shadowNode = new StainedGlassShadowNode(light, position => position.y.greaterThan(antechamber.floorY - 0.05)
+        .and(position.x.sub(antechamber.center[0]).abs().lessThan(antechamber.size[0] / 2))
+        .and(position.z.sub(antechamber.center[1]).abs().lessThan(antechamber.size[1] / 2)))
+    }
     return shineDaylightFrom(light)
   }, [sunShadowSamples])
   // The environment is part of every lit material’s cache key. Set after the first frame, it would build all of them a second time; a preset only redraws its pixels.
@@ -90,7 +112,7 @@ export default function GalleryLighting() {
   }, [scene, renderer, environmentIntensity, exposure])
   useLayoutEffect(() => {
     const light = sunLight.current
-    if (light) {
+    if (shadowsEnabled && light) {
       const camera = light.shadow.camera
       Object.assign(camera, {
         left: shadow.left,
@@ -162,7 +184,18 @@ export default function GalleryLighting() {
     <ambientLight color={preset.ambient.color} intensity={preset.ambient.intensity} />
     <hemisphereLight color={preset.hemisphere.color} groundColor={preset.hemisphere.ground} intensity={preset.hemisphere.intensity} />
     {/* The shadow map resizes in place, but a new filter needs a new shadow, so the sun is built anew. */}
-    <directionalLight key={sunShadowSamples} castShadow color={color} intensity={intensity} name='sun' position={sun.position} shadow-camera-bottom={sun.shadow.bottom} shadow-camera-far={sun.shadow.far} shadow-camera-left={sun.shadow.left} shadow-camera-near={sun.shadow.near} shadow-camera-right={sun.shadow.right} shadow-camera-top={sun.shadow.top} shadow-normalBias={sun.shadow.normalBias} userData={{marker: sunMarker}} ref={sunLight} {...sunShadow} />
+    <directionalLight
+      key={sunShadowSamples} castShadow={shadowsEnabled} color={color} intensity={intensity} name='sun' position={sun.position} userData={{marker: sunMarker}} ref={sunLight} {...shadowsEnabled ? {
+        'shadow-camera-bottom': sun.shadow.bottom,
+        'shadow-camera-far': sun.shadow.far,
+        'shadow-camera-left': sun.shadow.left,
+        'shadow-camera-near': sun.shadow.near,
+        'shadow-camera-right': sun.shadow.right,
+        'shadow-camera-top': sun.shadow.top,
+        'shadow-normalBias': sun.shadow.normalBias,
+        ...sunShadow,
+      } : {}}
+    />
   </>
 }
 
@@ -170,27 +203,6 @@ export default function GalleryLighting() {
 function useTunedLighting(preset: GalleryLightingPreset) {
   const tuning = lightingTuning.useValues()
   return useMemo(() => (isDevelopmentMode ? tuneLighting(preset, tuning, lightingTuning.initial) : preset), [preset, tuning])
-}
-/** The sun’s shadow props, which the world tuning of `?development` changes in heavy graphics, together with its lookups per pixel. */
-function useSunShadow(mapSize: number) {
-  const isHeavy = useGraphicsMode()
-  const profile = useGraphicsModeValue(getGraphicsProfile)
-  const tuned = pipelineTuning.useValues(useShallow(state => ({
-    mapSize: state.sunShadowMapSize,
-    radius: state.sunShadowRadius,
-    samples: state.sunShadowSamples,
-  })))
-  if (isDevelopmentMode && isHeavy) {
-    return {
-      ...getShadowProps(tuned),
-      samples: tuned.samples,
-    }
-  }
-  const sunShadow = getSunShadowSettings(profile, mapSize)
-  return {
-    ...getShadowProps(sunShadow),
-    samples: sunShadow.samples,
-  }
 }
 /** Sets the scene’s environment, returning how to restore the previous one. R3F expects it to be set from an effect. */
 function setEnvironment(scene: Scene, texture: CanvasTexture) {

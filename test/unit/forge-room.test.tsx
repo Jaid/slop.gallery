@@ -6,7 +6,6 @@ import {afterAll, beforeAll, describe, expect, test} from 'bun:test'
 import {Ray} from '@dimforge/rapier3d-compat'
 import {useThree} from '@react-three/fiber'
 import {Box3, MeshBasicMaterial, Vector3} from 'three/webgpu'
-import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import {workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import forge from '../../src/lib/gallery/forge.ts'
@@ -27,10 +26,10 @@ function SceneProbe() {
 }
 beforeAll(async () => {
   // Every finish of the room but its floors is the same plain material; only the colliders and the floors’ mirrors matter here.
-  mounted = await mountPhysics(<GraphicsModeProvider isHeavy onChange={() => {}}>
-    <ForgeRoom masonry={material} materials={new Proxy({}, {get: () => material}) as never} />
+  mounted = await mountPhysics(<>
+    <ForgeRoom masonry={material} materials={new Proxy({}, {get: () => material}) as never} reflections />
     <SceneProbe />
-  </GraphicsModeProvider>)
+  </>)
   mounted.physics.step(1 / 60)
 })
 afterAll(async () => {

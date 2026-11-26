@@ -4,8 +4,8 @@ import type {Light, PointLight, SpotLight} from 'three/webgpu'
 import hsl from 'okhsl'
 import {useLayoutEffect, useRef, useState} from 'react'
 import {Object3D} from 'three/webgpu'
-import useGraphicsMode from 'use-graphics-mode'
 
+import {isHeavyGraphics, shadowsEnabled} from '#src/lib/rendering/graphicsMode.ts'
 import {registerLamp} from '#src/lib/rendering/lamps.ts'
 import {useShadowProps} from '#src/lib/rendering/shadowFilters.ts'
 import world from '#src/worlds/current.ts'
@@ -39,21 +39,17 @@ export default function Lamps() {
   </group>
 }
 
-/** Whether the lamp casts a shadow in the current graphics mode. */
-const useShadow = (lamp: PlacedLamp) => {
-  const isHeavy = useGraphicsMode()
-  return lamp.shadow === 'heavy' ? isHeavy : lamp.shadow ?? false
-}
+/** Whether the lamp casts a shadow in this session’s graphics mode. */
+const lampCastsShadow = (lamp: PlacedLamp) => shadowsEnabled && (lamp.shadow === 'heavy' ? isHeavyGraphics : Boolean(lamp.shadow))
 /** Point lights that cast a shadow borrow a slot of the shadow pool with `userData.shadow`, blurred wider as `userData.softShadow` asks, the pool’s `softShadowKey`. */
 function PointLamp({lamp}: {lamp: PlacedPointLamp}) {
   const light = useRegistered<PointLight>(lamp)
-  const shadow = useShadow(lamp)
-  return <pointLight color={lamp.tint ?? hsl.integer(0, 0, 100)} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} position={lamp.position} userData-shadow={shadow} userData-softShadow={lamp.softShadow} ref={light} />
+  return <pointLight color={lamp.tint ?? hsl.integer(0, 0, 100)} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} position={lamp.position} userData-shadow={lampCastsShadow(lamp)} userData-softShadow={lamp.softShadow} ref={light} />
 }
 /** A spot light that casts a shadow takes a lights node of its own in every lit material. */
 function SpotLamp({lamp}: {lamp: PlacedSpotLamp}) {
   const light = useRegistered<SpotLight>(lamp)
-  const castsShadow = useShadow(lamp)
+  const castsShadow = lampCastsShadow(lamp)
   const [target] = useState(() => {
     const object = new Object3D
     object.position.set(...lamp.target)
@@ -62,6 +58,12 @@ function SpotLamp({lamp}: {lamp: PlacedSpotLamp}) {
   const shadow = useShadowProps(2048)
   return <>
     <primitive object={target} />
-    <spotLight angle={lamp.angle} castShadow={castsShadow} color={lamp.tint ?? hsl.integer(0, 0, 100)} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} penumbra={lamp.penumbra ?? 0} position={lamp.position} shadow-bias={-0.0001} shadow-normalBias={0.025} target={target} ref={light} {...castsShadow ? shadow : {}} />
+    <spotLight
+      angle={lamp.angle} castShadow={castsShadow} color={lamp.tint ?? hsl.integer(0, 0, 100)} decay={lamp.decay ?? 2} distance={lamp.range ?? 0} intensity={lamp.strength ?? 1} name={lamp.id} penumbra={lamp.penumbra ?? 0} position={lamp.position} target={target} ref={light} {...castsShadow ? {
+        'shadow-bias': -0.0001,
+        'shadow-normalBias': 0.025,
+        ...shadow,
+      } : {}}
+    />
   </>
 }

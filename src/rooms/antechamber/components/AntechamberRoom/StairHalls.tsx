@@ -8,14 +8,13 @@ import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {Shape} from 'three/webgpu'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {antechamberLanding, antechamberLandingSlab, antechamberStairBlocks, antechamberStairs, stairHallHeight, stairHalls} from '#src/lib/gallery/antechamber.ts'
 import {floorThickness} from '#src/lib/gallery/floors.ts'
 import PlanarMirrorMaterial from '#src/lib/materials/PlanarMirrorMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 const brass = hsl.integer(82, 54, 63)
 const enamel = hsl.integer(225, 46, 28)
@@ -116,18 +115,17 @@ function Dial({lunar}: {lunar: boolean}) {
 }
 /** A material for the figures in the middle of a dial: mirroring in heavy mode, which sets aside the metal of the brass ones, and as before otherwise. */
 function useFigureMaterial(color: number, roughness: number, metalness = 0) {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   return useDisposable(useMemo(() => {
     const material = new PlanarMirrorMaterial(null, {
       color,
       roughness,
-      reflection: mirrorReflections ? figureMirror : undefined,
+      reflection: graphicsProfile.mirrorReflections ? figureMirror : undefined,
     })
-    if (!mirrorReflections) {
+    if (!graphicsProfile.mirrorReflections) {
       material.metalness = metalness
     }
     return material
-  }, [color, metalness, mirrorReflections, roughness]))
+  }, [color, metalness, roughness]))
 }
 /** The crescent and its three stars in one bluish silver, laid in the dial’s plane like the reflection target of their mirror. */
 function Moon() {

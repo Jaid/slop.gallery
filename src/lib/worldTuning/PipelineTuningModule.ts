@@ -1,11 +1,8 @@
 import type {RenderPipelineSettings} from '#src/lib/rendering/renderPipelineSettings.ts'
 import type {TuningGroup} from './controls.ts'
 
-import useGraphicsMode from 'use-graphics-mode'
-
 import {getAntiAliasing} from '#src/lib/rendering/antiAliasing.ts'
-import {cinematicMaxTextureSize, getGraphicsProfile, readCinematicGraphics} from '#src/lib/rendering/graphicsMode.ts'
-import {graphicsQualities, useGraphicsQuality} from '#src/lib/rendering/graphicsQuality.ts'
+import {cinematicMaxTextureSize, getGraphicsProfile, isCinematicGraphics, isHeavyGraphics} from '#src/lib/rendering/graphicsMode.ts'
 import {getRenderPipelineSettings, renderPipelineStructure} from '#src/lib/rendering/renderPipelineSettings.ts'
 import {currentWorldId} from '#src/worlds/index.ts'
 
@@ -16,9 +13,8 @@ const {group, percent, range, select, toggle} = tuningControls<RenderPipelineSet
 /** the brightest value a half-float target holds, so a cap there caps nothing */
 const uncappedLuminance = 65_504
 /** Cinematic graphics request a texture size limit that fits a 16384² map; heavy graphics stop at WebGPU’s default of 8192. */
-const shadowMapSizes = [1024, 2048, 4096, 8192, ...readCinematicGraphics() ? [cinematicMaxTextureSize] : []]
+const shadowMapSizes = [1024, 2048, 4096, 8192, ...isCinematicGraphics ? [cinematicMaxTextureSize] : []]
 const structure: ReadonlySet<string> = new Set(renderPipelineStructure)
-const [fast] = graphicsQualities
 
 /**
  * The render pipeline of heavy graphics, its passes and their settings, and the shadows’ lookups. Checkboxes switch passes, which builds the pipeline anew, and sliders change its uniforms live.
@@ -185,16 +181,16 @@ export default class PipelineTuningModule extends TuningModule<RenderPipelineSet
     }),
   ]
 
-  override readonly hint = 'Switch graphics on in the menu to tune the pipeline.'
+  override readonly hint = 'Switch to heavy graphics in the menu and reload to tune the pipeline.'
   override readonly title = 'Render pipeline'
 
   constructor() {
-    super('pipeline', getRenderPipelineSettings(getGraphicsProfile(true, readCinematicGraphics()), getAntiAliasing(true)))
+    super('pipeline', getRenderPipelineSettings(getGraphicsProfile(true, isCinematicGraphics), getAntiAliasing(true)))
   }
 
   /** Only heavy graphics draw through a pipeline of passes. */
   override isShown() {
-    return useGraphicsQuality.getState().quality !== fast
+    return isHeavyGraphics
   }
 
   override rebuilds(key: string) {
@@ -202,7 +198,7 @@ export default class PipelineTuningModule extends TuningModule<RenderPipelineSet
   }
 
   override useShown() {
-    return useGraphicsMode()
+    return isHeavyGraphics
   }
 }
 

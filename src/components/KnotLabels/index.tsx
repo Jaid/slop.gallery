@@ -12,14 +12,13 @@ import hsl from 'okhsl'
 import {useEffect, useMemo, useRef} from 'react'
 import {attribute, texture, uv, vec2} from 'three/tsl'
 import {Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import InteractiveObject from '#component/InteractiveObject'
 import KnotLabelFace, {KnotLabelFaces} from '#component/KnotLabelFace'
 import GrabbableProp, {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import metal from '#src/lib/materials/metal.ts'
 import InstancedPropVisuals from '#src/lib/physics/InstancedPropVisuals.ts'
-import {fitCanvasTextureResolution, getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {fitCanvasTextureResolution, graphicsProfile, isHeavyGraphics} from '#src/lib/rendering/graphicsMode.ts'
 import useLoadingElementTexture, {rasterizeFace} from '#src/lib/useLoadingElementTexture.ts'
 
 import {labelAtlasColumns, labelBackground, labelHeight, labelWidth} from './layout.ts'
@@ -43,12 +42,19 @@ export default function KnotLabels({signs, ratings, action = 'Listen', onActivat
   ratings?: ReadonlyMap<string, Rarity>
   signs: ReadonlyArray<KnotSignPlacement>
 }) {
-  const isHeavy = useGraphicsMode()
-  const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = useGraphicsModeValue(getGraphicsProfile)
   const atlasRows = Math.ceil(signs.length / labelAtlasColumns)
-  // Only the flat fallback is owned here; the reflective steel is shared for the page lifetime.
-  const flatSupportMaterial = useDisposable(useMemo(() => new MeshBasicNodeMaterial({color: hsl.integer(238, 9, 67)}), []))
-  const supportMaterial = isHeavy ? metal : flatSupportMaterial
+  // Only the flat fallback is owned here in fast graphics; the reflective steel is shared for the page lifetime.
+  const flatSupport = useDisposable(useMemo(() => (isHeavyGraphics ? {
+    material: null,
+    dispose() {},
+  } : (() => {
+    const material = new MeshBasicNodeMaterial({color: hsl.integer(238, 9, 67)})
+    return {
+      material,
+      dispose: () => material.dispose(),
+    }
+  })()), []))
+  const supportMaterial = flatSupport.material ?? metal
   const resources = useDisposable(useMemo(() => {
     const offsets = new Float32Array(signs.length * 2)
     for (let index = 0; index < signs.length; index++) {
@@ -125,15 +131,15 @@ export default function KnotLabels({signs, ratings, action = 'Listen', onActivat
       },
     }
   }, [atlasRows, signs]))
-  const atlasResolution = fitCanvasTextureResolution(resolution, labelAtlasColumns * labelWidth, atlasRows * labelHeight)
+  const atlasResolution = fitCanvasTextureResolution(graphicsProfile.canvasTextureResolution, labelAtlasColumns * labelWidth, atlasRows * labelHeight)
   const atlas = useLoadingElementTexture('knot-sign-texture', useMemo(() => ({
     width: labelAtlasColumns * labelWidth,
     height: atlasRows * labelHeight,
     resolution: atlasResolution,
     name: 'Knot nameplate atlas',
-    mipmaps,
+    mipmaps: graphicsProfile.canvasTextureMipmaps,
     render: () => <KnotLabelFaces exhibits={signs.map(sign => sign.entry)} />,
-  }), [atlasResolution, atlasRows, mipmaps, signs]))
+  }), [atlasResolution, atlasRows, signs]))
   useEffect(() => {
     resources.setAtlas(atlas)
   }, [resources, atlas])

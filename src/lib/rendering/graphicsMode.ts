@@ -2,23 +2,40 @@ import type {RenderPipelineSetting, RenderPipelineSettings} from './renderPipeli
 
 import optis from 'optis'
 import readPermalink from 'read-permalink'
-import useGraphicsMode from 'use-graphics-mode'
 
+import {readStored} from '#src/lib/browserStorage.ts'
+
+import {isShowingAlbedo} from './albedo.ts'
 import {isHeavyCapable, readHeavyCapabilityHints} from './autoGraphics.ts'
 
-/** a `?graphics` name: a graphics mode or `auto`, which picks fast or heavy for the GPU */
-type GraphicsModeName = ReturnType<typeof useGraphicsMode.getName> | 'auto'
+/** concrete graphics quality presets */
+export const graphicsQualities = ['fast', 'heavy', 'cinematic'] as const
 
-const graphicsModeNames: Array<GraphicsModeName> = [useGraphicsMode.getName(false), useGraphicsMode.getName(true), useGraphicsMode.getName(true, true), 'auto']
+/** a graphics mode by its name, as `?graphics` and storage take it */
+export type GraphicsQuality = typeof graphicsQualities[number]
+
+/** a `?graphics` name: a graphics quality preset or `auto`, which picks fast or heavy for the GPU */
+export type GraphicsModeName = GraphicsQuality | 'auto'
+
+const graphicsModeNames: ReadonlyArray<GraphicsModeName> = [...graphicsQualities, 'auto']
+
+/** Format a graphics mode boolean pair as its preset name. */
+export function getGraphicsName(isHeavy: boolean, isCinematic = false): GraphicsQuality {
+  if (!isHeavy) {
+    return 'fast'
+  }
+  return isCinematic ? 'cinematic' : 'heavy'
+}
+
 const normalizeGraphicsMode = (value: unknown): GraphicsModeName => {
   if (value === true) {
-    return useGraphicsMode.getName(true)
+    return 'heavy'
   }
-  return graphicsModeNames.find(name => name === value) ?? useGraphicsMode.getName(false)
+  return graphicsModeNames.find(name => name === value) ?? 'fast'
 }
 const graphicsModeSchema = optis({
   defaults: {
-    graphics: useGraphicsMode.getName(false),
+    graphics: 'fast',
   },
   normalizations: {
     graphics: normalizeGraphicsMode,
@@ -90,13 +107,38 @@ type SsgiSettings = Pick<RenderPipelineSettings, | 'screenSpaceIndirectLightAmbi
   | 'screenSpaceIndirectLightTemporalFiltering'
   | 'screenSpaceIndirectLightThickness'>
 
+const defaultUrl = () => (typeof location === 'undefined' ? '' : location.href)
+
 /** Read the `?graphics` name: fast, heavy, cinematic or auto. Anything else is fast. */
-export function readGraphicsModeName(input: URL | string = typeof location === 'undefined' ? '' : location.href) {
+export function readGraphicsModeName(input: URL | string = defaultUrl()): GraphicsModeName {
   return readPermalink(input, {schema: graphicsModeSchema}).graphics
 }
 
-// Only `?graphics=auto` waits for the adapter, before anything reads the graphics mode.
-const isAutoHeavy = readGraphicsModeName() === 'auto' && isHeavyCapable(await readHeavyCapabilityHints())
+/** Read an explicit `?graphics` (or permalink `data`) override, or `undefined` when the URL leaves graphics to storage and defaults. */
+export function readGraphicsOverride(input: URL | string = defaultUrl()): GraphicsModeName | undefined {
+  const raw = readPermalink(input)
+  if (!Object.hasOwn(raw, 'graphics')) {
+    return undefined
+  }
+  return normalizeGraphicsMode(raw.graphics)
+}
+
+/** Parse a graphics mode name read from browser storage. */
+export function parseStoredGraphics(value: string | null): GraphicsModeName | undefined {
+  return graphicsModeNames.find(name => name === value)
+}
+
+const startupOverride = readGraphicsOverride()
+const startupStored = readStored('graphics')
+const startupName: GraphicsModeName = startupOverride ?? parseStoredGraphics(startupStored) ?? 'fast'
+// Only `auto` (from `?graphics=auto` or storage) waits for the adapter, before anything reads the graphics mode.
+const isAutoHeavy = startupName === 'auto' && isHeavyCapable(await readHeavyCapabilityHints())
+
+/** Resolve the concrete graphics quality from an optional URL override, a stored preference and the `auto` GPU verdict. */
+export function resolveGraphicsQuality(override: GraphicsModeName | undefined, stored: string | null, autoHeavy = isAutoHeavy): GraphicsQuality {
+  const name = override ?? parseStoredGraphics(stored) ?? 'fast'
+  return name === 'auto' ? (autoHeavy ? 'heavy' : 'fast') : name
+}
 
 /** Read whether `?graphics` asks for heavy graphics, which cinematic graphics are too. `auto` reads as what it picked for this page’s GPU. */
 export function readGraphicsMode(input?: URL | string) {
@@ -104,15 +146,15 @@ export function readGraphicsMode(input?: URL | string) {
   if (name === 'auto') {
     return isAutoHeavy
   }
-  return name !== useGraphicsMode.getName(false)
+  return name !== 'fast'
 }
 
 /** Read whether `?graphics` asks for cinematic graphics: heavy, but budgeted for non-realtime rendering. */
 export function readCinematicGraphics(input?: URL | string) {
-  return readGraphicsModeName(input) === useGraphicsMode.getName(true, true)
+  return readGraphicsModeName(input) === 'cinematic'
 }
 
-/** Read the profile `?graphics` asks for, for code outside React. It ignores later menu changes, so prefer `useGraphicsModeValue(getGraphicsProfile)` where a component can rebuild. */
+/** Read the profile `?graphics` asks for. */
 export function readGraphicsProfile(input?: URL | string) {
   return getGraphicsProfile(readGraphicsMode(input), readCinematicGraphics(input))
 }
@@ -235,3 +277,18 @@ export function getSunShadowSettings(profile: GraphicsProfile, baseMapSize: numb
     samples: profile.sunShadowSamples ?? profile.shadowSamples,
   }
 }
+
+/** the graphics quality of this session, fixed at startup from `?graphics`, browser storage or the `fast` default */
+export const graphicsQuality: GraphicsQuality = resolveGraphicsQuality(startupOverride, startupStored, isAutoHeavy)
+
+/** whether this session runs in heavy graphics (including cinematic), fixed at startup */
+export const isHeavyGraphics = graphicsQuality !== 'fast'
+
+/** whether this session runs in cinematic graphics, fixed at startup */
+export const isCinematicGraphics = graphicsQuality === 'cinematic'
+
+/** the graphics budget of this session, fixed at startup */
+export const graphicsProfile: GraphicsProfile = getGraphicsProfile(isHeavyGraphics, isCinematicGraphics)
+
+/** whether shadows are rendered in this session; `?albedo` shows no shadows, so their maps would only cost time */
+export const shadowsEnabled = graphicsProfile.shadows && !isShowingAlbedo

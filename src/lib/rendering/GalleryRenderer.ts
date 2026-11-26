@@ -14,7 +14,7 @@ import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 
 import GalleryDrawingPipeline from './GalleryDrawingPipeline.ts'
-import {cinematicMaxTextureSize, readCinematicGraphics} from './graphicsMode.ts'
+import {cinematicMaxTextureSize, graphicsProfile, isCinematicGraphics} from './graphicsMode.ts'
 import {readStreamBudget} from './streamBudget.ts'
 import {hasGeometry, worldBounds} from './worldBounds.ts'
 
@@ -212,7 +212,7 @@ export class GalleryRenderer extends WebgpuRenderer {
     super({
       ...options,
       requiredLimits: {
-        ...readCinematicGraphics() ? {maxTextureDimension2D: cinematicMaxTextureSize} : {},
+        ...isCinematicGraphics ? {maxTextureDimension2D: cinematicMaxTextureSize} : {},
       },
       alpha: false,
       antialias: false,
@@ -623,8 +623,11 @@ export class GalleryRenderer extends WebgpuRenderer {
     }
   }
 
-  /** Raises the color attachment limit for screen-space reflections, and for cinematic the sampled texture limit, to what the adapter offers, up to {@link wideColorAttachmentBytes} and {@link cinematicSampledTextures}, so GPUs with less still get a device. */
-  private async requestLimits() {
+  /** Raises the color attachment limit for screen-space reflections, and for cinematic the sampled texture limit, to what the adapter offers, up to {@link wideColorAttachmentBytes} and {@link cinematicSampledTextures}, so GPUs with less still get a device. Fast graphics need neither and skip the extra adapter request. */
+  private async requestLimits(wideColorAttachments = graphicsProfile.metalReflections, cinematic = isCinematicGraphics) {
+    if (!wideColorAttachments && !cinematic) {
+      return
+    }
     const {parameters} = this.backend as unknown as BackendInternals
     if (parameters.device !== undefined || typeof navigator === 'undefined' || !('gpu' in navigator)) {
       return
@@ -634,8 +637,10 @@ export class GalleryRenderer extends WebgpuRenderer {
     if (!adapter) {
       return
     }
-    parameters.requiredLimits.maxColorAttachmentBytesPerSample = Math.min(wideColorAttachmentBytes, adapter.limits.maxColorAttachmentBytesPerSample)
-    if (readCinematicGraphics()) {
+    if (wideColorAttachments) {
+      parameters.requiredLimits.maxColorAttachmentBytesPerSample = Math.min(wideColorAttachmentBytes, adapter.limits.maxColorAttachmentBytesPerSample)
+    }
+    if (cinematic) {
       parameters.requiredLimits.maxSampledTexturesPerShaderStage = Math.min(cinematicSampledTextures, adapter.limits.maxSampledTexturesPerShaderStage)
     }
   }

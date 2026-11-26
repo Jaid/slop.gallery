@@ -186,7 +186,7 @@ test('the tools see every value with its control, its group and what it starts f
   expect(pipeline.controls.find(control => control.key === 'bloomStrength')).not.toHaveProperty('rebuilds')
   // Fast graphics have no pipeline to tune.
   expect(pipeline.shown).toBe(false)
-  expect(pipeline.hint).toBe('Switch graphics on in the menu to tune the pipeline.')
+  expect(pipeline.hint).toBe('Switch to heavy graphics in the menu and reload to tune the pipeline.')
 })
 test('?world_tuning starts the page with the panel shown, but only with ?development, which the panel needs', () => {
   expect(readWorldTuning('http://localhost/?development&world_tuning')).toBe(true)
