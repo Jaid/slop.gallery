@@ -7,7 +7,6 @@ import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {positionWorld, vec3} from 'three/tsl'
 import {Color, MeshStandardNodeMaterial} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import EngravedPlate from '#component/EngravedPlate'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -30,7 +29,7 @@ import ShellInlayMaterial from '#src/lib/materials/ShellInlayMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '#src/lib/materials/TerrazzoFloorMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
 import {daylight} from '#src/lib/rendering/daylight.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, isHeavyGraphics} from '#src/lib/rendering/graphicsMode.ts'
 import {createStone} from '#src/stones/index.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
@@ -54,8 +53,7 @@ export default function SalonRoom({glass, stone, wood}: {
   // Painted as nero portoro round raised fields of giallo antico, the way Pompeian socles were.
   const socle = useDisposable(useMemo(() => new FauxMarbleMaterial(portoro), []))
   const fields = useDisposable(useMemo(() => new FauxMarbleMaterial(gialloAntico), []))
-  const isHeavy = useGraphicsMode()
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = graphicsProfile
   const terrazzo = useDisposable(useMemo(() => new TerrazzoFloorMaterial({
     center: room.center,
     size: room.size,
@@ -72,7 +70,7 @@ export default function SalonRoom({glass, stone, wood}: {
   return <group name='salon'>
     <group position={[room.center[0], 0, room.center[1]]}>
       <RoomFloor glass={glass} materials={floor} room={room} stone={stone} wood={wood} />
-      <Lantern heavy={isHeavy} />
+      <Lantern />
     </group>
     {salonWalls.map(wall => <WallDressing key={wall.id} fields={fields} gilt={gold} socle={socle} wall={wall} />)}
     <SalonOttoman />
@@ -81,22 +79,22 @@ export default function SalonRoom({glass, stone, wood}: {
 }
 
 /** The ceiling and its lantern: the drum’s windows and the lantern over the dome’s eye let the sun in, the stucco, the shells, the gilding and the bronze shade it. */
-function Lantern({heavy}: {heavy: boolean}) {
+function Lantern() {
   const geometry = useDisposable(useMemo(() => new SalonLanternGeometry(room.size), []))
   const collision = useMemo(() => salonLanternCollision(room.size), [])
   // Lime stucco a shade toward pink rather than yellow, so the shade under the ceiling doesn’t turn khaki.
   const stucco = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
     baseColor: hsl.integer(63, 36, 91),
     bounce,
-    heavy,
+    heavy: isHeavyGraphics,
     roughness: 0.86,
-  }), [heavy]))
+  }), []))
   const shells = useDisposable(useMemo(() => new ShellInlayMaterial({
     bounce,
     crease: salonLantern.shells.crease,
-    heavy,
+    heavy: isHeavyGraphics,
     lines: shellFilletLines(),
-  }), [heavy]))
+  }), []))
   // Patinated bronze glazing bars, as on the Vesper’s lantern.
   const bronze = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: hsl.integer(72, 31, 33),
@@ -104,7 +102,7 @@ function Lantern({heavy}: {heavy: boolean}) {
     roughness: 0.5,
   }), []))
   // Old drawn glass in the windows, faintly rippled and a little dusty along the sills; the fast one is the lantern’s.
-  const windowGlass = useDisposable(useMemo(() => (heavy ? new CrownGlassMaterial({
+  const windowGlass = useDisposable(useMemo(() => (isHeavyGraphics ? new CrownGlassMaterial({
     name: 'salon-window-glass-heavy',
     ior: 1.52,
     absorption: 0.04,
@@ -117,12 +115,12 @@ function Lantern({heavy}: {heavy: boolean}) {
     smudges: 0.035,
     grime: 0.3,
     waviness: 0.003,
-  }) : new VaultGlassMaterial({heavy})), [heavy]))
+  }) : new VaultGlassMaterial({heavy: false})), []))
   // The Lobby vault’s cast glass over the eye, a pane in each of its slopes.
   const lanternGlass = useDisposable(useMemo(() => new VaultGlassMaterial({
-    heavy,
+    heavy: isHeavyGraphics,
     paneSize: lanternPaneSize,
-  }), [heavy]))
+  }), []))
   return <group name='salon-lantern'>
     <RigidBody colliders={false} type='fixed'>
       <MeshSurfaceCollider args={collision} />

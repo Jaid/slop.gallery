@@ -2,22 +2,13 @@ import type {RenderPipelineSettings} from '../../src/lib/rendering/renderPipelin
 
 import {expect, test} from 'bun:test'
 
-import {renderToStaticMarkup} from 'react-dom/server'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
-
-import GraphicsMode from '../../src/components/App/GraphicsMode.tsx'
-import {fitCanvasTextureResolution, getGraphicsProfile, getSunShadowSettings, readCinematicGraphics, readGraphicsMode, readGraphicsModeName, readGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
+import {fitCanvasTextureResolution, getGraphicsProfile, getSunShadowSettings, graphicsProfile, graphicsQuality, graphicsQualityName, isCinematicGraphics, isHeavyGraphics, readCinematicGraphics, readGraphicsMode, readGraphicsModeName, readGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
 import {getRenderPipelineSettings, getRenderPipelineStructure} from '../../src/lib/rendering/renderPipelineSettings.ts'
 
-function ReadProfile() {
-  const isHeavy: boolean = useGraphicsMode()
-  const profile = useGraphicsModeValue(getGraphicsProfile)
-  return <span>{String(isHeavy)}:{JSON.stringify(profile)}</span>
-}
-test('graphics URL names round-trip through boolean state and default to fast', () => {
+test('graphics URL names round-trip through their booleans and default to fast', () => {
   expect(readGraphicsMode()).toBe(false)
   for (const isHeavy of [true, false]) {
-    const name = useGraphicsMode.getName(isHeavy)
+    const name = graphicsQualityName(isHeavy)
     expect(readGraphicsMode(`?graphics=${name}`)).toBe(isHeavy)
   }
   for (const value of ['', 'lite', 'full', 'Auto', 'high', 'quality', 'performance', 'QUALITY', 'true', 'false', 'Cinematic']) {
@@ -68,9 +59,11 @@ test('the cinematic profile raises intermediate resolutions, AO quality, shadow 
   expect(getGraphicsProfile(true, true)).toBe(cinematicProfile)
   expect(getGraphicsProfile(false, true)).toBe(getGraphicsProfile(false))
 })
-test('the provider exposes the fast profile during SSR, and every profile keeps its identity', () => {
-  const html = renderToStaticMarkup(<GraphicsMode><ReadProfile /></GraphicsMode>)
-  expect(html).toBe(renderToStaticMarkup(<span>false:{JSON.stringify(getGraphicsProfile(false))}</span>))
+test('this page went by the fast profile as it loaded, and every profile keeps its identity', () => {
+  expect(isHeavyGraphics).toBe(false)
+  expect(isCinematicGraphics).toBe(false)
+  expect(graphicsQuality).toBe('fast')
+  expect(graphicsProfile).toBe(getGraphicsProfile(false))
   expect(getGraphicsProfile(false).postprocessing).toBe(false)
   expect(getGraphicsProfile(true)).toBe(getGraphicsProfile(true))
   expect(getGraphicsProfile(false)).toBe(getGraphicsProfile(false))

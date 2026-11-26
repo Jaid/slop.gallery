@@ -1,6 +1,5 @@
 import {useFrame, useStore} from '@react-three/fiber'
 import {useEffect, useLayoutEffect, useState} from 'react'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import {galleryEvents, useGallery} from '#src/lib/gallery.ts'
 import {useLighting} from '#src/lib/gallery/lighting.ts'
@@ -8,7 +7,6 @@ import {useHiddenUi} from '#src/lib/hiddenUi.ts'
 import {loadingItems} from '#src/lib/loadingItems.ts'
 import overlay from '#src/lib/overlay/index.ts'
 import FrozenFrames from '#src/lib/rendering/FrozenFrames.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import worldClock from '#src/lib/worldClock.ts'
 import worldTuning from '#src/lib/worldTuning/index.ts'
 
@@ -18,7 +16,7 @@ const pictured = ['portraits', 'held', 'placement', 'consumed', 'remains'] as co
 /**
  * Stops the canvas while the world is frozen, under the pause menu of the Escape key: no frame is drawn, so nothing of the world runs, neither its physics nor its animations, until the world goes on, which continues with a frame as long as the last one before.
  * It does so inside the Canvas, at once as the clock freezes, since Canvas props only reach the scene with React’s next commit.
- * The frozen moment is drawn again whenever it would show differently: on a resized canvas, in another graphics mode or with other values of the world tuning, with a work hung, moved or brought in, after a teleport or a flight, with the UI hidden or shown, once the world got ready and, in development, after a hot update. No time passes in those frames (see `FrozenFrames`).
+ * The frozen moment is drawn again whenever it would show differently: on a resized canvas or with other values of the world tuning, with a work hung, moved or brought in, after a teleport or a flight, with the UI hidden or shown, once the world got ready and, in development, after a hot update. No time passes in those frames (see `FrozenFrames`).
  */
 export default function WorldFreeze() {
   const store = useStore()
@@ -41,14 +39,11 @@ export default function WorldFreeze() {
       },
     }
   })
-  // The graphics mode is React state of the page, so it gets here as a commit.
-  const isHeavy = useGraphicsMode()
-  const profile = useGraphicsModeValue(getGraphicsProfile)
   useFrame(({time}) => drawn(time))
   useLayoutEffect(() => frames.connect(), [frames])
   useEffect(() => {
     frames.refresh()
-  }, [frames, isHeavy, profile])
+  }, [frames])
   useEffect(() => {
     const refresh = () => frames.refresh()
     const unsubscribers = [

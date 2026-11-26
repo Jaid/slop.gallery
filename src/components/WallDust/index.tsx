@@ -6,7 +6,7 @@ import {useGallery} from '#src/lib/gallery.ts'
 import {wallDust} from '#src/lib/gallery/hanging/HangingRun.ts'
 import WallDustMesh from '#src/lib/gallery/hanging/WallDust.ts'
 
-/** how long the dust is drawn after it mounts, in seconds, so its pipeline has compiled by the first hanging, as when heavy graphics are switched on in the middle of a game */
+/** how long the dust is drawn after it mounts, in seconds, so its pipeline has compiled by the first hanging */
 const warmup = 1
 
 /** The dust works knock off their walls as they hang, in whichever world is loaded. It is drawn behind the loading screen and for a moment after it mounts, so its pipeline has compiled by the first hanging, and afterward only while dust is in the air. */

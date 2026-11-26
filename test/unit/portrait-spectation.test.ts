@@ -4,7 +4,6 @@ import {afterEach, beforeAll, describe, expect, spyOn, test} from 'bun:test'
 
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
-import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import Menu from '#component/Menu'
 import Minimap from '#component/Minimap'
@@ -51,14 +50,10 @@ const renderMenu = (stage: 'pause' | 'unfocus' = 'pause') => {
     locked: false,
   })
   try {
-    return renderToStaticMarkup(createElement(GraphicsModeProvider, {
-      isHeavy: true,
-      onChange: () => {},
-      children: createElement(Menu, {
-        available: true,
-        params: readAiSettings(),
-        setParams: () => {},
-      }),
+    return renderToStaticMarkup(createElement(Menu, {
+      available: true,
+      params: readAiSettings(),
+      setParams: () => {},
     }))
   } finally {
     snapshot.mockRestore()

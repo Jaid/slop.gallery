@@ -14,7 +14,7 @@ import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 
 import GalleryDrawingPipeline from './GalleryDrawingPipeline.ts'
-import {cinematicMaxTextureSize, readCinematicGraphics} from './graphicsMode.ts'
+import {cinematicMaxTextureSize, isCinematicGraphics} from './graphicsMode.ts'
 import {readStreamBudget} from './streamBudget.ts'
 import {hasGeometry, worldBounds} from './worldBounds.ts'
 
@@ -212,7 +212,7 @@ export class GalleryRenderer extends WebgpuRenderer {
     super({
       ...options,
       requiredLimits: {
-        ...readCinematicGraphics() ? {maxTextureDimension2D: cinematicMaxTextureSize} : {},
+        ...isCinematicGraphics ? {maxTextureDimension2D: cinematicMaxTextureSize} : {},
       },
       alpha: false,
       antialias: false,
@@ -635,7 +635,7 @@ export class GalleryRenderer extends WebgpuRenderer {
       return
     }
     parameters.requiredLimits.maxColorAttachmentBytesPerSample = Math.min(wideColorAttachmentBytes, adapter.limits.maxColorAttachmentBytesPerSample)
-    if (readCinematicGraphics()) {
+    if (isCinematicGraphics) {
       parameters.requiredLimits.maxSampledTexturesPerShaderStage = Math.min(cinematicSampledTextures, adapter.limits.maxSampledTexturesPerShaderStage)
     }
   }

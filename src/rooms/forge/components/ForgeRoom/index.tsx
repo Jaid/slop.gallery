@@ -6,7 +6,6 @@ import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {ExtrudeGeometry} from 'three/webgpu'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import IronTable from '#component/IronTable'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -19,7 +18,7 @@ import {forgeRoundVestibule, vestibuleArches} from '#src/lib/gallery/forgeVestib
 import roundRevealGeometry from '#src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/roundVestibule.ts'
 import EndGrainMaterial from '#src/lib/materials/forge/EndGrainMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import AlchemyMachine from '#src/rooms/forge/components/AlchemyMachine/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
@@ -53,7 +52,7 @@ export default function ForgeRoom({materials, masonry}: {
 
 /** One floor’s end-grain paving, mirroring the room in heavy mode. The room and its vestibule take one each, so either one in view renders the mirror, as its target bounds only the floor it lies in. */
 function useEndGrain() {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = graphicsProfile
   return useDisposable(useMemo(() => new EndGrainMaterial(mirrorReflections), [mirrorReflections]))
 }
 /** The floor’s reflection target, laid at the surface of the floor whose body holds it, if the floor mirrors the room. */

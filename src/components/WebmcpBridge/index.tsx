@@ -5,9 +5,8 @@ import type {TextOverlayInput} from '#src/lib/webmcp/tools.ts'
 import {useThree} from '@react-three/fiber'
 import {applyWireframeFlood} from 'capture-session'
 import {AimInspector} from 'ego-player'
-import {useEffect, useLayoutEffect, useRef} from 'react'
+import {useEffect} from 'react'
 import {Vector2} from 'three/webgpu'
-import useGraphicsMode, {useCinematicGraphics} from 'use-graphics-mode'
 
 import downloadFrame from '#src/lib/downloadFrame.ts'
 import {usePortraitSlots} from '#src/lib/gallery/portraitSlotStore.ts'
@@ -25,7 +24,6 @@ import changeSeed from '#src/lib/webmcp/changeSeed.ts'
 import dumpPortraits from '#src/lib/webmcp/dumpPortraits.ts'
 import getGeofences from '#src/lib/webmcp/getGeofences.ts'
 import registerWebmcp from '#src/lib/webmcp/register.ts'
-import setGraphicsQuality from '#src/lib/webmcp/setGraphicsQuality.ts'
 import showFence from '#src/lib/webmcp/showFence.ts'
 import {dumpSloperator, spawnSloperator, triggerSloperatorSighting} from '#src/lib/webmcp/sloperator.ts'
 import spawnOrb from '#src/lib/webmcp/spawnOrb.ts'
@@ -40,12 +38,6 @@ export default function WebmcpBridge() {
   const scene = useThree(s => s.scene)
   const camera = useThree(s => s.camera)
   const renderer = useThree(s => s.renderer)
-  // the graphics the scene has switched to, which lag behind the session’s by a commit
-  const graphics = useGraphicsMode.getName(useGraphicsMode(), useCinematicGraphics())
-  const shownGraphics = useRef(graphics)
-  useLayoutEffect(() => {
-    shownGraphics.current = graphics
-  }, [graphics])
   useEffect(() => {
     const controller = new AbortController
     const inspector = new AimInspector(scene, camera)
@@ -102,18 +94,6 @@ export default function WebmcpBridge() {
       getPortraits: dumpPortraits,
       getPortraitSlots: () => usePortraitSlots.getState().slots,
       getWorldTuning: dumpWorldTuning,
-      setGraphicsQuality: async (input: Parameters<typeof setGraphicsQuality>[0]) => {
-        const change = setGraphicsQuality(input)
-        // The scene commits on React’s own schedule, which takes no animation frame, so this also resolves under a stopped virtual clock.
-        const deadline = Date.now() + 10_000
-        while (shownGraphics.current !== change.quality) {
-          if (Date.now() > deadline) {
-            throw new Error(`The scene still shows ${shownGraphics.current} graphics instead of ${change.quality}.`)
-          }
-          await new Promise(resolve => setTimeout(resolve, 10))
-        }
-        return change
-      },
       rerollSeed: () => changeSeed(null),
       setSeed: ({seed}: SeedInput) => changeSeed(seed),
       setWireframe: applyWireframeFlood,

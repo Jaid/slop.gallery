@@ -30,6 +30,7 @@ export default function GraphicsHints({id}: {id: string}) {
     }}
   >
     <p className={css.title}>Auto graphics</p>
+    <p className={css.note}>The picked graphics apply when the page loads again.</p>
     <Branch if={opened}><Suspense fallback={<p className={css.pending}>Asking the GPU…</p>}><Checks /></Suspense></Branch>
   </div>
 }

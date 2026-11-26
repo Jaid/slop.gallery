@@ -2,23 +2,37 @@ import type {RenderPipelineSetting, RenderPipelineSettings} from './renderPipeli
 
 import optis from 'optis'
 import readPermalink from 'read-permalink'
-import useGraphicsMode from 'use-graphics-mode'
 
+import {readStored, writeStored} from '../browserStorage.ts'
 import {isHeavyCapable, readHeavyCapabilityHints} from './autoGraphics.ts'
 
-/** a `?graphics` name: a graphics mode or `auto`, which picks fast or heavy for the GPU */
-type GraphicsModeName = ReturnType<typeof useGraphicsMode.getName> | 'auto'
+/** a graphics quality by its name, as `?graphics` and the stored preference take it */
+export type GraphicsQuality = 'cinematic' | 'fast' | 'heavy'
 
-const graphicsModeNames: Array<GraphicsModeName> = [useGraphicsMode.getName(false), useGraphicsMode.getName(true), useGraphicsMode.getName(true, true), 'auto']
+/** every graphics quality there is, from the lightest to the heaviest */
+export const graphicsQualities: ReadonlyArray<GraphicsQuality> = ['fast', 'heavy', 'cinematic']
+
+/** a `?graphics` name: a graphics quality or `auto`, which picks fast or heavy for the GPU */
+type GraphicsModeName = GraphicsQuality | 'auto'
+
+/** The name of the graphics that are heavy or not, cinematic only while heavy. */
+export function graphicsQualityName(isHeavy: boolean, isCinematic = false): GraphicsQuality {
+  if (!isHeavy) {
+    return 'fast'
+  }
+  return isCinematic ? 'cinematic' : 'heavy'
+}
+
+const graphicsModeNames: Array<GraphicsModeName> = [...graphicsQualities, 'auto']
 const normalizeGraphicsMode = (value: unknown): GraphicsModeName => {
   if (value === true) {
-    return useGraphicsMode.getName(true)
+    return 'heavy'
   }
-  return graphicsModeNames.find(name => name === value) ?? useGraphicsMode.getName(false)
+  return graphicsModeNames.find(name => name === value) ?? 'fast'
 }
 const graphicsModeSchema = optis({
   defaults: {
-    graphics: useGraphicsMode.getName(false),
+    graphics: 'fast',
   },
   normalizations: {
     graphics: normalizeGraphicsMode,
@@ -90,29 +104,48 @@ type SsgiSettings = Pick<RenderPipelineSettings, | 'screenSpaceIndirectLightAmbi
   | 'screenSpaceIndirectLightTemporalFiltering'
   | 'screenSpaceIndirectLightThickness'>
 
-/** Read the `?graphics` name: fast, heavy, cinematic or auto. Anything else is fast. */
+/** Read the `?graphics` name of a permalink: fast, heavy, cinematic or auto. Anything else, and none, is fast. The stored preference is not its business; {@link readGraphicsMode} without input reads what this page went by. */
 export function readGraphicsModeName(input: URL | string = typeof location === 'undefined' ? '' : location.href) {
   return readPermalink(input, {schema: graphicsModeSchema}).graphics
 }
 
-// Only `?graphics=auto` waits for the adapter, before anything reads the graphics mode.
-const isAutoHeavy = readGraphicsModeName() === 'auto' && isHeavyCapable(await readHeavyCapabilityHints())
+/** Read the graphics a permalink asks for by name, its `graphics` given directly or packed into its `data`, or `undefined` where it asks for none, so the stored preference decides instead. */
+export function readGraphicsModeOverride(input: URL | string = typeof location === 'undefined' ? '' : location.href): GraphicsModeName | undefined {
+  const permalink: Record<string, unknown> = readPermalink(input)
+  return 'graphics' in permalink ? normalizeGraphicsMode(permalink.graphics) : undefined
+}
 
-/** Read whether `?graphics` asks for heavy graphics, which cinematic graphics are too. `auto` reads as what it picked for this page’s GPU. */
+/** The graphics name in a stored preference, or `undefined` for nothing the menu could have stored. */
+export function parseGraphicsModeName(value: unknown): GraphicsModeName | undefined {
+  return graphicsModeNames.find(name => name === value)
+}
+
+/** The graphics name a page load goes by: a permalink’s `?graphics` wins over the stored preference, and fast graphics are the default. */
+export function resolveGraphicsModeName(override?: GraphicsModeName, stored?: GraphicsModeName): GraphicsModeName {
+  return override ?? stored ?? 'fast'
+}
+
+/** the graphics name this page load goes by, decided once before the renderer and the scene exist, and never changed while the page lives */
+const requestedGraphicsModeName = resolveGraphicsModeName(readGraphicsModeOverride(), parseGraphicsModeName(readStored('graphics')))
+// Only graphics that go by `auto` wait for the adapter, before anything reads the graphics mode.
+const isAutoHeavy = requestedGraphicsModeName === 'auto' && isHeavyCapable(await readHeavyCapabilityHints())
+const graphicsModeNameOf = (input?: URL | string): GraphicsModeName => (input === undefined ? requestedGraphicsModeName : readGraphicsModeName(input))
+
+/** Read whether heavy graphics apply, which cinematic graphics are too: of the given permalink alone, or without one of this page, whose stored preference and `auto` pick for its GPU already count. */
 export function readGraphicsMode(input?: URL | string) {
-  const name = readGraphicsModeName(input)
+  const name = graphicsModeNameOf(input)
   if (name === 'auto') {
     return isAutoHeavy
   }
-  return name !== useGraphicsMode.getName(false)
+  return name !== 'fast'
 }
 
-/** Read whether `?graphics` asks for cinematic graphics: heavy, but budgeted for non-realtime rendering. */
+/** Read whether cinematic graphics apply: heavy, but budgeted for non-realtime rendering. Without a permalink, reads this page’s. */
 export function readCinematicGraphics(input?: URL | string) {
-  return readGraphicsModeName(input) === useGraphicsMode.getName(true, true)
+  return graphicsModeNameOf(input) === 'cinematic'
 }
 
-/** Read the profile `?graphics` asks for, for code outside React. It ignores later menu changes, so prefer `useGraphicsModeValue(getGraphicsProfile)` where a component can rebuild. */
+/** Read the profile the given permalink asks for, or without one this page’s, which is {@link graphicsProfile}. */
 export function readGraphicsProfile(input?: URL | string) {
   return getGraphicsProfile(readGraphicsMode(input), readCinematicGraphics(input))
 }
@@ -234,4 +267,83 @@ export function getSunShadowSettings(profile: GraphicsProfile, baseMapSize: numb
     radius: profile.sunShadowRadius ?? profile.shadowMapScale,
     samples: profile.sunShadowSamples ?? profile.shadowSamples,
   }
+}
+/** whether this page renders with heavy graphics, decided as it loaded and fixed for its lifetime; the menu only picks what the next load renders with */
+export const isHeavyGraphics = readGraphicsMode()
+/** whether this page’s heavy graphics are cinematic, decided as it loaded and fixed for its lifetime */
+export const isCinematicGraphics = readCinematicGraphics()
+/** the graphics quality this page renders with, by name */
+export const graphicsQuality: GraphicsQuality = graphicsQualityName(isHeavyGraphics, isCinematicGraphics)
+/** the profile this page renders with; every material, geometry and pipeline is built for it once, and no other quality’s assets are ever built */
+export const graphicsProfile = getGraphicsProfile(isHeavyGraphics, isCinematicGraphics)
+
+/** how the menu’s Graphics button changes what renders next, which {@link planGraphicsPreferenceChange} decides and {@link applyGraphicsPreferenceChange} carries out; what this page renders with never changes */
+export type GraphicsPreferenceChange = {
+  /** the graphics quality this page renders with, which the change leaves alone */
+  active: GraphicsQuality
+  /** the graphics quality the next load goes by from now on */
+  next: GraphicsQuality
+  /** the graphics quality the next load went by before the change, which the menu showed */
+  previous: GraphicsQuality
+} & ({
+  /** the URL the page goes to, which loads it again with the new graphics */
+  url: string
+  /** `url`: the page’s permalink carries its graphics, so it goes to the same URL with the new ones in their place, leaving the stored preference alone; `storage`: the new ones are stored for the next load and this page goes on as it renders */
+  via: 'url'
+} | {via: 'storage'})
+
+/** The graphics quality the menu’s flip between fast and heavy leaves `quality` at: the page’s own kind of heavy, cinematic where this page renders with that, and fast from every heavy quality. */
+export function toggledGraphicsQuality(quality: GraphicsQuality, active = graphicsQuality): GraphicsQuality {
+  return quality === 'fast' ? graphicsQualityName(true, active === 'cinematic') : 'fast'
+}
+
+/** Read the graphics quality the next load of this page would render with, which seeds the menu’s Graphics button: the stored preference, resolved, or the quality this page renders with where a permalink overrode it or nothing is stored. */
+export function readNextGraphicsQuality(): GraphicsQuality {
+  if (readGraphicsModeOverride() !== undefined) {
+    return graphicsQuality
+  }
+  const stored = parseGraphicsModeName(readStored('graphics'))
+  if (stored === undefined) {
+    return graphicsQuality
+  }
+  return stored === 'auto' ? graphicsQualityName(isAutoHeavy) : stored
+}
+
+/** How this page would flip the graphics quality of its next load between fast and heavy, without doing anything yet. */
+export function planGraphicsPreferenceChange(): GraphicsPreferenceChange {
+  const previous = readNextGraphicsQuality()
+  const next = toggledGraphicsQuality(previous)
+  if (readGraphicsModeOverride() !== undefined) {
+    const url = new URL(location.href)
+    url.searchParams.set('graphics', next)
+    return {
+      via: 'url',
+      url: url.href,
+      active: graphicsQuality,
+      previous,
+      next,
+    }
+  }
+  return {
+    via: 'storage',
+    active: graphicsQuality,
+    previous,
+    next,
+  }
+}
+
+/** Carries out a change {@link planGraphicsPreferenceChange} decided on. By URL it leaves this page for one that loads with the new graphics; by storage it only stores them, and the next load renders with them. */
+export function applyGraphicsPreferenceChange(change: GraphicsPreferenceChange) {
+  if (change.via === 'url') {
+    location.assign(change.url)
+    return
+  }
+  writeStored('graphics', change.next)
+}
+
+/** Flip the graphics quality of the next load between fast and heavy, as the menu’s Graphics button does, and tell which quality it goes by from now on. */
+export function toggleGraphicsPreference(): GraphicsPreferenceChange {
+  const change = planGraphicsPreferenceChange()
+  applyGraphicsPreferenceChange(change)
+  return change
 }

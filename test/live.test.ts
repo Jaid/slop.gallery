@@ -316,10 +316,12 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('production gallery: visible WebGPU, w
     expect(Math.hypot(...thrown.visualPosition.map((value, axis) => value - beforeThrow[axis]))).toBeGreaterThan(0.2)
     expect(Math.hypot(thrown.position.x - hanging.position.x, thrown.position.y - hanging.position.y, thrown.position.z - hanging.position.z)).toBeGreaterThan(0.1)
     await pause(page)
-    // The graphics switch takes effect at once, and both captures of a frame keep its size and show the scene.
-    const graphicsLabel = await page.$eval('[aria-label="Heavy graphics"] small', element => element.textContent)
-    await page.click('[aria-label="Heavy graphics"]')
-    await page.waitForFunction(before => document.querySelector('[aria-label="Heavy graphics"] small')?.textContent !== before, {}, graphicsLabel)
+    // Graphics never switch in place: this page’s permalink carries ?graphics=heavy, so picking the other graphics goes to the same URL with fast in its place and loads again with them, and both captures of a frame of the new page keep its size and show the scene.
+    expect(await page.$eval('[aria-label="Heavy graphics"] small', element => element.textContent)).toBe('Heavy')
+    await Promise.all([page.waitForNavigation({waitUntil: 'domcontentloaded'}), page.click('[aria-label="Heavy graphics"]')])
+    expect(URL.parse(page.url())!.searchParams.get('graphics')).toBe('fast')
+    await waitForGallery(page)
+    await page.waitForFunction(() => document.querySelector('[aria-label="Heavy graphics"] small')?.textContent === 'Fast')
     await page.screenshot({path: 'out/live-test/production-fast.png'})
     const captures = await page.evaluate(async () => {
       const [a, b] = await Promise.all([globalThis.slopGallery!.captureFrame!(), globalThis.slopGallery!.captureFrame!()])

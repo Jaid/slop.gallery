@@ -51,7 +51,6 @@
         "three-mesh-bvh": "0.10.0",
         "three-shadow-cache": "workspace:*",
         "use-audio-queue": "workspace:*",
-        "use-graphics-mode": "workspace:*",
         "use-narrator": "workspace:*",
         "use-pause-menu": "workspace:*",
         "victoria-browser-client": "0.4.0",
@@ -411,13 +410,6 @@
       "version": "0.1.0",
       "peerDependencies": {
         "three": "^0.187.0",
-      },
-    },
-    "packages/use-graphics-mode": {
-      "name": "use-graphics-mode",
-      "version": "0.1.0",
-      "peerDependencies": {
-        "react": "^19.3.1",
       },
     },
     "packages/use-narrator": {
@@ -2134,8 +2126,6 @@
     "uri-js": ["uri-js@4.4.1", "", { "dependencies": { "punycode": "^2.1.0" } }, "sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg=="],
 
     "use-audio-queue": ["use-audio-queue@workspace:packages/use-narrator/packages/use-audio-queue"],
-
-    "use-graphics-mode": ["use-graphics-mode@workspace:packages/use-graphics-mode"],
 
     "use-narrator": ["use-narrator@workspace:packages/use-narrator"],
 

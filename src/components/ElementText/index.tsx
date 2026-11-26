@@ -2,10 +2,9 @@ import type {ThreeElements} from '@react-three/fiber'
 
 import Branch from 'branch-component'
 import {useEffect, useEffectEvent, useMemo} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import {cssHex} from '#src/lib/color.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import useLoadingElementTexture from '#src/lib/useLoadingElementTexture.ts'
 
 import css from './style.module.sass'
@@ -71,7 +70,7 @@ export function Face({background, color, fontFamily, fontSize, fontWeight, heigh
 
 /** A line of text laid out as HTML, fitted into `width` × `height` meters; until it is rasterized, it is listed as the loading item `element-text:<text>` and hidden. */
 const ElementText = ({color = '#ffffff', fontFamily = 'sans-serif', fontSize = 0.7, fontWeight = 400, height, maxWidth = 0.9, materialProps, onReady, surface, text, width, ...meshProps}: ElementTextProps) => {
-  const {canvasTextureMipmaps: mipmaps} = useGraphicsModeValue(getGraphicsProfile)
+  const {canvasTextureMipmaps: mipmaps} = graphicsProfile
   const background = surface && cssHex(surface.color)
   const texture = useLoadingElementTexture(`element-text:${text}`, useMemo(() => {
     const textureHeight = Math.max(64, Math.round(textureWidth * height / width))

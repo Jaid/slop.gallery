@@ -396,7 +396,7 @@ const captureFilm = async ({encoding: {audio: audible, fps}, recipe, settle}: Fi
       const still = () => page.evaluate(() => globalThis.virtualClock!.step(0))
       await waitForLoadingItems(page, {between: still})
       if (frameCalls) {
-        // A tool can change how everything renders, like set_graphics_quality, whose first frames lack shadow maps and TRAA’s history: frames at the same moment settle them, like before the first frame.
+        // A tool can change how everything renders, like set_world_tuning rebuilding a pass of the pipeline, whose first frames lack shadow maps and TRAA’s history: frames at the same moment settle them, like before the first frame.
         for (let frame = 0; frame < settle; frame++) {
           await still()
         }

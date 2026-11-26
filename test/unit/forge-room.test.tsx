@@ -1,12 +1,11 @@
 import type {RapierRigidBody} from '@react-three/rapier'
-import type {Mesh, Object3D, Scene} from 'three/webgpu'
+import type {Mesh, Scene} from 'three/webgpu'
 
 import {afterAll, beforeAll, describe, expect, test} from 'bun:test'
 
 import {Ray} from '@dimforge/rapier3d-compat'
 import {useThree} from '@react-three/fiber'
-import {Box3, MeshBasicMaterial, Vector3} from 'three/webgpu'
-import {GraphicsModeProvider} from 'use-graphics-mode'
+import {MeshBasicMaterial} from 'three/webgpu'
 
 import {workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import forge from '../../src/lib/gallery/forge.ts'
@@ -17,20 +16,16 @@ import {mountPhysics} from './helpers/inertPhysics.tsx'
 const material = new MeshBasicMaterial
 let mounted: Awaited<ReturnType<typeof mountPhysics>>
 let scene: Scene | undefined
-const boundsOf = (object: Object3D) => {
-  const bounds = new Box3
-  return bounds.setFromObject(object)
-}
 function SceneProbe() {
   scene = useThree(state => state.scene)
   return null
 }
 beforeAll(async () => {
-  // Every finish of the room but its floors is the same plain material; only the colliders and the floors’ mirrors matter here.
-  mounted = await mountPhysics(<GraphicsModeProvider isHeavy onChange={() => {}}>
+  // Every finish of the room but its floors is the same plain material; only the colliders and the floors matter here.
+  mounted = await mountPhysics(<>
     <ForgeRoom masonry={material} materials={new Proxy({}, {get: () => material}) as never} />
     <SceneProbe />
-  </GraphicsModeProvider>)
+  </>)
   mounted.physics.step(1 / 60)
 })
 afterAll(async () => {
@@ -68,7 +63,7 @@ describe('the Forge as mounted', () => {
     expect(bench).toBeDefined()
     const start = bench!.translation()
     let drift = 0
-    // long frames like a graphics switch or a tab coming back from the background, which step up to 30 times at once, between short ones
+    // long frames like a tab coming back from the background, which step up to 30 times at once, between short ones
     for (let frame = 0; frame < 40; frame++) {
       step([0.5, 0.004, 0.25, 1 / 60][frame % 4])
       const {x, y, z} = bench!.translation()
@@ -77,25 +72,16 @@ describe('the Forge as mounted', () => {
     expect(drift).toBeLessThan(0.001)
     expect(bench!.isSleeping()).toBe(true)
   })
-  test('in heavy graphics, the room’s floor and the vestibule’s each mirror the room at their own surface, the mirror bounded by that floor alone', () => {
-    scene!.updateMatrixWorld(true)
-    const targets = new Set<Object3D>
+  test('the room’s floor and the vestibule’s are each end-grain of their own, and in this page’s fast graphics neither mirrors the room', () => {
+    const materials = new Set<EndGrainMaterial>
     for (const name of ['forge-block-floor', 'forge-vestibule-floor']) {
       const floor = scene!.getObjectByName(name) as Mesh
       expect(floor.material).toBeInstanceOf(EndGrainMaterial)
-      const target = (floor.material as EndGrainMaterial).reflectionTarget!
-      expect(target).not.toBeNull()
-      targets.add(target)
-      expect(target.getWorldPosition(new Vector3).y).toBeCloseTo(0, 6)
-      const facing = new Vector3(0, 0, 1)
-      expect(facing.transformDirection(target.matrixWorld).y).toBeCloseTo(1, 6)
-      // The shared mirror only renders while a floor is in view, by the bounds of the nearest of its target’s ancestors that has any.
-      let holder = target.parent
-      while (holder && boundsOf(holder).isEmpty()) {
-        holder = holder.parent
-      }
-      expect(boundsOf(holder!).equals(boundsOf(floor))).toBe(true)
+      const floorMaterial = floor.material as EndGrainMaterial
+      materials.add(floorMaterial)
+      // Heavy graphics build the same floors with a mirror; the material’s own tests cover both, as a page only ever builds its own quality’s.
+      expect(floorMaterial.reflectionTarget ?? null).toBeNull()
     }
-    expect(targets.size).toBe(2)
+    expect(materials.size).toBe(2)
   })
 })

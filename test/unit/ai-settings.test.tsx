@@ -1,7 +1,6 @@
 import {expect, test} from 'bun:test'
 
 import {renderToStaticMarkup} from 'react-dom/server'
-import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import Menu from '#component/Menu'
 import OpenRouterConnection from '#component/OpenRouterConnection'
@@ -112,7 +111,7 @@ const renderMenu = (available: boolean) => {
   const {orbit} = useIntro.getInitialState()
   Object.assign(useIntro.getInitialState(), {orbit: null})
   try {
-    return renderToStaticMarkup(<GraphicsModeProvider isHeavy onChange={() => {}}><Menu available={available} params={readAiSettings(available ? '' : '?ai=false')} setParams={() => {}} /></GraphicsModeProvider>)
+    return renderToStaticMarkup(<Menu available={available} params={readAiSettings(available ? '' : '?ai=false')} setParams={() => {}} />)
   } finally {
     Object.assign(useIntro.getInitialState(), {orbit})
   }

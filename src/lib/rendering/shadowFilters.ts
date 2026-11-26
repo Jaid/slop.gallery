@@ -1,9 +1,8 @@
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 import {useShallow} from 'zustand/react/shallow'
 
 import {isDevelopmentMode} from '../developmentMode.ts'
 import {pipelineTuning} from '../worldTuning/PipelineTuningModule.ts'
-import {getGraphicsProfile} from './graphicsMode.ts'
+import {graphicsProfile, isHeavyGraphics} from './graphicsMode.ts'
 import {getShadowProps, tunableFilters} from './shadowFilterNodes.ts'
 
 /**
@@ -17,13 +16,12 @@ export function useShadowProps(mapSize: number, {isPoint = false, radius = 1, so
   radius?: number
   softenable?: boolean
 } = {}) {
-  const isHeavy = useGraphicsMode()
-  const {lampShadowRadius, shadowMapScale, shadowSamples} = useGraphicsModeValue(getGraphicsProfile)
+  const {lampShadowRadius, shadowMapScale, shadowSamples} = graphicsProfile
   const tuned = pipelineTuning.useValues(useShallow(state => ({
     radius: state.lampShadowRadius,
     samples: state.lampShadowSamples,
   })))
-  if (isDevelopmentMode && isHeavy) {
+  if (isDevelopmentMode && isHeavyGraphics) {
     return {
       'shadow-filterNode': isPoint ? (softenable ? tunableFilters.softPoint : tunableFilters.point) : tunableFilters.pcf,
       'shadow-filterSamples': tuned.samples,

@@ -3,10 +3,9 @@ import type {Texture} from 'three/webgpu'
 import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import WoodFloorMaterial from '#src/lib/materials/WoodFloorMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 export default function WoodFloor({width, depth, texture, reflections}: {
   depth: number
@@ -14,7 +13,7 @@ export default function WoodFloor({width, depth, texture, reflections}: {
   texture: Texture
   width: number
 }) {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = graphicsProfile
   const reflective = reflections ?? mirrorReflections
   const material = useDisposable(useMemo(() => new WoodFloorMaterial(texture, reflective), [reflective, texture]))
   const reflection = material.reflectionTarget
