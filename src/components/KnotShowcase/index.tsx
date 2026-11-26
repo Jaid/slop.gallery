@@ -2,7 +2,7 @@ import type {ShowcasedKnot} from '#src/lib/gallery/showcasedKnots.ts'
 
 import {ConvexHullCollider, useBeforePhysicsStep} from '@react-three/rapier'
 import useDisposable from 'disposable-lifetime/react'
-import DirectKnotMaterials from 'knot-materials/knotMaterials/DirectKnotMaterials.ts'
+import KnotMaterials from 'knot-materials/KnotMaterials.ts'
 import loadKnotMaterial from 'knot-materials/materials.ts'
 import {useEffect, useMemo, useSyncExternalStore} from 'react'
 
@@ -48,7 +48,7 @@ export default function KnotShowcase({knots}: {knots: ReadonlyArray<ShowcasedKno
       }
     }
   })
-  const materials = useDisposable(useMemo(() => new DirectKnotMaterials(knots.map(knot => knot.entry), loadKnotMaterial, getPmremEnvironment()), [knots]))
+  const materials = useDisposable(useMemo(() => new KnotMaterials(knots.map(knot => knot.entry), loadKnotMaterial, getPmremEnvironment()), [knots]))
   const worn = useSyncExternalStore(materials.subscribe, materials.getSnapshot, materials.getSnapshot)
   useEffect(() => trackLoadingItems(() => materials.pendingMaterials.map(material => `knot-material:${material}`)), [materials])
   const {resources} = materials

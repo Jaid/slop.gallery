@@ -24,9 +24,7 @@ src/
   main.ts                 # Metadata-only catalogue
   types.ts
   rarities.ts             # Exhaustive, centrally curated rarity map
-  knotMaterials/
-    base/KnotMaterials.ts
-    DirectKnotMaterials.ts
+  KnotMaterials.ts
   geometry.ts
   StudioEnvironment.ts
 scripts/
@@ -36,7 +34,7 @@ scripts/
 
 Every knot lives directly in `src/entries/<id>`. Candidate folders contain attribution, shared candidate-specific utilities, and candidate/model assets—not nested knot entries. Shared shader functions live in `src/lib`; a helper used only by one candidate lives in that candidate's `lib`; a helper used only by one knot lives directly in its `Material.ts`. Materials import the narrow helper files they need. `src/lib/index.ts` also provides a barrel.
 
-`main.ts` and the metadata barrels never import shaders. The application can inspect the catalogue without evaluating any material constructors. `materials.ts` is the Vite-specific lazy loader, which gives every entry's `Material.ts` a chunk of its own; scenes pass it to `DirectKnotMaterials` and `RuntimeKnotIconRenderer`, so they only download the shaders of the knots they show.
+`main.ts` and the metadata barrels never import shaders. The application can inspect the catalogue without evaluating any material constructors. `materials.ts` is the Vite-specific lazy loader, which gives every entry's `Material.ts` a chunk of its own; scenes pass it to `KnotMaterials` and `RuntimeKnotIconRenderer`, so they only download the shaders of the knots they show.
 
 ## Metadata and identity
 
@@ -94,7 +92,7 @@ For vertex displacement, metadata must declare a conservative maximum distance i
 
 `placeholder` sums up how the knot looks. Its `color` tints the nameplates. Author it and the material’s palette with `hsl.integer(hue, saturation, lightness)`: hue in degrees, saturation and lightness in percent. The result is packed sRGB (`0xRRGGBB`), ready for Three.js materials and TSL’s `color()`. Prompt generation spreads its examples across the seven `shading` options: `smooth`, `ghost`, `metal`, `glass`, `stone`, `liquid` and `fabric`.
 
-Scenes take their knots’ materials from `DirectKnotMaterials`. It has no placeholders and no warmup of its own, since their renderer brings in new materials without stalling, like Slop Gallery’s streaming renderer: the shaders load once the scene subscribes, and its `getSnapshot()` (for `useSyncExternalStore`) lists each knot’s full material once it has arrived, so the scene only mounts a knot then, with its `coreMaterial` on a child mesh if it has one. It extends `KnotMaterials`, which owns the shared `KnotResources`, the environment and the on-demand loading. Full materials are built in every graphics mode, since Knottingham exists to review them.
+`KnotMaterials` loads the selected shaders on first subscription. Its `getSnapshot()` works with `useSyncExternalStore`: a scene mounts each knot once its material arrives and renders its `coreMaterial` on a child mesh if present. `dispose()` releases the geometry, materials and any environment the collection created; a supplied environment remains owned by the caller.
 
 ### Opaque cores under alpha-cut shells
 

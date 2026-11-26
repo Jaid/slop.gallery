@@ -5,7 +5,7 @@ import useDisposable from 'disposable-lifetime/react'
 import {special, unknown} from 'knot-materials'
 import {knotExhibition, knotFloatHeight, knotRarityMode} from 'knot-materials/exhibition.ts'
 import {createKnotGeometry} from 'knot-materials/geometry.ts'
-import DirectKnotMaterials from 'knot-materials/knotMaterials/DirectKnotMaterials.ts'
+import KnotMaterials from 'knot-materials/KnotMaterials.ts'
 import loadKnotMaterial from 'knot-materials/materials.ts'
 import {knotSign, knotSignPosition} from 'knot-materials/signs.ts'
 import {useEffect, useMemo, useSyncExternalStore} from 'react'
@@ -74,7 +74,7 @@ export default function KnotExhibition() {
       }
     }
   })
-  const materials = useDisposable(useMemo(() => new DirectKnotMaterials(knotExhibition, loadKnotMaterial, getPmremEnvironment()), []))
+  const materials = useDisposable(useMemo(() => new KnotMaterials(knotExhibition, loadKnotMaterial, getPmremEnvironment()), []))
   const worn = useSyncExternalStore(materials.subscribe, materials.getSnapshot, materials.getSnapshot)
   useEffect(() => trackLoadingItems(() => materials.pendingMaterials.map(id => `knot-material:${id}`)), [materials])
   const {resources} = materials
