@@ -134,7 +134,7 @@ await snap({
     target: {wall_id: 'studio-north', position: {x: 1, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
-    canvas_material: 'karakami'
+    canvas_material: 'isogilt'
   }),
   call.add_portrait({
     image: 'https://gstatic.com/webp/gallery/3.webp',
@@ -320,7 +320,7 @@ await film({
     target: {wall_id: 'studio-north', position: {x: 0, y: 2}},
     title: 'Jaid',
     frame: 'kumiko',
-    canvas_material: 'karakami',
+    canvas_material: 'isogilt',
     hanging_animation: true // fly onto the wall like a work the player hangs instead of appearing there
   }}}
 ])

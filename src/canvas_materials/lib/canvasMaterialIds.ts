@@ -1,5 +1,5 @@
 /** the ids of every canvas material there is; `index.ts` holds one of each, which lives in the folder of its id */
-export const canvasMaterialIds = ['linen', 'impasto', 'nacre', 'rag', 'wax', 'baryta', 'moire', 'karakami', 'silverplate', 'trichrome', 'isogilt', 'satin-stitch', 'prism-sweep', 'intaglio-rare', 'ghost-rare'] as const
+export const canvasMaterialIds = ['linen', 'impasto', 'nacre', 'rag', 'wax', 'baryta', 'moire', 'silverplate', 'trichrome', 'isogilt', 'prism-sweep', 'intaglio-rare'] as const
 /** the id of one of the canvas materials */
 export type CanvasMaterialId = typeof canvasMaterialIds[number]
 

@@ -50,7 +50,7 @@ await snap({
     image: 'https://pbs.twimg.com/media/HWO9FDjaIAAfhDz?format=jpg&name=orig',
     target: {wall_id: 'studio-north', position: {x: 0, y: 2}}, // from the wall’s middle, where the Studio’s own work hangs
     frame: 'kumiko',
-    canvas_material: 'karakami'
+    canvas_material: 'isogilt'
   }),
   call.set_world_tuning({values: {studio: {
     lightColor: {saturation: 0, lightness: 100}, // OkHSL, any of hue, saturation and lightness left out at 0, 100 and 50
