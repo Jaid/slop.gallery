@@ -5,11 +5,11 @@ import {expect, test} from 'bun:test'
 import {fitCanvasTextureResolution, getSunShadowSettings, graphicsProfiles as profiles} from '../../src/lib/rendering/graphicsMode.ts'
 import {getRenderPipelineSettings, getRenderPipelineStructure} from '../../src/lib/rendering/renderPipelineSettings.ts'
 
-test('the cinematic profile raises intermediate resolutions, AO quality, shadow samples and lamp filter radius, texture filtering, curve tessellation and indirect light over Heavy and keeps the rest', () => {
+test('the cinematic profile raises intermediate resolutions, AO quality, shadow samples and lamp filter radius, texture filtering, curve tessellation, frame triangles and indirect light over Heavy and keeps the rest', () => {
   const cinematicProfile = profiles.cinematic
   const heavy: Record<string, unknown> = profiles.heavy
   const cinematic: Record<string, unknown> = cinematicProfile
-  const raised = ['canvasTextureResolution', 'curveDetail', 'ambientOcclusionResolutionScale', 'ambientOcclusionSamples', 'reflectionResolutionScale', 'shadowMapScale', 'lampShadowRadius', 'shadowSamples', 'sunShadowRadius', 'sunShadowSamples', 'surfaceAnisotropy', 'volumetricLightSteps']
+  const raised = ['canvasTextureResolution', 'curveDetail', 'frameTriangles', 'ambientOcclusionResolutionScale', 'ambientOcclusionSamples', 'reflectionResolutionScale', 'shadowMapScale', 'lampShadowRadius', 'shadowSamples', 'sunShadowRadius', 'sunShadowSamples', 'surfaceAnisotropy', 'volumetricLightSteps']
   for (const key of raised) {
     expect(cinematic[key] as number, key).toBeGreaterThan(heavy[key] as number)
   }

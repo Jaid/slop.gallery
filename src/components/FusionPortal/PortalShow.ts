@@ -23,6 +23,7 @@ import {introOrbitRate, orbitAngle} from '#src/lib/gallery/fusion/orbit.ts'
 import portalShadow from '#src/lib/gallery/fusion/portalShadow.ts'
 import PortalVisuals, {emberPalette, paletteOf} from '#src/lib/gallery/fusion/PortalVisuals.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import {resetImpact, screenImpact} from '#src/lib/rendering/screenImpact.ts'
 import {softShadowKey} from '#src/lib/rendering/shadowPool.ts'
 import {holdArtworkTexture} from '#src/lib/useArtworkTexture.ts'
@@ -390,7 +391,7 @@ export default class PortalShow {
   private rehearseFrame() {
     const {frame: portal, resultFrame, spec} = this.fusion
     const frame = portraitFrame(resultFrame)
-    const mesh = new Mesh(frame.createGeometry(spec.work.width, spec.work.height), frame.materials)
+    const mesh = new Mesh(frame.createGeometry(spec.work.width, spec.work.height, graphicsProfile.frameTriangles), frame.materials)
     mesh.name = 'fusion-frame-rehearsal'
     mesh.castShadow = true
     mesh.receiveShadow = true

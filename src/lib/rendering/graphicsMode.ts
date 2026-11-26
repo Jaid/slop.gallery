@@ -27,6 +27,8 @@ export type GraphicsProfile = Readonly<{
   contactShadowTuning?: ContactShadowTuning
   /** factor on the segment counts of round meshes that opt in, along each curved direction */
   curveDetail: number
+  /** the most triangles a portrait frame of any size may take, which frames spend on finer ornaments, never on more of them */
+  frameTriangles: number
   /** whether screen-space indirect light bounces the lit scene off the surfaces’ diffuse color */
   indirectLight: boolean
   /** filter radius for shadow-casting lamps, in shadow-map texels, so a larger `shadowMapScale` needs a proportionally larger radius for the same penumbra; independent of the Sun */
@@ -80,6 +82,8 @@ const fastProfile: GraphicsProfile = {
   canvasTextureMipmaps: false,
   canvasTextureResolution: 0.5,
   curveDetail: 1,
+  // A frame’s `frameTriangleBudget`, which lays its ornaments out in every mode.
+  frameTriangles: 8192,
   noiseTextures: false,
   mirrorReflections: false,
   indirectLight: false,
@@ -99,6 +103,7 @@ const heavyProfile: GraphicsProfile = {
   canvasTextureMipmaps: false,
   canvasTextureResolution: 1,
   curveDetail: 1,
+  frameTriangles: 8192,
   noiseTextures: true,
   mirrorReflections: true,
   indirectLight: false,
@@ -117,7 +122,7 @@ const heavyProfile: GraphicsProfile = {
   volumetricLight: true,
   volumetricLightSteps: 64,
 }
-// Cinematic raises intermediate and shadow-map resolutions, AO quality, texture filtering, curve tessellation and indirect light for non-realtime rendering.
+// Cinematic raises intermediate and shadow-map resolutions, AO quality, texture filtering, curve tessellation, the frames’ triangles and indirect light for non-realtime rendering.
 const cinematicProfile: GraphicsProfile = {
   ...heavyProfile,
   // Tight, strong halos at full resolution with a hard threshold: the fountain’s water and the flames glow, while sunlit stone no longer hazes over.
@@ -140,6 +145,7 @@ const cinematicProfile: GraphicsProfile = {
     contactShadows: true,
   },
   curveDetail: 2,
+  frameTriangles: 32_768,
   indirectLight: true,
   ambientOcclusionResolutionScale: 2,
   ambientOcclusionSamples: 64,

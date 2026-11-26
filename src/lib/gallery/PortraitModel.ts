@@ -8,6 +8,7 @@ import {Box3, Group, Mesh, MeshBasicNodeMaterial, PlaneGeometry, Vector3} from '
 import {canvasMaterials} from '#src/canvas_materials/index.ts'
 import {portraitFrame} from '#src/frames/index.ts'
 
+import {graphicsProfile} from '../rendering/graphicsMode.ts'
 import {artworkPlaceholders, holdArtworkTexture} from '../useArtworkTexture.ts'
 
 /** what of a work its model shows */
@@ -41,7 +42,7 @@ export default class PortraitModel {
    */
   constructor({canvasMaterial, frame: frameId, height, source, width}: PortraitModelSubject, hold: ArtworkHolder = holdArtworkTexture) {
     const frame = portraitFrame(frameId)
-    this.moulding = new Mesh(frame.createGeometry(width, height), frame.materials)
+    this.moulding = new Mesh(frame.createGeometry(width, height, graphicsProfile.frameTriangles), frame.materials)
     this.moulding.name = 'portrait-frame'
     // Unlit, like in the world, where the image shows as it is whatever light falls on its frame.
     this.image = new Mesh(new PlaneGeometry(width, height), new MeshBasicNodeMaterial({color: artworkPlaceholders.loading}))

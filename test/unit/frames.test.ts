@@ -1,8 +1,9 @@
+import type PortraitFrame from '../../src/frames/base/PortraitFrame.ts'
 import type {Portrait, PortraitRatio, Vec3} from '../../src/lib/gallery/types.ts'
 
 import {describe, expect, test} from 'bun:test'
 
-import {frameBack, frameTriangleBudget, maximumFrameReach} from '../../src/frames/base/PortraitFrame.ts'
+import {frameBack, frameDetail, frameTriangleBudget, maximumFrameReach} from '../../src/frames/base/PortraitFrame.ts'
 import {classicFrame, frames, portraitFrame} from '../../src/frames/index.ts'
 import {choiceFrames, pickFrame} from '../../src/frames/lib/frameChoice.ts'
 import {frameIds, readFrame} from '../../src/frames/lib/frameParameter.ts'
@@ -14,6 +15,7 @@ import {imageSize} from '../../src/lib/gallery/ImageImporter.ts'
 import portraitOrbit from '../../src/lib/gallery/portraitOrbit.ts'
 import {portraitRatios, slotAreas, slotFrame} from '../../src/lib/placement/portraitSlots.ts'
 import {hangingOffset} from '../../src/lib/placement/wallGeometry.ts'
+import {graphicsProfiles} from '../../src/lib/rendering/graphicsMode.ts'
 import MaterialOutputsNode from '../../src/lib/rendering/MaterialOutputsNode.ts'
 import {orbs} from '../../src/orbs/index.ts'
 import artworks from '../../src/worlds/gallery/artworks.ts'
@@ -21,12 +23,14 @@ import slopGallery from '../../src/worlds/gallery/index.ts'
 import knottingham from '../../src/worlds/knottingham/index.ts'
 import sandbox from '../../src/worlds/sandbox/cell.ts'
 
-const entries = Object.entries(frames)
+const entries: Array<[string, PortraitFrame]> = Object.entries(frames)
 /** every size a work can come in: each slot ratio at each slot area, and imported images at both of the crop’s limits and square at each slot area, which rooms take their portrait areas from */
 const sizes = [
   ...Object.keys(portraitRatios).flatMap(ratio => slotAreas.map(area => slotFrame(ratio as PortraitRatio, area))),
   ...slotAreas.flatMap(area => [[2, 1], [1, 2], [1, 1]].map(([width, height]) => imageSize(width, height, area))),
 ]
+/** the triangles frames may take in each graphics mode, fewest first */
+const budgets = [...new Set(Object.values(graphicsProfiles).map(profile => profile.frameTriangles))].toSorted((a, b) => a - b)
 describe('frames', () => {
   test('every id has a frame and the default comes first', () => {
     expect(Object.keys(frames)).toEqual([...frameIds])
@@ -38,32 +42,48 @@ describe('frames', () => {
     expect(frame).toBe(frames.louis)
     expect(frame.materials[0]).toHaveProperty('mrtNode', expect.any(MaterialOutputsNode))
   })
+  test('fast and heavy graphics give frames their budget, cinematic graphics four times as many', () => {
+    expect(graphicsProfiles.fast.frameTriangles).toBe(frameTriangleBudget)
+    expect(graphicsProfiles.heavy.frameTriangles).toBe(frameTriangleBudget)
+    expect(graphicsProfiles.cinematic.frameTriangles).toBe(frameTriangleBudget * 4)
+    expect(frameDetail(frameTriangleBudget)).toBe(1)
+    expect(frameDetail(frameTriangleBudget * 4)).toBe(2)
+  })
   for (const [id, frame] of entries) {
-    test(`${id} stays within its budget and envelope at every size`, () => {
+    test(`${id} stays within every graphics mode’s budget and its envelope at every size, and takes the same room in each`, () => {
       expect(frame.reach).toBeGreaterThan(0)
       expect(frame.reach).toBeLessThanOrEqual(maximumFrameReach)
       expect(frame.imageDepth).toBeGreaterThan(frameBack)
       expect(frame.imageDepth).toBeLessThan(frame.front)
       const materials = frame.materials
       for (const {width, height} of sizes) {
-        const geometry = frame.createGeometry(width, height)
-        try {
-          const triangles = geometry.getAttribute('position').count / 3
-          expect(triangles).toBeLessThanOrEqual(frameTriangleBudget)
-          // Every triangle belongs to exactly one group, whose material exists.
-          expect(geometry.groups.reduce((sum, group) => sum + group.count, 0)).toBe(triangles * 3)
-          for (const group of geometry.groups) {
-            expect(materials[group.materialIndex!]).toBeDefined()
+        const boxes = budgets.map(budget => {
+          const geometry = frame.createGeometry(width, height, budget)
+          try {
+            const triangles = geometry.getAttribute('position').count / 3
+            expect(triangles).toBeLessThanOrEqual(budget)
+            // Every triangle belongs to exactly one group, whose material exists.
+            expect(geometry.groups.reduce((sum, group) => sum + group.count, 0)).toBe(triangles * 3)
+            for (const group of geometry.groups) {
+              expect(materials[group.materialIndex!]).toBeDefined()
+            }
+            // Nothing reaches into the wall behind the frame, nor out past the reach the clearance between hung works leaves room for.
+            const box = geometry.boundingBox!
+            expect(box.isEmpty()).toBe(false)
+            expect(box.min.z).toBeGreaterThan(wallFace - hangingOffset)
+            for (const [low, high, half] of [[box.min.x, box.max.x, width / 2], [box.min.y, box.max.y, height / 2]]) {
+              expect(Math.max(-low, high)).toBeLessThanOrEqual(half + maximumFrameReach + 1e-6)
+            }
+            return box
+          } finally {
+            geometry.dispose()
           }
-          // Nothing reaches into the wall behind the frame, nor out past the reach the clearance between hung works leaves room for.
-          const box = geometry.boundingBox!
-          expect(box.isEmpty()).toBe(false)
-          expect(box.min.z).toBeGreaterThan(wallFace - hangingOffset)
-          for (const [low, high, half] of [[box.min.x, box.max.x, width / 2], [box.min.y, box.max.y, height / 2]]) {
-            expect(Math.max(-low, high)).toBeLessThanOrEqual(half + maximumFrameReach + 1e-6)
+        })
+        // A larger budget only cuts the ornaments finer, which moves their outlines by a few millimeters at most.
+        for (const box of boxes.slice(1)) {
+          for (const [finer, plainer] of [[box.min, boxes[0].min], [box.max, boxes[0].max]]) {
+            expect(finer.distanceTo(plainer)).toBeLessThan(0.004)
           }
-        } finally {
-          geometry.dispose()
         }
       }
     })

@@ -14,6 +14,7 @@ import {portraitFrame} from '#src/frames/index.ts'
 import {AnimationClock} from '#src/lib/frozenTime.ts'
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import {frameSize} from '#src/lib/placement/portraitSlots.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import useArtworkTexture from '#src/lib/useArtworkTexture.ts'
 import sandbox from '#src/worlds/sandbox/cell.ts'
 
@@ -44,7 +45,7 @@ export default function CellTurntable({turntable}: {turntable: SandboxTurntable}
   const aspect = turntable.aspect ?? imageAspect
   const {width, height} = frameSize(aspect, turntable.area)
   const frame = portraitFrame(sandbox.frameAt(slot.position, environmentSeed, turntable.id))
-  const geometry = useDisposable(useMemo(() => frame.createGeometry(width, height), [frame, width, height]))
+  const geometry = useDisposable(useMemo(() => frame.createGeometry(width, height, graphicsProfile.frameTriangles), [frame, width, height]))
   // How much of the image’s width and height the work shows.
   const shown = aspect / imageAspect
   const [u, v] = shown < 1 ? [shown, 1] : [1, 1 / shown]

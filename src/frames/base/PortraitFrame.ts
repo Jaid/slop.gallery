@@ -8,14 +8,19 @@ import {frameShapeAttribute, ornamentMember} from '../lib/frameGeometry.ts'
 
 /** how far behind the middle of a work its frame’s back lies, the same for every frame, so each hangs the same distance off its wall */
 export const frameBack = -0.095
-/** the most triangles a frame of any size may take */
-export const frameTriangleBudget = 2048
+/** the most triangles a frame of any size may take in fast and heavy graphics, which also lays out its ornaments in every graphics mode; cinematic graphics allow more, see `GraphicsProfile.frameTriangles`, for finer ones */
+export const frameTriangleBudget = 8192
 /** how far a frame may reach out past its work’s edge at most, its mat included, which the clearance between hung works leaves room for */
 export const maximumFrameReach = 0.15
 /** how much a work weighs per square centimeter of its frame’s face, in kg: canvas, stretcher, backing board and moulding together, about 9 kg for a frame 1.2 m square */
 export const workAreaMass = 0.0006
 /** how much of what a frame leaves in sight of its image fills a view of it, the rest lying just outside, so the antialiased rim of the sight edge stays out of the view’s outermost pixels */
 const sightFill = 0.997
+
+/** How many times finer than within {@link frameTriangleBudget} a frame may cut its ornaments along each of their directions within `budget` triangles: twice in cinematic graphics’ four times as many. */
+export function frameDetail(budget: number) {
+  return Math.max(1, Math.floor(Math.sqrt(budget / frameTriangleBudget)))
+}
 
 /**
  * A kind of frame works hang in: its moulding swept round the work, its ornaments and its materials, built for any size of work.
@@ -82,8 +87,8 @@ export default abstract class PortraitFrame {
     return this.#sight
   }
 
-  /** The frame round a work of `width` × `height` meters, one group per material. */
-  abstract createGeometry(width: number, height: number): BufferGeometry
+  /** The frame round a work of `width` × `height` meters, one group per material, in at most `budget` triangles, by default {@link frameTriangleBudget}. A larger budget never moves an ornament or adds one, it only cuts them finer. */
+  abstract createGeometry(width: number, height: number, budget?: number): BufferGeometry
 
   protected abstract createMaterials(): Array<Material>
 
