@@ -1,4 +1,5 @@
 import type {CanvasSurface, ImageSize} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {Texture} from 'three/webgpu'
 
 import {mix, output, vec4} from 'three/tsl'
@@ -23,6 +24,9 @@ export default abstract class CanvasMaterial {
   abstract readonly title: string
   /** how much of the lit surface the finish mixes over the flat image at full strength */
   protected readonly weight: number = 1
+
+  /** what in the work’s surroundings changes how it looks, in the order of `influenceBases`, each with how it does on the material as it ships; every material answers the light and paints the image */
+  abstract get influences(): ReadonlyArray<Influence>
 
   /** A material of its own for an image plane showing the texture over `size`, which goes with whatever the material made from it. */
   createMaterial(map: Texture, size: ImageSize) {

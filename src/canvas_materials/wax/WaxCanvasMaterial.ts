@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import hsl from 'okhsl'
@@ -18,6 +19,19 @@ export default class WaxCanvasMaterial extends CanvasMaterial {
   override readonly strength = 0.5
   override readonly title = 'Beeswax veil'
   protected override readonly weight = 0.49
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'light',
+        description: 'rubbing relief under a clearcoat, both roughnesses following the rubbing',
+      },
+      {
+        base: 'texture',
+        description: 'luminance: the milky bloom gathers over dark paint',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {image, luminance, position}: CanvasSurface) {
     // Patches of the cloth’s rubbing, streaked along its strokes.

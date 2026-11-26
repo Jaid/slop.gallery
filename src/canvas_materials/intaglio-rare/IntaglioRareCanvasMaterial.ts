@@ -1,4 +1,5 @@
 import type {FoilSurface} from '../base/FoilCanvasMaterial.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial, Node} from 'three/webgpu'
 
 import {float, mix, uv, vec2, vec3} from 'three/tsl'
@@ -6,6 +7,7 @@ import {float, mix, uv, vec2, vec3} from 'three/tsl'
 import {insideBy} from '#src/lib/materials/filters.ts'
 
 import FoilCanvasMaterial from '../base/FoilCanvasMaterial.ts'
+import {millimeters} from '../lib/influence.ts'
 
 /** how many meters half a groove is wide at scale 1 for each unit of its width setting, as it was tuned where the plates climb 7.8 per meter, typical of the pictures */
 const cutScale = 0.0171
@@ -20,6 +22,24 @@ export default class IntaglioRareCanvasMaterial extends FoilCanvasMaterial {
   override readonly scale = 0.4
   override readonly strength = 0.6
   override readonly title = 'Intaglio rare'
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'angle',
+        description: 'the half vector picks the grooves that glint by the way they face, and tints them',
+      },
+      {
+        base: 'distance',
+        description: `ink averaged over ${millimeters(this.scale * 0.013)} or a pixel, whichever is wider; grooves fade where they crowd within a pixel`,
+      },
+      this.keyLight,
+      {
+        base: 'texture',
+        description: 'R, G and B: each plate is cut along steps of its channel, little where that channel is dark',
+      },
+    ]
+  }
 
   protected override coat(material: MeshPhysicalNodeMaterial, surface: FoilSurface) {
     const {half, uvPerMeter} = surface

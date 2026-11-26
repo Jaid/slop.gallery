@@ -1,4 +1,5 @@
 import type {FoilSurface} from '../base/FoilCanvasMaterial.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial, Node} from 'three/webgpu'
 
 import {mix, uv, vec2, vec3} from 'three/tsl'
@@ -13,6 +14,24 @@ export default class PrismSweepCanvasMaterial extends FoilCanvasMaterial {
   override readonly strength = 0.5
   override readonly title = 'Prism sweep'
   readonly width = 0.5
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'angle',
+        description: 'the half vector between the view and the key light rakes each sweep across the print and shifts its hue',
+      },
+      {
+        base: 'distance',
+        description: 'ink averaged over 5 mm or a pixel, whichever is wider',
+      },
+      this.keyLight,
+      {
+        base: 'texture',
+        description: 'R, G and B: each channel’s density sets where in the sweep its color catches',
+      },
+    ]
+  }
 
   protected override coat(material: MeshPhysicalNodeMaterial, surface: FoilSurface) {
     const {half, position} = surface

@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {mix, step, texture, uv, vec2, vec3} from 'three/tsl'
@@ -6,6 +7,7 @@ import {mix, step, texture, uv, vec2, vec3} from 'three/tsl'
 import {inside} from '#src/lib/materials/filters.ts'
 
 import CanvasMaterial from '../base/CanvasMaterial.ts'
+import {fades, millimeters} from '../lib/influence.ts'
 
 /** Three transparent sheets of subtractive ink, registered head-on and separated by the optical path through their spacers at a slant. */
 export default class TrichromeCanvasMaterial extends CanvasMaterial {
@@ -15,6 +17,27 @@ export default class TrichromeCanvasMaterial extends CanvasMaterial {
   readonly screen = 0.2
   override readonly strength = 0.7
   override readonly title = 'Trichrome register'
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'angle',
+        description: `the cyan and yellow sheets slide apart, ${millimeters(this.gap * 0.012 * this.strength)} each at 45°; magenta stays`,
+      },
+      {
+        base: 'distance',
+        description: `halftone dots, ${millimeters(this.scale * 0.0085)} apart, fade into flat ink at ${fades(0.0085, this.scale)}`,
+      },
+      {
+        base: 'light',
+        description: 'clearcoat over a satin print, no relief',
+      },
+      {
+        base: 'texture',
+        description: 'R, G and B, each a halftone on a sheet of its own',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {fine, image, map, position, uvPerMeter, view}: CanvasSurface) {
     const ray = view.xy.div(view.z.max(0.45)).mul(this.gap * 0.012 * this.strength)

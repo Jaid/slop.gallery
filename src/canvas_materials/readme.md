@@ -10,6 +10,8 @@ Without `?new_canvas_material`, imports are flat unless `add_portrait` specifies
 
 The two holographic finishes (`base/FoilCanvasMaterial.ts`) respond to the viewer and the strongest direct light at the center of the print in the scene drawing it. A directional light supplies its direction, a point or spot lamp its position, so its direction varies across the print. The choice follows the live intensities, lamp ranges and spot cones; ambient and hemisphere fill illuminate the print without sweeping its foil.
 
+Every material lists its `influences` (`lib/influence.ts`): what in a work’s surroundings changes how it looks, each an `Influence` of a `base` – `angle` where its own shading reads the view, `distance` where it fades or filters features by the pixel footprint, `time`, `light` and `texture`, what it reads of the image – and a `description` of how, with lengths worked out from the material’s fields. Every one answers the light and paints the image; none reads the clock. The unit test fails when a shader starts or stops reading the view, the pixel footprint or the clock without its influences saying so.
+
 The materials came out of the [Canvas materials editor on Hive](https://canvas-materials.hive.lan) (`private/agent/surface-proofs`), with a slider for the strength and each of their knobs. Their fields hold the values Jaid picked there, like the linen’s scale of 0.5 at 10% strength. While a work is carried it shows flat and faint, like any other.
 
 To add a canvas material, give it a folder with its class `<Id>CanvasMaterial.ts`, add its id to `canvasMaterialIds` and the material to `index.ts`.

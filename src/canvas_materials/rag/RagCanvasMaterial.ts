@@ -1,7 +1,9 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import CanvasMaterial from '../base/CanvasMaterial.ts'
+import {fades} from '../lib/influence.ts'
 import paintRag from './paintRag.ts'
 
 /** Cold-pressed cotton rag paper: the ink settles into the tooth’s tiny hollows while flecks of cotton on its crests keep their light. */
@@ -17,6 +19,23 @@ export default class RagCanvasMaterial extends CanvasMaterial {
   /** how deep the paper’s tooth is, against what it was made with */
   readonly tooth = 2
   protected override readonly weight = 0.63
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'distance',
+        description: `tooth and flecks fade out at ${fades(0.008, this.scale)}; slopes read across the pixel footprint, no edge narrower than a pixel`,
+      },
+      {
+        base: 'light',
+        description: 'tooth relief, almost fully matte',
+      },
+      {
+        base: 'texture',
+        description: 'RGB, darker in the hollows, pale cotton flecks on the crests',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {fine, footprint, image, position}: CanvasSurface) {
     paintRag(material, image, position, footprint, fine, {

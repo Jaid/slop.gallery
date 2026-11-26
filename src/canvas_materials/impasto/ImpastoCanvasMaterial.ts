@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {float, luminance, mix, texture, vec2} from 'three/tsl'
@@ -19,6 +20,23 @@ export default class ImpastoCanvasMaterial extends CanvasMaterial {
   /** how large the knife’s strokes are, against what they were made with */
   readonly strokeSize = 0.5
   override readonly title = 'Knife impasto'
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'distance',
+        description: 'slopes read across a relief texel up close and across a pixel from afar; the stroke relief is mipmapped',
+      },
+      {
+        base: 'light',
+        description: 'knife-stroke relief, glossy where the paint is thick, clearcoat',
+      },
+      {
+        base: 'texture',
+        description: 'luminance, baked once into strokes of up to 1600 texels/m that run along its contours and stand higher where it is light; its own slope adds relief; RGB lighter where the paint is thick',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {image, map, size, uvPerMeter}: CanvasSurface) {
     // Flat until the workers have laid the strokes, a fraction of a second later.

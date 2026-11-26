@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import hsl from 'okhsl'
@@ -7,6 +8,7 @@ import {mx_noise_float} from 'three/tsl'
 import {heightNormal} from '#src/lib/materials/filters.ts'
 
 import CanvasMaterial from '../base/CanvasMaterial.ts'
+import {fades} from '../lib/influence.ts'
 
 /** Satin baryta photographic paper: the print keeps its colors under a finely pebbled satin surface, over which a soft silver glint breaks, most of all in the dark ink. */
 export default class BarytaCanvasMaterial extends CanvasMaterial {
@@ -19,6 +21,23 @@ export default class BarytaCanvasMaterial extends CanvasMaterial {
   override readonly strength = 0.5
   override readonly title = 'Satin baryta'
   protected override readonly weight = 0.55
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'distance',
+        description: `pebbling fades out at ${fades(0.006, this.scale)}`,
+      },
+      {
+        base: 'light',
+        description: 'pebbled relief under a satin clearcoat, silver sheen, slightly metallic in dark ink',
+      },
+      {
+        base: 'texture',
+        description: 'luminance: the darker the ink, the more metallic',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {fine, luminance, position}: CanvasSurface) {
     const pebbling = mx_noise_float(position.mul(196)).mul(0.64).add(mx_noise_float(position.mul(307)).mul(0.36)).mul(fine(0.006))

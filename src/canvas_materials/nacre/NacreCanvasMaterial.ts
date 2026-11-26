@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {mx_noise_float, vec3} from 'three/tsl'
@@ -19,6 +20,23 @@ export default class NacreCanvasMaterial extends CanvasMaterial {
   readonly shell = 1
   override readonly strength = 0.1
   override readonly title = 'Abalone ground'
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'angle',
+        description: 'the view’s direction turns the shell’s colors along its growth bands, sea green to violet',
+      },
+      {
+        base: 'light',
+        description: 'growth-band relief, slightly metallic, clearcoat and thin-film iridescence',
+      },
+      {
+        base: 'texture',
+        description: 'luminance: the shell shows most through dark ink',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {image, luminance, position, view}: CanvasSurface) {
     const growth = position.y.mul(6.3).add(position.x.mul(2.3)).add(mx_noise_float(position.mul(3.8)).mul(2.5)).add(mx_noise_float(position.mul(16)).mul(0.16)).toVar('nacreGrowth')

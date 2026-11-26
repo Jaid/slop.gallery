@@ -31,6 +31,9 @@ export type ImageSize = {
 
 type Float = Node<'float'>
 
+/** The pixel footprints in meters between which `fine(extent)` fades features out, on a material of `scale`: from where a pixel spans 15% of them to where it spans 60%. */
+export const fineRange = (extent: number, scale: number) => [extent * scale * 0.15, extent * scale * 0.6] as const
+
 /** The surface of the image plane showing the texture over `size`, its features at `scale` times the size they were made at. */
 export function canvasSurface(map: Texture, size: ImageSize, scale: number): CanvasSurface {
   const meters = positionLocal.xy
@@ -46,6 +49,6 @@ export function canvasSurface(map: Texture, size: ImageSize, scale: number): Can
     uvPerMeter: vec2(1 / size.width, 1 / size.height),
     view: modelWorldMatrixInverse.mul(vec4(cameraPosition, 1)).xyz.sub(positionLocal).normalize(),
     footprint,
-    fine: extent => footprint.smoothstep(extent * scale * 0.15, extent * scale * 0.6).oneMinus(),
+    fine: extent => footprint.smoothstep(...fineRange(extent, scale)).oneMinus(),
   }
 }

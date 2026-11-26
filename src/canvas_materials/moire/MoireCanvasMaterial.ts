@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import hsl from 'okhsl'
@@ -7,6 +8,7 @@ import {mx_noise_float, vec2} from 'three/tsl'
 import {heightNormal} from '#src/lib/materials/filters.ts'
 
 import CanvasMaterial from '../base/CanvasMaterial.ts'
+import {fades, millimeters} from '../lib/influence.ts'
 
 const tau = 2 * Math.PI
 
@@ -21,6 +23,23 @@ export default class MoireCanvasMaterial extends CanvasMaterial {
   /** how strongly the watermark is pressed in, against what it was made with */
   readonly water = 1.2
   protected override readonly weight = 0.75
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'distance',
+        description: `ribs, ${millimeters(this.scale / 620)} apart, fade out at ${fades(1 / 620, this.scale)}; the watermark stays`,
+      },
+      {
+        base: 'light',
+        description: 'ribs tilted up and down by the watermark, whose waves trade brightness as the lamp moves; silk sheen',
+      },
+      {
+        base: 'texture',
+        description: 'RGB, a little lighter and darker along the watermark',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {fine, image, position}: CanvasSurface) {
     // The watermark crushes the ribs unevenly: one wave tilts them up, the next down, so the waves swap brightness with the light.

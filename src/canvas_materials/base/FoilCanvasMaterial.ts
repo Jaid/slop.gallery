@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial, Node} from 'three/webgpu'
 
 import {texture, uv, vec2, vec3} from 'three/tsl'
@@ -19,6 +20,12 @@ type Separation = {
 
 /** A foil stock whose optical response follows the key light in whatever scene renders it, including detached portrait previews. */
 export default abstract class FoilCanvasMaterial extends CanvasMaterial {
+  /** how every foil answers the light */
+  protected readonly keyLight: Influence = {
+    base: 'light',
+    description: 'the strongest lamp at the print is the key: its direction joins the view’s, and the foil fades as it grazes the print; slightly metallic under a clearcoat',
+  }
+
   protected abstract coat(material: MeshPhysicalNodeMaterial, surface: FoilSurface): void
 
   /** Exposes the three RGB plates in perceptual space over a physical patch of ink, filtered to at least the pixel footprint. */

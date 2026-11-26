@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial, Node} from 'three/webgpu'
 
 import {float, luminance, mix, texture, uv, vec2, vec3} from 'three/tsl'
@@ -22,6 +23,23 @@ export default class IsogiltCanvasMaterial extends CanvasMaterial {
   override readonly strength = 0.8
   override readonly title = 'Isogilt'
   readonly width = 0.2
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'distance',
+        description: 'tone averaged over 4 mm or two pixels, whichever is wider; contours fade where they crowd within a pixel',
+      },
+      {
+        base: 'light',
+        description: 'raised, burnished brass foil',
+      },
+      {
+        base: 'texture',
+        description: 'luminance over 4 mm: contours of equal tone, the foil as wide in meters wherever it runs, none where the tone is even',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {image, map, uvPerMeter}: CanvasSurface) {
     // The tone over a patch as wide as `blur`, or two pixels from afar, and its slope per meter across twice that.

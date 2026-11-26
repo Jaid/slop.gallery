@@ -1,4 +1,5 @@
 import type {CanvasSurface} from '../lib/canvasSurface.ts'
+import type {Influence} from '../lib/influence.ts'
 import type {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {float, mix, mx_noise_float, vec3} from 'three/tsl'
@@ -6,6 +7,7 @@ import {float, mix, mx_noise_float, vec3} from 'three/tsl'
 import {heightNormal} from '#src/lib/materials/filters.ts'
 
 import CanvasMaterial from '../base/CanvasMaterial.ts'
+import {fades} from '../lib/influence.ts'
 
 /** A daguerreotype’s pale grains scatter light while its bare silver reflects a dark field head-on and a bright one at a slant. */
 export default class SilverplateCanvasMaterial extends CanvasMaterial {
@@ -15,6 +17,27 @@ export default class SilverplateCanvasMaterial extends CanvasMaterial {
   readonly reversal = 0.5
   override readonly strength = 0.2
   override readonly title = 'Silver looking glass'
+
+  override get influences(): ReadonlyArray<Influence> {
+    return [
+      {
+        base: 'angle',
+        description: 'turning sideways, 10–41° off the normal, brightens the bare silver and dims the grains: the tone reversal; tilting up or down does nothing',
+      },
+      {
+        base: 'distance',
+        description: `grain fades out at ${fades(0.003, this.scale)}`,
+      },
+      {
+        base: 'light',
+        description: 'grain relief on the pale deposit; bare silver partly metallic and polished',
+      },
+      {
+        base: 'texture',
+        description: 'luminance: pale deposit where light, bare silver where dark; the image’s colors don’t show',
+      },
+    ]
+  }
 
   protected override paint(material: MeshPhysicalNodeMaterial, {fine, luminance, position, view}: CanvasSurface) {
     const deposit = luminance.sqrt().smoothstep(0.12, 0.87).toVar('silverDeposit')

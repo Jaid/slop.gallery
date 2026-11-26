@@ -8,6 +8,7 @@ import knifeRelief from '../../src/canvas_materials/impasto/knifeRelief.ts'
 import layKnifeStrokes, {ground} from '../../src/canvas_materials/impasto/knifeStrokes.ts'
 import {canvasMaterials} from '../../src/canvas_materials/index.ts'
 import {canvasMaterialIds, isCanvasMaterialId} from '../../src/canvas_materials/lib/canvasMaterialIds.ts'
+import {influenceBases} from '../../src/canvas_materials/lib/influence.ts'
 import {loadingItems} from '../../src/lib/loadingItems.ts'
 
 const entries = Object.entries(canvasMaterials) as Array<[CanvasMaterialId, typeof canvasMaterials[CanvasMaterialId]]>
@@ -47,6 +48,23 @@ const strokesAt = (density: number) => layKnifeStrokes({
   density,
   size: 1,
 })
+const materialsFolder = `${import.meta.dir}/../../src/canvas_materials/`
+const scripts = new Bun.Glob('*.ts')
+/** The code a canvas material shades with, without comments and strings: the files in its folder but its workers, and the foil base class if it is a foil. */
+const shaderCode = async (id: CanvasMaterialId) => {
+  const files = [...scripts.scanSync(`${materialsFolder}${id}`)].filter(file => !file.endsWith('.worker.ts'))
+  const texts = await Promise.all(files.map(file => Bun.file(`${materialsFolder}${id}/${file}`).text()))
+  if (texts.some(text => /extends FoilCanvasMaterial\b/.test(text))) {
+    texts.push(await Bun.file(`${materialsFolder}base/FoilCanvasMaterial.ts`).text())
+  }
+  return texts.join('\n').replaceAll(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '').replaceAll(/'(?:[^\n'\\]|\\.)*'|`(?:[^\\`]|\\.)*`/g, "''")
+}
+/** what in a shader’s code shows it reads an influence: the view or the foil’s half vector, the pixel footprint in any form but the derivatives the normal helpers take, or the clock */
+const influenceSignals = {
+  angle: /\b(?:half|view)\b/,
+  distance: /\bfine\(|\bfootprint\b|\.fwidth\(|\.dFd[xy]\(|\btextureSlope\(|\bthis\.ink\(/,
+  time: /\b(?:deltaTime|frameId|time|timerDelta|timerGlobal|timerLocal)\b/,
+}
 const previousDocument = globalThis.document
 // The relief shrinks the image on a 2D canvas.
 beforeAll(() => {
@@ -78,6 +96,21 @@ describe('canvas materials', () => {
     expect(isCanvasMaterialId('moire')).toBe(true)
     expect(isCanvasMaterialId('velvet')).toBe(false)
     expect(isCanvasMaterialId(undefined)).toBe(false)
+  })
+  test('each lists what changes its look as its shader reads it, once each in the order of the bases, the light and the image always', async () => {
+    for (const [id, material] of entries) {
+      const bases = material.influences.map(({base}) => base)
+      expect(bases).toEqual(influenceBases.filter(base => bases.includes(base)))
+      expect(bases).toContain('light')
+      expect(bases).toContain('texture')
+      for (const {description} of material.influences) {
+        expect(description === undefined || description.length > 0 && !/NaN|undefined/.test(description)).toBe(true)
+      }
+      const code = await shaderCode(id)
+      for (const [base, signal] of Object.entries(influenceSignals)) {
+        expect([id, base, bases.includes(base as keyof typeof influenceSignals)]).toEqual([id, base, signal.test(code)])
+      }
+    }
   })
   test('each makes a material of its own for every image, which mixes its finish over the flat image', () => {
     for (const [, kind] of entries) {
