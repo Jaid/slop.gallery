@@ -1,7 +1,15 @@
+import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
+
 import {frames} from '#src/frames/index.ts'
+import {choiceFrames} from '#src/frames/lib/frameChoice.ts'
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
 import {wallFace} from '#src/lib/gallery/architectureDimensions.ts'
 import {hangingOffset} from '#src/lib/placement/wallGeometry.ts'
+import {orbs} from '#src/orbs/index.ts'
+import {studioFrames} from '#src/rooms/studio/look.ts'
+import gallery from '#src/worlds/gallery/index.ts'
+import knottingham from '#src/worlds/knottingham/index.ts'
+import cell from '#src/worlds/sandbox/cell.ts'
 
 import {radians} from './lib/headlessGallery.ts'
 import snap from './snap.ts'
@@ -24,7 +32,7 @@ export default function snapFrames() {
   const fov = 45
   const focalLength = height / (2 * Math.tan(radians(fov / 2))) // pixels
   const portraitZ = hangingOffset - wallFace // the north wall’s face is at z = 0
-  const portraits = frameIds.map((frame, index) => ({
+  const portraits = framesByUsage().map((frame, index) => ({
     frame,
     x: (index % columns - (columns - 1) / 2) * columnWidth,
     y: roomHeight / 2 + ((rows - 1) / 2 - Math.floor(index / columns)) * rowHeight,
@@ -77,6 +85,15 @@ export default function snapFrames() {
   }, tools)
 }
 
+/** Sort by every frame a room or Orb can choose, including choices outside the default seed. */
+function framesByUsage() {
+  const rooms = [...gallery.rooms, ...knottingham.rooms, ...cell.rooms]
+  // The Studio rolls one frame for the entire room, so use its sampler rather than one seed’s result.
+  const roomFrames = new Set([...studioFrames, ...rooms.flatMap(({room}) => choiceFrames(room.frame ?? 'classic'))])
+  const orbFrames = new Set(orbs.flatMap(orb => choiceFrames(orb.frame ?? [])))
+  const rank = (frame: PortraitFrameId) => (roomFrames.has(frame) ? 0 : (orbFrames.has(frame) ? 1 : 2))
+  return frameIds.toSorted((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+}
 if (import.meta.main) {
   const {output} = await snapFrames()
   console.log(`Wrote ${output}`)

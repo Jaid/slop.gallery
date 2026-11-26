@@ -148,7 +148,7 @@ await snap({
 
 ## wall of all frames
 
-[`snapFrames.ts`](../../../scripts/snapFrames.ts) photographs every frame on the north wall of the seed 0 Studio in eight columns, with the square avatar in each frame and its ID below it. The photo is 8192 pixels tall and fits the outer frames with 64 pixels of padding on either side. Run it from the repository root after `bun run build`. The photo is saved in `out/snap/`.
+[`snapFrames.ts`](../../../scripts/snapFrames.ts) photographs every frame on the north wall of the seed 0 Studio in eight columns, with the square avatar in each frame and its ID below it. Read left to right: frames used by rooms come first, followed by Orb-only frames and then frames used by neither. Each group is alphabetical by frame ID. The photo is 8192 pixels tall and fits the outer frames with 64 pixels of padding on either side. Run it from the repository root after `bun run build`. The photo is saved in `out/snap/`.
 
 ```sh
 bun scripts/snapFrames.ts
