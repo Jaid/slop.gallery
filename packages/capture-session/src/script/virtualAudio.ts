@@ -36,24 +36,13 @@ declare global {
 /**
  * Page init script that lets an offline renderer own the clock of the page’s sound and record it, like the virtual clock owns that of its frames: every `AudioContext` the page makes is an `OfflineAudioContext` that only renders as far as {@link VirtualAudio.advance} takes it, so sounds stay in step with the frames however slowly each renders. Each advance renders the next chunk of every context and mixes it into the recording right away, so no context holds more than that chunk.
  * The contexts play from the start, as no autoplay policy holds them back, and say so through `navigator.getAutoplayPolicy()`; they report themselves running, and resuming, suspending or closing them does nothing. Media elements can’t play through them, as an offline context has no `createMediaElementSource`.
- * It needs incremental offline rendering, which Chromium ships from 158 on and earlier versions have behind `--enable-features=OfflineAudioContextIncrementalRendering`. Without it, the page keeps its own audio contexts and every advance and finish rejects.
+ * Requires Chromium 158’s incremental offline rendering.
  * It must stay self-contained: Puppeteer serializes it into the page, with its options as JSON.
  */
 export const installVirtualAudio = ({channels = 2, duration, sampleRate = 48_000}: VirtualAudioOptions) => {
-  // The explainer’s feature detection: close came with incremental rendering.
-  if (!('close' in OfflineAudioContext.prototype)) {
-    const unsupported = () => Promise.reject(new Error('Virtual audio needs incremental OfflineAudioContext rendering, which Chromium ships from 158 on. Launch earlier versions with --enable-features=OfflineAudioContextIncrementalRendering.'))
-    globalThis.virtualAudio = {
-      time: 0,
-      advance: unsupported,
-      finish: unsupported,
-    }
-    return
-  }
   /** how many sample frames a render quantum holds, the step an offline context renders in */
   const quantum = 128
   const length = Math.max(quantum, Math.ceil(duration * sampleRate))
-  /** seconds rendered so far */
   let time = 0
   let finished = false
   /** the mix, made along with the first context */
@@ -92,7 +81,6 @@ export const installVirtualAudio = ({channels = 2, duration, sampleRate = 48_000
         performanceTime: performance.now(),
       }
     }
-    /** Renders what is left. */
     renderAll() {
       return this.#renderUntil(this.length)
     }

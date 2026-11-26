@@ -8,14 +8,13 @@ import {installVirtualAudio} from '../src/script/virtualAudio.ts'
 
 const rate = 48_000
 const fps = 60
-// Exercise both feature states independently of the Chromium build’s default.
 describe.skipIf(!process.env.BROWSER)('virtual audio (needs BROWSER)', () => {
   let browser: Browser
   beforeAll(async () => {
     browser = await puppeteer.launch({
       executablePath: process.env.BROWSER,
       headless: true,
-      args: ['--disable-gpu', '--enable-features=OfflineAudioContextIncrementalRendering'],
+      args: ['--disable-gpu'],
     })
   })
   afterAll(() => browser.close())
@@ -131,23 +130,5 @@ describe.skipIf(!process.env.BROWSER)('virtual audio (needs BROWSER)', () => {
     })
     expect(recording).toBeUndefined()
     await page.close()
-  })
-  test('without incremental offline rendering, the page keeps its audio contexts and every advance and finish rejects', async () => {
-    await using legacy = await puppeteer.launch({
-      executablePath: process.env.BROWSER,
-      headless: true,
-      args: ['--disable-gpu', '--disable-features=OfflineAudioContextIncrementalRendering'],
-    })
-    const page = await legacy.newPage()
-    await page.evaluateOnNewDocument(installVirtualAudio, {duration: 0.25})
-    await page.goto('data:text/html,<title>virtual audio</title>')
-    const result = await page.evaluate(async () => ({
-      offline: new AudioContext instanceof OfflineAudioContext,
-      advance: await globalThis.virtualAudio!.advance(0.1).then(() => 'resolved', String),
-      finish: await globalThis.virtualAudio!.finish().then(() => 'resolved', String),
-    }))
-    expect(result.offline).toBe(false)
-    expect(result.advance).toContain('--enable-features=OfflineAudioContextIncrementalRendering')
-    expect(result.finish).toBe(result.advance)
   })
 })
