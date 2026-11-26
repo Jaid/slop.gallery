@@ -63,4 +63,28 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('the menu remembers the next preset wi
   expect(await saved()).toBe('heavy')
   expect(await selected()).toBe('Fast')
   expect(await hasMoon()).toBe(false)
+  // A packed fragment wins over the query, so the button rewrites it in place and loads the page again, without leaving an entry behind that shares the new page’s document.
+  const encoder = new TextEncoder
+  const packed = new URL(link)
+  packed.searchParams.delete('graphics')
+  packed.hash = `data:${encoder.encode(JSON.stringify({graphics: 'fast'})).toBase64({
+    alphabet: 'base64url',
+    omitPadding: true,
+  })}`
+  await page.goto(packed.href, {waitUntil: 'domcontentloaded'})
+  await waitForGallery(page)
+  await page.waitForSelector(button, {visible: true})
+  const fragmentPage = await page.evaluate(() => performance.timeOrigin)
+  await Promise.all([page.waitForNavigation({waitUntil: 'domcontentloaded'}), page.click(button)])
+  await waitForGallery(page)
+  expect(await page.evaluate(() => performance.timeOrigin)).not.toBe(fragmentPage)
+  expect(await selected()).toBe('Heavy')
+  expect(await hasMoon()).toBe(true)
+  // Back leaves for the page before the permalink, a document of its own, instead of showing the Fast permalink over the Heavy renderer.
+  await page.goBack({waitUntil: 'domcontentloaded'})
+  await waitForGallery(page)
+  expect(page.url()).toBe(link.href)
+  expect(await selected()).toBe('Fast')
+  expect(await hasMoon()).toBe(false)
+  expect(await saved()).toBe('heavy')
 }, 240_000)

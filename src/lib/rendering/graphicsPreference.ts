@@ -36,8 +36,8 @@ export function chooseGraphics(quality: 'fast' | 'heavy') {
         alphabet: 'base64url',
         omitPadding: true,
       })}`
-      // Assigning a fragment alone would keep this document and its renderer alive.
-      history.pushState(null, '', url)
+      // Assigning a fragment alone would keep this document and its renderer alive. A pushed entry would share this document, so Back would show the old preset’s URL over the new renderer without loading it again.
+      history.replaceState(null, '', url)
       location.reload()
       return true
     }

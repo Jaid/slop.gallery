@@ -33,7 +33,7 @@ beforeEach(() => {
       setItem: (name: string, value: string) => saved.set(name, value),
     },
     location: page,
-    history: {pushState: (_data: unknown, _title: string, url: URL) => {
+    history: {replaceState: (_data: unknown, _title: string, url: URL) => {
       page.href = url.href
     }},
   })
