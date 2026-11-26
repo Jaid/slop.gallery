@@ -1,6 +1,6 @@
 import type {Node, Texture} from 'three/webgpu'
 
-import {cameraPosition, luminance, modelWorldMatrixInverse, positionLocal, texture, vec2, vec4} from 'three/tsl'
+import {cameraPosition, float, luminance, modelWorldMatrixInverse, positionLocal, texture, vec2, vec4} from 'three/tsl'
 
 /** what every canvas material paints its surface from */
 export type CanvasSurface = {
@@ -28,6 +28,11 @@ export type ImageSize = {
   height: number
   width: number
 }
+
+/** a value a material paints with: one of its fields, or a slider’s uniform in the proof editor */
+export type Amount = Float | number
+/** An amount as a node, whether a field gave it as a number or a slider as a uniform. */
+export const amountNode = (value: Amount): Float => (typeof value === 'number' ? float(value) : value)
 
 type Float = Node<'float'>
 

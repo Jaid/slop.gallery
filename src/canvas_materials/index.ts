@@ -1,7 +1,11 @@
 import type CanvasMaterial from './base/CanvasMaterial.ts'
 import type {CanvasMaterialId} from './lib/canvasMaterialIds.ts'
 
+import AzulejoCanvasMaterial from './azulejo/AzulejoCanvasMaterial.ts'
 import BarytaCanvasMaterial from './baryta/BarytaCanvasMaterial.ts'
+import CraquelureCanvasMaterial from './craquelure/CraquelureCanvasMaterial.ts'
+import DiamondDustCanvasMaterial from './diamond-dust/DiamondDustCanvasMaterial.ts'
+import GuillocheCanvasMaterial from './guilloche/GuillocheCanvasMaterial.ts'
 import ImpastoCanvasMaterial from './impasto/ImpastoCanvasMaterial.ts'
 import IntaglioRareCanvasMaterial from './intaglio-rare/IntaglioRareCanvasMaterial.ts'
 import IsogiltCanvasMaterial from './isogilt/IsogiltCanvasMaterial.ts'
@@ -28,6 +32,10 @@ export const canvasMaterials = {
   isogilt: new IsogiltCanvasMaterial,
   'prism-sweep': new PrismSweepCanvasMaterial,
   'intaglio-rare': new IntaglioRareCanvasMaterial,
+  craquelure: new CraquelureCanvasMaterial,
+  azulejo: new AzulejoCanvasMaterial,
+  guilloche: new GuillocheCanvasMaterial,
+  'diamond-dust': new DiamondDustCanvasMaterial,
 } as const satisfies Record<CanvasMaterialId, CanvasMaterial>
 
 export type {CanvasMaterialId} from './lib/canvasMaterialIds.ts'

@@ -1023,7 +1023,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           canvas_material: {
             type: 'string',
             enum: [...canvasMaterialIds],
-            description: 'id of the canvas material its image is on, the surface it is painted or printed on: linen (loom linen), impasto (knife impasto), nacre (abalone ground), rag (cold-press rag), wax (beeswax veil), baryta (satin baryta), moire (watered silk), silverplate (silver looking glass), trichrome (trichrome register), isogilt (contour foil stamping), prism-sweep (RGB exposure foil) or intaglio-rare (three-plate engraving). Overridden by ?new_canvas_material. Default: none (flat image)',
+            description: 'id of the canvas material its image is on, the surface it is painted or printed on: linen (loom linen), impasto (knife impasto), nacre (abalone ground), rag (cold-press rag), wax (beeswax veil), baryta (satin baryta), moire (watered silk), silverplate (silver looking glass), trichrome (trichrome register), isogilt (contour foil stamping), prism-sweep (RGB exposure foil), intaglio-rare (three-plate engraving), craquelure (aged oil varnish), azulejo (tin-glazed tiles), guilloche (enamel on engine-turned silver) or diamond-dust (crushed glass on silkscreen). Overridden by ?new_canvas_material. Default: none (flat image)',
           },
           size: {
             type: 'number',
