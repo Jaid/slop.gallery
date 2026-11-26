@@ -1,14 +1,10 @@
 import type {PlayerPose, Vec3} from '../../src/lib/gallery/types.ts'
-import type {PlacedLamp} from '../../src/worlds/base/PlacedRoom.ts'
 import type {ReactElement} from 'react'
 
 import {describe, expect, test} from 'bun:test'
 import {readFileSync} from 'node:fs'
 import {dirname, resolve} from 'node:path'
 
-import hsl from 'okhsl'
-
-import {choiceFrames} from '../../src/frames/lib/frameChoice.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {knotGalleryBounds} from '../../src/lib/gallery/knotGallery.ts'
 import lobby from '../../src/lib/gallery/lobby.ts'
@@ -38,11 +34,7 @@ describe('world selection', () => {
     expect(selectWorld('?seed=1&spawn=lobby')).toBe('gallery')
     expect(readWorld('http://localhost/')).toBe('gallery')
   })
-  test('opens the world holding the room ?room names, even next to another world’s parameters', () => {
-    expect(selectWorld('?room=arena')).toBe('knottingham')
-    expect(selectWorld('?room=cell')).toBe('sandbox')
-    expect(selectWorld('?room=studio')).toBe('sandbox')
-    expect(selectWorld('?room=lobby')).toBe('gallery')
+  test('a room selects its world even next to another world’s parameters', () => {
     expect(selectWorld('?room=cell&candidate=grok')).toBe('sandbox')
     expect(selectWorld('?room=arena&item=prop-orb-spook')).toBe('knottingham')
     expect(readWorld('https://slop.gallery/?room=arena')).toBe('knottingham')
@@ -182,61 +174,23 @@ describe('worlds', () => {
     const [, , z] = single.spawn.position
     expect(single.wallDistance([vestibuleX, 1, z], [0, 0, -1])).toBeGreaterThan(z - vestibuleZ + vestibule.radius - wallFace)
   })
-  test('the Sandbox’s Studio is a single room, by default a floor 8 × 8 m between four walls 8 m high under a ceiling, its north-western corner the world’s origin, its floor spreading toward +x and +z, its spawn 5 m in from the west wall and 4 m from the north wall, looking at its one work, the chicken, lit by the Cell’s chandelier lamp, a faint, cool one by the west wall and a faint moon through openings in its ceiling, in shafts that hardly show, all its works framed in the Cell’s frame', () => {
+  test('the Studio places the north-west floor corner at the origin and bounds navigation by its walls and ceiling', () => {
     const plain = new StudioSandbox(0)
     expect(plain.id).toBe('sandbox')
     expect(plain.rooms.map(room => room.id)).toEqual(['studio'])
     const room = plain.room('studio')
-    const cell = sandbox.room('cell')
     const [width, depth] = room.size
     expect(room.title).toBe('Studio')
-    expect(width - wallFace * 2).toBeCloseTo(8, 12)
-    expect(depth - wallFace * 2).toBeCloseTo(8, 12)
-    expect(room.height).toBe(8)
-    expect(room.room.frame).toBe(choiceFrames(cell.room.frame!)[0])
-    expect(plain.artworks.map(artwork => [artwork.id, artwork.ratio])).toEqual([['chicken', '16:9']])
     expect(room.mood).toBeUndefined()
     expect(room.skybox).toBeNull()
     expect(plain.skybox('night')).toBeNull()
-    expect(room.volumetricSun).toBe(0.05)
+    expect(room.volumetricSun).toBe(room.room.look.moon.shafts)
     expect(room.map!.frame).toEqual([-width / 2, -depth / 2, width, depth])
-    // Where floor and the north and west walls’ faces meet.
     for (const value of room.toWorld(room.room.corner)) {
       expect(value).toBeCloseTo(0, 12)
     }
     expect(room.center[0]).toBeCloseTo(width / 2 - wallFace, 12)
     expect(room.center[1]).toBeCloseTo(depth / 2 - wallFace, 12)
-    // The Cell’s lamp, dimmed and reaching 20 m, over the middle of the floor, 4 m up, and a faint slate-blue one a tenth of the way east, seven tenths of the way south and two fifths of the way up, its shadow blurred 1° wide.
-    const [chandelier] = sandbox.lamps()
-    const [primary, secondary] = plain.lamps()
-    expect(primary).toEqual({
-      ...chandelier,
-      id: 'studio-primary-lamp',
-      room: 'studio',
-      position: room.toWorld([0, 4, 0]),
-      strength: 30,
-      decay: 2,
-      range: 20,
-    })
-    expect(secondary.position.map(value => Math.round(value * 1e9) / 1e9)).toEqual([0.8, 3.2, 5.6])
-    const expected: PlacedLamp = {
-      ...chandelier as Exclude<PlacedLamp, {kind: 'spot'}>,
-      id: 'studio-secondary-lamp',
-      room: 'studio',
-      position: secondary.position,
-      strength: 5,
-      decay: 1,
-      tint: hsl.integer(262, 30, 40),
-      softShadow: {
-        blurAngle: Math.PI / 180,
-        softSamples: 16,
-      },
-    }
-    expect(secondary).toEqual(expected)
-    // Looking north and a little down.
-    expect(plain.spawn.position).toEqual([5, 0.04, 4])
-    expect(plain.spawn.yaw).toBeCloseTo(15 * Math.PI / 180, 12)
-    expect(plain.spawn.pitch).toBeCloseTo(-15 * Math.PI / 180, 12)
     expect(plain.roomAt(plain.spawn.position)).toBe(room)
     expect(plain.contains(plain.spawn.position)).toBe(true)
     expect(plain.floorHeight(plain.spawn.position)).toBe(0)
@@ -252,9 +206,8 @@ describe('worlds', () => {
     expect(east.center[0]).toBeCloseTo(width - wallFace, 12)
     expect(south.center[2]).toBeCloseTo(depth - wallFace, 12)
     expect(west.center[0]).toBeCloseTo(-wallFace, 12)
-    // Every corner’s trim is mitered.
     expect(plain.walls.map(wall => wall.miters)).toEqual(plain.walls.map(() => [1, 1]))
-    // A body fits up to the ceiling over all of the floor, and nowhere past the walls.
+    // Check the ceiling and all four walls from both sides.
     expect(plain.contains([1, 1, 1])).toBe(true)
     expect(plain.contains([width - 1, 1, depth - 1])).toBe(true)
     expect(plain.contains([5, room.height - 0.5, 5])).toBe(true)

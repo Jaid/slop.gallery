@@ -24,13 +24,7 @@ import studioSlots from './slots.ts'
 
 /** how far the Studio’s one work hangs east of the north-western corner of the floor, in meters */
 const slotAlong = 4
-/** Where the player arrives, relative to the north-western corner of the floor: 5 m in from the west wall and 4 m from the north wall, turned 15° west of north toward the work and looking 15° down, as the {@link overview} does, but standing. */
-const arrival = {
-  position: [5, 0.04, 4],
-  yaw: 15 * Math.PI / 180,
-  pitch: -15 * Math.PI / 180,
-} as const satisfies RoomSpawn
-/** The view the seeds of the Studio compare in, which every room size frames alike, as it only shows the north and west walls, their corner and the work between: its eyes 5 m in from the west wall, 4 m from the north wall and 2 m over the floor, relative to the north-western corner of the floor, turned 15° west of north toward the work and looking 15° down. */
+/** The seed comparison view relative to the north-west floor corner, so the work and both walls stay framed alike across room sizes. */
 const overview = {
   position: [5, 2, 4],
   aim: {
@@ -107,15 +101,17 @@ export default class Studio extends Room {
       baseboardHeight: sandboxBaseboardHeight,
       cornice: false,
     }
+    const [viewX, viewY, viewZ] = overview.position
+    const x = corner[0] + viewX
+    const z = corner[2] + viewZ
     super({
       title: 'Studio',
       cameras: {
         overview: {
           ...overview,
-          position: [corner[0] + overview.position[0], overview.position[1], corner[2] + overview.position[2]],
+          position: [x, viewY, z],
         },
       },
-      // One for all works, as the seed rolls it.
       frame: look.frame,
       map: studioMap(size),
       slots: studioSlots(plan.clear, slotAlong),
@@ -143,8 +139,8 @@ export default class Studio extends Room {
     this.fence = new Geofence([footprint([this.air])])
     this.corner = corner
     this.spawn = {
-      ...arrival,
-      position: [corner[0] + arrival.position[0], arrival.position[1], corner[2] + arrival.position[2]],
+      ...overview.aim,
+      position: [x, 0.04, z],
     }
     this.toMoon = moonDirectionOf(look)
     this.openings = studioOpenings(seed, this.toMoon, design.openings, {

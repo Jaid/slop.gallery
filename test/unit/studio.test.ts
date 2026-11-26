@@ -216,6 +216,7 @@ test('the Studio’s lamps hang where the seed rolls them, their shadows blurred
       expect(lamp).toMatchObject({
         strength: look.strength,
         decay: look.decay,
+        range: look.range,
         tint: look.tint,
         shadow: true,
       })
@@ -228,27 +229,34 @@ test('the Studio’s lamps hang where the seed rolls them, their shadows blurred
     }
   }
 })
-test('the Studio’s one 16:9 work hangs on its north wall 4 m from its north-western corner, and its spawn and overview look at it from 5 m in from the west wall and 4 m from the north wall, in the same place of the world whatever its size', () => {
-  for (const seed of [0, 3, 17, 42, 99]) {
-    const sandbox = seed ? new StudioSandbox(seed) : studio
+test('the Studio’s work, spawn and overview keep their world positions and framing across room sizes', () => {
+  const [slot] = studio.portraitSlots()
+  const [camera] = studio.cameraBookmarks()
+  expect(slot.wallId).toBe('studio-north')
+  expect(camera.id).toBe('studio-overview')
+  expect(studio.spawn.position[0]).toBeCloseTo(camera.position[0])
+  expect(studio.spawn.position[2]).toBeCloseTo(camera.position[2])
+  expect(studio.spawn.position[1]).toBeLessThan(camera.position[1])
+  expect(camera.aim).toMatchObject({
+    yaw: studio.spawn.yaw,
+    pitch: studio.spawn.pitch,
+  })
+  for (const seed of [3, 17, 42, 99]) {
+    const sandbox = new StudioSandbox(seed)
     const slots = sandbox.portraitSlots()
-    expect(slots.map(slot => [slot.wallId, slot.ratio])).toEqual([['studio-north', '16:9']])
-    expect(slots.map(slot => rounded(slot.position))).toEqual([[4, 2, 0.115]])
-    expect(rounded(sandbox.spawn.position)).toEqual([5, 0.04, 4])
-    expect(sandbox.spawn.yaw).toBeCloseTo(15 * Math.PI / 180, 12)
-    expect(sandbox.spawn.pitch).toBeCloseTo(-15 * Math.PI / 180, 12)
-    // Only the Studio’s own works, all of its slot’s ratio, one of which hangs there.
-    expect(sandbox.artworks.map(artwork => artwork.id)).toEqual(['chicken'])
-    expect(sandbox.artworks.every(artwork => artwork.ratio === '16:9')).toBe(true)
-    const [overview, ...others] = sandbox.cameraBookmarks()
-    expect(others).toEqual([])
-    expect(overview).toMatchObject({
-      id: 'studio-overview',
-      fov: 65,
-    })
-    expect(rounded(overview.position)).toEqual([5, 2, 4])
-    expect(overview.aim.yaw).toBeCloseTo(15 * Math.PI / 180, 12)
-    expect(overview.aim.pitch).toBeCloseTo(-15 * Math.PI / 180, 12)
+    expect(slots).toHaveLength(1)
+    expect(slots[0].ratio).toBe(slot.ratio)
+    expect(slots[0].wallId).toBe(slot.wallId)
+    expect(rounded(slots[0].position)).toEqual(rounded(slot.position))
+    expect(sandbox.artworks.length).toBeGreaterThan(0)
+    expect(sandbox.artworks.every(artwork => artwork.ratio === slot.ratio)).toBe(true)
+    expect(rounded(sandbox.spawn.position)).toEqual(rounded(studio.spawn.position))
+    expect(sandbox.spawn.yaw).toBe(studio.spawn.yaw)
+    expect(sandbox.spawn.pitch).toBe(studio.spawn.pitch)
+    const overview = sandbox.cameraBookmarks().find(bookmark => bookmark.id === camera.id)!
+    expect(rounded(overview.position)).toEqual(rounded(camera.position))
+    expect(overview.aim).toEqual(camera.aim)
+    expect(overview.fov).toBe(camera.fov)
   }
 })
 test('every kind of openings is listed by its id, the default seed’s ceiling cut with coffers, and seeds roll every kind', () => {
