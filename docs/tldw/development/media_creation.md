@@ -148,17 +148,16 @@ await snap({
 
 ## wall of all frames
 
-This photographs every frame on the north wall of the seed 0 Studio in four columns. Each shows the same 16:9 image of *The Creation of Chick*, with its frame ID just below it. Run the snippet from the repository root after `bun run build`.
+This photographs every frame on the north wall of the seed 0 Studio in four columns. Each shows the same square avatar, with its frame ID just below it. Run the snippet from the repository root after `bun run build`.
 
 ```TypeScript
 import snap from './scripts/snap.ts'
 import {frameIds} from './src/frames/lib/frameParameter.ts'
 
-const image = 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/art/chicken.jxl'
 const columns = 4
 const rows = Math.ceil(frameIds.length / columns)
 const rowHeight = 10.8 / rows
-const size = (rowHeight - 0.4) ** 2 * (16 / 9) * 10_000 // image area in cm² after leaving clearance between frames
+const size = (rowHeight - 0.4) ** 2 * 10_000 // square image area in cm² after leaving clearance between frames
 
 await snap({
   room: 'studio',
@@ -170,16 +169,21 @@ await snap({
   position: '4,6,14', // world coordinates, facing the middle of the north wall
   angle: '0,0',
   fov: 45,
-  width: 1800,
+  width: 1350,
   height: 4320,
   'text-overlays': true
 }, frameIds.flatMap((frame, index) => {
-  const x = (index % columns - (columns - 1) / 2) * 1.2 // meters from the wall’s middle
+  const x = (index % columns - (columns - 1) / 2) * 0.9 // meters from the wall’s middle
   const y = 6 + ((rows - 1) / 2 - Math.floor(index / columns)) * rowHeight
   return [
     {
       name: 'add_portrait',
-      input: {image, frame, size, target: {wall_id: 'studio-north', position: {x, y}}}
+      input: {
+        frame,
+        size,
+        image: 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/avatar.webp',
+        target: {wall_id: 'studio-north', position: {x, y}}
+      }
     },
     {
       name: 'add_text_overlay',
