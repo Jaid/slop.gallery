@@ -21,10 +21,13 @@ import ContainmentFrame from './containment/ContainmentFrame.ts'
 import CrateFrame from './crate/CrateFrame.ts'
 import DecoFrame from './deco/DecoFrame.ts'
 import DichroicFrame from './dichroic/DichroicFrame.ts'
+import EmpireFrame from './empire/EmpireFrame.ts'
 import EvidenceFrame from './evidence/EvidenceFrame.ts'
 import FleshFrame from './flesh/FleshFrame.ts'
 import FloatFrame from './float/FloatFrame.ts'
+import FlorentineFrame from './florentine/FlorentineFrame.ts'
 import GildingFrame from './gilding/GildingFrame.ts'
+import GloryFrame from './glory/GloryFrame.ts'
 import ImpastoFrame from './impasto/ImpastoFrame.ts'
 import ImpressionistFrame from './impressionist/ImpressionistFrame.ts'
 import InfestedFrame from './infested/InfestedFrame.ts'
@@ -47,6 +50,7 @@ import PerspectiveFrame from './perspective/PerspectiveFrame.ts'
 import RegolithFrame from './regolith/RegolithFrame.ts'
 import RiftFrame from './rift/RiftFrame.ts'
 import RippleFrame from './ripple/RippleFrame.ts'
+import RocailleFrame from './rocaille/RocailleFrame.ts'
 import SeanceFrame from './seance/SeanceFrame.ts'
 import SevresFrame from './sevres/SevresFrame.ts'
 import SgraffitoFrame from './sgraffito/SgraffitoFrame.ts'
@@ -83,10 +87,13 @@ export const frames = {
   crate: new CrateFrame,
   deco: new DecoFrame,
   dichroic: new DichroicFrame,
+  empire: new EmpireFrame,
   evidence: new EvidenceFrame,
   flesh: new FleshFrame,
   float: new FloatFrame,
+  florentine: new FlorentineFrame,
   gilding: new GildingFrame,
+  glory: new GloryFrame,
   impasto: new ImpastoFrame,
   impressionist: new ImpressionistFrame,
   infested: new InfestedFrame,
@@ -108,6 +115,7 @@ export const frames = {
   regolith: new RegolithFrame,
   rift: new RiftFrame,
   ripple: new RippleFrame,
+  rocaille: new RocailleFrame,
   seance: new SeanceFrame,
   sevres: new SevresFrame,
   sgraffito: new SgraffitoFrame,
