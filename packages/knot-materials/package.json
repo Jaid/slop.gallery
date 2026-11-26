@@ -26,7 +26,7 @@
     "math": "0.1.0",
     "media-encoding": "workspace:*",
     "okhsl": "0.2.0",
-    "three-mesh-bvh": "0.9.18"
+    "three-mesh-bvh": "0.10.0"
   },
   "peerDependencies": {
     "three": "^0.187.0"
@@ -34,10 +34,10 @@
   "devDependencies": {
     "fencen": "0.1.0",
     "fs-extra": "11.4.1",
-    "puppeteer-core": "25.18.1",
+    "puppeteer-core": "25.19.0",
     "three-fiber-game": "workspace:*",
     "typescript": "npm:typescript-classic@6.0.4",
-    "vite": "8.4.0-beta.1",
+    "vite": "8.4.0",
     "@types/fs-extra": "11.0.4",
     "@types/three": "0.187.0"
   },

@@ -1,0 +1,18 @@
+diff --git a/package.json b/package.json
+--- a/package.json
++++ b/package.json
+@@ -4,6 +4,14 @@
+   "description": "A fast, flexible, dynamic CSG implementation on top of three-mesh-bvh",
+   "main": "build/index.umd.cjs",
+   "module": "src/index.js",
++  "exports": {
++    ".": {
++      "types": "./src/index.d.ts",
++      "import": "./src/index.js",
++      "require": "./build/index.umd.cjs"
++    },
++    "./*": "./*"
++  },
+   "type": "module",
+   "types": "src/index.d.ts",
+   "sideEffects": false,

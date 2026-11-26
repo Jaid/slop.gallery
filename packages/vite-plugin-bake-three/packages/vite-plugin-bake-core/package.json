@@ -34,8 +34,8 @@
   },
   "peerDependencies": {
     "three": "^0.187.0",
-    "three-bvh-csg": "^0.0.18",
-    "vite": "^8.4.0-beta.1"
+    "three-bvh-csg": "^0.0.19",
+    "vite": "^8.4.0"
   },
   "peerDependenciesMeta": {
     "three": {

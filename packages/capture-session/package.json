@@ -27,7 +27,7 @@
     "type-fest": "6.0.3"
   },
   "peerDependencies": {
-    "puppeteer-core": "^25.18.1",
+    "puppeteer-core": "^25.19.0",
     "three": "^0.187.0"
   },
   "peerDependenciesMeta": {

@@ -1,16 +1,16 @@
 import {expect, test} from 'bun:test'
 
 // Bun silently drops a patch from the lock once its key no longer names the installed version.
-test.each(['three', 'three-bvh-csg', '@react-three/rapier'])('the %s patch tracks the installed version and root lock', async name => {
-  const manifest = await Bun.file('package.json').json() as {
-    dependencies: Record<string, string>
-    patchedDependencies: Record<string, string>
+test('every dependency patch matches the installed version and is present in the lock', async () => {
+  const {patchedDependencies} = await Bun.file('package.json').json() as {patchedDependencies: Record<string, string>}
+  const lock = Bun.JSONC.parse(await Bun.file('bun.lock').text()) as {patchedDependencies: Record<string, string>}
+  expect(lock.patchedDependencies).toEqual(patchedDependencies)
+  for (const [key, path] of Object.entries(patchedDependencies)) {
+    const name = key.slice(0, key.lastIndexOf('@'))
+    const installed = await Bun.file(`node_modules/${name}/package.json`).json() as {version: string}
+    expect(key).toBe(`${name}@${installed.version}`)
+    expect(await Bun.file(path).exists()).toBe(true)
   }
-  const patchKey = `${name}@${manifest.dependencies[name]}`
-  const patchPath = `patches/${patchKey.replace('/', '%2F')}.patch`
-  expect(manifest.patchedDependencies[patchKey]).toBe(patchPath)
-  expect(await Bun.file(patchPath).exists()).toBe(true)
-  expect(await Bun.file('bun.lock').text()).toContain(`"${patchKey}": "${patchPath}"`)
 })
 test('the installed Three draws backgrounds after the opaque objects, depth tested at the far plane, so a skybox only shades the pixels it shows in', async () => {
   const bundle = await Bun.file(Bun.fileURLToPath(import.meta.resolve('three/webgpu'))).text()
