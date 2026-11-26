@@ -148,45 +148,48 @@ await snap({
 
 ## wall of all frames
 
-This photographs the north wall of the seed 0 Studio head-on. Each frame in `frameIds` gets the same 16:9 image of *The Creation of Chick*, with its frame ID on the placard below it. Run the snippet from the repository root after `bun run build`.
+This photographs every frame on the north wall of the seed 0 Studio in four columns. Each shows the same 16:9 image of *The Creation of Chick*, with its frame ID just below it. Run the snippet from the repository root after `bun run build`.
 
 ```TypeScript
-import {serveFile} from './scripts/lib/headlessGallery.ts'
 import snap from './scripts/snap.ts'
 import {frameIds} from './src/frames/lib/frameParameter.ts'
 
-await using chicken = serveFile('assets/art/chicken.jxl')
-const columns = 8
+const image = 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/art/chicken.jxl'
+const columns = 4
 const rows = Math.ceil(frameIds.length / columns)
+const rowHeight = 10.8 / rows
+const size = (rowHeight - 0.4) ** 2 * (16 / 9) * 10_000 // image area in cm² after leaving clearance between frames
 
 await snap({
   room: 'studio',
   seed: 0,
   portraits: 0,
-  room_width: 16,
+  room_width: 8,
   room_depth: 16,
   room_height: 12,
-  position: '8,6,14', // world coordinates, facing the middle of the north wall
+  position: '4,6,14', // world coordinates, facing the middle of the north wall
   angle: '0,0',
-  fov: 46,
-  width: 3200,
-  height: 2400
-}, frameIds.map((frame, index) => ({
-  name: 'add_portrait',
-  input: {
-    image: chicken.url,
-    frame,
-    title: frame,
-    size: 9000, // frame area in cm², leaving room for each placard
-    target: {
-      wall_id: 'studio-north',
-      position: {
-        x: (index % columns - (columns - 1) / 2) * 1.9, // meters from the wall’s middle
-        y: 1.5 + (rows - 1 - Math.floor(index / columns)) * 1.55 // top row first
+  fov: 45,
+  width: 1800,
+  height: 4320,
+  'text-overlays': true
+}, frameIds.flatMap((frame, index) => {
+  const x = (index % columns - (columns - 1) / 2) * 1.2 // meters from the wall’s middle
+  const y = 6 + ((rows - 1) / 2 - Math.floor(index / columns)) * rowHeight
+  return [
+    {
+      name: 'add_portrait',
+      input: {image, frame, size, target: {wall_id: 'studio-north', position: {x, y}}}
+    },
+    {
+      name: 'add_text_overlay',
+      input: {
+        text: frame,
+        position: {x: 4 + x, y: y - rowHeight / 2, z: 0.1} // labels use world coordinates
       }
     }
-  }
-})))
+  ]
+}))
 ```
 
 ## portrait slots
