@@ -32,6 +32,9 @@ export type SizedImage = {
   width: number
 }
 
+/** An optional finish painted on a local tint, off the main thread for expensive work. */
+export type TintFinish = (context: OffscreenCanvasRenderingContext2D) => Promise<void> | void
+
 /** The frame of an image in meters: its own aspect at an area of `area` cm². */
 export function imageSize(width: number, height: number, area = defaultPortraitArea) {
   if (!(width > 0 && height > 0) || !Number.isFinite(width + height)) {
@@ -169,7 +172,7 @@ export async function compositeImages(sources: ReadonlyArray<Blob | string>) {
 }
 
 /** The local stand-in for the instructions an ingredient contributes, like an orb’s prompt: the image washed in the ingredient’s glow and darkened toward its edges by it. */
-export async function tintImage(source: Blob | string, tint: number) {
+export async function tintImage(source: Blob | string, tint: number, finish?: TintFinish) {
   const color = cssHex(tint)
   const bitmap = await createImageBitmap(await loadBlob(source))
   try {
@@ -178,6 +181,7 @@ export async function tintImage(source: Blob | string, tint: number) {
     const context = canvas.getContext('2d')!
     const {width: w, height: h} = canvas
     context.drawImage(bitmap, 0, 0, w, h)
+    context.save()
     context.globalCompositeOperation = 'color'
     context.globalAlpha = 0.5
     context.fillStyle = color
@@ -189,6 +193,10 @@ export async function tintImage(source: Blob | string, tint: number) {
     vignette.addColorStop(1, color)
     context.fillStyle = vignette
     context.fillRect(0, 0, w, h)
+    context.restore()
+    if (finish) {
+      await finish(context)
+    }
     return await canvasImage(canvas)
   } finally {
     bitmap.close()

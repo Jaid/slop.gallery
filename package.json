@@ -31,6 +31,7 @@
     "test:capture-session": "bun run --cwd packages/capture-session test",
     "test:knot-materials": "bun run --cwd packages/knot-materials test",
     "test:live": "bun run build && LIVE_TEST=true bun test ./test/live.test.ts",
+    "test:live:frost-orb": "bun run build && LIVE_TEST=true bun test ./test/frost-orb.live.test.ts",
     "test:live:graphics-quality": "bun run build && LIVE_TEST=true bun test ./test/graphics-quality.live.test.ts",
     "test:live:intro-pause": "bun run build && LIVE_TEST=true bun test ./test/intro-pause.live.test.ts",
     "test:live:mood-vignette": "bun run build && LIVE_TEST=true bun test ./test/mood-vignette.live.test.ts",

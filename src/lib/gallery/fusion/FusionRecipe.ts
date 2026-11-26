@@ -1,6 +1,6 @@
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {PartyEffectId} from '#src/party_effects/index.ts'
-import type {SizedImage} from '../ImageImporter.ts'
+import type {SizedImage, TintFinish} from '../ImageImporter.ts'
 import type {Portrait} from '../types.ts'
 
 import modelImage from '../../ai/modelImage.ts'
@@ -30,6 +30,8 @@ export type IngredientLatch = 'charge' | 'glass'
 /** an item as an ingredient of a fusion: any number of contributions, none at all for the Transparent Orb, and how the portal shows it */
 export type ItemIngredient = {
   contributions: ReadonlyArray<IngredientContribution>
+  /** Optional marks an ingredient lays on its local tint before encoding. Never sent to the image model or drawn over an AI result. */
+  finishTint?: TintFinish
   /** its glow, which tints the portal and, where the ingredient contributes instructions, stands in for them by tinting the result when it is made locally, without AI */
   glow?: number
   /** how the intro’s ember latches it on, by default charging up */
@@ -171,8 +173,8 @@ export default class FusionRecipe {
   async local(): Promise<SizedImage> {
     const sources = await this.images()
     let result = sources.length > 1 ? await compositeImages(sources) : undefined
-    for (const {glow} of this.tints) {
-      result = await tintImage(result?.image ?? sources[0], glow)
+    for (const {finishTint, glow} of this.tints) {
+      result = await tintImage(result?.image ?? sources[0], glow, finishTint)
     }
     if (!result) {
       throw new Error('Nothing in this fusion can be made without AI.')

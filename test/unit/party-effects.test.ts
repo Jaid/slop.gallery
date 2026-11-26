@@ -319,7 +319,7 @@ describe('party effects', () => {
     expect(() => spawnThroughTool({
       effect: 'confetti',
       position: [0, 0, 0],
-    })).toThrow(/bats, blood, eyes, ghosts, smears, strokes, tendrils/)
+    })).toThrow(Object.keys(partyEffects).join(', '))
     expect(() => spawnThroughTool({
       effect: 'toString',
       position: [0, 0, 0],

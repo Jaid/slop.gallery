@@ -160,7 +160,13 @@ describe('fusion recipe', () => {
   // Any prompt orb, even one without a frame or an effect, which none of today’s lacks.
   for (const orb of promptOrbs as ReadonlyArray<PromptOrb>) {
     test(`the ${orb.title} contributes its prompt, its frame of the game and its effect, if it has them, shows by its glow and photograph and is latched on with a ping of glass`, () => {
-      expect(orb.ingredient(7)).toEqual({
+      const {contributions, glow, latch, look} = orb.ingredient(7)
+      expect({
+        contributions,
+        glow,
+        latch,
+        look,
+      }).toEqual({
         contributions: [
           {
             kind: 'instruction',
