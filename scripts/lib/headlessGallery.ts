@@ -174,7 +174,7 @@ const serveStatic = (root: string) => Bun.serve({
 export const serveFile = (file: string) => {
   const name = `/${encodeURIComponent(basename(file))}`
   const headers = {'Access-Control-Allow-Origin': '*'}
-  // Bun serves JXL as application/octet-stream, which the page refuses as an image.
+  // Bun serves JXL as application/octet-stream unless given its image type.
   const type = /\.jxl$/iu.test(file) ? 'image/jxl' : undefined
   const server = Bun.serve({
     hostname: '127.0.0.1',

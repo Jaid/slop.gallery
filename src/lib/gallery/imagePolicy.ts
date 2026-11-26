@@ -14,6 +14,17 @@ const importImageExtensions = {
   ...imageExtensions,
   'image/svg+xml': ['.svg'],
 }
+
+/** The media type of a remote import. Binary downloads like GitHub raw images only name their format in the URL after redirects. */
+export function importMediaType(url: URL, contentType: string | null) {
+  const declared = contentType?.split(';', 1)[0].trim().toLowerCase()
+  if (declared && declared !== 'application/octet-stream') {
+    return declared
+  }
+  const path = url.pathname.toLowerCase()
+  return Object.entries(importImageExtensions).find(([, extensions]) => extensions.some(extension => path.endsWith(extension)))?.[0]
+}
+
 /** A file picker hint only: local videos can have an empty or generic MIME type. The browser’s decoder decides whether they have a frame. */
 export const importAccept = [...Object.entries(importImageExtensions).flatMap(([type, extensions]) => [type, ...extensions]), 'video/*'].join(',')
 export const maximumImportFiles = 12

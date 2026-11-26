@@ -64,6 +64,25 @@ const image = 'http://127.0.0.1:8080/night_watch-2.png'
 const stored = (id: string) => useGallery.getState().portraits.find(portrait => portrait.id === id)!
 /** a plain flat wall works hang on, wide and high enough for anything the tests hang */
 const wall = slopGallery.placement.walls.find(candidate => candidate.sticky !== false && !candidate.holes?.length && !candidate.reservations?.length && !candidate.curveRadius && !candidate.slope && candidate.width > 6 && candidate.height > 3.5)!
+test('a redirected image URL can hang a JXL served as a binary download', async () => {
+  globalThis.fetch = previous.fetch
+  await using server = Bun.serve({
+    hostname: '127.0.0.1',
+    port: 0,
+    fetch(request) {
+      const {pathname} = new URL(request.url)
+      if (pathname === '/download') {
+        return Response.redirect(new URL('/chicken.jxl?raw=1', request.url))
+      }
+      return new Response('pixels', {headers: {'Content-Type': 'application/octet-stream'}})
+    },
+  })
+  const added = await addPortrait({
+    image: `${server.url}download`,
+    target: {slot: slot.id},
+  })
+  expect(added.hung).toBe(true)
+})
 test('a hung work arrives on its wall like one the player hangs only when told to', async () => {
   const quiet = await addPortrait({
     image,

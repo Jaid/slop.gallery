@@ -1,5 +1,5 @@
 import decodeImage from './decodeImage.ts'
-import {validateImportImage} from './imagePolicy.ts'
+import {importMediaType, validateImportImage} from './imagePolicy.ts'
 
 /** Decodes an image or the first frame of a video for a portrait. A file without a known image MIME type goes to the browser’s media decoder, even if it has no type or extension at all. The caller closes the source after drawing. */
 export default async function decodeImport(source: Blob | string) {
@@ -8,12 +8,21 @@ export default async function decodeImport(source: Blob | string) {
     if (!response.ok) {
       throw new Error(`The portrait source could not be loaded (HTTP ${response.status}).`)
     }
-    if (/^https?:/u.test(response.url) && !response.headers.get('Content-Type')?.toLowerCase().startsWith('image/')) {
-      // Let the decoder request byte ranges instead of downloading the whole recording. For data URLs it can sniff a blob even when it refuses the URL’s declared type.
-      await response.body?.cancel()
-      return decodeVideoFrame(response.url)
+    if (/^https?:/u.test(response.url)) {
+      const type = importMediaType(new URL(response.url), response.headers.get('Content-Type'))
+      if (!type?.startsWith('image/')) {
+        // Let the decoder request byte ranges instead of downloading the whole recording.
+        await response.body?.cancel()
+        return decodeVideoFrame(response.url)
+      }
+      source = await response.blob()
+      if (source.type !== type) {
+        source = source.slice(0, source.size, type)
+      }
+    } else {
+      // For data URLs the video decoder can sniff a blob even when it refuses the URL’s declared type.
+      source = await response.blob()
     }
-    source = await response.blob()
   }
   if (!source.type.startsWith('image/')) {
     return decodeVideoFrame(source)
