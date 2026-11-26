@@ -1,6 +1,9 @@
 import {frames} from '#src/frames/index.ts'
 import {frameIds} from '#src/frames/lib/frameParameter.ts'
+import {wallFace} from '#src/lib/gallery/architectureDimensions.ts'
+import {hangingOffset} from '#src/lib/placement/wallGeometry.ts'
 
+import {radians} from './lib/headlessGallery.ts'
 import snap from './snap.ts'
 
 /** Photograph every frame on the seed 0 Studio’s north wall in four labeled columns. */
@@ -13,37 +16,49 @@ export default function snapFrames() {
   const labelGap = 0.03 // meters below the frame’s outer edge
   const roomWidth = 8
   const roomHeight = 12
-  const tools = frameIds.flatMap((frame, index) => {
-    // Portraits are placed relative to the wall’s middle; overlay labels use world coordinates.
-    const x = (index % columns - (columns - 1) / 2) * 0.9
-    const y = roomHeight / 2 + ((rows - 1) / 2 - Math.floor(index / columns)) * rowHeight
-    return [{
-      name: 'add_portrait',
-      input: {
-        frame,
-        size,
-        image: 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/avatar.webp',
-        target: {
-          wall_id: 'studio-north',
-          position: {
-            x,
-            y,
-          },
-        },
-      },
-    }, {
-      name: 'add_text_overlay',
-      input: {
-        anchor: 2,
-        text: frame,
+  const height = 8192
+  const sidePadding = 64 // pixels on either side of the framed portraits
+  const cameraZ = 14
+  const fov = 45
+  const focalLength = height / (2 * Math.tan(radians(fov / 2))) // pixels
+  const portraitZ = hangingOffset - wallFace // the north wall’s face is at z = 0
+  const portraits = frameIds.map((frame, index) => ({
+    frame,
+    x: (index % columns - (columns - 1) / 2) * 0.9,
+    y: roomHeight / 2 + ((rows - 1) / 2 - Math.floor(index / columns)) * rowHeight,
+  }))
+  // Project each frame’s outer edge at its nearest depth, relative to the centered camera.
+  const halfWidth = Math.max(...portraits.map(({frame, x}) => {
+    const {front, reach} = frames[frame]
+    return focalLength * (Math.abs(x) + imageSide / 2 + reach) / (cameraZ - portraitZ - front)
+  }))
+  // Portraits are placed relative to the wall’s middle; overlay labels use world coordinates.
+  const tools = portraits.flatMap(({frame, x, y}) => [{
+    name: 'add_portrait',
+    input: {
+      frame,
+      size,
+      image: 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/avatar.webp',
+      target: {
+        wall_id: 'studio-north',
         position: {
-          x: roomWidth / 2 + x,
-          y: y - imageSide / 2 - frames[frame].reach - labelGap,
-          z: 0.05, // project near the outer rim, 5 cm in front of the north wall
+          x,
+          y,
         },
       },
-    }]
-  })
+    },
+  }, {
+    name: 'add_text_overlay',
+    input: {
+      anchor: 2,
+      text: frame,
+      position: {
+        x: roomWidth / 2 + x,
+        y: y - imageSide / 2 - frames[frame].reach - labelGap,
+        z: 0.05, // project near the outer rim, 5 cm in front of the north wall
+      },
+    },
+  }])
   return snap({
     room: 'studio',
     seed: 0,
@@ -51,11 +66,11 @@ export default function snapFrames() {
     room_width: roomWidth,
     room_depth: 16,
     room_height: roomHeight,
-    position: `${roomWidth / 2},${roomHeight / 2},14`,
+    position: `${roomWidth / 2},${roomHeight / 2},${cameraZ}`,
     angle: '0,0',
-    fov: 45,
-    width: 1350,
-    height: 4320,
+    fov,
+    width: Math.ceil(2 * (halfWidth + sidePadding)),
+    height,
     'text-overlays': true,
   }, tools)
 }
