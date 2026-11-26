@@ -146,6 +146,49 @@ await snap({
 ])
 ```
 
+## wall of all frames
+
+This photographs the north wall of the seed 0 Studio head-on. Each frame in `frameIds` gets the same 16:9 image of *The Creation of Chick*, with its frame ID on the placard below it. Run the snippet from the repository root after `bun run build`.
+
+```TypeScript
+import {serveFile} from './scripts/lib/headlessGallery.ts'
+import snap from './scripts/snap.ts'
+import {frameIds} from './src/frames/lib/frameParameter.ts'
+
+await using chicken = serveFile('assets/art/chicken.jxl')
+const columns = 8
+const rows = Math.ceil(frameIds.length / columns)
+
+await snap({
+  room: 'studio',
+  seed: 0,
+  portraits: 0,
+  room_width: 16,
+  room_depth: 16,
+  room_height: 12,
+  position: '8,6,14', // world coordinates, facing the middle of the north wall
+  angle: '0,0',
+  fov: 46,
+  width: 3200,
+  height: 2400
+}, frameIds.map((frame, index) => ({
+  name: 'add_portrait',
+  input: {
+    image: chicken.url,
+    frame,
+    title: frame,
+    size: 9000, // frame area in cm², leaving room for each placard
+    target: {
+      wall_id: 'studio-north',
+      position: {
+        x: (index % columns - (columns - 1) / 2) * 1.9, // meters from the wall’s middle
+        y: 1.5 + (rows - 1 - Math.floor(index / columns)) * 1.55 // top row first
+      }
+    }
+  }
+})))
+```
+
 ## portrait slots
 
 `show_portrait_slots` outlines every portrait slot, where works snap to when hung, with its frame and placard, colored by its aspect ratio. Behind a hung work, a slot keeps only a fifth of its opacity. `room: 'cell'` opens the Sandbox, the world of the Cell.
