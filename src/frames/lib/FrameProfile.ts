@@ -93,6 +93,25 @@ export default class FrameProfile {
     return this.curve(points, material)
   }
 
+  /** How far in front of the frame’s middle the profile’s face lies `r` meters out past the opening, the nearest to the viewer of its runs there, for ornaments that rest on it; beyond its ends, where it ends. */
+  heightAt(r: number) {
+    let height = -Infinity
+    for (let index = 1; index < this.points.length; index++) {
+      const a = this.points[index - 1]
+      const b = this.points[index]
+      if (r < Math.min(a.r, b.r) - 1e-9 || r > Math.max(a.r, b.r) + 1e-9) {
+        continue
+      }
+      // A run straight back or forward counts with both of its ends.
+      height = Math.abs(b.r - a.r) < 1e-9 ? Math.max(height, a.z, b.z) : Math.max(height, a.z + (b.z - a.z) * Math.min(1, Math.max(0, (r - a.r) / (b.r - a.r))))
+    }
+    if (height > -Infinity) {
+      return height
+    }
+    const outermost = this.points.reduce((best, point) => (point.r > best.r || point.r === best.r && point.z > best.z ? point : best))
+    return r > outermost.r ? outermost.z : this.points[0].z
+  }
+
   /** A straight run to the point, an arris where it ends. */
   line(r: number, z: number, {material, smooth = false}: {
     material?: number

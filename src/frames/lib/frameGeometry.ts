@@ -13,6 +13,8 @@ import {BufferGeometry, Float32BufferAttribute, Matrix4, Quaternion, Vector3} fr
 export const frameShapeAttribute = 'frameShape'
 /** the first `frameShape` member index of ornaments, which add their own kind to it */
 export const ornamentMember = 4
+/** an attribute an ornament may bring of its own, how hollow each of its points counts as, which {@link ornament} takes over unless told otherwise */
+export const cavityAttribute = 'cavity'
 /** the members clockwise from the top as seen from the front: which way they face out and which way they run */
 const members = [
   {
@@ -52,7 +54,7 @@ const newAttributes = (): Attributes => ({
 })
 /** how an ornament takes the frame’s shading: its kind among the ornaments and how hollow its surface counts as */
 export type OrnamentOptions = {
-  /** from −1, an exposed ridge, to 1, a deep hollow; by default the faces turning away from the viewer count as more hollow */
+  /** from −1, an exposed ridge, to 1, a deep hollow; by default the part’s own {@link cavityAttribute}, or else the faces turning away from the viewer count as more hollow */
   cavity?: ((normal: Vector3, position: Vector3) => number) | number
   /** which ornament it is, so materials can tell them apart; 0 by default */
   kind?: number
@@ -154,6 +156,7 @@ export function ornament(geometry: BufferGeometry, {kind = 0, cavity, ownUv = fa
   }
   const position = part.getAttribute('position')
   const normal = part.getAttribute('normal')
+  const own = part.hasAttribute(cavityAttribute) ? part.getAttribute(cavityAttribute) : undefined
   if (!ownUv || !part.hasAttribute('uv')) {
     const uv = new Float32Array(position.count * 2)
     for (let index = 0; index < position.count; index++) {
@@ -169,7 +172,7 @@ export function ornament(geometry: BufferGeometry, {kind = 0, cavity, ownUv = fa
     n.fromBufferAttribute(normal, index)
     p.fromBufferAttribute(position, index)
     shape[index * 4] = ornamentMember + kind
-    shape[index * 4 + 2] = typeof cavity === 'function' ? cavity(n, p) : cavity ?? (0.35 - n.z) * 0.6
+    shape[index * 4 + 2] = typeof cavity === 'function' ? cavity(n, p) : cavity ?? own?.getX(index) ?? (0.35 - n.z) * 0.6
   }
   part.setAttribute(frameShapeAttribute, new Float32BufferAttribute(shape, 4))
   for (const name of Object.keys(part.attributes)) {

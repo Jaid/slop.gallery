@@ -1,19 +1,23 @@
 import type {FrameSurface} from './frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
-import {abs, clamp, float, max, select, smoothstep} from 'three/tsl'
+import {abs, clamp, float, Fn, If, max, select, smoothstep} from 'three/tsl'
 
 import {visibleDetail} from '#src/lib/materials/filters.ts'
 
+import {ornamentMember} from '../frameGeometry.ts'
 import {fittedPeriod} from './frameAttributes.ts'
 
-type Float = Node<'float'>
+/** a carving worked out at the pixel’s footprint, see {@link footprintOf}, as a height */
+export type Carving = (footprint: Float) => Float
 
 /**
  * Carved ornament for frames as height fields from 0 to 1, to scale by a depth and hand to a material’s relief: classical enrichments repeating along a band of the moulding, fitted so a whole number of them runs into each miter.
  *
  * A band lies between two offsets past the opening; `t` is where a point lies within it, 0 at its inner edge and 1 at its outer one.
  */
+
+type Float = Node<'float'>
 
 /** where the point lies across the band from `from` to `to` meters out past the opening, and 1 inside it, 0 outside */
 export function band(surface: FrameSurface, from: number, to: number) {
@@ -30,11 +34,42 @@ export function repeatPhase(surface: FrameSurface, period: number, reach: number
   return surface.along.div(fitted).fract()
 }
 
-/** Fades a carving to its average before its features, `size` meters across, get small enough to shimmer. */
-export function legible(surface: FrameSurface, height: Float, size: number) {
+/** How many meters of the frame a pixel spans at the shaded point, which carvings fade by. */
+export function footprintOf(surface: FrameSurface) {
   const p = surface.position
-  const footprint = max(p.x.fwidth(), p.y.fwidth()).max(p.z.fwidth())
+  return max(p.x.fwidth(), p.y.fwidth()).max(p.z.fwidth())
+}
+
+/** Fades a carving to its average before its features, `size` meters across, get small enough to shimmer, at the pixel’s `footprint`, see {@link footprintOf}. */
+export function legible(surface: FrameSurface, height: Float, size: number, footprint: Float = footprintOf(surface)) {
   return height.mul(visibleDetail(footprint, size)).add(float(0.5).mul(visibleDetail(footprint, size).oneMinus()))
+}
+
+/**
+ * The carving of whatever a point lies on, as a height: the members’, that of its kind of ornament, or `others` for the kinds without one of their own, nothing by default. A shader branch works out only that one, so patterns only some pieces carry cost the rest nothing, which a `select` of them all would evaluate everywhere.
+ * The pixel’s footprint is worked out once before the branch and handed to each carving, which must take no derivatives of its own: inside a branch, neighboring pixels may not run them.
+ */
+export function carvingByPiece(surface: FrameSurface, {members, ornaments = [], others}: {
+  members: Carving
+  ornaments?: ReadonlyArray<readonly [kind: number, carving: Carving]>
+  others?: Carving
+}): Float {
+  return Fn(() => {
+    const footprint = footprintOf(surface).toVar('carvingFootprint')
+    const kind = surface.member.round().toVar('carvingKind')
+    const height = float(0).toVar('carving')
+    const chain = ornaments.reduce((branch, [own, carving]) => branch.ElseIf(kind.equal(ornamentMember + own), () => {
+      height.assign(carving(footprint))
+    }), If(kind.lessThan(ornamentMember), () => {
+      height.assign(members(footprint))
+    }))
+    if (others) {
+      chain.Else(() => {
+        height.assign(others(footprint))
+      })
+    }
+    return height
+  })()
 }
 
 const dome = (x: Float, y: Float) => clamp(float(1).sub(x.mul(x)).sub(y.mul(y)), 0, 1).sqrt()
