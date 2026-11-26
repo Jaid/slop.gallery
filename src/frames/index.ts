@@ -43,6 +43,7 @@ import MeanderFrame from './meander/MeanderFrame.ts'
 import MeteoriteFrame from './meteorite/MeteoriteFrame.ts'
 import MissionFrame from './mission/MissionFrame.ts'
 import OakFrame from './oak/OakFrame.ts'
+import OkladFrame from './oklad/OkladFrame.ts'
 import OrbitFrame from './orbit/OrbitFrame.ts'
 import OssuaryFrame from './ossuary/OssuaryFrame.ts'
 import PaletteFrame from './palette/PaletteFrame.ts'
@@ -108,6 +109,7 @@ export const frames = {
   meteorite: new MeteoriteFrame,
   mission: new MissionFrame,
   oak: new OakFrame,
+  oklad: new OkladFrame,
   orbit: new OrbitFrame,
   ossuary: new OssuaryFrame,
   palette: new PaletteFrame,
