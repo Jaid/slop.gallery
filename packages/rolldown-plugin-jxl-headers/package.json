@@ -1,14 +1,14 @@
 {
-  "name": "vite-plugin-jxl-headers",
+  "name": "rolldown-plugin-jxl-headers",
   "version": "0.1.0",
   "type": "module",
-  "description": "Vite plugin that makes Cloudflare Pages serve JXL images as image/jxl",
+  "description": "Rolldown plugin that makes Cloudflare Pages serve JXL images as image/jxl",
   "funding": "https://github.com/sponsors/Jaid",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Jaid/slop.gallery.git",
-    "directory": "packages/vite-plugin-jxl-headers"
+    "directory": "packages/rolldown-plugin-jxl-headers"
   },
   "main": "src/main.ts",
   "exports": {
@@ -18,10 +18,11 @@
     "test": "bun test ./test"
   },
   "peerDependencies": {
-    "vite": "^8.4.0"
+    "rolldown": "^1.3.4"
   },
   "devDependencies": {
     "fs-extra": "11.4.1",
+    "vite": "8.4.0",
     "@types/fs-extra": "11.0.4"
   }
 }

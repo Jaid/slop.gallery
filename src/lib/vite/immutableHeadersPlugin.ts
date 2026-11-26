@@ -1,6 +1,6 @@
 import type {Plugin, Rolldown} from 'vite'
 
-import {headersFileName} from 'vite-plugin-jxl-headers'
+import {headersFileName} from 'rolldown-plugin-jxl-headers'
 
 /** a file name the build derives from the file’s content: eight characters of Rolldown’s base64url hash and the extension */
 export const hashedFileName = /^[\w-]{8}\.[\da-z]+$/iu
@@ -31,7 +31,7 @@ export function immutableExtensions(fileNames: Iterable<string>) {
 }
 
 /**
- * Lets browsers keep every file named by its content hash for good, through the Cloudflare Pages `_headers` file that vite-plugin-jxl-headers emits, which it adds to.
+ * Lets browsers keep every file named by its content hash for good, through the Cloudflare Pages `_headers` file that rolldown-plugin-jxl-headers emits, which it adds to.
  * A changed file gets a new name, so only the page itself, which keeps its name and always revalidates, has to be fetched again after a deploy.
  */
 export default function immutableHeadersPlugin(): Plugin {

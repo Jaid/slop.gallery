@@ -1,4 +1,4 @@
-import type {Plugin} from 'vite'
+import type {Plugin} from 'rolldown'
 
 export const headersFileName = '_headers'
 // Cloudflare Pages does not know JPEG XL yet and would serve it as application/octet-stream.
@@ -10,7 +10,6 @@ export const headers = `/*.jxl
 export default function jxlHeadersPlugin(): Plugin {
   return {
     name: 'jxl-headers',
-    apply: 'build',
     generateBundle() {
       this.emitFile({
         type: 'asset',

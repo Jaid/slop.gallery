@@ -57,7 +57,6 @@
         "victoria-browser-errors": "workspace:*",
         "vite-plugin-import-voice-sample": "workspace:*",
         "vite-plugin-jxl": "workspace:*",
-        "vite-plugin-jxl-headers": "workspace:*",
         "vite-plugin-loading-screen": "workspace:*",
         "vite-plugin-rapier": "workspace:*",
         "voice-sample-store": "workspace:*",
@@ -93,6 +92,7 @@
         "rolldown": "1.3.4",
         "rolldown-plugin-bake-branch-component": "workspace:*",
         "rolldown-plugin-hoist-popular-constants": "workspace:*",
+        "rolldown-plugin-jxl-headers": "workspace:*",
         "rolldown-plugin-thematic-chunks": "workspace:*",
         "sass-embedded": "1.108.2",
         "terser": "5.51.4",
@@ -329,6 +329,18 @@
     "packages/rolldown-plugin-hoist-popular-constants/packages/babel-plugin-hoist-popular-constants/packages/sort-shortest-levenshtein": {
       "name": "sort-shortest-levenshtein",
       "version": "0.1.0",
+    },
+    "packages/rolldown-plugin-jxl-headers": {
+      "name": "rolldown-plugin-jxl-headers",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@types/fs-extra": "11.0.4",
+        "fs-extra": "11.4.1",
+        "vite": "8.4.0",
+      },
+      "peerDependencies": {
+        "rolldown": "^1.3.4",
+      },
     },
     "packages/rolldown-plugin-thematic-chunks": {
       "name": "rolldown-plugin-thematic-chunks",
@@ -619,17 +631,6 @@
       },
       "devDependencies": {
         "@types/fs-extra": "11.0.4",
-      },
-      "peerDependencies": {
-        "vite": "^8.4.0",
-      },
-    },
-    "packages/vite-plugin-jxl-headers": {
-      "name": "vite-plugin-jxl-headers",
-      "version": "0.1.0",
-      "devDependencies": {
-        "@types/fs-extra": "11.0.4",
-        "fs-extra": "11.4.1",
       },
       "peerDependencies": {
         "vite": "^8.4.0",
@@ -1929,6 +1930,8 @@
 
     "rolldown-plugin-hoist-popular-constants": ["rolldown-plugin-hoist-popular-constants@workspace:packages/rolldown-plugin-hoist-popular-constants"],
 
+    "rolldown-plugin-jxl-headers": ["rolldown-plugin-jxl-headers@workspace:packages/rolldown-plugin-jxl-headers"],
+
     "rolldown-plugin-thematic-chunks": ["rolldown-plugin-thematic-chunks@workspace:packages/rolldown-plugin-thematic-chunks"],
 
     "run-parallel": ["run-parallel@1.2.0", "", { "dependencies": { "queue-microtask": "^1.2.2" } }, "sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA=="],
@@ -2164,8 +2167,6 @@
     "vite-plugin-import-voice-sample": ["vite-plugin-import-voice-sample@workspace:packages/vite-plugin-import-voice-sample"],
 
     "vite-plugin-jxl": ["vite-plugin-jxl@workspace:packages/vite-plugin-jxl"],
-
-    "vite-plugin-jxl-headers": ["vite-plugin-jxl-headers@workspace:packages/vite-plugin-jxl-headers"],
 
     "vite-plugin-loading-screen": ["vite-plugin-loading-screen@workspace:packages/vite-plugin-loading-screen"],
 
