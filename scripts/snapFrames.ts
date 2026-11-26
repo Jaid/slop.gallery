@@ -6,16 +6,18 @@ import {hangingOffset} from '#src/lib/placement/wallGeometry.ts'
 import {radians} from './lib/headlessGallery.ts'
 import snap from './snap.ts'
 
-/** Photograph every frame on the seed 0 Studio’s north wall in four labeled columns. */
+/** Photograph every frame on the seed 0 Studio’s north wall in eight labeled columns. */
 export default function snapFrames() {
-  const columns = 4
+  const columns = 8
   const rows = Math.ceil(frameIds.length / columns)
-  const rowHeight = 10.8 / rows
-  const imageSide = rowHeight - 0.4 // meters, leaving clearance between frames
+  const roomWidth = 12
+  const roomHeight = 12
+  const wallMargin = 0.6 // meters around the grid
+  const columnWidth = (roomWidth - 2 * wallMargin) / columns
+  const rowHeight = (roomHeight - 2 * wallMargin) / rows
+  const imageSide = Math.min(columnWidth, rowHeight) - 0.4 // meters, leaving clearance between frames
   const size = imageSide ** 2 * 10_000 // square image area in cm²
   const labelGap = 0.03 // meters below the frame’s outer edge
-  const roomWidth = 8
-  const roomHeight = 12
   const height = 8192
   const sidePadding = 64 // pixels on either side of the framed portraits
   const cameraZ = 14
@@ -24,7 +26,7 @@ export default function snapFrames() {
   const portraitZ = hangingOffset - wallFace // the north wall’s face is at z = 0
   const portraits = frameIds.map((frame, index) => ({
     frame,
-    x: (index % columns - (columns - 1) / 2) * 0.9,
+    x: (index % columns - (columns - 1) / 2) * columnWidth,
     y: roomHeight / 2 + ((rows - 1) / 2 - Math.floor(index / columns)) * rowHeight,
   }))
   // Project each frame’s outer edge at its nearest depth, relative to the centered camera.
