@@ -82,6 +82,8 @@ export default function snapFrames() {
     width: Math.ceil(2 * (halfWidth + sidePadding)),
     height,
     'text-overlays': true,
+    'jxl-effort': 10,
+    'jxl-distance': 1,
   }, tools)
 }
 
