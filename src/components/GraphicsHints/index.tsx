@@ -19,8 +19,14 @@ const verdictLabels = {
   unmet: 'Not met',
 } satisfies Record<HeavyCapabilityVerdict, string>
 const unknown = 'unknown'
-/** What `?graphics=auto` looks at, as a tooltip for the button whose `interestfor` names `id`. It only asks the GPU once it first opens and changes nothing about the graphics mode. */
-export default function GraphicsHints({id}: {id: string}) {
+/**
+ * What `?graphics=auto` looks at, as a tooltip for the button whose `interestfor` names `id`, and that the button’s graphics only apply from the next reload on. It only asks the GPU once it first opens and changes nothing about the graphics.
+ * @param current the label of this page’s graphics once the button switched the next page’s to others
+ */
+export default function GraphicsHints({current, id}: {
+  current?: string
+  id: string
+}) {
   const [opened, setOpened] = useState(false)
   return <div
     id={id} className={css.container} popover='hint' onBeforeToggle={event => {
@@ -29,6 +35,7 @@ export default function GraphicsHints({id}: {id: string}) {
       }
     }}
   >
+    <p className={css.reload}><Branch if={current} else='Applies from the next reload on.'>Reload to switch. This page keeps {current} graphics until then.</Branch></p>
     <p className={css.title}>Auto graphics</p>
     <Branch if={opened}><Suspense fallback={<p className={css.pending}>Asking the GPU…</p>}><Checks /></Suspense></Branch>
   </div>

@@ -19,6 +19,7 @@ import {environmentSeed} from '../gameSeed.ts'
 import {hiddenUiKey, toggleHiddenUi} from '../hiddenUi.ts'
 import pauseMenu from '../pauseMenu.ts'
 import {fovKeys} from '../rendering/fov.ts'
+import {applyGraphicsChange, planGraphicsChange, toggledGraphicsQuality, useNextGraphics} from '../rendering/graphicsQuality.ts'
 import {toggleWorldTuning, worldTuningKey} from '../worldTuning/panel.ts'
 import {viewTuning} from '../worldTuning/ViewTuningModule.ts'
 import {bookmarkKey, teleportToNextBookmark} from './bookmarks.ts'
@@ -295,6 +296,16 @@ export function toggleSound() {
   const sound = !useGallery.getState().sound
   useGallery.setState({sound})
   writeStored('audio', String(sound))
+}
+
+/**
+ * Switches the graphics of the pages to come between fast and heavy, like the menu’s Graphics button, leaving this page’s as they are. A page with `?graphics` goes to the same URL with the other graphics in its place, which leaves the stored ones alone; otherwise they are stored for the next reload.
+ */
+export function switchGraphics() {
+  const change = planGraphicsChange(toggledGraphicsQuality(useNextGraphics.getState().quality))
+  if (!applyGraphicsChange(change)) {
+    notify('Browser storage is unavailable, so the next reload can’t keep other graphics.')
+  }
 }
 
 export function handleGalleryKey(event: KeyboardEvent) {

@@ -2,26 +2,29 @@ import type {RenderPipelineSetting, RenderPipelineSettings} from './renderPipeli
 
 import optis from 'optis'
 import readPermalink from 'read-permalink'
-import useGraphicsMode from 'use-graphics-mode'
 
-import {isHeavyCapable, readHeavyCapabilityHints} from './autoGraphics.ts'
+/** every graphics quality by its name, as `?graphics` and the browser storage take it, from the cheapest to the most expensive */
+export const graphicsQualities = ['fast', 'heavy', 'cinematic'] as const
+/** a graphics quality by its name: fast, heavy, or cinematic, which is heavy budgeted for non-realtime rendering */
+export type GraphicsQuality = typeof graphicsQualities[number]
+/** a `?graphics` name: a graphics quality or `auto`, which picks fast or heavy for the GPU */
+export type GraphicsModeName = GraphicsQuality | 'auto'
 
-/** a `?graphics` name: a graphics mode or `auto`, which picks fast or heavy for the GPU */
-type GraphicsModeName = ReturnType<typeof useGraphicsMode.getName> | 'auto'
+const graphicsModeNames: ReadonlyArray<GraphicsModeName> = [...graphicsQualities, 'auto']
 
-const graphicsModeNames: Array<GraphicsModeName> = [useGraphicsMode.getName(false), useGraphicsMode.getName(true), useGraphicsMode.getName(true, true), 'auto']
-const normalizeGraphicsMode = (value: unknown): GraphicsModeName => {
+/** The name, if it is one of a graphics quality or `auto`; a bare flag names heavy graphics. */
+export function parseGraphicsModeName(value: unknown): GraphicsModeName | undefined {
   if (value === true) {
-    return useGraphicsMode.getName(true)
+    return 'heavy'
   }
-  return graphicsModeNames.find(name => name === value) ?? useGraphicsMode.getName(false)
+  return graphicsModeNames.find(name => name === value)
 }
 const graphicsModeSchema = optis({
   defaults: {
-    graphics: useGraphicsMode.getName(false),
+    graphics: 'fast',
   },
   normalizations: {
-    graphics: normalizeGraphicsMode,
+    graphics: (value: unknown): GraphicsModeName => parseGraphicsModeName(value) ?? 'fast',
   },
 })
 
@@ -93,28 +96,6 @@ type SsgiSettings = Pick<RenderPipelineSettings, | 'screenSpaceIndirectLightAmbi
 /** Read the `?graphics` name: fast, heavy, cinematic or auto. Anything else is fast. */
 export function readGraphicsModeName(input: URL | string = typeof location === 'undefined' ? '' : location.href) {
   return readPermalink(input, {schema: graphicsModeSchema}).graphics
-}
-
-// Only `?graphics=auto` waits for the adapter, before anything reads the graphics mode.
-const isAutoHeavy = readGraphicsModeName() === 'auto' && isHeavyCapable(await readHeavyCapabilityHints())
-
-/** Read whether `?graphics` asks for heavy graphics, which cinematic graphics are too. `auto` reads as what it picked for this page’s GPU. */
-export function readGraphicsMode(input?: URL | string) {
-  const name = readGraphicsModeName(input)
-  if (name === 'auto') {
-    return isAutoHeavy
-  }
-  return name !== useGraphicsMode.getName(false)
-}
-
-/** Read whether `?graphics` asks for cinematic graphics: heavy, but budgeted for non-realtime rendering. */
-export function readCinematicGraphics(input?: URL | string) {
-  return readGraphicsModeName(input) === useGraphicsMode.getName(true, true)
-}
-
-/** Read the profile `?graphics` asks for, for code outside React. It ignores later menu changes, so prefer `useGraphicsModeValue(getGraphicsProfile)` where a component can rebuild. */
-export function readGraphicsProfile(input?: URL | string) {
-  return getGraphicsProfile(readGraphicsMode(input), readCinematicGraphics(input))
 }
 
 const fastProfile: GraphicsProfile = {
@@ -219,12 +200,11 @@ export function fitCanvasTextureResolution(resolution: number, width: number, he
   return Math.min(resolution, maxTextureSize / Math.max(width, height))
 }
 
-/** Select a stable gallery-specific budget without exposing enum keys to consumers. */
-export function getGraphicsProfile(isHeavy: boolean, isCinematic = false) {
-  if (!isHeavy) {
-    return fastProfile
-  }
-  return isCinematic ? cinematicProfile : heavyProfile
+/** the budget of every graphics quality by its name */
+export const graphicsProfiles: Readonly<Record<GraphicsQuality, GraphicsProfile>> = {
+  fast: fastProfile,
+  heavy: heavyProfile,
+  cinematic: cinematicProfile,
 }
 
 /** Resolve the sun’s independent shadow-map dimensions, PCF width and sample budget. */

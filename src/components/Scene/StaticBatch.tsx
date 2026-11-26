@@ -78,7 +78,7 @@ const placed = (mesh: Mesh) => {
 
 /**
  * Merges the meshes below it that shade alike and cast and receive shadows alike into one mesh each, once they have mounted, so a family of trims or panels costs one draw call instead of one per piece.
- * Only for decor that never moves and never gets looked up. The merged copy is rebuilt whenever the children render anew, like when the graphics mode swaps their materials, but doesn’t follow changes made to the meshes directly. The originals stay in the scene graph for colliders and raycasts but stop rendering. A `RigidBody` below it needs explicit colliders: automatic ones only consider visible meshes and are built after the originals are hidden.
+ * Only for decor that never moves and never gets looked up. The merged copy is rebuilt whenever the children render anew, like when a room swaps their materials, but doesn’t follow changes made to the meshes directly. The originals stay in the scene graph for colliders and raycasts but stop rendering. A `RigidBody` below it needs explicit colliders: automatic ones only consider visible meshes and are built after the originals are hidden.
  */
 export default function StaticBatch({children, ...props}: ThreeElements['group']) {
   const ref = useRef<Group>(null)

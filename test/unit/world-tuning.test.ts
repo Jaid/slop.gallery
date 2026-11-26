@@ -3,7 +3,7 @@ import {afterEach, expect, test} from 'bun:test'
 import readQueryOverrides from '../../src/lib/queryOverrides.ts'
 import {getAntiAliasing} from '../../src/lib/rendering/antiAliasing.ts'
 import {defaultFov, fovKeys, fovLimits} from '../../src/lib/rendering/fov.ts'
-import {getGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
+import {graphicsProfiles} from '../../src/lib/rendering/graphicsMode.ts'
 import {getRenderPipelineSettings} from '../../src/lib/rendering/renderPipelineSettings.ts'
 import {dumpWorldTuning, setWorldTuning} from '../../src/lib/webmcp/worldTuning.ts'
 import {lastTuningSource} from '../../src/lib/worldTuning/base/TuningModule.ts'
@@ -22,7 +22,7 @@ test('the gallery is tuned by the view, the lighting it brings along, the render
   expect(worldTuning.module('lighting')).toBe(lightingTuning)
 })
 test('the render pipeline starts from the pipeline of the page’s heavy graphics, the view from the default field of view', () => {
-  expect(pipelineTuning.initial).toEqual(getRenderPipelineSettings(getGraphicsProfile(true), getAntiAliasing(true)))
+  expect(pipelineTuning.initial).toEqual(getRenderPipelineSettings(graphicsProfiles.heavy, getAntiAliasing(true)))
   expect(viewTuning.initial).toEqual({
     fov: defaultFov,
     renderScale: 1,
@@ -184,9 +184,9 @@ test('the tools see every value with its control, its group and what it starts f
     off: 0,
   })
   expect(pipeline.controls.find(control => control.key === 'bloomStrength')).not.toHaveProperty('rebuilds')
-  // Fast graphics have no pipeline to tune.
+  // Fast graphics have no pipeline to tune, and the page keeps them until it reloads.
   expect(pipeline.shown).toBe(false)
-  expect(pipeline.hint).toBe('Switch graphics on in the menu to tune the pipeline.')
+  expect(pipeline.hint).toBe('Only heavy graphics draw through the pipeline. Switch the menu’s graphics to heavy and reload to tune it.')
 })
 test('?world_tuning starts the page with the panel shown, but only with ?development, which the panel needs', () => {
   expect(readWorldTuning('http://localhost/?development&world_tuning')).toBe(true)

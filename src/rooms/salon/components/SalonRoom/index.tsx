@@ -7,7 +7,6 @@ import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {positionWorld, vec3} from 'three/tsl'
 import {Color, MeshStandardNodeMaterial} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import EngravedPlate from '#component/EngravedPlate'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -30,7 +29,7 @@ import ShellInlayMaterial from '#src/lib/materials/ShellInlayMaterial.ts'
 import TerrazzoFloorMaterial, {blackTerrazzo, venetianTerrazzo} from '#src/lib/materials/TerrazzoFloorMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
 import {daylight} from '#src/lib/rendering/daylight.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, isHeavyGraphics} from '#src/lib/rendering/graphicsQuality.ts'
 import {createStone} from '#src/stones/index.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
@@ -54,8 +53,7 @@ export default function SalonRoom({glass, stone, wood}: {
   // Painted as nero portoro round raised fields of giallo antico, the way Pompeian socles were.
   const socle = useDisposable(useMemo(() => new FauxMarbleMaterial(portoro), []))
   const fields = useDisposable(useMemo(() => new FauxMarbleMaterial(gialloAntico), []))
-  const isHeavy = useGraphicsMode()
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = graphicsProfile
   const terrazzo = useDisposable(useMemo(() => new TerrazzoFloorMaterial({
     center: room.center,
     size: room.size,
@@ -72,7 +70,7 @@ export default function SalonRoom({glass, stone, wood}: {
   return <group name='salon'>
     <group position={[room.center[0], 0, room.center[1]]}>
       <RoomFloor glass={glass} materials={floor} room={room} stone={stone} wood={wood} />
-      <Lantern heavy={isHeavy} />
+      <Lantern heavy={isHeavyGraphics} />
     </group>
     {salonWalls.map(wall => <WallDressing key={wall.id} fields={fields} gilt={gold} socle={socle} wall={wall} />)}
     <SalonOttoman />

@@ -3,13 +3,12 @@ import type {ThreeElements} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import EngravedPlateFace from '#component/EngravedPlateFace'
 import engravedPlate from '#src/lib/gallery/engravedPlate.ts'
 import BrassMaterial from '#src/lib/materials/BrassMaterial.ts'
 import EngravedBrassMaterial from '#src/lib/materials/EngravedBrassMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsQuality.ts'
 import useLoadingElementTexture from '#src/lib/useLoadingElementTexture.ts'
 
 const {radius, size} = engravedPlate
@@ -19,7 +18,7 @@ export default function EngravedPlate({byline, heading, ...group}: Omit<ThreeEle
   byline?: string
   heading: string
 }) {
-  const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = useGraphicsModeValue(getGraphicsProfile)
+  const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = graphicsProfile
   const [width, height] = engravedPlate.texture
   const lettering = useLoadingElementTexture(`engraved-plate:${heading}\n${byline ?? ''}`, useMemo(() => ({
     width,

@@ -6,16 +6,17 @@ import {afterAll, beforeAll, describe, expect, test} from 'bun:test'
 import {Ray} from '@dimforge/rapier3d-compat'
 import {useThree} from '@react-three/fiber'
 import {Box3, MeshBasicMaterial, Vector3} from 'three/webgpu'
-import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import {workbench} from '../../src/lib/gallery/alchemy/alchemyMachine.ts'
 import forge from '../../src/lib/gallery/forge.ts'
 import EndGrainMaterial from '../../src/lib/materials/forge/EndGrainMaterial.ts'
 import ForgeRoom from '../../src/rooms/forge/components/ForgeRoom/index.tsx'
 import {mountPhysics} from './helpers/inertPhysics.tsx'
+import {mockPageGraphics} from './helpers/pageGraphics.ts'
 
 const material = new MeshBasicMaterial
 let mounted: Awaited<ReturnType<typeof mountPhysics>>
+let graphics: Awaited<ReturnType<typeof mockPageGraphics>> | undefined
 let scene: Scene | undefined
 const boundsOf = (object: Object3D) => {
   const bounds = new Box3
@@ -26,15 +27,18 @@ function SceneProbe() {
   return null
 }
 beforeAll(async () => {
+  // A page with heavy graphics, whose floors mirror the room.
+  graphics = await mockPageGraphics('heavy')
   // Every finish of the room but its floors is the same plain material; only the colliders and the floors’ mirrors matter here.
-  mounted = await mountPhysics(<GraphicsModeProvider isHeavy onChange={() => {}}>
+  mounted = await mountPhysics(<>
     <ForgeRoom masonry={material} materials={new Proxy({}, {get: () => material}) as never} />
     <SceneProbe />
-  </GraphicsModeProvider>)
+  </>)
   mounted.physics.step(1 / 60)
 })
 afterAll(async () => {
   await mounted[Symbol.asyncDispose]()
+  await graphics?.[Symbol.asyncDispose]()
   material.dispose()
 })
 describe('the Forge as mounted', () => {
@@ -68,7 +72,7 @@ describe('the Forge as mounted', () => {
     expect(bench).toBeDefined()
     const start = bench!.translation()
     let drift = 0
-    // long frames like a graphics switch or a tab coming back from the background, which step up to 30 times at once, between short ones
+    // long frames like a pipeline compiling or a tab coming back from the background, which step up to 30 times at once, between short ones
     for (let frame = 0; frame < 40; frame++) {
       step([0.5, 0.004, 0.25, 1 / 60][frame % 4])
       const {x, y, z} = bench!.translation()

@@ -8,13 +8,12 @@ import useEgoTelemetry from 'telemethree-ego/react'
 import usePauseMenuTelemetry from 'telemethree-pause-menu/react'
 import useThreeTelemetry from 'telemethree/react'
 import {Vector3} from 'three/webgpu'
-import useGraphicsMode, {useCinematicGraphics} from 'use-graphics-mode'
 
 import {useGallery} from '#src/lib/gallery.ts'
 import {useGeofences} from '#src/lib/gallery/geofences.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
 import {getAntiAliasing} from '#src/lib/rendering/antiAliasing.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, graphicsQuality, isHeavyGraphics} from '#src/lib/rendering/graphicsQuality.ts'
 import {describeObject, lampSwitches} from '#src/lib/rendering/lightLevels.ts'
 import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
 import {playerTelemetry, telemetry} from '#src/lib/telemetry/index.ts'
@@ -25,6 +24,8 @@ import worldClock from '#src/lib/worldClock.ts'
 import {useWorldTuningPanel} from '#src/lib/worldTuning/panel.ts'
 import world from '#src/worlds/current.ts'
 
+/** the antialiasing of this page’s graphics */
+const antiAliasing = getAntiAliasing(isHeavyGraphics)
 function Collectors() {
   usePauseMenuTelemetry({
     menu: pauseMenu,
@@ -35,12 +36,7 @@ function Collectors() {
   const inspector = new AimInspector(scene, camera)
   const [aimOrigin] = useState(() => new Vector3)
   const [aimDirection] = useState(() => new Vector3)
-  const isHeavy = useGraphicsMode()
-  const isCinematic = useCinematicGraphics()
-  const profile = getGraphicsProfile(isHeavy, isCinematic)
-  const antiAliasing = getAntiAliasing(isHeavy)
   const canvas = useThree(state => state.renderer.domElement)
-  const graphicsProfile = useGraphicsMode.getName(isHeavy, isCinematic)
   useEffect(() => {
     roomChangeDetails.current = (from, to) => {
       const {enabled, enabledCount, disabled, disabledCount} = lampSwitches(scene, from, to)
@@ -71,11 +67,11 @@ function Collectors() {
   }, [scene])
   useEffect(() => recordGeofenceCrossings(telemetry!, useGeofences, id => world.roomById(id)?.title), [])
   useEffect(() => attachWorldTuningTelemetry(telemetry!, () => ({
-    'graphics.profile': graphicsProfile,
+    'graphics.profile': graphicsQuality,
     'canvas.width': canvas.width,
     'canvas.height': canvas.height,
     room: useGallery.getState().room,
-  })), [canvas, graphicsProfile])
+  })), [canvas])
   useThreeTelemetry({
     telemetry: telemetry!,
     getAttributes: () => {
@@ -83,13 +79,13 @@ function Collectors() {
       return {
         room,
         locked,
-        'graphics.profile': useGraphicsMode.getName(isHeavy, isCinematic),
-        'graphics.shadows': profile.shadows,
-        'graphics.postprocessing': profile.postprocessing,
+        'graphics.profile': graphicsQuality,
+        'graphics.shadows': graphicsProfile.shadows,
+        'graphics.postprocessing': graphicsProfile.postprocessing,
         'graphics.anti_aliasing': antiAliasing || 'none',
-        'graphics.mirror_reflections': profile.mirrorReflections,
-        'graphics.noise_textures': profile.noiseTextures,
-        'graphics.volumetric_light': profile.volumetricLight,
+        'graphics.mirror_reflections': graphicsProfile.mirrorReflections,
+        'graphics.noise_textures': graphicsProfile.noiseTextures,
+        'graphics.volumetric_light': graphicsProfile.volumetricLight,
         'world_tuning.open': useWorldTuningPanel.getState().open,
       }
     },

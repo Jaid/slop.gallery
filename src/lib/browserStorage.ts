@@ -8,6 +8,8 @@ const keys = {
   apiKey: 'slop-gallery-key',
   /** whether audio is on, once the player switched it */
   audio: 'slop-gallery-audio',
+  /** the graphics every page starts with unless `?graphics` says otherwise, once the player switched them */
+  graphics: 'slop-gallery-graphics',
   /** the environment seed of the current world’s game */
   seed: `${currentWorldInfo.storageKey}-seed`,
 } as const

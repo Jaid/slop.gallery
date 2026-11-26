@@ -5,7 +5,6 @@ import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo} from 'react'
-import useGraphicsMode from 'use-graphics-mode'
 
 import {colliderGeometry} from '#src/lib/gallery/architecture.ts'
 import {wallFace} from '#src/lib/gallery/architectureDimensions.ts'
@@ -15,6 +14,7 @@ import BrassMaterial from '#src/lib/materials/BrassMaterial.ts'
 import ClearGlassMaterial from '#src/lib/materials/ClearGlassMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
 import JoineryWoodMaterial from '#src/lib/materials/JoineryWoodMaterial.ts'
+import {isHeavyGraphics} from '#src/lib/rendering/graphicsQuality.ts'
 import sandbox from '#src/worlds/sandbox/cell.ts'
 
 const cell = sandbox.room('cell')
@@ -31,7 +31,6 @@ export default function CellCeiling({beams}: {
   /** the wood of the beams and the roof lights’ sashes, its grain along each mesh’s x axis */
   beams: Material
 }) {
-  const isHeavy = useGraphicsMode()
   const geometry = useDisposable(useMemo(() => new CellCeilingGeometry(layout), []))
   const collision = useMemo(() => ({
     beams: colliderGeometry(geometry.beams),
@@ -41,9 +40,9 @@ export default function CellCeiling({beams}: {
   // A warm, tawny plaster between the beams and over the round room alike.
   const plaster = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
     baseColor: hsl.integer(58, 36, 42),
-    heavy: isHeavy,
+    heavy: isHeavyGraphics,
     roughness: 0.88,
-  }), [isHeavy]))
+  }), []))
   const brass = useDisposable(useMemo(() => new BrassMaterial, []))
   // The beams’ walnut, its grain running level along the gables, from the hall’s north wall to its south wall.
   const gableWood = useDisposable(useMemo(() => new JoineryWoodMaterial({grain: 'z'}), []))

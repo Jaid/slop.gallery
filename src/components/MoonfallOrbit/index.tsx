@@ -4,7 +4,6 @@ import {useFrame} from '@react-three/fiber'
 import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo, useRef} from 'react'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import Orbitable from '#component/Orbitable'
 import {useAmbienceEmitter} from '#src/ambience_emitters/lib/ambienceEmitters.ts'
@@ -15,7 +14,7 @@ import {moonfallTheme} from '#src/lib/gallery/moonfall/palette.ts'
 import {moonfallSculpture, sculptureLampOffset} from '#src/lib/gallery/moonfall/sculpture.ts'
 import ArmillaryRingMaterial from '#src/lib/materials/ArmillaryRingMaterial.ts'
 import MeteoriteMaterial from '#src/lib/materials/MeteoriteMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsQuality.ts'
 import {useLamp} from '#src/lib/rendering/lamps.ts'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
@@ -51,7 +50,7 @@ export default function MoonfallOrbit() {
   const turns = useRef<Array<Group | null>>([])
   const beads = useRef<Array<Mesh | null>>([])
   const clock = useMemo(() => new AnimationClock(0.05), [])
-  const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
+  const {curveDetail} = graphicsProfile
   useAmbienceEmitter(slopGallery.ambience('moonfall', 'orbital_sculpture'))
   const materials = useDisposable(useMemo(() => {
     const list = rings.map(ring => new ArmillaryRingMaterial(ring.radius, ring.hue, () => clock.time * ring.revolution / (Math.PI * 2) % 1))

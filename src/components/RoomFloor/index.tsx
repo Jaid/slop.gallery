@@ -4,14 +4,13 @@ import type {Material, Object3D, Texture} from 'three/webgpu'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
 import Branch from 'branch-component'
 import hsl from 'okhsl'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import FloorGlass from '#component/FloorGlass'
 import WoodFloor from '#component/WoodFloor'
 import Box from '#src/components/Scene/primitives.tsx'
 import StaticBatch from '#src/components/Scene/StaticBatch.tsx'
 import {floorThickness, roomFloorPlan} from '#src/lib/gallery/floors.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsQuality.ts'
 
 /** Materials that replace a room’s default stone slabs and brass inlays. */
 export type RoomFloorMaterials = {
@@ -29,7 +28,7 @@ export default function RoomFloor({glass, materials, room, stone, wood}: {
   stone: Texture
   wood: Texture
 }) {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
+  const {mirrorReflections} = graphicsProfile
   const plan = roomFloorPlan(room)
   const reflection = materials?.reflection
   const envMapIntensity = mirrorReflections ? 1 : 0

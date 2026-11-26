@@ -6,7 +6,6 @@ import {afterEach, beforeAll, beforeEach, describe, expect, spyOn, test} from 'b
 import {maximumSeed} from 'make-seed'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
-import {GraphicsModeProvider} from 'use-graphics-mode'
 
 import Menu from '#component/Menu'
 import Minimap from '#component/Minimap'
@@ -58,19 +57,16 @@ describe('minimal menu', () => {
   test('starts unlocked, with an expanded OpenRouter section', () => {
     expect(useGallery.getState().locked).toBe(false)
     const params: AiSettings = readAiSettings()
-    const html = renderToStaticMarkup(createElement(GraphicsModeProvider, {
-      isHeavy: true,
-      onChange: () => {},
-      children: createElement(Menu, {
-        available: true,
-        params,
-        setParams: () => {},
-      }),
+    const html = renderToStaticMarkup(createElement(Menu, {
+      available: true,
+      params,
+      setParams: () => {},
     }))
     expect(html).toContain('aria-labelledby="menu-title"')
     expect(html).toContain('Mute audio')
     expect(html).toContain('Heavy graphics')
-    expect(html).toContain('<small>Heavy</small>')
+    // A page without ?graphics or stored graphics renders fast ones, which the button names.
+    expect(html).toContain('<small>Fast</small>')
     // The Graphics button names its tooltip, which asks the GPU only once it opens.
     const tooltipId = /aria-label="Heavy graphics"[^>]*\binterestfor="([^"]+)"/u.exec(html)?.[1]
     expect(tooltipId).toBeString()
@@ -115,14 +111,10 @@ test.each(['first', 'reset', 'return', 'pause', 'unfocus'] as const)('renders th
   Object.assign(useGallery.getInitialState(), {ready: true})
   try {
     const params: AiSettings = readAiSettings()
-    const html = renderToStaticMarkup(createElement(GraphicsModeProvider, {
-      isHeavy: true,
-      onChange: () => {},
-      children: createElement(Menu, {
-        available: true,
-        params,
-        setParams: () => {},
-      }),
+    const html = renderToStaticMarkup(createElement(Menu, {
+      available: true,
+      params,
+      setParams: () => {},
     }))
     expect(html).toContain(`data-stage="${stage}"`)
     expect(html).toContain(primaryActionLabel(stage))
@@ -248,14 +240,10 @@ test.each(['lobby', 'oculus'] as const)('pause heading identifies the %s room an
   Object.assign(useGallery.getInitialState(), {room})
   try {
     const params: AiSettings = readAiSettings()
-    const html = renderToStaticMarkup(createElement(GraphicsModeProvider, {
-      isHeavy: true,
-      onChange: () => {},
-      children: createElement(Menu, {
-        available: true,
-        params,
-        setParams: () => {},
-      }),
+    const html = renderToStaticMarkup(createElement(Menu, {
+      available: true,
+      params,
+      setParams: () => {},
     }))
     expect(html).toContain(room === 'lobby' ? '>Lobby</h1>' : '>Oculus</h1>')
     expect(html).toContain(room === 'lobby' ? '>upper floor room</p>' : '>lower floor room</p>')
@@ -281,14 +269,10 @@ test.each(['first', 'return'] as const)('the %s menu stage leaves the intro in v
   Object.assign(useGallery.getInitialState(), {ready: true})
   Object.assign(useIntro.getInitialState(), {orbit: slopGallery.introOrbit})
   try {
-    const html = renderToStaticMarkup(createElement(GraphicsModeProvider, {
-      isHeavy: true,
-      onChange: () => {},
-      children: createElement(Menu, {
-        available: true,
-        params: readAiSettings(),
-        setParams: () => {},
-      }),
+    const html = renderToStaticMarkup(createElement(Menu, {
+      available: true,
+      params: readAiSettings(),
+      setParams: () => {},
     }))
     expect(html).toContain('>Slop Gallery</h1>')
     expect(html.indexOf('<img')).toBeGreaterThan(-1)
@@ -325,14 +309,10 @@ test('the pause menu’s map follows the player where a room climbs to the floor
       [[apexX + 0.3, -1.9 + 1.62, apexZ], 'Upper gallery map'],
     ] as const) {
       cameraPose.position = [...position]
-      const html = renderToStaticMarkup(createElement(GraphicsModeProvider, {
-        isHeavy: true,
-        onChange: () => {},
-        children: createElement(Menu, {
-          available: true,
-          params: readAiSettings(),
-          setParams: () => {},
-        }),
+      const html = renderToStaticMarkup(createElement(Menu, {
+        available: true,
+        params: readAiSettings(),
+        setParams: () => {},
       }))
       expect(html.match(/data-testid="minimap"/gu)).toHaveLength(1)
       expect(html).toContain(`aria-label="${label}"`)
@@ -351,14 +331,10 @@ test('the pause menu after the intro keeps the OpenRouter section', () => {
   })
   Object.assign(useIntro.getInitialState(), {orbit: slopGallery.introOrbit})
   try {
-    const html = renderToStaticMarkup(createElement(GraphicsModeProvider, {
-      isHeavy: true,
-      onChange: () => {},
-      children: createElement(Menu, {
-        available: true,
-        params: readAiSettings(),
-        setParams: () => {},
-      }),
+    const html = renderToStaticMarkup(createElement(Menu, {
+      available: true,
+      params: readAiSettings(),
+      setParams: () => {},
     }))
     expect(html).toContain('OpenRouter')
     expect(html).not.toMatch(/id="enter-gallery"[^>]*>Play</u)

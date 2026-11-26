@@ -3,7 +3,6 @@ import type {CanvasTexture, DirectionalLight, Light, Renderer, Scene} from 'thre
 
 import {useThree} from '@react-three/fiber'
 import {useEffect, useLayoutEffect, useMemo, useRef} from 'react'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 import {useShallow} from 'zustand/react/shallow'
 
 import {isDevelopmentMode} from '#src/lib/developmentMode.ts'
@@ -13,7 +12,8 @@ import {cycleLighting, lightingPresets, tuneLighting, useLighting} from '#src/li
 import lobbyVault from '#src/lib/gallery/lobbyVault.ts'
 import {sunGeometry, sunlitPoints, sunShadowMapSize} from '#src/lib/gallery/sun.ts'
 import {shineDaylightFrom} from '#src/lib/rendering/daylight.ts'
-import {getGraphicsProfile, getSunShadowSettings} from '#src/lib/rendering/graphicsMode.ts'
+import {getSunShadowSettings} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, isHeavyGraphics} from '#src/lib/rendering/graphicsQuality.ts'
 import {lampOf} from '#src/lib/rendering/lamps.ts'
 import {isShadowSlot, lightActive, lightGain, lightShadow, useLightEdits} from '#src/lib/rendering/lightLevels.ts'
 import {getShadowProps} from '#src/lib/rendering/shadowFilterNodes.ts'
@@ -173,20 +173,18 @@ function useTunedLighting(preset: GalleryLightingPreset) {
 }
 /** The sun’s shadow props, which the world tuning of `?development` changes in heavy graphics, together with its lookups per pixel. */
 function useSunShadow(mapSize: number) {
-  const isHeavy = useGraphicsMode()
-  const profile = useGraphicsModeValue(getGraphicsProfile)
   const tuned = pipelineTuning.useValues(useShallow(state => ({
     mapSize: state.sunShadowMapSize,
     radius: state.sunShadowRadius,
     samples: state.sunShadowSamples,
   })))
-  if (isDevelopmentMode && isHeavy) {
+  if (isDevelopmentMode && isHeavyGraphics) {
     return {
       ...getShadowProps(tuned),
       samples: tuned.samples,
     }
   }
-  const sunShadow = getSunShadowSettings(profile, mapSize)
+  const sunShadow = getSunShadowSettings(graphicsProfile, mapSize)
   return {
     ...getShadowProps(sunShadow),
     samples: sunShadow.samples,

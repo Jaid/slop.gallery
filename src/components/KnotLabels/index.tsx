@@ -12,14 +12,14 @@ import hsl from 'okhsl'
 import {useEffect, useMemo, useRef} from 'react'
 import {attribute, texture, uv, vec2} from 'three/tsl'
 import {Group, InstancedBufferAttribute, InstancedMesh, Matrix4, Mesh, MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import InteractiveObject from '#component/InteractiveObject'
 import KnotLabelFace, {KnotLabelFaces} from '#component/KnotLabelFace'
 import GrabbableProp, {propObjects} from '#src/components/Scene/GrabbableProp.tsx'
 import metal from '#src/lib/materials/metal.ts'
 import InstancedPropVisuals from '#src/lib/physics/InstancedPropVisuals.ts'
-import {fitCanvasTextureResolution, getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {fitCanvasTextureResolution} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, isHeavyGraphics} from '#src/lib/rendering/graphicsQuality.ts'
 import useLoadingElementTexture, {rasterizeFace} from '#src/lib/useLoadingElementTexture.ts'
 
 import {labelAtlasColumns, labelBackground, labelHeight, labelWidth} from './layout.ts'
@@ -43,12 +43,11 @@ export default function KnotLabels({signs, ratings, action = 'Listen', onActivat
   ratings?: ReadonlyMap<string, Rarity>
   signs: ReadonlyArray<KnotSignPlacement>
 }) {
-  const isHeavy = useGraphicsMode()
-  const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = useGraphicsModeValue(getGraphicsProfile)
+  const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = graphicsProfile
   const atlasRows = Math.ceil(signs.length / labelAtlasColumns)
   // Only the flat fallback is owned here; the reflective steel is shared for the page lifetime.
   const flatSupportMaterial = useDisposable(useMemo(() => new MeshBasicNodeMaterial({color: hsl.integer(238, 9, 67)}), []))
-  const supportMaterial = isHeavy ? metal : flatSupportMaterial
+  const supportMaterial = isHeavyGraphics ? metal : flatSupportMaterial
   const resources = useDisposable(useMemo(() => {
     const offsets = new Float32Array(signs.length * 2)
     for (let index = 0; index < signs.length; index++) {

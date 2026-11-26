@@ -24,6 +24,7 @@ const paths = {
       <circle cx='12' cy='12' r='9' />
       <path d='M9.5 9.5a2.5 2.5 0 1 1 3.4 2.33c-.55.22-.9.74-.9 1.32v.6M12 16.75v.01' />
     </>,
+  reload: <path d='M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4v4h-4' />,
 
 } satisfies Record<string, ReactNode>
 

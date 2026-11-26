@@ -6,7 +6,6 @@ import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
-import useGraphicsMode from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import MarbleFountainWaterMaterial from '#src/fountains/marble/MarbleFountainWaterMaterial.ts'
@@ -20,13 +19,13 @@ import InflowGeometry from '#src/lib/gallery/cistern/InflowGeometry.ts'
 import {routeRibDepth, routeRibThickness} from '#src/lib/gallery/passages/RoutedPassage.ts'
 import CisternWaterMaterial from '#src/lib/materials/CisternWaterMaterial.ts'
 import {lightIndoors} from '#src/lib/materials/lights/index.ts'
+import {isHeavyGraphics} from '#src/lib/rendering/graphicsQuality.ts'
 
 /**
  * The Bastion’s cistern behind the Forge’s vestibule: its floor with the channel sunk into it, the inflow’s pipe pouring water into it and the water running along it, the ribbed half dome, the window’s reveal and the drain in the approach’s floor that the channel’s water spills into out of the culvert.
  * The channel’s water swallows any bounce: an orb the cannon shoots in comes down into the channel and rides it round and out through the culvert.
  */
 export default function BastionCistern({stone}: {stone: Material}) {
-  const isHeavy = useGraphicsMode()
   const parts = useDisposable(useMemo(() => new CisternGeometry, []))
   const dome = useDisposable(useMemo(() => new HalfDomeGeometry({
     center: cistern.center,
@@ -57,7 +56,7 @@ export default function BastionCistern({stone}: {stone: Material}) {
   })), []))
   const water = useDisposable(useMemo(() => lightIndoors(new CisternWaterMaterial(cisternInflow.along)), []))
   const sump = useDisposable(useMemo(() => lightIndoors(new CisternWaterMaterial), []))
-  const falling = useDisposable(useMemo(() => lightIndoors(new MarbleFountainWaterMaterial(true, isHeavy)), [isHeavy]))
+  const falling = useDisposable(useMemo(() => lightIndoors(new MarbleFountainWaterMaterial(true, isHeavyGraphics)), []))
   const dead = {
     restitution: 0,
     restitutionCombineRule: CoefficientCombineRule.Min,

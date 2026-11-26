@@ -5,7 +5,6 @@ import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshStandardNodeMaterial} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
 import LobbyChandelierGeometry from '#src/lib/gallery/LobbyChandelierGeometry.ts'
@@ -16,7 +15,7 @@ import CandleFlameMaterial from '#src/lib/materials/CandleFlameMaterial.ts'
 import gold from '#src/lib/materials/gold.ts'
 import LimestoneMaterial from '#src/lib/materials/LimestoneMaterial.ts'
 import VaultGlassMaterial from '#src/lib/materials/VaultGlassMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, isHeavyGraphics} from '#src/lib/rendering/graphicsQuality.ts'
 
 /**
  * The Lobby’s coffered barrel vault with its glazed crown and rose windows, and the great chandeliers hanging from it.
@@ -25,16 +24,15 @@ import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 export default function LobbyVault({cladding}: {
   cladding: Material
 }) {
-  const isHeavy = useGraphicsMode()
-  const {curveDetail} = useGraphicsModeValue(getGraphicsProfile)
+  const {curveDetail} = graphicsProfile
   const geometry = useDisposable(useMemo(() => new LobbyVaultGeometry(curveDetail), [curveDetail]))
   const stone = useDisposable(useMemo(() => new LimestoneMaterial, []))
   // Cream coffer fields behind the white stone frames, gilt moldings and rosettes.
   const plaster = useDisposable(useMemo(() => new ArchitecturalPlasterMaterial({
     baseColor: hsl.integer(91, 30, 92),
-    heavy: isHeavy,
+    heavy: isHeavyGraphics,
     roughness: 0.86,
-  }), [isHeavy]))
+  }), []))
   // Painted bronze glazing bars, as on the Vesper’s and the Salon’s lanterns.
   const bars = useDisposable(useMemo(() => new MeshStandardNodeMaterial({
     color: hsl.integer(72, 31, 33),
@@ -50,9 +48,9 @@ export default function LobbyVault({cladding}: {
   }), []))
   // Cast conservatory glass like the floor’s, divided into the same panes as the bars in front of it.
   const glass = useDisposable(useMemo(() => new VaultGlassMaterial({
-    heavy: isHeavy,
+    heavy: isHeavyGraphics,
     paneSize: [lobbyVault.glazing.pane, lobbyVault.glazing.pane],
-  }), [isHeavy]))
+  }), []))
   const collision = useMemo(lobbyVaultCollision, [])
   return <group name='lobby-vault'>
     <RigidBody colliders={false} type='fixed'>

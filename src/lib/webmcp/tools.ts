@@ -12,7 +12,6 @@ import type {MoodCast, MoodCastInput} from './castMood.ts'
 import type {SeedInput} from './changeSeed.ts'
 import type {PortraitDump} from './dumpPortraits.ts'
 import type {GeofenceQuery} from './getGeofences.ts'
-import type {GraphicsQualityChange, GraphicsQualityInput} from './setGraphicsQuality.ts'
 import type {SloperatorDump, SloperatorSightingDump, SloperatorSightingInput, SloperatorSpawnInput} from './sloperator.ts'
 import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
 import type {PartyEffectSpawn, PartyEffectSpawnInput} from './spawnPartyEffect.ts'
@@ -93,7 +92,6 @@ export type WebmcpBridge = {
   } | null
   getWorldTuning: () => WorldTuningDump
   rerollSeed: () => SeedChange
-  setGraphicsQuality: (input: GraphicsQualityInput) => Promise<GraphicsQualityChange>
   setSeed: (input: SeedInput) => SeedChange
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
   setWorldTuning: (input: WorldTuningInput) => WorldTuningChange
@@ -792,39 +790,9 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       },
     },
     {
-      name: 'set_graphics_quality',
-      title: 'Set graphics quality',
-      description: 'Switch the graphics of this session like the menu’s Graphics button does, to fast, heavy or cinematic by name, or with null back to the ones the page started with: what ?graphics asked for, fast without it. Resolves once the scene has switched, while what it builds anew, like shadow maps and pipelines, may still load, which get_loading_items lists; render a few frames before capturing, so shadow maps and temporal antialiasing settle. Film recipes run it through their tools keyframes to switch graphics mid-flight. Fails for unknown graphics, whose error lists them, and for cinematic on a page not opened with ?graphics=cinematic, whose renderer lacks the GPU limits they need. Returns the graphics from now on, the previous ones and the initial ones. Does not move the player, change focus or simulate input.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          quality: {
-            type: ['string', 'null'],
-            description: 'fast, heavy or cinematic, or null for the graphics the page started with',
-          },
-        },
-        required: ['quality'],
-        additionalProperties: false,
-      },
-      annotations: {
-        readOnlyHint: false,
-      },
-      execute: (input: unknown, {signal}) => {
-        signal.throwIfAborted()
-        if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).join(',') !== 'quality') {
-          throw new TypeError('This tool takes an object with quality.')
-        }
-        const {quality} = input as Record<string, unknown>
-        if (quality !== null && (typeof quality !== 'string' || !quality)) {
-          throw new TypeError('quality must be the name of the graphics or null.')
-        }
-        return getBridge().setGraphicsQuality({quality})
-      },
-    },
-    {
       name: 'set_world_tuning',
       title: 'Set world tuning',
-      description: 'Set values of the world tuning like its panel does, by the module ids and keys get_world_tuning lists, like {values: {view: {fov: 50}, pipeline: {bloom: false, vignette: 0.3}, studio: {lightColor: {hue: 265, saturation: 53, lightness: 76}}}}, where null brings a value back to the one the page started with. Every value is checked against its control first, so one it does not take sets none, and the error says what it takes: a number within a range’s min and max, or its off value, one of a select’s option values, true or false for a toggle, a color as its OkHSL {hue, saturation, lightness}, a hue from 0 to 360°, a saturation and a lightness from 0 to 100%, any left out at hue 0°, saturation 100% and lightness 50%, or a switch’s on or off value. The values apply live and stay in effect whether the panel shows or not, as the panel shows them too; changing one that rebuilds something, like a pass of the render pipeline, compiles what it builds, which get_loading_items lists meanwhile, so render a few frames before capturing. The pipeline’s values only show in heavy graphics. The panel’s Copy button copies the values tuned so far in the very shape values takes. Each settled change logs a gallery.world_tuning.changed telemetry event. A value marked reloads, like the Studio’s size, reloads the page right after answering, carrying every tuned value and the player’s pose over, and the tools register anew once the next page has loaded. Fails for an unknown module or key, whose error lists what there is, and on a page without ?development, where no value takes effect. Returns every value that changed, with its module, key, from and to, a color as its OkHSL. Does not move the player, change focus or simulate input.',
+      description: 'Set values of the world tuning like its panel does, by the module ids and keys get_world_tuning lists, like {values: {view: {fov: 50}, pipeline: {bloom: false, vignette: 0.3}, studio: {lightColor: {hue: 265, saturation: 53, lightness: 76}}}}, where null brings a value back to the one the page started with. Every value is checked against its control first, so one it does not take sets none, and the error says what it takes: a number within a range’s min and max, or its off value, one of a select’s option values, true or false for a toggle, a color as its OkHSL {hue, saturation, lightness}, a hue from 0 to 360°, a saturation and a lightness from 0 to 100%, any left out at hue 0°, saturation 100% and lightness 50%, or a switch’s on or off value. The values apply live and stay in effect whether the panel shows or not, as the panel shows them too; changing one that rebuilds something, like a pass of the render pipeline, compiles what it builds, which get_loading_items lists meanwhile, so render a few frames before capturing. The pipeline’s values only show on a page with heavy graphics. The panel’s Copy button copies the values tuned so far in the very shape values takes. Each settled change logs a gallery.world_tuning.changed telemetry event. A value marked reloads, like the Studio’s size, reloads the page right after answering, carrying every tuned value and the player’s pose over, and the tools register anew once the next page has loaded. Fails for an unknown module or key, whose error lists what there is, and on a page without ?development, where no value takes effect. Returns every value that changed, with its module, key, from and to, a color as its OkHSL. Does not move the player, change focus or simulate input.',
       inputSchema: {
         type: 'object',
         properties: {

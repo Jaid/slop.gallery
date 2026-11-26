@@ -4,8 +4,8 @@ import type {Light, PointLight, SpotLight} from 'three/webgpu'
 import hsl from 'okhsl'
 import {useLayoutEffect, useRef, useState} from 'react'
 import {Object3D} from 'three/webgpu'
-import useGraphicsMode from 'use-graphics-mode'
 
+import {isHeavyGraphics} from '#src/lib/rendering/graphicsQuality.ts'
 import {registerLamp} from '#src/lib/rendering/lamps.ts'
 import {useShadowProps} from '#src/lib/rendering/shadowFilters.ts'
 import world from '#src/worlds/current.ts'
@@ -41,8 +41,7 @@ export default function Lamps() {
 
 /** Whether the lamp casts a shadow in the current graphics mode. */
 const useShadow = (lamp: PlacedLamp) => {
-  const isHeavy = useGraphicsMode()
-  return lamp.shadow === 'heavy' ? isHeavy : lamp.shadow ?? false
+  return lamp.shadow === 'heavy' ? isHeavyGraphics : lamp.shadow ?? false
 }
 /** Point lights that cast a shadow borrow a slot of the shadow pool with `userData.shadow`, blurred wider as `userData.softShadow` asks, the pool’s `softShadowKey`. */
 function PointLamp({lamp}: {lamp: PlacedPointLamp}) {
