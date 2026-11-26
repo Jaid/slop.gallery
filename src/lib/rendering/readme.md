@@ -18,7 +18,7 @@ current-frame scene color + depth + normals + velocity
 
 ## Graphics preset
 
-The page selects **one preset before creating the renderer**. An explicit `?graphics=fast`, `heavy`, `cinematic` or `auto` overrides the saved preference; without either, the default is Fast. Cinematic uses Heavy’s effects with larger budgets for offline rendering. Auto resolves to Heavy if the GPU and memory meet the [capability checks](autoGraphics.ts) and the CPU tier does not rule it out, otherwise Fast.
+The page selects **one preset before creating the renderer**. An explicit `?graphics=fast`, `heavy`, `cinematic` or `auto` overrides the saved preference; without either, the default is Fast. Cinematic uses Heavy’s effects with larger budgets for offline rendering. Auto resolves to Heavy if the GPU and memory meet the [capability checks](autoGraphics.ts) and the CPU tier does not rule it out, otherwise Fast: the WebGPU adapter must report a Lovelace, Blackwell or RDNA 4 architecture and `navigator.deviceMemory` at least 8, while `navigator.cpuPerformance` tier 1 or 2 rules it out. The menu’s Graphics tooltip shows how this browser fares on each.
 
 The menu’s Graphics button selects **Fast or Heavy for the next load**. Without an override it only saves `slop-gallery-graphics` in local storage and updates the button. Resume keeps the current preset; reload to apply the selection. Until then, the button shows the saved preset in the accent color with a reload icon, and its tooltip names the preset this page keeps. On an overridden page, the button navigates to the new preset in the permalink instead, without touching storage.
 
