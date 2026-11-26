@@ -8,6 +8,6 @@ Rooms and fusion ingredients name their frames in `frame`. In the default enviro
 
 Every frame stays within 8192 triangles at every size in fast and heavy graphics and within 32 768 in cinematic graphics (`GraphicsProfile.frameTriangles`, which `createGeometry` takes), and reaches at most 15 cm out past its work, its back 9.5 cm behind the work’s middle, which the tests check for each. A frame lays its ornaments out by the fast and heavy budget in every mode, so cinematic graphics may only cut them finer, `frameDetail` times along each of their directions, and never add or move one.
 
-Louis XIV shell uses the same 1058-triangle mesh and crackle-free gilt in every graphics mode. Where screen-space reflections are enabled, only gold with roughness ≤ 0.25 traces a ray; rougher leaf still reflects the frame’s studio environment.
+Louis XIV shell uses the same 1058-triangle mesh and crackle-free gilt in every graphics mode. Where screen-space reflections are enabled, only gold with roughness ≤ 0.25 traces a ray (`burnishedReflections`); rougher leaf still reflects the frame’s studio environment.
 
 To add a frame, give it a folder with its class `<Id>Frame.ts`, add its id to `frameIds` and the frame to `index.ts`. Name it in a room’s or an ingredient’s `frame` to include it in that sampler.

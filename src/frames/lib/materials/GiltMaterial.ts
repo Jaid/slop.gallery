@@ -2,10 +2,11 @@ import type {FrameSurface} from './frameAttributes.ts'
 import type {Node} from 'three/webgpu'
 
 import hsl from 'okhsl'
-import {clamp, color, float, max, mix, mx_noise_float, mx_worley_noise_float, smoothstep, vec3} from 'three/tsl'
+import {clamp, color, float, max, metalness as metalnessProperty, mix, mx_noise_float, mx_worley_noise_float, roughness as roughnessProperty, smoothstep, vec2, vec3} from 'three/tsl'
 import {MeshPhysicalNodeMaterial} from 'three/webgpu'
 
 import {heightNormal, visibleDetail} from '#src/lib/materials/filters.ts'
+import MaterialOutputsNode from '#src/lib/rendering/MaterialOutputsNode.ts'
 
 import {frameSurface as readSurface} from './frameAttributes.ts'
 import frameStudio from './frameStudio.ts'
@@ -19,6 +20,8 @@ export type GiltRelief = {
 export type GiltOptions = {
   /** the red clay the leaf is laid on, which shows where it is rubbed through */
   bole?: number
+  /** whether only burnished leaf, at a roughness of 0.25 or less, traces screen-space reflections where the graphics have them, at a fraction of their cost; rougher leaf keeps its studio reflection and its metallic lighting */
+  burnishedReflections?: boolean
   /** whether tiny pits break up the leaf’s roughness and normal */
   crackle?: boolean
   /** how strongly the hollows mirror the studio, relative to the default */
@@ -51,7 +54,7 @@ const waterGold = [0.9, 0.55, 0.2] as const
  * It reads the frame’s attributes, so it only suits frame geometry. A {@link GiltRelief} carves ornament into it as shading alone, its hollows taking the grime like the moulding’s own.
  */
 export default class GiltMaterial extends MeshPhysicalNodeMaterial {
-  constructor({bole = hsl.integer(36, 77, 32), crackle: withCrackle = true, environmentIntensity = 1, overlay, roughness = {
+  constructor({bole = hsl.integer(36, 77, 32), burnishedReflections = false, crackle: withCrackle = true, environmentIntensity = 1, overlay, roughness = {
     burnished: 0.12,
     matte: 0.3,
   }, relief, grime = 0.5, wear = 0.25}: GiltOptions = {}) {
@@ -85,5 +88,8 @@ export default class GiltMaterial extends MeshPhysicalNodeMaterial {
     this.roughnessNode = mix(mix(float(roughness.matte), float(roughness.burnished), ridge).add(hollow.mul(grime * 0.25)).add(rubbed.mul(0.35)).add(crackle.mul(0.08)), float(0.55), paintMask)
     const grain = speckle.mul(0.00002).sub(crackle.mul(0.00003))
     this.normalNode = heightNormal(carved.add(grain).add(smoothstep(0, 1, rubbed).mul(-0.00008)))
+    if (burnishedReflections) {
+      this.mrtNode = new MaterialOutputsNode({metalrough: vec2(roughnessProperty.lessThanEqual(0.25).select(metalnessProperty, 0), roughnessProperty)})
+    }
   }
 }

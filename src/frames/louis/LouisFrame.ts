@@ -1,7 +1,5 @@
 import hsl from 'okhsl'
-import {atan, metalness, roughness, select, smoothstep, vec2} from 'three/tsl'
-
-import MaterialOutputsNode from '#src/lib/rendering/MaterialOutputsNode.ts'
+import {atan, select, smoothstep, vec2} from 'three/tsl'
 
 import PortraitFrame, {frameBack} from '../base/PortraitFrame.ts'
 import {assembleFrame, corners, place, sweepProfile} from '../lib/frameGeometry.ts'
@@ -65,7 +63,8 @@ export default class LouisFrame extends PortraitFrame {
   }
 
   protected override createMaterials() {
-    const gilt = new GiltMaterial({
+    return [new GiltMaterial({
+      burnishedReflections: true,
       crackle: false,
       wear: 0.25,
       grime: 0.6,
@@ -85,9 +84,6 @@ export default class LouisFrame extends PortraitFrame {
           return select(surface.isOrnament.greaterThan(0.5), legible(surface, ribs, 0.008).mul(0.006), members)
         },
       },
-    })
-    // Only burnished gold traces a screen-space ray. Rougher leaf keeps its studio reflection and its metallic lighting.
-    gilt.mrtNode = new MaterialOutputsNode({metalrough: vec2(roughness.lessThanEqual(0.25).select(metalness, 0), roughness)})
-    return [gilt]
+    })]
   }
 }
