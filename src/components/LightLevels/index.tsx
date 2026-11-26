@@ -1,5 +1,6 @@
 import {useFrame, useThree} from '@react-three/fiber'
 
+import {renderShadows} from '#src/lib/rendering/graphicsMode.ts'
 import {applyLightLevels} from '#src/lib/rendering/lightLevels.ts'
 import {shadowPool} from '#src/lib/rendering/shadowPool.ts'
 
@@ -9,7 +10,9 @@ export default function LightLevels() {
   // The finish phase runs after the frame is drawn, too late for lights whose owners set them every frame.
   useFrame(({camera}) => {
     applyLightLevels(scene)
-    shadowPool.update(scene, camera)
+    if (renderShadows) {
+      shadowPool.update(scene, camera)
+    }
   }, {
     id: 'light-levels',
     before: 'render',

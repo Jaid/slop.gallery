@@ -12,7 +12,6 @@ import type {MoodCast, MoodCastInput} from './castMood.ts'
 import type {SeedInput} from './changeSeed.ts'
 import type {PortraitDump} from './dumpPortraits.ts'
 import type {GeofenceQuery} from './getGeofences.ts'
-import type {GraphicsQualityChange, GraphicsQualityInput} from './setGraphicsQuality.ts'
 import type {SloperatorDump, SloperatorSightingDump, SloperatorSightingInput, SloperatorSpawnInput} from './sloperator.ts'
 import type {OrbSpawn, OrbSpawnInput} from './spawnOrb.ts'
 import type {PartyEffectSpawn, PartyEffectSpawnInput} from './spawnPartyEffect.ts'
@@ -93,7 +92,6 @@ export type WebmcpBridge = {
   } | null
   getWorldTuning: () => WorldTuningDump
   rerollSeed: () => SeedChange
-  setGraphicsQuality: (input: GraphicsQualityInput) => Promise<GraphicsQualityChange>
   setSeed: (input: SeedInput) => SeedChange
   setWireframe: (flood: Partial<WireframeFlood>) => WireframeFlood
   setWorldTuning: (input: WorldTuningInput) => WorldTuningChange
@@ -789,36 +787,6 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
           throw new TypeError('mood must be the id of a mood or null.')
         }
         return getBridge().castMood({mood})
-      },
-    },
-    {
-      name: 'set_graphics_quality',
-      title: 'Set graphics quality',
-      description: 'Switch the graphics of this session like the menu’s Graphics button does, to fast, heavy or cinematic by name, or with null back to the ones the page started with: what ?graphics asked for, fast without it. Resolves once the scene has switched, while what it builds anew, like shadow maps and pipelines, may still load, which get_loading_items lists; render a few frames before capturing, so shadow maps and temporal antialiasing settle. Film recipes run it through their tools keyframes to switch graphics mid-flight. Fails for unknown graphics, whose error lists them, and for cinematic on a page not opened with ?graphics=cinematic, whose renderer lacks the GPU limits they need. Returns the graphics from now on, the previous ones and the initial ones. Does not move the player, change focus or simulate input.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          quality: {
-            type: ['string', 'null'],
-            description: 'fast, heavy or cinematic, or null for the graphics the page started with',
-          },
-        },
-        required: ['quality'],
-        additionalProperties: false,
-      },
-      annotations: {
-        readOnlyHint: false,
-      },
-      execute: (input: unknown, {signal}) => {
-        signal.throwIfAborted()
-        if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).join(',') !== 'quality') {
-          throw new TypeError('This tool takes an object with quality.')
-        }
-        const {quality} = input as Record<string, unknown>
-        if (quality !== null && (typeof quality !== 'string' || !quality)) {
-          throw new TypeError('quality must be the name of the graphics or null.')
-        }
-        return getBridge().setGraphicsQuality({quality})
       },
     },
     {

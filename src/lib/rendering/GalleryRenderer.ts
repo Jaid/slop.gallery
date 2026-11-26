@@ -1,4 +1,5 @@
 import type {Projection} from './GalleryDrawingPipeline.ts'
+import type {GraphicsQuality} from './graphicsPreference.ts'
 import type {StreamBudget} from './streamBudget.ts'
 import type {Drawable} from './worldBounds.ts'
 import type {WebgpuRendererOptions} from 'three-fiber-game'
@@ -14,7 +15,7 @@ import perceptualDistance from '#src/lib/perceptualDistance.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 
 import GalleryDrawingPipeline from './GalleryDrawingPipeline.ts'
-import {cinematicMaxTextureSize, readCinematicGraphics} from './graphicsMode.ts'
+import {cinematicMaxTextureSize, graphicsQuality} from './graphicsMode.ts'
 import {readStreamBudget} from './streamBudget.ts'
 import {hasGeometry, worldBounds} from './worldBounds.ts'
 
@@ -208,11 +209,11 @@ export class GalleryRenderer extends WebgpuRenderer {
   private readonly warmObjects = new WeakMap<Object3D, Set<Camera>>
   private warmupAdmissions = 0
 
-  constructor(options: WebgpuRendererOptions) {
+  constructor(options: WebgpuRendererOptions, private readonly quality: GraphicsQuality = graphicsQuality) {
     super({
       ...options,
       requiredLimits: {
-        ...readCinematicGraphics() ? {maxTextureDimension2D: cinematicMaxTextureSize} : {},
+        ...quality === 'cinematic' ? {maxTextureDimension2D: cinematicMaxTextureSize} : {},
       },
       alpha: false,
       antialias: false,
@@ -626,7 +627,8 @@ export class GalleryRenderer extends WebgpuRenderer {
   /** Raises the color attachment limit for screen-space reflections, and for cinematic the sampled texture limit, to what the adapter offers, up to {@link wideColorAttachmentBytes} and {@link cinematicSampledTextures}, so GPUs with less still get a device. */
   private async requestLimits() {
     const {parameters} = this.backend as unknown as BackendInternals
-    if (parameters.device !== undefined || typeof navigator === 'undefined' || !('gpu' in navigator)) {
+    // Fast never builds the reflection MRT, so it needs no limits probe before Three requests its adapter.
+    if (this.quality === 'fast' || parameters.device !== undefined || typeof navigator === 'undefined' || !('gpu' in navigator)) {
       return
     }
     // three requests the same GPU, so its device can get these limits.
@@ -635,7 +637,7 @@ export class GalleryRenderer extends WebgpuRenderer {
       return
     }
     parameters.requiredLimits.maxColorAttachmentBytesPerSample = Math.min(wideColorAttachmentBytes, adapter.limits.maxColorAttachmentBytesPerSample)
-    if (readCinematicGraphics()) {
+    if (this.quality === 'cinematic') {
       parameters.requiredLimits.maxSampledTexturesPerShaderStage = Math.min(cinematicSampledTextures, adapter.limits.maxSampledTexturesPerShaderStage)
     }
   }

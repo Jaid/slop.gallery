@@ -12,6 +12,7 @@ import {ownerRoom, roomContaining, roomsAt, screenRect, updatePickupRoom, visibl
 import {sunTightSpaces} from '#src/lib/gallery/sun.ts'
 import {getReflectionHeight} from '#src/lib/materials/PlanarMirrorMaterial.ts'
 import {GalleryRenderer} from '#src/lib/rendering/GalleryRenderer.ts'
+import {graphicsProfile, renderShadows} from '#src/lib/rendering/graphicsMode.ts'
 import {lightActive} from '#src/lib/rendering/lightLevels.ts'
 import {hasGeometry, worldBounds} from '#src/lib/rendering/worldBounds.ts'
 import {enabledRooms} from '#src/worlds/gallery/activations.ts'
@@ -72,8 +73,8 @@ export default function RoomCulling() {
       return
     }
     const {hidden, hiddenFromView, shadowCameras, unculledCameras} = galleryRenderer
-    const shadows = new ShadowCache
-    const refresher = new ShadowRefresher
+    const shadows = renderShadows ? new ShadowCache : null
+    const refresher = renderShadows ? new ShadowRefresher : null
     const related = new Set<RoomId>
     const cull = (camera: Camera) => {
       hidden.clear()
@@ -82,7 +83,7 @@ export default function RoomCulling() {
       const eye = camera.getWorldPosition(position).toArray()
       const from = roomsAt(eye)
       viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
-      const mirrorY = getReflectionHeight()
+      const mirrorY = graphicsProfile.mirrorReflections ? getReflectionHeight() : null
       related.clear()
       for (const room of [...from, ...enabledRooms(whereaboutsAt(eye, from))]) {
         related.add(room)
@@ -96,7 +97,7 @@ export default function RoomCulling() {
         updatePickupRoom(object)
         const room = ownerRoom(object, parentRoom)
         const light = object as Light & {shadow?: LightShadow}
-        if (light.isLight && light.shadow) {
+        if (refresher && light.isLight && light.shadow) {
           shadowCameras.add(light.shadow.camera)
           // Behind the loading screen, the sun would otherwise build every hidden room.
           if ((light as DirectionalLight).isDirectionalLight && ready) {
@@ -122,7 +123,10 @@ export default function RoomCulling() {
         }
       }
       visit(scene, undefined)
-      refresher.endFrame()
+      if (!shadows) {
+        return
+      }
+      refresher?.endFrame()
       frustum.setFromProjectionMatrix(viewProjection, camera.coordinateSystem, camera.reversedDepth)
       shadows.update(scene, {
         hidden,
@@ -146,7 +150,7 @@ export default function RoomCulling() {
     return () => {
       galleryRenderer.setCuller(null)
       galleryRenderer.setStreamPriority(null)
-      shadows.dispose()
+      shadows?.dispose()
     }
   }, [galleryRenderer, ready, scene])
   return null

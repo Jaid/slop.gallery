@@ -4,13 +4,13 @@ import {float, perspectiveDepthToViewZ, texture, uniform} from 'three/tsl'
 import {Color, DataTexture, DataUtils, FloatType, HalfFloatType, LinearFilter, Mesh, MeshBasicNodeMaterial, NearestFilter, NodeMaterial, PerspectiveCamera, PlaneGeometry, QuadMesh, RenderTarget, RGBAFormat, Scene, TorusGeometry, WebGPURenderer} from 'three/webgpu'
 
 import GalleryRenderPipeline from '../../src/lib/rendering/GalleryRenderPipeline.ts'
-import {getGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
+import {graphicsProfiles} from '../../src/lib/rendering/graphicsMode.ts'
 import KnotBokeh from '../../src/lib/rendering/KnotBokeh.ts'
 import {getRenderPipelineSettings} from '../../src/lib/rendering/renderPipelineSettings.ts'
 
 // Heavy graphics, without the dither, which would add noise to the measured pixels.
 const getSettings = (antiAliasing: AntiAliasing) => ({
-  ...getRenderPipelineSettings(getGraphicsProfile(true), antiAliasing),
+  ...getRenderPipelineSettings(graphicsProfiles.heavy, antiAliasing),
   dither: false,
 })
 function assert(value: unknown, message: string): asserts value {

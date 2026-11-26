@@ -4,13 +4,19 @@ import {DoubleSide, MeshStandardNodeMaterial} from 'three/webgpu'
 
 import {forgeVestibule} from '#src/lib/gallery/forge.ts'
 import {daylight} from '#src/lib/rendering/daylight.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 
 import MadeOnDemand from '../base/MadeOnDemand.ts'
 import {heightNormal, visibleDetail} from '../filters.ts'
+import EndGrainMaterial from './EndGrainMaterial.ts'
 import FirebrickMaterial from './FirebrickMaterial.ts'
 
-/** The finishes shared by the Forge’s two roofs, its walls and the reveals and trim of its openings. Its floors mirror the room or not by the graphics, so the room makes them itself. */
+/** The Forge’s finishes, including the separate targets of its two floors when they mirror the room. */
 export default class ForgeMaterials extends MadeOnDemand {
+  constructor(private readonly reflections = graphicsProfile.mirrorReflections) {
+    super()
+  }
+
   get brass() {
     return this.once('brass', () => new MeshStandardNodeMaterial({
       name: 'Drawn brass',
@@ -38,6 +44,10 @@ export default class ForgeMaterials extends MadeOnDemand {
       mat.emissiveNode = zinc.mul(daylight).mul(0.055)
       return mat
     })
+  }
+
+  get floor() {
+    return this.once('floor', () => new EndGrainMaterial(this.reflections))
   }
 
   /** the enameled iron of the roofs’ framing, of the walls’ baseboards, casings and cornices and of the reveals lining every opening */
@@ -76,6 +86,10 @@ export default class ForgeMaterials extends MadeOnDemand {
 
   get roundWall() {
     return this.once('roundWall', () => new FirebrickMaterial(forgeVestibule.radius))
+  }
+
+  get vestibuleFloor() {
+    return this.reflections ? this.once('vestibuleFloor', () => new EndGrainMaterial(true)) : this.floor
   }
 
   get wall() {

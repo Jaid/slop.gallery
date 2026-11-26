@@ -4,7 +4,6 @@ import type {PauseMenuStage} from 'use-pause-menu'
 import Branch from 'branch-component'
 import clsx from 'clsx'
 import {useEffect, useRef} from 'react'
-import useGraphicsMode from 'use-graphics-mode'
 import usePauseMenu from 'use-pause-menu'
 import {useShallow} from 'zustand/react/shallow'
 
@@ -21,6 +20,7 @@ import {useIntro} from '#src/lib/gallery/intro.ts'
 import {usePortraitSpectation} from '#src/lib/gallery/portraitSpectation.ts'
 import {rerollSeed} from '#src/lib/gameSeed.ts'
 import pauseMenu from '#src/lib/pauseMenu.ts'
+import {isHeavy} from '#src/lib/rendering/graphicsMode.ts'
 import world from '#src/worlds/current.ts'
 
 import css from './style.module.sass'
@@ -31,7 +31,6 @@ export default function Menu(settings: ReturnType<typeof useGalleryAI>) {
     room,
   })))
   const {stage} = usePauseMenu(pauseMenu)
-  const isHeavy = useGraphicsMode()
   const room = world.roomById(s.room) ?? world.room(world.defaultRoom)
   const paused = stage === 'pause'
   const tagline = paused ? world.roomTagline(room) : world.tagline

@@ -30,6 +30,7 @@ import {sunGeometry, sunlitPoints} from '#src/lib/gallery/sun.ts'
 import {mergeParts} from '#src/lib/geometry.ts'
 import DamaskWallpaperMaterial from '#src/lib/materials/DamaskWallpaperMaterial.ts'
 import JoineryWoodMaterial from '#src/lib/materials/JoineryWoodMaterial.ts'
+import {renderShadows} from '#src/lib/rendering/graphicsMode.ts'
 import {cellLed} from '#src/rooms/cell/Cell.ts'
 import CellCeiling from '#src/rooms/cell/components/CellCeiling/index.tsx'
 import CellDoor from '#src/rooms/cell/components/CellDoor/index.tsx'
@@ -107,8 +108,7 @@ export default function CellRoom() {
     {/* Through the roof lights, the roof and walls shadowing the rest of the room. */}
     <SandboxMoonlight geometry={moon} />
     {/* Each chandelier’s lamp borrows one of its slots for its shadow, which only renders again once something in its reach moves. */}
-    <ShadowPool />
-    <ShadowCaching />
+    <Branch if={renderShadows}><ShadowPool /><ShadowCaching /></Branch>
     <VarnishedFloor center={cell.center} name={cell.id} size={cell.size} />
     {hallWalls.map(wall => <WallSurface key={wall.id} material={joinery} plaster={surfaces.plaster} revealMaterial={wall === northWall ? surfaces.velvet : undefined} surfaceMaterial={damask} wall={wall} />)}
     <CellCeiling beams={joinery} />

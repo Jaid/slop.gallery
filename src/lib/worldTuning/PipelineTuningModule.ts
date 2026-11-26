@@ -1,12 +1,8 @@
 import type {RenderPipelineSettings} from '#src/lib/rendering/renderPipelineSettings.ts'
 import type {TuningGroup} from './controls.ts'
 
-import useGraphicsMode from 'use-graphics-mode'
-
-import {getAntiAliasing} from '#src/lib/rendering/antiAliasing.ts'
-import {cinematicMaxTextureSize, getGraphicsProfile, readCinematicGraphics} from '#src/lib/rendering/graphicsMode.ts'
-import {graphicsQualities, useGraphicsQuality} from '#src/lib/rendering/graphicsQuality.ts'
-import {getRenderPipelineSettings, renderPipelineStructure} from '#src/lib/rendering/renderPipelineSettings.ts'
+import {cinematicMaxTextureSize, graphicsQuality, isHeavy} from '#src/lib/rendering/graphicsMode.ts'
+import {renderPipelineSettings, renderPipelineStructure} from '#src/lib/rendering/renderPipelineSettings.ts'
 import {currentWorldId} from '#src/worlds/index.ts'
 
 import TuningModule from './base/TuningModule.ts'
@@ -16,13 +12,12 @@ const {group, percent, range, select, toggle} = tuningControls<RenderPipelineSet
 /** the brightest value a half-float target holds, so a cap there caps nothing */
 const uncappedLuminance = 65_504
 /** Cinematic graphics request a texture size limit that fits a 16384² map; heavy graphics stop at WebGPU’s default of 8192. */
-const shadowMapSizes = [1024, 2048, 4096, 8192, ...readCinematicGraphics() ? [cinematicMaxTextureSize] : []]
+const shadowMapSizes = [1024, 2048, 4096, 8192, ...graphicsQuality === 'cinematic' ? [cinematicMaxTextureSize] : []]
 const structure: ReadonlySet<string> = new Set(renderPipelineStructure)
-const [fast] = graphicsQualities
 
 /**
  * The render pipeline of heavy graphics, its passes and their settings, and the shadows’ lookups. Checkboxes switch passes, which builds the pipeline anew, and sliders change its uniforms live.
- * It starts from the pipeline of the page’s heavy graphics, heavy or cinematic.
+ * It starts from the pipeline of the page’s preset; only Heavy and Cinematic expose these controls.
  */
 export default class PipelineTuningModule extends TuningModule<RenderPipelineSettings> {
   override readonly groups: ReadonlyArray<TuningGroup<RenderPipelineSettings>> = [
@@ -185,24 +180,20 @@ export default class PipelineTuningModule extends TuningModule<RenderPipelineSet
     }),
   ]
 
-  override readonly hint = 'Switch graphics on in the menu to tune the pipeline.'
+  override readonly hint = 'Load the gallery in Heavy or Cinematic to tune the pipeline.'
   override readonly title = 'Render pipeline'
 
   constructor() {
-    super('pipeline', getRenderPipelineSettings(getGraphicsProfile(true, readCinematicGraphics()), getAntiAliasing(true)))
+    super('pipeline', renderPipelineSettings)
   }
 
   /** Only heavy graphics draw through a pipeline of passes. */
   override isShown() {
-    return useGraphicsQuality.getState().quality !== fast
+    return isHeavy
   }
 
   override rebuilds(key: string) {
     return structure.has(key)
-  }
-
-  override useShown() {
-    return useGraphicsMode()
   }
 }
 

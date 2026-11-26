@@ -1,3 +1,4 @@
+import type EndGrainMaterial from '#src/lib/materials/forge/EndGrainMaterial.ts'
 import type ForgeMaterials from '#src/lib/materials/forge/ForgeMaterials.ts'
 import type {Material} from 'three/webgpu'
 
@@ -6,7 +7,6 @@ import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import {useMemo} from 'react'
 import {ExtrudeGeometry} from 'three/webgpu'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import IronTable from '#component/IronTable'
 import MeshSurfaceCollider from '#component/MeshSurfaceCollider'
@@ -18,8 +18,6 @@ import ForgeRoofGeometry from '#src/lib/gallery/forge/ForgeRoofGeometry.ts'
 import {forgeRoundVestibule, vestibuleArches} from '#src/lib/gallery/forgeVestibule.ts'
 import roundRevealGeometry from '#src/lib/gallery/roundRevealGeometry.ts'
 import {roundVestibuleFloorShape, vestibuleArchOpening} from '#src/lib/gallery/roundVestibule.ts'
-import EndGrainMaterial from '#src/lib/materials/forge/EndGrainMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
 import AlchemyMachine from '#src/rooms/forge/components/AlchemyMachine/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
@@ -32,7 +30,7 @@ export default function ForgeRoom({materials, masonry}: {
   materials: ForgeMaterials
 }) {
   const [width, depth] = room.size
-  const floor = useEndGrain()
+  const floor = materials.floor
   return <group name='forge'>
     <group position={[room.center[0], 0, room.center[1]]}>
       <RigidBody colliders={false} type='fixed'>
@@ -51,11 +49,6 @@ export default function ForgeRoom({materials, masonry}: {
   </group>
 }
 
-/** One floor’s end-grain paving, mirroring the room in heavy mode. The room and its vestibule take one each, so either one in view renders the mirror, as its target bounds only the floor it lies in. */
-function useEndGrain() {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
-  return useDisposable(useMemo(() => new EndGrainMaterial(mirrorReflections), [mirrorReflections]))
-}
 /** The floor’s reflection target, laid at the surface of the floor whose body holds it, if the floor mirrors the room. */
 function Mirror({floor}: {floor: EndGrainMaterial}) {
   return <Branch if={floor.reflectionTarget}><group rotation-x={-Math.PI / 2}><primitive object={floor.reflectionTarget!} /></group></Branch>
@@ -80,7 +73,7 @@ function Vestibule({materials, masonry}: {
   materials: ForgeMaterials
 }) {
   const {center} = forgeVestibule
-  const floor = useEndGrain()
+  const floor = materials.vestibuleFloor
   const parts = useDisposable(useMemo(() => {
     const slab = new ExtrudeGeometry(roundVestibuleFloorShape(forgeRoundVestibule), {
       depth: floorThickness,

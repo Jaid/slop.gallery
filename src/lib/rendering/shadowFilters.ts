@@ -1,10 +1,11 @@
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 import {useShallow} from 'zustand/react/shallow'
 
 import {isDevelopmentMode} from '../developmentMode.ts'
 import {pipelineTuning} from '../worldTuning/PipelineTuningModule.ts'
-import {getGraphicsProfile} from './graphicsMode.ts'
+import {graphicsProfile, isHeavy} from './graphicsMode.ts'
 import {getShadowProps, tunableFilters} from './shadowFilterNodes.ts'
+
+const {lampShadowRadius, shadowMapScale, shadowSamples} = graphicsProfile
 
 /**
  * Shadow props for a light whose map is `mapSize` texels wide in heavy graphics, scaled to the graphics mode.
@@ -17,8 +18,6 @@ export function useShadowProps(mapSize: number, {isPoint = false, radius = 1, so
   radius?: number
   softenable?: boolean
 } = {}) {
-  const isHeavy = useGraphicsMode()
-  const {lampShadowRadius, shadowMapScale, shadowSamples} = useGraphicsModeValue(getGraphicsProfile)
   const tuned = pipelineTuning.useValues(useShallow(state => ({
     radius: state.lampShadowRadius,
     samples: state.lampShadowSamples,

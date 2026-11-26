@@ -10,13 +10,14 @@ import {useMemo} from 'react'
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js'
 import {color, mix, texture} from 'three/tsl'
 import {MeshPhysicalNodeMaterial, MeshStandardNodeMaterial} from 'three/webgpu'
-import {useGraphicsModeValue} from 'use-graphics-mode'
 
 import {surfaceTexture} from '#src/components/Scene/materials.ts'
 import WallSurface from '#src/components/Scene/WallSurface.tsx'
 import {CheckeredMarbleFloorMaterial, cremaMarfil, neroMarquina} from '#src/lib/materials/marble/index.ts'
 import VelvetWallMaterial from '#src/lib/materials/VelvetWallMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+
+const {surfaceAnisotropy, mirrorReflections} = graphicsProfile
 
 /** the Arena’s materials, apart from its floor’s */
 export type ArenaSurfaces = {
@@ -73,8 +74,7 @@ export function createArenaTrim() {
 
 /** The Arena’s walls, trim and ceiling, which one or more shells and their annexes can share. */
 export function useArenaSurfaces(): ArenaSurfaces {
-  const {surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
-  const plaster = useDisposable(useMemo(() => surfaceTexture('plaster', surfaceAnisotropy), [surfaceAnisotropy]))
+  const plaster = useDisposable(useMemo(() => surfaceTexture('plaster', surfaceAnisotropy), []))
   const velvet = useDisposable(useMemo(() => new VelvetWallMaterial, []))
   const trim = useDisposable(useMemo(createArenaTrim, []))
   const ceiling = useDisposable(useMemo(() => {
@@ -98,7 +98,6 @@ export function useArenaSurfaces(): ArenaSurfaces {
 
 /** The Arena’s floor: polished cream and Nero Marquina marble in a checkerboard, on the tile grid from `origin`, mirroring the room in heavy mode. Every floor in a plane of its own needs one of its own, holding its reflection target. */
 export function useArenaMarble(origin: Point, tile: number, polish: ArenaPolish = faintPolish) {
-  const {mirrorReflections} = useGraphicsModeValue(getGraphicsProfile)
   const {strength, grazingStrength} = polish
   return useDisposable(useMemo(() => new CheckeredMarbleFloorMaterial({
     dark: neroMarquina,
@@ -113,7 +112,7 @@ export function useArenaMarble(origin: Point, tile: number, polish: ArenaPolish 
     seed: 3,
     strength,
     tile,
-  }), [mirrorReflections, grazingStrength, origin, strength, tile]))
+  }), [grazingStrength, origin, strength, tile]))
 }
 
 /** The Arena’s floor over a rectangular floor plan: its marble on a dark slab, with the slab’s collider. */

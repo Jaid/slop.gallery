@@ -2,7 +2,6 @@ import type {PortraitAdditionInput} from '../../src/lib/webmcp/addPortrait.ts'
 import type {MoodCastInput} from '../../src/lib/webmcp/castMood.ts'
 import type {SeedInput} from '../../src/lib/webmcp/changeSeed.ts'
 import type {GeofenceQuery} from '../../src/lib/webmcp/getGeofences.ts'
-import type {GraphicsQualityInput} from '../../src/lib/webmcp/setGraphicsQuality.ts'
 import type {SloperatorSightingInput, SloperatorSpawnInput} from '../../src/lib/webmcp/sloperator.ts'
 import type {OrbSpawnInput} from '../../src/lib/webmcp/spawnOrb.ts'
 import type {PartyEffectSpawnInput} from '../../src/lib/webmcp/spawnPartyEffect.ts'
@@ -223,11 +222,6 @@ const bridge: WebmcpBridge = {
     position: [14, 3.13, 7.78],
     quaternion: [0, 1, 0, 0],
   }],
-  setGraphicsQuality: ({quality}: GraphicsQualityInput) => Promise.resolve({
-    quality: quality === 'heavy' ? 'heavy' : 'fast',
-    previous: 'fast',
-    initial: 'fast',
-  }),
   spawnOrb: ({orb, position, id = `prop-orb-${orb}-spawned-1`}: OrbSpawnInput) => Promise.resolve({
     prop: id,
     orb,
@@ -263,7 +257,7 @@ test('WebMCP read tools are read-only, validate input and read the current bridg
   let current = bridge
   const tools = createWebmcpTools(() => current)
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_world_tuning', 'get_geofences', 'show_fence', 'show_colliders', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'add_text_overlay', 'clear_text_overlay', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_graphics_quality', 'set_world_tuning', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
+  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_world_tuning', 'get_geofences', 'show_fence', 'show_colliders', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'add_text_overlay', 'clear_text_overlay', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_world_tuning', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
   for (const tool of tools.slice(0, 10)) {
     expect(tool.annotations?.readOnlyHint).toBe(true)
     expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
@@ -860,30 +854,6 @@ test('cast_mood takes the id of a mood or null and casts through the bridge', as
   }
   controller.abort()
   await expect(execute({mood: 'paint'})).rejects.toThrow()
-})
-test('set_graphics_quality takes the name of the graphics or null and switches through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'set_graphics_quality')!
-  const controller = new AbortController
-  const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
-  expect(tool.annotations?.readOnlyHint).toBe(false)
-  expect(await execute({quality: 'heavy'})).toEqual({
-    quality: 'heavy',
-    previous: 'fast',
-    initial: 'fast',
-  })
-  expect(await execute({quality: null})).toEqual({
-    quality: 'fast',
-    previous: 'fast',
-    initial: 'fast',
-  })
-  for (const input of [null, [], {}, {quality: ''}, {quality: 3}, {quality: undefined}, {
-    quality: 'heavy',
-    scale: 2,
-  }]) {
-    await expect(execute(input)).rejects.toThrow(TypeError)
-  }
-  controller.abort()
-  await expect(execute({quality: 'heavy'})).rejects.toThrow()
 })
 test('reroll_seed takes an empty input object and rerolls through the bridge', async () => {
   const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'reroll_seed')!

@@ -9,24 +9,24 @@ import loadKnotMaterial from 'knot-materials/materials.ts'
 import hsl from 'okhsl'
 import {useMemo} from 'react'
 import {MeshBasicNodeMaterial} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 
 import InteractiveObject from '#component/InteractiveObject'
 import Stand, {Sign} from '#component/KnotBillboardSupport'
 import KnotPreviewFace, {knotPreviewBackground} from '#component/KnotPreviewFace'
 import {narrate} from '#src/lib/gallery/actions.ts'
-import {fitCanvasTextureResolution, getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {fitCanvasTextureResolution, graphicsProfile, isHeavy} from '#src/lib/rendering/graphicsMode.ts'
 import useLoadingElementTexture from '#src/lib/useLoadingElementTexture.ts'
 
 import RuntimeKnotIconRenderer, {releaseCanvases} from './RuntimeKnotIconRenderer.ts'
+
+const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = graphicsProfile
 
 /** One billboard at the west end of every row, sharing one detached renderer for their Knot screenshots. */
 export default function KnotPreviewSigns({x}: {
   /** where the billboards stand, relative to their row centers */
   x: number
 }) {
-  const heavy = useGraphicsMode()
-  const renderer = useDisposable(useMemo(() => new RuntimeKnotIconRenderer(loadKnotMaterial, heavy), [heavy]))
+  const renderer = useDisposable(useMemo(() => new RuntimeKnotIconRenderer(loadKnotMaterial, isHeavy), []))
   return knotBays.map(bay => <group key={bay.candidate.id} position={bay.center}><KnotPreviewSign bay={bay} renderer={renderer} x={x} /></group>)
 }
 
@@ -38,7 +38,6 @@ function KnotPreviewSign({bay, renderer, x}: {
   x: number
 }) {
   const layout = knotPreviewTextureLayout(bay.finishes.length)
-  const {canvasTextureMipmaps: mipmaps, canvasTextureResolution: resolution} = useGraphicsModeValue(getGraphicsProfile)
   const texture = useLoadingElementTexture(`billboard-texture:${bay.candidate.id}`, useMemo(() => ({
     width: layout.width,
     height: layout.height,
@@ -48,7 +47,7 @@ function KnotPreviewSign({bay, renderer, x}: {
     prepare: (signal: AbortSignal) => renderer.render(bay.finishes, signal),
     disposeInputs: releaseCanvases,
     render: (images: ReadonlyMap<string, HTMLCanvasElement>) => <KnotPreviewFace bay={bay} images={images} />,
-  }), [bay, layout.height, layout.width, mipmaps, renderer, resolution]))
+  }), [bay, layout.height, layout.width, renderer]))
   const face = useDisposable(useMemo(() => new MeshBasicNodeMaterial({
     color: texture ? hsl.integer(0, 0, 100) : knotPreviewBackground,
     map: texture,

@@ -14,8 +14,14 @@
   border: 1px solid colors.$border
   font-size: 0.8rem
   small
+    display: inline-flex
+    align-items: center
+    gap: 0.35rem
     margin-left: auto
     color: colors.$muted
+  // a saved preset that only applies from the next reload on
+  &[data-pending] small
+    color: colors.$accent
 
 @media (max-width: 440px)
   .container

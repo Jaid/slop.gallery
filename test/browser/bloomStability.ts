@@ -3,12 +3,12 @@ import type {AntiAliasing} from '../../src/lib/rendering/antiAliasing.ts'
 import {Color, CylinderGeometry, DataUtils, HalfFloatType, Mesh, MeshBasicNodeMaterial, PerspectiveCamera, RenderTarget, Scene, SphereGeometry, WebGPURenderer} from 'three/webgpu'
 
 import GalleryRenderPipeline from '../../src/lib/rendering/GalleryRenderPipeline.ts'
-import {getGraphicsProfile} from '../../src/lib/rendering/graphicsMode.ts'
+import {graphicsProfiles} from '../../src/lib/rendering/graphicsMode.ts'
 import {getRenderPipelineSettings} from '../../src/lib/rendering/renderPipelineSettings.ts'
 
 // Heavy graphics, without the dither, which would add noise to the measured pixels.
 const getSettings = (antiAliasing: AntiAliasing) => ({
-  ...getRenderPipelineSettings(getGraphicsProfile(true), antiAliasing),
+  ...getRenderPipelineSettings(graphicsProfiles.heavy, antiAliasing),
   dither: false,
 })
 const width = 320

@@ -6,11 +6,11 @@ import type {DirectionalLight, Material, PointLight} from 'three/webgpu'
 
 import {useFrame, useThree} from '@react-three/fiber'
 import {CuboidCollider, RigidBody} from '@react-three/rapier'
+import Branch from 'branch-component'
 import useDisposable from 'disposable-lifetime/react'
 import hsl from 'okhsl'
 import {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {MeshBasicNodeMaterial, PlaneGeometry} from 'three/webgpu'
-import useGraphicsMode, {useGraphicsModeValue} from 'use-graphics-mode'
 import {useShallow} from 'zustand/react/shallow'
 
 import SandboxMoonlight from '#component/SandboxMoonlight'
@@ -22,7 +22,7 @@ import {sunDirectionFromAngles, sunGeometry, sunlitPoints} from '#src/lib/galler
 import {environmentSeed} from '#src/lib/gameSeed.ts'
 import ArchitecturalPlasterMaterial from '#src/lib/materials/ArchitecturalPlasterMaterial.ts'
 import PlanarMirrorMaterial from '#src/lib/materials/PlanarMirrorMaterial.ts'
-import {getGraphicsProfile} from '#src/lib/rendering/graphicsMode.ts'
+import {graphicsProfile, isHeavy, renderShadows} from '#src/lib/rendering/graphicsMode.ts'
 import {lampLight} from '#src/lib/rendering/lamps.ts'
 import {studioTuning} from '#src/lib/worldTuning/StudioTuningModule.ts'
 import ceilingGeometry from '#src/rooms/studio/ceilingGeometry.ts'
@@ -33,6 +33,7 @@ import {studioSlab} from '#src/rooms/studio/plan.ts'
 import {lampSoftShadow, studioLampIds} from '#src/rooms/studio/Studio.ts'
 import sandbox from '#src/worlds/sandbox/studio.ts'
 
+const {mirrorReflections, surfaceAnisotropy} = graphicsProfile
 const studio = sandbox.room('studio')
 const {room} = studio
 const walls = sandbox.walls.filter(wall => wall.room === studio.id)
@@ -55,7 +56,6 @@ const [initialWalls, initialFloor] = await Promise.all([studioWalls[room.design.
 const ownBlur = new WeakMap<object, number>
 /** The Studio: a floor between four walls in finishes of some of the game’s rooms, the Cell’s by default, under a plaster ceiling, nothing else, lit by a faint fill from no visible source, the lamp of the Cell’s chandelier without the chandelier, a secondary lamp and the moon, or a warm sun, falling in shafts through the openings cut in the ceiling, all as its design has them, which follows the world tuning live. */
 export default function StudioRoom() {
-  const {mirrorReflections, surfaceAnisotropy} = useGraphicsModeValue(getGraphicsProfile)
   const design = studioTuning.useValues()
   const look = useMemo(() => designLook(design), [design])
   const {lightAzimuth, lightElevation} = design
@@ -79,7 +79,7 @@ export default function StudioRoom() {
       ownBlur.set(made.material, made.material.reflectionBlur.value)
     }
     return made
-  }, [makeFloor, mirrorReflections, surfaceAnisotropy]))
+  }, [makeFloor]))
   // The design’s mirror over the finish’s.
   const {blur: mirrorBlur, loss: mirrorLoss, strength: mirror} = look.floor
   useEffect(() => {
@@ -103,8 +103,7 @@ export default function StudioRoom() {
     <hemisphereLight color={hsl.integer(258, 100, 93)} groundColor={hsl.integer(72, 20, 48)} intensity={look.fill.hemisphere} />
     <SandboxMoonlight blur={look.moon.blur} color={look.moon.color} geometry={moon} intensity={look.moon.intensity} mapSize={4096} />
     {/* The lamps borrow its slots for their shadows, which only render again once something in their reach moves; both may blur theirs wider than every lamp’s. */}
-    <ShadowPool softenable={2} />
-    <ShadowCaching />
+    <Branch if={renderShadows}><ShadowPool softenable={2} /><ShadowCaching /></Branch>
     <FloorSlab center={studio.center} material={floor.material} name={studio.id} size={studio.size} />
     {walls.map(wall => <WallSurface key={wall.id} material={finish.trim(wall)} surfaceMaterial={finish.surface(wall)} wall={wall} />)}
     <Ceiling surface={finish.ceiling} />
@@ -144,7 +143,6 @@ function Ceiling({surface}: {
   /** what the walls’ finish surfaces it with, if anything */
   surface: Material | undefined
 }) {
-  const isHeavy = useGraphicsMode()
   const [width, depth] = studio.size
   const {openings, variant} = studioTuning.useValues(useShallow(design => ({
     openings: design.openings,
@@ -160,7 +158,7 @@ function Ceiling({surface}: {
     baseColor: hsl.integer(58, 36, 42),
     heavy: isHeavy,
     roughness: 0.88,
-  }), [isHeavy]))
+  }), []))
   // Black over the openings, as the renderer clears, but near enough to end the moonlight’s shafts, which would glow on in the lit air over the ceiling; it casts no shadow, so the moon comes through.
   const backdrop = useDisposable(useMemo(() => {
     const plane = new PlaneGeometry(width, depth)
