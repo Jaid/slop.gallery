@@ -25,6 +25,7 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('the menu remembers the next preset wi
     await page.waitForSelector(button, {visible: true})
     return page.$eval(`${button} small`, element => element.textContent)
   }
+  const pending = () => page.$eval(button, element => element.hasAttribute('data-pending'))
   const saved = () => page.evaluate(() => localStorage.getItem('slop-gallery-graphics'))
   // Check the world itself, not a second settings label. The Cell’s shadow-casting moon never mounts in Fast.
   const hasMoon = async () => (await callWebmcpTool(page, 'analyze_world') as WorldAnalysis).globalLights.some(light => light.path.split('/').at(-1) === 'moon')
@@ -35,9 +36,11 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('the menu remembers the next preset wi
   await page.click(button)
   expect(await selected()).toBe('Heavy')
   expect(await saved()).toBe('heavy')
+  expect(await pending()).toBe(true)
   await page.click(button)
   expect(await selected()).toBe('Fast')
   expect(await saved()).toBe('fast')
+  expect(await pending()).toBe(false)
   await page.click(button)
   await page.keyboard.press('o')
   await page.waitForSelector(button, {hidden: true})
@@ -47,9 +50,11 @@ test.skipIf(Bun.env.LIVE_TEST !== 'true')('the menu remembers the next preset wi
   const link = new URL(page.url())
   expect(link.searchParams.has('graphics')).toBe(false)
   expect(await hasMoon()).toBe(false)
+  expect(await pending()).toBe(true)
   await page.reload({waitUntil: 'domcontentloaded'})
   await waitForGallery(page)
   expect(await selected()).toBe('Heavy')
+  expect(await pending()).toBe(false)
   expect(await hasMoon()).toBe(true)
   link.searchParams.set('graphics', 'heavy')
   link.hash = 'cell'

@@ -20,8 +20,21 @@ const verdictLabels = {
   unmet: 'Not met',
 } satisfies Record<HeavyCapabilityVerdict, string>
 const unknown = 'unknown'
-/** What `?graphics=auto` looks at, as a tooltip for the button whose `interestfor` names `id`. It only asks the GPU once it first opens and changes nothing about the graphics mode. */
-export default function GraphicsHints({id}: {id: string}) {
+/** What the button does to the graphics, which `current` names while this page keeps other ones than the button shows. */
+const describeBehavior = (current?: string) => {
+  if (current) {
+    return `Reload to switch. This page keeps ${current} graphics until then.`
+  }
+  return graphicsOverride === undefined ? 'Changes apply on the next reload.' : 'Changing the preset opens a new URL.'
+}
+/**
+ * What the button whose `interestfor` names `id` does and what `?graphics=auto` looks at, as its tooltip. It only asks the GPU once it first opens and changes nothing about the graphics mode.
+ * @param current the label of this page’s graphics, once the button saved others for the next reload
+ */
+export default function GraphicsHints({current, id}: {
+  current?: string
+  id: string
+}) {
   const [opened, setOpened] = useState(false)
   return <div
     id={id} className={css.container} popover='hint' onBeforeToggle={event => {
@@ -30,7 +43,7 @@ export default function GraphicsHints({id}: {id: string}) {
       }
     }}
   >
-    <p id={`${id}-behavior`}>{graphicsOverride === undefined ? 'Changes apply on the next reload.' : 'Changing the preset opens a new URL.'}</p>
+    <p id={`${id}-behavior`}>{describeBehavior(current)}</p>
     <p className={css.title}>Auto graphics</p>
     <Branch if={opened}><Suspense fallback={<p className={css.pending}>Asking the GPU…</p>}><Checks /></Suspense></Branch>
   </div>

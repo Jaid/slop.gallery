@@ -20,7 +20,7 @@ current-frame scene color + depth + normals + velocity
 
 The page selects **one preset before creating the renderer**. An explicit `?graphics=fast`, `heavy`, `cinematic` or `auto` overrides the saved preference; without either, the default is Fast. Cinematic uses Heavy’s effects with larger budgets for offline rendering. Auto resolves to Heavy if the GPU and memory meet the [capability checks](autoGraphics.ts) and the CPU tier does not rule it out, otherwise Fast.
 
-The menu’s Graphics button selects **Fast or Heavy for the next load**. Without an override it only saves `slop-gallery-graphics` in local storage and updates the button. Resume keeps the current preset; reload to apply the selection. On an overridden page, the button navigates to the new preset in the permalink instead, without touching storage.
+The menu’s Graphics button selects **Fast or Heavy for the next load**. Without an override it only saves `slop-gallery-graphics` in local storage and updates the button. Resume keeps the current preset; reload to apply the selection. Until then, the button shows the saved preset in the accent color with a reload icon, and its tooltip names the preset this page keeps. On an overridden page, the button navigates to the new preset in the permalink instead, without touching storage.
 
 Rendering code imports `graphicsProfile`, `isHeavy` or `graphicsQuality` from `graphicsMode.ts`. These are startup constants, not React state. For captures or comparisons, open a page per preset with `?graphics`; the live `set_graphics_quality` WebMCP tool has been removed. Individual development controls such as bloom and exposure still work live.
 

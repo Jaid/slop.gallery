@@ -8,6 +8,7 @@ import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
 
 import Menu from '#component/Menu'
+import MenuOptions from '#component/MenuOptions'
 import Minimap from '#component/Minimap'
 
 import {readAiSettings} from '../../src/lib/ai/settings.ts'
@@ -53,6 +54,7 @@ afterEach(() => {
     Reflect.deleteProperty(globalThis, 'localStorage')
   }
 })
+const renderOptions = () => renderToStaticMarkup(createElement(MenuOptions))
 describe('minimal menu', () => {
   test('starts unlocked, with an expanded OpenRouter section', () => {
     expect(useGallery.getState().locked).toBe(false)
@@ -87,6 +89,18 @@ describe('minimal menu', () => {
     setApiKey('')
     expect(values.has('slop-gallery-key')).toBe(false)
     expect(values.keys().toArray()).toEqual(['slop-gallery-audio'])
+  })
+  test('a saved preset this page doesn’t render waits for a reload, which the Graphics button and its tooltip tell', () => {
+    const settled = renderOptions()
+    expect(settled).not.toContain('data-pending')
+    expect(settled).toContain('Changes apply on the next reload.')
+    values.set('slop-gallery-graphics', 'heavy')
+    const pending = renderOptions()
+    expect(pending).toMatch(/aria-label="Heavy graphics"[^>]*\bdata-pending="true"/u)
+    expect(pending).toMatch(/<small><svg[^>]*>.*?<\/svg>Heavy<\/small>/u)
+    expect(pending).toContain('Reload to switch. This page keeps Fast graphics until then.')
+    values.set('slop-gallery-graphics', 'fast')
+    expect(renderOptions()).not.toContain('data-pending')
   })
 })
 function primaryActionLabel(stage: MenuStage) {
