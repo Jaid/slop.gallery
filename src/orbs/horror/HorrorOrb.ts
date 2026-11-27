@@ -32,6 +32,7 @@ export default class HorrorOrb extends PromptOrb {
     // blood
     ['gory', 'bloodstained', 'visceral'],
   ]
+  override readonly canvasMaterial = 'prism-sweep'
   readonly change = 'provide traits that make it'
   readonly color = hsl.integer(27.6, 99, 38)
   override readonly effect = ['blood', 'eyes', 'tendrils'] as const
