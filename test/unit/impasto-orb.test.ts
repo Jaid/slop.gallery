@@ -17,6 +17,10 @@ describe('Impasto Orb', () => {
     expect(impastoOrb.conjunction).toBe('and')
     expect(randomOrbs).toContain(impastoOrb)
     expect(choiceFrames(impastoOrb.frame)).toContain('impasto')
+    expect(impastoOrb.ingredient(0).contributions).toContainEqual({
+      kind: 'canvasMaterial',
+      canvasMaterial: 'impasto',
+    })
     expect(moods[impastoOrb.mood].ambience).not.toBe(moods[paintOrb.mood].ambience)
     const glows = promptOrbs.filter(orb => orb !== impastoOrb).map(orb => orb.color)
     expect(glows).not.toContain(impastoOrb.color)

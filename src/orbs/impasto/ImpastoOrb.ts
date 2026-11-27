@@ -22,6 +22,7 @@ export default class ImpastoOrb extends PromptOrb {
     'bold',
     ['expressive', 'gestural'],
   ]
+  override readonly canvasMaterial = 'impasto'
   readonly change = 'change it to a high-quality digital impasto artwork while keeping the original content intact. The artwork should be'
   readonly color = hsl.integer(48, 76, 71)
   override readonly conjunction = 'and'
