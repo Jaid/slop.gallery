@@ -27,6 +27,8 @@ export default function Hud() {
     ...foreground,
     text: foreground.text,
   } : undefined
+  // The subtitles already stand for their own narration, so only the others keep an indicator box.
+  const indicated = subtitled ? narrations.filter(narration => narration.instanceId !== subtitled.instanceId) : narrations
   const showCrosshair = useSyncExternalStore(crosshair.subscribe, crosshair.getSnapshot, crosshair.getSnapshot)
   const artwork = useGallery(({activeLabel, held, portraits}) => (held ? undefined : portraits.find(p => p.id === activeLabel && p.hung && !p.reserved)))
   return <Branch if={s.locked} not={s.dragging}>
@@ -35,6 +37,6 @@ export default function Hud() {
     <Branch if={artwork && !subtitled}><ArtworkOverlay portrait={artwork!} /></Branch>
     <Branch if={isAnnouncingRooms} then={RoomAnnouncement} />
     <InteractionHint />
-    <NarrationIndicatorStack narrations={narrations} />
+    <NarrationIndicatorStack narrations={indicated} />
   </Branch>
 }
