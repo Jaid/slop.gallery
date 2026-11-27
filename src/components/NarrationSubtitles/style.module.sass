@@ -5,8 +5,8 @@ $spoken: #ffd23f
   position: absolute
   bottom: 100px
   left: 50%
-  display: flex
-  justify-content: center
+  display: grid
+  justify-items: center
   align-items: end
   width: min(960px, calc(100% - 2rem))
   color: $text
@@ -21,20 +21,11 @@ $spoken: #ffd23f
   &[data-ended='true']
     opacity: 0
 
-// Every sentence shares one cell, so the leaving one and the hidden sizing copies stack under the current one.
-.lines
-  display: grid
-  justify-items: center
-  align-items: end
-  min-width: 0
-
 .group
   grid-area: 1 / 1
   margin: 0
   padding: 0.3em 1.6em
-  &[data-group='sizer']
-    visibility: hidden
-  &[data-group='current'] .word
+  &[data-group='current'] :is(.tag, .word)
     // Each word’s delay comes inline, so the sentence rises word after word.
     animation: enter 520ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards
   &[data-group='leaving']

@@ -5,6 +5,7 @@ import {renderToStaticMarkup} from 'react-dom/server'
 import {narrationWords, timingFromCharacters} from 'use-narrator/core'
 
 import NarrationSubtitles from '#component/NarrationSubtitles'
+import {narratorName} from '#component/NarratorTag'
 
 import {letterStarts, subtitleGroupAt, subtitleGroups, subtitleWordState} from '../../src/lib/audio/subtitles.ts'
 
@@ -125,11 +126,7 @@ test('subtitles render the current group’s words letter by letter, with or wit
   expect(plain).toContain('data-word="1"')
   expect(plain).toContain('data-letter="3">t</span>')
   expect(plain).not.toContain('data-fill')
-  // Later sentences are only there as hidden sizing copies, without words to paint.
-  expect(plain).not.toContain('data-word="2"')
-  expect(plain).toContain('ruler')
-  expect(plain).not.toContain('data-letter="10"')
-  expect(plain.match(/data-group="sizer"/g)).toHaveLength(2)
+  expect(plain).not.toContain('ruler')
   const characters = Array.from(text, (_, index) => [index / 10, index / 10 + 0.05] as const)
   const lettered = renderToStaticMarkup(createElement(NarrationSubtitles, {narration: {
     ...narration,
@@ -137,15 +134,25 @@ test('subtitles render the current group’s words letter by letter, with or wit
   }}))
   expect(lettered).toBe(plain)
 })
-test('subtitles show their narration’s indicator next to the text', () => {
-  const html = renderToStaticMarkup(createElement(NarrationSubtitles, {narration: {
+test('subtitles lead with the narrator’s tag, spectrum included only for recordings', () => {
+  const narration = {
     instanceId: 'a',
-    source: 'audio',
-    status: 'playing',
+    source: 'audio' as const,
+    status: 'playing' as const,
     text: 'Hi there.',
-  }}))
-  expect(html).toContain('aria-label="Audio guide"')
+  }
+  const html = renderToStaticMarkup(createElement(NarrationSubtitles, {narration}))
+  const tag = html.indexOf('data-testid="narrator-tag"')
+  expect(tag).toBeGreaterThan(-1)
+  expect(tag).toBeLessThan(html.indexOf('data-word="0"'))
+  expect(html).toContain(`${narratorName}:`)
   expect(html).toContain('data-testid="narrator-avatar"')
   expect(html).toContain('data-testid="audio-bars"')
-  expect(html.indexOf('data-testid="narrator-avatar"')).toBeLessThan(html.indexOf('data-word="0"'))
+  expect(html).not.toContain('aria-label="Audio guide"')
+  const spoken = renderToStaticMarkup(createElement(NarrationSubtitles, {narration: {
+    ...narration,
+    source: 'browser',
+  }}))
+  expect(spoken).toContain('data-testid="narrator-avatar"')
+  expect(spoken).not.toContain('data-testid="audio-bars"')
 })
