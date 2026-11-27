@@ -11,7 +11,7 @@ import {cameraPose, chime, markPortraitInteracted, playSound, useGallery} from '
 import {requestHanging} from '#src/lib/gallery/hanging/hangings.ts'
 import portraitObjects from '#src/lib/gallery/portraitObjects.ts'
 import PlayerGrace from '#src/lib/physics/PlayerGrace.ts'
-import {sprintSpeed, toss} from '#src/lib/physics/throwMotion.ts'
+import {sprintThrowDrive, toss} from '#src/lib/physics/throwMotion.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
 import world from '#src/worlds/current.ts'
 
@@ -42,12 +42,10 @@ const workThrow = {
   speed: 14,
   lift: 1.5 / 14,
 }
-/** The 8 m/s run-up toward the throw, expressed as a share of full sprint speed. */
-const frisbeeDrive = 8 / sprintSpeed
 /** three turns per second about the portrait’s face normal at release, in radians per second */
 const frisbeeSpin = 6 * Math.PI
 const workThrowRotation = ({drive, velocity: [x, y, z]}: Toss) => {
-  if (drive < frisbeeDrive) {
+  if (drive < sprintThrowDrive) {
     return {
       orientation: undefined,
       spin: undefined,

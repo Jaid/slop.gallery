@@ -25,8 +25,14 @@ const riseTilt = degreesToRadians(40)
 const riseSoftening = 0.4
 /** the steepest a throw ever leaves, in radians from level */
 const steepest = degreesToRadians(85)
-/** how a thrown orb tumbles, in radians per second, and anything else by its speed */
+/** how a prop that doesn’t roll tumbles thrown at {@link throwSpeed}, in radians per second, and by its speed otherwise */
 export const throwSpin: Vec3 = [3, 2, 1]
+/** how fast a thrown ball, like an orb, rolls forward round the line across its throw, in radians per second: three turns per second at {@link throwSpeed}, and by its speed otherwise */
+export const rollSpin = 6 * Math.PI
+/** how fast a ball thrown on a sprint spins round the world’s up like a top instead, in radians per second, by its speed like {@link rollSpin} */
+export const topSpin = 6 * Math.PI
+/** the share of a full sprint’s run-up toward a throw, 8 m/s, from which it counts as a sprint throw: a work leaves like a frisbee, a ball spins like a top */
+export const sprintThrowDrive = 8 / sprintSpeed
 /** how much a prop let go of on the move tumbles, as a share of a throw’s spin at the same speed */
 const dropSpin = 0.3
 /** How well the arm throws a thing of `mass`, in kg, before scaling to {@link throwSpeed}: the arm’s swing shared with the mass, held back for light things. */
@@ -42,6 +48,8 @@ export type TossInput = {
   lift?: number
   /** the prop’s mass in kg */
   mass: number
+  /** whether it rolls like a ball instead of tumbling, see {@link spinFor} */
+  rolls?: boolean
   /** how fast the arm throws it standing still, in m/s, by its mass by default, see {@link throwSpeedFor} */
   speed?: number
   /** whether it is thrown, or just let go of */
@@ -67,6 +75,18 @@ export type Toss = {
   /** the velocity it leaves with, in m/s: the arm’s throw on top of what it carried */
   velocity: Vec3
 }
+/** how a prop turns as it leaves the hand */
+export type SpinInput = {
+  /** the level direction it leaves in, of unit length, or none where it leaves straight up or down or not at all */
+  heading: Vec3
+  /** whether it rolls like a ball instead of tumbling */
+  rolls?: boolean
+  /** whether it is a sprint throw, see {@link sprintThrowDrive} */
+  sprinting?: boolean
+  /** how hard it leaves, as a share of an orb’s throw standing still, which its spin scales with */
+  strength: number
+}
+
 /**
  * How fast the player throws a thing of `mass` kg standing still, in m/s: {@link throwSpeed} for an orb, fastest at about 0.3 kg (13.5 m/s), slower for anything lighter, like a leaf (4.8 m/s), and ever slower for anything heavier, like a pumpkin (7.5 m/s) or a Knot (3.9 m/s).
  * Heavy things are thrown with all the arm’s swing, which their mass has to share; light ones catch on the air and slip out of the hand, which a speed stands in for, since nothing else in the physics slows them. A mass that isn’t positive, like one unknown, throws like an orb.
@@ -79,28 +99,53 @@ export function throwSpeedFor(mass: number) {
 }
 
 /**
+ * How a prop turns as it leaves the hand, in radians per second, about its own middle, so it changes nothing about how it flies until it touches something.
+ * A ball rolls forward toward where it heads, like a bowling ball, at {@link rollSpin}; thrown on a sprint, or heading nowhere level, it spins round the world’s up like a top, at {@link topSpin}. Anything else tumbles by {@link throwSpin}. All of them by `strength`.
+ */
+export function spinFor({heading: [x, , z], rolls = false, sprinting = false, strength}: SpinInput): Vec3 {
+  if (!rolls) {
+    return vec3.scale(vec3.create(), throwSpin, strength)
+  }
+  if (sprinting || x === 0 && z === 0) {
+    return [0, topSpin * strength, 0]
+  }
+  // Rolling forward along the heading turns it round the world’s up crossed with the heading.
+  return [z * rollSpin * strength, 0, -x * rollSpin * strength]
+}
+
+/** the level direction of `vector`, of unit length, or none where it has no level part */
+export function headingOf([x, , z]: Vec3): Vec3 {
+  const level = Math.hypot(x, z)
+  return level > 1e-6 ? [x / level, 0, z / level] : [0, 0, 0]
+}
+
+/**
  * How a prop of `mass` leaves the hand, thrown along `direction` or let go of, by someone moving at `carrier`.
  * It carries on with the carrier’s velocity either way, as a hand moves with its body, so a prop let go of on the run sails on ahead like a little throw, and one let go of mid-jump flies on up.
  * A throw adds the arm’s speed for its mass (see {@link throwSpeedFor}) along `direction` and a lift of a fifth of that. Running into it adds up to a fifth to the arm’s speed, with lift to match; rising at the start of a jump turns it up to 40° higher and two fifths softer, so it lobs up in a high arc and drops steeply like a jump shot. Both scale with how much of the run or the jump’s speed there is, and only toward the throw: backing away or falling only takes from it what the carrier’s velocity does.
+ * It turns as {@link spinFor} says, as hard as the arm sent it, or, let go of, by the carrier’s speed, a little: a ball that `rolls` rolls on forward, thrown on a sprint, it spins like a top.
  */
-export function toss({carrier = [0, 0, 0], direction, lift: liftShare = defaultLift, mass, speed = throwSpeedFor(mass), throwing}: TossInput): Toss {
+export function toss({carrier = [0, 0, 0], direction, lift: liftShare = defaultLift, mass, rolls, speed = throwSpeedFor(mass), throwing}: TossInput): Toss {
   const carried: Vec3 = [...carrier]
   if (!throwing) {
-    const tumble = dropSpin * vec3.length(carried) / throwSpeed
     return {
       carried,
       drive: 0,
       effort: 0,
       mass,
       rise: 0,
-      spin: vec3.scale(vec3.create(), throwSpin, tumble),
+      spin: spinFor({
+        heading: headingOf(carried),
+        rolls,
+        strength: dropSpin * vec3.length(carried) / throwSpeed,
+      }),
       throwing,
       velocity: carried,
     }
   }
   const [x, y, z] = vec3.normalize(vec3.create(), direction)
   const level = Math.hypot(x, z)
-  const heading: Vec3 = level > 1e-6 ? [x / level, 0, z / level] : [0, 0, 0]
+  const heading = headingOf([x, y, z])
   const drive = clamp((carried[0] * heading[0] + carried[2] * heading[2]) / sprintSpeed, 0, 1)
   const rise = clamp(carried[1] / jumpSpeed, 0, 1)
   const effort = speed * (1 + driveBoost * drive) * (1 - riseSoftening * rise)
@@ -108,14 +153,18 @@ export function toss({carrier = [0, 0, 0], direction, lift: liftShare = defaultL
   const elevation = level > 1e-6 ? Math.min(Math.atan2(y, level) + riseTilt * rise, Math.max(steepest, Math.atan2(y, level))) : Math.sign(y) * Math.PI / 2
   const aim: Vec3 = level > 1e-6 ? [heading[0] * Math.cos(elevation), Math.sin(elevation), heading[2] * Math.cos(elevation)] : [0, Math.sign(y) || 1, 0]
   const lift = liftShare * effort
-  const tumble = effort / throwSpeed
   return {
     carried,
     drive,
     effort,
     mass,
     rise,
-    spin: vec3.scale(vec3.create(), throwSpin, tumble),
+    spin: spinFor({
+      heading,
+      rolls,
+      sprinting: drive >= sprintThrowDrive,
+      strength: effort / throwSpeed,
+    }),
     throwing,
     velocity: [aim[0] * effort + carried[0], aim[1] * effort + lift + carried[1], aim[2] * effort + carried[2]],
   }

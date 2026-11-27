@@ -7,9 +7,9 @@ import {Quaternion} from 'three/webgpu'
 import {interacts, playerCollisionGroups} from '../../src/lib/physics/collisionGroups.ts'
 import GrabbableBody from '../../src/lib/physics/GrabbableBody.ts'
 import PlayerGrace, {graceTime} from '../../src/lib/physics/PlayerGrace.ts'
-import {throwSpeed, throwSpeedFor} from '../../src/lib/physics/throwMotion.ts'
+import {rollSpin, throwSpeed, throwSpeedFor, topSpin} from '../../src/lib/physics/throwMotion.ts'
 import {bodyThrow} from '../../src/lib/physics/ThrowState.ts'
-import {orbMass} from '../../src/orbs/index.ts'
+import {orbMass, orbRadius} from '../../src/orbs/index.ts'
 
 await RAPIER.init()
 let world: RAPIER.World
@@ -27,6 +27,12 @@ const sculpture = () => {
   world.createCollider(RAPIER.ColliderDesc.cuboid(0.3, 0.05, 0.4).setMass(orbMass - 0.3), body)
   world.createCollider(RAPIER.ColliderDesc.cuboid(0.35, 0.01, 0.45).setTranslation(0, 0.06, 0).setMass(0.3), body)
   return body
+}
+/** a ball as large and heavy as an orb, with what carries it, rolling when thrown if it `rolls` */
+const ball = (rolls: boolean) => {
+  const body = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(0, 2, 3))
+  world.createCollider(RAPIER.ColliderDesc.ball(orbRadius).setMass(orbMass), body)
+  return [body, new GrabbableBody(body, world, {rolls})] as const
 }
 /** the player’s capsule, standing with its feet at `feet`, in its own collision group like in the game */
 const player = (feet: [number, number, number] = [0, 0, 0]) => {
@@ -169,6 +175,32 @@ describe('shared grabbing regressions', () => {
       z: 0,
     })
     expect(body.translation().z).toBeCloseTo(-1.45, 6)
+  })
+  test('a ball that rolls leaves rolling forward, or spinning like a top on a sprint, flying exactly where a tumbling one does', () => {
+    const [rolling, roller] = ball(true)
+    const [tumbling, tumbler] = ball(false)
+    for (const [body, carried] of [[rolling, roller], [tumbling, tumbler]] as const) {
+      carried.grab()
+      // Side by side, apart from each other enough to never touch.
+      carried.release([body === rolling ? -2 : 2, 1.4, 0], [body === rolling ? -2 : 2, 1.4, 0.5], {throwing: true})
+    }
+    expect(rolling.angvel().x).toBeCloseTo(rollSpin, 4)
+    expect(rolling.angvel().y).toBeCloseTo(0, 9)
+    expect(rolling.angvel().z).toBeCloseTo(0, 9)
+    expect(rolling.linvel()).toEqual(tumbling.linvel())
+    step(30)
+    expect(rolling.translation().y).toBeCloseTo(tumbling.translation().y, 6)
+    expect(rolling.translation().z).toBeCloseTo(tumbling.translation().z, 6)
+    roller.grab()
+    roller.release([0, 1.4, 0], [0, 1.4, 0.5], {
+      carrier: [0, 0, 9],
+      throwing: true,
+    })
+    expect(rolling.angvel().x).toBeCloseTo(0, 9)
+    expect(rolling.angvel().y).toBeGreaterThan(topSpin)
+    // Flung by a tool, it rolls by its speed.
+    expect(roller.fling([0, 2, 0], [0, 0, throwSpeed / 2])).toBe(true)
+    expect(rolling.angvel().x).toBeCloseTo(rollSpin / 2, 4)
   })
   test('a prop held low in the view is thrown where the view looks, not along its lower line', () => {
     const body = sculpture()

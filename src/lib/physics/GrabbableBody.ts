@@ -3,17 +3,20 @@ import type {Toss} from './throwMotion.ts'
 import type {RigidBody, Vector, World} from '@dimforge/rapier3d-compat'
 
 import {RigidBodyType} from '@dimforge/rapier3d-compat'
+import {vec3} from 'math'
 
 import currentWorld from '#src/worlds/current.ts'
 
 import PlayerGrace from './PlayerGrace.ts'
 import PropPlacement from './PropPlacement.ts'
-import {throwSpin, toss} from './throwMotion.ts'
+import {headingOf, spinFor, throwSpeed, toss} from './throwMotion.ts'
 import {beginBodyThrow, clearBodyThrow} from './ThrowState.ts'
 
 export type GrabbableBodyOptions = {
   canGrab?: () => boolean
   recoverAsDynamic?: () => boolean
+  /** whether it rolls like a ball when thrown, like an orb, instead of tumbling, see `spinFor` */
+  rolls?: boolean
 }
 /** how a carried prop is let go of */
 export type ReleaseOptions = {
@@ -82,7 +85,7 @@ export default class GrabbableBody {
   }
 
   /**
-   * Throws the prop from `position` with `velocity`, in meters per second, tumbling like the player’s throws, wherever it lies, loose from then on, as if the player had let go of it there. Does nothing while it is carried.
+   * Throws the prop from `position` with `velocity`, in meters per second, turning like the player’s throws, wherever it lies, loose from then on, as if the player had let go of it there: tumbling as an orb’s throw would, or, if it rolls, rolling forward by its speed. Does nothing while it is carried.
    * Returns whether it did.
    */
   fling(position: Vec3, velocity: Vec3) {
@@ -90,7 +93,13 @@ export default class GrabbableBody {
       return false
     }
     this.rememberHome()
-    this.loose(position, vector(velocity), vector(throwSpin))
+    const {rolls} = this.options
+    const spin = spinFor({
+      heading: headingOf(velocity),
+      rolls,
+      strength: rolls ? vec3.length(velocity) / throwSpeed : 1,
+    })
+    this.loose(position, vector(velocity), vector(spin))
     this.grace.begin()
     beginBodyThrow(this.body)
     return true
@@ -137,6 +146,7 @@ export default class GrabbableBody {
       carrier,
       direction: direction ?? target.map((value, axis) => value - origin[axis]) as Vec3,
       mass: this.mass,
+      rolls: this.options.rolls,
       throwing,
     })
     this.loose(position, vector(thrown.velocity), vector(thrown.spin))

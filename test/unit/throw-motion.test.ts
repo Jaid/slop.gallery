@@ -4,7 +4,7 @@ import type {NoiseVoice, OscillatorVoice} from 'procedural-audio'
 import {describe, expect, test} from 'bun:test'
 
 import tossVoices from '../../src/lib/audio/tossVoices.ts'
-import {referenceMass, throwSpeed, throwSpeedFor, toss} from '../../src/lib/physics/throwMotion.ts'
+import {referenceMass, rollSpin, sprintSpeed, sprintThrowDrive, throwSpeed, throwSpeedFor, throwSpin, topSpin, toss} from '../../src/lib/physics/throwMotion.ts'
 import {orbMass} from '../../src/orbs/index.ts'
 
 const gravity = 9.81
@@ -170,6 +170,68 @@ describe('drops on the move', () => {
       throwing: true,
     })
     expect(Math.hypot(...dropped.spin)).toBeLessThan(Math.hypot(...thrown.spin))
+  })
+})
+/** an orb thrown along `direction` by someone moving at `carrier`, rolling unless told otherwise */
+const ballThrow = (carrier?: Vec3, rolls = true, direction: Vec3 = [1, 0.2, -1]) => toss({
+  carrier,
+  direction,
+  mass: referenceMass,
+  rolls,
+  throwing: true,
+})
+/** an orb thrown diagonally ahead, running into it at `speed` */
+const run = (speed: number) => ballThrow([speed * Math.SQRT1_2, 0, -speed * Math.SQRT1_2])
+/** how an orb dropped by someone moving at `carrier` spins */
+const ballDropSpin = (carrier: Vec3) => toss({
+  carrier,
+  direction: forward,
+  mass: referenceMass,
+  rolls: true,
+  throwing: false,
+}).spin
+describe('the spin of a ball', () => {
+  test('rolls forward round the line across its throw, as hard as it was thrown, without bending its flight', () => {
+    const ball = ballThrow()
+    expect(ball.spin[1]).toBe(0)
+    // Square to its heading and to the world’s up, turning its bottom backward so it rolls on forward on touching down.
+    expect(ball.spin[0] * ball.velocity[0] + ball.spin[2] * ball.velocity[2]).toBeCloseTo(0, 9)
+    const bottom: Vec3 = [0, -1, 0]
+    const bottomMoves = [ball.spin[1] * bottom[2] - ball.spin[2] * bottom[1], ball.spin[2] * bottom[0] - ball.spin[0] * bottom[2], ball.spin[0] * bottom[1] - ball.spin[1] * bottom[0]]
+    expect(bottomMoves[0] * ball.velocity[0] + bottomMoves[2] * ball.velocity[2]).toBeLessThan(0)
+    expect(Math.hypot(...ball.spin)).toBeCloseTo(rollSpin * ball.effort / throwSpeed, 9)
+    expect(Math.hypot(...ball.spin)).toBeCloseTo(rollSpin, 6)
+    expect(ball.velocity).toEqual(ballThrow(undefined, false).velocity)
+    const walk = ballThrow([1.5, 0, -1.5])
+    expect(Math.hypot(...walk.spin)).toBeGreaterThan(rollSpin)
+    expect(Math.hypot(...walk.spin) / rollSpin).toBeCloseTo(walk.effort / throwSpeed, 9)
+  })
+  test('thrown on a sprint, it spins like a top round the world’s up instead, harder still', () => {
+    const sprint = run(sprintSpeed)
+    expect(sprint.drive).toBeGreaterThanOrEqual(sprintThrowDrive)
+    expect(sprint.spin[0]).toBe(0)
+    expect(sprint.spin[2]).toBe(0)
+    expect(sprint.spin[1]).toBeCloseTo(topSpin * sprint.effort / throwSpeed, 9)
+    expect(sprint.spin[1]).toBeGreaterThan(topSpin)
+    // Just short of a sprint, it still rolls.
+    expect(run(sprintThrowDrive * sprintSpeed * 0.95).spin[1]).toBe(0)
+  })
+  test('thrown straight up, it spins like a top, dropped on the run, it rolls a little, dropped standing, not at all', () => {
+    const up = ballThrow(undefined, true, [0, 1, 0]).spin
+    expect([up[0], up[2]]).toEqual([0, 0])
+    expect(up[1]).toBeCloseTo(topSpin, 9)
+    const [x, y, z] = ballDropSpin([0, 0, -6])
+    expect(y).toBe(0)
+    expect(z).toBeCloseTo(0, 9)
+    expect(x).toBeLessThan(0)
+    expect(-x).toBeLessThan(rollSpin)
+    expect(Math.hypot(...ballDropSpin([0, 0, 0]))).toBe(0)
+  })
+  test('anything else tumbles as before', () => {
+    const {spin} = ballThrow(undefined, false)
+    for (const axis of [0, 1, 2]) {
+      expect(spin[axis]).toBeCloseTo(throwSpin[axis], 9)
+    }
   })
 })
 type Voices = ReturnType<typeof tossVoices>

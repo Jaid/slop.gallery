@@ -173,7 +173,7 @@ export default function GrabbableProp(props: GrabbablePropProps) {
 }
 
 /** The prop while it is still in the world. */
-function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, children, collider, canGrab, blockedMessage, recoverAsDynamic, remains, snapshotSubject, striker, withheld = false, ...props}: GrabbablePropProps) {
+function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, children, collider, canGrab, blockedMessage, recoverAsDynamic, remains, rolls = false, snapshotSubject, striker, withheld = false, ...props}: GrabbablePropProps) {
   const body = useRef<RapierRigidBody>(null)
   const group = useRef<Group>(null)
   /** whether a fusion holds the prop, from the start if it is withheld */
@@ -221,6 +221,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
     const carried = new GrabbableBody(body.current, world, {
       canGrab: () => callbacks.current.canGrab?.() ?? true,
       recoverAsDynamic: () => callbacks.current.recoverAsDynamic?.() ?? false,
+      rolls,
     })
     controller.current = carried
     const prop = group.current
@@ -350,7 +351,7 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
         controller.current = null
       }
     }
-  }, [id, mood, orb, title, world])
+  }, [id, mood, orb, rolls, title, world])
   // Whatever else ends carrying the prop, like a work arriving in the collection, drops it at the hand.
   useEffect(() => {
     if (!held) {
