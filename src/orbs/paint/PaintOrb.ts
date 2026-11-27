@@ -38,6 +38,7 @@ export default class PaintOrb extends PromptOrb {
     ['ethereal', 'dreamlike'],
     ['serene', 'contemplative'],
   ]
+  override readonly canvasMaterial = 'rag'
   readonly change = 'restyle it while keeping the original subject intact. The output should be a beautiful high-quality artistic painting that is'
   readonly color = impastoPaints.cobaltTeal
   override readonly conjunction = 'and'

@@ -5,6 +5,12 @@ import RosetteOrbMaterial from '../../src/orbs/paint/RosetteOrbMaterial.ts'
 import {blade, whorls} from '../../src/orbs/paint/whorls.ts'
 
 describe('Paint Orb', () => {
+  test('contributes cold-press rag to its fusion', () => {
+    expect(paintOrb.ingredient(0).contributions).toContainEqual({
+      kind: 'canvasMaterial',
+      canvasMaterial: 'rag',
+    })
+  })
   test('creates a glass material of its own for every orb, opaque to depth despite its transmission', () => {
     const first = paintOrb.createMaterial({radius: orbRadius})
     const second = paintOrb.createMaterial({radius: orbRadius})
