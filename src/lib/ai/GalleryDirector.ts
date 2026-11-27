@@ -255,11 +255,6 @@ export default class GalleryDirector {
     for (const look of recipe.pendingLooks) {
       void look.then(image => fusion.addImage(image), () => {})
     }
-    if (recipe.unchanged) {
-      notify(`The ${item.title} contributes nothing to fuse ${workName(a)} with. It will come back as it went in.`)
-    } else if (!this.usingAi) {
-      notify(`A local ${recipe.handmade} is taking shape. No AI and no upload.`)
-    }
     try {
       await this.brew(a, fusion, recipe, current, {
         canceled: 'You canceled the fusion. The original is still here.',
