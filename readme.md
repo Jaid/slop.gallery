@@ -1,8 +1,12 @@
-<h1><a href="https://slop.gallery"><img src=assets/icon.svg style=height:1em></a>Slop Gallery</h1>
+# Slop Gallery
 
-fun AI generation playground wrapped in an interactive 3D world
+image generation playground embedded in a fun-to-explore 3D game
 
 <center>
+<a href="https://slop.gallery">
+<img src=assets/icon.svg height=256>
+</a>
+
 [slop.gallery](https://slop.gallery) | [canary](https://main.slop.gallery) | [source](https://github.com/Jaid/slop.gallery)
 </center>
 
