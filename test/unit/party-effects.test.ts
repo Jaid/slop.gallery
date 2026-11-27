@@ -14,6 +14,7 @@ import worldClock from '../../src/lib/worldClock.ts'
 import {horrorOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import PartyEffect from '../../src/party_effects/base/PartyEffect.ts'
 import {batOffset, flyingBats} from '../../src/party_effects/bats/flights.ts'
+import {blownFlakes, flakeOffset} from '../../src/party_effects/blizzard/flights.ts'
 import {airDrag, bloodBeats, bloodDrops, bloodFading, bloodFlight, gravity as bloodGravity, bloodLanding, bloodPool, bloodPour, bloodPouring, pourFall, pourVolume, splatLift} from '../../src/party_effects/blood/flights.ts'
 import {shutting, staring, staringEyes} from '../../src/party_effects/eyes/flights.ts'
 import {escapingGhosts, ghostOffset} from '../../src/party_effects/ghosts/flights.ts'
@@ -26,7 +27,7 @@ import {brushStrokes, strokeDrying, strokePoint} from '../../src/party_effects/s
 import {lashing, lashingTendrils, snapping, tendrilReach} from '../../src/party_effects/tendrils/flights.ts'
 import slopGallery from '../../src/worlds/gallery/index.ts'
 
-const {bats: batsEffect, blood: bloodEffect, eyes: eyesEffect, ghosts: ghostsEffect, smears: smearsEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
+const {bats: batsEffect, blizzard: blizzardEffect, blood: bloodEffect, eyes: eyesEffect, ghosts: ghostsEffect, smears: smearsEffect, strokes: strokesEffect, tendrils: tendrilsEffect} = partyEffects
 const effects = Object.values<PartyEffect>(partyEffects)
 const hung = portraitIngredient({
   title: 'The hung portrait',
@@ -319,7 +320,7 @@ describe('party effects', () => {
     expect(() => spawnThroughTool({
       effect: 'confetti',
       position: [0, 0, 0],
-    })).toThrow(/bats, blood, eyes, ghosts, smears, strokes, tendrils/)
+    })).toThrow(/bats, blizzard, blood, eyes, ghosts, smears, strokes, tendrils/)
     expect(() => spawnThroughTool({
       effect: 'toString',
       position: [0, 0, 0],
@@ -476,6 +477,7 @@ describe('party effects', () => {
       expect(points.every(point => holds(box, point))).toBe(true)
     }
     at(batsEffect, flyingBats.flatMap(bat => [0.1, 0.4, 0.8].map(share => batOffset(bat, bat.life * share))))
+    at(blizzardEffect, blownFlakes.flatMap(flake => [0.1, 0.4, 0.8].map(share => flakeOffset(flake, flake.life * share, floor))))
     at(ghostsEffect, escapingGhosts.flatMap(ghost => [0.1, 0.4, 0.8].map(share => ghostOffset(ghost, ghost.life * share))))
     at(strokesEffect, brushStrokes.flatMap(stroke => [0.2, 0.7].flatMap(share => [0, 1, 2].map(seconds => strokePoint(stroke, share, seconds)))))
     at(smearsEffect, knifeSmears.flatMap(smear => [0, 0.5, 1].flatMap(share => [0, 1, 2].map(seconds => smearPoint(smear, share, seconds)))))
