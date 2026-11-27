@@ -1,3 +1,4 @@
+import type {CanvasMaterialId} from '../../src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {FusionIngredient, IngredientContribution} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
 import type PromptOrb from '../../src/orbs/base/PromptOrb.ts'
 
@@ -157,9 +158,23 @@ describe('fusion recipe', () => {
     expect(recipe.frame).toBe('tramp')
     expect(recipe.tints.map(tint => tint.title)).toEqual(['Test Orb'])
   })
+  test('takes the first contributed canvas material, which gives an image model nothing to do', () => {
+    const finish = (canvasMaterial: CanvasMaterialId) => item(canvasMaterial, {
+      kind: 'canvasMaterial',
+      canvasMaterial,
+    })
+    const plain = new FusionRecipe([hung, item('plain')])
+    expect(plain.canvasMaterial).toBeUndefined()
+    const recipe = new FusionRecipe([hung, item('plain'), finish('diamond-dust'), finish('linen')])
+    expect(recipe.canvasMaterial).toBe('diamond-dust')
+    const alone = new FusionRecipe([hung, finish('wax')])
+    expect(alone.canvasMaterial).toBe('wax')
+    expect(alone.unchanged).toBe(true)
+    expect(alone.looks).toEqual([image])
+  })
   // Any prompt orb, even one without a frame or an effect, which none of today’s lacks.
   for (const orb of promptOrbs as ReadonlyArray<PromptOrb>) {
-    test(`the ${orb.title} contributes its prompt, its frame of the game and its effect, if it has them, shows by its glow and photograph and is latched on with a ping of glass`, () => {
+    test(`the ${orb.title} contributes its prompt, its frame of the game, its canvas material and its effect, if it has them, shows by its glow and photograph and is latched on with a ping of glass`, () => {
       expect(orb.ingredient(7)).toEqual({
         contributions: [
           {
@@ -170,6 +185,12 @@ describe('fusion recipe', () => {
             {
               kind: 'frame' as const,
               frame: pickFrame(7, orb.frame),
+            },
+          ] : [],
+          ...orb.canvasMaterial ? [
+            {
+              kind: 'canvasMaterial' as const,
+              canvasMaterial: orb.canvasMaterial,
             },
           ] : [],
           ...orb.effect ? [

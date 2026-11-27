@@ -1,3 +1,4 @@
+import type {CanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {FrameChoice} from '#src/frames/lib/frameChoice.ts'
 import type {IngredientContribution, ItemIngredient} from '#src/lib/gallery/fusion/FusionRecipe.ts'
 import type {MoodId} from '#src/moods/index.ts'
@@ -13,6 +14,8 @@ import {pickEffect} from '#src/party_effects/lib/effectChoice.ts'
  * Its prop is `prop-orb-<id>`, and it lives in a folder of its own.
  */
 export default abstract class Orb {
+  /** the canvas material the orb contributes to a fusion, which its result’s image is painted or printed on wherever it arrives; without one, the result shows flat, unless it is an imported work keeping its own */
+  readonly canvasMaterial?: CanvasMaterialId
   /** the party effect the orb contributes to the portal of its fusion and lets burst out of the alchemy machine’s cannon, or several, of which every game picks one, if any */
   readonly effect?: PartyEffectChoice
   /** the frame the orb contributes to a fusion, or several, of which every game picks one; without one, the room the result arrives in frames it */
@@ -31,13 +34,19 @@ export default abstract class Orb {
   /** the glass with whatever the orb holds inside, for a ball of the given radius */
   abstract createMaterial(options: OrbGlassOptions): OrbGlassMaterial
 
-  /** the orb as an ingredient of a fusion in the environment of `seed`: it contributes its frame and its effect, if it has them, and is latched on with a ping of its glass */
+  /** the orb as an ingredient of a fusion in the environment of `seed`: it contributes its frame, its canvas material and its effect, if it has them, and is latched on with a ping of its glass */
   ingredient(seed: number): ItemIngredient {
     const contributions: Array<IngredientContribution> = []
     if (this.frame) {
       contributions.push({
         kind: 'frame',
         frame: pickFrame(seed, this.frame),
+      })
+    }
+    if (this.canvasMaterial) {
+      contributions.push({
+        kind: 'canvasMaterial',
+        canvasMaterial: this.canvasMaterial,
       })
     }
     const effect = this.partyEffect(seed)

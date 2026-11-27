@@ -1,3 +1,4 @@
+import type {CanvasMaterialId} from '../../src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {PortraitFrameId} from '../../src/frames/lib/frameParameter.ts'
 import type {AiSettings} from '../../src/lib/ai/settings.ts'
 import type {FusionOptions, FusionSpec} from '../../src/lib/gallery/fusion/Fusion.ts'
@@ -90,6 +91,23 @@ const framing = (item: ThrownItem, frame: PortraitFrameId): ThrownItem => ({
         {
           kind: 'frame',
           frame,
+        },
+      ],
+    }
+  },
+})
+/** the item, contributing the canvas material too */
+const finishing = (item: ThrownItem, canvasMaterial: CanvasMaterialId): ThrownItem => ({
+  ...item,
+  ingredient: () => {
+    const ingredient = item.ingredient()
+    return {
+      ...ingredient,
+      contributions: [
+        ...ingredient.contributions,
+        {
+          kind: 'canvasMaterial',
+          canvasMaterial,
         },
       ],
     }
@@ -664,6 +682,64 @@ test('the result wears the frame a thrown ingredient contributed wherever it arr
       expect(result.frame).toBe(expected)
     } finally {
       director.dispose()
+    }
+  }
+})
+test('the result is on the canvas material a thrown ingredient contributed, decided as the portal opens, unless ?new_canvas_material says otherwise, and keeps an imported work’s own without one', async () => {
+  const location = Object.getOwnPropertyDescriptor(globalThis, 'location')
+  const frosty = finishing(testOrb, 'diamond-dust')
+  const cases: Array<[string, ThrownItem, Partial<Portrait>, CanvasMaterialId | undefined]> = [
+    ['', frosty, {}, 'diamond-dust'],
+    ['new_canvas_material=wax', frosty, {}, 'wax'],
+    ['', frosty, {
+      imported: true,
+      canvasMaterial: 'linen',
+    }, 'diamond-dust'],
+    ['', testOrb, {
+      imported: true,
+      canvasMaterial: 'linen',
+    }, 'linen'],
+    ['canvas_material=linen', testOrb, {canvasMaterial: 'linen'}, undefined],
+    // Nothing to fuse, but the finish still goes on.
+    ['', finishing(clearOrb, 'diamond-dust'), {}, 'diamond-dust'],
+  ]
+  try {
+    for (const [query, item, work, expected] of cases) {
+      Object.defineProperty(globalThis, 'location', {
+        configurable: true,
+        value: new URL(`https://slop.gallery/?${query}`),
+      })
+      useGallery.setState(original, true)
+      useGallery.setState({
+        sound: false,
+        portraits: [{
+          ...original.portraits[0],
+          ...work,
+          id: 'a',
+          source: a,
+          hung: true,
+        }],
+      })
+      const director = new TestDirector({
+        ...defaults,
+        ai: false,
+      }, '')
+      try {
+        const job = director.fuseItem('a', item)
+        const [fusion] = director.opened
+        expect(fusion.resultCanvasMaterial).toBe(expected)
+        director.result.resolve(new Blob(['result'], {type: 'image/webp'}))
+        await job
+        expect(useGallery.getState().portraits.find(p => p.id === 'a')?.canvasMaterial).toBe(expected)
+      } finally {
+        director.dispose()
+      }
+    }
+  } finally {
+    if (location) {
+      Object.defineProperty(globalThis, 'location', location)
+    } else {
+      Reflect.deleteProperty(globalThis, 'location')
     }
   }
 })

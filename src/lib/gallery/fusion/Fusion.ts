@@ -1,3 +1,4 @@
+import type {CanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {PartyEffect} from '#src/party_effects/index.ts'
 import type {Portrait, Vec3} from '../types.ts'
@@ -40,7 +41,7 @@ export type FusionSpec = {
   latches: ReadonlyArray<IngredientLatch>
   partner: FusionPartner
   /** the hung portrait, the fusion’s first ingredient, which the portal opens in front of and the result replaces */
-  work: Pick<Portrait, 'frame' | 'height' | 'id' | 'position' | 'rotation' | 'width'>
+  work: Pick<Portrait, 'canvasMaterial' | 'frame' | 'height' | 'id' | 'imported' | 'position' | 'rotation' | 'width'>
 }
 export type FusionOutcome = {
   /** seconds into the fusion that the climax or the fizzle starts, or that the fusion was aborted */
@@ -83,6 +84,8 @@ export default class Fusion {
   outcome?: FusionOutcome
   /** the fused image, once it is in, or the hung portrait’s own where nothing was contributed to fuse it with */
   result?: Blob | string
+  /** the canvas material the result’s image will be on, or none for a flat image, which the director decides as the portal opens, so the portal has it compiled by the time the result flips out */
+  resultCanvasMaterial?: CanvasMaterialId
   /** the frame the result will wear, or the default frame for none, which the director rolls as the portal opens, so the portal has it ready by the time the result flips out */
   resultFrame?: PortraitFrameId
   /** aborted once the player breaks the fusion off, which makes the image model give up */

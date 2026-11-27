@@ -4,12 +4,13 @@ import type Fusion from '#src/lib/gallery/fusion/Fusion.ts'
 import type {PortalPalette} from '#src/lib/gallery/fusion/PortalCore.ts'
 import type {Vec3} from '#src/lib/gallery/types.ts'
 import type {PartyShow} from '#src/party_effects/index.ts'
-import type {Camera, Texture} from 'three/webgpu'
+import type {Camera, MeshPhysicalNodeMaterial, Texture} from 'three/webgpu'
 
 import {clamp} from 'math'
 import hsl from 'okhsl'
-import {Color, Group, Mesh, PointLight, Vector3} from 'three/webgpu'
+import {Color, Group, Mesh, PlaneGeometry, PointLight, Vector3} from 'three/webgpu'
 
+import {canvasMaterials} from '#src/canvas_materials/index.ts'
 import {portraitFrame} from '#src/frames/index.ts'
 import playArcCrack from '#src/lib/audio/arcCrack.ts'
 import FusionSound from '#src/lib/audio/FusionSound.ts'
@@ -57,6 +58,8 @@ const reboundReach = 3.2
  */
 export default class PortalShow {
   readonly root = new Group
+  /** an image on the canvas material the result will be on, shrunk to nothing, see {@link rehearseCanvas} */
+  private canvasRehearsal?: Mesh<PlaneGeometry, MeshPhysicalNodeMaterial>
   /** the party effects its ingredients contributed, staged as the portal opens, so their pipelines compile during the intro, and bursting out as the result flips out */
   private readonly effects: ReadonlyArray<PartyShow>
   private readonly embers: PortalPalette
@@ -134,6 +137,8 @@ export default class PortalShow {
     for (const effect of this.effects) {
       effect.dispose()
     }
+    this.canvasRehearsal?.geometry.dispose()
+    this.canvasRehearsal?.material.dispose()
     for (const image of this.images.values()) {
       image.release()
     }
@@ -150,6 +155,7 @@ export default class PortalShow {
     const delta = this.last === undefined ? 0 : clamp(elapsed - this.last, 0, 0.1)
     this.last = elapsed
     this.rehearsal ??= this.rehearseFrame()
+    this.canvasRehearsal ??= this.rehearseCanvas()
     const envelope = portalEnvelope(elapsed, outcome, fusion.emergedAt, timing, {
       images: fusion.spec.images.length,
       ingredients: fusion.spec.latches.length,
@@ -382,6 +388,31 @@ export default class PortalShow {
     uniforms.pull.value = state.pull
     uniforms.ripple.value = state.ripple
     uniforms.twist.value = state.twist
+  }
+
+  /**
+   * Draws the hung portrait’s image on the canvas material the result will be on, if any, once the image is decoded, at a scale of 0 like {@link rehearseFrame}, as `Portrait` draws it, so its pipelines compile while the portal brews instead of the result flipping out flat and only taking its finish seconds later.
+   * Every image on a canvas material shares its pipelines, unless the material measures something by the size of the work, which the result may not share.
+   */
+  private rehearseCanvas() {
+    const {frame: portal, resultCanvasMaterial: kind, spec} = this.fusion
+    const source = spec.images.at(0)
+    const texture = kind && source !== undefined ? this.image(source) : undefined
+    if (!kind || !texture) {
+      return
+    }
+    const {width, height} = spec.work
+    const mesh = new Mesh(new PlaneGeometry(width, height), canvasMaterials[kind].createMaterial(texture, {
+      width,
+      height,
+    }))
+    mesh.name = 'fusion-canvas-rehearsal'
+    mesh.castShadow = true
+    mesh.frustumCulled = false
+    mesh.position.fromArray(portal.center)
+    mesh.scale.setScalar(0)
+    this.root.add(mesh)
+    return mesh
   }
 
   /**

@@ -11,12 +11,18 @@ import {blizzardDone, blizzardParticles} from '../../src/party_effects/blizzard/
 import {partyEffects} from '../../src/party_effects/index.ts'
 
 describe('Frost Orb', () => {
-  test('brings its winter prompt, both ice frames, the blizzard and a mood of its own with a glow no other orb has, and turns up on the Vesper’s pedestals', () => {
+  test('brings its winter prompt, both ice frames, diamond dust, the blizzard and a mood of its own with a glow no other orb has, and turns up on the Vesper’s pedestals', () => {
     expect(promptOrbs).toContain(frostOrb)
     expect(randomOrbs).toContain(frostOrb)
     const ingredients = Array.from({length: 32}, (_, seed) => frostOrb.ingredient(seed))
     const rolled = new Set(ingredients.flatMap(({contributions}) => contributions.filter(part => part.kind === 'frame').map(part => part.frame)))
     expect(rolled).toEqual(new Set(['glacier', 'frost']))
+    for (const {contributions} of ingredients) {
+      expect(contributions).toContainEqual({
+        kind: 'canvasMaterial',
+        canvasMaterial: 'diamond-dust',
+      })
+    }
     expect(ingredients[0].glow).toBe(0x64_D4_FB)
     expect(frostOrb.partyEffect(3)).toBe('blizzard')
     expect(frostOrb.prompt(3)).toMatch(/winter storm/)

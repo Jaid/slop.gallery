@@ -6,7 +6,7 @@ import PromptOrb from '../base/PromptOrb.ts'
 import BlizzardOrbMaterial from './BlizzardOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
-/** A snow globe in a blizzard: a great crystal of glowing ice and an ice cap set in the glass, which roll and tumble with it, and snowflakes whirling round the crystal under a faint aurora. It lets a winter storm sweep over a work, burying it in snow and hoarfrost, and a blizzard of snowflakes bursts out of the portal as the result flips out. */
+/** A snow globe in a blizzard: a great crystal of glowing ice and an ice cap set in the glass, which roll and tumble with it, and snowflakes whirling round the crystal under a faint aurora. It lets a winter storm sweep over a work, burying it in snow and hoarfrost, puts it on diamond dust, and a blizzard of snowflakes bursts out of the portal as the result flips out. */
 export default class FrostOrb extends PromptOrb {
   readonly adjectives = [
     // weather
@@ -29,6 +29,8 @@ export default class FrostOrb extends PromptOrb {
     'desolate',
     ['magical', 'enchanted'],
   ]
+  /** Its result glitters with crushed glass like hoarfrost catching the light. */
+  override readonly canvasMaterial = 'diamond-dust'
   readonly change = 'let a fierce winter storm sweep over it, covering it in snow, frost and ice, keeping the original subject recognizable, so that it becomes'
   readonly color = hsl.integer(224, 92, 79)
   /** Its traits are all of one winter, so a prompt asks for every one it names. */

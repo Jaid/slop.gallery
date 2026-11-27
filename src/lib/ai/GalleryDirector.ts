@@ -333,7 +333,7 @@ export default class GalleryDirector {
    * A new image is a new work, which keeps nothing of what `a` was called or told and only tells the year it was made in until its flavor text is written.
    * Where the recipe leaves `a` unchanged, as nothing but its own image was contributed, no image model is asked: `a` itself comes back out of the portal as it went in.
    * The result flips out of the portal as a loose portrait once the fusion’s climax is over; a failure shows once the fusion fizzled out, like one the player broke off by jumping into its portal, which gives up on the image at once.
-   * A new image’s frame takes its shape, whatever the model made of the shape it was asked for, at the area of `a`’s frame. The result wears the frame the fusion rolled as its portal opened.
+   * A new image’s frame takes its shape, whatever the model made of the shape it was asked for, at the area of `a`’s frame. The result wears the frame and is on the canvas material the fusion decided as its portal opened.
    * As it flips out, the result is also saved as a download and posted to the webhook where `?download` and `?webhook` ask for results made the way it was.
    */
   private async brew(a: Portrait, fusion: Fusion, recipe: FusionRecipe, current: () => boolean, {canceled, consume, failure, remove}: {
@@ -406,8 +406,7 @@ export default class GalleryDirector {
     const released: Portrait = {
       ...a,
       ...fusion.launch(),
-      // The finish of an imported work can carry over; the native portrait override cannot.
-      canvasMaterial: readCanvasMaterialParameters().new_canvas_material ?? (a.imported ? a.canvasMaterial : undefined),
+      canvasMaterial: fusion.resultCanvasMaterial,
       frame: fusion.resultFrame,
       fusing: false,
       fusionJob: undefined,
@@ -510,10 +509,15 @@ export default class GalleryDirector {
     }
   }
 
-  /** Opens the portal of a fusion of `recipe` and rolls the frame its result will wear right away, so the portal has it ready by the end: the frame an ingredient contributed, otherwise that of the room the portal releases the result into. */
+  /**
+   * Opens the portal of a fusion of `recipe` and decides the frame its result will wear and the canvas material its image will be on right away, so the portal has them ready by the end.
+   * The frame is the one an ingredient contributed, otherwise that of the room the portal releases the result into. The canvas material is the page’s `?new_canvas_material`, otherwise the one an ingredient contributed, like the Frost Orb’s diamond dust, otherwise an imported work’s own, which carries over, unlike the native portraits’ `?canvas_material`.
+   */
   private startFusion(spec: FusionSpec, recipe: FusionRecipe) {
     const fusion = this.openFusion(spec)
-    fusion.resultFrame = recipe.frame ?? arrivalFrame(fusion.launch().position, spec.work.position, spec.work.id)
+    const {work} = spec
+    fusion.resultFrame = recipe.frame ?? arrivalFrame(fusion.launch().position, work.position, work.id)
+    fusion.resultCanvasMaterial = readCanvasMaterialParameters().new_canvas_material ?? recipe.canvasMaterial ?? (work.imported ? work.canvasMaterial : undefined)
     this.fusions.add(fusion)
     if (telemetry) {
       const {partner} = spec

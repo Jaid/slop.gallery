@@ -1,3 +1,4 @@
+import type {CanvasMaterialId} from '#src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {PortraitFrameId} from '#src/frames/lib/frameParameter.ts'
 import type {PartyEffectId} from '#src/party_effects/index.ts'
 import type {SizedImage} from '../ImageImporter.ts'
@@ -7,7 +8,7 @@ import modelImage from '../../ai/modelImage.ts'
 import {loadBlob} from '../actions.ts'
 import {compositeImages, tintImage} from '../ImageImporter.ts'
 
-/** Something an ingredient contributes to the fusion: an image the result is made of, an instruction to the image model, a frame the result wears or an effect the portal shows. */
+/** Something an ingredient contributes to the fusion: an image the result is made of, an instruction to the image model, a frame the result wears, a canvas material its image is on or an effect the portal shows. */
 export type IngredientContribution = {
   /** It may still be in the making, like an item’s studio photograph. */
   image: Blob | Promise<Blob> | string
@@ -16,6 +17,10 @@ export type IngredientContribution = {
   /** sent to the image model verbatim */
   instruction: string
   kind: 'instruction'
+} | {
+  /** the canvas material the result’s image is painted or printed on wherever it arrives; it gives an image model nothing to do */
+  canvasMaterial: CanvasMaterialId
+  kind: 'canvasMaterial'
 } | {
   /** the frame design the result wears wherever it arrives, instead of the frame of the room it arrives in */
   frame: PortraitFrameId
@@ -81,7 +86,7 @@ export function itemIngredient(title: string, ingredient: ItemIngredient): Fusio
 
 /**
  * A fusion’s ingredients and everything they contribute, gathered into what its result is made of. A fusion has {@link minimumIngredients} to {@link maximumIngredients} ingredients, each a portrait or an item; the first is always the hung portrait, whose portal it is and which the result replaces.
- * The recipe decides whether there is anything for an image model to do at all, writes the model’s prompt or makes the result locally, without AI, and picks the frame and the glow.
+ * The recipe decides whether there is anything for an image model to do at all, writes the model’s prompt or makes the result locally, without AI, and picks the frame, the canvas material and the glow.
  */
 export default class FusionRecipe {
   readonly ingredients: ReadonlyArray<FusionIngredient>
@@ -94,6 +99,11 @@ export default class FusionRecipe {
       throw new TypeError('The first ingredient of a fusion is always a portrait.')
     }
     this.ingredients = ingredients
+  }
+
+  /** the canvas material contributed first, which the result’s image is on wherever it arrives; without one, it shows flat, unless an imported work keeps its own */
+  get canvasMaterial() {
+    return this.contributionsOf('canvasMaterial').at(0)?.canvasMaterial
   }
 
   /** the ids of the party effects the portal shows, each once, in the order of their ingredients */
