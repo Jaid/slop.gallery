@@ -31,6 +31,7 @@ export default class HalloweenOrb extends PromptOrb {
     ['costumed', 'trick-or-treat-ready'],
     'witchy',
   ]
+  override readonly canvasMaterial = 'wax'
   readonly change = 'add casual Halloween decoration that makes it'
   readonly color = hsl.integer(49, 100, 68)
   override readonly effect = 'bats'

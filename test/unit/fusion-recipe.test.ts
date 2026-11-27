@@ -8,7 +8,7 @@ import hsl from 'okhsl'
 
 import {pickFrame} from '../../src/frames/lib/frameChoice.ts'
 import FusionRecipe, {fusionInstruction, itemIngredient, maximumIngredients, minimumIngredients, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
-import {horrorOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
+import {halloweenOrb, horrorOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
 import {pickEffect} from '../../src/party_effects/lib/effectChoice.ts'
 
 const png = Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMAAABIeJ9nAAAAA1BMVEX/AAAZ4gk3AAAADElEQVQI12NgYGAAAAAEAAEnNCcKAAAAAElFTkSuQmCC')
@@ -205,6 +205,9 @@ describe('fusion recipe', () => {
   })
   test('the Horror Orb gives its result prism sweep, even over an existing canvas material', () => {
     expect(material(portrait('linen'), itemIngredient(horrorOrb.title, horrorOrb.ingredient(7)))).toBe('prism-sweep')
+  })
+  test('the Halloween Orb gives its result beeswax veil, even over an existing canvas material', () => {
+    expect(material(portrait('linen'), itemIngredient(halloweenOrb.title, halloweenOrb.ingredient(7)))).toBe('wax')
   })
   // Any prompt orb, even one without a frame or an effect, which none of today’s lacks.
   for (const orb of promptOrbs as ReadonlyArray<PromptOrb>) {
