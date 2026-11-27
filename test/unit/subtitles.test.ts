@@ -126,7 +126,11 @@ test('subtitles render the current group’s words letter by letter, with or wit
   expect(plain).toContain('data-word="1"')
   expect(plain).toContain('data-letter="3">t</span>')
   expect(plain).not.toContain('data-fill')
-  expect(plain).not.toContain('ruler')
+  // Later sentences are only there as hidden sizing copies, without words to paint.
+  expect(plain).toContain('ruler')
+  expect(plain).not.toContain('data-word="2"')
+  expect(plain).not.toContain('data-letter="10"')
+  expect(plain.match(/data-group="sizer"/g)).toHaveLength(2)
   const characters = Array.from(text, (_, index) => [index / 10, index / 10 + 0.05] as const)
   const lettered = renderToStaticMarkup(createElement(NarrationSubtitles, {narration: {
     ...narration,
@@ -134,7 +138,7 @@ test('subtitles render the current group’s words letter by letter, with or wit
   }}))
   expect(lettered).toBe(plain)
 })
-test('subtitles lead with the narrator’s tag, spectrum included only for recordings', () => {
+test('subtitles are headed by the narrator’s tag, spectrum included only for recordings', () => {
   const narration = {
     instanceId: 'a',
     source: 'audio' as const,

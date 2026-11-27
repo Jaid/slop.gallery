@@ -19,7 +19,7 @@ type Props = {
 }
 
 /**
- * The narration’s text, one sentence (or a run of short ones) at a time, led by the narrator’s tag. Spoken words turn yellow letter by letter, at the letters’ own times where the timing has them and spread over their word’s duration otherwise.
+ * The narration’s text, one sentence (or a run of short ones) at a time, in a dark box headed by the narrator’s tag. Spoken words turn yellow letter by letter, at the letters’ own times where the timing has them and spread over their word’s duration otherwise.
  * Reads the playback position every frame and paints the words directly, so React only renders when the sentence changes.
  */
 export default function NarrationSubtitles({narration: {instanceId, source, status, statusEndsAt, text, timing}, progress: readProgress}: Props) {
@@ -96,9 +96,6 @@ export default function NarrationSubtitles({narration: {instanceId, source, stat
         }
       }}
     >
-      <NarratorTag className={css.tag} instanceId={instanceId} source={source} status={status} statusEndsAt={statusEndsAt} />
-      {/* A no-break space, so the first word never wraps away from the tag. */}
-      {'\u{A0}'}
       {words.slice(group.first, group.last).map((word, order) => {
         const token = text.slice(word.from, word.to)
         let offset = word.from
@@ -117,7 +114,17 @@ export default function NarrationSubtitles({narration: {instanceId, source, stat
     </p>
   }
   return <section className={css.container} aria-label='Subtitles' data-ended={ended} data-testid='narration-subtitles' ref={container}>
-    {/* One keyed list, so the sentence that starts leaving keeps its element and the colors the paint loop gave its words, instead of coming back white for a frame. */}
-    {(leaving !== undefined && leaving !== shown ? [leaving, shown] : [shown]).map(index => renderGroup(index, index === shown ? 'current' : 'leaving'))}
+    <NarratorTag instanceId={instanceId} source={source} status={status} statusEndsAt={statusEndsAt} />
+    <div className={css.lines}>
+      {/* Hidden copies of every sentence keep the box as wide as the widest and as tall as the tallest for the whole narration, so it never changes its size from sentence to sentence. */}
+      {groups.map((group, index) => <p key={index} className={css.group} aria-hidden='true' data-group='sizer'>
+        {words.slice(group.first, group.last).map((word, order) => <Fragment key={word.from}>
+          {order ? ' ' : null}
+          <span className={css.word}>{text.slice(word.from, word.to)}</span>
+        </Fragment>)}
+      </p>)}
+      {/* One keyed list, so the sentence that starts leaving keeps its element and the colors the paint loop gave its words, instead of coming back white for a frame. */}
+      {(leaving !== undefined && leaving !== shown ? [leaving, shown] : [shown]).map(index => renderGroup(index, index === shown ? 'current' : 'leaving'))}
+    </div>
   </section>
 }
