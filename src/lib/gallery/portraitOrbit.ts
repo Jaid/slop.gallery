@@ -1,4 +1,4 @@
-import type {OrbitSettings} from '#src/lib/camera/OrbitInspection.ts'
+import type {OrbitRocking, OrbitSettings} from '#src/lib/camera/OrbitInspection.ts'
 import type {Portrait, Vec3} from './types.ts'
 
 import {portraitFrame} from '#src/frames/index.ts'
@@ -6,9 +6,16 @@ import {inspectionFov} from '#src/lib/camera/OrbitInspection.ts'
 
 import {portraitLabelLayout} from './portraitLabel.ts'
 
+/** how the view of a portrait rocks while the player holds Space, so its canvas and frame catch the light from one angle after another: 45° either way and 15° up and down, a loop every 12 s at speed 1 */
+export const portraitRocking: OrbitRocking = {
+  nod: Math.PI / 12,
+  pace: Math.PI / 12,
+  sway: Math.PI / 4,
+}
+
 /**
  * Orbiting a hung portrait starts straight in front of it, its image filling the view at the inspection field of view as far as its frame leaves it in sight, so none of the frame shows along the view’s tighter sides. Inspecting the
- * name plate frames the portrait and its plate together, with room around both. The orbit stays in front
+ * name plate frames the portrait and its plate together, with room around both. Either view can rock ({@link portraitRocking}). The orbit stays in front
  * of the wall.
  */
 export default function portraitOrbit(portrait: Portrait, label: boolean, aspect: number): {
@@ -33,6 +40,7 @@ export default function portraitOrbit(portrait: Portrait, label: boolean, aspect
       facing: normal,
       yawLimit: 1.2,
       pitchLimit: 0.9,
+      rocking: portraitRocking,
     },
   }
 }

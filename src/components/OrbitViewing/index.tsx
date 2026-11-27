@@ -18,6 +18,13 @@ import {setInspectionFocus} from '#src/lib/rendering/playerView.ts'
 
 const inspectionDistanceSpeed = 0.45
 const inspectionFocusSpeed = 8
+/** how fast holding Space rocks a portrait’s view, as factors of its own pace, alone and with C or Shift held too: a loop every 12 s, 24 s with C and 6 s with Shift */
+const rockSpeeds = {
+  fast: 2,
+  normal: 1,
+  slow: 0.5,
+}
+const rockKeyCodes = new Set(['ShiftLeft', 'ShiftRight', 'Space'])
 
 type Target = {
   body?: RapierRigidBody
@@ -36,7 +43,7 @@ type Session = {
 
 /**
  * Holding V on an orbitable object or a hung portrait orbits the camera around it: the pointer turns around all axes, W/S change the
- * distance and A/D keep circling. Releasing V eases the camera back to the player. Each start or resumption dispatches an
+ * distance and A/D keep circling. Holding Space rocks a portrait’s view (see {@link portraitOrbit}), slower with C and faster with Shift. Releasing V eases the camera back to the player. Each start or resumption dispatches an
  * `inspect` event with the object’s id.
  */
 export default function OrbitViewing() {
@@ -47,6 +54,8 @@ export default function OrbitViewing() {
   const distanceKeys = useRef(new Set<'KeyS' | 'KeyW'>)
   const orbitKeys = useRef(new Set<'KeyA' | 'KeyD'>)
   const precisionPointer = useRef(false)
+  /** Space and Shift, whichever are held, even since before the orbit started */
+  const rockKeys = useRef(new Set<string>)
   const focusAmount = useRef(0)
   const focusPipelineActive = useRef(false)
   const center = useRef(new Vector3)
@@ -93,7 +102,14 @@ export default function OrbitViewing() {
       if (event.code === 'KeyC') {
         precisionPointer.current = true
       }
+      if (rockKeyCodes.has(event.code)) {
+        rockKeys.current.add(event.code)
+      }
       if (session.current && !session.current.orbit.returning) {
+        if (event.code === 'Space') {
+          event.preventDefault()
+          return
+        }
         if (event.code === 'KeyW' || event.code === 'KeyS') {
           event.preventDefault()
           if (!event.repeat) {
@@ -169,6 +185,7 @@ export default function OrbitViewing() {
       if (event.code === 'KeyC') {
         precisionPointer.current = false
       }
+      rockKeys.current.delete(event.code)
       if (event.code === 'KeyW' || event.code === 'KeyS') {
         distanceKeys.current.delete(event.code)
       } else if (event.code === 'KeyA' || event.code === 'KeyD') {
@@ -186,6 +203,7 @@ export default function OrbitViewing() {
     }
     const blur = () => {
       precisionPointer.current = false
+      rockKeys.current.clear()
       release()
     }
     const teleport = () => {
@@ -239,6 +257,7 @@ export default function OrbitViewing() {
       const orbitDirection = Number(orbitKeys.current.has('KeyD')) - Number(orbitKeys.current.has('KeyA'))
       current.orbit.adjustDistance(distanceDirection * inspectionDistanceSpeed * delta)
       current.orbit.addInput(orbitDirection * orbitKeySpeed * pointerSpeed * delta, 0)
+      current.orbit.rock(rockKeys.current.has('Space') ? rockSpeed() : 0)
     } else {
       distanceKeys.current.clear()
       orbitKeys.current.clear()
@@ -261,6 +280,15 @@ export default function OrbitViewing() {
     }
   })
   return null
+  function rockSpeed() {
+    if (precisionPointer.current) {
+      return rockSpeeds.slow
+    }
+    if (rockKeys.current.has('ShiftLeft') || rockKeys.current.has('ShiftRight')) {
+      return rockSpeeds.fast
+    }
+    return rockSpeeds.normal
+  }
 }
 
 /** An orbitable object, or a hung portrait, which orbits from straight in front and frames its name plate when aimed at. */

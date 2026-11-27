@@ -1,3 +1,5 @@
+import type {OrbitSettings} from '../../src/lib/camera/OrbitInspection.ts'
+
 import {describe, expect, test} from 'bun:test'
 
 import {PerspectiveCamera, Vector3} from 'three/webgpu'
@@ -296,5 +298,180 @@ describe('hold-to-orbit camera', () => {
     }
     expect(turned(held)).toBeGreaterThan(0.3)
     expect(camera.position.y).toBeCloseTo(height, 5)
+  })
+  describe('rocking', () => {
+    const rocking = {
+      nod: 0.12,
+      pace: 0.4,
+      sway: 0.54,
+    }
+    function rockingSetup(settings: Partial<OrbitSettings> = {}) {
+      const {camera} = setup()
+      const orbit = new OrbitInspection(camera, center, {
+        radius: 0.85,
+        distance: 3,
+        facing: [0, 0, 1],
+        yawLimit: 1.2,
+        pitchLimit: 0.9,
+        rocking,
+        ...settings,
+      })
+      orbit.settle(center)
+      /** the camera’s yaw and pitch around the center, in radians */
+      const angles = () => {
+        const offset = camera.position.clone().sub(center)
+        return {
+          yaw: Math.atan2(offset.x, offset.z),
+          pitch: Math.asin(offset.y / offset.length()),
+        }
+      }
+      const run = (seconds: number, each?: () => void) => {
+        for (let i = 0; i < Math.round(seconds * 60); i++) {
+          orbit.update(center, 1 / 60)
+          each?.()
+        }
+      }
+      return {
+        camera,
+        orbit,
+        angles,
+        run,
+      }
+    }
+    test('holds still until asked to rock, and an orbit without a rock never rocks', () => {
+      const {orbit, angles, run} = rockingSetup()
+      run(3)
+      expect(angles().yaw).toBeCloseTo(0, 9)
+      const plain = rockingSetup({rocking: undefined})
+      plain.orbit.rock(1)
+      plain.run(3)
+      expect(plain.angles().yaw).toBeCloseTo(0, 9)
+      orbit.rock(1)
+      run(1)
+      expect(angles().yaw).toBeGreaterThan(0.2)
+    })
+    test('sways and nods in a figure of two sways to three nods, a sway every π divided by its pace', () => {
+      const {orbit, angles, run} = rockingSetup()
+      orbit.rock(1)
+      const yaws: Array<number> = []
+      const pitches: Array<number> = []
+      run(Math.PI / rocking.pace, () => {
+        yaws.push(angles().yaw)
+        pitches.push(angles().pitch)
+      })
+      // The camera eases after its target, so the extremes fall a little short of the figure’s.
+      expect(Math.max(...yaws)).toBeGreaterThan(rocking.sway * 0.95)
+      expect(Math.max(...yaws)).toBeLessThanOrEqual(rocking.sway)
+      expect(Math.min(...yaws)).toBeLessThan(-rocking.sway * 0.95)
+      expect(Math.max(...pitches)).toBeGreaterThan(rocking.nod * 0.9)
+      expect(Math.min(...pitches)).toBeLessThan(-rocking.nod * 0.9)
+      const crossings = (values: Array<number>) => values.map(Math.sign).filter(Boolean).filter((value, index, all) => index && value !== all[index - 1]).length
+      expect(crossings(yaws)).toBe(1)
+      expect(crossings(pitches)).toBe(2)
+    })
+    test('goes through its figure as many times faster as its speed, keeping its place when the speed changes', () => {
+      const a = rockingSetup()
+      const b = rockingSetup()
+      a.orbit.rock(1)
+      a.run(2)
+      b.orbit.rock(2)
+      b.run(0.5)
+      b.orbit.rock(0.5)
+      b.run(2)
+      // 1 s at 2× and 1 s at 0.5× in 2.5 s, against 2 s at 1×
+      expect(b.angles().yaw).toBeCloseTo(a.angles().yaw, 2)
+      expect(b.angles().pitch).toBeCloseTo(a.angles().pitch, 2)
+    })
+    test('stops where it rocked to and sets off from there anew', () => {
+      const {orbit, angles, run} = rockingSetup()
+      orbit.rock(1)
+      run(1.5)
+      const target = Math.sin(2 * 1.5 * rocking.pace) * rocking.sway
+      orbit.rock(0)
+      run(3)
+      const stopped = angles()
+      expect(stopped.yaw).toBeCloseTo(target, 3)
+      orbit.rock(1)
+      const yaws: Array<number> = []
+      run(Math.PI / rocking.pace, () => yaws.push(angles().yaw - stopped.yaw))
+      expect(Math.max(...yaws)).toBeGreaterThan(0.3)
+      expect(Math.min(...yaws)).toBeLessThan(-0.3)
+    })
+    test('puts its turn into the pose an input turns from', () => {
+      const {orbit, angles, run} = rockingSetup()
+      orbit.rock(1)
+      run(1.5)
+      const target = Math.sin(2 * 1.5 * rocking.pace) * rocking.sway
+      orbit.addInput(0.1, 0)
+      orbit.rock(0)
+      run(3)
+      expect(angles().yaw).toBeCloseTo(target + 0.1, 3)
+    })
+    test('set off near a limit, moves its figure over to end right at the limit instead of running into it', () => {
+      const {orbit, angles, run} = rockingSetup({
+        yawLimit: 0.6,
+        pitchLimit: 0.2,
+      })
+      orbit.addInput(0.5, 0.15)
+      run(1)
+      orbit.rock(1)
+      const yaws: Array<number> = []
+      const pitches: Array<number> = []
+      run(Math.PI / rocking.pace, () => {
+        yaws.push(angles().yaw)
+        pitches.push(angles().pitch)
+      })
+      // as wide as ever, from the limit on
+      expect(Math.max(...yaws)).toBeLessThanOrEqual(0.6 + 1e-9)
+      expect(Math.max(...yaws)).toBeGreaterThan(0.59)
+      expect(Math.min(...yaws)).toBeLessThan(0.6 - 2 * rocking.sway + 0.01)
+      expect(Math.max(...pitches)).toBeLessThanOrEqual(0.2 + 1e-9)
+      expect(Math.max(...pitches)).toBeGreaterThan(0.19)
+      expect(Math.min(...pitches)).toBeLessThan(0.2 - 2 * rocking.nod + 0.01)
+      // Running into the limit would hold it there for a while.
+      expect(yaws.filter(yaw => yaw > 0.595).length).toBeLessThan(yaws.length / 20)
+    })
+    test('sets off from where it is, without a jump', () => {
+      const {orbit, angles, run} = rockingSetup({yawLimit: 0.6})
+      orbit.addInput(0.6, 0)
+      run(1)
+      const before = angles().yaw
+      orbit.rock(1)
+      run(1 / 60)
+      expect(Math.abs(angles().yaw - before)).toBeLessThan(0.005)
+      run(1)
+      expect(angles().yaw).toBeLessThan(before - 0.05)
+    })
+    test('narrows to the room between limits closer than its width', () => {
+      const {orbit, angles, run} = rockingSetup({yawLimit: 0.3})
+      orbit.rock(1)
+      const yaws: Array<number> = []
+      run(Math.PI / rocking.pace, () => yaws.push(angles().yaw))
+      expect(Math.max(...yaws)).toBeLessThanOrEqual(0.3 + 1e-9)
+      expect(Math.max(...yaws)).toBeGreaterThan(0.29)
+      expect(Math.min(...yaws)).toBeGreaterThanOrEqual(-0.3 - 1e-9)
+      expect(Math.min(...yaws)).toBeLessThan(-0.29)
+    })
+    test('returns to the player exactly, wherever it rocked', () => {
+      const {camera} = setup()
+      const original = camera.position.clone()
+      const rotation = camera.quaternion.clone()
+      const orbit = new OrbitInspection(camera, center, {
+        radius: 0.85,
+        rocking,
+      })
+      orbit.rock(4)
+      for (let i = 0; i < 150; i++) {
+        orbit.update(center, 1 / 60)
+      }
+      orbit.release()
+      let complete = false
+      for (let i = 0; i < 600 && !complete; i++) {
+        complete = orbit.update(center, 1 / 60)
+      }
+      expect(complete).toBe(true)
+      expect(camera.position.toArray()).toEqual(original.toArray())
+      expect(camera.quaternion.toArray()).toEqual(rotation.toArray())
+    })
   })
 })

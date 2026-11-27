@@ -12,7 +12,7 @@ import {arrivalFrame} from '../../src/lib/gallery/actions.ts'
 import {wallFace} from '../../src/lib/gallery/architectureDimensions.ts'
 import {hangDefaultWorks} from '../../src/lib/gallery/defaultPortraits.ts'
 import {imageSize} from '../../src/lib/gallery/ImageImporter.ts'
-import portraitOrbit from '../../src/lib/gallery/portraitOrbit.ts'
+import portraitOrbit, {portraitRocking} from '../../src/lib/gallery/portraitOrbit.ts'
 import {portraitRatios, slotAreas, slotFrame} from '../../src/lib/placement/portraitSlots.ts'
 import {hangingOffset} from '../../src/lib/placement/wallGeometry.ts'
 import {graphicsProfiles} from '../../src/lib/rendering/graphicsMode.ts'
@@ -124,8 +124,11 @@ describe('frames', () => {
     const {center, orbit} = portraitOrbit(portrait, false, 1)
     expect(orbit.distance).toBeCloseTo(frames.crate.viewingDistance(1.2, 0.8, 1, inspectionFov), 9)
     expect(center[2]).toBeCloseTo(frames.crate.imageDepth, 9)
-    // with its name plate, from further back
-    expect(portraitOrbit(portrait, true, 1).orbit.distance).toBeGreaterThan(orbit.distance!)
+    // with its name plate, from further back, both rocking alike
+    const label = portraitOrbit(portrait, true, 1).orbit
+    expect(label.distance).toBeGreaterThan(orbit.distance!)
+    expect(orbit.rocking).toBe(portraitRocking)
+    expect(label.rocking).toBe(portraitRocking)
   })
   test('?frame forces one of them or nothing', () => {
     const id = frameIds.at(-1)!
