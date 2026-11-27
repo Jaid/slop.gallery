@@ -27,6 +27,7 @@ export default class SpookOrb extends PromptOrb {
     ['occult', 'séance-like'],
     'possessed',
   ]
+  override readonly canvasMaterial = 'prism-sweep'
   readonly change = 'add something supernatural that makes it'
   readonly color = hsl.integer(156, 89, 75)
   override readonly effect = 'ghosts'
