@@ -48,7 +48,7 @@ export default function snapFrames() {
     input: {
       frame,
       size,
-      image: 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/avatar.webp',
+      image: 'https://github.com/Jaid/slop.gallery/raw/HEAD/assets/avatar.jxl',
       target: {
         wall_id: 'studio-north',
         position: {
