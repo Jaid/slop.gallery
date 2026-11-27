@@ -3,6 +3,7 @@ import type {AudioProgress, NarrationState, NarrationTiming} from 'use-narrator/
 import {Fragment, useEffect, useRef, useState} from 'react'
 import {estimateTiming, narrationCursor, narrationWords} from 'use-narrator/core'
 
+import NarrationIndicator from '#component/NarrationIndicator'
 import {narrator} from '#src/lib/audio/narration.ts'
 import {letterStarts, subtitleGroupAt, subtitleGroups, subtitleWordState} from '#src/lib/audio/subtitles.ts'
 
@@ -12,16 +13,16 @@ import css from './style.module.sass'
 const lead = 0.2
 
 type Props = {
-  narration: Pick<NarrationState, 'instanceId' | 'status' | 'timing'> & {text: string}
+  narration: Pick<NarrationState, 'instanceId' | 'source' | 'status' | 'statusEndsAt' | 'timing'> & {text: string}
   /** where playback stands, read every frame; the app narrator’s progress of `narration` by default, a scrubbable source in previews */
   progress?: () => AudioProgress | undefined
 }
 
 /**
- * The narration’s text, one sentence (or a run of short ones) at a time. Spoken words turn yellow letter by letter, at the letters’ own times where the timing has them and spread over their word’s duration otherwise.
+ * The narration’s text, one sentence (or a run of short ones) at a time, next to its indicator. Spoken words turn yellow letter by letter, at the letters’ own times where the timing has them and spread over their word’s duration otherwise.
  * Reads the playback position every frame and paints the words directly, so React only renders when the sentence changes.
  */
-export default function NarrationSubtitles({narration: {instanceId, status, text, timing}, progress: readProgress}: Props) {
+export default function NarrationSubtitles({narration: {instanceId, source, status, statusEndsAt, text, timing}, progress: readProgress}: Props) {
   const words = narrationWords(text)
   const groups = subtitleGroups(text, words)
   const ended = status === 'after'
@@ -113,7 +114,17 @@ export default function NarrationSubtitles({narration: {instanceId, status, text
     </p>
   }
   return <section className={css.container} aria-label='Subtitles' data-ended={ended} data-testid='narration-subtitles' ref={container}>
-    {/* One keyed list, so the sentence that starts leaving keeps its element and the colors the paint loop gave its words, instead of coming back white for a frame. */}
-    {(leaving !== undefined && leaving !== shown ? [leaving, shown] : [shown]).map(index => renderGroup(index, index === shown ? 'current' : 'leaving'))}
+    <NarrationIndicator instanceId={instanceId} source={source} status={status} statusEndsAt={statusEndsAt} />
+    <div className={css.lines}>
+      {/* Hidden copies of every sentence keep the lines as wide as the widest for the whole narration, so the indicator next to them stays where it is from sentence to sentence. */}
+      {groups.map((group, index) => <p key={index} className={css.group} aria-hidden='true' data-group='sizer'>
+        {words.slice(group.first, group.last).map((word, order) => <Fragment key={word.from}>
+          {order ? ' ' : null}
+          <span className={css.word}>{text.slice(word.from, word.to)}</span>
+        </Fragment>)}
+      </p>)}
+      {/* One keyed list, so the sentence that starts leaving keeps its element and the colors the paint loop gave its words, instead of coming back white for a frame. */}
+      {(leaving !== undefined && leaving !== shown ? [leaving, shown] : [shown]).map(index => renderGroup(index, index === shown ? 'current' : 'leaving'))}
+    </div>
   </section>
 }

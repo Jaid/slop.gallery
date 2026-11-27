@@ -27,7 +27,7 @@ export default function Hud() {
     ...foreground,
     text: foreground.text,
   } : undefined
-  // The subtitles already stand for their own narration, so only the others keep an indicator box.
+  // The subtitles bring their own narration’s indicator, so the stack keeps the others.
   const indicated = subtitled ? narrations.filter(narration => narration.instanceId !== subtitled.instanceId) : narrations
   const showCrosshair = useSyncExternalStore(crosshair.subscribe, crosshair.getSnapshot, crosshair.getSnapshot)
   const artwork = useGallery(({activeLabel, held, portraits}) => (held ? undefined : portraits.find(p => p.id === activeLabel && p.hung && !p.reserved)))

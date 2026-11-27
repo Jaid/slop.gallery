@@ -117,6 +117,7 @@ test('subtitles render the current group’s words letter by letter, with or wit
   const text = 'Hi there. A ruler of impeccable breeding and absolutely no qualifications at all.'
   const narration = {
     instanceId: 'a',
+    source: 'audio' as const,
     status: 'before' as const,
     text,
   }
@@ -124,11 +125,27 @@ test('subtitles render the current group’s words letter by letter, with or wit
   expect(plain).toContain('data-word="1"')
   expect(plain).toContain('data-letter="3">t</span>')
   expect(plain).not.toContain('data-fill')
-  expect(plain).not.toContain('ruler')
+  // Later sentences are only there as hidden sizing copies, without words to paint.
+  expect(plain).not.toContain('data-word="2"')
+  expect(plain).toContain('ruler')
+  expect(plain).not.toContain('data-letter="10"')
+  expect(plain.match(/data-group="sizer"/g)).toHaveLength(2)
   const characters = Array.from(text, (_, index) => [index / 10, index / 10 + 0.05] as const)
   const lettered = renderToStaticMarkup(createElement(NarrationSubtitles, {narration: {
     ...narration,
     timing: timingFromCharacters(text, characters),
   }}))
   expect(lettered).toBe(plain)
+})
+test('subtitles show their narration’s indicator next to the text', () => {
+  const html = renderToStaticMarkup(createElement(NarrationSubtitles, {narration: {
+    instanceId: 'a',
+    source: 'audio',
+    status: 'playing',
+    text: 'Hi there.',
+  }}))
+  expect(html).toContain('aria-label="Audio guide"')
+  expect(html).toContain('data-testid="narrator-avatar"')
+  expect(html).toContain('data-testid="audio-bars"')
+  expect(html.indexOf('data-testid="narrator-avatar"')).toBeLessThan(html.indexOf('data-word="0"'))
 })
