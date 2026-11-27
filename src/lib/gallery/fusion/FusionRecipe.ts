@@ -18,7 +18,7 @@ export type IngredientContribution = {
   instruction: string
   kind: 'instruction'
 } | {
-  /** the canvas material the result’s image is painted or printed on wherever it arrives; it gives an image model nothing to do */
+  /** the canvas material the result’s image is painted or printed on wherever it arrives, an item’s taking precedence over a portrait’s; it gives an image model nothing to do */
   canvasMaterial: CanvasMaterialId
   kind: 'canvasMaterial'
 } | {
@@ -61,8 +61,8 @@ export const maximumIngredients = 4
 /** what the image model is asked to do when it gets several images to make one of, ahead of the instructions */
 export const fusionInstruction = 'Please merge the provided images into a single result. It’s up to you to decide how to merge them. For example, if one image is a character and another one is a scene, you can place the character in the scene. If several images show a character, you could come up with a cool fusion of them or you could insert one character into another’s scene or you could show them together – whatever makes sense to you. Feel free to be creative and artistic and come up with a result that is funny or interesting or clever or mind-blowing'
 
-/** A portrait as an ingredient, which contributes its image. */
-export function portraitIngredient({source, title}: Pick<Portrait, 'source' | 'title'>): FusionIngredient {
+/** A portrait as an ingredient, which contributes its image and its canvas material, if it has one. */
+export function portraitIngredient({canvasMaterial, source, title}: Pick<Portrait, 'canvasMaterial' | 'source' | 'title'>): FusionIngredient {
   return {
     kind: 'portrait',
     ...title === undefined ? {} : {title},
@@ -71,6 +71,12 @@ export function portraitIngredient({source, title}: Pick<Portrait, 'source' | 't
         kind: 'image',
         image: source,
       },
+      ...canvasMaterial ? [
+        {
+          kind: 'canvasMaterial' as const,
+          canvasMaterial,
+        },
+      ] : [],
     ],
   }
 }
@@ -101,9 +107,10 @@ export default class FusionRecipe {
     this.ingredients = ingredients
   }
 
-  /** the canvas material contributed first, which the result’s image is on wherever it arrives; without one, it shows flat, unless an imported work keeps its own */
+  /** the canvas material the result’s image is on wherever it arrives: the first one an item contributed, like an orb’s, otherwise the first one a portrait brought along, the hung portrait’s before the others’; without any, it shows flat */
   get canvasMaterial() {
-    return this.contributionsOf('canvasMaterial').at(0)?.canvasMaterial
+    const contributed = (kind: FusionIngredient['kind']) => this.contributionsOf('canvasMaterial', kind).at(0)?.canvasMaterial
+    return contributed('item') ?? contributed('portrait')
   }
 
   /** the ids of the party effects the portal shows, each once, in the order of their ingredients */
@@ -195,8 +202,8 @@ export default class FusionRecipe {
     return [...images > 1 ? [fusionInstruction] : [], ...this.instructions].join('\n\n')
   }
 
-  /** every contribution of the kind, in the order of the ingredients */
-  private contributionsOf<Kind extends IngredientContribution['kind']>(kind: Kind) {
-    return this.ingredients.flatMap(ingredient => ingredient.contributions.filter((contribution): contribution is Extract<IngredientContribution, {kind: Kind}> => contribution.kind === kind))
+  /** every contribution of the kind, in the order of the ingredients, only those of portraits or of items if `from` says so */
+  private contributionsOf<Kind extends IngredientContribution['kind']>(kind: Kind, from?: FusionIngredient['kind']) {
+    return this.ingredients.filter(ingredient => !from || ingredient.kind === from).flatMap(ingredient => ingredient.contributions.filter((contribution): contribution is Extract<IngredientContribution, {kind: Kind}> => contribution.kind === kind))
   }
 }

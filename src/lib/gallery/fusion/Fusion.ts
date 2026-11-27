@@ -41,7 +41,7 @@ export type FusionSpec = {
   latches: ReadonlyArray<IngredientLatch>
   partner: FusionPartner
   /** the hung portrait, the fusion’s first ingredient, which the portal opens in front of and the result replaces */
-  work: Pick<Portrait, 'canvasMaterial' | 'frame' | 'height' | 'id' | 'imported' | 'position' | 'rotation' | 'width'>
+  work: Pick<Portrait, 'frame' | 'height' | 'id' | 'position' | 'rotation' | 'width'>
 }
 export type FusionOutcome = {
   /** seconds into the fusion that the climax or the fizzle starts, or that the fusion was aborted */

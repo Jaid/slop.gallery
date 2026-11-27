@@ -511,13 +511,12 @@ export default class GalleryDirector {
 
   /**
    * Opens the portal of a fusion of `recipe` and decides the frame its result will wear and the canvas material its image will be on right away, so the portal has them ready by the end.
-   * The frame is the one an ingredient contributed, otherwise that of the room the portal releases the result into. The canvas material is the page’s `?new_canvas_material`, otherwise the one an ingredient contributed, like the Frost Orb’s diamond dust, otherwise an imported work’s own, which carries over, unlike the native portraits’ `?canvas_material`.
+   * The frame is the one an ingredient contributed, otherwise that of the room the portal releases the result into. The canvas material is the page’s `?new_canvas_material`, otherwise the recipe’s: an item’s, like the Frost Orb’s diamond dust, otherwise a portrait’s, the hung one’s first.
    */
   private startFusion(spec: FusionSpec, recipe: FusionRecipe) {
     const fusion = this.openFusion(spec)
-    const {work} = spec
-    fusion.resultFrame = recipe.frame ?? arrivalFrame(fusion.launch().position, work.position, work.id)
-    fusion.resultCanvasMaterial = readCanvasMaterialParameters().new_canvas_material ?? recipe.canvasMaterial ?? (work.imported ? work.canvasMaterial : undefined)
+    fusion.resultFrame = recipe.frame ?? arrivalFrame(fusion.launch().position, spec.work.position, spec.work.id)
+    fusion.resultCanvasMaterial = readCanvasMaterialParameters().new_canvas_material ?? recipe.canvasMaterial
     this.fusions.add(fusion)
     if (telemetry) {
       const {partner} = spec

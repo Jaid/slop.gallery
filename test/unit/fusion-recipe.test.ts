@@ -19,6 +19,16 @@ const hung = portraitIngredient({
 })
 /** an item with the contributions and nothing else */
 const item = (title: string, ...contributions: Array<IngredientContribution>) => itemIngredient(title, {contributions})
+/** a portrait with its canvas material, if any */
+const portrait = (canvasMaterial?: CanvasMaterialId) => portraitIngredient({
+  source: '/work.jxl',
+  ...canvasMaterial ? {canvasMaterial} : {},
+})
+/** the canvas material of the recipe of the ingredients */
+const material = (...ingredients: Array<FusionIngredient>) => {
+  const recipe = new FusionRecipe(ingredients)
+  return recipe.canvasMaterial
+}
 describe('fusion recipe', () => {
   test('has 2 to 4 ingredients, the first of them a portrait', () => {
     expect([minimumIngredients, maximumIngredients]).toEqual([2, 4])
@@ -171,6 +181,24 @@ describe('fusion recipe', () => {
     expect(alone.canvasMaterial).toBe('wax')
     expect(alone.unchanged).toBe(true)
     expect(alone.looks).toEqual([image])
+  })
+  test('takes the canvas material of the first portrait that has one, the hung one first, below any an item contributed', () => {
+    expect(portrait('linen').contributions).toContainEqual({
+      kind: 'canvasMaterial',
+      canvasMaterial: 'linen',
+    })
+    expect(material(portrait('linen'), portrait('wax'))).toBe('linen')
+    expect(material(portrait(), portrait('wax'))).toBe('wax')
+    expect(material(portrait(), portrait())).toBeUndefined()
+    const finished = item('orb', {
+      kind: 'canvasMaterial',
+      canvasMaterial: 'diamond-dust',
+    })
+    expect(material(portrait('linen'), portrait('wax'), finished)).toBe('diamond-dust')
+    expect(material(portrait('linen'), item('plain'))).toBe('linen')
+    // A material gives an image model nothing to do.
+    const plain = new FusionRecipe([portrait('linen'), item('plain')])
+    expect(plain.unchanged).toBe(true)
   })
   // Any prompt orb, even one without a frame or an effect, which none of today’s lacks.
   for (const orb of promptOrbs as ReadonlyArray<PromptOrb>) {

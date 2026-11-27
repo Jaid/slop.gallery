@@ -234,7 +234,8 @@ test('native works, imports and fusion results take independent canvas material 
       await director.fuse(hung.id, imported.id)
       const [result] = useGallery.getState().portraits
       expect(result.source).toBe(b)
-      expect(result.canvasMaterial).toBe(output)
+      // Without the override, the hung native work passes its own on.
+      expect(result.canvasMaterial).toBe(output ?? native)
     }
   } finally {
     director.dispose()
@@ -685,7 +686,7 @@ test('the result wears the frame a thrown ingredient contributed wherever it arr
     }
   }
 })
-test('the result is on the canvas material a thrown ingredient contributed, decided as the portal opens, unless ?new_canvas_material says otherwise, and keeps an imported work’s own without one', async () => {
+test('the result is on the canvas material a thrown item contributed, decided as the portal opens, unless ?new_canvas_material says otherwise, and keeps the hung work’s own without one, native or imported', async () => {
   const location = Object.getOwnPropertyDescriptor(globalThis, 'location')
   const frosty = finishing(testOrb, 'diamond-dust')
   const cases: Array<[string, ThrownItem, Partial<Portrait>, CanvasMaterialId | undefined]> = [
@@ -699,7 +700,9 @@ test('the result is on the canvas material a thrown ingredient contributed, deci
       imported: true,
       canvasMaterial: 'linen',
     }, 'linen'],
-    ['canvas_material=linen', testOrb, {canvasMaterial: 'linen'}, undefined],
+    ['canvas_material=linen', testOrb, {canvasMaterial: 'linen'}, 'linen'],
+    ['new_canvas_material=wax', testOrb, {canvasMaterial: 'linen'}, 'wax'],
+    ['', testOrb, {}, undefined],
     // Nothing to fuse, but the finish still goes on.
     ['', finishing(clearOrb, 'diamond-dust'), {}, 'diamond-dust'],
   ]

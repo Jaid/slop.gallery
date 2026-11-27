@@ -14,7 +14,7 @@ import {pickEffect} from '#src/party_effects/lib/effectChoice.ts'
  * Its prop is `prop-orb-<id>`, and it lives in a folder of its own.
  */
 export default abstract class Orb {
-  /** the canvas material the orb contributes to a fusion, which its result’s image is painted or printed on wherever it arrives; without one, the result shows flat, unless it is an imported work keeping its own */
+  /** the canvas material the orb contributes to a fusion, which its result’s image is painted or printed on wherever it arrives; it takes precedence over the portraits’ own; without one, the result takes that of the first of them that has one */
   readonly canvasMaterial?: CanvasMaterialId
   /** the party effect the orb contributes to the portal of its fusion and lets burst out of the alchemy machine’s cannon, or several, of which every game picks one, if any */
   readonly effect?: PartyEffectChoice
