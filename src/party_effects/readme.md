@@ -1,6 +1,6 @@
 # Party effects
 
-A party effect (`base/PartyEffect.ts`) is a special effect that bursts out of a point in the world: sprites the GPU animates by the seconds since then, in one instanced draw, and a sound that plays once at that moment. Every party effect lives in a folder of its own, `src/party_effects/<id>`, with its sprites, the flights they follow and its sound, and `index.ts` holds one of each by its id: `bats`, `blood`, `eyes`, `ghosts`, `smears`, `strokes` and `tendrils`.
+A party effect (`base/PartyEffect.ts`) is a special effect that bursts out of a point in the world: sprites the GPU animates by the seconds since then, in one instanced draw, and a sound that plays once at that moment. Every party effect lives in a folder of its own, `src/party_effects/<id>`, with its sprites, the flights they follow and its sound, and `index.ts` holds one of each by its id: `bats`, `blood`, `eyes`, `flurry`, `ghosts`, `smears`, `strokes` and `tendrils`.
 
 A party effect belongs to nothing. It plays at a `PartySite` (`lib/partySite.ts`): the point it bursts out of, its origin, the level direction it faces and the floor’s height under it. Whoever shows one stages a `PartyShow` (`lib/PartyShow.ts`) of it at a site with `effect.stage(site)`, ahead of time where it can, so its pipelines compile while it still draws nothing, adds the show’s `root` to the scene and brings it along frame by frame with `show.update(since, audio)`, the seconds since it burst out. Three things do:
 
