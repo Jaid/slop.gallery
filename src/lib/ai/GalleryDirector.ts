@@ -7,7 +7,7 @@ import type {OpenRouterAccess} from './openRouterAccess.ts'
 import type {AiSettings} from './settings.ts'
 import type {Span} from 'victoria-browser-client'
 
-import {omit, upperFirst} from 'es-toolkit'
+import {omit} from 'es-toolkit'
 
 import readCanvasMaterialParameters from '#src/canvas_materials/lib/canvasMaterialParameters.ts'
 import {partyEffects} from '#src/party_effects/index.ts'
@@ -22,7 +22,6 @@ import {downloadedResults, includesResult, postedResults, webhookEndpoint, webho
 import {encodeGeneratedImage, imageSize} from '../gallery/ImageImporter.ts'
 import {validateImage} from '../gallery/imagePolicy.ts'
 import {useGallery} from '../gallery/store.ts'
-import workName from '../gallery/workName.ts'
 import FusionTrace from '../telemetry/FusionTrace.ts'
 import {telemetry} from '../telemetry/index.ts'
 import {modelImageType, toWebp} from './modelImage.ts'
@@ -443,7 +442,6 @@ export default class GalleryDirector {
       ingredients: recipe.ingredients.map(ingredient => ingredient.title ?? ''),
     }).catch((error: unknown) => console.warn('The fusion result could not be shared.', error))
     if (!fused) {
-      notify(`${upperFirst(workName(a))} came back as it went in.`)
       return
     }
     void this.flavor(result).catch(() => notify('The label could not be prepared.'))

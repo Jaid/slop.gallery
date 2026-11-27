@@ -905,7 +905,7 @@ for (const ai of [false, true]) {
       // The portal shows the hung portrait alone, in its own colors.
       expect(fusion.spec.images).toEqual([a])
       expect(fusion.spec.color).toBeUndefined()
-      expect(useGallery.getState().notice).toContain('contributes nothing to fuse')
+      expect(useGallery.getState().notice).toBe('')
       await job
       expect(director.recipe).toBeUndefined()
       // The fusion still plays out in full.
@@ -928,7 +928,7 @@ for (const ai of [false, true]) {
       expect(portrait.frame).toBe(arrivalFrame(portrait.position, before.position, 'a', environmentSeed))
       expect(portrait.frame).not.toBe('lantern')
       expect(useGallery.getState().consumed).toEqual(['prop-orb-clear'])
-      expect(useGallery.getState().notice).toContain('came back as it went in')
+      expect(useGallery.getState().notice).toBe('')
     } finally {
       director.dispose()
     }
