@@ -257,8 +257,8 @@ export default class GalleryDirector {
     }
     if (recipe.unchanged) {
       notify(`The ${item.title} contributes nothing to fuse ${workName(a)} with. It will come back as it went in.`)
-    } else {
-      notify(this.usingAi ? `The alchemy is underway. ${upperFirst(workName(a))} stays safe until it succeeds.` : `A local ${recipe.handmade} is taking shape. No AI and no upload.`)
+    } else if (!this.usingAi) {
+      notify(`A local ${recipe.handmade} is taking shape. No AI and no upload.`)
     }
     try {
       await this.brew(a, fusion, recipe, current, {
