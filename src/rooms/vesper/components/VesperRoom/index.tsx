@@ -14,7 +14,7 @@ const room = slopGallery.room('vesper')
 /** what stands on the orb pedestals in this game’s environment, in their order */
 const exhibits = vesperOrbs(environmentSeed)
 
-/** Opens up into a coved ceiling crowned by twin glazed lanterns instead of a flat ceiling, so the sun reaches inside, over four orbs on column pedestals in two rows in its north half. */
+/** Opens up into a coved ceiling crowned by twin glazed lanterns instead of a flat ceiling, so the sun reaches inside, over five orbs on column pedestals in a circle in its north half. */
 export default function VesperRoom({glass, stone, wood}: Omit<Parameters<typeof RoomFloor>[0], 'room'>) {
   return <group name='vesper-room'>
     <group position={[room.center[0], 0, room.center[1]]}>

@@ -1,36 +1,33 @@
 import {expect, test} from 'bun:test'
 
 import {columnPedestalRadius} from '../../src/lib/gallery/ColumnPedestalGeometry.ts'
-import {floorTile} from '../../src/lib/gallery/floors.ts'
-import {vesper, vesperOrbPedestals} from '../../src/lib/gallery/vesper.ts'
+import {vesper, vesperOrbCircle, vesperOrbPedestals} from '../../src/lib/gallery/vesper.ts'
 import {vesperOrbs} from '../../src/lib/gallery/vesperOrbs.ts'
 import {randomOrbs} from '../../src/orbs/index.ts'
 import {floorHeight, roomAt} from './fixtures/gallery.ts'
 
-test('the Vesper stands four orbs on column pedestals in two northern rows of two, centered on floor tiles and clear of the walls and each other', () => {
-  const rows = Map.groupBy(vesperOrbPedestals, ({position}) => position[2])
-  expect(rows.size).toBe(2)
-  const [front, back] = rows.values().map(row => row.map(({position}) => position[0]).toSorted((a, b) => a - b)).toArray()
-  expect(front).toHaveLength(2)
-  expect(back).toEqual(front)
+test('the Vesper stands five orbs on column pedestals evenly round a circle in its north half, clockwise from the north, clear of the walls and each other', () => {
+  expect(vesperOrbPedestals).toHaveLength(5)
   const [centerX, centerZ] = vesper.center
-  const middleX = vesperOrbPedestals.reduce((sum, {position: [x]}) => sum + x, 0) / vesperOrbPedestals.length
-  const middleZ = vesperOrbPedestals.reduce((sum, {position: [, , z]}) => sum + z, 0) / vesperOrbPedestals.length
-  expect(middleX).toBeCloseTo(centerX, 9)
-  expect(Math.max(...rows.keys())).toBeLessThan(centerZ)
+  const {center: [middleX, middleZ], radius} = vesperOrbCircle
+  expect(middleX).toBe(centerX)
+  // Even the southernmost pedestal stays in the room’s north half.
+  expect(Math.max(...vesperOrbPedestals.map(({position}) => position[2]))).toBeLessThan(centerZ)
   for (const [index, {position, rotation}] of vesperOrbPedestals.entries()) {
     const [x, y, z] = position
     expect(roomAt([x, 1.7, z])).toBe('vesper')
     expect(y).toBe(floorHeight([x, 1.7, z]))
-    expect((x - centerX + vesper.size[0] / 2) % floorTile).toBeCloseTo(floorTile / 2, 9)
-    expect((z - centerZ + vesper.size[1] / 2) % floorTile).toBeCloseTo(floorTile / 2, 9)
+    expect(Math.hypot(x - middleX, z - middleZ)).toBeCloseTo(radius, 9)
+    // a fifth of a turn clockwise past the last one, seen from above with north at the top
+    const turn = (Math.atan2(x - middleX, middleZ - z) + Math.PI * 2) % (Math.PI * 2)
+    expect(turn).toBeCloseTo(index / vesperOrbPedestals.length * Math.PI * 2, 9)
     // clearance for walking around the pedestal
-    expect(vesper.size[0] / 2 - Math.abs(x - centerX) - columnPedestalRadius.foot).toBeGreaterThan(3)
+    expect(vesper.size[0] / 2 - Math.abs(x - centerX) - columnPedestalRadius.foot).toBeGreaterThan(2.5)
     expect(vesper.size[1] / 2 - Math.abs(z - centerZ) - columnPedestalRadius.foot).toBeGreaterThan(3)
-    // The holder’s front foot faces out from the rows’ middle.
-    expect(Math.sin(rotation) * (x - middleX) + Math.cos(rotation) * (z - middleZ)).toBeCloseTo(Math.hypot(x - middleX, z - middleZ), 9)
+    // The holder’s front foot faces out from the circle’s middle.
+    expect(Math.sin(rotation) * (x - middleX) + Math.cos(rotation) * (z - middleZ)).toBeCloseTo(radius, 9)
     for (const {position: [otherX, , otherZ]} of vesperOrbPedestals.slice(index + 1)) {
-      // Allow a visitor 60 cm wide to pass without brushing either column.
+      // Allow a visitor 60 cm wide to pass without brushing either column.
       expect(Math.hypot(otherX - x, otherZ - z) - columnPedestalRadius.foot * 2).toBeGreaterThan(1.2)
     }
   }
@@ -62,4 +59,10 @@ test('each pass over the orb pool shuffles without replacement and each pedestal
 })
 test('in the default environment, the pedestals stand the random orbs in their order instead of rolling them', () => {
   expect(vesperOrbs(0).map(({orb}) => orb)).toEqual(vesperOrbPedestals.map((_, index) => randomOrbs[index % randomOrbs.length]))
+})
+test('the random orbs are one for every pedestal, so the circle stands every kind once', () => {
+  expect(randomOrbs).toHaveLength(vesperOrbPedestals.length)
+  for (let seed = 0; seed <= 20; seed++) {
+    expect(new Set(vesperOrbs(seed).map(({orb}) => orb))).toEqual(new Set(randomOrbs))
+  }
 })

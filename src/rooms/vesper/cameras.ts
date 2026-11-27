@@ -20,16 +20,16 @@ export default {
     ratio: 16 / 9,
   },
   orbs: {
-    position: [-3.979, 2.845, 0],
+    position: [-4.5, 3.2, 2],
     aim: {
-      yaw: -0.7443,
-      pitch: -0.3808,
+      yaw: -0.57,
+      pitch: -0.35,
     },
     fov: 30,
     ratio: 16 / 9,
   },
   orb: {
-    position: [0.112, 1.901, -2.369],
+    position: [0.9, 1.9, -1.9],
     aim: {
       yaw: -0.9536,
       pitch: -0.3636,
