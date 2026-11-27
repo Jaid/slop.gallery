@@ -10,6 +10,8 @@ export const rollingResistance = {
 }
 /** how upright what holds a ball has to be to bear it, as the up part of the line from where it touches to its middle */
 const bearing = 0.3
+/** how far a ball may be off what bears it and still rest on it, in meters: Rapier keeps contacts a little ahead of touching, and farther ahead of anything fast */
+const reach = 0.005
 
 type Vector = {
   x: number
@@ -71,25 +73,25 @@ export function resistRolling(world: World, body: RigidBody, delta: number) {
 /** Where the ball of `body` rests on something, the line from there to its middle, of unit length, or none while nothing bears it, like in flight or against a wall. */
 function support(world: World, body: RigidBody) {
   const ball = body.collider(0)
-  const center = body.translation()
   let best: Vector | undefined
   world.contactPairsWith(ball, other => {
-    world.contactPair(ball, other, manifold => {
-      for (let i = 0; i < manifold.numSolverContacts(); i++) {
-        const point = manifold.solverContactPoint(i)
-        if (!point) {
-          continue
-        }
-        const x = center.x - point.x
-        const y = center.y - point.y
-        const z = center.z - point.z
-        const length = Math.hypot(x, y, z)
-        if (length > 1e-6 && y / length > bearing && (!best || y / length > best.y)) {
-          best = {
-            x: x / length,
-            y: y / length,
-            z: z / length,
-          }
+    world.contactPair(ball, other, (manifold, flipped) => {
+      // Not the solver’s contacts: a ball rolling over a mesh, like a floor’s, hovers a hair over it for long stretches, where the solver has nothing to do, so it has none.
+      let touching = false
+      for (let i = 0; i < manifold.numContacts(); i++) {
+        touching ||= manifold.contactDist(i) < reach
+      }
+      if (!touching) {
+        return
+      }
+      // The manifold’s normal points from its first collider to its second, which the ball is if it is flipped.
+      const {x, y, z} = manifold.normal()
+      const toward = flipped ? 1 : -1
+      if (y * toward > bearing && (!best || y * toward > best.y)) {
+        best = {
+          x: x * toward,
+          y: y * toward,
+          z: z * toward,
         }
       }
     })
