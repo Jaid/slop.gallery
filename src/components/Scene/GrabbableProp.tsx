@@ -11,7 +11,7 @@ import type {ReactNode} from 'react'
 import type {Group, Object3D} from 'three/webgpu'
 
 import {useFrame} from '@react-three/fiber'
-import {RigidBody, useRapier} from '@react-three/rapier'
+import {RigidBody, useAfterPhysicsStep, useRapier} from '@react-three/rapier'
 import Branch from 'branch-component'
 import {useEffect, useLayoutEffect, useRef} from 'react'
 import {Box3, Vector3} from 'three/webgpu'
@@ -22,6 +22,7 @@ import {handBack, settle} from '#src/lib/gallery/fusion/handBack.ts'
 import {impactOf} from '#src/lib/gallery/fusion/impact/strike.ts'
 import {registerOrbitable} from '#src/lib/gallery/orbitables.ts'
 import GrabbableBody from '#src/lib/physics/GrabbableBody.ts'
+import {resistRolling} from '#src/lib/physics/rollingResistance.ts'
 import {bodyThrow, clearBodyThrow} from '#src/lib/physics/ThrowState.ts'
 import {snapshotObject} from '#src/lib/rendering/studio/StudioSnapshotRenderer.ts'
 import {telemetry} from '#src/lib/telemetry/index.ts'
@@ -365,6 +366,12 @@ function PresentProp({id, title, consumable, ingredient, mood, orb, orbit, child
   }, [striker])
   useFrame(() => {
     controller.current?.recover()
+  })
+  // A ball comes to rest on what bears it, which Rapier alone never lets it.
+  useAfterPhysicsStep(physicsWorld => {
+    if (rolls && body.current) {
+      resistRolling(physicsWorld, body.current, physicsWorld.timestep)
+    }
   })
   // Placed right before the frame is drawn, once the camera has moved for it, so the prop never trails it by a frame: very near, low in the middle of the view. It keeps the turn it had when picked up, which is its body’s and so its holder’s.
   // It is shown where letting go would put it, kept out of walls, pedestals and floors the way the hand would be, so it never reaches into them and leaves the hand right where it is seen.
