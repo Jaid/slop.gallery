@@ -145,7 +145,7 @@ test('subtitles lead with the narrator’s tag, spectrum included only for recor
   const tag = html.indexOf('data-testid="narrator-tag"')
   expect(tag).toBeGreaterThan(-1)
   expect(tag).toBeLessThan(html.indexOf('data-word="0"'))
-  expect(html).toContain(`${narratorName}:`)
+  expect(html).toContain(`>${narratorName}</span>`)
   expect(html).toContain('data-testid="narrator-avatar"')
   expect(html).toContain('data-testid="audio-bars"')
   expect(html).not.toContain('aria-label="Audio guide"')
