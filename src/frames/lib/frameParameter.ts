@@ -2,7 +2,7 @@ import optis from 'optis'
 import readPermalink from 'read-permalink'
 
 /** the ids of every frame there is, the default first; `index.ts` holds a frame for each, which lives in the folder of its id */
-export const frameIds = ['classic', 'abyss', 'acrylic', 'adam', 'auricular', 'barbizon', 'bleeding', 'brushes', 'burl', 'butcher', 'canvas', 'casing', 'charred', 'checker', 'coffer', 'coffin', 'containment', 'crate', 'deco', 'dichroic', 'empire', 'evidence', 'flesh', 'float', 'florentine', 'gilding', 'glory', 'impasto', 'impressionist', 'infested', 'kumiko', 'lantern', 'leather', 'louis', 'maelstrom', 'marbled', 'maw', 'meander', 'meteorite', 'mission', 'oak', 'oklad', 'orbit', 'ossuary', 'palette', 'perspective', 'regolith', 'rift', 'ripple', 'rocaille', 'seance', 'sevres', 'sgraffito', 'slabs', 'strapwork', 'tramp', 'travertine', 'twig', 'velvet', 'vitrine', 'whistler'] as const
+export const frameIds = ['classic', 'abyss', 'acrylic', 'adam', 'auricular', 'barbizon', 'bleeding', 'brushes', 'burl', 'butcher', 'canvas', 'casing', 'charred', 'checker', 'coffer', 'coffin', 'containment', 'crate', 'deco', 'dichroic', 'empire', 'evidence', 'flesh', 'float', 'florentine', 'gilding', 'glacier', 'glory', 'impasto', 'impressionist', 'infested', 'kumiko', 'lantern', 'leather', 'louis', 'maelstrom', 'marbled', 'maw', 'meander', 'meteorite', 'mission', 'oak', 'oklad', 'orbit', 'ossuary', 'palette', 'perspective', 'regolith', 'rift', 'ripple', 'rocaille', 'seance', 'sevres', 'sgraffito', 'slabs', 'strapwork', 'tramp', 'travertine', 'twig', 'velvet', 'vitrine', 'whistler'] as const
 /** the id of one of the frames */
 export type PortraitFrameId = typeof frameIds[number]
 
