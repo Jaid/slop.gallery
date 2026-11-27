@@ -10,4 +10,4 @@ To add an orb, give it a folder with its class `<Id>Orb.ts`, its glass material 
 
 ## Frost Orb
 
-The Frost Orb holds a snow globe, casts Blizzard and asks for a recognizable portrait caught in a winter storm. Without AI the portrait takes the orb’s icy glow and the usual vignette. The result wears either the snow-capped `glacier` frame or the chiseled `frost` frame, and emerges in a burst of snow, mist and ice shards. `?item=prop-orb-frost` puts it on a pedestal in the Sandbox.
+The Frost Orb holds a snow globe whose crystal and ice cap roll with the glass while its snow keeps falling toward the floor. It casts Blizzard and asks for a recognizable portrait caught in a winter storm. Without AI the portrait takes the orb’s icy glow and the usual vignette. The result wears either the snow-capped `glacier` frame or the chiseled `frost` frame, and emerges in a burst of snow, mist and ice shards. `?item=prop-orb-frost` puts it on a pedestal in the Sandbox.

@@ -83,7 +83,7 @@ const needles = {
   angle: Math.PI / 3,
   branch: 0.022,
 }
-/** the snowdrift the flakes settle into at the bottom of the globe, a flattened ellipsoid sunk into the glass: the height of its middle, and its radii across and up, its top heaped up highest in the middle of the globe and meeting the glass a little lower all round */
+/** the ice cap frozen to the bottom of the glass, in the orb’s own frame, a flattened ellipsoid sunk into the glass: the height of its middle, and its radii across and up, its top heaped up highest in the middle of the globe and meeting the glass a little lower all round */
 const drift = {
   center: -1.12,
   radii: [1.35, 0.56, 1.35] as [number, number, number],
@@ -118,13 +118,13 @@ const fringeColor = rgb(frostColors.auroraFringe)
 const shadeColor = rgb(hsl.integer(255, 60, 52))
 /** how many times the streaks of blowing snow repeat round the globe’s axis, per radian */
 const turnScale = 8 / (Math.PI * 2)
-/** where the light that the crystal’s facets mirror comes from, in the globe’s frame: high above, a little in front */
+/** where the light that the crystal’s facets mirror comes from, in the world: high above, a little in front */
 const skyLight = vec3(-0.3, 0.85, 0.42).normalize()
 /** how far apart neighboring pixels’ points lie, which antialiases what is drawn there */
 function footprint(point: Node<'vec3'>) {
   return fwidth(point).length().max(1e-5)
 }
-/** The orb’s up, which is the world’s, so its snow always settles at the bottom like in a snow globe, whichever way it lies: a frame of three axes in the orb’s own frame and the point or direction in it. */
+/** The orb’s up, which is the world’s, so its falling snow always sinks toward the floor like in a snow globe, whichever way it lies: a frame of three axes in the orb’s own frame and the point or direction in it. */
 function globeFrame() {
   // Use the world's horizontal axes too: projecting a local axis onto the ground would snap as the ball rolled past vertical.
   const side = modelWorldMatrixInverse.mul(vec4(1, 0, 0, 0)).xyz.normalize()
@@ -132,9 +132,20 @@ function globeFrame() {
   const ahead = modelWorldMatrixInverse.mul(vec4(0, 0, 1, 0)).xyz.normalize()
   return (vector: Node<'vec3'>) => vec3(vector.dot(side), vector.dot(up), vector.dot(ahead))
 }
+/** The inverse of {@link globeFrame}: a point or direction in the globe’s frame in the orb’s own frame. */
+function globeFrameInverse() {
+  const side = modelWorldMatrixInverse.mul(vec4(1, 0, 0, 0)).xyz.normalize()
+  const up = modelWorldMatrixInverse.mul(vec4(0, 1, 0, 0)).xyz.normalize()
+  const ahead = modelWorldMatrixInverse.mul(vec4(0, 0, 1, 0)).xyz.normalize()
+  return (vector: Node<'vec3'>) => side.mul(vector.x).add(up.mul(vector.y)).add(ahead.mul(vector.z))
+}
+/** The world’s direction in the orb’s own frame, which the crystal set in its glass turns with. */
+function toLocal(vector: Node<'vec3'>) {
+  return modelWorldMatrixInverse.mul(vec4(vector, 0)).xyz.normalize()
+}
 
 /**
- * A snow globe in a blizzard: a great six-armed snow crystal of glowing ice turns in the eye of the storm, snowflakes whirl round it in a vortex, sinking as they go, through wind-driven streaks of blowing snow under a faint aurora, and settle into a glittering drift at the bottom; hoarfrost creeps in over the glass from its rim. Whichever way the orb lies, its snow falls toward the floor.
+ * A snow globe in a blizzard: a great six-armed snow crystal of glowing ice is set in the glass, rolling and tumbling with it, snowflakes whirl round it in a vortex, sinking as they go, through wind-driven streaks of blowing snow under a faint aurora, over a glittering ice cap frozen to the bottom of the glass, which tumbles with it too; hoarfrost creeps in over the glass from its rim. Whichever way the orb lies, its falling snow and aurora keep to the world’s up.
  */
 export default class BlizzardOrbMaterial extends OrbGlassMaterial {
   constructor(options: OrbGlassOptions) {
@@ -147,6 +158,7 @@ export default class BlizzardOrbMaterial extends OrbGlassMaterial {
 
   protected override fill(ray: OrbRay) {
     const toGlobe = globeFrame()
+    const fromGlobe = globeFrameInverse()
     const origin = toGlobe(ray.origin).toVar('frostOrigin')
     const direction = toGlobe(ray.direction).toVar('frostDirection')
     const eye = toGlobe(ray.eye).toVar('frostEye')
@@ -198,15 +210,16 @@ export default class BlizzardOrbMaterial extends OrbGlassMaterial {
       coverage: fern.mul(0.9).max(haze),
       color: mix(iceColor.mul(0.7), snowColor, fern.mul(0.6).add(0.4)).mul(0.85).add(glintColor.mul(frostGlint.mul(3))),
     })
-    // The great crystal, turning in its own plane and slowly rocking, mostly facing whoever looks in.
+    // The great crystal is set in the glass, in the orb’s own frame, so it rolls and tumbles with the ball. It only turns slowly in its own plane and rocks a little on its mount.
     const crystalCenter = vec3(0, time.mul(0.6).sin().mul(0.025).add(0.04), 0)
     const rock = time.mul(0.21)
-    const toEye = eye.sub(crystalCenter).normalize()
-    const normal = toEye.mul(0.8).add(vec3(rock.sin(), time.mul(0.13).sin().mul(0.45), rock.cos()).mul(0.45)).normalize().toVar('frostCrystalNormal')
-    const crystalUp = vec3(0, 1, 0).sub(normal.mul(normal.y)).add(vec3(0, 0, 1e-3)).normalize()
+    const normal = vec3(rock.sin().mul(0.18), time.mul(0.13).sin().mul(0.12), 1).normalize().toVar('frostCrystalNormal')
+    const crystalUp = vec3(0, 1, 0).sub(normal.mul(normal.y)).normalize()
     const crystalRight = cross(normal, crystalUp)
-    const crystalDepth = planeDepth(origin, direction, crystalCenter, normal).toVar('frostCrystalDepth')
-    const onPlane = origin.add(direction.mul(crystalDepth)).sub(crystalCenter)
+    const crystalDepth = planeDepth(ray.origin, ray.direction, crystalCenter, normal).toVar('frostCrystalDepth')
+    const onPlane = ray.origin.add(ray.direction.mul(crystalDepth)).sub(crystalCenter)
+    // Where the crystal is in the globe’s frame, which lights the loose snow round it.
+    const crystalLight = toGlobe(crystalCenter).toVar('frostCrystalLight')
     const crystalPoint = turn(vec2(onPlane.dot(crystalRight), onPlane.dot(crystalUp)).div(crystalRadius), time.mul(-0.12)).toVar('frostCrystalPoint')
     const crystal = snowflakeShape(crystalPoint, stellarDendrite)
     const ahead = select(crystalDepth.greaterThan(0).and(crystalDepth.lessThan(length)), float(1), float(0))
@@ -223,8 +236,8 @@ export default class BlizzardOrbMaterial extends OrbGlassMaterial {
     const facing = arm.mul(Math.PI / 3).add(select(armSide.greaterThan(0), float(Math.PI / 2), float(-Math.PI / 2))).add(time.mul(0.12))
     const tilt = crystalRight.mul(facing.cos()).add(crystalUp.mul(facing.sin()))
     const facet = normal.add(tilt.mul(0.55)).normalize()
-    const mirrored = direction.sub(facet.mul(direction.dot(facet).mul(2)))
-    const sheen = mirrored.dot(skyLight).max(0).pow(14).mul(crystal.ridge.oneMinus().mul(0.7).add(0.3))
+    const mirrored = ray.direction.sub(facet.mul(ray.direction.dot(facet).mul(2)))
+    const sheen = mirrored.dot(toLocal(skyLight)).max(0).pow(14).mul(crystal.ridge.oneMinus().mul(0.7).add(0.3))
     const bevel = select(armSide.greaterThan(0), float(1.15), float(0.85)).mul(crystal.ridge.oneMinus()).add(crystal.ridge.mul(1.25))
     const crystalShade = mix(iceColor, snowColor, crystal.ridge.mul(0.7).add(rim.mul(0.6)).add(centerGlow.mul(0.3)).clamp()).mul(centerGlow.mul(1.3).add(1.4)).mul(bevel).add(glintColor.mul(flash.mul(2.5).add(sheen.mul(3))))
     const halo = crystal.inside.negate().max(0).mul(-9).exp().mul(crystalCoverage.oneMinus()).mul(ahead)
@@ -275,7 +288,7 @@ export default class BlizzardOrbMaterial extends OrbGlassMaterial {
         const trail = streak > 1.5 ? reach.mul(0.6).sub(trailing).div(pixel.max(reach.mul(0.7))).add(0.5).clamp().mul(0.26) : float(0)
         const flake = core.max(trail).mul(present)
         // The flakes are lit by the crystal, those near it the brightest, and now and then one flashes as it turns.
-        const lit = float(0.08).div(point.sub(crystalCenter).lengthSq().add(0.08)).add(0.8)
+        const lit = float(0.08).div(point.sub(crystalLight).lengthSq().add(0.08)).add(0.8)
         const twinkle = time.mul(seed.y.mul(3).add(2)).add(seed.x.mul(50)).sin().max(0).pow(40).mul(0.8)
         const glow = apart.div(reach).negate().mul(1.6).exp().mul(present).mul(flake.oneMinus()).mul(0.2)
         layers.push({
@@ -286,25 +299,25 @@ export default class BlizzardOrbMaterial extends OrbGlassMaterial {
         })
       }
     }
-    // The drift the snow settled into: a mound heaped up in the middle of the bottom of the globe and sloping down to the glass, its surface rippled by the wind, met in closed form.
-    const mound = lumpyMound(origin, direction)
-    const inMound = origin.sub(vec3(0, drift.center, 0)).div(vec3(...drift.radii)).length().lessThan(1)
+    // The ice cap the snow froze into: a mound heaped up in the middle of the bottom of the glass and sloping down to it, its surface rippled by the wind, met in closed form. Frozen to the glass, it rolls and tumbles with the ball like the crystal.
+    const mound = lumpyMound(ray.origin, ray.direction)
+    const inMound = ray.origin.sub(vec3(0, drift.center, 0)).div(vec3(...drift.radii)).length().lessThan(1)
     const driftDepth = select(inMound, float(0.001), mound.depth).toVar('frostDriftDepth')
     const inDrift = select(inMound, float(1), mound.coverage.mul(select(mound.depth.greaterThan(0).and(mound.depth.lessThan(length)), float(1), float(0)))).toVar('frostInDrift')
-    const surface = origin.add(direction.mul(driftDepth)).toVar('frostDriftPoint')
+    const surface = ray.origin.add(ray.direction.mul(driftDepth)).toVar('frostDriftPoint')
     const dunes = orbNoise(vec3(surface.x.mul(3), surface.y.mul(2), surface.z.mul(4)).add(1.7))
     const ripples = orbNoise(vec3(surface.x.mul(14), 5.1, surface.z.mul(9).add(surface.x.mul(3)))).y
     // Sastrugi: ridges the wind carved across the drift, which catch the light in bands.
     const sastrugi = float(1).sub(orbNoise(vec3(surface.x.mul(7), surface.z.mul(18), 6.6)).z.abs().mul(2)).clamp().pow(3).sub(0.3).mul(0.4)
     const driftNormal = surface.sub(vec3(0, drift.center, 0)).div(vec3(...drift.radii.map(radius => radius * radius))).normalize().add(vec3(dunes.x, 0, dunes.z).mul(0.7)).add(vec3(ripples, 0, ripples.mul(0.5)).mul(0.2)).add(vec3(sastrugi, 0, sastrugi.mul(0.35))).normalize()
     const toCrystal = crystalCenter.sub(surface)
-    // Lit by the crystal above and by the glow of the storm all round, bluer in the hollows between its drifts.
-    const sunlit = driftNormal.dot(toCrystal.normalize()).max(0).mul(float(0.3).div(toCrystal.lengthSq().add(0.15))).add(driftNormal.y.max(0).pow(4).mul(0.22))
+    // Lit by the crystal and by the glow of the storm from above, wherever that is now, bluer in the hollows between its drifts.
+    const sunlit = driftNormal.dot(toCrystal.normalize()).max(0).mul(float(0.3).div(toCrystal.lengthSq().add(0.15))).add(driftNormal.dot(toLocal(vec3(0, 1, 0))).max(0).pow(4).mul(0.22))
     const crust = orbFractalNoise(surface.mul(14).add(2.2), 3, 2.2).mul(0.5).add(0.5)
     // Glitter: the odd crystal in the snow catching the light, round, flashing as the storm and the viewer move.
     const grains = surface.mul(80)
     const grain = mx_cell_noise_vec3(grains.floor())
-    const glitter = smoothstep(0.26, 0.02, grains.fract().sub(grain.mul(0.5).add(0.25)).length()).mul(grain.x.greaterThan(0.7).select(float(1), float(0))).mul(time.mul(grain.y.mul(4).add(1)).add(grain.z.mul(60)).add(eye.x.add(eye.z).mul(6)).sin().mul(0.5).add(0.5).pow(4))
+    const glitter = smoothstep(0.26, 0.02, grains.fract().sub(grain.mul(0.5).add(0.25)).length()).mul(grain.x.greaterThan(0.7).select(float(1), float(0))).mul(time.mul(grain.y.mul(4).add(1)).add(grain.z.mul(60)).add(ray.eye.x.add(ray.eye.z).mul(6)).sin().mul(0.5).add(0.5).pow(4))
     layers.push({
       depth: driftDepth,
       coverage: inDrift,
@@ -321,10 +334,10 @@ export default class BlizzardOrbMaterial extends OrbGlassMaterial {
       const streaks = float(1).sub(orbNoise(wind.mul(vec3(2.2, 2.6, 1)).add(5.5)).z.abs().mul(2.4)).clamp().pow(3).mul(smoothstep(0.08, 0.3, fromAxis)).mul(smoothstep(0.7, 0.25, point.y))
       const settled = smoothstep(0.6, -0.4, point.y).mul(0.4).add(0.45)
       const wall = smoothstep(1, 0.88, point.length())
-      // Snow blowing low over the drift, a bright haze that softens where it meets the storm.
-      const groundMist = smoothstep(-0.48, -0.72, point.y).mul(gust.mul(0.5).add(0.7))
+      // Snow blowing low over the ice cap, wherever the ball turned it, a bright haze that softens where it meets the storm.
+      const groundMist = smoothstep(-0.48, -0.72, fromGlobe(point).y).mul(gust.mul(0.5).add(0.7))
       const density = gust.smoothstep(0.05, 0.6).mul(0.8).add(streaks.mul(1.1)).mul(settled).add(groundMist.mul(1.2)).mul(wall).mul(1.5)
-      const light = float(0.05).div(point.sub(crystalCenter).lengthSq().add(0.05))
+      const light = float(0.05).div(point.sub(crystalLight).lengthSq().add(0.05))
       const lit = mix(shadeColor.mul(0.6), glowColor, light.smoothstep(0.05, 1)).mul(light.mul(1.3).add(0.32))
       // The aurora’s curtains hang straight down like sheets folded across the sky, rayed along their folds.
       const sky = point.xz.mul(2).add(vec2(time.mul(0.03), time.mul(-0.02)))
@@ -343,7 +356,7 @@ export default class BlizzardOrbMaterial extends OrbGlassMaterial {
       }
     }, layers)
     // Beyond the storm, the night sky of the winter it is in, glowing round the crystal.
-    const crystalMiss = origin.sub(crystalCenter).sub(direction.mul(origin.sub(crystalCenter).dot(direction))).length()
+    const crystalMiss = origin.sub(crystalLight).sub(direction.mul(origin.sub(crystalLight).dot(direction))).length()
     const sky = mix(duskColor, nightColor, crystalMiss.smoothstep(0.1, 0.9)).mul(0.9)
     return {
       radiance: fill.radiance.add(sky.mul(fill.transmittance)),

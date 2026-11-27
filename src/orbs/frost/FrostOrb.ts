@@ -6,7 +6,7 @@ import PromptOrb from '../base/PromptOrb.ts'
 import BlizzardOrbMaterial from './BlizzardOrbMaterial.ts'
 import photo from './photo.jxl' with {distance: '1', format: 'jxl', maximumLong: '512'}
 
-/** A snow globe in a blizzard: a great crystal of glowing ice turning in the eye of the storm, snowflakes whirling round it under a faint aurora and settling into a drift. It lets a winter storm sweep over a work, burying it in snow and hoarfrost, and a blizzard of snowflakes bursts out of the portal as the result flips out. */
+/** A snow globe in a blizzard: a great crystal of glowing ice and an ice cap set in the glass, which roll and tumble with it, and snowflakes whirling round the crystal under a faint aurora. It lets a winter storm sweep over a work, burying it in snow and hoarfrost, and a blizzard of snowflakes bursts out of the portal as the result flips out. */
 export default class FrostOrb extends PromptOrb {
   readonly adjectives = [
     // weather
