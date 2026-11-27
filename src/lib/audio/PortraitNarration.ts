@@ -155,9 +155,6 @@ export default class PortraitNarration {
     }).catch(error => {
       console.error('Portrait narration cleanup failed.', error)
     })
-    if (story.pending || story.fusing) {
-      notify('The narrator is waiting for the ink to dry…')
-    }
     return handle
   }
 

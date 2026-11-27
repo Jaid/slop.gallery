@@ -325,11 +325,11 @@ export function handleGalleryKey(event: KeyboardEvent) {
   if (event.code === worldTuningKey && isDevelopmentMode) {
     toggleWorldTuning()
   }
-  if (event.code === moodSuppressionKey && isDevelopmentMode) {
-    notify(toggleMoodSuppression() ? 'Moods suppressed. N lets them back.' : 'Moods are back.')
+  if (event.code === moodSuppressionKey && isDevelopmentMode && toggleMoodSuppression()) {
+    notify('Moods suppressed. N lets them back.')
   }
-  if (event.code === flyModeKey && isDevelopmentMode && s.locked) {
-    notify(toggleFlyMode() ? 'Flying. W follows your gaze, Space and C rise and sink, F lands.' : 'Landed. Gravity is back.')
+  if (event.code === flyModeKey && isDevelopmentMode && s.locked && toggleFlyMode()) {
+    notify('Flying. W follows your gaze, Space and C rise and sink, F lands.')
   }
   if (event.code === bookmarkKey && isDevelopmentMode && s.locked) {
     teleportToNextBookmark(event.shiftKey)
