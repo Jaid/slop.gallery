@@ -1,4 +1,5 @@
 import BatsEffect from './bats/BatsEffect.ts'
+import BlizzardEffect from './blizzard/BlizzardEffect.ts'
 import BloodEffect from './blood/BloodEffect.ts'
 import EyesEffect from './eyes/EyesEffect.ts'
 import GhostsEffect from './ghosts/GhostsEffect.ts'
@@ -9,6 +10,7 @@ import TendrilsEffect from './tendrils/TendrilsEffect.ts'
 /** every party effect there is by its id */
 export const partyEffects = {
   bats: new BatsEffect,
+  blizzard: new BlizzardEffect,
   blood: new BloodEffect,
   eyes: new EyesEffect,
   ghosts: new GhostsEffect,

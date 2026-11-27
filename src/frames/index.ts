@@ -26,7 +26,9 @@ import EvidenceFrame from './evidence/EvidenceFrame.ts'
 import FleshFrame from './flesh/FleshFrame.ts'
 import FloatFrame from './float/FloatFrame.ts'
 import FlorentineFrame from './florentine/FlorentineFrame.ts'
+import FrostFrame from './frost/FrostFrame.ts'
 import GildingFrame from './gilding/GildingFrame.ts'
+import GlacierFrame from './glacier/GlacierFrame.ts'
 import GloryFrame from './glory/GloryFrame.ts'
 import ImpastoFrame from './impasto/ImpastoFrame.ts'
 import ImpressionistFrame from './impressionist/ImpressionistFrame.ts'
@@ -93,7 +95,9 @@ export const frames = {
   flesh: new FleshFrame,
   float: new FloatFrame,
   florentine: new FlorentineFrame,
+  frost: new FrostFrame,
   gilding: new GildingFrame,
+  glacier: new GlacierFrame,
   glory: new GloryFrame,
   impasto: new ImpastoFrame,
   impressionist: new ImpressionistFrame,

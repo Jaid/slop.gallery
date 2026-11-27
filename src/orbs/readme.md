@@ -7,3 +7,7 @@ What an orb brings along it only names by its id: its `mood` (`src/moods`), whic
 `base` holds what orbs are built from: `Orb.ts`, `PromptOrb.ts` for an orb filled with a scene, which contributes a prompt and leaves a Transparent Orb behind, and `OrbGlassMaterial.ts`, the glass every orb’s own material fills with its scene. `lib` holds the shader helpers those fills share. `#component/Orb` is the prop of any of them.
 
 To add an orb, give it a folder with its class `<Id>Orb.ts`, its glass material and its `photo.jxl`, and add it to `index.ts`; whatever makes it turn up in the game names it there, like `randomOrbs` or the alchemy machine’s `flavorSteering`.
+
+## Frost Orb
+
+The Frost Orb holds a snow globe, casts Blizzard and asks for a recognizable portrait caught in a winter storm. Without AI the portrait takes the orb’s icy glow and the usual vignette. The result wears either the snow-capped `glacier` frame or the chiseled `frost` frame, and emerges in a burst of snow, mist and ice shards. `?item=prop-orb-frost` puts it on a pedestal in the Sandbox.
