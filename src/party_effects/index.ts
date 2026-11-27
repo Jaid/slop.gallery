@@ -1,6 +1,7 @@
 import BatsEffect from './bats/BatsEffect.ts'
 import BloodEffect from './blood/BloodEffect.ts'
 import EyesEffect from './eyes/EyesEffect.ts'
+import FlurryEffect from './flurry/FlurryEffect.ts'
 import GhostsEffect from './ghosts/GhostsEffect.ts'
 import SmearsEffect from './smears/SmearsEffect.ts'
 import StrokesEffect from './strokes/StrokesEffect.ts'
@@ -11,6 +12,7 @@ export const partyEffects = {
   bats: new BatsEffect,
   blood: new BloodEffect,
   eyes: new EyesEffect,
+  flurry: new FlurryEffect,
   ghosts: new GhostsEffect,
   smears: new SmearsEffect,
   strokes: new StrokesEffect,
