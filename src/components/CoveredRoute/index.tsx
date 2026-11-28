@@ -26,12 +26,7 @@ export default function CoveredRoute({passage, material, lanterns, mounts: fixed
   passage: RoutedPassage
 }) {
   const geometry = useDisposable(useMemo(() => new RouteVaultGeometry(passage), [passage]))
-  const vault = useDisposable(useMemo(() => (curveDetail > 1 ? RouteVaultGeometry.vault(passage, curveDetail) : {
-    shell: geometry.shell,
-    ribs: geometry.ribs,
-    // The base detail’s belong to the passage’s geometry.
-    dispose() {},
-  }), [geometry, passage]))
+  const vault = useDisposable(useMemo(() => (curveDetail > 1 ? RouteVaultGeometry.vault(passage, curveDetail) : undefined), [passage])) ?? geometry
   const mounts = useMemo(() => fixedMounts ?? (lanterns ? routePendantMounts(passage, [geometry.shell, geometry.ribs], lanterns) : []), [fixedMounts, geometry, lanterns, passage])
   const paving = colliderGeometry(geometry.pavingCollision)
   const box = geometry.pavingBox

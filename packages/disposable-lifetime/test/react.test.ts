@@ -1,4 +1,4 @@
-import type {DisposableResource} from '../src/disposeResource.ts'
+import type useDisposable from '../src/react/useDisposable.ts'
 
 import {beforeEach, expect, mock, test} from 'bun:test'
 import {resolve} from 'node:path'
@@ -75,7 +75,7 @@ if (!build.success) {
 }
 const harness = await import(`data:text/javascript;base64,${Buffer.from(await build.outputs[0].text()).toBase64()}`) as {
   commit: () => void
-  default: <T extends DisposableResource>(resource: T) => T
+  default: typeof useDisposable
   replay: () => void
   reset: () => void
   unmount: () => void
@@ -108,4 +108,15 @@ test('dependency replacement disposes only the replaced resource', async () => {
   harness.unmount()
   await Promise.resolve()
   expect(disposeNew).toHaveBeenCalledTimes(1)
+})
+test('an optional resource can appear and disappear without a placeholder', async () => {
+  expect(harness.default(undefined)).toBeUndefined()
+  harness.commit()
+  const resource = {dispose: mock(() => {})}
+  harness.default(resource)
+  harness.commit()
+  harness.default(undefined)
+  harness.commit()
+  await Promise.resolve()
+  expect(resource.dispose).toHaveBeenCalledTimes(1)
 })

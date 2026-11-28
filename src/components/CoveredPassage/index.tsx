@@ -43,14 +43,8 @@ export default function CoveredPassage({passage, material, mounts = unlit, pavin
   transition?: PassageTransition
 }) {
   const geometry = useDisposable(useMemo(() => (timber ? TimberGeometry.passage(passage, ribCutouts) : new VaultGeometry(passage, transition?.length)), [passage, ribCutouts, timber, transition]))
-  // Graphics with more curve detail draw a finer stone vault, which neither collides nor carries the lanterns, so every graphics mode collides alike.
-  const vault = useDisposable(useMemo(() => (!timber && curveDetail > 1 ? new VaultGeometry(passage, transition?.length, curveDetail) : {
-    shell: geometry.shell,
-    ribs: geometry.ribs,
-    // The base detail’s belong to the passage’s geometry.
-    dispose() {},
-  }), [geometry, passage, timber, transition]))
-  // The hollow takes its footprint out of the floors.
+  // Collision and lantern placement use the base geometry even when the visible vault is finer.
+  const vault = useDisposable(useMemo(() => (!timber && curveDetail > 1 ? new VaultGeometry(passage, transition?.length, curveDetail) : undefined), [passage, timber, transition])) ?? geometry
   const floors = hollow ? passage.floors.flatMap(floor => hollow.cut(floor)) : passage.floors
   const paving = pavingOverride ?? transition?.stoneFloors ?? floors
   // A timber lining’s crown is the ceiling along its spans; a slab there would share its plane. Only the open elbows show the slab.
