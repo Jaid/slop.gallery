@@ -1,6 +1,5 @@
 import type {CanvasMaterialId} from '../../src/canvas_materials/lib/canvasMaterialIds.ts'
 import type {FusionIngredient, IngredientContribution} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
-import type PromptOrb from '../../src/orbs/base/PromptOrb.ts'
 
 import {describe, expect, test} from 'bun:test'
 
@@ -8,7 +7,7 @@ import hsl from 'okhsl'
 
 import {pickFrame} from '../../src/frames/lib/frameChoice.ts'
 import FusionRecipe, {fusionInstruction, itemIngredient, maximumIngredients, minimumIngredients, portraitIngredient} from '../../src/lib/gallery/fusion/FusionRecipe.ts'
-import {halloweenOrb, horrorOrb, promptOrbs, spookOrb, transparentOrb} from '../../src/orbs/index.ts'
+import {promptOrbs, transparentOrb} from '../../src/orbs/index.ts'
 import {pickEffect} from '../../src/party_effects/lib/effectChoice.ts'
 
 const png = Uint8Array.fromBase64('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMAAABIeJ9nAAAAA1BMVEX/AAAZ4gk3AAAADElEQVQI12NgYGAAAAAEAAEnNCcKAAAAAElFTkSuQmCC')
@@ -24,7 +23,6 @@ const portrait = (canvasMaterial?: CanvasMaterialId) => portraitIngredient({
   source: '/work.jxl',
   ...canvasMaterial ? {canvasMaterial} : {},
 })
-/** the canvas material of the recipe of the ingredients */
 const material = (...ingredients: Array<FusionIngredient>) => {
   const recipe = new FusionRecipe(ingredients)
   return recipe.canvasMaterial
@@ -200,47 +198,20 @@ describe('fusion recipe', () => {
     const plain = new FusionRecipe([portrait('linen'), item('plain')])
     expect(plain.unchanged).toBe(true)
   })
-  test('the Spook Orb gives its result watered silk, even over an existing canvas material', () => {
-    expect(material(portrait('linen'), itemIngredient(spookOrb.title, spookOrb.ingredient(7)))).toBe('moire')
-  })
-  test('the Horror Orb gives its result prism sweep, even over an existing canvas material', () => {
-    expect(material(portrait('linen'), itemIngredient(horrorOrb.title, horrorOrb.ingredient(7)))).toBe('prism-sweep')
-  })
-  test('the Halloween Orb gives its result beeswax veil, even over an existing canvas material', () => {
-    expect(material(portrait('linen'), itemIngredient(halloweenOrb.title, halloweenOrb.ingredient(7)))).toBe('wax')
-  })
-  // Any prompt orb, even one without a frame or an effect, which none of today’s lacks.
-  for (const orb of promptOrbs as ReadonlyArray<PromptOrb>) {
-    test(`the ${orb.title} contributes its prompt, its frame of the game, its canvas material and its effect, if it has them, shows by its glow and photograph and is latched on with a ping of glass`, () => {
-      expect(orb.ingredient(7)).toEqual({
-        contributions: [
-          {
-            kind: 'instruction',
-            instruction: orb.prompt(7),
-          },
-          ...orb.frame ? [
-            {
-              kind: 'frame' as const,
-              frame: pickFrame(7, orb.frame),
-            },
-          ] : [],
-          ...orb.canvasMaterial ? [
-            {
-              kind: 'canvasMaterial' as const,
-              canvasMaterial: orb.canvasMaterial,
-            },
-          ] : [],
-          ...orb.effect ? [
-            {
-              kind: 'effect' as const,
-              effect: pickEffect(7, orb.effect),
-            },
-          ] : [],
-        ],
-        glow: orb.color,
-        look: orb.photo,
-        latch: 'glass',
+  for (const orb of promptOrbs) {
+    test(`the ${orb.title} supplies the result’s finish, the model’s prompt and the portal’s look and effect`, () => {
+      const work = portraitIngredient({
+        source: image,
+        canvasMaterial: 'linen',
       })
+      const recipe = new FusionRecipe([work, itemIngredient(orb.title, orb.ingredient(7))])
+      expect(recipe.text(recipe.imageCount)).toBe(orb.prompt(7))
+      expect(recipe.frame).toBe(pickFrame(7, orb.frame))
+      expect(recipe.canvasMaterial).toBe(orb.canvasMaterial)
+      expect(recipe.effects).toEqual([pickEffect(7, orb.effect)])
+      expect(recipe.glow).toBe(orb.color)
+      expect(recipe.looks).toEqual([image, orb.photo])
+      expect(recipe.latches).toEqual(['charge', 'glass'])
     })
   }
   test('the intro latches every ingredient on by charging up, and an orb, even the Transparent Orb, with a ping of glass', () => {

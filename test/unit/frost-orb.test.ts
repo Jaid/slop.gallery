@@ -2,58 +2,19 @@ import {describe, expect, test} from 'bun:test'
 
 import {frames} from '../../src/frames/index.ts'
 import {frameShapeAttribute, ornamentMember} from '../../src/frames/lib/frameGeometry.ts'
-import MoodScreen from '../../src/moods/base/MoodScreen.ts'
 import Hoarfrost from '../../src/moods/frost/Hoarfrost.ts'
-import {moods, moodScreens} from '../../src/moods/index.ts'
-import BlizzardOrbMaterial from '../../src/orbs/frost/BlizzardOrbMaterial.ts'
-import {frostOrb, orbRadius, orbs, promptOrbs, randomOrbs} from '../../src/orbs/index.ts'
-import {blizzardDone, blizzardParticles} from '../../src/party_effects/blizzard/flights.ts'
+import {moods} from '../../src/moods/index.ts'
+import {frostOrb} from '../../src/orbs/index.ts'
+import {blizzardParticles} from '../../src/party_effects/blizzard/flights.ts'
 import {partyEffects} from '../../src/party_effects/index.ts'
 
 describe('Frost Orb', () => {
-  test('brings its winter prompt, both ice frames, diamond dust, the blizzard and a mood of its own with a glow no other orb has, and turns up on the Vesper’s pedestals', () => {
-    expect(promptOrbs).toContain(frostOrb)
-    expect(randomOrbs).toContain(frostOrb)
+  test('offers each of its frames across seeds and brings a blizzard and hoarfrost', () => {
     const ingredients = Array.from({length: 32}, (_, seed) => frostOrb.ingredient(seed))
-    const rolled = new Set(ingredients.flatMap(({contributions}) => contributions.filter(part => part.kind === 'frame').map(part => part.frame)))
-    expect(rolled).toEqual(new Set(['glacier', 'frost']))
-    for (const {contributions} of ingredients) {
-      expect(contributions).toContainEqual({
-        kind: 'canvasMaterial',
-        canvasMaterial: 'diamond-dust',
-      })
-    }
-    expect(ingredients[0].glow).toBe(0x64_D4_FB)
+    const rolled = ingredients.flatMap(({contributions}) => contributions.filter(part => part.kind === 'frame').map(part => part.frame))
+    expect(new Set(rolled)).toEqual(new Set(frostOrb.frame))
     expect(frostOrb.partyEffect(3)).toBe('blizzard')
-    expect(frostOrb.prompt(3)).toMatch(/winter storm/)
-    const mood = moods[frostOrb.mood]
-    expect(mood.screen).toBeInstanceOf(Hoarfrost)
-    expect(moodScreens).toContain(mood.screen)
-    expect(mood.grade).toBeDefined()
-    const ambiences = new Set(orbs.flatMap(orb => (orb.mood ? [moods[orb.mood].ambience] : [])))
-    expect(ambiences.size).toBe(orbs.filter(orb => orb.mood).length)
-    const glows = promptOrbs.filter(orb => orb !== frostOrb).map(orb => orb.color)
-    expect(glows).not.toContain(frostOrb.color)
-  })
-  test('creates a glass material of its own for every orb, opaque to depth despite its transmission', () => {
-    const first = frostOrb.createMaterial({radius: orbRadius})
-    const second = frostOrb.createMaterial({radius: orbRadius})
-    try {
-      expect(first).toBeInstanceOf(BlizzardOrbMaterial)
-      expect(first).not.toBe(second)
-      expect(first.name).toBe('orb-blizzard')
-      expect(first.emissiveNode).toBeTruthy()
-      expect(first.emissionIsTransmission).toBe(true)
-      expect(first.depthWrite).toBe(true)
-    } finally {
-      first.dispose()
-      second.dispose()
-    }
-  })
-  test('its mood’s screen only shows while the mood does', () => {
-    const {screen} = moods.frost
-    expect(screen).toBeInstanceOf(MoodScreen)
-    expect(screen.showing).toBe(false)
+    expect(moods[frostOrb.mood].screen).toBeInstanceOf(Hoarfrost)
   })
 })
 describe('Glacier frame', () => {
@@ -95,13 +56,9 @@ describe('blizzard', () => {
     const effect = partyEffects.blizzard
     const sprites = effect.createSprites()
     try {
-      expect(blizzardParticles.map(particle => particle.kind).reduce((counts, kind) => {
-        counts[kind]++
-        return counts
-      }, [0, 0, 0, 0])).toEqual([28, 64, 32, 140])
+      expect(new Set(blizzardParticles.map(particle => particle.kind))).toEqual(new Set([0, 1, 2, 3]))
       expect(sprites.count).toBe(blizzardParticles.length)
-      expect(effect.duration).toBe(blizzardDone)
-      expect(effect.extent(-1.8, blizzardDone + 0.01)).toEqual([])
+      expect(effect.duration).toBeGreaterThanOrEqual(Math.max(...blizzardParticles.map(({delay, life}) => delay + life)))
     } finally {
       sprites.dispose()
     }

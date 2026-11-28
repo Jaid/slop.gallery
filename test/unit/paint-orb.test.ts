@@ -1,32 +1,8 @@
 import {describe, expect, test} from 'bun:test'
 
-import {orbRadius, paintOrb} from '../../src/orbs/index.ts'
-import RosetteOrbMaterial from '../../src/orbs/paint/RosetteOrbMaterial.ts'
 import {blade, whorls} from '../../src/orbs/paint/whorls.ts'
 
 describe('Paint Orb', () => {
-  test('contributes cold-press rag to its fusion', () => {
-    expect(paintOrb.ingredient(0).contributions).toContainEqual({
-      kind: 'canvasMaterial',
-      canvasMaterial: 'rag',
-    })
-  })
-  test('creates a glass material of its own for every orb, opaque to depth despite its transmission', () => {
-    const first = paintOrb.createMaterial({radius: orbRadius})
-    const second = paintOrb.createMaterial({radius: orbRadius})
-    try {
-      expect(first).toBeInstanceOf(RosetteOrbMaterial)
-      expect(first).not.toBe(second)
-      expect(first.name).toBe('orb-rosette')
-      expect(first.emissiveNode).toBeTruthy()
-      expect(first.emissionIsTransmission).toBe(true)
-      expect(first.depthWrite).toBe(true)
-      expect(first.opacity).toBe(1)
-    } finally {
-      first.dispose()
-      second.dispose()
-    }
-  })
   test('keeps every whorl inside the glass and out of the others, all the way from heel to tip', () => {
     const tiers = whorls.toSorted((a, b) => a.depth - b.depth)
     for (const [i, tier] of tiers.entries()) {

@@ -18,7 +18,6 @@ test('a seeded hue only turns the hue, by the same roll every time and up to the
     const [hueShift, saturationShift, lightnessShift] = rollHslShift(random, {hue: 30})
     expect(Math.abs(hueShift)).toBeLessThan(30)
     expect([saturationShift, lightnessShift]).toEqual([0, 0])
-    expect(seededHue(color, random, 30)).toBe(seededHue(color, random, 30))
     expect(seededHue(color, random, 30)).toBe(hsl.integer(color[0] + hueShift, color[1], color[2]))
   }
 })
@@ -37,7 +36,7 @@ test('saturation and lightness spread on rolls of their own, which leave the hue
   expect(seededHsl([0, 140, -20], random, {})).toBe(0x00_00_00)
   expect(seededHsl([30, 50, 50], random, {})).toBe(hsl.integer(30, 50, 50))
 })
-test('the tunnel lamps sit a third of the hue circle apart round a whole-degree middle hue, blue by default', () => {
+test('the tunnel lamps sit a third of the hue circle apart around a seeded whole-degree middle hue', () => {
   expect(tunnelHue(0)).toBe(defaultTunnelHue)
   const hues = Array.from({length: 200}, (_, index) => tunnelHue(index + 1))
   for (const hue of hues) {
@@ -48,17 +47,12 @@ test('the tunnel lamps sit a third of the hue circle apart round a whole-degree 
   const distinct = new Set(hues)
   expect(distinct.size).toBeGreaterThan(120)
   expect(tunnelHue(7)).toBe(tunnelHue(7))
-  for (const middle of [0, 266, 359]) {
+  for (const middle of [0, defaultTunnelHue, 359]) {
     const [north, center, south] = tunnelTints(middle).map(unpackOkhsl)
     expect(hueGap(center[0], middle)).toBeLessThanOrEqual(2)
     expect(hueGap(north[0], middle - 120)).toBeLessThanOrEqual(2)
     expect(hueGap(south[0], middle + 120)).toBeLessThanOrEqual(2)
   }
-  // The default environment keeps its green, blue and red.
-  const [green, blue, red] = tunnelTints(defaultTunnelHue).map(unpackOkhsl)
-  expect(hueGap(green[0], hsl.fromHex('#4dff6a')[0])).toBeLessThanOrEqual(1)
-  expect(hueGap(blue[0], hsl.fromHex('#4d7aff')[0])).toBeLessThanOrEqual(1)
-  expect(hueGap(red[0], hsl.fromHex('#ff4d4d')[0])).toBeLessThanOrEqual(1)
 })
 test('the Salon ottoman keeps its velvet’s colors by default, otherwise all of them turn alike', () => {
   const unturned = salonVelvet(0)

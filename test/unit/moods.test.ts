@@ -623,6 +623,8 @@ describe('moods', () => {
   test('every orb that casts a mood casts one of its own, sharing its id, and only the Transparent Orb casts none', () => {
     const moody = orbs.filter(orb => orb.mood)
     expect(orbs.filter(orb => !orb.mood).map(orb => orb.id)).toEqual(['transparent'])
+    const ambiences = new Set(moody.map(orb => moods[orb.mood!].ambience))
+    expect(ambiences.size).toBe(moody.length)
     for (const orb of moody) {
       expect<string | undefined>(orb.mood).toBe(orb.id)
       const mood: Mood = moods[orb.mood!]
@@ -650,7 +652,6 @@ describe('moods', () => {
     expect(moodScreens).toEqual(screened.map(mood => mood.screen!))
     const unique = new Set(moodScreens)
     expect(unique.size).toBe(moodScreens.length)
-    expect(moodScreens).toContain(paint.screen)
     // Nothing shows before its mood does.
     expect(moodScreens.filter(screen => screen.showing)).toEqual([])
   })
