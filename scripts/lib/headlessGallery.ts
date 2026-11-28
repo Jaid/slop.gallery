@@ -287,9 +287,9 @@ export const resolveGallerySetup = async (values: GalleryValues, defaultHeight =
     viewport,
   }
 }
-/** Without these, headless Chrome on a machine without a GPU hands out a fallback adapter whose canvas can’t present, which loses the device on the first frame. ANGLE’s Vulkan backend additionally needs the surface extensions of a system Vulkan driver, without which the GPU process exits. */
 /** Lets the page read cross-origin responses without CORS headers, so tool calls like add_portrait can bring in images from any host. The private headless browser only ever opens the gallery. */
 export const crossOriginArgs = ['--disable-web-security']
+/** Without these, headless Chrome on a machine without a GPU hands out a fallback adapter whose canvas can’t present, which loses the device on the first frame. ANGLE’s Vulkan backend additionally needs the surface extensions of a system Vulkan driver. */
 const swiftshaderArgs = ['--use-angle=vulkan', '--use-vulkan=swiftshader', '--enable-unsafe-swiftshader']
 /** Starts a private Vite dev server, or serves the static target, and resolves with the page URL. Dispose it to stop the server. */
 export const serveGallery = async (setup: GallerySetup, options: {
@@ -349,7 +349,10 @@ export const watchPage = (page: Page) => {
   })
 }
 /** Waits until the scene is ready and checks the debug hooks that captures rely on, the fly hook only where `fly` asks for it, as a page without `?test=true` has none. Fails early when the app shows its render error screen instead. */
-export const waitForGallery = async (page: Page, {fly = true}: {fly?: boolean} = {}) => {
+export const waitForGallery = async (page: Page, {fly = true, timeout = 300_000}: {
+  fly?: boolean
+  timeout?: number
+} = {}) => {
   const outcome = await page.waitForFunction(() => {
     // RenderError replaces the scene when WebGPU is missing or rendering threw, e.g. because no adapter could be created; ready would never come.
     const renderError = document.querySelector('[data-testid="render-error"]')
@@ -357,7 +360,7 @@ export const waitForGallery = async (page: Page, {fly = true}: {fly?: boolean} =
       return {error: renderError.querySelector('h2')?.textContent ?? 'unknown'}
     }
     return Boolean(globalThis.slopGallery?.snapshot?.().ready && globalThis.slopGallery.captureFrame) && {}
-  }, {timeout: 300_000})
+  }, {timeout})
   const {error} = await outcome.jsonValue() as {error?: string}
   if (error !== undefined) {
     throw new Error(`The gallery showed its render error screen (“${error}”). The console errors above name the cause.`)
@@ -419,7 +422,11 @@ export const openHeadlessGallery = async (setup: GallerySetup, options: {
       waitUntil: 'domcontentloaded',
       timeout: 300_000,
     })
-    await waitForGallery(page, {fly: setup.test})
+    await waitForGallery(page, {
+      fly: setup.test,
+      // A cold Heavy world can take more than five minutes to compile on a runner’s software GPU, even at 180p.
+      timeout: setup.swiftshader ? 600_000 : undefined,
+    })
     return {
       page,
       [Symbol.asyncDispose]: close,

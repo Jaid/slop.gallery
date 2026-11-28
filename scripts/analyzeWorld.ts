@@ -11,7 +11,7 @@ const formats = ['json', 'markdown'] as const
 const help = `Usage: bun scripts/analyzeWorld.ts [options]
 
 Opens the world in a private headless browser, calls the app’s analyze_world WebMCP tool and prints its result: per room its title, fence, static meshes, items that can be picked up and lights, plus what lies elsewhere and the global lights.
-Serves the build --target names, dist unless told otherwise, or starts a private Vite dev server with --target false,; never touches the visible browser. Progress goes to stderr, so stdout can be redirected to a file.
+Serves the build named by --target (dist by default), or starts a private Vite dev server with --target false. Progress goes to stderr, so stdout can be redirected to a file.
 
 Options:
   --format <format>       json prints the whole analysis, markdown tables of the rooms’ static meshes and items with their triangles and of their lamps and shadows, like worldReport.ts does for several worlds. Default: json
