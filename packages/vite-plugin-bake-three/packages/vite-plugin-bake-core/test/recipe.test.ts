@@ -90,6 +90,11 @@ test('follows aliased imports and re-exports without executing the application m
   expect((roundTrip(result)() as Resource).data).toBe(17)
   expect([...result.dependencies].some(path => path.endsWith('source.ts'))).toBe(true)
 })
+test('declines live imports written in the exporter or mutated in the importer', async () => {
+  await fs.writeFile(join(directory, 'settings.ts'), 'export let width = 1; width++; export default {height: 2}')
+  await expect(evaluate("import {width} from './settings.ts'; const result = new Resource(width)")).rejects.toThrow('Mutable binding: width')
+  await expect(evaluate("import settings from './settings.ts'; settings.height++; const result = new Resource(settings.height)")).rejects.toThrow('Mutated dependency: settings')
+})
 test('supports static destructuring and helper functions', async () => {
   const result = await evaluate('const {x, y} = {x: 3, y: 7}; const result = new Resource(x * y)')
   expect((roundTrip(result)() as Resource).data).toBe(21)

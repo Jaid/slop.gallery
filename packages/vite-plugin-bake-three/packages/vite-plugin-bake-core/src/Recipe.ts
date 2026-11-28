@@ -48,7 +48,7 @@ const eraseOptions = loadPartialConfigSync({
   filename: 'recipe.ts',
   babelrc: false,
   configFile: false,
-  plugins: [[transformTypescript, {allowDeclareFields: true}]],
+  plugins: [transformTypescript],
   ast: true,
   code: false,
   // Every caller passes a fresh AST.
@@ -132,7 +132,7 @@ export default class Recipe {
       filename: 'recipe.ts',
       babelrc: false,
       configFile: false,
-      plugins: [[transformTypescript, {allowDeclareFields: true}]],
+      plugins: [transformTypescript],
       comments: false,
     })!
     const code = transformed.code!

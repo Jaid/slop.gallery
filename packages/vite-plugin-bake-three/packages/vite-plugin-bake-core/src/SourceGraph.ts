@@ -137,13 +137,14 @@ export default class SourceGraph {
 
 const mutators = new Set(['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse', 'fill', 'copyWithin', 'set', 'add', 'delete', 'clear'])
 
-/** const only protects a binding; reject observable writes through its references as well. */
+/** Reject writes to a captured binding and mutations through its references. */
 export function assertConstant(binding: Binding, visited = new Set<Binding>) {
   if (visited.has(binding)) {
     return
   }
   visited.add(binding)
-  if (!binding.constant || binding.constantViolations.length) {
+  // Named and default imports are live bindings, not writes. The recipe checks their source declarations or resolves them from an approved native module.
+  if (binding.constantViolations.length || !binding.constant && binding.kind !== 'module') {
     throw new NotBakeableError(`Mutable binding: ${binding.identifier.name}.`)
   }
   for (const reference of binding.referencePaths) {
