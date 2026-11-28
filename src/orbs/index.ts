@@ -17,9 +17,9 @@ export const horrorOrb = new HorrorOrb
 export const impastoOrb = new ImpastoOrb
 export const paintOrb = new PaintOrb
 export const spookOrb = new SpookOrb
-export const orbs = [frostOrb, halloweenOrb, horrorOrb, impastoOrb, paintOrb, spookOrb, transparentOrb] as const
 /** the orbs that rework a work by a prompt of their own */
 export const promptOrbs = [frostOrb, halloweenOrb, horrorOrb, impastoOrb, paintOrb, spookOrb] as const
+export const orbs = [...promptOrbs, transparentOrb] as const
 /** the orbs that turn up at random where nothing asks for a kind of its own, on the Vesper’s five pedestals; never the Horror Orb, which only the hatchet calls up, steering the Forge’s alchemy machine to it, nor the Transparent Orb, which only the alchemy machine’s holder keeps and a prompt orb’s fusion leaves; in the default environment, the pedestals stand them in this order */
 export const randomOrbs = [spookOrb, halloweenOrb, impastoOrb, paintOrb, frostOrb] as const
 

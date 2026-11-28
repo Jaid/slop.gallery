@@ -11,7 +11,6 @@ import VesperCeiling from '#src/rooms/vesper/components/VesperCeiling/index.tsx'
 import slopGallery from '#src/worlds/gallery/index.ts'
 
 const room = slopGallery.room('vesper')
-/** what stands on the orb pedestals in this game’s environment, in their order */
 const exhibits = vesperOrbs(environmentSeed)
 
 /** Opens up into a coved ceiling crowned by twin glazed lanterns instead of a flat ceiling, so the sun reaches inside, over five orbs on column pedestals in a circle in its north half. */
@@ -30,12 +29,12 @@ function OrbPedestals() {
   const pedestal = useColumnPedestal()
   const holder = useOrbHolder()
   return <group name='vesper-orbs'>
-    {exhibits.map(({id, orb}, index) => {
+    {exhibits.map((orb, index) => {
       const {position: [x, y, z], rotation} = vesperOrbPedestals[index]
-      return <group key={id}>
+      return <group key={orb.propId}>
         <ColumnPedestal {...pedestal} position={[x, y, z]} rotation={rotation}><OrbHolder {...holder} /></ColumnPedestal>
         {/* Let down onto the holder’s lip from just over it. */}
-        <Orb id={id} orb={orb} position={[x, y + columnPedestalHeight + orbSeat + 0.002, z]} />
+        <Orb orb={orb} position={[x, y + columnPedestalHeight + orbSeat + 0.002, z]} />
       </group>
     })}
   </group>
