@@ -116,7 +116,7 @@ const fetchPullRequests = async () => {
 /** Resolves with the aliases of the domains it detached, or would detach with `dryRun`. */
 const main = async ({dryRun = false, ...limits}: PruneLimits & {dryRun?: boolean}) => {
   const [previewDomains, pullRequests] = await Promise.all([listPreviewDomains(), fetchPullRequests()])
-  const domains = toPullRequestDomains(previewDomains.map(domain => domain.alias))
+  const domains = toPullRequestDomains(previewDomains)
   const pruned = selectPrunedDomains(domains, pullRequests, limits)
   if (domains.length < (limits.minimum ?? 0)) {
     console.log(`There are ${domains.length} pr-<number> domains, fewer than the minimum of ${limits.minimum}, so all of them stay.`)

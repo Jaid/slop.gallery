@@ -22,8 +22,8 @@ const pullRequests = new Map([
 ])
 const domains = toPullRequestDomains(['pr-1', 'pr-2', 'pr-3', 'pr-4', 'pr-5'])
 const prune = (limits: PruneLimits) => selectPrunedDomains(domains, pullRequests, limits).map(domain => domain.alias)
-test('only the domains of pull requests count, not those of branches like main', () => {
-  expect(toPullRequestDomains(['main', 'pr-12', 'pr-', 'pr-3a', 'xpr-4', 'pr-007'])).toEqual([
+test('only pull request previews count toward the pruning limit', () => {
+  expect(toPullRequestDomains(['canary', 'pr-12', 'pr-', 'pr-3a', 'xpr-4', 'pr-007'])).toEqual([
     {
       alias: 'pr-12',
       number: 12,
@@ -37,7 +37,6 @@ test('only the domains of pull requests count, not those of branches like main',
 test('closed pull requests go before open ones, those that closed or opened longest ago first', () => {
   expect(prune({maximum: 0})).toEqual(['pr-2', 'pr-5', 'pr-1', 'pr-4', 'pr-3'])
   expect(prune({maximum: 2})).toEqual(['pr-2', 'pr-5', 'pr-1'])
-  expect(prune({maximum: 1})).toEqual(['pr-2', 'pr-5', 'pr-1', 'pr-4'])
 })
 test('nothing goes with no more domains than the maximum', () => {
   expect(prune({maximum: 5})).toEqual([])

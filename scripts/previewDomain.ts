@@ -21,7 +21,6 @@ type DnsRecord = {
   type: string
 }
 type PagesDomain = {
-  created_on: string
   name: string
   status: 'active' | 'blocked' | 'deactivated' | 'error' | 'initializing' | 'pending'
   validation_data?: {error_message?: string}
@@ -35,9 +34,10 @@ const zoneName = 'slop.gallery'
 // Marks the DNS records this script owns, so it never takes over or deletes one made by hand.
 const recordComment = 'managed by the pages workflow'
 const help = [
-  'Usage: bun scripts/previewDomain.ts <attach|detach> <alias>',
+  'Usage: bun scripts/previewDomain.ts attach <alias> [pages-branch]',
+  '       bun scripts/previewDomain.ts detach <alias>',
   '',
-  `Serves the Cloudflare Pages preview alias <alias>.${project}.pages.dev at <alias>.${zoneName} (attach) or stops doing so (detach).`,
+  `Serves <pages-branch>.${project}.pages.dev at <alias>.${zoneName}. The Pages branch defaults to the alias.`,
   'attach waits until Cloudflare has validated the domain and issued its certificate.',
   `Needs CLOUDFLARE_API_TOKEN, a Cloudflare API token with Cloudflare Pages: Edit and DNS: Edit on ${zoneName}.`,
 ].join('\n')
@@ -68,15 +68,12 @@ const request = async <Result>(path: string, init: RequestInit = {}) => {
   const body = await requestResponse<Result>(path, init)
   return body?.result
 }
-const resolveAlias = (alias: string) => {
+const previewLabel = (alias: string) => {
   // Cloudflare cuts preview aliases to 28 characters of lowercase letters, digits and hyphens.
   if (!/^[\da-z](?:[\d\-a-z]{0,26}[\da-z])?$/.test(alias)) {
     throw new TypeError(`${alias} is no preview alias.`)
   }
-  return {
-    hostname: `${alias}.${zoneName}`,
-    target: `${alias}.${project}.pages.dev`,
-  }
+  return alias
 }
 const domainPath = (hostname?: string) => `/accounts/${accountId}/pages/projects/${project}/domains${hostname ? `/${hostname}` : ''}`
 const getRecords = async (hostname: string) => {
@@ -84,8 +81,9 @@ const getRecords = async (hostname: string) => {
   return records ?? []
 }
 
-export const attachPreviewDomain = async (alias: string, {timeout = 600_000} = {}) => {
-  const {hostname, target} = resolveAlias(alias)
+export const attachPreviewDomain = async (alias: string, {branch = alias, timeout = 600_000} = {}) => {
+  const hostname = `${previewLabel(alias)}.${zoneName}`
+  const target = `${previewLabel(branch)}.${project}.pages.dev`
   const records = await getRecords(hostname)
   const foreignRecord = records.find(record => record.comment !== recordComment)
   if (foreignRecord) {
@@ -137,7 +135,7 @@ export const attachPreviewDomain = async (alias: string, {timeout = 600_000} = {
   return url
 }
 
-/** Resolves with the preview aliases served at a subdomain of the zone, like `pr-145` for pr-145.slop.gallery, with when Cloudflare added their domain. */
+/** the custom domain labels on this project, like `pr-145` for pr-145.slop.gallery */
 export const listPreviewDomains = async () => {
   const domains: Array<PagesDomain> = []
   for (let page = 1; ; page++) {
@@ -148,14 +146,11 @@ export const listPreviewDomains = async () => {
     }
   }
   const suffix = `.${zoneName}`
-  return domains.filter(domain => domain.name.endsWith(suffix)).map(domain => ({
-    alias: domain.name.slice(0, -suffix.length),
-    createdOn: new Date(domain.created_on),
-  }))
+  return domains.filter(domain => domain.name.endsWith(suffix)).map(domain => domain.name.slice(0, -suffix.length))
 }
 
 export const detachPreviewDomain = async (alias: string) => {
-  const {hostname} = resolveAlias(alias)
+  const hostname = `${previewLabel(alias)}.${zoneName}`
   const domain = await request<PagesDomain>(domainPath(hostname), {method: 'DELETE'})
   if (domain !== undefined) {
     console.log(`Removed ${hostname} from the Pages project ${project}.`)
@@ -171,9 +166,9 @@ export const detachPreviewDomain = async (alias: string) => {
 }
 
 /** Resolves with the custom domain’s URL after `attach`. */
-const main = async (command: 'attach' | 'detach', alias: string) => {
+const main = async (command: 'attach' | 'detach', alias: string, branch?: string) => {
   if (command === 'attach') {
-    return attachPreviewDomain(alias)
+    return attachPreviewDomain(alias, {branch})
   }
   await detachPreviewDomain(alias)
 }
@@ -189,11 +184,11 @@ if (import.meta.main) {
       help: {type: 'boolean'},
     },
   })
-  const [command, alias] = positionals
-  if (values.help || !alias || positionals.length > 2 || command !== 'attach' && command !== 'detach') {
+  const [command, alias, branch] = positionals
+  if (values.help || !alias || positionals.length > (command === 'attach' ? 3 : 2) || command !== 'attach' && command !== 'detach') {
     console.log(help)
     process.exitCode = values.help ? 0 : 1
   } else {
-    await main(command, alias)
+    await main(command, alias, branch)
   }
 }

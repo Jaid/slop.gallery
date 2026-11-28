@@ -7,7 +7,7 @@ image generation playground embedded in a fun-to-explore 3D game
 <img src=assets/icon.svg height=256>
 </a>
 
-[slop.gallery](https://slop.gallery) | [canary](https://main.slop.gallery) | [source](https://github.com/Jaid/slop.gallery)
+[slop.gallery](https://slop.gallery) | [canary](https://canary.slop.gallery) | [source](https://github.com/Jaid/slop.gallery)
 </center>
 
 ## license
