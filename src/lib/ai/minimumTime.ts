@@ -8,6 +8,12 @@ export default async function withMinimumTime<T>(request: Promise<T>, seconds: n
   if (seconds <= 0) {
     return request
   }
-  const [answer] = await Promise.all([request, delay(seconds * 1000, {signal})])
-  return answer
+  const timer = new AbortController
+  const wait = delay(seconds * 1000, {signal: signal ? AbortSignal.any([signal, timer.signal]) : timer.signal})
+  try {
+    const [answer] = await Promise.all([request, wait])
+    return answer
+  } finally {
+    timer.abort()
+  }
 }

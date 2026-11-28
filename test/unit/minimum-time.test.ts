@@ -1,33 +1,34 @@
-import {expect, test} from 'bun:test'
+import {afterEach, beforeEach, expect, jest, test} from 'bun:test'
 
 import withMinimumTime from '../../src/lib/ai/minimumTime.ts'
 
-test('an answer that comes back early is held back until the minimum time has passed', async () => {
-  const start = performance.now()
-  expect(await withMinimumTime(Promise.resolve('cached'), 0.1)).toBe('cached')
-  expect(performance.now() - start).toBeGreaterThanOrEqual(95)
+beforeEach(() => {
+  jest.useFakeTimers()
 })
-test('an answer that takes longer than the minimum time is not held back any further', async () => {
-  const start = performance.now()
-  const slow = new Promise<string>(resolve => setTimeout(() => resolve('slow'), 100))
-  expect(await withMinimumTime(slow, 0.05)).toBe('slow')
-  expect(performance.now() - start).toBeLessThan(140)
+afterEach(() => {
+  jest.useRealTimers()
 })
-test('without a minimum time, the answer comes through as it is', async () => {
-  const start = performance.now()
-  expect(await withMinimumTime(Promise.resolve('at once'), 0)).toBe('at once')
-  expect(performance.now() - start).toBeLessThan(20)
+test('releases a cached answer at the deadline and a slower one as soon as it arrives', async () => {
+  const slow = Promise.withResolvers<string>()
+  const later = withMinimumTime(slow.promise, 1)
+  const cached = withMinimumTime(Promise.resolve('cached'), 1)
+  jest.advanceTimersByTime(1000)
+  expect(await cached).toBe('cached')
+  expect(Bun.peek.status(later)).toBe('pending')
+  slow.resolve('slow')
+  expect(await later).toBe('slow')
 })
-test('a failure comes through at once', async () => {
-  const start = performance.now()
-  await expect(withMinimumTime(Promise.reject(new Error('busy')), 10)).rejects.toThrow('busy')
-  expect(performance.now() - start).toBeLessThan(50)
-})
-test('an abort ends the wait', async () => {
+test('an abort just before the deadline still cancels a cached answer', async () => {
   const controller = new AbortController
-  const start = performance.now()
-  const waiting = withMinimumTime(Promise.resolve('cached'), 10, controller.signal)
+  const waiting = withMinimumTime(Promise.resolve('cached'), 1, controller.signal)
+  jest.advanceTimersByTime(999)
   controller.abort()
   await expect(waiting).rejects.toThrow()
-  expect(performance.now() - start).toBeLessThan(50)
+  expect(jest.getTimerCount()).toBe(0)
+})
+test('zero delay and failed requests settle without advancing the clock or leaving timers behind', async () => {
+  expect(await withMinimumTime(Promise.resolve('ready'), 0)).toBe('ready')
+  const error = new Error('busy')
+  await expect(withMinimumTime(Promise.reject(error), 10)).rejects.toBe(error)
+  expect(jest.getTimerCount()).toBe(0)
 })
