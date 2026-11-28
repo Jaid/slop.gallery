@@ -1,14 +1,12 @@
-@use '../../style/colors'
-
-// a line of the text in height
+// a line of the text in height, which the avatar reaches beyond
 .container
   display: flex
   align-items: center
-  gap: 0.3em
+  gap: 0.5em
   height: 1.25em
   .avatar
-    width: 1.25em
-    height: 1.25em
+    width: 2em
+    height: 2em
   .bars
     width: auto
     height: 0.6em
@@ -17,6 +15,7 @@
       width: 0.15em
       border-radius: 0.075em
 
+// takes the line’s free space, which pushes the spectrum to its far end
 .name
-  color: colors.$accent
-  font-size: 0.6em
+  flex: 1
+  text-align: start

@@ -5,34 +5,36 @@ $spoken: #ffd23f
 .container
   position: absolute
   right: 0
-  bottom: 100px
+  bottom: 1em
   left: 0
   display: flex
   flex-direction: column
-  gap: 0.25em
+  gap: 0.5em
   box-sizing: border-box
   width: fit-content
   max-width: min(960px, calc(100% - 2rem))
   margin-inline: auto
-  padding: 0.4em 0.9em 0.5em
+  padding: 0.8em
   color: $text
   font-size: clamp(1.25rem, 0.9rem + 1vw, 2rem)
   line-height: 1.25em
   text-align: center
   text-wrap: balance
-  text-shadow: 0 0 0.1em black, 0 0 0.3em black
+  text-shadow: 0 0 0.1em black
   background: rgb(0 0 0 / 50%)
   backdrop-filter: blur(8px)
+  border-radius: 8px
   pointer-events: none
   transition: opacity 450ms ease-in
   &[data-ended='true']
     opacity: 0
 
-// Every sentence shares one cell, so the leaving one and the hidden copies stack under the current one.
+// Every sentence shares one cell, so the leaving one and the hidden copies stack under the current one. A shorter sentence sits centered at the bottom, its lines left-aligned.
 .lines
   display: grid
   justify-items: center
   align-items: end
+  text-align: left
 
 .group
   grid-area: 1 / 1
