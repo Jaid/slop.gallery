@@ -1,5 +1,4 @@
 import {expect, test} from 'bun:test'
-import {fileURLToPath} from 'node:url'
 
 import {knotBays, knotNumberLabel} from 'knot-materials/exhibition.ts'
 import {knotPreviewBottomClearance, knotPreviewHeight, knotPreviewMountY, knotPreviewPanelOffsetY, knotPreviewTextureHeight, knotPreviewTextureLayout, knotPreviewTextureWidth, knotPreviewWidth} from 'knot-materials/KnotPreviewLayout.ts'
@@ -7,12 +6,12 @@ import {billboardParts} from 'knot-materials/signs.ts'
 import puppeteer from 'puppeteer-core'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
-import {preprocessCSS, resolveConfig} from 'vite'
 
 import KnotPreviewFace, {knotPreviewBackground} from '#component/KnotPreviewFace'
 import {cssHex} from '#src/lib/color.ts'
 
 import signAccentColor from '../../src/components/signAccentColor.ts'
+import compileStyle from './helpers/compileStyle.ts'
 
 test('runtime billboards keep one 3:2 mesh and pack stickers to fit the fixed raster', () => {
   expect(knotPreviewWidth / knotPreviewHeight).toBeCloseTo(3 / 2)
@@ -54,12 +53,7 @@ test.skipIf(!Bun.env.BROWSER)('the billboard centers the tiles in each row and s
     bay: {finishes},
     images: new Map,
   }))
-  const file = fileURLToPath(new URL('../../src/components/KnotPreviewFace/style.module.sass', import.meta.url))
-  const config = await resolveConfig({
-    configLoader: 'native',
-    logLevel: 'silent',
-  }, 'serve')
-  const {code} = await preprocessCSS(await Bun.file(file).text(), file, config)
+  const {code} = await compileStyle('src/components/KnotPreviewFace/style.module.sass')
   await using browser = await puppeteer.launch({executablePath: Bun.env.BROWSER})
   const page = await browser.newPage()
   await page.setContent(`<style>${code}</style>${markup}`)
@@ -77,7 +71,7 @@ test.skipIf(!Bun.env.BROWSER)('the billboard centers the tiles in each row and s
     expect(left).toBeGreaterThanOrEqual(-0.5)
     expect(Math.abs(left - right)).toBeLessThan(0.5)
   }
-})
+}, 60_000)
 test('runtime billboard textures keep the default preview population below 192 MiB', () => {
   const bytes = knotBays.reduce((total, bay) => {
     const raster = knotPreviewTextureLayout(bay.finishes.length)

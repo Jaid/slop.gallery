@@ -1,13 +1,9 @@
 import {expect, test} from 'bun:test'
-import {fileURLToPath} from 'node:url'
 
 import postcss from 'postcss'
-import {preprocessCSS, resolveConfig} from 'vite'
 
-const config = await resolveConfig({
-  configLoader: 'native',
-  logLevel: 'silent',
-}, 'serve')
+import compileStyle from './helpers/compileStyle.ts'
+
 function expectStaticStyles(code: string) {
   postcss.parse(code).walkDecls(declaration => {
     expect(declaration.prop).not.toStartWith('--')
@@ -19,8 +15,7 @@ test('components use real, locally scoped Sass module exports', async () => {
   const files = [...sassModuleGlob.scanSync()].toSorted()
   expect(files.length).toBeGreaterThan(0)
   for (const file of files) {
-    const source = await Bun.file(file).text()
-    const compiled = await preprocessCSS(source, fileURLToPath(new URL(`../../${file.replaceAll('\\', '/')}`, import.meta.url)), config)
+    const compiled = await compileStyle(file)
     expectStaticStyles(compiled.code)
     const modules = compiled.modules
     expect(modules, file).toBeDefined()
@@ -51,8 +46,7 @@ test('components use no global stylesheets or literal class names', async () => 
   }
 })
 test('document styling uses local fonts without font downloads', async () => {
-  const source = await Bun.file('src/style.sass').text()
-  const compiled = await preprocessCSS(source, fileURLToPath(new URL('../../src/style.sass', import.meta.url)), config)
+  const compiled = await compileStyle('src/style.sass')
   expectStaticStyles(compiled.code)
   expect(compiled.code).toContain('font-family')
   expect(compiled.code).not.toContain('url(')

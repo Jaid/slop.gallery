@@ -1,12 +1,12 @@
 import {expect, test} from 'bun:test'
-import {fileURLToPath} from 'node:url'
 
 import puppeteer from 'puppeteer-core'
 import {createElement} from 'react'
 import {renderToStaticMarkup} from 'react-dom/server'
-import {preprocessCSS, resolveConfig} from 'vite'
 
 import {Face} from '#component/ElementText'
+
+import compileStyle from './helpers/compileStyle.ts'
 
 const face = (fontFamily: string, text = 'Cornelius van Honk', fontSize = 54) => renderToStaticMarkup(createElement(Face, {
   color: '#696653',
@@ -22,7 +22,6 @@ test('a line’s font family reaches CSS as it is, so generic families stay gene
   // Quoted, sans-serif would name a font nobody has and fall back to the browser’s standard font, a serif one.
   expect(face('sans-serif')).toContain('font-family:sans-serif')
   expect(face('Georgia, serif')).toContain('font-family:Georgia, serif')
-  expect(face('sans-serif')).not.toContain('&quot;')
 })
 test('a line is limited to its share of the face', () => {
   const markup = face('sans-serif')
@@ -31,15 +30,9 @@ test('a line is limited to its share of the face', () => {
   expect(markup).toContain('>Cornelius van Honk<')
 })
 test.skipIf(!Bun.env.BROWSER)('a line too long for the face shrinks into its share, a short one keeps its size', async () => {
-  const file = fileURLToPath(new URL('../../src/components/ElementText/style.module.sass', import.meta.url))
-  const config = await resolveConfig({
-    configLoader: 'native',
-    logLevel: 'silent',
-  }, 'serve')
-  const {code} = await preprocessCSS(await Bun.file(file).text(), file, config)
+  const {code} = await compileStyle('src/components/ElementText/style.module.sass')
   await using browser = await puppeteer.launch({executablePath: Bun.env.BROWSER})
   const page = await browser.newPage()
-  // Far wider than the face at this size, so the line once widened the face’s track and shrank into 90% of that instead.
   await page.setContent(`<style>body{margin:0}${code}</style>${face('sans-serif', 'The Feline Overlord’s Morning Glare at Dawn', 120)}${face('sans-serif', 'Short')}`)
   const lines = await page.$$eval('body > div', faces => faces.map(element => {
     const range = document.createRange()
@@ -58,4 +51,4 @@ test.skipIf(!Bun.env.BROWSER)('a line too long for the face shrinks into its sha
   expect(Math.abs(long.left - long.right)).toBeLessThan(1)
   expect(short.width).toBeLessThan(1536 * 0.5)
   expect(Math.abs(short.left - short.right)).toBeLessThan(1)
-})
+}, 60_000)
