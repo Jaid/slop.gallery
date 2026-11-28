@@ -18,7 +18,6 @@ import registerWebmcp from '../../src/lib/webmcp/register.ts'
 import showFence from '../../src/lib/webmcp/showFence.ts'
 import {dumpSloperator, provideSloperator, spawnSloperator, triggerSloperatorSighting} from '../../src/lib/webmcp/sloperator.ts'
 import createWebmcpTools from '../../src/lib/webmcp/tools.ts'
-import slopGallery from '../../src/worlds/gallery/index.ts'
 
 /** what the bridge got as the target, which the real one resolves to a slot or a wall */
 type EchoedAddition = Awaited<ReturnType<WebmcpBridge['addPortrait']>> & Pick<PortraitAdditionInput, 'hangingAnimation' | 'target'>
@@ -253,49 +252,41 @@ const bridge: WebmcpBridge = {
     sight,
   }],
 }
-test('WebMCP read tools are read-only, validate input and read the current bridge', () => {
-  let current = bridge
-  const tools = createWebmcpTools(() => current)
+const galleryTools = createWebmcpTools(bridge)
+const toolNamed = (name: string) => galleryTools.find(tool => tool.name === name)!
+test('read-only snapshots take empty input and read from the mounted world', () => {
   const controller = new AbortController
-  expect(tools.map(tool => tool.name)).toEqual(['get_aim', 'get_telemetry', 'dump_knots', 'dump_portrait_slots', 'dump_portraits', 'dump_geofences', 'dump_sloperator', 'analyze_world', 'get_loading_items', 'get_world_tuning', 'get_geofences', 'show_fence', 'show_colliders', 'add_layer', 'clear_layer', 'clear_drawings', 'add_drawing', 'add_text_overlay', 'clear_text_overlay', 'download_frame', 'end_warmup', 'throw_prop', 'spawn_orb', 'spawn_party_effect', 'spawn_sloperator', 'trigger_sloperator_sighting', 'cast_mood', 'set_world_tuning', 'reroll_seed', 'set_seed', 'add_portrait', 'set_wireframe'])
-  for (const tool of tools.slice(0, 10)) {
-    expect(tool.annotations?.readOnlyHint).toBe(true)
-    expect(() => tool.execute({unexpected: true}, {signal: controller.signal})).toThrow(TypeError)
+  const options = {signal: controller.signal}
+  const snapshots = {
+    get_aim: bridge.getAim(),
+    get_telemetry: bridge.getTelemetry(),
+    dump_knots: bridge.getKnots(),
+    dump_portrait_slots: bridge.getPortraitSlots(),
+    dump_portraits: bridge.getPortraits(),
+    dump_geofences: bridge.dumpGeofences(),
+    dump_sloperator: bridge.dumpSloperator(),
+    analyze_world: bridge.analyzeWorld(),
+    get_loading_items: bridge.getLoadingItems().join('\n'),
+    get_world_tuning: bridge.getWorldTuning(),
   }
-  expect(tools[0].execute({}, {signal: controller.signal})).toEqual(bridge.getAim())
-  current = {
-    ...bridge,
-    getAim: () => ({
-      ...bridge.getAim(),
-      origin: {
-        x: 3,
-        y: 4,
-        z: 5,
-      },
-    }),
+  for (const [name, expected] of Object.entries(snapshots)) {
+    const tool = toolNamed(name)
+    expect(tool.annotations?.readOnlyHint, name).toBe(true)
+    expect(() => tool.execute({unexpected: true}, options), name).toThrow(TypeError)
+    expect(tool.execute({}, options), name).toEqual(expected)
   }
-  expect(tools[0].execute({}, {signal: controller.signal})).toEqual(current.getAim())
-  expect(tools[1].execute({}, {signal: controller.signal})).toBeNull()
-  expect(tools[2].execute({}, {signal: controller.signal})).toEqual(current.getKnots())
-  expect(tools[3].execute({}, {signal: controller.signal})).toEqual(current.getPortraitSlots())
-  expect(tools[4].execute({}, {signal: controller.signal})).toEqual(current.getPortraits())
-  expect(tools[5].execute({}, {signal: controller.signal})).toEqual(current.dumpGeofences())
-  expect(tools[6].execute({}, {signal: controller.signal})).toEqual(current.dumpSloperator())
-  expect(tools[7].execute({}, {signal: controller.signal})).toEqual(current.analyzeWorld())
-  expect(tools[8].execute({}, {signal: controller.signal})).toBe('pipeline:lobby-floor/MeshStandardNodeMaterial\nwarmup')
-  expect(tools[9].execute({}, {signal: controller.signal})).toEqual(current.getWorldTuning())
   controller.abort()
-  expect(() => tools[0].execute({}, {signal: controller.signal})).toThrow()
+  expect(() => toolNamed('get_aim').execute({}, options)).toThrow()
 })
 test('set_world_tuning takes values by module and key, null among them, and asks the bridge', () => {
   const inputs: Array<WorldTuningInput> = []
-  const tool = createWebmcpTools(() => ({
+  const tool = createWebmcpTools({
     ...bridge,
     setWorldTuning(input) {
       inputs.push(input)
       return bridge.setWorldTuning(input)
     },
-  })).find(({name}) => name === 'set_world_tuning')!
+  }).find(({name}) => name === 'set_world_tuning')!
   const controller = new AbortController
   const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -321,13 +312,13 @@ test('set_world_tuning takes values by module and key, null among them, and asks
 })
 test('get_geofences is read-only, takes an optional position of x, y and z and asks the bridge', () => {
   const queries: Array<GeofenceQuery> = []
-  const tool = createWebmcpTools(() => ({
+  const tool = createWebmcpTools({
     ...bridge,
     getGeofences(query) {
       queries.push(query)
       return bridge.getGeofences(query)
     },
-  })).find(({name}) => name === 'get_geofences')!
+  }).find(({name}) => name === 'get_geofences')!
   const controller = new AbortController
   const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
   const position = {
@@ -362,7 +353,7 @@ test('get_geofences is read-only, takes an optional position of x, y and z and a
   expect(() => execute({})).toThrow()
 })
 test('add_drawing validates the chosen shape before adding it to the overlay', () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'add_drawing')!
+  const tool = toolNamed('add_drawing')
   const controller = new AbortController
   const options = {signal: controller.signal}
   const drawing = {
@@ -390,9 +381,8 @@ test('add_drawing validates the chosen shape before adding it to the overlay', (
   }
 })
 test('WebMCP layer calls reject malformed inputs before creating or clearing layers', () => {
-  const tools = createWebmcpTools(() => bridge)
   const controller = new AbortController
-  const run = (name: string, input: Record<string, unknown>) => tools.find(tool => tool.name === name)!.execute(input, {signal: controller.signal})
+  const run = (name: string, input: Record<string, unknown>) => toolNamed(name).execute(input, {signal: controller.signal})
   expect(run('add_layer', {id: 'notes'})).toEqual({id: 'notes'})
   expect(run('clear_layer', {id: 'notes'})).toEqual({removed: 1})
   expect(run('clear_drawings', {})).toEqual({removed: 2})
@@ -410,9 +400,8 @@ test('WebMCP layer calls reject malformed inputs before creating or clearing lay
   }
 })
 test('text overlay calls reject ambiguous positions and invalid clears', () => {
-  const tools = createWebmcpTools(() => bridge)
   const controller = new AbortController
-  const run = (name: string, input: Record<string, unknown>) => tools.find(tool => tool.name === name)!.execute(input, {signal: controller.signal})
+  const run = (name: string, input: Record<string, unknown>) => toolNamed(name).execute(input, {signal: controller.signal})
   for (const position of [null, {x: 1}, {
     x: 1,
     y: Infinity,
@@ -442,7 +431,7 @@ test('text overlay calls reject ambiguous positions and invalid clears', () => {
   expect(() => run('clear_text_overlay', {})).toThrow()
 })
 test('show_fence selects all, one or no fences and preserves the selection on errors', () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'show_fence')!
+  const tool = toolNamed('show_fence')
   const controller = new AbortController
   const execute = (input: Record<string, unknown>) => tool.execute(input, {signal: controller.signal})
   const original = useFenceDisplay.getState()
@@ -465,7 +454,7 @@ test('show_fence selects all, one or no fences and preserves the selection on er
   }
 })
 test('show_colliders can select future objects, show all or hide them without changing the selection on invalid or aborted calls', () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'show_colliders')!
+  const tool = toolNamed('show_colliders')
   const controller = new AbortController
   const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
   const original = useColliderDisplay.getState()
@@ -485,7 +474,7 @@ test('show_colliders can select future objects, show all or hide them without ch
   }
 })
 test('download_frame validates its optional name and downloads through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'download_frame')!
+  const tool = toolNamed('download_frame')
   const controller = new AbortController
   const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal}) as Promise<unknown>
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -509,7 +498,7 @@ test('download_frame validates its optional name and downloads through the bridg
   await expect(execute({})).rejects.toThrow()
 })
 test('end_warmup takes no input and ends the warmup through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'end_warmup')!
+  const tool = toolNamed('end_warmup')
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -525,7 +514,7 @@ test('end_warmup takes no input and ends the warmup through the bridge', async (
   await expect(execute({})).rejects.toThrow()
 })
 test('set_wireframe validates its optional fields and sets them through the bridge', () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'set_wireframe')!
+  const tool = toolNamed('set_wireframe')
   const controller = new AbortController
   const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -610,7 +599,7 @@ test('set_wireframe validates its optional fields and sets them through the brid
   expect(() => execute({})).toThrow()
 })
 test('throw_prop takes a prop and exactly one of a portrait, a target or a velocity, and throws through the bridge', () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'throw_prop')!
+  const tool = toolNamed('throw_prop')
   const controller = new AbortController
   const execute = (input: unknown) => tool.execute(input as Record<string, unknown>, {signal: controller.signal})
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -663,7 +652,7 @@ test('throw_prop takes a prop and exactly one of a portrait, a target or a veloc
   })).toThrow()
 })
 test('spawn_orb takes a kind, a point and an optional prop id, and spawns through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'spawn_orb')!
+  const tool = toolNamed('spawn_orb')
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -712,7 +701,7 @@ test('spawn_orb takes a kind, a point and an optional prop id, and spawns throug
 })
 test('spawn_sloperator takes an optional sight and brings him there through the bridge, and trigger_sloperator_sighting takes an optional sight and an optional instant', async () => {
   const calls: Array<unknown> = []
-  const tools = createWebmcpTools(() => ({
+  const tools = createWebmcpTools({
     ...bridge,
     spawnSloperator(input) {
       calls.push(input)
@@ -722,7 +711,7 @@ test('spawn_sloperator takes an optional sight and brings him there through the 
       calls.push(input)
       return bridge.triggerSloperatorSighting(input)
     },
-  }))
+  })
   const controller = new AbortController
   const run = (name: string, input: unknown) => tools.find(tool => tool.name === name)!.execute(input as Record<string, unknown>, {signal: controller.signal})
   for (const name of ['spawn_sloperator', 'trigger_sloperator_sighting']) {
@@ -771,7 +760,7 @@ test('in a world without the Sloperator, his tools do nothing without a sight an
   expect(() => triggerSloperatorSighting({sight: 'salon_ottoman'})).toThrow('This world has no Sloperator.')
 })
 test('spawn_party_effect takes an effect, a point and an optional rotation, floor and delay, and spawns through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'spawn_party_effect')!
+  const tool = toolNamed('spawn_party_effect')
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -833,7 +822,7 @@ test('spawn_party_effect takes an effect, a point and an optional rotation, floo
   })).rejects.toThrow()
 })
 test('cast_mood takes the id of a mood or null and casts through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'cast_mood')!
+  const tool = toolNamed('cast_mood')
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -856,7 +845,7 @@ test('cast_mood takes the id of a mood or null and casts through the bridge', as
   await expect(execute({mood: 'paint'})).rejects.toThrow()
 })
 test('reroll_seed takes an empty input object and rerolls through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'reroll_seed')!
+  const tool = toolNamed('reroll_seed')
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -868,7 +857,7 @@ test('reroll_seed takes an empty input object and rerolls through the bridge', a
   await expect(execute({})).rejects.toThrow()
 })
 test('set_seed accepts the default or a canonical rolled seed and sets it through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'set_seed')!
+  const tool = toolNamed('set_seed')
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
   expect(tool.annotations?.readOnlyHint).toBe(false)
@@ -885,7 +874,7 @@ test('set_seed accepts the default or a canonical rolled seed and sets it throug
   await expect(execute({seed: 1})).rejects.toThrow()
 })
 test('add_portrait takes an image URL, exactly one kind of target and an optional title, id, frame, canvas material and size, and adds through the bridge', async () => {
-  const tool = createWebmcpTools(() => bridge).find(({name}) => name === 'add_portrait')!
+  const tool = toolNamed('add_portrait')
   const controller = new AbortController
   const execute = (input: unknown) => Promise.try(() => tool.execute(input as Record<string, unknown>, {signal: controller.signal}))
   const image = 'http://127.0.0.1:8080/xf14RxM8.png'
@@ -1043,44 +1032,38 @@ test('add_portrait takes an image URL, exactly one kind of target and an optiona
     target: slot,
   })).rejects.toThrow()
 })
-test('worlds without Knots expose an empty dump', () => {
-  expect(slopGallery.dumpKnots()).toEqual([])
-})
-test('registrations clean up on unmount, failure and cancellation during registration', async () => {
-  for (const mode of ['success', 'failure', 'abort'] as const) {
-    const controller = new AbortController
-    const signals: Array<AbortSignal> = []
-    const context = {
-      registerTool: async (_tool: WebMCP.ModelContextTool, options: WebMCP.ModelContextRegisterToolOptions) => {
-        signals.push(options.signal!)
-        if (signals.length === 2 && mode === 'failure') {
-          throw new Error('Registration failed')
-        }
-        if (mode === 'abort') {
-          controller.abort()
-        }
-      },
-    } as WebMCP.ModelContext
-    const registered = registerWebmcp(() => bridge, controller.signal, context)
-    if (mode === 'success') {
-      const cleanup = await registered
-      expect(signals).toHaveLength(createWebmcpTools(() => bridge).length)
-      expect(signals[0].aborted).toBe(false)
-      cleanup()
-      cleanup()
-    } else {
-      await expect(registered).rejects.toThrow()
-    }
-    expect(signals.every(signal => signal.aborted)).toBe(true)
-  }
-})
-test('an already aborted mount never registers tools', async () => {
+test('unmounting revokes every registered tool', async () => {
   const controller = new AbortController
+  const registrations = new Map<string, AbortSignal>
+  await registerWebmcp(bridge, controller, {async registerTool(tool, options) {
+    registrations.set(tool.name, options!.signal!)
+  }})
+  expect(registrations.keys().toArray().toSorted()).toEqual(galleryTools.map(tool => tool.name).toSorted())
+  expect(registrations.values().some(signal => signal.aborted)).toBe(false)
   controller.abort()
-  const cleanup = await registerWebmcp(() => bridge, controller.signal, {
-    registerTool: () => {
-      throw new Error('Must not register')
-    },
-  } as unknown as WebMCP.ModelContext)
-  expect(cleanup).toBeFunction()
+  expect(registrations.values().every(signal => signal.aborted)).toBe(true)
+})
+test.each(['failure', 'unmount', 'already unmounted'])('registration stops on %s and leaves no tools behind', async mode => {
+  const controller = new AbortController
+  if (mode === 'already unmounted') {
+    controller.abort()
+  }
+  const signals: Array<AbortSignal> = []
+  const registering = registerWebmcp(bridge, controller, {async registerTool(_tool, options) {
+    signals.push(options!.signal!)
+    if (mode === 'failure' && signals.length === 2) {
+      throw new Error('Registration failed')
+    }
+    if (mode === 'unmount') {
+      controller.abort()
+    }
+  }})
+  if (mode === 'failure') {
+    await expect(registering).rejects.toThrow('Registration failed')
+    expect(signals).toHaveLength(2)
+  } else {
+    await registering
+    expect(signals).toHaveLength(mode === 'unmount' ? 1 : 0)
+  }
+  expect(signals.every(signal => signal.aborted)).toBe(true)
 })

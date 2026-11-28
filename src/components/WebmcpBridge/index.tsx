@@ -116,27 +116,8 @@ export default function WebmcpBridge() {
         }
       },
     }
-    let unregister = () => {}
-    async function register() {
-      try {
-        const cleanup = await registerWebmcp(() => bridge, controller.signal)
-        if (controller.signal.aborted) {
-          cleanup()
-        } else {
-          unregister = cleanup
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          console.warn('Could not register gallery WebMCP tools:', error)
-        }
-      }
-    }
-    // eslint-disable-next-line typescript/no-floating-promises -- Registration handles errors internally; effects cannot await it.
-    void register()
-    return () => {
-      controller.abort()
-      unregister()
-    }
+    registerWebmcp(bridge, controller).catch(error => console.warn('Could not register gallery WebMCP tools:', error))
+    return () => controller.abort()
   }, [scene, camera, renderer])
   return null
 }

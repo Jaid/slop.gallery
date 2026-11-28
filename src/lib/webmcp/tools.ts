@@ -152,67 +152,67 @@ const readPortraitTarget = (target: unknown): PortraitTarget => {
 }
 const wireframeKeys = ['enabled', 'direction', 'mode', 'anchor', 'shape', 'position', 'radius', 'highlight', 'color', 'highlight_color', 'background', 'seam_width', 'glow_duration', 'seam_color', 'seam_intensity', 'angle_indicator_strength', 'speed', 'burst', 'burst_duration', 'antialiasing', 'line_style', 'line_width']
 
-export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<WebMCP.ModelContextTool> {
+export default function createWebmcpTools(bridge: WebmcpBridge): Array<WebMCP.ModelContextTool> {
   const readTools: Array<WebMCP.ModelContextTool> = [
     {
       name: 'get_aim',
       title: 'Inspect player aim',
       description: 'Read the current camera ray and visible mesh hits ordered by distance. Includes full-precision world and local positions, surface normals, instance IDs, UVs, materials and ancestor metadata. Read-only: does not move the player, change focus or simulate input. Use world-space hit points and normals for scene placement.',
-      read: () => getBridge().getAim(),
+      read: () => bridge.getAim(),
     },
     {
       name: 'get_telemetry',
       title: 'Inspect telemetry delivery',
       description: 'Read the current session ID, collection limits and Victoria delivery status, or null when telemetry is disabled. Use the session ID to correlate VictoriaLogs, VictoriaMetrics, VictoriaTraces and X-key ego.dump records (X dumps only with ?development). Does not enable telemetry or send data.',
-      read: () => getBridge().getTelemetry(),
+      read: () => bridge.getTelemetry(),
     },
     {
       name: 'dump_knots',
       title: 'Dump current Knots',
       description: 'Return every Knot currently present in the world with its canonical ID, display name, world position and current session rarity: Knottingham’s exhibition, including unsaved sign edits in its rarity edit mode, or the Knots the gallery showcases once their rooms have loaded.',
-      read: () => getBridge().getKnots(),
+      read: () => bridge.getKnots(),
     },
     {
       name: 'dump_portrait_slots',
       title: 'Dump portrait slots',
       description: 'Return every portrait slot of the world with its ID, wall ID, ratio, priority for default works, frame width and height in meters, world-space frame center, rotation, whether its placard hangs above the frame and the frame of its room, which its default work wears (left out for the default frame). With ?edit_portrait_slots, this includes the edits made on this page. Worlds without slots return an empty array.',
-      read: () => getBridge().getPortraitSlots(),
+      read: () => bridge.getPortraitSlots(),
     },
     {
       name: 'dump_portraits',
       title: 'Dump portraits',
       description: 'Return every work of the collection where it is now, hung, lying, flying or held by a fusion: its ID, its title if it has one, whether it hangs and on which wall, its frame width and height in meters, the frame it wears unless the default one, the canvas material its image is on (canvasMaterial) if any, whether a fusion holds it (fusing) or its flavor text is being written (pending), the world-space middle of its frame and its rotation as a quaternion [x, y, z, w], before which its front faces +z and its top +y. Poll it to follow a work through the air, like the result a fusion flips out of its portal, which joins the collection as it does.',
-      read: () => getBridge().getPortraits(),
+      read: () => bridge.getPortraits(),
     },
     {
       name: 'dump_geofences',
       title: 'Dump geofences',
       description: 'Return every geofence of the world in the order the world checks them, each with its ID and all of its boxes in world meters, rounded to the tenth of a millimeter. A fence is the union of its boxes, and a relational fence, which lists relations, the IDs of other fences of the world, also takes in all of their space, through theirs, so it may have no boxes of its own: the gallery’s Lobby is its three parts. A box stands on the rectangle between the corners (x, z) and (x2, z2) on the ground and reaches from its floor up without end, from its ceiling down without end, from y up to y2, or, with none of them, up and down without end; its faces count as inside. The rooms’ fences come first, each under its room’s ID: where a visitor counts as being in the room, which overlaps its neighbors’ along shared walls and wherever one room lies over another. The first of them holding the player’s place is the room the player is in, which stays the last one while none holds it. After them come the rooms’ other fences, room by room, each under its room’s ID and its own joined by a hyphen, which mark places in the room where something happens, like its parts: in the gallery, the three parts of its Lobby from north to south, lobby-north with the glazed floor over the Oculus, lobby-middle around its fountain and lobby-south between the arches into the Vesper and the Banquet, moonfall-stairs, the stairway between the Antechamber and Moonfall, bastion-knight_alley, the Bastion’s blind branch beside the Lodge, where an empty suit of armor stands, bastion-cistern, the Bastion’s cistern behind the Forge’s vestibule, bastion-gate, the Bastion’s curve behind the gate in the Oculus’ apse, bastion-seeing_lodge_floor, wherever the Bastion sees the Lodge’s planks: down its approach to the Lodge’s east doorway, round the curve to the crown of the apse and from the knight’s alley, corridor-window, the Corridor’s hall abreast of the Lodge’s west window, and corridor-seeing_lodge_floor, the Corridor’s doorway passage and its run along the Lodge’s bay, which look into the bay. The game probes all of them for the player’s place once per frame, and the gallery.geofence.entered and gallery.geofence.left telemetry counts every fence on its own. Rooms this page’s ?world_reach leaves out are fenced too. get_geofences tells which fences hold a position.',
-      read: () => getBridge().dumpGeofences(),
+      read: () => bridge.dumpGeofences(),
     },
     {
       name: 'dump_sloperator',
       title: 'Dump the Sloperator',
       description: 'Return every sight of the Sloperator, the bowler-hatted gentleman of the gallery’s icon, in rooms in this page’s ?world_reach, and what he is up to there, or an empty array in a world without him. A sight is a seat he turns up on, or a spot he stands on, while the player’s place is in its fence (id), seen from afar through a window or across a room: lodge_east_armchair from bastion-knight_alley, lodge_west_armchair from corridor-window, lobby_east_bench from salon, lobby_north_bench from oculus, salon_ottoman from forge, all seats, and exhibition_glass from bastion-gate, where he stands. Entering that fence makes the physics place him once, on its next step: on his seat where it stood when the game began, on it where it went if it was pushed or turned a little, or standing where it stood once it is gone, or on his spot; anything else in the box he takes up there from his neutral pose through his sight pose keeps him away until the player enters the fence anew. state is away while the player is out of the fence, waiting until the physics placed him, seated, standing, kept_away, or slopped once he left his Slop there after the player caught sight of him and left the fence, never to return; pinned whether spawn_sloperator keeps him there wherever the player goes. detection tells how the physics found his seat, like the gallery.sloperator_spawn log event: present, moved or missing where he turned up, none where he stands at a sight without a seat, moved (too little to be gone but too far to sit on) or blocked where he stays away. pose (sit, sit_armchair or stand), position (the point on the floor under him, in world meters) and yaw (his turn around y in radians) tell how and where he is or where he left his Slop; sighted whether the player caught sight of him there since entering the fence, by aiming at him zoomed in all the way or through trigger_sloperator_sighting, which makes him get up off his seat or bring his hands behind his back; seat, at a sight with one, how far his seat strayed from where it stood when the game began, as it stands now: moved, how far the spot he sits on moved along the floor in meters, turned and tilted, how far it turned around y and leans from upright in radians. He follows a seat that moved up to 0.3 m, turned up to 20° and leans up to 5°. Read-only.',
-      read: () => getBridge().dumpSloperator(),
+      read: () => bridge.dumpSloperator(),
     },
     {
       name: 'analyze_world',
       title: 'Analyze world per room',
       description: 'Sort every visible mesh of the scene into the room holding most of its world bounding box (summed over instances) and every light into the room whose fence holds it, and report rooms keyed by id, each with its title, its fence (one axis-aligned box of min/max corners in world meters from floor to clear height, or a list of them: the Corridor’s strips round the Lodge’s bay, its hall and its stair to the Sienna, the Lodge with its threshold and the box around its bay), its static meshes (scene path of named ancestors, instances unless just 1, material name or type, a list for several and left out for a plain MeshStandardNodeMaterial, spill: the other rooms holding at least 1% of its bounding volume, and triangles, most triangles first), its items (what can be picked up and carried into another room, like props and portraits, in the room holding their origin now: prop or portrait id, meshes and triangles, most triangles first) and its lights (type, world position, color, intensity, range, decay, spot cone and shadow: own for a shadow map of its own, pooled for one borrowed from the shadow pool while in view, left out without one; the pool’s own slots are not listed). A mesh meeting no fence, like a crater floor, goes to the room above or below it. Meshes mostly outside every room, such as in passages and stairways, and lights outside every fence seen from above are listed under elsewhere; ambient, hemisphere and directional lights under globalLights. Triangle counts follow draw ranges and instance counts, not per-frame culling. Worlds without rooms list everything under elsewhere.',
-      read: () => getBridge().analyzeWorld(),
+      read: () => bridge.analyzeWorld(),
     },
     {
       name: 'get_loading_items',
       title: 'List loading items',
       description: 'List the IDs of everything still loading that would leave something out of the next frame, one per line, or an empty string once nothing is left. IDs start with their kind: artwork: (decoding), pipeline: (compiling in the background), warmup (the loading screen’s pipeline warmup), stream: (objects waiting to stream in), shadow-map: (shadow maps missing streamed objects), room: (gallery rooms downloading or waiting to mount), knot-material:, billboard-texture:, model-sign-texture:, knot-sign-texture (the Knots’ nameplates) and element-text: (lines of text laid out as HTML, like the portraits’ placards). Captures poll this until it is empty before rendering a frame. A new pose can bring new items. Read-only.',
-      read: () => getBridge().getLoadingItems().join('\n'),
+      read: () => bridge.getLoadingItems().join('\n'),
     },
     {
       name: 'get_world_tuning',
       title: 'Inspect world tuning',
       description: 'Return the world tuning: every value the panel G shows with ?development (or ?world_tuning from the start) lets the world be tuned by, live, by module: view (scale, field of view and tone mapping), the modules only the world has, like the gallery’s lighting (its sun, lamps and fill on top of its lighting preset) and the Studio’s studio (its size, openings, moon or sun, two lamps, fill, finishes and frame), pipeline (the passes of the render pipeline of heavy graphics and the lookups of the shadows) and overlay (the lines of the world overlay). Each module has its id, title, whether the panel shows its controls right now (shown, the pipeline’s only in heavy graphics, otherwise with a hint) and its controls in the panel’s order, each with its key, group box, the caption of the part of the group it is in, label, kind (range, select, toggle, color as its OkHSL {hue, saturation, lightness} in whole degrees and percent, which the panel shows as a slider each, or switch for a group’s heading that switches the value between on and off), value, the initial one the page started with where it differs, a range’s min, max, step, unit and whether it is an integer or a percentage of 1, a select’s options as {value, label}, on and off for a switch, off for the value a checkbox in front of the label switches it off to, applies false while its group is switched off or it does nothing with the other values, rebuilds for a value that builds something anew, like a pass of the pipeline, and reloads for one that reloads the page. Also tells whether the panel shows (open) and whether the page has ?development (development), without which no value takes effect. Read-only.',
-      read: () => getBridge().getWorldTuning(),
+      read: () => bridge.getWorldTuning(),
     },
   ].map(({read, ...tool}) => ({
     ...tool,
@@ -269,7 +269,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (position !== undefined && !isCoordinates(position, 'x,y,z')) {
           throw new TypeError('position must be {x, y, z}, three finite numbers in world meters.')
         }
-        return getBridge().getGeofences({position: position as GeofenceQuery['position']})
+        return bridge.getGeofences({position: position as GeofenceQuery['position']})
       },
     },
     {
@@ -297,7 +297,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (typeof fence !== 'boolean' && (typeof fence !== 'string' || !fence)) {
           throw new TypeError('fence must be a nonempty minimatch pattern, true for all or false for none.')
         }
-        return getBridge().showFence({fence})
+        return bridge.showFence({fence})
       },
     },
     {
@@ -326,7 +326,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (selection === undefined) {
           throw new TypeError('object must be a nonempty mesh path pattern, true for all colliders or false for none.')
         }
-        return getBridge().showColliders({object: selection})
+        return bridge.showColliders({object: selection})
       },
     },
     {
@@ -337,7 +337,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       annotations: {readOnlyHint: false},
       execute: (input: unknown, {signal}) => {
         signal.throwIfAborted()
-        return {id: getBridge().addLayer(readLayer(input))}
+        return {id: bridge.addLayer(readLayer(input))}
       },
     },
     {
@@ -356,7 +356,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (!isRecord(input) || Object.keys(input).length !== 1 || !isLayerId(input.id)) {
           throw new TypeError('Expected {id} for one layer.')
         }
-        return {removed: getBridge().clearLayer(input.id)}
+        return {removed: bridge.clearLayer(input.id)}
       },
     },
     {
@@ -374,7 +374,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (!isRecord(input) || Object.keys(input).length) {
           throw new TypeError('Expected an empty object to clear all drawings.')
         }
-        return {removed: getBridge().clearDrawings()}
+        return {removed: bridge.clearDrawings()}
       },
     },
     {
@@ -388,7 +388,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
       annotations: {readOnlyHint: false},
       execute: (input: unknown, {signal}) => {
         signal.throwIfAborted()
-        return getBridge().addDrawing(readDrawing(input))
+        return bridge.addDrawing(readDrawing(input))
       },
     },
     {
@@ -436,7 +436,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (position !== undefined && !isCoordinates(position, 'x,y') && !isCoordinates(position, 'x,y,z')) {
           throw new TypeError('position must be {x, y} in viewport CSS pixels or {x, y, z} in world meters.')
         }
-        return getBridge().addTextOverlay(input as TextOverlayInput)
+        return bridge.addTextOverlay(input as TextOverlayInput)
       },
     },
     {
@@ -454,7 +454,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (!isRecord(input) || Object.keys(input).length) {
           throw new TypeError('Expected an empty object to clear text labels.')
         }
-        return {removed: getBridge().clearTextOverlay()}
+        return {removed: bridge.clearTextOverlay()}
       },
     },
     {
@@ -495,7 +495,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (format !== undefined && !frameFormats.includes(format as FrameFormat)) {
           throw new TypeError(`format must be one of ${frameFormats.join(', ')}.`)
         }
-        return getBridge().downloadFrame({
+        return bridge.downloadFrame({
           name,
           format: format as FrameFormat | undefined,
         })
@@ -518,7 +518,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (!input || typeof input !== 'object' || Array.isArray(input) || Object.keys(input).length) {
           throw new TypeError('This tool takes an empty input object.')
         }
-        return getBridge().endWarmup()
+        return bridge.endWarmup()
       },
     },
     {
@@ -574,7 +574,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (speed !== undefined && !(typeof speed === 'number' && Number.isFinite(speed) && speed > 0)) {
           throw new TypeError('speed must be a finite number above 0.')
         }
-        return getBridge().throwProp({
+        return bridge.throwProp({
           prop,
           portrait,
           target: target as [number, number, number] | undefined,
@@ -623,7 +623,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (id !== undefined && (typeof id !== 'string' || !propIdPattern.test(id))) {
           throw new TypeError(`id must match ${propIdPattern}.`)
         }
-        return getBridge().spawnOrb({
+        return bridge.spawnOrb({
           orb,
           position,
           id,
@@ -682,7 +682,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (delay !== undefined && !(typeof delay === 'number' && Number.isFinite(delay) && delay >= 0)) {
           throw new TypeError('delay must be a finite number of at least 0.')
         }
-        return getBridge().spawnPartyEffect({
+        return bridge.spawnPartyEffect({
           effect,
           position,
           rotation: rotation as number | undefined,
@@ -717,7 +717,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (sight !== undefined && (typeof sight !== 'string' || !sight)) {
           throw new TypeError('sight must be the id of a sight of the Sloperator.')
         }
-        return getBridge().spawnSloperator({sight})
+        return bridge.spawnSloperator({sight})
       },
     },
     {
@@ -753,7 +753,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (instant !== undefined && typeof instant !== 'boolean') {
           throw new TypeError('instant must be true or false.')
         }
-        return getBridge().triggerSloperatorSighting({
+        return bridge.triggerSloperatorSighting({
           sight,
           instant,
         })
@@ -786,7 +786,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (mood !== null && (typeof mood !== 'string' || !mood)) {
           throw new TypeError('mood must be the id of a mood or null.')
         }
-        return getBridge().castMood({mood})
+        return bridge.castMood({mood})
       },
     },
     {
@@ -849,7 +849,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (!isRecord(values) || !Object.values(values).every(isRecord)) {
           throw new TypeError('values must be an object of values by key for each module id, like {view: {fov: 50}}.')
         }
-        return getBridge().setWorldTuning({values: values as Record<string, Record<string, unknown>>})
+        return bridge.setWorldTuning({values: values as Record<string, Record<string, unknown>>})
       },
     },
     {
@@ -869,7 +869,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (!isRecord(input) || Object.keys(input).length) {
           throw new TypeError('This tool takes an empty input object.')
         }
-        return getBridge().rerollSeed()
+        return bridge.rerollSeed()
       },
     },
     {
@@ -901,7 +901,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (!isSeed(seed)) {
           throw new TypeError(`seed must be an integer from 0 to ${maximumSeed}.`)
         }
-        return getBridge().setSeed({seed})
+        return bridge.setSeed({seed})
       },
     },
     {
@@ -1036,7 +1036,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
         if (hangingAnimation !== undefined && typeof hangingAnimation !== 'boolean') {
           throw new TypeError('hanging_animation must be true or false.')
         }
-        return getBridge().addPortrait({
+        return bridge.addPortrait({
           image,
           target: readPortraitTarget(target),
           title,
@@ -1272,7 +1272,7 @@ export default function createWebmcpTools(getBridge: () => WebmcpBridge): Array<
             throw new TypeError(`${key} must be #rgb, #rrggbb or null.`)
           }
         }
-        const flood = getBridge().setWireframe({
+        const flood = bridge.setWireframe({
           enabled,
           direction: direction as WireframeFlood['direction'] | undefined,
           mode: mode as WireframeFlood['mode'] | undefined,
