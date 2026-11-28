@@ -332,8 +332,6 @@ export default class OkladFrame extends PortraitFrame {
     return [
       new GiltMaterial({
         burnishedReflections: true,
-        bole: hsl.integer(260, 4, 70),
-        wear: 0.02,
         grime: 0.55,
         roughness: {
           burnished: 0.12,

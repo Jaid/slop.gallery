@@ -40,7 +40,6 @@ export default class VelvetFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new GiltMaterial({
-        wear: 0.35,
         grime: 0.7,
         relief: {
           depth: 0.006,

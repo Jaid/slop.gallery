@@ -41,7 +41,6 @@ export default class BurlFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new GiltMaterial({
-        wear: 0.25,
         relief: {
           depth: 0.003,
           height: surface => {

@@ -40,7 +40,7 @@ export default class ImpressionistFrame extends PortraitFrame {
 
   protected override createMaterials() {
     return [
-      new GiltMaterial({wear: 0.15}),
+      new GiltMaterial,
       new FramePaintMaterial({
         color: hsl.integer(88, 29, 91),
         roughness: 0.8,

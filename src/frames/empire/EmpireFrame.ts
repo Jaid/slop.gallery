@@ -172,7 +172,6 @@ export default class EmpireFrame extends PortraitFrame {
   protected override createMaterials() {
     return [new GiltMaterial({
       burnishedReflections: true,
-      wear: 0.1,
       grime: 0.45,
       roughness: {
         burnished: 0.08,

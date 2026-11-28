@@ -101,7 +101,6 @@ export default class BarbizonFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new GiltMaterial({
-        wear: 0.3,
         grime: 0.65,
         roughness: {
           burnished: 0.22,

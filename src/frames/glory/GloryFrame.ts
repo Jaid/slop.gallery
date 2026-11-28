@@ -196,7 +196,6 @@ export default class GloryFrame extends PortraitFrame {
   protected override createMaterials() {
     return [new GiltMaterial({
       burnishedReflections: true,
-      wear: 0.18,
       grime: 0.5,
       roughness: {
         burnished: 0.09,

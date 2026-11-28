@@ -62,7 +62,6 @@ export default class AdamFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new GiltMaterial({
-        wear: 0.15,
         relief: {
           depth: 0.002,
           height: surface => {

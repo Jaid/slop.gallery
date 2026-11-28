@@ -68,7 +68,6 @@ export default class CofferFrame extends PortraitFrame {
         grime: 0.3,
       }),
       new GiltMaterial({
-        wear: 0.15,
         grime: 0.3,
       }),
       new FrameMetalMaterial({

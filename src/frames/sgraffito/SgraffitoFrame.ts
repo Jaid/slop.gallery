@@ -76,7 +76,6 @@ export default class SgraffitoFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new GiltMaterial({
-        wear: 0.3,
         relief: {
           depth: 0.003,
           height: surface => {

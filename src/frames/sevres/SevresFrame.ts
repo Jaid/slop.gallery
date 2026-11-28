@@ -144,7 +144,6 @@ export default class SevresFrame extends PortraitFrame {
   protected override createMaterials() {
     return [
       new GiltMaterial({
-        wear: 0.06,
         grime: 0.35,
         relief: {
           depth: 0.0015,

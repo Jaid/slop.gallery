@@ -52,7 +52,7 @@ export default class PerspectiveFrame extends PortraitFrame {
   }
 
   protected override createMaterials() {
-    return [new GiltMaterial({wear: 0.15}), new PerspectiveMaterial]
+    return [new GiltMaterial, new PerspectiveMaterial]
   }
 }
 

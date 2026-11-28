@@ -21,7 +21,7 @@ const profile = FrameProfile.from([-0.005, imageDepth])
 
 /** The frame every work wears where its room has none of its own: a classic moulding in water gilding. */
 export default class ClassicFrame extends PortraitFrame {
-  override readonly description = 'A classic moulding in water gilding on red bole: a sight bead, an ogee rising to a burnished torus and a cove falling away to the wall.'
+  override readonly description = 'A classic moulding in water gilding: a sight bead, an ogee rising to a burnished torus and a cove falling away to the wall.'
   override readonly front = profile.front
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach

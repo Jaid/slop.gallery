@@ -66,7 +66,6 @@ export default class LouisFrame extends PortraitFrame {
     return [new GiltMaterial({
       burnishedReflections: true,
       crackle: false,
-      wear: 0.25,
       grime: 0.6,
       relief: {
         depth: 0.008,

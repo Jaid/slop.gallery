@@ -206,7 +206,6 @@ export default class RocailleFrame extends PortraitFrame {
   protected override createMaterials() {
     return [new GiltMaterial({
       burnishedReflections: true,
-      wear: 0.12,
       grime: 0.5,
       roughness: {
         burnished: 0.1,

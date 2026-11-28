@@ -173,7 +173,7 @@ function leafRuns(halfWidth: number, halfHeight: number, spacing: number) {
 }
 /** One of the golden frames: a Florentine leaf frame, a broad torus wrapped in acanthus leaves carved in high relief and water gilt, running in from a rosette over every miter to a ribbon binding it in the middle of every member. */
 export default class FlorentineFrame extends PortraitFrame {
-  override readonly description = 'A Florentine leaf frame as the Medici’s carvers cut them: a broad torus wrapped in acanthus leaves carved in high relief, overlapping like scales, each cupped round its raised midrib and curling its tip up over the next, running in from a rosette over every miter to a ribbon binding the torus in the middle of every member, between a beaded stick wound with a ribbon at the sight edge, a cove of punched ground and a bead and reel, all in water gilding rubbed to the bole on its crests.'
+  override readonly description = 'A Florentine leaf frame as the Medici’s carvers cut them: a broad torus wrapped in acanthus leaves carved in high relief, overlapping like scales, each cupped round its raised midrib and curling its tip up over the next, running in from a rosette over every miter to a ribbon binding the torus in the middle of every member, between a beaded stick wound with a ribbon at the sight edge, a cove of punched ground and a bead and reel, all in water gilding burnished bright on its crests.'
   override readonly front = crest + Math.max(rosette.height, binding.lift, leaf.thickness * leafRise(1) * 0.9)
   override readonly imageDepth = imageDepth
   override readonly reach = profile.reach
@@ -208,7 +208,6 @@ export default class FlorentineFrame extends PortraitFrame {
   protected override createMaterials() {
     return [new GiltMaterial({
       burnishedReflections: true,
-      wear: 0.22,
       grime: 0.6,
       roughness: {
         burnished: 0.14,

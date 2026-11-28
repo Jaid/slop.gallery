@@ -102,7 +102,6 @@ export default class AuricularFrame extends PortraitFrame {
 
   protected override createMaterials() {
     return [new GiltMaterial({
-      wear: 0.1,
       grime: 0.7,
       relief: {
         depth: 0.006,

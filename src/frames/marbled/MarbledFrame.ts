@@ -70,7 +70,7 @@ export default class MarbledFrame extends PortraitFrame {
   }
 
   protected override createMaterials() {
-    return [new GiltMaterial({wear: 0.12}), new MarblingMaterial, new DustCoverMaterial]
+    return [new GiltMaterial, new MarblingMaterial, new DustCoverMaterial]
   }
 }
 

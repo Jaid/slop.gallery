@@ -108,7 +108,7 @@ export default class SlabsFrame extends PortraitFrame {
   }
 
   protected override createMaterials() {
-    return [new GiltMaterial({wear: 0.14}), new SlabReliefMaterial, new SlabBackMaterial]
+    return [new GiltMaterial, new SlabReliefMaterial, new SlabBackMaterial]
   }
 }
 

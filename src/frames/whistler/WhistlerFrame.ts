@@ -45,7 +45,6 @@ export default class WhistlerFrame extends PortraitFrame {
 
   protected override createMaterials() {
     return [new GiltMaterial({
-      wear: 0.15,
       grime: 0.3,
       environmentIntensity: 0.55,
       roughness: {
