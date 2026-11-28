@@ -333,6 +333,28 @@ test('generated speech is aligned before it plays, so the narration carries its 
   expect(fetchSpy).toHaveBeenCalledTimes(2)
   expect(narrationState(narrator.getSnapshot())?.timing).toBe(state.timing)
 })
+test('?request_minimum_time holds back the speech, but not its alignment after it', async () => {
+  const requested: Array<[string, number]> = []
+  const start = performance.now()
+  const answer = routedFetch(Response.json({words: []}))
+  fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async (input: RequestInfo | URL, init?: RequestInit) => {
+    requested.push([urlOf(input).split('/').at(-1)!, performance.now() - start])
+    return answer(input, init)
+  }) as typeof fetch)
+  create({
+    ai: true,
+    stt_model: 'x-ai/grok-stt-2.0',
+    request_minimum_time: 0.1,
+  }, 'test-key')
+  producer.enqueue('goose')
+  await Bun.sleep(50)
+  expect(requested.map(([name]) => name)).toEqual(['speech'])
+  expect(recordings).toHaveLength(0)
+  await Bun.sleep(100)
+  expect(requested.map(([name]) => name)).toEqual(['speech', 'transcriptions'])
+  expect(requested[1][1]).toBeGreaterThanOrEqual(95)
+  expect(recordings).toHaveLength(1)
+})
 test('a failed alignment still plays the generated audio, just without a timing', async () => {
   const warn = spyOn(console, 'warn').mockImplementation(() => {})
   fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(routedFetch(new Response('busy', {status: 503})))

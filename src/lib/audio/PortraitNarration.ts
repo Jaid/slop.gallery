@@ -6,6 +6,7 @@ import type {AudioHandle, Narrator} from 'use-narrator/core'
 import {noop} from 'es-toolkit'
 import {SpeechCache} from 'use-narrator/core'
 
+import withMinimumTime from '../ai/minimumTime.ts'
 import NarrationAligner from '../ai/NarrationAligner.ts'
 import NarrationGenerator from '../ai/NarrationGenerator.ts'
 import {hasAccess} from '../ai/openRouterAccess.ts'
@@ -71,10 +72,12 @@ export default class PortraitNarration {
     const character = settings.narrator_character ?? narratorCharacter(environmentSeed)
     const aligner = settings.stt_model === false ? undefined : new NarrationAligner(access, settings.stt_model)
     this.cache = new SpeechCache(async (speech, signal) => {
-      const audio = await generator.generate(speech.text, {
-        signal: AbortSignal.any([signal, AbortSignal.timeout(90_000)]),
+      const speaking = AbortSignal.any([signal, AbortSignal.timeout(90_000)])
+      // Only the speech is held back, the alignment after it isn’t.
+      const audio = await withMinimumTime(generator.generate(speech.text, {
+        signal: speaking,
         character,
-      })
+      }), settings.request_minimum_time, speaking)
       if (!aligner) {
         return audio
       }

@@ -335,6 +335,51 @@ test('streamed artwork years are retained and invalid provider years are ignored
     director.dispose()
   }
 })
+test('?request_minimum_time keeps a flavor text that came back early pending until the time has passed', async () => {
+  const director = new TestDirector({
+    ...defaults,
+    request_minimum_time: 0.1,
+  }, 'test')
+  try {
+    const start = performance.now()
+    director.flavorResult.resolve({title: 'Cached'})
+    const job = director.flavor(useGallery.getState().portraits[0])
+    await Bun.sleep(30)
+    expect(useGallery.getState().portraits[0].pending).toBe(true)
+    await job
+    expect(performance.now() - start).toBeGreaterThanOrEqual(95)
+    expect(useGallery.getState().portraits[0]).toMatchObject({
+      pending: false,
+      title: 'Cached',
+    })
+  } finally {
+    director.dispose()
+  }
+})
+for (const ai of [true, false]) {
+  test(`?request_minimum_time ${ai ? 'holds back the image model’s result' : 'leaves a local fusion as fast as it is'}`, async () => {
+    const director = new TestDirector({
+      ...defaults,
+      ai,
+      request_minimum_time: 0.1,
+    }, ai ? 'test' : '')
+    try {
+      const start = performance.now()
+      const fused = new Blob(['result'], {type: 'image/webp'})
+      director.result.resolve(fused)
+      await director.fuse('a', 'b')
+      const elapsed = performance.now() - start
+      expect(useGallery.getState().portraits[0].source).toBe(fused)
+      if (ai) {
+        expect(elapsed).toBeGreaterThanOrEqual(95)
+      } else {
+        expect(elapsed).toBeLessThan(95)
+      }
+    } finally {
+      director.dispose()
+    }
+  })
+}
 test('obsolete fusion cleanup cannot cancel its replacement', async () => {
   const old = new TestDirector({
     ...defaults,

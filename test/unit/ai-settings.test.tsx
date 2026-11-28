@@ -43,6 +43,15 @@ test('?stt_model picks the model that times generated narration, and false skips
   expect(readAiSettings('?stt_model').stt_model).toBe(fallback)
   expect(readAiSettings('?stt_model=true').stt_model).toBe(fallback)
 })
+test('?request_minimum_time takes a number of seconds that is not negative, and 0 for anything else', () => {
+  expect(readAiSettings('').request_minimum_time).toBe(0)
+  expect(readAiSettings('?request_minimum_time=3').request_minimum_time).toBe(3)
+  expect(readAiSettings('?request_minimum_time=0.5').request_minimum_time).toBe(0.5)
+  for (const value of ['', 'true', '-1', 'Infinity', 'soon']) {
+    expect(readAiSettings(`?request_minimum_time=${value}`).request_minimum_time).toBe(0)
+  }
+  expect(readQueryOverrides('http://localhost/?request_minimum_time=4')).toEqual({request_minimum_time: 4})
+})
 test('the narrator voice is only set by a non-blank ?narrator_voice, so the seed picks it otherwise', () => {
   expect(readAiSettings('').narrator_voice).toBeUndefined()
   expect(readAiSettings('?narrator_voice=').narrator_voice).toBeUndefined()

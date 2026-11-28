@@ -1,5 +1,5 @@
 import optis from 'optis'
-import readPermalink, {parseBoolean} from 'read-permalink'
+import readPermalink, {parseBoolean, parseNumber} from 'read-permalink'
 
 import {openRouterOrigin} from './openRouterAccess.ts'
 
@@ -29,6 +29,8 @@ const defaults = {
   /** the narrator’s delivery instructions, sent verbatim; without them, the environment seed picks the narrator’s traits */
   narrator_character: undefined as string | undefined,
   eager_audio: false,
+  /** the seconds every request for a fusion’s image, a flavor text or a narration’s speech takes at least before its answer counts, for trying out animations and their rhythm with answers that come back too fast to see them, like from a cache; failures still count at once, and the speech’s alignment for subtitles is not held back */
+  request_minimum_time: 0,
   /** the origin serving OpenRouter’s API, like an OpenRouter proxy or another server speaking the same API; a bare host like `openrouter.nas.lan` means HTTPS */
   openrouter_host: openRouterOrigin,
   /** the API key this page starts with instead of the one the player saved, which only goes to OpenRouter itself, never to an `openrouter_host` of another origin */
@@ -37,6 +39,15 @@ const defaults = {
 const normalizeBoolean = (fallback: boolean) => (value: unknown) => {
   try {
     return parseBoolean(value)
+  } catch {
+    return fallback
+  }
+}
+/** a finite number of seconds that is not negative */
+const normalizeSeconds = (fallback: number) => (value: unknown) => {
+  try {
+    const seconds = parseNumber(value)
+    return Number.isFinite(seconds) && seconds >= 0 ? seconds : fallback
   } catch {
     return fallback
   }
@@ -89,6 +100,7 @@ const aiSettingsSchema = optis({
     narrator_voice: normalizeOptionalString,
     narrator_character: normalizeOptionalString,
     eager_audio: normalizeBoolean(defaults.eager_audio),
+    request_minimum_time: normalizeSeconds(defaults.request_minimum_time),
     openrouter_host: normalizeHost,
     openrouter_key: normalizeKey,
   },

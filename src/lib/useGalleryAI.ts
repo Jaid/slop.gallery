@@ -55,7 +55,7 @@ export default function useGalleryAI() {
       galleryEvents.removeEventListener('item-fusion', fuseItem)
       director.dispose()
     }
-  }, [key, params.openrouter_host, params.ai, params.ai_tier, params.text_model, params.text_model_effort, params.image_model, params.audio_model, params.stt_model, params.narrator_voice, params.narrator_character, params.eager_audio])
+  }, [key, params.openrouter_host, params.ai, params.ai_tier, params.text_model, params.text_model_effort, params.image_model, params.audio_model, params.stt_model, params.narrator_voice, params.narrator_character, params.eager_audio, params.request_minimum_time])
   return {
     /** whether the page allows AI at all; `false` for `?ai=false`, which also hides every AI option */
     available: aiAvailable,

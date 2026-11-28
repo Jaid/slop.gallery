@@ -24,6 +24,7 @@ import {validateImage} from '../gallery/imagePolicy.ts'
 import {useGallery} from '../gallery/store.ts'
 import FusionTrace from '../telemetry/FusionTrace.ts'
 import {telemetry} from '../telemetry/index.ts'
+import withMinimumTime from './minimumTime.ts'
 import {modelImageType, toWebp} from './modelImage.ts'
 import {hasAccess} from './openRouterAccess.ts'
 import {tieredModel} from './settings.ts'
@@ -116,7 +117,10 @@ export default class GalleryDirector {
         }
         useGallery.getState().update(portrait.id, patch)
       }
-      const generate = async () => this.generateFlavor(await loadBlob(source), update, AbortSignal.any([this.controller.signal, AbortSignal.timeout(90_000)]))
+      const generate = async () => {
+        const signal = AbortSignal.any([this.controller.signal, AbortSignal.timeout(90_000)])
+        return withMinimumTime(this.generateFlavor(await loadBlob(source), update, signal), this.settings.request_minimum_time, signal)
+      }
       update(await (telemetry ? telemetry.wrap('gallery.ai.flavor', generate, {attributes: {model: tieredModel(this.settings.text_model, this.settings.ai_tier)}}) : generate()))
     } catch {
       if (current()) {
@@ -366,7 +370,9 @@ export default class GalleryDirector {
         // Image models take 15–40 s for most fusions, but now and then over 100 s.
         const signal = AbortSignal.any([this.controller.signal, fusion.signal, AbortSignal.timeout(180_000)])
         const generate = async (span?: Span) => {
-          const {image, width, height} = await this.generate(recipe, signal, a.width / a.height)
+          const generated = this.generate(recipe, signal, a.width / a.height)
+          // Only the image model’s answers are held back, not local results.
+          const {image, width, height} = await (this.usingAi ? withMinimumTime(generated, this.settings.request_minimum_time, signal) : generated)
           span?.setAttributes({
             width,
             height,
